@@ -1,5 +1,6 @@
 using System;
 using Pulsar4X.Engine;
+using Pulsar4X.Interfaces;
 
 namespace Pulsar4X.Factions
 {
