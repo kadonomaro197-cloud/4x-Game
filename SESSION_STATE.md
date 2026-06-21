@@ -56,6 +56,7 @@ From reading the test project structure: tests exist for EntityManager, orbits, 
 | `GameEngine/Damage/DamageComplex/DamageProcessor.cs` | **Modified** — added `DamageResult` struct, changed `OnTakingDamage` to return `DamageResult`, filled the empty component-removal block (finds destroyed components by design ID match, removes via `RemoveComponentInstance`, destroys ship when all components gone) |
 | `GameEngine/Weapons/WeaponBeam/BeamWeaponProcessor.cs` | **Modified** — replaced `SimpleDamage.OnTakingDamage(100, 500)` with corrected `DamageFragment` construction + `DamageProcessor.OnTakingDamage()` call |
 | `GameEngine/Weapons/CLAUDE.md` | Updated — Damage Status section reflects Phase 1a completion and known calibration issues |
+| `docs/COMBAT-DESIGN.md` | **Created** — generalized combat build plan: hardware constraints, LOD model, 11 required systems, build order |
 | `SESSION_STATE.md` | This file |
 
 **Prior session docs** (on `claude/amazing-clarke-7s118n`): 16 doc files, Aurora reference, hooks, CLAUDE.md files. These are on the branch as commits 1–14.
