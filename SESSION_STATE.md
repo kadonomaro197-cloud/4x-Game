@@ -6,7 +6,7 @@ This document tracks what we know about the codebase state at the close of each 
 
 ## Last Updated
 
-Session ending ~2026-06-21 (continued). Branch: `claude/laughing-cannon-08obma`.
+Session ending ~2026-06-21 (survey complete). Branch: `claude/laughing-cannon-08obma`.
 
 ---
 
@@ -106,6 +106,23 @@ All 5 decisions wired: two-zone range/energy falloff, wavelength-to-material map
 1. Power-starved ships not firing (if `EnergyGenAbilityDB` present but `EnergyStored` runs dry).
 2. Thermal suppression kicking in after 2 rapid shots.
 3. Beam damage respecting wavelength (FIR = 10000nm hits aluminium for ~18% absorption; same beam hits plastic for 85%).
+
+### Resource/Economy Survey — COMPLETE (session 2026-06-21)
+
+5-agent parallel survey of the entire mineral/material/resource system. Findings committed to `docs/RESOURCES-AND-MATERIALS-DESIGN.md`.
+
+**Key findings:**
+- 3-tier production pipeline exists and works (mine → refine → build)
+- 3 of 15 minerals have zero recipes (nickel, lithium, rare-earth-elements)
+- Processed materials (electronics, etc.) not referenced in any component build costs — refinery chain is decorative
+- Trade happens but generates no faction wealth (Ledger is disconnected)
+- Enemy ships can freely access your logistics bases (no faction access controls)
+- Research costs only money — no material requirements
+- NPC economic AI = 0% implemented; all systems are faction-agnostic and would work for NPCs if orders were issued
+
+**Priority order from survey:** (1) Fix Installations tab, (2) Wire processed materials into component costs, (3) Add 3 missing mineral recipes, (4) Connect trade to Ledger, (5) Build NPCDecisionProcessor.
+
+---
 
 ### System 2 — Sensor Range + Contact Model — NEXT
 

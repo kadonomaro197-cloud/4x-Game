@@ -145,6 +145,7 @@ See `ARCHITECTURE.md` for the full data-flow diagram.
 | `docs/aurora/GROUND-COMBAT.md` | Building ground forces, formations, invasion, bombardment-vs-ground. |
 | `docs/aurora/PLANETARY-INFRASTRUCTURE.md` | Adding installations, construction, economy depth. |
 | `docs/aurora/SPACE-COMBAT-BENCHMARK.md` | Calibrating "the same depth space combat has." |
+| `docs/RESOURCES-AND-MATERIALS-DESIGN.md` | Designing anything touching minerals, materials, production, commerce, research, or NPC economic AI. Full system survey — read before changing any part of the economy. |
 
 ---
 
