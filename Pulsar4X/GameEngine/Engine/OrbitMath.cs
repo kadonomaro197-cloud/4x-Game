@@ -1,0 +1,510 @@
+using System;
+using Pulsar4X.Orbital;
+using Pulsar4X.Extensions;
+using Pulsar4X.Events;
+using Pulsar4X.Factions;
+using Pulsar4X.Orbits;
+using Pulsar4X.Storage;
+using Pulsar4X.Galaxy;
+using Pulsar4X.Movement;
+
+namespace Pulsar4X.Engine
+{
+    /// <summary>
+    /// This class extends Orbital.OrbitalMath to use Entites and DataBlobs as parameters, and has other useful functions which are more pulsar specific.
+    /// if you're using raw numbers, use Orbital.OrbitalMath over this one (it'll likely be more efficent due to not having to look up data)
+    ///
+    /// note multiple simular functions for doing the same thing, some of these are untested.
+    /// Take care when using unless the function has a decent test in the tests project.
+    /// Some simular functions with simular inputs left in for future performance testing (ie one of the two might be slightly more performant).
+    /// </summary>
+    ///
+
+    public class OrbitMath : OrbitalMath
+    {
+
+        #region Fuel and DeltaV
+
+        /// <summary>
+        /// Currently this only calculates the change in velocity from 0 to planet radius * 1.1
+        /// TODO: add gravity drag and atmosphere drag, and tech improvements for such.
+        /// </summary>
+        /// <param name="planetEntity"></param>
+        /// <param name="payload"></param>
+        /// <returns></returns>
+        public static double FuelCostToLowOrbit(Entity planetEntity, double payload)
+        {
+            return FuelCostToLowOrbit(
+                planetEntity.GetDataBlob<MassVolumeDB>().RadiusInM,
+                planetEntity.GetDataBlob<MassVolumeDB>().MassDry, payload
+            );
+        }
+
+        /// <summary>
+        /// Fuel cost to reach a given orbit radius from the surface.
+        /// If targetOrbitRadius is &lt;= 0 or below low orbit, defaults to low orbit.
+        /// </summary>
+        /// <param name="planetEntity"></param>
+        /// <param name="payload">mass of the payload in kg</param>
+        /// <param name="targetOrbitRadius">orbit radius in meters from planet center</param>
+        /// <returns>mass of fuel required in kg</returns>
+        public static double FuelCostToOrbit(Entity planetEntity, double payload, double targetOrbitRadius)
+        {
+            var planetRadius = planetEntity.GetDataBlob<MassVolumeDB>().RadiusInM;
+            var planetMass = planetEntity.GetDataBlob<MassVolumeDB>().MassDry;
+            var lowOrbit = LowOrbitRadius(planetRadius);
+
+            if (targetOrbitRadius <= 0 || targetOrbitRadius < lowOrbit)
+                targetOrbitRadius = lowOrbit;
+
+            var exhaustVelocity = 3000;
+            var sgp = GeneralMath.StandardGravitationalParameter(payload + planetMass);
+            Vector3 pos = targetOrbitRadius * Vector3.UnitX;
+
+            var vel = OrbitalMath.ObjectLocalVelocityPolar(sgp, pos, targetOrbitRadius, 0, 0, 0);
+            var fuelCost = OrbitalMath.TsiolkovskyFuelCost(payload, exhaustVelocity, vel.speed);
+            return fuelCost;
+        }
+
+        /// <summary>
+        /// Mass of fuel burned for a given DV change.
+        /// </summary>
+        /// <param name="ship"></param>
+        /// <param name="dv"></param>
+        /// <param name="mass"></param>
+        /// <returns></returns>
+        public static double FuelBurned(Entity ship, double dv, double mass)
+        {
+            var ve = ship.GetDataBlob<NewtonThrustAbilityDB>().ExhaustVelocity;
+            double fuelBurned = TsiolkovskyFuelUse(mass, ve, dv);
+            return fuelBurned;
+        }
+
+               /// <summary>
+        /// the maximum deltaV availible (emtpy of cargo full of fuel).
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public static double GetEmptyWetDV(Entity entity, CargoDefinitionsLibrary cargoLibrary)
+        {
+            var fuelTypeID = entity.GetDataBlob<NewtonThrustAbilityDB>().FuelType;
+            var fuelType = cargoLibrary.GetAny(fuelTypeID);
+
+            if(fuelType == null) throw new NullReferenceException("fuelType cannot be null");
+
+            //var burnRate = entity.GetDataBlob<NewtonThrustAbilityDB>().FuelBurnRate;
+            var exhaustVelocity = entity.GetDataBlob<NewtonThrustAbilityDB>().ExhaustVelocity;
+            var massDry = entity.GetDataBlob<MassVolumeDB>().MassDry;
+            //var totalMass = entity.GetDataBlob<MassVolumeDB>().MassTotal;
+            var parentMass = entity.GetSOIParentEntity().GetDataBlob<MassVolumeDB>().MassTotal;
+
+            //var cargoMass = entity.GetDataBlob<CargoStorageDB>().TotalStoredMass;
+            //var fuelMass = entity.GetDataBlob<CargoStorageDB>().GetMassStored(fuelType);
+            var fuelMassMax = entity.GetDataBlob<CargoStorageDB>().GetMassMax(fuelType);
+            var massTotal = massDry + fuelMassMax;
+            //var sgp = OrbitMath.CalculateStandardGravityParameterInM3S2(massTotal, parentMass);
+
+            return TsiolkovskyRocketEquation(massTotal, massDry, exhaustVelocity);
+
+        }
+
+        /// <summary>
+        /// Max deltaV given a specific amount of (non fuel) cargoMass
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="cargoMass">non volitile cargo</param>
+        /// <returns></returns>
+        public static double GetWetDV(Entity entity, double cargoMass, CargoDefinitionsLibrary cargoLibrary)
+        {
+            var fuelTypeID = entity.GetDataBlob<NewtonThrustAbilityDB>().FuelType;
+            var fuelType = cargoLibrary.GetAny(fuelTypeID);
+
+            if(fuelType == null) throw new NullReferenceException("fuelType cannot be null");
+
+            //var burnRate = entity.GetDataBlob<NewtonThrustAbilityDB>().FuelBurnRate;
+            var exhaustVelocity = entity.GetDataBlob<NewtonThrustAbilityDB>().ExhaustVelocity;
+            var massDry = entity.GetDataBlob<MassVolumeDB>().MassDry;
+            //var totalMass = entity.GetDataBlob<MassVolumeDB>().MassTotal;
+            var parentMass = entity.GetSOIParentEntity().GetDataBlob<MassVolumeDB>().MassTotal;
+
+            var fuelMassMax = entity.GetDataBlob<CargoStorageDB>().GetMassMax(fuelType);
+            var massCargoDry = massDry + cargoMass;
+            var massTotal = massCargoDry + fuelMassMax;
+
+            //var sgp = OrbitMath.CalculateStandardGravityParameterInM3S2(massTotal, parentMass);
+
+            return TsiolkovskyRocketEquation(massTotal, massCargoDry, exhaustVelocity);
+
+        }
+
+        /// <summary>
+        /// Max deltaV given a specific amount of (non fuel) cargoMass, and an ammount of fuel
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="cargoMass">non volitile cargo</param>
+        /// <returns></returns>
+        public static double GetWetDV(Entity entity, double cargoMass, double fuelMass)
+        {
+            var exhaustVelocity = entity.GetDataBlob<NewtonThrustAbilityDB>().ExhaustVelocity;
+            var massDry = entity.GetDataBlob<MassVolumeDB>().MassDry;
+            var parentMass = entity.GetSOIParentEntity().GetDataBlob<MassVolumeDB>().MassTotal;
+
+            var massCargoDry = massDry + cargoMass;
+            var massTotal = massCargoDry + fuelMass;
+
+            return TsiolkovskyRocketEquation(massTotal, massCargoDry, exhaustVelocity);
+
+        }
+
+        /// <summary>
+        /// deltaV given a specific amount of (non fuel) cargoMass,and the current amount of carried fuel
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="cargoMass">non volitile cargo</param>
+        /// <returns></returns>
+        public static double GetDV(Entity entity, double cargoMass, CargoDefinitionsLibrary cargoLibrary)
+        {
+            var exhaustVelocity = entity.GetDataBlob<NewtonThrustAbilityDB>().ExhaustVelocity;
+            var massDry = entity.GetDataBlob<MassVolumeDB>().MassDry;
+            var parentMass = entity.GetSOIParentEntity().GetDataBlob<MassVolumeDB>().MassTotal;
+            var fuelTypeID = entity.GetDataBlob<NewtonThrustAbilityDB>().FuelType;
+            var fuelType = cargoLibrary.GetAny(fuelTypeID);
+
+            if(fuelType == null) throw new NullReferenceException("fuelType cannot be null");
+
+            var fuelMass = entity.GetDataBlob<CargoStorageDB>().GetMassStored(fuelType, false);
+
+            var massCargoDry = massDry + cargoMass;
+            var massTotal = massCargoDry + fuelMass;
+
+            return TsiolkovskyRocketEquation(massTotal, massCargoDry, exhaustVelocity);
+
+        }
+
+        /// <summary>
+        /// deltaV this ship has right now.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="cargoMass">non volitile cargo</param>
+        /// <returns></returns>
+        public static double GetDV(Entity entity)
+        {
+            var exhaustVelocity = entity.GetDataBlob<NewtonThrustAbilityDB>().ExhaustVelocity;
+            var massDry = entity.GetDataBlob<MassVolumeDB>().MassDry;
+            var parentMass = entity.GetSOIParentEntity().GetDataBlob<MassVolumeDB>().MassTotal;
+
+            var cargoLib = entity.GetFactionOwner.GetDataBlob<FactionInfoDB>().Data.CargoGoods;
+            var fuelTypeID = entity.GetDataBlob<NewtonThrustAbilityDB>().FuelType;
+            var fuelType = cargoLib.GetAny(fuelTypeID);
+
+            if(fuelType == null) throw new NullReferenceException("fuelType cannot be null");
+            var storage = entity.GetDataBlob<CargoStorageDB>();
+            var totalCargo = storage.TotalStoredMass;
+            var fuelMass = storage.GetMassStored(fuelType, false);
+            var dryCargo = totalCargo - fuelMass;
+            var massCargoDry = massDry + dryCargo;
+            var massTotal = massCargoDry + fuelMass;
+
+            return TsiolkovskyRocketEquation(massTotal, massCargoDry, exhaustVelocity);
+
+        }
+
+        /// <summary>
+        /// Currently this only calculates the change in velocity from 0 to planet radius +* 0.33333.
+        /// TODO: add gravity drag and atmosphere drag, and tech improvements for such.
+        /// </summary>
+        /// <param name="planetRadiusInM"></param>
+        /// <param name="planetMassDryInKG"></param>
+        /// <param name="payload"></param>
+        /// <returns></returns>
+        public static double FuelCostToLowOrbit(double planetRadiusInM, double planetMassDryInKG, double payload)
+        {
+            var lowOrbit = LowOrbitRadius(planetRadiusInM);
+
+            var exaustVelocity = 3000;
+            var sgp = GeneralMath.StandardGravitationalParameter(payload + planetMassDryInKG);
+            Vector3 pos = lowOrbit * Vector3.UnitX;
+
+            var vel = OrbitalMath.ObjectLocalVelocityPolar(sgp, pos, lowOrbit, 0, 0, 0);
+            var fuelCost = OrbitalMath.TsiolkovskyFuelCost(payload, exaustVelocity, vel.speed);
+            return fuelCost;
+        }
+
+
+
+        #endregion
+
+
+        #region RelativePosition And Velocity
+
+
+        public static Vector3 GetPosition(OrbitDB orbit, DateTime atDateTime)
+        {
+            return GetPosition(orbit, GetTrueAnomaly(orbit, atDateTime));
+        }
+
+        public static Vector3 GetPosition(OrbitDB orbit, double trueAnomaly)
+        {
+            if (orbit.IsStationary)
+            {
+                return Vector3.Zero;
+            }
+            // Use cached trigonometric values for performance
+            var (cosLoAN, sinLoAN, cosIncl, sinIncl) = orbit.GetCachedTrigValues();
+            return OrbitalMath.GetPosition(orbit.SemiMajorAxis, orbit.Eccentricity, orbit.ArgumentOfPeriapsis, trueAnomaly,
+                cosLoAN, sinLoAN, cosIncl, sinIncl);
+        }
+
+        public static Vector3 GetAbsolutePosition(OrbitDB orbit, DateTime atDateTime)
+        {
+            var ta = GetTrueAnomaly(orbit, atDateTime);
+            if (orbit.Parent == null)//if we're the parent sun
+                return OrbitMath.GetPosition(orbit, ta);
+            //else if we're a child
+            Vector3 rootPos = GetAbsolutePosition((OrbitDB)orbit.ParentDB, atDateTime);
+
+            if (orbit.IsStationary)
+            {
+                return rootPos;
+            }
+
+            return rootPos + GetPosition(orbit, ta);
+
+        }
+
+
+        public static (Vector3 pos, Vector3 Velocity) GetStateVectors(OrbitDB orbitDB, DateTime atTime)
+        {
+            Vector3 pos = GetPosition(orbitDB, atTime);
+            var vel = OrbitMath.InstantaneousOrbitalVelocityVector_m(orbitDB, atTime);
+            return (pos, vel);
+        }
+
+        /// <summary>
+        /// Parent relative velocity vector.
+        /// </summary>
+        /// <returns>The orbital vector relative to the parent</returns>
+        /// <param name="orbit">Orbit.</param>
+        /// <param name="atDateTime">At date time.</param>
+        public static Vector3 InstantaneousOrbitalVelocityVector_m(OrbitDB orbit, DateTime atDateTime)
+        {
+            var position = GetPosition(orbit, atDateTime);
+            var sma = orbit.SemiMajorAxis;
+            if (orbit.GravitationalParameter_m3S2 == 0 || sma == 0)
+                return new Vector3(); //so we're not returning NaN;
+            var sgp = orbit.GravitationalParameter_m3S2;
+
+            double e = orbit.Eccentricity;
+            double trueAnomaly = orbit.GetTrueAnomaly(atDateTime);
+            double aoP = orbit.ArgumentOfPeriapsis;
+            double i = orbit.Inclination;
+            double loAN = orbit.LongitudeOfAscendingNode;
+            return ParentLocalVeclocityVector(sgp, position, sma, e, trueAnomaly, aoP, i, loAN);
+        }
+
+        /// <summary>
+        /// Parent relative velocity vector.
+        /// </summary>
+        /// <returns>The orbital vector relative to the parent</returns>
+        /// <param name="orbit">Orbit.</param>
+        /// <param name="atDateTime">At date time.</param>
+        /// <param name="preCalculatedTrueAnomaly">Pre-calculated true anomaly to avoid redundant calculation.</param>
+        public static Vector3 InstantaneousOrbitalVelocityVector_m(OrbitDB orbit, DateTime atDateTime, double preCalculatedTrueAnomaly)
+        {
+            var position = GetPosition(orbit, preCalculatedTrueAnomaly);
+            var sma = orbit.SemiMajorAxis;
+            if (orbit.GravitationalParameter_m3S2 == 0 || sma == 0)
+                return new Vector3(); //so we're not returning NaN;
+            var sgp = orbit.GravitationalParameter_m3S2;
+
+            double e = orbit.Eccentricity;
+            double trueAnomaly = preCalculatedTrueAnomaly;
+            double aoP = orbit.ArgumentOfPeriapsis;
+            double i = orbit.Inclination;
+            double loAN = orbit.LongitudeOfAscendingNode;
+            return ParentLocalVeclocityVector(sgp, position, sma, e, trueAnomaly, aoP, i, loAN);
+        }
+
+        /// <summary>
+        /// basicaly the radius of the planet * 1.1
+        /// in future we may have this dependant on atmosphere (thickness and or gravity?)
+        /// maybe we should return a lower and an upper bound? ie 1.05 to 1.333 which would allow some flexability with eccentricity,
+        /// and as this is used by ships to get a good logistics transfer orbit, add some flavor with ship skill and risk aversion etc?
+        /// </summary>
+        /// <param name="planetEntity"></param>
+        /// <returns></returns>
+        public static double LowOrbitRadius(Entity planetEntity)
+        {
+            return LowOrbitRadius(planetEntity.GetDataBlob<MassVolumeDB>().RadiusInM);
+        }
+        public static double LowOrbitRadius(double planetRadiusInM)
+        {
+            return planetRadiusInM * 1.1;
+        }
+
+        #endregion
+
+        #region TrueAnomaly
+
+
+        public static double GetTrueAnomaly(OrbitDB orbit, DateTime time)
+        {
+            TimeSpan timeSinceEpoch = time - orbit.Epoch;
+            var secondsFromEpoch = timeSinceEpoch.TotalSeconds;
+
+            if (orbit.Eccentricity < 1) //elliptical orbit
+            {
+                // For elliptical orbits, normalize time using modulo to avoid large numbers
+                // GetMeanAnomalyFromTime already normalizes the angle, so we just need to handle the time
+                if (orbit.OrbitalPeriod.Ticks != 0 && Math.Abs(secondsFromEpoch) > orbit.OrbitalPeriod.TotalSeconds)
+                {
+                    secondsFromEpoch = secondsFromEpoch % orbit.OrbitalPeriod.TotalSeconds;
+                }
+
+                double o_M0 = orbit.MeanAnomalyAtEpoch;
+                double o_M1 = GetMeanAnomalyFromTime(o_M0, orbit.MeanMotion, secondsFromEpoch);
+                double o_E = GetEccentricAnomaly(orbit, o_M1);
+                return TrueAnomalyFromEccentricAnomaly(orbit.Eccentricity, o_E);
+            }
+            else //hyperbolic orbit
+            {
+                // Hyperbolic orbits don't have a period, so no normalization needed
+                double o_Mh = GetHyperbolicMeanAnomalyFromTime(orbit.MeanMotion, secondsFromEpoch);
+                double o_F =  GetHyperbolicAnomaly(orbit, o_Mh);
+                return TrueAnomalyFromHyperbolicAnomaly(orbit.Eccentricity, o_F);
+            }
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="orbit"></param>
+        /// <param name="currentMeanAnomaly"></param>
+        /// <returns>E</returns>
+        public static double GetEccentricAnomaly(OrbitDB orbit, double currentMeanAnomaly)
+        {
+            if(!TryGetEccentricAnomaly(orbit.Eccentricity, currentMeanAnomaly, out double E))
+            {
+                var datetime = orbit.Parent.StarSysDateTime;
+                var e = Event.Create(EventType.Opps, datetime, "Non-convergence of Newton's method while calculating Eccentric Anomaly.");
+                EventManager.Instance.Publish(e);
+            }
+            return E;
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="orbit"></param>
+        /// <param name="currentHyperbolicAnomaly"></param>
+        /// <returns>F</returns>
+        public static double GetHyperbolicAnomaly(OrbitDB orbit, double hyperbolicMeanAnomaly)
+        {
+            if(!TryGetHyperbolicAnomaly(orbit.Eccentricity, hyperbolicMeanAnomaly, out double F))
+            {
+                var datetime = orbit.Parent.StarSysDateTime;
+                var e = Event.Create(EventType.Opps, datetime, "Non-convergence of Newton's method while calculating Hyperbolic Anomaly.");
+                EventManager.Instance.Publish(e);
+            }
+            return F;
+        }
+
+
+        #endregion
+
+
+        #region Time
+
+        public static DateTime TimeToRadius(OrbitDB orbitDB, double r)
+        {
+            double a = orbitDB.SemiMajorAxis;
+            double e = orbitDB.Eccentricity;
+            double p = EllipseMath.SemiLatusRectum(a, e);
+            double ta = EllipseMath.TrueAnomalyAtRadus(r, p, e);
+            double t_s = 0;
+            if (e < 1)
+            {
+                t_s = TimeFromTrueAnomalyElliptic(e, orbitDB.MeanAnomalyAtEpoch, orbitDB.MeanMotion, ta);
+            }
+            else
+            {
+                t_s = TimeFromTrueAnomalyHyperbolic(orbitDB.GravitationalParameter_m3S2, a, e, ta);
+            }
+            return orbitDB.Epoch + TimeSpan.FromSeconds(t_s);
+        }
+
+        /// <summary>
+        /// Time for a burn manuver in seconds
+        /// </summary>
+        /// <param name="ship"></param>
+        /// <param name="dv"></param>
+        /// <param name="mass"></param>
+        /// <returns>time in seconds</returns>
+        public static double BurnTime(Entity ship, double dv, double mass)
+        {
+            //var mass = ship.GetDataBlob<MassVolumeDB>().MassTotal;
+            var ve = ship.GetDataBlob<NewtonThrustAbilityDB>().ExhaustVelocity;
+            var burnRate = ship.GetDataBlob<NewtonThrustAbilityDB>().FuelBurnRate;
+            double fuelBurned = TsiolkovskyFuelUse(mass, ve, dv);
+            double tburn = fuelBurned / burnRate;
+            return tburn;
+        }
+
+        #endregion
+
+
+        /// <summary>
+        /// Standard Gravitational Parameter.
+        /// </summary>
+        /// <param name="parent">Parent Entity</param>
+        /// <param name="child">Child Entity</param>
+        /// <returns></returns>
+        public static double SGP(Entity parent, Entity child) =>
+            GeneralMath.StandardGravitationalParameter(
+                    parent.GetDataBlob<MassVolumeDB>().MassTotal,
+                    child.GetDataBlob<MassVolumeDB>().MassTotal);
+
+        /// <summary>
+        /// returns the SOI radius of *this* orbital body,
+        /// ie for the SOI radius of earth give the orbitDB of earth.
+        /// TODO: what do we want to return if orbit is the sun? currently returning null.
+        /// </summary>
+        /// <param name="orbit"></param>
+        /// <returns></returns>
+        public static double GetSOIRadius(OrbitDB orbit)
+        {
+            return GetSOI(orbit.SemiMajorAxis, orbit._myMass, orbit._parentMass);
+        }
+
+        public static OrbitDB FindSOIForOrbit(OrbitDB orbit, Vector3 AbsolutePosition)
+        {
+            var soi = orbit.SOI_m;
+            var pos = orbit.OwningEntity.GetDataBlob<PositionDB>();
+            if (AbsolutePosition.GetDistanceTo_m(pos) < soi)
+            {
+                foreach (OrbitDB? subOrbit in orbit.ChildrenDBs)
+                {
+                    if(subOrbit == null) continue;
+                    var suborbitb = FindSOIForOrbit(subOrbit, AbsolutePosition);
+                    if (suborbitb != null)
+                        return suborbitb;
+                }
+            }
+
+            return null;
+        }
+
+        public static KeplerElements KeplerFromOrbitDB(OrbitDB orbitDB)
+        {
+            var entity = orbitDB.OwningEntity;
+
+            if(entity == null) throw new NullReferenceException("orbitDB.OwningEntity cannot be null");
+
+            var sgp = orbitDB.GravitationalParameter_m3S2;
+            var state = MoveMath.GetRelativeState(entity);
+            var epoch = entity.StarSysDateTime;
+            return KeplerFromPositionAndVelocity(sgp, state.pos, state.Velocity, epoch);
+
+        }
+    }
+}

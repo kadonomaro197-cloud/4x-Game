@@ -1,0 +1,80 @@
+2018-03-04  se5a  <jon.se5a@gmail.com>
+
+	* SerializationManagerTests.cs: some changes to
+	InstanceProcessors to help with serialization. 
+
+2018-01-12  se5a  <jon.se5a@gmail.com>
+
+	* ShipTests.cs: tweaked ownership
+
+2018-01-05  se5a  <jon.se5a@gmail.com>
+
+	* NetworkTests.cs: Some work on networking EntityOrders. 
+
+2018-01-02  se5a  <jon.se5a@gmail.com>
+
+	* EntityManagerTests.cs: ISensorCloneMethod now has an update
+	method as well as clone.
+	sensor entity datablobs are now nolonger replaced with a new
+	datablob each update
+	Fixed some bugs with EntityListner, removed db was not getting
+	enqueud. 
+
+2017-12-23  se5a  <jon.se5a@gmail.com>
+
+	* EntityManagerTests.cs: Fixes self referencing entitiy
+	seralization.
+	It's a bit of a hack, but should work for now. 
+
+2017-12-22  se5a  <jon.se5a@gmail.com>
+
+	* NetworkTests.cs:
+	* OrderQueueTest.cs:
+	* EntityManagerTests.cs: Fixed some more tests, wrote a test
+	demonstrating a problem with the deserialisation when an
+	entity has a datablob that references the same entity. 
+
+2017-12-20  se5a  <jon.se5a@gmail.com>
+
+	* SpeciesProcessorTest.cs:
+	* PopulationProcessorTest.cs: fixed previous Atmosphere
+	changes. (Albedo was moved to BodyDB in previous updates,
+	which didn't get fixed in tests)
+
+2017-12-04  se5a  <jon.se5a@gmail.com>
+
+	* OrderQueueTest.cs: More sensor work. it's starting to take
+	shape now. need to start documenting it. 
+
+2017-11-22  se5a  <jon.se5a@gmail.com>
+
+	* Pulsar4X.Tests.csproj: changed projects to use .net4.6.2
+	since .net7 is not already on win10 by default. reduce the
+	hastle of getting into the project. 
+
+2017-11-20  se5a  <jon.se5a@gmail.com>
+
+	* FactoryTests.cs:
+	* Pulsar4X.Tests.csproj: Changed all projects to Target
+	.Net4.7 MD didn't seem to care that ECSLib was 4.6 but the
+	others were 4.5, but VS wouldnt build it. removed the unused
+	openGL references since they were causing problems. 
+
+2017-11-17  se5a  <jon.se5a@gmail.com>
+
+	* ShipTests.cs:
+	* ShipComponentTests.cs: Rename refactor places where Ability
+	should be Attribute. 
+
+2017-11-13  se5a  <jon.se5a@gmail.com>
+
+	* ShipTests.cs:
+	* NetworkTests.cs:
+	* TestingUtilities.cs:
+	* Pulsar4X.Tests.csproj: some work on sensors and detection
+
+
+2017-10-22  se5a  <jon.se5a@gmail.com>
+
+	* ViewModelTests.cs: 
+

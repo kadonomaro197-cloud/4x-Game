@@ -1,0 +1,1071 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
+using ImGuiNET;
+using Pulsar4X.Client.Interface.Widgets;
+using Pulsar4X.Colonies;
+using Pulsar4X.Engine;
+using Pulsar4X.Datablobs;
+using Pulsar4X.Engine.Orders;
+using Pulsar4X.DataStructures;
+using Pulsar4X.Extensions;
+using Pulsar4X.Fleets;
+using Pulsar4X.GeoSurveys;
+using Pulsar4X.JumpPoints;
+using Pulsar4X.Names;
+using Pulsar4X.Ships;
+using Pulsar4X.Storage;
+using Pulsar4X.Galaxy;
+using Pulsar4X.Movement;
+
+namespace Pulsar4X.Client
+{
+    public class FleetWindow : PulsarGuiWindow
+    {
+        private enum IssueOrderType
+        {
+            MoveTo,
+            GeoSurvey,
+            JPSurvey,
+            Jump,
+            RefuelAt,
+        }
+
+        private IssueOrderType selectedIssueOrderType = IssueOrderType.MoveTo;
+
+        private FleetDB? factionRoot;
+        private int factionID;
+        private Entity dragEntity = Entity.InvalidEntity;
+        public Entity? SelectedFleet { get; private set; } = null;
+        private Entity? selectedFleetFlagship = null;
+        private Entity? selectedFleetSystem = null;
+        private FleetDB? selectedFleetDB = null;
+        private bool selectedFleetInheritOrders = false;
+        int nameCounter = 1;
+        private Dictionary<Entity, bool> selectedShips = new ();
+        private Dictionary<Entity, bool> selectedUnattachedShips = new ();
+
+        private ConditionalOrder? selectedOrder = null;
+
+        private Dictionary<ConditionItem, int> orderConditionIndexes = new Dictionary<ConditionItem, int>();
+        private int orderComparisonIndex = 0;
+        private string[] orderComparisons;
+        private int orderActionsIndex = 0;
+        private int orderConditionsIndex = 0;
+        private string[] orderActionDescriptions = OrderRegistry.Actions.Keys.ToArray();
+        private string[] orderConditionDescriptions = OrderRegistry.Conditions.Keys.ToArray();
+        private byte[] orderNameBuffer = new byte[32];
+
+        private List<EntityState> moveToList = new ();
+        private List<EntityState> geoSurveyList = new ();
+        private List<EntityState> gravSurveyList = new ();
+        private List<EntityState> colonyList = new ();
+        private List<EntityState> jumpPointList = new ();
+
+        private FleetWindow()
+        {
+            FactionChanged(_uiState);
+
+            _uiState.OnFactionChanged += FactionChanged;
+
+            orderComparisons = new string[5];
+            orderComparisons[0] = ComparisonType.LessThan.ToDescription();
+            orderComparisons[1] = ComparisonType.LessThanOrEqual.ToDescription();
+            orderComparisons[2] = ComparisonType.EqualTo.ToDescription();
+            orderComparisons[3] = ComparisonType.GreaterThan.ToDescription();
+            orderComparisons[4] = ComparisonType.GreaterThanOrEqual.ToDescription();
+        }
+        internal static FleetWindow GetInstance()
+        {
+            if (!_uiState.LoadedWindows.ContainsKey(typeof(FleetWindow)))
+            {
+                return new FleetWindow();
+            }
+            return (FleetWindow)_uiState.LoadedWindows[typeof(FleetWindow)];
+        }
+
+        private void FactionChanged(GlobalUIState uiState)
+        {
+            if(uiState.Faction == null)
+                throw new NullReferenceException();
+
+            factionID = uiState.Faction.Id;
+            factionRoot = uiState.Faction.GetDataBlob<FleetDB>();
+
+            SelectFleet(factionRoot.Children.FirstOrDefault(c => c.HasDataBlob<FleetDB>()));
+        }
+
+        public void SelectFleet(Entity? fleet)
+        {
+            SelectedFleet = fleet;
+            selectedShips = new ();
+            SelectOrder(null);
+
+            SelectedFleet?.TryGetDataBlob<FleetDB>(out selectedFleetDB);
+            if(selectedFleetDB == null || selectedFleetDB.FlagShipID == -1)
+            {
+                selectedFleetFlagship = null;
+                selectedFleetSystem = null;
+            }
+            else
+            {
+                selectedFleetDB.OwningEntity?.Manager?.TryGetEntityById(selectedFleetDB.FlagShipID, out selectedFleetFlagship);
+                if(selectedFleetFlagship != null && selectedFleetFlagship.IsValid && selectedFleetFlagship.TryGetDataBlob<PositionDB>(out var positionDB))
+                {
+                    selectedFleetSystem = positionDB?.Root;
+                }
+                else
+                {
+                    // If the above condition failed the selectedFleetFlagship needs to be set to null
+                    selectedFleetFlagship = null;
+                }
+                selectedFleetInheritOrders = selectedFleetDB.InheritOrders;
+            }
+        }
+
+        private void SelectOrder(ConditionalOrder? order)
+        {
+            selectedOrder = order;
+
+            if(selectedOrder != null)
+            {
+                orderNameBuffer = selectedOrder.Name.IsNullOrEmpty() ? new byte[32] : Utils.BytesFromString(selectedOrder.Name, 32);
+            }
+        }
+
+        internal override void Display()
+        {
+            if(!IsActive) return;
+
+            if(Window.Begin("Fleet Management", ref IsActive, _flags))
+            {
+                DisplayFleetList();
+
+                if(SelectedFleet != null)
+                {
+                    ImGui.SameLine();
+                    ImGui.SetCursorPosY(27f);
+                    var ysize = ImGui.GetContentRegionAvail().Y;
+                    DisplayShips();
+                    ImGui.SetCursorPosY(ysize * 0.5f);
+                    DisplayOrders();
+
+                    ImGui.SameLine();
+                    ImGui.SetCursorPosY(27f);
+
+                    DisplayTabs();
+                }
+            }
+            Window.End();
+        }
+
+        private void DisplayTabs()
+        {
+            if(SelectedFleet == null) return;
+
+            if(ImGui.BeginChild("FleetTabs"))
+            {
+                ImGui.BeginTabBar("FleetTabBar", ImGuiTabBarFlags.None);
+
+                if(ImGui.BeginTabItem("Summary"))
+                {
+                    Vector2 windowContentSize = ImGui.GetContentRegionAvail();
+                    var firstChildSize = new Vector2(windowContentSize.X * 0.99f, windowContentSize.Y);
+                    var secondChildSize = new Vector2(windowContentSize.X * 0.5f - (windowContentSize.X * 0.01f), windowContentSize.Y);
+                    if (ImGui.BeginChild("FleetSummary1", firstChildSize, ImGuiChildFlags.Borders))
+                    {
+                        if (ImGui.CollapsingHeader("Fleet Information", ImGuiTreeNodeFlags.DefaultOpen))
+                        {
+                            ImGui.Columns(2);
+                            DisplayHelpers.PrintRow("Name", SelectedFleet.GetName(factionID));
+
+                            if (selectedFleetFlagship != null)
+                            {
+                                DisplayHelpers.PrintRow("Flagship", selectedFleetFlagship.GetName(factionID));
+
+                                string commanderName = "None";
+                                if (selectedFleetFlagship.TryGetDataBlob<ShipInfoDB>(out var shipInfoDB)
+                                    && shipInfoDB.CommanderID != -1)
+                                {
+                                    if(shipInfoDB.OwningEntity != null && shipInfoDB.OwningEntity.Manager != null)
+                                    {
+                                        shipInfoDB.OwningEntity.Manager.TryGetEntityById(shipInfoDB.CommanderID, out var commanderEntity);
+                                        commanderName = commanderEntity.GetName(factionID);
+                                    }
+                                }
+                                DisplayHelpers.PrintRow("Commander", commanderName);
+                            }
+                            else
+                            {
+                                DisplayHelpers.PrintRow("Flagship", "-");
+                                DisplayHelpers.PrintRow("Commander", "-");
+                            }
+
+                            // Current system
+                            ImGui.PushStyleColor(ImGuiCol.Text, Styles.DescriptiveColor);
+                            ImGui.Text("Current System");
+                            ImGui.PopStyleColor();
+                            ImGui.NextColumn();
+                            if (selectedFleetFlagship != null && selectedFleetSystem != null && selectedFleetFlagship.TryGetDataBlob<PositionDB>(out var positionDB))
+                            {
+                                StarSystem? starSystem = (StarSystem?)positionDB.OwningEntity?.Manager;
+                                if (ImGui.SmallButton(starSystem?.NameDB.OwnersName ?? "Unknown"))
+                                {
+                                    if(starSystem != null)
+                                        _uiState.SetActiveSystem(starSystem.ManagerID);
+                                }
+                                ImGui.NextColumn();
+                                ImGui.Separator();
+
+                                ImGui.PushStyleColor(ImGuiCol.Text, Styles.DescriptiveColor);
+                                ImGui.Text("Orbiting");
+                                ImGui.PopStyleColor();
+                                ImGui.NextColumn();
+                                // Find the first visible parent (hidden entities like surveyed anomalies shouldn't show)
+                                var visibleParent = GetVisibleParent(positionDB, starSystem);
+                                if (ImGui.SmallButton(visibleParent?.GetName(factionID) ?? "Unknown"))
+                                {
+                                    if(visibleParent != null && starSystem != null)
+                                        _uiState.EntityClicked(visibleParent.Id, starSystem.ManagerID, MouseButtons.Primary);
+                                }
+                            }
+                            else
+                            {
+                                ImGui.Text("Unknown");
+                                ImGui.NextColumn();
+                                ImGui.Separator();
+                                ImGui.PushStyleColor(ImGuiCol.Text, Styles.DescriptiveColor);
+                                ImGui.Text("Orbiting");
+                                ImGui.PopStyleColor();
+                                ImGui.NextColumn();
+                                ImGui.Text("Unknown");
+                            }
+                            ImGui.NextColumn();
+                            ImGui.Separator();
+                            DisplayHelpers.PrintRow("Ships", SelectedFleet.GetDataBlob<FleetDB>().GetChildren().Count(x => !x.HasDataBlob<FleetDB>()).ToString());
+                        }
+                        ImGui.Columns(1);
+                    }
+                    ImGui.EndChild();
+                    ImGui.SameLine();
+                    ImGui.EndTabItem();
+                }
+
+                if (ImGui.BeginTabItem("Issue Orders"))
+                {
+                    var size = ImGui.GetContentRegionAvail();
+                    var firstChildSize = new Vector2(size.X * 0.27f, size.Y);
+                    var secondChildSize = new Vector2(size.X * 0.73f - (size.X * 0.01f), size.Y);
+                    if(ImGui.BeginChild("IssueOrders-List", firstChildSize, ImGuiChildFlags.Borders))
+                    {
+                        DisplayHelpers.Header("Available Orders");
+
+                        if(ImGui.Selectable("Move to ...", selectedIssueOrderType == IssueOrderType.MoveTo))
+                        {
+                            selectedIssueOrderType = IssueOrderType.MoveTo;
+                        }
+                        if(ImGui.Selectable("Refuel at ...", selectedIssueOrderType == IssueOrderType.RefuelAt))
+                        {
+                            selectedIssueOrderType = IssueOrderType.RefuelAt;
+                        }
+                        if(SelectedFleet.HasGeoSurveyAbility() && ImGui.Selectable("Geo Survey ...", selectedIssueOrderType == IssueOrderType.GeoSurvey))
+                        {
+                            selectedIssueOrderType = IssueOrderType.GeoSurvey;
+                        }
+                        if(SelectedFleet.HasJPSurveyAbililty() && ImGui.Selectable("Grav Survey ...", selectedIssueOrderType == IssueOrderType.JPSurvey))
+                        {
+                            selectedIssueOrderType = IssueOrderType.JPSurvey;
+                        }
+                        if(ImGui.Selectable("Jump...", selectedIssueOrderType == IssueOrderType.Jump))
+                        {
+                            selectedIssueOrderType = IssueOrderType.Jump;
+                        }
+                    }
+                    ImGui.EndChild();
+                    ImGui.SameLine();
+                    IssueOrdersDisplay(secondChildSize);
+                    ImGui.EndTabItem();
+                }
+
+                if(ImGui.BeginTabItem("Standing Orders"))
+                {
+                    var size = ImGui.GetContentRegionAvail();
+                    var firstChildSize = new Vector2(size.X * 0.33f, size.Y);
+                    var secondChildSize = new Vector2(size.X * 0.67f - (size.X * 0.01f), size.Y);
+                    if(ImGui.BeginChild("StandingOrders-List", firstChildSize, ImGuiChildFlags.Borders))
+                    {
+                        var sizeAvailable = ImGui.GetContentRegionAvail();
+                        DisplayHelpers.Header("Order List");
+                        // if(selectedFleet.GetDataBlob<FleetDB>().Parent.Guid != factionID)
+                        // {
+                        //     if(ImGui.Checkbox("Inherit Orders###fleet-inherit-orders", ref selectedFleetInheritOrders))
+                        //     {
+                        //         var order = FleetOrder.ToggleInheritOrders(factionID, selectedFleet);
+                        //         StaticRefLib.OrderHandler.HandleOrder(order);
+                        //     }
+                        //     if(ImGui.IsItemHovered())
+                        //     {
+                        //         ImGui.SetTooltip("If checked the fleet will inherit it's orders from the fleet above it in the command heirarchy.");
+                        //     }
+                        // }
+                        if(selectedFleetDB?.StandingOrders.Count > 0)
+                        {
+                            var count = selectedFleetDB.StandingOrders.Count;
+                            var orders = selectedFleetDB.StandingOrders.ToArray();
+                            for(int i = 0; i < count; i++)
+                            {
+                                ImGui.PushID("###" + i);
+                                bool isSelected = selectedOrder == orders[i];
+                                var name = orders[i].Name.IsNullOrEmpty() ? "<un-named>" : orders[i].Name;
+                                if(ImGui.Selectable((i + 1) + ". " + name, ref isSelected))
+                                {
+                                    SelectOrder(orders[i]);
+                                }
+                                if(ImGui.BeginPopupContextItem())
+                                {
+                                    if(i > 0 && ImGui.MenuItem("Move Up"))
+                                    {
+                                        var temp = selectedFleetDB.StandingOrders[i - 1];
+                                        selectedFleetDB.StandingOrders[i - 1] = selectedFleetDB.StandingOrders[i];
+                                        selectedFleetDB.StandingOrders[i] = temp;
+                                    }
+                                    if(i < count - 1 && ImGui.MenuItem("Move Down"))
+                                    {
+                                        var temp = selectedFleetDB.StandingOrders[i + 1];
+                                        selectedFleetDB.StandingOrders[i + 1] = selectedFleetDB.StandingOrders[i];
+                                        selectedFleetDB.StandingOrders[i] = temp;
+                                    }
+                                    if(ImGui.MenuItem("Delete Order"))
+                                    {
+                                        selectedFleetDB.StandingOrders.Remove(orders[i]);
+                                        if(isSelected)
+                                            SelectOrder(null);
+                                    }
+                                    ImGui.EndPopup();
+                                }
+                                ImGui.PopID();
+                            }
+                        }
+                        else
+                        {
+                            ImGui.Text("No orders");
+                        }
+
+                        ImGui.SetCursorPosY(sizeAvailable.Y - 12f);
+                        if(ImGui.Button("Create New Order", new Vector2(sizeAvailable.X, 0)))
+                        {
+                            var order = new ConditionalOrder();
+                            selectedFleetDB?.StandingOrders.Add(order);
+
+                            // if this is the first order, select it
+                            if(selectedFleetDB?.StandingOrders.Count == 1)
+                                SelectOrder(order);
+                        }
+                    }
+                    ImGui.EndChild();
+                    ImGui.SameLine();
+                    if(ImGui.BeginChild("StandingOrders-edit", secondChildSize, ImGuiChildFlags.Borders) && selectedOrder != null)
+                    {
+                        var sizeAvailable = ImGui.GetContentRegionAvail();
+                        DisplayHelpers.Header("Order Name");
+                        ImGui.InputText("###order-name-input", orderNameBuffer, 32);
+                        ImGui.NewLine();
+                        DisplayHelpers.Header("Conditions", "If the conditions listed are true, the actions will execute.");
+
+                        var count = selectedOrder.Condition.ConditionItems.Count;
+                        var items = selectedOrder.Condition.ConditionItems.ToArray();
+                        for(int i = 0; i < count; i++)
+                        {
+                            var conditionItem = items[i];
+                            ImGui.PushID(conditionItem.UniqueID);
+                            if(!orderConditionIndexes.ContainsKey(conditionItem)) orderConditionIndexes.Add(conditionItem, 0);
+                            var index = orderConditionIndexes[conditionItem];
+                            var condition = conditionItem.Condition;
+                            ImGui.Button(OrderRegistry.ConditionDescriptions[conditionItem.Condition.GetType()], new Vector2(Math.Max(sizeAvailable.X * 0.4f, 128f), 0f));
+
+                            switch(condition.DisplayType)
+                            {
+                                case ConditionDisplayType.Comparison:
+                                    ComparisonCondition comparisonCondition = (ComparisonCondition)condition;
+                                    int value = (int)comparisonCondition.Threshold;
+                                    int comparisonIndex = Array.IndexOf(orderComparisons, comparisonCondition.ComparisionType.ToDescription());
+                                    ImGui.SameLine();
+                                    ImGui.SetNextItemWidth(Math.Max(sizeAvailable.X * 0.075f, 16f));
+                                    if(ImGui.Combo("###orderComparison", ref comparisonIndex, orderComparisons, orderComparisons.Length))
+                                    {
+                                        ComparisonType? comparisonType = (ComparisonType?)Enum.GetValues(typeof(ComparisonType)).GetValue(comparisonIndex);
+                                        if(comparisonType != null)
+                                            comparisonCondition.ComparisionType = comparisonType.Value;
+                                    }
+                                    ImGui.SameLine();
+                                    ImGui.SetNextItemWidth(Math.Max(sizeAvailable.X * 0.15f, 32f));
+                                    if(ImGui.InputInt(comparisonCondition.Description + "###orderValue", ref value, 1, 5))
+                                    {
+                                        if(value < comparisonCondition.MinValue) value = (int)comparisonCondition.MinValue;
+                                        if(value > comparisonCondition.MaxValue) value = (int)comparisonCondition.MaxValue;
+
+                                        comparisonCondition.Threshold = value;
+                                    }
+                                    break;
+                            }
+
+                            // Show the logical operators UI on all but the last item
+                            ImGui.SameLine();
+                            var position = ImGui.GetCursorPos();
+                            if(i < count - 1)
+                            {
+                                if(conditionItem.LogicalOperation == null)
+                                    conditionItem.LogicalOperation = LogicalOperation.And;
+
+                                ImGui.SetCursorPosY(position.Y + 12f);
+                                if(conditionItem.LogicalOperation == LogicalOperation.And)
+                                {
+                                    ImGui.SetCursorPosX(sizeAvailable.X - 82f);
+                                    if(ImGui.Button("AND"))
+                                    {
+                                        conditionItem.LogicalOperation = LogicalOperation.Or;
+                                    }
+                                }
+                                else
+                                {
+                                    ImGui.SetCursorPosX(sizeAvailable.X - 48f);
+                                    if(ImGui.Button("OR"))
+                                    {
+                                        conditionItem.LogicalOperation = LogicalOperation.And;
+                                    }
+                                }
+                            }
+                            ImGui.SameLine();
+                            ImGui.SetCursorPos(position);
+                            ImGui.SetCursorPosX(sizeAvailable.X - 12f);
+                            if(ImGui.Button("x"))
+                            {
+                                selectedOrder.Condition.ConditionItems.Remove(conditionItem);
+                            }
+                            ImGui.PopID();
+                        }
+
+                        if(ImGui.Button("Add Condition"))
+                        {
+                            if(orderConditionsIndex >= 0 && orderConditionsIndex < orderConditionDescriptions.Length)
+                            {
+                                ConditionItem item = OrderRegistry.Conditions[orderConditionDescriptions[orderConditionsIndex]]();
+                                selectedOrder.Condition.ConditionItems.Add(item);
+                            }
+                        }
+                        ImGui.SameLine();
+                        if(ImGui.Combo("###order-add-condition-list", ref orderConditionsIndex, orderConditionDescriptions, orderConditionDescriptions.Length))
+                        {
+                        }
+
+                        ImGui.NewLine();
+                        DisplayHelpers.Header("Actions", "The actions listed will execute in the order in which they are listed.");
+
+                        foreach(var action in selectedOrder.Actions.ToArray())
+                        {
+                            DisplayActionItem(action);
+                        }
+
+                        if(ImGui.Button("Add Action"))
+                        {
+                            if(orderActionsIndex >= 0 && orderActionsIndex < orderActionDescriptions.Length)
+                            {
+                                var selectedAction = OrderRegistry.Actions[orderActionDescriptions[orderActionsIndex]](factionID, SelectedFleet);
+                                selectedOrder.Actions.Add(selectedAction);
+                            }
+                        }
+                        ImGui.SameLine();
+                        if(ImGui.Combo("###order-add-action-list", ref orderActionsIndex, orderActionDescriptions, orderActionDescriptions.Length))
+                        {
+                        }
+
+                        ImGui.SetCursorPosY(sizeAvailable.Y - 12f);
+                        if(ImGui.Button("Save", new Vector2(sizeAvailable.X, 0)))
+                        {
+                            string name = Utils.StringFromBytes(orderNameBuffer);
+                            if(name.IsNotNullOrEmpty())
+                            {
+                                selectedOrder.Name = name;
+                            }
+                        }
+                    }
+                    ImGui.EndChild();
+                    ImGui.EndTabItem();
+                }
+
+                ImGui.EndTabBar();
+            }
+            ImGui.EndChild();
+        }
+
+        private void IssueOrdersDisplay(Vector2 size)
+        {
+
+            if(ImGui.BeginChild("IssueOrders", size, ImGuiChildFlags.Borders))
+            {
+                if(SelectedFleet == null || SelectedFleet.Manager == null
+                    || _uiState.Faction == null || _uiState.Game == null)
+                {
+                    ImGui.EndChild();
+                    return;
+                }
+
+                switch(selectedIssueOrderType)
+                {
+                    case IssueOrderType.MoveTo:
+                        moveToList = _uiState.StarSystemStates[SelectedFleet.Manager.ManagerID].GetFilteredEntities(
+                            EntityFilter.Friendly | EntityFilter.Neutral,
+                            _uiState.Faction.Id,
+                            new List<Type>() {
+                                typeof(SystemBodyInfoDB),
+                                typeof(PositionDB)
+                            });
+
+                        foreach(var bodyState in moveToList)
+                        {
+                            var name = bodyState.Name;
+                            if(ImGui.Button(name + "###movement-button-" + name))
+                            {
+                                var order = MoveToSystemBodyOrder.CreateCommand(_uiState.Faction.Id, SelectedFleet, bodyState.Entity);
+                                _uiState.Game.OrderHandler.HandleOrder(order);
+                            }
+                        }
+                        break;
+                    case IssueOrderType.GeoSurvey:
+                        geoSurveyList = _uiState.StarSystemStates[SelectedFleet.Manager.ManagerID].GetFilteredEntities(
+                            EntityFilter.Friendly | EntityFilter.Neutral,
+                            _uiState.Faction.Id,
+                            typeof(GeoSurveyableDB));
+
+                        foreach(var bodyState in geoSurveyList)
+                        {
+                            if(!bodyState.Entity.TryGetDataBlob<GeoSurveyableDB>(out var geoSurveyableDB)) continue;
+                            if(geoSurveyableDB.IsSurveyComplete(_uiState.Faction.Id)) continue;
+
+                            var name = bodyState.Name;
+                            if(ImGui.Button(name + "###geosurvey-button-" + name))
+                            {
+                                var order = WarpFleetTowardsTargetOrder.CreateCommand(SelectedFleet, bodyState.Entity);
+                                _uiState.Game.OrderHandler.HandleOrder(order);
+
+                                var order2 = GeoSurveyOrder.CreateCommand(_uiState.Faction.Id, SelectedFleet, bodyState.Entity);
+                                _uiState.Game.OrderHandler.HandleOrder(order2);
+                            }
+                        }
+                        break;
+                    case IssueOrderType.JPSurvey:
+                        gravSurveyList = _uiState.StarSystemStates[SelectedFleet.Manager.ManagerID].GetFilteredEntities(
+                            EntityFilter.Friendly | EntityFilter.Neutral,
+                            _uiState.Faction.Id,
+                            typeof(JPSurveyableDB));
+
+                        foreach(var jpBody in gravSurveyList)
+                        {
+                            if(!jpBody.Entity.TryGetDataBlob<JPSurveyableDB>(out var jpSurveyableDB)) continue;
+                            if(jpSurveyableDB.IsSurveyComplete(_uiState.Faction.Id)) continue;
+
+                            var name = jpBody.Name;
+                            if(ImGui.Button(name + "###jpsurvey-button-" + name))
+                            {
+                                if(jpSurveyableDB.OwningEntity != null)
+                                {
+                                    var order = WarpFleetTowardsTargetOrder.CreateCommand(SelectedFleet, jpSurveyableDB.OwningEntity);
+                                    _uiState.Game.OrderHandler.HandleOrder(order);
+
+                                    var order2 = JPSurveyOrder.CreateCommand(_uiState.Faction.Id, SelectedFleet, jpSurveyableDB.OwningEntity);
+                                    _uiState.Game.OrderHandler.HandleOrder(order2);
+                                }
+                            }
+                        }
+                        break;
+                    case IssueOrderType.Jump:
+                        jumpPointList = _uiState.StarSystemStates[SelectedFleet.Manager.ManagerID].GetFilteredEntities(
+                            EntityFilter.Friendly | EntityFilter.Neutral,
+                            _uiState.Faction.Id,
+                            typeof(JumpPointDB));
+
+                        foreach(var jumpGate in jumpPointList)
+                        {
+                            if(!jumpGate.Entity.TryGetDataBlob<JumpPointDB>(out var jumpGateDB)) continue;
+                            if(!jumpGateDB.IsDiscovered.Contains(_uiState.Faction.Id)) continue;
+
+                            var name = jumpGate.Name;
+                            if(ImGui.Button(name + "###jump-gate-button-" + name))
+                            {
+                                if(jumpGateDB.OwningEntity != null)
+                                {
+                                    JumpOrder.CreateAndExecute(_uiState.Game, _uiState.Faction, SelectedFleet, jumpGateDB);
+                                }
+                            }
+                        }
+                        break;
+                    case IssueOrderType.RefuelAt:
+                        colonyList = _uiState.StarSystemStates[SelectedFleet.Manager.ManagerID].GetFilteredEntities(
+                            EntityFilter.Friendly | EntityFilter.Neutral,
+                            _uiState.Faction.Id,
+                            typeof(ColonyInfoDB));
+
+                        foreach(var colony in colonyList)
+                        {
+                            if(!colony.Entity.TryGetDataBlob<CargoStorageDB>(out var storageDB)) continue;
+
+                            var name = colony.Name;
+                            if(ImGui.Button(name + "###refuelAt-button-" + name))
+                            {
+
+                                //var order = MoveFleetTowardsTargetOrder.CreateCommand(SelectedFleet, jpSurveyableDB.OwningEntity);
+                                var order = WarpFleetTowardsTargetOrder.CreateCommand(SelectedFleet, colony.Entity);
+                                _uiState.Game.OrderHandler.HandleOrder(order);
+
+                                 CargoTransferOrder.CreateRefuelFleetCommand(colony.Entity,  SelectedFleet );
+                                //_uiState.Game.OrderHandler.HandleOrder(order2);
+
+                            }
+                        }
+                        break;
+                }
+            }
+            ImGui.EndChild();
+        }
+
+        private void DisplayOrders()
+        {
+            if(SelectedFleet == null)
+                return;
+
+            var xPosition = ImGui.GetCursorPosX();
+            Vector2 windowContentSize = ImGui.GetContentRegionAvail();
+
+            if (ImGui.BeginChild("Fleet Orders", new Vector2(Styles.LeftColumnWidthLg, windowContentSize.Y), ImGuiChildFlags.Borders))
+            {
+                var orderableDB = SelectedFleet.GetDataBlob<OrderableDB>();
+                DisplayHelpers.Header("Fleet Orders");
+                if (orderableDB.ActionList.Count == 0)
+                {
+                    ImGui.Text("None");
+                }
+                else
+                {
+                    if (ImGui.BeginTable("FleetOrdersTable", 2, Styles.TableFlags | ImGuiTableFlags.SizingStretchProp))
+                    {
+                        ImGui.TableSetupColumn("#", ImGuiTableColumnFlags.None, 0.1f);
+                        ImGui.TableSetupColumn("Order", ImGuiTableColumnFlags.None, 0.9f);
+                        ImGui.TableHeadersRow();
+
+                        var actions = orderableDB.ActionList.ToArray();
+                        for (int i = 0; i < actions.Length; i++)
+                        {
+                            ImGui.TableNextColumn();
+                            ImGui.Text((i + 1).ToString());
+                            ImGui.TableNextColumn();
+                            ImGui.Text(actions[i].Name);
+                            if (ImGui.IsItemHovered())
+                            {
+                                ImGui.BeginTooltip();
+                                ImGui.Text("IsRunning: " + actions[i].IsRunning);
+                                ImGui.Text("IsFinished: " + actions[i].GetIsFinished);
+                                ImGui.EndTooltip();
+                            }
+                        }
+
+                        ImGui.EndTable();
+                    }
+                }
+            }
+            ImGui.EndChild();
+            ImGui.SetCursorPosX(xPosition);
+        }
+
+        private void DisplayShips()
+        {
+            if(SelectedFleet == null) return;
+
+            var xPosition = ImGui.GetCursorPosX();
+            Vector2 windowContentSize = ImGui.GetContentRegionAvail();
+            if (ImGui.BeginChild("FleetSummary2", new Vector2(Styles.LeftColumnWidthLg, windowContentSize.Y * 0.5f - 24f), ImGuiChildFlags.Borders))
+            {
+                DisplayHelpers.Header("Assigned Ships");
+
+                ImGui.PushStyleColor(ImGuiCol.FrameBg, Styles.InvisibleColor);
+                var contentSizeAvail = ImGui.GetContentRegionAvail();
+                if (ImGui.BeginListBox("###assigned-ships", new Vector2(contentSizeAvail.X, contentSizeAvail.Y - Styles.ButtonVerticalOffset)))
+                {
+                    var fleet = SelectedFleet.GetDataBlob<FleetDB>();
+                    foreach (var ship in fleet.GetChildren())
+                    {
+                        // Only display ships
+                        if (ship.HasDataBlob<FleetDB>()) continue;
+
+                        if (!selectedShips.ContainsKey(ship))
+                        {
+                            selectedShips.Add(ship, false);
+                        }
+
+                        string name = ship.GetName(factionID);
+                        if (fleet.FlagShipID == ship.Id)
+                        {
+                            name = "(F) " + name;
+                        }
+                        if (ImGui.Selectable(name, selectedShips[ship], ImGuiSelectableFlags.SpanAllColumns))
+                        {
+                            selectedShips[ship] = !selectedShips[ship];
+                        }
+                        DisplayHelpers.ShipTooltip(ship, factionID);
+                        DisplayShipContextMenu(selectedShips, ship);
+                    }
+                    ImGui.EndListBox();
+                }
+                ImGui.PopStyleColor();
+
+                if(ImGui.Button("Select All/None", new Vector2(contentSizeAvail.X, 0)))
+                {
+                    bool selectAll = !selectedShips.Values.Any(v => v == true);
+                    foreach(var (ship, selected) in selectedShips)
+                    {
+                        selectedShips[ship] = selectAll;
+                    }
+                }
+            }
+            ImGui.EndChild();
+            ImGui.SetCursorPosX(xPosition);
+        }
+
+        private void DisplayFleetList()
+        {
+            if(factionRoot == null) return;
+
+            Vector2 windowContentSize = ImGui.GetContentRegionAvail();
+            if(ImGui.BeginChild("FleetListSelection", new Vector2(Styles.LeftColumnWidthLg, windowContentSize.Y - 24f), ImGuiChildFlags.Borders))
+            {
+                DisplayHelpers.Header("Fleets", "Select a fleet to manage it.");
+
+                // We need a drop target here so nested items can be un-nested to the root of the tree
+                DisplayEmptyDropTarget();
+
+                foreach(var fleet in factionRoot.GetChildren())
+                {
+                    DisplayFleetItem(fleet);
+                }
+
+                var sizeLeft = ImGui.GetContentRegionAvail();
+                ImGui.InvisibleButton("invis-droptarget", new Vector2(sizeLeft.X, 32f));
+                DisplayEmptyDropTarget();
+
+                if(factionRoot.GetChildren().Any(x => !x.HasDataBlob<FleetDB>()))
+                {
+                    DisplayHelpers.Header("Unattached Ships");
+
+                    foreach(var ship in factionRoot.GetChildren())
+                    {
+                        if(ship.HasDataBlob<FleetDB>()) continue;
+
+                        if(!selectedUnattachedShips.ContainsKey(ship))
+                        {
+                            selectedUnattachedShips.Add(ship, false);
+                        }
+
+                        if(ImGui.Selectable(ship.GetName(factionID), selectedUnattachedShips[ship]))
+                        {
+                            selectedUnattachedShips[ship] = !selectedUnattachedShips[ship];
+                        }
+                        DisplayHelpers.ShipTooltip(ship, factionID);
+                        DisplayShipContextMenu(selectedUnattachedShips, ship, isUnattached: true);
+                    }
+                }
+            }
+            ImGui.EndChild();
+
+            if(ImGui.Button("Create New Fleet", new Vector2(Styles.LeftColumnWidthLg, 0f)))
+            {
+                if(_uiState.Game != null && _uiState.Faction != null)
+                {
+                    string name = NameFactory.GetFleetName(_uiState.Game);
+                    var order = FleetOrder.CreateFleetOrder(name, _uiState.Faction, _uiState.SelectedSystem);
+                    _uiState.Game.OrderHandler.HandleOrder(order);
+                }
+            }
+        }
+
+        private void DisplayFleetItem(Entity fleet)
+        {
+            if(!fleet.TryGetDataBlob<FleetDB>(out var fleetInfo))
+            {
+                return;
+            }
+
+            ImGui.PushID(fleet.Id.ToString());
+            string name = fleet.GetName(factionID);
+            var flags = ImGuiTreeNodeFlags.DefaultOpen;
+
+            if(!fleetInfo.GetChildren().Any(x => x.HasDataBlob<FleetDB>()))
+            {
+                flags |= ImGuiTreeNodeFlags.Leaf;
+            }
+
+            if(SelectedFleet == fleet)
+            {
+                flags |= ImGuiTreeNodeFlags.Selected;
+            }
+
+            string description = "";
+
+            fleet.TryGetDataBlob<OrderableDB>(out var orderableDB);
+
+            if(orderableDB == null || orderableDB.ActionList.Count == 0)
+            {
+                description = "No Orders";
+            }
+            else
+            {
+                foreach(var order in orderableDB.ActionList)
+                {
+                    description += order.Name + "\n";
+                }
+            }
+
+            bool isTreeOpen = ImGui.TreeNodeEx(name, flags);
+            if(ImGui.IsItemHovered())
+                DisplayHelpers.DescriptiveTooltip(name, "Fleet", description);
+
+            if(isTreeOpen)
+            {
+                if(ImGui.IsItemClicked())
+                {
+                    SelectFleet(fleet);
+                }
+                DisplayContextMenu(fleet);
+                DisplayDropSource(fleet, name);
+                DisplayDropTarget(fleet);
+                foreach(var child in fleetInfo.GetChildren())
+                {
+                    DisplayFleetItem(child);
+                }
+                ImGui.TreePop();
+            }
+
+            if(!isTreeOpen)
+            {
+                DisplayContextMenu(fleet);
+                DisplayDropSource(fleet, name);
+                DisplayDropTarget(fleet);
+            }
+            ImGui.PopID();
+        }
+
+        private void DisplayContextMenu(Entity fleet)
+        {
+            if(ImGui.BeginPopupContextItem())
+            {
+                if(ImGui.MenuItem("Rename"))
+                {
+                    RenameWindow.GetInstance().SetEntity(fleet);
+                    RenameWindow.GetInstance().SetActive(true);
+                }
+                ImGui.Separator();
+                ImGui.PushStyleColor(ImGuiCol.Text, Styles.TerribleColor);
+                if(ImGui.MenuItem("Disband###delete-" + fleet.Id))
+                {
+                    var order = FleetOrder.DisbandFleet(factionID, fleet);
+                    _uiState.Game?.OrderHandler.HandleOrder(order);
+                    SelectFleet(null);
+                }
+                ImGui.PopStyleColor();
+                ImGui.EndPopup();
+            }
+        }
+
+        private void DisplayShipContextMenu(Dictionary<Entity, bool> selected, Entity ship, bool isUnattached = false)
+        {
+            if(SelectedFleet == null || factionRoot == null) return;
+
+            if(ImGui.BeginPopupContextItem())
+            {
+                if(ImGui.MenuItem("View Ship"))
+                {
+                    _uiState.EntityClicked(ship.Id, _uiState.SelectedStarSystemId, MouseButtons.Primary);
+                }
+                if(!isUnattached)
+                {
+                    if(selectedFleetFlagship != null && ship.Id == selectedFleetFlagship.Id)
+                    {
+                        ImGui.BeginDisabled();
+                    }
+                    if(ImGui.MenuItem("Promote to Flagship"))
+                    {
+                        var setFlagshipOrder = FleetOrder.SetFlagShip(factionID, SelectedFleet, ship);
+                        _uiState.Game?.OrderHandler.HandleOrder(setFlagshipOrder);
+                        SelectFleet(SelectedFleet);
+                    }
+                    if(selectedFleetFlagship != null && ship.Id == selectedFleetFlagship.Id)
+                    {
+                        ImGui.EndDisabled();
+                    }
+                }
+                ImGui.Separator();
+
+                if(ImGui.BeginMenu("Re-assign ships"))
+                {
+                    ImGui.Text("Re-assign ships to:");
+                    ImGui.Separator();
+                    foreach(var fleet in factionRoot.GetChildren())
+                    {
+                        DisplayShipAssignmentOption(selected, ship, fleet, isUnattached: isUnattached);
+                    }
+                    ImGui.EndMenu();
+                }
+                ImGui.EndPopup();
+            }
+        }
+
+        private void DisplayShipAssignmentOption(Dictionary<Entity, bool> selected, Entity ship, Entity fleet, int depth = 0, bool isUnattached = false)
+        {
+            if(!fleet.HasDataBlob<FleetDB>()
+                || factionRoot == null
+                || factionRoot.OwningEntity == null
+                || SelectedFleet == null)
+                return;
+
+            for(int i = 0; i < depth; i++)
+            {
+                ImGui.InvisibleButton("invis", new Vector2(8, 8));
+                ImGui.SameLine();
+            }
+
+            if(fleet == SelectedFleet && !isUnattached)
+            {
+                ImGui.PushStyleColor(ImGuiCol.Text, Styles.DescriptiveColor);
+                ImGui.Text(fleet.GetName(factionID));
+                ImGui.PopStyleColor();
+            }
+            else
+            {
+                ImGui.PushID(fleet.Id.ToString());
+                if(ImGui.MenuItem(fleet.GetName(factionID)))
+                {
+                    if(!selected.Any(x => x.Value))
+                    {
+                        var unassignFrom = factionRoot.Children.Contains(ship) ? factionRoot.OwningEntity : SelectedFleet;
+                        var unassignOrder = FleetOrder.UnassignShip(factionID, unassignFrom, ship);
+                        _uiState.Game?.OrderHandler.HandleOrder(unassignOrder);
+
+                        var assignOrder = FleetOrder.AssignShip(factionID, fleet, ship);
+                        _uiState.Game?.OrderHandler.HandleOrder(assignOrder);
+                    }
+                    else
+                    {
+                        foreach(var (selectedShip, isSelected) in selected)
+                        {
+                            if(!isSelected) continue;
+
+                            var unassignFrom = factionRoot.Children.Contains(selectedShip) ? factionRoot.OwningEntity : SelectedFleet;
+                            var unassignOrder = FleetOrder.UnassignShip(factionID, unassignFrom, selectedShip);
+                            _uiState.Game?.OrderHandler.HandleOrder(unassignOrder);
+
+                            var assignOrder = FleetOrder.AssignShip(factionID, fleet, selectedShip);
+                            _uiState.Game?.OrderHandler.HandleOrder(assignOrder);
+                        }
+                        // Clean up the selections
+                        selected.Clear();
+                    }
+                }
+                ImGui.PopID();
+            }
+
+            foreach(var child in fleet.GetDataBlob<FleetDB>().GetChildren())
+            {
+                DisplayShipAssignmentOption(selected, ship, child, depth + 1, isUnattached);
+            }
+        }
+
+        private void DisplayEmptyDropTarget()
+        {
+            if(ImGui.BeginDragDropTarget())
+            {
+                ImGui.AcceptDragDropPayload("FLEET", ImGuiDragDropFlags.None);
+                if(ImGui.IsMouseReleased(ImGuiMouseButton.Left) && dragEntity != Entity.InvalidEntity)
+                {
+                    if(factionRoot != null && factionRoot.OwningEntity !=null)
+                    {
+                        var order = FleetOrder.ChangeParent(factionID, dragEntity, factionRoot.OwningEntity);
+                        _uiState.Game?.OrderHandler.HandleOrder(order);
+                    }
+                }
+                ImGui.EndDragDropTarget();
+            }
+        }
+
+        private void DisplayDropTarget(Entity fleet)
+        {
+            // Begin Drag Target
+            if (ImGui.BeginDragDropTarget())
+            {
+                ImGui.AcceptDragDropPayload("FLEET", ImGuiDragDropFlags.None);
+                if(ImGui.IsMouseReleased(ImGuiMouseButton.Left) && dragEntity != Entity.InvalidEntity)
+                {
+                    var order = FleetOrder.ChangeParent(factionID, dragEntity, fleet);
+                    _uiState.Game?.OrderHandler.HandleOrder(order);
+                }
+                ImGui.EndDragDropTarget();
+            }
+        }
+
+        private void DisplayDropSource(Entity fleet, string name)
+        {
+            // Begin drag source
+            if(ImGui.BeginDragDropSource(ImGuiDragDropFlags.SourceNoDisableHover))
+            {
+                dragEntity = fleet;
+
+                ImGui.SetDragDropPayload("FLEET", IntPtr.Zero, 0);
+                ImGui.Text(name);
+                ImGui.EndDragDropSource();
+            }
+        }
+
+        private void DisplayActionItem(EntityCommand action)
+        {
+            ImGui.PushID(action.GetHashCode());
+            var size = ImGui.GetContentRegionAvail();
+            ImGui.Text(OrderRegistry.ActionDescriptions[action.GetType()]);
+            ImGui.SameLine();
+            ImGui.SetCursorPosX(size.X - 12f);
+            if(ImGui.Button("x"))
+            {
+                selectedOrder?.Actions.Remove(action);
+            }
+            ImGui.PopID();
+        }
+
+        /// <summary>
+        /// Finds the first visible parent entity in the hierarchy.
+        /// If the immediate parent is hidden (e.g., a surveyed anomaly), walks up the tree
+        /// to find the next visible ancestor.
+        /// </summary>
+        private Entity? GetVisibleParent(PositionDB positionDB, StarSystem? starSystem)
+        {
+            if (starSystem == null)
+                return positionDB.Parent;
+
+            if (!_uiState.StarSystemStates.TryGetValue(starSystem.ManagerID, out var systemState))
+                return positionDB.Parent;
+
+            var parent = positionDB.Parent;
+            while (parent != null)
+            {
+                // Check if this parent is visible to the faction
+                if (systemState.AllEntities.ContainsKey(parent.Id))
+                    return parent;
+
+                // Walk up to the next parent
+                if (parent.TryGetDataBlob<PositionDB>(out var parentPositionDB))
+                    parent = parentPositionDB.Parent;
+                else
+                    break;
+            }
+
+            // If no visible parent found, return the root or null
+            return positionDB.Root != positionDB.OwningEntity ? positionDB.Root : null;
+        }
+    }
+}
