@@ -74,6 +74,8 @@ LogisticsCycle.CargoTask
 
 **Verdict: core automated cargo logistics is functional.** The Aurora-style Maintenance Supply Point system (ships have a clock that consumes MSP to stay operational) is the main known gap. MSP isn't on the ground-combat critical path, but matters for the "logistics depth" goal.
 
+**Faction access:** `LogiShipBidding()` previously had no faction ownership check — any faction's ship would freely service any base. Fixed (this branch): added same-faction guard at line 124 of `LogisticsProcessor.cs`. When a diplomacy system is in place, that hardcoded same-faction guard should be replaced with a `DiplomacyDB.GetRelationship().LogisticsAccess` check to allow allied factions through. See `docs/DIPLOMACY-DESIGN.md`.
+
 ---
 
 ## Phase 4 Relevance

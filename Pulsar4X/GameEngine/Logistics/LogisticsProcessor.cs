@@ -123,6 +123,10 @@ public static class LogisticsCycle
 
         foreach(var tbase in tradingBases)
         {
+            // Same-faction only — cross-faction access requires a diplomacy system (flagged).
+            if(tbase.OwningEntity.FactionOwnerID != shippingEntity.FactionOwnerID)
+                continue;
+
             OrbitDB odb;// = tbase.OwningEntity.GetDataBlob<OrbitDB>();
             if(tbase.OwningEntity.HasDataBlob<OrbitDB>())
                  odb = tbase.OwningEntity.GetDataBlob<OrbitDB>();
