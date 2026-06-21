@@ -1,32 +1,26 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using Pulsar4X.Client;
 
-#if TRACE
-Trace.Listeners.Add(new ConsoleTraceListener());
-#endif
-// dotnet core doesn't have Debug.Listeners for some reason...
-// https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.debug?view=net-10.0
-// https://github.com/dotnet/dotnet-api-docs/issues/4866
-// Run the game
+// Route all Console and Trace output to a log file so every session is recordable.
+var logDir = Path.Combine(
+    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+    "Pulsar4X", "Pulsar4X");
+Directory.CreateDirectory(logDir);
+var logPath = Path.Combine(logDir, "game_log.txt");
+using var logWriter = new StreamWriter(logPath, append: false) { AutoFlush = true };
+Console.SetOut(logWriter);
+Console.SetError(logWriter);
+Trace.Listeners.Add(new TextWriterTraceListener(logWriter, "fileLog"));
+Trace.AutoFlush = true;
+
+Console.WriteLine($"=== Pulsar4X session started {DateTime.Now:yyyy-MM-dd HH:mm:ss} ===");
+Console.WriteLine($"Log: {logPath}");
+
 using (var pulsar = new PulsarMainWindow(args))
 {
-    
     pulsar.Run();
-    /*
-    try
-    {
-        pulsar.Run();
-
-    }
-    catch (Exception e)
-    {
-        Console.WriteLine(e);
-        //todo create a crashsave here.
-        //allow the player to try recover from a crash from the save
-        //don't overwrite normal saves incase it's not recoverable
-        //add extra logs or other data for debugging (such as the error caught above).
-        throw;
-    }*/
-
 }
+
+Console.WriteLine($"=== Session ended {DateTime.Now:yyyy-MM-dd HH:mm:ss} ===");
