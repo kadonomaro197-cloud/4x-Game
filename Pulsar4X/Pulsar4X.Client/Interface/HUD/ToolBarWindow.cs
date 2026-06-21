@@ -158,6 +158,15 @@ namespace Pulsar4X.Client
                 //Display a list of bodies with some info about them.
             };
             SMToolButtons.Add(btn);
+
+            btn = new ToolBarOption()
+            {
+                Picture = _uiState.Img_Select(),
+                TooltipText = "Dev Tools: spawn ships, create colonies, add minerals",
+                OnClick = new Action(DevToolsWindow.GetInstance().ToggleActive),
+                GetActive = new Func<bool>(DevToolsWindow.GetInstance().GetActive),
+            };
+            SMToolButtons.Add(btn);
         }
 
         internal static ToolBarWindow GetInstance()
