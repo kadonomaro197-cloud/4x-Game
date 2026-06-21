@@ -1,6 +1,6 @@
 # Damage — Subsystem Reference
 
-Three implementations exist: `Simple/` (active placeholder for beam hits), `DamageComplex/` (partial component-level system), and `DamageVeryComplex/` (new particle physics simulation, active for asteroids). Lives in `GameEngine/Damage/`.
+Three implementations exist: `Simple/` (dead code), `DamageComplex/` (active — ships and now colonies), and `DamageVeryComplex/` (active for asteroids). Lives in `GameEngine/Damage/`.
 
 ---
 
@@ -8,8 +8,8 @@ Three implementations exist: `Simple/` (active placeholder for beam hits), `Dama
 
 | File | Purpose |
 |------|---------|
-| `Simple/SimpleDamage.cs` | Active placeholder for beam hits. Random component selection, random 100–500 HTK damage. |
-| `DamageComplex/DamageProcessor.cs` | Partial component-level damage path. `OnTakingDamage()` partially wired; colony damage block is commented out. |
+| `Simple/SimpleDamage.cs` | Dead code. Not called from any active path — preserved for test reference. |
+| `DamageComplex/DamageProcessor.cs` | Active damage path. `OnTakingDamage()` routes ships through `DealDamageEnergyBeamSim()` and colonies through `OnColonyDamage()`. |
 | `DamageComplex/DamageTools.cs` | `DealDamageEnergyBeamSim()` — spatial component damage kernel. |
 | `DamageComplex/EntityDamageProfileDB.cs` | DataBlob: HTK remaining per component instance on a ship. Created lazily on first hit. |
 | `DamageComplex/ComponentPlacement.cs` | Spatial placement data for components in a ship cross-section. |
@@ -24,53 +24,68 @@ Three implementations exist: `Simple/` (active placeholder for beam hits), `Dama
 
 ---
 
-## Active Path: SimpleDamage
+## Active Path: DamageComplex (beam hits — wired as of Phase 1a/2)
 
+`BeamWeaponProcessor.OnHit()` → `DamageProcessor.OnTakingDamage()` → `DamageTools.DealDamageEnergyBeamSim()`.
+
+`SimpleDamage` is no longer on the beam hit path. `Simple/SimpleDamage.cs` remains in the project but is not called from any active code path.
+
+### DamageFragment struct (in `DamageTools.cs`)
 ```csharp
-SimpleDamage.OnTakingDamage(Entity entityToDamage, int damageMin, int damageMax)
-  → if entity has ComponentInstancesDB with components:
-      → pick random component index
-      → damage = RNG.Next(damageMin, damageMax)
-      → component.HTKRemaining -= damage
-      → if HTKRemaining <= 0: remove component from ComponentInstancesDB
-      → if no components remain:
-          → if ShipInfoDB present: ShipFactory.DestroyShip(entity)
-          → else: entity.Destroy()
-  → returns DamageResult { Damage, Destroyed }
+public struct DamageFragment
+{
+    public Vector2 Velocity;
+    public (int x, int y) Position;
+    public double Energy;       // joules
+    public float Mass;
+    public float Momentum;
+    public float Density;       // kg/m³
+    public float Length;
+    public double Wavelength;   // nm; 0 = kinetic/non-photon
+}
 ```
 
-Called from: `BeamWeaponProcessor.OnHit()` with `(target, 100, 500)`.
-
-**This is a placeholder.** The 100–500 range and random component selection are not physics-based.
-
----
-
-## Intended Path: DamageProcessor (PARTIALLY STUBBED)
-
-`DamageProcessor.OnTakingDamage(Entity damageableEntity, DamageFragment damageFragment)`:
-
+### DamageResistBlueprint (in `DamageTools.cs`)
+```csharp
+public class DamageResistBlueprint : Blueprint
+{
+    public byte IDCode;
+    public int HitPoints;
+    public int MeltingPoint;
+    public float Density;
+    // Bands: UV(0-400nm)=0, Vis(400-700nm)=1, NIR(700-2000nm)=2, MIR(2000-5000nm)=3, FIR(5000+nm)=4
+    // 0.0=transparent, 1.0=fully absorbing
+    public float[] WavelengthAbsorption = { 0.5f, 0.5f, 0.5f, 0.5f, 0.5f };
+}
 ```
-if entity has EntityDamageProfileDB:
-    DamageTools.DealDamageEnergyBeamSim(profile, fragment) → damages
-    foreach damage: profile.ComponentLookupTable[id].HTKRemaining -= damage.damageAmount
+JSON must use `"UniqueID"` field for the byte IDCode (mapped via `[JsonProperty("UniqueID")]` on constructor parameter). `WavelengthAbsorption` arrays are populated from JSON after construction. Data file: `GameData/basemod/TemplateFiles/damageResistance.json`.
 
-if entity has ComponentInstancesDB: [body is EMPTY — not yet implemented]
-```
-
-**Colony damage block (lines ~101–181) is entirely commented out.** It was the design for orbital bombardment:
-- Population casualties based on damage amount
-- Atmospheric dust + radiation effects
-- Random installation targeting using `MassVolumeDB.Volume_km3` (may no longer exist)
-- `ComponentInstanceData` type reference (may have been renamed)
-
-### DamageFragment (struct, likely in DamageProcessor.cs)
-Fields used in the commented call:
-- `Velocity`, `RelativePosition`, `Mass`, `Density`, `Momentum`, `Length`, `Energy`
+### DealDamageEnergyBeamSim() — how it works now
+- Traverses ship damage bitmap pixel by pixel from entry point toward center.
+- Loop stops when energy falls below 0.1% of starting energy, or beam exits bitmap.
+- Per pixel: looks up material by R channel (IDCode). Unknown materials are transparent (beam passes through).
+- Beer-Lambert absorption: `energyDeposited = energy * absorption_coefficient`. `energy -= energyDeposited`.
+- 1 damage point per 100J deposited (`damageAmount = Max(1, (int)(energyDeposited * 0.01))`).
+- Damage applied in `DamageProcessor`: `HealthPercent -= damageAmount * 0.001f` (1000 points = 100% health).
 
 ### EntityDamageProfileDB
 - Created from `ShipInfoDB.Design` when a ship first takes damage (lazy creation).
-- `ComponentLookupTable: Dictionary<id, ComponentLookupEntry>` where entry has `HTKRemaining`.
-- Should ideally be pre-created at ship construction, not lazily — lazy creation can miss the first hit.
+- `ComponentLookupTable: List<ComponentInstance>` — G-channel is 1-indexed but table is 0-indexed (off-by-one gotcha).
+- Should ideally be pre-created at ship construction, not lazily.
+
+### OnColonyDamage() — orbital bombardment (wired, in DamageProcessor.cs)
+
+`DamageProcessor.OnTakingDamage()` routes to `OnColonyDamage()` when the target has `ColonyInfoDB` but not `EntityDamageProfileDB` (i.e., it's a colony, not a ship).
+
+**Energy → damage strength:** `damageStrength = Max(1, (int)(energy / 1e8))`. 100 MJ = 1 unit. A typical missile warhead (1–100 TJ) yields 10,000–1,000,000 units. Adjust the divisor when warhead energies are finalized.
+
+**Population casualties:** `quarter_million × damageStrength`, capped at total population. Distributed proportionally across species.
+
+**Atmospheric contamination:** `AtmosphericDust` and `RadiationLevel` on the colony's planet both increase by `damageStrength × 0.001`, capped at 1.0 and 10.0 respectively.
+
+**Installation damage:** picks random `ComponentInstance`s from `ComponentInstancesDB.AllComponents`, drains `HealthPercent` until the damage budget is spent or 20 consecutive misses exhaust the attempt cap. Destroyed installations are removed via `RemoveComponentInstance()`. Calls `ReCalcProcessor.ReCalcAbilities()` after.
+
+**Important:** `OnColonyDamage` is only reachable if a weapon actually targets the colony *entity*, not just the planet body. Missiles must have their target set to the colony entity. Currently only beam weapons call `OnTakingDamage()` — missile guidance is incomplete (see `Weapons/CLAUDE.md`).
 
 ---
 
@@ -94,28 +109,26 @@ This is the active direction on DevBranch. It's a full 2D particle physics simul
 
 ---
 
-## Decision Point: Which Damage Path Forward?
+## Path Decision (Made)
 
-| Path | Status | Pros | Cons |
-|------|--------|------|------|
-| `SimpleDamage` | Active for beam hits | Works | Random, not physics-based |
-| `DamageComplex` | Partially stubbed | Aurora-style component HTK | Incomplete, colony damage commented out |
-| `DamageVeryComplex` | Active for asteroids, partial for beams | Physically rigorous | Incomplete, complex to extend |
+| Path | Status | Role |
+|------|--------|------|
+| `SimpleDamage` | No longer called | Dead code — preserved in case needed for testing |
+| `DamageComplex` | **Active for beam hits** | Forward path for ship and future ground combat damage |
+| `DamageVeryComplex` | Active for asteroid impacts | Complex particle physics sim — not used for beam hits |
 
-**Do not start ground combat damage until this decision is made.** Ground combat damage (AP rounds, artillery, orbital strikes) should use whichever path becomes the official forward direction.
+**DamageComplex is the forward direction.** Ground combat damage (AP rounds, artillery, orbital strikes) extends from this path.
 
 ---
 
-## Ground Combat Extension Point (After Path Decision)
+## Ground Combat Extension Points
 
-For DamageComplex path:
-1. Uncomment and update the colony damage block in `DamageProcessor.OnTakingDamage()` (~lines 101–181).
-2. Verify `MassVolumeDB.Volume_km3` still exists (it does — verified in Galaxy/).
-3. Create `GroundUnitDamageProfileDB` mirroring `EntityDamageProfileDB` for ground units.
+**Colony orbital bombardment** — done. `OnColonyDamage()` handles population, atmosphere, and installation damage when a weapon hits a colony entity.
 
-For DamageVeryComplex path:
-1. Create a `DamageMap` for ground unit cross-sections.
-2. Wire `GroundCombatProcessor` to call `DamagePhysicsSim.PhysicsLoop()` with appropriate projectile particles.
+**Remaining work for full ground combat integration:**
+1. Create `GroundUnitDamageProfileDB` mirroring `EntityDamageProfileDB` for ground unit formations.
+2. Add ground unit damage routing in `OnTakingDamage()` — check for `GroundUnitDB` (to be created) the same way colony checks for `ColonyInfoDB`.
+3. Wire the missile guidance path to actually call `OnTakingDamage()` on impact — currently missiles are launched but never connect (guidance incomplete, see `Weapons/CLAUDE.md`).
 
 ---
 
@@ -123,6 +136,8 @@ For DamageVeryComplex path:
 
 1. **`EntityDamageProfileDB` is lazily created.** The first hit on a ship without this blob creates it inline. This means the first hit's spatial placement may be slightly wrong (the profile is built from current state, not initial state). Fix: create at ship construction.
 
-2. **Colony damage code references types that may not exist.** `ComponentInfoDB`, `ComponentInstanceData` in the commented block may have been renamed/removed. Verify each type before uncommenting.
+2. **Colony damage energy scaling needs real warhead data.** The 1e8 J/unit divisor in `OnColonyDamage()` is a placeholder. When missile warhead energies are finalized in `ordnanceDesigns/`, calibrate this to produce meaningful but survivable damage per strike. Population casualties (250k/unit) and atmospheric contamination (0.001/unit) scale from the same divisor.
 
 3. **`DamageTools.DealDamageEnergyBeamSim()`** is the spatial simulation kernel. Read it carefully before wiring — it computes hit location against a component placement grid. If `ComponentPlacement` data is not populated, results will be wrong.
+
+4. **Missiles don't deliver damage yet.** `OnColonyDamage()` is wired and ready, but the missile guidance path never calls `OnTakingDamage()` on impact. Ground combat orbital bombardment depends on fixing missile guidance first.

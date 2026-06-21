@@ -15,13 +15,15 @@
         "BuildPointCost": "[Mass]"
       },
       "ResourceCost": {
-        "aluminium": "[Mass] * 0.3",
+        "aluminium": "[Mass] * 0.28",
         "stainless-steel": "[Mass] * 0.1",
         "plastic": "[Mass] * 0.1",
         "copper": "[Mass] * 0.1",
         "tungsten": "[Mass] * 0.2",
         "titanium": "[Mass] * 0.1",
-        "graphite": "[Mass] * 0.1"
+        "graphite": "[Mass] * 0.1",
+        "electronics": "[Mass] * 0.05",
+        "ree-magnetics": "[Mass] * 0.02"
       },
       "ComponentType": "Weapon",
       "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
@@ -212,16 +214,16 @@
         },
         {
           "Name": "genericWpnAtbArgs",
-          "DescriptionFormula": "'int magSize, int reloadPerSec, int amountPerShot, int minShotsPerfire\nAtbConstrArgs(PropertyValue('Charge Period') * PropertyValue('Power Input'), PropertyValue('Power Input'), PropertyValue('Pulse Energy'), 1)",
+          "DescriptionFormula": "'int magSize, int reloadPerSec, int amountPerShot, int minShotsPerfire. MagSize=100 abstract units; one shot costs 100 units; reload rate fills one charge period worth per second.",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(2, 1, 2, 2)",
+          "PropertyFormula": "AtbConstrArgs(100, Max(1, Ceiling(100 / PropertyValue('Charge Period'))), 100, 1)",
           "AttributeType": "Pulsar4X.Weapons.GenericWeaponAtb"
         },
         {
           "Name": "genericBeamWpnAtbArgs",
-          "DescriptionFormula": "'int range, double wavelength, int wattage",
+          "DescriptionFormula": "'double maxRange, double wavelength, double pulseEnergy, double focalLength, double chargePeriod, double thermalOutput_W, double allowThermalOverride",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('Range'), PropertyValue('Target Wavelength'), PropertyValue('Pulse Energy'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Range'), PropertyValue('Target Wavelength'), PropertyValue('Pulse Energy'), PropertyValue('Focal Length'), PropertyValue('Charge Period'), PropertyValue('Thermal Output'), 0)",
           "AttributeType": "Pulsar4X.Weapons.GenericBeamWeaponAtb"
         }
       ]

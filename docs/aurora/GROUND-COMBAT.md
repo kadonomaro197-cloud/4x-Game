@@ -96,12 +96,62 @@ A Ground Unit Class fills its slots with researched components. Every component 
 **Cadence:** one combat round per ⚠️ **3 hours (wiki) / 8 hours (manual)** of game time, resolved after the naval phase, whenever hostile forces share a body.
 
 ### Field positions
-| Position | Can target | Fortification | Notes |
-|----------|-----------|---------------|-------|
-| **Front-Line Attack** | any enemy position | forfeits all fort bonuses | doubled morale gain from kills; needs supply |
-| **Front-Line Defence** | front-line enemies only | keeps fort bonuses | standard morale |
-| **Support** | indirect-fire only | n/a | bombardment; med-artillery targets elements, heavy targets whole formations; fires alongside orbital bombardment |
-| **Rear Echelon** | very limited | n/a | logistics; 5% target-size modifier (hard to hit) |
+
+This fork adds a **Reserve** position (5th slot) beyond Aurora's four. See §4a for full Reserve / hidden-force rules.
+
+| Position | Can target | Fortification | Visible to enemy | Notes |
+|----------|-----------|---------------|-----------------|-------|
+| **Front-Line Attack** | any enemy position | forfeits all fort bonuses | Yes | doubled morale gain from kills; needs supply |
+| **Front-Line Defence** | front-line enemies only | keeps fort bonuses | Yes | standard morale |
+| **Support** | indirect-fire only | n/a | Yes (position known, not composition) | bombardment; med-artillery targets elements, heavy targets whole formations |
+| **Rear Echelon** | very limited | n/a | Yes (position known) | logistics; 5% target-size modifier (hard to hit) |
+| **Reserve** | none (not yet engaged) | n/a | **No** | hidden force; committed by order to bypass front-line shield |
+
+### Why position is a mechanical shield, not just a label
+
+A formation in Support or Rear Echelon **cannot be targeted** until all formations in front of it are destroyed or routed. This is not optional — it is a hard rule. An artillery battery in Support fires every round in safety while the front line holds. The moment the front line collapses, that battery is exposed and becomes the primary target for everything.
+
+This creates the core dramatic tension of ground combat in this fork:
+
+- **Carriers, siege weapons, heavy artillery, Warlord-class units** belong in Support. Their value is continuous indirect fire while shielded. Their weakness is that direct-fire weapons (which most of them carry for self-defence) **cannot be used from Support position**. A titan in Support fires its Apocalypse missiles; it does not brawl. It is powerful behind the line and vulnerable in front of it.
+- **Front-line formations exist to buy time** for the Support position to work. Their morale, fortification, and staying power are what protect the rear.
+- **Breaking the front line** is the decisive moment. When it goes, the enemy can suddenly reach the carrier/titan/artillery, and the engagement changes character entirely — from managed attrition to crisis.
+
+### Visual design for position (performance-conscious)
+
+Even with thousands of units, the combat window renders **positions, not individual units.** Formations are grouped into position slots and displayed as cards. A player with 1,000 ground units in 20 formations across 3 positions sees 20 cards, not 1,000 icons.
+
+```
+┌─────────────────────────────────────────┐
+│  ENEMY FRONT LINE                       │
+│  [3rd Infantry Btn] [AT Rgt] [Armor Bn] │
+├─────────────────────────────────────────┤
+│  ←── engagement zone / target lines ──►│
+├─────────────────────────────────────────┤
+│  YOUR FRONT LINE                        │
+│  [1st Marines]  [2nd Tank Bn]           │
+│                                         │
+│  YOUR SUPPORT                           │
+│  [Artillery Bde]  ← target lines here  │
+│  [Carrier Strike Gp]  ← protected      │
+│                                         │
+│  YOUR REAR ECHELON                      │
+│  [Logistics Rgt]                        │
+└─────────────────────────────────────────┘
+```
+
+Target lines (see `Pulsar4X.Client/CLAUDE.md` — Target Lines spec) run between **position cards**, not individual units. A red line from an enemy Front card to your Support card is the visual signal that your front line is gone and your carrier is taking fire. This is readable at a glance, renders as a handful of rectangles and lines, and scales to any army size.
+
+The same position-slot model applies to **space combat fleet formations**:
+
+| Fleet Role | Typical ships | Protected by | Exposed when |
+|-----------|--------------|-------------|-------------|
+| Screen | Destroyers, frigates | — (front) | Always |
+| Main Line | Cruisers, battleships | Screen | Screen gone |
+| Fire Support | Carriers, monitors, siege ships | Main Line | Main Line gone |
+| Logistics | Tankers, repair tenders | All of above | Catastrophic loss |
+
+A carrier in Fire Support launches fighters and fires long-range ordnance every round while the Main Line holds. If the Main Line is destroyed, the carrier is suddenly the closest armed vessel — and its point-defense turrets, designed for missiles not warships, are all it has left.
 
 ### Hit → penetrate → destroy (three rolls)
 ```
@@ -137,6 +187,128 @@ Combat-capability specialisations (Mountain/Jungle/Desert Warfare, Extreme Temp/
 - Effectiveness scales linearly: `Strength × Morale/100`.
 - Breakthrough = `Cohesion × BreakthroughRating`; at ≥30% the attacker gets extra attacks.
 - Morale recovers between rounds per commander training bonus; base post-drop recovery ≈ 100/yr.
+
+---
+
+## 4a. Reserve Forces and NPC Tactical AI (fork additions)
+
+### Reserve position — hidden and cloaked forces
+
+The **Reserve** position is a fifth field slot not present in vanilla Aurora. It works differently from all others:
+
+**Rules:**
+- A formation in Reserve **cannot fire** and **cannot be targeted** — it is sitting out of the engagement entirely.
+- The enemy does **not automatically see it** in the position display — but see Detection below.
+- The controlling player (or AI) issues a **Commit Reserve** order designating a specific enemy position as the target.
+- On commitment, the Reserve enters the engagement **directly against the designated enemy position**, bypassing the normal front-line shield rule. This represents a flanking maneuver, ambush, airdrop, or tunneling assault.
+- After commitment the formation is treated as Front-Line Attack. Normal rules apply from that point.
+
+**Reserve detection — concealment is earned, not automatic**
+
+A Reserve in the open with all systems running is detectable. Hiding is an active effort with three layers:
+
+| Concealment layer | What provides it | Time cost | Trade-off |
+|------------------|-----------------|-----------|-----------|
+| **EMCON** (emissions control) | Shutting down non-essential comms, radar, active sensors | Hours to implement | Force is partially blind while dark |
+| **Environmental cover** | Dense forest/jungle, nebula, underground, urban clutter — multiplies enemy detection difficulty | Time to move into position | Moving resets fortification to 0 |
+| **Active stealth component** | Tech-gated hardware installed on unit design | None (permanent) | Cost, reduced mobility, maintenance |
+
+Each round an enemy with sensor capability rolls a detection check against the Reserve's concealment rating. If the check succeeds, the Reserve's **position is revealed** — the enemy knows it exists, may be able to target it before commitment, and the ambush advantage is lost.
+
+**Commander effect on concealment:** A high-GCM (manoeuvre) commander maintains EMCON discipline — troops don't break radio silence early, movement is timed to reduce sensor returns. A poor commander's forces are sloppy: random EM spikes, early movement. On the detecting side, a commander with sensor/intel specialization gets bonus to detection checks against enemy Reserves.
+
+**Hidden vs cloaked:**
+
+| Type | What enemy sees without detection check | Tech required |
+|------|----------------------------------------|--------------|
+| Reserve (basic EMCON + cover) | Nothing if concealment holds; revealed by successful detection check | None |
+| Sensor-cloaked Reserve | Nothing; significantly higher detection threshold | Cloaking component (tech-gated) |
+
+---
+
+### NPC tactical AI — phased approach
+
+**Phase C (initial): Utility scoring**
+
+Each formation evaluates its options each round by scoring them from observable game state and picks the highest score:
+
+```
+Score(stay Front-Line Attack)   = MyStrength × EnemyFrontThreat × MySupplyLevel
+Score(pull back to Support)     = CasualtyRateThisRound × MyIndirectFireValue × ReplacementAvailable
+Score(commit Reserve)           = FrontLineCritical × ReserveStrength × EnemyRearVulnerability
+Score(full retreat)             = (1 - Morale) × (1 - StrategicValueWeight) × ReinforcementETA
+```
+
+Fast, deterministic, debuggable. Good enough to require real player thought. Predictable once the player learns it — which motivates Phase D.
+
+**Phase D (improved): Hybrid commander GOAP + formation utility**
+
+Goal-Oriented Action Planning (GOAP) — used in F.E.A.R., Halo, serious strategy AI — is not machine learning. The commander holds a *goal* ("destroy enemy carrier", "hold colony for 3 days until reinforcements arrive") and finds a sequence of actions that achieves it by doing A* pathfinding through an action graph. Still runs in microseconds.
+
+Example action chain for "destroy enemy carrier":
+```
+Goal: EnemyCarrierDestroyed
+Action sequence:
+  [HoldFrontLine]       precondition: FrontLineExists    effect: BuysTime
+  [WaitForExposure]     precondition: BuysTime           effect: EnemySupportExposed
+  [CommitReserve]       precondition: EnemySupportExposed effect: ReserveTargetsCarrier
+  [PressThroughRear]    precondition: ReserveEngaged     effect: EnemyCarrierDestroyed
+```
+
+The commander runs GOAP. Formations under that commander use utility scoring to execute — but the commander shifts their score weights: "hold front line" is up-weighted for all formations until the commit signal fires.
+
+This is a multi-step plan, not reactive scoring. The Reserve gets committed at the *right moment* because the plan requires it, not because the current round's FrontLineCritical score happened to tip over a threshold.
+
+**The structure supports this cleanly in Pulsar's ECS:**
+- Commander entity gets a `TacticalGoalDB` and a `TacticalPlanDB`
+- Formation entities keep their utility scoring but accept weighted priorities from the commander
+- Adding GOAP to the commander is additive — it doesn't require rewriting formation logic
+
+**Ruled out permanently:**
+- Reinforcement learning (requires massive offline training, can't run on weak hardware)
+- LLMs (latency, cost, requires internet, no offline play)
+
+**Commander skill as quality multiplier (both phases):**
+
+| Commander rating | Effect |
+|----------------|--------|
+| High **GCM** (manoeuvre) | Reserve commit timing more precise; EMCON maintained longer |
+| High **GCO** (direct fire) | Attack/hold threshold better calibrated |
+| High **GCT** (training) | Morale term recovers faster; retreat scored less |
+| Low skill | Scoring is noisier; GOAP chains break earlier |
+
+**Faction personality (JSON-moddable weight constants):**
+
+| Archetype | Scoring bias |
+|----------|-------------|
+| Aggressive | Attack ×1.5, retreat ×0.3 |
+| Defensive | Fortification ×2.0, advance ×0.5 |
+| Guerrilla | Reserve/ambush ×2.0, never holds a fair fight |
+| Fanatical | Morale term removed from retreat; holds until destroyed |
+| Swarm | CasualtyRate ignored; always commits everything |
+
+---
+
+### Commander capacity cap
+
+Every commander has a `CommandCapacity` — the maximum effective size of forces under their control. This is the mechanism that prevents "stack of doom" without an artificial flat cap.
+
+**Ground forces:** Capacity is in tons of unit mass, matching Aurora's HQ component already in §3. Command capacity = HQ type installed on the headquarters formation element.
+
+**Space fleets:** Capacity is in total Hull Size (HS) of ships in the fleet. An admiral's rank and skill determine how large a fleet they can command effectively.
+
+**Efficiency scaling:**
+
+| Force size vs capacity | Effect |
+|-----------------------|--------|
+| ≤ 50% | Commander underutilized — no penalty, wasted potential |
+| 51–100% | Full bonuses apply |
+| 101–150% | Bonuses scale down proportionally with overage |
+| > 150% | Coordination breaks — formations lose same-position synergy bonuses |
+
+You can assign more units than a commander can handle — nothing stops you — but effectiveness degrades. A large invasion requires either a high-rank commander with large CommandCapacity or multiple sub-commanders each commanding their own fleet/formation group. This creates real decisions: promote a capable commander and wait for them to develop, or split the force into smaller independently-commanded groups.
+
+**Stellaris comparison:** Stellaris uses flat naval capacity as a global resource pool. This design uses per-commander capacity instead. The result is that force size is bounded not by a game-wide resource but by the quality of the officer corps — which makes the People system meaningful rather than decorative.
 
 ---
 
@@ -216,3 +388,52 @@ Mirror Pulsar's ship pipeline. A ground unit is **an entity with `ComponentInsta
 | Ground UI | `GroundForcesWindow` + a `PlanetaryWindow` tab; reuse `ComponentInstancesDBDisplay` for unit loadouts | `Pulsar4X.Client/` |
 
 **Dependency note:** ground-combat damage must sit on the **complex `DamageProcessor`**, which is currently stubbed/placeholder (`SimpleDamage` is active instead). That is why PLAN.md Phase 1 (fix complex damage) is a hard prerequisite for ground combat — see root `CLAUDE.md` gotcha #1 and `Damage/CLAUDE.md`.
+
+---
+
+## 9. Weapon Specialisation — Why "Bigger Number" Doesn't Win
+
+This section captures a deliberate design decision for this fork: **the right tool must beat the wrong tool regardless of raw quantity.** A formation armed entirely with point-defense turrets should not defeat a formation built for direct-fire combat, even if the PD turrets have nominally higher total attack power.
+
+### How Aurora handles it (the AP/Armor floor)
+
+Aurora's two-roll combat sequence (penetrate → destroy) already enforces this, but it isn't obvious at first glance. The key is the penetration roll:
+
+```
+PenetrationChance = (WeaponAP / TargetArmor)²
+```
+
+Personal weapons have AP 1. A medium vehicle has Armor 4. Penetration chance = `(1/4)² = 6.25%`. Effectively zero — your rifle squad is useless against that tank. The formula means **wrong-tool weapons scale down to nearly nothing against the wrong target class**, not just "do less damage."
+
+| Weapon | AP | vs Infantry (armor 1) | vs Light Vehicle (armor 4) | vs Heavy Vehicle (armor 6) |
+|--------|:--:|:---------------------:|:--------------------------:|:--------------------------:|
+| Personal Weapons | 1 | 100% pen | 6.25% pen | 2.8% pen |
+| Anti-Vehicle (Med) | ~8 | auto | auto | 178% → auto |
+| Bombardment (Heavy) | ~2 | 400% → auto | 25% pen | 11% pen |
+
+Artillery is effective against infantry and emplaced positions; useless against armored vehicles. Anti-vehicle missiles are devastating against tanks; wasteful against rifle squads. The composition of your formation determines who you can and cannot fight effectively.
+
+### What this fork adds beyond Aurora (design intent)
+
+Aurora's AP/Armor system is the mechanism but the **weapon design UI doesn't make it obvious**. When a player designs a ground unit, they should see clearly what it's effective against. Proposed additions:
+
+**1. Target class labels on unit designs**
+
+Every Ground Unit Class should display its effective target classes in the design window — similar to how Aurora's `To-Hit modifier vs it` column tells you how hard something is to hit. Show derived effectiveness:
+
+| Unit Type | Strong vs | Weak vs |
+|-----------|-----------|---------|
+| Rifle Infantry | Infantry | Vehicles, Emplacements |
+| Anti-Tank Squad | Vehicles | Infantry (overkill AP), Air |
+| Artillery Battery | Emplacements, Infantry | Vehicles (too mobile), Air |
+| CIWS Platform | Missiles, Fighters | Everything ground |
+
+**2. Formation composition warnings**
+
+When a player assembles a Formation from Elements, the UI should flag imbalanced compositions: "This formation has no anti-armour capability" or "No anti-air elements — vulnerable to ground-support fighters."
+
+**3. The space-combat parallel (PD turrets vs destroyers)**
+
+The same principle applies to ships. A carrier with only point-defense turrets has high nominal "weapon count" but near-zero AP against armored warship hulls. When space combat damage is wired properly (Phase 1), beam weapon AP vs ship armor should produce the same discriminator. The `DamageComplex` path has the weapon penetration mechanics — they just need to be active and the weapon designs need realistic AP values.
+
+**Design rule: weapon specialisation must be visible, not hidden in formulas.** The player should be able to look at a unit or ship design and understand immediately what it counters and what counters it. If that's not readable from the UI, the balance is right but the decision-making is broken.

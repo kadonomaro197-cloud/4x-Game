@@ -65,6 +65,21 @@ namespace Pulsar4X.Factions
             var factionInfoDB = faction.GetDataBlob<FactionInfoDB>();
             var factionDataStore = factionInfoDB.Data;
 
+            if (rootJson["isNPC"] != null)
+                factionInfoDB.IsNPC = rootJson["isNPC"].Value<bool>();
+
+            var doctrineNode = rootJson["doctrine"];
+            if (doctrineNode != null)
+            {
+                factionInfoDB.Doctrine = new DoctrineVector
+                {
+                    Economic  = doctrineNode["economic"]?.Value<float>()  ?? 0.25f,
+                    Military  = doctrineNode["military"]?.Value<float>()  ?? 0.25f,
+                    Tech      = doctrineNode["tech"]?.Value<float>()      ?? 0.25f,
+                    Expansion = doctrineNode["expansion"]?.Value<float>() ?? 0.25f
+                };
+            }
+
             var componentDesignsToLoad = (JArray?)rootJson["componentDesigns"];
             foreach(var componentDesignToLoad in componentDesignsToLoad)
             {

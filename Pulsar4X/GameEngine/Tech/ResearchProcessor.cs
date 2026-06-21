@@ -119,6 +119,17 @@ namespace Pulsar4X.Technology
                     factionInfo.IndustryDesigns[tech.UniqueID] = tech.Design;
                 }
 
+                // Sync any materials this tech unlocked — Unlock() already moved them to CargoGoods
+                // but IndustryDesigns is only populated at startup via SetIndustryDesigns().
+                if (tech.Unlocks.TryGetValue(tech.Level, out var unlockedIds))
+                {
+                    foreach (var unlockId in unlockedIds)
+                    {
+                        if (factionDataStore.CargoGoods.IsMaterial(unlockId))
+                            factionInfoDB.IndustryDesigns[unlockId] = (IConstructableDesign)factionDataStore.CargoGoods[unlockId];
+                    }
+                }
+
                 // if (cycleProject)
                 //     scientist.ProjectQueue.Add((project.UniqueID, true));
 

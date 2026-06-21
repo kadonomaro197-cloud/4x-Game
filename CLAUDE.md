@@ -130,6 +130,7 @@ See `ARCHITECTURE.md` for the full data-flow diagram.
 | Fleets | `GameEngine/Fleets/` | `GameEngine/Fleets/CLAUDE.md` |
 | Logistics | `GameEngine/Logistics/` | `GameEngine/Logistics/CLAUDE.md` |
 | Research/Tech | `GameEngine/Tech/` | `GameEngine/Tech/CLAUDE.md` |
+| Factions | `GameEngine/Factions/` | `GameEngine/Factions/CLAUDE.md` |
 | People / Commanders | `GameEngine/People/` | `GameEngine/People/CLAUDE.md` |
 | UI Client | `Pulsar4X.Client/` | `Pulsar4X.Client/CLAUDE.md` |
 | Tests | `Pulsar4X.Tests/` | *(see Testing section below)* |
@@ -145,6 +146,8 @@ See `ARCHITECTURE.md` for the full data-flow diagram.
 | `docs/aurora/GROUND-COMBAT.md` | Building ground forces, formations, invasion, bombardment-vs-ground. |
 | `docs/aurora/PLANETARY-INFRASTRUCTURE.md` | Adding installations, construction, economy depth. |
 | `docs/aurora/SPACE-COMBAT-BENCHMARK.md` | Calibrating "the same depth space combat has." |
+| `docs/RESOURCES-AND-MATERIALS-DESIGN.md` | Designing anything touching minerals, materials, production, commerce, research, or NPC economic AI. Full system survey — read before changing any part of the economy. |
+| `docs/DIPLOMACY-DESIGN.md` | Designing anything touching faction relationships, IFF, inter-faction trade, logistics access, NPC doctrine, or diplomatic state. Full system survey — read before adding any cross-faction interaction. |
 
 ---
 
@@ -184,7 +187,7 @@ Test utilities live in `TestHelper.cs` and `TestingUtilities.cs`.
 
 ## Critical Gotchas
 
-1. **Three damage paths, no clear winner.** `BeamWeaponProcessor.OnHit()` still calls `SimpleDamage.OnTakingDamage(entity, 100, 500)` — a random 100–500 placeholder. DevBranch added a third path: `DamageVeryComplex/` — a 2D particle physics simulation (active for asteroid strikes). The original `DamageComplex/DamageProcessor` path (component HTK, Aurora-style) is still partially stubbed with the colony damage block commented out. Before building ground combat damage, choose which path is the forward direction. See `Damage/CLAUDE.md` decision table.
+1. **Damage path decision is made and fully wired.** `DamageComplex` is the forward direction. `SimpleDamage` is dead code. Beam hits go: `BeamWeaponProcessor.OnHit()` → `DamageProcessor.OnTakingDamage()` → `DealDamageEnergyBeamSim()`. Colony hits route to `OnColonyDamage()` (population + atmospheric + installation damage, all wired). Asteroid hits use `DamageVeryComplex`. See `Damage/CLAUDE.md`.
 
 2. **ProcessorManager auto-discovers via reflection.** Any class implementing `IHotloopProcessor` or `IInstanceProcessor` is automatically registered on startup by `ProcessorManager.CreateProcessors()`. You do not register processors manually. The trade-off: a broken processor crashes startup.
 
@@ -198,17 +201,39 @@ Test utilities live in `TestHelper.cs` and `TestingUtilities.cs`.
 
 7. **Save/load uses TypeNameHandling.Objects.** This means the JSON save file embeds C# type names. Renaming or moving a DataBlob class will break existing saves. When refactoring, add a `[JsonConverter]` or migration step.
 
-8. **Colony damage code for ground bombardment exists as a commented-out block** in `DamageProcessor.cs` (~lines 101–181). It references now-missing types (`ComponentInfoDB`, `ComponentInstanceData`, `MassVolumeDB.Volume_km3`) but contains the design intent for orbital bombardment. Read it before designing the ground combat damage system.
+8. **Colony orbital bombardment damage is wired but missiles don't deliver it yet.** `DamageProcessor.OnColonyDamage()` handles population casualties, atmospheric contamination, and random installation damage when a colony entity takes a hit. However, the missile guidance path never calls `OnTakingDamage()` on impact (`directAttack` is hardcoded `false` and the phasing maneuver branch doesn't fire on arrival). Ground combat orbital support depends on fixing missile guidance first. See `Weapons/CLAUDE.md` missile guidance status.
+
+9. **Claude Code remote sessions MUST be configured with `kadonomaro197-cloud/4x-Game`, not `Pulsar4x`.** The git proxy enforces the session's repository scope. If the session was started with the wrong repo name (`Pulsar4x` doesn't exist on GitHub — the actual game repo is `4x-Game`), every `git push` returns "repository not authorized" and MCP GitHub tools return "Access denied." There is no fix mid-session; the work cannot be pushed until a new session is started with the correct repo name. Verify the scope by checking the session ingress token: `cat /home/claude/.claude/remote/.session_ingress_token` — the JWT payload's `"sources"` field shows the authorized repos. The correct session configuration is `kadonomaro197-cloud/4x-Game` + `kadonomaro197-cloud/AiD-Main`. If you find yourself blocked, generate a patch with `git format-patch origin/HEAD..HEAD --stdout > /home/user/all-work.patch` and send it to the user via `SendUserFile` — all work is preserved and can be applied to a local clone with `git am`.
+
+---
+
+## The Prime Directive — Map the Connections First
+
+**Before making any decision about any system — combat, economy, UI, damage, population, anything — stop and map every connection that system has. Then look further.**
+
+This is not optional and it is not just for complex tasks. A change that looks local almost never is. The codebase is deeply interconnected: DataBlobs feed processors that write to other DataBlobs that trigger events that schedule more processors. Pulling one thread without knowing what it's attached to breaks things in places you weren't looking.
+
+**The four questions to answer before touching anything:**
+
+1. **What feeds INTO this system?** — What DataBlobs, processors, events, or JSON data does it read? If the input contract changes, what upstream provider breaks?
+2. **What does this system feed INTO?** — Who reads its output? What processor, what UI panel, what event consumer? If the output contract changes, what downstream consumer breaks?
+3. **What shares STATE with this system?** — Same DataBlob, same entity, same global table, same JSON file? A shared-state partner doesn't call you — it just reads the same memory.
+4. **What does this system TRIGGER?** — Events published, processors scheduled, orders issued. Follow the chain one more step than feels necessary.
+
+**Then look further.** The answer to those four questions is the minimum scope. The real scope is often one hop wider. Ask: does anything in that downstream system have the same four connections? If the answer surprises you, document it before writing a line of code.
+
+**This applies to every subsystem listed in the Subsystem Index, every system in `docs/COMBAT-DESIGN.md`, every column in the game.** Economy connects to industry connects to population connects to research connects to ship production connects to fleet strength. Sensors connect to contact model connects to IFF connects to doctrine connects to auto-resolution. None of these are islands.
 
 ---
 
 ## How to Work in This Repo (Working Agreement)
 
-1. **Read `CONVENTIONS.md` before writing any code; read the subsystem `CLAUDE.md` before working on that subsystem.** Only read source directly when the doc is insufficient, then update the doc after. For ground-combat/infrastructure design questions, consult `docs/aurora/`.
-2. **Keep all CLAUDE.md files current** whenever code changes — update the subsystem CLAUDE.md in the same commit as the code it describes. Stale docs are worse than no docs.
-3. **Build and run tests before and after every change.** Never leave the build broken. `dotnet build` + `dotnet test` before pushing.
-4. **Match existing conventions** (naming, `[JsonProperty]` discipline, `SafeDictionary`, processor auto-discovery pattern).
-5. **Add tests for new systems.** Space combat has no tests; do not compound this pattern.
-6. **Do not add features beyond what the task requires.** This is an ambitious codebase — scope creep compounds quickly.
-7. **Update ARCHITECTURE.md** when data flow changes.
-8. **Update this root CLAUDE.md** when a new subsystem is added, a subsystem moves, or a new gotcha is discovered.
+1. **Apply the Prime Directive.** Map connections before making decisions. See above.
+2. **Read `CONVENTIONS.md` before writing any code; read the subsystem `CLAUDE.md` before working on that subsystem.** Only read source directly when the doc is insufficient, then update the doc after. For ground-combat/infrastructure design questions, consult `docs/aurora/`.
+3. **Keep all CLAUDE.md files current** whenever code changes — update the subsystem CLAUDE.md in the same commit as the code it describes. Stale docs are worse than no docs.
+4. **Build and run tests before and after every change.** Never leave the build broken. `dotnet build` + `dotnet test` before pushing.
+5. **Match existing conventions** (naming, `[JsonProperty]` discipline, `SafeDictionary`, processor auto-discovery pattern).
+6. **Add tests for new systems.** Space combat has no tests; do not compound this pattern.
+7. **Do not add features beyond what the task requires.** This is an ambitious codebase — scope creep compounds quickly.
+8. **Update ARCHITECTURE.md** when data flow changes.
+9. **Update this root CLAUDE.md** when a new subsystem is added, a subsystem moves, or a new gotcha is discovered.

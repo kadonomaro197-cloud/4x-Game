@@ -1,5 +1,12 @@
 {
   "name": "Earth Govenments",
+  "isNPC": true,
+  "doctrine": {
+    "economic": 0.45,
+    "military": 0.15,
+    "tech": 0.25,
+    "expansion": 0.15
+  },
   "componentDesigns": [
     "componentDesigns/passiveScannerS50.json",
     "componentDesigns/fuelTank-1000.json",

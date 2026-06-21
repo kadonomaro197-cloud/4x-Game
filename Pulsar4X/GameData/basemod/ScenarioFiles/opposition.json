@@ -1,5 +1,12 @@
 {
   "name": "Opposition Forces",
+  "isNPC": true,
+  "doctrine": {
+    "economic": 0.15,
+    "military": 0.55,
+    "tech": 0.15,
+    "expansion": 0.15
+  },
   "componentDesigns": [
     "componentDesigns/passiveScannerS50.json",
     "componentDesigns/fuelTank-1000.json",

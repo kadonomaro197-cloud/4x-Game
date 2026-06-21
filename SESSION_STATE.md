@@ -6,7 +6,7 @@ This document tracks what we know about the codebase state at the close of each 
 
 ## Last Updated
 
-Session ending ~2026-06-20. Branch: `claude/amazing-clarke-7s118n` (not yet merged to main — user intent confirmed, awaiting explicit instruction).
+Session ending ~2026-06-21 (survey complete). Branch: `claude/laughing-cannon-08obma`.
 
 ---
 
@@ -27,11 +27,16 @@ Allowlisted/reachable: `github.com`, `raw.githubusercontent.com`, `api.nuget.org
 **To enable Claude to build/test itself**, the developer must add the dotnet hosts to the environment's network egress settings (see https://code.claude.com/docs/en/claude-code-on-the-web) — at minimum `builds.dotnet.microsoft.com` and `ci.dot.net`. Then a container setup script can `dotnet-install.sh --channel 8.0`. **Even then, running the GAME (UI) still needs the developer** — the container is headless (no display/GPU for SDL2+OpenGL). Do NOT re-test the network each session; this is the confirmed state until the policy changes.
 
 **What we know from reading source (not compiling):**
-- No code changes have been made — docs and infrastructure only.
 - The original repo was a working fork; baseline source should compile.
-- The branch is documentation and `.claude/` config only — zero C# changes.
+- **Phase 1a code changes are now in** — three C# files modified (see "Pinned Change Points" below).
+- This session is the FIRST session with actual C# changes.
 
-**Action for next session's first code change:** developer builds locally first, captures pass/fail, adds result here.
+**Action for developer:** Pull `claude/laughing-cannon-08obma` and run:
+```powershell
+dotnet build Pulsar4X/Pulsar4X.sln
+dotnet test Pulsar4X/Pulsar4X.Tests/Pulsar4X.Tests.csproj
+```
+Paste any errors back. Expected result: build passes; tests pass (no combat tests exist yet).
 
 ---
 
@@ -43,36 +48,89 @@ From reading the test project structure: tests exist for EntityManager, orbits, 
 
 ---
 
-## What's Been Done This Session
+## What's Been Done (all sessions to date)
 
-All documentation. No code has been touched. These files were created or corrected:
+### Prior session docs (on `claude/amazing-clarke-7s118n`)
+16 doc files, Aurora reference, hooks, CLAUDE.md files. Commits 1–14.
 
-| File | Status |
+### Phase 1a — DamageComplex wired (session 2026-06-21)
+| File | Change |
 |------|--------|
-| `CLAUDE.md` (root) | Updated — added plain-language rule, design references, corrected Gotcha #4 (InstallationsDB) |
-| `CONVENTIONS.md` | New — 15-section idiom reference extracted from source |
-| `PLAN.md` | Updated — corrected InstallationsDB references, added priority order, combat model table |
-| `OBJECTIVE.md` | New — concrete build spec (this session) |
-| `ARCHITECTURE.md` | Updated — corrected colony data flow, InstallationsDB correction |
-| `GameEngine/Colonies/CLAUDE.md` | Updated — corrected installation system section |
-| `GameEngine/Industry/CLAUDE.md` | Updated — corrected InstallationsDB rows |
-| `Pulsar4X.Client/CLAUDE.md` | Updated — corrected PlanetaryWindow entry |
-| `GameEngine/Fleets/CLAUDE.md` | New (this session) |
-| `.claude/settings.json` | New — hooks + read-deny for bin/obj |
-| `.claude/hooks/session_start.sh` | New |
-| `.claude/hooks/session_stop.sh` | New |
-| `.claude/hooks/lint_csharp.sh` | New |
-| `.claude/commands/build-check.md` | New |
-| `.claude/commands/phase-status.md` | New |
-| `.claude/commands/damage-audit.md` | New |
-| `docs/aurora/*.md` (13 files) | New — full Aurora design reference |
-| `SESSION_STATE.md` | New (this file) |
+| `GameEngine/Damage/DamageComplex/DamageTools.cs` | TryGetValue guard, DamageResult struct, Beer-Lambert energy model, WavelengthAbsorption |
+| `GameEngine/Damage/DamageComplex/DamageProcessor.cs` | OnTakingDamage returns DamageResult; component removal filled in |
+| `GameEngine/Weapons/WeaponBeam/BeamWeaponProcessor.cs` | Replaced SimpleDamage with DamageProcessor call |
+
+### System 1 — Weapon range enforced (session 2026-06-21)
+| File | Change |
+|------|--------|
+| `GameEngine/Weapons/IFireWeaponInstr.cs` | Added `IsInRange()` default method |
+| `GameEngine/Weapons/WeaponBeam/GenericBeamWeaponAtb.cs` | Added `IsInRange()` override, `BaseHitChance` |
+| `GameEngine/Weapons/WeaponBeam/BeamInfoDB.cs` | Added `BaseHitChance` field |
+| `GameEngine/Weapons/WeaponBeam/BeamWeaponProcessor.cs` | `CalculateHit()` uses `beamInfo.BaseHitChance` |
+| `GameEngine/Weapons/WeaponGeneric/GenericFiringWeaponsProcessor.cs` | Added `IsInRange()` call before `FireWeapon()` |
+
+### Phase 2 — 5 beam weapon decisions implemented (session 2026-06-21 continued)
+
+All 5 decisions wired in one pass per developer's explicit instruction.
+
+| File | Change |
+|------|--------|
+| `GameData/basemod/TemplateFiles/damageResistance.json` | Added `WavelengthAbsorption` arrays for all 5 materials (UV/Vis/NIR/MIR/FIR) |
+| `GameEngine/Damage/DamageComplex/DamageTools.cs` | `DamageResistBlueprint`: `[JsonConstructor]`/`[JsonProperty("UniqueID")]` fix; `WavelengthAbsorption` field; `GetWavelengthAbsorption()` helper; `DealDamageEnergyBeamSim()` fully rewritten (Beer-Lambert, infinite-loop fix, energy decrement, wavelength routing) |
+| `GameEngine/Damage/DamageComplex/DamageProcessor.cs` | Health scale fix: `HealthPercent -= damageAmount * 0.001f` |
+| `GameEngine/Weapons/WeaponGeneric/WeaponState.cs` | Added `CurrentHeat_kJ`, `HeatCapacity_kJ`, `AllowThermalOverride`, `ThermalOverrideActive` fields + copy constructor updated |
+| `GameEngine/Weapons/WeaponBeam/BeamInfoDB.cs` | Added `OptimalRange_m` field |
+| `GameEngine/Weapons/WeaponBeam/GenericBeamWeaponAtb.cs` | Added `OptimalRange_m`, `ChargePeriod`, `ThermalOutput_W`, `AllowThermalOverride` fields; 7-arg constructor (4 optional, backward compatible); `OnComponentInstallation()` sets `HeatCapacity_kJ`; `FireWeapon()` passes `OptimalRange_m` |
+| `GameEngine/Weapons/WeaponBeam/BeamWeaponProcessor.cs` | `FireBeamWeapon()` accepts `optimalRange_m`; `OnHit()` applies two-zone inverse-square energy scaling; `DamageFragment.Wavelength` set from `beamInfo.Frequency` |
+| `GameEngine/Weapons/WeaponGeneric/GenericFiringWeaponsProcessor.cs` | Added `using Pulsar4X.Energy`; fixed `Math.Max` → `Math.Min` reload bug; full thermal suppression + power grid check in `UpdateWeapons()` |
+| `GameData/basemod/TemplateFiles/weapons.json` | `genericWpnAtbArgs`: physics-driven formula (Charge Period → reload rate); `genericBeamWpnAtbArgs`: 7 args (adds FocalLength, ChargePeriod, ThermalOutput, override flag) |
+| `GameEngine/Weapons/CLAUDE.md` | Full 5-decision status added; damage path decision documented |
+| `GameEngine/Damage/CLAUDE.md` | Active path updated (DamageComplex, not SimpleDamage); DamageFragment and DamageResistBlueprint documented |
 
 ---
 
 ## Pinned Change Points (Next Code Work)
 
-### Phase 2a — Fix Installations Tab (FIRST)
+### Phase 1a — COMPLETE
+`DamageProcessor.OnTakingDamage()` is the active beam-hit path.
+
+### System 1 — Weapon Range — COMPLETE
+`MaxRange` enforced via `IsInRange()`. `BaseHitChance` flows from attribute to `CalculateHit()`.
+
+**Developer action required:** JSON default range is 5000m (space-scale tiny). Set "Range" `PropertyFormula` in `GameData/basemod/TemplateFiles/weapons.json` to something realistic before testing (e.g., `50000000` = 50,000 km).
+
+### Phase 2 — 5 Beam Weapon Decisions — COMPLETE
+All 5 decisions wired: two-zone range/energy falloff, wavelength-to-material mapping (Beer-Lambert), thermal management as fire-rate limiter, Charge Period drives fire rate, power grid check. See `Weapons/CLAUDE.md` "Beam Weapon Design" section.
+
+**Developer action required:** Test by running a ship-vs-ship combat scenario. Watch for:
+1. Power-starved ships not firing (if `EnergyGenAbilityDB` present but `EnergyStored` runs dry).
+2. Thermal suppression kicking in after 2 rapid shots.
+3. Beam damage respecting wavelength (FIR = 10000nm hits aluminium for ~18% absorption; same beam hits plastic for 85%).
+
+### Resource/Economy Survey — COMPLETE (session 2026-06-21)
+
+5-agent parallel survey of the entire mineral/material/resource system. Findings committed to `docs/RESOURCES-AND-MATERIALS-DESIGN.md`.
+
+**Key findings:**
+- 3-tier production pipeline exists and works (mine → refine → build)
+- 3 of 15 minerals have zero recipes (nickel, lithium, rare-earth-elements)
+- Processed materials (electronics, etc.) not referenced in any component build costs — refinery chain is decorative
+- Trade happens but generates no faction wealth (Ledger is disconnected)
+- Enemy ships can freely access your logistics bases (no faction access controls)
+- Research costs only money — no material requirements
+- NPC economic AI = 0% implemented; all systems are faction-agnostic and would work for NPCs if orders were issued
+
+**Priority order from survey:** (1) Fix Installations tab, (2) Wire processed materials into component costs, (3) Add 3 missing mineral recipes, (4) Connect trade to Ledger, (5) Build NPCDecisionProcessor.
+
+---
+
+### System 2 — Sensor Range + Contact Model — NEXT
+
+**Read `GameEngine/Sensors/CLAUDE.md` first** — sensor infrastructure may already partially exist.
+
+---
+
+### Phase 2a — Fix Installations Tab (FIRST UI TASK)
 
 **File:** `Pulsar4X/Pulsar4X.Client/Interface/Windows/PlanetaryWindow.cs`
 
@@ -83,19 +141,6 @@ Two broken lines to fix:
 The `ComponentInstancesDBDisplay` panel already exists in the client — search for it and reuse rather than writing a new table.
 
 **Read before touching:** `GameEngine/Colonies/CLAUDE.md`, `CONVENTIONS.md` §6.
-
----
-
-### Phase 1a — Wire Complex Damage (can run parallel with Phase 2)
-
-**File:** `Pulsar4X/GameEngine/Weapons/WeaponBeam/BeamWeaponProcessor.cs`
-
-- **Line 132:** `// DamageProcessor.OnTakingDamage(beamInfo.TargetEntity, damage);` — uncomment this
-- **Line 134:** `var damageResult = SimpleDamage.OnTakingDamage(beamInfo.TargetEntity, 100, 500);` — remove or comment out this
-
-**Read first:** `GameEngine/Damage/DamageComplex/DamageTools.cs` and `DamageProcessor.cs` in full — understand what `DamageProcessor.OnTakingDamage()` actually needs as arguments before removing the SimpleDamage call. The signature may not match.
-
-**Read:** `GameEngine/Damage/CLAUDE.md`.
 
 ---
 
@@ -119,8 +164,13 @@ The `maxPopulation` calculation on line 49 is already close to the Aurora formul
 | Issue | File | Line | Doc |
 |-------|------|------|-----|
 | Installations tab never appears | PlanetaryWindow.cs | 107, 221 | Colonies/CLAUDE.md Gotcha #1 |
-| SimpleDamage placeholder | BeamWeaponProcessor.cs | 132–134 | Damage/CLAUDE.md, root CLAUDE.md Gotcha #1 |
+| ~~SimpleDamage placeholder~~ | ~~BeamWeaponProcessor.cs~~ | ~~132–134~~ | **FIXED Phase 1a** — DamageComplex now wired |
+| ~~One-hit destroys (units mismatch)~~ | ~~DamageProcessor.cs~~ | — | **FIXED Phase 2** — `HealthPercent -= damageAmount * 0.001f` |
+| ~~DamageResistsLookupTable sparse~~ | ~~DamageTools.cs~~| — | **FIXED Phase 2** — `[JsonProperty("UniqueID")]` + `WavelengthAbsorption` arrays |
+| ~~Math.Max reload bug~~ | ~~GenericFiringWeaponsProcessor.cs~~ | — | **FIXED Phase 2** — changed to `Math.Min` |
+| Off-by-one in ComponentLookupTable indexing | DamageProcessor.cs + ComponentPlacement.cs | G-channel 1-indexed, table 0-indexed | Weapons/CLAUDE.md Damage Status |
 | Colony damage block commented out | DamageProcessor.cs | ~101–181 | Damage/CLAUDE.md, root CLAUDE.md Gotcha #8 |
+| Thermal override weapon damage not implemented | GenericFiringWeaponsProcessor.cs | override fires but no weapon damage | Weapons/CLAUDE.md Decision 3 |
 | Population −50% die-off stub | PopulationProcessor.cs | 54 | COLONY-ENVIRONMENT-AND-POPULATION.md |
 | Missile guidance hardcoded false | MissleProcessor.cs | directAttack | root CLAUDE.md Gotcha #3 |
 
@@ -170,6 +220,32 @@ This tells us the Installations tab, once fixed, has real data to display — it
 
 ### Claude's execution environment
 Remote Linux cloud container. **No .NET SDK installed.** Claude edits files here; the developer pulls and builds on their own machine.
+
+### CRITICAL — Session repository scope must be `4x-Game`, not `Pulsar4x`
+
+The Claude Code remote session must be started with **`kadonomaro197-cloud/4x-Game`** as the authorized repository. If started with `kadonomaro197-cloud/Pulsar4x` (which doesn't exist on GitHub), the git proxy blocks all pushes with "repository not authorized" and MCP GitHub tools return "Access denied." This cannot be fixed mid-session.
+
+**How to verify the session scope** (run this at the start of any new session):
+```bash
+cat /home/claude/.claude/remote/.session_ingress_token
+```
+Look for `"sources"` in the JWT payload. It must contain `kadonomaro197-cloud/4x-Game`. If it shows `kadonomaro197-cloud/Pulsar4x`, the session is misconfigured — end it and start a new one.
+
+**If a session IS misconfigured and you have uncommitted or unpushable work:**
+```bash
+git format-patch origin/HEAD..HEAD --stdout > /home/user/all-work.patch
+```
+Then use `SendUserFile("/home/user/all-work.patch")` to deliver the patch. The user applies it on their Windows machine:
+```powershell
+# In local 4x-Game clone
+git checkout -b claude/amazing-clarke-7s118n
+git am < all-work.patch
+git push -u origin claude/amazing-clarke-7s118n
+```
+
+**Correct session configuration:**
+- Repo 1: `kadonomaro197-cloud/4x-Game`
+- Repo 2: `kadonomaro197-cloud/AiD-Main`
 
 ### Developer's machine
 | Item | Value |

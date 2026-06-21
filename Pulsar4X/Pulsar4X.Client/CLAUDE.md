@@ -197,6 +197,36 @@ Two bugs, not one:
 
 No window exists for ground combat. When `GroundCombatDB` (to be created) is present on a colony entity, a new `GroundCombatWindow` should be reachable from `PlanetaryWindow` tabs and from the system map context menu.
 
+#### Target Lines — Visual Design Spec
+
+Ground combat units should have **target lines**: persistent lines drawn from attacker to target while a fire-control relationship is active. The line disappears when the relationship ends (target destroyed, order cancelled, out of range) — it does not fade on a timer, because game time is compressed and real-time fading is meaningless.
+
+**Rendering:**
+- Draw using `OpenGLRenderer` line primitives — same mechanism as `WarpMovingIcon` transit lines.
+- Line exists as long as the unit's current target order is active. Driven by game state, not wall-clock time.
+- Color table (starting point — can expand later):
+
+| Color | Meaning |
+|-------|---------|
+| Red | Actively firing this tick |
+| Amber/yellow | Targeted but not firing (out of range, suppressed, no ammo) |
+| Grey | Fire control lock held but combat paused / ceasefire |
+
+**Toggle:**
+- `bool ShowTargetLines` on `GlobalUIState` (or the `GroundCombatWindow` instance).
+- Toolbar button or checkbox in the combat window header — same pattern as orbit ellipse toggle.
+- Default on. Players with large battles can turn it off to reduce clutter.
+
+**Selection filtering:**
+- When a formation/unit is selected, only draw target lines for that selection.
+- Global toggle overrides to show all or none.
+- This mirrors how the system map shows orbit ellipses only for the selected body when zoomed in.
+
+**Coordinate space note:**
+- Ground units live on the `ColonyHexMapDB` tile grid, not in 3D system-map space.
+- Target lines for ground combat render inside the `GroundCombatWindow` 2D hex view, not on the system map.
+- The OpenGL line-drawing call is the same; the coordinate transform is hex-tile-to-screen, not world-to-screen.
+
 ---
 
 ## Gotchas

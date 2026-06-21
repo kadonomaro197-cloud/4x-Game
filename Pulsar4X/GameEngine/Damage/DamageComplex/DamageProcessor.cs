@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using Pulsar4X.Colonies;
+using Pulsar4X.Components;
 using Pulsar4X.Datablobs;
 using Pulsar4X.Engine;
 using Pulsar4X.Galaxy;
@@ -8,6 +11,12 @@ using Pulsar4X.Ships;
 
 namespace Pulsar4X.Damage
 {
+    public struct DamageResult
+    {
+        public int Damage;
+        public bool Destroyed;
+    }
+
     internal static class DamageProcessor
     {
         public static void Initialize()
@@ -25,7 +34,7 @@ namespace Pulsar4X.Damage
         /// </summary>
         /// <param name="damageableEntity"></param>
         /// <param name="damageAmount"></param>
-        public static void OnTakingDamage(Entity damageableEntity, DamageFragment damageFragment)
+        public static DamageResult OnTakingDamage(Entity damageableEntity, DamageFragment damageFragment)
         {
 
             if(!damageableEntity.TryGetDataBlob<EntityDamageProfileDB>(out var entityDamageProfileDB))
@@ -38,21 +47,55 @@ namespace Pulsar4X.Damage
                     entityDamageProfileDB = new EntityDamageProfileDB(shipInfoDB.Design);
                     damageableEntity.SetDataBlob(entityDamageProfileDB);
                 }
+                else if (damageableEntity.HasDataBlob<ColonyInfoDB>())
+                {
+                    return OnColonyDamage(damageableEntity, damageFragment);
+                }
                 //return;
             }
 
-            if(entityDamageProfileDB == null) return;
+            if(entityDamageProfileDB == null) return new DamageResult { Damage = 0, Destroyed = false };
 
             var damages = DamageTools.DealDamageEnergyBeamSim(entityDamageProfileDB, damageFragment);
 
+            // G-channel in the damage bitmap is 1-indexed (ComponentPlacement.CreateShipBmp starts
+            // componentInstance at 0 and increments before painting the first component).
+            // ComponentLookupTable is 0-indexed, so subtract 1 when using id as a list index.
             foreach (var damage in damages.damageToComponents)
             {
-                entityDamageProfileDB.ComponentLookupTable[damage.id].HealthPercent -= damage.damageAmount;
+                int componentIdx = damage.id - 1;
+                if (componentIdx >= 0 && componentIdx < entityDamageProfileDB.ComponentLookupTable.Count)
+                    entityDamageProfileDB.ComponentLookupTable[componentIdx].HealthPercent -= damage.damageAmount * 0.001f;
             }
 
             if(damageableEntity.TryGetDataBlob<ComponentInstancesDB>(out var damagedComponentInstancesDB))
             {
+                int totalDamage = 0;
+                foreach (var damage in damages.damageToComponents)
+                {
+                    totalDamage += damage.damageAmount;
+                    int componentIdx = damage.id - 1;
+                    if (componentIdx >= 0 && componentIdx < entityDamageProfileDB.ComponentLookupTable.Count)
+                    {
+                        var profileInstance = entityDamageProfileDB.ComponentLookupTable[componentIdx];
+                        if (profileInstance.HealthPercent <= 0 && profileInstance.Design != null)
+                        {
+                            var matchList = damagedComponentInstancesDB.GetComponentsBySpecificDesign(profileInstance.Design.UniqueID);
+                            if (matchList.Count > 0)
+                                damagedComponentInstancesDB.RemoveComponentInstance(matchList[0]);
+                        }
+                    }
+                }
 
+                if (damagedComponentInstancesDB.AllComponents.Count <= 0)
+                {
+                    if (damageableEntity.HasDataBlob<ShipInfoDB>())
+                        ShipFactory.DestroyShip(damageableEntity);
+                    else
+                        damageableEntity.Destroy();
+                    return new DamageResult { Damage = totalDamage, Destroyed = true };
+                }
+                return new DamageResult { Damage = totalDamage, Destroyed = false };
             }
 
             /*
@@ -180,6 +223,88 @@ namespace Pulsar4X.Damage
                 ReCalcProcessor.ReCalcAbilities(damageableEntity);
             }
             */
+
+            return new DamageResult { Damage = 0, Destroyed = false };
+        }
+
+        /// <summary>
+        /// Applies orbital bombardment damage to a colony: population casualties,
+        /// atmospheric contamination, and randomized installation destruction.
+        /// Called when a beam weapon or missile strikes a colony entity directly.
+        /// </summary>
+        private static DamageResult OnColonyDamage(Entity colonyEntity, DamageFragment damageFragment)
+        {
+            var colonyInfoDB = colonyEntity.GetDataBlob<ColonyInfoDB>();
+            var starSystem = colonyEntity.Manager as StarSystem;
+            if (starSystem == null)
+                return new DamageResult { Damage = 0, Destroyed = false };
+
+            // Scale energy to damage-strength units. 100 MJ per unit so a typical
+            // missile warhead (1–100 TJ) yields 10,000–1,000,000 units.
+            // Tuning: adjust the divisor when warhead energy values are finalized.
+            int damageStrength = Math.Max(1, (int)(damageFragment.Energy / 1e8));
+
+            // Population casualties: quarter million dead per damage unit.
+            if (colonyInfoDB.Population.Count > 0)
+            {
+                long totalPop = 0;
+                foreach (var pop in colonyInfoDB.Population.Values)
+                    totalPop += pop;
+
+                if (totalPop > 0)
+                {
+                    long casualties = Math.Min(damageStrength * 250_000L, totalPop);
+                    var speciesIds = new List<int>(colonyInfoDB.Population.Keys);
+                    foreach (int speciesId in speciesIds)
+                    {
+                        long share = (long)((double)colonyInfoDB.Population[speciesId] / totalPop * casualties);
+                        colonyInfoDB.Population[speciesId] = Math.Max(0L, colonyInfoDB.Population[speciesId] - share);
+                    }
+                }
+            }
+
+            // Atmospheric contamination from explosions: raise dust and radiation.
+            if (colonyInfoDB.PlanetEntity.TryGetDataBlob<SystemBodyInfoDB>(out var sysBodyInfo))
+            {
+                float contamination = damageStrength * 0.001f;
+                sysBodyInfo.AtmosphericDust  = Math.Min(1.0f,  sysBodyInfo.AtmosphericDust  + contamination);
+                sysBodyInfo.RadiationLevel   = Math.Min(10.0f, sysBodyInfo.RadiationLevel   + contamination);
+            }
+
+            // Installation damage: randomly pick and damage installations until
+            // the damage budget is spent or all installations are destroyed.
+            if (colonyEntity.TryGetDataBlob<ComponentInstancesDB>(out var installsDB))
+            {
+                var targets = new List<ComponentInstance>(installsDB.AllComponents.Values);
+                int budget = damageStrength;
+                int misses = 0;
+
+                while (budget > 0 && targets.Count > 0 && misses < 20)
+                {
+                    int idx = starSystem.RNGNext(targets.Count);
+                    var target = targets[idx];
+
+                    if (target.HealthPercent > 0)
+                    {
+                        float drain = Math.Min(budget * 0.001f, target.HealthPercent);
+                        target.HealthPercent -= drain;
+                        budget -= Math.Max(1, (int)(drain * 1000));
+
+                        if (target.HealthPercent <= 0)
+                        {
+                            installsDB.RemoveComponentInstance(target);
+                            targets.RemoveAt(idx);
+                        }
+                    }
+                    else
+                    {
+                        misses++;
+                    }
+                }
+            }
+
+            ReCalcProcessor.ReCalcAbilities(colonyEntity);
+            return new DamageResult { Damage = damageStrength, Destroyed = false };
         }
 
         /// <summary>

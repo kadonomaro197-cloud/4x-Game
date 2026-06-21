@@ -29,6 +29,7 @@ namespace Pulsar4X.Industry
             CargoTypeID = blueprint.CargoTypeID;
             MassPerUnit = blueprint.MassPerUnit;
             VolumePerUnit = blueprint.VolumePerUnit;
+            CreditValue = blueprint.CreditValue;
         }
 
         public void OnConstructionComplete(Entity industryEntity, CargoStorageDB storage, string productionLine, IndustryJob batchJob, IConstructableDesign designInfo)

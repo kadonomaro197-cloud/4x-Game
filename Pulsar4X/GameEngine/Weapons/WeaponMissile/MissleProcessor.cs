@@ -61,7 +61,7 @@ namespace Pulsar4X.Weapons
             }
 
             List<BaseDataBlob> dataBlobs = new List<BaseDataBlob>();
-            dataBlobs.Add(new ProjectileInfoDB(launchingEntity.Id, count));
+            dataBlobs.Add(new ProjectileInfoDB(launchingEntity.Id, count, targetEntity));
             dataBlobs.Add(new ComponentInstancesDB());
             dataBlobs.Add(misslPositionDB);
             dataBlobs.Add(MassVolumeDB.NewFromMassAndVolume(missileDesign.WetMass, missileDesign.WetMass));
@@ -82,7 +82,7 @@ namespace Pulsar4X.Weapons
             newtdb.SetFuel(missileDesign.WetMass - missileDesign.DryMass, missileDesign.WetMass);
 
 
-            bool directAttack = false;
+            bool directAttack = true;
 
 
             if(directAttack)
