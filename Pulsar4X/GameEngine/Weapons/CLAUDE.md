@@ -20,8 +20,9 @@ Space combat weapons: beam weapons, missiles, fire control. Lives in `GameEngine
 | `WeaponGeneric/WeaponState.cs` | Per-weapon state struct (internal magazine current amount, name). |
 | `WeaponMissile/MissleLauncherAtb.cs` | Component attribute: configures missile launcher. Has `FireWeapon()` → `MissileProcessor.LaunchMissile()`. |
 | `WeaponMissile/MissleLauncherAbilityDB.cs` | DataBlob for missile launcher ability. |
-| `WeaponMissile/MissleProcessor.cs` | Static class. `LaunchMissile()` creates missile entity with NewtonMoveDB + ordnance design components. |
-| `WeaponMissile/ProjectileInfoDB.cs` | DataBlob on a missile entity: who launched it, count. |
+| `WeaponMissile/MissleProcessor.cs` | Static class. `LaunchMissile()` creates missile entity with NewtonMoveDB + ordnance design components. Uses `directAttack = true` → `ThrustToTargetCmd`. |
+| `WeaponMissile/ProjectileInfoDB.cs` | DataBlob on a missile entity: who launched it, count, and `Entity TargetEntity` for impact detection. |
+| `WeaponMissile/MissileImpactProcessor.cs` | HotloopProcessor (1 sec). Checks proximity of each `ProjectileInfoDB` entity to its target. On hit (≤ 1000 m): calls `DamageProcessor.OnTakingDamage()` with kinetic energy, destroys missile. |
 | `OrdnanceDesign.cs` | Missile/ordnance design data (wet/dry mass, burn rate, exhaust velocity, payload). |
 | `OrdnanceDesignFromJson.cs` | JSON loading for ordnance designs. |
 | `OrdnancePayloadAtb.cs` | Component attribute: warhead payload type. |
@@ -144,11 +145,15 @@ Remaining known calibration issues (tracked, don't fix without dedicated task):
 
 ---
 
-## Missile Guidance Status (PARTIAL)
+## Missile Guidance Status (functional as of 2026-06-21)
 
-`MissileProcessor.LaunchMissile()` has `bool directAttack = false` hardcoded. The `false` branch uses orbital phasing maneuvers via `InterceptCalcs.OrbitPhasingManuvers()`. The `true` branch uses `ThrustToTargetCmd` (direct pursuit). The commented-out direct-attack targeting code is in lines ~93–105.
+`directAttack` is now `true`. `ThrustToTargetCmd.CreateCommand()` handles pursuit.
 
-Phasing maneuvers work for targets in stable orbits but may fail for moving ships. Fix needed before ground combat strikes (which would use the missile path).
+`ProjectileInfoDB` now stores `Entity TargetEntity` (following `BeamInfoDB` pattern). This is serialized via Newtonsoft `PreserveReferencesHandling.Objects`; it does not survive save/load if the missile is in-flight at save time (acceptable — combat is transient).
+
+`MissileImpactProcessor` (new `IHotloopProcessor`) checks every second whether any `ProjectileInfoDB` entity is within 1000 m of its target. On hit: computes kinetic energy (0.5 × dry mass × closing speed²), calls `DamageProcessor.OnTakingDamage()`, destroys the missile.
+
+**Known calibration issue:** Kinetic energy at orbital closing speeds (1–10 km/s) is GJ-range, far above the kJ–MJ scale the beam damage path is tuned for. Ships will be instantly destroyed by missile hits. Tune `MissileImpactProcessor.ImpactRadius_m` or scale energy before calling `OnTakingDamage` once warhead energy values are finalized.
 
 ---
 
@@ -168,10 +173,12 @@ Pattern (copy beam weapon approach):
 
 1. `ValidateTargetExists()` in GenericFiringWeaponsProcessor only sends CeaseFire once even if multiple fire controls have invalid targets. This is a minor bug — all invalid targets should receive CeaseFire.
 
-2. **Reload bug — `Math.Max` where `Math.Min` is needed** (`GenericFiringWeaponsProcessor.cs` line ~57): `Math.Max(currentQty + reloadAmount, magSize)` always returns `magSize`, so internal magazines are always instantly full and never actually deplete between shots. This is a pre-existing bug. Do not fix it in the same commit as other weapon changes — it will change combat behaviour significantly and needs its own test.
+2. **Reload bug — retired.** Was: `Math.Max` where `Math.Min` is needed. Fixed in a prior session — `GenericFiringWeaponsProcessor.cs` already uses `Math.Min(db.InternalMagQty[i] + tickReloadAmount, db.InternalMagSizes[i])` with a comment confirming the fix.
 
 3. Beam entities are added to the same `StarSystem` as the firing ship. If the target is in a different system (impossible currently, but keep in mind for future multi-system combat), this would break.
 
 4. `MissleLauncherAbilityDB` is spelled with one 's' — `Missle` not `Missile` throughout this directory. Do not "fix" the spelling in file/class names without updating all references.
 
 5. **Missile range is not yet implemented.** `MissileLauncherAtb.IsInRange()` inherits the default `return true` from `IFireWeaponInstr`. The correct implementation is a delta-V range check: can the missile's fuel budget match the target's velocity and distance? See `OrdnanceDesign.cs` for fuel/exhaust data. Tracked as a future task — do not implement until System 9 auto-resolution is being built, as delta-V range directly feeds into the Tier 0 strength model.
+
+6. **Off-by-one component targeting — retired.** Was: G-channel bitmap is 1-indexed but `ComponentLookupTable` is 0-indexed → first component never damaged. Fixed: `DamageProcessor.OnTakingDamage()` now uses `componentIdx = damage.id - 1` with a `>= 0` guard in both damage loops.

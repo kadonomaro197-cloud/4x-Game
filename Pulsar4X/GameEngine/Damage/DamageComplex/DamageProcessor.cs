@@ -58,10 +58,14 @@ namespace Pulsar4X.Damage
 
             var damages = DamageTools.DealDamageEnergyBeamSim(entityDamageProfileDB, damageFragment);
 
+            // G-channel in the damage bitmap is 1-indexed (ComponentPlacement.CreateShipBmp starts
+            // componentInstance at 0 and increments before painting the first component).
+            // ComponentLookupTable is 0-indexed, so subtract 1 when using id as a list index.
             foreach (var damage in damages.damageToComponents)
             {
-                if (damage.id < entityDamageProfileDB.ComponentLookupTable.Count)
-                    entityDamageProfileDB.ComponentLookupTable[damage.id].HealthPercent -= damage.damageAmount * 0.001f;
+                int componentIdx = damage.id - 1;
+                if (componentIdx >= 0 && componentIdx < entityDamageProfileDB.ComponentLookupTable.Count)
+                    entityDamageProfileDB.ComponentLookupTable[componentIdx].HealthPercent -= damage.damageAmount * 0.001f;
             }
 
             if(damageableEntity.TryGetDataBlob<ComponentInstancesDB>(out var damagedComponentInstancesDB))
@@ -70,9 +74,10 @@ namespace Pulsar4X.Damage
                 foreach (var damage in damages.damageToComponents)
                 {
                     totalDamage += damage.damageAmount;
-                    if (damage.id < entityDamageProfileDB.ComponentLookupTable.Count)
+                    int componentIdx = damage.id - 1;
+                    if (componentIdx >= 0 && componentIdx < entityDamageProfileDB.ComponentLookupTable.Count)
                     {
-                        var profileInstance = entityDamageProfileDB.ComponentLookupTable[damage.id];
+                        var profileInstance = entityDamageProfileDB.ComponentLookupTable[componentIdx];
                         if (profileInstance.HealthPercent <= 0 && profileInstance.Design != null)
                         {
                             var matchList = damagedComponentInstancesDB.GetComponentsBySpecificDesign(profileInstance.Design.UniqueID);

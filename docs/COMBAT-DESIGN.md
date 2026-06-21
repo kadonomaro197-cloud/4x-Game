@@ -480,12 +480,14 @@ Systems 7 and 8 can be built in parallel with Systems 4–6 because they are mod
 
 ---
 
-## Open Defects to Fix Before System 4
+## Open Defects — Status (updated 2026-06-21)
 
-These bugs exist in the current damage path. They don't block Systems 1–3 but will produce wrong results in auto-resolution if not fixed before System 4.
+All three pre-System-4 defects are now fixed.
 
-| Defect | File | Root Cause | Fix |
-|--------|------|-----------|-----|
-| Off-by-one: first component never targeted | `DamageProcessor.cs`, `ComponentPlacement.cs` | G-channel bitmap is 1-indexed; `ComponentLookupTable` is 0-indexed | Pre-decrement G value by 1 when looking up table, or start componentInstance counter at 0 |
-| One-hit destroys all components | `DamageProcessor.cs` | `HealthPercent` is a float starting at 1.0; `damageAmount` is an int with value 1; 1.0 − 1 = 0 on first hit | Normalize units: either scale damageAmount to float 0.0–1.0 range, or scale HealthPercent to integer HTK |
-| Material table nearly empty | `DamageTools.cs`, `damageResistance.json` | JSON field is `UniqueID` but constructor param is `iDCode` — Newtonsoft assigns default 0 for all entries | Fix JSON field name to match constructor, or add `[JsonProperty("UniqueID")]` to the constructor param |
+| Defect | Status | Fix Applied |
+|--------|--------|-------------|
+| Off-by-one: first component never targeted | ✅ Fixed | `DamageProcessor.cs`: `componentIdx = damage.id - 1` with `>= 0` guard in both damage loops |
+| One-hit destroys all components | ✅ Fixed | `DamageProcessor.cs`: `HealthPercent -= damageAmount * 0.001f` (1000 points = 100% health) |
+| Material table nearly empty | ✅ Fixed | `DamageResistBlueprint` constructor uses `[JsonProperty("UniqueID")]` to map the JSON key to the byte IDCode |
+
+**Remaining known calibration issue (not a bug, a tuning decision):** Missile kinetic impact energy is orders of magnitude higher than beam weapon energy. When `MissileImpactProcessor` delivers kinetic damage through `DealDamageEnergyBeamSim`, ships will be instantly destroyed. Tune the energy divisor in `MissileImpactProcessor.ProcessEntity()` or add a warhead-energy lookup from `OrdnanceExplosivePayload.ExposiveTnTEQMass` once warhead energy values are finalized in `ordnanceDesigns/`.
