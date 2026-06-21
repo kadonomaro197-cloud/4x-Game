@@ -4,7 +4,13 @@
     "Payload": {
       "UniqueID": "stainless-steel-armor",
       "ResourceID": "stainless-steel",
-      "Density": "7900"
+      "Density": "7900",
+      "Elasticity": 0.2,
+      "TensileStrength": 515,
+      "ThermalCapacity": 500,
+      "ThermalConductivity": 16.3,
+      "MeltingZeroPoint": 1673,
+      "PhotonReflectivityPeak": 0.62
     }
   },
   {
@@ -12,7 +18,13 @@
     "Payload": {
       "UniqueID": "plastic-armor",
       "ResourceID": "plastic",
-      "Density": "1175"
+      "Density": "1175",
+      "Elasticity": 0.85,
+      "TensileStrength": 70,
+      "ThermalCapacity": 1400,
+      "ThermalConductivity": 0.25,
+      "MeltingZeroPoint": 500,
+      "PhotonReflectivityPeak": 0.05
     }
   },
   {
@@ -20,7 +32,13 @@
     "Payload": {
       "UniqueID": "aluminium-armor",
       "ResourceID": "aluminium",
-      "Density": "2700"
+      "Density": "2700",
+      "Elasticity": 0.4,
+      "TensileStrength": 310,
+      "ThermalCapacity": 900,
+      "ThermalConductivity": 205.0,
+      "MeltingZeroPoint": 933,
+      "PhotonReflectivityPeak": 0.91
     }
   },
   {
@@ -28,7 +46,27 @@
     "Payload": {
       "UniqueID": "titanium-armor",
       "ResourceID": "titanium",
-      "Density": "4540"
+      "Density": "4540",
+      "Elasticity": 0.3,
+      "TensileStrength": 950,
+      "ThermalCapacity": 520,
+      "ThermalConductivity": 21.9,
+      "MeltingZeroPoint": 1941,
+      "PhotonReflectivityPeak": 0.55
+    }
+  },
+  {
+    "Type": "Armor",
+    "Payload": {
+      "UniqueID": "nickel-steel-armor",
+      "ResourceID": "nickel-steel",
+      "Density": "8200",
+      "Elasticity": 0.25,
+      "TensileStrength": 620,
+      "ThermalCapacity": 490,
+      "ThermalConductivity": 25.0,
+      "MeltingZeroPoint": 1750,
+      "PhotonReflectivityPeak": 0.60
     }
   }
 ]

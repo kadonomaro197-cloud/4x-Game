@@ -217,5 +217,155 @@
       "WealthCost": 0,
       "OutputAmount": 100
     }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "stainless-steel-d",
+      "Name": "Grade-D Steel",
+      "Description": "Simple iron-nickel alloy, no chromium, quick to produce but less corrosion-resistant.",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 12,
+      "PartMatUniqueID": "carbon-steel",
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.000125,
+      "ResourceCosts": {
+        "iron": 95,
+        "nickel": 5
+      },
+      "IndustryPointCosts": 10,
+      "IndustryTypeID": "refining",
+      "WealthCost": 0,
+      "OutputAmount": 100
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "stainless-steel-a",
+      "Name": "Grade-A Alloy Steel",
+      "Description": "Premium structural steel alloyed with titanium for superior strength-to-weight ratio.",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 80,
+      "PartMatUniqueID": "stainless-steel",
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.000125,
+      "ResourceCosts": {
+        "iron": 80,
+        "chromium": 10,
+        "titanium": 10
+      },
+      "IndustryPointCosts": 50,
+      "IndustryTypeID": "refining",
+      "WealthCost": 2,
+      "OutputAmount": 100
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "nickel-steel",
+      "Name": "Nickel Steel",
+      "Description": "Iron-nickel-chromium structural alloy. Tougher than stainless steel, used in pressure vessels and armor plating.",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 40,
+      "PartMatUniqueID": "stainless-steel",
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.000122,
+      "ResourceCosts": {
+        "iron": 70,
+        "nickel": 20,
+        "chromium": 10
+      },
+      "IndustryPointCosts": 30,
+      "IndustryTypeID": "refining",
+      "WealthCost": 1,
+      "OutputAmount": 100
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "electronics-d",
+      "Name": "Grade-D Electronics",
+      "Description": "Basic electrical components manufactured without aluminium refining. Lower performance, faster to produce.",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 80,
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.002,
+      "ResourceCosts": {
+        "copper": 2,
+        "plastic": 2,
+        "silicon": 1
+      },
+      "IndustryPointCosts": 60,
+      "IndustryTypeID": "refining",
+      "WealthCost": 1,
+      "OutputAmount": 5
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "electronics-a",
+      "Name": "Grade-A Electronics",
+      "Description": "High-performance electrical components incorporating rare-earth elements for superior precision and efficiency.",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 1000,
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.002,
+      "ResourceCosts": {
+        "copper": 2,
+        "plastic": 2,
+        "aluminium": 1,
+        "silicon": 1,
+        "ree-magnetics": 1
+      },
+      "IndustryPointCosts": 200,
+      "IndustryTypeID": "refining",
+      "WealthCost": 5,
+      "OutputAmount": 5
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "lithium-battery",
+      "Name": "Lithium Battery Pack",
+      "Description": "High-density energy storage cell. Lithium-ion chemistry with copper current collectors.",
+      "CargoTypeID": "battery-storage",
+      "CreditValue": 500,
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.001,
+      "ResourceCosts": {
+        "lithium": 5,
+        "copper": 2,
+        "electronics": 1
+      },
+      "IndustryPointCosts": 75,
+      "IndustryTypeID": "refining",
+      "WealthCost": 3,
+      "OutputAmount": 10
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "ree-magnetics",
+      "Name": "REE-Magnetics",
+      "Description": "Rare-earth permanent magnets and EM focusing elements. Essential for high-performance sensors, drives, and beam weapons.",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 1500,
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.00015,
+      "ResourceCosts": {
+        "rare-earth-elements": 5,
+        "iron": 1
+      },
+      "IndustryPointCosts": 100,
+      "IndustryTypeID": "refining",
+      "WealthCost": 5,
+      "OutputAmount": 10
+    }
   }
 ]

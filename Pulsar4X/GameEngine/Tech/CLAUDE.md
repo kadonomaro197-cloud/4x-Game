@@ -38,13 +38,17 @@ Each day, for each entity with `EntityResearchDB`:
 
 ```csharp
 Tech
-  Level             int     — current level (0 = not started)
-  MaxLevel          int     — caps at this
-  ResearchProgress  int     — accumulated points toward next level
-  ResearchCost      int     — computed: CostFormula(Level) via NCalc
-  Category          string  — maps to a tech category (e.g. "ground-combat")
-  Unlocks           list    — what this tech enables (component designs, formulas)
+  Level             int                          — current level (0 = not started)
+  MaxLevel          int                          — caps at this
+  ResearchProgress  int                          — accumulated points toward next level
+  ResearchCost      int                          — computed: CostFormula(Level) via NCalc
+  Category          string                       — maps to a tech category (e.g. "ground-combat")
+  Unlocks           Dictionary<int, List<string>> — items unlocked at each level (key = tech level)
 ```
+
+**`Unlocks` is `Dictionary<int, List<string>>`.** The key is the tech level at which items unlock; the value is a list of IDs (material IDs, component IDs, etc.). `FactionDataStore.IncrementTechLevel()` iterates the list for the new level and calls `Unlock()` on each ID, moving it from `LockedCargoGoods` to `CargoGoods`.
+
+**IndustryDesigns sync (fixed — this branch):** When a tech levels up and its `Unlocks` include `ProcessedMaterial` IDs, `ResearchProcessor.DoResearch()` now iterates `tech.Unlocks[tech.Level]` and syncs any newly available materials into `factionInfoDB.IndustryDesigns`. Previously, only `tech.Design` (a `ComponentDesign`) was synced, so material-unlocking techs were silently broken — the material reached `CargoGoods` but no colony could queue it for production.
 
 Costs are formulas (NCalc), not flat values — e.g., `"1000 * (Level + 1)^2"`. This means each successive level costs more. Same NCalc engine used by component design.
 

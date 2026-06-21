@@ -104,6 +104,18 @@ namespace Pulsar4X.Factions
         [JsonProperty]
         public IEventLog EventLog { get; internal set; }
 
+        /// <summary>
+        /// True for AI-controlled factions. The NPCDecisionProcessor only acts on factions where this is set.
+        /// </summary>
+        [JsonProperty]
+        public bool IsNPC { get; set; } = false;
+
+        /// <summary>
+        /// Strategic priority weights for NPC decision-making. Ignored for player factions.
+        /// </summary>
+        [JsonProperty]
+        public DoctrineVector Doctrine { get; set; } = new DoctrineVector();
+
         public FactionInfoDB()
         {
             var componentDesigns = new Dictionary<string, ComponentDesign>();

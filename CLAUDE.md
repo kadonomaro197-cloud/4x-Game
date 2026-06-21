@@ -130,6 +130,7 @@ See `ARCHITECTURE.md` for the full data-flow diagram.
 | Fleets | `GameEngine/Fleets/` | `GameEngine/Fleets/CLAUDE.md` |
 | Logistics | `GameEngine/Logistics/` | `GameEngine/Logistics/CLAUDE.md` |
 | Research/Tech | `GameEngine/Tech/` | `GameEngine/Tech/CLAUDE.md` |
+| Factions | `GameEngine/Factions/` | `GameEngine/Factions/CLAUDE.md` |
 | People / Commanders | `GameEngine/People/` | `GameEngine/People/CLAUDE.md` |
 | UI Client | `Pulsar4X.Client/` | `Pulsar4X.Client/CLAUDE.md` |
 | Tests | `Pulsar4X.Tests/` | *(see Testing section below)* |

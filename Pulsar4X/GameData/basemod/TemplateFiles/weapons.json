@@ -15,13 +15,15 @@
         "BuildPointCost": "[Mass]"
       },
       "ResourceCost": {
-        "aluminium": "[Mass] * 0.3",
+        "aluminium": "[Mass] * 0.28",
         "stainless-steel": "[Mass] * 0.1",
         "plastic": "[Mass] * 0.1",
         "copper": "[Mass] * 0.1",
         "tungsten": "[Mass] * 0.2",
         "titanium": "[Mass] * 0.1",
-        "graphite": "[Mass] * 0.1"
+        "graphite": "[Mass] * 0.1",
+        "electronics": "[Mass] * 0.05",
+        "ree-magnetics": "[Mass] * 0.02"
       },
       "ComponentType": "Weapon",
       "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
