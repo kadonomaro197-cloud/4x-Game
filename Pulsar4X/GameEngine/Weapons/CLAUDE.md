@@ -83,6 +83,20 @@ MissileProcessor.LaunchMissile(launcher, target, launchForce, design, count)
 
 ---
 
+## Weapon Range Status (System 1 — complete)
+
+`MaxRange` was already stored on `GenericBeamWeaponAtb` and populated from JSON but never enforced. Now wired:
+
+- `IFireWeaponInstr` has `IsInRange(launcher, target)` with a default `return true` — existing weapon types unaffected unless they override it.
+- `GenericBeamWeaponAtb.IsInRange()` checks `(launchPos - tgtPos).Length() <= MaxRange`. `MaxRange == 0` is treated as unlimited (preserves legacy designs that don't set a range).
+- `GenericFiringWeaponsProcessor` calls `IsInRange()` before `FireWeapon()` — beam weapons now refuse to fire beyond their configured range.
+- `BeamInfoDB` carries `BaseHitChance` (threaded from `GenericBeamWeaponAtb.FireWeapon()` → `FireBeamWeapon()`). `BeamWeaponProcessor.CalculateHit()` now uses the weapon's actual hit chance instead of the hardcoded 0.95.
+- Missile range: deferred — `MissileLauncherAtb` inherits `IsInRange() = true`. Correct implementation requires delta-V calculation. See Gotcha 5.
+
+**JSON default range is 5000m** (weapons.json, "Range" property). This is space-scale tiny — the developer should set this to something realistic (millions of km) when testing. The code is correct; the value is a configuration decision.
+
+---
+
 ## Damage Status (Phase 1a — DamageComplex now wired)
 
 **`DamageProcessor.OnTakingDamage()` is now the active beam-hit path** (replaced `SimpleDamage` placeholder).
@@ -124,8 +138,10 @@ Pattern (copy beam weapon approach):
 
 1. `ValidateTargetExists()` in GenericFiringWeaponsProcessor only sends CeaseFire once even if multiple fire controls have invalid targets. This is a minor bug — all invalid targets should receive CeaseFire.
 
-2. `BeamWeaponProcessor.CalculateHit()` uses a hardcoded 95% base hit chance: `WeaponUtils.ToHitChance(..., 0.95)`. This is a placeholder. The actual hit-chance formula should account for evasion, range, and beam divergence.
+2. **Reload bug — `Math.Max` where `Math.Min` is needed** (`GenericFiringWeaponsProcessor.cs` line ~57): `Math.Max(currentQty + reloadAmount, magSize)` always returns `magSize`, so internal magazines are always instantly full and never actually deplete between shots. This is a pre-existing bug. Do not fix it in the same commit as other weapon changes — it will change combat behaviour significantly and needs its own test.
 
 3. Beam entities are added to the same `StarSystem` as the firing ship. If the target is in a different system (impossible currently, but keep in mind for future multi-system combat), this would break.
 
 4. `MissleLauncherAbilityDB` is spelled with one 's' — `Missle` not `Missile` throughout this directory. Do not "fix" the spelling in file/class names without updating all references.
+
+5. **Missile range is not yet implemented.** `MissileLauncherAtb.IsInRange()` inherits the default `return true` from `IFireWeaponInstr`. The correct implementation is a delta-V range check: can the missile's fuel budget match the target's velocity and distance? See `OrdnanceDesign.cs` for fuel/exhaust data. Tracked as a future task — do not implement until System 9 auto-resolution is being built, as delta-V range directly feeds into the Tier 0 strength model.

@@ -19,6 +19,7 @@ public class BeamInfoDB : BaseDataBlob
     public double Frequency;
     public double Energy;
     public double StartingEnergy;
+    public float BaseHitChance;
     public int FiredBy;
     public Vector3 VelocityVector;
     public (Vector3, Vector3) Positions;

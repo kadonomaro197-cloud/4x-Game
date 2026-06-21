@@ -107,8 +107,7 @@ public class BeamWeaponProcessor : IHotloopProcessor
 
     private static bool CalculateHit(BeamInfoDB beamInfo, (Vector3 pos, double seconds) futurePosTime)
     {
-        // FIXME: fix the base 95% chance to hit
-        var tohit = WeaponUtils.ToHitChance(beamInfo.LaunchPosition, futurePosTime.pos, beamInfo.VelocityVector.Length(), 0.95);
+        var tohit = WeaponUtils.ToHitChance(beamInfo.LaunchPosition, futurePosTime.pos, beamInfo.VelocityVector.Length(), beamInfo.BaseHitChance);
         return (beamInfo.OwningEntity.Manager as StarSystem).RNGNextBool(tohit);
     }
 
@@ -193,16 +192,15 @@ public class BeamWeaponProcessor : IHotloopProcessor
         beamInfo.Positions.Item2 = beamInfo.PosDB.AbsolutePosition;
     }
 
-    public static void FireBeamWeapon(Entity launchingEntity, Entity targetEntity, bool hitsTarget, double energy, double wavelen, double beamVelocity, double beamLenInSeconds)
+    public static void FireBeamWeapon(Entity launchingEntity, Entity targetEntity, bool hitsTarget, double energy, double wavelen, double beamVelocity, double beamLenInSeconds, float baseHitChance = 0.95f)
     {
         var nowTime = launchingEntity.StarSysDateTime;
         var ourAbsPos = launchingEntity.GetDataBlob<PositionDB>().AbsolutePosition;
-        var targetFuturePosTime =WeaponUtils.PredictTargetPositionAndTime(ourAbsPos, nowTime, targetEntity, beamVelocity);
+        var targetFuturePosTime = WeaponUtils.PredictTargetPositionAndTime(ourAbsPos, nowTime, targetEntity, beamVelocity);
 
         var normVector = Vector3.Normalise(targetFuturePosTime.pos - ourAbsPos);
-        var absVector =  normVector * beamVelocity;
+        var absVector = normVector * beamVelocity;
         var startPos = (PositionDB)launchingEntity.GetDataBlob<PositionDB>().Clone();
-        var beamlenInMeters = beamLenInSeconds * UniversalConstants.Units.SpeedOfLightInMetresPerSecond;
 
         // Setup the beam entity
         var beamInfo = new BeamInfoDB(launchingEntity.Id, targetEntity, hitsTarget, energy)
@@ -210,7 +208,8 @@ public class BeamWeaponProcessor : IHotloopProcessor
             Positions = (startPos.AbsolutePosition, startPos.AbsolutePosition),
             LaunchPosition = startPos.AbsolutePosition,
             VelocityVector = absVector,
-            Frequency = wavelen
+            Frequency = wavelen,
+            BaseHitChance = baseHitChance
         };
 
         var dataBlobs = new List<BaseDataBlob>()

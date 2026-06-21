@@ -36,7 +36,7 @@ public class GenericFiringWeaponsProcessor : IHotloopProcessor
             {
                 db.ShotsFiredThisTick[i] = shots;
                 var tgt = db.FireControlStates[i].Target;
-                if(tgt.IsValid)
+                if(tgt.IsValid && db.FireInstructions[i].IsInRange(db.OwningEntity, tgt))
                 {
                     db.FireInstructions[i].FireWeapon(db.OwningEntity, tgt, shots);
                     db.InternalMagQty[i] -= shots * db.AmountPerShot[i];

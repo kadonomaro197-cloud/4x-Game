@@ -56,7 +56,13 @@ From reading the test project structure: tests exist for EntityManager, orbits, 
 | `GameEngine/Damage/DamageComplex/DamageProcessor.cs` | **Modified** — added `DamageResult` struct, changed `OnTakingDamage` to return `DamageResult`, filled the empty component-removal block (finds destroyed components by design ID match, removes via `RemoveComponentInstance`, destroys ship when all components gone) |
 | `GameEngine/Weapons/WeaponBeam/BeamWeaponProcessor.cs` | **Modified** — replaced `SimpleDamage.OnTakingDamage(100, 500)` with corrected `DamageFragment` construction + `DamageProcessor.OnTakingDamage()` call |
 | `GameEngine/Weapons/CLAUDE.md` | Updated — Damage Status section reflects Phase 1a completion and known calibration issues |
-| `docs/COMBAT-DESIGN.md` | **Created** — generalized combat build plan: hardware constraints, LOD model, 11 required systems, build order |
+| `docs/COMBAT-DESIGN.md` | **Created** — generalized combat build plan: hardware constraints, LOD model, 11 required systems, build order, connection maps for all 11 systems |
+| `GameEngine/Weapons/IFireWeaponInstr.cs` | **Modified** — added `IsInRange()` default interface method (`return true`) |
+| `GameEngine/Weapons/WeaponBeam/GenericBeamWeaponAtb.cs` | **Modified** — added `IsInRange()` override checking `MaxRange`; updated `FireWeapon()` to pass `BaseHitChance` |
+| `GameEngine/Weapons/WeaponBeam/BeamInfoDB.cs` | **Modified** — added `BaseHitChance` field |
+| `GameEngine/Weapons/WeaponBeam/BeamWeaponProcessor.cs` | **Modified** — `FireBeamWeapon()` now accepts and stores `baseHitChance`; `CalculateHit()` uses `beamInfo.BaseHitChance` instead of hardcoded 0.95 |
+| `GameEngine/Weapons/WeaponGeneric/GenericFiringWeaponsProcessor.cs` | **Modified** — added `IsInRange()` call before `FireWeapon()` |
+| `GameEngine/Weapons/CLAUDE.md` | Updated — Weapon Range Status section added, new gotchas (reload bug, missile range deferred) |
 | `SESSION_STATE.md` | This file |
 
 **Prior session docs** (on `claude/amazing-clarke-7s118n`): 16 doc files, Aurora reference, hooks, CLAUDE.md files. These are on the branch as commits 1–14.
@@ -68,6 +74,18 @@ From reading the test project structure: tests exist for EntityManager, orbits, 
 ### Phase 1a — COMPLETE
 
 `DamageProcessor.OnTakingDamage()` is now the active beam-hit path. See `GameEngine/Weapons/CLAUDE.md` Damage Status for the three known calibration issues that are tracked but intentionally deferred.
+
+---
+
+### System 1 — Weapon Range — COMPLETE
+
+Wired. `MaxRange` already existed on `GenericBeamWeaponAtb`, was stored in JSON at 5000m, was never enforced. Now enforced via `IsInRange()` on `IFireWeaponInstr`. `BaseHitChance` now flows from weapon attribute through to `CalculateHit()`.
+
+**Developer action required:** The JSON default range of 5000m is space-scale tiny. Before testing combat, set `"PropertyFormula": "5000"` in `GameData/basemod/TemplateFiles/weapons.json` "Range" property to something realistic (e.g., `50000000` = 50,000 km). The code is correct; the value is a design decision.
+
+### System 2 — Sensor Range + Contact Model — NEXT
+
+**Read `GameEngine/Sensors/CLAUDE.md` first** — sensor infrastructure may already partially exist.
 
 ---
 
