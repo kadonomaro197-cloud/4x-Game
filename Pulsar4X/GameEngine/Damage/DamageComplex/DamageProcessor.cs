@@ -1,4 +1,5 @@
 using System;
+using Pulsar4X.Components;
 using Pulsar4X.Datablobs;
 using Pulsar4X.Engine;
 using Pulsar4X.Galaxy;
@@ -8,6 +9,12 @@ using Pulsar4X.Ships;
 
 namespace Pulsar4X.Damage
 {
+    public struct DamageResult
+    {
+        public int Damage;
+        public bool Destroyed;
+    }
+
     internal static class DamageProcessor
     {
         public static void Initialize()
@@ -25,7 +32,7 @@ namespace Pulsar4X.Damage
         /// </summary>
         /// <param name="damageableEntity"></param>
         /// <param name="damageAmount"></param>
-        public static void OnTakingDamage(Entity damageableEntity, DamageFragment damageFragment)
+        public static DamageResult OnTakingDamage(Entity damageableEntity, DamageFragment damageFragment)
         {
 
             if(!damageableEntity.TryGetDataBlob<EntityDamageProfileDB>(out var entityDamageProfileDB))
@@ -41,18 +48,43 @@ namespace Pulsar4X.Damage
                 //return;
             }
 
-            if(entityDamageProfileDB == null) return;
+            if(entityDamageProfileDB == null) return new DamageResult { Damage = 0, Destroyed = false };
 
             var damages = DamageTools.DealDamageEnergyBeamSim(entityDamageProfileDB, damageFragment);
 
             foreach (var damage in damages.damageToComponents)
             {
-                entityDamageProfileDB.ComponentLookupTable[damage.id].HealthPercent -= damage.damageAmount;
+                if (damage.id < entityDamageProfileDB.ComponentLookupTable.Count)
+                    entityDamageProfileDB.ComponentLookupTable[damage.id].HealthPercent -= damage.damageAmount;
             }
 
             if(damageableEntity.TryGetDataBlob<ComponentInstancesDB>(out var damagedComponentInstancesDB))
             {
+                int totalDamage = 0;
+                foreach (var damage in damages.damageToComponents)
+                {
+                    totalDamage += damage.damageAmount;
+                    if (damage.id < entityDamageProfileDB.ComponentLookupTable.Count)
+                    {
+                        var profileInstance = entityDamageProfileDB.ComponentLookupTable[damage.id];
+                        if (profileInstance.HealthPercent <= 0 && profileInstance.Design != null)
+                        {
+                            var matchList = damagedComponentInstancesDB.GetComponentsBySpecificDesign(profileInstance.Design.UniqueID);
+                            if (matchList.Count > 0)
+                                damagedComponentInstancesDB.RemoveComponentInstance(matchList[0]);
+                        }
+                    }
+                }
 
+                if (damagedComponentInstancesDB.AllComponents.Count <= 0)
+                {
+                    if (damageableEntity.HasDataBlob<ShipInfoDB>())
+                        ShipFactory.DestroyShip(damageableEntity);
+                    else
+                        damageableEntity.Destroy();
+                    return new DamageResult { Damage = totalDamage, Destroyed = true };
+                }
+                return new DamageResult { Damage = totalDamage, Destroyed = false };
             }
 
             /*
@@ -180,6 +212,8 @@ namespace Pulsar4X.Damage
                 ReCalcProcessor.ReCalcAbilities(damageableEntity);
             }
             */
+
+            return new DamageResult { Damage = 0, Destroyed = false };
         }
 
         /// <summary>

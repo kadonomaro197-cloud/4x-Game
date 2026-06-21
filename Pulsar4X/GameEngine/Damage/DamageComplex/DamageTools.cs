@@ -246,7 +246,7 @@ namespace Pulsar4X.Damage
                 (byte r, byte g, byte b, byte a) px = thisFrame.GetPixel(dpos.x, dpos.y);
                 if (px.a > 0)
                 {
-                    DamageResistBlueprint damageresist = DamageResistsLookupTable[px.r];
+                    if (!DamageResistsLookupTable.TryGetValue(px.r, out var damageresist)) continue;
 
                     double density = damageresist.Density / (px.a / 255f); //density / health
 

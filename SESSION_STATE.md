@@ -6,7 +6,7 @@ This document tracks what we know about the codebase state at the close of each 
 
 ## Last Updated
 
-Session ending ~2026-06-20. Branch: `claude/amazing-clarke-7s118n` (not yet merged to main — user intent confirmed, awaiting explicit instruction).
+Session ending ~2026-06-21. Branch: `claude/laughing-cannon-08obma` (working branch; `claude/amazing-clarke-7s118n` contained prior docs-only work).
 
 ---
 
@@ -27,11 +27,16 @@ Allowlisted/reachable: `github.com`, `raw.githubusercontent.com`, `api.nuget.org
 **To enable Claude to build/test itself**, the developer must add the dotnet hosts to the environment's network egress settings (see https://code.claude.com/docs/en/claude-code-on-the-web) — at minimum `builds.dotnet.microsoft.com` and `ci.dot.net`. Then a container setup script can `dotnet-install.sh --channel 8.0`. **Even then, running the GAME (UI) still needs the developer** — the container is headless (no display/GPU for SDL2+OpenGL). Do NOT re-test the network each session; this is the confirmed state until the policy changes.
 
 **What we know from reading source (not compiling):**
-- No code changes have been made — docs and infrastructure only.
 - The original repo was a working fork; baseline source should compile.
-- The branch is documentation and `.claude/` config only — zero C# changes.
+- **Phase 1a code changes are now in** — three C# files modified (see "Pinned Change Points" below).
+- This session is the FIRST session with actual C# changes.
 
-**Action for next session's first code change:** developer builds locally first, captures pass/fail, adds result here.
+**Action for developer:** Pull `claude/laughing-cannon-08obma` and run:
+```powershell
+dotnet build Pulsar4X/Pulsar4X.sln
+dotnet test Pulsar4X/Pulsar4X.Tests/Pulsar4X.Tests.csproj
+```
+Paste any errors back. Expected result: build passes; tests pass (no combat tests exist yet).
 
 ---
 
@@ -43,36 +48,29 @@ From reading the test project structure: tests exist for EntityManager, orbits, 
 
 ---
 
-## What's Been Done This Session
-
-All documentation. No code has been touched. These files were created or corrected:
+## What's Been Done This Session (2026-06-21)
 
 | File | Status |
 |------|--------|
-| `CLAUDE.md` (root) | Updated — added plain-language rule, design references, corrected Gotcha #4 (InstallationsDB) |
-| `CONVENTIONS.md` | New — 15-section idiom reference extracted from source |
-| `PLAN.md` | Updated — corrected InstallationsDB references, added priority order, combat model table |
-| `OBJECTIVE.md` | New — concrete build spec (this session) |
-| `ARCHITECTURE.md` | Updated — corrected colony data flow, InstallationsDB correction |
-| `GameEngine/Colonies/CLAUDE.md` | Updated — corrected installation system section |
-| `GameEngine/Industry/CLAUDE.md` | Updated — corrected InstallationsDB rows |
-| `Pulsar4X.Client/CLAUDE.md` | Updated — corrected PlanetaryWindow entry |
-| `GameEngine/Fleets/CLAUDE.md` | New (this session) |
-| `.claude/settings.json` | New — hooks + read-deny for bin/obj |
-| `.claude/hooks/session_start.sh` | New |
-| `.claude/hooks/session_stop.sh` | New |
-| `.claude/hooks/lint_csharp.sh` | New |
-| `.claude/commands/build-check.md` | New |
-| `.claude/commands/phase-status.md` | New |
-| `.claude/commands/damage-audit.md` | New |
-| `docs/aurora/*.md` (13 files) | New — full Aurora design reference |
-| `SESSION_STATE.md` | New (this file) |
+| `GameEngine/Damage/DamageComplex/DamageTools.cs` | **Modified** — added `TryGetValue` guard in `DealDamageEnergyBeamSim()` to skip unknown material IDs instead of throwing `KeyNotFoundException` |
+| `GameEngine/Damage/DamageComplex/DamageProcessor.cs` | **Modified** — added `DamageResult` struct, changed `OnTakingDamage` to return `DamageResult`, filled the empty component-removal block (finds destroyed components by design ID match, removes via `RemoveComponentInstance`, destroys ship when all components gone) |
+| `GameEngine/Weapons/WeaponBeam/BeamWeaponProcessor.cs` | **Modified** — replaced `SimpleDamage.OnTakingDamage(100, 500)` with corrected `DamageFragment` construction + `DamageProcessor.OnTakingDamage()` call |
+| `GameEngine/Weapons/CLAUDE.md` | Updated — Damage Status section reflects Phase 1a completion and known calibration issues |
+| `SESSION_STATE.md` | This file |
+
+**Prior session docs** (on `claude/amazing-clarke-7s118n`): 16 doc files, Aurora reference, hooks, CLAUDE.md files. These are on the branch as commits 1–14.
 
 ---
 
 ## Pinned Change Points (Next Code Work)
 
-### Phase 2a — Fix Installations Tab (FIRST)
+### Phase 1a — COMPLETE
+
+`DamageProcessor.OnTakingDamage()` is now the active beam-hit path. See `GameEngine/Weapons/CLAUDE.md` Damage Status for the three known calibration issues that are tracked but intentionally deferred.
+
+---
+
+### Phase 2a — Fix Installations Tab (FIRST UI TASK)
 
 **File:** `Pulsar4X/Pulsar4X.Client/Interface/Windows/PlanetaryWindow.cs`
 
@@ -83,19 +81,6 @@ Two broken lines to fix:
 The `ComponentInstancesDBDisplay` panel already exists in the client — search for it and reuse rather than writing a new table.
 
 **Read before touching:** `GameEngine/Colonies/CLAUDE.md`, `CONVENTIONS.md` §6.
-
----
-
-### Phase 1a — Wire Complex Damage (can run parallel with Phase 2)
-
-**File:** `Pulsar4X/GameEngine/Weapons/WeaponBeam/BeamWeaponProcessor.cs`
-
-- **Line 132:** `// DamageProcessor.OnTakingDamage(beamInfo.TargetEntity, damage);` — uncomment this
-- **Line 134:** `var damageResult = SimpleDamage.OnTakingDamage(beamInfo.TargetEntity, 100, 500);` — remove or comment out this
-
-**Read first:** `GameEngine/Damage/DamageComplex/DamageTools.cs` and `DamageProcessor.cs` in full — understand what `DamageProcessor.OnTakingDamage()` actually needs as arguments before removing the SimpleDamage call. The signature may not match.
-
-**Read:** `GameEngine/Damage/CLAUDE.md`.
 
 ---
 
@@ -119,7 +104,10 @@ The `maxPopulation` calculation on line 49 is already close to the Aurora formul
 | Issue | File | Line | Doc |
 |-------|------|------|-----|
 | Installations tab never appears | PlanetaryWindow.cs | 107, 221 | Colonies/CLAUDE.md Gotcha #1 |
-| SimpleDamage placeholder | BeamWeaponProcessor.cs | 132–134 | Damage/CLAUDE.md, root CLAUDE.md Gotcha #1 |
+| ~~SimpleDamage placeholder~~ | ~~BeamWeaponProcessor.cs~~ | ~~132–134~~ | **FIXED Phase 1a** — DamageComplex now wired |
+| Off-by-one in ComponentLookupTable indexing | DamageProcessor.cs + ComponentPlacement.cs | G-channel 1-indexed, table 0-indexed | Weapons/CLAUDE.md Damage Status |
+| One-hit destroys (units mismatch) | DamageProcessor.cs | damage.damageAmount=1, HealthPercent starts 1.0f | Weapons/CLAUDE.md Damage Status |
+| DamageResistsLookupTable sparse | DamageTools.cs + damageResistance.json | JSON field name mismatch | Weapons/CLAUDE.md Damage Status |
 | Colony damage block commented out | DamageProcessor.cs | ~101–181 | Damage/CLAUDE.md, root CLAUDE.md Gotcha #8 |
 | Population −50% die-off stub | PopulationProcessor.cs | 54 | COLONY-ENVIRONMENT-AND-POPULATION.md |
 | Missile guidance hardcoded false | MissleProcessor.cs | directAttack | root CLAUDE.md Gotcha #3 |

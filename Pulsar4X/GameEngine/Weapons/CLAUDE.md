@@ -83,25 +83,20 @@ MissileProcessor.LaunchMissile(launcher, target, launchForce, design, count)
 
 ---
 
-## Damage Status (CRITICAL — read before modifying)
+## Damage Status (Phase 1a — DamageComplex now wired)
 
-**The complex damage path is disabled.** In `BeamWeaponProcessor.OnHit()` (~line 134):
+**`DamageProcessor.OnTakingDamage()` is now the active beam-hit path** (replaced `SimpleDamage` placeholder).
 
-```csharp
-// COMMENTED OUT — the real path:
-// DamageProcessor.OnTakingDamage(beamInfo.TargetEntity, damage);
+`BeamWeaponProcessor.OnHit()` (~line 117) now:
+1. Computes `posRelativeToTarget`, `shipFutureVel` (via `MoveMath.GetAbsoluteFutureVelocity`), `relativeVelocity`.
+2. Builds a `DamageFragment`: `Position` (correct field name), `Momentum = E/c`, `Length` from `Positions.Item1/.Item2`.
+3. Calls `DamageProcessor.OnTakingDamage(target, damageFragment)` → returns `DamageResult { int Damage; bool Destroyed }`.
+4. Publishes `TargetDestroyed` / `TargetHit` events.
 
-// ACTIVE — the placeholder:
-var damageResult = SimpleDamage.OnTakingDamage(beamInfo.TargetEntity, 100, 500);
-```
-
-`SimpleDamage.OnTakingDamage(entity, min, max)`:
-- Picks a random component from `ComponentInstancesDB.AllComponents`.
-- Deals `RNG.Next(100, 500)` damage to that component's `HTKRemaining`.
-- If HTK ≤ 0, removes the component.
-- If no components remain, calls `ShipFactory.DestroyShip()`.
-
-This works minimally but has no armor, no shields, no spatial component placement, and uses hardcoded magic numbers. **Phase 1 priority: replace with `DamageProcessor.OnTakingDamage()`.**
+Known calibration issues (pre-existing, tracked, don't fix without dedicated task):
+- **Off-by-one**: G-channel bitmap is 1-indexed but `ComponentLookupTable` is 0-indexed → first slot never targeted.
+- **One-hit destroys**: `HealthPercent` (float, starts 1.0) − `damageAmount` (int, value 1) = 0 on first hit. Units mismatch, needs calibration.
+- **Sparse material table**: `DamageResistsLookupTable` not fully populated (JSON field name mismatch). Guard added: unknown materials are skipped (beam passes through harmlessly).
 
 ---
 

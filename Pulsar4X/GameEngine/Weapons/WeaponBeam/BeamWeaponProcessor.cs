@@ -114,24 +114,21 @@ public class BeamWeaponProcessor : IHotloopProcessor
 
     private static void OnHit(BeamInfoDB beamInfo, (Vector3 AbsolutePosition, Vector3 VelocityVector) state, DateTime nowTime, (Vector3 pos, double seconds) futurePosTime)
     {
-        // var posRelativeToTarget = futurePosTime.pos - state.AbsolutePosition;
-        // var shipFutureVel = beamInfo.TargetEntity.GetAbsoluteFutureVelocity(nowTime + TimeSpan.FromSeconds(futurePosTime.seconds));
-        // var relativeVelocity = shipFutureVel - beamInfo.VelocityVector;
-        // var freq = beamInfo.Frequency;
+        var posRelativeToTarget = futurePosTime.pos - state.AbsolutePosition;
+        var shipFutureVel = MoveMath.GetAbsoluteFutureVelocity(beamInfo.TargetEntity, nowTime + TimeSpan.FromSeconds(futurePosTime.seconds));
+        var relativeVelocity = shipFutureVel - beamInfo.VelocityVector;
 
-        // DamageFragment damage = new DamageFragment()
-        // {
-        //     Velocity = new Vector2(relativeVelocity.X, relativeVelocity.Y),
-        //     RelativePosition = ((int)posRelativeToTarget.X, (int)posRelativeToTarget.Y),
-        //     Mass = 0.000001f,
-        //     Density = 1000,
-        //     Momentum = (float)(UniversalConstants.Science.PlankConstant * freq),
-        //     Length = (float)(beamInfo.Positions[0] - beamInfo.Positions[1]).Length(),
-        //     Energy = beamInfo.Energy,
-        // };
-        // DamageProcessor.OnTakingDamage(beamInfo.TargetEntity, damage);
-
-        var damageResult = SimpleDamage.OnTakingDamage(beamInfo.TargetEntity, 100, 500);
+        var damageFragment = new DamageFragment()
+        {
+            Velocity = new Vector2(relativeVelocity.X, relativeVelocity.Y),
+            Position = ((int)posRelativeToTarget.X, (int)posRelativeToTarget.Y),
+            Mass = 0.000001f,
+            Density = 1000,
+            Momentum = (float)(beamInfo.Energy / UniversalConstants.Units.SpeedOfLightInMetresPerSecond),
+            Length = (float)(beamInfo.Positions.Item1 - beamInfo.Positions.Item2).Length(),
+            Energy = beamInfo.Energy,
+        };
+        var damageResult = DamageProcessor.OnTakingDamage(beamInfo.TargetEntity, damageFragment);
 
         if(damageResult.Destroyed)
         {
