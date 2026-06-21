@@ -171,6 +171,32 @@ This tells us the Installations tab, once fixed, has real data to display — it
 ### Claude's execution environment
 Remote Linux cloud container. **No .NET SDK installed.** Claude edits files here; the developer pulls and builds on their own machine.
 
+### CRITICAL — Session repository scope must be `4x-Game`, not `Pulsar4x`
+
+The Claude Code remote session must be started with **`kadonomaro197-cloud/4x-Game`** as the authorized repository. If started with `kadonomaro197-cloud/Pulsar4x` (which doesn't exist on GitHub), the git proxy blocks all pushes with "repository not authorized" and MCP GitHub tools return "Access denied." This cannot be fixed mid-session.
+
+**How to verify the session scope** (run this at the start of any new session):
+```bash
+cat /home/claude/.claude/remote/.session_ingress_token
+```
+Look for `"sources"` in the JWT payload. It must contain `kadonomaro197-cloud/4x-Game`. If it shows `kadonomaro197-cloud/Pulsar4x`, the session is misconfigured — end it and start a new one.
+
+**If a session IS misconfigured and you have uncommitted or unpushable work:**
+```bash
+git format-patch origin/HEAD..HEAD --stdout > /home/user/all-work.patch
+```
+Then use `SendUserFile("/home/user/all-work.patch")` to deliver the patch. The user applies it on their Windows machine:
+```powershell
+# In local 4x-Game clone
+git checkout -b claude/amazing-clarke-7s118n
+git am < all-work.patch
+git push -u origin claude/amazing-clarke-7s118n
+```
+
+**Correct session configuration:**
+- Repo 1: `kadonomaro197-cloud/4x-Game`
+- Repo 2: `kadonomaro197-cloud/AiD-Main`
+
 ### Developer's machine
 | Item | Value |
 |------|-------|

@@ -200,6 +200,8 @@ Test utilities live in `TestHelper.cs` and `TestingUtilities.cs`.
 
 8. **Colony damage code for ground bombardment exists as a commented-out block** in `DamageProcessor.cs` (~lines 101–181). It references now-missing types (`ComponentInfoDB`, `ComponentInstanceData`, `MassVolumeDB.Volume_km3`) but contains the design intent for orbital bombardment. Read it before designing the ground combat damage system.
 
+9. **Claude Code remote sessions MUST be configured with `kadonomaro197-cloud/4x-Game`, not `Pulsar4x`.** The git proxy enforces the session's repository scope. If the session was started with the wrong repo name (`Pulsar4x` doesn't exist on GitHub — the actual game repo is `4x-Game`), every `git push` returns "repository not authorized" and MCP GitHub tools return "Access denied." There is no fix mid-session; the work cannot be pushed until a new session is started with the correct repo name. Verify the scope by checking the session ingress token: `cat /home/claude/.claude/remote/.session_ingress_token` — the JWT payload's `"sources"` field shows the authorized repos. The correct session configuration is `kadonomaro197-cloud/4x-Game` + `kadonomaro197-cloud/AiD-Main`. If you find yourself blocked, generate a patch with `git format-patch origin/HEAD..HEAD --stdout > /home/user/all-work.patch` and send it to the user via `SendUserFile` — all work is preserved and can be applied to a local clone with `git am`.
+
 ---
 
 ## How to Work in This Repo (Working Agreement)
