@@ -1,5 +1,6 @@
 ﻿using ImGuiNET;
 using Pulsar4X.Engine;
+using Pulsar4X.Datablobs;
 using Pulsar4X.Industry;
 using Pulsar4X.Extensions;
 using System;
@@ -98,7 +99,7 @@ namespace Pulsar4X.Client
 
             if(_lookedAtEntity == null) return;
 
-            if (_lookedAtEntity.Entity.HasDataBlob<InstallationsDB>())
+            if (_lookedAtEntity.Entity.HasDataBlob<ComponentInstancesDB>())
             {
                 ImGui.SameLine();
                 if (ImGui.SmallButton("Installations"))
@@ -213,9 +214,10 @@ namespace Pulsar4X.Client
 
         private void RenderInstallations()
         {
-            if (_lookedAtEntity != null && _lookedAtEntity.Entity.HasDataBlob<InstallationsDB>())
+            if (_lookedAtEntity == null) return;
+            if (_lookedAtEntity.Entity.TryGetDataBlob<ComponentInstancesDB>(out var componentsDB))
             {
-                InstallationsDB tempInstallations = _lookedAtEntity.Entity.GetDataBlob<InstallationsDB>();
+                componentsDB.Display(_lookedAtEntity, _uiState);
             }
         }
 
