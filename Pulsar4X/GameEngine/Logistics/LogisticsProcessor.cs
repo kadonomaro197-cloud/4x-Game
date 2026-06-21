@@ -10,6 +10,7 @@ using Pulsar4X.Orbits;
 using Pulsar4X.Storage;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Movement;
+using Pulsar4X.Blueprints;
 
 namespace Pulsar4X.Logistics;
 
@@ -31,7 +32,9 @@ public class LogiBaseProcessor : IHotloopProcessor
 
     public void ProcessEntity(Entity entity, int deltaSeconds)
     {
-        LogisticsCycle.LogiBaseBidding(entity.GetDataBlob<LogiBaseDB>());
+        var tradeBase = entity.GetDataBlob<LogiBaseDB>();
+        LogisticsCycle.UpdateListings(tradeBase);
+        LogisticsCycle.LogiBaseBidding(tradeBase);
     }
 
     public int ProcessManager(EntityManager manager, int deltaSeconds)
@@ -40,6 +43,7 @@ public class LogiBaseProcessor : IHotloopProcessor
         var shippingEntities = manager.GetAllEntitiesWithDataBlob<LogiShipperDB>();
         foreach(LogiBaseDB tradeBase in tradingBases)
         {
+            LogisticsCycle.UpdateListings(tradeBase);
             LogisticsCycle.LogiBaseBidding(tradeBase);
         }
         return tradingBases.Count;
@@ -100,6 +104,53 @@ public static class LogisticsCycle
         public long NumberOfItems;
         public double timeInSeconds;
         public double fuelUseDV;
+    }
+
+    // Called each base-processor tick before bidding. Recomputes ListedItems from DesiredLevels
+    // and current stock: bases automatically advertise surplus and request shortfall at prices
+    // that scale with how far stock is from the desired target (0.25x–4x base credit value).
+    public static void UpdateListings(LogiBaseDB tradeBase)
+    {
+        if (tradeBase.DesiredLevels.Count == 0)
+            return;
+        if (!tradeBase.OwningEntity.TryGetDataBlob<CargoStorageDB>(out var storage))
+            return;
+
+        foreach (var kvp in tradeBase.DesiredLevels)
+        {
+            ICargoable item = kvp.Key;
+            int minVal = kvp.Value.minVal;
+            int maxVal = kvp.Value.maxVal;
+
+            long currentStock = storage.GetUnitsStored(item, false);
+            double desiredMid = (minVal + maxVal) * 0.5;
+            double ratio = desiredMid / Math.Max(1L, currentStock);
+            int effectivePrice = (int)Math.Max(1.0, Math.Round(GetItemCreditValue(item) * Math.Clamp(ratio, 0.25, 4.0)));
+
+            if (currentStock > maxVal)
+            {
+                int surplus = (int)Math.Min(currentStock - maxVal, int.MaxValue);
+                tradeBase.ListedItems[item] = (surplus, effectivePrice);
+            }
+            else if (currentStock < minVal)
+            {
+                int shortage = (int)Math.Min(minVal - currentStock, int.MaxValue);
+                tradeBase.ListedItems[item] = (-shortage, effectivePrice);
+            }
+            else
+            {
+                tradeBase.ListedItems.Remove(item);
+            }
+        }
+    }
+
+    private static double GetItemCreditValue(ICargoable item)
+    {
+        if (item is ProcessedMaterialBlueprint material)
+            return material.CreditValue;
+        if (item is MineralBlueprint mineral)
+            return mineral.CreditValue;
+        return 0;
     }
 
 

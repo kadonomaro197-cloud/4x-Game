@@ -6,6 +6,7 @@
       "Name": "Stainless Steel",
       "Description": "Refined Iron",
       "CargoTypeID": "general-storage",
+      "CreditValue": 25,
       "MassPerUnit": 1.0,
       "VolumePerUnit": 0.000125,
       "PartMatUniqueID": "stainless-steel",
@@ -27,6 +28,7 @@
       "Name": "RP-1",
       "Description": "Highly refined Kerosene and Oxygen at a mix of 0.52:1 by volume",
       "CargoTypeID": "fuel-storage",
+      "CreditValue": 20,
       "MassPerUnit": 1,
       "VolumePerUnit": 0.0009446885,
       "ResourceCosts": {
@@ -49,6 +51,7 @@
       "Name": "Methalox",
       "Description": "Highly refined Methane and Oxygen rocket fuel at a mix of 1:3.333 by mass",
       "CargoTypeID": "fuel-storage",
+      "CreditValue": 20,
       "MassPerUnit": 1,
       "VolumePerUnit": 0.000835561,
       "ResourceCosts": {
@@ -71,6 +74,7 @@
       "Name": "Hydrolox",
       "Description": "Hydrogen and Oxygen rocket fuel at a mix of 2.7:1 by volume",
       "CargoTypeID": "fuel-storage",
+      "CreditValue": 25,
       "MassPerUnit": 1,
       "VolumePerUnit": 0.002777778,
       "ResourceCosts": {
@@ -93,6 +97,7 @@
       "Name": "Nuclear Thruster Propellant",
       "Description": "Composite fuel for nuclear thrusters, hydrogen with encapsulated fissile package.",
       "CargoTypeID": "fuel-storage",
+      "CreditValue": 2500,
       "MassPerUnit": 1,
       "VolumePerUnit": 0.002777778,
       "ResourceCosts": {
@@ -116,6 +121,7 @@
       "Name": "Plastic",
       "Description": "Rendered from Hydrocarbons",
       "CargoTypeID": "general-storage",
+      "CreditValue": 15,
       "PartMatUniqueID": "delrin",
       "MassPerUnit": 1,
       "VolumePerUnit": 0.0010638298,
@@ -135,6 +141,7 @@
       "Name": "Fissile fuels",
       "Description": "Processed fuel for nuclear reactors, enriched for fission.",
       "CargoTypeID": "fuel-storage",
+      "CreditValue": 50000,
       "MassPerUnit": 1.0,
       "VolumePerUnit": 0.0000531915,
       "ResourceCosts": {
@@ -154,6 +161,7 @@
       "Name": "Electronics",
       "Description": "Electrical components",
       "CargoTypeID": "general-storage",
+      "CreditValue": 250,
       "MassPerUnit": 1.0,
       "VolumePerUnit": 0.002,
       "ResourceCosts": {
@@ -175,6 +183,7 @@
       "Name": "Electricity",
       "Description": "Electrical Energy",
       "CargoTypeID": "battery-storage",
+      "CreditValue": 0,
       "MassPerUnit": 0.0,
       "VolumePerUnit": 0,
       "ResourceCosts": {
@@ -192,6 +201,7 @@
       "Name": "Space-Crete",
       "Description": "A composite material for extraterrestrial construction, utilizing local regolith and minerals.",
       "CargoTypeID": "general-storage",
+      "CreditValue": 10,
       "PartMatUniqueID": "concrete",
       "MassPerUnit": 2.4,
       "VolumePerUnit": 0.000417,

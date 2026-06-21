@@ -6,6 +6,7 @@
       "Name": "Hydrocarbons",
       "Description": "Cruid Oil, Coal and Natural Gas",
       "CargoTypeID": "general-storage",
+      "CreditValue": 5,
       "MassPerUnit": 1.0,
       "VolumePerUnit": 0.0011111,
       "Abundance": {
@@ -27,6 +28,7 @@
       "Name": "Iron",
       "Description": "A naturally-occurring mineral in large deposits.",
       "CargoTypeID": "general-storage",
+      "CreditValue": 10,
       "MassPerUnit": 1.0,
       "VolumePerUnit": 0.0001270648,
       "Abundance": {
@@ -48,6 +50,7 @@
       "Name": "Aluminium",
       "Description": "A naturally-occurring mineral in large deposits.",
       "CargoTypeID": "general-storage",
+      "CreditValue": 15,
       "PartMatUniqueID": "aluminum",
       "MassPerUnit": 1.0,
       "VolumePerUnit": 0.0003703703,
@@ -70,6 +73,7 @@
       "Name": "Copper",
       "Description": "A naturally-occurring mineral in large deposits.",
       "CargoTypeID": "general-storage",
+      "CreditValue": 50,
       "MassPerUnit": 1.0,
       "VolumePerUnit": 0.0001118568,
       "Abundance": {
@@ -91,6 +95,7 @@
       "Name": "Titanium",
       "Description": "A naturally-occurring mineral in large deposits.",
       "CargoTypeID": "general-storage",
+      "CreditValue": 75,
       "MassPerUnit": 1.0,
       "VolumePerUnit": 0.0002202643,
       "Abundance": {
@@ -112,6 +117,7 @@
       "Name": "Lithium",
       "Description": "A naturally-occurring mineral in large deposits.",
       "CargoTypeID": "general-storage",
+      "CreditValue": 100,
       "MassPerUnit": 1.0,
       "VolumePerUnit": 0.0018691589,
       "Abundance": {
@@ -133,6 +139,7 @@
       "Name": "Chromium",
       "Description": "A naturally-occurring mineral in large deposits.",
       "CargoTypeID": "general-storage",
+      "CreditValue": 40,
       "MassPerUnit": 1.0,
       "VolumePerUnit": 0.0001388889,
       "Abundance": {
@@ -154,6 +161,7 @@
       "Name": "Fissionables",
       "Description": "Un-refined Fissionable Metals",
       "CargoTypeID": "general-storage",
+      "CreditValue": 500,
       "MassPerUnit": 1.0,
       "VolumePerUnit": 0.0000531915,
       "Abundance": {
@@ -175,6 +183,7 @@
       "Name": "Silicon",
       "Description": "A naturally-occurring mineral in large deposits.",
       "CargoTypeID": "general-storage",
+      "CreditValue": 15,
       "MassPerUnit": 1.0,
       "VolumePerUnit": 0.000429185,
       "Abundance": {
@@ -196,6 +205,7 @@
       "Name": "Graphite",
       "Description": "A naturally-occurring mineral in large deposits.",
       "CargoTypeID": "general-storage",
+      "CreditValue": 25,
       "MassPerUnit": 1.0,
       "VolumePerUnit": 0.00044,
       "Abundance": {
@@ -217,6 +227,7 @@
       "Name": "Tungsten",
       "Description": "A naturally-occurring mineral.",
       "CargoTypeID": "general-storage",
+      "CreditValue": 250,
       "MassPerUnit": 1.0,
       "VolumePerUnit": 0.052,
       "Abundance": {
@@ -238,6 +249,7 @@
       "Name": "Nickel",
       "Description": "A naturally-occurring mineral in large deposits.",
       "CargoTypeID": "general-storage",
+      "CreditValue": 25,
       "MassPerUnit": 1.0,
       "VolumePerUnit": 0.000112259,
       "Abundance": {
@@ -259,7 +271,7 @@
       "Name": "Water",
       "Description": "Essential for life, found in various forms across celestial bodies.",
       "CargoTypeID": "general-storage",
-      "UniqueID": "water",
+      "CreditValue": 5,
       "MassPerUnit": 1.0,
       "VolumePerUnit": 0.001,
       "Abundance": {
@@ -281,6 +293,7 @@
       "Name": "Rare Earth Elements",
       "Description": "A group of metals crucial for advanced technology and industry.",
       "CargoTypeID": "general-storage",
+      "CreditValue": 1000,
       "MassPerUnit": 1.0,
       "VolumePerUnit": 0.00018,
       "Abundance": {
@@ -302,8 +315,9 @@
       "Name": "Regolith",
       "Description": "Loose, heterogeneous material covering solid rock on celestial bodies.",
       "CargoTypeID": "general-storage",
-      "MassPerUnit": 1.0, 
-      "VolumePerUnit": 0.0004, 
+      "CreditValue": 1,
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.0004,
       "Abundance": {
         "Terrestrial": 0.9,
         "GasGiant": 0.0,
