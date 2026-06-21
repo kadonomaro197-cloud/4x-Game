@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Pulsar4X.Colonies;
 using Pulsar4X.Components;
 using Pulsar4X.Datablobs;
 using Pulsar4X.Engine;
@@ -44,6 +46,10 @@ namespace Pulsar4X.Damage
                 {
                     entityDamageProfileDB = new EntityDamageProfileDB(shipInfoDB.Design);
                     damageableEntity.SetDataBlob(entityDamageProfileDB);
+                }
+                else if (damageableEntity.HasDataBlob<ColonyInfoDB>())
+                {
+                    return OnColonyDamage(damageableEntity, damageFragment);
                 }
                 //return;
             }
@@ -214,6 +220,86 @@ namespace Pulsar4X.Damage
             */
 
             return new DamageResult { Damage = 0, Destroyed = false };
+        }
+
+        /// <summary>
+        /// Applies orbital bombardment damage to a colony: population casualties,
+        /// atmospheric contamination, and randomized installation destruction.
+        /// Called when a beam weapon or missile strikes a colony entity directly.
+        /// </summary>
+        private static DamageResult OnColonyDamage(Entity colonyEntity, DamageFragment damageFragment)
+        {
+            var colonyInfoDB = colonyEntity.GetDataBlob<ColonyInfoDB>();
+            var starSystem = colonyEntity.Manager as StarSystem;
+            if (starSystem == null)
+                return new DamageResult { Damage = 0, Destroyed = false };
+
+            // Scale energy to damage-strength units. 100 MJ per unit so a typical
+            // missile warhead (1–100 TJ) yields 10,000–1,000,000 units.
+            // Tuning: adjust the divisor when warhead energy values are finalized.
+            int damageStrength = Math.Max(1, (int)(damageFragment.Energy / 1e8));
+
+            // Population casualties: quarter million dead per damage unit.
+            if (colonyInfoDB.Population.Count > 0)
+            {
+                long totalPop = 0;
+                foreach (var pop in colonyInfoDB.Population.Values)
+                    totalPop += pop;
+
+                if (totalPop > 0)
+                {
+                    long casualties = Math.Min(damageStrength * 250_000L, totalPop);
+                    var speciesIds = new List<int>(colonyInfoDB.Population.Keys);
+                    foreach (int speciesId in speciesIds)
+                    {
+                        long share = (long)((double)colonyInfoDB.Population[speciesId] / totalPop * casualties);
+                        colonyInfoDB.Population[speciesId] = Math.Max(0L, colonyInfoDB.Population[speciesId] - share);
+                    }
+                }
+            }
+
+            // Atmospheric contamination from explosions: raise dust and radiation.
+            if (colonyInfoDB.PlanetEntity.TryGetDataBlob<SystemBodyInfoDB>(out var sysBodyInfo))
+            {
+                float contamination = damageStrength * 0.001f;
+                sysBodyInfo.AtmosphericDust  = Math.Min(1.0f,  sysBodyInfo.AtmosphericDust  + contamination);
+                sysBodyInfo.RadiationLevel   = Math.Min(10.0f, sysBodyInfo.RadiationLevel   + contamination);
+            }
+
+            // Installation damage: randomly pick and damage installations until
+            // the damage budget is spent or all installations are destroyed.
+            if (colonyEntity.TryGetDataBlob<ComponentInstancesDB>(out var installsDB))
+            {
+                var targets = new List<ComponentInstance>(installsDB.AllComponents.Values);
+                int budget = damageStrength;
+                int misses = 0;
+
+                while (budget > 0 && targets.Count > 0 && misses < 20)
+                {
+                    int idx = starSystem.RNGNext(targets.Count);
+                    var target = targets[idx];
+
+                    if (target.HealthPercent > 0)
+                    {
+                        float drain = Math.Min(budget * 0.001f, target.HealthPercent);
+                        target.HealthPercent -= drain;
+                        budget -= Math.Max(1, (int)(drain * 1000));
+
+                        if (target.HealthPercent <= 0)
+                        {
+                            installsDB.RemoveComponentInstance(target);
+                            targets.RemoveAt(idx);
+                        }
+                    }
+                    else
+                    {
+                        misses++;
+                    }
+                }
+            }
+
+            ReCalcProcessor.ReCalcAbilities(colonyEntity);
+            return new DamageResult { Damage = damageStrength, Destroyed = false };
         }
 
         /// <summary>
