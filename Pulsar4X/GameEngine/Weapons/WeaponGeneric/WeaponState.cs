@@ -27,9 +27,20 @@ namespace Pulsar4X.Weapons
         public (string name, double value, ValueTypeStruct valueType)[] WeaponStats;
         [JsonProperty]
         public int InternalMagCurAmount = 0;
-        //public OrdnanceDesign AssignedOrdnanceDesign {get; internal set;}
-        
 
+        // Thermal management for beam weapons.
+        // CurrentHeat_kJ rises each time the weapon fires; falls by passive radiation each tick.
+        // When CurrentHeat_kJ >= HeatCapacity_kJ the weapon is suppressed (cannot fire).
+        [JsonProperty]
+        public float CurrentHeat_kJ = 0f;
+        [JsonProperty]
+        public float HeatCapacity_kJ = 1f;
+        // AllowThermalOverride: weapon design permits firing past thermal limit (risks weapon damage).
+        // ThermalOverrideActive: player has turned override on for this instance.
+        [JsonProperty]
+        public bool AllowThermalOverride = false;
+        [JsonProperty]
+        public bool ThermalOverrideActive = false;
 
         [JsonConstructor]
         private WeaponState(){}
@@ -48,9 +59,11 @@ namespace Pulsar4X.Weapons
             ReadyToFire = db.ReadyToFire;
             WeaponComponentInstance = db.WeaponComponentInstance;
             WeaponStats = db.WeaponStats;
-            //AssignedOrdnanceDesign = db.AssignedOrdnanceDesign;
             InternalMagCurAmount = db.InternalMagCurAmount;
-
+            CurrentHeat_kJ = db.CurrentHeat_kJ;
+            HeatCapacity_kJ = db.HeatCapacity_kJ;
+            AllowThermalOverride = db.AllowThermalOverride;
+            ThermalOverrideActive = db.ThermalOverrideActive;
         }
         
         // JSON deserialization callback.

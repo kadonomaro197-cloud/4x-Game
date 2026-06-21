@@ -1,6 +1,7 @@
 using System;
 using Pulsar4X.Engine;
 using Pulsar4X.Engine.Orders;
+using Pulsar4X.Energy;
 using Pulsar4X.Interfaces;
 
 namespace Pulsar4X.Weapons;
@@ -28,19 +29,61 @@ public class GenericFiringWeaponsProcessor : IHotloopProcessor
 
     private void UpdateWeapons(GenericFiringWeaponsDB db)
     {
-        //fire weapons that are able.
+        // Resolve the ship's power system once. May be null for entities without power plants.
+        EnergyGenAbilityDB energyDB = null;
+        if (db.OwningEntity != null)
+            db.OwningEntity.TryGetDataBlob<EnergyGenAbilityDB>(out energyDB);
+
         for (int i = 0; i < db.WpnIDs.Length; i++)
         {
+            var ws = db.WeaponStates[i];
+
+            // Beam weapons: passive thermal cooling every tick (half a second of radiator output).
+            // Non-beam weapons skip this block entirely.
+            GenericBeamWeaponAtb beamAtb = db.FireInstructions[i] as GenericBeamWeaponAtb;
+            if (beamAtb != null)
+            {
+                float cooling = (float)(beamAtb.ThermalOutput_W / 1000.0 * 0.5);
+                ws.CurrentHeat_kJ = Math.Max(0f, ws.CurrentHeat_kJ - cooling);
+            }
+
             int shots = (int)(db.InternalMagQty[i] / db.AmountPerShot[i]);
             if (shots >= db.MinShotsPerfire[i] && db.OwningEntity != null)
             {
-                db.ShotsFiredThisTick[i] = shots;
                 var tgt = db.FireControlStates[i].Target;
-                if(tgt.IsValid && db.FireInstructions[i].IsInRange(db.OwningEntity, tgt))
+                if (tgt.IsValid && db.FireInstructions[i].IsInRange(db.OwningEntity, tgt))
                 {
-                    db.FireInstructions[i].FireWeapon(db.OwningEntity, tgt, shots);
-                    db.InternalMagQty[i] -= shots * db.AmountPerShot[i];
-                    db.WeaponStates[i].InternalMagCurAmount = db.InternalMagQty[i];
+                    bool canFire = true;
+
+                    if (beamAtb != null)
+                    {
+                        // Thermal suppression: blocked if heat at capacity and override not active.
+                        if (ws.CurrentHeat_kJ >= ws.HeatCapacity_kJ && !ws.ThermalOverrideActive)
+                            canFire = false;
+
+                        // Power grid check: deduct shot cost from ship's stored energy.
+                        if (canFire && energyDB != null && energyDB.EnergyType != null)
+                        {
+                            string etype = energyDB.EnergyType.UniqueID;
+                            double costKJ = beamAtb.Energy / 1000.0;
+                            if (energyDB.EnergyStored.TryGetValue(etype, out double stored) && stored >= costKJ)
+                                energyDB.EnergyStored[etype] = stored - costKJ;
+                            else
+                                canFire = false;
+                        }
+                    }
+
+                    if (canFire)
+                    {
+                        db.ShotsFiredThisTick[i] = shots;
+                        db.FireInstructions[i].FireWeapon(db.OwningEntity, tgt, shots);
+                        db.InternalMagQty[i] -= shots * db.AmountPerShot[i];
+                        db.WeaponStates[i].InternalMagCurAmount = db.InternalMagQty[i];
+
+                        // Beam weapons accumulate waste heat from firing.
+                        if (beamAtb != null)
+                            ws.CurrentHeat_kJ += (float)(beamAtb.ThermalOutput_W * beamAtb.ChargePeriod / 1000.0);
+                    }
                 }
                 else
                 {
@@ -50,11 +93,11 @@ public class GenericFiringWeaponsProcessor : IHotloopProcessor
             }
         }
 
-        //reload all internal magazines.
-        for (int i = 0; i < db.WpnIDs.Length ; i++)
+        // Reload all internal magazines (Math.Min caps at magSize — was incorrectly Math.Max).
+        for (int i = 0; i < db.WpnIDs.Length; i++)
         {
             var tickReloadAmount = db.ReloadAmountsPerSec[i];
-            var magQty = Math.Max(db.InternalMagQty[i] + tickReloadAmount, db.InternalMagSizes[i]);
+            var magQty = Math.Min(db.InternalMagQty[i] + tickReloadAmount, db.InternalMagSizes[i]);
             db.InternalMagQty[i] = magQty;
             db.WeaponStates[i].InternalMagCurAmount = magQty;
         }

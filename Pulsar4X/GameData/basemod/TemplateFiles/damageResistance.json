@@ -6,7 +6,8 @@
       "MaterialID": "",
       "HitPoints": "0",
       "MeltingPoint": "0",
-      "Density": "0"
+      "Density": "0",
+      "WavelengthAbsorption": [0.5, 0.5, 0.5, 0.5, 0.5]
     }
   },
   {
@@ -16,7 +17,8 @@
       "MaterialID": "plastic",
       "HitPoints": "255",
       "MeltingPoint": "170",
-      "Density": "1175"
+      "Density": "1175",
+      "WavelengthAbsorption": [0.9, 0.3, 0.2, 0.9, 0.85]
     }
   },
   {
@@ -26,7 +28,8 @@
       "MaterialID": "aluminium",
       "HitPoints": "0",
       "MeltingPoint": "660",
-      "Density": "2700"
+      "Density": "2700",
+      "WavelengthAbsorption": [0.15, 0.08, 0.06, 0.12, 0.18]
     }
   },
   {
@@ -36,7 +39,8 @@
       "MaterialID": "titanium",
       "HitPoints": "255",
       "MeltingPoint": "1668",
-      "Density": "4540"
+      "Density": "4540",
+      "WavelengthAbsorption": [0.5, 0.4, 0.3, 0.5, 0.6]
     }
   },
   {
@@ -46,7 +50,8 @@
       "MaterialID": "stainless-steel",
       "HitPoints": "255",
       "MeltingPoint": "1400",
-      "Density": "7900"
+      "Density": "7900",
+      "WavelengthAbsorption": [0.45, 0.35, 0.28, 0.45, 0.55]
     }
   }
 ]

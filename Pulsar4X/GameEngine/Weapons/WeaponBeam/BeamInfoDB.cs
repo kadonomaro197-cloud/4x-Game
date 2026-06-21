@@ -16,7 +16,8 @@ public class BeamInfoDB : BaseDataBlob
     };
 
     public BeamStates BeamState;
-    public double Frequency;
+    public double Frequency;      // wavelength in nm (field is misnamed; stores wavelength not frequency)
+    public double OptimalRange_m; // full-damage inner zone; energy falls off inverse-square beyond this
     public double Energy;
     public double StartingEnergy;
     public float BaseHitChance;

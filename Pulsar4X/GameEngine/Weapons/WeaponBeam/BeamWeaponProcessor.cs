@@ -117,15 +117,26 @@ public class BeamWeaponProcessor : IHotloopProcessor
         var shipFutureVel = MoveMath.GetAbsoluteFutureVelocity(beamInfo.TargetEntity, nowTime + TimeSpan.FromSeconds(futurePosTime.seconds));
         var relativeVelocity = shipFutureVel - beamInfo.VelocityVector;
 
+        // Two-zone damage model: full energy inside optimal range; inverse-square falloff beyond.
+        double distance = (beamInfo.LaunchPosition - futurePosTime.pos).Length();
+        double energyScale = 1.0;
+        if (beamInfo.OptimalRange_m > 0 && distance > beamInfo.OptimalRange_m)
+        {
+            double ratio = beamInfo.OptimalRange_m / distance;
+            energyScale = ratio * ratio;
+        }
+        double scaledEnergy = beamInfo.Energy * energyScale;
+
         var damageFragment = new DamageFragment()
         {
             Velocity = new Vector2(relativeVelocity.X, relativeVelocity.Y),
             Position = ((int)posRelativeToTarget.X, (int)posRelativeToTarget.Y),
             Mass = 0.000001f,
             Density = 1000,
-            Momentum = (float)(beamInfo.Energy / UniversalConstants.Units.SpeedOfLightInMetresPerSecond),
+            Momentum = (float)(scaledEnergy / UniversalConstants.Units.SpeedOfLightInMetresPerSecond),
             Length = (float)(beamInfo.Positions.Item1 - beamInfo.Positions.Item2).Length(),
-            Energy = beamInfo.Energy,
+            Energy = scaledEnergy,
+            Wavelength = beamInfo.Frequency, // Frequency field stores wavelength in nm
         };
         var damageResult = DamageProcessor.OnTakingDamage(beamInfo.TargetEntity, damageFragment);
 
@@ -192,7 +203,7 @@ public class BeamWeaponProcessor : IHotloopProcessor
         beamInfo.Positions.Item2 = beamInfo.PosDB.AbsolutePosition;
     }
 
-    public static void FireBeamWeapon(Entity launchingEntity, Entity targetEntity, bool hitsTarget, double energy, double wavelen, double beamVelocity, double beamLenInSeconds, float baseHitChance = 0.95f)
+    public static void FireBeamWeapon(Entity launchingEntity, Entity targetEntity, bool hitsTarget, double energy, double wavelen, double beamVelocity, double beamLenInSeconds, float baseHitChance = 0.95f, double optimalRange_m = 0)
     {
         var nowTime = launchingEntity.StarSysDateTime;
         var ourAbsPos = launchingEntity.GetDataBlob<PositionDB>().AbsolutePosition;
@@ -209,7 +220,8 @@ public class BeamWeaponProcessor : IHotloopProcessor
             LaunchPosition = startPos.AbsolutePosition,
             VelocityVector = absVector,
             Frequency = wavelen,
-            BaseHitChance = baseHitChance
+            BaseHitChance = baseHitChance,
+            OptimalRange_m = optimalRange_m
         };
 
         var dataBlobs = new List<BaseDataBlob>()

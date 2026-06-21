@@ -83,6 +83,42 @@ MissileProcessor.LaunchMissile(launcher, target, launchForce, design, count)
 
 ---
 
+## Beam Weapon Design (5 decisions — wired)
+
+### Decision 1 — Two-zone range model (complete)
+- Inside `OptimalRange_m` (= Focal Length from JSON): beam hits at full energy.
+- Beyond `OptimalRange_m` out to `MaxRange`: energy scales inverse-square. `energyScale = (OptimalRange_m / distance)²`.
+- `BeamInfoDB.OptimalRange_m` carries this per-beam. `BeamWeaponProcessor.OnHit()` applies the scale before building the `DamageFragment`.
+- `MaxRange == 0` = unlimited (legacy designs unaffected). `OptimalRange_m == 0` = no falloff.
+
+### Decision 2 — Wavelength connected to material resistance (complete)
+- `DamageFragment.Wavelength` (double, nm) flows from `GenericBeamWeaponAtb.WaveLength` → `BeamInfoDB.Frequency` → `DamageFragment.Wavelength`.
+- `DamageResistBlueprint.WavelengthAbsorption[5]` stores per-band absorption coefficients (UV/Vis/NIR/MIR/FIR).
+- `DamageTools.GetWavelengthAbsorption()` maps nm to band index and returns the coefficient.
+- Beer-Lambert model: `energyDeposited = energy × absorption`. Aluminium (0.06–0.18 across bands) is very hard to burn with laser; plastic (0.2–0.9) is easy. See `damageResistance.json` for all values.
+- **JSON field bug fixed**: `[JsonProperty("UniqueID")]` maps the JSON key to `iDCode` byte. `DamageResistsLookupTable` is now populated at runtime.
+
+### Decision 3 — Thermal management as fire-rate limiter (complete)
+- `WeaponState.CurrentHeat_kJ` accumulates each time the weapon fires: `+= ThermalOutput_W × ChargePeriod / 1000`.
+- `WeaponState.HeatCapacity_kJ` = `ThermalOutput_W × ChargePeriod × 2 / 1000` (headroom for 2 charge cycles).
+- Each tick (1 second): passive cooling of `ThermalOutput_W / 1000 × 0.5` kJ removed.
+- At `CurrentHeat_kJ >= HeatCapacity_kJ`: weapon is suppressed and cannot fire.
+- `AllowThermalOverride` (weapon design flag) + `ThermalOverrideActive` (player toggle): override fires through thermal limit. Weapon damage from override is tracked but not yet implemented (future task).
+
+### Decision 4 — Fire rate driven by Charge Period (complete)
+- JSON formula: `genericWpnAtbArgs` = `AtbConstrArgs(100, Max(1, Ceiling(100 / ChargePeriod)), 100, 1)`.
+- MagSize=100 abstract units, AmountPerShot=100, MinShotsPerfire=1, ReloadPerSec=`ceil(100/ChargePeriod)`.
+- A 10-second charge period → reload rate 10/s → 10 ticks to reach full → fires once every 10 seconds.
+- **Math.Max reload bug fixed** (was: `Math.Max(qty + reload, magSize)` always returned magSize → instant reload). Now `Math.Min`.
+
+### Decision 5 — Power grid check (complete)
+- Before firing, `GenericFiringWeaponsProcessor` deducts `beamAtb.Energy / 1000.0` kJ from `EnergyGenAbilityDB.EnergyStored`.
+- If stored energy is insufficient, weapon cannot fire that tick.
+- Ships without `EnergyGenAbilityDB` (no power plant) skip the power check and fire freely (for testing/basic ships).
+- `ChargePeriod` and `ThermalOutput_W` are now args 5 and 6 of `genericBeamWpnAtbArgs` in weapons.json.
+
+---
+
 ## Weapon Range Status (System 1 — complete)
 
 `MaxRange` was already stored on `GenericBeamWeaponAtb` and populated from JSON but never enforced. Now wired:
@@ -97,20 +133,14 @@ MissileProcessor.LaunchMissile(launcher, target, launchForce, design, count)
 
 ---
 
-## Damage Status (Phase 1a — DamageComplex now wired)
+## Damage Status (Phase 1a + Phase 2 — DamageComplex fully wired)
 
-**`DamageProcessor.OnTakingDamage()` is now the active beam-hit path** (replaced `SimpleDamage` placeholder).
+**`DamageProcessor.OnTakingDamage()` is the active beam-hit path.** Path: `BeamWeaponProcessor.OnHit()` → energy scaled by two-zone model → `DamageFragment` with `Wavelength` → `DamageProcessor.OnTakingDamage()` → `DamageTools.DealDamageEnergyBeamSim()`.
 
-`BeamWeaponProcessor.OnHit()` (~line 117) now:
-1. Computes `posRelativeToTarget`, `shipFutureVel` (via `MoveMath.GetAbsoluteFutureVelocity`), `relativeVelocity`.
-2. Builds a `DamageFragment`: `Position` (correct field name), `Momentum = E/c`, `Length` from `Positions.Item1/.Item2`.
-3. Calls `DamageProcessor.OnTakingDamage(target, damageFragment)` → returns `DamageResult { int Damage; bool Destroyed }`.
-4. Publishes `TargetDestroyed` / `TargetHit` events.
+Health scale calibration (fixed): `HealthPercent -= damageAmount * 0.001f`. 1000 damage points = 100% health. At 1 point per 100J deposited, a 100kJ direct hit destroys the component.
 
-Known calibration issues (pre-existing, tracked, don't fix without dedicated task):
+Remaining known calibration issues (tracked, don't fix without dedicated task):
 - **Off-by-one**: G-channel bitmap is 1-indexed but `ComponentLookupTable` is 0-indexed → first slot never targeted.
-- **One-hit destroys**: `HealthPercent` (float, starts 1.0) − `damageAmount` (int, value 1) = 0 on first hit. Units mismatch, needs calibration.
-- **Sparse material table**: `DamageResistsLookupTable` not fully populated (JSON field name mismatch). Guard added: unknown materials are skipped (beam passes through harmlessly).
 
 ---
 

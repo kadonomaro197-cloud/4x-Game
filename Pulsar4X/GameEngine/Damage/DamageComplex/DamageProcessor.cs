@@ -55,7 +55,7 @@ namespace Pulsar4X.Damage
             foreach (var damage in damages.damageToComponents)
             {
                 if (damage.id < entityDamageProfileDB.ComponentLookupTable.Count)
-                    entityDamageProfileDB.ComponentLookupTable[damage.id].HealthPercent -= damage.damageAmount;
+                    entityDamageProfileDB.ComponentLookupTable[damage.id].HealthPercent -= damage.damageAmount * 0.001f;
             }
 
             if(damageableEntity.TryGetDataBlob<ComponentInstancesDB>(out var damagedComponentInstancesDB))

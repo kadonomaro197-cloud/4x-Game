@@ -6,7 +6,7 @@ This document tracks what we know about the codebase state at the close of each 
 
 ## Last Updated
 
-Session ending ~2026-06-21. Branch: `claude/laughing-cannon-08obma` (working branch; `claude/amazing-clarke-7s118n` contained prior docs-only work).
+Session ending ~2026-06-21 (continued). Branch: `claude/laughing-cannon-08obma`.
 
 ---
 
@@ -48,40 +48,64 @@ From reading the test project structure: tests exist for EntityManager, orbits, 
 
 ---
 
-## What's Been Done This Session (2026-06-21)
+## What's Been Done (all sessions to date)
 
-| File | Status |
+### Prior session docs (on `claude/amazing-clarke-7s118n`)
+16 doc files, Aurora reference, hooks, CLAUDE.md files. Commits 1–14.
+
+### Phase 1a — DamageComplex wired (session 2026-06-21)
+| File | Change |
 |------|--------|
-| `GameEngine/Damage/DamageComplex/DamageTools.cs` | **Modified** — added `TryGetValue` guard in `DealDamageEnergyBeamSim()` to skip unknown material IDs instead of throwing `KeyNotFoundException` |
-| `GameEngine/Damage/DamageComplex/DamageProcessor.cs` | **Modified** — added `DamageResult` struct, changed `OnTakingDamage` to return `DamageResult`, filled the empty component-removal block (finds destroyed components by design ID match, removes via `RemoveComponentInstance`, destroys ship when all components gone) |
-| `GameEngine/Weapons/WeaponBeam/BeamWeaponProcessor.cs` | **Modified** — replaced `SimpleDamage.OnTakingDamage(100, 500)` with corrected `DamageFragment` construction + `DamageProcessor.OnTakingDamage()` call |
-| `GameEngine/Weapons/CLAUDE.md` | Updated — Damage Status section reflects Phase 1a completion and known calibration issues |
-| `docs/COMBAT-DESIGN.md` | **Created** — generalized combat build plan: hardware constraints, LOD model, 11 required systems, build order, connection maps for all 11 systems |
-| `GameEngine/Weapons/IFireWeaponInstr.cs` | **Modified** — added `IsInRange()` default interface method (`return true`) |
-| `GameEngine/Weapons/WeaponBeam/GenericBeamWeaponAtb.cs` | **Modified** — added `IsInRange()` override checking `MaxRange`; updated `FireWeapon()` to pass `BaseHitChance` |
-| `GameEngine/Weapons/WeaponBeam/BeamInfoDB.cs` | **Modified** — added `BaseHitChance` field |
-| `GameEngine/Weapons/WeaponBeam/BeamWeaponProcessor.cs` | **Modified** — `FireBeamWeapon()` now accepts and stores `baseHitChance`; `CalculateHit()` uses `beamInfo.BaseHitChance` instead of hardcoded 0.95 |
-| `GameEngine/Weapons/WeaponGeneric/GenericFiringWeaponsProcessor.cs` | **Modified** — added `IsInRange()` call before `FireWeapon()` |
-| `GameEngine/Weapons/CLAUDE.md` | Updated — Weapon Range Status section added, new gotchas (reload bug, missile range deferred) |
-| `SESSION_STATE.md` | This file |
+| `GameEngine/Damage/DamageComplex/DamageTools.cs` | TryGetValue guard, DamageResult struct, Beer-Lambert energy model, WavelengthAbsorption |
+| `GameEngine/Damage/DamageComplex/DamageProcessor.cs` | OnTakingDamage returns DamageResult; component removal filled in |
+| `GameEngine/Weapons/WeaponBeam/BeamWeaponProcessor.cs` | Replaced SimpleDamage with DamageProcessor call |
 
-**Prior session docs** (on `claude/amazing-clarke-7s118n`): 16 doc files, Aurora reference, hooks, CLAUDE.md files. These are on the branch as commits 1–14.
+### System 1 — Weapon range enforced (session 2026-06-21)
+| File | Change |
+|------|--------|
+| `GameEngine/Weapons/IFireWeaponInstr.cs` | Added `IsInRange()` default method |
+| `GameEngine/Weapons/WeaponBeam/GenericBeamWeaponAtb.cs` | Added `IsInRange()` override, `BaseHitChance` |
+| `GameEngine/Weapons/WeaponBeam/BeamInfoDB.cs` | Added `BaseHitChance` field |
+| `GameEngine/Weapons/WeaponBeam/BeamWeaponProcessor.cs` | `CalculateHit()` uses `beamInfo.BaseHitChance` |
+| `GameEngine/Weapons/WeaponGeneric/GenericFiringWeaponsProcessor.cs` | Added `IsInRange()` call before `FireWeapon()` |
+
+### Phase 2 — 5 beam weapon decisions implemented (session 2026-06-21 continued)
+
+All 5 decisions wired in one pass per developer's explicit instruction.
+
+| File | Change |
+|------|--------|
+| `GameData/basemod/TemplateFiles/damageResistance.json` | Added `WavelengthAbsorption` arrays for all 5 materials (UV/Vis/NIR/MIR/FIR) |
+| `GameEngine/Damage/DamageComplex/DamageTools.cs` | `DamageResistBlueprint`: `[JsonConstructor]`/`[JsonProperty("UniqueID")]` fix; `WavelengthAbsorption` field; `GetWavelengthAbsorption()` helper; `DealDamageEnergyBeamSim()` fully rewritten (Beer-Lambert, infinite-loop fix, energy decrement, wavelength routing) |
+| `GameEngine/Damage/DamageComplex/DamageProcessor.cs` | Health scale fix: `HealthPercent -= damageAmount * 0.001f` |
+| `GameEngine/Weapons/WeaponGeneric/WeaponState.cs` | Added `CurrentHeat_kJ`, `HeatCapacity_kJ`, `AllowThermalOverride`, `ThermalOverrideActive` fields + copy constructor updated |
+| `GameEngine/Weapons/WeaponBeam/BeamInfoDB.cs` | Added `OptimalRange_m` field |
+| `GameEngine/Weapons/WeaponBeam/GenericBeamWeaponAtb.cs` | Added `OptimalRange_m`, `ChargePeriod`, `ThermalOutput_W`, `AllowThermalOverride` fields; 7-arg constructor (4 optional, backward compatible); `OnComponentInstallation()` sets `HeatCapacity_kJ`; `FireWeapon()` passes `OptimalRange_m` |
+| `GameEngine/Weapons/WeaponBeam/BeamWeaponProcessor.cs` | `FireBeamWeapon()` accepts `optimalRange_m`; `OnHit()` applies two-zone inverse-square energy scaling; `DamageFragment.Wavelength` set from `beamInfo.Frequency` |
+| `GameEngine/Weapons/WeaponGeneric/GenericFiringWeaponsProcessor.cs` | Added `using Pulsar4X.Energy`; fixed `Math.Max` → `Math.Min` reload bug; full thermal suppression + power grid check in `UpdateWeapons()` |
+| `GameData/basemod/TemplateFiles/weapons.json` | `genericWpnAtbArgs`: physics-driven formula (Charge Period → reload rate); `genericBeamWpnAtbArgs`: 7 args (adds FocalLength, ChargePeriod, ThermalOutput, override flag) |
+| `GameEngine/Weapons/CLAUDE.md` | Full 5-decision status added; damage path decision documented |
+| `GameEngine/Damage/CLAUDE.md` | Active path updated (DamageComplex, not SimpleDamage); DamageFragment and DamageResistBlueprint documented |
 
 ---
 
 ## Pinned Change Points (Next Code Work)
 
 ### Phase 1a — COMPLETE
-
-`DamageProcessor.OnTakingDamage()` is now the active beam-hit path. See `GameEngine/Weapons/CLAUDE.md` Damage Status for the three known calibration issues that are tracked but intentionally deferred.
-
----
+`DamageProcessor.OnTakingDamage()` is the active beam-hit path.
 
 ### System 1 — Weapon Range — COMPLETE
+`MaxRange` enforced via `IsInRange()`. `BaseHitChance` flows from attribute to `CalculateHit()`.
 
-Wired. `MaxRange` already existed on `GenericBeamWeaponAtb`, was stored in JSON at 5000m, was never enforced. Now enforced via `IsInRange()` on `IFireWeaponInstr`. `BaseHitChance` now flows from weapon attribute through to `CalculateHit()`.
+**Developer action required:** JSON default range is 5000m (space-scale tiny). Set "Range" `PropertyFormula` in `GameData/basemod/TemplateFiles/weapons.json` to something realistic before testing (e.g., `50000000` = 50,000 km).
 
-**Developer action required:** The JSON default range of 5000m is space-scale tiny. Before testing combat, set `"PropertyFormula": "5000"` in `GameData/basemod/TemplateFiles/weapons.json` "Range" property to something realistic (e.g., `50000000` = 50,000 km). The code is correct; the value is a design decision.
+### Phase 2 — 5 Beam Weapon Decisions — COMPLETE
+All 5 decisions wired: two-zone range/energy falloff, wavelength-to-material mapping (Beer-Lambert), thermal management as fire-rate limiter, Charge Period drives fire rate, power grid check. See `Weapons/CLAUDE.md` "Beam Weapon Design" section.
+
+**Developer action required:** Test by running a ship-vs-ship combat scenario. Watch for:
+1. Power-starved ships not firing (if `EnergyGenAbilityDB` present but `EnergyStored` runs dry).
+2. Thermal suppression kicking in after 2 rapid shots.
+3. Beam damage respecting wavelength (FIR = 10000nm hits aluminium for ~18% absorption; same beam hits plastic for 85%).
 
 ### System 2 — Sensor Range + Contact Model — NEXT
 
@@ -124,10 +148,12 @@ The `maxPopulation` calculation on line 49 is already close to the Aurora formul
 |-------|------|------|-----|
 | Installations tab never appears | PlanetaryWindow.cs | 107, 221 | Colonies/CLAUDE.md Gotcha #1 |
 | ~~SimpleDamage placeholder~~ | ~~BeamWeaponProcessor.cs~~ | ~~132–134~~ | **FIXED Phase 1a** — DamageComplex now wired |
+| ~~One-hit destroys (units mismatch)~~ | ~~DamageProcessor.cs~~ | — | **FIXED Phase 2** — `HealthPercent -= damageAmount * 0.001f` |
+| ~~DamageResistsLookupTable sparse~~ | ~~DamageTools.cs~~| — | **FIXED Phase 2** — `[JsonProperty("UniqueID")]` + `WavelengthAbsorption` arrays |
+| ~~Math.Max reload bug~~ | ~~GenericFiringWeaponsProcessor.cs~~ | — | **FIXED Phase 2** — changed to `Math.Min` |
 | Off-by-one in ComponentLookupTable indexing | DamageProcessor.cs + ComponentPlacement.cs | G-channel 1-indexed, table 0-indexed | Weapons/CLAUDE.md Damage Status |
-| One-hit destroys (units mismatch) | DamageProcessor.cs | damage.damageAmount=1, HealthPercent starts 1.0f | Weapons/CLAUDE.md Damage Status |
-| DamageResistsLookupTable sparse | DamageTools.cs + damageResistance.json | JSON field name mismatch | Weapons/CLAUDE.md Damage Status |
 | Colony damage block commented out | DamageProcessor.cs | ~101–181 | Damage/CLAUDE.md, root CLAUDE.md Gotcha #8 |
+| Thermal override weapon damage not implemented | GenericFiringWeaponsProcessor.cs | override fires but no weapon damage | Weapons/CLAUDE.md Decision 3 |
 | Population −50% die-off stub | PopulationProcessor.cs | 54 | COLONY-ENVIRONMENT-AND-POPULATION.md |
 | Missile guidance hardcoded false | MissleProcessor.cs | directAttack | root CLAUDE.md Gotcha #3 |
 
