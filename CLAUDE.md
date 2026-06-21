@@ -204,13 +204,33 @@ Test utilities live in `TestHelper.cs` and `TestingUtilities.cs`.
 
 ---
 
+## The Prime Directive — Map the Connections First
+
+**Before making any decision about any system — combat, economy, UI, damage, population, anything — stop and map every connection that system has. Then look further.**
+
+This is not optional and it is not just for complex tasks. A change that looks local almost never is. The codebase is deeply interconnected: DataBlobs feed processors that write to other DataBlobs that trigger events that schedule more processors. Pulling one thread without knowing what it's attached to breaks things in places you weren't looking.
+
+**The four questions to answer before touching anything:**
+
+1. **What feeds INTO this system?** — What DataBlobs, processors, events, or JSON data does it read? If the input contract changes, what upstream provider breaks?
+2. **What does this system feed INTO?** — Who reads its output? What processor, what UI panel, what event consumer? If the output contract changes, what downstream consumer breaks?
+3. **What shares STATE with this system?** — Same DataBlob, same entity, same global table, same JSON file? A shared-state partner doesn't call you — it just reads the same memory.
+4. **What does this system TRIGGER?** — Events published, processors scheduled, orders issued. Follow the chain one more step than feels necessary.
+
+**Then look further.** The answer to those four questions is the minimum scope. The real scope is often one hop wider. Ask: does anything in that downstream system have the same four connections? If the answer surprises you, document it before writing a line of code.
+
+**This applies to every subsystem listed in the Subsystem Index, every system in `docs/COMBAT-DESIGN.md`, every column in the game.** Economy connects to industry connects to population connects to research connects to ship production connects to fleet strength. Sensors connect to contact model connects to IFF connects to doctrine connects to auto-resolution. None of these are islands.
+
+---
+
 ## How to Work in This Repo (Working Agreement)
 
-1. **Read `CONVENTIONS.md` before writing any code; read the subsystem `CLAUDE.md` before working on that subsystem.** Only read source directly when the doc is insufficient, then update the doc after. For ground-combat/infrastructure design questions, consult `docs/aurora/`.
-2. **Keep all CLAUDE.md files current** whenever code changes — update the subsystem CLAUDE.md in the same commit as the code it describes. Stale docs are worse than no docs.
-3. **Build and run tests before and after every change.** Never leave the build broken. `dotnet build` + `dotnet test` before pushing.
-4. **Match existing conventions** (naming, `[JsonProperty]` discipline, `SafeDictionary`, processor auto-discovery pattern).
-5. **Add tests for new systems.** Space combat has no tests; do not compound this pattern.
-6. **Do not add features beyond what the task requires.** This is an ambitious codebase — scope creep compounds quickly.
-7. **Update ARCHITECTURE.md** when data flow changes.
-8. **Update this root CLAUDE.md** when a new subsystem is added, a subsystem moves, or a new gotcha is discovered.
+1. **Apply the Prime Directive.** Map connections before making decisions. See above.
+2. **Read `CONVENTIONS.md` before writing any code; read the subsystem `CLAUDE.md` before working on that subsystem.** Only read source directly when the doc is insufficient, then update the doc after. For ground-combat/infrastructure design questions, consult `docs/aurora/`.
+3. **Keep all CLAUDE.md files current** whenever code changes — update the subsystem CLAUDE.md in the same commit as the code it describes. Stale docs are worse than no docs.
+4. **Build and run tests before and after every change.** Never leave the build broken. `dotnet build` + `dotnet test` before pushing.
+5. **Match existing conventions** (naming, `[JsonProperty]` discipline, `SafeDictionary`, processor auto-discovery pattern).
+6. **Add tests for new systems.** Space combat has no tests; do not compound this pattern.
+7. **Do not add features beyond what the task requires.** This is an ambitious codebase — scope creep compounds quickly.
+8. **Update ARCHITECTURE.md** when data flow changes.
+9. **Update this root CLAUDE.md** when a new subsystem is added, a subsystem moves, or a new gotcha is discovered.
