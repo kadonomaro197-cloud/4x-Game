@@ -123,8 +123,15 @@ namespace Pulsar4X.Modding
 
         private void ApplyModGeneric<T>(Dictionary<string, T> dataDict, ModInstruction instruction, string modNamespace) where T : Blueprint
         {
+            // A null/empty UniqueID would throw ArgumentNullException from Dictionary.TryGetValue below (null keys
+            // are illegal). Skip the entry rather than crash the whole mod load — but say so, because a silently
+            // dropped blueprint is hard to diagnose downstream. Base-game data should never trip this.
             if (string.IsNullOrEmpty(instruction.Data?.UniqueID))
+            {
+                Console.WriteLine($"[ModLoader] Skipping a '{instruction.Type}' entry in " +
+                    $"'{instruction.Data?.JsonFileName ?? "unknown file"}' because its UniqueID is null or empty.");
                 return;
+            }
             if (dataDict.TryGetValue(instruction.Data.UniqueID, out var existingData))
             {
                 if (instruction.Operation == ModInstruction.OperationType.Default)

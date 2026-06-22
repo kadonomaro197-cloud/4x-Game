@@ -60,6 +60,8 @@ public class DamageResistBlueprint : Blueprint
 ```
 JSON must use `"UniqueID"` field for the byte IDCode (mapped via `[JsonProperty("UniqueID")]` on constructor parameter). `WavelengthAbsorption` arrays are populated from JSON after construction. Data file: `GameData/basemod/TemplateFiles/damageResistance.json`.
 
+**Gotcha — the `[JsonProperty("UniqueID")]` on the ctor param consumes the JSON token, leaving base `Blueprint.UniqueID` null.** `ModLoader.ApplyModGeneric` uses `Blueprint.UniqueID` as its dictionary key, and a null key throws `ArgumentNullException` — this crashed New Game / mod loading. Fix in place: the constructor now sets `UniqueID = iDCode.ToString()` so the string key and the byte channel stay in sync. Do not remove that line.
+
 ### DealDamageEnergyBeamSim() — how it works now
 - Traverses ship damage bitmap pixel by pixel from entry point toward center.
 - Loop stops when energy falls below 0.1% of starting energy, or beam exits bitmap.
@@ -140,4 +142,4 @@ This is the active direction on DevBranch. It's a full 2D particle physics simul
 
 3. **`DamageTools.DealDamageEnergyBeamSim()`** is the spatial simulation kernel. Read it carefully before wiring — it computes hit location against a component placement grid. If `ComponentPlacement` data is not populated, results will be wrong.
 
-4. **Missiles don't deliver damage yet.** `OnColonyDamage()` is wired and ready, but the missile guidance path never calls `OnTakingDamage()` on impact. Ground combat orbital bombardment depends on fixing missile guidance first.
+4. **Missiles now deliver damage (was: "don't deliver damage yet").** `MissileImpactProcessor` (an `IHotloopProcessor` in `Weapons/WeaponMissile/`) checks proximity every second and calls `DamageProcessor.OnTakingDamage()` on impact, which routes colony hits to `OnColonyDamage()`. Missile guidance fixed 2026-06-21 (`directAttack = true`). Calibration is still placeholder — kinetic energy at orbital closing speeds is GJ-scale, far above the 1e8 J/unit colony divisor and the kJ–MJ beam tuning. See `Weapons/CLAUDE.md`.
