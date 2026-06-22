@@ -51,6 +51,7 @@ public class NewGameMenu : PulsarGuiWindow
     string _selectedSystemId = "";
     string _selectedBodyId = "";
     string _selectedColonyId = "";
+    string _modsPageError = "";
     private bool _eleStart = true;
 
     List<string> _enabledSystems = new ();
@@ -156,6 +157,13 @@ public class NewGameMenu : PulsarGuiWindow
             ImGui.EndTable();
         }
 
+        if (!string.IsNullOrEmpty(_modsPageError))
+        {
+            ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1f, 0.35f, 0.35f, 1f));
+            ImGui.TextWrapped(_modsPageError);
+            ImGui.PopStyleColor();
+        }
+
         // if (ImGui.RadioButton("Host Network Game", ref _gameTypeButtonGrp, 1))
         //     _selectedGameType = gameType.Nethost;
         // if (ImGui.RadioButton("Start Standalone Game", ref _gameTypeButtonGrp, 0))
@@ -176,22 +184,38 @@ public class NewGameMenu : PulsarGuiWindow
         {
             _uiState.debugnewgame = false;
             LoadEnabledMods();
-            _selectedSpeciesId = _modDataStore.Species.First().Key;
-            _selectedThemeId = _modDataStore.Themes.First().Key;
-            _selectedColonyId = _modDataStore.Colonies.First().Key;
 
-            // Enable all the systems by default
-            _enabledSystems.Clear();
-            foreach(var (id, system) in _modDataStore.Systems)
+            // Guard the wizard defaults. If no mod is enabled (or the enabled mods provide no
+            // species/theme/colony) the .First() calls below throw "Sequence contains no elements" and
+            // crash the whole app -- LoadEnabledMods() returns early when nothing is enabled (see its
+            // FIXME). Stay on this page and tell the player instead of crashing. This is the New-Game
+            // equivalent of the guard QuickstartGame already has.
+            if (!_modDataStore.Species.Any() || !_modDataStore.Themes.Any() || !_modDataStore.Colonies.Any())
             {
-                if(!_modDataStore.SystemBodies.Any(kvp => kvp.Value.CanStartHere && _modDataStore.Systems[id].Bodies.Contains(kvp.Key)))
-                    continue;
-                _enabledSystems.Add(id);
+                _modsPageError = "Enable at least one mod that provides a species, a theme, and a starting "
+                               + "colony before continuing (the base mod 'Pulsar4x' provides all three). "
+                               + "Tick its Enable box above, then press Next.";
             }
-            _selectedSystemId = _enabledSystems.Any() ? _enabledSystems.First() : "";
-            ResetSelectedBodyId();
+            else
+            {
+                _modsPageError = "";
+                _selectedSpeciesId = _modDataStore.Species.First().Key;
+                _selectedThemeId = _modDataStore.Themes.First().Key;
+                _selectedColonyId = _modDataStore.Colonies.First().Key;
 
-            _currentPage = Page.ConfigureGalaxy;
+                // Enable all the systems by default
+                _enabledSystems.Clear();
+                foreach(var (id, system) in _modDataStore.Systems)
+                {
+                    if(!_modDataStore.SystemBodies.Any(kvp => kvp.Value.CanStartHere && _modDataStore.Systems[id].Bodies.Contains(kvp.Key)))
+                        continue;
+                    _enabledSystems.Add(id);
+                }
+                _selectedSystemId = _enabledSystems.Any() ? _enabledSystems.First() : "";
+                ResetSelectedBodyId();
+
+                _currentPage = Page.ConfigureGalaxy;
+            }
         }
         ImGui.EndChild();
     }

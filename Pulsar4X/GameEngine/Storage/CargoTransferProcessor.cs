@@ -101,7 +101,7 @@ namespace Pulsar4X.Storage
         /// <param name="entity"></param>
         /// <param name="item"></param>
         /// <param name="amountInMass"></param>
-        internal static double AddCargoItems(Entity entity, ICargoable item, int amount)
+        public static double AddCargoItems(Entity entity, ICargoable item, int amount)
         {
             CargoStorageDB cargo = entity.GetDataBlob<CargoStorageDB>();
             double amountSuccess = cargo.AddCargoByUnit(item, amount);
