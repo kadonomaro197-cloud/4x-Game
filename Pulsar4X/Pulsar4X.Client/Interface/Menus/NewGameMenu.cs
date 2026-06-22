@@ -411,31 +411,54 @@ public class NewGameMenu : PulsarGuiWindow
 
     void CreateNewGame()
     {
-        var p = new GameCreationParams
+        // Mirror QuickstartGame's safety net. Without this, any exception thrown while building the game
+        // (e.g. an empty or invalid selected id hitting a dictionary lookup in CreateGameCore) is UNHANDLED
+        // and takes the whole application down with nothing written to game_log.txt and no clean shutdown —
+        // which is exactly what a silent New Game crash looks like. Quickstart has this try/catch; New Game
+        // did not. Catch it, log it to the console (same as Quickstart), and return to the menu instead of
+        // crashing. The id dump makes an empty/invalid selection obvious in the console output.
+        try
         {
-            ModDataStore = _modDataStore,
-            FactionName = Utils.StringFromBytes(_corporationNameBuffer),
-            FactionAbbreviation = Utils.StringFromBytes(_corporationAbbreviationBuffer),
-            SpeciesId = _selectedSpeciesId,
-            ColonyId = _selectedColonyId,
-            SystemId = _selectedSystemId,
-            BodyId = _selectedBodyId,
-            EnabledSystems = _enabledSystems,
-            MaxSystems = _maxSystems,
-            MasterSeed = _masterSeed,
-            StartingFunds = _startingFunds,
-            EleStart = _eleStart,
-            SMPassword = Utils.StringFromBytes(_smPassInputbuffer),
-            PlayerPassword = Utils.StringFromBytes(_passInputBuffer)
-        };
+            var p = new GameCreationParams
+            {
+                ModDataStore = _modDataStore,
+                FactionName = Utils.StringFromBytes(_corporationNameBuffer),
+                FactionAbbreviation = Utils.StringFromBytes(_corporationAbbreviationBuffer),
+                SpeciesId = _selectedSpeciesId,
+                ColonyId = _selectedColonyId,
+                SystemId = _selectedSystemId,
+                BodyId = _selectedBodyId,
+                EnabledSystems = _enabledSystems,
+                MaxSystems = _maxSystems,
+                MasterSeed = _masterSeed,
+                StartingFunds = _startingFunds,
+                EleStart = _eleStart,
+                SMPassword = Utils.StringFromBytes(_smPassInputbuffer),
+                PlayerPassword = Utils.StringFromBytes(_passInputBuffer)
+            };
 
-        var result = CreateGameCore(p);
-        if (result == null) return;
+            Console.WriteLine($"New Game: SpeciesId='{p.SpeciesId}' ColonyId='{p.ColonyId}' " +
+                              $"SystemId='{p.SystemId}' BodyId='{p.BodyId}' EnabledSystems={p.EnabledSystems.Count}");
 
-        var (game, playerFaction, startingSystem, startingBody) = result.Value;
-        ActivateGameUI(game, playerFaction, startingSystem, startingBody);
-        IsActive = false;
-        _currentPage = Page.SelectMods;
+            var result = CreateGameCore(p);
+            if (result == null)
+            {
+                Console.WriteLine("New Game Error: CreateGameCore returned null — a starting system, body, or "
+                                  + "faction could not be resolved from the current selection.");
+                return;
+            }
+
+            var (game, playerFaction, startingSystem, startingBody) = result.Value;
+            ActivateGameUI(game, playerFaction, startingSystem, startingBody);
+            IsActive = false;
+            _currentPage = Page.SelectMods;
+        }
+        catch (Exception ex)
+        {
+            // Same handling Quickstart uses: log message + stack trace to the console and stay on the menu.
+            Console.WriteLine($"New Game Error: {ex.Message}");
+            Console.WriteLine(ex.StackTrace);
+        }
     }
 
     private struct GameCreationParams
