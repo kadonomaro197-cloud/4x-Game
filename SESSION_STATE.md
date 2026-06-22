@@ -12,6 +12,8 @@ Session ending ~2026-06-21 (survey complete). Branch: `claude/laughing-cannon-08
 
 ## Build Status
 
+**CI added 2026-06-22:** `.github/workflows/ci.yml` now runs `dotnet build` + the full NUnit suite on every push/PR via GitHub Actions (Linux runners have the .NET SDK this container lacks). The **first CI run establishes the real build/test baseline** that has been "UNKNOWN" — read the Actions tab. It builds the engine + test project (not the SDL client). New broad sensor: `GameLoopSmokeTests.GameLoop_AdvancesClockWithoutThrowing` (advances the sim clock 3 game-days on a generated universe, asserts no processor throws). **CI run #1 already earned its keep:** build compiled clean, 370/371 tests passed, and the one failure exposed that `DefaultStartFactory.DefaultHumans` is broken (see Known Broken Things) — a path no recent change touched.
+
 **UNKNOWN — .NET is not installed in the cloud execution environment, and CANNOT be installed under the current network policy.**
 
 Cannot run `dotnet build` or `dotnet test` from Claude's remote session. The developer must pull the branch to their Windows machine and build there to establish a baseline.
@@ -42,9 +44,13 @@ Paste any errors back. Expected result: build passes; tests pass (no combat test
 
 ## Test Baseline
 
-**UNKNOWN** for the same reason — cannot run `dotnet test` remotely.
+**Established by CI 2026-06-22: 371 tests, all green on Linux** (build compiles clean too). See the Actions tab.
 
-From reading the test project structure: tests exist for EntityManager, orbits, save/load, mining, population, pathfinding. **No tests for combat, damage, or ground combat.**
+**BUT the real coverage is much thinner than 371 implies — a large share of the integration fixtures are commented out:** `SavingAndLoadingTests`, `SerializationManagerTests`, `SystemGenTests`, `FactoryTests`, `MiningTests` are whole-file `/* ... */`, and `PathfindingTests` has its colony setup commented. So the active suite is mostly **unit-level**: orbital math, vectors, datablob serialization, EntityManager, scheduling/activity-state, modding. Colony creation, system gen (`CreateSol`), mining, and the in-code default start (`DefaultStartFactory.DefaultHumans`, broken) have **no active coverage**.
+
+New coverage added this session: `BaseModIntegrityTests` (base-mod data), `GameLoopSmokeTests` (core sim loop advances without throwing), `SaveLoadSmokeTests` (Game.Save→Load round-trips — **now verified green**), plus two passive read-only **sensors**: `StateIntegritySmokeTests` (asserts every entity position stays a finite number across a clock advance — catches silent NaN/garbage the engine never guards against) and `PerformanceReadoutSmokeTests` (reads the engine's built-in per-processor stopwatch and prints a timing breakdown to the CI log). CI also now emits a per-test TRX report (inline table + downloadable artifact). **No tests for combat, damage, or ground combat.**
+
+**The real path to "catch any crash" coverage is re-enabling/modernizing the commented-out integration fixtures one at a time, CI-verified** — they almost certainly broke (like `DefaultHumans`) when data/APIs were reorganized.
 
 ---
 
@@ -163,6 +169,7 @@ The `maxPopulation` calculation on line 49 is already close to the Aurora formul
 
 | Issue | File | Line | Doc |
 |-------|------|------|-----|
+| `DefaultStartFactory.DefaultHumans` broken — loads Sol via legacy `LoadSystemFromJson("Data/basemod/sol/")` → `systemInfo.json`, but Sol data moved to `ScenarioFiles/systems/sol/sol.json`. Only commented-out tests used it; the live game uses `ColonyFactory.CreateFromBlueprint`. Found by CI via `GameLoopSmokeTests`. | `DefaultStartFactory.cs` | 140 | — |
 | Installations tab never appears | PlanetaryWindow.cs | 107, 221 | Colonies/CLAUDE.md Gotcha #1 |
 | ~~SimpleDamage placeholder~~ | ~~BeamWeaponProcessor.cs~~ | ~~132–134~~ | **FIXED Phase 1a** — DamageComplex now wired |
 | ~~One-hit destroys (units mismatch)~~ | ~~DamageProcessor.cs~~ | — | **FIXED Phase 2** — `HealthPercent -= damageAmount * 0.001f` |
