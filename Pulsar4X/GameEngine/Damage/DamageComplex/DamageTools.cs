@@ -38,10 +38,14 @@ namespace Pulsar4X.Damage
         // [JsonConstructor] + [JsonProperty("UniqueID")] maps the JSON "UniqueID" field (which is the string key
         // used for the Blueprint dictionary) to the byte iDCode used as the color-channel key in the damage bitmap.
         // Without this, Newtonsoft can't match "UniqueID" to "iDCode" and the lookup table stays empty at runtime.
+        // Because that attribute consumes the JSON "UniqueID" token for iDCode, the base Blueprint.UniqueID string
+        // is left null — and ModLoader uses that string as its dictionary key, so it MUST be set here. We mirror
+        // iDCode back into UniqueID so the two stay in sync (e.g. iDCode 150 -> UniqueID "150").
         [JsonConstructor]
         public DamageResistBlueprint([JsonProperty("UniqueID")] byte iDCode, int hitPoints, float density)
         {
             IDCode = iDCode;
+            UniqueID = iDCode.ToString();
             HitPoints = hitPoints;
             Density = density; //kg/m^3
             if (DamageTools.DamageResistsLookupTable.ContainsKey(iDCode))
