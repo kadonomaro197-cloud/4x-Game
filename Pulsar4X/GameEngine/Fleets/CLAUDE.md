@@ -84,3 +84,9 @@ Fleet management is **fully functional**. Ships can be created, assigned to flee
 | Establish orbital dominance | New check in invasion order | Query enemy ships in same orbit zone over target colony |
 | Issue landing order | New `LandTroopsAction : INavAction` | Fires when fleet in orbit, checks dominance, creates `GroundCombatDB` on colony |
 | Detach escort sub-fleet | `FleetOrder.ChangeParent()` (already works) | Transports detach, escorts remain in orbit |
+
+---
+
+## Proposed Future Work — Fleet Combat Doctrine
+
+A design (not built) splits a fleet into named **components** (Front Line / Flank / Rear Guard / Artillery) — most cheaply as **sub-fleets of this tree hierarchy** — each running a switchable **combat doctrine** (Offensive / Defensive / Utilitarian) with situational trade-offs, a game-time switch cooldown, and optional commander "operational discretion." Full design, connection map, and data-model sketch: **`docs/FLEET-COMBAT-DOCTRINE-DESIGN.md`**. Read it before adding any component/posture concept to `FleetDB`.
