@@ -44,9 +44,13 @@ Paste any errors back. Expected result: build passes; tests pass (no combat test
 
 ## Test Baseline
 
-**UNKNOWN** for the same reason — cannot run `dotnet test` remotely.
+**Established by CI 2026-06-22: 371 tests, all green on Linux** (build compiles clean too). See the Actions tab.
 
-From reading the test project structure: tests exist for EntityManager, orbits, save/load, mining, population, pathfinding. **No tests for combat, damage, or ground combat.**
+**BUT the real coverage is much thinner than 371 implies — a large share of the integration fixtures are commented out:** `SavingAndLoadingTests`, `SerializationManagerTests`, `SystemGenTests`, `FactoryTests`, `MiningTests` are whole-file `/* ... */`, and `PathfindingTests` has its colony setup commented. So the active suite is mostly **unit-level**: orbital math, vectors, datablob serialization, EntityManager, scheduling/activity-state, modding. Colony creation, system gen (`CreateSol`), mining, and the in-code default start (`DefaultStartFactory.DefaultHumans`, broken) have **no active coverage**.
+
+New coverage added this session: `BaseModIntegrityTests` (base-mod data), `GameLoopSmokeTests` (core sim loop advances without throwing), `SaveLoadSmokeTests` (Game.Save→Load round-trips — **now verified green**). **No tests for combat, damage, or ground combat.**
+
+**The real path to "catch any crash" coverage is re-enabling/modernizing the commented-out integration fixtures one at a time, CI-verified** — they almost certainly broke (like `DefaultHumans`) when data/APIs were reorganized.
 
 ---
 
