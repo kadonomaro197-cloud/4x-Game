@@ -205,6 +205,37 @@ These systems are needed for all combat scenario types — ambush, fleet engagem
 
 ---
 
+### System 4 (detailed design) — Fleet Components & Switchable Doctrine
+
+*This refines System 4 above and extends System 6 (Commander Discretion). System 4 puts one doctrine on the whole fleet; this pushes doctrine down to **components within a fleet**, so different parts of the same fleet can fight differently. Captured from the developer 2026-06-22.*
+
+**Components.** A fleet is divided into named components — Front Line, Flank, Rear Guard, Artillery, … (names are data, open-ended). No rules on how ships are distributed: a component holds 1 ship or 50, and a ship is in exactly one component of its fleet. **Cheapest implementation: a component is a sub-fleet.** `FleetDB` already nests (`TreeHierarchyDB`) with order inheritance and detach/reattach, so ship assignment and movement already work — the new part is per-component doctrine state, not a new membership system. (See `Fleets/CLAUDE.md`. Decide later whether a lighter `FleetComponentDB` is cleaner than full sub-fleets.)
+
+**Doctrine = posture with named options.** Each component runs one doctrine from the three families above (Offensive / Defensive / Utilitarian), but each family has **multiple named options, each with both an upside and a downside** whose value depends on the situation — that's where the player's judgment lives. Worked example: Front Line, Defensive, **"Fighter Screen"** → −25% main-weapon fire rate, − fleet movement speed, + screening/interception for the ships behind it. Great against an ordnance swarm; bad in a gun duel.
+
+**Two data pieces (don't confuse them):**
+- `FleetDoctrineDB` (System 4's runtime blob, now living **per component**) holds the *active selection*: which doctrine option is set, its thresholds, and the switch-cooldown clock.
+- `CombatDoctrineBlueprint` (**new, moddable JSON** loaded by `ModLoader`) is the *catalog* of selectable options, so doctrines can be added/tuned without code and validated by a base-mod integrity test (same pattern as `Pulsar4X.Tests/Modding/BaseModIntegrityTests.cs`):
+  ```
+  CombatDoctrineBlueprint : Blueprint
+    UniqueID        "fighter-screen"
+    Family          Offensive | Defensive | Utilitarian
+    DisplayName     "Fighter Screen"
+    Effects         [ { Stat, Multiplier/Delta } ]   // WeaponFireRate ×0.75, FleetSpeed ×0.8, …
+    CooldownSeconds game-time gate before this component can switch again
+  ```
+Effects are **modifiers applied at read time** (match the `BonusesDB` pattern) — never bake them into a ship's base stats, so toggling is reversible. The levers already exist: weapon fire rate rides the same throttle as thermal suppression (`WeaponState` / `GenericFiringWeaponsProcessor`); fleet speed rides fleet movement.
+
+**Switching.** Set-and-forget, or changed live by player or NPC, gated by a **game-time cooldown** per component (System 4 already says doctrine changes aren't instant — this makes it an explicit timer). NPC choice reads the existing `DoctrineVector` on `FactionInfoDB` (Factions) — e.g. high Military weight → favour Offensive.
+
+**Operational discretion (extends System 6).** A fleet commander can be granted authority to switch the doctrine of **specific components** on their own; the player/faction decides which commanders get it and over which components. With it off, only the player/faction switches. This is System 6's commander discretion, scoped per component.
+
+**UI (extends the Fleet panel — you can't render 100 ships, so don't).** A Fleet Combat panel (extend `FleetWindow.cs`) shows a fleet's components; selecting one shows a **table of its ships** with the stats/systems that matter (weapons, armour/health, speed, fuel, current target), a doctrine dropdown (greyed while the cooldown runs, remaining game-time shown), and the discretion toggles. The table *is* the interface.
+
+**Open decisions:** components = sub-fleets vs a new `FleetComponentDB`; which stats v1 doctrines may touch (start with the two from the example — fire rate + fleet speed); cooldown length (per-doctrine data or global); discretion granularity (per role vs per specific component); stacking (recommend component overrides fleet).
+
+---
+
 ### System 5 — Retreat and Rally
 
 **What it is:** Fleets can break off an engagement. Retreating ships are briefly vulnerable. Rallied ships can re-enter.

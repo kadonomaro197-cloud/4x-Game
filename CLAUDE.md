@@ -148,7 +148,7 @@ See `ARCHITECTURE.md` for the full data-flow diagram.
 | `docs/aurora/SPACE-COMBAT-BENCHMARK.md` | Calibrating "the same depth space combat has." |
 | `docs/RESOURCES-AND-MATERIALS-DESIGN.md` | Designing anything touching minerals, materials, production, commerce, research, or NPC economic AI. Full system survey — read before changing any part of the economy. |
 | `docs/DIPLOMACY-DESIGN.md` | Designing anything touching faction relationships, IFF, inter-faction trade, logistics access, NPC doctrine, or diplomatic state. Full system survey — read before adding any cross-faction interaction. |
-| `docs/FLEET-COMBAT-DOCTRINE-DESIGN.md` | Designing fleet "components" (Front Line / Flank / Rear Guard / Artillery) and switchable combat doctrines (Offensive/Defensive/Utilitarian), commander operational discretion, or the fleet combat UI. Design capture — not built yet. |
+| `docs/COMBAT-DESIGN.md` | The master space-combat design: the eleven required systems (weapon range → auto-resolution → ground-combat interface). Includes the detailed **Fleet Components & Switchable Doctrine** design (Front Line/Flank/Rear Guard/Artillery as sub-fleets, Offensive/Defensive/Utilitarian options, switch cooldown, commander operational discretion, table-based fleet combat UI) under System 4. Read before any combat-system work. |
 
 ---
 
