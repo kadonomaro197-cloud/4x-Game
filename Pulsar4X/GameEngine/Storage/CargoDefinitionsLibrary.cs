@@ -129,7 +129,10 @@ namespace Pulsar4X.Storage
         }
 
         public ICargoable GetAny(int id) => _definitions[id];
-        public ICargoable? GetAny(string id) => _definitions.Count == 0 ? null : _definitions.Where(d => d.Value.UniqueID.Equals(id)).Select(kvp => kvp.Value).First();
+        // FirstOrDefault (not First) so a missing id returns null per the ICargoable? contract instead of
+        // throwing "Sequence contains no elements" — which previously crashed New Game / Quickstart deep in
+        // ComponentDesigner when a blueprint's ResourceCost referenced a cargo good not present in the library.
+        public ICargoable? GetAny(string id) => _definitions.Values.FirstOrDefault(d => d.UniqueID.Equals(id));
 
         public bool Contains(int id) => _definitions.ContainsKey(id);
         public bool Contains(string uniqueID) => _definitions.Any(d => d.Value.UniqueID.Equals(uniqueID));

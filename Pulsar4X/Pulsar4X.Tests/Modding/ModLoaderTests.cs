@@ -37,5 +37,26 @@ namespace Pulsar4X.Tests
                 _modLoader.LoadModManifest("Data/basemod/modInfo.json", _modDataStore);
             });
         }
+
+        [Test]
+        [Description("A collection operation (Add/Remove/Overwrite) on a base blueprint whose target " +
+                     "list/dictionary is null must not crash the mod load. Regression for the New Game " +
+                     "'Unable to resolve Dictionary'/'Unable to resolve List' NullReferenceException.")]
+        public void TestCollectionOperationOnNullBaseCollectionDoesNotThrow()
+        {
+            // The fixture defines a theme with no collections, then Adds to a null list,
+            // Overwrites a null dictionary, and Removes from a null dictionary.
+            Assert.DoesNotThrow(() =>
+                _modLoader.LoadModManifest("Data/collectionopmod/modInfo.json", _modDataStore));
+
+            var theme = _modDataStore.Themes["collectionop-theme"];
+
+            // Add onto a null list becomes the mod's list.
+            Assert.AreEqual(2, theme.FirstNames.Count);
+            // Overwrite onto a null dictionary sets it.
+            Assert.AreEqual(1, theme.NavyRanks.Count);
+            // Remove from a null dictionary is a no-op (stays null), not a crash.
+            Assert.IsNull(theme.NavyRanksAbbreviations);
+        }
     }
 }

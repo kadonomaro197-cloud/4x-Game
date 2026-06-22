@@ -110,6 +110,12 @@
     <None Update="Data\Other\VersionInfo.vinfo">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Data\collectionopmod\modInfo.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\collectionopmod\collectionOpData.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Target Name="CopyJsonData" AfterTargets="Build">
     <ItemGroup>

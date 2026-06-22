@@ -153,20 +153,32 @@ namespace Pulsar4X.Modding
                                 var originalList = (IList?)property.GetValue(existingData);
                                 var modList = (IList)modValue;
 
-                                if(originalList == null) throw new NullReferenceException($"Unable to resolve List for {existingData.FullIdentifier}");
-
                                 switch(instruction.CollectionOperation.Value)
                                 {
                                     case ModInstruction.CollectionOperationType.Add:
-                                        foreach(var item in modList)
+                                        // If the base blueprint never defined this list there is nothing to
+                                        // merge into, so the mod's list simply becomes the value. Throwing here
+                                        // (the old behaviour) took down the whole mod load — and the game.
+                                        if (originalList == null)
                                         {
-                                            originalList.Add(item);
+                                            property.SetValue(existingData, modValue);
+                                        }
+                                        else
+                                        {
+                                            foreach(var item in modList)
+                                            {
+                                                originalList.Add(item);
+                                            }
                                         }
                                         break;
                                     case ModInstruction.CollectionOperationType.Remove:
-                                        foreach(var item in modList)
+                                        // Nothing to remove from a list the base never defined.
+                                        if (originalList != null)
                                         {
-                                            originalList.Remove(item);
+                                            foreach(var item in modList)
+                                            {
+                                                originalList.Remove(item);
+                                            }
                                         }
                                         break;
                                     case ModInstruction.CollectionOperationType.Overwrite:
@@ -182,20 +194,32 @@ namespace Pulsar4X.Modding
                                 var originalDict = (IDictionary?)property.GetValue(existingData);
                                 var modDict = (IDictionary)modValue;
 
-                                if(originalDict == null) throw new NullReferenceException($"Unable to resolve Dictionary for {existingData.FullIdentifier}");
-
                                 switch(instruction.CollectionOperation.Value)
                                 {
                                     case ModInstruction.CollectionOperationType.Add:
-                                        foreach(DictionaryEntry entry in modDict)
+                                        // If the base blueprint never defined this dictionary there is nothing to
+                                        // merge into, so the mod's dictionary simply becomes the value. Throwing here
+                                        // (the old behaviour) took down the whole mod load — and the game.
+                                        if (originalDict == null)
                                         {
-                                            originalDict[entry.Key] = entry.Value;
+                                            property.SetValue(existingData, modValue);
+                                        }
+                                        else
+                                        {
+                                            foreach(DictionaryEntry entry in modDict)
+                                            {
+                                                originalDict[entry.Key] = entry.Value;
+                                            }
                                         }
                                         break;
                                     case ModInstruction.CollectionOperationType.Remove:
-                                        foreach(DictionaryEntry entry in modDict)
+                                        // Nothing to remove from a dictionary the base never defined.
+                                        if (originalDict != null)
                                         {
-                                            originalDict.Remove(entry.Key);
+                                            foreach(DictionaryEntry entry in modDict)
+                                            {
+                                                originalDict.Remove(entry.Key);
+                                            }
                                         }
                                         break;
                                     case ModInstruction.CollectionOperationType.Overwrite:
