@@ -15,6 +15,14 @@ namespace Pulsar4X.Modding
     {
         public Dictionary<string, ModManifest> LoadedMods { get; private set; } = new Dictionary<string, ModManifest>();
 
+        /// <summary>
+        /// Blueprints that ApplyModGeneric skipped because their UniqueID was null/empty (an illegal dictionary
+        /// key). The skip keeps a malformed USER mod from crashing the whole load — but for the BASE mod a skip
+        /// means a blueprint was silently dropped and the data is quietly broken, so tests should assert this is
+        /// empty for base data (BaseModIntegrityTests). Accumulates across every LoadModManifest call on this instance.
+        /// </summary>
+        public List<string> SkippedEntries { get; } = new List<string>();
+
         public void LoadModManifest(string modManifestPath, ModDataStore baseData)
         {
             var manifestJson = File.ReadAllText(modManifestPath);
@@ -128,8 +136,9 @@ namespace Pulsar4X.Modding
             // dropped blueprint is hard to diagnose downstream. Base-game data should never trip this.
             if (string.IsNullOrEmpty(instruction.Data?.UniqueID))
             {
-                Console.WriteLine($"[ModLoader] Skipping a '{instruction.Type}' entry in " +
-                    $"'{instruction.Data?.JsonFileName ?? "unknown file"}' because its UniqueID is null or empty.");
+                var skipped = $"'{instruction.Type}' entry in '{instruction.Data?.JsonFileName ?? "unknown file"}'";
+                SkippedEntries.Add(skipped);
+                Console.WriteLine($"[ModLoader] Skipping a {skipped} because its UniqueID is null or empty.");
                 return;
             }
             if (dataDict.TryGetValue(instruction.Data.UniqueID, out var existingData))

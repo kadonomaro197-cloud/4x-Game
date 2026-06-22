@@ -18,12 +18,14 @@ namespace Pulsar4X.Tests
     internal class BaseModIntegrityTests
     {
         private ModDataStore _baseMod;
+        private ModLoader _modLoader;
 
         [SetUp]
         public void Setup()
         {
             _baseMod = new ModDataStore();
-            new ModLoader().LoadModManifest("Data/basemod/modInfo.json", _baseMod);
+            _modLoader = new ModLoader();
+            _modLoader.LoadModManifest("Data/basemod/modInfo.json", _baseMod);
         }
 
         [Test]
@@ -86,6 +88,19 @@ namespace Pulsar4X.Tests
                 "Starting colonies require materials not unlocked at game start — this crashes New Game in " +
                 "ComponentDesigner. Add each missing material to that colony's StartingItems:\n  "
                 + string.Join("\n  ", failures));
+        }
+
+        [Test]
+        [Description("The base mod must load with zero skipped entries. ModLoader silently skips any blueprint " +
+                     "whose UniqueID is null/empty (a guard so a malformed USER mod can't crash the load); for " +
+                     "the BASE mod a skip means a blueprint was dropped and the data is quietly broken. " +
+                     "Regression for the DamageResistBlueprint null-UniqueID bug, which the skip-guard hid from " +
+                     "the suite (loading went green again) until the root cause was fixed.")]
+        public void BaseMod_LoadsWithNoSkippedEntries()
+        {
+            Assert.That(_modLoader.SkippedEntries, Is.Empty,
+                "ModLoader silently dropped base-mod blueprints with a null/empty UniqueID — the loaded data is " +
+                "incomplete even though nothing threw:\n  " + string.Join("\n  ", _modLoader.SkippedEntries));
         }
     }
 }
