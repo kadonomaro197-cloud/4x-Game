@@ -203,6 +203,16 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("Regression: a missing id in a NON-empty library must return null, not throw " +
+                     "'Sequence contains no elements'. This threw deep in ComponentDesigner and crashed New Game.")]
+        public void CargoDefinitionsLibrary_When_GettingAMissingDefinitionFromANonEmptyLibrary_Should_ReturnNull()
+        {
+            var library = new CargoDefinitionsLibrary();
+            library.Add(SetupCookieTradeGood());
+            Assert.IsNull(library.GetAny(Guid.NewGuid().ToString()));
+        }
+
+        [Test]
         public void VolumeStorage_BasicChecks()
         {
             var cookies = SetupCookieTradeGood();
