@@ -123,6 +123,8 @@ namespace Pulsar4X.Modding
 
         private void ApplyModGeneric<T>(Dictionary<string, T> dataDict, ModInstruction instruction, string modNamespace) where T : Blueprint
         {
+            if (string.IsNullOrEmpty(instruction.Data?.UniqueID))
+                return;
             if (dataDict.TryGetValue(instruction.Data.UniqueID, out var existingData))
             {
                 if (instruction.Operation == ModInstruction.OperationType.Default)
