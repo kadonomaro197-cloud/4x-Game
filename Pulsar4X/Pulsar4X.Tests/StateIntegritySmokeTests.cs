@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using Pulsar4X.Engine;
-using Pulsar4X.Datablobs;
+using Pulsar4X.Movement; // the ACTIVE PositionDB lives here (Movement/MoveState.cs); the Datablobs/PositionDB.cs copy is commented out
 
 namespace Pulsar4X.Tests
 {
