@@ -12,7 +12,7 @@ Session ending ~2026-06-21 (survey complete). Branch: `claude/laughing-cannon-08
 
 ## Build Status
 
-**CI added 2026-06-22:** `.github/workflows/ci.yml` now runs `dotnet build` + the full NUnit suite on every push/PR via GitHub Actions (Linux runners have the .NET SDK this container lacks). The **first CI run establishes the real build/test baseline** that has been "UNKNOWN" — read the Actions tab. It builds the engine + test project (not the SDL client). New broad sensor: `GameLoopSmokeTests.DefaultStart_AdvancesClockWithoutThrowing` (creates the default start, advances the clock 3 game-days, asserts no processor throws).
+**CI added 2026-06-22:** `.github/workflows/ci.yml` now runs `dotnet build` + the full NUnit suite on every push/PR via GitHub Actions (Linux runners have the .NET SDK this container lacks). The **first CI run establishes the real build/test baseline** that has been "UNKNOWN" — read the Actions tab. It builds the engine + test project (not the SDL client). New broad sensor: `GameLoopSmokeTests.GameLoop_AdvancesClockWithoutThrowing` (advances the sim clock 3 game-days on a generated universe, asserts no processor throws). **CI run #1 already earned its keep:** build compiled clean, 370/371 tests passed, and the one failure exposed that `DefaultStartFactory.DefaultHumans` is broken (see Known Broken Things) — a path no recent change touched.
 
 **UNKNOWN — .NET is not installed in the cloud execution environment, and CANNOT be installed under the current network policy.**
 
@@ -165,6 +165,7 @@ The `maxPopulation` calculation on line 49 is already close to the Aurora formul
 
 | Issue | File | Line | Doc |
 |-------|------|------|-----|
+| `DefaultStartFactory.DefaultHumans` broken — loads Sol via legacy `LoadSystemFromJson("Data/basemod/sol/")` → `systemInfo.json`, but Sol data moved to `ScenarioFiles/systems/sol/sol.json`. Only commented-out tests used it; the live game uses `ColonyFactory.CreateFromBlueprint`. Found by CI via `GameLoopSmokeTests`. | `DefaultStartFactory.cs` | 140 | — |
 | Installations tab never appears | PlanetaryWindow.cs | 107, 221 | Colonies/CLAUDE.md Gotcha #1 |
 | ~~SimpleDamage placeholder~~ | ~~BeamWeaponProcessor.cs~~ | ~~132–134~~ | **FIXED Phase 1a** — DamageComplex now wired |
 | ~~One-hit destroys (units mismatch)~~ | ~~DamageProcessor.cs~~ | — | **FIXED Phase 2** — `HealthPercent -= damageAmount * 0.001f` |
