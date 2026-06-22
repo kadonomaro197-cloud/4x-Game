@@ -12,6 +12,8 @@ Session ending ~2026-06-21 (survey complete). Branch: `claude/laughing-cannon-08
 
 ## Build Status
 
+**CI added 2026-06-22:** `.github/workflows/ci.yml` now runs `dotnet build` + the full NUnit suite on every push/PR via GitHub Actions (Linux runners have the .NET SDK this container lacks). The **first CI run establishes the real build/test baseline** that has been "UNKNOWN" — read the Actions tab. It builds the engine + test project (not the SDL client). New broad sensor: `GameLoopSmokeTests.DefaultStart_AdvancesClockWithoutThrowing` (creates the default start, advances the clock 3 game-days, asserts no processor throws).
+
 **UNKNOWN — .NET is not installed in the cloud execution environment, and CANNOT be installed under the current network policy.**
 
 Cannot run `dotnet build` or `dotnet test` from Claude's remote session. The developer must pull the branch to their Windows machine and build there to establish a baseline.

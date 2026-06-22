@@ -1,0 +1,34 @@
+name: CI
+
+# Builds the engine and runs the full NUnit suite on every push and pull request.
+# GitHub's runners have the .NET SDK that Claude's execution container is blocked from,
+# so THIS is the automated build+test gate that runs on every change without anyone
+# having to remember to run `dotnet test`. It catches a regression in any engine system
+# on every commit — including a system the commit didn't touch.
+#
+# Scope note: this builds GameEngine + Pulsar4X.OrbitalMath (via the test project) and
+# runs all tests. The SDL2/OpenGL client is intentionally NOT built here — it is
+# Windows/display-coupled, and the developer builds it locally when running the game.
+# Engine/data/logic regressions (the ones that hide from a manual workflow) show up here.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: Build & test (engine + NUnit suite)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore Pulsar4X/Pulsar4X.Tests/Pulsar4X.Tests.csproj
+
+      - name: Build & run tests
+        run: dotnet test Pulsar4X/Pulsar4X.Tests/Pulsar4X.Tests.csproj --no-restore --logger "console;verbosity=normal"
