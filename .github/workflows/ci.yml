@@ -10,6 +10,12 @@ name: CI
 # runs all tests. The SDL2/OpenGL client is intentionally NOT built here — it is
 # Windows/display-coupled, and the developer builds it locally when running the game.
 # Engine/data/logic regressions (the ones that hide from a manual workflow) show up here.
+#
+# Readouts (added 2026-06-22): beyond pass/fail, the test step writes a TRX result file
+# that is (a) rendered as an inline per-test results table on the run via dorny/test-reporter,
+# and (b) uploaded as a downloadable artifact. So a red run shows exactly WHICH test failed,
+# its message, and per-test durations — not just a count. The reporter is set fail-on-error:
+# false so the readout itself can never turn a green build red.
 
 on:
   push:
@@ -19,6 +25,9 @@ jobs:
   test:
     name: Build & test (engine + NUnit suite)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write          # lets the test-reporter publish the per-test results table
     steps:
       - uses: actions/checkout@v4
 
@@ -31,4 +40,26 @@ jobs:
         run: dotnet restore Pulsar4X/Pulsar4X.Tests/Pulsar4X.Tests.csproj
 
       - name: Build & run tests
-        run: dotnet test Pulsar4X/Pulsar4X.Tests/Pulsar4X.Tests.csproj --no-restore --logger "console;verbosity=normal"
+        run: >
+          dotnet test Pulsar4X/Pulsar4X.Tests/Pulsar4X.Tests.csproj
+          --no-restore
+          --logger "console;verbosity=normal"
+          --logger "trx;LogFileName=test-results.trx"
+          --results-directory TestResults
+
+      - name: Publish per-test report
+        uses: dorny/test-reporter@v1
+        if: always()           # run even when tests failed, so the failing test is shown
+        with:
+          name: NUnit results
+          path: TestResults/test-results.trx
+          reporter: dotnet-trx
+          fail-on-error: false # a reporting hiccup must never fail the build
+
+      - name: Upload test results artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: TestResults/**
+          if-no-files-found: warn
