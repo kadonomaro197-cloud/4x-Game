@@ -137,7 +137,7 @@ See `ARCHITECTURE.md` for the full data-flow diagram.
 | Factions | `GameEngine/Factions/` | `GameEngine/Factions/CLAUDE.md` |
 | People / Commanders | `GameEngine/People/` | `GameEngine/People/CLAUDE.md` |
 | UI Client | `Pulsar4X.Client/` | `Pulsar4X.Client/CLAUDE.md` |
-| Tests | `Pulsar4X.Tests/` | *(see Testing section below)* |
+| Tests | `Pulsar4X.Tests/` | `Pulsar4X.Tests/CLAUDE.md` |
 
 ---
 
