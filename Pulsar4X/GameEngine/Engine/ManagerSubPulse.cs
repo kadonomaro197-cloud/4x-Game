@@ -353,6 +353,14 @@ namespace Pulsar4X.Engine
                     int count = proc.ProcessManager(_entityManager, deltaSeconds);
                     Performance.Stop(_entityManager.ManagerID + "-" + type.Name);
 
+                    // count == 0 means this system currently holds no entity this processor cares about, so we
+                    // STOP scheduling it (null = "asleep, skip forever") instead of burning a tick every cycle on
+                    // an empty query. This is NOT a permanent kill: the moment an entity carrying this datablob
+                    // type is added to the manager, EntityManager.SetDataBlob -> AddSystemInterupt(blob) re-arms
+                    // this null entry (see AddSystemInterupt: it only sets a next-run when the current one is null).
+                    // So "colonize / expand into a system later" correctly wakes mining/industry/etc back up.
+                    // The one thing to preserve: any future path that grows an entity into a manager MUST go through
+                    // SetDataBlob (or otherwise call AddSystemInterupt) or its processor will stay asleep here.
                     if (count == 0)
                         HotLoopProcessorsNextRun[type] = null;
                     else
