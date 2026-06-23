@@ -105,13 +105,13 @@ reflection — if it's in the assembly, it runs.
 | **Energy / power** | `EnergyGenProcessor`, `EnergyGenHotloopProcessor` | 🔴 DARK | none | ships, components, sensors (power draw), reactors, fuel |
 | **Logistics** (auto cargo routes) | `LogiBaseProcessor`, `LogiShipProcessor` | 🔴 DARK | none | storage, fleets, **trade**, colonies |
 | **Fleets** | `FleetOrderProcessor` | 🔴 DARK | none | ships, movement, orders, combat |
-| **Ships & launch** | `LaunchComplexProcessor`, `ShipFactory` | 🟡 PARTIAL | traced launch fuel cost this session; `ShipTests`, `ShipComponentTests` | industry (builds them), **fuel** (launch cost via rocket eqn), orbits, fleets |
+| **Ships & launch** | `LaunchComplexProcessor`, `ShipFactory` | 🟡 PARTIAL | traced launch fuel cost this session; `ShipTests`, `ShipComponentTests`; **engine spawn proven** (the "Surveyor I" ship existed in the fuel gauge) | industry (builds them), **fuel** (launch cost via rocket eqn), orbits, fleets. **DevTools "Spawn Ship" issue → §6.** |
 | **People / commanders** | `AdminSpaceProcessor`, `NavalAcademyProcessor` | 🔴 DARK | none | colony (admin radius), ships (captains), research (scientists) |
 | **Survey** (geo & jump-point) | `GeoSurveyProcessor`, `JPSurveyProcessor` | 🔴 DARK | none | Galaxy (reveals minerals), jump points, movement |
 | **Factions & NPC AI** | `NPCDecisionProcessor` | 🔴 DARK | none | **economy (could auto-queue jobs!)**, industry, diplomacy, combat doctrine |
 | **Galaxy / system generation** | `StarSystemFactory`, `AtmosphereProcessor` | 🟢 WORKS | `AtmosphereDBExtensionsTests`, `AtmosphereAndSpeciesTests`; we rely on it | minerals, colony siting, orbits, sensors |
 | **Diplomacy** | — | ⚫ ABSENT | design only (`docs/DIPLOMACY-DESIGN.md`) | factions, IFF, trade, logistics |
-| **UI client** (ImGui/SDL) | — | 🔴 DARK + partly broken | **CI-blind**; `PlanetaryWindow` installations tab dead (root gotcha 4); economy panels orphaned | displays every system; live-test only (§5B) |
+| **UI client** (ImGui/SDL) | — | 🔴 DARK + partly broken | **CI-blind**; known gaps tracked in **§6** | displays every system; live-test only (§5B) |
 
 ---
 
@@ -207,8 +207,25 @@ client's only diagnostic channel — CI can't see it.
 
 ---
 
-## 6. How to keep this map honest
+## 6. Known open issues — live-test / client backlog (CI is blind to these)
+
+These are real issues seen in the running client. CI never compiles the UI, so **none of them can go
+green in an automated run** — they're verified only by the developer's live build + `console_output.txt`.
+Listed here so they're tracked, not lost.
+
+| Issue | Where | What we know | Status / next |
+|-------|-------|--------------|---------------|
+| **"Spawn Ship" — designed ship not in dropdown** | `DevToolsWindow.cs` (Spawn Ship) | The spawn dropdown is built from `factionInfo.ShipDesigns` only inside `HardRefresh()`, which runs on open / **"Refresh Lists"** / system-change / after a spawn — **not** when you design a ship elsewhere. So a just-designed ship is missing until you click Refresh (the developer's own "I probably didn't refresh"). The **engine spawn itself works** (`ShipFactory.CreateShip` is sound; proven by the live "Surveyor I"). | Instrumented yesterday with `[DevTools] Spawn Ship OK/FAILED` console logging — **but no repro reading captured yet.** Candidate fixes: (a) live-read the design list each frame instead of caching; (b) confirm a spawned ship renders on the map (icon refresh). Both need live verification. **Bisection gauge available:** an engine test that spawns via `ShipFactory.CreateShip` and asserts the ship lands in the system (CI-testable) — proves engine-vs-UI and adds the DARK Ships system its first gauge. |
+| **Planetary "Installations" tab never appears** | `PlanetaryWindow.cs` | Tab gated on dead `InstallationsDB` (root gotcha 4); should render from `ComponentInstancesDB`. | Known; fix = reuse `ComponentInstancesDBDisplay`. |
+| **Colony economy hard to see in UI** | colony/planet panels | Mining/industry/cargo panels exist (`CargoStorageDBDisplay`, `IndustryDisplay`, …) but aren't all wired into a reachable colony view. | The engine economy is proven in §5A; the UI to *watch* it is the gap. |
+
+**Already fixed in live-test (2026-06-22, for reference):** New Game empty-mod crash, Save dialog NRE at drive root, ship-design armor-material NRE. See `SESSION_STATE.md`.
+
+---
+
+## 7. How to keep this map honest
 
 Update a row the moment its status changes (same commit as the code). When you finish a system, it moves
 🔴→🟡→✅ and gains a "Can we see it?" entry. When you *start* a system, read its **Connected to** row and
-every row it points at — that is the whole point of this document.
+every row it points at — that is the whole point of this document. Live-test/client issues go in §6 (CI
+can't grade them).
