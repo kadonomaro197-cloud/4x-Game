@@ -39,7 +39,7 @@ s.AdvanceTime(TimeSpan.FromDays(365));
 *(The exact cargo / mineral read API is established by the first economy readout test — link it here when it lands.)*
 
 ### How it's built (mirrors `NewGameMenu.CreateGameCore`)
-load mods → pick New Game defaults (first `CanStartHere` body / first species / first colony) → `GameFactory.CreateGame` → `StarSystemFactory.LoadFromBlueprint` per enabled system → find the body by matching `GetDefaultName()` to the blueprint → `FactionFactory.CreateBasicFaction` → `SpeciesFactory.CreateFromBlueprint` → `ColonyFactory.CreateFromBlueprint`. A build failure logs the full exception (`ex.ToString()`) to the test output, then rethrows.
+load mods → pick New Game defaults (first `CanStartHere` body / first species / first colony) → `GameFactory.CreateGame` → `StarSystemFactory.LoadFromBlueprint` per enabled system → find the body by matching `GetDefaultName()` to the blueprint → `FactionFactory.CreateBasicFaction` → `SpeciesFactory.CreateFromBlueprint` → `ColonyFactory.CreateFromBlueprint` → **`startingSystem.IncrementExternalObserver(priority: true)`** (promote out of Stasis — see gotcha 6). A build failure logs the full exception (`ex.ToString()`) to the test output, then rethrows.
 
 ### Extend it
 - **Expose another entity:** capture it in `CreateWithColony` and add a `public ... { get; private set; }` handle.
@@ -71,6 +71,7 @@ Namespace drift between branches is the #1 compile trap here (it bit `PositionDB
 3. **Faction entities live in the `GlobalManager`, which `MasterTimePulse` does NOT iterate.** `AdvanceTime` fires **colony** processors (the colony is in the star system, which IS iterated) — mining, industry, population. It does **not** fire faction-level processors (NPC decisions, faction-wide aggregation). See `GameEngine/Factions/CLAUDE.md`.
 4. **A large chunk of the integration suite is commented out** (`/* ... */`): `SystemGenTests`, `SerializationManagerTests`, `FactoryTests`, `MiningTests`, `SavingAndLoadingTests`, parts of `PathfindingTests`. So the "all green" count is mostly unit-level. Re-enable these one at a time, CI-verified — they likely rotted (like the in-code `DefaultHumans` start).
 5. **CI cannot test the client.** Engine-only. UI verification is the developer's local build.
+6. **A star system defaults to `Stasis` and Stasis systems are NOT processed.** `StarSystem.ActivityState` starts at `Stasis`; `MasterTimePulse.SimulateTimeUntil` filters `Stasis` systems out of the processing loop, so a colony in a Stasis system does **zero** mining/population/industry no matter how far you advance the clock — and nothing throws, so a naive smoke test passes while measuring a frozen universe (this is exactly what hid "the mine does nothing" — the rates were correct; the system was asleep). The live game promotes a system via faction-entity detection (`Game` setup loop → `UpdateActivityState` → Background) and via the client observing it (→ Foreground). `CreateWithColony` reproduces the "player is here" case with `IncrementExternalObserver(priority: true)` → Foreground (full speed; Background throttles hotloop frequency 10×). The economy readout prints `s.StartingSystem.ActivityState` as its first gauge for this reason. **If a feature test advances time and sees no state change, check ActivityState first.**
 
 ---
 

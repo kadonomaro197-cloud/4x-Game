@@ -109,6 +109,17 @@ namespace Pulsar4X.Tests
                 var colony = ColonyFactory.CreateFromBlueprint(game, faction, species, startingSystem, startingBody,
                     modDataStore.Colonies[colonyId]);
 
+                // Promote the starting system out of Stasis, or it never processes. StarSystem.ActivityState
+                // defaults to Stasis and MasterTimePulse.SimulateTimeUntil filters Stasis systems OUT of the
+                // processing loop — so a Stasis colony does NO mining, population, or industry no matter how
+                // far the clock advances. The live game promotes a system two ways: its post-setup loop calls
+                // UpdateActivityState on every system (faction entities -> Background), and the client marks the
+                // system the player is viewing as a priority observer (-> Foreground). A headless harness has
+                // neither, so we register a priority external observer on the starting system — the engine-level
+                // equivalent of "the player is looking at their home system" — giving it full-speed Foreground
+                // processing. Without this the economy gauge measures a frozen universe, not a running one.
+                startingSystem.IncrementExternalObserver(priority: true);
+
                 s.Game = game;
                 s.Faction = faction;
                 s.Species = species;

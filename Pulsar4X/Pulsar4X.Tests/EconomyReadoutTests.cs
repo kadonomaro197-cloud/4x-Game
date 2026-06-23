@@ -76,6 +76,10 @@ namespace Pulsar4X.Tests
         /// </summary>
         private static void ReportInfrastructure(TestScenario s)
         {
+            // If the system is in Stasis, MasterTimePulse skips it entirely — NOTHING processes, no matter how
+            // far the clock advances. This is the first thing to check when "the economy did nothing."
+            Log($"  system activity: {s.StartingSystem.ActivityState}  (Stasis = not processed by the time loop)");
+
             if (s.Colony.TryGetDataBlob<InfrastructureDB>(out var infra))
                 Log($"  infrastructure: provided={infra.CapacityProvided}  required={infra.CapacityRequired}  " +
                     $"available={infra.CapacityAvailable}  efficiency={infra.Efficiency:P1}");
