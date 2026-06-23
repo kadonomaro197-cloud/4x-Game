@@ -12,6 +12,7 @@ using Pulsar4X.Ships;
 using Pulsar4X.Colonies;
 using Pulsar4X.Storage;
 using Pulsar4X.Industry;
+using Pulsar4X.Galaxy; // MassVolumeDB lives here on this branch (namespace drifted from the branch this file was written on)
 
 namespace Pulsar4X.Client
 {
