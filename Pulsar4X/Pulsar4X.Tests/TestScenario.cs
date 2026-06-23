@@ -7,6 +7,8 @@ using Pulsar4X.Factions;
 using Pulsar4X.People;
 using Pulsar4X.Colonies;
 using Pulsar4X.Galaxy;
+using Pulsar4X.Industry;
+using Pulsar4X.Interfaces;
 using Pulsar4X.Extensions;
 
 namespace Pulsar4X.Tests
@@ -152,6 +154,37 @@ namespace Pulsar4X.Tests
             long steps = (long)Math.Ceiling(total.TotalSeconds / tick.TotalSeconds);
             for (long i = 0; i < steps; i++)
                 Game.TimePulse.TimeStep();
+        }
+
+        /// <summary>
+        /// Queue a production job on the colony — the "job lever." This is the engine-level equivalent of the
+        /// player opening the industry window and ordering something built: the factory/refinery do NO work
+        /// until a job is queued, no matter how long the clock runs.
+        ///
+        /// Looks <paramref name="designId"/> up in the faction's unlocked IndustryDesigns (refined materials and
+        /// component/installation designs both live there), builds an <see cref="IndustryJob"/>, and adds it to
+        /// the first production line that handles that design's industry type (a "refining" material -> the
+        /// Refinery line; an "installation-construction" design -> the Factory line). Set <paramref name="repeat"/>
+        /// true for a standing order that re-queues itself on completion.
+        /// </summary>
+        public void QueueProductionJob(string designId, ushort count = 1, bool repeat = false)
+        {
+            var factionInfo = Faction.GetDataBlob<FactionInfoDB>();
+            if (!factionInfo.IndustryDesigns.TryGetValue(designId, out IConstructableDesign design))
+                throw new ArgumentException(
+                    $"'{designId}' is not an unlocked IndustryDesign on the faction.", nameof(designId));
+
+            var industry = Colony.GetDataBlob<IndustryAbilityDB>();
+            string lineId = industry.ProductionLines
+                .FirstOrDefault(l => l.Value.IndustryTypeRates.ContainsKey(design.IndustryTypeID)).Key;
+            if (lineId == null)
+                throw new InvalidOperationException(
+                    $"No production line on the colony handles industry type '{design.IndustryTypeID}' " +
+                    $"(needed to build '{designId}').");
+
+            var job = new IndustryJob(factionInfo, designId);
+            job.InitialiseJob(count, repeat);
+            IndustryTools.AddJob(Colony, lineId, job);
         }
     }
 }

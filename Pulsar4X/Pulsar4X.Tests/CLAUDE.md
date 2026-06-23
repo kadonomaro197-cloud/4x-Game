@@ -26,8 +26,11 @@ CI runs the full suite automatically and publishes a per-test TRX report (inline
 ```csharp
 var s = TestScenario.CreateWithColony();        // base mod, New Game wizard defaults
 // handles: s.Game, s.Faction, s.Species, s.StartingSystem, s.StartingBody, s.Colony
+s.QueueProductionJob("space-crete", repeat: true); // optional: give the factory/refinery work to do
 s.AdvanceTime(TimeSpan.FromDays(365));           // step granularity defaults to 1 game-day
 ```
+
+`QueueProductionJob(designId, count, repeat)` is the **job lever**: the factory/refinery do nothing until a job is queued. It looks the design up in the faction's unlocked `IndustryDesigns` (refined materials like `space-crete`/`stainless-steel`, and component/installation designs), builds an `IndustryJob`, and adds it to the production line that handles its industry type. A "refining" material needs its mineral inputs present (mined or in starting cargo) or the job sits at `MissingResources` — check the job Status in the industry readout.
 
 ### Feature-test pattern (read → advance → read → assert the delta)
 ```csharp

@@ -8,6 +8,7 @@ using Pulsar4X.Datablobs;
 using Pulsar4X.Industry;
 using Pulsar4X.Components;
 using Pulsar4X.Galaxy;
+using Pulsar4X.Names;
 
 namespace Pulsar4X.Tests
 {
@@ -24,8 +25,14 @@ namespace Pulsar4X.Tests
     /// was correct all along (ResourcesPerEconTick=15, BaseMiningRate=15, ActualMiningRate=15, efficiency 100%);
     /// the real fault was the colony's star system sitting in Stasis, which MasterTimePulse skips entirely — so
     /// nothing processed and the readout came back byte-for-byte identical. The harness now promotes the system
-    /// (TestScenario → Foreground), the mine extracts 1 unit/mineral/day (water/regolith/rare-earth go 0→365),
-    /// and the deposit-depletion assertion below now guards against any re-freeze or mining break.
+    /// (TestScenario → Foreground), the mine extracts 10 units/mineral/day, and the deposit-depletion assertion
+    /// below now guards against any re-freeze or mining break.
+    ///
+    /// It then queues a Space-Crete refining job (via TestScenario.QueueProductionJob) to drive the NEXT stage:
+    /// the refinery turns mined regolith/silicon/aluminium/iron/water into Space-Crete, closing the
+    /// mine → refine loop. Asserts Space-Crete (starts at 0, built only from mined inputs) is produced. Also
+    /// traces RP-1 fuel across every cargo-holding entity in the system to localise the ~490k/yr drain
+    /// (conserved system-wide = a transfer to a ship; dropped = genuine consumption).
     /// </summary>
     [TestFixture]
     public class EconomyReadoutTests
@@ -38,6 +45,13 @@ namespace Pulsar4X.Tests
         {
             var s = TestScenario.CreateWithColony();
 
+            // Give the Refinery a job, or it sits idle all year. Space-Crete is built from regolith/silicon/
+            // aluminium/iron/water — every input is a mineral the mine now produces, and regolith+water START AT
+            // ZERO (they only exist because mining runs). So this closes the mine -> refine loop end to end, and
+            // Space-Crete is exactly the material a colony needs to build more mines. Standing order (repeat) so
+            // it keeps refining as minerals accumulate.
+            s.QueueProductionJob("space-crete", count: 1, repeat: true);
+
             Log("================ STARTING COLONY ================");
             ReportInstallations(s);
             ReportInfrastructure(s);
@@ -45,6 +59,8 @@ namespace Pulsar4X.Tests
             ReportIndustry(s, "start");
             double massStart = ReportCargo(s, "start");
             long depositsStart = ReportDeposits(s);
+            long fuelStart = ReportSystemFuel(s, "start");
+            long spaceCreteStart = UnitsOf(s.Colony, "Space-Crete");
 
             s.AdvanceTime(TimeSpan.FromDays(365));
 
@@ -53,9 +69,14 @@ namespace Pulsar4X.Tests
             ReportIndustry(s, "end");
             double massEnd = ReportCargo(s, "end");
             long depositsEnd = ReportDeposits(s);
+            long fuelEnd = ReportSystemFuel(s, "end");
+            long spaceCreteEnd = UnitsOf(s.Colony, "Space-Crete");
 
             Log($">>> Colony cargo total mass: {massStart:N1} -> {massEnd:N1}   (delta {massEnd - massStart:N1})");
             Log($">>> Planet deposits total:   {depositsStart:N0} -> {depositsEnd:N0}   (mined {depositsStart - depositsEnd:N0})");
+            Log($">>> System RP-1 fuel:        {fuelStart:N0} -> {fuelEnd:N0}   (delta {fuelEnd - fuelStart:N0})   " +
+                "[conserved across system = transfer; dropped = consumption]");
+            Log($">>> Refined Space-Crete:     {spaceCreteStart:N0} -> {spaceCreteEnd:N0}   (produced {spaceCreteEnd - spaceCreteStart:N0})");
 
             // Storage accounting invariant.
             Assert.That(massEnd, Is.GreaterThanOrEqualTo(0),
@@ -68,6 +89,14 @@ namespace Pulsar4X.Tests
             Assert.That(depositsEnd, Is.LessThan(depositsStart),
                 "Planet mineral deposits did not deplete over a game-year — the mine did no work. " +
                 "Check StartingSystem.ActivityState (Stasis = system not processed) and the mining-chain rates above.");
+
+            // The refinery's ONE job: turn mined minerals into refined materials. Space-Crete starts at ZERO and
+            // is built only from mined inputs, so any positive amount proves the full mine->refine pipeline ran.
+            // Regression sensor for the production stage (and a second witness to the Stasis freeze).
+            Assert.That(spaceCreteEnd, Is.GreaterThan(spaceCreteStart),
+                "Refinery produced no Space-Crete over a game-year — the production pipeline did no work. " +
+                "Check the queued job's Status in the industry readout (MissingResources = inputs never arrived; " +
+                "Queued = line not processing) and that the system is not in Stasis.");
         }
 
         private static void ReportInstallations(TestScenario s)
@@ -214,6 +243,44 @@ namespace Pulsar4X.Tests
             {
                 total += kv.Value.Amount.Actual;
                 Log($"    deposit id {kv.Key,-8} accessibility {kv.Value.Accessibility:P0}  amount {kv.Value.Amount.Actual:N0}");
+            }
+            return total;
+        }
+
+        /// <summary>
+        /// RP-1 fuel across EVERY cargo-holding entity in the starting system (colony + ships), to localise the
+        /// ~490k/yr drain. If the system-wide total is conserved, fuel just MOVED (e.g. colony -> a launched/
+        /// maneuvering ship); if it dropped, it was CONSUMED (engine/launch burn). Returns the system-wide total.
+        /// </summary>
+        private static long ReportSystemFuel(TestScenario s, string label)
+        {
+            long systemTotal = 0;
+            Log($"  RP-1 fuel across system ({label}):");
+            foreach (var e in s.StartingSystem.GetAllEntitiesWithDataBlob<CargoStorageDB>())
+            {
+                long rp1 = UnitsOf(e, "RP-1");
+                if (rp1 == 0) continue;
+                systemTotal += rp1;
+                string name = e.Id == s.Colony.Id ? "Colony"
+                    : e.TryGetDataBlob<NameDB>(out var nm) ? nm.GetName(s.Faction.Id)
+                    : $"entity {e.Id}";
+                Log($"    {name,-28} {rp1,14:N0} RP-1");
+            }
+            Log($"    >>> system-wide RP-1 total: {systemTotal:N0}");
+            return systemTotal;
+        }
+
+        /// <summary>Total units of a named cargo item in one entity's stores (e.g. "Space-Crete", "RP-1").</summary>
+        private static long UnitsOf(Entity e, string cargoableName)
+        {
+            if (!e.TryGetDataBlob<CargoStorageDB>(out var cargo)) return 0;
+            long total = 0;
+            foreach (var ts in cargo.TypeStores.Values)
+            {
+                var cargoables = ts.GetCargoables();
+                foreach (var kv in ts.CurrentStoreInUnits)
+                    if (cargoables.TryGetValue(kv.Key, out var c) && c.Name == cargoableName)
+                        total += kv.Value;
             }
             return total;
         }
