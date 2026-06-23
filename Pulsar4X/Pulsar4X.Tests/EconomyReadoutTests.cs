@@ -15,15 +15,16 @@ namespace Pulsar4X.Tests
     /// on the scenario harness, and reads it again — printing installed infrastructure, cargo, and deposits to
     /// the runner output so we can learn what "normal" actually is.
     ///
-    /// Deliberately a READOUT, not a tight assertion: we have never measured this economy, so this prints the
-    /// numbers and asserts only a non-negotiable invariant (cargo mass can't go negative). Once we've read a
-    /// baseline off the CI log — e.g. "the starting colony has no Mine, so cargo never grows" — tighten the
-    /// assertions here (mining adds minerals, refining converts them, etc.). Instrument before you theorize.
+    /// Part readout, part regression sensor. It prints the full economy state (so we keep learning 'normal')
+    /// AND asserts the two things we've now established must hold: cargo mass stays non-negative, and the planet's
+    /// deposits deplete over a year (the mine does its job). Instrument before you theorize.
     ///
-    /// 2026-06-23 — chasing "the mine does zero work over a game-year." Added a full mining-chain dump
-    /// (NumberOfMines → per-mine ResourcesPerEconTick → BaseMiningRate → ActualMiningRate) plus the
-    /// infrastructure efficiency throttle and the body's gravity/pressure, so one CI run shows exactly which
-    /// node in the chain is empty. This is the "build the gauge before you theorize" move from the Visibility Gate.
+    /// 2026-06-23 — chased "the mine does zero work over a game-year" to ground with this gauge. The mining chain
+    /// was correct all along (ResourcesPerEconTick=15, BaseMiningRate=15, ActualMiningRate=15, efficiency 100%);
+    /// the real fault was the colony's star system sitting in Stasis, which MasterTimePulse skips entirely — so
+    /// nothing processed and the readout came back byte-for-byte identical. The harness now promotes the system
+    /// (TestScenario → Foreground), the mine extracts 1 unit/mineral/day (water/regolith/rare-earth go 0→365),
+    /// and the deposit-depletion assertion below now guards against any re-freeze or mining break.
     /// </summary>
     [TestFixture]
     public class EconomyReadoutTests
@@ -41,20 +42,29 @@ namespace Pulsar4X.Tests
             ReportInfrastructure(s);
             ReportMining(s, "start");
             double massStart = ReportCargo(s, "start");
-            ReportDeposits(s);
+            long depositsStart = ReportDeposits(s);
 
             s.AdvanceTime(TimeSpan.FromDays(365));
 
             Log("================ AFTER 1 GAME-YEAR =============");
             ReportMining(s, "end");
             double massEnd = ReportCargo(s, "end");
-            ReportDeposits(s);
+            long depositsEnd = ReportDeposits(s);
 
             Log($">>> Colony cargo total mass: {massStart:N1} -> {massEnd:N1}   (delta {massEnd - massStart:N1})");
+            Log($">>> Planet deposits total:   {depositsStart:N0} -> {depositsEnd:N0}   (mined {depositsStart - depositsEnd:N0})");
 
-            // We're establishing 'normal', not asserting it yet — so only the non-negotiable invariant.
+            // Storage accounting invariant.
             Assert.That(massEnd, Is.GreaterThanOrEqualTo(0),
                 "Colony cargo mass went negative across a game-year — storage accounting is broken.");
+
+            // The mine's ONE job: pull minerals out of the planet. Over a game-year the deposits MUST shrink.
+            // This is the regression sensor for the bug that started this whole chase — when the colony's system
+            // was stuck in Stasis the deposits came back byte-for-byte identical. If that (or any mining break)
+            // recurs, this goes red. First thing to check on failure: s.StartingSystem.ActivityState != Stasis.
+            Assert.That(depositsEnd, Is.LessThan(depositsStart),
+                "Planet mineral deposits did not deplete over a game-year — the mine did no work. " +
+                "Check StartingSystem.ActivityState (Stasis = system not processed) and the mining-chain rates above.");
         }
 
         private static void ReportInstallations(TestScenario s)
@@ -158,16 +168,23 @@ namespace Pulsar4X.Tests
             return cargo.TotalStoredMass;
         }
 
-        private static void ReportDeposits(TestScenario s)
+        /// <summary>Reports the planet's mineral deposits and returns their total remaining amount (the gauge the
+        /// mining assertion reads — total deposits must shrink over a year if the mine is working).</summary>
+        private static long ReportDeposits(TestScenario s)
         {
             if (!s.StartingBody.TryGetDataBlob<MineralsDB>(out var minerals))
             {
                 Log("  deposits: (no MineralsDB on starting body)");
-                return;
+                return 0;
             }
             Log($"  planet mineral deposits: {minerals.Minerals.Count} type(s)");
+            long total = 0;
             foreach (var kv in minerals.Minerals)
+            {
+                total += kv.Value.Amount.Actual;
                 Log($"    deposit id {kv.Key,-8} accessibility {kv.Value.Accessibility:P0}  amount {kv.Value.Amount.Actual:N0}");
+            }
+            return total;
         }
 
         private static long Sum(Dictionary<int, long> d)
