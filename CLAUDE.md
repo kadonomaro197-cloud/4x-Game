@@ -145,6 +145,7 @@ See `ARCHITECTURE.md` for the full data-flow diagram.
 
 | Doc | Read it when |
 |-----|--------------|
+| `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` | **Deciding what to work on next, or before touching any system.** The living map of every system, its status (done/works/partial/dark), its gauge/test, and what it's wired to. Stops reactive pivoting; enforces "work the connected systems too." Also holds the play-by-play test instructions. |
 | `CONVENTIONS.md` | **Before writing any new code.** Pulsar's actual coding idioms (DataBlob copy-ctor/`Clone()`, serialize-one-collection-rebuild-indexes, `TryGet`/sentinel defensiveness, components+`*Atb`, processor auto-discovery). Match these, don't impose your own style. |
 | `docs/aurora/INDEX.md` | Designing any ground-combat or infrastructure mechanic. Aurora 4X is the design spec for systems Pulsar lacks. |
 | `docs/aurora/GROUND-COMBAT.md` | Building ground forces, formations, invasion, bombardment-vs-ground. |
