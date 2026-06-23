@@ -97,6 +97,12 @@ namespace Pulsar4X.Client
             _minerals = mineralList;
             _mineralNames = mineralList.Select(m => m.Name).ToArray();
             _selectedMineral = 0;
+
+            // Logged so the console capture shows whether a just-designed ship actually made it into the
+            // spawn list (it reads factionInfo.ShipDesigns). Called on open / Refresh / system-change / after
+            // a spawn -- never per frame -- so it does not spam.
+            Console.WriteLine($"[DevTools] Refresh: {_shipDesignNames.Length} ship design(s), {_bodyNames.Length} body(ies), "
+                + $"{_cargoEntityNames.Length} cargo target(s), {_mineralNames.Length} mineral(s)");
         }
 
         static string GetEntityName(Entity e)
@@ -104,6 +110,22 @@ namespace Pulsar4X.Client
             if (e.TryGetDataBlob<NameDB>(out var nameDB))
                 return nameDB.OwnersName;
             return $"Entity {e.Id}";
+        }
+
+        // Keeps the Spawn Ship dropdown in step with the player's ship designs every frame, so a ship you just
+        // made in the Ship Design window shows up here immediately instead of only after "Refresh Lists".
+        // Deliberately lighter than HardRefresh(): it touches ONLY the ship-design arrays (not bodies/minerals)
+        // and only rebuilds when the design count actually changes, so it is safe to call from Display().
+        void SyncShipDesigns()
+        {
+            if (_uiState.PlayerFaction == null) return;
+            var factionInfo = _uiState.PlayerFaction.GetDataBlob<FactionInfoDB>();
+            if (factionInfo.ShipDesigns.Count == _shipDesignValues.Length) return;
+
+            _shipDesignValues = factionInfo.ShipDesigns.Values.ToArray();
+            _shipDesignNames = _shipDesignValues.Select(d => d.Name).ToArray();
+            if (_selectedDesign >= _shipDesignNames.Length)
+                _selectedDesign = 0;
         }
 
         internal override void Display()
@@ -118,6 +140,11 @@ namespace Pulsar4X.Client
                 // ── Spawn Ship ────────────────────────────────────
                 ImGui.Separator();
                 ImGui.Text("[ Spawn Ship ]");
+
+                // Pick up any ship designed since this window was opened, WITHOUT needing "Refresh Lists"
+                // (the 2026-06-22 "I designed a ship but it isn't in the spawn list" report). Cheap — only
+                // rebuilds when the design count changes.
+                SyncShipDesigns();
 
                 if (_shipDesignNames.Length == 0)
                 {
@@ -140,12 +167,14 @@ namespace Pulsar4X.Client
                             var parent = _bodyEntities[_selectedSpawnParent];
                             ShipFactory.CreateShip(design, _uiState.PlayerFaction, parent, shipName);
                             _spawnStatus = $"Spawned {design.Name}";
+                            Console.WriteLine($"[DevTools] Spawn Ship OK: '{design.Name}' around '{GetEntityName(parent)}'");
                             Array.Clear(_shipNameBuffer, 0, _shipNameBuffer.Length);
                             HardRefresh();
                         }
                         catch (Exception ex)
                         {
                             _spawnStatus = $"Error: {ex.Message}";
+                            Console.WriteLine($"[DevTools] Spawn Ship FAILED: {ex}");
                         }
                     }
                     if (!string.IsNullOrEmpty(_spawnStatus))
@@ -182,12 +211,14 @@ namespace Pulsar4X.Client
                                 long pop = (long)_popMillions * 1_000_000L;
                                 ColonyFactory.CreateColony(_uiState.PlayerFaction, species, planet, pop);
                                 _colonyStatus = $"Colony created on {GetEntityName(planet)}";
+                                Console.WriteLine($"[DevTools] Create Colony OK: on '{GetEntityName(planet)}' pop {pop:N0}");
                                 HardRefresh();
                             }
                         }
                         catch (Exception ex)
                         {
                             _colonyStatus = $"Error: {ex.Message}";
+                            Console.WriteLine($"[DevTools] Create Colony FAILED: {ex}");
                         }
                     }
                     if (!string.IsNullOrEmpty(_colonyStatus))
@@ -221,10 +252,12 @@ namespace Pulsar4X.Client
                             var mineral = _minerals[_selectedMineral];
                             CargoTransferProcessor.AddCargoItems(entity, mineral, _mineralAmount);
                             _mineralStatus = $"Added {_mineralAmount:N0} {mineral.Name}";
+                            Console.WriteLine($"[DevTools] Add Minerals OK: {_mineralAmount:N0} {mineral.Name} to '{GetEntityName(entity)}'");
                         }
                         catch (Exception ex)
                         {
                             _mineralStatus = $"Error: {ex.Message}";
+                            Console.WriteLine($"[DevTools] Add Minerals FAILED: {ex}");
                         }
                     }
                     if (!string.IsNullOrEmpty(_mineralStatus))

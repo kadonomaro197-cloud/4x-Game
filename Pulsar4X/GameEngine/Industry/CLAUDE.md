@@ -89,6 +89,8 @@ MineResourcesProcessor (daily)
 
 Mineral `Accessibility` ranges 0.0–1.0. Low accessibility deposits are harder to extract — they produce less per mining unit. Deposits deplete as they are mined.
 
+**Mine output rate (tunable, one constant).** The base `Mine` installation's per-mineral daily rate comes from the `mine` template's `MiningAmount` property in `GameData/basemod/TemplateFiles/installations.json`: `MiningAmount = Area × 0.00001`. So the default 1,000,000 m² mine = **10 units/mineral/day**, and a max-size 100,000,000 m² mine = 1,000/day; `ActualMiningRate` then scales that by accessibility (and rounds). Bumped 10× from the original `× 0.000001` (which gave a near-useless 1/mineral/day) on 2026-06-23 to restore the historical design scale the old `MiningTests` encoded (~9.5/mineral per mine). This single constant sets the early economy pace — dial it there. Sensor: `EconomyReadoutTests` prints `BaseMiningRate`/`ActualMiningRate` and asserts the planet's deposits deplete over a game-year. (The `automine` template uses a separate formula, `Size × 0.005`.)
+
 ---
 
 ## Installations

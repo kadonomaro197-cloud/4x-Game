@@ -75,6 +75,8 @@ The developer runs **Windows** with **PowerShell** as their shell. All commands 
 > **Cloud environment note:** `.NET SDK is NOT installed in the remote Claude Code execution environment.` Claude can read and edit C# files but cannot compile or run tests remotely. **Workflow:** Claude writes the change → developer pulls branch in PowerShell → builds/tests locally → pastes any errors back → Claude fixes. See `SESSION_STATE.md` for current build/test baseline.
 
 > **CI (added 2026-06-22):** `.github/workflows/ci.yml` runs `dotnet build` + the full NUnit suite on **every push and pull request**, on GitHub's Linux runners (which have the .NET SDK this container lacks). This is the automated gate that catches a regression in *any* engine system on every change — including one a given commit didn't touch — without relying on anyone remembering to run tests. It builds the engine + test project and runs all tests; the SDL/OpenGL client is **not** built in CI (Windows/display-coupled — built locally when running the game). A red ✗ on a commit/PR means build or a test broke — check it before promoting. The broadest sensor it runs is `GameLoopSmokeTests` (advances the simulation clock on a generated universe, asserts no processor throws). Two more passive, read-only sensors run alongside it: `StateIntegritySmokeTests` (after advancing the clock, asserts every entity's position is a finite number — catches silent NaN/garbage a throw-check can't see, since the engine has no NaN guards) and `PerformanceReadoutSmokeTests` (reads the engine's built-in per-processor stopwatch and prints a timing breakdown into the CI log). CI also publishes a per-test report (TRX) as an inline results table and a downloadable artifact, so a red run shows exactly which test broke and why — not just a count. All sensors only read game state; none modify the simulation.
+>
+> **CI is structurally blind to the SDL client** — it never compiles the UI, so client build errors and runtime crashes never surface here; the developer's local build is the only client check. The compensating tool is `launch.bat`: it captures all console output (stdout+stderr) to `console_output.txt` and keeps the window open on crash — the client's diagnostic channel. Live-test loop: play → reproduce → read/send `console_output.txt` → fix → pull → repeat. Full live-test play-by-play, session log, and lessons learned (2026-06-22) are in `SESSION_STATE.md`.
 
 All commands run from the repo root in **PowerShell on the developer's Windows machine**:
 
@@ -135,7 +137,7 @@ See `ARCHITECTURE.md` for the full data-flow diagram.
 | Factions | `GameEngine/Factions/` | `GameEngine/Factions/CLAUDE.md` |
 | People / Commanders | `GameEngine/People/` | `GameEngine/People/CLAUDE.md` |
 | UI Client | `Pulsar4X.Client/` | `Pulsar4X.Client/CLAUDE.md` |
-| Tests | `Pulsar4X.Tests/` | *(see Testing section below)* |
+| Tests | `Pulsar4X.Tests/` | `Pulsar4X.Tests/CLAUDE.md` |
 
 ---
 
@@ -143,6 +145,7 @@ See `ARCHITECTURE.md` for the full data-flow diagram.
 
 | Doc | Read it when |
 |-----|--------------|
+| `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` | **Deciding what to work on next, or before touching any system.** The living map of every system, its status (done/works/partial/dark), its gauge/test, and what it's wired to. Stops reactive pivoting; enforces "work the connected systems too." Also holds the play-by-play test instructions. |
 | `CONVENTIONS.md` | **Before writing any new code.** Pulsar's actual coding idioms (DataBlob copy-ctor/`Clone()`, serialize-one-collection-rebuild-indexes, `TryGet`/sentinel defensiveness, components+`*Atb`, processor auto-discovery). Match these, don't impose your own style. |
 | `docs/aurora/INDEX.md` | Designing any ground-combat or infrastructure mechanic. Aurora 4X is the design spec for systems Pulsar lacks. |
 | `docs/aurora/GROUND-COMBAT.md` | Building ground forces, formations, invasion, bombardment-vs-ground. |
@@ -228,6 +231,27 @@ This is not optional and it is not just for complex tasks. A change that looks l
 **Then look further.** The answer to those four questions is the minimum scope. The real scope is often one hop wider. Ask: does anything in that downstream system have the same four connections? If the answer surprises you, document it before writing a line of code.
 
 **This applies to every subsystem listed in the Subsystem Index, every system in `docs/COMBAT-DESIGN.md`, every column in the game.** Economy connects to industry connects to population connects to research connects to ship production connects to fleet strength. Sensors connect to contact model connects to IFF connects to doctrine connects to auto-resolution. None of these are islands.
+
+---
+
+## The Visibility Gate — "Can We See Enough?"
+
+**You cannot control what you cannot measure.** You can't run a steam plant without the pressures, temperatures, flow rates, and ratings — and a picture of what *normal* looks like. The same is true here: you cannot safely change a system you cannot observe.
+
+**The rule — when a fix fails on the first try, STOP.** Do not pile on a second guess. Ask one question first:
+
+> **"Can we see enough?"**
+
+If the answer is no — the failure is hidden, the error is swallowed, the state is invisible, there is no baseline for "normal" — then **building the visibility IS the task.** Add the gauge, capture the log, write the read-back, establish the baseline. *Then* resume the fix. This is not a detour from the work; it is the work.
+
+Proven 2026-06-22: every bug fixed that day was caught because the gauge was built first (CI, the passive sensors, the `launch.bat` console capture, the DevTools action logging). The failures that stayed mysterious were the ones whose errors were swallowed where nothing could read them.
+
+**Corollaries:**
+- A caught exception with no log is an invisible bug — route it somewhere captured.
+- "It didn't work" is not diagnosable; "here is the gauge reading when it didn't work" is. Instrument before you theorize — live data beats speculation.
+- Before changing a system, be able to state its *normal*: its inputs, expected outputs, ratings/limits. If you can't, read the docs and the source until you can. A plan built on a skim is a guess.
+
+Pairs with the Prime Directive: **map the connections, then make sure you can see them move.**
 
 ---
 

@@ -43,7 +43,7 @@
           "Name": "MiningAmount",
           "DescriptionFormula": "'Mining rate in units per time'",
           "GuiHint": "GuiTextDisplay",
-          "PropertyFormula": "PropertyValue('Area') * 0.000001"
+          "PropertyFormula": "PropertyValue('Area') * 0.00001"
         },
         {
           "Name": "MiningAmountDict",

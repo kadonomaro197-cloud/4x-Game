@@ -195,6 +195,10 @@ namespace Pulsar4X.Ships
             }
 
             var aresource = cargoLibrary.GetAny(armor.armorType.ResourceID);
+            if (aresource == null)
+                return 0; // Armor material isn't in this faction's cargo library (not unlocked/defined).
+                          // Return 0 mass rather than NRE-crashing the whole app from the ship-design UI,
+                          // which recomputes stats every frame a design is selected.
             var amass = aresource.MassPerUnit;
             var avol = aresource.VolumePerUnit;
             var aden = amass / avol;

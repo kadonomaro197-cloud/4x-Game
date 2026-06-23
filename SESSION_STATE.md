@@ -6,7 +6,47 @@ This document tracks what we know about the codebase state at the close of each 
 
 ## Last Updated
 
-Session ending ~2026-06-21 (survey complete). Branch: `claude/laughing-cannon-08obma`.
+Session ending ~2026-06-22 (testing infrastructure + live-test bug sweep). Branch: `claude/adoring-gates-i6svyk` (merged to main via PRs).
+
+---
+
+## Session 2026-06-22 — Testing Infrastructure + the Live-Test Loop (READ THIS)
+
+This session built the missing safety net and a live-test workflow, then used it to catch a cascade of real crashes.
+
+### What was built
+- **CI** (`.github/workflows/ci.yml`): builds engine + runs the full NUnit suite on every push/PR, with a per-test TRX report (inline table + artifact). The automated gate the cloud container can't be (no local .NET SDK). **CI does NOT build the SDL client.**
+- **Four passive read-only sensors** (none mutate the sim): `GameLoopSmokeTests` (advance clock, no processor throws), `SaveLoadSmokeTests` (Game.Save→Load round-trips), `StateIntegritySmokeTests` (entity positions stay finite — catches silent NaN the engine never guards), `PerformanceReadoutSmokeTests` (reads the built-in per-processor stopwatch).
+- **`NewGameStartSmokeTests`**: reproduces the real New Game colony path (CreateFromBlueprint) in CI. Base mod passes; **base + testing mod throws NRE** (testing mod ships incomplete Armor/Theme data, adds no species/colony) → marked `[Ignore]` pending a testing-mod data fix.
+- **`launch.bat` rewritten** to capture all console output to `console_output.txt` and keep the window open (`pause`). **The single most valuable diagnostic tool of the session.**
+- **`DevToolsWindow` promoted** from `sleepy-meitner` (Spawn Ship / Create Colony / Add Minerals in SM mode), now with all actions logged to the console.
+
+### Bugs found & fixed (every one via the live-test console loop)
+1. **New Game crash** — mods page `_modDataStore.Species.First()` on an empty store when no mod is enabled (the unimplemented `// FIXME`). Guarded. `NewGameMenu.cs`
+2. **DevTools build error** — missing `using Pulsar4X.Galaxy` for `MassVolumeDB` (namespace drift on cherry-pick). `DevToolsWindow.cs`
+3. **Save-dialog crash** — `FileDialog` dereferenced `Directory.GetParent` null at the drive root. Guarded. `FileDialog.cs`
+4. **Ship-design crash** — `ShipDesign.GetArmorMass` dereferenced a null armor material (not in faction cargo library). Guarded → returns 0. `ShipDesign.cs` — *engine code; a ship-design test would catch this in CI.*
+5. **"Ship didn't spawn"** — not a bug: `ShipFactory.CreateShip(design, faction, parent, name)` places it at **2× the body's radius** (hugging the planet, hidden under the icon). Added DevTools console logging so spawn results are captured.
+
+### LESSONS LEARNED (these shaped every fix above)
+1. **Live data beats speculation.** Driving the real game and reading `console_output.txt` caught bugs faster and more reliably than reasoning about code. When a symptom is reported, instrument and capture before theorizing.
+2. **CI is structurally blind to the client.** It builds engine + tests, never the SDL/OpenGL client. Every client-only bug (build errors, UI crashes) is invisible to CI — the **`launch.bat` console capture is the client's only test/diagnostic channel**, verified by the developer's local build.
+3. **A reproduction test reproduces what you SCRIPT, not what the user DOES.** `NewGameStartSmokeTests` found a *different* bug (testing-mod NRE) than the user's actual crash (empty-mods `.First()`), because it always loaded mods explicitly. Oblique results still narrow the search, but the real user flow is ground truth.
+4. **Verify a symbol is IMPORTED, not just that it EXISTS.** Cross-branch cherry-picks break on namespace drift (`MassVolumeDB`→Galaxy, `PositionDB`→Movement) even when the type exists. For client cherry-picks, a local build is the only real check.
+5. **A swallowed exception is an invisible bug.** DevTools hid action errors in UI-only status text → undiagnosable from logs. Route diagnostic / god-mode results to the console (or a captured file).
+6. **Unguarded `null` / `.First()` / `Directory.GetParent` on data-dependent paths is the recurring crash class here** (same family as the New Game JSON data bugs, root gotcha #10). When code assumes data is present, guard the access.
+7. **An expected-to-fail reproduction test must land `[Ignore]`'d (or fixed) in the SAME commit.** Merging the failing repro one PR before its `[Ignore]` turned main red briefly. Never land a deliberately-red test on the integration branch.
+8. **Engine bugs are CI-catchable; client bugs are not.** The GetArmorMass null was engine code — a ship-design test would have gone red in CI on the introducing commit. This is the concrete case for the **automated scenario harness** (next step): headless tests that build ships/colonies/fleets and exercise features, catching engine-side regressions before a playthrough.
+
+### Live-test workflow (the play-by-play)
+Quickstart → Esc → **SM Mode** → toolbar **Dev Tools** → spawn preconditions → **TimeControl** (pause, set span to Years/Days, **Step**) → watch `console_output.txt` → **Save Game** to bank a reusable scenario fixture. The loop: play → crash → send `console_output.txt` → fix → pull → repeat.
+
+### Open follow-ups from this session
+- Build the **automated scenario harness** (mid-game fixture + first feature test, e.g. ship-design stats / space combat) — the breadth half that catches engine bugs without a playthrough.
+- **Fix the `Pulsar4x-Testing` mod data** (incomplete Armor/Theme) so colony build doesn't NRE and `NewGameStart_BaseModPlusTestingMod` can be un-`[Ignore]`'d.
+- **Armor material missing from starting cargo** — `GetArmorMass` now returns 0; the default armor's material should be in the starting cargo library so armor mass is real.
+- Optional: bump DevTools ship-spawn distance so spawned ships are visible at normal zoom.
+- Re-enable the commented-out integration fixtures (SystemGen, Serialization, Factory, Mining, SavingAndLoading), one at a time, CI-verified.
 
 ---
 
