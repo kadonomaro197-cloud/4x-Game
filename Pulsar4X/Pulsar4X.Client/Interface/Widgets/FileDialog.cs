@@ -80,12 +80,17 @@ public static class FileDialog
         //this is Editor specific TODO: add a way to add specific dir to the LH colomn
         if (ImGui.Button("GameData/basemod"))
         {
+            // Walk up looking for the "Pulsar4X" folder. Guard against running off the top of the drive:
+            // Directory.GetParent returns null at the root, so without this null check dir.Name throws a
+            // NullReferenceException and crashes the whole app when there is no "Pulsar4X" ancestor (e.g.
+            // launched from the repo root, whose parent is "Pulsar 4X" -- with a space -- not "Pulsar4X").
             var dir = new DirectoryInfo(_curDir);
-            while (dir.Name != "Pulsar4X")
+            while (dir != null && dir.Name != "Pulsar4X")
             {
                 dir = Directory.GetParent(dir.FullName);
             }
-            _pathString = Path.Combine(dir.FullName, "GameData/basemod");
+            if (dir != null)
+                _pathString = Path.Combine(dir.FullName, "GameData/basemod");
         }
         if (ImGui.IsItemHovered()) ImGui.SetTooltip("Save to Source location");
 
@@ -107,7 +112,10 @@ public static class FileDialog
         {
             if (ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
             {
-                _pathString = Directory.GetParent(_pathString).FullName;
+                // GetParent returns null at the drive root -- guard so ".." at the top doesn't NRE.
+                var parent = Directory.GetParent(_pathString);
+                if (parent != null)
+                    _pathString = parent.FullName;
             }
         }
         ImGui.TableNextRow();
