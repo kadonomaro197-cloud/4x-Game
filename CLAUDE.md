@@ -233,6 +233,27 @@ This is not optional and it is not just for complex tasks. A change that looks l
 
 ---
 
+## The Visibility Gate — "Can We See Enough?"
+
+**You cannot control what you cannot measure.** You can't run a steam plant without the pressures, temperatures, flow rates, and ratings — and a picture of what *normal* looks like. The same is true here: you cannot safely change a system you cannot observe.
+
+**The rule — when a fix fails on the first try, STOP.** Do not pile on a second guess. Ask one question first:
+
+> **"Can we see enough?"**
+
+If the answer is no — the failure is hidden, the error is swallowed, the state is invisible, there is no baseline for "normal" — then **building the visibility IS the task.** Add the gauge, capture the log, write the read-back, establish the baseline. *Then* resume the fix. This is not a detour from the work; it is the work.
+
+Proven 2026-06-22: every bug fixed that day was caught because the gauge was built first (CI, the passive sensors, the `launch.bat` console capture, the DevTools action logging). The failures that stayed mysterious were the ones whose errors were swallowed where nothing could read them.
+
+**Corollaries:**
+- A caught exception with no log is an invisible bug — route it somewhere captured.
+- "It didn't work" is not diagnosable; "here is the gauge reading when it didn't work" is. Instrument before you theorize — live data beats speculation.
+- Before changing a system, be able to state its *normal*: its inputs, expected outputs, ratings/limits. If you can't, read the docs and the source until you can. A plan built on a skim is a guess.
+
+Pairs with the Prime Directive: **map the connections, then make sure you can see them move.**
+
+---
+
 ## How to Work in This Repo (Working Agreement)
 
 1. **Apply the Prime Directive.** Map connections before making decisions. See above.
