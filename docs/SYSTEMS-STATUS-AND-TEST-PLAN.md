@@ -105,7 +105,7 @@ reflection — if it's in the assembly, it runs.
 | **Energy / power** | `EnergyGenProcessor`, `EnergyGenHotloopProcessor` | 🔴 DARK | none | ships, components, sensors (power draw), reactors, fuel |
 | **Logistics** (auto cargo routes) | `LogiBaseProcessor`, `LogiShipProcessor` | 🔴 DARK | none | storage, fleets, **trade**, colonies |
 | **Fleets** | `FleetOrderProcessor` | 🔴 DARK | none | ships, movement, orders, combat |
-| **Ships & launch** | `LaunchComplexProcessor`, `ShipFactory` | 🟡 PARTIAL | traced launch fuel cost this session; `ShipTests`, `ShipComponentTests`; **engine spawn proven** (the "Surveyor I" ship existed in the fuel gauge) | industry (builds them), **fuel** (launch cost via rocket eqn), orbits, fleets. **DevTools "Spawn Ship" issue → §6.** |
+| **Ships & launch** | `LaunchComplexProcessor`, `ShipFactory` | 🟡 PARTIAL | **`ShipSpawnTests`** (spawn lands in system + survives a tick); traced launch fuel cost; `ShipTests`, `ShipComponentTests` | industry (builds them), **fuel** (launch cost via rocket eqn), orbits, fleets. **DevTools "Spawn Ship" issue → §6.** |
 | **People / commanders** | `AdminSpaceProcessor`, `NavalAcademyProcessor` | 🔴 DARK | none | colony (admin radius), ships (captains), research (scientists) |
 | **Survey** (geo & jump-point) | `GeoSurveyProcessor`, `JPSurveyProcessor` | 🔴 DARK | none | Galaxy (reveals minerals), jump points, movement |
 | **Factions & NPC AI** | `NPCDecisionProcessor` | 🔴 DARK | none | **economy (could auto-queue jobs!)**, industry, diplomacy, combat doctrine |
@@ -180,6 +180,10 @@ dotnet test Pulsar4X/Pulsar4X.Tests/Pulsar4X.Tests.csproj --logger "console;verb
   - `Refined Space-Crete: 0 -> ~5,200`,
   - `System RP-1 fuel: … (delta ~ -493,027)` with the **Colony** line losing it and **Surveyor I** flat.
 - The test `Economy_BaselineReadout_OverOneYear` **passing** is the proof the mine→refine chain runs.
+- `ShipSpawnTests` (`SpawnShip_LandsInSystem_WithCoreBlobs`, `SpawnedShip_SurvivesTimeAdvance`) **passing**
+  is the proof the **engine** spawns ships correctly — it runs the exact `ShipFactory.CreateShip` path the
+  DevTools "Spawn Ship" button uses. So if a ship "won't spawn" in the live game, it's a **UI** problem,
+  not the engine (see §6).
 
 ### B. Live game — confirm it launches & a New Game starts (catches client-only breakage)
 
@@ -202,6 +206,15 @@ dotnet run --project Pulsar4X/Pulsar4X.Client/Pulsar4X.Client.csproj
    is known-incomplete (the Installations tab is dead, some panels are orphaned), so if you can't see it
    clearly in the UI, that's a **UI gap, not an engine bug** — the engine side is already proven in §5A.
 
+6. **Ship-spawn fix (yesterday's issue).** Turn on **Space Master (SM)** mode (the Dev Tools window is gated
+   on it). Open the **Ship Design** window and design + save a ship. Now open **Dev Tools**:
+   - ✅ The ship you just designed should already be in the **"Design" dropdown — *without* clicking
+     "Refresh Lists".** That's the fix (the list used to be cached until a manual refresh).
+   - Pick a body under "Orbit around", optionally type a name, click **Spawn Ship**. Expected: green
+     "Spawned …" text, a new ship in the system, and `[DevTools] Spawn Ship OK: …` in the console.
+   - If the design still doesn't appear, or you see `[DevTools] Spawn Ship FAILED: …`, send me
+     `console_output.txt` — that's the repro reading we never captured yesterday.
+
 **If anything crashes or looks wrong:** send me `console_output.txt` (next to the executable). That's the
 client's only diagnostic channel — CI can't see it.
 
@@ -215,7 +228,7 @@ Listed here so they're tracked, not lost.
 
 | Issue | Where | What we know | Status / next |
 |-------|-------|--------------|---------------|
-| **"Spawn Ship" — designed ship not in dropdown** | `DevToolsWindow.cs` (Spawn Ship) | The spawn dropdown is built from `factionInfo.ShipDesigns` only inside `HardRefresh()`, which runs on open / **"Refresh Lists"** / system-change / after a spawn — **not** when you design a ship elsewhere. So a just-designed ship is missing until you click Refresh (the developer's own "I probably didn't refresh"). The **engine spawn itself works** (`ShipFactory.CreateShip` is sound; proven by the live "Surveyor I"). | Instrumented yesterday with `[DevTools] Spawn Ship OK/FAILED` console logging — **but no repro reading captured yet.** Candidate fixes: (a) live-read the design list each frame instead of caching; (b) confirm a spawned ship renders on the map (icon refresh). Both need live verification. **Bisection gauge available:** an engine test that spawns via `ShipFactory.CreateShip` and asserts the ship lands in the system (CI-testable) — proves engine-vs-UI and adds the DARK Ships system its first gauge. |
+| **"Spawn Ship" — designed ship not in dropdown** | `DevToolsWindow.cs` (Spawn Ship) | The spawn dropdown was built from `factionInfo.ShipDesigns` only inside `HardRefresh()`, which runs on open / **"Refresh Lists"** / system-change / after a spawn — **not** when you design a ship elsewhere. So a just-designed ship was missing until you clicked Refresh (the developer's own "I probably didn't refresh"). The **engine spawn itself works** (`ShipFactory.CreateShip` is sound; proven by the live "Surveyor I"). | ✅ **Engine gauge added & CI-green:** `ShipSpawnTests` runs the exact `CreateShip` path and asserts the ship lands in the system — engine spawning is now proven, so this was purely a UI problem. ✅ **Client fix applied** (`DevToolsWindow.SyncShipDesigns()` re-reads the design list each frame when its count changes, so a just-designed ship appears with no manual Refresh). ⏳ **Pending live verification** — §5B step 6 (CI can't build the client). |
 | **Planetary "Installations" tab never appears** | `PlanetaryWindow.cs` | Tab gated on dead `InstallationsDB` (root gotcha 4); should render from `ComponentInstancesDB`. | Known; fix = reuse `ComponentInstancesDBDisplay`. |
 | **Colony economy hard to see in UI** | colony/planet panels | Mining/industry/cargo panels exist (`CargoStorageDBDisplay`, `IndustryDisplay`, …) but aren't all wired into a reachable colony view. | The engine economy is proven in §5A; the UI to *watch* it is the gap. |
 

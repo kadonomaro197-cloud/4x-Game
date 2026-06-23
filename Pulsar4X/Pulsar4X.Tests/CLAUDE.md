@@ -84,6 +84,8 @@ Namespace drift between branches is the #1 compile trap here (it bit `PositionDB
 |------|----------------|
 | `ScenarioHarnessTests` | the harness itself — builds a colony start; advances a real colony a game-year without throwing (**the colony/economy loop coverage the suite never had**) |
 | `NewGameStartSmokeTests` | the real New Game colony path (rides the harness) |
+| `EconomyReadoutTests` | the economy board — mining (asserts deposits deplete), refining (asserts Space-Crete produced via the job lever), infra/fuel readouts |
+| `ShipSpawnTests` | engine ship-spawn — `ShipFactory.CreateShip` (the DevTools spawn path) lands a ship in the system with its parts, and it survives a tick |
 | `GameLoopSmokeTests` | core sim loop advances on a generated (colony-less) universe |
 | `SaveLoadSmokeTests` | `Game.Save → Load` round-trips |
 | `StateIntegritySmokeTests` | entity positions stay finite across a clock advance (catches silent NaN) |

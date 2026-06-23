@@ -112,6 +112,22 @@ namespace Pulsar4X.Client
             return $"Entity {e.Id}";
         }
 
+        // Keeps the Spawn Ship dropdown in step with the player's ship designs every frame, so a ship you just
+        // made in the Ship Design window shows up here immediately instead of only after "Refresh Lists".
+        // Deliberately lighter than HardRefresh(): it touches ONLY the ship-design arrays (not bodies/minerals)
+        // and only rebuilds when the design count actually changes, so it is safe to call from Display().
+        void SyncShipDesigns()
+        {
+            if (_uiState.PlayerFaction == null) return;
+            var factionInfo = _uiState.PlayerFaction.GetDataBlob<FactionInfoDB>();
+            if (factionInfo.ShipDesigns.Count == _shipDesignValues.Length) return;
+
+            _shipDesignValues = factionInfo.ShipDesigns.Values.ToArray();
+            _shipDesignNames = _shipDesignValues.Select(d => d.Name).ToArray();
+            if (_selectedDesign >= _shipDesignNames.Length)
+                _selectedDesign = 0;
+        }
+
         internal override void Display()
         {
             if (!IsActive || !_uiState.SMenabled || _uiState.PlayerFaction == null) return;
@@ -124,6 +140,11 @@ namespace Pulsar4X.Client
                 // ── Spawn Ship ────────────────────────────────────
                 ImGui.Separator();
                 ImGui.Text("[ Spawn Ship ]");
+
+                // Pick up any ship designed since this window was opened, WITHOUT needing "Refresh Lists"
+                // (the 2026-06-22 "I designed a ship but it isn't in the spawn list" report). Cheap — only
+                // rebuilds when the design count changes.
+                SyncShipDesigns();
 
                 if (_shipDesignNames.Length == 0)
                 {
