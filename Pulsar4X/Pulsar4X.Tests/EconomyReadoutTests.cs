@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using Pulsar4X.Engine;
 using Pulsar4X.Storage;
@@ -41,6 +42,7 @@ namespace Pulsar4X.Tests
             ReportInstallations(s);
             ReportInfrastructure(s);
             ReportMining(s, "start");
+            ReportIndustry(s, "start");
             double massStart = ReportCargo(s, "start");
             long depositsStart = ReportDeposits(s);
 
@@ -48,6 +50,7 @@ namespace Pulsar4X.Tests
 
             Log("================ AFTER 1 GAME-YEAR =============");
             ReportMining(s, "end");
+            ReportIndustry(s, "end");
             double massEnd = ReportCargo(s, "end");
             long depositsEnd = ReportDeposits(s);
 
@@ -144,6 +147,34 @@ namespace Pulsar4X.Tests
                 {
                     Log("      NO installed component carries MineResourcesAtbDB (TryGetComponentsByAttribute returned false)");
                 }
+            }
+        }
+
+        /// <summary>
+        /// The production gauge — the stage AFTER mining. Refinery/factory/shipyard each grant a ProductionLine
+        /// on the colony's IndustryAbilityDB (build-points/day per industry type). A line only does work if it has
+        /// JOBS queued, so this prints each line's rates and its job queue. A colony with full build capacity but
+        /// "jobs=0" everywhere is idle-by-design (no production orders), not broken — which is the expected
+        /// starting baseline until the player (or an NPC economic AI) queues something.
+        /// </summary>
+        private static void ReportIndustry(TestScenario s, string label)
+        {
+            if (!s.Colony.TryGetDataBlob<IndustryAbilityDB>(out var industry))
+            {
+                Log($"  industry ({label}): (no IndustryAbilityDB on colony)");
+                return;
+            }
+            int totalJobs = industry.ProductionLines.Sum(l => l.Value.Jobs.Count);
+            Log($"  industry ({label}): {industry.ProductionLines.Count} production line(s), {totalJobs} job(s) queued total");
+            foreach (var kv in industry.ProductionLines)
+            {
+                var line = kv.Value;
+                string rates = string.Join(", ", line.IndustryTypeRates.Select(r => $"{r.Key}={r.Value}"));
+                Log($"    line '{line.Name}'  rates[{rates}]  jobs={line.Jobs.Count}");
+                foreach (var job in line.Jobs)
+                    Log($"        job '{job.Name}' [{job.Status}]  " +
+                        $"{job.ProductionPointsCost - job.ProductionPointsLeft}/{job.ProductionPointsCost} pts  " +
+                        $"done {job.NumberCompleted}/{job.NumberOrdered}");
             }
         }
 
