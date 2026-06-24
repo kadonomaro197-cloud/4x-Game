@@ -70,7 +70,7 @@ namespace Pulsar4X.Tests
             int hits = 0;
             int lastDamage = 0;
             bool destroyed = false;
-            string exceptionText = null;
+            string? exceptionText = null;
 
             try
             {
