@@ -6,7 +6,40 @@ This document tracks what we know about the codebase state at the close of each 
 
 ## Last Updated
 
-Session ending ~2026-06-22 (testing infrastructure + live-test bug sweep). Branch: `claude/adoring-gates-i6svyk` (merged to main via PRs).
+Session ending ~2026-06-24 (economy substrate proven + scope firewall). Branch: `claude/adoring-gates-i6svyk`, HEAD `439576f` (18 commits this session, all CI-green).
+
+---
+
+## Session 2026-06-24 — Economy Substrate Proven + MVP Scope Firewall (READ THIS)
+
+Chased "the mine does literally nothing," proved the whole economy substrate, built the safety/scope docs, and corrected a pile of stale docs. Everything CI-green.
+
+### What was built
+- **Scenario harness `TestScenario`** (`Pulsar4X.Tests/TestScenario.cs`): stands up a REAL faction+colony via the live `CreateFromBlueprint` path, advances the sim clock, and exposes `QueueProductionJob(designId, count, repeat, installOnColony)` — the engine-level "player queues a build" lever. **The mid-game fixture the 2026-06-22 session flagged as the next step.**
+- **Economy gauges (CI-green, asserting):** `EconomyReadoutTests` (mining depletes deposits; refining makes Space-Crete; infra/fuel readouts), `ProductionBuildTests` (factory consumes minerals → installs a Refinery, 1→2 — the build-to-product link), `ShipSpawnTests` (engine ship-spawn lands a ship in the system + survives a tick — first coverage for the DARK Ships system).
+- **`docs/SYSTEMS-STATUS-AND-TEST-PLAN.md`** — the living systems map: every system's status (done/works/partial/dark/absent), its gauge/test, and what it's wired to; plus §5 play-by-play live-test and §6 client backlog. Made a MANDATORY consult in root `CLAUDE.md` (Prime Directive + working agreement).
+- **`docs/MVP.md`** — the scope firewall. MVP = **"One Planet, Taken"**: build a fleet + ground force, win the SPACE battle over a planet, drop troops, win the GROUND battle, capture it. 4X scorecard: Exploit(economy=substrate)/Expand/Exterminate IN; **eXplore and eXploit=espionage are the two deferred v2 strategic pillars**. Build path Stage 0 (economy, DONE) → 1 (space combat, gauge it) → 2 (ground combat, mirror it) → 3 (stitch loop) → 4 (UI).
+
+### The headline fix — the mine "did nothing" was a frozen SYSTEM, not broken mining
+`StarSystem.ActivityState` defaults to **Stasis**, and `MasterTimePulse` skips Stasis systems — so the colony's whole system never processed (no mining/industry/population), and nothing threw. The mining chain was correct all along (rates/efficiency/minerals all fine). Fix: the harness promotes the starting system to Foreground (the live game does this via faction presence + the player observing it). Also bumped the mine base rate 10× (`installations.json`, `Area*0.000001`→`*0.00001`) to match the old design scale.
+
+### Economy substrate — COMPLETE and gauged (gather → refine → build)
+- **Gather:** mining depletes deposits (asserted), respects storage `FreeVolume`. All 8 connection points audited.
+- **Refine:** Space-Crete 0→5,200 over a year (asserted); cross-checked that every refined material's raw inputs are in the 15 mined minerals.
+- **Build:** factory installs a new Refinery (asserted) via `IndustryProcessor → ConstructStuff → OnConstructionComplete → AddComponent(InstallOn)` — **the exact path a built ground unit will ride.** So units are now a DataBlob/data task on proven plumbing.
+
+### Stale docs corrected (the colony economy UI ALREADY EXISTS)
+Went to "build the colony economy UI" and found it already wired in `ColonyManagementWindow` (Summary/Production/Construction/Mining tabs, with job-queuing via `IndustryOrder2`) and `PlanetaryWindow`'s Installations tab already fixed (gates on `ComponentInstancesDB`). Root gotcha #4, `Pulsar4X.Client/CLAUDE.md`, and this file were stale — corrected. **Lesson: verify client state by running it; don't trust a "broken UI" note without reading the code.** Real state is live-unverified (CI is client-blind).
+
+### Findings parked (not fixed)
+- **`gallicite`** — referenced by `ordnance.json` but undefined as a mineral → missiles may not be buildable. Latent; **will bite Stage 1 (space combat uses missiles)**, not Stage 0.
+- **`count==0` hotloop sleep is self-healing**, not a bug (re-armed by `SetDataBlob`); documented the contract in `GameEngine/CLAUDE.md` gotcha 5.
+- **RP-1 fuel −493k/yr** = the Launch Complex putting the queued courier into orbit (rocket equation), not a leak.
+
+### Open follow-ups (developer live-test — CI can't see the client)
+- **§5B step 7:** open **Manage Colonies**, walk Summary/Mining/Production, queue a job, confirm the loop works live (and that the window even opens — `GetInstance` looks slightly suspect). Report + `console_output.txt`.
+- **§5B step 6:** confirm the DevTools ship-spawn refresh fix (designed ship appears without "Refresh Lists").
+- **Next stage (deliberate):** Stage 1 — put space combat under a gauge (read `COMBAT-DESIGN.md`/`Weapons/`/`Damage/`, stand up a two-fleet harness fight). Fix `gallicite` before relying on missiles.
 
 ---
 
@@ -84,7 +117,7 @@ Paste any errors back. Expected result: build passes; tests pass (no combat test
 
 ## Test Baseline
 
-**Established by CI 2026-06-22: 371 tests, all green on Linux** (build compiles clean too). See the Actions tab.
+**Current baseline (CI 2026-06-24): 382 tests — 381 pass, 1 `[Ignore]`'d, 0 fail, build clean on Linux.** (2026-06-22 was 371.) See the Actions tab. New this session: `EconomyReadoutTests`, `ProductionBuildTests`, `ShipSpawnTests`, `ScenarioHarnessTests`, plus the `TestScenario` harness they ride.
 
 **BUT the real coverage is much thinner than 371 implies — a large share of the integration fixtures are commented out:** `SavingAndLoadingTests`, `SerializationManagerTests`, `SystemGenTests`, `FactoryTests`, `MiningTests` are whole-file `/* ... */`, and `PathfindingTests` has its colony setup commented. So the active suite is mostly **unit-level**: orbital math, vectors, datablob serialization, EntityManager, scheduling/activity-state, modding. Colony creation, system gen (`CreateSol`), mining, and the in-code default start (`DefaultStartFactory.DefaultHumans`, broken) have **no active coverage**.
 
@@ -176,17 +209,12 @@ All 5 decisions wired: two-zone range/energy falloff, wavelength-to-material map
 
 ---
 
-### Phase 2a — Fix Installations Tab (FIRST UI TASK)
+### Phase 2a — Fix Installations Tab — DONE (already fixed in code, confirmed 2026-06-24)
 
-**File:** `Pulsar4X/Pulsar4X.Client/Interface/Windows/PlanetaryWindow.cs`
-
-Two broken lines to fix:
-- **Line 107:** `if (_lookedAtEntity.Entity.HasDataBlob<InstallationsDB>())` — this is the tab's render gate; it's always false because `InstallationsDB` is never attached to any colony. Change to `HasDataBlob<ComponentInstancesDB>()`.
-- **Line 221:** `if (_lookedAtEntity != null && _lookedAtEntity.Entity.HasDataBlob<InstallationsDB>())` — same dead gate inside `RenderInstallations()`. Change to `ComponentInstancesDB`, then implement the render body using `ComponentInstancesDB.DesignsAndComponentCount` (a dict of design entity → count).
-
-The `ComponentInstancesDBDisplay` panel already exists in the client — search for it and reuse rather than writing a new table.
-
-**Read before touching:** `GameEngine/Colonies/CLAUDE.md`, `CONVENTIONS.md` §6.
+`PlanetaryWindow` already gates the Installations tab on `ComponentInstancesDB` and renders via
+`componentsDB.Display(...)`. The broader colony economy UI also already exists in `ColonyManagementWindow`
+(Summary/Production/Construction/Mining + job-queuing). The only remaining work is a **live verification**
+that it all works in the running client (CI is client-blind) — `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` §5B step 7.
 
 ---
 
@@ -210,7 +238,7 @@ The `maxPopulation` calculation on line 49 is already close to the Aurora formul
 | Issue | File | Line | Doc |
 |-------|------|------|-----|
 | `DefaultStartFactory.DefaultHumans` broken — loads Sol via legacy `LoadSystemFromJson("Data/basemod/sol/")` → `systemInfo.json`, but Sol data moved to `ScenarioFiles/systems/sol/sol.json`. Only commented-out tests used it; the live game uses `ColonyFactory.CreateFromBlueprint`. Found by CI via `GameLoopSmokeTests`. | `DefaultStartFactory.cs` | 140 | — |
-| Installations tab never appears | PlanetaryWindow.cs | 107, 221 | Colonies/CLAUDE.md Gotcha #1 |
+| ~~Installations tab never appears~~ | ~~PlanetaryWindow.cs~~ | ~~107, 221~~ | **FIXED (verified in code 2026-06-24)** — gates on `ComponentInstancesDB`, renders `componentsDB.Display(...)`. Full colony economy UI also exists in `ColonyManagementWindow`. |
 | ~~SimpleDamage placeholder~~ | ~~BeamWeaponProcessor.cs~~ | ~~132–134~~ | **FIXED Phase 1a** — DamageComplex now wired |
 | ~~One-hit destroys (units mismatch)~~ | ~~DamageProcessor.cs~~ | — | **FIXED Phase 2** — `HealthPercent -= damageAmount * 0.001f` |
 | ~~DamageResistsLookupTable sparse~~ | ~~DamageTools.cs~~| — | **FIXED Phase 2** — `[JsonProperty("UniqueID")]` + `WavelengthAbsorption` arrays |

@@ -64,6 +64,11 @@ Namespace drift between branches is the #1 compile trap here (it bit `PositionDB
 | `GetDefaultName()` (Entity extension) | `Pulsar4X.Extensions` |
 | `CargoStorageDB` | `Pulsar4X.Storage` |
 | `Mineral`, `ProcessedMaterial` | `Pulsar4X.Industry` |
+| `ComponentInstancesDB` (**namespace ≠ folder** — file is in `Engine/Components/`, namespace is Datablobs) | `Pulsar4X.Datablobs` |
+| `ComponentInstance`, `ComponentDesign`, `TryGetComponentsByAttribute`, `GetAttribute` | `Pulsar4X.Components` |
+| `IndustryAbilityDB`, `IndustryJob`, `IndustryTools`, `MiningDB`, `InfrastructureDB`, `MineResourcesAtbDB` | `Pulsar4X.Industry` |
+| `ShipFactory`, `ShipDesign`, `ShipInfoDB` | `Pulsar4X.Ships` · `OrbitDB` → `Pulsar4X.Orbits` |
+| `IConstructableDesign` | `Pulsar4X.Interfaces` |
 
 ---
 
@@ -86,6 +91,7 @@ Namespace drift between branches is the #1 compile trap here (it bit `PositionDB
 | `NewGameStartSmokeTests` | the real New Game colony path (rides the harness) |
 | `EconomyReadoutTests` | the economy board — mining (asserts deposits deplete), refining (asserts Space-Crete produced via the job lever), infra/fuel readouts |
 | `ShipSpawnTests` | engine ship-spawn — `ShipFactory.CreateShip` (the DevTools spawn path) lands a ship in the system with its parts, and it survives a tick |
+| `ProductionBuildTests` | the build-to-product link — the factory consumes stored minerals and installs a new Refinery on the colony (`InstallOn` path); proves "resources → installed product", the rails a built unit rides |
 | `GameLoopSmokeTests` | core sim loop advances on a generated (colony-less) universe |
 | `SaveLoadSmokeTests` | `Game.Save → Load` round-trips |
 | `StateIntegritySmokeTests` | entity positions stay finite across a clock advance (catches silent NaN) |
