@@ -69,6 +69,9 @@ Namespace drift between branches is the #1 compile trap here (it bit `PositionDB
 | `IndustryAbilityDB`, `IndustryJob`, `IndustryTools`, `MiningDB`, `InfrastructureDB`, `MineResourcesAtbDB` | `Pulsar4X.Industry` |
 | `ShipFactory`, `ShipDesign`, `ShipInfoDB` | `Pulsar4X.Ships` · `OrbitDB` → `Pulsar4X.Orbits` |
 | `IConstructableDesign` | `Pulsar4X.Interfaces` |
+| `DamageProcessor` (**internal** — reachable via `[assembly: InternalsVisibleTo("Pulsar4X.Tests")]` in `Engine/Game.cs`), `DamageFragment`, `DamageResult`, `EntityDamageProfileDB`, `DamageTools` | `Pulsar4X.Damage` |
+| `Vector2` — `DamageFragment.Velocity`; **must be non-zero** or `DealDamageEnergyBeamSim` does `1/\|v\|` → NaN → `Convert.ToInt32` throws | `Pulsar4X.Orbital` |
+| `BeamWeaponProcessor.FireBeamWeapon(launcher, target, hitsTarget, energy, wavelen, beamVel, beamLenSec, baseHitChance, optimalRange_m)` (the real fire entry point — for the firing-path gauge) | `Pulsar4X.Weapons` |
 
 ---
 
@@ -92,6 +95,7 @@ Namespace drift between branches is the #1 compile trap here (it bit `PositionDB
 | `EconomyReadoutTests` | the economy board — mining (asserts deposits deplete), refining (asserts Space-Crete produced via the job lever), infra/fuel readouts |
 | `ShipSpawnTests` | engine ship-spawn — `ShipFactory.CreateShip` (the DevTools spawn path) lands a ship in the system with its parts, and it survives a tick |
 | `ProductionBuildTests` | the build-to-product link — the factory consumes stored minerals and installs a new Refinery on the colony (`InstallOn` path); proves "resources → installed product", the rails a built unit rides |
+| `CombatReadoutTests` | **MVP Stage 1** — the space-combat *damage* gauge (the path was 🔴 DARK / no tests). Calls `DamageProcessor.OnTakingDamage` directly on a real ship with a beam-shaped fragment and prints `[combat]` (health drop / components removed / destroyed?). Commit 1 is a **readout** (asserts only that the sim runs); hard "a ship CAN be destroyed" assertion is added once CI shows the reading. |
 | `GameLoopSmokeTests` | core sim loop advances on a generated (colony-less) universe |
 | `SaveLoadSmokeTests` | `Game.Save → Load` round-trips |
 | `StateIntegritySmokeTests` | entity positions stay finite across a clock advance (catches silent NaN) |
