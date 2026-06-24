@@ -9,6 +9,7 @@ using Pulsar4X.Datablobs;
 using Pulsar4X.Factions;
 using Pulsar4X.Names;
 using Pulsar4X.Ships;
+using Pulsar4X.Fleets;
 using Pulsar4X.Colonies;
 using Pulsar4X.Storage;
 using Pulsar4X.Industry;
@@ -27,6 +28,8 @@ namespace Pulsar4X.Client
         private int _selectedSpawnParent = 0;
         private byte[] _shipNameBuffer = new byte[64];
         private string _spawnStatus = "";
+        // Reused "Spawned Ships" fleet so DevTools-spawned ships land in a controllable fleet (show in Fleet window).
+        private Entity? _devFleet;
 
         // ── Create Colony ──────────────────────────────
         private string[] _planetNames = Array.Empty<string>();
@@ -122,6 +125,27 @@ namespace Pulsar4X.Client
             Console.Out.Flush();
         }
 
+        // Dumps the live ship/fleet counts for the current system to the (flushed) log and the on-screen status.
+        // This is the gauge that answers "are there any ships/fleets at all?" — a fresh New Game builds a colony
+        // but NO fleet, so it reads 0 fleets here. Spawned-but-fleetless ships show up as ships with no fleet.
+        void DumpState()
+        {
+            var sys = _uiState.SelectedSystem;
+            if (sys == null) { _spawnStatus = "Dump State: no system selected."; return; }
+
+            var ships = sys.GetAllEntitiesWithDataBlob<ShipInfoDB>();
+            var fleets = sys.GetAllEntitiesWithDataBlob<FleetDB>();
+            int pf = _uiState.PlayerFaction?.Id ?? -999;
+
+            DevLog($"STATE DUMP — playerFaction={pf}: {ships.Count} ship(s), {fleets.Count} fleet(s) in this system");
+            foreach (var sh in ships)
+                DevLog($"  ship  id={sh.Id} '{GetEntityName(sh)}' faction={sh.FactionOwnerID}");
+            foreach (var fl in fleets)
+                DevLog($"  fleet id={fl.Id} '{GetEntityName(fl)}' faction={fl.FactionOwnerID}");
+
+            _spawnStatus = $"State: {ships.Count} ship(s), {fleets.Count} fleet(s) in this system (player faction {pf}). Full list in console_output.txt.";
+        }
+
         // Keeps the Spawn Ship dropdown in step with the player's ship designs every frame, so a ship you just
         // made in the Ship Design window shows up here immediately instead of only after "Refresh Lists".
         // Deliberately lighter than HardRefresh(): it touches ONLY the ship-design arrays (not bodies/minerals)
@@ -146,6 +170,9 @@ namespace Pulsar4X.Client
             {
                 if (ImGui.Button("Refresh Lists"))
                     HardRefresh();
+                ImGui.SameLine();
+                if (ImGui.Button("Dump State (log)"))
+                    DumpState();
 
                 // ── Spawn Ship ────────────────────────────────────
                 ImGui.Separator();
@@ -177,14 +204,27 @@ namespace Pulsar4X.Client
                             var parent = _bodyEntities[_selectedSpawnParent];
                             var ship = ShipFactory.CreateShip(design, _uiState.PlayerFaction, parent, shipName);
 
+                            // Put the ship into a controllable FLEET. A bare CreateShip() leaves it in no fleet,
+                            // so it never shows in the Fleet window and can't be ordered — which (one level up)
+                            // is also why the would-be starting fleet is invisible. Reuse one "Spawned Ships"
+                            // fleet per system for the player faction. (Same fleet API as ColonyFactory.)
+                            if (_devFleet == null || !_devFleet.IsValid || _devFleet.Manager != parent.Manager)
+                            {
+                                _devFleet = FleetFactory.Create(parent.Manager, _uiState.PlayerFaction.Id, "Spawned Ships");
+                                _devFleet.GetDataBlob<FleetDB>().SetParent(_uiState.PlayerFaction);
+                            }
+                            var devFleetDB = _devFleet.GetDataBlob<FleetDB>();
+                            devFleetDB.AddChild(ship);
+                            if (devFleetDB.FlagShipID < 0) devFleetDB.FlagShipID = ship.Id;
+
                             // CreateShip puts the ship in orbit at ~2x the planet's RADIUS, which at the
                             // zoomed-out system view is sub-pixel right on top of the planet icon — so it
                             // looks like nothing happened even though the spawn succeeded. Report the
                             // system ship count as proof it landed, and say where to look.
                             int shipsInSystem = parent.Manager.GetAllEntitiesWithDataBlob<ShipInfoDB>().Count;
-                            _spawnStatus = $"Spawned '{design.Name}' (id {ship.Id}) orbiting {GetEntityName(parent)}. "
-                                + $"{shipsInSystem} ship(s) now in system — zoom into {GetEntityName(parent)} (or open the Fleet window) to see it.";
-                            DevLog($"Spawn Ship OK: '{design.Name}' id={ship.Id} around '{GetEntityName(parent)}', shipsInSystem={shipsInSystem}");
+                            _spawnStatus = $"Spawned '{design.Name}' (id {ship.Id}) into fleet 'Spawned Ships', orbiting {GetEntityName(parent)}. "
+                                + $"{shipsInSystem} ship(s) in system — open the Fleet window to control it (or zoom into {GetEntityName(parent)} to see it).";
+                            DevLog($"Spawn Ship OK: '{design.Name}' id={ship.Id} around '{GetEntityName(parent)}' into fleet 'Spawned Ships', shipsInSystem={shipsInSystem}");
                             Array.Clear(_shipNameBuffer, 0, _shipNameBuffer.Length);
 
                             // Deliberately NOT calling HardRefresh() here. It reset the Design dropdown to
