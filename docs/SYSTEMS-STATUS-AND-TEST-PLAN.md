@@ -67,7 +67,7 @@ reflection — if it's in the assembly, it runs.
 | System | Runs (processor) | Status | Can we see it? | Connected to |
 |--------|------------------|--------|----------------|--------------|
 | **Mining** | `MineResourcesProcessor` | ✅ DONE | `EconomyReadoutTests` — prints full chain, **asserts deposits deplete** | Galaxy (`MineralsDB` on planet), Storage (cargo out), Infrastructure (efficiency ×), Colony |
-| **Production / construction** | `IndustryProcessor` + `IndustryTools` | ✅ DONE | economy readout — prints lines+jobs; `QueueProductionJob` lever | Storage (inputs in / output out), Mining (feedstock), Infrastructure (×), Ships (builds ships), Components (builds installations), Factions (`IndustryDesigns`) |
+| **Production / construction** | `IndustryProcessor` + `IndustryTools` | ✅ DONE | economy readout (lines+jobs) + `QueueProductionJob` lever; **`ProductionBuildTests`** (factory consumes minerals → installs a new Refinery — the build-to-product link, and the template a built unit rides) | Storage (inputs in / output out), Mining (feedstock), Infrastructure (×), Ships (builds ships), Components (builds installations via `InstallOn`), Factions (`IndustryDesigns`) |
 | **Refining** | (via `IndustryProcessor`, `ProcessedMaterial`) | ✅ DONE | economy readout — **asserts Space-Crete is produced** | Mining (mineral inputs), Storage |
 | **Infrastructure (efficiency grid)** | `InfrastructureProcessor` | 🟢 WORKS | economy readout — prints provided/required/efficiency | Components (installations), Colony body (gravity/pressure), **all production** (it's the throttle) |
 | **Storage / cargo** | `CargoTransferProcessor` | 🟢 WORKS | `CargoTransferTests`, `CargoSpaceTests`; economy readout per-item | mining, industry, ships, logistics, launch fuel |

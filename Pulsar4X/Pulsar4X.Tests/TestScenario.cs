@@ -166,8 +166,13 @@ namespace Pulsar4X.Tests
         /// the first production line that handles that design's industry type (a "refining" material -> the
         /// Refinery line; an "installation-construction" design -> the Factory line). Set <paramref name="repeat"/>
         /// true for a standing order that re-queues itself on completion.
+        ///
+        /// Set <paramref name="installOnColony"/> true for an installation you want **installed on the colony**
+        /// (so it grows the colony's abilities) rather than dropped into cargo as a loose component — this is
+        /// the `IndustryJob.InstallOn` routing in `ComponentDesign.OnConstructionComplete`, and the same path a
+        /// built ground unit will use to reach its holding DataBlob.
         /// </summary>
-        public void QueueProductionJob(string designId, ushort count = 1, bool repeat = false)
+        public void QueueProductionJob(string designId, ushort count = 1, bool repeat = false, bool installOnColony = false)
         {
             var factionInfo = Faction.GetDataBlob<FactionInfoDB>();
             if (!factionInfo.IndustryDesigns.TryGetValue(designId, out IConstructableDesign design))
@@ -184,6 +189,8 @@ namespace Pulsar4X.Tests
 
             var job = new IndustryJob(factionInfo, designId);
             job.InitialiseJob(count, repeat);
+            if (installOnColony)
+                job.InstallOn = Colony;
             IndustryTools.AddJob(Colony, lineId, job);
         }
     }
