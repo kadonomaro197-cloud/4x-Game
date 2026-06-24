@@ -101,7 +101,7 @@ namespace Pulsar4X.Client
             // Logged so the console capture shows whether a just-designed ship actually made it into the
             // spawn list (it reads factionInfo.ShipDesigns). Called on open / Refresh / system-change / after
             // a spawn -- never per frame -- so it does not spam.
-            Console.WriteLine($"[DevTools] Refresh: {_shipDesignNames.Length} ship design(s), {_bodyNames.Length} body(ies), "
+            DevLog($"Refresh: {_shipDesignNames.Length} ship design(s), {_bodyNames.Length} body(ies), "
                 + $"{_cargoEntityNames.Length} cargo target(s), {_mineralNames.Length} mineral(s)");
         }
 
@@ -110,6 +110,16 @@ namespace Pulsar4X.Client
             if (e.TryGetDataBlob<NameDB>(out var nameDB))
                 return nameDB.OwnersName;
             return $"Entity {e.Id}";
+        }
+
+        // Writes a DevTools diagnostic line and FLUSHES immediately. When launch.bat redirects the game's
+        // output to console_output.txt, .NET buffers Console output and only flushes it when the process
+        // EXITS — so a mid-session action (like a spawn) never showed up in the file until the game was
+        // closed (this is why a spawn "produced no log"). Flushing here lands the line right away.
+        static void DevLog(string msg)
+        {
+            Console.WriteLine("[DevTools] " + msg);
+            Console.Out.Flush();
         }
 
         // Keeps the Spawn Ship dropdown in step with the player's ship designs every frame, so a ship you just
@@ -165,16 +175,27 @@ namespace Pulsar4X.Client
                             string? shipName = string.IsNullOrEmpty(rawName) ? null : rawName;
                             var design = _shipDesignValues[_selectedDesign];
                             var parent = _bodyEntities[_selectedSpawnParent];
-                            ShipFactory.CreateShip(design, _uiState.PlayerFaction, parent, shipName);
-                            _spawnStatus = $"Spawned {design.Name}";
-                            Console.WriteLine($"[DevTools] Spawn Ship OK: '{design.Name}' around '{GetEntityName(parent)}'");
+                            var ship = ShipFactory.CreateShip(design, _uiState.PlayerFaction, parent, shipName);
+
+                            // CreateShip puts the ship in orbit at ~2x the planet's RADIUS, which at the
+                            // zoomed-out system view is sub-pixel right on top of the planet icon — so it
+                            // looks like nothing happened even though the spawn succeeded. Report the
+                            // system ship count as proof it landed, and say where to look.
+                            int shipsInSystem = parent.Manager.GetAllEntitiesWithDataBlob<ShipInfoDB>().Count;
+                            _spawnStatus = $"Spawned '{design.Name}' (id {ship.Id}) orbiting {GetEntityName(parent)}. "
+                                + $"{shipsInSystem} ship(s) now in system — zoom into {GetEntityName(parent)} (or open the Fleet window) to see it.";
+                            DevLog($"Spawn Ship OK: '{design.Name}' id={ship.Id} around '{GetEntityName(parent)}', shipsInSystem={shipsInSystem}");
                             Array.Clear(_shipNameBuffer, 0, _shipNameBuffer.Length);
-                            HardRefresh();
+
+                            // Deliberately NOT calling HardRefresh() here. It reset the Design dropdown to
+                            // index 0, so a second click silently re-spawned the FIRST design — which is the
+                            // "the previous name stayed" behaviour. Spawning a ship changes neither the design
+                            // list nor the body list, so nothing in this window needs rebuilding.
                         }
                         catch (Exception ex)
                         {
                             _spawnStatus = $"Error: {ex.Message}";
-                            Console.WriteLine($"[DevTools] Spawn Ship FAILED: {ex}");
+                            DevLog($"Spawn Ship FAILED: {ex}");
                         }
                     }
                     if (!string.IsNullOrEmpty(_spawnStatus))
