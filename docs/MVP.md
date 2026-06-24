@@ -105,8 +105,10 @@ Note the order follows your own strategy: **do space combat first, then mirror i
 - **Stage 0 — Economy is real and visible.** *(we are here)* **Engine substrate COMPLETE and gauged: gather
   → refine → build all proven** (mining depletes deposits; refining makes Space-Crete; the factory consumes
   minerals and installs a new Refinery, 1→2 — `ProductionBuildTests`). The build path a unit will ride
-  (`IndustryJob.InstallOn` → `AddComponent`) is verified. **Remaining Stage-0 item: a colony economy view in
-  the UI** you can read/queue from (client, live-test only). The engine is ready to build ships and units.
+  (`IndustryJob.InstallOn` → `AddComponent`) is verified. **Remaining Stage-0 item: confirm the colony economy
+  UI works live** — it already EXISTS and is wired (`ColonyManagementWindow`: Summary/Production/Construction/
+  Mining, including job-queuing), so this is a *verify-and-fix* task (live-test §5B step 7), not a build. The
+  engine is ready to build ships and units.
 - **Stage 1 — Space combat resolves, and is gauged.** Take the DARK beam/missile systems, put them under a
   harness test, and make two fleets fight to a winner. This is MVP-critical **and** the reference pattern for
   Stage 2 — study how it's wired (`docs/COMBAT-DESIGN.md`, `Weapons/`, `Damage/`) and gauge it.

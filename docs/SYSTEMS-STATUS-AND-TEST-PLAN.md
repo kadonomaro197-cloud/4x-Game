@@ -116,7 +116,7 @@ reflection — if it's in the assembly, it runs.
 | **Factions & NPC AI** | `NPCDecisionProcessor` | 🔴 DARK | none | **economy (could auto-queue jobs!)**, industry, diplomacy, combat doctrine |
 | **Galaxy / system generation** | `StarSystemFactory`, `AtmosphereProcessor` | 🟢 WORKS | `AtmosphereDBExtensionsTests`, `AtmosphereAndSpeciesTests`; we rely on it | minerals, colony siting, orbits, sensors |
 | **Diplomacy** | — | ⚫ ABSENT | design only (`docs/DIPLOMACY-DESIGN.md`) | factions, IFF, trade, logistics |
-| **UI client** (ImGui/SDL) | — | 🔴 DARK + partly broken | **CI-blind**; known gaps tracked in **§6** | displays every system; live-test only (§5B) |
+| **UI client** (ImGui/SDL) | — | 🟡 more built than the docs claimed | **CI-blind**; the colony economy UI is fully wired (`ColonyManagementWindow`); real state is live-unverified. Gaps + verify tasks in **§6** | displays every system; live-test only (§5B) |
 
 ---
 
@@ -220,6 +220,19 @@ dotnet run --project Pulsar4X/Pulsar4X.Client/Pulsar4X.Client.csproj
    - If the design still doesn't appear, or you see `[DevTools] Spawn Ship FAILED: …`, send me
      `console_output.txt` — that's the repro reading we never captured yesterday.
 
+7. **Colony economy UI (the Stage-0 "can I see/drive the loop?" check).** Open **Manage Colonies** (toolbar/
+   menu) → pick your colony. Walk the tabs and confirm the minerals→refined→components loop is visible and
+   drivable:
+   - **Summary** — shows population, **infrastructure** (Provided/Used/Available + "Output at N% of capacity"),
+     **installed components**, and the **stockpile** (raw minerals *and* refined materials).
+   - **Mining** — Number of Mines + per-mineral table (Stockpile / Available / Accessibility / **Annual
+     Production** / **Years to Depletion**). After running time, stockpiles should climb, deposits fall.
+   - **Production** — click **+ New Job**, pick something (e.g. a refined material or an installation), set
+     batch/repeat/auto-install, **Queue the job**. Run time; confirm it builds and the stockpile/installs change.
+   - This is the verification that Stage 0 is *usable*, not just engine-correct. **Report which tabs work, which
+     are blank/wrong, and whether Manage Colonies even opens** (the `GetInstance` pattern is slightly suspect) —
+     with `console_output.txt` on any crash.
+
 **If anything crashes or looks wrong:** send me `console_output.txt` (next to the executable). That's the
 client's only diagnostic channel — CI can't see it.
 
@@ -235,7 +248,7 @@ Listed here so they're tracked, not lost.
 |-------|-------|--------------|---------------|
 | **"Spawn Ship" — designed ship not in dropdown** | `DevToolsWindow.cs` (Spawn Ship) | The spawn dropdown was built from `factionInfo.ShipDesigns` only inside `HardRefresh()`, which runs on open / **"Refresh Lists"** / system-change / after a spawn — **not** when you design a ship elsewhere. So a just-designed ship was missing until you clicked Refresh (the developer's own "I probably didn't refresh"). The **engine spawn itself works** (`ShipFactory.CreateShip` is sound; proven by the live "Surveyor I"). | ✅ **Engine gauge added & CI-green:** `ShipSpawnTests` runs the exact `CreateShip` path and asserts the ship lands in the system — engine spawning is now proven, so this was purely a UI problem. ✅ **Client fix applied** (`DevToolsWindow.SyncShipDesigns()` re-reads the design list each frame when its count changes, so a just-designed ship appears with no manual Refresh). ⏳ **Pending live verification** — §5B step 6 (CI can't build the client). |
 | **Planetary "Installations" tab never appears** | `PlanetaryWindow.cs` | Tab gated on dead `InstallationsDB` (root gotcha 4); should render from `ComponentInstancesDB`. | Known; fix = reuse `ComponentInstancesDBDisplay`. |
-| **Colony economy hard to see in UI** | colony/planet panels | Mining/industry/cargo panels exist (`CargoStorageDBDisplay`, `IndustryDisplay`, …) but aren't all wired into a reachable colony view. | The engine economy is proven in §5A; the UI to *watch* it is the gap. |
+| **Colony economy UI — exists, live-unverified** | `ColonyManagementWindow` + `PlanetaryWindow` | **The full minerals→refined→components UI is already wired** (2026-06-24 code read): Summary/Production/Construction/Mining tabs, including queuing jobs via `IndustryOrder2`. Earlier "panels not wired" note was wrong. | **Not a build task — a verify task.** Run it (§5B step 7) and report what works/breaks; CI can't see the client. Fix only real live bugs. |
 
 **Already fixed in live-test (2026-06-22, for reference):** New Game empty-mod crash, Save dialog NRE at drive root, ship-design armor-material NRE. See `SESSION_STATE.md`.
 

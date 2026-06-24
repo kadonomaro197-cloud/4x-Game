@@ -84,8 +84,8 @@ internal override void Display()
 |--------|------|--------|-------|
 | `SystemWindow` | `SystemWindow.cs` | ✅ Functional | Star system selector and planet list |
 | `FleetWindow` | `FleetWindow.cs` | ✅ Functional | Fleet listing, selection, basic orders |
-| `ColonyManagementWindow` | `ColonyManagementWindow.cs` | ✅ Partial | Colony list, tabs for panels |
-| `PlanetaryWindow` | `PlanetaryWindow.cs` | ⚠️ Partial | General info ✅ / Mineral deposits ✅ / **Installations ❌ (tab gated on dead `InstallationsDB`, never appears)** |
+| `ColonyManagementWindow` | `ColonyManagementWindow.cs` | ✅ **Full economy UI** (verified in code 2026-06-24) | Colony picker + tabs: **Summary** (planet/pop/infra-efficiency/installed components/stockpile of raw+refined), **Production** (`IndustryDisplay` — queue refine/build jobs via `IndustryOrder2`: batch/repeat/auto-install/priority/cancel), **Construction**, **Mining** (per-mineral rate/annual production/years-to-depletion). The minerals→refined→components loop is fully see-and-do here. **Live-behaviour unverified** (CI can't build the client). |
+| `PlanetaryWindow` | `PlanetaryWindow.cs` | ✅ (installations fixed 2026-06-24) | General info ✅ / Mineral deposits ✅ / **Installations ✅ — tab now gates on `ComponentInstancesDB` and renders via `componentsDB.Display(...)` (`:102,220`), NOT the dead `InstallationsDB`.** |
 | `ShipDesignWindow` | `ShipDesignWindow.cs` | ✅ Functional | Ship design and component assignment |
 | `ComponentDesignWindow` | `ComponentDesignWindow.cs` | ✅ Functional | Component designer with NCalc formulas |
 | `FireControlWindow` | `FireControlWindow.cs` | ✅ Functional | Weapon and fire control assignment |
@@ -174,24 +174,18 @@ Reusable panels embedded in windows (not standalone windows):
 
 ## Critical Gaps to Fill
 
-### PlanetaryWindow installations — EMPTY *and* unreachable
+### PlanetaryWindow installations — FIXED (2026-06-24); colony economy UI already exists
 
-```csharp
-private void RenderInstallations()
-{
-    if (_lookedAtEntity != null && _lookedAtEntity.Entity.HasDataBlob<InstallationsDB>())
-    {
-        InstallationsDB tempInstallations = _lookedAtEntity.Entity.GetDataBlob<InstallationsDB>();
-        // BODY IS EMPTY — nothing is rendered
-    }
-}
-```
+This section used to describe `PlanetaryWindow.RenderInstallations()` as empty and unreachable (gated on the
+dead `InstallationsDB`). **Both are fixed in the current code:** the Installations tab gates on
+`ComponentInstancesDB` and `RenderInstallations()` calls `componentsDB.Display(...)` (`PlanetaryWindow.cs:102,220`).
+And the **full colony economy UI lives in `ColonyManagementWindow`** (Summary / Production / Construction /
+Mining — see the Window Inventory). The minerals→refined→components loop is already see-and-do.
 
-Two bugs, not one:
-1. The body is empty.
-2. **`InstallationsDB` is never attached to a colony** (it is dead/vestigial — see `Industry/CLAUDE.md`), so the gate above is always false. The tab button is also gated on `HasDataBlob<InstallationsDB>()` in `RenderTabOptions()` (`PlanetaryWindow.cs:107`), so **the Installations tab never even appears.**
-
-**Correct fix (Phase 2a):** gate on `ComponentInstancesDB` (which every colony has) and render the colony's installations from it — reuse the existing `ComponentInstancesDBDisplay` panel, or build a table from `ComponentInstancesDB.DesignsAndComponentCount`. Do **not** resurrect `InstallationsDB`. See `docs/aurora/PLANETARY-INFRASTRUCTURE.md` §6.
+**So this is not a build task — it's a *verify* task.** CI can't build the client, and these docs were stale, so
+the only way to know the real state is to run it (see `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` §5B). If something
+is actually broken live, fix *that* — don't rebuild panels that already render. `InstallationsDB` itself remains
+dead/vestigial; do not resurrect it.
 
 ### GroundCombatWindow — MISSING ENTIRELY
 
