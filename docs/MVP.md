@@ -9,6 +9,12 @@ required for v1, and nothing else is allowed to block v1.
 > smaller, edit §1 deliberately and write down why. Picking up a feature "while we're here" is exactly the
 > 50-year trap this doc prevents.
 
+**Framing — engine vs. game.** Pulsar4X is a *world-simulation engine*, not a finished game: it models orbits,
+ships, economy, and damage in real depth, but it has no strategic loop, no opponent that acts, and no
+victory. That's why every dive finds dark/untested systems and no win condition — it's a flight-simulator-grade
+world model with no campaign on top. **The MVP is the first complete campaign loop — the thing that turns the
+engine into a game.**
+
 ---
 
 ## 1. The MVP, in one sentence
@@ -19,17 +25,21 @@ required for v1, and nothing else is allowed to block v1.
 If a player can do that one loop, the fork has delivered its core fantasy — combat that runs from orbit down
 to the surface, paid for by real planetary infrastructure — and v1 ships.
 
-### 4X coverage — why this is the right minimum
+### 4X coverage — and what's engine vs. game
 
-| X | In the MVP? | How |
-|---|-------------|-----|
-| **eXploit** | ✅ | the economy: mine → refine → build ships, installations, and ground units |
-| **eXpand** | ✅ | capturing the planet adds it to your territory |
-| **eXterminate** | ✅ | the full combat stack — space battle to clear orbit, then ground battle to take the surface |
-| **eXplore** | ⏳ deferred | survey/jump-point exploration to *find* new systems and targets — **post-MVP** (§6) |
+The reframe that matters: **the economy is not one of the X's — it's the engine substrate the X's run on.**
+Pulsar already gives us most of it (mine → refine → build). The four X's are the *strategic* game on top:
 
-Three of the four X's, end to end. Explore is the natural v2 — you start v1 with a known target so we can
-prove the combat-and-conquest spine first.
+| X | In the MVP? | What it is |
+|---|-------------|-----------|
+| **eXpand** | ✅ | take territory — capture the planet |
+| **eXterminate** | ✅ | the combat stack — space battle to clear orbit, then ground battle to take the surface |
+| **eXploit** | ⏳ deferred | **espionage & "abnormal" diplomacy** — spying, sabotage, bribery, subversion, propaganda; exploiting your *rivals*, not just your own dirt. A whole strategic pillar — v2 (§6). |
+| **eXplore** | ⏳ deferred | survey / jump-point discovery to *find* new systems and targets — v2 (§6). |
+
+So v1 proves **two of the four strategic X's — eXpand + eXterminate, the conquest spine** — running on the
+engine's economy. eXploit (espionage) and eXplore are the two big v2 strategic layers. Start v1 with a known
+target so we prove the spine before building the discovery and subterfuge around it.
 
 ---
 
@@ -68,8 +78,11 @@ If any step in that chain doesn't work, v1 isn't done. If a feature isn't *on* t
 
 These are **good** — and they are **not v1**. Building any of them before §1 works is the trap.
 
-- **eXplore (the 4th X):** survey processors, jump-point exploration, fog-of-war discovery, finding new
-  systems/targets. v1 starts with a known target. This is the headline v2.
+- **eXplore (a deferred strategic X):** survey processors, jump-point exploration, fog-of-war discovery,
+  finding new systems/targets. v1 starts with a known target. A headline v2.
+- **eXploit / espionage & "abnormal" diplomacy (a deferred strategic X):** spy networks, agents, sabotage,
+  bribery, subversion, propaganda, instigating rebellion — exploiting rivals. A whole strategic system that
+  rides on Diplomacy/Factions (design-only today). The other headline v2.
 - **Space-combat depth:** new weapon types, detailed fire control, fleet doctrine/formations, the
   auto-resolution system, point defense tuning. v1 uses what exists and makes it *resolve*.
 - **Ground-combat depth:** multiple unit types, formations, morale, supply, terrain, the tactical **hex-map**
@@ -113,8 +126,11 @@ When Stage 4 works, **v1 is done.** Stop. Play it. *Then* open the parking lot.
 Add ideas here freely. Writing the idea down means it's safe to *not* build it yet. Revisit only after the §1
 loop ships.
 
-- **eXplore — the whole 4th X** (the headline v2): survey ships find new systems, jump points, new planets to
-  take. The combat-and-conquest spine from v1 is what makes exploration *matter*.
+- **eXplore — a strategic X** (headline v2): survey ships find new systems, jump points, new planets to take.
+  The conquest spine from v1 is what makes exploration *matter*.
+- **eXploit — espionage & "abnormal" diplomacy — a strategic X** (the other headline v2): intelligence,
+  sabotage, bribery, subversion, propaganda, fomenting rebellion — exploiting *rivals*. Rides on
+  Diplomacy/Factions (design-only today). The conquest spine is what makes subterfuge worth doing.
 - _(seed)_ Orbital bombardment softens defenders before the drop.
 - _(seed)_ Multiple ground/space unit types (artillery / armor / infantry; PD / beam / missile doctrine).
 - _(seed)_ The hex-map tactical ground battle (`ColonyHexMapDB` already exists as a substrate).
