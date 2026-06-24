@@ -13,7 +13,7 @@ thing to the next. Pick the next job off this map, not off whatever we happened 
 tells you which of them are on the critical path to v1 and which are deferred. Use them together: pick the
 next MVP stage, then use this map to work it *and* its connected systems.
 
-**Last updated:** 2026-06-23, end of the economy session (branch `claude/adoring-gates-i6svyk`).
+**Last updated:** 2026-06-24 — economy substrate proven (gather→refine→build all gauged), MVP scope firewall set, stale UI docs corrected (branch `claude/adoring-gates-i6svyk`).
 
 ---
 
@@ -23,8 +23,8 @@ next MVP stage, then use this map to work it *and* its connected systems.
 |-------|-------|
 | Branch | `claude/adoring-gates-i6svyk` |
 | Working tree | clean — everything committed |
-| Pushed | yes — all 9 session commits on origin |
-| CI (engine build + full NUnit suite, Linux) | **green** on the latest commit `06bf4fb` |
+| Pushed | yes — 18 session commits on origin (HEAD `439576f`) |
+| CI (engine build + full NUnit suite, Linux) | **green** on the latest commit — 382 tests, 381 pass + 1 `[Ignore]`'d |
 | Client (SDL/ImGui UI) build | **not checked by CI** — only your local Windows build checks it (see §5B) |
 
 So the engine is provably building and passing. The one thing neither of us has verified since the
@@ -140,19 +140,20 @@ reflection — if it's in the assembly, it runs.
    NOT WIRED YET:  Ledger (no money from any of this) · Population demand · NPC auto-queue · Local construction line
 ```
 
-**Proven this session:** Mining fills the stockpile (10 units/mineral/day, deposits deplete). A queued
-refining job turns mined regolith/water/etc. into Space-Crete (0 → 5,200/yr). Launch burns colony fuel
-by the rocket equation (one-time, ~1%). Infrastructure efficiency 100%.
+**Proven this session — the full substrate gather→refine→build:** mining fills the stockpile (10 units/
+mineral/day, deposits deplete); a queued refining job turns mined regolith/water/etc. into Space-Crete
+(0 → 5,200/yr); **the factory consumes minerals and installs a new Refinery (1→2, `ProductionBuildTests`)** —
+the `InstallOn` rails a built unit will ride. Launch burns colony fuel by the rocket equation (one-time, ~1%).
+Infrastructure efficiency 100%. **The economy substrate is DONE; "turn resources into products" is proven.**
 
-**The three loose ends on this cluster** (in dependency order — do them before leaving the economy):
-1. **Local construction / building installations** — point the lever at the Factory to build a Mine from
-   refined Space-Crete → colony grows its own mining. Closes mine→refine→**build**→more-mining.
-2. **Ledger wiring** — give mining/refining/construction/trade a money signal, or the economy has no P&L
-   and no NPC can ever reason about it.
-3. **Population demand** — gauge whether pop grows/consumes; it's the demand side of the whole economy.
+**Remaining economy work — all DEFERRED past the MVP (see `docs/MVP.md` OUT list), not blocking v1:**
+1. ~~Local construction / building installations~~ — **DONE** (`ProductionBuildTests`).
+2. **Ledger / money** — give mining/refining/construction/trade a P&L signal. v2 (needed for NPC reasoning).
+3. **Population demand** — the consumption side. v2.
+4. **NPC auto-queue** (`NPCDecisionProcessor`) — autonomy, once there's a complete economy + money to reason about. v2.
 
-Only **after** those is it honest to say "the economy works," and only then does **NPC auto-queue**
-(`NPCDecisionProcessor`) have a complete economy to drive.
+For the MVP, the economy is "done enough": it builds ships and units. The only open Stage-0 item is the
+**live UI verification** (§6 + §5B step 7).
 
 ---
 
