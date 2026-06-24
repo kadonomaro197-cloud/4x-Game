@@ -178,10 +178,17 @@ namespace Pulsar4X.Client
                 _armorSelection.Add(kvp.Value);
 
                 _armorNames[i]= armorMat?.Name ?? "Unknown";
+
+                // Pick a default armor WITHOUT hard-indexing a key that might not exist. The currently-viewed
+                // faction can lack "plastic-armor" — notably the SpaceMaster faction that SM mode switches the
+                // view to has no unlocked armor — and `factionData.Armor["plastic-armor"]` then threw
+                // KeyNotFoundException and crashed the whole client when the Ship Design window opened in SM
+                // mode. Default to plastic-armor when present, otherwise just the first armor available.
+                if (kvp.Key == "plastic-armor" || i == 0)
+                    _armor = kvp.Value;
                 i++;
             }
             //TODO: bleed over from mod data to get a default armor...
-            _armor = factionData.Armor["plastic-armor"];
             _armorThickness = 3;
         }
 
