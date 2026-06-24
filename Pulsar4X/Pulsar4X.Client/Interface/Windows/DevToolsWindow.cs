@@ -10,6 +10,7 @@ using Pulsar4X.Factions;
 using Pulsar4X.Names;
 using Pulsar4X.Ships;
 using Pulsar4X.Fleets;
+using Pulsar4X.Engine.Orders;
 using Pulsar4X.Colonies;
 using Pulsar4X.Storage;
 using Pulsar4X.Industry;
@@ -202,18 +203,30 @@ namespace Pulsar4X.Client
                             var parent = _bodyEntities[_selectedSpawnParent];
                             var ship = ShipFactory.CreateShip(design, _uiState.PlayerFaction, parent, shipName);
 
-                            // CreateShip puts the ship in orbit at ~2x the planet's RADIUS, which at the
-                            // zoomed-out system view is sub-pixel right on top of the planet icon — so it
-                            // looks like nothing happened even though the spawn succeeded. Report the
-                            // system ship count as proof it landed, and say where to look.
-                            // NOTE: a bare CreateShip lands the ship in NO fleet. The client cannot put it in
-                            // one directly (FleetDB.SetParent/AddChild are engine-internal) — that goes through
-                            // the order system (FleetOrder.AssignShip) or, properly, the engine start path. So
-                            // the real fix for "controllable ships" is engine-side (make New Game build a fleet).
+                            // Put the ship into one of the player's fleets so it appears in the Fleet window and
+                            // can be ordered. A bare CreateShip parents the ship to the PLANET, not the faction's
+                            // fleet tree — so it never shows in fleet view (this is why a spawned ship is missing
+                            // there while the launch-queue courier, which IS under the faction, shows up). This
+                            // goes through the ORDER system (FleetOrder.AssignShip → OrderHandler), the only
+                            // fleet API the client may use — FleetDB's mutators are engine-internal (poking them
+                            // is what broke the build earlier). Uses _uiState.PlayerFaction (the REAL player) so
+                            // it works even while SM mode is viewing the Game Master faction.
+                            string fleetNote = "but found no player fleet to put it in";
+                            var playerFleet = parent.Manager.GetAllEntitiesWithDataBlob<FleetDB>()
+                                .FirstOrDefault(f => f.FactionOwnerID == _uiState.PlayerFaction.Id);
+                            if (playerFleet != null)
+                            {
+                                _uiState.Game.OrderHandler.HandleOrder(
+                                    FleetOrder.AssignShip(_uiState.PlayerFaction.Id, playerFleet, ship));
+                                fleetNote = $"added to fleet '{GetEntityName(playerFleet)}'";
+                            }
+
+                            // The ship orbits the planet at ~2x its radius — sub-pixel on the planet icon at
+                            // system zoom, so zoom into the body to see it on the map.
                             int shipsInSystem = parent.Manager.GetAllEntitiesWithDataBlob<ShipInfoDB>().Count;
-                            _spawnStatus = $"Spawned '{design.Name}' (id {ship.Id}) orbiting {GetEntityName(parent)}. "
-                                + $"{shipsInSystem} ship(s) in system — zoom into {GetEntityName(parent)} to see it. (Not in a fleet yet — use Dump State to confirm, fleet fix is engine-side.)";
-                            DevLog($"Spawn Ship OK: '{design.Name}' id={ship.Id} around '{GetEntityName(parent)}', shipsInSystem={shipsInSystem}");
+                            _spawnStatus = $"Spawned '{design.Name}' (id {ship.Id}) orbiting {GetEntityName(parent)}, {fleetNote}. "
+                                + $"Exit SM mode + open the Fleet window to command it (zoom into {GetEntityName(parent)} to see it on the map).";
+                            DevLog($"Spawn Ship OK: '{design.Name}' id={ship.Id} around '{GetEntityName(parent)}', {fleetNote}, shipsInSystem={shipsInSystem}");
                             Array.Clear(_shipNameBuffer, 0, _shipNameBuffer.Length);
 
                             // Deliberately NOT calling HardRefresh() here. It reset the Design dropdown to
