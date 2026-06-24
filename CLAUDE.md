@@ -145,6 +145,7 @@ See `ARCHITECTURE.md` for the full data-flow diagram.
 
 | Doc | Read it when |
 |-----|--------------|
+| `docs/MVP.md` | **Before adding any feature, or whenever a "good idea" arrives.** Defines the v1 finish line ("you can take a planet") and the scope firewall — what's IN, what's explicitly deferred, and the Parking Lot where ideas wait so they don't derail the build. The thing that stops the game being half-built forever. |
 | `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` | **Deciding what to work on next, or before touching any system.** The living map of every system, its status (done/works/partial/dark), its gauge/test, and what it's wired to. Stops reactive pivoting; enforces "work the connected systems too." Also holds the play-by-play test instructions. |
 | `CONVENTIONS.md` | **Before writing any new code.** Pulsar's actual coding idioms (DataBlob copy-ctor/`Clone()`, serialize-one-collection-rebuild-indexes, `TryGet`/sentinel defensiveness, components+`*Atb`, processor auto-discovery). Match these, don't impose your own style. |
 | `docs/aurora/INDEX.md` | Designing any ground-combat or infrastructure mechanic. Aurora 4X is the design spec for systems Pulsar lacks. |
@@ -232,6 +233,8 @@ This is not optional and it is not just for complex tasks. A change that looks l
 
 **This applies to every subsystem listed in the Subsystem Index, every system in `docs/COMBAT-DESIGN.md`, every column in the game.** Economy connects to industry connects to population connects to research connects to ship production connects to fleet strength. Sensors connect to contact model connects to IFF connects to doctrine connects to auto-resolution. None of these are islands.
 
+**Operationalize this with the systems map — every single time.** `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` is the connection map in table form, and it is not a document you read once. **Whenever you go into a system — to read it, change it, debug it, or even just decide whether to touch it — open the map first, find that system's row, and read its "Connected to" column and every row it points at.** That is the minimum blast radius; the four questions above extend it one hop further. When you finish, move that row's status and "Can we see it?" entry. If you hit a connection the map doesn't list, add it before you continue. The map is only worth keeping if it is consulted and updated on *every* system dive — that discipline is what stops the reactive pivoting that leaves a game half-built.
+
 ---
 
 ## The Visibility Gate — "Can We See Enough?"
@@ -257,7 +260,7 @@ Pairs with the Prime Directive: **map the connections, then make sure you can se
 
 ## How to Work in This Repo (Working Agreement)
 
-1. **Apply the Prime Directive.** Map connections before making decisions. See above.
+1. **Apply the Prime Directive — through the systems map.** Before touching any system, open `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md`, find its row, and read every system in its "Connected to" column (and their rows). Work those too — don't change a system in isolation. Update its status row when you're done. Map connections before deciding. See above.
 2. **Read `CONVENTIONS.md` before writing any code; read the subsystem `CLAUDE.md` before working on that subsystem.** Only read source directly when the doc is insufficient, then update the doc after. For ground-combat/infrastructure design questions, consult `docs/aurora/`.
 3. **Keep all CLAUDE.md files current** whenever code changes — update the subsystem CLAUDE.md in the same commit as the code it describes. Stale docs are worse than no docs.
 4. **Build and run tests before and after every change.** Never leave the build broken. `dotnet build` + `dotnet test` before pushing.

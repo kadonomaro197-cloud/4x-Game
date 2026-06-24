@@ -8,6 +8,11 @@ thing to the next. Pick the next job off this map, not off whatever we happened 
 > You do not work a system alone. Find its row, read its **Connected to** column, and read *those* rows too.
 > A change to one station ripples down the line. This is the Prime Directive in table form.
 
+**Scope authority:** what to *build* (vs. just gauge) is bounded by **`docs/MVP.md`** — the v1 finish line is
+"you can take a planet." This map tells you the state of every system and what it connects to; the MVP doc
+tells you which of them are on the critical path to v1 and which are deferred. Use them together: pick the
+next MVP stage, then use this map to work it *and* its connected systems.
+
 **Last updated:** 2026-06-23, end of the economy session (branch `claude/adoring-gates-i6svyk`).
 
 ---
