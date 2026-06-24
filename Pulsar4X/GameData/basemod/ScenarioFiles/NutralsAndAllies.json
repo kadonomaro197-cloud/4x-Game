@@ -1,0 +1,58 @@
+{
+  "name": "Earth Govenments",
+  "isNPC": true,
+  "doctrine": {
+    "economic": 0.45,
+    "military": 0.15,
+    "tech": 0.25,
+    "expansion": 0.15
+  },
+  "componentDesigns": [
+    "componentDesigns/passiveScannerS50.json",
+    "componentDesigns/fuelTank-1000.json",
+    "componentDesigns/alcuberiWhite-500.json",
+    "componentDesigns/battery-2t.json",
+    "componentDesigns/reactor-15k.json",
+    "componentDesigns/merlin.json"
+  ],
+  "ordnanceDesigns": [
+  ],
+  "shipDesigns": [
+    "shipDesigns/targetDrone.json"
+  ],
+  "species": [
+    "species-humans.json"
+  ],
+  "fleets": [
+    {
+      "name": "Target Drone Fleet",
+      "location": {
+        "systemId": "sol",
+        "body": "Luna"
+      },
+      "ships": [
+        {
+          "designId": "default-ship-design-target-drone",
+          "name": "Target Drone 0",
+          "cargo": [
+            { "id": "rp-1", "amount": 1000 }
+          ]
+        },
+        {
+          "designId": "default-ship-design-target-drone",
+          "name": "Target Drone 1",
+          "cargo": [
+            { "id": "rp-1", "amount": 1000 }
+          ]
+        },
+        {
+          "designId": "default-ship-design-target-drone",
+          "name": "Target Drone 2",
+          "cargo": [
+            { "id": "rp-1", "amount": 1000 }
+          ]
+        }
+      ]
+    }
+  ]
+}

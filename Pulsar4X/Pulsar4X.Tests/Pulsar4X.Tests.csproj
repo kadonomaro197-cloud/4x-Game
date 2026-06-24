@@ -1,0 +1,126 @@
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
+  <PropertyGroup>
+    <Authors>Pulsar4XDevs</Authors>
+    <Company>Pulsar4X</Company>
+    <Product>Pulsar4x.Tests</Product>
+    <Version>1.0.0</Version>
+    <PackageId>Pulsar4X.Tests</PackageId>
+    <FileUpgradeFlags>40</FileUpgradeFlags>
+    <UpgradeBackupLocation>C:\Users\matia\source\repos\Pulsar4x\Pulsar4X\Backup\Pulsar4X.Tests\</UpgradeBackupLocation>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <Nullable>enable</Nullable>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Linux_x64' ">
+    <IntermediateOutputPath>obj\Linux_x64\Debug</IntermediateOutputPath>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>
+    </DebugType>
+    <OutputPath>bin\Linux_x64\Debug</OutputPath>
+    <DefineConstants>
+    </DefineConstants>
+    <NoWarn>
+    </NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Linux_x64' ">
+    <IntermediateOutputPath>obj\Linux_x64\Release</IntermediateOutputPath>
+    <DebugType>
+    </DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Linux_x64\Release</OutputPath>
+    <DefineConstants>
+    </DefineConstants>
+    <NoWarn>
+    </NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Windows_x64' ">
+    <IntermediateOutputPath>obj\Windows_x64\Debug</IntermediateOutputPath>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>
+    </DebugType>
+    <OutputPath>bin\Windows_x64\Debug</OutputPath>
+    <DefineConstants>
+    </DefineConstants>
+    <NoWarn>
+    </NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Windows_x64' ">
+    <IntermediateOutputPath>obj\Windows_x64\Release</IntermediateOutputPath>
+    <DebugType>
+    </DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Windows_x64\Release</OutputPath>
+    <DefineConstants>
+    </DefineConstants>
+    <NoWarn>
+    </NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Windows_x86' ">
+    <IntermediateOutputPath>obj\Windows_x86\Debug</IntermediateOutputPath>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>
+    </DebugType>
+    <OutputPath>bin\Windows_x86\Debug</OutputPath>
+    <DefineConstants>
+    </DefineConstants>
+    <NoWarn>
+    </NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Windows_x86' ">
+    <IntermediateOutputPath>obj\Windows_x86\Release</IntermediateOutputPath>
+    <DebugType>
+    </DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Windows_x86\Release</OutputPath>
+    <DefineConstants>
+    </DefineConstants>
+    <NoWarn>
+    </NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CoreCLR-NCalc" Version="2.2.113" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
+    <PackageReference Include="NUnit" Version="3.13.3" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+    <Compile Remove="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GameEngine\GameEngine.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="mono_crash.197419f3c8.0.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Data\MalformedData\Commander Name Theme - The Creators.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\MalformedData\Minerals.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\MalformedData\VersionInfo.vinfo">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Other\Minerals.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Other\VersionInfo.vinfo">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\collectionopmod\modInfo.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\collectionopmod\collectionOpData.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <Target Name="CopyJsonData" AfterTargets="Build">
+    <ItemGroup>
+      <JsonDataFiles Include="..\GameData\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(JsonDataFiles)" DestinationFolder="$(OutputPath)\Data\%(RecursiveDir)" />
+  </Target>
+</Project>

@@ -1,0 +1,54 @@
+# Pulsar Specific Folders
+Pulsar4X/*/bin
+Pulsar4X/*/obj
+Pulsar4X/packages/*
+Pulsar4X/Pulsar4X.Client/*.ini
+Pulsar4X/Pulsar4X.Client/Data/*
+Pulsar4X/Benchmarks/BenchmarksDotNet.Artifacts/*
+Pulsar4X/Pulsar4X.Tests/TestResults/
+
+# Doxygen output
+doc/doxygen/html/
+# C# Temp Files:
+*.db
+*.suo
+*.user
+_ReSharper.Pulsar4X
+_ReSharper.AuroraExtract
+# Build results
+*_i.c
+*_p.c
+*.ilk
+*.meta
+*.obj
+*.pch
+*.pdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.log
+*.vspscc
+*.vssscc
+*.msi
+*.wixpdb
+# Visual Studio profiler
+*.psess
+*.vsp
+*.vspx
+/Pulsar4X/Pulsar4X.UI/StyleCop.Cache
+
+# Visual Studio 2015 cache/options directory
+.vs/
+
+# Monodevelop user specific files
+*.userprefs
+*.usertasks
+Pulsar4X/TestResults/Pulsar4X.TE.Tests.mdf
+Pulsar4X/TestResults/Pulsar4X.TE.Tests_log.ldf
+#Jetbrains Rider files
+.idea/
