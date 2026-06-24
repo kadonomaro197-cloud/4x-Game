@@ -64,6 +64,11 @@ Namespace drift between branches is the #1 compile trap here (it bit `PositionDB
 | `GetDefaultName()` (Entity extension) | `Pulsar4X.Extensions` |
 | `CargoStorageDB` | `Pulsar4X.Storage` |
 | `Mineral`, `ProcessedMaterial` | `Pulsar4X.Industry` |
+| `ComponentInstancesDB` (**namespace ≠ folder** — file is in `Engine/Components/`, namespace is Datablobs) | `Pulsar4X.Datablobs` |
+| `ComponentInstance`, `ComponentDesign`, `TryGetComponentsByAttribute`, `GetAttribute` | `Pulsar4X.Components` |
+| `IndustryAbilityDB`, `IndustryJob`, `IndustryTools`, `MiningDB`, `InfrastructureDB`, `MineResourcesAtbDB` | `Pulsar4X.Industry` |
+| `ShipFactory`, `ShipDesign`, `ShipInfoDB` | `Pulsar4X.Ships` · `OrbitDB` → `Pulsar4X.Orbits` |
+| `IConstructableDesign` | `Pulsar4X.Interfaces` |
 
 ---
 

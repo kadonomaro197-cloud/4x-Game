@@ -102,9 +102,11 @@ These are **good** — and they are **not v1**. Building any of them before §1 
 Each stage leaves the game in a working, testable state. Don't start a stage until the one before it is green.
 Note the order follows your own strategy: **do space combat first, then mirror its shape for ground.**
 
-- **Stage 0 — Economy is real and visible.** *(we are here)* Engine economy done and gauged. Remaining: the
-  build-installations link (factory builds installations from refined materials) + a colony economy view you
-  can read/queue from. → the colony can build ships and (soon) units.
+- **Stage 0 — Economy is real and visible.** *(we are here)* **Engine substrate COMPLETE and gauged: gather
+  → refine → build all proven** (mining depletes deposits; refining makes Space-Crete; the factory consumes
+  minerals and installs a new Refinery, 1→2 — `ProductionBuildTests`). The build path a unit will ride
+  (`IndustryJob.InstallOn` → `AddComponent`) is verified. **Remaining Stage-0 item: a colony economy view in
+  the UI** you can read/queue from (client, live-test only). The engine is ready to build ships and units.
 - **Stage 1 — Space combat resolves, and is gauged.** Take the DARK beam/missile systems, put them under a
   harness test, and make two fleets fight to a winner. This is MVP-critical **and** the reference pattern for
   Stage 2 — study how it's wired (`docs/COMBAT-DESIGN.md`, `Weapons/`, `Damage/`) and gauge it.
