@@ -94,6 +94,7 @@ Namespace drift between branches is the #1 compile trap here (it bit `PositionDB
 | `NewGameStartSmokeTests` | the real New Game colony path (rides the harness) |
 | `EconomyReadoutTests` | the economy board — mining (asserts deposits deplete), refining (asserts Space-Crete produced via the job lever), infra/fuel readouts |
 | `ShipSpawnTests` | engine ship-spawn — `ShipFactory.CreateShip` (the DevTools spawn path) lands a ship in the system with its parts, and it survives a tick |
+| `StartFleetTests` | the New Game **start fleet** — asserts `CreateFromBlueprint` builds the colony blueprint's fleets (CI-proven `[start] fleets=3, ships=5` from `colony-earth`). The engine-checkable half of "fleets aren't working" (the client half needs the dev's local build + DevTools "Dump State") |
 | `ProductionBuildTests` | the build-to-product link — the factory consumes stored minerals and installs a new Refinery on the colony (`InstallOn` path); proves "resources → installed product", the rails a built unit rides |
 | `CombatReadoutTests` | **MVP Stage 1** — the space-combat *damage* gauge (the path was 🔴 DARK / no tests). Calls `DamageProcessor.OnTakingDamage` directly on a real ship with a beam-shaped fragment and prints `[combat]` (health drop / components removed / destroyed?). Commit 1 is a **readout** (asserts only that the sim runs); hard "a ship CAN be destroyed" assertion is added once CI shows the reading. |
 | `GameLoopSmokeTests` | core sim loop advances on a generated (colony-less) universe |
