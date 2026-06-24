@@ -6,7 +6,62 @@ This document tracks what we know about the codebase state at the close of each 
 
 ## Last Updated
 
-Session ending ~2026-06-24 (economy substrate proven + scope firewall). Branch: `claude/adoring-gates-i6svyk`, HEAD `439576f` (18 commits this session, all CI-green).
+Session ending 2026-06-24 (cont.) — **Stage 1 combat gauge → combat-design rework → fleet/spawner/UI shakedown.** Branch `claude/adoring-gates-i6svyk`, HEAD `7878b5b` (8 commits this session). Engine CI green; client fixes live-verified by the developer. **Next: combat as its own effort — write the reworked `docs/COMBAT-DESIGN.md` (one engine + doctrine), then build the Tier 0 auto-resolve spine under a harness gauge. Combat damage + move orders are parked here on purpose.**
+
+---
+
+## Session 2026-06-24 (cont.) — Stage 1 Combat Gauge → Combat-Design Rework → Fleet/Spawner/UI Shakedown (READ THIS FIRST)
+
+Started Stage 1 (space combat) the gauge-first way; the gauge exposed that space combat's damage is **broken AND the wrong layer**. The developer reframed and chose to **rework the combat design**. Then a long live-test marathon shook out the ship/fleet/spawner/UI — a cascade that all traced back to **two roots** (stale live mod data + SM mode views the Game Master faction). Everything is resolved and live-verified. Combat is now a **deliberately separate effort.**
+
+### WHERE TO RESUME (the one thing that matters)
+**Stage 0 (economy) and the whole ship/fleet/economy/UI foundation are DONE and live-verified.** The next effort is **COMBAT, as its own thing** (the developer's explicit call — all combat *and* move-order work goes there). First combat task: **write the reworked `docs/COMBAT-DESIGN.md`** (the agreed direction is captured below and in a banner at the top of that file), then build **Stage 1 = the Tier 0 auto-resolve spine + ship combat value + doctrine, under harness tests.** Park the per-pixel damage sim (it's v2).
+
+### Current state (live-verified by the developer)
+- **Stage 0 economy:** DONE + live ("everything works but the spawner" — spawner since resolved).
+- **Starting fleet:** WORKS + **CI-proven** (`StartFleetTests`: a New Game builds **3 fleets / 5 ships**). Live `Dump State` read **6 ships, 3 fleets** (5 start + 1 spawned).
+- **DevTools spawner:** WORKS — spawns the ship, now joins it to a player fleet (via the order system), visible/controllable after exiting SM mode.
+- **Combat:** NOT started, separate effort. The **move-order crash** and the **0-damage** finding are parked there.
+
+### What was built this session
+- **`CombatReadoutTests`** — the space-combat DAMAGE gauge (first coverage of the DARK damage path).
+- **`StartFleetTests`** — the start-fleet gauge; CI-proves the engine builds the colony blueprint's fleets.
+- **DevTools:** new **"Dump State"** button (live ship/fleet counts on-screen + flushed log); spawned ships **auto-join a player fleet** via `FleetOrder.AssignShip` → `OrderHandler`; dropdown-reset removed; **`DevLog` flushes** (`Console.Out.Flush()`).
+- **Fixes:** `ShipDesignWindow` plastic-armor crash (graceful default, not a hard index). Reverted a client build-break I caused (see lesson 3).
+- **Docs:** systems map §6 + Fleets row; `Pulsar4X.Client/CLAUDE.md` gotchas 6–10; test CLAUDE.md inventory; this file; COMBAT-DESIGN.md rework banner.
+
+### BIG FINDING #1 — space combat damage is broken *and* the wrong layer
+- `CombatReadoutTests`: **100 beam hits @ 1e10 J on a real ship → 0 damage, 0 components lost, ship not destroyed.** The per-pixel spatial sim (`DamageTools.DealDamageEnergyBeamSim`) deposits nothing. Space combat does not actually damage ships.
+- Deeper: the as-built combat is **only** the Tier 2 per-pixel sim (the most detailed/expensive layer). The plan (`COMBAT-DESIGN.md`) wants **Tier 0 auto-resolution (fleet-math) as the spine — which does not exist.** They built the flashiest 10% and skipped the structural 90%. **Fixing the per-pixel sim = repairing the wrong layer.**
+
+### THE COMBAT-DESIGN REWORK (agreed verbally — this is the spec to write up)
+- **Developer's key insight:** *"it's always auto-resolve unless someone changes the fleet doctrine."* → There aren't 3 separate combat engines (the LOD tiers); there is **ONE engine — the auto-resolve loop — always running**, and player/AI **doctrine changes** (which take game-time to execute) are just inputs to it. "Watching a battle" = a **camera + the doctrine controls** on the same running loop. The per-pixel sim becomes an optional visual skin (v2), not a separate model.
+- **Doctrine is the ENTIRE player control** — no individual weapon aiming. So doctrine is **v1-core**, co-equal with the auto-resolve math.
+- **v1 line:** go **deep in the spine** (ship combat value derived from real weapons/armor + the auto-resolve loop + the fleet-components/switchable-doctrine model + retreat); **honest flagged STUBS at the edges** (weapon range = in/out; sensors + IFF = assume mutual detection, no fog; commander = one flat modifier; EMCON/terrain = none). **Parked for v2:** the per-pixel watched-battle sim, debris/salvage, real fog/IFF/commander-careers/EMCON/terrain. The stubs ARE the flags — they record what to deepen later (delivers the dev's "building it flags what we need" goal without dragging every dark system into v1).
+- **Ground inherits the same engine** (movement + engagement are the same shape; doctrine is the same lever; ground just adds terrain/dig-in). This is *why* we do space combat first.
+- **4X reframe stands:** economy = engine substrate; **eXpand + eXterminate = the v1 spine**; eXplore + eXploit(espionage) = the two deferred v2 strategic pillars (`docs/MVP.md`).
+
+### BIG FINDING #2 — the fleet/spawner/UI cascade had TWO roots (not many bugs)
+1. **Stale live mod data.** The running game reads `%AppData%\Roaming\Pulsar4X\Pulsar4X\Mods\`, refreshed from the repo's `GameData` only by a **successful** client build. Builds were broken (my fault, once), so the live `earth.json` was stale → "New Game has no starting fleet." **A clean build copied the fresh `earth.json` (which DOES define the fleet) → the fleets appeared.** CI always used the repo's `GameData` directly, so CI/`StartFleetTests` were right all along; the *live game* lagged.
+2. **SM (Space Master) mode switches the VIEWED faction to the Game Master faction** (`GlobalUIState` SM toggle → `SetFaction(Game.GameMasterFaction)`), which owns **no fleets and no armor**. This single fact caused: (a) fleets vanishing from the Fleet window in SM mode; (b) spawned/own ships invisible in SM mode; (c) the **ship-design crash** (`ShipDesignWindow.RefreshArmor()` hard-indexed `Armor["plastic-armor"]`, which the Game Master lacks → KeyNotFound → whole-client crash). `_uiState.PlayerFaction` stays the real player; only `_uiState.Faction` changes. **Workflow:** spawn/use dev tools in SM mode, then **exit SM mode** to see and command your ships.
+
+### Other diagnoses (smaller)
+- Spawned ships orbit at **2× the planet radius** → sub-pixel on the planet icon at system zoom (zoom in to see them). The starter **"ISS Hermes"** is the launch-queue courier (`earth.json` `LaunchQueue`), launched by `LaunchComplexProcessor.TryLaunchShip` to **low Earth orbit** (even tighter) and `fleetDB.AddChild`-ed into the faction fleet — invisible behind Earth's icon, but in the fleet menu. The engine launch path can call `fleetDB.AddChild`; the **client DevTools spawn can't** (engine-internal), which is exactly why spawned ships weren't in the fleet tree (now fixed via the order system).
+- **Console-output buffering:** when `launch.bat` redirects stdout to `console_output.txt`, .NET buffers runtime output and an **X-close does not reliably flush it** → the captured file is usually build-only. Reliable channels instead: the **on-screen DevTools status** and the **flushed `DevLog`** line.
+
+### LESSONS LEARNED (methodology — these are the durable takeaways)
+1. **Gauge-first won; guessing lost — twice.** The Visibility Gate paid off: `CombatReadoutTests` found 0 damage; `StartFleetTests` proved the engine builds fleets. Every time I *guessed* a live cause ("zoom in"; "fleets are defined at the faction level / never built"), I was **wrong**. The CI gauge was right. **When a fix fails, build the gauge — don't pile on a second guess.**
+2. **Wrong-file trap.** The "fleets never built" mis-diagnosis traced `uef.json` — a *scenario* file the New Game wizard does **not** use. The real colony blueprint is `earth.json` (`colony-earth`), which HAS the fleet. **Verify which file the LIVE code path actually reads before concluding.**
+3. **CI can't build the client → client changes are unverified until the dev builds.** I broke the client build once by calling **engine-internal** `FleetDB` mutators (`SetParent`/`AddChild`/`FlagShipID`) from the client — `ColonyFactory`/`LaunchComplexProcessor` (engine) may; `DevToolsWindow` (client) may not. **Client fleet changes MUST go through the order system** (`FleetOrder.*` → `Game.OrderHandler.HandleOrder`, as `FleetWindow` does). Verify a member is *accessible from the client*, not just that it exists.
+4. **Stale live data vs. repo data.** CI/tests use the repo's `GameData`; the running game uses `%AppData%\Mods` refreshed only on a *successful* build. A broken build → stale live data → live symptoms that don't reproduce in CI. **When live ≠ CI, suspect stale Mods → clean rebuild.**
+5. **The buffered console channel is unreliable; prefer on-screen + flushed.** Don't rely on `console_output.txt` for runtime readings (X-close doesn't flush). Build gauges that show **on-screen** and **flush** their log line.
+
+### Open / deferred (the pickup list)
+- **COMBAT — its own effort (developer's call).** (a) Write reworked `docs/COMBAT-DESIGN.md` (one engine + doctrine; v1 line above). (b) Build Stage 1: `ShipCombatValueDB` + the auto-resolve loop + the doctrine/fleet-components model + retreat, **each under a harness test** (no untested combat). Park the per-pixel sim.
+- **Move-order crash** — selecting a fleet + a *Move* order crashes *before* issuing it (on the latest branch). Parked with combat. Not the spawn fix (that's a fleet-*assign* order, which works). A missing feature should fail gracefully, not crash the game — fix when building the order/movement layer.
+- **Space-combat damage = 0** (per-pixel sim) — parked with the per-pixel sim. Tier 0 auto-resolve is the v1 damage model instead.
+- **`gallicite`** — `ordnance.json` references an undefined mineral; will bite missiles. Still open (carried from the prior session).
+- **Merge state:** latest fixes are on `claude/adoring-gates-i6svyk` (HEAD `7878b5b`). Ensure `main` has the crash fix (`f16c531`) and spawn-into-fleet (`7878b5b`) before the next live test.
 
 ---
 

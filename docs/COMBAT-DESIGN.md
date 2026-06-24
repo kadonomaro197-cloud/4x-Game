@@ -1,5 +1,17 @@
 # Combat System Design
 
+> ## ⚠️ REWORK PENDING (agreed 2026-06-24) — read this before building combat
+>
+> This document's **eleven-systems / three-LOD-tiers** framing (below) is now **reference detail**, not the v1 build plan. The agreed reworked direction — to be written up properly as the first combat task:
+>
+> - **ONE engine, always running: the auto-resolve loop.** The developer's insight: *"it's always auto-resolve unless someone changes the fleet doctrine."* There are **not** three separate combat engines (the LOD tiers) — there is one math loop, and **doctrine changes (by player or AI, which take game-time to execute) are just inputs to it.** "Watching a battle" = a **camera + the doctrine controls** on that same loop. The per-pixel damage sim (`DamageComplex`) becomes an optional **v2 visual skin**, not a model.
+> - **Doctrine is the ENTIRE player control** — no individual weapon aiming. So doctrine + the fleet-components model (System 4 detailed, below) are **v1-core**, alongside the auto-resolve math.
+> - **v1 = deep in the spine, flagged stubs at the edges.** Build: `ShipCombatValueDB` (strength/toughness from real weapons+armor) + the auto-resolve loop + the fleet-components/switchable-doctrine model + retreat. **Stub (flagged):** weapon range = in/out, sensors+IFF = mutual detection, commander = one flat modifier, EMCON/terrain = none. **Park for v2:** the per-pixel sim, debris/salvage, real fog/IFF/commander-careers/EMCON/terrain.
+> - **Ground inherits this same engine** (movement + engagement are the same shape; doctrine is the same lever; ground adds terrain/dig-in) — that's *why* space combat is built first.
+> - **Why now:** the as-built combat is ONLY the Tier-2 per-pixel sim, and it's **broken** — `CombatReadoutTests` proved beam hits deposit **0 damage**. The fleet-math spine the whole design hangs on **does not exist**. So v1 builds that spine; it does not repair the per-pixel sim.
+>
+> **Full session record + findings + lessons:** `SESSION_STATE.md` (2026-06-24 cont. entry). Scope firewall: `docs/MVP.md`. Build each piece under a harness test (no untested combat).
+
 **The design principle:** Give players meaningful choices and simulate those choices honestly. Not spectacular visuals — correct outcomes from correct decisions. A clever trap should work. A numbers advantage should matter. Poor doctrine should cost ships.
 
 ---
