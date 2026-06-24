@@ -1,0 +1,371 @@
+[
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "stainless-steel",
+      "Name": "Stainless Steel",
+      "Description": "Refined Iron",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 25,
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.000125,
+      "PartMatUniqueID": "stainless-steel",
+      "ResourceCosts": {
+        "iron": 88,
+        "chromium": 11,
+        "hydrocarbons": 1
+      },
+      "IndustryPointCosts": 20,
+      "IndustryTypeID": "refining",
+      "WealthCost": 0,
+      "OutputAmount": 100
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "rp-1",
+      "Name": "RP-1",
+      "Description": "Highly refined Kerosene and Oxygen at a mix of 0.52:1 by volume",
+      "CargoTypeID": "fuel-storage",
+      "CreditValue": 20,
+      "MassPerUnit": 1,
+      "VolumePerUnit": 0.0009446885,
+      "ResourceCosts": {
+        "hydrocarbons": 1
+      },
+      "IndustryPointCosts": 10,
+      "IndustryTypeID": "refining",
+      "WealthCost": 3,
+      "OutputAmount": 2,
+      "Formulas": {
+        "ExhaustVelocity": "3510",
+        "FuelType": "conventional"
+      }
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "methalox",
+      "Name": "Methalox",
+      "Description": "Highly refined Methane and Oxygen rocket fuel at a mix of 1:3.333 by mass",
+      "CargoTypeID": "fuel-storage",
+      "CreditValue": 20,
+      "MassPerUnit": 1,
+      "VolumePerUnit": 0.000835561,
+      "ResourceCosts": {
+        "hydrocarbons": 1
+      },
+      "IndustryPointCosts": 10,
+      "IndustryTypeID": "refining",
+      "WealthCost": 3,
+      "OutputAmount": 2,
+      "Formulas": {
+        "ExhaustVelocity": "3615",
+        "FuelType": "conventional"
+      }
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "hydrolox",
+      "Name": "Hydrolox",
+      "Description": "Hydrogen and Oxygen rocket fuel at a mix of 2.7:1 by volume",
+      "CargoTypeID": "fuel-storage",
+      "CreditValue": 25,
+      "MassPerUnit": 1,
+      "VolumePerUnit": 0.002777778,
+      "ResourceCosts": {
+        "hydrocarbons": 1
+      },
+      "IndustryPointCosts": 10,
+      "IndustryTypeID": "refining",
+      "WealthCost": 3,
+      "OutputAmount": 2,
+      "Formulas": {
+        "ExhaustVelocity": "4462",
+        "FuelType": "conventional"
+      }
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "ntp",
+      "Name": "Nuclear Thruster Propellant",
+      "Description": "Composite fuel for nuclear thrusters, hydrogen with encapsulated fissile package.",
+      "CargoTypeID": "fuel-storage",
+      "CreditValue": 2500,
+      "MassPerUnit": 1,
+      "VolumePerUnit": 0.002777778,
+      "ResourceCosts": {
+        "hydrocarbons": 100,
+        "fissionables": 1
+      },
+      "IndustryPointCosts": 100,
+      "IndustryTypeID": "refining",
+      "WealthCost": 3,
+      "OutputAmount": 100,
+      "Formulas": {
+        "ExhaustVelocity": "7000",
+        "FuelType": "ntr"
+      }
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "plastic",
+      "Name": "Plastic",
+      "Description": "Rendered from Hydrocarbons",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 15,
+      "PartMatUniqueID": "delrin",
+      "MassPerUnit": 1,
+      "VolumePerUnit": 0.0010638298,
+      "ResourceCosts": {
+        "hydrocarbons": 1
+      },
+      "IndustryPointCosts": 5,
+      "IndustryTypeID": "refining",
+      "WealthCost": 1,
+      "OutputAmount": 2
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "fissile-fuels",
+      "Name": "Fissile fuels",
+      "Description": "Processed fuel for nuclear reactors, enriched for fission.",
+      "CargoTypeID": "fuel-storage",
+      "CreditValue": 50000,
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.0000531915,
+      "ResourceCosts": {
+        "fissionables": 100,
+        "hydrocarbons": 10
+      },
+      "IndustryPointCosts": 10,
+      "IndustryTypeID": "refining",
+      "WealthCost": 1000,
+      "OutputAmount": 1
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "electronics",
+      "Name": "Electronics",
+      "Description": "Electrical components",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 250,
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.002,
+      "ResourceCosts": {
+        "copper" : 2,
+        "plastic": 2,
+        "aluminium": 1,
+        "silicon": 1
+      },
+      "IndustryPointCosts": 100,
+      "IndustryTypeID": "refining",
+      "WealthCost": 2,
+      "OutputAmount": 5
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "electricity",
+      "Name": "Electricity",
+      "Description": "Electrical Energy",
+      "CargoTypeID": "battery-storage",
+      "CreditValue": 0,
+      "MassPerUnit": 0.0,
+      "VolumePerUnit": 0,
+      "ResourceCosts": {
+      },
+      "IndustryPointCosts": 10,
+      "IndustryTypeID": "refining",
+      "WealthCost": 0,
+      "OutputAmount": 100
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "space-crete",
+      "Name": "Space-Crete",
+      "Description": "A composite material for extraterrestrial construction, utilizing local regolith and minerals.",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 10,
+      "PartMatUniqueID": "concrete",
+      "MassPerUnit": 2.4,
+      "VolumePerUnit": 0.000417,
+      "ResourceCosts": {
+        "regolith": 70, 
+        "silicon": 10, 
+        "aluminium": 10,
+        "iron": 5,
+        "water": 5 
+      },
+      "IndustryPointCosts": 25,
+      "IndustryTypeID": "refining",
+      "WealthCost": 0,
+      "OutputAmount": 100
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "stainless-steel-d",
+      "Name": "Grade-D Steel",
+      "Description": "Simple iron-nickel alloy, no chromium, quick to produce but less corrosion-resistant.",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 12,
+      "PartMatUniqueID": "carbon-steel",
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.000125,
+      "ResourceCosts": {
+        "iron": 95,
+        "nickel": 5
+      },
+      "IndustryPointCosts": 10,
+      "IndustryTypeID": "refining",
+      "WealthCost": 0,
+      "OutputAmount": 100
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "stainless-steel-a",
+      "Name": "Grade-A Alloy Steel",
+      "Description": "Premium structural steel alloyed with titanium for superior strength-to-weight ratio.",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 80,
+      "PartMatUniqueID": "stainless-steel",
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.000125,
+      "ResourceCosts": {
+        "iron": 80,
+        "chromium": 10,
+        "titanium": 10
+      },
+      "IndustryPointCosts": 50,
+      "IndustryTypeID": "refining",
+      "WealthCost": 2,
+      "OutputAmount": 100
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "nickel-steel",
+      "Name": "Nickel Steel",
+      "Description": "Iron-nickel-chromium structural alloy. Tougher than stainless steel, used in pressure vessels and armor plating.",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 40,
+      "PartMatUniqueID": "stainless-steel",
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.000122,
+      "ResourceCosts": {
+        "iron": 70,
+        "nickel": 20,
+        "chromium": 10
+      },
+      "IndustryPointCosts": 30,
+      "IndustryTypeID": "refining",
+      "WealthCost": 1,
+      "OutputAmount": 100
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "electronics-d",
+      "Name": "Grade-D Electronics",
+      "Description": "Basic electrical components manufactured without aluminium refining. Lower performance, faster to produce.",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 80,
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.002,
+      "ResourceCosts": {
+        "copper": 2,
+        "plastic": 2,
+        "silicon": 1
+      },
+      "IndustryPointCosts": 60,
+      "IndustryTypeID": "refining",
+      "WealthCost": 1,
+      "OutputAmount": 5
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "electronics-a",
+      "Name": "Grade-A Electronics",
+      "Description": "High-performance electrical components incorporating rare-earth elements for superior precision and efficiency.",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 1000,
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.002,
+      "ResourceCosts": {
+        "copper": 2,
+        "plastic": 2,
+        "aluminium": 1,
+        "silicon": 1,
+        "ree-magnetics": 1
+      },
+      "IndustryPointCosts": 200,
+      "IndustryTypeID": "refining",
+      "WealthCost": 5,
+      "OutputAmount": 5
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "lithium-battery",
+      "Name": "Lithium Battery Pack",
+      "Description": "High-density energy storage cell. Lithium-ion chemistry with copper current collectors.",
+      "CargoTypeID": "battery-storage",
+      "CreditValue": 500,
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.001,
+      "ResourceCosts": {
+        "lithium": 5,
+        "copper": 2,
+        "electronics": 1
+      },
+      "IndustryPointCosts": 75,
+      "IndustryTypeID": "refining",
+      "WealthCost": 3,
+      "OutputAmount": 10
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "ree-magnetics",
+      "Name": "REE-Magnetics",
+      "Description": "Rare-earth permanent magnets and EM focusing elements. Essential for high-performance sensors, drives, and beam weapons.",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 1500,
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.00015,
+      "ResourceCosts": {
+        "rare-earth-elements": 5,
+        "iron": 1
+      },
+      "IndustryPointCosts": 100,
+      "IndustryTypeID": "refining",
+      "WealthCost": 5,
+      "OutputAmount": 10
+    }
+  }
+]

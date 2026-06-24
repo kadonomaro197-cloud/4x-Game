@@ -1,0 +1,186 @@
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using Pulsar4X.Components;
+using Pulsar4X.DataStructures;
+using Pulsar4X.Engine;
+using Pulsar4X.Engine.Auth;
+using Pulsar4X.Interfaces;
+using Pulsar4X.Events;
+using Pulsar4X.Datablobs;
+using Pulsar4X.Sensors;
+using Pulsar4X.Ships;
+using Pulsar4X.Weapons;
+
+namespace Pulsar4X.Factions
+{
+    public class FactionInfoDB : BaseDataBlob
+    {
+        [JsonProperty]
+        public string Abbreviation { get; internal set; } = "";
+
+        /// <summary>
+        /// The unique index (0-31) for this faction used in Masked&lt;T&gt; bit masks.
+        /// Use FactionMask property to get the actual bit mask value.
+        /// </summary>
+        [JsonProperty]
+        public int FactionMaskIndex { get; internal set; } = -1;
+
+        /// <summary>
+        /// The bit mask for this faction, computed from FactionMaskIndex.
+        /// Use this value with Masked&lt;T&gt;.For() to retrieve faction-visible data.
+        /// </summary>
+        [JsonIgnore]
+        public int FactionMask => FactionMaskIndex >= 0 ? 1 << FactionMaskIndex : 0;
+
+        [JsonProperty]
+        public Ledger Money { get; internal set; } = new ();
+
+        [JsonProperty]
+        public FactionDataStore Data { get; internal set; } = new FactionDataStore();
+
+        [JsonProperty]
+        public List<Entity> Species { get; internal set; } = new ();
+
+
+        [JsonProperty]
+        public List<string> KnownSystems { get; internal set; } = new ();
+
+        [JsonProperty]
+        public ReadOnlyDictionary<string, List<Entity>> KnownJumpPoints => new (InternalKnownJumpPoints);
+        [JsonProperty]
+        internal Dictionary<string, List<Entity>> InternalKnownJumpPoints = new ();
+
+
+        [JsonProperty]
+        public List<Entity> KnownFactions { get; internal set; } = new ();
+
+
+        [PublicAPI]
+        [JsonProperty]
+        public List<Entity> Colonies { get; internal set; } = new ();
+
+        [JsonProperty]
+        public SafeList<Entity> Commanders { get; internal set; } = new ();
+
+        [JsonProperty]
+        public Dictionary<string, ShipDesign> ShipDesigns = new ();
+
+        [JsonProperty]
+        public Dictionary<string, OrdnanceDesign> MissileDesigns = new ();
+
+        /// <summary>
+        /// This includes non researched and not constructible designs.
+        /// Does Not Include Refined Materials
+        /// </summary>
+        public ReadOnlyDictionary<string, ComponentDesign> ComponentDesigns => new (InternalComponentDesigns);
+        [JsonProperty]
+        internal Dictionary<string, ComponentDesign> InternalComponentDesigns = new ();
+
+
+        /// <summary>
+        /// this shoudl only be designs we can construct.
+        /// Does Include Refined Materials.
+        /// </summary>
+        [JsonProperty]
+        public Dictionary<string, IConstructableDesign> IndustryDesigns = new ();
+
+
+
+
+        /// <summary>
+        /// stores sensor contacts for the entire faction, when a contact is created it gets added here.
+        /// </summary>
+        [JsonProperty]
+        internal Dictionary<int, SensorContact> SensorContacts = new ();
+        [JsonProperty]
+        public Dictionary<EventType, bool> HaltsOnEvent { get; } = new ();
+
+        [JsonProperty]
+        private Dictionary<Entity, uint> FactionAccessRoles { get; set; } = new ();
+        internal ReadOnlyDictionary<Entity, AccessRole> AccessRoles => new (FactionAccessRoles.ToDictionary(kvp => kvp.Key, kvp => (AccessRole)kvp.Value));
+
+        [JsonProperty]
+        public IEventLog EventLog { get; internal set; }
+
+        /// <summary>
+        /// True for AI-controlled factions. The NPCDecisionProcessor only acts on factions where this is set.
+        /// </summary>
+        [JsonProperty]
+        public bool IsNPC { get; set; } = false;
+
+        /// <summary>
+        /// Strategic priority weights for NPC decision-making. Ignored for player factions.
+        /// </summary>
+        [JsonProperty]
+        public DoctrineVector Doctrine { get; set; } = new DoctrineVector();
+
+        public FactionInfoDB()
+        {
+            var componentDesigns = new Dictionary<string, ComponentDesign>();
+            var shipClasses = new Dictionary<string, ShipDesign>();
+            SetIndustryDesigns(componentDesigns, shipClasses);
+            HaltsOnEvent.Add(EventType.OrdersHalt, true);
+        }
+
+        public FactionInfoDB(
+            FactionDataStore factionDataStore,
+            List<Entity> species,
+            List<string> knownSystems,
+            List<Entity> colonies,
+            Dictionary<string, ComponentDesign> componentDesigns,
+            Dictionary<string, ShipDesign> shipClasses)
+        {
+            Data = factionDataStore;
+            Species = species;
+            KnownSystems = knownSystems;
+            Colonies = colonies;
+            InternalComponentDesigns = componentDesigns;
+            ShipDesigns = shipClasses;
+            KnownFactions = new List<Entity>();
+            SetIndustryDesigns(componentDesigns, shipClasses);
+            HaltsOnEvent.Add(EventType.OrdersHalt, true);
+        }
+
+
+        public FactionInfoDB(FactionInfoDB factionDB)
+        {
+            Data = factionDB.Data;
+            Species = new List<Entity>(factionDB.Species);
+            KnownSystems = new List<string>(factionDB.KnownSystems);
+            KnownFactions = new List<Entity>(factionDB.KnownFactions);
+            Colonies = new List<Entity>(factionDB.Colonies);
+            InternalKnownJumpPoints = new Dictionary<string, List<Entity>>(factionDB.KnownJumpPoints);
+
+            ShipDesigns = new Dictionary<string, ShipDesign>(factionDB.ShipDesigns);
+            InternalComponentDesigns = new Dictionary<string, ComponentDesign>(factionDB.ComponentDesigns);
+            IndustryDesigns = new Dictionary<string, IConstructableDesign>(factionDB.IndustryDesigns);
+            HaltsOnEvent.Add(EventType.OrdersHalt, true);
+
+        }
+
+        public override object Clone()
+        {
+            return new FactionInfoDB(this);
+        }
+
+        void SetIndustryDesigns(
+            Dictionary<string, ComponentDesign> componentDesigns,
+            Dictionary<string, ShipDesign> shipClasses)
+        {
+            foreach (var mat in Data.CargoGoods.GetMaterialsList())
+            {
+                IndustryDesigns[mat.UniqueID] = mat;
+            }
+            foreach (var design in componentDesigns)
+            {
+                IndustryDesigns[design.Key] = design.Value;
+            }
+            foreach (var design in shipClasses)
+            {
+                IndustryDesigns[design.Key] = design.Value;
+            }
+        }
+    }
+}

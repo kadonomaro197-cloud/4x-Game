@@ -1,0 +1,9 @@
+{
+    "Author": "Pulsar4x Tests",
+    "ModName": "CollectionOpTest",
+    "Version": "0.1",
+    "Namespace": "CollectionOpTest",
+    "DataFiles": [
+        "collectionOpData.json"
+    ]
+}
