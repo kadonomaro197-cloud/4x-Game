@@ -91,7 +91,7 @@ reflection — if it's in the assembly, it runs.
 | **Warp / jump movement** | `WarpMoveProcessor` | 🟡 PARTIAL | `WarpMoveTests` | ships, fuel, jump points |
 | **Nav sequence / pathfinding** | `NavSequenceProcessor`, `MoveStateProcessor` | 🟡 PARTIAL | `PathfindingTests` | fleets, orders, movement |
 
-### 3e. Space combat — **the pillar to mirror for ground combat (developer's objective)**
+### 3e. Space combat — **MVP Stage 1 + the pattern to mirror for ground combat (`docs/MVP.md`)**
 
 | System | Runs (processor) | Status | Can we see it? | Connected to |
 |--------|------------------|--------|----------------|--------------|
