@@ -1,0 +1,54 @@
+[
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "balanced",
+      "DisplayName": "Balanced",
+      "Family": "Utilitarian",
+      "FirepowerMult": 1.0,
+      "ToughnessMult": 1.0,
+      "SpeedMult": 1.0,
+      "CooldownSeconds": 60,
+      "IsRetreat": false
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "all-out-attack",
+      "DisplayName": "All-Out Attack",
+      "Family": "Offensive",
+      "FirepowerMult": 1.4,
+      "ToughnessMult": 0.85,
+      "SpeedMult": 1.1,
+      "CooldownSeconds": 300,
+      "IsRetreat": false
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "defensive-line",
+      "DisplayName": "Defensive Line",
+      "Family": "Defensive",
+      "FirepowerMult": 0.85,
+      "ToughnessMult": 1.4,
+      "SpeedMult": 0.8,
+      "CooldownSeconds": 300,
+      "IsRetreat": false
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "fighting-withdrawal",
+      "DisplayName": "Fighting Withdrawal",
+      "Family": "Defensive",
+      "FirepowerMult": 0.6,
+      "ToughnessMult": 1.1,
+      "SpeedMult": 1.2,
+      "CooldownSeconds": 120,
+      "IsRetreat": true
+    }
+  }
+]

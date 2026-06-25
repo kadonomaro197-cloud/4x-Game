@@ -1,0 +1,180 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Pulsar4X.Orbital;
+using Pulsar4X.DataStructures;
+using Pulsar4X.Extensions;
+using Pulsar4X.Fleets;
+using Pulsar4X.Orbits;
+using Pulsar4X.Ships;
+using Pulsar4X.Galaxy;
+using Pulsar4X.Engine.Orders;
+using Pulsar4X.Engine;
+
+namespace Pulsar4X.Movement
+{
+    public class MoveToNearestAction : EntityCommand
+    {
+        public override string Name => "Move to Nearest";
+        public override string Details => "Moves the fleet to the nearest X by filter.";
+
+        public override ActionLaneTypes ActionLanes { get; } = ActionLaneTypes.IneteractWithSelf | ActionLaneTypes.InteractWithEntitySameFleet | ActionLaneTypes.Movement;
+
+        public override bool IsBlocking => true;
+
+        /// <summary>
+        /// Entity commanding is a fleet in this action
+        /// </summary>
+        protected Entity _entityCommanding;
+        internal override Entity EntityCommanding
+        {
+            get { return _entityCommanding; }
+        }
+
+        public EntityManager.FilterEntities Filter { get; protected set; }
+
+        public delegate Entity EntitySelector(Entity entity);
+        public EntitySelector? TargetSelector { get; protected set; }
+        public EntityFilter EntityFactionFilter { get; protected set; } = EntityFilter.Friendly | EntityFilter.Neutral | EntityFilter.Hostile;
+
+        private List<EntityCommand> _shipCommands = new List<EntityCommand>();
+
+        internal override bool IsFinished()
+        {
+            return _isFinished = ShipsFinishedWarping();
+        }
+
+        internal override void Execute(DateTime atDateTime)
+        {
+            if(!IsRunning) FindNearestAndSetupWarpCommands();
+        }
+
+        private void FindNearestAndSetupWarpCommands()
+        {
+            if(!EntityCommanding.TryGetDataBlob<FleetDB>(out var fleetDB)) return;
+            if(fleetDB.FlagShipID == -1) return;
+            if(!EntityCommanding.Manager.TryGetEntityById(fleetDB.FlagShipID, out var flagship)) return;
+            if(!flagship.TryGetDataBlob<PositionDB>(out var flagshipPositionDB)) return;
+
+            // Get all entites based on the filter
+            List<Entity> filteredEntities = EntityCommanding.Manager.GetFilteredEntities(
+                EntityFactionFilter,
+                RequestingFactionGuid,
+                Filter);
+
+            Entity? closestValidEntity = null;
+            double closestDistance = double.MaxValue;
+
+            // Find the closest colony
+            foreach(var entity in filteredEntities)
+            {
+                if(!entity.TryGetDataBlob<PositionDB>(out var positionDB))
+                {
+                    continue;
+                }
+
+                var distance = positionDB.GetDistanceTo_m(flagshipPositionDB);
+                if(distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closestValidEntity = entity;
+                }
+            }
+
+            if(closestValidEntity == null) return;
+
+            var targetEntity = TargetSelector == null ? closestValidEntity : TargetSelector(closestValidEntity);
+
+            if(!targetEntity.TryGetDataBlob<PositionDB>(out var targetEntityPositionDB))
+            {
+                return;
+            }
+
+            if(targetEntityPositionDB.Parent == null) return;
+
+            double targetSMA = OrbitMath.LowOrbitRadius(targetEntityPositionDB.Parent);
+
+            // Get all the ships we need to add the movement command to
+            var ships = fleetDB.Children.Where(c => c.HasDataBlob<ShipInfoDB>());
+
+            foreach(var ship in ships)
+            {
+                if(!ship.HasDataBlob<WarpAbilityDB>()) continue;
+                if(!ship.TryGetDataBlob<PositionDB>(out var shipPositionDB)) continue;
+                if(shipPositionDB.Parent == targetEntityPositionDB.OwningEntity) continue;
+
+                var shipMass = ship.GetDataBlob<MassVolumeDB>().MassTotal;
+
+                (Vector3 position, DateTime _) = WarpMath.GetInterceptPosition
+                (
+                    ship,
+                    targetEntity.GetDataBlob<OrbitDB>(),
+                    EntityCommanding.StarSysDateTime
+                );
+
+                //var maxRangeRate = CargoTransferProcessor.GetMaxRangeRate(targetEntity, ship);
+
+                // Create the movement order
+                var cmd = WarpMoveCommand.CreateCommandEZ(
+                    ship,
+                    targetEntity,
+                    EntityCommanding.StarSysDateTime);
+                _shipCommands.Add(cmd);
+                ship.Manager.Game.OrderHandler.HandleOrder(cmd);
+            }
+
+            IsRunning = true;
+        }
+
+        private bool ShipsFinishedWarping()
+        {
+            if(!IsRunning) return false;
+
+            foreach(var command in _shipCommands)
+            {
+                if(!command.IsFinished())
+                    return false;
+            }
+            return true;
+        }
+
+        internal override bool IsValidCommand(Game game)
+        {
+            return true;
+        }
+
+        protected MoveToNearestAction() { }
+
+        protected static T CreateCommand<T>(int factionId, Entity commandingEntity) where T : MoveToNearestAction, new()
+        {
+            var command = new T()
+            {
+                _entityCommanding = commandingEntity,
+                UseActionLanes = true,
+                RequestingFactionGuid = factionId,
+                EntityCommandingGuid = commandingEntity.Id,
+            };
+
+            return command;
+        }
+
+        public override EntityCommand Clone()
+        {
+            var command = new MoveToNearestAction()
+            {
+                _entityCommanding = this._entityCommanding,
+                Filter = this.Filter,
+                UseActionLanes = this.UseActionLanes,
+                RequestingFactionGuid = this.RequestingFactionGuid,
+                EntityCommandingGuid = this.EntityCommandingGuid,
+                CreatedDate = this.CreatedDate,
+                ActionOnDate = this.ActionOnDate,
+                ActionedOnDate = this.ActionedOnDate,
+                IsRunning = this.IsRunning,
+                TargetSelector = this.TargetSelector
+            };
+
+            return command;
+        }
+    }
+}

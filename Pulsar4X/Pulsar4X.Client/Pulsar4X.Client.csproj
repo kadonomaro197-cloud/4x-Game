@@ -1,0 +1,171 @@
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <FileUpgradeFlags>40</FileUpgradeFlags>
+    <OldToolsVersion>Current</OldToolsVersion>
+    <ApplicationIcon>Resources\pulsaricon.ico</ApplicationIcon>
+    <Nullable>enable</Nullable>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Linux_x64' ">
+    <IntermediateOutputPath>obj\Linux_x64\Debug</IntermediateOutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>
+    </DebugType>
+    <OutputPath>bin\Linux_x64\Debug</OutputPath>
+    <DefineConstants>DEBUG</DefineConstants>
+    <NoWarn>
+    </NoWarn>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DefineConstants>DEBUG</DefineConstants>
+    <NoWarn>0414;0649;0169</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Linux_x64' ">
+    <IntermediateOutputPath>obj\Linux_x64\Release</IntermediateOutputPath>
+    <DebugType>
+    </DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\build\bin\Linux_x64\Release</OutputPath>
+    <DefineConstants>
+    </DefineConstants>
+    <NoWarn>
+    </NoWarn>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>Pulsar4X</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Windows_x64' ">
+    <IntermediateOutputPath>obj\Windows_x64\Debug</IntermediateOutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>
+    </DebugType>
+    <OutputPath>bin\Windows_x64\Debug</OutputPath>
+    <DefineConstants>DEBUG</DefineConstants>
+    <NoWarn>
+    </NoWarn>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Windows_x64' ">
+    <IntermediateOutputPath>obj\Windows_x64\Release</IntermediateOutputPath>
+    <DebugType>
+    </DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Windows_x64\Release</OutputPath>
+    <DefineConstants>
+    </DefineConstants>
+    <NoWarn>
+    </NoWarn>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Windows_x86' ">
+    <IntermediateOutputPath>obj\Windows_x86\Debug</IntermediateOutputPath>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>
+    </DebugType>
+    <OutputPath>bin\Windows_x86\Debug</OutputPath>
+    <DefineConstants>DEBUG</DefineConstants>
+    <NoWarn>
+    </NoWarn>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Windows_x86' ">
+    <IntermediateOutputPath>obj\Windows_x86\Release</IntermediateOutputPath>
+    <DebugType>
+    </DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Windows_x86\Release</OutputPath>
+    <DefineConstants>
+    </DefineConstants>
+    <NoWarn>
+    </NoWarn>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+
+    <PackageReference Include="Microsoft.Extensions.Configuration.Ini" Version="7.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GameEngine\GameEngine.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' ">
+    <Content Include="..\external\ImGui.NET\deps\cimgui\osx\cimgui.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>cimgui.dylib</Link>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Copy all resource files with PreserveNewest -->
+    <Content Include="Resources\**\*.bmp;Resources\**\*.png;Resources\**\*.ico;Resources\**\*.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+
+    <!-- Copy imgui.ini -->
+    <None Update="imgui.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+    <ItemGroup>
+        <!-- Linux dependencies -->
+        <Content Include="Libs/linux-x64/*.so">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <Link>%(Filename)%(Extension)</Link>
+        </Content>
+    </ItemGroup>
+    <ItemGroup>
+        <!-- Windows dependencies -->
+        <Content Include="Libs/win-x64/*.dll" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' ">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <Link>%(Filename)%(Extension)</Link>
+        </Content>
+    </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="ImGui.NET">
+      <HintPath>Libs\ImGui\ImGui.NET.dll</HintPath>
+    </Reference>
+    <Reference Include="SDL3-CS">
+      <HintPath>Libs\linux-x64\SDL3-CS.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!-- Define a custom property for the data path -->
+    <AppDataPath Condition="'$(OS)' == 'Windows_NT'">$(APPDATA)\Pulsar4X\Pulsar4X</AppDataPath>
+    <AppDataPath Condition="'$(OS)' != 'Windows_NT'">$(HOME)/.local/share/Pulsar4X/Pulsar4X</AppDataPath>
+  </PropertyGroup>
+
+  <Target Name="WriteGitHash" BeforeTargets="CoreCompile">
+    <!-- names the obj/.../CustomAssemblyInfo.cs file -->
+    <PropertyGroup>
+      <CustomAssemblyInfoFile>$(IntermediateOutputPath)CustomAssemblyInfo.cs</CustomAssemblyInfoFile>
+    </PropertyGroup>
+    <!-- includes the CustomAssemblyInfo for compilation into your project -->
+    <ItemGroup>
+      <Compile Include="$(CustomAssemblyInfoFile)" />
+    </ItemGroup>
+    <!-- defines the AssemblyMetadata attribute that will be written -->
+    <ItemGroup>
+      <AssemblyAttributes Include="AssemblyMetadata">
+        <_Parameter1>GitHash</_Parameter1>
+        <_Parameter2>$(BuildHash)</_Parameter2>
+      </AssemblyAttributes>
+    </ItemGroup>
+    <!-- writes the attribute to the customAssemblyInfo file -->
+    <WriteCodeFragment Language="C#" OutputFile="$(CustomAssemblyInfoFile)" AssemblyAttributes="@(AssemblyAttributes)" />
+  </Target>
+  <Target Name="CleanDataDirectory" BeforeTargets="PreBuildEvent">
+    <!--<RemoveDir Directories="$(OutputPath)Data" />-->
+  </Target>
+  <Target Name="CopyJsonData" AfterTargets="Build">
+    <ItemGroup>
+      <JsonDataFiles Include="..\GameData\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(JsonDataFiles)" DestinationFolder="$(AppDataPath)\Mods\%(RecursiveDir)" />
+  </Target>
+
+</Project>

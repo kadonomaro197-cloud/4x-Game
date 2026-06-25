@@ -1,0 +1,33 @@
+[
+  {
+    "Type": "Theme",
+    "Payload": {
+      "UniqueID": "collectionop-theme",
+      "Name": "Collection Op Test Theme"
+    }
+  },
+  {
+    "Type": "Theme",
+    "CollectionOperation": "Add",
+    "Payload": {
+      "UniqueID": "collectionop-theme",
+      "FirstNames": [ "Alpha", "Beta" ]
+    }
+  },
+  {
+    "Type": "Theme",
+    "CollectionOperation": "Overwrite",
+    "Payload": {
+      "UniqueID": "collectionop-theme",
+      "NavyRanks": { "1": "Rank One" }
+    }
+  },
+  {
+    "Type": "Theme",
+    "CollectionOperation": "Remove",
+    "Payload": {
+      "UniqueID": "collectionop-theme",
+      "NavyRanksAbbreviations": { "1": "R1" }
+    }
+  }
+]
