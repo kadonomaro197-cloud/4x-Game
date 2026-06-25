@@ -13,12 +13,17 @@ namespace Pulsar4X.Tests
     /// MVP combat spine, step 4 — the in-game battle trigger (<see cref="CombatEngagement"/> +
     /// <see cref="BattleTriggerProcessor"/>).
     ///
-    /// Two HOSTILE fleets that come within range auto-engage and fight to a finish over game-time; SAME-faction
-    /// fleets never engage. These are integration tests: they advance the clock and let the auto-discovered
-    /// BattleTriggerProcessor run, so they also prove the live-loop hook doesn't throw. Engine-only -> runs in CI.
+    /// Coverage:
+    ///  - <see cref="Engagement_StrongerFleet_WipesWeaker"/> drives the engagement directly (Start + Step),
+    ///    deterministically, to prove the salvo math, casualties, and end-state (no AdvanceTime timing).
+    ///  - <see cref="Trigger_AutoEngages_HostileFleetsInRange"/> advances the clock and lets the auto-discovered
+    ///    processor detect + resolve the fight — proving the live-loop hook fires (and doesn't throw).
+    ///  - <see cref="SameFactionFleets_DoNotEngage"/> proves friend/foe: same-faction fleets never fight.
     ///
-    /// Ships are built real (so they are valid, positioned entities the engine can destroy) and then stamped with
-    /// KNOWN combat values, so the outcome is deterministic regardless of what the starting designs rate.
+    /// Ships are built under the PLAYER faction (which has the full material/cargo setup needed to build a hull),
+    /// then their FactionOwnerID is flipped to the intended owner — combat only reads that int. Each ship is then
+    /// stamped with a KNOWN <see cref="ShipCombatValueDB"/>, so outcomes are deterministic. TestScenario builds no
+    /// starting fleets (wizard path), so the only fleets present are the ones these tests create.
     /// </summary>
     [TestFixture]
     public class BattleTriggerTests
@@ -33,15 +38,53 @@ namespace Pulsar4X.Tests
         private static Entity AddShip(TestScenario s, Entity faction, Entity fleet, double firepower, double toughness, string name)
         {
             var design = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns.Values.First();
-            var ship = ShipFactory.CreateShip(design, faction, s.StartingBody, name);
+            // Build with the player faction — a bare CreateBasicFaction enemy can't build a hull (its thruster
+            // fuel-material lookup is empty -> throws). Combat only reads FactionOwnerID, so flip it after.
+            var ship = ShipFactory.CreateShip(design, s.Faction, s.StartingBody, name);
+            ship.FactionOwnerID = faction.Id;
             ship.SetDataBlob(new ShipCombatValueDB(firepower, toughness, 1.0));
             s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(faction.Id, fleet, ship));
             return ship;
         }
 
         [Test]
-        [Description("Two hostile fleets within range auto-engage; the stronger wipes the weaker and the engagement ends (state cleared on both fleets).")]
-        public void HostileFleetsInRange_AutoEngage_StrongerWins()
+        [Description("Driven directly: a 3-ship fleet wipes a lone unarmed enemy, takes no losses, and the engagement state clears on both fleets.")]
+        public void Engagement_StrongerFleet_WipesWeaker()
+        {
+            var s = TestScenario.CreateWithColony();
+            var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+
+            var strongFleet = MakeFleet(s, enemyFaction, "Red Fleet");
+            AddShip(s, enemyFaction, strongFleet, 50_000, 1_000_000, "Red 1");
+            AddShip(s, enemyFaction, strongFleet, 50_000, 1_000_000, "Red 2");
+            AddShip(s, enemyFaction, strongFleet, 50_000, 1_000_000, "Red 3");
+
+            var weakFleet = MakeFleet(s, s.Faction, "Blue Fleet");
+            var weakShip = AddShip(s, s.Faction, weakFleet, 0, 1_000_000, "Blue 1"); // unarmed -> loses
+
+            // Sanity: assignment actually populated the fleets before we fight.
+            Assert.That(CombatEngagement.GetFleetShips(strongFleet).Count, Is.EqualTo(3), "strong fleet should have 3 ships");
+            Assert.That(CombatEngagement.GetFleetShips(weakFleet).Count, Is.EqualTo(1), "weak fleet should have 1 ship");
+
+            CombatEngagement.StartEngagement(weakFleet, strongFleet);
+            Assert.That(weakFleet.HasDataBlob<FleetCombatStateDB>(), Is.True, "engagement should have started");
+
+            int steps = 0;
+            for (; steps < 1000 && weakFleet.HasDataBlob<FleetCombatStateDB>(); steps++)
+                CombatEngagement.StepEngagement(weakFleet, strongFleet, 5);
+
+            Log($"resolved in {steps} steps; weak={CombatEngagement.GetFleetShips(weakFleet).Count} strong={CombatEngagement.GetFleetShips(strongFleet).Count}");
+
+            Assert.That(weakFleet.HasDataBlob<FleetCombatStateDB>(), Is.False, "engagement should have ended");
+            Assert.That(strongFleet.HasDataBlob<FleetCombatStateDB>(), Is.False, "engagement should have ended on both sides");
+            Assert.That(CombatEngagement.GetFleetShips(weakFleet).Count, Is.EqualTo(0), "the weaker fleet should be wiped");
+            Assert.That(CombatEngagement.GetFleetShips(strongFleet).Count, Is.EqualTo(3), "the stronger fleet should take no losses from an unarmed enemy");
+            Assert.That(weakShip.IsValid, Is.False, "the destroyed ship should be invalid");
+        }
+
+        [Test]
+        [Description("Live trigger: two hostile fleets in range auto-engage as the clock advances; the unarmed player ship is destroyed and the enemy survives.")]
+        public void Trigger_AutoEngages_HostileFleetsInRange()
         {
             var s = TestScenario.CreateWithColony();
             var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
@@ -52,21 +95,15 @@ namespace Pulsar4X.Tests
             AddShip(s, enemyFaction, enemyFleet, 50_000, 1_000_000, "Red 3");
 
             var playerFleet = MakeFleet(s, s.Faction, "Blue Fleet");
-            var playerShip = AddShip(s, s.Faction, playerFleet, 0, 1_000_000, "Blue 1"); // unarmed -> loses
+            var playerShip = AddShip(s, s.Faction, playerFleet, 0, 1_000_000, "Blue 1");
 
             // Let the auto-discovered BattleTriggerProcessor detect + resolve the fight over game-time.
-            s.AdvanceTime(TimeSpan.FromMinutes(5));
+            s.AdvanceTime(TimeSpan.FromMinutes(10));
 
-            int enemyShips = CombatEngagement.GetFleetShips(enemyFleet).Count;
-            int playerShips = CombatEngagement.GetFleetShips(playerFleet).Count;
-            Log($"after battle: enemyShips={enemyShips} playerShips={playerShips} " +
-                $"enemyEngaged={enemyFleet.HasDataBlob<FleetCombatStateDB>()} playerEngaged={playerFleet.HasDataBlob<FleetCombatStateDB>()}");
+            Log($"after advance: playerValid={playerShip.IsValid} enemyShips={CombatEngagement.GetFleetShips(enemyFleet).Count}");
 
-            Assert.That(playerShips, Is.EqualTo(0), "the unarmed fleet should have been destroyed");
-            Assert.That(enemyShips, Is.EqualTo(3), "the armed fleet should lose nobody to an unarmed enemy");
-            Assert.That(enemyFleet.HasDataBlob<FleetCombatStateDB>(), Is.False, "engagement should have ended (state cleared)");
-            Assert.That(playerFleet.HasDataBlob<FleetCombatStateDB>(), Is.False, "engagement should have ended (state cleared)");
-            Assert.That(playerShip.IsValid, Is.False, "the destroyed ship should be invalid");
+            Assert.That(playerShip.IsValid, Is.False, "the live trigger should have engaged and destroyed the unarmed player ship");
+            Assert.That(CombatEngagement.GetFleetShips(enemyFleet).Count, Is.GreaterThan(0), "the armed enemy fleet should survive");
         }
 
         [Test]
