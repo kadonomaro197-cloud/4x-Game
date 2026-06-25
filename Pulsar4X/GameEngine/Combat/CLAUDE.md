@@ -296,6 +296,19 @@ explicit `TriangleBonus` (a tunable class-vs-class modifier) and the Capital▸B
 **range**, a v1 stub) are refinements on top. `AutoResolve` (the pure ship-list variant) stays dodge-free, like
 it stays doctrine-free.
 
+**Combat pace — the hot-damage rebalance (2026-06-25).** The raw numbers were "hot": a hull is built from
+~100 kJ components but a gun pours ~1 MJ/sec, so ships died in ~1 second of fire and whole fleet battles ended in
+**2–4 salvos (10–20 game-seconds)** — faster than the default 1-hour master tick, i.e. over before you could
+watch or steer them. `StepEngagementGroup` now multiplies each salvo's pooled damage by **`SalvoDamageScale`**
+(0.1), so only a tenth of the raw energy counts toward kills per step — the same fight now plays out over **~10×
+more salvos** (a couple of game-minutes you can watch and change doctrine inside). Because the scale is **uniform**
+(every fleet's incoming fire is scaled by the same factor), it changes battle **duration, not the outcome**: who
+wins, the exchange ratio, and every weapon-triangle/dodge/doctrine finding are unchanged — only the salvo count
+to get there rises. It is the single tunable for the "per-shot-energy ÷ hull-toughness" balance the
+`WeaponTriangleBattleTests` docstring flagged as a v2 pass. It lives ONLY on the stepped (live, watchable)
+resolve; `AutoResolve` (the instant off-screen resolver) stays unscaled on purpose — a battle nobody watches
+needn't be paced out. Measured before/after numbers: `CombatStressLab` + `CombatBattleSims`.
+
 **Test:** `Pulsar4X.Tests/DodgeResolveTests.cs` — the `HitFraction` curve (beams ignore evasion, slugs are
 dodged, flak floors it); and through the resolve, slug fire kills the un-evasive battleship while the fighter
 (same toughness, only evasion differs) dodges and survives.
@@ -322,6 +335,7 @@ dodged, flak floors it); and through the resolve, slug fire kills the un-evasive
 | `CombatEngagement.SaturationReference` | 50 | saturation (tracks/sec) at which a weapon half-guarantees a hit regardless of dodge (flak ≫ this) | `CombatEngagement.cs` |
 | `CombatEngagement.MinLandedFraction` | 0.02 | floor on fire that lands — enough volume kills even a perfect dodger | `CombatEngagement.cs` |
 | `CombatEngagement.FallbackBeamVelocity_mps` | 1e8 | an unarmed-profile (old-style) ship fires as this light-speed always-hit beam → dodge degrades to old behaviour | `CombatEngagement.cs` |
+| `CombatEngagement.SalvoDamageScale` | 0.1 | **the combat-pace dial** — fraction of a salvo's raw energy that counts toward kills; <1 stretches a battle over more salvos (effectively "every hull is 1/scale tougher"). Uniform, so it changes battle DURATION, not who wins. The "per-shot-energy ÷ hull-toughness" knob (hot-damage rebalance 2026-06-25) | `CombatEngagement.cs` |
 | `BattleTriggerProcessor` run frequency | 5 s | how often each system is scanned for battles | `BattleTriggerProcessor.cs` |
 
 ---

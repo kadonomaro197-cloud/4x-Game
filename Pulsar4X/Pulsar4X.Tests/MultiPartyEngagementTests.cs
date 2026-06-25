@@ -181,17 +181,18 @@ namespace Pulsar4X.Tests
             var s = TestScenario.CreateWithColony();
             var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
 
-            // The lone gun: 100k dps, effectively unkillable for the test. Each target is tough enough that HALF
-            // the gun's fire (one step) can't kill it, but its FULL fire (or two steps of half) can. So:
-            //   • fire divided  -> 50k/s each -> 250k/step  -> neither dies on step 1, both die on step 2.
-            //   • fire NOT split -> 100k/s each -> 500k/step -> both would die on step 1 (the bug we guard against).
+            // The lone gun: 100k dps, effectively unkillable for the test. Each target (40k toughness) is tough
+            // enough that HALF the gun's fire (one step) can't kill it, but its FULL fire (or two steps of half)
+            // can — at the SalvoDamageScale combat pace, a salvo deposits dps × 5s × 0.1. So:
+            //   • fire divided  -> 50k/s each  -> 25k/step -> neither dies on step 1, both die on step 2 (50k > 40k).
+            //   • fire NOT split -> 100k/s each -> 50k/step -> both would die on step 1 (the bug we guard against).
             var gun = MakeFleet(s, enemyFaction, "Spinal Gun");
             var gunShip = AddWarship(s, enemyFaction, gun, 100_000, 1_000_000_000, "Gun");
 
             var target1 = MakeFleet(s, s.Faction, "Target One");
-            var target1Ship = AddWarship(s, s.Faction, target1, 0, 300_000, "T1");
+            var target1Ship = AddWarship(s, s.Faction, target1, 0, 40_000, "T1");
             var target2 = MakeFleet(s, s.Faction, "Target Two");
-            var target2Ship = AddWarship(s, s.Faction, target2, 0, 300_000, "T2");
+            var target2Ship = AddWarship(s, s.Faction, target2, 0, 40_000, "T2");
 
             CombatEngagement.EnsureInCombat(gun, target1.Id);
             CombatEngagement.EnsureInCombat(target1, gun.Id);

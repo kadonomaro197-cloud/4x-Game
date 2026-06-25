@@ -16,11 +16,12 @@ namespace Pulsar4X.Tests
     /// All three tests are calibration-ROBUST by ISOLATING evasion: identical forces that differ ONLY in whether
     /// the fighters can dodge, so whatever the absolute damage numbers, the dodge is the only variable and the side
     /// that can dodge ends better. (The screen tests vary the weapon flavor on identical fighter screens; the
-    /// swarm test zeroes the fighters' evasion on one of two identical swarms.) Calibration note found building
-    /// these: at the current default weapon/toughness numbers, weapons are hot relative to hull toughness — a
-    /// capital's railgun volley one-shots a handful of fighters — so the iconic "a few fighters survive a
-    /// battleship" only reads cleanly with a large swarm; the per-shot-energy vs toughness balance is a v2 tuning
-    /// pass (same family as the known missile one-shot note). Engine-only -> runs in CI.
+    /// swarm test zeroes the fighters' evasion on one of two identical swarms.) Pace note: the hot-damage rebalance
+    /// (2026-06-25) added <see cref="CombatEngagement.SalvoDamageScale"/> (0.1) so a salvo deposits a tenth of its
+    /// raw energy — a capital no longer one-shots a wing of fighters; the same fight just plays out over ~10× more
+    /// salvos. Because the scale is uniform it doesn't change these evasion-isolated OUTCOMES (the dodging side
+    /// still ends better) — only how many steps it takes, so the loop caps below were raised ~10× to match the
+    /// slower pace. Engine-only -> runs in CI.
     /// </summary>
     [TestFixture]
     public class WeaponTriangleBattleTests
@@ -102,13 +103,13 @@ namespace Pulsar4X.Tests
             AddGun(s, red, beamGun, new WeaponProfile(WeaponClass.Beam, dps, 3e8, 0.95, 0.5), "Beamer");
             var beamScreen = MakeFleet(s, s.Faction, "Beam-side Screen");
             for (int i = 0; i < screen; i++) AddReal(s, s.Faction, beamScreen, Fighter, "BW" + i);
-            int survivesBeam = RunBattle(beamGun, beamScreen, 40);
+            int survivesBeam = RunBattle(beamGun, beamScreen, 400);
 
             var slugGun = MakeFleet(s, red, "Slug Battery");
             AddGun(s, red, slugGun, new WeaponProfile(WeaponClass.Railgun, dps, 50_000, 0.05, 5), "Slugger");
             var slugScreen = MakeFleet(s, s.Faction, "Slug-side Screen");
             for (int i = 0; i < screen; i++) AddReal(s, s.Faction, slugScreen, Fighter, "SW" + i);
-            int survivesRailgun = RunBattle(slugGun, slugScreen, 40);
+            int survivesRailgun = RunBattle(slugGun, slugScreen, 400);
 
             Log($"equal {dps:0} dps on identical fighter screens -> survivors: beam={survivesBeam}/{screen}  railgun={survivesRailgun}/{screen}");
             Assert.That(survivesRailgun, Is.GreaterThan(survivesBeam),
@@ -128,13 +129,13 @@ namespace Pulsar4X.Tests
             AddGun(s, red, slugGun, new WeaponProfile(WeaponClass.Railgun, dps, 50_000, 0.05, 5), "Slugger");
             var slugScreen = MakeFleet(s, s.Faction, "Slug-side Screen");
             for (int i = 0; i < screen; i++) AddReal(s, s.Faction, slugScreen, Fighter, "SW" + i);
-            int survivesRailgun = RunBattle(slugGun, slugScreen, 40);
+            int survivesRailgun = RunBattle(slugGun, slugScreen, 400);
 
             var flakGun = MakeFleet(s, red, "Flak Battery");
             AddGun(s, red, flakGun, new WeaponProfile(WeaponClass.Flak, dps, 20_000, 0.10, 300), "Flakker");
             var flakScreen = MakeFleet(s, s.Faction, "Flak-side Screen");
             for (int i = 0; i < screen; i++) AddReal(s, s.Faction, flakScreen, Fighter, "FW" + i);
-            int survivesFlak = RunBattle(flakGun, flakScreen, 40);
+            int survivesFlak = RunBattle(flakGun, flakScreen, 400);
 
             Log($"equal {dps:0} dps on identical fighter screens -> survivors: railgun={survivesRailgun}/{screen}  flak={survivesFlak}/{screen}");
             Assert.That(survivesFlak, Is.LessThan(survivesRailgun),
@@ -155,14 +156,14 @@ namespace Pulsar4X.Tests
             double waspEvasion = CombatEngagement.GetFleetShips(evasive)[0].GetDataBlob<ShipCombatValueDB>().Evasion;
             var capA = MakeFleet(s, red, "Capital A");
             AddReal(s, red, capA, Capital, "Leviathan A");
-            var (capALeft, evasiveLeft) = RunSwarmVsCapital(evasive, capA, 100);
+            var (capALeft, evasiveLeft) = RunSwarmVsCapital(evasive, capA, 1000);
 
             // The SAME Wasp swarm with evasion zeroed (sitting ducks) vs an identical Leviathan.
             var ducks = MakeFleet(s, s.Faction, "Sitting-Duck Wing");
             for (int i = 0; i < N; i++) AddDuck(s, s.Faction, ducks, "D" + i);
             var capB = MakeFleet(s, red, "Capital B");
             AddReal(s, red, capB, Capital, "Leviathan B");
-            var (capBLeft, ducksLeft) = RunSwarmVsCapital(ducks, capB, 100);
+            var (capBLeft, ducksLeft) = RunSwarmVsCapital(ducks, capB, 1000);
 
             Log($"{N} fighters vs identical capitals (real wasp evasion={waspEvasion:0.###}): " +
                 $"evasive survivors={evasiveLeft}, sitting-duck survivors={ducksLeft}; capitals left A={capALeft} B={capBLeft}");

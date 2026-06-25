@@ -62,6 +62,28 @@ namespace Pulsar4X.Combat
         /// always lands — so the dodge model degrades exactly to the pre-dodge behaviour. Backward-compat.</summary>
         public const double FallbackBeamVelocity_mps = 100_000_000.0;
 
+        // --- combat PACE (the hot-damage rebalance, 2026-06-25) -----------------------------------------------
+
+        /// <summary>
+        /// THE COMBAT-PACE DIAL — how much of a salvo's raw weapon energy actually counts toward kills each step.
+        ///
+        /// Plain English: with the raw numbers, weapons were "hot" — a hull is built from components worth ~100 kJ
+        /// each, but a single gun pours ~1 MJ/sec, so a ship died in about one second of fire and whole fleet
+        /// battles were over in 2–4 salvos (10–20 game-seconds). That's faster than the game clock's default
+        /// 1-hour tick — the fight was finished before you could watch it or change a doctrine. Think of this dial
+        /// as "every hull is secretly 1/scale times tougher than its parts add up to": at 0.1 a ship soaks 10× the
+        /// punishment, so the SAME battle plays out over ~10× more salvos (a couple of minutes of game-time you can
+        /// actually watch and steer) — WITHOUT changing who wins or the exchange ratio, because it scales every
+        /// fleet's incoming fire by the same factor. Turn it DOWN to make battles drag out longer, UP to make
+        /// them deadlier. It is the single knob for the "per-shot-energy ÷ hull-toughness" balance.
+        ///
+        /// It lives here, on the STEPPED resolve (the live, watchable battle path the trigger drives), on purpose:
+        /// <see cref="AutoResolve"/> is the pure "instant" resolver for an off-screen fight nobody is watching, so
+        /// it stays unscaled (a battle no one sees needn't be paced out). If a future version routes live battles
+        /// through AutoResolve, give it the same dial.
+        /// </summary>
+        public const double SalvoDamageScale = 0.1;
+
         /// <summary>One trigger pass over a system: engage/join hostile fleets, then step the engagement. Returns
         /// the number of fleets seen. Defensive — built not to throw on normal game state.</summary>
         public static int Tick(EntityManager manager, int deltaSeconds)
@@ -192,7 +214,9 @@ namespace Pulsar4X.Combat
                     if (split <= 0) continue;
                     AddScaledFire(incoming, fire[g], 1.0 / split);
                 }
-                state.DamageTakenPool += TotalDamage(incoming) * dt;
+                // SalvoDamageScale is the combat-pace dial: only this fraction of the raw salvo energy counts
+                // toward kills, so battles play out over many salvos instead of ending in 2–4 (see the const).
+                state.DamageTakenPool += TotalDamage(incoming) * dt * SalvoDamageScale;
                 ApplyCasualties(ships[i], state, incoming); // prunes the dead from ships[i]
             }
 
