@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using Pulsar4X.Components;
 using Pulsar4X.Damage;
@@ -35,6 +36,15 @@ namespace Pulsar4X.Combat
     {
         /// <summary>Flat firepower (J/s) a single missile launcher contributes until ordnance energy is wired (v2).</summary>
         public const double MissileLauncherFirepowerStub = 100_000.0;
+
+        /// <summary>v1 stub: a missile's shot velocity (m/s) until ordnance speed is read from the design (v2). Slow vs a beam.</summary>
+        public const double MissileVelocityStub_mps = 5_000.0;
+
+        /// <summary>v1 stub: missiles are guided, so they track an evasive target well (0..1).</summary>
+        public const double MissileTrackingStub = 0.9;
+
+        /// <summary>v1 stub: a launcher's effective tracks/sec until salvo size + reload are read (v2).</summary>
+        public const double MissileSaturationStub = 1.0;
 
         /// <summary>Role weight for a hull that carries no weapons (utility/transport). v1 stub.</summary>
         public const double UtilityRoleWeight = 0.25;
@@ -76,6 +86,11 @@ namespace Pulsar4X.Combat
         /// v1 stub: sensors and crew experience are not yet factored (flagged for v2). Used by the dodge model.</summary>
         [JsonProperty] public double Evasion { get; internal set; }
 
+        /// <summary>The ship's weapons as flavor profiles (damage/velocity/tracking/saturation per weapon) — the
+        /// per-weapon-type breakdown the dodge model + weapon triangle read. <see cref="Firepower"/> is the sum of
+        /// these profiles' damage. Empty for an unarmed hull. See docs/WEAPONS-AND-DODGE-DESIGN.md.</summary>
+        [JsonProperty] public List<WeaponProfile> Weapons { get; internal set; } = new();
+
         public ShipCombatValueDB() { }
 
         public ShipCombatValueDB(double firepower, double toughness, double roleWeight)
@@ -91,6 +106,9 @@ namespace Pulsar4X.Combat
             Toughness = db.Toughness;
             RoleWeight = db.RoleWeight;
             Evasion = db.Evasion;
+            Weapons = new List<WeaponProfile>();
+            if (db.Weapons != null)
+                foreach (var w in db.Weapons) Weapons.Add(new WeaponProfile(w));
         }
 
         public override object Clone()
@@ -104,8 +122,8 @@ namespace Pulsar4X.Combat
         /// </summary>
         public static ShipCombatValueDB Calculate(Entity ship)
         {
-            double firepower = 0;
             double toughness = 0;
+            var weapons = new List<WeaponProfile>();
 
             if (ship.TryGetDataBlob<ComponentInstancesDB>(out var instances))
             {
@@ -113,7 +131,8 @@ namespace Pulsar4X.Combat
                 foreach (var comp in instances.AllComponents.Values)
                     toughness += comp.HealthPercent * ComponentHitPoints_J;
 
-                // Firepower from beam weapons: joules-per-second = Energy / ChargePeriod, scaled by health.
+                // Beam weapons: damage/sec = Energy / ChargePeriod (scaled by health); ~light-speed; tracks well
+                // (BaseHitChance); saturation = one pulse per charge period (its rate of fire).
                 if (instances.TryGetComponentsByAttribute<GenericBeamWeaponAtb>(out var beams))
                 {
                     foreach (var comp in beams)
@@ -121,16 +140,21 @@ namespace Pulsar4X.Combat
                         if (comp.Design.TryGetAttribute<GenericBeamWeaponAtb>(out var beam))
                         {
                             double period = beam.ChargePeriod > 0 ? beam.ChargePeriod : 1.0;
-                            firepower += (beam.Energy / period) * comp.HealthPercent;
+                            double dps = (beam.Energy / period) * comp.HealthPercent;
+                            weapons.Add(new WeaponProfile(WeaponClass.Beam, dps, beam.BeamSpeed, beam.BaseHitChance, 1.0 / period));
                         }
                     }
                 }
 
-                // Firepower from missile launchers: flat stub each until warhead energy is wired (v2).
+                // Missile launchers: flat damage stub each (warhead energy is v2); slow + guided (tracks) — the
+                // weapon flak answers. Velocity/tracking/saturation are v1 stubs.
                 if (instances.TryGetComponentsByAttribute<MissileLauncherAtb>(out var launchers))
                 {
                     foreach (var comp in launchers)
-                        firepower += MissileLauncherFirepowerStub * comp.HealthPercent;
+                    {
+                        double dps = MissileLauncherFirepowerStub * comp.HealthPercent;
+                        weapons.Add(new WeaponProfile(WeaponClass.Missile, dps, MissileVelocityStub_mps, MissileTrackingStub, MissileSaturationStub));
+                    }
                 }
             }
 
@@ -138,10 +162,18 @@ namespace Pulsar4X.Combat
             if (ship.TryGetDataBlob<EntityDamageProfileDB>(out var dmgProfile))
                 toughness += dmgProfile.Armor.thickness * ArmorHitPointsPerThickness_J;
 
+            // Firepower is the sum of every weapon's damage/sec (same value as before — backward compatible).
+            double firepower = 0;
+            foreach (var w in weapons) firepower += w.DamagePerSecond;
+
             // Role: anything that can shoot is a combatant; everything else is a low-priority utility hull.
             double roleWeight = firepower > 0 ? 1.0 : UtilityRoleWeight;
 
-            return new ShipCombatValueDB(firepower, toughness, roleWeight) { Evasion = CalculateEvasion(ship) };
+            return new ShipCombatValueDB(firepower, toughness, roleWeight)
+            {
+                Evasion = CalculateEvasion(ship),
+                Weapons = weapons,
+            };
         }
 
         /// <summary>
