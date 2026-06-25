@@ -479,3 +479,22 @@ If build/test fails → paste error output here → Claude fixes → repeat.
 **Hard-won lesson (now in `Combat/CLAUDE.md`):** adding a player-buildable weapon touches **six** registration points — the C# Atb, the `weapons.json` template, the `componentDesigns.json` design, and **three** lists in `earth.json` (`StartingItems` unlocks the template, `ComponentDesigns` builds it, `ShipDesigns` mounts it). Miss any one and New Game crashes (but `dotnet test` over the C# path looks fine). CI's `CreateWithColony` harness is the standing sensor — it builds every starting design from JSON, so a missing registration fails loudly there.
 
 **Still open / v2:** Capital▸Beam range edge, degraded-condition tiers (need recalc-combat-value-on-damage), explicit TriangleBonus tuning knob, and the per-pixel firing sim (parked — these weapons feed the auto-resolve only). Next big arc per the developer objective: **ground combat**, mirroring this now-solid space-combat spine.
+
+---
+
+## Session 2026-06-25 (cont.) — live-test: Fleet Combat UI + the "click a hostile ship → crash" bug (branch `claude/focused-ritchie-debock`)
+
+**Live test result:** New Game started, the **Fleet Combat tab showed and doctrine selection worked** (`[FleetCombat] Set doctrine … OK` in the log). The developer spawned 6 hostile "Cargo Courier" ships around Ceres (`[DevTools] Spawn Hostile Fleet OK … fleet id=700`), zoomed in, clicked Ceres — and the game **crashed** (looked like a freeze; `game_log.txt` ended clean right after the spawn line).
+
+**Root cause (provable, three code traces + the build log agreed):** a pre-existing latent client bug my hostile-spawn feature *exposed* — it's the first time a player could click a foreign-faction ship. Zoomed in, ships render at ~2× body radius, so they sit **on top of** the Ceres icon (Client gotcha #7) — the click opened the *ship's* `EntityWindow`, whose cargo-bar block did `factionInfoDB.Data.CargoTypes[sid].Name` on the **Hostiles** faction. A bare faction's `CargoTypes` is **empty** (everything's in `LockedCargoTypes` until tech unlock — Factions gotcha #4), so the hard index threw `KeyNotFoundException`. The SDL `Run` loop has **no try/catch** → the process crashed, and the trace went to **stderr**, which isn't in `game_log.txt` (Program.cs redirects stdout only) → invisible, looked like a hang.
+
+**Fixed (client-only — CI can't build the client, so this needs your local `dotnet build`):**
+- **Defensive cargo-type lookup** at the three sites that read an *owner* faction's cargo types (unlocked → locked → fall back to the id, never a hard index): `EntityWindow.cs` (ship cargo bars), `CargoStorageDBDisplay.cs`, `CreateTransferWindow.cs`.
+- **A render-loop visibility gauge** — `PulsarMainWindow.SafeRender(...)` wraps the map draw + every window's `Display()`; if one throws, it logs the full stack trace **once** to `game_log.txt` (`[RenderError] <context> …`) and skips just that piece instead of crashing the whole app. So the *next* hidden render crash names itself in the log. (Client gotchas #11–#12.)
+
+**Pull + retest:** `git pull origin claude/focused-ritchie-debock` → `dotnet build Pulsar4X/Pulsar4X.sln` → run → spawn hostiles, zoom in, **click a hostile ship** (the exact repro). It should no longer crash. If anything else faults, grep `game_log.txt` for `[RenderError]` and send me that block — it'll name the window.
+
+**Still open from this live test:**
+- **Fleet-component split UX** — the developer couldn't find how to divide the starting fleet into components (sub-fleets). The capability exists (Fleet tree → sub-fleet doctrine); it needs a discoverable affordance in the Fleet window. **Next task.**
+- Confirm whether pressing **play** auto-starts the battle, or whether the "Force Engagement" fallback is needed (the test harness couldn't settle this — Combat sandbox gotcha #2).
+- Deferred (developer's call, "later"): move game data out of `%AppData%\…\Pulsar4X\`; make `launch.bat` capture `game_log.txt` (the runtime log) instead of the build-only `console_output.txt`.
