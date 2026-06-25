@@ -14,8 +14,11 @@ It deliberately does **not** use the per-pixel damage sim (`Damage/DamageComplex
 |------|---------|--------|
 | `ShipCombatValueDB.cs` | DataBlob: a ship's **Firepower** (joules/sec from beams + a missile-launcher stub) and **Toughness** (live components + armour), plus a **RoleWeight**. Computed once at build time. `ShipCombatValueDB.Calculate(Entity)` is the calculator. | ✅ built (spine step 2) |
 | `AutoResolve.cs` | The salvo-exchange resolver: `AutoResolve.Resolve(sideA, sideB, config)` runs the math loop (strength → damage pools → whole-ship casualties, combatants first) until one side is gone, both are, or a frozen fight hits the round cap. Returns an `AutoResolveResult` (outcome + casualty lists); **pure** — it reports casualties, it does not destroy them. Plus `AutoResolveConfig`, `BattleOutcome`. | ✅ built (spine step 3) |
+| `FleetCombatStateDB.cs` | DataBlob marking a fleet as **engaged** (opponent fleet id, accumulated damage pool, steps fought). On both fleets during a battle; removed when it ends. Its presence is the "in combat" flag the engagement lock (step 11) keys on. | ✅ built (spine step 4) |
+| `CombatEngagement.cs` | The trigger's engine logic: `Tick(manager, dt)` finds hostile fleets in range, starts engagements, and steps active ones (incremental over game-time) until one side is wiped. Hostility/range/detection are v1 stubs. Testable directly. | ✅ built (spine step 4) |
+| `BattleTriggerProcessor.cs` | `IHotloopProcessor` (every 5 s) that calls `CombatEngagement.Tick` per star system. Keyed to `StarInfoDB` (FleetDB is already taken). | ✅ built (spine step 4) |
 
-*(rows added as the battle trigger, `FleetCombatStateDB`, doctrine, fleet components, and retreat land.)*
+*(rows added as doctrine, fleet components, and retreat land.)*
 
 ---
 
@@ -63,6 +66,32 @@ It deliberately does **not** use the per-pixel damage sim (`Damage/DamageComplex
 
 ---
 
+## The battle trigger — hostile fleets auto-engage
+
+**What it is.** `CombatEngagement.Tick(manager, dt)` is run every ~5 s of game-time per star system by `BattleTriggerProcessor`. It:
+
+1. **Detects** pairs of hostile fleets in the same system that are in range and not already fighting, and **starts an engagement** — attaches `FleetCombatStateDB` to both (this is also what trips the engagement lock, step 11).
+2. **Steps** each active engagement forward by `dt` game-seconds: both sides add `strength × dt` joules to the other's damage pool and lose whole ships (combatants first) — the same math as `AutoResolve`, but spread across game-time so a battle plays out instead of resolving instantly.
+3. **Ends** the engagement when one fleet is wiped (or the fight stalls), removing `FleetCombatStateDB` from both (clearing the lock).
+
+Battles spanning game-time is what makes "watch a battle / change doctrine mid-fight / orders freeze while engaged" real — instant resolution would give none of that.
+
+**v1 stubs (flagged):**
+- **Hostility** = different non-neutral faction. There is **no diplomacy/relations system** in the engine yet, and the engine's own `EntityFilter.Hostile` additionally requires a *sensor contact* — which the v1 plan stubs as "everyone sees everyone." So the trigger ignores sensors and treats any two different-faction fleets as enemies. Real IFF/relations is a v2 layer.
+- **Range** = a flat `EngagementRange_m` (1 million km). Real value = weapon range (combat steps 1–2, v2).
+- **Casualties** use `Entity.Destroy()` (lightweight: flips `IsValid` false at once, no order re-entrancy). Commander death, debris, and fleet-roster cleanup are v2.
+
+**Connections (Prime Directive):**
+- **Feeds IN:** `FleetDB.Children` (a fleet's ships, recursing into sub-fleets); `ShipCombatValueDB` per ship; `PositionDB` (a fleet's position = its first ship's position — a fleet entity has none of its own).
+- **Feeds OUT:** destroys casualty ships; sets/clears `FleetCombatStateDB` (read by the engagement lock, step 11).
+- **Triggers:** ship destruction — this is the one combat piece with *side effects on the live game*.
+
+**Behaviour change to be aware of:** any two hostile fleets that get within range now **fight automatically** — including in an existing save the moment it loads. That's the feature, but it is new behaviour. In a single-faction game nothing happens (no hostile pairs).
+
+**Test:** `Pulsar4X.Tests/BattleTriggerTests.cs` — hostile fleets in range auto-engage and the weaker is wiped (state cleared); same-faction fleets never engage. Integration tests (advance the clock, let the real processor run) so they also prove the live-loop hook doesn't throw.
+
+---
+
 ## Model-coupled / tuning constants
 
 | Constant | Value | Meaning | Where |
@@ -73,6 +102,9 @@ It deliberately does **not** use the per-pixel damage sim (`Damage/DamageComplex
 | `ArmorHitPointsPerThickness_J` | 100,000 | joules of toughness added per unit of armour thickness | `ShipCombatValueDB.cs` |
 | `AutoResolveConfig.RoundSeconds` | 5.0 | game-seconds of fire per salvo round | `AutoResolve.cs` |
 | `AutoResolveConfig.MaxRounds` | 2000 | round-cap backstop; hitting it = Stalemate | `AutoResolve.cs` |
+| `CombatEngagement.EngagementRange_m` | 1e9 (1M km) | v1 flat auto-engage distance (real value = weapon range, v2) | `CombatEngagement.cs` |
+| `CombatEngagement.MaxSteps` | 5000 | per-engagement step cap (stalemate backstop) | `CombatEngagement.cs` |
+| `BattleTriggerProcessor` run frequency | 5 s | how often each system is scanned for battles | `BattleTriggerProcessor.cs` |
 
 ---
 
@@ -82,3 +114,5 @@ It deliberately does **not** use the per-pixel damage sim (`Damage/DamageComplex
 2. **Combat value is computed once at build (v1).** Recalc-on-damage is a v2 refinement; in v1 a ship is alive at full value or removed whole, so a value cached at build is sufficient.
 3. **`ComponentInstancesDB.AllComponents` is `internal`.** Combat code reads it because it lives in the same `GameEngine` assembly; tests reach it via `InternalsVisibleTo("Pulsar4X.Tests")`.
 4. **Firepower mixes precise beam J/s with a flat missile stub.** The number is a *relative* strength figure for the salvo math, not a physical unit — don't read absolute meaning into it until missile ordnance energy is wired.
+5. **The battle trigger is the one combat piece with live side effects.** `BattleTriggerProcessor` runs every 5 s on every star system and **destroys ships** when hostile fleets fight. It is keyed to `StarInfoDB` (not `FleetDB`, which `FleetOrderProcessor` already owns — one processor per DataBlob type) and returns `>= 1` so it never sleeps. Keep its constructor trivial and `CombatEngagement.Tick` defensive (no throws) — a throwing hotloop processor crashes the whole game loop and CI's `GameLoopSmokeTests`.
+6. **Hostility is "different non-neutral faction" (v1 stub).** No diplomacy/relations system exists, and the engine's `EntityFilter.Hostile` also requires a sensor contact (stubbed away in v1). When relations/sensors are built, route `CombatEngagement` hostility through them.
