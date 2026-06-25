@@ -10,6 +10,7 @@ The `GameEngine` project is the core domain library. It has no dependency on any
 |-----------|---------|
 | `Engine/` | ECS infrastructure: Entity, EntityManager, DataBlobs, Processors, MasterTimePulse, ManagerSubPulse, Orders, Modding, SaveLoad |
 | `Weapons/` | Space combat: beams, missiles, generic fire control |
+| `Combat/` | Auto-resolve combat engine: ship combat value, fleet battle resolution, doctrine (v1 spine) |
 | `Damage/` | Damage application — Simple (active) and Complex (stubbed) |
 | `Colonies/` | Colony state, population, life support |
 | `Industry/` | Production, mining, materials |

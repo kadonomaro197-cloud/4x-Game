@@ -124,6 +124,7 @@ See `ARCHITECTURE.md` for the full data-flow diagram.
 |-----------|-----------|-----------|
 | Game Engine Core | `GameEngine/Engine/` | `GameEngine/CLAUDE.md` |
 | Space Combat (Weapons) | `GameEngine/Weapons/` | `GameEngine/Weapons/CLAUDE.md` |
+| Combat (Auto-Resolve Engine) | `GameEngine/Combat/` | `GameEngine/Combat/CLAUDE.md` |
 | Damage | `GameEngine/Damage/` | `GameEngine/Damage/CLAUDE.md` |
 | Colonies / Population | `GameEngine/Colonies/` | `GameEngine/Colonies/CLAUDE.md` |
 | Industry / Production | `GameEngine/Industry/` | `GameEngine/Industry/CLAUDE.md` |
