@@ -13,8 +13,9 @@ It deliberately does **not** use the per-pixel damage sim (`Damage/DamageComplex
 | File | Purpose | Status |
 |------|---------|--------|
 | `ShipCombatValueDB.cs` | DataBlob: a ship's **Firepower** (joules/sec from beams + a missile-launcher stub) and **Toughness** (live components + armour), plus a **RoleWeight**. Computed once at build time. `ShipCombatValueDB.Calculate(Entity)` is the calculator. | ✅ built (spine step 2) |
+| `AutoResolve.cs` | The salvo-exchange resolver: `AutoResolve.Resolve(sideA, sideB, config)` runs the math loop (strength → damage pools → whole-ship casualties, combatants first) until one side is gone, both are, or a frozen fight hits the round cap. Returns an `AutoResolveResult` (outcome + casualty lists); **pure** — it reports casualties, it does not destroy them. Plus `AutoResolveConfig`, `BattleOutcome`. | ✅ built (spine step 3) |
 
-*(rows added as the auto-resolve loop, `FleetCombatStateDB`, doctrine, fleet components, and retreat land.)*
+*(rows added as the battle trigger, `FleetCombatStateDB`, doctrine, fleet components, and retreat land.)*
 
 ---
 
@@ -38,6 +39,30 @@ It deliberately does **not** use the per-pixel damage sim (`Damage/DamageComplex
 
 ---
 
+## AutoResolve — the salvo loop
+
+**What it is.** `AutoResolve.Resolve(IList<Entity> sideA, IList<Entity> sideB, AutoResolveConfig)` fights two flat lists of ships and returns an `AutoResolveResult`. Per round:
+
+1. Each side's strength = Σ `Firepower` of its surviving ships (later × doctrine/commander/range — stubbed at ×1 for now).
+2. Each side adds `strength × RoundSeconds` joules to the **other** side's damage pool.
+3. The pool removes WHOLE ships, **combatants first** (highest `RoleWeight`), then utility hulls. Leftover damage stays in the pool for next round, so a weaker fleet still grinds kills over time.
+4. Repeat until one side is empty (victory), both empty (mutual destruction), neither can deal damage, or `MaxRounds` (stalemate).
+
+**Pure by design.** It does the math and *reports* casualties (`DestroyedA`/`DestroyedB` entity lists) — it does **not** destroy entities, advance the clock, RNG, or touch the per-pixel damage sim. The battle trigger (step 4) flattens fleets into ship lists, calls `Resolve`, then destroys the reported casualties.
+
+**Why joules.** `Firepower` is J/s and `Toughness` is J (see `ShipCombatValueDB`), so `Firepower × RoundSeconds` is joules and subtracts cleanly from toughness — time-to-kill is in seconds.
+
+**Connections (Prime Directive):**
+- **Feeds IN:** `ShipCombatValueDB` per ship (falls back to `Calculate` if a ship somehow lacks one).
+- **Feeds OUT:** `AutoResolveResult` → the battle trigger destroys casualties, applies retreat (step 7), writes the event log.
+- **Triggers:** nothing itself — pure function. The *caller* destroys ships.
+
+**Test:** `Pulsar4X.Tests/AutoResolveTests.cs` — stronger fleet wins & wipes the weaker; zero-firepower = stalemate; combatants die before utility hulls. Deterministic (ships stamped with known combat values).
+
+**Not yet (later steps):** doctrine/commander/range multipliers on strength (steps 4–6); retreat threshold ending a side early with a vector (step 7); `FleetCombatStateDB` to mark fleets "engaged" and optionally spread rounds across game-time (steps 4 / 11).
+
+---
+
 ## Model-coupled / tuning constants
 
 | Constant | Value | Meaning | Where |
@@ -46,6 +71,8 @@ It deliberately does **not** use the per-pixel damage sim (`Damage/DamageComplex
 | `UtilityRoleWeight` | 0.25 | combat-value role weight of a hull with no weapons | `ShipCombatValueDB.cs` |
 | `ComponentHitPoints_J` | 100,000 | joules one component absorbs before destruction (= the damage tuning's "100 kJ kills a component") | `ShipCombatValueDB.cs` |
 | `ArmorHitPointsPerThickness_J` | 100,000 | joules of toughness added per unit of armour thickness | `ShipCombatValueDB.cs` |
+| `AutoResolveConfig.RoundSeconds` | 5.0 | game-seconds of fire per salvo round | `AutoResolve.cs` |
+| `AutoResolveConfig.MaxRounds` | 2000 | round-cap backstop; hitting it = Stalemate | `AutoResolve.cs` |
 
 ---
 
