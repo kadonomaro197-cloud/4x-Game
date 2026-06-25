@@ -42,6 +42,21 @@ namespace Pulsar4X.Tests
             return ship;
         }
 
+        /// <summary>
+        /// A New Game start spawns the colony's own fleets (colony-earth gives 3 — Freight/Military/Science,
+        /// all player-owned; see <see cref="StartFleetTests"/>). A Tick-based trigger test needs a CONTROLLED
+        /// matchup, so we clear those first: otherwise the enemy fleet engages whichever hostile player fleet
+        /// the iteration reaches first (a colony fleet) and consumes itself before the test's own player fleet
+        /// is paired — the engine is behaving correctly, the scenario just has extra fleets. Destroy() flips
+        /// IsValid synchronously, and CombatEngagement.Tick skips !IsValid fleets, so they drop out at once;
+        /// the orphaned ships have no FleetDB, so fleet pairing never sees them.
+        /// </summary>
+        private static void ClearExistingFleets(TestScenario s)
+        {
+            foreach (var fleet in s.StartingSystem.GetAllEntitiesWithDataBlob<FleetDB>().ToList())
+                fleet.Destroy();
+        }
+
         [Test]
         [Description("Driven directly: a 3-ship fleet wipes a lone unarmed enemy, takes no losses, and the engagement state clears on both fleets.")]
         public void Engagement_StrongerFleet_WipesWeaker()
@@ -81,6 +96,7 @@ namespace Pulsar4X.Tests
         public void Tick_DetectsEngagesAndResolves_HostileFleetsInRange()
         {
             var s = TestScenario.CreateWithColony();
+            ClearExistingFleets(s); // drop the colony's own start fleets so this is a clean two-fleet matchup
             var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
 
             var enemyFleet = MakeFleet(s, enemyFaction, "Red Fleet");
@@ -92,6 +108,7 @@ namespace Pulsar4X.Tests
             var playerShip = AddShip(s, s.Faction, playerFleet, 0, 1_000_000, "Blue 1");
 
             Log($"setup: factions enemy={enemyFaction.Id} player={s.Faction.Id}; fleetOwners enemy={enemyFleet.FactionOwnerID} player={playerFleet.FactionOwnerID}; " +
+                $"validFleets={s.StartingSystem.GetAllEntitiesWithDataBlob<FleetDB>().Count(f => f.IsValid)}; " +
                 $"ships enemy={CombatEngagement.GetFleetShips(enemyFleet).Count} player={CombatEngagement.GetFleetShips(playerFleet).Count}");
 
             // First tick: detect the hostile pair in range and start an engagement.
@@ -116,6 +133,7 @@ namespace Pulsar4X.Tests
         public void Tick_SameFactionFleets_DoNotEngage()
         {
             var s = TestScenario.CreateWithColony();
+            ClearExistingFleets(s); // isolate to just the two friendly fleets under test
 
             var fleet1 = MakeFleet(s, s.Faction, "Home Guard A");
             AddShip(s, s.Faction, fleet1, 50_000, 1_000_000, "A1");
