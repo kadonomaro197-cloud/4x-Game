@@ -95,8 +95,11 @@ namespace Pulsar4X.Combat
                 || !fleetB.TryGetDataBlob<FleetCombatStateDB>(out var stateB))
                 return;
 
-            var shipsA = GetFleetShips(fleetA);
-            var shipsB = GetFleetShips(fleetB);
+            // Per-component doctrine: each ship carries the firepower/toughness multipliers of the component
+            // (sub-fleet) it sits in, so a fleet's Front Line and Rear Guard can fight with different postures.
+            // A ship directly in the fleet uses the fleet's own posture (1.0 if none). docs/COMBAT-DESIGN.md System 4.
+            var shipsA = GetCombatShips(fleetA);
+            var shipsB = GetCombatShips(fleetB);
 
             // A side with no ships has already lost.
             if (shipsA.Count == 0 || shipsB.Count == 0)
@@ -105,10 +108,8 @@ namespace Pulsar4X.Combat
                 return;
             }
 
-            // Doctrine is a read-time multiplier on each fleet's effective strength/toughness (its active
-            // FleetDoctrineDB posture; 1.0 if none). docs/COMBAT-DESIGN.md System 4.
-            double strA = TotalFirepower(shipsA) * FleetDoctrine.FirepowerMult(fleetA);
-            double strB = TotalFirepower(shipsB) * FleetDoctrine.FirepowerMult(fleetB);
+            double strA = TotalFirepower(shipsA);
+            double strB = TotalFirepower(shipsB);
 
             stateA.StepsFought++;
             stateB.StepsFought++;
@@ -117,8 +118,8 @@ namespace Pulsar4X.Combat
             stateB.DamageTakenPool += strA * dt;
             stateA.DamageTakenPool += strB * dt;
 
-            ApplyCasualties(shipsB, stateB, FleetDoctrine.ToughnessMult(fleetB)); // A shoots B
-            ApplyCasualties(shipsA, stateA, FleetDoctrine.ToughnessMult(fleetA)); // B shoots A
+            ApplyCasualties(shipsB, stateB); // A shoots B
+            ApplyCasualties(shipsA, stateA); // B shoots A
 
             bool frozen = strA <= 0 && strB <= 0;
             bool timedOut = stateA.StepsFought >= MaxSteps;
@@ -141,24 +142,42 @@ namespace Pulsar4X.Combat
 
         // --- helpers -------------------------------------------------------
 
-        // Whole-or-destroyed: drain the pool by removing lead ships (combatants first). Kills are real
+        /// <summary>A ship in combat, tagged with the firepower/toughness multipliers of the component (sub-fleet)
+        /// it belongs to. Per-component doctrine lives here: collect once, and each ship already knows its posture.</summary>
+        public readonly struct CombatShip
+        {
+            public readonly Entity Ship;
+            public readonly double FirepowerMult;
+            public readonly double ToughnessMult;
+            public CombatShip(Entity ship, double firepowerMult, double toughnessMult)
+            {
+                Ship = ship;
+                FirepowerMult = firepowerMult;
+                ToughnessMult = toughnessMult;
+            }
+        }
+
+        // Whole-or-destroyed: drain the pool by removing lead ships (combatants first). Each ship's effective
+        // toughness is scaled by ITS component's doctrine (a defensive posture soaks more). Kills are real
         // (Entity.Destroy() => IsValid=false immediately), and the ship is dropped from this local list so the
         // survivor count is accurate within the step.
-        private static void ApplyCasualties(List<Entity> ships, FleetCombatStateDB state, double toughnessMult)
+        private static void ApplyCasualties(List<CombatShip> ships, FleetCombatStateDB state)
         {
-            ships.Sort((x, y) => CombatValue(y).RoleWeight.CompareTo(CombatValue(x).RoleWeight));
-            while (ships.Count > 0 && state.DamageTakenPool >= CombatValue(ships[0]).Toughness * toughnessMult)
+            ships.Sort((x, y) => CombatValue(y.Ship).RoleWeight.CompareTo(CombatValue(x.Ship).RoleWeight));
+            while (ships.Count > 0)
             {
-                state.DamageTakenPool -= CombatValue(ships[0]).Toughness * toughnessMult;
-                ships[0].Destroy();
+                double effToughness = CombatValue(ships[0].Ship).Toughness * ships[0].ToughnessMult;
+                if (state.DamageTakenPool < effToughness) break;
+                state.DamageTakenPool -= effToughness;
+                ships[0].Ship.Destroy();
                 ships.RemoveAt(0);
             }
         }
 
-        private static double TotalFirepower(List<Entity> ships)
+        private static double TotalFirepower(List<CombatShip> ships)
         {
             double sum = 0;
-            foreach (var ship in ships) sum += CombatValue(ship).Firepower;
+            foreach (var cs in ships) sum += CombatValue(cs.Ship).Firepower * cs.FirepowerMult;
             return sum;
         }
 
@@ -185,6 +204,33 @@ namespace Pulsar4X.Combat
                     into.Add(child);
                 else if (child.HasDataBlob<FleetDB>())
                     CollectShips(child, into); // sub-fleet (fleet component)
+            }
+        }
+
+        /// <summary>All live ships in a fleet, each tagged with the doctrine multipliers of the component
+        /// (sub-fleet) it sits in — so per-component doctrine is applied where each ship actually fights. A ship
+        /// directly in the fleet uses the fleet's own posture; a ship in a sub-fleet uses the sub-fleet's
+        /// (component overrides fleet — there is no multiplicative inheritance in v1).</summary>
+        public static List<CombatShip> GetCombatShips(Entity fleet)
+        {
+            var result = new List<CombatShip>();
+            CollectCombatShips(fleet, result);
+            return result;
+        }
+
+        private static void CollectCombatShips(Entity fleet, List<CombatShip> into)
+        {
+            if (fleet == null || !fleet.IsValid || !fleet.TryGetDataBlob<FleetDB>(out var fleetDB)) return;
+            // This node's posture applies to ships DIRECTLY in it; a sub-fleet (component) applies its OWN.
+            double fpMult = FleetDoctrine.FirepowerMult(fleet);
+            double toughMult = FleetDoctrine.ToughnessMult(fleet);
+            foreach (var child in fleetDB.Children)
+            {
+                if (child == null || !child.IsValid) continue;
+                if (child.HasDataBlob<ShipInfoDB>())
+                    into.Add(new CombatShip(child, fpMult, toughMult));
+                else if (child.HasDataBlob<FleetDB>())
+                    CollectCombatShips(child, into); // sub-component → recurse with its own doctrine
             }
         }
 

@@ -15,13 +15,13 @@ It deliberately does **not** use the per-pixel damage sim (`Damage/DamageComplex
 | `ShipCombatValueDB.cs` | DataBlob: a ship's **Firepower** (joules/sec from beams + a missile-launcher stub) and **Toughness** (live components + armour), plus a **RoleWeight**. Computed once at build time. `ShipCombatValueDB.Calculate(Entity)` is the calculator. | ✅ built (spine step 2) |
 | `AutoResolve.cs` | The salvo-exchange resolver: `AutoResolve.Resolve(sideA, sideB, config)` runs the math loop (strength → damage pools → whole-ship casualties, combatants first) until one side is gone, both are, or a frozen fight hits the round cap. Returns an `AutoResolveResult` (outcome + casualty lists); **pure** — it reports casualties, it does not destroy them. Plus `AutoResolveConfig`, `BattleOutcome`. | ✅ built (spine step 3) |
 | `FleetCombatStateDB.cs` | DataBlob marking a fleet as **engaged** (opponent fleet id, accumulated damage pool, steps fought). On both fleets during a battle; removed when it ends. Its presence is the "in combat" flag the engagement lock (step 11) keys on. | ✅ built (spine step 4) |
-| `CombatEngagement.cs` | The trigger's engine logic: `Tick(manager, dt)` finds hostile fleets in range, starts engagements, and steps active ones (incremental over game-time) until one side is wiped. Hostility/range/detection are v1 stubs. Testable directly. | ✅ built (spine step 4) |
+| `CombatEngagement.cs` | The trigger's engine logic: `Tick(manager, dt)` finds hostile fleets in range, starts engagements, and steps active ones (incremental over game-time) until one side is wiped. `GetCombatShips(fleet)` collects ships tagged with their **component's** doctrine multipliers (step 6); `GetFleetShips` is the flat list (counts/detection). Hostility/range/detection are v1 stubs. Testable directly. | ✅ built (spine steps 4, 6) |
 | `BattleTriggerProcessor.cs` | `IHotloopProcessor` (every 5 s) that calls `CombatEngagement.Tick` per star system. Keyed to `StarInfoDB` (FleetDB is already taken). | ✅ built (spine step 4) |
 | `FleetDoctrineDB.cs` | DataBlob: a fleet's **active** combat posture (doctrine id, firepower/toughness/speed multipliers, retreat flag, switch-cooldown clock). Read by the engagement as a strength/toughness modifier. | ✅ built (spine step 5) |
 | `FleetDoctrine.cs` | Helpers: `FirepowerMult`/`ToughnessMult`/`IsRetreat(fleet)` reads; `TrySetDoctrine(fleet, blueprint, now)` sets a posture from the catalog, honouring the cooldown. | ✅ built (spine step 5) |
 | `CombatDoctrineBlueprint` (`Engine/Blueprints/`) | The moddable **catalog** of postures (JSON → `ModDataStore.CombatDoctrines`): family, display name, the multipliers, cooldown, retreat flag. | ✅ built (spine step 5) |
 
-*(rows added as fleet components and retreat land.)*
+*Fleet components (step 6) reuse `FleetDB` sub-fleets + `FleetDoctrineDB` — no new file; see "Fleet components" below. (Retreat, step 7, adds rows as it lands.)*
 
 ---
 
@@ -103,7 +103,7 @@ Battles spanning game-time is what makes "watch a battle / change doctrine mid-f
 
 **Setting a posture.** `FleetDoctrine.TrySetDoctrine(fleet, blueprint, now)` copies the blueprint's effects into the fleet's `FleetDoctrineDB` and starts the cooldown; it returns `false` (no change) if the fleet is still within `SwitchableAfter`. Effects apply **at read time** (the `BonusesDB` pattern) — never baked into ship stats, so switching is reversible.
 
-**How combat reads it.** `CombatEngagement.StepEngagement` multiplies each fleet's firepower by `FleetDoctrine.FirepowerMult(fleet)` and each fleet's casualty-toughness by `FleetDoctrine.ToughnessMult(fleet)`. A fleet with no `FleetDoctrineDB` reads ×1.0 (neutral), so doctrine is purely additive over step 4. `AutoResolve` (the pure ship-list variant) stays doctrine-free — doctrine lives where fleets do (the engagement).
+**How combat reads it.** `CombatEngagement.StepEngagement` works off `GetCombatShips(fleet)`, which tags every ship with the firepower/toughness multipliers of the **component it sits in** (see "Fleet components" below) — so a posture set on the whole fleet applies to the ships directly in it, and a posture set on a sub-fleet applies to that sub-fleet's ships. A fleet/component with no `FleetDoctrineDB` reads ×1.0 (neutral), so doctrine is purely additive over step 4. `AutoResolve` (the pure ship-list variant) stays doctrine-free — doctrine lives where fleets do (the engagement).
 
 **Don't confuse with `FactionInfoDB.Doctrine`** — that's the strategic Economic/Military/Tech/Expansion AI vector (a different system). Same word.
 
@@ -111,7 +111,24 @@ Battles spanning game-time is what makes "watch a battle / change doctrine mid-f
 
 **Tests:** `Pulsar4X.Tests/FleetDoctrineTests.cs` — the catalog loads from JSON; `TrySetDoctrine` applies the multipliers and honours the cooldown; an aggressive (×2 firepower) fleet beats the identical enemy that has none. `BaseModIntegrityTests` (existing) also validates the JSON loads with zero skipped entries.
 
-**Not yet:** a player-facing order to change doctrine mid-fight (the engagement lock, step 11, will allow that one order during combat); `SpeedMult` is stored but not yet applied to movement; per-component doctrine (step 6).
+**Not yet:** a player-facing order to change doctrine mid-fight (the engagement lock, step 11, will allow that one order during combat); `SpeedMult` is stored but not yet applied to movement.
+
+---
+
+## Fleet components — per-component doctrine
+
+**What it is.** A fleet can be split into named **components** — Front Line, Flank, Rear Guard, Artillery — so different parts of one fleet fight with different postures in the *same* engagement (docs/COMBAT-DESIGN.md System 4, detailed design). A component is just a **sub-fleet**: `FleetDB` already nests via `TreeHierarchyDB`, so ship assignment, movement, and detach/reattach all already work — the only new part is that each sub-fleet can carry its own `FleetDoctrineDB`.
+
+**How it works.** `CombatEngagement.GetCombatShips(fleet)` walks the fleet tree and returns a `List<CombatShip>` — each `CombatShip` is `{ Entity Ship, double FirepowerMult, double ToughnessMult }`, where the multipliers come from the doctrine of the **immediate component** that ship sits in. A ship directly in the top fleet gets the top fleet's posture; a ship in a sub-fleet gets the sub-fleet's. `StepEngagement` then sums `Firepower × FirepowerMult` for strength and scales each ship's casualty-toughness by its own `ToughnessMult`.
+
+**v1 stacking rule: component overrides fleet, no inheritance.** A sub-fleet with no `FleetDoctrineDB` reads ×1.0 (neutral) — it does **not** inherit the parent fleet's multiplier. This keeps the math predictable (one posture per ship, no multiplicative stacking). Revisit if v2 wants fleet-wide buffs that layer onto component postures.
+
+**Connections (Prime Directive):**
+- **Feeds IN:** `FleetDB.Children` (the tree — ships and sub-fleets); `FleetDoctrineDB` per fleet-node (via `FleetDoctrine.FirepowerMult`/`ToughnessMult`).
+- **Feeds OUT:** `GetCombatShips` is consumed by `StepEngagement` (strength + casualties). `GetFleetShips` (the flat `List<Entity>`, no multipliers) is unchanged and still used for count checks, the battle-trigger detection, range, and tests.
+- **Triggers:** nothing new — same casualty side effects as the battle trigger.
+
+**Test:** `Pulsar4X.Tests/FleetComponentTests.cs` — a ship in an offensive sub-component reads ×2 while a ship directly in the fleet reads ×1 (doctrine is per-component, not whole-fleet); and a component's ×2 firepower flips a battle a raw 6k-vs-10k hull would have lost.
 
 ---
 
