@@ -161,6 +161,22 @@ namespace Pulsar4X.Combat
                     }
                 }
 
+                // Flak / point-defense: rapid-fire pellet clouds. Low per-pellet damage, but HIGH saturation
+                // (rounds/sec × pellets/shot) floors the hit fraction — it catches the fast, evasive things a
+                // railgun misses (fighters, missiles). damage/sec = damage/pellet × saturation.
+                if (instances.TryGetComponentsByAttribute<FlakWeaponAtb>(out var flaks))
+                {
+                    foreach (var comp in flaks)
+                    {
+                        if (comp.Design.TryGetAttribute<FlakWeaponAtb>(out var flak))
+                        {
+                            double saturation = flak.RoundsPerSecond * flak.PelletsPerShot;
+                            double dps = flak.DamagePerPellet_J * saturation * comp.HealthPercent;
+                            weapons.Add(new WeaponProfile(WeaponClass.Flak, dps, flak.MuzzleVelocity_mps, flak.Tracking, saturation));
+                        }
+                    }
+                }
+
                 // Missile launchers: flat damage stub each (warhead energy is v2); slow + guided (tracks) — the
                 // weapon flak answers. Velocity/tracking/saturation are v1 stubs.
                 if (instances.TryGetComponentsByAttribute<MissileLauncherAtb>(out var launchers))

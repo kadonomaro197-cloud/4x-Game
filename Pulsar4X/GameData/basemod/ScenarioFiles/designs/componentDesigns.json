@@ -211,6 +211,14 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-flak-weapon",
+      "Name": "Flak Gun",
+      "TemplateId": "flak-weapon"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-logistics-office",
       "Name": "Logistics Office",
       "TemplateId": "logistics-office"

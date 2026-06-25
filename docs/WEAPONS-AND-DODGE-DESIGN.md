@@ -112,8 +112,13 @@ a CI test will prove a 500-ship fight resolves in milliseconds.
    JSON design and asserts the flavor stats + that it's dodgeable) — and `BaseModIntegrityTests` builds it from the
    real data path, so the gotcha-10 JSON→Atb binding is gauged in CI, not just on the developer's New Game (a live
    New Game spawn from DevTools is still the final confirmation).
-4. ⏳ **Flak / point-defense weapon type** — high saturation, short range, low per-shot. Same plumbing as #3.
-   **Remaining.**
+4. ✅ **Flak / point-defense weapon type** — `FlakWeaponAtb` (`GameEngine/Weapons/WeaponFlak/`) + the `flak-weapon`
+   JSON template + component design + a `Bulwark` escort; HIGH saturation (rounds/sec × pellets/shot), low per-pellet
+   damage, moderate velocity. `ShipCombatValueDB.Calculate` reads it into a `Flak` `WeaponProfile` whose saturation
+   FLOORS the dodge — it catches the nimble (fighters/missiles) a railgun misses. **CI-green** via `FlakWeaponTests`
+   (builds the real JSON design; asserts saturation = rof×pellets and that it lands heavily on a hard dodger where a
+   slug is juked). Same six-point registration as the railgun (template → StartingItems → ComponentDesigns →
+   ShipDesigns), so the gotcha-10 binding is CI-gauged.
 5. ✅ **Dodge + (emergent) triangle in the resolve** — `BuildFireMix`/`LandedFraction`/`HitFraction`, effective
    toughness ÷ landed fraction, hittable-first casualties. **Gauge:** slug fire kills the battleship while the
    same-toughness fighter dodges; beams ignore evasion; flak floors it. `DodgeResolveTests`. **CI-green.**

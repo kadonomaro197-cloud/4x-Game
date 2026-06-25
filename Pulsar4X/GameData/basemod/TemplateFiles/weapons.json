@@ -414,5 +414,90 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "flak-weapon",
+      "Name": "Flak / Point-Defense Gun",
+      "Formulas": {
+        "Description": "Rapid-fire pellet-cloud gun. Barely scratches a capital, but its volume of fire fills the sky — the fighter and missile killer.",
+        "Mass": "PropertyValue('Rounds Per Second') * 10 + PropertyValue('Pellets Per Shot') * 2",
+        "Volume": "[Mass] * 0.5",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.1",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "aluminium": "[Mass] * 0.25",
+        "stainless-steel": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.2",
+        "tungsten": "[Mass] * 0.15",
+        "titanium": "[Mass] * 0.1",
+        "graphite": "[Mass] * 0.05"
+      },
+      "ComponentType": "Weapon",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Muzzle Velocity",
+          "Units": "m/s",
+          "DescriptionFormula": "'How fast the pellets leave the barrel. Moderate — short-ranged, not a beam.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100000",
+          "MinFormula": "1000",
+          "StepFormula": "1000",
+          "PropertyFormula": "20000"
+        },
+        {
+          "Name": "Damage Per Pellet",
+          "Units": "J",
+          "DescriptionFormula": "'Damage one pellet does. LOW — flak only tickles a capital; its strength is volume.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100000",
+          "MinFormula": "10",
+          "StepFormula": "10",
+          "PropertyFormula": "1000"
+        },
+        {
+          "Name": "Rounds Per Second",
+          "Units": "1/s",
+          "DescriptionFormula": "'Bursts per second. With pellets/shot, sets saturation = how much fire fills the sky.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100",
+          "MinFormula": "0.1",
+          "StepFormula": "0.1",
+          "PropertyFormula": "10"
+        },
+        {
+          "Name": "Pellets Per Shot",
+          "Units": "",
+          "DescriptionFormula": "'Spread — pellets thrown per burst. Saturation = rounds/sec × pellets/shot.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "500",
+          "MinFormula": "1",
+          "StepFormula": "1",
+          "PropertyFormula": "30"
+        },
+        {
+          "Name": "Tracking",
+          "Units": "",
+          "DescriptionFormula": "'How well the cloud follows an evasive target (0..1). Medium — the spread helps.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0.1"
+        },
+        {
+          "Name": "flakAtbArgs",
+          "DescriptionFormula": "'double muzzleVelocity, double damagePerPellet, double roundsPerSecond, double pelletsPerShot, double tracking'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Muzzle Velocity'), PropertyValue('Damage Per Pellet'), PropertyValue('Rounds Per Second'), PropertyValue('Pellets Per Shot'), PropertyValue('Tracking'))",
+          "AttributeType": "Pulsar4X.Weapons.FlakWeaponAtb"
+        }
+      ]
+    }
   }
 ]

@@ -150,6 +150,7 @@
         "ree-magnetics",
         "laser-weapon",
         "railgun-weapon",
+        "flak-weapon",
         "admin-complex",
         "ship-command",
         "tech-panel-efficiency",
@@ -177,6 +178,7 @@
         "default-design-gravitational-surveyor",
         "default-design-laser-weapon",
         "default-design-railgun-weapon",
+        "default-design-flak-weapon",
         "default-design-merlin",
         "default-design-mine",
         "default-design-NTR1.8",
@@ -208,7 +210,8 @@
         "default-ship-design-sensorsat",
         "default-ship-design-test-warship",
         "default-ship-design-test-corvette",
-        "default-ship-design-test-railgun"
+        "default-ship-design-test-railgun",
+        "default-ship-design-test-flak"
       ],
       "LaunchQueue": [
         { "DesignId": "default-ship-design-courier", "Name": "ISS Hermes" }
