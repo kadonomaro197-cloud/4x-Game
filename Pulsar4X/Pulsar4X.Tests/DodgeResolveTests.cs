@@ -88,5 +88,35 @@ namespace Pulsar4X.Tests
             Assert.That(battleship.IsValid, Is.False, "the slugs hit the un-evasive battleship");
             Assert.That(fighter.IsValid, Is.True, "the fighter dodged the slugs and held — same toughness, only evasion differs");
         }
+
+        [Test]
+        [Description("Class buckets, by count: under slug fire one battleship dies while a whole fighter screen (same toughness, high evasion) dodges and holds — casualties are applied per class bucket, not per individual.")]
+        public void RailgunFire_AgainstAClassMix_KillsTheBattleship_HoldsTheFighterScreen()
+        {
+            var s = TestScenario.CreateWithColony();
+            var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+
+            var attacker = MakeFleet(s, enemyFaction, "Slug Battery");
+            AddShip(s, enemyFaction, attacker, Railgunner(20_000), "Slugger");
+
+            var defender = MakeFleet(s, s.Faction, "Task Force");
+            var battleship = AddShip(s, s.Faction, defender, Hull(0.0, 200_000), "Battleship");
+            var fighters = new System.Collections.Generic.List<Entity>();
+            for (int i = 0; i < 5; i++)
+                fighters.Add(AddShip(s, s.Faction, defender, Hull(0.9, 200_000), "Fighter" + i)); // same toughness, evasive
+
+            CombatEngagement.StartEngagement(attacker, defender);
+            int steps = 0;
+            while (battleship.IsValid && defender.HasDataBlob<FleetCombatStateDB>() && steps < 2000)
+            {
+                CombatEngagement.StepEngagement(attacker, defender, 5);
+                steps++;
+            }
+
+            int aliveFighters = fighters.Count(f => f.IsValid);
+            Log($"after {steps} steps: battleship={battleship.IsValid} fightersAlive={aliveFighters}/5");
+            Assert.That(battleship.IsValid, Is.False, "the slugs hit the un-evasive battleship first");
+            Assert.That(aliveFighters, Is.EqualTo(5), "the whole fighter screen (one class bucket) dodged the slugs and held");
+        }
     }
 }

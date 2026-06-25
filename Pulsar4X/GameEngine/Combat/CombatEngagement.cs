@@ -195,37 +195,81 @@ namespace Pulsar4X.Combat
             }
         }
 
-        // Whole-or-destroyed, DODGE-AWARE. The incoming fire mix decides what fraction lands on each ship — a
-        // fighter dodges ballistic slugs, nobody dodges a beam, flak floors it. A ship's EFFECTIVE toughness is
-        // its raw toughness (× its doctrine posture) ÷ that landed fraction, so a dodgy ship needs far more fire
-        // to kill. Targets fall combatants-first, then most-hittable-first, so the big slow hulls die before the
-        // evasive screen. Degrades EXACTLY to the old behaviour with no weapon profiles / no evasion (landed = 1).
-        // O(ships × weapons): each ship's landed fraction is computed once, not per comparison.
+        // Whole-or-destroyed, DODGE-AWARE and CLASS-BUCKETED. Interchangeable ships — same doctrine posture and
+        // same combat value (evasion / toughness / role) — die identically, so they're processed as a COUNTED
+        // group: the landed fraction and effective toughness are computed ONCE per bucket, not per ship. That
+        // makes the costly part O(buckets), independent of ship count (500 identical fighters cost the same as
+        // 5). The bucket key is everything that decides HOW a ship dies, which is ALSO the seam for future
+        // "degraded" condition tiers — a damaged ship gets a different combat value => a different bucket, with
+        // no new code here (docs/WEAPONS-AND-DODGE-DESIGN.md "aggregate force condition"). Behaviour matches the
+        // old per-ship loop: buckets are killed combatants-first then most-hittable-first, and the pool stops at
+        // the first bucket it can't finish.
         private static void ApplyCasualties(List<CombatShip> ships, FleetCombatStateDB state, List<WeaponProfile> incomingFire)
         {
-            // Pair each ship with its (computed-once) landed fraction + role weight, then order the kills.
-            var ordered = new List<(CombatShip cs, double landed, double roleWeight)>(ships.Count);
+            if (ships.Count == 0) return;
+
+            // Bucket by (doctrine toughness mult, evasion, toughness, role) — the fields that set effective
+            // toughness + kill order. Same-design undamaged ships share a bucket; degraded ones would split off.
+            var buckets = new Dictionary<(double tm, double ev, double tough, double role), CasualtyBucket>();
             foreach (var cs in ships)
             {
                 var cv = CombatValue(cs.Ship);
-                ordered.Add((cs, LandedFraction(incomingFire, cv.Evasion), cv.RoleWeight));
+                var key = (cs.ToughnessMult, cv.Evasion, cv.Toughness, cv.RoleWeight);
+                if (!buckets.TryGetValue(key, out var b))
+                {
+                    double landed = LandedFraction(incomingFire, cv.Evasion);
+                    b = new CasualtyBucket
+                    {
+                        RoleWeight = cv.RoleWeight,
+                        Landed = landed,
+                        EffToughness = cv.Toughness * cs.ToughnessMult / landed,
+                        Ships = new List<Entity>(),
+                    };
+                    buckets[key] = b;
+                }
+                b.Ships.Add(cs.Ship);
             }
+
+            var ordered = new List<CasualtyBucket>(buckets.Values);
             ordered.Sort((x, y) =>
             {
-                int byRole = y.roleWeight.CompareTo(x.roleWeight);          // combatants before utility
-                return byRole != 0 ? byRole : y.landed.CompareTo(x.landed); // then most-hittable first
+                int byRole = y.RoleWeight.CompareTo(x.RoleWeight);          // combatants before utility
+                return byRole != 0 ? byRole : y.Landed.CompareTo(x.Landed); // then most-hittable first
             });
 
-            foreach (var item in ordered)
+            foreach (var b in ordered)
             {
-                double effToughness = CombatValue(item.cs.Ship).Toughness * item.cs.ToughnessMult / item.landed;
-                if (state.DamageTakenPool < effToughness) break;
-                state.DamageTakenPool -= effToughness;
-                item.cs.Ship.Destroy();
+                // How many WHOLE ships from this bucket the pool can afford (guard div-by-zero + int overflow).
+                int kills;
+                if (b.EffToughness <= 0)
+                    kills = b.Ships.Count;
+                else
+                {
+                    double afford = state.DamageTakenPool / b.EffToughness;
+                    kills = afford >= b.Ships.Count ? b.Ships.Count : (int)afford;
+                }
+
+                if (kills > 0)
+                {
+                    state.DamageTakenPool -= kills * b.EffToughness;
+                    for (int i = 0; i < kills; i++) b.Ships[i].Destroy(); // reify the count back to real entities
+                }
+                if (kills < b.Ships.Count) break; // pool ran out inside this bucket -> stop (matches per-ship break)
             }
 
             // Drop the dead (Destroy() flips IsValid synchronously) so the caller's survivor count is accurate.
             ships.RemoveAll(cs => !cs.Ship.IsValid);
+        }
+
+        /// <summary>A group of interchangeable ships in the casualty step — same doctrine posture + same combat
+        /// value, so they share one landed fraction + effective toughness and are killed as a count. This is the
+        /// unit the "aggregate force condition" / degraded-tier model would extend. See ApplyCasualties.</summary>
+        private sealed class CasualtyBucket
+        {
+            public double RoleWeight;
+            public double Landed;
+            public double EffToughness;
+            public List<Entity> Ships;
         }
 
         /// <summary>A fleet's outgoing fire, AGGREGATED BY WEAPON CLASS — at most a handful of entries no matter

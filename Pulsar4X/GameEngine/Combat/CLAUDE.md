@@ -222,12 +222,21 @@ slow hull dies while the nimble fighter holds — the developer's acceptance tes
 `LandedFraction = 1` — so an all-old-style fight (every existing combat test) behaves EXACTLY as before. Dodge
 only changes outcomes once ships carry weapon profiles + evasion.
 
-**Performance — O(ships) per step.** `BuildFireMix` AGGREGATES outgoing fire **by weapon class** (≤4 entries),
-so each target's `LandedFraction` iterates a handful of classes, not every enemy weapon. A step costs
-`O(attacker ships + defender ships)`, not `O(ships²)`. Aggregating means weapons of the same class are merged
-with a damage-weighted velocity/tracking/saturation — a fine v1 approximation (same-class weapons are similar).
-Proven by `CombatPerformanceTests` (200 real warships resolve in milliseconds). **If you ever stop aggregating
-by class, that test is the tripwire.**
+**Performance — bucketed both ways.** Outgoing: `BuildFireMix` aggregates fire **by weapon class** (≤4 entries),
+so each `LandedFraction` iterates a handful of classes, not every enemy weapon. Incoming: `ApplyCasualties`
+buckets defenders by their **combat value** — key `(doctrine toughness mult, evasion, toughness, role)`, i.e.
+everything that decides how a ship dies — and computes the landed fraction + effective toughness ONCE per
+bucket, killing whole ships as a count (`CasualtyBucket`). So **500 identical fighters cost the same as 5**; the
+costly work is O(buckets), not O(ships). Proven by `CombatPerformanceTests` (200 real warships resolve in
+milliseconds) — **the tripwire if either aggregation ever breaks.** Aggregating outgoing fire uses a
+damage-weighted velocity/tracking/saturation (a fine v1 approximation; same-class weapons are similar).
+
+**The casualty bucket is the seam for "degraded" condition tiers.** Because ships bucket by combat value, a
+damaged ship with a degraded combat value lands in a *different* bucket automatically — so the
+aggregate-force-condition model (Pristine / Lightly / Moderately / Severely Degraded, per-tier debuffs, "launch
+only Non-Degraded" orders) needs **no new resolve code**, only the parked v2 "recalc combat value on damage"
+hook. Design + connected systems: `docs/WEAPONS-AND-DODGE-DESIGN.md` → "Future depth — aggregate force
+condition." Principle: *simulate at the granularity of the decision, not the entity.*
 
 **v1 scope.** This delivers the dodge-driven triangle edges (Beam▸Fighter, Fighter▸ballistic-Capital). The
 explicit `TriangleBonus` (a tunable class-vs-class modifier) and the Capital▸Beam edge (which needs weapon
