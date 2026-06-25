@@ -33,6 +33,7 @@ It deliberately does **not** use the per-pixel damage sim (`Damage/DamageComplex
 - **`Firepower`** — hurt-per-second. Each beam weapon contributes `Energy ÷ ChargePeriod` (joules/sec), scaled by that component's `HealthPercent`. Each missile launcher adds a flat `MissileLauncherFirepowerStub` (v1 stub).
 - **`Toughness`** — how much it can take, **in joules absorbed**. Each live component contributes `HealthPercent × ComponentHitPoints_J` (1e5 J kills a component — straight from the damage tuning: 1000 dmg-points × 100 J), plus `armour.thickness × ArmorHitPointsPerThickness_J`. Same currency as `Firepower × time`, so the salvo loop's time-to-kill comes out in seconds.
 - **`RoleWeight`** — `1.0` for anything that can shoot, `UtilityRoleWeight` (0.25) for a utility hull. The auto-resolver uses it so utility/transport ships are low-priority targets (absorb casualties last) and contribute less strength. v1 stub.
+- **`Evasion`** — how hard the ship is to **hit** (0 = a sitting brick, capped at `EvasionCap` 0.95 = a nimble fighter), from `CalculateEvasion`: size (small = hard to hit, via `MassVolumeDB.Volume_m3`) × agility (acceleration = `NewtonThrustAbilityDB.ThrustInNewtons ÷ MassDry`, the *rate it changes vector*). Distinct from Toughness — toughness soaks what lands, evasion is not getting hit, and (unlike toughness) it depends on the **weapon** (you can't dodge a beam). A ship with no engine can't dodge (evasion 0). This is the input the dodge model uses; v1 stub leaves sensors + crew experience out (flagged for v2).
 
 **Where it's computed.** `ShipFactory.CreateShip()` calls `ship.SetDataBlob(ShipCombatValueDB.Calculate(ship))` after the components are installed. `Calculate` is defensive — a part-less ship rates 0/0 and never throws.
 
@@ -206,6 +207,9 @@ switcher, step 9) to watch the auto-resolver decide it.
 | `UtilityRoleWeight` | 0.25 | combat-value role weight of a hull with no weapons | `ShipCombatValueDB.cs` |
 | `ComponentHitPoints_J` | 100,000 | joules one component absorbs before destruction (= the damage tuning's "100 kJ kills a component") | `ShipCombatValueDB.cs` |
 | `ArmorHitPointsPerThickness_J` | 100,000 | joules of toughness added per unit of armour thickness | `ShipCombatValueDB.cs` |
+| `SizeReference_m3` | 1,000 | ship volume (m³) at which the size half-contributes to evasion (bigger = easier to hit) | `ShipCombatValueDB.cs` |
+| `AgilityReference_mps2` | 5.0 | acceleration (m/s²) at which agility half-contributes to evasion (thrust ÷ mass) | `ShipCombatValueDB.cs` |
+| `EvasionCap` | 0.95 | hard ceiling on Evasion — nothing is ever fully untouchable | `ShipCombatValueDB.cs` |
 | `AutoResolveConfig.RoundSeconds` | 5.0 | game-seconds of fire per salvo round | `AutoResolve.cs` |
 | `AutoResolveConfig.MaxRounds` | 2000 | round-cap backstop; hitting it = Stalemate | `AutoResolve.cs` |
 | `CombatEngagement.EngagementRange_m` | 1e9 (1M km) | v1 flat auto-engage distance (real value = weapon range, v2) | `CombatEngagement.cs` |
