@@ -22,6 +22,7 @@
         "TemplateFiles/techs.json",
         "TemplateFiles/techs-bureaucracy.json",
         "TemplateFiles/weapons.json",
+        "TemplateFiles/combatDoctrines.json",
         "TemplateFiles/damageResistance.json",
         "ScenarioFiles/designs/componentDesigns.json",
         "ScenarioFiles/designs/shipDesigns.json",

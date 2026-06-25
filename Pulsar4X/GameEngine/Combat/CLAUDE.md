@@ -17,8 +17,11 @@ It deliberately does **not** use the per-pixel damage sim (`Damage/DamageComplex
 | `FleetCombatStateDB.cs` | DataBlob marking a fleet as **engaged** (opponent fleet id, accumulated damage pool, steps fought). On both fleets during a battle; removed when it ends. Its presence is the "in combat" flag the engagement lock (step 11) keys on. | ✅ built (spine step 4) |
 | `CombatEngagement.cs` | The trigger's engine logic: `Tick(manager, dt)` finds hostile fleets in range, starts engagements, and steps active ones (incremental over game-time) until one side is wiped. Hostility/range/detection are v1 stubs. Testable directly. | ✅ built (spine step 4) |
 | `BattleTriggerProcessor.cs` | `IHotloopProcessor` (every 5 s) that calls `CombatEngagement.Tick` per star system. Keyed to `StarInfoDB` (FleetDB is already taken). | ✅ built (spine step 4) |
+| `FleetDoctrineDB.cs` | DataBlob: a fleet's **active** combat posture (doctrine id, firepower/toughness/speed multipliers, retreat flag, switch-cooldown clock). Read by the engagement as a strength/toughness modifier. | ✅ built (spine step 5) |
+| `FleetDoctrine.cs` | Helpers: `FirepowerMult`/`ToughnessMult`/`IsRetreat(fleet)` reads; `TrySetDoctrine(fleet, blueprint, now)` sets a posture from the catalog, honouring the cooldown. | ✅ built (spine step 5) |
+| `CombatDoctrineBlueprint` (`Engine/Blueprints/`) | The moddable **catalog** of postures (JSON → `ModDataStore.CombatDoctrines`): family, display name, the multipliers, cooldown, retreat flag. | ✅ built (spine step 5) |
 
-*(rows added as doctrine, fleet components, and retreat land.)*
+*(rows added as fleet components and retreat land.)*
 
 ---
 
@@ -92,6 +95,26 @@ Battles spanning game-time is what makes "watch a battle / change doctrine mid-f
 
 ---
 
+## Switchable doctrine
+
+**What it is.** Each fleet can fly an active **combat posture** — its doctrine — set by the player (or NPC). The auto-resolver reads it as a read-time multiplier on that fleet's strength and toughness, so the *same* fleet fights differently under a different posture. Two pieces:
+- `FleetDoctrineDB` (on a fleet) = the **active selection**: the chosen posture's id + its `FirepowerMult` / `ToughnessMult` / `SpeedMult` / `IsRetreat`, plus `SwitchableAfter` (the switch-cooldown clock).
+- `CombatDoctrineBlueprint` (in `ModDataStore.CombatDoctrines`, loaded from `GameData/basemod/TemplateFiles/combatDoctrines.json`) = the **moddable catalog** of selectable postures. Wired through the standard mod pipeline: a `DataType.CombatDoctrine` case in `ModInstruction` + `ModLoader`, a dict in `ModDataStore`, an entry in `modInfo.json`.
+
+**Setting a posture.** `FleetDoctrine.TrySetDoctrine(fleet, blueprint, now)` copies the blueprint's effects into the fleet's `FleetDoctrineDB` and starts the cooldown; it returns `false` (no change) if the fleet is still within `SwitchableAfter`. Effects apply **at read time** (the `BonusesDB` pattern) — never baked into ship stats, so switching is reversible.
+
+**How combat reads it.** `CombatEngagement.StepEngagement` multiplies each fleet's firepower by `FleetDoctrine.FirepowerMult(fleet)` and each fleet's casualty-toughness by `FleetDoctrine.ToughnessMult(fleet)`. A fleet with no `FleetDoctrineDB` reads ×1.0 (neutral), so doctrine is purely additive over step 4. `AutoResolve` (the pure ship-list variant) stays doctrine-free — doctrine lives where fleets do (the engagement).
+
+**Don't confuse with `FactionInfoDB.Doctrine`** — that's the strategic Economic/Military/Tech/Expansion AI vector (a different system). Same word.
+
+**Base catalog (4 postures):** `balanced` (Utilitarian), `all-out-attack` (Offensive: +firepower / −toughness), `defensive-line` (Defensive: −firepower / +toughness), `fighting-withdrawal` (Defensive, `IsRetreat=true` — the withdraw posture for step 7).
+
+**Tests:** `Pulsar4X.Tests/FleetDoctrineTests.cs` — the catalog loads from JSON; `TrySetDoctrine` applies the multipliers and honours the cooldown; an aggressive (×2 firepower) fleet beats the identical enemy that has none. `BaseModIntegrityTests` (existing) also validates the JSON loads with zero skipped entries.
+
+**Not yet:** a player-facing order to change doctrine mid-fight (the engagement lock, step 11, will allow that one order during combat); `SpeedMult` is stored but not yet applied to movement; per-component doctrine (step 6).
+
+---
+
 ## Model-coupled / tuning constants
 
 | Constant | Value | Meaning | Where |
@@ -116,3 +139,4 @@ Battles spanning game-time is what makes "watch a battle / change doctrine mid-f
 4. **Firepower mixes precise beam J/s with a flat missile stub.** The number is a *relative* strength figure for the salvo math, not a physical unit — don't read absolute meaning into it until missile ordnance energy is wired.
 5. **The battle trigger is the one combat piece with live side effects.** `BattleTriggerProcessor` runs every 5 s on every star system and **destroys ships** when hostile fleets fight. It is keyed to `StarInfoDB` (not `FleetDB`, which `FleetOrderProcessor` already owns — one processor per DataBlob type) and returns `>= 1` so it never sleeps. Keep its constructor trivial and `CombatEngagement.Tick` defensive (no throws) — a throwing hotloop processor crashes the whole game loop and CI's `GameLoopSmokeTests`.
 6. **Hostility is "different non-neutral faction" (v1 stub).** No diplomacy/relations system exists, and the engine's `EntityFilter.Hostile` also requires a sensor contact (stubbed away in v1). When relations/sensors are built, route `CombatEngagement` hostility through them.
+7. **`FleetDoctrineDB` (fleet posture) ≠ `FactionInfoDB.Doctrine` (strategic AI vector).** Same word, different systems. Doctrine effects are read-time multipliers (`BonusesDB` pattern) applied in `StepEngagement` — never bake them into ship stats. `AutoResolve` (pure ship-list) intentionally has no doctrine; it lives in the engagement where fleets do.

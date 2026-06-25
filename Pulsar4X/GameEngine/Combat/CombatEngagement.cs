@@ -105,8 +105,10 @@ namespace Pulsar4X.Combat
                 return;
             }
 
-            double strA = TotalFirepower(shipsA);
-            double strB = TotalFirepower(shipsB);
+            // Doctrine is a read-time multiplier on each fleet's effective strength/toughness (its active
+            // FleetDoctrineDB posture; 1.0 if none). docs/COMBAT-DESIGN.md System 4.
+            double strA = TotalFirepower(shipsA) * FleetDoctrine.FirepowerMult(fleetA);
+            double strB = TotalFirepower(shipsB) * FleetDoctrine.FirepowerMult(fleetB);
 
             stateA.StepsFought++;
             stateB.StepsFought++;
@@ -115,8 +117,8 @@ namespace Pulsar4X.Combat
             stateB.DamageTakenPool += strA * dt;
             stateA.DamageTakenPool += strB * dt;
 
-            ApplyCasualties(shipsB, stateB); // A shoots B
-            ApplyCasualties(shipsA, stateA); // B shoots A
+            ApplyCasualties(shipsB, stateB, FleetDoctrine.ToughnessMult(fleetB)); // A shoots B
+            ApplyCasualties(shipsA, stateA, FleetDoctrine.ToughnessMult(fleetA)); // B shoots A
 
             bool frozen = strA <= 0 && strB <= 0;
             bool timedOut = stateA.StepsFought >= MaxSteps;
@@ -142,12 +144,12 @@ namespace Pulsar4X.Combat
         // Whole-or-destroyed: drain the pool by removing lead ships (combatants first). Kills are real
         // (Entity.Destroy() => IsValid=false immediately), and the ship is dropped from this local list so the
         // survivor count is accurate within the step.
-        private static void ApplyCasualties(List<Entity> ships, FleetCombatStateDB state)
+        private static void ApplyCasualties(List<Entity> ships, FleetCombatStateDB state, double toughnessMult)
         {
             ships.Sort((x, y) => CombatValue(y).RoleWeight.CompareTo(CombatValue(x).RoleWeight));
-            while (ships.Count > 0 && state.DamageTakenPool >= CombatValue(ships[0]).Toughness)
+            while (ships.Count > 0 && state.DamageTakenPool >= CombatValue(ships[0]).Toughness * toughnessMult)
             {
-                state.DamageTakenPool -= CombatValue(ships[0]).Toughness;
+                state.DamageTakenPool -= CombatValue(ships[0]).Toughness * toughnessMult;
                 ships[0].Destroy();
                 ships.RemoveAt(0);
             }
