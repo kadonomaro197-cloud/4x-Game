@@ -196,9 +196,18 @@ namespace Pulsar4X.Combat
 
         private static bool InRange(Entity a, Entity b)
         {
-            if (!TryGetFleetPosition(a, out var pa) || !TryGetFleetPosition(b, out var pb))
-                return false;
-            return (pa - pb).Length() <= EngagementRange_m;
+            // v1: a real weapon-range gate is a v2 layer (EngagementRange_m is the placeholder). Tick already runs
+            // per star system, so "same system" is the working v1 stub. We still apply a distance gate WHEN both
+            // positions are available and finite, but DEFAULT TO IN-RANGE otherwise — a freshly-spawned fleet's
+            // position isn't finite until the orbit processor runs, and a fragile position read must never stop a
+            // battle from triggering.
+            if (TryGetFleetPosition(a, out var pa) && TryGetFleetPosition(b, out var pb))
+            {
+                double dist = (pa - pb).Length();
+                if (!double.IsNaN(dist) && !double.IsInfinity(dist) && dist > EngagementRange_m)
+                    return false;
+            }
+            return true;
         }
 
         private static bool TryGetFleetPosition(Entity fleet, out Vector3 position)

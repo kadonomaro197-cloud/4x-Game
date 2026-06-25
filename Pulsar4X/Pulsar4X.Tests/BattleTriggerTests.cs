@@ -91,6 +91,9 @@ namespace Pulsar4X.Tests
             var playerFleet = MakeFleet(s, s.Faction, "Blue Fleet");
             var playerShip = AddShip(s, s.Faction, playerFleet, 0, 1_000_000, "Blue 1");
 
+            Log($"setup: factions enemy={enemyFaction.Id} player={s.Faction.Id}; fleetOwners enemy={enemyFleet.FactionOwnerID} player={playerFleet.FactionOwnerID}; " +
+                $"ships enemy={CombatEngagement.GetFleetShips(enemyFleet).Count} player={CombatEngagement.GetFleetShips(playerFleet).Count}");
+
             // First tick: detect the hostile pair in range and start an engagement.
             CombatEngagement.Tick(s.StartingSystem, 5);
             Assert.That(playerFleet.HasDataBlob<FleetCombatStateDB>(), Is.True, "the trigger should have engaged the hostile fleets");
