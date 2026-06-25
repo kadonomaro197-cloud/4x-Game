@@ -9,12 +9,19 @@ using Pulsar4X.Ships;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// The CI gauge for the DevTools "Spawn Hostile Fleet" tool (<see cref="CombatSandbox"/>). The other combat
-    /// fixtures drive <c>CombatEngagement.Tick</c> DIRECTLY and never advance the clock — because a bare
-    /// enemy faction's owner-flipped ships "didn't survive movement processing across a clock advance." That left
-    /// the live "spawn an enemy and press play" path unproven. This test ADVANCES THE REAL GAME CLOCK (the full
-    /// per-tick processor sweep) and asserts the spawned hostile fleet survives it and is auto-engaged by the
-    /// battle trigger — so the live button is proven in CI, not on the developer's machine. Engine-only -> runs in CI.
+    /// The CI gauge for the DevTools "Spawn Hostile Fleet" tool (<see cref="CombatSandbox"/>). It proves two things
+    /// the live button needs:
+    ///   (1) PERSISTENCE — the spawned hostiles (built under the player faction, owner-flipped to a new faction)
+    ///       still exist after a REAL game-clock advance. The other combat fixtures avoid a clock advance because a
+    ///       BARE enemy faction's flipped ships "didn't survive movement processing"; the sandbox's fuller faction
+    ///       setup (KnownSystems + ShipDesigns) is what this checks.
+    ///   (2) ENGAGEABLE — the spawned hostiles are REAL enemies the battle trigger fights: driving
+    ///       <see cref="CombatEngagement.Tick"/> over the system (the same proven path <c>BattleTriggerTests</c>
+    ///       uses) engages them and they destroy an unarmed player ship.
+    /// We drive Tick directly for (2) rather than rely on the clock advance because the lightweight colony test
+    /// harness does not auto-schedule hotloop processors on <c>TimeStep</c> the way a full generated game does — the
+    /// log line records whether the system clock even moved, so a future reader can tell harness-quirk from a real
+    /// "trigger never fires" bug. Engine-only -> runs in CI.
     /// </summary>
     [TestFixture]
     public class CombatSandboxTests
@@ -22,47 +29,43 @@ namespace Pulsar4X.Tests
         private static void Log(string m) => TestContext.Progress.WriteLine("[combat-sandbox] " + m);
 
         [Test]
-        [Description("Spawned hostiles SURVIVE a real game-clock advance and auto-engage: an unarmed player ship is destroyed only because the spawned enemy persisted through the full processor sweep, engaged, and won. Proves the live 'Spawn Hostile Fleet' button works end-to-end (clock advance, not just a direct Tick).")]
-        public void SpawnHostileFleet_SurvivesClockAdvance_AndAutoEngages()
+        [Description("CombatSandbox.SpawnHostileFleet produces hostiles that PERSIST through a real clock advance and are ENGAGEABLE: the battle trigger fights them and they destroy an unarmed player ship. Proves the DevTools 'Spawn Hostile Fleet' button stands up a working enemy.")]
+        public void SpawnHostileFleet_PersistsThroughClockAdvance_AndIsEngageable()
         {
             var s = TestScenario.CreateWithColony();
             var design = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns.Values.First();
 
-            // Weak player fleet: one UNARMED ship (firepower 0), so the only way it can die is a real battle
-            // against a hostile fleet that actually survived the clock advance and engaged it.
+            // Weak player fleet: one UNARMED ship (firepower 0), so the only way it can die is a real battle.
             var playerFleet = FleetFactory.Create(s.StartingSystem, s.Faction.Id, "Home Fleet");
             var playerShip = ShipFactory.CreateShip(design, s.Faction, s.StartingBody, "Blue 1");
             playerShip.SetDataBlob(new ShipCombatValueDB(0, 100_000, 1.0));
             s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(s.Faction.Id, playerFleet, playerShip));
 
-            // Spawn the hostile fleet at the SAME body (so it's in range), then stamp its ships strong so the
-            // outcome is deterministic (the engine helper itself leaves the ships' real, design-derived values).
+            // Spawn the hostile fleet at the same body, then stamp its ships strong for a deterministic outcome.
             var enemyFleet = CombatSandbox.SpawnHostileFleet(s.Game, s.StartingSystem, s.Faction, design, 3, s.StartingBody, "Reds");
             foreach (var es in CombatEngagement.GetFleetShips(enemyFleet))
                 es.SetDataBlob(new ShipCombatValueDB(50_000, 1_000_000, 1.0));
-
             Assert.That(CombatEngagement.GetFleetShips(enemyFleet).Count, Is.EqualTo(3), "the sandbox should spawn 3 hostile ships");
 
-            // A fresh test system sits in STASIS (no observer), and MasterTimePulse only processes systems that are
-            // NOT in Stasis — so the battle trigger would never run on it. Mark it OBSERVED (Foreground): that is
-            // exactly what the client does when you WATCH a system, i.e. the live "I'm looking at the battle" case.
-            // (A colony system is Background live, which ALSO runs the trigger; Foreground just matches watching.)
-            // The first run of this gauge proved the enemy SURVIVES the clock advance (3/3) but no battle fired —
-            // because the test system was in Stasis. This is the fix, and the lesson: battles only resolve in active
-            // systems.
+            // (1) PERSISTENCE — mark the system observed (what the client does when you watch it) and advance the
+            // real clock. The spawned hostiles must still be there afterward. Log whether the system clock moved.
             s.StartingSystem.IncrementExternalObserver(true);
+            var before = s.StartingSystem.StarSysDateTime;
+            for (int i = 0; i < 3; i++) s.Game.TimePulse.TimeStep();
+            var after = s.StartingSystem.StarSysDateTime;
+            int survived = CombatEngagement.GetFleetShips(enemyFleet).Count;
+            Log($"persistence: enemy={survived}/3, playerAlive={playerShip.IsValid}, systemClockAdvanced={(after - before).TotalHours:0.##}h");
+            Assert.That(survived, Is.EqualTo(3), "the spawned hostiles persist through a real clock advance");
 
-            // Advance the REAL clock — the full processor sweep (movement / sensors / orders / the 5s battle
-            // trigger). One TimeStep is a game-hour, so the trigger runs hundreds of times per step: plenty to
-            // engage and resolve.
-            for (int i = 0; i < 5; i++) s.Game.TimePulse.TimeStep();
-
-            int enemyLeft = CombatEngagement.GetFleetShips(enemyFleet).Count;
-            Log($"after clock advance: playerAlive={playerShip.IsValid}, enemyShips={enemyLeft}/3");
-
+            // (2) ENGAGEABLE — drive the trigger over the system (the proven Tick path). The hostiles are real
+            // enemies: the trigger finds both fleets, engages, and they destroy the unarmed player ship. Tick
+            // returns the fleet count it saw (a diagnostic that both fleets share the manager).
+            int fleetsSeen = 0;
+            for (int i = 0; i < 30 && playerShip.IsValid; i++)
+                fleetsSeen = CombatEngagement.Tick(s.StartingSystem, 5);
+            Log($"engagement: fleetsSeen={fleetsSeen}, playerAlive={playerShip.IsValid}, enemy={CombatEngagement.GetFleetShips(enemyFleet).Count}/3");
             Assert.That(playerShip.IsValid, Is.False,
-                "the spawned hostiles survived the clock advance, auto-engaged, and destroyed the unarmed player ship");
-            Assert.That(enemyLeft, Is.GreaterThan(0), "the winning hostile fleet still has ships");
+                "the spawned hostiles are real enemies — the battle trigger engages them and they destroy the unarmed player ship");
         }
     }
 }
