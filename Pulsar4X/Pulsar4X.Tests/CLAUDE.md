@@ -96,7 +96,16 @@ Namespace drift between branches is the #1 compile trap here (it bit `PositionDB
 | `ShipSpawnTests` | engine ship-spawn — `ShipFactory.CreateShip` (the DevTools spawn path) lands a ship in the system with its parts, and it survives a tick |
 | `StartFleetTests` | the New Game **start fleet** — asserts `CreateFromBlueprint` builds the colony blueprint's fleets (CI-proven `[start] fleets=3, ships=5` from `colony-earth`). The engine-checkable half of "fleets aren't working" (the client half needs the dev's local build + DevTools "Dump State") |
 | `ProductionBuildTests` | the build-to-product link — the factory consumes stored minerals and installs a new Refinery on the colony (`InstallOn` path); proves "resources → installed product", the rails a built unit rides |
-| `CombatReadoutTests` | **MVP Stage 1** — the space-combat *damage* gauge (the path was 🔴 DARK / no tests). Calls `DamageProcessor.OnTakingDamage` directly on a real ship with a beam-shaped fragment and prints `[combat]` (health drop / components removed / destroyed?). Commit 1 is a **readout** (asserts only that the sim runs); hard "a ship CAN be destroyed" assertion is added once CI shows the reading. |
+| `CombatReadoutTests` | **MVP Stage 1** — the space-combat *damage* gauge (the path was 🔴 DARK / no tests). Calls `DamageProcessor.OnTakingDamage` directly on a real ship with a beam-shaped fragment and prints `[combat]` (health drop / components removed / destroyed?). Reading: the per-pixel sim deposits ~0 damage — which is why the auto-resolve engine below routes around it. |
+| **Auto-resolve combat engine** (8 fixtures, `GameEngine/Combat/`) | the v1 space-combat spine — all CI-green: |
+| &nbsp;&nbsp;`ShipCombatValueTests` | every starting design gets a `ShipCombatValueDB` (toughness > 0; firepower > 0 for beam-carriers) at build |
+| &nbsp;&nbsp;`AutoResolveTests` | the salvo loop — stronger fleet wins & wipes the weaker; zero-firepower = stalemate; combatants die before utility hulls |
+| &nbsp;&nbsp;`BattleTriggerTests` | `CombatEngagement.Tick` detects two hostile fleets in range, engages, and resolves; same-faction fleets never engage. (Clears the colony's own start fleets first — see the fixture's `ClearExistingFleets` note) |
+| &nbsp;&nbsp;`FleetDoctrineTests` | the moddable doctrine catalog loads; `TrySetDoctrine` applies mults + honours the switch cooldown; an aggressive (×2) fleet beats the identical enemy |
+| &nbsp;&nbsp;`FleetComponentTests` | per-component doctrine — a ship in an offensive sub-fleet reads ×2 while a ship directly in the fleet reads ×1; a component's ×2 flips a battle the raw hull would lose |
+| &nbsp;&nbsp;`FleetRetreatTests` | retreat — a `fighting-withdrawal` fleet breaks off intact (posture); a 4-ship fleet that loses half retreats with survivors (threshold); both record a `FleetRetreatDB` |
+| &nbsp;&nbsp;`EngagementLockTests` | an engaged fleet (`FleetCombatStateDB`) refuses an AssignShip order; a `TrySetDoctrine` on it still applies; clearing the combat state lets the order through |
+| &nbsp;&nbsp;`CombatTestShipsTests` | the example ships (Aegis warship / Picket corvette) load + rate strong-vs-weak; a 3v3 auto-resolve is a decisive `SideAVictory` |
 | `GameLoopSmokeTests` | core sim loop advances on a generated (colony-less) universe |
 | `SaveLoadSmokeTests` | `Game.Save → Load` round-trips |
 | `StateIntegritySmokeTests` | entity positions stay finite across a clock advance (catches silent NaN) |

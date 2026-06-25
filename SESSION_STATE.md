@@ -6,7 +6,37 @@ This document tracks what we know about the codebase state at the close of each 
 
 ## Last Updated
 
-Session ending 2026-06-24 (cont.) — **Stage 1 combat gauge → combat-design rework → fleet/spawner/UI shakedown.** Branch `claude/adoring-gates-i6svyk`, HEAD `7878b5b` (8 commits this session). Engine CI green; client fixes live-verified by the developer. **Next: combat as its own effort — write the reworked `docs/COMBAT-DESIGN.md` (one engine + doctrine), then build the Tier 0 auto-resolve spine under a harness gauge. Combat damage + move orders are parked here on purpose.**
+Session ending 2026-06-25 — **MVP Stage 1 (space combat) BUILT: the v1 auto-resolve combat engine, end-to-end and CI-green.** Branch `claude/focused-ritchie-debock` (10 commits). The whole combat spine the previous session specced is now real and tested: rate ships → auto-resolve → in-game trigger → switchable + per-component doctrine → retreat → engagement lock, plus example test ships and a DevTools faction switcher. Engine + data are CI-verified (8 new test fixtures); the DevTools faction switcher is client code that **needs the developer's local build** (CI can't compile the SDL client). **Next: the developer live-tests a staged fight (spawn Aegis vs Picket, switch factions to watch); then Stage 2 — mirror this spine for ground combat.**
+
+---
+
+## Session 2026-06-25 — MVP Stage 1: the Auto-Resolve Combat Engine (READ THIS FIRST)
+
+Built the entire v1 space-combat spine that the 2026-06-24 rework specced — **one engine (auto-resolve), doctrine is the wheel** — piece by piece, each under a CI test, on branch `claude/focused-ritchie-debock`. All engine/data pieces are CI-green.
+
+### WHERE TO RESUME
+Stage 1 space combat **resolves** now. The next move is the developer's **live test**: enter SM mode → DevTools → spawn an *Aegis Test Warship* fleet, use the **Faction Switcher** to act as another faction and spawn a *Picket Test Corvette* fleet in the same system → they auto-engage → watch one side win (and try a doctrine change / `fighting-withdrawal` to see retreat). After that, **Stage 2 = mirror this engine for ground combat** (`GroundUnitDesign : IConstructableDesign` + a `GroundCombatProcessor` that attrites attacker vs defender — same shape as `CombatEngagement`).
+
+### What was built (each its own commit + CI-green test)
+| Piece | Engine | Test |
+|-------|--------|------|
+| Combat-design rework (one engine + doctrine, v1 boundary) | `docs/COMBAT-DESIGN.md` | — |
+| **Ship combat value** (firepower from beams + missile stub; toughness from components + armour; role weight) — computed at build | `Combat/ShipCombatValueDB.cs`, hook in `ShipFactory` | `ShipCombatValueTests` |
+| **Auto-resolve salvo loop** (strength → damage pools → whole-ship casualties, combatants first; pure, reports casualties) | `Combat/AutoResolve.cs` | `AutoResolveTests` |
+| **In-game battle trigger** (hostile fleets in range auto-engage, fight over game-time) | `Combat/CombatEngagement.cs`, `BattleTriggerProcessor.cs`, `FleetCombatStateDB.cs` | `BattleTriggerTests` |
+| **Switchable doctrine** (moddable `CombatDoctrineBlueprint` catalog → active `FleetDoctrineDB`; read-time strength/toughness mults; switch cooldown) | `Combat/FleetDoctrine*.cs`, `combatDoctrines.json` + mod pipeline | `FleetDoctrineTests` |
+| **Per-component doctrine** (a fleet's sub-fleets each run their own posture) | `CombatEngagement.GetCombatShips` (CombatShip struct) | `FleetComponentTests` |
+| **Retreat** (math outcome: flag + withdraw vector, no move order; posture OR casualty threshold) | `Combat/FleetRetreatDB.cs`, `CombatEngagement` | `FleetRetreatTests` |
+| **Engagement lock** (engaged fleets refuse regular orders; only doctrine — a direct call — applies) | `StandAloneOrderHandler` + `EntityCommand.IsAllowedDuringEngagement` | `EngagementLockTests` |
+| **Example test ships** (Aegis warship / Picket corvette — strong vs weak) | `shipDesigns.json` + colony-earth | `CombatTestShipsTests` |
+| **DevTools faction switcher** (view/act as any faction — SM) | `DevToolsWindow.cs` | *client — local build only* |
+
+### Key decisions / things a future session must know
+- **The auto-resolve engine deliberately does NOT use the per-pixel damage sim** (it deposits ~0 damage — see BIG FINDING #1 below). Casualties are whole-ship removal by strength math. Don't wire combat value into `DamageProcessor`.
+- **`CombatEngagement` is the heart**: `Tick` (detect + step engagements per system, run by `BattleTriggerProcessor` every 5 s), `GetFleetShips` (flat, for counts/detection), `GetCombatShips` (doctrine-tagged, for the math). v1 stubs are flagged in code: hostility = different non-neutral faction; range = flat distance + per-system; detection = mutual.
+- **Doctrine is a direct call** (`FleetDoctrine.TrySetDoctrine`), NOT an order — that's *why* it still works under the engagement lock (the lock only gates the order handler).
+- **Test-scenario gotcha that bit twice:** `TestScenario.CreateWithColony()` spawns the colony's own 3 fleets; a Tick test must clear them first (`ClearExistingFleets`) or the enemy engages a colony fleet before the test's. Documented in `BattleTriggerTests`.
+- Full per-system detail is in **`GameEngine/Combat/CLAUDE.md`** (the source of truth) — file map, every gotcha, tuning constants.
 
 ---
 

@@ -13,7 +13,7 @@ thing to the next. Pick the next job off this map, not off whatever we happened 
 tells you which of them are on the critical path to v1 and which are deferred. Use them together: pick the
 next MVP stage, then use this map to work it *and* its connected systems.
 
-**Last updated:** 2026-06-24 — economy substrate proven (gather→refine→build all gauged), MVP scope firewall set, stale UI docs corrected; **Stage 1 (space combat) started — first damage gauge added** (`CombatReadoutTests`, reading pending CI) (branch `claude/adoring-gates-i6svyk`).
+**Last updated:** 2026-06-25 — **MVP Stage 1 (space combat) RESOLVED**: the v1 auto-resolve combat engine is built and CI-green end-to-end (rate ships → auto-resolve → in-game trigger → switchable + per-component doctrine → retreat → engagement lock), with example test ships and a DevTools faction switcher to stage/watch fights. See §3e and `GameEngine/Combat/CLAUDE.md` (branch `claude/focused-ritchie-debock`). *Prev: 2026-06-24 — economy substrate proven, MVP scope firewall set, first damage gauge added.*
 
 ---
 
@@ -98,8 +98,9 @@ reflection — if it's in the assembly, it runs.
 | **Beam weapons** | `BeamWeaponProcessor` | 🔴 DARK | **NO TESTS** | fire control, Damage, sensors (targeting), ships, energy |
 | **Missiles** | `MissileImpactProcessor` (+ `MissleProcessor`) | 🔴 DARK | **NO TESTS** (made functional 2026-06-21, untested) | Damage, movement (guidance/fuel), ordnance, sensors |
 | **Generic firing / fire control** | `GenericFiringWeaponsProcessor` | 🔴 DARK | **NO TESTS** | weapons, sensors, orders |
-| **Damage** | `DamageProcessor` (DamageComplex) | 🔴→🟡 gauging | **NEW** `CombatReadoutTests` — calls `OnTakingDamage` directly on a real ship and prints `[combat]` (health drop / components removed / destroyed?); first reading lands with CI. Was: NO TESTS. | weapons, ships, components, **colony bombardment → population** |
-| **Ground combat** | — | ⚫ ABSENT | — | colony, hex map, Damage, population, industry (build ground units) — **the destination** |
+| **Damage** | `DamageProcessor` (DamageComplex) | 🔴→🟡 gauging | `CombatReadoutTests` — calls `OnTakingDamage` directly on a real ship and prints `[combat]`. **Reading: the per-pixel sim deposits ~0 damage (broken) — which is why the auto-resolve engine below routes AROUND it.** | weapons, ships, components, **colony bombardment → population** |
+| **Auto-resolve combat engine** ⭐ **BUILT this session** | `BattleTriggerProcessor` → `CombatEngagement` (`GameEngine/Combat/`) | 🟢 **WORKS** | **8 CI-green fixtures:** `ShipCombatValueTests`, `AutoResolveTests`, `BattleTriggerTests`, `FleetDoctrineTests`, `FleetComponentTests`, `FleetRetreatTests`, `EngagementLockTests`, `CombatTestShipsTests` | ships (combat value), fleets (the two sides), doctrine (player's lever), orders (engagement lock). **This is the v1 combat spine** — decides battles by *strength math*, not the per-pixel sim above (parked v2). Rate ships → auto-resolve → in-game trigger → switchable + per-component doctrine → retreat → engaged fleets locked to doctrine-only. See `docs/COMBAT-DESIGN.md`, `GameEngine/Combat/CLAUDE.md`. **Example ships:** Aegis warship / Picket corvette (spawn via DevTools faction switcher). |
+| **Ground combat** | — | ⚫ ABSENT | — | colony, hex map, Damage, population, industry (build ground units) — **the destination; now has a built space-combat spine to mirror** |
 
 ### 3f. Sensors, survey, and the rest of the watch-bill
 
