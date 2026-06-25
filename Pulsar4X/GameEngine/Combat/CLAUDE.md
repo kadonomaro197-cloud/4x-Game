@@ -353,6 +353,15 @@ possible if the spawned hostiles are real, in-range enemies the trigger fights).
    exercise it here. **Live-test implication: confirm in the running client whether pressing play auto-starts the
    battle; if not, the fallback is a "Force Engagement" control that calls `CombatEngagement.Tick`.** The gauge
    logs whether the system clock even advanced, to tell harness-quirk from a real "trigger never fires" bug.
+3. **The spawned hostiles are the FIRST foreign-faction entities a player can click — they expose latent
+   client crashes that assume player-owned data (found + fixed live 2026-06-25).** The enemy faction is bare:
+   `FactionDataStore.CargoTypes` is empty (everything sits in `LockedCargoTypes` until tech unlock). Clicking a
+   hostile "Cargo Courier" opened its `EntityWindow`, which hard-indexed the OWNER faction's `CargoTypes[sid]` →
+   `KeyNotFoundException` → whole-client crash (invisible in `game_log.txt` because the trace goes to stderr).
+   Fixed client-side (defensive cargo-type lookup at three sites + a `SafeRender` render-loop gauge) — see
+   `Pulsar4X.Client/CLAUDE.md` gotchas #11–#12. **Implication for this tool: any new "show me data about an
+   entity" client panel must tolerate a foreign/NPC owner with empty unlocked data; the spawn button is the way
+   to flush these out before real NPCs exist.**
 
 ---
 
