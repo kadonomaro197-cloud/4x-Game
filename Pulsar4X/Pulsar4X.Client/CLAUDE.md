@@ -83,7 +83,7 @@ internal override void Display()
 | Window | File | Status | Notes |
 |--------|------|--------|-------|
 | `SystemWindow` | `SystemWindow.cs` | ✅ Functional | Star system selector and planet list |
-| `FleetWindow` | `FleetWindow.cs` | ✅ Functional | Fleet listing, selection, basic orders |
+| `FleetWindow` | `FleetWindow.cs` | ✅ Functional | Fleet listing, selection, basic orders. **+ Combat tab (2026-06-25)** — see "Fleet Combat tab" below. |
 | `ColonyManagementWindow` | `ColonyManagementWindow.cs` | ✅ **Full economy UI** (verified in code 2026-06-24) | Colony picker + tabs: **Summary** (planet/pop/infra-efficiency/installed components/stockpile of raw+refined), **Production** (`IndustryDisplay` — queue refine/build jobs via `IndustryOrder2`: batch/repeat/auto-install/priority/cancel), **Construction**, **Mining** (per-mineral rate/annual production/years-to-depletion). The minerals→refined→components loop is fully see-and-do here. **Live-behaviour unverified** (CI can't build the client). |
 | `PlanetaryWindow` | `PlanetaryWindow.cs` | ✅ (installations fixed 2026-06-24) | General info ✅ / Mineral deposits ✅ / **Installations ✅ — tab now gates on `ComponentInstancesDB` and renders via `componentsDB.Display(...)` (`:102,220`), NOT the dead `InstallationsDB`.** |
 | `ShipDesignWindow` | `ShipDesignWindow.cs` | ✅ Functional | Ship design and component assignment |
@@ -186,6 +186,41 @@ Mining — see the Window Inventory). The minerals→refined→components loop i
 the only way to know the real state is to run it (see `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` §5B). If something
 is actually broken live, fix *that* — don't rebuild panels that already render. `InstallationsDB` itself remains
 dead/vestigial; do not resurrect it.
+
+### Fleet Combat tab (FleetWindow) — BUILT 2026-06-25 (the space-combat UI starting point)
+
+The space auto-resolve engine had **no client UI** — battles ran invisibly and ships just vanished. The first
+piece of the real combat UI is a **"Combat" tab on `FleetWindow`** (between Summary and Issue Orders), shown the
+moment a fleet — or a sub-fleet "component" — is selected. It is the in-client realisation of COMBAT-DESIGN
+System 4's "extend the Fleet panel; the table IS the interface." Three sections (`DisplayCombatTab` →
+`DisplayCombatStatus` / `DisplayDoctrineSelector` / `DisplayFleetCombatSheet`):
+
+1. **Status** — the live battle readout. Reads `FleetCombatStateDB`: "● IN COMBAT — salvo N", the representative
+   opponent (`OpponentFleetId` → name + ship count), ships `alive of started (lost X)`, and the incoming
+   `DamageTakenPool`. Falls back to `FleetRetreatDB` ("withdrew") or "Not engaged".
+2. **Doctrine** — the player's lever. Shows the active `FleetDoctrineDB` and a dropdown of the moddable catalog
+   (`Game.StartingGameData.CombatDoctrines`); **Set** calls `FleetDoctrine.TrySetDoctrine` (a **direct call, not an
+   order**, so it bypasses the engagement lock and works mid-battle). The button greys out with a game-time
+   countdown while `SwitchableAfter` (the switch cooldown) is in the future.
+3. **Combat sheet** — fleet totals (firepower J/s, toughness J, combatant count), firepower broken down by weapon
+   class (from each ship's `ShipCombatValueDB.Weapons`), and the per-ship table (role / firepower / toughness /
+   evasion). Per-component doctrine falls out for free: selecting a sub-fleet in the tree makes it the selected
+   fleet, so the tab then shows/sets THAT component's posture.
+
+**Connections (Prime Directive):** reads `ShipCombatValueDB`, `FleetDoctrineDB`, `FleetCombatStateDB`,
+`FleetRetreatDB`, the `CombatDoctrines` catalog; writes nothing directly except via `FleetDoctrine.TrySetDoctrine`.
+All reads are defensive (`TryGet` + `IsValid` + snapshot-to-array) because the background combat processor mutates
+this state on another thread — and a ship killed mid-battle lingers in the fleet's child list with `IsValid=false`
+until cleanup, so alive/loss counts **filter on `IsValid`** (don't drop that filter).
+
+**Testing caveat — sections 2 and 3 verify on an IDLE fleet (no enemy needed); section 1 needs a live battle.**
+A fresh New Game has **no fleet at all** (gotcha 8) and **no hostile faction**, so to exercise the live readout you
+must first stand up an enemy fleet. That tooling (a DevTools "spawn hostile fleet") is the **next piece** — until
+it lands, the Status section only ever reads "Not engaged". To verify the tab now: Fleet window → *Create New
+Fleet* → DevTools (SM mode) → *Spawn Ship* a few armed designs (Lancer/Bulwark/Wasp/Leviathan) into it → select
+the fleet → **Combat tab** → the sheet + doctrine selector should populate; set a posture and watch "Current"
+change. CI can't build the client, so this is a build → play → read `console_output.txt` (look for `[FleetCombat]`
+lines) loop.
 
 ### GroundCombatWindow — MISSING ENTIRELY
 
