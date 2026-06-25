@@ -11,15 +11,24 @@ namespace Pulsar4X.Combat
     /// The battle trigger's engine logic, separated from the processor (<see cref="BattleTriggerProcessor"/>)
     /// so it can be tested directly.
     ///
-    /// Each tick: (1) find pairs of hostile fleets that are in range and not already engaged, and start an
-    /// engagement; (2) step each active engagement forward a little (game-time), removing whole-ship casualties
-    /// (combatants first); when one fleet is wiped — or the fight stalls — end the engagement, which removes the
-    /// combat state from both fleets and so clears the engagement lock.
+    /// MULTI-PARTY by design: any number of fleets can fight on either side, and a fleet can JOIN a battle in
+    /// progress at any moment. Each tick: (1) the engage/join pass — any two hostile fleets in range are both
+    /// put "in combat" (a fleet reinforcing a fight simply gains combat state here when it comes into range of
+    /// an enemy); (2) the step pass — every in-combat fleet in this star system fights as one engagement, the
+    /// fleets partitioned into SIDES by faction. Each fleet takes the combined fire of all fleets hostile to it;
+    /// an attacker facing several enemy fleets DIVIDES its fire across them (outnumbering a side doesn't multiply
+    /// your guns). Casualties are whole ships, removed combatants-first then most-hittable-first; a fleet that is
+    /// wiped, breaks off (retreat), or is left with no enemy drops out, and when fewer than two hostile sides
+    /// remain the engagement ends — each fleet's combat state (and so its engagement lock) clears as it leaves.
+    /// A two-fleet fight is just the n=2 special case of this (see <see cref="StepEngagement"/>).
     ///
-    /// v1 stubs (flagged): hostility = "different non-neutral faction" (no diplomacy/relations system exists yet);
-    /// detection = mutual (no sensor/IFF gate — sensors are a v2 layer); range = a flat huge distance. Casualties
-    /// are removed with the lightweight <c>Entity.Destroy()</c> (sets IsValid=false immediately, so the fleet's
-    /// ship list excludes them at once and there is no order re-entrancy); commander death and debris are v2.
+    /// v1 stubs (flagged): a SIDE is a faction — there is no alliance/diplomacy model yet, so "different
+    /// non-neutral faction" = hostile and same faction = same side (real alliances are a v2 layer). The whole
+    /// star system is one battlefield: every in-combat fleet in the manager is in the same engagement (real
+    /// weapon-range CLUSTERING — distinct simultaneous battles in one system — is v2; <see cref="InRange"/> only
+    /// gates JOINING). Detection is mutual (no sensor/IFF gate). Casualties are removed with the lightweight
+    /// <c>Entity.Destroy()</c> (sets IsValid=false immediately, so the fleet's ship list excludes them at once and
+    /// there is no order re-entrancy); commander death and debris are v2.
     /// </summary>
     public static class CombatEngagement
     {
@@ -53,8 +62,8 @@ namespace Pulsar4X.Combat
         /// always lands — so the dodge model degrades exactly to the pre-dodge behaviour. Backward-compat.</summary>
         public const double FallbackBeamVelocity_mps = 100_000_000.0;
 
-        /// <summary>One trigger pass over a system: start new engagements, then step active ones. Returns the
-        /// number of fleets seen. Defensive — built not to throw on normal game state.</summary>
+        /// <summary>One trigger pass over a system: engage/join hostile fleets, then step the engagement. Returns
+        /// the number of fleets seen. Defensive — built not to throw on normal game state.</summary>
         public static int Tick(EntityManager manager, int deltaSeconds)
         {
             var fleets = manager.GetAllEntitiesWithDataBlob<FleetDB>();
@@ -62,107 +71,170 @@ namespace Pulsar4X.Combat
 
             double dt = deltaSeconds > 0 ? deltaSeconds : 1;
 
-            // 1) Start engagements: unengaged hostile fleets within range that both still have ships.
+            // 1) Engage / JOIN. Any two hostile fleets in range are BOTH put in combat. This is also how a fleet
+            //    joins a battle already underway: it comes into range of an enemy and gains combat state here, on
+            //    its faction's side — no special "reinforce" path. A fleet with no enemy in range never engages.
+            //    O(fleets^2), but fleet counts are small and this is the trigger, not the per-ship resolve.
             for (int i = 0; i < fleets.Count; i++)
             {
                 var a = fleets[i];
-                if (!a.IsValid || a.HasDataBlob<FleetCombatStateDB>()) continue;
-                if (GetFleetShips(a).Count == 0) continue;
+                if (!a.IsValid || GetFleetShips(a).Count == 0) continue;
 
                 for (int j = i + 1; j < fleets.Count; j++)
                 {
                     var b = fleets[j];
-                    if (!b.IsValid || b.HasDataBlob<FleetCombatStateDB>()) continue;
+                    if (!b.IsValid) continue;
                     if (!AreHostile(a, b)) continue;
                     if (GetFleetShips(b).Count == 0) continue;
                     if (!InRange(a, b)) continue;
 
-                    StartEngagement(a, b);
-                    break; // a is engaged now; stop pairing it this tick
+                    EnsureInCombat(a, b.Id);
+                    EnsureInCombat(b, a.Id);
                 }
             }
 
-            // 2) Step active engagements once each. The lower-Id fleet drives, so each pair steps exactly once.
+            // 2) Step the engagement. In v1 a star system IS the battlefield (range ~ whole system), so every
+            //    in-combat fleet in this manager fights in ONE multi-party engagement, partitioned into sides by
+            //    faction inside the resolver. (Real weapon-range clustering — distinct simultaneous battles in one
+            //    system — is a v2 layer.) One group step per tick; the resolver releases fleets as they drop out.
+            var members = new List<Entity>();
             foreach (var fleet in fleets)
-            {
-                if (!fleet.IsValid || !fleet.TryGetDataBlob<FleetCombatStateDB>(out var state)) continue;
+                if (fleet.IsValid && fleet.HasDataBlob<FleetCombatStateDB>())
+                    members.Add(fleet);
 
-                if (!manager.TryGetEntityById(state.OpponentFleetId, out var opponent)
-                    || opponent == null || !opponent.IsValid
-                    || !opponent.TryGetDataBlob<FleetCombatStateDB>(out var oppState)
-                    || oppState.OpponentFleetId != fleet.Id)
-                {
-                    // Opponent gone or the pairing is inconsistent — release this fleet from combat.
-                    EndEngagement(fleet);
-                    continue;
-                }
-
-                if (fleet.Id < opponent.Id)
-                    StepEngagement(fleet, opponent, dt);
-            }
+            if (members.Count > 0)
+                StepEngagementGroup(members, dt);
 
             return fleets.Count;
         }
 
-        /// <summary>Attach combat state to both fleets, each pointing at the other and recording its starting
-        /// ship count (the denominator for the casualty-fraction retreat threshold).</summary>
+        /// <summary>Attach combat state to both fleets, each pointing at the other as its (representative) opponent
+        /// and recording its starting ship count (the denominator for the casualty-fraction retreat threshold).
+        /// The proven entry point for a controlled two-fleet matchup; multi-party joins go through
+        /// <see cref="EnsureInCombat"/> in <see cref="Tick"/>.</summary>
         public static void StartEngagement(Entity fleetA, Entity fleetB)
         {
             fleetA.SetDataBlob(new FleetCombatStateDB(fleetB.Id, GetFleetShips(fleetA).Count));
             fleetB.SetDataBlob(new FleetCombatStateDB(fleetA.Id, GetFleetShips(fleetB).Count));
         }
 
-        /// <summary>Advance one engagement by dt game-seconds: trade fire, remove casualties, end if decided.</summary>
+        /// <summary>Put a fleet "in combat" if it isn't already — the JOIN primitive. Idempotent: a fleet already
+        /// engaged keeps its running state (damage pool, steps, initial count) untouched, so a reinforcement
+        /// arriving each tick doesn't reset the fight. Records its starting ship count for the retreat threshold
+        /// and a representative opponent for readout (the real membership is every hostile fleet in the system).</summary>
+        public static void EnsureInCombat(Entity fleet, int representativeOpponentId)
+        {
+            if (fleet == null || !fleet.IsValid || fleet.HasDataBlob<FleetCombatStateDB>()) return;
+            fleet.SetDataBlob(new FleetCombatStateDB(representativeOpponentId, GetFleetShips(fleet).Count));
+        }
+
+        /// <summary>Advance a two-fleet engagement by dt game-seconds. This is the n=2 special case of
+        /// <see cref="StepEngagementGroup"/> — kept as the proven, directly-tested entry point — so a 1-v-1 fight
+        /// and a 10-fleet melee run the exact same resolve code.</summary>
         public static void StepEngagement(Entity fleetA, Entity fleetB, double dt)
         {
-            if (!fleetA.TryGetDataBlob<FleetCombatStateDB>(out var stateA)
-                || !fleetB.TryGetDataBlob<FleetCombatStateDB>(out var stateB))
-                return;
+            StepEngagementGroup(new List<Entity> { fleetA, fleetB }, dt);
+        }
 
-            // Per-component doctrine: each ship carries the firepower/toughness multipliers of the component
-            // (sub-fleet) it sits in, so a fleet's Front Line and Rear Guard can fight with different postures.
-            // A ship directly in the fleet uses the fleet's own posture (1.0 if none). docs/COMBAT-DESIGN.md System 4.
-            var shipsA = GetCombatShips(fleetA);
-            var shipsB = GetCombatShips(fleetB);
+        /// <summary>Advance one MULTI-PARTY engagement by dt game-seconds: every in-combat member fleet trades
+        /// fire with the fleets hostile to it, casualties land, and fleets that are wiped / break off / have no
+        /// enemy left drop out; when fewer than two hostile sides remain (or the fight is frozen / timed out) the
+        /// engagement ends. Reduces exactly to the old two-fleet exchange for n=2. docs/COMBAT-DESIGN.md System 4,
+        /// docs/WEAPONS-AND-DODGE-DESIGN.md.</summary>
+        public static void StepEngagementGroup(List<Entity> members, double dt)
+        {
+            // Only valid, in-combat fleets take part. (A caller may hand us a fleet that just lost its state.)
+            var live = new List<Entity>();
+            foreach (var f in members)
+                if (f != null && f.IsValid && f.HasDataBlob<FleetCombatStateDB>())
+                    live.Add(f);
+            int n = live.Count;
+            if (n == 0) return;
 
-            // A side with no ships has already lost.
-            if (shipsA.Count == 0 || shipsB.Count == 0)
+            // --- SNAPSHOT phase: compute every fleet's ships, outgoing fire, and enemy set BEFORE any casualties,
+            // so the exchange is SIMULTANEOUS — everyone fires from full strength, then everyone takes losses.
+            // Per-component doctrine rides on each CombatShip (a sub-fleet fights with its own posture).
+            var ships = new List<CombatShip>[n];
+            var fire = new List<WeaponProfile>[n];
+            var enemies = new List<int>[n]; // indices into `live` of the fleets hostile to live[i] (with ships)
+            for (int i = 0; i < n; i++)
             {
-                EndEngagement(fleetA, fleetB);
-                return;
+                ships[i] = GetCombatShips(live[i]);
+                fire[i] = BuildFireMix(ships[i]);
+                enemies[i] = new List<int>();
+            }
+            for (int i = 0; i < n; i++)
+                for (int k = i + 1; k < n; k++)
+                    if (ships[i].Count > 0 && ships[k].Count > 0 && AreHostile(live[i], live[k]))
+                    {
+                        enemies[i].Add(k);
+                        enemies[k].Add(i); // hostility is symmetric — i and k are each other's enemy
+                    }
+
+            // --- DAMAGE phase: each fleet takes the COMBINED fire of all fleets hostile to it. An attacker that
+            // faces several enemy fleets DIVIDES its fire across them (conserves firepower — outnumbering a side
+            // doesn't multiply your guns). Within a target fleet the dodge/bucket resolve still concentrates on the
+            // most-hittable ships. Pools carry between ticks so a weaker attacker still grinds kills over time.
+            double totalFire = 0;
+            for (int i = 0; i < n; i++)
+            {
+                if (!live[i].TryGetDataBlob<FleetCombatStateDB>(out var state)) continue;
+                state.StepsFought++;
+                totalFire += TotalDamage(fire[i]);
+                if (enemies[i].Count == 0) continue; // nobody shooting at this fleet this step
+
+                state.OpponentFleetId = live[enemies[i][0]].Id; // keep the readout pointing at a live enemy
+
+                var incoming = new List<WeaponProfile>();
+                foreach (int g in enemies[i])
+                {
+                    int split = enemies[g].Count; // how many targets attacker g divides its fire across
+                    if (split <= 0) continue;
+                    AddScaledFire(incoming, fire[g], 1.0 / split);
+                }
+                state.DamageTakenPool += TotalDamage(incoming) * dt;
+                ApplyCasualties(ships[i], state, incoming); // prunes the dead from ships[i]
             }
 
-            // Each side's outgoing fire as a mix of weapon flavors (doctrine firepower applied). The dodge model
-            // reads this to decide WHO in the other fleet gets hit. docs/WEAPONS-AND-DODGE-DESIGN.md.
-            var fireA = BuildFireMix(shipsA);
-            var fireB = BuildFireMix(shipsB);
-            double strA = TotalDamage(fireA);
-            double strB = TotalDamage(fireB);
+            // --- RESOLUTION phase. Per-fleet: a fleet drops out if it is wiped, breaks off (retreat — System 5,
+            // v1 math outcome: record a withdraw vector + end, no move order), or has no enemy here. Then, if the
+            // battle is decided (fewer than two mutually-hostile fleets remain in combat) or stalled (frozen / any
+            // fleet timed out), release everyone still in.
+            bool frozen = totalFire <= 0;
+            bool timedOut = false;
+            for (int i = 0; i < n; i++)
+                if (live[i].IsValid && live[i].TryGetDataBlob<FleetCombatStateDB>(out var st) && st.StepsFought >= MaxSteps)
+                    timedOut = true;
 
-            stateA.StepsFought++;
-            stateB.StepsFought++;
+            for (int i = 0; i < n; i++)
+            {
+                var f = live[i];
+                if (!f.IsValid || !f.TryGetDataBlob<FleetCombatStateDB>(out var state)) continue;
+                int aliveCount = ships[i].Count; // post-casualty
+                if (aliveCount == 0) { EndEngagement(f); continue; }       // wiped — destroyed, not retreating
+                if (enemies[i].Count == 0) { EndEngagement(f); continue; } // no enemy here — done fighting
+                if (ShouldRetreat(f, state, aliveCount))
+                {
+                    RecordRetreat(f, live[enemies[i][0]]); // break off away from a fleet it was fighting
+                    EndEngagement(f);
+                }
+            }
 
-            // Each side pours strength x dt (joules) into the other's damage pool, then casualties land — hittable
-            // ships first, and an evasive ship's effective toughness is inflated by however much fire it dodges.
-            stateB.DamageTakenPool += strA * dt;
-            stateA.DamageTakenPool += strB * dt;
+            // Whole-engagement end: gather who's still in combat with ships, and look for any remaining hostile
+            // pair. None left (battle decided), or frozen, or timed out -> release every remaining fleet.
+            var stillIn = new List<Entity>();
+            for (int i = 0; i < n; i++)
+                if (live[i].IsValid && live[i].HasDataBlob<FleetCombatStateDB>() && ships[i].Count > 0)
+                    stillIn.Add(live[i]);
 
-            ApplyCasualties(shipsB, stateB, fireA); // A shoots B
-            ApplyCasualties(shipsA, stateA, fireB); // B shoots A
+            bool anyHostilePair = false;
+            for (int i = 0; i < stillIn.Count && !anyHostilePair; i++)
+                for (int k = i + 1; k < stillIn.Count; k++)
+                    if (AreHostile(stillIn[i], stillIn[k])) { anyHostilePair = true; break; }
 
-            // Retreat (System 5, v1 = math outcome): a side breaks off if it flies a withdraw posture or has lost
-            // too large a fraction of its ships. Breaking off records a retreat vector and ends the engagement; it
-            // does NOT issue a move order (that's a v2 movement-system layer). A wiped side (count 0) is destroyed,
-            // not retreating.
-            bool aRetreats = ShouldRetreat(fleetA, stateA, shipsA.Count);
-            bool bRetreats = ShouldRetreat(fleetB, stateB, shipsB.Count);
-            if (aRetreats) RecordRetreat(fleetA, fleetB);
-            if (bRetreats) RecordRetreat(fleetB, fleetA);
-
-            bool frozen = strA <= 0 && strB <= 0;
-            bool timedOut = stateA.StepsFought >= MaxSteps;
-            if (shipsA.Count == 0 || shipsB.Count == 0 || aRetreats || bRetreats || frozen || timedOut)
-                EndEngagement(fleetA, fleetB);
+            if (frozen || timedOut || !anyHostilePair)
+                foreach (var f in stillIn)
+                    EndEngagement(f);
         }
 
         /// <summary>Remove the combat state from both fleets (ends the lock).</summary>
@@ -317,6 +389,17 @@ namespace Pulsar4X.Combat
             double sum = 0;
             foreach (var w in fire) sum += w.DamagePerSecond;
             return sum;
+        }
+
+        /// <summary>Append one fleet's class-aggregated fire to a combined incoming mix, scaling its damage by
+        /// <paramref name="scale"/> (an attacker divides its fire among the enemy fleets it faces). Velocity /
+        /// tracking / saturation are unchanged — only the amount of that flavor changes. Keeps the incoming list
+        /// small (≤ a few classes per attacking fleet), so the per-target landed-fraction stays cheap.</summary>
+        private static void AddScaledFire(List<WeaponProfile> into, List<WeaponProfile> fire, double scale)
+        {
+            if (fire == null || scale <= 0) return;
+            foreach (var w in fire)
+                into.Add(new WeaponProfile(w.Class, w.DamagePerSecond * scale, w.Velocity, w.Tracking, w.Saturation));
         }
 
         /// <summary>The damage-weighted fraction of an incoming fire mix that LANDS on a ship with the given

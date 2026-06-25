@@ -503,9 +503,11 @@ Cached in `ShipCombatValueDB`, recalculated when a ship takes significant damage
 **What to build:**
 - `ShipCombatValueDB`: cached at ship completion, updated on component loss
 - `FleetCombatStateDB`: round-by-round state for an ongoing auto-resolved engagement (fleet strengths, casualty counts, round number, EMCON status, retreat state)
-- Auto-resolution loop: called by `MasterTimePulse` (or `ManagerSubPulse`) when two fleets are within weapon range of each other
+- Auto-resolution loop: called by `MasterTimePulse` (or `ManagerSubPulse`) when hostile fleets are within weapon range of each other
 - Casualty application: probabilistic ship selection from fleet (weighted by role and position)
 - Result packaging: destroyed ship list, retreat vectors, ammo/fuel cost, debris spawned, time elapsed
+
+**As built — MULTI-PARTY (2026-06-25).** The engine is **not** limited to two fleets. An engagement holds **any number of fleets on either side**, and a fleet can **join one in progress** by coming into weapon range (the developer's "all combat can be multi party at anytime… send in another fleet to assist"). `CombatEngagement.StepEngagementGroup` resolves the whole melee at once: each fleet takes the **combined** fire of all fleets hostile to it, and an attacker facing several enemies **divides** its fire across them (firepower is conserved — outnumbering doesn't multiply your guns). A two-fleet fight is just the n=2 special case. This is also what makes the system's **skill surface** real: the closed math of a single matchup opens up the moment the player commits a second fleet or the environment shifts. **v1 stubs:** a SIDE is a faction (no alliance/diplomacy model yet); one star system is one battlefield (range ≈ whole system — real weapon-range clustering into distinct simultaneous battles is v2). Full as-built model + invariants: `GameEngine/Combat/CLAUDE.md` → "Multi-party engagements."
 
 **Applies to:** Every off-screen battle. This is the system that makes the ThinkPad target achievable.
 
