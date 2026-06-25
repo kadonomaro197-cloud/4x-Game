@@ -130,3 +130,48 @@ a CI test will prove a 500-ship fight resolves in milliseconds.
 - The new weapon types are wired for the **auto-resolve** (their design stats) — the parked per-pixel firing
   sim is NOT extended to them (it deposits ~0 damage and is a v2 visual skin).
 - Triangle bonus values + evasion/saturation tuning constants are first-pass ("make it work before fair").
+
+---
+
+## Future depth — aggregate force condition ("Degraded" tiers)
+
+*Captured 2026-06-25 from the developer. The natural next layer once damage persists between fights, and it
+slots into the class-bucketing resolve almost for free.*
+
+**The idea.** Don't track individual ship components at fleet scale. Bucket ships within a class by a coarse
+**condition tier** — Pristine / Lightly / Moderately / Severely Degraded — and apply a debuff per tier (reduced
+firepower / toughness / evasion / speed). The fleet readout drills **Fleet → Component → Class → Condition**
+("this carrier wing: 60% Pristine, 25% Lightly, 15% Severely Degraded"), and combat applies the per-tier
+modifiers. The commander then decides *with condition in view*: a standing order becomes **"Launch all
+Non-Degraded Fighters,"** not "Launch All Fighters" — you think twice before committing a beat-up wing.
+
+**Why it's nearly free given the bucketing.** The dodge resolve buckets ships by their combat-relevant stats
+(everything that decides how a ship fights and dies). A degraded ship simply has a *different* combat value →
+it lands in a *different* bucket, automatically. So "condition tier" is just one more reason two same-class
+ships aren't interchangeable — the *same* mechanism that already separates a fighter from a battleship. **No new
+resolve code.** The one prerequisite is the piece deliberately parked in v1: a combat value that DEGRADES as a
+ship takes damage (the v2 "recalc-on-damage" hook on `ShipCombatValueDB`).
+
+**Connected systems (map before building):**
+- **Damage** — needs *cumulative* ship damage to move a ship between tiers (or to recompute its combat value).
+  Today combat value is fixed at build (v1, whole-ship removal). This is the v2 recalc-on-damage hook.
+- **Repair / maintenance / logistics** — a ship climbs back up the tiers only via repair (shipyard, an
+  Aurora-style maintenance-supply economy). A degraded fleet becomes a logistics liability → *condition
+  management is strategy.* Connects to colonies / industry / logistics.
+- **Fleet orders** — "launch / commit / hold *by condition*" needs orders that filter a class by tier. Connects
+  to the order system + carrier/fighter launch (`ColonyInfoDB.FighterStockpile`, parasite craft).
+- **Carrier / fighter system** — the motivating example: fighters launch, fight, return, repair; condition
+  makes "commit the damaged wing?" a real call.
+- **UI** — a Fleet → Component → Class → Condition table (extends the System-4 fleet-combat table).
+- **NPC doctrine** — an AI deciding whether to spend degraded forces reads the tier.
+
+**The principle it expresses (and the developer's meta-observation, captured):**
+> **Simulate at the granularity of the DECISION, not the entity.** The player decides at fleet → component →
+> class → condition, so model *there* — in counts and tiers — and reify down to a specific ship entity only
+> where an individual carries meaning (a flagship, a named commander, the objective). The individual isn't
+> lost; it's recovered on demand. This is Lanchester's attrition math / operations-research thinking, and how
+> real navies track *readiness states* rather than every rivet.
+>
+> Corollary (the developer's words): *"the further this goes, the less it's about the individual and the more
+> about the assembly of individuals."* That is correct and intended — it is what lets the model scale to
+> thousands of ships and stay legible.
