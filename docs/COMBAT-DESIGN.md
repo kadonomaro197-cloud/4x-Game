@@ -1,16 +1,80 @@
 # Combat System Design
 
-> ## ⚠️ REWORK PENDING (agreed 2026-06-24) — read this before building combat
->
-> This document's **eleven-systems / three-LOD-tiers** framing (below) is now **reference detail**, not the v1 build plan. The agreed reworked direction — to be written up properly as the first combat task:
->
-> - **ONE engine, always running: the auto-resolve loop.** The developer's insight: *"it's always auto-resolve unless someone changes the fleet doctrine."* There are **not** three separate combat engines (the LOD tiers) — there is one math loop, and **doctrine changes (by player or AI, which take game-time to execute) are just inputs to it.** "Watching a battle" = a **camera + the doctrine controls** on that same loop. The per-pixel damage sim (`DamageComplex`) becomes an optional **v2 visual skin**, not a model.
-> - **Doctrine is the ENTIRE player control** — no individual weapon aiming. So doctrine + the fleet-components model (System 4 detailed, below) are **v1-core**, alongside the auto-resolve math.
-> - **v1 = deep in the spine, flagged stubs at the edges.** Build: `ShipCombatValueDB` (strength/toughness from real weapons+armor) + the auto-resolve loop + the fleet-components/switchable-doctrine model + retreat. **Stub (flagged):** weapon range = in/out, sensors+IFF = mutual detection, commander = one flat modifier, EMCON/terrain = none. **Park for v2:** the per-pixel sim, debris/salvage, real fog/IFF/commander-careers/EMCON/terrain.
-> - **Ground inherits this same engine** (movement + engagement are the same shape; doctrine is the same lever; ground adds terrain/dig-in) — that's *why* space combat is built first.
-> - **Why now:** the as-built combat is ONLY the Tier-2 per-pixel sim, and it's **broken** — `CombatReadoutTests` proved beam hits deposit **0 damage**. The fleet-math spine the whole design hangs on **does not exist**. So v1 builds that spine; it does not repair the per-pixel sim.
->
-> **Full session record + findings + lessons:** `SESSION_STATE.md` (2026-06-24 cont. entry). Scope firewall: `docs/MVP.md`. Build each piece under a harness test (no untested combat).
+## What we're building (v1) — one combat engine, doctrine is the wheel
+
+**The point first.** Combat in this game runs itself. Two hostile fleets get close enough, the math takes over and fights it out — ships die, one side wins or runs. The player does **not** aim guns. **The one thing the player (or the AI) sets is doctrine** — the standing battle orders that tell a fleet *how* to fight: press hard, hold and protect, screen against missiles, withdraw. Change the doctrine and you change how the same auto-fight plays out. That is the whole game of space combat — pick the right posture for the situation, and let trained crews execute.
+
+Think of it like a ship's standing battle orders. The captain doesn't pull every trigger; he sets the condition — weapons free, defensive, fall back to the rally point — and the watch executes. Our "doctrine" is that condition card.
+
+**There is ONE engine, not three.** An earlier version of this doc described three "levels of detail" (off-screen math, a formation view, a full per-ship sim) as if they were separate combat engines. They are not. There is **one math loop — the auto-resolver — always running.** "Watching a battle" is just pointing a camera at that same loop and showing you the doctrine controls. The fancy per-pixel damage animation (the old "Tier 2") is an optional *visual skin* for later — it is **not** how outcomes are decided. Outcomes are decided by the math, every time, whether you watch or not. That is also why the old ThinkPad target is reachable: a 500-ship fleet costs the same math as a 5-ship fleet.
+
+**Ground combat will inherit this same engine.** Moving into contact, engaging, and setting doctrine are the same shapes on a planet's surface; the ground just adds terrain and dig-in on top. That's *why* we build space combat first — it is the template the ground systems get mirrored from.
+
+### What the player actually does, step by step
+
+1. **Before contact:** set each fleet's (and each fleet-component's) doctrine.
+2. **In range:** hostile fleets **auto-engage** — the trigger fires on its own.
+3. **Once engaged, the fleet's normal orders freeze.** You cannot tell an engaged fleet to move or reassign its ships mid-fight. The only lever that still works is **changing its doctrine** — and even that takes game-time to execute (a switch cooldown, like it takes time to pass new orders down the line). This is deliberate: doctrine *is* the entire combat interface, so a battle can't be micro-managed by spamming move orders. When the engagement ends, normal orders work again.
+4. **It resolves:** ships lost on each side, ammo/fuel spent, and the losing side either dies or **retreats** along a recorded escape heading.
+
+**Retreat is both an automatic outcome and a doctrine you can choose.** A fleet automatically breaks off when its losses cross its doctrine's retreat threshold. *And* "withdraw / disengage" is itself a selectable doctrine posture — you can order a fighting withdrawal from the start. Either way, in v1 retreat is a **math result, not a chase**: the engine flags the fleet "retreated," records which way it ran (a heading vector) as data, and ends its part of the battle. It does **not** issue a movement order (fleet move-orders are parked/buggy right now, and an engaged fleet is order-locked anyway). Actually chasing a retreater (pursuit) is a v2 flag.
+
+### The v1 boundary — deep in the spine, honest stubs at the edges
+
+v1 builds the **load-bearing spine** for real and **stubs the edges** with flat values, each clearly flagged so nobody mistakes a stub for a finished system. (Full scope firewall: `docs/MVP.md`.)
+
+| Build for real (v1 spine) | Stub, flagged (v1) | Park for v2 |
+|---|---|---|
+| `ShipCombatValueDB` — strength + toughness from a ship's *actual* weapons & armor | Weapon range = simple in-range / out-of-range | The per-pixel damage sim as a visual skin |
+| The auto-resolve salvo loop (kills ships by strength math) | Sensors + IFF = mutual detection (everyone sees everyone; a different faction is hostile) | Real fog-of-war, transponders, EMCON |
+| Switchable doctrine (`FleetDoctrineDB` + `CombatDoctrineBlueprint` JSON) | Commander = one flat skill modifier | Commander careers/skills, terrain/environment |
+| Fleet components (per-component doctrine) | Environment / terrain = none | Debris & salvage, ammo/fuel economy depth |
+| Retreat (flag + vector) + the engagement lock | — | Pursuit, rally / re-engage state machine |
+
+**Why the stubs are safe:** every edge stub is a single function returning a flat value (e.g. `CommanderModifier() => 1.0`). When v2 builds the real version, it replaces that one function — the spine never changes. The spine is the expensive part to get right; the edges swap in later.
+
+### The pieces (what each one is, in plain terms)
+
+- **`ShipCombatValueDB` — the spec sheet.** When a ship is built we read its real parts and compute two numbers: how much hurt it can deal (firepower, from its weapon components) and how much it can take (toughness, from armor + hull). Cached on the ship like the displacement-and-armor-belt line on a warship's spec card; recomputed when the ship loses parts. *(Built under a test; `CombatReadoutTests` already shows how to stand up a real armed ship in the harness.)*
+
+  **Correction found while mapping the code:** the existing per-pixel damage routine (`DealDamageEnergyBeamSim`) currently deposits ~**0 damage** on a real ship — the damage *readout* gauge (`CombatReadoutTests`) showed it. That broken routine is exactly the "per-pixel sim" we're parking for v2. The auto-resolve loop **does not use it** — it computes casualties from the combat-value math, so the broken sim does **not** block v1. We route around it on purpose; we are not repairing it now.
+
+- **The auto-resolve loop — the gunnery table.** Add up each side's strength (combat values × doctrine × the flat stubs), trade salvos, and remove whole ships as casualties (most-exposed combatants die first, transports last). Repeat until one side is destroyed or retreats. Pure math, microseconds per battle. Round-by-round state lives in `FleetCombatStateDB` (round number, strengths, casualty counts, retreat state).
+
+- **Switchable doctrine — the posture cards.** Two pieces, kept deliberately separate:
+  - `FleetDoctrineDB` (on a fleet / component) = the *active selection*: which posture is set, its thresholds, and the switch-cooldown clock.
+  - `CombatDoctrineBlueprint` (**new JSON**, loaded by `ModLoader`) = the *catalog* of postures, so they can be tuned/added without code. Each posture has a family (Offensive / Defensive / Utilitarian — plus a **Withdraw** posture), a display name, a list of effects (e.g. fire-rate ×0.75, fleet-speed ×0.8), and a cooldown. Effects are applied **at read-time** (the `BonusesDB` pattern) — never baked into base stats, so switching is reversible. `BaseModIntegrityTests` will auto-catch a malformed doctrine JSON.
+  - **Do not confuse this with the existing `FactionInfoDB.Doctrine`** — that's a *strategic* AI vector (Economic / Military / Tech / Expansion weights), a different thing entirely. The NPC may *read* its Military weight to pick a combat posture, but they are separate data living in separate places.
+
+- **Fleet components — sub-formations with their own posture.** A fleet splits into named parts (Front Line, Flank, Rear Guard, Artillery — names are data). Cheapest build: each component is a **sub-fleet** (fleets already nest and inherit orders), and each carries its own `FleetDoctrineDB`. So the Front Line can hold defensive while the Artillery presses — different parts of one fleet fighting differently.
+
+- **Retreat + the engagement lock** — described above. Retreat = flag + recorded vector, no move order. The lock = engaged fleets accept only doctrine orders, enforced at the single order chokepoint (`StandAloneOrderHandler.HandleOrder`).
+
+### Testing this for real — the two enablers
+
+To actually *watch this work* you need a fight, and a fresh game gives you one faction and a couple of barely-armed starting ships. So v1 includes two testing enablers — both verified on your local Windows build, since the cloud CI cannot run the client:
+
+- **Example armed ships.** Ready-made warship designs carrying real beam / missile weapons + armor, so there's something with a real combat value to throw at each other — used by the harness tests *and* spawnable live from Dev Tools.
+- **Space-Master faction switcher.** A Dev-Tools control to create / observe / command **any** faction, so you can stand up a second hostile faction, give it ships, set it against you, and jump between sides to watch the auto-resolver fight. (This rides the existing `SetFaction()` that the SM toggle already uses.) Without it there is no second side to fight.
+
+### Build order — harness first, no untested combat
+
+Each piece lands **under a CI test before it's trusted** (your Visibility Gate: build the gauge first). The sequence, tracked as tasks:
+
+1. This doc.
+2. `ShipCombatValueDB` + compute-at-build, under test.
+3. The auto-resolve loop, under test (two armed fleets → one dies).
+4. The in-game trigger (hostile fleets in range auto-engage), under test.
+5. Switchable doctrine (blueprint catalog + active selection), under test.
+6. Fleet components (per-component doctrine), under test.
+7. Retreat (flag + vector; threshold *and* posture), under test.
+8. Engagement lock (order freeze), under test.
+9. Faction switcher + example armed ships (your live-test rig).
+10. Update the subsystem CLAUDE.md files, the systems map, MVP, and SESSION_STATE.
+
+**The eleven-systems detail below is now the v2 depth roadmap and the definition of each stub** — reference, not the v1 build plan. Read it to see where each edge goes when we deepen it.
+
+**Full session record + findings + lessons:** `SESSION_STATE.md`. Scope firewall: `docs/MVP.md`. Build each piece under a harness test (no untested combat).
 
 **The design principle:** Give players meaningful choices and simulate those choices honestly. Not spectacular visuals — correct outcomes from correct decisions. A clever trap should work. A numbers advantage should matter. Poor doctrine should cost ships.
 
@@ -38,6 +102,8 @@ The key insight: most battles at any given moment are happening off-screen. If t
 ---
 
 ## Level-of-Detail (LOD) Combat Model
+
+> **Reference / v2 framing — not the v1 build plan.** Per "What we're building (v1)" at the top, there is **one** engine: the auto-resolver. These three "tiers" are that single math loop plus an optional visual skin for the battle you happen to be watching — *not* three separate engines. Kept here for the v2 roadmap and the hardware rationale.
 
 Every battle lives at exactly one tier at any moment. Tier changes when the player starts or stops watching — the transition is seamless, no battle interruption.
 
@@ -106,6 +172,8 @@ Apply the Prime Directive from the root CLAUDE.md: map every connection before m
 ---
 
 ## The Eleven Required Systems
+
+> **Reference / v2 depth roadmap — not the v1 build plan.** v1 builds the spine (`ShipCombatValueDB` + auto-resolve + switchable doctrine + fleet components + retreat) and **stubs** Systems 1–3, 6, 7, 8 as flat values (see the v1 boundary table at the top). The write-ups below define what each stubbed edge *becomes* when v2 deepens it, and the order to build them in. System 4 (Fleet Doctrine) and System 9 (Auto-Resolution) are the two that v1 builds for real — their detailed designs below are the working spec.
 
 These systems are needed for all combat scenario types — ambush, fleet engagement, orbital bombardment, patrol intercept, siege, covert insertion, and anything else. Listed in build order; each one depends on those above it.
 
@@ -435,9 +503,11 @@ Cached in `ShipCombatValueDB`, recalculated when a ship takes significant damage
 **What to build:**
 - `ShipCombatValueDB`: cached at ship completion, updated on component loss
 - `FleetCombatStateDB`: round-by-round state for an ongoing auto-resolved engagement (fleet strengths, casualty counts, round number, EMCON status, retreat state)
-- Auto-resolution loop: called by `MasterTimePulse` (or `ManagerSubPulse`) when two fleets are within weapon range of each other
+- Auto-resolution loop: called by `MasterTimePulse` (or `ManagerSubPulse`) when hostile fleets are within weapon range of each other
 - Casualty application: probabilistic ship selection from fleet (weighted by role and position)
 - Result packaging: destroyed ship list, retreat vectors, ammo/fuel cost, debris spawned, time elapsed
+
+**As built — MULTI-PARTY (2026-06-25).** The engine is **not** limited to two fleets. An engagement holds **any number of fleets on either side**, and a fleet can **join one in progress** by coming into weapon range (the developer's "all combat can be multi party at anytime… send in another fleet to assist"). `CombatEngagement.StepEngagementGroup` resolves the whole melee at once: each fleet takes the **combined** fire of all fleets hostile to it, and an attacker facing several enemies **divides** its fire across them (firepower is conserved — outnumbering doesn't multiply your guns). A two-fleet fight is just the n=2 special case. This is also what makes the system's **skill surface** real: the closed math of a single matchup opens up the moment the player commits a second fleet or the environment shifts. **v1 stubs:** a SIDE is a faction (no alliance/diplomacy model yet); one star system is one battlefield (range ≈ whole system — real weapon-range clustering into distinct simultaneous battles is v2). Full as-built model + invariants: `GameEngine/Combat/CLAUDE.md` → "Multi-party engagements."
 
 **Applies to:** Every off-screen battle. This is the system that makes the ThinkPad target achievable.
 

@@ -83,7 +83,7 @@ internal override void Display()
 | Window | File | Status | Notes |
 |--------|------|--------|-------|
 | `SystemWindow` | `SystemWindow.cs` | ✅ Functional | Star system selector and planet list |
-| `FleetWindow` | `FleetWindow.cs` | ✅ Functional | Fleet listing, selection, basic orders |
+| `FleetWindow` | `FleetWindow.cs` | ✅ Functional | Fleet listing, selection, basic orders. **+ Combat tab (2026-06-25)** — see "Fleet Combat tab" below. |
 | `ColonyManagementWindow` | `ColonyManagementWindow.cs` | ✅ **Full economy UI** (verified in code 2026-06-24) | Colony picker + tabs: **Summary** (planet/pop/infra-efficiency/installed components/stockpile of raw+refined), **Production** (`IndustryDisplay` — queue refine/build jobs via `IndustryOrder2`: batch/repeat/auto-install/priority/cancel), **Construction**, **Mining** (per-mineral rate/annual production/years-to-depletion). The minerals→refined→components loop is fully see-and-do here. **Live-behaviour unverified** (CI can't build the client). |
 | `PlanetaryWindow` | `PlanetaryWindow.cs` | ✅ (installations fixed 2026-06-24) | General info ✅ / Mineral deposits ✅ / **Installations ✅ — tab now gates on `ComponentInstancesDB` and renders via `componentsDB.Display(...)` (`:102,220`), NOT the dead `InstallationsDB`.** |
 | `ShipDesignWindow` | `ShipDesignWindow.cs` | ✅ Functional | Ship design and component assignment |
@@ -187,6 +187,49 @@ the only way to know the real state is to run it (see `docs/SYSTEMS-STATUS-AND-T
 is actually broken live, fix *that* — don't rebuild panels that already render. `InstallationsDB` itself remains
 dead/vestigial; do not resurrect it.
 
+### Fleet Combat tab (FleetWindow) — BUILT 2026-06-25 (the space-combat UI starting point)
+
+The space auto-resolve engine had **no client UI** — battles ran invisibly and ships just vanished. The first
+piece of the real combat UI is a **"Combat" tab on `FleetWindow`** (between Summary and Issue Orders), shown the
+moment a fleet — or a sub-fleet "component" — is selected. It is the in-client realisation of COMBAT-DESIGN
+System 4's "extend the Fleet panel; the table IS the interface." Three sections (`DisplayCombatTab` →
+`DisplayCombatStatus` / `DisplayDoctrineSelector` / `DisplayFleetCombatSheet`):
+
+1. **Status** — the live battle readout. Reads `FleetCombatStateDB`: "● IN COMBAT — salvo N", the representative
+   opponent (`OpponentFleetId` → name + ship count), ships `alive of started (lost X)`, and the incoming
+   `DamageTakenPool`. Falls back to `FleetRetreatDB` ("withdrew") or "Not engaged".
+2. **Doctrine** — the player's lever. Shows the active `FleetDoctrineDB` and a dropdown of the moddable catalog
+   (`Game.StartingGameData.CombatDoctrines`); **Set** calls `FleetDoctrine.TrySetDoctrine` (a **direct call, not an
+   order**, so it bypasses the engagement lock and works mid-battle). The button greys out with a game-time
+   countdown while `SwitchableAfter` (the switch cooldown) is in the future.
+3. **Combat sheet** — fleet totals (firepower J/s, toughness J, combatant count), firepower broken down by weapon
+   class (from each ship's `ShipCombatValueDB.Weapons`), and the per-ship table (role / firepower / toughness /
+   evasion). Per-component doctrine falls out for free: selecting a sub-fleet in the tree makes it the selected
+   fleet, so the tab then shows/sets THAT component's posture.
+
+**Connections (Prime Directive):** reads `ShipCombatValueDB`, `FleetDoctrineDB`, `FleetCombatStateDB`,
+`FleetRetreatDB`, the `CombatDoctrines` catalog; writes nothing directly except via `FleetDoctrine.TrySetDoctrine`.
+All reads are defensive (`TryGet` + `IsValid` + snapshot-to-array) because the background combat processor mutates
+this state on another thread — and a ship killed mid-battle lingers in the fleet's child list with `IsValid=false`
+until cleanup, so alive/loss counts **filter on `IsValid`** (don't drop that filter).
+
+**Testing caveat — sections 2 and 3 verify on an IDLE fleet (no enemy needed); section 1 needs a live battle.**
+A fresh New Game has **no fleet at all** (gotcha 8) and **no hostile faction**. The enemy-spawn tooling now exists
+— **DevTools → "Combat Sandbox" → Spawn Hostile Fleet** (a thin wrapper over the CI-proven
+`Combat.CombatSandbox.SpawnHostileFleet`), plus a **"Tick Combat (force a salvo)"** button that drives
+`CombatEngagement.Tick` manually. To exercise the whole thing: Fleet window → *Create New Fleet* → DevTools (SM
+mode) → *Spawn Ship* a few armed designs (Lancer/Bulwark/Wasp/Leviathan) into it → set "Orbit around" to that
+body → **Spawn Hostile Fleet** (same body) → exit SM → select your fleet → **Combat tab**. Press play (or click
+*Tick Combat*) and watch the **Status** section come alive: salvo counter, ships lost, damage pool — and switch
+doctrine mid-fight to steer it. CI can't build the client, so this is a build → play → read `console_output.txt`
+(look for `[FleetCombat]` + `[DevTools]` lines) loop.
+
+**Open live question (CI can't settle):** the engine gauge `CombatSandboxTests` proved the spawned enemy *persists*
+through a clock advance and *is engageable*, but the lightweight test harness didn't auto-fire the battle trigger
+on a clock advance — so whether **pressing play** auto-starts the battle in the full game is unconfirmed. If it
+doesn't, the **Tick Combat** button drives the fight manually (and tells us the trigger scheduling, not the combat
+math, is what needs a look). See `GameEngine/Combat/CLAUDE.md` → "Combat sandbox".
+
 ### GroundCombatWindow — MISSING ENTIRELY
 
 No window exists for ground combat. When `GroundCombatDB` (to be created) is present on a colony entity, a new `GroundCombatWindow` should be reachable from `PlanetaryWindow` tabs and from the system map context menu.
@@ -244,3 +287,5 @@ Ground combat units should have **target lines**: persistent lines drawn from at
 9. **New Game wizard must guard against an empty `_modDataStore` (fixed 2026-06-22).** `NewGameMenu.DisplayModsPage()` "Next" handler calls `LoadEnabledMods()` then sets defaults with `_modDataStore.Species.First()` / `.Themes.First()` / `.Colonies.First()`. `LoadEnabledMods()` returns early (leaving the store empty) when **no mod is enabled** — so if the player presses Next with every Enable box unchecked, `.First()` throws `InvalidOperationException: Sequence contains no elements` and the **whole app crashes** (the wizard runs inside the render loop, not behind a try/catch). It now checks `.Any()` first and shows an inline error (`_modsPageError`) instead of advancing. `QuickstartGame()` already had the equivalent `.Any(...)` guard — keep the two paths in parity. Same class of bug as the unguarded `.First()` calls in `CreateGameCore` (`SystemBodies[BodyId]`, `Colonies[ColonyId]`); validate selections before dictionary/`.First()` access in any New Game step.
 
 10. **SM (Space Master) mode switches the VIEWED faction to the Game Master faction** — `GlobalUIState`'s SM toggle calls `SetFaction(Game.GameMasterFaction)` on enable and `SetFaction(PlayerFaction)` on disable (`GlobalUIState.cs:498-508`). The Game Master faction owns **no fleets** and has **no unlocked armor/tech**. Consequences confirmed live 2026-06-24, all the same root cause: (a) the **Fleet window shows nothing in SM mode** — it filters by `_uiState.Faction` (= Game Master); your fleets aren't gone, **exit SM mode to see them**; (b) **spawned/own ships are invisible in SM mode** for the same reason — exit SM and they appear; (c) windows that read `_uiState.Faction` and assume player data **crash** — `ShipDesignWindow.RefreshArmor()` hard-indexed `factionData.Armor["plastic-armor"]`, which the Game Master lacks → `KeyNotFoundException` → whole-client crash (fixed: default to the first available armor, never hard-index). **`_uiState.PlayerFaction` stays the real player throughout** (only `_uiState.Faction` changes) — that's why DevTools spawns still correctly belong to the player. **Rule: any window usable in SM mode must tolerate the viewed faction having empty data — never hard-index a faction dictionary, and use `_uiState.PlayerFaction` when you specifically mean the player.**
+
+> **DevTools "Faction Switcher (SM)"** generalises this beyond the GameMaster/Player toggle: it lists every entry in `Game.Factions` and a "View as" button calls the same `_uiState.SetFaction(faction)` to switch the *viewed* faction to any of them (with a "Back to player" → `SetFaction(PlayerFaction)`). It's the tool for watching an auto-resolved battle from either side's perspective (engine combat spine step 9). It inherits the caveat above — switching to a bare faction (GameMaster, an NPC with no known systems) shows empty Fleet/System views; that's expected, switch back. The switch is wrapped in try/catch so a faction missing `FactionInfoDB` reports an error instead of crashing the client.

@@ -6,7 +6,71 @@ This document tracks what we know about the codebase state at the close of each 
 
 ## Last Updated
 
-Session ending 2026-06-24 (cont.) — **Stage 1 combat gauge → combat-design rework → fleet/spawner/UI shakedown.** Branch `claude/adoring-gates-i6svyk`, HEAD `7878b5b` (8 commits this session). Engine CI green; client fixes live-verified by the developer. **Next: combat as its own effort — write the reworked `docs/COMBAT-DESIGN.md` (one engine + doctrine), then build the Tier 0 auto-resolve spine under a harness gauge. Combat damage + move orders are parked here on purpose.**
+Session ending 2026-06-25 — **MVP Stage 1 (space combat) BUILT, then a combat-DEPTH pass started — all CI-green.** Branch `claude/focused-ritchie-debock`. First the v1 auto-resolve spine (rate → auto-resolve → trigger → doctrine + per-component → retreat → engagement lock + example ships + DevTools faction switcher). Then, at the developer's explicit call to **cross the MVP firewall** for combat depth, the **weapon-flavor + dodge model**: ship Evasion (size+agility), per-weapon flavor profiles (damage/velocity/tracking/saturation), and DODGE in the resolve (a weapon's flavor decides who it hits — beams ignore evasion, slugs are dodged by the nimble, flak floors it), aggregated by weapon class so it stays **O(ships)** for 100s-of-ship battles. The DevTools faction switcher is the only piece CI can't verify (client). **Then the depth pass FINISHED and went further (all CI-green — see "cont. 3" below): the real player-buildable railgun + flak COMPONENTS (the full JSON template→Atb path) and the triangle example fleets; MULTI-PARTY engagements (any number of fleets, join mid-fight); a 20-sim behaviour lab (`CombatStressLab` + `CombatBattleSims`); and the HOT-DAMAGE REBALANCE (`SalvoDamageScale` — battles now last ~10× more salvos). Stage 2 (mirror the spine for ground combat) is next.**
+
+---
+
+## Session 2026-06-25 (cont. 3) — railgun/flak built, multi-party, + HOT-DAMAGE REBALANCE (READ THIS FIRST of the combat entries)
+
+Everything the older entries below call "paused" or "remaining" is now **DONE and CI-green** on `claude/focused-ritchie-debock`:
+
+- **Real player-buildable weapon types.** Railgun (P3) + flak (P4) ship through the full six-point JSON path (`*Atb` class → `weapons.json` template → `componentDesigns.json` → `earth.json` StartingItems + ComponentDesigns + ShipDesigns). The "riskiest CI-blind data work" note below is retired — the harness builds every `earth.json` design end-to-end, so a missing registration now fails CI loudly (learned it twice on railgun; the six-point checklist is in `GameEngine/Combat/CLAUDE.md`). Triangle example fleets (Wasp fighter / Leviathan capital + Lancer/Bulwark) are in the base mod and DevTools-spawnable.
+- **Multi-party engagements.** Any number of fleets, either side, joining a fight in progress by coming into range. `StepEngagementGroup` is the resolver; the 2-fleet path is its n=2 special case (`MultiPartyEngagementTests`).
+- **HOT-DAMAGE REBALANCE (the headline of this entry).** Raw numbers made fights end in 2–4 salvos (10–20 game-seconds) — over before the default 1-hour master tick. **`CombatEngagement.SalvoDamageScale` (0.1)** makes a salvo deposit a tenth of its raw energy toward kills, so the SAME fight lasts ~10× more salvos (a 50v50 mirror now runs 38 salvos ≈ 190 game-seconds — watchable, steerable). The scale is **uniform**, so it changed DURATION, not who wins. It lives only on the stepped (live) resolve; `AutoResolve` (instant off-screen) stays unscaled. The one knob to tune combat pace.
+  - **One emergent shift a future session MUST know:** the slower pace let the **50%-loss retreat actually trigger**. At hot damage a loser was often alpha-wiped before it could break off; now it hits 50% losses and *retreats with survivors*. So a few "X wipes Y" matchups are now break-offs — e.g. a 150-fighter swarm now retreats from a super-capital it used to wipe (takes ~400 to overwhelm it). This is the retreat mechanic finally working, not a bug.
+- **20-sim behaviour lab** (numbers in the test messages + `docs/WEAPONS-AND-DODGE-DESIGN.md`): `CombatStressLab` (10 extreme weapon/scale stress sims) + `CombatBattleSims` (10 whole-battle sims: duration, toughness sweep, saturation/evasion frontiers, combined-arms, quality-vs-quantity, 3-way FFA, reinforcements, mid-fight doctrine, 1-vs-1000). All directions held under the rebalance (it's balance-preserving); only durations grew and a few wipes became break-offs.
+
+Source of truth for combat detail: **`GameEngine/Combat/CLAUDE.md`** (constants table incl. `SalvoDamageScale`, the six-point weapon-registration checklist, multi-party section) and **`docs/WEAPONS-AND-DODGE-DESIGN.md`** (rebalance note + findings).
+
+---
+
+## Session 2026-06-25 (cont.) — Combat-DEPTH pass: weapon flavor + dodge (READ THIS SECOND)
+
+After the spine, the developer chose to add space-combat depth (knowingly crossing his own `docs/MVP.md` firewall — "cross it, it'll just deepen the tests"). Design captured in **`docs/WEAPONS-AND-DODGE-DESIGN.md`** (the four weapon-flavor stats, computed saturation, the **Fire-Emblem weapon triangle** Beam▸Fighter▸Capital▸Beam + a Missile⟷Flak axis, and the aggregate O(ships) math). Built gauge-first, all CI-green:
+
+| Piece | What | Test |
+|-------|------|------|
+| Evasion | how hard a ship is to HIT = size (Volume_m3) × agility (thrust÷mass). Separate from toughness. | `ShipEvasionTests` |
+| Weapon profiles | each weapon's {class, damage/sec, velocity, tracking, saturation=rate-of-fire} on `ShipCombatValueDB.Weapons`; Firepower = sum (backward-compat) | `WeaponProfileTests` |
+| Dodge resolve | `BuildFireMix`→`LandedFraction`→`HitFraction`; effective toughness = raw ÷ landed; hittable ships die first. Beams ignore evasion; slugs dodged; flak floors. | `DodgeResolveTests` |
+| Performance | fire aggregated by weapon CLASS → O(ships) per step (not O(ships²)); 200 warships resolve in ms | `CombatPerformanceTests` |
+
+**Key things a future session MUST know:**
+- **Backward-compat is load-bearing.** A ship with no `WeaponProfile`s fires as a light-speed always-hit beam, and a 0-evasion target has landed-fraction 1 — so every pre-dodge combat test behaves identically. That's WHY the whole spine stayed green. Don't break it.
+- **Performance hinges on `BuildFireMix` aggregating by weapon class.** If that ever stops, the resolve goes O(ships²); `CombatPerformanceTests` is the tripwire.
+- **The dodge model is exercised by STAMPING `WeaponProfile`s in tests** (Railgun/Beam/Flak) — it does NOT yet need a real railgun/flak component. That's deliberate: the real components are the remaining piece.
+- **Why the railgun/flak COMPONENTS are paused:** making them player-buildable needs the NCalc component-designer **template** system (`GameData/.../TemplateFiles/weapons.json` — ~30 formula properties per weapon). The runtime template→attribute construction isn't covered by CI (gotcha 10 — JSON data drift crashes New Game, not `dotnet test`), so it's the riskiest CI-blind work. Do it as a careful dedicated pass WITH a local New Game check, or get the developer's input on the template approach first. The weapon-attribute classes themselves (code) ARE CI-verifiable; it's the JSON template + designer formulas that aren't.
+- Full per-detail source of truth: **`GameEngine/Combat/CLAUDE.md`** ("Dodge in the resolve", "Example combat-test ships", constants table) and `docs/WEAPONS-AND-DODGE-DESIGN.md`.
+
+---
+
+## Session 2026-06-25 — MVP Stage 1: the Auto-Resolve Combat Engine (READ THIS FIRST)
+
+Built the entire v1 space-combat spine that the 2026-06-24 rework specced — **one engine (auto-resolve), doctrine is the wheel** — piece by piece, each under a CI test, on branch `claude/focused-ritchie-debock`. All engine/data pieces are CI-green.
+
+### WHERE TO RESUME
+Stage 1 space combat **resolves** now. The next move is the developer's **live test**: enter SM mode → DevTools → spawn an *Aegis Test Warship* fleet, use the **Faction Switcher** to act as another faction and spawn a *Picket Test Corvette* fleet in the same system → they auto-engage → watch one side win (and try a doctrine change / `fighting-withdrawal` to see retreat). After that, **Stage 2 = mirror this engine for ground combat** (`GroundUnitDesign : IConstructableDesign` + a `GroundCombatProcessor` that attrites attacker vs defender — same shape as `CombatEngagement`).
+
+### What was built (each its own commit + CI-green test)
+| Piece | Engine | Test |
+|-------|--------|------|
+| Combat-design rework (one engine + doctrine, v1 boundary) | `docs/COMBAT-DESIGN.md` | — |
+| **Ship combat value** (firepower from beams + missile stub; toughness from components + armour; role weight) — computed at build | `Combat/ShipCombatValueDB.cs`, hook in `ShipFactory` | `ShipCombatValueTests` |
+| **Auto-resolve salvo loop** (strength → damage pools → whole-ship casualties, combatants first; pure, reports casualties) | `Combat/AutoResolve.cs` | `AutoResolveTests` |
+| **In-game battle trigger** (hostile fleets in range auto-engage, fight over game-time) | `Combat/CombatEngagement.cs`, `BattleTriggerProcessor.cs`, `FleetCombatStateDB.cs` | `BattleTriggerTests` |
+| **Switchable doctrine** (moddable `CombatDoctrineBlueprint` catalog → active `FleetDoctrineDB`; read-time strength/toughness mults; switch cooldown) | `Combat/FleetDoctrine*.cs`, `combatDoctrines.json` + mod pipeline | `FleetDoctrineTests` |
+| **Per-component doctrine** (a fleet's sub-fleets each run their own posture) | `CombatEngagement.GetCombatShips` (CombatShip struct) | `FleetComponentTests` |
+| **Retreat** (math outcome: flag + withdraw vector, no move order; posture OR casualty threshold) | `Combat/FleetRetreatDB.cs`, `CombatEngagement` | `FleetRetreatTests` |
+| **Engagement lock** (engaged fleets refuse regular orders; only doctrine — a direct call — applies) | `StandAloneOrderHandler` + `EntityCommand.IsAllowedDuringEngagement` | `EngagementLockTests` |
+| **Example test ships** (Aegis warship / Picket corvette — strong vs weak) | `shipDesigns.json` + colony-earth | `CombatTestShipsTests` |
+| **DevTools faction switcher** (view/act as any faction — SM) | `DevToolsWindow.cs` | *client — local build only* |
+
+### Key decisions / things a future session must know
+- **The auto-resolve engine deliberately does NOT use the per-pixel damage sim** (it deposits ~0 damage — see BIG FINDING #1 below). Casualties are whole-ship removal by strength math. Don't wire combat value into `DamageProcessor`.
+- **`CombatEngagement` is the heart**: `Tick` (detect + step engagements per system, run by `BattleTriggerProcessor` every 5 s), `GetFleetShips` (flat, for counts/detection), `GetCombatShips` (doctrine-tagged, for the math). v1 stubs are flagged in code: hostility = different non-neutral faction; range = flat distance + per-system; detection = mutual.
+- **Doctrine is a direct call** (`FleetDoctrine.TrySetDoctrine`), NOT an order — that's *why* it still works under the engagement lock (the lock only gates the order handler).
+- **Test-scenario gotcha that bit twice:** `TestScenario.CreateWithColony()` spawns the colony's own 3 fleets; a Tick test must clear them first (`ClearExistingFleets`) or the enemy engages a colony fleet before the test's. Documented in `BattleTriggerTests`.
+- Full per-system detail is in **`GameEngine/Combat/CLAUDE.md`** (the source of truth) — file map, every gotcha, tuning constants.
 
 ---
 
@@ -395,3 +459,23 @@ dotnet build Pulsar4X/Pulsar4X.sln
 dotnet test Pulsar4X/Pulsar4X.Tests/Pulsar4X.Tests.csproj
 ```
 If build/test fails → paste error output here → Claude fixes → repeat.
+
+---
+
+## Session 2026-06-25 — multi-party engagements + real weapon types + the triangle (branch `claude/focused-ritchie-debock`)
+
+**What got built (all CI-green on GitHub; engine only — the SDL client still needs your local run):**
+
+1. **Multi-party engagements.** A battle is no longer locked to two fleets. Any number of fleets fight at once, and a fleet **joins a fight in progress just by coming into range** ("send in another fleet to assist"). Same-faction fleets share a side (no friendly fire); an attacker facing several enemies splits its fire across them (outnumbering doesn't multiply your guns). The old two-fleet fight is just the simplest case of the same code. Tests: `MultiPartyEngagementTests`.
+
+2. **Two real, player-buildable weapon types** (the meaty part — they go through the live New Game JSON path, which `dotnet test` normally skips, so this took a few CI rounds to get the data registration right):
+   - **Railgun / slug** — fast but finite-speed kinetic. Brutal vs slow capitals, but a nimble fighter **dodges** it. Design: **Lancer** cruiser. Tests: `RailgunWeaponTests`.
+   - **Flak / point-defense** — low per-pellet, but **huge volume of fire** (rate × pellets) fills the sky and floors the dodge: the fighter/missile killer. Design: **Bulwark** escort. Tests: `FlakWeaponTests`.
+
+3. **The weapon triangle on real ships.** New **Wasp** fighter (tiny, agile, evasive) and **Leviathan** battleship (big, armoured, can't dodge) designs. `WeaponTriangleTests` proves on the real built ships: fighter dodges the railgun, beam ignores the dodge, flak floors it. (The Capital▸Beam edge needs weapon *range*, still a v1 stub.)
+
+**Spawn these from DevTools (faction switcher) to watch it live:** Aegis (beam), Lancer (railgun), Bulwark (flak), Wasp (fighter), Leviathan (capital), Picket (weak).
+
+**Hard-won lesson (now in `Combat/CLAUDE.md`):** adding a player-buildable weapon touches **six** registration points — the C# Atb, the `weapons.json` template, the `componentDesigns.json` design, and **three** lists in `earth.json` (`StartingItems` unlocks the template, `ComponentDesigns` builds it, `ShipDesigns` mounts it). Miss any one and New Game crashes (but `dotnet test` over the C# path looks fine). CI's `CreateWithColony` harness is the standing sensor — it builds every starting design from JSON, so a missing registration fails loudly there.
+
+**Still open / v2:** Capital▸Beam range edge, degraded-condition tiers (need recalc-combat-value-on-damage), explicit TriangleBonus tuning knob, and the per-pixel firing sim (parked — these weapons feed the auto-resolve only). Next big arc per the developer objective: **ground combat**, mirroring this now-solid space-combat spine.
