@@ -338,6 +338,16 @@ unlocked components; combat only reads `FactionOwnerID`, so the flip is enough.)
 **Test:** `Pulsar4X.Tests/CombatSandboxTests.cs` — spawns 3 strong hostiles vs 1 unarmed player ship, advances the
 clock 5 game-hours, asserts the player ship is destroyed (only possible if the enemy survived the sweep and won).
 
+**Gotcha the gauge surfaced — battles only fire in ACTIVE systems.** `MasterTimePulse` only processes systems
+whose `StarSystem.ActivityState != Stasis`, and a system defaults to **Stasis**. So the `BattleTriggerProcessor`
+(like every hotloop) does NOT run on a system nobody is observing and that has no activity — the first gauge run
+proved the spawned enemy *survived* the clock advance (3/3) but **no battle triggered**, precisely because the
+test system was in Stasis. Live, a colony system is **Background** (runs processors at 10× coarser time) and a
+system you're **watching** is **Foreground** — both run the trigger. The test forces this with
+`StartingSystem.IncrementExternalObserver(true)` (Foreground = the "watching the battle" case). **Live-test
+implication:** auto-resolve only happens where there's a colony or where you're looking — a battle in a dead-quiet
+unobserved system won't tick until something activates it.
+
 ---
 
 ## Model-coupled / tuning constants

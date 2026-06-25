@@ -43,9 +43,18 @@ namespace Pulsar4X.Tests
 
             Assert.That(CombatEngagement.GetFleetShips(enemyFleet).Count, Is.EqualTo(3), "the sandbox should spawn 3 hostile ships");
 
+            // A fresh test system sits in STASIS (no observer), and MasterTimePulse only processes systems that are
+            // NOT in Stasis — so the battle trigger would never run on it. Mark it OBSERVED (Foreground): that is
+            // exactly what the client does when you WATCH a system, i.e. the live "I'm looking at the battle" case.
+            // (A colony system is Background live, which ALSO runs the trigger; Foreground just matches watching.)
+            // The first run of this gauge proved the enemy SURVIVES the clock advance (3/3) but no battle fired —
+            // because the test system was in Stasis. This is the fix, and the lesson: battles only resolve in active
+            // systems.
+            s.StartingSystem.IncrementExternalObserver(true);
+
             // Advance the REAL clock — the full processor sweep (movement / sensors / orders / the 5s battle
             // trigger). One TimeStep is a game-hour, so the trigger runs hundreds of times per step: plenty to
-            // engage and resolve. This is the step the bare-flip test pattern could not survive.
+            // engage and resolve.
             for (int i = 0; i < 5; i++) s.Game.TimePulse.TimeStep();
 
             int enemyLeft = CombatEngagement.GetFleetShips(enemyFleet).Count;
