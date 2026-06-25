@@ -14,12 +14,13 @@ It deliberately does **not** use the per-pixel damage sim (`Damage/DamageComplex
 |------|---------|--------|
 | `ShipCombatValueDB.cs` | DataBlob: a ship's **Firepower** (joules/sec from beams + a missile-launcher stub) and **Toughness** (live components + armour), plus a **RoleWeight**. Computed once at build time. `ShipCombatValueDB.Calculate(Entity)` is the calculator. | ✅ built (spine step 2) |
 | `AutoResolve.cs` | The salvo-exchange resolver: `AutoResolve.Resolve(sideA, sideB, config)` runs the math loop (strength → damage pools → whole-ship casualties, combatants first) until one side is gone, both are, or a frozen fight hits the round cap. Returns an `AutoResolveResult` (outcome + casualty lists); **pure** — it reports casualties, it does not destroy them. Plus `AutoResolveConfig`, `BattleOutcome`. | ✅ built (spine step 3) |
-| `FleetCombatStateDB.cs` | DataBlob marking a fleet as **engaged** (opponent fleet id, accumulated damage pool, steps fought). On both fleets during a battle; removed when it ends. Its presence is the "in combat" flag the engagement lock (step 11) keys on. | ✅ built (spine step 4) |
+| `FleetCombatStateDB.cs` | DataBlob marking a fleet as **engaged** (opponent fleet id, accumulated damage pool, steps fought, starting ship count for the retreat threshold). On both fleets during a battle; removed when it ends. Its presence is the "in combat" flag the engagement lock (step 11) keys on. | ✅ built (spine steps 4, 7) |
 | `CombatEngagement.cs` | The trigger's engine logic: `Tick(manager, dt)` finds hostile fleets in range, starts engagements, and steps active ones (incremental over game-time) until one side is wiped. `GetCombatShips(fleet)` collects ships tagged with their **component's** doctrine multipliers (step 6); `GetFleetShips` is the flat list (counts/detection). Hostility/range/detection are v1 stubs. Testable directly. | ✅ built (spine steps 4, 6) |
 | `BattleTriggerProcessor.cs` | `IHotloopProcessor` (every 5 s) that calls `CombatEngagement.Tick` per star system. Keyed to `StarInfoDB` (FleetDB is already taken). | ✅ built (spine step 4) |
 | `FleetDoctrineDB.cs` | DataBlob: a fleet's **active** combat posture (doctrine id, firepower/toughness/speed multipliers, retreat flag, switch-cooldown clock). Read by the engagement as a strength/toughness modifier. | ✅ built (spine step 5) |
 | `FleetDoctrine.cs` | Helpers: `FirepowerMult`/`ToughnessMult`/`IsRetreat(fleet)` reads; `TrySetDoctrine(fleet, blueprint, now)` sets a posture from the catalog, honouring the cooldown. | ✅ built (spine step 5) |
 | `CombatDoctrineBlueprint` (`Engine/Blueprints/`) | The moddable **catalog** of postures (JSON → `ModDataStore.CombatDoctrines`): family, display name, the multipliers, cooldown, retreat flag. | ✅ built (spine step 5) |
+| `FleetRetreatDB.cs` | DataBlob recording that a fleet **broke off** (flag + a withdraw vector away from the enemy + who it fled from). Attached when a fleet retreats; persists after the engagement ends (so the outcome stays visible). v1 records the vector only — no move order. | ✅ built (spine step 7) |
 
 *Fleet components (step 6) reuse `FleetDB` sub-fleets + `FleetDoctrineDB` — no new file; see "Fleet components" below. (Retreat, step 7, adds rows as it lands.)*
 
@@ -132,6 +133,29 @@ Battles spanning game-time is what makes "watch a battle / change doctrine mid-f
 
 ---
 
+## Retreat — breaking off a fight
+
+**What it is.** A fleet can **break off** an engagement instead of fighting to extinction (docs/COMBAT-DESIGN.md System 5). v1 is a **math outcome**: breaking off attaches a `FleetRetreatDB` (the flag + a withdraw vector + who it fled from) and ends the engagement. It does **not** issue a movement order — ships don't physically run yet; that's a v2 movement-system layer. `FleetRetreatDB` is the hook that layer will read.
+
+**Two triggers (both in `CombatEngagement.ShouldRetreat`):**
+- **Posture** — the fleet flies a withdraw doctrine (a `FleetDoctrineDB` with `IsRetreat=true`, e.g. the base catalog's `fighting-withdrawal`). The posture *is* a standing retreat order, so the fleet breaks off after one salvo window.
+- **Threshold** — the fleet has lost at least `RetreatCasualtyThreshold` (v1 flat **0.5**) of the ship count it started the engagement with (`FleetCombatStateDB.InitialShipCount`, captured at `StartEngagement`).
+
+A **wiped** fleet (0 ships) is destroyed, not retreated — `ShouldRetreat` returns false at count 0, so a retreat always leaves survivors.
+
+**The withdraw vector.** `RecordRetreat` sets a unit vector pointing from the enemy fleet toward the retreating fleet (the way it would run). If fleet positions aren't available or coincide (common in a headless test where ships share a body), it records `Vector3.Zero` — best-effort; the flag and `FledFromFleetId` are always recorded.
+
+**Connections (Prime Directive):**
+- **Feeds IN:** `FleetDoctrine.IsRetreat(fleet)` (posture); `FleetCombatStateDB.InitialShipCount` + current survivor count (threshold); fleet positions (vector).
+- **Feeds OUT:** `FleetRetreatDB` on the fleet (persists past the engagement) — the v2 movement layer and any "did this fleet retreat?" readout/UI consume it. Ends the engagement (clears `FleetCombatStateDB`, releasing the engagement lock, step 11).
+- **Triggers:** engagement end (same path as a wipe).
+
+**Test:** `Pulsar4X.Tests/FleetRetreatTests.cs` — a fleet on `fighting-withdrawal` breaks off intact (posture); a 4-ship fleet that loses half retreats with its survivors (threshold). Both assert the `FleetRetreatDB` is recorded and the engagement ended.
+
+**Not yet (v2):** the actual withdraw **movement** (Breaking Off → Withdrawing → Safe state machine, rally point, pursuit); per-doctrine retreat thresholds (v1 uses one flat constant); commander-triggered early retreat (System 6).
+
+---
+
 ## Model-coupled / tuning constants
 
 | Constant | Value | Meaning | Where |
@@ -144,6 +168,7 @@ Battles spanning game-time is what makes "watch a battle / change doctrine mid-f
 | `AutoResolveConfig.MaxRounds` | 2000 | round-cap backstop; hitting it = Stalemate | `AutoResolve.cs` |
 | `CombatEngagement.EngagementRange_m` | 1e9 (1M km) | v1 flat auto-engage distance (real value = weapon range, v2) | `CombatEngagement.cs` |
 | `CombatEngagement.MaxSteps` | 5000 | per-engagement step cap (stalemate backstop) | `CombatEngagement.cs` |
+| `CombatEngagement.RetreatCasualtyThreshold` | 0.5 | fraction of starting ships a fleet must lose to break off (v1 flat; real value = per-doctrine, v2) | `CombatEngagement.cs` |
 | `BattleTriggerProcessor` run frequency | 5 s | how often each system is scanned for battles | `BattleTriggerProcessor.cs` |
 
 ---

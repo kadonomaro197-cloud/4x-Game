@@ -30,6 +30,11 @@ namespace Pulsar4X.Combat
         /// <summary>v1 stub: an engagement that runs this many steps without a decision ends (stalemate backstop).</summary>
         public const int MaxSteps = 5000;
 
+        /// <summary>v1 stub: a fleet that has lost at least this fraction of its starting ships breaks off
+        /// (retreats). Per System 5 the real threshold comes from doctrine — this is a flat default until
+        /// per-doctrine thresholds are wired.</summary>
+        public const double RetreatCasualtyThreshold = 0.5;
+
         /// <summary>One trigger pass over a system: start new engagements, then step active ones. Returns the
         /// number of fleets seen. Defensive — built not to throw on normal game state.</summary>
         public static int Tick(EntityManager manager, int deltaSeconds)
@@ -81,11 +86,12 @@ namespace Pulsar4X.Combat
             return fleets.Count;
         }
 
-        /// <summary>Attach combat state to both fleets, each pointing at the other.</summary>
+        /// <summary>Attach combat state to both fleets, each pointing at the other and recording its starting
+        /// ship count (the denominator for the casualty-fraction retreat threshold).</summary>
         public static void StartEngagement(Entity fleetA, Entity fleetB)
         {
-            fleetA.SetDataBlob(new FleetCombatStateDB(fleetB.Id));
-            fleetB.SetDataBlob(new FleetCombatStateDB(fleetA.Id));
+            fleetA.SetDataBlob(new FleetCombatStateDB(fleetB.Id, GetFleetShips(fleetA).Count));
+            fleetB.SetDataBlob(new FleetCombatStateDB(fleetA.Id, GetFleetShips(fleetB).Count));
         }
 
         /// <summary>Advance one engagement by dt game-seconds: trade fire, remove casualties, end if decided.</summary>
@@ -121,9 +127,18 @@ namespace Pulsar4X.Combat
             ApplyCasualties(shipsB, stateB); // A shoots B
             ApplyCasualties(shipsA, stateA); // B shoots A
 
+            // Retreat (System 5, v1 = math outcome): a side breaks off if it flies a withdraw posture or has lost
+            // too large a fraction of its ships. Breaking off records a retreat vector and ends the engagement; it
+            // does NOT issue a move order (that's a v2 movement-system layer). A wiped side (count 0) is destroyed,
+            // not retreating.
+            bool aRetreats = ShouldRetreat(fleetA, stateA, shipsA.Count);
+            bool bRetreats = ShouldRetreat(fleetB, stateB, shipsB.Count);
+            if (aRetreats) RecordRetreat(fleetA, fleetB);
+            if (bRetreats) RecordRetreat(fleetB, fleetA);
+
             bool frozen = strA <= 0 && strB <= 0;
             bool timedOut = stateA.StepsFought >= MaxSteps;
-            if (shipsA.Count == 0 || shipsB.Count == 0 || frozen || timedOut)
+            if (shipsA.Count == 0 || shipsB.Count == 0 || aRetreats || bRetreats || frozen || timedOut)
                 EndEngagement(fleetA, fleetB);
         }
 
@@ -184,6 +199,33 @@ namespace Pulsar4X.Combat
         private static ShipCombatValueDB CombatValue(Entity ship)
         {
             return ship.TryGetDataBlob<ShipCombatValueDB>(out var cv) ? cv : ShipCombatValueDB.Calculate(ship);
+        }
+
+        /// <summary>A fleet retreats if it still has ships AND either flies a withdraw posture (a doctrine with
+        /// IsRetreat, e.g. fighting-withdrawal) or has lost at least <see cref="RetreatCasualtyThreshold"/> of its
+        /// starting ships.</summary>
+        private static bool ShouldRetreat(Entity fleet, FleetCombatStateDB state, int currentShipCount)
+        {
+            if (currentShipCount <= 0) return false;            // wiped — destroyed, not retreating
+            if (FleetDoctrine.IsRetreat(fleet)) return true;    // withdraw posture = a standing retreat order
+            if (state.InitialShipCount <= 0) return false;
+            int lost = state.InitialShipCount - currentShipCount;
+            return lost >= state.InitialShipCount * RetreatCasualtyThreshold;
+        }
+
+        /// <summary>Flag a fleet as retreated and record the direction it would withdraw (a unit vector away from
+        /// the enemy). v1 records the outcome only — no movement order is issued (that's a v2 layer).</summary>
+        private static void RecordRetreat(Entity fleet, Entity enemy)
+        {
+            Vector3 vector = Vector3.Zero;
+            if (TryGetFleetPosition(fleet, out var myPos) && TryGetFleetPosition(enemy, out var enemyPos))
+            {
+                var diff = myPos - enemyPos; // from the enemy toward us = the way we'd run
+                double len = diff.Length();
+                if (len > 1e-6 && !double.IsNaN(len) && !double.IsInfinity(len))
+                    vector = diff / len;
+            }
+            fleet.SetDataBlob(new FleetRetreatDB(vector, enemy.Id));
         }
 
         /// <summary>All live ships in a fleet, recursing into sub-fleets (fleet components).</summary>

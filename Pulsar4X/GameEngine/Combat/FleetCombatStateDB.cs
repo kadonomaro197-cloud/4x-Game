@@ -24,6 +24,10 @@ namespace Pulsar4X.Combat
         /// <summary>How many salvo steps this fleet has fought (readout + stalemate backstop).</summary>
         [JsonProperty] public int StepsFought { get; internal set; }
 
+        /// <summary>Ship count when the engagement started — the denominator for the casualty-fraction retreat
+        /// threshold (lose this fraction of your ships and you break off). Set at <c>StartEngagement</c>.</summary>
+        [JsonProperty] public int InitialShipCount { get; internal set; }
+
         public FleetCombatStateDB() { }
 
         public FleetCombatStateDB(int opponentFleetId)
@@ -31,11 +35,18 @@ namespace Pulsar4X.Combat
             OpponentFleetId = opponentFleetId;
         }
 
+        public FleetCombatStateDB(int opponentFleetId, int initialShipCount)
+        {
+            OpponentFleetId = opponentFleetId;
+            InitialShipCount = initialShipCount;
+        }
+
         public FleetCombatStateDB(FleetCombatStateDB db)
         {
             OpponentFleetId = db.OpponentFleetId;
             DamageTakenPool = db.DamageTakenPool;
             StepsFought = db.StepsFought;
+            InitialShipCount = db.InitialShipCount;
         }
 
         public override object Clone()
