@@ -98,18 +98,28 @@ a CI test will prove a 500-ship fight resolves in milliseconds.
 
 ## Build order (each piece its own commit, gauged in CI)
 
-1. ✅ **Evasion stat** — size + agility (`ShipCombatValueDB.CalculateEvasion`). `ShipEvasionTests`.
-2. **Weapon profiles** — the four flavor stats per weapon; saturation computed from rate-of-fire. Read real
-   beams + missile stub into a `WeaponProfile` list on `ShipCombatValueDB`. Test: beam = light-speed/high-track.
-3. **Railgun / slug weapon type** — new `*Atb` + weapons.json template + component. Finite velocity, ballistic
-   (≈0 tracking), rate-of-fire drives saturation. The thing fighters dodge.
-4. **Flak / point-defense weapon type** — high saturation, short range, low per-shot. The fighter/missile killer.
-5. **Bucketed dodge + triangle in the resolve** — the aggregate model above. **Gauge:** fighters survive
-   railgun fire and die to beams/flak; capitals die to railguns; the triangle holds; missiles answered by flak.
-6. **Example fleets** — fighter / capital / beam-cruiser / missile-boat / flak-escort designs that demonstrate
-   the triangle. Tests: the matchups resolve as designed.
-7. **Performance** — a 500-ship battle benchmark + a CI test asserting it stays cheap.
-8. **Docs capstone** — `Weapons/CLAUDE.md`, `Combat/CLAUDE.md`, systems map, this doc finalized.
+**The dodge MODEL is built and CI-green (done in order 1→2→5→7). The real player-buildable weapon COMPONENTS
+(3, 4) and the fleet demos (6) are the remaining plumbing — see the note below.**
+
+1. ✅ **Evasion stat** — size + agility (`ShipCombatValueDB.CalculateEvasion`). `ShipEvasionTests`. **CI-green.**
+2. ✅ **Weapon profiles** — the four flavor stats per weapon; saturation from rate-of-fire. `WeaponProfile` list
+   on `ShipCombatValueDB`; beams read real, missiles stubbed; Firepower = sum. `WeaponProfileTests`. **CI-green.**
+3. ⏳ **Railgun / slug weapon type** — new `*Atb` + weapons.json template + component (finite velocity, ballistic,
+   rate-of-fire → saturation). **Remaining.** Heaviest piece: it needs the NCalc component-designer template
+   system. Risky to do blind (the runtime template→attribute path isn't fully covered by CI — gotcha 10);
+   wants a careful pass + a local New Game check. *Until then the dodge model is exercised by stamping Railgun
+   `WeaponProfile`s directly in tests, which is enough to prove the behavior.*
+4. ⏳ **Flak / point-defense weapon type** — high saturation, short range, low per-shot. Same plumbing as #3.
+   **Remaining.**
+5. ✅ **Dodge + (emergent) triangle in the resolve** — `BuildFireMix`/`LandedFraction`/`HitFraction`, effective
+   toughness ÷ landed fraction, hittable-first casualties. **Gauge:** slug fire kills the battleship while the
+   same-toughness fighter dodges; beams ignore evasion; flak floors it. `DodgeResolveTests`. **CI-green.**
+   *(The explicit `TriangleBonus` + the Capital▸Beam range edge are still refinements on top.)*
+6. ⏳ **Example fleets** — fighter / capital / beam-cruiser / missile-boat / flak-escort designs that demonstrate
+   the triangle live. **Remaining** (depends on the real components from 3/4 to be player-buildable).
+7. ✅ **Performance** — fire aggregated by weapon class → O(ships) per step; `CombatPerformanceTests` resolves
+   200 real warships in milliseconds. **CI-green.**
+8. ✅ **Docs capstone** — `Combat/CLAUDE.md` (per piece), this doc, systems map, test inventory, SESSION_STATE.
 
 ---
 

@@ -106,6 +106,11 @@ Namespace drift between branches is the #1 compile trap here (it bit `PositionDB
 | &nbsp;&nbsp;`FleetRetreatTests` | retreat — a `fighting-withdrawal` fleet breaks off intact (posture); a 4-ship fleet that loses half retreats with survivors (threshold); both record a `FleetRetreatDB` |
 | &nbsp;&nbsp;`EngagementLockTests` | an engaged fleet (`FleetCombatStateDB`) refuses an AssignShip order; a `TrySetDoctrine` on it still applies; clearing the combat state lets the order through |
 | &nbsp;&nbsp;`CombatTestShipsTests` | the example ships (Aegis warship / Picket corvette) load + rate strong-vs-weak; a 3v3 auto-resolve is a decisive `SideAVictory` |
+| **Combat depth — weapon flavor + dodge** (`docs/WEAPONS-AND-DODGE-DESIGN.md`) | all CI-green: |
+| &nbsp;&nbsp;`ShipEvasionTests` | Evasion (maneuverability) — a small/light/high-thrust fighter dodges far better than a heavy sluggish battleship; no engine = no dodge |
+| &nbsp;&nbsp;`WeaponProfileTests` | per-weapon flavor profiles — a laser warship has Beam profiles at ~light-speed with hit-chance + rate-of-fire; profiles sum to Firepower |
+| &nbsp;&nbsp;`DodgeResolveTests` | the dodge — `HitFraction` curve (beams ignore evasion, slugs are dodged, flak floors it); and through the resolve, slug fire kills the un-evasive battleship while the same-toughness fighter survives |
+| &nbsp;&nbsp;`CombatPerformanceTests` | 200 real warships resolve in milliseconds — the dodge resolve is O(ships) (fire aggregated by weapon class), the tripwire against an O(ships²) regression |
 | `GameLoopSmokeTests` | core sim loop advances on a generated (colony-less) universe |
 | `SaveLoadSmokeTests` | `Game.Save → Load` round-trips |
 | `StateIntegritySmokeTests` | entity positions stay finite across a clock advance (catches silent NaN) |

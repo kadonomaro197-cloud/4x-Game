@@ -6,7 +6,27 @@ This document tracks what we know about the codebase state at the close of each 
 
 ## Last Updated
 
-Session ending 2026-06-25 — **MVP Stage 1 (space combat) BUILT: the v1 auto-resolve combat engine, end-to-end and CI-green.** Branch `claude/focused-ritchie-debock` (10 commits). The whole combat spine the previous session specced is now real and tested: rate ships → auto-resolve → in-game trigger → switchable + per-component doctrine → retreat → engagement lock, plus example test ships and a DevTools faction switcher. Engine + data are CI-verified (8 new test fixtures); the DevTools faction switcher is client code that **needs the developer's local build** (CI can't compile the SDL client). **Next: the developer live-tests a staged fight (spawn Aegis vs Picket, switch factions to watch); then Stage 2 — mirror this spine for ground combat.**
+Session ending 2026-06-25 — **MVP Stage 1 (space combat) BUILT, then a combat-DEPTH pass started — all CI-green.** Branch `claude/focused-ritchie-debock`. First the v1 auto-resolve spine (rate → auto-resolve → trigger → doctrine + per-component → retreat → engagement lock + example ships + DevTools faction switcher). Then, at the developer's explicit call to **cross the MVP firewall** for combat depth, the **weapon-flavor + dodge model**: ship Evasion (size+agility), per-weapon flavor profiles (damage/velocity/tracking/saturation), and DODGE in the resolve (a weapon's flavor decides who it hits — beams ignore evasion, slugs are dodged by the nimble, flak floors it), aggregated by weapon class so it stays **O(ships)** for 100s-of-ship battles. The DevTools faction switcher is the only piece CI can't verify (client). **Remaining in the depth pass: the real player-buildable railgun + flak COMPONENTS (heavy NCalc weapon-template plumbing — paused as the riskiest CI-blind data work, see below) and the example fleets that show the triangle. Then Stage 2 — mirror the spine for ground combat.**
+
+---
+
+## Session 2026-06-25 (cont.) — Combat-DEPTH pass: weapon flavor + dodge (READ THIS SECOND)
+
+After the spine, the developer chose to add space-combat depth (knowingly crossing his own `docs/MVP.md` firewall — "cross it, it'll just deepen the tests"). Design captured in **`docs/WEAPONS-AND-DODGE-DESIGN.md`** (the four weapon-flavor stats, computed saturation, the **Fire-Emblem weapon triangle** Beam▸Fighter▸Capital▸Beam + a Missile⟷Flak axis, and the aggregate O(ships) math). Built gauge-first, all CI-green:
+
+| Piece | What | Test |
+|-------|------|------|
+| Evasion | how hard a ship is to HIT = size (Volume_m3) × agility (thrust÷mass). Separate from toughness. | `ShipEvasionTests` |
+| Weapon profiles | each weapon's {class, damage/sec, velocity, tracking, saturation=rate-of-fire} on `ShipCombatValueDB.Weapons`; Firepower = sum (backward-compat) | `WeaponProfileTests` |
+| Dodge resolve | `BuildFireMix`→`LandedFraction`→`HitFraction`; effective toughness = raw ÷ landed; hittable ships die first. Beams ignore evasion; slugs dodged; flak floors. | `DodgeResolveTests` |
+| Performance | fire aggregated by weapon CLASS → O(ships) per step (not O(ships²)); 200 warships resolve in ms | `CombatPerformanceTests` |
+
+**Key things a future session MUST know:**
+- **Backward-compat is load-bearing.** A ship with no `WeaponProfile`s fires as a light-speed always-hit beam, and a 0-evasion target has landed-fraction 1 — so every pre-dodge combat test behaves identically. That's WHY the whole spine stayed green. Don't break it.
+- **Performance hinges on `BuildFireMix` aggregating by weapon class.** If that ever stops, the resolve goes O(ships²); `CombatPerformanceTests` is the tripwire.
+- **The dodge model is exercised by STAMPING `WeaponProfile`s in tests** (Railgun/Beam/Flak) — it does NOT yet need a real railgun/flak component. That's deliberate: the real components are the remaining piece.
+- **Why the railgun/flak COMPONENTS are paused:** making them player-buildable needs the NCalc component-designer **template** system (`GameData/.../TemplateFiles/weapons.json` — ~30 formula properties per weapon). The runtime template→attribute construction isn't covered by CI (gotcha 10 — JSON data drift crashes New Game, not `dotnet test`), so it's the riskiest CI-blind work. Do it as a careful dedicated pass WITH a local New Game check, or get the developer's input on the template approach first. The weapon-attribute classes themselves (code) ARE CI-verifiable; it's the JSON template + designer formulas that aren't.
+- Full per-detail source of truth: **`GameEngine/Combat/CLAUDE.md`** ("Dodge in the resolve", "Example combat-test ships", constants table) and `docs/WEAPONS-AND-DODGE-DESIGN.md`.
 
 ---
 
