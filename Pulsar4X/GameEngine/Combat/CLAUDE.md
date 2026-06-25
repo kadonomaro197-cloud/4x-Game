@@ -225,6 +225,18 @@ switcher, step 9) to watch the auto-resolver decide it.
 **Test:** `Pulsar4X.Tests/CombatTestShipsTests.cs` — the two designs load onto the faction and rate strong-vs-weak
 (warship out-guns + out-armours the corvette); a 3v3 auto-resolve is a decisive `SideAVictory` with all corvettes lost.
 
+**Adding a new armed test design — it touches FOUR data files, register BOTH ends (gotcha-10 lesson, learned the
+hard way on the railgun P3):** a starting ship design whose components aren't all registered with the colony
+crashes `ColonyFactory.CreateFromBlueprint` → `ShipDesignFromJson` with `KeyNotFoundException: '<component-id>'
+not present` (it looks the component up in `factionInfoDB.InternalComponentDesigns`), which fails **every**
+`TestScenario.CreateWithColony` test at once. For a new weapon (e.g. flak) add: (1) the `*Atb` C# class, (2) the
+`ComponentTemplate` in `weapons.json`, (3) the `ComponentDesign` in `componentDesigns.json`, (4a) the
+component-design id in `earth.json`'s **`ComponentDesigns`** list *and* (4b) the ship-design id in `earth.json`'s
+**`ShipDesigns`** list — plus the ship design in `shipDesigns.json`. Note `BaseModIntegrityTests` did **not**
+catch this gap (it checks the mod store + industry buildability, not the `ShipDesigns`→`ComponentDesigns`
+faction-registration step); the harness itself is now the sensor — once a design is in `earth.json`, every
+harness test builds it, so a missing registration fails loudly.
+
 ---
 
 ## Dodge in the resolve (weapon flavor decides WHO gets hit)
