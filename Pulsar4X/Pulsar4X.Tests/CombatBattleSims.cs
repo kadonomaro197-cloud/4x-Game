@@ -15,18 +15,18 @@ namespace Pulsar4X.Tests
     /// Combat BATTLE SIMS — the "10 more" battle scenarios run AFTER the hot-damage rebalance
     /// (<see cref="CombatEngagement.SalvoDamageScale"/> = 0.1, 2026-06-25). Where <see cref="CombatStressLab"/> pins
     /// the dodge MECHANISM at the extremes, these measure how whole BATTLES feel now that a salvo deposits only a
-    /// tenth of its raw energy:
-    ///   • B01 — battle DURATION: a standard mirror now lasts many salvos (the rebalance made visible).
-    ///   • B02 — the pace lever is PREDICTABLE: duration scales with hull toughness.
-    ///   • B03 — the saturation frontier as a CURVE (kills climb with rate-of-fire).
-    ///   • B04 — the evasion frontier as a CURVE (survivors climb with evasion).
-    ///   • B05 — COMBINED ARMS (railgun + flak) clears a mixed-evasive enemy better than mono railgun.
-    ///   • B06 — QUALITY vs QUANTITY at equal total firepower AND toughness.
-    ///   • B07 — a 3-WAY free-for-all (multi-party sides + fire division at n=3).
-    ///   • B08 — REINFORCEMENTS turn a losing fight (the "send in another fleet" feature at fleet scale).
-    ///   • B09 — STEERING: a mid-fight doctrine switch changes the result of an otherwise-even fight.
-    ///   • B10 — extreme ASYMMETRY (1 dreadnought vs 1000 gnats) stays fast + correct (bucketed resolve).
-    /// Engine-only -> runs in CI. Numbers in the messages are harvested from CI (the TRX artifact is egress-blocked).
+    /// tenth of its raw energy. Measured results (CI, deterministic — the messages carry the live numbers):
+    ///   • B01 — DURATION: a standard 50v50 mirror now lasts 38 salvos (= 190s game-time), 25–25 — not 2–4 salvos.
+    ///   • B02 — PREDICTABLE pace: at toughness ×1/×4/×16 the same 20v20 takes 38 / 150 / 599 salvos (≈ linear).
+    ///   • B03 — saturation frontier (kills of 100, ev0.9, 40 salvos): sat 1/10/100/1000 -> 5 / 6 / 26 / 38.
+    ///   • B04 — evasion frontier (kills of 100, slug, 40 salvos): ev 0/.3/.6/.9/.95 -> 40 / 28 / 17 / 5 / 3.
+    ///   • B05 — COMBINED ARMS (railgun+flak) clears a mixed enemy better than mono (50 vs 66 left of 100).
+    ///   • B06 — QUALITY vs QUANTITY at equal totals: 5 heavy keep 60% (3/5), 50 light keep 48% (24/50) — quality endures.
+    ///   • B07 — 3-WAY free-for-all (10/10/10): perfectly symmetric, all break off at 50% (5/5/5, 36 salvos).
+    ///   • B08 — REINFORCEMENTS flip it: 10v20 the enemy keeps 18; a 15-ship ally joining drops the enemy to 10 (it breaks off).
+    ///   • B09 — STEERING: an even mirror (15–15) becomes player 22 vs enemy 15 when the player switches doctrine mid-fight.
+    ///   • B10 — extreme ASYMMETRY: 1 dreadnought vs 1000 gnats resolves in 9 ms / 20 salvos (bucketed); the dread tanks the swarm's break-off.
+    /// Engine-only -> runs in CI.
     /// </summary>
     [TestFixture]
     public class CombatBattleSims
@@ -126,7 +126,7 @@ namespace Pulsar4X.Tests
         // ---------------------------------------------------------------------------------------------------
 
         [Test]
-        [Description("Battle DURATION: after the rebalance a standard 50v50 mirror lasts many salvos (was 2-4 salvos at hot damage). Reports steps + game-seconds.")]
+        [Description("Battle DURATION: after the rebalance a standard 50v50 mirror lasts 38 salvos (= 190s game-time, both bleeding to 25/50) — not the 2-4 salvos of hot damage. The headline 'you can now watch a battle' check.")]
         public void B01_BattleDuration_ManySalvosNow()
         {
             var s = TestScenario.CreateWithColony();
@@ -134,12 +134,11 @@ namespace Pulsar4X.Tests
             var blue = Squadron(s, s.Faction, 50, 10_000, 200_000, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "blue");
             var redf = Squadron(s, red, 50, 10_000, 200_000, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "red");
             var (bl, rd, steps) = Resolve(blue, redf, 5000);
-            Assert.That(steps, Is.GreaterThan(15), "the rebalance should make a standard fleet fight last many salvos, not 2-4");
-            Assert.Fail($"[HARVEST-B01] 50v50 mirror: {steps} steps = {steps * 5}s game-time, survivors blue={bl} red={rd}");
+            Assert.That(steps, Is.GreaterThan(15), $"[BSIM-01] 50v50 mirror resolved in {steps} salvos = {steps * 5}s game-time (blue={bl} red={rd}) -> battles last many salvos now, not 2-4.");
         }
 
         [Test]
-        [Description("The pace lever is PREDICTABLE: at toughness x1/x4/x16 the SAME 20v20 fight takes proportionally more salvos to resolve — confirms duration scales cleanly with toughness (= the inverse of SalvoDamageScale).")]
+        [Description("The pace lever is PREDICTABLE: at toughness x1/x4/x16 the SAME 20v20 fight takes 38 / 150 / 599 salvos — duration scales ~linearly with toughness (the inverse of SalvoDamageScale), so the dial is easy to tune.")]
         public void B02_Duration_ScalesWithToughness()
         {
             var s = TestScenario.CreateWithColony();
@@ -151,37 +150,36 @@ namespace Pulsar4X.Tests
                 return Resolve(b, r, 5000).steps;
             }
             int s1 = Steps(200_000), s4 = Steps(800_000), s16 = Steps(3_200_000);
-            Assert.That(s4, Is.GreaterThan(s1), "4x toughness -> more salvos");
-            Assert.That(s16, Is.GreaterThan(s4), "16x toughness -> more salvos still");
-            Assert.Fail($"[HARVEST-B02] 20v20 duration vs toughness: x1={s1} steps, x4={s4} steps, x16={s16} steps");
+            Assert.That(s4, Is.GreaterThan(s1), $"[BSIM-02] 20v20 duration vs toughness: x1={s1}, x4={s4}, x16={s16} salvos -> 4x toughness -> more salvos.");
+            Assert.That(s16, Is.GreaterThan(s4), $"[BSIM-02] 16x toughness -> more salvos still (x1={s1}, x4={s4}, x16={s16}).");
         }
 
         [Test]
-        [Description("Saturation frontier as a CURVE: vs a fixed evasive(0.9) screen, railgun kills climb with rate-of-fire (saturation 1/10/100/1000). The dodge-defeat frontier, tabulated.")]
+        [Description("Saturation frontier as a CURVE: vs a fixed evasive(0.9) screen, railgun kills climb with rate-of-fire — saturation 1/10/100/1000 -> 5 / 6 / 26 / 38 kills of 100. The dodge-defeat frontier, tabulated.")]
         public void B03_SaturationFrontier_Curve()
         {
             var s = TestScenario.CreateWithColony();
             var red = FactionFactory.CreateBasicFaction(s.Game, "R", "RED", 0);
             int K(double sat) => KilledInWindow(s, red, new WeaponProfile(WeaponClass.Railgun, 200_000, 50_000, 0.05, sat), 100, 0.9, 100_000, 40);
             int k1 = K(1), k10 = K(10), k100 = K(100), k1000 = K(1000);
-            Assert.That(k1000, Is.GreaterThan(k1), "more saturation defeats more of the dodge");
-            Assert.Fail($"[HARVEST-B03] saturation curve (kills of 100, ev0.9, 40 steps): sat1={k1} sat10={k10} sat100={k100} sat1000={k1000}");
+            Assert.That(k1000, Is.GreaterThan(k1), $"[BSIM-03] saturation curve (kills of 100, ev0.9, 40 salvos): sat1={k1} sat10={k10} sat100={k100} sat1000={k1000} -> more rate-of-fire defeats more dodge.");
+            Assert.That(k100, Is.GreaterThan(k10), $"[BSIM-03] the curve is monotonic: sat1={k1} sat10={k10} sat100={k100} sat1000={k1000}.");
         }
 
         [Test]
-        [Description("Evasion frontier as a CURVE: vs a fixed slug (railgun), the screen's survivors climb with evasion (0/0.3/0.6/0.9/0.95). The dodge curve, tabulated.")]
+        [Description("Evasion frontier as a CURVE: vs a fixed slug (railgun), kills FALL as evasion rises — ev 0/.3/.6/.9/.95 -> 40 / 28 / 17 / 5 / 3 kills of 100. The dodge curve, tabulated.")]
         public void B04_EvasionFrontier_Curve()
         {
             var s = TestScenario.CreateWithColony();
             var red = FactionFactory.CreateBasicFaction(s.Game, "R", "RED", 0);
             int K(double ev) => KilledInWindow(s, red, new WeaponProfile(WeaponClass.Railgun, 200_000, 50_000, 0.05, 5), 100, ev, 100_000, 40);
             int e0 = K(0.0), e30 = K(0.3), e60 = K(0.6), e90 = K(0.9), e95 = K(0.95);
-            Assert.That(e0, Is.GreaterThan(e95), "evasion saves ships from a ballistic slug");
-            Assert.Fail($"[HARVEST-B04] evasion curve (kills of 100, slug, 40 steps): ev0={e0} ev0.3={e30} ev0.6={e60} ev0.9={e90} ev0.95={e95}");
+            Assert.That(e0, Is.GreaterThan(e95), $"[BSIM-04] evasion curve (kills of 100, slug, 40 salvos): ev0={e0} ev0.3={e30} ev0.6={e60} ev0.9={e90} ev0.95={e95} -> evasion saves ships.");
+            Assert.That(e30, Is.GreaterThan(e90), $"[BSIM-04] the curve is monotonic: ev0={e0} ev0.3={e30} ev0.6={e60} ev0.9={e90} ev0.95={e95}.");
         }
 
         [Test]
-        [Description("COMBINED ARMS: at equal total firepower, a railgun+flak mix clears more of a mixed-evasive enemy (80 dodging fighters + 20 sluggish capitals) than mono railgun — the flak finishes the fighters the railgun can't catch.")]
+        [Description("COMBINED ARMS: at equal total firepower, a railgun+flak mix clears more of a mixed-evasive enemy (80 dodging fighters + 20 sluggish capitals) than mono railgun — the flak finishes the fighters the railgun can't catch. Measured 50 left vs 66 left of 100.")]
         public void B05_CombinedArms_BeatsMono_VsMixedEnemy()
         {
             var s = TestScenario.CreateWithColony();
@@ -195,11 +193,12 @@ namespace Pulsar4X.Tests
             {
                 new WeaponProfile(WeaponClass.Railgun, 800_000, 50_000, 0.05, 5),
             }, 50);
-            Assert.Fail($"[HARVEST-B05] mixed enemy (80 fighters ev0.9 + 20 caps) survivors after 50 steps: vs combined(railgun+flak)={combinedLeft}, vs mono-railgun={monoLeft}");
+            Assert.That(combinedLeft, Is.LessThan(monoLeft),
+                $"[BSIM-05] mixed enemy (80 fighters ev0.9 + 20 caps) survivors after 50 salvos: vs combined(railgun+flak)={combinedLeft}, vs mono-railgun={monoLeft} -> combined arms clears more.");
         }
 
         [Test]
-        [Description("QUALITY vs QUANTITY at EQUAL totals: 5 heavy ships (fp40k/tough400k) vs 50 light ships (fp4k/tough40k) — same aggregate firepower AND toughness, evasion held at 0. Which form factor wins?")]
+        [Description("QUALITY vs QUANTITY at EQUAL totals: 5 heavy ships (fp40k/tough400k) vs 50 light (fp4k/tough40k) — same aggregate firepower AND toughness, evasion 0. Quality endures: heavy keep 60% (3/5), light keep 48% (24/50) — the dispersed force hits its 50% break-off first because each fragile ship is a whole hull lost.")]
         public void B06_QualityVsQuantity_EqualTotals()
         {
             var s = TestScenario.CreateWithColony();
@@ -207,11 +206,12 @@ namespace Pulsar4X.Tests
             var heavy = Squadron(s, s.Faction, 5, 40_000, 400_000, 0.0, new WeaponProfile(WeaponClass.Railgun, 40_000, 50_000, 0.05, 5), "heavy");
             var light = Squadron(s, red, 50, 4_000, 40_000, 0.0, new WeaponProfile(WeaponClass.Railgun, 4_000, 50_000, 0.05, 5), "light");
             var (hv, lt, steps) = Resolve(heavy, light, 5000);
-            Assert.Fail($"[HARVEST-B06] quality(5x fp40k/tough400k) vs quantity(50x fp4k/tough40k), equal totals: {steps} steps, heavy={hv}/5 light={lt}/50");
+            Assert.That(hv, Is.GreaterThan(0), $"[BSIM-06] quality(5x fp40k/tough400k) vs quantity(50x fp4k/tough40k), equal totals: {steps} salvos, heavy={hv}/5 light={lt}/50 -> the concentrated force survives.");
+            Assert.That(hv / 5.0, Is.GreaterThan(lt / 50.0), $"[BSIM-06] quality keeps a higher FRACTION than quantity: heavy {hv}/5 vs light {lt}/50 ({steps} salvos).");
         }
 
         [Test]
-        [Description("3-WAY free-for-all: three equal 10-ship fleets of different factions in one engagement. Each divides its fire between two enemies and takes the combined fire of both. Reports who is left when fewer than two hostile sides remain.")]
+        [Description("3-WAY free-for-all: three equal 10-ship fleets of different factions in one engagement. Each divides its fire between two enemies and takes the combined fire of both. Perfectly symmetric -> all three break off at 50% together (5/5/5, 36 salvos).")]
         public void B07_ThreeWayFreeForAll()
         {
             var s = TestScenario.CreateWithColony();
@@ -227,17 +227,18 @@ namespace Pulsar4X.Tests
             int steps = 0;
             while (steps < 5000 && InCombat(a, b, c) >= 2) { CombatEngagement.StepEngagementGroup(group, 5); steps++; }
             int al = CombatEngagement.GetFleetShips(a).Count, bl = CombatEngagement.GetFleetShips(b).Count, cl = CombatEngagement.GetFleetShips(c).Count;
-            Assert.Fail($"[HARVEST-B07] 3-way FFA (10/10/10): {steps} steps, A={al} B={bl} C={cl}");
+            Assert.That(al, Is.EqualTo(bl).And.EqualTo(cl), $"[BSIM-07] 3-way FFA (10/10/10) in {steps} salvos: A={al} B={bl} C={cl} -> a symmetric 3-way resolves symmetrically.");
+            Assert.That(al, Is.GreaterThan(0), $"[BSIM-07] all three break off at 50% losses rather than fight to extinction (A={al} B={bl} C={cl}).");
         }
 
         [Test]
-        [Description("REINFORCEMENTS turn the tide: a 10-ship fleet loses to 20 identical enemies (control). But add a 15-ship reinforcement that JOINS the same fight, and the now-25 allied side wins. The 'send in another fleet to assist' feature at fleet scale.")]
+        [Description("REINFORCEMENTS turn the tide: a 10-ship fleet loses to 20 identical enemies (control — enemy keeps 18, player breaks off). Add a 15-ship reinforcement that JOINS the same fight and the enemy is driven down to 10 (it breaks off instead). The 'send in another fleet to assist' feature at fleet scale.")]
         public void B08_Reinforcements_TurnALosingFight()
         {
             var s = TestScenario.CreateWithColony();
             var red = FactionFactory.CreateBasicFaction(s.Game, "R", "RED", 0);
 
-            // Control: 10 player vs 20 enemy — the player is out-gunned 2:1 and should break off / lose.
+            // Control: 10 player vs 20 enemy — the player is out-gunned 2:1 and breaks off, the enemy barely scratched.
             var pc = Squadron(s, s.Faction, 10, 10_000, 200_000, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "pc");
             var ec = Squadron(s, red, 20, 10_000, 200_000, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "ec");
             var (pcl, ecl, ccs) = Resolve(pc, ec, 5000);
@@ -255,11 +256,12 @@ namespace Pulsar4X.Tests
             for (; k < 5000 && InCombat(pt, et, relief) >= 2; k++) CombatEngagement.StepEngagementGroup(group, 5);
             int ptl = CombatEngagement.GetFleetShips(pt).Count, etl = CombatEngagement.GetFleetShips(et).Count, rl = CombatEngagement.GetFleetShips(relief).Count;
 
-            Assert.Fail($"[HARVEST-B08] control 10v20: player={pcl} enemy={ecl} ({ccs} steps). Reinforced 10+15 v 20: player={ptl} relief={rl} enemy={etl} ({k} steps)");
+            Assert.That(etl, Is.LessThan(ecl),
+                $"[BSIM-08] control 10v20: enemy kept {ecl} (player broke off at {pcl}, {ccs} salvos). Reinforced 10+15v20: enemy down to {etl} (player={ptl} relief={rl}, {k} salvos) -> the reinforcement flips it.");
         }
 
         [Test]
-        [Description("STEERING with doctrine: two identical 30v30 fights. Control runs neutral both sides (a near-even mirror). Test fights neutral for 8 salvos, then the player switches to an all-out-attack (x2 firepower) doctrine MID-FIGHT — and ends ahead. Proves you steer a battle in progress with doctrine, not micromanagement.")]
+        [Description("STEERING with doctrine: two identical 30v30 fights. Control runs neutral both sides -> an even mirror (15-15). The test fights neutral for 8 salvos, then the player switches to an all-out-attack (x2 firepower) doctrine MID-FIGHT -> ends ahead (22 vs 15). You steer a battle in progress with doctrine, not micromanagement.")]
         public void B09_DoctrineSwitchedMidFight_SteersIt()
         {
             var s = TestScenario.CreateWithColony();
@@ -283,12 +285,12 @@ namespace Pulsar4X.Tests
                 CombatEngagement.StepEngagement(pt, et, 5);
             int ptl = CombatEngagement.GetFleetShips(pt).Count, etl = CombatEngagement.GetFleetShips(et).Count;
 
-            Assert.That(ptl, Is.GreaterThan(etl), "the mid-fight all-out-attack switch should leave the player ahead of the enemy");
-            Assert.Fail($"[HARVEST-B09] control mirror: player={pcl} enemy={ecl} ({ccs} steps). Switched mid-fight: player={ptl} enemy={etl} ({k} steps)");
+            Assert.That(ptl, Is.GreaterThan(etl),
+                $"[BSIM-09] control mirror: player={pcl} enemy={ecl} ({ccs} salvos). Switched mid-fight: player={ptl} enemy={etl} ({k} salvos) -> the mid-fight all-out-attack leaves the player ahead.");
         }
 
         [Test]
-        [Description("Extreme ASYMMETRY stays fast + correct: 1 dreadnought vs 1000 evasive gnats (equal aggregate firepower AND toughness). The bucketed resolve handles it in milliseconds; reports the winner. A tripwire that the O(buckets) resolve still holds at extreme ship counts.")]
+        [Description("Extreme ASYMMETRY stays fast + correct: 1 dreadnought vs 1000 evasive gnats (equal aggregate firepower AND toughness). The bucketed resolve handles it in ~9 ms / 20 salvos; the dreadnought tanks the swarm's 50% break-off and survives (gnats fall back at ~475 left). A tripwire that the O(buckets) resolve still holds at 1000 ships.")]
         public void B10_OneDreadnought_vs_1000Gnats()
         {
             var s = TestScenario.CreateWithColony();
@@ -307,8 +309,8 @@ namespace Pulsar4X.Tests
             }
             sw.Stop();
             int dl = CombatEngagement.GetFleetShips(dread).Count, gl = CombatEngagement.GetFleetShips(gnats).Count;
-            Assert.That(sw.ElapsedMilliseconds, Is.LessThan(4000), "the bucketed resolve must stay fast even at 1000 ships");
-            Assert.Fail($"[HARVEST-B10] 1 dreadnought vs 1000 gnats: {steps} steps, {sw.ElapsedMilliseconds} ms, dread={dl} gnats={gl}");
+            Assert.That(sw.ElapsedMilliseconds, Is.LessThan(4000), $"[BSIM-10] 1 dreadnought vs 1000 gnats: {steps} salvos, {sw.ElapsedMilliseconds} ms (dread={dl} gnats={gl}) -> the bucketed resolve stays fast at 1000 ships.");
+            Assert.That(steps, Is.LessThan(5000), $"[BSIM-10] it terminates (didn't hang): {steps} salvos, dread={dl} gnats={gl}.");
         }
     }
 }

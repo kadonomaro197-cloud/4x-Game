@@ -13,14 +13,19 @@ namespace Pulsar4X.Tests
 {
     /// <summary>
     /// Combat STRESS LAB — push the ends of weapon design and fleet scale and pin down what the dodge resolver
-    /// actually does. The assertions encode the measured results (CI run 248799c); the messages carry the real
-    /// numbers so a regression shows exactly how the behaviour shifted. Stamped combat values dial weapon flavor +
-    /// hull to the extremes directly. Findings (2026-06-25):
-    ///   • Three independent ways to defeat evasion: high SATURATION (S01), high VELOCITY (S03), and a beam's both.
-    ///   • A slow flak is nearly useless (S02); nothing is truly untouchable — the floor always lands some (S04).
-    ///   • Alpha-strike beats attrition at current numbers (S05).
-    ///   • Identical fleets resolve EXACTLY even (S06); doctrine x2 swings a fair fight ~2:1 (S08); dodge scales (S09).
-    ///   • One capital is worth ~25-50 of these fighters (S07, S10) — damage runs HOT (fights end in 2-4 salvos).
+    /// actually does, now at the REBALANCED combat pace (<see cref="CombatEngagement.SalvoDamageScale"/> = 0.1 —
+    /// fights last many salvos, not 2-4). The assertions encode the measured DIRECTION; the messages carry the real
+    /// numbers so a regression shows exactly how the behaviour shifted. Findings (2026-06-25, post-rebalance):
+    ///   • Three independent ways to defeat evasion: high SATURATION (S01: 38 vs 5 of 100), high VELOCITY (S03: 39
+    ///     vs 5), and a beam's both. A slow flak is near-useless (S02: 34 vs 7); nothing is untouchable (S04: 39 vs
+    ///     3 of MAX-evasion 0.95 — the saturation floor always lands some).
+    ///   • Alpha-strike still beats attrition (S05). Identical fleets resolve EXACTLY even (S06: 50–50 of 100, 39
+    ///     salvos); doctrine ×2 swings a fair fight ~1.6:1 (S08: 40 vs 25); dodge scales to fleets (S09: railguns
+    ///     leave 85/100 of an evasive screen, equal-firepower beams leave 49/100).
+    ///   • Exchange ratio: a capital is worth ~25–50 of these fighters (S10, break-even N=50). The rebalance made
+    ///     RETREAT bite: a super-capital now tanks long enough that a 150-fighter swarm would break off at 50%
+    ///     losses BEFORE killing it — it takes ~400 to overwhelm it (S07). At hot damage the swarm wiped it in one
+    ///     volley, before anyone could retreat.
     /// Engine-only -> runs in CI.
     /// </summary>
     [TestFixture]
@@ -41,6 +46,8 @@ namespace Pulsar4X.Tests
             return ship;
         }
 
+        // An evasive railgun screen of n ships. Sized large (n=100) so the 50%-loss break-off does not cap the
+        // dodge comparisons at the rebalanced pace (a smaller screen would just retreat at half losses).
         private static Entity Screen(TestScenario s, Entity faction, int n, double evasion, double tough, string tag)
         {
             var fleet = MakeFleet(s, faction, tag);
@@ -75,7 +82,7 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("Rate of fire defeats evasion: a high-saturation (spinal-slug) railgun lands on nimble fighters that dodge a normal railgun. Measured 19 vs 5 of 20.")]
+        [Description("Rate of fire defeats evasion: a high-saturation (spinal-slug) railgun lands on nimble fighters that dodge a normal railgun. Measured 38 vs 5 of 100 (ev0.9, 40 salvos).")]
         public void S01_RateOfFire_DefeatsEvasion()
         {
             var s = TestScenario.CreateWithColony();
@@ -83,11 +90,10 @@ namespace Pulsar4X.Tests
             int hi = Killed(s, red, new WeaponProfile(WeaponClass.Railgun, 200_000, 50_000, 0.05, 1000), 100, 0.9, 100_000, 40);
             int lo = Killed(s, red, new WeaponProfile(WeaponClass.Railgun, 200_000, 50_000, 0.05, 5), 100, 0.9, 100_000, 40);
             Assert.That(hi, Is.GreaterThan(lo), $"[STRESS-01] vs 100 evasive(0.9) fighters/40 steps: spinal slug (saturation 1000) killed {hi}, normal railgun (saturation 5) killed {lo} -> rate-of-fire defeats the dodge.");
-            Assert.Fail($"[HARVEST-S01] sat1000 killed {hi}, sat5 killed {lo} (of 100, 0.9 evasion, 40 steps)");
         }
 
         [Test]
-        [Description("A slow flak cannon is nearly useless: fast flak (high saturation) kills far more of an evasive screen than a 1/min flak. Measured 17 vs 7 of 20.")]
+        [Description("A slow flak cannon is nearly useless: fast flak (high saturation) kills far more of an evasive screen than a 1/min flak. Measured 34 vs 7 of 100 (ev0.9, 40 salvos).")]
         public void S02_SlowFlak_IsUseless()
         {
             var s = TestScenario.CreateWithColony();
@@ -95,11 +101,10 @@ namespace Pulsar4X.Tests
             int fast = Killed(s, red, new WeaponProfile(WeaponClass.Flak, 200_000, 20_000, 0.10, 300), 100, 0.9, 100_000, 40);
             int slow = Killed(s, red, new WeaponProfile(WeaponClass.Flak, 200_000, 20_000, 0.10, 0.02), 100, 0.9, 100_000, 40);
             Assert.That(fast, Is.GreaterThan(slow), $"[STRESS-02] vs 100 evasive(0.9) fighters/40 steps: fast flak (saturation 300) killed {fast}, a 1/min flak (saturation 0.02) killed {slow} -> slow flak is useless.");
-            Assert.Fail($"[HARVEST-S02] fast-flak killed {fast}, slow-flak killed {slow} (of 100, 0.9 evasion, 40 steps)");
         }
 
         [Test]
-        [Description("Muzzle velocity defeats evasion: a near-light railgun lands on nimble fighters that dodge a normal-velocity railgun. Measured 19 vs 5 of 20.")]
+        [Description("Muzzle velocity defeats evasion: a near-light railgun lands on nimble fighters that dodge a normal-velocity railgun. Measured 39 vs 5 of 100 (ev0.9, 40 salvos).")]
         public void S03_MuzzleVelocity_DefeatsEvasion()
         {
             var s = TestScenario.CreateWithColony();
@@ -107,11 +112,10 @@ namespace Pulsar4X.Tests
             int light = Killed(s, red, new WeaponProfile(WeaponClass.Railgun, 200_000, 3e8, 0.05, 5), 100, 0.9, 100_000, 40);
             int slow = Killed(s, red, new WeaponProfile(WeaponClass.Railgun, 200_000, 50_000, 0.05, 5), 100, 0.9, 100_000, 40);
             Assert.That(light, Is.GreaterThan(slow), $"[STRESS-03] vs 100 evasive(0.9) fighters/40 steps: near-light railgun (vel 3e8) killed {light}, normal railgun (vel 5e4) killed {slow} -> muzzle velocity defeats the dodge.");
-            Assert.Fail($"[HARVEST-S03] near-light killed {light}, slow killed {slow} (of 100, 0.9 evasion, 40 steps)");
         }
 
         [Test]
-        [Description("Nothing is truly untouchable: extreme-saturation flak wipes even max-evasion (0.95) fighters; the floor means even a normal slug grinds them down over time. Measured 20 vs 12 of 20.")]
+        [Description("Nothing is truly untouchable: extreme-saturation flak wipes even max-evasion (0.95) fighters; the floor means even a normal slug grinds them down over time. Measured 39 vs 3 of 100 (ev0.95, 16 salvos).")]
         public void S04_SaturationFloor_NothingIsUntouchable()
         {
             var s = TestScenario.CreateWithColony();
@@ -119,11 +123,10 @@ namespace Pulsar4X.Tests
             int extreme = Killed(s, red, new WeaponProfile(WeaponClass.Flak, 500_000, 20_000, 0.10, 100_000), 100, 0.95, 100_000, 16);
             int normalSlug = Killed(s, red, new WeaponProfile(WeaponClass.Railgun, 500_000, 50_000, 0.05, 5), 100, 0.95, 100_000, 16);
             Assert.That(extreme, Is.GreaterThan(normalSlug), $"[STRESS-04] vs 100 MAX-evasion(0.95) fighters/16 steps: extreme-saturation flak killed {extreme}, a normal slug killed {normalSlug} -> the floor means nothing is untouchable.");
-            Assert.Fail($"[HARVEST-S04] extreme-flak killed {extreme}, normal-slug killed {normalSlug} (of 100, 0.95 evasion, 16 steps)");
         }
 
         [Test]
-        [Description("Alpha strike beats attrition: a glass cannon (huge dps, paper hull) destroys a brick (tiny dps, huge hull) before the brick's trickle matters.")]
+        [Description("Alpha strike beats attrition: a glass cannon (huge dps, paper hull) destroys a brick (tiny dps, huge hull) before the brick's trickle matters. ~20 salvos now (was instant at hot damage).")]
         public void S05_GlassCannon_vs_Brick()
         {
             var s = TestScenario.CreateWithColony();
@@ -135,11 +138,10 @@ namespace Pulsar4X.Tests
             var (g, b, steps) = Resolve(glass, brick, 5000);
             Assert.That(brickShip.IsValid, Is.False, $"[STRESS-05] glass cannon vs brick in {steps} steps: glass alive={glassShip.IsValid}, brick alive={brickShip.IsValid} -> alpha-strike kills the brick.");
             Assert.That(glassShip.IsValid, Is.True, "the glass cannon outruns the brick's attrition and survives");
-            Assert.Fail($"[HARVEST-S05] glass vs brick: {steps} steps, glassAlive={glassShip.IsValid} brickAlive={brickShip.IsValid} (survivors g={g} b={b})");
         }
 
         [Test]
-        [Description("Identical fleets resolve EXACTLY even (no first-mover advantage), both bleeding to ~half before breaking off. Measured 46 vs 46 of 100.")]
+        [Description("Identical fleets resolve EXACTLY even (no first-mover advantage), both bleeding to exactly half before breaking off. Measured 50 vs 50 of 100 in 39 salvos (the slower pace lands them right on the 50% retreat line).")]
         public void S06_MirrorFleet_100v100()
         {
             var s = TestScenario.CreateWithColony();
@@ -154,28 +156,26 @@ namespace Pulsar4X.Tests
             var (bl, rd, steps) = Resolve(blue, redf, 5000);
             Assert.That(Math.Abs(bl - rd), Is.LessThanOrEqualTo(4), $"[STRESS-06] 100v100 mirror in {steps} steps: blue={bl}, red={rd} -> a fair fight is near-perfectly even.");
             Assert.That(bl, Is.LessThan(100), "both sides take real attrition (neither walks away whole)");
-            Assert.Fail($"[HARVEST-S06] 100v100 mirror: {steps} steps, blue={bl} red={rd}");
         }
 
         [Test]
-        [Description("Numbers overwhelm a monster, at a brutal exchange rate: 150 nimble fighters destroy a super-capital but lose ~96 doing it.")]
+        [Description("Numbers overwhelm a monster — and the rebalance RAISED the bar. At hot damage 150 fighters wiped this super-capital in one volley; now it tanks ~10x longer, so a 150-swarm would break off at 50% losses first. It takes ~400 evasive fighters to overwhelm it (losing only ~30 doing it).")]
         public void S07_Swarm_vs_SuperCapital()
         {
             var s = TestScenario.CreateWithColony();
             var red = FactionFactory.CreateBasicFaction(s.Game, "R", "RED", 0);
             var swarm = MakeFleet(s, s.Faction, "swarm");
-            for (int i = 0; i < 150; i++)
+            for (int i = 0; i < 400; i++)
                 Stamp(s, s.Faction, swarm, 50_000, 100_000, 0.85, new WeaponProfile(WeaponClass.Railgun, 50_000, 50_000, 0.05, 5), "F" + i);
             var cap = MakeFleet(s, red, "cap");
             Stamp(s, red, cap, 5e6, 5e7, 0, new WeaponProfile(WeaponClass.Railgun, 5e6, 50_000, 0.05, 5), "SuperCap");
             var (sw, cp, steps) = Resolve(swarm, cap, 5000);
-            Assert.That(cp, Is.EqualTo(0), $"[STRESS-07] 150 evasive(0.85) fighters vs 1 super-capital in {steps} steps: fighters left={sw}/150, capital left={cp} -> the swarm overwhelms it.");
+            Assert.That(cp, Is.EqualTo(0), $"[STRESS-07] 400 evasive(0.85) fighters vs 1 super-capital in {steps} steps: fighters left={sw}/400, capital left={cp} -> a big enough swarm overwhelms it.");
             Assert.That(sw, Is.GreaterThan(0), "but the swarm wins at heavy cost (a brutal exchange ratio)");
-            Assert.Fail($"[HARVEST-S07] 150 fighters vs supercap: {steps} steps, fighters={sw}/150 capital={cp}");
         }
 
         [Test]
-        [Description("Doctrine is a real lever: a x2-firepower offensive doctrine turns a 50v50 coin-flip into a ~2:1 win. Measured 36 vs 18.")]
+        [Description("Doctrine is a real lever: a x2-firepower offensive doctrine turns a 50v50 coin-flip into a ~1.6:1 win (the loser breaks off at 50% losses). Measured 40 vs 25 in 16 salvos.")]
         public void S08_Doctrine_SwingsAFleetFight()
         {
             var s = TestScenario.CreateWithColony();
@@ -190,11 +190,10 @@ namespace Pulsar4X.Tests
             FleetDoctrine.TrySetDoctrine(off, new CombatDoctrineBlueprint { UniqueID = "aggro", DisplayName = "aggro", Family = "Offensive", FirepowerMult = 2.0, ToughnessMult = 1.0, CooldownSeconds = 0 }, off.StarSysDateTime);
             var (o, d, steps) = Resolve(off, def, 5000);
             Assert.That(o, Is.GreaterThan(d), $"[STRESS-08] 50 offensive(x2 doctrine) vs 50 plain in {steps} steps: offensive left={o}, plain left={d} -> doctrine swings a fair fleet fight.");
-            Assert.Fail($"[HARVEST-S08] 50 offensive(x2) vs 50 plain: {steps} steps, offensive={o} plain={d}");
         }
 
         [Test]
-        [Description("Dodge scales to fleets: equal-firepower 30-ship fleets vs identical 60-fighter screens — the railgun (dodgeable) leaves more of the screen alive than the beam. Measured 30 vs 21.")]
+        [Description("Dodge scales to fleets: equal-firepower 30-ship fleets vs identical 100-fighter screens — the railgun (dodgeable) leaves far more of the screen alive than the beam. Measured railguns 85/100, beams 49/100 (40 salvos).")]
         public void S09_BeamVsRailgun_Fleet_vs_EvasiveScreen()
         {
             var s = TestScenario.CreateWithColony();
@@ -212,11 +211,10 @@ namespace Pulsar4X.Tests
             for (int i = 0; i < 40 && screenB.HasDataBlob<FleetCombatStateDB>(); i++) CombatEngagement.StepEngagement(slugFleet, screenB, 5);
             int slugScreenLeft = CombatEngagement.GetFleetShips(screenB).Count;
             Assert.That(slugScreenLeft, Is.GreaterThan(beamScreenLeft), $"[STRESS-09] equal-firepower 30-ship fleets vs identical 100-fighter screens/40 steps: beams left {beamScreenLeft}/100, railguns left {slugScreenLeft}/100 -> dodge at fleet scale.");
-            Assert.Fail($"[HARVEST-S09] beams left {beamScreenLeft}/100, railguns left {slugScreenLeft}/100 (40 steps)");
         }
 
         [Test]
-        [Description("Swarm-vs-capital exchange ratio: a sweep finds one capital is worth ~25-50 of these fighters. Measured break-even (win WITH survivors) at N=50; mutual kill at N=25.")]
+        [Description("Swarm-vs-capital exchange ratio: a sweep finds one capital is worth ~25-50 of these fighters. Measured break-even (win WITH survivors) at N=50; at N=25 the capital still survives.")]
         public void S10_SwarmVsCapital_BreakEvenSweep()
         {
             var s = TestScenario.CreateWithColony();
@@ -235,7 +233,6 @@ namespace Pulsar4X.Tests
             }
             Assert.That(breakeven, Is.GreaterThan(0).And.LessThanOrEqualTo(100),
                 $"[STRESS-10] swarm-vs-capital sweep: {string.Join("; ", results)}. Smallest swarm that wins WITH survivors: N={breakeven} -> a capital is worth ~25-50 of these fighters.");
-            Assert.Fail($"[HARVEST-S10] {string.Join("; ", results)}; breakeven N={breakeven}");
         }
     }
 }

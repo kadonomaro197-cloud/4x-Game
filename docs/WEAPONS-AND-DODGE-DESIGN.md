@@ -142,27 +142,46 @@ a CI test will prove a 500-ship fight resolves in milliseconds.
 - The new weapon types are wired for the **auto-resolve** (their design stats) — the parked per-pixel firing
   sim is NOT extended to them (it deposits ~0 damage and is a v2 visual skin).
 - Triangle bonus values + evasion/saturation tuning constants are first-pass ("make it work before fair").
-- **Damage vs toughness is HOT (found building the P6 battle sims, 2026-06-25).** At current numbers a railgun is
-  ~1 MJ/s and a hull's toughness is ~1 MJ, so a capital's railgun volley one-shots a handful of fighters — battles
-  are near-instant and the dodge multiplier doesn't visibly change *small*-scale outcomes (it shows clearly at
-  fleet scale / when isolated). Same family as the known missile one-shot note (`Weapons/CLAUDE.md`). The dodge
-  MODEL is correct (the `WeaponTriangleBattleTests` isolate evasion and prove it changes who survives); what wants
-  a v2 pass is the **per-shot-energy ÷ component-toughness balance** so a ship lasts many salvos and the
-  rock-paper-scissors plays out gradually rather than in one volley. Until then, "fighters beat a battleship"
-  needs a large swarm, not a handful.
+- **Damage-vs-toughness pace — REBALANCED 2026-06-25 (was HOT).** Raw numbers had a railgun at ~1 MJ/s vs a
+  ~1 MJ hull, so a volley one-shot a wing of fighters and whole fleet battles ended in **2–4 salvos (10–20
+  game-seconds)** — over before the default 1-hour master tick. Fixed by **`CombatEngagement.SalvoDamageScale`
+  (0.1)**: a salvo now deposits a tenth of its raw energy toward kills, so a ship lasts **~10× more salvos** and
+  the rock-paper-scissors plays out gradually (a standard 50v50 now runs 38 salvos ≈ 190 game-seconds — watchable
+  and steerable). The scale is **uniform**, so it changed battle DURATION, not who wins — every triangle / dodge /
+  doctrine finding held (see `CombatStressLab` + `CombatBattleSims`). One emergent shift worth knowing: the slower
+  pace lets the **50%-loss retreat actually trigger**, so a few matchups that used to be wipes are now break-offs
+  — e.g. a 150-fighter swarm now *retreats* from a super-capital it used to wipe; it takes ~400 to overwhelm it.
+  Tune via the one constant (see the constants table in `GameEngine/Combat/CLAUDE.md`).
 
-**Stress-lab findings (2026-06-25, `CombatStressLab` — 10 extreme sims, real numbers in the test messages):**
+**Stress-lab findings (2026-06-25, post-rebalance — `CombatStressLab`, 10 extreme sims; real numbers in the test
+messages):**
 - **Three independent ways to defeat evasion fall out of the model**, not just flak: high **saturation** (a spinal
-  slug at rof 1000 killed 19/20 nimble fighters vs 5/20 for a normal railgun), high **velocity** (a near-light
-  railgun: 19/20 vs 5/20), and a beam (both at once). Good emergent design space — a "fighter-killer" can be a
+  slug at rof 1000 killed 38/100 nimble fighters vs 5/100 for a normal railgun), high **velocity** (a near-light
+  railgun: 39/100 vs 5/100), and a beam (both at once). Good emergent design space — a "fighter-killer" can be a
   fast-firing OR a high-velocity gun.
 - **Nothing is untouchable** — the `MinLandedFraction` floor means even a normal slug grinds down max-evasion
-  (0.95) fighters over time; extreme saturation wipes them outright.
-- **Fair + scalable**: a 100v100 mirror resolves *exactly* even (46–46, no first-mover edge); the dodge advantage
-  still shows at fleet scale (30 railgun ships leave 30/60 of an evasive screen, 30 equal-firepower beam ships
-  leave 21/60); doctrine ×2 swings a 50v50 fight ~2:1 (36–18).
-- **Exchange ratio quantified**: one capital is worth ~25–50 of these fighters (mutual kill at 25, win-with-
-  survivors at 50) — the concrete read on how hot the damage runs.
+  (0.95) fighters over time; extreme saturation wipes them outright (39/100 vs 3/100 in 16 salvos).
+- **Fair + scalable**: a 100v100 mirror resolves *exactly* even (now **50–50** — the slower pace lands both right
+  on the 50% retreat line, no first-mover edge); the dodge advantage still shows at fleet scale (30 railgun ships
+  leave 85/100 of an evasive screen, 30 equal-firepower beam ships leave 49/100); doctrine ×2 swings a 50v50 fight
+  ~1.6:1 (40–25, the loser breaking off at half losses).
+- **Exchange ratio quantified**: one capital is worth ~25–50 of these fighters (break-even with survivors at
+  N=50). The rebalance made **retreat bite**: a super-capital now tanks long enough that a 150-swarm breaks off
+  before killing it — it takes ~400 fighters to overwhelm it (at hot damage the swarm wiped it in one volley).
+
+**Battle-sim findings (2026-06-25, `CombatBattleSims` — the "10 more", whole-battle scenarios at the rebalanced
+pace):**
+- **Battles last many salvos now**: a standard 50v50 mirror runs **38 salvos = 190 game-seconds** (was 2–4), and
+  duration scales ~linearly with toughness (×1/×4/×16 → 38 / 150 / 599 salvos) — the pace dial is predictable.
+- **The frontiers are smooth curves**: saturation 1/10/100/1000 → 5 / 6 / 26 / 38 kills of 100; evasion
+  0/.3/.6/.9/.95 → 40 / 28 / 17 / 5 / 3 kills — the dodge model is a gradient, not a cliff.
+- **Combined arms > mono** at equal firepower vs a mixed enemy (railgun+flak leaves 50 of 100 alive, mono railgun
+  66). **Quality endures over quantity** at equal aggregate firepower *and* toughness (5 heavy keep 60%, 50 light
+  keep 48% — the dispersed force hits its break-off threshold first).
+- **Multi-party + steering work as battles**: a symmetric 3-way free-for-all resolves symmetrically (5/5/5); a
+  15-ship reinforcement joining a losing 10-v-20 drops the enemy from 18 survivors to 10 (break-off); a mid-fight
+  doctrine switch turns an even 30v30 mirror (15–15) into a 22–15 win. Extreme asymmetry stays cheap: 1
+  dreadnought vs **1000** gnats resolves in **9 ms** (the O(buckets) resolve holds).
 
 ---
 
