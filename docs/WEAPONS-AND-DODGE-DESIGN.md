@@ -151,6 +151,19 @@ a CI test will prove a 500-ship fight resolves in milliseconds.
   rock-paper-scissors plays out gradually rather than in one volley. Until then, "fighters beat a battleship"
   needs a large swarm, not a handful.
 
+**Stress-lab findings (2026-06-25, `CombatStressLab` — 10 extreme sims, real numbers in the test messages):**
+- **Three independent ways to defeat evasion fall out of the model**, not just flak: high **saturation** (a spinal
+  slug at rof 1000 killed 19/20 nimble fighters vs 5/20 for a normal railgun), high **velocity** (a near-light
+  railgun: 19/20 vs 5/20), and a beam (both at once). Good emergent design space — a "fighter-killer" can be a
+  fast-firing OR a high-velocity gun.
+- **Nothing is untouchable** — the `MinLandedFraction` floor means even a normal slug grinds down max-evasion
+  (0.95) fighters over time; extreme saturation wipes them outright.
+- **Fair + scalable**: a 100v100 mirror resolves *exactly* even (46–46, no first-mover edge); the dodge advantage
+  still shows at fleet scale (30 railgun ships leave 30/60 of an evasive screen, 30 equal-firepower beam ships
+  leave 21/60); doctrine ×2 swings a 50v50 fight ~2:1 (36–18).
+- **Exchange ratio quantified**: one capital is worth ~25–50 of these fighters (mutual kill at 25, win-with-
+  survivors at 50) — the concrete read on how hot the damage runs.
+
 ---
 
 ## Future depth — aggregate force condition ("Degraded" tiers)
