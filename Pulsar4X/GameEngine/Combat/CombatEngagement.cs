@@ -228,25 +228,42 @@ namespace Pulsar4X.Combat
             ships.RemoveAll(cs => !cs.Ship.IsValid);
         }
 
-        /// <summary>A fleet's outgoing fire as a flat list of weapon-flavor profiles, each weapon's damage scaled
-        /// by its component's doctrine firepower multiplier. A ship with no weapon profiles but real firepower
-        /// (old-style combat value) fires as a light-speed always-hits beam, so dodge degrades to old behaviour.</summary>
+        /// <summary>A fleet's outgoing fire, AGGREGATED BY WEAPON CLASS — at most a handful of entries no matter
+        /// how many ships fire. This is what keeps the dodge resolve O(ships), not O(ships²), for 100s-of-ship
+        /// battles: the per-target landed-fraction then iterates ≤4 classes, not every weapon. Each class entry
+        /// carries the class's TOTAL damage (doctrine-scaled) and a damage-weighted velocity/tracking/saturation.
+        /// A ship with no weapon profiles but real firepower (old-style combat value) fires as a light-speed
+        /// always-hits beam, so dodge degrades to the old behaviour.</summary>
         private static List<WeaponProfile> BuildFireMix(List<CombatShip> ships)
         {
-            var mix = new List<WeaponProfile>();
+            // class -> (total damage, damage-weighted velocity, tracking, saturation)
+            var byClass = new Dictionary<WeaponClass, (double dmg, double velW, double trkW, double satW)>();
+            void Add(WeaponClass cls, double dmg, double vel, double trk, double sat)
+            {
+                if (dmg <= 0) return;
+                byClass.TryGetValue(cls, out var e);
+                byClass[cls] = (e.dmg + dmg, e.velW + vel * dmg, e.trkW + trk * dmg, e.satW + sat * dmg);
+            }
+
             foreach (var cs in ships)
             {
                 var cv = CombatValue(cs.Ship);
                 if (cv.Weapons != null && cv.Weapons.Count > 0)
                 {
                     foreach (var w in cv.Weapons)
-                        mix.Add(new WeaponProfile(w.Class, w.DamagePerSecond * cs.FirepowerMult, w.Velocity, w.Tracking, w.Saturation));
+                        Add(w.Class, w.DamagePerSecond * cs.FirepowerMult, w.Velocity, w.Tracking, w.Saturation);
                 }
                 else if (cv.Firepower > 0)
                 {
-                    mix.Add(new WeaponProfile(WeaponClass.Beam, cv.Firepower * cs.FirepowerMult,
-                        FallbackBeamVelocity_mps, 1.0, double.PositiveInfinity));
+                    Add(WeaponClass.Beam, cv.Firepower * cs.FirepowerMult, FallbackBeamVelocity_mps, 1.0, double.PositiveInfinity);
                 }
+            }
+
+            var mix = new List<WeaponProfile>(byClass.Count);
+            foreach (var kv in byClass)
+            {
+                double d = kv.Value.dmg;
+                mix.Add(new WeaponProfile(kv.Key, d, kv.Value.velW / d, kv.Value.trkW / d, kv.Value.satW / d));
             }
             return mix;
         }

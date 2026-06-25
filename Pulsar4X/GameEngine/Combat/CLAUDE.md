@@ -222,8 +222,12 @@ slow hull dies while the nimble fighter holds — the developer's acceptance tes
 `LandedFraction = 1` — so an all-old-style fight (every existing combat test) behaves EXACTLY as before. Dodge
 only changes outcomes once ships carry weapon profiles + evasion.
 
-**Performance.** O(ships × weapons) per step (each ship's landed fraction computed once, not per comparison) —
-the same complexity class as the pre-dodge resolve. 100s of ships stay cheap (P7 benchmarks it).
+**Performance — O(ships) per step.** `BuildFireMix` AGGREGATES outgoing fire **by weapon class** (≤4 entries),
+so each target's `LandedFraction` iterates a handful of classes, not every enemy weapon. A step costs
+`O(attacker ships + defender ships)`, not `O(ships²)`. Aggregating means weapons of the same class are merged
+with a damage-weighted velocity/tracking/saturation — a fine v1 approximation (same-class weapons are similar).
+Proven by `CombatPerformanceTests` (200 real warships resolve in milliseconds). **If you ever stop aggregating
+by class, that test is the tripwire.**
 
 **v1 scope.** This delivers the dodge-driven triangle edges (Beam▸Fighter, Fighter▸ballistic-Capital). The
 explicit `TriangleBonus` (a tunable class-vs-class modifier) and the Capital▸Beam edge (which needs weapon
