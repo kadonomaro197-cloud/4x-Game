@@ -205,7 +205,8 @@
         "default-ship-design-surveyor",
         "default-ship-design-sensorsat",
         "default-ship-design-test-warship",
-        "default-ship-design-test-corvette"
+        "default-ship-design-test-corvette",
+        "default-ship-design-test-railgun"
       ],
       "LaunchQueue": [
         { "DesignId": "default-ship-design-courier", "Name": "ISS Hermes" }

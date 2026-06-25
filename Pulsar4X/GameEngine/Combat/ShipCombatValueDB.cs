@@ -146,6 +146,21 @@ namespace Pulsar4X.Combat
                     }
                 }
 
+                // Railguns / slug-throwers: kinetic, FINITE muzzle velocity, ballistic (low tracking). damage/sec
+                // = energy-per-shot × rounds/sec; saturation = rounds/sec (one slug per shot). Dodged by the
+                // nimble, brutal vs the sluggish — the corner of the triangle opposite the beam.
+                if (instances.TryGetComponentsByAttribute<RailgunWeaponAtb>(out var railguns))
+                {
+                    foreach (var comp in railguns)
+                    {
+                        if (comp.Design.TryGetAttribute<RailgunWeaponAtb>(out var rg))
+                        {
+                            double dps = rg.KineticEnergyPerShot_J * rg.RoundsPerSecond * comp.HealthPercent;
+                            weapons.Add(new WeaponProfile(WeaponClass.Railgun, dps, rg.MuzzleVelocity_mps, rg.Tracking, rg.RoundsPerSecond));
+                        }
+                    }
+                }
+
                 // Missile launchers: flat damage stub each (warhead energy is v2); slow + guided (tracks) — the
                 // weapon flak answers. Velocity/tracking/saturation are v1 stubs.
                 if (instances.TryGetComponentsByAttribute<MissileLauncherAtb>(out var launchers))

@@ -17,6 +17,7 @@ Space combat weapons: beam weapons, missiles, fire control. Lives in `GameEngine
 | `WeaponGeneric/GenericFiringWeaponsDB.cs` | DataBlob: arrays of weapon states per weapon slot. Internal magazine qty, reload rate, fire control assignments. |
 | `WeaponGeneric/GenericFiringWeaponsProcessor.cs` | HotloopProcessor (1 sec). Iterates all weapon slots, fires when ammo ≥ min shots and target valid, reloads. |
 | `WeaponGeneric/GenericWeaponAtb.cs` | Component attribute for generic weapons (ammo capacity, reload rate, damage). |
+| `WeaponRailgun/RailgunWeaponAtb.cs` | Component attribute for a **railgun / slug-thrower**: muzzle velocity, kinetic energy/shot, rounds/sec, tracking. Implements ONLY `IComponentDesignAttribute` (no-op install, no `IFireWeaponInstr`) — it feeds the **auto-resolve** combat value (`ShipCombatValueDB` reads it into a `Railgun` `WeaponProfile`: finite velocity, ballistic, rof→saturation) and is invisible to the parked per-pixel firing sim. JSON: `railgun-weapon` template (weapons.json). |
 | `WeaponGeneric/WeaponState.cs` | Per-weapon state struct (internal magazine current amount, name). |
 | `WeaponMissile/MissleLauncherAtb.cs` | Component attribute: configures missile launcher. Has `FireWeapon()` → `MissileProcessor.LaunchMissile()`. |
 | `WeaponMissile/MissleLauncherAbilityDB.cs` | DataBlob for missile launcher ability. |

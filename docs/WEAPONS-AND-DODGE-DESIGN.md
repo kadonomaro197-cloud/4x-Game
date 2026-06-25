@@ -104,11 +104,14 @@ a CI test will prove a 500-ship fight resolves in milliseconds.
 1. ✅ **Evasion stat** — size + agility (`ShipCombatValueDB.CalculateEvasion`). `ShipEvasionTests`. **CI-green.**
 2. ✅ **Weapon profiles** — the four flavor stats per weapon; saturation from rate-of-fire. `WeaponProfile` list
    on `ShipCombatValueDB`; beams read real, missiles stubbed; Firepower = sum. `WeaponProfileTests`. **CI-green.**
-3. ⏳ **Railgun / slug weapon type** — new `*Atb` + weapons.json template + component (finite velocity, ballistic,
-   rate-of-fire → saturation). **Remaining.** Heaviest piece: it needs the NCalc component-designer template
-   system. Risky to do blind (the runtime template→attribute path isn't fully covered by CI — gotcha 10);
-   wants a careful pass + a local New Game check. *Until then the dodge model is exercised by stamping Railgun
-   `WeaponProfile`s directly in tests, which is enough to prove the behavior.*
+3. ✅ **Railgun / slug weapon type** — `RailgunWeaponAtb` (`GameEngine/Weapons/WeaponRailgun/`) + the `railgun-weapon`
+   JSON template (weapons.json) + component design + a `Lancer` cruiser design; finite muzzle velocity, ballistic
+   (near-zero tracking), rate-of-fire → saturation. `ShipCombatValueDB.Calculate` reads it into a `Railgun`
+   `WeaponProfile`. The Atb implements only `IComponentDesignAttribute` (no `IFireWeaponInstr`), so it feeds the
+   auto-resolve but is invisible to the parked firing sim. **CI-green** via `RailgunWeaponTests` (builds the real
+   JSON design and asserts the flavor stats + that it's dodgeable) — and `BaseModIntegrityTests` builds it from the
+   real data path, so the gotcha-10 JSON→Atb binding is gauged in CI, not just on the developer's New Game (a live
+   New Game spawn from DevTools is still the final confirmation).
 4. ⏳ **Flak / point-defense weapon type** — high saturation, short range, low per-shot. Same plumbing as #3.
    **Remaining.**
 5. ✅ **Dodge + (emergent) triangle in the resolve** — `BuildFireMix`/`LandedFraction`/`HitFraction`, effective
