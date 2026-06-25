@@ -121,7 +121,7 @@ Battles spanning game-time is what makes "watch a battle / change doctrine mid-f
 - **Feeds OUT:** destroys casualty ships; sets/clears `FleetCombatStateDB` per fleet (engagement lock); records `FleetRetreatDB` on a fleet that breaks off.
 - **Triggers:** ship destruction and engagement end — same side effects as the two-fleet trigger, now per fleet.
 
-**Test:** `Pulsar4X.Tests/MultiPartyEngagementTests.cs` — **assist** (two fleets ganging up beat a lone equal enemy), **join** (a reinforcement pulled in mid-battle through the real `Tick` tips a 1-v-1 it then wins), **fire-split** (one fleet vs two enemies divides its fire — can't kill both in the step it could kill one, but the fire reaches both).
+**Test:** `Pulsar4X.Tests/MultiPartyEngagementTests.cs` — **assist** (two fleets ganging up beat a lone equal enemy), **same-faction side** (a friendly reinforcement shares a side — no friendly fire, both disengage cleanly when the enemy dies; sized so an ally would die if friendly fire ever regressed in), **join** (a reinforcement pulled in mid-battle through the real `Tick` tips a 1-v-1 it then wins), **fire-split** (one fleet vs two enemies divides its fire — can't kill both in the step it could kill one, but the fire reaches both).
 
 ---
 

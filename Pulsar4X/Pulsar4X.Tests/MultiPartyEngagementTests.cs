@@ -90,6 +90,46 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("SAME-FACTION SIDE / no friendly fire: when a same-faction fleet joins, the two allies share a side — they never shoot each other, they combine fire on the common enemy, and both cleanly disengage when it dies. Sized so that IF friendly fire occurred an ally WOULD die — so 'both survive' is a hard no-friendly-fire guarantee.")]
+        public void SameFactionFleets_ShareASide_NoFriendlyFire()
+        {
+            var s = TestScenario.CreateWithColony();
+            var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+
+            // A tanky but weak-gunned enemy, so the fight lasts ~10 steps. The two allies carry HEAVY guns
+            // (10k dps) but modest hulls (150k). The enemy's trickle (100 dps, split between the two allies)
+            // barely scratches them — but a 10k ally gun would punch through a 150k ally hull in ~6 steps. So
+            // "both allies still alive when the enemy dies" can ONLY happen if they never shot each other.
+            var enemy = MakeFleet(s, enemyFaction, "Tanky Raider");
+            var enemyShip = AddWarship(s, enemyFaction, enemy, 100, 1_000_000, "Raider");
+
+            var ally1 = MakeFleet(s, s.Faction, "First Fleet");
+            var ally1Ship = AddWarship(s, s.Faction, ally1, 10_000, 150_000, "Alpha");
+            var ally2 = MakeFleet(s, s.Faction, "Second Fleet"); // SAME faction as ally1 — a friendly reinforcement
+            var ally2Ship = AddWarship(s, s.Faction, ally2, 10_000, 150_000, "Bravo");
+
+            CombatEngagement.EnsureInCombat(enemy, ally1.Id);
+            CombatEngagement.EnsureInCombat(ally1, enemy.Id);
+            CombatEngagement.EnsureInCombat(ally2, enemy.Id);
+            var group = new List<Entity> { enemy, ally1, ally2 };
+
+            int steps = 0;
+            while (enemy.HasDataBlob<FleetCombatStateDB>() && steps < 2000)
+            {
+                CombatEngagement.StepEngagementGroup(group, 5);
+                steps++;
+            }
+
+            Log($"same-faction: resolved in {steps} steps; enemyAlive={enemyShip.IsValid} ally1Alive={ally1Ship.IsValid} ally2Alive={ally2Ship.IsValid}");
+
+            Assert.That(enemyShip.IsValid, Is.False, "the two same-faction fleets' combined fire destroys the enemy");
+            Assert.That(ally1Ship.IsValid, Is.True, "ally 1 survives — a same-faction ally never shot it (no friendly fire)");
+            Assert.That(ally2Ship.IsValid, Is.True, "ally 2 survives too — same side, no friendly fire");
+            Assert.That(ally1.HasDataBlob<FleetCombatStateDB>(), Is.False, "both allies cleanly disengage once the enemy is gone");
+            Assert.That(ally2.HasDataBlob<FleetCombatStateDB>(), Is.False, "neither is left stuck in a 'combat' with only a friend present");
+        }
+
+        [Test]
         [Description("JOIN: a 1-v-1 grind is evenly matched, then a reinforcement arrives in range. The real Tick trigger pulls it into the fight (it gains combat state) and the now 2-v-1 destroys the lone enemy.")]
         public void AReinforcementJoinsMidBattle_AndTipsTheFight()
         {
