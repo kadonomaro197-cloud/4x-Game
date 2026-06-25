@@ -35,6 +35,24 @@ namespace Pulsar4X.Combat
         /// per-doctrine thresholds are wired.</summary>
         public const double RetreatCasualtyThreshold = 0.5;
 
+        // --- dodge model tuning (docs/WEAPONS-AND-DODGE-DESIGN.md), all v1 stubs ----------------------------
+
+        /// <summary>Shot velocity (m/s) at which a weapon half-defeats evasion. A light-speed beam is far above
+        /// this (≈always hits); a finite-velocity slug is far below (its shots can be dodged).</summary>
+        public const double VelocityReference_mps = 1_000_000.0;
+
+        /// <summary>Saturation (tracks/sec) at which a weapon half-guarantees a hit regardless of dodge — high for
+        /// flak (fills the sky), low for a single slow slug.</summary>
+        public const double SaturationReference = 50.0;
+
+        /// <summary>Floor on the fraction of fire that lands, so even a perfect dodger eventually dies to enough
+        /// volume of fire — nothing is truly untouchable.</summary>
+        public const double MinLandedFraction = 0.02;
+
+        /// <summary>An old-style combat value with no <c>WeaponProfile</c>s fires as if a light-speed beam that
+        /// always lands — so the dodge model degrades exactly to the pre-dodge behaviour. Backward-compat.</summary>
+        public const double FallbackBeamVelocity_mps = 100_000_000.0;
+
         /// <summary>One trigger pass over a system: start new engagements, then step active ones. Returns the
         /// number of fleets seen. Defensive — built not to throw on normal game state.</summary>
         public static int Tick(EntityManager manager, int deltaSeconds)
@@ -114,18 +132,23 @@ namespace Pulsar4X.Combat
                 return;
             }
 
-            double strA = TotalFirepower(shipsA);
-            double strB = TotalFirepower(shipsB);
+            // Each side's outgoing fire as a mix of weapon flavors (doctrine firepower applied). The dodge model
+            // reads this to decide WHO in the other fleet gets hit. docs/WEAPONS-AND-DODGE-DESIGN.md.
+            var fireA = BuildFireMix(shipsA);
+            var fireB = BuildFireMix(shipsB);
+            double strA = TotalDamage(fireA);
+            double strB = TotalDamage(fireB);
 
             stateA.StepsFought++;
             stateB.StepsFought++;
 
-            // Each side pours strength x dt (joules) into the other's damage pool, then casualties land.
+            // Each side pours strength x dt (joules) into the other's damage pool, then casualties land — hittable
+            // ships first, and an evasive ship's effective toughness is inflated by however much fire it dodges.
             stateB.DamageTakenPool += strA * dt;
             stateA.DamageTakenPool += strB * dt;
 
-            ApplyCasualties(shipsB, stateB); // A shoots B
-            ApplyCasualties(shipsA, stateA); // B shoots A
+            ApplyCasualties(shipsB, stateB, fireA); // A shoots B
+            ApplyCasualties(shipsA, stateA, fireB); // B shoots A
 
             // Retreat (System 5, v1 = math outcome): a side breaks off if it flies a withdraw posture or has lost
             // too large a fraction of its ships. Breaking off records a retreat vector and ends the engagement; it
@@ -172,28 +195,97 @@ namespace Pulsar4X.Combat
             }
         }
 
-        // Whole-or-destroyed: drain the pool by removing lead ships (combatants first). Each ship's effective
-        // toughness is scaled by ITS component's doctrine (a defensive posture soaks more). Kills are real
-        // (Entity.Destroy() => IsValid=false immediately), and the ship is dropped from this local list so the
-        // survivor count is accurate within the step.
-        private static void ApplyCasualties(List<CombatShip> ships, FleetCombatStateDB state)
+        // Whole-or-destroyed, DODGE-AWARE. The incoming fire mix decides what fraction lands on each ship — a
+        // fighter dodges ballistic slugs, nobody dodges a beam, flak floors it. A ship's EFFECTIVE toughness is
+        // its raw toughness (× its doctrine posture) ÷ that landed fraction, so a dodgy ship needs far more fire
+        // to kill. Targets fall combatants-first, then most-hittable-first, so the big slow hulls die before the
+        // evasive screen. Degrades EXACTLY to the old behaviour with no weapon profiles / no evasion (landed = 1).
+        // O(ships × weapons): each ship's landed fraction is computed once, not per comparison.
+        private static void ApplyCasualties(List<CombatShip> ships, FleetCombatStateDB state, List<WeaponProfile> incomingFire)
         {
-            ships.Sort((x, y) => CombatValue(y.Ship).RoleWeight.CompareTo(CombatValue(x.Ship).RoleWeight));
-            while (ships.Count > 0)
+            // Pair each ship with its (computed-once) landed fraction + role weight, then order the kills.
+            var ordered = new List<(CombatShip cs, double landed, double roleWeight)>(ships.Count);
+            foreach (var cs in ships)
             {
-                double effToughness = CombatValue(ships[0].Ship).Toughness * ships[0].ToughnessMult;
+                var cv = CombatValue(cs.Ship);
+                ordered.Add((cs, LandedFraction(incomingFire, cv.Evasion), cv.RoleWeight));
+            }
+            ordered.Sort((x, y) =>
+            {
+                int byRole = y.roleWeight.CompareTo(x.roleWeight);          // combatants before utility
+                return byRole != 0 ? byRole : y.landed.CompareTo(x.landed); // then most-hittable first
+            });
+
+            foreach (var item in ordered)
+            {
+                double effToughness = CombatValue(item.cs.Ship).Toughness * item.cs.ToughnessMult / item.landed;
                 if (state.DamageTakenPool < effToughness) break;
                 state.DamageTakenPool -= effToughness;
-                ships[0].Ship.Destroy();
-                ships.RemoveAt(0);
+                item.cs.Ship.Destroy();
             }
+
+            // Drop the dead (Destroy() flips IsValid synchronously) so the caller's survivor count is accurate.
+            ships.RemoveAll(cs => !cs.Ship.IsValid);
         }
 
-        private static double TotalFirepower(List<CombatShip> ships)
+        /// <summary>A fleet's outgoing fire as a flat list of weapon-flavor profiles, each weapon's damage scaled
+        /// by its component's doctrine firepower multiplier. A ship with no weapon profiles but real firepower
+        /// (old-style combat value) fires as a light-speed always-hits beam, so dodge degrades to old behaviour.</summary>
+        private static List<WeaponProfile> BuildFireMix(List<CombatShip> ships)
+        {
+            var mix = new List<WeaponProfile>();
+            foreach (var cs in ships)
+            {
+                var cv = CombatValue(cs.Ship);
+                if (cv.Weapons != null && cv.Weapons.Count > 0)
+                {
+                    foreach (var w in cv.Weapons)
+                        mix.Add(new WeaponProfile(w.Class, w.DamagePerSecond * cs.FirepowerMult, w.Velocity, w.Tracking, w.Saturation));
+                }
+                else if (cv.Firepower > 0)
+                {
+                    mix.Add(new WeaponProfile(WeaponClass.Beam, cv.Firepower * cs.FirepowerMult,
+                        FallbackBeamVelocity_mps, 1.0, double.PositiveInfinity));
+                }
+            }
+            return mix;
+        }
+
+        private static double TotalDamage(List<WeaponProfile> fire)
         {
             double sum = 0;
-            foreach (var cs in ships) sum += CombatValue(cs.Ship).Firepower * cs.FirepowerMult;
+            foreach (var w in fire) sum += w.DamagePerSecond;
             return sum;
+        }
+
+        /// <summary>The damage-weighted fraction of an incoming fire mix that LANDS on a ship with the given
+        /// evasion. Beams (≈light-speed) land fully; ballistic slugs are dodged by the evasive; flak floors it.</summary>
+        private static double LandedFraction(List<WeaponProfile> fire, double evasion)
+        {
+            double total = 0, landed = 0;
+            foreach (var w in fire)
+            {
+                total += w.DamagePerSecond;
+                landed += w.DamagePerSecond * HitFraction(w, evasion);
+            }
+            return total > 0 ? landed / total : 1.0;
+        }
+
+        /// <summary>Fraction of one weapon's shots that land on a target with the given evasion. Fast/guided
+        /// weapons defeat evasion (a beam ignores it); high saturation floors the result (flak fills the sky).
+        /// Internal so the dodge curve can be unit-tested directly.</summary>
+        internal static double HitFraction(WeaponProfile w, double evasion)
+        {
+            double velocityTerm = w.Velocity / (w.Velocity + VelocityReference_mps);                  // beam → ~1, slug → low
+            double trackingEffectiveness = velocityTerm > w.Tracking ? velocityTerm : w.Tracking;     // guided tracks even when slow
+            double dodgeChance = evasion * (1.0 - trackingEffectiveness);
+            double saturationFloor = double.IsInfinity(w.Saturation) ? 1.0 : w.Saturation / (w.Saturation + SaturationReference);
+            if (saturationFloor < MinLandedFraction) saturationFloor = MinLandedFraction;
+
+            double hit = 1.0 - dodgeChance;
+            if (hit < saturationFloor) hit = saturationFloor;
+            if (hit > 1.0) hit = 1.0;
+            return hit;
         }
 
         private static ShipCombatValueDB CombatValue(Entity ship)

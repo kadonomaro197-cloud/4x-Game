@@ -201,6 +201,41 @@ switcher, step 9) to watch the auto-resolver decide it.
 
 ---
 
+## Dodge in the resolve (weapon flavor decides WHO gets hit)
+
+**What it is.** `StepEngagement` no longer pours one flat firepower number into the enemy's pool. It builds each
+side's **fire mix** (`BuildFireMix` → a list of `WeaponProfile`s, each weapon's damage scaled by its doctrine
+firepower mult), and `ApplyCasualties` is now **dodge-aware**: a ship's *effective* toughness is its raw
+toughness ÷ the **landed fraction** of the incoming fire, and ships fall **most-hittable first**. So the big
+slow hull dies while the nimble fighter holds — the developer's acceptance test.
+
+**The math (all in `CombatEngagement`, see `docs/WEAPONS-AND-DODGE-DESIGN.md`):**
+- `HitFraction(weapon, evasion)` (internal, unit-tested): `velocityTerm = velocity/(velocity+VelocityReference)`;
+  `trackingEffectiveness = max(velocityTerm, tracking)`; `dodgeChance = evasion × (1 − trackingEffectiveness)`;
+  result `= clamp(1 − dodgeChance, saturationFloor, 1)`. A beam (≈light-speed) → ~1 (can't dodge light); a slug
+  (finite, ballistic) → low vs the evasive; flak's high saturation floors it up.
+- `LandedFraction(fireMix, evasion)` = damage-weighted average `HitFraction` over the mix.
+- Effective toughness in `ApplyCasualties` = `Toughness × ToughnessMult ÷ LandedFraction`.
+
+**Backward-compatible (the green spine stays green).** A ship with **no** weapon profiles but real firepower
+(old-style combat value) fires as a `FallbackBeamVelocity` always-hit beam, and a target with **0 evasion** has
+`LandedFraction = 1` — so an all-old-style fight (every existing combat test) behaves EXACTLY as before. Dodge
+only changes outcomes once ships carry weapon profiles + evasion.
+
+**Performance.** O(ships × weapons) per step (each ship's landed fraction computed once, not per comparison) —
+the same complexity class as the pre-dodge resolve. 100s of ships stay cheap (P7 benchmarks it).
+
+**v1 scope.** This delivers the dodge-driven triangle edges (Beam▸Fighter, Fighter▸ballistic-Capital). The
+explicit `TriangleBonus` (a tunable class-vs-class modifier) and the Capital▸Beam edge (which needs weapon
+**range**, a v1 stub) are refinements on top. `AutoResolve` (the pure ship-list variant) stays dodge-free, like
+it stays doctrine-free.
+
+**Test:** `Pulsar4X.Tests/DodgeResolveTests.cs` — the `HitFraction` curve (beams ignore evasion, slugs are
+dodged, flak floors it); and through the resolve, slug fire kills the un-evasive battleship while the fighter
+(same toughness, only evasion differs) dodges and survives.
+
+---
+
 ## Model-coupled / tuning constants
 
 | Constant | Value | Meaning | Where |
@@ -217,6 +252,10 @@ switcher, step 9) to watch the auto-resolver decide it.
 | `CombatEngagement.EngagementRange_m` | 1e9 (1M km) | v1 flat auto-engage distance (real value = weapon range, v2) | `CombatEngagement.cs` |
 | `CombatEngagement.MaxSteps` | 5000 | per-engagement step cap (stalemate backstop) | `CombatEngagement.cs` |
 | `CombatEngagement.RetreatCasualtyThreshold` | 0.5 | fraction of starting ships a fleet must lose to break off (v1 flat; real value = per-doctrine, v2) | `CombatEngagement.cs` |
+| `CombatEngagement.VelocityReference_mps` | 1e6 | shot velocity at which a weapon half-defeats evasion (beam ≫ this, slug ≪ this) | `CombatEngagement.cs` |
+| `CombatEngagement.SaturationReference` | 50 | saturation (tracks/sec) at which a weapon half-guarantees a hit regardless of dodge (flak ≫ this) | `CombatEngagement.cs` |
+| `CombatEngagement.MinLandedFraction` | 0.02 | floor on fire that lands — enough volume kills even a perfect dodger | `CombatEngagement.cs` |
+| `CombatEngagement.FallbackBeamVelocity_mps` | 1e8 | an unarmed-profile (old-style) ship fires as this light-speed always-hit beam → dodge degrades to old behaviour | `CombatEngagement.cs` |
 | `BattleTriggerProcessor` run frequency | 5 s | how often each system is scanned for battles | `BattleTriggerProcessor.cs` |
 
 ---
