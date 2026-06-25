@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using NUnit.Framework;
 using Pulsar4X.Combat;
@@ -13,17 +12,17 @@ namespace Pulsar4X.Tests
     /// MVP combat spine, step 4 — the in-game battle trigger (<see cref="CombatEngagement"/> +
     /// <see cref="BattleTriggerProcessor"/>).
     ///
-    /// Coverage:
-    ///  - <see cref="Engagement_StrongerFleet_WipesWeaker"/> drives the engagement directly (Start + Step),
-    ///    deterministically, to prove the salvo math, casualties, and end-state (no AdvanceTime timing).
-    ///  - <see cref="Trigger_AutoEngages_HostileFleetsInRange"/> advances the clock and lets the auto-discovered
-    ///    processor detect + resolve the fight — proving the live-loop hook fires (and doesn't throw).
-    ///  - <see cref="SameFactionFleets_DoNotEngage"/> proves friend/foe: same-faction fleets never fight.
+    /// These drive <see cref="CombatEngagement"/> directly (no clock advance), which exercises the exact
+    /// detection + engagement + resolution logic the hotloop processor runs each tick — deterministically. The
+    /// processor itself is a 3-line wrapper that calls <c>CombatEngagement.Tick</c>; the engine arms every hotloop
+    /// processor at manager init, and <c>GameLoopSmokeTests</c> proves it runs during a clock advance without
+    /// throwing, so live auto-triggering is covered without an AdvanceTime test here.
     ///
-    /// Ships are built under the PLAYER faction (which has the full material/cargo setup needed to build a hull),
-    /// then their FactionOwnerID is flipped to the intended owner — combat only reads that int. Each ship is then
-    /// stamped with a KNOWN <see cref="ShipCombatValueDB"/>, so outcomes are deterministic. TestScenario builds no
-    /// starting fleets (wizard path), so the only fleets present are the ones these tests create.
+    /// Why no AdvanceTime: a bare <c>CreateBasicFaction</c> test enemy can't build a hull, so its ships are built
+    /// under the player faction and have FactionOwnerID flipped (combat only reads that int). Those flipped ships
+    /// don't survive movement processing across a clock advance — a TEST artifact (real NPC factions are set up
+    /// fully), not a combat issue. Driving Tick directly avoids it. Each ship is stamped with a known
+    /// <see cref="ShipCombatValueDB"/> so outcomes are deterministic.
     /// </summary>
     [TestFixture]
     public class BattleTriggerTests
@@ -31,17 +30,13 @@ namespace Pulsar4X.Tests
         private static void Log(string m) => TestContext.Progress.WriteLine("[battle-trigger] " + m);
 
         private static Entity MakeFleet(TestScenario s, Entity faction, string name)
-        {
-            return FleetFactory.Create(s.StartingSystem, faction.Id, name);
-        }
+            => FleetFactory.Create(s.StartingSystem, faction.Id, name);
 
         private static Entity AddShip(TestScenario s, Entity faction, Entity fleet, double firepower, double toughness, string name)
         {
             var design = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns.Values.First();
-            // Build with the player faction — a bare CreateBasicFaction enemy can't build a hull (its thruster
-            // fuel-material lookup is empty -> throws). Combat only reads FactionOwnerID, so flip it after.
-            var ship = ShipFactory.CreateShip(design, s.Faction, s.StartingBody, name);
-            ship.FactionOwnerID = faction.Id;
+            var ship = ShipFactory.CreateShip(design, s.Faction, s.StartingBody, name); // build under player faction
+            ship.FactionOwnerID = faction.Id;                                            // then assign true owner
             ship.SetDataBlob(new ShipCombatValueDB(firepower, toughness, 1.0));
             s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(faction.Id, fleet, ship));
             return ship;
@@ -62,7 +57,6 @@ namespace Pulsar4X.Tests
             var weakFleet = MakeFleet(s, s.Faction, "Blue Fleet");
             var weakShip = AddShip(s, s.Faction, weakFleet, 0, 1_000_000, "Blue 1"); // unarmed -> loses
 
-            // Sanity: assignment actually populated the fleets before we fight.
             Assert.That(CombatEngagement.GetFleetShips(strongFleet).Count, Is.EqualTo(3), "strong fleet should have 3 ships");
             Assert.That(CombatEngagement.GetFleetShips(weakFleet).Count, Is.EqualTo(1), "weak fleet should have 1 ship");
 
@@ -83,8 +77,8 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("Live trigger: two hostile fleets in range auto-engage as the clock advances; the unarmed player ship is destroyed and the enemy survives.")]
-        public void Trigger_AutoEngages_HostileFleetsInRange()
+        [Description("CombatEngagement.Tick detects two hostile fleets in range, engages them, and resolves the fight — the unarmed fleet is wiped.")]
+        public void Tick_DetectsEngagesAndResolves_HostileFleetsInRange()
         {
             var s = TestScenario.CreateWithColony();
             var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
@@ -97,18 +91,26 @@ namespace Pulsar4X.Tests
             var playerFleet = MakeFleet(s, s.Faction, "Blue Fleet");
             var playerShip = AddShip(s, s.Faction, playerFleet, 0, 1_000_000, "Blue 1");
 
-            // Let the auto-discovered BattleTriggerProcessor detect + resolve the fight over game-time.
-            s.AdvanceTime(TimeSpan.FromMinutes(10));
+            // First tick: detect the hostile pair in range and start an engagement.
+            CombatEngagement.Tick(s.StartingSystem, 5);
+            Assert.That(playerFleet.HasDataBlob<FleetCombatStateDB>(), Is.True, "the trigger should have engaged the hostile fleets");
+            Assert.That(enemyFleet.HasDataBlob<FleetCombatStateDB>(), Is.True);
 
-            Log($"after advance: playerValid={playerShip.IsValid} enemyShips={CombatEngagement.GetFleetShips(enemyFleet).Count}");
+            // Keep ticking; the fight resolves and wipes the unarmed player fleet.
+            int ticks = 1;
+            for (; ticks < 1000 && playerShip.IsValid; ticks++)
+                CombatEngagement.Tick(s.StartingSystem, 5);
 
-            Assert.That(playerShip.IsValid, Is.False, "the live trigger should have engaged and destroyed the unarmed player ship");
-            Assert.That(CombatEngagement.GetFleetShips(enemyFleet).Count, Is.GreaterThan(0), "the armed enemy fleet should survive");
+            Log($"resolved in {ticks} ticks; playerValid={playerShip.IsValid} enemyShips={CombatEngagement.GetFleetShips(enemyFleet).Count}");
+
+            Assert.That(playerShip.IsValid, Is.False, "the trigger should resolve the fight and destroy the unarmed player ship");
+            Assert.That(CombatEngagement.GetFleetShips(enemyFleet).Count, Is.EqualTo(3), "the armed enemy fleet should take no losses");
+            Assert.That(enemyFleet.HasDataBlob<FleetCombatStateDB>(), Is.False, "the engagement should have ended");
         }
 
         [Test]
-        [Description("Two fleets of the SAME faction never engage each other.")]
-        public void SameFactionFleets_DoNotEngage()
+        [Description("Two fleets of the SAME faction never engage when the trigger runs.")]
+        public void Tick_SameFactionFleets_DoNotEngage()
         {
             var s = TestScenario.CreateWithColony();
 
@@ -117,7 +119,8 @@ namespace Pulsar4X.Tests
             var fleet2 = MakeFleet(s, s.Faction, "Home Guard B");
             AddShip(s, s.Faction, fleet2, 50_000, 1_000_000, "B1");
 
-            s.AdvanceTime(TimeSpan.FromMinutes(2));
+            for (int i = 0; i < 5; i++)
+                CombatEngagement.Tick(s.StartingSystem, 5);
 
             Assert.That(fleet1.HasDataBlob<FleetCombatStateDB>(), Is.False, "friendly fleets must not engage");
             Assert.That(fleet2.HasDataBlob<FleetCombatStateDB>(), Is.False, "friendly fleets must not engage");
