@@ -445,3 +445,23 @@ dotnet build Pulsar4X/Pulsar4X.sln
 dotnet test Pulsar4X/Pulsar4X.Tests/Pulsar4X.Tests.csproj
 ```
 If build/test fails → paste error output here → Claude fixes → repeat.
+
+---
+
+## Session 2026-06-25 — multi-party engagements + real weapon types + the triangle (branch `claude/focused-ritchie-debock`)
+
+**What got built (all CI-green on GitHub; engine only — the SDL client still needs your local run):**
+
+1. **Multi-party engagements.** A battle is no longer locked to two fleets. Any number of fleets fight at once, and a fleet **joins a fight in progress just by coming into range** ("send in another fleet to assist"). Same-faction fleets share a side (no friendly fire); an attacker facing several enemies splits its fire across them (outnumbering doesn't multiply your guns). The old two-fleet fight is just the simplest case of the same code. Tests: `MultiPartyEngagementTests`.
+
+2. **Two real, player-buildable weapon types** (the meaty part — they go through the live New Game JSON path, which `dotnet test` normally skips, so this took a few CI rounds to get the data registration right):
+   - **Railgun / slug** — fast but finite-speed kinetic. Brutal vs slow capitals, but a nimble fighter **dodges** it. Design: **Lancer** cruiser. Tests: `RailgunWeaponTests`.
+   - **Flak / point-defense** — low per-pellet, but **huge volume of fire** (rate × pellets) fills the sky and floors the dodge: the fighter/missile killer. Design: **Bulwark** escort. Tests: `FlakWeaponTests`.
+
+3. **The weapon triangle on real ships.** New **Wasp** fighter (tiny, agile, evasive) and **Leviathan** battleship (big, armoured, can't dodge) designs. `WeaponTriangleTests` proves on the real built ships: fighter dodges the railgun, beam ignores the dodge, flak floors it. (The Capital▸Beam edge needs weapon *range*, still a v1 stub.)
+
+**Spawn these from DevTools (faction switcher) to watch it live:** Aegis (beam), Lancer (railgun), Bulwark (flak), Wasp (fighter), Leviathan (capital), Picket (weak).
+
+**Hard-won lesson (now in `Combat/CLAUDE.md`):** adding a player-buildable weapon touches **six** registration points — the C# Atb, the `weapons.json` template, the `componentDesigns.json` design, and **three** lists in `earth.json` (`StartingItems` unlocks the template, `ComponentDesigns` builds it, `ShipDesigns` mounts it). Miss any one and New Game crashes (but `dotnet test` over the C# path looks fine). CI's `CreateWithColony` harness is the standing sensor — it builds every starting design from JSON, so a missing registration fails loudly there.
+
+**Still open / v2:** Capital▸Beam range edge, degraded-condition tiers (need recalc-combat-value-on-damage), explicit TriangleBonus tuning knob, and the per-pixel firing sim (parked — these weapons feed the auto-resolve only). Next big arc per the developer objective: **ground combat**, mirroring this now-solid space-combat spine.
