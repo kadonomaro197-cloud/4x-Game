@@ -214,13 +214,21 @@ this state on another thread — and a ship killed mid-battle lingers in the fle
 until cleanup, so alive/loss counts **filter on `IsValid`** (don't drop that filter).
 
 **Testing caveat — sections 2 and 3 verify on an IDLE fleet (no enemy needed); section 1 needs a live battle.**
-A fresh New Game has **no fleet at all** (gotcha 8) and **no hostile faction**, so to exercise the live readout you
-must first stand up an enemy fleet. That tooling (a DevTools "spawn hostile fleet") is the **next piece** — until
-it lands, the Status section only ever reads "Not engaged". To verify the tab now: Fleet window → *Create New
-Fleet* → DevTools (SM mode) → *Spawn Ship* a few armed designs (Lancer/Bulwark/Wasp/Leviathan) into it → select
-the fleet → **Combat tab** → the sheet + doctrine selector should populate; set a posture and watch "Current"
-change. CI can't build the client, so this is a build → play → read `console_output.txt` (look for `[FleetCombat]`
-lines) loop.
+A fresh New Game has **no fleet at all** (gotcha 8) and **no hostile faction**. The enemy-spawn tooling now exists
+— **DevTools → "Combat Sandbox" → Spawn Hostile Fleet** (a thin wrapper over the CI-proven
+`Combat.CombatSandbox.SpawnHostileFleet`), plus a **"Tick Combat (force a salvo)"** button that drives
+`CombatEngagement.Tick` manually. To exercise the whole thing: Fleet window → *Create New Fleet* → DevTools (SM
+mode) → *Spawn Ship* a few armed designs (Lancer/Bulwark/Wasp/Leviathan) into it → set "Orbit around" to that
+body → **Spawn Hostile Fleet** (same body) → exit SM → select your fleet → **Combat tab**. Press play (or click
+*Tick Combat*) and watch the **Status** section come alive: salvo counter, ships lost, damage pool — and switch
+doctrine mid-fight to steer it. CI can't build the client, so this is a build → play → read `console_output.txt`
+(look for `[FleetCombat]` + `[DevTools]` lines) loop.
+
+**Open live question (CI can't settle):** the engine gauge `CombatSandboxTests` proved the spawned enemy *persists*
+through a clock advance and *is engageable*, but the lightweight test harness didn't auto-fire the battle trigger
+on a clock advance — so whether **pressing play** auto-starts the battle in the full game is unconfirmed. If it
+doesn't, the **Tick Combat** button drives the fight manually (and tells us the trigger scheduling, not the combat
+math, is what needs a look). See `GameEngine/Combat/CLAUDE.md` → "Combat sandbox".
 
 ### GroundCombatWindow — MISSING ENTIRELY
 
