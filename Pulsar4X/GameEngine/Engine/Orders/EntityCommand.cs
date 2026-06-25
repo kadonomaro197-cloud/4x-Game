@@ -28,6 +28,16 @@ namespace Pulsar4X.Engine.Orders
         public virtual void UpdateDetailString()
         {}
 
+        /// <summary>
+        /// True if this order may still be issued to a fleet that is LOCKED IN AN ENGAGEMENT. Default false:
+        /// while a fleet is in combat (it has a <c>FleetCombatStateDB</c>) its regular orders are refused by the
+        /// order handler — only orders that opt in here still apply. (v1: doctrine changes go through a direct
+        /// <c>FleetDoctrine.TrySetDoctrine</c> call, not an order, so they are inherently exempt; this hook is the
+        /// path for any future combat-time order — e.g. an explicit retreat order.) See the engagement lock in
+        /// <c>StandAloneOrderHandler</c> and Combat spine step 11.
+        /// </summary>
+        public virtual bool IsAllowedDuringEngagement => false;
+
         [JsonProperty]
         /// <summary>
         /// This is the faction that has requested the command.

@@ -156,6 +156,27 @@ A **wiped** fleet (0 ships) is destroyed, not retreated — `ShouldRetreat` retu
 
 ---
 
+## Engagement lock — engaged fleets can't be re-tasked
+
+**What it is.** Once a fleet is in a battle, you can't re-task it — its regular orders are refused until the fight ends. The *only* thing you can still do is change its **doctrine**. This is what makes the combat model "set the fight up, then steer it with doctrine, not micromanagement" (the developer's requirement, step 11).
+
+**How it works.** The lock lives in the order handler — `StandAloneOrderHandler.HandleOrder` — not in the Combat subsystem, but it keys on a combat blob, so it's documented here too. After an order passes `IsValidCommand`, `IsEngagementLocked` rejects it (silently, no execute) when:
+- the order's `EntityCommanding` is a fleet that has a `FleetCombatStateDB` (i.e. it's engaged — the battle trigger attaches this on both fleets), **and**
+- the order is not flagged `EntityCommand.IsAllowedDuringEngagement` (default false).
+
+**Why doctrine still works.** Doctrine changes go through a **direct call** — `FleetDoctrine.TrySetDoctrine` — not an `EntityCommand`, so they never reach the order handler and are unaffected by the lock. That's the v1 mechanism for "only doctrine changes apply." The `IsAllowedDuringEngagement` hook is the path for any *future* combat-time order (e.g. an explicit retreat order) to opt back in.
+
+**Scope (v1).** The lock is fleet-level: it blocks orders whose commanding entity is an engaged fleet (`FleetCombatStateDB` is only ever on fleets). Orders on an individual ship inside an engaged fleet are not blocked by this check — re-tasking individual ships mid-battle is a v2 tightening. The refusal is silent at the engine level; surfacing a player-facing "fleet is engaged — orders locked" message is the UI's job (it reads `FleetCombatStateDB` to show the locked state).
+
+**Connections (Prime Directive):**
+- **Feeds IN:** `FleetCombatStateDB` presence on the commanding fleet (set/cleared by the battle trigger + retreat); `EntityCommand.IsAllowedDuringEngagement`.
+- **Feeds OUT:** order acceptance/refusal — every `FleetOrder` / movement order routed through `StandAloneOrderHandler` is now gated by it.
+- **Triggers:** nothing — it only gates existing order execution.
+
+**Test:** `Pulsar4X.Tests/EngagementLockTests.cs` — a fleet with a `FleetCombatStateDB` refuses an AssignShip order (ship count unchanged); a `TrySetDoctrine` on the same engaged fleet still applies; removing the combat state lets the order through.
+
+---
+
 ## Model-coupled / tuning constants
 
 | Constant | Value | Meaning | Where |
