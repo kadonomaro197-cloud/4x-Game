@@ -225,17 +225,18 @@ switcher, step 9) to watch the auto-resolver decide it.
 **Test:** `Pulsar4X.Tests/CombatTestShipsTests.cs` — the two designs load onto the faction and rate strong-vs-weak
 (warship out-guns + out-armours the corvette); a 3v3 auto-resolve is a decisive `SideAVictory` with all corvettes lost.
 
-**Adding a new armed test design — it touches FOUR data files, register BOTH ends (gotcha-10 lesson, learned the
-hard way on the railgun P3):** a starting ship design whose components aren't all registered with the colony
-crashes `ColonyFactory.CreateFromBlueprint` → `ShipDesignFromJson` with `KeyNotFoundException: '<component-id>'
-not present` (it looks the component up in `factionInfoDB.InternalComponentDesigns`), which fails **every**
-`TestScenario.CreateWithColony` test at once. For a new weapon (e.g. flak) add: (1) the `*Atb` C# class, (2) the
-`ComponentTemplate` in `weapons.json`, (3) the `ComponentDesign` in `componentDesigns.json`, (4a) the
-component-design id in `earth.json`'s **`ComponentDesigns`** list *and* (4b) the ship-design id in `earth.json`'s
-**`ShipDesigns`** list — plus the ship design in `shipDesigns.json`. Note `BaseModIntegrityTests` did **not**
-catch this gap (it checks the mod store + industry buildability, not the `ShipDesigns`→`ComponentDesigns`
-faction-registration step); the harness itself is now the sensor — once a design is in `earth.json`, every
-harness test builds it, so a missing registration fails loudly.
+**Adding a new player-buildable weapon + armed design — it touches SIX registration points; miss any and New
+Game / `CreateWithColony` crashes (gotcha-10, learned the hard way twice on railgun P3).** The colony build
+chains template → component design → ship design, each looked up in the faction's data store, so ALL of:
+
+1. **`*Atb` C# class** (`GameEngine/Weapons/Weapon<X>/`) — implements `IComponentDesignAttribute`; ctor arg order MUST match the JSON `AtbConstrArgs(...)`.
+2. **`ComponentTemplate`** in `weapons.json` — `UniqueID` + the `AtbConstrArgs` property with the exact `AttributeType` namespace, ResourceCost keys that are all defined materials.
+3. **`ComponentDesign`** in `componentDesigns.json` — `UniqueId` (lowercase d) + `TemplateId` pointing at #2.
+4. **`earth.json` `StartingItems`** — add the **template** id (e.g. `"railgun-weapon"`). *Unlocks the template for the faction.* Miss this → `ComponentDesignFromJson`: `"<template> was not found in the faction data store"`.
+5. **`earth.json` `ComponentDesigns`** — add the **component-design** id (e.g. `"default-design-railgun-weapon"`). *Builds it into `InternalComponentDesigns`.* Miss this → `ShipDesignFromJson`: `KeyNotFoundException: '<component-design-id>'`.
+6. **`earth.json` `ShipDesigns`** + the ship design in `shipDesigns.json` — the design that mounts the weapon (its `Components[].Id` = the #5 design id).
+
+The two failures are distinct and both crash **every** `CreateWithColony` test at setup (not just one). `BaseModIntegrityTests` did **not** catch either (it checks the mod store + industry buildability, not the faction StartingItems-unlock → ComponentDesigns-build → ShipDesigns-resolve chain); the harness itself is the standing sensor — once a design is in `earth.json`, every harness test builds it end-to-end, so a missing registration fails loudly and immediately.
 
 ---
 
