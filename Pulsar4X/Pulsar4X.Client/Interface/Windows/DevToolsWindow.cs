@@ -47,6 +47,12 @@ namespace Pulsar4X.Client
         private int _mineralAmount = 1000;
         private string _mineralStatus = "";
 
+        // ── Faction Switcher (SM) ──────────────────────
+        private string[] _factionNames = Array.Empty<string>();
+        private Entity[] _factionEntities = Array.Empty<Entity>();
+        private int _selectedFactionView = 0;
+        private string _factionStatus = "";
+
         private DevToolsWindow()
         {
             _flags = ImGuiWindowFlags.AlwaysAutoResize;
@@ -161,6 +167,19 @@ namespace Pulsar4X.Client
                 _selectedDesign = 0;
         }
 
+        // Keeps the faction-switcher list current. Factions rarely change, so (like SyncShipDesigns) this only
+        // rebuilds when the count changes, making it safe to call every frame from Display().
+        void SyncFactions()
+        {
+            if (_uiState.Game == null) return;
+            if (_factionEntities.Length == _uiState.Game.Factions.Count) return;
+
+            _factionEntities = _uiState.Game.Factions.Values.ToArray();
+            _factionNames = _factionEntities.Select(GetEntityName).ToArray();
+            if (_selectedFactionView >= _factionNames.Length)
+                _selectedFactionView = 0;
+        }
+
         internal override void Display()
         {
             if (!IsActive || !_uiState.SMenabled || _uiState.PlayerFaction == null) return;
@@ -172,6 +191,53 @@ namespace Pulsar4X.Client
                 ImGui.SameLine();
                 if (ImGui.Button("Dump State (log)"))
                     DumpState();
+
+                // ── Faction Switcher (SM) ─────────────────────────
+                ImGui.Separator();
+                ImGui.Text("[ Faction Switcher (SM) ]");
+                ImGui.TextDisabled("View/act as any faction. Switch sides to watch a battle from either perspective;");
+                ImGui.TextDisabled("the Fleet/System windows then show that faction's ships. 'Back to player' restores yours.");
+
+                SyncFactions();
+
+                string viewingName = _uiState.Faction != null ? GetEntityName(_uiState.Faction) : "(none)";
+                string playerName = _uiState.PlayerFaction != null ? GetEntityName(_uiState.PlayerFaction) : "(none)";
+                ImGui.Text($"Viewing: {viewingName}");
+                ImGui.SameLine();
+                ImGui.TextDisabled($"(your faction: {playerName})");
+
+                if (_factionNames.Length == 0)
+                {
+                    ImGui.TextDisabled("No factions found.");
+                }
+                else
+                {
+                    ImGui.Combo("Faction##devfactionview", ref _selectedFactionView, _factionNames, _factionNames.Length);
+                    if (ImGui.Button("View as##devfactionviewbtn"))
+                    {
+                        try
+                        {
+                            var faction = _factionEntities[_selectedFactionView];
+                            _uiState.SetFaction(faction);
+                            _factionStatus = $"Now viewing {GetEntityName(faction)} (id {faction.Id}).";
+                            DevLog($"Faction view -> '{GetEntityName(faction)}' id={faction.Id}");
+                        }
+                        catch (Exception ex)
+                        {
+                            _factionStatus = $"Error: {ex.Message}";
+                            DevLog($"Faction view FAILED: {ex}");
+                        }
+                    }
+                    ImGui.SameLine();
+                    if (ImGui.Button("Back to player##devfactionback") && _uiState.PlayerFaction != null)
+                    {
+                        _uiState.SetFaction(_uiState.PlayerFaction);
+                        _factionStatus = $"Back to your faction ({GetEntityName(_uiState.PlayerFaction)}).";
+                        DevLog("Faction view -> player faction");
+                    }
+                    if (!string.IsNullOrEmpty(_factionStatus))
+                        ImGui.TextColored(new Vector4(0.4f, 1f, 0.4f, 1f), _factionStatus);
+                }
 
                 // ── Spawn Ship ────────────────────────────────────
                 ImGui.Separator();
