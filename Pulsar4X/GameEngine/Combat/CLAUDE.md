@@ -335,18 +335,24 @@ gives a root `FleetDB`), add the system to the faction's `KnownSystems`, and cop
 ships are still built under the player faction because `ComponentDesigns` is a read-only view and the enemy hasn't
 unlocked components; combat only reads `FactionOwnerID`, so the flip is enough.)
 
-**Test:** `Pulsar4X.Tests/CombatSandboxTests.cs` — spawns 3 strong hostiles vs 1 unarmed player ship, advances the
-clock 5 game-hours, asserts the player ship is destroyed (only possible if the enemy survived the sweep and won).
+**Test:** `Pulsar4X.Tests/CombatSandboxTests.cs` proves two things separately: **(1) persistence** — spawn 3
+hostiles, advance the real clock, assert they're still there (3/3); and **(2) engageable** — drive
+`CombatEngagement.Tick` over the system (the proven path) and assert the unarmed player ship is destroyed (only
+possible if the spawned hostiles are real, in-range enemies the trigger fights).
 
-**Gotcha the gauge surfaced — battles only fire in ACTIVE systems.** `MasterTimePulse` only processes systems
-whose `StarSystem.ActivityState != Stasis`, and a system defaults to **Stasis**. So the `BattleTriggerProcessor`
-(like every hotloop) does NOT run on a system nobody is observing and that has no activity — the first gauge run
-proved the spawned enemy *survived* the clock advance (3/3) but **no battle triggered**, precisely because the
-test system was in Stasis. Live, a colony system is **Background** (runs processors at 10× coarser time) and a
-system you're **watching** is **Foreground** — both run the trigger. The test forces this with
-`StartingSystem.IncrementExternalObserver(true)` (Foreground = the "watching the battle" case). **Live-test
-implication:** auto-resolve only happens where there's a colony or where you're looking — a battle in a dead-quiet
-unobserved system won't tick until something activates it.
+**Gotchas the gauge surfaced (two, both load-bearing for the live test):**
+1. **The flipped-faction enemy ships DO persist through a clock advance** with the sandbox's faction setup
+   (`CreateBasicFaction` + `KnownSystems` + copied `ShipDesigns`) — the old "don't survive movement processing"
+   warning was about a *bare* faction. Proven: 3/3 survive.
+2. **The lightweight colony test harness does NOT auto-fire hotloop processors on `TimeStep`.** Setting the system
+   Foreground (`IncrementExternalObserver(true)`) was *not* enough to make the battle trigger run on the clock
+   advance in the test — so the gauge drives `CombatEngagement.Tick` DIRECTLY for the engagement proof (same as
+   every other combat fixture). Whether the trigger auto-fires on a clock advance in the **full live game** is a
+   separate question the test can't settle — `MasterTimePulse` only processes systems whose `ActivityState !=
+   Stasis` (a colony system is Background, a watched one Foreground), but the harness's `TimeStep` path didn't
+   exercise it here. **Live-test implication: confirm in the running client whether pressing play auto-starts the
+   battle; if not, the fallback is a "Force Engagement" control that calls `CombatEngagement.Tick`.** The gauge
+   logs whether the system clock even advanced, to tell harness-quirk from a real "trigger never fires" bug.
 
 ---
 
