@@ -124,6 +124,7 @@ See `ARCHITECTURE.md` for the full data-flow diagram.
 |-----------|-----------|-----------|
 | Game Engine Core | `GameEngine/Engine/` | `GameEngine/CLAUDE.md` |
 | Space Combat (Weapons) | `GameEngine/Weapons/` | `GameEngine/Weapons/CLAUDE.md` |
+| Combat (Auto-Resolve Engine) | `GameEngine/Combat/` | `GameEngine/Combat/CLAUDE.md` |
 | Damage | `GameEngine/Damage/` | `GameEngine/Damage/CLAUDE.md` |
 | Colonies / Population | `GameEngine/Colonies/` | `GameEngine/Colonies/CLAUDE.md` |
 | Industry / Production | `GameEngine/Industry/` | `GameEngine/Industry/CLAUDE.md` |
@@ -155,6 +156,7 @@ See `ARCHITECTURE.md` for the full data-flow diagram.
 | `docs/RESOURCES-AND-MATERIALS-DESIGN.md` | Designing anything touching minerals, materials, production, commerce, research, or NPC economic AI. Full system survey — read before changing any part of the economy. |
 | `docs/DIPLOMACY-DESIGN.md` | Designing anything touching faction relationships, IFF, inter-faction trade, logistics access, NPC doctrine, or diplomatic state. Full system survey — read before adding any cross-faction interaction. |
 | `docs/COMBAT-DESIGN.md` | The master space-combat design: the eleven required systems (weapon range → auto-resolution → ground-combat interface). Includes the detailed **Fleet Components & Switchable Doctrine** design (Front Line/Flank/Rear Guard/Artillery as sub-fleets, Offensive/Defensive/Utilitarian options, switch cooldown, commander operational discretion, table-based fleet combat UI) under System 4. Read before any combat-system work. |
+| `docs/WEAPONS-AND-DODGE-DESIGN.md` | The combat-**depth** pass (weapon flavors + dodge): the four weapon flavor stats, computed saturation, the dodge hit-fraction, the **weapon triangle** (Beam▸Fighter▸Capital▸Beam + a Missile⟷Flak axis, Fire-Emblem style), and the **aggregate/bucketed** resolve that keeps 100s-of-ships battles cheap. Read before touching weapon types, evasion, or the dodge resolve. |
 
 ---
 

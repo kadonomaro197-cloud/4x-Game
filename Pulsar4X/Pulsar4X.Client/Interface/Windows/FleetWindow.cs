@@ -18,6 +18,8 @@ using Pulsar4X.Ships;
 using Pulsar4X.Storage;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Movement;
+using Pulsar4X.Combat;
+using Pulsar4X.Blueprints;
 
 namespace Pulsar4X.Client
 {
@@ -62,6 +64,14 @@ namespace Pulsar4X.Client
         private List<EntityState> gravSurveyList = new ();
         private List<EntityState> colonyList = new ();
         private List<EntityState> jumpPointList = new ();
+
+        // ── Combat tab — doctrine selector state ──
+        // The catalog of selectable postures (ModDataStore.CombatDoctrines). Cached and only rebuilt when the
+        // count changes (the cheap-sync pattern DevToolsWindow uses), so it's safe to touch every frame.
+        private CombatDoctrineBlueprint[] _doctrineBlueprints = Array.Empty<CombatDoctrineBlueprint>();
+        private string[] _doctrineNames = Array.Empty<string>();
+        private int _selectedDoctrine = 0;
+        private string _doctrineStatus = "";
 
         private FleetWindow()
         {
@@ -251,6 +261,8 @@ namespace Pulsar4X.Client
                     ImGui.SameLine();
                     ImGui.EndTabItem();
                 }
+
+                DisplayCombatTab();
 
                 if (ImGui.BeginTabItem("Issue Orders"))
                 {
@@ -497,6 +509,228 @@ namespace Pulsar4X.Client
                 ImGui.EndTabBar();
             }
             ImGui.EndChild();
+        }
+
+        // ───────────────────────────── Combat tab ─────────────────────────────
+        // Everything a fleet (or a selected sub-fleet "component") brings to and does in a battle, in one place:
+        // its live engagement status, the doctrine lever, and the per-ship combat sheet. Reads the combat
+        // DataBlobs the auto-resolve engine maintains (ShipCombatValueDB / FleetDoctrineDB / FleetCombatStateDB /
+        // FleetRetreatDB) and drives doctrine through FleetDoctrine.TrySetDoctrine (a direct call, NOT an order —
+        // so it works even while the engagement lock has the fleet's regular orders frozen). All reads are
+        // defensive (TryGet + IsValid + snapshot-to-array) because the background combat processor mutates this
+        // state on another thread.
+        private void DisplayCombatTab()
+        {
+            if (!ImGui.BeginTabItem("Combat")) return;
+
+            if (SelectedFleet != null && selectedFleetDB != null)
+            {
+                if (ImGui.BeginChild("CombatTab"))
+                {
+                    DisplayCombatStatus();
+                    ImGui.Separator();
+                    DisplayDoctrineSelector();
+                    ImGui.Separator();
+                    DisplayFleetCombatSheet();
+                }
+                ImGui.EndChild();
+            }
+            ImGui.EndTabItem();
+        }
+
+        // The live battle readout: is this fleet fighting, who is it fighting, how many ships has it lost, and how
+        // much not-yet-lethal damage is pooled against it. Absent any combat blob it just reads "Not engaged".
+        private void DisplayCombatStatus()
+        {
+            if (SelectedFleet == null) return;
+            DisplayHelpers.Header("Status");
+
+            if (SelectedFleet.TryGetDataBlob<FleetCombatStateDB>(out var combat))
+            {
+                ImGui.TextColored(new Vector4(1f, 0.3f, 0.3f, 1f), $"● IN COMBAT — salvo {combat.StepsFought}");
+
+                string oppName = "an enemy fleet";
+                if (combat.OpponentFleetId != -1 && SelectedFleet.Manager != null
+                    && SelectedFleet.Manager.TryGetEntityById(combat.OpponentFleetId, out var opp) && opp.IsValid)
+                {
+                    int oppShips = opp.TryGetDataBlob<FleetDB>(out var oppDB)
+                        ? oppDB.GetChildren().Count(x => x.IsValid && !x.HasDataBlob<FleetDB>()) : 0;
+                    oppName = $"{opp.GetName(factionID)} ({oppShips} ships)";
+                }
+                ImGui.Text($"Engaging: {oppName}");
+
+                // A ship killed mid-battle lingers in the child list with IsValid=false until cleanup, so filter it.
+                int started = combat.InitialShipCount;
+                int alive = selectedFleetDB.GetChildren().Count(x => x.IsValid && !x.HasDataBlob<FleetDB>());
+                ImGui.Text($"Ships: {alive} of {started} (lost {Math.Max(0, started - alive)})");
+                ImGui.TextDisabled($"Incoming damage pool: {combat.DamageTakenPool:N0} J");
+
+                ImGui.PushStyleColor(ImGuiCol.Text, Styles.DescriptiveColor);
+                ImGui.TextWrapped("Regular orders are locked while engaged — only a doctrine change applies. Set the fight up, then steer it with doctrine.");
+                ImGui.PopStyleColor();
+            }
+            else if (SelectedFleet.TryGetDataBlob<FleetRetreatDB>(out _))
+            {
+                ImGui.TextColored(new Vector4(1f, 0.8f, 0.3f, 1f), "Broke off the last engagement (withdrew).");
+            }
+            else
+            {
+                ImGui.TextColored(new Vector4(0.4f, 1f, 0.4f, 1f), "Not engaged.");
+            }
+        }
+
+        // The doctrine lever: shows the active posture, and lets the player pick a new one from the moddable
+        // catalog. The Set button greys out with a game-time countdown while the switch cooldown runs.
+        private void DisplayDoctrineSelector()
+        {
+            if (SelectedFleet == null || _uiState.Game == null) return;
+            DisplayHelpers.Header("Doctrine", "The fleet's combat posture. Applied as a read-time multiplier on strength/toughness — reversible, and switchable mid-battle.");
+
+            SelectedFleet.TryGetDataBlob<FleetDoctrineDB>(out var active);
+            if (active != null)
+            {
+                ImGui.Text($"Current: {active.DoctrineId}  [{active.Family}]");
+                ImGui.TextDisabled($"Firepower x{active.FirepowerMult:0.##}, Toughness x{active.ToughnessMult:0.##}, Speed x{active.SpeedMult:0.##}{(active.IsRetreat ? "  · WITHDRAW" : "")}");
+            }
+            else
+            {
+                ImGui.Text("Current: none (neutral x1.0)");
+            }
+
+            SyncDoctrines();
+            if (_doctrineNames.Length == 0)
+            {
+                ImGui.TextDisabled("No doctrines in the catalog.");
+                return;
+            }
+
+            ImGui.SetNextItemWidth(Math.Max(ImGui.GetContentRegionAvail().X * 0.5f, 160f));
+            ImGui.Combo("###doctrine-combo", ref _selectedDoctrine, _doctrineNames, _doctrineNames.Length);
+
+            // Game-time cooldown gate. now comes from the fleet's star system; if the fleet has no manager yet
+            // (shouldn't happen for a real fleet) we can't time the cooldown, so disable the switch.
+            bool haveTime = SelectedFleet.Manager != null;
+            DateTime now = haveTime ? SelectedFleet.StarSysDateTime : DateTime.MinValue;
+            bool onCooldown = haveTime && active != null && now < active.SwitchableAfter;
+            double secsLeft = onCooldown ? (active.SwitchableAfter - now).TotalSeconds : 0;
+
+            ImGui.SameLine();
+            if (!haveTime || onCooldown) ImGui.BeginDisabled();
+            if (ImGui.Button("Set Doctrine"))
+            {
+                var bp = _doctrineBlueprints[_selectedDoctrine];
+                bool ok = FleetDoctrine.TrySetDoctrine(SelectedFleet, bp, now);
+                _doctrineStatus = ok ? $"Set posture: {bp.DisplayName}" : "On cooldown — can't switch yet.";
+                Console.WriteLine($"[FleetCombat] Set doctrine '{bp.UniqueID}' on fleet {SelectedFleet.Id}: {(ok ? "OK" : "blocked (cooldown)")}");
+                Console.Out.Flush();
+            }
+            if (!haveTime || onCooldown) ImGui.EndDisabled();
+            if (onCooldown)
+            {
+                ImGui.SameLine();
+                ImGui.TextDisabled($"switch in {secsLeft:0}s (game time)");
+            }
+
+            // Preview the highlighted posture's effects, so the player sees the trade before committing.
+            var sel = _doctrineBlueprints[_selectedDoctrine];
+            ImGui.TextDisabled($"{sel.DisplayName} [{sel.Family}] — Firepower x{sel.FirepowerMult:0.##}, Toughness x{sel.ToughnessMult:0.##}, Speed x{sel.SpeedMult:0.##}{(sel.IsRetreat ? ", WITHDRAW posture" : "")}, cooldown {sel.CooldownSeconds:0}s");
+
+            if (!string.IsNullOrEmpty(_doctrineStatus))
+                ImGui.TextColored(new Vector4(0.4f, 1f, 0.4f, 1f), _doctrineStatus);
+        }
+
+        // The combat sheet: fleet totals + firepower-by-weapon-type + the per-ship table ("the table IS the
+        // interface", per COMBAT-DESIGN System 4). Reads each ship's cached ShipCombatValueDB.
+        private void DisplayFleetCombatSheet()
+        {
+            if (selectedFleetDB == null) return;
+            DisplayHelpers.Header("Combat Strength");
+
+            var ships = selectedFleetDB.GetChildren().Where(c => c.IsValid && !c.HasDataBlob<FleetDB>()).ToArray();
+            double totalFp = 0, totalTough = 0;
+            int combatants = 0;
+            var classDps = new Dictionary<WeaponClass, double>();
+            foreach (var ship in ships)
+            {
+                if (!ship.IsValid || !ship.TryGetDataBlob<ShipCombatValueDB>(out var cv)) continue;
+                totalFp += cv.Firepower;
+                totalTough += cv.Toughness;
+                if (cv.Firepower > 0) combatants++;
+                if (cv.Weapons != null)
+                    foreach (var w in cv.Weapons)
+                    {
+                        classDps.TryGetValue(w.Class, out var d);
+                        classDps[w.Class] = d + w.DamagePerSecond;
+                    }
+            }
+
+            ImGui.Columns(2);
+            DisplayHelpers.PrintRow("Ships", ships.Length.ToString());
+            DisplayHelpers.PrintRow("Combatants", combatants.ToString());
+            DisplayHelpers.PrintRow("Total firepower", $"{totalFp:N0} J/s");
+            DisplayHelpers.PrintRow("Total toughness", $"{totalTough:N0} J");
+            ImGui.Columns(1);
+
+            if (classDps.Count > 0)
+            {
+                ImGui.TextDisabled("Firepower by weapon type:");
+                foreach (var kv in classDps)
+                    ImGui.BulletText($"{kv.Key}: {kv.Value:N0} J/s");
+            }
+
+            var subFleets = selectedFleetDB.GetChildren().Count(c => c.HasDataBlob<FleetDB>());
+            if (subFleets > 0)
+                ImGui.TextDisabled($"+ {subFleets} component(s) — select one in the tree to set its own doctrine.");
+
+            ImGui.Separator();
+            DisplayHelpers.Header("Ships");
+            if (ships.Length == 0)
+            {
+                ImGui.Text("No ships in this fleet.");
+                return;
+            }
+            if (ImGui.BeginTable("CombatShipTable", 5, Styles.TableFlags | ImGuiTableFlags.SizingStretchProp))
+            {
+                ImGui.TableSetupColumn("Ship", ImGuiTableColumnFlags.None, 0.3f);
+                ImGui.TableSetupColumn("Role", ImGuiTableColumnFlags.None, 0.16f);
+                ImGui.TableSetupColumn("Firepower J/s", ImGuiTableColumnFlags.None, 0.22f);
+                ImGui.TableSetupColumn("Toughness J", ImGuiTableColumnFlags.None, 0.22f);
+                ImGui.TableSetupColumn("Evasion", ImGuiTableColumnFlags.None, 0.1f);
+                ImGui.TableHeadersRow();
+                foreach (var ship in ships)
+                {
+                    if (!ship.IsValid) continue;
+                    ImGui.TableNextColumn(); ImGui.Text(ship.GetName(factionID));
+                    if (ship.TryGetDataBlob<ShipCombatValueDB>(out var cv))
+                    {
+                        ImGui.TableNextColumn(); ImGui.Text(cv.Firepower > 0 ? "Combatant" : "Utility");
+                        ImGui.TableNextColumn(); ImGui.Text($"{cv.Firepower:N0}");
+                        ImGui.TableNextColumn(); ImGui.Text($"{cv.Toughness:N0}");
+                        ImGui.TableNextColumn(); ImGui.Text($"{cv.Evasion:0.00}");
+                    }
+                    else
+                    {
+                        ImGui.TableNextColumn(); ImGui.TextDisabled("—");
+                        ImGui.TableNextColumn(); ImGui.TextDisabled("—");
+                        ImGui.TableNextColumn(); ImGui.TextDisabled("—");
+                        ImGui.TableNextColumn(); ImGui.TextDisabled("—");
+                    }
+                }
+                ImGui.EndTable();
+            }
+        }
+
+        // Rebuilds the doctrine dropdown from the moddable catalog only when its size changes (cheap to call
+        // every frame). Same lazy-sync pattern as DevToolsWindow's ship-design / faction lists.
+        private void SyncDoctrines()
+        {
+            if (_uiState.Game == null) return;
+            var catalog = _uiState.Game.StartingGameData.CombatDoctrines;
+            if (_doctrineBlueprints.Length == catalog.Count) return;
+
+            _doctrineBlueprints = catalog.Values.ToArray();
+            _doctrineNames = _doctrineBlueprints.Select(d => $"{d.DisplayName} [{d.Family}]").ToArray();
+            if (_selectedDoctrine >= _doctrineNames.Length) _selectedDoctrine = 0;
         }
 
         private void IssueOrdersDisplay(Vector2 size)

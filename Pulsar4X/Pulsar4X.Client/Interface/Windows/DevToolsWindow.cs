@@ -15,6 +15,7 @@ using Pulsar4X.Colonies;
 using Pulsar4X.Storage;
 using Pulsar4X.Industry;
 using Pulsar4X.Galaxy; // MassVolumeDB lives here on this branch (namespace drifted from the branch this file was written on)
+using Pulsar4X.Combat;
 
 namespace Pulsar4X.Client
 {
@@ -46,6 +47,16 @@ namespace Pulsar4X.Client
         private int _selectedMineral = 0;
         private int _mineralAmount = 1000;
         private string _mineralStatus = "";
+
+        // ── Faction Switcher (SM) ──────────────────────
+        private string[] _factionNames = Array.Empty<string>();
+        private Entity[] _factionEntities = Array.Empty<Entity>();
+        private int _selectedFactionView = 0;
+        private string _factionStatus = "";
+
+        // ── Combat Sandbox ─────────────────────────────
+        private int _hostileCount = 3;
+        private string _hostileStatus = "";
 
         private DevToolsWindow()
         {
@@ -161,6 +172,19 @@ namespace Pulsar4X.Client
                 _selectedDesign = 0;
         }
 
+        // Keeps the faction-switcher list current. Factions rarely change, so (like SyncShipDesigns) this only
+        // rebuilds when the count changes, making it safe to call every frame from Display().
+        void SyncFactions()
+        {
+            if (_uiState.Game == null) return;
+            if (_factionEntities.Length == _uiState.Game.Factions.Count) return;
+
+            _factionEntities = _uiState.Game.Factions.Values.ToArray();
+            _factionNames = _factionEntities.Select(GetEntityName).ToArray();
+            if (_selectedFactionView >= _factionNames.Length)
+                _selectedFactionView = 0;
+        }
+
         internal override void Display()
         {
             if (!IsActive || !_uiState.SMenabled || _uiState.PlayerFaction == null) return;
@@ -172,6 +196,53 @@ namespace Pulsar4X.Client
                 ImGui.SameLine();
                 if (ImGui.Button("Dump State (log)"))
                     DumpState();
+
+                // ── Faction Switcher (SM) ─────────────────────────
+                ImGui.Separator();
+                ImGui.Text("[ Faction Switcher (SM) ]");
+                ImGui.TextDisabled("View/act as any faction. Switch sides to watch a battle from either perspective;");
+                ImGui.TextDisabled("the Fleet/System windows then show that faction's ships. 'Back to player' restores yours.");
+
+                SyncFactions();
+
+                string viewingName = _uiState.Faction != null ? GetEntityName(_uiState.Faction) : "(none)";
+                string playerName = _uiState.PlayerFaction != null ? GetEntityName(_uiState.PlayerFaction) : "(none)";
+                ImGui.Text($"Viewing: {viewingName}");
+                ImGui.SameLine();
+                ImGui.TextDisabled($"(your faction: {playerName})");
+
+                if (_factionNames.Length == 0)
+                {
+                    ImGui.TextDisabled("No factions found.");
+                }
+                else
+                {
+                    ImGui.Combo("Faction##devfactionview", ref _selectedFactionView, _factionNames, _factionNames.Length);
+                    if (ImGui.Button("View as##devfactionviewbtn"))
+                    {
+                        try
+                        {
+                            var faction = _factionEntities[_selectedFactionView];
+                            _uiState.SetFaction(faction);
+                            _factionStatus = $"Now viewing {GetEntityName(faction)} (id {faction.Id}).";
+                            DevLog($"Faction view -> '{GetEntityName(faction)}' id={faction.Id}");
+                        }
+                        catch (Exception ex)
+                        {
+                            _factionStatus = $"Error: {ex.Message}";
+                            DevLog($"Faction view FAILED: {ex}");
+                        }
+                    }
+                    ImGui.SameLine();
+                    if (ImGui.Button("Back to player##devfactionback") && _uiState.PlayerFaction != null)
+                    {
+                        _uiState.SetFaction(_uiState.PlayerFaction);
+                        _factionStatus = $"Back to your faction ({GetEntityName(_uiState.PlayerFaction)}).";
+                        DevLog("Faction view -> player faction");
+                    }
+                    if (!string.IsNullOrEmpty(_factionStatus))
+                        ImGui.TextColored(new Vector4(0.4f, 1f, 0.4f, 1f), _factionStatus);
+                }
 
                 // ── Spawn Ship ────────────────────────────────────
                 ImGui.Separator();
@@ -242,6 +313,65 @@ namespace Pulsar4X.Client
                     }
                     if (!string.IsNullOrEmpty(_spawnStatus))
                         ImGui.TextColored(new Vector4(0.4f, 1f, 0.4f, 1f), _spawnStatus);
+                }
+
+                // ── Combat Sandbox (spawn an enemy to fight) ──────
+                ImGui.Separator();
+                ImGui.Text("[ Combat Sandbox ]");
+                ImGui.TextDisabled("Stand up a HOSTILE fleet using the Design + 'Orbit around' body picked above,");
+                ImGui.TextDisabled("so the battle trigger can engage your fleet. Put YOUR fleet at the same body.");
+
+                if (_shipDesignValues.Length == 0 || _bodyEntities.Length == 0)
+                {
+                    ImGui.TextDisabled("Need a ship design and a body (see Spawn Ship above).");
+                }
+                else
+                {
+                    ImGui.SetNextItemWidth(120f);
+                    ImGui.InputInt("Count##devhostilecount", ref _hostileCount);
+                    if (_hostileCount < 1) _hostileCount = 1;
+
+                    if (ImGui.Button("Spawn Hostile Fleet##devhostilespawn"))
+                    {
+                        try
+                        {
+                            var design = _shipDesignValues[_selectedDesign];
+                            var body = _bodyEntities[_selectedSpawnParent];
+                            // CombatSandbox builds a registered enemy faction + fleet + ships (owner-flipped) — the
+                            // CI-proven engine helper, so this client call stays a thin wrapper.
+                            var fleet = CombatSandbox.SpawnHostileFleet(
+                                _uiState.Game, _uiState.SelectedSystem, _uiState.PlayerFaction,
+                                design, _hostileCount, body, "Hostiles");
+                            _hostileStatus = $"Spawned {_hostileCount}x '{design.Name}' as a HOSTILE fleet orbiting {GetEntityName(body)}. "
+                                + "Put your fleet at the same body, then press play (or click 'Tick Combat') to fight.";
+                            DevLog($"Spawn Hostile Fleet OK: {_hostileCount}x '{design.Name}' around '{GetEntityName(body)}', fleet id={fleet.Id}");
+                        }
+                        catch (Exception ex)
+                        {
+                            _hostileStatus = $"Error: {ex.Message}";
+                            DevLog($"Spawn Hostile Fleet FAILED: {ex}");
+                        }
+                    }
+                    ImGui.SameLine();
+                    // Manual driver / diagnostic: force one combat tick over the current system. If pressing play
+                    // doesn't auto-start the fight, clicking this drives it salvo by salvo (watch the Combat tab).
+                    // Tick returns the fleet count it scanned — a quick check that both fleets are in this system.
+                    if (ImGui.Button("Tick Combat (force a salvo)##devhostiletick"))
+                    {
+                        try
+                        {
+                            int seen = CombatEngagement.Tick(_uiState.SelectedSystem, 5);
+                            _hostileStatus = $"Ticked combat: scanned {seen} fleet(s) in this system. Click again to drive the battle; watch the Combat tab on your fleet.";
+                            DevLog($"Combat Tick: scanned {seen} fleet(s) in the current system");
+                        }
+                        catch (Exception ex)
+                        {
+                            _hostileStatus = $"Error: {ex.Message}";
+                            DevLog($"Combat Tick FAILED: {ex}");
+                        }
+                    }
+                    if (!string.IsNullOrEmpty(_hostileStatus))
+                        ImGui.TextColored(new Vector4(1f, 0.6f, 0.4f, 1f), _hostileStatus);
                 }
 
                 // ── Create Colony ─────────────────────────────────

@@ -10,6 +10,7 @@ The `GameEngine` project is the core domain library. It has no dependency on any
 |-----------|---------|
 | `Engine/` | ECS infrastructure: Entity, EntityManager, DataBlobs, Processors, MasterTimePulse, ManagerSubPulse, Orders, Modding, SaveLoad |
 | `Weapons/` | Space combat: beams, missiles, generic fire control |
+| `Combat/` | Auto-resolve combat engine: ship combat value, fleet battle resolution, doctrine (v1 spine) |
 | `Damage/` | Damage application — Simple (active) and Complex (stubbed) |
 | `Colonies/` | Colony state, population, life support |
 | `Industry/` | Production, mining, materials |
@@ -109,7 +110,8 @@ string TypeName { get; }  // key used in InstanceProcessorsQueue
 - `OrderableDB` — DataBlob marking an entity as orderable.
 - `OrderableProcessor` — `IInstanceProcessor` that executes pending commands.
 - `ConditionalOrder` — order that only executes when a condition is met.
-- `StandAloneOrderHandler` — the current order handler; validates and enqueues orders.
+- `StandAloneOrderHandler` — the current order handler; validates and enqueues orders. Also enforces the **combat engagement lock**: after `IsValidCommand`, it refuses any order whose commanding entity is a fleet currently in a battle (has a `Combat.FleetCombatStateDB`) unless the order opts in via `EntityCommand.IsAllowedDuringEngagement`. Doctrine changes use a direct call (not an order), so they stay available mid-battle. See `Combat/CLAUDE.md` → "Engagement lock."
+- `EntityCommand.IsAllowedDuringEngagement` — virtual, default false; an order overrides it to remain issuable to a fleet locked in an engagement.
 
 ---
 

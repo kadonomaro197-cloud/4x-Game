@@ -31,6 +31,7 @@ namespace Pulsar4X.Modding
             Colony,
             ComponentDesign,
             ShipDesign,
+            CombatDoctrine,
         }
         public enum OperationType { Default, Remove }
         public enum CollectionOperationType { Add, Remove, Overwrite }
@@ -128,6 +129,9 @@ namespace Pulsar4X.Modding
                     break;
                 case ModInstruction.DataType.ShipDesign:
                     instruction.Data = jObject["Payload"].ToObject<ShipDesignBlueprint>();
+                    break;
+                case ModInstruction.DataType.CombatDoctrine:
+                    instruction.Data = jObject["Payload"].ToObject<CombatDoctrineBlueprint>();
                     break;
             }
 

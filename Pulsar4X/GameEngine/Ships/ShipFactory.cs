@@ -10,6 +10,7 @@ using Pulsar4X.People;
 using Pulsar4X.Engine;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Movement;
+using Pulsar4X.Combat;
 
 namespace Pulsar4X.Ships
 {
@@ -133,6 +134,10 @@ namespace Pulsar4X.Ships
             {
                 NewtonionMovementProcessor.UpdateNewtonThrustAbilityDB(ship);
             }
+
+            // Rate the freshly-built ship for the auto-resolve combat engine: firepower + toughness read
+            // from its real installed weapons and armour. (docs/COMBAT-DESIGN.md, combat spine step 2.)
+            ship.SetDataBlob(ShipCombatValueDB.Calculate(ship));
 
             return ship;
         }
