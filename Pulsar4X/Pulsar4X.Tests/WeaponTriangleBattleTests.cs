@@ -13,11 +13,14 @@ namespace Pulsar4X.Tests
     /// real fleets through the dodge resolver (<see cref="CombatEngagement.StepEngagement"/>) and assert the
     /// rock-paper-scissors OUTCOMES, using the real base-mod Wasp fighter / Leviathan capital designs.
     ///
-    /// The two screen tests are calibration-ROBUST by construction: identical real fighter screens are shot by
-    /// attackers of EQUAL damage/sec that differ ONLY in weapon flavor, so whatever the absolute numbers, the side
-    /// whose fire the fighters can dodge leaves more of them alive. The swarm-vs-capital test is robust by the
-    /// triangle's own asymmetry — the fighters land full fire on the sluggish capital while dodging its railguns.
-    /// Engine-only -> runs in CI.
+    /// All three tests are calibration-ROBUST by ISOLATING evasion: identical forces that differ ONLY in whether
+    /// the fighters can dodge, so whatever the absolute damage numbers, the dodge is the only variable and the side
+    /// that can dodge ends better. (The screen tests vary the weapon flavor on identical fighter screens; the
+    /// swarm test zeroes the fighters' evasion on one of two identical swarms.) Calibration note found building
+    /// these: at the current default weapon/toughness numbers, weapons are hot relative to hull toughness — a
+    /// capital's railgun volley one-shots a handful of fighters — so the iconic "a few fighters survive a
+    /// battleship" only reads cleanly with a large swarm; the per-shot-energy vs toughness balance is a v2 tuning
+    /// pass (same family as the known missile one-shot note). Engine-only -> runs in CI.
     /// </summary>
     [TestFixture]
     public class WeaponTriangleBattleTests
@@ -47,6 +50,31 @@ namespace Pulsar4X.Tests
             ship.FactionOwnerID = faction.Id;
             ship.SetDataBlob(new ShipCombatValueDB(wp.DamagePerSecond, 1e12, 1.0) { Evasion = 0, Weapons = { wp } });
             s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(faction.Id, fleet, ship));
+        }
+
+        /// <summary>A "sitting-duck" fighter: a REAL Wasp (same hull, same weapon, same toughness) with its evasion
+        /// zeroed — so a swarm of these is identical to a real Wasp swarm in every way EXCEPT it can't dodge. That
+        /// isolates evasion as the only variable in the swarm-vs-capital comparison.</summary>
+        private static void AddDuck(TestScenario s, Entity faction, Entity fleet, string name)
+        {
+            var design = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns[Fighter];
+            var ship = ShipFactory.CreateShip(design, s.Faction, s.StartingBody, name);
+            ship.FactionOwnerID = faction.Id;
+            ship.GetDataBlob<ShipCombatValueDB>().Evasion = 0; // same fighter, but can't dodge
+            s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(faction.Id, fleet, ship));
+        }
+
+        /// <summary>Fight a swarm against a capital to a decision; return (capital ships left, swarm ships left).</summary>
+        private static (int capital, int swarm) RunSwarmVsCapital(Entity swarm, Entity capital, int maxSteps)
+        {
+            CombatEngagement.StartEngagement(swarm, capital);
+            int steps = 0;
+            while (capital.HasDataBlob<FleetCombatStateDB>() && steps < maxSteps)
+            {
+                CombatEngagement.StepEngagement(swarm, capital, 5);
+                steps++;
+            }
+            return (CombatEngagement.GetFleetShips(capital).Count, CombatEngagement.GetFleetShips(swarm).Count);
         }
 
         private static int RunBattle(Entity attacker, Entity defender, int maxSteps)
@@ -114,31 +142,34 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("FIGHTER ▸ CAPITAL: a swarm of real Wasp fighters fights a real Leviathan railgun battleship. The fighters' fire lands full on the sluggish capital (destroyed) while they dodge its railguns (survivors remain).")]
-        public void FighterSwarm_DodgesAndDestroys_TheRailgunCapital()
+        [Description("FIGHTER ▸ CAPITAL: the SAME swarm of real Wasp fighters out-survives an identical swarm whose evasion is zeroed, against identical Leviathan railgun capitals. Both destroy the capital (it can't dodge their fire); the EVASIVE ones lose fewer — so it's the fighters' evasion (dodging the capital's railguns) that wins it. Isolating evasion makes this calibration-robust where a raw 'fighters survive' count is not.")]
+        public void EvasiveSwarm_OutLastsSittingDucks_AgainstTheSameRailgunCapital()
         {
             var s = TestScenario.CreateWithColony();
             var red = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+            const int N = 60; // big enough that the dodged volley leaves survivors across a wide toughness range
 
-            var swarm = MakeFleet(s, s.Faction, "Fighter Wing");
-            const int wing = 6;
-            for (int i = 0; i < wing; i++) AddReal(s, s.Faction, swarm, Fighter, "W" + i);
-            var capitalFleet = MakeFleet(s, red, "Capital");
-            AddReal(s, red, capitalFleet, Capital, "Leviathan");
+            // Real, evasive Wasp swarm vs a Leviathan.
+            var evasive = MakeFleet(s, s.Faction, "Evasive Wing");
+            for (int i = 0; i < N; i++) AddReal(s, s.Faction, evasive, Fighter, "E" + i);
+            double waspEvasion = CombatEngagement.GetFleetShips(evasive)[0].GetDataBlob<ShipCombatValueDB>().Evasion;
+            var capA = MakeFleet(s, red, "Capital A");
+            AddReal(s, red, capA, Capital, "Leviathan A");
+            var (capALeft, evasiveLeft) = RunSwarmVsCapital(evasive, capA, 100);
 
-            CombatEngagement.StartEngagement(swarm, capitalFleet);
-            int steps = 0;
-            while (capitalFleet.HasDataBlob<FleetCombatStateDB>() && steps < 200)
-            {
-                CombatEngagement.StepEngagement(swarm, capitalFleet, 5);
-                steps++;
-            }
+            // The SAME Wasp swarm with evasion zeroed (sitting ducks) vs an identical Leviathan.
+            var ducks = MakeFleet(s, s.Faction, "Sitting-Duck Wing");
+            for (int i = 0; i < N; i++) AddDuck(s, s.Faction, ducks, "D" + i);
+            var capB = MakeFleet(s, red, "Capital B");
+            AddReal(s, red, capB, Capital, "Leviathan B");
+            var (capBLeft, ducksLeft) = RunSwarmVsCapital(ducks, capB, 100);
 
-            int capitalLeft = CombatEngagement.GetFleetShips(capitalFleet).Count;
-            int wingLeft = CombatEngagement.GetFleetShips(swarm).Count;
-            Log($"swarm vs capital in {steps} steps: capitalShips={capitalLeft}  fightersSurviving={wingLeft}/{wing}");
-            Assert.That(capitalLeft, Is.EqualTo(0), "FIGHTER ▸ CAPITAL: the fighters' fire lands full on the sluggish capital — it is destroyed");
-            Assert.That(wingLeft, Is.GreaterThan(0), "while the fighters dodge its railguns and the wing survives");
+            Log($"{N} fighters vs identical capitals (real wasp evasion={waspEvasion:0.###}): " +
+                $"evasive survivors={evasiveLeft}, sitting-duck survivors={ducksLeft}; capitals left A={capALeft} B={capBLeft}");
+
+            Assert.That(capALeft, Is.EqualTo(0), "FIGHTER ▸ CAPITAL: the swarm's fire lands full on the sluggish capital — it is destroyed");
+            Assert.That(evasiveLeft, Is.GreaterThan(ducksLeft),
+                $"evasion is the difference: {evasiveLeft} evasive fighters survive vs {ducksLeft} sitting ducks against the same capital (real wasp evasion={waspEvasion:0.###})");
         }
     }
 }

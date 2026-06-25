@@ -142,6 +142,14 @@ a CI test will prove a 500-ship fight resolves in milliseconds.
 - The new weapon types are wired for the **auto-resolve** (their design stats) — the parked per-pixel firing
   sim is NOT extended to them (it deposits ~0 damage and is a v2 visual skin).
 - Triangle bonus values + evasion/saturation tuning constants are first-pass ("make it work before fair").
+- **Damage vs toughness is HOT (found building the P6 battle sims, 2026-06-25).** At current numbers a railgun is
+  ~1 MJ/s and a hull's toughness is ~1 MJ, so a capital's railgun volley one-shots a handful of fighters — battles
+  are near-instant and the dodge multiplier doesn't visibly change *small*-scale outcomes (it shows clearly at
+  fleet scale / when isolated). Same family as the known missile one-shot note (`Weapons/CLAUDE.md`). The dodge
+  MODEL is correct (the `WeaponTriangleBattleTests` isolate evasion and prove it changes who survives); what wants
+  a v2 pass is the **per-shot-energy ÷ component-toughness balance** so a ship lasts many salvos and the
+  rock-paper-scissors plays out gradually rather than in one volley. Until then, "fighters beat a battleship"
+  needs a large swarm, not a handful.
 
 ---
 
