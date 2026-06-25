@@ -222,6 +222,20 @@ Both reuse only gunship-proven components, so they stay buildable (`BaseModInteg
 you want an even matchup. Spawn an Aegis fleet for one faction and a Picket fleet for the other (DevTools faction
 switcher, step 9) to watch the auto-resolver decide it.
 
+**Weapon-flavor + triangle roster (added with the depth pass P3/P4/P6) — all in `shipDesigns.json` + `earth.json`:**
+
+| Design id | Name | Mounts | Triangle role |
+|-----------|------|--------|---------------|
+| `default-ship-design-test-railgun` | Lancer Railgun Cruiser | 4 railguns | finite-velocity kinetic — brutal vs slow, dodged by fast |
+| `default-ship-design-test-flak` | Bulwark Flak Escort | 4 flak guns | high-saturation PD — the fighter/missile killer |
+| `default-ship-design-test-fighter` | Wasp Strike Fighter | 1 railgun, 4 engines | small + agile = **evasive** (dodges railguns) |
+| `default-ship-design-test-capital` | Leviathan Battleship | 4 railguns, 8 armour, 2 engines | big + sluggish = **tanky, can't dodge** |
+
+These compose already-registered weapon components (no new `weapons.json` templates), so a new such design needs
+only its entry in `shipDesigns.json` + the `ShipDesigns` list in `earth.json` — NOT the full six-point chain
+below (that's only for a brand-new weapon TYPE). `WeaponTriangleTests` proves the dodge edges off the Wasp/
+Leviathan real combat values; `RailgunWeaponTests` / `FlakWeaponTests` prove the Lancer/Bulwark weapon profiles.
+
 **Test:** `Pulsar4X.Tests/CombatTestShipsTests.cs` — the two designs load onto the faction and rate strong-vs-weak
 (warship out-guns + out-armours the corvette); a 3v3 auto-resolve is a decisive `SideAVictory` with all corvettes lost.
 

@@ -123,8 +123,12 @@ a CI test will prove a 500-ship fight resolves in milliseconds.
    toughness ÷ landed fraction, hittable-first casualties. **Gauge:** slug fire kills the battleship while the
    same-toughness fighter dodges; beams ignore evasion; flak floors it. `DodgeResolveTests`. **CI-green.**
    *(The explicit `TriangleBonus` + the Capital▸Beam range edge are still refinements on top.)*
-6. ⏳ **Example fleets** — fighter / capital / beam-cruiser / missile-boat / flak-escort designs that demonstrate
-   the triangle live. **Remaining** (depends on the real components from 3/4 to be player-buildable).
+6. ✅ **Example fleets** — buildable `Wasp` fighter (tiny, 4 engines, evasive) + `Leviathan` battleship (4 railguns,
+   8 armour, sluggish) anchor the dodge axis; the existing `Aegis` beam warship + `Bulwark` flak escort are the
+   other corners. **CI-green** via `WeaponTriangleTests`, which proves on REAL built ships: FIGHTER ▸ railgun (the
+   fighter dodges slugs the capital eats), BEAM ▸ fighter (light-speed ignores the dodge), FLAK ▸ fighter
+   (saturation floors the dodge). All four spawnable from DevTools to watch the triangle live. *(The CAPITAL ▸ beam
+   edge needs weapon RANGE — a v1 stub — so it's the one edge still on the v2 list.)*
 7. ✅ **Performance** — fire aggregated by weapon class → O(ships) per step; `CombatPerformanceTests` resolves
    200 real warships in milliseconds. **CI-green.**
 8. ✅ **Docs capstone** — `Combat/CLAUDE.md` (per piece), this doc, systems map, test inventory, SESSION_STATE.

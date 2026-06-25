@@ -211,7 +211,9 @@
         "default-ship-design-test-warship",
         "default-ship-design-test-corvette",
         "default-ship-design-test-railgun",
-        "default-ship-design-test-flak"
+        "default-ship-design-test-flak",
+        "default-ship-design-test-fighter",
+        "default-ship-design-test-capital"
       ],
       "LaunchQueue": [
         { "DesignId": "default-ship-design-courier", "Name": "ISS Hermes" }
