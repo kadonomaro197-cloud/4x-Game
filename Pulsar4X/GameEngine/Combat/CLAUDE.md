@@ -22,6 +22,7 @@ It deliberately does **not** use the per-pixel damage sim (`Damage/DamageComplex
 | `FleetDoctrine.cs` | Helpers: `FirepowerMult`/`ToughnessMult`/`IsRetreat(fleet)` reads; `TrySetDoctrine(fleet, blueprint, now)` sets a posture from the catalog, honouring the cooldown. | ✅ built (spine step 5) |
 | `CombatDoctrineBlueprint` (`Engine/Blueprints/`) | The moddable **catalog** of postures (JSON → `ModDataStore.CombatDoctrines`): family, display name, the multipliers, cooldown, retreat flag. | ✅ built (spine step 5) |
 | `FleetRetreatDB.cs` | DataBlob recording that a fleet **broke off** (flag + a withdraw vector away from the enemy + who it fled from). Attached when a fleet retreats; persists after the engagement ends (so the outcome stays visible). v1 records the vector only — no move order. | ✅ built (spine step 7) |
+| `CombatSandbox.cs` | Dev/test utility: `SpawnHostileFleet(game, system, playerFaction, design, count, body, name)` stands up a **registered hostile faction + fleet + ships** (built from the player's designs, owner-flipped) at a body so the trigger auto-engages them. The DevTools "Spawn Hostile Fleet" button + `CombatSandboxTests` use it. Lives in the ENGINE so the survival-through-a-clock-advance question is CI-verified, not client-only. | ✅ built (combat-test enabler) |
 
 *Fleet components (step 6) reuse `FleetDB` sub-fleets + `FleetDoctrineDB` — no new file; see "Fleet components" below. (Retreat, step 7, adds rows as it lands.)*
 
@@ -312,6 +313,30 @@ needn't be paced out. Measured before/after numbers: `CombatStressLab` + `Combat
 **Test:** `Pulsar4X.Tests/DodgeResolveTests.cs` — the `HitFraction` curve (beams ignore evasion, slugs are
 dodged, flak floors it); and through the resolve, slug fire kills the un-evasive battleship while the fighter
 (same toughness, only evasion differs) dodges and survives.
+
+---
+
+## Combat sandbox — spawning an enemy to fight (the live-test enabler)
+
+**What it is.** `CombatSandbox.SpawnHostileFleet(...)` stands up the OTHER side of a battle: a fresh registered
+faction + a fleet + N ships (built from the player's designs, owner-flipped to the enemy), parked at a body so
+the `BattleTriggerProcessor` auto-engages them. A fresh game has only the player and an empty sky, so without this
+there's nothing to fight — it's what makes "spawn an enemy and press play" possible. The DevTools "Spawn Hostile
+Fleet" button is a thin wrapper over it.
+
+**Why it's in the ENGINE, not the client.** The combat test fixtures (`BattleTriggerTests`, `MultiParty…`) drive
+`CombatEngagement.Tick` DIRECTLY and never advance the game clock, with a standing note that a *bare* enemy
+faction's owner-flipped ships "don't survive movement processing across a clock advance." That made the live path
+(spawn enemy → press play → full per-tick processor sweep) an unproven, CI-blind unknown. Putting the spawn in the
+engine lets **`CombatSandboxTests` advance the REAL clock (`game.TimePulse.TimeStep()`) and assert the spawned
+enemy survives + engages** — so the live button is proven in CI, not on the developer's Windows build. The recipe
+that makes the flipped ships persist like a real NPC's: `CreateBasicFaction` (registers it in `game.Factions` +
+gives a root `FleetDB`), add the system to the faction's `KnownSystems`, and copy the player's `ShipDesigns`. (The
+ships are still built under the player faction because `ComponentDesigns` is a read-only view and the enemy hasn't
+unlocked components; combat only reads `FactionOwnerID`, so the flip is enough.)
+
+**Test:** `Pulsar4X.Tests/CombatSandboxTests.cs` — spawns 3 strong hostiles vs 1 unarmed player ship, advances the
+clock 5 game-hours, asserts the player ship is destroyed (only possible if the enemy survived the sweep and won).
 
 ---
 
