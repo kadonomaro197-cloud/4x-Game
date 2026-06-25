@@ -177,6 +177,27 @@ A **wiped** fleet (0 ships) is destroyed, not retreated — `ShouldRetreat` retu
 
 ---
 
+## Example combat-test ships (testing enabler)
+
+Two purpose-built armed designs ship in the base mod for setting up a fight (spine step 10), in
+`GameData/basemod/ScenarioFiles/designs/shipDesigns.json` and listed in `colony-earth`'s `ShipDesigns` so the
+starting faction has them (spawnable from DevTools):
+
+| Design id | Name | Build | Role |
+|-----------|------|-------|------|
+| `default-ship-design-test-warship` | Aegis Test Warship | 4 lasers, plastic armour ×6, 2 reactors/4 batteries/4 engines | the **strong** side |
+| `default-ship-design-test-corvette` | Picket Test Corvette | 1 laser, plastic armour ×1, 1 reactor/1 battery/1 engine | the **weak** side |
+
+Both reuse only gunship-proven components, so they stay buildable (`BaseModIntegrityTests`) and are auto-rated by
+`ShipCombatValueTests`. The existing `default-ship-design-gunship` / `-dropship` are also armed (2 lasers each) if
+you want an even matchup. Spawn an Aegis fleet for one faction and a Picket fleet for the other (DevTools faction
+switcher, step 9) to watch the auto-resolver decide it.
+
+**Test:** `Pulsar4X.Tests/CombatTestShipsTests.cs` — the two designs load onto the faction and rate strong-vs-weak
+(warship out-guns + out-armours the corvette); a 3v3 auto-resolve is a decisive `SideAVictory` with all corvettes lost.
+
+---
+
 ## Model-coupled / tuning constants
 
 | Constant | Value | Meaning | Where |
