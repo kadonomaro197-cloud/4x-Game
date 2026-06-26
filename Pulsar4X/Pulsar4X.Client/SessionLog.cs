@@ -52,11 +52,52 @@ namespace Pulsar4X.Client
                     + " step=" + tp.Ticklength.TotalSeconds.ToString("0") + "s"
                     + " selected=" + (string.IsNullOrEmpty(selectedName) ? "(none)" : selectedName)
                     + " ships-in-view=" + shipCount);
+                CheckForTeleports(system);
             }
             catch (Exception e)
             {
                 Line("STATE", "heartbeat failed: " + e.Message);
             }
+        }
+
+        /// <summary>
+        /// Distance from the Sun (the system origin), in metres, below which a ship is certainly "teleported" —
+        /// nothing real orbits this close to the star (the innermost body, Mercury, is ~58 Gm = 5.8e10 m out).
+        /// 1 Gm = 1e9 m. A detached ship draws at ~its old orbital offset from origin (~12,000 km = 1.2e7 m).
+        /// </summary>
+        const double TeleportSunDistThreshold_m = 1e9;
+
+        /// <summary>
+        /// Scan every ship in the system for the "teleported to the Sun" signature and log each offender, so the
+        /// recorder catches the warp/Sun-jump bug the instant it happens — no faction-view switch needed. Two
+        /// tells: (1) the position reads right on the system origin (sun-dist under ~1 Gm), or (2) the position's
+        /// anchor (Parent) has gone null/invalid — the exact state that makes AbsolutePosition collapse to the
+        /// star (see MoveState.cs:44). Also prints the ship's move mode (Orbit/Warp/...) — the smoking gun for
+        /// whether it detached mid-warp. Returns how many it flagged.
+        /// </summary>
+        public static int CheckForTeleports(StarSystem sys)
+        {
+            if (!Enabled || sys == null) return 0;
+            int found = 0;
+            foreach (var sh in sys.GetAllEntitiesWithDataBlob<ShipInfoDB>())
+            {
+                if (!sh.TryGetDataBlob<PositionDB>(out var p)) continue;
+                var parent = p.Parent;
+                bool parentBad = parent == null || !parent.IsValid;
+                double sunDist = p.AbsolutePosition.Length();
+                if (!parentBad && sunDist >= TeleportSunDistThreshold_m) continue; // looks fine
+
+                found++;
+                string name = sh.TryGetDataBlob<NameDB>(out var n) ? n.OwnersName : "?";
+                string par = parent == null ? "ROOT/null"
+                    : (parent.IsValid
+                        ? (parent.TryGetDataBlob<NameDB>(out var pn) ? pn.OwnersName : "Entity#" + parent.Id)
+                        : "INVALID");
+                Line("STATE", "  ⚠ TELEPORT ship #" + sh.Id + " '" + name + "' faction=" + sh.FactionOwnerID
+                    + " sun-dist=" + (sunDist / 1e9).ToString("0.###") + "Gm parent=" + par
+                    + " moveType=" + p.MoveType);
+            }
+            return found;
         }
 
         /// <summary>
