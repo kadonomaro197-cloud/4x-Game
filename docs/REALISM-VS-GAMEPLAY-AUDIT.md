@@ -93,3 +93,5 @@ Run every future system — and every existing one *before you touch it* — thr
 > **What decision-with-a-tradeoff does this hand the player, and what does it stack with?**
 
 If the honest answer is "none," it's *pretty*: don't build it, or install the lever instead. **Name the decision before you build the realism.** This is the firewall that keeps the game from becoming a beautiful simulation nobody plays — the same job `docs/MVP.md` does for scope, this doc does for *weight*.
+
+The "…and what does it stack with?" half is **Connect** — the fourth verb in the per-system discipline (root `CLAUDE.md` → "Keep / Cut / Add / Connect"). EARNS/PRETTY/LATENT grades a system *alone*; Connect is the rule that a system is only as done as its **connections** (code AND data), and the real test is always the cross-system *stack*, never the unit in isolation. Run all four every time a system is touched — that's how the game tightens.

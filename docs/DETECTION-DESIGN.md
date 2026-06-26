@@ -42,7 +42,9 @@ The sensor subsystem (`GameEngine/Sensors/`) is **one of the most complete in th
 - **Combat is omniscient.** The battle trigger and fire control read `GetAllEntitiesWithDataBlob<FleetDB>()` / raw entities — **zero** references to the track table. You fight what's *present*, not what you *detect*. (Grep-confirmed: nothing in `GameEngine/Weapons/` touches contacts.)
 - **The scan barely runs in tests.** `SensorScan` is only scheduled by `Game.PostNewGameInitialization()` (live New-Game path). It *does* run in the real game, but the test harness never kicked it — which is why the whole subsystem shipped 🔴 **DARK** (no gauge). **Slice-1 gauge (`SensorDetectionTests`) is now ✅ CI-GREEN** (commit `666d555`): a faction's ship detects a hostile ship at point-blank and the contact lands in the track table. So the engine genuinely works — the foundation fog-of-war rides on is verified, and Sensors is no longer dark.
 
-## 3. KEEP / CUT / ADD (the decisions — mark these up)
+## 3. KEEP / CUT / ADD / CONNECT (the decisions — mark these up)
+
+*(Keep/Cut/Add judges the pieces; **Connect** is the one that matters — see the table, then the CONNECT block under it. The real test of detection is detection ON TOP OF weapons, not detection alone.)*
 
 | | Item | Call | Why |
 |---|---|---|---|
@@ -57,6 +59,20 @@ The sensor subsystem (`GameEngine/Sensors/`) is **one of the most complete in th
 | **ADD** | **The EMCON lever** (Active / Passive-dark posture) | ➕ the decision | A fleet/ship stance that sets **detection range** AND **own detectability**, reusing emitted/reflected. Active = see far, get seen far; Dark = see short, stay quiet, ambush. |
 | **ADD** | **Reliable scan + gauge** | ➕ foundation | Make detection fire and be testable headless (slice 1) so everything above is gauged, not DARK. |
 | **ADD** | **UI** | ➕ (your build) | Contacts drawn as *contacts* (fog), an EMCON toggle, detection-range ring. Client-side, live-tested. |
+
+**CONNECT — the real test is the STACK, not the unit.** A system isn't "done" because it works alone — it's done when it *changes how the connected systems play*. Detection's real test is **detection on top of weapons**: does what you can SEE decide the fight? Map every wire, build the seam, gauge the *integrated* behavior:
+
+| Detection connects to | The wire | The real-test gauge |
+|---|---|---|
+| **Weapons / battle trigger** | trigger reads the **track table**, not all entities | an **undetected** hostile does NOT start a battle; a **detected** one does |
+| **Fire control / targeting** | can only target what's in the track table | you cannot order fire on an undetected entity |
+| **EMCON posture** | posture scales your detect-range + your signature | **Dark** fleet slips a picket (sees short, unseen); **Active** trips it (sees far, seen far) |
+| **Combat interrupt** | auto-pause fires when YOU first detect/engage | first contact hands you the doctrine call the moment info arrives |
+| **Doctrine** | detect-first = set posture before contact | the side that sees first chooses the engagement |
+| **Movement** *(later lever)* | dark+slow = ambush; active = picket/tripwire | a scout's posture changes what a fleet reveals |
+| **Materials/data** *(the data end)* | sensor/EMCON components cost real materials; check the other end (gotcha #10) | a new sensor/EMCON design builds from defined, stocked materials — no JSON drift |
+
+**The headline: fog-of-war gating the trigger (detection × weapons) IS the deliverable.** "It detects" (slice 1, green) is necessary, not the test. "What I can't see can't pull me into a fight, and what I choose to hide lets me strike first" is the test.
 
 ## 4. How it all COMES TOGETHER (the target)
 
@@ -82,7 +98,7 @@ The rigorous physics stays as the **under-the-hood number** the posture scales �
 ## 6. Build sequence (once §3/§5 are signed off) — each a bounded, gauged slice
 
 1. **Gauge the engine** ✅ **DONE (CI-green, `666d555`)** — a fleet detects a hostile fleet; Sensors DARK → verified.
-2. **Fog-of-war seam** — the battle trigger consumes the track table (`GetSensorContacts`) instead of raw entities; an undetected hostile doesn't engage. CI-gauge: out-of-range hostile → no battle; detected → battle. *(Engine-side, I can do solo.)*
+2. **Fog-of-war seam — THE real test (detection × weapons).** The battle trigger consumes the track table (`GetSensorContacts`) instead of raw entities; an undetected hostile doesn't engage. CI-gauge: out-of-range hostile → no battle; detected → battle. Slice 1 ("it detects") was only the precondition — *this* is where detection earns its weight by changing combat. *(Engine-side, I can do solo.)*
 3. **EMCON lever** — a `FleetEmconDB` / posture enum that scales detection range + emitted signature, reusing the existing model. CI-gauge: Dark detects/ is-detected at shorter range than Active; the asymmetry holds. *(Engine-side.)*
 4. **First-strike falls out** — verify the detected-first side gets the interrupt/initiative; gauge the asymmetry. *(Engine-side.)*
 5. **UI** — contacts as blips, EMCON toggle, range ring. *(Your local build; CI can't see the client.)*

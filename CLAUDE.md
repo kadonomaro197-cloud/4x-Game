@@ -239,6 +239,17 @@ This is not optional and it is not just for complex tasks. A change that looks l
 
 **Operationalize this with the systems map — every single time.** `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` is the connection map in table form, and it is not a document you read once. **Whenever you go into a system — to read it, change it, debug it, or even just decide whether to touch it — open the map first, find that system's row, and read its "Connected to" column and every row it points at.** That is the minimum blast radius; the four questions above extend it one hop further. When you finish, move that row's status and "Can we see it?" entry. If you hit a connection the map doesn't list, add it before you continue. The map is only worth keeping if it is consulted and updated on *every* system dive — that discipline is what stops the reactive pivoting that leaves a game half-built.
 
+### Keep / Cut / Add / CONNECT — what you DO with the map (every system, every time)
+
+The Prime Directive tells you to *map* the connections. This is the **action you take with that map whenever you touch any system** — combat, economy, UI, data, anything:
+
+- **Keep** the parts that earn their weight (they're the source of a player decision — `docs/REALISM-VS-GAMEPLAY-AUDIT.md`).
+- **Cut** — or hide behind a legible number — the parts that are "pretty": fidelity nobody acts on.
+- **Add** the missing decision/lever.
+- **Connect** — *the one that matters most* — wire the system into the others and **verify the stacked behavior, in code AND data.** A system is only as done as its connections: detection isn't done when "it detects," it's done when *what you can see decides the fight* (detection × weapons). The **data** half is the same move — when you add a cost/material/tech reference, check the *other end* (gotcha #10): the id is defined, and a starting design's material is stocked. **The real test is always the cross-system stack, never the unit in isolation.**
+
+**This is how we improve.** Run Keep/Cut/Add/Connect on a system every time it's touched and the game gets tighter — pretty gets trimmed, levers get added, and the connections that turn "100 simple systems" into a *stacking* game get built and verified. Worked example: `docs/DETECTION-DESIGN.md` §3.
+
 ---
 
 ## The Visibility Gate — "Can We See Enough?"
