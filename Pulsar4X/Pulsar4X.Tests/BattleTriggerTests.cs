@@ -129,6 +129,40 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("Combat interrupt: with InterruptTimeOnNewEngagement on, a NEW battle requests a time halt (CombatInterruptPending) so the clock stops at first contact instead of resolving the whole fight inside one step. Off by default, so headless tests stay deterministic.")]
+        public void Tick_NewEngagement_RequestsCombatHalt_WhenInterruptEnabled()
+        {
+            var s = TestScenario.CreateWithColony();
+            ClearExistingFleets(s); // clean two-fleet matchup
+            var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+
+            var enemyFleet = MakeFleet(s, enemyFaction, "Red Fleet");
+            AddShip(s, enemyFaction, enemyFleet, 50_000, 1_000_000, "Red 1");
+            var playerFleet = MakeFleet(s, s.Faction, "Blue Fleet");
+            AddShip(s, s.Faction, playerFleet, 50_000, 1_000_000, "Blue 1");
+
+            Assert.That(CombatEngagement.InterruptTimeOnNewEngagement, Is.False, "the interrupt must default OFF so every other combat test advances deterministically");
+
+            s.Game.TimePulse.CombatInterruptPending = false;
+            CombatEngagement.InterruptTimeOnNewEngagement = true;
+            try
+            {
+                Assert.That(s.Game.TimePulse.CombatInterruptPending, Is.False, "no interrupt before any combat");
+
+                CombatEngagement.Tick(s.StartingSystem, 5); // detects the hostile pair, engages -> EnsureInCombat -> halt
+
+                Assert.That(playerFleet.HasDataBlob<FleetCombatStateDB>(), Is.True, "the trigger should have engaged the fleets");
+                Assert.That(s.Game.TimePulse.CombatInterruptPending, Is.True,
+                    "a NEW engagement should request a combat halt so the clock stops at first contact");
+            }
+            finally
+            {
+                CombatEngagement.InterruptTimeOnNewEngagement = false; // never leak the static flag to other tests
+                s.Game.TimePulse.CombatInterruptPending = false;
+            }
+        }
+
+        [Test]
         [Description("Two fleets of the SAME faction never engage when the trigger runs.")]
         public void Tick_SameFactionFleets_DoNotEngage()
         {

@@ -402,6 +402,30 @@ namespace Pulsar4X.Client.Rendering
             _allLabels.RemoveWhere(x => x.Entity.Id == entityGuid);
         }
 
+        // Drop the icon/label/interactable for any entity that has gone invalid (destroyed). A ship killed in
+        // combat flips its entity's IsValid to false IMMEDIATELY (TagEntityForRemoval), but RemoveIconable only
+        // runs when the engine's EntityRemoved MESSAGE is later processed — which lags, and never arrives while
+        // the game is paused after a single step. In that gap the dead ship's AbsolutePosition collapses to the
+        // origin, so its leftover icon + label pile up ON THE SUN and stay on screen (clickable too — that was
+        // the crash, now guarded in GlobalUIState). Running this every frame makes the ghost vanish the instant
+        // the ship dies, matching the screen to reality during a battle. Bodies (stars/planets) never go invalid.
+        void PruneDeadEntities()
+        {
+            List<int> dead = null;
+            foreach (var lbl in _allLabels)
+            {
+                if (lbl.Entity != null && !lbl.Entity.IsValid)
+                    (dead ??= new List<int>()).Add(lbl.Entity.Id);
+            }
+            if (dead == null) return;
+            foreach (var id in dead)
+            {
+                RemoveIconable(id);
+                SessionLog.State("pruned ghost icon/label for dead entity #" + id);
+            }
+            _updateLabels = true; // rebuild the visible-label + interactable caches without the dead ones
+        }
+
         public void UpdateUserOrbitSettings()
         {
             foreach (var item in _orbitRings.Values)
@@ -522,6 +546,8 @@ namespace Pulsar4X.Client.Rendering
         internal void Update()
         {
             if(_sysState == null) return;
+
+            PruneDeadEntities();
 
             foreach (var item in _sysState.EntityStatesWithPosition.Values)
             {
