@@ -110,6 +110,9 @@ namespace Pulsar4X.Combat
                     if (!AreHostile(a, b)) continue;
                     if (GetFleetShips(b).Count == 0) continue;
                     if (!InRange(a, b)) continue;
+                    // Fog of war (client-on / test-off): only engage a hostile you actually DETECT. v1 requires
+                    // MUTUAL detection so the resolver gets both sides and there's no one-way enter/exit thrash.
+                    if (RequireDetectionToEngage && !(FleetDetects(a, b) && FleetDetects(b, a))) continue;
 
                     EnsureInCombat(a, b.Id);
                     EnsureInCombat(b, a.Id);
@@ -190,6 +193,16 @@ namespace Pulsar4X.Combat
         /// turns it on at startup. Fires once per battle/joiner (EnsureInCombat is guarded — an ongoing fight does
         /// not re-halt every tick); only a brand-new engagement or a fresh fleet joining stops the clock.</summary>
         public static bool InterruptTimeOnNewEngagement = false;
+
+        /// <summary>When true, combat is FOG-OF-WAR gated: two hostile fleets engage only if they DETECT each other
+        /// (a sensor contact in the per-faction track table, <see cref="EntityManager.GetSensorContacts"/>), not
+        /// merely because they're present in the system. This is the seam that makes "what you can see decides the
+        /// fight" real — detection × weapons. v1 requires MUTUAL detection (both sides hold a contact for the other)
+        /// so the resolver still gets two sides and there's no one-way enter/exit thrash; the ambush/first-strike
+        /// asymmetry (one side sees the other first) is a later slice that needs resolver support. Default FALSE so
+        /// the existing combat tests stay deterministic (they don't stand up sensors/contacts); the client turns it
+        /// on when detection is live, next to <see cref="NarrateToLog"/> / <see cref="InterruptTimeOnNewEngagement"/>.</summary>
+        public static bool RequireDetectionToEngage = false;
 
         private static void CombatLog(string msg)
         {
@@ -629,6 +642,21 @@ namespace Pulsar4X.Combat
         {
             int fa = a.FactionOwnerID, fb = b.FactionOwnerID;
             return fa != fb && fa != Game.NeutralFactionId && fb != Game.NeutralFactionId;
+        }
+
+        /// <summary>Fog-of-war check (the detection × weapons seam): does the <paramref name="detector"/> fleet's
+        /// faction hold a sensor contact for ANY ship in the <paramref name="target"/> fleet? Reads the per-faction
+        /// track table the sensor scan populates (<see cref="EntityManager.GetSensorContacts"/>). Defensive — false
+        /// if there's no manager or the faction has no contact list yet. Only consulted when
+        /// <see cref="RequireDetectionToEngage"/> is on.</summary>
+        private static bool FleetDetects(Entity detector, Entity target)
+        {
+            if (detector?.Manager == null) return false;
+            var contacts = detector.Manager.GetSensorContacts(detector.FactionOwnerID);
+            if (contacts == null) return false;
+            foreach (var ship in GetFleetShips(target))
+                if (contacts.SensorContactExists(ship.Id)) return true;
+            return false;
         }
 
         private static bool InRange(Entity a, Entity b)

@@ -445,6 +445,17 @@ the auto-trigger fired; its absence (while DevTools "Tick Combat" *does* produce
 
 ---
 
+## Fog of war — combat only acts on what you DETECT (added 2026-06-26, detection slice 2)
+
+**The seam that makes detection × weapons real.** The battle trigger used to read *every* fleet present (`GetAllEntitiesWithDataBlob<FleetDB>()`) — omniscient. With `CombatEngagement.RequireDetectionToEngage` on, the engage pass also requires the two hostile fleets to **detect** each other: `FleetDetects(a, b)` checks the per-faction track table (`EntityManager.GetSensorContacts(factionId).SensorContactExists(shipId)`) the sensor scan populates. An undetected hostile can't pull you into a battle — you fight what you *see*.
+
+- **v1 = MUTUAL detection.** Both sides must hold a contact for the other, so the resolver still gets two sides and there's no one-way enter/exit thrash (which would also spam the combat interrupt). The **ambush / first-strike asymmetry** (one side detects the other first and shoots) is a later slice — it needs resolver support for a one-sided engagement and ties into the heat/EMCON model. See `docs/DETECTION-DESIGN.md`.
+- **The flag (mirrors `NarrateToLog` / `InterruptTimeOnNewEngagement`).** Default **FALSE** so every existing combat fixture stays deterministic (they don't stand up sensors). **Currently OFF in the client too, by choice** — it changes *when* combat triggers (you wait for a sensor sweep), so it's left off until the developer live-tests detection deliberately; flipping it on is one line in `PulsarMainWindow` next to the other two flags.
+- **Test:** `BattleTriggerTests.Tick_RequireDetection_NoBattleUntilDetected` — flag on, two hostile *sensor-capable* fleets in range: **no scan → no battle**; fire the scan → **battle**. Asserts the flag defaults off + try/finally so it never leaks.
+- **Connections (Prime Directive / cradle-to-grave):** contacts come from sensor **components** (researched/built/installed) → a **destroyed** sensor (the grave rung) drops you out of the track table = you go blind. **Stacks with** the combat interrupt (you're paused when a *detected* battle begins) and doctrine (detect-first = set posture before contact).
+
+---
+
 ## Gotchas
 
 1. **This engine does not touch the per-pixel damage sim.** Casualties are whole-ship removal driven by strength math, not `DamageProcessor.OnTakingDamage`. Do not wire combat value into the pixel sim — that path is broken and parked for v2.
