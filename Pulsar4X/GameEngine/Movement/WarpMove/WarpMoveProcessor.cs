@@ -74,6 +74,16 @@ namespace Pulsar4X.Movement
             System.Console.WriteLine("[WARP] ship #" + entity.Id + " '" + name + "' " + msg);
         }
 
+        /// <summary>Narrate WHY a warp order couldn't start (no drive / no reactor / not enough energy) instead of
+        /// failing silently — so "I gave a move order and the ship didn't move" becomes a [WARP] line naming the
+        /// blocker. Called from WarpMoveCommand.Execute. Gated like the rest of the warp narration.</summary>
+        internal static void WarpBlocked(Entity entity, string reason)
+        {
+            if (!NarrateWarpToLog) return;
+            string name = entity.TryGetDataBlob<NameDB>(out var n) ? n.OwnersName : ("#" + entity.Id);
+            System.Console.WriteLine("[WARP] ship #" + entity.Id + " '" + name + "' CAN'T WARP — " + reason);
+        }
+
         static string TargetName(WarpMovingDB moveDB)
         {
             if (moveDB.TargetEntity != null && moveDB.TargetEntity.TryGetDataBlob<NameDB>(out var tn))
