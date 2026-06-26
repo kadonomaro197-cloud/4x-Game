@@ -42,6 +42,10 @@ namespace Pulsar4X.Client
         ulong _fpsLastMeasurementTime = 0;
         float _fpsLastMeasurement = 0;
 
+        // Session-recorder heartbeat throttle. PostFrameUpdate runs every frame; we only want a STATE snapshot
+        // every ~3 s. Measured in SDL wall-clock ticks (ms) so the cadence is steady regardless of game speed.
+        ulong _lastHeartbeatTick = 0;
+
         // Render-loop crash visibility: a window's Display() or the map draw can throw (e.g. inspecting a
         // foreign/NPC entity whose faction has locked/empty data). The SDL Run loop has no try/catch, so an
         // unhandled exception kills the process and its trace goes to stderr — invisible in game_log.txt,
@@ -274,6 +278,18 @@ namespace Pulsar4X.Client
             foreach (var (_, systemState) in _state.StarSystemStates)
             {
                 systemState.PostFrameCleanup();
+            }
+
+            // Session-recorder heartbeat: a STATE snapshot (game clock, run/pause, step, selection, ship count)
+            // every ~3 s so the log shows the situation even when the player isn't clicking. Wrapped in SafeRender
+            // because _state.SelectedSystem THROWS when no system is selected — a fault here logs once and the
+            // game keeps running rather than crashing on a diagnostic.
+            var now = SDL.GetTicks();
+            if (_state.IsGameLoaded && now - _lastHeartbeatTick >= 3000)
+            {
+                _lastHeartbeatTick = now;
+                SafeRender("Heartbeat", () =>
+                    SessionLog.Heartbeat(_state.Game, _state.SelectedSystem, _state.LastClickedEntity?.Name));
             }
         }
 

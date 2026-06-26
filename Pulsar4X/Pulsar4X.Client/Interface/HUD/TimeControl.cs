@@ -282,10 +282,12 @@ namespace Pulsar4X.Client
             if (_timeloop.IsRunning)
             {
                 _timeloop.PauseTime();
+                Pulsar4X.Client.SessionLog.Time("paused");
             }
             else
             {
                 _timeloop.StartTime();
+                Pulsar4X.Client.SessionLog.Time("play (step " + _timeloop.Ticklength.TotalSeconds.ToString("0") + "s)");
             }
         }
 
@@ -295,6 +297,7 @@ namespace Pulsar4X.Client
                 return;
 
             _timeloop.TimeStep();
+            Pulsar4X.Client.SessionLog.Time("one step (" + _timeloop.Ticklength.TotalSeconds.ToString("0") + "s)");
         }
     }
 }
