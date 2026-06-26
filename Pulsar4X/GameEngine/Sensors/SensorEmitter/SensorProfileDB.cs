@@ -76,6 +76,18 @@ namespace Pulsar4X.Sensors
         //public Dictionary<EMWaveForm, double> EmittedEMSpectra { get; } = new Dictionary<EMWaveForm, double>();
 
         public List<EMData> EmittedEMSpectra = new();
+
+        /// <summary>
+        /// EMCON activity dial (default 1.0): a runtime multiplier on this entity's EMITTED signature, so "how hot
+        /// you run" scales how loud you are. The EMCON processor sets it from posture + reactor load + thrust +
+        /// weapons firing (1.0 = as-designed; &lt;1 = running quiet/dark; &gt;1 = lit up). Applied to the EMITTED
+        /// spectra in <see cref="Pulsar4X.Sensors.SensorTools.AttenuatedForDistance"/>; the REFLECTED (radar return)
+        /// is NOT scaled — going dark doesn't shrink your hull. Default 1.0 so detection is unchanged until the
+        /// EMCON lever drives it. This finishes the dynamic-signature the original author scaffolded (see the
+        /// EMITTED comment above + the inert <see cref="EMData.StateLoad"/>).
+        /// </summary>
+        public double ActivityMultiplier = 1.0;
+
         public SensorProfileDB() { }
 
         public SensorProfileDB(SensorProfileDB db)
@@ -85,6 +97,7 @@ namespace Pulsar4X.Sensors
             EmittedEMSpectra = new List<EMData>( db.EmittedEMSpectra);
             ReflectedEMSpectra = new List<EMData>( db.ReflectedEMSpectra);
             _targetCrossSection = db._targetCrossSection;
+            ActivityMultiplier = db.ActivityMultiplier;
         }
 
         public override object Clone()

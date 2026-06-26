@@ -147,6 +147,7 @@ See `ARCHITECTURE.md` for the full data-flow diagram.
 | Doc | Read it when |
 |-----|--------------|
 | `docs/MVP.md` | **Before adding any feature, or whenever a "good idea" arrives.** Defines the v1 finish line ("you can take a planet") and the scope firewall — what's IN, what's explicitly deferred, and the Parking Lot where ideas wait so they don't derail the build. The thing that stops the game being half-built forever. |
+| `docs/REALISM-VS-GAMEPLAY-AUDIT.md` | **Before building or deepening ANY system — and the companion to MVP.md (scope firewall : weight firewall).** Grades every system EARNS WEIGHT / PRETTY / LATENT by one rule: a mechanic earns its keep only if it's the source of a player DECISION that stacks. Holds the headline finding ("a fidelity showcase, not a decision engine — 95% built, 5% wired"), the verdict board, the "stop feeding the pretty" list, and the ranked **cheap-wiring list** that converts built realism into gameplay. Name the decision before you build the realism. |
 | `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` | **Deciding what to work on next, or before touching any system.** The living map of every system, its status (done/works/partial/dark), its gauge/test, and what it's wired to. Stops reactive pivoting; enforces "work the connected systems too." Also holds the play-by-play test instructions. |
 | `CONVENTIONS.md` | **Before writing any new code.** Pulsar's actual coding idioms (DataBlob copy-ctor/`Clone()`, serialize-one-collection-rebuild-indexes, `TryGet`/sentinel defensiveness, components+`*Atb`, processor auto-discovery). Match these, don't impose your own style. |
 | `docs/aurora/INDEX.md` | Designing any ground-combat or infrastructure mechanic. Aurora 4X is the design spec for systems Pulsar lacks. |
@@ -155,6 +156,7 @@ See `ARCHITECTURE.md` for the full data-flow diagram.
 | `docs/aurora/SPACE-COMBAT-BENCHMARK.md` | Calibrating "the same depth space combat has." |
 | `docs/RESOURCES-AND-MATERIALS-DESIGN.md` | Designing anything touching minerals, materials, production, commerce, research, or NPC economic AI. Full system survey — read before changing any part of the economy. |
 | `docs/DIPLOMACY-DESIGN.md` | Designing anything touching faction relationships, IFF, inter-faction trade, logistics access, NPC doctrine, or diplomatic state. Full system survey — read before adding any cross-faction interaction. |
+| `docs/DETECTION-DESIGN.md` | **Before any sensor/detection/fog-of-war/EMCON work** (M1 lever #1). Survey of the existing (rigorous but unwired) sensor engine + the Keep/Cut/Add design: keep the contact track-table + signature model, hide the EM-spectrum math as gameplay, ADD fog-of-war-in-combat + the EMCON (Active/Dark) posture lever. Holds the "what exists / how it works / how it comes together" and the gauged build sequence. The decision is *dark-vs-loud*, not wavelength tuning. |
 | `docs/COMBAT-DESIGN.md` | The master space-combat design: the eleven required systems (weapon range → auto-resolution → ground-combat interface). Includes the detailed **Fleet Components & Switchable Doctrine** design (Front Line/Flank/Rear Guard/Artillery as sub-fleets, Offensive/Defensive/Utilitarian options, switch cooldown, commander operational discretion, table-based fleet combat UI) under System 4. Read before any combat-system work. |
 | `docs/WEAPONS-AND-DODGE-DESIGN.md` | The combat-**depth** pass (weapon flavors + dodge): the four weapon flavor stats, computed saturation, the dodge hit-fraction, the **weapon triangle** (Beam▸Fighter▸Capital▸Beam + a Missile⟷Flak axis, Fire-Emblem style), and the **aggregate/bucketed** resolve that keeps 100s-of-ships battles cheap. Read before touching weapon types, evasion, or the dodge resolve. |
 
@@ -236,6 +238,30 @@ This is not optional and it is not just for complex tasks. A change that looks l
 **This applies to every subsystem listed in the Subsystem Index, every system in `docs/COMBAT-DESIGN.md`, every column in the game.** Economy connects to industry connects to population connects to research connects to ship production connects to fleet strength. Sensors connect to contact model connects to IFF connects to doctrine connects to auto-resolution. None of these are islands.
 
 **Operationalize this with the systems map — every single time.** `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` is the connection map in table form, and it is not a document you read once. **Whenever you go into a system — to read it, change it, debug it, or even just decide whether to touch it — open the map first, find that system's row, and read its "Connected to" column and every row it points at.** That is the minimum blast radius; the four questions above extend it one hop further. When you finish, move that row's status and "Can we see it?" entry. If you hit a connection the map doesn't list, add it before you continue. The map is only worth keeping if it is consulted and updated on *every* system dive — that discipline is what stops the reactive pivoting that leaves a game half-built.
+
+### Keep / Cut / Add / CONNECT — what you DO with the map (every system, every time)
+
+The Prime Directive tells you to *map* the connections. This is the **action you take with that map whenever you touch any system** — combat, economy, UI, data, anything:
+
+- **Keep** the parts that earn their weight (they're the source of a player decision — `docs/REALISM-VS-GAMEPLAY-AUDIT.md`).
+- **Cut** — or hide behind a legible number — the parts that are "pretty": fidelity nobody acts on.
+- **Add** the missing decision/lever.
+- **Connect** — *the one that matters most* — wire the system into the others and **verify the stacked behavior, in code AND data.** A system is only as done as its connections: detection isn't done when "it detects," it's done when *what you can see decides the fight* (detection × weapons). The **data** half is the same move — when you add a cost/material/tech reference, check the *other end* (gotcha #10): the id is defined, and a starting design's material is stocked. **The real test is always the cross-system stack, never the unit in isolation.**
+  - **Investigate before you wire — every connected system, every time (standing process).** When you touch a system, a flagged connection is a **work item, not a footnote**: go open the files on each system it connects to and produce an **EXISTS / MISSING / NEEDS-CHANGE** ledger (file:line, not assertions) *before* designing the change. This is the half of the Prime Directive that's easy to skip — mapping the connection but not looking at what's on the other end. It routinely overturns assumptions and finds half-built scaffolding to finish instead of rebuild. Worked example: `docs/DETECTION-DESIGN.md` §3c (EMCON traced across the emitter / control-heat / detection systems).
+
+**This is how we improve.** Run Keep/Cut/Add/Connect on a system every time it's touched and the game gets tighter — pretty gets trimmed, levers get added, and the connections that turn "100 simple systems" into a *stacking* game get built and verified. Worked example: `docs/DETECTION-DESIGN.md` §3.
+
+### Cradle to Grave — a system is real only if the player can reach it through the whole chain
+
+**Connect is lateral (system × system). This is Connect made VERTICAL, and it is the acceptance test for "is this actually in the game":** every capability must be reachable and shaped by the player through the **full chain — from the mineral in the ground, to the decision on the battlefield, to the loss when it's destroyed.** Nothing is parachuted in as an engine abstraction the player can't research, build, deploy, or lose.
+
+The chain (both ways):
+
+> **mineral** (mined) → **material** (refined) → **production** (built at a colony) → **component** (designed in the designer) → gated by **research** (tech unlocks what you can design) → installed on a **unit/building** → the **in-play decision** (the lever) → **damaged/destroyed** (a component-level loss that *matters* — you re-research / re-mine / re-build).
+
+This is **why** `CONVENTIONS.md` §6 ("abilities are components — do NOT invent parallel systems") is the law: modeling a capability as a component is exactly what gets you research-gating, construction-from-materials, save/load, and the design UI **for free** — i.e. it is what makes the capability *accessible from the base layer*. A capability that's a bespoke engine flag the player can't research/build/lose **fails cradle-to-grave** — the "pretty" disease, vertical.
+
+**The acceptance test, every system, every time:** trace it cradle to grave — name the mineral, the material, the component, the research, the unit/building, the decision, and the loss. A missing rung is a design gap to fill (or a deliberate, written deferral), never a thing to skip. Worked example: `docs/DETECTION-DESIGN.md` — a sensor is a **component** (designed / researched / built / installed); the heat/active/fog *posture* is the **order**; a **destroyed** sensor blinds you (the grave rung, which wires detection to the damage system).
 
 ---
 
