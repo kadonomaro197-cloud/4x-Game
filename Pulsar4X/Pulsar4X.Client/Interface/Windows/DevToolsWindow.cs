@@ -7,6 +7,7 @@ using Pulsar4X.Client.Interface.Widgets;
 using Pulsar4X.Engine;
 using Pulsar4X.Datablobs;
 using Pulsar4X.Factions;
+using Pulsar4X.Movement;
 using Pulsar4X.Names;
 using Pulsar4X.Ships;
 using Pulsar4X.Fleets;
@@ -149,7 +150,20 @@ namespace Pulsar4X.Client
 
             DevLog($"STATE DUMP — playerFaction={pf}: {ships.Count} ship(s), {fleets.Count} fleet(s) in this system");
             foreach (var sh in ships)
-                DevLog($"  ship  id={sh.Id} '{GetEntityName(sh)}' faction={sh.FactionOwnerID}");
+            {
+                // Position gauge for the "ships teleport to the Sun" bug. sun-dist = the ship's distance from the
+                // system origin (the Sun) in Gm (millions of km); Earth orbit ≈ 150 Gm. A ship reading ≈ 0 has
+                // moved to the Sun in ENGINE state; if it reads ≈ 150 but still DRAWS at the Sun, it's render-only.
+                // parent = what its position hangs off (Earth normally; null/INVALID = the anchor broke).
+                string posStr = "no-PositionDB";
+                if (sh.TryGetDataBlob<PositionDB>(out var p))
+                {
+                    var parent = p.Parent;
+                    string parentStr = parent == null ? "ROOT/null" : (parent.IsValid ? GetEntityName(parent) : "INVALID");
+                    posStr = $"sun-dist={p.AbsolutePosition.Length() / 1e9:0.##}Gm parent={parentStr}";
+                }
+                DevLog($"  ship  id={sh.Id} '{GetEntityName(sh)}' faction={sh.FactionOwnerID} {posStr}");
+            }
             foreach (var fl in fleets)
                 DevLog($"  fleet id={fl.Id} '{GetEntityName(fl)}' faction={fl.FactionOwnerID}");
 
