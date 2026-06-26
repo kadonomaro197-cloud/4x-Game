@@ -1,6 +1,8 @@
 using System.Linq;
 using NUnit.Framework;
 using Pulsar4X.Combat;
+using Pulsar4X.Components;
+using Pulsar4X.Datablobs;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
 using Pulsar4X.Fleets;
@@ -315,6 +317,63 @@ namespace Pulsar4X.Tests
                 CombatEngagement.Tick(s.StartingSystem, 5);
                 Assert.That(playerFleet.HasDataBlob<FleetCombatStateDB>(), Is.True, "once detected, hostiles engage — detection x weapons");
                 Assert.That(enemyFleet.HasDataBlob<FleetCombatStateDB>(), Is.True);
+            }
+            finally
+            {
+                CombatEngagement.RequireDetectionToEngage = false; // never leak the static flag to other tests
+            }
+        }
+
+        [Test]
+        [Description("First-strike (detection slice 5): the side that sees first shoots first. Two EQUAL armed " +
+                     "fleets, but the enemy is BLINDED (its sensors shot off — the grave-rung path), so the player " +
+                     "detects it while it stays blind. With fog of war on, the player wipes it taking ZERO losses — " +
+                     "the blind fleet never returns fire. Equal forces firing both ways would be mutual destruction, " +
+                     "so 'player intact, enemy wiped' is the proof. Composes detection × grave-rung × weapons.")]
+        public void FirstStrike_SeerWipesBlindEnemy_Unscathed()
+        {
+            var s = TestScenario.CreateWithColony();
+            ClearExistingFleets(s); // clean two-fleet matchup
+            var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+
+            // EQUAL fleets: same firepower + toughness. The enemy CAN fire (it has the guns) — it just can't SEE.
+            var playerFleet = MakeFleet(s, s.Faction, "Blue Fleet");
+            var watcher = AddSensingShip(s, s.Faction, playerFleet, "Blue 1");
+            var enemyFleet = MakeFleet(s, enemyFaction, "Red Fleet");
+            var bogey = AddSensingShip(s, enemyFaction, enemyFleet, "Red 1");
+
+            // Blind the enemy: shoot its sensor receivers off (the grave-rung path) so it cannot detect anyone.
+            var comps = bogey.GetDataBlob<ComponentInstancesDB>();
+            comps.TryGetComponentsByAttribute<SensorReceiverAtb>(out var receivers);
+            foreach (var r in receivers.ToList())
+                comps.RemoveComponentInstance(r);
+            ReCalcProcessor.ReCalcAbilities(bogey);
+
+            RunSensorScan(s);
+
+            // Preconditions: the player DETECTS the enemy (so it can open fire), and the enemy is genuinely BLIND
+            // (no working receivers — it still emits a signature, so it can be seen, but it can't see).
+            Assert.That(s.StartingSystem.GetSensorContacts(s.Faction.Id).SensorContactExists(bogey.Id), Is.True,
+                "the player must detect the blinded enemy (it still emits)");
+            Assert.That(bogey.GetDataBlob<SensorAbilityDB>().InstanceStates.Count, Is.EqualTo(0),
+                "the enemy must be blind — its sensor receivers were shot off");
+
+            CombatEngagement.RequireDetectionToEngage = true;
+            try
+            {
+                CombatEngagement.StartEngagement(playerFleet, enemyFleet);
+                int steps = 0;
+                for (; steps < 1000 && playerFleet.HasDataBlob<FleetCombatStateDB>(); steps++)
+                    CombatEngagement.StepEngagement(playerFleet, enemyFleet, 5);
+
+                Log($"first-strike resolved in {steps} steps; player={CombatEngagement.GetFleetShips(playerFleet).Count} " +
+                    $"enemy={CombatEngagement.GetFleetShips(enemyFleet).Count}");
+
+                Assert.That(CombatEngagement.GetFleetShips(enemyFleet).Count, Is.EqualTo(0),
+                    "the blind enemy is wiped — it's being shot and can't see to shoot back");
+                Assert.That(CombatEngagement.GetFleetShips(playerFleet).Count, Is.EqualTo(1),
+                    "the player takes ZERO losses — first-strike: a blind fleet never returns fire (equal forces both firing would be mutual kill)");
+                Assert.That(watcher.IsValid, Is.True, "the player's ship survives unscathed");
             }
             finally
             {
