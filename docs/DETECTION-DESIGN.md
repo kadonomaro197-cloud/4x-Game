@@ -112,12 +112,25 @@ The rigorous EM physics stays the **under-the-hood number** the heat/sensor mode
 5. **Multi-purpose sensor components in M1?** Build military-detection + heat + active/passive now, and leave **cloud-penetration / "why am I blind" / survey-habitability** as *architected-but-unbuilt seams* (they need obscuring hazards / the colonization layer to connect to). Rec: **yes — seams now, content when their connections exist** (see §3a).
 6. **EW/jamming stays parked?** Rec: yes.
 
-## 6. Build sequence (once §3/§5 are signed off) — each a bounded, gauged slice
+## 6. Build sequence — CRADLE TO GRAVE, each a bounded gauged slice (once §3/§5 signed off)
 
-1. **Gauge the engine** ✅ **DONE (CI-green, `666d555`)** — a fleet detects a hostile fleet; Sensors DARK → verified.
-2. **Fog-of-war seam — THE real test (detection × weapons).** The battle trigger consumes the track table (`GetSensorContacts`) instead of raw entities; an undetected hostile doesn't engage. CI-gauge: out-of-range hostile → no battle; detected → battle. Slice 1 ("it detects") was only the precondition — *this* is where detection earns its weight by changing combat. *(Engine-side, I can do solo.)*
-3. **The heat lever** — a `FleetEmconDB` / heat-state that scales your **emitted signature** (and is nudged by activity), reusing the existing signature model; plus the active-ping-exposes-you coupling. CI-gauge: a **cold** ship is detected at *shorter* range than a **hot** one (you're harder to see when cold), while a cold ship still detects a hot one at long range (your own heat doesn't reduce how far you *see*) — the asymmetry is the gameplay. *(Engine-side.)*
-4. **First-strike falls out** — verify the detected-first side gets the interrupt/initiative; gauge the asymmetry. *(Engine-side.)*
-5. **UI** — contacts as blips, EMCON toggle, range ring. *(Your local build; CI can't see the client.)*
+First the **cradle-to-grave trace** — the acceptance test (root `CLAUDE.md` → "Cradle to Grave"): name every rung and mark what exists vs. needs building. Detection rides the component architecture (`CONVENTIONS.md` §6), so most rungs are *there*:
 
-Slices 1–4 are engine + CI (I build, CI proves); slice 5 is yours at the keyboard. We do them in order, one at a time, each green before the next.
+| Rung | Detection's version | Status |
+|---|---|---|
+| **mineral → material → production** | sensor/EMCON components cost materials, built at a colony | exists, but on **raw minerals** — the refined-material rung is **economy lever #1's job (shared)** |
+| **component (designed)** | `SensorReceiverAtb` + a new signature/**EMCON** `*Atb`, in the component designer | sensor ✓; an EMCON/signature-reduction component = **ADD** |
+| **research-gated** | the **sensors** tech category gates sensor/EMCON designs | category exists ✓; tie new EMCON designs to it |
+| **installed on unit/building** | sensors sit on ships (and can on stations) | ✓ |
+| **in-play decision** | fog-of-war + heat/active **posture** (a fleet ORDER like doctrine; capability *bounded by the components*) | **ADD** |
+| **grave (loss)** | a **destroyed sensor component blinds you** — detection × damage | **ADD** (wires to the damage system) |
+
+The slices, in order:
+1. **Gauge the engine** ✅ **DONE (`666d555`)** — a fleet detects a hostile fleet; Sensors DARK → verified.
+2. **Fog-of-war seam — THE real test (detection × weapons).** The battle trigger consumes the track table (`GetSensorContacts`) instead of raw entities; an undetected hostile doesn't engage. CI-gauge: out-of-range hostile → no battle; detected → battle. *(Engine-side.)*
+3. **Heat/EMCON as COMPONENTS + a posture ORDER.** The *capability* (signature level, run-silent, active-ping) lives on **components** (researched/built/installed — §6 hands you that chain free); the *choice* is a fleet order (`FleetEmconDB`, like doctrine). Make the signature **dynamic**. CI-gauge: a cold ship is detected at shorter range than a hot one, AND a fleet with a better EMCON component runs quieter — capability comes from the components, *not a free flag*. *(Engine-side.)*
+4. **Grave rung — a destroyed sensor blinds you.** Lose your sensor components → you drop out of the track-table game (detection × damage). CI-gauge: kill the sensor component → that faction's contacts go dark. *(Engine-side.)*
+5. **First-strike falls out** — the detected-first side gets the interrupt/initiative; gauge the asymmetry. *(Engine-side.)*
+6. **UI** — contacts as blips, the EMCON order, range ring, and the sensor/EMCON **component in the designer** (research → build). *(Your local build; CI can't see the client.)*
+
+Engine slices (2–5) I build + CI proves; the UI (6) is yours. One at a time, each green before the next. **The one shared rung** — sensor/EMCON components costing **refined** materials — lands with economy lever #1; until then they ride the existing raw-mineral cost (a *flagged, deliberate* gap, not a skip).
