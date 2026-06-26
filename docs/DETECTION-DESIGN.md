@@ -78,7 +78,18 @@ The sensor subsystem (`GameEngine/Sensors/`) is **one of the most complete in th
 
 ## 3a. Sensors are COMPONENTS — the multi-purpose design space (sequenced by Connect)
 
-Sensors aren't one knob; they're **components you design and tune**, and the sci-fi design space is real and *applicable here*. Per Connect, each purpose earns its keep only once the thing it connects to exists — so we **architect the component layer to accept all of them, and build each when its connection is live:**
+Sensors aren't one knob; they're **components you design and tune**. Per the developer (2026-06-26), the design space is **FOUR sensor flavors** — distinct components with distinct use cases:
+
+| Flavor | What it's for | The tradeoff (must be real, or it's menu-bloat) | Connects to | Status |
+|---|---|---|---|---|
+| **Long-range** | early warning — spot the hot enemy from far | far reach, **coarse** (low quality/ID), heavier/pricier | combat (the picture) — **now** | a tuned variant of the existing `passive-sensor` |
+| **Short-range** | fire-control-grade detail up close | **sharp** (high quality/ID), short reach, cheap/light | combat (targeting) — **now** | `passive-sensor` variant |
+| **Detection** | the general-purpose military sensor | balanced middle | combat — **now** | the existing `passive-sensor` itself |
+| **Survey** | read planets/bodies (habitability, minerals) — *not* ships | a different job entirely (no combat use) | survey → mining/colonization | **already exists**: `geo-surveyor` + `gravitational-surveyor` components |
+
+So **3 of the 4 are military-detection variants** that connect to weapons now (the `passive-sensor` is the seed; long-vs-short is a genuine reach↔detail trade that stacks with the heat model — a long-range picket spots a hot fleet first, a short-range sensor gives the firing solution); **the 4th (survey) already exists** and connects to the survey/mining mechanic. All four are cradle-to-grave-grounded *today* (components, researched, built). **The caveat that keeps it honest:** each flavor must be a *distinct decision* (real reach/quality/cost trades), not four near-identical sensors.
+
+Under those flavors sit the underlying *capabilities/purposes*, sequenced by Connect — build each only once the thing it connects to exists:
 
 | Sensor purpose | What it is | Connects to | Build when |
 |---|---|---|---|
@@ -127,7 +138,7 @@ First the **cradle-to-grave trace** — the acceptance test (root `CLAUDE.md` �
 
 The slices, in order:
 1. **Gauge the engine** ✅ **DONE (`666d555`)** — a fleet detects a hostile fleet; Sensors DARK → verified.
-2. **Fog-of-war seam — THE real test (detection × weapons).** The battle trigger consumes the track table (`GetSensorContacts`) instead of raw entities; an undetected hostile doesn't engage. CI-gauge: out-of-range hostile → no battle; detected → battle. *(Engine-side.)*
+2. **Fog-of-war seam — THE real test (detection × weapons). ✅ BUILT (CI pending).** The battle trigger now gates on the track table (`CombatEngagement.RequireDetectionToEngage` + `FleetDetects` reading `GetSensorContacts`) — two hostile fleets engage only if they DETECT each other (v1 = mutual; ambush asymmetry is a later slice). Behind a default-off flag (like the interrupt) so existing combat fixtures stay deterministic; **off in the client too** until live-tested. Gauge: `BattleTriggerTests.Tick_RequireDetection_NoBattleUntilDetected` — no scan → no battle; scan → battle. *(Engine-side.)*
 3. **Heat/EMCON as COMPONENTS + a posture ORDER.** The *capability* (signature level, run-silent, active-ping) lives on **components** (researched/built/installed — §6 hands you that chain free); the *choice* is a fleet order (`FleetEmconDB`, like doctrine). Make the signature **dynamic**. CI-gauge: a cold ship is detected at shorter range than a hot one, AND a fleet with a better EMCON component runs quieter — capability comes from the components, *not a free flag*. *(Engine-side.)*
 4. **Grave rung — a destroyed sensor blinds you.** Lose your sensor components → you drop out of the track-table game (detection × damage). CI-gauge: kill the sensor component → that faction's contacts go dark. *(Engine-side.)*
 5. **First-strike falls out** — the detected-first side gets the interrupt/initiative; gauge the asymmetry. *(Engine-side.)*
