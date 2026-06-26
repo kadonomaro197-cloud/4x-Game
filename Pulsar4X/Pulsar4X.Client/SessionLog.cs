@@ -41,6 +41,56 @@ namespace Pulsar4X.Client
         public static void Drag(string m)   => Line("DRAG", m);
         public static void State(string m)  => Line("STATE", m);
 
+        // ── Hang watchdog ──────────────────────────────────────────────────────────────────────────────────
+        // The per-event ([InputError]) and per-draw ([RenderError]) nets only catch THROWS on the main thread. A
+        // FREEZE — the main loop stuck in a long or infinite operation — throws nothing: the log just stops, which
+        // reads identically to a crash (this is the 2026-06-26 "no trace anywhere" case). This watchdog runs on its
+        // OWN thread, so it keeps logging even while the main thread is wedged: PostFrameUpdate stamps _lastFrameTick
+        // every frame; if that stamp goes stale by more than HangThresholdMs, the main loop is hung and we write a
+        // [HANG] line ONCE (it re-arms if the loop recovers). The lines just ABOVE the [HANG] are where it wedged.
+        static volatile int _lastFrameTick;
+        public static int HangThresholdMs = 5000;   // a single "frame" this long = frozen, not just a slow tick
+
+        /// <summary>Called once per frame by the render loop — stamps "the main loop is still alive" for the watchdog.</summary>
+        public static void FrameTick() => _lastFrameTick = Environment.TickCount;
+
+        /// <summary>Start the background hang watchdog (a daemon thread; call once at startup). It cannot catch a
+        /// hard native crash that kills every thread at once, but it WILL name a freeze the main thread is stuck in.</summary>
+        public static void StartHangWatchdog()
+        {
+            _lastFrameTick = Environment.TickCount;
+            try
+            {
+                var t = new System.Threading.Thread(() =>
+                {
+                    bool reported = false;
+                    while (true)
+                    {
+                        try { System.Threading.Thread.Sleep(1000); } catch { }
+                        int stall = Environment.TickCount - _lastFrameTick;
+                        if (stall >= HangThresholdMs)
+                        {
+                            if (!reported)
+                            {
+                                Line("HANG", "main loop STALLED ~" + (stall / 1000) + "s (frozen, or stuck in a long native/render call) — "
+                                    + "the lines just above this are where it wedged");
+                                reported = true;
+                            }
+                        }
+                        else if (reported)
+                        {
+                            Line("HANG", "main loop recovered after the stall");
+                            reported = false;
+                        }
+                    }
+                });
+                t.IsBackground = true;   // never blocks process exit
+                t.Name = "Pulsar4X-HangWatchdog";
+                t.Start();
+            }
+            catch (Exception e) { Line("HANG", "watchdog failed to start: " + e.Message); }
+        }
+
         /// <summary>
         /// Periodic "situation snapshot" written every few seconds even when the player isn't doing anything —
         /// the equivalent of a watch-stander logging the gauges each round. Records the game clock, whether time

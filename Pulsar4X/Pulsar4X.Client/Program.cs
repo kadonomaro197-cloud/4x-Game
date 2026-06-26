@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using Pulsar4X.Client;
 
 // Route all Console and Trace output to the session log so every session is recordable. Per the developer: keep
@@ -47,6 +48,28 @@ using (logWriter)
     Console.SetError(logWriter);
     Trace.Listeners.Add(new TextWriterTraceListener(logWriter, "fileLog"));
     Trace.AutoFlush = true;
+
+    // Last-resort crash net: an unhandled exception — often on a BACKGROUND thread, which the per-event
+    // ([InputError]) and per-draw ([RenderError]) MAIN-thread nets don't cover — used to terminate the process
+    // leaving NOTHING in the rotating pages. Route it to the pages as [FATAL] and FLUSH before death, so the trace
+    // is always in the log a remote review reads. (A hard native SDL/GL access violation still can't be caught in
+    // managed code; the [HANG] watchdog narrows those by stall instead.)
+    AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+    {
+        try
+        {
+            Console.WriteLine("[FATAL] unhandled exception (process is terminating):");
+            Console.WriteLine((e.ExceptionObject as Exception)?.ToString() ?? ("" + e.ExceptionObject));
+            Console.Out.Flush();
+        }
+        catch { }
+    };
+    TaskScheduler.UnobservedTaskException += (s, e) =>
+    {
+        try { Console.WriteLine("[FATAL] unobserved background-task exception: " + e.Exception); Console.Out.Flush(); e.SetObserved(); }
+        catch { }
+    };
+    SessionLog.StartHangWatchdog();
 
     Console.WriteLine($"=== Pulsar4X session started {DateTime.Now:yyyy-MM-dd HH:mm:ss} ===");
     Console.WriteLine($"Log: {logTarget}");
