@@ -101,6 +101,29 @@ Under those flavors sit the underlying *capabilities/purposes*, sequenced by Con
 
 The rule that keeps this from ballooning: **don't build a sensor purpose until the system it connects to is live.** A "see-through-the-cloud" sensor with no clouds is the definition of *pretty*. So M1 builds the two purposes that connect to weapons today; the rest are **component-type seams we design now and fill when their partners exist** — that's how the rich design space lands without half-building it.
 
+## 3b. EMCON — the variables, traced (variable → system? → player can tweak? → player cares?)
+
+EMCON is **not one variable** ("how hot you run") — it's a cluster of emitter systems you already own. Run each through the checklist (this is cradle-to-grave + earns-its-weight as a question set — *the standing way to think about any feature*):
+
+| Variable (makes you loud / lets you see) | System behind it — exists? | Player can tweak? | Would the player care? (the decision) | Verdict |
+|---|---|---|---|---|
+| **Thrust / burn** | engine component + the move order | design (engine) + **play (burn vs coast)** | YES — close fast & light up, or coast cold & sneak | **BUILD** (headline) |
+| **Reactor output** | reactor — *already* the signature driver (`SensorSignatureAtb` = reactor CoreOutput), but **static** today | design (reactor) + **play (throttle / run-silent)** | YES — bigger reactor = more guns/sensors but louder | **BUILD** (make dynamic) |
+| **Weapons firing** | weapon component + fire state | design + **play (fire vs hold)** | YES — the first shot gives away the ambush | **BUILD** |
+| **Active sensors** | active-sensor component + active/passive toggle | design + **play (ping vs quiet)** | YES — light the room to find the cold guy, get seen | **BUILD** |
+| **Sensor reach vs detail** | the receiver (the 4 flavors, §3a) | **design** | YES — picket sees far/coarse; short-range gives the firing solution | **BUILD** |
+| **EMCON posture** | a fleet order (new) — master switch over the four above | **play** | YES — the one dark/loud lever | **BUILD** (the lever) |
+| **Hull cross-section** | ship size (`TargetCrossSection` from radius) — exists | design (sized for other reasons) | passively — a capital is *inherently* a beacon | **KEEP** (falls out; no dial) |
+| **Range / distance** | position + movement (inverse-square) | play (where you sit) | YES, but automatic | **KEEP** (core mechanic; no dial) |
+| **Heat sinks / radiators** | a thermal-store component — *likely absent* | design (if built) | YES — run hot, stay cold, dump heat after the strike | **LATENT** (new component) |
+| **Stealth coatings / RAM** | per-band absorption (substrate exists) → a material/hull flavor | design (a stealth hull) | YES — a real stealth-ship design tradeoff | **LATENT** (material flavor) |
+| **Environmental masking** | star emissions modeled; masking + clouds aren't | play (lurk near a star / in a cloud) | YES — positional stealth | **LATENT** (cloud/hazard seam) |
+| **Contact quality** | sensor resolution (0–1, exists) | design | a little — ID detail | **KEEP-as-flavor** v1; deepen later |
+
+**Insight:** the four emitters (engine / reactor / weapons / active-sensor) are **existing components** — so EMCON is *wiring their activity into a dynamic signature + one posture order*, **not a new system** (cradle-to-grave by construction; the reactor is *already* the signature driver). Today the signature is a **static** design number; **making it dynamic (thrust on, guns firing, sensors active → louder) is the actual build.** The "would the player care" filter split the cluster cleanly: emitters + sensor flavor + posture = *felt* decisions (build); cross-section + range = *automatic* (keep, no dial — a "cross-section slider" would be pretty); heat sinks / coatings / masking = real depth but **latent** until their systems exist.
+
+**So slice 3 = make the signature DYNAMIC from the four emitters' activity + add the EMCON posture order (the master dark/loud switch).** Open call: one bundled posture (**Full / Cruise / Silent** — the Navy EMCON condition) vs. four separate switches. *Lean: bundled — one legible knob — with the rule that **firing weapons always lights you up** regardless (you can't shoot quietly).*
+
 ## 4. How it all COMES TOGETHER (the target)
 
 One sentence: **how hot you run sets how far you're SEEN (and how fast/ready you are); how far you SEE is the target's heat × your sensors; combat only acts on what you detect — so a cold ship that spots a hot one first owns the engagement.**
