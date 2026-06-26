@@ -55,6 +55,10 @@ namespace Pulsar4X.Client
             _state = new GlobalUIState(this);
             _state.GalacticMap = new GalacticMapRender(this, _state);
 
+            // Narrate live battles to game_log.txt ([Combat] lines) so a fight is visible in the log, not just the
+            // Fleet Combat tab. Off by default in the engine (keeps the timed battle tests fast); on for the game.
+            Pulsar4X.Combat.CombatEngagement.NarrateToLog = true;
+
             try
             {
                 string? appDataDirectory = GetAppDataPath();
