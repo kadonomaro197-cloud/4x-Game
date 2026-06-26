@@ -34,6 +34,32 @@ namespace Pulsar4X.Client
         public static void State(string m)  => Line("STATE", m);
 
         /// <summary>
+        /// Periodic "situation snapshot" written every few seconds even when the player isn't doing anything —
+        /// the equivalent of a watch-stander logging the gauges each round. Records the game clock, whether time
+        /// is running or paused, the time step, what's currently selected, and how many ships are in the viewed
+        /// system. So if a freeze or oddity happens between clicks, the log still shows the state right up to it.
+        /// Caller passes the pieces it already has in hand; null/empty are tolerated.
+        /// </summary>
+        public static void Heartbeat(Game game, StarSystem system, string selectedName)
+        {
+            if (!Enabled || game == null) return;
+            try
+            {
+                var tp = game.TimePulse;
+                int shipCount = system != null ? system.GetAllEntitiesWithDataBlob<ShipInfoDB>().Count : 0;
+                Line("STATE", "heartbeat t=" + tp.GameGlobalDateTime.ToString("yyyy-MM-dd HH:mm")
+                    + " " + (tp.IsRunning ? "RUNNING" : "paused")
+                    + " step=" + tp.Ticklength.TotalSeconds.ToString("0") + "s"
+                    + " selected=" + (string.IsNullOrEmpty(selectedName) ? "(none)" : selectedName)
+                    + " ships-in-view=" + shipCount);
+            }
+            catch (Exception e)
+            {
+                Line("STATE", "heartbeat failed: " + e.Message);
+            }
+        }
+
+        /// <summary>
         /// Dump every ship in a system: distance from the Sun (the system origin) in Gm (millions of km) + the
         /// entity its position hangs off. This is the "teleport" gauge — a ship reading ~0 Gm, or parent
         /// ROOT/null/INVALID, has detached from its anchor and will draw on the Sun. Earth orbit ≈ 150 Gm.

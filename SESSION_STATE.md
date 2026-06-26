@@ -508,3 +508,23 @@ Live: player added a battleship to a military fleet, ordered it to Luna (enemy p
 **My crash-catcher was masking it (fixed).** The coarse whole-map `SafeRender` meant one NaN coordinate (a mid-warp position → `Convert.ToInt32` overflow in a transit icon) aborted the rest of the map draw → orbit/transit lines drawn, ship icons + labels gone = the exact "stuck lines, ships missing" picture. Pushed the guard down to **per-item** (`SystemMapRendering.SafeDraw`) so one bad icon is skipped + named in the log (`[RenderError] map item '<Type>'`) and the rest of the map renders. (Client CLAUDE.md gotcha #12.)
 
 **To capture the precise culprit:** on the new build, reproduce exactly — add a ship to a fleet, order the fleet to **Luna**, advance **1 hour** — then send `game_log.txt`. A `[RenderError] map item 'WarpMoveOrderWidget'/'TransitIcon' …` line (if any) names the NaN source. **Open root-cause fix (needs developer OK — it's pre-existing warp physics, out of the combat scope):** gate `WarpMoveProcessor`'s reparent so an intra-system hop doesn't detach to the star, and/or NaN-guard the icon coordinate before `Convert.ToInt32`. Not changing warp blind.
+
+### Session recorder — "an exact play-by-play of my experience" (built 2026-06-26)
+
+The developer asked to **re-route the game log into the repo folder and log literally everything** — ship positions, game speed, star positions, every click, drag-select — so the log alone tells the story without a reproduce-and-capture loop. Built as `Pulsar4X.Client.SessionLog` (`Pulsar4X.Client/SessionLog.cs`), a small static "flight recorder." Every line is **flushed immediately**, so a freeze/crash still leaves the trail right up to the instant it stopped.
+
+**Log location re-routed:** `Program.cs` now writes `game_log.txt` to the **repo root** (next to `console_output.txt`/`launch.bat`), not `%AppData%` — it walks up from the running exe to the folder holding `.git`/`launch.bat`. (This is the runtime log; `console_output.txt` is still the build log `launch.bat` produces.)
+
+**What gets recorded** (categories keep it greppable: `[ACTION] [VIEW] [TIME] [CAMERA] [SELECT] [DRAG] [STATE]`):
+- **Time controls** — pause / play / one-step, with the step size (`TimeControl.cs`). `[TIME]`
+- **Camera** — pan + zoom, **throttled to ~400 ms** so a drag doesn't bury the log (`SystemMapRendering.cs`). `[CAMERA]`
+- **Selection** — every entity click: button, name, entity id, owning faction (`GlobalUIState.EntityClicked`). `[SELECT]`
+- **View / faction switch** — plus an automatic ship-position dump on every switch (`GlobalUIState.SetFaction`). `[VIEW]`+`[STATE]`
+- **Heartbeat** — a situation snapshot every **~3 s** (wall-clock, so it's steady at any game speed): game clock, running/paused, step, current selection, ship count in view (`PulsarMainWindow.PostFrameUpdate` → `SessionLog.Heartbeat`). `[STATE]`
+- **Teleport gauge** — `SessionLog.DumpShipPositions` logs each ship's Sun-distance (Gm) + its position parent; `parent=ROOT/null/INVALID` or `sun-dist≈0` is the "detached, will draw on the Sun" tell. This is the read-back for the warp/Sun-jump bug above.
+
+**Two honest limits noted to the developer:**
+1. **There is no drag-box / marquee multi-select in the game** — the map hit-tests one entity per click; a mouse-drag *pans the camera* (logged as `[CAMERA]`). The `[DRAG]` category is wired and ready *if* rubber-band select is ever built; right now nothing emits it. Building real drag-select is a separate feature, not a log hook.
+2. **CI can't build the client**, so these hooks are unverified until the developer's local `dotnet build`. They were written defensively (the heartbeat is wrapped in `SafeRender` because `SelectedSystem` throws when nothing is selected), but a typo would only surface in the Windows build.
+
+**Pull + test:** `git pull origin claude/focused-ritchie-debock` → `dotnet build Pulsar4X/Pulsar4X.sln` → run via `launch.bat`. Play normally for a minute, then **fully close the game** and open `game_log.txt` in the repo root — it should read like a transcript (`[TIME] play`, `[SELECT] Primary click on 'Earth'`, `[CAMERA] zoom`, `[STATE] heartbeat …`). If the build breaks, paste the error block and I'll fix. Full recorder reference is in `Pulsar4X.Client/CLAUDE.md` gotcha #13.
