@@ -132,31 +132,30 @@ namespace Pulsar4X.Combat
         }
 
         /// <summary>
-        /// Read-only pre-step gate for the time loop: is a battle ALREADY underway, or about to start, in this
-        /// star system right now? True if any fleet here holds a <see cref="FleetCombatStateDB"/> (fighting), or
-        /// any two hostile fleets with ships sit within <see cref="EngagementRange_m"/> (the trigger would engage
-        /// them on its next pass). The master time loop calls this to decide whether to advance the clock in FINE
-        /// sub-steps so a brand-new battle can halt time at first contact — otherwise one coarse step (the default
-        /// is a whole game-hour) resolves the entire fight before the halt is honoured. Mirrors the engage/join
-        /// pass of <see cref="Tick"/> but mutates NOTHING. O(fleets^2); fleet counts are small. Defensive — never
-        /// throws on normal state.
+        /// Read-only pre-step gate for the time loop: is a brand-NEW engagement about to fire in this star system
+        /// on the next trigger pass? True iff some hostile pair, both with ships, sits within
+        /// <see cref="EngagementRange_m"/> AND at least one of them is NOT already in combat — because
+        /// <see cref="EnsureInCombat"/> is guarded, so it (and the time-halt it requests) only fires for a fleet
+        /// that lacks <see cref="FleetCombatStateDB"/>. So this reads TRUE at first contact and when a fresh fleet
+        /// JOINS a fight, and FALSE once every in-range hostile is already mutually engaged.
         ///
-        /// LIMIT (v1): gates on present, in-range state only. A fleet that warps in from out of range AND fights
-        /// inside a single coarse step is still resolved coarsely (a lookahead that predicts closing is a v2
-        /// layer). The common case — fleets already parked together, e.g. at the same body — is fully covered.
+        /// That last part is deliberate and is the whole point of the narrow test: the master time loop only drops
+        /// to fine sub-steps while this is true — just long enough to land the auto-pause at the new engagement —
+        /// and then hands the clock back at the player's chosen step size for the ONGOING exchange. So combat runs
+        /// at the speed you set (1 s, 10 min, 1 hr), and the engine only "takes the wheel" for the split second a
+        /// fight is being born so you are never blindsided by its START. Mirrors the engage/join pass of
+        /// <see cref="Tick"/> but mutates NOTHING. O(fleets^2); fleet counts are small. Defensive — never throws.
+        ///
+        /// LIMIT (v1): gates on present, in-range state only. A fleet that crosses from out of range to engaged
+        /// inside a single step (e.g. a long warp resolved under a big step) is still resolved without a pause —
+        /// a closing-prediction lookahead is a v2 layer. The common case — fleets already parked together, e.g. at
+        /// the same body, or a player stepping carefully through a battle — is fully covered.
         /// </summary>
-        public static bool CombatActiveOrImminent(EntityManager manager)
+        public static bool NewEngagementImminent(EntityManager manager)
         {
             var fleets = manager.GetAllEntitiesWithDataBlob<FleetDB>();
             if (fleets.Count == 0) return false;
 
-            // Already fighting: any in-combat fleet keeps time fine-grained so the player can watch/step the salvos.
-            for (int i = 0; i < fleets.Count; i++)
-                if (fleets[i].IsValid && fleets[i].HasDataBlob<FleetCombatStateDB>())
-                    return true;
-
-            // About to fight: any two hostile fleets, both with ships, within engagement range. SAME test the
-            // engage pass uses, so the gate flips true exactly on the step the trigger would start the battle.
             for (int i = 0; i < fleets.Count; i++)
             {
                 var a = fleets[i];
@@ -168,7 +167,11 @@ namespace Pulsar4X.Combat
                     if (!AreHostile(a, b)) continue;
                     if (GetFleetShips(b).Count == 0) continue;
                     if (!InRange(a, b)) continue;
-                    return true;
+                    // In range + hostile + both manned. If EITHER isn't yet in combat, a new entry — and so the
+                    // interrupt — fires this tick. If both are already engaged, this pair is an ONGOING fight and
+                    // does NOT force fine-stepping, so the player keeps their set step size for it.
+                    if (!a.HasDataBlob<FleetCombatStateDB>() || !b.HasDataBlob<FleetCombatStateDB>())
+                        return true;
                 }
             }
             return false;
