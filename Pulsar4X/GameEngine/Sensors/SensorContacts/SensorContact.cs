@@ -27,6 +27,20 @@ namespace Pulsar4X.Sensors
 
         public string Name = "UnNamed";
 
+        // ── UI read-only accessors ─────────────────────────────────────────────────────────────────────────
+        // The client is a SEPARATE assembly and can't reach the internal detection fields (SensorInfoDB's quality
+        // struct, SensorPositionDB's source flag). SensorContact lives in the engine, so it CAN — expose just what
+        // the map blip needs to draw "the information you have, which varies." Computed; never serialized.
+        /// <summary>TRUE once the detected entity is gone and we're coasting on its last-known ("memory") position —
+        /// the grave rung: you see where it WAS, not where it is. The map draws these faded as "(last known)".</summary>
+        [System.Text.Json.Serialization.JsonIgnore, Newtonsoft.Json.JsonIgnore]
+        public bool PositionIsMemory => Position != null && Position.GetDataFrom == DataFrom.Memory;
+
+        /// <summary>Latest detected signal strength (kW): the loudness of the return — falls off with distance, rises
+        /// with the target's signature/EMCON. The map scales the blip by it (louder = bolder). 0 if not yet scanned.</summary>
+        [System.Text.Json.Serialization.JsonIgnore, Newtonsoft.Json.JsonIgnore]
+        public double SignalStrength_kW => SensorInfo != null ? SensorInfo.LatestDetectionQuality.SignalStrength_kW : 0.0;
+
         [JsonConstructor]
         public SensorContact() { }
 
