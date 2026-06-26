@@ -42,6 +42,13 @@ namespace Pulsar4X.Client
         ulong _fpsLastMeasurementTime = 0;
         float _fpsLastMeasurement = 0;
 
+        // Render-loop crash visibility: a window's Display() or the map draw can throw (e.g. inspecting a
+        // foreign/NPC entity whose faction has locked/empty data). The SDL Run loop has no try/catch, so an
+        // unhandled exception kills the process and its trace goes to stderr — invisible in game_log.txt,
+        // which captures stdout only. SafeRender catches per-piece, logs the full exception ONCE to the
+        // captured log, and continues. Set keyed by error signature so a per-frame fault logs once.
+        private readonly HashSet<string> _loggedRenderErrors = new ();
+
         public PulsarMainWindow(string[] args)
             : base(AppName)
         {
@@ -218,8 +225,8 @@ namespace Pulsar4X.Client
         {
             base.Render();
 
-            // Render the game
-            _state.GalacticMap?.Draw();
+            // Render the game (isolated so a map-draw fault logs + is skipped, not a hard crash)
+            SafeRender("GalacticMap.Draw", () => _state.GalacticMap?.Draw());
 
             // Render the UI
             RenderUI();
@@ -267,6 +274,30 @@ namespace Pulsar4X.Client
         }
 
         /// <summary>
+        /// Runs one piece of per-frame rendering; if it throws, logs the full exception to the captured
+        /// game log (Console is redirected to game_log.txt) and skips just that piece this frame, instead
+        /// of letting it crash the whole app. ImGui error recovery (enabled in SDL3Window.Run) cleans up
+        /// any half-open window/stack. Dedupes by error signature so a per-frame fault logs once, not 60×/s.
+        /// </summary>
+        private void SafeRender(string context, Action render)
+        {
+            try
+            {
+                render();
+            }
+            catch (Exception e)
+            {
+                string signature = context + "|" + e.GetType().Name + "|" + e.Message;
+                if (_loggedRenderErrors.Add(signature))
+                {
+                    Console.WriteLine("[RenderError] " + context + " threw and was skipped this frame (logged once per unique error). Fix the cause:");
+                    Console.WriteLine(e.ToString());
+                    Console.Out.Flush();
+                }
+            }
+        }
+
+        /// <summary>
         /// Render the UI
         /// </summary>
         public void RenderUI()
@@ -282,26 +313,27 @@ namespace Pulsar4X.Client
             }
 
             // Render name icons
-            _state.GalacticMap?.DrawNameIcons();
+            SafeRender("GalacticMap.DrawNameIcons", () => _state.GalacticMap?.DrawNameIcons());
 
-            // Render any windows that have registered themselves
+            // Render any windows that have registered themselves. Each Display() is isolated so one
+            // faulting window logs + is skipped rather than crashing the whole app (see SafeRender).
             foreach (var item in _state.LoadedWindows.Values.ToArray())
             {
-                item.Display();
+                SafeRender(item.GetType().Name, item.Display);
             }
 
             foreach (var entityWindow in _state.EntityWindows.Values.ToArray())
             {
-                entityWindow.Display();
+                SafeRender("EntityWindow:" + entityWindow.GetType().Name, entityWindow.Display);
             }
 
             foreach (var item in _state.LoadedNonUniqueWindows.Values.ToArray())
             {
-                item.Display();
+                SafeRender(item.GetType().Name, item.Display);
             }
 
             // Render the maneuver node panel overlay (if active)
-            _state.DisplayManeuverNodePanel();
+            SafeRender("ManeuverNodePanel", () => _state.DisplayManeuverNodePanel());
         }
 
         public override void Exit()
