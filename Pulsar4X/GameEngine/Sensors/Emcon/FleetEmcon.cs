@@ -59,7 +59,14 @@ namespace Pulsar4X.Sensors
             double mult = MultiplierFor(posture);
             foreach (var ship in EnumerateShips(fleet))
                 if (ship.TryGetDataBlob<SensorProfileDB>(out var profile))
+                {
+                    // SignatureBaseMultiplier is the posture BASE — the EmconActivityProcessor reads it each tick
+                    // and multiplies by a heat factor (thrust/firing) for the final ActivityMultiplier. We also set
+                    // ActivityMultiplier here so the change is instant (before the processor's next run); the
+                    // processor refines it to base × heat. At idle (heat = 1) the two agree.
+                    profile.SignatureBaseMultiplier = mult;
                     profile.ActivityMultiplier = mult;
+                }
         }
 
         /// <summary>
