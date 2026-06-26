@@ -23,10 +23,10 @@ namespace Pulsar4X.Client
                 // A foreign/NPC owner may not have this cargo type UNLOCKED (empty CargoTypes) — a hard
                 // index throws KeyNotFoundException and crashes the render loop. Fall back: unlocked → locked → id.
                 var factionData = entityState.Entity.GetFactionOwner.GetDataBlob<FactionInfoDB>().Data;
-                var cargoType = factionData.CargoTypes.TryGetValue(sid, out var ct) ? ct
+                var cargoTypeBp = factionData.CargoTypes.TryGetValue(sid, out var ct) ? ct
                     : factionData.LockedCargoTypes.TryGetValue(sid, out var lct) ? lct : null;
-                string header = (cargoType?.Name ?? sid) + " Storage";
-                string headerId = cargoType?.UniqueID.ToString() ?? sid;
+                string header = (cargoTypeBp?.Name ?? sid) + " Storage";
+                string headerId = cargoTypeBp?.UniqueID.ToString() ?? sid;
                 double freeVolume = storage.GetFreeVolume(sid);
                 double percent = ((storageType.MaxVolume - freeVolume) / storageType.MaxVolume) * 100;
                 header += " (" + percent.ToString("0.#") + "% full)";
