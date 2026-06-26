@@ -14,6 +14,8 @@ using Pulsar4X.Ships;
 using Pulsar4X.Weapons;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Movement;
+using Pulsar4X.Sensors;
+using Pulsar4X.Combat;
 using SDL3;
 
 namespace Pulsar4X.Client.Rendering
@@ -35,6 +37,10 @@ namespace Pulsar4X.Client.Rendering
         ConcurrentDictionary<int, Icon> _moveIcons = new ();
         ConcurrentDictionary<int, Icon> _entityIcons = new ();
         ConcurrentDictionary<int, Icon> _bodyIcons = new ();
+
+        // Fog-of-war sensor-contact blips (detected foreign units), keyed by the real entity's id. Rebuilt from the
+        // live contact list each frame on the render thread, so a plain Dictionary is fine. See UpdateContactBlips.
+        readonly Dictionary<int, SensorContactIcon> _contactIcons = new ();
 
         HashSet<EntityLabel> _allLabels = new ();
         HashSet<EntityLabel> _visibleLabels = new ();
@@ -264,6 +270,7 @@ namespace Pulsar4X.Client.Rendering
             _allLabels.Clear();
             _bodyIcons.Clear();
             _interactable.Clear();
+            ClearContactBlips();
 
             _sysState = systemState;
             _state.StarSystemStates[_sysState.StarSystem.ID] = _sysState;
@@ -297,6 +304,24 @@ namespace Pulsar4X.Client.Rendering
 
         void AddIconable(EntityState entityState)
         {
+            // FOG OF WAR (only when CombatEngagement.RequireDetectionToEngage is on): a foreign-faction MOBILE unit
+            // (ship / projectile / beam) is NEVER drawn as a full icon — you see it only as a sensor-contact BLIP
+            // (UpdateContactBlips) and only once your sensors hold it; undetected, it's invisible. Bodies (stars/
+            // planets/moons/jump points), your OWN units, and neutrals are unaffected; with fog off, all draw as
+            // before. Guarding at the TOP also hides the unit's orbit/move trail, so the trail can't betray it.
+            if (CombatEngagement.RequireDetectionToEngage)
+            {
+                int viewedFaction = _faction?.Id ?? Game.NeutralFactionId;
+                int ownerId = entityState.Entity.FactionOwnerID;
+                if (ownerId != viewedFaction && ownerId != Game.NeutralFactionId
+                    && (entityState.TryGetDataBlob<ShipInfoDB>(out _)
+                        || entityState.TryGetDataBlob<ProjectileInfoDB>(out _)
+                        || entityState.TryGetDataBlob<BeamInfoDB>(out _)))
+                {
+                    return;
+                }
+            }
+
             entityState.TryGetDataBlob<PositionDB>(out var positionDB);
             entityState.TryGetDataBlob<MassVolumeDB>(out var massVolumeDB);
 
@@ -579,6 +604,8 @@ namespace Pulsar4X.Client.Rendering
             foreach (var item in _allLabels)
                 item.OnFrameUpdate(matrix, _camera);
 
+            UpdateContactBlips(matrix);
+
             if (_updateLabels)
             {
                 _updateLabels = false;
@@ -621,6 +648,7 @@ namespace Pulsar4X.Client.Rendering
             DrawIcons(_orbitRings.Values);
             DrawIcons(_moveIcons.Values);
             DrawIcons(_entityIcons.Values);
+            DrawIcons(_contactIcons.Values);
             DrawIcons(_bodyIcons.Values);
             DrawIcons(SelectedEntityExtras);
 
@@ -633,6 +661,48 @@ namespace Pulsar4X.Client.Rendering
             foreach (var item in icons)
                 SafeDraw(item.GetType().Name, () => item.Draw(_window.Renderer, _camera));
         }
+
+        // Rebuild the fog-of-war contact blips from the viewed faction's CURRENT sensor contacts. Runs every frame
+        // (cheap — contacts are few). Only when fog is ON (CombatEngagement.RequireDetectionToEngage): with fog off
+        // you see the real ships, so a blip would just double them. A contact for one of YOUR ships or a neutral is
+        // skipped (yours draw normally; neutrals aren't fogged). Add the new, refresh the held, drop the gone — so
+        // the blip set mirrors GetAllContacts: a target that leaves range drops off the list (blip removed); a
+        // destroyed one lingers as a faded "memory" ghost (the grave rung) until the engine ages the contact out.
+        void UpdateContactBlips(Matrix matrix)
+        {
+            if (_sensorMgr == null || !CombatEngagement.RequireDetectionToEngage)
+            {
+                if (_contactIcons.Count > 0) _contactIcons.Clear(); // textures freed on GC via the icon finalizer
+                return;
+            }
+
+            int viewedFaction = _faction?.Id ?? Game.NeutralFactionId;
+            var live = new HashSet<int>();
+            foreach (var contact in _sensorMgr.GetAllContacts())
+            {
+                if (contact?.Position == null) continue;
+                int ownerId = contact.ActualEntity != null ? contact.ActualEntity.FactionOwnerID : Game.NeutralFactionId;
+                if (ownerId == viewedFaction || ownerId == Game.NeutralFactionId) continue; // own ships / neutrals aren't fogged
+                live.Add(contact.ActualEntityId);
+                if (!_contactIcons.TryGetValue(contact.ActualEntityId, out var icon))
+                {
+                    icon = new SensorContactIcon(contact, hostile: true); // v1: any rival contact reads hostile/unknown (IFF is later)
+                    _contactIcons[contact.ActualEntityId] = icon;
+                }
+                icon.OnFrameUpdate(matrix, _camera);
+            }
+
+            if (_contactIcons.Count > live.Count)
+            {
+                List<int> gone = null;
+                foreach (var id in _contactIcons.Keys)
+                    if (!live.Contains(id)) (gone ??= new List<int>()).Add(id);
+                if (gone != null)
+                    foreach (var id in gone) _contactIcons.Remove(id);
+            }
+        }
+
+        void ClearContactBlips() => _contactIcons.Clear();
 
         // Draw one map item, isolating a fault: if it throws (commonly a NaN coordinate from a mid-warp or
         // detached position hitting Convert.ToInt32), skip just that item and log it ONCE so the rest of the

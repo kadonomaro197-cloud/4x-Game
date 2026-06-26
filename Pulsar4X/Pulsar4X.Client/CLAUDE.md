@@ -257,12 +257,33 @@ is build → play → read the rolling log pages under `game_logs/` (`[FleetComb
    - `[EMCON]` — your ships' signature summary (how many run hot/dark/blind, plus loudest/quietest by name).
    Plus, on the engine side, `[Combat]` now narrates an explicit **FIRST-STRIKE** line when an asymmetric battle
    forms (one side blind). Read-only, wrapped in the heartbeat's `SafeRender`.
-4. **GAP — contacts are NOT drawn on the map.** The map retrieves `GetSensorContacts(factionId)`
-   (`SystemMapRendering.cs:244`) but never renders contact blips — so with fog on you can't yet *see* which
-   hostiles you've detected vs not on the map. Combat behaviour + the signature readout + the `[Combat]` log
-   narration are the current observability. A contact-blip icon renderer (mirroring `ShipIcon`, fed from the
-   per-faction track table) is the deferred follow-up — the "see what you detect" view. (Higher-risk CI-blind
-   work given the map-render crash history — gotchas #12/#14 — so left for a deliberate pass.)
+4. **Contact blips + unit fog of war — BUILT 2026-06-26 (closes the prior GAP).** The map now renders the viewed
+   faction's DETECTED foreign units as limited-info **contact blips**, and HIDES undetected foreign units — the
+   visual half of fog of war ("everyone sees the same star; not everyone sees the fleet around it"). Gated on the
+   existing `CombatEngagement.RequireDetectionToEngage` flag (off by default) — the same one switch as detection-
+   gated combat, so "fog of war" is one toggle for both behaviour and visuals (DevTools › Detection / Fog of War).
+   - **Blip:** `SensorContactIcon` (`Rendering/Icons/SensorContactIcon.cs`) — a real `Icon` subclass fed by the
+     engine's `SensorContact` (position is the contact's last-known `SensorPositionDB`, which is an `IPosition`, so
+     it drops straight into the `Icon(IPosition)` ctor). A diamond marker (red = rival; sized a touch by signal
+     strength) + a name label drawn with the same SDL TTF path `EntityLabel` uses. When the target is gone and the
+     contact coasts on its last-known ("memory") position, the blip fades and the label reads "(last known)" — the
+     grave rung made visible.
+   - **Refresh:** `SystemMapRendering.UpdateContactBlips()` rebuilds `_contactIcons` from `_sensorMgr.GetAllContacts()`
+     every frame (cheap; contacts are few), skipping your OWN ships and neutrals; drawn via `DrawIcons` (SafeDraw-
+     wrapped, so a glitchy blip logs once and skips). Cleared on faction/system switch (`ClearContactBlips`).
+   - **Hide half:** a guard at the top of `AddIconable` skips the real icon + label + orbit/move trail for a
+     foreign-faction MOBILE unit (ShipInfoDB/ProjectileInfoDB/BeamInfoDB) when fog is on — so a rival ship never
+     draws as a full unit; it appears ONLY as a blip, and only once detected. Bodies (stars/planets/moons/JPs),
+     your own units, and neutrals are unaffected. The engine accessors the blip needs (`SensorContact.PositionIsMemory`,
+     `.SignalStrength_kW`) are CI-covered (the client can't reach the engine's internal detection fields directly).
+   - **v1 limits (flagged):** every rival contact reads "hostile/unknown" (no IFF/diplomacy model yet — politics is
+     a later problem); toggling the flag mid-session only affects entities added/updated AFTER the toggle (the real-
+     icon hide is event-driven at add-time), so toggle fog BEFORE spawning for a clean test; the on-map ID never
+     hides the *name* (the engine hands you the name on detection — true "unknown blip until you resolve it" needs
+     the detection-QUALITY signal, which is currently degenerate — see `GameEngine/Sensors/CLAUDE.md` →
+     "Detection-quality bug"). Built defensively given the map-render crash history (gotchas #12/#14): every blip
+     draws through `SafeDraw`, and the blip's `OnFrameUpdate` swallows a bad-position throw so one stale contact
+     can't abort the frame.
 
 ### GroundCombatWindow — MISSING ENTIRELY
 

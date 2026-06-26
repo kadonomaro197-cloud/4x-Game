@@ -85,13 +85,29 @@ EMCON is being built as gameplay (a posture lever), **not** the EM-spectrum phys
 | **3c** | `EmconActivityProcessor` (hotloop, 5 s, keyed to **ShipInfoDB**) sets `ActivityMultiplier = SignatureBaseMultiplier × HeatFactor(burning, firing)`. **Thrust** (the dominant signal) read from `NewtonMoveDB.ManuverDeltaVLen > 0` (no new field — the burn state is already there); **firing** from `GenericFiringWeaponsDB.ShotsFiredThisTick`. Emergent: a lit drive plume betrays you even on Silent (you can't burn quietly). | ✅ built | `SensorEmconTests.HeatFactor_*`, `ComputeActivityMultiplier_*`, `Processor_OnIdleFleet_*` (heat math + composition CI-gauged; the real burning/firing reads are **live**-verified) |
 | **3f** | active-ping self-exposure (an active sensor sweep adds to your own emitted spectra). | ⏳ next | — |
 | **reactor-load** | folding "how hard the reactor runs" into the heat factor. The blocking `EnergyGenAbilityDB.Load` bug is **FIXED** (slice D — `EnergyGenProcessor.CalcLoad` = `Demand/TotalOutputMax` clamped 0-1), so this is now unblocked; left unwired as a marginal signal vs thrust. | ⏳ unblocked, deferred | — |
-| **UI** | posture order in the Fleet window; contacts as blips; the sensor/EMCON **component** in the designer. | ⏳ client (slice 6) | local build (CI can't see the SDL client) |
+| **UI** | posture order in the Fleet window (✅ slice A); **detected foreign units shown as contact blips + undetected hidden** (✅ — `SensorContactIcon` + the `SystemMapRendering` fog guard, gated on `RequireDetectionToEngage`: the visual half of fog of war); the sensor/EMCON **component** in the designer (⏳). | ✅ blips/fog built | local build (CI can't see the SDL client) |
 
 **The model.** Posture sets a BASELINE loudness (`SignatureBaseMultiplier`); the activity processor multiplies it by a HEAT FACTOR (1.0 cold; +`ThrustHeat` while burning; +`WeaponHeat` while firing) into the final `ActivityMultiplier` the detection math reads. So posture × activity stack: a Silent ship that lights its drive (0.15 × ~5 ≈ 0.75) is far louder than one coasting (0.15) — the heat-asymmetry truth that you can't hide a hot plume — yet still quieter than the same burn at Full.
 
 **Tunables (gameplay feel, like Combat's `SalvoDamageScale`):** in `FleetEmcon` — `FullMultiplier 1.0` / `CruiseMultiplier 0.5` / `SilentMultiplier 0.15` (Silent ≠ 0: never perfectly invisible). In `EmconActivityProcessor` — `ThrustHeat 4.0` (≈5× louder burning ⇒ ~2.2× detection range; the KEY knob) / `WeaponHeat 1.0`. A **switch cooldown** (reactor can't flash-cool) is a flagged candidate follow-up.
 
 **Layering:** EMCON lives in `Sensors/Emcon/`, reads Fleets/Ships/Movement/Weapons to drive the dial it owns (`SensorProfileDB.ActivityMultiplier`), and is keyed to **ShipInfoDB** (one hotloop per DataBlob type — SensorProfileDB is taken by `SensorReflectionProcessor`, the same constraint that makes the battle trigger key to StarInfoDB). It does **not** depend on the combat resolver — clean direction is Combat → Sensors, never Sensors → Combat.
+
+## SensorContact — UI read accessors (added 2026-06-26)
+
+The map's fog-of-war blips (`SensorContactIcon`, client side) need a contact's signal strength and whether it's a stale "memory" position, but those live in the **internal** fields `SensorInfoDB.LatestDetectionQuality` and `SensorPositionDB.GetDataFrom` — the client is a separate assembly and can't reach them. `SensorContact` (engine, same assembly) exposes them as public, computed, **never-serialized** accessors:
+- `SensorContact.SignalStrength_kW` — latest return loudness (kW); the blip scales a touch by it.
+- `SensorContact.PositionIsMemory` — TRUE once the real entity is gone and the contact coasts on its last-known position (the grave rung); the blip fades and the label reads "(last known)".
+
+Pure pass-throughs (CI compiles them; no behavioural test needed). When new UI needs more of a contact's *known* info, expose it here — don't widen the internal fields' visibility.
+
+## Detection-quality bug (FLAGGED, not yet fixed — `SensorTools.cs:173`)
+
+`SensorTools.DetectonQuality` builds `SignalQuality` as `new PercentValue((float)(100 - distortion / signalWaveSpectraFreqMax))`. **`PercentValue(float)` expects 0..1** (it does `_percent = (byte)(value * 255)`), but this feeds it a **0..100** value — so `~100 × 255 ≈ 25500` overflows the byte and wraps. **Detection quality is therefore degenerate** (effectively random, not "how well resolved").
+
+**Why it's flagged, not drive-by-fixed:** quality is consumed as a real 0..1 elsewhere — `Galaxy/SystemBodyInfoDB.cs:154-160` and `Galaxy/StarInfoDB.cs:130` gate **planet/star survey reveal** at 0.20 / 0.80. Repairing the formula (e.g. `clamp(1 - distortion / signalWaveSpectraFreqMax, 0, 1)`) would change how bodies/stars get identified — a separate **survey** behaviour that deserves its own consideration + test, not a side effect of a UI feature. Consequences honoured for now:
+- The fog-of-war blips gate on signals that ARE sound (the contact's **name**, its **live-vs-memory** position, **signal strength**) — **not** on quality.
+- True "you only see an *unknown* blip until you resolve it" (progressive ID) is blocked on this fix — it's the natural next slice. When fixing: add a `SensorTools` quality test (quality ∈ [0,1]; better alignment ⇒ higher) AND re-check the two survey consumers live.
 
 ## Grave rung — a destroyed sensor blinds you (detection × damage)
 

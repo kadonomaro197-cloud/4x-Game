@@ -396,10 +396,11 @@ namespace Pulsar4X.Client
                 // ── Detection / Fog of War ────────────────────────
                 ImGui.Separator();
                 ImGui.Text("[ Detection / Fog of War ]");
-                ImGui.TextDisabled("Detection-gated combat: fleets only engage hostiles they DETECT, and the side that");
-                ImGui.TextDisabled("sees first shoots first (first-strike). Off by default. Set a fleet's EMCON posture in");
-                ImGui.TextDisabled("Fleet window > Combat tab (run hot / cruise / go dark to change how far off you're seen).");
-                if (ImGui.Checkbox("Fog of War — detection-gated combat (first-strike)##devfow", ref CombatEngagement.RequireDetectionToEngage))
+                ImGui.TextDisabled("You only see foreign units your sensors DETECT: undetected enemy fleets are HIDDEN on the");
+                ImGui.TextDisabled("map (the star + planets always show), and detected ones appear as limited-info contact blips");
+                ImGui.TextDisabled("(name + last-known position, fading to a ghost when the track is lost). Combat is gated too:");
+                ImGui.TextDisabled("fleets only engage hostiles they detect, the side that sees first shoots first. Off by default.");
+                if (ImGui.Checkbox("Fog of War — hide undetected foreign units + detection-gated combat##devfow", ref CombatEngagement.RequireDetectionToEngage))
                     DevLog($"Fog of war (RequireDetectionToEngage) = {CombatEngagement.RequireDetectionToEngage}");
 
                 // On-demand detection/EMCON snapshot to the log (the same thing the ~3 s heartbeat writes) — for
