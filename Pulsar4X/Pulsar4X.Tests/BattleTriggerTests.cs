@@ -163,8 +163,8 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("CombatActiveOrImminent (the time-loop's fine-step gate): two hostile fleets in range read as 'about to fight' so the clock will sub-step and halt at first contact.")]
-        public void CombatActiveOrImminent_TwoHostileFleetsInRange_ReturnsTrue()
+        [Description("NewEngagementImminent (the time-loop's fine-step gate): two hostile, un-engaged fleets in range read TRUE, so the clock sub-steps and the auto-pause lands at first contact.")]
+        public void NewEngagementImminent_TwoHostileUnengagedInRange_ReturnsTrue()
         {
             var s = TestScenario.CreateWithColony();
             ClearExistingFleets(s); // clean matchup — drop the colony's own start fleets
@@ -175,13 +175,13 @@ namespace Pulsar4X.Tests
             var playerFleet = MakeFleet(s, s.Faction, "Blue Fleet");
             AddShip(s, s.Faction, playerFleet, 50_000, 1_000_000, "Blue 1");
 
-            Assert.That(CombatEngagement.CombatActiveOrImminent(s.StartingSystem), Is.True,
-                "two hostile fleets with ships in range should read as combat-imminent");
+            Assert.That(CombatEngagement.NewEngagementImminent(s.StartingSystem), Is.True,
+                "two hostile un-engaged fleets in range mean a NEW engagement is about to fire");
         }
 
         [Test]
-        [Description("CombatActiveOrImminent: a fleet already in combat reads true (the already-fighting branch) so the clock stays fine-grained for the whole battle, not just first contact.")]
-        public void CombatActiveOrImminent_FleetAlreadyInCombat_ReturnsTrue()
+        [Description("NewEngagementImminent: once BOTH hostiles are already engaged, the ongoing fight reads FALSE — so the player gets their chosen step size back for the exchange, not a forced 5s.")]
+        public void NewEngagementImminent_BothAlreadyEngaged_ReturnsFalse()
         {
             var s = TestScenario.CreateWithColony();
             ClearExistingFleets(s);
@@ -192,14 +192,33 @@ namespace Pulsar4X.Tests
             var playerFleet = MakeFleet(s, s.Faction, "Blue Fleet");
             AddShip(s, s.Faction, playerFleet, 50_000, 1_000_000, "Blue 1");
 
-            CombatEngagement.StartEngagement(playerFleet, enemyFleet);
-            Assert.That(CombatEngagement.CombatActiveOrImminent(s.StartingSystem), Is.True,
-                "a fleet holding FleetCombatStateDB should read as combat-active");
+            CombatEngagement.StartEngagement(playerFleet, enemyFleet); // both now hold FleetCombatStateDB
+            Assert.That(CombatEngagement.NewEngagementImminent(s.StartingSystem), Is.False,
+                "an ONGOING fight (both already engaged) is not a NEW engagement — combat runs at the player's set speed");
         }
 
         [Test]
-        [Description("CombatActiveOrImminent: only friendly fleets present -> false, so peacetime fast-forward keeps taking full Ticklength steps (no needless fine-stepping).")]
-        public void CombatActiveOrImminent_SameFactionFleetsOnly_ReturnsFalse()
+        [Description("NewEngagementImminent: one side already fighting, a hostile in range NOT yet in combat -> TRUE. This is the JOIN/round-2 case — a fresh fleet entering the fight re-arms the auto-pause.")]
+        public void NewEngagementImminent_OneEngagedOneJoining_ReturnsTrue()
+        {
+            var s = TestScenario.CreateWithColony();
+            ClearExistingFleets(s);
+            var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+
+            var enemyFleet = MakeFleet(s, enemyFaction, "Red Fleet");
+            AddShip(s, enemyFaction, enemyFleet, 50_000, 1_000_000, "Red 1");
+            var playerFleet = MakeFleet(s, s.Faction, "Blue Fleet");
+            AddShip(s, s.Faction, playerFleet, 50_000, 1_000_000, "Blue 1");
+
+            CombatEngagement.StartEngagement(playerFleet, enemyFleet); // both engaged...
+            CombatEngagement.EndEngagement(enemyFleet);                // ...then the enemy drops its state (player still in)
+            Assert.That(CombatEngagement.NewEngagementImminent(s.StartingSystem), Is.True,
+                "a hostile in range that is not yet in combat with the engaged fleet is a NEW entry about to fire");
+        }
+
+        [Test]
+        [Description("NewEngagementImminent: only friendly fleets present -> false, so peacetime fast-forward keeps taking full Ticklength steps (no needless fine-stepping).")]
+        public void NewEngagementImminent_SameFactionFleetsOnly_ReturnsFalse()
         {
             var s = TestScenario.CreateWithColony();
             ClearExistingFleets(s);
@@ -209,19 +228,19 @@ namespace Pulsar4X.Tests
             var fleet2 = MakeFleet(s, s.Faction, "Home Guard B");
             AddShip(s, s.Faction, fleet2, 50_000, 1_000_000, "B1");
 
-            Assert.That(CombatEngagement.CombatActiveOrImminent(s.StartingSystem), Is.False,
-                "same-faction fleets are not hostile, so no battle is imminent");
+            Assert.That(CombatEngagement.NewEngagementImminent(s.StartingSystem), Is.False,
+                "same-faction fleets are not hostile, so no engagement is imminent");
         }
 
         [Test]
-        [Description("CombatActiveOrImminent: an empty system (no fleets) -> false. The gate must be cheap-and-quiet so it never forces fine-stepping where there is nothing to fight.")]
-        public void CombatActiveOrImminent_NoFleets_ReturnsFalse()
+        [Description("NewEngagementImminent: an empty system (no fleets) -> false. The gate must be cheap-and-quiet so it never forces fine-stepping where there is nothing to fight.")]
+        public void NewEngagementImminent_NoFleets_ReturnsFalse()
         {
             var s = TestScenario.CreateWithColony();
             ClearExistingFleets(s);
 
-            Assert.That(CombatEngagement.CombatActiveOrImminent(s.StartingSystem), Is.False,
-                "no fleets means no combat, imminent or otherwise");
+            Assert.That(CombatEngagement.NewEngagementImminent(s.StartingSystem), Is.False,
+                "no fleets means no engagement, imminent or otherwise");
         }
 
         [Test]
