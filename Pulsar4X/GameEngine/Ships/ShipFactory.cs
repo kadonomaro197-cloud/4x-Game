@@ -11,6 +11,8 @@ using Pulsar4X.Engine;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Movement;
 using Pulsar4X.Combat;
+using Pulsar4X.Factions;
+using Pulsar4X.Storage;
 
 namespace Pulsar4X.Ships
 {
@@ -141,6 +143,31 @@ namespace Pulsar4X.Ships
 
             return ship;
         }
+
+        /// <summary>
+        /// Fill a ship's fuel tanks from a faction's material library so it can maneuver. CreateShip builds
+        /// ships with EMPTY tanks on purpose — production-built ships are meant to be fuelled at a colony, so
+        /// CreateShip must not hand out free fuel (that would break the fuel economy). Call this explicitly for
+        /// ships that should spawn ready to fly (the DevTools spawns, the combat sandbox). Reads the ship's own
+        /// thruster fuel type and pulls that material from the faction's unlocked goods, falling back to the
+        /// LOCKED library (some engines burn a fuel a fresh start hasn't researched — e.g. an NTR burns 'ntp').
+        /// Returns the units of fuel actually stored — 0 (never throws) if the ship has no thruster, no matching
+        /// fuel-tank bay, or the fuel isn't a defined material. AddCargoByUnit caps at tank free volume, so the
+        /// huge FuelFillUnits just tops the tank off.
+        /// </summary>
+        public static double FillFuelTanks(Entity ship, FactionInfoDB factionInfo)
+        {
+            if (factionInfo == null) return 0;
+            if (!ship.TryGetDataBlob<NewtonThrustAbilityDB>(out var thrust) || string.IsNullOrEmpty(thrust.FuelType))
+                return 0;
+            var fuel = factionInfo.Data.CargoGoods.GetAny(thrust.FuelType)
+                     ?? factionInfo.Data.LockedCargoGoods.GetAny(thrust.FuelType);
+            if (fuel == null)
+                return 0;
+            return CargoTransferProcessor.AddCargoItems(ship, fuel, FuelFillUnits);
+        }
+
+        private const int FuelFillUnits = 10_000_000;
 
         public static void DestroyShip(Entity shipToDestroy)
         {
