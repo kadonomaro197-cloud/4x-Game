@@ -1117,7 +1117,12 @@ namespace Pulsar4X.Client
                 {
                     foreach (var (sid, storageType) in storage.TypeStores)
                     {
-                        string name = factionInfoDB.Data.CargoTypes[sid].Name;
+                        // A foreign/NPC owner may not have this cargo type UNLOCKED (its CargoTypes is
+                        // empty until researched), so a hard index throws KeyNotFoundException and crashes
+                        // the render loop. Look it up defensively: unlocked, then locked, then the id.
+                        string name = factionInfoDB.Data.CargoTypes.TryGetValue(sid, out var cargoType) ? cargoType.Name
+                            : factionInfoDB.Data.LockedCargoTypes.TryGetValue(sid, out var lockedType) ? lockedType.Name
+                            : sid;
                         double freeVolume = storage.GetFreeVolume(sid);
                         double usedVolume = storageType.MaxVolume - freeVolume;
                         double percent = storageType.MaxVolume > 0 ? usedVolume / storageType.MaxVolume : 0;

@@ -175,7 +175,12 @@ public class CreateTransferWindow : PulsarGuiWindow
         {
             foreach(var (storageId, storageType) in leftVolumeStorageDB.TypeStores)
             {
-                string header = entity.GetFactionOwner.GetDataBlob<FactionInfoDB>().Data.CargoTypes[storageId].Name + " Storage";
+                // Defensive: a foreign owner may not have this cargo type unlocked (empty CargoTypes),
+                // and a hard index throws KeyNotFoundException. Fall back: unlocked → locked → id.
+                var ctData = entity.GetFactionOwner.GetDataBlob<FactionInfoDB>().Data;
+                string ctName = ctData.CargoTypes.TryGetValue(storageId, out var ctype) ? ctype.Name
+                    : ctData.LockedCargoTypes.TryGetValue(storageId, out var lctype) ? lctype.Name : storageId;
+                string header = ctName + " Storage";
                 if(ImGui.CollapsingHeader(header + "###" + storageId, ImGuiTreeNodeFlags.DefaultOpen))
                 {
                     var cargoables = storageType.GetCargoables();
