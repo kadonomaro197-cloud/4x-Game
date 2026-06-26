@@ -39,6 +39,12 @@ namespace Pulsar4X.Client.Rendering
         HashSet<EntityLabel> _allLabels = new ();
         HashSet<EntityLabel> _visibleLabels = new ();
 
+        // Per-item render-fault isolation: if ONE map item's Draw throws (commonly a NaN coordinate from a
+        // mid-warp / detached position hitting Convert.ToInt32 -> OverflowException), skip just that item and
+        // log it ONCE — so one bad entity can't blank the rest of the map. Names the item so game_log.txt says
+        // WHICH one faulted (a precise gauge, vs the coarse whole-map SafeRender in PulsarMainWindow).
+        readonly HashSet<string> _loggedDrawErrors = new ();
+
         // Per-body-type minimum camera zoom for the label to render. Lower-tier
         // bodies (moons, ships, asteroids, comets) only show labels once you've
         // zoomed in enough that they aren't just visual clutter. Stars, planets,
@@ -581,13 +587,34 @@ namespace Pulsar4X.Client.Rendering
             DrawIcons(SelectedEntityExtras);
 
             foreach (var i in _visibleLabels)
-                i.Draw(_window.Renderer, _camera);
+                SafeDraw(i.GetType().Name, () => i.Draw(_window.Renderer, _camera));
         }
 
         void DrawIcons(IEnumerable<IDrawData> icons)
         {
             foreach (var item in icons)
-                item.Draw(_window.Renderer, _camera);
+                SafeDraw(item.GetType().Name, () => item.Draw(_window.Renderer, _camera));
+        }
+
+        // Draw one map item, isolating a fault: if it throws (commonly a NaN coordinate from a mid-warp or
+        // detached position hitting Convert.ToInt32), skip just that item and log it ONCE so the rest of the
+        // map still renders and game_log.txt names which item faulted. Without this, one bad icon aborts the
+        // whole map draw under the coarse SafeRender, leaving a half-drawn frame ("stuck lines, ships gone").
+        void SafeDraw(string label, Action draw)
+        {
+            try
+            {
+                draw();
+            }
+            catch (Exception e)
+            {
+                string sig = label + "|" + e.GetType().Name + "|" + e.Message;
+                if (_loggedDrawErrors.Add(sig))
+                {
+                    Console.WriteLine("[RenderError] map item '" + label + "' threw and was skipped (logged once): " + e);
+                    Console.Out.Flush();
+                }
+            }
         }
 
         public override bool GetActive()

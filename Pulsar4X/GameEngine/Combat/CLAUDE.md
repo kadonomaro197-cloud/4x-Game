@@ -335,10 +335,22 @@ gives a root `FleetDB`), add the system to the faction's `KnownSystems`, and cop
 ships are still built under the player faction because `ComponentDesigns` is a read-only view and the enemy hasn't
 unlocked components; combat only reads `FactionOwnerID`, so the flip is enough.)
 
-**Test:** `Pulsar4X.Tests/CombatSandboxTests.cs` proves two things separately: **(1) persistence** — spawn 3
-hostiles, advance the real clock, assert they're still there (3/3); and **(2) engageable** — drive
+**Fuelling (added 2026-06-25).** `ShipFactory` builds ships with **empty** tanks, so `SpawnHostileFleet` calls
+`FuelShip` right after each ship is created and **before the owner flip** — fuel is resolved through the ship's
+*faction* cargo library (`UpdateMassFuelAndDeltaV` → `GetFactionCargoDefinitions`), and only the player has the
+fuel unlocked, so it must run while the ship is still player-owned. `FuelShip` reads the ship's own
+`NewtonThrustAbilityDB.FuelType` and fills the tank from the player's `CargoGoods` via
+`CargoTransferProcessor.AddCargoItems` (a huge unit count; `CargoMath.AddCargoByUnit` caps at tank free volume).
+A ship with no thruster, no matching fuel-tank bay, or an unknown fuel is left empty — `AddCargoByUnit` returns 0,
+no crash. (The auto-resolve battle itself doesn't consume fuel — v1 combat is math, not maneuvering — so this is
+for realism + so a future maneuvering/retreat layer has something to burn.)
+
+**Test:** `Pulsar4X.Tests/CombatSandboxTests.cs` proves three things separately: **(1) persistence** — spawn 3
+hostiles, advance the real clock, assert they're still there (3/3); **(2) engageable** — drive
 `CombatEngagement.Tick` over the system (the proven path) and assert the unarmed player ship is destroyed (only
-possible if the spawned hostiles are real, in-range enemies the trigger fights).
+possible if the spawned hostiles are real, in-range enemies the trigger fights); and **(3) fuelled** — every
+spawned ship that has a thruster *and* a bay for its fuel comes out with `TotalFuel_kg > 0` (the fuel gauge;
+asserts only for fuel-capable ships so a no-fuel-bay design can't falsely fail it).
 
 **Gotchas the gauge surfaced (two, both load-bearing for the live test):**
 1. **The flipped-faction enemy ships DO persist through a clock advance** with the sandbox's faction setup
