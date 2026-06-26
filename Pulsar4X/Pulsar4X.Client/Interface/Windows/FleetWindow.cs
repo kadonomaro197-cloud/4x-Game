@@ -763,6 +763,8 @@ namespace Pulsar4X.Client
                             {
                                 var order = MoveToSystemBodyOrder.CreateCommand(_uiState.Faction.Id, SelectedFleet, bodyState.Entity);
                                 _uiState.Game.OrderHandler.HandleOrder(order);
+                                Pulsar4X.Client.SessionLog.Action("move order: fleet #" + SelectedFleet.Id
+                                    + " -> '" + bodyState.Name + "' (warp). Watch next heartbeat for teleport check.");
                             }
                         }
                         break;
