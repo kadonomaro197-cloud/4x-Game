@@ -659,3 +659,13 @@ Answering "any additional sensors to make the logs better," driven by the crash 
 - **Teleport detector is now warp-aware.** It was crying wolf on every warp: a warping ship is reparented to the system root (null parent) ON PURPOSE, which the old detector read as "teleported." Now it flags only **AT-SUN** (position collapsed to origin — the real bug) or **ORPHANED** (null parent while NOT warping). The developer's "ships looked like they were en route to Jupiter" was exactly right — they were fine; the gauge was wrong. (`SessionLog.CheckForTeleports`.)
 
 Both client-only (CI-blind). **Lesson: a gauge that cries wolf is worse than no gauge — tune it against ground truth** (the visual confirmed the ships were fine, so the detector, not the ships, was at fault).
+
+### The freeze diagnosed + fixed — orbit render runaway at extreme zoom (2026-06-26)
+
+The developer's repro nailed it: spawn a ship orbiting a Jupiter moon, zoom in a LOT, and the game gets progressively slower until it fully freezes (no crash, no trace — the `[HANG]` watchdog's exact target).
+
+**Cause.** `OrbitEllipseIcon` transforms a fixed 181 points and draws ~180 line segments every frame for EVERY orbit, with no on-screen-size cull. At extreme zoom the big orbits (Jupiter around the Sun, the moon around Jupiter) are millions of pixels across — pure off-screen clutter — but their full transform+draw still runs, and `SDL.RenderLine` chokes on lines with astronomically off-screen endpoints. More zoom → more extreme coords → frame time climbs → freeze.
+
+**Fix (reversible).** `OnFrameUpdate` (every frame) computes the orbit's on-screen radius and, if it's absurd (>50000 px ≈ 25 screens), skips that orbit's transform AND draw via `_offScreenSkip`. **Because it's recomputed per frame from the CURRENT zoom, zooming back out brings the ring right back** — a per-frame "worth drawing now?" decision, not a removal. The orbit you zoomed in to see is screen-sized, so it always draws.
+
+**Gauges added this round:** `[HANG]` watchdog (catches the full freeze from its OWN thread); `[FATAL]` net (background/unhandled crashes → pages, not just console_output.txt); `[PERF] ⏱ slow frame Nms` (logs the slowdown CLIMB before a freeze). Triage by elimination: `[HANG]`→freeze, `[FATAL]`→managed, neither→native. All client-only (CI-blind). Flagged: other trajectory icons (`HyperbolicIcon`, Newton trails) may need the same cull.
