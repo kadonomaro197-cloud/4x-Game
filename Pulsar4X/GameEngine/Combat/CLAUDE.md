@@ -360,6 +360,19 @@ the **Leviathan** (the `ntp`-burning NTR design, the trickiest fuel path) and as
 no-op) and that every fuel-capable ship comes out with `TotalFuel_kg > 0` (asserts only for ships with a matching
 fuel bay, so a no-bay design can't falsely fail it).
 
+**Live battle narration (added 2026-06-25).** `CombatEngagement.NarrateToLog` (a `public static bool`, default
+**false**) makes the engine write plain-language `[Combat]` lines to the captured log (`game_log.txt`) on each
+**state change** — `enters combat`, `salvo N: <fleet> lost K ship(s), M left`, `breaks off — retreats`,
+`disengages` — so a live fight is visible in the log, not only the Fleet Combat tab. It's logged only on
+transitions (never per-tick), so it reads like a play-by-play without flooding. **Default off so it never slows
+the timed battle tests** (`CombatPerformanceTests`, `CombatStressLab`, the 1000-ship `B10`); the client turns it
+**on** at startup (`PulsarMainWindow` ctor: `CombatEngagement.NarrateToLog = true`). Helpers `CombatLog`/`FleetLabel`
+are in `CombatEngagement.cs`; the per-salvo line guards on `NarrateToLog` before building its string so the hot
+casualty path allocates nothing when narration is off. **Bonus diagnostic:** because the live auto-trigger
+(`BattleTriggerProcessor` → `CombatEngagement.Tick`) runs this, an `[Combat] … enters combat` line on PLAY confirms
+the auto-trigger fired; its absence (while DevTools "Tick Combat" *does* produce lines) localises the open
+"does PLAY auto-start combat live?" question to the trigger/scheduler, not the resolve.
+
 **Gotchas the gauge surfaced (two, both load-bearing for the live test):**
 1. **The flipped-faction enemy ships DO persist through a clock advance** with the sandbox's faction setup
    (`CreateBasicFaction` + `KnownSystems` + copied `ShipDesigns`) — the old "don't survive movement processing"
