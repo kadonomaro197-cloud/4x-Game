@@ -1,0 +1,426 @@
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[STATE] heartbeat t=2050-01-21 23:00 paused step=3600s selected=Pasiphae ships-in-view=7
+[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=119.283Gm parent=ROOT/null moveType=Warp
+[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=119.27Gm parent=ROOT/null moveType=Warp
+[ENGINE] sensor scans 3024 (+0), battle-trigger passes 362161 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
+[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-21 23:00 paused step=3600s selected=Pasiphae ships-in-view=7
+[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=119.283Gm parent=ROOT/null moveType=Warp
+[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=119.27Gm parent=ROOT/null moveType=Warp
+[ENGINE] sensor scans 3024 (+0), battle-trigger passes 362161 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
+[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-21 23:00 paused step=3600s selected=Pasiphae ships-in-view=7
+[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=119.283Gm parent=ROOT/null moveType=Warp
+[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=119.27Gm parent=ROOT/null moveType=Warp
+[ENGINE] sensor scans 3024 (+0), battle-trigger passes 362161 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
+[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[DevTools] Fog of war (RequireDetectionToEngage) = False
+[STATE] heartbeat t=2050-01-21 23:00 paused step=3600s selected=Pasiphae ships-in-view=7
+[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=119.283Gm parent=ROOT/null moveType=Warp
+[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=119.27Gm parent=ROOT/null moveType=Warp
+[ENGINE] sensor scans 3024 (+0), battle-trigger passes 362161 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
+[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-21 23:00 paused step=3600s selected=Pasiphae ships-in-view=7
+[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=119.283Gm parent=ROOT/null moveType=Warp
+[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=119.27Gm parent=ROOT/null moveType=Warp
+[ENGINE] sensor scans 3024 (+0), battle-trigger passes 362161 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
+[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[VIEW] now viewing faction id=621 (UEC)
+[STATE] ship positions (after view switch): 7 ship(s)
+[STATE]   ship #627 'Planet Express Ship' faction=621 sun-dist=149.34Gm parent=Earth
+[STATE]   ship #630 'Serial Peacemaker' faction=621 sun-dist=119.28Gm parent=ROOT/null
+[STATE]   ship #632 'Prevailing Stillness' faction=621 sun-dist=119.27Gm parent=ROOT/null
+[STATE]   ship #635 'Surveyor I' faction=621 sun-dist=149.36Gm parent=Earth
+[STATE]   ship #637 'SensorSat I' faction=621 sun-dist=149.36Gm parent=Earth
+[STATE]   ship #642 'ISS Hermes' faction=621 sun-dist=149.35Gm parent=Earth
+[STATE]   ship #645 '645' faction=643 sun-dist=807.98Gm parent=Pasiphae
+[STATE] heartbeat t=2050-01-21 23:00 paused step=3600s selected=Pasiphae ships-in-view=7
+[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=119.283Gm parent=ROOT/null moveType=Warp
+[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=119.27Gm parent=ROOT/null moveType=Warp
+[ENGINE] sensor scans 3024 (+0), battle-trigger passes 362161 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
+[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[TIME] play (step 3600s)
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[STATE] heartbeat t=2050-01-22 21:00 RUNNING step=3600s selected=Pasiphae ships-in-view=7
+[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=118.266Gm parent=ROOT/null moveType=Warp
+[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=118.253Gm parent=ROOT/null moveType=Warp
+[ENGINE] sensor scans 3156 (+132), battle-trigger passes 378001 (+15840) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
+[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[STATE] heartbeat t=2050-01-24 03:00 RUNNING step=3600s selected=Pasiphae ships-in-view=7
+[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=116.938Gm parent=ROOT/null moveType=Warp
+[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=116.924Gm parent=ROOT/null moveType=Warp
+[ENGINE] sensor scans 3336 (+180), battle-trigger passes 399601 (+21600) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
+[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[STATE] heartbeat t=2050-01-25 09:00 RUNNING step=3600s selected=Pasiphae ships-in-view=7
+[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=115.677Gm parent=ROOT/null moveType=Warp
+[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=115.664Gm parent=ROOT/null moveType=Warp
+[ENGINE] sensor scans 3516 (+180), battle-trigger passes 421201 (+21600) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
+[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> -0,0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[STATE] heartbeat t=2050-01-26 16:00 RUNNING step=3600s selected=Pasiphae ships-in-view=7
+[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=114.448Gm parent=ROOT/null moveType=Warp
+[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=114.435Gm parent=ROOT/null moveType=Warp
+[ENGINE] sensor scans 3702 (+186), battle-trigger passes 443521 (+22320) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
+[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0.1,0 Gm
+[CAMERA] pan -> 0.1,0 Gm
+[CAMERA] pan -> 0.1,0 Gm
+[CAMERA] pan -> 0.1,0 Gm
+[CAMERA] pan -> 0.1,0 Gm
+[CAMERA] pan -> 0.1,0 Gm
+[CAMERA] pan -> 0.1,0 Gm
+[CAMERA] pan -> 0.1,0 Gm
+[CAMERA] pan -> 0.1,0 Gm
+[CAMERA] pan -> 0.1,0 Gm
+[STATE] heartbeat t=2050-01-27 22:00 RUNNING step=3600s selected=Pasiphae ships-in-view=7
+[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=113.333Gm parent=ROOT/null moveType=Warp
+[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=113.32Gm parent=ROOT/null moveType=Warp
+[ENGINE] sensor scans 3882 (+180), battle-trigger passes 465121 (+21600) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
+[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 0.1,0.2 Gm
+[CAMERA] pan -> 0.1,0.2 Gm
+[CAMERA] pan -> 0.1,0.2 Gm
+[CAMERA] pan -> 0.1,0.2 Gm
+[CAMERA] pan -> 0.1,0.2 Gm
+[CAMERA] pan -> 0.1,0.2 Gm
+[CAMERA] pan -> 0.1,0.2 Gm
+[CAMERA] pan -> 0.1,0.2 Gm
+[CAMERA] pan -> 0.1,0.2 Gm
+[CAMERA] pan -> 0.1,0.2 Gm
+[CAMERA] pan -> 0.2,0.8 Gm
+[CAMERA] pan -> 0.2,0.8 Gm
+[CAMERA] pan -> 0.2,0.8 Gm
+[CAMERA] pan -> 0.2,0.8 Gm
+[CAMERA] pan -> 0.2,0.8 Gm
+[CAMERA] pan -> 0.2,0.8 Gm
+[CAMERA] pan -> 0.2,0.8 Gm
+[CAMERA] pan -> 0.2,0.8 Gm
+[CAMERA] pan -> 0.2,0.8 Gm
+[CAMERA] pan -> 0.2,0.8 Gm
+[CAMERA] pan -> 2.5,5.7 Gm
+[CAMERA] pan -> 2.5,5.7 Gm
+[CAMERA] pan -> 2.5,5.7 Gm
+[CAMERA] pan -> 2.5,5.7 Gm
+[CAMERA] pan -> 2.5,5.7 Gm
+[CAMERA] pan -> 2.5,5.7 Gm
+[CAMERA] pan -> 2.5,5.7 Gm
+[CAMERA] pan -> 2.5,5.7 Gm
+[CAMERA] pan -> 2.5,5.7 Gm
+[CAMERA] pan -> 2.5,5.7 Gm
+[CAMERA] pan -> 12.5,17.7 Gm
+[CAMERA] pan -> 12.5,17.7 Gm
+[CAMERA] pan -> 12.5,17.7 Gm
+[CAMERA] pan -> 12.5,17.7 Gm
+[CAMERA] pan -> 12.5,17.7 Gm
+[CAMERA] pan -> 12.5,17.7 Gm
+[CAMERA] pan -> 12.5,17.7 Gm
+[CAMERA] pan -> 12.5,17.7 Gm
+[CAMERA] pan -> 12.5,17.7 Gm
+[CAMERA] pan -> 12.5,17.7 Gm
+[CAMERA] pan -> 35.5,-17.5 Gm
+[CAMERA] pan -> 35.5,-17.5 Gm
+[CAMERA] pan -> 35.5,-17.5 Gm
+[CAMERA] pan -> 35.5,-17.5 Gm
+[CAMERA] pan -> 35.5,-17.5 Gm
+[CAMERA] pan -> 35.5,-17.5 Gm
+[CAMERA] pan -> 35.5,-17.5 Gm
+[CAMERA] pan -> 35.5,-17.5 Gm
+[CAMERA] pan -> 35.5,-17.5 Gm
+[CAMERA] pan -> 35.5,-17.5 Gm
+[STATE] heartbeat t=2050-01-29 04:00 RUNNING step=3600s selected=Pasiphae ships-in-view=7
+[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=112.293Gm parent=ROOT/null moveType=Warp
+[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=112.28Gm parent=ROOT/null moveType=Warp
+[ENGINE] sensor scans 4062 (+180), battle-trigger passes 486721 (+21600) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
+[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 39.6,-39.3 Gm
+[CAMERA] pan -> 39.6,-39.3 Gm
+[CAMERA] pan -> 39.6,-39.3 Gm
+[CAMERA] pan -> 39.6,-39.3 Gm
+[CAMERA] pan -> 39.6,-39.3 Gm
+[CAMERA] pan -> 39.6,-39.3 Gm
+[CAMERA] pan -> 39.6,-39.3 Gm
+[CAMERA] pan -> 39.6,-39.3 Gm
+[CAMERA] pan -> 39.6,-39.3 Gm
+[CAMERA] pan -> 39.6,-39.3 Gm
+[CAMERA] pan -> 39.9,-41 Gm
+[CAMERA] pan -> 39.9,-41 Gm
+[CAMERA] pan -> 39.9,-41 Gm
+[CAMERA] pan -> 39.9,-41 Gm
+[CAMERA] pan -> 39.9,-41 Gm
+[CAMERA] pan -> 39.9,-41 Gm
+[CAMERA] pan -> 39.9,-41 Gm
+[CAMERA] pan -> 39.9,-41 Gm
+[CAMERA] pan -> 39.9,-41 Gm
+[CAMERA] pan -> 39.9,-41 Gm
+[CAMERA] pan -> 45.1,-73.9 Gm
+[CAMERA] pan -> 45.1,-73.9 Gm
+[CAMERA] pan -> 45.1,-73.9 Gm
+[CAMERA] pan -> 45.1,-73.9 Gm
+[CAMERA] pan -> 45.1,-73.9 Gm
+[CAMERA] pan -> 45.1,-73.9 Gm
+[CAMERA] pan -> 45.1,-73.9 Gm
+[CAMERA] pan -> 45.1,-73.9 Gm
+[CAMERA] pan -> 45.1,-73.9 Gm
+[CAMERA] pan -> 45.1,-73.9 Gm
+[CAMERA] pan -> 45.7,-92.4 Gm
+[CAMERA] pan -> 45.7,-92.4 Gm
+[CAMERA] pan -> 45.7,-92.4 Gm
+[CAMERA] pan -> 45.7,-92.4 Gm
+[CAMERA] pan -> 45.7,-92.4 Gm
+[CAMERA] pan -> 45.7,-92.4 Gm
+[CAMERA] pan -> 45.7,-92.4 Gm
+[CAMERA] pan -> 45.7,-92.4 Gm
+[CAMERA] pan -> 45.7,-92.4 Gm
+[CAMERA] pan -> 45.7,-92.4 Gm
+[CAMERA] pan -> 78.9,-105.2 Gm
+[CAMERA] pan -> 78.9,-105.2 Gm
+[CAMERA] pan -> 78.9,-105.2 Gm
+[CAMERA] pan -> 78.9,-105.2 Gm
+[CAMERA] pan -> 78.9,-105.2 Gm
+[CAMERA] pan -> 78.9,-105.2 Gm
+[CAMERA] pan -> 78.9,-105.2 Gm
+[CAMERA] pan -> 78.9,-105.2 Gm
+[CAMERA] pan -> 78.9,-105.2 Gm
+[CAMERA] pan -> 78.9,-105.2 Gm
+[CAMERA] pan -> 113.9,-49.9 Gm
+[CAMERA] pan -> 113.9,-49.9 Gm
+[CAMERA] pan -> 113.9,-49.9 Gm
+[CAMERA] pan -> 113.9,-49.9 Gm
+[CAMERA] pan -> 113.9,-49.9 Gm
+[CAMERA] pan -> 113.9,-49.9 Gm
+[CAMERA] pan -> 113.9,-49.9 Gm
+[CAMERA] pan -> 113.9,-49.9 Gm
+[CAMERA] pan -> 113.9,-49.9 Gm
+[CAMERA] pan -> 113.9,-49.9 Gm
+[STATE] heartbeat t=2050-01-30 10:00 RUNNING step=3600s selected=Pasiphae ships-in-view=7
+[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=111.33Gm parent=ROOT/null moveType=Warp
+[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=111.318Gm parent=ROOT/null moveType=Warp
+[ENGINE] sensor scans 4242 (+180), battle-trigger passes 508321 (+21600) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
+[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
