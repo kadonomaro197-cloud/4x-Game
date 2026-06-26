@@ -809,9 +809,12 @@ namespace Pulsar4X.Client
 
         internal void EntitySelectedAsPrimary(int entityGuid, string starSys)
         {
-            // Same stale-entity guard as EntityClicked below: a label can linger for an entity already removed
-            // from the state (destroyed in combat), and hard-indexing it threw KeyNotFoundException -> crash.
-            if (!StarSystemStates[starSys].EntityStatesWithNames.TryGetValue(entityGuid, out var primary))
+            // Same stale guard as EntityClicked below, and it guards BOTH dictionary levels: a label can linger for
+            // an entity removed from the state, OR for a star system no longer in StarSystemStates (a faction switch
+            // rebuilds it; a system can leave the active/known set). Hard-indexing EITHER threw KeyNotFoundException
+            // -> whole-process crash. TryGetValue the outer (system) then the inner (entity).
+            if (!StarSystemStates.TryGetValue(starSys, out var sysState)
+                || !sysState.EntityStatesWithNames.TryGetValue(entityGuid, out var primary))
                 return;
             PrimaryEntity = primary;
             ActiveWindow?.EntitySelectedAsPrimary(PrimaryEntity);
@@ -828,10 +831,17 @@ namespace Pulsar4X.Client
             // crashed (confirmed live 2026-06-26: clicking a dead Earth-fleet label, key '676'). Look it up safely
             // and ignore the click if the entity is gone. Same "never hard-index a dictionary" class as the Ceres
             // cargo crash (gotcha #11) — extended here to the entity-state dictionaries.
-            if (!StarSystemStates[starSys].EntityStatesWithNames.TryGetValue(entityGuid, out var entityState))
+            // Guard BOTH dictionary levels: the OUTER StarSystemStates[starSys] is ALSO a hard index, and it threw
+            // KeyNotFoundException when a label was clicked for a star system not in the current set — a faction
+            // switch rebuilds StarSystemStates, and a system can leave KnownSystems, so a lingering label's
+            // _starSysGuid can be absent (confirmed live 2026-06-26: key '50cad7a5-…', a system not in view, crashed
+            // the whole process via the no-try/catch SDL loop). This COMPLETES gotcha #14, which guarded only the
+            // inner entity dictionary and left this outer index exposed.
+            if (!StarSystemStates.TryGetValue(starSys, out var sysState)
+                || !sysState.EntityStatesWithNames.TryGetValue(entityGuid, out var entityState))
             {
-                SessionLog.Select("ignored click on stale/removed entity #" + entityGuid
-                    + " (no state — likely destroyed; its label outlived it)");
+                SessionLog.Select("ignored click on stale entity #" + entityGuid + " in system " + starSys
+                    + " (no state — entity destroyed, or its star system isn't in the current view; label outlived it)");
                 return;
             }
             LastClickedEntity = entityState;
