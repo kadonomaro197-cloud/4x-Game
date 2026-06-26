@@ -3,6 +3,7 @@ using Pulsar4X.Engine;
 using Pulsar4X.Movement;
 using Pulsar4X.Names;
 using Pulsar4X.Ships;
+using Pulsar4X.Sensors;
 
 namespace Pulsar4X.Client
 {
@@ -131,6 +132,67 @@ namespace Pulsar4X.Client
             catch (Exception e)
             {
                 Line("STATE", "ship-position dump failed: " + e.Message);
+            }
+        }
+
+        /// <summary>
+        /// Detection + EMCON situation snapshot for one faction — the "what can I see, and how loud am I" gauge the
+        /// detection/EMCON stack is all about. Logs three things the rest of the recorder can't show:
+        ///   • <c>[DETECT]</c> — how many sensor contacts this faction holds, and the FOG GAP: how many
+        ///     other-faction ships are in the system vs how many of them it actually detects (the rest are hidden).
+        ///   • <c>[EMCON]</c> — a summary of this faction's own ships' emitted-signature multiplier
+        ///     (<see cref="SensorProfileDB.ActivityMultiplier"/>): how many run hot/loud (&gt;1.2), dark/quiet
+        ///     (&lt;0.8), or are blind (sensors shot off), plus the loudest and quietest ship by name.
+        /// So when you play with fog of war on, the log shows what you detect, what's hidden, and which of your
+        /// ships are lit up — not just the actions and battles. Called from the ~3 s heartbeat. Read-only; nulls OK.
+        /// </summary>
+        public static void DetectionSnapshot(StarSystem system, Entity faction)
+        {
+            if (!Enabled || system == null || faction == null) return;
+            try
+            {
+                int fid = faction.Id;
+                var contacts = system.GetSensorContacts(fid);
+                int held = contacts != null ? contacts.GetAllContacts().Count : 0;
+                string fname = faction.TryGetDataBlob<NameDB>(out var fn) ? fn.OwnersName : ("faction#" + fid);
+
+                var ships = system.GetAllEntitiesWithDataBlob<ShipInfoDB>();
+
+                // Other-faction ships present vs how many this faction detects — the fog-of-war gap.
+                int others = 0, detected = 0;
+                foreach (var sh in ships)
+                {
+                    if (sh.FactionOwnerID == fid) continue;
+                    others++;
+                    if (contacts != null && contacts.SensorContactExists(sh.Id)) detected++;
+                }
+                Line("DETECT", fname + " holds " + held + " contact(s); " + others + " other-faction ship(s) in-system, detects "
+                    + detected + " (" + (others - detected) + " hidden from you)");
+
+                // This faction's own ships' EMCON signature (1.0 = as-designed; <1 quiet/Silent; >1 loud/running hot).
+                int mine = 0, hot = 0, dark = 0, blind = 0;
+                double loudest = double.MinValue, quietest = double.MaxValue;
+                string loudName = "", quietName = "";
+                foreach (var sh in ships)
+                {
+                    if (sh.FactionOwnerID != fid) continue;
+                    if (!sh.TryGetDataBlob<SensorProfileDB>(out var sp)) continue;
+                    mine++;
+                    double sig = sp.ActivityMultiplier;
+                    if (sig > 1.2) hot++;
+                    else if (sig < 0.8) dark++;
+                    if (!sh.TryGetDataBlob<SensorAbilityDB>(out var ab) || ab.InstanceStates.Count == 0) blind++;
+                    string nm = sh.TryGetDataBlob<NameDB>(out var n) ? n.OwnersName : ("#" + sh.Id);
+                    if (sig > loudest) { loudest = sig; loudName = nm; }
+                    if (sig < quietest) { quietest = sig; quietName = nm; }
+                }
+                if (mine > 0)
+                    Line("EMCON", "your " + mine + " ship(s): hot(loud)=" + hot + " dark(quiet)=" + dark + " blind=" + blind
+                        + "; loudest " + loudName + " x" + loudest.ToString("0.##") + ", quietest " + quietName + " x" + quietest.ToString("0.##"));
+            }
+            catch (Exception e)
+            {
+                Line("DETECT", "detection snapshot failed: " + e.Message);
             }
         }
     }

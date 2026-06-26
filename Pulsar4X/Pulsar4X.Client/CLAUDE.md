@@ -245,7 +245,14 @@ is build → play → read `game_log.txt` (`[FleetCombat]`/`[DevTools]` lines) �
    `CombatEngagement.RequireDetectionToEngage` (default off). On → combat is detection-gated and first-strike is
    live (the side that sees first shoots first). Plus a **live signature readout** of the clicked entity's
    `SensorProfileDB.ActivityMultiplier` (watch it climb when a ship runs hot / thrusts / fires, drop when Silent).
-3. **GAP — contacts are NOT drawn on the map.** The map retrieves `GetSensorContacts(factionId)`
+3. **Logging — the detection/EMCON state shows up in `game_log.txt` (so a remote review can see what you saw).**
+   `SessionLog.DetectionSnapshot(system, faction)` runs inside the **~3 s heartbeat** (and on demand via the DevTools
+   **"Dump Detection (log)"** button), writing two lines: `[DETECT]` (contacts held + the FOG GAP — how many
+   other-faction ships are present vs how many you detect, the rest "hidden from you") and `[EMCON]` (your ships'
+   signature summary — how many run hot/dark/blind, plus the loudest/quietest by name). This is the gauge that makes
+   "what you detect, what's hidden, how loud you are" visible in the log, not just on screen. Read-only, wrapped in
+   the heartbeat's `SafeRender`.
+4. **GAP — contacts are NOT drawn on the map.** The map retrieves `GetSensorContacts(factionId)`
    (`SystemMapRendering.cs:244`) but never renders contact blips — so with fog on you can't yet *see* which
    hostiles you've detected vs not on the map. Combat behaviour + the signature readout + the `[Combat]` log
    narration are the current observability. A contact-blip icon renderer (mirroring `ShipIcon`, fed from the
