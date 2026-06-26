@@ -1,426 +1,1000 @@
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[STATE] heartbeat t=2050-01-21 23:00 paused step=3600s selected=Pasiphae ships-in-view=7
-[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=119.283Gm parent=ROOT/null moveType=Warp
-[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=119.27Gm parent=ROOT/null moveType=Warp
-[ENGINE] sensor scans 3024 (+0), battle-trigger passes 362161 (+0) since last beat
-[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-21 23:00 paused step=3600s selected=Pasiphae ships-in-view=7
-[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=119.283Gm parent=ROOT/null moveType=Warp
-[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=119.27Gm parent=ROOT/null moveType=Warp
-[ENGINE] sensor scans 3024 (+0), battle-trigger passes 362161 (+0) since last beat
-[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-21 23:00 paused step=3600s selected=Pasiphae ships-in-view=7
-[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=119.283Gm parent=ROOT/null moveType=Warp
-[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=119.27Gm parent=ROOT/null moveType=Warp
-[ENGINE] sensor scans 3024 (+0), battle-trigger passes 362161 (+0) since last beat
-[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[DevTools] Fog of war (RequireDetectionToEngage) = False
-[STATE] heartbeat t=2050-01-21 23:00 paused step=3600s selected=Pasiphae ships-in-view=7
-[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=119.283Gm parent=ROOT/null moveType=Warp
-[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=119.27Gm parent=ROOT/null moveType=Warp
-[ENGINE] sensor scans 3024 (+0), battle-trigger passes 362161 (+0) since last beat
-[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-21 23:00 paused step=3600s selected=Pasiphae ships-in-view=7
-[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=119.283Gm parent=ROOT/null moveType=Warp
-[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=119.27Gm parent=ROOT/null moveType=Warp
-[ENGINE] sensor scans 3024 (+0), battle-trigger passes 362161 (+0) since last beat
-[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[VIEW] now viewing faction id=621 (UEC)
-[STATE] ship positions (after view switch): 7 ship(s)
-[STATE]   ship #627 'Planet Express Ship' faction=621 sun-dist=149.34Gm parent=Earth
-[STATE]   ship #630 'Serial Peacemaker' faction=621 sun-dist=119.28Gm parent=ROOT/null
-[STATE]   ship #632 'Prevailing Stillness' faction=621 sun-dist=119.27Gm parent=ROOT/null
-[STATE]   ship #635 'Surveyor I' faction=621 sun-dist=149.36Gm parent=Earth
-[STATE]   ship #637 'SensorSat I' faction=621 sun-dist=149.36Gm parent=Earth
-[STATE]   ship #642 'ISS Hermes' faction=621 sun-dist=149.35Gm parent=Earth
-[STATE]   ship #645 '645' faction=643 sun-dist=807.98Gm parent=Pasiphae
-[STATE] heartbeat t=2050-01-21 23:00 paused step=3600s selected=Pasiphae ships-in-view=7
-[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=119.283Gm parent=ROOT/null moveType=Warp
-[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=119.27Gm parent=ROOT/null moveType=Warp
-[ENGINE] sensor scans 3024 (+0), battle-trigger passes 362161 (+0) since last beat
-[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[TIME] play (step 3600s)
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[STATE] heartbeat t=2050-01-22 21:00 RUNNING step=3600s selected=Pasiphae ships-in-view=7
-[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=118.266Gm parent=ROOT/null moveType=Warp
-[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=118.253Gm parent=ROOT/null moveType=Warp
-[ENGINE] sensor scans 3156 (+132), battle-trigger passes 378001 (+15840) since last beat
-[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[STATE] heartbeat t=2050-01-24 03:00 RUNNING step=3600s selected=Pasiphae ships-in-view=7
-[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=116.938Gm parent=ROOT/null moveType=Warp
-[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=116.924Gm parent=ROOT/null moveType=Warp
-[ENGINE] sensor scans 3336 (+180), battle-trigger passes 399601 (+21600) since last beat
-[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[STATE] heartbeat t=2050-01-25 09:00 RUNNING step=3600s selected=Pasiphae ships-in-view=7
-[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=115.677Gm parent=ROOT/null moveType=Warp
-[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=115.664Gm parent=ROOT/null moveType=Warp
-[ENGINE] sensor scans 3516 (+180), battle-trigger passes 421201 (+21600) since last beat
-[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[STATE] heartbeat t=2050-01-26 16:00 RUNNING step=3600s selected=Pasiphae ships-in-view=7
-[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=114.448Gm parent=ROOT/null moveType=Warp
-[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=114.435Gm parent=ROOT/null moveType=Warp
-[ENGINE] sensor scans 3702 (+186), battle-trigger passes 443521 (+22320) since last beat
-[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0.1,0 Gm
-[CAMERA] pan -> 0.1,0 Gm
-[CAMERA] pan -> 0.1,0 Gm
-[CAMERA] pan -> 0.1,0 Gm
-[CAMERA] pan -> 0.1,0 Gm
-[CAMERA] pan -> 0.1,0 Gm
-[CAMERA] pan -> 0.1,0 Gm
-[CAMERA] pan -> 0.1,0 Gm
-[CAMERA] pan -> 0.1,0 Gm
-[CAMERA] pan -> 0.1,0 Gm
-[STATE] heartbeat t=2050-01-27 22:00 RUNNING step=3600s selected=Pasiphae ships-in-view=7
-[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=113.333Gm parent=ROOT/null moveType=Warp
-[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=113.32Gm parent=ROOT/null moveType=Warp
-[ENGINE] sensor scans 3882 (+180), battle-trigger passes 465121 (+21600) since last beat
-[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 0.1,0.2 Gm
-[CAMERA] pan -> 0.1,0.2 Gm
-[CAMERA] pan -> 0.1,0.2 Gm
-[CAMERA] pan -> 0.1,0.2 Gm
-[CAMERA] pan -> 0.1,0.2 Gm
-[CAMERA] pan -> 0.1,0.2 Gm
-[CAMERA] pan -> 0.1,0.2 Gm
-[CAMERA] pan -> 0.1,0.2 Gm
-[CAMERA] pan -> 0.1,0.2 Gm
-[CAMERA] pan -> 0.1,0.2 Gm
-[CAMERA] pan -> 0.2,0.8 Gm
-[CAMERA] pan -> 0.2,0.8 Gm
-[CAMERA] pan -> 0.2,0.8 Gm
-[CAMERA] pan -> 0.2,0.8 Gm
-[CAMERA] pan -> 0.2,0.8 Gm
-[CAMERA] pan -> 0.2,0.8 Gm
-[CAMERA] pan -> 0.2,0.8 Gm
-[CAMERA] pan -> 0.2,0.8 Gm
-[CAMERA] pan -> 0.2,0.8 Gm
-[CAMERA] pan -> 0.2,0.8 Gm
-[CAMERA] pan -> 2.5,5.7 Gm
-[CAMERA] pan -> 2.5,5.7 Gm
-[CAMERA] pan -> 2.5,5.7 Gm
-[CAMERA] pan -> 2.5,5.7 Gm
-[CAMERA] pan -> 2.5,5.7 Gm
-[CAMERA] pan -> 2.5,5.7 Gm
-[CAMERA] pan -> 2.5,5.7 Gm
-[CAMERA] pan -> 2.5,5.7 Gm
-[CAMERA] pan -> 2.5,5.7 Gm
-[CAMERA] pan -> 2.5,5.7 Gm
-[CAMERA] pan -> 12.5,17.7 Gm
-[CAMERA] pan -> 12.5,17.7 Gm
-[CAMERA] pan -> 12.5,17.7 Gm
-[CAMERA] pan -> 12.5,17.7 Gm
-[CAMERA] pan -> 12.5,17.7 Gm
-[CAMERA] pan -> 12.5,17.7 Gm
-[CAMERA] pan -> 12.5,17.7 Gm
-[CAMERA] pan -> 12.5,17.7 Gm
-[CAMERA] pan -> 12.5,17.7 Gm
-[CAMERA] pan -> 12.5,17.7 Gm
-[CAMERA] pan -> 35.5,-17.5 Gm
-[CAMERA] pan -> 35.5,-17.5 Gm
-[CAMERA] pan -> 35.5,-17.5 Gm
-[CAMERA] pan -> 35.5,-17.5 Gm
-[CAMERA] pan -> 35.5,-17.5 Gm
-[CAMERA] pan -> 35.5,-17.5 Gm
-[CAMERA] pan -> 35.5,-17.5 Gm
-[CAMERA] pan -> 35.5,-17.5 Gm
-[CAMERA] pan -> 35.5,-17.5 Gm
-[CAMERA] pan -> 35.5,-17.5 Gm
-[STATE] heartbeat t=2050-01-29 04:00 RUNNING step=3600s selected=Pasiphae ships-in-view=7
-[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=112.293Gm parent=ROOT/null moveType=Warp
-[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=112.28Gm parent=ROOT/null moveType=Warp
-[ENGINE] sensor scans 4062 (+180), battle-trigger passes 486721 (+21600) since last beat
-[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 39.6,-39.3 Gm
-[CAMERA] pan -> 39.6,-39.3 Gm
-[CAMERA] pan -> 39.6,-39.3 Gm
-[CAMERA] pan -> 39.6,-39.3 Gm
-[CAMERA] pan -> 39.6,-39.3 Gm
-[CAMERA] pan -> 39.6,-39.3 Gm
-[CAMERA] pan -> 39.6,-39.3 Gm
-[CAMERA] pan -> 39.6,-39.3 Gm
-[CAMERA] pan -> 39.6,-39.3 Gm
-[CAMERA] pan -> 39.6,-39.3 Gm
-[CAMERA] pan -> 39.9,-41 Gm
-[CAMERA] pan -> 39.9,-41 Gm
-[CAMERA] pan -> 39.9,-41 Gm
-[CAMERA] pan -> 39.9,-41 Gm
-[CAMERA] pan -> 39.9,-41 Gm
-[CAMERA] pan -> 39.9,-41 Gm
-[CAMERA] pan -> 39.9,-41 Gm
-[CAMERA] pan -> 39.9,-41 Gm
-[CAMERA] pan -> 39.9,-41 Gm
-[CAMERA] pan -> 39.9,-41 Gm
-[CAMERA] pan -> 45.1,-73.9 Gm
-[CAMERA] pan -> 45.1,-73.9 Gm
-[CAMERA] pan -> 45.1,-73.9 Gm
-[CAMERA] pan -> 45.1,-73.9 Gm
-[CAMERA] pan -> 45.1,-73.9 Gm
-[CAMERA] pan -> 45.1,-73.9 Gm
-[CAMERA] pan -> 45.1,-73.9 Gm
-[CAMERA] pan -> 45.1,-73.9 Gm
-[CAMERA] pan -> 45.1,-73.9 Gm
-[CAMERA] pan -> 45.1,-73.9 Gm
-[CAMERA] pan -> 45.7,-92.4 Gm
-[CAMERA] pan -> 45.7,-92.4 Gm
-[CAMERA] pan -> 45.7,-92.4 Gm
-[CAMERA] pan -> 45.7,-92.4 Gm
-[CAMERA] pan -> 45.7,-92.4 Gm
-[CAMERA] pan -> 45.7,-92.4 Gm
-[CAMERA] pan -> 45.7,-92.4 Gm
-[CAMERA] pan -> 45.7,-92.4 Gm
-[CAMERA] pan -> 45.7,-92.4 Gm
-[CAMERA] pan -> 45.7,-92.4 Gm
-[CAMERA] pan -> 78.9,-105.2 Gm
-[CAMERA] pan -> 78.9,-105.2 Gm
-[CAMERA] pan -> 78.9,-105.2 Gm
-[CAMERA] pan -> 78.9,-105.2 Gm
-[CAMERA] pan -> 78.9,-105.2 Gm
-[CAMERA] pan -> 78.9,-105.2 Gm
-[CAMERA] pan -> 78.9,-105.2 Gm
-[CAMERA] pan -> 78.9,-105.2 Gm
-[CAMERA] pan -> 78.9,-105.2 Gm
-[CAMERA] pan -> 78.9,-105.2 Gm
-[CAMERA] pan -> 113.9,-49.9 Gm
-[CAMERA] pan -> 113.9,-49.9 Gm
-[CAMERA] pan -> 113.9,-49.9 Gm
-[CAMERA] pan -> 113.9,-49.9 Gm
-[CAMERA] pan -> 113.9,-49.9 Gm
-[CAMERA] pan -> 113.9,-49.9 Gm
-[CAMERA] pan -> 113.9,-49.9 Gm
-[CAMERA] pan -> 113.9,-49.9 Gm
-[CAMERA] pan -> 113.9,-49.9 Gm
-[CAMERA] pan -> 113.9,-49.9 Gm
-[STATE] heartbeat t=2050-01-30 10:00 RUNNING step=3600s selected=Pasiphae ships-in-view=7
-[STATE]   ⚠ TELEPORT ship #630 'Serial Peacemaker' faction=621 sun-dist=111.33Gm parent=ROOT/null moveType=Warp
-[STATE]   ⚠ TELEPORT ship #632 'Prevailing Stillness' faction=621 sun-dist=111.318Gm parent=ROOT/null moveType=Warp
-[ENGINE] sensor scans 4242 (+180), battle-trigger passes 508321 (+21600) since last beat
-[DETECT] United Earth Corp holds 2 contact(s); 1 other-faction ship(s) in-system, detects 1 (0 hidden from you)
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> -57.1,190.1 Gm
+[CAMERA] pan -> -57.1,190.1 Gm
+[CAMERA] pan -> -57.1,190.1 Gm
+[CAMERA] pan -> -57.1,190.1 Gm
+[CAMERA] pan -> -57.1,190.1 Gm
+[CAMERA] pan -> -57.1,190.1 Gm
+[CAMERA] pan -> -57.1,190.1 Gm
+[CAMERA] pan -> -57.1,190.1 Gm
+[STATE] heartbeat t=2050-01-01 08:27 RUNNING step=60s selected=Sovereign ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 54 (+6), battle-trigger passes 6085 (+360) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> -59.5,221.4 Gm
+[CAMERA] pan -> -59.5,221.4 Gm
+[CAMERA] pan -> -59.5,221.4 Gm
+[CAMERA] pan -> -59.5,221.4 Gm
+[CAMERA] pan -> -59.5,221.4 Gm
+[CAMERA] pan -> -59.5,221.4 Gm
+[CAMERA] pan -> -59.5,221.4 Gm
+[CAMERA] pan -> -59.5,221.4 Gm
+[CAMERA] pan -> -59.5,221.4 Gm
+[CAMERA] pan -> -59.5,221.4 Gm
+[CAMERA] pan -> -69.7,489.3 Gm
+[CAMERA] pan -> -69.7,489.3 Gm
+[CAMERA] pan -> -69.7,489.3 Gm
+[CAMERA] pan -> -69.7,489.3 Gm
+[CAMERA] pan -> -69.7,489.3 Gm
+[CAMERA] pan -> -69.7,489.3 Gm
+[CAMERA] pan -> -69.7,489.3 Gm
+[CAMERA] pan -> -69.7,489.3 Gm
+[CAMERA] pan -> -69.7,489.3 Gm
+[CAMERA] pan -> -69.7,489.3 Gm
+[CAMERA] pan -> -79.8,569.1 Gm
+[CAMERA] pan -> -79.8,569.1 Gm
+[CAMERA] pan -> -79.8,569.1 Gm
+[CAMERA] pan -> -79.8,569.1 Gm
+[CAMERA] pan -> -79.8,569.1 Gm
+[CAMERA] pan -> -79.8,569.1 Gm
+[CAMERA] pan -> -79.8,569.1 Gm
+[CAMERA] pan -> -79.8,569.1 Gm
+[CAMERA] pan -> -79.8,569.1 Gm
+[CAMERA] pan -> -79.8,569.1 Gm
+[CAMERA] pan -> -106.7,750.3 Gm
+[CAMERA] pan -> -106.7,750.3 Gm
+[CAMERA] pan -> -106.7,750.3 Gm
+[CAMERA] pan -> -106.7,750.3 Gm
+[CAMERA] pan -> -106.7,750.3 Gm
+[CAMERA] pan -> -106.7,750.3 Gm
+[CAMERA] pan -> -106.7,750.3 Gm
+[CAMERA] pan -> -106.7,750.3 Gm
+[CAMERA] pan -> -106.7,750.3 Gm
+[CAMERA] pan -> -106.7,750.3 Gm
+[CAMERA] pan -> -98.3,803.9 Gm
+[CAMERA] pan -> -98.3,803.9 Gm
+[CAMERA] pan -> -98.3,803.9 Gm
+[CAMERA] pan -> -98.3,803.9 Gm
+[CAMERA] pan -> -98.3,803.9 Gm
+[CAMERA] pan -> -98.3,803.9 Gm
+[CAMERA] pan -> -98.3,803.9 Gm
+[CAMERA] pan -> -98.3,803.9 Gm
+[CAMERA] pan -> -98.3,803.9 Gm
+[CAMERA] pan -> -98.3,803.9 Gm
+[CAMERA] pan -> -96.8,809.8 Gm
+[CAMERA] pan -> -96.8,809.8 Gm
+[CAMERA] pan -> -96.8,809.8 Gm
+[CAMERA] pan -> -96.8,809.8 Gm
+[CAMERA] pan -> -96.8,809.8 Gm
+[CAMERA] pan -> -96.8,809.8 Gm
+[CAMERA] pan -> -96.8,809.8 Gm
+[CAMERA] pan -> -96.8,809.8 Gm
+[CAMERA] pan -> -96.8,809.8 Gm
+[CAMERA] pan -> -96.8,809.8 Gm
+[STATE] heartbeat t=2050-01-01 08:57 RUNNING step=60s selected=Sovereign ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 54 (+0), battle-trigger passes 6445 (+360) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> -96.9,810.9 Gm
+[CAMERA] pan -> -96.9,810.9 Gm
+[CAMERA] pan -> -96.9,810.9 Gm
+[CAMERA] pan -> -96.9,810.9 Gm
+[CAMERA] pan -> -96.9,810.9 Gm
+[CAMERA] pan -> -96.9,810.9 Gm
+[CAMERA] pan -> -96.9,810.9 Gm
+[CAMERA] pan -> -96.9,810.9 Gm
+[CAMERA] pan -> -96.9,810.9 Gm
+[CAMERA] pan -> -96.9,810.9 Gm
+[SELECT] Primary click on 'Jupiter' (entity #690, faction -99)
+[CAMERA] pan -> -97.2,810.7 Gm
+[CAMERA] pan -> -97.2,810.7 Gm
+[CAMERA] pan -> -97.2,810.7 Gm
+[CAMERA] pan -> -97.2,810.7 Gm
+[CAMERA] pan -> -97.2,810.7 Gm
+[CAMERA] pan -> -97.2,810.7 Gm
+[CAMERA] pan -> -97.2,810.7 Gm
+[CAMERA] pan -> -97.2,810.7 Gm
+[CAMERA] pan -> -97.2,810.7 Gm
+[CAMERA] pan -> -97.2,810.7 Gm
+[CAMERA] pan -> -97,810.7 Gm
+[CAMERA] pan -> -97,810.7 Gm
+[CAMERA] pan -> -97,810.7 Gm
+[CAMERA] pan -> -97,810.7 Gm
+[CAMERA] pan -> -97,810.7 Gm
+[CAMERA] pan -> -97,810.7 Gm
+[CAMERA] pan -> -97,810.7 Gm
+[CAMERA] pan -> -97,810.7 Gm
+[CAMERA] pan -> -97,810.7 Gm
+[CAMERA] pan -> -97,810.7 Gm
+[STATE] heartbeat t=2050-01-01 09:27 RUNNING step=60s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 60 (+6), battle-trigger passes 6805 (+360) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> -96.9,810.7 Gm
+[CAMERA] pan -> -96.9,810.7 Gm
+[CAMERA] pan -> -96.9,810.7 Gm
+[CAMERA] pan -> -96.9,810.7 Gm
+[CAMERA] pan -> -96.9,810.7 Gm
+[CAMERA] pan -> -96.9,810.7 Gm
+[CAMERA] pan -> -96.9,810.7 Gm
+[CAMERA] pan -> -96.9,810.7 Gm
+[CAMERA] pan -> -96.9,810.7 Gm
+[CAMERA] pan -> -96.9,810.7 Gm
+[STATE] heartbeat t=2050-01-01 09:57 RUNNING step=60s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 60 (+0), battle-trigger passes 7165 (+360) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-01 10:27 RUNNING step=60s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 66 (+6), battle-trigger passes 7525 (+360) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-01 10:57 RUNNING step=60s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 66 (+0), battle-trigger passes 7885 (+360) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-01 11:27 RUNNING step=60s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 72 (+6), battle-trigger passes 8245 (+360) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[VIEW] now viewing faction id=0 ()
+[STATE] ship positions (after view switch): 8 ship(s)
+[STATE]   ship #728 'Planet Express Ship' faction=722 sun-dist=150.21Gm parent=Earth
+[STATE]   ship #731 'Serial Peacemaker' faction=722 sun-dist=149.41Gm parent=ROOT/null
+[STATE]   ship #733 'Prevailing Stillness' faction=722 sun-dist=149.4Gm parent=ROOT/null
+[STATE]   ship #736 'Surveyor I' faction=722 sun-dist=150.23Gm parent=Earth
+[STATE]   ship #738 'SensorSat I' faction=722 sun-dist=150.23Gm parent=Earth
+[STATE]   ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null
+[STATE]   ship #746 '746' faction=744 sun-dist=816.58Gm parent=Jupiter
+[STATE]   ship #747 'ISS Hermes' faction=722 sun-dist=150.23Gm parent=Earth
+[STATE] heartbeat t=2050-01-01 11:57 RUNNING step=60s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 72 (+0), battle-trigger passes 8605 (+360) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[DevTools] Fog of war (RequireDetectionToEngage) = True
+[STATE] heartbeat t=2050-01-01 12:27 RUNNING step=60s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 78 (+6), battle-trigger passes 8965 (+360) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-01 12:57 RUNNING step=60s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 78 (+0), battle-trigger passes 9325 (+360) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[VIEW] now viewing faction id=722 (UEC)
+[STATE] ship positions (after view switch): 8 ship(s)
+[STATE]   ship #728 'Planet Express Ship' faction=722 sun-dist=150.22Gm parent=Earth
+[STATE]   ship #731 'Serial Peacemaker' faction=722 sun-dist=149.3Gm parent=ROOT/null
+[STATE]   ship #733 'Prevailing Stillness' faction=722 sun-dist=149.28Gm parent=ROOT/null
+[STATE]   ship #736 'Surveyor I' faction=722 sun-dist=150.22Gm parent=Earth
+[STATE]   ship #738 'SensorSat I' faction=722 sun-dist=150.22Gm parent=Earth
+[STATE]   ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null
+[STATE]   ship #746 '746' faction=744 sun-dist=816.42Gm parent=Jupiter
+[STATE]   ship #747 'ISS Hermes' faction=722 sun-dist=150.22Gm parent=Earth
+[STATE] heartbeat t=2050-01-01 13:27 RUNNING step=60s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 84 (+6), battle-trigger passes 9685 (+360) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> -96.6,810.7 Gm
+[CAMERA] pan -> -96.6,810.7 Gm
+[CAMERA] pan -> -96.6,810.7 Gm
+[CAMERA] pan -> -96.6,810.7 Gm
+[CAMERA] pan -> -96.6,810.7 Gm
+[CAMERA] pan -> -96.6,810.7 Gm
+[CAMERA] pan -> -96.6,810.7 Gm
+[CAMERA] pan -> -96.6,810.7 Gm
+[CAMERA] pan -> -96.6,810.7 Gm
+[CAMERA] pan -> -96.6,810.7 Gm
+[CAMERA] pan -> -97.1,810.4 Gm
+[CAMERA] pan -> -97.1,810.4 Gm
+[CAMERA] pan -> -97.1,810.4 Gm
+[CAMERA] pan -> -97.1,810.4 Gm
+[CAMERA] pan -> -97.1,810.4 Gm
+[CAMERA] pan -> -97.1,810.4 Gm
+[CAMERA] pan -> -97.1,810.4 Gm
+[CAMERA] pan -> -97.1,810.4 Gm
+[CAMERA] pan -> -97.1,810.4 Gm
+[CAMERA] pan -> -97.1,810.4 Gm
+[STATE] heartbeat t=2050-01-01 13:58 RUNNING step=60s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 84 (+0), battle-trigger passes 10057 (+372) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> -97.1,810.5 Gm
+[CAMERA] pan -> -97.1,810.5 Gm
+[CAMERA] pan -> -97.1,810.5 Gm
+[CAMERA] pan -> -97.1,810.5 Gm
+[CAMERA] pan -> -97.1,810.5 Gm
+[CAMERA] pan -> -97.1,810.5 Gm
+[CAMERA] pan -> -97.1,810.5 Gm
+[CAMERA] pan -> -97.1,810.5 Gm
+[CAMERA] pan -> -97.1,810.5 Gm
+[CAMERA] pan -> -97.1,810.5 Gm
+[CAMERA] pan -> -97.2,810.5 Gm
+[CAMERA] pan -> -97.2,810.5 Gm
+[CAMERA] pan -> -97.2,810.5 Gm
+[CAMERA] pan -> -97.2,810.5 Gm
+[CAMERA] pan -> -97.2,810.5 Gm
+[CAMERA] pan -> -97.2,810.5 Gm
+[CAMERA] pan -> -97.2,810.5 Gm
+[CAMERA] pan -> -97.2,810.5 Gm
+[CAMERA] pan -> -97.2,810.5 Gm
+[CAMERA] pan -> -97.2,810.5 Gm
+[CAMERA] pan -> -96.9,810.4 Gm
+[CAMERA] pan -> -96.9,810.4 Gm
+[CAMERA] pan -> -96.9,810.4 Gm
+[CAMERA] pan -> -96.9,810.4 Gm
+[CAMERA] pan -> -96.9,810.4 Gm
+[CAMERA] pan -> -96.9,810.4 Gm
+[CAMERA] pan -> -96.9,810.4 Gm
+[CAMERA] pan -> -96.9,810.4 Gm
+[CAMERA] pan -> -96.9,810.4 Gm
+[CAMERA] pan -> -96.9,810.4 Gm
+[CAMERA] pan -> -96.7,810.4 Gm
+[CAMERA] pan -> -96.7,810.4 Gm
+[CAMERA] pan -> -96.7,810.4 Gm
+[CAMERA] pan -> -96.7,810.4 Gm
+[CAMERA] pan -> -96.7,810.4 Gm
+[CAMERA] pan -> -96.7,810.4 Gm
+[CAMERA] pan -> -96.7,810.4 Gm
+[CAMERA] pan -> -96.7,810.4 Gm
+[CAMERA] pan -> -96.7,810.4 Gm
+[CAMERA] pan -> -96.7,810.4 Gm
+[CAMERA] pan -> -95.5,810.1 Gm
+[CAMERA] pan -> -95.5,810.1 Gm
+[CAMERA] pan -> -95.5,810.1 Gm
+[CAMERA] pan -> -95.5,810.1 Gm
+[CAMERA] pan -> -95.5,810.1 Gm
+[CAMERA] pan -> -95.5,810.1 Gm
+[CAMERA] pan -> -95.5,810.1 Gm
+[CAMERA] pan -> -95.5,810.1 Gm
+[CAMERA] pan -> -95.5,810.1 Gm
+[CAMERA] pan -> -95.5,810.1 Gm
+[STATE] heartbeat t=2050-01-01 14:28 RUNNING step=60s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 90 (+6), battle-trigger passes 10417 (+360) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-01 14:58 RUNNING step=60s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 90 (+0), battle-trigger passes 10777 (+360) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-01 15:28 RUNNING step=60s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 96 (+6), battle-trigger passes 11137 (+360) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> -91.2,808.7 Gm
+[CAMERA] pan -> -91.2,808.7 Gm
+[CAMERA] pan -> -91.2,808.7 Gm
+[CAMERA] pan -> -91.2,808.7 Gm
+[CAMERA] pan -> -91.2,808.7 Gm
+[CAMERA] pan -> -91.2,808.7 Gm
+[CAMERA] pan -> -91.2,808.7 Gm
+[CAMERA] pan -> -91.2,808.7 Gm
+[CAMERA] pan -> -91.2,808.7 Gm
+[CAMERA] pan -> -91.2,808.7 Gm
+[CAMERA] pan -> -90.3,808.4 Gm
+[CAMERA] pan -> -90.3,808.4 Gm
+[CAMERA] pan -> -90.3,808.4 Gm
+[CAMERA] pan -> -90.3,808.4 Gm
+[CAMERA] pan -> -90.3,808.4 Gm
+[CAMERA] pan -> -90.3,808.4 Gm
+[CAMERA] pan -> -90.3,808.4 Gm
+[CAMERA] pan -> -90.3,808.4 Gm
+[CAMERA] pan -> -90.3,808.4 Gm
+[CAMERA] pan -> -90.3,808.4 Gm
+[STATE] heartbeat t=2050-01-01 15:58 RUNNING step=60s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 96 (+0), battle-trigger passes 11497 (+360) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> -94.3,822.8 Gm
+[CAMERA] pan -> -94.3,822.8 Gm
+[CAMERA] pan -> -94.3,822.8 Gm
+[CAMERA] pan -> -94.3,822.8 Gm
+[CAMERA] pan -> -94.3,822.8 Gm
+[CAMERA] pan -> -94.3,822.8 Gm
+[CAMERA] pan -> -94.3,822.8 Gm
+[CAMERA] pan -> -94.3,822.8 Gm
+[CAMERA] pan -> -94.3,822.8 Gm
+[CAMERA] pan -> -94.3,822.8 Gm
+[CAMERA] pan -> -95.1,826.5 Gm
+[CAMERA] pan -> -95.1,826.5 Gm
+[CAMERA] pan -> -95.1,826.5 Gm
+[CAMERA] pan -> -95.1,826.5 Gm
+[CAMERA] pan -> -95.1,826.5 Gm
+[CAMERA] pan -> -95.1,826.5 Gm
+[CAMERA] pan -> -95.1,826.5 Gm
+[CAMERA] pan -> -95.1,826.5 Gm
+[CAMERA] pan -> -95.1,826.5 Gm
+[CAMERA] pan -> -95.1,826.5 Gm
+[CAMERA] pan -> -67.5,763.7 Gm
+[CAMERA] pan -> -67.5,763.7 Gm
+[CAMERA] pan -> -67.5,763.7 Gm
+[CAMERA] pan -> -67.5,763.7 Gm
+[CAMERA] pan -> -67.5,763.7 Gm
+[CAMERA] pan -> -67.5,763.7 Gm
+[CAMERA] pan -> -67.5,763.7 Gm
+[CAMERA] pan -> -67.5,763.7 Gm
+[CAMERA] pan -> -67.5,763.7 Gm
+[CAMERA] pan -> -67.5,763.7 Gm
+[CAMERA] pan -> -36.6,772.5 Gm
+[CAMERA] pan -> -36.6,772.5 Gm
+[CAMERA] pan -> -36.6,772.5 Gm
+[CAMERA] pan -> -36.6,772.5 Gm
+[CAMERA] pan -> -36.6,772.5 Gm
+[CAMERA] pan -> -36.6,772.5 Gm
+[CAMERA] pan -> -36.6,772.5 Gm
+[CAMERA] pan -> -36.6,772.5 Gm
+[CAMERA] pan -> -36.6,772.5 Gm
+[CAMERA] pan -> -36.6,772.5 Gm
+[CAMERA] pan -> -16.8,784.6 Gm
+[CAMERA] pan -> -16.8,784.6 Gm
+[CAMERA] pan -> -16.8,784.6 Gm
+[CAMERA] pan -> -16.8,784.6 Gm
+[CAMERA] pan -> -16.8,784.6 Gm
+[CAMERA] pan -> -16.8,784.6 Gm
+[CAMERA] pan -> -16.8,784.6 Gm
+[CAMERA] pan -> -16.8,784.6 Gm
+[CAMERA] pan -> -16.8,784.6 Gm
+[CAMERA] pan -> -16.8,784.6 Gm
+[CAMERA] pan -> -43.7,557.8 Gm
+[CAMERA] pan -> -43.7,557.8 Gm
+[CAMERA] pan -> -43.7,557.8 Gm
+[CAMERA] pan -> -43.7,557.8 Gm
+[CAMERA] pan -> -43.7,557.8 Gm
+[CAMERA] pan -> -43.7,557.8 Gm
+[CAMERA] pan -> -43.7,557.8 Gm
+[CAMERA] pan -> -43.7,557.8 Gm
+[CAMERA] pan -> -43.7,557.8 Gm
+[CAMERA] pan -> -43.7,557.8 Gm
+[STATE] heartbeat t=2050-01-01 16:28 RUNNING step=60s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 102 (+6), battle-trigger passes 11857 (+360) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> -43.7,287.1 Gm
+[CAMERA] pan -> -43.7,287.1 Gm
+[CAMERA] pan -> -43.7,287.1 Gm
+[CAMERA] pan -> -43.7,287.1 Gm
+[CAMERA] pan -> -43.7,287.1 Gm
+[CAMERA] pan -> -43.7,287.1 Gm
+[CAMERA] pan -> -43.7,287.1 Gm
+[CAMERA] pan -> -43.7,287.1 Gm
+[CAMERA] pan -> -43.7,287.1 Gm
+[CAMERA] pan -> -43.7,287.1 Gm
+[CAMERA] pan -> 77.7,110.9 Gm
+[CAMERA] pan -> 77.7,110.9 Gm
+[CAMERA] pan -> 77.7,110.9 Gm
+[CAMERA] pan -> 77.7,110.9 Gm
+[CAMERA] pan -> 77.7,110.9 Gm
+[CAMERA] pan -> 77.7,110.9 Gm
+[CAMERA] pan -> 77.7,110.9 Gm
+[CAMERA] pan -> 77.7,110.9 Gm
+[CAMERA] pan -> 77.7,110.9 Gm
+[CAMERA] pan -> 77.7,110.9 Gm
+[CAMERA] pan -> 122.3,40.3 Gm
+[CAMERA] pan -> 122.3,40.3 Gm
+[CAMERA] pan -> 122.3,40.3 Gm
+[CAMERA] pan -> 122.3,40.3 Gm
+[CAMERA] pan -> 122.3,40.3 Gm
+[CAMERA] pan -> 122.3,40.3 Gm
+[CAMERA] pan -> 122.3,40.3 Gm
+[CAMERA] pan -> 122.3,40.3 Gm
+[CAMERA] pan -> 122.3,40.3 Gm
+[CAMERA] pan -> 122.3,40.3 Gm
+[CAMERA] pan -> 129.8,11.3 Gm
+[CAMERA] pan -> 129.8,11.3 Gm
+[CAMERA] pan -> 129.8,11.3 Gm
+[CAMERA] pan -> 129.8,11.3 Gm
+[CAMERA] pan -> 129.8,11.3 Gm
+[CAMERA] pan -> 129.8,11.3 Gm
+[CAMERA] pan -> 129.8,11.3 Gm
+[CAMERA] pan -> 129.8,11.3 Gm
+[CAMERA] pan -> 129.8,11.3 Gm
+[CAMERA] pan -> 129.8,11.3 Gm
+[STATE] heartbeat t=2050-01-01 16:58 RUNNING step=60s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 102 (+0), battle-trigger passes 12217 (+360) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 138,-0.8 Gm
+[CAMERA] pan -> 138,-0.8 Gm
+[CAMERA] pan -> 138,-0.8 Gm
+[CAMERA] pan -> 138,-0.8 Gm
+[CAMERA] pan -> 138,-0.8 Gm
+[CAMERA] pan -> 138,-0.8 Gm
+[CAMERA] pan -> 138,-0.8 Gm
+[CAMERA] pan -> 138,-0.8 Gm
+[CAMERA] pan -> 138,-0.8 Gm
+[CAMERA] pan -> 138,-0.8 Gm
+[TIME] paused
+[STATE] heartbeat t=2050-01-01 17:17 paused step=60s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 108 (+6), battle-trigger passes 12445 (+228) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[TIME] one step (86400s)
+[CAMERA] pan -> 144.6,-5.6 Gm
+[CAMERA] pan -> 144.6,-5.6 Gm
+[CAMERA] pan -> 144.6,-5.6 Gm
+[CAMERA] pan -> 144.6,-5.6 Gm
+[CAMERA] pan -> 144.6,-5.6 Gm
+[CAMERA] pan -> 144.6,-5.6 Gm
+[CAMERA] pan -> 144.6,-5.6 Gm
+[CAMERA] pan -> 144.6,-5.6 Gm
+[CAMERA] pan -> 144.6,-5.6 Gm
+[CAMERA] pan -> 144.6,-5.6 Gm
+[CAMERA] pan -> 193.7,-35.1 Gm
+[CAMERA] pan -> 193.7,-35.1 Gm
+[CAMERA] pan -> 193.7,-35.1 Gm
+[CAMERA] pan -> 193.7,-35.1 Gm
+[CAMERA] pan -> 193.7,-35.1 Gm
+[CAMERA] pan -> 193.7,-35.1 Gm
+[CAMERA] pan -> 193.7,-35.1 Gm
+[CAMERA] pan -> 193.7,-35.1 Gm
+[CAMERA] pan -> 193.7,-35.1 Gm
+[CAMERA] pan -> 193.7,-35.1 Gm
+[STATE] heartbeat t=2050-01-02 17:17 paused step=86400s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 252 (+144), battle-trigger passes 29725 (+17280) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 220.8,-49.3 Gm
+[CAMERA] pan -> 220.8,-49.3 Gm
+[CAMERA] pan -> 220.8,-49.3 Gm
+[CAMERA] pan -> 220.8,-49.3 Gm
+[CAMERA] pan -> 220.8,-49.3 Gm
+[CAMERA] pan -> 220.8,-49.3 Gm
+[CAMERA] pan -> 220.8,-49.3 Gm
+[CAMERA] pan -> 220.8,-49.3 Gm
+[CAMERA] pan -> 220.8,-49.3 Gm
+[CAMERA] pan -> 220.8,-49.3 Gm
+[TIME] one step (86400s)
+[STATE] heartbeat t=2050-01-03 17:17 paused step=86400s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 396 (+144), battle-trigger passes 47005 (+17280) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[TIME] play (step 86400s)
+[TIME] paused
+[STATE] heartbeat t=2050-01-07 17:17 paused step=86400s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 972 (+576), battle-trigger passes 116125 (+69120) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[TIME] one step (2592000s)
+[STATE] heartbeat t=2050-01-07 17:17 RUNNING step=2592000s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 996 (+24), battle-trigger passes 119111 (+2986) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-07 17:17 RUNNING step=2592000s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 1956 (+960), battle-trigger passes 234300 (+115189) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 141.5,46.4 Gm
+[CAMERA] pan -> 141.5,46.4 Gm
+[CAMERA] pan -> 141.5,46.4 Gm
+[CAMERA] pan -> 141.5,46.4 Gm
+[CAMERA] pan -> 141.5,46.4 Gm
+[CAMERA] pan -> 141.5,46.4 Gm
+[CAMERA] pan -> 141.5,46.4 Gm
+[CAMERA] pan -> 141.5,46.4 Gm
+[CAMERA] pan -> 141.5,46.4 Gm
+[CAMERA] pan -> 141.5,46.4 Gm
+[CAMERA] pan -> 78.6,102.6 Gm
+[CAMERA] pan -> 78.6,102.6 Gm
+[CAMERA] pan -> 78.6,102.6 Gm
+[CAMERA] pan -> 78.6,102.6 Gm
+[CAMERA] pan -> 78.6,102.6 Gm
+[CAMERA] pan -> 78.6,102.6 Gm
+[CAMERA] pan -> 78.6,102.6 Gm
+[CAMERA] pan -> 78.6,102.6 Gm
+[CAMERA] pan -> 78.6,102.6 Gm
+[CAMERA] pan -> 78.6,102.6 Gm
+[STATE] heartbeat t=2050-01-07 17:17 RUNNING step=2592000s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 2904 (+948), battle-trigger passes 348403 (+114103) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-07 17:17 RUNNING step=2592000s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 3852 (+948), battle-trigger passes 462222 (+113819) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-07 17:17 RUNNING step=2592000s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 4788 (+936), battle-trigger passes 574071 (+111849) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[TIME] paused
+[STATE] heartbeat t=2050-02-06 17:17 paused step=2592000s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+504), battle-trigger passes 634525 (+60454) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 188.8,65.4 Gm
+[CAMERA] pan -> 188.8,65.4 Gm
+[CAMERA] pan -> 188.8,65.4 Gm
+[CAMERA] pan -> 188.8,65.4 Gm
+[CAMERA] pan -> 188.8,65.4 Gm
+[CAMERA] pan -> 188.8,65.4 Gm
+[CAMERA] pan -> 188.8,65.4 Gm
+[CAMERA] pan -> 188.8,65.4 Gm
+[CAMERA] pan -> 188.8,65.4 Gm
+[CAMERA] pan -> 188.8,65.4 Gm
+[CAMERA] pan -> -23.5,408.4 Gm
+[CAMERA] pan -> -23.5,408.4 Gm
+[CAMERA] pan -> -23.5,408.4 Gm
+[CAMERA] pan -> -23.5,408.4 Gm
+[CAMERA] pan -> -23.5,408.4 Gm
+[CAMERA] pan -> -23.5,408.4 Gm
+[CAMERA] pan -> -23.5,408.4 Gm
+[CAMERA] pan -> -23.5,408.4 Gm
+[CAMERA] pan -> -23.5,408.4 Gm
+[CAMERA] pan -> -23.5,408.4 Gm
+[CAMERA] pan -> -38.4,421.8 Gm
+[CAMERA] pan -> -38.4,421.8 Gm
+[CAMERA] pan -> -38.4,421.8 Gm
+[CAMERA] pan -> -38.4,421.8 Gm
+[CAMERA] pan -> -38.4,421.8 Gm
+[CAMERA] pan -> -38.4,421.8 Gm
+[CAMERA] pan -> -38.4,421.8 Gm
+[CAMERA] pan -> -38.4,421.8 Gm
+[CAMERA] pan -> -38.4,421.8 Gm
+[CAMERA] pan -> -38.4,421.8 Gm
+[CAMERA] pan -> -200.7,701.3 Gm
+[CAMERA] pan -> -200.7,701.3 Gm
+[CAMERA] pan -> -200.7,701.3 Gm
+[CAMERA] pan -> -200.7,701.3 Gm
+[CAMERA] pan -> -200.7,701.3 Gm
+[CAMERA] pan -> -200.7,701.3 Gm
+[CAMERA] pan -> -200.7,701.3 Gm
+[CAMERA] pan -> -200.7,701.3 Gm
+[CAMERA] pan -> -200.7,701.3 Gm
+[CAMERA] pan -> -200.7,701.3 Gm
+[CAMERA] pan -> -154.9,758.3 Gm
+[CAMERA] pan -> -154.9,758.3 Gm
+[CAMERA] pan -> -154.9,758.3 Gm
+[CAMERA] pan -> -154.9,758.3 Gm
+[CAMERA] pan -> -154.9,758.3 Gm
+[CAMERA] pan -> -154.9,758.3 Gm
+[CAMERA] pan -> -154.9,758.3 Gm
+[CAMERA] pan -> -154.9,758.3 Gm
+[CAMERA] pan -> -154.9,758.3 Gm
+[CAMERA] pan -> -154.9,758.3 Gm
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> -135.9,783.7 Gm
+[CAMERA] pan -> -135.9,783.7 Gm
+[CAMERA] pan -> -135.9,783.7 Gm
+[CAMERA] pan -> -135.9,783.7 Gm
+[CAMERA] pan -> -135.9,783.7 Gm
+[CAMERA] pan -> -135.9,783.7 Gm
+[CAMERA] pan -> -135.9,783.7 Gm
+[CAMERA] pan -> -135.9,783.7 Gm
+[CAMERA] pan -> -135.9,783.7 Gm
+[CAMERA] pan -> -135.9,783.7 Gm
+[CAMERA] pan -> -137.7,789.4 Gm
+[CAMERA] pan -> -137.7,789.4 Gm
+[CAMERA] pan -> -137.7,789.4 Gm
+[CAMERA] pan -> -137.7,789.4 Gm
+[CAMERA] pan -> -137.7,789.4 Gm
+[CAMERA] pan -> -137.7,789.4 Gm
+[CAMERA] pan -> -137.7,789.4 Gm
+[CAMERA] pan -> -137.7,789.4 Gm
+[CAMERA] pan -> -137.7,789.4 Gm
+[CAMERA] pan -> -137.7,789.4 Gm
+[CAMERA] pan -> -139.2,791.2 Gm
+[CAMERA] pan -> -139.2,791.2 Gm
+[CAMERA] pan -> -139.2,791.2 Gm
+[CAMERA] pan -> -139.2,791.2 Gm
+[CAMERA] pan -> -139.2,791.2 Gm
+[CAMERA] pan -> -139.2,791.2 Gm
+[CAMERA] pan -> -139.2,791.2 Gm
+[CAMERA] pan -> -139.2,791.2 Gm
+[CAMERA] pan -> -139.2,791.2 Gm
+[CAMERA] pan -> -139.2,791.2 Gm
+[CAMERA] pan -> -139.4,791.2 Gm
+[CAMERA] pan -> -139.4,791.2 Gm
+[CAMERA] pan -> -139.4,791.2 Gm
+[CAMERA] pan -> -139.4,791.2 Gm
+[CAMERA] pan -> -139.4,791.2 Gm
+[CAMERA] pan -> -139.4,791.2 Gm
+[CAMERA] pan -> -139.4,791.2 Gm
+[CAMERA] pan -> -139.4,791.2 Gm
+[CAMERA] pan -> -139.4,791.2 Gm
+[CAMERA] pan -> -139.4,791.2 Gm
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> -135.4,785.1 Gm
+[CAMERA] pan -> -135.4,785.1 Gm
+[CAMERA] pan -> -135.4,785.1 Gm
+[CAMERA] pan -> -135.4,785.1 Gm
+[CAMERA] pan -> -135.4,785.1 Gm
+[CAMERA] pan -> -135.4,785.1 Gm
+[CAMERA] pan -> -135.4,785.1 Gm
+[CAMERA] pan -> -135.4,785.1 Gm
+[CAMERA] pan -> -135.4,785.1 Gm
+[CAMERA] pan -> -135.4,785.1 Gm
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[VIEW] now viewing faction id=0 ()
+[STATE] ship positions (after view switch): 8 ship(s)
+[STATE]   ship #728 'Planet Express Ship' faction=722 sun-dist=148.68Gm parent=Earth
+[STATE]   ship #731 'Serial Peacemaker' faction=722 sun-dist=107.23Gm parent=ROOT/null
+[STATE]   ship #733 'Prevailing Stillness' faction=722 sun-dist=107.22Gm parent=ROOT/null
+[STATE]   ship #736 'Surveyor I' faction=722 sun-dist=148.7Gm parent=Earth
+[STATE]   ship #738 'SensorSat I' faction=722 sun-dist=148.7Gm parent=Earth
+[STATE]   ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null
+[STATE]   ship #746 '746' faction=744 sun-dist=816.42Gm parent=Jupiter
+[STATE]   ship #747 'ISS Hermes' faction=722 sun-dist=148.7Gm parent=Earth
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> -132.4,780.8 Gm
+[CAMERA] pan -> -132.4,780.8 Gm
+[CAMERA] pan -> -132.4,780.8 Gm
+[CAMERA] pan -> -132.4,780.8 Gm
+[CAMERA] pan -> -132.4,780.8 Gm
+[CAMERA] pan -> -132.4,780.8 Gm
+[CAMERA] pan -> -132.4,780.8 Gm
+[CAMERA] pan -> -132.4,780.8 Gm
+[CAMERA] pan -> -132.4,780.8 Gm
+[CAMERA] pan -> -132.4,780.8 Gm
+[CAMERA] pan -> -138.1,788.5 Gm
+[CAMERA] pan -> -138.1,788.5 Gm
+[CAMERA] pan -> -138.1,788.5 Gm
+[CAMERA] pan -> -138.1,788.5 Gm
+[CAMERA] pan -> -138.1,788.5 Gm
+[CAMERA] pan -> -138.1,788.5 Gm
+[CAMERA] pan -> -138.1,788.5 Gm
+[CAMERA] pan -> -138.1,788.5 Gm
+[CAMERA] pan -> -138.1,788.5 Gm
+[CAMERA] pan -> -138.1,788.5 Gm
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=8
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[DevTools] Spawn Ship OK: 'Leviathan Battleship' id=748 around 'Lysithea', added to fleet 'Freight Fleet', fuel=+1079999 units, shipsInSystem=9
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=9
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 7 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=9
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 7 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[VIEW] now viewing faction id=722 (UEC)
+[STATE] ship positions (after view switch): 9 ship(s)
+[STATE]   ship #728 'Planet Express Ship' faction=722 sun-dist=148.68Gm parent=Earth
+[STATE]   ship #731 'Serial Peacemaker' faction=722 sun-dist=107.23Gm parent=ROOT/null
+[STATE]   ship #733 'Prevailing Stillness' faction=722 sun-dist=107.22Gm parent=ROOT/null
+[STATE]   ship #736 'Surveyor I' faction=722 sun-dist=148.7Gm parent=Earth
+[STATE]   ship #738 'SensorSat I' faction=722 sun-dist=148.7Gm parent=Earth
+[STATE]   ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null
+[STATE]   ship #746 '746' faction=744 sun-dist=816.42Gm parent=Jupiter
+[STATE]   ship #747 'ISS Hermes' faction=722 sun-dist=148.7Gm parent=Earth
+[STATE]   ship #748 'to war' faction=722 sun-dist=805.75Gm parent=Lysithea
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=9
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 7 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> -140.3,791.9 Gm
+[CAMERA] pan -> -140.3,791.9 Gm
+[CAMERA] pan -> -140.3,791.9 Gm
+[CAMERA] pan -> -140.3,791.9 Gm
+[CAMERA] pan -> -140.3,791.9 Gm
+[CAMERA] pan -> -140.3,791.9 Gm
+[CAMERA] pan -> -140.3,791.9 Gm
+[CAMERA] pan -> -140.3,791.9 Gm
+[CAMERA] pan -> -140.3,791.9 Gm
+[CAMERA] pan -> -140.3,791.9 Gm
+[CAMERA] pan -> -140.9,792.9 Gm
+[CAMERA] pan -> -140.9,792.9 Gm
+[CAMERA] pan -> -140.9,792.9 Gm
+[CAMERA] pan -> -140.9,792.9 Gm
+[CAMERA] pan -> -140.9,792.9 Gm
+[CAMERA] pan -> -140.9,792.9 Gm
+[CAMERA] pan -> -140.9,792.9 Gm
+[CAMERA] pan -> -140.9,792.9 Gm
+[CAMERA] pan -> -140.9,792.9 Gm
+[CAMERA] pan -> -140.9,792.9 Gm
+[CAMERA] pan -> -141.2,793.2 Gm
+[CAMERA] pan -> -141.2,793.2 Gm
+[CAMERA] pan -> -141.2,793.2 Gm
+[CAMERA] pan -> -141.2,793.2 Gm
+[CAMERA] pan -> -141.2,793.2 Gm
+[CAMERA] pan -> -141.2,793.2 Gm
+[CAMERA] pan -> -141.2,793.2 Gm
+[CAMERA] pan -> -141.2,793.2 Gm
+[CAMERA] pan -> -141.2,793.2 Gm
+[CAMERA] pan -> -141.2,793.2 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=9
+[STATE]   ⚠ TELEPORT AT-SUN (pos collapsed to origin) ship #743 'Sovereign' faction=722 sun-dist=0Gm parent=ROOT/null moveType=Orbit
+[ENGINE] sensor scans 5292 (+0), battle-trigger passes 634525 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 7 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[CAMERA] pan -> -141.2,793.3 Gm
+[STATE] heartbeat t=2050-02-06 17:17 paused step=3600s selected=Jupiter ships-in-view=9
