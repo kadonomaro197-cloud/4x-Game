@@ -6,7 +6,48 @@ This document tracks what we know about the codebase state at the close of each 
 
 ## Last Updated
 
-Session 2026-06-26 — **live-test hardening on `claude/focused-ritchie-debock`.** The session recorder (`SessionLog` flight recorder) is built and live-confirmed; the dead-ship click-crash and ghost-icons-on-the-Sun are fixed; and the **combat interrupt now stops the clock at first contact while combat otherwise runs at the player's set speed** (rounds 2–3 below — `CombatReactionStep` fine-stepping in `MasterTimePulse`, gated by `NewEngagementImminent` so only a *forming* fight fine-steps), fixing "combat happened suddenly with no time to react" without forcing a hidden combat clock. Open thread: the warp→Sun teleport (a pre-existing movement edge case) is now auto-detected by the teleport heartbeat but not yet root-fixed (needs one more live repro). See the 2026-06-26 entries below. Prior state ↓.
+Session 2026-06-26 — **detection / EMCON / fog-of-war BUILT, plus the logging that makes a session reviewable, on `claude/focused-ritchie-debock`.** Since the last live test the whole detection layer landed in CI-gauged slices (all engine work CI-green): the fog-of-war combat seam (you fight what you DETECT), dynamic ship signatures + the **EMCON posture lever** (Full/Cruise/Silent) + the activity processor (a lit drive plume betrays you even on Silent), the **grave rung** (shoot a ship's sensors off → it goes blind), a real **reactor-Load bug fix**, and **first-strike** (detect-first → shoot-first). Then the player-facing layer (client, CI-blind): **EMCON UI**, and **fog of war for units on the map** — detected foreign units show as limited-info **contact blips**, undetected ones are **hidden** (everyone sees the star, not the fleet around it). Plus a **logging overhaul** so a remote review can reconstruct a whole session: processor-liveness `[ENGINE]` counters (is the scan / battle-trigger even firing?), `[DETECT]`/`[EMCON]` snapshots, and the log now **rolls into read-sized `game_logs/` pages**. Still standing from earlier this session: the `SessionLog` flight recorder, the dead-ship click-crash / ghost-icon fixes, and the **combat interrupt** (stops the clock at first contact, otherwise runs at the player's set speed). Open threads: the warp→Sun teleport (pre-existing, auto-detected, not root-fixed) and a flagged **detection-quality units bug** (`SensorTools.cs:173`). **Full consolidation + this test's watch list ↓; the older "WHERE TO RESUME" plan predates this work — treat it as the M1 lever map, not the to-do.**
+
+---
+
+## ⏩ Consolidation — everything since the last live test (2026-06-26) — READ FIRST
+
+**Two flags drive all of it, both OFF by default:** `CombatEngagement.RequireDetectionToEngage` (the fog switch — combat-gating **and** unit-hiding **and** contact blips, all at once) and `CombatEngagement.NarrateToLog` (`[Combat]` battle narration + first-strike line). Set in DevTools › Detection / Fog of War, or `PulsarMainWindow` ctor.
+
+### What's built (engine = CI-green; client = CI-BLIND, awaiting the developer's local build)
+| Piece | What | Status |
+|---|---|---|
+| Fog-of-war combat seam | fleets engage only hostiles they DETECT | ✅ engine, CI-green |
+| Dynamic signatures + EMCON | `SensorProfileDB.ActivityMultiplier`; `FleetEmconDB` posture; `EmconActivityProcessor` (a lit drive plume betrays you on Silent) | ✅ engine, CI-green |
+| Grave rung | shoot a ship's sensors off → it goes blind | ✅ engine, CI-green |
+| Reactor-Load bug fix | `EnergyGenProcessor.CalcLoad = Demand/TotalOutputMax` clamped 0-1 (was inverted/unbounded; drove fuel use + power UI) | ✅ engine, CI-green |
+| First-strike | detect-first → shoot-first; the blind side takes fire it can't return | ✅ engine, CI-green |
+| EMCON UI | Fleet › Combat posture selector; DevTools fog toggle + live signature readout | ⏳ client, CI-blind |
+| **Fog of war for units** | detected foreign units = limited-info **blips**; undetected = **hidden**; bodies always shown (`SensorContactIcon` + `AddIconable` guard) | ⏳ client, CI-blind |
+| Logging — liveness | `[ENGINE]` counters: is the scan / battle-trigger actually firing? (the #1 silent-failure tell) | ⏳ client, CI-blind |
+| Logging — rotation | the log rolls into read-sized `game_logs/` pages (no "file too large" wall) | ⏳ client, CI-blind |
+| Logging — snapshots | `[DETECT]` (contacts held + fog gap) / `[EMCON]` (your ships hot/dark/blind) each ~3 s | ⏳ client, CI-blind |
+
+### Watch list for THIS play-test (what the logs should show)
+1. **`[ENGINE]` counters CLIMB** while ships are in-system → the scan + battle-trigger ARE firing live. Flat = the processor never fired (the #1 documented unknown). The single most important reading.
+2. A **`game_logs/` folder** appears with numbered pages (`game_log_000.txt`…), each readable in one pass.
+3. **Fog of war:** toggle it ON in DevTools **before** spawning → spawn a hostile fleet → they stay HIDDEN until detected, then appear as **red-diamond blips with names** (not full ships), fading to "(last known)" when the track is lost. `[DETECT]` shows contacts held vs hidden.
+4. **EMCON:** change a fleet's posture (Fleet › Combat) → the `[EMCON]` line + DevTools signature readout move (Silent < 1, running hot > 1).
+5. **First-strike:** a blind side taking fire → a one-time `[Combat] FIRST-STRIKE` line.
+6. **Faults:** any `[RenderError]` (especially from the new blips) → send the page. And `⚠ TELEPORT` if the warp→Sun bug recurs.
+
+### Lessons learned (the durable ones)
+- **Investigate the OTHER END before you wire — it changed the plan every time this session.** The contact model already existed (just render it); the map already *fetched* contacts and threw them away (`SystemMapRendering.cs:244` — a half-built wire); `Icon` takes `IPosition` and `SensorPositionDB` IS one (the blip drops in like any unit); and checking access modifiers up front caught that quality/strength/memory are `internal` (needing engine accessors). On CI-blind client code the compiler won't save you — verify reachability before you write.
+- **A change that looks local almost never is** (the detection-quality bug). The "resolution varies" signal the feature wanted is degenerate (`SensorTools.cs:173`, a 0–100 value in a 0–1 slot → byte overflow); tracing its consumers found it ALSO drives planet/star survey reveal. So: NOT drive-by-fixed — the blips gate on sound signals, and the quality fix is its own slice with a survey re-check.
+- **CI-blind client work = de-risk by structure, not hope.** Push logic into the CI-covered engine (the `SensorContact` accessors); mirror a proven pattern verbatim (the SDL text path from `EntityLabel`); wrap every new draw in `SafeDraw` + guard position reads; read the exact regions. (Now a standing principle in `Pulsar4X.Client/CLAUDE.md`.)
+- **Build the gauge first, AND make it readable.** Liveness counters separate "nothing to detect" from "the processor never ran"; rotating the log into read-sized pages is the remote-review corollary of the Visibility Gate — *you cannot review what you cannot read*.
+
+### Open / flagged (not done — deliberate)
+- **Detection-quality units bug** (`SensorTools.cs:173`) — degenerate; blocks true progressive contact ID. Next engine slice; fix it WITH a survey-reveal re-check (`SystemBodyInfoDB`/`StarInfoDB` gate on it). Write-up: `GameEngine/Sensors/CLAUDE.md` → "Detection-quality bug."
+- **Warp→Sun teleport** — pre-existing movement edge case; auto-detected by the teleport heartbeat; needs one live repro + root fix (no warp-position test exists — don't blind-fix).
+- **Contact aging** — a destroyed/lost contact lingers as a memory ghost forever (no expiry pass). The blips reflect this faithfully; aging is a follow-up.
+- **IFF / diplomacy** — every rival contact reads "hostile/unknown"; no faction-politics model yet (the developer's stated "later problem").
+- **EMCON slice 3f** (active-ping self-exposure) and **reactor-load → heat** (unblocked by the Load fix; deferred as marginal vs thrust).
 
 ### WHERE TO RESUME — the UNIFIED plan (2026-06-26, after the realism-vs-gameplay audit)
 

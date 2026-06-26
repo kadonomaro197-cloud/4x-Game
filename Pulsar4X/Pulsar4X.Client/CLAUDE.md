@@ -2,6 +2,13 @@
 
 ImGui.NET + SDL2 immediate-mode UI. The only runnable application in the solution. Lives in `Pulsar4X/Pulsar4X.Client/`.
 
+> **⚠ READ FIRST — this client is CI-BLIND.** `ci.yml` builds the GameEngine + tests only; it **never compiles this SDL/OpenGL client**. A client typo, a wrong overload, or a bad SDL interop call sails through green CI and only surfaces on the developer's local Windows build. The compiler is not your safety net here — **de-risk by structure, not hope** (the discipline that carried the detection/EMCON/fog work):
+> 1. **Push logic into the engine, which IS CI-covered.** Need a value the client can't reach? Add a small computed accessor on the engine type (e.g. `SensorContact.SignalStrength_kW`/`PositionIsMemory`) instead of new client logic — CI compiles it, and a wrong `internal`-field access fails loudly there.
+> 2. **Verify reachability BEFORE writing.** Check access modifiers (`internal` engine fields are invisible across the assembly boundary) and that the type/overload actually exists — read the exact source region. A guess costs a full pull→build→paste→fix round-trip with the developer.
+> 3. **Mirror a proven pattern verbatim.** New SDL text? Copy `EntityLabel`'s `RenderTextSolid`→texture→`RenderTexture` path exactly (incl. the finalizer that frees the texture). Don't improvise native interop.
+> 4. **Wrap every new draw in the fault-isolator** (`SystemMapRendering.SafeDraw` / `PulsarMainWindow.SafeRender`) and guard position reads (a NaN/null `AbsolutePosition` throws) — so a glitch logs once and skips instead of blanking the map (gotchas #12/#14).
+> 5. **The gauge IS the test.** You can't run it; the developer can. Leave a log line (`SessionLog` / `[RenderError]`) at each new code path so the play-test's `game_logs/` pages name what happened.
+
 ---
 
 ## Entry Point and Boot Sequence
