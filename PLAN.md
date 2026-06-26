@@ -1,5 +1,18 @@
 # Pulsar4X — Development Plan
 
+> ## ⚠️ SUPERSEDED (2026-06-26) — read `docs/MVP.md` for the live plan.
+> This was the *original* pre-rework plan and its sequencing is **stale**. Do not follow Phases 1–3 as written:
+> - **Phase 1 (fix space combat) is DONE** — complex damage is wired (root gotcha #1), combat has tests, missile
+>   guidance is fixed (gotcha #3). More importantly, the whole per-pixel beam/missile *approach* here was
+>   **superseded** by the 2026-06-24 combat rework → the **auto-resolve engine + doctrine** (`docs/COMBAT-DESIGN.md`).
+>   Following Phase 1's "wire the per-ship beam sim" would be backtracking onto a parked v2 path.
+> - **The live plan is `docs/MVP.md`** ("take a planet": Stage 1 space combat ✅ done → Stage 2 ground combat →
+>   Stage 3 stitch the loop → Stage 4 UI), filtered by the weight-firewall `docs/REALISM-VS-GAMEPLAY-AUDIT.md`.
+> - **What's still good below:** **Phase 4 (Ground Combat System)** is sound *design reference* for MVP Stage 2 —
+>   the Formation/Element/equipment hierarchy and the `GameEngine/GroundForces/` layout. Read it for the *shape*,
+>   but build the minimal MVP slice (`docs/MVP.md` §3 C/E), not the full spec, and mirror the **doctrine decision
+>   spine**, not the realism. Phases 2/3/5 are partly overtaken by events — cross-check against the systems map.
+
 ## Objective
 
 Bring planetary/ground combat and planetary infrastructure to the same depth as space combat already has, and improve the UI. Space combat is the template; ground combat mirrors its architecture.
