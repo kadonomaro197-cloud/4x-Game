@@ -17,6 +17,7 @@ using Pulsar4X.Storage;
 using Pulsar4X.Industry;
 using Pulsar4X.Galaxy; // MassVolumeDB lives here on this branch (namespace drifted from the branch this file was written on)
 using Pulsar4X.Combat;
+using Pulsar4X.Sensors;
 
 namespace Pulsar4X.Client
 {
@@ -391,6 +392,24 @@ namespace Pulsar4X.Client
                     if (!string.IsNullOrEmpty(_hostileStatus))
                         ImGui.TextColored(new Vector4(1f, 0.6f, 0.4f, 1f), _hostileStatus);
                 }
+
+                // ── Detection / Fog of War ────────────────────────
+                ImGui.Separator();
+                ImGui.Text("[ Detection / Fog of War ]");
+                ImGui.TextDisabled("Detection-gated combat: fleets only engage hostiles they DETECT, and the side that");
+                ImGui.TextDisabled("sees first shoots first (first-strike). Off by default. Set a fleet's EMCON posture in");
+                ImGui.TextDisabled("Fleet window > Combat tab (run hot / cruise / go dark to change how far off you're seen).");
+                if (ImGui.Checkbox("Fog of War — detection-gated combat (first-strike)##devfow", ref CombatEngagement.RequireDetectionToEngage))
+                    DevLog($"Fog of war (RequireDetectionToEngage) = {CombatEngagement.RequireDetectionToEngage}");
+
+                // Live signature readout for the clicked entity — watch it climb when a ship runs hot / thrusts /
+                // fires (the EMCON activity model) and drop when it goes Silent. Defensive: tolerates no selection.
+                var clickedEnt = _uiState.LastClickedEntity;
+                if (clickedEnt?.Entity != null && clickedEnt.Entity.IsValid &&
+                    clickedEnt.Entity.TryGetDataBlob<SensorProfileDB>(out var sigProfile))
+                    ImGui.TextDisabled($"Selected #{clickedEnt.Entity.Id}: emitted signature x{sigProfile.ActivityMultiplier:0.##} (posture base x{sigProfile.SignatureBaseMultiplier:0.##})");
+                else
+                    ImGui.TextDisabled("Click a ship on the map to read its live emitted-signature multiplier.");
 
                 // ── Create Colony ─────────────────────────────────
                 ImGui.Separator();

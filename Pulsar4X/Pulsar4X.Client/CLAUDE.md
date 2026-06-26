@@ -230,6 +230,28 @@ on a clock advance — so whether **pressing play** auto-starts the battle in th
 doesn't, the **Tick Combat** button drives the fight manually (and tells us the trigger scheduling, not the combat
 math, is what needs a look). See `GameEngine/Combat/CLAUDE.md` → "Combat sandbox".
 
+### EMCON posture + fog-of-war UI (FleetWindow + DevTools) — BUILT 2026-06-26 (detection stack, slices A)
+
+The engine-side detection/EMCON stack (fog of war, EMCON posture, activity heat, first-strike, grave rung) is
+all CI-green; this is the client lever + toggle to **drive and observe** it. **CI can't build the client, so this
+is build → play → read `game_log.txt` (`[FleetCombat]`/`[DevTools]` lines) — unverified live until then.**
+
+1. **EMCON posture selector** — `FleetWindow.DisplayEmconSelector()` (Combat tab, between Doctrine and the combat
+   sheet). Mirrors the doctrine selector exactly: shows the fleet's current posture + signature multiplier, a
+   Full/Cruise/Silent combo, and a **Set Posture** button that calls `FleetEmcon.SetPosture(SelectedFleet, posture)`
+   (a **direct call**, like doctrine, so it works mid-battle). All reads are defensive (`FleetEmcon.PostureOf` /
+   `MultiplierOf` return a Full/1.0 default for a fleet with no posture).
+2. **Fog-of-war toggle** — `DevToolsWindow` "[ Detection / Fog of War ]" section: a checkbox bound to
+   `CombatEngagement.RequireDetectionToEngage` (default off). On → combat is detection-gated and first-strike is
+   live (the side that sees first shoots first). Plus a **live signature readout** of the clicked entity's
+   `SensorProfileDB.ActivityMultiplier` (watch it climb when a ship runs hot / thrusts / fires, drop when Silent).
+3. **GAP — contacts are NOT drawn on the map.** The map retrieves `GetSensorContacts(factionId)`
+   (`SystemMapRendering.cs:244`) but never renders contact blips — so with fog on you can't yet *see* which
+   hostiles you've detected vs not on the map. Combat behaviour + the signature readout + the `[Combat]` log
+   narration are the current observability. A contact-blip icon renderer (mirroring `ShipIcon`, fed from the
+   per-faction track table) is the deferred follow-up — the "see what you detect" view. (Higher-risk CI-blind
+   work given the map-render crash history — gotchas #12/#14 — so left for a deliberate pass.)
+
 ### GroundCombatWindow — MISSING ENTIRELY
 
 No window exists for ground combat. When `GroundCombatDB` (to be created) is present on a colony entity, a new `GroundCombatWindow` should be reachable from `PlanetaryWindow` tabs and from the system map context menu.
