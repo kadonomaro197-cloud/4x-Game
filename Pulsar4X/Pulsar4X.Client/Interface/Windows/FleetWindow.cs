@@ -20,6 +20,7 @@ using Pulsar4X.Galaxy;
 using Pulsar4X.Movement;
 using Pulsar4X.Combat;
 using Pulsar4X.Blueprints;
+using Pulsar4X.Sensors;
 
 namespace Pulsar4X.Client
 {
@@ -72,6 +73,13 @@ namespace Pulsar4X.Client
         private string[] _doctrineNames = Array.Empty<string>();
         private int _selectedDoctrine = 0;
         private string _doctrineStatus = "";
+
+        // EMCON posture lever (detection slice 3b): the three fixed postures the player can fly. Index-aligned with
+        // _emconPostureNames so the combo selection maps straight to a posture.
+        private readonly EmconPosture[] _emconPostures = { EmconPosture.Full, EmconPosture.Cruise, EmconPosture.Silent };
+        private readonly string[] _emconPostureNames = { "Full", "Cruise", "Silent" };
+        private int _selectedEmconPosture = 0;
+        private string _emconStatus = "";
 
         private FleetWindow()
         {
@@ -531,6 +539,8 @@ namespace Pulsar4X.Client
                     ImGui.Separator();
                     DisplayDoctrineSelector();
                     ImGui.Separator();
+                    DisplayEmconSelector();
+                    ImGui.Separator();
                     DisplayFleetCombatSheet();
                 }
                 ImGui.EndChild();
@@ -637,6 +647,40 @@ namespace Pulsar4X.Client
 
             if (!string.IsNullOrEmpty(_doctrineStatus))
                 ImGui.TextColored(new Vector4(0.4f, 1f, 0.4f, 1f), _doctrineStatus);
+        }
+
+        // The EMCON lever (detection slice 3b): run hot / cruise / go dark. Sets the fleet's posture, which scales
+        // every member ship's EMITTED signature — how far off you can be detected. Mirrors the doctrine selector;
+        // a DIRECT call (FleetEmcon.SetPosture, not an order), so it works mid-battle. Note: going Silent does NOT
+        // hide a hot drive plume — the activity processor still lights you up when you thrust or fire.
+        private void DisplayEmconSelector()
+        {
+            if (SelectedFleet == null || _uiState.Game == null) return;
+            DisplayHelpers.Header("EMCON Posture", "How loud the fleet runs. Full = as designed; Silent = go dark (harder to detect) at the cost of running cold. Hard activity — thrust, weapons fire — still lights you up regardless of posture.");
+
+            var posture = FleetEmcon.PostureOf(SelectedFleet);
+            double mult = FleetEmcon.MultiplierOf(SelectedFleet);
+            ImGui.Text($"Current: {posture}  (signature x{mult:0.##})");
+
+            ImGui.SetNextItemWidth(Math.Max(ImGui.GetContentRegionAvail().X * 0.5f, 160f));
+            ImGui.Combo("###emcon-combo", ref _selectedEmconPosture, _emconPostureNames, _emconPostureNames.Length);
+
+            ImGui.SameLine();
+            if (ImGui.Button("Set Posture"))
+            {
+                var chosen = _emconPostures[_selectedEmconPosture];
+                FleetEmcon.SetPosture(SelectedFleet, chosen);
+                _emconStatus = $"Set EMCON: {chosen} (signature x{FleetEmcon.MultiplierFor(chosen):0.##})";
+                Console.WriteLine($"[FleetCombat] Set EMCON posture '{chosen}' on fleet {SelectedFleet.Id}");
+                Console.Out.Flush();
+            }
+
+            // Preview the highlighted posture's signature scale, so the player sees the trade before committing.
+            var sel = _emconPostures[_selectedEmconPosture];
+            ImGui.TextDisabled($"{sel} — emitted signature x{FleetEmcon.MultiplierFor(sel):0.##}");
+
+            if (!string.IsNullOrEmpty(_emconStatus))
+                ImGui.TextColored(new Vector4(0.4f, 1f, 0.4f, 1f), _emconStatus);
         }
 
         // The combat sheet: fleet totals + firepower-by-weapon-type + the per-ship table ("the table IS the

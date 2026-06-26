@@ -8,9 +8,9 @@ rem    trace) to console_output.txt next to this script.
 rem  - Keeps this window OPEN after the game exits/crashes so the output is
 rem    readable, and opens the capture file in Notepad for easy copy/paste.
 rem ============================================================================
-rem The game (Program.cs) writes game_log.txt to the repo root (the folder holding .git/launch.bat),
-rem NOT %AppData% -- so point this label at the real location: next to this script + console_output.txt.
-set "LOGFILE=%~dp0game_log.txt"
+rem The game (Program.cs) writes its rolling log PAGES into a game_logs\ folder at the repo root (the folder
+rem holding .git/launch.bat), NOT %AppData% -- point this label there: next to this script + console_output.txt.
+set "LOGFILE=%~dp0game_logs"
 set "CONSOLELOG=%~dp0console_output.txt"
 cd /d "%~dp0"
 

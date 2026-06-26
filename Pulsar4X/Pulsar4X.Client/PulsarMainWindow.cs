@@ -305,7 +305,11 @@ namespace Pulsar4X.Client
             {
                 _lastHeartbeatTick = now;
                 SafeRender("Heartbeat", () =>
-                    SessionLog.Heartbeat(_state.Game, _state.SelectedSystem, _state.LastClickedEntity?.Name));
+                {
+                    SessionLog.Heartbeat(_state.Game, _state.SelectedSystem, _state.LastClickedEntity?.Name);
+                    // Detection + EMCON snapshot: what the player detects, the fog gap, and how loud their ships run.
+                    SessionLog.DetectionSnapshot(_state.SelectedSystem, _state.PlayerFaction);
+                });
             }
 
             // Combat interrupt: the engine sets CombatInterruptPending and stops the clock the instant a new battle

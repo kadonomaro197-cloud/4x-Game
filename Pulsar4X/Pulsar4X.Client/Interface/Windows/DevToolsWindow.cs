@@ -17,6 +17,7 @@ using Pulsar4X.Storage;
 using Pulsar4X.Industry;
 using Pulsar4X.Galaxy; // MassVolumeDB lives here on this branch (namespace drifted from the branch this file was written on)
 using Pulsar4X.Combat;
+using Pulsar4X.Sensors;
 
 namespace Pulsar4X.Client
 {
@@ -391,6 +392,37 @@ namespace Pulsar4X.Client
                     if (!string.IsNullOrEmpty(_hostileStatus))
                         ImGui.TextColored(new Vector4(1f, 0.6f, 0.4f, 1f), _hostileStatus);
                 }
+
+                // ── Detection / Fog of War ────────────────────────
+                ImGui.Separator();
+                ImGui.Text("[ Detection / Fog of War ]");
+                ImGui.TextDisabled("You only see foreign units your sensors DETECT: undetected enemy fleets are HIDDEN on the");
+                ImGui.TextDisabled("map (the star + planets always show), and detected ones appear as limited-info contact blips");
+                ImGui.TextDisabled("(name + last-known position, fading to a ghost when the track is lost). Combat is gated too:");
+                ImGui.TextDisabled("fleets only engage hostiles they detect, the side that sees first shoots first. Off by default.");
+                if (ImGui.Checkbox("Fog of War — hide undetected foreign units + detection-gated combat##devfow", ref CombatEngagement.RequireDetectionToEngage))
+                    DevLog($"Fog of war (RequireDetectionToEngage) = {CombatEngagement.RequireDetectionToEngage}");
+
+                // On-demand detection/EMCON snapshot to the log (the same thing the ~3 s heartbeat writes) — for
+                // grabbing the picture at a precise moment. The heartbeat already logs it periodically.
+                if (ImGui.Button("Dump Detection (log)##devdumpdetect"))
+                {
+                    try
+                    {
+                        SessionLog.DetectionSnapshot(_uiState.SelectedSystem, _uiState.PlayerFaction);
+                        DevLog("Dumped detection/EMCON snapshot to the log.");
+                    }
+                    catch (Exception ex) { DevLog($"Dump Detection FAILED: {ex.Message}"); }
+                }
+
+                // Live signature readout for the clicked entity — watch it climb when a ship runs hot / thrusts /
+                // fires (the EMCON activity model) and drop when it goes Silent. Defensive: tolerates no selection.
+                var clickedEnt = _uiState.LastClickedEntity;
+                if (clickedEnt?.Entity != null && clickedEnt.Entity.IsValid &&
+                    clickedEnt.Entity.TryGetDataBlob<SensorProfileDB>(out var sigProfile))
+                    ImGui.TextDisabled($"Selected #{clickedEnt.Entity.Id}: emitted signature x{sigProfile.ActivityMultiplier:0.##} (posture base x{sigProfile.SignatureBaseMultiplier:0.##})");
+                else
+                    ImGui.TextDisabled("Click a ship on the map to read its live emitted-signature multiplier.");
 
                 // ── Create Colony ─────────────────────────────────
                 ImGui.Separator();
