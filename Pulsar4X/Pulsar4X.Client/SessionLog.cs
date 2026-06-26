@@ -14,7 +14,7 @@ namespace Pulsar4X.Client
     /// whole session reads start-to-finish without a "file too large" wall; see Program.cs / RotatingLogWriter.cs).
     /// Every line is FLUSHED immediately, so a crash or freeze still leaves the full trail up to that instant.
     /// Categories keep the log greppable: [ACTION] [VIEW] [TIME] [CAMERA] [SELECT] [DRAG] [STATE] [DETECT] [EMCON]
-    /// [ENGINE] (plus engine-side [Combat]/[FleetCombat]/[DevTools]). Toggle the whole thing with
+    /// [ENGINE] (plus the fault gauges [InputError]/[RenderError] and engine-side [Combat]/[FleetCombat]/[DevTools]). Toggle the whole thing with
     /// <see cref="Enabled"/>. This is the "flight recorder" — the point is that a future bug report IS the log,
     /// instead of "reproduce it and send a log."
     /// </summary>
@@ -78,10 +78,11 @@ namespace Pulsar4X.Client
         /// <summary>
         /// Scan every ship in the system for the "teleported to the Sun" signature and log each offender, so the
         /// recorder catches the warp/Sun-jump bug the instant it happens — no faction-view switch needed. Two
-        /// tells: (1) the position reads right on the system origin (sun-dist under ~1 Gm), or (2) the position's
-        /// anchor (Parent) has gone null/invalid — the exact state that makes AbsolutePosition collapse to the
-        /// star (see MoveState.cs:44). Also prints the ship's move mode (Orbit/Warp/...) — the smoking gun for
-        /// whether it detached mid-warp. Returns how many it flagged.
+        /// tells: (1) AT-SUN — the position reads right on the system origin (sun-dist under ~1 Gm), the collapse;
+        /// or (2) ORPHANED — the anchor (Parent) has gone null/invalid **while the ship is NOT warping**. A normal
+        /// warp is reparented to root (null parent) ON PURPOSE and carries its true absolute position, so warp is
+        /// excluded to avoid false alarms (learned live 2026-06-26: ships at 111 Gm correctly en route to Jupiter
+        /// were being flagged). Prints the reason + move mode (Orbit/Warp/...). Returns how many it flagged.
         /// </summary>
         public static int CheckForTeleports(StarSystem sys)
         {
@@ -92,8 +93,19 @@ namespace Pulsar4X.Client
                 if (!sh.TryGetDataBlob<PositionDB>(out var p)) continue;
                 var parent = p.Parent;
                 bool parentBad = parent == null || !parent.IsValid;
+                bool warping = p.MoveType == PositionDB.MoveTypes.Warp;
                 double sunDist = p.AbsolutePosition.Length();
-                if (!parentBad && sunDist >= TeleportSunDistThreshold_m) continue; // looks fine
+
+                // A REAL teleport is the position collapsing to the origin/Sun: an orbiting ship that loses its
+                // parent falls back to its small RelativePosition (MoveState.cs:44) and draws on the star. A
+                // WARPING ship, though, is INTENTIONALLY reparented to the system root (parent null) and carries its
+                // true absolute coords in RelativePosition — so a null parent at a healthy distance is NORMAL warp,
+                // NOT a teleport. (Confirmed live 2026-06-26: ships flagged here at 111 Gm were correctly en route
+                // to Jupiter — the old null-parent trigger cried wolf on every warp.) Flag only the real cases:
+                // AT-SUN (collapsed to origin), or ORPHANED (null/invalid parent while NOT warping).
+                bool atSun = sunDist < TeleportSunDistThreshold_m;
+                bool orphaned = parentBad && !warping;
+                if (!atSun && !orphaned) continue; // looks fine (incl. a normally-warping ship with a root/null parent)
 
                 found++;
                 string name = sh.TryGetDataBlob<NameDB>(out var n) ? n.OwnersName : "?";
@@ -101,7 +113,8 @@ namespace Pulsar4X.Client
                     : (parent.IsValid
                         ? (parent.TryGetDataBlob<NameDB>(out var pn) ? pn.OwnersName : "Entity#" + parent.Id)
                         : "INVALID");
-                Line("STATE", "  ⚠ TELEPORT ship #" + sh.Id + " '" + name + "' faction=" + sh.FactionOwnerID
+                string reason = atSun ? "AT-SUN (pos collapsed to origin)" : "ORPHANED (null parent, not warping)";
+                Line("STATE", "  ⚠ TELEPORT " + reason + " ship #" + sh.Id + " '" + name + "' faction=" + sh.FactionOwnerID
                     + " sun-dist=" + (sunDist / 1e9).ToString("0.###") + "Gm parent=" + par
                     + " moveType=" + p.MoveType);
             }
