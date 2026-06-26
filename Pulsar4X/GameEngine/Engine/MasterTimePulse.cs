@@ -82,6 +82,17 @@ namespace Pulsar4X.Engine
         [JsonProperty]
         public TimeSpan Ticklength { get; set; } = TimeSpan.FromSeconds(3600);
 
+        /// <summary>
+        /// When a battle is underway or about to begin (and the combat interrupt is armed), the time loop advances
+        /// in sub-steps no larger than this instead of a whole <see cref="Ticklength"/>, so the combat halt
+        /// (<see cref="RequestCombatHalt"/>) is honoured at first contact rather than after the whole fight has
+        /// resolved inside one coarse step. Sized to the battle trigger's run frequency (5s) so each sub-step runs
+        /// the trigger at most once — finer would just spin the loop without catching combat any sooner. Only in
+        /// effect near combat (gated by <see cref="Pulsar4X.Combat.CombatEngagement.CombatActiveOrImminent"/>), so
+        /// normal play / fast-forward keeps taking full Ticklength steps.
+        /// </summary>
+        public static readonly TimeSpan CombatReactionStep = TimeSpan.FromSeconds(5);
+
         [JsonIgnore]
         private Game _game;
 
@@ -290,7 +301,23 @@ namespace Pulsar4X.Engine
             while (GameGlobalDateTime < targetDateTime && !ct.IsCancellationRequested)
             {
                 _subpulseStopwatch.Start();
-                DateTime nextInterupt = ProcessNextInterupt(targetDateTime);
+
+                // Combat reaction granularity: if the combat interrupt is armed AND a battle is active or about to
+                // start, advance this iteration by no more than CombatReactionStep instead of the full target — so
+                // RequestCombatHalt's cancel is honoured at FIRST CONTACT, not after the whole fight has resolved
+                // inside one coarse step. Re-checked every iteration (combat can begin mid-advance). Cheap away from
+                // combat: the scan only runs when a cap could apply (capped < target) and the interrupt is armed,
+                // and when no battle is near it returns at once and a full Ticklength step is taken as before.
+                DateTime iterTarget = targetDateTime;
+                DateTime cappedTarget = GameGlobalDateTime + CombatReactionStep;
+                if (cappedTarget < iterTarget
+                    && Pulsar4X.Combat.CombatEngagement.InterruptTimeOnNewEngagement
+                    && AnyActiveSystemInOrNearCombat())
+                {
+                    iterTarget = cappedTarget;
+                }
+
+                DateTime nextInterupt = ProcessNextInterupt(iterTarget);
                 //do system processors
                 var activeSystems = _game.Systems.Where(s => s.ActivityState != SystemActivityState.Stasis);
 
@@ -337,6 +364,24 @@ namespace Pulsar4X.Engine
 
             }
             return nextInteruptDateTime;
+        }
+
+        /// <summary>
+        /// True if any non-stasis star system has a battle underway or about to start, so the time loop should
+        /// advance in fine <see cref="CombatReactionStep"/> sub-steps (see <see cref="SimulateTimeUntil"/>). Runs
+        /// on the master thread BETWEEN processing batches — the previous batch's parallel work has joined, so no
+        /// system is being mutated — and it only reads combat state. Mirrors the active-system filter used by the
+        /// processing loop.
+        /// </summary>
+        private bool AnyActiveSystemInOrNearCombat()
+        {
+            foreach (var starSys in _game.Systems)
+            {
+                if (starSys.ActivityState == SystemActivityState.Stasis) continue;
+                if (Pulsar4X.Combat.CombatEngagement.CombatActiveOrImminent(starSys))
+                    return true;
+            }
+            return false;
         }
 
         public bool Equals(MasterTimePulse? other)
