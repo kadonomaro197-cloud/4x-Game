@@ -1,5 +1,10 @@
+using System.Linq;
 using NUnit.Framework;
+using Pulsar4X.Engine;
+using Pulsar4X.Factions;
+using Pulsar4X.Fleets;
 using Pulsar4X.Sensors;
+using Pulsar4X.Ships;
 
 namespace Pulsar4X.Tests
 {
@@ -20,6 +25,10 @@ namespace Pulsar4X.Tests
     /// <see cref="SensorTools.AttenuatedForDistance"/> multiplies the EMITTED spectra by it and leaves the
     /// REFLECTED spectra alone. Default 1.0 means detection is byte-for-byte unchanged until the lever moves it,
     /// which is why detection slices 1 and 2 stay green.
+    ///
+    /// Slice 3b — the player LEVER (<see cref="FleetEmcon"/>). 3a is the dial on one ship; 3b is the fleet-level
+    /// Full/Cruise/Silent posture that pushes the right dial setting onto every ship in the fleet, and the gauge
+    /// that the posture flows through the SAME attenuation math the sensor scan uses (posture → ship → detection).
     /// </summary>
     [TestFixture]
     public class SensorEmconTests
@@ -119,6 +128,116 @@ namespace Pulsar4X.Tests
                     return d.Magnitude;
             Assert.Fail("expected band not present in attenuated list (was it culled below the floor?)");
             return 0;
+        }
+
+        // ---- Slice 3b — the EMCON posture LEVER (FleetEmcon.SetPosture) ---------------------------------------
+        // 3a gave us the dial (ActivityMultiplier) on a ship. 3b is the player's hand on it: a fleet-level
+        // Full/Cruise/Silent posture that pushes the right dial setting onto every ship in the fleet. These gauges
+        // prove the full stack the lever rides: posture (fleet choice) -> each ship's ActivityMultiplier -> the
+        // emitted signal in the same detection math the sensor scan uses.
+
+        private static Entity MakeFleet(TestScenario s, Entity faction, string name)
+            => FleetFactory.Create(s.StartingSystem, faction.Id, name);
+
+        /// <summary>Nest a sub-fleet (fleet component) under a parent — the real ChangeParent order, same idiom as
+        /// the combat fixtures. Lets us prove SetPosture recurses into components (the whole fleet goes dark).</summary>
+        private static Entity MakeComponent(TestScenario s, Entity faction, Entity parentFleet, string name)
+        {
+            var component = FleetFactory.Create(s.StartingSystem, faction.Id, name);
+            s.Game.OrderHandler.HandleOrder(FleetOrder.ChangeParent(faction.Id, component, parentFleet));
+            return component;
+        }
+
+        /// <summary>Build a sensor-capable ship (the capital design carries a reactor signature, so it has a
+        /// SensorProfileDB to dial) under the player faction, flip its owner, and assign it to the fleet.</summary>
+        private static Entity AddSensingShip(TestScenario s, Entity faction, Entity fleet, string name)
+        {
+            var designs = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns;
+            var design = designs.TryGetValue("default-ship-design-test-capital", out var cap) ? cap : designs.Values.First();
+            var ship = ShipFactory.CreateShip(design, s.Faction, s.StartingBody, name);
+            ship.FactionOwnerID = faction.Id;
+            s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(faction.Id, fleet, ship));
+            return ship;
+        }
+
+        private static double Mult(Entity ship) => ship.GetDataBlob<SensorProfileDB>().ActivityMultiplier;
+
+        [Test]
+        [Description("Setting a fleet's EMCON posture pushes the matching signature scale onto EVERY member ship's " +
+                     "ActivityMultiplier — including ships in sub-fleet components — and the change is reversible. " +
+                     "A ship in no posture-set fleet stays at the as-designed 1.0.")]
+        public void SetPosture_PushesScaleToAllMemberShips_RecursingComponents()
+        {
+            var s = TestScenario.CreateWithColony();
+
+            var fleet = MakeFleet(s, s.Faction, "Task Force");
+            var shipA = AddSensingShip(s, s.Faction, fleet, "Direct A");
+            var shipB = AddSensingShip(s, s.Faction, fleet, "Direct B");
+            var component = MakeComponent(s, s.Faction, fleet, "Picket Component"); // a sub-fleet of the task force
+            var shipC = AddSensingShip(s, s.Faction, component, "Component C");      // ship inside the sub-fleet
+
+            // A loose ship in no fleet — the control: the lever must not touch ships outside the fleet.
+            var looseFleet = MakeFleet(s, s.Faction, "Unrelated");
+            var looseShip = AddSensingShip(s, s.Faction, looseFleet, "Loose");
+
+            // Precondition: every ship starts at the as-designed default (1.0) — nothing has moved the dial.
+            foreach (var ship in new[] { shipA, shipB, shipC, looseShip })
+                Assert.That(Mult(ship), Is.EqualTo(1.0).Within(1e-12), "ships start at the as-designed full signature");
+            Assert.That(FleetEmcon.PostureOf(fleet), Is.EqualTo(EmconPosture.Full), "a fleet with no order set reads Full");
+
+            // Pull the lever: the whole task force goes dark.
+            FleetEmcon.SetPosture(fleet, EmconPosture.Silent);
+
+            Assert.That(FleetEmcon.PostureOf(fleet), Is.EqualTo(EmconPosture.Silent), "the fleet now holds the Silent posture");
+            Assert.That(FleetEmcon.MultiplierOf(fleet), Is.EqualTo(FleetEmcon.SilentMultiplier).Within(1e-12));
+            Log($"after Silent: A={Mult(shipA):F3} B={Mult(shipB):F3} C(component)={Mult(shipC):F3} loose={Mult(looseShip):F3}");
+
+            // Every ship in the fleet — direct AND in the sub-component — is now quiet at the Silent scale.
+            foreach (var ship in new[] { shipA, shipB, shipC })
+                Assert.That(Mult(ship), Is.EqualTo(FleetEmcon.SilentMultiplier).Within(1e-12),
+                    "every member ship (including in a sub-component) takes the fleet's Silent signature scale");
+
+            // The loose ship in a different, un-posed fleet is untouched — the lever is scoped to its fleet.
+            Assert.That(Mult(looseShip), Is.EqualTo(1.0).Within(1e-12),
+                "a ship outside the posture-set fleet must keep its as-designed signature");
+
+            // Reversible (the BonusesDB pattern, like doctrine): flip back to Full and the dial returns to 1.0.
+            FleetEmcon.SetPosture(fleet, EmconPosture.Full);
+            foreach (var ship in new[] { shipA, shipB, shipC })
+                Assert.That(Mult(ship), Is.EqualTo(1.0).Within(1e-12), "going back to Full restores the as-designed signature");
+        }
+
+        [Test]
+        [Description("The end-to-end stack: a fleet's posture flows all the way into the SAME attenuation math the " +
+                     "sensor scan uses. A Silent fleet's ship emits one-tenth-ish (the Silent scale) the signal it " +
+                     "does at Full, at the same range — so going dark really does shrink how far off you can be seen.")]
+        public void FleetPosture_FlowsIntoTheRealDetectionMath()
+        {
+            var s = TestScenario.CreateWithColony();
+            var fleet = MakeFleet(s, s.Faction, "Lone Scout");
+            var ship = AddSensingShip(s, s.Faction, fleet, "Scout");
+            var profile = ship.GetDataBlob<SensorProfileDB>();
+
+            const double distance = 50_000; // arbitrary; same range used for both reads, so attenuation cancels
+
+            // The ship genuinely emits something (kit present) and, fresh, has no radar-return set yet — so the
+            // attenuated total is pure EMITTED signature, which is the part EMCON scales. (Reflection is set by the
+            // hourly SensorReflectionProcessor, which the colony harness doesn't run.)
+            Assert.That(profile.EmittedEMSpectra.Count, Is.GreaterThan(0), "a capital ship must emit a reactor signature to dial");
+            Assert.That(profile.ReflectedEMSpectra.Count, Is.EqualTo(0),
+                "fresh ship has no radar-return set yet, so the total is pure emitted — the band EMCON controls");
+
+            FleetEmcon.SetPosture(fleet, EmconPosture.Full);
+            double fullTotal = SensorTools.AttenuatedForDistance(profile, distance).Values.Sum();
+
+            FleetEmcon.SetPosture(fleet, EmconPosture.Silent);
+            double darkTotal = SensorTools.AttenuatedForDistance(profile, distance).Values.Sum();
+
+            Log($"detection-math signal at {distance:N0} m: Full={fullTotal:E3}  Silent={darkTotal:E3}  ratio={darkTotal / fullTotal:F3}");
+
+            Assert.That(fullTotal, Is.GreaterThan(0), "the ship must produce a detectable signal at Full");
+            Assert.That(darkTotal, Is.EqualTo(fullTotal * FleetEmcon.SilentMultiplier).Within(1e-6).Percent,
+                "going Silent must scale the detectable signal to the Silent multiplier — the posture reaches the real detection math");
         }
     }
 }

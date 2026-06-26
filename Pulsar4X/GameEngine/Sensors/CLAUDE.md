@@ -23,6 +23,8 @@
 | `EMWaveForm.cs` | Defines a band of EM spectrum: min wavelength, peak, max. |
 | `SensorInfoDB.cs` | Per-contact info blob: last detection time, latest/highest detection quality. |
 | `SensorPositionDB.cs` | Stores the last-known position of a detected entity (may lag reality if not recently scanned). |
+| `Emcon/FleetEmconDB.cs` | DataBlob on a **fleet**: its active **EMCON posture** (`EmconPosture` enum — Full / Cruise / Silent), the run-hot/cruise/go-dark lever. Mirrors `Combat.FleetDoctrineDB` (a thin per-fleet "active choice" blob). The *choice* lives here (persistent, save/loaded, UI-visible); the per-ship effect is derived from it. |
+| `Emcon/FleetEmcon.cs` | Helpers + setter for the posture lever. `MultiplierFor(posture)` (posture → emitted-signature scale: Full 1.0 / Cruise 0.5 / Silent 0.15), `PostureOf`/`MultiplierOf(fleet)` reads, and `SetPosture(fleet, posture)` — a **direct call** (like doctrine, so usable mid-combat) that pushes the posture's scale onto every member ship's `SensorProfileDB.ActivityMultiplier` (recursing sub-fleet components). v1 PUSH model; the runtime-activity inputs (reactor/thrust/firing) are the next slices. |
 
 ---
 
@@ -64,12 +66,27 @@ Detection quality: triangular overlap between sensor's waveform band and signal'
 | Active vs passive sensors | `SensorReceiverAtb` tuned wavelength determines if it picks up emission or reflection | ✅ functional |
 | Detection range scales with signature | `AttenuatedForDistance()` | ✅ functional |
 | Contact quality (partial vs full ID) | `SignalQuality` 0–1 on `SensorReturnValues` | ✅ functional |
-| EMCON (reduce your own signature) | Not verified — check if ships can zero out `EmittedEMSpectra` | ⚠️ unknown |
+| EMCON (reduce your own signature) | `FleetEmconDB` posture (Full/Cruise/Silent) → ship `ActivityMultiplier` scales `EmittedEMSpectra` in the detection math | ✅ lever built (posture); runtime-activity inputs (reactor/thrust/firing) pending — see "EMCON build status" |
 | Electronic warfare (jamming) | Not present | ❌ missing |
 
 **Verdict: sensors are among the most complete subsystems in Pulsar.** The EM-spectrum physics approach is arguably more rigorous than Aurora's simpler thermal/EM bands. The main gaps are EMCON controls and EW jamming, neither of which are on the ground-combat critical path.
 
 ---
+
+## EMCON build status (detection slice 3 — the dark/loud lever)
+
+EMCON is being built as gameplay (a posture lever), **not** the EM-spectrum physics — the waveform math stays under the hood as the gauge needle. Full design + connected-systems ledger: `docs/DETECTION-DESIGN.md` §3/§3a/§6. Built in small gauged wires (each its own CI-green slice):
+
+| Wire | What | Status | Gauge |
+|------|------|--------|-------|
+| **3a** | `SensorProfileDB.ActivityMultiplier` (default 1.0) read in the detection math (`SensorTools.AttenuatedForDistance` + `…List`), scaling **EMITTED** only (reflected/radar-return untouched). | ✅ built | `SensorEmconTests.ActivityMultiplier_*` |
+| **3b** | `FleetEmconDB` posture (Full/Cruise/Silent) + `FleetEmcon.SetPosture` — the **player lever**: pushes the posture's scale onto every member ship's `ActivityMultiplier`. | ✅ built | `SensorEmconTests.SetPosture_*`, `FleetPosture_FlowsIntoTheRealDetectionMath` |
+| **3c–3f** | make the signature respond to **runtime activity**: a processor that sets `ActivityMultiplier = posture × reactor-load × thrust × firing`; reactor throttle; runtime burn/fire state; active-ping self-exposure. | ⏳ next | — |
+| **UI** | posture order in the Fleet window; contacts as blips; the sensor/EMCON **component** in the designer. | ⏳ client (slice 6) | local build (CI can't see the SDL client) |
+
+**Tunables (gameplay feel, like Combat's `SalvoDamageScale`)** in `FleetEmcon`: `FullMultiplier 1.0` / `CruiseMultiplier 0.5` / `SilentMultiplier 0.15`. Silent is deliberately **not** zero — you can never be perfectly invisible (hull still reflects an active ping; a cold ship still leaks some heat). A **switch cooldown** (reactor can't flash-cool, so committing to dark would be a real tactical commitment) is a flagged candidate follow-up, left out of v1 to keep the lever a single wire.
+
+**Layering:** EMCON lives in `Sensors/Emcon/` and reads Fleets/Ships to push the dial it owns (`SensorProfileDB.ActivityMultiplier`). It does **not** depend on the combat resolver — clean direction is Combat → Sensors (combat reads contacts/first-strike), never Sensors → Combat.
 
 ## Phase 4 Relevance
 
