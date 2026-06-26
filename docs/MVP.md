@@ -25,6 +25,12 @@ engine into a game.**
 If a player can do that one loop, the fork has delivered its core fantasy — combat that runs from orbit down
 to the surface, paid for by real planetary infrastructure — and v1 ships.
 
+> **⚠️ RE-SEQUENCED 2026-06-26 — SPACE earns its weight BEFORE we take a planet (a deliberate finish-line move, per §7 — not a drift).** The realism-vs-gameplay audit (`docs/REALISM-VS-GAMEPLAY-AUDIT.md`) found the loop above would be a thin shell on hollow systems: a planet that's colonize-and-forget isn't worth taking, and a space battle with no fog, no supply, no power isn't a game. So the build order is now two milestones:
+> - **M1 — make the SPACE + infrastructure layer a real decision engine.** Build the audit's **ranked decision-levers** (§6), one bounded+gauged slice at a time, in leverage order — **starting with DETECTION** (fog of war + the dark-vs-active EMCON knob, riding the existing contact engine; *not* the spectrum-physics sim). This is the active build path now.
+> - **M2 — the take-a-planet loop above** (ground combat → transport/drop → ground battle → capture), deferred until M1 lands, then built on a space layer that's actually a game.
+>
+> **Why (developer, 2026-06-26):** planetary combat is hollow without real planetary infrastructure to fight over — better to deepen what we already have in space until it earns its keep, then go planetary. **Discipline for M1:** one ranked lever at a time, each a gauged slice — *not* "fix everything at once" (that phrasing is the half-built-forever trap this doc exists to stop). M2's spec below (§§2–5) is unchanged and waiting.
+
 ### 4X coverage — and what's engine vs. game
 
 The reframe that matters: **the economy is not one of the X's — it's the engine substrate the X's run on.**
@@ -101,6 +107,11 @@ These are **good** — and they are **not v1**. Building any of them before §1 
 
 Each stage leaves the game in a working, testable state. Don't start a stage until the one before it is green.
 Note the order follows your own strategy: **do space combat first, then mirror its shape for ground.**
+
+> **Re-sequenced (2026-06-26):** **M1 — the space-depth levers (`docs/REALISM-VS-GAMEPLAY-AUDIT.md`, detection
+> first) now run BEFORE Stages 2–4.** Stage 1 (space combat resolves) is ✅ done; rather than proceed straight to
+> Stage 2 ground combat, we first make the space + infrastructure layer earn its weight (M1). Stages 2–4 below
+> are the M2 conquest loop, unchanged and deferred until M1 lands. Each M1 lever is its own bounded, gauged slice.
 
 - **Stage 0 — Economy is real and visible.** *(we are here)* **Engine substrate COMPLETE and gauged: gather
   → refine → build all proven** (mining depletes deposits; refining makes Space-Crete; the factory consumes
