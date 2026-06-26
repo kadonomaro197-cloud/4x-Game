@@ -24,7 +24,8 @@
 | `SensorInfoDB.cs` | Per-contact info blob: last detection time, latest/highest detection quality. |
 | `SensorPositionDB.cs` | Stores the last-known position of a detected entity (may lag reality if not recently scanned). |
 | `Emcon/FleetEmconDB.cs` | DataBlob on a **fleet**: its active **EMCON posture** (`EmconPosture` enum — Full / Cruise / Silent), the run-hot/cruise/go-dark lever. Mirrors `Combat.FleetDoctrineDB` (a thin per-fleet "active choice" blob). The *choice* lives here (persistent, save/loaded, UI-visible); the per-ship effect is derived from it. |
-| `Emcon/FleetEmcon.cs` | Helpers + setter for the posture lever. `MultiplierFor(posture)` (posture → emitted-signature scale: Full 1.0 / Cruise 0.5 / Silent 0.15), `PostureOf`/`MultiplierOf(fleet)` reads, and `SetPosture(fleet, posture)` — a **direct call** (like doctrine, so usable mid-combat) that pushes the posture's scale onto every member ship's `SensorProfileDB.ActivityMultiplier` (recursing sub-fleet components). v1 PUSH model; the runtime-activity inputs (reactor/thrust/firing) are the next slices. |
+| `Emcon/FleetEmcon.cs` | Helpers + setter for the posture lever. `MultiplierFor(posture)` (posture → emitted-signature scale: Full 1.0 / Cruise 0.5 / Silent 0.15), `PostureOf`/`MultiplierOf(fleet)` reads, and `SetPosture(fleet, posture)` — a **direct call** (like doctrine, so usable mid-combat) that pushes the posture's scale onto every member ship's `SensorProfileDB.SignatureBaseMultiplier` + `ActivityMultiplier` (recursing sub-fleet components). |
+| `Emcon/EmconActivityProcessor.cs` | `IHotloopProcessor` (5 s, keyed to **ShipInfoDB**) that makes the signature respond to ACTIVITY: sets `ActivityMultiplier = SignatureBaseMultiplier × HeatFactor(burning, firing)`. **Thrust** read from `NewtonMoveDB.ManuverDeltaVLen` (no new field), **firing** from `GenericFiringWeaponsDB.ShotsFiredThisTick`. Pure statics `HeatFactor`/`ComputeActivityMultiplier`/`IsBurning`/`IsFiring` + tunables `ThrustHeat 4.0`/`WeaponHeat 1.0`. Reactor-load NOT folded in yet (the `Load` field is buggy — see EMCON build status). |
 
 ---
 
@@ -79,14 +80,48 @@ EMCON is being built as gameplay (a posture lever), **not** the EM-spectrum phys
 
 | Wire | What | Status | Gauge |
 |------|------|--------|-------|
-| **3a** | `SensorProfileDB.ActivityMultiplier` (default 1.0) read in the detection math (`SensorTools.AttenuatedForDistance` + `…List`), scaling **EMITTED** only (reflected/radar-return untouched). | ✅ built | `SensorEmconTests.ActivityMultiplier_*` |
-| **3b** | `FleetEmconDB` posture (Full/Cruise/Silent) + `FleetEmcon.SetPosture` — the **player lever**: pushes the posture's scale onto every member ship's `ActivityMultiplier`. | ✅ built | `SensorEmconTests.SetPosture_*`, `FleetPosture_FlowsIntoTheRealDetectionMath` |
-| **3c–3f** | make the signature respond to **runtime activity**: a processor that sets `ActivityMultiplier = posture × reactor-load × thrust × firing`; reactor throttle; runtime burn/fire state; active-ping self-exposure. | ⏳ next | — |
-| **UI** | posture order in the Fleet window; contacts as blips; the sensor/EMCON **component** in the designer. | ⏳ client (slice 6) | local build (CI can't see the SDL client) |
+| **3a** | `SensorProfileDB.ActivityMultiplier` (default 1.0, the FINAL scale) read in the detection math (`SensorTools.AttenuatedForDistance` + `…List`), scaling **EMITTED** only (reflected/radar-return untouched). | ✅ built | `SensorEmconTests.ActivityMultiplier_*` |
+| **3b** | `FleetEmconDB` posture (Full/Cruise/Silent) + `FleetEmcon.SetPosture` — the **player lever**: pushes the posture's scale onto every member ship's `SignatureBaseMultiplier` (and `ActivityMultiplier` for instant feedback). | ✅ built | `SensorEmconTests.SetPosture_*`, `FleetPosture_FlowsIntoTheRealDetectionMath` |
+| **3c** | `EmconActivityProcessor` (hotloop, 5 s, keyed to **ShipInfoDB**) sets `ActivityMultiplier = SignatureBaseMultiplier × HeatFactor(burning, firing)`. **Thrust** (the dominant signal) read from `NewtonMoveDB.ManuverDeltaVLen > 0` (no new field — the burn state is already there); **firing** from `GenericFiringWeaponsDB.ShotsFiredThisTick`. Emergent: a lit drive plume betrays you even on Silent (you can't burn quietly). | ✅ built | `SensorEmconTests.HeatFactor_*`, `ComputeActivityMultiplier_*`, `Processor_OnIdleFleet_*` (heat math + composition CI-gauged; the real burning/firing reads are **live**-verified) |
+| **3f** | active-ping self-exposure (an active sensor sweep adds to your own emitted spectra). | ⏳ next | — |
+| **reactor-load** | folding "how hard the reactor runs" into the heat factor. The blocking `EnergyGenAbilityDB.Load` bug is **FIXED** (slice D — `EnergyGenProcessor.CalcLoad` = `Demand/TotalOutputMax` clamped 0-1), so this is now unblocked; left unwired as a marginal signal vs thrust. | ⏳ unblocked, deferred | — |
+| **UI** | posture order in the Fleet window (✅ slice A); **detected foreign units shown as contact blips + undetected hidden** (✅ — `SensorContactIcon` + the `SystemMapRendering` fog guard, gated on `RequireDetectionToEngage`: the visual half of fog of war); the sensor/EMCON **component** in the designer (⏳). | ✅ blips/fog built | local build (CI can't see the SDL client) |
 
-**Tunables (gameplay feel, like Combat's `SalvoDamageScale`)** in `FleetEmcon`: `FullMultiplier 1.0` / `CruiseMultiplier 0.5` / `SilentMultiplier 0.15`. Silent is deliberately **not** zero — you can never be perfectly invisible (hull still reflects an active ping; a cold ship still leaks some heat). A **switch cooldown** (reactor can't flash-cool, so committing to dark would be a real tactical commitment) is a flagged candidate follow-up, left out of v1 to keep the lever a single wire.
+**The model.** Posture sets a BASELINE loudness (`SignatureBaseMultiplier`); the activity processor multiplies it by a HEAT FACTOR (1.0 cold; +`ThrustHeat` while burning; +`WeaponHeat` while firing) into the final `ActivityMultiplier` the detection math reads. So posture × activity stack: a Silent ship that lights its drive (0.15 × ~5 ≈ 0.75) is far louder than one coasting (0.15) — the heat-asymmetry truth that you can't hide a hot plume — yet still quieter than the same burn at Full.
 
-**Layering:** EMCON lives in `Sensors/Emcon/` and reads Fleets/Ships to push the dial it owns (`SensorProfileDB.ActivityMultiplier`). It does **not** depend on the combat resolver — clean direction is Combat → Sensors (combat reads contacts/first-strike), never Sensors → Combat.
+**Tunables (gameplay feel, like Combat's `SalvoDamageScale`):** in `FleetEmcon` — `FullMultiplier 1.0` / `CruiseMultiplier 0.5` / `SilentMultiplier 0.15` (Silent ≠ 0: never perfectly invisible). In `EmconActivityProcessor` — `ThrustHeat 4.0` (≈5× louder burning ⇒ ~2.2× detection range; the KEY knob) / `WeaponHeat 1.0`. A **switch cooldown** (reactor can't flash-cool) is a flagged candidate follow-up.
+
+**Layering:** EMCON lives in `Sensors/Emcon/`, reads Fleets/Ships/Movement/Weapons to drive the dial it owns (`SensorProfileDB.ActivityMultiplier`), and is keyed to **ShipInfoDB** (one hotloop per DataBlob type — SensorProfileDB is taken by `SensorReflectionProcessor`, the same constraint that makes the battle trigger key to StarInfoDB). It does **not** depend on the combat resolver — clean direction is Combat → Sensors, never Sensors → Combat.
+
+## SensorContact — UI read accessors (added 2026-06-26)
+
+The map's fog-of-war blips (`SensorContactIcon`, client side) need a contact's signal strength and whether it's a stale "memory" position, but those live in the **internal** fields `SensorInfoDB.LatestDetectionQuality` and `SensorPositionDB.GetDataFrom` — the client is a separate assembly and can't reach them. `SensorContact` (engine, same assembly) exposes them as public, computed, **never-serialized** accessors:
+- `SensorContact.SignalStrength_kW` — latest return loudness (kW); the blip scales a touch by it.
+- `SensorContact.PositionIsMemory` — TRUE once the real entity is gone and the contact coasts on its last-known position (the grave rung); the blip fades and the label reads "(last known)".
+
+Pure pass-throughs (CI compiles them; no behavioural test needed). When new UI needs more of a contact's *known* info, expose it here — don't widen the internal fields' visibility.
+
+## Detection-quality bug (FLAGGED, not yet fixed — `SensorTools.cs:173`)
+
+`SensorTools.DetectonQuality` builds `SignalQuality` as `new PercentValue((float)(100 - distortion / signalWaveSpectraFreqMax))`. **`PercentValue(float)` expects 0..1** (it does `_percent = (byte)(value * 255)`), but this feeds it a **0..100** value — so `~100 × 255 ≈ 25500` overflows the byte and wraps. **Detection quality is therefore degenerate** (effectively random, not "how well resolved").
+
+**Why it's flagged, not drive-by-fixed:** quality is consumed as a real 0..1 elsewhere — `Galaxy/SystemBodyInfoDB.cs:154-160` and `Galaxy/StarInfoDB.cs:130` gate **planet/star survey reveal** at 0.20 / 0.80. Repairing the formula (e.g. `clamp(1 - distortion / signalWaveSpectraFreqMax, 0, 1)`) would change how bodies/stars get identified — a separate **survey** behaviour that deserves its own consideration + test, not a side effect of a UI feature. Consequences honoured for now:
+- The fog-of-war blips gate on signals that ARE sound (the contact's **name**, its **live-vs-memory** position, **signal strength**) — **not** on quality.
+- True "you only see an *unknown* blip until you resolve it" (progressive ID) is blocked on this fix — it's the natural next slice. When fixing: add a `SensorTools` quality test (quality ∈ [0,1]; better alignment ⇒ higher) AND re-check the two survey consumers live.
+
+## Grave rung — a destroyed sensor blinds you (detection × damage)
+
+The cradle-to-grave loss rung: shoot a ship's sensor receivers off and it stops detecting. **How it's wired:**
+- `SensorTools.SetInstances(entity)` rebuilds the ship's receiver cache (`SensorAbilityDB.InstanceStates`/`InstanceAtributes`) from its CURRENT components — and now **clears the cache when no receivers remain** (previously it only rebuilt when receivers were present, so a fully-disarmed ship kept a phantom sensor).
+- It's hooked to **`ReCalcProcessor.TypeProcessorMap[typeof(SensorAbilityDB)]`** (`Engine/Processors/RecalcProcessor.cs`), so every ability recalc rebuilds it. The **damage system calls `ReCalcProcessor.ReCalcAbilities(entity)` after destroying a component** (`DamageProcessor`), so losing your sensors empties the cache.
+- The scan loop in `SensorScan` iterates `InstanceStates`, and its **reschedule is inside that loop** — so an empty cache means the ship neither scans nor re-schedules: it goes dark.
+- **v1 limit (flagged):** the ship stops detecting NEW/refreshed contacts, but contacts it already put in the faction track table **persist until they age out** (no contact-expiry pass yet) — so a faction doesn't instantly forget. Contact aging is a separate follow-up.
+
+Gauge: `SensorDetectionTests.DestroyingSensor_BlindsTheShip_GraveRung` — a watcher detects (receivers > 0, contacts > 0); remove its `SensorReceiverAtb` components + `ReCalcAbilities` (the damage-path tail); assert the receiver cache is empty and the next scan detects nothing.
+
+## Live diagnostics — is the scan even firing?
+
+`SensorScan.ScanCount` is a `public static long`, Interlocked-incremented at the top of `ProcessEntity` — a pure liveness counter (diagnostic only, no game effect). The client's `SessionLog` heartbeat logs it as part of the `[ENGINE] sensor scans N (+delta)` line, so a remote review can tell **"detecting nothing because nothing's in range" apart from "the scan never fired"** — the latter is a real risk, since the scan is only auto-scheduled by `Game.PostNewGameInitialization` (the test harness skips it). If the count doesn't climb while ships are present, the detection engine is dead, not quiet. Sibling counter on the combat side: `CombatEngagement.TickCount` (see `Combat/CLAUDE.md`).
 
 ## Phase 4 Relevance
 

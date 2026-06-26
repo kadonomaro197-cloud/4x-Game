@@ -7,6 +7,11 @@ Pulsar4X/Pulsar4X.Client/Data/*
 Pulsar4X/Benchmarks/BenchmarksDotNet.Artifacts/*
 Pulsar4X/Pulsar4X.Tests/TestResults/
 
+# Session logs (runtime play-by-play from Program.cs / RotatingLogWriter.cs — never commit a play session).
+# These are .txt, so the *.log rule below does NOT catch them; list them explicitly.
+game_logs/
+game_log.txt
+
 # Doxygen output
 doc/doxygen/html/
 # C# Temp Files:

@@ -1,5 +1,7 @@
 using System.Linq;
 using NUnit.Framework;
+using Pulsar4X.Components;
+using Pulsar4X.Datablobs;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
 using Pulsar4X.Sensors;
@@ -75,6 +77,44 @@ namespace Pulsar4X.Tests
             Log($"after scan: player faction detects bogey #{bogey.Id} = {detected}; total contacts held = {contacts.GetAllContacts().Count}");
             Assert.That(detected, Is.True,
                 "the player faction should hold a SensorContact for the hostile ship after a scan at point-blank range");
+        }
+
+        [Test]
+        [Description("Grave rung (detection × damage): shoot a watcher's sensor receivers off and recalc its " +
+                     "abilities — exactly what the damage system does when a component is destroyed — and the ship's " +
+                     "receiver cache empties, so it stops detecting. Lose your sensors, you go blind. This is the " +
+                     "cradle-to-grave loss rung that wires detection to the damage system.")]
+        public void DestroyingSensor_BlindsTheShip_GraveRung()
+        {
+            var s = TestScenario.CreateWithColony();
+            var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+
+            var watcher = BuildShip(s, s.Faction, "Watcher");   // carries the sensor receiver
+            var bogey = BuildShip(s, enemyFaction, "Bogey");     // emits a signature to be seen
+
+            // Precondition + "before": the watcher has working receivers and a scan registers contacts.
+            var ability = watcher.GetDataBlob<SensorAbilityDB>();
+            Assert.That(ability.InstanceStates.Count, Is.GreaterThan(0), "the watcher must start with working sensor receivers");
+            RunSensorScan(s);
+            Assert.That(ability.CurrentContacts.Count, Is.GreaterThan(0), "with sensors, a scan registers contacts");
+
+            // Shoot the sensors off: remove every sensor-receiver component, then recalc abilities — the tail of the
+            // damage path (DamageProcessor removes a destroyed component, then calls ReCalcProcessor.ReCalcAbilities).
+            var comps = watcher.GetDataBlob<ComponentInstancesDB>();
+            comps.TryGetComponentsByAttribute<SensorReceiverAtb>(out var receivers);
+            foreach (var receiver in receivers.ToList())
+                comps.RemoveComponentInstance(receiver);
+            ReCalcProcessor.ReCalcAbilities(watcher);
+
+            // The grave rung: the receiver cache is now empty — the ship has no working sensors.
+            Log($"after losing sensors: receivers cached = {ability.InstanceStates.Count} (expect 0)");
+            Assert.That(ability.InstanceStates.Count, Is.EqualTo(0),
+                "destroying the sensor components must clear the receiver cache — otherwise the ship scans with a phantom sensor");
+
+            // ...and a fresh scan now detects nothing (the scan loop iterates the now-empty receiver list).
+            RunSensorScan(s);
+            Assert.That(ability.CurrentContacts.Count, Is.EqualTo(0),
+                "a blinded ship detects nothing on its next scan");
         }
     }
 }

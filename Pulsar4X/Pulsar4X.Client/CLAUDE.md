@@ -230,6 +230,61 @@ on a clock advance — so whether **pressing play** auto-starts the battle in th
 doesn't, the **Tick Combat** button drives the fight manually (and tells us the trigger scheduling, not the combat
 math, is what needs a look). See `GameEngine/Combat/CLAUDE.md` → "Combat sandbox".
 
+### EMCON posture + fog-of-war UI (FleetWindow + DevTools) — BUILT 2026-06-26 (detection stack, slices A)
+
+The engine-side detection/EMCON stack (fog of war, EMCON posture, activity heat, first-strike, grave rung) is
+all CI-green; this is the client lever + toggle to **drive and observe** it. **CI can't build the client, so this
+is build → play → read the rolling log pages under `game_logs/` (`[FleetCombat]`/`[DevTools]` lines) — unverified live until then.**
+
+1. **EMCON posture selector** — `FleetWindow.DisplayEmconSelector()` (Combat tab, between Doctrine and the combat
+   sheet). Mirrors the doctrine selector exactly: shows the fleet's current posture + signature multiplier, a
+   Full/Cruise/Silent combo, and a **Set Posture** button that calls `FleetEmcon.SetPosture(SelectedFleet, posture)`
+   (a **direct call**, like doctrine, so it works mid-battle). All reads are defensive (`FleetEmcon.PostureOf` /
+   `MultiplierOf` return a Full/1.0 default for a fleet with no posture).
+2. **Fog-of-war toggle** — `DevToolsWindow` "[ Detection / Fog of War ]" section: a checkbox bound to
+   `CombatEngagement.RequireDetectionToEngage` (default off). On → combat is detection-gated and first-strike is
+   live (the side that sees first shoots first). Plus a **live signature readout** of the clicked entity's
+   `SensorProfileDB.ActivityMultiplier` (watch it climb when a ship runs hot / thrusts / fires, drop when Silent).
+3. **Logging — the detection/EMCON state shows up in the rolling log pages under `game_logs/` (so a remote review can see what you saw).**
+   `SessionLog.DetectionSnapshot(system, faction)` runs inside the **~3 s heartbeat** (and on demand via the DevTools
+   **"Dump Detection (log)"** button), writing three lines:
+   - `[ENGINE]` — **processor liveness**: `sensor scans N (+delta), battle-trigger passes M (+delta)`, read from
+     `SensorScan.ScanCount` / `CombatEngagement.TickCount`. This is the load-bearing one: if these don't climb while
+     ships are present, the engine is DEAD — it tells "the scan never fired / the trigger never ran on play" (both
+     documented live unknowns) apart from "running but nothing to see." Without it, both look like "nothing happened."
+   - `[DETECT]` — contacts held + the FOG GAP (how many other-faction ships are present vs how many you detect, rest
+     "hidden from you").
+   - `[EMCON]` — your ships' signature summary (how many run hot/dark/blind, plus loudest/quietest by name).
+   Plus, on the engine side, `[Combat]` now narrates an explicit **FIRST-STRIKE** line when an asymmetric battle
+   forms (one side blind). Read-only, wrapped in the heartbeat's `SafeRender`.
+4. **Contact blips + unit fog of war — BUILT 2026-06-26 (closes the prior GAP).** The map now renders the viewed
+   faction's DETECTED foreign units as limited-info **contact blips**, and HIDES undetected foreign units — the
+   visual half of fog of war ("everyone sees the same star; not everyone sees the fleet around it"). Gated on the
+   existing `CombatEngagement.RequireDetectionToEngage` flag (off by default) — the same one switch as detection-
+   gated combat, so "fog of war" is one toggle for both behaviour and visuals (DevTools › Detection / Fog of War).
+   - **Blip:** `SensorContactIcon` (`Rendering/Icons/SensorContactIcon.cs`) — a real `Icon` subclass fed by the
+     engine's `SensorContact` (position is the contact's last-known `SensorPositionDB`, which is an `IPosition`, so
+     it drops straight into the `Icon(IPosition)` ctor). A diamond marker (red = rival; sized a touch by signal
+     strength) + a name label drawn with the same SDL TTF path `EntityLabel` uses. When the target is gone and the
+     contact coasts on its last-known ("memory") position, the blip fades and the label reads "(last known)" — the
+     grave rung made visible.
+   - **Refresh:** `SystemMapRendering.UpdateContactBlips()` rebuilds `_contactIcons` from `_sensorMgr.GetAllContacts()`
+     every frame (cheap; contacts are few), skipping your OWN ships and neutrals; drawn via `DrawIcons` (SafeDraw-
+     wrapped, so a glitchy blip logs once and skips). Cleared on faction/system switch (`ClearContactBlips`).
+   - **Hide half:** a guard at the top of `AddIconable` skips the real icon + label + orbit/move trail for a
+     foreign-faction MOBILE unit (ShipInfoDB/ProjectileInfoDB/BeamInfoDB) when fog is on — so a rival ship never
+     draws as a full unit; it appears ONLY as a blip, and only once detected. Bodies (stars/planets/moons/JPs),
+     your own units, and neutrals are unaffected. The engine accessors the blip needs (`SensorContact.PositionIsMemory`,
+     `.SignalStrength_kW`) are CI-covered (the client can't reach the engine's internal detection fields directly).
+   - **v1 limits (flagged):** every rival contact reads "hostile/unknown" (no IFF/diplomacy model yet — politics is
+     a later problem); toggling the flag mid-session only affects entities added/updated AFTER the toggle (the real-
+     icon hide is event-driven at add-time), so toggle fog BEFORE spawning for a clean test; the on-map ID never
+     hides the *name* (the engine hands you the name on detection — true "unknown blip until you resolve it" needs
+     the detection-QUALITY signal, which is currently degenerate — see `GameEngine/Sensors/CLAUDE.md` →
+     "Detection-quality bug"). Built defensively given the map-render crash history (gotchas #12/#14): every blip
+     draws through `SafeDraw`, and the blip's `OnFrameUpdate` swallows a bad-position throw so one stale contact
+     can't abort the frame.
+
 ### GroundCombatWindow — MISSING ENTIRELY
 
 No window exists for ground combat. When `GroundCombatDB` (to be created) is present on a colony entity, a new `GroundCombatWindow` should be reachable from `PlanetaryWindow` tabs and from the system map context menu.
@@ -296,8 +351,8 @@ Ground combat units should have **target lines**: persistent lines drawn from at
 
 > **Map granularity (added 2026-06-25 with the warp "fleets jumped to the Sun" investigation).** The whole-map `SafeRender("GalacticMap.Draw", …)` wrapper turned out too coarse: if ONE icon throws mid-draw (e.g. a NaN coordinate from a mid-warp/detached position hitting `Convert.ToInt32` → `OverflowException` in a transit/move icon), it aborted the **rest** of the map for that frame — orbit/transit lines (drawn first) survive, ship icons + labels (drawn after) vanish. That is exactly the live "stuck blue lines between Earth and the Sun, ships gone" symptom — a *render artifact masking* a movement bug, not the movement bug itself. Fix: `SystemMapRendering.DrawIcons` and the label loop now wrap **each item** in `SystemMapRendering.SafeDraw`, which logs `[RenderError] map item '<TypeName>' …` once and skips just that item so the rest of the map renders. The coarse `GalacticMap.Draw` wrapper stays as a backstop. **Lesson: put the gauge at the granularity of the thing that fails** — per-item names the culprit entity; per-map only says "the map broke." (The underlying warp bug — `WarpMoveProcessor` reparents a ship's position to the system Root/Sun on launch, so an intra-system hop like Earth→Luna can read as a jump to the Sun — is a separate, PRE-EXISTING movement issue, not the combat code; tracked in `SESSION_STATE.md`.)
 
-13. **Session recorder — the "flight recorder" for live play (`SessionLog`, built 2026-06-26).** `Pulsar4X.Client.SessionLog` (`SessionLog.cs`) writes a readable, greppable play-by-play of the player's actions + periodic state to the captured log, so a bug report **is** the log instead of "reproduce it and send a log." Every line is **flushed immediately** (`Console.Out.Flush()`), so a freeze or hard crash still leaves the full trail up to that instant. Categories: `[ACTION] [VIEW] [TIME] [CAMERA] [SELECT] [DRAG] [STATE]`. Toggle the whole thing with `SessionLog.Enabled`.
-    - **Where the log lives:** `game_log.txt` in the **repo root** (next to `console_output.txt` / `launch.bat`), NOT `%AppData%`. `Program.cs` redirects `Console.Out`/`Console.Error` there and walks up from the running exe to the folder holding `.git` or `launch.bat` (falls back to the exe dir, then `%AppData%`). This is a different file from `console_output.txt`, which `launch.bat` fills with **build** output. Runtime lines (`[ACTION]`/`[SELECT]`/`[Combat]` etc.) go to `game_log.txt`.
+13. **Session recorder — the "flight recorder" for live play (`SessionLog`, built 2026-06-26).** `Pulsar4X.Client.SessionLog` (`SessionLog.cs`) writes a readable, greppable play-by-play of the player's actions + periodic state to the captured log, so a bug report **is** the log instead of "reproduce it and send a log." Every line is **flushed immediately** (`Console.Out.Flush()`), so a freeze or hard crash still leaves the full trail up to that instant. Categories: `[ACTION] [VIEW] [TIME] [CAMERA] [SELECT] [DRAG] [STATE] [DETECT] [EMCON] [ENGINE]` (plus engine-side `[Combat]`/`[FleetCombat]`/`[DevTools]`). Toggle the whole thing with `SessionLog.Enabled`.
+    - **Where the log lives:** the managed log now **rolls into read-sized pages** under a `game_logs/` folder in the **repo root** (`game_log_000.txt`, `_001`, … — see `RotatingLogWriter.cs`), NOT `%AppData%`. Each page is capped (~1000 lines / ~120 KB) just under the "file too large" read wall, so a whole session can be read start-to-finish, one page at a time, with nothing lost — that wall was about to make the log unreadable for a remote review (the heartbeat alone writes ~5 lines/3 s). `Program.cs` redirects `Console.Out`/`Console.Error` into the rotating writer and walks up from the running exe to the folder holding `.git` or `launch.bat` (falls back to the exe dir, then `%AppData%`; and if the folder can't be created, falls back to a single `game_log.txt` so it ALWAYS logs). The folder starts fresh each launch (stale pages cleared), matching `console_output.txt`/the old single file. This is separate from `console_output.txt`, which `launch.bat` fills with **build + native/stderr** output. Runtime lines (`[ACTION]`/`[SELECT]`/`[Combat]` etc.) go to the `game_logs/` pages. **To review a session: read the pages in numeric order** (`game_log_000.txt` first); to grep, `Select-String -Path game_logs\*.txt -Pattern '[Combat]'`.
     - **The hooks (where state is captured):** time controls → `TimeControl.PausePlayPressed`/`OneStepPressed` (`[TIME]`); camera pan/zoom → `SystemMapRendering` `_camera.PanOccured`/`ZoomOccured`, **throttled ~400 ms** via `_lastCamLogTick` so a drag doesn't flood the log (`[CAMERA]`); entity click/select → `GlobalUIState.EntityClicked` (`[SELECT]`); **fleet/ship move/warp order → BOTH `FleetWindow.cs` move button (`[ACTION]` "move order: fleet #N -> 'Body'") and `WarpOrderWindow.cs` right-click "Warp to a new orbit" (`[ACTION]` "warp order: ship #N -> 'Body'")** — these are the two ways to issue a warp, the trigger for the teleport bug, logged right before the teleport check fires. (The teleport *detector* is trigger-agnostic — it scans all ships every heartbeat — so even an unhooked order path can't hide a teleport; these hooks just show the trigger in the log.) faction/view switch → `GlobalUIState.SetFaction`, which also auto-dumps ship positions (`[VIEW]` + `[STATE]`); periodic snapshot → `PulsarMainWindow.PostFrameUpdate` calls `SessionLog.Heartbeat(...)` **every ~3 s** (wall-clock `SDL.GetTicks()`, so cadence is steady regardless of game speed) reporting game clock / run-or-paused / step / selection / ship count (`[STATE]`).
     - **The teleport gauge — now automatic.** `SessionLog.CheckForTeleports(StarSystem)` runs **inside every heartbeat** (~3 s): it scans all ships and logs a `⚠ TELEPORT` line for any whose anchor (`Parent`) is null/invalid **or** whose distance from the Sun is under 1 Gm (`TeleportSunDistThreshold_m`; nothing real orbits that close — Mercury is ~58 Gm out), including the ship's `moveType` (Orbit/Warp) as the smoking gun. So the "teleport to Sun" bug now **announces itself within 3 s of happening, with no faction-view switch needed.** The older `SessionLog.DumpShipPositions(StarSystem, context)` (logs *every* ship's Sun-distance + parent) still exists for an explicit before/after snapshot and auto-fires on view switch. Diagnosis as of 2026-06-26: the **clean warp path is correct** (`WarpMoveProcessor.StartNonNewtTranslation` reparents to the system root but `MoveState.SetParent` preserves absolute position) — the teleport is an **interaction edge case** in a single time-step (warp + orbit + combat-destroying-ships) where a ship's `Parent` goes null/invalid while `RelativePosition` is still a small orbital offset, so `AbsolutePosition` (MoveState.cs:44 fallback) collapses to the origin/Sun. The detector exists to catch which path does it; **don't blind-fix the warp code** (no warp-position test exists; CI's smoke test only checks positions are finite, not correct).
     - **The heartbeat is wrapped in `SafeRender`** in `PostFrameUpdate` because `GlobalUIState.SelectedSystem` is a computed property (`StarSystemStates[SelectedStarSystemId].StarSystem`) that **throws** when no system is selected — a fault there logs once and the game keeps running rather than crashing on a diagnostic.

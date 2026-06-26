@@ -85,10 +85,17 @@ namespace Pulsar4X.Combat
         /// </summary>
         public const double SalvoDamageScale = 0.1;
 
+        /// <summary>Liveness counter (diagnostic only): how many trigger passes the battle engine has run across the
+        /// whole game. The client logs this each heartbeat so a remote review can tell "no battle because nothing's
+        /// hostile/in-range/detected" apart from "the battle trigger never fires on play" — a documented open
+        /// question (the colony test harness doesn't reliably auto-fire it). Interlocked: systems tick in parallel.</summary>
+        public static long TickCount;
+
         /// <summary>One trigger pass over a system: engage/join hostile fleets, then step the engagement. Returns
         /// the number of fleets seen. Defensive — built not to throw on normal game state.</summary>
         public static int Tick(EntityManager manager, int deltaSeconds)
         {
+            System.Threading.Interlocked.Increment(ref TickCount);
             var fleets = manager.GetAllEntitiesWithDataBlob<FleetDB>();
             if (fleets.Count == 0) return 0;
 
@@ -110,9 +117,24 @@ namespace Pulsar4X.Combat
                     if (!AreHostile(a, b)) continue;
                     if (GetFleetShips(b).Count == 0) continue;
                     if (!InRange(a, b)) continue;
-                    // Fog of war (client-on / test-off): only engage a hostile you actually DETECT. v1 requires
-                    // MUTUAL detection so the resolver gets both sides and there's no one-way enter/exit thrash.
-                    if (RequireDetectionToEngage && !(FleetDetects(a, b) && FleetDetects(b, a))) continue;
+                    // Fog of war (client-on / test-off): a fight forms once EITHER side detects the other — the
+                    // detector can open fire even if its target is still blind (first-strike). Both fleets enter
+                    // combat so the resolver has the target present to be shot; the BLIND one simply doesn't shoot
+                    // back (the directed-fire resolve handles that — see StepEngagementGroup / CanEngageTarget).
+                    if (RequireDetectionToEngage && !(FleetDetects(a, b) || FleetDetects(b, a))) continue;
+
+                    // First-strike narration: when a NEW engagement forms with one side blind to the other, call it
+                    // out ONCE in the combat log. Gated on NarrateToLog + fog-on (inert in tests), and on at least
+                    // one side not yet in combat — after EnsureInCombat both hold state, so it never re-logs.
+                    if (NarrateToLog && RequireDetectionToEngage &&
+                        (!a.HasDataBlob<FleetCombatStateDB>() || !b.HasDataBlob<FleetCombatStateDB>()))
+                    {
+                        bool aSeesB = FleetDetects(a, b), bSeesA = FleetDetects(b, a);
+                        if (aSeesB && !bSeesA)
+                            CombatLog($"FIRST-STRIKE: {FleetLabel(a)} detects {FleetLabel(b)}, which is BLIND — it takes fire it can't return");
+                        else if (bSeesA && !aSeesB)
+                            CombatLog($"FIRST-STRIKE: {FleetLabel(b)} detects {FleetLabel(a)}, which is BLIND — it takes fire it can't return");
+                    }
 
                     EnsureInCombat(a, b.Id);
                     EnsureInCombat(b, a.Id);
@@ -194,14 +216,16 @@ namespace Pulsar4X.Combat
         /// not re-halt every tick); only a brand-new engagement or a fresh fleet joining stops the clock.</summary>
         public static bool InterruptTimeOnNewEngagement = false;
 
-        /// <summary>When true, combat is FOG-OF-WAR gated: two hostile fleets engage only if they DETECT each other
-        /// (a sensor contact in the per-faction track table, <see cref="EntityManager.GetSensorContacts"/>), not
-        /// merely because they're present in the system. This is the seam that makes "what you can see decides the
-        /// fight" real — detection × weapons. v1 requires MUTUAL detection (both sides hold a contact for the other)
-        /// so the resolver still gets two sides and there's no one-way enter/exit thrash; the ambush/first-strike
-        /// asymmetry (one side sees the other first) is a later slice that needs resolver support. Default FALSE so
-        /// the existing combat tests stay deterministic (they don't stand up sensors/contacts); the client turns it
-        /// on when detection is live, next to <see cref="NarrateToLog"/> / <see cref="InterruptTimeOnNewEngagement"/>.</summary>
+        /// <summary>When true, combat is FOG-OF-WAR gated: a fight is driven by what each side DETECTS (a sensor
+        /// contact in the per-faction track table, <see cref="EntityManager.GetSensorContacts"/>), not merely by
+        /// presence in the system. This is the seam that makes "what you can see decides the fight" real —
+        /// detection × weapons. A fight forms once EITHER side detects the other (the detector can open fire on a
+        /// still-blind target), and the resolver's fire is DIRECTED by <see cref="CanEngageTarget"/> — a fleet shoots
+        /// only the hostiles it detects. That gives FIRST-STRIKE: the side that sees first shoots first, and a blind
+        /// fleet can't return fire until its own sensors find the shooter. Default FALSE so the existing combat
+        /// tests stay deterministic (they don't stand up sensors/contacts) — and with it off, <c>CanEngageTarget</c>
+        /// is always true, so the resolver is exactly the old symmetric exchange. The client turns it on when
+        /// detection is live, next to <see cref="NarrateToLog"/> / <see cref="InterruptTimeOnNewEngagement"/>.</summary>
         public static bool RequireDetectionToEngage = false;
 
         private static void CombatLog(string msg)
@@ -271,20 +295,31 @@ namespace Pulsar4X.Combat
             // Per-component doctrine rides on each CombatShip (a sub-fleet fights with its own posture).
             var ships = new List<CombatShip>[n];
             var fire = new List<WeaponProfile>[n];
-            var enemies = new List<int>[n]; // indices into `live` of the fleets hostile to live[i] (with ships)
+            // DIRECTED engagement (first-strike): fleet i can shoot k only if i can ENGAGE k — hostile, both manned,
+            // and (with fog-of-war on) i DETECTS k. So a fleet that hasn't detected its attacker doesn't shoot back.
+            // With fog off, CanEngageTarget is always true, so every hostile pair fills BOTH directions and this is
+            // exactly the old symmetric enemy set — the existing combat fixtures are unchanged.
+            var targetsOf = new List<int>[n];   // fleets live[i] can shoot
+            var attackersOf = new List<int>[n]; // fleets that can shoot live[i]
             for (int i = 0; i < n; i++)
             {
                 ships[i] = GetCombatShips(live[i]);
                 fire[i] = BuildFireMix(ships[i]);
-                enemies[i] = new List<int>();
+                targetsOf[i] = new List<int>();
+                attackersOf[i] = new List<int>();
             }
             for (int i = 0; i < n; i++)
-                for (int k = i + 1; k < n; k++)
-                    if (ships[i].Count > 0 && ships[k].Count > 0 && AreHostile(live[i], live[k]))
+                for (int k = 0; k < n; k++)
+                {
+                    if (i == k) continue;
+                    if (ships[i].Count == 0 || ships[k].Count == 0) continue;
+                    if (!AreHostile(live[i], live[k])) continue;
+                    if (CanEngageTarget(live[i], live[k]))
                     {
-                        enemies[i].Add(k);
-                        enemies[k].Add(i); // hostility is symmetric — i and k are each other's enemy
+                        targetsOf[i].Add(k);
+                        attackersOf[k].Add(i);
                     }
+                }
 
             // --- DAMAGE phase: each fleet takes the COMBINED fire of all fleets hostile to it. An attacker that
             // faces several enemy fleets DIVIDES its fire across them (conserves firepower — outnumbering a side
@@ -296,14 +331,14 @@ namespace Pulsar4X.Combat
                 if (!live[i].TryGetDataBlob<FleetCombatStateDB>(out var state)) continue;
                 state.StepsFought++;
                 totalFire += TotalDamage(fire[i]);
-                if (enemies[i].Count == 0) continue; // nobody shooting at this fleet this step
+                if (attackersOf[i].Count == 0) continue; // nobody shooting at this fleet this step (it may still be shooting others)
 
-                state.OpponentFleetId = live[enemies[i][0]].Id; // keep the readout pointing at a live enemy
+                state.OpponentFleetId = live[attackersOf[i][0]].Id; // keep the readout pointing at a fleet shooting it
 
                 var incoming = new List<WeaponProfile>();
-                foreach (int g in enemies[i])
+                foreach (int g in attackersOf[i])
                 {
-                    int split = enemies[g].Count; // how many targets attacker g divides its fire across
+                    int split = targetsOf[g].Count; // attacker g divides its fire across the targets IT can engage
                     if (split <= 0) continue;
                     AddScaledFire(incoming, fire[g], 1.0 / split);
                 }
@@ -329,10 +364,15 @@ namespace Pulsar4X.Combat
                 if (!f.IsValid || !f.TryGetDataBlob<FleetCombatStateDB>(out var state)) continue;
                 int aliveCount = ships[i].Count; // post-casualty
                 if (aliveCount == 0) { EndEngagement(f); continue; }       // wiped — destroyed, not retreating
-                if (enemies[i].Count == 0) { EndEngagement(f); continue; } // no enemy here — done fighting
+                // Done here only if it can neither shoot anyone NOR be shot: a one-sided aggressor (targets, no
+                // attackers) stays IN so it keeps firing on its blind victim; a blind victim (attackers, no targets)
+                // stays IN so it keeps taking fire until it's wiped or its own scan finds the shooter.
+                if (attackersOf[i].Count == 0 && targetsOf[i].Count == 0) { EndEngagement(f); continue; }
                 if (ShouldRetreat(f, state, aliveCount))
                 {
-                    RecordRetreat(f, live[enemies[i][0]]); // break off away from a fleet it was fighting
+                    // Break off away from a fleet that's actually shooting it; fall back to one it was shooting.
+                    var from = attackersOf[i].Count > 0 ? live[attackersOf[i][0]] : live[targetsOf[i][0]];
+                    RecordRetreat(f, from);
                     EndEngagement(f);
                 }
             }
@@ -658,6 +698,14 @@ namespace Pulsar4X.Combat
                 if (contacts.SensorContactExists(ship.Id)) return true;
             return false;
         }
+
+        /// <summary>Can <paramref name="attacker"/> bring fire on <paramref name="target"/> this step? Always yes
+        /// when fog-of-war is off (<see cref="RequireDetectionToEngage"/> false → the existing symmetric behaviour,
+        /// so every combat fixture is unchanged). When on, only if the attacker DETECTS the target. This is the
+        /// engine of FIRST-STRIKE: the side that sees first shoots first, and a fleet that hasn't detected its
+        /// attacker can't return fire on it until its own sensors find it.</summary>
+        private static bool CanEngageTarget(Entity attacker, Entity target)
+            => !RequireDetectionToEngage || FleetDetects(attacker, target);
 
         private static bool InRange(Entity a, Entity b)
         {
