@@ -250,6 +250,18 @@ The Prime Directive tells you to *map* the connections. This is the **action you
 
 **This is how we improve.** Run Keep/Cut/Add/Connect on a system every time it's touched and the game gets tighter — pretty gets trimmed, levers get added, and the connections that turn "100 simple systems" into a *stacking* game get built and verified. Worked example: `docs/DETECTION-DESIGN.md` §3.
 
+### Cradle to Grave — a system is real only if the player can reach it through the whole chain
+
+**Connect is lateral (system × system). This is Connect made VERTICAL, and it is the acceptance test for "is this actually in the game":** every capability must be reachable and shaped by the player through the **full chain — from the mineral in the ground, to the decision on the battlefield, to the loss when it's destroyed.** Nothing is parachuted in as an engine abstraction the player can't research, build, deploy, or lose.
+
+The chain (both ways):
+
+> **mineral** (mined) → **material** (refined) → **production** (built at a colony) → **component** (designed in the designer) → gated by **research** (tech unlocks what you can design) → installed on a **unit/building** → the **in-play decision** (the lever) → **damaged/destroyed** (a component-level loss that *matters* — you re-research / re-mine / re-build).
+
+This is **why** `CONVENTIONS.md` §6 ("abilities are components — do NOT invent parallel systems") is the law: modeling a capability as a component is exactly what gets you research-gating, construction-from-materials, save/load, and the design UI **for free** — i.e. it is what makes the capability *accessible from the base layer*. A capability that's a bespoke engine flag the player can't research/build/lose **fails cradle-to-grave** — the "pretty" disease, vertical.
+
+**The acceptance test, every system, every time:** trace it cradle to grave — name the mineral, the material, the component, the research, the unit/building, the decision, and the loss. A missing rung is a design gap to fill (or a deliberate, written deferral), never a thing to skip. Worked example: `docs/DETECTION-DESIGN.md` — a sensor is a **component** (designed / researched / built / installed); the heat/active/fog *posture* is the **order**; a **destroyed** sensor blinds you (the grave rung, which wires detection to the damage system).
+
 ---
 
 ## The Visibility Gate — "Can We See Enough?"
