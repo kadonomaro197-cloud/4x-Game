@@ -103,6 +103,10 @@ The cradle-to-grave loss rung: shoot a ship's sensor receivers off and it stops 
 
 Gauge: `SensorDetectionTests.DestroyingSensor_BlindsTheShip_GraveRung` — a watcher detects (receivers > 0, contacts > 0); remove its `SensorReceiverAtb` components + `ReCalcAbilities` (the damage-path tail); assert the receiver cache is empty and the next scan detects nothing.
 
+## Live diagnostics — is the scan even firing?
+
+`SensorScan.ScanCount` is a `public static long`, Interlocked-incremented at the top of `ProcessEntity` — a pure liveness counter (diagnostic only, no game effect). The client's `SessionLog` heartbeat logs it as part of the `[ENGINE] sensor scans N (+delta)` line, so a remote review can tell **"detecting nothing because nothing's in range" apart from "the scan never fired"** — the latter is a real risk, since the scan is only auto-scheduled by `Game.PostNewGameInitialization` (the test harness skips it). If the count doesn't climb while ships are present, the detection engine is dead, not quiet. Sibling counter on the combat side: `CombatEngagement.TickCount` (see `Combat/CLAUDE.md`).
+
 ## Phase 4 Relevance
 
 Ground forces have a sensor component (`SensorSignatureAtb`) that gives them an EM profile when in space transport. On the ground, sensor ranges become terrain-line-of-sight problems — a different mechanic from the space EM system. Do not reuse `SensorScan` for ground unit spotting; it's the wrong tool.

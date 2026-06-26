@@ -85,10 +85,17 @@ namespace Pulsar4X.Combat
         /// </summary>
         public const double SalvoDamageScale = 0.1;
 
+        /// <summary>Liveness counter (diagnostic only): how many trigger passes the battle engine has run across the
+        /// whole game. The client logs this each heartbeat so a remote review can tell "no battle because nothing's
+        /// hostile/in-range/detected" apart from "the battle trigger never fires on play" — a documented open
+        /// question (the colony test harness doesn't reliably auto-fire it). Interlocked: systems tick in parallel.</summary>
+        public static long TickCount;
+
         /// <summary>One trigger pass over a system: engage/join hostile fleets, then step the engagement. Returns
         /// the number of fleets seen. Defensive — built not to throw on normal game state.</summary>
         public static int Tick(EntityManager manager, int deltaSeconds)
         {
+            System.Threading.Interlocked.Increment(ref TickCount);
             var fleets = manager.GetAllEntitiesWithDataBlob<FleetDB>();
             if (fleets.Count == 0) return 0;
 
@@ -115,6 +122,19 @@ namespace Pulsar4X.Combat
                     // combat so the resolver has the target present to be shot; the BLIND one simply doesn't shoot
                     // back (the directed-fire resolve handles that — see StepEngagementGroup / CanEngageTarget).
                     if (RequireDetectionToEngage && !(FleetDetects(a, b) || FleetDetects(b, a))) continue;
+
+                    // First-strike narration: when a NEW engagement forms with one side blind to the other, call it
+                    // out ONCE in the combat log. Gated on NarrateToLog + fog-on (inert in tests), and on at least
+                    // one side not yet in combat — after EnsureInCombat both hold state, so it never re-logs.
+                    if (NarrateToLog && RequireDetectionToEngage &&
+                        (!a.HasDataBlob<FleetCombatStateDB>() || !b.HasDataBlob<FleetCombatStateDB>()))
+                    {
+                        bool aSeesB = FleetDetects(a, b), bSeesA = FleetDetects(b, a);
+                        if (aSeesB && !bSeesA)
+                            CombatLog($"FIRST-STRIKE: {FleetLabel(a)} detects {FleetLabel(b)}, which is BLIND — it takes fire it can't return");
+                        else if (bSeesA && !aSeesB)
+                            CombatLog($"FIRST-STRIKE: {FleetLabel(b)} detects {FleetLabel(a)}, which is BLIND — it takes fire it can't return");
+                    }
 
                     EnsureInCombat(a, b.Id);
                     EnsureInCombat(b, a.Id);

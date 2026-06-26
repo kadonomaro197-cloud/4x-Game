@@ -19,8 +19,16 @@ namespace Pulsar4X.Sensors
         //TODO: ReWrite this, instead of each component trying to do a scan,
         //multiple components should mix together to form a single suite and the ship itself should scan.
         //maybe the scan freqency /attribute.scanTime should just effect the chance of a detection.
+        /// <summary>Liveness counter (diagnostic only): how many times the scan processor has been invoked across
+        /// the whole game. The client logs this each heartbeat so a remote review can tell "detecting nothing
+        /// because there's nothing in range" apart from "the scan never fires" — the latter is a real risk, since
+        /// the scan is only auto-scheduled by <c>Game.PostNewGameInitialization</c> (the test harness skips it).
+        /// Interlocked because systems process in parallel; exactness doesn't matter, only that it climbs.</summary>
+        public static long ScanCount;
+
         internal override void ProcessEntity(Entity entity, DateTime atDateTime)
         {
+            System.Threading.Interlocked.Increment(ref ScanCount);
             if(entity.Manager == null) throw new NullReferenceException("entity.Manager cannot be null");
 
             EntityManager manager = entity.Manager;
