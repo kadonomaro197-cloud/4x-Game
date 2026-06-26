@@ -38,6 +38,16 @@ namespace Pulsar4X.Client
 
         }
 
+        // PERF / freeze guard (2026-06-26): at extreme zoom an orbit ring can be MILLIONS of pixels across — pure
+        // off-screen clutter — yet the fixed 181-point transform + 180-line draw still run for it EVERY frame, and
+        // SDL chokes rasterizing lines with astronomically off-screen endpoints. The cost stays full no matter how
+        // little is on screen, so zooming in piles on more huge rings until a frame never finishes (the live freeze:
+        // a ship orbiting a Jupiter moon, zoomed way in). When an orbit's on-screen radius is absurd we skip it
+        // entirely (it isn't a usable ring at that scale); the orbit you zoomed in to SEE is screen-sized and still draws.
+        const double _auInMetresInverse = 6.6859e-12;      // 1 / (metres per AU) — matches the OnFrameUpdate transform scale
+        const double _maxOrbitScreenRadiusPx = 50000.0;    // ~25+ screens; beyond this an orbit ring is off-screen clutter
+        bool _offScreenSkip;
+
         protected override void CreatePointArray()
         {
             _points = new Vector2[_numberOfArcSegments + 1];
@@ -143,6 +153,13 @@ namespace Pulsar4X.Client
             var scAU = Matrix.IDScale(6.6859E-12, 6.6859E-12);
             var mtrx =  scAU * matrix * trns; //scale to au, scale for camera zoom, and move to camera position and zoom
 
+            // PERF guard: skip an orbit whose on-screen radius is absurd (off-screen clutter at extreme zoom) — skips
+            // BOTH the transform below and the draw. Same scale the transform uses: radius_m * (1/AU) * zoom = pixels.
+            double orbitScreenRadiusPx = SemiMaj * (1.0 + _eccentricity) * _auInMetresInverse * camera.ZoomLevel;
+            _offScreenSkip = orbitScreenRadiusPx > _maxOrbitScreenRadiusPx;
+            if (_offScreenSkip)
+                return;
+
             // Transform full orbit points for ghost rendering
             for (int i = 0; i < _numberOfArcSegments + 1 && i < _fullOrbitDrawPoints.Length; i++)
             {
@@ -174,6 +191,7 @@ namespace Pulsar4X.Client
 
         public override void Draw(IntPtr rendererPtr, Camera camera)
         {
+            if (_offScreenSkip) return;   // absurdly large on-screen orbit — skipped in OnFrameUpdate (see the PERF guard there)
             //now we draw a line between each of the points in the translatedPoints[] array.
             if (_drawPoints.Count() < _numberOfDrawSegments - 1)
                 return;
