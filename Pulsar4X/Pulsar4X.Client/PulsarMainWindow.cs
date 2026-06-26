@@ -315,6 +315,7 @@ namespace Pulsar4X.Client
         public override void PostFrameUpdate()
         {
             base.PostFrameUpdate();
+            SessionLog.FrameTick();   // stamp "the main loop is alive this frame" for the hang watchdog
 
             foreach (var (_, systemState) in _state.StarSystemStates)
             {
