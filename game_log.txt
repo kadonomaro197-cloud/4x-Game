@@ -1,4 +1,4 @@
-=== Pulsar4X session started 2026-06-26 07:24:32 ===
+=== Pulsar4X session started 2026-06-26 07:35:02 ===
 Log: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\game_log.txt
 File not found: Resources\CancelIco.bmp
 File not found: Resources\CargoIco.bmp
@@ -29,64 +29,64 @@ Found mod 'Pulsar4x-Testing' from C:\Users\DeeDiebS\AppData\Roaming\Pulsar4X\Pul
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\pulsar4x-menu.png
 Successfully loaded: pulsar4x-menu
 Format: .png
-Texture pointer: 2444FF1D340
+Texture pointer: 214492672C0
 Dimensions: 400x200
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\discord-mark-white.png
 Successfully loaded: discord
 Format: .png
-Texture pointer: 2444FF1D0C0
+Texture pointer: 21449266B40
 Dimensions: 619x469
 --------------------------------------------------
 New Game: SpeciesId='species-human' ColonyId='colony-earth' SystemId='system-sol' BodyId='planet-earth' EnabledSystems=1
-[VIEW] now viewing faction id=795 (UEC) [player]
+[VIEW] now viewing faction id=570 (UEC) [player]
 Ship icon texture loaded: 28x14
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\DesignComponentIco.bmp
 Successfully loaded: DesComp
 Format: .bmp
-Texture pointer: 2445463D3D0
+Texture pointer: 21449730390
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\DesignShipIco.bmp
 Successfully loaded: DesShip
 Format: .bmp
-Texture pointer: 2445463BAD0
+Texture pointer: 2144972F5D0
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\IndustryIco.bmp
 Successfully loaded: Industry
 Format: .bmp
-Texture pointer: 2445463D290
+Texture pointer: 2144972F850
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\ResearchIco.bmp
 Successfully loaded: Research
 Format: .bmp
-Texture pointer: 2445463D510
+Texture pointer: 21449730ED0
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\SelectIco.bmp
 Successfully loaded: Select
 Format: .bmp
-Texture pointer: 2445463CED0
+Texture pointer: 2144972FAD0
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\GalaxyMapIco.bmp
 Successfully loaded: GalMap
 Format: .bmp
-Texture pointer: 2445463C610
+Texture pointer: 2144972FC10
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\RulerIco.bmp
 Successfully loaded: Ruler
 Format: .bmp
-Texture pointer: 2445463C890
+Texture pointer: 21449731150
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\TreeIco.bmp
 Successfully loaded: Tree
 Format: .bmp
-Texture pointer: 2445463D790
+Texture pointer: 2144972FFD0
 Dimensions: 256x256
 --------------------------------------------------
 [DevTools] Refresh: 13 ship design(s), 41 body(ies), 5 cargo target(s), 15 mineral(s)
@@ -94,256 +94,130 @@ Dimensions: 256x256
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\Play.bmp
 Successfully loaded: PlayImg
 Format: .bmp
-Texture pointer: 2445463BFD0
+Texture pointer: 21449730750
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\OneStep.bmp
 Successfully loaded: OneStepImg
 Format: .bmp
-Texture pointer: 2445463C750
+Texture pointer: 2144972FD50
 Dimensions: 256x256
 --------------------------------------------------
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=5
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=5
 [VIEW] now viewing faction id=0 ()
 [STATE] ship positions (after view switch): 5 ship(s)
-[STATE]   ship #801 'Planet Express Ship' faction=795 sun-dist=150.23Gm parent=Earth
-[STATE]   ship #804 'Serial Peacemaker' faction=795 sun-dist=150.24Gm parent=Earth
-[STATE]   ship #806 'Prevailing Stillness' faction=795 sun-dist=150.23Gm parent=Earth
-[STATE]   ship #809 'Surveyor I' faction=795 sun-dist=150.25Gm parent=Earth
-[STATE]   ship #811 'SensorSat I' faction=795 sun-dist=150.25Gm parent=Earth
+[STATE]   ship #576 'Planet Express Ship' faction=570 sun-dist=150.25Gm parent=Earth
+[STATE]   ship #579 'Serial Peacemaker' faction=570 sun-dist=150.25Gm parent=Earth
+[STATE]   ship #581 'Prevailing Stillness' faction=570 sun-dist=150.25Gm parent=Earth
+[STATE]   ship #584 'Surveyor I' faction=570 sun-dist=150.24Gm parent=Earth
+[STATE]   ship #586 'SensorSat I' faction=570 sun-dist=150.25Gm parent=Earth
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=5
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=5
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=5
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=5
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=5
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=5
-[DevTools] Spawn Hostile Fleet OK: 3x 'Leviathan Battleship' around 'Luna', fleet id=817
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=8
-[CAMERA] pan -> 150,-7.6 Gm
-[CAMERA] pan -> 150,-7.6 Gm
-[CAMERA] pan -> 150,-7.6 Gm
-[CAMERA] pan -> 150,-7.6 Gm
-[CAMERA] pan -> 150,-7.6 Gm
-[CAMERA] pan -> 150,-7.6 Gm
-[CAMERA] pan -> 150,-7.6 Gm
-[CAMERA] pan -> 150,-7.6 Gm
-[CAMERA] pan -> 150,-7.6 Gm
-[CAMERA] pan -> 150,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=8
-[CAMERA] pan -> 150.1,-7.7 Gm
-[CAMERA] pan -> 150.1,-7.7 Gm
-[CAMERA] pan -> 150.1,-7.7 Gm
-[CAMERA] pan -> 150.1,-7.7 Gm
-[CAMERA] pan -> 150.1,-7.7 Gm
-[CAMERA] pan -> 150.1,-7.7 Gm
-[CAMERA] pan -> 150.1,-7.7 Gm
-[CAMERA] pan -> 150.1,-7.7 Gm
-[CAMERA] pan -> 150.1,-7.7 Gm
-[CAMERA] pan -> 150.1,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=8
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.3,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
+[DevTools] Spawn Hostile Fleet OK: 3x 'Leviathan Battleship' around 'Luna', fleet id=592
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=8
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=8
-[VIEW] now viewing faction id=816 (FOE)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=8
+[VIEW] now viewing faction id=570 (UEC)
 [STATE] ship positions (after view switch): 8 ship(s)
-[STATE]   ship #801 'Planet Express Ship' faction=795 sun-dist=150.23Gm parent=Earth
-[STATE]   ship #804 'Serial Peacemaker' faction=795 sun-dist=150.24Gm parent=Earth
-[STATE]   ship #806 'Prevailing Stillness' faction=795 sun-dist=150.23Gm parent=Earth
-[STATE]   ship #809 'Surveyor I' faction=795 sun-dist=150.25Gm parent=Earth
-[STATE]   ship #811 'SensorSat I' faction=795 sun-dist=150.25Gm parent=Earth
-[STATE]   ship #818 '818' faction=816 sun-dist=150.57Gm parent=Luna
-[STATE]   ship #819 '819' faction=816 sun-dist=150.57Gm parent=Luna
-[STATE]   ship #820 '820' faction=816 sun-dist=150.57Gm parent=Luna
-[DevTools] Faction view -> 'Hostiles' id=816
+[STATE]   ship #576 'Planet Express Ship' faction=570 sun-dist=150.25Gm parent=Earth
+[STATE]   ship #579 'Serial Peacemaker' faction=570 sun-dist=150.25Gm parent=Earth
+[STATE]   ship #581 'Prevailing Stillness' faction=570 sun-dist=150.25Gm parent=Earth
+[STATE]   ship #584 'Surveyor I' faction=570 sun-dist=150.24Gm parent=Earth
+[STATE]   ship #586 'SensorSat I' faction=570 sun-dist=150.25Gm parent=Earth
+[STATE]   ship #593 '593' faction=591 sun-dist=150.57Gm parent=Luna
+[STATE]   ship #594 '594' faction=591 sun-dist=150.57Gm parent=Luna
+[STATE]   ship #595 '595' faction=591 sun-dist=150.57Gm parent=Luna
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=8
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=8
-[VIEW] now viewing faction id=795 (UEC)
-[STATE] ship positions (after view switch): 8 ship(s)
-[STATE]   ship #801 'Planet Express Ship' faction=795 sun-dist=150.23Gm parent=Earth
-[STATE]   ship #804 'Serial Peacemaker' faction=795 sun-dist=150.24Gm parent=Earth
-[STATE]   ship #806 'Prevailing Stillness' faction=795 sun-dist=150.23Gm parent=Earth
-[STATE]   ship #809 'Surveyor I' faction=795 sun-dist=150.25Gm parent=Earth
-[STATE]   ship #811 'SensorSat I' faction=795 sun-dist=150.25Gm parent=Earth
-[STATE]   ship #818 '818' faction=816 sun-dist=150.57Gm parent=Luna
-[STATE]   ship #819 '819' faction=816 sun-dist=150.57Gm parent=Luna
-[STATE]   ship #820 '820' faction=816 sun-dist=150.57Gm parent=Luna
-[DevTools] Faction view -> player faction
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=8
-[VIEW] now viewing faction id=795 (UEC)
-[STATE] ship positions (after view switch): 8 ship(s)
-[STATE]   ship #801 'Planet Express Ship' faction=795 sun-dist=150.23Gm parent=Earth
-[STATE]   ship #804 'Serial Peacemaker' faction=795 sun-dist=150.24Gm parent=Earth
-[STATE]   ship #806 'Prevailing Stillness' faction=795 sun-dist=150.23Gm parent=Earth
-[STATE]   ship #809 'Surveyor I' faction=795 sun-dist=150.25Gm parent=Earth
-[STATE]   ship #811 'SensorSat I' faction=795 sun-dist=150.25Gm parent=Earth
-[STATE]   ship #818 '818' faction=816 sun-dist=150.57Gm parent=Luna
-[STATE]   ship #819 '819' faction=816 sun-dist=150.57Gm parent=Luna
-[STATE]   ship #820 '820' faction=816 sun-dist=150.57Gm parent=Luna
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=8
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.4,-7.9 Gm
-[CAMERA] pan -> 150.8,-8.1 Gm
-[CAMERA] pan -> 150.8,-8.1 Gm
-[CAMERA] pan -> 150.8,-8.1 Gm
-[CAMERA] pan -> 150.8,-8.1 Gm
-[CAMERA] pan -> 150.8,-8.1 Gm
-[CAMERA] pan -> 150.8,-8.1 Gm
-[CAMERA] pan -> 150.8,-8.1 Gm
-[CAMERA] pan -> 150.8,-8.1 Gm
-[CAMERA] pan -> 150.8,-8.1 Gm
-[CAMERA] pan -> 150.8,-8.1 Gm
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=8
+[SELECT] Primary click on 'Prevailing Stillness' (entity #581, faction 570)
+Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\PinIco.bmp
+Successfully loaded: Pin
+Format: .bmp
+Texture pointer: 2144E4B2680
+Dimensions: 256x256
+--------------------------------------------------
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Prevailing Stillness ships-in-view=8
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150,-7.6 Gm
+[CAMERA] pan -> 150,-7.6 Gm
+[CAMERA] pan -> 150,-7.6 Gm
+[CAMERA] pan -> 150,-7.6 Gm
+[CAMERA] pan -> 150,-7.6 Gm
+[CAMERA] pan -> 150,-7.6 Gm
+[CAMERA] pan -> 150,-7.6 Gm
+[CAMERA] pan -> 150,-7.6 Gm
+[CAMERA] pan -> 150,-7.6 Gm
+[CAMERA] pan -> 150,-7.6 Gm
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Prevailing Stillness ships-in-view=8
+[ACTION] move order: fleet #578 -> 'Luna' (warp). Watch next heartbeat for teleport check.
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=1s selected=Prevailing Stillness ships-in-view=8
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Prevailing Stillness ships-in-view=8
 [TIME] one step (3600s)
-[Combat] Freight Fleet #800 enters combat (1 ship(s))
-[Combat] Hostiles Fleet #817 enters combat (3 ship(s))
-[Combat] Military Fleet #803 enters combat (2 ship(s))
-[Combat] Science Fleet #808 enters combat (2 ship(s))
+[Combat] Freight Fleet #575 enters combat (1 ship(s))
+[Combat] Hostiles Fleet #592 enters combat (3 ship(s))
+[Combat] Military Fleet #578 enters combat (2 ship(s))
+[Combat] Science Fleet #583 enters combat (2 ship(s))
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\Pause.bmp
 Successfully loaded: PauseImg
 Format: .bmp
-Texture pointer: 244546A8B80
+Texture pointer: 2144E4B18C0
 Dimensions: 256x256
 --------------------------------------------------
-[Combat] salvo 2: Freight Fleet #800 lost 1 ship(s), 0 left
-[Combat] salvo 2: Science Fleet #808 lost 1 ship(s), 1 left
-[Combat] Freight Fleet #800 disengages (0 ship(s) left)
-[Combat] Science Fleet #808 breaks off — retreats from Hostiles Fleet #817
-[Combat] Science Fleet #808 disengages (1 ship(s) left)
-[Combat] Science Fleet #808 enters combat (1 ship(s))
-[Combat] salvo 3: Military Fleet #803 lost 2 ship(s), 0 left
-[Combat] salvo 1: Science Fleet #808 lost 1 ship(s), 0 left
-[Combat] Military Fleet #803 disengages (0 ship(s) left)
-[Combat] Science Fleet #808 disengages (0 ship(s) left)
-[Combat] Hostiles Fleet #817 disengages (3 ship(s) left)
-[CAMERA] pan -> 150.9,-8.2 Gm
-[CAMERA] pan -> 150.9,-8.2 Gm
-[CAMERA] pan -> 150.9,-8.2 Gm
-[CAMERA] pan -> 150.9,-8.2 Gm
-[CAMERA] pan -> 150.9,-8.2 Gm
-[CAMERA] pan -> 150.9,-8.2 Gm
-[CAMERA] pan -> 150.9,-8.2 Gm
-[CAMERA] pan -> 150.9,-8.2 Gm
-[CAMERA] pan -> 150.9,-8.2 Gm
-[CAMERA] pan -> 150.9,-8.2 Gm
-[CAMERA] pan -> 150.3,-7.8 Gm
-[CAMERA] pan -> 150.3,-7.8 Gm
-[CAMERA] pan -> 150.3,-7.8 Gm
-[CAMERA] pan -> 150.3,-7.8 Gm
-[CAMERA] pan -> 150.3,-7.8 Gm
-[CAMERA] pan -> 150.3,-7.8 Gm
-[CAMERA] pan -> 150.3,-7.8 Gm
-[CAMERA] pan -> 150.3,-7.8 Gm
-[CAMERA] pan -> 150.3,-7.8 Gm
-[CAMERA] pan -> 150.3,-7.8 Gm
-[CAMERA] pan -> 150.2,-7.8 Gm
-[CAMERA] pan -> 150.2,-7.8 Gm
-[CAMERA] pan -> 150.2,-7.8 Gm
-[CAMERA] pan -> 150.2,-7.8 Gm
-[CAMERA] pan -> 150.2,-7.8 Gm
-[CAMERA] pan -> 150.2,-7.8 Gm
-[CAMERA] pan -> 150.2,-7.8 Gm
-[CAMERA] pan -> 150.2,-7.8 Gm
-[CAMERA] pan -> 150.2,-7.8 Gm
-[CAMERA] pan -> 150.2,-7.8 Gm
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=3
+[Combat] salvo 2: Freight Fleet #575 lost 1 ship(s), 0 left
+[Combat] salvo 2: Science Fleet #583 lost 1 ship(s), 1 left
+[Combat] Freight Fleet #575 disengages (0 ship(s) left)
+[Combat] Science Fleet #583 breaks off — retreats from Hostiles Fleet #592
+[Combat] Science Fleet #583 disengages (1 ship(s) left)
+[Combat] Science Fleet #583 enters combat (1 ship(s))
+[Combat] salvo 3: Military Fleet #578 lost 2 ship(s), 0 left
+[Combat] salvo 1: Science Fleet #583 lost 1 ship(s), 0 left
+[Combat] Military Fleet #578 disengages (0 ship(s) left)
+[Combat] Science Fleet #583 disengages (0 ship(s) left)
+[Combat] Hostiles Fleet #592 disengages (3 ship(s) left)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Prevailing Stillness ships-in-view=3
 [CAMERA] pan -> 150.1,-7.6 Gm
 [CAMERA] pan -> 150.1,-7.6 Gm
 [CAMERA] pan -> 150.1,-7.6 Gm
@@ -354,70 +228,20 @@ Dimensions: 256x256
 [CAMERA] pan -> 150.1,-7.6 Gm
 [CAMERA] pan -> 150.1,-7.6 Gm
 [CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[TIME] one step (3600s)
-[STATE] heartbeat t=2050-01-01 01:00 paused step=3600s selected=(none) ships-in-view=3
-[TIME] one step (3600s)
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.2,-7.7 Gm
-[CAMERA] pan -> 150.2,-7.7 Gm
-[CAMERA] pan -> 150.2,-7.7 Gm
-[CAMERA] pan -> 150.2,-7.7 Gm
-[CAMERA] pan -> 150.2,-7.7 Gm
-[CAMERA] pan -> 150.2,-7.7 Gm
-[CAMERA] pan -> 150.2,-7.7 Gm
-[CAMERA] pan -> 150.2,-7.7 Gm
-[CAMERA] pan -> 150.2,-7.7 Gm
-[CAMERA] pan -> 150.2,-7.7 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[CAMERA] pan -> 150.1,-7.5 Gm
-[STATE] heartbeat t=2050-01-01 02:00 paused step=3600s selected=(none) ships-in-view=3
-[STATE] heartbeat t=2050-01-01 02:00 paused step=3600s selected=(none) ships-in-view=3
-[STATE] heartbeat t=2050-01-01 02:00 paused step=3600s selected=(none) ships-in-view=3
-=== Session ended 2026-06-26 07:25:49 ===
+[CAMERA] pan -> 150.1,-7.7 Gm
+[CAMERA] pan -> 150.1,-7.7 Gm
+[CAMERA] pan -> 150.1,-7.7 Gm
+[CAMERA] pan -> 150.1,-7.7 Gm
+[CAMERA] pan -> 150.1,-7.7 Gm
+[CAMERA] pan -> 150.1,-7.7 Gm
+[CAMERA] pan -> 150.1,-7.7 Gm
+[CAMERA] pan -> 150.1,-7.7 Gm
+[CAMERA] pan -> 150.1,-7.7 Gm
+[CAMERA] pan -> 150.1,-7.7 Gm
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Prevailing Stillness ships-in-view=3
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Prevailing Stillness ships-in-view=3
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Prevailing Stillness ships-in-view=3
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Prevailing Stillness ships-in-view=3
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Prevailing Stillness ships-in-view=3
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Prevailing Stillness ships-in-view=3
+=== Session ended 2026-06-26 07:38:14 ===
