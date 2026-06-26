@@ -124,6 +124,30 @@ EMCON is **not one variable** ("how hot you run") — it's a cluster of emitter 
 
 **So slice 3 = make the signature DYNAMIC from the four emitters' activity + add the EMCON posture order (the master dark/loud switch).** Open call: one bundled posture (**Full / Cruise / Silent** — the Navy EMCON condition) vs. four separate switches. *Lean: bundled — one legible knob — with the rule that **firing weapons always lights you up** regardless (you can't shoot quietly).*
 
+## 3c. EMCON, grounded in the code — EXISTS / MISSING / NEEDS-CHANGE (investigated 2026-06-26, file:line)
+
+§3b flagged these systems from memory; here's what's **actually in the files**. **Headline: EMCON v1 is finishing INERT SCAFFOLDING + a few small wires — not new subsystems.** The original author scaffolded dynamic-signature *and* active-sensor events and left them unwired.
+
+| System (EMCON variable) | What's actually there | Verdict | File |
+|---|---|---|---|
+| **Signature store/compute** | `SensorProfileDB.EmittedEMSpectra`, set **ONCE** at component install (`SetProfileDB`), never updated at runtime | **EXISTS but STATIC** — the thing to make dynamic | `SensorProfileTools.cs:14-45` |
+| **Dynamic-signature hook** | `EMData.StateLoad` getter **already reads** `ComponentInstance.ComponentLoadPercent` — but load is **never set** (so it's always 100%) and nothing scales by it | **INERT SCAFFOLDING** — finish it | `SensorProfileDB.cs:102-110`, `ComponentInstance.cs:77` |
+| **Reactor → signature** | uses **design-time** output; the **live** `EnergyGenAbilityDB.Output` exists + varies with load but is **never consulted** | **NEEDS-CHANGE** — scale by live load | `EnergyGenAbilityDB.cs:44`, `energy.json:74` |
+| **Engine/thrust → signature** | engines **do** carry `SensorSignatureAtb` (design Thrust); but **no runtime "burning now" state** | **NEEDS-CHANGE** — add a current-thrust state | `engines.json:82`, `NewtonThrustAbilityDB.cs` |
+| **Weapons firing → signature** | weapons carry **NO** signature (only missiles do); **no "firing this tick" state** (`ThermalOutput_W` is fire-rate-limit only) | **NEEDS-BUILD** (small) — firing spikes you | `GenericBeamWeaponAtb.cs` |
+| **Active sensors → exposure** | reflections computed; passive/active by tuned wavelength — but pinging **does NOT raise your own signature**; unused `ActiveSensorDetected` event | **HALF-BUILT** — add the exposure | `SensorReflectionProcessor.cs`, `EventTypes.cs:310` |
+| **Reactor throttle / run-silent** | output fixed at max−demand; **no throttle, no power/EMCON order** | **NEEDS-CHANGE** — add `PowerThrottlePercent` | `EnergyGenProcessor.cs:24` |
+| **EMCON posture/order** | none — no order, no state, no flag | **NEEDS-BUILD** (small, mirrors doctrine) | — |
+| **Cross-section** | π·r² from ship radius; fixed geometry | **EXISTS, no lever** (keep) | `SensorProfileDB.cs:33-47` |
+| **Contact quality** | computed 0–1; **consumed for SURVEY detail** (star/planet accuracy gating), **not combat** | **EXISTS, survey-wired** — ties to the *survey* flavor; v2 for fire-control lock | `SensorReturnValues.cs:8`, `SystemBodyInfoDB.cs:154` |
+| **Heat / radiators** | **none** on ships (thermal math lives only in the asteroid-damage sim) | **v2 / LATENT** — not needed for EMCON v1 ("hot = loud now") | `Damage/DamageVeryComplex/` |
+| **Environmental masking** | **none** — detection is pure signal-vs-sensitivity; **author's own TODO wants it** ("ships near a sun hidden") | **v2 / LATENT** (positional stealth) | `SensorTools.cs:65` |
+| **Stealth-by-material** | emitter side is a flat `Reflectivity 0.9`; per-band material math **exists but only in the damage path** | **v2 / LATENT** (reuse the damage math) | `SensorProfileDB.cs:53`, `ArmorBlueprint.cs` |
+
+**Slice 3 build list (the wires, grounded):** (1) `SensorProfileDB.ActivityMultiplier` (or finish `ComponentLoadPercent`) read in the detection math (`SensorTools.AttenuatedForDistance`); (2) a small `EMCONProcessor` / per-scan recompute that sets it from reactor-load + thrust-state + firing × the posture; (3) `FleetEmconDB` + order (**Full / Cruise / Silent** — mirrors doctrine); (4) `PowerThrottlePercent` on `EnergyGenAbilityDB` so Silent caps output; (5) a runtime burn/firing state so thrust + the first shot spike you; (6) active-ping adds to your own `EmittedEMSpectra`. Each its own gauged slice.
+
+**v2 / latent (genuinely new, correctly deferred):** heat sinks/radiators (the juicy "store heat, dump after the strike"); environmental masking (the *author's own TODO* — hide near a star); stealth-by-material (reuse the damage-path per-band math on the emitter side). None block EMCON v1.
+
 ## 4. How it all COMES TOGETHER (the target)
 
 One sentence: **how hot you run sets how far you're SEEN (and how fast/ready you are); how far you SEE is the target's heat × your sensors; combat only acts on what you detect — so a cold ship that spots a hot one first owns the engagement.**
