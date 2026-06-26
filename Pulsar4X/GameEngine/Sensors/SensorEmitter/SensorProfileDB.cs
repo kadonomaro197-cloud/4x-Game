@@ -78,15 +78,28 @@ namespace Pulsar4X.Sensors
         public List<EMData> EmittedEMSpectra = new();
 
         /// <summary>
-        /// EMCON activity dial (default 1.0): a runtime multiplier on this entity's EMITTED signature, so "how hot
-        /// you run" scales how loud you are. The EMCON processor sets it from posture + reactor load + thrust +
-        /// weapons firing (1.0 = as-designed; &lt;1 = running quiet/dark; &gt;1 = lit up). Applied to the EMITTED
-        /// spectra in <see cref="Pulsar4X.Sensors.SensorTools.AttenuatedForDistance"/>; the REFLECTED (radar return)
-        /// is NOT scaled — going dark doesn't shrink your hull. Default 1.0 so detection is unchanged until the
-        /// EMCON lever drives it. This finishes the dynamic-signature the original author scaffolded (see the
-        /// EMITTED comment above + the inert <see cref="EMData.StateLoad"/>).
+        /// EMCON activity dial (default 1.0): the FINAL runtime multiplier on this entity's EMITTED signature —
+        /// "how loud am I right now." Applied to the EMITTED spectra in
+        /// <see cref="Pulsar4X.Sensors.SensorTools.AttenuatedForDistance"/>; the REFLECTED (radar return) is NOT
+        /// scaled — going dark doesn't shrink your hull. Default 1.0 so detection is unchanged until the EMCON
+        /// stack drives it. This is the OUTPUT field the detection math reads; it is computed as
+        /// <see cref="SignatureBaseMultiplier"/> × an activity heat factor by
+        /// <see cref="Pulsar4X.Sensors.EmconActivityProcessor"/> (and set directly by the posture lever for
+        /// instant feedback). Finishes the dynamic-signature the original author scaffolded (see the EMITTED
+        /// comment above + the inert <see cref="EMData.StateLoad"/>).
         /// </summary>
         public double ActivityMultiplier = 1.0;
+
+        /// <summary>
+        /// The posture BASE (default 1.0): the signature scale the fleet's chosen EMCON posture
+        /// (Full 1.0 / Cruise 0.5 / Silent 0.15) implies, BEFORE runtime activity. Pushed here by
+        /// <see cref="FleetEmcon.SetPosture"/> (the player's lever). The <see cref="EmconActivityProcessor"/> reads
+        /// it each tick and multiplies by a heat factor (running hot / thrusting / firing makes you louder) to
+        /// produce the final <see cref="ActivityMultiplier"/>. So: posture sets your baseline loudness; activity
+        /// modulates around it — and hard activity (a lit drive plume) can betray you even on a Silent posture
+        /// (you can't burn quietly). Default 1.0 = Full, so detection is unchanged until a posture is set.
+        /// </summary>
+        public double SignatureBaseMultiplier = 1.0;
 
         public SensorProfileDB() { }
 
@@ -98,6 +111,7 @@ namespace Pulsar4X.Sensors
             ReflectedEMSpectra = new List<EMData>( db.ReflectedEMSpectra);
             _targetCrossSection = db._targetCrossSection;
             ActivityMultiplier = db.ActivityMultiplier;
+            SignatureBaseMultiplier = db.SignatureBaseMultiplier;
         }
 
         public override object Clone()

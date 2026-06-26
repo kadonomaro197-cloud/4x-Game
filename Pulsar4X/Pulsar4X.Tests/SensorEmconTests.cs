@@ -239,5 +239,78 @@ namespace Pulsar4X.Tests
             Assert.That(darkTotal, Is.EqualTo(fullTotal * FleetEmcon.SilentMultiplier).Within(1e-6).Percent,
                 "going Silent must scale the detectable signal to the Silent multiplier — the posture reaches the real detection math");
         }
+
+        // ---- Slice 3c — signature responds to ACTIVITY (EmconActivityProcessor) -------------------------------
+        // Posture sets the baseline; this slice makes running hot betray you. The heat MATH is gauged here (pure,
+        // CI-robust); the cross-system reads (a real burning/firing ship gets louder) are verified LIVE — standing
+        // up a genuinely thrusting/firing ship in a unit test is fragile, and the processor auto-runs every 5 s, so
+        // the developer's fly-a-ship / fire-the-guns test exercises the Movement↔Sensors / Weapons↔Sensors links.
+
+        [Test]
+        [Description("The heat factor (pure): cold/idle = 1.0; thrusting and firing each add their heat and stack. " +
+                     "1.0 means no change, so an idle ship keeps its posture signature exactly.")]
+        public void HeatFactor_RisesWithActivity_StacksThrustAndFiring()
+        {
+            Assert.That(EmconActivityProcessor.HeatFactor(false, false), Is.EqualTo(1.0).Within(1e-12),
+                "cold and idle: heat factor is 1.0 (no change to the posture signature)");
+            Assert.That(EmconActivityProcessor.HeatFactor(true, false),
+                Is.EqualTo(1.0 + EmconActivityProcessor.ThrustHeat).Within(1e-12), "thrusting adds thrust heat");
+            Assert.That(EmconActivityProcessor.HeatFactor(false, true),
+                Is.EqualTo(1.0 + EmconActivityProcessor.WeaponHeat).Within(1e-12), "firing adds weapon heat");
+            Assert.That(EmconActivityProcessor.HeatFactor(true, true),
+                Is.EqualTo(1.0 + EmconActivityProcessor.ThrustHeat + EmconActivityProcessor.WeaponHeat).Within(1e-12),
+                "thrust and firing heat stack");
+            // Thrust is the dominant signal (the developer's 'full burn seen long before idle' picture).
+            Assert.That(EmconActivityProcessor.ThrustHeat, Is.GreaterThan(EmconActivityProcessor.WeaponHeat),
+                "a lit drive plume should be louder than a weapon discharge");
+        }
+
+        [Test]
+        [Description("Final scale = posture base × activity heat. A burning Silent ship is far louder than an idle " +
+                     "one — you can't burn quietly — yet a Silent posture still buys quiet vs the same activity at Full.")]
+        public void ComputeActivityMultiplier_ComposesPostureAndActivity()
+        {
+            double silentIdle    = EmconActivityProcessor.ComputeActivityMultiplier(FleetEmcon.SilentMultiplier, false, false);
+            double silentBurning = EmconActivityProcessor.ComputeActivityMultiplier(FleetEmcon.SilentMultiplier, true,  false);
+            double fullIdle      = EmconActivityProcessor.ComputeActivityMultiplier(FleetEmcon.FullMultiplier,   false, false);
+            double fullBurning   = EmconActivityProcessor.ComputeActivityMultiplier(FleetEmcon.FullMultiplier,   true,  false);
+
+            // Idle composes to exactly the posture base (heat = 1).
+            Assert.That(silentIdle, Is.EqualTo(FleetEmcon.SilentMultiplier).Within(1e-12));
+            Assert.That(fullIdle, Is.EqualTo(FleetEmcon.FullMultiplier).Within(1e-12));
+            // Burning betrays the hiding attempt: a Silent ship lights up hard when its drive is lit.
+            Assert.That(silentBurning, Is.GreaterThan(silentIdle), "a burning Silent ship is much louder than an idle one — you can't burn quietly");
+            // ...but the posture still helps: Silent+burning is quieter than Full+burning (same activity, lower base).
+            Assert.That(silentBurning, Is.LessThan(fullBurning), "a Silent posture still buys quiet against the same activity at Full");
+            Assert.That(silentBurning, Is.EqualTo(FleetEmcon.SilentMultiplier * (1.0 + EmconActivityProcessor.ThrustHeat)).Within(1e-12));
+        }
+
+        [Test]
+        [Description("End-to-end through the real processor on real (idle, coasting) ships: after Silent posture, " +
+                     "running the EmconActivityProcessor leaves each ship at exactly the Silent base — at idle the " +
+                     "heat factor is 1, so the processor reads the posture base, composes, and writes ActivityMultiplier.")]
+        public void Processor_OnIdleFleet_LeavesSignatureAtPostureBase()
+        {
+            var s = TestScenario.CreateWithColony();
+            var fleet = MakeFleet(s, s.Faction, "Quiet Squadron");
+            var shipA = AddSensingShip(s, s.Faction, fleet, "A");
+            var shipB = AddSensingShip(s, s.Faction, fleet, "B");
+
+            FleetEmcon.SetPosture(fleet, EmconPosture.Silent);
+
+            // These ships sit at a body (OrbitDB, not NewtonMoveDB) and carry no fire-control firing kit, so they
+            // are genuinely idle — the robust state to gauge the processor's composition on.
+            Assert.That(EmconActivityProcessor.IsBurning(shipA), Is.False, "a ship parked at a body is not burning");
+            Assert.That(EmconActivityProcessor.IsFiring(shipA), Is.False, "a ship with no fire-control kit is not firing");
+
+            var proc = new EmconActivityProcessor();
+            proc.ProcessEntity(shipA, 5);
+            proc.ProcessEntity(shipB, 5);
+
+            Log($"after processor on idle Silent fleet: A={Mult(shipA):F3} B={Mult(shipB):F3} (expect {FleetEmcon.SilentMultiplier})");
+            foreach (var ship in new[] { shipA, shipB })
+                Assert.That(Mult(ship), Is.EqualTo(FleetEmcon.SilentMultiplier).Within(1e-12),
+                    "idle (heat 1) ⇒ the processor leaves the ship at its posture base — posture × activity composed correctly");
+        }
     }
 }
