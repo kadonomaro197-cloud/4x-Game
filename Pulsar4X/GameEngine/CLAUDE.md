@@ -74,6 +74,7 @@ The `GameEngine` project is the core domain library. It has no dependency on any
 - `StartTime()` / `PauseTime()` / `TimeStep()` — UI-facing controls.
 - `DoProcessing(targetDateTime)` — inner loop, processes systems in parallel via `Task.Parallel.ForEach`.
 - `AddSystemInteractionInterupt()` — schedules cross-system events (e.g., jumps).
+- **Combat interrupt:** `RequestCombatHalt()` (called by the combat engine when a new battle starts) sets `CombatInterruptPending` and cancels the sim — same mechanism as `PauseTime`. The cancel is only honoured at the master-loop boundary, so `SimulateTimeUntil` advances in fine `CombatReactionStep` (5 s) sub-steps instead of a full `Ticklength` **when a battle is active/imminent** (gated by `AnyActiveSystemInOrNearCombat()` → `Combat.CombatEngagement.CombatActiveOrImminent`), letting the clock stop at first contact. Away from combat it takes full Ticklength steps as before, so fast-forward is unaffected. Full rationale: `Combat/CLAUDE.md` → "Combat interrupt — stop the clock at first contact."
 
 ### ManagerSubPulse (`Engine/ManagerSubPulse.cs`)
 - `HotLoopProcessorsNextRun: SafeDictionary<Type, DateTime?>` — when each HotLoop processor next fires.

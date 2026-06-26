@@ -163,6 +163,68 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("CombatActiveOrImminent (the time-loop's fine-step gate): two hostile fleets in range read as 'about to fight' so the clock will sub-step and halt at first contact.")]
+        public void CombatActiveOrImminent_TwoHostileFleetsInRange_ReturnsTrue()
+        {
+            var s = TestScenario.CreateWithColony();
+            ClearExistingFleets(s); // clean matchup — drop the colony's own start fleets
+            var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+
+            var enemyFleet = MakeFleet(s, enemyFaction, "Red Fleet");
+            AddShip(s, enemyFaction, enemyFleet, 50_000, 1_000_000, "Red 1");
+            var playerFleet = MakeFleet(s, s.Faction, "Blue Fleet");
+            AddShip(s, s.Faction, playerFleet, 50_000, 1_000_000, "Blue 1");
+
+            Assert.That(CombatEngagement.CombatActiveOrImminent(s.StartingSystem), Is.True,
+                "two hostile fleets with ships in range should read as combat-imminent");
+        }
+
+        [Test]
+        [Description("CombatActiveOrImminent: a fleet already in combat reads true (the already-fighting branch) so the clock stays fine-grained for the whole battle, not just first contact.")]
+        public void CombatActiveOrImminent_FleetAlreadyInCombat_ReturnsTrue()
+        {
+            var s = TestScenario.CreateWithColony();
+            ClearExistingFleets(s);
+            var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+
+            var enemyFleet = MakeFleet(s, enemyFaction, "Red Fleet");
+            AddShip(s, enemyFaction, enemyFleet, 50_000, 1_000_000, "Red 1");
+            var playerFleet = MakeFleet(s, s.Faction, "Blue Fleet");
+            AddShip(s, s.Faction, playerFleet, 50_000, 1_000_000, "Blue 1");
+
+            CombatEngagement.StartEngagement(playerFleet, enemyFleet);
+            Assert.That(CombatEngagement.CombatActiveOrImminent(s.StartingSystem), Is.True,
+                "a fleet holding FleetCombatStateDB should read as combat-active");
+        }
+
+        [Test]
+        [Description("CombatActiveOrImminent: only friendly fleets present -> false, so peacetime fast-forward keeps taking full Ticklength steps (no needless fine-stepping).")]
+        public void CombatActiveOrImminent_SameFactionFleetsOnly_ReturnsFalse()
+        {
+            var s = TestScenario.CreateWithColony();
+            ClearExistingFleets(s);
+
+            var fleet1 = MakeFleet(s, s.Faction, "Home Guard A");
+            AddShip(s, s.Faction, fleet1, 50_000, 1_000_000, "A1");
+            var fleet2 = MakeFleet(s, s.Faction, "Home Guard B");
+            AddShip(s, s.Faction, fleet2, 50_000, 1_000_000, "B1");
+
+            Assert.That(CombatEngagement.CombatActiveOrImminent(s.StartingSystem), Is.False,
+                "same-faction fleets are not hostile, so no battle is imminent");
+        }
+
+        [Test]
+        [Description("CombatActiveOrImminent: an empty system (no fleets) -> false. The gate must be cheap-and-quiet so it never forces fine-stepping where there is nothing to fight.")]
+        public void CombatActiveOrImminent_NoFleets_ReturnsFalse()
+        {
+            var s = TestScenario.CreateWithColony();
+            ClearExistingFleets(s);
+
+            Assert.That(CombatEngagement.CombatActiveOrImminent(s.StartingSystem), Is.False,
+                "no fleets means no combat, imminent or otherwise");
+        }
+
+        [Test]
         [Description("Two fleets of the SAME faction never engage when the trigger runs.")]
         public void Tick_SameFactionFleets_DoNotEngage()
         {

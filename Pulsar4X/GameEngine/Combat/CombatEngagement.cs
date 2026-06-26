@@ -131,6 +131,49 @@ namespace Pulsar4X.Combat
             return fleets.Count;
         }
 
+        /// <summary>
+        /// Read-only pre-step gate for the time loop: is a battle ALREADY underway, or about to start, in this
+        /// star system right now? True if any fleet here holds a <see cref="FleetCombatStateDB"/> (fighting), or
+        /// any two hostile fleets with ships sit within <see cref="EngagementRange_m"/> (the trigger would engage
+        /// them on its next pass). The master time loop calls this to decide whether to advance the clock in FINE
+        /// sub-steps so a brand-new battle can halt time at first contact — otherwise one coarse step (the default
+        /// is a whole game-hour) resolves the entire fight before the halt is honoured. Mirrors the engage/join
+        /// pass of <see cref="Tick"/> but mutates NOTHING. O(fleets^2); fleet counts are small. Defensive — never
+        /// throws on normal state.
+        ///
+        /// LIMIT (v1): gates on present, in-range state only. A fleet that warps in from out of range AND fights
+        /// inside a single coarse step is still resolved coarsely (a lookahead that predicts closing is a v2
+        /// layer). The common case — fleets already parked together, e.g. at the same body — is fully covered.
+        /// </summary>
+        public static bool CombatActiveOrImminent(EntityManager manager)
+        {
+            var fleets = manager.GetAllEntitiesWithDataBlob<FleetDB>();
+            if (fleets.Count == 0) return false;
+
+            // Already fighting: any in-combat fleet keeps time fine-grained so the player can watch/step the salvos.
+            for (int i = 0; i < fleets.Count; i++)
+                if (fleets[i].IsValid && fleets[i].HasDataBlob<FleetCombatStateDB>())
+                    return true;
+
+            // About to fight: any two hostile fleets, both with ships, within engagement range. SAME test the
+            // engage pass uses, so the gate flips true exactly on the step the trigger would start the battle.
+            for (int i = 0; i < fleets.Count; i++)
+            {
+                var a = fleets[i];
+                if (!a.IsValid || GetFleetShips(a).Count == 0) continue;
+                for (int j = i + 1; j < fleets.Count; j++)
+                {
+                    var b = fleets[j];
+                    if (!b.IsValid) continue;
+                    if (!AreHostile(a, b)) continue;
+                    if (GetFleetShips(b).Count == 0) continue;
+                    if (!InRange(a, b)) continue;
+                    return true;
+                }
+            }
+            return false;
+        }
+
         /// <summary>When true, the engine narrates each fight (engage / casualties / retreat / disengage) to the
         /// captured log (game_log.txt) as plain-language <c>[Combat]</c> lines, so a live battle is visible there and
         /// not only in the Fleet Combat tab. Default FALSE so it never slows the timed battle tests; the client turns
