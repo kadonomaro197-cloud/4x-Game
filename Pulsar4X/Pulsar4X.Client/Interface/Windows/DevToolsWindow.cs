@@ -274,6 +274,10 @@ namespace Pulsar4X.Client
                             var parent = _bodyEntities[_selectedSpawnParent];
                             var ship = ShipFactory.CreateShip(design, _uiState.PlayerFaction, parent, shipName);
 
+                            // Spawn ready to fly: CreateShip leaves tanks empty (production-built ships aren't
+                            // free-fuelled), so top them off here the way the start fleet is fuelled.
+                            double fuelUnits = ShipFactory.FillFuelTanks(ship, _uiState.PlayerFaction.GetDataBlob<FactionInfoDB>());
+
                             // Put the ship into one of the player's fleets so it appears in the Fleet window and
                             // can be ordered. A bare CreateShip parents the ship to the PLANET, not the faction's
                             // fleet tree — so it never shows in fleet view (this is why a spawned ship is missing
@@ -297,7 +301,7 @@ namespace Pulsar4X.Client
                             int shipsInSystem = parent.Manager.GetAllEntitiesWithDataBlob<ShipInfoDB>().Count;
                             _spawnStatus = $"Spawned '{design.Name}' (id {ship.Id}) orbiting {GetEntityName(parent)}, {fleetNote}. "
                                 + $"Exit SM mode + open the Fleet window to command it (zoom into {GetEntityName(parent)} to see it on the map).";
-                            DevLog($"Spawn Ship OK: '{design.Name}' id={ship.Id} around '{GetEntityName(parent)}', {fleetNote}, shipsInSystem={shipsInSystem}");
+                            DevLog($"Spawn Ship OK: '{design.Name}' id={ship.Id} around '{GetEntityName(parent)}', {fleetNote}, fuel=+{fuelUnits:0} units, shipsInSystem={shipsInSystem}");
                             Array.Clear(_shipNameBuffer, 0, _shipNameBuffer.Length);
 
                             // Deliberately NOT calling HardRefresh() here. It reset the Design dropdown to
