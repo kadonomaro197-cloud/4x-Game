@@ -4,7 +4,9 @@ using Pulsar4X.Combat;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
 using Pulsar4X.Fleets;
+using Pulsar4X.Movement;
 using Pulsar4X.Ships;
+using Pulsar4X.Storage;
 
 namespace Pulsar4X.Tests
 {
@@ -46,6 +48,26 @@ namespace Pulsar4X.Tests
             foreach (var es in CombatEngagement.GetFleetShips(enemyFleet))
                 es.SetDataBlob(new ShipCombatValueDB(50_000, 1_000_000, 1.0));
             Assert.That(CombatEngagement.GetFleetShips(enemyFleet).Count, Is.EqualTo(3), "the sandbox should spawn 3 hostile ships");
+
+            // Fuel gauge (sensor for SpawnHostileFleet fuelling, added 2026-06-25): a spawned ship that has a
+            // thruster AND a tank bay for its fuel must come out fuelled — TotalFuel_kg is set by AddCargoItems
+            // -> UpdateMassFuelAndDeltaV. Asserts only for fuel-capable ships, so a design with no fuel bay
+            // can't falsely fail it. ShipFactory leaves tanks empty; this proves the sandbox fills them.
+            int fuelCapable = 0, fuelled = 0;
+            foreach (var es in CombatEngagement.GetFleetShips(enemyFleet))
+            {
+                if (!es.TryGetDataBlob<NewtonThrustAbilityDB>(out var thr) || string.IsNullOrEmpty(thr.FuelType))
+                    continue;
+                var fuelDef = s.Faction.GetDataBlob<FactionInfoDB>().Data.CargoGoods.GetAny(thr.FuelType);
+                if (fuelDef != null && es.TryGetDataBlob<CargoStorageDB>(out var cargo) && cargo.TypeStores.ContainsKey(fuelDef.CargoTypeID))
+                {
+                    fuelCapable++;
+                    if (thr.TotalFuel_kg > 0) fuelled++;
+                }
+            }
+            Log($"fuel: {fuelled}/{fuelCapable} fuel-capable hostiles fuelled (TotalFuel_kg>0)");
+            if (fuelCapable > 0)
+                Assert.That(fuelled, Is.EqualTo(fuelCapable), "spawned hostiles that can store their fuel should be fuelled by SpawnHostileFleet");
 
             // (1) PERSISTENCE — mark the system observed (what the client does when you watch it) and advance the
             // real clock. The spawned hostiles must still be there afterward. Log whether the system clock moved.
