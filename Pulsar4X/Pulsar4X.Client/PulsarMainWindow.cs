@@ -49,6 +49,8 @@ namespace Pulsar4X.Client
         // Combat-interrupt banner: when the engine auto-pauses time because a battle began, flash an on-screen
         // notice until this SDL tick (wall-clock ms). 0 = not showing.
         ulong _combatBannerUntilTick = 0;
+        ulong _lastFrameMsTick = 0;       // [PERF] slow-frame gauge: SDL tick of the previous frame
+        ulong _lastSlowFrameLogTick = 0;  // throttle so a sustained slowdown doesn't flood the log
 
         // Render-loop crash visibility: a window's Display() or the map draw can throw (e.g. inspecting a
         // foreign/NPC entity whose faction has locked/empty data). The SDL Run loop has no try/catch, so an
@@ -327,6 +329,18 @@ namespace Pulsar4X.Client
             // because _state.SelectedSystem THROWS when no system is selected — a fault here logs once and the
             // game keeps running rather than crashing on a diagnostic.
             var now = SDL.GetTicks();
+
+            // [PERF] slow-frame gauge: time since the previous frame. A progressive slowdown (e.g. zooming until it
+            // freezes) shows its CLIMB here — 50ms, 200ms, 900ms... — right up to the point the [HANG] watchdog trips
+            // on a full stall. Throttled to ~1 line/sec so a sustained slow patch doesn't flood the pages.
+            ulong frameMs = _lastFrameMsTick == 0 ? 0 : now - _lastFrameMsTick;
+            _lastFrameMsTick = now;
+            if (frameMs > 250 && now - _lastSlowFrameLogTick > 1000)
+            {
+                _lastSlowFrameLogTick = now;
+                SessionLog.State("⏱ slow frame " + frameMs + "ms — something heavy this frame (watch the trend; zoom/render?)");
+            }
+
             if (_state.IsGameLoaded && now - _lastHeartbeatTick >= 3000)
             {
                 _lastHeartbeatTick = now;
