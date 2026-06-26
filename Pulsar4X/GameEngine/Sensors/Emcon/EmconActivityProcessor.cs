@@ -28,11 +28,11 @@ namespace Pulsar4X.Sensors
     /// the right key anyway: only ships have an EMCON posture + activity, so it auto-scopes to ships, and planets/
     /// stars (no ShipInfoDB) are never touched — their signature stays as-is.
     ///
-    /// NOTE — reactor load is deliberately NOT a heat input here yet. The obvious field
-    /// (<c>EnergyGenAbilityDB.Load</c>) is buggy: its formula is <c>TotalOutputMax / batteryInflow</c> — inverted
-    /// and unbounded (1.0 at idle, growing without bound under demand), NOT the "percent of max output" its own
-    /// comment claims. Folding reactor load in needs either a fix to that field or a clean <c>Demand/TotalOutputMax</c>;
-    /// flagged for a follow-up so this slice doesn't propagate the bug. Thrust + firing are the dominant, clean signals.
+    /// NOTE — reactor load is NOT a heat input here yet (it's a marginal signal next to thrust, which already
+    /// dominates). The <c>EnergyGenAbilityDB.Load</c> inversion bug that originally blocked it was FIXED (slice D —
+    /// <c>EnergyGenProcessor.CalcLoad</c> is now <c>Demand/TotalOutputMax</c> clamped 0-1), so folding reactor-load
+    /// into the heat factor is now unblocked — just not wired (do it via the fixed <c>Load</c> if it earns its keep).
+    /// Thrust + firing are the dominant, clean signals.
     /// </summary>
     public class EmconActivityProcessor : IHotloopProcessor
     {
