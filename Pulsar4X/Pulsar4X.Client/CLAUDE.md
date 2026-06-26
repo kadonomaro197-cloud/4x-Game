@@ -247,11 +247,16 @@ is build → play → read `game_log.txt` (`[FleetCombat]`/`[DevTools]` lines) �
    `SensorProfileDB.ActivityMultiplier` (watch it climb when a ship runs hot / thrusts / fires, drop when Silent).
 3. **Logging — the detection/EMCON state shows up in `game_log.txt` (so a remote review can see what you saw).**
    `SessionLog.DetectionSnapshot(system, faction)` runs inside the **~3 s heartbeat** (and on demand via the DevTools
-   **"Dump Detection (log)"** button), writing two lines: `[DETECT]` (contacts held + the FOG GAP — how many
-   other-faction ships are present vs how many you detect, the rest "hidden from you") and `[EMCON]` (your ships'
-   signature summary — how many run hot/dark/blind, plus the loudest/quietest by name). This is the gauge that makes
-   "what you detect, what's hidden, how loud you are" visible in the log, not just on screen. Read-only, wrapped in
-   the heartbeat's `SafeRender`.
+   **"Dump Detection (log)"** button), writing three lines:
+   - `[ENGINE]` — **processor liveness**: `sensor scans N (+delta), battle-trigger passes M (+delta)`, read from
+     `SensorScan.ScanCount` / `CombatEngagement.TickCount`. This is the load-bearing one: if these don't climb while
+     ships are present, the engine is DEAD — it tells "the scan never fired / the trigger never ran on play" (both
+     documented live unknowns) apart from "running but nothing to see." Without it, both look like "nothing happened."
+   - `[DETECT]` — contacts held + the FOG GAP (how many other-faction ships are present vs how many you detect, rest
+     "hidden from you").
+   - `[EMCON]` — your ships' signature summary (how many run hot/dark/blind, plus loudest/quietest by name).
+   Plus, on the engine side, `[Combat]` now narrates an explicit **FIRST-STRIKE** line when an asymmetric battle
+   forms (one side blind). Read-only, wrapped in the heartbeat's `SafeRender`.
 4. **GAP — contacts are NOT drawn on the map.** The map retrieves `GetSensorContacts(factionId)`
    (`SystemMapRendering.cs:244`) but never renders contact blips — so with fog on you can't yet *see* which
    hostiles you've detected vs not on the map. Combat behaviour + the signature readout + the `[Combat]` log

@@ -4,6 +4,7 @@ using Pulsar4X.Movement;
 using Pulsar4X.Names;
 using Pulsar4X.Ships;
 using Pulsar4X.Sensors;
+using Pulsar4X.Combat;
 
 namespace Pulsar4X.Client
 {
@@ -18,6 +19,10 @@ namespace Pulsar4X.Client
     public static class SessionLog
     {
         public static bool Enabled = true;
+
+        // Previous values of the engine liveness counters, so the heartbeat can report the per-beat DELTA (is the
+        // processor still climbing = alive, or stuck = dead).
+        private static long _lastScanCount, _lastTickCount;
 
         public static void Line(string category, string message)
         {
@@ -151,6 +156,15 @@ namespace Pulsar4X.Client
             if (!Enabled || system == null || faction == null) return;
             try
             {
+                // Processor liveness FIRST — proves the detection (scan) + combat (trigger) ENGINES are firing live.
+                // If these don't climb while ships are present, the processor is dead: that's "the scan never ran"
+                // (or "the trigger never fires on play"), NOT "nothing to detect" — both documented live unknowns.
+                long scans = SensorScan.ScanCount, ticks = CombatEngagement.TickCount;
+                Line("ENGINE", "sensor scans " + scans + " (+" + (scans - _lastScanCount)
+                    + "), battle-trigger passes " + ticks + " (+" + (ticks - _lastTickCount) + ") since last beat");
+                _lastScanCount = scans;
+                _lastTickCount = ticks;
+
                 int fid = faction.Id;
                 var contacts = system.GetSensorContacts(fid);
                 int held = contacts != null ? contacts.GetAllContacts().Count : 0;
