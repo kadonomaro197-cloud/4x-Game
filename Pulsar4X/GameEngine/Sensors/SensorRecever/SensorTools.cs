@@ -186,22 +186,41 @@ namespace Pulsar4X.Sensors
         }
 
         /// <summary>
-        /// Clears recever InstanceAtributes and InstanceStates lists from the SensorAbilityDB and re-adds the attributes and states.
+        /// Rebuilds the SensorAbilityDB's InstanceAtributes/InstanceStates lists from the entity's CURRENT sensor
+        /// receiver components — clearing any that are gone. Called when a sensor is installed
+        /// (<see cref="SensorReceiverAtb.OnComponentInstallation"/>) AND on any ability recalc
+        /// (<c>ReCalcProcessor</c> → after the damage system destroys a component). That recalc hook is the GRAVE
+        /// RUNG (detection × damage): destroy a ship's sensor receivers and this rebuild leaves the lists EMPTY, so
+        /// the scan loop (which iterates InstanceStates) does nothing and the ship stops detecting — you go blind.
         /// </summary>
         /// <param name="entity"></param>
         internal static void SetInstances(Entity entity)
         {
+            // No components → no sensors to (re)build.
+            if (!entity.TryGetDataBlob<ComponentInstancesDB>(out var components))
+                return;
 
-            if (entity.GetDataBlob<ComponentInstancesDB>().TryGetComponentsByAttribute<SensorReceiverAtb>(out var receivers))
+            // receivers is null/empty if every receiver has been removed (e.g. shot off). We must still CLEAR the
+            // cache in that case — that's the grave rung — so we don't gate the rebuild on having receivers.
+            components.TryGetComponentsByAttribute<SensorReceiverAtb>(out var receivers);
+            bool hasReceivers = receivers != null && receivers.Count > 0;
+            bool hasAbility = entity.TryGetDataBlob<SensorAbilityDB>(out var abilityDB);
+
+            // Nothing to build and no stale cache to clear.
+            if (!hasReceivers && !hasAbility)
+                return;
+
+            if (!hasAbility)
             {
-                if (!entity.TryGetDataBlob<SensorAbilityDB>(out var abilityDB))
-                {
-                    abilityDB = new SensorAbilityDB();
-                    entity.SetDataBlob(abilityDB);
-                }
-                
-                abilityDB.InstanceAtributes = new ();
-                abilityDB.InstanceStates = new ();
+                abilityDB = new SensorAbilityDB();
+                entity.SetDataBlob(abilityDB);
+            }
+
+            // Rebuild from scratch so destroyed receivers drop out. With none left, the lists end up empty.
+            abilityDB.InstanceAtributes = new ();
+            abilityDB.InstanceStates = new ();
+            if (hasReceivers)
+            {
                 foreach (var receiverInstance in receivers)
                 {
                     //we're cloning the design to the instance here.

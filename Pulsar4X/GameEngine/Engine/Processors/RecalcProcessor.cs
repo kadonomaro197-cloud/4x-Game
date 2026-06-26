@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Pulsar4X.Components;
 using Pulsar4X.Datablobs;
 using Pulsar4X.Industry;
+using Pulsar4X.Sensors;
 
 namespace Pulsar4X.Engine
 {
@@ -18,6 +19,13 @@ namespace Pulsar4X.Engine
                 // capacity whenever an installation is added or removed. RecalcCapacity ignores
                 // non-colony entities (e.g. ships).
                 { typeof(ComponentInstancesDB), new Action<ComponentInstancesDB>(processor => { InfrastructureProcessor.RecalcCapacity(CurrentEntity); }) },
+
+                // GRAVE RUNG (detection × damage): rebuild a ship's sensor-receiver cache from its CURRENT
+                // components whenever abilities are recalced — which the damage system does after destroying a
+                // component. Shoot a ship's sensors off and SetInstances leaves its InstanceStates empty, so it
+                // stops scanning and goes blind. (SetInstances rebuilds from live components, so it's idempotent
+                // on install/creation recalcs too.)
+                { typeof(SensorAbilityDB), new Action<SensorAbilityDB>(processor => { SensorTools.SetInstances(CurrentEntity); }) },
 
                 // { typeof(ShipInfoDB), new Action<ShipInfoDB>(processor => {ShipAndColonyInfoProcessor.ReCalculateShipTonnaageAndHTK(CurrentEntity); }) },
                 // { typeof(MiningDB), new Action<MiningDB>(processor => { MineResourcesProcessor.CalcMaxRate(CurrentEntity);}) },
