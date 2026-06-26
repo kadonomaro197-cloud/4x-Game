@@ -820,6 +820,9 @@ namespace Pulsar4X.Client
             var entityState = StarSystemStates[starSys].EntityStatesWithNames[entityGuid];
             LastClickedEntity = entityState;
 
+            SessionLog.Select(button + " click on '" + entityState.Name + "' (entity #" + entityState.Entity.Id
+                + ", faction " + entityState.Entity.FactionOwnerID + ")");
+
             ActiveWindow?.EntityClicked(entityState, button);
 
             SelectedSysMapRender.SelectedEntityExtras = new List<IDrawData>();
