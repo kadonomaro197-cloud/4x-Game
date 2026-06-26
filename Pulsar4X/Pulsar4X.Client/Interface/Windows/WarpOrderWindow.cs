@@ -630,6 +630,8 @@ namespace Pulsar4X.Client
                 if (cmd.EndpointTargetExpendDeltaV.Length() < _maxDV)
                 {
                     _uiState.Game.OrderHandler.HandleOrder(cmd);
+                    Pulsar4X.Client.SessionLog.Action("warp order: ship #" + OrderingEntityState.Entity.Id
+                        + " -> '" + _uiState.LastClickedEntity.Name + "' (warp). Watch next heartbeat for teleport check.");
                     CloseWindow();
                 }
                 else
