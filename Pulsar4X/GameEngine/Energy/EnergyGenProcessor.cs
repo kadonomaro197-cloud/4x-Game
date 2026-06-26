@@ -40,15 +40,7 @@ namespace Pulsar4X.Energy
             }
 
 
-            double load = 0;
-            if (output > 0)
-            {
-                load = _energyGenDB.TotalOutputMax / output;
-            }
-            else if (output < 0)
-            {
-                load = 1;
-            }
+            double load = CalcLoad(_energyGenDB.Demand, _energyGenDB.TotalOutputMax);
             _energyGenDB.Load = load;
             _energyGenDB.Output = output;
             double fueluse = _energyGenDB.TotalFuelUseAtMax.maxUse * load;
@@ -86,6 +78,25 @@ namespace Pulsar4X.Energy
             }
         }
 
+
+        /// <summary>
+        /// Reactor load as a fraction of max output (0 = idle, 1 = maxed) — the "percent of max output" the
+        /// <c>Load</c> field and the power UI mean. Clamped to [0,1]: a reactor can't be more than fully loaded,
+        /// and can't burn more than max fuel — over-demand is met by the battery discharging, not by over-driving
+        /// the reactor. A zero/negative capacity (no reactor) reads 0 with no divide-by-zero.
+        ///
+        /// Fixes a long-standing bug (2026-06-26): the old formula was <c>TotalOutputMax / spareCapacity</c>
+        /// (i.e. max ÷ (max − demand)) — INVERTED and UNBOUNDED: 1.0 at idle, 2.0 at half demand, →∞ approaching
+        /// full. It mislabelled the power-UI readout (shown via <c>"P1"</c> percent) AND, because reactor fuel use
+        /// is <c>maxFuelUse × load</c>, made an IDLE reactor burn near-max fuel. Both consumers are corrected by
+        /// this one fix; the battery/interrupt logic uses <c>output</c> (spare), not <c>load</c>, so it is unchanged.
+        /// </summary>
+        public static double CalcLoad(double demand, double totalOutputMax)
+        {
+            if (totalOutputMax <= 0)
+                return 0;
+            return Math.Clamp(demand / totalOutputMax, 0.0, 1.0);
+        }
 
         internal override void ProcessEntity(Entity entity, DateTime atDateTime)
         {
