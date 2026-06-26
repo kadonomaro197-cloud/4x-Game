@@ -45,6 +45,10 @@ namespace Pulsar4X.Client.Rendering
         // WHICH one faulted (a precise gauge, vs the coarse whole-map SafeRender in PulsarMainWindow).
         readonly HashSet<string> _loggedDrawErrors = new ();
 
+        // Throttle for camera pan/zoom logging. Pan/zoom fire many times per drag — without a throttle the
+        // session log would drown in CAMERA lines. Only emit one every ~400 ms (Environment.TickCount is ms).
+        int _lastCamLogTick = 0;
+
         // Per-body-type minimum camera zoom for the label to render. Lower-tier
         // bodies (moons, ships, asteroids, comets) only show labels once you've
         // zoomed in enough that they aren't just visual clutter. Stars, planets,
@@ -196,10 +200,18 @@ namespace Pulsar4X.Client.Rendering
             };
 
             _camera.PanOccured +=
-                (object sender, Orbital.Vector3 pos) => _updateLabels = true;
+                (object sender, Orbital.Vector3 pos) => {
+                    _updateLabels = true;
+                    if (Environment.TickCount - _lastCamLogTick > 400)
+                    { _lastCamLogTick = Environment.TickCount; SessionLog.Camera("pan -> " + (pos.X / 1e9).ToString("0.#") + "," + (pos.Y / 1e9).ToString("0.#") + " Gm"); }
+                };
 
             _camera.ZoomOccured +=
-                (object sender, float zoom) => _updateLabels = true;
+                (object sender, float zoom) => {
+                    _updateLabels = true;
+                    if (Environment.TickCount - _lastCamLogTick > 400)
+                    { _lastCamLogTick = Environment.TickCount; SessionLog.Camera("zoom -> " + zoom.ToString("0.####")); }
+                };
 
             SystemViewPreferences.GetInstance().ViewUpdateOccured +=
                 (object sender, SystemViewPreferences.View view) => _updateLabels = true;

@@ -415,6 +415,13 @@ namespace Pulsar4X.Client
                 }
             }
 
+            // Session recorder: a faction-view switch (incl. SM enter/exit) rebuilds the map and re-reads every
+            // ship's position — the exact moment the "teleport to the Sun" surfaces — so log the switch and dump
+            // all ship positions here. This makes the teleport gauge automatic (no button, no exiting SM).
+            SessionLog.View("now viewing faction id=" + factionEntity.Id + " (" + factionInfo.Abbreviation + ")" + (setAsPlayer ? " [player]" : ""));
+            if (!string.IsNullOrEmpty(SelectedStarSystemId) && StarSystemStates.ContainsKey(SelectedStarSystemId))
+                SessionLog.DumpShipPositions(StarSystemStates[SelectedStarSystemId].StarSystem, "after view switch");
+
             // Unsubscribe to any previous message listeners
             MessagePublisher.Instance.Unsubscribe(MessageTypes.StarSystemRevealed, OnSystemRevealed);
 
@@ -812,6 +819,9 @@ namespace Pulsar4X.Client
 
             var entityState = StarSystemStates[starSys].EntityStatesWithNames[entityGuid];
             LastClickedEntity = entityState;
+
+            SessionLog.Select(button + " click on '" + entityState.Name + "' (entity #" + entityState.Entity.Id
+                + ", faction " + entityState.Entity.FactionOwnerID + ")");
 
             ActiveWindow?.EntityClicked(entityState, button);
 
