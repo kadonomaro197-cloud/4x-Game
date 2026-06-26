@@ -7,6 +7,7 @@ using Pulsar4X.Energy;
 using Pulsar4X.Orbits;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Engine;
+using Pulsar4X.Names;
 
 namespace Pulsar4X.Movement
 {
@@ -60,6 +61,25 @@ namespace Pulsar4X.Movement
     public class WarpMoveProcessor : IHotloopProcessor
     {
         private static GameSettings _gameSettings;
+
+        /// <summary>Diagnostic: when true, the warp lifecycle (departure → arrival) is narrated to the captured log
+        /// as [WARP] lines, so a ship's warp journey is legible — and a warp that DEPARTS but never ARRIVES stands
+        /// out right next to a ⚠ TELEPORT flag (the open warp-detach bug). Default false so tests/headless stay
+        /// quiet; the client turns it on. Mirrors Combat.CombatEngagement.NarrateToLog.</summary>
+        public static bool NarrateWarpToLog = false;
+
+        static void WarpLog(Entity entity, string msg)
+        {
+            string name = entity.TryGetDataBlob<NameDB>(out var n) ? n.OwnersName : ("#" + entity.Id);
+            System.Console.WriteLine("[WARP] ship #" + entity.Id + " '" + name + "' " + msg);
+        }
+
+        static string TargetName(WarpMovingDB moveDB)
+        {
+            if (moveDB.TargetEntity != null && moveDB.TargetEntity.TryGetDataBlob<NameDB>(out var tn))
+                return tn.OwnersName;
+            return "target";
+        }
 
         public TimeSpan RunFrequency => TimeSpan.FromMinutes(5);
 
@@ -128,6 +148,8 @@ namespace Pulsar4X.Movement
 
                 if (distanceToTargetMt <= distanceToMove) // moving would overtake target, just go directly to target
                 {
+                    if (NarrateWarpToLog)
+                        WarpLog(entity, "arrived at " + TargetName(moveDB));
                     moveDB._parentEnitity = moveDB.TargetEntity;
                     moveDB._position = (Vector2)moveDB.ExitPointrelative;
                     var destinationMoveType = moveDB.TargetEntity.GetDataBlob<PositionDB>().MoveType;
@@ -192,6 +214,9 @@ namespace Pulsar4X.Movement
                 //powerDB.EnergyStore[warpDB.EnergyType] = estore;
                 moveDB.HasStarted = true;
                 canStart = true;
+                if (NarrateWarpToLog)
+                    WarpLog(entity, "departing → " + TargetName(moveDB) + " (" + (totalDistance / 1e9).ToString("0.#")
+                        + " Gm, ETA " + (entity.StarSysDateTime + TimeSpan.FromSeconds(t)).ToString("yyyy-MM-dd HH:mm") + ")");
             }
 
             return canStart;

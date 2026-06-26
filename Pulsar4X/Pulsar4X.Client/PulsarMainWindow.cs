@@ -49,6 +49,8 @@ namespace Pulsar4X.Client
         // Combat-interrupt banner: when the engine auto-pauses time because a battle began, flash an on-screen
         // notice until this SDL tick (wall-clock ms). 0 = not showing.
         ulong _combatBannerUntilTick = 0;
+        ulong _lastFrameMsTick = 0;       // [PERF] slow-frame gauge: SDL tick of the previous frame
+        ulong _lastSlowFrameLogTick = 0;  // throttle so a sustained slowdown doesn't flood the log
 
         // Render-loop crash visibility: a window's Display() or the map draw can throw (e.g. inspecting a
         // foreign/NPC entity whose faction has locked/empty data). The SDL Run loop has no try/catch, so an
@@ -71,6 +73,11 @@ namespace Pulsar4X.Client
             // resolve invisibly inside one hour-step/play-run. Off by default in the engine (deterministic tests);
             // on for the game. The auto-pause is surfaced by the banner + SessionLog line in Render/PostFrameUpdate.
             Pulsar4X.Combat.CombatEngagement.InterruptTimeOnNewEngagement = true;
+
+            // Narrate the warp lifecycle ([WARP] departure → arrival) so a ship's journey is legible in the log —
+            // and a warp that departs but never arrives stands out right next to a ⚠ TELEPORT flag (the open
+            // warp-detach bug). Off by default in the engine (tests stay quiet); on for the game.
+            Pulsar4X.Movement.WarpMoveProcessor.NarrateWarpToLog = true;
 
             try
             {
@@ -315,6 +322,7 @@ namespace Pulsar4X.Client
         public override void PostFrameUpdate()
         {
             base.PostFrameUpdate();
+            SessionLog.FrameTick();   // stamp "the main loop is alive this frame" for the hang watchdog
 
             foreach (var (_, systemState) in _state.StarSystemStates)
             {
@@ -326,6 +334,18 @@ namespace Pulsar4X.Client
             // because _state.SelectedSystem THROWS when no system is selected — a fault here logs once and the
             // game keeps running rather than crashing on a diagnostic.
             var now = SDL.GetTicks();
+
+            // [PERF] slow-frame gauge: time since the previous frame. A progressive slowdown (e.g. zooming until it
+            // freezes) shows its CLIMB here — 50ms, 200ms, 900ms... — right up to the point the [HANG] watchdog trips
+            // on a full stall. Throttled to ~1 line/sec so a sustained slow patch doesn't flood the pages.
+            ulong frameMs = _lastFrameMsTick == 0 ? 0 : now - _lastFrameMsTick;
+            _lastFrameMsTick = now;
+            if (frameMs > 250 && now - _lastSlowFrameLogTick > 1000)
+            {
+                _lastSlowFrameLogTick = now;
+                SessionLog.State("⏱ slow frame " + frameMs + "ms — something heavy this frame (watch the trend; zoom/render?)");
+            }
+
             if (_state.IsGameLoaded && now - _lastHeartbeatTick >= 3000)
             {
                 _lastHeartbeatTick = now;
@@ -334,6 +354,11 @@ namespace Pulsar4X.Client
                     SessionLog.Heartbeat(_state.Game, _state.SelectedSystem, _state.LastClickedEntity?.Name);
                     // Detection + EMCON snapshot: what the player detects, the fog gap, and how loud their ships run.
                     SessionLog.DetectionSnapshot(_state.SelectedSystem, _state.PlayerFaction);
+                    // Fault tally: if anything has thrown (render or input), keep the running count visible each beat
+                    // so a session that's quietly accumulating faults says so at a glance. Silent when clean (0).
+                    if (_loggedRenderErrors.Count > 0)
+                        SessionLog.State("⚠ faults this session: " + _loggedRenderErrors.Count
+                            + " unique (render+input — grep [RenderError]/[InputError])");
                 });
             }
 
@@ -346,6 +371,18 @@ namespace Pulsar4X.Client
                 _combatBannerUntilTick = now + 8000; // show for ~8 s
                 SessionLog.Action("COMBAT INTERRUPT — a battle began; time auto-paused. Open Fleet -> Combat to steer it.");
             }
+        }
+
+        /// <summary>A one-line end-of-session readback (faults + how far the clock got). Logged on a CLEAN exit, so
+        /// its PRESENCE in the log = the game quit normally; its ABSENCE = it crashed/froze (cross-check [HANG]/[FATAL]).</summary>
+        public string SessionSummary()
+        {
+            try
+            {
+                string clock = _state?.Game != null ? _state.Game.TimePulse.GameGlobalDateTime.ToString("yyyy-MM-dd HH:mm") : "n/a";
+                return "faults=" + _loggedRenderErrors.Count + ", game-time=" + clock;
+            }
+            catch { return "faults=" + _loggedRenderErrors.Count; }
         }
 
         /// <summary>
