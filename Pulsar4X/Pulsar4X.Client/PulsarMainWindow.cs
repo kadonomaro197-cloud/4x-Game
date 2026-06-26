@@ -74,6 +74,11 @@ namespace Pulsar4X.Client
             // on for the game. The auto-pause is surfaced by the banner + SessionLog line in Render/PostFrameUpdate.
             Pulsar4X.Combat.CombatEngagement.InterruptTimeOnNewEngagement = true;
 
+            // Narrate the warp lifecycle ([WARP] departure → arrival) so a ship's journey is legible in the log —
+            // and a warp that departs but never arrives stands out right next to a ⚠ TELEPORT flag (the open
+            // warp-detach bug). Off by default in the engine (tests stay quiet); on for the game.
+            Pulsar4X.Movement.WarpMoveProcessor.NarrateWarpToLog = true;
+
             try
             {
                 string? appDataDirectory = GetAppDataPath();
@@ -349,6 +354,11 @@ namespace Pulsar4X.Client
                     SessionLog.Heartbeat(_state.Game, _state.SelectedSystem, _state.LastClickedEntity?.Name);
                     // Detection + EMCON snapshot: what the player detects, the fog gap, and how loud their ships run.
                     SessionLog.DetectionSnapshot(_state.SelectedSystem, _state.PlayerFaction);
+                    // Fault tally: if anything has thrown (render or input), keep the running count visible each beat
+                    // so a session that's quietly accumulating faults says so at a glance. Silent when clean (0).
+                    if (_loggedRenderErrors.Count > 0)
+                        SessionLog.State("⚠ faults this session: " + _loggedRenderErrors.Count
+                            + " unique (render+input — grep [RenderError]/[InputError])");
                 });
             }
 
@@ -361,6 +371,18 @@ namespace Pulsar4X.Client
                 _combatBannerUntilTick = now + 8000; // show for ~8 s
                 SessionLog.Action("COMBAT INTERRUPT — a battle began; time auto-paused. Open Fleet -> Combat to steer it.");
             }
+        }
+
+        /// <summary>A one-line end-of-session readback (faults + how far the clock got). Logged on a CLEAN exit, so
+        /// its PRESENCE in the log = the game quit normally; its ABSENCE = it crashed/froze (cross-check [HANG]/[FATAL]).</summary>
+        public string SessionSummary()
+        {
+            try
+            {
+                string clock = _state?.Game != null ? _state.Game.TimePulse.GameGlobalDateTime.ToString("yyyy-MM-dd HH:mm") : "n/a";
+                return "faults=" + _loggedRenderErrors.Count + ", game-time=" + clock;
+            }
+            catch { return "faults=" + _loggedRenderErrors.Count; }
         }
 
         /// <summary>

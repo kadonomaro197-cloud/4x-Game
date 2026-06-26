@@ -74,6 +74,8 @@ Warp is an abstraction that moves an entity from one orbit to another without si
 
 Warp speed is calculated by `WarpMath.CalcMaxWarpSpeed()` based on `WarpAbilityDB` properties.
 
+**Diagnostic — `[WARP]` log (added 2026-06-26).** `WarpMoveProcessor.NarrateWarpToLog` (static bool, default false; the client sets it true in `PulsarMainWindow`) narrates the warp lifecycle to the captured log: `[WARP] ship #N 'Name' departing → 'Target' (distance Gm, ETA datetime)` when `StartNonNewtTranslation` fires, and `[WARP] … arrived at 'Target'` when it reaches the destination. **Why:** a warp that DEPARTS but never ARRIVES stands out right next to a `⚠ TELEPORT` flag — the open warp-detach bug (gotcha-tracked in `SESSION_STATE.md`: a ship reparented to root mid-warp whose position then collapses to origin). Off by default so tests/headless stay quiet; mirrors `Combat.CombatEngagement.NarrateToLog`. Engine-side (`System.Console.WriteLine`), so it lands in the client's rotating `game_logs/` pages via the console redirect.
+
 ---
 
 ## Nav Sequence
