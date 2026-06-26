@@ -809,7 +809,11 @@ namespace Pulsar4X.Client
 
         internal void EntitySelectedAsPrimary(int entityGuid, string starSys)
         {
-            PrimaryEntity = StarSystemStates[starSys].EntityStatesWithNames[entityGuid];
+            // Same stale-entity guard as EntityClicked below: a label can linger for an entity already removed
+            // from the state (destroyed in combat), and hard-indexing it threw KeyNotFoundException -> crash.
+            if (!StarSystemStates[starSys].EntityStatesWithNames.TryGetValue(entityGuid, out var primary))
+                return;
+            PrimaryEntity = primary;
             ActiveWindow?.EntitySelectedAsPrimary(PrimaryEntity);
         }
 
@@ -817,7 +821,19 @@ namespace Pulsar4X.Client
         {
             if (SelectedSysMapRender == null) throw new NullReferenceException("SelectedSysMapRender is null");
 
-            var entityState = StarSystemStates[starSys].EntityStatesWithNames[entityGuid];
+            // Defensive: a clickable label/icon can linger for an entity already removed from the state — e.g. a
+            // ship destroyed in combat whose name-state is gone from EntityStatesWithNames but whose label is
+            // still drawn (often piled on the Sun, since a dead entity's position collapses to the origin). Hard-
+            // indexing here threw KeyNotFoundException, and the SDL Run loop has no try/catch, so the WHOLE game
+            // crashed (confirmed live 2026-06-26: clicking a dead Earth-fleet label, key '676'). Look it up safely
+            // and ignore the click if the entity is gone. Same "never hard-index a dictionary" class as the Ceres
+            // cargo crash (gotcha #11) — extended here to the entity-state dictionaries.
+            if (!StarSystemStates[starSys].EntityStatesWithNames.TryGetValue(entityGuid, out var entityState))
+            {
+                SessionLog.Select("ignored click on stale/removed entity #" + entityGuid
+                    + " (no state — likely destroyed; its label outlived it)");
+                return;
+            }
             LastClickedEntity = entityState;
 
             SessionLog.Select(button + " click on '" + entityState.Name + "' (entity #" + entityState.Entity.Id

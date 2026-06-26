@@ -137,6 +137,14 @@ namespace Pulsar4X.Combat
         /// it on at startup. Logged on STATE CHANGES only (never per-tick) so it reads like a play-by-play.</summary>
         public static bool NarrateToLog = false;
 
+        /// <summary>When true, a NEW battle beginning (a fleet first entering combat) HALTS the game clock at that
+        /// sub-pulse — the Aurora-style combat interrupt. So an hour-step or a play-run stops at first contact and
+        /// hands the player notice + a chance to steer (change doctrine) instead of the whole fight resolving
+        /// invisibly inside one step. Default FALSE so headless/combat tests advance deterministically; the client
+        /// turns it on at startup. Fires once per battle/joiner (EnsureInCombat is guarded — an ongoing fight does
+        /// not re-halt every tick); only a brand-new engagement or a fresh fleet joining stops the clock.</summary>
+        public static bool InterruptTimeOnNewEngagement = false;
+
         private static void CombatLog(string msg)
         {
             if (NarrateToLog) System.Console.WriteLine("[Combat] " + msg);
@@ -168,6 +176,12 @@ namespace Pulsar4X.Combat
             if (fleet == null || !fleet.IsValid || fleet.HasDataBlob<FleetCombatStateDB>()) return;
             fleet.SetDataBlob(new FleetCombatStateDB(representativeOpponentId, GetFleetShips(fleet).Count));
             CombatLog($"{FleetLabel(fleet)} enters combat ({GetFleetShips(fleet).Count} ship(s))");
+
+            // Aurora-style combat interrupt: a NEW fleet just entered a battle — stop the clock here (if enabled)
+            // so the player is handed control at first contact instead of the whole fight resolving inside one
+            // step/play-run. The early-return guard above makes this fire once per battle/joiner, not every tick.
+            if (InterruptTimeOnNewEngagement)
+                fleet.Manager?.Game?.TimePulse?.RequestCombatHalt();
         }
 
         /// <summary>Advance a two-fleet engagement by dt game-seconds. This is the n=2 special case of

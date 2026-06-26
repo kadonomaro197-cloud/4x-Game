@@ -423,6 +423,20 @@ the auto-trigger fired; its absence (while DevTools "Tick Combat" *does* produce
 
 ---
 
+## Combat interrupt — stop the clock at first contact (added 2026-06-26)
+
+**The problem it fixes.** Combat is paced in **game-time** — one salvo every 5 s (`BattleTriggerProcessor`), stretched over minutes by `SalvoDamageScale`. But the player advances game-time in **chunks** (default 1-hour step / continuous play). Advancing an hour silently runs all ~720 of the 5-second sub-pulses inside one button press, so a whole battle — first contact to total loss — resolves *invisibly* between two frames. The developer's report (2026-06-26): "I had no notice of when combat began and no time to intervene; all fleets destroyed in one tick." The pacing was fine; there was **no interrupt** to hand control back when fighting started.
+
+**The fix.** `CombatEngagement.EnsureInCombat` (the JOIN primitive — fires once per fleet's first entry, it's guarded) calls `fleet.Manager.Game.TimePulse.RequestCombatHalt()` when `CombatEngagement.InterruptTimeOnNewEngagement` is true. `RequestCombatHalt` (`MasterTimePulse`) sets `CombatInterruptPending` and cancels `_timeSimulationCts` — the **exact** cancellation `PauseTime` uses — so both a continuous PLAY and a multi-sub-pulse STEP halt at the current sub-pulse, and the next `StartTime`/`TimeStep` restarts cleanly (each makes a fresh CTS). The clock stops **after the engaging tick's first salvo** (Tick engages *and* steps once), so the player lands in a barely-scratched battle with full control: change doctrine, assess, then step forward deliberately to watch it unfold.
+
+**The flag (mirrors `NarrateToLog`).** `InterruptTimeOnNewEngagement` defaults **false** so every headless/combat test advances deterministically (a halt mid-`AdvanceTime` would break the timed sims); the **client turns it on** at startup (`PulsarMainWindow` ctor, next to `NarrateToLog = true`). The client surfaces the halt: `PulsarMainWindow.PostFrameUpdate` reads+clears `TimePulse.CombatInterruptPending`, writes a `[ACTION] COMBAT INTERRUPT` SessionLog line, and arms an on-screen banner (`RenderDebugText`, ~8 s) — so the auto-pause reads as "combat started," not a mystery stop.
+
+**v1 stubs / follow-ups.** (a) Halts on **any** new engagement, not only the player's — the engine has no client-side "player faction" concept; "only interrupt *my* battles" is a v2 refinement once that's known engine-side. (b) One salvo of damage lands before the halt (engage + step share a Tick); halting *before* the first salvo needs engage-this-tick / step-next-tick separation (v2). (c) The thrown-together time-control UI (step-size slider vs the frequency sub-slider) is a *separate* client confusion the developer hit — the interrupt makes step size far less critical, but the slider UX is its own follow-up.
+
+**Connections (Prime Directive):** **Feeds IN** — `InterruptTimeOnNewEngagement` flag; `EnsureInCombat` join event; `fleet.Manager.Game.TimePulse`. **Feeds OUT** — `MasterTimePulse.RequestCombatHalt` (cancels the sim) + `CombatInterruptPending` (UI notice). **Triggers** — the time loop stops (same mechanism as `PauseTime`). **Test:** `BattleTriggerTests.Tick_NewEngagement_RequestsCombatHalt_WhenInterruptEnabled` — flag on → a new engagement sets `CombatInterruptPending`; asserts the flag defaults off; try/finally so the static flag never leaks.
+
+---
+
 ## Gotchas
 
 1. **This engine does not touch the per-pixel damage sim.** Casualties are whole-ship removal driven by strength math, not `DamageProcessor.OnTakingDamage`. Do not wire combat value into the pixel sim — that path is broken and parked for v2.

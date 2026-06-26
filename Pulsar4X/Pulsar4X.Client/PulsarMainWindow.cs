@@ -46,6 +46,10 @@ namespace Pulsar4X.Client
         // every ~3 s. Measured in SDL wall-clock ticks (ms) so the cadence is steady regardless of game speed.
         ulong _lastHeartbeatTick = 0;
 
+        // Combat-interrupt banner: when the engine auto-pauses time because a battle began, flash an on-screen
+        // notice until this SDL tick (wall-clock ms). 0 = not showing.
+        ulong _combatBannerUntilTick = 0;
+
         // Render-loop crash visibility: a window's Display() or the map draw can throw (e.g. inspecting a
         // foreign/NPC entity whose faction has locked/empty data). The SDL Run loop has no try/catch, so an
         // unhandled exception kills the process and its trace goes to stderr — invisible in game_log.txt,
@@ -62,6 +66,11 @@ namespace Pulsar4X.Client
             // Narrate live battles to game_log.txt ([Combat] lines) so a fight is visible in the log, not just the
             // Fleet Combat tab. Off by default in the engine (keeps the timed battle tests fast); on for the game.
             Pulsar4X.Combat.CombatEngagement.NarrateToLog = true;
+
+            // Aurora-style combat interrupt: stop the clock the instant a new battle begins, so a fight doesn't
+            // resolve invisibly inside one hour-step/play-run. Off by default in the engine (deterministic tests);
+            // on for the game. The auto-pause is surfaced by the banner + SessionLog line in Render/PostFrameUpdate.
+            Pulsar4X.Combat.CombatEngagement.InterruptTimeOnNewEngagement = true;
 
             try
             {
@@ -269,6 +278,13 @@ namespace Pulsar4X.Client
                 var fps = "FPS: " + _fpsLastMeasurement.ToString();
                 RenderDebugText(this.Renderer, fps, 50 + _debugSDLFontHeight * 4);
             }
+
+            // Combat-interrupt banner: a visible reason for the auto-pause when a battle begins (armed in
+            // PostFrameUpdate from MasterTimePulse.CombatInterruptPending). Shows near the top for ~8 s.
+            if (SDL.GetTicks() < _combatBannerUntilTick)
+                RenderDebugText(this.Renderer,
+                    ">>> COMBAT HAS BEGUN -- time auto-paused. Open the Fleet window's Combat tab to steer the fight. <<<",
+                    20);
         }
 
         public override void PostFrameUpdate()
@@ -290,6 +306,16 @@ namespace Pulsar4X.Client
                 _lastHeartbeatTick = now;
                 SafeRender("Heartbeat", () =>
                     SessionLog.Heartbeat(_state.Game, _state.SelectedSystem, _state.LastClickedEntity?.Name));
+            }
+
+            // Combat interrupt: the engine sets CombatInterruptPending and stops the clock the instant a new battle
+            // begins (see CombatEngagement.InterruptTimeOnNewEngagement). Surface it — record it + flash a banner —
+            // so the auto-pause reads as "combat started," not a mystery stop. Read-and-clear (one-shot).
+            if (_state.IsGameLoaded && _state.Game.TimePulse.CombatInterruptPending)
+            {
+                _state.Game.TimePulse.CombatInterruptPending = false;
+                _combatBannerUntilTick = now + 8000; // show for ~8 s
+                SessionLog.Action("COMBAT INTERRUPT — a battle began; time auto-paused. Open Fleet -> Combat to steer it.");
             }
         }
 

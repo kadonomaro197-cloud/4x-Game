@@ -156,6 +156,28 @@ namespace Pulsar4X.Engine
             // Requests a simulation halt if it is running.
             _timeSimulationCts?.Cancel();
         }
+
+        /// <summary>
+        /// Set true the instant the clock is stopped by a combat interrupt (a NEW battle beginning while time was
+        /// advancing). The UI polls this, shows a "combat has begun — time stopped" notice, and clears it. It is
+        /// only a notice flag — the actual stop is done by <see cref="RequestCombatHalt"/>.
+        /// </summary>
+        public bool CombatInterruptPending { get; set; }
+
+        /// <summary>
+        /// Aurora-style combat interrupt: stop the clock at the current sub-pulse because a new battle just began,
+        /// so the player gets notice + a chance to intervene (change doctrine) instead of a whole fight resolving
+        /// invisibly inside one step or play-run. Reuses the exact cancellation <see cref="PauseTime"/> uses, so
+        /// both a continuous PLAY and a multi-sub-pulse STEP halt at first contact and the next StartTime/TimeStep
+        /// restarts cleanly (each makes a fresh CancellationTokenSource). Thread-safe: it is called from a combat
+        /// processor thread, but CancellationTokenSource.Cancel() is thread-safe and the time loop only checks the
+        /// token at its sub-pulse boundary, so the current sub-pulse finishes and nothing is left torn.
+        /// </summary>
+        public void RequestCombatHalt()
+        {
+            CombatInterruptPending = true;
+            _timeSimulationCts?.Cancel();
+        }
         /// <summary>
         /// Starts the timeloop
         /// </summary>
