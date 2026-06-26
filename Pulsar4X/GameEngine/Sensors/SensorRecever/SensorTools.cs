@@ -270,17 +270,18 @@ namespace Pulsar4X.Sensors
         public static Dictionary<EMWaveForm, double> AttenuatedForDistance(SensorProfileDB emissionProfile, double distance)
         {
             var dict = new Dictionary<EMWaveForm, double>();
-            foreach (var emdat in emissionProfile.EmittedEMSpectra.Concat(emissionProfile.ReflectedEMSpectra))
+            void Add(EMWaveForm wf, double v)
             {
-                var reflectedValue = AttenuationCalc(emdat.Magnitude, distance);
-                if(!dict.ContainsKey(emdat.WaveForm))
-                    dict.Add(emdat.WaveForm, reflectedValue);
-                else
-                {
-                    dict[emdat.WaveForm] += reflectedValue;
-                }
-
+                if (!dict.ContainsKey(wf)) dict.Add(wf, v);
+                else dict[wf] += v;
             }
+            // EMITTED signature scales with the entity's current activity / EMCON posture (run hot = loud, dark = quiet).
+            double emit = emissionProfile.ActivityMultiplier;
+            foreach (var emdat in emissionProfile.EmittedEMSpectra)
+                Add(emdat.WaveForm, AttenuationCalc(emdat.Magnitude * emit, distance));
+            // REFLECTED (radar return) is NOT scaled by EMCON — going quiet doesn't shrink your cross-section.
+            foreach (var emdat in emissionProfile.ReflectedEMSpectra)
+                Add(emdat.WaveForm, AttenuationCalc(emdat.Magnitude, distance));
             return dict;
         }
         
@@ -294,17 +295,20 @@ namespace Pulsar4X.Sensors
         {
             var list = new List<EMData>();
             var factor = AttenuationFactor(distance);
-            foreach (var emdat in emissionProfile.EmittedEMSpectra.Concat(emissionProfile.ReflectedEMSpectra))
+            double emit = emissionProfile.ActivityMultiplier; // EMITTED scales with EMCON activity; REFLECTED does not.
+            void AddScaled(EMData emdat, double mult)
             {
-                var reflectedValue = emdat.Magnitude * factor;
-                if(reflectedValue >= cullBelow)
+                var value = emdat.Magnitude * mult * factor;
+                if (value >= cullBelow)
                 {
                     EMData newdata = new EMData();
                     newdata.WaveForm = emdat.WaveForm;
-                    newdata.Magnitude = reflectedValue;
+                    newdata.Magnitude = value;
                     list.Add(newdata);
                 }
             }
+            foreach (var emdat in emissionProfile.EmittedEMSpectra) AddScaled(emdat, emit);
+            foreach (var emdat in emissionProfile.ReflectedEMSpectra) AddScaled(emdat, 1.0);
             return list;
         }
 

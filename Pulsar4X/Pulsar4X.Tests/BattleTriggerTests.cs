@@ -4,6 +4,7 @@ using Pulsar4X.Combat;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
 using Pulsar4X.Fleets;
+using Pulsar4X.Sensors;
 using Pulsar4X.Ships;
 
 namespace Pulsar4X.Tests
@@ -40,6 +41,28 @@ namespace Pulsar4X.Tests
             ship.SetDataBlob(new ShipCombatValueDB(firepower, toughness, 1.0));
             s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(faction.Id, fleet, ship));
             return ship;
+        }
+
+        /// <summary>Like <see cref="AddShip"/>, but built from the SENSOR-capable capital design (it carries a
+        /// passive sensor receiver AND a reactor signature, so it can detect and be detected) — the fog-of-war
+        /// test needs ships that both fight and show up on a sensor scan.</summary>
+        private static Entity AddSensingShip(TestScenario s, Entity faction, Entity fleet, string name)
+        {
+            var designs = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns;
+            var design = designs.TryGetValue("default-ship-design-test-capital", out var cap) ? cap : designs.Values.First();
+            var ship = ShipFactory.CreateShip(design, s.Faction, s.StartingBody, name);
+            ship.FactionOwnerID = faction.Id;
+            ship.SetDataBlob(new ShipCombatValueDB(50_000, 1_000_000, 1.0));
+            s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(faction.Id, fleet, ship));
+            return ship;
+        }
+
+        /// <summary>Fire the sensor scan once on every sensor-bearing entity — what <c>Game.PostNewGameInitialization</c>
+        /// does at New Game, reproduced because the colony harness doesn't schedule it. Populates the track tables.</summary>
+        private static void RunSensorScan(TestScenario s)
+        {
+            foreach (var e in s.StartingSystem.GetAllEntitiesWithDataBlob<SensorAbilityDB>())
+                s.Game.ProcessorManager.GetInstanceProcessor(nameof(SensorScan)).ProcessEntity(e, s.Game.TimePulse.GameGlobalDateTime);
         }
 
         /// <summary>
@@ -163,6 +186,87 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("NewEngagementImminent (the time-loop's fine-step gate): two hostile, un-engaged fleets in range read TRUE, so the clock sub-steps and the auto-pause lands at first contact.")]
+        public void NewEngagementImminent_TwoHostileUnengagedInRange_ReturnsTrue()
+        {
+            var s = TestScenario.CreateWithColony();
+            ClearExistingFleets(s); // clean matchup — drop the colony's own start fleets
+            var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+
+            var enemyFleet = MakeFleet(s, enemyFaction, "Red Fleet");
+            AddShip(s, enemyFaction, enemyFleet, 50_000, 1_000_000, "Red 1");
+            var playerFleet = MakeFleet(s, s.Faction, "Blue Fleet");
+            AddShip(s, s.Faction, playerFleet, 50_000, 1_000_000, "Blue 1");
+
+            Assert.That(CombatEngagement.NewEngagementImminent(s.StartingSystem), Is.True,
+                "two hostile un-engaged fleets in range mean a NEW engagement is about to fire");
+        }
+
+        [Test]
+        [Description("NewEngagementImminent: once BOTH hostiles are already engaged, the ongoing fight reads FALSE — so the player gets their chosen step size back for the exchange, not a forced 5s.")]
+        public void NewEngagementImminent_BothAlreadyEngaged_ReturnsFalse()
+        {
+            var s = TestScenario.CreateWithColony();
+            ClearExistingFleets(s);
+            var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+
+            var enemyFleet = MakeFleet(s, enemyFaction, "Red Fleet");
+            AddShip(s, enemyFaction, enemyFleet, 50_000, 1_000_000, "Red 1");
+            var playerFleet = MakeFleet(s, s.Faction, "Blue Fleet");
+            AddShip(s, s.Faction, playerFleet, 50_000, 1_000_000, "Blue 1");
+
+            CombatEngagement.StartEngagement(playerFleet, enemyFleet); // both now hold FleetCombatStateDB
+            Assert.That(CombatEngagement.NewEngagementImminent(s.StartingSystem), Is.False,
+                "an ONGOING fight (both already engaged) is not a NEW engagement — combat runs at the player's set speed");
+        }
+
+        [Test]
+        [Description("NewEngagementImminent: one side already fighting, a hostile in range NOT yet in combat -> TRUE. This is the JOIN/round-2 case — a fresh fleet entering the fight re-arms the auto-pause.")]
+        public void NewEngagementImminent_OneEngagedOneJoining_ReturnsTrue()
+        {
+            var s = TestScenario.CreateWithColony();
+            ClearExistingFleets(s);
+            var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+
+            var enemyFleet = MakeFleet(s, enemyFaction, "Red Fleet");
+            AddShip(s, enemyFaction, enemyFleet, 50_000, 1_000_000, "Red 1");
+            var playerFleet = MakeFleet(s, s.Faction, "Blue Fleet");
+            AddShip(s, s.Faction, playerFleet, 50_000, 1_000_000, "Blue 1");
+
+            CombatEngagement.StartEngagement(playerFleet, enemyFleet); // both engaged...
+            CombatEngagement.EndEngagement(enemyFleet);                // ...then the enemy drops its state (player still in)
+            Assert.That(CombatEngagement.NewEngagementImminent(s.StartingSystem), Is.True,
+                "a hostile in range that is not yet in combat with the engaged fleet is a NEW entry about to fire");
+        }
+
+        [Test]
+        [Description("NewEngagementImminent: only friendly fleets present -> false, so peacetime fast-forward keeps taking full Ticklength steps (no needless fine-stepping).")]
+        public void NewEngagementImminent_SameFactionFleetsOnly_ReturnsFalse()
+        {
+            var s = TestScenario.CreateWithColony();
+            ClearExistingFleets(s);
+
+            var fleet1 = MakeFleet(s, s.Faction, "Home Guard A");
+            AddShip(s, s.Faction, fleet1, 50_000, 1_000_000, "A1");
+            var fleet2 = MakeFleet(s, s.Faction, "Home Guard B");
+            AddShip(s, s.Faction, fleet2, 50_000, 1_000_000, "B1");
+
+            Assert.That(CombatEngagement.NewEngagementImminent(s.StartingSystem), Is.False,
+                "same-faction fleets are not hostile, so no engagement is imminent");
+        }
+
+        [Test]
+        [Description("NewEngagementImminent: an empty system (no fleets) -> false. The gate must be cheap-and-quiet so it never forces fine-stepping where there is nothing to fight.")]
+        public void NewEngagementImminent_NoFleets_ReturnsFalse()
+        {
+            var s = TestScenario.CreateWithColony();
+            ClearExistingFleets(s);
+
+            Assert.That(CombatEngagement.NewEngagementImminent(s.StartingSystem), Is.False,
+                "no fleets means no engagement, imminent or otherwise");
+        }
+
+        [Test]
         [Description("Two fleets of the SAME faction never engage when the trigger runs.")]
         public void Tick_SameFactionFleets_DoNotEngage()
         {
@@ -181,6 +285,41 @@ namespace Pulsar4X.Tests
             Assert.That(fleet2.HasDataBlob<FleetCombatStateDB>(), Is.False, "friendly fleets must not engage");
             Assert.That(CombatEngagement.GetFleetShips(fleet1).Count, Is.EqualTo(1), "no friendly losses");
             Assert.That(CombatEngagement.GetFleetShips(fleet2).Count, Is.EqualTo(1), "no friendly losses");
+        }
+
+        [Test]
+        [Description("Fog of war (RequireDetectionToEngage): two hostile fleets in range do NOT engage until they DETECT each other. No scan -> empty track tables -> no battle; fire the scan -> mutual contacts -> battle. The detection x weapons seam — slice 2. Off by default so every other combat test stays deterministic.")]
+        public void Tick_RequireDetection_NoBattleUntilDetected()
+        {
+            var s = TestScenario.CreateWithColony();
+            ClearExistingFleets(s); // clean two-fleet matchup
+            var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+
+            var enemyFleet = MakeFleet(s, enemyFaction, "Red Fleet");
+            AddSensingShip(s, enemyFaction, enemyFleet, "Red 1");
+            var playerFleet = MakeFleet(s, s.Faction, "Blue Fleet");
+            AddSensingShip(s, s.Faction, playerFleet, "Blue 1");
+
+            Assert.That(CombatEngagement.RequireDetectionToEngage, Is.False, "fog of war must default OFF so other combat tests don't need sensors");
+
+            CombatEngagement.RequireDetectionToEngage = true;
+            try
+            {
+                // No scan has run -> the track tables are empty -> hostile + in range but UNSEEN -> no engagement.
+                CombatEngagement.Tick(s.StartingSystem, 5);
+                Assert.That(playerFleet.HasDataBlob<FleetCombatStateDB>(), Is.False, "undetected hostiles must NOT engage (fog of war)");
+                Assert.That(enemyFleet.HasDataBlob<FleetCombatStateDB>(), Is.False);
+
+                // Fire the sensor scan (as the live game does at New Game) -> mutual contacts -> now they engage.
+                RunSensorScan(s);
+                CombatEngagement.Tick(s.StartingSystem, 5);
+                Assert.That(playerFleet.HasDataBlob<FleetCombatStateDB>(), Is.True, "once detected, hostiles engage — detection x weapons");
+                Assert.That(enemyFleet.HasDataBlob<FleetCombatStateDB>(), Is.True);
+            }
+            finally
+            {
+                CombatEngagement.RequireDetectionToEngage = false; // never leak the static flag to other tests
+            }
         }
     }
 }

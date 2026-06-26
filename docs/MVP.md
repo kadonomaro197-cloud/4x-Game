@@ -25,6 +25,12 @@ engine into a game.**
 If a player can do that one loop, the fork has delivered its core fantasy — combat that runs from orbit down
 to the surface, paid for by real planetary infrastructure — and v1 ships.
 
+> **⚠️ RE-SEQUENCED 2026-06-26 — SPACE earns its weight BEFORE we take a planet (a deliberate finish-line move, per §7 — not a drift).** The realism-vs-gameplay audit (`docs/REALISM-VS-GAMEPLAY-AUDIT.md`) found the loop above would be a thin shell on hollow systems: a planet that's colonize-and-forget isn't worth taking, and a space battle with no fog, no supply, no power isn't a game. So the build order is now two milestones:
+> - **M1 — make the SPACE + infrastructure layer a real decision engine.** Build the audit's **ranked decision-levers** (§6), one bounded+gauged slice at a time, in leverage order — **starting with DETECTION** (fog of war + the dark-vs-active EMCON knob, riding the existing contact engine; *not* the spectrum-physics sim). This is the active build path now.
+> - **M2 — the take-a-planet loop above** (ground combat → transport/drop → ground battle → capture), deferred until M1 lands, then built on a space layer that's actually a game.
+>
+> **Why (developer, 2026-06-26):** planetary combat is hollow without real planetary infrastructure to fight over — better to deepen what we already have in space until it earns its keep, then go planetary. **Discipline for M1:** one ranked lever at a time, each a gauged slice — *not* "fix everything at once" (that phrasing is the half-built-forever trap this doc exists to stop). M2's spec below (§§2–5) is unchanged and waiting.
+
 ### 4X coverage — and what's engine vs. game
 
 The reframe that matters: **the economy is not one of the X's — it's the engine substrate the X's run on.**
@@ -102,6 +108,11 @@ These are **good** — and they are **not v1**. Building any of them before §1 
 Each stage leaves the game in a working, testable state. Don't start a stage until the one before it is green.
 Note the order follows your own strategy: **do space combat first, then mirror its shape for ground.**
 
+> **Re-sequenced (2026-06-26):** **M1 — the space-depth levers (`docs/REALISM-VS-GAMEPLAY-AUDIT.md`, detection
+> first) now run BEFORE Stages 2–4.** Stage 1 (space combat resolves) is ✅ done; rather than proceed straight to
+> Stage 2 ground combat, we first make the space + infrastructure layer earn its weight (M1). Stages 2–4 below
+> are the M2 conquest loop, unchanged and deferred until M1 lands. Each M1 lever is its own bounded, gauged slice.
+
 - **Stage 0 — Economy is real and visible.** *(we are here)* **Engine substrate COMPLETE and gauged: gather
   → refine → build all proven** (mining depletes deposits; refining makes Space-Crete; the factory consumes
   minerals and installs a new Refinery, 1→2 — `ProductionBuildTests`). The build path a unit will ride
@@ -109,19 +120,35 @@ Note the order follows your own strategy: **do space combat first, then mirror i
   UI works live** — it already EXISTS and is wired (`ColonyManagementWindow`: Summary/Production/Construction/
   Mining, including job-queuing), so this is a *verify-and-fix* task (live-test §5B step 7), not a build. The
   engine is ready to build ships and units.
-- **Stage 1 — Space combat resolves, and is gauged.** Take the DARK beam/missile systems, put them under a
-  harness test, and make two fleets fight to a winner. This is MVP-critical **and** the reference pattern for
-  Stage 2 — study how it's wired (`docs/COMBAT-DESIGN.md`, `Weapons/`, `Damage/`) and gauge it.
-- **Stage 2 — Ground combat, mirroring Stage 1.** `GroundUnitDesign` (an `IConstructableDesign`, so the
-  *existing* industry queue builds it) + `GroundForcesDB`; a `GroundCombatProcessor` that attrites attacker
-  vs defender. Gauge: build a unit, resolve a battle to a winner.
+- **Stage 1 — Space combat resolves, and is gauged. 🟢 DONE (2026-06-25).** The `GameEngine/Combat/`
+  auto-resolve engine (strength-math, doctrine as the player's lever, retreat, engagement lock), 8 CI-green
+  fixtures. **This is the reference pattern for Stage 2** (`docs/COMBAT-DESIGN.md`). *Open live-test threads
+  riding on top, not new stages: the combat **interrupt** (auto-pause at first contact, runs at the player's
+  set speed — built, CI-green, awaiting the developer's live test) and the **teleport-to-Sun** movement defect
+  (auto-detected by the SessionLog heartbeat; needs one live repro + root fix — a Stage-4 live-drive blocker,
+  see `SESSION_STATE.md`).*
+- **Stage 2 — Ground combat, mirroring Stage 1 — build the DECISION SPINE, not the realism.** `GroundUnitDesign`
+  (an `IConstructableDesign`, so the *existing* industry queue builds it) + `GroundForcesDB`; a
+  `GroundCombatProcessor` that attrites attacker vs defender. **Mirror what *earns its weight* in Stage 1 — the
+  doctrine/composition decision — not the parked per-pixel realism** (see `docs/REALISM-VS-GAMEPLAY-AUDIT.md`).
+  Gauge: build a unit, resolve a battle to a winner.
 - **Stage 3 — Stitch the loop.** Target planet gets orbital defenders + a garrison. Fleet clears orbit
   (Stage 1) → transport/drop the ground force → ground battle (Stage 2) → defenders gone → flip the colony's
   owner. Gauge each link; gauge the whole loop once.
-- **Stage 4 — Drive it from the UI.** Build ships+units, send the fleet, issue the invade order, watch the
-  result. Live-test (§5B of the systems map); CI can't see the client.
+- **Stage 4 — Drive it from the UI — the keystone, not polish.** Build ships+units, send the fleet, issue the
+  invade order, watch the result. The realism-vs-gameplay audit's headline applies here: the engines are
+  built, **the UI is the missing control panel.** Stage 4 is where must-have **H** turns the existing,
+  already-working engines into reachable *decisions* — wire levers onto what exists, don't gold-plate or
+  rebuild. Live-test (§5B of the systems map); CI can't see the client.
 
 When Stage 4 works, **v1 is done.** Stop. Play it. *Then* open the parking lot.
+
+> **The weight-firewall lens (companion to this scope-firewall).** Every remaining stage is built to one extra
+> rule from `docs/REALISM-VS-GAMEPLAY-AUDIT.md`: **name the player decision before you build the realism.** This
+> doc says *what* is on the path (only the §1 loop); the audit says *how well* each piece must earn its keep (it
+> must hand the player a decision that stacks). The two compose — they don't compete. Staying on this spine is
+> also what *prevents* the detection/omniscience debt: that debt only grows if we keep **deepening** combat on
+> the "everyone sees everyone" stub, and the firewall says don't — finish the loop. Detection is parked (§6).
 
 ---
 
@@ -130,15 +157,38 @@ When Stage 4 works, **v1 is done.** Stop. Play it. *Then* open the parking lot.
 Add ideas here freely. Writing the idea down means it's safe to *not* build it yet. Revisit only after the §1
 loop ships.
 
-- **eXplore — a strategic X** (headline v2): survey ships find new systems, jump points, new planets to take.
+**Strategic pillars (headline v2):**
+- **eXplore — a strategic X**: survey ships find new systems, jump points, new planets to take.
   The conquest spine from v1 is what makes exploration *matter*.
-- **eXploit — espionage & "abnormal" diplomacy — a strategic X** (the other headline v2): intelligence,
-  sabotage, bribery, subversion, propaganda, fomenting rebellion — exploiting *rivals*. Rides on
-  Diplomacy/Factions (design-only today). The conquest spine is what makes subterfuge worth doing.
+- **eXploit — espionage & "abnormal" diplomacy — a strategic X**: intelligence, sabotage, bribery, subversion,
+  propaganda, fomenting rebellion — exploiting *rivals*. Rides on Diplomacy/Factions (design-only today). The
+  conquest spine is what makes subterfuge worth doing.
+
+**The ranked decision-lever backlog (the FIRST thing to build once v1 ships).** Sourced from and ranked in
+`docs/REALISM-VS-GAMEPLAY-AUDIT.md` — these are the highest *decision-installed-per-effort* wins, each one
+turning an engine that *already runs* into a player decision, and most making systems **stack**. Build in this
+order when the §1 loop is done; do **not** pull them onto the v1 path (that's the firewall):
+
+1. **Refined materials → component costs.** Weapons/shipyards require steel/electronics → mining→refining→
+   production→combat becomes ONE supply-chain decision. Converts ~4 "pretty" systems into a stacked choice.
+   Mostly JSON data + a `BaseModIntegrityTests` check. *Highest leverage in the game.*
+2. **Energy powers weapons & engines.** Cut power → guns don't fire / thrust drops. The dead power gauge
+   becomes "guns or thrust?" mid-fight; reactor/battery ship-design choices start to matter.
+3. **Detection done right — active/passive + EMCON on a *simple* model** (NOT the spectrum sim). See far but
+   get seen, or go dark and go blind. *This* is the gameplay of detection (fog, ambush, first-strike). The
+   v2 entry point is a one-method seam in the combat trigger ("what can this faction see", currently "everything").
+4. **IFF + relationship state.** Fire control refuses friendlies; hostility becomes friendly/neutral/hostile.
+   Seeds the whole diplomacy/eXploit axis.
+5. **Expose the `NavWindow`** (~2-line wiring) — a complete maneuver/intercept/delta-V planner exists and is
+   unreachable; surfacing it makes fuel/intercept a real decision.
+6. **Tighten storage + surface fuel scarcity**, **commander combat skill read by the resolve**, **armor design /
+   in-battle damage-focus** — the rest of the audit's list.
+
+**Other seeds:**
 - _(seed)_ Orbital bombardment softens defenders before the drop.
 - _(seed)_ Multiple ground/space unit types (artillery / armor / infantry; PD / beam / missile doctrine).
 - _(seed)_ The hex-map tactical ground battle (`ColonyHexMapDB` already exists as a substrate).
-- _(seed)_ Money/Ledger so the economy has a P&L and an NPC can reason about it.
+- _(seed)_ Money/Ledger so the economy has a P&L and an NPC can reason about it (unblocks lever #1's pricing).
 - _(seed)_ A real defending/attacking AI; auto-resolution for off-screen battles.
 - _(add yours here…)_
 

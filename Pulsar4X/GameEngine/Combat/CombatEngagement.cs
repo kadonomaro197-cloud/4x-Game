@@ -110,6 +110,9 @@ namespace Pulsar4X.Combat
                     if (!AreHostile(a, b)) continue;
                     if (GetFleetShips(b).Count == 0) continue;
                     if (!InRange(a, b)) continue;
+                    // Fog of war (client-on / test-off): only engage a hostile you actually DETECT. v1 requires
+                    // MUTUAL detection so the resolver gets both sides and there's no one-way enter/exit thrash.
+                    if (RequireDetectionToEngage && !(FleetDetects(a, b) && FleetDetects(b, a))) continue;
 
                     EnsureInCombat(a, b.Id);
                     EnsureInCombat(b, a.Id);
@@ -131,6 +134,52 @@ namespace Pulsar4X.Combat
             return fleets.Count;
         }
 
+        /// <summary>
+        /// Read-only pre-step gate for the time loop: is a brand-NEW engagement about to fire in this star system
+        /// on the next trigger pass? True iff some hostile pair, both with ships, sits within
+        /// <see cref="EngagementRange_m"/> AND at least one of them is NOT already in combat — because
+        /// <see cref="EnsureInCombat"/> is guarded, so it (and the time-halt it requests) only fires for a fleet
+        /// that lacks <see cref="FleetCombatStateDB"/>. So this reads TRUE at first contact and when a fresh fleet
+        /// JOINS a fight, and FALSE once every in-range hostile is already mutually engaged.
+        ///
+        /// That last part is deliberate and is the whole point of the narrow test: the master time loop only drops
+        /// to fine sub-steps while this is true — just long enough to land the auto-pause at the new engagement —
+        /// and then hands the clock back at the player's chosen step size for the ONGOING exchange. So combat runs
+        /// at the speed you set (1 s, 10 min, 1 hr), and the engine only "takes the wheel" for the split second a
+        /// fight is being born so you are never blindsided by its START. Mirrors the engage/join pass of
+        /// <see cref="Tick"/> but mutates NOTHING. O(fleets^2); fleet counts are small. Defensive — never throws.
+        ///
+        /// LIMIT (v1): gates on present, in-range state only. A fleet that crosses from out of range to engaged
+        /// inside a single step (e.g. a long warp resolved under a big step) is still resolved without a pause —
+        /// a closing-prediction lookahead is a v2 layer. The common case — fleets already parked together, e.g. at
+        /// the same body, or a player stepping carefully through a battle — is fully covered.
+        /// </summary>
+        public static bool NewEngagementImminent(EntityManager manager)
+        {
+            var fleets = manager.GetAllEntitiesWithDataBlob<FleetDB>();
+            if (fleets.Count == 0) return false;
+
+            for (int i = 0; i < fleets.Count; i++)
+            {
+                var a = fleets[i];
+                if (!a.IsValid || GetFleetShips(a).Count == 0) continue;
+                for (int j = i + 1; j < fleets.Count; j++)
+                {
+                    var b = fleets[j];
+                    if (!b.IsValid) continue;
+                    if (!AreHostile(a, b)) continue;
+                    if (GetFleetShips(b).Count == 0) continue;
+                    if (!InRange(a, b)) continue;
+                    // In range + hostile + both manned. If EITHER isn't yet in combat, a new entry — and so the
+                    // interrupt — fires this tick. If both are already engaged, this pair is an ONGOING fight and
+                    // does NOT force fine-stepping, so the player keeps their set step size for it.
+                    if (!a.HasDataBlob<FleetCombatStateDB>() || !b.HasDataBlob<FleetCombatStateDB>())
+                        return true;
+                }
+            }
+            return false;
+        }
+
         /// <summary>When true, the engine narrates each fight (engage / casualties / retreat / disengage) to the
         /// captured log (game_log.txt) as plain-language <c>[Combat]</c> lines, so a live battle is visible there and
         /// not only in the Fleet Combat tab. Default FALSE so it never slows the timed battle tests; the client turns
@@ -144,6 +193,16 @@ namespace Pulsar4X.Combat
         /// turns it on at startup. Fires once per battle/joiner (EnsureInCombat is guarded — an ongoing fight does
         /// not re-halt every tick); only a brand-new engagement or a fresh fleet joining stops the clock.</summary>
         public static bool InterruptTimeOnNewEngagement = false;
+
+        /// <summary>When true, combat is FOG-OF-WAR gated: two hostile fleets engage only if they DETECT each other
+        /// (a sensor contact in the per-faction track table, <see cref="EntityManager.GetSensorContacts"/>), not
+        /// merely because they're present in the system. This is the seam that makes "what you can see decides the
+        /// fight" real — detection × weapons. v1 requires MUTUAL detection (both sides hold a contact for the other)
+        /// so the resolver still gets two sides and there's no one-way enter/exit thrash; the ambush/first-strike
+        /// asymmetry (one side sees the other first) is a later slice that needs resolver support. Default FALSE so
+        /// the existing combat tests stay deterministic (they don't stand up sensors/contacts); the client turns it
+        /// on when detection is live, next to <see cref="NarrateToLog"/> / <see cref="InterruptTimeOnNewEngagement"/>.</summary>
+        public static bool RequireDetectionToEngage = false;
 
         private static void CombatLog(string msg)
         {
@@ -583,6 +642,21 @@ namespace Pulsar4X.Combat
         {
             int fa = a.FactionOwnerID, fb = b.FactionOwnerID;
             return fa != fb && fa != Game.NeutralFactionId && fb != Game.NeutralFactionId;
+        }
+
+        /// <summary>Fog-of-war check (the detection × weapons seam): does the <paramref name="detector"/> fleet's
+        /// faction hold a sensor contact for ANY ship in the <paramref name="target"/> fleet? Reads the per-faction
+        /// track table the sensor scan populates (<see cref="EntityManager.GetSensorContacts"/>). Defensive — false
+        /// if there's no manager or the faction has no contact list yet. Only consulted when
+        /// <see cref="RequireDetectionToEngage"/> is on.</summary>
+        private static bool FleetDetects(Entity detector, Entity target)
+        {
+            if (detector?.Manager == null) return false;
+            var contacts = detector.Manager.GetSensorContacts(detector.FactionOwnerID);
+            if (contacts == null) return false;
+            foreach (var ship in GetFleetShips(target))
+                if (contacts.SensorContactExists(ship.Id)) return true;
+            return false;
         }
 
         private static bool InRange(Entity a, Entity b)
