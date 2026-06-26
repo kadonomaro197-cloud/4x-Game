@@ -51,6 +51,8 @@ namespace Pulsar4X.Movement
         [JsonIgnore]
         Entity _factionEntity;
         WarpMovingDB _warpingDB;
+        bool _warpBlockLogged;     // so a "can't warp" reason is logged ONCE, not every tick
+        bool _permanentlyBlocked;  // no drive / no reactor — clear the order instead of retrying forever
 
 
         Entity _entityCommanding;
@@ -237,15 +239,37 @@ namespace Pulsar4X.Movement
         {
             if (!IsRunning)
             {
-                var warpDB = _entityCommanding.GetDataBlob<WarpAbilityDB>();
-                var powerDB = _entityCommanding.GetDataBlob<EnergyGenAbilityDB>();
+                // Visibility: these blockers used to fail SILENTLY (the old "FIXME: alert the player?") — the ship
+                // just sat there with no message, exactly the "I gave a move order and it didn't move" symptom. Now
+                // each one says WHY in the [WARP] log (once, not every tick).
+                if (!_entityCommanding.TryGetDataBlob<WarpAbilityDB>(out var warpDB))
+                {
+                    if (!_warpBlockLogged) { WarpMoveProcessor.WarpBlocked(_entityCommanding, "no warp drive on this design"); _warpBlockLogged = true; }
+                    _permanentlyBlocked = true;   // never going to warp; let the order clear
+                    return;
+                }
+                if (!_entityCommanding.TryGetDataBlob<EnergyGenAbilityDB>(out var powerDB))
+                {
+                    if (!_warpBlockLogged) { WarpMoveProcessor.WarpBlocked(_entityCommanding, "no reactor / power supply to run the warp drive"); _warpBlockLogged = true; }
+                    _permanentlyBlocked = true;
+                    return;
+                }
                 string eType = warpDB.EnergyType;
-                double estored = powerDB.EnergyStored[eType];
+                double estored = powerDB.EnergyStored.TryGetValue(eType, out var es) ? es : 0;
                 double creationCost = warpDB.BubbleCreationCost;
 
-                // FIXME: alert the player?
                 if (creationCost > estored)
+                {
+                    // Temporary — keep the order pending so it warps the moment the reactor charges. Reason logged once.
+                    if (!_warpBlockLogged)
+                    {
+                        WarpMoveProcessor.WarpBlocked(_entityCommanding, "not enough energy for the warp bubble yet — needs "
+                            + creationCost.ToString("0") + " " + eType + ", reactor has " + estored.ToString("0")
+                            + " stored (advance time to let it charge, or check reactor fuel)");
+                        _warpBlockLogged = true;
+                    }
                     return;
+                }
 
                 _warpingDB = new WarpMovingDB(_entityCommanding, _targetEntity, EndpointRelitivePosition, EndpointTargetOrbit);
 
@@ -272,6 +296,7 @@ namespace Pulsar4X.Movement
 
         internal override bool IsFinished()
         {
+            if (_permanentlyBlocked) return _isFinished = true;   // no drive / no reactor — clear, don't hang the move lane
             if(_warpingDB != null)
                 _isFinished = _warpingDB.IsAtTarget;
             else
