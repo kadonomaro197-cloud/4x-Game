@@ -2,9 +2,7 @@ using System.Linq;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
 using Pulsar4X.Fleets;
-using Pulsar4X.Movement;
 using Pulsar4X.Ships;
-using Pulsar4X.Storage;
 
 namespace Pulsar4X.Combat
 {
@@ -55,29 +53,13 @@ namespace Pulsar4X.Combat
             for (int i = 0; i < count; i++)
             {
                 var ship = ShipFactory.CreateShip(design, playerFaction, orbitBody, $"{factionName} {i + 1}");
-                FuelShip(ship, playerInfo);
+                // Fill tanks BEFORE the owner flip: fuel resolves through the ship's faction library, and only
+                // the player has the fuel unlocked (the bare enemy faction's CargoGoods is empty).
+                ShipFactory.FillFuelTanks(ship, playerInfo);
                 ship.FactionOwnerID = enemyFaction.Id;
                 game.OrderHandler.HandleOrder(FleetOrder.AssignShip(enemyFaction.Id, fleet, ship));
             }
             return fleet;
-        }
-
-        // Fill a freshly-built ship's fuel tanks so it can actually maneuver — ShipFactory leaves them empty.
-        // Reads the ship's OWN thruster fuel type and pulls that fuel from the PLAYER faction's library (the
-        // player has it unlocked; the bare enemy faction's CargoGoods is empty), so this must run BEFORE the
-        // owner flip. A ship with no thruster, no matching fuel-tank bay, or an unknown fuel is left as-is —
-        // CargoMath.AddCargoByUnit returns 0 (no crash). FuelFillUnits is intentionally huge; AddCargoByUnit
-        // caps the add at the tank's free volume, so this fills to capacity and no more.
-        private const int FuelFillUnits = 10_000_000;
-
-        private static void FuelShip(Entity ship, FactionInfoDB playerInfo)
-        {
-            if (!ship.TryGetDataBlob<NewtonThrustAbilityDB>(out var thrust) || string.IsNullOrEmpty(thrust.FuelType))
-                return;
-            var fuel = playerInfo.Data.CargoGoods.GetAny(thrust.FuelType);
-            if (fuel == null)
-                return;
-            CargoTransferProcessor.AddCargoItems(ship, fuel, FuelFillUnits);
         }
     }
 }

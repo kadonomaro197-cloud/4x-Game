@@ -35,7 +35,10 @@ namespace Pulsar4X.Tests
         public void SpawnHostileFleet_PersistsThroughClockAdvance_AndIsEngageable()
         {
             var s = TestScenario.CreateWithColony();
-            var design = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns.Values.First();
+            // Prefer the Leviathan (an NTR ship burning 'ntp', a fuel a fresh start may not have unlocked) so the
+            // fuel gauge below exercises the trickiest fuel path; fall back to any design if it isn't loaded.
+            var allDesigns = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns;
+            var design = allDesigns.TryGetValue("default-ship-design-test-capital", out var capital) ? capital : allDesigns.Values.First();
 
             // Weak player fleet: one UNARMED ship (firepower 0), so the only way it can die is a real battle.
             var playerFleet = FleetFactory.Create(s.StartingSystem, s.Faction.Id, "Home Fleet");
@@ -53,13 +56,19 @@ namespace Pulsar4X.Tests
             // thruster AND a tank bay for its fuel must come out fuelled — TotalFuel_kg is set by AddCargoItems
             // -> UpdateMassFuelAndDeltaV. Asserts only for fuel-capable ships, so a design with no fuel bay
             // can't falsely fail it. ShipFactory leaves tanks empty; this proves the sandbox fills them.
+            var faction = s.Faction.GetDataBlob<FactionInfoDB>();
             int fuelCapable = 0, fuelled = 0;
             foreach (var es in CombatEngagement.GetFleetShips(enemyFleet))
             {
                 if (!es.TryGetDataBlob<NewtonThrustAbilityDB>(out var thr) || string.IsNullOrEmpty(thr.FuelType))
                     continue;
-                var fuelDef = s.Faction.GetDataBlob<FactionInfoDB>().Data.CargoGoods.GetAny(thr.FuelType);
-                if (fuelDef != null && es.TryGetDataBlob<CargoStorageDB>(out var cargo) && cargo.TypeStores.ContainsKey(fuelDef.CargoTypeID))
+                // The engine's FuelType must resolve to a real fuel MATERIAL (unlocked OR locked). If it
+                // doesn't (e.g. it stored a fuel *category* like "ntr" instead of the material "ntp"), the
+                // fuelling silently no-ops — fail loudly so that mapping bug can't hide behind a skipped assert.
+                var fuelDef = faction.Data.CargoGoods.GetAny(thr.FuelType) ?? faction.Data.LockedCargoGoods.GetAny(thr.FuelType);
+                Assert.That(fuelDef, Is.Not.Null, $"thruster FuelType '{thr.FuelType}' should resolve to a defined fuel material");
+                Log($"fuel: ship id={es.Id} fuelType='{thr.FuelType}' TotalFuel_kg={thr.TotalFuel_kg:0}");
+                if (es.TryGetDataBlob<CargoStorageDB>(out var cargo) && cargo.TypeStores.ContainsKey(fuelDef.CargoTypeID))
                 {
                     fuelCapable++;
                     if (thr.TotalFuel_kg > 0) fuelled++;
@@ -67,7 +76,7 @@ namespace Pulsar4X.Tests
             }
             Log($"fuel: {fuelled}/{fuelCapable} fuel-capable hostiles fuelled (TotalFuel_kg>0)");
             if (fuelCapable > 0)
-                Assert.That(fuelled, Is.EqualTo(fuelCapable), "spawned hostiles that can store their fuel should be fuelled by SpawnHostileFleet");
+                Assert.That(fuelled, Is.EqualTo(fuelCapable), "spawned hostiles that can store their fuel should be fuelled");
 
             // (1) PERSISTENCE — mark the system observed (what the client does when you watch it) and advance the
             // real clock. The spawned hostiles must still be there afterward. Log whether the system clock moved.
