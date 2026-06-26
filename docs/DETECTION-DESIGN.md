@@ -6,13 +6,14 @@
 
 ## 0. The point first (what detection is FOR)
 
-In Navy terms you already own: detection is the **ESM/RADAR + EMCON** game. The gameplay isn't the physics of how a receiver tunes a band — it's the **decision** the physics forces on the player:
+**Space is not an ocean — you cannot hide if you are HOT.** A ship at full burn is a beacon you can read from far off; a ship running cold is nearly invisible. Crucially, how far *you* see depends on the **target's** heat and **your** sensors — *not* on your own emissions — so a cold ship sees a hot ship LONG before the hot ship sees it. That asymmetry, not a symmetric "we both go quiet and both go blind," is the game. The decisions the physics forces:
 
 - **Do I even know the enemy is there?** (fog of war)
-- **Do I light off active radar** — see far, but broadcast my position and get seen first — **or run EMCON-dark** — listen only, see short, but slip in and shoot first?
-- **Whoever detects first chooses the fight** — engage, or fade away.
+- **How hot do I run?** Full burn / hot guns / active sensors gets me there fast and hits hard — but lights me up. Running cold hides me but costs speed and readiness. *(Not free, not symmetric — couples to movement and weapons.)*
+- **Do I go ACTIVE** — ping with radar/lidar to flush out a cold, silent ship — knowing the ping **exposes me**? Or stay **passive** (read their heat, stay quiet, but be blind to anyone running cold)?
+- **Whoever detects first chooses the fight** — pounce, or fade.
 
-That's the whole prize: **fog of war + an emissions-posture tradeoff + first-strike.** Everything below serves those three. The rigorous EM-spectrum math is *not* the prize — it's the gauge needle, and it can stay under the hood.
+That's the prize: **fog of war + a heat/emissions tradeoff + active-to-flush + first-strike.** The rigorous EM-spectrum math is *not* the prize — it's the gauge needle, under the hood. (Sensors are also **components** with other purposes — survey, counter-interference — sequenced by what they connect to; see §3a.)
 
 ---
 
@@ -56,7 +57,8 @@ The sensor subsystem (`GameEngine/Sensors/`) is **one of the most complete in th
 | **CUT as gameplay** | EM-waveform spectrum / per-band absorption / triangular-overlap tuning | 🔇 **hide, don't delete** | Keep it computing the number; **never make the player tune wavelengths.** Per the weight rule: it adds complexity, not a decision. Collapse the player's mental model to "signature vs. sensor vs. range." |
 | **CUT** | EW / jamming | ❌ not now | Net-new, not on the path. Parking lot. |
 | **ADD** | **Fog of war in combat** | ➕ the seam | Battle trigger + fire control ask the track table "what hostile do I *detect*," not "what's present." An unseen enemy can't trigger or be targeted. *This is the core add.* |
-| **ADD** | **The EMCON lever** (Active / Passive-dark posture) | ➕ the decision | A fleet/ship stance that sets **detection range** AND **own detectability**, reusing emitted/reflected. Active = see far, get seen far; Dark = see short, stay quiet, ambush. |
+| **ADD** | **The HEAT/emissions lever** ("how hot do I run") | ➕ the decision | Your signature scales with what you're DOING (thrust / hot guns / active sensors) plus an explicit "run silent" throttle. High = a beacon seen from far; cold = hidden but slower/less ready. Sets **your detectability + your capability** — *not* how far you see (that's the target's heat × your sensors). Needs the signature made **dynamic** (today it's a static design constant). |
+| **ADD** | **Active-to-flush choice** (active vs. passive) | ➕ the decision | Passive = read their heat (blind to a cold ship, but quiet). Active = ping to find the cold/silent ship — but the ping **exposes you**. Reuses the existing emitted (passive) + reflected (active) halves; add the "pinging raises my signature" coupling. |
 | **ADD** | **Reliable scan + gauge** | ➕ foundation | Make detection fire and be testable headless (slice 1) so everything above is gauged, not DARK. |
 | **ADD** | **UI** | ➕ (your build) | Contacts drawn as *contacts* (fog), an EMCON toggle, detection-range ring. Client-side, live-tested. |
 
@@ -66,40 +68,55 @@ The sensor subsystem (`GameEngine/Sensors/`) is **one of the most complete in th
 |---|---|---|
 | **Weapons / battle trigger** | trigger reads the **track table**, not all entities | an **undetected** hostile does NOT start a battle; a **detected** one does |
 | **Fire control / targeting** | can only target what's in the track table | you cannot order fire on an undetected entity |
-| **EMCON posture** | posture scales your detect-range + your signature | **Dark** fleet slips a picket (sees short, unseen); **Active** trips it (sees far, seen far) |
+| **Heat / active posture** | how-hot-you-run scales your **signature**; active-ping adds exposure | a **cold** fleet reads a hot picket and slips past unseen; a **hot/active** fleet is read from far; going **active** flushes a cold ambusher but lights *you* up |
+| **Movement** | thrust state IS heat — burn hard = loud, coast = quiet | a hard burn to close fast announces you; a cold coast arrives unseen (the approach is the bet) |
 | **Combat interrupt** | auto-pause fires when YOU first detect/engage | first contact hands you the doctrine call the moment info arrives |
 | **Doctrine** | detect-first = set posture before contact | the side that sees first chooses the engagement |
-| **Movement** *(later lever)* | dark+slow = ambush; active = picket/tripwire | a scout's posture changes what a fleet reveals |
 | **Materials/data** *(the data end)* | sensor/EMCON components cost real materials; check the other end (gotcha #10) | a new sensor/EMCON design builds from defined, stocked materials — no JSON drift |
 
 **The headline: fog-of-war gating the trigger (detection × weapons) IS the deliverable.** "It detects" (slice 1, green) is necessary, not the test. "What I can't see can't pull me into a fight, and what I choose to hide lets me strike first" is the test.
 
+## 3a. Sensors are COMPONENTS — the multi-purpose design space (sequenced by Connect)
+
+Sensors aren't one knob; they're **components you design and tune**, and the sci-fi design space is real and *applicable here*. Per Connect, each purpose earns its keep only once the thing it connects to exists — so we **architect the component layer to accept all of them, and build each when its connection is live:**
+
+| Sensor purpose | What it is | Connects to | Build when |
+|---|---|---|---|
+| **Military detection + heat** | find ships; "how hot you run" | **weapons (combat)** — live now | **M1, now** |
+| **Active illumination** | ping to flush cold/silent ships, exposing you | **combat / heat lever** — live now | **M1, now** |
+| **Counter-interference** | a sensor tuned to **see through** an obscuring cloud | needs **obscuring hazards** (don't exist yet) | when hazards exist — substrate (per-band absorption) is already there; **leave the seam** |
+| **Diagnostics** | detect *why* you've gone blind ("it's a neutrino cloud, not a fault") | needs hazards too | with counter-interference |
+| **Survey / habitability** | read a planet's atmosphere/temp for colonization | **colonization / eXplore** (M2 / v2) | when colonization is a decision — reuse the existing `GeoSurveys/` ability |
+
+The rule that keeps this from ballooning: **don't build a sensor purpose until the system it connects to is live.** A "see-through-the-cloud" sensor with no clouds is the definition of *pretty*. So M1 builds the two purposes that connect to weapons today; the rest are **component-type seams we design now and fill when their partners exist** — that's how the rich design space lands without half-building it.
+
 ## 4. How it all COMES TOGETHER (the target)
 
-One sentence: **you pick an emissions posture; that sets how far you see and how far you're seen; combat only acts on what you detect; so seeing first is a real advantage you bet on.**
+One sentence: **how hot you run sets how far you're SEEN (and how fast/ready you are); how far you SEE is the target's heat × your sensors; combat only acts on what you detect — so a cold ship that spots a hot one first owns the engagement.**
 
 The loop, and how it **stacks** with what we already built:
-- **EMCON posture (the lever)** → sets your detection range + your signature. *Two postures to start* (Active / Dark); maybe a middle default.
-- **Fog of war (the seam)** → the battle trigger only auto-engages hostiles in your **track table**. Run dark and you can slip a fleet past a picket; run active and you'll see them coming but they'll see you.
-- **First-strike** → because engagement needs detection, the side that detects first **chooses**: pounce, or fade. That decision **stacks with the combat interrupt** — the auto-pause fires when *you* first detect/engage, handing you the doctrine call at the exact moment information arrives.
-- **Doctrine** → detecting first means you set posture *before* contact. Detection feeds the decision we already made earn its weight.
-- **Movement (later lever)** → a dark fleet on a slow approach is the ambush; an active fleet is the tripwire/picket. Detection + movement = the scouting game.
+- **Heat/emissions lever** → hot (burn / hot guns / active sensors) = fast, strong, a beacon; cold = hidden but slower/less ready. The bet is *exposure vs. capability*. **Active-to-flush:** can't find a cold ship passively? Ping it — and accept the ping paints you for everyone.
+- **Fog of war (the seam)** → the battle trigger only auto-engages hostiles in your **track table**. A cold fleet can slip past a hot picket; a hot fleet trips every picket on the way in.
+- **First-strike** → because engagement needs detection, the side that detects first **chooses**: pounce, or fade. **Stacks with the combat interrupt** — the auto-pause fires when *you* first detect/engage, handing you the doctrine call the moment information arrives.
+- **Doctrine** → detect-first means you set posture *before* contact. Detection feeds the lever we already made earn its weight.
+- **Movement** → thrust IS heat: a hard burn closes fast but announces you; a cold coast arrives unseen. Detection + movement = the approach is the gamble.
 
-The rigorous physics stays as the **under-the-hood number** the posture scales — present, but never a thing the player has to read.
+The rigorous EM physics stays the **under-the-hood number** the heat/sensor model scales — present, never something the player reads.
 
 ## 5. Open calls for YOU (before I write the build slices)
 
-1. **How many EMCON postures?** My rec: **two** — **Active** (see far / seen far) and **Dark/Passive** (see short / quiet). A third "balanced" default is easy but is it worth the menu? *(One knob that matters beats three that blur.)*
-2. **Per-fleet or per-ship posture?** Rec: **per-fleet** for v1 (matches how doctrine works), per-ship later.
-3. **Does going Active auto-trigger in a fight, or stay a deliberate choice?** Rec: **deliberate** — choosing to stay dark mid-fight (and shoot blind-ish) vs. lighting up is exactly the decision.
+1. **The heat lever — emergent or discrete?** Does "how hot you run" ride on what you're DOING (thrust / hot guns / active sensors auto-raise your signature) + an explicit "run silent" throttle, OR a discrete stance (Full / Cruise / Silent)? *(Lean: a discrete stance for legibility, with signature also nudged by activity underneath.)*
+2. **Per-fleet or per-ship?** Rec: **per-fleet** for v1 (matches how doctrine works), per-ship later.
+3. **Active sensors — a deliberate toggle?** Going active flushes hidden/cold ships but exposes you. Rec: **deliberate, default passive** — choosing to light up to find what's hiding *is* the decision.
 4. **Quality in v1: gate info, or flavor?** Rec: **flavor** for v1 (detected = you can engage); make quality gate detail later, so we don't front-load complexity.
-5. **Scope check:** EW/jamming stays parked? (Rec: yes.)
+5. **Multi-purpose sensor components in M1?** Build military-detection + heat + active/passive now, and leave **cloud-penetration / "why am I blind" / survey-habitability** as *architected-but-unbuilt seams* (they need obscuring hazards / the colonization layer to connect to). Rec: **yes — seams now, content when their connections exist** (see §3a).
+6. **EW/jamming stays parked?** Rec: yes.
 
 ## 6. Build sequence (once §3/§5 are signed off) — each a bounded, gauged slice
 
 1. **Gauge the engine** ✅ **DONE (CI-green, `666d555`)** — a fleet detects a hostile fleet; Sensors DARK → verified.
 2. **Fog-of-war seam — THE real test (detection × weapons).** The battle trigger consumes the track table (`GetSensorContacts`) instead of raw entities; an undetected hostile doesn't engage. CI-gauge: out-of-range hostile → no battle; detected → battle. Slice 1 ("it detects") was only the precondition — *this* is where detection earns its weight by changing combat. *(Engine-side, I can do solo.)*
-3. **EMCON lever** — a `FleetEmconDB` / posture enum that scales detection range + emitted signature, reusing the existing model. CI-gauge: Dark detects/ is-detected at shorter range than Active; the asymmetry holds. *(Engine-side.)*
+3. **The heat lever** — a `FleetEmconDB` / heat-state that scales your **emitted signature** (and is nudged by activity), reusing the existing signature model; plus the active-ping-exposes-you coupling. CI-gauge: a **cold** ship is detected at *shorter* range than a **hot** one (you're harder to see when cold), while a cold ship still detects a hot one at long range (your own heat doesn't reduce how far you *see*) — the asymmetry is the gameplay. *(Engine-side.)*
 4. **First-strike falls out** — verify the detected-first side gets the interrupt/initiative; gauge the asymmetry. *(Engine-side.)*
 5. **UI** — contacts as blips, EMCON toggle, range ring. *(Your local build; CI can't see the client.)*
 
