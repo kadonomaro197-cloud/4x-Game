@@ -4,6 +4,7 @@ using Pulsar4X.Fleets;
 using Pulsar4X.Movement;
 using Pulsar4X.Orbital;
 using Pulsar4X.Ships;
+using Pulsar4X.Names;
 
 namespace Pulsar4X.Combat
 {
@@ -130,6 +131,23 @@ namespace Pulsar4X.Combat
             return fleets.Count;
         }
 
+        /// <summary>When true, the engine narrates each fight (engage / casualties / retreat / disengage) to the
+        /// captured log (game_log.txt) as plain-language <c>[Combat]</c> lines, so a live battle is visible there and
+        /// not only in the Fleet Combat tab. Default FALSE so it never slows the timed battle tests; the client turns
+        /// it on at startup. Logged on STATE CHANGES only (never per-tick) so it reads like a play-by-play.</summary>
+        public static bool NarrateToLog = false;
+
+        private static void CombatLog(string msg)
+        {
+            if (NarrateToLog) System.Console.WriteLine("[Combat] " + msg);
+        }
+
+        private static string FleetLabel(Entity fleet)
+        {
+            if (fleet == null || !fleet.IsValid) return "(gone)";
+            return (fleet.TryGetDataBlob<NameDB>(out var n) ? n.OwnersName : "Fleet") + " #" + fleet.Id;
+        }
+
         /// <summary>Attach combat state to both fleets, each pointing at the other as its (representative) opponent
         /// and recording its starting ship count (the denominator for the casualty-fraction retreat threshold).
         /// The proven entry point for a controlled two-fleet matchup; multi-party joins go through
@@ -138,6 +156,7 @@ namespace Pulsar4X.Combat
         {
             fleetA.SetDataBlob(new FleetCombatStateDB(fleetB.Id, GetFleetShips(fleetA).Count));
             fleetB.SetDataBlob(new FleetCombatStateDB(fleetA.Id, GetFleetShips(fleetB).Count));
+            CombatLog($"{FleetLabel(fleetA)} vs {FleetLabel(fleetB)} — engaged");
         }
 
         /// <summary>Put a fleet "in combat" if it isn't already — the JOIN primitive. Idempotent: a fleet already
@@ -148,6 +167,7 @@ namespace Pulsar4X.Combat
         {
             if (fleet == null || !fleet.IsValid || fleet.HasDataBlob<FleetCombatStateDB>()) return;
             fleet.SetDataBlob(new FleetCombatStateDB(representativeOpponentId, GetFleetShips(fleet).Count));
+            CombatLog($"{FleetLabel(fleet)} enters combat ({GetFleetShips(fleet).Count} ship(s))");
         }
 
         /// <summary>Advance a two-fleet engagement by dt game-seconds. This is the n=2 special case of
@@ -271,7 +291,10 @@ namespace Pulsar4X.Combat
         public static void EndEngagement(Entity fleet)
         {
             if (fleet != null && fleet.IsValid && fleet.HasDataBlob<FleetCombatStateDB>())
+            {
+                CombatLog($"{FleetLabel(fleet)} disengages ({GetFleetShips(fleet).Count} ship(s) left)");
                 fleet.RemoveDataBlob<FleetCombatStateDB>();
+            }
         }
 
         // --- helpers -------------------------------------------------------
@@ -333,6 +356,7 @@ namespace Pulsar4X.Combat
                 return byRole != 0 ? byRole : y.Landed.CompareTo(x.Landed); // then most-hittable first
             });
 
+            int totalKilled = 0;
             foreach (var b in ordered)
             {
                 // How many WHOLE ships from this bucket the pool can afford (guard div-by-zero + int overflow).
@@ -349,12 +373,16 @@ namespace Pulsar4X.Combat
                 {
                     state.DamageTakenPool -= kills * b.EffToughness;
                     for (int i = 0; i < kills; i++) b.Ships[i].Destroy(); // reify the count back to real entities
+                    totalKilled += kills;
                 }
                 if (kills < b.Ships.Count) break; // pool ran out inside this bucket -> stop (matches per-ship break)
             }
 
             // Drop the dead (Destroy() flips IsValid synchronously) so the caller's survivor count is accurate.
             ships.RemoveAll(cs => !cs.Ship.IsValid);
+
+            if (totalKilled > 0 && NarrateToLog)
+                CombatLog($"salvo {state.StepsFought}: {FleetLabel(state.OwningEntity)} lost {totalKilled} ship(s), {ships.Count} left");
         }
 
         /// <summary>A group of interchangeable ships in the casualty step — same doctrine posture + same combat
@@ -486,6 +514,7 @@ namespace Pulsar4X.Combat
                     vector = diff / len;
             }
             fleet.SetDataBlob(new FleetRetreatDB(vector, enemy.Id));
+            CombatLog($"{FleetLabel(fleet)} breaks off — retreats from {FleetLabel(enemy)}");
         }
 
         /// <summary>All live ships in a fleet, recursing into sub-fleets (fleet components).</summary>
