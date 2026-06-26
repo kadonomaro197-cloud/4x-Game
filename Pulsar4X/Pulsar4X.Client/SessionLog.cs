@@ -10,9 +10,11 @@ namespace Pulsar4X.Client
 {
     /// <summary>
     /// Session recorder — a readable play-by-play of the player's actions + periodic state, written to the
-    /// captured log (Console is redirected to game_log.txt in the repo root; see Program.cs). Every line is
-    /// FLUSHED immediately, so a crash or freeze still leaves the full trail up to that instant. Categories keep
-    /// the log greppable: [ACTION] [VIEW] [TIME] [CAMERA] [SELECT] [DRAG] [STATE]. Toggle the whole thing with
+    /// captured log (Console is redirected into rolling read-sized pages under game_logs/ in the repo root, so a
+    /// whole session reads start-to-finish without a "file too large" wall; see Program.cs / RotatingLogWriter.cs).
+    /// Every line is FLUSHED immediately, so a crash or freeze still leaves the full trail up to that instant.
+    /// Categories keep the log greppable: [ACTION] [VIEW] [TIME] [CAMERA] [SELECT] [DRAG] [STATE] [DETECT] [EMCON]
+    /// [ENGINE] (plus engine-side [Combat]/[FleetCombat]/[DevTools]). Toggle the whole thing with
     /// <see cref="Enabled"/>. This is the "flight recorder" — the point is that a future bug report IS the log,
     /// instead of "reproduce it and send a log."
     /// </summary>
