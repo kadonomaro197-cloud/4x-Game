@@ -651,3 +651,11 @@ The developer merged the branch to `main`, played, and crashed — then committe
 - **The teleport bug reproduced (repro captured for the root-fix pass).** After `[ACTION] move order: fleet #629 -> 'Jupiter' (warp)`, the heartbeat flagged `⚠ TELEPORT ship #630/#632 faction=621 parent=ROOT/null moveType=Warp` — the pre-existing warp-detach. Concrete repro now in hand (warp order → ships detach to null parent mid-warp). Still the deliberate next root-fix (don't blind-fix; no warp-position test exists).
 
 **Lessons reinforced:** `a[x].b[y]` is TWO hard indexes — guarding the leaf isn't enough; guard every level from a UI path. And the gauge built BEFORE the test is what turned "it crashed" into "here's the exact line, and proof the engines were live." Visibility Gate, paid out.
+
+### Two gauge upgrades from the first live test (2026-06-26)
+
+Answering "any additional sensors to make the logs better," driven by the crash + the warp false-alarm:
+- **`[InputError]` — the input-side SafeRender.** `PulsarMainWindow.HandleEvent` now wraps event dispatch in try/catch: a throwing click/key handler logs `[InputError] …` once and the event loop continues, instead of the SDL loop (which has no try/catch) killing the whole process and dumping the trace only to `console_output.txt`. This is the net that would have made today's click crash a one-line log entry. Render faults → `[RenderError]`, input faults → `[InputError]`, both isolated + logged in the pages.
+- **Teleport detector is now warp-aware.** It was crying wolf on every warp: a warping ship is reparented to the system root (null parent) ON PURPOSE, which the old detector read as "teleported." Now it flags only **AT-SUN** (position collapsed to origin — the real bug) or **ORPHANED** (null parent while NOT warping). The developer's "ships looked like they were en route to Jupiter" was exactly right — they were fine; the gauge was wrong. (`SessionLog.CheckForTeleports`.)
+
+Both client-only (CI-blind). **Lesson: a gauge that cries wolf is worse than no gauge — tune it against ground truth** (the visual confirmed the ships were fine, so the detector, not the ships, was at fault).

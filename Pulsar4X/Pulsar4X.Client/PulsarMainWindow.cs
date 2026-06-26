@@ -161,6 +161,31 @@ namespace Pulsar4X.Client
 
         public override void HandleEvent(SDL.Event e)
         {
+            // Input-side sibling of SafeRender: SDL3Window.PollEvents has NO try/catch, so an exception in any
+            // click/key handler used to crash the WHOLE process — and the trace reached only console_output.txt,
+            // not the rotating game_logs pages. Catch it, log ONCE per signature as [InputError], and let the event
+            // loop continue: a bad click does nothing instead of killing the game, and it names itself in the log.
+            // (This is exactly what would have turned the 2026-06-26 StarSystemStates click crash into a logged,
+            // survivable event — gotcha #14.)
+            try
+            {
+                DispatchEvent(e);
+            }
+            catch (Exception ex)
+            {
+                string sig = "input|" + ((SDL.EventType)e.Type) + "|" + ex.GetType().Name + "|" + ex.Message;
+                if (_loggedRenderErrors.Add(sig))
+                {
+                    Console.WriteLine("[InputError] event " + ((SDL.EventType)e.Type)
+                        + " handler threw and was skipped (logged once per unique error). Fix the cause:");
+                    Console.WriteLine(ex.ToString());
+                    Console.Out.Flush();
+                }
+            }
+        }
+
+        void DispatchEvent(SDL.Event e)
+        {
             (float mX, float mY, SDL.MouseButtonFlags mouseFlags) = GetMouseState();
 
             if (mX != mouseX || mY != mouseY)
