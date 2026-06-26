@@ -77,6 +77,9 @@ using (logWriter)
     using (var pulsar = new PulsarMainWindow(args))
     {
         pulsar.Run();
+        // Clean-exit summary: only printed when Run() RETURNS normally, so a [STATE] session summary line in the
+        // log proves the game quit cleanly — its absence (vs a [HANG]/[FATAL]) means it crashed or froze.
+        try { Console.WriteLine("[STATE] session summary — " + pulsar.SessionSummary()); Console.Out.Flush(); } catch { }
     }
 
     Console.WriteLine($"=== Session ended {DateTime.Now:yyyy-MM-dd HH:mm:ss} ===");
