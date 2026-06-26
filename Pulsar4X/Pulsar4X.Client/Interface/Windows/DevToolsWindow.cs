@@ -402,6 +402,18 @@ namespace Pulsar4X.Client
                 if (ImGui.Checkbox("Fog of War — detection-gated combat (first-strike)##devfow", ref CombatEngagement.RequireDetectionToEngage))
                     DevLog($"Fog of war (RequireDetectionToEngage) = {CombatEngagement.RequireDetectionToEngage}");
 
+                // On-demand detection/EMCON snapshot to the log (the same thing the ~3 s heartbeat writes) — for
+                // grabbing the picture at a precise moment. The heartbeat already logs it periodically.
+                if (ImGui.Button("Dump Detection (log)##devdumpdetect"))
+                {
+                    try
+                    {
+                        SessionLog.DetectionSnapshot(_uiState.SelectedSystem, _uiState.PlayerFaction);
+                        DevLog("Dumped detection/EMCON snapshot to the log.");
+                    }
+                    catch (Exception ex) { DevLog($"Dump Detection FAILED: {ex.Message}"); }
+                }
+
                 // Live signature readout for the clicked entity — watch it climb when a ship runs hot / thrusts /
                 // fires (the EMCON activity model) and drop when it goes Silent. Defensive: tolerates no selection.
                 var clickedEnt = _uiState.LastClickedEntity;
