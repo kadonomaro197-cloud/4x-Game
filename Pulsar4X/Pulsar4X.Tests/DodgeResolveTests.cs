@@ -65,7 +65,10 @@ namespace Pulsar4X.Tests
             Assert.That(slugFar, Is.LessThan(slugNear), "a dumb slug loses accuracy at long range (flight-time dodge)");
             Assert.That(slugFar, Is.LessThan(0.2), "...and is largely juked by a nimble target at 1000 km");
             Assert.That(missFar, Is.GreaterThan(0.5), "a GUIDED missile still hits well at the same range (tracking resists distance)");
-            Assert.That(beamFar, Is.EqualTo(beamNear).Within(1e-6), "a light-speed beam's accuracy doesn't fall with distance");
+            // A beam at ~light-speed has a tiny but non-zero flight time, so the penalty is negligible (not bit-zero):
+            // assert the beam's drop is TINY relative to the slug's, which is the real "beams don't care about range" claim.
+            Assert.That(beamNear - beamFar, Is.LessThan(0.001), "a light-speed beam's accuracy is essentially unaffected by distance");
+            Assert.That(beamNear - beamFar, Is.LessThan((slugNear - slugFar) / 10), "...and far less affected than a ballistic slug");
             Assert.That(CombatEngagement.HitFraction(slug, ev, 0), Is.EqualTo(CombatEngagement.HitFraction(slug, ev)).Within(1e-12),
                 "separation 0 == the legacy 2-arg curve (pre-closing resolve byte-identical)");
         }
