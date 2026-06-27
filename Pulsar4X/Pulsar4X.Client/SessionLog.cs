@@ -248,6 +248,44 @@ namespace Pulsar4X.Client
                 Line("DETECT", fname + " holds " + held + " contact(s); " + others + " other-faction ship(s) in-system, detects "
                     + detected + " (" + (others - detected) + " hidden from you)");
 
+                // REACH gauge (detection-tuning diagnostic): our BEST sensor reach (how far we'd see a ship like us)
+                // vs the distance to the NEAREST enemy ship — and whether that enemy is actually detected. If the
+                // nearest enemy sits well BEYOND our reach, detection is simply too short for combat to trigger (the
+                // "sat at Luna and saw nothing" case) — this is the number that tells "tune the sensors" from "a bug".
+                double bestReach = 0; string reachShip = "";
+                foreach (var sh in ships)
+                {
+                    if (sh.FactionOwnerID != fid) continue;
+                    double r = SensorTools.SensorReachRange_m(sh);
+                    if (r > bestReach) { bestReach = r; reachShip = sh.TryGetDataBlob<NameDB>(out var rn) ? rn.OwnersName : ("#" + sh.Id); }
+                }
+                double nearestEnemy = double.MaxValue; bool nearestDetected = false;
+                foreach (var en in ships)
+                {
+                    if (en.FactionOwnerID == fid) continue;
+                    if (!en.TryGetDataBlob<PositionDB>(out var ep)) continue;
+                    var epos = ep.AbsolutePosition;
+                    foreach (var myShip in ships)
+                    {
+                        if (myShip.FactionOwnerID != fid) continue;
+                        if (!myShip.TryGetDataBlob<PositionDB>(out var mp)) continue;
+                        double d = (epos - mp.AbsolutePosition).Length();
+                        if (d < nearestEnemy)
+                        {
+                            nearestEnemy = d;
+                            nearestDetected = contacts != null && contacts.SensorContactExists(en.Id);
+                        }
+                    }
+                }
+                if (bestReach > 0 || nearestEnemy < double.MaxValue)
+                {
+                    string reachStr = (bestReach / 1e9).ToString("0.###") + " Gm";
+                    string nearStr = nearestEnemy < double.MaxValue
+                        ? (nearestEnemy / 1e9).ToString("0.###") + " Gm (" + (nearestDetected ? "DETECTED" : "beyond reach / undetected") + ")"
+                        : "no enemy ships";
+                    Line("REACH", "best sensor reach " + reachStr + " (" + reachShip + "); nearest enemy " + nearStr);
+                }
+
                 // This faction's own ships' EMCON signature (1.0 = as-designed; <1 quiet/Silent; >1 loud/running hot).
                 int mine = 0, hot = 0, dark = 0, blind = 0;
                 double loudest = double.MinValue, quietest = double.MaxValue;
