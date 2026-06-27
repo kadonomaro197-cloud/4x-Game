@@ -41,6 +41,35 @@ namespace Pulsar4X.Tests
             Assert.That(flakVsFighter, Is.GreaterThan(slugVsFighter), "flak fills the sky — harder to dodge than a single slug");
         }
 
+        [Test]
+        [Description("RANGE degrades ballistic accuracy (the 'pay to play' closing model): at a long separation a " +
+                     "dumb slug is largely juked by an evasive target, while a GUIDED weapon (high tracking) still " +
+                     "hits and a light-speed BEAM is unaffected by distance entirely. separation 0 reproduces the " +
+                     "legacy 2-arg curve exactly, so the pre-closing resolve is byte-identical.")]
+        public void HitFraction_RangeDegradesBallistics_NotBeamsOrGuided()
+        {
+            var beam    = new WeaponProfile(WeaponClass.Beam, 1000, 3e8, 0.95, 0.5);     // light-speed
+            var slug    = new WeaponProfile(WeaponClass.Railgun, 1000, 5_000, 0.05, 5);  // slow, DUMB (low tracking)
+            var missile = new WeaponProfile(WeaponClass.Missile, 1000, 5_000, 0.9, 5);   // slow but GUIDED (high tracking)
+
+            const double ev = 0.9;            // a nimble target
+            const double far = 1_000_000.0;   // a 1000 km gap
+
+            double slugNear = CombatEngagement.HitFraction(slug, ev, 0);
+            double slugFar  = CombatEngagement.HitFraction(slug, ev, far);
+            double missFar  = CombatEngagement.HitFraction(missile, ev, far);
+            double beamNear = CombatEngagement.HitFraction(beam, ev, 0);
+            double beamFar  = CombatEngagement.HitFraction(beam, ev, far);
+            Log($"slug near={slugNear:0.###} far={slugFar:0.###} | missile far={missFar:0.###} | beam near={beamNear:0.###} far={beamFar:0.###}");
+
+            Assert.That(slugFar, Is.LessThan(slugNear), "a dumb slug loses accuracy at long range (flight-time dodge)");
+            Assert.That(slugFar, Is.LessThan(0.2), "...and is largely juked by a nimble target at 1000 km");
+            Assert.That(missFar, Is.GreaterThan(0.5), "a GUIDED missile still hits well at the same range (tracking resists distance)");
+            Assert.That(beamFar, Is.EqualTo(beamNear).Within(1e-6), "a light-speed beam's accuracy doesn't fall with distance");
+            Assert.That(CombatEngagement.HitFraction(slug, ev, 0), Is.EqualTo(CombatEngagement.HitFraction(slug, ev)).Within(1e-12),
+                "separation 0 == the legacy 2-arg curve (pre-closing resolve byte-identical)");
+        }
+
         // --- the dodge flowing through the resolve ---------------------------------------------------------
         private static Entity MakeFleet(TestScenario s, Entity faction, string name)
             => FleetFactory.Create(s.StartingSystem, faction.Id, name);

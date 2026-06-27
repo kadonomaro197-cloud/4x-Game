@@ -277,11 +277,21 @@ toughness ÷ the **landed fraction** of the incoming fire, and ships fall **most
 slow hull dies while the nimble fighter holds — the developer's acceptance test.
 
 **The math (all in `CombatEngagement`, see `docs/WEAPONS-AND-DODGE-DESIGN.md`):**
-- `HitFraction(weapon, evasion)` (internal, unit-tested): `velocityTerm = velocity/(velocity+VelocityReference)`;
+- `HitFraction(weapon, evasion, separation_m = 0)` (internal, unit-tested): `velocityTerm = velocity/(velocity+VelocityReference)`;
   `trackingEffectiveness = max(velocityTerm, tracking)`; `dodgeChance = evasion × (1 − trackingEffectiveness)`;
   result `= clamp(1 − dodgeChance, saturationFloor, 1)`. A beam (≈light-speed) → ~1 (can't dodge light); a slug
   (finite, ballistic) → low vs the evasive; flak's high saturation floors it up.
-- `LandedFraction(fireMix, evasion)` = damage-weighted average `HitFraction` over the mix.
+- **RANGE term — accuracy falls off with distance (2026-06-27, the "authentic closing" pass).** When a closing
+  `separation_m > 0` is in play, `dodgeChance` gains `evasion × timeFactor × (1 − tracking)` where
+  `timeFactor = flightTime/(flightTime + FlightTimeReference_s)` and `flightTime = separation/velocity`. So a shot
+  that takes longer to cross the gap is easier to dodge — a **dumb slug** loses a lot of accuracy at range, a
+  **guided** weapon (high `Tracking`) barely any, and a **beam** (≈light-speed → ~0 flight time) **none**. This is
+  what makes the closing fight authentic: railguns harass inaccurately from afar and want to close, missiles hold
+  accuracy at standoff, beams knife-fight. **`separation_m = 0` (closing off / point blank) zeroes the term, so the
+  pre-closing resolve is byte-identical** — threaded as a default-0 param through `LandedFraction` → `ApplyCasualties`
+  (the caller passes `SeparationOf(defender)`). Tunable: `FlightTimeReference_s` (default 10 s). Gauge:
+  `DodgeResolveTests.HitFraction_RangeDegradesBallistics_NotBeamsOrGuided`.
+- `LandedFraction(fireMix, evasion, separation_m = 0)` = damage-weighted average `HitFraction` over the mix.
 - Effective toughness in `ApplyCasualties` = `Toughness × ToughnessMult ÷ LandedFraction`.
 
 **Backward-compatible (the green spine stays green).** A ship with **no** weapon profiles but real firepower
