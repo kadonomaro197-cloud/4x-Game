@@ -167,5 +167,35 @@ namespace Pulsar4X.Tests
             Assert.That(dark, Is.LessThan(full), "running Silent shrinks the self-detection ring (you and a ship like you are both quieter)");
             Assert.That(restored, Is.EqualTo(full).Within(1e-6).Percent, "back to Full restores the ring — the lever is reversible");
         }
+
+        [Test]
+        [Description("DetectionRangeAgainst(detector, target) reads the TARGET's real signature: the same enemy ship " +
+                     "is picked up farther off when it runs hot (Full) than when it goes Silent. This is the honest " +
+                     "'detectability bubble' a ring-against-the-selected-enemy draws — range depends on the specific target.")]
+        public void DetectionRangeAgainst_LoudTargetSeenFartherThanQuiet()
+        {
+            var s = TestScenario.CreateWithColony();
+            var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+
+            var designs = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns;
+            var design = designs.TryGetValue("default-ship-design-test-capital", out var cap) ? cap : designs.Values.First();
+
+            var watcher = ShipFactory.CreateShip(design, s.Faction, s.StartingBody, "Watcher");   // carries the receiver
+
+            var bogey = ShipFactory.CreateShip(design, s.Faction, s.StartingBody, "Bogey");        // emits a signature
+            bogey.FactionOwnerID = enemyFaction.Id;
+            var enemyFleet = FleetFactory.Create(s.StartingSystem, enemyFaction.Id, "Red Squadron");
+            s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(enemyFaction.Id, enemyFleet, bogey));
+
+            FleetEmcon.SetPosture(enemyFleet, EmconPosture.Full);
+            double loud = SensorTools.DetectionRangeAgainst(watcher, bogey);
+
+            FleetEmcon.SetPosture(enemyFleet, EmconPosture.Silent);
+            double quiet = SensorTools.DetectionRangeAgainst(watcher, bogey);
+
+            Log($"detection bubble vs the bogey: Full={loud:N0} m  Silent={quiet:N0} m  ratio={quiet / loud:F3}");
+            Assert.That(loud, Is.GreaterThan(0), "a sensing ship must detect a loud emitting target at some range");
+            Assert.That(quiet, Is.LessThan(loud), "the same target running Silent is picked up closer in — range reads the target's signature");
+        }
     }
 }

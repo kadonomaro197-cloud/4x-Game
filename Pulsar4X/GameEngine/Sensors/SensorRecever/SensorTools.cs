@@ -465,6 +465,24 @@ namespace Pulsar4X.Sensors
         }
 
         /// <summary>
+        /// "How far can THIS ship pick up THAT specific target?" — the honest version of the self-ring, against a
+        /// real enemy instead of a ship-like-me reference. Uses the detector's best receiver and the target's actual
+        /// signature, so a LOUD target (running hot) yields a bigger range than the same target gone Silent. Drawn
+        /// as a "detectability bubble" around the target: if the detector is inside it, it sees the target. Returns
+        /// 0 if the detector can't sense (no/destroyed receivers) or the target has no signature.
+        /// </summary>
+        public static double DetectionRangeAgainst(Entity detector, Entity target)
+        {
+            if (detector == null || target == null)
+                return 0;
+            if (!TryGetBestReceiver(detector, out var receiver))
+                return 0;
+            if (!target.TryGetDataBlob<SensorProfileDB>(out var profile))
+                return 0;
+            return DetectionRange_m(receiver, profile);
+        }
+
+        /// <summary>
         /// Probibly only needs to be done at star creation, unless we do funky stuff like change a stars temprature and stuff.
         /// </summary>
         /// <returns>The star emmision sig.</returns>
