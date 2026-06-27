@@ -58,8 +58,11 @@ namespace Pulsar4X.Tests
             foreach (var r in rows)
             {
                 Assert.That(r.maxRange, Is.GreaterThan(0), "a reported beam row must have a finite (non-legacy) MaxRange");
-                Assert.That(r.optimalRange, Is.LessThanOrEqualTo(r.maxRange),
-                    "optimal (full-energy) range can't exceed the hard MaxRange cutoff");
+                // NOTE: optimalRange (focal length) and maxRange (hard cutoff) are INDEPENDENT design knobs — the
+                // base-mod laser ships focal length 1,000,000 m vs MaxRange 5,000 m, so optimal can exceed max (the
+                // whole firing envelope is then inside optimal = no falloff). So we only assert it's reported, not
+                // any ordering between the two.
+                Assert.That(r.optimalRange, Is.GreaterThanOrEqualTo(0), "optimal range is reported (a real, non-negative number)");
             }
         }
 
