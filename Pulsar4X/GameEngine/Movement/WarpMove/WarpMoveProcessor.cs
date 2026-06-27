@@ -185,7 +185,6 @@ namespace Pulsar4X.Movement
 
             var warpDB = entity.GetDataBlob<WarpAbilityDB>();
             var positionDB = entity.GetDataBlob<PositionDB>();
-            var maxSpeedMS = warpDB.MaxSpeed;
             var powerDB = entity.GetDataBlob<EnergyGenAbilityDB>();
             EnergyGenProcessor.EnergyGen(entity, entity.StarSysDateTime);
             
@@ -197,6 +196,10 @@ namespace Pulsar4X.Movement
 
 
             var moveDB = entity.GetDataBlob<WarpMovingDB>();
+            // The speed the ship ACTUALLY travels at: the fleet cap (slowest unit) when moving as a fleet, else its
+            // own MaxSpeed. Reading WarpAbilityDB.MaxSpeed here was THE bug that let a fast ship race ahead on a
+            // fleet move even though the cap was correctly baked into the ETA. 0 (old save) → fall back to MaxSpeed.
+            var maxSpeedMS = moveDB.WarpSpeed_mps > 0 ? moveDB.WarpSpeed_mps : warpDB.MaxSpeed;
             var tgt = moveDB.TargetEntity.GetDataBlob<PositionDB>();
             var tgtpos = tgt.AbsolutePosition;
             moveDB._position = (Vector2)positionDB.AbsolutePosition;
@@ -205,7 +208,7 @@ namespace Pulsar4X.Movement
             double totalDistance = postionDelta.Length();
 
             var creationCost = warpDB.BubbleCreationCost;
-            var t = totalDistance / warpDB.MaxSpeed;
+            var t = totalDistance / maxSpeedMS;
             var tcost = t * warpDB.BubbleSustainCost;
             double estored = powerDB.EnergyStored[warpDB.EnergyType];
             bool canStart = false;

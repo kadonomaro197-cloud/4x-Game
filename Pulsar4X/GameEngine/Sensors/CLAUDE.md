@@ -51,8 +51,22 @@
 
 Attenuation (from `SensorTools.AttenuationCalc`):
 ```
-AttenuatedPower = sourcePower / (4π × distance²)
+AttenuatedPower = sourcePower × DetectionSensitivityScale / (4π × distance²)
 ```
+
+**`DetectionSensitivityScale` (1e6, added 2026-06-27) — the detection-range tuning dial.** The raw inverse-square
+law was so harsh at realistic scales that a ship detected another ship at only **~292 km** (measured by
+`DetectionTuningTests`). With fog of war on, that meant a fleet could sit AT a body and never see the hostiles
+parked there, **and combat — which needs mutual detection — could never trigger** (the developer's "sat at Luna,
+saw nothing, no battle" play-test, 2026-06-27). This is the long-standing in-code TODO ("the default sensor on
+Earth doesn't even detect Uranus"). The scale multiplies the received signal **uniformly**, so detection RANGE
+scales by its **square root**: 1e6 → ~1000× range → a ship sees a ship at **~0.29 Gm**. That covers same-body
+combat + modest approach warning, while staying far below the ~60 Gm inner-system scale, so **fog of war is
+preserved** (you do NOT see the whole system). Because it's uniform, every RELATIVE result (loud-seen-farther,
+shrinks-on-Silent, the EMCON ladder) is unchanged — only the absolute reach moves. Applied in `AttenuationCalc` +
+`AttenuationFactor` (the live scan) AND `RangeForSignal` (the readout), so the scan and the "how far can I see"
+number stay in exact agreement. Gauges: `DetectionTuningTests` (ship-vs-ship clears the 0.1 Gm combat floor; reach
+stays under the fog ceiling). Tunable like Combat's `SalvoDamageScale` — one number for the whole detection feel.
 
 Detection quality: triangular overlap between sensor's waveform band and signal's waveform band. Signal must overlap the sensor's peak sensitivity region to score high quality.
 

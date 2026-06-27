@@ -53,6 +53,11 @@ namespace Pulsar4X.Client
         ulong _combatBannerUntilTick = 0;
         ulong _lastFrameMsTick = 0;       // [PERF] slow-frame gauge: SDL tick of the previous frame
         ulong _lastSlowFrameLogTick = 0;  // throttle so a sustained slowdown doesn't flood the log
+        // [PERF] per-stage frame breakdown — filled each frame, logged on a slow frame so the next play-test names
+        // WHICH stage is heavy (state-update/transforms vs map SDL-draw vs ImGui windows), not just "a slow frame".
+        ulong _perfUpdateMs = 0;   // _state.Update() — window state + the map's per-frame transform loops
+        ulong _perfMapDrawMs = 0;  // GalacticMap.Draw() — the SDL line rasterisation (orbits/rings/icons)
+        ulong _perfUiMs = 0;       // RenderUI() — name icons + every ImGui window's Display()
 
         // Render-loop crash visibility: a window's Display() or the map draw can throw (e.g. inspecting a
         // foreign/NPC entity whose faction has locked/empty data). The SDL Run loop has no try/catch, so an
@@ -282,7 +287,9 @@ namespace Pulsar4X.Client
                 }
             }
 
+            var tUpdate = SDL.GetTicks();
             _state.Update();
+            _perfUpdateMs = SDL.GetTicks() - tUpdate;
         }
 
         public override void Render()
@@ -290,10 +297,14 @@ namespace Pulsar4X.Client
             base.Render();
 
             // Render the game (isolated so a map-draw fault logs + is skipped, not a hard crash)
+            var tMap = SDL.GetTicks();
             SafeRender("GalacticMap.Draw", () => _state.GalacticMap?.Draw());
+            _perfMapDrawMs = SDL.GetTicks() - tMap;
 
             // Render the UI
+            var tUi = SDL.GetTicks();
             RenderUI();
+            _perfUiMs = SDL.GetTicks() - tUi;
 
             // If in DEBUG render the git hash as the version in the corner of the screen
 #if DEBUG
@@ -358,7 +369,9 @@ namespace Pulsar4X.Client
             if (frameMs > 250 && now - _lastSlowFrameLogTick > 1000)
             {
                 _lastSlowFrameLogTick = now;
-                SessionLog.State("⏱ slow frame " + frameMs + "ms — something heavy this frame (watch the trend; zoom/render?)");
+                SessionLog.State("⏱ slow frame " + frameMs + "ms — stage breakdown: update(state+transforms) "
+                    + _perfUpdateMs + " / map-draw(SDL lines) " + _perfMapDrawMs + " / ui(windows) " + _perfUiMs
+                    + " ms — the biggest number is the culprit");
             }
 
             if (_state.IsGameLoaded && now - _lastHeartbeatTick >= 3000)
