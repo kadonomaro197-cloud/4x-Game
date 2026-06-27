@@ -761,7 +761,7 @@ namespace Pulsar4X.Client
         // Compute once per fleet selection instead. (Stale after an EMCON/loadout change until you reselect the
         // fleet — same trade-off as the rings; the readout is a glance, not a live telemetry feed.)
         private FleetDB? _rangeCacheFleet;
-        private readonly Dictionary<int, (double beam, double sensor)> _shipRangeCache = new();
+        private readonly Dictionary<int, (double beam, double reach, double detect)> _shipRangeCache = new();
 
         private void EnsureRangeCache()
         {
@@ -770,11 +770,14 @@ namespace Pulsar4X.Client
             _shipRangeCache.Clear();
             if (selectedFleetDB == null) return;
             foreach (var ship in selectedFleetDB.GetChildren().Where(c => c.IsValid && !c.HasDataBlob<FleetDB>()))
-                _shipRangeCache[ship.Id] = (WeaponUtils.GetMaxBeamRange_m(ship), SensorTools.SelfDetectionRange_m(ship));
+                _shipRangeCache[ship.Id] = (
+                    WeaponUtils.GetMaxBeamRange_m(ship),        // beam reach (how far it can SHOOT)
+                    SensorTools.SensorReachRange_m(ship),       // sensor reach (how far it can SEE — stable vs your EMCON)
+                    SensorTools.DetectabilityRange_m(ship));    // detectability (how far it can BE SEEN — moves with activity)
         }
 
-        private (double beam, double sensor) ShipRanges(int shipId)
-            => _shipRangeCache.TryGetValue(shipId, out var v) ? v : (0, 0);
+        private (double beam, double reach, double detect) ShipRanges(int shipId)
+            => _shipRangeCache.TryGetValue(shipId, out var v) ? v : (0, 0, 0);
 
         private void ClearRangeRings()
         {
@@ -809,13 +812,21 @@ namespace Pulsar4X.Client
                     _rangeRingKeys.Add(key);
                 }
 
-                double reach = SensorTools.SelfDetectionRange_m(ship);
+                double reach = SensorTools.SensorReachRange_m(ship);   // how far it can SEE (stable vs your EMCON)
                 if (reach > 0)
                 {
                     string key = "rangering_sensor_" + ship.Id;
                     render.UIWidgets[key] = new SimpleCircle(pos, Pulsar4X.Orbital.Distance.MToAU(reach),
                         new SDL3.SDL.Color { R = 80, G = 210, B = 110, A = 70 });   // green: how far it can SEE
-                                                                                    // (blue is already used in-game)
+                    _rangeRingKeys.Add(key);
+                }
+
+                double detect = SensorTools.DetectabilityRange_m(ship);   // how far it can BE SEEN (moves with activity)
+                if (detect > 0)
+                {
+                    string key = "rangering_detect_" + ship.Id;
+                    render.UIWidgets[key] = new SimpleCircle(pos, Pulsar4X.Orbital.Distance.MToAU(detect),
+                        new SDL3.SDL.Color { R = 240, G = 160, B = 40, A = 80 });   // amber: how far YOU can be detected
                     _rangeRingKeys.Add(key);
                 }
             }
@@ -875,12 +886,16 @@ namespace Pulsar4X.Client
             double totalFp = 0, totalTough = 0;
             int combatants = 0;
             double fleetBeamReach = 0;   // the fleet's longest beam reach — how close it must get to open fire
+            double fleetSensorReach = 0; // the fleet's widest sensor reach — how far it can SEE (max = sensors parallel)
+            double fleetDetect = 0;      // the fleet's LOUDEST ship's detectability — how far the fleet can BE SEEN
             var classDps = new Dictionary<WeaponClass, double>();
             foreach (var ship in ships)
             {
                 if (!ship.IsValid) continue;
-                double beam = ShipRanges(ship.Id).beam;   // cached (was a per-frame engine walk)
+                var (beam, reach, detect) = ShipRanges(ship.Id);   // cached (was a per-frame engine walk)
                 if (beam > fleetBeamReach) fleetBeamReach = beam;
+                if (reach > fleetSensorReach) fleetSensorReach = reach;
+                if (detect > fleetDetect) fleetDetect = detect;
                 if (!ship.TryGetDataBlob<ShipCombatValueDB>(out var cv)) continue;
                 totalFp += cv.Firepower;
                 totalTough += cv.Toughness;
@@ -901,7 +916,23 @@ namespace Pulsar4X.Client
             // Engagement range: the longest beam reach in the fleet. This is the distance the firing processor
             // enforces (a weapon won't fire past it), now visible so the player knows how close to close.
             DisplayHelpers.PrintRow("Beam reach", fleetBeamReach > 0 ? Stringify.Distance(fleetBeamReach) : "—");
+            // The two sensor numbers, kept distinct: "Sensor reach" = how far the fleet can SEE (does NOT move with
+            // your EMCON); "Detectable at" = how far the fleet can BE SEEN (its loudest ship), which DOES move with
+            // what you're doing — go Silent / stop burning and it shrinks.
+            DisplayHelpers.PrintRow("Sensor reach", fleetSensorReach > 0 ? Stringify.Distance(fleetSensorReach) : "—");
+            DisplayHelpers.PrintRow("Detectable at", fleetDetect > 0 ? Stringify.Distance(fleetDetect) : "—");
             ImGui.Columns(1);
+
+            // Why the detectability number is what it is: the loudest ship's live activity scale (EMCON × heat).
+            var loudest = ships.Where(sh => sh.IsValid)
+                .OrderByDescending(sh => SensorTools.CurrentActivityMultiplier(sh)).FirstOrDefault();
+            if (loudest != null && loudest.IsValid)
+            {
+                double act = SensorTools.CurrentActivityMultiplier(loudest);
+                string how = act > 1.01 ? "running HOT (thrusting / firing)" : act < 0.99 ? "running quiet" : "as designed";
+                ImGui.TextDisabled($"Signature activity x{act:0.00} — {how}. Set EMCON above / stop burning to go quieter.");
+            }
+            ImGui.TextDisabled("Rings: red = your reach (shoot), green = you can SEE, amber = you can BE SEEN.");
 
             if (classDps.Count > 0)
             {
@@ -921,15 +952,16 @@ namespace Pulsar4X.Client
                 ImGui.Text("No ships in this fleet.");
                 return;
             }
-            if (ImGui.BeginTable("CombatShipTable", 7, Styles.TableFlags | ImGuiTableFlags.SizingStretchProp))
+            if (ImGui.BeginTable("CombatShipTable", 8, Styles.TableFlags | ImGuiTableFlags.SizingStretchProp))
             {
-                ImGui.TableSetupColumn("Ship", ImGuiTableColumnFlags.None, 0.24f);
-                ImGui.TableSetupColumn("Role", ImGuiTableColumnFlags.None, 0.13f);
-                ImGui.TableSetupColumn("Firepower J/s", ImGuiTableColumnFlags.None, 0.16f);
-                ImGui.TableSetupColumn("Toughness J", ImGuiTableColumnFlags.None, 0.16f);
-                ImGui.TableSetupColumn("Evasion", ImGuiTableColumnFlags.None, 0.08f);
-                ImGui.TableSetupColumn("Beam Range", ImGuiTableColumnFlags.None, 0.12f);
-                ImGui.TableSetupColumn("Sensor Reach", ImGuiTableColumnFlags.None, 0.12f);
+                ImGui.TableSetupColumn("Ship", ImGuiTableColumnFlags.None, 0.20f);
+                ImGui.TableSetupColumn("Role", ImGuiTableColumnFlags.None, 0.11f);
+                ImGui.TableSetupColumn("Firepower J/s", ImGuiTableColumnFlags.None, 0.14f);
+                ImGui.TableSetupColumn("Toughness J", ImGuiTableColumnFlags.None, 0.14f);
+                ImGui.TableSetupColumn("Evasion", ImGuiTableColumnFlags.None, 0.07f);
+                ImGui.TableSetupColumn("Beam Range", ImGuiTableColumnFlags.None, 0.11f);
+                ImGui.TableSetupColumn("Can See", ImGuiTableColumnFlags.None, 0.11f);
+                ImGui.TableSetupColumn("Seen At", ImGuiTableColumnFlags.None, 0.11f);
                 ImGui.TableHeadersRow();
                 foreach (var ship in ships)
                 {
@@ -949,11 +981,13 @@ namespace Pulsar4X.Client
                         ImGui.TableNextColumn(); ImGui.TextDisabled("—");
                         ImGui.TableNextColumn(); ImGui.TextDisabled("—");
                     }
-                    // Beam reach (how far this ship can shoot) and sensor reach (how far it can see a ship like
-                    // itself). From the per-fleet cache (was a per-frame engine walk); "—" when none.
-                    var (beam, reach) = ShipRanges(ship.Id);
+                    // Beam reach (how far it can SHOOT), "Can See" (sensor reach — stable vs your own EMCON), and
+                    // "Seen At" (detectability — how far this ship can BE detected, which moves with what it's
+                    // doing). From the per-fleet cache (was a per-frame engine walk); "—" when none.
+                    var (beam, reach, detect) = ShipRanges(ship.Id);
                     ImGui.TableNextColumn(); ImGui.Text(beam > 0 ? Stringify.Distance(beam) : "—");
                     ImGui.TableNextColumn(); ImGui.Text(reach > 0 ? Stringify.Distance(reach) : "—");
+                    ImGui.TableNextColumn(); ImGui.Text(detect > 0 ? Stringify.Distance(detect) : "—");
                 }
                 ImGui.EndTable();
             }
