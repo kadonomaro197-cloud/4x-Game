@@ -67,6 +67,28 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("The established beam-range physics, enforced in code: MaxRange is ALWAYS the outer bound. " +
+                     "Full damage at/inside OptimalRange, degraded out to MaxRange, no fire beyond. A focal length " +
+                     "set past MaxRange (a stale debug value did exactly this) is clamped to MaxRange so the falloff " +
+                     "band can never silently invert/vanish. A sane focal length is kept; unset defaults to half range.")]
+        public void BeamOptimalRange_NeverExceedsMaxRange_Invariant()
+        {
+            // Focal length 200x the range (the real base-mod placeholder bug) — must clamp to MaxRange.
+            var absurd = new Weapons.GenericBeamWeaponAtb(maxRange: 5000, waveLen: 700, jules: 1000, focalLength: 1_000_000);
+            Assert.That(absurd.OptimalRange_m, Is.EqualTo(5000).Within(1e-9),
+                "focal length beyond MaxRange must be clamped to MaxRange — the degraded band can't sit above the range");
+            Assert.That(absurd.OptimalRange_m, Is.LessThanOrEqualTo(absurd.MaxRange), "the invariant: optimal <= max, always");
+
+            // A sane focal length (inside the range) is preserved — there's a real degraded band from 2500..5000.
+            var sane = new Weapons.GenericBeamWeaponAtb(maxRange: 5000, waveLen: 700, jules: 1000, focalLength: 2500);
+            Assert.That(sane.OptimalRange_m, Is.EqualTo(2500).Within(1e-9), "a focal length below MaxRange is kept as-is");
+
+            // Unset focal length defaults to half the range (the constructor's intent).
+            var defaulted = new Weapons.GenericBeamWeaponAtb(maxRange: 5000, waveLen: 700, jules: 1000, focalLength: 0);
+            Assert.That(defaulted.OptimalRange_m, Is.EqualTo(2500).Within(1e-9), "unset focal length defaults to MaxRange * 0.5");
+        }
+
+        [Test]
         [Description("A ship with no beam weapons reports zero engagement range — the UI's signal to draw no beam ring.")]
         public void BeamRange_NoBeamWeapons_ReportsZero()
         {
