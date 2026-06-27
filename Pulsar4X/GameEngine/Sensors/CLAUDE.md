@@ -107,9 +107,27 @@ The scan only ever asks "is this target's faded signal above threshold at its *c
 - `RangeForSignal(source_kW, threshold_kW)` = `√(source / 4π·threshold)` — the exact inverse of `AttenuationCalc`. Inverts only the FIRST gate of `DetectonQuality` (a band is detectable when its attenuated magnitude > `BestSensitivity_kW`); ignores the waveform-overlap quality refinement (that shapes *how well* resolved, not *whether* seen).
 - `DetectionRange_m(receiver, target)` — how far that receiver first picks up that target: loudest band wins; **emitted** scales by the target's `ActivityMultiplier` (run hot = seen farther), **reflected** does not (going dark doesn't shrink your hull).
 - `TryGetBestReceiver(entity, out atb)` — the ship's most sensitive receiver (lowest `BestSensitivity_kW`, skipping `IsEnergyGen` solar arrays). Reads the same `SensorAbilityDB.InstanceAtributes` cache the scan uses, so a sensor-less / shot-blind ship returns false (the grave rung).
-- `SelfDetectionRange_m(entity)` — "a ship like me, running as I am, I'd first see at range R." Uses the ship's **own** `SensorProfileDB` as a magic-constant-free reference target; reads live `ActivityMultiplier`, so the value **shrinks on Silent, grows running hot** — the EMCON lever as a drawable number.
+- `SelfDetectionRange_m(entity)` — "a ship like me, running as I am, I'd first see at range R." Uses the ship's **own** `SensorProfileDB` as a magic-constant-free reference target; reads live `ActivityMultiplier`.
 
-Feeds the client (Fleet Combat tab "Sensor Reach" column + the blue map range ring). Gauged by `Pulsar4X.Tests/RangeReadoutTests.cs` (round-trip; loudest-band/activity; self-ring shrinks on Silent end-to-end). Survey + framing: `docs/INFORMATION-DELTA-DESIGN.md`. **Next honest step:** a ring *against the selected enemy contact* (`DetectionRange_m` already supports it — the UI just needs to pass that target's profile).
+**SEE vs BE-SEEN — two distinct numbers (the mislabel fix, 2026-06-27).** `SelfDetectionRange_m` reads the ship's
+LIVE activity, so it **shrinks on Silent** — which is correct for *detectability* but WRONG when drawn as "sensor
+reach" (going dark must not reduce how far YOU can see). The client ring was mislabeled this way. Now split cleanly,
+both off the same `DetectionRange_m` with the new `activityOverride` param:
+- `SensorReachRange_m(entity)` — **how far you can SEE.** Your receiver vs a reference target pinned to FULL
+  activity (`activityOverride: 1.0`), so it does **not** move with your own EMCON — only a louder/quieter *target*
+  moves it. The green map ring + the "Can See" column.
+- `DetectabilityRange_m(entity)` — **how far you can BE SEEN.** Your live emitted signature (EMCON × thrust × fire)
+  vs a receiver as good as your own; **shrinks on Silent, grows running hot** (= `SelfDetectionRange_m`, renamed for
+  intent). The amber map ring + the "Seen At" column.
+- `CurrentActivityMultiplier(entity)` — the live emitted-signature scale (1.0 = as-designed, <1 quiet, >1 hot) — the
+  driver shown next to detectability so the player sees WHY it moved.
+At Full activity reach == detectability (both at 1.0); they diverge the moment you change EMCON or burn.
+
+Feeds the client (Fleet Combat tab "Can See"/"Seen At" columns + green/amber map rings + the activity readout).
+Gauged by `Pulsar4X.Tests/RangeReadoutTests.cs` (round-trip; loudest-band/activity; self-ring shrinks on Silent;
+**+ `SensorReach_vs_Detectability_UnderEmcon`** — reach unchanged on Silent, detectability shrinks). Survey +
+framing: `docs/INFORMATION-DELTA-DESIGN.md`. **Next honest step:** a ring *against the selected enemy contact*
+(`DetectionRange_m` already supports it — the UI just needs to pass that target's profile).
 
 ## Detection-quality bug (FLAGGED, not yet fixed — `SensorTools.cs:173`)
 

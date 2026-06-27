@@ -191,6 +191,69 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("The two honest sensor numbers behave OPPOSITELY under EMCON: DETECTABILITY (how far I can be " +
+                     "SEEN) shrinks on Silent, while SENSOR REACH (how far I can SEE) does NOT — going dark hides " +
+                     "you, it doesn't blind you. At Full they're the same number (both at activity 1.0). This is the " +
+                     "fix for the mislabeled ring that used to shrink 'sensor reach' on Silent.")]
+        public void SensorReach_vs_Detectability_UnderEmcon()
+        {
+            var s = TestScenario.CreateWithColony();
+            var fleet = FleetFactory.Create(s.StartingSystem, s.Faction.Id, "Scout Force");
+
+            var designs = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns;
+            var design = designs.TryGetValue("default-ship-design-test-capital", out var cap) ? cap : designs.Values.First();
+            var ship = ShipFactory.CreateShip(design, s.Faction, s.StartingBody, "Scout");
+            s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(s.Faction.Id, fleet, ship));
+            Assert.That(ship.HasDataBlob<SensorAbilityDB>(), Is.True, "the scout must carry a sensor receiver");
+
+            FleetEmcon.SetPosture(fleet, EmconPosture.Full);
+            double reachFull = SensorTools.SensorReachRange_m(ship);
+            double detectFull = SensorTools.DetectabilityRange_m(ship);
+            Assert.That(reachFull, Is.GreaterThan(0), "a sensing, emitting ship has a non-zero reach at Full");
+            Assert.That(detectFull, Is.EqualTo(reachFull).Within(1e-6).Percent, "at Full activity, reach and detectability are the SAME number");
+
+            FleetEmcon.SetPosture(fleet, EmconPosture.Silent);
+            double reachDark = SensorTools.SensorReachRange_m(ship);
+            double detectDark = SensorTools.DetectabilityRange_m(ship);
+            Log($"reach: Full={reachFull:N0} Silent={reachDark:N0} | detectability: Full={detectFull:N0} Silent={detectDark:N0} | activity={SensorTools.CurrentActivityMultiplier(ship):F2}");
+
+            Assert.That(reachDark, Is.EqualTo(reachFull).Within(1e-6).Percent, "going Silent does NOT change how far you can SEE (reach pins target activity to 1.0)");
+            Assert.That(detectDark, Is.LessThan(detectFull), "going Silent DOES shrink how far you can be SEEN (detectability reads LIVE activity)");
+            Assert.That(SensorTools.CurrentActivityMultiplier(ship), Is.LessThan(1.0), "Silent drops the activity multiplier below 1.0");
+        }
+
+        [Test]
+        [Description("REALISM GUARDRAIL (sensor-range tuning): detection operates at a SCANNING scale — far larger " +
+                     "than weapon range. A sensor ship's reach must out-scale the beam weapon's reach by a wide " +
+                     "margin (you detect long before you can shoot). This LOCKS IN the 'sensors are a separate, " +
+                     "larger scale than weapons' principle rather than blindly retuning numbers — and the model " +
+                     "already earns it: sensitivity = tech / (antennaSize^2 * efficiency), so a bigger antenna sees " +
+                     "farther, i.e. range is PAID FOR in component size. If this ever goes red, detection has " +
+                     "collapsed to weapon-scale and THEN the base-mod sensor/signature JSON needs a tuning pass.")]
+        public void Detection_OutScalesWeaponRange_ScanningRealism()
+        {
+            var s = TestScenario.CreateWithColony();
+            var designs = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns;
+
+            // Sensor reach from a sensor-bearing hull (the capital carries a passive scanner).
+            var capital = ShipFactory.CreateShip(designs["default-ship-design-test-capital"], s.Faction, s.StartingBody, "Sensor");
+            Assert.That(capital.HasDataBlob<SensorAbilityDB>(), Is.True, "the capital must carry a sensor receiver");
+            double reach = SensorTools.SensorReachRange_m(capital);
+
+            // Beam weapon reach from a beam hull (the Aegis carries lasers).
+            var aegis = ShipFactory.CreateShip(designs["default-ship-design-test-warship"], s.Faction, s.StartingBody, "Gun");
+            double beam = WeaponUtils.GetMaxBeamRange_m(aegis);
+
+            Log($"sensor reach = {reach:N0} m ; beam range = {beam:N0} m ; ratio = {(beam > 0 ? reach / beam : 0):N0}x (detection should DWARF weapons)");
+            Assert.That(reach, Is.GreaterThan(0), "a sensor ship must have a finite reach");
+            Assert.That(beam, Is.GreaterThan(0), "a beam ship must have a finite weapon range");
+            Assert.That(reach, Is.GreaterThan(beam * 10),
+                "detection must out-scale weapon range by a WIDE margin — sensors are the long-range eyes, weapons the short-range fight");
+            Assert.That(reach, Is.LessThan(1e13),
+                "...but not absurd (under ~67 AU) — a sanity ceiling so detection isn't whole-system-wide");
+        }
+
+        [Test]
         [Description("DetectionRangeAgainst(detector, target) reads the TARGET's real signature: the same enemy ship " +
                      "is picked up farther off when it runs hot (Full) than when it goes Silent. This is the honest " +
                      "'detectability bubble' a ring-against-the-selected-enemy draws — range depends on the specific target.")]

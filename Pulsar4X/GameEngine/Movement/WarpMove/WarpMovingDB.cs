@@ -114,10 +114,12 @@ namespace Pulsar4X.Movement
         /// <param name="targetPositiondb"></param>
         /// <param name="offsetPosition">normaly you want to move to a position next to the entity, this is
         /// a position relative to the entity you're wanting to move to</param>
-        public WarpMovingDB(Entity thisEntity, Entity targetEntity, Vector3 offsetPosition, KeplerElements endpointTargetOrbit)
+        public WarpMovingDB(Entity thisEntity, Entity targetEntity, Vector3 offsetPosition, KeplerElements endpointTargetOrbit, double speedCap_m = 0)
         {
             EntryDateTime = thisEntity.Manager.ManagerSubpulses.StarSysDateTime;
-            var targetIntercept = WarpMath.GetInterceptPosition(thisEntity, targetEntity, EntryDateTime, offsetPosition);
+            // speedCap_m (> 0) makes this ship warp at the FLEET's slowest speed, so a fleet arrives together. The
+            // ETA (PredictedExitTime) bakes in here, so the cap only needs to reach GetInterceptPosition.
+            var targetIntercept = WarpMath.GetInterceptPosition(thisEntity, targetEntity, EntryDateTime, offsetPosition, speedCap_m);
 
             var startState = MoveMath.GetAbsoluteState(thisEntity);
             ExitPointAbsolute = targetIntercept.position + offsetPosition;

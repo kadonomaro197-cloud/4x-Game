@@ -59,6 +59,14 @@ namespace Pulsar4X.Combat
         /// volume of fire — nothing is truly untouchable.</summary>
         public const double MinLandedFraction = 0.02;
 
+        /// <summary>Flight time (seconds) at which a ballistic shot's RANGE penalty reaches half its max — the
+        /// "accuracy falls off with distance" knob. A shot crossing the gap takes flightTime = gap/velocity; the
+        /// longer it flies, the more the target can displace before it arrives, so it's easier to dodge at range.
+        /// A light-speed beam has ~0 flight time (no range penalty); a slow slug accrues it fast. Guided weapons
+        /// (high Tracking) correct for it. Only applies once a closing separation is set (Phase 1+); at separation
+        /// 0 the term is inert, so the pre-closing resolve is byte-identical. Tunable like SalvoDamageScale.</summary>
+        public const double FlightTimeReference_s = 10.0;
+
         /// <summary>An old-style combat value with no <c>WeaponProfile</c>s fires as if a light-speed beam that
         /// always lands — so the dodge model degrades exactly to the pre-dodge behaviour. Backward-compat.</summary>
         public const double FallbackBeamVelocity_mps = 100_000_000.0;
@@ -227,9 +235,17 @@ namespace Pulsar4X.Combat
                     if (GetFleetShips(b).Count == 0) continue;
                     if (!InRange(a, b)) continue;
                     if (!FleetHasFirepower(a) && !FleetHasFirepower(b)) continue; // no fight two unarmed fleets can resolve
-                    // In range + hostile + both manned. If EITHER isn't yet in combat, a new entry — and so the
-                    // interrupt — fires this tick. If both are already engaged, this pair is an ONGOING fight and
-                    // does NOT force fine-stepping, so the player keeps their set step size for it.
+                    // Match the engage pass's fog gate (see Tick): if combat is detection-gated, a pair that can't
+                    // yet SEE each other is NOT imminent — a battle can't form, so it must not force fine-stepping.
+                    // Without this, a fleet parked in range of UNDETECTED hostiles (e.g. yours at Earth, ~384,000 km
+                    // from a fogged Luna squadron, inside the 1e9 m EngagementRange) makes this return true forever,
+                    // so the master loop drops to 5 s sub-steps permanently and game-time grinds to a crawl — the
+                    // "time stopped moving under fog of war" live bug (2026-06-27). The imminent-gate and the
+                    // engage-gate MUST agree.
+                    if (RequireDetectionToEngage && !(FleetDetects(a, b) || FleetDetects(b, a))) continue;
+                    // In range + hostile + both manned + armed (+ detected, if fog-gated). If EITHER isn't yet in
+                    // combat, a new entry — and so the interrupt — fires this tick. If both are already engaged, this
+                    // pair is an ONGOING fight and does NOT force fine-stepping, so the player keeps their set step.
                     if (!a.HasDataBlob<FleetCombatStateDB>() || !b.HasDataBlob<FleetCombatStateDB>())
                         return true;
                 }
@@ -441,7 +457,9 @@ namespace Pulsar4X.Combat
                 // SalvoDamageScale is the combat-pace dial: only this fraction of the raw salvo energy counts
                 // toward kills, so battles play out over many salvos instead of ending in 2–4 (see the const).
                 state.DamageTakenPool += TotalDamage(incoming) * dt * SalvoDamageScale;
-                ApplyCasualties(ships[i], state, incoming); // prunes the dead from ships[i]
+                // Pass the defender's gap so ballistic fire loses accuracy at range (the range term in HitFraction).
+                // SeparationOf is 0 when closing is off, so this is inert for the pre-closing resolve.
+                ApplyCasualties(ships[i], state, incoming, SeparationOf(live[i])); // prunes the dead from ships[i]
             }
 
             // --- CLOSING phase (Phase 1): the gap moves toward the faster side's preferred range, AFTER this step's
@@ -541,7 +559,7 @@ namespace Pulsar4X.Combat
         // no new code here (docs/WEAPONS-AND-DODGE-DESIGN.md "aggregate force condition"). Behaviour matches the
         // old per-ship loop: buckets are killed combatants-first then most-hittable-first, and the pool stops at
         // the first bucket it can't finish.
-        private static void ApplyCasualties(List<CombatShip> ships, FleetCombatStateDB state, List<WeaponProfile> incomingFire)
+        private static void ApplyCasualties(List<CombatShip> ships, FleetCombatStateDB state, List<WeaponProfile> incomingFire, double separation_m = 0)
         {
             if (ships.Count == 0) return;
 
@@ -554,7 +572,7 @@ namespace Pulsar4X.Combat
                 var key = (cs.ToughnessMult, cv.Evasion, cv.Toughness, cv.RoleWeight);
                 if (!buckets.TryGetValue(key, out var b))
                 {
-                    double landed = LandedFraction(incomingFire, cv.Evasion);
+                    double landed = LandedFraction(incomingFire, cv.Evasion, separation_m);
                     b = new CasualtyBucket
                     {
                         RoleWeight = cv.RoleWeight,
@@ -829,25 +847,43 @@ namespace Pulsar4X.Combat
 
         /// <summary>The damage-weighted fraction of an incoming fire mix that LANDS on a ship with the given
         /// evasion. Beams (≈light-speed) land fully; ballistic slugs are dodged by the evasive; flak floors it.</summary>
-        private static double LandedFraction(List<WeaponProfile> fire, double evasion)
+        private static double LandedFraction(List<WeaponProfile> fire, double evasion, double separation_m = 0)
         {
             double total = 0, landed = 0;
             foreach (var w in fire)
             {
                 total += w.DamagePerSecond;
-                landed += w.DamagePerSecond * HitFraction(w, evasion);
+                landed += w.DamagePerSecond * HitFraction(w, evasion, separation_m);
             }
             return total > 0 ? landed / total : 1.0;
         }
 
-        /// <summary>Fraction of one weapon's shots that land on a target with the given evasion. Fast/guided
-        /// weapons defeat evasion (a beam ignores it); high saturation floors the result (flak fills the sky).
+        /// <summary>Fraction of one weapon's shots that land on a target with the given evasion, at the given
+        /// engagement separation. Fast/guided weapons defeat evasion (a beam ignores it); high saturation floors the
+        /// result (flak fills the sky); and RANGE degrades accuracy for ballistic weapons (the longer the shot
+        /// flies, the more the target dodges) — guided weapons resist that via Tracking. <paramref name="separation_m"/>
+        /// 0 = point blank / closing off, so the range term is inert and the result equals the pre-closing curve.
         /// Internal so the dodge curve can be unit-tested directly.</summary>
-        internal static double HitFraction(WeaponProfile w, double evasion)
+        internal static double HitFraction(WeaponProfile w, double evasion, double separation_m = 0)
         {
             double velocityTerm = w.Velocity / (w.Velocity + VelocityReference_mps);                  // beam → ~1, slug → low
             double trackingEffectiveness = velocityTerm > w.Tracking ? velocityTerm : w.Tracking;     // guided tracks even when slow
             double dodgeChance = evasion * (1.0 - trackingEffectiveness);
+
+            // RANGE term (the "accuracy falls off with distance" physics): a shot crossing the gap takes
+            // flightTime = gap/velocity; the longer it flies, the more the target displaces, so it's easier to
+            // dodge. timeFactor saturates 0→1 with flight time. Guided weapons (high Tracking) correct for it, so
+            // the penalty scales by (1 − Tracking) — a beam (≈light-speed → ~0 flight time) is unaffected, a guided
+            // missile barely loses accuracy, a dumb slug loses a lot at range. Inert at separation 0.
+            if (separation_m > 0 && w.Velocity > 0)
+            {
+                double flightTime = separation_m / w.Velocity;
+                double timeFactor = flightTime / (flightTime + FlightTimeReference_s);
+                double tracking = w.Tracking < 0 ? 0 : w.Tracking > 1 ? 1 : w.Tracking;
+                dodgeChance += evasion * timeFactor * (1.0 - tracking);
+            }
+            if (dodgeChance > 1.0) dodgeChance = 1.0;
+
             double saturationFloor = double.IsInfinity(w.Saturation) ? 1.0 : w.Saturation / (w.Saturation + SaturationReference);
             if (saturationFloor < MinLandedFraction) saturationFloor = MinLandedFraction;
 

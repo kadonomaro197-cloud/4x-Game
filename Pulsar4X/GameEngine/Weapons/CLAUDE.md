@@ -15,6 +15,31 @@ The rule going forward, for beams and every other weapon:
 
 Before changing any `Range`/`MaxRange`/`OptimalRange` value, re-read this — the instinct to make ranges "playable-big" is the thing we're deliberately resisting.
 
+### Start realistic → climb to sci-fi through RESEARCH (developer's call, 2026-06-27)
+
+**Every component starts at a physically-honest baseline; RESEARCH is what pushes it toward sci-fi.** A starting
+laser is a real ~5 km knife-fight laser; a **Muon laser** (or whatever the tech tree unlocks) is the *researched*
+upgrade that makes lasers genuinely more powerful/longer-ranged. The same arc applies to every system — sensors,
+engines, armour, reactors: the v1 numbers are the "we just left Earth" floor, and the climb to space-opera
+capability is **earned up the tech tree**, by the player AND by NPCs (so a late-game fleet genuinely out-techs an
+early one — a real progression axis, not just bigger numbers handed out).
+
+**The mechanism already exists — don't build a parallel one.** Component design formulas pull tech values via
+NCalc `TechData('tech-...')` (e.g. sensor sensitivity = `TechData('tech-antenna-sensitivity') / (size² · eff)`;
+weapon stats reference their tech). So "research makes it better" is wired by having a stat's NCalc formula read a
+`TechData(...)` term that improves as the tech levels up. To add a sci-fi upgrade:
+- **Better numbers on the EXISTING component type** → raise/extend the tech the formula already reads (the cheap,
+  smooth path — a higher antenna-sensitivity level just makes every sensor design better).
+- **A genuinely NEW weapon/sensor flavour** (the Muon laser, a new emitter) → a new component **template** gated
+  behind a new tech, following the six-point registration chain in `Combat/CLAUDE.md` ("Adding a new
+  player-buildable weapon"). It's still a component — research-gated, built-from-materials, installed, losable —
+  so it inherits the whole cradle-to-grave chain for free (`CONVENTIONS.md` §6: abilities are components).
+
+**Rule:** when you add a stat that should improve with progress, make its design formula read a `TechData(...)`
+term rather than hard-coding the number — that is what turns "realistic baseline" into "research climbs to sci-fi"
+without a bespoke upgrade system. The realism floor + the tech ceiling are the same scale, just at different tech
+levels.
+
 ---
 
 ## File Map
