@@ -292,6 +292,11 @@ namespace Pulsar4X.Client
                             // Spawn ready to fly: CreateShip leaves tanks empty (production-built ships aren't
                             // free-fuelled), so top them off here the way the start fleet is fuelled.
                             double fuelUnits = ShipFactory.FillFuelTanks(ship, _uiState.PlayerFaction.GetDataBlob<FactionInfoDB>());
+                            // ...and CHARGE THE REACTOR. CreateShip also leaves stored energy at 0, and WARP is paid
+                            // from stored electricity (not fuel) — an uncharged ship given a move order just sits
+                            // there. This is the energy half of "ready to fly" (the start fleet gets it in
+                            // DefaultStartFactory); without it a freshly-spawned ship can't warp until it slowly charges.
+                            double energyKJ = ShipFactory.ChargeReactors(ship);
 
                             // Put the ship into one of the player's fleets so it appears in the Fleet window and
                             // can be ordered. A bare CreateShip parents the ship to the PLANET, not the faction's
@@ -316,7 +321,7 @@ namespace Pulsar4X.Client
                             int shipsInSystem = parent.Manager.GetAllEntitiesWithDataBlob<ShipInfoDB>().Count;
                             _spawnStatus = $"Spawned '{design.Name}' (id {ship.Id}) orbiting {GetEntityName(parent)}, {fleetNote}. "
                                 + $"Exit SM mode + open the Fleet window to command it (zoom into {GetEntityName(parent)} to see it on the map).";
-                            DevLog($"Spawn Ship OK: '{design.Name}' id={ship.Id} around '{GetEntityName(parent)}', {fleetNote}, fuel=+{fuelUnits:0} units, shipsInSystem={shipsInSystem}");
+                            DevLog($"Spawn Ship OK: '{design.Name}' id={ship.Id} around '{GetEntityName(parent)}', {fleetNote}, fuel=+{fuelUnits:0} units, energy=+{energyKJ:0} KJ, shipsInSystem={shipsInSystem}");
                             Array.Clear(_shipNameBuffer, 0, _shipNameBuffer.Length);
 
                             // Deliberately NOT calling HardRefresh() here. It reset the Design dropdown to
