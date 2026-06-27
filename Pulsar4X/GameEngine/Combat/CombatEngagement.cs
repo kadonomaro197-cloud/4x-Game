@@ -109,6 +109,15 @@ namespace Pulsar4X.Combat
 
             double dt = deltaSeconds > 0 ? deltaSeconds : 1;
 
+            // A fleet that BROKE OFF (has FleetRetreatDB) stays withdrawn while a threat is present — the engage
+            // pass below skips it, so it isn't yanked back into the fight every tick (the engage/disengage thrash).
+            // Once no hostile is in range (the enemy died, left, or this fleet was moved away) the flag is stale, so
+            // drop it here and the fleet can fight again later. This is the v1 "re-commit" path (no move-order wiring
+            // yet — the v2 movement layer that actually sails the withdraw vector will supersede this).
+            foreach (var rf in fleets)
+                if (rf.IsValid && rf.HasDataBlob<FleetRetreatDB>() && !AnyHostileInRange(rf, fleets))
+                    rf.RemoveDataBlob<FleetRetreatDB>();
+
             // 1) Engage / JOIN. Any two hostile fleets in range are BOTH put in combat. This is also how a fleet
             //    joins a battle already underway: it comes into range of an enemy and gains combat state here, on
             //    its faction's side — no special "reinforce" path. A fleet with no enemy in range never engages.
@@ -123,8 +132,14 @@ namespace Pulsar4X.Combat
                     var b = fleets[j];
                     if (!b.IsValid) continue;
                     if (!AreHostile(a, b)) continue;
+                    // Don't re-grab a fleet that broke off — it stays withdrawn while the enemy is in range (the
+                    // top-of-Tick sweep clears the flag once the threat is gone). Stops the retreat thrash.
+                    if (a.HasDataBlob<FleetRetreatDB>() || b.HasDataBlob<FleetRetreatDB>()) continue;
                     if (GetFleetShips(b).Count == 0) continue;
                     if (!InRange(a, b)) continue;
+                    // Don't start a fight neither side can resolve (both unarmed): it would enter, freeze (no damage
+                    // dealt), and disengage every tick — a thrash. A fight needs at least one side that can deal damage.
+                    if (!FleetHasFirepower(a) && !FleetHasFirepower(b)) continue;
                     // Fog of war (client-on / test-off): a fight forms once EITHER side detects the other — the
                     // detector can open fire even if its target is still blind (first-strike). Both fleets enter
                     // combat so the resolver has the target present to be shot; the BLIND one simply doesn't shoot
@@ -216,8 +231,10 @@ namespace Pulsar4X.Combat
                     var b = fleets[j];
                     if (!b.IsValid) continue;
                     if (!AreHostile(a, b)) continue;
+                    if (a.HasDataBlob<FleetRetreatDB>() || b.HasDataBlob<FleetRetreatDB>()) continue; // withdrawn — won't form a new engagement
                     if (GetFleetShips(b).Count == 0) continue;
                     if (!InRange(a, b)) continue;
+                    if (!FleetHasFirepower(a) && !FleetHasFirepower(b)) continue; // no fight two unarmed fleets can resolve
                     // Match the engage pass's fog gate (see Tick): if combat is detection-gated, a pair that can't
                     // yet SEE each other is NOT imminent — a battle can't form, so it must not force fine-stepping.
                     // Without this, a fleet parked in range of UNDETECTED hostiles (e.g. yours at Earth, ~384,000 km
@@ -226,9 +243,9 @@ namespace Pulsar4X.Combat
                     // "time stopped moving under fog of war" live bug (2026-06-27). The imminent-gate and the
                     // engage-gate MUST agree.
                     if (RequireDetectionToEngage && !(FleetDetects(a, b) || FleetDetects(b, a))) continue;
-                    // In range + hostile + both manned (+ detected, if fog-gated). If EITHER isn't yet in combat, a
-                    // new entry — and so the interrupt — fires this tick. If both are already engaged, this pair is
-                    // an ONGOING fight and does NOT force fine-stepping, so the player keeps their set step size.
+                    // In range + hostile + both manned + armed (+ detected, if fog-gated). If EITHER isn't yet in
+                    // combat, a new entry — and so the interrupt — fires this tick. If both are already engaged, this
+                    // pair is an ONGOING fight and does NOT force fine-stepping, so the player keeps their set step.
                     if (!a.HasDataBlob<FleetCombatStateDB>() || !b.HasDataBlob<FleetCombatStateDB>())
                         return true;
                 }
@@ -962,6 +979,35 @@ namespace Pulsar4X.Combat
         {
             int fa = a.FactionOwnerID, fb = b.FactionOwnerID;
             return fa != fb && fa != Game.NeutralFactionId && fb != Game.NeutralFactionId;
+        }
+
+        /// <summary>True if any ship in the fleet can deal damage (has a weapon profile or nonzero Firepower). A
+        /// hostile pair with NO firepower on either side can't resolve a fight — engaging them just thrashes
+        /// (enter → frozen, no damage → disengage, every tick), so the trigger skips such pairs.</summary>
+        private static bool FleetHasFirepower(Entity fleet)
+        {
+            foreach (var ship in GetFleetShips(fleet))
+            {
+                var cv = CombatValue(ship);
+                if (cv.Firepower > 0) return true;
+                if (cv.Weapons != null && cv.Weapons.Count > 0) return true;
+            }
+            return false;
+        }
+
+        /// <summary>True if any hostile, manned fleet is in range of this one. Used to expire a stale
+        /// <see cref="FleetRetreatDB"/> once the threat is gone — so a withdrawn fleet can fight again later, and
+        /// moving it out of range re-commits it.</summary>
+        private static bool AnyHostileInRange(Entity fleet, IReadOnlyList<Entity> fleets)
+        {
+            foreach (var other in fleets)
+            {
+                if (other == null || !other.IsValid || other == fleet) continue;
+                if (!AreHostile(fleet, other)) continue;
+                if (GetFleetShips(other).Count == 0) continue;
+                if (InRange(fleet, other)) return true;
+            }
+            return false;
         }
 
         /// <summary>Fog-of-war check (the detection × weapons seam): does the <paramref name="detector"/> fleet's
