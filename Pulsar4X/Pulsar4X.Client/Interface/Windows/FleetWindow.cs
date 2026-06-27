@@ -684,12 +684,74 @@ namespace Pulsar4X.Client
                 ImGui.TextColored(new Vector4(0.4f, 1f, 0.4f, 1f), _emconStatus);
         }
 
+        // ── Range rings on the map ────────────────────────────────────────────────────────────────────────────
+        // Draws each selected-fleet ship's beam reach (red) and sensor reach (blue) as circles on the system map,
+        // so "how close to shoot / how far I can see" is visible in space, not just as a number in the table. Uses
+        // the existing SimpleCircle widget + UIWidgets dict — the exact mechanism DebugWindow's "Draw SOI" uses, so
+        // no new SDL drawing code. Radius is in AU (SimpleCircle's unit), converted from the engine's metres.
+        private bool _showRangeRings;
+        private readonly List<string> _rangeRingKeys = new();
+        private FleetDB? _ringsFleet;   // which fleet's ships currently own rings — rebuild when this changes
+
+        private void ClearRangeRings()
+        {
+            var render = _uiState.SelectedSysMapRender;
+            if (render != null)
+                foreach (var key in _rangeRingKeys)
+                    render.UIWidgets.Remove(key);
+            _rangeRingKeys.Clear();
+            _ringsFleet = null;
+        }
+
+        private void BuildRangeRings()
+        {
+            ClearRangeRings();
+            var render = _uiState.SelectedSysMapRender;
+            if (render == null || selectedFleetDB == null) return;
+            _ringsFleet = selectedFleetDB;
+
+            foreach (var ship in selectedFleetDB.GetChildren().Where(c => c.IsValid && !c.HasDataBlob<FleetDB>()))
+            {
+                if (!ship.HasDataBlob<PositionDB>()) continue;
+                var pos = ship.GetDataBlob<PositionDB>();
+
+                double beam = WeaponUtils.GetMaxBeamRange_m(ship);
+                if (beam > 0)
+                {
+                    string key = "rangering_beam_" + ship.Id;
+                    render.UIWidgets[key] = new SimpleCircle(pos, Pulsar4X.Orbital.Distance.MToAU(beam),
+                        new SDL3.SDL.Color { R = 225, G = 90, B = 70, A = 90 });   // red-ish: how far it can SHOOT
+                    _rangeRingKeys.Add(key);
+                }
+
+                double reach = SensorTools.SelfDetectionRange_m(ship);
+                if (reach > 0)
+                {
+                    string key = "rangering_sensor_" + ship.Id;
+                    render.UIWidgets[key] = new SimpleCircle(pos, Pulsar4X.Orbital.Distance.MToAU(reach),
+                        new SDL3.SDL.Color { R = 70, G = 150, B = 225, A = 70 });   // blue-ish: how far it can SEE
+                    _rangeRingKeys.Add(key);
+                }
+            }
+        }
+
         // The combat sheet: fleet totals + firepower-by-weapon-type + the per-ship table ("the table IS the
         // interface", per COMBAT-DESIGN System 4). Reads each ship's cached ShipCombatValueDB.
         private void DisplayFleetCombatSheet()
         {
             if (selectedFleetDB == null) return;
             DisplayHelpers.Header("Combat Strength");
+
+            // Range-ring toggle: beam reach + sensor reach drawn on the map for this fleet's ships. Rebuilt when the
+            // player switches to a different fleet so the rings always match what's selected. (Radii are captured at
+            // build time, so re-toggle after an EMCON change to refresh the sensor ring.)
+            if (ImGui.Checkbox("Show range rings on map", ref _showRangeRings))
+            {
+                if (_showRangeRings) BuildRangeRings();
+                else ClearRangeRings();
+            }
+            if (_showRangeRings && !ReferenceEquals(_ringsFleet, selectedFleetDB))
+                BuildRangeRings();
 
             var ships = selectedFleetDB.GetChildren().Where(c => c.IsValid && !c.HasDataBlob<FleetDB>()).ToArray();
             double totalFp = 0, totalTough = 0;
