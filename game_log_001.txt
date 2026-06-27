@@ -1,1000 +1,1000 @@
-[CAMERA] pan -> 103.8,-33 Gm
-[CAMERA] pan -> 103.8,-33 Gm
-[CAMERA] pan -> 103.8,-33 Gm
-[CAMERA] pan -> 103.8,-33 Gm
-[CAMERA] pan -> 103.8,-33 Gm
-[CAMERA] pan -> 103.8,-33 Gm
-[CAMERA] pan -> 103.8,-33 Gm
-[CAMERA] pan -> 103.8,-33 Gm
-[CAMERA] pan -> 107,-35.5 Gm
-[CAMERA] pan -> 107,-35.5 Gm
-[CAMERA] pan -> 107,-35.5 Gm
-[CAMERA] pan -> 107,-35.5 Gm
-[CAMERA] pan -> 107,-35.5 Gm
-[CAMERA] pan -> 107,-35.5 Gm
-[CAMERA] pan -> 107,-35.5 Gm
-[CAMERA] pan -> 107,-35.5 Gm
-[CAMERA] pan -> 107,-35.5 Gm
-[CAMERA] pan -> 107,-35.5 Gm
-[STATE] heartbeat t=2050-05-01 22:02 paused step=1s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089475 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 123.9,-49.8 Gm
-[CAMERA] pan -> 123.9,-49.8 Gm
-[CAMERA] pan -> 123.9,-49.8 Gm
-[CAMERA] pan -> 123.9,-49.8 Gm
-[CAMERA] pan -> 123.9,-49.8 Gm
-[CAMERA] pan -> 123.9,-49.8 Gm
-[CAMERA] pan -> 123.9,-49.8 Gm
-[CAMERA] pan -> 123.9,-49.8 Gm
-[CAMERA] pan -> 123.9,-49.8 Gm
-[CAMERA] pan -> 123.9,-49.8 Gm
-[CAMERA] pan -> 125.4,-49.3 Gm
-[CAMERA] pan -> 125.4,-49.3 Gm
-[CAMERA] pan -> 125.4,-49.3 Gm
-[CAMERA] pan -> 125.4,-49.3 Gm
-[CAMERA] pan -> 125.4,-49.3 Gm
-[CAMERA] pan -> 125.4,-49.3 Gm
-[CAMERA] pan -> 125.4,-49.3 Gm
-[CAMERA] pan -> 125.4,-49.3 Gm
-[CAMERA] pan -> 125.4,-49.3 Gm
-[CAMERA] pan -> 125.4,-49.3 Gm
-[CAMERA] pan -> 109,-20.7 Gm
-[CAMERA] pan -> 109,-20.7 Gm
-[CAMERA] pan -> 109,-20.7 Gm
-[CAMERA] pan -> 109,-20.7 Gm
-[CAMERA] pan -> 109,-20.7 Gm
-[CAMERA] pan -> 109,-20.7 Gm
-[CAMERA] pan -> 109,-20.7 Gm
-[CAMERA] pan -> 109,-20.7 Gm
-[CAMERA] pan -> 109,-20.7 Gm
-[CAMERA] pan -> 109,-20.7 Gm
-[STATE] heartbeat t=2050-05-01 22:02 paused step=1s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089475 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 99.7,-8.7 Gm
-[CAMERA] pan -> 99.7,-8.7 Gm
-[CAMERA] pan -> 99.7,-8.7 Gm
-[CAMERA] pan -> 99.7,-8.7 Gm
-[CAMERA] pan -> 99.7,-8.7 Gm
-[CAMERA] pan -> 99.7,-8.7 Gm
-[CAMERA] pan -> 99.7,-8.7 Gm
-[CAMERA] pan -> 99.7,-8.7 Gm
-[CAMERA] pan -> 99.7,-8.7 Gm
-[CAMERA] pan -> 99.7,-8.7 Gm
-[CAMERA] pan -> 89.5,9.6 Gm
-[CAMERA] pan -> 89.5,9.6 Gm
-[CAMERA] pan -> 89.5,9.6 Gm
-[CAMERA] pan -> 89.5,9.6 Gm
-[CAMERA] pan -> 89.5,9.6 Gm
-[CAMERA] pan -> 89.5,9.6 Gm
-[CAMERA] pan -> 89.5,9.6 Gm
-[CAMERA] pan -> 89.5,9.6 Gm
-[CAMERA] pan -> 89.5,9.6 Gm
-[CAMERA] pan -> 89.5,9.6 Gm
-[CAMERA] pan -> 87.2,14 Gm
-[CAMERA] pan -> 87.2,14 Gm
-[CAMERA] pan -> 87.2,14 Gm
-[CAMERA] pan -> 87.2,14 Gm
-[CAMERA] pan -> 87.2,14 Gm
-[CAMERA] pan -> 87.2,14 Gm
-[CAMERA] pan -> 87.2,14 Gm
-[CAMERA] pan -> 87.2,14 Gm
-[CAMERA] pan -> 87.2,14 Gm
-[CAMERA] pan -> 87.2,14 Gm
-[STATE] heartbeat t=2050-05-01 22:02 paused step=1s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089475 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-01 22:02 paused step=1s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089475 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 86.8,15.4 Gm
-[CAMERA] pan -> 86.8,15.4 Gm
-[CAMERA] pan -> 86.8,15.4 Gm
-[CAMERA] pan -> 86.8,15.4 Gm
-[CAMERA] pan -> 86.8,15.4 Gm
-[CAMERA] pan -> 86.8,15.4 Gm
-[CAMERA] pan -> 86.8,15.4 Gm
-[CAMERA] pan -> 86.8,15.4 Gm
-[CAMERA] pan -> 86.8,15.4 Gm
-[CAMERA] pan -> 86.8,15.4 Gm
-[CAMERA] pan -> 87.6,14.9 Gm
-[CAMERA] pan -> 87.6,14.9 Gm
-[CAMERA] pan -> 87.6,14.9 Gm
-[CAMERA] pan -> 87.6,14.9 Gm
-[CAMERA] pan -> 87.6,14.9 Gm
-[CAMERA] pan -> 87.6,14.9 Gm
-[CAMERA] pan -> 87.6,14.9 Gm
-[CAMERA] pan -> 87.6,14.9 Gm
-[CAMERA] pan -> 87.6,14.9 Gm
-[CAMERA] pan -> 87.6,14.9 Gm
-[CAMERA] pan -> 87.7,15.1 Gm
-[CAMERA] pan -> 87.7,15.1 Gm
-[CAMERA] pan -> 87.7,15.1 Gm
-[CAMERA] pan -> 87.7,15.1 Gm
-[CAMERA] pan -> 87.7,15.1 Gm
-[CAMERA] pan -> 87.7,15.1 Gm
-[CAMERA] pan -> 87.7,15.1 Gm
-[CAMERA] pan -> 87.7,15.1 Gm
-[CAMERA] pan -> 87.7,15.1 Gm
-[CAMERA] pan -> 87.7,15.1 Gm
-[CAMERA] pan -> 86.9,15.7 Gm
-[CAMERA] pan -> 86.9,15.7 Gm
-[CAMERA] pan -> 86.9,15.7 Gm
-[CAMERA] pan -> 86.9,15.7 Gm
-[CAMERA] pan -> 86.9,15.7 Gm
-[CAMERA] pan -> 86.9,15.7 Gm
-[CAMERA] pan -> 86.9,15.7 Gm
-[CAMERA] pan -> 86.9,15.7 Gm
-[CAMERA] pan -> 86.9,15.7 Gm
-[CAMERA] pan -> 86.9,15.7 Gm
-[CAMERA] pan -> 91.8,-1.5 Gm
-[CAMERA] pan -> 91.8,-1.5 Gm
-[CAMERA] pan -> 91.8,-1.5 Gm
-[CAMERA] pan -> 91.8,-1.5 Gm
-[CAMERA] pan -> 91.8,-1.5 Gm
-[CAMERA] pan -> 91.8,-1.5 Gm
-[CAMERA] pan -> 91.8,-1.5 Gm
-[CAMERA] pan -> 91.8,-1.5 Gm
-[CAMERA] pan -> 91.8,-1.5 Gm
-[CAMERA] pan -> 91.8,-1.5 Gm
-[CAMERA] pan -> 87.1,-14.4 Gm
-[CAMERA] pan -> 87.1,-14.4 Gm
-[CAMERA] pan -> 87.1,-14.4 Gm
-[CAMERA] pan -> 87.1,-14.4 Gm
-[CAMERA] pan -> 87.1,-14.4 Gm
-[CAMERA] pan -> 87.1,-14.4 Gm
-[CAMERA] pan -> 87.1,-14.4 Gm
-[CAMERA] pan -> 87.1,-14.4 Gm
-[CAMERA] pan -> 87.1,-14.4 Gm
-[CAMERA] pan -> 87.1,-14.4 Gm
-[STATE] heartbeat t=2050-05-01 22:02 paused step=1s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089475 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 96.7,-23.4 Gm
-[CAMERA] pan -> 96.7,-23.4 Gm
-[CAMERA] pan -> 96.7,-23.4 Gm
-[CAMERA] pan -> 96.7,-23.4 Gm
-[CAMERA] pan -> 96.7,-23.4 Gm
-[CAMERA] pan -> 96.7,-23.4 Gm
-[CAMERA] pan -> 96.7,-23.4 Gm
-[CAMERA] pan -> 96.7,-23.4 Gm
-[CAMERA] pan -> 96.7,-23.4 Gm
-[CAMERA] pan -> 96.7,-23.4 Gm
-[STATE] heartbeat t=2050-05-01 22:02 paused step=1s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089475 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-01 22:02 paused step=1s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089475 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-01 22:02 paused step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089475 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 100.3,-27.4 Gm
-[CAMERA] pan -> 100.3,-27.4 Gm
-[CAMERA] pan -> 100.3,-27.4 Gm
-[CAMERA] pan -> 100.3,-27.4 Gm
-[CAMERA] pan -> 100.3,-27.4 Gm
-[CAMERA] pan -> 100.3,-27.4 Gm
-[CAMERA] pan -> 100.3,-27.4 Gm
-[CAMERA] pan -> 100.3,-27.4 Gm
-[CAMERA] pan -> 100.3,-27.4 Gm
-[CAMERA] pan -> 100.3,-27.4 Gm
-[CAMERA] pan -> 102.5,-29.7 Gm
-[CAMERA] pan -> 102.5,-29.7 Gm
-[CAMERA] pan -> 102.5,-29.7 Gm
-[CAMERA] pan -> 102.5,-29.7 Gm
-[CAMERA] pan -> 102.5,-29.7 Gm
-[CAMERA] pan -> 102.5,-29.7 Gm
-[CAMERA] pan -> 102.5,-29.7 Gm
-[CAMERA] pan -> 102.5,-29.7 Gm
-[CAMERA] pan -> 102.5,-29.7 Gm
-[CAMERA] pan -> 102.5,-29.7 Gm
-[CAMERA] pan -> 103.1,-31.4 Gm
-[CAMERA] pan -> 103.1,-31.4 Gm
-[CAMERA] pan -> 103.1,-31.4 Gm
-[CAMERA] pan -> 103.1,-31.4 Gm
-[CAMERA] pan -> 103.1,-31.4 Gm
-[CAMERA] pan -> 103.1,-31.4 Gm
-[CAMERA] pan -> 103.1,-31.4 Gm
-[CAMERA] pan -> 103.1,-31.4 Gm
-[CAMERA] pan -> 103.1,-31.4 Gm
-[CAMERA] pan -> 103.1,-31.4 Gm
-[CAMERA] pan -> 103,-31.9 Gm
-[CAMERA] pan -> 103,-31.9 Gm
-[CAMERA] pan -> 103,-31.9 Gm
-[CAMERA] pan -> 103,-31.9 Gm
-[CAMERA] pan -> 103,-31.9 Gm
-[CAMERA] pan -> 103,-31.9 Gm
-[CAMERA] pan -> 103,-31.9 Gm
-[CAMERA] pan -> 103,-31.9 Gm
-[CAMERA] pan -> 103,-31.9 Gm
-[CAMERA] pan -> 103,-31.9 Gm
-[CAMERA] pan -> 103,-32.1 Gm
-[CAMERA] pan -> 103,-32.1 Gm
-[CAMERA] pan -> 103,-32.1 Gm
-[CAMERA] pan -> 103,-32.1 Gm
-[CAMERA] pan -> 103,-32.1 Gm
-[CAMERA] pan -> 103,-32.1 Gm
-[CAMERA] pan -> 103,-32.1 Gm
-[CAMERA] pan -> 103,-32.1 Gm
-[CAMERA] pan -> 103,-32.1 Gm
-[CAMERA] pan -> 103,-32.1 Gm
-[CAMERA] pan -> 103,-32.2 Gm
-[CAMERA] pan -> 103,-32.2 Gm
-[CAMERA] pan -> 103,-32.2 Gm
-[CAMERA] pan -> 103,-32.2 Gm
-[CAMERA] pan -> 103,-32.2 Gm
-[CAMERA] pan -> 103,-32.2 Gm
-[CAMERA] pan -> 103,-32.2 Gm
-[CAMERA] pan -> 103,-32.2 Gm
-[CAMERA] pan -> 103,-32.2 Gm
-[CAMERA] pan -> 103,-32.2 Gm
-[STATE] heartbeat t=2050-05-01 22:02 paused step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089475 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[TIME] one step (60s)
-[STATE] heartbeat t=2050-05-01 22:03 paused step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089487 (+12) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 103,-32.2 Gm
-[CAMERA] pan -> 103,-32.2 Gm
-[CAMERA] pan -> 103,-32.2 Gm
-[CAMERA] pan -> 103,-32.2 Gm
-[CAMERA] pan -> 103,-32.2 Gm
-[CAMERA] pan -> 103,-32.2 Gm
-[CAMERA] pan -> 103,-32.2 Gm
-[CAMERA] pan -> 103,-32.2 Gm
-[CAMERA] pan -> 103,-32.2 Gm
-[CAMERA] pan -> 103,-32.2 Gm
-[CAMERA] pan -> 103.1,-32.2 Gm
-[CAMERA] pan -> 103.1,-32.2 Gm
-[CAMERA] pan -> 103.1,-32.2 Gm
-[CAMERA] pan -> 103.1,-32.2 Gm
-[CAMERA] pan -> 103.1,-32.2 Gm
-[CAMERA] pan -> 103.1,-32.2 Gm
-[CAMERA] pan -> 103.1,-32.2 Gm
-[CAMERA] pan -> 103.1,-32.2 Gm
-[CAMERA] pan -> 103.1,-32.2 Gm
-[CAMERA] pan -> 103.1,-32.2 Gm
-[STATE] heartbeat t=2050-05-01 22:03 paused step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089487 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-01 22:03 paused step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089487 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-01 22:03 paused step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089487 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[TIME] one step (60s)
-[TIME] one step (60s)
-[TIME] one step (60s)
-[STATE] heartbeat t=2050-05-01 22:06 paused step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089523 (+36) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[TIME] one step (60s)
-[TIME] one step (60s)
-[TIME] one step (60s)
-[STATE] heartbeat t=2050-05-01 22:09 paused step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089559 (+36) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[TIME] one step (60s)
-[STATE] heartbeat t=2050-05-01 22:10 paused step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089571 (+12) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.3 Gm
-[CAMERA] pan -> 103,-32.5 Gm
-[CAMERA] pan -> 103,-32.5 Gm
-[CAMERA] pan -> 103,-32.5 Gm
-[CAMERA] pan -> 103,-32.5 Gm
-[CAMERA] pan -> 103,-32.5 Gm
-[CAMERA] pan -> 103,-32.5 Gm
-[CAMERA] pan -> 103,-32.5 Gm
-[CAMERA] pan -> 103,-32.5 Gm
-[CAMERA] pan -> 103,-32.5 Gm
-[CAMERA] pan -> 103,-32.5 Gm
-[CAMERA] pan -> 102.8,-33.3 Gm
-[CAMERA] pan -> 102.8,-33.3 Gm
-[CAMERA] pan -> 102.8,-33.3 Gm
-[CAMERA] pan -> 102.8,-33.3 Gm
-[CAMERA] pan -> 102.8,-33.3 Gm
-[CAMERA] pan -> 102.8,-33.3 Gm
-[CAMERA] pan -> 102.8,-33.3 Gm
-[CAMERA] pan -> 102.8,-33.3 Gm
-[CAMERA] pan -> 102.8,-33.3 Gm
-[CAMERA] pan -> 102.8,-33.3 Gm
-[CAMERA] pan -> 102.7,-34.7 Gm
-[CAMERA] pan -> 102.7,-34.7 Gm
-[CAMERA] pan -> 102.7,-34.7 Gm
-[CAMERA] pan -> 102.7,-34.7 Gm
-[CAMERA] pan -> 102.7,-34.7 Gm
-[CAMERA] pan -> 102.7,-34.7 Gm
-[CAMERA] pan -> 102.7,-34.7 Gm
-[CAMERA] pan -> 102.7,-34.7 Gm
-[CAMERA] pan -> 102.7,-34.7 Gm
-[CAMERA] pan -> 102.7,-34.7 Gm
-[STATE] heartbeat t=2050-05-01 22:10 paused step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089571 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[TIME] play (step 60s)
-[CAMERA] pan -> 103.1,-35.4 Gm
-[CAMERA] pan -> 103.1,-35.4 Gm
-[CAMERA] pan -> 103.1,-35.4 Gm
-[CAMERA] pan -> 103.1,-35.4 Gm
-[CAMERA] pan -> 103.1,-35.4 Gm
-[CAMERA] pan -> 103.1,-35.4 Gm
-[CAMERA] pan -> 103.1,-35.4 Gm
-[CAMERA] pan -> 103.1,-35.4 Gm
-[CAMERA] pan -> 103.1,-35.4 Gm
-[CAMERA] pan -> 103.1,-35.4 Gm
-[CAMERA] pan -> 108.3,-44.2 Gm
-[CAMERA] pan -> 108.3,-44.2 Gm
-[CAMERA] pan -> 108.3,-44.2 Gm
-[CAMERA] pan -> 108.3,-44.2 Gm
-[CAMERA] pan -> 108.3,-44.2 Gm
-[CAMERA] pan -> 108.3,-44.2 Gm
-[CAMERA] pan -> 108.3,-44.2 Gm
-[CAMERA] pan -> 108.3,-44.2 Gm
-[CAMERA] pan -> 108.3,-44.2 Gm
-[CAMERA] pan -> 108.3,-44.2 Gm
-[STATE] heartbeat t=2050-05-01 22:31 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089823 (+252) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 117.4,-61 Gm
-[CAMERA] pan -> 117.4,-61 Gm
-[CAMERA] pan -> 117.4,-61 Gm
-[CAMERA] pan -> 117.4,-61 Gm
-[CAMERA] pan -> 117.4,-61 Gm
-[CAMERA] pan -> 117.4,-61 Gm
-[CAMERA] pan -> 117.4,-61 Gm
-[CAMERA] pan -> 117.4,-61 Gm
-[CAMERA] pan -> 117.4,-61 Gm
-[CAMERA] pan -> 117.4,-61 Gm
-[CAMERA] pan -> 109.4,-46.4 Gm
-[CAMERA] pan -> 109.4,-46.4 Gm
-[CAMERA] pan -> 109.4,-46.4 Gm
-[CAMERA] pan -> 109.4,-46.4 Gm
-[CAMERA] pan -> 109.4,-46.4 Gm
-[CAMERA] pan -> 109.4,-46.4 Gm
-[CAMERA] pan -> 109.4,-46.4 Gm
-[CAMERA] pan -> 109.4,-46.4 Gm
-[CAMERA] pan -> 109.4,-46.4 Gm
-[CAMERA] pan -> 109.4,-46.4 Gm
-[STATE] heartbeat t=2050-05-01 23:01 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17424 (+6), battle-trigger passes 2090183 (+360) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 108.4,-45.6 Gm
-[CAMERA] pan -> 108.4,-45.6 Gm
-[CAMERA] pan -> 108.4,-45.6 Gm
-[CAMERA] pan -> 108.4,-45.6 Gm
-[CAMERA] pan -> 108.4,-45.6 Gm
-[CAMERA] pan -> 108.4,-45.6 Gm
-[CAMERA] pan -> 108.4,-45.6 Gm
-[CAMERA] pan -> 108.4,-45.6 Gm
-[CAMERA] pan -> 108.4,-45.6 Gm
-[CAMERA] pan -> 108.4,-45.6 Gm
-[CAMERA] pan -> 93.9,-35.9 Gm
-[CAMERA] pan -> 93.9,-35.9 Gm
-[CAMERA] pan -> 93.9,-35.9 Gm
-[CAMERA] pan -> 93.9,-35.9 Gm
-[CAMERA] pan -> 93.9,-35.9 Gm
-[CAMERA] pan -> 93.9,-35.9 Gm
-[CAMERA] pan -> 93.9,-35.9 Gm
-[CAMERA] pan -> 93.9,-35.9 Gm
-[CAMERA] pan -> 93.9,-35.9 Gm
-[CAMERA] pan -> 93.9,-35.9 Gm
-[STATE] heartbeat t=2050-05-01 23:31 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17424 (+0), battle-trigger passes 2090543 (+360) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 58,-69.1 Gm
-[CAMERA] pan -> 58,-69.1 Gm
-[CAMERA] pan -> 58,-69.1 Gm
-[CAMERA] pan -> 58,-69.1 Gm
-[CAMERA] pan -> 58,-69.1 Gm
-[CAMERA] pan -> 58,-69.1 Gm
-[CAMERA] pan -> 58,-69.1 Gm
-[CAMERA] pan -> 58,-69.1 Gm
-[CAMERA] pan -> 58,-69.1 Gm
-[CAMERA] pan -> 58,-69.1 Gm
-[CAMERA] pan -> 87.5,-97.6 Gm
-[CAMERA] pan -> 87.5,-97.6 Gm
-[CAMERA] pan -> 87.5,-97.6 Gm
-[CAMERA] pan -> 87.5,-97.6 Gm
-[CAMERA] pan -> 87.5,-97.6 Gm
-[CAMERA] pan -> 87.5,-97.6 Gm
-[CAMERA] pan -> 87.5,-97.6 Gm
-[CAMERA] pan -> 87.5,-97.6 Gm
-[CAMERA] pan -> 87.5,-97.6 Gm
-[CAMERA] pan -> 87.5,-97.6 Gm
-[CAMERA] pan -> 91,-84.2 Gm
-[CAMERA] pan -> 91,-84.2 Gm
-[CAMERA] pan -> 91,-84.2 Gm
-[CAMERA] pan -> 91,-84.2 Gm
-[CAMERA] pan -> 91,-84.2 Gm
-[CAMERA] pan -> 91,-84.2 Gm
-[CAMERA] pan -> 91,-84.2 Gm
-[CAMERA] pan -> 91,-84.2 Gm
-[CAMERA] pan -> 91,-84.2 Gm
-[CAMERA] pan -> 91,-84.2 Gm
-[CAMERA] pan -> 100.3,-48 Gm
-[CAMERA] pan -> 100.3,-48 Gm
-[CAMERA] pan -> 100.3,-48 Gm
-[CAMERA] pan -> 100.3,-48 Gm
-[CAMERA] pan -> 100.3,-48 Gm
-[CAMERA] pan -> 100.3,-48 Gm
-[CAMERA] pan -> 100.3,-48 Gm
-[CAMERA] pan -> 100.3,-48 Gm
-[CAMERA] pan -> 100.3,-48 Gm
-[CAMERA] pan -> 100.3,-48 Gm
-[STATE] heartbeat t=2050-05-02 00:01 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17430 (+6), battle-trigger passes 2090903 (+360) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 101.8,-41.5 Gm
-[CAMERA] pan -> 101.8,-41.5 Gm
-[CAMERA] pan -> 101.8,-41.5 Gm
-[CAMERA] pan -> 101.8,-41.5 Gm
-[CAMERA] pan -> 101.8,-41.5 Gm
-[CAMERA] pan -> 101.8,-41.5 Gm
-[CAMERA] pan -> 101.8,-41.5 Gm
-[CAMERA] pan -> 101.8,-41.5 Gm
-[CAMERA] pan -> 101.8,-41.5 Gm
-[CAMERA] pan -> 101.8,-41.5 Gm
-[CAMERA] pan -> 100.4,-39.1 Gm
-[CAMERA] pan -> 100.4,-39.1 Gm
-[CAMERA] pan -> 100.4,-39.1 Gm
-[CAMERA] pan -> 100.4,-39.1 Gm
-[CAMERA] pan -> 100.4,-39.1 Gm
-[CAMERA] pan -> 100.4,-39.1 Gm
-[CAMERA] pan -> 100.4,-39.1 Gm
-[CAMERA] pan -> 100.4,-39.1 Gm
-[CAMERA] pan -> 100.4,-39.1 Gm
-[CAMERA] pan -> 100.4,-39.1 Gm
-[STATE] heartbeat t=2050-05-02 00:31 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17430 (+0), battle-trigger passes 2091263 (+360) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-02 01:01 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17436 (+6), battle-trigger passes 2091623 (+360) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-02 01:31 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17436 (+0), battle-trigger passes 2091983 (+360) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-02 02:01 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17442 (+6), battle-trigger passes 2092343 (+360) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-02 02:31 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17442 (+0), battle-trigger passes 2092703 (+360) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-02 03:01 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17448 (+6), battle-trigger passes 2093063 (+360) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-02 03:31 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17448 (+0), battle-trigger passes 2093423 (+360) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-02 04:01 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17454 (+6), battle-trigger passes 2093783 (+360) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-02 04:31 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17454 (+0), battle-trigger passes 2094143 (+360) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-02 05:01 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17460 (+6), battle-trigger passes 2094503 (+360) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-02 05:31 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17460 (+0), battle-trigger passes 2094863 (+360) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 100.9,-40.9 Gm
-[CAMERA] pan -> 100.9,-40.9 Gm
-[CAMERA] pan -> 100.9,-40.9 Gm
-[CAMERA] pan -> 100.9,-40.9 Gm
-[CAMERA] pan -> 100.9,-40.9 Gm
-[CAMERA] pan -> 100.9,-40.9 Gm
-[CAMERA] pan -> 100.9,-40.9 Gm
-[CAMERA] pan -> 100.9,-40.9 Gm
-[CAMERA] pan -> 100.9,-40.9 Gm
-[CAMERA] pan -> 100.9,-40.9 Gm
-[CAMERA] pan -> 104.2,-101.2 Gm
-[CAMERA] pan -> 104.2,-101.2 Gm
-[CAMERA] pan -> 104.2,-101.2 Gm
-[CAMERA] pan -> 104.2,-101.2 Gm
-[CAMERA] pan -> 104.2,-101.2 Gm
-[CAMERA] pan -> 104.2,-101.2 Gm
-[CAMERA] pan -> 104.2,-101.2 Gm
-[CAMERA] pan -> 104.2,-101.2 Gm
-[CAMERA] pan -> 104.2,-101.2 Gm
-[CAMERA] pan -> 104.2,-101.2 Gm
-[STATE] heartbeat t=2050-05-02 06:01 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17466 (+6), battle-trigger passes 2095223 (+360) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[SELECT] ignored click on stale entity #556 in system 9921b0e4-415d-4c4f-b8f1-5f4ac8cadd7e (no state — entity destroyed, or its star system isn't in the current view; label outlived it)
-[STATE] heartbeat t=2050-05-02 06:31 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17466 (+0), battle-trigger passes 2095583 (+360) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-02 07:01 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17472 (+6), battle-trigger passes 2095943 (+360) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-02 07:31 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17472 (+0), battle-trigger passes 2096303 (+360) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-02 08:01 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17478 (+6), battle-trigger passes 2096663 (+360) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-02 08:31 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17478 (+0), battle-trigger passes 2097023 (+360) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-02 09:01 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17484 (+6), battle-trigger passes 2097383 (+360) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-02 09:31 RUNNING step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17484 (+0), battle-trigger passes 2097743 (+360) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[TIME] paused
-[STATE] heartbeat t=2050-05-02 09:50 paused step=60s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17484 (+0), battle-trigger passes 2097971 (+228) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-8.1 Gm
+[CAMERA] pan -> 150.4,-8.1 Gm
+[CAMERA] pan -> 150.4,-8.1 Gm
+[CAMERA] pan -> 150.4,-8.1 Gm
+[CAMERA] pan -> 150.4,-8.1 Gm
+[CAMERA] pan -> 150.4,-8.1 Gm
+[CAMERA] pan -> 150.4,-8.1 Gm
+[CAMERA] pan -> 150.4,-8.1 Gm
+[CAMERA] pan -> 150.4,-8.1 Gm
+[CAMERA] pan -> 150.4,-8.1 Gm
+[STATE] heartbeat t=2050-01-01 00:25 paused step=300s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 6 (+0), battle-trigger passes 301 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 20 other-faction ship(s) in-system, detects 0 (20 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 150.4,-8.2 Gm
+[CAMERA] pan -> 150.4,-8.2 Gm
+[CAMERA] pan -> 150.4,-8.2 Gm
+[CAMERA] pan -> 150.4,-8.2 Gm
+[CAMERA] pan -> 150.4,-8.2 Gm
+[CAMERA] pan -> 150.4,-8.2 Gm
+[CAMERA] pan -> 150.4,-8.2 Gm
+[CAMERA] pan -> 150.4,-8.2 Gm
+[CAMERA] pan -> 150.4,-8.2 Gm
+[CAMERA] pan -> 150.4,-8.2 Gm
+[CAMERA] pan -> 150.4,-8.4 Gm
+[CAMERA] pan -> 150.4,-8.4 Gm
+[CAMERA] pan -> 150.4,-8.4 Gm
+[CAMERA] pan -> 150.4,-8.4 Gm
+[CAMERA] pan -> 150.4,-8.4 Gm
+[CAMERA] pan -> 150.4,-8.4 Gm
+[CAMERA] pan -> 150.4,-8.4 Gm
+[CAMERA] pan -> 150.4,-8.4 Gm
+[CAMERA] pan -> 150.4,-8.4 Gm
+[CAMERA] pan -> 150.4,-8.4 Gm
+[STATE] heartbeat t=2050-01-01 00:25 paused step=300s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 6 (+0), battle-trigger passes 301 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 20 other-faction ship(s) in-system, detects 0 (20 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 150.3,-8.9 Gm
+[CAMERA] pan -> 150.3,-8.9 Gm
+[CAMERA] pan -> 150.3,-8.9 Gm
+[CAMERA] pan -> 150.3,-8.9 Gm
+[CAMERA] pan -> 150.3,-8.9 Gm
+[CAMERA] pan -> 150.3,-8.9 Gm
+[CAMERA] pan -> 150.3,-8.9 Gm
+[CAMERA] pan -> 150.3,-8.9 Gm
+[CAMERA] pan -> 150.3,-8.9 Gm
+[CAMERA] pan -> 150.3,-8.9 Gm
+[STATE] heartbeat t=2050-01-01 00:25 paused step=300s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 6 (+0), battle-trigger passes 301 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 20 other-faction ship(s) in-system, detects 0 (20 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 150,-9.6 Gm
+[CAMERA] pan -> 150,-9.6 Gm
+[CAMERA] pan -> 150,-9.6 Gm
+[CAMERA] pan -> 150,-9.6 Gm
+[CAMERA] pan -> 150,-9.6 Gm
+[CAMERA] pan -> 150,-9.6 Gm
+[CAMERA] pan -> 150,-9.6 Gm
+[CAMERA] pan -> 150,-9.6 Gm
+[CAMERA] pan -> 150,-9.6 Gm
+[CAMERA] pan -> 150,-9.6 Gm
+[STATE] heartbeat t=2050-01-01 00:25 paused step=300s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 6 (+0), battle-trigger passes 301 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 20 other-faction ship(s) in-system, detects 0 (20 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 150.2,-8.2 Gm
+[CAMERA] pan -> 150.2,-8.2 Gm
+[CAMERA] pan -> 150.2,-8.2 Gm
+[CAMERA] pan -> 150.2,-8.2 Gm
+[CAMERA] pan -> 150.2,-8.2 Gm
+[CAMERA] pan -> 150.2,-8.2 Gm
+[CAMERA] pan -> 150.2,-8.2 Gm
+[CAMERA] pan -> 150.2,-8.2 Gm
+[CAMERA] pan -> 150.2,-8.2 Gm
+[CAMERA] pan -> 150.2,-8.2 Gm
+[CAMERA] pan -> 150.3,-7.8 Gm
+[CAMERA] pan -> 150.3,-7.8 Gm
+[CAMERA] pan -> 150.3,-7.8 Gm
+[CAMERA] pan -> 150.3,-7.8 Gm
+[CAMERA] pan -> 150.3,-7.8 Gm
+[CAMERA] pan -> 150.3,-7.8 Gm
+[CAMERA] pan -> 150.3,-7.8 Gm
+[CAMERA] pan -> 150.3,-7.8 Gm
+[CAMERA] pan -> 150.3,-7.8 Gm
+[CAMERA] pan -> 150.3,-7.8 Gm
+[CAMERA] pan -> 150.2,-7.7 Gm
+[CAMERA] pan -> 150.2,-7.7 Gm
+[CAMERA] pan -> 150.2,-7.7 Gm
+[CAMERA] pan -> 150.2,-7.7 Gm
+[CAMERA] pan -> 150.2,-7.7 Gm
+[CAMERA] pan -> 150.2,-7.7 Gm
+[CAMERA] pan -> 150.2,-7.7 Gm
+[CAMERA] pan -> 150.2,-7.7 Gm
+[CAMERA] pan -> 150.2,-7.7 Gm
+[CAMERA] pan -> 150.2,-7.7 Gm
+[CAMERA] pan -> 150.2,-7.6 Gm
+[CAMERA] pan -> 150.2,-7.6 Gm
+[CAMERA] pan -> 150.2,-7.6 Gm
+[CAMERA] pan -> 150.2,-7.6 Gm
+[CAMERA] pan -> 150.2,-7.6 Gm
+[CAMERA] pan -> 150.2,-7.6 Gm
+[CAMERA] pan -> 150.2,-7.6 Gm
+[CAMERA] pan -> 150.2,-7.6 Gm
+[CAMERA] pan -> 150.2,-7.6 Gm
+[CAMERA] pan -> 150.2,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[STATE] heartbeat t=2050-01-01 00:25 paused step=300s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 6 (+0), battle-trigger passes 301 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 20 other-faction ship(s) in-system, detects 0 (20 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[STATE] heartbeat t=2050-01-01 00:25 paused step=300s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 6 (+0), battle-trigger passes 301 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 20 other-faction ship(s) in-system, detects 0 (20 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[TIME] play (step 300s)
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[STATE] heartbeat t=2050-01-01 02:05 RUNNING step=300s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+12), battle-trigger passes 1501 (+1200) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[WARP] ship #981 '1st Task Force Bulwark Flak Escort 3' arrived at Luna
+[WARP] ship #982 '1st Task Force Wasp Strike Fighter 4' arrived at Luna
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.2,-7.7 Gm
+[CAMERA] pan -> 150.2,-7.7 Gm
+[CAMERA] pan -> 150.2,-7.7 Gm
+[CAMERA] pan -> 150.2,-7.7 Gm
+[CAMERA] pan -> 150.2,-7.7 Gm
+[CAMERA] pan -> 150.2,-7.7 Gm
+[CAMERA] pan -> 150.2,-7.7 Gm
+[CAMERA] pan -> 150.2,-7.7 Gm
+[CAMERA] pan -> 150.2,-7.7 Gm
+[CAMERA] pan -> 150.2,-7.7 Gm
+[CAMERA] pan -> 150.3,-7.8 Gm
+[CAMERA] pan -> 150.3,-7.8 Gm
+[CAMERA] pan -> 150.3,-7.8 Gm
+[CAMERA] pan -> 150.3,-7.8 Gm
+[CAMERA] pan -> 150.3,-7.8 Gm
+[CAMERA] pan -> 150.3,-7.8 Gm
+[CAMERA] pan -> 150.3,-7.8 Gm
+[CAMERA] pan -> 150.3,-7.8 Gm
+[CAMERA] pan -> 150.3,-7.8 Gm
+[CAMERA] pan -> 150.3,-7.8 Gm
+[STATE] heartbeat t=2050-01-01 02:34 paused step=300s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1860 (+359) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 150.4,-7.7 Gm
+[CAMERA] pan -> 150.4,-7.7 Gm
+[CAMERA] pan -> 150.4,-7.7 Gm
+[CAMERA] pan -> 150.4,-7.7 Gm
+[CAMERA] pan -> 150.4,-7.7 Gm
+[CAMERA] pan -> 150.4,-7.7 Gm
+[CAMERA] pan -> 150.4,-7.7 Gm
+[CAMERA] pan -> 150.4,-7.7 Gm
+[CAMERA] pan -> 150.4,-7.7 Gm
+[CAMERA] pan -> 150.4,-7.7 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.7 Gm
+[CAMERA] pan -> 150.4,-7.7 Gm
+[CAMERA] pan -> 150.4,-7.7 Gm
+[CAMERA] pan -> 150.4,-7.7 Gm
+[CAMERA] pan -> 150.4,-7.7 Gm
+[CAMERA] pan -> 150.4,-7.7 Gm
+[CAMERA] pan -> 150.4,-7.7 Gm
+[CAMERA] pan -> 150.4,-7.7 Gm
+[CAMERA] pan -> 150.4,-7.7 Gm
+[CAMERA] pan -> 150.4,-7.7 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[STATE] heartbeat t=2050-01-01 02:34 paused step=300s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1860 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[STATE] heartbeat t=2050-01-01 02:34 paused step=300s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1860 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[TIME] one step (300s)
+[WARP] ship #983 '1st Task Force Wasp Strike Fighter 5' arrived at Luna
+[STATE] heartbeat t=2050-01-01 02:34 paused step=300s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1860 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[TIME] one step (300s)
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessEntity(Entity entity, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 34
+   at Pulsar4X.Movement.WarpMoveProcessor.SetOrbitHereSimpleNewt(Entity entity, WarpMovingDB moveDB, DateTime atDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\WarpMove\WarpMoveProcessor.cs:line 339
+   at Pulsar4X.Movement.WarpMoveProcessor.EndWarpMove(Entity entity, WarpAbilityDB warpDB, WarpMovingDB moveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\WarpMove\WarpMoveProcessor.cs:line 261
+   at Pulsar4X.Movement.WarpMoveProcessor.WarpMove(Entity entity, WarpMovingDB moveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\WarpMove\WarpMoveProcessor.cs:line 171
+   at Pulsar4X.Movement.WarpMoveProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\WarpMove\WarpMoveProcessor.cs:line 113
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.<>c__DisplayClass47_0.<TimeStep>b__0() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 227
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+   --- End of inner exception stack trace ---
+[TIME] one step (300s)
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.<>c__DisplayClass47_0.<TimeStep>b__0() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 227
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+   --- End of inner exception stack trace ---
+[TIME] one step (300s)
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessEntity(Entity entity, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 34
+   at Pulsar4X.Movement.WarpMoveProcessor.SetOrbitHereSimpleNewt(Entity entity, WarpMovingDB moveDB, DateTime atDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\WarpMove\WarpMoveProcessor.cs:line 339
+   at Pulsar4X.Movement.WarpMoveProcessor.EndWarpMove(Entity entity, WarpAbilityDB warpDB, WarpMovingDB moveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\WarpMove\WarpMoveProcessor.cs:line 261
+   at Pulsar4X.Movement.WarpMoveProcessor.WarpMove(Entity entity, WarpMovingDB moveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\WarpMove\WarpMoveProcessor.cs:line 171
+   at Pulsar4X.Movement.WarpMoveProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\WarpMove\WarpMoveProcessor.cs:line 113
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeAsync(CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 287
+   --- End of inner exception stack trace ---
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.<>c__DisplayClass47_0.<TimeStep>b__0() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 227
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+   --- End of inner exception stack trace ---
+[TIME] one step (300s)
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.<>c__DisplayClass47_0.<TimeStep>b__0() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 227
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+   --- End of inner exception stack trace ---
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[STATE] heartbeat t=2050-01-01 02:35 paused step=300s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1866 (+6) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[TIME] one step (300s)
+[TIME] one step (300s)
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.<>c__DisplayClass47_0.<TimeStep>b__0() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 227
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+   --- End of inner exception stack trace ---
+[STATE] heartbeat t=2050-01-01 02:35 paused step=300s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1866 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[TIME] one step (300s)
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.<>c__DisplayClass47_0.<TimeStep>b__0() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 227
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+   --- End of inner exception stack trace ---
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.5,-7.7 Gm
+[CAMERA] pan -> 150.5,-7.7 Gm
+[CAMERA] pan -> 150.5,-7.7 Gm
+[CAMERA] pan -> 150.5,-7.7 Gm
+[CAMERA] pan -> 150.5,-7.7 Gm
+[CAMERA] pan -> 150.5,-7.7 Gm
+[CAMERA] pan -> 150.5,-7.7 Gm
+[CAMERA] pan -> 150.5,-7.7 Gm
+[CAMERA] pan -> 150.5,-7.7 Gm
+[CAMERA] pan -> 150.5,-7.7 Gm
+[STATE] heartbeat t=2050-01-01 02:35 paused step=300s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1866 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 150.5,-7.7 Gm
+[CAMERA] pan -> 150.5,-7.7 Gm
+[CAMERA] pan -> 150.5,-7.7 Gm
+[CAMERA] pan -> 150.5,-7.7 Gm
+[CAMERA] pan -> 150.5,-7.7 Gm
+[CAMERA] pan -> 150.5,-7.7 Gm
+[CAMERA] pan -> 150.5,-7.7 Gm
+[CAMERA] pan -> 150.5,-7.7 Gm
+[CAMERA] pan -> 150.5,-7.7 Gm
+[CAMERA] pan -> 150.5,-7.7 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.<>c__DisplayClass47_0.<TimeStep>b__0() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 227
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+   --- End of inner exception stack trace ---
+[TIME] one step (300s)
+[STATE] heartbeat t=2050-01-01 02:35 paused step=300s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1866 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.<>c__DisplayClass47_0.<TimeStep>b__0() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 227
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+   --- End of inner exception stack trace ---
+[TIME] one step (300s)
+[STATE] heartbeat t=2050-01-01 02:35 paused step=300s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1866 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[TIME] play (step 300s)
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.<>c__DisplayClass47_0.<TimeStep>b__0() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 227
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+   --- End of inner exception stack trace ---
+[STATE] heartbeat t=2050-01-01 02:35 paused step=300s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1866 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[TIME] play (step 300s)
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeAsync(CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 287
+   --- End of inner exception stack trace ---
+[TIME] play (step 300s)
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeAsync(CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 287
+   --- End of inner exception stack trace ---
+[TIME] play (step 300s)
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeAsync(CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 287
+   --- End of inner exception stack trace ---
+[TIME] one step (300s)
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeAsync(CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 287
+   --- End of inner exception stack trace ---
+[STATE] heartbeat t=2050-01-01 02:35 paused step=300s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1866 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.4,-7.5 Gm
+[CAMERA] pan -> 150.3,-7.4 Gm
+[CAMERA] pan -> 150.3,-7.4 Gm
+[CAMERA] pan -> 150.3,-7.4 Gm
+[CAMERA] pan -> 150.3,-7.4 Gm
+[CAMERA] pan -> 150.3,-7.4 Gm
+[CAMERA] pan -> 150.3,-7.4 Gm
+[CAMERA] pan -> 150.3,-7.4 Gm
+[CAMERA] pan -> 150.3,-7.4 Gm
+[CAMERA] pan -> 150.3,-7.4 Gm
+[CAMERA] pan -> 150.3,-7.4 Gm
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.<>c__DisplayClass47_0.<TimeStep>b__0() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 227
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+   --- End of inner exception stack trace ---
+[STATE] heartbeat t=2050-01-01 02:35 paused step=300s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1866 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-01 02:35 paused step=300s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1866 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-01 02:35 paused step=300s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1866 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[TIME] play (step 300s)
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.<>c__DisplayClass47_0.<TimeStep>b__0() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 227
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+   --- End of inner exception stack trace ---
+[STATE] heartbeat t=2050-01-01 02:35 paused step=18000s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1866 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[TIME] play (step 18000s)
+[TIME] one step (18000s)
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeAsync(CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 287
+   --- End of inner exception stack trace ---
+[STATE] heartbeat t=2050-01-01 02:35 paused step=18000s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1866 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-01 02:35 paused step=18000s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1866 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[TIME] one step (18000s)
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.<>c__DisplayClass47_0.<TimeStep>b__0() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 227
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+   --- End of inner exception stack trace ---
+[TIME] play (step 18000s)
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.<>c__DisplayClass47_0.<TimeStep>b__0() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 227
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+   --- End of inner exception stack trace ---
+[STATE] heartbeat t=2050-01-01 02:35 paused step=3600s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1866 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeAsync(CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 287
+   --- End of inner exception stack trace ---
 [TIME] one step (3600s)
-[STATE] heartbeat t=2050-05-02 10:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17490 (+6), battle-trigger passes 2098691 (+720) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[TIME] one step (3600s)
-[STATE] heartbeat t=2050-05-02 11:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17496 (+6), battle-trigger passes 2099411 (+720) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[TIME] one step (3600s)
-[TIME] one step (3600s)
-[TIME] one step (3600s)
-[STATE] heartbeat t=2050-05-02 14:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17514 (+18), battle-trigger passes 2101571 (+2160) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[TIME] one step (3600s)
-[TIME] one step (3600s)
-[STATE] heartbeat t=2050-05-02 16:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17526 (+12), battle-trigger passes 2103011 (+1440) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
 [TIME] play (step 3600s)
-[STATE] heartbeat t=2050-05-03 19:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17688 (+162), battle-trigger passes 2122451 (+19440) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-05 01:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 17868 (+180), battle-trigger passes 2144051 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-06 07:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 18048 (+180), battle-trigger passes 2165651 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-07 13:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 18228 (+180), battle-trigger passes 2187251 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-08 19:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 18408 (+180), battle-trigger passes 2208851 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-10 01:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 18588 (+180), battle-trigger passes 2230451 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-11 07:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 18768 (+180), battle-trigger passes 2252051 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-12 13:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 18948 (+180), battle-trigger passes 2273651 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-13 19:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 19128 (+180), battle-trigger passes 2295251 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-15 01:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 19308 (+180), battle-trigger passes 2316851 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-16 07:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 19488 (+180), battle-trigger passes 2338451 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[WARP] ship #816 'Endless Stride' arrived at Venus
-[STATE] heartbeat t=2050-05-17 13:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 19668 (+180), battle-trigger passes 2360051 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-18 19:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 19848 (+180), battle-trigger passes 2381651 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-20 01:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 20028 (+180), battle-trigger passes 2403251 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-21 07:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 20208 (+180), battle-trigger passes 2424851 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-22 13:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 20388 (+180), battle-trigger passes 2446451 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-23 19:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 20568 (+180), battle-trigger passes 2468051 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-25 01:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 20748 (+180), battle-trigger passes 2489651 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-26 07:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 20928 (+180), battle-trigger passes 2511251 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-27 13:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 21108 (+180), battle-trigger passes 2532851 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-28 19:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 21288 (+180), battle-trigger passes 2554451 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-30 01:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 21468 (+180), battle-trigger passes 2576051 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-05-31 07:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 21648 (+180), battle-trigger passes 2597651 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-01 13:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 21828 (+180), battle-trigger passes 2619251 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-02 19:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 22008 (+180), battle-trigger passes 2640851 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-04 01:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 22188 (+180), battle-trigger passes 2662451 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-05 07:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 22368 (+180), battle-trigger passes 2684051 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-06 13:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 22554 (+186), battle-trigger passes 2706327 (+22276) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-07 19:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 22734 (+180), battle-trigger passes 2727895 (+21568) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-09 01:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 22914 (+180), battle-trigger passes 2749530 (+21635) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-10 07:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 23094 (+180), battle-trigger passes 2771128 (+21598) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-11 13:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 23274 (+180), battle-trigger passes 2792647 (+21519) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-12 19:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 23454 (+180), battle-trigger passes 2814288 (+21641) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-14 01:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 23634 (+180), battle-trigger passes 2835893 (+21605) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-15 07:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 23814 (+180), battle-trigger passes 2857538 (+21645) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-16 13:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 23994 (+180), battle-trigger passes 2879051 (+21513) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-17 19:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 24174 (+180), battle-trigger passes 2900636 (+21585) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-19 01:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 24354 (+180), battle-trigger passes 2922266 (+21630) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-20 07:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 24534 (+180), battle-trigger passes 2943827 (+21561) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-21 13:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 24714 (+180), battle-trigger passes 2965468 (+21641) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-22 19:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 24894 (+180), battle-trigger passes 2987068 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-24 01:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 25074 (+180), battle-trigger passes 3008638 (+21570) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-25 07:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 25254 (+180), battle-trigger passes 3030252 (+21614) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-26 13:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 25434 (+180), battle-trigger passes 3051885 (+21633) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-27 19:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 25614 (+180), battle-trigger passes 3073483 (+21598) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-29 01:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 25794 (+180), battle-trigger passes 3095081 (+21598) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-06-30 07:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 25974 (+180), battle-trigger passes 3116681 (+21600) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-01 13:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 26154 (+180), battle-trigger passes 3138265 (+21584) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-02 19:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 26334 (+180), battle-trigger passes 3159840 (+21575) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-04 01:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 26514 (+180), battle-trigger passes 3181481 (+21641) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-05 07:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 26694 (+180), battle-trigger passes 3203040 (+21559) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-06 13:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 26874 (+180), battle-trigger passes 3224629 (+21589) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-07 19:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 27054 (+180), battle-trigger passes 3246297 (+21668) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-09 01:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 27234 (+180), battle-trigger passes 3267840 (+21543) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-10 07:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 27414 (+180), battle-trigger passes 3289393 (+21553) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-11 13:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 27594 (+180), battle-trigger passes 3311091 (+21698) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-12 19:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 27774 (+180), battle-trigger passes 3332657 (+21566) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-14 01:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 27954 (+180), battle-trigger passes 3354294 (+21637) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-15 07:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28134 (+180), battle-trigger passes 3375897 (+21603) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-16 13:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28314 (+180), battle-trigger passes 3397476 (+21579) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-17 19:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28494 (+180), battle-trigger passes 3419083 (+21607) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 01:50 RUNNING step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28674 (+180), battle-trigger passes 3440623 (+21540) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[TIME] paused
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+102), battle-trigger passes 3453011 (+12388) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-07-19 19:50 paused step=3600s selected=Sol A G0V ships-in-view=7
-[ENGINE] sensor scans 28776 (+0), battle-trigger passes 3453011 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[STATE] heartbeat t=2050-01-01 02:35 paused step=3600s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1866 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-01 02:35 paused step=3600s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1866 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.<>c__DisplayClass47_0.<TimeStep>b__0() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 227
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+   --- End of inner exception stack trace ---
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeAsync(CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 287
+   --- End of inner exception stack trace ---
+[STATE] heartbeat t=2050-01-01 02:35 paused step=3600s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1866 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-01 02:35 paused step=3600s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1866 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-01 02:35 paused step=3600s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1866 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[TIME] play (step 3600s)
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeAsync(CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 287
+   --- End of inner exception stack trace ---
+[TIME] one step (3600s)
+[STATE] heartbeat t=2050-01-01 02:35 paused step=3600s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1866 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol)
+ ---> System.Collections.Generic.KeyNotFoundException: BlobType Pulsar4X.Storage.CargoStorageDB not found in Manager: system-sol
+   at Pulsar4X.Engine.EntityManager.GetDataBlob[T](Int32 entityID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\EntityManager.cs:line 405
+   at Pulsar4X.Engine.Entity.GetDataBlob[T]() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Entities\Entity.cs:line 58
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 63
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeAsync(CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 287
+   --- End of inner exception stack trace ---
+[CAMERA] pan -> 150.3,-7.4 Gm
+[CAMERA] pan -> 150.3,-7.4 Gm
+[CAMERA] pan -> 150.3,-7.4 Gm
+[CAMERA] pan -> 150.3,-7.4 Gm
+[CAMERA] pan -> 150.3,-7.4 Gm
+[CAMERA] pan -> 150.3,-7.4 Gm
+[CAMERA] pan -> 150.3,-7.4 Gm
+[CAMERA] pan -> 150.3,-7.4 Gm
+[CAMERA] pan -> 150.3,-7.4 Gm
+[CAMERA] pan -> 150.3,-7.4 Gm
+[STATE] heartbeat t=2050-01-01 02:35 paused step=3600s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1866 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 150.3,-7.5 Gm
+[CAMERA] pan -> 150.3,-7.5 Gm
+[CAMERA] pan -> 150.3,-7.5 Gm
+[CAMERA] pan -> 150.3,-7.5 Gm
+[CAMERA] pan -> 150.3,-7.5 Gm
+[CAMERA] pan -> 150.3,-7.5 Gm
+[CAMERA] pan -> 150.3,-7.5 Gm
+[CAMERA] pan -> 150.3,-7.5 Gm
+[CAMERA] pan -> 150.3,-7.5 Gm
+[CAMERA] pan -> 150.3,-7.5 Gm
+[CAMERA] pan -> 150.3,-7.6 Gm
+[CAMERA] pan -> 150.3,-7.6 Gm
+[CAMERA] pan -> 150.3,-7.6 Gm
+[CAMERA] pan -> 150.3,-7.6 Gm
+[CAMERA] pan -> 150.3,-7.6 Gm
+[CAMERA] pan -> 150.3,-7.6 Gm
+[CAMERA] pan -> 150.3,-7.6 Gm
+[CAMERA] pan -> 150.3,-7.6 Gm
+[CAMERA] pan -> 150.3,-7.6 Gm
+[CAMERA] pan -> 150.3,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[CAMERA] pan -> 150.4,-7.6 Gm
+[STATE] heartbeat t=2050-01-01 02:35 paused step=3600s selected=(none) ships-in-view=35
+[ENGINE] sensor scans 18 (+0), battle-trigger passes 1866 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 20 other-faction ship(s) in-system, detects 1 (19 hidden from you)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[VIEW] now viewing faction id=0 ()
+[STATE] ship positions (after view switch): 35 ship(s)
+[STATE]   ship #963 'Planet Express Ship' faction=957 sun-dist=150.25Gm parent=Earth
+[STATE]   ship #966 'Serial Peacemaker' faction=957 sun-dist=150.24Gm parent=Earth
+[STATE]   ship #968 'Prevailing Stillness' faction=957 sun-dist=150.25Gm parent=Earth
+[STATE]   ship #971 'Surveyor I' faction=957 sun-dist=150.23Gm parent=Earth
+[STATE]   ship #973 'SensorSat I' faction=957 sun-dist=150.24Gm parent=Earth
+[STATE]   ship #979 '1st Task Force Aegis Test Warship 1' faction=957 sun-dist=150.26Gm parent=ROOT/null
+[STATE]   ship #980 '1st Task Force Lancer Test Railgun Cruiser 2' faction=957 sun-dist=150.56Gm parent=ROOT/null
+[STATE]   ship #981 '1st Task Force Bulwark Flak Escort 3' faction=957 sun-dist=150.57Gm parent=Luna
+[STATE]   ship #982 '1st Task Force Wasp Strike Fighter 4' faction=957 sun-dist=150.56Gm parent=ROOT/null
+[STATE]   ship #983 '1st Task Force Wasp Strike Fighter 5' faction=957 sun-dist=150.56Gm parent=ROOT/null
+[STATE]   ship #985 '2nd Task Force Aegis Test Warship 1' faction=957 sun-dist=150.23Gm parent=Earth
+[STATE]   ship #986 '2nd Task Force Lancer Test Railgun Cruiser 2' faction=957 sun-dist=150.23Gm parent=Earth
+[STATE]   ship #987 '2nd Task Force Bulwark Flak Escort 3' faction=957 sun-dist=150.23Gm parent=Earth
+[STATE]   ship #988 '2nd Task Force Wasp Strike Fighter 4' faction=957 sun-dist=150.23Gm parent=Earth
+[STATE]   ship #989 '2nd Task Force Wasp Strike Fighter 5' faction=957 sun-dist=150.23Gm parent=Earth
+[STATE]   ship #992 '992' faction=990 sun-dist=150.56Gm parent=Luna
+[STATE]   ship #993 '993' faction=990 sun-dist=150.56Gm parent=Luna
+[STATE]   ship #994 '994' faction=990 sun-dist=150.56Gm parent=Luna
+[STATE]   ship #995 '995' faction=990 sun-dist=150.56Gm parent=Luna
+[STATE]   ship #996 '996' faction=990 sun-dist=150.56Gm parent=Luna
+[STATE]   ship #998 '998' faction=990 sun-dist=108.28Gm parent=Venus
+[STATE]   ship #999 '999' faction=990 sun-dist=108.28Gm parent=Venus
+[STATE]   ship #1000 '1000' faction=990 sun-dist=108.28Gm parent=Venus
+[STATE]   ship #1001 '1001' faction=990 sun-dist=108.28Gm parent=Venus
+[STATE]   ship #1002 '1002' faction=990 sun-dist=108.28Gm parent=Venus
+[STATE]   ship #1004 '1004' faction=990 sun-dist=46.03Gm parent=Mercury
+[STATE]   ship #1005 '1005' faction=990 sun-dist=46.03Gm parent=Mercury
+[STATE]   ship #1006 '1006' faction=990 sun-dist=46.03Gm parent=Mercury
+[STATE]   ship #1007 '1007' faction=990 sun-dist=46.03Gm parent=Mercury
+[STATE]   ship #1008 '1008' faction=990 sun-dist=46.03Gm parent=Mercury

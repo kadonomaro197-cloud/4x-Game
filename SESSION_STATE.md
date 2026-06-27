@@ -10,6 +10,64 @@ Session 2026-06-26 — **detection / EMCON / fog-of-war BUILT, plus the logging 
 
 ---
 
+## ⏩ Session 2026-06-27 — combat made PLAYABLE + VISIBLE; warp/spawn fixes; thrash fix (READ FIRST)
+
+**Headline: a spawned fleet can now travel, fight, win — and you can SEE it happen.** Today closed the gap between
+"the combat engine works" and "you can actually *play* a battle." All on `claude/focused-ritchie-debock`; engine
+work is CI-green, client (UI) work is CI-blind (the developer's local build is the only check).
+
+### What shipped (in order)
+1. **Combat ships can travel** (`c67b8d2`) — the 6 combat designs (Aegis / Picket / Lancer / Bulwark / Wasp /
+   Leviathan) had guns + sublight thrusters but **no warp drive**. Added Alcubierre drives (the same drive the
+   utility ships already carry → materials already stocked, `BaseModIntegrityTests`-safe).
+2. **Spawned ships boot ready to fight** (`82d4ccd`) — `ShipFactory.ChargeReactors` tops a spawned ship's reactor
+   to capacity. Warp **and** weapons run off **stored electricity**; the DevTools/sandbox spawn filled the fuel
+   tanks but left the battery at 0, so a fresh ship just sat there. The exact *"what do the premade ships have that
+   ours don't?"*: the start fleet is hand-charged in `DefaultStartFactory`; the spawn path wasn't.
+3. **Live combat auto-trigger CONFIRMED** (a long-open question, now CLOSED) — a player log shows the whole chain
+   firing on **PLAY**: `enters combat → COMBAT INTERRUPT (clock auto-pauses) → salvo → disengage`, player won 3-0.
+   The engine was never the problem; the gap was **visibility**.
+4. **Combat is now VISIBLE** (the "I couldn't see the battle" fix):
+   - `Combat.BattleLog` (engine, `2e655b2`) — a capped, structured history of battle state-changes that **survives
+     after the fight** (the live `FleetCombatStateDB` is wiped on disengage, so it can't be the source).
+   - **Battle Report window** (client, `fbf48cb`) — lists recent battles from `BattleLog.Recent()`; opens from
+     DevTools and **AUTO-OPENS on first contact** (`6d636cd`), which also selects the player's engaged fleet so the
+     **Combat/doctrine tab is one click away**. Works outside SM (uses the real `PlayerFaction`).
+5. **Engage/disengage thrash fixed** (`84ee353`) — the trigger was re-grabbing a fleet that *left* a fight but
+   stayed in range. The trigger now skips **no-firepower pairs** (a stalemate that can't resolve) and **broken-off
+   fleets** (`FleetRetreatDB`), and clears a stale retreat flag once **no hostile is in range**.
+
+### Lessons (durable — today)
+- **"Works" ≠ "playable" ≠ "visible."** The combat engine was DONE and even auto-triggered correctly — yet the
+  player couldn't travel to a fight (no drive / dead battery), couldn't see it (auto-resolve math, no UI), and the
+  trigger thrashed on edge cases. Three different rungs; all had to be wired for combat to *feel* real.
+- **Auto-resolve models WHOLE-SHIP losses, not per-ship damage.** A 3v1 ending with your fleet "without a scratch"
+  is CORRECT (concentration of force: 3 guns kill the 1 before its single gun racks up a kill). A survivor reads as
+  untouched even if it soaked sub-lethal fire — battle scars (a damaged-condition tier) are a documented later add,
+  not a bug.
+- **"Leaves but stays in range" is the thrash signature.** Any system where an actor exits a state while its
+  *triggering condition is still true* re-fires every tick. Fix = remove the condition (separation / move away — v2)
+  or guard re-entry (skip-while-flagged + clear-when-clear — the v1 fix here). Watch for this shape elsewhere.
+- (Earlier today, in "Lessons learned" below) **cradle-to-grave includes the TRAVEL rung**, and **spawn parity** —
+  a convenience-spawned unit must get everything the start factory hands a native one (`FillFuelTanks` +
+  `ChargeReactors` are the pair to extend, not bypass).
+
+### Open / flagged (deliberate — for next time)
+- **On-map combat marker** — the LAST of the 3 combat-visibility windows (a marker at the battle site on the system
+  map so you see *where* a fight is). Engine + 2 UI pieces done; the marker is next (task #39).
+- **v2: retreat actually moves** — v1 retreat records the withdraw vector but issues no move order, so the fleet
+  stays put (now guarded against thrash, but it doesn't physically run). The v2 movement layer reads
+  `FleetRetreatDB.RetreatVector`.
+- **Per-ship battle damage (a "condition tier")** — auto-resolve is whole-ship-kills; sub-lethal damage isn't
+  tracked per ship yet (`docs/WEAPONS-AND-DODGE-DESIGN.md` "aggregate force condition").
+- (Carried) detection-quality units bug (`SensorTools.cs:173`); warp→Sun teleport edge case.
+
+### Where to resume
+Build the on-map combat **marker** (finishes the 3-window visibility set), then back to the M1 lever plan
+(`docs/SYSTEMS-STATUS-AND-TEST-PLAN.md`) for the next system.
+
+---
+
 ## ⏩ Consolidation — everything since the last live test (2026-06-26) — READ FIRST
 
 **Two flags drive all of it, both OFF by default:** `CombatEngagement.RequireDetectionToEngage` (the fog switch — combat-gating **and** unit-hiding **and** contact blips, all at once) and `CombatEngagement.NarrateToLog` (`[Combat]` battle narration + first-strike line). Set in DevTools › Detection / Fog of War, or `PulsarMainWindow` ctor.
