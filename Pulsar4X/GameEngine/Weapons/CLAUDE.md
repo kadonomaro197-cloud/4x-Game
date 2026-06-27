@@ -4,6 +4,19 @@ Space combat weapons: beam weapons, missiles, fire control. Lives in `GameEngine
 
 ---
 
+## Design principle — weapon ranges are REALISTIC, and that's the point (developer's call, 2026-06-27)
+
+**Space is big. Weapon ranges stay physically honest, not sci-fi-convenient.** A default beam (`weapons.json` `Range` ≈ **5 km**) really is a 5 km knife-fight laser — microscopic next to the `EngagementRange_m` = 1,000,000 km detection/closing bubble. That mismatch is **intended**, not a bug: you detect at a million km and then *close* to where your guns actually reach (this is exactly what the closing-fight model — `docs/FLEET-COMBAT-CLOSING-DESIGN.md` — is built to play out).
+
+The rule going forward, for beams and every other weapon:
+- **Long range is earned, not given.** A laser coherent over tens of thousands of km needs enormous power — so a long-range design must carry a **fat price tag in both construction (materials/tech) and utilization (power/heat)**. Range is a stat you *pay* for, up the whole cradle-to-grave chain (mineral → material → component → research → installed → the in-play reach).
+- **Don't "fix" a small range by inflating the number.** If a weapon feels too short-legged, the answer is a *new, more expensive design*, not rescaling the base data. Keep the base data realistic.
+- **UI consequence (not a data problem):** a 5 km ring is sub-pixel at system scale — you **zoom in** to appreciate it. The render side is made safe for that zoom (the `SimpleCircle` on-screen cull, root `CLAUDE.md` gotcha #15), so zooming to the ring no longer stutters. The ring being tiny is the realism showing through, not a defect.
+
+Before changing any `Range`/`MaxRange`/`OptimalRange` value, re-read this — the instinct to make ranges "playable-big" is the thing we're deliberately resisting.
+
+---
+
 ## File Map
 
 | File | Purpose |
