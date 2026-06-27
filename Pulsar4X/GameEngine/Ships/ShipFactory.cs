@@ -13,6 +13,7 @@ using Pulsar4X.Movement;
 using Pulsar4X.Combat;
 using Pulsar4X.Factions;
 using Pulsar4X.Storage;
+using Pulsar4X.Energy;
 
 namespace Pulsar4X.Ships
 {
@@ -168,6 +169,39 @@ namespace Pulsar4X.Ships
         }
 
         private const int FuelFillUnits = 10_000_000;
+
+        /// <summary>
+        /// Top a ship's energy store (its battery bank) up to max capacity. The reactor/battery sibling of
+        /// <see cref="FillFuelTanks"/>: <see cref="CreateShip"/> leaves a new ship's stored energy at ZERO
+        /// (EnergyStoreAtb initialises EnergyStored = 0; a production-built ship earns its charge over time), so
+        /// call this for ships that should spawn READY TO FLY — the DevTools spawns and the combat sandbox.
+        ///
+        /// The one that bites: WARP is paid out of STORED electricity, not fuel — `WarpMoveCommand` blocks until
+        /// `EnergyStored >= BubbleCreationCost`. A 0-charge ship handed a move order therefore just sits there
+        /// (the "I spawned a ship, ordered it to move, and nothing happened" symptom). Charging it removes that
+        /// trap; weapons (which also draw from EnergyStored) likewise work immediately.
+        ///
+        /// Charges to the ship's OWN <c>EnergyStoreMax</c> (the principled version of DefaultStartFactory's
+        /// hand-set 2,750,000) — correct for any design. For the base-mod ships a topped-off battery always holds
+        /// 2×–4× one warp bubble at starting tech, so a charged ship can always warp. Returns total KJ added; 0
+        /// (never throws) if the ship has no reactor/battery.
+        /// </summary>
+        public static double ChargeReactors(Entity ship)
+        {
+            if (!ship.TryGetDataBlob<EnergyGenAbilityDB>(out var energyDB))
+                return 0;
+            double added = 0;
+            foreach (var kvp in energyDB.EnergyStoreMax)
+            {
+                double current = energyDB.EnergyStored.TryGetValue(kvp.Key, out var c) ? c : 0;
+                if (kvp.Value > current)
+                {
+                    added += kvp.Value - current;
+                    energyDB.EnergyStored[kvp.Key] = kvp.Value;
+                }
+            }
+            return added;
+        }
 
         public static void DestroyShip(Entity shipToDestroy)
         {
