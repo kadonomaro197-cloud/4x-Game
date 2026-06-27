@@ -296,12 +296,27 @@ namespace Pulsar4X.Combat
 
         /// <summary>Closing-rate dial (m/s): the gap-change speed of a maximally-maneuverable fleet (evasion 1.0); a
         /// fleet changes the gap proportional to its maneuverability (min evasion over its ships — it moves as one).
-        /// Tunable like <see cref="SalvoDamageScale"/>; set 0 to FREEZE the gap (gauge use). v1 calibration provisional.</summary>
-        public static double ClosingSpeedScale_mps = 100_000.0;
+        /// Tunable like <see cref="SalvoDamageScale"/>; set 0 to FREEZE the gap (gauge use). RAISED 10× 2026-06-27: at
+        /// 100k a low-evasion (~0.05) fleet closed only ~25 km/salvo, so a 10,000 km gap never reached weapons range
+        /// and the fight resolved at standoff via unbounded railguns (the developer's "no combat within weapons range"
+        /// play-test). 1e6 closes the weapon envelope in a watchable handful of salvos. Live-calibration provisional.</summary>
+        public static double ClosingSpeedScale_mps = 1_000_000.0;
 
         /// <summary>Fallback opening gap (m) when first contact has no usable fleet positions (the multi-party join
-        /// path). The 2-fleet <see cref="StartEngagement"/> seeds the real distance instead. v1 stub.</summary>
-        public static double InitialSeparationDefault_m = 10_000_000.0;
+        /// path). The 2-fleet <see cref="StartEngagement"/> seeds the real distance instead. LOWERED 2026-06-27 from
+        /// 10,000 km to ~1,000 km (missile range) so a fight that falls back to this default OPENS at the outer weapon
+        /// envelope — missiles trade immediately, then flak/beam as the fleets close — instead of 10× beyond every
+        /// weapon. The "combat happens at weapons range" fix, paired with the closing-rate bump + range falloff.</summary>
+        public static double InitialSeparationDefault_m = 1_000_000.0;
+
+        /// <summary>Evasion-INDEPENDENT range-accuracy falloff for ballistic fire (the developer's "a railgun has
+        /// infinite range but the chance of a hit falls off with distance"). The pre-existing range term scaled ONLY
+        /// by the target's evasion, so a zero-evasion battleship was hit perfectly at ANY range — which let unbounded
+        /// railguns resolve a fight at 10,000 km, before anyone closed to beam/flak range. This adds a base miss that
+        /// applies even to a sitting target (the firing solution + the target's own orbital drift degrade over a long
+        /// flight time), scaled by flight-time and by (1−Tracking) so a beam (≈0 flight time) and a guided weapon
+        /// (high Tracking) are barely affected — a dumb slug at long range is. 0 = old evasion-only behaviour.</summary>
+        public static double RangeBaseMiss = 0.9;
 
         /// <summary>Phase 2 (kiting counter): Δv (m/s) a fleet spends per game-second it CONTROLS the range. A kiter
         /// holding the gap burns this each step; when its <see cref="FleetCombatStateDB.ManeuverBudget"/> runs dry it can
@@ -880,7 +895,11 @@ namespace Pulsar4X.Combat
                 double flightTime = separation_m / w.Velocity;
                 double timeFactor = flightTime / (flightTime + FlightTimeReference_s);
                 double tracking = w.Tracking < 0 ? 0 : w.Tracking > 1 ? 1 : w.Tracking;
-                dodgeChance += evasion * timeFactor * (1.0 - tracking);
+                // (evasion + RangeBaseMiss): the target's dodge PLUS an evasion-independent base miss, so even a
+                // sitting (0-evasion) hull is hard to hit with a dumb slug at long range — the "accuracy falls off
+                // with distance" that forces fleets to CLOSE for a decisive hit instead of resolving at standoff.
+                // Both scale by flight-time and (1−Tracking): a beam / guided weapon shrugs it off, a dumb slug doesn't.
+                dodgeChance += (evasion + RangeBaseMiss) * timeFactor * (1.0 - tracking);
             }
             if (dodgeChance > 1.0) dodgeChance = 1.0;
 
