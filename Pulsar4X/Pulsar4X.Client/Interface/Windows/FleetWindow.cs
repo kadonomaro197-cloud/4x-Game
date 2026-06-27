@@ -692,6 +692,7 @@ namespace Pulsar4X.Client
         private bool _showRangeRings;
         private readonly List<string> _rangeRingKeys = new();
         private FleetDB? _ringsFleet;   // which fleet's ships currently own rings — rebuild when this changes
+        private Entity? _ringsTarget;   // which enemy the detection bubble is drawn for — rebuild when selection changes
 
         private void ClearRangeRings()
         {
@@ -701,6 +702,7 @@ namespace Pulsar4X.Client
                     render.UIWidgets.Remove(key);
             _rangeRingKeys.Clear();
             _ringsFleet = null;
+            _ringsTarget = null;
         }
 
         private void BuildRangeRings()
@@ -709,6 +711,7 @@ namespace Pulsar4X.Client
             var render = _uiState.SelectedSysMapRender;
             if (render == null || selectedFleetDB == null) return;
             _ringsFleet = selectedFleetDB;
+            _ringsTarget = _uiState.LastClickedEntity?.Entity;
 
             foreach (var ship in selectedFleetDB.GetChildren().Where(c => c.IsValid && !c.HasDataBlob<FleetDB>()))
             {
@@ -733,6 +736,36 @@ namespace Pulsar4X.Client
                     _rangeRingKeys.Add(key);
                 }
             }
+
+            // Detection bubble vs the currently-selected ENEMY: one cyan ring around that target = how far the
+            // fleet's BEST sensor picks it up (your ship inside the ring → you see it). Range reads the target's
+            // real signature, so the bubble shrinks when the enemy goes dark — the honest, target-specific version
+            // of the self-ring. LastClickedEntity is the player's current map selection.
+            var target = _uiState.LastClickedEntity?.Entity;
+            if (target != null && target.IsValid && target.FactionOwnerID != factionID
+                && target.HasDataBlob<SensorProfileDB>() && target.HasDataBlob<PositionDB>())
+            {
+                double bestReach = 0;
+                foreach (var ship in selectedFleetDB.GetChildren().Where(c => c.IsValid && !c.HasDataBlob<FleetDB>()))
+                {
+                    double r = SensorTools.DetectionRangeAgainst(ship, target);
+                    if (r > bestReach) bestReach = r;
+                }
+                if (bestReach > 0)
+                {
+                    string key = "rangering_target_" + target.Id;
+                    render.UIWidgets[key] = new SimpleCircle(target.GetDataBlob<PositionDB>(), Pulsar4X.Orbital.Distance.MToAU(bestReach),
+                        new SDL3.SDL.Color { R = 90, G = 215, B = 215, A = 100 });   // cyan: the enemy's detectability bubble
+                    _rangeRingKeys.Add(key);
+                    SessionLog.Action($"[range-ring] detection bubble vs '{target.GetName(factionID)}' #{target.Id}: fleet best sensor reach {Stringify.Distance(bestReach)}");
+                }
+            }
+
+            // Live-test gauge (CI is blind to the SDL client): name what the ring build actually did, so the
+            // developer's play-test log shows whether the wire found ships + ranges. 0 rings when rings were
+            // expected = the wire, not the toggle, is the bug.
+            SessionLog.Action($"[range-ring] built {_rangeRingKeys.Count} ring(s) for the selected fleet"
+                + (target != null && target.FactionOwnerID != factionID ? $" (+ bubble vs #{target.Id})" : ""));
         }
 
         // The combat sheet: fleet totals + firepower-by-weapon-type + the per-ship table ("the table IS the
@@ -750,7 +783,8 @@ namespace Pulsar4X.Client
                 if (_showRangeRings) BuildRangeRings();
                 else ClearRangeRings();
             }
-            if (_showRangeRings && !ReferenceEquals(_ringsFleet, selectedFleetDB))
+            if (_showRangeRings && (!ReferenceEquals(_ringsFleet, selectedFleetDB)
+                    || !ReferenceEquals(_ringsTarget, _uiState.LastClickedEntity?.Entity)))
                 BuildRangeRings();
 
             var ships = selectedFleetDB.GetChildren().Where(c => c.IsValid && !c.HasDataBlob<FleetDB>()).ToArray();
