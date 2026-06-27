@@ -1,5 +1,11 @@
 # Combat System Design
 
+> **→ The range/closing build plan lives in `docs/FLEET-COMBAT-CLOSING-DESIGN.md`.** That doc is the phased
+> blueprint for the next big evolution: turning this instant strength-compare into a **closing fight** where range,
+> speed, detection, and doctrine decide who can hit whom — fleet capability aggregation, per-sub-fleet ranges, the
+> first-shot trigger, and Rules of Engagement (the grown-up doctrine). Read it before touching combat distance,
+> the engagement trigger, or doctrine. The decision it all serves: **standoff vs. brawl.**
+
 ## What we're building (v1) — one combat engine, doctrine is the wheel
 
 **The point first.** Combat in this game runs itself. Two hostile fleets get close enough, the math takes over and fights it out — ships die, one side wins or runs. The player does **not** aim guns. **The one thing the player (or the AI) sets is doctrine** — the standing battle orders that tell a fleet *how* to fight: press hard, hold and protect, screen against missiles, withdraw. Change the doctrine and you change how the same auto-fight plays out. That is the whole game of space combat — pick the right posture for the situation, and let trained crews execute.
