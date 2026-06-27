@@ -564,6 +564,20 @@ on when the model is live. All deterministic (no wall-clock/RNG) so fast-forward
 - **Gauges:** `FleetAggregationTests` (Roots), `ClosingTests` (P1 range gate / determinism / flag-off / who-dictates;
   P2 kiting clock), `WeaponsReleaseTests` (P3 standoff). **Open (the developer's play-test):** live calibration of the
   closing-rate / burn-rate tunables and the "is standoff-vs-brawl FUN" gut-check.
+
+> **Calibration pass 2026-06-27 — "no combat within weapons range" play-test.** A live fight resolved at a ~10,000 km
+> standoff in 2 salvos via **unbounded railguns**, and the gap closed only ~25 km/salvo — so the fleets never reached
+> beam/flak range (the `[Combat] closing:` log: `gap 9,975,238m IN RANGE (reach unlimited)`). Two root causes, both
+> fixed: (1) **the range-accuracy falloff scaled ONLY by the target's evasion**, so a 0-evasion battleship was hit
+> perfectly at any range — added `RangeBaseMiss` (0.9), an evasion-INDEPENDENT base miss in `HitFraction` (still
+> scaled by flight-time × (1−Tracking), so beams/guided shrug it off, a dumb slug at long range doesn't) → unbounded
+> railguns are now weak at standoff and can't decide a fight before the merge. (2) **the gap barely closed** —
+> `ClosingSpeedScale_mps` 100k→**1e6** (10×) so a low-evasion fleet closes the weapon envelope in a watchable handful
+> of salvos, and `InitialSeparationDefault_m` 10,000 km→**1,000 km** (missile range) so a fallback-seeded fight OPENS
+> at the outer weapon envelope, not 10× beyond it. Net intent: **missile → flak → beam as they close**, the decisive
+> blows at weapons range. All three are `public static` dials (provisional, live-tuned). The range term is inert at
+> separation 0, so every closing-OFF combat fixture (the sims, triangle, stress lab) is byte-identical; gauges:
+> `DodgeResolveTests.HitFraction_RangeDegradesBallistics_EvenVsSittingTarget` (the 0-evasion falloff) + `ClosingTests`.
 - **Next: P4 — per-sub-fleet ranges** (each component its own gap, so a fighter wing closes while the capitals hold).
 
 ## Gotchas

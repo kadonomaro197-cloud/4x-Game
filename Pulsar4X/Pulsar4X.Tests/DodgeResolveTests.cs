@@ -73,6 +73,28 @@ namespace Pulsar4X.Tests
                 "separation 0 == the legacy 2-arg curve (pre-closing resolve byte-identical)");
         }
 
+        [Test]
+        [Description("The range falloff now bites a ZERO-evasion (sitting) target too — a dumb slug at long range is " +
+                     "much less accurate even against a battleship, not only an evasive fighter. This is the fix that " +
+                     "stops unbounded railguns from resolving a fight at standoff before fleets close to weapons range " +
+                     "(the developer's 'no combat within weapons range' play-test).")]
+        public void HitFraction_RangeDegradesBallistics_EvenVsSittingTarget()
+        {
+            var slug = new WeaponProfile(WeaponClass.Railgun, 1000, 5_000, 0.05, 5);   // slow, DUMB (low tracking)
+            double near = CombatEngagement.HitFraction(slug, 0.0, 0);                  // point blank vs a 0-evasion hull
+            double far  = CombatEngagement.HitFraction(slug, 0.0, 1_000_000);          // 1000 km vs the SAME hull
+            TestContext.Progress.WriteLine($"[dodge] slug vs 0-evasion: near={near:0.###} far={far:0.###}");
+            Assert.That(near, Is.GreaterThan(0.9), "point blank, a dumb slug hits a sitting target almost every time");
+            Assert.That(far, Is.LessThan(near),
+                "at long range it misses the SAME sitting target far more — accuracy falls off with distance, evasion or not");
+
+            // A GUIDED weapon resists the base miss even at range (it corrects in flight) — so the falloff is the
+            // ballistic weapon's problem, not a flat distance penalty on everything.
+            var missile = new WeaponProfile(WeaponClass.Missile, 1000, 5_000, 0.9, 5);
+            double missFar = CombatEngagement.HitFraction(missile, 0.0, 1_000_000);
+            Assert.That(missFar, Is.GreaterThan(far), "a guided missile holds accuracy at the range a dumb slug loses it");
+        }
+
         // --- the dodge flowing through the resolve ---------------------------------------------------------
         private static Entity MakeFleet(TestScenario s, Entity faction, string name)
             => FleetFactory.Create(s.StartingSystem, faction.Id, name);
