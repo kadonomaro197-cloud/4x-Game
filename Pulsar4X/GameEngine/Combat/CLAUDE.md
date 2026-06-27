@@ -424,6 +424,24 @@ panel reads `BattleLog.Recent()` (a snapshot array copy, safe on any thread) to 
 Runtime-only (not save/load) — a "recent battles" readout, not game state; thread-safe because combat ticks run
 per-system in parallel. Sensor: `BattleLogTests` (records survive the fight; ring buffer caps at MaxEvents).
 
+**Engage/disengage THRASH fix (2026-06-27).** Live symptom: the combat log spamming `enters combat` / `disengages`
+over and over for the same fleets. Root cause (both flavours): **a fleet LEAVES a fight but stays physically in
+range, so `Tick`'s engage pass re-grabs it the very next tick.** Two ways it happened:
+1. **Stalemate** — two fleets that can't damage each other (no firepower) entered, `StepEngagementGroup` ended them
+   as `frozen` (totalFire ≤ 0), and they re-engaged next tick. Fix: the engage pass (and `NewEngagementImminent`)
+   **skips a hostile pair when NEITHER side has firepower** (`FleetHasFirepower`) — no fight that can't resolve.
+2. **Retreat** — a fleet that broke off gets a `FleetRetreatDB`, but v1 retreat records the withdraw vector and
+   **issues no move order**, so the fleet stays put, in range → re-engaged → retreats again. Fix: the engage pass
+   **skips a fleet that holds `FleetRetreatDB`** (it has withdrawn — don't yank it back). `FleetRetreatDB` had **no
+   lifecycle** (never cleared), so to avoid a permanently-pacifist fleet, the top of `Tick` **clears a stale
+   `FleetRetreatDB` once no hostile is in range** (`AnyHostileInRange`) — the enemy died/left, or the player moved
+   the fleet out of range (the v1 "re-commit" path until the v2 movement layer actually sails the vector).
+Net: a withdrawn fleet stays withdrawn while threatened and rejoins the fight once clear; two unarmed fleets never
+"fight." Sensors: `CombatReengageTests` (unarmed pair never engages; a retreated fleet isn't re-grabbed, then its
+flag clears when the threat is gone). **Connections:** reads `FleetRetreatDB` (Feeds IN) + clears it (Feeds OUT);
+the firepower guard reads each fleet's `ShipCombatValueDB`. The directly-driven `StartEngagement`/`StepEngagement`
+test entry points are unchanged — only the auto-trigger `Tick` gained the guards, so the existing fixtures still pass.
+
 **Gotchas the gauge surfaced (two, both load-bearing for the live test):**
 1. **The flipped-faction enemy ships DO persist through a clock advance** with the sandbox's faction setup
    (`CreateBasicFaction` + `KnownSystems` + copied `ShipDesigns`) — the old "don't survive movement processing"
