@@ -399,7 +399,7 @@ namespace Pulsar4X.Sensors
         /// wins because that's the band that breaks threshold first as you close. Returns 0 if there's nothing to
         /// detect or the receiver's threshold is non-positive.
         /// </summary>
-        public static double DetectionRange_m(SensorReceiverAtb receiver, SensorProfileDB target)
+        public static double DetectionRange_m(SensorReceiverAtb receiver, SensorProfileDB target, double activityOverride = -1)
         {
             if (receiver == null || target == null)
                 return 0;
@@ -408,7 +408,10 @@ namespace Pulsar4X.Sensors
                 return 0;
 
             double bestRange = 0;
-            double activity = target.ActivityMultiplier;   // EMITTED scales with run-hot/dark; REFLECTED does not.
+            // EMITTED scales with run-hot/dark; REFLECTED does not. activityOverride >= 0 PINS the emitted scaling
+            // (e.g. 1.0 = "as if at full activity"), so "how far I SEE" can be measured against a reference target
+            // without MY own EMCON shrinking it — only the TARGET's loudness should move that number.
+            double activity = activityOverride >= 0 ? activityOverride : target.ActivityMultiplier;
             foreach (var emdat in target.EmittedEMSpectra)
             {
                 double r = RangeForSignal(emdat.Magnitude * activity, threshold);
@@ -463,6 +466,39 @@ namespace Pulsar4X.Sensors
                 return 0;
             return DetectionRange_m(receiver, profile);
         }
+
+        /// <summary>
+        /// HOW FAR THIS SHIP CAN SEE ("sensor reach"). Its best receiver against a reference target as loud as
+        /// itself at FULL activity (EMCON pinned to 1.0), so the number does NOT shrink when YOU go Silent — going
+        /// dark hides you, it doesn't blind you. This is the honest reach the map ring should draw (distinct from
+        /// detectability below). Returns 0 if the ship can't sense or has no signature reference.
+        /// </summary>
+        public static double SensorReachRange_m(Entity entity)
+        {
+            if (!TryGetBestReceiver(entity, out var receiver))
+                return 0;
+            if (!entity.TryGetDataBlob<SensorProfileDB>(out var profile))
+                return 0;
+            return DetectionRange_m(receiver, profile, activityOverride: 1.0);
+        }
+
+        /// <summary>
+        /// HOW FAR THIS SHIP CAN BE DETECTED ("detectability"). Its LIVE emitted signature — scaled by what it's
+        /// doing right now (EMCON posture × thrust × weapons heat, via <see cref="SensorProfileDB.ActivityMultiplier"/>)
+        /// — against a receiver as good as its own. SHRINKS on Silent, GROWS running hot: the "how loud am I, and
+        /// how does that change with what I'm doing" number. (Same value as <see cref="SelfDetectionRange_m"/>,
+        /// named for the detectability reading so callers don't conflate it with sensor REACH.)
+        /// </summary>
+        public static double DetectabilityRange_m(Entity entity) => SelfDetectionRange_m(entity);
+
+        /// <summary>
+        /// The ship's current emitted-signature activity scale (EMCON posture × heat): 1.0 = as-designed; &lt;1 =
+        /// quieter (Silent / coasting); &gt;1 = running hot (thrusting / firing). The driver behind
+        /// <see cref="DetectabilityRange_m"/> — the UI shows it so the player sees WHY their detectability moved.
+        /// Returns 1.0 if the ship has no signature profile.
+        /// </summary>
+        public static double CurrentActivityMultiplier(Entity entity)
+            => entity.TryGetDataBlob<SensorProfileDB>(out var p) ? p.ActivityMultiplier : 1.0;
 
         /// <summary>
         /// "How far can THIS ship pick up THAT specific target?" — the honest version of the self-ring, against a
