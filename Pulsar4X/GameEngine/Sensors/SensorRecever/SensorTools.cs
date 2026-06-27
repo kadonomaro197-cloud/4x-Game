@@ -338,18 +338,28 @@ namespace Pulsar4X.Sensors
         /// <returns>souce / (4 pi r^2)</returns>
         /// <param name="sourceValue">Source value.</param>
         /// <param name="distance">Distance. must be > 1 or it'll just return the source value</param>
+        // Detection-sensitivity rebalance (2026-06-27). The raw inverse-square law (source / 4π r²) is so harsh at
+        // realistic scales that a ship detected another ship at only ~292 km (measured by DetectionTuningTests:
+        // ~0.0003 Gm). With fog of war on that meant a fleet could sit AT a body and never see
+        // the hostiles parked there, AND combat (which requires mutual detection) could never trigger. This was the
+        // exact "sat at Luna, saw nothing, no battle" play-test report, and it's the long-standing in-code TODO
+        // ("the default sensor on Earth doesn't even detect Uranus"). DetectionSensitivityScale multiplies the
+        // received signal uniformly, so detection RANGE scales by its square root: 1e6 → ~1000× range → a ship
+        // detects a ship at ~0.29 Gm. That comfortably covers same-body combat and gives modest approach warning,
+        // while staying far below the ~60 Gm inner-system scale (so fog of war is preserved — you do NOT see the
+        // whole system). It's UNIFORM (multiplies every signal equally), so every RELATIVE detection result —
+        // loud-seen-farther-than-quiet, shrinks-on-Silent, the EMCON ladder — is unchanged; only the absolute reach
+        // moves. Applied in AttenuationCalc + AttenuationFactor (the live scan) AND RangeForSignal (the readout), so
+        // the scan and the "how far can I see" number stay in exact agreement. Tunable like Combat's SalvoDamageScale.
+        public const double DetectionSensitivityScale = 1e6;
+
         public static double AttenuationCalc(double sourceValue, double distance)
         {
-            // source / (4 pi r^2)
+            // source * scale / (4 pi r^2)  — see DetectionSensitivityScale above
             if (distance < 1) //if distance is too small, 4 pi r^2 ends up being < 1
                 distance = 1;
 
-            // TODO: need to rebalance this
-            // dividing by 4pi r^2 makes it incredibly hard to detect things from far away
-            // even if they have large signatures. For example, using this formula the default
-            // sensor on Earth doesn't detect Uranus or Neptune.
-            return sourceValue / (4 * Math.PI * distance * distance);
-            //return sourceValue;
+            return sourceValue * DetectionSensitivityScale / (4 * Math.PI * distance * distance);
         }
 
         /// <summary>
@@ -362,7 +372,7 @@ namespace Pulsar4X.Sensors
         {
             if(distance < 1)
                 distance = 1;
-            return 1 / (4 * Math.PI * distance * distance);
+            return DetectionSensitivityScale / (4 * Math.PI * distance * distance);
         }
 
         // ─── Detection RANGE (the reverse of attenuation) ──────────────────────────────────────────────────────
@@ -389,7 +399,9 @@ namespace Pulsar4X.Sensors
         {
             if (source_kW <= 0 || threshold_kW <= 0)
                 return 0;
-            return Math.Sqrt(source_kW / (4 * Math.PI * threshold_kW));
+            // Includes DetectionSensitivityScale so this stays the EXACT inverse of AttenuationCalc (the readout
+            // range matches the distance at which the live scan actually breaks threshold).
+            return Math.Sqrt(source_kW * DetectionSensitivityScale / (4 * Math.PI * threshold_kW));
         }
 
         /// <summary>

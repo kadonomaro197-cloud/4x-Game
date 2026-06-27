@@ -139,8 +139,8 @@ namespace Pulsar4X.Tests
 
             profile.ActivityMultiplier = 1.0;
             double full = SensorTools.DetectionRange_m(receiver, profile);
-            double expectedFull = Math.Sqrt(1e9 / (4 * Math.PI * 1.0));
-            Assert.That(full, Is.EqualTo(expectedFull).Within(1e-6).Percent, "full-power detection range follows the reverse-solve");
+            double expectedFull = Math.Sqrt(1e9 * SensorTools.DetectionSensitivityScale / (4 * Math.PI * 1.0));
+            Assert.That(full, Is.EqualTo(expectedFull).Within(1e-6).Percent, "full-power detection range follows the reverse-solve (incl. the sensitivity scale)");
 
             // Go dark: emitted signature drops, so you're first seen closer — range scales by sqrt(activity).
             profile.ActivityMultiplier = 0.15;
@@ -153,7 +153,7 @@ namespace Pulsar4X.Tests
             // it now dominates — the loudest band wins and the activity dial no longer moves the range.
             profile.ReflectedEMSpectra.Add(new EMData { WaveForm = new EMWaveForm(1400, 1500, 1600), Magnitude = 1e10 });
             double withReflect = SensorTools.DetectionRange_m(receiver, profile);
-            double expectedReflect = Math.Sqrt(1e10 / (4 * Math.PI * 1.0));
+            double expectedReflect = Math.Sqrt(1e10 * SensorTools.DetectionSensitivityScale / (4 * Math.PI * 1.0));
             Assert.That(withReflect, Is.EqualTo(expectedReflect).Within(1e-6).Percent,
                 "a louder reflected band sets the range, and (unlike emitted) it ignores the activity dial");
         }
