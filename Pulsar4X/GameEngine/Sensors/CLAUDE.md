@@ -101,6 +101,16 @@ The map's fog-of-war blips (`SensorContactIcon`, client side) need a contact's s
 
 Pure pass-throughs (CI compiles them; no behavioural test needed). When new UI needs more of a contact's *known* info, expose it here — don't widen the internal fields' visibility.
 
+## Detection RANGE accessors (2026-06-27) — the reverse-solve, so "how far can I see" is a number
+
+The scan only ever asks "is this target's faded signal above threshold at its *current* distance?" (a yes/no, fresh every scan) — so no "how far can I see" number existed for the UI to draw. There's no `DetectionRange` field, and that's *correct*: range depends on how loud the **other** ship is (dark vs. hot), so it's a relationship, not a property. `SensorTools` now runs that same attenuation **backwards**:
+- `RangeForSignal(source_kW, threshold_kW)` = `√(source / 4π·threshold)` — the exact inverse of `AttenuationCalc`. Inverts only the FIRST gate of `DetectonQuality` (a band is detectable when its attenuated magnitude > `BestSensitivity_kW`); ignores the waveform-overlap quality refinement (that shapes *how well* resolved, not *whether* seen).
+- `DetectionRange_m(receiver, target)` — how far that receiver first picks up that target: loudest band wins; **emitted** scales by the target's `ActivityMultiplier` (run hot = seen farther), **reflected** does not (going dark doesn't shrink your hull).
+- `TryGetBestReceiver(entity, out atb)` — the ship's most sensitive receiver (lowest `BestSensitivity_kW`, skipping `IsEnergyGen` solar arrays). Reads the same `SensorAbilityDB.InstanceAtributes` cache the scan uses, so a sensor-less / shot-blind ship returns false (the grave rung).
+- `SelfDetectionRange_m(entity)` — "a ship like me, running as I am, I'd first see at range R." Uses the ship's **own** `SensorProfileDB` as a magic-constant-free reference target; reads live `ActivityMultiplier`, so the value **shrinks on Silent, grows running hot** — the EMCON lever as a drawable number.
+
+Feeds the client (Fleet Combat tab "Sensor Reach" column + the blue map range ring). Gauged by `Pulsar4X.Tests/RangeReadoutTests.cs` (round-trip; loudest-band/activity; self-ring shrinks on Silent end-to-end). Survey + framing: `docs/INFORMATION-DELTA-DESIGN.md`. **Next honest step:** a ring *against the selected enemy contact* (`DetectionRange_m` already supports it — the UI just needs to pass that target's profile).
+
 ## Detection-quality bug (FLAGGED, not yet fixed — `SensorTools.cs:173`)
 
 `SensorTools.DetectonQuality` builds `SignalQuality` as `new PercentValue((float)(100 - distortion / signalWaveSpectraFreqMax))`. **`PercentValue(float)` expects 0..1** (it does `_percent = (byte)(value * 255)`), but this feeds it a **0..100** value — so `~100 × 255 ≈ 25500` overflows the byte and wraps. **Detection quality is therefore degenerate** (effectively random, not "how well resolved").

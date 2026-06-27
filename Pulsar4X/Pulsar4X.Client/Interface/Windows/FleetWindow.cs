@@ -21,6 +21,7 @@ using Pulsar4X.Movement;
 using Pulsar4X.Combat;
 using Pulsar4X.Blueprints;
 using Pulsar4X.Sensors;
+using Pulsar4X.Weapons;
 
 namespace Pulsar4X.Client
 {
@@ -152,30 +153,52 @@ namespace Pulsar4X.Client
             }
         }
 
+        // Per-section perf gauge — CI can't see client frame time, so this is the instrument to localize a "fleet
+        // manager is laggy" report: when this window's frame work is heavy it logs the section breakdown (throttled),
+        // so the play-test log names WHICH part (list / ships / tabs) is eating the time instead of just "it's slow".
+        private const double FleetWindowSlowMs = 4.0;
+        private int _lastPerfLogTick;
+
         internal override void Display()
         {
             if(!IsActive) return;
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            long tList = 0, tShips = 0, tOrders = 0, tTabs = 0, t0;
 
             if(Window.Begin("Fleet Management", ref IsActive, _flags))
             {
-                DisplayFleetList();
+                t0 = sw.ElapsedTicks; DisplayFleetList(); tList = sw.ElapsedTicks - t0;
 
                 if(SelectedFleet != null)
                 {
                     ImGui.SameLine();
                     ImGui.SetCursorPosY(27f);
                     var ysize = ImGui.GetContentRegionAvail().Y;
-                    DisplayShips();
+                    t0 = sw.ElapsedTicks; DisplayShips(); tShips = sw.ElapsedTicks - t0;
                     ImGui.SetCursorPosY(ysize * 0.5f);
-                    DisplayOrders();
+                    t0 = sw.ElapsedTicks; DisplayOrders(); tOrders = sw.ElapsedTicks - t0;
 
                     ImGui.SameLine();
                     ImGui.SetCursorPosY(27f);
 
-                    DisplayTabs();
+                    t0 = sw.ElapsedTicks; DisplayTabs(); tTabs = sw.ElapsedTicks - t0;
                 }
             }
             Window.End();
+
+            double totalMs = sw.Elapsed.TotalMilliseconds;
+            if (SessionLog.Enabled && totalMs > FleetWindowSlowMs)
+            {
+                int now = Environment.TickCount;
+                if (now - _lastPerfLogTick >= 1000)   // throttle to ~1/sec so a sustained slow frame doesn't flood
+                {
+                    _lastPerfLogTick = now;
+                    double f = 1000.0 / System.Diagnostics.Stopwatch.Frequency;   // stopwatch-ticks -> ms
+                    SessionLog.Action($"[perf] FleetWindow {totalMs:0.0}ms — list {tList * f:0.0} / ships {tShips * f:0.0}"
+                        + $" / orders {tOrders * f:0.0} / tabs {tTabs * f:0.0} ms"
+                        + $" (fleet '{(SelectedFleet != null ? SelectedFleet.GetName(factionID) : "none")}')");
+                }
+            }
         }
 
         private void DisplayTabs()
@@ -683,6 +706,110 @@ namespace Pulsar4X.Client
                 ImGui.TextColored(new Vector4(0.4f, 1f, 0.4f, 1f), _emconStatus);
         }
 
+        // ── Range rings on the map ────────────────────────────────────────────────────────────────────────────
+        // Draws each selected-fleet ship's beam reach (red) and sensor reach (blue) as circles on the system map,
+        // so "how close to shoot / how far I can see" is visible in space, not just as a number in the table. Uses
+        // the existing SimpleCircle widget + UIWidgets dict — the exact mechanism DebugWindow's "Draw SOI" uses, so
+        // no new SDL drawing code. Radius is in AU (SimpleCircle's unit), converted from the engine's metres.
+        private bool _showRangeRings;
+        private readonly List<string> _rangeRingKeys = new();
+        private FleetDB? _ringsFleet;   // which fleet's ships currently own rings — rebuild when this changes
+        private Entity? _ringsTarget;   // which enemy the detection bubble is drawn for — rebuild when selection changes
+
+        // Per-ship range cache for the combat sheet. The range accessors walk component/sensor datablobs, and the
+        // sheet redraws EVERY frame (ImGui immediate mode) — so without this we re-walked every ship every frame.
+        // Compute once per fleet selection instead. (Stale after an EMCON/loadout change until you reselect the
+        // fleet — same trade-off as the rings; the readout is a glance, not a live telemetry feed.)
+        private FleetDB? _rangeCacheFleet;
+        private readonly Dictionary<int, (double beam, double sensor)> _shipRangeCache = new();
+
+        private void EnsureRangeCache()
+        {
+            if (ReferenceEquals(_rangeCacheFleet, selectedFleetDB)) return;
+            _rangeCacheFleet = selectedFleetDB;
+            _shipRangeCache.Clear();
+            if (selectedFleetDB == null) return;
+            foreach (var ship in selectedFleetDB.GetChildren().Where(c => c.IsValid && !c.HasDataBlob<FleetDB>()))
+                _shipRangeCache[ship.Id] = (WeaponUtils.GetMaxBeamRange_m(ship), SensorTools.SelfDetectionRange_m(ship));
+        }
+
+        private (double beam, double sensor) ShipRanges(int shipId)
+            => _shipRangeCache.TryGetValue(shipId, out var v) ? v : (0, 0);
+
+        private void ClearRangeRings()
+        {
+            var render = _uiState.SelectedSysMapRender;
+            if (render != null)
+                foreach (var key in _rangeRingKeys)
+                    render.UIWidgets.Remove(key);
+            _rangeRingKeys.Clear();
+            _ringsFleet = null;
+            _ringsTarget = null;
+        }
+
+        private void BuildRangeRings()
+        {
+            ClearRangeRings();
+            var render = _uiState.SelectedSysMapRender;
+            if (render == null || selectedFleetDB == null) return;
+            _ringsFleet = selectedFleetDB;
+            _ringsTarget = _uiState.LastClickedEntity?.Entity;
+
+            foreach (var ship in selectedFleetDB.GetChildren().Where(c => c.IsValid && !c.HasDataBlob<FleetDB>()))
+            {
+                if (!ship.HasDataBlob<PositionDB>()) continue;
+                var pos = ship.GetDataBlob<PositionDB>();
+
+                double beam = WeaponUtils.GetMaxBeamRange_m(ship);
+                if (beam > 0)
+                {
+                    string key = "rangering_beam_" + ship.Id;
+                    render.UIWidgets[key] = new SimpleCircle(pos, Pulsar4X.Orbital.Distance.MToAU(beam),
+                        new SDL3.SDL.Color { R = 225, G = 90, B = 70, A = 90 });   // red-ish: how far it can SHOOT
+                    _rangeRingKeys.Add(key);
+                }
+
+                double reach = SensorTools.SelfDetectionRange_m(ship);
+                if (reach > 0)
+                {
+                    string key = "rangering_sensor_" + ship.Id;
+                    render.UIWidgets[key] = new SimpleCircle(pos, Pulsar4X.Orbital.Distance.MToAU(reach),
+                        new SDL3.SDL.Color { R = 70, G = 150, B = 225, A = 70 });   // blue-ish: how far it can SEE
+                    _rangeRingKeys.Add(key);
+                }
+            }
+
+            // Detection bubble vs the currently-selected ENEMY: one cyan ring around that target = how far the
+            // fleet's BEST sensor picks it up (your ship inside the ring → you see it). Range reads the target's
+            // real signature, so the bubble shrinks when the enemy goes dark — the honest, target-specific version
+            // of the self-ring. LastClickedEntity is the player's current map selection.
+            var target = _uiState.LastClickedEntity?.Entity;
+            if (target != null && target.IsValid && target.FactionOwnerID != factionID
+                && target.HasDataBlob<SensorProfileDB>() && target.HasDataBlob<PositionDB>())
+            {
+                double bestReach = 0;
+                foreach (var ship in selectedFleetDB.GetChildren().Where(c => c.IsValid && !c.HasDataBlob<FleetDB>()))
+                {
+                    double r = SensorTools.DetectionRangeAgainst(ship, target);
+                    if (r > bestReach) bestReach = r;
+                }
+                if (bestReach > 0)
+                {
+                    string key = "rangering_target_" + target.Id;
+                    render.UIWidgets[key] = new SimpleCircle(target.GetDataBlob<PositionDB>(), Pulsar4X.Orbital.Distance.MToAU(bestReach),
+                        new SDL3.SDL.Color { R = 90, G = 215, B = 215, A = 100 });   // cyan: the enemy's detectability bubble
+                    _rangeRingKeys.Add(key);
+                    SessionLog.Action($"[range-ring] detection bubble vs '{target.GetName(factionID)}' #{target.Id}: fleet best sensor reach {Stringify.Distance(bestReach)}");
+                }
+            }
+
+            // Live-test gauge (CI is blind to the SDL client): name what the ring build actually did, so the
+            // developer's play-test log shows whether the wire found ships + ranges. 0 rings when rings were
+            // expected = the wire, not the toggle, is the bug.
+            SessionLog.Action($"[range-ring] built {_rangeRingKeys.Count} ring(s) for the selected fleet"
+                + (target != null && target.FactionOwnerID != factionID ? $" (+ bubble vs #{target.Id})" : ""));
+        }
+
         // The combat sheet: fleet totals + firepower-by-weapon-type + the per-ship table ("the table IS the
         // interface", per COMBAT-DESIGN System 4). Reads each ship's cached ShipCombatValueDB.
         private void DisplayFleetCombatSheet()
@@ -690,13 +817,30 @@ namespace Pulsar4X.Client
             if (selectedFleetDB == null) return;
             DisplayHelpers.Header("Combat Strength");
 
+            // Range-ring toggle: beam reach + sensor reach drawn on the map for this fleet's ships. Rebuilt when the
+            // player switches to a different fleet so the rings always match what's selected. (Radii are captured at
+            // build time, so re-toggle after an EMCON change to refresh the sensor ring.)
+            if (ImGui.Checkbox("Show range rings on map", ref _showRangeRings))
+            {
+                if (_showRangeRings) BuildRangeRings();
+                else ClearRangeRings();
+            }
+            if (_showRangeRings && (!ReferenceEquals(_ringsFleet, selectedFleetDB)
+                    || !ReferenceEquals(_ringsTarget, _uiState.LastClickedEntity?.Entity)))
+                BuildRangeRings();
+
+            EnsureRangeCache();   // walk component/sensor blobs once per fleet selection, not per frame
             var ships = selectedFleetDB.GetChildren().Where(c => c.IsValid && !c.HasDataBlob<FleetDB>()).ToArray();
             double totalFp = 0, totalTough = 0;
             int combatants = 0;
+            double fleetBeamReach = 0;   // the fleet's longest beam reach — how close it must get to open fire
             var classDps = new Dictionary<WeaponClass, double>();
             foreach (var ship in ships)
             {
-                if (!ship.IsValid || !ship.TryGetDataBlob<ShipCombatValueDB>(out var cv)) continue;
+                if (!ship.IsValid) continue;
+                double beam = ShipRanges(ship.Id).beam;   // cached (was a per-frame engine walk)
+                if (beam > fleetBeamReach) fleetBeamReach = beam;
+                if (!ship.TryGetDataBlob<ShipCombatValueDB>(out var cv)) continue;
                 totalFp += cv.Firepower;
                 totalTough += cv.Toughness;
                 if (cv.Firepower > 0) combatants++;
@@ -713,6 +857,9 @@ namespace Pulsar4X.Client
             DisplayHelpers.PrintRow("Combatants", combatants.ToString());
             DisplayHelpers.PrintRow("Total firepower", $"{totalFp:N0} J/s");
             DisplayHelpers.PrintRow("Total toughness", $"{totalTough:N0} J");
+            // Engagement range: the longest beam reach in the fleet. This is the distance the firing processor
+            // enforces (a weapon won't fire past it), now visible so the player knows how close to close.
+            DisplayHelpers.PrintRow("Beam reach", fleetBeamReach > 0 ? Stringify.Distance(fleetBeamReach) : "—");
             ImGui.Columns(1);
 
             if (classDps.Count > 0)
@@ -733,13 +880,15 @@ namespace Pulsar4X.Client
                 ImGui.Text("No ships in this fleet.");
                 return;
             }
-            if (ImGui.BeginTable("CombatShipTable", 5, Styles.TableFlags | ImGuiTableFlags.SizingStretchProp))
+            if (ImGui.BeginTable("CombatShipTable", 7, Styles.TableFlags | ImGuiTableFlags.SizingStretchProp))
             {
-                ImGui.TableSetupColumn("Ship", ImGuiTableColumnFlags.None, 0.3f);
-                ImGui.TableSetupColumn("Role", ImGuiTableColumnFlags.None, 0.16f);
-                ImGui.TableSetupColumn("Firepower J/s", ImGuiTableColumnFlags.None, 0.22f);
-                ImGui.TableSetupColumn("Toughness J", ImGuiTableColumnFlags.None, 0.22f);
-                ImGui.TableSetupColumn("Evasion", ImGuiTableColumnFlags.None, 0.1f);
+                ImGui.TableSetupColumn("Ship", ImGuiTableColumnFlags.None, 0.24f);
+                ImGui.TableSetupColumn("Role", ImGuiTableColumnFlags.None, 0.13f);
+                ImGui.TableSetupColumn("Firepower J/s", ImGuiTableColumnFlags.None, 0.16f);
+                ImGui.TableSetupColumn("Toughness J", ImGuiTableColumnFlags.None, 0.16f);
+                ImGui.TableSetupColumn("Evasion", ImGuiTableColumnFlags.None, 0.08f);
+                ImGui.TableSetupColumn("Beam Range", ImGuiTableColumnFlags.None, 0.12f);
+                ImGui.TableSetupColumn("Sensor Reach", ImGuiTableColumnFlags.None, 0.12f);
                 ImGui.TableHeadersRow();
                 foreach (var ship in ships)
                 {
@@ -759,6 +908,11 @@ namespace Pulsar4X.Client
                         ImGui.TableNextColumn(); ImGui.TextDisabled("—");
                         ImGui.TableNextColumn(); ImGui.TextDisabled("—");
                     }
+                    // Beam reach (how far this ship can shoot) and sensor reach (how far it can see a ship like
+                    // itself). From the per-fleet cache (was a per-frame engine walk); "—" when none.
+                    var (beam, reach) = ShipRanges(ship.Id);
+                    ImGui.TableNextColumn(); ImGui.Text(beam > 0 ? Stringify.Distance(beam) : "—");
+                    ImGui.TableNextColumn(); ImGui.Text(reach > 0 ? Stringify.Distance(reach) : "—");
                 }
                 ImGui.EndTable();
             }

@@ -13,7 +13,8 @@ It deliberately does **not** use the per-pixel damage sim (`Damage/DamageComplex
 | File | Purpose | Status |
 |------|---------|--------|
 | `ShipCombatValueDB.cs` | DataBlob: a ship's **Firepower** (joules/sec from beams + **railguns** + **flak** + a missile-launcher stub), **Toughness** (live components + armour), **RoleWeight**, **Evasion** (size + agility), and a **`Weapons`** list of per-weapon flavor profiles. Computed once at build. `Calculate(Entity)` + `CalculateEvasion(Entity)`. | ✅ built (spine step 2; +Evasion/Weapons in the depth pass; +railgun P3, +flak P4) |
-| `WeaponProfile.cs` | The per-weapon flavor: `WeaponClass` enum (Beam/Railgun/Missile/Flak) + `WeaponProfile` (damage/velocity/tracking/saturation). The breakdown the dodge model + weapon triangle read. | ✅ built (depth pass P2) |
+| `WeaponProfile.cs` | The per-weapon flavor: `WeaponClass` enum (Beam/Railgun/Missile/Flak) + `WeaponProfile` (damage/velocity/tracking/saturation/**`Range_m`**). The breakdown the dodge model + weapon triangle read. **+`Range_m` (Root A, 2026-06-27)** — how far the weapon reaches (0 = unbounded, the beam `IsInRange` convention); beams carry their `MaxRange`, others rangeless-for-now. The data the closing-fight model reads (`docs/FLEET-COMBAT-CLOSING-DESIGN.md`). | ✅ built (depth pass P2; +Range_m Root A) |
+| `FleetCombat.cs` | **Root B (2026-06-27): fleet capability aggregation** — pure read-models, no behaviour change. `WarpSpeedFloor`/`DeltaVFloor` (min over ships — the fleet moves as one, bound by its slowest/shortest-legged), `FirepowerAtRange(R)` (the firepower-vs-range curve: sum of weapons whose `Range_m` reaches R), `SensorReach` (max over ships — sensors run parallel, envelope = max not sum), `Ships(fleet)` (tree walk, recursing components). The numbers the closing resolve (Phase 1+) + the battle readout will read. | ✅ built (closing Root B) |
 | `AutoResolve.cs` | The salvo-exchange resolver: `AutoResolve.Resolve(sideA, sideB, config)` runs the math loop (strength → damage pools → whole-ship casualties, combatants first) until one side is gone, both are, or a frozen fight hits the round cap. Returns an `AutoResolveResult` (outcome + casualty lists); **pure** — it reports casualties, it does not destroy them. Plus `AutoResolveConfig`, `BattleOutcome`. | ✅ built (spine step 3) |
 | `FleetCombatStateDB.cs` | DataBlob marking a fleet as **engaged** (a *representative* opponent id for readout, accumulated damage pool, steps fought, starting ship count for the retreat threshold). On **every** fleet in a battle (state is per-fleet); removed from a fleet when it leaves. Its presence is the "in combat" flag the engagement lock (step 11) keys on. | ✅ built (spine steps 4, 7; multi-party) |
 | `CombatEngagement.cs` | The trigger's engine logic: `Tick(manager, dt)` engages/JOINS hostile fleets in range, then steps the **multi-party** engagement (every in-combat fleet in the system, sides = factions) incrementally over game-time. `StepEngagementGroup(members, dt)` is the resolver; `StepEngagement(a,b,dt)` is its n=2 special case; `EnsureInCombat` is the join primitive. `GetCombatShips` tags ships with their **component's** doctrine mults (step 6); `GetFleetShips` is the flat list (counts/detection). Hostility/range/sides are v1 stubs. Testable directly. | ✅ built (spine steps 4, 6; multi-party) |
@@ -22,7 +23,7 @@ It deliberately does **not** use the per-pixel damage sim (`Damage/DamageComplex
 | `FleetDoctrine.cs` | Helpers: `FirepowerMult`/`ToughnessMult`/`IsRetreat(fleet)` reads; `TrySetDoctrine(fleet, blueprint, now)` sets a posture from the catalog, honouring the cooldown. | ✅ built (spine step 5) |
 | `CombatDoctrineBlueprint` (`Engine/Blueprints/`) | The moddable **catalog** of postures (JSON → `ModDataStore.CombatDoctrines`): family, display name, the multipliers, cooldown, retreat flag. | ✅ built (spine step 5) |
 | `FleetRetreatDB.cs` | DataBlob recording that a fleet **broke off** (flag + a withdraw vector away from the enemy + who it fled from). Attached when a fleet retreats; persists after the engagement ends (so the outcome stays visible). v1 records the vector only — no move order. | ✅ built (spine step 7) |
-| `CombatSandbox.cs` | Dev/test utility: `SpawnHostileFleet(game, system, playerFaction, design, count, body, name)` stands up a **registered hostile faction + fleet + ships** (built from the player's designs, owner-flipped) at a body so the trigger auto-engages them. The DevTools "Spawn Hostile Fleet" button + `CombatSandboxTests` use it. Lives in the ENGINE so the survival-through-a-clock-advance question is CI-verified, not client-only. | ✅ built (combat-test enabler) |
+| `CombatSandbox.cs` | Dev/test utility: `SpawnHostileFleet(...)` stands up a **registered hostile faction + fleet + ships** at a body so the trigger auto-engages them. **+ premade scenario (2026-06-27):** `SpawnCombatScenario(game, system, playerFaction)` = 2 well-rounded PLAYER task forces at Earth + well-rounded HOSTILE squadrons at **Luna/Venus/Mercury/Mars** (Luna is inside auto-engage range → instant fight; the rest are sail-to closing targets). `WellRoundedDesignSet` = beam+railgun+flak+2 fighters (no Leviathan — all three weapon flavors + a range spread = rich closing/dodge data); `SpawnMixedFleet` builds one fuelled+charged mixed fleet; `FindBody(system, name)` finds a body by default name. DevTools "Spawn Combat Scenario" button + `CombatScenarioTests`. Lives in the ENGINE so it's CI-verified. | ✅ built (combat-test enabler) |
 
 *Fleet components (step 6) reuse `FleetDB` sub-fleets + `FleetDoctrineDB` — no new file; see "Fleet components" below. (Retreat, step 7, adds rows as it lands.)*
 
@@ -526,6 +527,33 @@ test entry points are unchanged — only the auto-trigger `Tick` gained the guar
 - **Connections (Prime Directive / cradle-to-grave):** contacts come from sensor **components** (researched/built/installed) → a **destroyed** sensor (the grave rung — **now wired**: `SensorTools.SetInstances` via `ReCalcProcessor` on damage empties the ship's receiver cache so it stops scanning; see `Sensors/CLAUDE.md` → "Grave rung") = you go blind. **Stacks with** the combat interrupt (you're paused when a *detected* battle begins) and doctrine (detect-first = set posture before contact).
 
 ---
+
+## Closing distance + Rules of Engagement (Phases 1–3, 2026-06-27)
+
+The auto-resolver is becoming a **closing fight** where range/speed/detection/doctrine decide who can hit whom — the
+build plan + locked decisions are `docs/FLEET-COMBAT-CLOSING-DESIGN.md`. Each phase is behind a **default-OFF flag**
+(the `RequireDetectionToEngage` pattern), so every pre-existing fixture is byte-identical; the client turns the flags
+on when the model is live. All deterministic (no wall-clock/RNG) so fast-forward == watch.
+
+- **Root A — `WeaponProfile.Range_m`** (0 = unbounded, the beam `IsInRange` convention). Beams carry their `MaxRange`;
+  railgun/flak/missile rangeless-for-now (flagged). **Root B — `FleetCombat.cs`**: `WarpSpeedFloor`/`DeltaVFloor` (min
+  = the fleet moves as one), `FirepowerAtRange(R)` (the firepower-vs-range curve), `SensorReach` (max = parallel sensors).
+- **P1 `EnableClosingRange`** — `FleetCombatStateDB.Separation_m` (the gap, seeded from real distance at `StartEngagement`).
+  `BuildFireMix(ships, separation)` gates each weapon on `Range_m ≥ gap` (0 separation = no-op). `AdvanceClosing` moves the
+  gap toward the FASTER side's preferred range (controller = highest `FleetManeuver` = min evasion over its ships; desired
+  = longest finite weapon range). Tunables `ClosingSpeedScale_mps` (0 = freeze), `InitialSeparationDefault_m`. → a fast
+  long-range fleet kites, a fast brawler forces the merge.
+- **P2 (kiting clock)** — `FleetCombatStateDB.ManeuverBudget` (Δv reserve, seeded from `DeltaVFloor`). Only a fleet with
+  budget can be the controller; it spends `ManeuverBurnRate × dt` each step. A burned-out kiter loses control and the enemy
+  closes — you can't kite forever. (Interceptors are emergent from P1's speed rule.)
+- **P3 `RequireWeaponsReleaseToEngage`** — `EngagementPosture` (WeaponsFree/WeaponsHold/ReturnFire) on `FleetDoctrineDB`
+  (the first ROE knob; `FleetDoctrine.PostureOf`/`SetEngagementPosture`, preserved across a doctrine switch). A battle
+  erupts only if a side is WeaponsFree; two holding fleets in range sit in a tense **standoff**. Default WeaponsFree, so
+  flag-off = proximity engages as before.
+- **Gauges:** `FleetAggregationTests` (Roots), `ClosingTests` (P1 range gate / determinism / flag-off / who-dictates;
+  P2 kiting clock), `WeaponsReleaseTests` (P3 standoff). **Open (the developer's play-test):** live calibration of the
+  closing-rate / burn-rate tunables and the "is standoff-vs-brawl FUN" gut-check.
+- **Next: P4 — per-sub-fleet ranges** (each component its own gap, so a fighter wing closes while the capitals hold).
 
 ## Gotchas
 

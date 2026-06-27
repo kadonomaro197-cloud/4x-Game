@@ -451,6 +451,21 @@ namespace Pulsar4X.Client
                 {
                     ImGui.SameLine();
                     ImGui.Text(TargetEntity.Name);
+
+                    // Travel summary — the two numbers that were computed but never shown: the ship's manoeuvre
+                    // budget (delta-V, the real "how far can I go" limit) and when it will arrive. Kept at top
+                    // level (not in the collapsed Orbit Data) because they're what the player decides on.
+                    ImGui.Text("Available Δv: " + Stringify.Velocity(_maxDV));
+                    if (_targetIntercept.eti > _departureDateTime)
+                    {
+                        var eta = _targetIntercept.eti - _departureDateTime;
+                        string etaStr = eta.TotalDays >= 1
+                            ? ((int)eta.TotalDays) + "d " + eta.Hours + "h " + eta.Minutes + "m"
+                            : eta.TotalHours >= 1
+                                ? ((int)eta.TotalHours) + "h " + eta.Minutes + "m"
+                                : ((int)eta.TotalMinutes) + "m " + eta.Seconds + "s";
+                        ImGui.Text("ETA: " + etaStr + "  (arrive " + _targetIntercept.eti.ToString("yyyy-MM-dd HH:mm") + ")");
+                    }
                 }
 
                 //ImGui.Text("Eccentricity: " + _eccentricity.ToString("g3"));
