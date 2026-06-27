@@ -52,6 +52,10 @@ namespace Pulsar4X.Combat
                 enemyInfo.ShipDesigns[kv.Key] = kv.Value;
 
             var fleet = FleetFactory.Create(system, enemyFaction.Id, factionName + " Fleet");
+            // Attach the new fleet to the faction's fleet tree (the same call FleetOrder.Create makes). FleetFactory
+            // .Create alone leaves the fleet an ORPHAN — owned by the faction but not a child of its root FleetDB —
+            // and the Fleet window only lists factionRoot.Children, so an un-parented fleet never shows up there.
+            fleet.GetDataBlob<FleetDB>().SetParent(enemyFaction);
 
             for (int i = 0; i < count; i++)
             {
@@ -97,6 +101,9 @@ namespace Pulsar4X.Combat
         {
             var playerInfo = playerFaction.GetDataBlob<FactionInfoDB>();
             var fleet = FleetFactory.Create(system, owningFaction.Id, fleetName);
+            // Attach to the owning faction's fleet tree so it appears in the Fleet window (FleetFactory.Create alone
+            // leaves it an orphan; the window lists only factionRoot.Children). Same call FleetOrder.Create makes.
+            fleet.GetDataBlob<FleetDB>().SetParent(owningFaction);
             int i = 0;
             foreach (var design in designs)
             {
