@@ -233,6 +233,18 @@ namespace Pulsar4X.Combat
             if (NarrateToLog) System.Console.WriteLine("[Combat] " + msg);
         }
 
+        /// <summary>Capture a structured battle event for the persistent Battle Report (<see cref="BattleLog"/>).
+        /// UNCONDITIONAL — not gated on <see cref="NarrateToLog"/> — so the report works regardless of the
+        /// console-log flag (it's a cheap struct append under a lock). Defensive: never throws on game state.</summary>
+        private static void RecordBattleEvent(Entity fleet, BattleEventType type, int shipsLost, int shipsLeft, int step, string note)
+        {
+            if (fleet == null) return;
+            System.DateTime when = default;
+            try { when = fleet.Manager?.Game?.TimePulse?.GameGlobalDateTime ?? default; } catch { }
+            string name = fleet.TryGetDataBlob<NameDB>(out var n) ? n.OwnersName : "Fleet";
+            BattleLog.Record(new BattleEvent(when, fleet.Id, name, fleet.FactionOwnerID, type, shipsLost, shipsLeft, step, note));
+        }
+
         private static string FleetLabel(Entity fleet)
         {
             if (fleet == null || !fleet.IsValid) return "(gone)";
@@ -248,6 +260,8 @@ namespace Pulsar4X.Combat
             fleetA.SetDataBlob(new FleetCombatStateDB(fleetB.Id, GetFleetShips(fleetA).Count));
             fleetB.SetDataBlob(new FleetCombatStateDB(fleetA.Id, GetFleetShips(fleetB).Count));
             CombatLog($"{FleetLabel(fleetA)} vs {FleetLabel(fleetB)} — engaged");
+            RecordBattleEvent(fleetA, BattleEventType.Engaged, 0, GetFleetShips(fleetA).Count, 0, "vs " + FleetLabel(fleetB));
+            RecordBattleEvent(fleetB, BattleEventType.Engaged, 0, GetFleetShips(fleetB).Count, 0, "vs " + FleetLabel(fleetA));
         }
 
         /// <summary>Put a fleet "in combat" if it isn't already — the JOIN primitive. Idempotent: a fleet already
@@ -259,6 +273,7 @@ namespace Pulsar4X.Combat
             if (fleet == null || !fleet.IsValid || fleet.HasDataBlob<FleetCombatStateDB>()) return;
             fleet.SetDataBlob(new FleetCombatStateDB(representativeOpponentId, GetFleetShips(fleet).Count));
             CombatLog($"{FleetLabel(fleet)} enters combat ({GetFleetShips(fleet).Count} ship(s))");
+            RecordBattleEvent(fleet, BattleEventType.Engaged, 0, GetFleetShips(fleet).Count, 0, "enters combat");
 
             // Aurora-style combat interrupt: a NEW fleet just entered a battle — stop the clock here (if enabled)
             // so the player is handed control at first contact instead of the whole fight resolving inside one
@@ -406,6 +421,7 @@ namespace Pulsar4X.Combat
             if (fleet != null && fleet.IsValid && fleet.HasDataBlob<FleetCombatStateDB>())
             {
                 CombatLog($"{FleetLabel(fleet)} disengages ({GetFleetShips(fleet).Count} ship(s) left)");
+                RecordBattleEvent(fleet, BattleEventType.Disengaged, 0, GetFleetShips(fleet).Count, 0, "disengages");
                 fleet.RemoveDataBlob<FleetCombatStateDB>();
             }
         }
@@ -494,8 +510,12 @@ namespace Pulsar4X.Combat
             // Drop the dead (Destroy() flips IsValid synchronously) so the caller's survivor count is accurate.
             ships.RemoveAll(cs => !cs.Ship.IsValid);
 
-            if (totalKilled > 0 && NarrateToLog)
-                CombatLog($"salvo {state.StepsFought}: {FleetLabel(state.OwningEntity)} lost {totalKilled} ship(s), {ships.Count} left");
+            if (totalKilled > 0)
+            {
+                if (NarrateToLog)
+                    CombatLog($"salvo {state.StepsFought}: {FleetLabel(state.OwningEntity)} lost {totalKilled} ship(s), {ships.Count} left");
+                RecordBattleEvent(state.OwningEntity, BattleEventType.Salvo, totalKilled, ships.Count, state.StepsFought, "");
+            }
         }
 
         /// <summary>A group of interchangeable ships in the casualty step — same doctrine posture + same combat
@@ -628,6 +648,7 @@ namespace Pulsar4X.Combat
             }
             fleet.SetDataBlob(new FleetRetreatDB(vector, enemy.Id));
             CombatLog($"{FleetLabel(fleet)} breaks off — retreats from {FleetLabel(enemy)}");
+            RecordBattleEvent(fleet, BattleEventType.Retreat, 0, GetFleetShips(fleet).Count, 0, "from " + FleetLabel(enemy));
         }
 
         /// <summary>All live ships in a fleet, recursing into sub-fleets (fleet components).</summary>
