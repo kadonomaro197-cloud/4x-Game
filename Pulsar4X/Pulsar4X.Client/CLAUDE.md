@@ -107,7 +107,7 @@ internal override void Display()
 | `CommanderWindow` | `CommanderWindow.cs` | ✅ Basic | People/commander display |
 | `GalaxyWindow` | `GalaxyWindow.cs` | ✅ Functional | Galaxy map and system list |
 | `SMWindow` | `SMWindow.cs` | ✅ Functional | Space Master debug controls |
-| `BattleReportWindow` | `BattleReportWindow.cs` | ✅ New 2026-06-27 | Persistent recent-battles readout — reads the engine `Combat.BattleLog`; survives after a fight ends. The "review a battle you missed" window (combat-visibility 2/2). Opened from DevTools → "Open Battle Report". |
+| `BattleReportWindow` | `BattleReportWindow.cs` | ✅ New 2026-06-27 | Persistent recent-battles readout — reads the engine `Combat.BattleLog`; survives after a fight ends. The "review a battle you missed" window. **AUTO-OPENS on the combat interrupt** (`PulsarMainWindow.PostFrameUpdate` — pops it + selects the player's engaged fleet in `FleetWindow` so the Combat/doctrine tab is one click away; uses the real `PlayerFaction`, so it works outside SM). Also opens from DevTools → "Open Battle Report". |
 | `Debug/*` | `Debug/*.cs` | ✅ Dev tools | Data viewer, blueprint inspector, entity inspector, performance monitor |
 
 ---
@@ -292,6 +292,13 @@ is build → play → read the rolling log pages under `game_logs/` (`[FleetComb
      "Detection-quality bug"). Built defensively given the map-render crash history (gotchas #12/#14): every blip
      draws through `SafeDraw`, and the blip's `OnFrameUpdate` swallows a bad-position throw so one stale contact
      can't abort the frame.
+
+### Range/info readouts — engagement range, sensor reach, delta-V, ETA (BUILT 2026-06-27)
+
+Closed part of the gap between what the sim KNOWS and what it tells the player (`docs/INFORMATION-DELTA-DESIGN.md`). All reads go through CI-covered engine accessors (`WeaponUtils.GetMaxBeamRange_m` / `SensorTools.SelfDetectionRange_m`), so the client stays a thin draw — **CI can't build it, unverified until the local build.**
+- **Fleet Combat tab** (`FleetWindow.DisplayFleetCombatSheet`): a fleet "Beam reach" row + per-ship "Beam Range" / "Sensor Reach" columns. Plus a **"Show range rings on map"** checkbox → `BuildRangeRings`/`ClearRangeRings`: draws each selected-fleet ship's beam reach (red) + sensor reach (blue) as `SimpleCircle`s in `SystemMapRendering.UIWidgets` — **the exact DebugWindow "Draw SOI" mechanism, so no new SDL drawing code.** Radius is in **AU** (`SimpleCircle`'s unit — convert metres with `Pulsar4X.Orbital.Distance.MToAU`). Rings rebuild on fleet-selection change; radii captured at build time (re-toggle to refresh after an EMCON change). Note: `FleetWindow` imports `System.Numerics`, so `Distance`/`SDL.Color` are **fully-qualified** to dodge a `Vector2` ambiguity.
+- **Fire Control** (`FireControlWindow.ShowRangeToTarget`): range-to-target vs. the ship's beam reach + a red **OUT OF RANGE** flag — fixes the silent no-fire (a weapon past `MaxRange` just didn't fire, no feedback). Position read wrapped in try/catch (a mid-warp/detached `AbsolutePosition` can throw).
+- **Warp Order** (`WarpOrderWindow`): "Available Δv" + "ETA / arrive" at top level, from `_maxDV` + `_targetIntercept.eti` the window already computed but never printed.
 
 ### GroundCombatWindow — MISSING ENTIRELY
 

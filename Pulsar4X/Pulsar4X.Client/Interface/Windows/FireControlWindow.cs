@@ -105,6 +105,7 @@ namespace Pulsar4X.Client
                 if (fc.Target != null && fc.Target.IsValid)
                 {
                     ImGui.Text(fc.TargetName);
+                    ShowRangeToTarget(fc.Target);
                     if (fc.IsEngaging)
                     {
                         if (ImGui.Button("Cease Fire"))
@@ -156,6 +157,42 @@ namespace Pulsar4X.Client
                 ImGui.NewLine();
             }
 
+        }
+
+        /// <summary>
+        /// Show the current distance to the assigned target against the ship's longest beam reach, and call OUT OF
+        /// RANGE in red when the target is past it. Before this, a weapon beyond its MaxRange just silently didn't
+        /// fire (GenericFiringWeaponsProcessor.IsInRange returns false with no UI feedback) — the player had no way
+        /// to tell "out of range" from "broken". Reads the same MaxRange the firing path enforces, via the engine
+        /// accessor. Wrapped in try/catch because a detached / mid-warp position read can throw.
+        /// </summary>
+        void ShowRangeToTarget(Entity target)
+        {
+            if (_orderEntityState == null || _orderEntityState.Entity == null || !_orderEntityState.Entity.IsValid)
+                return;
+            try
+            {
+                double range = (MoveMath.GetAbsolutePosition(_orderEntityState.Entity) - MoveMath.GetAbsolutePosition(target)).Length();
+                double beamReach = WeaponUtils.GetMaxBeamRange_m(_orderEntityState.Entity);
+                if (beamReach > 0)
+                {
+                    ImGui.Text("Range " + Stringify.Distance(range) + " · reach " + Stringify.Distance(beamReach));
+                    if (range > beamReach)
+                    {
+                        ImGui.PushStyleColor(ImGuiCol.Text, Styles.BadColor);
+                        ImGui.Text("OUT OF RANGE — close to fire");
+                        ImGui.PopStyleColor();
+                    }
+                }
+                else
+                {
+                    ImGui.TextDisabled("Range " + Stringify.Distance(range));
+                }
+            }
+            catch
+            {
+                // a mid-warp / detached position can throw on AbsolutePosition; skip the readout, keep the window alive.
+            }
         }
 
         string GetRichWeaponName(WeaponState wpnState)

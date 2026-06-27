@@ -24,6 +24,22 @@ namespace Pulsar4X.Combat
         public static bool IsRetreat(Entity fleet)
             => fleet != null && fleet.TryGetDataBlob<FleetDoctrineDB>(out var d) && d.IsRetreat;
 
+        /// <summary>This fleet's weapons-release posture (Phase 3). WeaponsFree if it has no doctrine — fight on contact.</summary>
+        public static EngagementPosture PostureOf(Entity fleet)
+            => fleet != null && fleet.TryGetDataBlob<FleetDoctrineDB>(out var d) ? d.Posture : EngagementPosture.WeaponsFree;
+
+        /// <summary>Set a fleet's weapons-release posture — a DIRECT call (like the doctrine + EMCON setters), so it
+        /// works mid-battle. Mutates the existing doctrine blob in place (preserving its multipliers) or creates a
+        /// neutral one carrying just the posture.</summary>
+        public static void SetEngagementPosture(Entity fleet, EngagementPosture posture)
+        {
+            if (fleet == null) return;
+            if (fleet.TryGetDataBlob<FleetDoctrineDB>(out var d))
+                d.Posture = posture;
+            else
+                fleet.SetDataBlob(new FleetDoctrineDB { Posture = posture });
+        }
+
         /// <summary>
         /// Set a fleet's posture from a catalog blueprint, honouring the switch cooldown. Returns false (no
         /// change) if the fleet is still within its cooldown window. <paramref name="now"/> is the current game time.
@@ -31,7 +47,8 @@ namespace Pulsar4X.Combat
         public static bool TrySetDoctrine(Entity fleet, CombatDoctrineBlueprint doctrine, DateTime now)
         {
             if (fleet == null || doctrine == null) return false;
-            if (fleet.TryGetDataBlob<FleetDoctrineDB>(out var existing) && now < existing.SwitchableAfter)
+            bool hadDoctrine = fleet.TryGetDataBlob<FleetDoctrineDB>(out var existing);
+            if (hadDoctrine && now < existing.SwitchableAfter)
                 return false; // still on cooldown
 
             var db = new FleetDoctrineDB
@@ -42,6 +59,9 @@ namespace Pulsar4X.Combat
                 ToughnessMult = doctrine.ToughnessMult,
                 SpeedMult = doctrine.SpeedMult,
                 IsRetreat = doctrine.IsRetreat,
+                // Preserve the weapons-release posture across a doctrine switch (they're separate ROE knobs; Phase 5
+                // unifies them). Without this, changing doctrine would silently reset a fleet to WeaponsFree.
+                Posture = hadDoctrine ? existing.Posture : EngagementPosture.WeaponsFree,
                 SwitchableAfter = now + TimeSpan.FromSeconds(doctrine.CooldownSeconds),
             };
             fleet.SetDataBlob(db);

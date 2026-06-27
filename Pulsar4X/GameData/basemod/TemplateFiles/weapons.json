@@ -114,12 +114,12 @@
         {
           "Name": "Focal Length",
           "Units": "M",
-          "DescriptionFormula": "'Distance to target (debug)'",
+          "DescriptionFormula": "'Optimal range: full damage at or inside this distance, degrading out to Max Range. Keep it BELOW Range (the engine clamps it to Range otherwise, collapsing the falloff band).'",
           "GuiHint": "GuiSelectionMaxMin",
-          "MaxFormula": "100000000",
+          "MaxFormula": "10000",
           "MinFormula": "1",
           "StepFormula": "1",
-          "PropertyFormula": "1000000"
+          "PropertyFormula": "2500"
         },
         {
           "Name": "Emissitivity",

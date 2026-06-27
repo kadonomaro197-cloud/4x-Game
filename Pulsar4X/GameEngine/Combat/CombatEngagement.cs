@@ -101,6 +101,15 @@ namespace Pulsar4X.Combat
 
             double dt = deltaSeconds > 0 ? deltaSeconds : 1;
 
+            // A fleet that BROKE OFF (has FleetRetreatDB) stays withdrawn while a threat is present — the engage
+            // pass below skips it, so it isn't yanked back into the fight every tick (the engage/disengage thrash).
+            // Once no hostile is in range (the enemy died, left, or this fleet was moved away) the flag is stale, so
+            // drop it here and the fleet can fight again later. This is the v1 "re-commit" path (no move-order wiring
+            // yet — the v2 movement layer that actually sails the withdraw vector will supersede this).
+            foreach (var rf in fleets)
+                if (rf.IsValid && rf.HasDataBlob<FleetRetreatDB>() && !AnyHostileInRange(rf, fleets))
+                    rf.RemoveDataBlob<FleetRetreatDB>();
+
             // 1) Engage / JOIN. Any two hostile fleets in range are BOTH put in combat. This is also how a fleet
             //    joins a battle already underway: it comes into range of an enemy and gains combat state here, on
             //    its faction's side — no special "reinforce" path. A fleet with no enemy in range never engages.
@@ -115,13 +124,37 @@ namespace Pulsar4X.Combat
                     var b = fleets[j];
                     if (!b.IsValid) continue;
                     if (!AreHostile(a, b)) continue;
+                    // Don't re-grab a fleet that broke off — it stays withdrawn while the enemy is in range (the
+                    // top-of-Tick sweep clears the flag once the threat is gone). Stops the retreat thrash.
+                    if (a.HasDataBlob<FleetRetreatDB>() || b.HasDataBlob<FleetRetreatDB>()) continue;
                     if (GetFleetShips(b).Count == 0) continue;
                     if (!InRange(a, b)) continue;
+                    // Don't start a fight neither side can resolve (both unarmed): it would enter, freeze (no damage
+                    // dealt), and disengage every tick — a thrash. A fight needs at least one side that can deal damage.
+                    if (!FleetHasFirepower(a) && !FleetHasFirepower(b)) continue;
                     // Fog of war (client-on / test-off): a fight forms once EITHER side detects the other — the
                     // detector can open fire even if its target is still blind (first-strike). Both fleets enter
                     // combat so the resolver has the target present to be shot; the BLIND one simply doesn't shoot
                     // back (the directed-fire resolve handles that — see StepEngagementGroup / CanEngageTarget).
                     if (RequireDetectionToEngage && !(FleetDetects(a, b) || FleetDetects(b, a))) continue;
+
+                    // First-shot trigger (Phase 3, client-on / test-off): a battle erupts only if someone will RELEASE
+                    // a shot. If BOTH fleets are holding fire (neither WeaponsFree), they sit in a tense STANDOFF — no
+                    // engagement forms. Default posture is WeaponsFree, so with the flag off this never blocks anything.
+                    if (RequireWeaponsReleaseToEngage
+                        && FleetDoctrine.PostureOf(a) != EngagementPosture.WeaponsFree
+                        && FleetDoctrine.PostureOf(b) != EngagementPosture.WeaponsFree)
+                        continue;
+
+                    // Weapons-release narration: when the first-shot rule is on and a NEW battle forms, name who
+                    // opened fire (the standoff breaking). Once-only — after EnsureInCombat both hold state.
+                    if (NarrateToLog && RequireWeaponsReleaseToEngage &&
+                        (!a.HasDataBlob<FleetCombatStateDB>() || !b.HasDataBlob<FleetCombatStateDB>()))
+                    {
+                        var shooter = FleetDoctrine.PostureOf(a) == EngagementPosture.WeaponsFree ? a : b;
+                        var target = shooter == a ? b : a;
+                        CombatLog($"WEAPONS RELEASE: {FleetLabel(shooter)} opens fire on {FleetLabel(target)} — the standoff breaks");
+                    }
 
                     // First-strike narration: when a NEW engagement forms with one side blind to the other, call it
                     // out ONCE in the combat log. Gated on NarrateToLog + fog-on (inert in tests), and on at least
@@ -190,8 +223,10 @@ namespace Pulsar4X.Combat
                     var b = fleets[j];
                     if (!b.IsValid) continue;
                     if (!AreHostile(a, b)) continue;
+                    if (a.HasDataBlob<FleetRetreatDB>() || b.HasDataBlob<FleetRetreatDB>()) continue; // withdrawn — won't form a new engagement
                     if (GetFleetShips(b).Count == 0) continue;
                     if (!InRange(a, b)) continue;
+                    if (!FleetHasFirepower(a) && !FleetHasFirepower(b)) continue; // no fight two unarmed fleets can resolve
                     // In range + hostile + both manned. If EITHER isn't yet in combat, a new entry — and so the
                     // interrupt — fires this tick. If both are already engaged, this pair is an ONGOING fight and
                     // does NOT force fine-stepping, so the player keeps their set step size for it.
@@ -228,6 +263,36 @@ namespace Pulsar4X.Combat
         /// detection is live, next to <see cref="NarrateToLog"/> / <see cref="InterruptTimeOnNewEngagement"/>.</summary>
         public static bool RequireDetectionToEngage = false;
 
+        /// <summary>When true, a battle only ERUPTS if someone will release a shot — the first-shot trigger (Phase 3,
+        /// docs/FLEET-COMBAT-CLOSING-DESIGN.md). Two hostile fleets that are BOTH non-WeaponsFree (weapons-hold /
+        /// return-fire) sit in a tense STANDOFF — proximity no longer auto-starts a fight. At least one WeaponsFree
+        /// fleet (the default posture) starts it. Default FALSE so existing fixtures (no posture set = WeaponsFree
+        /// anyway) are unchanged; the client turns it on when ROE is live.</summary>
+        public static bool RequireWeaponsReleaseToEngage = false;
+
+        /// <summary>When true, combat is a CLOSING fight (Phase 1, docs/FLEET-COMBAT-CLOSING-DESIGN.md): a weapon only
+        /// fires if its <see cref="WeaponProfile.Range_m"/> reaches the current gap, and the gap CLOSES each step toward
+        /// the FASTER (more maneuverable) side's preferred range — so a faster long-range fleet kites a slower
+        /// short-range one, and a faster brawler forces the merge. Default FALSE so every existing combat fixture is
+        /// byte-identical: with it off the gap stays 0 and the range-gate is a no-op (a 0-separation or 0/unbounded-range
+        /// weapon always fires). v1: ONE shared range per engagement group (per-sub-fleet ranges are Phase 4).</summary>
+        public static bool EnableClosingRange = false;
+
+        /// <summary>Closing-rate dial (m/s): the gap-change speed of a maximally-maneuverable fleet (evasion 1.0); a
+        /// fleet changes the gap proportional to its maneuverability (min evasion over its ships — it moves as one).
+        /// Tunable like <see cref="SalvoDamageScale"/>; set 0 to FREEZE the gap (gauge use). v1 calibration provisional.</summary>
+        public static double ClosingSpeedScale_mps = 100_000.0;
+
+        /// <summary>Fallback opening gap (m) when first contact has no usable fleet positions (the multi-party join
+        /// path). The 2-fleet <see cref="StartEngagement"/> seeds the real distance instead. v1 stub.</summary>
+        public static double InitialSeparationDefault_m = 10_000_000.0;
+
+        /// <summary>Phase 2 (kiting counter): Δv (m/s) a fleet spends per game-second it CONTROLS the range. A kiter
+        /// holding the gap burns this each step; when its <see cref="FleetCombatStateDB.ManeuverBudget"/> runs dry it can
+        /// no longer dictate the range and the enemy closes on it — so you can't kite forever. Tunable; 0 = free maneuver
+        /// (kiting never runs out). v1 calibration provisional.</summary>
+        public static double ManeuverBurnRate = 5.0;
+
         private static void CombatLog(string msg)
         {
             if (NarrateToLog) System.Console.WriteLine("[Combat] " + msg);
@@ -257,8 +322,18 @@ namespace Pulsar4X.Combat
         /// <see cref="EnsureInCombat"/> in <see cref="Tick"/>.</summary>
         public static void StartEngagement(Entity fleetA, Entity fleetB)
         {
-            fleetA.SetDataBlob(new FleetCombatStateDB(fleetB.Id, GetFleetShips(fleetA).Count));
-            fleetB.SetDataBlob(new FleetCombatStateDB(fleetA.Id, GetFleetShips(fleetB).Count));
+            var sa = new FleetCombatStateDB(fleetB.Id, GetFleetShips(fleetA).Count);
+            var sb = new FleetCombatStateDB(fleetA.Id, GetFleetShips(fleetB).Count);
+            if (EnableClosingRange)   // Phase 1: seed the opening gap from the real distance between the two fleets
+            {
+                double gap = FleetSeparation(fleetA, fleetB);
+                sa.Separation_m = gap;
+                sb.Separation_m = gap;
+                sa.ManeuverBudget = FleetCombat.DeltaVFloor(fleetA);   // Phase 2: the kiting clock = the fleet's Δv floor
+                sb.ManeuverBudget = FleetCombat.DeltaVFloor(fleetB);
+            }
+            fleetA.SetDataBlob(sa);
+            fleetB.SetDataBlob(sb);
             CombatLog($"{FleetLabel(fleetA)} vs {FleetLabel(fleetB)} — engaged");
             RecordBattleEvent(fleetA, BattleEventType.Engaged, 0, GetFleetShips(fleetA).Count, 0, "vs " + FleetLabel(fleetB));
             RecordBattleEvent(fleetB, BattleEventType.Engaged, 0, GetFleetShips(fleetB).Count, 0, "vs " + FleetLabel(fleetA));
@@ -271,7 +346,13 @@ namespace Pulsar4X.Combat
         public static void EnsureInCombat(Entity fleet, int representativeOpponentId)
         {
             if (fleet == null || !fleet.IsValid || fleet.HasDataBlob<FleetCombatStateDB>()) return;
-            fleet.SetDataBlob(new FleetCombatStateDB(representativeOpponentId, GetFleetShips(fleet).Count));
+            var st = new FleetCombatStateDB(representativeOpponentId, GetFleetShips(fleet).Count);
+            if (EnableClosingRange)
+            {
+                st.Separation_m = InitialSeparationDefault_m;          // Phase 1 v1: join path seeds the default gap
+                st.ManeuverBudget = FleetCombat.DeltaVFloor(fleet);    // Phase 2: the kiting clock
+            }
+            fleet.SetDataBlob(st);
             CombatLog($"{FleetLabel(fleet)} enters combat ({GetFleetShips(fleet).Count} ship(s))");
             RecordBattleEvent(fleet, BattleEventType.Engaged, 0, GetFleetShips(fleet).Count, 0, "enters combat");
 
@@ -319,7 +400,7 @@ namespace Pulsar4X.Combat
             for (int i = 0; i < n; i++)
             {
                 ships[i] = GetCombatShips(live[i]);
-                fire[i] = BuildFireMix(ships[i]);
+                fire[i] = BuildFireMix(ships[i], SeparationOf(live[i]));   // Phase 1: only weapons reaching the gap fire
                 targetsOf[i] = new List<int>();
                 attackersOf[i] = new List<int>();
             }
@@ -361,6 +442,14 @@ namespace Pulsar4X.Combat
                 // toward kills, so battles play out over many salvos instead of ending in 2–4 (see the const).
                 state.DamageTakenPool += TotalDamage(incoming) * dt * SalvoDamageScale;
                 ApplyCasualties(ships[i], state, incoming); // prunes the dead from ships[i]
+            }
+
+            // --- CLOSING phase (Phase 1): the gap moves toward the faster side's preferred range, AFTER this step's
+            // salvo landed at the current gap. Off by default (flag) so the pre-closing resolve is untouched.
+            if (EnableClosingRange)
+            {
+                AdvanceClosing(live, ships, dt);
+                if (NarrateToLog) NarrateClosing(live, ships);   // live visibility into the closing fight
             }
 
             // --- RESOLUTION phase. Per-fleet: a fleet drops out if it is wiped, breaks off (retreat — System 5,
@@ -535,7 +624,152 @@ namespace Pulsar4X.Combat
         /// carries the class's TOTAL damage (doctrine-scaled) and a damage-weighted velocity/tracking/saturation.
         /// A ship with no weapon profiles but real firepower (old-style combat value) fires as a light-speed
         /// always-hits beam, so dodge degrades to the old behaviour.</summary>
-        private static List<WeaponProfile> BuildFireMix(List<CombatShip> ships)
+        // ─── Phase 1 — closing distance ────────────────────────────────────────────────────────────────────────
+
+        /// <summary>This fleet's current gap to the opposing side — 0 when closing is off or it has no state (which
+        /// makes the range-gate a no-op).</summary>
+        private static double SeparationOf(Entity fleet)
+            => EnableClosingRange && fleet.TryGetDataBlob<FleetCombatStateDB>(out var st) ? st.Separation_m : 0;
+
+        /// <summary>Advance the engagement gap one step. The FASTER (more maneuverable) side dictates the range: the
+        /// gap moves toward the controller's preferred standoff (its longest weapon range; 0 = close in). v1 keeps ONE
+        /// shared gap for the whole group (per-sub-fleet ranges are Phase 4). Deterministic — pure arithmetic on dt.</summary>
+        private static void AdvanceClosing(List<Entity> live, List<CombatShip>[] ships, double dt)
+        {
+            int controller = -1;
+            double best = -1;
+            for (int i = 0; i < live.Count; i++)
+            {
+                if (ships[i].Count == 0) continue;
+                // Phase 2 (kiting counter): only a fleet with maneuver budget LEFT can dictate the range. A burned-out
+                // fleet drops out of contention, so a dry kiter loses control and the enemy closes. ManeuverBurnRate 0
+                // = free maneuver (budget never matters), the pre-P2 behaviour.
+                if (ManeuverBurnRate > 0 &&
+                    (!live[i].TryGetDataBlob<FleetCombatStateDB>(out var bs) || bs.ManeuverBudget <= 0))
+                    continue;
+                double m = FleetManeuver(ships[i]);
+                if (m > best) { best = m; controller = i; }
+            }
+            if (controller < 0) return;
+
+            // The controller SPENDS maneuver budget to dictate the range — the kiting clock that makes "kite forever"
+            // impossible. When it hits 0 it's no longer eligible above, so next step the enemy takes the wheel.
+            if (ManeuverBurnRate > 0 && live[controller].TryGetDataBlob<FleetCombatStateDB>(out var ctrlState))
+            {
+                double before = ctrlState.ManeuverBudget;
+                ctrlState.ManeuverBudget = System.Math.Max(0, before - ManeuverBurnRate * dt);
+                if (NarrateToLog && before > 0 && ctrlState.ManeuverBudget <= 0)
+                    CombatLog($"{FleetLabel(live[controller])} has spent its maneuver reserve — it can no longer dictate the range, the enemy will close");
+            }
+
+            double desired = FleetDesiredRange(ships[controller]);      // the controller's preferred standoff
+            double step = best * ClosingSpeedScale_mps * dt;            // metres it can change the gap this step
+            for (int i = 0; i < live.Count; i++)
+            {
+                if (!live[i].IsValid || !live[i].TryGetDataBlob<FleetCombatStateDB>(out var st)) continue;
+                double r = st.Separation_m;
+                if (r > desired) r = System.Math.Max(desired, r - step);
+                else if (r < desired) r = System.Math.Min(desired, r + step);
+                st.Separation_m = r;
+            }
+        }
+
+        /// <summary>A fleet's maneuver speed proxy = the MIN evasion over its ships (it moves as one, bound by its
+        /// least-agile ship). Higher = it controls the range. Reuses the already-computed Evasion (no new data).</summary>
+        private static double FleetManeuver(List<CombatShip> ships)
+        {
+            double floor = double.PositiveInfinity;
+            foreach (var cs in ships)
+            {
+                double e = CombatValue(cs.Ship).Evasion;
+                if (e < floor) floor = e;
+            }
+            return double.IsInfinity(floor) ? 0 : floor;
+        }
+
+        /// <summary>The fleet's preferred standoff = its longest FINITE weapon range (so a long-range fleet wants to
+        /// hold far; a fleet with only unbounded/short guns wants 0 = close in).</summary>
+        private static double FleetDesiredRange(List<CombatShip> ships)
+        {
+            double maxFinite = 0;
+            foreach (var cs in ships)
+            {
+                var cv = CombatValue(cs.Ship);
+                if (cv.Weapons == null) continue;
+                foreach (var w in cv.Weapons)
+                    if (w.Range_m > maxFinite) maxFinite = w.Range_m;   // unbounded (0) never raises it
+            }
+            return maxFinite;
+        }
+
+        /// <summary>The real-space distance between two fleets, for seeding the opening gap; the default if either has
+        /// no usable position.</summary>
+        private static double FleetSeparation(Entity a, Entity b)
+        {
+            if (TryGetFleetPosition(a, out var pa) && TryGetFleetPosition(b, out var pb))
+                return (pa - pb).Length();
+            return InitialSeparationDefault_m;
+        }
+
+        /// <summary>The fleet's longest weapon reach — <see cref="double.PositiveInfinity"/> if it has any unbounded
+        /// (rangeless) weapon, else the max finite <see cref="WeaponProfile.Range_m"/>, 0 if it has no weapons.</summary>
+        private static double MaxReach(List<CombatShip> ships)
+        {
+            double max = 0;
+            foreach (var cs in ships)
+            {
+                var cv = CombatValue(cs.Ship);
+                if (cv.Weapons == null) continue;
+                foreach (var w in cv.Weapons)
+                {
+                    if (w.Range_m <= 0) return double.PositiveInfinity;   // an unbounded weapon = infinite reach
+                    if (w.Range_m > max) max = w.Range_m;
+                }
+            }
+            return max;
+        }
+
+        /// <summary>One live line per fleet per closing step: its gap, whether its guns REACH it, its longest reach,
+        /// and its maneuver reserve — so a play-test log shows the standoff/closing play out (the gauge CI can't run).</summary>
+        private static void NarrateClosing(List<Entity> live, List<CombatShip>[] ships)
+        {
+            for (int i = 0; i < live.Count; i++)
+            {
+                if (ships[i].Count == 0 || !live[i].TryGetDataBlob<FleetCombatStateDB>(out var st)) continue;
+                double gap = st.Separation_m;
+                double reach = MaxReach(ships[i]);
+                bool reaches = reach >= gap;            // PositiveInfinity >= gap is true (unbounded reaches)
+                string reachStr = double.IsInfinity(reach) ? "unlimited" : $"{reach:N0}m";
+                CombatLog($"closing: {FleetLabel(live[i])} gap {gap:N0}m — {(reaches ? "IN RANGE" : "OUT OF RANGE")} " +
+                          $"(reach {reachStr}), maneuver reserve {st.ManeuverBudget:N0}");
+            }
+        }
+
+        /// <summary>On-demand snapshot of every active engagement in a system — the "send me a screenshot of the
+        /// fight" tool. Prints, per in-combat fleet: ships, gap, reach/IN-or-OUT, maneuver reserve, posture, and the
+        /// damage pool against it. Writes <c>[Combat] DUMP</c> lines UNCONDITIONALLY (not gated on <see cref="NarrateToLog"/>)
+        /// so a DevTools button works even with narration off. Read-only.</summary>
+        public static void DumpActiveCombat(EntityManager system)
+        {
+            if (system == null) return;
+            var inCombat = system.GetAllEntitiesWithDataBlob<FleetCombatStateDB>();
+            System.Console.WriteLine($"[Combat] DUMP — {inCombat.Count} fleet(s) in combat in this system "
+                + $"(closing {(EnableClosingRange ? "ON" : "OFF")}, weapons-release {(RequireWeaponsReleaseToEngage ? "ON" : "OFF")}, fog {(RequireDetectionToEngage ? "ON" : "OFF")})");
+            foreach (var fleet in inCombat)
+            {
+                if (!fleet.TryGetDataBlob<FleetCombatStateDB>(out var st)) continue;
+                var combatShips = GetCombatShips(fleet);
+                double reach = MaxReach(combatShips);
+                string reachStr = double.IsInfinity(reach) ? "unlimited" : $"{reach:N0}m";
+                bool reaches = reach >= st.Separation_m;
+                System.Console.WriteLine($"[Combat] DUMP   {FleetLabel(fleet)}: {combatShips.Count} ship(s), "
+                    + $"gap {st.Separation_m:N0}m {(reaches ? "IN RANGE" : "OUT")} (reach {reachStr}), "
+                    + $"reserve {st.ManeuverBudget:N0}, posture {FleetDoctrine.PostureOf(fleet)}, "
+                    + $"salvo {st.StepsFought}, incoming pool {st.DamageTakenPool:N0}");
+            }
+        }
+
+        private static List<WeaponProfile> BuildFireMix(List<CombatShip> ships, double separation_m = 0)
         {
             // class -> (total damage, damage-weighted velocity, tracking, saturation)
             var byClass = new Dictionary<WeaponClass, (double dmg, double velW, double trkW, double satW)>();
@@ -552,7 +786,13 @@ namespace Pulsar4X.Combat
                 if (cv.Weapons != null && cv.Weapons.Count > 0)
                 {
                     foreach (var w in cv.Weapons)
+                    {
+                        // RANGE GATE (Phase 1): a FINITE-range weapon only fires if it reaches the current gap.
+                        // separation 0 (flag off / point blank) or a 0/unbounded weapon range => always fires, so
+                        // this is a no-op in the pre-closing path (every existing fixture is unchanged).
+                        if (separation_m > 0 && w.Range_m > 0 && w.Range_m < separation_m) continue;
                         Add(w.Class, w.DamagePerSecond * cs.FirepowerMult, w.Velocity, w.Tracking, w.Saturation);
+                    }
                 }
                 else if (cv.Firepower > 0)
                 {
@@ -703,6 +943,35 @@ namespace Pulsar4X.Combat
         {
             int fa = a.FactionOwnerID, fb = b.FactionOwnerID;
             return fa != fb && fa != Game.NeutralFactionId && fb != Game.NeutralFactionId;
+        }
+
+        /// <summary>True if any ship in the fleet can deal damage (has a weapon profile or nonzero Firepower). A
+        /// hostile pair with NO firepower on either side can't resolve a fight — engaging them just thrashes
+        /// (enter → frozen, no damage → disengage, every tick), so the trigger skips such pairs.</summary>
+        private static bool FleetHasFirepower(Entity fleet)
+        {
+            foreach (var ship in GetFleetShips(fleet))
+            {
+                var cv = CombatValue(ship);
+                if (cv.Firepower > 0) return true;
+                if (cv.Weapons != null && cv.Weapons.Count > 0) return true;
+            }
+            return false;
+        }
+
+        /// <summary>True if any hostile, manned fleet is in range of this one. Used to expire a stale
+        /// <see cref="FleetRetreatDB"/> once the threat is gone — so a withdrawn fleet can fight again later, and
+        /// moving it out of range re-commits it.</summary>
+        private static bool AnyHostileInRange(Entity fleet, IReadOnlyList<Entity> fleets)
+        {
+            foreach (var other in fleets)
+            {
+                if (other == null || !other.IsValid || other == fleet) continue;
+                if (!AreHostile(fleet, other)) continue;
+                if (GetFleetShips(other).Count == 0) continue;
+                if (InRange(fleet, other)) return true;
+            }
+            return false;
         }
 
         /// <summary>Fog-of-war check (the detection × weapons seam): does the <paramref name="detector"/> fleet's
