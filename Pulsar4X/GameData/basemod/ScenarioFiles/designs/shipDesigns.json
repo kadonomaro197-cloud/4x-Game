@@ -177,7 +177,8 @@
         { "Id": "default-design-fuel-tank-1000", "Amount": 2 },
         { "Id": "default-design-battery-2t", "Amount": 4 },
         { "Id": "default-design-reactor-2t", "Amount": 2 },
-        { "Id": "default-design-NTR1.8", "Amount": 4 }
+        { "Id": "default-design-NTR1.8", "Amount": 4 },
+        { "Id": "default-design-alcubierre-2k", "Amount": 1 }
       ]
     }
   },
@@ -197,7 +198,8 @@
         { "Id": "default-design-fuel-tank-1000", "Amount": 1 },
         { "Id": "default-design-battery-2t", "Amount": 1 },
         { "Id": "default-design-reactor-2t", "Amount": 1 },
-        { "Id": "default-design-NTR1.8", "Amount": 1 }
+        { "Id": "default-design-NTR1.8", "Amount": 1 },
+        { "Id": "default-design-alcubierre-500", "Amount": 1 }
       ]
     }
   },
@@ -216,7 +218,8 @@
         { "Id": "default-design-fuel-tank-1000", "Amount": 2 },
         { "Id": "default-design-battery-2t", "Amount": 2 },
         { "Id": "default-design-reactor-2t", "Amount": 2 },
-        { "Id": "default-design-NTR1.8", "Amount": 4 }
+        { "Id": "default-design-NTR1.8", "Amount": 4 },
+        { "Id": "default-design-alcubierre-2k", "Amount": 1 }
       ]
     }
   },
@@ -235,7 +238,8 @@
         { "Id": "default-design-fuel-tank-1000", "Amount": 2 },
         { "Id": "default-design-battery-2t", "Amount": 2 },
         { "Id": "default-design-reactor-2t", "Amount": 1 },
-        { "Id": "default-design-NTR1.8", "Amount": 4 }
+        { "Id": "default-design-NTR1.8", "Amount": 4 },
+        { "Id": "default-design-alcubierre-2k", "Amount": 1 }
       ]
     }
   },
@@ -253,7 +257,8 @@
         { "Id": "default-design-railgun-weapon", "Amount": 1 },
         { "Id": "default-design-reactor-2t", "Amount": 1 },
         { "Id": "default-design-battery-2t", "Amount": 1 },
-        { "Id": "default-design-NTR1.8", "Amount": 4 }
+        { "Id": "default-design-NTR1.8", "Amount": 4 },
+        { "Id": "default-design-alcubierre-500", "Amount": 1 }
       ]
     }
   },
@@ -272,7 +277,8 @@
         { "Id": "default-design-fuel-tank-1000", "Amount": 3 },
         { "Id": "default-design-battery-2t", "Amount": 4 },
         { "Id": "default-design-reactor-2t", "Amount": 3 },
-        { "Id": "default-design-NTR1.8", "Amount": 2 }
+        { "Id": "default-design-NTR1.8", "Amount": 2 },
+        { "Id": "default-design-alcubierre-2k", "Amount": 1 }
       ]
     }
   }
