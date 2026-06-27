@@ -62,5 +62,39 @@ namespace Pulsar4X.Tests
             Assert.That(capped.etiDateTime, Is.GreaterThan(fast.etiDateTime),
                 "capping to half speed must make the ship arrive later — the fleet-moves-as-one lever");
         }
+
+        [Test]
+        [Description("The cap must reach the ACTUAL travel speed, not only the predicted ETA. WarpMovingDB stores the " +
+                     "capped speed in WarpSpeed_mps; the warp processor reads THAT (not WarpAbilityDB.MaxSpeed) to set " +
+                     "the transit velocity. This is the bug that let a fast ship race ahead even on a fleet move — the " +
+                     "ETA was capped but the ship still flew at its own MaxSpeed. 0 cap = the ship's own speed.")]
+        public void WarpMovingDB_StoresTheCappedSpeed_SoTheProcessorUsesIt()
+        {
+            var s = TestScenario.CreateWithColony();
+            var info = s.Faction.GetDataBlob<FactionInfoDB>();
+            var ship = ShipFactory.CreateShip(info.ShipDesigns["default-ship-design-test-warship"], s.Faction, s.StartingBody, "Aegis");
+
+            if (!ship.TryGetDataBlob<WarpAbilityDB>(out var warp) || warp.MaxSpeed <= 0)
+            {
+                Assert.Ignore("ship has no usable warp drive — can't gauge the cap");
+                return;
+            }
+
+            var target = s.StartingSystem.GetAllEntitiesWithDataBlob<SystemBodyInfoDB>()
+                .FirstOrDefault(b => b.Id != s.StartingBody.Id && b.HasDataBlob<PositionDB>() && b.HasDataBlob<OrbitDB>());
+            Assert.That(target, Is.Not.Null, "need a second body in the system to warp toward");
+
+            double cap = warp.MaxSpeed * 0.5;
+            var capped = new WarpMovingDB(ship, target, new Pulsar4X.Orbital.Vector3(),
+                default(Pulsar4X.Orbital.KeplerElements), cap);
+            Log($"capped WarpSpeed_mps = {capped.WarpSpeed_mps:N0} (cap {cap:N0})");
+            Assert.That(capped.WarpSpeed_mps, Is.EqualTo(cap).Within(1e-6),
+                "a fleet move's cap must be stored as the actual travel speed the processor reads");
+
+            var uncapped = new WarpMovingDB(ship, target, new Pulsar4X.Orbital.Vector3(),
+                default(Pulsar4X.Orbital.KeplerElements), 0);
+            Assert.That(uncapped.WarpSpeed_mps, Is.EqualTo(warp.MaxSpeed).Within(1e-6),
+                "no cap (0) must fall back to the ship's own MaxSpeed — single-ship warps unchanged");
+        }
     }
 }
