@@ -747,7 +747,7 @@ namespace Pulsar4X.Client
         }
 
         // ── Range rings on the map ────────────────────────────────────────────────────────────────────────────
-        // Draws each selected-fleet ship's beam reach (red) and sensor reach (blue) as circles on the system map,
+        // Draws each selected-fleet ship's beam reach (red) and sensor reach (green) as circles on the system map,
         // so "how close to shoot / how far I can see" is visible in space, not just as a number in the table. Uses
         // the existing SimpleCircle widget + UIWidgets dict — the exact mechanism DebugWindow's "Draw SOI" uses, so
         // no new SDL drawing code. Radius is in AU (SimpleCircle's unit), converted from the engine's metres.
@@ -814,7 +814,8 @@ namespace Pulsar4X.Client
                 {
                     string key = "rangering_sensor_" + ship.Id;
                     render.UIWidgets[key] = new SimpleCircle(pos, Pulsar4X.Orbital.Distance.MToAU(reach),
-                        new SDL3.SDL.Color { R = 70, G = 150, B = 225, A = 70 });   // blue-ish: how far it can SEE
+                        new SDL3.SDL.Color { R = 80, G = 210, B = 110, A = 70 });   // green: how far it can SEE
+                                                                                    // (blue is already used in-game)
                     _rangeRingKeys.Add(key);
                 }
             }

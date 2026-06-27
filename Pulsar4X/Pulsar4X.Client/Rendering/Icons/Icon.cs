@@ -213,6 +213,15 @@ namespace Pulsar4X.Client
 
         bool positionByDB;
 
+        // On-screen-size cull (mirrors OrbitEllipseIcon, root CLAUDE.md gotcha #15). When you zoom in past a circle
+        // — e.g. into a ship's tiny 5 km beam ring — this circle (or its larger sibling rings) can balloon to
+        // millions of pixels across. SDL.RenderLine chokes rasterizing astronomically off-screen lines, so frame
+        // time climbs until the game stutters/freezes. If the on-screen radius exceeds this, skip the draw for that
+        // frame. Recomputed every frame, so zooming back out brings the ring straight back — it's a per-frame
+        // "worth drawing right now?" decision, not a permanent removal.
+        bool _offScreenSkip;
+        const double MaxScreenRadiusPx = 50000;
+
         public Vector3 WorldPosition
         {
             get { if (positionByDB) return _positionDB.AbsolutePosition + _worldPosition; else return _worldPosition; }
@@ -237,6 +246,7 @@ namespace Pulsar4X.Client
 
         public void Draw(IntPtr rendererPtr, Camera camera)
         {
+            if (_offScreenSkip || _drawShape.Points == null) return;
             SDL.SetRenderDrawColor(rendererPtr, _drawShape.Color.R, _drawShape.Color.G, _drawShape.Color.B, _drawShape.Color.A);
 
             for (int i = 0; i < _shape.Points.Length - 1; i++)
@@ -251,14 +261,25 @@ namespace Pulsar4X.Client
 
         public void OnFrameUpdate(Matrix matrix, Camera camera)
         {
-
-
             ViewScreenPos = camera.ViewCoordinate_m(WorldPosition);
             var vsp = new Vector2
             {
                 X = ViewScreenPos.X,
                 Y = ViewScreenPos.Y
             };
+
+            // Cull before transforming all 128 points: the matrix scales world→screen, so a single transformed
+            // point's distance from the centre IS the on-screen radius in pixels. If it's absurd (you've zoomed in
+            // past the ring) or non-finite, skip this frame's draw entirely — don't hand SDL million-pixel lines.
+            _offScreenSkip = false;
+            var radiusPoint = matrix.TransformD(_shape.Points[0].X, _shape.Points[0].Y);
+            double screenRadius = Math.Sqrt(radiusPoint.X * radiusPoint.X + radiusPoint.Y * radiusPoint.Y);
+            if (!double.IsFinite(screenRadius) || screenRadius > MaxScreenRadiusPx)
+            {
+                _offScreenSkip = true;
+                return;
+            }
+
             Orbital.Vector2[] drawPoints = new Orbital.Vector2[_shape.Points.Length];
 
             for (int i2 = 0; i2 < _shape.Points.Length; i2++)
