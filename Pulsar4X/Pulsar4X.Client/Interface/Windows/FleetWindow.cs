@@ -798,37 +798,35 @@ namespace Pulsar4X.Client
             _ringsFleet = selectedFleetDB;
             _ringsTarget = _uiState.LastClickedEntity?.Entity;
 
+            // THREE rings PER FLEET (not per ship): the fleet moves and fights as one, so draw one ring of each
+            // kind sized off the ship with the HIGHEST of that range (max beam reach / max sensor reach / max
+            // detectability), centred on the fleet's representative position (its first ship). This is both the
+            // clean readout AND the perf fix — 3 circles regardless of fleet size, instead of 3×N.
+            double maxBeam = 0, maxReach = 0, maxDetect = 0;
+            PositionDB center = null;
             foreach (var ship in selectedFleetDB.GetChildren().Where(c => c.IsValid && !c.HasDataBlob<FleetDB>()))
             {
-                if (!ship.HasDataBlob<PositionDB>()) continue;
-                var pos = ship.GetDataBlob<PositionDB>();
-
+                if (center == null && ship.HasDataBlob<PositionDB>()) center = ship.GetDataBlob<PositionDB>();
                 double beam = WeaponUtils.GetMaxBeamRange_m(ship);
-                if (beam > 0)
+                double reach = SensorTools.SensorReachRange_m(ship);
+                double detect = SensorTools.DetectabilityRange_m(ship);
+                if (beam > maxBeam) maxBeam = beam;
+                if (reach > maxReach) maxReach = reach;
+                if (detect > maxDetect) maxDetect = detect;
+            }
+            if (center != null)
+            {
+                void Ring(string suffix, double range_m, byte r, byte g, byte b, byte a)
                 {
-                    string key = "rangering_beam_" + ship.Id;
-                    render.UIWidgets[key] = new SimpleCircle(pos, Pulsar4X.Orbital.Distance.MToAU(beam),
-                        new SDL3.SDL.Color { R = 225, G = 90, B = 70, A = 90 });   // red-ish: how far it can SHOOT
+                    if (range_m <= 0) return;
+                    string key = "rangering_" + suffix;
+                    render.UIWidgets[key] = new SimpleCircle(center, Pulsar4X.Orbital.Distance.MToAU(range_m),
+                        new SDL3.SDL.Color { R = r, G = g, B = b, A = a });
                     _rangeRingKeys.Add(key);
                 }
-
-                double reach = SensorTools.SensorReachRange_m(ship);   // how far it can SEE (stable vs your EMCON)
-                if (reach > 0)
-                {
-                    string key = "rangering_sensor_" + ship.Id;
-                    render.UIWidgets[key] = new SimpleCircle(pos, Pulsar4X.Orbital.Distance.MToAU(reach),
-                        new SDL3.SDL.Color { R = 80, G = 210, B = 110, A = 70 });   // green: how far it can SEE
-                    _rangeRingKeys.Add(key);
-                }
-
-                double detect = SensorTools.DetectabilityRange_m(ship);   // how far it can BE SEEN (moves with activity)
-                if (detect > 0)
-                {
-                    string key = "rangering_detect_" + ship.Id;
-                    render.UIWidgets[key] = new SimpleCircle(pos, Pulsar4X.Orbital.Distance.MToAU(detect),
-                        new SDL3.SDL.Color { R = 240, G = 160, B = 40, A = 80 });   // amber: how far YOU can be detected
-                    _rangeRingKeys.Add(key);
-                }
+                Ring("beam", maxBeam, 225, 90, 70, 90);     // red: fleet's longest reach to SHOOT
+                Ring("sensor", maxReach, 80, 210, 110, 70); // green: fleet's widest reach to SEE
+                Ring("detect", maxDetect, 240, 160, 40, 80);// amber: fleet's loudest ship = how far it can BE SEEN
             }
 
             // Detection bubble vs the currently-selected ENEMY: one cyan ring around that target = how far the

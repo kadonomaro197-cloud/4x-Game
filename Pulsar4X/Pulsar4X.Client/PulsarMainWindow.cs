@@ -79,6 +79,12 @@ namespace Pulsar4X.Client
             // warp-detach bug). Off by default in the engine (tests stay quiet); on for the game.
             Pulsar4X.Movement.WarpMoveProcessor.NarrateWarpToLog = true;
 
+            // Authentic closing fight: fleets fight at a real range — every weapon trades fire as they close, getting
+            // more accurate the nearer they get (range degrades ballistic accuracy; beams/missiles/flak gate on their
+            // ranges). Off by default in the engine (existing combat tests are byte-identical at separation 0); ON for
+            // the game so battles are authentic (the developer's call). DevTools can still toggle it.
+            Pulsar4X.Combat.CombatEngagement.EnableClosingRange = true;
+
             try
             {
                 string? appDataDirectory = GetAppDataPath();
