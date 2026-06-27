@@ -80,17 +80,43 @@ screen (`WarpOrderWindow` even read the ship's max delta-V into `_maxDV` and nev
 
 ---
 
+## Live-test gauges — filling the hole CI can't see
+
+CI builds the engine + tests but **never compiles the SDL client**, so it cannot tell whether a client *wire*
+reads the right value or fires at all — only the engine *gauge* (the accessor) is CI-checkable. So every client
+wire here also drops a **`SessionLog` line at its action/commit point** (flushed immediately into the `game_logs/`
+pages), turning the developer's play-test into the test CI can't run:
+- Range rings: `[range-ring] built N ring(s) for the selected fleet (+ bubble vs #id)` — **0 rings when rings were
+  expected names the wire, not the toggle, as the bug** — plus the bubble's computed reach.
+- Nav maneuver: `[nav] phase-change committed: ship #N, K burns, Δv X of Y available` — proves the order fired
+  with the cost the readout previewed, and that the Δv-budget number is sane on a real ship.
+
+The rule (from the client CLAUDE.md): the engine accessor is CI's gauge; the `SessionLog` line is the *client's*
+gauge. A client feature without a log line is a wire you can't see move.
+
 ## What's still open (the honest list)
 
 - **Missile range** has no number at all yet (`MissileLauncherAtb.IsInRange` returns `true` always — v2 stub). Any
   missile ring would be a lie until that's built — so it deliberately isn't drawn.
-- **Detection ring is the *self*-reference** ("a ship like me"). A ring *against the selected enemy contact* is the
-  more honest next step (range genuinely depends on the target) — the engine accessor `DetectionRange_m(receiver,
-  targetProfile)` already supports it; it just needs the UI to pick the target.
+- **Detection bubble vs the selected enemy — DONE** (`SensorTools.DetectionRangeAgainst`; cyan ring around the
+  clicked enemy, reads the target's real signature so it shrinks when the enemy goes dark).
+- **Maneuver fuel-cost preview — DONE** (NavWindow phase-change/phasing: est. fuel + Δv-used-of-available + red
+  NOT ENOUGH Δv). The thrust/edit modes can take the same preview if wanted.
 - **Sensor-ring radius is captured at build time**, so it doesn't live-update when a ship changes EMCON posture —
-  re-toggle to refresh. A per-frame refresh is the follow-up if it's wanted.
-- **Maneuver fuel cost** (the `NavWindow` `_totalDVUsage` that's computed and never rendered) is the same Failure-A
-  wire, not yet done.
+  re-toggle (or change selection) to refresh. A per-frame refresh is the follow-up if it's wanted.
+
+## Finding: the base laser's two-zone falloff never fires (focal length 200× its range)
+
+Surfaced while gauging the weapon-range readout. The two-zone beam model (Weapons CLAUDE Decision 1) is "full
+energy inside `OptimalRange_m` (= focal length); inverse-square falloff from there out to `MaxRange`" — which
+assumes **focal length < max range**. But the base-mod laser (`weapons.json`) ships **`Range` = 5,000 m** and
+**`Focal Length` = 1,000,000 m** (a "Distance to target (debug)" property left at its placeholder), so
+`OptimalRange_m` is 200× the gun's actual reach. `BeamWeaponProcessor.OnHit` only attenuates **beyond** optimal
+(`if (distance > OptimalRange_m)`) and caps `energyScale` at 1.0 otherwise — so **no damage bug** (it never
+amplifies) — but every reachable hit is at ≤ 5,000 m ≪ 1,000,000 m, so the falloff branch is **never taken**: the
+laser deals flat full energy at every range it can fire. The feature is **dead for this design**. **Fix is data,
+not code** (a balance call, flagged not changed): set `Focal Length` below `Range` (e.g. `Range * 0.5`) so a real
+falloff band exists — or declare "flat damage to max range" the intent and label it so.
 
 ---
 

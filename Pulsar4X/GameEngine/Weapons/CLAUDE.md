@@ -94,6 +94,8 @@ MissileProcessor.LaunchMissile(launcher, target, launchForce, design, count)
 - `BeamInfoDB.OptimalRange_m` carries this per-beam. `BeamWeaponProcessor.OnHit()` applies the scale before building the `DamageFragment`.
 - `MaxRange == 0` = unlimited (legacy designs unaffected). `OptimalRange_m == 0` = no falloff.
 
+> **⚠ DATA FINDING (2026-06-27): the base laser's falloff never fires.** This model assumes **focal length < max range**, but the base-mod laser ships `Range` = 5,000 m and `Focal Length` = 1,000,000 m (a "Distance to target (debug)" placeholder in `weapons.json`), so `OptimalRange_m` is 200× the gun's reach. `OnHit` only attenuates `if (distance > OptimalRange_m)` and caps `energyScale` at 1.0 otherwise — **no damage bug** (never amplifies), but every reachable hit (≤ 5,000 m) is far inside optimal, so the falloff branch is never taken: the laser deals **flat full energy to max range** and the two-zone feature is dead for this design. **Fix is DATA, not code** (balance call — flagged, not changed): set Focal Length below Range (e.g. `Range * 0.5`) for a real falloff band, or declare flat-damage the intent. Full write-up: `docs/INFORMATION-DELTA-DESIGN.md` → "Finding: the base laser's two-zone falloff never fires."
+
 ### Decision 2 — Wavelength connected to material resistance (complete)
 - `DamageFragment.Wavelength` (double, nm) flows from `GenericBeamWeaponAtb.WaveLength` → `BeamInfoDB.Frequency` → `DamageFragment.Wavelength`.
 - `DamageResistBlueprint.WavelengthAbsorption[5]` stores per-band absorption coefficients (UV/Vis/NIR/MIR/FIR).
