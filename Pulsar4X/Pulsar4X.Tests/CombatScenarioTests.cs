@@ -61,6 +61,16 @@ namespace Pulsar4X.Tests
             foreach (var fleet in playerTaskForces)
                 Assert.That(fleet.GetDataBlob<FleetDB>().GetChildren().Count(c => c.IsValid && !c.HasDataBlob<FleetDB>()),
                     Is.EqualTo(5), "each player task force is well-rounded (5 ships)");
+
+            // The task forces must be reachable the way the Fleet WINDOW enumerates them — as children of the
+            // faction's root FleetDB. FleetFactory.Create alone leaves a fleet owned+placed but ORPHANED from the
+            // tree, so it never appears in the Fleet window (this exact bug shipped: the scenario spawned ships but
+            // showed no fleets). GetAllEntitiesWithDataBlob<FleetDB> (above) finds orphans too, which is why it hid
+            // the bug — so assert the tree linkage directly.
+            var playerRootChildIds = s.Faction.GetDataBlob<FleetDB>().GetChildren().Select(c => c.Id).ToHashSet();
+            foreach (var tf in playerTaskForces)
+                Assert.That(playerRootChildIds.Contains(tf.Id), Is.True,
+                    $"task force '{tf.GetDefaultName()}' must be a child of the faction root fleet — else the Fleet window can't list it");
         }
     }
 }
