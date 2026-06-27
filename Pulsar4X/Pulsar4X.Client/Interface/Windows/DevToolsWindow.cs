@@ -406,6 +406,50 @@ namespace Pulsar4X.Client
                 if (ImGui.Button("Open Battle Report##devbattlereport"))
                     BattleReportWindow.GetInstance().SetActive(true);
 
+                // ── Closing Combat (the range/standoff model) ─────
+                ImGui.Separator();
+                ImGui.Text("[ Closing Combat ]");
+                ImGui.TextDisabled("The closing-fight model: a weapon only fires if it REACHES the gap, and the gap closes toward");
+                ImGui.TextDisabled("the faster side's range — so a fast long-range fleet kites, a fast brawler forces the merge.");
+                ImGui.TextDisabled("Both OFF by default (the live game is unchanged). Turn them on to test. Watch the [Combat] log.");
+                if (ImGui.Checkbox("Closing range — weapons gate on range + the gap closes##devclosing", ref CombatEngagement.EnableClosingRange))
+                    DevLog($"Closing range (EnableClosingRange) = {CombatEngagement.EnableClosingRange}");
+                if (ImGui.Checkbox("First-shot trigger — weapons-hold fleets sit in a standoff##devfirstshot", ref CombatEngagement.RequireWeaponsReleaseToEngage))
+                    DevLog($"First-shot trigger (RequireWeaponsReleaseToEngage) = {CombatEngagement.RequireWeaponsReleaseToEngage}");
+
+                // Premade combat scenario: 2 well-rounded player task forces at Earth + hostile squadrons at
+                // Luna/Venus/Mercury/Mars — for generating rich live combat/closing data in one click.
+                if (ImGui.Button("Spawn Combat Scenario##devscenario"))
+                {
+                    try
+                    {
+                        var enemy = CombatSandbox.SpawnCombatScenario(_uiState.Game, _uiState.SelectedSystem, _uiState.PlayerFaction);
+                        _hostileStatus = "Spawned: 2 player task forces (Earth) + hostile squadrons at Luna/Venus/Mercury/Mars.";
+                        DevLog($"Spawn Combat Scenario OK: hostile faction id={enemy.Id}; player fleets at Earth, enemies at Luna/Venus/Mercury/Mars");
+                    }
+                    catch (System.Exception ex)
+                    {
+                        _hostileStatus = "Spawn Combat Scenario FAILED — see log.";
+                        DevLog($"Spawn Combat Scenario FAILED: {ex}");
+                    }
+                }
+
+                // On-demand snapshot of every active engagement (gap / reach / reserve / posture / pool) to the log —
+                // the "send me a picture of the fight" tool. Works regardless of the narration flag.
+                if (ImGui.Button("Dump Combat (log)##devdumpcombat"))
+                {
+                    try
+                    {
+                        CombatEngagement.DumpActiveCombat(_uiState.SelectedSystem);
+                        System.Console.Out.Flush();
+                        DevLog("Dump Combat: wrote active-engagement snapshot to the log");
+                    }
+                    catch (System.Exception ex)
+                    {
+                        DevLog($"Dump Combat FAILED: {ex}");
+                    }
+                }
+
                 // ── Detection / Fog of War ────────────────────────
                 ImGui.Separator();
                 ImGui.Text("[ Detection / Fog of War ]");
