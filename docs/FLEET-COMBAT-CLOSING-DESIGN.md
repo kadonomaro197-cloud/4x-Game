@@ -199,8 +199,33 @@ the developer's build. Don't start a phase until the one below it is rooted.
 - **Unlocks:** brinkmanship/blockade/escort as real states; the ROE system's first knob; removes the "everything in a
   system instantly brawls" stub.
 
-### PHASE 4 — Per-sub-fleet ranges (the fighter-wing scenario)
+### PHASE 4 — Per-sub-fleet ranges (the fighter-wing scenario) ⏸ SPEC-READY, deliberately NOT built blind (2026-06-27)
 *The structural upgrade that makes sub-fleet doctrine actually matter. Build only once Phases 1–3 are solid — this multiplies the state.*
+
+> **Why P1–P3 landed but P4 paused here:** P1–P3 are *additive, flag-gated* changes — the gauge is pure math, so CI
+> fully verifies them. **P4 is a resolver RESTRUCTURE**, and its payoff (the fighter wing eating flak while the
+> capitals trade artillery from the back) is an *incoming-fire* behaviour whose correctness is a **feel** question CI
+> can't answer — only the developer's play-test can. Landing that blind would risk the well-tested combat engine for a
+> result I can't see. So P4 is taken to **implementation-ready** and left for a session with playtest in the loop.
+>
+> **The implementation, concretely (when we build it together):**
+> 1. **Per-component gap.** Each component (sub-fleet node) needs its own `Separation_m`, not one per top fleet. Storage:
+>    a `Dictionary<int,double>` (component-entity-id → gap) on the top fleet's `FleetCombatStateDB`, seeded + closed per
+>    component. `CollectCombatShips` already recurses components tagging each ship with its component's doctrine mults —
+>    extend `CombatShip` with a `Separation` and tag it there (the clean hook).
+> 2. **Per-component closing.** `AdvanceClosing` runs per component: each closes per ITS own maneuver floor + desired
+>    range, so a fast fighter component slides to knife range while the slow capital component holds back — naturally
+>    producing the spread. Cohesion = a component closes to its doctrine band and HOLDS (don't let it fragment past).
+> 3. **OUTGOING gate (the easy half):** `BuildFireMix` already takes a separation — make it per-ship via `CombatShip.Separation`
+>    so each component fires only the weapons that reach ITS gap. Low risk, additive.
+> 4. **INCOMING gate (the hard half — the actual restructure):** a defending ship takes an attacker's weapon only if it
+>    reaches the DEFENDER's component gap. So the attacker's fire must be re-gated at each target component's separation,
+>    and `ApplyCasualties` bucketed per target component. **This is the part that needs playtest** — it changes the damage
+>    phase, and the bucket key gains the component gap.
+> 5. **Default targeting (the triangle)** + **form-up** ride on top once the per-component structure exists.
+>
+> **Gauge to write:** a fighter sub-fleet (close doctrine) reaches flak range and TAKES flak while the capital sub-fleet
+> (standoff) trades only artillery from the back — assert the two components take *different* damage profiles in one battle.
 
 - **Design to lock:** each **sub-fleet (component)** carries its **own** range-to-enemy, closing per its **own**
   doctrine × its **own** (min-unit) speed — so the fighter wing closes fast, the capitals lag. Fire is **group-to-group**,
