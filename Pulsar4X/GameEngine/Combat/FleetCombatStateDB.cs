@@ -36,6 +36,14 @@ namespace Pulsar4X.Combat
         /// threshold (lose this fraction of your ships and you break off). Set at <c>StartEngagement</c>.</summary>
         [JsonProperty] public int InitialShipCount { get; internal set; }
 
+        /// <summary>The current gap (metres) to the opposing side — the CLOSING range (Phase 1,
+        /// docs/FLEET-COMBAT-CLOSING-DESIGN.md). Seeded from the real distance at first contact, then closed each step
+        /// toward the controlling (faster) side's preferred range. A weapon only fires if its <see cref="WeaponProfile.Range_m"/>
+        /// reaches this. ONLY meaningful when <see cref="CombatEngagement.EnableClosingRange"/> is on; 0 otherwise (which
+        /// makes the range-gate a no-op, so the resolve is byte-identical to the pre-closing behaviour). v1: one shared
+        /// range per engagement group (per-sub-fleet ranges are Phase 4).</summary>
+        [JsonProperty] public double Separation_m { get; internal set; }
+
         public FleetCombatStateDB() { }
 
         public FleetCombatStateDB(int opponentFleetId)
@@ -55,6 +63,7 @@ namespace Pulsar4X.Combat
             DamageTakenPool = db.DamageTakenPool;
             StepsFought = db.StepsFought;
             InitialShipCount = db.InitialShipCount;
+            Separation_m = db.Separation_m;
         }
 
         public override object Clone()
