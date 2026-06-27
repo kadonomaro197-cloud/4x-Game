@@ -223,6 +223,37 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("REALISM GUARDRAIL (sensor-range tuning): detection operates at a SCANNING scale — far larger " +
+                     "than weapon range. A sensor ship's reach must out-scale the beam weapon's reach by a wide " +
+                     "margin (you detect long before you can shoot). This LOCKS IN the 'sensors are a separate, " +
+                     "larger scale than weapons' principle rather than blindly retuning numbers — and the model " +
+                     "already earns it: sensitivity = tech / (antennaSize^2 * efficiency), so a bigger antenna sees " +
+                     "farther, i.e. range is PAID FOR in component size. If this ever goes red, detection has " +
+                     "collapsed to weapon-scale and THEN the base-mod sensor/signature JSON needs a tuning pass.")]
+        public void Detection_OutScalesWeaponRange_ScanningRealism()
+        {
+            var s = TestScenario.CreateWithColony();
+            var designs = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns;
+
+            // Sensor reach from a sensor-bearing hull (the capital carries a passive scanner).
+            var capital = ShipFactory.CreateShip(designs["default-ship-design-test-capital"], s.Faction, s.StartingBody, "Sensor");
+            Assert.That(capital.HasDataBlob<SensorAbilityDB>(), Is.True, "the capital must carry a sensor receiver");
+            double reach = SensorTools.SensorReachRange_m(capital);
+
+            // Beam weapon reach from a beam hull (the Aegis carries lasers).
+            var aegis = ShipFactory.CreateShip(designs["default-ship-design-test-warship"], s.Faction, s.StartingBody, "Gun");
+            double beam = WeaponUtils.GetMaxBeamRange_m(aegis);
+
+            Log($"sensor reach = {reach:N0} m ; beam range = {beam:N0} m ; ratio = {(beam > 0 ? reach / beam : 0):N0}x (detection should DWARF weapons)");
+            Assert.That(reach, Is.GreaterThan(0), "a sensor ship must have a finite reach");
+            Assert.That(beam, Is.GreaterThan(0), "a beam ship must have a finite weapon range");
+            Assert.That(reach, Is.GreaterThan(beam * 10),
+                "detection must out-scale weapon range by a WIDE margin — sensors are the long-range eyes, weapons the short-range fight");
+            Assert.That(reach, Is.LessThan(1e13),
+                "...but not absurd (under ~67 AU) — a sanity ceiling so detection isn't whole-system-wide");
+        }
+
+        [Test]
         [Description("DetectionRangeAgainst(detector, target) reads the TARGET's real signature: the same enemy ship " +
                      "is picked up farther off when it runs hot (Full) than when it goes Silent. This is the honest " +
                      "'detectability bubble' a ring-against-the-selected-enemy draws — range depends on the specific target.")]
