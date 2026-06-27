@@ -249,6 +249,15 @@ is build → play → read the rolling log pages under `game_logs/` (`[FleetComb
    Full/Cruise/Silent combo, and a **Set Posture** button that calls `FleetEmcon.SetPosture(SelectedFleet, posture)`
    (a **direct call**, like doctrine, so it works mid-battle). All reads are defensive (`FleetEmcon.PostureOf` /
    `MultiplierOf` return a Full/1.0 default for a fleet with no posture).
+
+   **Engagement-posture selector (closing P3, added 2026-06-27)** — `FleetWindow.DisplayEngagementPostureSelector()`
+   (Combat tab, between EMCON and the combat sheet). The PLAYER's half of the first-shot rule: a Weapons Free /
+   Hold Fire / Return Fire combo + **Set Engagement** button calling `FleetDoctrine.SetEngagementPosture(SelectedFleet,
+   posture)` (direct call, works mid-battle). Without it the player was stuck on the WeaponsFree default and could
+   never *hold fire* — so the P3 **standoff** (two hold-fire fleets sit in range without a battle, `CombatEngagement.cs`
+   first-shot gate) was unreachable from the player side. This is the lever that makes the standoff a real player
+   decision. Only bites when DevTools' **First-shot trigger** (`RequireWeaponsReleaseToEngage`) is on; with it off,
+   posture is inert and everyone fights on proximity. Mirrors the EMCON selector verbatim (CI-blind — local build only).
 2. **Fog-of-war toggle** — `DevToolsWindow` "[ Detection / Fog of War ]" section: a checkbox bound to
    `CombatEngagement.RequireDetectionToEngage` (default off). On → combat is detection-gated and first-strike is
    live (the side that sees first shoots first). Plus a **live signature readout** of the clicked entity's
