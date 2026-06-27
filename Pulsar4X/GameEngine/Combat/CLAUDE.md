@@ -403,6 +403,27 @@ casualty path allocates nothing when narration is off. **Bonus diagnostic:** bec
 the auto-trigger fired; its absence (while DevTools "Tick Combat" *does* produce lines) localises the open
 "does PLAY auto-start combat live?" question to the trigger/scheduler, not the resolve.
 
+> **RESOLVED (2026-06-27, live log):** a player session confirmed the auto-trigger DOES fire on play — the captured
+> `game_logs/` pages show `[Combat] Military Fleet #803 enters combat (3 ships)` / `Hostiles Fleet #818 enters combat`
+> → `[ACTION] COMBAT INTERRUPT` → `salvo 5: Hostiles … lost 1 ship, 0 left` → both disengage. So the whole live chain
+> (trigger → engage → auto-resolve → auto-pause → win) works end-to-end in the running game. The remaining gap was
+> purely **visibility** (it's math, with no on-map cue and over in a blink) — which the Battle Report / marker /
+> readout below address.
+
+**Battle Report data — `BattleLog` (added 2026-06-27, the combat-visibility feature).** The `[Combat]` console lines
+above are great for a *log* review but VANISH from the game the instant a fight ends (the live `FleetCombatStateDB`
+is removed on disengage), so a battle you blinked and missed leaves nothing on screen. `BattleLog`
+(`Combat/BattleLog.cs`) is the fix: a thread-safe, capped (`MaxEvents` = 250) ring buffer of structured
+`BattleEvent` records — `{ When (game time), FleetId, FleetName, FactionId, Type (Engaged / Salvo / Retreat /
+Disengaged), ShipsLost, ShipsLeft, Step, Note }` — captured **unconditionally** (NOT gated on `NarrateToLog`, so the
+report works regardless of the console-log flag) at the SAME five state-change sites the narration uses:
+`StartEngagement`, `EnsureInCombat`, `ApplyCasualties` (Salvo, with the kill count), `RecordRetreat`,
+`EndEngagement`. `RecordBattleEvent` in `CombatEngagement` is the single capture helper (defensive — never throws;
+reads game time via `fleet.Manager?.Game?.TimePulse?.GameGlobalDateTime`). The client's **persistent Battle Report**
+panel reads `BattleLog.Recent()` (a snapshot array copy, safe on any thread) to list recent fights AFTER they end.
+Runtime-only (not save/load) — a "recent battles" readout, not game state; thread-safe because combat ticks run
+per-system in parallel. Sensor: `BattleLogTests` (records survive the fight; ring buffer caps at MaxEvents).
+
 **Gotchas the gauge surfaced (two, both load-bearing for the live test):**
 1. **The flipped-faction enemy ships DO persist through a clock advance** with the sandbox's faction setup
    (`CreateBasicFaction` + `KnownSystems` + copied `ShipDesigns`) — the old "don't survive movement processing"
