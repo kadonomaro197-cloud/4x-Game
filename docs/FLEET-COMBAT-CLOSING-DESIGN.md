@@ -96,8 +96,14 @@ the developer's build. Don't start a phase until the one below it is rooted.
 
 ---
 
-### ROOT A — Weapon range on the combat profile
+### ROOT A — Weapon range on the combat profile ✅ BUILT (2026-06-27)
 *The data everything else reads. Nothing closes until a weapon knows how far it reaches.*
+
+> **Status:** `WeaponProfile.Range_m` added (convention: **0 = unbounded**, same as beam's `IsInRange` — serialization-
+> safe, no Infinity in JSON). Beams carry their design `MaxRange`; railgun/flak/missile default to 0 (rangeless) —
+> their own range fields are the immediate follow-up (flagged in `ShipCombatValueDB.Calculate`). Gauged by
+> `FleetAggregationTests.WeaponProfile_CarriesDesignRange_FirepowerUnchanged` (beam range > 0; Firepower identity
+> unchanged; railgun = 0).
 
 - **Design:** `WeaponProfile` gains a `Range_m`. Fed from the real weapon designs — beam `MaxRange` (exists),
   railgun/flak ranges, missile range (still a stub — flagged; a rangeless weapon = "always in range" until built).
@@ -107,8 +113,13 @@ the developer's build. Don't start a phase until the one below it is rooted.
   unchanged. (Extends `WeaponProfileTests`.)
 - **Unlocks:** range-banded firepower (everything).
 
-### ROOT B — Fleet capability aggregation
+### ROOT B — Fleet capability aggregation ✅ BUILT (2026-06-27)
 *Pure read-models over data that already exists. No behavior change yet — just the numbers the closing model will read.*
+
+> **Status:** `GameEngine/Combat/FleetCombat.cs` — `WarpSpeedFloor` / `DeltaVFloor` (min over ships = the fleet moves
+> as one), `FirepowerAtRange(R)` (sum of weapons whose `Range_m` reaches R — the firepower-vs-range curve), `SensorReach`
+> (max over ships — parallel, not summed), `Ships(fleet)` (the tree walk). Gauged by `FleetAggregationTests`
+> (`FirepowerAtRange_DropsFiniteRangeWeapons_AsTheGapGrows`, `Floors_TakeTheSlowest_SensorReach_TakesTheBest`).
 
 - **Design:** Fleet **speed** = min(unit max speeds); fleet **endurance/Δv** = min(unit Δv) — the slowest, shortest-
   legged unit constrains the fleet (it moves as one icon). Fleet **firepower-vs-range curve** = `firepower(R)` = sum
