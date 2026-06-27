@@ -1,4 +1,4 @@
-=== Pulsar4X session started 2026-06-26 20:41:49 ===
+=== Pulsar4X session started 2026-06-26 20:59:54 ===
 Log: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\game_logs (rolling pages game_log_000.txt, _001, …)
 File not found: Resources\CancelIco.bmp
 File not found: Resources\CargoIco.bmp
@@ -29,69 +29,69 @@ Found mod 'Pulsar4x-Testing' from C:\Users\DeeDiebS\AppData\Roaming\Pulsar4X\Pul
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\pulsar4x-menu.png
 Successfully loaded: pulsar4x-menu
 Format: .png
-Texture pointer: 2D9F5549010
+Texture pointer: 172853BD710
 Dimensions: 400x200
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\discord-mark-white.png
 Successfully loaded: discord
 Format: .png
-Texture pointer: 2D9F5549290
+Texture pointer: 172853BDE90
 Dimensions: 619x469
 --------------------------------------------------
-[STATE] ⏱ slow frame 369ms — something heavy this frame (watch the trend; zoom/render?)
+[STATE] ⏱ slow frame 362ms — something heavy this frame (watch the trend; zoom/render?)
 New Game: SpeciesId='species-human' ColonyId='colony-earth' SystemId='system-sol' BodyId='planet-earth' EnabledSystems=1
-[VIEW] now viewing faction id=841 (UEC) [player]
+[VIEW] now viewing faction id=795 (UEC) [player]
 Ship icon texture loaded: 28x14
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\DesignComponentIco.bmp
 Successfully loaded: DesComp
 Format: .bmp
-Texture pointer: 2D9F59C1730
+Texture pointer: 17285914B50
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\DesignShipIco.bmp
 Successfully loaded: DesShip
 Format: .bmp
-Texture pointer: 2D9F59C28B0
+Texture pointer: 17285915190
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\IndustryIco.bmp
 Successfully loaded: Industry
 Format: .bmp
-Texture pointer: 2D9F59C0FB0
+Texture pointer: 17285914F10
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\ResearchIco.bmp
 Successfully loaded: Research
 Format: .bmp
-Texture pointer: 2D9F59C2770
+Texture pointer: 17285915050
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\SelectIco.bmp
 Successfully loaded: Select
 Format: .bmp
-Texture pointer: 2D9F59C1870
+Texture pointer: 17285915550
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\GalaxyMapIco.bmp
 Successfully loaded: GalMap
 Format: .bmp
-Texture pointer: 2D9F59C2C70
+Texture pointer: 17285916590
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\RulerIco.bmp
 Successfully loaded: Ruler
 Format: .bmp
-Texture pointer: 2D9F59C1FF0
+Texture pointer: 17285914C90
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\TreeIco.bmp
 Successfully loaded: Tree
 Format: .bmp
-Texture pointer: 2D9F59C1D70
+Texture pointer: 17285915F50
 Dimensions: 256x256
 --------------------------------------------------
 [DevTools] Refresh: 13 ship design(s), 41 body(ies), 5 cargo target(s), 15 mineral(s)
-[STATE] ⏱ slow frame 999ms — something heavy this frame (watch the trend; zoom/render?)
+[STATE] ⏱ slow frame 994ms — something heavy this frame (watch the trend; zoom/render?)
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=5
 [ENGINE] sensor scans 6 (+6), battle-trigger passes 0 (+0) since last beat
 [DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
@@ -99,15 +99,28 @@ Dimensions: 256x256
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\Play.bmp
 Successfully loaded: PlayImg
 Format: .bmp
-Texture pointer: 2D9F59C1370
+Texture pointer: 17285916310
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\OneStep.bmp
 Successfully loaded: OneStepImg
 Format: .bmp
-Texture pointer: 2D9F59C15F0
+Texture pointer: 17285915910
 Dimensions: 256x256
 --------------------------------------------------
+[CAMERA] pan -> 150,-7.6 Gm
+[CAMERA] pan -> 149.8,-7.7 Gm
+[CAMERA] pan -> 148.7,-7.6 Gm
+[CAMERA] pan -> 137.8,-6.3 Gm
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=5
+[ENGINE] sensor scans 6 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[EMCON] your 4 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 76.8,2.5 Gm
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=5
+[ENGINE] sensor scans 6 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[EMCON] your 4 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=5
 [ENGINE] sensor scans 6 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
@@ -118,11 +131,11 @@ Dimensions: 256x256
 [EMCON] your 4 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
 [VIEW] now viewing faction id=0 ()
 [STATE] ship positions (after view switch): 5 ship(s)
-[STATE]   ship #847 'Planet Express Ship' faction=841 sun-dist=150.23Gm parent=Earth
-[STATE]   ship #850 'Serial Peacemaker' faction=841 sun-dist=150.25Gm parent=Earth
-[STATE]   ship #852 'Prevailing Stillness' faction=841 sun-dist=150.25Gm parent=Earth
-[STATE]   ship #855 'Surveyor I' faction=841 sun-dist=150.23Gm parent=Earth
-[STATE]   ship #857 'SensorSat I' faction=841 sun-dist=150.25Gm parent=Earth
+[STATE]   ship #801 'Planet Express Ship' faction=795 sun-dist=150.23Gm parent=Earth
+[STATE]   ship #804 'Serial Peacemaker' faction=795 sun-dist=150.25Gm parent=Earth
+[STATE]   ship #806 'Prevailing Stillness' faction=795 sun-dist=150.23Gm parent=Earth
+[STATE]   ship #809 'Surveyor I' faction=795 sun-dist=150.24Gm parent=Earth
+[STATE]   ship #811 'SensorSat I' faction=795 sun-dist=150.23Gm parent=Earth
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=5
 [ENGINE] sensor scans 6 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
@@ -135,19 +148,15 @@ Dimensions: 256x256
 [ENGINE] sensor scans 6 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
 [EMCON] your 4 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[DevTools] Spawn Ship OK: 'Picket Test Corvette' id=862 around 'Earth', added to fleet 'Freight Fleet', fuel=+359999 units, shipsInSystem=6
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=6
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=5
 [ENGINE] sensor scans 6 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[VIEW] now viewing faction id=841 (UEC)
-[STATE] ship positions (after view switch): 6 ship(s)
-[STATE]   ship #847 'Planet Express Ship' faction=841 sun-dist=150.23Gm parent=Earth
-[STATE]   ship #850 'Serial Peacemaker' faction=841 sun-dist=150.25Gm parent=Earth
-[STATE]   ship #852 'Prevailing Stillness' faction=841 sun-dist=150.25Gm parent=Earth
-[STATE]   ship #855 'Surveyor I' faction=841 sun-dist=150.23Gm parent=Earth
-[STATE]   ship #857 'SensorSat I' faction=841 sun-dist=150.25Gm parent=Earth
-[STATE]   ship #862 'Void’s Embrace' faction=841 sun-dist=150.25Gm parent=Earth
+[EMCON] your 4 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=5
+[ENGINE] sensor scans 6 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[EMCON] your 4 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[DevTools] Spawn Ship OK: 'Picket Test Corvette' id=816 around 'Earth', added to fleet 'Freight Fleet', fuel=+359999 units, energy=+1048000 KJ, shipsInSystem=6
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=6
 [ENGINE] sensor scans 6 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
@@ -164,370 +173,828 @@ Dimensions: 256x256
 [ENGINE] sensor scans 6 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
 [EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[WARP] ship #850 'Serial Peacemaker' CAN'T WARP — not enough energy for the warp bubble yet — needs 1000000 electricity, reactor has 48000 stored (advance time to let it charge, or check reactor fuel)
-[WARP] ship #852 'Prevailing Stillness' CAN'T WARP — not enough energy for the warp bubble yet — needs 1000000 electricity, reactor has 48000 stored (advance time to let it charge, or check reactor fuel)
-[WARP] ship #862 'Void’s Embrace' CAN'T WARP — not enough energy for the warp bubble yet — needs 250000 electricity, reactor has 0 stored (advance time to let it charge, or check reactor fuel)
-[ACTION] move order: fleet #849 -> 'Mercury' (warp). Watch next heartbeat for teleport check.
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=6
+[DevTools] Spawn Hostile Fleet OK: 1x 'Picket Test Corvette' around 'Venus', fleet id=818
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=7
 [ENGINE] sensor scans 6 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
 [EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 150,-7.6 Gm
-[CAMERA] pan -> 150,-7.6 Gm
-[CAMERA] pan -> 150,-7.6 Gm
-[CAMERA] pan -> 150,-7.6 Gm
-[CAMERA] pan -> 150,-7.6 Gm
-[CAMERA] pan -> 150,-7.6 Gm
-[CAMERA] pan -> 150,-7.6 Gm
-[CAMERA] pan -> 150,-7.6 Gm
-[CAMERA] pan -> 150,-7.6 Gm
-[CAMERA] pan -> 150,-7.6 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=6
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=7
 [ENGINE] sensor scans 6 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
 [EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 150,-7.8 Gm
-[CAMERA] pan -> 150,-7.8 Gm
-[CAMERA] pan -> 150,-7.8 Gm
-[CAMERA] pan -> 150,-7.8 Gm
-[CAMERA] pan -> 150,-7.8 Gm
-[CAMERA] pan -> 150,-7.8 Gm
-[CAMERA] pan -> 150,-7.8 Gm
-[CAMERA] pan -> 150,-7.8 Gm
-[CAMERA] pan -> 150,-7.8 Gm
-[CAMERA] pan -> 150,-7.8 Gm
-[CAMERA] pan -> 150.4,-8.2 Gm
-[CAMERA] pan -> 150.4,-8.2 Gm
-[CAMERA] pan -> 150.4,-8.2 Gm
-[CAMERA] pan -> 150.4,-8.2 Gm
-[CAMERA] pan -> 150.4,-8.2 Gm
-[CAMERA] pan -> 150.4,-8.2 Gm
-[CAMERA] pan -> 150.4,-8.2 Gm
-[CAMERA] pan -> 150.4,-8.2 Gm
-[CAMERA] pan -> 150.4,-8.2 Gm
-[CAMERA] pan -> 150.4,-8.2 Gm
-[CAMERA] pan -> 154.3,-10.9 Gm
-[CAMERA] pan -> 154.3,-10.9 Gm
-[CAMERA] pan -> 154.3,-10.9 Gm
-[CAMERA] pan -> 154.3,-10.9 Gm
-[CAMERA] pan -> 154.3,-10.9 Gm
-[CAMERA] pan -> 154.3,-10.9 Gm
-[CAMERA] pan -> 154.3,-10.9 Gm
-[CAMERA] pan -> 154.3,-10.9 Gm
-[CAMERA] pan -> 154.3,-10.9 Gm
-[CAMERA] pan -> 154.3,-10.9 Gm
-[CAMERA] pan -> 170.4,-20.5 Gm
-[CAMERA] pan -> 170.4,-20.5 Gm
-[CAMERA] pan -> 170.4,-20.5 Gm
-[CAMERA] pan -> 170.4,-20.5 Gm
-[CAMERA] pan -> 170.4,-20.5 Gm
-[CAMERA] pan -> 170.4,-20.5 Gm
-[CAMERA] pan -> 170.4,-20.5 Gm
-[CAMERA] pan -> 170.4,-20.5 Gm
-[CAMERA] pan -> 170.4,-20.5 Gm
-[CAMERA] pan -> 170.4,-20.5 Gm
-[CAMERA] pan -> 311,-104.5 Gm
-[CAMERA] pan -> 311,-104.5 Gm
-[CAMERA] pan -> 311,-104.5 Gm
-[CAMERA] pan -> 311,-104.5 Gm
-[CAMERA] pan -> 311,-104.5 Gm
-[CAMERA] pan -> 311,-104.5 Gm
-[CAMERA] pan -> 311,-104.5 Gm
-[CAMERA] pan -> 311,-104.5 Gm
-[CAMERA] pan -> 311,-104.5 Gm
-[CAMERA] pan -> 311,-104.5 Gm
-[CAMERA] pan -> 309,-104.5 Gm
-[CAMERA] pan -> 309,-104.5 Gm
-[CAMERA] pan -> 309,-104.5 Gm
-[CAMERA] pan -> 309,-104.5 Gm
-[CAMERA] pan -> 309,-104.5 Gm
-[CAMERA] pan -> 309,-104.5 Gm
-[CAMERA] pan -> 309,-104.5 Gm
-[CAMERA] pan -> 309,-104.5 Gm
-[CAMERA] pan -> 309,-104.5 Gm
-[CAMERA] pan -> 309,-104.5 Gm
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=6
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=7
 [ENGINE] sensor scans 6 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[VIEW] now viewing faction id=795 (UEC)
+[STATE] ship positions (after view switch): 7 ship(s)
+[STATE]   ship #801 'Planet Express Ship' faction=795 sun-dist=150.23Gm parent=Earth
+[STATE]   ship #804 'Serial Peacemaker' faction=795 sun-dist=150.25Gm parent=Earth
+[STATE]   ship #806 'Prevailing Stillness' faction=795 sun-dist=150.23Gm parent=Earth
+[STATE]   ship #809 'Surveyor I' faction=795 sun-dist=150.24Gm parent=Earth
+[STATE]   ship #811 'SensorSat I' faction=795 sun-dist=150.23Gm parent=Earth
+[STATE]   ship #816 'Endless Stride' faction=795 sun-dist=150.25Gm parent=Earth
+[STATE]   ship #819 '819' faction=817 sun-dist=108.27Gm parent=Venus
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=7
+[ENGINE] sensor scans 6 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=7
+[ENGINE] sensor scans 6 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=7
+[ENGINE] sensor scans 6 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 11.5,11.2 Gm
+[CAMERA] pan -> 11.5,11.2 Gm
+[CAMERA] pan -> 11.5,11.2 Gm
+[CAMERA] pan -> 11.5,11.2 Gm
+[CAMERA] pan -> 11.5,11.2 Gm
+[CAMERA] pan -> 11.5,11.2 Gm
+[CAMERA] pan -> 11.5,11.2 Gm
+[CAMERA] pan -> 11.5,11.2 Gm
+[CAMERA] pan -> 11.5,11.2 Gm
+[CAMERA] pan -> 11.5,11.2 Gm
+[CAMERA] pan -> 68.6,-1.6 Gm
+[CAMERA] pan -> 68.6,-1.6 Gm
+[CAMERA] pan -> 68.6,-1.6 Gm
+[CAMERA] pan -> 68.6,-1.6 Gm
+[CAMERA] pan -> 68.6,-1.6 Gm
+[CAMERA] pan -> 68.6,-1.6 Gm
+[CAMERA] pan -> 68.6,-1.6 Gm
+[CAMERA] pan -> 68.6,-1.6 Gm
+[CAMERA] pan -> 68.6,-1.6 Gm
+[CAMERA] pan -> 68.6,-1.6 Gm
+[CAMERA] pan -> 128.1,-10.3 Gm
+[CAMERA] pan -> 128.1,-10.3 Gm
+[CAMERA] pan -> 128.1,-10.3 Gm
+[CAMERA] pan -> 128.1,-10.3 Gm
+[CAMERA] pan -> 128.1,-10.3 Gm
+[CAMERA] pan -> 128.1,-10.3 Gm
+[CAMERA] pan -> 128.1,-10.3 Gm
+[CAMERA] pan -> 128.1,-10.3 Gm
+[CAMERA] pan -> 128.1,-10.3 Gm
+[CAMERA] pan -> 128.1,-10.3 Gm
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=7
+[ENGINE] sensor scans 6 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=7
+[ENGINE] sensor scans 6 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[SELECT] Primary click on 'Earth' (entity #760, faction -99)
+Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\PinIco.bmp
+Successfully loaded: Pin
+Format: .bmp
+Texture pointer: 131E87D4920
+Dimensions: 256x256
+--------------------------------------------------
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=7
+[ENGINE] sensor scans 6 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
 [EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
 [TIME] play (step 3600s)
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\Pause.bmp
 Successfully loaded: PauseImg
 Format: .bmp
-Texture pointer: 2D9FA707AC0
+Texture pointer: 131E87D4A60
 Dimensions: 256x256
 --------------------------------------------------
-[WARP] ship #850 'Serial Peacemaker' departing → Mercury (158.5 Gm, ETA 2050-03-05 18:31)
-[WARP] ship #852 'Prevailing Stillness' departing → Mercury (158.5 Gm, ETA 2050-03-05 18:33)
+[CAMERA] pan -> -0.6,0.5 Gm
+[CAMERA] pan -> -0.6,0.5 Gm
+[CAMERA] pan -> -0.6,0.5 Gm
+[CAMERA] pan -> -0.6,0.5 Gm
+[CAMERA] pan -> -0.6,0.5 Gm
+[CAMERA] pan -> -0.6,0.5 Gm
+[CAMERA] pan -> -0.6,0.5 Gm
+[CAMERA] pan -> -0.6,0.5 Gm
+[CAMERA] pan -> -0.6,0.5 Gm
+[CAMERA] pan -> -0.6,0.5 Gm
+[CAMERA] pan -> -0.7,0.7 Gm
+[CAMERA] pan -> -0.7,0.7 Gm
+[CAMERA] pan -> -0.7,0.7 Gm
+[CAMERA] pan -> -0.7,0.7 Gm
+[CAMERA] pan -> -0.7,0.7 Gm
+[CAMERA] pan -> -0.7,0.7 Gm
+[CAMERA] pan -> -0.7,0.7 Gm
+[CAMERA] pan -> -0.7,0.7 Gm
+[CAMERA] pan -> -0.7,0.7 Gm
+[CAMERA] pan -> -0.7,0.7 Gm
+[STATE] heartbeat t=2050-01-01 16:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 102 (+96), battle-trigger passes 11521 (+11521) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 1.3,-0.2 Gm
+[CAMERA] pan -> 1.3,-0.2 Gm
+[CAMERA] pan -> 1.3,-0.2 Gm
+[CAMERA] pan -> 1.3,-0.2 Gm
+[CAMERA] pan -> 1.3,-0.2 Gm
+[CAMERA] pan -> 1.3,-0.2 Gm
+[CAMERA] pan -> 1.3,-0.2 Gm
+[CAMERA] pan -> 1.3,-0.2 Gm
+[CAMERA] pan -> 1.3,-0.2 Gm
+[CAMERA] pan -> 1.3,-0.2 Gm
+[CAMERA] pan -> 0.6,-0.2 Gm
+[CAMERA] pan -> 0.6,-0.2 Gm
+[CAMERA] pan -> 0.6,-0.2 Gm
+[CAMERA] pan -> 0.6,-0.2 Gm
+[CAMERA] pan -> 0.6,-0.2 Gm
+[CAMERA] pan -> 0.6,-0.2 Gm
+[CAMERA] pan -> 0.6,-0.2 Gm
+[CAMERA] pan -> 0.6,-0.2 Gm
+[CAMERA] pan -> 0.6,-0.2 Gm
+[CAMERA] pan -> 0.6,-0.2 Gm
+[CAMERA] pan -> 0.2,-0 Gm
+[CAMERA] pan -> 0.2,-0 Gm
+[CAMERA] pan -> 0.2,-0 Gm
+[CAMERA] pan -> 0.2,-0 Gm
+[CAMERA] pan -> 0.2,-0 Gm
+[CAMERA] pan -> 0.2,-0 Gm
+[CAMERA] pan -> 0.2,-0 Gm
+[CAMERA] pan -> 0.2,-0 Gm
+[CAMERA] pan -> 0.2,-0 Gm
+[CAMERA] pan -> 0.2,-0 Gm
+[STATE] heartbeat t=2050-01-02 22:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 282 (+180), battle-trigger passes 33121 (+21600) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-04 04:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 462 (+180), battle-trigger passes 54721 (+21600) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-05 10:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 642 (+180), battle-trigger passes 76321 (+21600) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-06 16:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 822 (+180), battle-trigger passes 97921 (+21600) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
 [TIME] paused
-[STATE] heartbeat t=2050-01-01 21:00 paused step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 132 (+126), battle-trigger passes 15121 (+15121) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[CAMERA] pan -> 0.1,-0 Gm
+[CAMERA] pan -> 0.1,-0 Gm
+[CAMERA] pan -> 0.1,-0 Gm
+[CAMERA] pan -> 0.1,-0 Gm
+[CAMERA] pan -> 0.1,-0 Gm
+[CAMERA] pan -> 0.1,-0 Gm
+[CAMERA] pan -> 0.1,-0 Gm
+[CAMERA] pan -> 0.1,-0 Gm
+[CAMERA] pan -> 0.1,-0 Gm
+[CAMERA] pan -> 0.1,-0 Gm
+[CAMERA] pan -> 0.1,-0 Gm
+[CAMERA] pan -> 0.1,-0 Gm
+[CAMERA] pan -> 0.1,-0 Gm
+[CAMERA] pan -> 0.1,-0 Gm
+[CAMERA] pan -> 0.1,-0 Gm
+[CAMERA] pan -> 0.1,-0 Gm
+[CAMERA] pan -> 0.1,-0 Gm
+[CAMERA] pan -> 0.1,-0 Gm
+[CAMERA] pan -> 0.1,-0 Gm
+[CAMERA] pan -> 0.1,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[STATE] heartbeat t=2050-01-06 19:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 840 (+18), battle-trigger passes 100081 (+2160) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
 [EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 200.8,-61.3 Gm
-[CAMERA] pan -> 200.8,-61.3 Gm
-[CAMERA] pan -> 200.8,-61.3 Gm
-[CAMERA] pan -> 200.8,-61.3 Gm
-[CAMERA] pan -> 200.8,-61.3 Gm
-[CAMERA] pan -> 200.8,-61.3 Gm
-[CAMERA] pan -> 200.8,-61.3 Gm
-[CAMERA] pan -> 200.8,-61.3 Gm
-[CAMERA] pan -> 200.8,-61.3 Gm
-[CAMERA] pan -> 200.8,-61.3 Gm
-[CAMERA] pan -> 161.5,-24.5 Gm
-[CAMERA] pan -> 161.5,-24.5 Gm
-[CAMERA] pan -> 161.5,-24.5 Gm
-[CAMERA] pan -> 161.5,-24.5 Gm
-[CAMERA] pan -> 161.5,-24.5 Gm
-[CAMERA] pan -> 161.5,-24.5 Gm
-[CAMERA] pan -> 161.5,-24.5 Gm
-[CAMERA] pan -> 161.5,-24.5 Gm
-[CAMERA] pan -> 161.5,-24.5 Gm
-[CAMERA] pan -> 161.5,-24.5 Gm
-[CAMERA] pan -> 148.7,-17.6 Gm
-[CAMERA] pan -> 148.7,-17.6 Gm
-[CAMERA] pan -> 148.7,-17.6 Gm
-[CAMERA] pan -> 148.7,-17.6 Gm
-[CAMERA] pan -> 148.7,-17.6 Gm
-[CAMERA] pan -> 148.7,-17.6 Gm
-[CAMERA] pan -> 148.7,-17.6 Gm
-[CAMERA] pan -> 148.7,-17.6 Gm
-[CAMERA] pan -> 148.7,-17.6 Gm
-[CAMERA] pan -> 148.7,-17.6 Gm
-[CAMERA] pan -> 147.7,-11.8 Gm
-[CAMERA] pan -> 147.7,-11.8 Gm
-[CAMERA] pan -> 147.7,-11.8 Gm
-[CAMERA] pan -> 147.7,-11.8 Gm
-[CAMERA] pan -> 147.7,-11.8 Gm
-[CAMERA] pan -> 147.7,-11.8 Gm
-[CAMERA] pan -> 147.7,-11.8 Gm
-[CAMERA] pan -> 147.7,-11.8 Gm
-[CAMERA] pan -> 147.7,-11.8 Gm
-[CAMERA] pan -> 147.7,-11.8 Gm
-[CAMERA] pan -> 148.3,-9.4 Gm
-[CAMERA] pan -> 148.3,-9.4 Gm
-[CAMERA] pan -> 148.3,-9.4 Gm
-[CAMERA] pan -> 148.3,-9.4 Gm
-[CAMERA] pan -> 148.3,-9.4 Gm
-[CAMERA] pan -> 148.3,-9.4 Gm
-[CAMERA] pan -> 148.3,-9.4 Gm
-[CAMERA] pan -> 148.3,-9.4 Gm
-[CAMERA] pan -> 148.3,-9.4 Gm
-[CAMERA] pan -> 148.3,-9.4 Gm
-[CAMERA] pan -> 148.2,-8.7 Gm
-[CAMERA] pan -> 148.2,-8.7 Gm
-[CAMERA] pan -> 148.2,-8.7 Gm
-[CAMERA] pan -> 148.2,-8.7 Gm
-[CAMERA] pan -> 148.2,-8.7 Gm
-[CAMERA] pan -> 148.2,-8.7 Gm
-[CAMERA] pan -> 148.2,-8.7 Gm
-[CAMERA] pan -> 148.2,-8.7 Gm
-[CAMERA] pan -> 148.2,-8.7 Gm
-[CAMERA] pan -> 148.2,-8.7 Gm
-[STATE] heartbeat t=2050-01-01 21:00 paused step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 132 (+0), battle-trigger passes 15121 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[STATE] heartbeat t=2050-01-06 19:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 840 (+0), battle-trigger passes 100081 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
 [EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 148.1,-8.5 Gm
-[CAMERA] pan -> 148.1,-8.5 Gm
-[CAMERA] pan -> 148.1,-8.5 Gm
-[CAMERA] pan -> 148.1,-8.5 Gm
-[CAMERA] pan -> 148.1,-8.5 Gm
-[CAMERA] pan -> 148.1,-8.5 Gm
-[CAMERA] pan -> 148.1,-8.5 Gm
-[CAMERA] pan -> 148.1,-8.5 Gm
-[CAMERA] pan -> 148.1,-8.5 Gm
-[CAMERA] pan -> 148.1,-8.5 Gm
-[CAMERA] pan -> 148.1,-8.4 Gm
-[CAMERA] pan -> 148.1,-8.4 Gm
-[CAMERA] pan -> 148.1,-8.4 Gm
-[CAMERA] pan -> 148.1,-8.4 Gm
-[CAMERA] pan -> 148.1,-8.4 Gm
-[CAMERA] pan -> 148.1,-8.4 Gm
-[CAMERA] pan -> 148.1,-8.4 Gm
-[CAMERA] pan -> 148.1,-8.4 Gm
-[CAMERA] pan -> 148.1,-8.4 Gm
-[CAMERA] pan -> 148.1,-8.4 Gm
-[CAMERA] pan -> 148.1,-8.4 Gm
-[CAMERA] pan -> 148.1,-8.4 Gm
-[CAMERA] pan -> 148.1,-8.4 Gm
-[CAMERA] pan -> 148.1,-8.4 Gm
-[CAMERA] pan -> 148.1,-8.4 Gm
-[CAMERA] pan -> 148.1,-8.4 Gm
-[CAMERA] pan -> 148.1,-8.4 Gm
-[CAMERA] pan -> 148.1,-8.4 Gm
-[CAMERA] pan -> 148.1,-8.4 Gm
-[CAMERA] pan -> 148.1,-8.4 Gm
-[CAMERA] pan -> 148.1,-8.5 Gm
-[CAMERA] pan -> 148.1,-8.5 Gm
-[CAMERA] pan -> 148.1,-8.5 Gm
-[CAMERA] pan -> 148.1,-8.5 Gm
-[CAMERA] pan -> 148.1,-8.5 Gm
-[CAMERA] pan -> 148.1,-8.5 Gm
-[CAMERA] pan -> 148.1,-8.5 Gm
-[CAMERA] pan -> 148.1,-8.5 Gm
-[CAMERA] pan -> 148.1,-8.5 Gm
-[CAMERA] pan -> 148.1,-8.5 Gm
-[STATE] heartbeat t=2050-01-01 21:00 paused step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 132 (+0), battle-trigger passes 15121 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[STATE] heartbeat t=2050-01-06 19:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 840 (+0), battle-trigger passes 100081 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
 [EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 147.7,-8.9 Gm
-[CAMERA] pan -> 147.7,-8.9 Gm
-[CAMERA] pan -> 147.7,-8.9 Gm
-[CAMERA] pan -> 147.7,-8.9 Gm
-[CAMERA] pan -> 147.7,-8.9 Gm
-[CAMERA] pan -> 147.7,-8.9 Gm
-[CAMERA] pan -> 147.7,-8.9 Gm
-[CAMERA] pan -> 147.7,-8.9 Gm
-[CAMERA] pan -> 147.7,-8.9 Gm
-[CAMERA] pan -> 147.7,-8.9 Gm
-[CAMERA] pan -> 147.4,-10.1 Gm
-[CAMERA] pan -> 147.4,-10.1 Gm
-[CAMERA] pan -> 147.4,-10.1 Gm
-[CAMERA] pan -> 147.4,-10.1 Gm
-[CAMERA] pan -> 147.4,-10.1 Gm
-[CAMERA] pan -> 147.4,-10.1 Gm
-[CAMERA] pan -> 147.4,-10.1 Gm
-[CAMERA] pan -> 147.4,-10.1 Gm
-[CAMERA] pan -> 147.4,-10.1 Gm
-[CAMERA] pan -> 147.4,-10.1 Gm
-[CAMERA] pan -> 148.3,-9.7 Gm
-[CAMERA] pan -> 148.3,-9.7 Gm
-[CAMERA] pan -> 148.3,-9.7 Gm
-[CAMERA] pan -> 148.3,-9.7 Gm
-[CAMERA] pan -> 148.3,-9.7 Gm
-[CAMERA] pan -> 148.3,-9.7 Gm
-[CAMERA] pan -> 148.3,-9.7 Gm
-[CAMERA] pan -> 148.3,-9.7 Gm
-[CAMERA] pan -> 148.3,-9.7 Gm
-[CAMERA] pan -> 148.3,-9.7 Gm
-[CAMERA] pan -> 150.1,-6.6 Gm
-[CAMERA] pan -> 150.1,-6.6 Gm
-[CAMERA] pan -> 150.1,-6.6 Gm
-[CAMERA] pan -> 150.1,-6.6 Gm
-[CAMERA] pan -> 150.1,-6.6 Gm
-[CAMERA] pan -> 150.1,-6.6 Gm
-[CAMERA] pan -> 150.1,-6.6 Gm
-[CAMERA] pan -> 150.1,-6.6 Gm
-[CAMERA] pan -> 150.1,-6.6 Gm
-[CAMERA] pan -> 150.1,-6.6 Gm
-[CAMERA] pan -> 150.2,-5.7 Gm
-[CAMERA] pan -> 150.2,-5.7 Gm
-[CAMERA] pan -> 150.2,-5.7 Gm
-[CAMERA] pan -> 150.2,-5.7 Gm
-[CAMERA] pan -> 150.2,-5.7 Gm
-[CAMERA] pan -> 150.2,-5.7 Gm
-[CAMERA] pan -> 150.2,-5.7 Gm
-[CAMERA] pan -> 150.2,-5.7 Gm
-[CAMERA] pan -> 150.2,-5.7 Gm
-[CAMERA] pan -> 150.2,-5.7 Gm
-[STATE] heartbeat t=2050-01-01 21:00 paused step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 132 (+0), battle-trigger passes 15121 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[STATE] heartbeat t=2050-01-06 19:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 840 (+0), battle-trigger passes 100081 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
 [EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 150.2,-5.5 Gm
-[CAMERA] pan -> 150.2,-5.5 Gm
-[CAMERA] pan -> 150.2,-5.5 Gm
-[CAMERA] pan -> 150.2,-5.5 Gm
-[CAMERA] pan -> 150.2,-5.5 Gm
-[CAMERA] pan -> 150.2,-5.5 Gm
-[CAMERA] pan -> 150.2,-5.5 Gm
-[CAMERA] pan -> 150.2,-5.5 Gm
-[CAMERA] pan -> 150.2,-5.5 Gm
-[CAMERA] pan -> 150.2,-5.5 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[STATE] heartbeat t=2050-01-01 21:00 paused step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 132 (+0), battle-trigger passes 15121 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[STATE] heartbeat t=2050-01-06 19:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 840 (+0), battle-trigger passes 100081 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
 [EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[CAMERA] pan -> 150.1,-5.4 Gm
-[STATE] heartbeat t=2050-01-01 21:00 paused step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 132 (+0), battle-trigger passes 15121 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[STATE] heartbeat t=2050-01-06 19:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 840 (+0), battle-trigger passes 100081 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
 [EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[SELECT] Primary click on 'Void’s Embrace' (entity #862, faction 841)
-Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\PinIco.bmp
-Successfully loaded: Pin
-Format: .bmp
-Texture pointer: 2D9FA707E80
-Dimensions: 256x256
---------------------------------------------------
-[STATE] heartbeat t=2050-01-01 21:00 paused step=3600s selected=Void’s Embrace ships-in-view=7
-[ENGINE] sensor scans 132 (+0), battle-trigger passes 15121 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[STATE] heartbeat t=2050-01-06 19:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 840 (+0), battle-trigger passes 100081 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[WARP] ship #804 'Serial Peacemaker' departing → Mercury (151.2 Gm, ETA 2050-03-08 15:18)
+[WARP] ship #806 'Prevailing Stillness' departing → Mercury (151.8 Gm, ETA 2050-03-08 20:41)
+[WARP] ship #816 'Endless Stride' departing → Mercury (103.1 Gm, ETA 2050-03-24 13:06)
+[ACTION] move order: fleet #803 -> 'Mercury' (warp). Watch next heartbeat for teleport check.
+[STATE] heartbeat t=2050-01-06 19:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 840 (+0), battle-trigger passes 100081 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,-0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0,0 Gm
+[CAMERA] pan -> 0.2,0.1 Gm
+[CAMERA] pan -> 0.2,0.1 Gm
+[CAMERA] pan -> 0.2,0.1 Gm
+[CAMERA] pan -> 0.2,0.1 Gm
+[CAMERA] pan -> 0.2,0.1 Gm
+[CAMERA] pan -> 0.2,0.1 Gm
+[CAMERA] pan -> 0.2,0.1 Gm
+[CAMERA] pan -> 0.2,0.1 Gm
+[CAMERA] pan -> 0.2,0.1 Gm
+[CAMERA] pan -> 0.2,0.1 Gm
+[CAMERA] pan -> 0.6,0.3 Gm
+[CAMERA] pan -> 0.6,0.3 Gm
+[CAMERA] pan -> 0.6,0.3 Gm
+[CAMERA] pan -> 0.6,0.3 Gm
+[CAMERA] pan -> 0.6,0.3 Gm
+[CAMERA] pan -> 0.6,0.3 Gm
+[CAMERA] pan -> 0.6,0.3 Gm
+[CAMERA] pan -> 0.6,0.3 Gm
+[CAMERA] pan -> 0.6,0.3 Gm
+[CAMERA] pan -> 0.6,0.3 Gm
+[STATE] heartbeat t=2050-01-06 19:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 840 (+0), battle-trigger passes 100081 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 3.1,2 Gm
+[CAMERA] pan -> 3.1,2 Gm
+[CAMERA] pan -> 3.1,2 Gm
+[CAMERA] pan -> 3.1,2 Gm
+[CAMERA] pan -> 3.1,2 Gm
+[CAMERA] pan -> 3.1,2 Gm
+[CAMERA] pan -> 3.1,2 Gm
+[CAMERA] pan -> 3.1,2 Gm
+[CAMERA] pan -> 3.1,2 Gm
+[CAMERA] pan -> 3.1,2 Gm
+[CAMERA] pan -> 0,6.1 Gm
+[CAMERA] pan -> 0,6.1 Gm
+[CAMERA] pan -> 0,6.1 Gm
+[CAMERA] pan -> 0,6.1 Gm
+[CAMERA] pan -> 0,6.1 Gm
+[CAMERA] pan -> 0,6.1 Gm
+[CAMERA] pan -> 0,6.1 Gm
+[CAMERA] pan -> 0,6.1 Gm
+[CAMERA] pan -> 0,6.1 Gm
+[CAMERA] pan -> 0,6.1 Gm
+[CAMERA] pan -> -16,33.9 Gm
+[CAMERA] pan -> -16,33.9 Gm
+[CAMERA] pan -> -16,33.9 Gm
+[CAMERA] pan -> -16,33.9 Gm
+[CAMERA] pan -> -16,33.9 Gm
+[CAMERA] pan -> -16,33.9 Gm
+[CAMERA] pan -> -16,33.9 Gm
+[CAMERA] pan -> -16,33.9 Gm
+[CAMERA] pan -> -16,33.9 Gm
+[CAMERA] pan -> -16,33.9 Gm
+[STATE] heartbeat t=2050-01-06 19:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 840 (+0), battle-trigger passes 100081 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-06 19:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 840 (+0), battle-trigger passes 100081 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
 [EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
 [TIME] play (step 3600s)
-[STATE] heartbeat t=2050-01-02 15:00 RUNNING step=3600s selected=Void’s Embrace ships-in-view=7
-[ENGINE] sensor scans 240 (+108), battle-trigger passes 28081 (+12960) since last beat
+[STATE] heartbeat t=2050-01-07 19:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 984 (+144), battle-trigger passes 117361 (+17280) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-09 01:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 1164 (+180), battle-trigger passes 138961 (+21600) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-10 07:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 1344 (+180), battle-trigger passes 160561 (+21600) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-11 13:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 1524 (+180), battle-trigger passes 182161 (+21600) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-12 19:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 1704 (+180), battle-trigger passes 203761 (+21600) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-14 01:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 1884 (+180), battle-trigger passes 225361 (+21600) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-15 07:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 2064 (+180), battle-trigger passes 246961 (+21600) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-01-16 13:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 2244 (+180), battle-trigger passes 268561 (+21600) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> -14.5,25.2 Gm
+[CAMERA] pan -> -14.5,25.2 Gm
+[CAMERA] pan -> -14.5,25.2 Gm
+[CAMERA] pan -> -14.5,25.2 Gm
+[CAMERA] pan -> -14.5,25.2 Gm
+[CAMERA] pan -> -14.5,25.2 Gm
+[CAMERA] pan -> -14.5,25.2 Gm
+[CAMERA] pan -> -14.5,25.2 Gm
+[CAMERA] pan -> -14.5,25.2 Gm
+[CAMERA] pan -> -14.5,25.2 Gm
+[STATE] heartbeat t=2050-01-17 19:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 2424 (+180), battle-trigger passes 290161 (+21600) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> -90,-35.6 Gm
+[CAMERA] pan -> -90,-35.6 Gm
+[CAMERA] pan -> -90,-35.6 Gm
+[CAMERA] pan -> -90,-35.6 Gm
+[CAMERA] pan -> -90,-35.6 Gm
+[CAMERA] pan -> -90,-35.6 Gm
+[CAMERA] pan -> -90,-35.6 Gm
+[CAMERA] pan -> -90,-35.6 Gm
+[CAMERA] pan -> -90,-35.6 Gm
+[CAMERA] pan -> -90,-35.6 Gm
+[SELECT] Primary click on 'Sol A G0V' (entity #757, faction -99)
+[SELECT] ignored click on stale entity #1 in system f3795896-2e77-4837-a454-2dc84190ef29 (no state — entity destroyed, or its star system isn't in the current view; label outlived it)
+[SELECT] ignored click on stale entity #83 in system 4015fd1f-55f2-41d3-b9ec-de74a50b0e8f (no state — entity destroyed, or its star system isn't in the current view; label outlived it)
+[SELECT] ignored click on stale entity #123 in system c9f1605b-764a-4700-bd28-446489b1d501 (no state — entity destroyed, or its star system isn't in the current view; label outlived it)
+[SELECT] ignored click on stale entity #200 in system 6b08462d-07a3-4c68-9749-c5295946be08 (no state — entity destroyed, or its star system isn't in the current view; label outlived it)
+[SELECT] ignored click on stale entity #237 in system 0abfa535-0f9a-482b-8e6c-f89295f72c33 (no state — entity destroyed, or its star system isn't in the current view; label outlived it)
+[SELECT] ignored click on stale entity #268 in system 5dc1523b-4fe8-4ab4-845f-a39f0f6b38e3 (no state — entity destroyed, or its star system isn't in the current view; label outlived it)
+[SELECT] ignored click on stale entity #298 in system 4b64cbd7-5c33-4c1c-b02a-c5e1e6007f19 (no state — entity destroyed, or its star system isn't in the current view; label outlived it)
+[SELECT] ignored click on stale entity #509 in system 9921b0e4-415d-4c4f-b8f1-5f4ac8cadd7e (no state — entity destroyed, or its star system isn't in the current view; label outlived it)
+[SELECT] ignored click on stale entity #677 in system 7ea93dfd-d99e-41cc-a50c-59f168a62242 (no state — entity destroyed, or its star system isn't in the current view; label outlived it)
+[STATE] heartbeat t=2050-01-19 01:00 RUNNING step=3600s selected=Sol A G0V ships-in-view=8
+[ENGINE] sensor scans 2604 (+180), battle-trigger passes 311761 (+21600) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 1.5,-1 Gm
+[CAMERA] pan -> 1.5,-1 Gm
+[CAMERA] pan -> 1.5,-1 Gm
+[CAMERA] pan -> 1.5,-1 Gm
+[CAMERA] pan -> 1.5,-1 Gm
+[CAMERA] pan -> 1.5,-1 Gm
+[CAMERA] pan -> 1.5,-1 Gm
+[CAMERA] pan -> 1.5,-1 Gm
+[CAMERA] pan -> 1.5,-1 Gm
+[CAMERA] pan -> 1.5,-1 Gm
+[CAMERA] pan -> 13.6,-16.1 Gm
+[CAMERA] pan -> 13.6,-16.1 Gm
+[CAMERA] pan -> 13.6,-16.1 Gm
+[CAMERA] pan -> 13.6,-16.1 Gm
+[CAMERA] pan -> 13.6,-16.1 Gm
+[CAMERA] pan -> 13.6,-16.1 Gm
+[CAMERA] pan -> 13.6,-16.1 Gm
+[CAMERA] pan -> 13.6,-16.1 Gm
+[CAMERA] pan -> 13.6,-16.1 Gm
+[CAMERA] pan -> 13.6,-16.1 Gm
+[STATE] heartbeat t=2050-01-20 07:00 RUNNING step=3600s selected=Sol A G0V ships-in-view=8
+[ENGINE] sensor scans 2784 (+180), battle-trigger passes 333361 (+21600) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[TIME] paused
+[STATE] heartbeat t=2050-01-20 22:00 paused step=3600s selected=Sol A G0V ships-in-view=8
+[ENGINE] sensor scans 2874 (+90), battle-trigger passes 344161 (+10800) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[TIME] play (step 86400s)
+[STATE] heartbeat t=2050-01-20 22:00 RUNNING step=86400s selected=Sol A G0V ships-in-view=8
+[ENGINE] sensor scans 2910 (+36), battle-trigger passes 349088 (+4927) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 12.6,-16.8 Gm
+[CAMERA] pan -> 12.6,-16.8 Gm
+[CAMERA] pan -> 12.6,-16.8 Gm
+[CAMERA] pan -> 12.6,-16.8 Gm
+[CAMERA] pan -> 12.6,-16.8 Gm
+[CAMERA] pan -> 12.6,-16.8 Gm
+[CAMERA] pan -> 12.6,-16.8 Gm
+[CAMERA] pan -> 12.6,-16.8 Gm
+[CAMERA] pan -> 12.6,-16.8 Gm
+[CAMERA] pan -> 12.6,-16.8 Gm
+[CAMERA] pan -> 21.9,-35 Gm
+[CAMERA] pan -> 21.9,-35 Gm
+[CAMERA] pan -> 21.9,-35 Gm
+[CAMERA] pan -> 21.9,-35 Gm
+[CAMERA] pan -> 21.9,-35 Gm
+[CAMERA] pan -> 21.9,-35 Gm
+[CAMERA] pan -> 21.9,-35 Gm
+[CAMERA] pan -> 21.9,-35 Gm
+[CAMERA] pan -> 21.9,-35 Gm
+[CAMERA] pan -> 21.9,-35 Gm
+[CAMERA] pan -> 53.2,-50.2 Gm
+[CAMERA] pan -> 53.2,-50.2 Gm
+[CAMERA] pan -> 53.2,-50.2 Gm
+[CAMERA] pan -> 53.2,-50.2 Gm
+[CAMERA] pan -> 53.2,-50.2 Gm
+[CAMERA] pan -> 53.2,-50.2 Gm
+[CAMERA] pan -> 53.2,-50.2 Gm
+[CAMERA] pan -> 53.2,-50.2 Gm
+[CAMERA] pan -> 53.2,-50.2 Gm
+[CAMERA] pan -> 53.2,-50.2 Gm
+[STATE] heartbeat t=2050-01-27 22:00 RUNNING step=86400s selected=Sol A G0V ships-in-view=8
+[ENGINE] sensor scans 3882 (+972), battle-trigger passes 465445 (+116357) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-02 22:00 RUNNING step=86400s selected=Sol A G0V ships-in-view=8
+[ENGINE] sensor scans 4830 (+948), battle-trigger passes 578983 (+113538) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-09 22:00 RUNNING step=86400s selected=Sol A G0V ships-in-view=8
+[ENGINE] sensor scans 5796 (+966), battle-trigger passes 694808 (+115825) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-16 22:00 RUNNING step=86400s selected=Sol A G0V ships-in-view=8
+[ENGINE] sensor scans 6768 (+972), battle-trigger passes 811534 (+116726) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-02-22 22:00 RUNNING step=86400s selected=Sol A G0V ships-in-view=8
+[ENGINE] sensor scans 7728 (+960), battle-trigger passes 927318 (+115784) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-03-01 22:00 RUNNING step=86400s selected=Sol A G0V ships-in-view=8
+[ENGINE] sensor scans 8700 (+972), battle-trigger passes 1043589 (+116271) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[WARP] ship #804 'Serial Peacemaker' arrived at Mercury
+[WARP] ship #806 'Prevailing Stillness' arrived at Mercury
+[STATE] heartbeat t=2050-03-08 22:00 RUNNING step=86400s selected=Sol A G0V ships-in-view=8
+[ENGINE] sensor scans 9666 (+966), battle-trigger passes 1159387 (+115798) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-03-14 22:00 RUNNING step=86400s selected=Sol A G0V ships-in-view=8
+[ENGINE] sensor scans 10602 (+936), battle-trigger passes 1271641 (+112254) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 37.3,-46.4 Gm
+[CAMERA] pan -> 37.3,-46.4 Gm
+[CAMERA] pan -> 37.3,-46.4 Gm
+[CAMERA] pan -> 37.3,-46.4 Gm
+[CAMERA] pan -> 37.3,-46.4 Gm
+[CAMERA] pan -> 37.3,-46.4 Gm
+[CAMERA] pan -> 37.3,-46.4 Gm
+[CAMERA] pan -> 37.3,-46.4 Gm
+[CAMERA] pan -> 37.3,-46.4 Gm
+[CAMERA] pan -> 37.3,-46.4 Gm
+[CAMERA] pan -> 41.4,-37.7 Gm
+[CAMERA] pan -> 41.4,-37.7 Gm
+[CAMERA] pan -> 41.4,-37.7 Gm
+[CAMERA] pan -> 41.4,-37.7 Gm
+[CAMERA] pan -> 41.4,-37.7 Gm
+[CAMERA] pan -> 41.4,-37.7 Gm
+[CAMERA] pan -> 41.4,-37.7 Gm
+[CAMERA] pan -> 41.4,-37.7 Gm
+[CAMERA] pan -> 41.4,-37.7 Gm
+[CAMERA] pan -> 41.4,-37.7 Gm
+[CAMERA] pan -> 41.3,-34.5 Gm
+[CAMERA] pan -> 41.3,-34.5 Gm
+[CAMERA] pan -> 41.3,-34.5 Gm
+[CAMERA] pan -> 41.3,-34.5 Gm
+[CAMERA] pan -> 41.3,-34.5 Gm
+[CAMERA] pan -> 41.3,-34.5 Gm
+[CAMERA] pan -> 41.3,-34.5 Gm
+[CAMERA] pan -> 41.3,-34.5 Gm
+[CAMERA] pan -> 41.3,-34.5 Gm
+[CAMERA] pan -> 41.3,-34.5 Gm
+[STATE] heartbeat t=2050-03-21 22:00 RUNNING step=86400s selected=Sol A G0V ships-in-view=8
+[ENGINE] sensor scans 11538 (+936), battle-trigger passes 1383932 (+112291) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[WARP] ship #816 'Endless Stride' arrived at Mercury
+[TIME] paused
+[STATE] heartbeat t=2050-03-27 22:00 RUNNING step=86400s selected=Sol A G0V ships-in-view=8
+[ENGINE] sensor scans 12468 (+930), battle-trigger passes 1495989 (+112057) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-03-28 22:00 paused step=86400s selected=Sol A G0V ships-in-view=8
+[ENGINE] sensor scans 12522 (+54), battle-trigger passes 1501921 (+5932) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-03-28 22:00 paused step=86400s selected=Sol A G0V ships-in-view=8
+[ENGINE] sensor scans 12522 (+0), battle-trigger passes 1501921 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[WARP] ship #804 'Serial Peacemaker' departing → Venus (82.7 Gm, ETA 2050-05-01 04:12)
+[WARP] ship #806 'Prevailing Stillness' departing → Venus (82.7 Gm, ETA 2050-05-01 04:12)
+[WARP] ship #816 'Endless Stride' departing → Venus (66.3 Gm, ETA 2050-05-17 06:06)
+[ACTION] move order: fleet #803 -> 'Venus' (warp). Watch next heartbeat for teleport check.
+[STATE] heartbeat t=2050-03-28 22:00 paused step=86400s selected=Sol A G0V ships-in-view=8
+[ENGINE] sensor scans 12522 (+0), battle-trigger passes 1501921 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[TIME] play (step 86400s)
+[STATE] heartbeat t=2050-03-29 22:00 RUNNING step=86400s selected=Sol A G0V ships-in-view=8
+[ENGINE] sensor scans 12708 (+186), battle-trigger passes 1524929 (+23008) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-04-04 22:00 RUNNING step=86400s selected=Sol A G0V ships-in-view=8
+[ENGINE] sensor scans 13650 (+942), battle-trigger passes 1637553 (+112624) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-04-11 22:00 RUNNING step=86400s selected=Sol A G0V ships-in-view=8
+[ENGINE] sensor scans 14592 (+942), battle-trigger passes 1750572 (+113019) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-04-17 22:00 RUNNING step=86400s selected=Sol A G0V ships-in-view=8
+[ENGINE] sensor scans 15528 (+936), battle-trigger passes 1863237 (+112665) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-04-24 22:00 RUNNING step=86400s selected=Sol A G0V ships-in-view=8
+[ENGINE] sensor scans 16470 (+942), battle-trigger passes 1975776 (+112539) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 1 other-faction ship(s) in-system, detects 0 (1 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[Combat] Military Fleet #803 enters combat (3 ship(s))
+[Combat] Hostiles Fleet #818 enters combat (1 ship(s))
+[ACTION] COMBAT INTERRUPT — a battle began; time auto-paused. Open Fleet -> Combat to steer it.
+[Combat] salvo 5: Hostiles Fleet #818 lost 1 ship(s), 0 left
+[Combat] Hostiles Fleet #818 disengages (0 ship(s) left)
+[Combat] Military Fleet #803 disengages (3 ship(s) left)
+[WARP] ship #806 'Prevailing Stillness' arrived at Venus
+[WARP] ship #804 'Serial Peacemaker' arrived at Venus
+[STATE] heartbeat t=2050-05-01 22:00 paused step=86400s selected=Sol A G0V ships-in-view=7
+[ENGINE] sensor scans 17418 (+948), battle-trigger passes 2089441 (+113665) since last beat
 [DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
 [EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[STATE] heartbeat t=2050-01-03 21:00 RUNNING step=3600s selected=Void’s Embrace ships-in-view=7
-[ENGINE] sensor scans 420 (+180), battle-trigger passes 49681 (+21600) since last beat
+[STATE] heartbeat t=2050-05-01 22:00 paused step=86400s selected=Sol A G0V ships-in-view=7
+[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089441 (+0) since last beat
 [DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
 [EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-05 03:00 RUNNING step=3600s selected=Void’s Embrace ships-in-view=7
-[ENGINE] sensor scans 600 (+180), battle-trigger passes 71281 (+21600) since last beat
+[STATE] heartbeat t=2050-05-01 22:00 paused step=60s selected=Sol A G0V ships-in-view=7
+[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089441 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-05-01 22:00 paused step=1s selected=Sol A G0V ships-in-view=7
+[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089441 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-05-01 22:00 paused step=1s selected=Sol A G0V ships-in-view=7
+[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089441 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-05-01 22:00 paused step=1s selected=Sol A G0V ships-in-view=7
+[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089441 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-05-01 22:00 paused step=1s selected=Sol A G0V ships-in-view=7
+[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089441 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-05-01 22:00 paused step=1s selected=Sol A G0V ships-in-view=7
+[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089441 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-05-01 22:00 paused step=1s selected=Sol A G0V ships-in-view=7
+[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089441 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-05-01 22:00 paused step=1s selected=Sol A G0V ships-in-view=7
+[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089441 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-05-01 22:00 paused step=1s selected=Sol A G0V ships-in-view=7
+[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089441 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[TIME] play (step 1s)
+[STATE] heartbeat t=2050-05-01 22:00 RUNNING step=1s selected=Sol A G0V ships-in-view=7
+[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089443 (+2) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-05-01 22:00 RUNNING step=1s selected=Sol A G0V ships-in-view=7
+[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089449 (+6) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-05-01 22:01 RUNNING step=1s selected=Sol A G0V ships-in-view=7
+[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089455 (+6) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-05-01 22:01 RUNNING step=1s selected=Sol A G0V ships-in-view=7
+[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089461 (+6) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-05-01 22:02 RUNNING step=1s selected=Sol A G0V ships-in-view=7
+[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089467 (+6) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-05-01 22:02 RUNNING step=1s selected=Sol A G0V ships-in-view=7
+[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089473 (+6) since last beat
 [DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
 [EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
 [TIME] paused
-[STATE] session summary — faults=0, game-time=2050-01-05 18:00
-=== Session ended 2026-06-26 20:43:05 ===
+[STATE] heartbeat t=2050-05-01 22:02 paused step=1s selected=Sol A G0V ships-in-view=7
+[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089475 (+2) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 49.5,-56.1 Gm
+[CAMERA] pan -> 49.5,-56.1 Gm
+[CAMERA] pan -> 49.5,-56.1 Gm
+[CAMERA] pan -> 49.5,-56.1 Gm
+[CAMERA] pan -> 49.5,-56.1 Gm
+[CAMERA] pan -> 49.5,-56.1 Gm
+[CAMERA] pan -> 49.5,-56.1 Gm
+[CAMERA] pan -> 49.5,-56.1 Gm
+[CAMERA] pan -> 49.5,-56.1 Gm
+[CAMERA] pan -> 49.5,-56.1 Gm
+[CAMERA] pan -> 84.8,-43.6 Gm
+[CAMERA] pan -> 84.8,-43.6 Gm
+[CAMERA] pan -> 84.8,-43.6 Gm
+[CAMERA] pan -> 84.8,-43.6 Gm
+[CAMERA] pan -> 84.8,-43.6 Gm
+[CAMERA] pan -> 84.8,-43.6 Gm
+[CAMERA] pan -> 84.8,-43.6 Gm
+[CAMERA] pan -> 84.8,-43.6 Gm
+[CAMERA] pan -> 84.8,-43.6 Gm
+[CAMERA] pan -> 84.8,-43.6 Gm
+[STATE] heartbeat t=2050-05-01 22:02 paused step=1s selected=Sol A G0V ships-in-view=7
+[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089475 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 99,-33.6 Gm
+[CAMERA] pan -> 99,-33.6 Gm
+[CAMERA] pan -> 99,-33.6 Gm
+[CAMERA] pan -> 99,-33.6 Gm
+[CAMERA] pan -> 99,-33.6 Gm
+[CAMERA] pan -> 99,-33.6 Gm
+[CAMERA] pan -> 99,-33.6 Gm
+[CAMERA] pan -> 99,-33.6 Gm
+[CAMERA] pan -> 99,-33.6 Gm
+[CAMERA] pan -> 99,-33.6 Gm
+[CAMERA] pan -> 101.4,-32.7 Gm
+[CAMERA] pan -> 101.4,-32.7 Gm
+[CAMERA] pan -> 101.4,-32.7 Gm
+[CAMERA] pan -> 101.4,-32.7 Gm
+[CAMERA] pan -> 101.4,-32.7 Gm
+[CAMERA] pan -> 101.4,-32.7 Gm
+[CAMERA] pan -> 101.4,-32.7 Gm
+[CAMERA] pan -> 101.4,-32.7 Gm
+[CAMERA] pan -> 101.4,-32.7 Gm
+[CAMERA] pan -> 101.4,-32.7 Gm
+[CAMERA] pan -> 102.7,-32.3 Gm
+[CAMERA] pan -> 102.7,-32.3 Gm
+[CAMERA] pan -> 102.7,-32.3 Gm
+[CAMERA] pan -> 102.7,-32.3 Gm
+[CAMERA] pan -> 102.7,-32.3 Gm
+[CAMERA] pan -> 102.7,-32.3 Gm
+[CAMERA] pan -> 102.7,-32.3 Gm
+[CAMERA] pan -> 102.7,-32.3 Gm
+[CAMERA] pan -> 102.7,-32.3 Gm
+[CAMERA] pan -> 102.7,-32.3 Gm
+[CAMERA] pan -> 102.9,-32.3 Gm
+[CAMERA] pan -> 102.9,-32.3 Gm
+[CAMERA] pan -> 102.9,-32.3 Gm
+[CAMERA] pan -> 102.9,-32.3 Gm
+[CAMERA] pan -> 102.9,-32.3 Gm
+[CAMERA] pan -> 102.9,-32.3 Gm
+[CAMERA] pan -> 102.9,-32.3 Gm
+[CAMERA] pan -> 102.9,-32.3 Gm
+[CAMERA] pan -> 102.9,-32.3 Gm
+[CAMERA] pan -> 102.9,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[STATE] heartbeat t=2050-05-01 22:02 paused step=1s selected=Sol A G0V ships-in-view=7
+[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089475 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[STATE] heartbeat t=2050-05-01 22:02 paused step=1s selected=Sol A G0V ships-in-view=7
+[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089475 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-05-01 22:02 paused step=1s selected=Sol A G0V ships-in-view=7
+[ENGINE] sensor scans 17418 (+0), battle-trigger passes 2089475 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
+[EMCON] your 6 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103,-32.3 Gm
+[CAMERA] pan -> 103.1,-32.5 Gm
+[CAMERA] pan -> 103.1,-32.5 Gm
+[CAMERA] pan -> 103.1,-32.5 Gm
+[CAMERA] pan -> 103.1,-32.5 Gm
+[CAMERA] pan -> 103.1,-32.5 Gm
+[CAMERA] pan -> 103.1,-32.5 Gm
+[CAMERA] pan -> 103.1,-32.5 Gm
+[CAMERA] pan -> 103.1,-32.5 Gm
+[CAMERA] pan -> 103.1,-32.5 Gm
+[CAMERA] pan -> 103.1,-32.5 Gm
+[CAMERA] pan -> 103.8,-33 Gm
+[CAMERA] pan -> 103.8,-33 Gm
