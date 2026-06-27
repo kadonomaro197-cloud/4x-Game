@@ -56,6 +56,9 @@ namespace Pulsar4X.Combat
                 // Fill tanks BEFORE the owner flip: fuel resolves through the ship's faction library, and only
                 // the player has the fuel unlocked (the bare enemy faction's CargoGoods is empty).
                 ShipFactory.FillFuelTanks(ship, playerInfo);
+                // Charge the reactor too (energy is the ship's own, faction-independent): a 0-charge ship can't
+                // fire (weapons draw stored energy) or warp — spawn it ready to fight.
+                ShipFactory.ChargeReactors(ship);
                 ship.FactionOwnerID = enemyFaction.Id;
                 game.OrderHandler.HandleOrder(FleetOrder.AssignShip(enemyFaction.Id, fleet, ship));
             }

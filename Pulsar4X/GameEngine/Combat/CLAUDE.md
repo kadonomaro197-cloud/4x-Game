@@ -363,6 +363,18 @@ tank accepts any of them; `FillFuelTanks` looks the fuel material up in `CargoGo
 `FuelType` that resolves to no material is left empty (returns 0, no crash). (The auto-resolve battle doesn't burn
 fuel — v1 combat is math, not maneuvering — this is for realism + a future maneuver/retreat layer.)
 
+**Charging (added 2026-06-27) — the sibling fix that actually makes a spawned ship MOVE.** Fuel alone wasn't
+enough: **warp is paid from stored electricity, not fuel**, and `CreateShip` leaves stored energy at **0** too
+(`EnergyStoreAtb` inits `EnergyStored = 0`). A spawned ship had full tanks but a dead battery, so a move order did
+nothing — `WarpMoveCommand` blocks while `EnergyStored < BubbleCreationCost`. The start fleet dodges this because
+`DefaultStartFactory` hand-charges each ship to `EnergyStored = 2,750,000` — *that* was "what the premade ships have
+that a spawned one doesn't." Fix: **`ShipFactory.ChargeReactors(ship)`** (the energy sibling of `FillFuelTanks`),
+called by both spawn paths right after the fuel fill (`SpawnHostileFleet` here + DevTools "Spawn Ship"). It tops
+`EnergyStored` to the ship's own `EnergyStoreMax`; a charged base-mod battery holds **2×–4× one warp bubble** at
+starting tech (battery-2t = 1,000,000 KJ each; alcubierre-2k bubble = 1,000,000 KJ, alcubierre-500 = 250,000 KJ), so
+a charged ship can always warp — and can FIRE (weapons draw stored energy too). Sensor:
+`CombatTestShipsTests.ChargeReactors_FillsStoredEnergy_SoASpawnedShipCanWarp`; full warp chain in `Movement/CLAUDE.md`.
+
 **Test:** `Pulsar4X.Tests/CombatSandboxTests.cs` proves three things separately: **(1) persistence** — spawn 3
 hostiles, advance the real clock, assert they're still there (3/3); **(2) engageable** — drive
 `CombatEngagement.Tick` over the system (the proven path) and assert the unarmed player ship is destroyed (only

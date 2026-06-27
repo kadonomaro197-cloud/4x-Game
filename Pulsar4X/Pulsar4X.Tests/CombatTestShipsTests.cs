@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using Pulsar4X.Combat;
+using Pulsar4X.Energy;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
+using Pulsar4X.Movement;
 using Pulsar4X.Ships;
 
 namespace Pulsar4X.Tests
@@ -69,6 +71,40 @@ namespace Pulsar4X.Tests
             Assert.That(result.Outcome, Is.EqualTo(BattleOutcome.SideAVictory), "the warship fleet should win");
             Assert.That(result.DestroyedB.Count, Is.EqualTo(3), "all corvettes destroyed");
             Assert.That(result.SurvivorsA, Is.GreaterThan(0), "warships survive");
+        }
+
+        [Test]
+        [Description("A freshly built ship boots with an EMPTY reactor (0 stored energy) — too little to create a warp bubble, so a move order does nothing. ShipFactory.ChargeReactors tops it to capacity so it can warp immediately: the energy half of 'spawn ready to fly', the sibling of FillFuelTanks (the 'spawned ship won't move' fix).")]
+        public void ChargeReactors_FillsStoredEnergy_SoASpawnedShipCanWarp()
+        {
+            var s = TestScenario.CreateWithColony();
+            var designs = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns;
+            // Leviathan: reactor + 4 battery banks + an alcubierre-2k warp drive — a heavy combat hull.
+            const string Capital = "default-ship-design-test-capital";
+            Assert.That(designs.ContainsKey(Capital), Is.True, "the Leviathan design should load onto the faction");
+
+            var ship = ShipFactory.CreateShip(designs[Capital], s.Faction, s.StartingBody, "Leviathan");
+            var energy = ship.GetDataBlob<EnergyGenAbilityDB>();
+            var warp = ship.GetDataBlob<WarpAbilityDB>();
+            string eType = warp.EnergyType;
+
+            double max = energy.EnergyStoreMax[eType];
+            double storedBefore = energy.EnergyStored.TryGetValue(eType, out var b) ? b : 0;
+            double bubbleCost = warp.BubbleCreationCost;
+            Log($"Leviathan {eType}: storedBefore={storedBefore:0} max={max:0} bubbleCreationCost={bubbleCost:0}");
+
+            // The bug: a brand-new ship can't warp because it boots with too little stored energy for the bubble.
+            Assert.That(storedBefore, Is.LessThan(bubbleCost),
+                "a freshly built ship starts with too little stored energy to create a warp bubble (the 'spawned ship won't move' cause)");
+
+            double added = ShipFactory.ChargeReactors(ship);
+            double storedAfter = energy.EnergyStored[eType];
+            Log($"after ChargeReactors: stored={storedAfter:0} (+{added:0})");
+
+            Assert.That(storedAfter, Is.EqualTo(max), "ChargeReactors tops the energy store off to its max capacity");
+            Assert.That(storedAfter, Is.GreaterThanOrEqualTo(bubbleCost),
+                "the charged ship now holds enough to create the warp bubble — it can warp on a move order");
+            Assert.That(added, Is.GreaterThan(0), "energy was actually added (it started below capacity)");
         }
     }
 }
