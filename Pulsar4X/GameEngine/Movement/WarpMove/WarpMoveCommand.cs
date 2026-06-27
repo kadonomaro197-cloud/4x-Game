@@ -61,6 +61,11 @@ namespace Pulsar4X.Movement
         public DateTime TransitStartDateTime;
         public Vector3 EndpointRelitivePosition { get; set; }
         public Vector3 EndpointTargetExpendDeltaV;
+        /// <summary>Warp speed cap in m/s (0 = the ship's own MaxSpeed). A fleet move sets this to the SLOWEST
+        /// unit's speed so every ship arrives together instead of scattering. Persisted so a reloaded mid-warp
+        /// order keeps the capped ETA.</summary>
+        [JsonProperty]
+        public double SpeedCap_m { get; set; }
         /// <summary>
         /// the orbit we want to be in at the target.
         /// </summary>
@@ -135,7 +140,8 @@ namespace Pulsar4X.Movement
         public static WarpMoveCommand CreateCommandEZ(
             Entity orderEntity,
             Entity targetEntity,
-            DateTime transitStartDatetime)
+            DateTime transitStartDatetime,
+            double speedCap_m = 0)
         {
             //if target is a colony, just make the target the parent planet.
             if(targetEntity.TryGetDataBlob<ColonyInfoDB>(out ColonyInfoDB info))
@@ -156,6 +162,7 @@ namespace Pulsar4X.Movement
                 CreatedDate = orderEntity.Manager.ManagerSubpulses.StarSysDateTime,
                 TargetEntityGuid = targetEntity.Id,
                 TransitStartDateTime = transitStartDatetime,
+                SpeedCap_m = speedCap_m,
 
             };
 
@@ -171,7 +178,7 @@ namespace Pulsar4X.Movement
                     var lowOrbitRadius = OrbitMath.LowOrbitRadius(targetEntity);
                     var perpVec = Vector3.Normalise(new Vector3(departureState.vel.Y * -1, departureState.vel.X, 0));
                     var lowOrbitPos = perpVec * lowOrbitRadius;
-                    (Vector3 pos, DateTime eti) targetIntercept  = WarpMath.GetInterceptPosition(orderEntity, targetEntity, transitStartDatetime, lowOrbitPos);
+                    (Vector3 pos, DateTime eti) targetIntercept  = WarpMath.GetInterceptPosition(orderEntity, targetEntity, transitStartDatetime, lowOrbitPos, speedCap_m);
                     var lowOrbit = OrbitMath.KeplerCircularFromPosition(sgp, lowOrbitPos, targetIntercept.eti);
                     var lowOrbitState = OrbitMath.GetStateVectors(lowOrbit, targetIntercept.eti);
                     var targetEntityOrbitDb = targetEntity.GetDataBlob<OrbitDB>();
@@ -271,7 +278,7 @@ namespace Pulsar4X.Movement
                     return;
                 }
 
-                _warpingDB = new WarpMovingDB(_entityCommanding, _targetEntity, EndpointRelitivePosition, EndpointTargetOrbit);
+                _warpingDB = new WarpMovingDB(_entityCommanding, _targetEntity, EndpointRelitivePosition, EndpointTargetOrbit, SpeedCap_m);
 
                 //if we're already in a warp moving state,
                 //then we should carry over the SavedNewtonionVector.
@@ -356,6 +363,15 @@ namespace Pulsar4X.Movement
             // Get all the ships we need to add the movement command to
             var ships = fleetDB.Children.Where(c => c.HasDataBlob<ShipInfoDB>());
 
+            // Fleet moves as ONE: cap every ship to the SLOWEST unit's warp speed so they arrive together (same
+            // as MoveToSystemBodyOrder). 0 = no warp-capable ship → per-ship speed (cap ignored when <= 0).
+            double fleetWarpFloor = 0;
+            foreach(var ship in ships)
+            {
+                if(!ship.TryGetDataBlob<WarpAbilityDB>(out var wab)) continue;
+                if(wab.MaxSpeed > 0 && (fleetWarpFloor == 0 || wab.MaxSpeed < fleetWarpFloor))
+                    fleetWarpFloor = wab.MaxSpeed;
+            }
 
             foreach(var ship in ships)
             {
@@ -366,8 +382,8 @@ namespace Pulsar4X.Movement
                 if (Target.TryGetDataBlob<ColonyInfoDB>(out var colonyDB) && colonyDB.PlanetEntity == shipParent)
                     continue;
                 if(!ship.HasDataBlob<WarpAbilityDB>()) continue;
-                
-                var shipCommand = WarpMoveCommand.CreateCommandEZ(ship, Target, atDateTime);
+
+                var shipCommand = WarpMoveCommand.CreateCommandEZ(ship, Target, atDateTime, fleetWarpFloor);
 
                 _shipCommands.Add(shipCommand);
                 ship.Manager.Game.OrderHandler.HandleOrder(shipCommand);
