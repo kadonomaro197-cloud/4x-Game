@@ -82,6 +82,15 @@ namespace Pulsar4X.Client
         private int _selectedEmconPosture = 0;
         private string _emconStatus = "";
 
+        // Engagement-posture lever (closing P3): whether this fleet will START a fight. Index-aligned with
+        // _engagePostureNames so the combo maps straight to a posture. This is the player's half of the first-shot
+        // rule — Weapons Free starts battles, Hold Fire never shoots first (two hold-fire fleets sit in a standoff),
+        // Return Fire defends but won't open. The enemy postures are set by the scenario; this lets the PLAYER hold.
+        private readonly EngagementPosture[] _engagePostures = { EngagementPosture.WeaponsFree, EngagementPosture.WeaponsHold, EngagementPosture.ReturnFire };
+        private readonly string[] _engagePostureNames = { "Weapons Free", "Hold Fire", "Return Fire" };
+        private int _selectedEngagePosture = 0;
+        private string _engageStatus = "";
+
         private FleetWindow()
         {
             FactionChanged(_uiState);
@@ -564,6 +573,8 @@ namespace Pulsar4X.Client
                     ImGui.Separator();
                     DisplayEmconSelector();
                     ImGui.Separator();
+                    DisplayEngagementPostureSelector();
+                    ImGui.Separator();
                     DisplayFleetCombatSheet();
                 }
                 ImGui.EndChild();
@@ -704,6 +715,35 @@ namespace Pulsar4X.Client
 
             if (!string.IsNullOrEmpty(_emconStatus))
                 ImGui.TextColored(new Vector4(0.4f, 1f, 0.4f, 1f), _emconStatus);
+        }
+
+        // The engagement-posture lever (closing P3): whether the fleet will OPEN a fight. The player's half of the
+        // first-shot rule — only bites when the "First-shot trigger" flag (RequireWeaponsReleaseToEngage) is on.
+        // Mirrors the EMCON/doctrine selectors: a DIRECT call (FleetDoctrine.SetEngagementPosture, not an order), so
+        // it works mid-battle. Defensive: PostureOf returns WeaponsFree for a fleet with no doctrine blob.
+        private void DisplayEngagementPostureSelector()
+        {
+            if (SelectedFleet == null || _uiState.Game == null) return;
+            DisplayHelpers.Header("Engagement Posture", "Whether this fleet STARTS a fight. Weapons Free = open fire on a detected enemy in range; Hold Fire = never shoot first (two hold-fire fleets sit in a tense standoff); Return Fire = won't start it, but shoots back once fired upon. Only takes effect when the 'First-shot trigger' is enabled (DevTools).");
+
+            var posture = FleetDoctrine.PostureOf(SelectedFleet);
+            ImGui.Text($"Current: {posture}");
+
+            ImGui.SetNextItemWidth(Math.Max(ImGui.GetContentRegionAvail().X * 0.5f, 160f));
+            ImGui.Combo("###engage-combo", ref _selectedEngagePosture, _engagePostureNames, _engagePostureNames.Length);
+
+            ImGui.SameLine();
+            if (ImGui.Button("Set Engagement"))
+            {
+                var chosen = _engagePostures[_selectedEngagePosture];
+                FleetDoctrine.SetEngagementPosture(SelectedFleet, chosen);
+                _engageStatus = $"Set engagement posture: {chosen}";
+                Console.WriteLine($"[FleetCombat] Set engagement posture '{chosen}' on fleet {SelectedFleet.Id}");
+                Console.Out.Flush();
+            }
+
+            if (!string.IsNullOrEmpty(_engageStatus))
+                ImGui.TextColored(new Vector4(0.4f, 1f, 0.4f, 1f), _engageStatus);
         }
 
         // ── Range rings on the map ────────────────────────────────────────────────────────────────────────────
