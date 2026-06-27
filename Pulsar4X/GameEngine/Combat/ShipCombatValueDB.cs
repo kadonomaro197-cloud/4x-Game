@@ -46,6 +46,17 @@ namespace Pulsar4X.Combat
         /// <summary>v1 stub: a launcher's effective tracks/sec until salvo size + reload are read (v2).</summary>
         public const double MissileSaturationStub = 1.0;
 
+        /// <summary>Flak effective range (m) — SHORT. Point-defense: pellets disperse and bleed energy fast, so it
+        /// only reaches the close-in screen (catches fighters/missiles at knife-to-near range). The hard cutoff the
+        /// closing model gates on. v1 class-default; a per-design field (paid-for in the designer) is the follow-up.</summary>
+        public const double FlakRange_m = 50_000.0;       // ~50 km
+
+        /// <summary>Missile range (m) — LONG. The standoff opener: guided, fuel/Δv-limited, out-reaches every gun so
+        /// it fires first as fleets close. v1 class-default stub (the launcher/ordnance Δv would derive the real
+        /// number); a per-design field (paid-for) is the follow-up. Gives the range LAYERING the closing fight wants:
+        /// missile (long) → flak/railgun (mid, railgun rangeless-but-inaccurate) → beam (knife).</summary>
+        public const double MissileRange_m = 1_000_000.0; // ~1000 km
+
         /// <summary>Role weight for a hull that carries no weapons (utility/transport). v1 stub.</summary>
         public const double UtilityRoleWeight = 0.25;
 
@@ -176,7 +187,8 @@ namespace Pulsar4X.Combat
                         {
                             double saturation = flak.RoundsPerSecond * flak.PelletsPerShot;
                             double dps = flak.DamagePerPellet_J * saturation * comp.HealthPercent;
-                            weapons.Add(new WeaponProfile(WeaponClass.Flak, dps, flak.MuzzleVelocity_mps, flak.Tracking, saturation));
+                            // Range (the authentic-closing pass): flak is SHORT-ranged point defense (hard cutoff).
+                            weapons.Add(new WeaponProfile(WeaponClass.Flak, dps, flak.MuzzleVelocity_mps, flak.Tracking, saturation, FlakRange_m));
                         }
                     }
                 }
@@ -188,7 +200,8 @@ namespace Pulsar4X.Combat
                     foreach (var comp in launchers)
                     {
                         double dps = MissileLauncherFirepowerStub * comp.HealthPercent;
-                        weapons.Add(new WeaponProfile(WeaponClass.Missile, dps, MissileVelocityStub_mps, MissileTrackingStub, MissileSaturationStub));
+                        // Range (the authentic-closing pass): missiles are the LONG-range standoff opener (hard cutoff).
+                        weapons.Add(new WeaponProfile(WeaponClass.Missile, dps, MissileVelocityStub_mps, MissileTrackingStub, MissileSaturationStub, MissileRange_m));
                     }
                 }
             }
