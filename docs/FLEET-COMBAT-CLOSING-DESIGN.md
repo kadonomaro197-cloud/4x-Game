@@ -157,8 +157,16 @@ the developer's build. Don't start a phase until the one below it is rooted.
 - **Unlocks:** validates the whole premise. **If standoff-vs-brawl isn't fun here, stop and fix the math before
   building Phases 2–6 on top of it.**
 
-### PHASE 2 — Kiting counters (so Phase 1 isn't a dominant-strategy generator)
+### PHASE 2 — Kiting counters (so Phase 1 isn't a dominant-strategy generator) ✅ BUILT (2026-06-27, fuel tier)
 *Phase 1 makes "fast + long range" potentially unbeatable. This roots the counters in the SAME pass — never ship the kite without its clock.*
+
+> **Status (endurance tier 1 = fuel):** `FleetCombatStateDB.ManeuverBudget` (a combat-abstract Δv reserve, seeded
+> from `FleetCombat.DeltaVFloor` at engagement start). In `AdvanceClosing` only a fleet with budget LEFT can be the
+> controller, and the controller spends `ManeuverBurnRate × dt` each step — so a kiter that burns out stops dictating
+> the range and the enemy closes. Gauged by `ClosingTests.Kiting_RunsOutOfBudget_TheEnemyCloses` (a short-budget kiter's
+> gap collapses to the brawler's range once it runs dry). Interceptors are already emergent from P1's speed rule (the
+> faster short-range fleet forces the merge — `Closing_FasterSideDictatesTheRange` case B). Munitions depletion +
+> provisions (tiers 2–3) stay parked (canopy). Live calibration of `ManeuverBurnRate` is the developer's play-test.
 
 - **Design to lock:** **Endurance tier 1 = FUEL** (already built): holding range = maneuvering = burning Δv; the
   resolver debits maneuver fuel during the close/kite, so a kiter has a clock and must eventually disengage or close.

@@ -245,6 +245,12 @@ namespace Pulsar4X.Combat
         /// path). The 2-fleet <see cref="StartEngagement"/> seeds the real distance instead. v1 stub.</summary>
         public static double InitialSeparationDefault_m = 10_000_000.0;
 
+        /// <summary>Phase 2 (kiting counter): Δv (m/s) a fleet spends per game-second it CONTROLS the range. A kiter
+        /// holding the gap burns this each step; when its <see cref="FleetCombatStateDB.ManeuverBudget"/> runs dry it can
+        /// no longer dictate the range and the enemy closes on it — so you can't kite forever. Tunable; 0 = free maneuver
+        /// (kiting never runs out). v1 calibration provisional.</summary>
+        public static double ManeuverBurnRate = 5.0;
+
         private static void CombatLog(string msg)
         {
             if (NarrateToLog) System.Console.WriteLine("[Combat] " + msg);
@@ -281,6 +287,8 @@ namespace Pulsar4X.Combat
                 double gap = FleetSeparation(fleetA, fleetB);
                 sa.Separation_m = gap;
                 sb.Separation_m = gap;
+                sa.ManeuverBudget = FleetCombat.DeltaVFloor(fleetA);   // Phase 2: the kiting clock = the fleet's Δv floor
+                sb.ManeuverBudget = FleetCombat.DeltaVFloor(fleetB);
             }
             fleetA.SetDataBlob(sa);
             fleetB.SetDataBlob(sb);
@@ -297,7 +305,11 @@ namespace Pulsar4X.Combat
         {
             if (fleet == null || !fleet.IsValid || fleet.HasDataBlob<FleetCombatStateDB>()) return;
             var st = new FleetCombatStateDB(representativeOpponentId, GetFleetShips(fleet).Count);
-            if (EnableClosingRange) st.Separation_m = InitialSeparationDefault_m;   // Phase 1 v1: join path seeds the default gap
+            if (EnableClosingRange)
+            {
+                st.Separation_m = InitialSeparationDefault_m;          // Phase 1 v1: join path seeds the default gap
+                st.ManeuverBudget = FleetCombat.DeltaVFloor(fleet);    // Phase 2: the kiting clock
+            }
             fleet.SetDataBlob(st);
             CombatLog($"{FleetLabel(fleet)} enters combat ({GetFleetShips(fleet).Count} ship(s))");
             RecordBattleEvent(fleet, BattleEventType.Engaged, 0, GetFleetShips(fleet).Count, 0, "enters combat");
@@ -583,10 +595,21 @@ namespace Pulsar4X.Combat
             for (int i = 0; i < live.Count; i++)
             {
                 if (ships[i].Count == 0) continue;
+                // Phase 2 (kiting counter): only a fleet with maneuver budget LEFT can dictate the range. A burned-out
+                // fleet drops out of contention, so a dry kiter loses control and the enemy closes. ManeuverBurnRate 0
+                // = free maneuver (budget never matters), the pre-P2 behaviour.
+                if (ManeuverBurnRate > 0 &&
+                    (!live[i].TryGetDataBlob<FleetCombatStateDB>(out var bs) || bs.ManeuverBudget <= 0))
+                    continue;
                 double m = FleetManeuver(ships[i]);
                 if (m > best) { best = m; controller = i; }
             }
             if (controller < 0) return;
+
+            // The controller SPENDS maneuver budget to dictate the range — the kiting clock that makes "kite forever"
+            // impossible. When it hits 0 it's no longer eligible above, so next step the enemy takes the wheel.
+            if (ManeuverBurnRate > 0 && live[controller].TryGetDataBlob<FleetCombatStateDB>(out var ctrlState))
+                ctrlState.ManeuverBudget = System.Math.Max(0, ctrlState.ManeuverBudget - ManeuverBurnRate * dt);
 
             double desired = FleetDesiredRange(ships[controller]);      // the controller's preferred standoff
             double step = best * ClosingSpeedScale_mps * dt;            // metres it can change the gap this step

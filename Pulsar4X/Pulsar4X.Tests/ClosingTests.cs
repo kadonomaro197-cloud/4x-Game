@@ -43,6 +43,15 @@ namespace Pulsar4X.Tests
         private static double Pool(Entity fleet)
             => fleet.TryGetDataBlob<FleetCombatStateDB>(out var st) ? st.DamageTakenPool : -1;
 
+        /// <summary>Override the engagement gap + maneuver budget directly (combat values stamped, so the gauge is
+        /// deterministic and independent of seeding/fuel).</summary>
+        private static void Set(Entity fleet, double gap, double budget)
+        {
+            var st = fleet.GetDataBlob<FleetCombatStateDB>();
+            st.Separation_m = gap;
+            st.ManeuverBudget = budget;
+        }
+
         // ─── The heart: range gate ─────────────────────────────────────────────────────────────────────────────
 
         [Test]
@@ -153,8 +162,8 @@ namespace Pulsar4X.Tests
                 try
                 {
                     CombatEngagement.StartEngagement(fastLong, slowShort);
-                    fastLong.GetDataBlob<FleetCombatStateDB>().Separation_m = 50_000;
-                    slowShort.GetDataBlob<FleetCombatStateDB>().Separation_m = 50_000;
+                    Set(fastLong, gap: 50_000, budget: 1e9);   // budget so P2's gate doesn't freeze the maneuver
+                    Set(slowShort, gap: 50_000, budget: 1e9);
                     CombatEngagement.StepEngagement(fastLong, slowShort, 5.0);
                     double gap = fastLong.GetDataBlob<FleetCombatStateDB>().Separation_m;
                     Log($"fast long-range fleet: gap 50,000 -> {gap:N0} (expect GROW toward its 100 km range)");
@@ -176,14 +185,54 @@ namespace Pulsar4X.Tests
                 try
                 {
                     CombatEngagement.StartEngagement(fastShort, slowLong);
-                    fastShort.GetDataBlob<FleetCombatStateDB>().Separation_m = 50_000;
-                    slowLong.GetDataBlob<FleetCombatStateDB>().Separation_m = 50_000;
+                    Set(fastShort, gap: 50_000, budget: 1e9);
+                    Set(slowLong, gap: 50_000, budget: 1e9);
                     CombatEngagement.StepEngagement(fastShort, slowLong, 5.0);
                     double gap = fastShort.GetDataBlob<FleetCombatStateDB>().Separation_m;
                     Log($"fast short-range fleet: gap 50,000 -> {gap:N0} (expect SHRINK toward its 1 km range)");
                     Assert.That(gap, Is.LessThan(50_000), "the faster short-range fleet closes the range — it forces the merge");
                 }
                 finally { CombatEngagement.EnableClosingRange = false; CombatEngagement.ClosingSpeedScale_mps = 100_000.0; }
+            }
+        }
+
+        // ─── Phase 2 — kiting has a clock ──────────────────────────────────────────────────────────────────────
+
+        [Test]
+        [Description("Phase 2: a fast long-range kiter with a LIMITED maneuver budget can't hold the enemy off " +
+                     "forever. When its budget runs dry it stops dictating the range, and the slower short-range " +
+                     "enemy closes the gap into its OWN range — the kiter gets caught. The counter to P1's kite.")]
+        public void Kiting_RunsOutOfBudget_TheEnemyCloses()
+        {
+            var s = TestScenario.CreateWithColony();
+            var reds = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+            var kiter = MakeFleet(s, s.Faction, "Kiter");
+            var brawler = MakeFleet(s, reds, "Brawler");
+            AddShip(s, s.Faction, kiter, range_m: 100_000, evasion: 0.9);   // fast + long
+            AddShip(s, reds, brawler, range_m: 5_000, evasion: 0.5);        // slower + short, but persistent
+
+            CombatEngagement.EnableClosingRange = true;
+            CombatEngagement.ClosingSpeedScale_mps = 100_000.0;
+            CombatEngagement.ManeuverBurnRate = 5.0;
+            try
+            {
+                CombatEngagement.StartEngagement(kiter, brawler);
+                Set(kiter, gap: 50_000, budget: 100);     // a SHORT kiting clock — runs dry in a few steps
+                Set(brawler, gap: 50_000, budget: 1e9);   // the brawler can maneuver all day
+
+                double gapStart = kiter.GetDataBlob<FleetCombatStateDB>().Separation_m;
+                for (int i = 0; i < 12; i++) CombatEngagement.StepEngagement(kiter, brawler, 5.0);
+                double gapEnd = kiter.GetDataBlob<FleetCombatStateDB>().Separation_m;
+
+                Log($"kiter gap: start {gapStart:N0} -> end {gapEnd:N0} (brawler range 5,000 — the gap should collapse to it)");
+                Assert.That(gapEnd, Is.LessThanOrEqualTo(5_000 + 1).And.GreaterThanOrEqualTo(0),
+                    "once the kiter's budget runs dry, the brawler closes the gap to its 5 km range — you can't kite forever");
+            }
+            finally
+            {
+                CombatEngagement.EnableClosingRange = false;
+                CombatEngagement.ClosingSpeedScale_mps = 100_000.0;
+                CombatEngagement.ManeuverBurnRate = 5.0;
             }
         }
     }
