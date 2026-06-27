@@ -177,8 +177,16 @@ the developer's build. Don't start a phase until the one below it is rooted.
   interceptor (faster, short-range) runs down a kiter and forces the merge.
 - **Unlocks:** the standoff decision has real counterplay — the triangle survives in the spatial layer.
 
-### PHASE 3 — First-shot trigger + the standoff state (detect ≠ fire)
+### PHASE 3 — First-shot trigger + the standoff state (detect ≠ fire) ✅ BUILT (2026-06-27)
 *Rework the trigger from proximity to weapons-release. Adds the tense cold-war state.*
+
+> **Status:** `EngagementPosture` (WeaponsFree / WeaponsHold / ReturnFire) on `FleetDoctrineDB` (the first ROE knob —
+> ROE grows here in P5, not a parallel system); `FleetDoctrine.PostureOf` / `SetEngagementPosture` (a direct call,
+> works mid-battle; preserved across a doctrine switch). Behind `CombatEngagement.RequireWeaponsReleaseToEngage`
+> (default OFF → default posture is WeaponsFree, so proximity engages exactly as before). When on, the engage pass
+> skips a hostile pair if BOTH are non-WeaponsFree → tense standoff, no battle. Gauged by `WeaponsReleaseTests`
+> (both weapons-hold = no engagement; one weapons-free = battle forms; flag-off = proximity still engages). Deterministic
+> tiebreaker (no bluffing model) + the ReturnFire nuance are P5/ROE refinements.
 
 - **Design to lock:** a battle erupts when a fleet **releases a shot** — which happens when its ROE is weapons-free
   AND an enemy is **detected** AND **in weapon range**. Two weapons-hold fleets in range = **no battle** (tense
