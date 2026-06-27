@@ -105,7 +105,7 @@ Namespace drift between branches is the #1 compile trap here (it bit `PositionDB
 | &nbsp;&nbsp;`FleetComponentTests` | per-component doctrine — a ship in an offensive sub-fleet reads ×2 while a ship directly in the fleet reads ×1; a component's ×2 flips a battle the raw hull would lose |
 | &nbsp;&nbsp;`FleetRetreatTests` | retreat — a `fighting-withdrawal` fleet breaks off intact (posture); a 4-ship fleet that loses half retreats with survivors (threshold); both record a `FleetRetreatDB` |
 | &nbsp;&nbsp;`EngagementLockTests` | an engaged fleet (`FleetCombatStateDB`) refuses an AssignShip order; a `TrySetDoctrine` on it still applies; clearing the combat state lets the order through |
-| &nbsp;&nbsp;`CombatTestShipsTests` | the example ships (Aegis warship / Picket corvette) load + rate strong-vs-weak; a 3v3 auto-resolve is a decisive `SideAVictory` |
+| &nbsp;&nbsp;`CombatTestShipsTests` | the example ships (Aegis warship / Picket corvette) load + rate strong-vs-weak; a 3v3 auto-resolve is a decisive `SideAVictory`; **+ `ChargeReactors_FillsStoredEnergy_SoASpawnedShipCanWarp`** — a freshly built Leviathan boots with 0 stored energy (< warp bubble cost), `ShipFactory.ChargeReactors` tops it to `EnergyStoreMax` ≥ bubble cost (the "spawned ship won't move" fix) |
 | **Combat depth — weapon flavor + dodge** (`docs/WEAPONS-AND-DODGE-DESIGN.md`) | all CI-green: |
 | &nbsp;&nbsp;`ShipEvasionTests` | Evasion (maneuverability) — a small/light/high-thrust fighter dodges far better than a heavy sluggish battleship; no engine = no dodge |
 | &nbsp;&nbsp;`WeaponProfileTests` | per-weapon flavor profiles — a laser warship has Beam profiles at ~light-speed with hit-chance + rate-of-fire; profiles sum to Firepower |
