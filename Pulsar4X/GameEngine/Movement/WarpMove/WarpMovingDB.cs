@@ -29,6 +29,13 @@ namespace Pulsar4X.Movement
         [JsonProperty]
         public Vector3 CurrentNonNewtonionVectorMS { get; internal set; }
 
+        /// <summary>The speed (m/s) this ship ACTUALLY warps at — the fleet cap (slowest unit) when moving as a
+        /// fleet, else the ship's own MaxSpeed. The processor (<see cref="WarpMoveProcessor.StartNonNewtTranslation"/>)
+        /// MUST read this, not <c>WarpAbilityDB.MaxSpeed</c>, or the cap is dropped and a fast ship races ahead even
+        /// on a fleet move (the "Aegis lagged / others arrived early" bug). 0 (old save) → fall back to MaxSpeed.</summary>
+        [JsonProperty]
+        public double WarpSpeed_mps { get; internal set; }
+
         [JsonProperty]
         internal Vector2 _position;
         [JsonProperty]
@@ -102,6 +109,7 @@ namespace Pulsar4X.Movement
             //PredictedExitTime = targetIntercept.atDateTime;
             SavedNewtonionVector = MoveMath.GetRelativeState(thisEntity).Velocity; //TODO: this needs to check GameSettings.UseRelativeVelocity
             TargetEntity = null;
+            WarpSpeed_mps = thisEntity.GetDataBlob<WarpAbilityDB>().MaxSpeed; // no fleet cap on a direct-position warp
 
             Heading_Radians = (float)Vector3.AngleBetween(startState.pos, ExitPointAbsolute);
 
@@ -120,6 +128,9 @@ namespace Pulsar4X.Movement
             // speedCap_m (> 0) makes this ship warp at the FLEET's slowest speed, so a fleet arrives together. The
             // ETA (PredictedExitTime) bakes in here, so the cap only needs to reach GetInterceptPosition.
             var targetIntercept = WarpMath.GetInterceptPosition(thisEntity, targetEntity, EntryDateTime, offsetPosition, speedCap_m);
+            // The actual travel speed must match the speed the ETA above was computed at — the fleet cap when set,
+            // else the ship's own MaxSpeed. The processor reads WarpSpeed_mps, so the cap reaches the real velocity.
+            WarpSpeed_mps = speedCap_m > 0 ? speedCap_m : thisEntity.GetDataBlob<WarpAbilityDB>().MaxSpeed;
 
             var startState = MoveMath.GetAbsoluteState(thisEntity);
             ExitPointAbsolute = targetIntercept.position + offsetPosition;
@@ -143,6 +154,7 @@ namespace Pulsar4X.Movement
             EndpointTargetOrbit = db.EndpointTargetOrbit;
             IsAtTarget = db.IsAtTarget;
             TargetEntity = db.TargetEntity;
+            WarpSpeed_mps = db.WarpSpeed_mps;
 
             HasStarted = db.HasStarted;
             TargetPositionDB = db.TargetPositionDB;
