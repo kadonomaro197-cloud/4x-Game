@@ -56,12 +56,19 @@ public class NewtonSimpleProcessor : IHotloopProcessor
         var massdb = entity.GetDataBlob<MassVolumeDB>();
 
 
-        //update deltav
+        //update deltav. A ship with no cargo/fuel-tank bay (e.g. the Wasp fighter — a thruster but no storage) has
+        //no fuel: guard the hard CargoStorageDB index so completing a warp doesn't THROW on a background sim thread.
+        //That throw (KeyNotFoundException: CargoStorageDB) was killing warp-completion mid-flight — the ship vanished /
+        //teleported and the corrupted scheduling cascaded into Temporal Anomaly exceptions that froze the clock.
+        //cargoLib/fuelType don't need the storage bay (they're faction-library lookups), so they stay hoisted for the
+        //fuel-burn below; only the stored-mass read is guarded. A tankless ship has 0 DeltaV, so the burn never runs.
         CargoDefinitionsLibrary cargoLib = entity.GetFactionOwner.GetDataBlob<FactionInfoDB>().Data.CargoGoods;
-        var fuelTypeID = thrustdb.FuelType;
-        var fuelType = cargoLib.GetAny(fuelTypeID);
-        var storage = entity.GetDataBlob<CargoStorageDB>();
-        var fuelMass = storage.GetMassStored(fuelType, false);
+        var fuelType = cargoLib.GetAny(thrustdb.FuelType);
+        double fuelMass = 0;
+        if (entity.TryGetDataBlob<CargoStorageDB>(out var storage))
+        {
+            fuelMass = storage.GetMassStored(fuelType, false);
+        }
 
         var currentOrbit = newtonSimplelMoveDB.CurrentTrajectory;
         var targetOrbit = newtonSimplelMoveDB.TargetTrajectory;
@@ -85,9 +92,12 @@ public class NewtonSimpleProcessor : IHotloopProcessor
             OrbitDB newOrbit = OrbitDB.FromKeplerElements(newtonSimplelMoveDB.SOIParent, massdb.MassTotal, targetOrbit, toDateTime);
             entity.SetDataBlob(newOrbit);
 
-            //remove fuel
-            double fuelBurned = OrbitMath.TsiolkovskyFuelUse(massdb.MassTotal, thrustdb.ExhaustVelocity, moveDeltaV);
-            CargoTransferProcessor.AddRemoveCargoMass(entity, fuelType, -fuelBurned);
+            //remove fuel (only if the ship actually has a tank — a tankless thruster still completes the orbit move)
+            if (storage != null)
+            {
+                double fuelBurned = OrbitMath.TsiolkovskyFuelUse(massdb.MassTotal, thrustdb.ExhaustVelocity, moveDeltaV);
+                CargoTransferProcessor.AddRemoveCargoMass(entity, fuelType, -fuelBurned);
+            }
 
             //tag as complete
             newtonSimplelMoveDB.IsComplete = true;
