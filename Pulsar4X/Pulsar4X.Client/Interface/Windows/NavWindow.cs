@@ -582,6 +582,27 @@ namespace Pulsar4X.Client
             ImGui.SameLine();
             ImGui.Text("for all manuvers: " + Stringify.Velocity(totalManuverDV));
 
+            // Cost preview — what that Δv actually COSTS and whether the ship even has the budget. The fuel math
+            // was computed only inside the button (never shown); this mirrors its per-burn Tsiolkovsky chain so the
+            // readout matches what the order will burn. Δv-vs-available is the load-bearing, unit-clean decision.
+            {
+                double mass = _totalMass;
+                double totalFuelMass = 0;
+                foreach (var mnv in _manuvers)
+                {
+                    double fuelUnits = OrbitMath.TsiolkovskyFuelUse(mass, _exhaustVelocity, mnv.deltaV.Length());
+                    double fuelMass = fuelUnits * (_fuelType?.MassPerUnit ?? 1);
+                    totalFuelMass += fuelMass;
+                    mass -= fuelMass;
+                }
+                ImGui.Text("Est. fuel: " + Stringify.Mass(totalFuelMass));
+                bool enoughDV = totalManuverDV <= _totalDV;
+                if (!enoughDV) ImGui.PushStyleColor(ImGuiCol.Text, Styles.BadColor);
+                ImGui.Text("Δv used " + Stringify.Velocity(totalManuverDV) + " of " + Stringify.Velocity(_totalDV) + " available"
+                    + (enoughDV ? "" : "  — NOT ENOUGH Δv"));
+                if (!enoughDV) ImGui.PopStyleColor();
+            }
+
             if (ImGui.Button("Make it so"))
             {
 
@@ -600,6 +621,11 @@ namespace Pulsar4X.Client
                 var manuverNodeTime2 = manuverNodeTime1 + TimeSpan.FromSeconds(_manuvers[1].tSec);
 
                 NewtonThrustCommand.CreateCommand(_orderEntity.FactionOwnerID, _orderEntity, manuverNodeTime2, _manuvers[1].deltaV, secondsBurn2);
+
+                // Live-test gauge (CI is blind to the SDL client): name the committed plan + its Δv-vs-budget, so
+                // the play-test log shows the order actually fired with the cost the readout previewed.
+                SessionLog.Action($"[nav] phase-change committed: ship #{_orderEntity.Id}, {_manuvers.Length} burns, "
+                    + $"Δv {Stringify.Velocity(totalManuverDV)} of {Stringify.Velocity(_totalDV)} available");
             }
         }
 
@@ -632,6 +658,27 @@ namespace Pulsar4X.Client
             ImGui.Text("Total Δv");
             ImGui.SameLine();
             ImGui.Text("for all manuvers: " + Stringify.Velocity(totalManuverDV));
+
+            // Cost preview — what that Δv actually COSTS and whether the ship even has the budget. The fuel math
+            // was computed only inside the button (never shown); this mirrors its per-burn Tsiolkovsky chain so the
+            // readout matches what the order will burn. Δv-vs-available is the load-bearing, unit-clean decision.
+            {
+                double mass = _totalMass;
+                double totalFuelMass = 0;
+                foreach (var mnv in _manuvers)
+                {
+                    double fuelUnits = OrbitMath.TsiolkovskyFuelUse(mass, _exhaustVelocity, mnv.deltaV.Length());
+                    double fuelMass = fuelUnits * (_fuelType?.MassPerUnit ?? 1);
+                    totalFuelMass += fuelMass;
+                    mass -= fuelMass;
+                }
+                ImGui.Text("Est. fuel: " + Stringify.Mass(totalFuelMass));
+                bool enoughDV = totalManuverDV <= _totalDV;
+                if (!enoughDV) ImGui.PushStyleColor(ImGuiCol.Text, Styles.BadColor);
+                ImGui.Text("Δv used " + Stringify.Velocity(totalManuverDV) + " of " + Stringify.Velocity(_totalDV) + " available"
+                    + (enoughDV ? "" : "  — NOT ENOUGH Δv"));
+                if (!enoughDV) ImGui.PopStyleColor();
+            }
 
             if (ImGui.Button("Make it so"))
             {

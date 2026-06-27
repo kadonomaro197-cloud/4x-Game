@@ -94,6 +94,8 @@ MissileProcessor.LaunchMissile(launcher, target, launchForce, design, count)
 - `BeamInfoDB.OptimalRange_m` carries this per-beam. `BeamWeaponProcessor.OnHit()` applies the scale before building the `DamageFragment`.
 - `MaxRange == 0` = unlimited (legacy designs unaffected). `OptimalRange_m == 0` = no falloff.
 
+> **⚠ DATA FINDING (2026-06-27): the base laser's falloff never fires.** This model assumes **focal length < max range**, but the base-mod laser ships `Range` = 5,000 m and `Focal Length` = 1,000,000 m (a "Distance to target (debug)" placeholder in `weapons.json`), so `OptimalRange_m` is 200× the gun's reach. `OnHit` only attenuates `if (distance > OptimalRange_m)` and caps `energyScale` at 1.0 otherwise — **no damage bug** (never amplifies), but every reachable hit (≤ 5,000 m) is far inside optimal, so the falloff branch is never taken: the laser deals **flat full energy to max range** and the two-zone feature is dead for this design. **Fix is DATA, not code** (balance call — flagged, not changed): set Focal Length below Range (e.g. `Range * 0.5`) for a real falloff band, or declare flat-damage the intent. Full write-up: `docs/INFORMATION-DELTA-DESIGN.md` → "Finding: the base laser's two-zone falloff never fires."
+
 ### Decision 2 — Wavelength connected to material resistance (complete)
 - `DamageFragment.Wavelength` (double, nm) flows from `GenericBeamWeaponAtb.WaveLength` → `BeamInfoDB.Frequency` → `DamageFragment.Wavelength`.
 - `DamageResistBlueprint.WavelengthAbsorption[5]` stores per-band absorption coefficients (UV/Vis/NIR/MIR/FIR).
@@ -133,6 +135,14 @@ MissileProcessor.LaunchMissile(launcher, target, launchForce, design, count)
 - Missile range: deferred — `MissileLauncherAtb` inherits `IsInRange() = true`. Correct implementation requires delta-V calculation. See Gotcha 5.
 
 **JSON default range is 5000m** (weapons.json, "Range" property). This is space-scale tiny — the developer should set this to something realistic (millions of km) when testing. The code is correct; the value is a configuration decision.
+
+### Engagement range READOUT (2026-06-27) — the enforced MaxRange, now visible
+
+`MaxRange` was enforced but invisible: a weapon past range just silently didn't fire, with zero UI feedback (the player couldn't tell "out of range" from "broken"). `WeaponUtils` now exposes it:
+- `GetMaxBeamRange_m(Entity ship)` — the ship's longest beam reach (max `MaxRange` across installed, **enabled, undestroyed** beam weapons; a shot-off gun no longer extends reach — the loss rung). 0 = no finite beam range.
+- `GetBeamWeaponRanges(Entity ship)` → `List<(name, maxRange, optimalRange)>` — the per-weapon breakdown for a readout; skips legacy `MaxRange==0` "unlimited" designs.
+
+These feed the client (Fleet Combat tab columns + fleet "Beam reach" row; Fire Control range-to-target + red **OUT OF RANGE**; map range rings). Gauged by `Pulsar4X.Tests/RangeReadoutTests.cs` (aggregation on the Aegis). Full survey + the two-failure-mode framing: `docs/INFORMATION-DELTA-DESIGN.md`. Missile range is still a stub (`IsInRange` returns true) so no missile ring is drawn — drawing one would lie.
 
 ---
 

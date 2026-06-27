@@ -55,6 +55,13 @@ namespace Pulsar4X.Weapons
             WaveLength = waveLen;
             Energy = (int)jules;
             OptimalRange_m = focalLength > 0 ? focalLength : maxRange * 0.5;
+            // INVARIANT (the established physics): MaxRange is ALWAYS the outer bound. Full damage at/inside
+            // OptimalRange; degraded (inverse-square) from OptimalRange out to MaxRange; no fire beyond MaxRange.
+            // A design or a stale debug value that sets focal length past MaxRange must NOT be able to invert that
+            // (it silently disabled the falloff before) — clamp optimal to MaxRange so the degraded band can never
+            // vanish above the range. MaxRange == 0 is the legacy "unlimited" sentinel; leave optimal alone there.
+            if (MaxRange > 0 && OptimalRange_m > MaxRange)
+                OptimalRange_m = MaxRange;
             ChargePeriod = chargePeriod;
             ThermalOutput_W = thermalOutput_W;
             AllowThermalOverride = allowThermalOverride > 0.5;
