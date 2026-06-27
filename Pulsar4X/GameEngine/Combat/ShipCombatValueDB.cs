@@ -141,7 +141,8 @@ namespace Pulsar4X.Combat
                         {
                             double period = beam.ChargePeriod > 0 ? beam.ChargePeriod : 1.0;
                             double dps = (beam.Energy / period) * comp.HealthPercent;
-                            weapons.Add(new WeaponProfile(WeaponClass.Beam, dps, beam.BeamSpeed, beam.BaseHitChance, 1.0 / period));
+                            // Range (Root A): beams carry their design MaxRange (0 = unbounded, the legacy convention).
+                            weapons.Add(new WeaponProfile(WeaponClass.Beam, dps, beam.BeamSpeed, beam.BaseHitChance, 1.0 / period, beam.MaxRange));
                         }
                     }
                 }
@@ -156,6 +157,9 @@ namespace Pulsar4X.Combat
                         if (comp.Design.TryGetAttribute<RailgunWeaponAtb>(out var rg))
                         {
                             double dps = rg.KineticEnergyPerShot_J * rg.RoundsPerSecond * comp.HealthPercent;
+                            // Range (Root A): railguns have no design range field yet → 0 (rangeless / always in range).
+                            // FLAG: a real kinetic range (an Atb + JSON field, like beam's) is the Root-A follow-up;
+                            // flak should end up SHORT-ranged (the triangle going spatial) — see FLEET-COMBAT-CLOSING-DESIGN.
                             weapons.Add(new WeaponProfile(WeaponClass.Railgun, dps, rg.MuzzleVelocity_mps, rg.Tracking, rg.RoundsPerSecond));
                         }
                     }
