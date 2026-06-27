@@ -123,6 +123,14 @@ namespace Pulsar4X.Combat
                     // back (the directed-fire resolve handles that — see StepEngagementGroup / CanEngageTarget).
                     if (RequireDetectionToEngage && !(FleetDetects(a, b) || FleetDetects(b, a))) continue;
 
+                    // First-shot trigger (Phase 3, client-on / test-off): a battle erupts only if someone will RELEASE
+                    // a shot. If BOTH fleets are holding fire (neither WeaponsFree), they sit in a tense STANDOFF — no
+                    // engagement forms. Default posture is WeaponsFree, so with the flag off this never blocks anything.
+                    if (RequireWeaponsReleaseToEngage
+                        && FleetDoctrine.PostureOf(a) != EngagementPosture.WeaponsFree
+                        && FleetDoctrine.PostureOf(b) != EngagementPosture.WeaponsFree)
+                        continue;
+
                     // First-strike narration: when a NEW engagement forms with one side blind to the other, call it
                     // out ONCE in the combat log. Gated on NarrateToLog + fog-on (inert in tests), and on at least
                     // one side not yet in combat — after EnsureInCombat both hold state, so it never re-logs.
@@ -227,6 +235,13 @@ namespace Pulsar4X.Combat
         /// is always true, so the resolver is exactly the old symmetric exchange. The client turns it on when
         /// detection is live, next to <see cref="NarrateToLog"/> / <see cref="InterruptTimeOnNewEngagement"/>.</summary>
         public static bool RequireDetectionToEngage = false;
+
+        /// <summary>When true, a battle only ERUPTS if someone will release a shot — the first-shot trigger (Phase 3,
+        /// docs/FLEET-COMBAT-CLOSING-DESIGN.md). Two hostile fleets that are BOTH non-WeaponsFree (weapons-hold /
+        /// return-fire) sit in a tense STANDOFF — proximity no longer auto-starts a fight. At least one WeaponsFree
+        /// fleet (the default posture) starts it. Default FALSE so existing fixtures (no posture set = WeaponsFree
+        /// anyway) are unchanged; the client turns it on when ROE is live.</summary>
+        public static bool RequireWeaponsReleaseToEngage = false;
 
         /// <summary>When true, combat is a CLOSING fight (Phase 1, docs/FLEET-COMBAT-CLOSING-DESIGN.md): a weapon only
         /// fires if its <see cref="WeaponProfile.Range_m"/> reaches the current gap, and the gap CLOSES each step toward

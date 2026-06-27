@@ -510,6 +510,33 @@ per-system in parallel. Sensor: `BattleLogTests` (records survive the fight; rin
 
 ---
 
+## Closing distance + Rules of Engagement (Phases 1–3, 2026-06-27)
+
+The auto-resolver is becoming a **closing fight** where range/speed/detection/doctrine decide who can hit whom — the
+build plan + locked decisions are `docs/FLEET-COMBAT-CLOSING-DESIGN.md`. Each phase is behind a **default-OFF flag**
+(the `RequireDetectionToEngage` pattern), so every pre-existing fixture is byte-identical; the client turns the flags
+on when the model is live. All deterministic (no wall-clock/RNG) so fast-forward == watch.
+
+- **Root A — `WeaponProfile.Range_m`** (0 = unbounded, the beam `IsInRange` convention). Beams carry their `MaxRange`;
+  railgun/flak/missile rangeless-for-now (flagged). **Root B — `FleetCombat.cs`**: `WarpSpeedFloor`/`DeltaVFloor` (min
+  = the fleet moves as one), `FirepowerAtRange(R)` (the firepower-vs-range curve), `SensorReach` (max = parallel sensors).
+- **P1 `EnableClosingRange`** — `FleetCombatStateDB.Separation_m` (the gap, seeded from real distance at `StartEngagement`).
+  `BuildFireMix(ships, separation)` gates each weapon on `Range_m ≥ gap` (0 separation = no-op). `AdvanceClosing` moves the
+  gap toward the FASTER side's preferred range (controller = highest `FleetManeuver` = min evasion over its ships; desired
+  = longest finite weapon range). Tunables `ClosingSpeedScale_mps` (0 = freeze), `InitialSeparationDefault_m`. → a fast
+  long-range fleet kites, a fast brawler forces the merge.
+- **P2 (kiting clock)** — `FleetCombatStateDB.ManeuverBudget` (Δv reserve, seeded from `DeltaVFloor`). Only a fleet with
+  budget can be the controller; it spends `ManeuverBurnRate × dt` each step. A burned-out kiter loses control and the enemy
+  closes — you can't kite forever. (Interceptors are emergent from P1's speed rule.)
+- **P3 `RequireWeaponsReleaseToEngage`** — `EngagementPosture` (WeaponsFree/WeaponsHold/ReturnFire) on `FleetDoctrineDB`
+  (the first ROE knob; `FleetDoctrine.PostureOf`/`SetEngagementPosture`, preserved across a doctrine switch). A battle
+  erupts only if a side is WeaponsFree; two holding fleets in range sit in a tense **standoff**. Default WeaponsFree, so
+  flag-off = proximity engages as before.
+- **Gauges:** `FleetAggregationTests` (Roots), `ClosingTests` (P1 range gate / determinism / flag-off / who-dictates;
+  P2 kiting clock), `WeaponsReleaseTests` (P3 standoff). **Open (the developer's play-test):** live calibration of the
+  closing-rate / burn-rate tunables and the "is standoff-vs-brawl FUN" gut-check.
+- **Next: P4 — per-sub-fleet ranges** (each component its own gap, so a fighter wing closes while the capitals hold).
+
 ## Gotchas
 
 1. **This engine does not touch the per-pixel damage sim.** Casualties are whole-ship removal driven by strength math, not `DamageProcessor.OnTakingDamage`. Do not wire combat value into the pixel sim — that path is broken and parked for v2.
