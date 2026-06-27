@@ -153,30 +153,52 @@ namespace Pulsar4X.Client
             }
         }
 
+        // Per-section perf gauge — CI can't see client frame time, so this is the instrument to localize a "fleet
+        // manager is laggy" report: when this window's frame work is heavy it logs the section breakdown (throttled),
+        // so the play-test log names WHICH part (list / ships / tabs) is eating the time instead of just "it's slow".
+        private const double FleetWindowSlowMs = 4.0;
+        private int _lastPerfLogTick;
+
         internal override void Display()
         {
             if(!IsActive) return;
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            long tList = 0, tShips = 0, tOrders = 0, tTabs = 0, t0;
 
             if(Window.Begin("Fleet Management", ref IsActive, _flags))
             {
-                DisplayFleetList();
+                t0 = sw.ElapsedTicks; DisplayFleetList(); tList = sw.ElapsedTicks - t0;
 
                 if(SelectedFleet != null)
                 {
                     ImGui.SameLine();
                     ImGui.SetCursorPosY(27f);
                     var ysize = ImGui.GetContentRegionAvail().Y;
-                    DisplayShips();
+                    t0 = sw.ElapsedTicks; DisplayShips(); tShips = sw.ElapsedTicks - t0;
                     ImGui.SetCursorPosY(ysize * 0.5f);
-                    DisplayOrders();
+                    t0 = sw.ElapsedTicks; DisplayOrders(); tOrders = sw.ElapsedTicks - t0;
 
                     ImGui.SameLine();
                     ImGui.SetCursorPosY(27f);
 
-                    DisplayTabs();
+                    t0 = sw.ElapsedTicks; DisplayTabs(); tTabs = sw.ElapsedTicks - t0;
                 }
             }
             Window.End();
+
+            double totalMs = sw.Elapsed.TotalMilliseconds;
+            if (SessionLog.Enabled && totalMs > FleetWindowSlowMs)
+            {
+                int now = Environment.TickCount;
+                if (now - _lastPerfLogTick >= 1000)   // throttle to ~1/sec so a sustained slow frame doesn't flood
+                {
+                    _lastPerfLogTick = now;
+                    double f = 1000.0 / System.Diagnostics.Stopwatch.Frequency;   // stopwatch-ticks -> ms
+                    SessionLog.Action($"[perf] FleetWindow {totalMs:0.0}ms — list {tList * f:0.0} / ships {tShips * f:0.0}"
+                        + $" / orders {tOrders * f:0.0} / tabs {tTabs * f:0.0} ms"
+                        + $" (fleet '{(SelectedFleet != null ? SelectedFleet.GetName(factionID) : "none")}')");
+                }
+            }
         }
 
         private void DisplayTabs()
@@ -694,6 +716,26 @@ namespace Pulsar4X.Client
         private FleetDB? _ringsFleet;   // which fleet's ships currently own rings — rebuild when this changes
         private Entity? _ringsTarget;   // which enemy the detection bubble is drawn for — rebuild when selection changes
 
+        // Per-ship range cache for the combat sheet. The range accessors walk component/sensor datablobs, and the
+        // sheet redraws EVERY frame (ImGui immediate mode) — so without this we re-walked every ship every frame.
+        // Compute once per fleet selection instead. (Stale after an EMCON/loadout change until you reselect the
+        // fleet — same trade-off as the rings; the readout is a glance, not a live telemetry feed.)
+        private FleetDB? _rangeCacheFleet;
+        private readonly Dictionary<int, (double beam, double sensor)> _shipRangeCache = new();
+
+        private void EnsureRangeCache()
+        {
+            if (ReferenceEquals(_rangeCacheFleet, selectedFleetDB)) return;
+            _rangeCacheFleet = selectedFleetDB;
+            _shipRangeCache.Clear();
+            if (selectedFleetDB == null) return;
+            foreach (var ship in selectedFleetDB.GetChildren().Where(c => c.IsValid && !c.HasDataBlob<FleetDB>()))
+                _shipRangeCache[ship.Id] = (WeaponUtils.GetMaxBeamRange_m(ship), SensorTools.SelfDetectionRange_m(ship));
+        }
+
+        private (double beam, double sensor) ShipRanges(int shipId)
+            => _shipRangeCache.TryGetValue(shipId, out var v) ? v : (0, 0);
+
         private void ClearRangeRings()
         {
             var render = _uiState.SelectedSysMapRender;
@@ -787,6 +829,7 @@ namespace Pulsar4X.Client
                     || !ReferenceEquals(_ringsTarget, _uiState.LastClickedEntity?.Entity)))
                 BuildRangeRings();
 
+            EnsureRangeCache();   // walk component/sensor blobs once per fleet selection, not per frame
             var ships = selectedFleetDB.GetChildren().Where(c => c.IsValid && !c.HasDataBlob<FleetDB>()).ToArray();
             double totalFp = 0, totalTough = 0;
             int combatants = 0;
@@ -795,7 +838,7 @@ namespace Pulsar4X.Client
             foreach (var ship in ships)
             {
                 if (!ship.IsValid) continue;
-                double beam = WeaponUtils.GetMaxBeamRange_m(ship);   // engine accessor (CI-covered)
+                double beam = ShipRanges(ship.Id).beam;   // cached (was a per-frame engine walk)
                 if (beam > fleetBeamReach) fleetBeamReach = beam;
                 if (!ship.TryGetDataBlob<ShipCombatValueDB>(out var cv)) continue;
                 totalFp += cv.Firepower;
@@ -866,9 +909,8 @@ namespace Pulsar4X.Client
                         ImGui.TableNextColumn(); ImGui.TextDisabled("—");
                     }
                     // Beam reach (how far this ship can shoot) and sensor reach (how far it can see a ship like
-                    // itself). Both from the engine accessors; "—" when the ship has no beam / can't sense.
-                    double beam = WeaponUtils.GetMaxBeamRange_m(ship);
-                    double reach = SensorTools.SelfDetectionRange_m(ship);
+                    // itself). From the per-fleet cache (was a per-frame engine walk); "—" when none.
+                    var (beam, reach) = ShipRanges(ship.Id);
                     ImGui.TableNextColumn(); ImGui.Text(beam > 0 ? Stringify.Distance(beam) : "—");
                     ImGui.TableNextColumn(); ImGui.Text(reach > 0 ? Stringify.Distance(reach) : "—");
                 }
