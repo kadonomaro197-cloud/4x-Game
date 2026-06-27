@@ -38,6 +38,12 @@ namespace Pulsar4X.Client.Rendering
         ConcurrentDictionary<int, Icon> _entityIcons = new ();
         ConcurrentDictionary<int, Icon> _bodyIcons = new ();
 
+        // Ship ids HIDDEN this frame because their fleet is drawn as ONE icon (its flagship). Recomputed every frame
+        // from FleetTools (engine, CI-tested), so collapse/expand tracks fleet membership live. A ship's icon, orbit
+        // ring, move trail, and label are all skipped when it's in here — so a fleet shows a single marker, not a
+        // scattered cluster, until it's broken up. Empty when no multi-ship fleet exists, so non-fleet play is unchanged.
+        HashSet<int> _collapsedFleetMembers = new ();
+
         // Fog-of-war sensor-contact blips (detected foreign units), keyed by the real entity's id. Rebuilt from the
         // live contact list each frame on the render thread, so a plain Dictionary is fine. See UpdateContactBlips.
         readonly Dictionary<int, SensorContactIcon> _contactIcons = new ();
@@ -574,6 +580,19 @@ namespace Pulsar4X.Client.Rendering
 
             PruneDeadEntities();
 
+            // Which of the viewed faction's ships are non-representative fleet members (drawn as one fleet icon).
+            // Engine-side + CI-tested; recomputed each frame so it tracks fleet membership live. Defensive: a throw
+            // here must not blank the map, so fall back to "hide nothing" (every ship draws individually).
+            try
+            {
+                _collapsedFleetMembers = Pulsar4X.Fleets.FleetTools.CollapsedFleetMemberShipIds(
+                    _sysState.StarSystem, _faction?.Id ?? Game.NeutralFactionId);
+            }
+            catch
+            {
+                _collapsedFleetMembers = new HashSet<int>();
+            }
+
             foreach (var item in _sysState.EntityStatesWithPosition.Values)
             {
                 if (item.Changes.Count > 0)
@@ -645,21 +664,35 @@ namespace Pulsar4X.Client.Rendering
         internal void Draw()
         {
             DrawIcons(UIWidgets.Values);
-            DrawIcons(_orbitRings.Values);
-            DrawIcons(_moveIcons.Values);
-            DrawIcons(_entityIcons.Values);
+            DrawIconsExceptCollapsed(_orbitRings);   // a collapsed member's orbit ring is hidden too...
+            DrawIconsExceptCollapsed(_moveIcons);    // ...and its move/warp trail...
+            DrawIconsExceptCollapsed(_entityIcons);  // ...and its ship icon — so the fleet is ONE marker.
             DrawIcons(_contactIcons.Values);
             DrawIcons(_bodyIcons.Values);
             DrawIcons(SelectedEntityExtras);
 
             foreach (var i in _visibleLabels)
+            {
+                if (i.Entity != null && _collapsedFleetMembers.Contains(i.Entity.Id)) continue; // hide member labels
                 SafeDraw(i.GetType().Name, () => i.Draw(_window.Renderer, _camera));
+            }
         }
 
         void DrawIcons(IEnumerable<IDrawData> icons)
         {
             foreach (var item in icons)
                 SafeDraw(item.GetType().Name, () => item.Draw(_window.Renderer, _camera));
+        }
+
+        // Draw an entity-id-keyed icon set, skipping any ship collapsed into its fleet's single icon this frame.
+        // Only ship ids ever land in _collapsedFleetMembers, so bodies/stars/contacts keyed here are never skipped.
+        void DrawIconsExceptCollapsed(ConcurrentDictionary<int, Icon> icons)
+        {
+            foreach (var kv in icons)
+            {
+                if (_collapsedFleetMembers.Contains(kv.Key)) continue;
+                SafeDraw(kv.Value.GetType().Name, () => kv.Value.Draw(_window.Renderer, _camera));
+            }
         }
 
         // Rebuild the fog-of-war contact blips from the viewed faction's CURRENT sensor contacts. Runs every frame
