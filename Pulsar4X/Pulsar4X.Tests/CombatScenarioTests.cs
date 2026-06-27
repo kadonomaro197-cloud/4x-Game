@@ -45,6 +45,15 @@ namespace Pulsar4X.Tests
                     Assert.That(ship.HasDataBlob<ShipCombatValueDB>(), Is.True, "each ship is combat-rated at build");
             }
 
+            // The squadrons carry a MIX of engagement postures (attack-first / return-fire / hold-fire) — the
+            // material the first-shot/standoff mechanic needs to be worth testing.
+            var postures = enemySquadrons.Select(f => FleetDoctrine.PostureOf(f)).ToList();
+            var postureStr = string.Join(", ", enemySquadrons.Select(f => f.GetDefaultName() + "=" + FleetDoctrine.PostureOf(f)));
+            Log("enemy postures: " + postureStr);
+            Assert.That(postures.Distinct().Count(), Is.GreaterThanOrEqualTo(2), "the enemy fleets carry a MIX of postures, not all the same");
+            Assert.That(postures, Does.Contain(EngagementPosture.WeaponsHold), "at least one enemy holds fire — the standoff case");
+            Assert.That(postures, Does.Contain(EngagementPosture.ReturnFire), "at least one enemy only returns fire");
+
             // Two player task forces at Earth.
             var playerTaskForces = s.StartingSystem.GetAllEntitiesWithDataBlob<FleetDB>()
                 .Where(f => f.FactionOwnerID == s.Faction.Id && f.GetDefaultName().Contains("Task Force")).ToList();
