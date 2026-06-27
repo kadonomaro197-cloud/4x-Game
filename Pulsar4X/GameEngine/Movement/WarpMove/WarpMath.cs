@@ -50,12 +50,14 @@ public static class WarpMath
         public double T;
     }
 
-    public static (Vector3 position, DateTime etiDateTime) GetInterceptPosition(Entity mover, Entity target, DateTime atDateTime, Vector3 offsetPosition = new Vector3())
+    public static (Vector3 position, DateTime etiDateTime) GetInterceptPosition(Entity mover, Entity target, DateTime atDateTime, Vector3 offsetPosition = new Vector3(), double speedOverride_m = 0)
     {
         var moverPos = (Vector3)MoveMath.GetAbsoluteFuturePosition(mover, atDateTime);
         var tgtPos = (Vector3)MoveMath.GetAbsoluteFuturePosition(target, atDateTime);
         var exitPos = tgtPos + offsetPosition;
-        double spd_m = mover.GetDataBlob<WarpAbilityDB>().MaxSpeed;
+        // speedOverride_m lets a FLEET move move every ship at the slowest unit's warp speed (so they arrive
+        // together instead of scattering). 0 = use the ship's own MaxSpeed (every existing caller is unchanged).
+        double spd_m = speedOverride_m > 0 ? speedOverride_m : mover.GetDataBlob<WarpAbilityDB>().MaxSpeed;
 
         var tgtMoveType = target.GetDataBlob<PositionDB>().MoveType;
         switch (tgtMoveType)

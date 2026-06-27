@@ -58,6 +58,18 @@ namespace Pulsar4X.Movement
             var ships = fleetDB.Children.Where(c => c.HasDataBlob<ShipInfoDB>());
             Target.TryGetDataBlob<OrbitDB>(out var targetOrbitDB);
 
+            // Fleet moves as ONE: every ship warps at the SLOWEST unit's max speed, so they arrive together and
+            // stay grouped instead of the fast ships racing ahead and the fleet scattering. The floor is the min
+            // WarpAbilityDB.MaxSpeed over the warp-capable ships; 0 (no warp-capable ship) falls back to per-ship
+            // speed (the cap is ignored when <= 0).
+            double fleetWarpFloor = 0;
+            foreach(var ship in ships)
+            {
+                if(!ship.TryGetDataBlob<WarpAbilityDB>(out var wab)) continue;
+                if(wab.MaxSpeed > 0 && (fleetWarpFloor == 0 || wab.MaxSpeed < fleetWarpFloor))
+                    fleetWarpFloor = wab.MaxSpeed;
+            }
+
             foreach(var ship in ships)
             {
                 if(!ship.HasDataBlob<WarpAbilityDB>()) continue;
@@ -70,7 +82,8 @@ namespace Pulsar4X.Movement
                     var cmd = WarpMoveCommand.CreateCommandEZ(
                         ship,
                         Target,
-                        EntityCommanding.StarSysDateTime);
+                        EntityCommanding.StarSysDateTime,
+                        fleetWarpFloor);
                     _shipCommands.Add(cmd);
                     ship.Manager.Game.OrderHandler.HandleOrder(cmd);
                 }
@@ -90,7 +103,8 @@ namespace Pulsar4X.Movement
                     var cmd = WarpMoveCommand.CreateCommandEZ(
                         ship,
                         Target,
-                        EntityCommanding.StarSysDateTime);
+                        EntityCommanding.StarSysDateTime,
+                        fleetWarpFloor);
                     _shipCommands.Add(cmd);
                     ship.Manager.Game.OrderHandler.HandleOrder(cmd);
                 }
