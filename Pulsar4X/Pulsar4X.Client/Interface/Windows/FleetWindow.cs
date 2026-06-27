@@ -21,6 +21,7 @@ using Pulsar4X.Movement;
 using Pulsar4X.Combat;
 using Pulsar4X.Blueprints;
 using Pulsar4X.Sensors;
+using Pulsar4X.Weapons;
 
 namespace Pulsar4X.Client
 {
@@ -693,10 +694,14 @@ namespace Pulsar4X.Client
             var ships = selectedFleetDB.GetChildren().Where(c => c.IsValid && !c.HasDataBlob<FleetDB>()).ToArray();
             double totalFp = 0, totalTough = 0;
             int combatants = 0;
+            double fleetBeamReach = 0;   // the fleet's longest beam reach — how close it must get to open fire
             var classDps = new Dictionary<WeaponClass, double>();
             foreach (var ship in ships)
             {
-                if (!ship.IsValid || !ship.TryGetDataBlob<ShipCombatValueDB>(out var cv)) continue;
+                if (!ship.IsValid) continue;
+                double beam = WeaponUtils.GetMaxBeamRange_m(ship);   // engine accessor (CI-covered)
+                if (beam > fleetBeamReach) fleetBeamReach = beam;
+                if (!ship.TryGetDataBlob<ShipCombatValueDB>(out var cv)) continue;
                 totalFp += cv.Firepower;
                 totalTough += cv.Toughness;
                 if (cv.Firepower > 0) combatants++;
@@ -713,6 +718,9 @@ namespace Pulsar4X.Client
             DisplayHelpers.PrintRow("Combatants", combatants.ToString());
             DisplayHelpers.PrintRow("Total firepower", $"{totalFp:N0} J/s");
             DisplayHelpers.PrintRow("Total toughness", $"{totalTough:N0} J");
+            // Engagement range: the longest beam reach in the fleet. This is the distance the firing processor
+            // enforces (a weapon won't fire past it), now visible so the player knows how close to close.
+            DisplayHelpers.PrintRow("Beam reach", fleetBeamReach > 0 ? Stringify.Distance(fleetBeamReach) : "—");
             ImGui.Columns(1);
 
             if (classDps.Count > 0)
@@ -733,13 +741,15 @@ namespace Pulsar4X.Client
                 ImGui.Text("No ships in this fleet.");
                 return;
             }
-            if (ImGui.BeginTable("CombatShipTable", 5, Styles.TableFlags | ImGuiTableFlags.SizingStretchProp))
+            if (ImGui.BeginTable("CombatShipTable", 7, Styles.TableFlags | ImGuiTableFlags.SizingStretchProp))
             {
-                ImGui.TableSetupColumn("Ship", ImGuiTableColumnFlags.None, 0.3f);
-                ImGui.TableSetupColumn("Role", ImGuiTableColumnFlags.None, 0.16f);
-                ImGui.TableSetupColumn("Firepower J/s", ImGuiTableColumnFlags.None, 0.22f);
-                ImGui.TableSetupColumn("Toughness J", ImGuiTableColumnFlags.None, 0.22f);
-                ImGui.TableSetupColumn("Evasion", ImGuiTableColumnFlags.None, 0.1f);
+                ImGui.TableSetupColumn("Ship", ImGuiTableColumnFlags.None, 0.24f);
+                ImGui.TableSetupColumn("Role", ImGuiTableColumnFlags.None, 0.13f);
+                ImGui.TableSetupColumn("Firepower J/s", ImGuiTableColumnFlags.None, 0.16f);
+                ImGui.TableSetupColumn("Toughness J", ImGuiTableColumnFlags.None, 0.16f);
+                ImGui.TableSetupColumn("Evasion", ImGuiTableColumnFlags.None, 0.08f);
+                ImGui.TableSetupColumn("Beam Range", ImGuiTableColumnFlags.None, 0.12f);
+                ImGui.TableSetupColumn("Sensor Reach", ImGuiTableColumnFlags.None, 0.12f);
                 ImGui.TableHeadersRow();
                 foreach (var ship in ships)
                 {
@@ -759,6 +769,12 @@ namespace Pulsar4X.Client
                         ImGui.TableNextColumn(); ImGui.TextDisabled("—");
                         ImGui.TableNextColumn(); ImGui.TextDisabled("—");
                     }
+                    // Beam reach (how far this ship can shoot) and sensor reach (how far it can see a ship like
+                    // itself). Both from the engine accessors; "—" when the ship has no beam / can't sense.
+                    double beam = WeaponUtils.GetMaxBeamRange_m(ship);
+                    double reach = SensorTools.SelfDetectionRange_m(ship);
+                    ImGui.TableNextColumn(); ImGui.Text(beam > 0 ? Stringify.Distance(beam) : "—");
+                    ImGui.TableNextColumn(); ImGui.Text(reach > 0 ? Stringify.Distance(reach) : "—");
                 }
                 ImGui.EndTable();
             }
