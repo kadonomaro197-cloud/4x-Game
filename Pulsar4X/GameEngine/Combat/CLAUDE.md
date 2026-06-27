@@ -375,6 +375,12 @@ starting tech (battery-2t = 1,000,000 KJ each; alcubierre-2k bubble = 1,000,000 
 a charged ship can always warp — and can FIRE (weapons draw stored energy too). Sensor:
 `CombatTestShipsTests.ChargeReactors_FillsStoredEnergy_SoASpawnedShipCanWarp`; full warp chain in `Movement/CLAUDE.md`.
 
+> **Spawn-parity rule:** "ready to fly" is the hull PLUS what `DefaultStartFactory` does after the build. There are
+> **two** convenience-spawn paths — `CombatSandbox.SpawnHostileFleet` and `DevToolsWindow` "Spawn Ship" — and both
+> must mirror the start setup. `FillFuelTanks` + `ChargeReactors` are the pair that does it today; **when you add any
+> new "ship is ready" state to the start factory (crew, ammo, ECM charge…), extend BOTH spawn helpers beside them** —
+> or a spawned unit silently behaves differently from a native one.
+
 **Test:** `Pulsar4X.Tests/CombatSandboxTests.cs` proves three things separately: **(1) persistence** — spawn 3
 hostiles, advance the real clock, assert they're still there (3/3); **(2) engageable** — drive
 `CombatEngagement.Tick` over the system (the proven path) and assert the unarmed player ship is destroyed (only
