@@ -311,6 +311,28 @@ Closed part of the gap between what the sim KNOWS and what it tells the player (
 - **Fire Control** (`FireControlWindow.ShowRangeToTarget`): range-to-target vs. the ship's beam reach + a red **OUT OF RANGE** flag — fixes the silent no-fire (a weapon past `MaxRange` just didn't fire, no feedback). Position read wrapped in try/catch (a mid-warp/detached `AbsolutePosition` can throw).
 - **Warp Order** (`WarpOrderWindow`): "Available Δv" + "ETA / arrive" at top level, from `_maxDV` + `_targetIntercept.eti` the window already computed but never printed.
 
+### Fleet-as-one-icon — BUILT 2026-06-27 (the map matches "a fleet is one unit")
+
+The engine treats a fleet as a single unit (moves as one, fights as one, locks orders as one), but the map drew
+**one icon per ship** — `AddIconable` gives every `ShipInfoDB`+position entity its own `ShipIcon`, and a `FleetDB`
+is just a tree of ships with **no icon/position of its own**, so the renderer only ever saw the individual ships
+(the developer's "why don't fleet units become one icon?"). Now a multi-ship fleet draws as **one marker** — its
+flagship's icon — until it's broken up. Wiring:
+- **Engine (CI-tested):** `FleetTools.CollapsedFleetMemberShipIds(manager, factionId)` returns the ship ids to HIDE
+  — every ship in a 2+ ship fleet **except its representative** (the flagship, or the first member if the flagship
+  is unset). A lone ship / one-ship fleet is never hidden. Stateless → recomputed each frame, so collapse/expand
+  tracks membership **live** (break a fleet up and the ships reappear next frame). Gauge: `FleetCollapseTests`.
+- **Client:** `SystemMapRendering.Update()` recomputes `_collapsedFleetMembers` each frame (wrapped in try/catch →
+  "hide nothing" on a throw, never blanks the map). `Draw()` skips those ids in `_entityIcons` (ship icon),
+  `_orbitRings` (orbit ellipse) and `_moveIcons` (warp/burn trail) via `DrawIconsExceptCollapsed`, and skips their
+  labels — so a fleet is ONE marker, not a scattered cluster. Only own-faction ships collapse (foreign fleets are
+  fog blips); the set only ever holds ship ids, so bodies/stars/contacts are never affected.
+- **v1 limits (flagged, easy follow-ups):** the single marker shows the **flagship's** name/icon, not a "Fleet (N)"
+  label (the `FleetTools.FleetShipCountFor` helper is already there for it); a hidden member's interactable still
+  exists, so a click exactly where its (undrawn) label was can still select that ship — clicking the fleet marker
+  selects the flagship, and individual ships are managed in the Fleet window; **expand-on-select / expand-on-zoom**
+  (Aurora's tactical view) is not built — v1 is always-collapsed-until-broken-up (the developer's literal ask).
+
 ### GroundCombatWindow — MISSING ENTIRELY
 
 No window exists for ground combat. When `GroundCombatDB` (to be created) is present on a colony entity, a new `GroundCombatWindow` should be reachable from `PlanetaryWindow` tabs and from the system map context menu.

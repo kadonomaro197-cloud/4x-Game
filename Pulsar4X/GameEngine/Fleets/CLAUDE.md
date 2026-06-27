@@ -14,6 +14,7 @@
 | `FleetFactory.cs` | Creates fleet entities. `FleetFactory.Create(manager, factionID, name)` — creates the entity with `FleetDB`, `OrderableDB`, `NameDB`, `OwnedDB`. |
 | `FleetOrder.cs` | All player-issued fleet commands — `Create`, `Disband`, `ChangeParent`, `AssignShip`, `UnassignShip`, `SetFlagShip`, `ToggleInheritOrders`. Each is an `EntityCommand` with `ActionLaneTypes.InstantOrder`. |
 | `FleetOrderProcessor.cs` | The `IInstanceProcessor` that executes `FleetOrder` commands. |
+| `FleetTools.cs` | Read-only UI helpers so the MAP can draw a fleet as ONE icon (matching how the engine already treats it as one unit). `CollapsedFleetMemberShipIds(manager, factionId)` = the ship ids to hide (every ship in a 2+ ship fleet except its flagship/first representative); `FleetShipCountFor(...)` backs a "Fleet (N)" label. Pure queries, defensive (render-thread safe). Gauge: `FleetCollapseTests`. Client wiring: `Pulsar4X.Client/CLAUDE.md` → "Fleet-as-one-icon". |
 | `RefuelAction.cs` | INavAction — fleet-level refueling action. |
 | `ResupplyAction.cs` | INavAction — fleet-level resupply action. |
 | `ServeyAnomalyAction.cs` | INavAction — survey action (anomaly investigation). |
