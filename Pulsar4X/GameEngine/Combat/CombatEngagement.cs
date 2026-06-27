@@ -228,6 +228,23 @@ namespace Pulsar4X.Combat
         /// detection is live, next to <see cref="NarrateToLog"/> / <see cref="InterruptTimeOnNewEngagement"/>.</summary>
         public static bool RequireDetectionToEngage = false;
 
+        /// <summary>When true, combat is a CLOSING fight (Phase 1, docs/FLEET-COMBAT-CLOSING-DESIGN.md): a weapon only
+        /// fires if its <see cref="WeaponProfile.Range_m"/> reaches the current gap, and the gap CLOSES each step toward
+        /// the FASTER (more maneuverable) side's preferred range — so a faster long-range fleet kites a slower
+        /// short-range one, and a faster brawler forces the merge. Default FALSE so every existing combat fixture is
+        /// byte-identical: with it off the gap stays 0 and the range-gate is a no-op (a 0-separation or 0/unbounded-range
+        /// weapon always fires). v1: ONE shared range per engagement group (per-sub-fleet ranges are Phase 4).</summary>
+        public static bool EnableClosingRange = false;
+
+        /// <summary>Closing-rate dial (m/s): the gap-change speed of a maximally-maneuverable fleet (evasion 1.0); a
+        /// fleet changes the gap proportional to its maneuverability (min evasion over its ships — it moves as one).
+        /// Tunable like <see cref="SalvoDamageScale"/>; set 0 to FREEZE the gap (gauge use). v1 calibration provisional.</summary>
+        public static double ClosingSpeedScale_mps = 100_000.0;
+
+        /// <summary>Fallback opening gap (m) when first contact has no usable fleet positions (the multi-party join
+        /// path). The 2-fleet <see cref="StartEngagement"/> seeds the real distance instead. v1 stub.</summary>
+        public static double InitialSeparationDefault_m = 10_000_000.0;
+
         private static void CombatLog(string msg)
         {
             if (NarrateToLog) System.Console.WriteLine("[Combat] " + msg);
@@ -257,8 +274,16 @@ namespace Pulsar4X.Combat
         /// <see cref="EnsureInCombat"/> in <see cref="Tick"/>.</summary>
         public static void StartEngagement(Entity fleetA, Entity fleetB)
         {
-            fleetA.SetDataBlob(new FleetCombatStateDB(fleetB.Id, GetFleetShips(fleetA).Count));
-            fleetB.SetDataBlob(new FleetCombatStateDB(fleetA.Id, GetFleetShips(fleetB).Count));
+            var sa = new FleetCombatStateDB(fleetB.Id, GetFleetShips(fleetA).Count);
+            var sb = new FleetCombatStateDB(fleetA.Id, GetFleetShips(fleetB).Count);
+            if (EnableClosingRange)   // Phase 1: seed the opening gap from the real distance between the two fleets
+            {
+                double gap = FleetSeparation(fleetA, fleetB);
+                sa.Separation_m = gap;
+                sb.Separation_m = gap;
+            }
+            fleetA.SetDataBlob(sa);
+            fleetB.SetDataBlob(sb);
             CombatLog($"{FleetLabel(fleetA)} vs {FleetLabel(fleetB)} — engaged");
             RecordBattleEvent(fleetA, BattleEventType.Engaged, 0, GetFleetShips(fleetA).Count, 0, "vs " + FleetLabel(fleetB));
             RecordBattleEvent(fleetB, BattleEventType.Engaged, 0, GetFleetShips(fleetB).Count, 0, "vs " + FleetLabel(fleetA));
@@ -271,7 +296,9 @@ namespace Pulsar4X.Combat
         public static void EnsureInCombat(Entity fleet, int representativeOpponentId)
         {
             if (fleet == null || !fleet.IsValid || fleet.HasDataBlob<FleetCombatStateDB>()) return;
-            fleet.SetDataBlob(new FleetCombatStateDB(representativeOpponentId, GetFleetShips(fleet).Count));
+            var st = new FleetCombatStateDB(representativeOpponentId, GetFleetShips(fleet).Count);
+            if (EnableClosingRange) st.Separation_m = InitialSeparationDefault_m;   // Phase 1 v1: join path seeds the default gap
+            fleet.SetDataBlob(st);
             CombatLog($"{FleetLabel(fleet)} enters combat ({GetFleetShips(fleet).Count} ship(s))");
             RecordBattleEvent(fleet, BattleEventType.Engaged, 0, GetFleetShips(fleet).Count, 0, "enters combat");
 
@@ -319,7 +346,7 @@ namespace Pulsar4X.Combat
             for (int i = 0; i < n; i++)
             {
                 ships[i] = GetCombatShips(live[i]);
-                fire[i] = BuildFireMix(ships[i]);
+                fire[i] = BuildFireMix(ships[i], SeparationOf(live[i]));   // Phase 1: only weapons reaching the gap fire
                 targetsOf[i] = new List<int>();
                 attackersOf[i] = new List<int>();
             }
@@ -362,6 +389,10 @@ namespace Pulsar4X.Combat
                 state.DamageTakenPool += TotalDamage(incoming) * dt * SalvoDamageScale;
                 ApplyCasualties(ships[i], state, incoming); // prunes the dead from ships[i]
             }
+
+            // --- CLOSING phase (Phase 1): the gap moves toward the faster side's preferred range, AFTER this step's
+            // salvo landed at the current gap. Off by default (flag) so the pre-closing resolve is untouched.
+            if (EnableClosingRange) AdvanceClosing(live, ships, dt);
 
             // --- RESOLUTION phase. Per-fleet: a fleet drops out if it is wiped, breaks off (retreat — System 5,
             // v1 math outcome: record a withdraw vector + end, no move order), or has no enemy here. Then, if the
@@ -535,7 +566,78 @@ namespace Pulsar4X.Combat
         /// carries the class's TOTAL damage (doctrine-scaled) and a damage-weighted velocity/tracking/saturation.
         /// A ship with no weapon profiles but real firepower (old-style combat value) fires as a light-speed
         /// always-hits beam, so dodge degrades to the old behaviour.</summary>
-        private static List<WeaponProfile> BuildFireMix(List<CombatShip> ships)
+        // ─── Phase 1 — closing distance ────────────────────────────────────────────────────────────────────────
+
+        /// <summary>This fleet's current gap to the opposing side — 0 when closing is off or it has no state (which
+        /// makes the range-gate a no-op).</summary>
+        private static double SeparationOf(Entity fleet)
+            => EnableClosingRange && fleet.TryGetDataBlob<FleetCombatStateDB>(out var st) ? st.Separation_m : 0;
+
+        /// <summary>Advance the engagement gap one step. The FASTER (more maneuverable) side dictates the range: the
+        /// gap moves toward the controller's preferred standoff (its longest weapon range; 0 = close in). v1 keeps ONE
+        /// shared gap for the whole group (per-sub-fleet ranges are Phase 4). Deterministic — pure arithmetic on dt.</summary>
+        private static void AdvanceClosing(List<Entity> live, List<CombatShip>[] ships, double dt)
+        {
+            int controller = -1;
+            double best = -1;
+            for (int i = 0; i < live.Count; i++)
+            {
+                if (ships[i].Count == 0) continue;
+                double m = FleetManeuver(ships[i]);
+                if (m > best) { best = m; controller = i; }
+            }
+            if (controller < 0) return;
+
+            double desired = FleetDesiredRange(ships[controller]);      // the controller's preferred standoff
+            double step = best * ClosingSpeedScale_mps * dt;            // metres it can change the gap this step
+            for (int i = 0; i < live.Count; i++)
+            {
+                if (!live[i].IsValid || !live[i].TryGetDataBlob<FleetCombatStateDB>(out var st)) continue;
+                double r = st.Separation_m;
+                if (r > desired) r = System.Math.Max(desired, r - step);
+                else if (r < desired) r = System.Math.Min(desired, r + step);
+                st.Separation_m = r;
+            }
+        }
+
+        /// <summary>A fleet's maneuver speed proxy = the MIN evasion over its ships (it moves as one, bound by its
+        /// least-agile ship). Higher = it controls the range. Reuses the already-computed Evasion (no new data).</summary>
+        private static double FleetManeuver(List<CombatShip> ships)
+        {
+            double floor = double.PositiveInfinity;
+            foreach (var cs in ships)
+            {
+                double e = CombatValue(cs.Ship).Evasion;
+                if (e < floor) floor = e;
+            }
+            return double.IsInfinity(floor) ? 0 : floor;
+        }
+
+        /// <summary>The fleet's preferred standoff = its longest FINITE weapon range (so a long-range fleet wants to
+        /// hold far; a fleet with only unbounded/short guns wants 0 = close in).</summary>
+        private static double FleetDesiredRange(List<CombatShip> ships)
+        {
+            double maxFinite = 0;
+            foreach (var cs in ships)
+            {
+                var cv = CombatValue(cs.Ship);
+                if (cv.Weapons == null) continue;
+                foreach (var w in cv.Weapons)
+                    if (w.Range_m > maxFinite) maxFinite = w.Range_m;   // unbounded (0) never raises it
+            }
+            return maxFinite;
+        }
+
+        /// <summary>The real-space distance between two fleets, for seeding the opening gap; the default if either has
+        /// no usable position.</summary>
+        private static double FleetSeparation(Entity a, Entity b)
+        {
+            if (TryGetFleetPosition(a, out var pa) && TryGetFleetPosition(b, out var pb))
+                return (pa - pb).Length();
+            return InitialSeparationDefault_m;
+        }
+
+        private static List<WeaponProfile> BuildFireMix(List<CombatShip> ships, double separation_m = 0)
         {
             // class -> (total damage, damage-weighted velocity, tracking, saturation)
             var byClass = new Dictionary<WeaponClass, (double dmg, double velW, double trkW, double satW)>();
@@ -552,7 +654,13 @@ namespace Pulsar4X.Combat
                 if (cv.Weapons != null && cv.Weapons.Count > 0)
                 {
                     foreach (var w in cv.Weapons)
+                    {
+                        // RANGE GATE (Phase 1): a FINITE-range weapon only fires if it reaches the current gap.
+                        // separation 0 (flag off / point blank) or a 0/unbounded weapon range => always fires, so
+                        // this is a no-op in the pre-closing path (every existing fixture is unchanged).
+                        if (separation_m > 0 && w.Range_m > 0 && w.Range_m < separation_m) continue;
                         Add(w.Class, w.DamagePerSecond * cs.FirepowerMult, w.Velocity, w.Tracking, w.Saturation);
+                    }
                 }
                 else if (cv.Firepower > 0)
                 {

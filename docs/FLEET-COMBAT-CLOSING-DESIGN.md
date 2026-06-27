@@ -133,8 +133,17 @@ the developer's build. Don't start a phase until the one below it is rooted.
 
 ---
 
-### PHASE 1 — Single-range closing (prove the standoff decision is fun)
+### PHASE 1 — Single-range closing (prove the standoff decision is fun) ✅ BUILT (2026-06-27)
 *One range per fleet-pair (NOT yet per-sub-fleet). The cheapest model that proves the core decision before we add richness.*
+
+> **Status:** behind `CombatEngagement.EnableClosingRange` (default OFF → every existing fixture byte-identical).
+> `FleetCombatStateDB.Separation_m` is the gap (seeded from real distance at `StartEngagement`); `BuildFireMix` gates
+> each weapon on `Range_m ≥ gap`; `AdvanceClosing` moves the gap toward the FASTER side's preferred range (controller =
+> max maneuver = min-evasion-over-ships; desired = longest finite weapon range). Deterministic (pure dt arithmetic).
+> Tunables: `ClosingSpeedScale_mps` (0 = freeze), `InitialSeparationDefault_m`. Gauged by `ClosingTests`: the range
+> gate (100-km fleet hits across a 50-km gap, 1-km fleet deals zero — kited), determinism, flag-off identity, and the
+> faster side dictating (fast+long OPENS the gap/kites, fast+short CLOSES it). **Live calibration of the closing rate +
+> the "is it fun" gut-check are the developer's play-test.**
 
 - **Design to lock:** initial separation = seeded from **real map distance** at contact (Decision 3/4 input). Closing
   rate = f(both sides' doctrine intent: close/hold/kite) × **relative fleet speed** — the **faster side dictates the
