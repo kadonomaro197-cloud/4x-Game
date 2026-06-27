@@ -134,6 +134,14 @@ MissileProcessor.LaunchMissile(launcher, target, launchForce, design, count)
 
 **JSON default range is 5000m** (weapons.json, "Range" property). This is space-scale tiny — the developer should set this to something realistic (millions of km) when testing. The code is correct; the value is a configuration decision.
 
+### Engagement range READOUT (2026-06-27) — the enforced MaxRange, now visible
+
+`MaxRange` was enforced but invisible: a weapon past range just silently didn't fire, with zero UI feedback (the player couldn't tell "out of range" from "broken"). `WeaponUtils` now exposes it:
+- `GetMaxBeamRange_m(Entity ship)` — the ship's longest beam reach (max `MaxRange` across installed, **enabled, undestroyed** beam weapons; a shot-off gun no longer extends reach — the loss rung). 0 = no finite beam range.
+- `GetBeamWeaponRanges(Entity ship)` → `List<(name, maxRange, optimalRange)>` — the per-weapon breakdown for a readout; skips legacy `MaxRange==0` "unlimited" designs.
+
+These feed the client (Fleet Combat tab columns + fleet "Beam reach" row; Fire Control range-to-target + red **OUT OF RANGE**; map range rings). Gauged by `Pulsar4X.Tests/RangeReadoutTests.cs` (aggregation on the Aegis). Full survey + the two-failure-mode framing: `docs/INFORMATION-DELTA-DESIGN.md`. Missile range is still a stub (`IsInRange` returns true) so no missile ring is drawn — drawing one would lie.
+
 ---
 
 ## Damage Status (Phase 1a + Phase 2 — DamageComplex fully wired)

@@ -125,6 +125,7 @@ Namespace drift between branches is the #1 compile trap here (it bit `PositionDB
 | `PerformanceReadoutSmokeTests` | reads the engine's per-processor stopwatch; prints timing |
 | `BaseModIntegrityTests` | base-mod JSON data (starting designs buildable; zero skipped entries) |
 | `SensorDetectionTests` | **first gauge on the (previously 🔴 DARK) sensor/contact layer** — M1 detection lever, slice 1. Two hostile ships at a body; fire `SensorScan` by hand (the harness never schedules it — `PostNewGameInitialization` does, and the colony harness skips it), then assert the player faction holds a `SensorContact` for the enemy ship. Reaches `ProcessorManager.GetInstanceProcessor` via `InternalsVisibleTo`. *Foundation for the fog-of-war seam (slice 2).* |
+| `RangeReadoutTests` | **the "what the player can SEE" gauges** (`docs/INFORMATION-DELTA-DESIGN.md`) — the engine half of making engagement range + detection range visible. Beam-range aggregation on the Aegis (`WeaponUtils.GetMaxBeamRange_m` / `GetBeamWeaponRanges`); the attenuation round-trip (`RangeForSignal` inverts `AttenuationCalc`); loudest-band + activity scaling (`DetectionRange_m`); and `SelfDetectionRange_m` shrinking on Silent end-to-end through the real `FleetEmcon` posture path. Client rings/readouts ride these (CI-blind — local build only). |
 | `LedgerTests` | the (economy-disconnected) `Ledger` math |
 | orbit math / vectors / EntityManager / serialization / modding | unit-level |
 
