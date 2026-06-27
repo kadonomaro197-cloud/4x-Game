@@ -1,0 +1,57 @@
+using System.Linq;
+using NUnit.Framework;
+using Pulsar4X.Combat;
+using Pulsar4X.Engine;
+using Pulsar4X.Extensions;
+using Pulsar4X.Fleets;
+
+namespace Pulsar4X.Tests
+{
+    /// <summary>
+    /// Gauges the premade combat scenario (`CombatSandbox.SpawnCombatScenario`) — two well-rounded PLAYER task
+    /// forces at Earth and a well-rounded HOSTILE squadron at each of Luna / Venus / Mercury / Mars, for generating
+    /// rich live combat data. CI-side proof the spawn stands up real, combat-rated fleets; the live behaviour (the
+    /// fights, the closing log) is the developer's play-test.
+    /// </summary>
+    [TestFixture]
+    public class CombatScenarioTests
+    {
+        private static void Log(string m) => TestContext.Progress.WriteLine("[combat-scenario] " + m);
+
+        [Test]
+        [Description("SpawnCombatScenario stands up 2 player task forces at Earth + 4 hostile squadrons (Luna/Venus/" +
+                     "Mercury/Mars), each well-rounded (5 ships: beam+railgun+flak+2 fighters) and combat-rated.")]
+        public void SpawnCombatScenario_StandsUpPlayerAndEnemyFleets()
+        {
+            var s = TestScenario.CreateWithColony();
+
+            foreach (var bn in new[] { "Earth", "Luna", "Venus", "Mercury", "Mars" })
+                Log($"body '{bn}' found in system: {CombatSandbox.FindBody(s.StartingSystem, bn) != null}");
+
+            var enemy = CombatSandbox.SpawnCombatScenario(s.Game, s.StartingSystem, s.Faction);
+            Assert.That(enemy, Is.Not.Null, "the scenario returns the hostile faction");
+
+            // Four hostile squadrons (filter by name so the faction's empty root fleet isn't counted).
+            var enemySquadrons = s.StartingSystem.GetAllEntitiesWithDataBlob<FleetDB>()
+                .Where(f => f.FactionOwnerID == enemy.Id && f.GetDefaultName().Contains("Squadron")).ToList();
+            Log($"hostile squadrons spawned: {enemySquadrons.Count} ({string.Join(", ", enemySquadrons.Select(f => f.GetDefaultName()))})");
+            Assert.That(enemySquadrons.Count, Is.EqualTo(4), "a hostile squadron at Luna, Venus, Mercury, and Mars");
+
+            foreach (var fleet in enemySquadrons)
+            {
+                var ships = fleet.GetDataBlob<FleetDB>().GetChildren().Where(c => c.IsValid && !c.HasDataBlob<FleetDB>()).ToList();
+                Assert.That(ships.Count, Is.EqualTo(5), "well-rounded = beam + railgun + flak + 2 fighters");
+                foreach (var ship in ships)
+                    Assert.That(ship.HasDataBlob<ShipCombatValueDB>(), Is.True, "each ship is combat-rated at build");
+            }
+
+            // Two player task forces at Earth.
+            var playerTaskForces = s.StartingSystem.GetAllEntitiesWithDataBlob<FleetDB>()
+                .Where(f => f.FactionOwnerID == s.Faction.Id && f.GetDefaultName().Contains("Task Force")).ToList();
+            Assert.That(playerTaskForces.Count, Is.EqualTo(2), "two well-rounded player task forces");
+            foreach (var fleet in playerTaskForces)
+                Assert.That(fleet.GetDataBlob<FleetDB>().GetChildren().Count(c => c.IsValid && !c.HasDataBlob<FleetDB>()),
+                    Is.EqualTo(5), "each player task force is well-rounded (5 ships)");
+        }
+    }
+}

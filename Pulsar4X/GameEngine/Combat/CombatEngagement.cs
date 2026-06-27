@@ -131,6 +131,16 @@ namespace Pulsar4X.Combat
                         && FleetDoctrine.PostureOf(b) != EngagementPosture.WeaponsFree)
                         continue;
 
+                    // Weapons-release narration: when the first-shot rule is on and a NEW battle forms, name who
+                    // opened fire (the standoff breaking). Once-only — after EnsureInCombat both hold state.
+                    if (NarrateToLog && RequireWeaponsReleaseToEngage &&
+                        (!a.HasDataBlob<FleetCombatStateDB>() || !b.HasDataBlob<FleetCombatStateDB>()))
+                    {
+                        var shooter = FleetDoctrine.PostureOf(a) == EngagementPosture.WeaponsFree ? a : b;
+                        var target = shooter == a ? b : a;
+                        CombatLog($"WEAPONS RELEASE: {FleetLabel(shooter)} opens fire on {FleetLabel(target)} — the standoff breaks");
+                    }
+
                     // First-strike narration: when a NEW engagement forms with one side blind to the other, call it
                     // out ONCE in the combat log. Gated on NarrateToLog + fog-on (inert in tests), and on at least
                     // one side not yet in combat — after EnsureInCombat both hold state, so it never re-logs.
@@ -419,7 +429,11 @@ namespace Pulsar4X.Combat
 
             // --- CLOSING phase (Phase 1): the gap moves toward the faster side's preferred range, AFTER this step's
             // salvo landed at the current gap. Off by default (flag) so the pre-closing resolve is untouched.
-            if (EnableClosingRange) AdvanceClosing(live, ships, dt);
+            if (EnableClosingRange)
+            {
+                AdvanceClosing(live, ships, dt);
+                if (NarrateToLog) NarrateClosing(live, ships);   // live visibility into the closing fight
+            }
 
             // --- RESOLUTION phase. Per-fleet: a fleet drops out if it is wiped, breaks off (retreat — System 5,
             // v1 math outcome: record a withdraw vector + end, no move order), or has no enemy here. Then, if the
@@ -624,7 +638,12 @@ namespace Pulsar4X.Combat
             // The controller SPENDS maneuver budget to dictate the range — the kiting clock that makes "kite forever"
             // impossible. When it hits 0 it's no longer eligible above, so next step the enemy takes the wheel.
             if (ManeuverBurnRate > 0 && live[controller].TryGetDataBlob<FleetCombatStateDB>(out var ctrlState))
-                ctrlState.ManeuverBudget = System.Math.Max(0, ctrlState.ManeuverBudget - ManeuverBurnRate * dt);
+            {
+                double before = ctrlState.ManeuverBudget;
+                ctrlState.ManeuverBudget = System.Math.Max(0, before - ManeuverBurnRate * dt);
+                if (NarrateToLog && before > 0 && ctrlState.ManeuverBudget <= 0)
+                    CombatLog($"{FleetLabel(live[controller])} has spent its maneuver reserve — it can no longer dictate the range, the enemy will close");
+            }
 
             double desired = FleetDesiredRange(ships[controller]);      // the controller's preferred standoff
             double step = best * ClosingSpeedScale_mps * dt;            // metres it can change the gap this step
@@ -673,6 +692,64 @@ namespace Pulsar4X.Combat
             if (TryGetFleetPosition(a, out var pa) && TryGetFleetPosition(b, out var pb))
                 return (pa - pb).Length();
             return InitialSeparationDefault_m;
+        }
+
+        /// <summary>The fleet's longest weapon reach — <see cref="double.PositiveInfinity"/> if it has any unbounded
+        /// (rangeless) weapon, else the max finite <see cref="WeaponProfile.Range_m"/>, 0 if it has no weapons.</summary>
+        private static double MaxReach(List<CombatShip> ships)
+        {
+            double max = 0;
+            foreach (var cs in ships)
+            {
+                var cv = CombatValue(cs.Ship);
+                if (cv.Weapons == null) continue;
+                foreach (var w in cv.Weapons)
+                {
+                    if (w.Range_m <= 0) return double.PositiveInfinity;   // an unbounded weapon = infinite reach
+                    if (w.Range_m > max) max = w.Range_m;
+                }
+            }
+            return max;
+        }
+
+        /// <summary>One live line per fleet per closing step: its gap, whether its guns REACH it, its longest reach,
+        /// and its maneuver reserve — so a play-test log shows the standoff/closing play out (the gauge CI can't run).</summary>
+        private static void NarrateClosing(List<Entity> live, List<CombatShip>[] ships)
+        {
+            for (int i = 0; i < live.Count; i++)
+            {
+                if (ships[i].Count == 0 || !live[i].TryGetDataBlob<FleetCombatStateDB>(out var st)) continue;
+                double gap = st.Separation_m;
+                double reach = MaxReach(ships[i]);
+                bool reaches = reach >= gap;            // PositiveInfinity >= gap is true (unbounded reaches)
+                string reachStr = double.IsInfinity(reach) ? "unlimited" : $"{reach:N0}m";
+                CombatLog($"closing: {FleetLabel(live[i])} gap {gap:N0}m — {(reaches ? "IN RANGE" : "OUT OF RANGE")} " +
+                          $"(reach {reachStr}), maneuver reserve {st.ManeuverBudget:N0}");
+            }
+        }
+
+        /// <summary>On-demand snapshot of every active engagement in a system — the "send me a screenshot of the
+        /// fight" tool. Prints, per in-combat fleet: ships, gap, reach/IN-or-OUT, maneuver reserve, posture, and the
+        /// damage pool against it. Writes <c>[Combat] DUMP</c> lines UNCONDITIONALLY (not gated on <see cref="NarrateToLog"/>)
+        /// so a DevTools button works even with narration off. Read-only.</summary>
+        public static void DumpActiveCombat(EntityManager system)
+        {
+            if (system == null) return;
+            var inCombat = system.GetAllEntitiesWithDataBlob<FleetCombatStateDB>();
+            System.Console.WriteLine($"[Combat] DUMP — {inCombat.Count} fleet(s) in combat in this system "
+                + $"(closing {(EnableClosingRange ? "ON" : "OFF")}, weapons-release {(RequireWeaponsReleaseToEngage ? "ON" : "OFF")}, fog {(RequireDetectionToEngage ? "ON" : "OFF")})");
+            foreach (var fleet in inCombat)
+            {
+                if (!fleet.TryGetDataBlob<FleetCombatStateDB>(out var st)) continue;
+                var combatShips = GetCombatShips(fleet);
+                double reach = MaxReach(combatShips);
+                string reachStr = double.IsInfinity(reach) ? "unlimited" : $"{reach:N0}m";
+                bool reaches = reach >= st.Separation_m;
+                System.Console.WriteLine($"[Combat] DUMP   {FleetLabel(fleet)}: {combatShips.Count} ship(s), "
+                    + $"gap {st.Separation_m:N0}m {(reaches ? "IN RANGE" : "OUT")} (reach {reachStr}), "
+                    + $"reserve {st.ManeuverBudget:N0}, posture {FleetDoctrine.PostureOf(fleet)}, "
+                    + $"salvo {st.StepsFought}, incoming pool {st.DamageTakenPool:N0}");
+            }
         }
 
         private static List<WeaponProfile> BuildFireMix(List<CombatShip> ships, double separation_m = 0)

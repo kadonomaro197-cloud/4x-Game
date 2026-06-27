@@ -1,7 +1,10 @@
+using System.Collections.Generic;
 using System.Linq;
 using Pulsar4X.Engine;
+using Pulsar4X.Extensions;
 using Pulsar4X.Factions;
 using Pulsar4X.Fleets;
+using Pulsar4X.Galaxy;
 using Pulsar4X.Ships;
 
 namespace Pulsar4X.Combat
@@ -63,6 +66,92 @@ namespace Pulsar4X.Combat
                 game.OrderHandler.HandleOrder(FleetOrder.AssignShip(enemyFaction.Id, fleet, ship));
             }
             return fleet;
+        }
+
+        /// <summary>The "well-rounded" design set for a good combat-data fleet: BEAM (Aegis) + RAILGUN (Lancer) +
+        /// FLAK (Bulwark) + two FIGHTERS (Wasp). Deliberately NO Leviathan capital — it carries all three weapon
+        /// flavors (the whole triangle) and a range spread (long beam / mid railgun / short flak), so a fight gives
+        /// rich closing/dodge data. Pulls the design objects from a faction that has them in <c>ShipDesigns</c>.</summary>
+        public static List<ShipDesign> WellRoundedDesignSet(FactionInfoDB info)
+        {
+            string[] ids =
+            {
+                "default-ship-design-test-warship",   // Aegis — 4 beams (long range)
+                "default-ship-design-test-railgun",   // Lancer — 4 railguns (mid)
+                "default-ship-design-test-flak",      // Bulwark — 4 flak (short, anti-fighter)
+                "default-ship-design-test-fighter",   // Wasp — fighter (evasive screen)
+                "default-ship-design-test-fighter",   // Wasp — a second fighter
+            };
+            var set = new List<ShipDesign>();
+            foreach (var id in ids)
+                if (info.ShipDesigns.TryGetValue(id, out var d)) set.Add(d);
+            return set;
+        }
+
+        /// <summary>Spawn ONE fleet of the given designs (one ship each), owned by <paramref name="owningFaction"/>,
+        /// parked at <paramref name="body"/>, fuelled + charged (ready to fly + fire). Ships are built under
+        /// <paramref name="playerFaction"/> (which has the unlocked components/fuel) then owner-flipped — the same
+        /// recipe as <see cref="SpawnHostileFleet"/>, generalised to a mixed design list and any owner.</summary>
+        public static Entity SpawnMixedFleet(Game game, EntityManager system, Entity owningFaction, Entity playerFaction,
+            List<ShipDesign> designs, Entity body, string fleetName)
+        {
+            var playerInfo = playerFaction.GetDataBlob<FactionInfoDB>();
+            var fleet = FleetFactory.Create(system, owningFaction.Id, fleetName);
+            int i = 0;
+            foreach (var design in designs)
+            {
+                i++;
+                var ship = ShipFactory.CreateShip(design, playerFaction, body, $"{fleetName} {design.Name} {i}");
+                ShipFactory.FillFuelTanks(ship, playerInfo);   // BEFORE the flip — fuel resolves via the player's library
+                ShipFactory.ChargeReactors(ship);
+                ship.FactionOwnerID = owningFaction.Id;
+                game.OrderHandler.HandleOrder(FleetOrder.AssignShip(owningFaction.Id, fleet, ship));
+            }
+            return fleet;
+        }
+
+        /// <summary>Find a body in the system by its default name (e.g. "Earth", "Luna", "Mars"), or null.</summary>
+        public static Entity FindBody(EntityManager system, string name)
+        {
+            foreach (var e in system.GetAllEntitiesWithDataBlob<SystemBodyInfoDB>())
+                if (e.GetDefaultName() == name)
+                    return e;
+            return null;
+        }
+
+        /// <summary>Stand up a ready-to-watch COMBAT SCENARIO: two well-rounded PLAYER task forces at Earth, and
+        /// well-rounded HOSTILE squadrons at Luna, Venus, Mercury, and Mars. Luna is inside the auto-engage range, so
+        /// that fight starts at once (instant data); Venus/Mercury/Mars are far, so the player sails a task force out
+        /// to them (closing data). Returns the hostile faction. The DevTools "Spawn Combat Scenario" button calls this.</summary>
+        public static Entity SpawnCombatScenario(Game game, EntityManager system, Entity playerFaction)
+        {
+            var playerInfo = playerFaction.GetDataBlob<FactionInfoDB>();
+            List<ShipDesign> RoundSet() => WellRoundedDesignSet(playerInfo);
+
+            // Player task forces at Earth — the home base; send them out to the enemies.
+            var earth = FindBody(system, "Earth");
+            if (earth != null)
+            {
+                SpawnMixedFleet(game, system, playerFaction, playerFaction, RoundSet(), earth, "1st Task Force");
+                SpawnMixedFleet(game, system, playerFaction, playerFaction, RoundSet(), earth, "2nd Task Force");
+            }
+
+            // One hostile faction (set up to persist like a real NPC: knows the system, holds the designs), with a
+            // well-rounded squadron at each of the four bodies.
+            var enemy = FactionFactory.CreateBasicFaction(game, "Hostiles", "FOE", 0);
+            var enemyInfo = enemy.GetDataBlob<FactionInfoDB>();
+            if (!enemyInfo.KnownSystems.Contains(system.ManagerID))
+                enemyInfo.KnownSystems.Add(system.ManagerID);
+            foreach (var kv in playerInfo.ShipDesigns)
+                enemyInfo.ShipDesigns[kv.Key] = kv.Value;
+
+            foreach (var bodyName in new[] { "Luna", "Venus", "Mercury", "Mars" })
+            {
+                var body = FindBody(system, bodyName);
+                if (body != null)
+                    SpawnMixedFleet(game, system, enemy, playerFaction, RoundSet(), body, $"Hostile {bodyName} Squadron");
+            }
+            return enemy;
         }
     }
 }

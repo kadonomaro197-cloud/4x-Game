@@ -93,6 +93,15 @@ the developer's build. Don't start a phase until the one below it is rooted.
 > **Cross-cutting from day one — the readout.** Each phase ships the slice of the battle readout needed to *observe
 > its own gauge*. The readout is not a final phase bolted on; it grows rung by rung, and Phase 6 is its
 > consolidation. You cannot believe Phase 1's kiting works if you can't watch the range close.
+>
+> **Live visibility BUILT (2026-06-27) — the closing model narrates itself.** Since CI can't run the closing fight,
+> the engine writes `[Combat]` lines (gated on `NarrateToLog`, which the client turns on) so a play-test log shows it
+> move: a **per-step closing line** per fleet (gap / IN-or-OUT-of-RANGE / reach / maneuver reserve), a **WEAPONS
+> RELEASE** line when the first-shot rule breaks a standoff, and a **maneuver-reserve-spent** line when a kiter burns
+> out. Plus `CombatEngagement.DumpActiveCombat(system)` — an on-demand snapshot of every active engagement (DevTools
+> "Dump Combat" button). DevTools also has the **toggles** to turn closing / first-shot on, and **"Spawn Combat
+> Scenario"** to stand up a ready fight (`CombatSandbox.SpawnCombatScenario`). This is how the developer's play-test
+> data lets us troubleshoot what CI is blind to.
 
 ---
 
