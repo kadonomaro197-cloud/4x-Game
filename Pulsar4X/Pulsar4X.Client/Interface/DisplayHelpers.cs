@@ -72,6 +72,12 @@ namespace Pulsar4X.Client
 
         public static void ShipTooltip(Entity ship, int factionId)
         {
+            // Only build the tooltip strings when the item is actually hovered. This is called per ship EVERY frame
+            // (ImGui immediate mode) from the fleet/ship lists; without this gate it concatenated the orders string
+            // and did a commander lookup for every ship, every frame, hovered or not.
+            if(!ImGui.IsItemHovered())
+                return;
+
             if(!ship.TryGetDataBlob<ShipInfoDB>(out var shipInfo))
                 return;
 
