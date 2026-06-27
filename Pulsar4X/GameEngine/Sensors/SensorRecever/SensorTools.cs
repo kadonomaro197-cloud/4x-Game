@@ -365,6 +365,105 @@ namespace Pulsar4X.Sensors
             return 1 / (4 * Math.PI * distance * distance);
         }
 
+        // ─── Detection RANGE (the reverse of attenuation) ──────────────────────────────────────────────────────
+        //
+        // The scan loop only ever asks "at the target's CURRENT distance, is its faded signal above my threshold?"
+        // (a yes/no, computed fresh every scan). It never produces a "how far can I see?" number — so the UI has
+        // nothing to draw as a sensor ring. These helpers run that same physics BACKWARDS: given a loud source and
+        // a sensitivity threshold, solve AttenuationCalc(source, d) = threshold for d.
+        //
+        //     source / (4π d²) = threshold   ⇒   d = √( source / (4π · threshold) )
+        //
+        // This inverts only the FIRST gate of DetectonQuality (line ~119: a band is detectable when its attenuated
+        // magnitude exceeds BestSensitivity_kW). It deliberately ignores the waveform-overlap quality refinement —
+        // that shapes how WELL a contact is resolved, not whether it's seen at all. The gameplay truth survives the
+        // simplification: a louder target (or one running hot, higher ActivityMultiplier) is seen farther; a more
+        // sensitive sensor (lower BestSensitivity_kW) sees farther.
+
+        /// <summary>
+        /// The distance at which a single band of <paramref name="source_kW"/> fades to <paramref name="threshold_kW"/>.
+        /// Exact inverse of <see cref="AttenuationCalc"/>. Returns 0 for a non-positive source or threshold (nothing
+        /// to detect / a perfect-sensor degenerate case the caller should treat as "unbounded, don't draw").
+        /// </summary>
+        public static double RangeForSignal(double source_kW, double threshold_kW)
+        {
+            if (source_kW <= 0 || threshold_kW <= 0)
+                return 0;
+            return Math.Sqrt(source_kW / (4 * Math.PI * threshold_kW));
+        }
+
+        /// <summary>
+        /// How far the given receiver would first pick up the given target: the largest single-band detection range
+        /// across the target's emitted spectra (scaled by its current EMCON/activity, exactly as the scan does) and
+        /// its reflected spectra (NOT scaled — going dark doesn't shrink your radar cross-section). The loudest band
+        /// wins because that's the band that breaks threshold first as you close. Returns 0 if there's nothing to
+        /// detect or the receiver's threshold is non-positive.
+        /// </summary>
+        public static double DetectionRange_m(SensorReceiverAtb receiver, SensorProfileDB target)
+        {
+            if (receiver == null || target == null)
+                return 0;
+            double threshold = receiver.BestSensitivity_kW;
+            if (threshold <= 0)
+                return 0;
+
+            double bestRange = 0;
+            double activity = target.ActivityMultiplier;   // EMITTED scales with run-hot/dark; REFLECTED does not.
+            foreach (var emdat in target.EmittedEMSpectra)
+            {
+                double r = RangeForSignal(emdat.Magnitude * activity, threshold);
+                if (r > bestRange) bestRange = r;
+            }
+            foreach (var emdat in target.ReflectedEMSpectra)
+            {
+                double r = RangeForSignal(emdat.Magnitude, threshold);
+                if (r > bestRange) bestRange = r;
+            }
+            return bestRange;
+        }
+
+        /// <summary>
+        /// Picks the ship's most capable sensor: the receiver with the lowest (best) BestSensitivity_kW among its
+        /// installed receivers, skipping solar arrays (IsEnergyGen — they share the sensor code but aren't sensors).
+        /// Reads the same InstanceAtributes cache the scan loop uses, so if the ship's receivers have been shot off
+        /// (the grave rung empties that cache) this returns false and the ship has no reach to draw.
+        /// </summary>
+        public static bool TryGetBestReceiver(Entity entity, out SensorReceiverAtb best)
+        {
+            best = null;
+            if (!entity.TryGetDataBlob<SensorAbilityDB>(out var ability))
+                return false;
+            double bestThreshold = double.PositiveInfinity;
+            foreach (var atb in ability.InstanceAtributes)
+            {
+                if (atb == null || atb.IsEnergyGen)
+                    continue;
+                if (atb.BestSensitivity_kW > 0 && atb.BestSensitivity_kW < bestThreshold)
+                {
+                    bestThreshold = atb.BestSensitivity_kW;
+                    best = atb;
+                }
+            }
+            return best != null;
+        }
+
+        /// <summary>
+        /// "A ship like me, running as I am now, I'd first detect at THIS range." Uses the ship's own signature
+        /// (its <see cref="SensorProfileDB"/>) as the reference target against its own best receiver — a self-contained,
+        /// magic-constant-free reach the UI can draw as a sensor ring without inventing a reference enemy. Because it
+        /// reads the ship's live ActivityMultiplier, the ring SHRINKS when the ship goes Silent and GROWS when it
+        /// lights its drive — making the dark-vs-loud EMCON lever visible. Returns 0 if the ship can't sense or has
+        /// no signature.
+        /// </summary>
+        public static double SelfDetectionRange_m(Entity entity)
+        {
+            if (!TryGetBestReceiver(entity, out var receiver))
+                return 0;
+            if (!entity.TryGetDataBlob<SensorProfileDB>(out var profile))
+                return 0;
+            return DetectionRange_m(receiver, profile);
+        }
+
         /// <summary>
         /// Probibly only needs to be done at star creation, unless we do funky stuff like change a stars temprature and stuff.
         /// </summary>
