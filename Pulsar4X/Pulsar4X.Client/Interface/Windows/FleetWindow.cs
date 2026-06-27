@@ -755,18 +755,36 @@ namespace Pulsar4X.Client
         private readonly List<string> _rangeRingKeys = new();
         private FleetDB? _ringsFleet;   // which fleet's ships currently own rings — rebuild when this changes
         private Entity? _ringsTarget;   // which enemy the detection bubble is drawn for — rebuild when selection changes
+        private double _ringsActivity = double.NaN; // the fleet's loudness when the rings were built — rebuild on change
 
         // Per-ship range cache for the combat sheet. The range accessors walk component/sensor datablobs, and the
         // sheet redraws EVERY frame (ImGui immediate mode) — so without this we re-walked every ship every frame.
-        // Compute once per fleet selection instead. (Stale after an EMCON/loadout change until you reselect the
-        // fleet — same trade-off as the rings; the readout is a glance, not a live telemetry feed.)
+        // Compute once per fleet selection AND whenever the fleet's loudness changes (so an EMCON Silent/Full flip
+        // refreshes the detectability number + amber ring live — the developer's "I went Silent and nothing moved"
+        // report; the engine DOES drop the signature, the readout just wasn't re-reading it).
         private FleetDB? _rangeCacheFleet;
+        private double _rangeCacheActivity = double.NaN;
         private readonly Dictionary<int, (double beam, double reach, double detect)> _shipRangeCache = new();
+
+        // Sum of member ships' live emitted-signature activity (EMCON posture × heat). Discrete + cheap (a field read
+        // per ship), rounded to swallow float jitter. Changes when the player flips EMCON or a ship runs hot/cold —
+        // the trigger to recompute "how far we can BE SEEN" (detectability + amber ring). Sensor REACH (green) and
+        // beam reach (red) don't depend on it, but they're recomputed in the same pass — cheap for a fleet's ships.
+        private double FleetActivityFingerprint()
+        {
+            if (selectedFleetDB == null) return 0;
+            double sum = 0;
+            foreach (var ship in selectedFleetDB.GetChildren().Where(c => c.IsValid && !c.HasDataBlob<FleetDB>()))
+                sum += SensorTools.CurrentActivityMultiplier(ship);
+            return Math.Round(sum, 3);
+        }
 
         private void EnsureRangeCache()
         {
-            if (ReferenceEquals(_rangeCacheFleet, selectedFleetDB)) return;
+            double activity = FleetActivityFingerprint();
+            if (ReferenceEquals(_rangeCacheFleet, selectedFleetDB) && activity == _rangeCacheActivity) return;
             _rangeCacheFleet = selectedFleetDB;
+            _rangeCacheActivity = activity;
             _shipRangeCache.Clear();
             if (selectedFleetDB == null) return;
             foreach (var ship in selectedFleetDB.GetChildren().Where(c => c.IsValid && !c.HasDataBlob<FleetDB>()))
@@ -797,6 +815,7 @@ namespace Pulsar4X.Client
             if (render == null || selectedFleetDB == null) return;
             _ringsFleet = selectedFleetDB;
             _ringsTarget = _uiState.LastClickedEntity?.Entity;
+            _ringsActivity = FleetActivityFingerprint();   // baseline loudness; rebuild when EMCON changes it
 
             // THREE rings PER FLEET (not per ship): the fleet moves and fights as one, so draw one ring of each
             // kind sized off the ship with the HIGHEST of that range (max beam reach / max sensor reach / max
@@ -868,15 +887,16 @@ namespace Pulsar4X.Client
             DisplayHelpers.Header("Combat Strength");
 
             // Range-ring toggle: beam reach + sensor reach drawn on the map for this fleet's ships. Rebuilt when the
-            // player switches to a different fleet so the rings always match what's selected. (Radii are captured at
-            // build time, so re-toggle after an EMCON change to refresh the sensor ring.)
+            // player switches fleet/target OR when the fleet's loudness changes (EMCON Silent/Full), so the amber
+            // detectability ring shrinks/grows live with the posture instead of needing a re-toggle.
             if (ImGui.Checkbox("Show range rings on map", ref _showRangeRings))
             {
                 if (_showRangeRings) BuildRangeRings();
                 else ClearRangeRings();
             }
             if (_showRangeRings && (!ReferenceEquals(_ringsFleet, selectedFleetDB)
-                    || !ReferenceEquals(_ringsTarget, _uiState.LastClickedEntity?.Entity)))
+                    || !ReferenceEquals(_ringsTarget, _uiState.LastClickedEntity?.Entity)
+                    || FleetActivityFingerprint() != _ringsActivity))
                 BuildRangeRings();
 
             EnsureRangeCache();   // walk component/sensor blobs once per fleet selection, not per frame
