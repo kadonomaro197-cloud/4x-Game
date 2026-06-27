@@ -269,6 +269,40 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("NewEngagementImminent must AGREE with the engage gate under fog: two hostile fleets in range " +
+                     "that have NOT detected each other read FALSE. Otherwise the master loop fine-steps at 5s forever " +
+                     "next to undetected-but-in-range hostiles (a battle that can never form keeps 'almost' forming) " +
+                     "and game-time grinds to a crawl — the 'time stopped moving under fog of war' live bug " +
+                     "(2026-06-27, fleets at Earth ~384,000 km from a fogged Luna squadron, inside 1e9 m range). " +
+                     "After a sensor scan populates contacts, it reads TRUE again.")]
+        public void NewEngagementImminent_FogOn_NotImminentUntilDetected()
+        {
+            var s = TestScenario.CreateWithColony();
+            ClearExistingFleets(s);
+            var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+
+            var enemyFleet = MakeFleet(s, enemyFaction, "Red Fleet");
+            AddShip(s, enemyFaction, enemyFleet, 50_000, 1_000_000, "Red 1");
+            var playerFleet = MakeFleet(s, s.Faction, "Blue Fleet");
+            AddShip(s, s.Faction, playerFleet, 50_000, 1_000_000, "Blue 1");
+
+            Assert.That(CombatEngagement.RequireDetectionToEngage, Is.False, "fog of war must default OFF");
+            CombatEngagement.RequireDetectionToEngage = true;
+            try
+            {
+                Assert.That(CombatEngagement.NewEngagementImminent(s.StartingSystem), Is.False,
+                    "fog ON + no scan: undetected hostiles in range must NOT read as imminent (else the clock fine-steps forever)");
+                RunSensorScan(s);
+                Assert.That(CombatEngagement.NewEngagementImminent(s.StartingSystem), Is.True,
+                    "once a scan populates the track tables, a NEW engagement IS imminent again");
+            }
+            finally
+            {
+                CombatEngagement.RequireDetectionToEngage = false; // never leak the static flag to other tests
+            }
+        }
+
+        [Test]
         [Description("Two fleets of the SAME faction never engage when the trigger runs.")]
         public void Tick_SameFactionFleets_DoNotEngage()
         {

@@ -210,9 +210,17 @@ namespace Pulsar4X.Combat
                     if (!AreHostile(a, b)) continue;
                     if (GetFleetShips(b).Count == 0) continue;
                     if (!InRange(a, b)) continue;
-                    // In range + hostile + both manned. If EITHER isn't yet in combat, a new entry — and so the
-                    // interrupt — fires this tick. If both are already engaged, this pair is an ONGOING fight and
-                    // does NOT force fine-stepping, so the player keeps their set step size for it.
+                    // Match the engage pass's fog gate (see Tick): if combat is detection-gated, a pair that can't
+                    // yet SEE each other is NOT imminent — a battle can't form, so it must not force fine-stepping.
+                    // Without this, a fleet parked in range of UNDETECTED hostiles (e.g. yours at Earth, ~384,000 km
+                    // from a fogged Luna squadron, inside the 1e9 m EngagementRange) makes this return true forever,
+                    // so the master loop drops to 5 s sub-steps permanently and game-time grinds to a crawl — the
+                    // "time stopped moving under fog of war" live bug (2026-06-27). The imminent-gate and the
+                    // engage-gate MUST agree.
+                    if (RequireDetectionToEngage && !(FleetDetects(a, b) || FleetDetects(b, a))) continue;
+                    // In range + hostile + both manned (+ detected, if fog-gated). If EITHER isn't yet in combat, a
+                    // new entry — and so the interrupt — fires this tick. If both are already engaged, this pair is
+                    // an ONGOING fight and does NOT force fine-stepping, so the player keeps their set step size.
                     if (!a.HasDataBlob<FleetCombatStateDB>() || !b.HasDataBlob<FleetCombatStateDB>())
                         return true;
                 }
