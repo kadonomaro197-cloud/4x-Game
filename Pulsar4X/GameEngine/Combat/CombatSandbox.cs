@@ -145,13 +145,33 @@ namespace Pulsar4X.Combat
             foreach (var kv in playerInfo.ShipDesigns)
                 enemyInfo.ShipDesigns[kv.Key] = kv.Value;
 
-            foreach (var bodyName in new[] { "Luna", "Venus", "Mercury", "Mars" })
+            // A MIX of engagement postures so the first-shot / standoff mechanic has something to show: some attack
+            // on sight, one only returns fire, one holds fire entirely. (Postures only BITE when the first-shot
+            // trigger flag — RequireWeaponsReleaseToEngage — is on; with it off, everyone fights on proximity.)
+            var enemyPlan = new[]
+            {
+                ("Luna",    EngagementPosture.WeaponsFree),  // attack first — and it's in auto-engage range, so it opens the fight
+                ("Venus",   EngagementPosture.ReturnFire),   // only shoots if shot at
+                ("Mercury", EngagementPosture.WeaponsHold),  // won't attack at all — a passive picket (standoff unless you fire)
+                ("Mars",    EngagementPosture.WeaponsFree),  // attack first
+            };
+            foreach (var (bodyName, posture) in enemyPlan)
             {
                 var body = FindBody(system, bodyName);
-                if (body != null)
-                    SpawnMixedFleet(game, system, enemy, playerFaction, RoundSet(), body, $"Hostile {bodyName} Squadron");
+                if (body == null) continue;
+                var squadron = SpawnMixedFleet(game, system, enemy, playerFaction, RoundSet(), body,
+                    $"Hostile {bodyName} Squadron ({PostureLabel(posture)})");
+                FleetDoctrine.SetEngagementPosture(squadron, posture);
             }
             return enemy;
         }
+
+        private static string PostureLabel(EngagementPosture p) => p switch
+        {
+            EngagementPosture.WeaponsFree => "Weapons Free",
+            EngagementPosture.WeaponsHold => "Hold Fire",
+            EngagementPosture.ReturnFire => "Return Fire",
+            _ => p.ToString(),
+        };
     }
 }
