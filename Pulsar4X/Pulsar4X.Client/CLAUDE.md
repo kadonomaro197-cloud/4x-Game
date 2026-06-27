@@ -277,8 +277,10 @@ is build → play → read the rolling log pages under `game_logs/` (`[FleetComb
 4. **Contact blips + unit fog of war — BUILT 2026-06-26 (closes the prior GAP).** The map now renders the viewed
    faction's DETECTED foreign units as limited-info **contact blips**, and HIDES undetected foreign units — the
    visual half of fog of war ("everyone sees the same star; not everyone sees the fleet around it"). Gated on the
-   existing `CombatEngagement.RequireDetectionToEngage` flag (off by default) — the same one switch as detection-
-   gated combat, so "fog of war" is one toggle for both behaviour and visuals (DevTools › Detection / Fog of War).
+   existing `CombatEngagement.RequireDetectionToEngage` flag (**ON in the client as of 2026-06-27** — set true in
+   `PulsarMainWindow` after a play-test showed an undetected Venus contact was visible on a move order) — the same
+   one switch as detection-gated combat, so "fog of war" is one toggle for both behaviour and visuals (DevTools ›
+   Detection / Fog of War toggles it back off live).
    - **Blip:** `SensorContactIcon` (`Rendering/Icons/SensorContactIcon.cs`) — a real `Icon` subclass fed by the
      engine's `SensorContact` (position is the contact's last-known `SensorPositionDB`, which is an `IPosition`, so
      it drops straight into the `Icon(IPosition)` ctor). A diamond marker (red = rival; sized a touch by signal

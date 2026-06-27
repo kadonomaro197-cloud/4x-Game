@@ -87,6 +87,13 @@ namespace Pulsar4X.Client
             // the game so battles are authentic (the developer's call). DevTools can still toggle it.
             Pulsar4X.Combat.CombatEngagement.EnableClosingRange = true;
 
+            // Fog of war: visibility AND combat are gated by what your sensors actually detect — an undetected enemy
+            // doesn't show on the map and can't pull you into a battle (the side that sees first shoots first). This is
+            // the realistic detection-range behaviour (a contact at Venus only appears once you're in sensor reach of
+            // it), the developer's deliberate call on 2026-06-27. Off by default in the engine (combat tests don't
+            // stand up sensors); ON for the game. DevTools → Detection / Fog of War can still toggle it live.
+            Pulsar4X.Combat.CombatEngagement.RequireDetectionToEngage = true;
+
             try
             {
                 string? appDataDirectory = GetAppDataPath();
