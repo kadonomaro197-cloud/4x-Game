@@ -161,6 +161,11 @@ namespace Pulsar4X.Ships
             if (factionInfo == null) return 0;
             if (!ship.TryGetDataBlob<NewtonThrustAbilityDB>(out var thrust) || string.IsNullOrEmpty(thrust.FuelType))
                 return 0;
+            // No cargo/fuel-tank bay = nowhere to put the fuel. A fighter (the Wasp) carries a thruster but no
+            // storage bay, so it has no CargoStorageDB at all — guard here so the "never throws" contract holds
+            // (AddCargoItems hard-indexes CargoStorageDB and would throw KeyNotFoundException otherwise).
+            if (!ship.HasDataBlob<CargoStorageDB>())
+                return 0;
             var fuel = factionInfo.Data.CargoGoods.GetAny(thrust.FuelType)
                      ?? factionInfo.Data.LockedCargoGoods.GetAny(thrust.FuelType);
             if (fuel == null)

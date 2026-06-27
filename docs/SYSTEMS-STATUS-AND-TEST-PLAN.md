@@ -106,7 +106,7 @@ reflection — if it's in the assembly, it runs.
 
 | System | Runs (processor) | Status | Can we see it? | Connected to |
 |--------|------------------|--------|----------------|--------------|
-| **Sensors** | `SensorScan`, `SensorReflectionProcessor` | 🔴 DARK | none | orbits, contacts, IFF, combat targeting, fog-of-war |
+| **Sensors** | `SensorScan`, `SensorReflectionProcessor` | 🔴 DARK | **detection RANGE now readable** — `SensorTools.SelfDetectionRange_m` / `DetectionRange_m` (the reverse-solve), gauged by `RangeReadoutTests`; surfaced in the Fleet Combat tab "Sensor Reach" column + the blue map range ring (`docs/INFORMATION-DELTA-DESIGN.md`). Contact-existence still via `SensorDetectionTests` | orbits, contacts, IFF, combat targeting, fog-of-war |
 | **Research / tech** | `ResearchProcessor` | 🔴 DARK | none | factions, **industry (unlocks the designs you can build)**, components, people (scientists) |
 | **Energy / power** | `EnergyGenProcessor`, `EnergyGenHotloopProcessor` | 🔴 DARK | none | ships, components, sensors (power draw), reactors, fuel |
 | **Logistics** (auto cargo routes) | `LogiBaseProcessor`, `LogiShipProcessor` | 🔴 DARK | none | storage, fleets, **trade**, colonies |
@@ -117,7 +117,7 @@ reflection — if it's in the assembly, it runs.
 | **Factions & NPC AI** | `NPCDecisionProcessor` | 🔴 DARK | none | **economy (could auto-queue jobs!)**, industry, diplomacy, combat doctrine |
 | **Galaxy / system generation** | `StarSystemFactory`, `AtmosphereProcessor` | 🟢 WORKS | `AtmosphereDBExtensionsTests`, `AtmosphereAndSpeciesTests`; we rely on it | minerals, colony siting, orbits, sensors |
 | **Diplomacy** | — | ⚫ ABSENT | design only (`docs/DIPLOMACY-DESIGN.md`) | factions, IFF, trade, logistics |
-| **UI client** (ImGui/SDL) | — | 🟡 more built than the docs claimed | **CI-blind**; the colony economy UI is fully wired (`ColonyManagementWindow`); real state is live-unverified. Gaps + verify tasks in **§6** | displays every system; live-test only (§5B) |
+| **UI client** (ImGui/SDL) | — | 🟡 more built than the docs claimed | **CI-blind**; the colony economy UI is fully wired (`ColonyManagementWindow`); real state is live-unverified. **+ range/info readouts (2026-06-27):** engagement range, sensor reach, delta-V, ETA + map range rings + OUT OF RANGE flag (`docs/INFORMATION-DELTA-DESIGN.md`) — engine half CI-gauged, client half live-unverified. Gaps + verify tasks in **§6** | displays every system; live-test only (§5B) |
 
 ---
 

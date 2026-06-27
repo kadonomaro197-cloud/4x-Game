@@ -42,15 +42,24 @@ namespace Pulsar4X.Combat
         /// this weapon's damage still lands on an evasive target. A 1/min flak is tiny; a 1000/sec slug is huge.</summary>
         [JsonProperty] public double Saturation { get; internal set; }
 
+        /// <summary>The farthest this weapon can land a hit (metres) — the ROOT of the closing-fight model: as two
+        /// fleets close, a weapon only contributes once the gap is ≤ its range (see
+        /// docs/FLEET-COMBAT-CLOSING-DESIGN.md, Root A). Uses the engine's existing range convention: **0 = unbounded
+        /// / always in range** (same as <see cref="Weapons.GenericBeamWeaponAtb.IsInRange"/> treating MaxRange ≤ 0 as
+        /// unlimited), which is also serialization-safe (no Infinity in JSON). Beams carry their design MaxRange;
+        /// railgun/flak/missile default to 0 (rangeless) until their own range fields are added — a flagged follow-up.</summary>
+        [JsonProperty] public double Range_m { get; internal set; }
+
         public WeaponProfile() { }
 
-        public WeaponProfile(WeaponClass cls, double damagePerSecond, double velocity, double tracking, double saturation)
+        public WeaponProfile(WeaponClass cls, double damagePerSecond, double velocity, double tracking, double saturation, double range_m = 0)
         {
             Class = cls;
             DamagePerSecond = damagePerSecond;
             Velocity = velocity;
             Tracking = tracking;
             Saturation = saturation;
+            Range_m = range_m;
         }
 
         public WeaponProfile(WeaponProfile p)
@@ -60,6 +69,7 @@ namespace Pulsar4X.Combat
             Velocity = p.Velocity;
             Tracking = p.Tracking;
             Saturation = p.Saturation;
+            Range_m = p.Range_m;
         }
     }
 }
