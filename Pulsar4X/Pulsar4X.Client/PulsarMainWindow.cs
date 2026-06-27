@@ -11,6 +11,8 @@ using ImGuiNET;
 using SDL3;
 using Microsoft.Extensions.Configuration;
 using Pulsar4X.Client.Interface.Themes;
+using Pulsar4X.Fleets;
+using Pulsar4X.Combat;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 
@@ -369,7 +371,33 @@ namespace Pulsar4X.Client
             {
                 _state.Game.TimePulse.CombatInterruptPending = false;
                 _combatBannerUntilTick = now + 8000; // show for ~8 s
-                SessionLog.Action("COMBAT INTERRUPT — a battle began; time auto-paused. Open Fleet -> Combat to steer it.");
+                SessionLog.Action("COMBAT INTERRUPT — a battle began; time auto-paused. Combat view opened.");
+
+                // Pop the combat view for the player automatically — no digging through SM / DevTools. The Battle
+                // Report shows the live play-by-play (it reads BattleLog each frame as salvos land). Then bring up
+                // the player's engaged fleet so the Combat tab (doctrine controls) is one click away. Uses the REAL
+                // player faction, so it works whether or not SM mode is on. Defensive: SelectedSystem can throw when
+                // nothing is selected, so the fleet lookup is guarded — the Battle Report still pops regardless.
+                BattleReportWindow.GetInstance().SetActive(true);
+                try
+                {
+                    var sys = _state.SelectedSystem;
+                    var pf = _state.PlayerFaction;
+                    if (sys != null && pf != null)
+                    {
+                        foreach (var f in sys.GetAllEntitiesWithDataBlob<FleetDB>())
+                        {
+                            if (f.FactionOwnerID == pf.Id && f.HasDataBlob<FleetCombatStateDB>())
+                            {
+                                var fw = FleetWindow.GetInstance();
+                                fw.SelectFleet(f);
+                                fw.SetActive(true);
+                                break;
+                            }
+                        }
+                    }
+                }
+                catch { }
             }
         }
 
