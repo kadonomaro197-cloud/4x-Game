@@ -398,6 +398,14 @@ namespace Pulsar4X.Client
                         ImGui.TextColored(new Vector4(1f, 0.6f, 0.4f, 1f), _hostileStatus);
                 }
 
+                // ── Battle Report ─────────────────────────────────
+                ImGui.Separator();
+                ImGui.Text("[ Battle Report ]");
+                ImGui.TextDisabled("Space combat is auto-resolved math (no on-map fight, and a lopsided one is over in a blink).");
+                ImGui.TextDisabled("This is the play-by-play that SURVIVES the fight, so you can review a battle you missed.");
+                if (ImGui.Button("Open Battle Report##devbattlereport"))
+                    BattleReportWindow.GetInstance().SetActive(true);
+
                 // ── Detection / Fog of War ────────────────────────
                 ImGui.Separator();
                 ImGui.Text("[ Detection / Fog of War ]");

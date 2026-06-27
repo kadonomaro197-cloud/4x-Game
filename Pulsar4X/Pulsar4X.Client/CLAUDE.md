@@ -107,6 +107,7 @@ internal override void Display()
 | `CommanderWindow` | `CommanderWindow.cs` | ✅ Basic | People/commander display |
 | `GalaxyWindow` | `GalaxyWindow.cs` | ✅ Functional | Galaxy map and system list |
 | `SMWindow` | `SMWindow.cs` | ✅ Functional | Space Master debug controls |
+| `BattleReportWindow` | `BattleReportWindow.cs` | ✅ New 2026-06-27 | Persistent recent-battles readout — reads the engine `Combat.BattleLog`; survives after a fight ends. The "review a battle you missed" window (combat-visibility 2/2). Opened from DevTools → "Open Battle Report". |
 | `Debug/*` | `Debug/*.cs` | ✅ Dev tools | Data viewer, blueprint inspector, entity inspector, performance monitor |
 
 ---
