@@ -6,7 +6,124 @@ This document tracks what we know about the codebase state at the close of each 
 
 ## Last Updated
 
+Session 2026-06-28 — **a hardening + readout-honesty day on `claude/4x-game-architecture-review-e64s2u` (engine CI-green; client CI-blind).** Took the combat/detection work from the prior sessions and made it *survive contact with a player*: killed the two-fleet-move crash (a warp ship reparenting to *itself*), gave railguns a real range so fights close in instead of shooting across the whole system, put **every unit's and place's ranges on the map by default**, and fixed Earth's detection ring so it stops *shrinking when you spawn enemies*. Plus a defence-in-depth net so no future order can blank the UI. Seven commits, all green after one self-inflicted CI red (a stale test that pinned the *old* railgun rule — the gauge caught it). Full what/why/lessons ↓. **Tomorrow is a NEW layer: space-layer gameplay + building infrastructure IN SPACE — see "Where to resume / TOMORROW" in the 2026-06-28 block.**
+
 Session 2026-06-26 — **detection / EMCON / fog-of-war BUILT, plus the logging that makes a session reviewable, on `claude/focused-ritchie-debock`.** Since the last live test the whole detection layer landed in CI-gauged slices (all engine work CI-green): the fog-of-war combat seam (you fight what you DETECT), dynamic ship signatures + the **EMCON posture lever** (Full/Cruise/Silent) + the activity processor (a lit drive plume betrays you even on Silent), the **grave rung** (shoot a ship's sensors off → it goes blind), a real **reactor-Load bug fix**, and **first-strike** (detect-first → shoot-first). Then the player-facing layer (client, CI-blind): **EMCON UI**, and **fog of war for units on the map** — detected foreign units show as limited-info **contact blips**, undetected ones are **hidden** (everyone sees the star, not the fleet around it). Plus a **logging overhaul** so a remote review can reconstruct a whole session: processor-liveness `[ENGINE]` counters (is the scan / battle-trigger even firing?), `[DETECT]`/`[EMCON]` snapshots, and the log now **rolls into read-sized `game_logs/` pages**. Still standing from earlier this session: the `SessionLog` flight recorder, the dead-ship click-crash / ghost-icon fixes, and the **combat interrupt** (stops the clock at first contact, otherwise runs at the player's set speed). Open threads: the warp→Sun teleport (pre-existing, auto-detected, not root-fixed) and a flagged **detection-quality units bug** (`SensorTools.cs:173`). **Full consolidation + this test's watch list ↓; the older "WHERE TO RESUME" plan predates this work — treat it as the M1 lever map, not the to-do.**
+
+---
+
+## ⏩ Session 2026-06-28 — playtest hardening: warp crash, combat-at-range, ranges-on-map, honest detection ring (READ FIRST)
+
+**Headline: nothing new was *invented* today — the combat/detection spine from prior sessions got HARDENED against
+real play.** Five live-reported issues, each traced to a root cause and fixed in the engine (CI-green) with the
+client kept thin (CI-blind). Branch `claude/4x-game-architecture-review-e64s2u`. The thread running through all of
+it: **a system isn't done when it works in a test — it's done when it survives a player doing the unexpected.**
+
+### What shipped (in order, with commits)
+1. **Adversarial audit fixes** (`7c06687`) — poked holes in the prior day's work, then fixed: (A) the new *attack*
+   order now respects fog (`CanEngageTarget` — you can't order an attack on an enemy you don't detect); (C) the
+   persistent Battle Report stopped **flooding** (only casualty salvos are kept, not 250 "no losses" lines that
+   evict the real events); (D) the range-ring `SimpleCircle` got the same **off-screen segment cull** as the orbit
+   rings (zoom-stutter + an `OverflowException` on absurd coords). + a written **RNG-determinism caveat** for the
+   future degraded-ship damage model (combat must stay deterministic → any per-tick random component loss needs its
+   own seeded, order-independent stream; `StarSystem.RNG` is shared).
+2. **Hole B decided** (`ecc8661`) — the colony megasensor sees ~230 Gm (the whole inner system). Detection range is
+   **linear in antenna size** and the 1e6 scale is one global knob, so you can't rein the colony in without dropping
+   ship sensors below the combat floor. **Decision (developer): keep it — a fixed ground array IS realistic
+   system-wide early warning; ship-vs-ship fog stays the tight ~0.3 Gm bubble.** Test reframed to assert the intent.
+3. **Two-fleet-move CRASH fixed** (`c52c36a`) — the big one. Moving two fleets at once broke the whole UI. Root
+   cause from the stack trace: a ship **already mid-warp** has a null position parent, so `PositionDB.Root` walks up
+   and resolves to the **ship itself** — and the warp-start "detach to root" step then did `SetParent(self)`, which
+   throws. Because the order runs **inside the Fleet window's `Display()`**, that throw corrupted the ImGui frame →
+   a **cascade of 13 "already inside window" render errors** (one bug wearing 13 masks). Fix: skip the reparent when
+   Root *is* the entity. **Defence-in-depth (engine, CI-covered):** `StandAloneOrderHandler.HandleOrder` now wraps
+   the synchronous order execution in a logged `try/catch` so **no** future order-throw can ever blank the UI again.
+4. **All-ranges always-on** (`45dfece`) — every own unit + place draws its reach rings on the map by default (no
+   selecting a fleet, no ticking a box). `GlobalUIState.ShowAllRangeRings` (default on, DevTools toggle to declutter)
+   → `SystemMapRendering.UpdateAllRangeRings`. Cheap: rings ride each entity's live position (track moving ships, no
+   per-frame rebuild) and rebuild only on a set/loudness **fingerprint** change.
+5. **Combat at weapons range** (`51fbbb6`) — railguns were built **rangeless** (`Range_m = 0` → `MaxReach` =
+   infinity → "IN RANGE at any gap"), so they fired across the whole 1 Gm engagement bubble — the live "ships firing
+   outside their detection range" report. Gave railguns a finite **MID** range (`RailgunRange_m` 500 km; flak 50 km
+   < railgun < missile 1000 km). The closing model now holds fire until the gap is within range — always *inside*
+   sensor reach. **Safe by design:** the range gate only bites when `EnableClosingRange` is on (live); with it off
+   (every headless fixture) `SeparationOf` returns 0, so it's a no-op — combat behaviour changed with **zero** test
+   churn. (First cut of the colony ring here used `DetectionRangeAgainst` vs a present ship — superseded by #6.)
+6. **Honest, STABLE Earth ring** (`50af070`) — live report: *"on default you see Earth's detection but once you
+   spawn the scenario the range shrinks."* Cause: the colony ring was sized off **whichever ship was the reference**,
+   and it preferred a *foreign* one — so spawning a (quieter) hostile flipped the reference and shrank the ring.
+   Fix: new CI-tested engine helper `SensorTools.NominalDetectionRange_m(detector, ref)` pins the reference target to
+   **full activity**, and the client sizes the ring off the best nominal over your **own** ships — a *stable property
+   of the sensor*, decoupled from who's nearby or who went Silent.
+7. **CI red → green** (`ba32f95`) — #5 made one existing test (`FleetAggregationTests`) fail: it **pinned the OLD
+   rule** (railgun `Range_m == 0`). Updated it to expect `RailgunRange_m`. (The gauge did its job — caught a contract
+   change I'd missed.)
+
+### Lessons (durable — today)
+- **A test can pin the contract you're changing — grep the WHOLE suite for a constant/behaviour before you change
+  it, not just the obvious test file.** I checked `RailgunWeaponTests`/`CombatStressLab`/`ClosingTests` but missed
+  `FleetAggregationTests`, which asserted the old `Range_m == 0`. CI caught it; a 30-second `grep RailgunRange|Range_m`
+  up front would have caught it first.
+- **A readout must be a STABLE property of the thing it measures — never key it off transient world state.** The
+  Earth ring shrank because it was sized off "whichever enemy is present." The fix was to pin the reference (full
+  activity) and use a stable set (own ships). *Rule for every gauge: would this number change if something unrelated
+  walked into the system? If yes, it's measuring the wrong thing.*
+- **Verify a log's PROVENANCE before you diagnose from it.** The play-test logs the developer pushed were from a
+  build *before* the railgun fix — every line still said `reach unlimited`. A known marker (`reach unlimited` vs
+  `reach 500,000m`) tells you which build produced a log. *Don't conclude "the fix didn't work" from a pre-fix log.*
+- **The FIRST error in the log is the root; everything after is cascade.** 13 render errors ("already inside window
+  Fleet Management") were ONE warp self-parent throw that escaped mid-frame. Read top-down; fix the first, the rest
+  evaporate.
+- **`Root` of a detached node is the node itself** — any "reparent to root / top of tree" operation must guard the
+  already-at-root case, or it self-parents and throws. Generalises beyond warp.
+- **An order executed inside a render `Display()` can corrupt the whole frame — contain it.** Synchronous side
+  effects run from a UI click unwind through ImGui's `Begin/End`. The fix is a logged `try/catch` at the engine
+  boundary (CI-covered), not hoping the order never throws.
+- **A behaviour change that's a NO-OP in the test path lets you change the live game without breaking 500 tests.**
+  Railgun range only matters when `EnableClosingRange` is on (live); off (tests) → `SeparationOf` = 0 → gate skipped.
+  Designing the change to be inert in the headless path is what kept the diff to one assertion update.
+- **Investigate the connection's OTHER end before wiring (Prime Directive, the half that's easy to skip).** The
+  colony ring first used `SensorReachRange_m(colony)` without checking what it *measures* — "detect a thing as loud
+  as a COLONY," not "as loud as a ship." Reading the accessor's doc/impl before wiring would have skipped two
+  iterations.
+
+### Process improvements to ADOPT tomorrow (make the day go smoother)
+1. **Before changing any constant or behaviour contract:** `grep` the whole `Pulsar4X.Tests/` for the symbol/value.
+   Update the tests that pin the old contract *in the same commit*. (Would have avoided today's one CI red.)
+2. **Before diagnosing from a pushed log:** confirm which build it's from (pick a marker that changed) — state it
+   explicitly ("this log predates fix X") so we don't chase ghosts.
+3. **For every new readout/gauge:** ask "is this a stable property, or does it move with transient state?" Pin/decouple
+   *before* shipping it.
+4. **Keep the CI-blind client thin:** every value the client shows should come from a CI-covered engine accessor
+   (today: `NominalDetectionRange_m`). New client logic is the thing CI can't catch — push it down.
+
+### Open / flagged (deliberate — carried into tomorrow)
+- **Live A–E play-test still owed** (the combat-range spine acceptance test). From the last logs: **A (range UI), B
+  (fog + first-strike), C-P1 (closing) are PROVEN**; **D (the both-hold-fire standoff) and E (return-fire) were never
+  exercised** — the player ran Weapons-Free everywhere, so battles formed; **C-P2 (kiting/budget-exhaustion) not
+  cleanly shown.** And none of those logs reflect the railgun/ring fixes (pre-fix build). *Next play-test: run D + E,
+  and eyeball `reach 500,000m` + the non-shrinking Earth ring.*
+- (Carried, unchanged) detection-quality units bug (`SensorTools.cs:173`); warp→Sun teleport edge case (auto-flagged,
+  not root-fixed — 0 teleports in the last run); per-ship battle damage "condition tier"; v2 retreat-actually-moves;
+  on-map combat marker (last of the 3 visibility windows).
+
+### Where to resume — **TOMORROW = a NEW LAYER: space-layer gameplay + building infrastructure in space**
+Combat/detection is hardened enough to set down for now. The next focus is the **space economy made playable**:
+building **infrastructure in space** (orbital installations / stations / shipyards), not just on a planet surface.
+Before writing code, run the standing discipline on it:
+- **Map first (`docs/SYSTEMS-STATUS-AND-TEST-PLAN.md`)** — open the Industry / Colonies / Construction rows and
+  everything they connect to. The economy substrate (mine → refine → build → install) is already **proven CI-green**
+  (`EconomyReadoutTests` / `ProductionBuildTests`), so this is *extend a working loop*, not build from zero.
+- **Read before building:** `docs/MVP.md` (is "build a space station" in the v1 finish line or the parking lot?),
+  `docs/REALISM-VS-GAMEPLAY-AUDIT.md` (name the DECISION a space installation creates before adding the realism),
+  `docs/RESOURCES-AND-MATERIALS-DESIGN.md` (the full economy survey), `docs/aurora/PLANETARY-INFRASTRUCTURE.md` (the
+  design spec), and `GameEngine/Industry/CLAUDE.md` + `GameEngine/Colonies/CLAUDE.md`.
+- **Apply cradle-to-grave:** a space installation must be reachable through the whole chain — mineral → material →
+  built at a colony/shipyard → a **component** (so it's research-gated + save/loaded + designable for free, per
+  `CONVENTIONS.md` §6 — do NOT invent a parallel system) → the in-play decision it enables → the loss when it's
+  destroyed. Name every rung before writing the first line.
+- **Gauge it in CI:** mirror `ProductionBuildTests` — build the thing from stored materials, assert it installs and
+  does work. The engine is CI-covered; keep any UI a thin draw over a CI-tested accessor.
 
 ---
 
