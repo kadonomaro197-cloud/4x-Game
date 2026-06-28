@@ -57,6 +57,16 @@ namespace Pulsar4X.Tests
             Assert.That(first.Saturation, Is.EqualTo(5).Within(0.001), "saturation = rounds/sec from the design");
             Assert.That(first.DamagePerSecond, Is.GreaterThan(0), "energy-per-shot × rounds/sec gives real damage/sec");
 
+            // Range: a railgun is now a FINITE mid-range gun (was 0 = rangeless/unbounded, which let it fire across
+            // the whole engagement bubble — "ships firing outside detection range"). The closing model holds its fire
+            // until the gap is within this, so a slug only lands on a target the ship has closed with.
+            Assert.That(first.Range_m, Is.EqualTo(ShipCombatValueDB.RailgunRange_m).Within(1),
+                "a railgun has a finite mid range now (not rangeless) — the closing model gates fire on it");
+            Assert.That(first.Range_m, Is.GreaterThan(ShipCombatValueDB.FlakRange_m),
+                "...longer than close-in flak...");
+            Assert.That(first.Range_m, Is.LessThan(ShipCombatValueDB.MissileRange_m),
+                "...but shorter than a guided missile — the mid rung of the range ladder");
+
             // The payoff, on the REAL built weapon: its fire lands on a sluggish hull but is dodged by a nimble one.
             double vsSluggish = CombatEngagement.HitFraction(first, 0.0);
             double vsNimble = CombatEngagement.HitFraction(first, 0.9);
