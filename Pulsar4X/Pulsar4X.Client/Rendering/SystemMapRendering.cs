@@ -593,6 +593,8 @@ namespace Pulsar4X.Client.Rendering
                 _collapsedFleetMembers = new HashSet<int>();
             }
 
+            UpdateAllRangeRings();
+
             foreach (var item in _sysState.EntityStatesWithPosition.Values)
             {
                 if (item.Changes.Count > 0)
@@ -693,6 +695,85 @@ namespace Pulsar4X.Client.Rendering
                 if (_collapsedFleetMembers.Contains(kv.Key)) continue;
                 SafeDraw(kv.Value.GetType().Name, () => kv.Value.Draw(_window.Renderer, _camera));
             }
+        }
+
+        // ── All-ranges always-on ("all units and places have their ranges on display") ──────────────────────────
+        // Draws reach rings for EVERY own unit + place, regardless of selection (GlobalUIState.ShowAllRangeRings,
+        // default on). "Units" = every own ship drawn as its OWN icon — lone ships + each fleet's representative
+        // (we reuse _collapsedFleetMembers, so rings land on exactly the ships that show as icons, one ring-set per
+        // fleet marker). "Places" = every own colony (one detection ring — e.g. Earth's system-wide megasensor).
+        // A ring's centre is the entity's LIVE PositionDB, so it TRACKS the ship as it moves — no per-frame rebuild
+        // needed. We rebuild only when the SET of units/places or their loudness (EMCON) changes, via a cheap
+        // fingerprint. SimpleCircle culls off-screen segments (the zoom-stutter fix), so a huge colony ring is cheap
+        // when out of view. Keys are "allrange_*", distinct from the Combat tab's "rangering_*" so the two coexist.
+        private readonly List<string> _allRangeKeys = new();
+        private string _allRangeFingerprint = "";
+
+        void UpdateAllRangeRings()
+        {
+            if (_sysState == null || _faction == null) return;
+
+            // Toggled off → drop any rings we own and reset, so flipping it back rebuilds clean.
+            if (!_state.ShowAllRangeRings)
+            {
+                if (_allRangeKeys.Count > 0)
+                {
+                    foreach (var k in _allRangeKeys) UIWidgets.Remove(k);
+                    _allRangeKeys.Clear();
+                    _allRangeFingerprint = "";
+                }
+                return;
+            }
+
+            int facId = _faction.Id;
+            List<Entity> ownShips, ownColonies;
+            try
+            {
+                ownShips = _sysState.StarSystem.GetAllEntitiesWithDataBlob<ShipInfoDB>()
+                    .Where(e => e.FactionOwnerID == facId && e.IsValid
+                                && !_collapsedFleetMembers.Contains(e.Id) && e.HasDataBlob<PositionDB>())
+                    .ToList();
+                ownColonies = _sysState.StarSystem.GetAllEntitiesWithDataBlob<Pulsar4X.Colonies.ColonyInfoDB>()
+                    .Where(e => e.FactionOwnerID == facId && e.IsValid && e.HasDataBlob<PositionDB>())
+                    .ToList();
+            }
+            catch { return; }   // a bad engine read must never blank the map
+
+            // Fingerprint = which units/places + their loudness. Positions are deliberately NOT in it (the rings
+            // track live), so this only changes when a unit/colony appears or leaves, or EMCON flips a ship's
+            // detectability — exactly when the rings need rebuilding.
+            double loud = 0;
+            foreach (var s in ownShips) loud += SensorTools.CurrentActivityMultiplier(s);
+            string fp = string.Join(",", ownShips.Select(s => s.Id).OrderBy(i => i))
+                      + "|" + string.Join(",", ownColonies.Select(c => c.Id).OrderBy(i => i))
+                      + "|" + Math.Round(loud, 2);
+            if (fp == _allRangeFingerprint) return;
+            _allRangeFingerprint = fp;
+
+            foreach (var k in _allRangeKeys) UIWidgets.Remove(k);
+            _allRangeKeys.Clear();
+
+            void Ring(string key, PositionDB center, double range_m, byte r, byte g, byte b, byte a)
+            {
+                if (range_m <= 0 || center == null) return;
+                UIWidgets[key] = new SimpleCircle(center, Pulsar4X.Orbital.Distance.MToAU(range_m),
+                    new SDL3.SDL.Color { R = r, G = g, B = b, A = a });
+                _allRangeKeys.Add(key);
+            }
+
+            foreach (var ship in ownShips)
+            {
+                var pos = ship.GetDataBlob<PositionDB>();
+                Ring("allrange_" + ship.Id + "_beam",   pos, WeaponUtils.GetMaxBeamRange_m(ship),   225, 90, 70, 70);  // red: how far it can SHOOT
+                Ring("allrange_" + ship.Id + "_sensor", pos, SensorTools.SensorReachRange_m(ship),   80, 210, 110, 55); // green: how far it can SEE
+                Ring("allrange_" + ship.Id + "_detect", pos, SensorTools.DetectabilityRange_m(ship), 240, 160, 40, 60); // amber: how far it can BE SEEN
+            }
+
+            foreach (var colony in ownColonies)   // a "place" shows its detection reach (Earth's megasensor = the inner-system early-warning bubble)
+                Ring("allrange_colony_" + colony.Id + "_sensor", colony.GetDataBlob<PositionDB>(),
+                    SensorTools.SensorReachRange_m(colony), 80, 210, 110, 45);
+
+            SessionLog.Action($"[range-ring] all-ranges rebuilt: {ownShips.Count} unit(s) + {ownColonies.Count} place(s) = {_allRangeKeys.Count} ring(s)");
         }
 
         // Rebuild the fog-of-war contact blips from the viewed faction's CURRENT sensor contacts. Runs every frame
