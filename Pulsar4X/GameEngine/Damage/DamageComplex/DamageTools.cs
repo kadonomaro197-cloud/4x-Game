@@ -27,6 +27,11 @@ namespace Pulsar4X.Damage
     public class DamageResistBlueprint: Blueprint
     {
         public byte IDCode;
+        // The material this resistance blueprint is FOR (e.g. "stainless-steel", "aluminium") — matches an
+        // ArmorBlueprint.ResourceID. This is the link that lets the damage bitmap paint a ship's armour pixels with
+        // the RIGHT IDCode for the material it's actually clad in (see DamageTools.IDCodeForMaterial +
+        // ComponentPlacement). Loaded by-name from the JSON Payload; "" for the void/unset entry.
+        public string MaterialID = "";
         public int HitPoints;
         public int MeltingPoint;
         public float Density;
@@ -164,6 +169,22 @@ namespace Pulsar4X.Damage
         {
             byte id = color.R;
             return DamageResistsLookupTable[id];
+        }
+
+        /// <summary>
+        /// The damage-bitmap IDCode (the pixel R-channel key) for a given armour/material id — the link between an
+        /// <c>ArmorBlueprint.ResourceID</c> and the <see cref="DamageResistBlueprint"/> that carries that material's
+        /// wavelength absorption + signature resistance. So a ship clad in a material is hit AS that material. Falls
+        /// back to 255 (stainless) for an unknown/empty id, matching the old hard-coded default. Returns 255 if the
+        /// table is empty (e.g. data not yet loaded) so callers never get a 0/void id by accident.
+        /// </summary>
+        public static byte IDCodeForMaterial(string materialId)
+        {
+            if (!string.IsNullOrEmpty(materialId))
+                foreach (var kv in DamageResistsLookupTable)
+                    if (kv.Value.MaterialID == materialId)
+                        return kv.Key;
+            return 255;
         }
         // Returns which of the five wavelength bands (UV/Vis/NIR/MIR/FIR) a given wavelength (nm) falls into.
         private static float GetWavelengthAbsorption(DamageResistBlueprint material, double wavelength_nm)

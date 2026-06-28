@@ -46,6 +46,20 @@ Three implementations exist: `Simple/` (dead code), `DamageComplex/` (active —
 
 ---
 
+## Armour material → damage resistance: the per-design link (FIXED 2026-06-28 — load-bearing)
+
+**The hole (found before building the research loop, exactly the kind that quietly breaks cradle-to-grave).** The whole "the armour material IS the counter" premise — both the existing `WavelengthAbsorption` AND the new `SignatureResistance` — only works if a ship's damage-profile **bitmap encodes the material it's actually clad in** (the sim reads each pixel's R-channel as a `DamageResistBlueprint` IDCode: `DamageResistsLookupTable[px.r]`). It didn't:
+- Interior **component** pixels were hard-coded `255` (stainless) — `ComponentPlacement.CreateComponentByteArray` line ~52 (a documented "for now").
+- **Armour** pixels used a **density-derived byte** (`ComponentPlacement.CreateShipBmp`), which only *coincidentally* equals 255 for stainless and misses for other materials (e.g. aluminium's density mapped to ~171, but its real IDCode is 150 — so the lookup MISSED and that armour was effectively transparent to damage). So a ship's chosen armour material did **not** reliably drive its resistance.
+
+**The fix.** `DamageResistBlueprint` now exposes `MaterialID` (the JSON already had it — `"stainless-steel"`, `"aluminium"`, …; the class just wasn't reading it). `DamageTools.IDCodeForMaterial(resourceId)` maps an `ArmorBlueprint.ResourceID` → the matching blueprint's IDCode (fallback 255). `ComponentPlacement.CreateShipBmp` paints armour pixels with `IDCodeForMaterial(shipProfile.Armor.armorType.ResourceID)` instead of the density byte — so a ship is hit **as the material it's clad in**, and its `WavelengthAbsorption` + `SignatureResistance` actually apply.
+
+**Still simplified (documented, not a bug):** interior **component** pixels remain a flat 255. Components are made of mixed materials; mapping them is a later pass. Armour is the outer defence the player chooses, so it's the high-value layer and the one wired. A beam crosses armour (now material-correct) then components (255).
+
+**Gauge:** `Pulsar4X.Tests/ArmorMaterialWiringTests.cs` — `IDCodeForMaterial` maps each material to its IDCode (unknown→255), and a ship's damage-profile bitmap paints armour pixels with its **actual** armour-material IDCode. This is the pipe a researched, signature-rated armour rides; without it, researched armour would build but never resist.
+
+---
+
 ## Active Path: DamageComplex (beam hits — wired as of Phase 1a/2)
 
 `BeamWeaponProcessor.OnHit()` → `DamageProcessor.OnTakingDamage()` → `DamageTools.DealDamageEnergyBeamSim()`.

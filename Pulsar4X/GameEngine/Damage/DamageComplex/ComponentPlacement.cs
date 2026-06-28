@@ -235,8 +235,12 @@ namespace Pulsar4X.Damage
             bottomcoordStart = (bottomcoordStart.x, halfwidth + bottomcoordStart.y);
             topcoordStart = (topcoordStart.x, halfwidth - topcoordStart.y);
             float thickness = (shipProfile.Armor.thickness - 3) / 10 + 3;
-            float maxdensity = 7900;//TODO read this from armor data
-            byte armorcolor = (byte)Math.Min(255 * ((shipProfile.Armor.armorType.Density / 2 + maxdensity / 2) / maxdensity), 255);
+            // The armour pixels' R-channel is the damage-sim MATERIAL ID — so a ship is hit AS the material it's
+            // actually clad in (its wavelength absorption + signature resistance), not a hard-coded stainless or a
+            // density-derived byte that only coincidentally matched 255. THIS is the link that makes "the armour
+            // material is the counter" real per-design (and what a researched, signature-rated armour rides).
+            // (Interior component pixels are still a flat 255 — a documented simplification; see line ~52.)
+            byte armorcolor = DamageTools.IDCodeForMaterial(shipProfile.Armor.armorType?.ResourceID);
 
             for (int i = 1; i < linePoints.Count; i++)
             {
