@@ -189,12 +189,29 @@ namespace Pulsar4X.Client
 
 
 
+        // Per-segment off-screen cull (the zoom-stutter fix, 2026-06-27). At extreme zoom an on-screen orbit's far
+        // segments land astronomically off-screen, and SDL.RenderLine chokes rasterising lines whose endpoints are
+        // huge — measured at ~1400 ms/frame, all in map-draw (the [STATE] stage breakdown). This is a cheap trivial-
+        // reject (Cohen–Sutherland): if BOTH endpoints sit beyond the same screen edge (+ margin) the segment can't
+        // cross the view, so skip it. The visible arc still draws; only the expensive off-screen wrap is dropped.
+        const int OffScreenCullMargin = 2000;
+        static bool SegOffScreen(int x0, int y0, int x1, int y1, int w, int h)
+        {
+            if (x0 < -OffScreenCullMargin && x1 < -OffScreenCullMargin) return true;
+            if (x0 > w + OffScreenCullMargin && x1 > w + OffScreenCullMargin) return true;
+            if (y0 < -OffScreenCullMargin && y1 < -OffScreenCullMargin) return true;
+            if (y0 > h + OffScreenCullMargin && y1 > h + OffScreenCullMargin) return true;
+            return false;
+        }
+
         public override void Draw(IntPtr rendererPtr, Camera camera)
         {
             if (_offScreenSkip) return;   // absurdly large on-screen orbit — skipped in OnFrameUpdate (see the PERF guard there)
             //now we draw a line between each of the points in the translatedPoints[] array.
             if (_drawPoints.Count() < _numberOfDrawSegments - 1)
                 return;
+
+            int vw = (int)camera.ViewPortSize.X, vh = (int)camera.ViewPortSize.Y;
 
             // Draw faded full orbit ghost underneath
             byte ghostAlpha = _userSettings.GhostOrbitAlpha;
@@ -203,7 +220,9 @@ namespace Pulsar4X.Client
                 SDL.SetRenderDrawColor(rendererPtr, _userSettings.Red, _userSettings.Grn, _userSettings.Blu, ghostAlpha);
                 for (int i = 0; i < _numberOfArcSegments; i++)
                 {
-                    SDL.RenderLine(rendererPtr, _fullOrbitDrawPoints[i].X, _fullOrbitDrawPoints[i].Y, _fullOrbitDrawPoints[i + 1].X, _fullOrbitDrawPoints[i + 1].Y);
+                    var a = _fullOrbitDrawPoints[i]; var b = _fullOrbitDrawPoints[i + 1];
+                    if (SegOffScreen(a.X, a.Y, b.X, b.Y, vw, vh)) continue;
+                    SDL.RenderLine(rendererPtr, a.X, a.Y, b.X, b.Y);
                 }
             }
 
@@ -212,7 +231,9 @@ namespace Pulsar4X.Client
             for (int i = 0; i < _numberOfDrawSegments - 1; i++)
             {
                 SDL.SetRenderDrawColor(rendererPtr, _userSettings.Red, _userSettings.Grn, _userSettings.Blu, (byte)alpha);//we cast the alpha here to stop rounding errors creaping up.
-                SDL.RenderLine(rendererPtr, _drawPoints[i].X, _drawPoints[i].Y, _drawPoints[i + 1].X, _drawPoints[i +1].Y);
+                var a = _drawPoints[i]; var b = _drawPoints[i + 1];
+                if (!SegOffScreen(a.X, a.Y, b.X, b.Y, vw, vh))
+                    SDL.RenderLine(rendererPtr, a.X, a.Y, b.X, b.Y);
                 alpha -= _alphaChangeAmount;
             }
         }

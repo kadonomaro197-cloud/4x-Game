@@ -127,6 +127,25 @@ Battles spanning game-time is what makes "watch a battle / change doctrine mid-f
 
 ---
 
+## Order a fleet to ATTACK (player agency — `OrderAttack`, added 2026-06-27)
+
+The auto-trigger fights hostile fleets that are detected + in range + Weapons Free. But once a fight ends, two
+fleets can sit in range doing nothing — one **holding fire**, or an enemy that **broke off** (carries
+`FleetRetreatDB`, which `Tick`'s engage pass deliberately skips so it doesn't thrash). The developer's "they were
+just staring at each other menacingly." `CombatEngagement.OrderAttack(attacker, target)` is the explicit override:
+- Clears the attacker's `FleetRetreatDB` (re-commits — it's back in the fight).
+- Sets the attacker **Weapons Free** (`FleetDoctrine.SetEngagementPosture`), or it would keep holding fire.
+- Forces both into combat **now**: `StartEngagement` if neither is engaged (seeds the closing gap from real
+  distance), else `EnsureInCombat` both (joins a running fight without resetting it).
+It's a **direct call** (like doctrine/EMCON), so it bypasses the auto-trigger's detection/posture/retreat gates —
+the player is taking the shot deliberately. No-ops on a friendly target (`AreHostile` guard), an empty fleet, or
+self. `OrderAttackNearestHostile(fleet)` is the one-click convenience the Fleet-window button uses: finds the
+nearest hostile fleet with ships (`FleetSeparation`) and `OrderAttack`s it (targeting a SPECIFIC enemy fleet by
+map-click is the follow-up). **Connections:** writes `FleetCombatStateDB` (engage), clears `FleetRetreatDB`, sets
+`EngagementPosture` — the resolver/closing model then runs the fight. **Client:** `FleetWindow.DisplayEngageButton`
+("Attack nearest hostile fleet", Combat tab). Gauges: `OrderAttackTests` (forces engagement past a hold + retreat;
+no-ops on a friendly; nearest-hostile finds + engages, null when none).
+
 ## Switchable doctrine
 
 **What it is.** Each fleet can fly an active **combat posture** — its doctrine — set by the player (or NPC). The auto-resolver reads it as a read-time multiplier on that fleet's strength and toughness, so the *same* fleet fights differently under a different posture. Two pieces:
@@ -435,6 +454,44 @@ panel reads `BattleLog.Recent()` (a snapshot array copy, safe on any thread) to 
 Runtime-only (not save/load) — a "recent battles" readout, not game state; thread-safe because combat ticks run
 per-system in parallel. Sensor: `BattleLogTests` (records survive the fight; ring buffer caps at MaxEvents).
 
+**Per-salvo PLAY-BY-PLAY in the Salvo note (added 2026-06-27, "salvo means nothing" feedback).** The `Salvo`
+event's `Note` is now a detailed line — `took Railgun + Beam fire at 8.5 km from <attacker> — 42% on target (58%
+dodged), 0.82 GJ dealt; destroyed 'Cargo Courier'; 3 left` — built in `ApplyCasualties` from the data the
+**aggregate** resolve actually has: the weapon **CLASSES** in the incoming fire mix (`DescribeFireMix`), the
+ship-count-weighted **landed fraction** (hit-vs-dodge rate), the **damage** dealt that salvo, and the ships
+**destroyed by name** (`ShipName`). **Honest limits of the aggregate model (flagged for the player):** there is NO
+per-shot hit/miss and NO per-component loss — ships are whole-or-dead in v1 (the per-component damage sim is parked,
+gotcha #1), and damage is a fleet pool, so "ship X is at 60% hull" isn't tracked. Those need the degraded-condition
+model below. **Volume control:** the rich note + event is recorded **every** salvo a fleet takes fire **when
+`NarrateToLog` is on** (the client sets it true → full Battle-Report play-by-play); with it **off** (the headless
+combat tests + perf sims) only **casualty** salvos record, exactly as before — so every fixture's event volume and
+the O(fleets) note cost are unchanged (note is per-fleet-per-salvo, never per-ship). Gauge:
+`BattleLogTests.BattleLog_SalvoNote_NamesWeaponHitRateDamageAndDestroyedShip`.
+
+**Future: degraded / damaged-component condition (the design the play-by-play points at).** The per-salvo note's
+limits are exactly where the parked **aggregate force-condition** model plugs in (`docs/WEAPONS-AND-DODGE-DESIGN.md`
+→ "Future depth — aggregate force condition"). The seam is already here: `ApplyCasualties` **buckets ships by combat
+value** (`(toughnessMult, evasion, toughness, role)`), so a *damaged* ship with a recalculated, lower combat value
+lands in a **different bucket automatically** — Pristine / Lightly / Moderately / Severely Degraded tiers fall out
+with **no new resolve code**, only the parked "recalc `ShipCombatValueDB` on component loss" hook (gotcha #2) + a
+per-tier debuff table. At that point the note can read `'Aegis' degraded to Moderate (lost a railgun + a reactor)`
+because the recalc knows which components dropped. Principle (unchanged): **simulate at the granularity of the
+DECISION, not the entity** — the player decides at the force/tier level ("pull back the Moderately-Degraded wing"),
+so that's the granularity to model, rather than a full per-component-per-shot sim that buys cost without a decision.
+
+**Determinism caveat for the future RNG-damage hook (audit, 2026-06-27).** The play-by-play floated an *RNG-based
+"received-damage" model* — each tick, roll which components a degraded ship loses and feed that back into its combat
+value. That is buildable, but it has a **hard constraint the current aggregate model doesn't**: combat MUST stay
+deterministic (the locked rule — *fast-forward must equal watch*; see `docs/FLEET-COMBAT-CLOSING-DESIGN.md`). Today's
+resolve is pure arithmetic (no draws), so it's deterministic for free. The moment you add per-tick random component
+loss you introduce RNG, and the result will only match between a watched battle and a fast-forwarded one if **every
+draw is reproducible**: it must pull from a *seeded* stream and the draw order must be **independent of fleet/ship
+iteration order** (e.g. seed a per-ship or per-(attacker,target,tick) sub-stream, don't share one cursor across a
+loop whose order can shift). `StarSystem.RNG` is shared across all processors, so reusing it directly would make a
+combat draw's value depend on how many *other* systems happened to roll first that tick — non-reproducible. So the
+hook needs **its own seeded RNG, keyed for order-independence**, before any RNG-damage model ships. Flagged here so
+it's designed in, not bolted on.
+
 **Engage/disengage THRASH fix (2026-06-27).** Live symptom: the combat log spamming `enters combat` / `disengages`
 over and over for the same fleets. Root cause (both flavours): **a fleet LEAVES a fight but stays physically in
 range, so `Tick`'s engage pass re-grabs it the very next tick.** Two ways it happened:
@@ -564,6 +621,20 @@ on when the model is live. All deterministic (no wall-clock/RNG) so fast-forward
 - **Gauges:** `FleetAggregationTests` (Roots), `ClosingTests` (P1 range gate / determinism / flag-off / who-dictates;
   P2 kiting clock), `WeaponsReleaseTests` (P3 standoff). **Open (the developer's play-test):** live calibration of the
   closing-rate / burn-rate tunables and the "is standoff-vs-brawl FUN" gut-check.
+
+> **Calibration pass 2026-06-27 — "no combat within weapons range" play-test.** A live fight resolved at a ~10,000 km
+> standoff in 2 salvos via **unbounded railguns**, and the gap closed only ~25 km/salvo — so the fleets never reached
+> beam/flak range (the `[Combat] closing:` log: `gap 9,975,238m IN RANGE (reach unlimited)`). Two root causes, both
+> fixed: (1) **the range-accuracy falloff scaled ONLY by the target's evasion**, so a 0-evasion battleship was hit
+> perfectly at any range — added `RangeBaseMiss` (0.9), an evasion-INDEPENDENT base miss in `HitFraction` (still
+> scaled by flight-time × (1−Tracking), so beams/guided shrug it off, a dumb slug at long range doesn't) → unbounded
+> railguns are now weak at standoff and can't decide a fight before the merge. (2) **the gap barely closed** —
+> `ClosingSpeedScale_mps` 100k→**1e6** (10×) so a low-evasion fleet closes the weapon envelope in a watchable handful
+> of salvos, and `InitialSeparationDefault_m` 10,000 km→**1,000 km** (missile range) so a fallback-seeded fight OPENS
+> at the outer weapon envelope, not 10× beyond it. Net intent: **missile → flak → beam as they close**, the decisive
+> blows at weapons range. All three are `public static` dials (provisional, live-tuned). The range term is inert at
+> separation 0, so every closing-OFF combat fixture (the sims, triangle, stress lab) is byte-identical; gauges:
+> `DodgeResolveTests.HitFraction_RangeDegradesBallistics_EvenVsSittingTarget` (the 0-evasion falloff) + `ClosingTests`.
 - **Next: P4 — per-sub-fleet ranges** (each component its own gap, so a fighter wing closes while the capitals hold).
 
 ## Gotchas

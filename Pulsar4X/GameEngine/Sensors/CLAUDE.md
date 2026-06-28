@@ -68,6 +68,18 @@ shrinks-on-Silent, the EMCON ladder) is unchanged — only the absolute reach mo
 number stay in exact agreement. Gauges: `DetectionTuningTests` (ship-vs-ship clears the 0.1 Gm combat floor; reach
 stays under the fog ceiling). Tunable like Combat's `SalvoDamageScale` — one number for the whole detection feel.
 
+**Colony sensors see ACROSS the system — by design (decision 2026-06-28).** A follow-up to the scale tuning: detection
+range is **linear in antenna size** (`threshold ∝ 1/antenna²`, range `∝ 1/√threshold ∝ antenna`), and the colony's
+Passive Scanner has a **5000** antenna vs a ship's **5.5** — ~900× — so the colony detects a ship at **~230 Gm**, well
+past Venus (~60 Gm): it sees the whole inner system. Because the 1e6 scale is ONE global knob and the two sensors are
+locked ~800× apart by antenna size, you **cannot** rein the colony in without dropping the ship sensor back under the
+combat-useful floor. The developer's call: **keep it.** A fixed ground megasensor is realistic system-wide early
+warning — the homeworld always spots fleets entering the system, but the fog that matters for tactics (ship-vs-ship in
+deep space) is still the tight ~0.3 Gm bubble. So a colony is intentionally NOT a "tactical bubble" sensor; ships are.
+Gauge: `DetectionTuningTests.ColonyScanner_IsSystemWideEarlyWarning_ByDesign` (asserts the colony reach dwarfs a
+warship's — that asymmetry IS the design). If a future build wants surprise approaches on the homeworld, that needs a
+deliberate per-design sensor-horizon cap, not a scale change.
+
 Detection quality: triangular overlap between sensor's waveform band and signal's waveform band. Signal must overlap the sensor's peak sensitivity region to score high quality.
 
 ---

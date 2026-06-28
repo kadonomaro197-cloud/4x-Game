@@ -296,12 +296,27 @@ namespace Pulsar4X.Combat
 
         /// <summary>Closing-rate dial (m/s): the gap-change speed of a maximally-maneuverable fleet (evasion 1.0); a
         /// fleet changes the gap proportional to its maneuverability (min evasion over its ships — it moves as one).
-        /// Tunable like <see cref="SalvoDamageScale"/>; set 0 to FREEZE the gap (gauge use). v1 calibration provisional.</summary>
-        public static double ClosingSpeedScale_mps = 100_000.0;
+        /// Tunable like <see cref="SalvoDamageScale"/>; set 0 to FREEZE the gap (gauge use). RAISED 10× 2026-06-27: at
+        /// 100k a low-evasion (~0.05) fleet closed only ~25 km/salvo, so a 10,000 km gap never reached weapons range
+        /// and the fight resolved at standoff via unbounded railguns (the developer's "no combat within weapons range"
+        /// play-test). 1e6 closes the weapon envelope in a watchable handful of salvos. Live-calibration provisional.</summary>
+        public static double ClosingSpeedScale_mps = 1_000_000.0;
 
         /// <summary>Fallback opening gap (m) when first contact has no usable fleet positions (the multi-party join
-        /// path). The 2-fleet <see cref="StartEngagement"/> seeds the real distance instead. v1 stub.</summary>
-        public static double InitialSeparationDefault_m = 10_000_000.0;
+        /// path). The 2-fleet <see cref="StartEngagement"/> seeds the real distance instead. LOWERED 2026-06-27 from
+        /// 10,000 km to ~1,000 km (missile range) so a fight that falls back to this default OPENS at the outer weapon
+        /// envelope — missiles trade immediately, then flak/beam as the fleets close — instead of 10× beyond every
+        /// weapon. The "combat happens at weapons range" fix, paired with the closing-rate bump + range falloff.</summary>
+        public static double InitialSeparationDefault_m = 1_000_000.0;
+
+        /// <summary>Evasion-INDEPENDENT range-accuracy falloff for ballistic fire (the developer's "a railgun has
+        /// infinite range but the chance of a hit falls off with distance"). The pre-existing range term scaled ONLY
+        /// by the target's evasion, so a zero-evasion battleship was hit perfectly at ANY range — which let unbounded
+        /// railguns resolve a fight at 10,000 km, before anyone closed to beam/flak range. This adds a base miss that
+        /// applies even to a sitting target (the firing solution + the target's own orbital drift degrade over a long
+        /// flight time), scaled by flight-time and by (1−Tracking) so a beam (≈0 flight time) and a guided weapon
+        /// (high Tracking) are barely affected — a dumb slug at long range is. 0 = old evasion-only behaviour.</summary>
+        public static double RangeBaseMiss = 0.9;
 
         /// <summary>Phase 2 (kiting counter): Δv (m/s) a fleet spends per game-second it CONTROLS the range. A kiter
         /// holding the gap burns this each step; when its <see cref="FleetCombatStateDB.ManeuverBudget"/> runs dry it can
@@ -332,6 +347,35 @@ namespace Pulsar4X.Combat
             return (fleet.TryGetDataBlob<NameDB>(out var n) ? n.OwnersName : "Fleet") + " #" + fleet.Id;
         }
 
+        private static string ShipName(Entity ship)
+            => ship != null && ship.TryGetDataBlob<NameDB>(out var n) ? n.OwnersName : ("ship #" + (ship?.Id ?? -1));
+
+        /// <summary>Distinct weapon CLASSES in a fire mix, "Railgun + Beam" — the "which weapon" the player asked for.
+        /// The resolve aggregates by class (≤4 entries), so this is the real weapon makeup, not an individual mount.</summary>
+        private static string DescribeFireMix(List<WeaponProfile> fire)
+        {
+            if (fire == null || fire.Count == 0) return "no weapons in range";
+            var seen = new List<WeaponClass>();
+            foreach (var w in fire) if (w.DamagePerSecond > 0 && !seen.Contains(w.Class)) seen.Add(w.Class);
+            return seen.Count == 0 ? "no weapons in range" : string.Join(" + ", seen);
+        }
+
+        private static string FmtEnergy(double j)
+        {
+            if (j >= 1e9) return (j / 1e9).ToString("0.##") + " GJ";
+            if (j >= 1e6) return (j / 1e6).ToString("0.##") + " MJ";
+            if (j >= 1e3) return (j / 1e3).ToString("0.##") + " kJ";
+            return j.ToString("0") + " J";
+        }
+
+        private static string FmtDist(double m)
+        {
+            if (m >= 1e9) return (m / 1e9).ToString("0.##") + " Gm";
+            if (m >= 1e6) return (m / 1e6).ToString("0.##") + " Mm";
+            if (m >= 1e3) return (m / 1e3).ToString("0.#") + " km";
+            return m.ToString("0") + " m";
+        }
+
         /// <summary>Attach combat state to both fleets, each pointing at the other as its (representative) opponent
         /// and recording its starting ship count (the denominator for the casualty-fraction retreat threshold).
         /// The proven entry point for a controlled two-fleet matchup; multi-party joins go through
@@ -353,6 +397,60 @@ namespace Pulsar4X.Combat
             CombatLog($"{FleetLabel(fleetA)} vs {FleetLabel(fleetB)} — engaged");
             RecordBattleEvent(fleetA, BattleEventType.Engaged, 0, GetFleetShips(fleetA).Count, 0, "vs " + FleetLabel(fleetB));
             RecordBattleEvent(fleetB, BattleEventType.Engaged, 0, GetFleetShips(fleetB).Count, 0, "vs " + FleetLabel(fleetA));
+        }
+
+        /// <summary>Player order: this fleet ATTACKS that one — the explicit "engage them" the player wanted when two
+        /// fleets sat in range doing nothing (one holding fire, or an enemy that had broken off and the auto-trigger
+        /// won't re-grab). COMMITS the attacker: clears any retreat it was on (it's back in the fight), sets it
+        /// **Weapons Free** (or it would just keep holding fire), and forces BOTH fleets into combat now — the resolver
+        /// + closing model then run the fight (closing to weapons range first if there's a gap). A **direct call**
+        /// (like doctrine/EMCON), so it bypasses the auto-trigger's detection/posture/retreat gates: the player is
+        /// taking the shot deliberately. No-ops on a friendly target, an empty fleet, or self. Idempotent if a side is
+        /// already fighting (joins via <see cref="EnsureInCombat"/> instead of resetting a running engagement).</summary>
+        public static void OrderAttack(Entity attacker, Entity target)
+        {
+            if (attacker == null || !attacker.IsValid || target == null || !target.IsValid || attacker == target) return;
+            if (!AreHostile(attacker, target)) return;                       // no attacking your own
+            if (GetFleetShips(attacker).Count == 0 || GetFleetShips(target).Count == 0) return;
+            // Fog of war: you can't attack what you can't see. CanEngageTarget is "fog off → always; fog on → the
+            // attacker DETECTS the target", so with detection on this no-ops on an undetected enemy (the order can't
+            // conjure a target out of the dark) — matching the auto-trigger's detection gate.
+            if (!CanEngageTarget(attacker, target)) return;
+
+            if (attacker.HasDataBlob<FleetRetreatDB>()) attacker.RemoveDataBlob<FleetRetreatDB>(); // re-commit
+            FleetDoctrine.SetEngagementPosture(attacker, EngagementPosture.WeaponsFree);           // actually shoot
+
+            bool aIn = attacker.HasDataBlob<FleetCombatStateDB>();
+            bool bIn = target.HasDataBlob<FleetCombatStateDB>();
+            if (!aIn && !bIn)
+                StartEngagement(attacker, target);   // fresh fight — seeds the closing gap from the real distance
+            else
+            {
+                EnsureInCombat(attacker, target.Id); // one side already in a fight — join it (don't reset state)
+                EnsureInCombat(target, attacker.Id);
+            }
+        }
+
+        /// <summary>The Fleet-window "Engage" button: find the NEAREST hostile fleet in the same system and
+        /// <see cref="OrderAttack"/> it. Solves the common "two fleets in range just staring at each other" case
+        /// without map-click targeting (picking a SPECIFIC enemy fleet is the follow-up). Returns the fleet it
+        /// engaged, or null if no hostile fleet with ships is present.</summary>
+        public static Entity OrderAttackNearestHostile(Entity fleet)
+        {
+            if (fleet == null || !fleet.IsValid || fleet.Manager == null) return null;
+            Entity best = null;
+            double bestDist = double.MaxValue;
+            foreach (var other in fleet.Manager.GetAllEntitiesWithDataBlob<FleetDB>())
+            {
+                if (other == fleet || other == null || !other.IsValid) continue;
+                if (!AreHostile(fleet, other)) continue;
+                if (GetFleetShips(other).Count == 0) continue;
+                if (!CanEngageTarget(fleet, other)) continue;   // fog: only target hostiles we actually DETECT
+                double d = FleetSeparation(fleet, other);
+                if (d < bestDist) { bestDist = d; best = other; }
+            }
+            if (best != null) OrderAttack(fleet, best);
+            return best;
         }
 
         /// <summary>Put a fleet "in combat" if it isn't already — the JOIN primitive. Idempotent: a fleet already
@@ -456,10 +554,14 @@ namespace Pulsar4X.Combat
                 }
                 // SalvoDamageScale is the combat-pace dial: only this fraction of the raw salvo energy counts
                 // toward kills, so battles play out over many salvos instead of ending in 2–4 (see the const).
-                state.DamageTakenPool += TotalDamage(incoming) * dt * SalvoDamageScale;
+                double dmgThisSalvo = TotalDamage(incoming) * dt * SalvoDamageScale;
+                state.DamageTakenPool += dmgThisSalvo;
+                string attackerLabel = FleetLabel(live[attackersOf[i][0]])
+                    + (attackersOf[i].Count > 1 ? " +" + (attackersOf[i].Count - 1) + " more" : "");
                 // Pass the defender's gap so ballistic fire loses accuracy at range (the range term in HitFraction).
-                // SeparationOf is 0 when closing is off, so this is inert for the pre-closing resolve.
-                ApplyCasualties(ships[i], state, incoming, SeparationOf(live[i])); // prunes the dead from ships[i]
+                // SeparationOf is 0 when closing is off, so this is inert for the pre-closing resolve. dmgThisSalvo +
+                // attackerLabel feed the per-salvo play-by-play (which weapon / hit-rate / damage / which ship).
+                ApplyCasualties(ships[i], state, incoming, SeparationOf(live[i]), dmgThisSalvo, attackerLabel); // prunes the dead
             }
 
             // --- CLOSING phase (Phase 1): the gap moves toward the faster side's preferred range, AFTER this step's
@@ -559,7 +661,7 @@ namespace Pulsar4X.Combat
         // no new code here (docs/WEAPONS-AND-DODGE-DESIGN.md "aggregate force condition"). Behaviour matches the
         // old per-ship loop: buckets are killed combatants-first then most-hittable-first, and the pool stops at
         // the first bucket it can't finish.
-        private static void ApplyCasualties(List<CombatShip> ships, FleetCombatStateDB state, List<WeaponProfile> incomingFire, double separation_m = 0)
+        private static void ApplyCasualties(List<CombatShip> ships, FleetCombatStateDB state, List<WeaponProfile> incomingFire, double separation_m = 0, double damageThisSalvo = 0, string attackerLabel = null)
         {
             if (ships.Count == 0) return;
 
@@ -585,6 +687,11 @@ namespace Pulsar4X.Combat
                 b.Ships.Add(cs.Ship);
             }
 
+            // Ship-count-weighted average "fraction that got through the dodge" — the hit-vs-evade rate for the readout.
+            double landedSum = 0; int shipCount = 0;
+            foreach (var b in buckets.Values) { landedSum += b.Landed * b.Ships.Count; shipCount += b.Ships.Count; }
+            double avgLanded = shipCount > 0 ? landedSum / shipCount : 0;
+
             var ordered = new List<CasualtyBucket>(buckets.Values);
             ordered.Sort((x, y) =>
             {
@@ -593,6 +700,7 @@ namespace Pulsar4X.Combat
             });
 
             int totalKilled = 0;
+            var destroyedNames = new List<string>();   // the "which ship" detail the player asked for
             foreach (var b in ordered)
             {
                 // How many WHOLE ships from this bucket the pool can afford (guard div-by-zero + int overflow).
@@ -608,7 +716,7 @@ namespace Pulsar4X.Combat
                 if (kills > 0)
                 {
                     state.DamageTakenPool -= kills * b.EffToughness;
-                    for (int i = 0; i < kills; i++) b.Ships[i].Destroy(); // reify the count back to real entities
+                    for (int i = 0; i < kills; i++) { destroyedNames.Add(ShipName(b.Ships[i])); b.Ships[i].Destroy(); }
                     totalKilled += kills;
                 }
                 if (kills < b.Ships.Count) break; // pool ran out inside this bucket -> stop (matches per-ship break)
@@ -617,11 +725,33 @@ namespace Pulsar4X.Combat
             // Drop the dead (Destroy() flips IsValid synchronously) so the caller's survivor count is accurate.
             ships.RemoveAll(cs => !cs.Ship.IsValid);
 
-            if (totalKilled > 0)
+            // The per-salvo PLAY-BY-PLAY (the developer's "salvo means nothing — tell me which weapon, hit/evade,
+            // damage, which ship"). From the aggregate resolve we can honestly report: the weapon CLASSES firing, the
+            // hit-vs-dodge RATE, the damage dealt, and the ships DESTROYED by name. Per-component loss + per-ship hull%
+            // are NOT in this model (ships are whole-or-dead in v1) — that needs the parked per-component damage sim.
+            //
+            // VOLUME (the flooding fix): the FULL per-salvo play-by-play goes to the CONSOLE every salvo a fleet takes
+            // fire (when NarrateToLog is on — the client sets it true, so game_logs has the blow-by-blow). The capped
+            // (250) persistent Battle Report only keeps the BEATS — a salvo that DESTROYS a ship — with the rich note,
+            // so a long battle's report shows the kills + how the fight opened/ended, not 240 "no losses" lines that
+            // evict the Engaged event. Narration-off (headless tests + perf sims) records casualty salvos only =
+            // unchanged. Note built only when something will use it.
+            if (totalKilled > 0 || NarrateToLog)
             {
-                if (NarrateToLog)
-                    CombatLog($"salvo {state.StepsFought}: {FleetLabel(state.OwningEntity)} lost {totalKilled} ship(s), {ships.Count} left");
-                RecordBattleEvent(state.OwningEntity, BattleEventType.Salvo, totalKilled, ships.Count, state.StepsFought, "");
+                string rangeStr = separation_m > 0 ? " at " + FmtDist(separation_m) : "";
+                string outcome = totalKilled > 0
+                    ? "destroyed " + string.Join(", ", destroyedNames.ConvertAll(d => "'" + d + "'"))
+                    : "no losses";
+                string note = "took " + DescribeFireMix(incomingFire) + " fire" + rangeStr
+                    + " from " + (attackerLabel ?? "enemy")
+                    + " — " + (avgLanded * 100).ToString("0") + "% on target ("
+                    + ((1 - avgLanded) * 100).ToString("0") + "% dodged), " + FmtEnergy(damageThisSalvo) + " dealt; "
+                    + outcome + "; " + ships.Count + " left";
+
+                if (NarrateToLog)   // full blow-by-blow → console / game_logs
+                    CombatLog($"salvo {state.StepsFought}: {FleetLabel(state.OwningEntity)} {note}");
+                if (totalKilled > 0)   // only the casualty beats → the capped persistent Battle Report (no flooding)
+                    RecordBattleEvent(state.OwningEntity, BattleEventType.Salvo, totalKilled, ships.Count, state.StepsFought, note);
             }
         }
 
@@ -880,7 +1010,11 @@ namespace Pulsar4X.Combat
                 double flightTime = separation_m / w.Velocity;
                 double timeFactor = flightTime / (flightTime + FlightTimeReference_s);
                 double tracking = w.Tracking < 0 ? 0 : w.Tracking > 1 ? 1 : w.Tracking;
-                dodgeChance += evasion * timeFactor * (1.0 - tracking);
+                // (evasion + RangeBaseMiss): the target's dodge PLUS an evasion-independent base miss, so even a
+                // sitting (0-evasion) hull is hard to hit with a dumb slug at long range — the "accuracy falls off
+                // with distance" that forces fleets to CLOSE for a decisive hit instead of resolving at standoff.
+                // Both scale by flight-time and (1−Tracking): a beam / guided weapon shrugs it off, a dumb slug doesn't.
+                dodgeChance += (evasion + RangeBaseMiss) * timeFactor * (1.0 - tracking);
             }
             if (dodgeChance > 1.0) dodgeChance = 1.0;
 

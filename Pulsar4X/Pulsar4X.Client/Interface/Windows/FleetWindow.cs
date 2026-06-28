@@ -575,11 +575,36 @@ namespace Pulsar4X.Client
                     ImGui.Separator();
                     DisplayEngagementPostureSelector();
                     ImGui.Separator();
+                    DisplayEngageButton();
+                    ImGui.Separator();
                     DisplayFleetCombatSheet();
                 }
                 ImGui.EndChild();
             }
             ImGui.EndTabItem();
+        }
+
+        // The ATTACK lever — the player's "go get them" when two fleets sit in range doing nothing (one holding fire,
+        // or an enemy that broke off so the auto-trigger won't re-grab it). Calls the engine OrderAttackNearestHostile
+        // (a DIRECT call, like doctrine/EMCON), which clears any retreat, flips this fleet Weapons Free, and forces the
+        // fight now — the resolver/closing model then closes to weapons range and fights. v1 targets the NEAREST
+        // hostile; picking a specific enemy fleet by map-click is the follow-up.
+        private string _engageMsg = "";
+        private void DisplayEngageButton()
+        {
+            DisplayHelpers.Header("Engage",
+                "Order this fleet to ATTACK the nearest hostile fleet in the system NOW — clears any retreat, sets Weapons Free, and forces the fight (it will close to weapons range first if there's a gap). For when two fleets sit in range staring at each other.");
+            if (ImGui.Button("Attack nearest hostile fleet"))
+            {
+                var target = Pulsar4X.Combat.CombatEngagement.OrderAttackNearestHostile(SelectedFleet);
+                _engageMsg = target != null
+                    ? "Attacking '" + target.GetName(factionID) + "'"
+                    : "No hostile fleet in this system to attack.";
+                SessionLog.Action($"[attack] {(SelectedFleet != null ? SelectedFleet.GetName(factionID) : "fleet")} -> "
+                    + (target != null ? $"'{target.GetName(factionID)}' #{target.Id}" : "no hostile in system"));
+            }
+            if (!string.IsNullOrEmpty(_engageMsg))
+                ImGui.TextWrapped(_engageMsg);
         }
 
         // The live battle readout: is this fleet fighting, who is it fighting, how many ships has it lost, and how
