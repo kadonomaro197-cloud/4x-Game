@@ -4,6 +4,7 @@
 
 - **Gas cloud** — permanent terrain in some (non-home) systems. Inside it your sensors are cut, sub-light movement is dragged, warp crawls, and your hull slowly corrodes. A place to hide, get ambushed, or have to cross.
 - **Solar flare** — the home star's *weather*. On a schedule the star erupts a flare that grows near it, blinds sensors in the area and irradiates any ship caught there, then fades and is gone.
+- **Star corona** — a permanent danger zone hugging every star. Heat damage that **scales with proximity** (max at the surface, fading to zero at the edge of the zone) — dive toward the sun and you cook. Uses `SpaceHazardDB.DamageScalesWithProximity`.
 
 **Why it matters:** before this, empty space was truly empty — planets are tiny dots separated by astronomical gaps and nothing filled them. Hazards give the map geography to fight, hide and route around, which is what makes movement and detection *decisions* instead of straight lines.
 

@@ -101,5 +101,28 @@ namespace Pulsar4X.Tests
             new SpaceHazardProcessor().ProcessEntity(flare, 5);
             Assert.IsFalse(flare.IsValid, "An expired flare should be destroyed when processed.");
         }
+
+        [Test]
+        [Description("Every star gets a permanent corona danger zone (proximity-scaled heat damage); it bites near the star and not far out.")]
+        public void StarCorona_DamagesNearTheStar()
+        {
+            var s = TestScenario.CreateWithColony();
+            var star = FirstStar(s);
+            var starPos = star.GetDataBlob<PositionDB>().AbsolutePosition;
+
+            var coronas = s.StartingSystem.GetAllDataBlobsOfType<SpaceHazardDB>()
+                .Where(h => h.HazardType == SpaceHazardType.StarCorona).ToList();
+            Assert.IsNotEmpty(coronas, "The home star should have a corona danger zone.");
+            Assert.IsTrue(coronas[0].DamageScalesWithProximity, "Corona damage should scale with proximity.");
+            Assert.Greater(coronas[0].DamagePerSecond, 0.0);
+
+            var atStar = SpaceHazardTools.CombinedAt(s.StartingSystem, starPos);
+            Assert.IsTrue(atStar.InAnyHazard, "Right at the star you should be inside the corona.");
+            Assert.Greater(atStar.DamagePerSecond, 0.0, "The corona should be flagged as damaging.");
+
+            // 10 AU out is far beyond the corona — no corona there (and Sol has no other load-time hazards).
+            var farOut = SpaceHazardTools.CombinedAt(s.StartingSystem, starPos + new Vector3(Distance.AuToMt(10), 0, 0));
+            Assert.IsFalse(farOut.InAnyHazard, "Far from the star you should be clear of the corona.");
+        }
     }
 }

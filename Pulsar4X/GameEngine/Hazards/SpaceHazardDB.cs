@@ -13,6 +13,7 @@ namespace Pulsar4X.Hazards
     {
         GasCloud,
         SolarFlare,
+        StarCorona,
     }
 
     /// <summary>
@@ -42,6 +43,13 @@ namespace Pulsar4X.Hazards
         [JsonProperty] public double DamagePerSecond { get; internal set; } = 0.0;
         [JsonProperty] public bool BlindsSensors { get; internal set; } = false;
 
+        /// <summary>
+        /// When true, <see cref="DamagePerSecond"/> is the damage at the CENTRE and falls off linearly to zero at
+        /// the edge of the radius — so the closer a ship gets to the centre (e.g. a star), the more it takes. Used
+        /// by the star corona: dive toward the sun and the heat damage climbs. When false, damage is uniform inside.
+        /// </summary>
+        [JsonProperty] public bool DamageScalesWithProximity { get; internal set; } = false;
+
         // Transient (solar-flare) lifecycle. A gas cloud leaves these at default (IsTransient = false) and
         // lives forever; a flare grows from a point to MaxRadius_m at its peak then fades back to nothing,
         // and is removed from the game at ExpiresAt.
@@ -61,6 +69,7 @@ namespace Pulsar4X.Hazards
             WarpSpeedMultiplier = other.WarpSpeedMultiplier;
             DamagePerSecond = other.DamagePerSecond;
             BlindsSensors = other.BlindsSensors;
+            DamageScalesWithProximity = other.DamageScalesWithProximity;
             IsTransient = other.IsTransient;
             StartedAt = other.StartedAt;
             ExpiresAt = other.ExpiresAt;

@@ -50,6 +50,40 @@ namespace Pulsar4X.Hazards
         }
 
         /// <summary>
+        /// A permanent "corona" danger zone hugging a star: dive toward the sun and the heat damage climbs
+        /// (damage is max at the star and fades to zero at the edge of the zone). One per star.
+        /// </summary>
+        public static Entity CreateStarCorona(StarSystem system, Entity star, string name = "Solar Corona")
+        {
+            // Danger zone size: at least 0.12 AU, or 25x the star's surface radius for a big/hot star.
+            double starRadius_m = star.GetDataBlob<MassVolumeDB>().RadiusInM;
+            double radius_m = Math.Max(Distance.AuToMt(0.12), starRadius_m * 25.0);
+
+            var hazard = new SpaceHazardDB
+            {
+                HazardType = SpaceHazardType.StarCorona,
+                Radius_m = radius_m,
+                DamagePerSecond = 800.0,              // at the star surface; falls to 0 at the corona edge
+                DamageScalesWithProximity = true,
+                IsTransient = false,
+            };
+
+            var pos = new PositionDB(Vector3.Zero, star);
+            var blobs = new List<BaseDataBlob>
+            {
+                hazard,
+                pos,
+                new NameDB(name),
+                new VisibleByDefaultDB(),
+            };
+
+            var entity = Entity.Create();
+            entity.FactionOwnerID = Game.NeutralFactionId;
+            system.AddEntity(entity, blobs);
+            return entity;
+        }
+
+        /// <summary>
         /// A transient solar flare hugging the star — blinds sensors in the area and irradiates ships caught in
         /// it, then fades. Created by <c>SolarFlareProcessor</c> on a schedule so the home star has "weather".
         /// </summary>

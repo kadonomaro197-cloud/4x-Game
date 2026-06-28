@@ -76,12 +76,19 @@ namespace Pulsar4X.Hazards
                     continue;
                 if (!ship.TryGetDataBlob<PositionDB>(out var shipPos))
                     continue;
-                if ((shipPos.AbsolutePosition - center).Length() > radius)
+                double dist = (shipPos.AbsolutePosition - center).Length();
+                if (dist > radius)
                     continue;
 
                 if (doesDamage)
                 {
-                    double energy = hazDb.DamagePerSecond * deltaSeconds;
+                    double dps = hazDb.DamagePerSecond;
+                    // Star corona: damage is max at the centre (the star) and fades to zero at the edge — so the
+                    // closer a ship dives toward the sun, the more heat damage it takes.
+                    if (hazDb.DamageScalesWithProximity && radius > 0)
+                        dps *= Math.Max(0.0, 1.0 - dist / radius);
+
+                    double energy = dps * deltaSeconds;
                     var fragment = new DamageFragment
                     {
                         Energy = Math.Max(energy, 1.0),

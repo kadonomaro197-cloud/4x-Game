@@ -819,9 +819,16 @@ namespace Pulsar4X.Client.Rendering
                 var hazDb = haz.GetDataBlob<Pulsar4X.Hazards.SpaceHazardDB>();
                 if (hazDb.Radius_m <= 0) continue;
 
-                SDL3.SDL.Color colour = hazDb.HazardType == Pulsar4X.Hazards.SpaceHazardType.SolarFlare
-                    ? new SDL3.SDL.Color { R = 255, G = 140, B = 40, A = 160 }   // flare: bright orange
-                    : new SDL3.SDL.Color { R = 120, G = 200, B = 120, A = 90 };  // gas cloud: soft green
+                SDL3.SDL.Color colour;
+                switch (hazDb.HazardType)
+                {
+                    case Pulsar4X.Hazards.SpaceHazardType.SolarFlare:
+                        colour = new SDL3.SDL.Color { R = 255, G = 140, B = 40, A = 160 }; break;  // bright orange
+                    case Pulsar4X.Hazards.SpaceHazardType.StarCorona:
+                        colour = new SDL3.SDL.Color { R = 230, G = 80, B = 30, A = 70 }; break;    // faint red-orange
+                    default:
+                        colour = new SDL3.SDL.Color { R = 120, G = 200, B = 120, A = 90 }; break;  // gas cloud: soft green
+                }
 
                 string key = "hazard_" + haz.Id;
                 UIWidgets[key] = new SimpleCircle(haz.GetDataBlob<PositionDB>(),

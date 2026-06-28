@@ -52,13 +52,14 @@ namespace Pulsar4X.Galaxy
                 _systemBodyFactory.GenerateSystemBodiesForStar(game.StartingGameData, newSystem, star, game.TimePulse.GameGlobalDateTime);
             }
 
-            // Every star gets weather (a recurring solar-flare source).
+            // Every star gets weather (a recurring solar-flare source) and a permanent corona danger zone.
             foreach (Entity star in stars)
             {
                 star.SetDataBlob(new Pulsar4X.Hazards.StarFlareSourceDB
                 {
                     NextFlareTime = game.TimePulse.GameGlobalDateTime + TimeSpan.FromDays(2 + newSystem.RNGNextDouble() * 40)
                 });
+                Pulsar4X.Hazards.SpaceHazardFactory.CreateStarCorona(newSystem, star);
             }
 
             // Some generated (non-home) systems carry a gas cloud — deep-space terrain that cuts sensors, drags
@@ -512,6 +513,8 @@ namespace Pulsar4X.Galaxy
                 {
                     NextFlareTime = game.TimePulse.GameGlobalDateTime + TimeSpan.FromDays(2 + system.RNGNextDouble() * 20)
                 });
+                // A permanent corona danger zone — heat damage that climbs the closer a ship gets to the star.
+                Pulsar4X.Hazards.SpaceHazardFactory.CreateStarCorona(system, rootStar);
             }
 
             if(systemBlueprint.SurveyRings != null)
