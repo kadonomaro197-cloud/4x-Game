@@ -39,6 +39,13 @@ namespace Pulsar4X.Tests
             Effects = { new HazardEffect(HazardEffectType.RadiationDamage, 500, 150) }, // UV/ionising, like the real flare
         };
 
+        private static SpaceHazardDB KineticHazard() => new SpaceHazardDB
+        {
+            HazardType = SpaceHazardType.Generic,
+            Radius_m = 1e10,
+            Effects = { new HazardEffect(HazardEffectType.KineticDamage, 60, 0) }, // micrometeoroids, like the real debris field
+        };
+
         [Test]
         [Description("Discover a thermal hazard → its counter-research opens → completing it unlocks heat-resistant " +
                      "armour whose material actually resists thermal damage. The full cradle-to-grave loop.")]
@@ -110,6 +117,43 @@ namespace Pulsar4X.Tests
             Log($"tungsten-plating IDCode={id}, hard-radiation resistance={radResist}");
             Assert.That(radResist, Is.GreaterThan(0f),
                 "the unlocked armour's material must actually resist hard radiation — the loop pays off");
+        }
+
+        [Test]
+        [Description("The THIRD fully-wired flavour: discover a KINETIC hazard (a debris field) → its counter-research " +
+                     "opens → completing it unlocks ablative composite armour whose material actually resists kinetic " +
+                     "damage. Kinetic rides the wavelength-0 armour path, same as a railgun slug.")]
+        public void DiscoverKineticHazard_ResearchUnlocksKineticRatedArmour()
+        {
+            var s = TestScenario.CreateWithColony();
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+            var data = factionInfo.Data;
+            var design = factionInfo.ShipDesigns.Values.First();
+
+            // 1. Before discovery: the kinetic counter-tech is LOCKED, the rated armour unavailable.
+            Assert.That(data.LockedTechs.ContainsKey("tech-ablative-plating"), Is.True, "the kinetic counter-tech starts LOCKED");
+            Assert.That(data.Techs.ContainsKey("tech-ablative-plating"), Is.False, "...so it isn't researchable yet");
+            Assert.That(data.Armor.ContainsKey("ablative-composite-armor"), Is.False, "the rated armour is unavailable before research");
+
+            // 2. A ship in a debris field discovers kinetic impacts → the counter-research opens.
+            var ship = ShipFactory.CreateShip(design, s.Faction, s.StartingBody, "Surveyor");
+            HazardDiscovery.RecordAndAnnounce(ship, KineticHazard(), s.Game.TimePulse.GameGlobalDateTime);
+            Assert.That(data.Techs.ContainsKey("tech-ablative-plating"), Is.True,
+                "discovering a kinetic hazard opens its counter-research");
+
+            // 3. Complete the research → unlocks the rated armour (and its composite build material).
+            var tech = data.Techs["tech-ablative-plating"];
+            data.IncrementTechLevel(tech);
+            Assert.That(data.Armor.ContainsKey("ablative-composite-armor"), Is.True,
+                "completing the counter-tech unlocks the kinetic-resistant armour");
+
+            // 4. The unlocked armour's material carries real kinetic resistance (clad a ship, cross the debris field).
+            byte id = DamageTools.IDCodeForMaterial("ablative-composite");
+            var resist = DamageTools.DamageResistsLookupTable[id];
+            float kineticResist = resist.SignatureResistance[(int)DamageSignature.Kinetic];
+            Log($"ablative-composite IDCode={id}, kinetic resistance={kineticResist}");
+            Assert.That(kineticResist, Is.GreaterThan(0f),
+                "the unlocked armour's material must actually resist kinetic damage — the loop pays off");
         }
     }
 }

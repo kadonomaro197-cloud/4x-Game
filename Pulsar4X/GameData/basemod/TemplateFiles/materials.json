@@ -308,6 +308,28 @@
   {
     "Type": "ProcessedMaterial",
     "Payload": {
+      "UniqueID": "ablative-composite",
+      "Name": "Ablative Composite",
+      "Description": "Light carbon-composite plating that sheds kinetic impacts by ablating — sacrificing surface layers to absorb the energy of micrometeoroids and debris. The hull armour of choice for crossing a debris field.",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 50,
+      "PartMatUniqueID": "stainless-steel",
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.000556,
+      "ResourceCosts": {
+        "graphite": 50,
+        "aluminium": 30,
+        "silicon": 20
+      },
+      "IndustryPointCosts": 40,
+      "IndustryTypeID": "refining",
+      "WealthCost": 1,
+      "OutputAmount": 100
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
       "UniqueID": "electronics-d",
       "Name": "Grade-D Electronics",
       "Description": "Basic electrical components manufactured without aluminium refining. Lower performance, faster to produce.",

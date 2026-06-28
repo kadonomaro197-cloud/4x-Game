@@ -38,19 +38,19 @@ The hazard discovery/resistance/research loop the developer asked for is wired e
 
 **Gauge:** `Pulsar4X.Tests/HazardResearchLoopTests.cs` runs the whole chain on a real faction through the New-Game data path: locked → discover → open → research → armour unlocked → its material resists thermal.
 
-**Wired flavours = Thermal + HardRadiation (2 of 6).** `HazardDiscovery.CounterTechFor` maps all six signatures to tech ids; two now have the full data chain:
+**Wired flavours = Thermal + HardRadiation + Kinetic (3 of 6).** `HazardDiscovery.CounterTechFor` maps all six signatures to tech ids; three now have the full data chain (source → discover → tech → rated armour), all gauged in `HazardResearchLoopTests`:
 - **Thermal** ← corona/gas-cloud heat → `tech-thermal-shielding` → `nickel-steel` armour (IDCode 50).
-- **HardRadiation** ← **solar flare** (the real recurring source already emits `RadiationDamage` at 150 nm UV) → `tech-radiation-shielding` → `tungsten-plating` armour (IDCode 75, UV-absorbing + hard-radiation `SignatureResistance`). Gauge: `HazardResearchLoopTests.DiscoverRadiationHazard_...`.
+- **HardRadiation** ← **solar flare** (already emits `RadiationDamage` at 150 nm UV) → `tech-radiation-shielding` → `tungsten-plating` armour (IDCode 75, UV-absorbing + hard-radiation `SignatureResistance`).
+- **Kinetic** ← **debris field** (`SpaceHazardFactory.CreateDebrisField`, placed in ~25% of generated systems — `KineticDamage` at wavelength 0, same armour path as a railgun slug) → `tech-ablative-plating` → `ablative-composite` armour (IDCode 125, kinetic `SignatureResistance`).
 
-**The other four are NOT "just JSON" — the Prime-Directive investigation (2026-06-28) corrected that assumption:**
-| Flavour | Has a hazard that emits it? | Damage path | What it actually needs |
+**The remaining three are NOT "just JSON" — they need an engine damage SITE first (the Prime-Directive investigation, 2026-06-28, corrected the "5 easy follow-ups" assumption):**
+| Flavour | Has a source? | Damage site | What it needs next |
 |---|---|---|---|
-| **Kinetic** | ❌ nothing emits `KineticDamage` | ✅ wavelength-0 | author a kinetic *hazard* (debris/micrometeoroid field) FIRST, then the pure-JSON tech+armour (`tech-ablative-plating`) |
-| **EMStorm** | ❌ | ❌ no wavelength site | a new `HazardEffectType` (appended) + its own damage-application site (engine) + a source, THEN JSON |
-| **Gravimetric** | ❌ | ❌ no wavelength site | same — tidal/spacetime damage site (engine), per the black-hole work |
-| **Corrosive** | ❌ (gas cloud "corrosion" is modelled as `HeatDamage`→Thermal today) | ❌ no wavelength site | same — a chemical/dense-medium damage site (engine), THEN JSON |
+| **Corrosive** | the gas cloud's "corrosion" is mislabelled as `HeatDamage`→Thermal today | ❌ no wavelength | append `CorrosiveDamage` to `HazardEffectType`, build the **flat non-wavelength damage site** (health reduced by the ship's armour-material `SignatureResistance[Corrosive]`), reclassify the gas cloud, THEN tech+armour |
+| **EMStorm** | ❌ | ❌ no wavelength | same flat site + an EM-storm source; later refinement: target electronics/sensors, not hull |
+| **Gravimetric** | ❌ | ❌ no wavelength | same flat site + a source (exotic body); later refinement: tidal/structural, scaled by hull size |
 
-So authoring techs for the bottom four now would be inert armour-that-resists-nothing (the "pretty, not a decision" anti-pattern) — they wait on their hazard source and (for the non-wavelength trio) an engine damage site. The `Unlock` calls already no-op safely until then.
+These three share ONE engine job: a flat-damage application site for non-wavelength signatures (reduce ship health by `energy × scale × (1 − SignatureResistance[sig])`, reading the ship's armour material). Build it once, then all three are JSON. Until then their `Unlock` calls no-op safely — authoring their techs now would be inert armour-that-resists-nothing (the "pretty, not a decision" anti-pattern).
 
 ---
 

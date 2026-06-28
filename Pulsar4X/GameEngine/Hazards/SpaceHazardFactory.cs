@@ -89,6 +89,22 @@ namespace Pulsar4X.Hazards
         }
 
         /// <summary>
+        /// A debris / micrometeoroid field — kinetic terrain. Fast rock and ice pepper a ship's hull (kinetic
+        /// damage, resisted by ablative armour) and the cloud of grit drags sub-light movement. The kinetic
+        /// "wavelength 0" convention routes the damage through the same armour sim as a railgun slug, so an
+        /// ablative-rated hull shrugs it off.
+        /// </summary>
+        public static Entity CreateDebrisField(StarSystem system, Entity star, Vector3 offsetFromStar_m, double radius_m, string name = "Debris Field")
+        {
+            var effects = new List<HazardEffect>
+            {
+                new HazardEffect(HazardEffectType.KineticDamage, 60.0, 0.0), // micrometeoroid impacts (wavelength 0 = kinetic)
+                new HazardEffect(HazardEffectType.MovementDrag, 0.6),        // grit slows sub-light thrust
+            };
+            return CreateFromEffects(system, star, offsetFromStar_m, radius_m, SpaceHazardType.Generic, effects, name);
+        }
+
+        /// <summary>
         /// A transient solar flare hugging the star — blinds sensors in the area and irradiates ships caught in
         /// it (UV/ionising radiation, resisted by radiation shielding), then fades.
         /// </summary>

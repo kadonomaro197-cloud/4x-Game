@@ -82,5 +82,19 @@
       "MeltingZeroPoint": 3695,
       "PhotonReflectivityPeak": 0.50
     }
+  },
+  {
+    "Type": "Armor",
+    "Payload": {
+      "UniqueID": "ablative-composite-armor",
+      "ResourceID": "ablative-composite",
+      "Density": "1800",
+      "Elasticity": 0.6,
+      "TensileStrength": 600,
+      "ThermalCapacity": 1000,
+      "ThermalConductivity": 5.0,
+      "MeltingZeroPoint": 3800,
+      "PhotonReflectivityPeak": 0.10
+    }
   }
 ]

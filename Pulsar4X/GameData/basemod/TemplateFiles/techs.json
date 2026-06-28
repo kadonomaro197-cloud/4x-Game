@@ -655,6 +655,24 @@
         ]
       }
     }
+  },
+  {
+    "Type": "Tech",
+    "Payload": {
+      "UniqueID": "tech-ablative-plating",
+      "Name": "Ablative Plating",
+      "Description": "Sacrificial carbon-composite hull plating developed from studying debris fields and micrometeoroid streams. Unlocks ablative composite armour, which sheds the kinetic impacts of debris by ablating away its surface.",
+      "Category": "tech-category-stellar-science",
+      "MaxLevel": 1,
+      "DataFormula": "1",
+      "CostFormula": "2500",
+      "Unlocks": {
+        "1": [
+          "ablative-composite",
+          "ablative-composite-armor"
+        ]
+      }
+    }
   }
 
 ]
