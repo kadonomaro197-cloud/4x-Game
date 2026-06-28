@@ -61,6 +61,15 @@ namespace Pulsar4X.Client.Rendering
         // session log would drown in CAMERA lines. Only emit one every ~400 ms (Environment.TickCount is ms).
         int _lastCamLogTick = 0;
 
+        // [PERF] per-category map timing (filled each frame) so the slow-frame log names the heavy icon LIST —
+        // orbits vs rings(widgets) vs ships vs bodies vs labels — not just "map-draw heavy". 'u' = the per-frame
+        // transform (Update), 'd' = the SDL draw (Draw). One shared stopwatch: Update runs before Draw each frame,
+        // same render thread. Logged throttled by MaybeLogMapPerf so one play-test pinpoints the real culprit.
+        readonly System.Diagnostics.Stopwatch _perfSw = new System.Diagnostics.Stopwatch();
+        double _perfUWidgets, _perfUOrbits, _perfUMove, _perfUEntity, _perfUBody, _perfULabels;
+        double _perfDWidgets, _perfDOrbits, _perfDMove, _perfDEntity, _perfDContacts, _perfDBody, _perfDExtras, _perfDLabels;
+        int _lastPerfLogTick = 0;
+
         // Per-body-type minimum camera zoom for the label to render. Lower-tier
         // bodies (moons, ships, asteroids, comets) only show labels once you've
         // zoomed in enough that they aren't just visual clutter. Stars, planets,
@@ -605,26 +614,40 @@ namespace Pulsar4X.Client.Rendering
             }
 
             var matrix = _camera.GetZoomMatrix();
+
+            // [PERF] time each list's per-frame transform (orbits are the prime suspect: ~181 pts/ring/frame).
+            _perfSw.Restart();
             foreach (var (_, item) in UIWidgets)
                 item.OnFrameUpdate(matrix, _camera);
+            _perfUWidgets = _perfSw.Elapsed.TotalMilliseconds;
 
+            _perfSw.Restart();
             foreach (var (_, item) in _orbitRings)
                 item.OnFrameUpdate(matrix, _camera);
+            _perfUOrbits = _perfSw.Elapsed.TotalMilliseconds;
 
+            _perfSw.Restart();
             foreach (var (_, item) in _moveIcons)
                 item.OnFrameUpdate(matrix, _camera);
+            _perfUMove = _perfSw.Elapsed.TotalMilliseconds;
 
+            _perfSw.Restart();
             foreach (var (_, item) in _entityIcons)
                 item.OnFrameUpdate(matrix, _camera);
+            _perfUEntity = _perfSw.Elapsed.TotalMilliseconds;
 
+            _perfSw.Restart();
             foreach (var (_, item) in _bodyIcons)
                 item.OnFrameUpdate(matrix, _camera);
+            _perfUBody = _perfSw.Elapsed.TotalMilliseconds;
 
             foreach (var item in SelectedEntityExtras)
                 item.OnFrameUpdate(matrix, _camera);
 
+            _perfSw.Restart();
             foreach (var item in _allLabels)
                 item.OnFrameUpdate(matrix, _camera);
+            _perfULabels = _perfSw.Elapsed.TotalMilliseconds;
 
             UpdateContactBlips(matrix);
 
@@ -667,19 +690,43 @@ namespace Pulsar4X.Client.Rendering
         internal void Draw()
         {
             SafeDraw("Starfield", DrawStarfield);   // faint background stars, behind everything
-            DrawIcons(UIWidgets.Values);
-            DrawIconsExceptCollapsed(_orbitRings);   // a collapsed member's orbit ring is hidden too...
-            DrawIconsExceptCollapsed(_moveIcons);    // ...and its move/warp trail...
-            DrawIconsExceptCollapsed(_entityIcons);  // ...and its ship icon — so the fleet is ONE marker.
-            DrawIcons(_contactIcons.Values);
-            DrawIcons(_bodyIcons.Values);
-            DrawIcons(SelectedEntityExtras);
 
+            // [PERF] time each list's SDL draw (orbits draw ~180 lines/ring/frame — the prime suspect).
+            _perfSw.Restart(); DrawIcons(UIWidgets.Values); _perfDWidgets = _perfSw.Elapsed.TotalMilliseconds;
+            _perfSw.Restart(); DrawIconsExceptCollapsed(_orbitRings); _perfDOrbits = _perfSw.Elapsed.TotalMilliseconds;   // a collapsed member's orbit ring is hidden too...
+            _perfSw.Restart(); DrawIconsExceptCollapsed(_moveIcons); _perfDMove = _perfSw.Elapsed.TotalMilliseconds;      // ...and its move/warp trail...
+            _perfSw.Restart(); DrawIconsExceptCollapsed(_entityIcons); _perfDEntity = _perfSw.Elapsed.TotalMilliseconds;  // ...and its ship icon — so the fleet is ONE marker.
+            _perfSw.Restart(); DrawIcons(_contactIcons.Values); _perfDContacts = _perfSw.Elapsed.TotalMilliseconds;
+            _perfSw.Restart(); DrawIcons(_bodyIcons.Values); _perfDBody = _perfSw.Elapsed.TotalMilliseconds;
+            _perfSw.Restart(); DrawIcons(SelectedEntityExtras); _perfDExtras = _perfSw.Elapsed.TotalMilliseconds;
+
+            _perfSw.Restart();
             foreach (var i in _visibleLabels)
             {
                 if (i.Entity != null && _collapsedFleetMembers.Contains(i.Entity.Id)) continue; // hide member labels
                 SafeDraw(i.GetType().Name, () => i.Draw(_window.Renderer, _camera));
             }
+            _perfDLabels = _perfSw.Elapsed.TotalMilliseconds;
+
+            MaybeLogMapPerf();
+        }
+
+        // [PERF] throttled per-category map-timing log (mirrors the camera-log throttle). One play-test in a busy
+        // system / battle now names the heavy list + its entity count, so a fix targets the real culprit — no
+        // guessing. Reads as: "orbits u12.4/d281.0 (412)" = orbit transforms 12.4ms, orbit DRAW 281ms, 412 orbits.
+        void MaybeLogMapPerf()
+        {
+            double upd = _perfUOrbits + _perfUWidgets + _perfUMove + _perfUEntity + _perfUBody + _perfULabels;
+            double drw = _perfDOrbits + _perfDWidgets + _perfDMove + _perfDEntity + _perfDContacts + _perfDBody + _perfDExtras + _perfDLabels;
+            if (upd + drw < 8.0) return;                                  // map work cheap this frame — nothing to report
+            if (Environment.TickCount - _lastPerfLogTick < 2000) return;  // throttle ~2s (mirrors _lastCamLogTick)
+            _lastPerfLogTick = Environment.TickCount;
+            SessionLog.State("⏱ map breakdown ms — orbits u" + _perfUOrbits.ToString("0.0") + "/d" + _perfDOrbits.ToString("0.0") + " (" + _orbitRings.Count + ")"
+                + " | rings(widgets) u" + _perfUWidgets.ToString("0.0") + "/d" + _perfDWidgets.ToString("0.0") + " (" + UIWidgets.Count + ")"
+                + " | ships u" + _perfUEntity.ToString("0.0") + "/d" + _perfDEntity.ToString("0.0") + " (" + _entityIcons.Count + ")"
+                + " | bodies u" + _perfUBody.ToString("0.0") + "/d" + _perfDBody.ToString("0.0") + " (" + _bodyIcons.Count + ")"
+                + " | moves d" + _perfDMove.ToString("0.0") + " | contacts d" + _perfDContacts.ToString("0.0")
+                + " | labels u" + _perfULabels.ToString("0.0") + "/d" + _perfDLabels.ToString("0.0") + " (" + _visibleLabels.Count + ")");
         }
 
         void DrawIcons(IEnumerable<IDrawData> icons)
