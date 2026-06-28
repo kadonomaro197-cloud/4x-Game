@@ -76,6 +76,43 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("With narration on (as the live client runs), the casualty salvo records a detailed play-by-play " +
+                     "note — which weapon CLASS fired, the hit-vs-dodge rate, the damage dealt, and the ship destroyed " +
+                     "BY NAME (the developer's 'salvo means nothing — tell me which weapon / hit / damage / which ship').")]
+        public void BattleLog_SalvoNote_NamesWeaponHitRateDamageAndDestroyedShip()
+        {
+            var s = TestScenario.CreateWithColony();
+            var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+            var attacker = FleetFactory.Create(s.StartingSystem, enemyFaction.Id, "Slug Battery");
+            AddShip(s, enemyFaction, attacker, Slugger(40_000), "Slugger");
+            var defender = FleetFactory.Create(s.StartingSystem, s.Faction.Id, "Defenders");
+            AddShip(s, s.Faction, defender, SoftHull(100_000), "Victim"); // can't dodge -> dies
+
+            bool prev = CombatEngagement.NarrateToLog;
+            BattleLog.Clear();
+            CombatEngagement.NarrateToLog = true;   // the client runs with this ON; tests default OFF
+            try
+            {
+                CombatEngagement.StartEngagement(attacker, defender);
+                int steps = 0;
+                while (defender.HasDataBlob<FleetCombatStateDB>() && steps < 2000)
+                { CombatEngagement.StepEngagement(attacker, defender, 5); steps++; }
+            }
+            finally { CombatEngagement.NarrateToLog = prev; }   // never leak the static
+
+            var killNote = BattleLog.Recent()
+                .Where(e => e.FleetId == defender.Id && e.Type == BattleEventType.Salvo && e.ShipsLost > 0)
+                .Select(e => e.Note).FirstOrDefault();
+            Log($"kill note: {killNote}");
+
+            Assert.That(killNote, Is.Not.Null.And.Not.Empty, "the casualty salvo carries a detailed note");
+            Assert.That(killNote, Does.Contain("Railgun"), "names the weapon CLASS that fired");
+            Assert.That(killNote, Does.Contain("on target"), "reports the hit-vs-dodge rate");
+            Assert.That(killNote, Does.Contain("dealt"), "reports the damage dealt");
+            Assert.That(killNote, Does.Contain("'Victim'"), "names the ship that was destroyed");
+        }
+
+        [Test]
         [Description("BattleLog is capped (ring buffer) so a long campaign can't grow it without bound.")]
         public void BattleLog_IsCappedToMaxEvents()
         {
