@@ -32,9 +32,10 @@ namespace Pulsar4X.Tests
         // ─── Root A — weapon range on the combat profile ───────────────────────────────────────────────────────
 
         [Test]
-        [Description("A beam weapon carries its design MaxRange into its WeaponProfile.Range_m; railguns (no range " +
-                     "field yet) carry 0 = unbounded. Range does NOT change Firepower — the old strength number is " +
-                     "identical (the field is additive data the closing model reads, not a stat change).")]
+        [Description("A beam weapon carries its design MaxRange into its WeaponProfile.Range_m; railguns carry a finite " +
+                     "class-default MID range (RailgunRange_m, 2026-06-28 — was 0/unbounded). Range does NOT change " +
+                     "Firepower — the old strength number is identical (the field is additive data the closing model " +
+                     "reads, not a stat change).")]
         public void WeaponProfile_CarriesDesignRange_FirepowerUnchanged()
         {
             var s = TestScenario.CreateWithColony();
@@ -52,26 +53,30 @@ namespace Pulsar4X.Tests
             Assert.That(cv.Weapons.Sum(w => w.DamagePerSecond), Is.EqualTo(cv.Firepower).Within(1e-6).Percent,
                 "Firepower must still equal the summed weapon DPS — range is additive data, not a stat change");
 
-            // Railguns have no design range field yet → rangeless (0). Documents the flagged follow-up.
+            // Railguns now carry a finite class-default MID range (was 0/unbounded — the "firing outside detection
+            // range" fix, 2026-06-28). A per-design field is the next step.
             var lancer = Build(s, "default-ship-design-test-railgun", "Lancer");
             var rg = lancer.GetDataBlob<ShipCombatValueDB>().Weapons.Where(w => w.Class == WeaponClass.Railgun).ToArray();
             Assert.That(rg.Length, Is.GreaterThan(0), "the Lancer carries railguns");
             foreach (var w in rg)
-                Assert.That(w.Range_m, Is.EqualTo(0), "railguns default to 0 = unbounded until their range field is added (flagged)");
+                Assert.That(w.Range_m, Is.EqualTo(ShipCombatValueDB.RailgunRange_m).Within(1),
+                    "railguns carry the finite class-default mid range (no longer rangeless)");
         }
 
         // ─── Root B — fleet capability aggregation ─────────────────────────────────────────────────────────────
 
         [Test]
-        [Description("The firepower-vs-range curve: at range 0 every weapon counts; past the beams' finite range the " +
-                     "beam firepower drops out and only the unbounded (rangeless railgun) firepower remains. The shape " +
-                     "the closing resolve sums each step against the current gap.")]
+        [Description("The firepower-vs-range curve: at range 0 every weapon counts; past a weapon's finite range its " +
+                     "firepower drops out. The identity tested holds regardless of which weapons are finite — the drop " +
+                     "at a given gap is exactly the firepower of the weapons whose range is shorter than that gap. The " +
+                     "shape the closing resolve sums each step against the current gap.")]
         public void FirepowerAtRange_DropsFiniteRangeWeapons_AsTheGapGrows()
         {
             var s = TestScenario.CreateWithColony();
             var fleet = FleetFactory.Create(s.StartingSystem, s.Faction.Id, "Task Force");
 
-            // Aegis = beams (finite range); Capital = railguns (rangeless, always count).
+            // Aegis = beams; Capital = railguns. Both are finite-range now (railgun range added 2026-06-28), so at a
+            // 1 Gm gap BOTH drop out — the identity below (drop == finite-range firepower at that gap) still holds.
             foreach (var (id, name) in new[] { ("default-ship-design-test-warship", "Aegis"),
                                                ("default-ship-design-test-capital", "Leviathan") })
                 s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(s.Faction.Id, fleet, Build(s, id, name)));
@@ -87,7 +92,7 @@ namespace Pulsar4X.Tests
             Assert.That(finiteRangeFp, Is.GreaterThan(0), "the test needs finite-range (beam) weapons to be meaningful");
             Assert.That(beyond, Is.LessThan(total), "past the beams' range, fleet firepower drops");
             Assert.That(beyond, Is.EqualTo(total - finiteRangeFp).Within(0.001).Percent,
-                "the drop is exactly the finite-range firepower; the unbounded (railgun) firepower remains");
+                "the drop is exactly the firepower of weapons whose finite range is under the gap; only truly unbounded firepower (if any) remains");
         }
 
         [Test]
