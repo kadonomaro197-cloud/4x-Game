@@ -1377,37 +1377,39 @@ namespace Pulsar4X.Client
             }
 
             bool isTreeOpen = ImGui.TreeNodeEx(name, flags);
+
+            // LEFT-click selects the fleet IMMEDIATELY — whether or not the node is expanded, with no popup in the
+            // way. (Selection used to live inside `if(isTreeOpen)`, so picking a fleet was a two-step dance and you
+            // had to click elsewhere before a different fleet would take — the reported "a menu blocks selection".)
+            // Right-click is the context menu only (DisplayContextMenu → BeginPopupContextItem with MouseButtonRight).
+            if(ImGui.IsItemClicked(ImGuiMouseButton.Left))
+            {
+                SelectFleet(fleet);
+            }
+
             if(ImGui.IsItemHovered())
                 DisplayHelpers.DescriptiveTooltip(name, "Fleet", description);
 
+            // Context menu (RIGHT-click) + drag/drop — once per fleet, regardless of open/closed.
+            DisplayContextMenu(fleet);
+            DisplayDropSource(fleet, name);
+            DisplayDropTarget(fleet);
+
             if(isTreeOpen)
             {
-                if(ImGui.IsItemClicked())
-                {
-                    SelectFleet(fleet);
-                }
-                DisplayContextMenu(fleet);
-                DisplayDropSource(fleet, name);
-                DisplayDropTarget(fleet);
                 foreach(var child in fleetInfo.GetChildren())
                 {
                     DisplayFleetItem(child);
                 }
                 ImGui.TreePop();
             }
-
-            if(!isTreeOpen)
-            {
-                DisplayContextMenu(fleet);
-                DisplayDropSource(fleet, name);
-                DisplayDropTarget(fleet);
-            }
             ImGui.PopID();
         }
 
         private void DisplayContextMenu(Entity fleet)
         {
-            if(ImGui.BeginPopupContextItem())
+            // RIGHT-click only (explicit), so a LEFT-click never opens this menu — left-click just selects the fleet.
+            if(ImGui.BeginPopupContextItem(null, ImGuiPopupFlags.MouseButtonRight))
             {
                 if(ImGui.MenuItem("Rename"))
                 {
