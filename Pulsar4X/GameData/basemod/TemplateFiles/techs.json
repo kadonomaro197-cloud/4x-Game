@@ -619,6 +619,24 @@
       "DataFormula": "0.2 - [Level] * 0.01",
       "CostFormula": "(1 + [Level]) * 500"
     }
+  },
+  {
+    "Type": "Tech",
+    "Payload": {
+      "UniqueID": "tech-thermal-shielding",
+      "Name": "Thermal Shielding",
+      "Description": "Heat-resistant hull plating developed from studying stellar thermal environments. Unlocks nickel-steel armour, which sheds the heat of a corona or hot nebula.",
+      "Category": "tech-category-stellar-science",
+      "MaxLevel": 1,
+      "DataFormula": "1",
+      "CostFormula": "2500",
+      "Unlocks": {
+        "1": [
+          "nickel-steel",
+          "nickel-steel-armor"
+        ]
+      }
+    }
   }
-  
+
 ]

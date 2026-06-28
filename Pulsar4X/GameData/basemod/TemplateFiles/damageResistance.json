@@ -53,5 +53,17 @@
       "Density": "7900",
       "WavelengthAbsorption": [0.45, 0.35, 0.28, 0.45, 0.55]
     }
+  },
+  {
+    "Type": "DamageResistance",
+    "Payload": {
+      "UniqueID": "50",
+      "MaterialID": "nickel-steel",
+      "HitPoints": "255",
+      "MeltingPoint": "1750",
+      "Density": "8200",
+      "WavelengthAbsorption": [0.2, 0.15, 0.12, 0.5, 0.6],
+      "SignatureResistance": [0.0, 0.6, 0.2, 0.0, 0.0, 0.0]
+    }
   }
 ]

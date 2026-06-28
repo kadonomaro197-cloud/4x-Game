@@ -27,6 +27,21 @@
 
 ---
 
+## The complete loop — survey → discover → research → rated armour (cradle to grave, 2026-06-28)
+
+The hazard discovery/resistance/research loop the developer asked for is wired end to end:
+
+1. **Survive/encounter** — a ship inside a hazard takes damage stamped with the hazard's `DamageSignature` (the keystone flavour: corona heat → Thermal). Armour rated against that flavour (`DamageResistBlueprint.SignatureResistance`) takes less — and a ship is hit **as the material it's actually clad in** (the `ComponentPlacement` IDCode wiring, `Damage/CLAUDE.md`).
+2. **Discover** — `HazardDiscovery.RecordAndAnnounce` records the flavour into the faction's `FactionHazardKnowledgeDB`, fires an `EnvironmentalHazardDiscovered` notification, and `Unlock`s the counter-tech.
+3. **Research** — the counter-tech (`tech-thermal-shielding`, in the new **Stellar Science** category, `techCategories.json`/`techs.json`) was LOCKED; discovery opens it. Completing it `Unlock`s the rated armour + its build material.
+4. **Build & clad** — the rated armour (`nickel-steel-armor`, made of `nickel-steel` — built from iron/nickel/chromium) is now buildable; its material's `DamageResistBlueprint` (`damageResistance.json` IDCode 50) carries thermal `SignatureResistance`, so a ship clad in it survives the corona. Lose the ship → re-build; the knowledge persists (save/loaded), the armour is re-buildable.
+
+**Gauge:** `Pulsar4X.Tests/HazardResearchLoopTests.cs` runs the whole chain on a real faction through the New-Game data path: locked → discover → open → research → armour unlocked → its material resists thermal.
+
+**Worked example = Thermal only (v1).** `HazardDiscovery.CounterTechFor` maps all six signatures to tech ids, but only `tech-thermal-shielding` exists in data so far; the other five `Unlock` calls no-op until their tech + armour are authored (same pattern — pure JSON, no new C#). Purpose-named armours (vs reusing nickel-steel) are the same trivial follow-up.
+
+---
+
 ## Player agency — the DECISION the hazard creates (read this before tuning damage)
 
 A hazard that just deals unavoidable damage is "pretty, not a decision" — the anti-pattern `docs/REALISM-VS-GAMEPLAY-AUDIT.md` warns against. The hazard earns its keep only as the source of a stacking decision. Three layers give that:

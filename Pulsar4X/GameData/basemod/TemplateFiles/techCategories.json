@@ -78,5 +78,13 @@
       "Name": "Bureaucracy",
       "Description": "Research into improvements in bureaucracy and administration"
     }
+  },
+  {
+    "Type": "TechCategory",
+    "Payload": {
+      "UniqueID": "tech-category-stellar-science",
+      "Name": "Stellar Science",
+      "Description": "Study of stars, hazards and exotic stellar environments — the research that turns surviving a hazard into a counter for it."
+    }
   }
 ]
