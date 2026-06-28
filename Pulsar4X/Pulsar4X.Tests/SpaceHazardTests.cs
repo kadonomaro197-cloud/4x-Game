@@ -1,6 +1,9 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
+using System.Collections.Generic;
+using Pulsar4X.Components;
+using Pulsar4X.Datablobs;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
 using Pulsar4X.Galaxy;
@@ -200,6 +203,31 @@ namespace Pulsar4X.Tests
                 "The module must carry a HazardResistanceAtb (the JSON template -> Atb binding, gotcha-10).");
             Assert.AreEqual(HazardEffectType.SensorJam, atb.ResistedEffectType, "It should resist SensorJam.");
             Assert.Greater(atb.ResistanceFraction, 0.0, "It should provide some resistance.");
+        }
+
+        [Test]
+        [Description("Install → read → grave: an INSTALLED hardening module gives resistance to its kind only, and a DESTROYED one gives none.")]
+        public void InstalledHardeningModule_Resists_AndLosesItWhenDestroyed()
+        {
+            var s = TestScenario.CreateWithColony();
+            var design = s.Faction.GetDataBlob<FactionInfoDB>().ComponentDesigns["default-design-sensor-hardening-module"];
+
+            // A bare ship-like entity carrying a ComponentInstancesDB, with the module installed.
+            var ship = Entity.Create();
+            var cidb = new ComponentInstancesDB();
+            s.StartingSystem.AddEntity(ship, new List<BaseDataBlob> { cidb });
+            var module = new ComponentInstance(design);
+            cidb.AddComponentInstance(module);
+
+            Assert.Greater(SpaceHazardTools.ResistanceFraction(ship, HazardEffectType.SensorJam), 0.0,
+                "An installed Sensor Hardening Module should give sensor-jam resistance.");
+            Assert.AreEqual(0.0, SpaceHazardTools.ResistanceFraction(ship, HazardEffectType.MovementDrag), 1e-9,
+                "It should NOT resist a different effect kind (drag) — resistance is per-kind.");
+
+            // Grave rung: destroy the module → its resistance is gone (read live from installed components).
+            cidb.RemoveComponentInstance(module);
+            Assert.AreEqual(0.0, SpaceHazardTools.ResistanceFraction(ship, HazardEffectType.SensorJam), 1e-9,
+                "Destroying the module removes the resistance (the grave rung).");
         }
     }
 }
