@@ -11,7 +11,10 @@ namespace Pulsar4X.Client
     {
         double _tempK;
         SDL.Color _color;
-        float _iconMinSize = 16;
+        // Floor size of the star glyph on screen (px). A star's true radius is sub-pixel at the
+        // system-wide zoom, so this floor is what you actually see — bumped up so the sun reads as
+        // a real, dominant body instead of a dot the size of a planet.
+        float _iconMinSize = 32;
         double _bodyRadiusAU;
         public StarIcon(StarInfoDB starInfoDB, PositionDB positionDB, MassVolumeDB massVolumeDB): base(positionDB)
         {

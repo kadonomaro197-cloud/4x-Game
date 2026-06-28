@@ -41,6 +41,7 @@
         "ScenarioFiles/systems/sol/uranus.json",
         "ScenarioFiles/systems/sol/neptune.json",
         "ScenarioFiles/systems/sol/dwarfPlanets.json",
+        "ScenarioFiles/systems/sol/asteroids.json",
         "ScenarioFiles/systems/sol/comets.json"
     ]
 }

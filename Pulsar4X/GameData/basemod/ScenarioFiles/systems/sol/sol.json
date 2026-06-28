@@ -55,10 +55,24 @@
         "dwarf-haumea",
         "dwarf-makemake",
         "dwarf-pluto",
-        "comet-halleys"
+        "comet-halleys",
+        "asteroid-vesta",
+        "asteroid-pallas",
+        "asteroid-hygiea",
+        "asteroid-juno",
+        "asteroid-eunomia",
+        "asteroid-psyche",
+        "asteroid-davida",
+        "asteroid-interamnia",
+        "asteroid-europa52",
+        "asteroid-sylvia"
       ],
       "SurveyRings": [
         { "RingRadiusInAU": 2, "Count": 2 }
+      ],
+      "AsteroidBelts": [
+        { "Name": "Main Belt", "InnerRadiusInAU": 2.1, "OuterRadiusInAU": 3.3, "Count": 140 },
+        { "Name": "Kuiper Belt", "InnerRadiusInAU": 30, "OuterRadiusInAU": 48, "Count": 90 }
       ]
     }
   }

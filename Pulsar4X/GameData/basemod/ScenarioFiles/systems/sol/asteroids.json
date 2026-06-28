@@ -1,0 +1,252 @@
+[
+  {
+    "Type": "SystemBody",
+    "Payload": {
+      "UniqueID": "asteroid-vesta",
+      "Name": "Vesta",
+      "Colonizable": false,
+      "GenerateMinerals": "random",
+      "GeoSurveyPointsRequired": 400,
+      "Info": {
+        "Type": "asteroid",
+        "Albedo": 0.42,
+        "Mass": 2.59076E20,
+        "Radius": 262.7,
+        "LengthOfDay": "0.05:20:00"
+      },
+      "Orbit": {
+        "SemiMajorAxis": 353.28E6,
+        "Eccentricity": 0.0887,
+        "EclipticInclination": 7.14,
+        "LoAN": 103.81,
+        "AoP": 151.2,
+        "MeanAnomaly": 20.86
+      }
+    }
+  },
+  {
+    "Type": "SystemBody",
+    "Payload": {
+      "UniqueID": "asteroid-pallas",
+      "Name": "Pallas",
+      "Colonizable": false,
+      "GenerateMinerals": "random",
+      "GeoSurveyPointsRequired": 400,
+      "Info": {
+        "Type": "asteroid",
+        "Albedo": 0.16,
+        "Mass": 2.04E20,
+        "Radius": 256,
+        "LengthOfDay": "0.07:48:00"
+      },
+      "Orbit": {
+        "SemiMajorAxis": 414.69E6,
+        "Eccentricity": 0.2313,
+        "EclipticInclination": 34.84,
+        "LoAN": 173.02,
+        "AoP": 310.05,
+        "MeanAnomaly": 40.6
+      }
+    }
+  },
+  {
+    "Type": "SystemBody",
+    "Payload": {
+      "UniqueID": "asteroid-hygiea",
+      "Name": "Hygiea",
+      "Colonizable": false,
+      "GenerateMinerals": "random",
+      "GeoSurveyPointsRequired": 400,
+      "Info": {
+        "Type": "asteroid",
+        "Albedo": 0.072,
+        "Mass": 8.74E19,
+        "Radius": 217,
+        "LengthOfDay": "0.13:50:00"
+      },
+      "Orbit": {
+        "SemiMajorAxis": 469.97E6,
+        "Eccentricity": 0.1125,
+        "EclipticInclination": 3.83,
+        "LoAN": 283.2,
+        "AoP": 312.32,
+        "MeanAnomaly": 152.18
+      }
+    }
+  },
+  {
+    "Type": "SystemBody",
+    "Payload": {
+      "UniqueID": "asteroid-juno",
+      "Name": "Juno",
+      "Colonizable": false,
+      "GenerateMinerals": "random",
+      "GeoSurveyPointsRequired": 350,
+      "Info": {
+        "Type": "asteroid",
+        "Albedo": 0.238,
+        "Mass": 2.67E19,
+        "Radius": 127,
+        "LengthOfDay": "0.07:13:00"
+      },
+      "Orbit": {
+        "SemiMajorAxis": 399.33E6,
+        "Eccentricity": 0.2562,
+        "EclipticInclination": 12.99,
+        "LoAN": 169.85,
+        "AoP": 247.74,
+        "MeanAnomaly": 33.0
+      }
+    }
+  },
+  {
+    "Type": "SystemBody",
+    "Payload": {
+      "UniqueID": "asteroid-eunomia",
+      "Name": "Eunomia",
+      "Colonizable": false,
+      "GenerateMinerals": "random",
+      "GeoSurveyPointsRequired": 350,
+      "Info": {
+        "Type": "asteroid",
+        "Albedo": 0.21,
+        "Mass": 3.12E19,
+        "Radius": 136,
+        "LengthOfDay": "0.06:05:00"
+      },
+      "Orbit": {
+        "SemiMajorAxis": 395.51E6,
+        "Eccentricity": 0.1869,
+        "EclipticInclination": 11.75,
+        "LoAN": 292.93,
+        "AoP": 98.62,
+        "MeanAnomaly": 333.0
+      }
+    }
+  },
+  {
+    "Type": "SystemBody",
+    "Payload": {
+      "UniqueID": "asteroid-psyche",
+      "Name": "Psyche",
+      "Colonizable": false,
+      "GenerateMinerals": "random",
+      "GeoSurveyPointsRequired": 350,
+      "Info": {
+        "Type": "asteroid",
+        "Albedo": 0.12,
+        "Mass": 2.29E19,
+        "Radius": 111,
+        "LengthOfDay": "0.04:12:00"
+      },
+      "Orbit": {
+        "SemiMajorAxis": 437.0E6,
+        "Eccentricity": 0.134,
+        "EclipticInclination": 3.1,
+        "LoAN": 150.04,
+        "AoP": 229.66,
+        "MeanAnomaly": 20.0
+      }
+    }
+  },
+  {
+    "Type": "SystemBody",
+    "Payload": {
+      "UniqueID": "asteroid-davida",
+      "Name": "Davida",
+      "Colonizable": false,
+      "GenerateMinerals": "random",
+      "GeoSurveyPointsRequired": 350,
+      "Info": {
+        "Type": "asteroid",
+        "Albedo": 0.054,
+        "Mass": 3.84E19,
+        "Radius": 144,
+        "LengthOfDay": "0.05:08:00"
+      },
+      "Orbit": {
+        "SemiMajorAxis": 473.98E6,
+        "Eccentricity": 0.1861,
+        "EclipticInclination": 15.94,
+        "LoAN": 107.61,
+        "AoP": 337.95,
+        "MeanAnomaly": 205.0
+      }
+    }
+  },
+  {
+    "Type": "SystemBody",
+    "Payload": {
+      "UniqueID": "asteroid-interamnia",
+      "Name": "Interamnia",
+      "Colonizable": false,
+      "GenerateMinerals": "random",
+      "GeoSurveyPointsRequired": 350,
+      "Info": {
+        "Type": "asteroid",
+        "Albedo": 0.078,
+        "Mass": 3.5E19,
+        "Radius": 153,
+        "LengthOfDay": "0.08:43:00"
+      },
+      "Orbit": {
+        "SemiMajorAxis": 458.08E6,
+        "Eccentricity": 0.1549,
+        "EclipticInclination": 17.29,
+        "LoAN": 280.36,
+        "AoP": 95.69,
+        "MeanAnomaly": 350.0
+      }
+    }
+  },
+  {
+    "Type": "SystemBody",
+    "Payload": {
+      "UniqueID": "asteroid-europa52",
+      "Name": "Europa (52)",
+      "Colonizable": false,
+      "GenerateMinerals": "random",
+      "GeoSurveyPointsRequired": 350,
+      "Info": {
+        "Type": "asteroid",
+        "Albedo": 0.058,
+        "Mass": 2.5E19,
+        "Radius": 151.5,
+        "LengthOfDay": "0.05:38:00"
+      },
+      "Orbit": {
+        "SemiMajorAxis": 463.0E6,
+        "Eccentricity": 0.1009,
+        "EclipticInclination": 7.48,
+        "LoAN": 128.55,
+        "AoP": 343.0,
+        "MeanAnomaly": 30.0
+      }
+    }
+  },
+  {
+    "Type": "SystemBody",
+    "Payload": {
+      "UniqueID": "asteroid-sylvia",
+      "Name": "Sylvia",
+      "Colonizable": false,
+      "GenerateMinerals": "random",
+      "GeoSurveyPointsRequired": 350,
+      "Info": {
+        "Type": "asteroid",
+        "Albedo": 0.045,
+        "Mass": 1.478E19,
+        "Radius": 143,
+        "LengthOfDay": "0.05:11:00"
+      },
+      "Orbit": {
+        "SemiMajorAxis": 521.4E6,
+        "Eccentricity": 0.0902,
+        "EclipticInclination": 10.87,
+        "LoAN": 73.13,
+        "AoP": 265.99,
+        "MeanAnomaly": 140.0
+      }
+    }
+  }
+]

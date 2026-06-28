@@ -387,6 +387,67 @@ namespace Pulsar4X.Galaxy
             return system;
         }
 
+        /// <summary>
+        /// Scatters <paramref name="count"/> small asteroid (and the occasional small dwarf-planet) entities
+        /// across a band of the system between <paramref name="innerAU"/> and <paramref name="outerAU"/> from
+        /// the star. This is what fills an AsteroidBelt declared on a SystemBlueprint — e.g. Sol's main belt
+        /// between Mars and Jupiter, or the Kuiper belt past Neptune. The hand-listed named asteroids in the
+        /// blueprint's Bodies are the big real ones; this is the gravel around them so the band actually reads
+        /// as a populated belt on the map. Every scattered rock is visible by default (no survey needed to see
+        /// it) and orbits the star prograde, like the rest of the system bodies.
+        /// </summary>
+        public void GenerateAsteroidBelt(Game game, StarSystem system, Entity star, string beltName, double innerAU, double outerAU, int count)
+        {
+            if (count <= 0)
+                return;
+            if (outerAU < innerAU)
+                (innerAU, outerAU) = (outerAU, innerAU);
+
+            var settings = GalaxyGen.Settings;
+            double starMass = star.GetDataBlob<MassVolumeDB>().MassDry;
+            DateTime epoch = settings.J2000;
+
+            for (int i = 0; i < count; i++)
+            {
+                // Most are asteroids; roughly 1-in-NumberOfAsteroidsPerDwarfPlanet is a small dwarf planet,
+                // matching the flavour of the procedural belt-finalize path (SystemBodyFactory).
+                bool isDwarf = settings.NumberOfAsteroidsPerDwarfPlanet > 0
+                    && system.RNGNextDouble() <= (1.0 / settings.NumberOfAsteroidsPerDwarfPlanet);
+                BodyType bodyType = isDwarf ? BodyType.DwarfPlanet : BodyType.Asteroid;
+
+                var blobs = new List<BaseDataBlob>();
+
+                var infoDB = new SystemBodyInfoDB() { BodyType = bodyType, SupportsPopulations = false };
+                blobs.Add(infoDB);
+
+                var mvDB = MassVolumeDB.NewFromMassAndDensity(
+                    GeneralMath.Lerp(settings.SystemBodyMassByType[bodyType], system.RNGNextDouble()),
+                    GeneralMath.Lerp(settings.SystemBodyDensityByType[bodyType], system.RNGNextDouble()));
+                blobs.Add(mvDB);
+
+                double sma_m = Distance.AuToMt(GeneralMath.Lerp(innerAU, outerAU, system.RNGNextDouble()));
+                double ecc = system.RNGNextDouble() * 0.12;                  // belt rocks are fairly circular
+                double loAN = system.RNGNextDouble() * 2 * Math.PI;
+                double aoP = system.RNGNextDouble() * 2 * Math.PI;
+                double meanAnomaly = system.RNGNextDouble() * 2 * Math.PI;
+                // Inclination kept at 0 (prograde) — the engine flattens orbits to the ecliptic for the 2D view anyway.
+                var orbitDB = OrbitDB.FromAsteroidFormat_r(star, starMass, mvDB.MassDry, sma_m, ecc, 0, loAN, aoP, meanAnomaly, epoch);
+
+                var posDB = new PositionDB(orbitDB.GetPosition(epoch), star);
+                posDB.MoveType = PositionDB.MoveTypes.Orbit;
+                blobs.Add(posDB);
+                blobs.Add(orbitDB);
+
+                infoDB.BaseTemperature = (float)SystemBodyFactory.CalculateBaseTemperatureOfBody(star, orbitDB);
+
+                blobs.Add(new NameDB(beltName + " " + (i + 1).ToString()));
+                blobs.Add(new VisibleByDefaultDB());
+
+                var entity = Entity.Create();
+                system.AddEntity(entity, blobs);
+            }
+        }
+
         public static StarSystem LoadFromBlueprint(Game game, SystemBlueprint systemBlueprint)
         {
             var galaxyGen = new GalaxyFactory(game.SystemGenSettings);
@@ -408,6 +469,19 @@ namespace Pulsar4X.Galaxy
             foreach(var id in systemBlueprint.Bodies)
             {
                 var bodyEntity = SystemBodyFactory.CreateFromBlueprint(game, system, rootStar, galaxyGen.Settings.J2000, new SensorProfileDB(), game.StartingGameData.SystemBodies[id]);
+            }
+
+            // Fill any declared asteroid belts with scattered small rocks so the band reads as a populated
+            // belt (Sol's main belt / Kuiper belt) rather than empty space between the named big asteroids.
+            if(rootStar != null && systemBlueprint.AsteroidBelts != null)
+            {
+                foreach(var belt in systemBlueprint.AsteroidBelts)
+                {
+                    galaxyGen.StarSystemFactory.GenerateAsteroidBelt(
+                        game, system, rootStar,
+                        belt.Name ?? "Asteroid",
+                        belt.InnerRadiusInAU, belt.OuterRadiusInAU, belt.Count);
+                }
             }
 
             if(systemBlueprint.SurveyRings != null)

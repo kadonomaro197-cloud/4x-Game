@@ -33,13 +33,35 @@ namespace Pulsar4X.Client
             _sysId = entity.StarSystemId;
             _rng = new Random(_entityId); //use entity guid as a seed for psudoRandomness.
 
+            // Per-body-type colours. Note: non-asteroid bodies are drawn as a FILLED circle in Draw(),
+            // which BRIGHTENS the base colour by +80 per channel (moons ×0.8). So these base values are
+            // deliberately darker/muted — pick them by imagining +80 added. Asteroids draw as an outline
+            // (no brighten), so their colour is used as-is.
             switch (_bodyType)
             {
                 case BodyType.Asteroid:
                     Asteroid();
                     break;
                 case BodyType.Terrestrial:
-                    Terestrial();
+                    ColouredBody(85, 80, 55);    // rocky tan-green land world (NOT blue)
+                    break;
+                case BodyType.GasGiant:
+                    ColouredBody(150, 110, 60);  // banded orange-tan (Jupiter/Saturn)
+                    break;
+                case BodyType.IceGiant:
+                    ColouredBody(70, 120, 150);  // pale ice-blue (Uranus/Neptune) — blue belongs HERE
+                    break;
+                case BodyType.GasDwarf:
+                    ColouredBody(90, 120, 100);  // muted teal-green
+                    break;
+                case BodyType.DwarfPlanet:
+                    ColouredBody(130, 125, 115); // icy off-white (Pluto/Ceres)
+                    break;
+                case BodyType.Moon:
+                    ColouredBody(95, 95, 100);   // rocky grey (Luna)
+                    break;
+                case BodyType.Comet:
+                    ColouredBody(120, 150, 170); // icy blue-white
                     break;
                 default:
                     Unknown();
@@ -69,20 +91,18 @@ namespace Pulsar4X.Client
             return System.Numerics.Vector2.Distance(v, point.ToVector2()) <= Scale * 100;
         }
 
-        void Terestrial()
+        /// <summary>
+        /// Builds a round body of a given base colour. Used by every non-asteroid body type
+        /// (terrestrial, gas giant, ice giant, gas dwarf, dwarf planet, moon, comet). The colour
+        /// here is the BASE; Draw() brightens it (+80/channel, ×0.8 for moons) when it fills the circle.
+        /// </summary>
+        void ColouredBody(byte r, byte g, byte b)
         {
             _iconMinSize = 8;
             short segments = 32;
             var points = CreatePrimitiveShapes.Circle(0, 0, 100, segments);
 
-
-            //colors picked out of my ass for a blue/green look.
-            //TODO: use minerals for this? but migth not have that info. going to have to work in with sensor stuff.
-            byte r = 0;
-            byte g = 100;
-            byte b = 100;
-            byte a = 255;
-            SDL.Color colour = new SDL.Color() { R = r, G = g, B = b, A = a };
+            SDL.Color colour = new SDL.Color() { R = r, G = g, B = b, A = 255 };
             Shapes.Add(new Shape() { Color = colour, Points = points });
         }
 
