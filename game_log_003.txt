@@ -1,1000 +1,1000 @@
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 124.723 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-07 00:40 paused step=300s selected=(none) ships-in-view=28
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123682 (+0) since last beat
+[DETECT] United Earth Corp holds 4 contact(s); 12 other-faction ship(s) in-system, detects 3 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.005 Gm (DETECTED)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 08:00 paused step=300s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 342 (+0), battle-trigger passes 40322 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 124.723 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-07 00:40 paused step=300s selected=(none) ships-in-view=28
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123682 (+0) since last beat
+[DETECT] United Earth Corp holds 4 contact(s); 12 other-faction ship(s) in-system, detects 3 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.005 Gm (DETECTED)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[CAMERA] pan -> 0,-0 Gm
-[STATE] heartbeat t=2050-01-03 08:00 paused step=300s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 342 (+0), battle-trigger passes 40322 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 124.723 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-07 00:40 paused step=300s selected=(none) ships-in-view=28
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123682 (+0) since last beat
+[DETECT] United Earth Corp holds 4 contact(s); 12 other-faction ship(s) in-system, detects 3 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.005 Gm (DETECTED)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 08:00 paused step=300s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 342 (+0), battle-trigger passes 40322 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 124.723 Gm (DETECTED)
+[Combat] Military Fleet #614 vs Hostile Mercury Squadron (Hold Fire) #652 — engaged
+[ACTION] [attack] Military Fleet -> 'Hostile Mercury Squadron (Hold Fire)' #652
+[STATE] heartbeat t=2050-03-07 00:40 paused step=300s selected=(none) ships-in-view=28
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123682 (+0) since last beat
+[DETECT] United Earth Corp holds 4 contact(s); 12 other-faction ship(s) in-system, detects 3 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.005 Gm (DETECTED)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[STATE] heartbeat t=2050-01-03 08:00 paused step=300s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 342 (+0), battle-trigger passes 40322 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 124.723 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-07 00:40 paused step=300s selected=(none) ships-in-view=28
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123682 (+0) since last beat
+[DETECT] United Earth Corp holds 4 contact(s); 12 other-faction ship(s) in-system, detects 3 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.005 Gm (DETECTED)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 08:00 paused step=300s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 342 (+0), battle-trigger passes 40322 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 124.723 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-07 00:40 paused step=300s selected=(none) ships-in-view=28
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123682 (+0) since last beat
+[DETECT] United Earth Corp holds 4 contact(s); 12 other-faction ship(s) in-system, detects 3 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.005 Gm (DETECTED)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 08:00 paused step=300s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 342 (+0), battle-trigger passes 40322 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 124.723 Gm (DETECTED)
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.6,-60.3 Gm
+[CAMERA] pan -> 5.6,-60.3 Gm
+[CAMERA] pan -> 5.6,-60.3 Gm
+[CAMERA] pan -> 5.6,-60.3 Gm
+[CAMERA] pan -> 5.6,-60.3 Gm
+[CAMERA] pan -> 5.6,-60.3 Gm
+[CAMERA] pan -> 5.6,-60.3 Gm
+[CAMERA] pan -> 5.6,-60.3 Gm
+[CAMERA] pan -> 5.6,-60.3 Gm
+[CAMERA] pan -> 5.6,-60.3 Gm
+[CAMERA] pan -> 5.5,-60.3 Gm
+[CAMERA] pan -> 5.5,-60.3 Gm
+[CAMERA] pan -> 5.5,-60.3 Gm
+[CAMERA] pan -> 5.5,-60.3 Gm
+[CAMERA] pan -> 5.5,-60.3 Gm
+[CAMERA] pan -> 5.5,-60.3 Gm
+[CAMERA] pan -> 5.5,-60.3 Gm
+[CAMERA] pan -> 5.5,-60.3 Gm
+[CAMERA] pan -> 5.5,-60.3 Gm
+[CAMERA] pan -> 5.5,-60.3 Gm
+[CAMERA] pan -> 4.8,-61.1 Gm
+[CAMERA] pan -> 4.8,-61.1 Gm
+[CAMERA] pan -> 4.8,-61.1 Gm
+[CAMERA] pan -> 4.8,-61.1 Gm
+[CAMERA] pan -> 4.8,-61.1 Gm
+[CAMERA] pan -> 4.8,-61.1 Gm
+[CAMERA] pan -> 4.8,-61.1 Gm
+[CAMERA] pan -> 4.8,-61.1 Gm
+[CAMERA] pan -> 4.8,-61.1 Gm
+[CAMERA] pan -> 4.8,-61.1 Gm
+[CAMERA] pan -> 2.9,-62.8 Gm
+[CAMERA] pan -> 2.9,-62.8 Gm
+[CAMERA] pan -> 2.9,-62.8 Gm
+[CAMERA] pan -> 2.9,-62.8 Gm
+[CAMERA] pan -> 2.9,-62.8 Gm
+[CAMERA] pan -> 2.9,-62.8 Gm
+[CAMERA] pan -> 2.9,-62.8 Gm
+[CAMERA] pan -> 2.9,-62.8 Gm
+[CAMERA] pan -> 2.9,-62.8 Gm
+[CAMERA] pan -> 2.9,-62.8 Gm
+[CAMERA] pan -> -11.3,-73.2 Gm
+[CAMERA] pan -> -11.3,-73.2 Gm
+[CAMERA] pan -> -11.3,-73.2 Gm
+[CAMERA] pan -> -11.3,-73.2 Gm
+[CAMERA] pan -> -11.3,-73.2 Gm
+[CAMERA] pan -> -11.3,-73.2 Gm
+[CAMERA] pan -> -11.3,-73.2 Gm
+[CAMERA] pan -> -11.3,-73.2 Gm
+[CAMERA] pan -> -11.3,-73.2 Gm
+[CAMERA] pan -> -11.3,-73.2 Gm
+[STATE] heartbeat t=2050-03-07 00:40 paused step=300s selected=(none) ships-in-view=28
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123682 (+0) since last beat
+[DETECT] United Earth Corp holds 4 contact(s); 12 other-faction ship(s) in-system, detects 3 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.005 Gm (DETECTED)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[STATE] heartbeat t=2050-01-03 08:00 paused step=300s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 342 (+0), battle-trigger passes 40322 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 124.723 Gm (DETECTED)
+[CAMERA] pan -> -92.6,-125.9 Gm
+[CAMERA] pan -> -92.6,-125.9 Gm
+[CAMERA] pan -> -92.6,-125.9 Gm
+[CAMERA] pan -> -92.6,-125.9 Gm
+[CAMERA] pan -> -92.6,-125.9 Gm
+[CAMERA] pan -> -92.6,-125.9 Gm
+[CAMERA] pan -> -92.6,-125.9 Gm
+[CAMERA] pan -> -92.6,-125.9 Gm
+[CAMERA] pan -> -92.6,-125.9 Gm
+[CAMERA] pan -> -92.6,-125.9 Gm
+[CAMERA] pan -> -136.7,-160.2 Gm
+[CAMERA] pan -> -136.7,-160.2 Gm
+[CAMERA] pan -> -136.7,-160.2 Gm
+[CAMERA] pan -> -136.7,-160.2 Gm
+[CAMERA] pan -> -136.7,-160.2 Gm
+[CAMERA] pan -> -136.7,-160.2 Gm
+[CAMERA] pan -> -136.7,-160.2 Gm
+[CAMERA] pan -> -136.7,-160.2 Gm
+[CAMERA] pan -> -136.7,-160.2 Gm
+[CAMERA] pan -> -136.7,-160.2 Gm
+[CAMERA] pan -> -29,-102.6 Gm
+[CAMERA] pan -> -29,-102.6 Gm
+[CAMERA] pan -> -29,-102.6 Gm
+[CAMERA] pan -> -29,-102.6 Gm
+[CAMERA] pan -> -29,-102.6 Gm
+[CAMERA] pan -> -29,-102.6 Gm
+[CAMERA] pan -> -29,-102.6 Gm
+[CAMERA] pan -> -29,-102.6 Gm
+[CAMERA] pan -> -29,-102.6 Gm
+[CAMERA] pan -> -29,-102.6 Gm
+[CAMERA] pan -> -14.2,-87.5 Gm
+[CAMERA] pan -> -14.2,-87.5 Gm
+[CAMERA] pan -> -14.2,-87.5 Gm
+[CAMERA] pan -> -14.2,-87.5 Gm
+[CAMERA] pan -> -14.2,-87.5 Gm
+[CAMERA] pan -> -14.2,-87.5 Gm
+[CAMERA] pan -> -14.2,-87.5 Gm
+[CAMERA] pan -> -14.2,-87.5 Gm
+[CAMERA] pan -> -14.2,-87.5 Gm
+[CAMERA] pan -> -14.2,-87.5 Gm
+[CAMERA] pan -> -3.1,-70.6 Gm
+[CAMERA] pan -> -3.1,-70.6 Gm
+[CAMERA] pan -> -3.1,-70.6 Gm
+[CAMERA] pan -> -3.1,-70.6 Gm
+[CAMERA] pan -> -3.1,-70.6 Gm
+[CAMERA] pan -> -3.1,-70.6 Gm
+[CAMERA] pan -> -3.1,-70.6 Gm
+[CAMERA] pan -> -3.1,-70.6 Gm
+[CAMERA] pan -> -3.1,-70.6 Gm
+[CAMERA] pan -> -3.1,-70.6 Gm
+[CAMERA] pan -> 2.6,-63.5 Gm
+[CAMERA] pan -> 2.6,-63.5 Gm
+[CAMERA] pan -> 2.6,-63.5 Gm
+[CAMERA] pan -> 2.6,-63.5 Gm
+[CAMERA] pan -> 2.6,-63.5 Gm
+[CAMERA] pan -> 2.6,-63.5 Gm
+[CAMERA] pan -> 2.6,-63.5 Gm
+[CAMERA] pan -> 2.6,-63.5 Gm
+[CAMERA] pan -> 2.6,-63.5 Gm
+[CAMERA] pan -> 2.6,-63.5 Gm
+[STATE] heartbeat t=2050-03-07 00:40 paused step=300s selected=(none) ships-in-view=28
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123682 (+0) since last beat
+[DETECT] United Earth Corp holds 4 contact(s); 12 other-faction ship(s) in-system, detects 3 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.005 Gm (DETECTED)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> -0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[CAMERA] pan -> 0,0 Gm
-[STATE] heartbeat t=2050-01-03 08:00 paused step=300s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 342 (+0), battle-trigger passes 40322 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 124.723 Gm (DETECTED)
+[CAMERA] pan -> 4.5,-61.1 Gm
+[CAMERA] pan -> 4.5,-61.1 Gm
+[CAMERA] pan -> 4.5,-61.1 Gm
+[CAMERA] pan -> 4.5,-61.1 Gm
+[CAMERA] pan -> 4.5,-61.1 Gm
+[CAMERA] pan -> 4.5,-61.1 Gm
+[CAMERA] pan -> 4.5,-61.1 Gm
+[CAMERA] pan -> 4.5,-61.1 Gm
+[CAMERA] pan -> 4.5,-61.1 Gm
+[CAMERA] pan -> 4.5,-61.1 Gm
+[CAMERA] pan -> 5,-60.8 Gm
+[CAMERA] pan -> 5,-60.8 Gm
+[CAMERA] pan -> 5,-60.8 Gm
+[CAMERA] pan -> 5,-60.8 Gm
+[CAMERA] pan -> 5,-60.8 Gm
+[CAMERA] pan -> 5,-60.8 Gm
+[CAMERA] pan -> 5,-60.8 Gm
+[CAMERA] pan -> 5,-60.8 Gm
+[CAMERA] pan -> 5,-60.8 Gm
+[CAMERA] pan -> 5,-60.8 Gm
+[CAMERA] pan -> 5.3,-60.5 Gm
+[CAMERA] pan -> 5.3,-60.5 Gm
+[CAMERA] pan -> 5.3,-60.5 Gm
+[CAMERA] pan -> 5.3,-60.5 Gm
+[CAMERA] pan -> 5.3,-60.5 Gm
+[CAMERA] pan -> 5.3,-60.5 Gm
+[CAMERA] pan -> 5.3,-60.5 Gm
+[CAMERA] pan -> 5.3,-60.5 Gm
+[CAMERA] pan -> 5.3,-60.5 Gm
+[CAMERA] pan -> 5.3,-60.5 Gm
+[CAMERA] pan -> 5.5,-60.3 Gm
+[CAMERA] pan -> 5.5,-60.3 Gm
+[CAMERA] pan -> 5.5,-60.3 Gm
+[CAMERA] pan -> 5.5,-60.3 Gm
+[CAMERA] pan -> 5.5,-60.3 Gm
+[CAMERA] pan -> 5.5,-60.3 Gm
+[CAMERA] pan -> 5.5,-60.3 Gm
+[CAMERA] pan -> 5.5,-60.3 Gm
+[CAMERA] pan -> 5.5,-60.3 Gm
+[CAMERA] pan -> 5.5,-60.3 Gm
+[CAMERA] pan -> 5.6,-60.3 Gm
+[CAMERA] pan -> 5.6,-60.3 Gm
+[CAMERA] pan -> 5.6,-60.3 Gm
+[CAMERA] pan -> 5.6,-60.3 Gm
+[CAMERA] pan -> 5.6,-60.3 Gm
+[CAMERA] pan -> 5.6,-60.3 Gm
+[CAMERA] pan -> 5.6,-60.3 Gm
+[CAMERA] pan -> 5.6,-60.3 Gm
+[CAMERA] pan -> 5.6,-60.3 Gm
+[CAMERA] pan -> 5.6,-60.3 Gm
+[STATE] heartbeat t=2050-03-07 00:40 paused step=300s selected=(none) ships-in-view=28
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123682 (+0) since last beat
+[DETECT] United Earth Corp holds 4 contact(s); 12 other-faction ship(s) in-system, detects 3 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.005 Gm (DETECTED)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 0,0.2 Gm
-[CAMERA] pan -> 0,0.2 Gm
-[CAMERA] pan -> 0,0.2 Gm
-[CAMERA] pan -> 0,0.2 Gm
-[CAMERA] pan -> 0,0.2 Gm
-[CAMERA] pan -> 0,0.2 Gm
-[CAMERA] pan -> 0,0.2 Gm
-[CAMERA] pan -> 0,0.2 Gm
-[CAMERA] pan -> 0,0.2 Gm
-[CAMERA] pan -> 0,0.2 Gm
-[CAMERA] pan -> -0,1.2 Gm
-[CAMERA] pan -> -0,1.2 Gm
-[CAMERA] pan -> -0,1.2 Gm
-[CAMERA] pan -> -0,1.2 Gm
-[CAMERA] pan -> -0,1.2 Gm
-[CAMERA] pan -> -0,1.2 Gm
-[CAMERA] pan -> -0,1.2 Gm
-[CAMERA] pan -> -0,1.2 Gm
-[CAMERA] pan -> -0,1.2 Gm
-[CAMERA] pan -> -0,1.2 Gm
-[CAMERA] pan -> -0.1,5.2 Gm
-[CAMERA] pan -> -0.1,5.2 Gm
-[CAMERA] pan -> -0.1,5.2 Gm
-[CAMERA] pan -> -0.1,5.2 Gm
-[CAMERA] pan -> -0.1,5.2 Gm
-[CAMERA] pan -> -0.1,5.2 Gm
-[CAMERA] pan -> -0.1,5.2 Gm
-[CAMERA] pan -> -0.1,5.2 Gm
-[CAMERA] pan -> -0.1,5.2 Gm
-[CAMERA] pan -> -0.1,5.2 Gm
-[CAMERA] pan -> 2,44.3 Gm
-[CAMERA] pan -> 2,44.3 Gm
-[CAMERA] pan -> 2,44.3 Gm
-[CAMERA] pan -> 2,44.3 Gm
-[CAMERA] pan -> 2,44.3 Gm
-[CAMERA] pan -> 2,44.3 Gm
-[CAMERA] pan -> 2,44.3 Gm
-[CAMERA] pan -> 2,44.3 Gm
-[CAMERA] pan -> 2,44.3 Gm
-[CAMERA] pan -> 2,44.3 Gm
-[STATE] heartbeat t=2050-01-03 08:00 paused step=300s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 342 (+0), battle-trigger passes 40322 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 124.723 Gm (DETECTED)
+[CAMERA] pan -> 5.6,-60.2 Gm
+[CAMERA] pan -> 5.6,-60.2 Gm
+[CAMERA] pan -> 5.6,-60.2 Gm
+[CAMERA] pan -> 5.6,-60.2 Gm
+[CAMERA] pan -> 5.6,-60.2 Gm
+[CAMERA] pan -> 5.6,-60.2 Gm
+[CAMERA] pan -> 5.6,-60.2 Gm
+[CAMERA] pan -> 5.6,-60.2 Gm
+[CAMERA] pan -> 5.6,-60.2 Gm
+[CAMERA] pan -> 5.6,-60.2 Gm
+[CAMERA] pan -> 5.6,-60.2 Gm
+[CAMERA] pan -> 5.6,-60.2 Gm
+[CAMERA] pan -> 5.6,-60.2 Gm
+[CAMERA] pan -> 5.6,-60.2 Gm
+[CAMERA] pan -> 5.6,-60.2 Gm
+[CAMERA] pan -> 5.6,-60.2 Gm
+[CAMERA] pan -> 5.6,-60.2 Gm
+[CAMERA] pan -> 5.6,-60.2 Gm
+[CAMERA] pan -> 5.6,-60.2 Gm
+[CAMERA] pan -> 5.6,-60.2 Gm
+[STATE] heartbeat t=2050-03-07 00:40 paused step=300s selected=(none) ships-in-view=28
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123682 (+0) since last beat
+[DETECT] United Earth Corp holds 4 contact(s); 12 other-faction ship(s) in-system, detects 3 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.005 Gm (DETECTED)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> -16,85.3 Gm
-[CAMERA] pan -> -16,85.3 Gm
-[CAMERA] pan -> -16,85.3 Gm
-[CAMERA] pan -> -16,85.3 Gm
-[CAMERA] pan -> -16,85.3 Gm
-[CAMERA] pan -> -16,85.3 Gm
-[CAMERA] pan -> -16,85.3 Gm
-[CAMERA] pan -> -16,85.3 Gm
-[CAMERA] pan -> -16,85.3 Gm
-[CAMERA] pan -> -16,85.3 Gm
-[CAMERA] pan -> -37.1,74.4 Gm
-[CAMERA] pan -> -37.1,74.4 Gm
-[CAMERA] pan -> -37.1,74.4 Gm
-[CAMERA] pan -> -37.1,74.4 Gm
-[CAMERA] pan -> -37.1,74.4 Gm
-[CAMERA] pan -> -37.1,74.4 Gm
-[CAMERA] pan -> -37.1,74.4 Gm
-[CAMERA] pan -> -37.1,74.4 Gm
-[CAMERA] pan -> -37.1,74.4 Gm
-[CAMERA] pan -> -37.1,74.4 Gm
-[CAMERA] pan -> -88,48.2 Gm
-[CAMERA] pan -> -88,48.2 Gm
-[CAMERA] pan -> -88,48.2 Gm
-[CAMERA] pan -> -88,48.2 Gm
-[CAMERA] pan -> -88,48.2 Gm
-[CAMERA] pan -> -88,48.2 Gm
-[CAMERA] pan -> -88,48.2 Gm
-[CAMERA] pan -> -88,48.2 Gm
-[CAMERA] pan -> -88,48.2 Gm
-[CAMERA] pan -> -88,48.2 Gm
-[CAMERA] pan -> -105.8,40.9 Gm
-[CAMERA] pan -> -105.8,40.9 Gm
-[CAMERA] pan -> -105.8,40.9 Gm
-[CAMERA] pan -> -105.8,40.9 Gm
-[CAMERA] pan -> -105.8,40.9 Gm
-[CAMERA] pan -> -105.8,40.9 Gm
-[CAMERA] pan -> -105.8,40.9 Gm
-[CAMERA] pan -> -105.8,40.9 Gm
-[CAMERA] pan -> -105.8,40.9 Gm
-[CAMERA] pan -> -105.8,40.9 Gm
-[STATE] heartbeat t=2050-01-03 08:00 paused step=300s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 342 (+0), battle-trigger passes 40322 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 124.723 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-07 00:40 paused step=300s selected=(none) ships-in-view=28
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123682 (+0) since last beat
+[DETECT] United Earth Corp holds 4 contact(s); 12 other-faction ship(s) in-system, detects 3 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.005 Gm (DETECTED)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> -108.7,85.9 Gm
-[CAMERA] pan -> -108.7,85.9 Gm
-[CAMERA] pan -> -108.7,85.9 Gm
-[CAMERA] pan -> -108.7,85.9 Gm
-[CAMERA] pan -> -108.7,85.9 Gm
-[CAMERA] pan -> -108.7,85.9 Gm
-[CAMERA] pan -> -108.7,85.9 Gm
-[CAMERA] pan -> -108.7,85.9 Gm
-[CAMERA] pan -> -108.7,85.9 Gm
-[CAMERA] pan -> -108.7,85.9 Gm
-[STATE] heartbeat t=2050-01-03 08:00 paused step=300s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 342 (+0), battle-trigger passes 40322 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 124.723 Gm (DETECTED)
+[TIME] one step (300s)
+[Combat] salvo 1: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 5.44 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 5,271,737m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,905
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 5,271,737m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 2: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 5.27 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 5,101,485m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,885
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 5,101,485m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 3: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 5.1 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 4,931,232m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,865
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 4,931,232m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 4: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 4.93 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 4,760,980m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,845
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 4,760,980m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 5: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 4.76 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 4,590,728m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,825
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 4,590,728m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 6: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 4.59 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 4,420,475m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,805
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 4,420,475m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 7: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 4.42 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 4,250,223m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,785
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 4,250,223m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 8: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 4.25 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 4,079,971m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,765
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 4,079,971m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 9: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 4.08 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 3,909,718m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,745
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 3,909,718m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 10: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 3.91 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 3,739,466m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,725
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 3,739,466m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 11: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 3.74 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 3,569,213m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,705
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 3,569,213m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 12: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 3.57 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 3,398,961m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,685
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 3,398,961m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 13: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 3.4 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 3,228,709m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,665
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 3,228,709m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 14: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 3.23 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 3,058,456m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,645
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 3,058,456m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 15: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 3.06 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 2,888,204m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,625
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 2,888,204m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 16: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 2.89 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 2,717,952m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,605
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 2,717,952m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 17: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 2.72 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 2,547,699m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,585
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 2,547,699m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 18: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 2.55 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 2,377,447m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,565
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 2,377,447m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 19: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 2.38 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 2,207,195m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,545
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 2,207,195m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 20: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 2.21 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 2,036,942m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,525
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 2,036,942m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 21: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 2.04 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 1,866,690m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,505
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 1,866,690m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 22: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 1.87 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 1,696,437m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,485
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 1,696,437m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 23: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 1.7 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 1,526,185m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,465
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 1,526,185m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 24: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 1.53 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 1,355,933m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,445
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 1,355,933m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 25: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 1.36 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 1,185,680m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,425
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 1,185,680m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 26: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 1.19 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 1,015,428m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,405
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 1,015,428m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 27: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 1.02 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 845,176m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,385
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 845,176m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 28: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 845.2 km from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 674,923m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,365
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 674,923m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 29: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 674.9 km from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 504,671m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,345
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 504,671m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 30: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 504.7 km from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 334,418m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,325
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 334,418m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 31: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 334.4 km from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 164,166m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,305
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 164,166m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 32: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 164.2 km from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 5,000m — IN RANGE (reach 5,000m), maneuver reserve 9,285
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 5,000m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 33: Hostile Mercury Squadron (Hold Fire) #652 took Beam fire at 5 km from Military Fleet #614 — 100% on target (0% dodged), 155.05 kJ dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 5,000m — IN RANGE (reach 5,000m), maneuver reserve 9,265
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 5,000m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 34: Hostile Mercury Squadron (Hold Fire) #652 took Beam fire at 5 km from Military Fleet #614 — 100% on target (0% dodged), 155.05 kJ dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 5,000m — IN RANGE (reach 5,000m), maneuver reserve 9,245
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 5,000m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 35: Hostile Mercury Squadron (Hold Fire) #652 took Beam fire at 5 km from Military Fleet #614 — 100% on target (0% dodged), 155.05 kJ dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 5,000m — IN RANGE (reach 5,000m), maneuver reserve 9,225
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 5,000m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 36: Hostile Mercury Squadron (Hold Fire) #652 took Beam fire at 5 km from Military Fleet #614 — 100% on target (0% dodged), 155.05 kJ dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 5,000m — IN RANGE (reach 5,000m), maneuver reserve 9,205
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 5,000m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 37: Hostile Mercury Squadron (Hold Fire) #652 took Beam fire at 5 km from Military Fleet #614 — 100% on target (0% dodged), 155.05 kJ dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 5,000m — IN RANGE (reach 5,000m), maneuver reserve 9,185
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 5,000m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 38: Hostile Mercury Squadron (Hold Fire) #652 took Beam fire at 5 km from Military Fleet #614 — 100% on target (0% dodged), 155.05 kJ dealt; no losses; 2 left
+[Combat] closing: Military Fleet #614 gap 5,000m — IN RANGE (reach 5,000m), maneuver reserve 9,165
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 5,000m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 39: Hostile Mercury Squadron (Hold Fire) #652 took Beam fire at 5 km from Military Fleet #614 — 100% on target (0% dodged), 155.05 kJ dealt; destroyed '656'; 1 left
+[Combat] closing: Military Fleet #614 gap 5,000m — IN RANGE (reach 5,000m), maneuver reserve 9,145
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 5,000m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] Hostile Mercury Squadron (Hold Fire) #652 breaks off — retreats from Military Fleet #614
+[Combat] Hostile Mercury Squadron (Hold Fire) #652 disengages (1 ship(s) left)
+[Combat] Military Fleet #614 disengages (2 ship(s) left)
+[STATE] heartbeat t=2050-03-07 00:45 paused step=300s selected=(none) ships-in-view=27
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123742 (+60) since last beat
+[DETECT] United Earth Corp holds 3 contact(s); 11 other-faction ship(s) in-system, detects 2 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.006 Gm (DETECTED)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> -188.1,217 Gm
-[CAMERA] pan -> -188.1,217 Gm
-[CAMERA] pan -> -188.1,217 Gm
-[CAMERA] pan -> -188.1,217 Gm
-[CAMERA] pan -> -188.1,217 Gm
-[CAMERA] pan -> -188.1,217 Gm
-[CAMERA] pan -> -188.1,217 Gm
-[CAMERA] pan -> -188.1,217 Gm
-[CAMERA] pan -> -188.1,217 Gm
-[CAMERA] pan -> -188.1,217 Gm
-[STATE] heartbeat t=2050-01-03 08:00 paused step=300s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 342 (+0), battle-trigger passes 40322 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 124.723 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-07 00:45 paused step=300s selected=(none) ships-in-view=27
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123742 (+0) since last beat
+[DETECT] United Earth Corp holds 3 contact(s); 11 other-faction ship(s) in-system, detects 2 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.006 Gm (DETECTED)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 08:00 paused step=300s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 342 (+0), battle-trigger passes 40322 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 124.723 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-07 00:45 paused step=300s selected=(none) ships-in-view=27
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123742 (+0) since last beat
+[DETECT] United Earth Corp holds 3 contact(s); 11 other-faction ship(s) in-system, detects 2 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.006 Gm (DETECTED)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 08:00 paused step=300s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 342 (+0), battle-trigger passes 40322 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 124.723 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-07 00:45 paused step=300s selected=(none) ships-in-view=27
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123742 (+0) since last beat
+[DETECT] United Earth Corp holds 3 contact(s); 11 other-faction ship(s) in-system, detects 2 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.006 Gm (DETECTED)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[WARP] ship #786 '1st Task Force Aegis Test Warship 1' departing → Mercury (214.5 Gm, ETA 2050-05-02 09:50)
-[WARP] ship #787 '1st Task Force Lancer Test Railgun Cruiser 2' departing → Mercury (214.5 Gm, ETA 2050-05-02 09:50)
-[WARP] ship #788 '1st Task Force Bulwark Flak Escort 3' departing → Mercury (214.5 Gm, ETA 2050-05-02 09:50)
-[WARP] ship #789 '1st Task Force Wasp Strike Fighter 4' departing → Mercury (180.3 Gm, ETA 2050-04-13 09:22)
-[WARP] ship #790 '1st Task Force Wasp Strike Fighter 5' departing → Mercury (180.3 Gm, ETA 2050-04-13 09:22)
-[ACTION] move order: fleet #785 -> 'Mercury' (warp). Watch next heartbeat for teleport check.
-[ACTION] [perf] FleetWindow 12.9ms — list 0.0 / ships 0.0 / orders 0.0 / tabs 12.9 ms (fleet '1st Task Force')
-[STATE] heartbeat t=2050-01-03 08:00 paused step=300s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 342 (+0), battle-trigger passes 40322 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 124.723 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-07 00:45 paused step=300s selected=(none) ships-in-view=27
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123742 (+0) since last beat
+[DETECT] United Earth Corp holds 3 contact(s); 11 other-faction ship(s) in-system, detects 2 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.006 Gm (DETECTED)
+[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[Combat] Military Fleet #614 vs Hostile Mercury Squadron (Hold Fire) #652 — engaged
+[ACTION] [attack] Military Fleet -> 'Hostile Mercury Squadron (Hold Fire)' #652
+[STATE] heartbeat t=2050-03-07 00:45 paused step=300s selected=(none) ships-in-view=27
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123742 (+0) since last beat
+[DETECT] United Earth Corp holds 3 contact(s); 11 other-faction ship(s) in-system, detects 2 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.006 Gm (DETECTED)
+[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[TIME] one step (300s)
+[Combat] salvo 1: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 5.88 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 5,709,482m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,905
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 5,709,482m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 2: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 5.71 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 5,539,229m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,885
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 5,539,229m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 3: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 5.54 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 5,368,977m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,865
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 5,368,977m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 4: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 5.37 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 5,198,725m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,845
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 5,198,725m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 5: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 5.2 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 5,028,472m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,825
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 5,028,472m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 6: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 5.03 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 4,858,220m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,805
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 4,858,220m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 7: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 4.86 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 4,687,968m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,785
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 4,687,968m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 8: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 4.69 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 4,517,715m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,765
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 4,517,715m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 9: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 4.52 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 4,347,463m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,745
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 4,347,463m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 10: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 4.35 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 4,177,210m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,725
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 4,177,210m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 11: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 4.18 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 4,006,958m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,705
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 4,006,958m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 12: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 4.01 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 3,836,706m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,685
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 3,836,706m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 13: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 3.84 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 3,666,453m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,665
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 3,666,453m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 14: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 3.67 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 3,496,201m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,645
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 3,496,201m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 15: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 3.5 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 3,325,949m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,625
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 3,325,949m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 16: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 3.33 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 3,155,696m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,605
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 3,155,696m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 17: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 3.16 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 2,985,444m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,585
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 2,985,444m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 18: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 2.99 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 2,815,191m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,565
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 2,815,191m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 19: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 2.82 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 2,644,939m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,545
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 2,644,939m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 20: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 2.64 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 2,474,687m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,525
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 2,474,687m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 21: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 2.47 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 2,304,434m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,505
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 2,304,434m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 22: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 2.3 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 2,134,182m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,485
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 2,134,182m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 23: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 2.13 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 1,963,930m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,465
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 1,963,930m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 24: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 1.96 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 1,793,677m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,445
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 1,793,677m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 25: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 1.79 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 1,623,425m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,425
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 1,623,425m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 26: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 1.62 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 1,453,173m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,405
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 1,453,173m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 27: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 1.45 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 1,282,920m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,385
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 1,282,920m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 28: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 1.28 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 1,112,668m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,365
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 1,112,668m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 29: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 1.11 Mm from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 942,415m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,345
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 942,415m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 30: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 942.4 km from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 772,163m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,325
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 772,163m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 31: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 772.2 km from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 601,911m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,305
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 601,911m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 32: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 601.9 km from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 431,658m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,285
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 431,658m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 33: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 431.7 km from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 261,406m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,265
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 261,406m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 34: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 261.4 km from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 91,154m — OUT OF RANGE (reach 5,000m), maneuver reserve 9,245
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 91,154m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 35: Hostile Mercury Squadron (Hold Fire) #652 took no weapons in range fire at 91.2 km from Military Fleet #614 — 100% on target (0% dodged), 0 J dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 5,000m — IN RANGE (reach 5,000m), maneuver reserve 9,225
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 5,000m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 36: Hostile Mercury Squadron (Hold Fire) #652 took Beam fire at 5 km from Military Fleet #614 — 100% on target (0% dodged), 155.05 kJ dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 5,000m — IN RANGE (reach 5,000m), maneuver reserve 9,205
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 5,000m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 37: Hostile Mercury Squadron (Hold Fire) #652 took Beam fire at 5 km from Military Fleet #614 — 100% on target (0% dodged), 155.05 kJ dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 5,000m — IN RANGE (reach 5,000m), maneuver reserve 9,185
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 5,000m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 38: Hostile Mercury Squadron (Hold Fire) #652 took Beam fire at 5 km from Military Fleet #614 — 100% on target (0% dodged), 155.05 kJ dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 5,000m — IN RANGE (reach 5,000m), maneuver reserve 9,165
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 5,000m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 39: Hostile Mercury Squadron (Hold Fire) #652 took Beam fire at 5 km from Military Fleet #614 — 100% on target (0% dodged), 155.05 kJ dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 5,000m — IN RANGE (reach 5,000m), maneuver reserve 9,145
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 5,000m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 40: Hostile Mercury Squadron (Hold Fire) #652 took Beam fire at 5 km from Military Fleet #614 — 100% on target (0% dodged), 155.05 kJ dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 5,000m — IN RANGE (reach 5,000m), maneuver reserve 9,125
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 5,000m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 41: Hostile Mercury Squadron (Hold Fire) #652 took Beam fire at 5 km from Military Fleet #614 — 100% on target (0% dodged), 155.05 kJ dealt; no losses; 1 left
+[Combat] closing: Military Fleet #614 gap 5,000m — IN RANGE (reach 5,000m), maneuver reserve 9,105
+[Combat] closing: Hostile Mercury Squadron (Hold Fire) #652 gap 5,000m — IN RANGE (reach unlimited), maneuver reserve 0
+[Combat] salvo 42: Hostile Mercury Squadron (Hold Fire) #652 took Beam fire at 5 km from Military Fleet #614 — 100% on target (0% dodged), 155.05 kJ dealt; destroyed '657'; 0 left
+[Combat] closing: Military Fleet #614 gap 5,000m — IN RANGE (reach 5,000m), maneuver reserve 9,085
+[Combat] Hostile Mercury Squadron (Hold Fire) #652 disengages (0 ship(s) left)
+[Combat] Military Fleet #614 disengages (2 ship(s) left)
+[STATE] heartbeat t=2050-03-07 00:50 paused step=300s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123802 (+60) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 57.362 Gm (beyond reach / undetected)
+[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[STATE] heartbeat t=2050-03-07 00:50 paused step=300s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123802 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 57.362 Gm (beyond reach / undetected)
+[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[STATE] heartbeat t=2050-03-07 00:50 paused step=300s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123802 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 57.362 Gm (beyond reach / undetected)
+[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.2 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[STATE] heartbeat t=2050-03-07 00:50 paused step=300s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123802 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 57.362 Gm (beyond reach / undetected)
+[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.7,-60.3 Gm
+[CAMERA] pan -> 5.3,-60.5 Gm
+[CAMERA] pan -> 5.3,-60.5 Gm
+[CAMERA] pan -> 5.3,-60.5 Gm
+[CAMERA] pan -> 5.3,-60.5 Gm
+[CAMERA] pan -> 5.3,-60.5 Gm
+[CAMERA] pan -> 5.3,-60.5 Gm
+[CAMERA] pan -> 5.3,-60.5 Gm
+[CAMERA] pan -> 5.3,-60.5 Gm
+[CAMERA] pan -> 5.3,-60.5 Gm
+[CAMERA] pan -> 5.3,-60.5 Gm
+[CAMERA] pan -> 3.6,-61.2 Gm
+[CAMERA] pan -> 3.6,-61.2 Gm
+[CAMERA] pan -> 3.6,-61.2 Gm
+[CAMERA] pan -> 3.6,-61.2 Gm
+[CAMERA] pan -> 3.6,-61.2 Gm
+[CAMERA] pan -> 3.6,-61.2 Gm
+[CAMERA] pan -> 3.6,-61.2 Gm
+[CAMERA] pan -> 3.6,-61.2 Gm
+[CAMERA] pan -> 3.6,-61.2 Gm
+[CAMERA] pan -> 3.6,-61.2 Gm
+[STATE] heartbeat t=2050-03-07 00:50 paused step=300s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123802 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 57.362 Gm (beyond reach / undetected)
+[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> -4.7,-65 Gm
+[CAMERA] pan -> -4.7,-65 Gm
+[CAMERA] pan -> -4.7,-65 Gm
+[CAMERA] pan -> -4.7,-65 Gm
+[CAMERA] pan -> -4.7,-65 Gm
+[CAMERA] pan -> -4.7,-65 Gm
+[CAMERA] pan -> -4.7,-65 Gm
+[CAMERA] pan -> -4.7,-65 Gm
+[CAMERA] pan -> -4.7,-65 Gm
+[CAMERA] pan -> -4.7,-65 Gm
+[CAMERA] pan -> -44.4,-81 Gm
+[CAMERA] pan -> -44.4,-81 Gm
+[CAMERA] pan -> -44.4,-81 Gm
+[CAMERA] pan -> -44.4,-81 Gm
+[CAMERA] pan -> -44.4,-81 Gm
+[CAMERA] pan -> -44.4,-81 Gm
+[CAMERA] pan -> -44.4,-81 Gm
+[CAMERA] pan -> -44.4,-81 Gm
+[CAMERA] pan -> -44.4,-81 Gm
+[CAMERA] pan -> -44.4,-81 Gm
+[CAMERA] pan -> -116.9,-107.3 Gm
+[CAMERA] pan -> -116.9,-107.3 Gm
+[CAMERA] pan -> -116.9,-107.3 Gm
+[CAMERA] pan -> -116.9,-107.3 Gm
+[CAMERA] pan -> -116.9,-107.3 Gm
+[CAMERA] pan -> -116.9,-107.3 Gm
+[CAMERA] pan -> -116.9,-107.3 Gm
+[CAMERA] pan -> -116.9,-107.3 Gm
+[CAMERA] pan -> -116.9,-107.3 Gm
+[CAMERA] pan -> -116.9,-107.3 Gm
+[CAMERA] pan -> -183.6,-131.7 Gm
+[CAMERA] pan -> -183.6,-131.7 Gm
+[CAMERA] pan -> -183.6,-131.7 Gm
+[CAMERA] pan -> -183.6,-131.7 Gm
+[CAMERA] pan -> -183.6,-131.7 Gm
+[CAMERA] pan -> -183.6,-131.7 Gm
+[CAMERA] pan -> -183.6,-131.7 Gm
+[CAMERA] pan -> -183.6,-131.7 Gm
+[CAMERA] pan -> -183.6,-131.7 Gm
+[CAMERA] pan -> -183.6,-131.7 Gm
+[CAMERA] pan -> -101.8,-211.5 Gm
+[CAMERA] pan -> -101.8,-211.5 Gm
+[CAMERA] pan -> -101.8,-211.5 Gm
+[CAMERA] pan -> -101.8,-211.5 Gm
+[CAMERA] pan -> -101.8,-211.5 Gm
+[CAMERA] pan -> -101.8,-211.5 Gm
+[CAMERA] pan -> -101.8,-211.5 Gm
+[CAMERA] pan -> -101.8,-211.5 Gm
+[CAMERA] pan -> -101.8,-211.5 Gm
+[CAMERA] pan -> -101.8,-211.5 Gm
+[CAMERA] pan -> -70.9,-211.9 Gm
+[CAMERA] pan -> -70.9,-211.9 Gm
+[CAMERA] pan -> -70.9,-211.9 Gm
+[CAMERA] pan -> -70.9,-211.9 Gm
+[CAMERA] pan -> -70.9,-211.9 Gm
+[CAMERA] pan -> -70.9,-211.9 Gm
+[CAMERA] pan -> -70.9,-211.9 Gm
+[CAMERA] pan -> -70.9,-211.9 Gm
+[CAMERA] pan -> -70.9,-211.9 Gm
+[CAMERA] pan -> -70.9,-211.9 Gm
+[STATE] heartbeat t=2050-03-07 00:50 paused step=300s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123802 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 57.362 Gm (beyond reach / undetected)
+[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> -64.5,-222.8 Gm
+[CAMERA] pan -> -64.5,-222.8 Gm
+[CAMERA] pan -> -64.5,-222.8 Gm
+[CAMERA] pan -> -64.5,-222.8 Gm
+[CAMERA] pan -> -64.5,-222.8 Gm
+[CAMERA] pan -> -64.5,-222.8 Gm
+[CAMERA] pan -> -64.5,-222.8 Gm
+[CAMERA] pan -> -64.5,-222.8 Gm
+[CAMERA] pan -> -64.5,-222.8 Gm
+[CAMERA] pan -> -64.5,-222.8 Gm
+[STATE] heartbeat t=2050-03-07 00:50 paused step=300s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 9366 (+0), battle-trigger passes 1123802 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 57.362 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
 [TIME] play (step 300s)
-[STATE] heartbeat t=2050-01-03 08:30 RUNNING step=300s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 342 (+0), battle-trigger passes 40716 (+394) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 124.801 Gm (DETECTED)
-[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> -107.1,79.4 Gm
-[CAMERA] pan -> -107.1,79.4 Gm
-[CAMERA] pan -> -107.1,79.4 Gm
-[CAMERA] pan -> -107.1,79.4 Gm
-[CAMERA] pan -> -107.1,79.4 Gm
-[CAMERA] pan -> -107.1,79.4 Gm
-[CAMERA] pan -> -107.1,79.4 Gm
-[CAMERA] pan -> -107.1,79.4 Gm
-[CAMERA] pan -> -107.1,79.4 Gm
-[CAMERA] pan -> -107.1,79.4 Gm
-[CAMERA] pan -> -42.8,27.8 Gm
-[CAMERA] pan -> -42.8,27.8 Gm
-[CAMERA] pan -> -42.8,27.8 Gm
-[CAMERA] pan -> -42.8,27.8 Gm
-[CAMERA] pan -> -42.8,27.8 Gm
-[CAMERA] pan -> -42.8,27.8 Gm
-[CAMERA] pan -> -42.8,27.8 Gm
-[CAMERA] pan -> -42.8,27.8 Gm
-[CAMERA] pan -> -42.8,27.8 Gm
-[CAMERA] pan -> -42.8,27.8 Gm
-[STATE] heartbeat t=2050-01-03 11:00 RUNNING step=300s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 360 (+18), battle-trigger passes 42517 (+1801) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 125.19 Gm (DETECTED)
-[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> -12.5,16 Gm
-[CAMERA] pan -> -12.5,16 Gm
-[CAMERA] pan -> -12.5,16 Gm
-[CAMERA] pan -> -12.5,16 Gm
-[CAMERA] pan -> -12.5,16 Gm
-[CAMERA] pan -> -12.5,16 Gm
-[CAMERA] pan -> -12.5,16 Gm
-[CAMERA] pan -> -12.5,16 Gm
-[CAMERA] pan -> -12.5,16 Gm
-[CAMERA] pan -> -12.5,16 Gm
-[CAMERA] pan -> -4.3,6.5 Gm
-[CAMERA] pan -> -4.3,6.5 Gm
-[CAMERA] pan -> -4.3,6.5 Gm
-[CAMERA] pan -> -4.3,6.5 Gm
-[CAMERA] pan -> -4.3,6.5 Gm
-[CAMERA] pan -> -4.3,6.5 Gm
-[CAMERA] pan -> -4.3,6.5 Gm
-[CAMERA] pan -> -4.3,6.5 Gm
-[CAMERA] pan -> -4.3,6.5 Gm
-[CAMERA] pan -> -4.3,6.5 Gm
-[CAMERA] pan -> -1.6,1.5 Gm
-[CAMERA] pan -> -1.6,1.5 Gm
-[CAMERA] pan -> -1.6,1.5 Gm
-[CAMERA] pan -> -1.6,1.5 Gm
-[CAMERA] pan -> -1.6,1.5 Gm
-[CAMERA] pan -> -1.6,1.5 Gm
-[CAMERA] pan -> -1.6,1.5 Gm
-[CAMERA] pan -> -1.6,1.5 Gm
-[CAMERA] pan -> -1.6,1.5 Gm
-[CAMERA] pan -> -1.6,1.5 Gm
-[CAMERA] pan -> -1,0.2 Gm
-[CAMERA] pan -> -1,0.2 Gm
-[CAMERA] pan -> -1,0.2 Gm
-[CAMERA] pan -> -1,0.2 Gm
-[CAMERA] pan -> -1,0.2 Gm
-[CAMERA] pan -> -1,0.2 Gm
-[CAMERA] pan -> -1,0.2 Gm
-[CAMERA] pan -> -1,0.2 Gm
-[CAMERA] pan -> -1,0.2 Gm
-[CAMERA] pan -> -1,0.2 Gm
-[CAMERA] pan -> -0.9,0.1 Gm
-[CAMERA] pan -> -0.9,0.1 Gm
-[CAMERA] pan -> -0.9,0.1 Gm
-[CAMERA] pan -> -0.9,0.1 Gm
-[CAMERA] pan -> -0.9,0.1 Gm
-[CAMERA] pan -> -0.9,0.1 Gm
-[CAMERA] pan -> -0.9,0.1 Gm
-[CAMERA] pan -> -0.9,0.1 Gm
-[CAMERA] pan -> -0.9,0.1 Gm
-[CAMERA] pan -> -0.9,0.1 Gm
-[STATE] heartbeat t=2050-01-03 13:30 RUNNING step=300s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 372 (+12), battle-trigger passes 44322 (+1805) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 125.584 Gm (DETECTED)
-[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> -0.8,-0.2 Gm
-[CAMERA] pan -> -0.8,-0.2 Gm
-[CAMERA] pan -> -0.8,-0.2 Gm
-[CAMERA] pan -> -0.8,-0.2 Gm
-[CAMERA] pan -> -0.8,-0.2 Gm
-[CAMERA] pan -> -0.8,-0.2 Gm
-[CAMERA] pan -> -0.8,-0.2 Gm
-[CAMERA] pan -> -0.8,-0.2 Gm
-[CAMERA] pan -> -0.8,-0.2 Gm
-[CAMERA] pan -> -0.8,-0.2 Gm
-[CAMERA] pan -> -0.7,0.7 Gm
-[CAMERA] pan -> -0.7,0.7 Gm
-[CAMERA] pan -> -0.7,0.7 Gm
-[CAMERA] pan -> -0.7,0.7 Gm
-[CAMERA] pan -> -0.7,0.7 Gm
-[CAMERA] pan -> -0.7,0.7 Gm
-[CAMERA] pan -> -0.7,0.7 Gm
-[CAMERA] pan -> -0.7,0.7 Gm
-[CAMERA] pan -> -0.7,0.7 Gm
-[CAMERA] pan -> -0.7,0.7 Gm
-[CAMERA] pan -> 0.8,4.3 Gm
-[CAMERA] pan -> 0.8,4.3 Gm
-[CAMERA] pan -> 0.8,4.3 Gm
-[CAMERA] pan -> 0.8,4.3 Gm
-[CAMERA] pan -> 0.8,4.3 Gm
-[CAMERA] pan -> 0.8,4.3 Gm
-[CAMERA] pan -> 0.8,4.3 Gm
-[CAMERA] pan -> 0.8,4.3 Gm
-[CAMERA] pan -> 0.8,4.3 Gm
-[CAMERA] pan -> 0.8,4.3 Gm
-[CAMERA] pan -> 8.5,20.3 Gm
-[CAMERA] pan -> 8.5,20.3 Gm
-[CAMERA] pan -> 8.5,20.3 Gm
-[CAMERA] pan -> 8.5,20.3 Gm
-[CAMERA] pan -> 8.5,20.3 Gm
-[CAMERA] pan -> 8.5,20.3 Gm
-[CAMERA] pan -> 8.5,20.3 Gm
-[CAMERA] pan -> 8.5,20.3 Gm
-[CAMERA] pan -> 8.5,20.3 Gm
-[CAMERA] pan -> 8.5,20.3 Gm
-[CAMERA] pan -> 61.5,82.6 Gm
-[CAMERA] pan -> 61.5,82.6 Gm
-[CAMERA] pan -> 61.5,82.6 Gm
-[CAMERA] pan -> 61.5,82.6 Gm
-[CAMERA] pan -> 61.5,82.6 Gm
-[CAMERA] pan -> 61.5,82.6 Gm
-[CAMERA] pan -> 61.5,82.6 Gm
-[CAMERA] pan -> 61.5,82.6 Gm
-[CAMERA] pan -> 61.5,82.6 Gm
-[CAMERA] pan -> 61.5,82.6 Gm
-[STATE] heartbeat t=2050-01-03 16:00 RUNNING step=300s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 390 (+18), battle-trigger passes 46113 (+1791) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 125.966 Gm (DETECTED)
-[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 64.3,101.4 Gm
-[CAMERA] pan -> 64.3,101.4 Gm
-[CAMERA] pan -> 64.3,101.4 Gm
-[CAMERA] pan -> 64.3,101.4 Gm
-[CAMERA] pan -> 64.3,101.4 Gm
-[CAMERA] pan -> 64.3,101.4 Gm
-[CAMERA] pan -> 64.3,101.4 Gm
-[CAMERA] pan -> 64.3,101.4 Gm
-[CAMERA] pan -> 64.3,101.4 Gm
-[CAMERA] pan -> 64.3,101.4 Gm
-[CAMERA] pan -> -26.4,50.3 Gm
-[CAMERA] pan -> -26.4,50.3 Gm
-[CAMERA] pan -> -26.4,50.3 Gm
-[CAMERA] pan -> -26.4,50.3 Gm
-[CAMERA] pan -> -26.4,50.3 Gm
-[CAMERA] pan -> -26.4,50.3 Gm
-[CAMERA] pan -> -26.4,50.3 Gm
-[CAMERA] pan -> -26.4,50.3 Gm
-[CAMERA] pan -> -26.4,50.3 Gm
-[CAMERA] pan -> -26.4,50.3 Gm
-[CAMERA] pan -> -80.9,32.2 Gm
-[CAMERA] pan -> -80.9,32.2 Gm
-[CAMERA] pan -> -80.9,32.2 Gm
-[CAMERA] pan -> -80.9,32.2 Gm
-[CAMERA] pan -> -80.9,32.2 Gm
-[CAMERA] pan -> -80.9,32.2 Gm
-[CAMERA] pan -> -80.9,32.2 Gm
-[CAMERA] pan -> -80.9,32.2 Gm
-[CAMERA] pan -> -80.9,32.2 Gm
-[CAMERA] pan -> -80.9,32.2 Gm
-[STATE] heartbeat t=2050-01-03 18:30 RUNNING step=300s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 402 (+12), battle-trigger passes 47917 (+1804) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 126.292 Gm (DETECTED)
-[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 21:00 RUNNING step=300s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 420 (+18), battle-trigger passes 49715 (+1798) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 126.578 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-07 02:20 RUNNING step=300s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 9378 (+12), battle-trigger passes 1124882 (+1080) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 57.474 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
 [TIME] paused
-[STATE] heartbeat t=2050-01-03 21:55 paused step=300s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 420 (+0), battle-trigger passes 50342 (+627) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 126.689 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-07 02:30 paused step=432000s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 9378 (+0), battle-trigger passes 1125002 (+120) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 57.491 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[TIME] play (step 3024000s)
-[STATE] heartbeat t=2050-01-03 21:55 RUNNING step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 456 (+36), battle-trigger passes 54505 (+4163) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 127.353 Gm (DETECTED)
+[TIME] one step (432000s)
+[STATE] heartbeat t=2050-03-07 02:30 RUNNING step=432000s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 9486 (+108), battle-trigger passes 1138201 (+13199) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 59.172 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> -81.2,25.5 Gm
-[CAMERA] pan -> -81.2,25.5 Gm
-[CAMERA] pan -> -81.2,25.5 Gm
-[CAMERA] pan -> -81.2,25.5 Gm
-[CAMERA] pan -> -81.2,25.5 Gm
-[CAMERA] pan -> -81.2,25.5 Gm
-[CAMERA] pan -> -81.2,25.5 Gm
-[CAMERA] pan -> -81.2,25.5 Gm
-[CAMERA] pan -> -81.2,25.5 Gm
-[CAMERA] pan -> -81.2,25.5 Gm
-[STATE] heartbeat t=2050-01-03 21:55 RUNNING step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 690 (+234), battle-trigger passes 82801 (+28296) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 132.191 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-07 02:30 RUNNING step=432000s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 9804 (+318), battle-trigger passes 1176115 (+37914) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 64.306 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 21:55 RUNNING step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 930 (+240), battle-trigger passes 111004 (+28203) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 137.2 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-12 02:30 paused step=432000s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 10098 (+294), battle-trigger passes 1211402 (+35287) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 69.593 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 21:55 RUNNING step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 1164 (+234), battle-trigger passes 139098 (+28094) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 142.14 Gm (DETECTED)
+[TIME] play (step 432000s)
+[STATE] heartbeat t=2050-03-12 02:30 RUNNING step=432000s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 10218 (+120), battle-trigger passes 1225596 (+14194) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 67.287 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 21:55 RUNNING step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 1398 (+234), battle-trigger passes 167342 (+28244) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 146.895 Gm (DETECTED)
+[CAMERA] pan -> -61.7,-226.8 Gm
+[CAMERA] pan -> -61.7,-226.8 Gm
+[CAMERA] pan -> -61.7,-226.8 Gm
+[CAMERA] pan -> -61.7,-226.8 Gm
+[CAMERA] pan -> -61.7,-226.8 Gm
+[CAMERA] pan -> -61.7,-226.8 Gm
+[CAMERA] pan -> -61.7,-226.8 Gm
+[CAMERA] pan -> -61.7,-226.8 Gm
+[CAMERA] pan -> -61.7,-226.8 Gm
+[CAMERA] pan -> -61.7,-226.8 Gm
+[CAMERA] pan -> -25.6,-240.4 Gm
+[CAMERA] pan -> -25.6,-240.4 Gm
+[CAMERA] pan -> -25.6,-240.4 Gm
+[CAMERA] pan -> -25.6,-240.4 Gm
+[CAMERA] pan -> -25.6,-240.4 Gm
+[CAMERA] pan -> -25.6,-240.4 Gm
+[CAMERA] pan -> -25.6,-240.4 Gm
+[CAMERA] pan -> -25.6,-240.4 Gm
+[CAMERA] pan -> -25.6,-240.4 Gm
+[CAMERA] pan -> -25.6,-240.4 Gm
+[STATE] heartbeat t=2050-03-12 02:30 RUNNING step=432000s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 10530 (+312), battle-trigger passes 1263135 (+37539) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 57.604 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 21:55 RUNNING step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 1632 (+234), battle-trigger passes 195567 (+28225) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 151.305 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-17 02:30 RUNNING step=432000s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 10842 (+312), battle-trigger passes 1300910 (+37775) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 47.75 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 21:55 RUNNING step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 1866 (+234), battle-trigger passes 223848 (+28281) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 155.3 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-17 02:30 RUNNING step=432000s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 11160 (+318), battle-trigger passes 1338694 (+37784) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 37.77 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 21:55 RUNNING step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 2100 (+234), battle-trigger passes 251940 (+28092) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 158.798 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-17 02:30 RUNNING step=432000s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 11478 (+318), battle-trigger passes 1376659 (+37965) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 27.638 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 21:55 RUNNING step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 2334 (+234), battle-trigger passes 279876 (+27936) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 161.765 Gm (DETECTED)
+[TIME] paused
+[CAMERA] pan -> -13,-216 Gm
+[CAMERA] pan -> -13,-216 Gm
+[CAMERA] pan -> -13,-216 Gm
+[CAMERA] pan -> -13,-216 Gm
+[CAMERA] pan -> -13,-216 Gm
+[CAMERA] pan -> -13,-216 Gm
+[CAMERA] pan -> -13,-216 Gm
+[CAMERA] pan -> -13,-216 Gm
+[CAMERA] pan -> -13,-216 Gm
+[CAMERA] pan -> -13,-216 Gm
+[STATE] heartbeat t=2050-03-22 02:30 paused step=432000s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 11538 (+60), battle-trigger passes 1384202 (+7543) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 25.627 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 21:55 RUNNING step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 2568 (+234), battle-trigger passes 307947 (+28071) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 164.259 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-22 02:30 paused step=432000s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 11538 (+0), battle-trigger passes 1384202 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 25.627 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 34.7,-43.4 Gm
-[CAMERA] pan -> 34.7,-43.4 Gm
-[CAMERA] pan -> 34.7,-43.4 Gm
-[CAMERA] pan -> 34.7,-43.4 Gm
-[CAMERA] pan -> 34.7,-43.4 Gm
-[CAMERA] pan -> 34.7,-43.4 Gm
-[CAMERA] pan -> 34.7,-43.4 Gm
-[CAMERA] pan -> 34.7,-43.4 Gm
-[CAMERA] pan -> 34.7,-43.4 Gm
-[CAMERA] pan -> 34.7,-43.4 Gm
-[CAMERA] pan -> -130.2,-46.9 Gm
-[CAMERA] pan -> -130.2,-46.9 Gm
-[CAMERA] pan -> -130.2,-46.9 Gm
-[CAMERA] pan -> -130.2,-46.9 Gm
-[CAMERA] pan -> -130.2,-46.9 Gm
-[CAMERA] pan -> -130.2,-46.9 Gm
-[CAMERA] pan -> -130.2,-46.9 Gm
-[CAMERA] pan -> -130.2,-46.9 Gm
-[CAMERA] pan -> -130.2,-46.9 Gm
-[CAMERA] pan -> -130.2,-46.9 Gm
-[CAMERA] pan -> -141.2,-41.1 Gm
-[CAMERA] pan -> -141.2,-41.1 Gm
-[CAMERA] pan -> -141.2,-41.1 Gm
-[CAMERA] pan -> -141.2,-41.1 Gm
-[CAMERA] pan -> -141.2,-41.1 Gm
-[CAMERA] pan -> -141.2,-41.1 Gm
-[CAMERA] pan -> -141.2,-41.1 Gm
-[CAMERA] pan -> -141.2,-41.1 Gm
-[CAMERA] pan -> -141.2,-41.1 Gm
-[CAMERA] pan -> -141.2,-41.1 Gm
-[STATE] heartbeat t=2050-01-03 21:55 RUNNING step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 2808 (+240), battle-trigger passes 336245 (+28298) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 166.268 Gm (DETECTED)
+[CAMERA] pan -> 3.9,-162.8 Gm
+[CAMERA] pan -> 3.9,-162.8 Gm
+[CAMERA] pan -> 3.9,-162.8 Gm
+[CAMERA] pan -> 3.9,-162.8 Gm
+[CAMERA] pan -> 3.9,-162.8 Gm
+[CAMERA] pan -> 3.9,-162.8 Gm
+[CAMERA] pan -> 3.9,-162.8 Gm
+[CAMERA] pan -> 3.9,-162.8 Gm
+[CAMERA] pan -> 3.9,-162.8 Gm
+[CAMERA] pan -> 3.9,-162.8 Gm
+[CAMERA] pan -> 15.5,-144.8 Gm
+[CAMERA] pan -> 15.5,-144.8 Gm
+[CAMERA] pan -> 15.5,-144.8 Gm
+[CAMERA] pan -> 15.5,-144.8 Gm
+[CAMERA] pan -> 15.5,-144.8 Gm
+[CAMERA] pan -> 15.5,-144.8 Gm
+[CAMERA] pan -> 15.5,-144.8 Gm
+[CAMERA] pan -> 15.5,-144.8 Gm
+[CAMERA] pan -> 15.5,-144.8 Gm
+[CAMERA] pan -> 15.5,-144.8 Gm
+[STATE] heartbeat t=2050-03-22 02:30 paused step=432000s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 11538 (+0), battle-trigger passes 1384202 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 25.627 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> -193.7,-16.5 Gm
-[CAMERA] pan -> -193.7,-16.5 Gm
-[CAMERA] pan -> -193.7,-16.5 Gm
-[CAMERA] pan -> -193.7,-16.5 Gm
-[CAMERA] pan -> -193.7,-16.5 Gm
-[CAMERA] pan -> -193.7,-16.5 Gm
-[CAMERA] pan -> -193.7,-16.5 Gm
-[CAMERA] pan -> -193.7,-16.5 Gm
-[CAMERA] pan -> -193.7,-16.5 Gm
-[CAMERA] pan -> -193.7,-16.5 Gm
-[STATE] heartbeat t=2050-01-03 21:55 RUNNING step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 3042 (+234), battle-trigger passes 364615 (+28370) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 167.776 Gm (DETECTED)
+[TIME] one step (432000s)
+[STATE] heartbeat t=2050-03-22 02:30 RUNNING step=432000s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 11814 (+276), battle-trigger passes 1417202 (+33000) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 16.723 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 21:55 RUNNING step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 3276 (+234), battle-trigger passes 392823 (+28208) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 168.666 Gm (DETECTED)
+[TIME] paused
+[STATE] heartbeat t=2050-03-22 02:30 RUNNING step=432000s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 12126 (+312), battle-trigger passes 1455083 (+37881) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 6.446 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 21:55 RUNNING step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 3510 (+234), battle-trigger passes 420859 (+28036) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 168.962 Gm (DETECTED)
+[WARP] ship #628 '1st Task Force Aegis Test Warship 1' arrived at Venus
+[WARP] ship #629 '1st Task Force Lancer Test Railgun Cruiser 2' arrived at Venus
+[WARP] ship #630 '1st Task Force Bulwark Flak Escort 3' arrived at Venus
+[WARP] ship #631 '1st Task Force Wasp Strike Fighter 4' arrived at Venus
+[WARP] ship #632 '1st Task Force Wasp Strike Fighter 5' arrived at Venus
+[STATE] heartbeat t=2050-03-27 02:30 paused step=432000s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 12258 (+132), battle-trigger passes 1470602 (+15519) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.013 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 21:55 RUNNING step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 3744 (+234), battle-trigger passes 448958 (+28099) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 168.793 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-27 02:30 paused step=432000s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 12258 (+0), battle-trigger passes 1470602 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.013 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 21:55 RUNNING step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 3978 (+234), battle-trigger passes 477308 (+28350) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 168.158 Gm (DETECTED)
+[CAMERA] pan -> 18.7,-136.5 Gm
+[CAMERA] pan -> 18.7,-136.5 Gm
+[CAMERA] pan -> 18.7,-136.5 Gm
+[CAMERA] pan -> 18.7,-136.5 Gm
+[CAMERA] pan -> 18.7,-136.5 Gm
+[CAMERA] pan -> 18.7,-136.5 Gm
+[CAMERA] pan -> 18.7,-136.5 Gm
+[CAMERA] pan -> 18.7,-136.5 Gm
+[CAMERA] pan -> 18.7,-136.5 Gm
+[CAMERA] pan -> 18.7,-136.5 Gm
+[CAMERA] pan -> 25,-117.3 Gm
+[CAMERA] pan -> 25,-117.3 Gm
+[CAMERA] pan -> 25,-117.3 Gm
+[CAMERA] pan -> 25,-117.3 Gm
+[CAMERA] pan -> 25,-117.3 Gm
+[CAMERA] pan -> 25,-117.3 Gm
+[CAMERA] pan -> 25,-117.3 Gm
+[CAMERA] pan -> 25,-117.3 Gm
+[CAMERA] pan -> 25,-117.3 Gm
+[CAMERA] pan -> 25,-117.3 Gm
+[CAMERA] pan -> 26.1,-111.3 Gm
+[CAMERA] pan -> 26.1,-111.3 Gm
+[CAMERA] pan -> 26.1,-111.3 Gm
+[CAMERA] pan -> 26.1,-111.3 Gm
+[CAMERA] pan -> 26.1,-111.3 Gm
+[CAMERA] pan -> 26.1,-111.3 Gm
+[CAMERA] pan -> 26.1,-111.3 Gm
+[CAMERA] pan -> 26.1,-111.3 Gm
+[CAMERA] pan -> 26.1,-111.3 Gm
+[CAMERA] pan -> 26.1,-111.3 Gm
+[CAMERA] pan -> 27.6,-107.4 Gm
+[CAMERA] pan -> 27.6,-107.4 Gm
+[CAMERA] pan -> 27.6,-107.4 Gm
+[CAMERA] pan -> 27.6,-107.4 Gm
+[CAMERA] pan -> 27.6,-107.4 Gm
+[CAMERA] pan -> 27.6,-107.4 Gm
+[CAMERA] pan -> 27.6,-107.4 Gm
+[CAMERA] pan -> 27.6,-107.4 Gm
+[CAMERA] pan -> 27.6,-107.4 Gm
+[CAMERA] pan -> 27.6,-107.4 Gm
+[CAMERA] pan -> 28.4,-105.7 Gm
+[CAMERA] pan -> 28.4,-105.7 Gm
+[CAMERA] pan -> 28.4,-105.7 Gm
+[CAMERA] pan -> 28.4,-105.7 Gm
+[CAMERA] pan -> 28.4,-105.7 Gm
+[CAMERA] pan -> 28.4,-105.7 Gm
+[CAMERA] pan -> 28.4,-105.7 Gm
+[CAMERA] pan -> 28.4,-105.7 Gm
+[CAMERA] pan -> 28.4,-105.7 Gm
+[CAMERA] pan -> 28.4,-105.7 Gm
+[STATE] heartbeat t=2050-03-27 02:30 paused step=432000s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 12258 (+0), battle-trigger passes 1470602 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.013 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 21:55 RUNNING step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 4218 (+240), battle-trigger passes 505536 (+28228) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 167.087 Gm (DETECTED)
+[CAMERA] pan -> 28.6,-105.3 Gm
+[CAMERA] pan -> 28.6,-105.3 Gm
+[CAMERA] pan -> 28.6,-105.3 Gm
+[CAMERA] pan -> 28.6,-105.3 Gm
+[CAMERA] pan -> 28.6,-105.3 Gm
+[CAMERA] pan -> 28.6,-105.3 Gm
+[CAMERA] pan -> 28.6,-105.3 Gm
+[CAMERA] pan -> 28.6,-105.3 Gm
+[CAMERA] pan -> 28.6,-105.3 Gm
+[CAMERA] pan -> 28.6,-105.3 Gm
+[STATE] heartbeat t=2050-03-27 02:30 paused step=300s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 12258 (+0), battle-trigger passes 1470602 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.013 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 21:55 RUNNING step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 4452 (+234), battle-trigger passes 533695 (+28159) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 165.611 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-27 02:30 paused step=300s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 12258 (+0), battle-trigger passes 1470602 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.013 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 21:55 RUNNING step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 4686 (+234), battle-trigger passes 561883 (+28188) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 163.754 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-27 02:30 paused step=300s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 12258 (+0), battle-trigger passes 1470602 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.013 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 21:55 RUNNING step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 4920 (+234), battle-trigger passes 589992 (+28109) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 161.535 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-27 02:30 paused step=300s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 12258 (+0), battle-trigger passes 1470602 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.013 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 21:55 RUNNING step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 5154 (+234), battle-trigger passes 618091 (+28099) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 158.966 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-27 02:30 paused step=300s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 12258 (+0), battle-trigger passes 1470602 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.013 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-03 21:55 RUNNING step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 5388 (+234), battle-trigger passes 646162 (+28071) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 156.076 Gm (DETECTED)
+[STATE] heartbeat t=2050-03-27 02:30 paused step=300s selected=(none) ships-in-view=26
+[ENGINE] sensor scans 12258 (+0), battle-trigger passes 1470602 (+0) since last beat
+[DETECT] United Earth Corp holds 2 contact(s); 10 other-faction ship(s) in-system, detects 1 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 0.013 Gm (beyond reach / undetected)
 [EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[WARP] ship #792 '2nd Task Force Aegis Test Warship 1' departing → Venus (137.9 Gm, ETA 2050-04-24 22:39)
-[WARP] ship #793 '2nd Task Force Lancer Test Railgun Cruiser 2' departing → Venus (137.9 Gm, ETA 2050-04-24 22:38)
-[WARP] ship #794 '2nd Task Force Bulwark Flak Escort 3' departing → Venus (137.9 Gm, ETA 2050-04-24 22:41)
-[WARP] ship #795 '2nd Task Force Wasp Strike Fighter 4' departing → Venus (137.9 Gm, ETA 2050-04-24 22:40)
-[WARP] ship #796 '2nd Task Force Wasp Strike Fighter 5' departing → Venus (137.9 Gm, ETA 2050-04-24 22:44)
-[RenderError] FleetWindow threw and was skipped this frame (logged once per unique error). Fix the cause:
-System.ArgumentException: Cannot set the parent entity equal to self
-   at Pulsar4X.Datablobs.TreeHierarchyDB.set_Parent(Entity value) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Datablobs\TreeHierarchyDB.cs:line 54
-   at Pulsar4X.Datablobs.TreeHierarchyDB.SetParent(Entity parent) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Datablobs\TreeHierarchyDB.cs:line 132
-   at Pulsar4X.Movement.PositionDB.SetParent(Entity newParent) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\MoveState.cs:line 154
-   at Pulsar4X.Movement.WarpMoveProcessor.StartNonNewtTranslation(Entity entity) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\WarpMove\WarpMoveProcessor.cs:line 193
-   at Pulsar4X.Movement.WarpMoveCommand.Execute(DateTime atDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\WarpMove\WarpMoveCommand.cs:line 293
-   at Pulsar4X.Engine.OrderableProcessor.ProcessEntity(Entity entity, DateTime atDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Processors\OrderableProcessor.cs:line 71
-   at Pulsar4X.Engine.Orders.StandAloneOrderHandler.HandleOrder(EntityCommand entityCommand) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Orders\StandAloneOrderHandler.cs:line 42
-   at Pulsar4X.Movement.MoveToSystemBodyOrder.FindColonyAndSetupWarpCommands() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\MoveToSystemBodyOrder.cs:line 109
-   at Pulsar4X.Movement.MoveToSystemBodyOrder.Execute(DateTime atDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\MoveToSystemBodyOrder.cs:line 39
-   at Pulsar4X.Engine.OrderableProcessor.ProcessEntity(Entity entity, DateTime atDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Processors\OrderableProcessor.cs:line 71
-   at Pulsar4X.Engine.Orders.StandAloneOrderHandler.HandleOrder(EntityCommand entityCommand) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\Orders\StandAloneOrderHandler.cs:line 42
-   at Pulsar4X.Client.FleetWindow.IssueOrdersDisplay(Vector2 size) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Windows\FleetWindow.cs:line 1081
-   at Pulsar4X.Client.FleetWindow.DisplayTabs() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Windows\FleetWindow.cs:line 339
-   at Pulsar4X.Client.FleetWindow.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Windows\FleetWindow.cs:line 193
-   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 452
-[RenderError] Selector threw and was skipped this frame (logged once per unique error). Fix the cause:
-System.InvalidOperationException: Begin("###selector") called while already inside window "Fleet Management". Must call End() before starting a new window.
-   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
-   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 52
-   at Pulsar4X.Client.Selector.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\HUD\Selector.cs:line 84
-   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 452
-[RenderError] EntityFilterBar threw and was skipped this frame (logged once per unique error). Fix the cause:
-System.InvalidOperationException: Begin("###entity-filter-bar") called while already inside window "Fleet Management". Must call End() before starting a new window.
-   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
-   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 52
-   at Pulsar4X.Client.EntityFilterBar.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\HUD\EntityFilterBar.cs:line 48
-   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 452
-[RenderError] TimeControl threw and was skipped this frame (logged once per unique error). Fix the cause:
-System.InvalidOperationException: Begin("TimeControl") called while already inside window "Fleet Management". Must call End() before starting a new window.
-   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
-   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, Boolean& isActive, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 44
-   at Pulsar4X.Client.TimeControl.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\HUD\TimeControl.cs:line 63
-   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 452
-[RenderError] ToolBarWindow threw and was skipped this frame (logged once per unique error). Fix the cause:
-System.InvalidOperationException: Begin("##Toolbar") called while already inside window "Fleet Management". Must call End() before starting a new window.
-   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
-   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 52
-   at Pulsar4X.Client.ToolBarWindow.DisplayButtons(String name, List`1 DisplayToolButtons) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\HUD\ToolBarWindow.cs:line 198
-   at Pulsar4X.Client.ToolBarWindow.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\HUD\ToolBarWindow.cs:line 189
-   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 452
-[RenderError] FleetWindow threw and was skipped this frame (logged once per unique error). Fix the cause:
-System.InvalidOperationException: Begin("Fleet Management") called while already inside window "Fleet Management". Must call End() before starting a new window.
-   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
-   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, Boolean& isActive, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 44
-   at Pulsar4X.Client.FleetWindow.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Windows\FleetWindow.cs:line 177
-   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 452
-[CAMERA] pan -> -138.9,-51.1 Gm
-[CAMERA] pan -> -138.9,-51.1 Gm
-[CAMERA] pan -> -138.9,-51.1 Gm
-[CAMERA] pan -> -138.9,-51.1 Gm
-[CAMERA] pan -> -138.9,-51.1 Gm
-[CAMERA] pan -> -138.9,-51.1 Gm
-[CAMERA] pan -> -138.9,-51.1 Gm
-[CAMERA] pan -> -138.9,-51.1 Gm
-[CAMERA] pan -> -138.9,-51.1 Gm
-[CAMERA] pan -> -138.9,-51.1 Gm
-[STATE] heartbeat t=2050-01-03 21:55 paused step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 5394 (+6), battle-trigger passes 646740 (+578) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 156.013 Gm (DETECTED)
-[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] ⚠ faults this session: 6 unique (render+input — grep [RenderError]/[InputError])
-[CAMERA] pan -> -103,-59 Gm
-[CAMERA] pan -> -103,-59 Gm
-[CAMERA] pan -> -103,-59 Gm
-[CAMERA] pan -> -103,-59 Gm
-[CAMERA] pan -> -103,-59 Gm
-[CAMERA] pan -> -103,-59 Gm
-[CAMERA] pan -> -103,-59 Gm
-[CAMERA] pan -> -103,-59 Gm
-[CAMERA] pan -> -103,-59 Gm
-[CAMERA] pan -> -103,-59 Gm
-[CAMERA] pan -> -106.3,-85.6 Gm
-[CAMERA] pan -> -106.3,-85.6 Gm
-[CAMERA] pan -> -106.3,-85.6 Gm
-[CAMERA] pan -> -106.3,-85.6 Gm
-[CAMERA] pan -> -106.3,-85.6 Gm
-[CAMERA] pan -> -106.3,-85.6 Gm
-[CAMERA] pan -> -106.3,-85.6 Gm
-[CAMERA] pan -> -106.3,-85.6 Gm
-[CAMERA] pan -> -106.3,-85.6 Gm
-[CAMERA] pan -> -106.3,-85.6 Gm
-[STATE] heartbeat t=2050-01-03 21:55 paused step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 5394 (+0), battle-trigger passes 646740 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 156.013 Gm (DETECTED)
-[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] ⚠ faults this session: 6 unique (render+input — grep [RenderError]/[InputError])
-[CAMERA] pan -> -89.7,-95 Gm
-[CAMERA] pan -> -89.7,-95 Gm
-[CAMERA] pan -> -89.7,-95 Gm
-[CAMERA] pan -> -89.7,-95 Gm
-[CAMERA] pan -> -89.7,-95 Gm
-[CAMERA] pan -> -89.7,-95 Gm
-[CAMERA] pan -> -89.7,-95 Gm
-[CAMERA] pan -> -89.7,-95 Gm
-[CAMERA] pan -> -89.7,-95 Gm
-[CAMERA] pan -> -89.7,-95 Gm
-[CAMERA] pan -> -60.7,-78.2 Gm
-[CAMERA] pan -> -60.7,-78.2 Gm
-[CAMERA] pan -> -60.7,-78.2 Gm
-[CAMERA] pan -> -60.7,-78.2 Gm
-[CAMERA] pan -> -60.7,-78.2 Gm
-[CAMERA] pan -> -60.7,-78.2 Gm
-[CAMERA] pan -> -60.7,-78.2 Gm
-[CAMERA] pan -> -60.7,-78.2 Gm
-[CAMERA] pan -> -60.7,-78.2 Gm
-[CAMERA] pan -> -60.7,-78.2 Gm
-[CAMERA] pan -> -102.4,-50.7 Gm
-[CAMERA] pan -> -102.4,-50.7 Gm
-[CAMERA] pan -> -102.4,-50.7 Gm
-[CAMERA] pan -> -102.4,-50.7 Gm
-[CAMERA] pan -> -102.4,-50.7 Gm
-[CAMERA] pan -> -102.4,-50.7 Gm
-[CAMERA] pan -> -102.4,-50.7 Gm
-[CAMERA] pan -> -102.4,-50.7 Gm
-[CAMERA] pan -> -102.4,-50.7 Gm
-[CAMERA] pan -> -102.4,-50.7 Gm
-[STATE] heartbeat t=2050-01-03 21:55 paused step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 5394 (+0), battle-trigger passes 646740 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 156.013 Gm (DETECTED)
-[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] ⚠ faults this session: 6 unique (render+input — grep [RenderError]/[InputError])
-[CAMERA] pan -> -117.3,-90.6 Gm
-[CAMERA] pan -> -117.3,-90.6 Gm
-[CAMERA] pan -> -117.3,-90.6 Gm
-[CAMERA] pan -> -117.3,-90.6 Gm
-[CAMERA] pan -> -117.3,-90.6 Gm
-[CAMERA] pan -> -117.3,-90.6 Gm
-[CAMERA] pan -> -117.3,-90.6 Gm
-[CAMERA] pan -> -117.3,-90.6 Gm
-[CAMERA] pan -> -117.3,-90.6 Gm
-[CAMERA] pan -> -117.3,-90.6 Gm
-[CAMERA] pan -> -98.6,-85.8 Gm
-[CAMERA] pan -> -98.6,-85.8 Gm
-[CAMERA] pan -> -98.6,-85.8 Gm
-[CAMERA] pan -> -98.6,-85.8 Gm
-[CAMERA] pan -> -98.6,-85.8 Gm
-[CAMERA] pan -> -98.6,-85.8 Gm
-[CAMERA] pan -> -98.6,-85.8 Gm
-[CAMERA] pan -> -98.6,-85.8 Gm
-[CAMERA] pan -> -98.6,-85.8 Gm
-[CAMERA] pan -> -98.6,-85.8 Gm
-[CAMERA] pan -> -75.3,-83.8 Gm
-[CAMERA] pan -> -75.3,-83.8 Gm
-[CAMERA] pan -> -75.3,-83.8 Gm
-[CAMERA] pan -> -75.3,-83.8 Gm
-[CAMERA] pan -> -75.3,-83.8 Gm
-[CAMERA] pan -> -75.3,-83.8 Gm
-[CAMERA] pan -> -75.3,-83.8 Gm
-[CAMERA] pan -> -75.3,-83.8 Gm
-[CAMERA] pan -> -75.3,-83.8 Gm
-[CAMERA] pan -> -75.3,-83.8 Gm
-[CAMERA] pan -> -56.2,-81.9 Gm
-[CAMERA] pan -> -56.2,-81.9 Gm
-[CAMERA] pan -> -56.2,-81.9 Gm
-[CAMERA] pan -> -56.2,-81.9 Gm
-[CAMERA] pan -> -56.2,-81.9 Gm
-[CAMERA] pan -> -56.2,-81.9 Gm
-[CAMERA] pan -> -56.2,-81.9 Gm
-[CAMERA] pan -> -56.2,-81.9 Gm
-[CAMERA] pan -> -56.2,-81.9 Gm
-[CAMERA] pan -> -56.2,-81.9 Gm
-[STATE] heartbeat t=2050-01-03 21:55 paused step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 5394 (+0), battle-trigger passes 646740 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 156.013 Gm (DETECTED)
-[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] ⚠ faults this session: 6 unique (render+input — grep [RenderError]/[InputError])
-[CAMERA] pan -> -48.9,-81.2 Gm
-[CAMERA] pan -> -48.9,-81.2 Gm
-[CAMERA] pan -> -48.9,-81.2 Gm
-[CAMERA] pan -> -48.9,-81.2 Gm
-[CAMERA] pan -> -48.9,-81.2 Gm
-[CAMERA] pan -> -48.9,-81.2 Gm
-[CAMERA] pan -> -48.9,-81.2 Gm
-[CAMERA] pan -> -48.9,-81.2 Gm
-[CAMERA] pan -> -48.9,-81.2 Gm
-[CAMERA] pan -> -48.9,-81.2 Gm
-[CAMERA] pan -> -45.9,-81 Gm
-[CAMERA] pan -> -45.9,-81 Gm
-[CAMERA] pan -> -45.9,-81 Gm
-[CAMERA] pan -> -45.9,-81 Gm
-[CAMERA] pan -> -45.9,-81 Gm
-[CAMERA] pan -> -45.9,-81 Gm
-[CAMERA] pan -> -45.9,-81 Gm
-[CAMERA] pan -> -45.9,-81 Gm
-[CAMERA] pan -> -45.9,-81 Gm
-[CAMERA] pan -> -45.9,-81 Gm
-[CAMERA] pan -> -37.5,-80.6 Gm
-[CAMERA] pan -> -37.5,-80.6 Gm
-[CAMERA] pan -> -37.5,-80.6 Gm
-[CAMERA] pan -> -37.5,-80.6 Gm
-[CAMERA] pan -> -37.5,-80.6 Gm
-[CAMERA] pan -> -37.5,-80.6 Gm
-[CAMERA] pan -> -37.5,-80.6 Gm
-[CAMERA] pan -> -37.5,-80.6 Gm
-[CAMERA] pan -> -37.5,-80.6 Gm
-[CAMERA] pan -> -37.5,-80.6 Gm
-[STATE] heartbeat t=2050-01-03 21:55 paused step=3024000s selected=Luna ships-in-view=31
-[ENGINE] sensor scans 5394 (+0), battle-trigger passes 646740 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 156.013 Gm (DETECTED)
-[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] ⚠ faults this session: 6 unique (render+input — grep [RenderError]/[InputError])
-[CAMERA] pan -> -36.1,-80.4 Gm
-[CAMERA] pan -> -36.1,-80.4 Gm
-[CAMERA] pan -> -36.1,-80.4 Gm
-[CAMERA] pan -> -36.1,-80.4 Gm
-[CAMERA] pan -> -36.1,-80.4 Gm
-[CAMERA] pan -> -36.1,-80.4 Gm
-[CAMERA] pan -> -36.1,-80.4 Gm
-[CAMERA] pan -> -36.1,-80.4 Gm
-[CAMERA] pan -> -36.1,-80.4 Gm
-[CAMERA] pan -> -36.1,-80.4 Gm
-[SELECT] Primary click on '1st Task Force Aegis Test Warship 1' (entity #786, faction 764)
-[RenderError] EntityWindow:EntityWindow threw and was skipped this frame (logged once per unique error). Fix the cause:
-System.InvalidOperationException: Begin("1st Task Force Aegis Test Warship 1 (Ship)###786") called while already inside window "Fleet Management". Must call End() before starting a new window.
-   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
-   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, Boolean& isActive, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 44
-   at Pulsar4X.Client.EntityWindow.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Windows\EntityWindow.cs:line 186
-   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 452
-[SELECT] Primary click on '1st Task Force Aegis Test Warship 1' (entity #786, faction 764)
-[SELECT] Primary click on '1st Task Force Aegis Test Warship 1' (entity #786, faction 764)
-[STATE] heartbeat t=2050-01-03 21:55 paused step=3024000s selected=1st Task Force Aegis Test Warship 1 ships-in-view=31
-[ENGINE] sensor scans 5394 (+0), battle-trigger passes 646740 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 156.013 Gm (DETECTED)
-[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] ⚠ faults this session: 7 unique (render+input — grep [RenderError]/[InputError])
-[STATE] heartbeat t=2050-01-03 21:55 paused step=3024000s selected=1st Task Force Aegis Test Warship 1 ships-in-view=31
-[ENGINE] sensor scans 5394 (+0), battle-trigger passes 646740 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 156.013 Gm (DETECTED)
-[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] ⚠ faults this session: 7 unique (render+input — grep [RenderError]/[InputError])
-[CAMERA] pan -> -35.9,-80.4 Gm
-[CAMERA] pan -> -35.9,-80.4 Gm
-[CAMERA] pan -> -35.9,-80.4 Gm
-[CAMERA] pan -> -35.9,-80.4 Gm
-[CAMERA] pan -> -35.9,-80.4 Gm
-[CAMERA] pan -> -35.9,-80.4 Gm
-[CAMERA] pan -> -35.9,-80.4 Gm
-[CAMERA] pan -> -35.9,-80.4 Gm
-[CAMERA] pan -> -35.9,-80.4 Gm
-[CAMERA] pan -> -35.9,-80.4 Gm
-[SELECT] Primary click on '1st Task Force Aegis Test Warship 1' (entity #786, faction 764)
-[SELECT] Primary click on '1st Task Force Aegis Test Warship 1' (entity #786, faction 764)
-[CAMERA] pan -> -36.1,-80.4 Gm
-[CAMERA] pan -> -36.1,-80.4 Gm
-[CAMERA] pan -> -36.1,-80.4 Gm
-[CAMERA] pan -> -36.1,-80.4 Gm
-[CAMERA] pan -> -36.1,-80.4 Gm
-[CAMERA] pan -> -36.1,-80.4 Gm
-[CAMERA] pan -> -36.1,-80.4 Gm
-[CAMERA] pan -> -36.1,-80.4 Gm
-[CAMERA] pan -> -36.1,-80.4 Gm
-[CAMERA] pan -> -36.1,-80.4 Gm
-[CAMERA] pan -> -37.4,-81.8 Gm
-[CAMERA] pan -> -37.4,-81.8 Gm
-[CAMERA] pan -> -37.4,-81.8 Gm
-[CAMERA] pan -> -37.4,-81.8 Gm
-[CAMERA] pan -> -37.4,-81.8 Gm
-[CAMERA] pan -> -37.4,-81.8 Gm
-[CAMERA] pan -> -37.4,-81.8 Gm
-[CAMERA] pan -> -37.4,-81.8 Gm
-[CAMERA] pan -> -37.4,-81.8 Gm
-[CAMERA] pan -> -37.4,-81.8 Gm
-[CAMERA] pan -> -27.5,-105.7 Gm
-[CAMERA] pan -> -27.5,-105.7 Gm
-[CAMERA] pan -> -27.5,-105.7 Gm
-[CAMERA] pan -> -27.5,-105.7 Gm
-[CAMERA] pan -> -27.5,-105.7 Gm
-[CAMERA] pan -> -27.5,-105.7 Gm
-[CAMERA] pan -> -27.5,-105.7 Gm
-[CAMERA] pan -> -27.5,-105.7 Gm
-[CAMERA] pan -> -27.5,-105.7 Gm
-[CAMERA] pan -> -27.5,-105.7 Gm
-[STATE] heartbeat t=2050-01-03 21:55 paused step=3024000s selected=1st Task Force Aegis Test Warship 1 ships-in-view=31
-[ENGINE] sensor scans 5394 (+0), battle-trigger passes 646740 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 156.013 Gm (DETECTED)
-[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] ⚠ faults this session: 7 unique (render+input — grep [RenderError]/[InputError])
-[CAMERA] pan -> -9.4,-116.5 Gm
-[CAMERA] pan -> -9.4,-116.5 Gm
-[CAMERA] pan -> -9.4,-116.5 Gm
-[CAMERA] pan -> -9.4,-116.5 Gm
-[CAMERA] pan -> -9.4,-116.5 Gm
-[CAMERA] pan -> -9.4,-116.5 Gm
-[CAMERA] pan -> -9.4,-116.5 Gm
-[CAMERA] pan -> -9.4,-116.5 Gm
-[CAMERA] pan -> -9.4,-116.5 Gm
-[CAMERA] pan -> -9.4,-116.5 Gm
-[CAMERA] pan -> -1.6,-18.9 Gm
-[CAMERA] pan -> -1.6,-18.9 Gm
-[CAMERA] pan -> -1.6,-18.9 Gm
-[CAMERA] pan -> -1.6,-18.9 Gm
-[CAMERA] pan -> -1.6,-18.9 Gm
-[CAMERA] pan -> -1.6,-18.9 Gm
-[CAMERA] pan -> -1.6,-18.9 Gm
-[CAMERA] pan -> -1.6,-18.9 Gm
-[CAMERA] pan -> -1.6,-18.9 Gm
-[CAMERA] pan -> -1.6,-18.9 Gm
-[CAMERA] pan -> -0.3,-3.4 Gm
-[CAMERA] pan -> -0.3,-3.4 Gm
-[CAMERA] pan -> -0.3,-3.4 Gm
-[CAMERA] pan -> -0.3,-3.4 Gm
-[CAMERA] pan -> -0.3,-3.4 Gm
-[CAMERA] pan -> -0.3,-3.4 Gm
-[CAMERA] pan -> -0.3,-3.4 Gm
-[CAMERA] pan -> -0.3,-3.4 Gm
-[CAMERA] pan -> -0.3,-3.4 Gm
-[CAMERA] pan -> -0.3,-3.4 Gm
-[CAMERA] pan -> 0,-0.9 Gm
-[CAMERA] pan -> 0,-0.9 Gm
-[CAMERA] pan -> 0,-0.9 Gm
-[CAMERA] pan -> 0,-0.9 Gm
-[CAMERA] pan -> 0,-0.9 Gm
-[CAMERA] pan -> 0,-0.9 Gm
-[CAMERA] pan -> 0,-0.9 Gm
-[CAMERA] pan -> 0,-0.9 Gm
-[CAMERA] pan -> 0,-0.9 Gm
-[CAMERA] pan -> 0,-0.9 Gm
-[CAMERA] pan -> 0.1,-0.6 Gm
-[CAMERA] pan -> 0.1,-0.6 Gm
-[CAMERA] pan -> 0.1,-0.6 Gm
-[CAMERA] pan -> 0.1,-0.6 Gm
-[CAMERA] pan -> 0.1,-0.6 Gm
-[CAMERA] pan -> 0.1,-0.6 Gm
-[CAMERA] pan -> 0.1,-0.6 Gm
-[CAMERA] pan -> 0.1,-0.6 Gm
-[CAMERA] pan -> 0.1,-0.6 Gm
-[CAMERA] pan -> 0.1,-0.6 Gm
-[CAMERA] pan -> 0.1,-0.5 Gm
-[CAMERA] pan -> 0.1,-0.5 Gm
-[CAMERA] pan -> 0.1,-0.5 Gm
-[CAMERA] pan -> 0.1,-0.5 Gm
-[CAMERA] pan -> 0.1,-0.5 Gm
-[CAMERA] pan -> 0.1,-0.5 Gm
-[CAMERA] pan -> 0.1,-0.5 Gm
-[CAMERA] pan -> 0.1,-0.5 Gm
-[CAMERA] pan -> 0.1,-0.5 Gm
-[CAMERA] pan -> 0.1,-0.5 Gm
-[STATE] heartbeat t=2050-01-03 21:55 paused step=3024000s selected=1st Task Force Aegis Test Warship 1 ships-in-view=31
-[ENGINE] sensor scans 5394 (+0), battle-trigger passes 646740 (+0) since last beat
-[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
-[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 156.013 Gm (DETECTED)
-[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[TIME] one step (300s)
+[TIME] one step (300s)
+[TIME] one step (300s)
+[CAMERA] pan -> 28.8,-105.4 Gm
+[CAMERA] pan -> 28.8,-105.4 Gm
+[CAMERA] pan -> 28.8,-105.4 Gm
+[CAMERA] pan -> 28.8,-105.4 Gm
+[CAMERA] pan -> 28.8,-105.4 Gm
+[CAMERA] pan -> 28.8,-105.4 Gm
+[CAMERA] pan -> 28.8,-105.4 Gm
+[CAMERA] pan -> 28.8,-105.4 Gm
+[CAMERA] pan -> 28.8,-105.4 Gm
+[CAMERA] pan -> 28.8,-105.4 Gm
+[CAMERA] pan -> 29.6,-109.3 Gm
+[CAMERA] pan -> 29.6,-109.3 Gm
