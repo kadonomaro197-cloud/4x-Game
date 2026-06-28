@@ -311,6 +311,17 @@ Closed part of the gap between what the sim KNOWS and what it tells the player (
 - **Fire Control** (`FireControlWindow.ShowRangeToTarget`): range-to-target vs. the ship's beam reach + a red **OUT OF RANGE** flag — fixes the silent no-fire (a weapon past `MaxRange` just didn't fire, no feedback). Position read wrapped in try/catch (a mid-warp/detached `AbsolutePosition` can throw).
 - **Warp Order** (`WarpOrderWindow`): "Available Δv" + "ETA / arrive" at top level, from `_maxDV` + `_targetIntercept.eti` the window already computed but never printed.
 
+### "Attack" button — order a fleet to engage (FleetWindow Combat tab, 2026-06-27)
+
+`FleetWindow.DisplayEngageButton` ("Attack nearest hostile fleet") gives the player the explicit **engage** order
+that was missing — for when two fleets sit in range "staring at each other" (one holding fire, or an enemy that
+broke off so the auto-trigger won't re-grab it). Calls `Pulsar4X.Combat.CombatEngagement.OrderAttackNearestHostile(
+SelectedFleet)` (a **direct call**, like doctrine/EMCON), which clears any retreat, flips the fleet Weapons Free,
+and forces the fight (the resolver closes to weapons range first). Engine logic is CI-tested (`OrderAttackTests`);
+the button is a thin call + a `[attack]` SessionLog line + a one-line result message. **v1 targets the NEAREST
+hostile**; picking a SPECIFIC enemy fleet by map-click is the follow-up (needs blip-clickability + enemy ship→fleet
+resolution). See `GameEngine/Combat/CLAUDE.md` → "Order a fleet to ATTACK".
+
 ### Fleet-as-one-icon — BUILT 2026-06-27 (the map matches "a fleet is one unit")
 
 The engine treats a fleet as a single unit (moves as one, fights as one, locks orders as one), but the map drew

@@ -399,6 +399,55 @@ namespace Pulsar4X.Combat
             RecordBattleEvent(fleetB, BattleEventType.Engaged, 0, GetFleetShips(fleetB).Count, 0, "vs " + FleetLabel(fleetA));
         }
 
+        /// <summary>Player order: this fleet ATTACKS that one — the explicit "engage them" the player wanted when two
+        /// fleets sat in range doing nothing (one holding fire, or an enemy that had broken off and the auto-trigger
+        /// won't re-grab). COMMITS the attacker: clears any retreat it was on (it's back in the fight), sets it
+        /// **Weapons Free** (or it would just keep holding fire), and forces BOTH fleets into combat now — the resolver
+        /// + closing model then run the fight (closing to weapons range first if there's a gap). A **direct call**
+        /// (like doctrine/EMCON), so it bypasses the auto-trigger's detection/posture/retreat gates: the player is
+        /// taking the shot deliberately. No-ops on a friendly target, an empty fleet, or self. Idempotent if a side is
+        /// already fighting (joins via <see cref="EnsureInCombat"/> instead of resetting a running engagement).</summary>
+        public static void OrderAttack(Entity attacker, Entity target)
+        {
+            if (attacker == null || !attacker.IsValid || target == null || !target.IsValid || attacker == target) return;
+            if (!AreHostile(attacker, target)) return;                       // no attacking your own
+            if (GetFleetShips(attacker).Count == 0 || GetFleetShips(target).Count == 0) return;
+
+            if (attacker.HasDataBlob<FleetRetreatDB>()) attacker.RemoveDataBlob<FleetRetreatDB>(); // re-commit
+            FleetDoctrine.SetEngagementPosture(attacker, EngagementPosture.WeaponsFree);           // actually shoot
+
+            bool aIn = attacker.HasDataBlob<FleetCombatStateDB>();
+            bool bIn = target.HasDataBlob<FleetCombatStateDB>();
+            if (!aIn && !bIn)
+                StartEngagement(attacker, target);   // fresh fight — seeds the closing gap from the real distance
+            else
+            {
+                EnsureInCombat(attacker, target.Id); // one side already in a fight — join it (don't reset state)
+                EnsureInCombat(target, attacker.Id);
+            }
+        }
+
+        /// <summary>The Fleet-window "Engage" button: find the NEAREST hostile fleet in the same system and
+        /// <see cref="OrderAttack"/> it. Solves the common "two fleets in range just staring at each other" case
+        /// without map-click targeting (picking a SPECIFIC enemy fleet is the follow-up). Returns the fleet it
+        /// engaged, or null if no hostile fleet with ships is present.</summary>
+        public static Entity OrderAttackNearestHostile(Entity fleet)
+        {
+            if (fleet == null || !fleet.IsValid || fleet.Manager == null) return null;
+            Entity best = null;
+            double bestDist = double.MaxValue;
+            foreach (var other in fleet.Manager.GetAllEntitiesWithDataBlob<FleetDB>())
+            {
+                if (other == fleet || other == null || !other.IsValid) continue;
+                if (!AreHostile(fleet, other)) continue;
+                if (GetFleetShips(other).Count == 0) continue;
+                double d = FleetSeparation(fleet, other);
+                if (d < bestDist) { bestDist = d; best = other; }
+            }
+            if (best != null) OrderAttack(fleet, best);
+            return best;
+        }
+
         /// <summary>Put a fleet "in combat" if it isn't already — the JOIN primitive. Idempotent: a fleet already
         /// engaged keeps its running state (damage pool, steps, initial count) untouched, so a reinforcement
         /// arriving each tick doesn't reset the fight. Records its starting ship count for the retreat threshold

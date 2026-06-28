@@ -127,6 +127,25 @@ Battles spanning game-time is what makes "watch a battle / change doctrine mid-f
 
 ---
 
+## Order a fleet to ATTACK (player agency — `OrderAttack`, added 2026-06-27)
+
+The auto-trigger fights hostile fleets that are detected + in range + Weapons Free. But once a fight ends, two
+fleets can sit in range doing nothing — one **holding fire**, or an enemy that **broke off** (carries
+`FleetRetreatDB`, which `Tick`'s engage pass deliberately skips so it doesn't thrash). The developer's "they were
+just staring at each other menacingly." `CombatEngagement.OrderAttack(attacker, target)` is the explicit override:
+- Clears the attacker's `FleetRetreatDB` (re-commits — it's back in the fight).
+- Sets the attacker **Weapons Free** (`FleetDoctrine.SetEngagementPosture`), or it would keep holding fire.
+- Forces both into combat **now**: `StartEngagement` if neither is engaged (seeds the closing gap from real
+  distance), else `EnsureInCombat` both (joins a running fight without resetting it).
+It's a **direct call** (like doctrine/EMCON), so it bypasses the auto-trigger's detection/posture/retreat gates —
+the player is taking the shot deliberately. No-ops on a friendly target (`AreHostile` guard), an empty fleet, or
+self. `OrderAttackNearestHostile(fleet)` is the one-click convenience the Fleet-window button uses: finds the
+nearest hostile fleet with ships (`FleetSeparation`) and `OrderAttack`s it (targeting a SPECIFIC enemy fleet by
+map-click is the follow-up). **Connections:** writes `FleetCombatStateDB` (engage), clears `FleetRetreatDB`, sets
+`EngagementPosture` — the resolver/closing model then runs the fight. **Client:** `FleetWindow.DisplayEngageButton`
+("Attack nearest hostile fleet", Combat tab). Gauges: `OrderAttackTests` (forces engagement past a hold + retreat;
+no-ops on a friendly; nearest-hostile finds + engages, null when none).
+
 ## Switchable doctrine
 
 **What it is.** Each fleet can fly an active **combat posture** — its doctrine — set by the player (or NPC). The auto-resolver reads it as a read-time multiplier on that fleet's strength and toughness, so the *same* fleet fights differently under a different posture. Two pieces:
