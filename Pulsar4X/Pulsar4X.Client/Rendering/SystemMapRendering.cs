@@ -726,7 +726,7 @@ namespace Pulsar4X.Client.Rendering
             }
 
             int facId = _faction.Id;
-            List<Entity> ownShips, ownColonies; Entity refTarget = null;
+            List<Entity> ownShips, ownColonies, refShips;
             try
             {
                 var allShips = _sysState.StarSystem.GetAllEntitiesWithDataBlob<ShipInfoDB>();
@@ -737,24 +737,24 @@ namespace Pulsar4X.Client.Rendering
                 ownColonies = _sysState.StarSystem.GetAllEntitiesWithDataBlob<Pulsar4X.Colonies.ColonyInfoDB>()
                     .Where(e => e.FactionOwnerID == facId && e.IsValid && e.HasDataBlob<PositionDB>())
                     .ToList();
-                // Reference target for a PLACE's detection ring: "how far does this colony detect a ship like THIS?"
-                // Prefer a real foreign ship (the thing you actually want to spot — gives the honest bubble that
-                // reaches the inner planets), else one of your own ships (a ship-like target). Sized by the detector
-                // vs the target's signature, NOT the colony's own signature — which is why the old SensorReachRange
-                // ring came out tiny (it measured "detect a thing as loud as a colony", not "as loud as a ship").
-                refTarget = allShips.FirstOrDefault(e => e.FactionOwnerID != facId && e.IsValid && e.HasDataBlob<SensorProfileDB>())
-                            ?? ownShips.FirstOrDefault(e => e.HasDataBlob<SensorProfileDB>());
+                // Reference SHIPS for a PLACE's detection ring (how far the colony picks up a ship). Use your OWN
+                // ships — a stable set that's always present — NOT whichever enemy is nearby. Sizing off an enemy
+                // made the ring SHRINK the instant you spawned a (quieter) hostile (the live report). If you have no
+                // ships at all, fall back to any ship in-system so the ring still draws.
+                refShips = ownShips.Where(e => e.HasDataBlob<SensorProfileDB>()).ToList();
+                if (refShips.Count == 0)
+                    refShips = allShips.Where(e => e.IsValid && e.HasDataBlob<SensorProfileDB>()).ToList();
             }
             catch { return; }   // a bad engine read must never blank the map
 
-            // Fingerprint = which units/places + their loudness + the place-ring reference. Positions are deliberately
-            // NOT in it (the rings track live), so this only changes when a unit/colony/enemy appears or leaves, or
-            // EMCON flips a ship's detectability — exactly when the rings need rebuilding.
+            // Fingerprint = which units/places + their loudness. Positions are deliberately NOT in it (the rings
+            // track live). The colony ring uses NOMINAL detection (pinned at full activity), so it does NOT depend on
+            // EMCON or on which enemy is present — that's the whole point of the stable-ring fix.
             double loud = 0;
             foreach (var s in ownShips) loud += SensorTools.CurrentActivityMultiplier(s);
             string fp = string.Join(",", ownShips.Select(s => s.Id).OrderBy(i => i))
                       + "|" + string.Join(",", ownColonies.Select(c => c.Id).OrderBy(i => i))
-                      + "|" + (refTarget?.Id ?? -1) + "|" + Math.Round(loud, 2);
+                      + "|" + Math.Round(loud, 2);
             if (fp == _allRangeFingerprint) return;
             _allRangeFingerprint = fp;
 
@@ -779,12 +779,18 @@ namespace Pulsar4X.Client.Rendering
 
             foreach (var colony in ownColonies)
             {
-                // A "place" shows how far it detects an actual SHIP (Earth's megasensor = the inner-system early-
-                // warning bubble that spots fleets at Mercury/Mars). Falls back to the self-referential reach only if
-                // there's no ship anywhere to measure against.
-                double placeReach = refTarget != null
-                    ? SensorTools.DetectionRangeAgainst(colony, refTarget)
-                    : SensorTools.SensorReachRange_m(colony);
+                // A "place" shows how far it detects a SHIP — Earth's megasensor early-warning bubble (spots fleets
+                // at Mercury/Mars). Sized off the BEST NOMINAL detection over the reference ships: nominal pins the
+                // target to full activity, so the ring is a STABLE property of the colony's sensor — it does NOT
+                // shrink when a quieter hostile spawns or a ship goes Silent. Falls back to the self-referential
+                // reach only if there's no ship in-system at all.
+                double placeReach = 0;
+                foreach (var r in refShips)
+                {
+                    double d = SensorTools.NominalDetectionRange_m(colony, r);
+                    if (d > placeReach) placeReach = d;
+                }
+                if (placeReach <= 0) placeReach = SensorTools.SensorReachRange_m(colony);
                 Ring("allrange_colony_" + colony.Id + "_sensor", colony.GetDataBlob<PositionDB>(), placeReach, 80, 210, 110, 45);
             }
 

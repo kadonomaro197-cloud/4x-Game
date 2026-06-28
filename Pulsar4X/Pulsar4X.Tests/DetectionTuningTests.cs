@@ -97,5 +97,31 @@ namespace Pulsar4X.Tests
             Assert.That(colonyReach, Is.GreaterThan(shipReach * 10),
                 "the colony array must dwarf a warship's sensor — that asymmetry IS the early-warning design");
         }
+
+        [Test]
+        [Description("The colony's map detection RING must be a STABLE property of its sensor — it must NOT shrink the " +
+                     "moment a quieter hostile spawns (the live 2026-06-28 report: 'on default you see Earth's detection " +
+                     "but once you spawn the scenario the range shrinks'). The cause was sizing the ring off whichever " +
+                     "ship happened to be the reference (it flipped to a quieter enemy). NominalDetectionRange_m pins " +
+                     "the reference target to FULL activity, so the colony's reach against a ship is large AND does not " +
+                     "depend on that ship's EMCON or on which same-class ship is passed. Asserts it clears the inner-" +
+                     "system scale and dwarfs a warship's nominal reach.")]
+        public void ColonyNominalDetection_IsLargeAndStable()
+        {
+            var s = TestScenario.CreateWithColony();
+            var info = s.Faction.GetDataBlob<FactionInfoDB>();
+            var ship   = ShipFactory.CreateShip(info.ShipDesigns["default-ship-design-test-corvette"], s.Faction, s.StartingBody, "Ref");
+            var picket = ShipFactory.CreateShip(info.ShipDesigns["default-ship-design-test-warship"], s.Faction, s.StartingBody, "Picket");
+
+            double colonyNominal = SensorTools.NominalDetectionRange_m(s.Colony, ship);
+            double shipNominal   = SensorTools.NominalDetectionRange_m(picket, ship);
+            const double InnerSystemScale_m = 1.0e10; // 10 Gm
+            Log($"colony nominal detection of a ship = {colonyNominal / 1e9:0.###} Gm; warship nominal = {shipNominal / 1e9:0.###} Gm");
+
+            Assert.That(colonyNominal, Is.GreaterThan(InnerSystemScale_m),
+                "the colony ring reaches the inner system — the early-warning bubble the player should see");
+            Assert.That(colonyNominal, Is.GreaterThan(shipNominal * 10),
+                "and it dwarfs a warship's reach — the place ring is the megasensor, sized stably (not off a passing enemy)");
+        }
     }
 }

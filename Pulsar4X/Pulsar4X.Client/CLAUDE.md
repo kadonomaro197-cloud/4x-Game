@@ -322,13 +322,17 @@ default true; toggle off in DevTools › Detection / Fog of War if cluttered):
   per-frame `_collapsedFleetMembers` set, so rings land on exactly the ships that show as icons, one ring-set per
   fleet marker). Three rings each: beam reach (red, how far it can SHOOT), sensor reach (green, how far it can SEE),
   detectability (amber, how far it can BE SEEN).
-- **Places** = every own colony — one green detection ring sized by `SensorTools.DetectionRangeAgainst(colony,
-  referenceShip)` where the reference is a real foreign ship (else one of your own): "how far this place detects a
-  ship LIKE THIS." That's Earth's ~230 Gm megasensor bubble that covers the inner system — what lets the homeworld
-  see contacts at Mercury/Mars, the "colonies are system-wide early warning" decision made visible. **(Fixed
-  2026-06-28: the first cut used `SensorReachRange_m(colony)`, which measures "detect a thing as loud as a COLONY",
-  not "as loud as a ship" — so the ring came out tiny and didn't reach the inner planets. The reference-ship metric
-  is the honest one.)**
+- **Places** = every own colony — one green detection ring = Earth's ~230 Gm megasensor bubble that covers the inner
+  system (what lets the homeworld see contacts at Mercury/Mars, the "colonies are system-wide early warning" decision
+  made visible). Sized by the BEST `SensorTools.NominalDetectionRange_m(colony, refShip)` over your **own** ships —
+  **nominal pins the reference target to full activity**, so the ring is a STABLE property of the colony's sensor.
+  **Two bugs fixed here (2026-06-28), both live-reported:** (1) the first cut used `SensorReachRange_m(colony)`, which
+  measures "detect a thing as loud as a COLONY" not "as loud as a ship" → tiny ring that didn't reach the inner
+  planets; (2) the second cut sized it off whichever ship was the reference and PREFERRED a foreign one → the ring
+  **shrank the moment you spawned a (quieter) hostile** ("on default you see Earth's detection but once you spawn the
+  scenario the range shrinks"). The fix: own-ship reference + nominal (full-activity) detection = a ring that stays
+  put regardless of who spawns or who goes Silent. Engine helper is CI-tested (`DetectionTuningTests.
+  ColonyNominalDetection_IsLargeAndStable`).
 - **Cheap by construction:** the ring centre is the entity's LIVE `PositionDB`, so each ring TRACKS its ship as it
   moves — **no per-frame rebuild**. Rebuilds only when the SET of units/places or their loudness (EMCON) changes,
   via a fingerprint (positions deliberately excluded). `SimpleCircle` culls off-screen segments (the zoom-stutter

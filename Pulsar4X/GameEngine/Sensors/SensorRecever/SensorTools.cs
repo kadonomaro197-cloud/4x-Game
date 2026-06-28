@@ -519,6 +519,25 @@ namespace Pulsar4X.Sensors
         /// as a "detectability bubble" around the target: if the detector is inside it, it sees the target. Returns
         /// 0 if the detector can't sense (no/destroyed receivers) or the target has no signature.
         /// </summary>
+        /// <summary>
+        /// "How far would this detector pick up a ship LIKE the reference, if that ship ran at FULL activity?" — the
+        /// STABLE version of <see cref="DetectionRangeAgainst"/>: it pins the reference target's emitted scaling to
+        /// 1.0 (activityOverride), so the number does NOT move with the reference ship's live EMCON, and it doesn't
+        /// matter WHICH same-class ship you pass. Built for a colony's "detection envelope" map ring: that ring must
+        /// be a stable property of the PLACE's sensor, not flip/shrink the moment a (quieter) hostile spawns or a
+        /// reference ship goes Silent. Returns 0 if the detector can't sense or the reference has no signature.
+        /// </summary>
+        public static double NominalDetectionRange_m(Entity detector, Entity referenceTarget)
+        {
+            if (detector == null || referenceTarget == null)
+                return 0;
+            if (!TryGetBestReceiver(detector, out var receiver))
+                return 0;
+            if (!referenceTarget.TryGetDataBlob<SensorProfileDB>(out var profile))
+                return 0;
+            return DetectionRange_m(receiver, profile, activityOverride: 1.0);
+        }
+
         public static double DetectionRangeAgainst(Entity detector, Entity target)
         {
             if (detector == null || target == null)
