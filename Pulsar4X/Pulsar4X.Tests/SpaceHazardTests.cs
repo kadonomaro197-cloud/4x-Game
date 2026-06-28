@@ -124,5 +124,28 @@ namespace Pulsar4X.Tests
             var farOut = SpaceHazardTools.CombinedAt(s.StartingSystem, starPos + new Vector3(Distance.AuToMt(10), 0, 0));
             Assert.IsFalse(farOut.InAnyHazard, "Far from the star you should be clear of the corona.");
         }
+
+        [Test]
+        [Description("Hazard damage carries a wavelength so the ARMOUR a ship is clad in is its defence — the player's agency. Corona heat is IR, flare radiation is UV (different bands → different shielding).")]
+        public void HazardDamage_CarriesAnArmourResistableWavelength()
+        {
+            var s = TestScenario.CreateWithColony();
+            var star = FirstStar(s);
+
+            var corona = s.StartingSystem.GetAllDataBlobsOfType<SpaceHazardDB>()
+                .First(h => h.HazardType == SpaceHazardType.StarCorona);
+            Assert.Greater(corona.DamageWavelength_nm, 0.0,
+                "Corona damage must carry a wavelength so heat-reflective armour can resist it (else there's no counterplay).");
+
+            var flare = SpaceHazardFactory.CreateSolarFlare(
+                s.StartingSystem, star, star.StarSysDateTime, TimeSpan.FromHours(1), Distance.AuToMt(0.1))
+                .GetDataBlob<SpaceHazardDB>();
+            Assert.Greater(flare.DamageWavelength_nm, 0.0, "Flare damage must also carry a wavelength.");
+
+            // The corona (heat) lives in the infrared; the flare (radiation) in the ultraviolet — different bands,
+            // so the armour material that beats one isn't automatically the one that beats the other.
+            Assert.Less(flare.DamageWavelength_nm, corona.DamageWavelength_nm,
+                "Flare (UV/radiation) should be a shorter wavelength than corona (heat/IR).");
+        }
     }
 }

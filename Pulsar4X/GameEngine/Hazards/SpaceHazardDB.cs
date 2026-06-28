@@ -50,6 +50,15 @@ namespace Pulsar4X.Hazards
         /// </summary>
         [JsonProperty] public bool DamageScalesWithProximity { get; internal set; } = false;
 
+        /// <summary>
+        /// The wavelength (nm) the hazard's damage comes in at, so it runs through the SAME armour
+        /// wavelength-absorption model as a beam weapon — heat/corona = infrared (long), flare radiation = UV
+        /// (short). This is what gives the player AGENCY against a hazard: clad a ship in armour that reflects
+        /// that band (heat shielding) and it survives where an unshielded ship cooks. 0 = treat as kinetic
+        /// (bypasses material absorption — don't use for a hazard you want armour to defend against).
+        /// </summary>
+        [JsonProperty] public double DamageWavelength_nm { get; internal set; } = 0.0;
+
         // Transient (solar-flare) lifecycle. A gas cloud leaves these at default (IsTransient = false) and
         // lives forever; a flare grows from a point to MaxRadius_m at its peak then fades back to nothing,
         // and is removed from the game at ExpiresAt.
@@ -70,6 +79,7 @@ namespace Pulsar4X.Hazards
             DamagePerSecond = other.DamagePerSecond;
             BlindsSensors = other.BlindsSensors;
             DamageScalesWithProximity = other.DamageScalesWithProximity;
+            DamageWavelength_nm = other.DamageWavelength_nm;
             IsTransient = other.IsTransient;
             StartedAt = other.StartedAt;
             ExpiresAt = other.ExpiresAt;

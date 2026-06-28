@@ -30,6 +30,7 @@ namespace Pulsar4X.Hazards
                 MoveSpeedMultiplier = 0.5,      // sub-light thrust slowed, like wading through mud
                 WarpSpeedMultiplier = 0.25,     // warp crawls through the dense medium
                 DamagePerSecond = 50.0,         // slow corrosive hull damage — uncomfortable to loiter in
+                DamageWavelength_nm = 8000.0,   // infrared/thermal band — heat-reflective armour resists it
                 BlindsSensors = false,
                 IsTransient = false,
             };
@@ -65,6 +66,7 @@ namespace Pulsar4X.Hazards
                 Radius_m = radius_m,
                 DamagePerSecond = 800.0,              // at the star surface; falls to 0 at the corona edge
                 DamageScalesWithProximity = true,
+                DamageWavelength_nm = 10000.0,        // far-infrared/heat — this is what HEAT SHIELDING resists
                 IsTransient = false,
             };
 
@@ -98,6 +100,7 @@ namespace Pulsar4X.Hazards
                 MoveSpeedMultiplier = 1.0,      // a flare doesn't slow you — it fries you
                 WarpSpeedMultiplier = 1.0,
                 DamagePerSecond = 500.0,        // radiation / heat damage
+                DamageWavelength_nm = 150.0,    // ultraviolet/radiation band — radiation shielding resists it
                 BlindsSensors = true,
                 IsTransient = true,
                 StartedAt = startedAt,

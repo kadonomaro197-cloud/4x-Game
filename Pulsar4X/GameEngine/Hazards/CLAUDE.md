@@ -23,6 +23,18 @@
 
 ---
 
+## Player agency — the DECISION the hazard creates (read this before tuning damage)
+
+A hazard that just deals unavoidable damage is "pretty, not a decision" — the anti-pattern `docs/REALISM-VS-GAMEPLAY-AUDIT.md` warns against. The hazard earns its keep only as the source of a stacking decision. Three layers give that:
+
+1. **See it → avoid it (navigation).** Every hazard draws as a ring on the map, and the corona's damage **scales with proximity** — the outer edge is a low-damage *warning band* you can pull out of, not an instant-death wall. The decision: take the shortcut through/near it vs. route around (time/fuel vs. risk).
+2. **Prepare → survive it (design + research).** Hazard damage carries a **wavelength** (`DamageWavelength_nm` — corona/cloud = infrared/heat, flare = UV/radiation), so it runs through the **same armour wavelength-absorption model as a beam weapon** (`DamageTools.DealDamageEnergyBeamSim`). That means **the armour material you clad a ship in IS its hazard defence** — heat-reflective armour survives the corona where an unshielded hull cooks. This is deliberately NOT a bespoke "shield" system: per `CONVENTIONS.md` §6 (abilities are components) the armour the player already designs/researches/builds/loses is the lever, so it inherits the whole cradle-to-grave chain for free. More armour (thickness) + the right material (band) both help, and both stack with the weapon triangle.
+3. **A reason to go there (risk/reward).** Avoidance is only a *decision* if there's a payoff for taking the risk — a shortcut, a hiding spot (the gas cloud's sensor cut), a resource near the star, a barrier enemies can't cross without shielding. Without a payoff the hazard is just a "don't go here" wall. **This layer is design-only so far** (the corona/cloud don't yet gate a reward) — flagged as the next slice.
+
+**Flagged follow-ups (the explicit levers):** a dedicated **Heat/Radiation Shielding component** (a more legible lever than armour-material absorption, still a component), and a **per-ship "survivability in this hazard" readout** (the INFORMATION-DELTA principle — show the player the decision before they path into it). Both are additive on top of the wavelength-armour mechanism above.
+
+---
+
 ## How the effects are wired (Prime Directive — the connections)
 
 Two kinds of effect, applied two different ways:

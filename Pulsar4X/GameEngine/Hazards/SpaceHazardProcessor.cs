@@ -92,7 +92,10 @@ namespace Pulsar4X.Hazards
                     var fragment = new DamageFragment
                     {
                         Energy = Math.Max(energy, 1.0),
-                        Wavelength = 0,            // environmental: not a tuned beam
+                        // The hazard's wavelength routes its damage through the armour wavelength-absorption model,
+                        // so the armour material a ship is clad in is its defence (heat shielding vs the corona's IR,
+                        // radiation shielding vs the flare's UV). This is the player's agency against the hazard.
+                        Wavelength = hazDb.DamageWavelength_nm,
                         Position = (0, 0),
                         Velocity = new Vector2(1, 0),
                     };
