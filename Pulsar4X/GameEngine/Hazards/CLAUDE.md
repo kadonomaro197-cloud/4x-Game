@@ -110,3 +110,5 @@ Two kinds of effect, applied two different ways:
 - `FlareRadius_GrowsToPeakThenFades` — the flare shape.
 - `HomeStar_HasFlareWeather` — placement wiring (Sol's star gets a `StarFlareSourceDB`).
 - `Flare_BlindsThenExpires` — a flare blinds sensors at the star and is removed once it expires.
+
+`Pulsar4X.Tests/SpatialEnvironmentsDioramaTests.cs` (engine-only → CI-green): **the whole-system verification** — parks a probe ship at each of six greedily-far-apart bodies in Sol, drops a DIFFERENT hazard on each (one per flavour, each parented to its body so it tracks the probe), drives the `SpaceHazardProcessor`, and asserts the faction DISCOVERS all six signatures — printing an environment→detected readout. The developer's "fill the system with test ships, let them sit, ensure the game catches it all" as a permanent CI gauge: if any spatial environment silently breaks, this goes red and names it. (Drives the processor directly, like `Flare_BlindsThenExpires` — the harness doesn't reliably auto-fire hotloops.)
