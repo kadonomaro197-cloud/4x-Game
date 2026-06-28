@@ -61,7 +61,7 @@ namespace Pulsar4X.Damage
             // resistance to that flavour. Default-identical for every existing caller: a beam/missile/kinetic-hazard
             // fragment carries a wavelength-path signature (Kinetic is the struct default), so this never fires for them.
             if (!DamageSignatures.UsesWavelengthArmorPath(damageFragment.Signature))
-                return ApplyNonWavelengthDamage(entityDamageProfileDB, damageFragment);
+                return ApplyNonWavelengthDamage(damageableEntity, entityDamageProfileDB, damageFragment);
 
             var damages = DamageTools.DealDamageEnergyBeamSim(entityDamageProfileDB, damageFragment);
 
@@ -243,15 +243,12 @@ namespace Pulsar4X.Damage
         /// Per-flavour targeting (EM → electronics, gravimetric → structure scaled by hull size, corrosive → surface
         /// over time) and full destruction bookkeeping are flagged refinements, not built. See Hazards/CLAUDE.md.
         /// </summary>
-        private static DamageResult ApplyNonWavelengthDamage(EntityDamageProfileDB profile, DamageFragment frag)
+        private static DamageResult ApplyNonWavelengthDamage(Entity ship, EntityDamageProfileDB profile, DamageFragment frag)
         {
-            var components = profile?.ComponentLookupTable;
-            if (components == null || components.Count == 0)
-                return new DamageResult { Damage = 0, Destroyed = false };
-
             // Armour material's resistance to this flavour (0 = none … 1 = immune) — the researched-armour payoff.
+            // Read off the damage profile's armour (the same place the wavelength sim reads the material).
             float resist = 0f;
-            string armorId = profile.Armor.armorType?.ResourceID;
+            string armorId = profile?.Armor.armorType?.ResourceID;
             if (!string.IsNullOrEmpty(armorId))
             {
                 byte id = DamageTools.IDCodeForMaterial(armorId);
@@ -260,13 +257,18 @@ namespace Pulsar4X.Damage
             }
 
             // Energy → damage points on the SAME scale as the beam sim (1 pt / 100 J), reduced by resistance.
+            // Computed independently of any component list so the hit always registers (the bitmap lookup table
+            // can be empty on a lazily-built profile — the real components live in ComponentInstancesDB).
             int damageAmount = Math.Max(1, (int)(frag.Energy * 0.01 * (1f - resist)));
 
-            // Spread evenly across components. HealthPercent is the same field the wavelength path reduces
-            // (1000 pts = 100% health), so the scale matches.
-            float perComponentHealth = (damageAmount * 0.001f) / components.Count;
-            foreach (var c in components)
-                c.HealthPercent -= perComponentHealth;
+            // Spread evenly across the ship's REAL components (the always-populated store the colony path uses).
+            // HealthPercent is the same field the wavelength path reduces (1000 pts = 100% health).
+            if (ship != null && ship.TryGetDataBlob<ComponentInstancesDB>(out var instances) && instances.AllComponents.Count > 0)
+            {
+                float perComponentHealth = (damageAmount * 0.001f) / instances.AllComponents.Count;
+                foreach (var c in instances.AllComponents.Values)
+                    c.HealthPercent -= perComponentHealth;
+            }
 
             return new DamageResult { Damage = damageAmount, Destroyed = false };
         }
