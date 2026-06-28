@@ -18,6 +18,7 @@ The `GameEngine` project is the core domain library. It has no dependency on any
 | `Sensors/` | EM signatures, scanning, sensor contacts |
 | `Orbits/` | Kepler orbit DataBlobs and processors |
 | `Galaxy/` | Star system + body generation, atmosphere |
+| `Hazards/` | Space hazards — gas clouds + solar flares (a region of space that affects ships inside it) |
 | `Fleets/` | Fleet grouping, fleet orders |
 | `Logistics/` | Automated cargo routes |
 | `Tech/` | Research, scientists, tech unlocks |

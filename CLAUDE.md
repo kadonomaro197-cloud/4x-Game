@@ -130,6 +130,7 @@ See `ARCHITECTURE.md` for the full data-flow diagram.
 | Industry / Production | `GameEngine/Industry/` | `GameEngine/Industry/CLAUDE.md` |
 | Movement / Navigation | `GameEngine/Movement/` | `GameEngine/Movement/CLAUDE.md` |
 | Sensors | `GameEngine/Sensors/` | `GameEngine/Sensors/CLAUDE.md` |
+| Space Hazards (Gas Clouds / Solar Flares) | `GameEngine/Hazards/` | `GameEngine/Hazards/CLAUDE.md` |
 | Orbits | `GameEngine/Orbits/` + `Pulsar4X.OrbitalMath/` | *(not yet written — read source directly)* |
 | Galaxy / System Gen | `GameEngine/Galaxy/` | `GameEngine/Galaxy/CLAUDE.md` |
 | Fleets | `GameEngine/Fleets/` | `GameEngine/Fleets/CLAUDE.md` |
