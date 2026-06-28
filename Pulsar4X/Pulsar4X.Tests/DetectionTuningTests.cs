@@ -68,25 +68,34 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("THE UNVERIFIED CASE (audit, 2026-06-27): the 1e6 detection scale was only checked on the WEAK " +
-                     "ship sensor (antenna 5.5). The COLONY carries the full Passive Scanner (antenna 5000), ~900× " +
-                     "bigger — does that make a colony see the whole system and gut fog? Measure how far the colony " +
-                     "detects a ship, and print whether it stays under the fog ceiling (Venus ~60 Gm). Asserts only " +
-                     "that it's positive; the printed Gm decides whether a detection-range CAP is needed.")]
-        public void ColonyScanner_DetectionRange_Measure()
+        [Description("Colony = system-wide EARLY WARNING, by design (decision 2026-06-28). The audit measured the " +
+                     "colony's full Passive Scanner (antenna 5000, ~900× the ship sensor) at ~230 Gm — past Venus, " +
+                     "across the whole inner system. Detection range is LINEAR in antenna size and the 1e6 scale is " +
+                     "ONE global knob, so you can't rein in the colony without dropping the ship sensor back below the " +
+                     "combat-useful floor. The DECISION (developer): keep it — a fixed ground megasensor is realistic " +
+                     "early warning; the fog that matters (ship-vs-ship in deep space) stays a tight ~0.3 Gm bubble " +
+                     "(the OTHER two tests guard that). So this asserts the colony sees FAR and decisively farther " +
+                     "than a ship — documenting the intent, NOT gating a cap.")]
+        public void ColonyScanner_IsSystemWideEarlyWarning_ByDesign()
         {
             var s = TestScenario.CreateWithColony();
             var info = s.Faction.GetDataBlob<FactionInfoDB>();
             var ship = ShipFactory.CreateShip(info.ShipDesigns["default-ship-design-test-corvette"], s.Faction, s.StartingBody, "Target");
+            var picket = ShipFactory.CreateShip(info.ShipDesigns["default-ship-design-test-warship"], s.Faction, s.StartingBody, "Picket");
 
             double colonyReach = SensorTools.DetectionRangeAgainst(s.Colony, ship);   // colony's full scanner vs a ship
-            const double Venus_m = 6.0e10;
-            Log($"colony detects a ship at {colonyReach:N0} m = {colonyReach / 1e9:0.###} Gm (Venus ≈ 60 Gm)");
-            Log(colonyReach < 1.0e10 ? "FOG OK — colony reach < 10 Gm (tactical warning, not omniscient)"
-                : colonyReach < Venus_m ? "FOG MARGINAL — colony sees a good chunk of the inner system but not across it"
-                : "FOG BROKEN — colony sees PAST Venus; the 1e6 scale needs a detection cap for strong sensors");
+            double shipReach   = SensorTools.DetectionRangeAgainst(picket, ship);     // a warship's sensor vs the same ship
+            const double InnerSystemScale_m = 1.0e10; // 10 Gm — the ship "tactical bubble" ceiling
+
+            Log($"colony detects a ship at {colonyReach / 1e9:0.###} Gm (Venus ≈ 60 Gm) — early-warning radar, by design");
+            Log($"a warship detects the same ship at {shipReach / 1e9:0.###} Gm — the tactical bubble fog runs on");
 
             Assert.That(colonyReach, Is.GreaterThan(0), "the colony's scanner must have a positive reach");
+            // Intent: the fixed ground array sees WAY past a ship's tactical bubble (system-wide early warning).
+            Assert.That(colonyReach, Is.GreaterThan(InnerSystemScale_m),
+                "a colony's megasensor is intended system-wide early warning — it should see well past a ship's ~10 Gm bubble");
+            Assert.That(colonyReach, Is.GreaterThan(shipReach * 10),
+                "the colony array must dwarf a warship's sensor — that asymmetry IS the early-warning design");
         }
     }
 }
