@@ -58,6 +58,33 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("Fog of war: OrderAttack can't conjure a target out of the dark. With detection-gated combat on " +
+                     "and no sensor contact, ordering an attack on an undetected hostile no-ops; with fog off it engages.")]
+        public void OrderAttack_RespectsFog_NoOpOnUndetectedEnemy()
+        {
+            var s = TestScenario.CreateWithColony();
+            var reds = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+            var mine = FleetFactory.Create(s.StartingSystem, s.Faction.Id, "Striker");
+            AddShip(s, s.Faction, mine, "Striker-1");
+            var enemy = FleetFactory.Create(s.StartingSystem, reds.Id, "Prey");
+            AddShip(s, reds, enemy, "Prey-1");
+
+            bool prev = CombatEngagement.RequireDetectionToEngage;
+            CombatEngagement.RequireDetectionToEngage = true;   // fog on; no scan has run -> nobody is detected
+            try
+            {
+                CombatEngagement.OrderAttack(mine, enemy);
+                Assert.That(mine.HasDataBlob<FleetCombatStateDB>(), Is.False,
+                    "can't attack an undetected enemy with fog on");
+
+                CombatEngagement.RequireDetectionToEngage = false; // fog off -> you can always engage
+                CombatEngagement.OrderAttack(mine, enemy);
+                Assert.That(mine.HasDataBlob<FleetCombatStateDB>(), Is.True, "fog off -> the attack lands");
+            }
+            finally { CombatEngagement.RequireDetectionToEngage = prev; }   // never leak the static
+        }
+
+        [Test]
         [Description("OrderAttack no-ops on a friendly target — you can't order a fleet to attack your own.")]
         public void OrderAttack_OnAFriendly_DoesNothing()
         {

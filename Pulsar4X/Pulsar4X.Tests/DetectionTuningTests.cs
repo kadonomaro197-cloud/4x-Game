@@ -66,5 +66,27 @@ namespace Pulsar4X.Tests
             Assert.That(reach, Is.LessThan(InnerSystemScale_m),
                 "a ship sensor must not reach across the inner system, or fog of war is gone");
         }
+
+        [Test]
+        [Description("THE UNVERIFIED CASE (audit, 2026-06-27): the 1e6 detection scale was only checked on the WEAK " +
+                     "ship sensor (antenna 5.5). The COLONY carries the full Passive Scanner (antenna 5000), ~900× " +
+                     "bigger — does that make a colony see the whole system and gut fog? Measure how far the colony " +
+                     "detects a ship, and print whether it stays under the fog ceiling (Venus ~60 Gm). Asserts only " +
+                     "that it's positive; the printed Gm decides whether a detection-range CAP is needed.")]
+        public void ColonyScanner_DetectionRange_Measure()
+        {
+            var s = TestScenario.CreateWithColony();
+            var info = s.Faction.GetDataBlob<FactionInfoDB>();
+            var ship = ShipFactory.CreateShip(info.ShipDesigns["default-ship-design-test-corvette"], s.Faction, s.StartingBody, "Target");
+
+            double colonyReach = SensorTools.DetectionRangeAgainst(s.Colony, ship);   // colony's full scanner vs a ship
+            const double Venus_m = 6.0e10;
+            Log($"colony detects a ship at {colonyReach:N0} m = {colonyReach / 1e9:0.###} Gm (Venus ≈ 60 Gm)");
+            Log(colonyReach < 1.0e10 ? "FOG OK — colony reach < 10 Gm (tactical warning, not omniscient)"
+                : colonyReach < Venus_m ? "FOG MARGINAL — colony sees a good chunk of the inner system but not across it"
+                : "FOG BROKEN — colony sees PAST Venus; the 1e6 scale needs a detection cap for strong sensors");
+
+            Assert.That(colonyReach, Is.GreaterThan(0), "the colony's scanner must have a positive reach");
+        }
     }
 }

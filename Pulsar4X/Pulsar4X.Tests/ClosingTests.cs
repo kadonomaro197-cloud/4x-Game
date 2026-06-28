@@ -235,5 +235,51 @@ namespace Pulsar4X.Tests
                 CombatEngagement.ManeuverBurnRate = 5.0;
             }
         }
+
+        [Test]
+        [Description("END-TO-END at the LIVE tuning (audit fix for 'no combat within weapons range'): two armed fleets " +
+                     "opening at a 10,000 km gap must CLOSE all the way to weapons range over a handful of salvos. The " +
+                     "play-test bug was the gap crawling ~25 km/salvo so the fight resolved at standoff via unbounded " +
+                     "railguns; this proves the 1e6 closing-rate actually collapses the gap to the beam range.")]
+        public void Closing_AtLiveTuning_CollapsesTheGapToWeaponsRange()
+        {
+            var s = TestScenario.CreateWithColony();
+            var reds = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+            const double beamRange = 100_000;   // 100 km
+
+            var a = MakeFleet(s, s.Faction, "A");
+            AddShip(s, s.Faction, a, range_m: beamRange, evasion: 0.3);
+            var b = MakeFleet(s, reds, "B");
+            AddShip(s, reds, b, range_m: beamRange, evasion: 0.3);
+
+            bool prevEnable = CombatEngagement.EnableClosingRange;
+            double prevScale = CombatEngagement.ClosingSpeedScale_mps;
+            CombatEngagement.EnableClosingRange = true;
+            CombatEngagement.ClosingSpeedScale_mps = 1_000_000.0;   // the LIVE value the client runs
+            try
+            {
+                CombatEngagement.StartEngagement(a, b);
+                Set(a, gap: 10_000_000, budget: 1e9);   // 10,000 km opening gap, ample maneuver budget
+                Set(b, gap: 10_000_000, budget: 1e9);
+                double startGap = a.GetDataBlob<FleetCombatStateDB>().Separation_m;
+
+                for (int i = 0; i < 60 && a.HasDataBlob<FleetCombatStateDB>() && b.HasDataBlob<FleetCombatStateDB>(); i++)
+                    CombatEngagement.StepEngagement(a, b, 5.0);
+
+                // If they closed AND fought to a finish, the loser's state is gone -> treat the gap as collapsed (0).
+                double endGap = a.IsValid && a.HasDataBlob<FleetCombatStateDB>()
+                    ? a.GetDataBlob<FleetCombatStateDB>().Separation_m : 0;
+                Log($"gap {startGap:N0} -> {endGap:N0} m over up to 60 salvos (beam range {beamRange:N0})");
+
+                Assert.That(endGap, Is.LessThan(startGap), "the fleets close — the gap shrinks");
+                Assert.That(endGap, Is.LessThanOrEqualTo(beamRange + 1),
+                    "...all the way to weapons range, so the decisive fight happens up close (not at standoff)");
+            }
+            finally
+            {
+                CombatEngagement.EnableClosingRange = prevEnable;
+                CombatEngagement.ClosingSpeedScale_mps = prevScale;
+            }
+        }
     }
 }
