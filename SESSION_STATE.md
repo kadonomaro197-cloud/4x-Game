@@ -10,6 +10,36 @@ Session 2026-06-26 — **detection / EMCON / fog-of-war BUILT, plus the logging 
 
 ---
 
+## ⏩ Session 2026-06-28 — hazard cradle-to-grave loop BUILT (discover→research→rated armour); render gauge; email scrub (READ FIRST)
+
+On branch `claude/4x-space-entities-reality-hl4r19`. All engine work **CI-green**; client work is CI-blind (developer's local build only). **The repo is now safe to make PUBLIC** — git history was rewritten to swap the developer's gmail for a GitHub noreply on both `main` and the feature branch (file content byte-identical; 144 upstream Pulsar4X authors untouched). NOTE: the rewrite changed every commit hash — the developer must **re-clone or `git reset --hard origin/<branch>`**, and set `git config user.email` to the noreply so future commits don't re-add the gmail.
+
+### What shipped (the hazard discovery → resistance → research loop — the headline)
+Full vision wired end to end and gauged: **survive a hazard → discover its damage flavour → research a counter → build rated armour that resists it.**
+1. **`DamageSignature` keystone** (`Damage/DamageSignature.cs`) — coarse SHARED damage-flavour vocab (Kinetic/Thermal/HardRadiation/EMStorm/Gravimetric/Corrosive) both hazards AND weapons speak; above `HazardEffectType` (hazard-only) + `WeaponClass` (platform). Order index-stable (SignatureResistance arrays key off it). `UsesWavelengthArmorPath` splits the 3 wavelength-path flavours from the 3 needing their own damage site (EMStorm/Gravimetric/Corrosive — not built).
+2. **Threaded through the damage path** — `DamageFragment.Signature` (hazards/beams/missiles stamp it); `DamageResistBlueprint.SignatureResistance[6]` (default 0 = unchanged); applied in `DealDamageEnergyBeamSim`.
+3. **LOAD-BEARING HOLE FOUND + FIXED** — `ComponentPlacement` painted EVERY ship's armour as hard-coded stainless / a density byte, so armour material did NOT drive resistance. Added `DamageResistBlueprint.MaterialID` + `DamageTools.IDCodeForMaterial`; armour pixels now carry the real material's IDCode. Without this, researched armour would build but never resist. (Interior components still flat-255 — documented simplification.)
+4. **Discovery** (`Hazards/HazardDiscovery.cs` + `FactionHazardKnowledgeDB`) — a ship inside a hazard learns its flavour → fires `EnvironmentalHazardDiscovered` → `FactionDataStore.Unlock(counterTech)`.
+5. **Research** (data) — new **Stellar Science** category; `tech-thermal-shielding` (LOCKED until discovery) Unlocks `nickel-steel`/`nickel-steel-armor`; a nickel-steel `DamageResistBlueprint` (IDCode 50) with thermal resistance. v1 = Thermal worked example; the other 5 flavours are the same pure-JSON pattern (Unlock no-ops until authored).
+- Gauges (CI-green): `DamageSignatureTests`, `DamageSignatureResistanceTests`, `ArmorMaterialWiringTests`, `HazardDiscoveryTests`, `HazardResearchLoopTests` (whole loop on a real faction through the New-Game path).
+
+### Also shipped
+- **Corona damage = inverse-square flux** (developer: "Mercury orbit shouldn't accumulate damage"). `SpaceHazardDB.InnerRadius_m` + `ProximityIntensity` — danger concentrates within a few stellar radii; a normal orbit takes ZERO. Generalises to all proximity hazards. Gauge: `HazardDamageCalibrationTests`.
+- **Detection-quality overflow fix** (`SensorTools.DetectonQuality`, the long-flagged `:173` bug) — 0..100 shoved into a 0..1 byte wrapped → survey reveal was random; now a real 0..1. Gauge: `SensorQualityTests`. Phase-0 prerequisite for discovery.
+- **Stale-test baseline restore** — `FleetAggregationTests` (railguns now carry `RailgunRange_m`). Branch was pre-existing red; fixed.
+- **Fleet window UX (client)** — left-click selects a fleet IMMEDIATELY (was gated inside `if(isTreeOpen)`); context menu explicit right-click only.
+- **Per-category render gauge (client)** — `SystemMapRendering.MaybeLogMapPerf` logs `⏱ map breakdown ms — orbits u../d.. (N) | …` so ONE play-test names the heavy icon list. **Hypothesis: ORBITS** (`OrbitEllipseIcon` re-transforms 181 pts + ~180 `SDL.RenderLine` calls per orbit per frame; Aurora draws one cheap ellipse + caches). **OPEN: developer runs the combat scenario, reads the ⏱ map breakdown line; then the fix (batch ghost ring into `SDL.RenderLines` — needs `_fullOrbitDrawPoints` `SDL.Point[]`→`SDL.FPoint[]`; LOD segments; cache transform).**
+- **Colony progression captured** — `docs/COLONY-PROGRESSION-DESIGN.md` (vision): Outpost→Colony(flavors)→World→Minor→Hub→Major→Capitol, cost↑/yield↑, outpost-only-automation, scaling.
+
+### Open threads for the developer (live-only / decisions)
+- **Render perf**: run the scenario, send the `⏱ map breakdown` line → targeted fix.
+- **Fleet left-click fix**: verify in local build.
+- **Hazard loop live**: fly into the corona, check the discovery notification + that researched nickel-steel armour resists thermal.
+- The 5 non-Thermal signature counter-techs/armours are pure-JSON follow-ups.
+- The big foundation map (what to build for shields / armour-material-in-combat / NPC-AI-driving-the-loop) is in `docs/HAZARD-DISCOVERY-RESISTANCE-RESEARCH-DESIGN.md` — the SIXTH item (un-cache `ShipCombatValueDB` toughness) is the shared prerequisite under shields + armour-material-in-fleet-combat.
+
+---
+
 ## ⏩ Session 2026-06-27 — combat made PLAYABLE + VISIBLE; warp/spawn fixes; thrash fix (READ FIRST)
 
 **Headline: a spawned fleet can now travel, fight, win — and you can SEE it happen.** Today closed the gap between
