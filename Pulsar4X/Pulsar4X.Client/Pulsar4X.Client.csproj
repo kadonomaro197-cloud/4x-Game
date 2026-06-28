@@ -126,10 +126,10 @@
 
   <ItemGroup>
     <Reference Include="ImGui.NET">
-      <HintPath>Libs\ImGui\ImGui.NET.dll</HintPath>
+      <HintPath>Libs\ImGui.NET.dll</HintPath>
     </Reference>
     <Reference Include="SDL3-CS">
-      <HintPath>Libs\linux-x64\SDL3-CS.dll</HintPath>
+      <HintPath>Libs\SDL3-CS.dll</HintPath>
     </Reference>
   </ItemGroup>
 
