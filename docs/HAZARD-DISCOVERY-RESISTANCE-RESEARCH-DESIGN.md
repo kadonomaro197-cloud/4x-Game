@@ -143,6 +143,31 @@ This is the deepest "pays for itself": researching resistance to a signature to 
 
 ---
 
+## Blast-radius coverage — what's MAPPED vs still ON PAPER (be honest before building)
+
+**Fully mapped (existing systems, with file:line — verified this session):**
+- ✅ Component cradle-to-grave / the six-point chain (railgun-style binding) — *verified by code trace.*
+- ✅ Research/tech unlock (`Unlocks`, `LockedArmor`→`Armor`, `ResearcherDB.LocationId` unused, no site-research) — mapped.
+- ✅ Survey / sensor / notification (survey reveals minerals only; events defined-not-fired; detection-quality bug) — mapped.
+- ✅ Armour model + the 5-file ripple (data → damage sim → mass → combat value → UI/save) — mapped.
+- ✅ Faction discovery/knowledge (`Masked<T>` precedent, used only for minerals) — mapped.
+
+**Designed but blast-radius NOT yet mapped (the real remaining work — DO NOT assume these are accounted for):**
+1. **The `DamageSignature` unification INTO the existing combat system — the biggest one.** I asserted it "maps directly" onto weapon classes (Beam/Railgun/Flak) + wavelength bands + `DamageResistBlueprint` + `ShipCombatValueDB` + the dodge/saturation resolve. **That has NOT been verified.** Reworking the combat damage-type vocabulary is a large blast radius into the most-tested subsystem; map it before touching it.
+2. **Shield code insertion.** Behaviour is designed; the actual touch-points are NOT mapped: the absorb intercept inside `DamageProcessor.OnTakingDamage` (which routes ship vs colony, lazily builds `EntityDamageProfileDB`), how charge interacts with the per-pixel `DealDamageEnergyBeamSim`, the `EnergyStored` power draw + a regen processor, the `ShipCombatValueDB` toughness contribution, save/load of live shield state, and the UI.
+3. **Body-type expansion** (neutron star / black hole / protostar / SN remnant). Cataloged, not mapped: `StarInfoDB`/`SpectralType`, `StarFactory`, system-gen, the client `StarIcon`/rendering, the `gravimetric` non-wavelength damage path, and the moving/periodic/event hazard behaviours.
+4. **Provisions / maintenance-supplies consumable** — a black box. Touches resupply (`ResupplyAction` stub), cargo/logistics, repair, and colony production. The "supplies when a shield breaks" rung depends on it.
+5. **NPC AI driving the loop** — survey→discover→research→build→deploy must be drivable by the (thin) faction AI, or only the player gets the loop. Barely mapped.
+
+**Cradle-to-grave per NEW buildable — partial:**
+- Shield: *is* a component (inherits research/build/install/loss for free) — **except** the "supplies-on-break" loss rung, which needs #4.
+- Armour additives: new environmental materials may need new **mineral→refine** rungs (unmapped — do they reuse existing minerals or need new ones?).
+- Research station / site-experience research: a new buildable component **and** a new generation mechanic (unmapped — extends `ResearcherDB.LocationId`).
+
+**Bottom line:** the *map of what we're plugging into* is solid; the *map of the new machinery* is ~half done. #1 (DamageSignature → combat) is the highest-value gap to close next, because it's the keystone and it reaches into the most fragile subsystem.
+
+---
+
 ## Build order (foundations first — the anti-backpedal sequence)
 
 **Phase 0 — foundations (no visible feature; everything stands on these):**
