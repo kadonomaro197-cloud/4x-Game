@@ -130,8 +130,8 @@ Each phase is gauged (engine tests, CI-covered) before the next. Phase 0 is the 
 
 ---
 
-## Open questions for the developer (answer before Phase 0)
-1. **Hazard Class granularity:** coarse (a handful: hard-radiation / thermal / EM-storm / tidal / corrosive) or fine (many named stellar/planetary radiations)? This sets how many research lines and armour additives exist. *(Recommend: start coarse, data lets you add fine later.)*
-2. **Does armour material finally count in auto-resolve toughness**, or stay damage-sim-only? *(Recommend: yes, wire it — or the payoff is invisible in fleet combat.)*
-3. **"Update system":** is the event feed + auto-pause enough for v1, or do you want a dedicated decisions/alerts queue?
-4. **Research field:** a NEW "energy/stellar" research category per the Stellaris feel, or reuse `tech-category-defensive-systems` / `-sensors`?
+## Decisions — LOCKED (developer, this session)
+1. **Hazard Class granularity: COARSE (~5–8 classes)** to start — e.g. hard-radiation, thermal, EM-storm, tidal/gravitic, corrosive, kinetic-debris. Data lets us split into finer named classes later without code.
+2. **Armour material DOES count in auto-resolve toughness** — wire material into `ShipCombatValueDB` (today thickness-only) so specialised armour pays off in fleet combat, not just the per-pixel damage sim.
+3. **Research lives in a NEW "Stellar/Energy Science" field** — a dedicated tech category for studying stars/bodies/hazards (the Stellaris physics/energy feel), which the site-research loop feeds and whose techs `Unlocks` the armour-resistance lines.
+4. **Update system = the Aurora model, which the engine already has the bones of** — discoveries fire typed events into the existing `FactionEventLog` → `GameLogWindow` feed, with auto-pause on important ones (`_haltsOn` already supports it). No new decisions-queue UI for v1; make the existing event feed carry the discovery family with the right severity/pause flags.
