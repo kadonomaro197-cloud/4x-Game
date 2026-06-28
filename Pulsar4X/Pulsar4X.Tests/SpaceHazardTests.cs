@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using NUnit.Framework;
 using Pulsar4X.Engine;
+using Pulsar4X.Factions;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Hazards;
 using Pulsar4X.Movement;
@@ -182,6 +183,23 @@ namespace Pulsar4X.Tests
             Assert.Less(cloud.MultiplierFor(HazardEffectType.WarpInhibit), 1.0, "Cloud should inhibit warp per its JSON.");
             Assert.IsTrue(cloud.Effects.Any(e => e.Type == HazardEffectType.HeatDamage),
                 "Cloud should carry its heat-damage effect from JSON.");
+        }
+
+        [Test]
+        [Description("Cradle-to-grave: the buildable Sensor Hardening Module unlocks on the faction and its JSON template binds to the generic HazardResistanceAtb resisting SensorJam.")]
+        public void SensorHardeningModule_BuildsAndCarriesHazardResistance()
+        {
+            var s = TestScenario.CreateWithColony();
+            var facData = s.Faction.GetDataBlob<FactionInfoDB>();
+
+            Assert.IsTrue(facData.ComponentDesigns.ContainsKey("default-design-sensor-hardening-module"),
+                "The Sensor Hardening Module design should be unlocked on the faction (the six-point JSON chain).");
+
+            var design = facData.ComponentDesigns["default-design-sensor-hardening-module"];
+            Assert.IsTrue(design.TryGetAttribute<HazardResistanceAtb>(out var atb),
+                "The module must carry a HazardResistanceAtb (the JSON template -> Atb binding, gotcha-10).");
+            Assert.AreEqual(HazardEffectType.SensorJam, atb.ResistedEffectType, "It should resist SensorJam.");
+            Assert.Greater(atb.ResistanceFraction, 0.0, "It should provide some resistance.");
         }
     }
 }
