@@ -83,6 +83,10 @@ namespace Pulsar4X.Hazards
                 if (dist > radius)
                     continue;
 
+                // DISCOVERY — a ship inside a hazard learns its damage flavours (the knowledge the research loop
+                // gates on); on first contact this also fires a notification and unlocks the counter-research.
+                HazardDiscovery.RecordAndAnnounce(ship, hazDb, now);
+
                 // DAMAGE — each effect at its own wavelength (so the ship's ARMOUR material is the defence).
                 if (damageEffects.Count > 0)
                 {

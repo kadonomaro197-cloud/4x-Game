@@ -432,7 +432,12 @@ namespace Pulsar4X.Events
         ColonyAdministratorUnassigned,
         AdministratorAssignedToColony, //from admin perspective
         AdministratorUnassignedFromColony,
-        
+
+        // Environmental-hazard discovery (the survey→research loop): a faction's ship first encounters a space
+        // hazard of a given damage SIGNATURE, which makes its counter-research available.
+        EnvironmentalHazardDiscovered,
+
+
 
 
     }

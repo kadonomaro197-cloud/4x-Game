@@ -22,6 +22,8 @@
 | `SpaceHazardFactory.cs` | Builds the hazard entities — `CreateGasCloud(...)` and `CreateSolarFlare(...)`. |
 | `SpaceHazardProcessor.cs` | `IHotloopProcessor` (5 s, keyed to `SpaceHazardDB`). Grows/fades/expires transient flares, and applies the **per-tick** effects — hull DAMAGE (via the wired `DamageProcessor.OnTakingDamage` path) and Newtonian DRAG — to ships inside. `FlareRadiusAt` (pure, tested) is the grow→peak→fade shape. |
 | `SolarFlareProcessor.cs` | `IHotloopProcessor` (1 h, keyed to `StarFlareSourceDB`). When the clock reaches a star's scheduled time it erupts a flare and rolls the next one off the system RNG. |
+| `FactionHazardKnowledgeDB.cs` | Per-faction KNOWLEDGE store: the set of `DamageSignature`s the faction has discovered. The thing the research loop gates on (you can't research a counter to a flavour you've never met). Lives on the faction entity, created lazily on first discovery, save/loaded. |
+| `HazardDiscovery.cs` | The survey→discover→research connection. `RecordAndAnnounce(ship, hazDb, now)` (called from `SpaceHazardProcessor` for ships inside a hazard) records the hazard's signatures into the owner faction's knowledge; on a NEW discovery it fires an `EnvironmentalHazardDiscovered` event AND `FactionDataStore.Unlock(CounterTechFor(sig))` to open the counter-research (a safe no-op until that tech exists in data). Thread-safe (one lock — discovery is rare and reachable from parallel per-system processors). |
 
 ---
 
