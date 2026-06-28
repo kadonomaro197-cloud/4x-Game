@@ -21,12 +21,14 @@ namespace Pulsar4X.Hazards
         /// effect list at <paramref name="offsetFromStar_m"/> relative to <paramref name="star"/>.</summary>
         public static Entity CreateFromEffects(StarSystem system, Entity star, Vector3 offsetFromStar_m,
             double radius_m, SpaceHazardType type, List<HazardEffect> effects, string name,
-            bool isTransient = false, DateTime startedAt = default, DateTime expiresAt = default, double maxRadius_m = 0)
+            bool isTransient = false, DateTime startedAt = default, DateTime expiresAt = default, double maxRadius_m = 0,
+            double innerRadius_m = 0)
         {
             var hazard = new SpaceHazardDB
             {
                 HazardType = type,
                 Radius_m = radius_m,
+                InnerRadius_m = innerRadius_m,
                 Effects = effects ?? new List<HazardEffect>(),
                 IsTransient = isTransient,
                 StartedAt = startedAt,
@@ -79,7 +81,11 @@ namespace Pulsar4X.Hazards
             {
                 new HazardEffect(HazardEffectType.HeatDamage, 800.0, 10000.0, scalesWithProximity: true),
             };
-            return CreateFromEffects(system, star, Vector3.Zero, radius_m, SpaceHazardType.StarCorona, effects, name);
+            // Inner radius = the star's surface, so corona heat follows real radiative flux (∝ 1/dist²): the danger
+            // is concentrated within a few stellar radii. The outer zone is a warning band and every normal orbit
+            // (Mercury at 0.39 AU is well outside the ~0.12 AU zone) takes ~zero — only a genuine close dive cooks.
+            return CreateFromEffects(system, star, Vector3.Zero, radius_m, SpaceHazardType.StarCorona, effects, name,
+                innerRadius_m: starRadius_m);
         }
 
         /// <summary>

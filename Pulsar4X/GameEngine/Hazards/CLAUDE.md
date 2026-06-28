@@ -4,7 +4,7 @@
 
 - **Gas cloud** — permanent terrain in some (non-home) systems. Inside it your sensors are cut, sub-light movement is dragged, warp crawls, and your hull slowly corrodes. A place to hide, get ambushed, or have to cross.
 - **Solar flare** — the home star's *weather*. On a schedule the star erupts a flare that grows near it, blinds sensors in the area and irradiates any ship caught there, then fades and is gone.
-- **Star corona** — a permanent danger zone hugging every star. Heat damage that **scales with proximity** (max at the surface, fading to zero at the edge of the zone) — dive toward the sun and you cook. Uses `SpaceHazardDB.DamageScalesWithProximity`.
+- **Star corona** — a permanent danger zone hugging every star. Heat damage that **scales with proximity** following **real radiative flux (∝ 1/dist²)** between the star's surface (`SpaceHazardDB.InnerRadius_m`) and the zone edge — max at the surface, near-zero across the outer corona, climbing steeply only as you close on the star. So a normal planetary orbit (Mercury at 0.39 AU is well outside the ~0.12 AU zone) takes **zero**, the outer corona is a warning band, and only a genuine close dive cooks. Uses `HazardEffect.ScalesWithProximity` + `SpaceHazardProcessor.ProximityIntensity`.
 
 **Why it matters:** before this, empty space was truly empty — planets are tiny dots separated by astronomical gaps and nothing filled them. Hazards give the map geography to fight, hide and route around, which is what makes movement and detection *decisions* instead of straight lines.
 
@@ -66,6 +66,10 @@ Two kinds of effect, applied two different ways:
 3. **Warp slow is keyed off the DEPARTURE point only (v1).** A ship that starts outside a cloud and warps *through* it isn't slowed; a true block (`WarpSpeedMultiplier` 0) is clamped to a crawl rather than refusing the order. Both are flagged follow-ups.
 
 4. **Damage calibration is borrowed.** `DamagePerSecond` feeds `DamageFragment.Energy` on the same scale as beam/missile damage (~1 point / 100 J, 1000 = 100% health). Gas cloud 50 J/s ≈ slow attrition; flare 500 J/s ≈ noticeable. Tune in the factory if combat damage gets recalibrated.
+
+5. **Corona damage is inverse-square, NOT linear (2026-06-28 — "make the damage make sense").** Proximity-scaled damage uses `SpaceHazardProcessor.ProximityIntensity(dist, outerR, innerR)`: with an `InnerRadius_m` (the star's surface) it models radiative flux ∝ 1/dist², normalised to 1 at the surface and 0 at the zone edge — so the outer ~90% of the corona is nearly harmless and damage concentrates within a few stellar radii (the physically-honest "only a close dive cooks"). Magnitude (800 J/s at the surface) is the *peak*; the curve scales it down hard with distance. A hazard with **no** `InnerRadius_m` (e.g. a gas cloud, which uses flat damage anyway) falls back to the original linear band, so this is back-compat. Gauge: `HazardDamageCalibrationTests` (Mercury = 0; concentrated near the star; linear fallback). **The sentiment generalises:** any new proximity hazard around a body should set its `InnerRadius_m` so its damage falls off physically rather than as a flat disc.
+
+6. **Hazard hits carry a `DamageSignature` (the keystone).** `SpaceHazardProcessor` stamps each damage `DamageFragment` with the effect's flavour (`HazardEffect.Signature`, e.g. corona heat → Thermal), so armour rated against that flavour (`DamageResistBlueprint.SignatureResistance`) resists it — the same label a matching weapon carries. See `Damage/CLAUDE.md` → "The DamageSignature keystone".
 
 ---
 

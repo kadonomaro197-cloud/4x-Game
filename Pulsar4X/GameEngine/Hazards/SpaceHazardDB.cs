@@ -34,6 +34,12 @@ namespace Pulsar4X.Hazards
         [JsonProperty] public double Radius_m { get; internal set; }
         [JsonProperty] public List<HazardEffect> Effects { get; internal set; } = new List<HazardEffect>();
 
+        // Inner radius (m) of a proximity-scaled hazard — for a star corona, the STAR'S SURFACE. 0 = none/point.
+        // When set, proximity-scaled damage follows real radiative FLUX (∝ 1/dist²) between this surface and the
+        // outer Radius_m, so danger is concentrated tight against the source: the outer zone is a near-harmless
+        // warning band and a normal orbit takes ~nothing — only a genuine close dive accumulates real damage.
+        [JsonProperty] public double InnerRadius_m { get; internal set; } = 0;
+
         // Transient (solar-flare) lifecycle. A permanent hazard (gas cloud / corona) leaves these at default
         // and lives forever; a flare grows from a point to MaxRadius_m at its peak, fades, and is removed at ExpiresAt.
         [JsonProperty] public bool IsTransient { get; internal set; } = false;
@@ -47,6 +53,7 @@ namespace Pulsar4X.Hazards
         {
             HazardType = other.HazardType;
             Radius_m = other.Radius_m;
+            InnerRadius_m = other.InnerRadius_m;
             Effects = other.Effects?.Select(e => new HazardEffect(e)).ToList() ?? new List<HazardEffect>();
             IsTransient = other.IsTransient;
             StartedAt = other.StartedAt;

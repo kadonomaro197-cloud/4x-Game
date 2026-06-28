@@ -86,7 +86,7 @@ namespace Pulsar4X.Hazards
                 // DAMAGE — each effect at its own wavelength (so the ship's ARMOUR material is the defence).
                 if (damageEffects.Count > 0)
                 {
-                    double proximity = radius > 0 ? Math.Max(0.0, 1.0 - dist / radius) : 1.0;
+                    double proximity = ProximityIntensity(dist, radius, hazDb.InnerRadius_m);
                     foreach (var e in damageEffects)
                     {
                         double dps = e.ScalesWithProximity ? e.Magnitude * proximity : e.Magnitude;
@@ -123,6 +123,28 @@ namespace Pulsar4X.Hazards
         /// A flare's radius over its life: grows from a point to <see cref="SpaceHazardDB.MaxRadius_m"/> at the
         /// halfway peak, then fades back toward nothing. Pure function so a test can check the shape.
         /// </summary>
+        /// <summary>
+        /// Intensity of a proximity-scaled effect at <paramref name="dist"/> from the hazard centre, 0 at the outer
+        /// edge → 1 at the core. Pure + tested. With an <paramref name="innerR"/> (a star's surface) it models real
+        /// radiative FLUX (∝ 1/dist²) between the surface and the outer radius, so damage is concentrated tight
+        /// against the source — the outer zone is a near-harmless warning band and a normal orbit (well outside the
+        /// zone) takes zero; only a genuine close dive (within a few inner-radii) accumulates real damage. Without an
+        /// inner radius it falls back to the original LINEAR band (back-compat for hazards that don't set one).
+        /// </summary>
+        internal static double ProximityIntensity(double dist, double outerR, double innerR)
+        {
+            if (outerR <= 0) return 1.0;
+            if (dist >= outerR) return 0.0;                     // outside the zone (the caller's region check also excludes this)
+            if (innerR <= 0)                                    // no inner radius → original linear band
+                return Math.Max(0.0, 1.0 - dist / outerR);
+
+            double d = Math.Max(dist, innerR);                  // clamp to the surface — don't divide past it
+            double raw = (innerR / d) * (innerR / d);           // inverse-square flux, = 1 at the surface
+            double edge = (innerR / outerR) * (innerR / outerR);// flux at the zone edge
+            if (edge >= 1.0) return raw >= 1.0 ? 1.0 : 0.0;     // degenerate (inner ≈ outer)
+            return Math.Clamp((raw - edge) / (1.0 - edge), 0.0, 1.0); // normalise: 1 at surface → 0 at the edge
+        }
+
         public static double FlareRadiusAt(SpaceHazardDB hazDb, DateTime now)
         {
             if (now <= hazDb.StartedAt)
