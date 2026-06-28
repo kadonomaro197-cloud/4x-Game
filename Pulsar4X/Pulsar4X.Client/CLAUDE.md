@@ -311,6 +311,32 @@ Closed part of the gap between what the sim KNOWS and what it tells the player (
 - **Fire Control** (`FireControlWindow.ShowRangeToTarget`): range-to-target vs. the ship's beam reach + a red **OUT OF RANGE** flag — fixes the silent no-fire (a weapon past `MaxRange` just didn't fire, no feedback). Position read wrapped in try/catch (a mid-warp/detached `AbsolutePosition` can throw).
 - **Warp Order** (`WarpOrderWindow`): "Available Δv" + "ETA / arrive" at top level, from `_maxDV` + `_targetIntercept.eti` the window already computed but never printed.
 
+### All-ranges always-on — every unit + place shows its reach rings (2026-06-28)
+
+The per-fleet "Show range rings" checkbox (above) only drew the SELECTED fleet's rings, and only while the Combat
+tab was open — the developer wanted "can all units and places just have their ranges on display and active." Now a
+global, default-ON mode draws reach rings for **every own unit + place**, no selection needed.
+`SystemMapRendering.UpdateAllRangeRings()` (called each frame from `Update()`, gated on `GlobalUIState.ShowAllRangeRings`,
+default true; toggle off in DevTools › Detection / Fog of War if cluttered):
+- **Units** = every own ship drawn as its OWN icon — lone ships + each fleet's representative (it reuses the
+  per-frame `_collapsedFleetMembers` set, so rings land on exactly the ships that show as icons, one ring-set per
+  fleet marker). Three rings each: beam reach (red, how far it can SHOOT), sensor reach (green, how far it can SEE),
+  detectability (amber, how far it can BE SEEN).
+- **Places** = every own colony — one green detection ring (e.g. Earth's ~230 Gm megasensor bubble that covers the
+  inner system; this is what lets the homeworld see contacts at Mercury/Mars, the "colonies are system-wide early
+  warning" decision made visible).
+- **Cheap by construction:** the ring centre is the entity's LIVE `PositionDB`, so each ring TRACKS its ship as it
+  moves — **no per-frame rebuild**. Rebuilds only when the SET of units/places or their loudness (EMCON) changes,
+  via a fingerprint (positions deliberately excluded). `SimpleCircle` culls off-screen segments (the zoom-stutter
+  fix), so a huge colony ring costs nothing when out of view. Keys are `allrange_*`, distinct from the Combat tab's
+  `rangering_*`, so the per-fleet checkbox (which adds the enemy-target detection bubble) still works alongside it.
+- Values come from CI-covered engine accessors (`WeaponUtils.GetMaxBeamRange_m`, `SensorTools.SensorReachRange_m` /
+  `DetectabilityRange_m` / `CurrentActivityMultiplier`); the client just enumerates + draws. **CI-blind — local
+  build only.** A `[range-ring] all-ranges rebuilt: N unit(s) + M place(s)` SessionLog line gauges the wire.
+- **v1 limits (flagged):** a fleet representative's rings are sized off the FLAGSHIP's own ranges, not the fleet
+  max (the Combat tab's per-fleet builder does fleet-max; the fleet-max refinement here is a follow-up); enemy
+  ranges are never drawn (fog — you don't know them).
+
 ### "Attack" button — order a fleet to engage (FleetWindow Combat tab, 2026-06-27)
 
 `FleetWindow.DisplayEngageButton` ("Attack nearest hostile fleet") gives the player the explicit **engage** order
