@@ -143,7 +143,7 @@ This is the deepest "pays for itself": researching resistance to a signature to 
 
 ---
 
-## Blast-radius coverage — what's MAPPED vs still ON PAPER (be honest before building)
+## Blast-radius coverage — ALL gaps now MAPPED (traced to code this session)
 
 **Fully mapped (existing systems, with file:line — verified this session):**
 - ✅ Component cradle-to-grave / the six-point chain (railgun-style binding) — *verified by code trace.*
@@ -152,19 +152,28 @@ This is the deepest "pays for itself": researching resistance to a signature to 
 - ✅ Armour model + the 5-file ripple (data → damage sim → mass → combat value → UI/save) — mapped.
 - ✅ Faction discovery/knowledge (`Masked<T>` precedent, used only for minerals) — mapped.
 
-**Designed but blast-radius NOT yet mapped (the real remaining work — DO NOT assume these are accounted for):**
-1. **The `DamageSignature` unification INTO the existing combat system — the biggest one.** I asserted it "maps directly" onto weapon classes (Beam/Railgun/Flak) + wavelength bands + `DamageResistBlueprint` + `ShipCombatValueDB` + the dodge/saturation resolve. **That has NOT been verified.** Reworking the combat damage-type vocabulary is a large blast radius into the most-tested subsystem; map it before touching it.
-2. **Shield code insertion.** Behaviour is designed; the actual touch-points are NOT mapped: the absorb intercept inside `DamageProcessor.OnTakingDamage` (which routes ship vs colony, lazily builds `EntityDamageProfileDB`), how charge interacts with the per-pixel `DealDamageEnergyBeamSim`, the `EnergyStored` power draw + a regen processor, the `ShipCombatValueDB` toughness contribution, save/load of live shield state, and the UI.
-3. **Body-type expansion** (neutron star / black hole / protostar / SN remnant). Cataloged, not mapped: `StarInfoDB`/`SpectralType`, `StarFactory`, system-gen, the client `StarIcon`/rendering, the `gravimetric` non-wavelength damage path, and the moving/periodic/event hazard behaviours.
-4. **Provisions / maintenance-supplies consumable** — a black box. Touches resupply (`ResupplyAction` stub), cargo/logistics, repair, and colony production. The "supplies when a shield breaks" rung depends on it.
-5. **NPC AI driving the loop** — survey→discover→research→build→deploy must be drivable by the (thin) faction AI, or only the player gets the loop. Barely mapped.
+**Now mapped this session (the five "on-paper" gaps, traced to file:line by parallel code-survey — each verdict below is from reading the code, not asserting):**
 
-**Cradle-to-grave per NEW buildable — partial:**
-- Shield: *is* a component (inherits research/build/install/loss for free) — **except** the "supplies-on-break" loss rung, which needs #4.
-- Armour additives: new environmental materials may need new **mineral→refine** rungs (unmapped — do they reuse existing minerals or need new ones?).
-- Research station / site-experience research: a new buildable component **and** a new generation mechanic (unmapped — extends `ResearcherDB.LocationId`).
+1. ✅ **`DamageSignature` unification INTO combat — VERDICT: CLEAN, no rewrite.** The auto-resolve engine (`ShipCombatValueDB` firepower/toughness, the bucketed dodge/saturation resolve) is **signature-blind** — it never reads a damage *type*, only scalar strengths. So adding a `DamageSignature` vocabulary does **not** touch it: the signature lives in the per-pixel layer (`DamageFragment` already carries `Wavelength`; `DamageResistBlueprint.WavelengthAbsorption` already bands it) and on the weapon/hazard definitions. We **keep both layers** — wavelength (per-pixel, fine) and the coarse signature label (for resistance matching + UI) — they don't fight. ~12 files *read*, but the change is **additive** (a label + a lookup), not a rework of the most-tested subsystem. The earlier fear ("biggest blast radius") was wrong; this is the *cheapest* of the five.
 
-**Bottom line:** the *map of what we're plugging into* is solid; the *map of the new machinery* is ~half done. #1 (DamageSignature → combat) is the highest-value gap to close next, because it's the keystone and it reaches into the most fragile subsystem.
+2. ✅ **Shield code insertion — all hooks EXIST; the hard part is auto-resolve, see the sixth item.** Touch-points traced: absorb intercept at **`DamageProcessor.cs:59`** (before `DealDamageEnergyBeamSim`, inside the ship branch — colony branch untouched); power draw via the existing **`EnergyGenAbilityDB.AddDemand`**; a new `ShieldGeneratorAtb` / `ShieldGeneratorDB` / `ShieldRegenProcessor` **mirroring the existing `EnergyGen*` trio** (proven pattern, not novel plumbing); save/load rides `[JsonProperty]` on the DB like every other live-state blob. **The one genuine problem:** shields *regenerate continuously*, but auto-resolve is *salvo-based* and `ShipCombatValueDB` is *cached at build* — so a shield is **invisible to fleet combat** unless toughness recomputes on damage. That's not a shield bug; it's the sixth item below.
+
+3. ✅ **Body-type expansion — ~15–18 files, ADDITIVE, no rewrite.** `SpectralType` enum +N/P/X/H/T/S, `BodyType` +BlackHole/NeutronStar/etc., new render glyphs in the client `StarIcon`/`SysBodyIcon`, the `gravimetric` **non-wavelength** damage path (its own application site in `DamageProcessor`, per `Hazards/CLAUDE.md`), an `EventHorizonInstaDeath` boundary, and the moving/periodic hazard lifecycle (generalises the flare grow→peak→fade we already built). All new content rides the spine; **authoring a black hole is then mostly JSON.** Sequenced as *content after the loop exists* — not a foundation.
+
+4. ✅ **Provisions / maintenance-supplies consumable + repair — mapped; repair is ENTIRELY MISSING.** The consumable itself is **cheap**: cargo/production are already generic (`CargoStorageDB`/`CargoTransferProcessor`/`IndustryProcessor` store & build *any* `ICargoable` with zero changes) — a provision is **2 JSON entries** (a `supplies-storage` cargo type + a `provisions` material) plus a small `ShipConsumptionProcessor` (mirrors the reactor-fuel `EnergyGenProcessor` pattern). The two resupply orders (`RefuelAction`/`ResupplyAction`) are **empty stubs** to fill in. **The real finding: ship REPAIR does not exist at all** — `ComponentInstance.HealthPercent` is only ever *decremented* by damage; nothing restores it, and a component at 0 health is **permanently removed**. So today the grave rung (a shot-off module) is *irreversible with no recovery path*. The "supplies-when-a-shield-breaks" cost the developer wants **depends on building this** (a `RepairDB`/`RepairProcessor` + the provisions consumable). ~8 new files, 5 modified, 2 JSON — its own phase.
+
+5. ✅ **NPC AI driving the loop — 80% scaffold, 20% gap.** `NPCDecisionProcessor.cs` **exists** (an `IHotloopProcessor` on `FactionInfoDB`, reads a `DoctrineVector` of Economic/Military/Tech/Expansion weights) and **every action API the loop needs is reachable by non-UI code** (`StandAloneOrderHandler.HandleOrder`, `ResearcherDB.TechQueue.Enqueue`, `IndustryTools.AddJob`, `FleetFactory.Create`, `ShipFactory.CreateShip`, `ColonyFactory`). **Two gaps:** (a) the processor is **never clock-driven** — faction entities live in the `GlobalManager`, which `MasterTimePulse` does **not** iterate (`MasterTimePulse.cs:325–341` loops per-*system* only); and (b) the **decision→action wiring is a TODO** (it picks a doctrine but issues no order). Plus NPCs aren't created in a normal New Game. So the loop is buildable on real scaffolding — it needs *wiring*, not *invention*.
+
+**The SIXTH item this mapping SURFACED (not on the original list) — the real wall:**
+
+6. ⚠️ **Auto-resolve combat is cached, salvo-based, and material-blind — and that blocks BOTH shields (#2) AND the locked "armour material counts in toughness" decision.** `ShipCombatValueDB.Calculate` runs **once at build** and reads armour *thickness only*, never the material/signature. So: (a) a shield's continuously-regenerating buffer can't show up in a cached, salvo-based toughness number; and (b) Decision 2 ("specialised armour pays off in fleet combat") can't land while toughness is material-blind. **Both wants require the same prerequisite: make `ShipCombatValueDB` recompute toughness on damage (and read material/shield state).** This is one shared piece of work standing behind two headline features — call it out *now* so it's sequenced as a foundation, not discovered mid-build.
+
+**Cradle-to-grave per NEW buildable — now resolved:**
+- Shield: *is* a component (research/build/install for free); the **loss rung now has a home** — "supplies-on-break" rides the provisions+repair system (#4), and the **grave rung itself** (a destroyed generator) only *matters* once repair exists, else every loss is permanent.
+- Armour additives: confirmed they can **reuse existing minerals** (the additive is a material recipe like any other — new minerals optional, not required to ship).
+- Research station / site-experience research: a buildable component **plus** a generation mechanic extending `ResearcherDB.LocationId` (today unused) — mapped, still the most novel new machinery.
+
+**Bottom line — honest status:** all five on-paper gaps are now traced to code, and the surprise is **good news on four of five** (DamageSignature is cheap not costly; shields/body-types/provisions are additive; NPC AI is real scaffolding). The **one hard prerequisite** is the sixth item — the auto-resolve combat-value refactor — which is the shared foundation under shields *and* armour-material-in-toughness. Close that first and both headline features unlock; everything else is additive on top of the spine already built.
 
 ---
 
@@ -179,9 +188,11 @@ This is the deepest "pays for itself": researching resistance to a signature to 
 
 **Phase 2 — research the counter:** Hazard Class → research field/line; site-aware + experience research generation (extend `ResearcherDB.LocationId`); the research-station component; tech `Unlocks` the armour-resistance line. *(Decision 4.)*
 
-**Phase 3 — armour + deploy:** base+additive armour model (data + damage sim + mass + combat value + UI + save/load), additive keyed to Hazard Class, gated by the Phase-2 unlock; deploy → survive → late-game payoff. *(Decision 3.)*
+**Phase 3 — armour + deploy:** base+additive armour model (data + damage sim + mass + combat value + UI + save/load), additive keyed to Hazard Class, gated by the Phase-2 unlock; deploy → survive → late-game payoff. *(Decision 3.)* **Prerequisite — the sixth blast-radius item:** Decision 2 (material counts in toughness) needs `ShipCombatValueDB` to stop being thickness-only-and-cached — the same refactor shields need. Do that refactor **once**, here, and it serves both this phase and the shield phase.
 
-Each phase is gauged (engine tests, CI-covered) before the next. Phase 0 is the part to get RIGHT.
+**Phase 4 (its own track) — shields + the provisions/repair triad.** Shields ride the `HazardClass` keystone + the Phase-3 combat-value refactor; the "supplies-on-break" cost and the grave-rung recovery both ride a new provisions consumable + a `RepairDB`/`RepairProcessor` (ship repair does not exist today — `HealthPercent` only ever drops). Build the consumable + repair **once** so shields, armour-loss recovery, and logistics all draw on it.
+
+Each phase is gauged (engine tests, CI-covered) before the next. Phase 0 is the part to get RIGHT. **The one hard, shared foundation is the combat-value refactor (sixth item) — sequence it as a Phase-3 prerequisite, not a surprise mid-build.**
 
 ---
 
