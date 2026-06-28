@@ -1,0 +1,91 @@
+[STATE] ⚠ faults this session: 7 unique (render+input — grep [RenderError]/[InputError])
+[CAMERA] pan -> 0.1,-0.4 Gm
+[CAMERA] pan -> 0.1,-0.4 Gm
+[CAMERA] pan -> 0.1,-0.4 Gm
+[CAMERA] pan -> 0.1,-0.4 Gm
+[CAMERA] pan -> 0.1,-0.4 Gm
+[CAMERA] pan -> 0.1,-0.4 Gm
+[CAMERA] pan -> 0.1,-0.4 Gm
+[CAMERA] pan -> 0.1,-0.4 Gm
+[CAMERA] pan -> 0.1,-0.4 Gm
+[CAMERA] pan -> 0.1,-0.4 Gm
+[SELECT] Primary click on '2nd Task Force Aegis Test Warship 1' (entity #792, faction 764)
+[RenderError] EntityWindow:EntityWindow threw and was skipped this frame (logged once per unique error). Fix the cause:
+System.InvalidOperationException: Begin("2nd Task Force Aegis Test Warship 1 (Ship)###792") called while already inside window "Fleet Management". Must call End() before starting a new window.
+   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
+   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, Boolean& isActive, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 44
+   at Pulsar4X.Client.EntityWindow.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Windows\EntityWindow.cs:line 186
+   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 452
+[CAMERA] pan -> 0.1,-0.4 Gm
+[CAMERA] pan -> 0.1,-0.4 Gm
+[CAMERA] pan -> 0.1,-0.4 Gm
+[CAMERA] pan -> 0.1,-0.4 Gm
+[CAMERA] pan -> 0.1,-0.4 Gm
+[CAMERA] pan -> 0.1,-0.4 Gm
+[CAMERA] pan -> 0.1,-0.4 Gm
+[CAMERA] pan -> 0.1,-0.4 Gm
+[CAMERA] pan -> 0.1,-0.4 Gm
+[CAMERA] pan -> 0.1,-0.4 Gm
+[SELECT] Primary click on 'Surveyor I' (entity #778, faction 764)
+[RenderError] EntityWindow:EntityWindow threw and was skipped this frame (logged once per unique error). Fix the cause:
+System.InvalidOperationException: Begin("Surveyor I (Ship)###778") called while already inside window "Fleet Management". Must call End() before starting a new window.
+   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
+   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, Boolean& isActive, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 44
+   at Pulsar4X.Client.EntityWindow.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Windows\EntityWindow.cs:line 186
+   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 452
+[SELECT] Primary click on 'Earth' (entity #729, faction -99)
+[RenderError] EntityWindow:EntityWindow threw and was skipped this frame (logged once per unique error). Fix the cause:
+System.InvalidOperationException: Begin("Earth (Planet)###729") called while already inside window "Fleet Management". Must call End() before starting a new window.
+   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
+   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, Boolean& isActive, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 44
+   at Pulsar4X.Client.EntityWindow.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Windows\EntityWindow.cs:line 186
+   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 452
+[STATE] heartbeat t=2050-01-03 21:55 paused step=3024000s selected=Earth ships-in-view=31
+[ENGINE] sensor scans 5394 (+0), battle-trigger passes 646740 (+0) since last beat
+[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 156.013 Gm (DETECTED)
+[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] ⚠ faults this session: 10 unique (render+input — grep [RenderError]/[InputError])
+[SELECT] Alt click on 'Serial Peacemaker' (entity #773, faction 764)
+[STATE] heartbeat t=2050-01-03 21:55 paused step=3024000s selected=Serial Peacemaker ships-in-view=31
+[ENGINE] sensor scans 5394 (+0), battle-trigger passes 646740 (+0) since last beat
+[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 156.013 Gm (DETECTED)
+[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] ⚠ faults this session: 10 unique (render+input — grep [RenderError]/[InputError])
+[RenderError] OrdersListWindow threw and was skipped this frame (logged once per unique error). Fix the cause:
+System.InvalidOperationException: Begin("Orders: Serial Peacemaker") called while already inside window "Fleet Management". Must call End() before starting a new window.
+   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
+   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, Boolean& isActive, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 44
+   at Pulsar4X.Client.OrdersListWindow.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Windows\OrdersListWindow.cs:line 65
+   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 452
+[STATE] heartbeat t=2050-01-03 21:55 paused step=3024000s selected=Serial Peacemaker ships-in-view=31
+[ENGINE] sensor scans 5394 (+0), battle-trigger passes 646740 (+0) since last beat
+[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 156.013 Gm (DETECTED)
+[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] ⚠ faults this session: 11 unique (render+input — grep [RenderError]/[InputError])
+[RenderError] FireControl threw and was skipped this frame (logged once per unique error). Fix the cause:
+System.InvalidOperationException: Begin("Fire Control") called while already inside window "Fleet Management". Must call End() before starting a new window.
+   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
+   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, Boolean& isActive, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 44
+   at Pulsar4X.Client.FireControl.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Windows\FireControlWindow.cs:line 75
+   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 452
+[STATE] heartbeat t=2050-01-03 21:55 paused step=3024000s selected=Serial Peacemaker ships-in-view=31
+[ENGINE] sensor scans 5394 (+0), battle-trigger passes 646740 (+0) since last beat
+[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 156.013 Gm (DETECTED)
+[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] ⚠ faults this session: 12 unique (render+input — grep [RenderError]/[InputError])
+[RenderError] CargoTransferWindow threw and was skipped this frame (logged once per unique error). Fix the cause:
+System.InvalidOperationException: Begin("Cargo") called while already inside window "Fleet Management". Must call End() before starting a new window.
+   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
+   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, Boolean& isActive, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 44
+   at Pulsar4X.Client.CargoTransferWindow.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Displays\CargoTransfer\CargoTransferWindow.cs:line 245
+   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 452
+[STATE] heartbeat t=2050-01-03 21:55 paused step=3024000s selected=Serial Peacemaker ships-in-view=31
+[ENGINE] sensor scans 5394 (+0), battle-trigger passes 646740 (+0) since last beat
+[DETECT] United Earth Corp holds 7 contact(s); 15 other-faction ship(s) in-system, detects 6 (9 hidden from you)
+[REACH] best sensor reach 1.204 Gm (ISS Hermes); nearest enemy 156.013 Gm (DETECTED)
+[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] ⚠ faults this session: 13 unique (render+input — grep [RenderError]/[InputError])
