@@ -32,9 +32,9 @@ namespace Pulsar4X.Tests
         // ─── Root A — weapon range on the combat profile ───────────────────────────────────────────────────────
 
         [Test]
-        [Description("A beam weapon carries its design MaxRange into its WeaponProfile.Range_m; railguns (no range " +
-                     "field yet) carry 0 = unbounded. Range does NOT change Firepower — the old strength number is " +
-                     "identical (the field is additive data the closing model reads, not a stat change).")]
+        [Description("A beam weapon carries its design MaxRange into its WeaponProfile.Range_m; railguns carry their " +
+                     "finite mid-range (RailgunRange_m, ~500 km). Range does NOT change Firepower — the old strength " +
+                     "number is identical (the field is additive data the closing model reads, not a stat change).")]
         public void WeaponProfile_CarriesDesignRange_FirepowerUnchanged()
         {
             var s = TestScenario.CreateWithColony();
@@ -52,12 +52,14 @@ namespace Pulsar4X.Tests
             Assert.That(cv.Weapons.Sum(w => w.DamagePerSecond), Is.EqualTo(cv.Firepower).Within(1e-6).Percent,
                 "Firepower must still equal the summed weapon DPS — range is additive data, not a stat change");
 
-            // Railguns have no design range field yet → rangeless (0). Documents the flagged follow-up.
+            // Railguns now carry a finite MID range (RailgunRange_m, ~500 km) so the closing model holds their fire
+            // until the gap closes inside it — the once-flagged follow-up, now done in ShipCombatValueDB.
             var lancer = Build(s, "default-ship-design-test-railgun", "Lancer");
             var rg = lancer.GetDataBlob<ShipCombatValueDB>().Weapons.Where(w => w.Class == WeaponClass.Railgun).ToArray();
             Assert.That(rg.Length, Is.GreaterThan(0), "the Lancer carries railguns");
             foreach (var w in rg)
-                Assert.That(w.Range_m, Is.EqualTo(0), "railguns default to 0 = unbounded until their range field is added (flagged)");
+                Assert.That(w.Range_m, Is.EqualTo(ShipCombatValueDB.RailgunRange_m),
+                    "railguns carry their finite mid-range (RailgunRange_m), between flak and missile reach");
         }
 
         // ─── Root B — fleet capability aggregation ─────────────────────────────────────────────────────────────
