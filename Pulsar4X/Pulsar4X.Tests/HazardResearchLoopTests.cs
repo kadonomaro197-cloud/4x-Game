@@ -155,5 +155,51 @@ namespace Pulsar4X.Tests
             Assert.That(kineticResist, Is.GreaterThan(0f),
                 "the unlocked armour's material must actually resist kinetic damage — the loop pays off");
         }
+
+        // The three NON-WAVELENGTH flavours share one loop shape — discover the hazard, the counter-tech opens,
+        // research unlocks the rated armour, the material resists the flavour. DRY helper drives all three.
+        private static void AssertHazardLoop(HazardEffectType effect, string techId, string armorId,
+                                             string materialId, DamageSignature sig)
+        {
+            var s = TestScenario.CreateWithColony();
+            var data = s.Faction.GetDataBlob<FactionInfoDB>().Data;
+            var design = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns.Values.First();
+
+            Assert.That(data.LockedTechs.ContainsKey(techId), Is.True, $"{techId} starts LOCKED");
+            Assert.That(data.Techs.ContainsKey(techId), Is.False, $"{techId} not researchable before discovery");
+            Assert.That(data.Armor.ContainsKey(armorId), Is.False, $"{armorId} unavailable before research");
+
+            var haz = new SpaceHazardDB { HazardType = SpaceHazardType.Generic, Radius_m = 1e10,
+                Effects = { new HazardEffect(effect, 100, 0) } };
+            var ship = ShipFactory.CreateShip(design, s.Faction, s.StartingBody, "Surveyor");
+            HazardDiscovery.RecordAndAnnounce(ship, haz, s.Game.TimePulse.GameGlobalDateTime);
+            Assert.That(data.Techs.ContainsKey(techId), Is.True, $"discovering the hazard opens {techId}");
+
+            data.IncrementTechLevel(data.Techs[techId]);
+            Assert.That(data.Armor.ContainsKey(armorId), Is.True, $"completing {techId} unlocks {armorId}");
+
+            byte id = DamageTools.IDCodeForMaterial(materialId);
+            float resist = DamageTools.DamageResistsLookupTable[id].SignatureResistance[(int)sig];
+            Log($"{materialId} IDCode={id}, {sig} resistance={resist}");
+            Assert.That(resist, Is.GreaterThan(0f), $"{materialId} must actually resist {sig} — the loop pays off");
+        }
+
+        [Test]
+        [Description("4th flavour — Corrosive: a corrosive nebula (gas cloud) → tech-corrosion-plating → corrosion-resistant alloy.")]
+        public void DiscoverCorrosiveHazard_ResearchUnlocksCorrosionRatedArmour() =>
+            AssertHazardLoop(HazardEffectType.CorrosiveDamage, "tech-corrosion-plating",
+                "corrosion-resistant-alloy-armor", "corrosion-resistant-alloy", DamageSignature.Corrosive);
+
+        [Test]
+        [Description("5th flavour — EMStorm: an ion storm → tech-em-hardening → EM shielding mesh.")]
+        public void DiscoverEMHazard_ResearchUnlocksEMRatedArmour() =>
+            AssertHazardLoop(HazardEffectType.EMDamage, "tech-em-hardening",
+                "em-shielding-mesh-armor", "em-shielding-mesh", DamageSignature.EMStorm);
+
+        [Test]
+        [Description("6th flavour — Gravimetric: a gravimetric anomaly → tech-structural-reinforcement → reinforced trusswork.")]
+        public void DiscoverGravimetricHazard_ResearchUnlocksStructuralArmour() =>
+            AssertHazardLoop(HazardEffectType.GravimetricDamage, "tech-structural-reinforcement",
+                "reinforced-trusswork-armor", "reinforced-trusswork", DamageSignature.Gravimetric);
     }
 }

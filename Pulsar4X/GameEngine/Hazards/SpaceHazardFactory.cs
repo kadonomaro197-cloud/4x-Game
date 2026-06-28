@@ -60,7 +60,7 @@ namespace Pulsar4X.Hazards
         {
             var effects = new List<HazardEffect>
             {
-                new HazardEffect(HazardEffectType.HeatDamage, 50.0, 8000.0),   // slow corrosive/thermal hull damage
+                new HazardEffect(HazardEffectType.CorrosiveDamage, 50.0),     // slow chemical hull corrosion (Corrosive flavour)
                 new HazardEffect(HazardEffectType.SensorJam, 0.35),            // sensors cut to 35% — hide / get ambushed
                 new HazardEffect(HazardEffectType.MovementDrag, 0.5),          // sub-light thrust slowed
                 new HazardEffect(HazardEffectType.WarpInhibit, 0.25),          // warp crawls through it
@@ -100,6 +100,35 @@ namespace Pulsar4X.Hazards
             {
                 new HazardEffect(HazardEffectType.KineticDamage, 60.0, 0.0), // micrometeoroid impacts (wavelength 0 = kinetic)
                 new HazardEffect(HazardEffectType.MovementDrag, 0.6),        // grit slows sub-light thrust
+            };
+            return CreateFromEffects(system, star, offsetFromStar_m, radius_m, SpaceHazardType.Generic, effects, name);
+        }
+
+        /// <summary>
+        /// An ion storm — a region of violent electromagnetic interference. It jams sensors and its EM surges
+        /// damage a ship's systems (EMStorm flavour, resisted by EM-hardened shielding).
+        /// </summary>
+        public static Entity CreateIonStorm(StarSystem system, Entity star, Vector3 offsetFromStar_m, double radius_m, string name = "Ion Storm")
+        {
+            var effects = new List<HazardEffect>
+            {
+                new HazardEffect(HazardEffectType.EMDamage, 40.0), // EM surges damage ship systems
+                new HazardEffect(HazardEffectType.SensorJam, 0.4), // sensors cut to 40%
+            };
+            return CreateFromEffects(system, star, offsetFromStar_m, radius_m, SpaceHazardType.Generic, effects, name);
+        }
+
+        /// <summary>
+        /// A gravimetric anomaly — a knot of tidal spacetime stress (a micro-singularity / dense remnant). Tidal
+        /// forces stress a ship's structure (Gravimetric flavour, resisted by structural reinforcement), worst at
+        /// the core (proximity-scaled), and warp crawls near it.
+        /// </summary>
+        public static Entity CreateGravimetricAnomaly(StarSystem system, Entity star, Vector3 offsetFromStar_m, double radius_m, string name = "Gravimetric Anomaly")
+        {
+            var effects = new List<HazardEffect>
+            {
+                new HazardEffect(HazardEffectType.GravimetricDamage, 70.0, 0.0, scalesWithProximity: true), // tidal stress, worst at the core
+                new HazardEffect(HazardEffectType.WarpInhibit, 0.3),  // warp crawls near the anomaly
             };
             return CreateFromEffects(system, star, offsetFromStar_m, radius_m, SpaceHazardType.Generic, effects, name);
         }

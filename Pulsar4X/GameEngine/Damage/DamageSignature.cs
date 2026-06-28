@@ -41,13 +41,15 @@ namespace Pulsar4X.Damage
     public static class DamageSignatures
     {
         /// <summary>
-        /// True if this flavour already deposits damage through the EXISTING wavelength-armour path
+        /// True if this flavour deposits damage through the wavelength-armour path
         /// (<c>DamageTools.DealDamageEnergyBeamSim</c>): <see cref="DamageSignature.Thermal"/> (infrared),
         /// <see cref="DamageSignature.HardRadiation"/> (UV), and <see cref="DamageSignature.Kinetic"/> (the
-        /// wavelength-0 convention → the near-IR band). FALSE for the three that have NO wavelength and so need
-        /// their own damage application site built before they can hurt anything: <see cref="DamageSignature.EMStorm"/>,
-        /// <see cref="DamageSignature.Gravimetric"/>, <see cref="DamageSignature.Corrosive"/>. This is the
-        /// load-bearing distinction the build plan + <c>Hazards/CLAUDE.md</c> call out (gravimetric needs its own site).
+        /// wavelength-0 convention → the near-IR band). FALSE for the three that have NO wavelength
+        /// (<see cref="DamageSignature.EMStorm"/>, <see cref="DamageSignature.Gravimetric"/>,
+        /// <see cref="DamageSignature.Corrosive"/>) — these route to the FLAT non-wavelength damage site
+        /// (<c>DamageProcessor.ApplyNonWavelengthDamage</c>, built 2026-06-28): a hit spread flat across the hull,
+        /// reduced by the ship's armour-material <c>SignatureResistance</c>. This bool is the router between the two
+        /// sites; both reduce damage by the same per-material resistance, so armour is the counter either way.
         /// </summary>
         public static bool UsesWavelengthArmorPath(DamageSignature sig) => sig switch
         {

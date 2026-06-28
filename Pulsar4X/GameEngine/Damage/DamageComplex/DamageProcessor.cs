@@ -56,6 +56,13 @@ namespace Pulsar4X.Damage
 
             if(entityDamageProfileDB == null) return new DamageResult { Damage = 0, Destroyed = false };
 
+            // Non-wavelength flavours (EMStorm / Gravimetric / Corrosive) aren't photons — they can't run through the
+            // per-pixel wavelength sim, so they're applied flat to the hull here, reduced by the ship's armour-material
+            // resistance to that flavour. Default-identical for every existing caller: a beam/missile/kinetic-hazard
+            // fragment carries a wavelength-path signature (Kinetic is the struct default), so this never fires for them.
+            if (!DamageSignatures.UsesWavelengthArmorPath(damageFragment.Signature))
+                return ApplyNonWavelengthDamage(entityDamageProfileDB, damageFragment);
+
             var damages = DamageTools.DealDamageEnergyBeamSim(entityDamageProfileDB, damageFragment);
 
             // G-channel in the damage bitmap is 1-indexed (ComponentPlacement.CreateShipBmp starts
@@ -225,6 +232,43 @@ namespace Pulsar4X.Damage
             */
 
             return new DamageResult { Damage = 0, Destroyed = false };
+        }
+
+        /// <summary>
+        /// The flat damage SITE for the non-wavelength flavours (EMStorm / Gravimetric / Corrosive). They aren't
+        /// photons, so they can't drive the per-pixel wavelength armour sim; the hit is instead applied FLAT and
+        /// spread evenly across the ship's components (a field effect, not a beam puncture), REDUCED by the ship's
+        /// armour-material resistance to that flavour — the same <c>SignatureResistance</c> the wavelength path uses,
+        /// so "the armour material IS the counter" holds for all six flavours. v1: even spread + health attrition.
+        /// Per-flavour targeting (EM → electronics, gravimetric → structure scaled by hull size, corrosive → surface
+        /// over time) and full destruction bookkeeping are flagged refinements, not built. See Hazards/CLAUDE.md.
+        /// </summary>
+        private static DamageResult ApplyNonWavelengthDamage(EntityDamageProfileDB profile, DamageFragment frag)
+        {
+            var components = profile?.ComponentLookupTable;
+            if (components == null || components.Count == 0)
+                return new DamageResult { Damage = 0, Destroyed = false };
+
+            // Armour material's resistance to this flavour (0 = none … 1 = immune) — the researched-armour payoff.
+            float resist = 0f;
+            string armorId = profile.Armor.armorType?.ResourceID;
+            if (!string.IsNullOrEmpty(armorId))
+            {
+                byte id = DamageTools.IDCodeForMaterial(armorId);
+                if (DamageTools.DamageResistsLookupTable.TryGetValue(id, out var mat))
+                    resist = DamageTools.GetSignatureResistance(mat, frag.Signature);
+            }
+
+            // Energy → damage points on the SAME scale as the beam sim (1 pt / 100 J), reduced by resistance.
+            int damageAmount = Math.Max(1, (int)(frag.Energy * 0.01 * (1f - resist)));
+
+            // Spread evenly across components. HealthPercent is the same field the wavelength path reduces
+            // (1000 pts = 100% health), so the scale matches.
+            float perComponentHealth = (damageAmount * 0.001f) / components.Count;
+            foreach (var c in components)
+                c.HealthPercent -= perComponentHealth;
+
+            return new DamageResult { Damage = damageAmount, Destroyed = false };
         }
 
         /// <summary>

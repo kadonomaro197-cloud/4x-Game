@@ -673,6 +673,60 @@
         ]
       }
     }
+  },
+  {
+    "Type": "Tech",
+    "Payload": {
+      "UniqueID": "tech-corrosion-plating",
+      "Name": "Corrosion Plating",
+      "Description": "Passivated corrosion-resistant hull plating developed from studying corrosive nebulae. Unlocks corrosion-resistant alloy armour, which shrugs off the chemical attack of a dense medium.",
+      "Category": "tech-category-stellar-science",
+      "MaxLevel": 1,
+      "DataFormula": "1",
+      "CostFormula": "2500",
+      "Unlocks": {
+        "1": [
+          "corrosion-resistant-alloy",
+          "corrosion-resistant-alloy-armor"
+        ]
+      }
+    }
+  },
+  {
+    "Type": "Tech",
+    "Payload": {
+      "UniqueID": "tech-em-hardening",
+      "Name": "EM Hardening",
+      "Description": "Faraday shielding mesh developed from studying ion storms and electromagnetic interference. Unlocks EM shielding mesh armour, which grounds out the surges of an ion storm before they reach a ship's systems.",
+      "Category": "tech-category-stellar-science",
+      "MaxLevel": 1,
+      "DataFormula": "1",
+      "CostFormula": "2500",
+      "Unlocks": {
+        "1": [
+          "em-shielding-mesh",
+          "em-shielding-mesh-armor"
+        ]
+      }
+    }
+  },
+  {
+    "Type": "Tech",
+    "Payload": {
+      "UniqueID": "tech-structural-reinforcement",
+      "Name": "Structural Reinforcement",
+      "Description": "High-tensile internal framing developed from studying gravimetric anomalies. Unlocks reinforced trusswork armour, which holds a hull together against the tidal stress of a spacetime anomaly.",
+      "Category": "tech-category-stellar-science",
+      "MaxLevel": 1,
+      "DataFormula": "1",
+      "CostFormula": "2500",
+      "Unlocks": {
+        "1": [
+          "reinforced-trusswork",
+          "reinforced-trusswork-armor"
+        ]
+      }
+    }
   }
 
 ]

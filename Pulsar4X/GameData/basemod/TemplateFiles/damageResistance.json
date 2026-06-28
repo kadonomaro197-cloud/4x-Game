@@ -89,5 +89,41 @@
       "WavelengthAbsorption": [0.6, 0.55, 0.5, 0.45, 0.4],
       "SignatureResistance": [0.6, 0.0, 0.0, 0.0, 0.0, 0.0]
     }
+  },
+  {
+    "Type": "DamageResistance",
+    "Payload": {
+      "UniqueID": "175",
+      "MaterialID": "corrosion-resistant-alloy",
+      "HitPoints": "255",
+      "MeltingPoint": "1900",
+      "Density": "4500",
+      "WavelengthAbsorption": [0.5, 0.4, 0.3, 0.5, 0.6],
+      "SignatureResistance": [0.0, 0.0, 0.0, 0.0, 0.0, 0.6]
+    }
+  },
+  {
+    "Type": "DamageResistance",
+    "Payload": {
+      "UniqueID": "185",
+      "MaterialID": "em-shielding-mesh",
+      "HitPoints": "255",
+      "MeltingPoint": "1200",
+      "Density": "6000",
+      "WavelengthAbsorption": [0.3, 0.25, 0.2, 0.3, 0.4],
+      "SignatureResistance": [0.0, 0.0, 0.0, 0.6, 0.0, 0.0]
+    }
+  },
+  {
+    "Type": "DamageResistance",
+    "Payload": {
+      "UniqueID": "195",
+      "MaterialID": "reinforced-trusswork",
+      "HitPoints": "255",
+      "MeltingPoint": "2000",
+      "Density": "7000",
+      "WavelengthAbsorption": [0.45, 0.35, 0.28, 0.45, 0.55],
+      "SignatureResistance": [0.0, 0.0, 0.0, 0.0, 0.6, 0.0]
+    }
   }
 ]

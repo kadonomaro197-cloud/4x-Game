@@ -38,19 +38,20 @@ The hazard discovery/resistance/research loop the developer asked for is wired e
 
 **Gauge:** `Pulsar4X.Tests/HazardResearchLoopTests.cs` runs the whole chain on a real faction through the New-Game data path: locked → discover → open → research → armour unlocked → its material resists thermal.
 
-**Wired flavours = Thermal + HardRadiation + Kinetic (3 of 6).** `HazardDiscovery.CounterTechFor` maps all six signatures to tech ids; three now have the full data chain (source → discover → tech → rated armour), all gauged in `HazardResearchLoopTests`:
-- **Thermal** ← corona/gas-cloud heat → `tech-thermal-shielding` → `nickel-steel` armour (IDCode 50).
-- **HardRadiation** ← **solar flare** (already emits `RadiationDamage` at 150 nm UV) → `tech-radiation-shielding` → `tungsten-plating` armour (IDCode 75, UV-absorbing + hard-radiation `SignatureResistance`).
-- **Kinetic** ← **debris field** (`SpaceHazardFactory.CreateDebrisField`, placed in ~25% of generated systems — `KineticDamage` at wavelength 0, same armour path as a railgun slug) → `tech-ablative-plating` → `ablative-composite` armour (IDCode 125, kinetic `SignatureResistance`).
+**ALL SIX flavours are now wired (source → discover → tech → rated armour), every one gauged in `HazardResearchLoopTests`:**
 
-**The remaining three are NOT "just JSON" — they need an engine damage SITE first (the Prime-Directive investigation, 2026-06-28, corrected the "5 easy follow-ups" assumption):**
-| Flavour | Has a source? | Damage site | What it needs next |
+| Flavour | Source (real, in-game) | Damage path | Counter tech → armour (IDCode) |
 |---|---|---|---|
-| **Corrosive** | the gas cloud's "corrosion" is mislabelled as `HeatDamage`→Thermal today | ❌ no wavelength | append `CorrosiveDamage` to `HazardEffectType`, build the **flat non-wavelength damage site** (health reduced by the ship's armour-material `SignatureResistance[Corrosive]`), reclassify the gas cloud, THEN tech+armour |
-| **EMStorm** | ❌ | ❌ no wavelength | same flat site + an EM-storm source; later refinement: target electronics/sensors, not hull |
-| **Gravimetric** | ❌ | ❌ no wavelength | same flat site + a source (exotic body); later refinement: tidal/structural, scaled by hull size |
+| **Thermal** | star corona | wavelength (IR) | `tech-thermal-shielding` → nickel-steel (50) |
+| **HardRadiation** | solar flare (UV) | wavelength (UV) | `tech-radiation-shielding` → tungsten-plating (75) |
+| **Kinetic** | debris field (~25% of systems) | wavelength (0) | `tech-ablative-plating` → ablative-composite (125) |
+| **Corrosive** | gas cloud (reclassified from the mislabelled HeatDamage) | **flat site** | `tech-corrosion-plating` → corrosion-resistant-alloy (175) |
+| **EMStorm** | ion storm (`CreateIonStorm`, ~15% of systems) | **flat site** | `tech-em-hardening` → em-shielding-mesh (185) |
+| **Gravimetric** | gravimetric anomaly (`CreateGravimetricAnomaly`, ~8%, proximity-scaled) | **flat site** | `tech-structural-reinforcement` → reinforced-trusswork (195) |
 
-These three share ONE engine job: a flat-damage application site for non-wavelength signatures (reduce ship health by `energy × scale × (1 − SignatureResistance[sig])`, reading the ship's armour material). Build it once, then all three are JSON. Until then their `Unlock` calls no-op safely — authoring their techs now would be inert armour-that-resists-nothing (the "pretty, not a decision" anti-pattern).
+**The flat non-wavelength damage SITE (2026-06-28)** — the three non-wavelength flavours (Corrosive/EMStorm/Gravimetric) can't run through the per-pixel wavelength sim, so `DamageProcessor.ApplyNonWavelengthDamage` applies the hit **flat** and spread evenly across the ship's components, **reduced by the ship's armour-material `SignatureResistance[sig]`** — so "the armour material IS the counter" holds for all six. Routed by `DamageProcessor.OnTakingDamage` via `DamageSignatures.UsesWavelengthArmorPath(sig)` (false → flat site). **Default-identical** for every existing caller: a beam/missile/kinetic-hazard fragment carries a wavelength-path signature (Kinetic is the struct default), so the branch never fires for them. The three new `HazardEffectType` kinds (`CorrosiveDamage`/`EMDamage`/`GravimetricDamage`) are **appended** to the enum (gotcha #10). Gauge: `DamageSignatureResistanceTests.NonWavelengthHit_FlatSite_RatedArmourTakesLess`.
+
+**v1 simplifications (documented, flagged — not bugs):** the flat site spreads damage evenly (a field effect) and does health attrition only (no full destruction bookkeeping). Per-flavour targeting is a later refinement: EM should hit **electronics/sensors** (not hull), Gravimetric should scale by **hull size** (tidal), Corrosive should eat the **surface** over time. The decision/loop is fully wired; the damage *fidelity* of the trio is the next polish pass.
 
 ---
 
