@@ -286,6 +286,28 @@
   {
     "Type": "ProcessedMaterial",
     "Payload": {
+      "UniqueID": "tungsten-plating",
+      "Name": "Tungsten Radiation Plating",
+      "Description": "Dense tungsten-alloy hull plating. Its high-Z mass absorbs ionising UV and hard radiation — a solar flare's bane — that would otherwise reach a ship's crew and electronics.",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 60,
+      "PartMatUniqueID": "stainless-steel",
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.0000588,
+      "ResourceCosts": {
+        "iron": 50,
+        "tungsten": 40,
+        "nickel": 10
+      },
+      "IndustryPointCosts": 45,
+      "IndustryTypeID": "refining",
+      "WealthCost": 1,
+      "OutputAmount": 100
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
       "UniqueID": "electronics-d",
       "Name": "Grade-D Electronics",
       "Description": "Basic electrical components manufactured without aluminium refining. Lower performance, faster to produce.",

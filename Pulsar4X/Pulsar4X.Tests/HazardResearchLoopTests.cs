@@ -32,6 +32,13 @@ namespace Pulsar4X.Tests
             Effects = { new HazardEffect(HazardEffectType.HeatDamage, 100, 10000, scalesWithProximity: true) },
         };
 
+        private static SpaceHazardDB RadiationHazard() => new SpaceHazardDB
+        {
+            HazardType = SpaceHazardType.SolarFlare,
+            Radius_m = 1e10,
+            Effects = { new HazardEffect(HazardEffectType.RadiationDamage, 500, 150) }, // UV/ionising, like the real flare
+        };
+
         [Test]
         [Description("Discover a thermal hazard → its counter-research opens → completing it unlocks heat-resistant " +
                      "armour whose material actually resists thermal damage. The full cradle-to-grave loop.")]
@@ -66,6 +73,43 @@ namespace Pulsar4X.Tests
             Log($"nickel-steel IDCode={id}, thermal resistance={thermalResist}");
             Assert.That(thermalResist, Is.GreaterThan(0f),
                 "the unlocked armour's material must actually resist thermal damage — the loop pays off");
+        }
+
+        [Test]
+        [Description("The SECOND fully-wired flavour: discover a RADIATION hazard (a solar flare) → its counter-research " +
+                     "opens → completing it unlocks tungsten radiation plating whose material actually resists hard " +
+                     "radiation. Proves the keystone pattern repeats — a real second worked example, end to end.")]
+        public void DiscoverRadiationHazard_ResearchUnlocksRadiationRatedArmour()
+        {
+            var s = TestScenario.CreateWithColony();
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+            var data = factionInfo.Data;
+            var design = factionInfo.ShipDesigns.Values.First();
+
+            // 1. Before discovery: the radiation counter-tech is LOCKED, the rated armour unavailable.
+            Assert.That(data.LockedTechs.ContainsKey("tech-radiation-shielding"), Is.True, "the radiation counter-tech starts LOCKED");
+            Assert.That(data.Techs.ContainsKey("tech-radiation-shielding"), Is.False, "...so it isn't researchable yet");
+            Assert.That(data.Armor.ContainsKey("tungsten-plating-armor"), Is.False, "the rated armour is unavailable before research");
+
+            // 2. A ship caught in a solar flare discovers hard radiation → the counter-research opens.
+            var ship = ShipFactory.CreateShip(design, s.Faction, s.StartingBody, "Surveyor");
+            HazardDiscovery.RecordAndAnnounce(ship, RadiationHazard(), s.Game.TimePulse.GameGlobalDateTime);
+            Assert.That(data.Techs.ContainsKey("tech-radiation-shielding"), Is.True,
+                "discovering a radiation hazard opens its counter-research");
+
+            // 3. Complete the research → unlocks the rated armour (and its tungsten build material).
+            var tech = data.Techs["tech-radiation-shielding"];
+            data.IncrementTechLevel(tech);
+            Assert.That(data.Armor.ContainsKey("tungsten-plating-armor"), Is.True,
+                "completing the counter-tech unlocks the radiation-resistant armour");
+
+            // 4. The unlocked armour's material carries real hard-radiation resistance (clad a ship, survive the flare).
+            byte id = DamageTools.IDCodeForMaterial("tungsten-plating");
+            var resist = DamageTools.DamageResistsLookupTable[id];
+            float radResist = resist.SignatureResistance[(int)DamageSignature.HardRadiation];
+            Log($"tungsten-plating IDCode={id}, hard-radiation resistance={radResist}");
+            Assert.That(radResist, Is.GreaterThan(0f),
+                "the unlocked armour's material must actually resist hard radiation — the loop pays off");
         }
     }
 }

@@ -68,5 +68,19 @@
       "MeltingZeroPoint": 1750,
       "PhotonReflectivityPeak": 0.60
     }
+  },
+  {
+    "Type": "Armor",
+    "Payload": {
+      "UniqueID": "tungsten-plating-armor",
+      "ResourceID": "tungsten-plating",
+      "Density": "17000",
+      "Elasticity": 0.15,
+      "TensileStrength": 550,
+      "ThermalCapacity": 134,
+      "ThermalConductivity": 173.0,
+      "MeltingZeroPoint": 3695,
+      "PhotonReflectivityPeak": 0.50
+    }
   }
 ]

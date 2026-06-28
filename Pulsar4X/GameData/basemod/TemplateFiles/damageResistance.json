@@ -65,5 +65,17 @@
       "WavelengthAbsorption": [0.2, 0.15, 0.12, 0.5, 0.6],
       "SignatureResistance": [0.0, 0.6, 0.2, 0.0, 0.0, 0.0]
     }
+  },
+  {
+    "Type": "DamageResistance",
+    "Payload": {
+      "UniqueID": "75",
+      "MaterialID": "tungsten-plating",
+      "HitPoints": "255",
+      "MeltingPoint": "3695",
+      "Density": "17000",
+      "WavelengthAbsorption": [0.85, 0.45, 0.25, 0.2, 0.2],
+      "SignatureResistance": [0.0, 0.0, 0.6, 0.0, 0.0, 0.0]
+    }
   }
 ]

@@ -637,6 +637,24 @@
         ]
       }
     }
+  },
+  {
+    "Type": "Tech",
+    "Payload": {
+      "UniqueID": "tech-radiation-shielding",
+      "Name": "Radiation Shielding",
+      "Description": "Dense radiation-absorbing hull plating developed from studying solar flares and stellar radiation belts. Unlocks tungsten radiation plating, whose high-Z mass shields a ship's crew and systems from the ionising radiation of a flare.",
+      "Category": "tech-category-stellar-science",
+      "MaxLevel": 1,
+      "DataFormula": "1",
+      "CostFormula": "2500",
+      "Unlocks": {
+        "1": [
+          "tungsten-plating",
+          "tungsten-plating-armor"
+        ]
+      }
+    }
   }
 
 ]

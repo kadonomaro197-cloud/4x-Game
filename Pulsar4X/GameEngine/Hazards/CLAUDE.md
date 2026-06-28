@@ -38,7 +38,19 @@ The hazard discovery/resistance/research loop the developer asked for is wired e
 
 **Gauge:** `Pulsar4X.Tests/HazardResearchLoopTests.cs` runs the whole chain on a real faction through the New-Game data path: locked → discover → open → research → armour unlocked → its material resists thermal.
 
-**Worked example = Thermal only (v1).** `HazardDiscovery.CounterTechFor` maps all six signatures to tech ids, but only `tech-thermal-shielding` exists in data so far; the other five `Unlock` calls no-op until their tech + armour are authored (same pattern — pure JSON, no new C#). Purpose-named armours (vs reusing nickel-steel) are the same trivial follow-up.
+**Wired flavours = Thermal + HardRadiation (2 of 6).** `HazardDiscovery.CounterTechFor` maps all six signatures to tech ids; two now have the full data chain:
+- **Thermal** ← corona/gas-cloud heat → `tech-thermal-shielding` → `nickel-steel` armour (IDCode 50).
+- **HardRadiation** ← **solar flare** (the real recurring source already emits `RadiationDamage` at 150 nm UV) → `tech-radiation-shielding` → `tungsten-plating` armour (IDCode 75, UV-absorbing + hard-radiation `SignatureResistance`). Gauge: `HazardResearchLoopTests.DiscoverRadiationHazard_...`.
+
+**The other four are NOT "just JSON" — the Prime-Directive investigation (2026-06-28) corrected that assumption:**
+| Flavour | Has a hazard that emits it? | Damage path | What it actually needs |
+|---|---|---|---|
+| **Kinetic** | ❌ nothing emits `KineticDamage` | ✅ wavelength-0 | author a kinetic *hazard* (debris/micrometeoroid field) FIRST, then the pure-JSON tech+armour (`tech-ablative-plating`) |
+| **EMStorm** | ❌ | ❌ no wavelength site | a new `HazardEffectType` (appended) + its own damage-application site (engine) + a source, THEN JSON |
+| **Gravimetric** | ❌ | ❌ no wavelength site | same — tidal/spacetime damage site (engine), per the black-hole work |
+| **Corrosive** | ❌ (gas cloud "corrosion" is modelled as `HeatDamage`→Thermal today) | ❌ no wavelength site | same — a chemical/dense-medium damage site (engine), THEN JSON |
+
+So authoring techs for the bottom four now would be inert armour-that-resists-nothing (the "pretty, not a decision" anti-pattern) — they wait on their hazard source and (for the non-wavelength trio) an engine damage site. The `Unlock` calls already no-op safely until then.
 
 ---
 
