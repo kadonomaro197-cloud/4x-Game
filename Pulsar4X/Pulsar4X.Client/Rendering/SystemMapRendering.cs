@@ -594,6 +594,7 @@ namespace Pulsar4X.Client.Rendering
             }
 
             UpdateAllRangeRings();
+            UpdateHazardRegions();
 
             foreach (var item in _sysState.EntityStatesWithPosition.Values)
             {
@@ -789,6 +790,44 @@ namespace Pulsar4X.Client.Rendering
             }
 
             SessionLog.Action($"[range-ring] all-ranges rebuilt: {ownShips.Count} unit(s) + {ownColonies.Count} place(s) = {_allRangeKeys.Count} ring(s)");
+        }
+
+        // Draws each space hazard (gas cloud / solar flare) as a coloured circle marking the area it covers — the
+        // visual half of "a region of space that affects ships inside it". Rebuilt each frame (a system holds only
+        // a handful, and a flare's radius GROWS as it erupts, so we re-read its current size). Reuses the proven,
+        // zoom-safe SimpleCircle (same vehicle as the range rings), keyed "hazard_*" so it coexists with them. A
+        // bad engine read must never blank the map, so the whole thing is wrapped defensively.
+        private readonly List<string> _hazardKeys = new();
+
+        void UpdateHazardRegions()
+        {
+            if (_sysState == null) return;
+
+            foreach (var k in _hazardKeys) UIWidgets.Remove(k);
+            _hazardKeys.Clear();
+
+            List<Entity> hazards;
+            try
+            {
+                hazards = _sysState.StarSystem.GetAllEntitiesWithDataBlob<Pulsar4X.Hazards.SpaceHazardDB>();
+            }
+            catch { return; }
+
+            foreach (var haz in hazards)
+            {
+                if (haz == null || !haz.IsValid || !haz.HasDataBlob<PositionDB>()) continue;
+                var hazDb = haz.GetDataBlob<Pulsar4X.Hazards.SpaceHazardDB>();
+                if (hazDb.Radius_m <= 0) continue;
+
+                SDL3.SDL.Color colour = hazDb.HazardType == Pulsar4X.Hazards.SpaceHazardType.SolarFlare
+                    ? new SDL3.SDL.Color { R = 255, G = 140, B = 40, A = 160 }   // flare: bright orange
+                    : new SDL3.SDL.Color { R = 120, G = 200, B = 120, A = 90 };  // gas cloud: soft green
+
+                string key = "hazard_" + haz.Id;
+                UIWidgets[key] = new SimpleCircle(haz.GetDataBlob<PositionDB>(),
+                    Pulsar4X.Orbital.Distance.MToAU(hazDb.Radius_m), colour);
+                _hazardKeys.Add(key);
+            }
         }
 
         // Rebuild the fog-of-war contact blips from the viewed faction's CURRENT sensor contacts. Runs every frame
