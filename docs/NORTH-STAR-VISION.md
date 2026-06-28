@@ -20,6 +20,37 @@ This is the discipline that keeps a vague north star from becoming infinite scop
 
 ---
 
+## The extracted mechanics — what the developer ACTUALLY wants (2026-06-28, his words)
+
+Not the stories — the **one thing each universe does best.** "A lot of sci-fi does a few things very well. I want that." Cherry-pick the best mechanic from each and bake **"a cake of perfection, or at least get close."** The specific pillars, verbatim intent:
+
+1. **BSG → the NOMADIC CIVILIZATION.** *Not* Adama's story. The capability: **even if all is lost — every planet gone — a player's whole civilization can be nomadic, living on ships, moving star system to star system.** A fleet that *is* the nation. (The distinctive pillar most 4X games can't do: survive homeless.)
+2. **Babylon 5 → POLITICS WITH TEETH.** The *level* of **politics, espionage, and reasons to push the "declare war" button beyond the basic "they have a planet I want, I'll take it."** Casus belli, intrigue, spying — war as a political act, not just a land grab.
+3. **Star Wars (Clone Wars) + Warhammer 40K → TITANIC GROUND COMBAT.** Ground combat at that scale — **Emperor-class Titans walking across a continent.** A unit-scale range from a squad up to a god-machine.
+4. **Star Trek → TERRIFYING EXPLORATION.** **Entering a new system feels unique each time, and terrifying.** Wonder and dread on arrival — never a rubber-stamp.
+5. **Mass Effect → SUPER-ALIENS.** Drop in precursor/vastly-advanced alien factions that change the board.
+6. **Stellaris → THE GOOD MECHANICS WORTH KEEPING.** Cherry-pick the best of the 4X spine; leave the bloat.
+7. **Stargate → PLAYER-BUILT WORMHOLE NETWORKS.** Do "wacky shit" — **build a whole wormhole network** and reshape how the galaxy connects.
+8. **Halo / Spartans → THE VISCERAL SQUAD PAYOFF.** The rush of **tick-by-tick directing a team of space-marine / Spartan super-soldiers toward an enemy garrison and watching the garrison blip goodbye.** The ground-combat moment that has to *feel* great.
+
+### The engineering creed (the hard constraint that makes it buildable)
+- **The shit-tier lemon PC is the CORE target.** Build for it, not the RTX rig.
+- **No fancy graphics needed — it's all simulation.** Depth lives in the *numbers and the sim*, not the render. (Pulsar's ImGui + headless engine is exactly the right shape for this — the lemon runs sim, not shaders.)
+- **"It all theoretically can be done."** Every pillar above is reachable as simulation depth on the lemon. **If we overshoot the lemon, it's only marginal** — so aim high on depth, lean on the engine being numbers not pixels.
+
+### What this means: the distinctive pillars are the SOUL (build order will favour these)
+Most map onto systems Pulsar already has or is building — and several **connect**, which is how a few deep systems serve many universes at once:
+- **Nomadic civ** ← a *colony that lives on ships* (Colonies × Logistics × Fleets) — lose your homeworld, play on.
+- **Politics with teeth** ← diplomacy-as-politics + espionage + casus belli (the missing decision layer, `docs/DIPLOMACY-DESIGN.md`).
+- **Terrifying exploration** ← **the hazard system (just built!) × sensors/fog × procedural system-entry events.** *This pillar's first brick is already laid* — a system you jump into can already hide a corona, an ion storm, a gravimetric anomaly you must discover and survive.
+- **Titanic + visceral ground combat** ← ground combat (the MVP target) with a squad→Titan unit-scale range and tick-by-tick resolution (Halo's payoff is the *feel* of the same system).
+- **Wormhole networks** ← jump points exist; *player-creatable* gate networks are the reach.
+- **Super-aliens / best-of-Stellaris** ← faction types + the 4X spine.
+
+> **Discipline check:** this section raises the ceiling and names the soul; it does **not** reorder the MVP. "Take a planet" (which *is* the Halo/40K ground-combat pillar's first delivery) stays the near milestone. Each pillar still earns its way in one connected system at a time.
+
+---
+
 ## The lens — each universe → an aspect → a Pulsar system (many already exist or are in flight)
 
 The point that makes this *not* a pivot: the aspects map onto systems Pulsar **already has or is actively building.** The vision is a lens on the existing build, not a new direction.
