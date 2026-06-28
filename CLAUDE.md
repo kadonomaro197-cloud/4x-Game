@@ -19,7 +19,11 @@ The developer is hands-on technical (US Navy nuclear-trained machinist's mate) b
 
 ## Developer Objective (this fork)
 
-Extend the fork so that **planetary/ground combat and planetary infrastructure eventually have the same depth that space combat already has**, and improve the UI. Survey priority: understand how space combat is built so it can be mirrored for ground systems, where ground/planetary systems currently live or would hook in, and how the UI layer is constructed.
+**The north star (`docs/NORTH-STAR-VISION.md`, 2026-06-28): build the 4X engine whose systems — taken to real depth and *connected* — let a player stage their own version of *specific aspects* of the great sci-fi universes (The Expanse, Stargate, Stellaris, Halo, BSG, Star Trek, Babylon 5, Star Wars, Mass Effect, Andromeda).** Deliberately broad. Ground combat is no longer the finish line — it's *one* funded system in that box. A surprising amount of the substrate already exists (Newtonian physics, the weapon triangle, jump points, sensors, logistics); the work is mostly **depth + connection** plus a few missing decision layers (diplomacy-as-politics, scarcity-as-pressure, first-contact, a late-game crisis, ground combat).
+
+The **near-term** objective still stands as the path toward that: extend the fork so **planetary/ground combat and planetary infrastructure eventually have the same depth space combat already has**, and improve the UI. Survey priority: understand how space combat is built so it can be mirrored for ground systems, where ground/planetary systems currently live or would hook in, and how the UI layer is constructed.
+
+> **The vision raises the ceiling; it does NOT lower the bar.** `docs/MVP.md` still governs what ships next ("you can take a planet" is the nearest milestone); `docs/REALISM-VS-GAMEPLAY-AUDIT.md` still requires every system to earn its weight as a player decision. A franchise name is never a justification by itself — an *aspect* earns a *system*, built cradle-to-grave.
 
 ---
 
