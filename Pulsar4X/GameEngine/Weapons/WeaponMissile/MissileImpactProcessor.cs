@@ -63,6 +63,7 @@ namespace Pulsar4X.Weapons
             {
                 Energy     = Math.Max(kineticEnergy, 1.0),
                 Wavelength = 0,        // kinetic: no wavelength
+                Signature  = Pulsar4X.Damage.DamageSignature.Kinetic, // a missile strike is the keystone Kinetic flavour
                 Position   = (0, 0),
                 Velocity   = new Vector2(1, 0),
             };

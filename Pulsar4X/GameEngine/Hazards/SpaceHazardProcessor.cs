@@ -96,6 +96,8 @@ namespace Pulsar4X.Hazards
                         {
                             Energy = Math.Max(dps * deltaSeconds, 1.0),
                             Wavelength = e.Wavelength_nm,
+                            // Stamp the keystone flavour so armour rated against this hazard's signature resists it.
+                            Signature = e.Signature ?? Pulsar4X.Damage.DamageSignatures.FromWavelength_nm(e.Wavelength_nm),
                             Position = (0, 0),
                             Velocity = new Vector2(1, 0),
                         };

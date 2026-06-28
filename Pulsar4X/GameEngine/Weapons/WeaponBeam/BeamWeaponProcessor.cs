@@ -137,6 +137,9 @@ public class BeamWeaponProcessor : IHotloopProcessor
             Length = (float)(beamInfo.Positions.Item1 - beamInfo.Positions.Item2).Length(),
             Energy = scaledEnergy,
             Wavelength = beamInfo.Frequency, // Frequency field stores wavelength in nm
+            // Keystone flavour from the beam's wavelength: a UV laser reads HardRadiation, an IR laser Thermal —
+            // the same flavour the matching hazard carries, so armour rated against it resists both.
+            Signature = Pulsar4X.Damage.DamageSignatures.FromWavelength_nm(beamInfo.Frequency),
         };
         var damageResult = DamageProcessor.OnTakingDamage(beamInfo.TargetEntity, damageFragment);
 

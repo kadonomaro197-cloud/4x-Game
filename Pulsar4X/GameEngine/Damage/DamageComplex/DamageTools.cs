@@ -35,6 +35,14 @@ namespace Pulsar4X.Damage
         // 0.0 = fully transparent (no energy absorbed), 1.0 = fully absorbing (all energy deposited here, beam stops)
         public float[] WavelengthAbsorption = { 0.5f, 0.5f, 0.5f, 0.5f, 0.5f };
 
+        // Per-signature damage RESISTANCE — the keystone counter on the ARMOUR side, indexed by
+        // (int)DamageSignature: [Kinetic, Thermal, HardRadiation, EMStorm, Gravimetric, Corrosive].
+        // 0 = no resistance (DEFAULT → behaviour byte-identical to before), 1 = takes ~no damage from that flavour.
+        // A material hardened against a hazard's signature still ABSORBS the energy (so it still shields the
+        // interior — see DealDamageEnergyBeamSim) but takes LESS DAMAGE from the flavour it's rated against.
+        // Loaded by-name from the JSON Payload like WavelengthAbsorption (set after the [JsonConstructor]).
+        public float[] SignatureResistance = { 0f, 0f, 0f, 0f, 0f, 0f };
+
         // [JsonConstructor] + [JsonProperty("UniqueID")] maps the JSON "UniqueID" field (which is the string key
         // used for the Blueprint dictionary) to the byte iDCode used as the color-channel key in the damage bitmap.
         // Without this, Newtonsoft can't match "UniqueID" to "iDCode" and the lookup table stays empty at runtime.
@@ -65,6 +73,10 @@ namespace Pulsar4X.Damage
         public float Density;//kg/m^3
         public float Length;
         public double Wavelength; // wavelength of beam in nm; 0 = kinetic/non-photon damage
+        // The coarse shared damage FLAVOUR of this hit (the keystone). Producers stamp it: hazards from their
+        // HazardEffect, a beam from its wavelength (DamageSignatures.FromWavelength_nm), a missile = Kinetic.
+        // default(DamageSignature) is Kinetic (= 0), the right neutral for a bare/unstamped fragment.
+        public DamageSignature Signature;
     }
 
     public static class DamageTools
@@ -169,6 +181,17 @@ namespace Pulsar4X.Damage
             return material.WavelengthAbsorption[band];
         }
 
+        // The material's RESISTANCE fraction (0 = none, 1 = ~immune) to a damage signature — the keystone counter
+        // on the armour side. Returns 0 (no effect) when the material declares none, so default armour behaves
+        // exactly as before. internal so the gauge can assert the lookup directly.
+        internal static float GetSignatureResistance(DamageResistBlueprint material, DamageSignature signature)
+        {
+            int i = (int)signature;
+            if (material.SignatureResistance == null || i < 0 || i >= material.SignatureResistance.Length)
+                return 0f;
+            return Math.Clamp(material.SignatureResistance[i], 0f, 1f);
+        }
+
         public static (List<(byte id, int damageAmount)> damageToComponents, List<RawBmp> damageFrames) DealDamageEnergyBeamSim(EntityDamageProfileDB damageProfile, DamageFragment damage)
         {
             RawBmp shipDamageProfile = damageProfile.DamageProfile;
@@ -248,10 +271,13 @@ namespace Pulsar4X.Damage
                     // Beer-Lambert absorption: fraction of remaining beam energy deposited in this pixel layer.
                     float absorption = GetWavelengthAbsorption(damageresist, damage.Wavelength);
                     double energyDeposited = energy * absorption;
-                    energy -= energyDeposited;
+                    energy -= energyDeposited;   // energy absorbed normally — resistant armour still STOPS the beam.
 
                     // 1 damage point per 100J deposited. DamageProcessor divides by 1000 before applying to HealthPercent.
-                    int damageAmount = Math.Max(1, (int)(energyDeposited * 0.01));
+                    // SIGNATURE RESISTANCE (the keystone): armour rated against this hit's flavour absorbs the energy
+                    // (still shielding the interior) but takes LESS DAMAGE from it. Default resistance 0 → unchanged.
+                    float sigResist = GetSignatureResistance(damageresist, damage.Signature);
+                    int damageAmount = Math.Max(1, (int)(energyDeposited * 0.01 * (1f - sigResist)));
                     damageToComponents.Add((px.g, damageAmount));
 
                     // Reduce material health visualization (alpha channel)
