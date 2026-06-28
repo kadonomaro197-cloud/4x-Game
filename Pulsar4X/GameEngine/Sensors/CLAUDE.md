@@ -155,13 +155,19 @@ Gauged by `Pulsar4X.Tests/RangeReadoutTests.cs` (round-trip; loudest-band/activi
 framing: `docs/INFORMATION-DELTA-DESIGN.md`. **Next honest step:** a ring *against the selected enemy contact*
 (`DetectionRange_m` already supports it — the UI just needs to pass that target's profile).
 
-## Detection-quality bug (FLAGGED, not yet fixed — `SensorTools.cs:173`)
+## Detection-quality bug — FIXED (2026-06-28, `SensorTools.cs` `DetectonQuality`)
 
-`SensorTools.DetectonQuality` builds `SignalQuality` as `new PercentValue((float)(100 - distortion / signalWaveSpectraFreqMax))`. **`PercentValue(float)` expects 0..1** (it does `_percent = (byte)(value * 255)`), but this feeds it a **0..100** value — so `~100 × 255 ≈ 25500` overflows the byte and wraps. **Detection quality is therefore degenerate** (effectively random, not "how well resolved").
+**The bug (was):** `SensorTools.DetectonQuality` built `SignalQuality` as `new PercentValue((float)(100 - distortion / signalWaveSpectraFreqMax))`. **`PercentValue(float)` expects 0..1** (it does `_percent = (byte)(value * 255)`), but this fed it a **0..100** value — so `~100 × 255 ≈ 25500` overflowed the byte and wrapped, making detection quality **degenerate** (effectively random, not "how well resolved"). Because quality gates **planet/star survey reveal** (`Galaxy/SystemBodyInfoDB.cs:154-160` and `Galaxy/StarInfoDB.cs:130`, thresholds 0.20 / 0.80), survey reveal was random too.
 
-**Why it's flagged, not drive-by-fixed:** quality is consumed as a real 0..1 elsewhere — `Galaxy/SystemBodyInfoDB.cs:154-160` and `Galaxy/StarInfoDB.cs:130` gate **planet/star survey reveal** at 0.20 / 0.80. Repairing the formula (e.g. `clamp(1 - distortion / signalWaveSpectraFreqMax, 0, 1)`) would change how bodies/stars get identified — a separate **survey** behaviour that deserves its own consideration + test, not a side effect of a UI feature. Consequences honoured for now:
-- The fog-of-war blips gate on signals that ARE sound (the contact's **name**, its **live-vs-memory** position, **signal strength**) — **not** on quality.
-- True "you only see an *unknown* blip until you resolve it" (progressive ID) is blocked on this fix — it's the natural next slice. When fixing: add a `SensorTools` quality test (quality ∈ [0,1]; better alignment ⇒ higher) AND re-check the two survey consumers live.
+**The fix:** `quality = new PercentValue((float)Math.Clamp(1.0 - distortion / signalWaveSpectraFreqMax, 0.0, 1.0))` — a true 0..1 fraction. `distortion` (how far the signal's peak wavelength sits from the receiver's ideal band, nm) divided by the signal's max wavelength is a dimensionless mis-tune fraction, so a well-centred signal scores ~1 and an off-band one ~0; the clamp guards a mis-tune larger than the band. This is the **Phase-0 prerequisite** for the hazard discovery/research loop (a survey must report a *real* confidence before discovery can gate on it).
+
+**Gauge:** `Pulsar4X.Tests/SensorQualityTests.cs` (CI) — a perfectly-tuned signal resolves at **1.0** (the regression guard: pre-fix it read ~0.74, a wrapped byte), quality is always in [0,1], and better alignment ⇒ higher quality.
+
+**Survey consumers (the "look at the other end" check):** both `SystemBodyInfoDB.UpdateDatablob` and `StarInfoDB.Update` read `SignalQuality` as a 0..1 confidence (reveal body type > 0.20, tectonics/star detail > 0.80; `RndSigmoid` noise scaled by it). With the old garbage value these thresholds fired at random; the fix makes them fire on actual sensor↔signal alignment — strictly more correct. The *live* effect on a real survey (which bodies now read as Unknown vs identified) is the developer's local-build check; CI gauges the formula.
+
+**Now unblocked (next slices):** progressive contact ID ("an *unknown* blip until you resolve it") and the discovery-confidence gate both depend on a real quality number, which now exists. The per-band quirk below is the next cleanup if needed.
+
+**Known remaining quirk (out of scope for this fix):** when a signal has multiple wavebands, `quality` is **overwritten** each loop iteration (last detectable band wins) rather than taking the max. Most entities have one dominant band, and the time-aggregated `HighestDetectionQuality` smooths it, so this is left as a flagged follow-up — fixing it is a behaviour change (max-across-bands) that wants its own test, not a rider on the overflow fix.
 
 ## Grave rung — a destroyed sensor blinds you (detection × damage)
 

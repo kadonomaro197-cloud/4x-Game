@@ -170,7 +170,18 @@ namespace Pulsar4X.Sensors
                         else
                             detectedMagnatude = signalWaveSpectraMagnatude_kW - recever.BestSensitivity_kW;
 
-                        quality = new PercentValue((float)(100 - distortion / signalWaveSpectraFreqMax));
+                        // SignalQuality is a 0..1 fraction ("how well resolved is this contact"). PercentValue
+                        // stores it as a byte (value * 255), so it MUST be handed 0..1. `distortion` is how far the
+                        // signal's peak wavelength sits from the receiver's ideal band (in nm); dividing by the
+                        // signal's max wavelength turns it into a dimensionless mis-tune fraction, so a well-centred
+                        // signal scores ~1 and a badly-off-band one ~0. Clamp guards the case where the mis-tune
+                        // exceeds the band.
+                        // BUGFIX (Phase-0 prerequisite): the old line computed `100 - …` on a 0..100 scale and shoved
+                        // it into PercentValue — ~100 * 255 overflowed the byte and WRAPPED, so quality came out
+                        // effectively random. Because planet/star SURVEY reveal gates on this value
+                        // (SystemBodyInfoDB / StarInfoDB read it against 0.20 / 0.80), survey reveal was random too.
+                        // See Sensors/CLAUDE.md "Detection-quality bug".
+                        quality = new PercentValue((float)Math.Clamp(1.0 - distortion / signalWaveSpectraFreqMax, 0.0, 1.0));
 
                     }
                 }
