@@ -726,27 +726,35 @@ namespace Pulsar4X.Client.Rendering
             }
 
             int facId = _faction.Id;
-            List<Entity> ownShips, ownColonies;
+            List<Entity> ownShips, ownColonies; Entity refTarget = null;
             try
             {
-                ownShips = _sysState.StarSystem.GetAllEntitiesWithDataBlob<ShipInfoDB>()
+                var allShips = _sysState.StarSystem.GetAllEntitiesWithDataBlob<ShipInfoDB>();
+                ownShips = allShips
                     .Where(e => e.FactionOwnerID == facId && e.IsValid
                                 && !_collapsedFleetMembers.Contains(e.Id) && e.HasDataBlob<PositionDB>())
                     .ToList();
                 ownColonies = _sysState.StarSystem.GetAllEntitiesWithDataBlob<Pulsar4X.Colonies.ColonyInfoDB>()
                     .Where(e => e.FactionOwnerID == facId && e.IsValid && e.HasDataBlob<PositionDB>())
                     .ToList();
+                // Reference target for a PLACE's detection ring: "how far does this colony detect a ship like THIS?"
+                // Prefer a real foreign ship (the thing you actually want to spot — gives the honest bubble that
+                // reaches the inner planets), else one of your own ships (a ship-like target). Sized by the detector
+                // vs the target's signature, NOT the colony's own signature — which is why the old SensorReachRange
+                // ring came out tiny (it measured "detect a thing as loud as a colony", not "as loud as a ship").
+                refTarget = allShips.FirstOrDefault(e => e.FactionOwnerID != facId && e.IsValid && e.HasDataBlob<SensorProfileDB>())
+                            ?? ownShips.FirstOrDefault(e => e.HasDataBlob<SensorProfileDB>());
             }
             catch { return; }   // a bad engine read must never blank the map
 
-            // Fingerprint = which units/places + their loudness. Positions are deliberately NOT in it (the rings
-            // track live), so this only changes when a unit/colony appears or leaves, or EMCON flips a ship's
-            // detectability — exactly when the rings need rebuilding.
+            // Fingerprint = which units/places + their loudness + the place-ring reference. Positions are deliberately
+            // NOT in it (the rings track live), so this only changes when a unit/colony/enemy appears or leaves, or
+            // EMCON flips a ship's detectability — exactly when the rings need rebuilding.
             double loud = 0;
             foreach (var s in ownShips) loud += SensorTools.CurrentActivityMultiplier(s);
             string fp = string.Join(",", ownShips.Select(s => s.Id).OrderBy(i => i))
                       + "|" + string.Join(",", ownColonies.Select(c => c.Id).OrderBy(i => i))
-                      + "|" + Math.Round(loud, 2);
+                      + "|" + (refTarget?.Id ?? -1) + "|" + Math.Round(loud, 2);
             if (fp == _allRangeFingerprint) return;
             _allRangeFingerprint = fp;
 
@@ -769,9 +777,16 @@ namespace Pulsar4X.Client.Rendering
                 Ring("allrange_" + ship.Id + "_detect", pos, SensorTools.DetectabilityRange_m(ship), 240, 160, 40, 60); // amber: how far it can BE SEEN
             }
 
-            foreach (var colony in ownColonies)   // a "place" shows its detection reach (Earth's megasensor = the inner-system early-warning bubble)
-                Ring("allrange_colony_" + colony.Id + "_sensor", colony.GetDataBlob<PositionDB>(),
-                    SensorTools.SensorReachRange_m(colony), 80, 210, 110, 45);
+            foreach (var colony in ownColonies)
+            {
+                // A "place" shows how far it detects an actual SHIP (Earth's megasensor = the inner-system early-
+                // warning bubble that spots fleets at Mercury/Mars). Falls back to the self-referential reach only if
+                // there's no ship anywhere to measure against.
+                double placeReach = refTarget != null
+                    ? SensorTools.DetectionRangeAgainst(colony, refTarget)
+                    : SensorTools.SensorReachRange_m(colony);
+                Ring("allrange_colony_" + colony.Id + "_sensor", colony.GetDataBlob<PositionDB>(), placeReach, 80, 210, 110, 45);
+            }
 
             SessionLog.Action($"[range-ring] all-ranges rebuilt: {ownShips.Count} unit(s) + {ownColonies.Count} place(s) = {_allRangeKeys.Count} ring(s)");
         }
