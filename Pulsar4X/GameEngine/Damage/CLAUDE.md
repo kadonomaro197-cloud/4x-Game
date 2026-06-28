@@ -21,6 +21,23 @@ Three implementations exist: `Simple/` (dead code), `DamageComplex/` (active —
 | `DamageVeryComplex/TempratureMath.cs` | Thermal effects on particles (heating from beams, ablation). |
 | `DamageVeryComplex/Particle.cs` | `PhysicalParticle` struct: position, velocity, material properties. The atom of the physics sim. |
 | `DamageVeryComplex/AsteroidDamage.cs` | **Active path for asteroid kinetic impacts.** Wires an asteroid strike into the particle physics sim. |
+| `DamageSignature.cs` | **The KEYSTONE (2026-06-28).** The coarse, shared "damage flavour" enum — `DamageSignature` (HardRadiation / Thermal / Kinetic / EMStorm / Gravimetric / Corrosive) — that lets a space HAZARD and a WEAPON speak one language, so armour (and later shields) that resist a flavour resist it from both. Sits ABOVE the narrower `Hazards.HazardEffectType` (hazard-only + non-damage kinds) and `Combat.WeaponClass` (weapon platform). `DamageSignatures.UsesWavelengthArmorPath(sig)` is the load-bearing split: Thermal/HardRadiation/Kinetic already deposit through the wavelength-armour sim below; EMStorm/Gravimetric/Corrosive have **no wavelength** and need their own application site built. See "The DamageSignature keystone" below. |
+
+---
+
+## The DamageSignature keystone (the shared hazard↔weapon damage vocabulary)
+
+**Why it exists.** Armour already resists damage by **wavelength** (`DamageFragment.Wavelength` → `DamageResistBlueprint.WavelengthAbsorption[5]`), and that *already* unifies the wavelength-based flavours for free — a thermal hazard (IR) and a thermal beam (IR) both land in the same far-IR absorption band, so heat-tuned armour resists both with no extra code. What was missing is a **coarse label** the player and the systems can name and match on — and a home for the flavours that are **not** a wavelength. `DamageSignature` (in `Damage/DamageSignature.cs`, namespace `Pulsar4X.Damage`) is that label.
+
+**The six (coarse — the developer's locked "5–8 classes" call; finer variants are DATA later):** `HardRadiation` (UV/ionising), `Thermal` (IR/heat), `Kinetic` (impacts/debris — the wavelength-0 convention), `EMStorm` (EM interference), `Gravimetric` (tidal/spacetime), `Corrosive` (chemical/dense medium).
+
+**The load-bearing distinction — `DamageSignatures.UsesWavelengthArmorPath(sig)`:**
+- **TRUE** for Thermal / HardRadiation / Kinetic — these already deposit through `DealDamageEnergyBeamSim` (Kinetic via the wavelength-0 → near-IR-band convention). `RepresentativeWavelength_nm(sig)` gives the nm that lands each in the right band (HardRadiation 150 = UV, Thermal 10000 = far-IR, Kinetic 0).
+- **FALSE** for EMStorm / Gravimetric / Corrosive — these have **no wavelength** and so need their **own damage application site** before they can hurt anything (gravimetric especially — tidal force, per the black-hole work). They have no `HazardEffectType` yet for the same reason; when built they're **appended** to that enum, never reordered (JSON references it by int — root gotcha #10).
+
+**How it connects today (slice 1 — additive, no behaviour change).** `Hazards.HazardEffect` exposes a derived `[JsonIgnore] Signature` (mapping in `HazardEffect.SignatureFor`: HeatDamage→Thermal, RadiationDamage→HardRadiation, KineticDamage→Kinetic; the stat kinds → null). The mapping lives on the **Hazards** side (which already depends on Damage), so the keystone enum keeps **no upward dependency**. Nothing reads `Signature` to change damage yet — that's the next gauged slices (thread it onto `DamageFragment`, then onto resistance matching, then onto weapons).
+
+**Gauge:** `Pulsar4X.Tests/DamageSignatureTests.cs` — the three hazard damage kinds carry the right signature (stat kinds carry none); the six split correctly into wavelength-path vs needs-own-site; representative wavelengths land in the right armour bands.
 
 ---
 

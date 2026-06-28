@@ -14,7 +14,7 @@
 
 | File | Role |
 |------|------|
-| `HazardEffect.cs` | The typed effect vocabulary — `HazardEffectType` (HeatDamage / RadiationDamage / KineticDamage / SensorJam / MovementDrag / WarpInhibit) + the `HazardEffect` (type + magnitude + wavelength + scales-with-proximity). This is the SPINE: a hazard is a list of these (data); a counter resists by kind (data). |
+| `HazardEffect.cs` | The typed effect vocabulary — `HazardEffectType` (HeatDamage / RadiationDamage / KineticDamage / SensorJam / MovementDrag / WarpInhibit) + the `HazardEffect` (type + magnitude + wavelength + scales-with-proximity). This is the SPINE: a hazard is a list of these (data); a counter resists by kind (data). **+ the keystone link (2026-06-28):** a derived `[JsonIgnore] Signature` maps each *damage* kind to the coarse shared `Damage.DamageSignature` (HeatDamage→Thermal, RadiationDamage→HardRadiation, KineticDamage→Kinetic; stat kinds → null) via `HazardEffect.SignatureFor`. That's the shared hazard↔weapon flavour word — see `Damage/CLAUDE.md` → "The DamageSignature keystone". |
 | `SpaceHazardDB.cs` | The shared component (and `SpaceHazardType` enum, now incl. `Generic` for JSON-authored). A circular region — centred on the entity's `PositionDB`, reaching `Radius_m` — holding a **list of typed `Effects`** (not fixed knobs). `MultiplierFor(kind)` / `BlindsSensors` derive from the list. Plus transient-flare lifecycle fields. |
 | `HazardResistanceAtb.cs` | The generic COUNTER: one `IComponentDesignAttribute` that resists an effect kind by a fraction. A new counter is a new component TEMPLATE (data), not new C#. |
 | `StarFlareSourceDB.cs` | Marks a star as able to flare and holds its schedule (`NextFlareTime`, mean gap, duration, peak radius). |

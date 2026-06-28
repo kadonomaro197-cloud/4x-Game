@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using Pulsar4X.Damage;
 
 namespace Pulsar4X.Hazards
 {
@@ -57,5 +58,29 @@ namespace Pulsar4X.Hazards
             Type == HazardEffectType.HeatDamage ||
             Type == HazardEffectType.RadiationDamage ||
             Type == HazardEffectType.KineticDamage;
+
+        /// <summary>
+        /// The coarse shared <see cref="DamageSignature"/> (the keystone hazard↔weapon damage flavour) this effect
+        /// delivers, or null when it isn't a damage effect (SensorJam / MovementDrag / WarpInhibit aren't "damage").
+        /// Derived from <see cref="Type"/> — the keystone LABEL layered over the existing effect kinds, so a thermal
+        /// hazard and a thermal weapon are resisted as the same flavour. <c>[JsonIgnore]</c>: it's computed and never
+        /// serialised, so it adds nothing to the save format.
+        /// </summary>
+        [JsonIgnore]
+        public DamageSignature? Signature => SignatureFor(Type);
+
+        /// <summary>
+        /// Maps a hazard effect kind to its coarse <see cref="DamageSignature"/>; null for the non-damage (stat) kinds.
+        /// The three existing damage kinds ARE three of the six signatures — the other three (EMStorm / Gravimetric /
+        /// Corrosive) have no <see cref="HazardEffectType"/> yet because they have no damage application site yet
+        /// (they'd be APPENDED to the enum when built, never reordered — JSON references these by int, gotcha #10).
+        /// </summary>
+        public static DamageSignature? SignatureFor(HazardEffectType type) => type switch
+        {
+            HazardEffectType.HeatDamage => DamageSignature.Thermal,
+            HazardEffectType.RadiationDamage => DamageSignature.HardRadiation,
+            HazardEffectType.KineticDamage => DamageSignature.Kinetic,
+            _ => null, // SensorJam / MovementDrag / WarpInhibit are stat effects, not damage
+        };
     }
 }
