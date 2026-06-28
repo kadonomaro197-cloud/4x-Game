@@ -96,5 +96,40 @@ namespace Pulsar4X.Tests
             Assert.That(uncapped.WarpSpeed_mps, Is.EqualTo(warp.MaxSpeed).Within(1e-6),
                 "no cap (0) must fall back to the ship's own MaxSpeed — single-ship warps unchanged");
         }
+
+        [Test]
+        [Description("Regression (live, 2026-06-28): issuing a warp to a ship that is ALREADY mid-warp must NOT crash. " +
+                     "A ship in warp has a DETACHED position (null parent), so PositionDB.Root walks up and resolves " +
+                     "to the ship ITSELF. The warp-start reparent step used to do SetParent(Root) = SetParent(self), " +
+                     "which throws 'Cannot set the parent entity equal to self' — and because the order runs inside " +
+                     "the Fleet window's Display(), that throw corrupted the whole ImGui frame (the developer's 'moved " +
+                     "two fleets at once and the UI broke'). The guard now skips the reparent when Root == self.")]
+        public void WarpStart_OnAnAlreadyDetachedShip_DoesNotThrowSelfParent()
+        {
+            var s = TestScenario.CreateWithColony();
+            var info = s.Faction.GetDataBlob<FactionInfoDB>();
+            var ship = ShipFactory.CreateShip(info.ShipDesigns["default-ship-design-test-warship"], s.Faction, s.StartingBody, "Aegis");
+            if (!ship.TryGetDataBlob<WarpAbilityDB>(out var warp) || warp.MaxSpeed <= 0)
+            {
+                Assert.Ignore("ship has no usable warp drive — can't gauge the reparent guard");
+                return;
+            }
+
+            var target = s.StartingSystem.GetAllEntitiesWithDataBlob<SystemBodyInfoDB>()
+                .FirstOrDefault(b => b.Id != s.StartingBody.Id && b.HasDataBlob<PositionDB>() && b.HasDataBlob<OrbitDB>());
+            Assert.That(target, Is.Not.Null, "need a second body in the system to warp toward");
+
+            // Give the ship a real in-warp state, then DETACH its position to reproduce the mid-warp condition
+            // (null parent → Root resolves to the ship itself) that a SECOND warp order hit.
+            ship.SetDataBlob(new WarpMovingDB(ship, target, new Pulsar4X.Orbital.Vector3(),
+                default(Pulsar4X.Orbital.KeplerElements), 0));
+            var pos = ship.GetDataBlob<PositionDB>();
+            pos.SetParent(null);
+            Assert.That(pos.Root.Id, Is.EqualTo(ship.Id),
+                "precondition: a detached (mid-warp) ship is its own position root — the trap the guard must dodge");
+
+            Assert.DoesNotThrow(() => WarpMoveProcessor.StartNonNewtTranslation(ship),
+                "warp-start must SKIP the reparent when the ship is already its own root, not call SetParent(self)");
+        }
     }
 }

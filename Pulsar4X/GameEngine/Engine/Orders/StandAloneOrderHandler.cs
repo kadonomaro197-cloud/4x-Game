@@ -27,28 +27,44 @@ namespace Pulsar4X.Engine.Orders
                 if (IsEngagementLocked(entityCommand))
                     return;
 
-                if (entityCommand.UseActionLanes)
+                // This runs SYNCHRONOUSLY from the UI click handler (the Fleet window issues a move order inside its
+                // ImGui Begin/End). If an order's Execute/scheduling throws, the exception unwinds through that open
+                // window and corrupts the WHOLE frame — one bad order blanked every window (the 2026-06-28 "moved two
+                // fleets at once and the UI broke" cascade, root-caused to a warp self-parent throw). Contain + log
+                // it loudly instead: the order fails, the game keeps running, and the trace lands in the captured log
+                // (game_logs). A logged skip is strictly more visible than the silent engagement-lock return above —
+                // and never worse than killing the render.
+                try
                 {
-                    if (entityCommand.ActionOnDate > entityCommand.EntityCommanding.StarSysDateTime)
+                    if (entityCommand.UseActionLanes)
                     {
-                        entityCommand.EntityCommanding.Manager.ManagerSubpulses.AddEntityInterupt(entityCommand.ActionOnDate, nameof(OrderableProcessor), entityCommand.EntityCommanding);
+                        if (entityCommand.ActionOnDate > entityCommand.EntityCommanding.StarSysDateTime)
+                        {
+                            entityCommand.EntityCommanding.Manager.ManagerSubpulses.AddEntityInterupt(entityCommand.ActionOnDate, nameof(OrderableProcessor), entityCommand.EntityCommanding);
+                        }
+                        var orderableDB = entityCommand.EntityCommanding.GetDataBlob<OrderableDB>();
+
+                        if(orderableDB == null) throw new NullReferenceException("orderableDB cannot be null");
+                        if(orderableDB.OwningEntity == null) throw new NullReferenceException("orderableDB.OwningEntity cannot be null");
+
+                        orderableDB.ActionList.Add(entityCommand);
+                        Game.ProcessorManager.GetInstanceProcessor(nameof(OrderableProcessor)).ProcessEntity(orderableDB.OwningEntity, Game.TimePulse.GameGlobalDateTime);
                     }
-                    var orderableDB = entityCommand.EntityCommanding.GetDataBlob<OrderableDB>();
-
-                    if(orderableDB == null) throw new NullReferenceException("orderableDB cannot be null");
-                    if(orderableDB.OwningEntity == null) throw new NullReferenceException("orderableDB.OwningEntity cannot be null");
-
-                    orderableDB.ActionList.Add(entityCommand);
-                    Game.ProcessorManager.GetInstanceProcessor(nameof(OrderableProcessor)).ProcessEntity(orderableDB.OwningEntity, Game.TimePulse.GameGlobalDateTime);
-                }
-                else
-                {
-                    if(entityCommand.EntityCommanding.StarSysDateTime >= entityCommand.ActionOnDate)
-                        entityCommand.Execute(entityCommand.EntityCommanding.StarSysDateTime);
                     else
                     {
-                        entityCommand.EntityCommanding.Manager.ManagerSubpulses.AddEntityInterupt(entityCommand.ActionOnDate, nameof(OrderableProcessor), entityCommand.EntityCommanding);
+                        if(entityCommand.EntityCommanding.StarSysDateTime >= entityCommand.ActionOnDate)
+                            entityCommand.Execute(entityCommand.EntityCommanding.StarSysDateTime);
+                        else
+                        {
+                            entityCommand.EntityCommanding.Manager.ManagerSubpulses.AddEntityInterupt(entityCommand.ActionOnDate, nameof(OrderableProcessor), entityCommand.EntityCommanding);
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine("[OrderError] " + entityCommand.GetType().Name + " on entity #"
+                        + entityCommand.EntityCommandingGuid + " threw and was skipped (the order failed; the game "
+                        + "keeps running). Fix the cause:\n" + ex);
                 }
             }
         }
