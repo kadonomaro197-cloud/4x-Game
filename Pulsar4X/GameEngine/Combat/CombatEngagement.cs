@@ -347,6 +347,35 @@ namespace Pulsar4X.Combat
             return (fleet.TryGetDataBlob<NameDB>(out var n) ? n.OwnersName : "Fleet") + " #" + fleet.Id;
         }
 
+        private static string ShipName(Entity ship)
+            => ship != null && ship.TryGetDataBlob<NameDB>(out var n) ? n.OwnersName : ("ship #" + (ship?.Id ?? -1));
+
+        /// <summary>Distinct weapon CLASSES in a fire mix, "Railgun + Beam" — the "which weapon" the player asked for.
+        /// The resolve aggregates by class (≤4 entries), so this is the real weapon makeup, not an individual mount.</summary>
+        private static string DescribeFireMix(List<WeaponProfile> fire)
+        {
+            if (fire == null || fire.Count == 0) return "no weapons in range";
+            var seen = new List<WeaponClass>();
+            foreach (var w in fire) if (w.DamagePerSecond > 0 && !seen.Contains(w.Class)) seen.Add(w.Class);
+            return seen.Count == 0 ? "no weapons in range" : string.Join(" + ", seen);
+        }
+
+        private static string FmtEnergy(double j)
+        {
+            if (j >= 1e9) return (j / 1e9).ToString("0.##") + " GJ";
+            if (j >= 1e6) return (j / 1e6).ToString("0.##") + " MJ";
+            if (j >= 1e3) return (j / 1e3).ToString("0.##") + " kJ";
+            return j.ToString("0") + " J";
+        }
+
+        private static string FmtDist(double m)
+        {
+            if (m >= 1e9) return (m / 1e9).ToString("0.##") + " Gm";
+            if (m >= 1e6) return (m / 1e6).ToString("0.##") + " Mm";
+            if (m >= 1e3) return (m / 1e3).ToString("0.#") + " km";
+            return m.ToString("0") + " m";
+        }
+
         /// <summary>Attach combat state to both fleets, each pointing at the other as its (representative) opponent
         /// and recording its starting ship count (the denominator for the casualty-fraction retreat threshold).
         /// The proven entry point for a controlled two-fleet matchup; multi-party joins go through
@@ -471,10 +500,14 @@ namespace Pulsar4X.Combat
                 }
                 // SalvoDamageScale is the combat-pace dial: only this fraction of the raw salvo energy counts
                 // toward kills, so battles play out over many salvos instead of ending in 2–4 (see the const).
-                state.DamageTakenPool += TotalDamage(incoming) * dt * SalvoDamageScale;
+                double dmgThisSalvo = TotalDamage(incoming) * dt * SalvoDamageScale;
+                state.DamageTakenPool += dmgThisSalvo;
+                string attackerLabel = FleetLabel(live[attackersOf[i][0]])
+                    + (attackersOf[i].Count > 1 ? " +" + (attackersOf[i].Count - 1) + " more" : "");
                 // Pass the defender's gap so ballistic fire loses accuracy at range (the range term in HitFraction).
-                // SeparationOf is 0 when closing is off, so this is inert for the pre-closing resolve.
-                ApplyCasualties(ships[i], state, incoming, SeparationOf(live[i])); // prunes the dead from ships[i]
+                // SeparationOf is 0 when closing is off, so this is inert for the pre-closing resolve. dmgThisSalvo +
+                // attackerLabel feed the per-salvo play-by-play (which weapon / hit-rate / damage / which ship).
+                ApplyCasualties(ships[i], state, incoming, SeparationOf(live[i]), dmgThisSalvo, attackerLabel); // prunes the dead
             }
 
             // --- CLOSING phase (Phase 1): the gap moves toward the faster side's preferred range, AFTER this step's
@@ -574,7 +607,7 @@ namespace Pulsar4X.Combat
         // no new code here (docs/WEAPONS-AND-DODGE-DESIGN.md "aggregate force condition"). Behaviour matches the
         // old per-ship loop: buckets are killed combatants-first then most-hittable-first, and the pool stops at
         // the first bucket it can't finish.
-        private static void ApplyCasualties(List<CombatShip> ships, FleetCombatStateDB state, List<WeaponProfile> incomingFire, double separation_m = 0)
+        private static void ApplyCasualties(List<CombatShip> ships, FleetCombatStateDB state, List<WeaponProfile> incomingFire, double separation_m = 0, double damageThisSalvo = 0, string attackerLabel = null)
         {
             if (ships.Count == 0) return;
 
@@ -600,6 +633,11 @@ namespace Pulsar4X.Combat
                 b.Ships.Add(cs.Ship);
             }
 
+            // Ship-count-weighted average "fraction that got through the dodge" — the hit-vs-evade rate for the readout.
+            double landedSum = 0; int shipCount = 0;
+            foreach (var b in buckets.Values) { landedSum += b.Landed * b.Ships.Count; shipCount += b.Ships.Count; }
+            double avgLanded = shipCount > 0 ? landedSum / shipCount : 0;
+
             var ordered = new List<CasualtyBucket>(buckets.Values);
             ordered.Sort((x, y) =>
             {
@@ -608,6 +646,7 @@ namespace Pulsar4X.Combat
             });
 
             int totalKilled = 0;
+            var destroyedNames = new List<string>();   // the "which ship" detail the player asked for
             foreach (var b in ordered)
             {
                 // How many WHOLE ships from this bucket the pool can afford (guard div-by-zero + int overflow).
@@ -623,7 +662,7 @@ namespace Pulsar4X.Combat
                 if (kills > 0)
                 {
                     state.DamageTakenPool -= kills * b.EffToughness;
-                    for (int i = 0; i < kills; i++) b.Ships[i].Destroy(); // reify the count back to real entities
+                    for (int i = 0; i < kills; i++) { destroyedNames.Add(ShipName(b.Ships[i])); b.Ships[i].Destroy(); }
                     totalKilled += kills;
                 }
                 if (kills < b.Ships.Count) break; // pool ran out inside this bucket -> stop (matches per-ship break)
@@ -632,11 +671,29 @@ namespace Pulsar4X.Combat
             // Drop the dead (Destroy() flips IsValid synchronously) so the caller's survivor count is accurate.
             ships.RemoveAll(cs => !cs.Ship.IsValid);
 
-            if (totalKilled > 0)
+            // The per-salvo PLAY-BY-PLAY (the developer's "salvo means nothing — tell me which weapon, hit/evade,
+            // damage, which ship"). From the aggregate resolve we can honestly report: the weapon CLASSES firing, the
+            // hit-vs-dodge RATE, the damage dealt, and the ships DESTROYED by name. Per-component loss + per-ship hull%
+            // are NOT in this model (ships are whole-or-dead in v1) — that needs the parked per-component damage sim.
+            //
+            // Recorded EVERY salvo a fleet takes fire when narration is on (the client sets NarrateToLog = true, so the
+            // Battle Report gets the full play-by-play); when narration is off (the headless combat tests + the perf
+            // sims) only CASUALTY salvos are recorded — same volume as before, so the fixtures stay unchanged.
+            if (totalKilled > 0 || NarrateToLog)
             {
+                string rangeStr = separation_m > 0 ? " at " + FmtDist(separation_m) : "";
+                string outcome = totalKilled > 0
+                    ? "destroyed " + string.Join(", ", destroyedNames.ConvertAll(d => "'" + d + "'"))
+                    : "no losses";
+                string note = "took " + DescribeFireMix(incomingFire) + " fire" + rangeStr
+                    + " from " + (attackerLabel ?? "enemy")
+                    + " — " + (avgLanded * 100).ToString("0") + "% on target ("
+                    + ((1 - avgLanded) * 100).ToString("0") + "% dodged), " + FmtEnergy(damageThisSalvo) + " dealt; "
+                    + outcome + "; " + ships.Count + " left";
+
                 if (NarrateToLog)
-                    CombatLog($"salvo {state.StepsFought}: {FleetLabel(state.OwningEntity)} lost {totalKilled} ship(s), {ships.Count} left");
-                RecordBattleEvent(state.OwningEntity, BattleEventType.Salvo, totalKilled, ships.Count, state.StepsFought, "");
+                    CombatLog($"salvo {state.StepsFought}: {FleetLabel(state.OwningEntity)} {note}");
+                RecordBattleEvent(state.OwningEntity, BattleEventType.Salvo, totalKilled, ships.Count, state.StepsFought, note);
             }
         }
 

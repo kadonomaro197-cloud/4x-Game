@@ -435,6 +435,31 @@ panel reads `BattleLog.Recent()` (a snapshot array copy, safe on any thread) to 
 Runtime-only (not save/load) — a "recent battles" readout, not game state; thread-safe because combat ticks run
 per-system in parallel. Sensor: `BattleLogTests` (records survive the fight; ring buffer caps at MaxEvents).
 
+**Per-salvo PLAY-BY-PLAY in the Salvo note (added 2026-06-27, "salvo means nothing" feedback).** The `Salvo`
+event's `Note` is now a detailed line — `took Railgun + Beam fire at 8.5 km from <attacker> — 42% on target (58%
+dodged), 0.82 GJ dealt; destroyed 'Cargo Courier'; 3 left` — built in `ApplyCasualties` from the data the
+**aggregate** resolve actually has: the weapon **CLASSES** in the incoming fire mix (`DescribeFireMix`), the
+ship-count-weighted **landed fraction** (hit-vs-dodge rate), the **damage** dealt that salvo, and the ships
+**destroyed by name** (`ShipName`). **Honest limits of the aggregate model (flagged for the player):** there is NO
+per-shot hit/miss and NO per-component loss — ships are whole-or-dead in v1 (the per-component damage sim is parked,
+gotcha #1), and damage is a fleet pool, so "ship X is at 60% hull" isn't tracked. Those need the degraded-condition
+model below. **Volume control:** the rich note + event is recorded **every** salvo a fleet takes fire **when
+`NarrateToLog` is on** (the client sets it true → full Battle-Report play-by-play); with it **off** (the headless
+combat tests + perf sims) only **casualty** salvos record, exactly as before — so every fixture's event volume and
+the O(fleets) note cost are unchanged (note is per-fleet-per-salvo, never per-ship). Gauge:
+`BattleLogTests.BattleLog_SalvoNote_NamesWeaponHitRateDamageAndDestroyedShip`.
+
+**Future: degraded / damaged-component condition (the design the play-by-play points at).** The per-salvo note's
+limits are exactly where the parked **aggregate force-condition** model plugs in (`docs/WEAPONS-AND-DODGE-DESIGN.md`
+→ "Future depth — aggregate force condition"). The seam is already here: `ApplyCasualties` **buckets ships by combat
+value** (`(toughnessMult, evasion, toughness, role)`), so a *damaged* ship with a recalculated, lower combat value
+lands in a **different bucket automatically** — Pristine / Lightly / Moderately / Severely Degraded tiers fall out
+with **no new resolve code**, only the parked "recalc `ShipCombatValueDB` on component loss" hook (gotcha #2) + a
+per-tier debuff table. At that point the note can read `'Aegis' degraded to Moderate (lost a railgun + a reactor)`
+because the recalc knows which components dropped. Principle (unchanged): **simulate at the granularity of the
+DECISION, not the entity** — the player decides at the force/tier level ("pull back the Moderately-Degraded wing"),
+so that's the granularity to model, rather than a full per-component-per-shot sim that buys cost without a decision.
+
 **Engage/disengage THRASH fix (2026-06-27).** Live symptom: the combat log spamming `enters combat` / `disengages`
 over and over for the same fleets. Root cause (both flavours): **a fleet LEAVES a fight but stays physically in
 range, so `Tick`'s engage pass re-grabs it the very next tick.** Two ways it happened:
