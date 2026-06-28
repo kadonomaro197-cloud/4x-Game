@@ -666,6 +666,7 @@ namespace Pulsar4X.Client.Rendering
 
         internal void Draw()
         {
+            SafeDraw("Starfield", DrawStarfield);   // faint background stars, behind everything
             DrawIcons(UIWidgets.Values);
             DrawIconsExceptCollapsed(_orbitRings);   // a collapsed member's orbit ring is hidden too...
             DrawIconsExceptCollapsed(_moveIcons);    // ...and its move/warp trail...
@@ -685,6 +686,39 @@ namespace Pulsar4X.Client.Rendering
         {
             foreach (var item in icons)
                 SafeDraw(item.GetType().Name, () => item.Draw(_window.Renderer, _camera));
+        }
+
+        // Faint static starfield behind the map, so deep space reads as space instead of a flat dark panel.
+        // Fixed screen-space points (distant stars don't parallax meaningfully) regenerated only when the
+        // viewport resizes, off a fixed seed so they don't twinkle/jitter frame to frame. Drawn as 1px lines
+        // via the proven SDL.RenderLine (avoids guessing a RenderPoint binding on the CI-blind client).
+        private (int x, int y, byte b)[] _starfield;
+        private int _starfieldW, _starfieldH;
+
+        void DrawStarfield()
+        {
+            int w = (int)_camera.ViewPortSize.X;
+            int h = (int)_camera.ViewPortSize.Y;
+            if (w <= 0 || h <= 0)
+                return;
+
+            if (_starfield == null || w != _starfieldW || h != _starfieldH)
+            {
+                _starfieldW = w;
+                _starfieldH = h;
+                var rng = new Random(8675309);   // fixed seed → stable field
+                int count = Math.Clamp((w * h) / 6000, 150, 900);
+                _starfield = new (int, int, byte)[count];
+                for (int i = 0; i < count; i++)
+                    _starfield[i] = (rng.Next(0, w), rng.Next(0, h), (byte)rng.Next(40, 170));
+            }
+
+            var r = _window.Renderer;
+            foreach (var (x, y, b) in _starfield)
+            {
+                SDL3.SDL.SetRenderDrawColor(r, b, b, (byte)Math.Min(255, b + 25), 255); // faint blue-white
+                SDL3.SDL.RenderLine(r, x, y, x, y);                                     // a single point
+            }
         }
 
         // Draw an entity-id-keyed icon set, skipping any ship collapsed into its fleet's single icon this frame.
