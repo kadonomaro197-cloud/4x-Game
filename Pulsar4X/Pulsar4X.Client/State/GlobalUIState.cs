@@ -33,6 +33,13 @@ namespace Pulsar4X.Client
         public event StarSystemAddedEventHandler? OnStarSystemAdded;
 
         public bool debugnewgame = false;
+
+        // When on (default), the system map always draws reach rings for EVERY own unit + place, with no need to
+        // select a fleet or tick a box — the developer's "can all units and places just have their ranges on
+        // display and active." SystemMapRendering.UpdateAllRangeRings reads this each frame. Toggle off in DevTools
+        // (Detection / Fog of War) if the rings get cluttered. The per-fleet checkbox in the Combat tab still works
+        // independently (it adds the enemy-target detection bubble).
+        public bool ShowAllRangeRings = true;
         //internal PulsarGuiWindow distanceRulerWindow { get; set; }
         internal static readonly Dictionary<Type, string> NamesForMenus = new() {
             {typeof(PinCameraBlankMenuHelper), "Pin camera"},

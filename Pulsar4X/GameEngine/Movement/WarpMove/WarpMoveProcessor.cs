@@ -188,9 +188,16 @@ namespace Pulsar4X.Movement
             var powerDB = entity.GetDataBlob<EnergyGenAbilityDB>();
             EnergyGenProcessor.EnergyGen(entity, entity.StarSysDateTime);
             
-            // Check to make sure we don't set the position parent to itself
-            if(positionDB.Parent != positionDB.Root)
-                positionDB.SetParent(positionDB.Root);
+            // Detach to the top of the position tree before warp (preserves absolute position).
+            // The OLD guard only checked Parent != Root, which does NOT actually prevent setting the parent to
+            // self: a ship that is ALREADY mid-warp has a null position parent, so Root walks up and resolves to
+            // the ship ITSELF — then SetParent(self) throws "Cannot set the parent entity equal to self" and (because
+            // the order is run inside the Fleet window's Display) corrupts the whole ImGui frame. This bit when a
+            // fleet move was issued to ships already in warp (e.g. moving two fleets at once). If we're already the
+            // root, there's nothing to detach — skip it.
+            var positionRoot = positionDB.Root;
+            if(positionRoot != entity && positionRoot != Entity.InvalidEntity && positionDB.Parent != positionRoot)
+                positionDB.SetParent(positionRoot);
 
             Vector3 currentPositionMt = positionDB.AbsolutePosition;
 

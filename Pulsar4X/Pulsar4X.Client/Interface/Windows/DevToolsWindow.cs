@@ -460,6 +460,12 @@ namespace Pulsar4X.Client
                 if (ImGui.Checkbox("Fog of War — hide undetected foreign units + detection-gated combat##devfow", ref CombatEngagement.RequireDetectionToEngage))
                     DevLog($"Fog of war (RequireDetectionToEngage) = {CombatEngagement.RequireDetectionToEngage}");
 
+                // All-ranges always-on toggle. On (default) draws reach rings for every own unit + place on the map.
+                if (ImGui.Checkbox("Show all ranges — every own unit + place draws its reach rings##devallrings", ref _uiState.ShowAllRangeRings))
+                    DevLog($"Show all range rings = {_uiState.ShowAllRangeRings}");
+                ImGui.TextDisabled("Red = weapons reach · Green = sensor reach (how far you SEE) · Amber = detectability (how far you're SEEN).");
+                ImGui.TextDisabled("A colony shows one green ring — its detection bubble (e.g. Earth's covers the inner system). Off = declutter.");
+
                 // On-demand detection/EMCON snapshot to the log (the same thing the ~3 s heartbeat writes) — for
                 // grabbing the picture at a precise moment. The heartbeat already logs it periodically.
                 if (ImGui.Button("Dump Detection (log)##devdumpdetect"))
