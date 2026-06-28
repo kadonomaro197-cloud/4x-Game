@@ -92,6 +92,44 @@ The notification pipe works; the gap is that nothing fires discovery into it. St
 
 ---
 
+## Resistance vehicles — passive armour, passive module, ACTIVE shield (developer note, this session)
+
+**Reality check (verified):** *shields do NOT exist in the engine yet* — no `ShieldDB`/`ShieldAtb`/`ShieldProcessor`, no absorb-before-armour. The only traces are flavour text and, tellingly, the `defensive-systems` tech-category description: *"Research into protective armor and shields."* So the **intent** is in the data; the mechanic was never built. Likewise the *"three consumables"* (fuel / munitions / provisions) is only ~2/3 real: **fuel** (reactor energy, `RefuelAction`) and **ordnance** (missiles from cargo) exist; a **provisions / maintenance-supplies** consumable does **not** (`ResupplyAction` is a vague near-stub).
+
+**Why this matters here:** a shield is the natural *environment-tuned* resistor — and it rides this foundation cleanly rather than fighting it. Three vehicles, ONE vocabulary (all keyed to the same `HazardClass`, Decision 1):
+
+| Vehicle | Nature | Cost paid | Best at |
+|---|---|---|---|
+| **Armour material / additive** | passive, physical | hull **mass** (permanent) | always-on baseline; cheap to keep |
+| **Hardening module** (built) | passive, electronic | a component slot | the non-damage effects (sensor jam) |
+| **Shield** (NOT built) | **active, regenerating** | **power (continuous), + a supply later** | **environment-tuned, swappable; "patch the holes vs. fix nothing"** |
+
+A shield is "easier/cheaper to tune for environments" than armour because you re-tune the emitter + feed it more reactor, instead of re-plating the hull — you pay in **power and commitment**, not mass. It rides the foundation: it resists a `HazardClass` like everything else (Decision 1), draws from the **existing** `EnergyStored` reactor pool, and slots into the damage path at **one clean intercept in `DamageProcessor.OnTakingDamage` BEFORE armour**. So it's the *active sibling* of the passive resistors — no new vocabulary, no foundation change.
+
+### Shield design — SUPPLEMENTAL, active, signature-tuned (developer, this session)
+
+A shield is **supplemental to armour, never a replacement.** Armour is the always-on physical baseline (mass); the shield is the **active, tunable add-on** you fit when you mean it. Design + mechanics:
+
+- **It's a component (cradle-to-grave):** a `ShieldGeneratorAtb` — researched (Stellar/Energy + `defensive-systems`), built from materials, installed, **losable** (shot off → no shield). Design stats: **capacity** (max strength, J), **regen rate** (J/s), **tuning** (which DamageSignature(s) it's strong vs), **power draw**.
+- **Costs a LOT of energy to RUN.** Continuous reactor draw just to keep it up, *plus* energy per point absorbed — it competes with weapons/sensors/warp for `EnergyStored` every tick. A shield up is a reactor committed. This is the "you gotta want it."
+- **Costs a LOT of supplies when it BREAKS.** When capacity hits 0 the shield **collapses** (no protection while down); bringing it back from a collapse drains the **provisions/maintenance-supplies** consumable heavily (cheap to *hold up*, expensive to *recover*). *(That consumable doesn't exist yet — a flagged dependency; v1 may approximate with a one-off cost, but the intent is the shared supply pool, parking lot.)*
+- **Absorbs BEFORE armour, up to a per-tick cap = "to a point".** Incoming damage (hazard OR weapon) hits the shield first; it absorbs up to a throughput **ceiling** set by tuning + capacity, draining charge. Anything **over the cap or past remaining charge bleeds through to armour.** This is *exactly* the existing weapon **saturation** lever: a high-rate-of-fire / flak barrage **overwhelms** a shield's per-tick cap and leaks, while a few big hits are eaten — so shields and the dodge/saturation triangle compose for free.
+- **Bigger/better = bigger payoff, bigger cost.** Capacity, regen, tuning-breadth, and the per-tick cap all scale with **size + tech** (research climbs it). A *narrow* shield (one signature) is cheaper and stronger vs that one thing; a *broad* shield (many signatures) is the jack-of-all that pays more in power/mass. The "patch a hundred holes vs. fix nothing" payoff is real and scales.
+
+**Decisions (defaults this session; revise freely):**
+- **DESIGN NOW, BUILD LATER** — captured here so we don't backpedal; build it as its own phase after the survey→research loop, since it's a whole new system (component + regen/absorb processor + the damage intercept + power draw + combat-value wiring).
+- **Cost = power to RUN + supplies to RECOVER from a break** (per the developer). The supplies half waits on the provisions consumable (parking lot).
+
+### Keystone refinement — `HazardClass` IS a `DamageSignature`, shared by HAZARDS *and* WEAPONS
+
+The developer's insight — *"a shield resistant to environmental kinetic damage is also resistant to ballistic weapons, to a point"* — collapses two things into one and makes the keystone (Decision 1) far stronger:
+
+**A "kinetic" signature is the same whether it comes from a debris field (hazard) or a railgun (weapon). A "thermal/IR" signature is the same from a corona or a laser.** So the keystone class isn't a *hazard*-only label — it's a **DamageSignature** that *both* hazards and weapons EMIT, and that *both* armour (passive, by material wavelength) and shields (active, by tuning) RESIST.
+
+This is the deepest "pays for itself": researching resistance to a signature to **survive an environment** *also* hardens you against **enemies who use that weapon type** — and vice-versa. One vocabulary, threaded through: weapons emit it, hazards emit it, sensors characterise it, the discovery store records it, research unlocks resistance to it, armour + shields resist it, the damage sim applies it. **Build Decision 1 as `DamageSignature`, not `HazardClass`** — wider, and it unifies combat with environment instead of running a parallel track. The existing weapon classes (Beam/Railgun/Flak) and wavelength bands map onto it directly.
+
+---
+
 ## The holes / risks (what ruins this if ignored)
 
 1. **Two resistance vocabularies (Decision 1)** — the #1 backpedal risk. Build the unified Hazard Class first.
@@ -123,6 +161,8 @@ Each phase is gauged (engine tests, CI-covered) before the next. Phase 0 is the 
 ---
 
 ## Parking lot (deliberately deferred)
+- **Shields** as the active, power-hungry, environment-tuned resistor (see "Resistance vehicles" above) — design captured, build it as its own phase after the loop is proven; it rides the `HazardClass` keystone + existing `EnergyStored`, intercepting in `DamageProcessor.OnTakingDamage` before armour.
+- **Provisions / maintenance-supplies** consumable — the missing third of the fuel/munitions/provisions triad; build once, so repair + shields + logistics all draw on it (not a one-off shield supply).
 - NPC strategic AI actually *using* the loop (avoid/survey/research/prepare) — the faction-AI layer is thin; a separate effort.
 - Per-ship survivability readout (the INFORMATION-DELTA gauge) — strongly wanted, but a Phase-1/3 polish, not a foundation.
 - Generalising discovery to ruins/anomalies/special projects (the `RuinsDB`/`AnomalyDiscovered` stubs) — the same discovery store + event family covers it; do after the hazard path proves the pattern.
