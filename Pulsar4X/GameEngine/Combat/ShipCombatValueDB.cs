@@ -51,6 +51,16 @@ namespace Pulsar4X.Combat
         /// closing model gates on. v1 class-default; a per-design field (paid-for in the designer) is the follow-up.</summary>
         public const double FlakRange_m = 50_000.0;       // ~50 km
 
+        /// <summary>Railgun effective range (m) — MID. A kinetic slug is unguided and bleeds accuracy with distance,
+        /// so it's a medium-range gun: longer than close-in flak (~50 km), shorter than a guided missile (~1000 km).
+        /// This is the number that turns "railguns are rangeless, so they fire across the whole engagement bubble"
+        /// (the live "ships firing outside their detection range" report, 2026-06-28) into a real closing fight — the
+        /// closing model holds railgun fire until the gap is within this range, which is FAR inside any sensor reach,
+        /// so a railgun shot only lands on a target the ship has actually closed with. Was the flagged Root-A
+        /// follow-up (railguns had no design range field → 0 = unbounded). v1 class-default; a per-design field
+        /// (paid-for in the designer, like beam's MaxRange) is the next step.</summary>
+        public const double RailgunRange_m = 500_000.0;   // ~500 km (mid: flak 50 km < railgun < missile 1000 km)
+
         /// <summary>Missile range (m) — LONG. The standoff opener: guided, fuel/Δv-limited, out-reaches every gun so
         /// it fires first as fleets close. v1 class-default stub (the launcher/ordnance Δv would derive the real
         /// number); a per-design field (paid-for) is the follow-up. Gives the range LAYERING the closing fight wants:
@@ -168,10 +178,12 @@ namespace Pulsar4X.Combat
                         if (comp.Design.TryGetAttribute<RailgunWeaponAtb>(out var rg))
                         {
                             double dps = rg.KineticEnergyPerShot_J * rg.RoundsPerSecond * comp.HealthPercent;
-                            // Range (Root A): railguns have no design range field yet → 0 (rangeless / always in range).
-                            // FLAG: a real kinetic range (an Atb + JSON field, like beam's) is the Root-A follow-up;
-                            // flak should end up SHORT-ranged (the triangle going spatial) — see FLEET-COMBAT-CLOSING-DESIGN.
-                            weapons.Add(new WeaponProfile(WeaponClass.Railgun, dps, rg.MuzzleVelocity_mps, rg.Tracking, rg.RoundsPerSecond));
+                            // Range: a finite MID range (RailgunRange_m) so the closing model holds railgun fire until
+                            // the gap is within it — the fix for railguns firing across the whole engagement bubble
+                            // (and so "outside detection range"). v1 class-default; a per-design field (an Atb + JSON,
+                            // like beam's MaxRange) is the next step. Only bites when EnableClosingRange is on (live);
+                            // with it off (the headless fixtures) SeparationOf is 0 so the range gate is a no-op.
+                            weapons.Add(new WeaponProfile(WeaponClass.Railgun, dps, rg.MuzzleVelocity_mps, rg.Tracking, rg.RoundsPerSecond, RailgunRange_m));
                         }
                     }
                 }
