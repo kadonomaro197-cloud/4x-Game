@@ -412,6 +412,10 @@ namespace Pulsar4X.Combat
             if (attacker == null || !attacker.IsValid || target == null || !target.IsValid || attacker == target) return;
             if (!AreHostile(attacker, target)) return;                       // no attacking your own
             if (GetFleetShips(attacker).Count == 0 || GetFleetShips(target).Count == 0) return;
+            // Fog of war: you can't attack what you can't see. CanEngageTarget is "fog off → always; fog on → the
+            // attacker DETECTS the target", so with detection on this no-ops on an undetected enemy (the order can't
+            // conjure a target out of the dark) — matching the auto-trigger's detection gate.
+            if (!CanEngageTarget(attacker, target)) return;
 
             if (attacker.HasDataBlob<FleetRetreatDB>()) attacker.RemoveDataBlob<FleetRetreatDB>(); // re-commit
             FleetDoctrine.SetEngagementPosture(attacker, EngagementPosture.WeaponsFree);           // actually shoot
@@ -441,6 +445,7 @@ namespace Pulsar4X.Combat
                 if (other == fleet || other == null || !other.IsValid) continue;
                 if (!AreHostile(fleet, other)) continue;
                 if (GetFleetShips(other).Count == 0) continue;
+                if (!CanEngageTarget(fleet, other)) continue;   // fog: only target hostiles we actually DETECT
                 double d = FleetSeparation(fleet, other);
                 if (d < bestDist) { bestDist = d; best = other; }
             }
@@ -725,9 +730,12 @@ namespace Pulsar4X.Combat
             // hit-vs-dodge RATE, the damage dealt, and the ships DESTROYED by name. Per-component loss + per-ship hull%
             // are NOT in this model (ships are whole-or-dead in v1) — that needs the parked per-component damage sim.
             //
-            // Recorded EVERY salvo a fleet takes fire when narration is on (the client sets NarrateToLog = true, so the
-            // Battle Report gets the full play-by-play); when narration is off (the headless combat tests + the perf
-            // sims) only CASUALTY salvos are recorded — same volume as before, so the fixtures stay unchanged.
+            // VOLUME (the flooding fix): the FULL per-salvo play-by-play goes to the CONSOLE every salvo a fleet takes
+            // fire (when NarrateToLog is on — the client sets it true, so game_logs has the blow-by-blow). The capped
+            // (250) persistent Battle Report only keeps the BEATS — a salvo that DESTROYS a ship — with the rich note,
+            // so a long battle's report shows the kills + how the fight opened/ended, not 240 "no losses" lines that
+            // evict the Engaged event. Narration-off (headless tests + perf sims) records casualty salvos only =
+            // unchanged. Note built only when something will use it.
             if (totalKilled > 0 || NarrateToLog)
             {
                 string rangeStr = separation_m > 0 ? " at " + FmtDist(separation_m) : "";
@@ -740,9 +748,10 @@ namespace Pulsar4X.Combat
                     + ((1 - avgLanded) * 100).ToString("0") + "% dodged), " + FmtEnergy(damageThisSalvo) + " dealt; "
                     + outcome + "; " + ships.Count + " left";
 
-                if (NarrateToLog)
+                if (NarrateToLog)   // full blow-by-blow → console / game_logs
                     CombatLog($"salvo {state.StepsFought}: {FleetLabel(state.OwningEntity)} {note}");
-                RecordBattleEvent(state.OwningEntity, BattleEventType.Salvo, totalKilled, ships.Count, state.StepsFought, note);
+                if (totalKilled > 0)   // only the casualty beats → the capped persistent Battle Report (no flooding)
+                    RecordBattleEvent(state.OwningEntity, BattleEventType.Salvo, totalKilled, ships.Count, state.StepsFought, note);
             }
         }
 

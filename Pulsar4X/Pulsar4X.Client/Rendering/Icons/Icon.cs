@@ -249,13 +249,20 @@ namespace Pulsar4X.Client
             if (_offScreenSkip || _drawShape.Points == null) return;
             SDL.SetRenderDrawColor(rendererPtr, _drawShape.Color.R, _drawShape.Color.G, _drawShape.Color.B, _drawShape.Color.A);
 
+            // Per-segment off-screen cull (same zoom-stutter fix as OrbitEllipseIcon): at zoom a big ring's far
+            // segments land astronomically off-screen and SDL.RenderLine chokes. Skip segments fully beyond one
+            // screen edge (+margin); this ALSO dodges the old Convert.ToInt32 OverflowException on absurd coords
+            // (replaced by a plain cast on the survivors, which are on-screen and finite).
+            int vw = (int)camera.ViewPortSize.X, vh = (int)camera.ViewPortSize.Y;
+            const int M = 2000;
             for (int i = 0; i < _shape.Points.Length - 1; i++)
             {
-                var x0 = Convert.ToInt32(_drawShape.Points[i].X);
-                var y0 = Convert.ToInt32(_drawShape.Points[i].Y);
-                var x1 = Convert.ToInt32(_drawShape.Points[i + 1].X);
-                var y1 = Convert.ToInt32(_drawShape.Points[i + 1].Y);
-                SDL.RenderLine(rendererPtr, x0, y0, x1, y1);
+                double ax = _drawShape.Points[i].X, ay = _drawShape.Points[i].Y;
+                double bx = _drawShape.Points[i + 1].X, by = _drawShape.Points[i + 1].Y;
+                if (!double.IsFinite(ax) || !double.IsFinite(ay) || !double.IsFinite(bx) || !double.IsFinite(by)) continue;
+                if ((ax < -M && bx < -M) || (ax > vw + M && bx > vw + M)
+                    || (ay < -M && by < -M) || (ay > vh + M && by > vh + M)) continue;
+                SDL.RenderLine(rendererPtr, (int)ax, (int)ay, (int)bx, (int)by);
             }
         }
 

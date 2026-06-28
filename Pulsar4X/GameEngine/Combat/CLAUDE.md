@@ -479,6 +479,19 @@ because the recalc knows which components dropped. Principle (unchanged): **simu
 DECISION, not the entity** — the player decides at the force/tier level ("pull back the Moderately-Degraded wing"),
 so that's the granularity to model, rather than a full per-component-per-shot sim that buys cost without a decision.
 
+**Determinism caveat for the future RNG-damage hook (audit, 2026-06-27).** The play-by-play floated an *RNG-based
+"received-damage" model* — each tick, roll which components a degraded ship loses and feed that back into its combat
+value. That is buildable, but it has a **hard constraint the current aggregate model doesn't**: combat MUST stay
+deterministic (the locked rule — *fast-forward must equal watch*; see `docs/FLEET-COMBAT-CLOSING-DESIGN.md`). Today's
+resolve is pure arithmetic (no draws), so it's deterministic for free. The moment you add per-tick random component
+loss you introduce RNG, and the result will only match between a watched battle and a fast-forwarded one if **every
+draw is reproducible**: it must pull from a *seeded* stream and the draw order must be **independent of fleet/ship
+iteration order** (e.g. seed a per-ship or per-(attacker,target,tick) sub-stream, don't share one cursor across a
+loop whose order can shift). `StarSystem.RNG` is shared across all processors, so reusing it directly would make a
+combat draw's value depend on how many *other* systems happened to roll first that tick — non-reproducible. So the
+hook needs **its own seeded RNG, keyed for order-independence**, before any RNG-damage model ships. Flagged here so
+it's designed in, not bolted on.
+
 **Engage/disengage THRASH fix (2026-06-27).** Live symptom: the combat log spamming `enters combat` / `disengages`
 over and over for the same fleets. Root cause (both flavours): **a fleet LEAVES a fight but stays physically in
 range, so `Tick`'s engage pass re-grabs it the very next tick.** Two ways it happened:
