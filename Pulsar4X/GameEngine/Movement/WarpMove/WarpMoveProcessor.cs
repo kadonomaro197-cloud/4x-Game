@@ -213,7 +213,12 @@ namespace Pulsar4X.Movement
             // so the transit-time division below can't blow up). v1: keyed off the DEPARTURE point only.
             var warpHazards = Pulsar4X.Hazards.SpaceHazardTools.CombinedForEntity(entity);
             if (warpHazards.WarpSpeedMultiplier < 1.0)
-                maxSpeedMS *= Math.Max(warpHazards.WarpSpeedMultiplier, 0.02);
+            {
+                // A warp-stabiliser component (WarpInhibit resistance) shrinks the slow-down.
+                double warpResist = Pulsar4X.Hazards.SpaceHazardTools.ResistanceFraction(entity, Pulsar4X.Hazards.HazardEffectType.WarpInhibit);
+                double effWarpMult = Pulsar4X.Hazards.SpaceHazardTools.ApplyResistance(warpHazards.WarpSpeedMultiplier, warpResist);
+                maxSpeedMS *= Math.Max(effWarpMult, 0.02);
+            }
 
             var tgt = moveDB.TargetEntity.GetDataBlob<PositionDB>();
             var tgtpos = tgt.AbsolutePosition;

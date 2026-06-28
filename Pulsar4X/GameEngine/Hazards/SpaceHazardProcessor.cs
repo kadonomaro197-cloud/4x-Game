@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Pulsar4X.Damage;
 using Pulsar4X.Engine;
 using Pulsar4X.Interfaces;
@@ -10,10 +11,10 @@ using Pulsar4X.Ships;
 namespace Pulsar4X.Hazards
 {
     /// <summary>
-    /// Drives every <see cref="SpaceHazardDB"/> region each tick: it grows/fades transient flares (and removes
-    /// them when they expire), and applies the per-tick effects — hull DAMAGE and Newtonian DRAG — to ships
-    /// caught inside. The query-time effects (sensor cut, warp slow) are NOT here; they're read at the point of
-    /// use by the sensor/warp code via <see cref="SpaceHazardTools"/>.
+    /// Drives every <see cref="SpaceHazardDB"/> region each tick: grows/fades/expires transient flares, and
+    /// applies the PER-TICK effects to ships inside — DAMAGE (each damage effect through the armour-resisted
+    /// DamageProcessor path, at its own wavelength) and DRAG (reduced by the ship's MovementDrag resistance).
+    /// The query-time effects (sensor jam, warp inhibit) are read at the point of use via <see cref="SpaceHazardTools"/>.
     /// </summary>
     public class SpaceHazardProcessor : IHotloopProcessor
     {
@@ -27,7 +28,6 @@ namespace Pulsar4X.Hazards
 
         public int ProcessManager(EntityManager manager, int deltaSeconds)
         {
-            // Snapshot to a list — a transient flare can destroy its own entity mid-loop.
             var list = new List<SpaceHazardDB>(manager.GetAllDataBlobsOfType<SpaceHazardDB>());
             foreach (var hazDb in list)
             {
@@ -58,10 +58,13 @@ namespace Pulsar4X.Hazards
                 hazDb.Radius_m = FlareRadiusAt(hazDb, now);
             }
 
-            // Per-tick effects only apply if there's something to apply.
-            bool doesDamage = hazDb.DamagePerSecond > 0;
-            bool doesDrag = hazDb.MoveSpeedMultiplier < 1.0;
-            if (!doesDamage && !doesDrag)
+            if (hazDb.Effects == null || hazDb.Effects.Count == 0)
+                return;
+
+            // Per-tick effects: damage (any IsDamage effect) and drag (a MovementDrag effect). Sensor/warp are query-time.
+            var damageEffects = hazDb.Effects.Where(e => e.IsDamage && e.Magnitude > 0).ToList();
+            var dragEffect = hazDb.Effects.FirstOrDefault(e => e.Type == HazardEffectType.MovementDrag && e.Magnitude < 1.0);
+            if (damageEffects.Count == 0 && dragEffect == null)
                 return;
 
             if (!hazardEntity.TryGetDataBlob<PositionDB>(out var hazPos))
@@ -80,43 +83,43 @@ namespace Pulsar4X.Hazards
                 if (dist > radius)
                     continue;
 
-                if (doesDamage)
+                // DAMAGE — each effect at its own wavelength (so the ship's ARMOUR material is the defence).
+                if (damageEffects.Count > 0)
                 {
-                    double dps = hazDb.DamagePerSecond;
-                    // Star corona: damage is max at the centre (the star) and fades to zero at the edge — so the
-                    // closer a ship dives toward the sun, the more heat damage it takes.
-                    if (hazDb.DamageScalesWithProximity && radius > 0)
-                        dps *= Math.Max(0.0, 1.0 - dist / radius);
-
-                    double energy = dps * deltaSeconds;
-                    var fragment = new DamageFragment
+                    double proximity = radius > 0 ? Math.Max(0.0, 1.0 - dist / radius) : 1.0;
+                    foreach (var e in damageEffects)
                     {
-                        Energy = Math.Max(energy, 1.0),
-                        // The hazard's wavelength routes its damage through the armour wavelength-absorption model,
-                        // so the armour material a ship is clad in is its defence (heat shielding vs the corona's IR,
-                        // radiation shielding vs the flare's UV). This is the player's agency against the hazard.
-                        Wavelength = hazDb.DamageWavelength_nm,
-                        Position = (0, 0),
-                        Velocity = new Vector2(1, 0),
-                    };
-                    DamageProcessor.OnTakingDamage(ship, fragment);
+                        double dps = e.ScalesWithProximity ? e.Magnitude * proximity : e.Magnitude;
+                        if (dps <= 0)
+                            continue;
+                        var fragment = new DamageFragment
+                        {
+                            Energy = Math.Max(dps * deltaSeconds, 1.0),
+                            Wavelength = e.Wavelength_nm,
+                            Position = (0, 0),
+                            Velocity = new Vector2(1, 0),
+                        };
+                        DamageProcessor.OnTakingDamage(ship, fragment);
+                    }
                 }
 
-                // Drag only bites a ship in free-flight (it has a NewtonMoveDB — actually coasting/thrusting
-                // through the medium). A ship in a stable Kepler orbit isn't "ploughing through" the cloud.
-                if (doesDrag && ship.TryGetDataBlob<NewtonMoveDB>(out var nmdb))
+                // DRAG — only a free-flying ship (NewtonMoveDB), reduced by its MovementDrag resistance component.
+                if (dragEffect != null && ship.TryGetDataBlob<NewtonMoveDB>(out var nmdb))
                 {
-                    // Apply the per-tick share of the drag so the slow-down is independent of tick length:
-                    // MoveSpeedMultiplier is the factor per game-hour; raise it to (this tick / 1 hour).
-                    double dragThisTick = Math.Pow(hazDb.MoveSpeedMultiplier, deltaSeconds / 3600.0);
-                    nmdb.CurrentVector_ms *= dragThisTick;
+                    double resistance = SpaceHazardTools.ResistanceFraction(ship, HazardEffectType.MovementDrag);
+                    double effMult = SpaceHazardTools.ApplyResistance(dragEffect.Magnitude, resistance);
+                    if (effMult < 1.0)
+                    {
+                        double dragThisTick = Math.Pow(effMult, deltaSeconds / 3600.0);
+                        nmdb.CurrentVector_ms *= dragThisTick;
+                    }
                 }
             }
         }
 
         /// <summary>
         /// A flare's radius over its life: grows from a point to <see cref="SpaceHazardDB.MaxRadius_m"/> at the
-        /// halfway point (peak), then fades back toward nothing. Pure function so a test can check the shape.
+        /// halfway peak, then fades back toward nothing. Pure function so a test can check the shape.
         /// </summary>
         public static double FlareRadiusAt(SpaceHazardDB hazDb, DateTime now)
         {
@@ -129,8 +132,8 @@ namespace Pulsar4X.Hazards
             if (total <= 0)
                 return hazDb.MaxRadius_m;
 
-            double t = (now - hazDb.StartedAt).TotalSeconds / total;     // 0..1 across the flare's life
-            double shape = t < 0.5 ? (t / 0.5) : (1.0 - (t - 0.5) / 0.5); // triangle: 0 -> 1 at peak -> 0
+            double t = (now - hazDb.StartedAt).TotalSeconds / total;
+            double shape = t < 0.5 ? (t / 0.5) : (1.0 - (t - 0.5) / 0.5);
             return Math.Max(1.0, hazDb.MaxRadius_m * shape);
         }
     }

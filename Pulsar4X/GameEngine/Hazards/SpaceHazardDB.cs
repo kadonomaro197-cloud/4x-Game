@@ -1,67 +1,41 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using Pulsar4X.Datablobs;
 
 namespace Pulsar4X.Hazards
 {
     /// <summary>
-    /// The kind of space hazard. Both kinds are "a region of space that affects ships inside it" — the
-    /// difference is flavour and lifecycle: a gas cloud is permanent terrain, a solar flare is a transient
-    /// eruption that grows, peaks and fades.
+    /// The kind of space hazard — drives only flavour and display (map colour) and the transient lifecycle.
+    /// What the hazard actually DOES is the typed <see cref="SpaceHazardDB.Effects"/> list, not this.
     /// </summary>
     public enum SpaceHazardType : byte
     {
         GasCloud,
         SolarFlare,
         StarCorona,
+        Generic,        // anything authored from JSON that isn't one of the named flavours
     }
 
     /// <summary>
-    /// A circular region in space that changes how ships inside it behave — the shared component behind both
-    /// the gas cloud (other systems) and the solar flare (near the star). The region is centred on this
-    /// entity's <c>PositionDB</c> and reaches out to <see cref="Radius_m"/>. Anything within that radius is
-    /// "inside" the hazard.
+    /// A circular region in space that affects ships inside it — the shared component behind every hazard
+    /// (gas cloud, solar flare, star corona, and anything authored from JSON). The region is centred on this
+    /// entity's <c>PositionDB</c> and reaches <see cref="Radius_m"/>.
     ///
-    /// The effect knobs are deliberately generic so one component covers every hazard:
-    ///   • <see cref="SensorRangeMultiplier"/> — scales how far a ship inside can SEE (1 = no effect, &lt;1 cuts).
-    ///   • <see cref="MoveSpeedMultiplier"/>   — drag on sub-light (Newtonian) movement (1 = none, &lt;1 slows).
-    ///   • <see cref="WarpSpeedMultiplier"/>   — scales warp speed for a ship departing inside (1 = none).
-    ///   • <see cref="DamagePerSecond"/>       — hull-damage energy applied each second to ships inside.
-    ///   • <see cref="BlindsSensors"/>         — hard sensor wash-out (a flare); overrides the multiplier to "blind".
-    ///
-    /// Query-time effects (sensors, warp) are read by their own processors via <see cref="SpaceHazardTools"/>;
-    /// per-tick effects (damage, drag) are applied by <c>SpaceHazardProcessor</c>.
+    /// What it does is a LIST of typed <see cref="HazardEffect"/>s (damage at a wavelength, sensor jam, drag,
+    /// warp inhibit, …). This is the "spine": a hazard is just a bag of typed effects (data), and a resistance
+    /// component (<see cref="HazardResistanceAtb"/>) counters effects by kind (data) — so a vast variety of
+    /// hazards and counters is content, not engine code.
     /// </summary>
     public class SpaceHazardDB : BaseDataBlob
     {
         [JsonProperty] public SpaceHazardType HazardType { get; internal set; }
         [JsonProperty] public double Radius_m { get; internal set; }
+        [JsonProperty] public List<HazardEffect> Effects { get; internal set; } = new List<HazardEffect>();
 
-        [JsonProperty] public double SensorRangeMultiplier { get; internal set; } = 1.0;
-        [JsonProperty] public double MoveSpeedMultiplier { get; internal set; } = 1.0;
-        [JsonProperty] public double WarpSpeedMultiplier { get; internal set; } = 1.0;
-        [JsonProperty] public double DamagePerSecond { get; internal set; } = 0.0;
-        [JsonProperty] public bool BlindsSensors { get; internal set; } = false;
-
-        /// <summary>
-        /// When true, <see cref="DamagePerSecond"/> is the damage at the CENTRE and falls off linearly to zero at
-        /// the edge of the radius — so the closer a ship gets to the centre (e.g. a star), the more it takes. Used
-        /// by the star corona: dive toward the sun and the heat damage climbs. When false, damage is uniform inside.
-        /// </summary>
-        [JsonProperty] public bool DamageScalesWithProximity { get; internal set; } = false;
-
-        /// <summary>
-        /// The wavelength (nm) the hazard's damage comes in at, so it runs through the SAME armour
-        /// wavelength-absorption model as a beam weapon — heat/corona = infrared (long), flare radiation = UV
-        /// (short). This is what gives the player AGENCY against a hazard: clad a ship in armour that reflects
-        /// that band (heat shielding) and it survives where an unshielded ship cooks. 0 = treat as kinetic
-        /// (bypasses material absorption — don't use for a hazard you want armour to defend against).
-        /// </summary>
-        [JsonProperty] public double DamageWavelength_nm { get; internal set; } = 0.0;
-
-        // Transient (solar-flare) lifecycle. A gas cloud leaves these at default (IsTransient = false) and
-        // lives forever; a flare grows from a point to MaxRadius_m at its peak then fades back to nothing,
-        // and is removed from the game at ExpiresAt.
+        // Transient (solar-flare) lifecycle. A permanent hazard (gas cloud / corona) leaves these at default
+        // and lives forever; a flare grows from a point to MaxRadius_m at its peak, fades, and is removed at ExpiresAt.
         [JsonProperty] public bool IsTransient { get; internal set; } = false;
         [JsonProperty] public DateTime StartedAt { get; internal set; }
         [JsonProperty] public DateTime ExpiresAt { get; internal set; }
@@ -73,13 +47,7 @@ namespace Pulsar4X.Hazards
         {
             HazardType = other.HazardType;
             Radius_m = other.Radius_m;
-            SensorRangeMultiplier = other.SensorRangeMultiplier;
-            MoveSpeedMultiplier = other.MoveSpeedMultiplier;
-            WarpSpeedMultiplier = other.WarpSpeedMultiplier;
-            DamagePerSecond = other.DamagePerSecond;
-            BlindsSensors = other.BlindsSensors;
-            DamageScalesWithProximity = other.DamageScalesWithProximity;
-            DamageWavelength_nm = other.DamageWavelength_nm;
+            Effects = other.Effects?.Select(e => new HazardEffect(e)).ToList() ?? new List<HazardEffect>();
             IsTransient = other.IsTransient;
             StartedAt = other.StartedAt;
             ExpiresAt = other.ExpiresAt;
@@ -87,5 +55,22 @@ namespace Pulsar4X.Hazards
         }
 
         public override object Clone() => new SpaceHazardDB(this);
+
+        // ── Convenience reads over the effect list (one source of truth) ─────────────────────────────────────
+
+        /// <summary>The combined multiplier for a stat-multiplier effect kind (SensorJam/MovementDrag/WarpInhibit):
+        /// the product of every matching effect's magnitude. 1.0 if the hazard has no such effect.</summary>
+        public double MultiplierFor(HazardEffectType kind)
+        {
+            double mult = 1.0;
+            if (Effects == null) return mult;
+            foreach (var e in Effects)
+                if (e.Type == kind)
+                    mult *= e.Magnitude;
+            return mult;
+        }
+
+        /// <summary>True if this hazard fully blinds sensors (a SensorJam effect with magnitude ≤ 0).</summary>
+        public bool BlindsSensors => Effects != null && Effects.Any(e => e.Type == HazardEffectType.SensorJam && e.Magnitude <= 0.0);
     }
 }

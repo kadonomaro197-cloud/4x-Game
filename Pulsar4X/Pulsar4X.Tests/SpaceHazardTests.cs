@@ -113,8 +113,9 @@ namespace Pulsar4X.Tests
             var coronas = s.StartingSystem.GetAllDataBlobsOfType<SpaceHazardDB>()
                 .Where(h => h.HazardType == SpaceHazardType.StarCorona).ToList();
             Assert.IsNotEmpty(coronas, "The home star should have a corona danger zone.");
-            Assert.IsTrue(coronas[0].DamageScalesWithProximity, "Corona damage should scale with proximity.");
-            Assert.Greater(coronas[0].DamagePerSecond, 0.0);
+            var coronaHeat = coronas[0].Effects.First(e => e.Type == HazardEffectType.HeatDamage);
+            Assert.IsTrue(coronaHeat.ScalesWithProximity, "Corona damage should scale with proximity.");
+            Assert.Greater(coronaHeat.Magnitude, 0.0);
 
             var atStar = SpaceHazardTools.CombinedAt(s.StartingSystem, starPos);
             Assert.IsTrue(atStar.InAnyHazard, "Right at the star you should be inside the corona.");
@@ -134,18 +135,34 @@ namespace Pulsar4X.Tests
 
             var corona = s.StartingSystem.GetAllDataBlobsOfType<SpaceHazardDB>()
                 .First(h => h.HazardType == SpaceHazardType.StarCorona);
-            Assert.Greater(corona.DamageWavelength_nm, 0.0,
+            var coronaHeat = corona.Effects.First(e => e.IsDamage);
+            Assert.Greater(coronaHeat.Wavelength_nm, 0.0,
                 "Corona damage must carry a wavelength so heat-reflective armour can resist it (else there's no counterplay).");
 
             var flare = SpaceHazardFactory.CreateSolarFlare(
                 s.StartingSystem, star, star.StarSysDateTime, TimeSpan.FromHours(1), Distance.AuToMt(0.1))
                 .GetDataBlob<SpaceHazardDB>();
-            Assert.Greater(flare.DamageWavelength_nm, 0.0, "Flare damage must also carry a wavelength.");
+            var flareDmg = flare.Effects.First(e => e.IsDamage);
+            Assert.Greater(flareDmg.Wavelength_nm, 0.0, "Flare damage must also carry a wavelength.");
 
             // The corona (heat) lives in the infrared; the flare (radiation) in the ultraviolet — different bands,
             // so the armour material that beats one isn't automatically the one that beats the other.
-            Assert.Less(flare.DamageWavelength_nm, corona.DamageWavelength_nm,
+            Assert.Less(flareDmg.Wavelength_nm, coronaHeat.Wavelength_nm,
                 "Flare (UV/radiation) should be a shorter wavelength than corona (heat/IR).");
+        }
+
+        [Test]
+        [Description("Resistance shrinks a hazard's stat-cut: no resistance leaves it unchanged, full resistance nearly negates it.")]
+        public void ApplyResistance_ShrinksTheCut()
+        {
+            // A hazard cuts the stat to 0.35 (35%). With no resistance it stays 0.35.
+            Assert.AreEqual(0.35, SpaceHazardTools.ApplyResistance(0.35, 0.0), 1e-9);
+            // With 0.9 resistance only a tenth of the cut remains → ~0.935.
+            Assert.AreEqual(0.935, SpaceHazardTools.ApplyResistance(0.35, 0.9), 1e-9);
+            // A full blind (mult 0) with 0.9 resistance is reduced to a 0.9 multiplier — you can still see.
+            Assert.AreEqual(0.9, SpaceHazardTools.ApplyResistance(0.0, 0.9), 1e-9);
+            // No cut to begin with stays no cut.
+            Assert.AreEqual(1.0, SpaceHazardTools.ApplyResistance(1.0, 0.5), 1e-9);
         }
     }
 }

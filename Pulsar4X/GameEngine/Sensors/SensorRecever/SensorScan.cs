@@ -66,17 +66,22 @@ namespace Pulsar4X.Sensors
                         bool hazardHides = false;
                         if (hazardMods.InAnyHazard && detectionValues.SignalStrength_kW > 0.0)
                         {
-                            if (hazardMods.BlindsSensors || hazardMods.SensorRangeMultiplier <= 0.0)
+                            // The ship's SensorJam resistance (a hardening component) shrinks the jam: a fully
+                            // hardened ship can see through a cloud / flare that blinds an unhardened one.
+                            double sensorResist = Pulsar4X.Hazards.SpaceHazardTools.ResistanceFraction(entity, Pulsar4X.Hazards.HazardEffectType.SensorJam);
+                            double effSensorMult = Pulsar4X.Hazards.SpaceHazardTools.ApplyResistance(hazardMods.SensorRangeMultiplier, sensorResist);
+
+                            if (effSensorMult <= 0.0)
                             {
                                 hazardHides = true;
                             }
-                            else if (hazardMods.SensorRangeMultiplier < 1.0
+                            else if (effSensorMult < 1.0
                                      && detectableEntity.TryGetDataBlob<SensorProfileDB>(out var hzProfile)
                                      && detectableEntity.TryGetDataBlob<PositionDB>(out var hzTgtPos))
                             {
                                 double reach = SensorTools.DetectionRange_m(sensorAtb, hzProfile);
                                 double dist = (hzTgtPos.AbsolutePosition - position.AbsolutePosition).Length();
-                                if (dist > reach * hazardMods.SensorRangeMultiplier)
+                                if (dist > reach * effSensorMult)
                                     hazardHides = true;
                             }
                         }
