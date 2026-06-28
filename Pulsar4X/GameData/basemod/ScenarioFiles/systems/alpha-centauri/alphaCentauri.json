@@ -13,6 +13,21 @@
         { "RingRadiusInAU": 1, "Count": 3 },
         { "RingRadiusInAU": 8, "Count": 9 },
         { "RingRadiusInAU": 20, "Count": 17 }
+      ],
+      "Hazards": [
+        {
+          "Name": "Centauri Gas Cloud",
+          "Type": "GasCloud",
+          "DistanceInAU": 12,
+          "AngleInDegrees": 35,
+          "RadiusInAU": 4,
+          "Effects": [
+            { "Type": "SensorJam", "Magnitude": 0.35 },
+            { "Type": "MovementDrag", "Magnitude": 0.5 },
+            { "Type": "WarpInhibit", "Magnitude": 0.25 },
+            { "Type": "HeatDamage", "Magnitude": 50, "Wavelength_nm": 8000 }
+          ]
+        }
       ]
     }
   },

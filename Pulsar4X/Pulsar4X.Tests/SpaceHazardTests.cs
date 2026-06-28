@@ -164,5 +164,24 @@ namespace Pulsar4X.Tests
             // No cut to begin with stays no cut.
             Assert.AreEqual(1.0, SpaceHazardTools.ApplyResistance(1.0, 0.5), 1e-9);
         }
+
+        [Test]
+        [Description("A hazard authored purely as JSON (Alpha Centauri's gas cloud) loads with its typed effects.")]
+        public void JsonAuthoredHazard_LoadsFromSystemBlueprint()
+        {
+            var s = TestScenario.CreateWithColony();
+            var blueprint = s.Game.StartingGameData.Systems["system-alpha-centauri"];
+            var ac = StarSystemFactory.LoadFromBlueprint(s.Game, blueprint);
+
+            var clouds = ac.GetAllDataBlobsOfType<SpaceHazardDB>()
+                .Where(h => h.HazardType == SpaceHazardType.GasCloud).ToList();
+            Assert.IsNotEmpty(clouds, "The JSON-authored gas cloud should load in Alpha Centauri.");
+
+            var cloud = clouds[0];
+            Assert.Less(cloud.MultiplierFor(HazardEffectType.SensorJam), 1.0, "Cloud should jam sensors per its JSON.");
+            Assert.Less(cloud.MultiplierFor(HazardEffectType.WarpInhibit), 1.0, "Cloud should inhibit warp per its JSON.");
+            Assert.IsTrue(cloud.Effects.Any(e => e.Type == HazardEffectType.HeatDamage),
+                "Cloud should carry its heat-damage effect from JSON.");
+        }
     }
 }

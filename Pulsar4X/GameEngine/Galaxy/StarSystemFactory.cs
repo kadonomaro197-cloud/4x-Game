@@ -517,6 +517,36 @@ namespace Pulsar4X.Galaxy
                 Pulsar4X.Hazards.SpaceHazardFactory.CreateStarCorona(system, rootStar);
             }
 
+            // JSON-authored hazards (gas clouds, nebulae, radiation belts, …) — placed at a polar offset from the
+            // primary star with a list of typed effects. This is the data path: a new hazard is content, not code.
+            if(rootStar != null && systemBlueprint.Hazards != null)
+            {
+                foreach(var hz in systemBlueprint.Hazards)
+                {
+                    var effects = new List<Pulsar4X.Hazards.HazardEffect>();
+                    if(hz.Effects != null)
+                    {
+                        foreach(var ev in hz.Effects)
+                        {
+                            if(Enum.TryParse<Pulsar4X.Hazards.HazardEffectType>(ev.Type, true, out var kind))
+                                effects.Add(new Pulsar4X.Hazards.HazardEffect(kind, ev.Magnitude, ev.Wavelength_nm, ev.ScalesWithProximity));
+                        }
+                    }
+
+                    var hazType = Enum.TryParse<Pulsar4X.Hazards.SpaceHazardType>(hz.Type, true, out var t)
+                        ? t : Pulsar4X.Hazards.SpaceHazardType.Generic;
+
+                    double ang = hz.AngleInDegrees * Math.PI / 180.0;
+                    var offset = new Vector3(
+                        Distance.AuToMt(hz.DistanceInAU) * Math.Cos(ang),
+                        Distance.AuToMt(hz.DistanceInAU) * Math.Sin(ang),
+                        0);
+
+                    Pulsar4X.Hazards.SpaceHazardFactory.CreateFromEffects(
+                        system, rootStar, offset, Distance.AuToMt(hz.RadiusInAU), hazType, effects, hz.Name ?? "Hazard");
+                }
+            }
+
             if(systemBlueprint.SurveyRings != null)
             {
                 var ringSettings = new Dictionary<double, int>();
