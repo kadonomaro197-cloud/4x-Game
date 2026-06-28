@@ -52,6 +52,26 @@ namespace Pulsar4X.Galaxy
                 _systemBodyFactory.GenerateSystemBodiesForStar(game.StartingGameData, newSystem, star, game.TimePulse.GameGlobalDateTime);
             }
 
+            // Every star gets weather (a recurring solar-flare source).
+            foreach (Entity star in stars)
+            {
+                star.SetDataBlob(new Pulsar4X.Hazards.StarFlareSourceDB
+                {
+                    NextFlareTime = game.TimePulse.GameGlobalDateTime + TimeSpan.FromDays(2 + newSystem.RNGNextDouble() * 40)
+                });
+            }
+
+            // Some generated (non-home) systems carry a gas cloud — deep-space terrain that cuts sensors, drags
+            // sub-light movement, slows warp through it and slowly corrodes hulls. ~40% of systems.
+            if (newSystem.RNGNextDouble() < 0.4 && stars.Count > 0)
+            {
+                double au = 3 + newSystem.RNGNextDouble() * 25;             // inner-to-outer system distance
+                double ang = newSystem.RNGNextDouble() * 2 * Math.PI;
+                var offset = new Vector3(Distance.AuToMt(au) * Math.Cos(ang), Distance.AuToMt(au) * Math.Sin(ang), 0);
+                double radius = Distance.AuToMt(0.5 + newSystem.RNGNextDouble() * 2.0); // 0.5–2.5 AU radius
+                Pulsar4X.Hazards.SpaceHazardFactory.CreateGasCloud(newSystem, stars[0], offset, radius);
+            }
+
             // Generate Jump Points
             JPSurveyFactory.GenerateJPSurveyPoints(newSystem);
             JPFactory.GenerateJumpPoints(this, newSystem, stars[0].GetDataBlob<PositionDB>().Root);
@@ -482,6 +502,16 @@ namespace Pulsar4X.Galaxy
                         belt.Name ?? "Asteroid",
                         belt.InnerRadiusInAU, belt.OuterRadiusInAU, belt.Count);
                 }
+            }
+
+            // Give the star "weather" — a recurring solar-flare source so the home system feels alive (the flares
+            // themselves are erupted on a schedule by SolarFlareProcessor). First flare lands within a month.
+            if(rootStar != null)
+            {
+                rootStar.SetDataBlob(new Pulsar4X.Hazards.StarFlareSourceDB
+                {
+                    NextFlareTime = game.TimePulse.GameGlobalDateTime + TimeSpan.FromDays(2 + system.RNGNextDouble() * 20)
+                });
             }
 
             if(systemBlueprint.SurveyRings != null)

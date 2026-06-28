@@ -207,6 +207,14 @@ namespace Pulsar4X.Movement
             // own MaxSpeed. Reading WarpAbilityDB.MaxSpeed here was THE bug that let a fast ship race ahead on a
             // fleet move even though the cap was correctly baked into the ETA. 0 (old save) → fall back to MaxSpeed.
             var maxSpeedMS = moveDB.WarpSpeed_mps > 0 ? moveDB.WarpSpeed_mps : warpDB.MaxSpeed;
+
+            // A ship departing from inside a gas cloud warps slower — the dense medium drags the warp bubble.
+            // Scale the warp speed by the hazards at the ship's current position, clamped to a crawl (never 0,
+            // so the transit-time division below can't blow up). v1: keyed off the DEPARTURE point only.
+            var warpHazards = Pulsar4X.Hazards.SpaceHazardTools.CombinedForEntity(entity);
+            if (warpHazards.WarpSpeedMultiplier < 1.0)
+                maxSpeedMS *= Math.Max(warpHazards.WarpSpeedMultiplier, 0.02);
+
             var tgt = moveDB.TargetEntity.GetDataBlob<PositionDB>();
             var tgtpos = tgt.AbsolutePosition;
             moveDB._position = (Vector2)positionDB.AbsolutePosition;

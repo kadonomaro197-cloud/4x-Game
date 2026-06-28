@@ -37,7 +37,12 @@ namespace Pulsar4X.Sensors
             var position = entity.GetDataBlob<PositionDB>();//recever is a componentDB. not a shipDB
             if (position == null) //then it's probilby a colony
                 position = entity.GetDataBlob<ColonyInfoDB>().PlanetEntity.GetDataBlob<PositionDB>();
-            
+
+            // Hazards at the OBSERVER's position degrade what it can see: a gas cloud cuts the effective sensor
+            // range, a solar flare blinds entirely. Computed once per scan; applied per contact below. With no
+            // hazard present this is the identity (InAnyHazard == false), so normal detection is unchanged.
+            var hazardMods = Pulsar4X.Hazards.SpaceHazardTools.CombinedAt(manager as StarSystem, position.AbsolutePosition);
+
             if( entity.TryGetDataBlob<SensorAbilityDB>(out var sensorAbility))
             {
                 var detectableEntitys = manager.GetAllEntitiesWithDataBlob<SensorProfileDB>();
@@ -55,7 +60,28 @@ namespace Pulsar4X.Sensors
                         var detectionValues = detections[j];
                         var detectableEntity = detectableEntitys[j];
                         sensorAbility.CurrentContacts.Add((detectableEntity, detectionValues));
-                        if (detectionValues.SignalStrength_kW > 0.0)
+
+                        // A hazard the observer sits in can hide this contact: blinded (flare) drops everything;
+                        // a sensor-cut (gas cloud) drops contacts beyond the observer's reduced reach to the target.
+                        bool hazardHides = false;
+                        if (hazardMods.InAnyHazard && detectionValues.SignalStrength_kW > 0.0)
+                        {
+                            if (hazardMods.BlindsSensors || hazardMods.SensorRangeMultiplier <= 0.0)
+                            {
+                                hazardHides = true;
+                            }
+                            else if (hazardMods.SensorRangeMultiplier < 1.0
+                                     && detectableEntity.TryGetDataBlob<SensorProfileDB>(out var hzProfile)
+                                     && detectableEntity.TryGetDataBlob<PositionDB>(out var hzTgtPos))
+                            {
+                                double reach = SensorTools.DetectionRange_m(sensorAtb, hzProfile);
+                                double dist = (hzTgtPos.AbsolutePosition - position.AbsolutePosition).Length();
+                                if (dist > reach * hazardMods.SensorRangeMultiplier)
+                                    hazardHides = true;
+                            }
+                        }
+
+                        if (detectionValues.SignalStrength_kW > 0.0 && !hazardHides)
                         {
                             
                             if (sensorAtb.IsEnergyGen)//if solar array not sensor
