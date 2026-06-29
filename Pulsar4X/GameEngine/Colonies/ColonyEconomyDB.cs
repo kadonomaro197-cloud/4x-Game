@@ -20,11 +20,12 @@ namespace Pulsar4X.Colonies
     {
         /// <summary>Credits produced per person per month at full (neutral-morale) productivity, before tax.</summary>
         public const double PerCapitaTaxBase = 0.01;
-        /// <summary>The default starting tax rate (10%).</summary>
-        public const double DefaultTaxRate = 0.1;
 
-        /// <summary>Player-set tax rate, 0.0 (none) .. 1.0 (total). The lever.</summary>
-        [JsonProperty] public double TaxRate { get; set; } = DefaultTaxRate;
+        /// <summary>
+        /// Player-set tax rate, 0.0 (none) .. 1.0 (total). The lever. Defaults to 0 — a new colony is UNTAXED
+        /// until the player (or a governor) sets a rate, so founding a colony never silently dents its morale.
+        /// </summary>
+        [JsonProperty] public double TaxRate { get; set; } = 0.0;
 
         public ColonyEconomyDB() { }
 
