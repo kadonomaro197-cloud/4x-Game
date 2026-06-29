@@ -35,6 +35,12 @@ namespace Pulsar4X.Colonies
         public const double CrowdingThreshold = 0.85;
         /// <summary>Cap on the overcrowding penalty.</summary>
         public const double MaxCrowdingPenalty = 35.0;
+        /// <summary>Morale bonus at full employment (jobs ≥ population).</summary>
+        public const double MaxEmploymentBonus = 15.0;
+        /// <summary>Morale penalty at total unemployment (no jobs for the population).</summary>
+        public const double MaxUnemploymentPenalty = 25.0;
+        /// <summary>Cap on the housing-comfort morale bonus.</summary>
+        public const double MaxComfortBonus = 20.0;
         /// <summary>Max fraction of population that migrates per month at morale 0 (out) or 100 (in).</summary>
         public const double MaxMigrationRate = 0.05;
 
@@ -63,7 +69,17 @@ namespace Pulsar4X.Colonies
         /// is population / capacity (0 when there is no finite capacity, e.g. a native world). Fills
         /// <paramref name="factorsOut"/> (if non-null) with the per-factor breakdown. Returns morale clamped 0..100.
         /// </summary>
+        /// <summary>M1-compatible overload — no employment/comfort data (neutral). Kept for callers/tests that
+        /// only have the conditions + crowding inputs.</summary>
         public static double ComputeMorale(double worstColonyCost, double crowdingRatio, Dictionary<string, double> factorsOut)
+            => ComputeMorale(worstColonyCost, crowdingRatio, -1.0, 0.0, factorsOut);
+
+        /// <summary>
+        /// Full morale computation (M2). <paramref name="employmentRatio"/> = jobs / population; pass a NEGATIVE
+        /// value when no installation declares jobs ("no job data" → neutral, not 100% unemployment).
+        /// <paramref name="comfort"/> = summed housing comfort (a morale bonus). Other params as the M1 overload.
+        /// </summary>
+        public static double ComputeMorale(double worstColonyCost, double crowdingRatio, double employmentRatio, double comfort, Dictionary<string, double> factorsOut)
         {
             factorsOut?.Clear();
             double morale = Neutral;
@@ -81,6 +97,23 @@ namespace Pulsar4X.Colonies
             }
             morale += crowding;
             factorsOut?.Add("crowding", crowding);
+
+            // Employment (two-sided). Negative employmentRatio = no job data → neutral contribution.
+            double employment = 0.0;
+            if (employmentRatio >= 0.0)
+            {
+                if (employmentRatio >= 1.0)
+                    employment = MaxEmploymentBonus;                                    // full employment
+                else
+                    employment = -(1.0 - employmentRatio) * MaxUnemploymentPenalty;     // unemployment
+            }
+            morale += employment;
+            factorsOut?.Add("employment", employment);
+
+            // Housing comfort — a capped positive bonus.
+            double comfortContribution = Math.Min(MaxComfortBonus, Math.Max(0.0, comfort));
+            morale += comfortContribution;
+            factorsOut?.Add("comfort", comfortContribution);
 
             if (morale < 0.0) morale = 0.0;
             if (morale > 100.0) morale = 100.0;

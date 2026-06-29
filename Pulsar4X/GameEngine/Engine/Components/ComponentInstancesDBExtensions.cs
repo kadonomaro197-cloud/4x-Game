@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Pulsar4X.Datablobs;
 using Pulsar4X.Components;
+using Pulsar4X.Colonies;
 using Pulsar4X.Engine;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Movement;
@@ -10,6 +11,39 @@ namespace Pulsar4X.Extensions
 {
     public static class ComponentInstancesDBExtensions
     {
+        /// <summary>
+        /// Total jobs (worker slots) provided by installed components carrying <see cref="EmploymentAtbDB"/>,
+        /// scaled by component health. Zero when no installation declares jobs (M2 treats that as "no job data"
+        /// → neutral employment, not 100% unemployment). See docs/MORALE-AND-POPULATION-DESIGN.md.
+        /// </summary>
+        public static long GetTotalJobs(this ComponentInstancesDB componentInstances)
+        {
+            long jobs = 0;
+            foreach (var design in componentInstances.GetDesignsByType(typeof(EmploymentAtbDB)))
+            {
+                int perComponent = design.GetAttribute<EmploymentAtbDB>().Jobs;
+                foreach (var component in componentInstances.GetComponentsBySpecificDesign(design.UniqueID).Where(c => c.IsEnabled))
+                    jobs += (long)(perComponent * component.HealthPercent);
+            }
+            return jobs;
+        }
+
+        /// <summary>
+        /// Total housing comfort (a morale bonus) from installed components carrying <see cref="HousingAtbDB"/>,
+        /// scaled by component health. The quality-of-life "tier" layer above bare life-support capacity.
+        /// </summary>
+        public static double GetHousingComfort(this ComponentInstancesDB componentInstances)
+        {
+            double comfort = 0.0;
+            foreach (var design in componentInstances.GetDesignsByType(typeof(HousingAtbDB)))
+            {
+                double perComponent = design.GetAttribute<HousingAtbDB>().Comfort;
+                foreach (var component in componentInstances.GetComponentsBySpecificDesign(design.UniqueID).Where(c => c.IsEnabled))
+                    comfort += perComponent * component.HealthPercent;
+            }
+            return comfort;
+        }
+
         public static long GetPopulationSupportValue(this ComponentInstancesDB componentInstances, Entity bodyEntity)
         {
             var infrustructureDesigns = componentInstances.GetDesignsByType(typeof(PopulationSupportAtbDB));

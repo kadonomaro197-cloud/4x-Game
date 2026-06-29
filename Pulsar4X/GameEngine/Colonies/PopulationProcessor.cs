@@ -55,7 +55,14 @@ namespace Pulsar4X.Colonies
                     double capacity = ((double)popSupportValue / needs) / worstColonyCost;
                     crowdingRatio = capacity > 0.0 ? totalPop / capacity : 2.0;
                 }
-                moraleDB.Morale = ColonyMoraleDB.ComputeMorale(worstColonyCost, crowdingRatio, moraleDB.Factors);
+
+                // M2: jobs vs population (two-sided) and housing comfort. A colony with no installation
+                // declaring jobs has "no job data" → neutral employment (sentinel -1), not 100% unemployment.
+                long jobs = instancesDB.GetTotalJobs();
+                double employmentRatio = (jobs > 0 && totalPop > 0) ? (double)jobs / totalPop : -1.0;
+                double comfort = instancesDB.GetHousingComfort();
+
+                moraleDB.Morale = ColonyMoraleDB.ComputeMorale(worstColonyCost, crowdingRatio, employmentRatio, comfort, moraleDB.Factors);
                 migration = ColonyMoraleDB.MigrationRate(moraleDB.Morale);
             }
 

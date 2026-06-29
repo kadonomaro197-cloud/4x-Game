@@ -61,6 +61,43 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("M2: full employment buffs morale, unemployment debuffs it, and no job data is neutral.")]
+        public void ComputeMorale_Employment_TwoSided()
+        {
+            // No job data (negative sentinel) == the M1 overload baseline.
+            double noData = ColonyMoraleDB.ComputeMorale(0.0, 0.0, -1.0, 0.0, null);
+            Assert.That(noData, Is.EqualTo(ColonyMoraleDB.Neutral), "no job data should be neutral, not penalized");
+
+            // Full employment (jobs >= pop) is a buff above the no-data baseline.
+            double fullEmployment = ColonyMoraleDB.ComputeMorale(0.0, 0.0, 1.0, 0.0, null);
+            Assert.That(fullEmployment, Is.EqualTo(ColonyMoraleDB.Neutral + ColonyMoraleDB.MaxEmploymentBonus).Within(0.001));
+            Assert.That(fullEmployment, Is.GreaterThan(noData));
+
+            // Total unemployment (ratio 0) is the full debuff below baseline.
+            double totalUnemployment = ColonyMoraleDB.ComputeMorale(0.0, 0.0, 0.0, 0.0, null);
+            Assert.That(totalUnemployment, Is.EqualTo(ColonyMoraleDB.Neutral - ColonyMoraleDB.MaxUnemploymentPenalty).Within(0.001));
+            Assert.That(totalUnemployment, Is.LessThan(noData));
+
+            // Half employment sits between.
+            double half = ColonyMoraleDB.ComputeMorale(0.0, 0.0, 0.5, 0.0, null);
+            Assert.That(half, Is.GreaterThan(totalUnemployment).And.LessThan(fullEmployment));
+        }
+
+        [Test]
+        [Description("M2: housing comfort is a capped positive morale bonus.")]
+        public void ComputeMorale_Comfort_BonusCapped()
+        {
+            var factors = new Dictionary<string, double>();
+            double withComfort = ColonyMoraleDB.ComputeMorale(0.0, 0.0, -1.0, 10.0, factors);
+            Assert.That(withComfort, Is.EqualTo(ColonyMoraleDB.Neutral + 10.0).Within(0.001));
+            Assert.That(factors["comfort"], Is.EqualTo(10.0).Within(0.001));
+
+            // Capped — a lavish comfort value can't exceed the cap.
+            double capped = ColonyMoraleDB.ComputeMorale(0.0, 0.0, -1.0, 9999.0, null);
+            Assert.That(capped, Is.EqualTo(ColonyMoraleDB.Neutral + ColonyMoraleDB.MaxComfortBonus).Within(0.001));
+        }
+
+        [Test]
         [Description("MoraleDB clones deeply (survives entity transfer / save-load).")]
         public void ColonyMoraleDB_ClonesDeeply()
         {

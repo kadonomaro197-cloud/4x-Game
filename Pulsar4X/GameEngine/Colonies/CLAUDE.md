@@ -12,7 +12,9 @@ Population, colony lifecycle, life support. Lives in `GameEngine/Colonies/`.
 |------|---------|
 | `ColonyInfoDB.cs` | Core colony DataBlob: population per species, stockpiles, parent planet reference, component dictionary for bombardment. |
 | `ColonyLifeSupportDB.cs` | Tracks `MaxPopulation` — the carrying capacity ceiling calculated from infrastructure. |
-| `ColonyMoraleDB.cs` | **NEW (M1, 2026-06-29)** Morale (0–100, 50 = neutral) — the level-control valve on the population "tank". Recalced each population tick from conditions + overcrowding; drives migration. All weights are named coefficients (government-ready). Host-agnostic (station-attachable later). See `docs/MORALE-AND-POPULATION-DESIGN.md`. |
+| `ColonyMoraleDB.cs` | **NEW (M1, 2026-06-29)** Morale (0–100, 50 = neutral) — the level-control valve on the population "tank". Recalced each population tick from conditions + overcrowding (M1) + employment + housing comfort (M2); drives migration. All weights are named coefficients (government-ready). Host-agnostic (station-attachable later). See `docs/MORALE-AND-POPULATION-DESIGN.md`. |
+| `EmploymentAtbDB.cs` | **NEW (M2)** Component attribute: jobs (worker slots) an installation provides. Summed via `ComponentInstancesDBExtensions.GetTotalJobs`. Morale: jobs-vs-pop is two-sided (unemployment debuff / full-employment buff). |
+| `HousingAtbDB.cs` | **NEW (M2)** Component attribute: housing **comfort** (a morale bonus) — the quality "tier" above bare life-support capacity (`PopulationSupportAtbDB` keeps people alive; this keeps them content). Summed via `GetHousingComfort`. |
 | `ColonyBonusesDB.cs` | Modifier DataBlob for production/research/mining bonuses on a colony. |
 | `ColonizeableDB.cs` | Marker DataBlob on planets that can be colonized. |
 | `ColonyFactory.cs` | `CreateColony()` — creates a colony entity and attaches all required DataBlobs. |
