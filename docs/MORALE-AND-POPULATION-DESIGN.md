@@ -81,9 +81,17 @@ One system serves the **economy** pillar, the **BSG-nomad** pillar (a planet-les
 - **What makes jobs:** every *productive* installation (mine/factory/refinery/lab/shipyard) carries a **worker demand** (`EmploymentAtbDB`). Total jobs = sum of slots. **Two-sided:** people > jobs → **unemployment** → morale down; jobs > people → **labor shortage** → installations run **under-staffed** → output drops. (Hard draw from M3 means workers are actually pulled from the tank.)
 - **What makes housing worth a damn:** `HousingAtbDB` raises the **population ceiling** AND reduces **overcrowding** (a morale input). No housing → low ceiling → overcrowding → emigration → labor/tax/recruitment pools all stall. Build housing → ceiling rises → more workers, soldiers, taxpayers. **Tiers make it a design decision** (not a rubber stamp): cheap-and-cramped (capacity, mild morale penalty) vs expensive-and-comfortable (capacity + morale bonus). Housing costs materials/power/upkeep and produces nothing directly — so it trades against productive installations. That tension is the city-builder core.
 
-### M3 — people as a HARD, gated resource (the spine)
-- Derive an **available-manpower** sub-pool from population.
-- Make crew (`ShipDesign.CrewReq`), officers/academy graduation (cap by population; the unused `GeneratesNavalOfficers` ability flags are the hook), scientists, and installation workers all **draw** from it and be **capped** by it. Shortfall → can't crew/build/staff (penalty or block). Now you can run out of people.
+### M3 — people as a HARD, gated resource (the spine) — LOCKED 2026-06-29
+The decisions (A–E):
+- **A. Workforce pool.** Not all population is drawable (children/elderly). `Workforce = population × WorkforceFraction` (a tunable coefficient, ~0.5) — a derived value, not separately tracked. Jobs, crew, soldiers, officers all draw against the workforce, **not** raw headcount. *This is also the fix for M2's employment denominator.*
+- **B. Two tiers — bulk vs talent.** Bulk manpower (crew, workers, rank-and-file) draws from the workforce (plentiful). **Talent** (officers, scientists, governors) is a small, scarce pool (`Talent = population × TalentFraction`, ~0.5%) — trained, not drafted. "Who captains my ships / runs my worlds" is a scarcity separate from "do I have hands."
+- **C. Return vs lost.** Disband a ship/army → its people **return** to the nearest colony's population. **Destroyed** → **lost** (casualties subtract from population). This is the BSG bite — losing a fleet/world hurts.
+- **D. Shortage BLOCKS the build.** You cannot build a ship you can't crew — construction is gated on available manpower (block until people are free), not a uncrewed-hull penalty. Manpower is a hard gate on construction.
+- **E. v1 scope.** Wire the consumers that exist today: **crew** (`ShipDesign.CrewReq` ← bulk), **officers** (academy/captains ← talent, capped; the unused `GeneratesNavalOfficers` flags are the hook), **scientists** (← talent). The **workforce** concept retro-fixes M2 employment. Army units ride the unit-designer track (task #21), drawing the same pools later.
+
+**Pools are per-colony** (population is per-colony; the faction aggregates). Coefficients are named/government-ready.
+
+**Build sub-slices (CI-safety):** *(1) foundation* — `ColonyManpowerDB` (committed bulk/talent) + pure pool math (`Workforce`/`Talent`/`Available`/`CanCommit`) + attach + retro-fix M2's employment denominator to use workforce; engine + unit tests, nothing enforced yet (CI-safe). *(2) enforcement* — gate ship construction on available crew (block), commit on build, return on disband, subtract-on-destroy, draw officers/scientists from talent; invasive (Industry/ShipFactory/CommanderFactory) and best confirmed on the developer's local build.
 
 ### M4 — colony economy → money + the TAX lever
 - Colony output (mining/industry/population) → faction `Ledger` as income, **scaled by morale** (happy = richer); upkeep/maintenance + power as expense.

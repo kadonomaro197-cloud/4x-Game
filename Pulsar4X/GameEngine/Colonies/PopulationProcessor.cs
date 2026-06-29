@@ -56,10 +56,13 @@ namespace Pulsar4X.Colonies
                     crowdingRatio = capacity > 0.0 ? totalPop / capacity : 2.0;
                 }
 
-                // M2: jobs vs population (two-sided) and housing comfort. A colony with no installation
-                // declaring jobs has "no job data" → neutral employment (sentinel -1), not 100% unemployment.
+                // M2 employment + M3 fix: jobs are measured against the WORKFORCE (the drawable fraction of
+                // population), not raw headcount — a 500M homeworld isn't "employed" by a handful of
+                // installations. Two-sided; a colony with no installation declaring jobs has "no job data"
+                // → neutral employment (sentinel -1), not 100% unemployment. Housing comfort is a bonus.
                 long jobs = instancesDB.GetTotalJobs();
-                double employmentRatio = (jobs > 0 && totalPop > 0) ? (double)jobs / totalPop : -1.0;
+                long workforce = ColonyManpowerDB.Workforce(totalPop);
+                double employmentRatio = (jobs > 0 && workforce > 0) ? (double)jobs / workforce : -1.0;
                 double comfort = instancesDB.GetHousingComfort();
 
                 moraleDB.Morale = ColonyMoraleDB.ComputeMorale(worstColonyCost, crowdingRatio, employmentRatio, comfort, moraleDB.Factors);
