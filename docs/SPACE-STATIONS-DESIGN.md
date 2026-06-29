@@ -86,6 +86,7 @@ A research station that can't be researched, built from materials, manned, and *
 - **Logistics** (`GameEngine/Logistics/`) — a station as a cargo depot / transfer node (routes already exist).
 - **Galaxy / bodies** (`GameEngine/Galaxy/`) — what a station orbits (body, belt point, anomaly).
 - **People / Species** — "always manned" = population; racial traits set the void-living debuffs.
+- **Morale / population / manpower (M1–M3, built)** — `ColonyMoraleDB`, `ColonyManpowerDB`, `EmploymentAtbDB`, `HousingAtbDB` were built **host-agnostic** (no `ColonyInfoDB` dependency). A manned station attaches the *same* blobs; the one load-bearing change is teaching `PopulationProcessor` to also process `StationInfoDB` (or a thin parallel processor). So the morale/people loop serves stations nearly for free — this is the answer to the station "manning" open question. See `docs/MORALE-AND-POPULATION-DESIGN.md` Prime-Directive accounting finding #7.
 - **Movement / Orbits** — a station holds a station-keeping orbit (`OrbitDB`) at its location.
 
 ---
