@@ -103,7 +103,7 @@ One system serves the **economy** pillar, the **BSG-nomad** pillar (a planet-les
 
 ## Open questions (lock WHEN we reach each slice)
 - M1: the exact morale curve coefficients (condition weight, crowding weight, migration cap %/month) — start simple, tune by feel.
-- M2: housing-tier numbers; worker-slots per installation type; the labor-shortage output penalty curve.
+- M2: housing-tier numbers; worker-slots per installation type; the labor-shortage output penalty curve. **Open finding (surfaced building M2-A):** employment must be measured against a **WORKFORCE** (the fraction of population available to work), NOT total population — a 500M homeworld can't be "employed" by a few installations, so a literal jobs/total-pop ratio reads as total unemployment and would tank the starting colony. The workforce concept is defined in M3 (it's the same pool crew/army/officers draw from). M2's base-low calibration waits on it.
 - M3: population→manpower conversion ratios per draw type; what a crew/worker shortfall *does* (block vs degrade).
 - M4: tax curve + the morale↔tax equilibrium shape; upkeep units.
 - M5: food model (stock + per-capita consumption); power-shortage severity bands.
