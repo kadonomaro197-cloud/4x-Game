@@ -60,9 +60,14 @@ The political payoff, riding on top of morale + government:
 - M3-2's crew shortage is built as a **swappable `CrewShortagePolicy`** (Block default) so the regime can flip it.
 - A future **popular-demands** layer (enact→buff / refuse→debuff), weighted by government type.
 
-**Open (decide before building the GovernmentDB):**
-- Discrete **types** vs composable **axes (authority/economy/liberty) + civics**? (Lean: named types for v1 over an axis-capable table.)
-- Can the regime **change mid-game** (reform / coup / revolution, driven by unrest/demands)? (Lean: yes, later — built with the demands layer.)
+**Locked (developer, 2026-06-29) cont.:**
+- **Regime CAN change mid-game — phased.** Tier 1 *the switch itself* is nearly free (government is a modulator; swapping its values re-skins the rules next tick). Tier 2 *player-chosen reform* (cost + cooldown + a temporary instability dip) is cheap and lands with the government substrate. Tier 3 *forced change* (revolution/coup, driven by unrest) waits on the unrest system; the *upheaval drama* (civil war / secession / coup-installs-rival) is a bigger, optional, later layer riding on unrest + demands.
+
+**Open (one fork left — decide before building the GovernmentDB):**
+- **How does the player pick a government — a fixed MENU, or DIALS underneath a menu?**
+  - *Menu only:* pick a preset bundle (Democracy/Dictatorship/…). Simplest to build + balance; you only get what's on the menu.
+  - *Dials under a menu (RECOMMENDED):* build the underlying knobs (authority / economic control / civil liberty / …), and ship the named types as **saved dial-settings**. Player sees the simple menu day one; the dials can be exposed later for custom + moddable governments with **zero rework**. Same "presets over a general substrate" pattern as the ship/component designer (a ship class = a saved component loadout; a government = a saved dial setting).
+  - *Decision pending the developer's pick. The recommendation ships simple now and grows deep later on one foundation.*
 - Exact coefficient/rule values per type (calibration — local-build feel).
 - What replaces "morale" for a Hive/Machine empire (a unity/processing stat?), and how the droid/people rules differ.
 - Where `GovernmentDB` lives (faction entity) and how per-colony processors read it given the GlobalManager-not-iterated trap (pass it down, or cache on the colony).
