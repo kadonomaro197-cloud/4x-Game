@@ -9,7 +9,6 @@ using Pulsar4X.People;
 using Pulsar4X.Storage;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Movement;
-using Pulsar4X.Colonies;
 
 namespace Pulsar4X.Stations
 {
@@ -47,7 +46,10 @@ namespace Pulsar4X.Stations
 
             blobs.Add(name);
             blobs.Add(stationInfo);
-            blobs.Add(new ColonyBonusesDB());
+            // NOTE: ColonyBonusesDB is deliberately NOT attached here — its GetDependencies() hard-requires
+            // ColonyInfoDB (which a station does not have), so attaching it would fail AddEntity's dependency
+            // validation. How a station carries production/research/mining bonuses is a decision for the
+            // economy-wiring slice (relax that dependency, or a station-compatible bonuses blob).
             blobs.Add(new MiningDB());
             blobs.Add(new OrderableDB());
             blobs.Add(new MassVolumeDB());

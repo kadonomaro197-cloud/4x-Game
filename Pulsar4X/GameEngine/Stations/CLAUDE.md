@@ -27,7 +27,9 @@ A station does the same off-world jobs a colony does — mine, refine, research,
 
 Mirrors `ColonyFactory.CreateColony` exactly, because the economy processors discover their work by these ability blobs, not by host type:
 
-`NameDB`, `StationInfoDB`, `ColonyBonusesDB`, `MiningDB`, `OrderableDB`, `MassVolumeDB`, `CargoStorageDB`, `PositionDB` (relative to the hosting body), `TeamsHousedDB`, `ComponentInstancesDB` (installed modules live here), `InfrastructureDB`.
+`NameDB`, `StationInfoDB`, `MiningDB`, `OrderableDB`, `MassVolumeDB`, `CargoStorageDB`, `PositionDB` (relative to the hosting body), `TeamsHousedDB`, `ComponentInstancesDB` (installed modules live here), `InfrastructureDB`.
+
+**Deliberately NOT attached: `ColonyBonusesDB`.** Its `GetDependencies()` hard-requires `ColonyInfoDB` (which a station doesn't have), so attaching it fails `EntityManager.AddEntity`'s dependency validation (`AreAllDependenciesPresent()` → `InvalidOperationException`). How a station carries production/research/mining bonuses is a decision for the economy-wiring slice (task #17) — relax that dependency, or give the station a station-compatible bonuses blob. This was caught by CI on the first push (the foundation's first red → green).
 
 It is then registered: `factionInfo.Stations.Add(station)` + `FactionOwnerDB.SetOwned(station)`.
 
