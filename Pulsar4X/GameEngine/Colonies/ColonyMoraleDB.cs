@@ -43,6 +43,10 @@ namespace Pulsar4X.Colonies
         public const double MaxComfortBonus = 20.0;
         /// <summary>Morale penalty at 100% tax rate (scales linearly with the tax rate). M4.</summary>
         public const double MaxTaxPenalty = 30.0;
+        /// <summary>Morale penalty at total power shortage (scales with the shortage fraction). M5.</summary>
+        public const double MaxPowerShortagePenalty = 30.0;
+        /// <summary>Morale penalty at total food shortage — starvation bites harder than a brownout. M5.</summary>
+        public const double MaxFoodShortagePenalty = 40.0;
         /// <summary>Max fraction of population that migrates per month at morale 0 (out) or 100 (in).</summary>
         public const double MaxMigrationRate = 0.05;
 
@@ -80,57 +84,83 @@ namespace Pulsar4X.Colonies
         public static double ComputeMorale(double worstColonyCost, double crowdingRatio, double employmentRatio, double comfort, Dictionary<string, double> factorsOut)
             => ComputeMorale(worstColonyCost, crowdingRatio, employmentRatio, comfort, 0.0, factorsOut);
 
-        /// <summary>
-        /// Full morale computation (M4). <paramref name="employmentRatio"/> = jobs / workforce; pass NEGATIVE
-        /// when no installation declares jobs ("no job data" → neutral, not 100% unemployment).
-        /// <paramref name="comfort"/> = summed housing comfort (bonus). <paramref name="taxRate"/> 0..1 = the
-        /// colony tax rate (a linear morale penalty). Other params as the M1 overload.
-        /// </summary>
+        /// <summary>Positional overload (M4) — power/food shortages default to none. Builds a MoraleInputs.</summary>
         public static double ComputeMorale(double worstColonyCost, double crowdingRatio, double employmentRatio, double comfort, double taxRate, Dictionary<string, double> factorsOut)
+            => ComputeMorale(new MoraleInputs
+            {
+                WorstColonyCost = worstColonyCost,
+                CrowdingRatio = crowdingRatio,
+                EmploymentRatio = employmentRatio,
+                Comfort = comfort,
+                TaxRate = taxRate,
+                PowerShortage = 0.0,
+                FoodShortage = 0.0
+            }, factorsOut);
+
+        /// <summary>
+        /// The canonical morale computation (M5). All inputs come in a <see cref="MoraleInputs"/> struct so the
+        /// parameter list stops growing. Fills <paramref name="factorsOut"/> with the per-factor breakdown (the
+        /// gauge) and returns morale clamped 0..100. PowerShortage/FoodShortage are fractions 0 (none)..1
+        /// (total) and contribute 0 when there's no shortage — neutral until M5's energy/food wiring feeds real
+        /// values. All weights are named coefficients (government-ready).
+        /// </summary>
+        public static double ComputeMorale(MoraleInputs inp, Dictionary<string, double> factorsOut)
         {
             factorsOut?.Clear();
             double morale = Neutral;
             factorsOut?.Add("baseline", Neutral);
 
-            double conditions = -Math.Min(MaxConditionsPenalty, Math.Max(0.0, worstColonyCost) * ConditionsWeight);
+            double conditions = -Math.Min(MaxConditionsPenalty, Math.Max(0.0, inp.WorstColonyCost) * ConditionsWeight);
             morale += conditions;
             factorsOut?.Add("conditions", conditions);
 
             double crowding = 0.0;
-            if (crowdingRatio > CrowdingThreshold)
+            if (inp.CrowdingRatio > CrowdingThreshold)
             {
-                double over = (crowdingRatio - CrowdingThreshold) / (1.0 - CrowdingThreshold); // 0 at threshold, 1 at capacity
+                double over = (inp.CrowdingRatio - CrowdingThreshold) / (1.0 - CrowdingThreshold); // 0 at threshold, 1 at capacity
                 crowding = -Math.Min(MaxCrowdingPenalty, over * MaxCrowdingPenalty);
             }
             morale += crowding;
             factorsOut?.Add("crowding", crowding);
 
-            // Employment (two-sided). Negative employmentRatio = no job data → neutral contribution.
+            // Employment (two-sided). Negative EmploymentRatio = no job data → neutral contribution.
             double employment = 0.0;
-            if (employmentRatio >= 0.0)
+            if (inp.EmploymentRatio >= 0.0)
             {
-                if (employmentRatio >= 1.0)
-                    employment = MaxEmploymentBonus;                                    // full employment
+                if (inp.EmploymentRatio >= 1.0)
+                    employment = MaxEmploymentBonus;                                        // full employment
                 else
-                    employment = -(1.0 - employmentRatio) * MaxUnemploymentPenalty;     // unemployment
+                    employment = -(1.0 - inp.EmploymentRatio) * MaxUnemploymentPenalty;     // unemployment
             }
             morale += employment;
             factorsOut?.Add("employment", employment);
 
             // Housing comfort — a capped positive bonus.
-            double comfortContribution = Math.Min(MaxComfortBonus, Math.Max(0.0, comfort));
+            double comfortContribution = Math.Min(MaxComfortBonus, Math.Max(0.0, inp.Comfort));
             morale += comfortContribution;
             factorsOut?.Add("comfort", comfortContribution);
 
             // Tax — a linear penalty (heavier tax, unhappier people). A government type sets how hard it bites.
-            double tax = -Math.Min(MaxTaxPenalty, Math.Max(0.0, taxRate) * MaxTaxPenalty);
+            double tax = -Math.Min(MaxTaxPenalty, Math.Max(0.0, inp.TaxRate) * MaxTaxPenalty);
             morale += tax;
             factorsOut?.Add("tax", tax);
+
+            // Power shortage (M5) — brownouts sour the populace.
+            double power = -Math.Min(MaxPowerShortagePenalty, Clamp01(inp.PowerShortage) * MaxPowerShortagePenalty);
+            morale += power;
+            factorsOut?.Add("power", power);
+
+            // Food shortage (M5) — starvation, the harshest of the everyday inputs.
+            double food = -Math.Min(MaxFoodShortagePenalty, Clamp01(inp.FoodShortage) * MaxFoodShortagePenalty);
+            morale += food;
+            factorsOut?.Add("food", food);
 
             if (morale < 0.0) morale = 0.0;
             if (morale > 100.0) morale = 100.0;
             return morale;
         }
+
+        private static double Clamp01(double v) => v < 0.0 ? 0.0 : (v > 1.0 ? 1.0 : v);
 
         /// <summary>
         /// Monthly migration as a fraction of population. Positive = immigration (morale above neutral),
@@ -140,5 +170,29 @@ namespace Pulsar4X.Colonies
         {
             return ((morale - Neutral) / Neutral) * MaxMigrationRate;
         }
+    }
+
+    /// <summary>
+    /// All the inputs to <see cref="ColonyMoraleDB.ComputeMorale(MoraleInputs, System.Collections.Generic.Dictionary{string, double})"/>,
+    /// gathered into one struct so the morale signature stops growing as new factors are added. Defaults are
+    /// the neutral case EXCEPT <see cref="EmploymentRatio"/>, which must be set to a negative sentinel for
+    /// "no job data" (the parameterless default 0 would read as total unemployment).
+    /// </summary>
+    public struct MoraleInputs
+    {
+        /// <summary>Harshest resident-species ColonyCost (0 = hospitable). Conditions penalty.</summary>
+        public double WorstColonyCost;
+        /// <summary>Population / capacity (0 = uncrowded). Overcrowding penalty past the threshold.</summary>
+        public double CrowdingRatio;
+        /// <summary>Jobs / workforce. NEGATIVE = "no job data" → neutral (not unemployment).</summary>
+        public double EmploymentRatio;
+        /// <summary>Summed housing comfort (a capped morale bonus).</summary>
+        public double Comfort;
+        /// <summary>Colony tax rate 0..1 (a linear morale penalty).</summary>
+        public double TaxRate;
+        /// <summary>Power shortage fraction 0 (none)..1 (total). M5.</summary>
+        public double PowerShortage;
+        /// <summary>Food shortage fraction 0 (none)..1 (total). M5.</summary>
+        public double FoodShortage;
     }
 }

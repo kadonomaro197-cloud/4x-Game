@@ -98,6 +98,36 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("M5: power and food shortages drag morale down (food bites harder); neutral when no shortage.")]
+        public void ComputeMorale_PowerAndFoodShortage_DragMoraleDown()
+        {
+            var none = new MoraleInputs { EmploymentRatio = -1.0 }; // all else 0 = the neutral case
+            double baseM = ColonyMoraleDB.ComputeMorale(none, null);
+            Assert.That(baseM, Is.EqualTo(ColonyMoraleDB.Neutral), "no shortages = neutral");
+
+            var brownout = new MoraleInputs { EmploymentRatio = -1.0, PowerShortage = 0.5 };
+            var famine = new MoraleInputs { EmploymentRatio = -1.0, FoodShortage = 0.5 };
+            Assert.That(ColonyMoraleDB.ComputeMorale(brownout, null), Is.LessThan(baseM), "power shortage lowers morale");
+            Assert.That(ColonyMoraleDB.ComputeMorale(famine, null), Is.LessThan(baseM), "food shortage lowers morale");
+            Assert.That(ColonyMoraleDB.ComputeMorale(famine, null), Is.LessThan(ColonyMoraleDB.ComputeMorale(brownout, null)),
+                "starvation should bite harder than a brownout at the same shortage fraction");
+
+            var total = new MoraleInputs { EmploymentRatio = -1.0, PowerShortage = 1.0, FoodShortage = 1.0 };
+            double expected = Math.Max(0.0, ColonyMoraleDB.Neutral - ColonyMoraleDB.MaxPowerShortagePenalty - ColonyMoraleDB.MaxFoodShortagePenalty);
+            Assert.That(ColonyMoraleDB.ComputeMorale(total, null), Is.EqualTo(expected).Within(0.001));
+        }
+
+        [Test]
+        [Description("The positional ComputeMorale overload matches the canonical MoraleInputs path (back-compat after the refactor).")]
+        public void ComputeMorale_PositionalOverload_MatchesStruct()
+        {
+            double positional = ColonyMoraleDB.ComputeMorale(1.0, 0.2, 0.5, 5.0, 0.2, null);
+            var inp = new MoraleInputs { WorstColonyCost = 1.0, CrowdingRatio = 0.2, EmploymentRatio = 0.5, Comfort = 5.0, TaxRate = 0.2 };
+            double viaStruct = ColonyMoraleDB.ComputeMorale(inp, null);
+            Assert.That(positional, Is.EqualTo(viaStruct).Within(0.0001));
+        }
+
+        [Test]
         [Description("MoraleDB clones deeply (survives entity transfer / save-load).")]
         public void ColonyMoraleDB_ClonesDeeply()
         {

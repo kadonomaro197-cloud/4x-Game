@@ -98,7 +98,8 @@ The decisions (A–E):
 - **Deferred refinement (needs local feel / later):** pricing *actual* output (minerals/refined goods) instead of a per-capita prosperity tax; upkeep/maintenance + power as expense; the happy-medium equilibrium tuning.
 
 ### M5 — wire energy + food
-- Power shortage and food shortage feed morale down and (severe) deaths. Connects the built-but-unplugged `Energy/` subsystem and a new food stock/consumption.
+- **M5a BUILT (machinery, CI pending):** the `ComputeMorale` overload-explosion is refactored to a `MoraleInputs` struct (positional overloads kept as thin delegates — back-compat); power-shortage and food-shortage added as morale inputs (food bites harder), **neutral when absent** so nothing changes live until the wiring. Unit-tested.
+- **M5b (wiring, needs local build):** attach `EnergyGenAbilityDB` to colonies + a `PowerConsumptionAtb` / per-capita demand so a power deficit feeds a real `PowerShortage`; a food cargo good + monthly consumption processor feeding `FoodShortage`; severe shortage → a death term in `PopulationProcessor`. Additive + ship-safe (energy processors are entity-agnostic), but it's live cross-system behavior — pairs with the developer's build.
 
 ### Parallel track (after M3) — the unit designer / armies
 - Ground units are **designed like ships** (confirmed: the component/`*Atb` chain, research gating, build-from-materials, and `ComponentInstancesDB` all reuse as-is; only the unit chassis, unit-scale stats, and formation grouping are new). The colony already has a hex-grid spatial substrate (`ColonyHexMapDB`). Armies draw people from the tank — the consumer that makes the resource bite. See task #21.
