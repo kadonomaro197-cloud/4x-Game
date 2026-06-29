@@ -1,0 +1,62 @@
+# Stations — Subsystem Reference
+
+Space stations — the **cheap, fast, flexible, FRAGILE alternative to a planetary colony**. Lives in `GameEngine/Stations/`. New as of 2026-06-29.
+
+> **Read `docs/SPACE-STATIONS-DESIGN.md` before touching this.** It holds the locked architecture decision (PARALLEL host, NOT a generalized colony) and the open tuning questions (cost-gradient curve, durability/invasion numbers, manning). This subsystem is the foundation slice of that design.
+
+---
+
+## The one idea
+
+A station does the same off-world jobs a colony does — mine, refine, research, trade, house people — by carrying the **same component-equipment chassis** a colony carries. But it is its **own host type** so it can own its own cost curve, durability, and invasion math. That distinctness is the whole point: a station is cheap while focused and expensive as a planet-replacement, and a fraction of the effort to destroy compared to a planet's long ground war ("blowing on a flower vs. pushing a Seawolf-class submarine").
+
+**Why parallel and not a planet-less colony:** those two trade-offs only exist if stations and planets are mechanically distinct hosts. See the design doc's "Why PARALLEL" section.
+
+---
+
+## File Map
+
+| File | Purpose |
+|------|---------|
+| `StationInfoDB.cs` | Core station DataBlob — the parallel to `ColonyInfoDB`. Fields: `Population` (species ID → count, manned stations only), `ComponentStockpile`, `HostingBodyEntity` (the body/belt/anomaly it orbits — the parallel to `ColonyInfoDB.PlanetEntity`). Copy-ctor + `Clone()`; `GetDependencies()` → `NameDB`. |
+| `StationFactory.cs` | `CreateStation(faction, hostingBody, initialPopulation=0, species=null)` — creates the station entity, attaches the SHARED blob set, registers it on `FactionInfoDB.Stations`, and grants the faction mineral access on the hosting body. The parallel to `ColonyFactory.CreateColony`. |
+
+---
+
+## The shared chassis (what `StationFactory` attaches)
+
+Mirrors `ColonyFactory.CreateColony` exactly, because the economy processors discover their work by these ability blobs, not by host type:
+
+`NameDB`, `StationInfoDB`, `ColonyBonusesDB`, `MiningDB`, `OrderableDB`, `MassVolumeDB`, `CargoStorageDB`, `PositionDB` (relative to the hosting body), `TeamsHousedDB`, `ComponentInstancesDB` (installed modules live here), `InfrastructureDB`.
+
+It is then registered: `factionInfo.Stations.Add(station)` + `FactionOwnerDB.SetOwned(station)`.
+
+---
+
+## The key finding — economy comes for FREE, population does NOT
+
+The economy processors query by **ability component**, not by `ColonyInfoDB`:
+- `MineResourcesProcessor` → `GetAllEntitiesWithDataBlob<MiningDB>()`
+- `IndustryProcessor` → `GetAllEntitiesWithDataBlob<IndustryAbilityDB>()` (auto-attached when an industry module is installed)
+- `ResearchProcessor` → `GetAllEntitiesWithDataBlob<ResearcherDB>()` (spawned by a research-lab component)
+
+So a station that carries the matching components is mined / built / researched **without any station-aware code**. The exceptions (the next build slice, task #17):
+1. **`MineResourcesProcessor.ProcessEntity` still has a `ColonyInfoDB` guard** and reads `MineralsDB` off `colonyInfoDB.PlanetEntity` — it must learn to also accept a `StationInfoDB` and read off `HostingBodyEntity`, or a station won't actually mine.
+2. **`PopulationProcessor` is hard-keyed to `ColonyInfoDB`** (`GetAllDataBlobsOfType<ColonyInfoDB>()`) — a manned station won't grow population until a station-aware population path exists (parallel processor or a shared interface both hosts implement).
+
+---
+
+## Gotchas
+
+1. **`PositionDB`'s active class is in `Pulsar4X.Movement`, not `Datablobs`** (the Datablobs copy is commented out). `StationFactory` imports `Pulsar4X.Movement` for it — the same trap that bit the test harness.
+2. **`FactionInfoDB.Stations` must be added to the FactionInfoDB copy-ctor**, or it's dropped on `Clone()` / save-load round-trip. It is (mirrors the `Colonies` line). Any new faction-level list needs the same treatment.
+3. **A bare station does nothing yet.** This foundation slice builds the host; the economy wiring (task #17) and the first real flavor — the research station (task #18) — are what make it a cradle-to-grave decision. Don't ship a station the player can build but that has no product/loss — that's the "pretty, not a decision" anti-pattern.
+
+---
+
+## Tests
+
+`Pulsar4X.Tests/StationFactoryTests.cs` (rides `TestScenario.CreateWithColony`):
+- `CreateStation_WiresSharedChassis_AndRegistersOnFaction` — the station carries the shared blob set, hosting body is set, it's in `Stations` (not `Colonies`), owned by the faction, in the body's manager.
+- `CreateStation_PopulationOptional` — automated = unmanned; manned houses the given species.
+- `StationInfoDB_ClonesDeeply` — `Clone()` deep-copies the collections (survives entity transfer / save-load).
