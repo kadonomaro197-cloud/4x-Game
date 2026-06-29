@@ -63,11 +63,36 @@ The political payoff, riding on top of morale + government:
 **Locked (developer, 2026-06-29) cont.:**
 - **Regime CAN change mid-game — phased.** Tier 1 *the switch itself* is nearly free (government is a modulator; swapping its values re-skins the rules next tick). Tier 2 *player-chosen reform* (cost + cooldown + a temporary instability dip) is cheap and lands with the government substrate. Tier 3 *forced change* (revolution/coup, driven by unrest) waits on the unrest system; the *upheaval drama* (civil war / secession / coup-installs-rival) is a bigger, optional, later layer riding on unrest + demands.
 
-**Open (one fork left — decide before building the GovernmentDB):**
-- **How does the player pick a government — a fixed MENU, or DIALS underneath a menu?**
-  - *Menu only:* pick a preset bundle (Democracy/Dictatorship/…). Simplest to build + balance; you only get what's on the menu.
-  - *Dials under a menu (RECOMMENDED):* build the underlying knobs (authority / economic control / civil liberty / …), and ship the named types as **saved dial-settings**. Player sees the simple menu day one; the dials can be exposed later for custom + moddable governments with **zero rework**. Same "presets over a general substrate" pattern as the ship/component designer (a ship class = a saved component loadout; a government = a saved dial setting).
-  - *Decision pending the developer's pick. The recommendation ships simple now and grows deep later on one foundation.*
+**Locked (developer, 2026-06-29) — Fork 1 = BOTH (dials under a menu).** Build the underlying dials; ship the named types as saved dial-settings. Player sees the simple menu day one; dials exposed later for custom + moddable governments with zero rework (presets-over-a-substrate, same as the ship/component designer).
+
+**Open (sub-decisions to nail before building):**
+- **Free sliders vs three notches per dial?** (Lean: sliders for the math — coefficients scale smoothly — with the *name* bucketing low/mid/high. Three notches is the dead-simple alternative = a clean 27-government menu.)
+- **A 4th dial later?** (Lean: ship 3 now; leave room for Militarism or Tradition/Religion as an optional civic later.)
+
+---
+
+## The control panel — the dials + the live classifier (design detail, 2026-06-29)
+
+A government is a **panel of three dials**. Each just *sets the coefficient + rule-flag values the modulator already exposes* (`government.Coeff(x)` / `government.Rule(y)`) — so this is wiring values, not new engine plumbing. Each dial is a trade, no "correct" setting.
+
+**Dial 1 — AUTHORITY (The People ⟷ One Ruler):** toward People → morale & popular-demand weight HIGH, govern by consent (`CrewShortagePolicy = Block`), tax ceiling LOW, discontent = emigration/elections. Toward One Ruler → opinion weight LOW but **unrest** accrues, conscription (`CrewShortagePolicy = BuildUnderstaffed`), tax ceiling HIGH, discontent = **unrest → revolt**.
+
+**Dial 2 — ECONOMY (Free Market ⟷ State Command):** Free → trade wealth/money, builds cost cash & follow demand. Command → military/infrastructure builds **fast & cheap (materials not money)**, innovation/wealth penalty, state can force builds.
+
+**Dial 3 — OPENNESS (Closed ⟷ Open):** Open → research bonus, immigration appeal, discontent = emigration, demands loud, espionage-vulnerable. Closed → research penalty, **closed borders** (discontent = unrest), demands muffled, espionage-resistant.
+
+**The live classifier (what the player sees while twiddling):** each dial is a continuous value; **bucket it (low/mid/high)** and look the *combination* up. Iconic combos get iconic names (table below); any un-named combo gets an **auto-assembled description** ("An open, command-run authoritarian state") so every setting always shows something sensible. The named-combo table is a **JSON file** (moddable). The panel also shows **live consequences** ("+25% research · −15% build cost · tax cap 30% · conscription OFF · citizens may emigrate") so the player sees the trade as they make it.
+
+| Authority | Economy | Openness | Names itself |
+|---|---|---|---|
+| People | Free Market | Open | Liberal Democracy |
+| People | Command | Open | Democratic Socialist Union |
+| One Ruler | Command | Closed | Totalitarian State |
+| One Ruler | Free Market | Open | Corporate Plutocracy |
+| One Ruler | Command | Open | Military Junta |
+| mid | mid | mid | Federal Republic |
+
+*(Names/values illustrative; calibration is a local-build/feel job. Implementation: `GovernmentDB` holds the 3 dial values; `Coeff()`/`Rule()` derive from them; a `GovernmentClassifier` (JSON-backed) maps bucketed dials → name + description + the live modifier summary.)*
 - Exact coefficient/rule values per type (calibration — local-build feel).
 - What replaces "morale" for a Hive/Machine empire (a unity/processing stat?), and how the droid/people rules differ.
 - Where `GovernmentDB` lives (faction entity) and how per-colony processors read it given the GlobalManager-not-iterated trap (pass it down, or cache on the colony).
