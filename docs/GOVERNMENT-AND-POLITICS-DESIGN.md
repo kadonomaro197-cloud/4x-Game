@@ -65,15 +65,15 @@ The political payoff, riding on top of morale + government:
 
 **Locked (developer, 2026-06-29) — Fork 1 = BOTH (dials under a menu).** Build the underlying dials; ship the named types as saved dial-settings. Player sees the simple menu day one; dials exposed later for custom + moddable governments with zero rework (presets-over-a-substrate, same as the ship/component designer).
 
-**Open (sub-decisions to nail before building):**
-- **Free sliders vs three notches per dial?** (Lean: sliders for the math — coefficients scale smoothly — with the *name* bucketing low/mid/high. Three notches is the dead-simple alternative = a clean 27-government menu.)
-- **A 4th dial later?** (Lean: ship 3 now; leave room for Militarism or Tradition/Religion as an optional civic later.)
+**Locked (developer, 2026-06-29) — sub-decisions:**
+- **THREE NOTCHES per dial (Low / Mid / High)**, not free sliders. Each notch = one fixed coefficient/rule set (no interpolation). The classifier reads the notch combo directly (the combo *is* the key). 4 dials × 3 notches = 81 combos; hand-name the ~12 iconic ones, auto-describe the rest.
+- **FOURTH DIAL = MILITARISM** (Pacifist ⟷ Militarist). Chosen over Tradition/Religion because it plugs into systems already being built (combat, armies, M3 manpower) and sharpens the war-weariness case. (Religion/Tradition remains a candidate 5th civic later. Developer may swap.)
 
 ---
 
 ## The control panel — the dials + the live classifier (design detail, 2026-06-29)
 
-A government is a **panel of three dials**. Each just *sets the coefficient + rule-flag values the modulator already exposes* (`government.Coeff(x)` / `government.Rule(y)`) — so this is wiring values, not new engine plumbing. Each dial is a trade, no "correct" setting.
+A government is a **panel of four dials, each with three notches (Low / Mid / High)**. Each notch just *sets the coefficient + rule-flag values the modulator already exposes* (`government.Coeff(x)` / `government.Rule(y)`) — so this is wiring values, not new engine plumbing. Each dial is a trade, no "correct" setting. Mid is the balanced middle of each.
 
 **Dial 1 — AUTHORITY (The People ⟷ One Ruler):** toward People → morale & popular-demand weight HIGH, govern by consent (`CrewShortagePolicy = Block`), tax ceiling LOW, discontent = emigration/elections. Toward One Ruler → opinion weight LOW but **unrest** accrues, conscription (`CrewShortagePolicy = BuildUnderstaffed`), tax ceiling HIGH, discontent = **unrest → revolt**.
 
@@ -81,18 +81,22 @@ A government is a **panel of three dials**. Each just *sets the coefficient + ru
 
 **Dial 3 — OPENNESS (Closed ⟷ Open):** Open → research bonus, immigration appeal, discontent = emigration, demands loud, espionage-vulnerable. Closed → research penalty, **closed borders** (discontent = unrest), demands muffled, espionage-resistant.
 
-**The live classifier (what the player sees while twiddling):** each dial is a continuous value; **bucket it (low/mid/high)** and look the *combination* up. Iconic combos get iconic names (table below); any un-named combo gets an **auto-assembled description** ("An open, command-run authoritarian state") so every setting always shows something sensible. The named-combo table is a **JSON file** (moddable). The panel also shows **live consequences** ("+25% research · −15% build cost · tax cap 30% · conscription OFF · citizens may emigrate") so the player sees the trade as they make it.
+**Dial 4 — MILITARISM (Pacifist ⟷ Militarist):** Pacifist → war is a **morale penalty** (war-weariness, amplified by Authority-toward-People), military upkeep resented, costly casus belli, **recruitment harder** (M3 draw), but civilian trade/research/diplomacy bonuses. Militarist → war is tolerated or a **morale bonus** (martial pride), cheap/accepted upkeep, easy casus belli, **recruitment easier** (M3 draw), but civilian economy/research/diplomacy penalties. Modulates the "war" morale input's SIGN.
 
-| Authority | Economy | Openness | Names itself |
-|---|---|---|---|
-| People | Free Market | Open | Liberal Democracy |
-| People | Command | Open | Democratic Socialist Union |
-| One Ruler | Command | Closed | Totalitarian State |
-| One Ruler | Free Market | Open | Corporate Plutocracy |
-| One Ruler | Command | Open | Military Junta |
-| mid | mid | mid | Federal Republic |
+**The live classifier (what the player sees while twiddling):** each dial has **three notches**, so the notch combo *is* the lookup key (no bucketing). Iconic combos get iconic names (table below); any un-named combo gets an **auto-assembled description** ("a closed, command-run, militarist autocracy") so every setting always shows something sensible. The named-combo table is a **JSON file** (moddable). The panel also shows **live consequences** ("+25% research · −15% build cost · tax cap 30% · conscription OFF · war: morale −X · citizens may emigrate") so the player sees the trade as they make it.
 
-*(Names/values illustrative; calibration is a local-build/feel job. Implementation: `GovernmentDB` holds the 3 dial values; `Coeff()`/`Rule()` derive from them; a `GovernmentClassifier` (JSON-backed) maps bucketed dials → name + description + the live modifier summary.)*
+| Authority | Economy | Openness | Militarism | Names itself |
+|---|---|---|---|---|
+| People | Free Market | Open | Pacifist | Liberal Democracy |
+| People | Free Market | Open | Militarist | Martial Republic |
+| People | Command | Open | Pacifist | Democratic Socialist Union |
+| One Ruler | Command | Closed | Pacifist | Totalitarian State |
+| One Ruler | Command | Closed | Militarist | Totalitarian War-State |
+| One Ruler | Free Market | Open | Pacifist | Corporate Plutocracy |
+| One Ruler | Command | Mid | Militarist | Military Junta |
+| Mid | Mid | Mid | Mid | Federal Republic |
+
+*(Names/values illustrative; calibration is a local-build/feel job. Implementation: `GovernmentDB` holds the 4 notch values; `Coeff()`/`Rule()` derive from them via a per-notch table; a `GovernmentClassifier` (JSON-backed) maps the notch combo → name + description + the live modifier summary.)*
 - Exact coefficient/rule values per type (calibration — local-build feel).
 - What replaces "morale" for a Hive/Machine empire (a unity/processing stat?), and how the droid/people rules differ.
 - Where `GovernmentDB` lives (faction entity) and how per-colony processors read it given the GlobalManager-not-iterated trap (pass it down, or cache on the colony).
