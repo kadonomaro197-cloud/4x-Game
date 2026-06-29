@@ -13,6 +13,7 @@ Faction state, tech database, ability store, and NPC decision engine. Lives in `
 | `FactionFactory.cs` | Creates faction entities and populates `FactionInfoDB`. `CreateFaction()` for code-created factions; `LoadFromJson()` for scenario-file-created factions (reads "name", "componentDesigns", "ordnanceDesigns", "shipDesigns", "species", "colonies", "isNPC", "doctrine"). |
 | `DoctrineVector.cs` | **NEW** Struct: four float weights (Economic, Military, Tech, Expansion) describing NPC strategic priorities. Serialized with `[JsonProperty]`; lives on `FactionInfoDB.Doctrine`. |
 | `NPCDecisionProcessor.cs` | **NEW SKELETON** `IHotloopProcessor` on `FactionInfoDB`, monthly. Only acts on factions where `IsNPC == true`. Evaluates `DoctrineVector` to pick the dominant goal each cycle. Decision implementation is a TODO. See wiring note below. |
+| `GovernmentDB.cs` | **NEW (substrate)** The empire-wide regime as a MODULATOR (`docs/GOVERNMENT-AND-POLITICS-DESIGN.md`). Four 3-notch dials (Authority/Economy/Openness/Militarism) that derive **rule overrides** (`CrewPolicy()` → the M3-2 crew rule; `Discontent()`) and **coefficient overrides** (`TaxCeiling()`/`MoraleWeight()`/`ResearchMultiplier()`/`MilitaryBuildMultiplier()`/`WarMoraleFactor()`), plus a live classifier (`Name()`/`Description()` — iconic combos table + auto-fallback). **Substrate only — not attached to factions and not yet read by any processor;** the per-lever wiring is the next step. Tests: `GovernmentTests`. |
 
 ---
 
