@@ -12,6 +12,7 @@ Population, colony lifecycle, life support. Lives in `GameEngine/Colonies/`.
 |------|---------|
 | `ColonyInfoDB.cs` | Core colony DataBlob: population per species, stockpiles, parent planet reference, component dictionary for bombardment. |
 | `ColonyLifeSupportDB.cs` | Tracks `MaxPopulation` — the carrying capacity ceiling calculated from infrastructure. |
+| `ColonyMoraleDB.cs` | **NEW (M1, 2026-06-29)** Morale (0–100, 50 = neutral) — the level-control valve on the population "tank". Recalced each population tick from conditions + overcrowding; drives migration. All weights are named coefficients (government-ready). Host-agnostic (station-attachable later). See `docs/MORALE-AND-POPULATION-DESIGN.md`. |
 | `ColonyBonusesDB.cs` | Modifier DataBlob for production/research/mining bonuses on a colony. |
 | `ColonizeableDB.cs` | Marker DataBlob on planets that can be colonized. |
 | `ColonyFactory.cs` | `CreateColony()` — creates a colony entity and attaches all required DataBlobs. |
@@ -81,11 +82,14 @@ Dictionary<Entity, double> ColonyComponentDictionary // for bombardment targetin
    - If `colonyCost == 0` (species is native to this environment): uncapped growth, same formula.
 3. Publishes `EventType.PopulationChanged` event.
 
-**Current gaps:**
-- No governor modifiers (`// @todo: get external factors`)
+**Morale (M1, 2026-06-29):** if the colony has a `ColonyMoraleDB`, `GrowPopulation` now recomputes morale from the worst resident-species `ColonyCost` (conditions) and `totalPop / capacity` (overcrowding, only on support-capped hostile worlds), then adds `ColonyMoraleDB.MigrationRate(morale)` to the growth rate at the two former `@todo: external factors` hooks. Morale < 50 → emigration; > 50 → immigration; 50 → no change. The math is pure/static on `ColonyMoraleDB` (`ComputeMorale`, `MigrationRate`) and unit-tested in `MoraleTests`. Guarded by `TryGetDataBlob` so a colony without the blob grows as before. Roadmap (jobs/unemployment, hard people-draw, money+tax, energy+food): `docs/MORALE-AND-POPULATION-DESIGN.md`.
+
+**Current gaps (remaining after M1):**
+- No jobs/unemployment input yet (M2); carrying capacity still a single lump (housing/jobs/food not split)
+- Population is not yet a *drawable* resource — crew/officers/scientists/army still spawn free (M3)
+- No money/tax wiring (M4) or energy/food (M5)
 - No radiation effect on growth
-- The `−50.0` die-off rate is a placeholder, not a formula
-- No distinction between starvation, disease, migration
+- The `−50.0` over-hard-cap die-off rate is still a placeholder, not a formula
 
 ---
 

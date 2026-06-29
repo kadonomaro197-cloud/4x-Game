@@ -26,13 +26,37 @@ namespace Pulsar4X.Colonies
             long popSupportValue = instancesDB.GetPopulationSupportValue(colonyInfoDB.PlanetEntity);
 
             long needsSupport = 0;
+            long totalPop = 0;
+            double worstColonyCost = 0.0;
             foreach (var (id, value) in currentPopulation)
             {
 
                 var species = colony.Manager.GetGlobalEntityById(id).GetDataBlob<SpeciesDB>();
+                double cc = species.ColonyCost(colonyInfoDB.PlanetEntity);
                 // count the number of different population groups that need infrastructure support
-                if (species.ColonyCost(colony.GetDataBlob<ColonyInfoDB>().PlanetEntity) > 0.0)
+                if (cc > 0.0)
                     needsSupport++;
+                if (cc > worstColonyCost)
+                    worstColonyCost = cc;
+                totalPop += value;
+            }
+
+            // --- M1 morale (the population "tank" valve, docs/MORALE-AND-POPULATION-DESIGN.md) ---
+            // Recompute morale from the inputs that already exist (conditions + overcrowding) and turn it into
+            // a migration rate added to growth below. Guarded: a colony without a ColonyMoraleDB (e.g. built by
+            // an older path) just skips morale and grows as before.
+            double migration = 0.0;
+            if (colony.TryGetDataBlob<ColonyMoraleDB>(out var moraleDB))
+            {
+                double crowdingRatio = 0.0;
+                if (worstColonyCost > 0.0) // only support-capped (hostile) worlds can overcrowd
+                {
+                    long needs = needsSupport < 1 ? 1 : needsSupport;
+                    double capacity = ((double)popSupportValue / needs) / worstColonyCost;
+                    crowdingRatio = capacity > 0.0 ? totalPop / capacity : 2.0;
+                }
+                moraleDB.Morale = ColonyMoraleDB.ComputeMorale(worstColonyCost, crowdingRatio, moraleDB.Factors);
+                migration = ColonyMoraleDB.MigrationRate(moraleDB.Morale);
             }
 
             // find colony cost, divide the population support value by it
@@ -64,8 +88,8 @@ namespace Pulsar4X.Colonies
                         growthRate = (20.0 / (Math.Pow(value, (1.0 / 3.0))));
                         if (growthRate > 10.0)
                             growthRate = 10.0;
-                        // @todo: get external factors in population growth (or death)
-                        newPop = (long)(value * (1.0 + growthRate));
+                        // external factor: morale-driven migration (M1)
+                        newPop = (long)(value * (1.0 + growthRate + migration));
                         if (newPop > maxPopulation)
                             newPop = maxPopulation;
                         if (newPop < 0)
@@ -80,8 +104,8 @@ namespace Pulsar4X.Colonies
                     growthRate = (20.0 / (Math.Pow(value, (1.0 / 3.0))));
                     if (growthRate > 10.0)
                         growthRate = 10.0;
-                    // @todo: get external factors in population growth (or death)
-                    newPop = (long)(value * (1.0 + growthRate));
+                    // external factor: morale-driven migration (M1)
+                    newPop = (long)(value * (1.0 + growthRate + migration));
                     if (newPop < 0)
                         newPop = 0;
                     UpdatePopulation(colonyInfoDB, currentPopulation, id, newPop);
