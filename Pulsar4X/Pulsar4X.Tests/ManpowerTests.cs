@@ -64,6 +64,36 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("Crew-shortage policy: full crew always builds; shortage blocks under Block, conscripts under BuildUnderstaffed. (The rule a government type flips.)")]
+        public void ResolveConstructionCrew_PolicyDecidesShortage()
+        {
+            // Fully crewed → builds, commits exactly the requirement, not understaffed (policy irrelevant).
+            var full = ColonyManpowerDB.ResolveConstructionCrew(availableBulk: 500, crewRequired: 100, CrewShortagePolicy.Block);
+            Assert.That(full.CanBuild, Is.True);
+            Assert.That(full.CrewToCommit, Is.EqualTo(100));
+            Assert.That(full.Understaffed, Is.False);
+            Assert.That(full.ShortBy, Is.EqualTo(0));
+
+            // Short + Block → no build, commits nothing.
+            var blocked = ColonyManpowerDB.ResolveConstructionCrew(availableBulk: 40, crewRequired: 100, CrewShortagePolicy.Block);
+            Assert.That(blocked.CanBuild, Is.False);
+            Assert.That(blocked.CrewToCommit, Is.EqualTo(0));
+            Assert.That(blocked.ShortBy, Is.EqualTo(60));
+
+            // Short + BuildUnderstaffed → builds anyway, conscripts what's available, flagged understaffed.
+            var conscript = ColonyManpowerDB.ResolveConstructionCrew(availableBulk: 40, crewRequired: 100, CrewShortagePolicy.BuildUnderstaffed);
+            Assert.That(conscript.CanBuild, Is.True);
+            Assert.That(conscript.CrewToCommit, Is.EqualTo(40));
+            Assert.That(conscript.Understaffed, Is.True);
+            Assert.That(conscript.ShortBy, Is.EqualTo(60));
+
+            // A design needing no crew always builds regardless of policy/pool.
+            var crewless = ColonyManpowerDB.ResolveConstructionCrew(availableBulk: 0, crewRequired: 0, CrewShortagePolicy.Block);
+            Assert.That(crewless.CanBuild, Is.True);
+            Assert.That(crewless.CrewToCommit, Is.EqualTo(0));
+        }
+
+        [Test]
         [Description("ManpowerDB clones deeply (survives entity transfer / save-load).")]
         public void ColonyManpowerDB_ClonesDeeply()
         {

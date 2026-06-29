@@ -60,5 +60,58 @@ namespace Pulsar4X.Colonies
         public void ReleaseBulk(long n) { CommittedBulk -= n; if (CommittedBulk < 0) CommittedBulk = 0; }
         public void CommitTalent(long n) { if (n > 0) CommittedTalent += n; }
         public void ReleaseTalent(long n) { CommittedTalent -= n; if (CommittedTalent < 0) CommittedTalent = 0; }
+
+        /// <summary>
+        /// Decide whether a build with a given crew requirement may proceed, given available bulk manpower and
+        /// the host's <see cref="CrewShortagePolicy"/>. This is the pure decision the M3-2 construction gate
+        /// calls — and the exact rule a government type flips (consent regimes = Block; a dictatorship =
+        /// BuildUnderstaffed, conscripting what's available and suffering a debuff until crewed). See
+        /// docs/GOVERNMENT-AND-POLITICS-DESIGN.md.
+        /// </summary>
+        public static BuildCrewDecision ResolveConstructionCrew(long availableBulk, long crewRequired, CrewShortagePolicy policy)
+        {
+            if (availableBulk < 0) availableBulk = 0;
+            if (crewRequired <= 0)
+                return new BuildCrewDecision(true, 0, false, 0);                       // no crew needed
+            if (availableBulk >= crewRequired)
+                return new BuildCrewDecision(true, crewRequired, false, 0);            // fully crewed
+
+            // Short on crew:
+            if (policy == CrewShortagePolicy.BuildUnderstaffed)
+                return new BuildCrewDecision(true, availableBulk, true, crewRequired - availableBulk); // conscript what we have
+            return new BuildCrewDecision(false, 0, false, crewRequired - availableBulk);                // block
+        }
+    }
+
+    /// <summary>
+    /// How a host responds to a build it lacks the crew for. A government type sets this: consent regimes
+    /// (democracy/republic) Block; command regimes (dictatorship) BuildUnderstaffed (conscription + debuff).
+    /// Default is Block. docs/GOVERNMENT-AND-POLITICS-DESIGN.md.
+    /// </summary>
+    public enum CrewShortagePolicy
+    {
+        Block,
+        BuildUnderstaffed
+    }
+
+    /// <summary>Result of <see cref="ColonyManpowerDB.ResolveConstructionCrew"/>.</summary>
+    public readonly struct BuildCrewDecision
+    {
+        /// <summary>May the build proceed?</summary>
+        public bool CanBuild { get; }
+        /// <summary>How many bulk manpower to commit from the pool if it proceeds.</summary>
+        public long CrewToCommit { get; }
+        /// <summary>True if it proceeds without full crew (a debuff applies until crewed).</summary>
+        public bool Understaffed { get; }
+        /// <summary>How many crew short of the requirement (0 if fully crewed or blocked).</summary>
+        public long ShortBy { get; }
+
+        public BuildCrewDecision(bool canBuild, long crewToCommit, bool understaffed, long shortBy)
+        {
+            CanBuild = canBuild;
+            CrewToCommit = crewToCommit;
+            Understaffed = understaffed;
+            ShortBy = shortBy;
+        }
     }
 }
