@@ -93,9 +93,9 @@ The decisions (A–E):
 
 **Build sub-slices (CI-safety):** *(1) foundation* — `ColonyManpowerDB` (committed bulk/talent) + pure pool math (`Workforce`/`Talent`/`Available`/`CanCommit`) + attach + retro-fix M2's employment denominator to use workforce; engine + unit tests, nothing enforced yet (CI-safe). *(2) enforcement* — gate ship construction on available crew (block), commit on build, return on disband, subtract-on-destroy, draw officers/scientists from talent; invasive (Industry/ShipFactory/CommanderFactory) and best confirmed on the developer's local build.
 
-### M4 — colony economy → money + the TAX lever
-- Colony output (mining/industry/population) → faction `Ledger` as income, **scaled by morale** (happy = richer); upkeep/maintenance + power as expense.
-- **Tax rate** = player slider: income ∝ tax, morale ∝ −tax, with a happy-medium equilibrium that rises with investment. New `TransactionCategory` values (Mining/Production/Maintenance/Tax).
+### M4 — colony economy → money + the TAX lever  *(built — CI pending)*
+- **BUILT:** `ColonyEconomyDB` (player `TaxRate`) + `ColonyEconomyProcessor` (monthly, keyed on `ColonyEconomyDB`, bills tax into the faction `Ledger` via new `TransactionCategory.ColonyTax`). Income = population × per-capita × tax × morale-multiplier (a happy colony pays more). Tax is also a morale penalty (read by `PopulationProcessor`) — the one-tick-lagged loop. Pure math + the missing money gauge (`FactionEconomyTests`) included.
+- **Deferred refinement (needs local feel / later):** pricing *actual* output (minerals/refined goods) instead of a per-capita prosperity tax; upkeep/maintenance + power as expense; the happy-medium equilibrium tuning.
 
 ### M5 — wire energy + food
 - Power shortage and food shortage feed morale down and (severe) deaths. Connects the built-but-unplugged `Energy/` subsystem and a new food stock/consumption.

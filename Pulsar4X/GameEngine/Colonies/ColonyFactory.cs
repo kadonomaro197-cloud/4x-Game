@@ -70,6 +70,7 @@ namespace Pulsar4X.Colonies
             blobs.Add(new ColonyInfoDB(species, (long)(colonyBlueprint.StartingPopulation ?? 1000), systemBody));
             blobs.Add(new ColonyMoraleDB());
             blobs.Add(new ColonyManpowerDB());
+            blobs.Add(new ColonyEconomyDB());
             blobs.Add(new ColonyBonusesDB());
             blobs.Add(new MiningDB());
             blobs.Add(new OrderableDB());
@@ -171,6 +172,7 @@ namespace Pulsar4X.Colonies
             blobs.Add(new ColonyInfoDB(speciesEntity, initialPopulation, planetEntity));
             blobs.Add(new ColonyMoraleDB());
             blobs.Add(new ColonyManpowerDB());
+            blobs.Add(new ColonyEconomyDB());
             blobs.Add(new ColonyBonusesDB());
             blobs.Add(new MiningDB());
             blobs.Add(new OrderableDB());

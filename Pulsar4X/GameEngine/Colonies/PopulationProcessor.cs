@@ -65,7 +65,11 @@ namespace Pulsar4X.Colonies
                 double employmentRatio = (jobs > 0 && workforce > 0) ? (double)jobs / workforce : -1.0;
                 double comfort = instancesDB.GetHousingComfort();
 
-                moraleDB.Morale = ColonyMoraleDB.ComputeMorale(worstColonyCost, crowdingRatio, employmentRatio, comfort, moraleDB.Factors);
+                // M4: tax is a morale input (read the colony's tax rate; ColonyEconomyProcessor reads morale
+                // back to scale income — a one-tick-lagged loop).
+                double taxRate = colony.TryGetDataBlob<ColonyEconomyDB>(out var econDB) ? econDB.TaxRate : 0.0;
+
+                moraleDB.Morale = ColonyMoraleDB.ComputeMorale(worstColonyCost, crowdingRatio, employmentRatio, comfort, taxRate, moraleDB.Factors);
                 migration = ColonyMoraleDB.MigrationRate(moraleDB.Morale);
             }
 

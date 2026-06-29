@@ -41,6 +41,8 @@ namespace Pulsar4X.Colonies
         public const double MaxUnemploymentPenalty = 25.0;
         /// <summary>Cap on the housing-comfort morale bonus.</summary>
         public const double MaxComfortBonus = 20.0;
+        /// <summary>Morale penalty at 100% tax rate (scales linearly with the tax rate). M4.</summary>
+        public const double MaxTaxPenalty = 30.0;
         /// <summary>Max fraction of population that migrates per month at morale 0 (out) or 100 (in).</summary>
         public const double MaxMigrationRate = 0.05;
 
@@ -74,12 +76,17 @@ namespace Pulsar4X.Colonies
         public static double ComputeMorale(double worstColonyCost, double crowdingRatio, Dictionary<string, double> factorsOut)
             => ComputeMorale(worstColonyCost, crowdingRatio, -1.0, 0.0, factorsOut);
 
-        /// <summary>
-        /// Full morale computation (M2). <paramref name="employmentRatio"/> = jobs / population; pass a NEGATIVE
-        /// value when no installation declares jobs ("no job data" → neutral, not 100% unemployment).
-        /// <paramref name="comfort"/> = summed housing comfort (a morale bonus). Other params as the M1 overload.
-        /// </summary>
+        /// <summary>M2-compatible overload — no tax input (taxRate 0).</summary>
         public static double ComputeMorale(double worstColonyCost, double crowdingRatio, double employmentRatio, double comfort, Dictionary<string, double> factorsOut)
+            => ComputeMorale(worstColonyCost, crowdingRatio, employmentRatio, comfort, 0.0, factorsOut);
+
+        /// <summary>
+        /// Full morale computation (M4). <paramref name="employmentRatio"/> = jobs / workforce; pass NEGATIVE
+        /// when no installation declares jobs ("no job data" → neutral, not 100% unemployment).
+        /// <paramref name="comfort"/> = summed housing comfort (bonus). <paramref name="taxRate"/> 0..1 = the
+        /// colony tax rate (a linear morale penalty). Other params as the M1 overload.
+        /// </summary>
+        public static double ComputeMorale(double worstColonyCost, double crowdingRatio, double employmentRatio, double comfort, double taxRate, Dictionary<string, double> factorsOut)
         {
             factorsOut?.Clear();
             double morale = Neutral;
@@ -114,6 +121,11 @@ namespace Pulsar4X.Colonies
             double comfortContribution = Math.Min(MaxComfortBonus, Math.Max(0.0, comfort));
             morale += comfortContribution;
             factorsOut?.Add("comfort", comfortContribution);
+
+            // Tax — a linear penalty (heavier tax, unhappier people). A government type sets how hard it bites.
+            double tax = -Math.Min(MaxTaxPenalty, Math.Max(0.0, taxRate) * MaxTaxPenalty);
+            morale += tax;
+            factorsOut?.Add("tax", tax);
 
             if (morale < 0.0) morale = 0.0;
             if (morale > 100.0) morale = 100.0;
