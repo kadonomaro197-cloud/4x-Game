@@ -54,6 +54,22 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("The society readout (the dev instrument panel) names the colony and includes morale, manpower, and tax.")]
+        public void SocietyReadout_DumpsColonyState()
+        {
+            var s = TestScenario.CreateWithColony();
+
+            string line = SocietyReadout.Colony(s.Colony);
+            Assert.That(line, Does.Contain("pop"));
+            Assert.That(line, Does.Contain("morale"));
+            Assert.That(line, Does.Contain("workforce"));
+            Assert.That(line, Does.Contain("tax"));
+
+            // The government readout is graceful while no GovernmentDB is attached to factions yet.
+            Assert.That(SocietyReadout.Government(s.Faction), Does.Contain("no government set"));
+        }
+
+        [Test]
         [Description("Colony tax flows into the faction's Ledger over time (the money circuit, finally plugged in).")]
         public void Tax_FlowsColonyOutputToFactionLedger()
         {

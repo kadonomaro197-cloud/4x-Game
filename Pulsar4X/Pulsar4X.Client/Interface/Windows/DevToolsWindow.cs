@@ -171,6 +171,24 @@ namespace Pulsar4X.Client
             _spawnStatus = $"State: {ships.Count} ship(s), {fleets.Count} fleet(s) in this system (player faction {pf}). Full list in console_output.txt.";
         }
 
+        // The instrument panel for the M-ECON systems (morale / manpower / economy / government) — they have no
+        // on-screen readout yet, so this dumps each colony's state (and the player's government) to the flushed
+        // log so a play-test can WATCH the numbers move. The formatting lives in the engine (SocietyReadout, which
+        // is CI-tested); this is a thin iterate-and-log wrapper.
+        void DumpSociety()
+        {
+            var sys = _uiState.SelectedSystem;
+            if (sys == null) { _spawnStatus = "Dump Society: no system selected."; return; }
+
+            var colonies = sys.GetAllEntitiesWithDataBlob<ColonyInfoDB>();
+            DevLog($"SOCIETY DUMP — {colonies.Count} colony(ies) in this system:");
+            foreach (var c in colonies)
+                DevLog("  " + SocietyReadout.Colony(c));
+            DevLog("  government: " + SocietyReadout.Government(_uiState.PlayerFaction));
+
+            _spawnStatus = $"Society: dumped {colonies.Count} colony(ies) to console_output.txt (close the game to read it).";
+        }
+
         // Keeps the Spawn Ship dropdown in step with the player's ship designs every frame, so a ship you just
         // made in the Ship Design window shows up here immediately instead of only after "Refresh Lists".
         // Deliberately lighter than HardRefresh(): it touches ONLY the ship-design arrays (not bodies/minerals)
@@ -211,6 +229,9 @@ namespace Pulsar4X.Client
                 ImGui.SameLine();
                 if (ImGui.Button("Dump State (log)"))
                     DumpState();
+                ImGui.SameLine();
+                if (ImGui.Button("Dump Society (log)"))
+                    DumpSociety();
 
                 // ── Faction Switcher (SM) ─────────────────────────
                 ImGui.Separator();
