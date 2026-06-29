@@ -78,7 +78,9 @@ reflection — if it's in the assembly, it runs.
 
 | System | Runs (processor) | Status | Can we see it? | Connected to |
 |--------|------------------|--------|----------------|--------------|
-| **Population** | `PopulationProcessor` | 🟡 PARTIAL | `PopulationProcessorTest`; runs in our year-advance but **we never gauged growth** | Galaxy (atmosphere → colony cost), Infrastructure (pop support cap), Storage (future: food) — formulas are stubs (see `Colonies/CLAUDE.md`) |
+| **Population** | `PopulationProcessor` | 🟡 PARTIAL | `PopulationProcessorTest`; growth formulas still stubs (see `Colonies/CLAUDE.md`) | Galaxy (atmosphere → colony cost), Infrastructure (pop support cap), Storage (future: food), **Morale (migration)** |
+| **Morale** (the population-tank valve) | `PopulationProcessor` (M1) reads `ColonyMoraleDB` | ✅ DONE (M1) | `MoraleTests` — pure morale math + migration sign/bounds + the real start born neutral | population (migration), Galaxy (conditions = colony cost), capacity (overcrowding); **roadmap** jobs/tax/power/food/**governor** (`docs/MORALE-AND-POPULATION-DESIGN.md`) |
+| **Governance / delegation** (governors maintain worlds — *auto-resolve for the economy*) | — (wires dead `AdminSpaceDB` seat) | ⚫ ABSENT (designed, task #23) | none | **People** (governor = commander), `AdminSpaceDB` (the seat to wire), morale (what it maintains), tax/M4 (sets happy-medium). Principle: agency is OPT-IN — every management lever needs a governor auto-default. |
 | **Life support / carrying capacity** | (`ColonyLifeSupportDB`, recalc) | 🔴 DARK | none | population, infrastructure |
 | **Colony hex map** (spatial grid) | `ColonyHexMapProcessor` | 🔴 DARK | none | colony, **future ground combat** (already a spatial substrate) |
 
