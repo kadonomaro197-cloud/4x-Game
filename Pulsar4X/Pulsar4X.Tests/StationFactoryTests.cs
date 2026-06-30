@@ -183,5 +183,25 @@ namespace Pulsar4X.Tests
             Assert.That(industry.ProductionLines[lineId].Jobs, Does.Contain(job),
                 "the in-situ build job should be queued on the station's own production line");
         }
+
+        [Test]
+        [Description("Station population is gated by LIFE SUPPORT (the sealed-habitat model): a manned station with no habitat modules loses population over time — where a native-world colony would grow un-capped. Proves StationPopulationProcessor runs and applies the station-specific cap semantic (task #17, population half).")]
+        public void MannedStation_WithNoLifeSupport_LosesPopulation()
+        {
+            var s = TestScenario.CreateWithColony();
+
+            var manned = StationFactory.CreateStation(s.Faction, s.StartingBody, 5000, s.Species);
+            Assert.That(manned.HasDataBlob<ColonyMoraleDB>(), Is.True,
+                "a station should carry the shared morale valve");
+
+            long before = manned.GetDataBlob<StationInfoDB>().Population[s.Species.Id];
+            Assert.That(before, Is.EqualTo(5000));
+
+            s.AdvanceTime(TimeSpan.FromDays(120)); // ~4 monthly population ticks
+
+            long after = manned.GetDataBlob<StationInfoDB>().Population[s.Species.Id];
+            Assert.That(after, Is.LessThan(before),
+                "a sealed-habitat station with no life-support modules should starve (lose population), not grow");
+        }
     }
 }

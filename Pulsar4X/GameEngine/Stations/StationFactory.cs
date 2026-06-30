@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Pulsar4X.Orbital;
 using Pulsar4X.Datablobs;
 using Pulsar4X.Engine;
+using Pulsar4X.Colonies;
 using Pulsar4X.Factions;
 using Pulsar4X.Industry;
 using Pulsar4X.Names;
@@ -58,6 +59,7 @@ namespace Pulsar4X.Stations
             blobs.Add(new TeamsHousedDB());
             blobs.Add(new ComponentInstancesDB()); // installed station modules live here
             blobs.Add(new InfrastructureDB());      // capacity summed from installed modules
+            blobs.Add(new ColonyMoraleDB());        // shared, host-agnostic morale valve — StationPopulationProcessor reads it for a manned station
 
             Entity stationEntity = Entity.Create();
             stationEntity.FactionOwnerID = factionEntity.Id;
