@@ -56,8 +56,16 @@ A few named types for v1, each a **preset bundle** of coefficients + rules over 
 
 The internal half of "politics with teeth," designed to the *Every-Layer-a-Complete-Game* bar. Two theaters exist (INTERNAL = hold your own house; EXTERNAL = deal with rivals); **internal is designed first** because it rides directly on the morale/government engine already built. The core loop the developer named: **the people speak → you enact (buff) or refuse (debuff) → consequences stack → mishandle it and you lose your regime.**
 
-### Legitimacy — the regime's health bar (the grave rung for politics)
-An empire-wide meter (0–100), **DERIVED each cycle** (not a parallel system) from: weighted **colony morale** (the people's contentment — already computed) + the recent **demand track-record** (enact/refuse outcomes) + **war outcomes** (wins ↑, war-weariness ↓) + economic state. **Government type modulates the weights** (democracy: morale + demands dominate; dictatorship: stability/force + military dominate, morale matters less but unrest accrues). **Low legitimacy → the regime-change grave rung** (the phased coup/revolution/secession already locked above). High legitimacy → room to act *against* the popular will. This is politics' cradle-to-grave loss: mismanage it and you lose your government, or the empire fractures — then you re-earn it.
+### Legitimacy — the regime's health bar, **LOCAL not empire-wide** (the grave rung for politics)
+**Legitimacy is tracked PER SYSTEM (the province), not as one empire-wide number** — so the whole empire can never rebel at once; you lose *provinces*, regionally, one at a time, and can fight to hold or retake them. A **station** (especially a lone or major one) can hold its **own** legitimacy and break away independently — fitting the station as the fragile, frontier, easily-lost node.
+
+Each system's legitimacy (0–100) is **DERIVED each cycle** (not a parallel system) from: its **hosts' morale** (the local people's contentment — already computed per colony/station) + the local **demand track-record** + **war outcomes** affecting it + **governor competence** (the delegation layer holds a restless province) + **distance/connectivity to the capital** (a far, poorly-connected system is harder to hold — ties to logistics and the Stargate gate-network pillar: a gated province is easier to keep). **Government type modulates the weights** (democracy: morale + demands dominate; dictatorship: garrison/force + control dominate, morale matters less but unrest accrues).
+
+**Two tiers of collapse:**
+- **Local (common, manageable):** a single system's legitimacy collapses → **that system rebels** — secedes to independence, installs a rival local government, or defects to an enemy. Regional, not fatal. A restless frontier while the core stays loyal is the normal texture.
+- **Central (rare, catastrophic):** if the **capital's** legitimacy collapses, or **enough** provinces rebel at once, the central **REGIME** falls — the empire-wide coup/revolution/regime-change locked above. This is the extreme, reached *through* widespread local failure, not a single empire bar ticking to zero.
+
+This is politics' cradle-to-grave loss: mismanage a province and you lose *it*; mismanage the whole and you lose your government. Re-earn legitimacy to recover a wavering system before it goes.
 
 ### Blocs — the sources of demands (Stellaris-parties)
 A **small FIXED set of interest blocs**, each with **EMERGENT support** that shifts with conditions and your responses (presets-over-a-substrate, like the dials — civics can extend it later):
@@ -88,25 +96,49 @@ Flavor text dresses the emergent trigger; the *substance* is generated, so it's 
 ### The delegate — the Interior Minister (the auto-resolve path; the principle made concrete)
 A commander (talent-gated, M3) seated as **Interior Minister**. The player sets a **stance/policy** ("favour stability," "favour the military," "keep taxes low," "balance the blocs"), and the minister **auto-responds to demands per that stance, at a competence cost** (a good minister optimises; a poor one mishandles → legitimacy leaks). So a player who doesn't want to micro politics sets a stance + a capable minister and forgets it; a player who *loves* it handles every demand personally. **That symmetry is the bar from the governing principle.**
 
+### Government RE-SKINS the names AND the process (the modulator extends to presentation + flow)
+**The same machinery underneath; the government type changes what it's CALLED and HOW it plays out.** Government-as-modulator isn't only coefficients and rule-overrides on the numbers — it also overrides the **vocabulary** and the **process flow** of this whole internal layer, so a democracy and a hive don't look like the same game with different multipliers. The substrate (legitimacy meter, blocs, emergent demands, enact/refuse, collapse) is identical; the **skin and the steps** are the government's to set. Same as the dial classifier names the regime, an extra column of that JSON names the *politics*:
+
+| Concept (engine) | Democracy / Republic | Dictatorship / Autocracy | Theocracy | Hive / Machine |
+|---|---|---|---|---|
+| **Bloc** | **party** | **faction / clique** | **sect / order** | (none — one will) |
+| **Demand** | petition / platform plank | grievance / agitation | doctrinal call | (none / drift signal) |
+| **Enact** | pass / legislate | grant / decree | sanctify / issue edict | self-correct |
+| **Refuse** | veto / lose the vote | **suppress / purge** | declare heresy | overrule |
+| **Legitimacy loss** | lose the election | coup risk / unrest | **schism** | (near-none — coherence) |
+| **The cadence** | **elections** (periodic, scheduled reckoning) | continuous unrest you suppress/appease + coup risk | doctrinal cycles / religious calendar | minimal — rare drift events |
+
+**The PROCESS shifts too, not just the words:**
+- **Consent regimes (Authority→People):** demands arrive as petitions; refusing one costs you at the next **election** (a scheduled, recurring legitimacy reckoning unique to these regimes — lose it and the regime changes *peacefully*). The people leave or vote you out; they rarely shoot.
+- **Command regimes (Authority→One Ruler):** there's no election to lose — demands are unrest you **suppress** (cheap short-term, stacks resentment) or **appease**, and the grave rung is a **coup** (a faction's loyalty flips the garrison) rather than a ballot. Legitimacy is held by force + delivery, not approval.
+- **Theocracy:** demands are doctrinal; refusing the faithful risks a **schism** (a sect secedes with its own legitimacy — ties straight into the per-system local-collapse model above).
+- **Hive / Machine:** the layer nearly **collapses to nothing** — minimal/no blocs, no demands, no elections; "discontent" is rare coherence-drift, not politics. This is the intended *thin* skin for a unity-stat empire (and the place the "what replaces morale" open question lands).
+
+**Why it's cheap:** the engine still computes one legitimacy number, one bloc-support set, one demand list. The government type supplies (a) a **string table** (bloc→"party"/"sect", refuse→"purge"/"veto") read by the readout/UI, and (b) a small set of **process flags** already implied by the dials — `HasElections` (consent regimes), `RefusalMode` (emigration / suppress→coup / schism), `DemandVolume` (how loud/often) — all derivable from the Authority/Openness/Militarism notches the modulator already holds. No parallel system per government; one substrate, re-skinned and re-sequenced by the same modulator that already overrides the numbers.
+
 ### Cradle to grave (politics)
 > a simulation **PRESSURE** (a real condition) → a **BLOC** voices a **DEMAND** (organised interest) → the player **ENACTS or REFUSES** (the lever) → **buff/debuff** to bloc support + legitimacy + morale (the effect) → sustained mishandling collapses **LEGITIMACY** → **regime change / revolt / secession** (the grave rung — you can lose your government or fracture your empire) → re-earn legitimacy to recover.
+>
+> *(The whole loop above is **re-skinned and re-sequenced by government type** — see "Government RE-SKINS the names AND the process": same machinery, different words and cadence, from party-petition-veto-election to faction-grievance-purge-coup.)*
 
 ### Connections (Prime Directive)
 - **Morale/population** (built) — demands are generated from its factors; unrest is the per-colony manifestation; war-weariness is a morale input.
-- **Government** (substrate built) — the modulator: which blocs are loud, how loud demands are, the refusal cost (emigration vs revolt), and legitimacy's weights; legitimacy-collapse triggers the locked regime-change.
+- **Government** (substrate built) — the modulator: which blocs are loud, how loud demands are, the refusal cost (emigration vs revolt), and legitimacy's weights; legitimacy-collapse triggers the locked regime-change. **It also re-skins the VOCABULARY and re-sequences the PROCESS of this layer** (party/petition/election vs faction/grievance/coup — see "Government RE-SKINS the names AND the process"), via a string table + a few process flags (`HasElections`, `RefusalMode`, `DemandVolume`) derived from the same dial notches.
 - **Economy** (built) — most demands are economic (taxes/jobs); enacting spends money/resources.
 - **Military** (built) — war demands; war outcomes feed legitimacy; "Confront [Rival]" bridges to EXTERNAL casus belli.
 - **People** (M3 talent) — the Interior Minister is a delegate commander.
 - **EXTERNAL politics** (next) — rival-facing demands hand off to diplomacy/casus belli.
 
 ### Build order (design now; build when scheduled)
-legitimacy meter (derived) → blocs + emergent support → the emergent demand engine (reads the morale factors) → enact/refuse + buff/debuff + bloc-conflict → the Interior-Minister delegate → wire legitimacy-collapse to the locked regime-change. *(EXTERNAL diplomacy — relations/treaties/casus belli/espionage/first-contact — is the larger, later half; see `docs/DIPLOMACY-DESIGN.md`.)*
+legitimacy meter (derived, **per-system**) → blocs + emergent support → the emergent demand engine (reads the morale factors) → enact/refuse + buff/debuff + bloc-conflict → **the government re-skin/process layer** (string table + `HasElections`/`RefusalMode`/`DemandVolume` flags off the dials) → the Interior-Minister delegate → wire local legitimacy-collapse (system secession) + central collapse (capital / enough provinces) to the locked regime-change. *(EXTERNAL diplomacy — relations/treaties/casus belli/espionage/first-contact — is the larger, later half; see `docs/DIPLOMACY-DESIGN.md`.)*
 
 ### Open (decide when we build)
 - Legitimacy's exact weight formula + the collapse threshold (calibration — feel).
 - Bloc **support** dynamics (how fast support shifts; loyalty vs support split).
 - Whether a 6th bloc (Faithful) appears only when the theocracy/tradition lean is high.
 - Demand cadence (how often the people speak) + how many can be "open" at once.
+- The re-skin **string table** + process-flag values per government type (the JSON column, moddable — same file as the dial classifier).
+- Election mechanics for consent regimes (the scheduled legitimacy reckoning) — how often, and whether a lost election is a peaceful regime-swap vs. a soft game-over.
 
 ---
 
