@@ -20,6 +20,14 @@ namespace Pulsar4X.Factions
         public TimeSpan FirstRunOffset => TimeSpan.FromDays(5);
         public Type GetParameterType => typeof(FactionInfoDB);
 
+        /// <summary>
+        /// Liveness gauge: total faction entities processed across all ProcessManager calls. Climbs only once
+        /// MasterTimePulse actually iterates the GlobalManager (where faction entities live) — before the
+        /// keystone fix this stayed 0 forever (the processor was registered but never reached any faction).
+        /// Read by tests to prove faction-level processors fire. Not serialized; resets each process start.
+        /// </summary>
+        public static int TickCount;
+
         private Game _game;
 
         public void Init(Game game)
@@ -45,6 +53,7 @@ namespace Pulsar4X.Factions
                 ProcessEntity(entity, deltaSeconds);
                 count++;
             }
+            TickCount += count; // liveness gauge — proves the GlobalManager is now being iterated
             return count;
         }
 

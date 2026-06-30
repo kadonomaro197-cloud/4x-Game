@@ -85,5 +85,19 @@ namespace Pulsar4X.Tests
             decimal taxAfter = money.GetTransactionsByCategory(TransactionCategory.ColonyTax).Sum(t => t.Amount);
             Assert.That(taxAfter, Is.GreaterThan(taxBefore), "colony tax should have added income to the faction ledger");
         }
+
+        [Test]
+        [Description("KEYSTONE: faction-level processors now FIRE because MasterTimePulse processes the GlobalManager's subpulse (where faction entities live). NPCDecisionProcessor.TickCount climbs as the clock advances; before the fix it stayed 0 forever — the GlobalManager was never iterated, leaving every faction-level autonomous loop (NPC AI, politics) dormant.")]
+        public void FactionLevelProcessors_FireOnceGlobalManagerIsIterated()
+        {
+            var s = TestScenario.CreateWithColony();
+
+            int before = NPCDecisionProcessor.TickCount;
+            s.AdvanceTime(TimeSpan.FromDays(60)); // NPCDecisionProcessor: FirstRunOffset 5d, RunFrequency 30d → fires ~twice
+
+            int after = NPCDecisionProcessor.TickCount;
+            Assert.That(after, Is.GreaterThan(before),
+                "a faction-level processor should fire now that MasterTimePulse iterates the GlobalManager subpulse");
+        }
     }
 }

@@ -56,11 +56,7 @@ FactionInfoDB
 
 `DoctrineVector` has four float weights. They are relative, not normalized — whichever is largest drives that cycle's decision. Defaults to all zeros (no decision is made).
 
-`NPCDecisionProcessor` registers via the standard `IHotloopProcessor` auto-discovery. It targets entities with `FactionInfoDB`. However, **faction entities currently live in the GlobalManager, which MasterTimePulse does not iterate** — so this processor will not fire until either:
-1. The GlobalManager is added to `MasterTimePulse.DoProcessing()`, or
-2. The processor is triggered manually (e.g., from a monthly game-time event).
-
-This is a known wiring gap. The processor itself compiles and will not crash startup.
+`NPCDecisionProcessor` registers via the standard `IHotloopProcessor` auto-discovery. It targets entities with `FactionInfoDB`. **The GlobalManager wiring gap is FIXED (keystone, 2026-06-30):** `MasterTimePulse.SimulateTimeUntil` now processes `GlobalManager.ManagerSubpulses` after the per-system block, so faction-level processors fire on their schedule (NPCDecisionProcessor: `FirstRunOffset` 5d, `RunFrequency` 30d). It still no-ops on player factions (`IsNPC == false`) and its `Tick` decision body is still a TODO — but the *loop now runs*, which is the prerequisite every faction-level autonomous system (NPC turns, the internal/external politics engines) was waiting on. Liveness gauge: `NPCDecisionProcessor.TickCount` (static; climbs each ProcessManager call) — asserted by `FactionEconomyTests.FactionLevelProcessors_FireOnceGlobalManagerIsIterated`.
 
 **Scenario JSON keys (FactionFactory.LoadFromJson):**
 ```json
@@ -84,6 +80,6 @@ This is a known wiring gap. The processor itself compiles and will not crash sta
 
 2. **`IndustryDesigns` must be refreshed after any mid-game unlock.** The startup path (`SetIndustryDesigns`) and the startup-item path (`ColonyFactory.cs:43`) both do this correctly. Any new unlock call site must also update `IndustryDesigns` — either by calling the sync loop or by calling `SetIndustryDesigns()`.
 
-3. **NPCDecisionProcessor wiring is incomplete.** See note above. Don't remove it — it's the intended integration point. Wire the global manager when implementing NPC turns.
+3. **NPCDecisionProcessor now FIRES (GlobalManager wired, 2026-06-30) but its decision body is still a stub.** The loop runs (see note above); the `Tick` that turns doctrine weights into actual orders is the TODO. So it's safe and live but does nothing yet — implement the decision body when building NPC turns.
 
 4. **Every material a *starting* `ComponentDesign` needs must be in the colony blueprint's `StartingItems`.** `ColonyFactory.CreateFromBlueprint` unlocks `StartingItems` into `CargoGoods` first, then builds each `ComponentDesigns` entry — and `ComponentDesigner` (`Engine/Components/ComponentDesigner.cs:63`) looks up every `ResourceCost` material in the **unlocked** `CargoGoods`. A required-but-not-unlocked material crashes New Game / Quickstart in `ComponentDesigner` (`GUID object {id} not found`). This happened when `electronics`/`ree-magnetics` were added to the starting laser weapon and to the Ship Yard / Research Lab installations (commit `28967c7`) without being added to `earth.json` `StartingItems` — fixed by adding them. When you give a starting installation/weapon a new material cost, add that material to `StartingItems` too. (Related defensive change: `CargoDefinitionsLibrary.GetAny(string)` returns null instead of throwing `Sequence contains no elements`, so the failure names the missing id.) **Separate latent bug:** `TemplateFiles/ordnance.json` references `gallicite`, which is **not defined** as a mineral or material — harmless until that ordnance design is built, then it faults the same way.
