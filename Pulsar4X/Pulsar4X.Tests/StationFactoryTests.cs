@@ -142,5 +142,46 @@ namespace Pulsar4X.Tests
             Assert.That(stockpile.TotalStoredMass, Is.GreaterThan(before),
                 "a station with a mine + hold should have extracted minerals off its hosting body");
         }
+
+        [Test]
+        [Description("Deploy-bare-build-in-situ (Model 2): installing a constructor module makes a station a BUILDER — it gains a production line that handles the same industry type a colony uses to build installations, and accepts a build job set to install ON the station. The fabricate→install step (ComponentDesign.OnConstructionComplete → InstallOn.AddComponent) is host-agnostic, already proven by the colony ProductionBuildTests + the station mining test above.")]
+        public void Station_WithConstructorModule_IsAnInSituBuilder()
+        {
+            var s = TestScenario.CreateWithColony();
+            var planet = s.Colony.GetDataBlob<ColonyInfoDB>().PlanetEntity;
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+
+            // The colony's OWN constructor (factory) design — the same chassis a station carries.
+            var colonyComps = s.Colony.GetDataBlob<ComponentInstancesDB>();
+            Assert.That(colonyComps.TryGetComponentsByAttribute<IndustryAtb>(out var facInsts), Is.True,
+                "precondition: the colony has a constructor/factory component to copy");
+            var facDesign = facInsts.First().Design;
+
+            // A refinery is the canonical installation the colony build path (ProductionBuildTests) already builds.
+            var refineryDesign = factionInfo.IndustryDesigns["default-design-refinery"];
+
+            var station = StationFactory.CreateStation(s.Faction, planet);
+            Assert.That(station.HasDataBlob<IndustryAbilityDB>(), Is.False, "a bare station has no production line yet");
+
+            station.AddComponent(facDesign); // install the constructor → the in-situ build capability
+
+            Assert.That(station.HasDataBlob<IndustryAbilityDB>(), Is.True,
+                "installing a constructor module must give the station a production line (IndustryAbilityDB)");
+
+            var industry = station.GetDataBlob<IndustryAbilityDB>();
+            string lineId = industry.ProductionLines
+                .FirstOrDefault(l => l.Value.IndustryTypeRates.ContainsKey(refineryDesign.IndustryTypeID)).Key;
+            Assert.That(lineId, Is.Not.Null,
+                "the station's constructor should handle the same industry type the colony uses to build installations");
+
+            // The build job queues on the station, set to install the finished module ON the station (in-situ).
+            var job = new IndustryJob(factionInfo, "default-design-refinery");
+            job.InitialiseJob(1, false);
+            job.InstallOn = station;
+            Assert.DoesNotThrow(() => IndustryTools.AddJob(station, lineId, job),
+                "a station with a constructor should accept an in-situ build job");
+            Assert.That(industry.ProductionLines[lineId].Jobs, Does.Contain(job),
+                "the in-situ build job should be queued on the station's own production line");
+        }
     }
 }

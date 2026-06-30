@@ -58,6 +58,8 @@ So a station that carries the matching components is mined / built / researched 
 
 ## Tests
 
+**Build model — deploy bare, build IN-SITU (LOCKED 2026-06-30, see `docs/SPACE-STATIONS-DESIGN.md`).** A station is a generic chassis; "mining/research station" is emergent from the modules you bolt on. You deploy a bare platform (frame + power + control + minimal infra + a small constructor) and build modules ON it on location. The whole in-situ loop (`IndustryProcessor` → `ConstructStuff` → `ComponentDesign.OnConstructionComplete` → `InstallOn.AddComponent`) is **already host-agnostic** — a station with a constructor module builds + installs its own modules for free. Remaining to build is the PLAYER front: a deploy order/UI + queue-module-on-a-station UI + materials shipping. Gauge: `Station_WithConstructorModule_IsAnInSituBuilder`.
+
 `Pulsar4X.Tests/StationFactoryTests.cs` (rides `TestScenario.CreateWithColony`):
 - `CreateStation_WiresSharedChassis_AndRegistersOnFaction` — the station carries the shared blob set, hosting body is set, it's in `Stations` (not `Colonies`), owned by the faction, in the body's manager.
 - `CreateStation_PopulationOptional` — automated = unmanned; manned houses the given species.

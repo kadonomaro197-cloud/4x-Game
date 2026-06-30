@@ -78,6 +78,31 @@ A research station that can't be researched, built from materials, manned, and *
 
 ---
 
+## The BUILD MODEL — deploy bare, build in-situ (LOCKED 2026-06-30)
+
+**The developer's call (his words):** *"What if I slap a mining station between some asteroids and a mining station is just a station UNTIL I build a mining module on it."* Locked: a station is a **generic chassis**; *"mining station"* / *"research station"* are **descriptions of the modules you bolted on, not types you pick** — exactly the component-chassis law ships already follow (a "warship" is a ship with guns). And the build model is **deploy a bare platform, then build its modules ON it, on location** — NOT "design-and-assemble-complete-at-a-shipyard" (that was the rejected alternative; it bakes the modules in at build time and loses the "just a station until you add a module" feel).
+
+**The bare platform** is the cheap minimum that can host modules and bootstrap construction: **frame + power + control core + minimal infrastructure + a small constructor module** (the constructor is what gives it an in-situ build line; the infra/power is what lets that line actually run — see the efficiency note below). You deploy it to a spot (a belt body / point between asteroids), and it sits there inert — *just a station* — until you build a module onto it.
+
+**The in-situ loop is ALREADY host-agnostic in the engine** (verified by reading, 2026-06-30 — this is mostly CONNECT, not build):
+- `IndustryProcessor` keys on `IndustryAbilityDB`, not host type — a station with a constructor module is processed for free.
+- `IndustryAtb.OnComponentInstallation` creates the `IndustryAbilityDB` (the production line) on **any** entity the constructor is installed on (`Industry/IndustryAtb.cs:55-57`).
+- `IndustryTools.ConstructStuff` operates on a generic `industryEntity` (CargoStorageDB + IndustryAbilityDB + faction) with **no `ColonyInfoDB` assumption** (`Industry/IndustryTools.cs:90`).
+- `ComponentDesign.OnConstructionComplete` installs a finished module via **`batchJob.InstallOn.AddComponent(...)` + `ReCalcAbilities`** — no colony check (`Engine/Components/ComponentDesign.cs:70-77`). Set `InstallOn = theStation` and the built module lands on the station.
+- The **mining wire** (this branch) then makes the installed mine actually mine its hosting body.
+
+So the full chain — *ship materials to the platform → its constructor fabricates a mine → installs it on itself → it mines the belt* — rides entirely on existing, now-verified host-agnostic code. **Gauge:** `StationFactoryTests.Station_WithConstructorModule_IsAnInSituBuilder` (a station gains a production line that handles the colony's installation industry type and accepts an install-on-self job) + `Station_WithMiningModule_MinesItsHostingBody`.
+
+**The efficiency catch (a real design point, flagged):** `ConstructStuff` scales output by `InfrastructureProcessor.GetEfficiency` — a bare platform carrying a constructor but **no infrastructure/power** runs that constructor at ~0 efficiency (Required capacity > 0, Provided = 0). So the bare platform MUST include minimal infrastructure/power, exactly like a colony needs its utility grid. This is *why* the bare platform is "frame + power + control + minimal infra + constructor," not just "frame + constructor."
+
+**What's still to BUILD (the player-facing front of the chain — engine + UI):**
+1. **A deploy path** — a player order/UI to place a bare station platform at a chosen location (the engine `StationFactory.CreateStation` exists; the player can't call it yet). Likely a "deploy station platform" constructable built at a colony then sent out, or a direct deploy order.
+2. **Queue-a-module-on-a-station UI** — the colony industry window (`ColonyManagementWindow`/`IndustryDisplay`) pointed at a selected station, with the install-on-self default. The engine job path (`IndustryTools.AddJob` with `InstallOn`) already works.
+3. **Materials supply** — ship materials to the station (logistics/cargo) for the FIRST module; once a mine + refinery are up it can self-sustain from the belt (the satisfying loop).
+4. **(Later)** a station designer mirroring the ship designer (task #21 territory) — for v1, a couple of preset bare-platform + module designs suffice.
+
+---
+
 ## Where this plugs in (connections to map before building)
 
 - **Colonies** (`GameEngine/Colonies/`) — the **reference chassis** the parallel `StationInfoDB` mirrors (NOT generalized — `ColonyInfoDB` stays planet-tied); the morale/population loop must be shared so it runs on both hosts.
