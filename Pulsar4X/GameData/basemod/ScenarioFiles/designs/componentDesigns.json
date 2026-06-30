@@ -445,13 +445,7 @@
     "Payload": {
       "UniqueId": "default-design-space-habitat",
       "Name": "Space Habitat",
-      "TemplateId": "infrastructure",
-      "Properties": [
-        { "Key": "Min Gravity", "Value": 0.0 },
-        { "Key": "Max Gravity", "Value": 100.0 },
-        { "Key": "Min Pressure", "Value": 0.0 },
-        { "Key": "Max Pressure", "Value": 100.0 }
-      ]
+      "TemplateId": "space-habitat"
     }
   },
   {

@@ -811,6 +811,72 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "space-habitat",
+      "Name": "Space Habitat",
+      "Formulas": {
+        "Description": "A sealed, self-contained habitat module. Provides life support and housing for station crews regardless of the body the station orbits — it carries its own internal environment, so unlike planetary infrastructure it has NO gravity or pressure tolerance limits and supports population anywhere (asteroid, dwarf, deep space).",
+        "Mass": "1000",
+        "Volume": "[Mass]",
+        "HTK": "0.5",
+        "CrewReq": "10",
+        "ResearchCost": "0",
+        "CreditCost": "0",
+        "BuildPointCost": "100"
+      },
+      "ResourceCost": {
+        "iron": "[Mass] * 0.5",
+        "aluminium": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.1",
+        "plastic": "[Mass] * 0.1",
+        "stainless-steel": "[Mass] * 0.1"
+      },
+      "ComponentType":"Infrastructure",
+      "MountType": "ShipCargo, PlanetInstallation",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "Support Colonists",
+          "DescriptionFormula": "'Population this sealed habitat supports — anywhere, since it provides its own environment (no gravity or atmosphere tolerance applies).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "500"
+        },
+        {
+          "Name": "Storage Amount",
+          "DescriptionFormula": "'The amount of space that is dedicated to storage space. '",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "500"
+        },
+        {
+          "Name": "Support Capacity",
+          "DescriptionFormula": "'Support capacity each unit of this habitat provides. Other installations on the station consume this capacity.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "1000"
+        },
+        {
+          "Name": "DBargs",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(UniqueID('general-storage'), PropertyValue('Storage Amount'))",
+          "AttributeType": "Pulsar4X.Storage.CargoStorageAtb"
+        },
+        {
+          "Name": "DBargsPopSupport",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Support Colonists'))",
+          "AttributeType": "Pulsar4X.Galaxy.PopulationSupportAtbDB"
+        },
+        {
+          "Name": "DBargsCapacity",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Support Capacity'))",
+          "AttributeType": "Pulsar4X.Industry.InfrastructureCapacityAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "space-port",
       "Name": "Space Port",
       "Formulas": {
