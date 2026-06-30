@@ -35,7 +35,7 @@ These are self-maintaining (CI gates them red/green every push). Listed so we kn
 | Combat suite (`AutoResolve`, `BattleTrigger`, doctrine, retreat, weapon-triangle, `CombatStressLab`…) | the auto-resolve space-combat spine | 🔵 |
 | Detection (`SensorDetection`, `SensorEmcon`, `RangeReadout`…) | fog/EMCON/first-strike engine | 🔵 |
 | Hazards (`SpaceHazard`, `HazardResearchLoop`, `SpatialEnvironmentsDiorama`…) | all six hazard flavours cradle-to-grave | 🔵 |
-| **M-ECON** (`MoraleTests`, `ManpowerTests`, `FactionEconomyTests`, `GovernmentTests`) | morale math, manpower pools, crew rule, tax→ledger, government dials/classifier, society readout | 🔵 |
+| **M-ECON** (`MoraleTests`, `ManpowerTests`, `FactionEconomyTests`, `GovernmentTests`, `DiplomacyTests`) | morale math, manpower pools, crew rule, tax→ledger, government dials/classifier, society readout, diplomacy relationship-track substrate | 🔵 |
 | economy / mining / orbits / save-load / modding | the economy substrate + infrastructure | 🔵 |
 
 **What this layer does NOT cover (the reason Layer 3 exists):** the client running at all; any rendering; player-facing reachability (a system with no UI/data wiring); calibration *feel*; performance; save/load of a *played* game; the New-Game path *from the menu* (the harness mirrors it but isn't it).
@@ -152,6 +152,12 @@ These are self-maintaining (CI gates them red/green every push). Listed so we kn
 - **Method:** engine test per link (mirror the auto-resolve fixtures) + the whole-loop gauge once stitched; live drive from the (to-build) `GroundCombatWindow`.
 - **Most likely failure:** the complex `DamageProcessor` (stubbed) is a prerequisite; ground combat has no tests yet (don't compound the no-combat-tests pattern).
 - **Unblocks:** **v1 ships** (`docs/MVP.md` §1).
+
+#### C6 — Diplomacy behaves (IFF + first-contact + commerce wiring, #32/#33) — ⚫ NOT-YET
+- **What right looks like:** the relationship score actually *decides things* — a War/Hostile stance flips IFF so combat engages; a TradeAgreement/LogisticsAccess flag gates inter-faction commerce/supply; first contact creates the relationship row and fires an event. The substrate (`DiplomacyDB` + `RelationshipState`, the score→stance derivation) is **built and CI-green now (`DiplomacyTests`)** — this row tracks the BEHAVIOR slice that reads it.
+- **Method:** engine integration test (two factions, set a stance → assert IFF/commerce respond) once the readers are wired; live drive from a diplomacy panel.
+- **Most likely failure:** the GlobalManager-not-iterated trap for any faction-level diplomatic processor → **mitigated** (keystone #34 fixed — the GlobalManager is now iterated); or a default-Neutral stranger being treated as Friendly/Hostile by an unguarded IFF reader → mitigate by deriving hostility strictly from `CurrentStance()`.
+- **Unblocks:** the external-politics "teeth" layer (treaties-as-levers, casus belli, the reactive "Are we good?" engine) and NPC diplomatic AI.
 
 ---
 

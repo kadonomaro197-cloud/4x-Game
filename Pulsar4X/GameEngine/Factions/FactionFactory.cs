@@ -297,6 +297,7 @@ namespace Pulsar4X.Factions
                 new FactionOwnerDB(),
                 new FleetDB(),
                 new OrderableDB(),
+                new DiplomacyDB(),
             };
             var factionEntity = Entity.Create();
             game.GlobalManager.AddEntity(factionEntity, blobs);
@@ -355,6 +356,7 @@ namespace Pulsar4X.Factions
                 new FactionOwnerDB(),
                 new FleetDB(),
                 new OrderableDB(),
+                new DiplomacyDB(),
             };
             var factionEntity = Entity.Create();
             game.GlobalManager.AddEntity(factionEntity, blobs);
