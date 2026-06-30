@@ -42,9 +42,9 @@ The economy processors query by **ability component**, not by `ColonyInfoDB`:
 - `IndustryProcessor` → `GetAllEntitiesWithDataBlob<IndustryAbilityDB>()` (auto-attached when an industry module is installed)
 - `ResearchProcessor` → `GetAllEntitiesWithDataBlob<ResearcherDB>()` (spawned by a research-lab component)
 
-So a station that carries the matching components is mined / built / researched **without any station-aware code**. The exceptions (the next build slice, task #17):
-1. **`MineResourcesProcessor.ProcessEntity` still has a `ColonyInfoDB` guard** and reads `MineralsDB` off `colonyInfoDB.PlanetEntity` — it must learn to also accept a `StationInfoDB` and read off `HostingBodyEntity`, or a station won't actually mine.
-2. **`PopulationProcessor` is hard-keyed to `ColonyInfoDB`** (`GetAllDataBlobsOfType<ColonyInfoDB>()`) — a manned station won't grow population until a station-aware population path exists (parallel processor or a shared interface both hosts implement).
+So a station that carries the matching components is mined / built / researched **without any station-aware code**. The exceptions:
+1. **Mining — WIRED 2026-06-30 (task #17, slice 1).** `MineResourcesProcessor` was hard-coded to read `MineralsDB` off `colonyInfoDB.PlanetEntity` in three spots (`ProcessEntity`, `CalcMaxRate`, and `MiningHelper.CalculateActualMiningRates`). All three now resolve the resource body through the host-agnostic helper **`MiningHelper.TryGetMiningBody(entity, out bodyEntity)`** — colony → `PlanetEntity`, station → `HostingBodyEntity` (guards an unset/invalid body so it can't NPE). A station that carries a mine component + a cargo hold now mines its hosting body exactly like a colony. `InfrastructureProcessor.GetEfficiency` and the recalc path were already host-agnostic. Mining bonuses come from `ColonyBonusesDB` (a station has none → defaults to ×1.0). Gauge: `StationFactoryTests.Station_WithMiningModule_MinesItsHostingBody` (a station carrying the colony's own mine + cargo designs accrues `CargoStorageDB.TotalStoredMass`) + `TryGetMiningBody_ResolvesColonyAndStation`.
+2. **`PopulationProcessor` is STILL hard-keyed to `ColonyInfoDB`** (`GetAllDataBlobsOfType<ColonyInfoDB>()`) — a manned station won't grow population until a station-aware population path exists (parallel processor or a shared interface both hosts implement). The remaining half of task #17.
 
 ---
 

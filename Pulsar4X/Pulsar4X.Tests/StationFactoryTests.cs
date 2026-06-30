@@ -8,6 +8,8 @@ using Pulsar4X.Datablobs;
 using Pulsar4X.Storage;
 using Pulsar4X.Industry;
 using Pulsar4X.Names;
+using Pulsar4X.Colonies;
+using Pulsar4X.Components;
 
 namespace Pulsar4X.Tests
 {
@@ -90,6 +92,55 @@ namespace Pulsar4X.Tests
             // Deep copy: mutating the clone must not touch the original's collections.
             clone.Population[42] = 9999;
             Assert.That(original.Population[42], Is.EqualTo(1234), "Population dictionary was shared, not cloned");
+        }
+
+        [Test]
+        [Description("The host-agnostic mining seam: TryGetMiningBody resolves a colony's planet and a station's hosting body, and rejects a plain body.")]
+        public void TryGetMiningBody_ResolvesColonyAndStation()
+        {
+            var s = TestScenario.CreateWithColony();
+            var planet = s.Colony.GetDataBlob<ColonyInfoDB>().PlanetEntity;
+
+            Assert.That(MiningHelper.TryGetMiningBody(s.Colony, out var colonyBody), Is.True);
+            Assert.That(colonyBody, Is.EqualTo(planet), "a colony's mining body is its planet");
+
+            var station = StationFactory.CreateStation(s.Faction, planet);
+            Assert.That(MiningHelper.TryGetMiningBody(station, out var stationBody), Is.True);
+            Assert.That(stationBody, Is.EqualTo(planet), "a station's mining body is its hosting body");
+
+            // A bare body (neither colony nor station) is not a mining host.
+            Assert.That(MiningHelper.TryGetMiningBody(planet, out _), Is.False);
+        }
+
+        [Test]
+        [Description("A station carrying the colony's own mine + cargo modules mines its hosting body — the economy comes for free, no station-specific code (task #17).")]
+        public void Station_WithMiningModule_MinesItsHostingBody()
+        {
+            var s = TestScenario.CreateWithColony();
+            var planet = s.Colony.GetDataBlob<ColonyInfoDB>().PlanetEntity;
+            Assert.That(planet.HasDataBlob<MineralsDB>(), Is.True, "precondition: the colony's planet has minerals to mine");
+
+            // Reuse the SAME mine + cargo-store designs the starting colony already runs — proves a station
+            // rides the identical component chassis with no station-aware economy code.
+            var colonyComponents = s.Colony.GetDataBlob<ComponentInstancesDB>();
+            Assert.That(colonyComponents.TryGetComponentsByAttribute<MineResourcesAtbDB>(out var mineInstances), Is.True,
+                "precondition: the starting colony has a mine to copy");
+            Assert.That(colonyComponents.TryGetComponentsByAttribute<CargoStorageAtb>(out var cargoInstances), Is.True,
+                "precondition: the starting colony has cargo storage to copy");
+            var mineDesign = mineInstances.First().Design;
+            var cargoDesign = cargoInstances.First().Design;
+
+            var station = StationFactory.CreateStation(s.Faction, planet);
+            station.AddComponent(cargoDesign); // a hold to mine into (a bare station has zero storage)
+            station.AddComponent(mineDesign);  // the mine — AddComponent triggers ReCalc → sets ActualMiningRate
+
+            var stockpile = station.GetDataBlob<CargoStorageDB>();
+            double before = stockpile.TotalStoredMass;
+
+            s.AdvanceTime(TimeSpan.FromDays(60));
+
+            Assert.That(stockpile.TotalStoredMass, Is.GreaterThan(before),
+                "a station with a mine + hold should have extracted minerals off its hosting body");
         }
     }
 }
