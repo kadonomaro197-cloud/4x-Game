@@ -12,6 +12,7 @@ using Pulsar4X.Colonies;
 using Pulsar4X.Components;
 using Pulsar4X.Extensions;
 using Pulsar4X.Galaxy;
+using Pulsar4X.Technology;
 
 namespace Pulsar4X.Tests
 {
@@ -252,6 +253,48 @@ namespace Pulsar4X.Tests
             long after = habStation.GetDataBlob<StationInfoDB>().Population[s.Species.Id];
             Assert.That(after, Is.GreaterThan(before),
                 "a habitat-supported station should grow population, not starve");
+        }
+
+        [Test]
+        [Description("A RESEARCH STATION, cradle-to-grave: a station carrying a research-lab module spawns a ResearcherDB and accrues research points toward a queued tech (paid from faction funds) — proving research is host-agnostic and a station can BE a research flavor (task #18).")]
+        public void ResearchStation_AccruesResearchTowardAQueuedTech()
+        {
+            var s = TestScenario.CreateWithColony();
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+            var planet = s.Colony.GetDataBlob<ColonyInfoDB>().PlanetEntity;
+
+            var labDesign = (ComponentDesign)factionInfo.IndustryDesigns["default-design-research-lab"];
+
+            var station = StationFactory.CreateStation(s.Faction, planet);
+            station.AddComponent(labDesign); // installing the lab spawns a ResearcherDB on a new entity tied to the station
+
+            // The lab spawns its ResearcherDB on a SEPARATE entity, tagged with LocationId = the station.
+            Entity labEntity = null;
+            foreach (var e in station.Manager.GetAllEntitiesWithDataBlob<ResearcherDB>())
+            {
+                if (e.GetDataBlob<ResearcherDB>().LocationId == station.Id) { labEntity = e; break; }
+            }
+            Assert.That(labEntity, Is.Not.Null, "installing a research lab on a station should spawn a ResearcherDB tied to it");
+            var researcherDB = labEntity.GetDataBlob<ResearcherDB>();
+            Assert.That(researcherDB.PointsPerDay.GetValue(), Is.GreaterThan(0), "the station's lab should produce research points");
+
+            // Queue a researchable tech (the faction starts with ample funds to pay the research cost).
+            string techId = null;
+            Tech tech = null;
+            foreach (var kv in factionInfo.Data.Techs)
+            {
+                if (factionInfo.Data.IsResearchable(kv.Key)) { techId = kv.Key; tech = kv.Value; break; }
+            }
+            Assert.That(techId, Is.Not.Null, "the faction should have at least one researchable tech to queue");
+
+            int levelBefore = tech.Level;
+            int progressBefore = tech.ResearchProgress;
+            ResearchProcessor.AssignTech(researcherDB, techId);
+
+            s.AdvanceTime(TimeSpan.FromDays(120));
+
+            Assert.That(tech.ResearchProgress > progressBefore || tech.Level > levelBefore, Is.True,
+                "the research station should have accrued research points toward the queued tech");
         }
     }
 }
