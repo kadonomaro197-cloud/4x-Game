@@ -151,19 +151,22 @@ namespace Pulsar4X.Tests
             var planet = s.Colony.GetDataBlob<ColonyInfoDB>().PlanetEntity;
             var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
 
-            // The colony's OWN constructor (factory) design — the same chassis a station carries.
             var colonyComps = s.Colony.GetDataBlob<ComponentInstancesDB>();
-            Assert.That(colonyComps.TryGetComponentsByAttribute<IndustryAtb>(out var facInsts), Is.True,
-                "precondition: the colony has a constructor/factory component to copy");
-            var facDesign = facInsts.First().Design;
 
             // A refinery is the canonical installation the colony build path (ProductionBuildTests) already builds.
             var refineryDesign = factionInfo.IndustryDesigns["default-design-refinery"];
 
+            // Copy the colony's FULL set of constructor/industry modules onto the station. The colony has several
+            // (factory, refinery, shipyard…), each providing a DIFFERENT industry-type line; a refinery is built by
+            // the installation-construction line specifically, so grabbing just one IndustryAtb component can miss it.
+            var industryDesigns = colonyComps.GetDesignsByType(typeof(IndustryAtb));
+            Assert.That(industryDesigns, Is.Not.Empty, "precondition: the colony has constructor/industry modules to copy");
+
             var station = StationFactory.CreateStation(s.Faction, planet);
             Assert.That(station.HasDataBlob<IndustryAbilityDB>(), Is.False, "a bare station has no production line yet");
 
-            station.AddComponent(facDesign); // install the constructor → the in-situ build capability
+            foreach (var design in industryDesigns)
+                station.AddComponent(design); // install the constructors → the in-situ build capability
 
             Assert.That(station.HasDataBlob<IndustryAbilityDB>(), Is.True,
                 "installing a constructor module must give the station a production line (IndustryAbilityDB)");
