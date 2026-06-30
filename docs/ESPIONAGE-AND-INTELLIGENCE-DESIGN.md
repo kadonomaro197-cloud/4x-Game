@@ -108,7 +108,14 @@ Every rung is reachable and losable — it is NOT a parachuted-in "spy points" a
 
 ## Locked vs. open
 
-**Proposed for lock (developer to confirm):**
+**Locked design forks (developer, 2026-06-30) — the options pass:**
+- **D — information model = PER-FACET ledger (D2).** Separate intel on disposition / military / economy / internal-politics / secrets, each Inferred→Confirmed→Stale — so the player SPECIALISES intelligence (what you learn is a real choice). NOT a single fog-% (too shallow) and NOT continuous error-bars (overload). Sub-lock: **passive (ambassador + sensors) = the cheap fuzzy baseline; active (agents) = the sharp/secret stuff** — two distinct intel taps.
+- **E — catalog breadth = E2 NOW (intel + economic: gather/steal-tech/steal-funds/sabotage) as the FOUNDATION for E3 (political + personal: sow-unrest/turn/assassinate).** Build the cold-war core first; **E3 sow-unrest is the high-value wire into the REBELLION hub (B)** but lands later and **needs further discussion** (especially balance, gated behind counter-intel so it isn't oppressive).
+- **F — risk model = F2 + F3 TOGETHER.** Graduated outcomes (clean / success-but-traced / caught) feeding a per-rival **suspicion meter** — hurt them quietly, but each "traced" builds suspicion until they're sure. The deniability game IS the espionage fun; "caught" scales into the betrayal penalty / casus-belli-for-them.
+- **G — the mirror = G3 (always-on, per archetype), tuned LOW and scaling with hostility.** NPCs spy on you per their nature; counter-intel is a STANDING (cheap-baseline, ramp-when-threatened) decision. Non-negotiable for the system to feel fair/alive — a one-way spy toy is the shallow version. *(Developer: "go with your read, may tweak later.")*
+- **H — deception = aim for H2 (simple disinformation — plant a false estimate in THEIR ledger about you), then move to H3 (framing/false-flag) from there.** H2 completes the hidden-information triangle: HIDE (EMCON) · LEARN (intel) · LIE (disinfo). Built last in the spine; H3 is the deeper multi-party intrigue to grow into.
+
+**Locked (developer, 2026-06-30):**
 - **Espionage is the hidden-information ENGINE** — load-bearing for the locked full version, not optional flavor.
 - **The INFORMATION LEDGER** — per-rival, per-facet intel level (Inferred → Confirmed → decays to Stale). Fog-of-war for politics, on the detection substrate.
 - **Covert-action catalog built BROAD + data-driven** (mirror of the exchange catalog) — gather / steal-tech / steal-funds / sabotage / sow-unrest / turn-or-assassinate / disinformation / counter-intel.

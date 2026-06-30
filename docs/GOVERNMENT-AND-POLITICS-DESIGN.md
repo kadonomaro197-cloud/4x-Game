@@ -67,6 +67,16 @@ Each system's legitimacy (0–100) is **DERIVED each cycle** (not a parallel sys
 
 This is politics' cradle-to-grave loss: mismanage a province and you lose *it*; mismanage the whole and you lose your government. Re-earn legitimacy to recover a wavering system before it goes.
 
+### What "the system rebels" ACTUALLY does — the rebellion mechanics (LOCKED 2026-06-30: a structured combo of all three paths)
+
+When a system's legitimacy hits collapse, it does NOT just flip ownership. It runs a **process with a reaction window**, and the *outcome* depends on what's driving it. The locked design is a combo, not a single path — **rebellion-as-process → one of three resolutions:**
+
+1. **Rebellion is a PROCESS you can fight (the reaction window).** Collapse first puts the system into a **REBELLION state** — hostile-but-not-yet-gone, with a timer/struggle — instead of an instant loss. You get a window to **respond**: pour in legitimacy (enact the local demands, ship aid, replace the governor), OR **militarily suppress it**. *This is the load-bearing wire: suppressing/retaking a rebelling colony IS the ground-combat MVP ("you can take a planet"), pointed inward — internal politics becomes a generator of ground-combat scenarios.* Fail to act and the rebellion resolves into one of:
+2. **Secession → a NEW independent faction is BORN (B1).** The system breaks away as its own faction, inheriting its colonies (and some local forces), carrying a grudge against you. **Your mismanagement literally spawns a rival** — the galaxy gets more crowded organically, and you can try to re-absorb it later by diplomacy or conquest. *(Engine note: needs runtime faction-spawn + asset inheritance — the biggest new piece.)*
+3. **Defection → flips to an EXISTING rival (B2)** — especially the one whose **espionage sowed the unrest** (the ESPIONAGE `sow-unrest` action, `ESPIONAGE-AND-INTELLIGENCE-DESIGN.md` cat E3). This is the cheaper path (transfer ownership, no new faction) and the concrete **payoff for the spy game**: their agents flip your frontier worlds; yours flip theirs. Borders become dynamic.
+
+**Why the combo:** this single mechanic is the **hub that wires three pillars together** — it is *driven by* espionage (defection), it *generates* ground combat (the suppress/retake window), and it *creates* new diplomatic actors (secession). Build order: the **rebellion-state + suppress-window** first (rides ground combat), then **secession-to-new-faction**, then **espionage-driven defection** (lands with the espionage `sow-unrest` slice). Calibration lock from the espionage side: a spy can *nudge* a wavering province toward rebellion but not single-handedly topple a healthy one — legitimacy still has to be low.
+
 ### Blocs — the sources of demands (Stellaris-parties)
 A **small FIXED set of interest blocs**, each with **EMERGENT support** that shifts with conditions and your responses (presets-over-a-substrate, like the dials — civics can extend it later):
 - **Labor** — jobs, low unemployment, housing.
