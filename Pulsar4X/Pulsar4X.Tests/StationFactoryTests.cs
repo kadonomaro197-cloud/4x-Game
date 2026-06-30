@@ -10,6 +10,8 @@ using Pulsar4X.Industry;
 using Pulsar4X.Names;
 using Pulsar4X.Colonies;
 using Pulsar4X.Components;
+using Pulsar4X.Extensions;
+using Pulsar4X.Galaxy;
 
 namespace Pulsar4X.Tests
 {
@@ -205,6 +207,51 @@ namespace Pulsar4X.Tests
             long after = manned.GetDataBlob<StationInfoDB>().Population[s.Species.Id];
             Assert.That(after, Is.LessThan(before),
                 "a sealed-habitat station with no life-support modules should starve (lose population), not grow");
+        }
+
+        [Test]
+        [Description("The void habitat (default-design-space-habitat) supports station population in MICROGRAVITY where Earth-toleranced infrastructure provides nothing — and a manned station carrying it GROWS toward the habitat cap. This is the data that makes an asteroid station viable (task #18 groundwork).")]
+        public void SpaceHabitat_SupportsPopulationInMicrogravity_WhereEarthInfraCannot()
+        {
+            var s = TestScenario.CreateWithColony();
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+
+            // Both infrastructure designs are unlocked at start (added to the colony blueprint).
+            Assert.That(factionInfo.IndustryDesigns.ContainsKey("default-design-space-habitat"), Is.True,
+                "the space habitat design should be unlocked at start");
+            var habDesign = (ComponentDesign)factionInfo.IndustryDesigns["default-design-space-habitat"];
+            var earthInfra = (ComponentDesign)factionInfo.IndustryDesigns["default-design-infrastructure"];
+
+            // A real low-gravity body (asteroid / dwarf) in Sol to station between.
+            Entity lowGravBody = null;
+            foreach (var e in s.StartingSystem.GetAllEntitiesWithDataBlob<SystemBodyInfoDB>())
+            {
+                if (e.GetDataBlob<SystemBodyInfoDB>().Gravity < 1.0 && e.HasDataBlob<MassVolumeDB>() && e.HasDataBlob<NameDB>())
+                {
+                    lowGravBody = e;
+                    break;
+                }
+            }
+            Assert.That(lowGravBody, Is.Not.Null, "Sol should have a low-gravity body (asteroid/dwarf) to station on");
+
+            // Earth-toleranced infrastructure supports NO ONE in microgravity (out of gravity/pressure tolerance)…
+            var earthStation = StationFactory.CreateStation(s.Faction, lowGravBody, 100, s.Species);
+            earthStation.AddComponent(earthInfra);
+            Assert.That(earthStation.GetDataBlob<ComponentInstancesDB>().GetPopulationSupportValue(lowGravBody), Is.EqualTo(0),
+                "Earth-toleranced infrastructure provides no life support in microgravity");
+
+            // …but the void-rated space habitat does.
+            var habStation = StationFactory.CreateStation(s.Faction, lowGravBody, 100, s.Species);
+            habStation.AddComponent(habDesign);
+            Assert.That(habStation.GetDataBlob<ComponentInstancesDB>().GetPopulationSupportValue(lowGravBody), Is.GreaterThan(0),
+                "the void-rated space habitat supports population in microgravity");
+
+            // And a manned, habitat-supported station GROWS toward the cap (where a bare station would starve).
+            long before = habStation.GetDataBlob<StationInfoDB>().Population[s.Species.Id];
+            s.AdvanceTime(TimeSpan.FromDays(120));
+            long after = habStation.GetDataBlob<StationInfoDB>().Population[s.Species.Id];
+            Assert.That(after, Is.GreaterThan(before),
+                "a habitat-supported station should grow population, not starve");
         }
     }
 }
