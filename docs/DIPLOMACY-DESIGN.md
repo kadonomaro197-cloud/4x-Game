@@ -2,6 +2,8 @@
 
 **What it needs to do:** Let factions have relationships with each other — allies, enemies, and everyone in between. Right now the game treats every non-player faction as hostile by definition, with no state machine, no treaties, and no way for factions to cooperate. This document maps what exists, what's missing, and what to build.
 
+> **Two halves of this doc.** The **Survey + mechanical Design Plan** below (Steps 1–6) is the *substrate* — the data model (`DiplomacyDB`, `RelationshipState`), IFF, first-contact wiring, commerce. It's correct and stays. Layered ON TOP of it is **"EXTERNAL politics — politics with teeth"** (near the end, added 2026-06-30) — the *decision-engine* design that makes diplomacy a thing a player can MAIN or delegate, to the same **Every-Layer-a-Complete-Game** bar as the INTERNAL politics layer (`docs/GOVERNMENT-AND-POLITICS-DESIGN.md`). The substrate is the plumbing; the teeth section is what makes it a game. Read both; build the substrate first.
+
 ---
 
 ## Survey Findings — What Currently Exists
@@ -247,9 +249,91 @@ Steps 4 are the same order classes the player uses. The NPC sets `RequestingFact
 
 ---
 
+## EXTERNAL politics — politics with teeth (the decision-engine layer) — LOCKED 2026-06-30
+
+The substrate above (Steps 1–6) gives factions *relationships*. This section makes those relationships a **game** — a pillar a player can MAIN (a whole playthrough won by diplomacy, never firing a shot) or **delegate and ignore** (a Foreign Minister runs it while you play conqueror). Same bar as the INTERNAL layer in `docs/GOVERNMENT-AND-POLITICS-DESIGN.md`; this is its outward-facing twin. **Two theaters: INTERNAL = hold your own house; EXTERNAL = deal with the neighbours.** They share one engine and constantly hand off to each other.
+
+> **The developer's framing (why this matters):** *"x4 games make these lack. Think of a player that auto-resolves everything — combat and colony building — because those aspects are well done. That's a milestone. Vice versa as well."* The bar is symmetric: diplomacy must be good enough that a player would happily auto-resolve **combat** to focus on **politics**, exactly as today a player auto-resolves politics to focus on combat. Neither side is the throwaway.
+
+### The core decision (the lever)
+**Who do you make a friend, who do you make an enemy, and what does each cost you — abroad AND at home?** Every foreign move (open trade, sign a pact, demand tribute, declare war) has a price paid in two currencies at once: the **foreign** ledger (the other faction's relation score, their allies' reactions) and the **domestic** ledger (your blocs and legitimacy — see INTERNAL). A trade deal that enriches you may enrage your Militarists; a war your Militarists demanded bleeds morale through war-weariness if it drags. **There is no free foreign policy** — that two-front cost IS the depth.
+
+### First contact — the EVENT (the Star Trek / Babylon 5 aspect)
+First contact is a **moment, not a line item.** When your sensors first resolve a contact belonging to an unknown faction (the substrate's Step 2 wiring on `SensorScan` → populate `KnownFactions` + fire the event), the game **stops and tells you** — a real event with a decision attached, not a silent dictionary insert:
+- **Who blinked first** matters — did you detect them (you hold the information edge, ties to DETECTION/EMCON: a dark first-contact is a different opening than being hailed loud) or did they hail you?
+- The **opening stance** is set by *their* archetype + *your* government lean, not hardwired Hostile — a pacifist explorer meeting a fellow trader opens Neutral-curious; a militarist meeting a known raider opens at the edge of war.
+- The first decision: **how do you answer** — hail openly (loud, builds relation, reveals you), observe silently (keep the edge, learn first), or warn off (stake a border). This is the cradle of the whole relationship.
+
+First contact is where the **late-game frontier** lives too: a *super-alien* / precursor power or a **crisis faction** (the parked "late-game crisis" aspect) arrives through exactly this path — a first-contact event with a power you can't simply fight, forcing diplomacy as survival. The event system is the same; the stakes scale.
+
+### The relationship as a TRACK (earned cradle-to-grave)
+The substrate's `RelationScore` (−100…+100) and `DiplomaticStance` ladder (War ▸ Hostile ▸ Neutral ▸ Friendly ▸ Allied) are the meter. The TEETH are that the score is **earned and lost through actions the player takes**, never a number you set:
+- **Earns up:** honoured treaties, delivered trade, joint war against a common enemy, gifts/aid, time at peace.
+- **Earns down:** broken treaties (the big one — betrayal craters the score AND signals every *other* faction you're untrustworthy), border incursions, espionage caught, backing their enemy, sanctions.
+- **It's a memory, not a mood** — a faction remembers what you did. This makes the score a *reputation* (your standing with the whole neighbourhood), which is what lets a "diplomatic playthrough" exist: you build a web of trust that's an asset as real as a fleet, and one betrayal can burn it.
+
+### Treaties — the levers (each a real, costed decision)
+Treaties are the moves. The substrate stores them as flags on `RelationshipState` (`TradeAgreement`, `LogisticsAccess`, `MilitaryAccess`); the teeth give each one a **cost, a benefit, and a domestic consequence** so signing is a decision, not a checkbox:
+
+| Treaty | Foreign effect | Domestic consequence (INTERNAL handoff) |
+|---|---|---|
+| **Non-aggression** | locks stance ≥ Neutral; breaking it is the betrayal penalty | calms war-demands; Militarists grumble |
+| **Trade agreement** | opens inter-faction commerce (Step 6); both profit | pleases Merchants; may anger Labor (foreign competition) |
+| **Logistics/transit access** | their ships use your bases / cross your space | Order/security blocs uneasy (foreigners in your space) |
+| **Defensive pact** | drags you into their wars (and them into yours) | Militarists pleased; Pacifists alarmed; a real entanglement |
+| **Tribute / vassalage** | one pays the other; the strong lever over the weak | pride vs. coffers — the tributary's blocs seethe |
+
+Each treaty is **proposed → considered → accepted/countered/refused** (their archetype + relation score decides), and each one you sign **ripples into your INTERNAL politics** — which is the whole point: foreign policy is a domestic act.
+
+### Casus belli — war needs a REASON (the militarism gate)
+You cannot declare war for free. **A war without justification is a legitimacy/morale hit** (your own people ask "why are we dying for this?"); a war with a **casus belli** (a border dispute, a broken treaty, a "Confront [Rival]" demand your own Militarists raised, defence of an ally) is *accepted* by your population. The cost of war is gated by the **MILITARISM dial** (`GOVERNMENT-AND-POLITICS-DESIGN.md`):
+- **Militarist regime** → casus belli is cheap/easy, war is martial pride (morale **bonus**), conquest is legitimate.
+- **Pacifist regime** → casus belli is expensive, war is war-weariness (morale **penalty** that compounds the longer it runs), an unjustified war can topple you.
+This is the seam where EXTERNAL war meets INTERNAL legitimacy — and it's why the militarism dial earns its place (it's the coefficient on this exact trade).
+
+### The handoff — INTERNAL ⟷ EXTERNAL (the two engines, one loop)
+The layers are not separate games; they feed each other every cycle:
+- INTERNAL → EXTERNAL: a **"Confront [Rival]"** demand from your Militarists *is* a casus belli your population already backs; a "Lower Taxes" demand pushes you toward a **trade agreement** for revenue; an "End the War" demand forces you to **sue for peace**.
+- EXTERNAL → INTERNAL: a **war outcome** feeds **legitimacy** (win → up, lose → down, per the per-system model); a **broken treaty** by a rival can rally your blocs; **war-weariness** is a standing morale input while a war runs; a lucrative **trade deal** grows the Merchant bloc.
+- The **delegate** symmetry holds: just as the Interior Minister auto-runs INTERNAL, the **Foreign Minister** auto-runs EXTERNAL.
+
+### Government RE-SKINS external politics too (consistent with the internal tweak)
+Same modulator principle as the INTERNAL layer's re-skin: government type changes the **vocabulary and process** of foreign policy, not just the numbers. A **democracy** ratifies treaties (a legislative act, slow, public, hard to break); a **dictatorship** issues pacts by fiat (fast, personal, as brittle as the ruler); a **theocracy** frames relations as crusade/communion (the faithful vs. the heathen); a **hive** barely does diplomacy at all (it expands or it doesn't). The same `DiplomacyDB` underneath; the string table + process flags (from `GovernmentDB`) re-skin how it reads and how fast/bindingly treaties move.
+
+### The delegate — the Foreign Minister (the auto-resolve path)
+A commander (talent-gated, M3 people pool), seated as **Foreign Minister**. The player sets a **doctrine/stance** ("seek allies," "isolationist," "expand by tribute," "keep the peace"), and the minister **auto-handles first-contacts and treaty proposals per that stance, at a competence cost** (a skilled minister lands good deals and reads rivals; a poor one signs bad pacts and misses betrayals). So a war-focused player delegates foreign policy and is merely *notified* of the big moments; a diplomacy-focused player handles every contact personally and never delegates combat instead. **That symmetry is the Every-Layer bar, applied outward.**
+
+### The EXTERNAL frontier — espionage, wormhole networks, super-aliens, the crisis (placed, not parked-blindly)
+These are the *deeper* external aspects the developer named. They are **later**, but they belong on this same spine, not as bolt-ons:
+- **Espionage / covert agents** (the B5 "politics with teeth" underside) — agents as a people-resource (M3) tasked against a rival: steal tech, sabotage, sway a bloc inside *their* empire (EXTERNAL reaching into their INTERNAL — the mirror of their spies in yours). First slice: a single covert action with a detection risk (caught = the betrayal penalty).
+- **Wormhole / jump-gate networks** (the Stargate aspect) — already partly real (jump points + `KnownJumpPoints`); the political layer is **who controls the gate** — a gated chokepoint is a diplomatic asset (grant/deny transit = the logistics-access treaty with a map behind it), and connectivity feeds the per-system legitimacy model (a well-gated province is easier to hold).
+- **Super-aliens / late-game crisis** — arrives via the first-contact event with stakes that **force** cooperation (a power you can't out-build), the pressure-release the developer wants so the late game doesn't go stale. Diplomacy-as-survival.
+
+### Cradle to grave (external politics)
+> **first contact** (the EVENT — you learn a faction exists) → a **relationship TRACK** built/burned by your **actions** (treaties honoured, betrayals committed) → **treaties** as levers (trade/access/pact/tribute), each with a **domestic** cost → **casus belli** gates war (justified = accepted, unjustified = legitimacy bleed) → **war/peace outcomes** feed back into INTERNAL legitimacy + morale → a relationship can **die** (betrayal, conquest, your faction or theirs destroyed) — and a burned reputation is a real, lasting loss, the grave rung of the diplomatic game.
+
+### Connections (Prime Directive)
+- **Detection/sensors** (built) — first contact rides `SensorScan`; who-sees-whom-first sets the opening edge; EMCON shapes the meeting.
+- **INTERNAL politics / government** (designed) — the constant two-way handoff above; government re-skins + modulates external policy; militarism gates casus belli.
+- **Combat / fleets** (built) — war is the EXTERNAL lever's violent end; defensive pacts pull fleets into others' wars; IFF (Step 4) makes "who can shoot whom" a diplomacy query.
+- **Economy / logistics / commerce** (built/substrate) — trade and access treaties open the inter-faction money + base-sharing paths (Steps 3, 6).
+- **People** (M3 talent) — the Foreign Minister and covert agents are people-resources.
+- **NPC doctrine** (`DoctrineVector`, `NPCDecisionProcessor` skeleton) — archetypes decide how a faction answers contact, proposes/accepts treaties, and chooses war; this layer gives the dormant processor its *foreign* goals (the trap: faction entities live in `GlobalManager`, which `MasterTimePulse` doesn't iterate — the same wiring problem as the internal layer; solve once for both).
+
+### Build order (design now; build after the INTERNAL layer + substrate)
+substrate Steps 1–6 (`DiplomacyDB` + relations + IFF + first-contact wiring + commerce) → first-contact **EVENT** (the moment + opening-stance rules) → treaties as **costed levers** with the INTERNAL handoff → **casus belli** + the militarism gate → war-outcome → legitimacy/morale feedback → the **Foreign Minister** delegate → *(frontier, later)* espionage → gate-control politics → the late-game crisis. **Solve the GlobalManager-not-iterated processor trap once** — it blocks both the internal demand engine and the NPC foreign loop.
+
+### Open (decide when we build)
+- Relation-score dynamics (how fast trust builds vs. how hard betrayal craters it) — calibration/feel.
+- Whether the player can target an **Allied** faction's ships (Aurora says yes; the substrate Step 4 leans yes — confirm).
+- First-contact event cadence + how much info a contact reveals at first sight (ties to the degenerate detection-quality signal — see `GameEngine/Sensors/CLAUDE.md`).
+- How "enough provinces rebel" (INTERNAL central collapse) interacts with a rival **exploiting** your unrest via espionage (the EXTERNAL-into-INTERNAL reach).
+
+---
+
 ## What NOT to Build Yet
 
-- Complex treaty negotiation UI — the data model (Step 1) is sufficient for now; treaties are just setting boolean flags
-- Espionage / infiltration — entirely new system, flag for later
-- Reputation with minor factions — needs faction archetypes first (Step 5)
-- Population happiness from foreign relations — hooks into colony system, flag for later
+- Complex treaty negotiation UI — the data model (Step 1) is sufficient for now; treaties are just setting boolean flags (the *costed-lever* teaty design above is the eventual shape, but v1 ships the flags).
+- Espionage / infiltration — **placed** on the external spine above (the EXTERNAL frontier), built **after** the relationship/treaty/casus-belli core lands; not a v1 item.
+- Reputation with minor factions — the relationship TRACK above is the model; needs faction archetypes first (Step 5).
+- Population happiness from foreign relations — this is now **designed** as the INTERNAL⟷EXTERNAL handoff (trade pleases Merchants, war-weariness bleeds morale); it hooks into the colony/morale system that's now built, so it lands *with* the teeth layer, not "for later."

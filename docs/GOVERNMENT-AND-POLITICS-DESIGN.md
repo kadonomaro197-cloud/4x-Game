@@ -127,7 +127,7 @@ A commander (talent-gated, M3) seated as **Interior Minister**. The player sets 
 - **Economy** (built) — most demands are economic (taxes/jobs); enacting spends money/resources.
 - **Military** (built) — war demands; war outcomes feed legitimacy; "Confront [Rival]" bridges to EXTERNAL casus belli.
 - **People** (M3 talent) — the Interior Minister is a delegate commander.
-- **EXTERNAL politics** (next) — rival-facing demands hand off to diplomacy/casus belli.
+- **EXTERNAL politics** (designed 2026-06-30, `docs/DIPLOMACY-DESIGN.md` → "EXTERNAL politics — politics with teeth") — rival-facing demands hand off to diplomacy/casus belli; a "Confront [Rival]" demand IS a casus belli; war outcomes feed this layer's legitimacy; a trade treaty grows the Merchant bloc. The two layers share one engine and hand off every cycle.
 
 ### Build order (design now; build when scheduled)
 legitimacy meter (derived, **per-system**) → blocs + emergent support → the emergent demand engine (reads the morale factors) → enact/refuse + buff/debuff + bloc-conflict → **the government re-skin/process layer** (string table + `HasElections`/`RefusalMode`/`DemandVolume` flags off the dials) → the Interior-Minister delegate → wire local legitimacy-collapse (system secession) + central collapse (capital / enough provinces) to the locked regime-change. *(EXTERNAL diplomacy — relations/treaties/casus belli/espionage/first-contact — is the larger, later half; see `docs/DIPLOMACY-DESIGN.md`.)*
