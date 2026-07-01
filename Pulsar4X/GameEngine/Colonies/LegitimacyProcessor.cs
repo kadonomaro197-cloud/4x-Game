@@ -53,7 +53,29 @@ namespace Pulsar4X.Colonies
                 morale = moraleDB.Morale;
 
             var inputs = LegitimacyInputs.FromMorale(morale);
+            inputs.WarOutcome = WarTermFor(province);   // 0 in peace; while at war, gated by militarism
             legitimacy.Legitimacy = LegitimacyDB.ComputeLegitimacy(inputs, legitimacy.Factors);
+        }
+
+        /// <summary>
+        /// The war term feeding legitimacy: 0 in peacetime; while the province's OWNING FACTION is at war with
+        /// anyone it's the government's <see cref="Pulsar4X.Factions.GovernmentDB.WarMoraleFactor"/> — a militarist
+        /// regime takes PRIDE in war (a legitimacy bonus), a pacifist one tires of it (a penalty). This is the
+        /// casus-belli militarism gate made LIVE on the province: war has a domestic price set by who you are. A
+        /// faction with no <see cref="Pulsar4X.Factions.GovernmentDB"/> reads the neutral (Mid) default. Defensive:
+        /// any missing game / faction / ledger reads as peace (0).
+        /// </summary>
+        private static double WarTermFor(Entity province)
+        {
+            var game = province.Manager?.Game;
+            if (game == null) return 0.0;
+            if (!game.Factions.TryGetValue(province.FactionOwnerID, out var faction) || faction == null || !faction.IsValid)
+                return 0.0;
+            if (!faction.TryGetDataBlob<Pulsar4X.Factions.DiplomacyDB>(out var dip) || !dip.IsAtWarWithAnyone())
+                return 0.0;
+            if (faction.TryGetDataBlob<Pulsar4X.Factions.GovernmentDB>(out var gov))
+                return gov.WarMoraleFactor();
+            return new Pulsar4X.Factions.GovernmentDB().WarMoraleFactor();   // no regime set → neutral Mid default
         }
     }
 }

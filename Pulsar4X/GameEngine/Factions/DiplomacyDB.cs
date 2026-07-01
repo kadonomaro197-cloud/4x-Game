@@ -75,5 +75,14 @@ namespace Pulsar4X.Factions
 
         /// <summary>True if a relationship row already exists for the other faction (they have met / interacted).</summary>
         public bool HasMet(int otherFactionId) => Relationships.ContainsKey(otherFactionId);
+
+        /// <summary>True if this faction is in a declared war with ANY other faction — the standing "are we at war"
+        /// read that legitimacy/morale (war-weariness) and NPC AI consult.</summary>
+        public bool IsAtWarWithAnyone()
+        {
+            foreach (var rel in Relationships.Values)
+                if (rel.AtWar) return true;
+            return false;
+        }
     }
 }

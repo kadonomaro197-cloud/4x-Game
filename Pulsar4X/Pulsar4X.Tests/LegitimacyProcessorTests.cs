@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using Pulsar4X.Colonies;
 using Pulsar4X.Engine;
+using Pulsar4X.Factions;
 
 namespace Pulsar4X.Tests
 {
@@ -44,6 +45,32 @@ namespace Pulsar4X.Tests
 
             // The factors gauge is populated (why, not just the number).
             Assert.That(legitimacy.Factors.ContainsKey("morale"), Is.True);
+        }
+
+        [Test]
+        [Description("The casus-belli → legitimacy loop, CLOSED: at war a default/pacifist regime's provinces lose loyalty; a militarist regime's gain it (the militarism gate, live on the province).")]
+        public void War_TaxesLegitimacy_ByMilitarism()
+        {
+            var s = TestScenario.CreateWithColony();
+            var morale = s.Colony.GetDataBlob<ColonyMoraleDB>();
+            var leg = s.Colony.GetDataBlob<LegitimacyDB>();
+            morale.Morale = 60.0;
+
+            // Peacetime baseline: legitimacy tracks morale exactly.
+            LegitimacyProcessor.RecalcLegitimacy(s.Colony);
+            double peace = leg.Legitimacy;
+            Assert.That(peace, Is.EqualTo(60.0).Within(0.001));
+
+            // Declare war with NO regime set → the neutral (Mid) default is mild war-weariness → legitimacy drops.
+            var reds = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+            Diplomacy.DeclareWar(s.Faction, reds, CasusBelli.None, s.Game.TimePulse.GameGlobalDateTime);
+            LegitimacyProcessor.RecalcLegitimacy(s.Colony);
+            Assert.That(leg.Legitimacy, Is.LessThan(peace), "war without a militarist regime saps loyalty");
+
+            // A MILITARIST regime takes pride in the same war → legitimacy rises above peacetime.
+            s.Faction.SetDataBlob(new GovernmentDB(GovNotch.Mid, GovNotch.Mid, GovNotch.Mid, GovNotch.High));
+            LegitimacyProcessor.RecalcLegitimacy(s.Colony);
+            Assert.That(leg.Legitimacy, Is.GreaterThan(peace), "a militarist regime is proud of the war");
         }
     }
 }
