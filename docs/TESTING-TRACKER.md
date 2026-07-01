@@ -153,10 +153,11 @@ These are self-maintaining (CI gates them red/green every push). Listed so we kn
 - **Most likely failure:** the complex `DamageProcessor` (stubbed) is a prerequisite; ground combat has no tests yet (don't compound the no-combat-tests pattern).
 - **Unblocks:** **v1 ships** (`docs/MVP.md` §1).
 
-#### C6 — Diplomacy behaves (IFF + first-contact + commerce wiring, #32/#33) — ⚫ NOT-YET
-- **What right looks like:** the relationship score actually *decides things* — a War/Hostile stance flips IFF so combat engages; a TradeAgreement/LogisticsAccess flag gates inter-faction commerce/supply; first contact creates the relationship row and fires an event. The substrate (`DiplomacyDB` + `RelationshipState`, the score→stance derivation) is **built and CI-green now (`DiplomacyTests`)** — this row tracks the BEHAVIOR slice that reads it.
-- **Method:** engine integration test (two factions, set a stance → assert IFF/commerce respond) once the readers are wired; live drive from a diplomacy panel.
-- **Most likely failure:** the GlobalManager-not-iterated trap for any faction-level diplomatic processor → **mitigated** (keystone #34 fixed — the GlobalManager is now iterated); or a default-Neutral stranger being treated as Friendly/Hostile by an unguarded IFF reader → mitigate by deriving hostility strictly from `CurrentStance()`.
+#### C6 — Diplomacy behaves (IFF + first-contact + commerce wiring, #32/#33) — 🔵 IFF DONE (CI); first-contact/commerce ⚫ NOT-YET
+- **What right looks like:** the relationship score actually *decides things* — a War/Hostile stance flips IFF so combat engages; a TradeAgreement/LogisticsAccess flag gates inter-faction commerce/supply; first contact creates the relationship row and fires an event.
+- **DONE (2026-07-01): the IFF half.** Combat hostility (`CombatEngagement.AreHostile`) now reads `DiplomacyDB` — a MUTUAL Friendly/Allied stance suppresses the fight; the v1 "different faction = hostile" default is preserved for unmet strangers (so all existing combat stays green). Gauge **`DiplomacyIffTests`** (CI-green): unmet→hostile, mutual-peace→suppressed, one-sided-peace→still hostile, same-faction→never hostile.
+- **Still NOT-YET:** first-contact creating the row + firing an event; commerce/logistics gated on the treaty flags. **Method:** engine integration test (two factions, set a flag → assert commerce/first-contact responds); live drive from a diplomacy panel.
+- **Most likely failure:** the GlobalManager-not-iterated trap for any faction-level diplomatic processor → **mitigated** (keystone #34 fixed). The default-stranger risk is closed: `AtPeace` only suppresses on a STORED mutual Friendly/Allied, so a default-Neutral never accidentally disarms combat.
 - **Unblocks:** the external-politics "teeth" layer (treaties-as-levers, casus belli, the reactive "Are we good?" engine) and NPC diplomatic AI.
 
 ---

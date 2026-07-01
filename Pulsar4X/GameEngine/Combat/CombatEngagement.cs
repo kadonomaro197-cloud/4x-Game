@@ -1109,10 +1109,44 @@ namespace Pulsar4X.Combat
             }
         }
 
-        private static bool AreHostile(Entity a, Entity b)
+        internal static bool AreHostile(Entity a, Entity b)
         {
             int fa = a.FactionOwnerID, fb = b.FactionOwnerID;
-            return fa != fb && fa != Game.NeutralFactionId && fb != Game.NeutralFactionId;
+            // Same faction, or either side neutral → never hostile (the v1 rule, unchanged).
+            if (fa == fb || fa == Game.NeutralFactionId || fb == Game.NeutralFactionId)
+                return false;
+
+            // Diplomacy can only SUPPRESS the default hostility, never create it: two different non-neutral
+            // factions are hostile (the v1 rule) UNLESS *both* sides hold a Friendly/Allied stance toward the
+            // other (a mutual peace). A one-sided friendly declaration does NOT disarm you — if either side is
+            // still hostile, they fight. An unmet stranger has no stored relationship, so this falls straight
+            // through to the old "different faction = hostile" result — every existing combat fixture unchanged.
+            if (AtPeace(a, fa, fb) && AtPeace(b, fb, fa))
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// True if <paramref name="ownFactionId"/>'s faction holds a Friendly or Allied stance toward
+        /// <paramref name="otherFactionId"/> in its <see cref="Pulsar4X.Factions.DiplomacyDB"/>. Only a STORED
+        /// relationship counts — an unmet faction (no record) returns false, so it defaults to the v1 hostile
+        /// rule. Defensive: any missing manager/game/faction-entity/blob returns false (stay hostile). The entity
+        /// argument is only the handle used to reach the shared <see cref="Game"/>.
+        /// </summary>
+        private static bool AtPeace(Entity fromEntity, int ownFactionId, int otherFactionId)
+        {
+            var game = fromEntity.Manager?.Game;
+            if (game == null) return false;
+            if (!game.Factions.TryGetValue(ownFactionId, out var factionEntity) || factionEntity == null || !factionEntity.IsValid)
+                return false;
+            if (!factionEntity.TryGetDataBlob<Pulsar4X.Factions.DiplomacyDB>(out var dip))
+                return false;
+            if (!dip.HasMet(otherFactionId))   // no relationship on record → v1 default (hostile)
+                return false;
+            var stance = dip.GetRelationship(otherFactionId).CurrentStance();
+            return stance == Pulsar4X.Factions.DiplomaticStance.Friendly
+                || stance == Pulsar4X.Factions.DiplomaticStance.Allied;
         }
 
         /// <summary>True if any ship in the fleet can deal damage (has a weapon profile or nonzero Firepower). A
