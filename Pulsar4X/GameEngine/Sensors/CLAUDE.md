@@ -183,6 +183,20 @@ Gauge: `SensorDetectionTests.DestroyingSensor_BlindsTheShip_GraveRung` — a wat
 
 `SensorScan.ScanCount` is a `public static long`, Interlocked-incremented at the top of `ProcessEntity` — a pure liveness counter (diagnostic only, no game effect). The client's `SessionLog` heartbeat logs it as part of the `[ENGINE] sensor scans N (+delta)` line, so a remote review can tell **"detecting nothing because nothing's in range" apart from "the scan never fired"** — the latter is a real risk, since the scan is only auto-scheduled by `Game.PostNewGameInitialization` (the test harness skips it). If the count doesn't climb while ships are present, the detection engine is dead, not quiet. Sibling counter on the combat side: `CombatEngagement.TickCount` (see `Combat/CLAUDE.md`).
 
+## First contact — a detection is the diplomacy front door (2026-07-01)
+
+When `SensorScan` adds a **new** sensor contact for a foreign entity, it calls
+`Pulsar4X.Factions.FirstContact.OnDetection(faction, detectableEntity, atDateTime)` (one line, in the new-contact
+branch). That is where two factions first "meet": it records a mutual Neutral relationship row on both factions'
+`DiplomacyDB` and fires a first-contact event. The `DiplomacyDB.HasMet` guard inside makes it fire once per faction
+pair (the first foreign entity a faction ever detects is always a NEW contact, so the new-contact branch is the
+correct, sufficient hook). It is defensive (never throws) and a no-op for neutral (planet/asteroid) or own-faction
+targets — so the sensor hot loop is unaffected in the common case. Direction is Sensors → Factions (writes
+`DiplomacyDB`), same as the scan already reaching `Game.Factions`. Full design: `docs/DIPLOMACY-DESIGN.md`; gauge
+`DiplomacyFirstContactTests`. **v1 limit (flagged):** the hook is in the new-contact branch, so a save that already
+holds a foreign contact from before this code (no diplomacy row) won't retro-register — harmless (IFF defaults to
+hostile), and a contact-aging/backfill pass is the follow-up.
+
 ## Phase 4 Relevance
 
 Ground forces have a sensor component (`SensorSignatureAtb`) that gives them an EM profile when in space transport. On the ground, sensor ranges become terrain-line-of-sight problems — a different mechanic from the space EM system. Do not reuse `SensorScan` for ground unit spotting; it's the wrong tool.

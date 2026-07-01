@@ -112,6 +112,12 @@ namespace Pulsar4X.Sensors
                                 var contact = new SensorContact(faction, detectableEntity, atDateTime);
                                 sensorMgr.AddContact(contact);
                                 sensorAbl.CurrentContacts[detectableEntity.Id] = detectionValues;
+
+                                // First contact between factions — the front door to external politics. The first
+                                // foreign entity this faction ever detects is a NEW sensor contact, so this branch
+                                // is where two factions first "meet". The HasMet guard inside makes it fire once
+                                // per pair; a neutral (planet/asteroid) or own-faction target is a no-op.
+                                Pulsar4X.Factions.FirstContact.OnDetection(faction, detectableEntity, atDateTime);
                             }
 
                         }
