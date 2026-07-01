@@ -66,8 +66,9 @@ namespace Pulsar4X.Tests
             Assert.That(line, Does.Contain("workforce"));
             Assert.That(line, Does.Contain("tax"));
 
-            // The government readout is graceful while no GovernmentDB is attached to factions yet.
-            Assert.That(SocietyReadout.Government(s.Faction), Does.Contain("no government set"));
+            // Every faction now carries a GovernmentDB (#30); the default all-Mid dials classify as the
+            // "Federal Republic" iconic name, so the readout shows a real regime instead of "no government set".
+            Assert.That(SocietyReadout.Government(s.Faction), Does.Contain("Federal Republic"));
         }
 
         [Test]
