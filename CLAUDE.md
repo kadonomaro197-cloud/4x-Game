@@ -213,6 +213,24 @@ Test utilities live in `TestHelper.cs` and `TestingUtilities.cs`.
 
 ## Critical Gotchas
 
+### 🧨 Landmine Index — scan this ONCE before touching an unfamiliar system
+
+The worst traps in this codebase, in one scannable table. Each has bitten before. The "Read" column is where the full detail lives. **If a row touches what you're about to change, read that source first.** (The numbered gotchas below this table are the root-level detail; subsystem `CLAUDE.md`s hold the rest.)
+
+| # | Trap (the symptom) | The rule / fix | Read |
+|---|--------------------|----------------|------|
+| L1 | **Dead code that looks live.** `InstallationsDB`, `SimpleDamage`, `ViewModelLib`, `PlanetaryWindow.RenderInstallations` gated on a dead blob — building on any of these wastes the work. | Grep + read the source before wiring; a class with no `[JsonProperty]` fields and only dead-code refs is a corpse. | this file gotchas #4/#6; Colonies/Industry CLAUDE.md |
+| L2 | **`async void` swallows exceptions.** `AddEntity`/`SetDataBlob`/`TagEntityForRemoval`/`RemoveDatablob` — an exception inside vanishes to the thread pool, unobservable. | Keep mutation code minimal + well-tested; never hide logic inside these. | gotcha #5 |
+| L3 | **Renaming a DataBlob breaks every save.** `TypeNameHandling.Objects` embeds C# type names in the JSON. | Add a `[JsonConverter]`/migration when renaming/moving a `*DB`. | gotcha #7 |
+| L4 | **A broken processor crashes STARTUP silently.** Processors auto-register by reflection; a bad ctor → `NullReferenceException` at boot. | Keep processor constructors trivial; `Tick`/`ProcessEntity` must never throw. | gotcha #2; GameEngine CLAUDE.md #1 |
+| L5 | **Faction-level processors only fire because the GlobalManager is now iterated (keystone #34).** Before, anything on a faction entity (politics, NPC AI) never ran. | Faction-level work runs in `GlobalManager.ManagerSubpulses`; if a processor "never fires," check it's keyed to a blob that's actually iterated. | Factions CLAUDE.md; MasterTimePulse |
+| L6 | **New component = TWO-part registration or New Game crashes.** Design id in the colony blueprint `ComponentDesigns` **and** the template id in `StartingItems`. A new player weapon is a **six-point** chain. | Add both ends in the same change; run `BaseModIntegrityTests`. | gotcha #10; Combat CLAUDE.md "SIX registration points" |
+| L7 | **Template Property values clamp to tech-formula bounds at instantiation.** Setting e.g. gravity tolerance to 0 via a design Property silently won't stick. | To omit an attribute, author a dedicated template without it — don't rely on a 0 value. | Stations CLAUDE.md (space-habitat) |
+| L8 | **JSON data drift crashes players, not `dotnet test`.** The game builds the start colony from JSON; the tests build it in C#. A cost/reference added to one end and not the other ships green and blows up on New Game. | Apply the Prime Directive to DATA: check the *other end* (id defined? material in `StartingItems`?); `BaseModIntegrityTests` is the sensor. | gotcha #10 |
+| L9 | **One hotloop processor per DataBlob type.** Two processors keyed to the same blob → one silently never runs. | Key a new processor to a blob no other processor owns (e.g. combat trigger → `StarInfoDB`, not `FleetDB`). | Combat/Colonies CLAUDE.md |
+| L10 | **Combat is the auto-resolve strength-math engine, NOT the per-pixel damage sim.** `DamageComplex`/`VeryComplex` is parked. | Wire combat via `ShipCombatValueDB`/`AutoResolve`; don't route it through the pixel sim. | Combat CLAUDE.md #1 |
+| L11 | **CI can't run the client.** Compile breaks → `build-client` catches; runtime crashes/render/behavior → only the developer's local Windows build sees them. | Engine logic gets a CI test; client behavior goes on `docs/CLIENT-TEST-CHECKLIST.md` for a local run. | this file (CI section) |
+
 1. **Damage path decision is made and fully wired.** `DamageComplex` is the forward direction. `SimpleDamage` is dead code. Beam hits go: `BeamWeaponProcessor.OnHit()` → `DamageProcessor.OnTakingDamage()` → `DealDamageEnergyBeamSim()`. Colony hits route to `OnColonyDamage()` (population + atmospheric + installation damage, all wired). Asteroid hits use `DamageVeryComplex`. See `Damage/CLAUDE.md`.
 
 2. **ProcessorManager auto-discovers via reflection.** Any class implementing `IHotloopProcessor` or `IInstanceProcessor` is automatically registered on startup by `ProcessorManager.CreateProcessors()`. You do not register processors manually. The trade-off: a broken processor crashes startup.
@@ -302,6 +320,19 @@ Pairs with the Prime Directive: **map the connections, then make sure you can se
 ---
 
 ## How to Work in This Repo (Working Agreement)
+
+### ⚡ Pre-flight — run these SIX steps on EVERY task, before writing code (do not skip because the change "looks small")
+
+This is the operational core of everything below, made scannable. If you do nothing else, do these — in order. They are the difference between a change that lands and one that breaks a system you weren't looking at. **They are not optional and they are not just for big tasks.**
+
+1. **OPEN the subsystem `CLAUDE.md`** for the code you're touching (Subsystem Index above), AND `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` — find the row, read every system in its "Connected to" column. The map is the minimum blast radius.
+2. **GREP before you trust.** Search for the type/method you're about to touch and read it in the source — do not build on a doc's *description*. Half the landmines here are **dead code that looks live** (`InstallationsDB`, `SimpleDamage`, `ViewModelLib`, dead UI). The docs have been wrong (gotcha #4); the source is the truth. See the **Landmine Index** below before wiring anything unfamiliar.
+3. **WRITE the EXISTS / MISSING / NEEDS-CHANGE ledger** (file:line, not assertions) for each connected system — *before* designing the change. This is the step most likely to be skipped and the one that most often overturns a wrong assumption. If you can't cite the file:line, you haven't looked yet.
+4. **NAME the cradle-to-grave chain** (mineral → material → component → research → unit → decision → loss) and the **gauge** (the test that proves it) *before* you build. A capability with no gauge is not done.
+5. **EDIT, matching the conventions** you just read (`CONVENTIONS.md` + the subsystem idioms). Update the subsystem `CLAUDE.md` **in the same change**.
+6. **ONE SLICE AT A TIME — push, then WAIT for CI green before building the next slice on top.** CI is the only correctness gauge (the SDK can't build locally) and it takes ~30 min. Do **not** stack commit N+1 on N until N is green — if N broke compilation, everything above it is built on sand. A verified base is worth the wait. Confirm both jobs green (`test` + `build-client`) before proceeding.
+
+The numbered agreement below is the full-detail version of these six.
 
 1. **Apply the Prime Directive — through the systems map.** Before touching any system, open `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md`, find its row, and read every system in its "Connected to" column (and their rows). Work those too — don't change a system in isolation. Update its status row when you're done. Map connections before deciding. See above.
 2. **Read `CONVENTIONS.md` before writing any code; read the subsystem `CLAUDE.md` before working on that subsystem.** Only read source directly when the doc is insufficient, then update the doc after. For ground-combat/infrastructure design questions, consult `docs/aurora/`.
