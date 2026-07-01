@@ -89,7 +89,18 @@ namespace Pulsar4X.Ships
                 {
                     fleetDB.AddChild(ship);
                 }
+
+                // M3-2b: stamp WHICH colony's pool crewed this ship, so a later destroy/disband releases the
+                // right pool. (The commit itself is below, so it runs for the launch-complex path too — where
+                // the ship isn't born here but queued; LaunchComplexProcessor.TryLaunchShip stamps it then.)
+                if (CrewReq > 0 && ship.TryGetDataBlob<ShipInfoDB>(out var builtInfo))
+                    builtInfo.CrewSourceColonyId = industryEntity.Id;
             }
+
+            // M3-2b: commit the crew from the building colony's manpower pool at build-complete — for BOTH the
+            // direct-launch path (above) and the launch-complex queue path (the ship launches later). Inert if
+            // the host has no pool (a station) — CommitCrew no-ops.
+            Pulsar4X.Colonies.ManpowerTools.CommitCrew(industryEntity, CrewReq);
 
             if (batchJob.NumberCompleted == batchJob.NumberOrdered)
             {

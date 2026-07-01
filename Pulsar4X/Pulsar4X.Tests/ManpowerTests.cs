@@ -1,5 +1,7 @@
+using System.Linq;
 using NUnit.Framework;
 using Pulsar4X.Colonies;
+using Pulsar4X.Factions;
 
 namespace Pulsar4X.Tests
 {
@@ -91,6 +93,43 @@ namespace Pulsar4X.Tests
             var crewless = ColonyManpowerDB.ResolveConstructionCrew(availableBulk: 0, crewRequired: 0, CrewShortagePolicy.Block);
             Assert.That(crewless.CanBuild, Is.True);
             Assert.That(crewless.CrewToCommit, Is.EqualTo(0));
+        }
+
+        [Test]
+        [Description("M3-2b build gate through the REAL colony host: a crew shortage blocks the build under the default (Mid) government; a high-authority regime conscripts (BuildUnderstaffed) — the CrewPolicy rule-override end-to-end.")]
+        public void ManpowerTools_ResolveBuild_HonoursHostPoolAndGovernment()
+        {
+            var s = TestScenario.CreateWithColony();
+
+            // Force a near-total crew shortage on the real start colony (billions of pop → huge workforce):
+            // commit all but 5 of the workforce, so a 100-crew hull can't be crewed.
+            long pop = s.Colony.GetDataBlob<ColonyInfoDB>().Population.Values.Sum();
+            long workforce = ColonyManpowerDB.Workforce(pop);
+            var mp = s.Colony.GetDataBlob<ColonyManpowerDB>();
+            mp.CommitBulk(workforce - 5);
+            Assert.That(mp.AvailableBulk(pop), Is.EqualTo(5), "left only 5 crew free");
+
+            // Default government is all-Mid → CrewPolicy = Block → the build is refused.
+            var blocked = ManpowerTools.ResolveBuild(s.Colony, 100);
+            Assert.That(blocked.CanBuild, Is.False, "Mid-authority (Block) refuses a build it can't crew");
+
+            // Flip the regime to high authority → CrewPolicy = BuildUnderstaffed → it conscripts the 5 it has.
+            s.Faction.GetDataBlob<GovernmentDB>().Authority = GovNotch.High;
+            var conscript = ManpowerTools.ResolveBuild(s.Colony, 100);
+            Assert.That(conscript.CanBuild, Is.True, "high-authority conscripts instead of blocking");
+            Assert.That(conscript.Understaffed, Is.True);
+            Assert.That(conscript.CrewToCommit, Is.EqualTo(5), "conscripts exactly what's available");
+        }
+
+        [Test]
+        [Description("M3-2b: the gate is INERT on a host with no manpower pool (e.g. a station) — the build is always allowed.")]
+        public void ManpowerTools_ResolveBuild_InertWithoutPool()
+        {
+            var s = TestScenario.CreateWithColony();
+            // The hosting body has no ColonyManpowerDB → unenforced → always allowed, commits nothing.
+            var decision = ManpowerTools.ResolveBuild(s.StartingBody, 100000);
+            Assert.That(decision.CanBuild, Is.True, "a pool-less host is unenforced");
+            Assert.That(decision.CrewToCommit, Is.EqualTo(0));
         }
 
         [Test]

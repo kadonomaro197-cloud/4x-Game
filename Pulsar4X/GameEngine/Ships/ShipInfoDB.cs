@@ -37,6 +37,16 @@ namespace Pulsar4X.Ships
         [JsonProperty]
         public bool IsMilitary { get; set; }
 
+        /// <summary>
+        /// M3-2b crew provenance: the Id of the colony whose manpower pool crewed this ship at build, or -1 if
+        /// none (a start-fleet / DevTools ship spawned directly, or a station-built hull with no pool). A ship
+        /// roams between systems, so it must REMEMBER which pool it drew from — destroy/disband releases THAT
+        /// colony's crew, not "the nearest one." Set in ShipDesign.OnConstructionComplete; read in
+        /// ShipFactory.DestroyShip. -1 keeps the whole path inert for ships that never drew a pool.
+        /// </summary>
+        [JsonProperty]
+        public int CrewSourceColonyId { get; internal set; } = -1;
+
         //public float Tonnage { get; set; }
 
         //public double TCS { get {return Tonnage * 0.02;} }
@@ -69,6 +79,7 @@ namespace Pulsar4X.Ships
             InternalHTK = shipInfoDB.InternalHTK;
             //Tonnage = shipInfoDB.Tonnage;
             IsMilitary = shipInfoDB.IsMilitary;
+            CrewSourceColonyId = shipInfoDB.CrewSourceColonyId;
             /*
             if (shipInfoDB.Orders == null)
                 Orders = null;

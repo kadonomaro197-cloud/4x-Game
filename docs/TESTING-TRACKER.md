@@ -77,6 +77,7 @@ These are self-maintaining (CI gates them red/green every push). Listed so we kn
 - **Most likely failure:** miscalibration — morale too harsh (colony collapses instantly) or too soft (no visible change). A *feel* problem, not a crash.
 - **Mitigation:** all morale weights are named coefficients (easy to tune); the unit tests fix the *direction*, this checks the *magnitude*.
 - **Unblocks:** the M2-data **base-low calibration** (#25) — you can't tune the base without seeing morale move.
+- **M2-data housing half DONE (2026-07-01, #25):** infrastructure + space-habitat templates now declare a "Housing Comfort" property bound to `HousingAtbDB` (a capped positive morale bonus), so the M2 comfort machinery has real numbers on the starting colony. Additive-only (no new resource cost). Gauge `MoraleTests.StartingColony_Infrastructure_ProvidesHousingComfort`. The **employment half stays parked** — jobs measured against the billions-strong homeworld workforce would trip the unemployment penalty on New Game, so those numbers need the local base-low pass, not a blind commit.
 
 #### A3 — Hazards live (carried into this branch) — 🟡 PENDING
 - See `docs/CLIENT-TEST-CHECKLIST.md` "Hazards" section: corona discovery fires, the research→armor loop pays off, normal orbit = zero hazard damage, new environments appear in generated systems. Engine side is CI-green (diorama); this is the live feel.
@@ -126,10 +127,11 @@ These are self-maintaining (CI gates them red/green every push). Listed so we kn
 
 > For each, the test is **designed now** so the slice ships *with* its gauge (the no-untested-system rule). ⚫ NOT-YET until built.
 
-#### C1 — M3-2b crew enforcement (#27) — ⚫ NOT-YET
-- **What right looks like:** a ship build **blocks** with no crew (consent regime) or **builds understaffed + debuff** (command regime); disband returns crew, destroy subtracts casualties from the *right* colony.
-- **Method:** engine integration test (queue a ship with a drained manpower pool → assert blocked/understaffed per policy) + live Dump Society to watch the pool draw down.
-- **Most likely failure:** the build gate blocks the New-Game start fleet → **mitigated** (the survey proved the start fleet bypasses the construction queue); or crew-provenance loss bleeds the wrong colony → the open `CrewSourceColonyId` design call must land first.
+#### C1 — M3-2b crew enforcement (#27) — 🔵 WIRED (CI); FEEL is a PC-test
+- **DONE (2026-07-01):** `ManpowerTools` gates SHIP construction on available bulk manpower at three sites — the gate in `IndustryTools.ConstructStuff` (blocks before resources are spent, government `CrewPolicy` decides Block vs conscript), the commit + `ShipInfoDB.CrewSourceColonyId` provenance stamp in `ShipDesign.OnConstructionComplete`, and the release in `ShipFactory.DestroyShip`. The open `CrewSourceColonyId` design call landed (an int on `ShipInfoDB`, set at build, read at destroy). **Start-safe:** INERT on a pool-less host (a station), start fleet bypasses the queue (provenance -1 → destroy no-op), billions of start pop. Gauge `ManpowerTests` (CrewPolicy end-to-end + inert-without-pool).
+- **PC-test (the FEEL):** drain a real colony's pool (or build a large fleet) → confirm a ship build **blocks** under the default (consent) regime and Dump Society shows the pool drawn down; flip Authority to High → the same build **conscripts** (understaffed). Watch a destroyed ship return its crew.
+- **Parked (needs local calibration):** the harsher **casualties-shrink-population** sting on destroy (release-to-pool only for now), and the officer/scientist **talent** draw (academy/CommanderFactory) — its own follow-up slice.
+- **Most likely failure:** the build gate blocks the New-Game start fleet → **mitigated** (start fleet bypasses the construction queue); crew-provenance loss bleeds the wrong colony → **mitigated** (`CrewSourceColonyId` remembers the source pool).
 - **Unblocks:** "people are finite" actually biting; the army/unit consumer.
 
 #### C2 — M5b energy/food wiring (#29) — 🔵 WIRED (inert, CI); calibration is a PC-test
@@ -142,7 +144,7 @@ These are self-maintaining (CI gates them red/green every push). Listed so we kn
 - **Unblocks:** the full morale input set live.
 
 #### C3 — Government wiring (#30) — 🔵 WIRED (CI); FEEL is a PC-test
-- **DONE (2026-07-01):** `GovernmentDB` is attached to every faction (default all-Mid) and its dials are read live — `MoraleWeight`→migration, `ResearchMultiplier`→research, `TaxCeiling`→capped tax income+morale. Neutral at Mid (New Game unchanged); gauges `GovernmentWiringTests` + `GovernmentTests`. Deferred wires: `MilitaryBuildMultiplier` (needs military-item tagging), `CrewPolicy` rule-override (needs the #27 crew gate).
+- **DONE (2026-07-01):** `GovernmentDB` is attached to every faction (default all-Mid) and its dials are read live — `MoraleWeight`→migration, `ResearchMultiplier`→research, `TaxCeiling`→capped tax income+morale, and (2026-07-01, #27) `CrewPolicy`→the ship-construction crew gate. Neutral at Mid (New Game unchanged); gauges `GovernmentWiringTests` + `GovernmentTests` + `ManpowerTests`. Only-deferred wire: `MilitaryBuildMultiplier` (needs military-item tagging).
 - **PC-test (the FEEL, not the wiring):** set a faction to a non-Mid regime (once a gov panel/DevTools exists) → confirm Dump Society shows the regime name and the dials visibly bite (over-tax past the ceiling is capped; open/closed research speed changes; morale pull scales). Until a gov-set UI exists this is driven from a test/debugger.
 - *(original placeholder below — superseded by the above)*
 - **What right looks like:** Dump Society shows a real government name; the Authority dial visibly flips the crew rule and tax ceiling; morale weight/research/build multipliers apply.

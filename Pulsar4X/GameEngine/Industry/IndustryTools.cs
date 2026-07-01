@@ -132,6 +132,22 @@ namespace Pulsar4X.Industry
 
                     if(industryPointsToUse < 1) continue;
 
+                    // M3-2b crew GATE (docs/MORALE-AND-POPULATION-DESIGN.md): you cannot build a ship you can't
+                    // crew. Checked BEFORE any resources are consumed below, and only for ship hulls with a real
+                    // crew requirement. Inert on a host with no manpower pool (a station) and at the all-Mid
+                    // government default the policy is Block; a high-authority regime conscripts instead
+                    // (BuildUnderstaffed) via GovernmentDB.CrewPolicy. A blocked job waits — same as waiting on
+                    // materials — until crew frees up (a destroyed ship returns its crew to the pool).
+                    if (designInfo is Pulsar4X.Ships.ShipDesign shipToCrew && shipToCrew.CrewReq > 0)
+                    {
+                        var crewDecision = Pulsar4X.Colonies.ManpowerTools.ResolveBuild(industryEntity, shipToCrew.CrewReq);
+                        if (!crewDecision.CanBuild)
+                        {
+                            batchJob.Status = IndustryJobStatus.MissingResources; // short on crew — hold the job
+                            continue;
+                        }
+                    }
+
                     //total number of resources requred for a single job in this batch
                     var resourceSum = batchJob.ResourcesCosts.Sum(item => item.Value);
                     //how many construction points each resourcepoint is worth.
