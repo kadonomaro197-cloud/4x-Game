@@ -58,12 +58,16 @@ namespace Pulsar4X.Factions
         [JsonProperty] public bool AtWar { get; internal set; } = false;
 
         // --- Treaty flags (the concrete deals; each gates a real capability when wired) ---
+        /// <summary>A non-aggression pact: a standing promise not to attack. Breaking it is the betrayal penalty.</summary>
+        [JsonProperty] public bool NonAggressionPact { get; internal set; } = false;
         /// <summary>A standing trade agreement (commerce between the two factions is permitted).</summary>
         [JsonProperty] public bool TradeAgreement { get; internal set; } = false;
         /// <summary>Logistics access: this faction's supply network may route through the other's territory.</summary>
         [JsonProperty] public bool LogisticsAccess { get; internal set; } = false;
         /// <summary>Military access: this faction's warships may transit the other's territory without it being an act of war.</summary>
         [JsonProperty] public bool MilitaryAccess { get; internal set; } = false;
+        /// <summary>A defensive pact: an attack on one drags in the other. The deepest, most entangling treaty.</summary>
+        [JsonProperty] public bool DefensivePact { get; internal set; } = false;
 
         /// <summary>When the two factions last made contact (first-contact / last diplomatic exchange). Null = never met.</summary>
         [JsonProperty] public DateTime? LastContact { get; internal set; } = null;
@@ -80,9 +84,11 @@ namespace Pulsar4X.Factions
             OtherFactionId = other.OtherFactionId;
             RelationScore = other.RelationScore;
             AtWar = other.AtWar;
+            NonAggressionPact = other.NonAggressionPact;
             TradeAgreement = other.TradeAgreement;
             LogisticsAccess = other.LogisticsAccess;
             MilitaryAccess = other.MilitaryAccess;
+            DefensivePact = other.DefensivePact;
             LastContact = other.LastContact;
         }
 
