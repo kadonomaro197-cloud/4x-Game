@@ -62,6 +62,7 @@ namespace Pulsar4X.Stations
             blobs.Add(new ColonyMoraleDB());        // shared, host-agnostic morale valve — StationPopulationProcessor reads it for a manned station
             blobs.Add(new LegitimacyDB());          // a station holds its OWN legitimacy (LegitimacyProcessor recomputes it from morale) — the fragile frontier node
             blobs.Add(new RebellionDB());           // and can break away on its own (rebellion state driven off legitimacy collapse)
+            blobs.Add(new ColonySustenanceDB());    // power/food shortage gauges (M5b) — inert until demand is calibrated locally
 
             Entity stationEntity = Entity.Create();
             stationEntity.FactionOwnerID = factionEntity.Id;

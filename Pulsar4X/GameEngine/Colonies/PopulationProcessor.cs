@@ -46,6 +46,17 @@ namespace Pulsar4X.Colonies
             // a migration rate added to growth below. Guarded: a colony without a ColonyMoraleDB (e.g. built by
             // an older path) just skips morale and grows as before.
             double migration = 0.0;
+
+            // M5b: the province's computed power/food shortage (SustenanceProcessor). Neutral (0) by default → no
+            // morale hit and no deaths until demand is calibrated on the local build (the default-deficit guard).
+            double powerShortage = 0.0, foodShortage = 0.0, starvation = 0.0;
+            if (colony.TryGetDataBlob<ColonySustenanceDB>(out var sustenanceDB))
+            {
+                powerShortage = sustenanceDB.PowerShortage;
+                foodShortage = sustenanceDB.FoodShortage;
+                starvation = ColonySustenanceDB.StarvationDeathRate(foodShortage);
+            }
+
             if (colony.TryGetDataBlob<ColonyMoraleDB>(out var moraleDB))
             {
                 double crowdingRatio = 0.0;
@@ -73,7 +84,17 @@ namespace Pulsar4X.Colonies
                 double taxCeiling = Pulsar4X.Factions.GovernmentTools.OwnerOf(colony).TaxCeiling();
                 if (taxRate > taxCeiling) taxRate = taxCeiling;
 
-                moraleDB.Morale = ColonyMoraleDB.ComputeMorale(worstColonyCost, crowdingRatio, employmentRatio, comfort, taxRate, moraleDB.Factors);
+                // M5b: power/food shortage now feed morale (both 0 by default → neutral until calibrated).
+                moraleDB.Morale = ColonyMoraleDB.ComputeMorale(new MoraleInputs
+                {
+                    WorstColonyCost = worstColonyCost,
+                    CrowdingRatio = crowdingRatio,
+                    EmploymentRatio = employmentRatio,
+                    Comfort = comfort,
+                    TaxRate = taxRate,
+                    PowerShortage = powerShortage,
+                    FoodShortage = foodShortage
+                }, moraleDB.Factors);
                 // Government MODULATOR (#30): the regime's MoraleWeight scales how hard public opinion pulls
                 // migration (People-end amplifies it, One-Ruler-end damps it). Neutral (×1.0) at the default Mid
                 // authority, so this changes nothing until a non-Mid regime is set.
@@ -97,7 +118,7 @@ namespace Pulsar4X.Colonies
                         long excessPopulation = currentPopulation[id] - maxPopulation;
                         // @todo: figure out better formula
                         growthRate = -50.0;
-                        newPop = (long)(value * (1.0 + growthRate));
+                        newPop = (long)(value * (1.0 + growthRate - starvation));
                         if (newPop < 0)
                             newPop = 0;
                         UpdatePopulation(colonyInfoDB, currentPopulation, id, newPop);
@@ -110,7 +131,7 @@ namespace Pulsar4X.Colonies
                         if (growthRate > 10.0)
                             growthRate = 10.0;
                         // external factor: morale-driven migration (M1)
-                        newPop = (long)(value * (1.0 + growthRate + migration));
+                        newPop = (long)(value * (1.0 + growthRate + migration - starvation));
                         if (newPop > maxPopulation)
                             newPop = maxPopulation;
                         if (newPop < 0)

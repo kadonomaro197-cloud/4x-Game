@@ -132,7 +132,10 @@ These are self-maintaining (CI gates them red/green every push). Listed so we kn
 - **Most likely failure:** the build gate blocks the New-Game start fleet → **mitigated** (the survey proved the start fleet bypasses the construction queue); or crew-provenance loss bleeds the wrong colony → the open `CrewSourceColonyId` design call must land first.
 - **Unblocks:** "people are finite" actually biting; the army/unit consumer.
 
-#### C2 — M5b energy/food wiring (#29) — ⚫ NOT-YET
+#### C2 — M5b energy/food wiring (#29) — 🔵 WIRED (inert, CI); calibration is a PC-test
+- **DONE (2026-07-01):** `ColonySustenanceDB` + `SustenanceProcessor` compute power/food shortage → morale (`MoraleInputs`) + a starvation death term. Built **neutral-when-absent** (per-capita demand defaults to 0 → 0 shortage), so New Game is unchanged. Gauge `SustenanceTests`.
+- **PC-test (the calibration):** set a colony's `PerCapitaFoodDemand`/`PerCapitaPowerDemand` > 0 and give it supply (a power reactor; a food good — **not yet defined**, so food supply reads 0). Confirm Dump Society shows a `power`/`food` morale factor and, at severe shortage, a population drop. **Watch for the default-deficit class of bug** — with demand set but no supply modeled, a colony reads total shortage and starves; that's why the coefficients ship at 0 and the food-supply good is a deliberate local follow-up.
+- *(original placeholder below — superseded)*
 - **What right looks like:** a power/food deficit shows a non-zero `power`/`food` factor in Dump Society and (severe) a death term; ship energy unaffected.
 - **Method:** Dump Society on a colony with consumption > supply; assert the morale factor + population drop.
 - **Most likely failure:** attaching `EnergyGenAbilityDB` to colonies disturbs the entity-agnostic energy processors, or a default deficit tanks every colony (the tax-default class of bug) → **mitigate** with neutral-when-absent defaults + the M1 starting-colony assertion as a guard.

@@ -71,6 +71,7 @@ namespace Pulsar4X.Colonies
             blobs.Add(new ColonyMoraleDB());
             blobs.Add(new LegitimacyDB());
             blobs.Add(new RebellionDB());
+            blobs.Add(new ColonySustenanceDB());
             blobs.Add(new ColonyManpowerDB());
             blobs.Add(new ColonyEconomyDB());
             blobs.Add(new ColonyBonusesDB());
@@ -175,6 +176,7 @@ namespace Pulsar4X.Colonies
             blobs.Add(new ColonyMoraleDB());
             blobs.Add(new LegitimacyDB());
             blobs.Add(new RebellionDB());
+            blobs.Add(new ColonySustenanceDB());
             blobs.Add(new ColonyManpowerDB());
             blobs.Add(new ColonyEconomyDB());
             blobs.Add(new ColonyBonusesDB());
