@@ -154,6 +154,28 @@ public static class LogisticsCycle
     }
 
 
+    /// <summary>
+    /// May a ship of <paramref name="shipFactionId"/> service a trade base owned by <paramref name="baseFactionId"/>?
+    /// True for the same faction (unchanged) OR when the BASE owner has granted the ship's faction
+    /// <see cref="Pulsar4X.Factions.RelationshipState.LogisticsAccess"/> in its <see cref="Pulsar4X.Factions.DiplomacyDB"/>
+    /// — the "you may run your freighters through my supply network" treaty flag. Access is granted by the base
+    /// owner (their network, their call). Defensive: any missing game / faction-entity / ledger returns false (stay
+    /// closed). LogisticsAccess defaults false and nothing sets it until a treaty does, so with no deal in place this
+    /// is identical to the old same-faction-only guard — existing logistics behaviour is unchanged.
+    /// </summary>
+    internal static bool LogisticsAccessAllowed(int baseFactionId, int shipFactionId, Game game)
+    {
+        if (baseFactionId == shipFactionId) return true;
+        if (game == null) return false;
+        if (!game.Factions.TryGetValue(baseFactionId, out var baseFaction) || baseFaction == null || !baseFaction.IsValid)
+            return false;
+        if (!baseFaction.TryGetDataBlob<Pulsar4X.Factions.DiplomacyDB>(out var dip))
+            return false;
+        if (!dip.HasMet(shipFactionId))
+            return false;
+        return dip.GetRelationship(shipFactionId).LogisticsAccess;
+    }
+
     public static void LogiShipBidding(Entity shippingEntity, List<LogiBaseDB> tradingBases)
     {
 
@@ -174,8 +196,10 @@ public static class LogisticsCycle
 
         foreach(var tbase in tradingBases)
         {
-            // Same-faction only — cross-faction access requires a diplomacy system (flagged).
-            if(tbase.OwningEntity.FactionOwnerID != shippingEntity.FactionOwnerID)
+            // Same faction OR the base owner has granted this ship's faction LogisticsAccess by treaty.
+            // Cross-faction trade was hardcoded off; now it opens exactly when a LogisticsAccess deal exists
+            // (default false, so with no treaty this behaves identically to the old same-faction-only guard).
+            if(!LogisticsAccessAllowed(tbase.OwningEntity.FactionOwnerID, shippingEntity.FactionOwnerID, shippingEntity.Manager?.Game))
                 continue;
 
             OrbitDB odb;// = tbase.OwningEntity.GetDataBlob<OrbitDB>();
