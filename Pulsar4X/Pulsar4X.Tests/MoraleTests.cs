@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Pulsar4X.Colonies;
+using Pulsar4X.Datablobs;
+using Pulsar4X.Extensions;
 
 namespace Pulsar4X.Tests
 {
@@ -140,6 +142,18 @@ namespace Pulsar4X.Tests
 
             clone.Factors["conditions"] = 0.0;
             Assert.That(original.Factors["conditions"], Is.EqualTo(-17.0), "Factors dict was shared, not cloned");
+        }
+
+        [Test]
+        [Description("M2-data: the real starting colony's infrastructure binds a HousingAtbDB from JSON — GetHousingComfort > 0 (the cradle-to-grave data sensor for the housing-comfort attribute).")]
+        public void StartingColony_Infrastructure_ProvidesHousingComfort()
+        {
+            var s = TestScenario.CreateWithColony();
+            var instances = s.Colony.GetDataBlob<ComponentInstancesDB>();
+            // Earth's starting infrastructure now declares a Housing Comfort property that binds HousingAtbDB.
+            // If the JSON attribute failed to bind (wrong AttributeType / ctor mismatch), this reads 0.
+            Assert.That(instances.GetHousingComfort(), Is.GreaterThan(0.0),
+                "starting infrastructure should provide housing comfort (JSON HousingAtbDB bound through the real colony build)");
         }
 
         [Test]

@@ -736,6 +736,12 @@
           "PropertyFormula": "1000"
         },
         {
+          "Name": "Housing Comfort",
+          "DescriptionFormula": "'Quality-of-life comfort this infrastructure provides — a capped morale bonus on top of bare life-support. Basic utilities and housing keep colonists content, not just alive.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "5"
+        },
+        {
           "Name": "Min Gravity",
           "DescriptionFormula": "'Surface gravity range (m/s²) this infrastructure can operate in. Earth standard is 9.81 m/s². Drag the left/right handles to set the bounds; drag the bar between them to shift the whole range.'",
           "GuiHint": "GuiSelectionMinMaxRange",
@@ -792,6 +798,12 @@
           "GuiHint": "None",
           "PropertyFormula": "AtbConstrArgs(PropertyValue('Support Capacity'))",
           "AttributeType": "Pulsar4X.Industry.InfrastructureCapacityAtb"
+        },
+        {
+          "Name": "DBargsHousing",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Housing Comfort'))",
+          "AttributeType": "Pulsar4X.Colonies.HousingAtbDB"
         },
         {
           "Name": "DBargsGravity",
@@ -854,6 +866,12 @@
           "PropertyFormula": "1000"
         },
         {
+          "Name": "Housing Comfort",
+          "DescriptionFormula": "'Quality-of-life comfort this sealed habitat provides — a capped morale bonus for the station crew.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "5"
+        },
+        {
           "Name": "DBargs",
           "GuiHint": "None",
           "PropertyFormula": "AtbConstrArgs(UniqueID('general-storage'), PropertyValue('Storage Amount'))",
@@ -870,6 +888,12 @@
           "GuiHint": "None",
           "PropertyFormula": "AtbConstrArgs(PropertyValue('Support Capacity'))",
           "AttributeType": "Pulsar4X.Industry.InfrastructureCapacityAtb"
+        },
+        {
+          "Name": "DBargsHousing",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Housing Comfort'))",
+          "AttributeType": "Pulsar4X.Colonies.HousingAtbDB"
         }
       ]
     }
