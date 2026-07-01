@@ -36,6 +36,13 @@ namespace Pulsar4X.Colonies
                         .Select(f => $"{f.Key} {f.Value:+0.0;-0.0;0}")) + "]");
             }
 
+            if (colony.TryGetDataBlob<LegitimacyDB>(out var leg))
+            {
+                sb.Append($" | legitimacy {leg.Legitimacy:0.0}");
+                if (LegitimacyDB.IsCollapsing(leg.Legitimacy))
+                    sb.Append(" !REBELLING");
+            }
+
             if (colony.TryGetDataBlob<ColonyManpowerDB>(out var mp))
                 sb.Append($" | workforce {mp.AvailableBulk(pop):N0}/{ColonyManpowerDB.Workforce(pop):N0}"
                         + $" talent {mp.AvailableTalent(pop):N0}/{ColonyManpowerDB.TalentPool(pop):N0}");

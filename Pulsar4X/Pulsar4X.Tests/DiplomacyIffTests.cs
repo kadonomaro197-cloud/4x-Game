@@ -94,6 +94,27 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("The treaty→combat loop, CLOSED: signing a mutual non-aggression pact suppresses hostility even at a neutral score — a treaty actually stops the fight.")]
+        public void SignedPact_StopsTheFight()
+        {
+            var s = TestScenario.CreateWithColony();
+            var reds = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+            var mine = MakeShip(s, s.Faction, "Ours");
+            var theirs = MakeShip(s, reds, "Theirs");
+
+            // Default strangers fight.
+            Assert.That(CombatEngagement.AreHostile(mine, theirs), Is.True, "unmet foreign factions fight");
+
+            // Sign a mutual non-aggression pact (accepted at the default neutral score).
+            bool signed = Treaties.Propose(s.Faction, reds, TreatyType.NonAggression, s.Game.TimePulse.GameGlobalDateTime);
+            Assert.That(signed, Is.True, "a non-aggression pact is accepted at neutral");
+
+            // The pact now stays both hands — no fight, without needing a high relation score.
+            Assert.That(CombatEngagement.AreHostile(mine, theirs), Is.False, "the signed pact suppresses combat");
+            Log("signed non-aggression pact → not hostile ✓");
+        }
+
+        [Test]
         [Description("Same faction is never hostile (unchanged v1 rule), even with no diplomacy involved.")]
         public void SameFaction_IsNeverHostile()
         {

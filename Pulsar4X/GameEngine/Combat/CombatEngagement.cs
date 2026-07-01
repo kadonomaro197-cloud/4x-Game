@@ -1144,7 +1144,13 @@ namespace Pulsar4X.Combat
                 return false;
             if (!dip.HasMet(otherFactionId))   // no relationship on record → v1 default (hostile)
                 return false;
-            var stance = dip.GetRelationship(otherFactionId).CurrentStance();
+            var rel = dip.GetRelationship(otherFactionId);
+            // A signed non-aggression OR defensive pact stays your hand regardless of the raw score — a treaty is
+            // the explicit promise not to shoot. (A defensive pact's "drag me into your wars" entanglement is a
+            // separate, later slice; here it just means the two signatories don't fight each other.)
+            if (rel.NonAggressionPact || rel.DefensivePact)
+                return true;
+            var stance = rel.CurrentStance();
             return stance == Pulsar4X.Factions.DiplomaticStance.Friendly
                 || stance == Pulsar4X.Factions.DiplomaticStance.Allied;
         }

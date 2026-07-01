@@ -62,6 +62,7 @@ namespace Pulsar4X.Tests
             string line = SocietyReadout.Colony(s.Colony);
             Assert.That(line, Does.Contain("pop"));
             Assert.That(line, Does.Contain("morale"));
+            Assert.That(line, Does.Contain("legitimacy"));   // the province's regime-health readout (#31)
             Assert.That(line, Does.Contain("workforce"));
             Assert.That(line, Does.Contain("tax"));
 

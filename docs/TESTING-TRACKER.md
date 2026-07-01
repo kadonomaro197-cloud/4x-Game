@@ -188,16 +188,16 @@ These are self-maintaining (CI gates them red/green every push). Listed so we kn
 - **What right looks like:** load succeeds; legitimacy values persist; no missing-type/serialization error. **Most likely failure:** a serialization snag on a new blob. **Mitigation:** all new state is plain `[JsonProperty]` doubles/bools/dicts + a Dictionary of value objects; CI save/load tests cover the base path.
 - **Unblocks:** confidence the cluster survives a played game.
 
-#### D2 — Legitimacy tracks morale, live — 🟡 PENDING (needs a readout)
-- **What:** confirm each colony's legitimacy moves with its morale over time (a content colony ~loyal, a miserable one drifts toward the < 20 collapse band).
+#### D2 — Legitimacy tracks morale, live — 🟡 PENDING (readout now EXISTS)
+- **What:** confirm each colony's legitimacy moves with its morale over time (a content colony ~loyal, a miserable one drifts toward the < 20 collapse band, shown as `!REBELLING`).
 - **Why:** the one live gameplay behavior added; proves the processor runs and reads morale in the full sim, not just the unit test.
-- **Method:** there is **no legitimacy readout yet** — quickest path is to add a legitimacy line to DevTools **Dump Society** (A1) when that's next touched, then read it; or inspect via the debugger. Until then this is **blocked on a readout** (an Information-Delta gap: the number exists, the gauge doesn't).
+- **Method:** **the readout is now wired** — DevTools → **Dump Society (log)** prints a `legitimacy NN.N` field per colony (in `SocietyReadout.Colony`, CI-tested), plus `!REBELLING` if it's in the collapse band. So: New Game → advance a few months → Dump Society → read `console_output.txt`; then tank a colony's morale (overcrowd / crank tax) → advance → Dump again and watch legitimacy fall.
 - **What right looks like:** legitimacy ≈ morale each month; tank a colony's morale (overcrowd / high tax) and watch legitimacy fall under 20. **Most likely failure:** legitimacy stuck at 50 (processor not firing — check the monthly tick / that the colony has both blobs). **Mitigation:** `LegitimacyProcessorTests` proves the recompute; A1's Dump Society is the natural home for the readout.
 - **Unblocks:** the rebellion trigger (#38) — a visible collapse band is the cue a province is about to rebel.
 
 #### D3+ — DORMANT until wired (do NOT test live yet; CI-green, no runtime effect)
 These are built + CI-verified but have **no live effect** until their wiring/UI slice lands — each needs the noted hook before it's exercisable at the PC:
-- **IFF suppression (allies hold fire)** — needs a way to SET a Friendly/Allied stance live (a diplomacy panel or DevTools "set relation"). Until then every faction is at the default (fights) — same as before. Gauge stands in CI (`DiplomacyIffTests`).
+- **IFF suppression (allies/pacts hold fire)** — the engine loop is now CLOSED (a signed non-aggression/defensive pact OR a mutual Friendly/Allied stance stops the fight; gauge `DiplomacyIffTests.SignedPact_StopsTheFight`). Still DORMANT live because there's **no UI to propose a treaty or set a stance** — until a diplomacy panel / DevTools "propose treaty" button exists, every faction sits at the default (fights). That button is the remaining wire.
 - **First-contact event** — fires when your sensors first detect a foreign faction's ship. Requires a foreign faction present + detected. The `CombatSandbox`/DevTools "Spawn Hostile Fleet" is the way to trigger it once a first-contact *notification* is surfaced (event is published; no UI panel reads it yet).
 - **Treaty proposals + casus belli** — no UI to propose a treaty or declare a justified war yet; `Treaties.Propose`/`CasusBelliRules` are engine-only. Needs the diplomacy screen (or DevTools buttons).
 - **Reactive "Are we good?" engine** — needs the per-cycle loop that feeds it fleet-position observations (a processor reading fleets vs. the sensor contact table) + a message surface. Pure decision-table only today.
