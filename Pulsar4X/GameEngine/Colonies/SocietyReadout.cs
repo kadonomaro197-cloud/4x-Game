@@ -39,8 +39,10 @@ namespace Pulsar4X.Colonies
             if (colony.TryGetDataBlob<LegitimacyDB>(out var leg))
             {
                 sb.Append($" | legitimacy {leg.Legitimacy:0.0}");
-                if (LegitimacyDB.IsCollapsing(leg.Legitimacy))
+                if (colony.TryGetDataBlob<RebellionDB>(out var reb) && reb.IsRebelling)
                     sb.Append(" !REBELLING");
+                else if (LegitimacyDB.IsCollapsing(leg.Legitimacy))
+                    sb.Append(" (collapsing)");
             }
 
             if (colony.TryGetDataBlob<ColonyManpowerDB>(out var mp))

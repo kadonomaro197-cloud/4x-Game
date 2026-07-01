@@ -37,7 +37,7 @@ These are self-maintaining (CI gates them red/green every push). Listed so we kn
 | Hazards (`SpaceHazard`, `HazardResearchLoop`, `SpatialEnvironmentsDiorama`…) | all six hazard flavours cradle-to-grave | 🔵 |
 | **M-ECON** (`MoraleTests`, `ManpowerTests`, `FactionEconomyTests`, `GovernmentTests`, `DiplomacyTests`) | morale math, manpower pools, crew rule, tax→ledger, government dials/classifier, society readout, diplomacy relationship-track substrate | 🔵 |
 | **POLITICS-EXTERNAL** (`DiplomacyIffTests`, `DiplomacyFirstContactTests`, `DiplomacyLogisticsAccessTests`, `DiplomacyTreatyTests`, `DiplomacyCasusBelliTests`, `DiplomacyWarTests`) | IFF reads diplomacy (incl. signed-pact suppression), first-contact records mutual rows, logistics gated on a grant, treaty propose/accept trust-ladder, casus-belli militarism gate, declare-war/make-peace latch | 🔵 |
-| **POLITICS-INTERNAL** (`LegitimacyTests`, `LegitimacyProcessorTests`) | per-province legitimacy derived from morale + war-standing (militarism-gated) + demand/governor/connectivity inputs; collapse threshold = the rebellion trigger; live processor recompute | 🔵 |
+| **POLITICS-INTERNAL** (`LegitimacyTests`, `LegitimacyProcessorTests`, `RebellionTests`) | per-province legitimacy derived from morale + war-standing (militarism-gated); live processor recompute; collapse → rebellion state machine (begin/quell + reaction-window clock) | 🔵 |
 | **POLITICS-REACTIVE** (`DiplomacyReactiveTests`, `ExchangeCatalogTests`) | the "Are we good?" observation→overture engine (stance-gated) + the data-driven exchange catalog (broad coverage, unique keys, every row routed into a system) | 🔵 |
 | economy / mining / orbits / save-load / modding | the economy substrate + infrastructure | 🔵 |
 

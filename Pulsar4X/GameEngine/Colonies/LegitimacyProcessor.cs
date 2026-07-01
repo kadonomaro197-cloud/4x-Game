@@ -55,6 +55,36 @@ namespace Pulsar4X.Colonies
             var inputs = LegitimacyInputs.FromMorale(morale);
             inputs.WarOutcome = WarTermFor(province);   // 0 in peace; while at war, gated by militarism
             legitimacy.Legitimacy = LegitimacyDB.ComputeLegitimacy(inputs, legitimacy.Factors);
+
+            // Legitimacy collapse drives the REBELLION state (#38): begin a rebellion (start the reaction window)
+            // when it falls into the collapse band, quell it when legitimacy is restored. The window-expiry
+            // resolution (secession/defection) is a later slice — this lights up the collapse hook.
+            if (province.TryGetDataBlob<RebellionDB>(out var rebellion))
+                UpdateRebellion(rebellion, legitimacy.Legitimacy, province.StarSysDateTime);
+        }
+
+        /// <summary>
+        /// Drive one province's rebellion state from its current legitimacy. BEGIN a rebellion (open the reaction
+        /// window) when legitimacy is in the collapse band and none is active; QUELL it when legitimacy has climbed
+        /// back to <see cref="RebellionDB.RecoveryThreshold"/> (hysteresis above the collapse line). A rebellion in
+        /// progress that hasn't recovered simply keeps running toward its window-expiry (the later resolution slice
+        /// reads <see cref="RebellionDB.WindowExpired"/>).
+        /// </summary>
+        internal static void UpdateRebellion(RebellionDB rebellion, double legitimacy, DateTime now)
+        {
+            if (!rebellion.IsRebelling)
+            {
+                if (LegitimacyDB.IsCollapsing(legitimacy))
+                {
+                    rebellion.IsRebelling = true;
+                    rebellion.StartDate = now;
+                    rebellion.ReactionWindowEnds = now + TimeSpan.FromDays(RebellionDB.ReactionWindowDays);
+                }
+            }
+            else if (legitimacy >= RebellionDB.RecoveryThreshold)
+            {
+                rebellion.IsRebelling = false;   // quelled — legitimacy restored within the window
+            }
         }
 
         /// <summary>
