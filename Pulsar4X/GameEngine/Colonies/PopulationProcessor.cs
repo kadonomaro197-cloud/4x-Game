@@ -68,9 +68,16 @@ namespace Pulsar4X.Colonies
                 // M4: tax is a morale input (read the colony's tax rate; ColonyEconomyProcessor reads morale
                 // back to scale income — a one-tick-lagged loop).
                 double taxRate = colony.TryGetDataBlob<ColonyEconomyDB>(out var econDB) ? econDB.TaxRate : 0.0;
+                // Government MODULATOR (#30): cap the effective tax at the regime's TaxCeiling here too, so the
+                // morale penalty and the billed income (ColonyEconomyProcessor) agree. Inert at the Mid default.
+                double taxCeiling = Pulsar4X.Factions.GovernmentTools.OwnerOf(colony).TaxCeiling();
+                if (taxRate > taxCeiling) taxRate = taxCeiling;
 
                 moraleDB.Morale = ColonyMoraleDB.ComputeMorale(worstColonyCost, crowdingRatio, employmentRatio, comfort, taxRate, moraleDB.Factors);
-                migration = ColonyMoraleDB.MigrationRate(moraleDB.Morale);
+                // Government MODULATOR (#30): the regime's MoraleWeight scales how hard public opinion pulls
+                // migration (People-end amplifies it, One-Ruler-end damps it). Neutral (×1.0) at the default Mid
+                // authority, so this changes nothing until a non-Mid regime is set.
+                migration = ColonyMoraleDB.MigrationRate(moraleDB.Morale) * Pulsar4X.Factions.GovernmentTools.OwnerOf(colony).MoraleWeight();
             }
 
             // find colony cost, divide the population support value by it

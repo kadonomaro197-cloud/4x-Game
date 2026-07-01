@@ -86,6 +86,10 @@ namespace Pulsar4X.Technology
             // Get the calculated total number of points to add
             var pointsToAdd = researcherDB.PointsPerDay.GetValue();
 
+            // Government MODULATOR (#30): an OPEN society races ahead, a CLOSED one drags (ResearchMultiplier).
+            // ×1.0 at the default Mid openness, so this changes nothing until a non-Mid regime is set.
+            pointsToAdd = (int)(pointsToAdd * GovernmentTools.Of(faction).ResearchMultiplier());
+
             // Make sure the calculated total is > 0
             if(pointsToAdd <= 0)
                 return;

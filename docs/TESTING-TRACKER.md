@@ -138,7 +138,10 @@ These are self-maintaining (CI gates them red/green every push). Listed so we kn
 - **Most likely failure:** attaching `EnergyGenAbilityDB` to colonies disturbs the entity-agnostic energy processors, or a default deficit tanks every colony (the tax-default class of bug) → **mitigate** with neutral-when-absent defaults + the M1 starting-colony assertion as a guard.
 - **Unblocks:** the full morale input set live.
 
-#### C3 — Government wiring (#30) — ⚫ NOT-YET
+#### C3 — Government wiring (#30) — 🔵 WIRED (CI); FEEL is a PC-test
+- **DONE (2026-07-01):** `GovernmentDB` is attached to every faction (default all-Mid) and its dials are read live — `MoraleWeight`→migration, `ResearchMultiplier`→research, `TaxCeiling`→capped tax income+morale. Neutral at Mid (New Game unchanged); gauges `GovernmentWiringTests` + `GovernmentTests`. Deferred wires: `MilitaryBuildMultiplier` (needs military-item tagging), `CrewPolicy` rule-override (needs the #27 crew gate).
+- **PC-test (the FEEL, not the wiring):** set a faction to a non-Mid regime (once a gov panel/DevTools exists) → confirm Dump Society shows the regime name and the dials visibly bite (over-tax past the ceiling is capped; open/closed research speed changes; morale pull scales). Until a gov-set UI exists this is driven from a test/debugger.
+- *(original placeholder below — superseded by the above)*
 - **What right looks like:** Dump Society shows a real government name; the Authority dial visibly flips the crew rule and tax ceiling; morale weight/research/build multipliers apply.
 - **Method:** set a faction's dials → Dump Society (name + effects) → exercise a lever (try to over-tax past the ceiling; build with no crew under a dictatorship).
 - **Most likely failure:** the GlobalManager-not-iterated trap if any lever is read by a faction-level processor → **mitigated** (design says read per-colony, pass the regime down).

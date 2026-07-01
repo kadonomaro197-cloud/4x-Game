@@ -53,7 +53,12 @@ namespace Pulsar4X.Colonies
             if (colony.TryGetDataBlob<ColonyMoraleDB>(out var moraleDB))
                 morale = moraleDB.Morale;
 
-            decimal income = ColonyEconomyDB.MonthlyTaxIncome(population, econ.TaxRate, morale);
+            // Government MODULATOR (#30): the regime's TaxCeiling caps how hard you can tax (authority raises it).
+            // Default Mid ceiling is 0.5; the start tax is 0, so this is inert until a player taxes past the cap.
+            double ceiling = GovernmentTools.OwnerOf(colony).TaxCeiling();
+            double effectiveTaxRate = econ.TaxRate < ceiling ? econ.TaxRate : ceiling;
+
+            decimal income = ColonyEconomyDB.MonthlyTaxIncome(population, effectiveTaxRate, morale);
             if (income <= 0m) return;
 
             var game = colony.Manager?.Game;
@@ -67,7 +72,7 @@ namespace Pulsar4X.Colonies
             factionInfo.Money.AddIncome(
                 colony.Manager.StarSysDateTime,
                 TransactionCategory.ColonyTax,
-                $"Tax from {colony.GetName(factionId)} ({econ.TaxRate:P0})",
+                $"Tax from {colony.GetName(factionId)} ({effectiveTaxRate:P0})",
                 income);
         }
     }
