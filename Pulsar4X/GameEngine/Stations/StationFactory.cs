@@ -60,6 +60,7 @@ namespace Pulsar4X.Stations
             blobs.Add(new ComponentInstancesDB()); // installed station modules live here
             blobs.Add(new InfrastructureDB());      // capacity summed from installed modules
             blobs.Add(new ColonyMoraleDB());        // shared, host-agnostic morale valve — StationPopulationProcessor reads it for a manned station
+            blobs.Add(new LegitimacyDB());          // a station holds its OWN legitimacy (LegitimacyProcessor recomputes it from morale) — the fragile frontier node
 
             Entity stationEntity = Entity.Create();
             stationEntity.FactionOwnerID = factionEntity.Id;

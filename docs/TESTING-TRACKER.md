@@ -167,6 +167,46 @@ These are self-maintaining (CI gates them red/green every push). Listed so we kn
 
 ---
 
+### D. Political cluster — built 2026-07-01 (what to check at the PC)
+
+> **Read this first, the honest framing:** the political cluster (diplomacy substrate + IFF + first-contact + commerce + treaties + casus-belli + legitimacy + reactive engine + exchange catalog) is **CI-green as engine logic** — the math and data are proven. But almost all of it is **DORMANT in a running game**: nothing sets a relationship, proposes a treaty, or feeds the reactive engine yet, so it **cannot change what you see live until its wiring/UI lands**. That means the local-test list here is SHORT and split into two buckets:
+> - **D0–D2 = test NOW** — the ONE genuinely-live behavior this session added (legitimacy runs on every colony) + the save/load and boot regressions that any new blob/processor risks.
+> - **D3+ = can't test yet (dormant)** — listed so you know they exist and what will make them exercisable, but there's nothing to see until the wiring slice for each lands. Do NOT spend PC time hunting for these live yet.
+
+#### D0 — New Game still boots + clock runs with the new politics blobs/processor — 🟡 PENDING ⭐ (this is T0 for this work)
+- **What:** the standard T0 boot, specifically confirming the new `LegitimacyProcessor` (a new monthly `IHotloopProcessor`) and the new blobs on every colony (`LegitimacyDB`) + every faction (`DiplomacyDB`) don't crash startup or the sim.
+- **Why:** this session added the first auto-discovered processor + per-colony/per-faction blobs of the cluster — exactly the shape that can crash boot (GameEngine gotcha #1) or the monthly tick.
+- **Method:** `launch.bat` → New Game → press play → advance several months → close; read `console_output.txt`.
+- **What right looks like:** boots, clock advances past a month boundary (so the monthly `LegitimacyProcessor` fires ≥ once), no exception, clean close.
+- **Most likely failure:** `LegitimacyProcessor` throws in the monthly tick, or `LegitimacyDB`/`DiplomacyDB` attachment breaks the New-Game build.
+- **Mitigation in place:** processor is defensive (`RecalcLegitimacy` no-ops on missing blobs, never throws); trivial ctor; `LegitimacyProcessorTests` + `GameLoopSmokeTests` cover it in CI. **Unblocks:** D1/D2.
+
+#### D1 — Save/load round-trips the politics blobs — 🟡 PENDING
+- **What:** start a game, save, load, confirm no crash and colonies/factions still hold sensible legitimacy/relationship state.
+- **Why:** `LegitimacyDB` (colony/station), `DiplomacyDB` (faction), and the new `RelationshipState` treaty flags are all `[JsonProperty]` — save/load with `TypeNameHandling.Objects` is the standard risk (gotcha #7).
+- **Method:** New Game → save → load → Dump Society / no exception in `console_output.txt`.
+- **What right looks like:** load succeeds; legitimacy values persist; no missing-type/serialization error. **Most likely failure:** a serialization snag on a new blob. **Mitigation:** all new state is plain `[JsonProperty]` doubles/bools/dicts + a Dictionary of value objects; CI save/load tests cover the base path.
+- **Unblocks:** confidence the cluster survives a played game.
+
+#### D2 — Legitimacy tracks morale, live — 🟡 PENDING (needs a readout)
+- **What:** confirm each colony's legitimacy moves with its morale over time (a content colony ~loyal, a miserable one drifts toward the < 20 collapse band).
+- **Why:** the one live gameplay behavior added; proves the processor runs and reads morale in the full sim, not just the unit test.
+- **Method:** there is **no legitimacy readout yet** — quickest path is to add a legitimacy line to DevTools **Dump Society** (A1) when that's next touched, then read it; or inspect via the debugger. Until then this is **blocked on a readout** (an Information-Delta gap: the number exists, the gauge doesn't).
+- **What right looks like:** legitimacy ≈ morale each month; tank a colony's morale (overcrowd / high tax) and watch legitimacy fall under 20. **Most likely failure:** legitimacy stuck at 50 (processor not firing — check the monthly tick / that the colony has both blobs). **Mitigation:** `LegitimacyProcessorTests` proves the recompute; A1's Dump Society is the natural home for the readout.
+- **Unblocks:** the rebellion trigger (#38) — a visible collapse band is the cue a province is about to rebel.
+
+#### D3+ — DORMANT until wired (do NOT test live yet; CI-green, no runtime effect)
+These are built + CI-verified but have **no live effect** until their wiring/UI slice lands — each needs the noted hook before it's exercisable at the PC:
+- **IFF suppression (allies hold fire)** — needs a way to SET a Friendly/Allied stance live (a diplomacy panel or DevTools "set relation"). Until then every faction is at the default (fights) — same as before. Gauge stands in CI (`DiplomacyIffTests`).
+- **First-contact event** — fires when your sensors first detect a foreign faction's ship. Requires a foreign faction present + detected. The `CombatSandbox`/DevTools "Spawn Hostile Fleet" is the way to trigger it once a first-contact *notification* is surfaced (event is published; no UI panel reads it yet).
+- **Treaty proposals + casus belli** — no UI to propose a treaty or declare a justified war yet; `Treaties.Propose`/`CasusBelliRules` are engine-only. Needs the diplomacy screen (or DevTools buttons).
+- **Reactive "Are we good?" engine** — needs the per-cycle loop that feeds it fleet-position observations (a processor reading fleets vs. the sensor contact table) + a message surface. Pure decision-table only today.
+- **Commerce (logistics access)** — cross-faction freight opens only if a base owner grants `LogisticsAccess`; nothing grants it yet, so behavior == old same-faction-only. Needs the treaty UI to set the flag.
+- **Exchange catalog** — data only; needs the commitment model (execute an exchange) + a trade UI.
+- **When any of these gets its wiring slice, MOVE it up to a D-numbered live test** with the seven fields.
+
+---
+
 ## The process (how this doc stays true)
 
 1. **Build something testable → add its row here** (CI row if automated; a Layer-3 entry with the seven fields if it needs a run). Designing the test *before/with* the build is the no-untested-system rule.
