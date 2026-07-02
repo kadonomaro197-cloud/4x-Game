@@ -214,16 +214,24 @@ namespace Pulsar4X.Client
 
                         if(jobs.Count > 0)
                         {
-                            IConstructableDesign designInfo = _factionInfoDB.IndustryDesigns[line.Jobs[0].ItemGuid];
-                            var rate = line.IndustryTypeRates[designInfo.IndustryTypeID];
-                            ImGui.SameLine();
-                            ImGui.Text("Progress per day:");
-                            ImGui.SameLine();
-                            ImGui.PushStyleColor(ImGuiCol.Text, Styles.HighlightColor);
-                            ImGui.Text(rate.ToString());
-                            ImGui.PopStyleColor();
-                            if(ImGui.IsItemHovered())
-                                ImGui.SetTooltip("Assuming all resources needed are available.");
+                            // Defensive lookup (gotcha #10/#11): _factionInfoDB is the VIEWED faction, so in SM mode
+                            // it's the GameMaster (empty IndustryDesigns) and a foreign colony's jobs reference designs
+                            // the viewed faction may not have. A HARD INDEX here (`IndustryDesigns['electronics']`)
+                            // threw KeyNotFoundException and took down the WHOLE colony window — and because the throw
+                            // skipped the window's End(), it cascaded every other window that frame. Resolve
+                            // defensively and just skip the rate readout when it can't be resolved.
+                            if(_factionInfoDB.IndustryDesigns.TryGetValue(line.Jobs[0].ItemGuid, out var designInfo)
+                                && line.IndustryTypeRates.TryGetValue(designInfo.IndustryTypeID, out var rate))
+                            {
+                                ImGui.SameLine();
+                                ImGui.Text("Progress per day:");
+                                ImGui.SameLine();
+                                ImGui.PushStyleColor(ImGuiCol.Text, Styles.HighlightColor);
+                                ImGui.Text(rate.ToString());
+                                ImGui.PopStyleColor();
+                                if(ImGui.IsItemHovered())
+                                    ImGui.SetTooltip("Assuming all resources needed are available.");
+                            }
 
                             if(ImGui.BeginTable(line.Name, 4, Styles.TableFlags | ImGuiTableFlags.SizingStretchProp))
                             {
