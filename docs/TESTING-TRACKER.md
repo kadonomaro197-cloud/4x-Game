@@ -229,4 +229,9 @@ These are built + CI-verified but have **no live effect** until their wiring/UI 
 3. **Branch lifecycle:** a branch isn't "done" until its Layer-3 rows are 🟢 or consciously deferred (note why). Per-branch `CLIENT-TEST-CHECKLIST.md` is the working scratchpad; this tracker is the durable index across branches.
 4. **A failure is data, not a setback** — record the failure mode under "most likely failure" so the next branch inherits the lesson.
 
+### Staged game-state generator (task #39) — 🔵 engine BUILT (2026-07-02); DevTools button = next slice
+- **DONE:** `GameStageFactory.AgeTo(game, playerFaction, GameStage.{Early|Mid|Late})` (engine, CI-tested) layers a New-Game start up to a stage so the LATE-triggering cluster is visible without hours of play: Early = a frontier colony; Mid = two met rivals (one Friendly + treaty, one hostile); Late = an active war + a frontier colony in rebellion. GENERATED (rides current factories → never rots on a new blob), cumulative + convergent (safe to re-run). Rivals are contacted-factions only (no rival colonies — dodges the secession ownership blast radius). Gauge `GameStageTests`.
+- **Next slice:** a DevTools "Age the galaxy → Early/Mid/Late" button (thin wrapper) so the developer loads a rich state instantly at the PC. Then: save-file fixtures once the DataBlob schema stabilises (post-MVP), with a load-old-save regression test.
+- **PC-test:** once the button lands — DevTools → Age → Late → Dump Society: two colonies, a rebelling frontier (window countdown), the diplomacy ledger showing a friendly+treaty and a hostile+WAR.
+
 *Next action (this branch): T0 boot test, then A1 society readout. Everything else in M-ECON is observable once A1 passes.*

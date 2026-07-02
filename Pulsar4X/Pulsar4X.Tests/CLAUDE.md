@@ -136,6 +136,7 @@ Namespace drift between branches is the #1 compile trap here (it bit `PositionDB
 | &nbsp;&nbsp;`FactionEconomyTests` | GlobalManager-iterated faction processors fire; colony tax flows to the faction Ledger; the SocietyReadout colony line |
 | &nbsp;&nbsp;`SocietyReadoutTests` | the instrument-panel text (sustenance shown, diplomacy ledger stance/score/treaties, no-contacts case) — the observability gauge the client's Dump Society prints |
 | **Diplomacy cluster** (`DiplomacyTests`, `DiplomacyIffTests`, `DiplomacyFirstContactTests`, `DiplomacyLogisticsAccessTests`, `DiplomacyTreatyTests`, `DiplomacyCasusBelliTests`, `DiplomacyWarTests`, `DiplomacyReactiveTests`, `ExchangeCatalogTests`, `DiplomacyDriftTests`) | relationship track + IFF (signed-pact suppression) + first-contact + logistics gate + treaty trust-ladder + casus-belli militarism gate + declare-war/peace latch + the reactive table + exchange catalog + **the live monthly reactive DRIFT** (`DiplomacyDriftTests`: militarist cools, treaty warms, inert without contacts) |
+| `GameStageTests` | the **staged game-state generator** (task #39) — `GameStageFactory.AgeTo` layers a New-Game start to Early (frontier colony) / Mid (met rivals + treaty) / Late (active war + a rebelling colony); asserts each stage's content + that aging is cumulative & convergent (re-aging doesn't duplicate). The rig that lets the late-triggering political cluster be seen/asserted without playing for hours |
 | orbit math / vectors / EntityManager / serialization / modding | unit-level |
 
 ---
