@@ -4,9 +4,9 @@
 
 **THE RULE (not optional):** when a commit changes a doc — or changes code that makes a doc newly-true or newly-stale — update that doc's row here **in the same commit**. A row's *status* is the maintained truth (git already knows the last-touch sha; what git can't tell you is whether the content still reflects reality). Keep the "As of" stamp current on any substantive pass.
 
-**As of:** 2026-07-02 · branch `claude/space-economy-morale` · last verified-green HEAD `b2d2e60` (engine + client CI green).
+**As of:** 2026-07-02 · branch `claude/space-economy-morale` · last verified-green HEAD `02baffa` (engine + client CI green).
 
-**Current focus (what's being worked on):** the space-economy / morale / political-substrate branch. This session drove it "to the PC line" — everything cloud-doable wired + CI-green; what remains is local runtime testing + a few design decisions. See `docs/TESTING-TRACKER.md` for the live PC-test queue and the design/PC-gated list.
+**Current focus (what's being worked on):** the space-economy / morale / political-substrate branch, driven "to the PC line" — everything cloud-doable wired + CI-green; what remains is local runtime testing + a few design decisions. Latest landings: the diplomacy reactive-drift + observability readouts + the DevTools government lever, and the **staged game-state generator** (`GameStageFactory` — Age the galaxy to Early/Mid/Late so the late-triggering political cluster is visible without hours of play). See `docs/TESTING-TRACKER.md` for the live PC-test queue and the design/PC-gated list.
 
 ---
 
