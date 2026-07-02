@@ -99,6 +99,15 @@ namespace Pulsar4X.Client
             // stand up sensors); ON for the game. DevTools → Detection / Fog of War can still toggle it live.
             Pulsar4X.Combat.CombatEngagement.RequireDetectionToEngage = true;
 
+            // Battle-start rule (the developer's, 2026-07-02): a fight auto-starts only when the fleets are within
+            // actual WEAPON range AND at least one side is Weapons Free (fire-at-will). Seeing each other is NOT
+            // enough — two fleets can sit in sensor range across the system and never fire; the player closes them
+            // (navigation) or issues an explicit Attack order. WeaponRange replaces the coarse 1 Gm proximity trigger;
+            // WeaponsRelease enforces the fire-at-will half (default posture is Weapons Free, so by default they DO
+            // fight once in range). Off by default in the engine (fixtures are co-located / posture-free); ON here.
+            Pulsar4X.Combat.CombatEngagement.RequireWeaponRangeToEngage = true;
+            Pulsar4X.Combat.CombatEngagement.RequireWeaponsReleaseToEngage = true;
+
             try
             {
                 string? appDataDirectory = GetAppDataPath();

@@ -137,6 +137,10 @@ namespace Pulsar4X.Combat
                     if (a.HasDataBlob<FleetRetreatDB>() || b.HasDataBlob<FleetRetreatDB>()) continue;
                     if (GetFleetShips(b).Count == 0) continue;
                     if (!InRange(a, b)) continue;
+                    // Weapon-range trigger (client-on / test-off): SEEING isn't FIRING. A battle auto-starts only when
+                    // someone's guns can actually reach — proximity alone (the 1 Gm EngagementRange bubble) no longer
+                    // starts a fight. An explicit attack order bypasses this (OrderAttack). MUST match NewEngagementImminent.
+                    if (RequireWeaponRangeToEngage && !WithinWeaponRange(a, b)) continue;
                     // Don't start a fight neither side can resolve (both unarmed): it would enter, freeze (no damage
                     // dealt), and disengage every tick — a thrash. A fight needs at least one side that can deal damage.
                     if (!FleetHasFirepower(a) && !FleetHasFirepower(b)) continue;
@@ -235,6 +239,14 @@ namespace Pulsar4X.Combat
                     if (GetFleetShips(b).Count == 0) continue;
                     if (!InRange(a, b)) continue;
                     if (!FleetHasFirepower(a) && !FleetHasFirepower(b)) continue; // no fight two unarmed fleets can resolve
+                    // Weapon-range + weapons-release gates MUST mirror Tick's — a pair that can't yet FIRE (out of weapon
+                    // range) or WON'T fire (both holding fire) can't form a battle, so it must not force fine-stepping.
+                    // Same class of bug as the fog gate below: a mismatch made the master loop crawl at 5 s forever.
+                    if (RequireWeaponRangeToEngage && !WithinWeaponRange(a, b)) continue;
+                    if (RequireWeaponsReleaseToEngage
+                        && FleetDoctrine.PostureOf(a) != EngagementPosture.WeaponsFree
+                        && FleetDoctrine.PostureOf(b) != EngagementPosture.WeaponsFree)
+                        continue;
                     // Match the engage pass's fog gate (see Tick): if combat is detection-gated, a pair that can't
                     // yet SEE each other is NOT imminent — a battle can't form, so it must not force fine-stepping.
                     // Without this, a fleet parked in range of UNDETECTED hostiles (e.g. yours at Earth, ~384,000 km
@@ -285,6 +297,18 @@ namespace Pulsar4X.Combat
         /// fleet (the default posture) starts it. Default FALSE so existing fixtures (no posture set = WeaponsFree
         /// anyway) are unchanged; the client turns it on when ROE is live.</summary>
         public static bool RequireWeaponsReleaseToEngage = false;
+
+        /// <summary>When true, the auto-trigger only starts a battle once the fleets are within actual WEAPON range
+        /// (<see cref="WithinWeaponRange(Entity,Entity)"/>) — NOT merely inside the coarse <see cref="EngagementRange_m"/>
+        /// proximity bubble. This is the developer's rule and the v2 weapon-range gate <see cref="EngagementRange_m"/>
+        /// was always flagged as the placeholder for: two fleets can SEE each other clear across the system and never
+        /// fire; a battle auto-starts only when someone's guns can actually reach — or via an explicit
+        /// <see cref="OrderAttack"/>, which bypasses this. Detection lets you SEE; this lets you FIRE. Pairs with
+        /// <see cref="RequireWeaponsReleaseToEngage"/> (at least one side Weapons Free) → "in range AND willing to fire."
+        /// Default FALSE so every headless fixture (co-located ships / no weapon profiles) is byte-identical; the client
+        /// turns it on. MUST be gated in BOTH <see cref="Tick"/> and <see cref="NewEngagementImminent"/> or the clock
+        /// and combat disagree (the same rule fog-of-war learned — see NewEngagementImminent).</summary>
+        public static bool RequireWeaponRangeToEngage = false;
 
         /// <summary>When true, combat is a CLOSING fight (Phase 1, docs/FLEET-COMBAT-CLOSING-DESIGN.md): a weapon only
         /// fires if its <see cref="WeaponProfile.Range_m"/> reaches the current gap, and the gap CLOSES each step toward
@@ -876,6 +900,27 @@ namespace Pulsar4X.Combat
             }
             return max;
         }
+
+        /// <summary>Pure weapon-range test: given the real separation and each fleet's longest weapon reach, can at
+        /// least ONE side's guns reach the other? Uses the LONGER of the two reaches — a long-range fleet opens the
+        /// fight at its range (the shorter side just can't shoot back until they close, which the directed-fire resolve
+        /// already handles). An unbounded (rangeless) reach (∞) reaches any gap; a pair with no armed reach (0) can't
+        /// start a fight. Split out pure so it's deterministically unit-testable (no positions), like HitFraction.</summary>
+        internal static bool WithinWeaponRange(double separation_m, double reachA, double reachB)
+        {
+            double reach = System.Math.Max(reachA, reachB);
+            if (double.IsPositiveInfinity(reach)) return true;   // an unbounded weapon reaches any gap (fallback/old-style)
+            if (reach <= 0) return false;                        // neither side has a weapon with reach → nothing to start
+            return separation_m <= reach;
+        }
+
+        /// <summary>Are the two fleets within actual weapon range of each other — the entity-level gate for
+        /// <see cref="RequireWeaponRangeToEngage"/>. Resolves each fleet's <see cref="MaxReach"/> and their real
+        /// <see cref="FleetSeparation"/> and defers to the pure overload. (FleetSeparation falls back to
+        /// <see cref="InitialSeparationDefault_m"/> when a fleet has no usable position, so a positionless test pair is
+        /// treated as ~missile range apart rather than co-located.)</summary>
+        internal static bool WithinWeaponRange(Entity a, Entity b)
+            => WithinWeaponRange(FleetSeparation(a, b), MaxReach(GetCombatShips(a)), MaxReach(GetCombatShips(b)));
 
         /// <summary>One live line per fleet per closing step: its gap, whether its guns REACH it, its longest reach,
         /// and its maneuver reserve — so a play-test log shows the standoff/closing play out (the gauge CI can't run).</summary>

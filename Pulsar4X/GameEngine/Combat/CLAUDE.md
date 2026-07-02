@@ -87,7 +87,7 @@ Battles spanning game-time is what makes "watch a battle / change doctrine mid-f
 
 **v1 stubs (flagged):**
 - **Hostility** = different non-neutral faction. There is **no diplomacy/relations system** in the engine yet, and the engine's own `EntityFilter.Hostile` additionally requires a *sensor contact* — which the v1 plan stubs as "everyone sees everyone." So the trigger ignores sensors and treats any two different-faction fleets as enemies. Real IFF/relations is a v2 layer.
-- **Range** = a flat `EngagementRange_m` (1 million km). Real value = weapon range (combat steps 1–2, v2).
+- **Range** = a flat `EngagementRange_m` (1 million km) as the *coarse* pre-gate, then the **real weapon-range gate** `WithinWeaponRange` when **`RequireWeaponRangeToEngage`** is on (default off; **client on** as of 2026-07-02). So a battle auto-starts only when someone's guns can actually reach — the developer's "they can see each other all they want but won't fire until in weapons range." Seeing (detection) ≠ firing (weapon range). An explicit `OrderAttack` still bypasses. Paired with `RequireWeaponsReleaseToEngage` (now **also client-on**): "in weapon range AND at least one side Weapons Free." See "Weapon-range trigger" below.
 - **Casualties** use `Entity.Destroy()` (lightweight: flips `IsValid` false at once, no order re-entrancy). Commander death, debris, and fleet-roster cleanup are v2.
 
 **Connections (Prime Directive):**
@@ -548,7 +548,9 @@ test entry points are unchanged — only the auto-trigger `Tick` gained the guar
 | `EvasionCap` | 0.95 | hard ceiling on Evasion — nothing is ever fully untouchable | `ShipCombatValueDB.cs` |
 | `AutoResolveConfig.RoundSeconds` | 5.0 | game-seconds of fire per salvo round | `AutoResolve.cs` |
 | `AutoResolveConfig.MaxRounds` | 2000 | round-cap backstop; hitting it = Stalemate | `AutoResolve.cs` |
-| `CombatEngagement.EngagementRange_m` | 1e9 (1M km) | v1 flat auto-engage distance (real value = weapon range, v2) | `CombatEngagement.cs` |
+| `CombatEngagement.EngagementRange_m` | 1e9 (1M km) | the COARSE proximity pre-gate; the real trigger is `WithinWeaponRange` when `RequireWeaponRangeToEngage` is on (client-on 2026-07-02) | `CombatEngagement.cs` |
+| `CombatEngagement.RequireWeaponRangeToEngage` | false (client: true) | auto-start a battle only within actual WEAPON range (`WithinWeaponRange`), not the 1 Gm bubble — "seeing ≠ firing." Must be gated in BOTH `Tick` and `NewEngagementImminent`. Gauge `WeaponRangeTriggerTests` | `CombatEngagement.cs` |
+| `CombatEngagement.RequireWeaponsReleaseToEngage` | false (client: true 2026-07-02) | a battle needs ≥1 side Weapons Free (fire-at-will); two holding fleets in weapon range sit in a standoff. Now also gated in `NewEngagementImminent` | `CombatEngagement.cs` |
 | `CombatEngagement.MaxSteps` | 5000 | per-engagement step cap (stalemate backstop) | `CombatEngagement.cs` |
 | `CombatEngagement.RetreatCasualtyThreshold` | 0.5 | fraction of starting ships a fleet must lose to break off (v1 flat; real value = per-doctrine, v2) | `CombatEngagement.cs` |
 | `CombatEngagement.VelocityReference_mps` | 1e6 | shot velocity at which a weapon half-defeats evasion (beam ≫ this, slug ≪ this) | `CombatEngagement.cs` |
@@ -635,6 +637,23 @@ on when the model is live. All deterministic (no wall-clock/RNG) so fast-forward
 > blows at weapons range. All three are `public static` dials (provisional, live-tuned). The range term is inert at
 > separation 0, so every closing-OFF combat fixture (the sims, triangle, stress lab) is byte-identical; gauges:
 > `DodgeResolveTests.HitFraction_RangeDegradesBallistics_EvenVsSittingTarget` (the 0-evasion falloff) + `ClosingTests`.
+- **Weapon-range trigger — a battle starts at WEAPON range, not proximity (2026-07-02, the developer's rule).** The
+  auto-trigger's range check was a flat `EngagementRange_m` (1 Gm) — so two fleets 752 km apart with 500 km guns
+  "entered combat" (interrupt, Battle Report, time-pause) but dealt 0 damage and immediately disengaged (the live
+  "they're not actually in battle" report — detection range ≫ weapon range, so proximity triggered a fight nobody
+  could fight). Fixed with **`RequireWeaponRangeToEngage`** (default off, **client on**): the engage pass now also
+  requires **`WithinWeaponRange(a, b)`** — real `FleetSeparation` ≤ the LONGER of the two fleets' `MaxReach` (the
+  long-range side opens the fight; an unbounded weapon reaches any gap; pure `(sep, reachA, reachB)` overload is
+  unit-tested). So a fight auto-starts only when someone can actually shoot; otherwise the fleets sit in sensor range
+  and the **player closes them (navigation) or issues an explicit Attack order** (`OrderAttack` bypasses the gate).
+  Also turned **`RequireWeaponsReleaseToEngage` on in the client** (it was off) — the fire-at-will half: ≥1 side must
+  be Weapons Free (default posture, so they fight by default; set Hold Fire on both → standoff). **Both gates are
+  mirrored in `NewEngagementImminent`** (the combat-interrupt fine-step gate) — the weapons-release gate was MISSING
+  there, which would have re-created the "time crawls at 5 s forever" bug once the flag went on (the same lesson the
+  fog gate learned: the imminent-gate and engage-gate MUST agree). Gauge: **`WeaponRangeTriggerTests`** (pure math;
+  752 km no-engage → 400 km engage through the real `Tick`; flag-off still engages at 752 km; imminent agreement;
+  both-hold-fire not imminent). **This resolves BOTH live issues at once:** #1 (battles starting out of range) and #2
+  (the closing model "not closing" — moot, since closing-into-range is now the player's move, not an auto-trigger job).
 - **Next: P4 — per-sub-fleet ranges** (each component its own gap, so a fighter wing closes while the capitals hold).
 
 ## Gotchas
