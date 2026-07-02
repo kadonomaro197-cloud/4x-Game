@@ -60,6 +60,9 @@ namespace Pulsar4X.Client
         private int _hostileCount = 3;
         private string _hostileStatus = "";
 
+        // ── Government (test regimes) ──────────────────
+        private string _governmentStatus = "";
+
         private DevToolsWindow()
         {
             _flags = ImGuiWindowFlags.AlwaysAutoResize;
@@ -175,6 +178,29 @@ namespace Pulsar4X.Client
         // on-screen readout yet, so this dumps each colony's state (and the player's government) to the flushed
         // log so a play-test can WATCH the numbers move. The formatting lives in the engine (SocietyReadout, which
         // is CI-tested); this is a thin iterate-and-log wrapper.
+        // Set the player faction's government dials to a preset regime (public setters; guarded). Logs the
+        // classified name + description so the play-test sees which regime is active. The dials themselves are
+        // read live by the engine processors (#30) — this is just the lever to move them off the Mid default.
+        void SetGovernment(GovNotch authority, GovNotch economy, GovNotch openness, GovNotch militarism)
+        {
+            try
+            {
+                var faction = _uiState.PlayerFaction;
+                if (faction == null || !faction.TryGetDataBlob<GovernmentDB>(out var gov))
+                {
+                    _governmentStatus = "No player faction / GovernmentDB to set.";
+                    return;
+                }
+                gov.Authority = authority; gov.Economy = economy; gov.Openness = openness; gov.Militarism = militarism;
+                _governmentStatus = $"Government -> {gov.Name()}";
+                DevLog($"Government set -> {gov.Name()} ({gov.Description()})");
+            }
+            catch (Exception ex)
+            {
+                _governmentStatus = $"Government error: {ex.Message}";
+            }
+        }
+
         void DumpSociety()
         {
             var sys = _uiState.SelectedSystem;
@@ -233,6 +259,24 @@ namespace Pulsar4X.Client
                 ImGui.SameLine();
                 if (ImGui.Button("Dump Society (log)"))
                     DumpSociety();
+
+                // ── Government (test regimes) ─────────────────────
+                // Set the player faction's GovernmentDB to a preset regime so a play-test can watch the #30
+                // dials bite (tax ceiling, crew policy, research speed, morale weight, war pride). No UI existed
+                // to leave the neutral Mid default, so C3 was untestable; these three cover the extremes. Then
+                // Dump Society to read the effects.
+                ImGui.Separator();
+                ImGui.Text("[ Government (test regimes) ]");
+                ImGui.TextDisabled("Flip the player regime, then Dump Society / advance time to watch the dials bite.");
+                if (ImGui.Button("Federal Republic (Mid — neutral)"))
+                    SetGovernment(GovNotch.Mid, GovNotch.Mid, GovNotch.Mid, GovNotch.Mid);
+                ImGui.SameLine();
+                if (ImGui.Button("Totalitarian War-State"))
+                    SetGovernment(GovNotch.High, GovNotch.High, GovNotch.Low, GovNotch.High);
+                ImGui.SameLine();
+                if (ImGui.Button("Liberal Democracy"))
+                    SetGovernment(GovNotch.Low, GovNotch.Low, GovNotch.High, GovNotch.Low);
+                if (_governmentStatus.Length > 0) ImGui.TextDisabled(_governmentStatus);
 
                 // ── Faction Switcher (SM) ─────────────────────────
                 ImGui.Separator();
