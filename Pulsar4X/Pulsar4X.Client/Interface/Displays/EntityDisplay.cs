@@ -141,6 +141,147 @@ namespace Pulsar4X.Client
             ImGui.EndChild();
         }
 
+        // ── Society tab ────────────────────────────────────────────────────────────────────────────────
+        // The player-facing instrument panel for the M-ECON / political state of ONE colony — morale (+ the factor
+        // breakdown that explains WHY), legitimacy (+ rebellion countdown), the manpower pools, power/food
+        // sustenance, tax→income, and the governing regime that modulates them all. Until now these numbers were
+        // reachable ONLY via DevTools "Dump Society" → a log line in SM mode; a player couldn't see them to make a
+        // decision. Everything here READS the same public blobs the CI-tested SocietyReadout formats (no new engine
+        // math), so it's a thin, defensive draw: each section is guarded by TryGetDataBlob (a colony missing a blob
+        // just omits that section) and every read is a public property/method. Values are colour-banded so the
+        // player reads "this colony is in trouble" at a glance.
+        public static void DisplaySociety(this Entity entity, EntityState entityState, GlobalUIState uiState)
+        {
+            if(!entity.TryGetDataBlob<ColonyInfoDB>(out var info))
+            {
+                ImGui.TextUnformatted("No colony data.");
+                return;
+            }
+
+            long pop = info.Population.Values.Sum();
+            double morale = ColonyMoraleDB.Neutral;
+
+            // ── Morale & legitimacy — the loyalty gauges ──
+            if(ImGui.CollapsingHeader("Morale & Legitimacy", ImGuiTreeNodeFlags.DefaultOpen))
+            {
+                ImGui.Columns(2);
+                if(entity.TryGetDataBlob<ColonyMoraleDB>(out var m))
+                {
+                    morale = m.Morale;
+                    SocietyRow("Morale", $"{m.Morale:0.0} / 100", Band0to100(m.Morale),
+                        "0–100, 50 = neutral. Below 50 people emigrate; above 50 they immigrate.");
+
+                    // The factor breakdown is the WHY behind the number — the lever a player acts on.
+                    foreach(var f in m.Factors.Where(f => f.Key != "baseline"))
+                        SocietyRow("  · " + f.Key, f.Value.ToString("+0.0;-0.0;0"),
+                            f.Value >= 0 ? Styles.GoodColor : Styles.BadColor);
+                }
+                else SocietyRow("Morale", "n/a", Styles.NeutralColor);
+
+                if(entity.TryGetDataBlob<LegitimacyDB>(out var leg))
+                {
+                    SocietyRow("Legitimacy", $"{leg.Legitimacy:0.0} / 100", Band0to100(leg.Legitimacy),
+                        "The regime's hold on this province. Below 20 it collapses into rebellion.");
+
+                    if(entity.TryGetDataBlob<RebellionDB>(out var reb) && reb.IsRebelling)
+                    {
+                        double daysLeft = (reb.ReactionWindowEnds - uiState.Game.TimePulse.GameGlobalDateTime).TotalDays;
+                        SocietyRow("  · Status", daysLeft > 0 ? $"REBELLING — {daysLeft:0} days to act" : "REBELLING — window lapsed",
+                            Styles.TerribleColor, "Restore legitimacy (ease tax / overcrowding) before the window closes.");
+                    }
+                    else if(LegitimacyDB.IsCollapsing(leg.Legitimacy))
+                        SocietyRow("  · Status", "COLLAPSING", Styles.BadColor);
+                }
+                ImGui.Columns(1);
+            }
+
+            // ── People — the finite manpower the colony draws crew/talent from ──
+            if(entity.TryGetDataBlob<ColonyManpowerDB>(out var mp)
+                && ImGui.CollapsingHeader("People (manpower)", ImGuiTreeNodeFlags.DefaultOpen))
+            {
+                ImGui.Columns(2);
+                long availBulk = mp.AvailableBulk(pop),  totalBulk = ColonyManpowerDB.Workforce(pop);
+                long availTal  = mp.AvailableTalent(pop), totalTal  = ColonyManpowerDB.TalentPool(pop);
+                SocietyRow("Workforce (crew/labour)", $"{availBulk:N0} free of {totalBulk:N0}",
+                    availBulk > 0 ? Styles.NeutralColor : Styles.BadColor,
+                    "Bulk manpower. A ship build blocks (or conscripts) when this hits 0.");
+                SocietyRow("Talent (officers/scientists)", $"{availTal:N0} free of {totalTal:N0}",
+                    availTal > 0 ? Styles.NeutralColor : Styles.BadColor, separator: false);
+                ImGui.Columns(1);
+            }
+
+            // ── Sustenance — brown-out / famine pressure (0% until per-capita demand is calibrated) ──
+            if(entity.TryGetDataBlob<ColonySustenanceDB>(out var sust)
+                && ImGui.CollapsingHeader("Sustenance (power / food)", ImGuiTreeNodeFlags.DefaultOpen))
+            {
+                ImGui.Columns(2);
+                SocietyRow("Power shortage", sust.PowerShortage.ToString("P0"), ShortageColor(sust.PowerShortage),
+                    "Fraction of power demand unmet. Sours morale; zero = fully powered.");
+                SocietyRow("Food shortage", sust.FoodShortage.ToString("P0"), ShortageColor(sust.FoodShortage),
+                    "Fraction of food demand unmet. Severe shortage starves population.", separator: false);
+                ImGui.Columns(1);
+            }
+
+            // ── Economy — the tax lever (which itself feeds back into morale) ──
+            if(entity.TryGetDataBlob<ColonyEconomyDB>(out var econ)
+                && ImGui.CollapsingHeader("Economy (tax)", ImGuiTreeNodeFlags.DefaultOpen))
+            {
+                ImGui.Columns(2);
+                SocietyRow("Tax rate", econ.TaxRate.ToString("P0"),
+                    econ.TaxRate <= 0.25 ? Styles.GoodColor : econ.TaxRate <= 0.5 ? Styles.MediocreColor : Styles.BadColor,
+                    "Higher tax earns more but lowers morale.");
+                SocietyRow("Monthly income", $"{ColonyEconomyDB.MonthlyTaxIncome(pop, econ.TaxRate, morale):N0} / mo",
+                    Styles.NeutralColor, "Scales with population AND morale — a happy colony pays more.", separator: false);
+                ImGui.Columns(1);
+            }
+
+            // ── Government — the empire regime that modulates all of the above (tax ceiling, morale weight, ...) ──
+            if(uiState.Game != null && uiState.Game.Factions.TryGetValue(entity.FactionOwnerID, out var owner)
+                && owner.TryGetDataBlob<GovernmentDB>(out var gov)
+                && ImGui.CollapsingHeader("Government", ImGuiTreeNodeFlags.DefaultOpen))
+            {
+                ImGui.PushStyleColor(ImGuiCol.Text, Styles.HighlightColor);
+                ImGui.TextUnformatted(gov.Name());
+                ImGui.PopStyleColor();
+                ImGui.PushStyleColor(ImGuiCol.Text, Styles.DescriptiveColor);
+                ImGui.TextWrapped(gov.Description());
+                ImGui.PopStyleColor();
+            }
+        }
+
+        // One label→value row with a colour-banded value. TextUnformatted on the value so a literal '%' (from a
+        // P0-formatted percentage) isn't parsed as a printf specifier (the same trap DisplaySummary avoids). Assumes
+        // ImGui.Columns(2) is active — matches DisplayHelpers.PrintRow's contract.
+        private static void SocietyRow(string label, string value, Vector4 valueColor, string? tooltip = null, bool separator = true)
+        {
+            ImGui.PushStyleColor(ImGuiCol.Text, Styles.DescriptiveColor);
+            ImGui.TextUnformatted(label);
+            ImGui.PopStyleColor();
+            if(tooltip != null && ImGui.IsItemHovered()) ImGui.SetTooltip(tooltip);
+            ImGui.NextColumn();
+            ImGui.PushStyleColor(ImGuiCol.Text, valueColor);
+            ImGui.TextUnformatted(value);
+            ImGui.PopStyleColor();
+            ImGui.NextColumn();
+            if(separator) ImGui.Separator();
+        }
+
+        // 0–100 gauge colour band (morale, legitimacy): green good → red terrible.
+        private static Vector4 Band0to100(double v) =>
+            v >= 65 ? Styles.GoodColor :
+            v >= 50 ? Styles.OkColor :
+            v >= 35 ? Styles.MediocreColor :
+            v >= 20 ? Styles.BadColor :
+                      Styles.TerribleColor;
+
+        // Shortage fraction colour band (0 = fine/green, 1 = total/red).
+        private static Vector4 ShortageColor(double s) =>
+            s <= 0.001 ? Styles.GoodColor :
+            s < 0.25   ? Styles.OkColor :
+            s < 0.5    ? Styles.MediocreColor :
+            s < 0.75   ? Styles.BadColor :
+                         Styles.TerribleColor;
+
         public static void DisplayIndustry(this Entity entity, EntityState entityState, GlobalUIState uiState)
         {
             IndustryDisplay.GetInstance(entityState).Display(uiState);

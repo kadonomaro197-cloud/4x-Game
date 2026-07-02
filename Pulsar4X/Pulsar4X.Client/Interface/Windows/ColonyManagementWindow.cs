@@ -92,6 +92,11 @@ namespace Pulsar4X.Client
                         SelectedEntity.Entity.DisplaySummary(SelectedEntity, _uiState);
                         ImGui.EndTabItem();
                     }
+                    if(ImGui.BeginTabItem("Society"))
+                    {
+                        SelectedEntity.Entity.DisplaySociety(SelectedEntity, _uiState);
+                        ImGui.EndTabItem();
+                    }
                     if(ImGui.BeginTabItem("Production"))
                     {
                         SelectedEntity.Entity.DisplayIndustry(SelectedEntity, _uiState);

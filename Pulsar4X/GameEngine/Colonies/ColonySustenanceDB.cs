@@ -30,6 +30,18 @@ namespace Pulsar4X.Colonies
         /// <summary>Max fraction of population that starves to death per month at TOTAL food shortage.</summary>
         public const double MaxStarvationDeathRate = 0.10;
 
+        /// <summary>
+        /// Set the per-capita power &amp; food demand directly (both are normally calibrated coefficients with
+        /// internal setters, so a value can't be poked in from another assembly — e.g. the client). This is the
+        /// lever the DevTools "Sustenance levers" panel uses to switch the M5b shortage→morale wiring ON for a
+        /// colony during a play-test (the wiring ships neutral/inert — demand defaults to 0). Negatives floor at 0.
+        /// </summary>
+        public void SetDemand(double perCapitaPower, double perCapitaFood)
+        {
+            PerCapitaPowerDemand = perCapitaPower < 0.0 ? 0.0 : perCapitaPower;
+            PerCapitaFoodDemand = perCapitaFood < 0.0 ? 0.0 : perCapitaFood;
+        }
+
         public ColonySustenanceDB() { }
 
         public ColonySustenanceDB(ColonySustenanceDB other)

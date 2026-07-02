@@ -66,6 +66,19 @@ namespace Pulsar4X.Client
         // ── Age the galaxy (staged states) ─────────────
         private string _stageStatus = "";
 
+        // ── Society levers (sustenance / manpower) — colony picker shared by both ──
+        private string[] _colonyNames = Array.Empty<string>();
+        private Entity[] _colonyEntities = Array.Empty<Entity>();
+        private int _selectedColony = 0;
+        private float _perCapitaPower = 1.0f;
+        private float _perCapitaFood = 1.0f;
+        private string _sustenanceStatus = "";
+        private string _manpowerStatus = "";
+
+        // ── Diplomacy levers (stance / treaties / war) ──
+        private int _selectedDipFaction = 0;
+        private string _diploStatus = "";
+
         private DevToolsWindow()
         {
             _flags = ImGuiWindowFlags.AlwaysAutoResize;
@@ -118,6 +131,12 @@ namespace Pulsar4X.Client
             _minerals = mineralList;
             _mineralNames = mineralList.Select(m => m.Name).ToArray();
             _selectedMineral = 0;
+
+            // Colonies in the current system (target for the sustenance / manpower levers)
+            var colonyList = _uiState.SelectedSystem.GetAllEntitiesWithDataBlob<ColonyInfoDB>();
+            _colonyEntities = colonyList.ToArray();
+            _colonyNames = colonyList.Select(GetEntityName).ToArray();
+            _selectedColony = 0;
 
             // Logged so the console capture shows whether a just-designed ship actually made it into the
             // spawn list (it reads factionInfo.ShipDesigns). Called on open / Refresh / system-change / after
@@ -268,6 +287,133 @@ namespace Pulsar4X.Client
             _factionNames = _factionEntities.Select(GetEntityName).ToArray();
             if (_selectedFactionView >= _factionNames.Length)
                 _selectedFactionView = 0;
+            if (_selectedDipFaction >= _factionNames.Length)
+                _selectedDipFaction = 0;
+        }
+
+        // Keeps the colony picker (used by the sustenance + manpower levers) current. Colonies appear via DevTools
+        // "Create Colony" (which calls HardRefresh) and "Age the galaxy" (which does not) — so, like SyncFactions,
+        // rebuild whenever the count changes, making it safe to call every frame from Display().
+        void SyncColonies()
+        {
+            if (_uiState.SelectedSystem == null) return;
+            var cols = _uiState.SelectedSystem.GetAllEntitiesWithDataBlob<ColonyInfoDB>();
+            if (cols.Count == _colonyEntities.Length) return;
+            _colonyEntities = cols.ToArray();
+            _colonyNames = cols.Select(GetEntityName).ToArray();
+            if (_selectedColony >= _colonyNames.Length) _selectedColony = 0;
+        }
+
+        // C2 lever: switch the M5b power/food sustenance wiring ON for the selected colony by setting its per-capita
+        // demand (it ships neutral — demand defaults to 0, so shortage is always 0). With demand set and no supply
+        // modelled, the next SustenanceProcessor cycle computes a real shortage → a morale factor (and, severe, a
+        // starvation death term). Thin caller over the CI-tested engine setter. Then Dump Society to read it.
+        void ApplySustenanceDemand()
+        {
+            try
+            {
+                if (_colonyEntities.Length == 0) { _sustenanceStatus = "No colony selected."; return; }
+                var colony = _colonyEntities[_selectedColony];
+                if (!colony.TryGetDataBlob<ColonySustenanceDB>(out var sust))
+                {
+                    _sustenanceStatus = $"'{GetEntityName(colony)}' has no ColonySustenanceDB.";
+                    return;
+                }
+                sust.SetDemand(_perCapitaPower, _perCapitaFood);
+                _sustenanceStatus = $"Set demand on '{GetEntityName(colony)}': power {_perCapitaPower}, food {_perCapitaFood}/capita. Advance time, then Dump Society for the power/food factor.";
+                DevLog($"Sustenance demand set on '{GetEntityName(colony)}': power={_perCapitaPower} food={_perCapitaFood} per-capita");
+            }
+            catch (Exception ex) { _sustenanceStatus = $"Error: {ex.Message}"; }
+        }
+
+        // C1 lever: drain the selected colony's bulk manpower pool to ~empty so the next crewed SHIP build hits the
+        // crew gate (blocks under a consent regime; conscripts understaffed under Authority-High). Commits all
+        // currently-available bulk (Available = workforce − committed). CommitBulk is a public engine method, so no
+        // engine change was needed here. Then try to build a ship and watch it block / Dump Society to see the draw.
+        void DrainManpower()
+        {
+            try
+            {
+                if (_colonyEntities.Length == 0) { _manpowerStatus = "No colony selected."; return; }
+                var colony = _colonyEntities[_selectedColony];
+                if (!colony.TryGetDataBlob<ColonyManpowerDB>(out var mp) ||
+                    !colony.TryGetDataBlob<ColonyInfoDB>(out var info))
+                {
+                    _manpowerStatus = $"'{GetEntityName(colony)}' has no manpower pool.";
+                    return;
+                }
+                long pop = info.Population.Values.Sum();
+                long avail = mp.AvailableBulk(pop);
+                mp.CommitBulk(avail);   // leaves AvailableBulk == 0
+                _manpowerStatus = $"Drained '{GetEntityName(colony)}': committed {avail:N0} bulk manpower (available now ~0). A crewed ship build should block now.";
+                DevLog($"Manpower drained on '{GetEntityName(colony)}': committed {avail:N0} bulk (pop {pop:N0})");
+            }
+            catch (Exception ex) { _manpowerStatus = $"Error: {ex.Message}"; }
+        }
+
+        // C6 / D4 levers: drive interactive diplomacy against the selected faction so the IFF/legitimacy/treaty
+        // wiring is reachable without waiting for NPC drift. All are thin callers over CI-tested engine acts
+        // (RelationshipState.AdjustScore, Diplomacy.DeclareWar/MakePeace, Treaties.Propose). MUTUAL where the engine
+        // act isn't already symmetric (warm/cool nudge both ledgers) so Dump Society reflects it from the player side.
+        Entity? SelectedDipFaction()
+        {
+            if (_selectedDipFaction < 0 || _selectedDipFaction >= _factionEntities.Length) return null;
+            var f = _factionEntities[_selectedDipFaction];
+            if (_uiState.PlayerFaction != null && f.Id == _uiState.PlayerFaction.Id) return null; // can't do diplomacy with yourself
+            return f;
+        }
+
+        void WarmCoolRelation(int delta)
+        {
+            var other = SelectedDipFaction();
+            if (other == null) { _diploStatus = "Pick a NON-player faction first."; return; }
+            var player = _uiState.PlayerFaction;
+            if (player == null || !player.TryGetDataBlob<DiplomacyDB>(out var pDip) || !other.TryGetDataBlob<DiplomacyDB>(out var oDip))
+            { _diploStatus = "A faction is missing its DiplomacyDB."; return; }
+
+            int nP = pDip.GetOrCreateRelationship(other.Id).AdjustScore(delta);
+            oDip.GetOrCreateRelationship(player.Id).AdjustScore(delta);   // keep both views in step
+            _diploStatus = $"{(delta >= 0 ? "Warmed" : "Cooled")} relations with {GetEntityName(other)} → your score {nP}.";
+            DevLog($"Diplomacy: adjusted score with '{GetEntityName(other)}' by {delta} → {nP}");
+        }
+
+        void DoDeclareWar()
+        {
+            var other = SelectedDipFaction();
+            if (other == null) { _diploStatus = "Pick a NON-player faction first."; return; }
+            bool ok = Diplomacy.DeclareWar(_uiState.PlayerFaction, other, CasusBelli.ConfrontRival, _uiState.Game.TimePulse.GameGlobalDateTime);
+            _diploStatus = ok ? $"Declared WAR on {GetEntityName(other)}. Advance a month → Dump Society: legitimacy shifts by your militarism."
+                              : $"Declare war failed (already at war, or missing DiplomacyDB).";
+            DevLog($"Diplomacy: DeclareWar on '{GetEntityName(other)}' -> {ok}");
+        }
+
+        void DoMakePeace()
+        {
+            var other = SelectedDipFaction();
+            if (other == null) { _diploStatus = "Pick a NON-player faction first."; return; }
+            bool ok = Diplomacy.MakePeace(_uiState.PlayerFaction, other, _uiState.Game.TimePulse.GameGlobalDateTime);
+            _diploStatus = ok ? $"Made peace with {GetEntityName(other)}." : $"Make peace: no active war to end.";
+            DevLog($"Diplomacy: MakePeace with '{GetEntityName(other)}' -> {ok}");
+        }
+
+        void DoProposeTreaty(TreatyType t)
+        {
+            var other = SelectedDipFaction();
+            if (other == null) { _diploStatus = "Pick a NON-player faction first."; return; }
+            bool ok = Treaties.Propose(_uiState.PlayerFaction, other, t, _uiState.Game.TimePulse.GameGlobalDateTime);
+            _diploStatus = ok ? $"{t} SIGNED with {GetEntityName(other)}."
+                              : $"{t} refused — warm relations first (needs a high enough score; no ordinary treaty mid-war).";
+            DevLog($"Diplomacy: Propose {t} to '{GetEntityName(other)}' -> {ok}");
+        }
+
+        void SetFactionMilitarism(Entity? faction, GovNotch notch)
+        {
+            if (faction == null) { _diploStatus = "Pick a NON-player faction first."; return; }
+            if (!faction.TryGetDataBlob<GovernmentDB>(out var gov))
+            { _diploStatus = "Faction has no GovernmentDB."; return; }
+            gov.Militarism = notch;
+            _diploStatus = $"{GetEntityName(faction)} militarism → {notch} ({gov.Name()}). Advance months → its relations drift.";
+            DevLog($"Diplomacy: set '{GetEntityName(faction)}' militarism -> {notch}");
         }
 
         internal override void Display()
@@ -321,6 +467,41 @@ namespace Pulsar4X.Client
                     AgeGalaxy(GameStage.Late);
                 if (_stageStatus.Length > 0) ImGui.TextDisabled(_stageStatus);
 
+                // ── Society levers (sustenance / manpower) ────────
+                // The M5b sustenance (#29) and M3 crew-gate (#27) wiring ship NEUTRAL/INERT (demand 0, billions of
+                // start pop) so New Game is unchanged — which also means they're invisible on a short play-test.
+                // These two levers switch them ON for one colony so C2/C1 are reachable: set per-capita power/food
+                // demand (→ a shortage → a morale factor), and drain the crew pool (→ a ship build blocks). Then
+                // Dump Society / try a build to see the effect.
+                ImGui.Separator();
+                ImGui.Text("[ Society levers (sustenance / manpower) ]");
+                SyncColonies();
+                if (_colonyNames.Length == 0)
+                {
+                    ImGui.TextDisabled("No colonies in this system yet (Create Colony below, or Age the galaxy).");
+                }
+                else
+                {
+                    ImGui.Combo("Colony##devsoccolony", ref _selectedColony, _colonyNames, _colonyNames.Length);
+
+                    ImGui.TextDisabled("C2 — power/food demand per capita (0 = inert). Set > 0 with no supply to force a shortage.");
+                    ImGui.SetNextItemWidth(140f);
+                    ImGui.InputFloat("Power/cap##devsocpower", ref _perCapitaPower);
+                    ImGui.SameLine();
+                    ImGui.SetNextItemWidth(140f);
+                    ImGui.InputFloat("Food/cap##devsocfood", ref _perCapitaFood);
+                    if (_perCapitaPower < 0f) _perCapitaPower = 0f;
+                    if (_perCapitaFood < 0f) _perCapitaFood = 0f;
+                    if (ImGui.Button("Apply sustenance demand##devsocapply"))
+                        ApplySustenanceDemand();
+                    if (_sustenanceStatus.Length > 0) ImGui.TextColored(new Vector4(0.4f, 1f, 0.4f, 1f), _sustenanceStatus);
+
+                    ImGui.TextDisabled("C1 — drain the crew pool so the next crewed ship build hits the manpower gate.");
+                    if (ImGui.Button("Drain manpower pool##devsocdrain"))
+                        DrainManpower();
+                    if (_manpowerStatus.Length > 0) ImGui.TextColored(new Vector4(1f, 0.8f, 0.4f, 1f), _manpowerStatus);
+                }
+
                 // ── Faction Switcher (SM) ─────────────────────────
                 ImGui.Separator();
                 ImGui.Text("[ Faction Switcher (SM) ]");
@@ -366,6 +547,47 @@ namespace Pulsar4X.Client
                     }
                     if (!string.IsNullOrEmpty(_factionStatus))
                         ImGui.TextColored(new Vector4(0.4f, 1f, 0.4f, 1f), _factionStatus);
+                }
+
+                // ── Diplomacy levers (stance / treaties / war) ────
+                // Drive interactive diplomacy against another faction so the IFF/legitimacy/treaty wiring (C6/D4)
+                // is reachable without waiting for NPC drift. Needs a second faction to exist (Age the galaxy →
+                // Mid/Late, or Spawn Hostile Fleet). Warm/cool nudges the score, treaties are score-gated (warm
+                // first), war flips the legitimacy militarism term. Militarism High/Low on the OTHER faction feeds
+                // D3's reactive drift. Then Dump Society to read the ledger.
+                ImGui.Separator();
+                ImGui.Text("[ Diplomacy levers (stance / treaties / war) ]");
+                if (_factionNames.Length < 2)
+                {
+                    ImGui.TextDisabled("Only one faction — Age the galaxy (Mid/Late) or Spawn a Hostile Fleet to get a rival.");
+                }
+                else
+                {
+                    ImGui.Combo("Faction##devdipfaction", ref _selectedDipFaction, _factionNames, _factionNames.Length);
+                    ImGui.TextDisabled("Acts are between YOUR faction and the one picked above (pick a non-player faction).");
+
+                    if (ImGui.Button("Warm +25##devdipwarm")) WarmCoolRelation(25);
+                    ImGui.SameLine();
+                    if (ImGui.Button("Cool -25##devdipcool")) WarmCoolRelation(-25);
+                    ImGui.SameLine();
+                    if (ImGui.Button("Declare War##devdipwar")) DoDeclareWar();
+                    ImGui.SameLine();
+                    if (ImGui.Button("Make Peace##devdippeace")) DoMakePeace();
+
+                    if (ImGui.Button("Sign Non-Aggression##devdipnap")) DoProposeTreaty(TreatyType.NonAggression);
+                    ImGui.SameLine();
+                    if (ImGui.Button("Sign Trade##devdiptrade")) DoProposeTreaty(TreatyType.TradeAgreement);
+                    ImGui.SameLine();
+                    if (ImGui.Button("Sign Defensive Pact##devdippact")) DoProposeTreaty(TreatyType.DefensivePact);
+
+                    ImGui.TextDisabled("Make the OTHER faction militarist/pacifist (drives D3 reactive drift):");
+                    if (ImGui.Button("Their militarism → High##devdiphawk"))
+                        SetFactionMilitarism(SelectedDipFaction(), GovNotch.High);
+                    ImGui.SameLine();
+                    if (ImGui.Button("→ Low##devdipdove"))
+                        SetFactionMilitarism(SelectedDipFaction(), GovNotch.Low);
+
+                    if (_diploStatus.Length > 0) ImGui.TextColored(new Vector4(0.6f, 0.9f, 1f, 1f), _diploStatus);
                 }
 
                 // ── Spawn Ship ────────────────────────────────────

@@ -58,5 +58,19 @@ namespace Pulsar4X.Tests
             SustenanceProcessor.Recalc(s.Colony);
             Assert.That(sust.FoodShortage, Is.EqualTo(1.0), "demand with zero supply = total shortage");
         }
+
+        [Test]
+        [Description("SetDemand is the public lever the client (DevTools) uses to switch the wiring on — it sets both coefficients and floors negatives at 0.")]
+        public void SetDemand_SetsAndFloorsNegatives()
+        {
+            var sust = new ColonySustenanceDB();
+            sust.SetDemand(0.002, 0.001);
+            Assert.That(sust.PerCapitaPowerDemand, Is.EqualTo(0.002).Within(1e-9));
+            Assert.That(sust.PerCapitaFoodDemand, Is.EqualTo(0.001).Within(1e-9));
+
+            sust.SetDemand(-5, -1);
+            Assert.That(sust.PerCapitaPowerDemand, Is.EqualTo(0.0), "negative power demand floors at 0");
+            Assert.That(sust.PerCapitaFoodDemand, Is.EqualTo(0.0), "negative food demand floors at 0");
+        }
     }
 }
