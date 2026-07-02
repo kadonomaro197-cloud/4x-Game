@@ -51,6 +51,12 @@ namespace Pulsar4X.Client
         static volatile int _lastFrameTick;
         public static int HangThresholdMs = 5000;   // a single "frame" this long = frozen, not just a slow tick
 
+        /// <summary>The render/update stage currently executing — set by PulsarMainWindow.SafeRender (and around the
+        /// state update) so the hang watchdog can NAME the wedged stage instead of leaving us to guess from the lines
+        /// above. A hang leaves no stack trace, so this breadcrumb is the difference between "it froze somewhere" and
+        /// "it froze in window X". Volatile: written on the main thread, read on the watchdog thread.</summary>
+        public static volatile string CurrentStage = "(startup)";
+
         /// <summary>Called once per frame by the render loop — stamps "the main loop is still alive" for the watchdog.</summary>
         public static void FrameTick() => _lastFrameTick = Environment.TickCount;
 
@@ -73,7 +79,7 @@ namespace Pulsar4X.Client
                             if (!reported)
                             {
                                 Line("HANG", "main loop STALLED ~" + (stall / 1000) + "s (frozen, or stuck in a long native/render call) — "
-                                    + "the lines just above this are where it wedged");
+                                    + "wedged in stage: '" + CurrentStage + "' (the lines just above this are the last activity before it)");
                                 reported = true;
                             }
                         }

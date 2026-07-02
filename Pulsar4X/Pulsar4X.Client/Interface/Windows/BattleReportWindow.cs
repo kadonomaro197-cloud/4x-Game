@@ -34,6 +34,13 @@ namespace Pulsar4X.Client
         internal override void Display()
         {
             if (!IsActive) return;
+
+            // ImGui rule: End() MUST be called for every Begin(), even when Begin() returns false (window
+            // collapsed/clipped). The old code called ImGui.End() only INSIDE the if(Begin) block (and via an
+            // early return), so a COLLAPSED Battle Report window skipped End() -> "Missing End()" error spam +
+            // an unbalanced ImGui window stack. This window AUTO-OPENS on the combat interrupt, so that
+            // corruption landed on an already-heavy combat frame. End() is now unconditional; the empty case is
+            // an else (no early return); EndTable stays inside its own if (BeginTable is the "End only if true" kind).
             if (ImGui.Begin("Battle Report", ref IsActive, _flags))
             {
                 var events = BattleLog.Recent();   // snapshot copy, oldest -> newest; safe on this thread
@@ -47,36 +54,36 @@ namespace Pulsar4X.Client
                 {
                     ImGui.TextDisabled("No battles recorded yet. Spawn a hostile fleet (DevTools) and bring yours into range,");
                     ImGui.TextDisabled("then press play — a fight will show up here after it resolves.");
-                    ImGui.End();
-                    return;
                 }
-
-                var tableFlags = ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY;
-                if (ImGui.BeginTable("battlelog", 5, tableFlags))
+                else
                 {
-                    ImGui.TableSetupColumn("Game time");
-                    ImGui.TableSetupColumn("Fleet");
-                    ImGui.TableSetupColumn("Event");
-                    ImGui.TableSetupColumn("Lost / Left");
-                    ImGui.TableSetupColumn("Detail");
-                    ImGui.TableHeadersRow();
-
-                    int n = events.Count;
-                    for (int i = 0; i < n; i++)
+                    var tableFlags = ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY;
+                    if (ImGui.BeginTable("battlelog", 5, tableFlags))
                     {
-                        var e = _newestFirst ? events[n - 1 - i] : events[i];
-                        ImGui.TableNextRow();
-                        ImGui.TableSetColumnIndex(0); ImGui.TextUnformatted(e.When.ToString("yyyy-MM-dd HH:mm"));
-                        ImGui.TableSetColumnIndex(1); ImGui.TextUnformatted($"{e.FleetName} #{e.FleetId}");
-                        ImGui.TableSetColumnIndex(2); ImGui.TextColored(ColorFor(e.Type), LabelFor(e));
-                        ImGui.TableSetColumnIndex(3);
-                        ImGui.TextUnformatted(e.Type == BattleEventType.Salvo ? $"{e.ShipsLost} / {e.ShipsLeft}" : $"- / {e.ShipsLeft}");
-                        ImGui.TableSetColumnIndex(4); ImGui.TextUnformatted(e.Note ?? "");
+                        ImGui.TableSetupColumn("Game time");
+                        ImGui.TableSetupColumn("Fleet");
+                        ImGui.TableSetupColumn("Event");
+                        ImGui.TableSetupColumn("Lost / Left");
+                        ImGui.TableSetupColumn("Detail");
+                        ImGui.TableHeadersRow();
+
+                        int n = events.Count;
+                        for (int i = 0; i < n; i++)
+                        {
+                            var e = _newestFirst ? events[n - 1 - i] : events[i];
+                            ImGui.TableNextRow();
+                            ImGui.TableSetColumnIndex(0); ImGui.TextUnformatted(e.When.ToString("yyyy-MM-dd HH:mm"));
+                            ImGui.TableSetColumnIndex(1); ImGui.TextUnformatted($"{e.FleetName} #{e.FleetId}");
+                            ImGui.TableSetColumnIndex(2); ImGui.TextColored(ColorFor(e.Type), LabelFor(e));
+                            ImGui.TableSetColumnIndex(3);
+                            ImGui.TextUnformatted(e.Type == BattleEventType.Salvo ? $"{e.ShipsLost} / {e.ShipsLeft}" : $"- / {e.ShipsLeft}");
+                            ImGui.TableSetColumnIndex(4); ImGui.TextUnformatted(e.Note ?? "");
+                        }
+                        ImGui.EndTable();
                     }
-                    ImGui.EndTable();
                 }
-                ImGui.End();
             }
+            ImGui.End();
         }
 
         private static string LabelFor(BattleEvent e)

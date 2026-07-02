@@ -288,6 +288,7 @@ namespace Pulsar4X.Client
             }
 
             var tUpdate = SDL.GetTicks();
+            SessionLog.CurrentStage = "state.Update";   // breadcrumb: the heavy un-SafeRender-wrapped stage
             _state.Update();
             _perfUpdateMs = SDL.GetTicks() - tUpdate;
         }
@@ -447,6 +448,9 @@ namespace Pulsar4X.Client
         /// </summary>
         private void SafeRender(string context, Action render)
         {
+            // Breadcrumb for the hang watchdog: if render() freezes (a long/native/infinite call throws nothing),
+            // the watchdog can name THIS context instead of us guessing. Cheap reference write on the main thread.
+            SessionLog.CurrentStage = context;
             try
             {
                 render();
