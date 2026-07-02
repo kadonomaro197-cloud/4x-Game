@@ -47,9 +47,38 @@ These are self-maintaining (CI gates them red/green every push). Listed so we kn
 
 ## Layer 3 — Local runtime / play backlog (the tracked work)
 
+### 📋 Live-run results — 2026-07-02 (main @ Society-tab merge, the `test 1 actual` session)
+
+The developer merged the testing levers + Society tab to main and ran one dense session (logs committed to the repo: `game_log_000..002.txt` + `console_output.txt`). **One session exercised most of the backlog.** The gauge readings (the Visibility-Gate rule — record the actual value, not "it passed"):
+
+| Item | Result | Actual reading from the log |
+|---|---|---|
+| **T0 / D0** boot + clock + politics blobs | 🟢 **PASS** | boots, clock ran to `2050-12-27`, no `[FATAL]`; `LegitimacyDB`/`DiplomacyDB` attached via Age→Late, no crash |
+| **A1** Society readout (Dump Society) | 🟢 **PASS** | `Earth HQ: morale 70.0 [comfort +20.0…] legitimacy 70.0 · workforce 5.8B · tax 0%→0/mo` — real numbers, incl. the M2 housing-comfort +20 live |
+| **#39** Age→Late staged state | 🟢 **PASS** | `5 player colonies · Vega Combine 2 (+45+treaty) · Crimson Hegemony 2 (-40) · Terran League 1 (+65+treaty) · WAR · frontier REBELLING` |
+| **D2** legitimacy tracks morale | 🟢 **PASS** | `Mercury Colony: morale 10.0 · legitimacy 10.0 !REBELLING (180d left)` — collapse band + rebellion window live |
+| **C6** diplomacy ledger + interactive levers | 🟢 **PASS** | ledger: `Vega Friendly (+55) [Trade] · Crimson War (-100) [WAR] · Terran Friendly (+65)`; warmed Vega `80→100`, **DefensivePact signed → True** |
+| **C1/C2/C3/D3** the new DevTools levers **fire** | 🟢 **PASS (lever)** | sustenance `power=1 food=1 set`; manpower `committed 5.8B`; government `→ Totalitarian War-State`; diplomacy `Vega militarism → High` |
+| **Create Colony** | 🟢 **PASS** | `Create Colony OK: on 'Venus' pop 100,000,000` |
+| **B1** combat auto-triggers on play + interrupt | 🟢 **PASS (trigger)** | 7× `enters combat` + `COMBAT INTERRUPT` fired on play (auto-trigger + auto-pause confirmed live) |
+| **B2** teleport-to-Sun | 🟢 **PASS** | **zero** `⚠ TELEPORT` lines all session |
+| **B5** perf | 🟡 **DATA** | slow frames `509ms` / `1219ms` were **entirely `ui(windows)`** (map-draw ~0) — a WINDOW is the cost, not the map |
+
+**Still open after this run (honest gaps):**
+- **Effects-over-time not captured** — the C1/C2/C3/D3 levers *fire*, but there was no second Dump Society *after a time-advance*, so the *bite* (dials cap tax, shortage sours morale, drained pool blocks a build, militarist neighbour drifts hostile) isn't yet gauged live. Next run: apply lever → advance months → Dump again.
+- **Society TAB (player UI) unverified** — the dev used DevTools "Dump Society" (the log), not the `ColonyManagementWindow` → Society tab render. That tab's live render/colours still need eyes.
+- **A2 magnitude, D1 save/load, B3 economy-UI tabs** — not exercised this run.
+- **B1 real fight** — the engagement that triggered was the OUT-OF-RANGE one (752 km gap, 500 km guns, `0 J dealt`) — a *spurious* battle, not a real exchange.
+
+**Two bugs found → FIXED on branch `claude/4x-game-testing-strategy-19xw8q` (await merge + re-test):**
+1. **FREEZE** (`[HANG]` … wedged as the combat interrupt auto-opened Battle Report) → `BattleReportWindow` ImGui `Begin/End` imbalance fixed (`f2d16c8`) + the `[HANG]` line now names the wedged stage. **The B5 "`ui(windows)` 1219ms" finding is almost certainly this same window's ImGui-recovery churn — re-measure perf after the fix.**
+2. **Combat started out of weapon range** (the spurious 0-damage battle above) → weapon-range trigger (`e86a8e1`): a fight now auto-starts only within actual weapon range + one side Weapons Free.
+
+*Re-test priority next session (on the merged fixes): the effects-over-time re-dump, the Society tab render, a real in-weapon-range fight, and a perf re-measure.*
+
 ### ⭐ The always-first test, every branch
 
-#### T0 — New Game boots and the clock runs — 🟡 PENDING (re-run per branch)
+#### T0 — New Game boots and the clock runs — 🟢 PASSED 2026-07-02 (main @ Society-tab merge; RE-RUN after the freeze + weapon-range fixes merge)
 - **What:** launch the client, start a New Game, let the clock advance a few months, close cleanly.
 - **Why:** every branch adds DataBlobs/processors/UI; the #1 risk is a startup crash or a sim that throws — and CI cannot open a window. This is the cheapest, highest-value check and gates *everything* else.
 - **Method (most efficient):** pull branch → `launch.bat` → New Game → press play, wait → close → read `console_output.txt` (and `game_logs/` pages).
@@ -60,7 +89,7 @@ These are self-maintaining (CI gates them red/green every push). Listed so we kn
 
 ### A. M-ECON branch (`claude/space-economy-morale`) — current
 
-#### A1 — Society readout (the instrument panel) — 🟡 PENDING
+#### A1 — Society readout (the instrument panel) — 🟢 PASSED 2026-07-02 (Dump Society; the player-facing Society TAB render still PENDING)
 - **What:** DevTools → **Dump Society (log)** prints each colony's pop · morale (+factor breakdown) · workforce/talent · tax→income, plus the player government.
 - **Why:** the gauge for every later M-ECON test (a greppable log snapshot).
 - **PLAYER-FACING READOUT NOW EXISTS (2026-07-02):** the same numbers now render in a colour-banded **Society tab on ColonyManagementWindow** (toolbar → Colony Management → Society), visible in NORMAL play (not SM). So there are two gauges: the DevTools log dump (diagnostic, greppable) and the in-game Society tab (player-facing, at-a-glance). Verify the tab renders live + the colours read right. The **diplomacy** ledger is still Dump-Society-only (no player tab yet).
@@ -85,7 +114,7 @@ These are self-maintaining (CI gates them red/green every push). Listed so we kn
 
 ### B. Carried / prior-branch runtime items (in the build, not yet confirmed live)
 
-#### B1 — Space combat starts on "play" — 🟡 PENDING (OPEN QUESTION)
+#### B1 — Space combat starts on "play" — 🟢 TRIGGER CONFIRMED 2026-07-02 (auto-trigger + interrupt fire on play); a real IN-RANGE fight still PENDING (the one seen was out-of-weapon-range → 0 damage → the weapon-range fix)
 - **What:** two hostile fleets in range auto-engage when the player presses play (not only via the manual "Tick Combat" button).
 - **Why:** the auto-resolve engine is CI-green, but the *trigger scheduling on a real clock advance* is unconfirmed (the test harness doesn't auto-fire the battle-trigger hotloop).
 - **Method:** DevTools → Spawn Combat Scenario (or Spawn Hostile Fleet at your fleet's body) → press play → watch the Fleet → Combat tab + `[Combat]`/`[FleetCombat]` log lines.
@@ -94,7 +123,7 @@ These are self-maintaining (CI gates them red/green every push). Listed so we kn
 - **Mitigation:** the **Tick Combat** button drives it manually (isolates trigger-scheduling from combat-math); `[ENGINE]` heartbeat logs battle-trigger pass count so a dead trigger is visible.
 - **Unblocks:** declaring space combat (MVP must-have B) live-done; it's the template ground combat mirrors.
 
-#### B2 — Teleport-to-Sun movement defect — 🟡 PENDING (KNOWN BUG)
+#### B2 — Teleport-to-Sun movement defect — 🟢 PASSED 2026-07-02 (zero `⚠ TELEPORT` all session; keep the heartbeat detector as the standing sensor)
 - **What:** ships sometimes jump to the system origin (the Sun) — an engine-state collapse, or a render artifact masking one.
 - **Why:** it corrupts movement/combat and blanks the map; a Stage-4 live-drive blocker.
 - **Method:** play normally with fleets moving/warping; the heartbeat auto-flags it within ~3 s — grep `game_logs/` for `⚠ TELEPORT`.
@@ -200,7 +229,7 @@ These are self-maintaining (CI gates them red/green every push). Listed so we kn
 - **What right looks like:** load succeeds; legitimacy values persist; no missing-type/serialization error. **Most likely failure:** a serialization snag on a new blob. **Mitigation:** all new state is plain `[JsonProperty]` doubles/bools/dicts + a Dictionary of value objects; CI save/load tests cover the base path.
 - **Unblocks:** confidence the cluster survives a played game.
 
-#### D2 — Legitimacy tracks morale, live — 🟡 PENDING (readout now EXISTS)
+#### D2 — Legitimacy tracks morale, live — 🟢 PASSED 2026-07-02 (`Mercury: morale 10 · legitimacy 10 !REBELLING (180d left)`; Earth 70/70 — legitimacy ≈ morale confirmed)
 - **What:** confirm each colony's legitimacy moves with its morale over time (a content colony ~loyal, a miserable one drifts toward the < 20 collapse band, shown as `!REBELLING`).
 - **Why:** the one live gameplay behavior added; proves the processor runs and reads morale in the full sim, not just the unit test.
 - **Method:** **the readout is now wired** — DevTools → **Dump Society (log)** prints a `legitimacy NN.N` field per colony (in `SocietyReadout.Colony`, CI-tested), plus `!REBELLING` if it's in the collapse band. So: New Game → advance a few months → Dump Society → read `console_output.txt`; then tank a colony's morale (overcrowd / crank tax) → advance → Dump again and watch legitimacy fall.
@@ -236,6 +265,6 @@ These are built + CI-verified but have **no live effect** until their wiring/UI 
 ### Staged game-state generator (task #39) — 🔵 engine BUILT (2026-07-02); DevTools button = next slice
 - **DONE:** `GameStageFactory.AgeTo(game, playerFaction, GameStage.{Early|Mid|Late})` (engine, CI-tested) layers a New-Game start into a real galaxy-at-a-stage: Early = the player goes multi-world (several colonies); Mid = two rival EMPIRES each with their OWN species + colonies (one Friendly + a trade treaty, one hostile); Late = the player at ~5 colonies, a third rival (an ally via defensive pact), an active war with the hostile rival, and a frontier colony in open rebellion — populations scaled up per stage. GENERATED (rides current factories → never rots on a new blob), cumulative + convergent (re-aging grows a rival 1→2 colonies, neutral→allied, no duplicates). Creating a rival's colony from birth is a clean ColonyFactory call — NOT the secession ownership blast radius (that's transferring an existing colony). Gauge `GameStageTests`.
 - **Next slice:** a DevTools "Age the galaxy → Early/Mid/Late" button (thin wrapper) so the developer loads a rich state instantly at the PC. Then: save-file fixtures once the DataBlob schema stabilises (post-MVP), with a load-old-save regression test.
-- **PC-test:** once the button lands — DevTools → Age → Late → Dump Society: two colonies, a rebelling frontier (window countdown), the diplomacy ledger showing a friendly+treaty and a hostile+WAR.
+- **PC-test:** 🟢 **PASSED 2026-07-02** — DevTools → Age → Late → Dump Society showed exactly this live: `5 player colonies`, a rebelling frontier (`Mercury … !REBELLING (180d left)`), and the ledger with `Vega Friendly+Trade`, `Crimson War`, `Terran Friendly+treaty`.
 
-*Next action (this branch): T0 boot test, then A1 society readout. Everything else in M-ECON is observable once A1 passes.*
+*Where we're at (2026-07-02): the M-ECON + politics + staged-galaxy layer is **confirmed live** — boot, Society readout, legitimacy/rebellion, the full diplomacy ledger, and every new DevTools lever fired in one session (see "Live-run results" at the top of Layer 3). Two bugs the run surfaced — a Battle-Report freeze and out-of-weapon-range combat — are FIXED on `claude/4x-game-testing-strategy-19xw8q`, awaiting merge. **Next session (on the merged fixes):** (1) re-run T0 + read `game_logs/` for a clean, hang-free session; (2) the effects-over-time re-dump (apply a lever → advance months → Dump again to see it BITE); (3) the Society-tab render; (4) a real in-weapon-range fight; (5) a perf re-measure (the 1219ms `ui(windows)` frame should drop with the Battle-Report fix).*
