@@ -1,0 +1,71 @@
+[DETECT] United Earth Corp holds 1 contact(s); 20 other-faction ship(s) in-system, detects 0 (20 hidden from you)
+[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy 0.362 Gm (beyond reach / undetected)
+[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-12-27 00:00 paused step=300s selected=(none) ships-in-view=36
+[ENGINE] sensor scans 51846 (+0), battle-trigger passes 12441602 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 20 other-faction ship(s) in-system, detects 0 (20 hidden from you)
+[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy 0.362 Gm (beyond reach / undetected)
+[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-12-27 00:00 paused step=300s selected=(none) ships-in-view=36
+[ENGINE] sensor scans 51846 (+0), battle-trigger passes 12441602 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 20 other-faction ship(s) in-system, detects 0 (20 hidden from you)
+[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy 0.362 Gm (beyond reach / undetected)
+[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-12-27 00:00 paused step=300s selected=(none) ships-in-view=36
+[ENGINE] sensor scans 51846 (+0), battle-trigger passes 12441602 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 20 other-faction ship(s) in-system, detects 0 (20 hidden from you)
+[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy 0.362 Gm (beyond reach / undetected)
+[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-12-27 00:00 paused step=300s selected=(none) ships-in-view=36
+[ENGINE] sensor scans 51846 (+0), battle-trigger passes 12441602 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 20 other-faction ship(s) in-system, detects 0 (20 hidden from you)
+[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy 0.362 Gm (beyond reach / undetected)
+[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] heartbeat t=2050-12-27 00:00 paused step=300s selected=(none) ships-in-view=36
+[ENGINE] sensor scans 51846 (+0), battle-trigger passes 12441602 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 20 other-faction ship(s) in-system, detects 0 (20 hidden from you)
+[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy 0.362 Gm (beyond reach / undetected)
+[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 193.8,153.3 Gm
+[CAMERA] pan -> 193.8,153.3 Gm
+[CAMERA] pan -> 193.8,153.3 Gm
+[CAMERA] pan -> 193.8,153.3 Gm
+[CAMERA] pan -> 193.8,153.3 Gm
+[CAMERA] pan -> 193.8,153.3 Gm
+[CAMERA] pan -> 193.8,153.3 Gm
+[CAMERA] pan -> 193.8,153.3 Gm
+[CAMERA] pan -> 193.8,153.3 Gm
+[CAMERA] pan -> 193.8,153.3 Gm
+[STATE] heartbeat t=2050-12-27 00:00 paused step=300s selected=(none) ships-in-view=36
+[ENGINE] sensor scans 51846 (+0), battle-trigger passes 12441602 (+0) since last beat
+[DETECT] United Earth Corp holds 1 contact(s); 20 other-faction ship(s) in-system, detects 0 (20 hidden from you)
+[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy 0.362 Gm (beyond reach / undetected)
+[EMCON] your 15 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[TIME] play (step 300s)
+[STATE] ⏱ map breakdown ms — orbits u1.2/d2.1 (286) | rings(widgets) u0.1/d0.4 (17) | ships u0.0/d0.0 (19) | bodies u0.5/d1.3 (270) | moves d0.0 | contacts d2.6 | labels u0.2/d0.0 (24)
+[Combat] FIRST-STRIKE: Freight Fleet #794 detects Hostile Luna Squadron (Weapons Free) #854, which is BLIND — it takes fire it can't return
+[Combat] Freight Fleet #794 enters combat (1 ship(s))
+[Combat] Hostile Luna Squadron (Weapons Free) #854 enters combat (5 ship(s))
+[Combat] FIRST-STRIKE: Military Fleet #797 detects Hostile Luna Squadron (Weapons Free) #854, which is BLIND — it takes fire it can't return
+[Combat] Military Fleet #797 enters combat (2 ship(s))
+[Combat] FIRST-STRIKE: Science Fleet #802 detects Hostile Luna Squadron (Weapons Free) #854, which is BLIND — it takes fire it can't return
+[Combat] Science Fleet #802 enters combat (2 ship(s))
+[Combat] FIRST-STRIKE: 1st Task Force #841 detects Hostile Luna Squadron (Weapons Free) #854, which is BLIND — it takes fire it can't return
+[Combat] 1st Task Force #841 enters combat (5 ship(s))
+[Combat] FIRST-STRIKE: 2nd Task Force #847 detects Hostile Luna Squadron (Weapons Free) #854, which is BLIND — it takes fire it can't return
+[Combat] 2nd Task Force #847 enters combat (5 ship(s))
+[ACTION] COMBAT INTERRUPT — a battle began; time auto-paused. Combat view opened.
+[Combat] salvo 1: Hostile Luna Squadron (Weapons Free) #854 took no weapons in range fire at 1 Mm from Freight Fleet #794 +4 more — 100% on target (0% dodged), 0 J dealt; no losses; 5 left
+[Combat] closing: Freight Fleet #794 gap 752,377m — OUT OF RANGE (reach 0m), maneuver reserve 13,028
+[Combat] closing: Military Fleet #797 gap 752,377m — OUT OF RANGE (reach 5,000m), maneuver reserve 20,046
+[Combat] closing: Science Fleet #802 gap 752,377m — OUT OF RANGE (reach 0m), maneuver reserve 0
+[Combat] closing: 1st Task Force #841 gap 752,377m — OUT OF RANGE (reach 500,000m), maneuver reserve 0
+[Combat] closing: 2nd Task Force #847 gap 752,377m — OUT OF RANGE (reach 500,000m), maneuver reserve 0
+[Combat] closing: Hostile Luna Squadron (Weapons Free) #854 gap 752,377m — OUT OF RANGE (reach 500,000m), maneuver reserve 0
+[Combat] Freight Fleet #794 disengages (1 ship(s) left)
+[Combat] Military Fleet #797 disengages (2 ship(s) left)
+[Combat] Science Fleet #802 disengages (2 ship(s) left)
+[Combat] 1st Task Force #841 disengages (5 ship(s) left)
+[Combat] 2nd Task Force #847 disengages (5 ship(s) left)
+[Combat] Hostile Luna Squadron (Weapons Free) #854 disengages (5 ship(s) left)
+[HANG] main loop STALLED ~5s (frozen, or stuck in a long native/render call) — the lines just above this are where it wedged
