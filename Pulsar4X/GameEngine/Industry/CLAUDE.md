@@ -23,7 +23,7 @@ Production, mining, and material processing. Lives in `GameEngine/Industry/`.
 | `MineResourcesProcessor.cs` | `IHotloopProcessor` (daily). Runs `MiningHelper.CalculateActualMiningRates()` and transfers minerals. |
 | `MineralsDB.cs` | DataBlob on a planet: mineral deposits (type → `MineralDeposit { Amount, Accessibility }`). |
 | `MiningDB.cs` | DataBlob on a colony: active mining configuration. |
-| `MiningHelper.cs` | `CalculateActualMiningRates()` — determines effective mining rate per mineral per colony. |
+| `MiningHelper.cs` | `CalculateActualMiningRates()` — determines effective mining rate per mineral per host. `TryGetMiningBody(entity, out body)` — the host-agnostic resource-body resolver (colony→`PlanetEntity`, station→`StationInfoDB.HostingBodyEntity`); used by `MineResourcesProcessor` so a **station mines its hosting body exactly like a colony** (no host-type branch). |
 | `MineralDepositFactory.cs` | Creates mineral deposits during system generation. |
 | `Mineral.cs` | Mineral type definition (name, ID). |
 | `ProcessedMaterial.cs` | Processed material definition (refined output from raw minerals). |

@@ -2,8 +2,8 @@
 
 ImGui.NET + SDL2 immediate-mode UI. The only runnable application in the solution. Lives in `Pulsar4X/Pulsar4X.Client/`.
 
-> **⚠ READ FIRST — this client is CI-BLIND.** `ci.yml` builds the GameEngine + tests only; it **never compiles this SDL/OpenGL client**. A client typo, a wrong overload, or a bad SDL interop call sails through green CI and only surfaces on the developer's local Windows build. The compiler is not your safety net here — **de-risk by structure, not hope** (the discipline that carried the detection/EMCON/fog work):
-> 1. **Push logic into the engine, which IS CI-covered.** Need a value the client can't reach? Add a small computed accessor on the engine type (e.g. `SensorContact.SignalStrength_kW`/`PositionIsMemory`) instead of new client logic — CI compiles it, and a wrong `internal`-field access fails loudly there.
+> **⚠ READ FIRST — this client is RUNTIME CI-blind (COMPILE is now covered, 2026-06-28).** `ci.yml` now has a **`build-client` job that COMPILES this client on every push** — so a typo, a wrong overload, a bad `internal` access, or a missing `using` turns CI **red** instead of ambushing the developer's local Windows build (the recurring pain in the gotchas below — "broke the client build, CI couldn't catch it" — is closed). **BUT CI still cannot RUN it** (display-coupled; headless CI can't open a window), so rendering bugs, click crashes, NaN positions, freezes, and all *behavior* are still invisible to CI and surface only in the developer's local build + the `game_logs/` gauges. **So: compile errors → CI catches them now; runtime/behavior → still the developer's local gauge.** The compile backstop does NOT make a `Display()` that throws safe — the **de-risk-by-structure** discipline still governs runtime (it's what carried the detection/EMCON/fog work):
+> 1. **Push logic into the engine, which is CI-tested (not just compiled).** Need a value the client can't reach? Add a small computed accessor on the engine type (e.g. `SensorContact.SignalStrength_kW`/`PositionIsMemory`) instead of new client logic — the engine has real *tests*, so the logic is verified, not just compilable.
 > 2. **Verify reachability BEFORE writing.** Check access modifiers (`internal` engine fields are invisible across the assembly boundary) and that the type/overload actually exists — read the exact source region. A guess costs a full pull→build→paste→fix round-trip with the developer.
 > 3. **Mirror a proven pattern verbatim.** New SDL text? Copy `EntityLabel`'s `RenderTextSolid`→texture→`RenderTexture` path exactly (incl. the finalizer that frees the texture). Don't improvise native interop.
 > 4. **Wrap every new draw in the fault-isolator** (`SystemMapRendering.SafeDraw` / `PulsarMainWindow.SafeRender`) and guard position reads (a NaN/null `AbsolutePosition` throws) — so a glitch logs once and skips instead of blanking the map (gotchas #12/#14).
@@ -373,6 +373,15 @@ flagship's icon — until it's broken up. Wiring:
   exists, so a click exactly where its (undrawn) label was can still select that ship — clicking the fleet marker
   selects the flagship, and individual ships are managed in the Fleet window; **expand-on-select / expand-on-zoom**
   (Aurora's tactical view) is not built — v1 is always-collapsed-until-broken-up (the developer's literal ask).
+
+### DevTools — society / economy / politics levers (2026-06-29 → 2026-07-02)
+
+The M-ECON + political systems have **no dedicated player UI yet**, so their observability + test levers live in `DevToolsWindow` (all thin callers over CI-tested engine logic — the runtime-blind discipline):
+- **Dump Society (log)** → `SocietyReadout.Colony` per colony + `SocietyReadout.Government` + `SocietyReadout.Diplomacy` (2026-07-02) for the player faction. Prints morale (+factors) / legitimacy (+ rebellion window countdown) / workforce+talent / **power-food shortage** / tax→income, the government name, and the diplomacy ledger (stance/score/treaties). The engine formats it (CI-tested); this is an iterate-and-log wrapper. Reads via the flushed `game_logs/` pages.
+- **Government (test regimes)** (2026-07-02) → three preset buttons (Federal Republic/Mid reset · Totalitarian War-State · Liberal Democracy) set the player faction's `GovernmentDB` dials via public setters, so a play-test can flip a non-Mid regime and watch the #30 wires bite (tax ceiling, crew policy, research speed, morale weight, war pride). Guarded (null faction / missing blob).
+- **Age the galaxy (staged states)** (2026-07-02) → Early/Mid/Late buttons call the CI-tested engine `GameStageFactory.AgeTo` to layer the running game up so the late-triggering cluster is visible immediately: Early = a frontier colony, Mid = met rivals + a treaty, Late = an active war + a rebelling colony. Cumulative + convergent (click through the stages); logs the engine's summary. Then Dump Society to read it. (task #39)
+
+These are the levers the TESTING-TRACKER C1/C3/D3 rows drive. **CI compiles them; runtime is the developer's local build.**
 
 ### GroundCombatWindow — MISSING ENTIRELY
 

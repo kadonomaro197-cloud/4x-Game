@@ -84,5 +84,53 @@ namespace Pulsar4X.Tests
                     DamageTools.DamageResistsLookupTable[kv.Key].SignatureResistance = kv.Value;
             }
         }
+
+        [Test]
+        [Description("The NON-WAVELENGTH damage SITE: a Corrosive hit (no wavelength — can't use the per-pixel sim) is " +
+                     "applied FLAT to the hull and reduced by the ship's armour-material resistance. Proves the trio's " +
+                     "(Corrosive/EMStorm/Gravimetric) armour is the counter, through the real DamageProcessor path.")]
+        public void NonWavelengthHit_FlatSite_RatedArmourTakesLess()
+        {
+            var s = TestScenario.CreateWithColony();
+            var design = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns.Values.First();
+
+            // A corrosive hit with NO wavelength — this routes through the flat non-wavelength site, not the per-pixel sim.
+            DamageFragment CorrosiveHit() => new DamageFragment
+            {
+                Velocity  = new Vector2(1, 1),
+                Position  = (0, 0),
+                Energy    = 1e6,
+                Signature = DamageSignature.Corrosive,
+            };
+
+            var shipA = ShipFactory.CreateShip(design, s.Faction, s.StartingBody, "Unrated");
+            int dmgUnrated = DamageProcessor.OnTakingDamage(shipA, CorrosiveHit()).Damage;
+
+            var saved = DamageTools.DamageResistsLookupTable.Values
+                .ToDictionary(m => m.IDCode, m => m.SignatureResistance);
+            try
+            {
+                foreach (var m in DamageTools.DamageResistsLookupTable.Values)
+                {
+                    var arr = new float[6];
+                    arr[(int)DamageSignature.Corrosive] = 0.9f;   // 90% resistance to corrosive
+                    m.SignatureResistance = arr;
+                }
+
+                var shipB = ShipFactory.CreateShip(design, s.Faction, s.StartingBody, "CorrosionRated");
+                int dmgRated = DamageProcessor.OnTakingDamage(shipB, CorrosiveHit()).Damage;
+
+                Log($"corrosive (non-wavelength) hit: unrated armour took {dmgUnrated}, corrosion-rated took {dmgRated}");
+                Assert.That(dmgUnrated, Is.GreaterThan(0),
+                    "the flat non-wavelength site must deposit measurable damage, or the comparison proves nothing");
+                Assert.That(dmgRated, Is.LessThan(dmgUnrated),
+                    "corrosion-rated armour must take less from a corrosive hit — the trio's armour is the counter");
+            }
+            finally
+            {
+                foreach (var kv in saved)
+                    DamageTools.DamageResistsLookupTable[kv.Key].SignatureResistance = kv.Value;
+            }
+        }
     }
 }

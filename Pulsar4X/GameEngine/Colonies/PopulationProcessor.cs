@@ -26,13 +26,79 @@ namespace Pulsar4X.Colonies
             long popSupportValue = instancesDB.GetPopulationSupportValue(colonyInfoDB.PlanetEntity);
 
             long needsSupport = 0;
+            long totalPop = 0;
+            double worstColonyCost = 0.0;
             foreach (var (id, value) in currentPopulation)
             {
 
                 var species = colony.Manager.GetGlobalEntityById(id).GetDataBlob<SpeciesDB>();
+                double cc = species.ColonyCost(colonyInfoDB.PlanetEntity);
                 // count the number of different population groups that need infrastructure support
-                if (species.ColonyCost(colony.GetDataBlob<ColonyInfoDB>().PlanetEntity) > 0.0)
+                if (cc > 0.0)
                     needsSupport++;
+                if (cc > worstColonyCost)
+                    worstColonyCost = cc;
+                totalPop += value;
+            }
+
+            // --- M1 morale (the population "tank" valve, docs/MORALE-AND-POPULATION-DESIGN.md) ---
+            // Recompute morale from the inputs that already exist (conditions + overcrowding) and turn it into
+            // a migration rate added to growth below. Guarded: a colony without a ColonyMoraleDB (e.g. built by
+            // an older path) just skips morale and grows as before.
+            double migration = 0.0;
+
+            // M5b: the province's computed power/food shortage (SustenanceProcessor). Neutral (0) by default → no
+            // morale hit and no deaths until demand is calibrated on the local build (the default-deficit guard).
+            double powerShortage = 0.0, foodShortage = 0.0, starvation = 0.0;
+            if (colony.TryGetDataBlob<ColonySustenanceDB>(out var sustenanceDB))
+            {
+                powerShortage = sustenanceDB.PowerShortage;
+                foodShortage = sustenanceDB.FoodShortage;
+                starvation = ColonySustenanceDB.StarvationDeathRate(foodShortage);
+            }
+
+            if (colony.TryGetDataBlob<ColonyMoraleDB>(out var moraleDB))
+            {
+                double crowdingRatio = 0.0;
+                if (worstColonyCost > 0.0) // only support-capped (hostile) worlds can overcrowd
+                {
+                    long needs = needsSupport < 1 ? 1 : needsSupport;
+                    double capacity = ((double)popSupportValue / needs) / worstColonyCost;
+                    crowdingRatio = capacity > 0.0 ? totalPop / capacity : 2.0;
+                }
+
+                // M2 employment + M3 fix: jobs are measured against the WORKFORCE (the drawable fraction of
+                // population), not raw headcount — a 500M homeworld isn't "employed" by a handful of
+                // installations. Two-sided; a colony with no installation declaring jobs has "no job data"
+                // → neutral employment (sentinel -1), not 100% unemployment. Housing comfort is a bonus.
+                long jobs = instancesDB.GetTotalJobs();
+                long workforce = ColonyManpowerDB.Workforce(totalPop);
+                double employmentRatio = (jobs > 0 && workforce > 0) ? (double)jobs / workforce : -1.0;
+                double comfort = instancesDB.GetHousingComfort();
+
+                // M4: tax is a morale input (read the colony's tax rate; ColonyEconomyProcessor reads morale
+                // back to scale income — a one-tick-lagged loop).
+                double taxRate = colony.TryGetDataBlob<ColonyEconomyDB>(out var econDB) ? econDB.TaxRate : 0.0;
+                // Government MODULATOR (#30): cap the effective tax at the regime's TaxCeiling here too, so the
+                // morale penalty and the billed income (ColonyEconomyProcessor) agree. Inert at the Mid default.
+                double taxCeiling = Pulsar4X.Factions.GovernmentTools.OwnerOf(colony).TaxCeiling();
+                if (taxRate > taxCeiling) taxRate = taxCeiling;
+
+                // M5b: power/food shortage now feed morale (both 0 by default → neutral until calibrated).
+                moraleDB.Morale = ColonyMoraleDB.ComputeMorale(new MoraleInputs
+                {
+                    WorstColonyCost = worstColonyCost,
+                    CrowdingRatio = crowdingRatio,
+                    EmploymentRatio = employmentRatio,
+                    Comfort = comfort,
+                    TaxRate = taxRate,
+                    PowerShortage = powerShortage,
+                    FoodShortage = foodShortage
+                }, moraleDB.Factors);
+                // Government MODULATOR (#30): the regime's MoraleWeight scales how hard public opinion pulls
+                // migration (People-end amplifies it, One-Ruler-end damps it). Neutral (×1.0) at the default Mid
+                // authority, so this changes nothing until a non-Mid regime is set.
+                migration = ColonyMoraleDB.MigrationRate(moraleDB.Morale) * Pulsar4X.Factions.GovernmentTools.OwnerOf(colony).MoraleWeight();
             }
 
             // find colony cost, divide the population support value by it
@@ -52,7 +118,7 @@ namespace Pulsar4X.Colonies
                         long excessPopulation = currentPopulation[id] - maxPopulation;
                         // @todo: figure out better formula
                         growthRate = -50.0;
-                        newPop = (long)(value * (1.0 + growthRate));
+                        newPop = (long)(value * (1.0 + growthRate - starvation));
                         if (newPop < 0)
                             newPop = 0;
                         UpdatePopulation(colonyInfoDB, currentPopulation, id, newPop);
@@ -64,8 +130,8 @@ namespace Pulsar4X.Colonies
                         growthRate = (20.0 / (Math.Pow(value, (1.0 / 3.0))));
                         if (growthRate > 10.0)
                             growthRate = 10.0;
-                        // @todo: get external factors in population growth (or death)
-                        newPop = (long)(value * (1.0 + growthRate));
+                        // external factor: morale-driven migration (M1)
+                        newPop = (long)(value * (1.0 + growthRate + migration - starvation));
                         if (newPop > maxPopulation)
                             newPop = maxPopulation;
                         if (newPop < 0)
@@ -80,8 +146,8 @@ namespace Pulsar4X.Colonies
                     growthRate = (20.0 / (Math.Pow(value, (1.0 / 3.0))));
                     if (growthRate > 10.0)
                         growthRate = 10.0;
-                    // @todo: get external factors in population growth (or death)
-                    newPop = (long)(value * (1.0 + growthRate));
+                    // external factor: morale-driven migration (M1)
+                    newPop = (long)(value * (1.0 + growthRate + migration));
                     if (newPop < 0)
                         newPop = 0;
                     UpdatePopulation(colonyInfoDB, currentPopulation, id, newPop);

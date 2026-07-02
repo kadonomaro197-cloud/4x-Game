@@ -68,5 +68,75 @@
       "MeltingZeroPoint": 1750,
       "PhotonReflectivityPeak": 0.60
     }
+  },
+  {
+    "Type": "Armor",
+    "Payload": {
+      "UniqueID": "tungsten-plating-armor",
+      "ResourceID": "tungsten-plating",
+      "Density": "17000",
+      "Elasticity": 0.15,
+      "TensileStrength": 550,
+      "ThermalCapacity": 134,
+      "ThermalConductivity": 173.0,
+      "MeltingZeroPoint": 3695,
+      "PhotonReflectivityPeak": 0.50
+    }
+  },
+  {
+    "Type": "Armor",
+    "Payload": {
+      "UniqueID": "ablative-composite-armor",
+      "ResourceID": "ablative-composite",
+      "Density": "1800",
+      "Elasticity": 0.6,
+      "TensileStrength": 600,
+      "ThermalCapacity": 1000,
+      "ThermalConductivity": 5.0,
+      "MeltingZeroPoint": 3800,
+      "PhotonReflectivityPeak": 0.10
+    }
+  },
+  {
+    "Type": "Armor",
+    "Payload": {
+      "UniqueID": "corrosion-resistant-alloy-armor",
+      "ResourceID": "corrosion-resistant-alloy",
+      "Density": "4500",
+      "Elasticity": 0.3,
+      "TensileStrength": 900,
+      "ThermalCapacity": 520,
+      "ThermalConductivity": 22.0,
+      "MeltingZeroPoint": 1900,
+      "PhotonReflectivityPeak": 0.55
+    }
+  },
+  {
+    "Type": "Armor",
+    "Payload": {
+      "UniqueID": "em-shielding-mesh-armor",
+      "ResourceID": "em-shielding-mesh",
+      "Density": "6000",
+      "Elasticity": 0.35,
+      "TensileStrength": 400,
+      "ThermalCapacity": 385,
+      "ThermalConductivity": 300.0,
+      "MeltingZeroPoint": 1200,
+      "PhotonReflectivityPeak": 0.70
+    }
+  },
+  {
+    "Type": "Armor",
+    "Payload": {
+      "UniqueID": "reinforced-trusswork-armor",
+      "ResourceID": "reinforced-trusswork",
+      "Density": "7000",
+      "Elasticity": 0.2,
+      "TensileStrength": 1100,
+      "ThermalCapacity": 470,
+      "ThermalConductivity": 30.0,
+      "MeltingZeroPoint": 2000,
+      "PhotonReflectivityPeak": 0.50
+    }
   }
 ]

@@ -116,6 +116,12 @@ namespace Pulsar4X.Ships
             var position = new Vector3(targetRadius, 0, 0);
             var ship = ShipFactory.CreateShip(shipDesign, faction, position, planet, pad.ShipName);
 
+            // M3-2b: stamp the crew provenance on a launch-complex-built ship. Its crew was already committed
+            // from this colony's pool at build-complete (ShipDesign.OnConstructionComplete); the launching
+            // colony IS the source colony, so record it here so destroy/disband releases the right pool.
+            if (shipDesign.CrewReq > 0 && ship.TryGetDataBlob<ShipInfoDB>(out var launchedInfo))
+                launchedInfo.CrewSourceColonyId = colonyEntity.Id;
+
             if (faction.TryGetDataBlob<FleetDB>(out var fleetDB))
             {
                 fleetDB.AddChild(ship);

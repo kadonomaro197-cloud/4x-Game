@@ -1,5 +1,7 @@
 # Pulsar4X — Systems Status & Test Plan (Living Map)
 
+> ⚠ **STALE since 2026-06-29 (flagged 2026-07-02).** This map doesn't yet reflect the `claude/space-economy-morale` landings — morale/population (M1–M5), government-as-modulator, diplomacy substrate+teeth+drift, crew/manpower enforcement, legitimacy/rebellion, and stations are all built + CI-green but their rows here show earlier states. **For current status use `docs/TESTING-TRACKER.md` (tests) + `docs/DOCS-INDEX.md` (overview) until these rows are refreshed** (doc-debt #1 in DOCS-INDEX).
+
 **What this is:** one place that lists *every* system in the game, what state it's in, whether we can
 *see* it (a gauge/test), and what it's *wired to*. It exists so we stop pivoting from one shiny broken
 thing to the next. Pick the next job off this map, not off whatever we happened to trip over.
@@ -78,7 +80,9 @@ reflection — if it's in the assembly, it runs.
 
 | System | Runs (processor) | Status | Can we see it? | Connected to |
 |--------|------------------|--------|----------------|--------------|
-| **Population** | `PopulationProcessor` | 🟡 PARTIAL | `PopulationProcessorTest`; runs in our year-advance but **we never gauged growth** | Galaxy (atmosphere → colony cost), Infrastructure (pop support cap), Storage (future: food) — formulas are stubs (see `Colonies/CLAUDE.md`) |
+| **Population** | `PopulationProcessor` | 🟡 PARTIAL | `PopulationProcessorTest`; growth formulas still stubs (see `Colonies/CLAUDE.md`) | Galaxy (atmosphere → colony cost), Infrastructure (pop support cap), Storage (future: food), **Morale (migration)** |
+| **Morale** (the population-tank valve) | `PopulationProcessor` (M1) reads `ColonyMoraleDB` | ✅ DONE (M1) | `MoraleTests` — pure morale math + migration sign/bounds + the real start born neutral | population (migration), Galaxy (conditions = colony cost), capacity (overcrowding); **roadmap** jobs/tax/power/food/**governor** (`docs/MORALE-AND-POPULATION-DESIGN.md`) |
+| **Governance / delegation** (governors maintain worlds — *auto-resolve for the economy*) | — (wires dead `AdminSpaceDB` seat) | ⚫ ABSENT (designed, task #23) | none | **People** (governor = commander), `AdminSpaceDB` (the seat to wire), morale (what it maintains), tax/M4 (sets happy-medium). Principle: agency is OPT-IN — every management lever needs a governor auto-default. |
 | **Life support / carrying capacity** | (`ColonyLifeSupportDB`, recalc) | 🔴 DARK | none | population, infrastructure |
 | **Colony hex map** (spatial grid) | `ColonyHexMapProcessor` | 🔴 DARK | none | colony, **future ground combat** (already a spatial substrate) |
 

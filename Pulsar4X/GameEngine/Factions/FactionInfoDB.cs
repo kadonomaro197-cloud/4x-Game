@@ -61,6 +61,14 @@ namespace Pulsar4X.Factions
         [JsonProperty]
         public List<Entity> Colonies { get; internal set; } = new ();
 
+        /// <summary>
+        /// Space station entities owned by this faction — the parallel registry to <see cref="Colonies"/>.
+        /// A station is the cheap/fast/fragile off-world host (see StationFactory / docs/SPACE-STATIONS-DESIGN.md).
+        /// </summary>
+        [PublicAPI]
+        [JsonProperty]
+        public List<Entity> Stations { get; internal set; } = new ();
+
         [JsonProperty]
         public SafeList<Entity> Commanders { get; internal set; } = new ();
 
@@ -151,6 +159,7 @@ namespace Pulsar4X.Factions
             KnownSystems = new List<string>(factionDB.KnownSystems);
             KnownFactions = new List<Entity>(factionDB.KnownFactions);
             Colonies = new List<Entity>(factionDB.Colonies);
+            Stations = new List<Entity>(factionDB.Stations);
             InternalKnownJumpPoints = new Dictionary<string, List<Entity>>(factionDB.KnownJumpPoints);
 
             ShipDesigns = new Dictionary<string, ShipDesign>(factionDB.ShipDesigns);

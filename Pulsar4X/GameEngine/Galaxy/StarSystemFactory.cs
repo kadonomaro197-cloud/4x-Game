@@ -73,6 +73,39 @@ namespace Pulsar4X.Galaxy
                 Pulsar4X.Hazards.SpaceHazardFactory.CreateGasCloud(newSystem, stars[0], offset, radius);
             }
 
+            // Some generated systems carry a debris / micrometeoroid field — kinetic terrain that peppers hulls
+            // (resisted by ablative armour) and drags movement. ~25% of systems, rolled independently of the cloud.
+            if (newSystem.RNGNextDouble() < 0.25 && stars.Count > 0)
+            {
+                double au = 2 + newSystem.RNGNextDouble() * 20;
+                double ang = newSystem.RNGNextDouble() * 2 * Math.PI;
+                var offset = new Vector3(Distance.AuToMt(au) * Math.Cos(ang), Distance.AuToMt(au) * Math.Sin(ang), 0);
+                double radius = Distance.AuToMt(0.3 + newSystem.RNGNextDouble() * 1.2); // 0.3–1.5 AU radius
+                Pulsar4X.Hazards.SpaceHazardFactory.CreateDebrisField(newSystem, stars[0], offset, radius);
+            }
+
+            // Some systems carry an ion storm — EM interference that jams sensors and damages ship systems
+            // (resisted by EM hardening). ~15% of systems.
+            if (newSystem.RNGNextDouble() < 0.15 && stars.Count > 0)
+            {
+                double au = 2 + newSystem.RNGNextDouble() * 22;
+                double ang = newSystem.RNGNextDouble() * 2 * Math.PI;
+                var offset = new Vector3(Distance.AuToMt(au) * Math.Cos(ang), Distance.AuToMt(au) * Math.Sin(ang), 0);
+                double radius = Distance.AuToMt(0.4 + newSystem.RNGNextDouble() * 1.5);
+                Pulsar4X.Hazards.SpaceHazardFactory.CreateIonStorm(newSystem, stars[0], offset, radius);
+            }
+
+            // A rare gravimetric anomaly — tidal spacetime stress that warps structure (resisted by structural
+            // reinforcement) and inhibits warp. ~8% of systems.
+            if (newSystem.RNGNextDouble() < 0.08 && stars.Count > 0)
+            {
+                double au = 3 + newSystem.RNGNextDouble() * 25;
+                double ang = newSystem.RNGNextDouble() * 2 * Math.PI;
+                var offset = new Vector3(Distance.AuToMt(au) * Math.Cos(ang), Distance.AuToMt(au) * Math.Sin(ang), 0);
+                double radius = Distance.AuToMt(0.2 + newSystem.RNGNextDouble() * 0.8);
+                Pulsar4X.Hazards.SpaceHazardFactory.CreateGravimetricAnomaly(newSystem, stars[0], offset, radius);
+            }
+
             // Generate Jump Points
             JPSurveyFactory.GenerateJPSurveyPoints(newSystem);
             JPFactory.GenerateJumpPoints(this, newSystem, stars[0].GetDataBlob<PositionDB>().Root);

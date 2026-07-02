@@ -340,6 +340,13 @@ namespace Pulsar4X.Engine
                     }
                 }
 
+                // Faction-level processors (NPC decisions, and the politics/diplomacy loops) live on faction
+                // entities in the GlobalManager, which is NOT a StarSystem and so is absent from _game.Systems.
+                // Process its subpulse on the same cadence so those hotloops actually fire — done sequentially
+                // AFTER the (possibly parallel) system block to avoid racing it. This is the keystone that
+                // un-blocks every faction-level autonomous loop; before it, the GlobalManager was never iterated.
+                _game.GlobalManager?.ManagerSubpulses?.ProcessSystem(nextInterupt);
+
                 LastSubtickTime = _subpulseStopwatch.Elapsed;
                 GameGlobalDateTime = nextInterupt; //set the GlobalDateTime this will invoke the datechange event.
                 _subpulseStopwatch.Reset();

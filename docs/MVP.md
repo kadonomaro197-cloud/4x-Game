@@ -31,6 +31,12 @@ to the surface, paid for by real planetary infrastructure — and v1 ships.
 >
 > **Why (developer, 2026-06-26):** planetary combat is hollow without real planetary infrastructure to fight over — better to deepen what we already have in space until it earns its keep, then go planetary. **Discipline for M1:** one ranked lever at a time, each a gauged slice — *not* "fix everything at once" (that phrasing is the half-built-forever trap this doc exists to stop). M2's spec below (§§2–5) is unchanged and waiting.
 
+> **⚠️ FINISH-LINE MOVED — ratified 2026-06-29 (a deliberate decision, per §7, not a drift).** A new milestone is inserted ahead of M2, and it is the **active build path now**:
+> - **M-ECON — Space Economy & Society: make a colony/station a living place worth fighting over.** The population/morale loop (a TANK with morale as the level-control valve), **people as a finite hard-drawn resource** (crew/officers/scientists/army all drawn from population), the **Ledger/tax** economic lever, energy+food, **governance/delegation** (governors so management is opt-in, the "auto-resolve for the economy"), and the **government-type modulator** (regime as coefficients + rule-overrides; the 4-dial/3-notch panel; regime change; popular demands). Built one gauged, CI-green slice at a time. Design is fully locked in `docs/MORALE-AND-POPULATION-DESIGN.md` + `docs/GOVERNMENT-AND-POLITICS-DESIGN.md`; foundations M1(morale)/M2A(jobs-housing)/M3-1(manpower)/M3-2a(crew-policy) are built + green.
+> - **Why (developer, 2026-06-29):** the north-star widened the objective (`docs/NORTH-STAR-VISION.md`) — the fork now aims to let a player stage *aspects* of the great sci-fi universes, several of which (BSG nomad survival, B5 politics, the economic *pressure* that makes conquest mean something) live in exactly this layer. And it serves the conquest spine directly: **the grave rung of morale = colony collapse = the ground-invasion objective** (you take a world by breaking its morale, not just its buildings). So a deep colony is the thing that makes "take a planet" worth doing.
+> - **Resulting order:** M-ECON (active) → then the ranked space-depth levers (§6: materials→costs, energy→weapons, detection) → then **M2 take-a-planet** (§§2–5, the v1 conquest finish, unchanged). The §6 levers and M2 are NOT abandoned — they follow M-ECON.
+> - **Honest caveat:** M-ECON was prioritized ahead of the audit's two highest-leverage levers (refined-materials→component-costs #1, energy→weapons #2). Those remain ranked and waiting; revisit whether to interleave them once M-ECON's core lands.
+
 ### 4X coverage — and what's engine vs. game
 
 The reframe that matters: **the economy is not one of the X's — it's the engine substrate the X's run on.**
@@ -96,8 +102,8 @@ These are **good** — and they are **not v1**. Building any of them before §1 
 - **Orbital bombardment** integrated with the ground phase (engine has partial hooks — v2).
 - **Diplomacy**, multi-faction war, alliances, IFF depth.
 - **Research** depth — v1 uses starting tech.
-- Economy depth: the **Ledger/money** signal, trade, logistics automation, population economics beyond
-  "enough population to staff the build."
+- ~~Economy depth: the **Ledger/money** signal, trade, logistics automation, population economics beyond
+  "enough population to staff the build."~~ **→ PROMOTED into M-ENGINE/M-ECON, ratified 2026-06-29 (see §1).** The Ledger/tax signal and population economics (morale, people-as-resource, government) are now the active milestone, not deferred. *(Trade and logistics automation remain deferred.)*
 - An **NPC AI** that plays the whole game — v1's defender is a static seed.
 - Combat **visualization** polish (target lines, animations) and **balancing** — make it *work* before *fair*.
 

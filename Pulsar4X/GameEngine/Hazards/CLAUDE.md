@@ -38,7 +38,20 @@ The hazard discovery/resistance/research loop the developer asked for is wired e
 
 **Gauge:** `Pulsar4X.Tests/HazardResearchLoopTests.cs` runs the whole chain on a real faction through the New-Game data path: locked → discover → open → research → armour unlocked → its material resists thermal.
 
-**Worked example = Thermal only (v1).** `HazardDiscovery.CounterTechFor` maps all six signatures to tech ids, but only `tech-thermal-shielding` exists in data so far; the other five `Unlock` calls no-op until their tech + armour are authored (same pattern — pure JSON, no new C#). Purpose-named armours (vs reusing nickel-steel) are the same trivial follow-up.
+**ALL SIX flavours are now wired (source → discover → tech → rated armour), every one gauged in `HazardResearchLoopTests`:**
+
+| Flavour | Source (real, in-game) | Damage path | Counter tech → armour (IDCode) |
+|---|---|---|---|
+| **Thermal** | star corona | wavelength (IR) | `tech-thermal-shielding` → nickel-steel (50) |
+| **HardRadiation** | solar flare (UV) | wavelength (UV) | `tech-radiation-shielding` → tungsten-plating (75) |
+| **Kinetic** | debris field (~25% of systems) | wavelength (0) | `tech-ablative-plating` → ablative-composite (125) |
+| **Corrosive** | gas cloud (reclassified from the mislabelled HeatDamage) | **flat site** | `tech-corrosion-plating` → corrosion-resistant-alloy (175) |
+| **EMStorm** | ion storm (`CreateIonStorm`, ~15% of systems) | **flat site** | `tech-em-hardening` → em-shielding-mesh (185) |
+| **Gravimetric** | gravimetric anomaly (`CreateGravimetricAnomaly`, ~8%, proximity-scaled) | **flat site** | `tech-structural-reinforcement` → reinforced-trusswork (195) |
+
+**The flat non-wavelength damage SITE (2026-06-28)** — the three non-wavelength flavours (Corrosive/EMStorm/Gravimetric) can't run through the per-pixel wavelength sim, so `DamageProcessor.ApplyNonWavelengthDamage` applies the hit **flat** and spread evenly across the ship's components, **reduced by the ship's armour-material `SignatureResistance[sig]`** — so "the armour material IS the counter" holds for all six. Routed by `DamageProcessor.OnTakingDamage` via `DamageSignatures.UsesWavelengthArmorPath(sig)` (false → flat site). **Default-identical** for every existing caller: a beam/missile/kinetic-hazard fragment carries a wavelength-path signature (Kinetic is the struct default), so the branch never fires for them. The three new `HazardEffectType` kinds (`CorrosiveDamage`/`EMDamage`/`GravimetricDamage`) are **appended** to the enum (gotcha #10). Gauge: `DamageSignatureResistanceTests.NonWavelengthHit_FlatSite_RatedArmourTakesLess`.
+
+**v1 simplifications (documented, flagged — not bugs):** the flat site spreads damage evenly (a field effect) and does health attrition only (no full destruction bookkeeping). Per-flavour targeting is a later refinement: EM should hit **electronics/sensors** (not hull), Gravimetric should scale by **hull size** (tidal), Corrosive should eat the **surface** over time. The decision/loop is fully wired; the damage *fidelity* of the trio is the next polish pass.
 
 ---
 
@@ -68,7 +81,9 @@ Two kinds of effect, applied two different ways:
   - **Sensors** — `SensorScan` reads the observer's hazard mods and gates contact registration: blinded (flare) → no contacts; sensor-cut (gas cloud) → contacts beyond the observer's *reduced* reach (using the `SensorTools.DetectionRange_m` reverse-solve) are dropped. **Default-identical when no hazard is present**, so existing detection/fog tests are untouched.
   - **Warp** — `WarpMoveProcessor.StartNonNewtTranslation` scales warp speed by the hazard at the ship's departure point (clamped to a crawl, never 0, so the transit-time division can't blow up).
 
-**Placement** lives in `Galaxy/StarSystemFactory.cs`: `LoadFromBlueprint` gives the home star a `StarFlareSourceDB` (first flare within a month); `CreateSystem` gives every generated star one and drops a gas cloud in ~40% of generated systems.
+**Placement** lives in `Galaxy/StarSystemFactory.cs`: `LoadFromBlueprint` gives the home star a `StarFlareSourceDB` (first flare within a month); `CreateSystem` gives every generated star one and drops a gas cloud in ~40% of generated systems (plus debris ~25%, ion storm ~15%, gravimetric ~8%).
+
+> **★ FLAGGED — placement is FLAT RNG, not contextual (developer ask 2026-06-28, finish next client-test pass).** Today every generated system rolls the same per-hazard percentages regardless of its character — so a system doesn't *feel* like what it is. It needs to read `StarInfoDB` (spectral class / luminosity / age) and pick an environment **profile**: a **protostar / young system** thick with solar flares, gas & dust clouds, and asteroid/debris fields; a calm main-sequence system sparse; a neutron star / magnetar / black hole carrying gravimetric anomalies + hard-radiation belts + EM storms. This is what makes "entering a new system is unique and terrifying" (the Star Trek pillar, `docs/NORTH-STAR-VISION.md`) real. Full note + rationale in `SESSION_STATE.md` → "NEXT CLIENT-TEST PASS".
 
 **Rendering** is client-side (CI-blind): `SystemMapRendering.UpdateHazardRegions()` draws each region as a coloured `SimpleCircle` (gas cloud green, flare orange), rebuilt each frame so a growing flare re-reads its size.
 
@@ -97,3 +112,5 @@ Two kinds of effect, applied two different ways:
 - `FlareRadius_GrowsToPeakThenFades` — the flare shape.
 - `HomeStar_HasFlareWeather` — placement wiring (Sol's star gets a `StarFlareSourceDB`).
 - `Flare_BlindsThenExpires` — a flare blinds sensors at the star and is removed once it expires.
+
+`Pulsar4X.Tests/SpatialEnvironmentsDioramaTests.cs` (engine-only → CI-green): **the whole-system verification** — parks a probe at each of six greedily-far-apart Sol bodies, drops a DIFFERENT environment on each built from the **REAL effect lists** (damage AND the supplemental sensor-jam / drag / warp-inhibit), each parented to its body so it tracks the probe, drives the `SpaceHazardProcessor`, then verifies per probe: **(1) detection** (the faction discovers the flavour), **(2) actual damage** (a real 1e6 J hit of that flavour deposits measurable damage — the processor's per-tick energy is too low for the per-pixel sim, the `CombatReadoutTests` finding, so damage is proven by a direct hit at the proven scale), **(3) supplemental effects** (`SpaceHazardTools.CombinedForEntity` shows the env's stat cuts — e.g. the gas-cloud probe's radar IS cut, debris drags movement, the anomaly inhibits warp). Prints an `env → detected | damage | sensorx movex warpx blind` readout. The developer's "fill the system with test ships, let them sit, ensure the game catches it all" as a permanent CI gauge: if any environment silently loses detection, damage, OR a supplemental effect, this goes red and names it. (Drives the processor directly, like `Flare_BlindsThenExpires` — the harness doesn't reliably auto-fire hotloops.)

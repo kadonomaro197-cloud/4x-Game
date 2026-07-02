@@ -24,6 +24,14 @@ namespace Pulsar4X.Hazards
         SensorJam,         // cuts sensor range; Magnitude 0 = fully blinded
         MovementDrag,      // slows sub-light (Newtonian) movement
         WarpInhibit,       // slows warp through/from the region
+
+        // Non-WAVELENGTH damage kinds (APPENDED 2026-06-28 — never reorder, JSON refs by int, gotcha #10). These
+        // are not photons, so they can't run through the per-pixel wavelength armour sim; they're applied at the
+        // flat non-wavelength damage site (DamageProcessor.ApplyNonWavelengthDamage), reduced by the ship's
+        // armour-material SignatureResistance for the flavour. So "armour material is the counter" holds for all six.
+        CorrosiveDamage,   // chemical / dense medium (a corrosive nebula) → Corrosive
+        EMDamage,          // electromagnetic interference (an ion storm, a magnetar) → EMStorm
+        GravimetricDamage, // tidal / spacetime stress (a black hole, a neutron star) → Gravimetric
     }
 
     /// <summary>
@@ -57,7 +65,10 @@ namespace Pulsar4X.Hazards
         public bool IsDamage =>
             Type == HazardEffectType.HeatDamage ||
             Type == HazardEffectType.RadiationDamage ||
-            Type == HazardEffectType.KineticDamage;
+            Type == HazardEffectType.KineticDamage ||
+            Type == HazardEffectType.CorrosiveDamage ||
+            Type == HazardEffectType.EMDamage ||
+            Type == HazardEffectType.GravimetricDamage;
 
         /// <summary>
         /// The coarse shared <see cref="DamageSignature"/> (the keystone hazard↔weapon damage flavour) this effect
@@ -80,6 +91,9 @@ namespace Pulsar4X.Hazards
             HazardEffectType.HeatDamage => DamageSignature.Thermal,
             HazardEffectType.RadiationDamage => DamageSignature.HardRadiation,
             HazardEffectType.KineticDamage => DamageSignature.Kinetic,
+            HazardEffectType.CorrosiveDamage => DamageSignature.Corrosive,
+            HazardEffectType.EMDamage => DamageSignature.EMStorm,
+            HazardEffectType.GravimetricDamage => DamageSignature.Gravimetric,
             _ => null, // SensorJam / MovementDrag / WarpInhibit are stat effects, not damage
         };
     }

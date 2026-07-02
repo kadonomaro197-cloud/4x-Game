@@ -286,6 +286,116 @@
   {
     "Type": "ProcessedMaterial",
     "Payload": {
+      "UniqueID": "tungsten-plating",
+      "Name": "Tungsten Radiation Plating",
+      "Description": "Dense tungsten-alloy hull plating. Its high-Z mass absorbs ionising UV and hard radiation — a solar flare's bane — that would otherwise reach a ship's crew and electronics.",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 60,
+      "PartMatUniqueID": "stainless-steel",
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.0000588,
+      "ResourceCosts": {
+        "iron": 50,
+        "tungsten": 40,
+        "nickel": 10
+      },
+      "IndustryPointCosts": 45,
+      "IndustryTypeID": "refining",
+      "WealthCost": 1,
+      "OutputAmount": 100
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "ablative-composite",
+      "Name": "Ablative Composite",
+      "Description": "Light carbon-composite plating that sheds kinetic impacts by ablating — sacrificing surface layers to absorb the energy of micrometeoroids and debris. The hull armour of choice for crossing a debris field.",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 50,
+      "PartMatUniqueID": "stainless-steel",
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.000556,
+      "ResourceCosts": {
+        "graphite": 50,
+        "aluminium": 30,
+        "silicon": 20
+      },
+      "IndustryPointCosts": 40,
+      "IndustryTypeID": "refining",
+      "WealthCost": 1,
+      "OutputAmount": 100
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "corrosion-resistant-alloy",
+      "Name": "Corrosion-Resistant Alloy",
+      "Description": "A passivated titanium-chromium alloy that shrugs off chemical attack. The hull plating for crossing a corrosive nebula without the medium eating your skin away.",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 55,
+      "PartMatUniqueID": "stainless-steel",
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.000222,
+      "ResourceCosts": {
+        "titanium": 50,
+        "chromium": 30,
+        "silicon": 20
+      },
+      "IndustryPointCosts": 42,
+      "IndustryTypeID": "refining",
+      "WealthCost": 1,
+      "OutputAmount": 100
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "em-shielding-mesh",
+      "Name": "EM Shielding Mesh",
+      "Description": "A woven copper-aluminium Faraday mesh that grounds out electromagnetic surges before they reach a ship's systems. The defence against an ion storm's interference.",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 55,
+      "PartMatUniqueID": "stainless-steel",
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.000167,
+      "ResourceCosts": {
+        "copper": 50,
+        "aluminium": 30,
+        "silicon": 20
+      },
+      "IndustryPointCosts": 42,
+      "IndustryTypeID": "refining",
+      "WealthCost": 1,
+      "OutputAmount": 100
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "reinforced-trusswork",
+      "Name": "Reinforced Trusswork",
+      "Description": "A high-tensile titanium-tungsten internal frame that holds a hull together against tidal stress. The structural reinforcement that lets a ship survive a gravimetric anomaly's pull.",
+      "CargoTypeID": "general-storage",
+      "CreditValue": 65,
+      "PartMatUniqueID": "stainless-steel",
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.000143,
+      "ResourceCosts": {
+        "titanium": 40,
+        "tungsten": 30,
+        "iron": 30
+      },
+      "IndustryPointCosts": 48,
+      "IndustryTypeID": "refining",
+      "WealthCost": 1,
+      "OutputAmount": 100
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
       "UniqueID": "electronics-d",
       "Name": "Grade-D Electronics",
       "Description": "Basic electrical components manufactured without aluminium refining. Lower performance, faster to produce.",

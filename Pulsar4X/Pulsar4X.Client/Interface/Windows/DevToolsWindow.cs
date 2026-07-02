@@ -60,6 +60,12 @@ namespace Pulsar4X.Client
         private int _hostileCount = 3;
         private string _hostileStatus = "";
 
+        // ── Government (test regimes) ──────────────────
+        private string _governmentStatus = "";
+
+        // ── Age the galaxy (staged states) ─────────────
+        private string _stageStatus = "";
+
         private DevToolsWindow()
         {
             _flags = ImGuiWindowFlags.AlwaysAutoResize;
@@ -171,6 +177,70 @@ namespace Pulsar4X.Client
             _spawnStatus = $"State: {ships.Count} ship(s), {fleets.Count} fleet(s) in this system (player faction {pf}). Full list in console_output.txt.";
         }
 
+        // The instrument panel for the M-ECON systems (morale / manpower / economy / government) — they have no
+        // on-screen readout yet, so this dumps each colony's state (and the player's government) to the flushed
+        // log so a play-test can WATCH the numbers move. The formatting lives in the engine (SocietyReadout, which
+        // is CI-tested); this is a thin iterate-and-log wrapper.
+        // Set the player faction's government dials to a preset regime (public setters; guarded). Logs the
+        // classified name + description so the play-test sees which regime is active. The dials themselves are
+        // read live by the engine processors (#30) — this is just the lever to move them off the Mid default.
+        void SetGovernment(GovNotch authority, GovNotch economy, GovNotch openness, GovNotch militarism)
+        {
+            try
+            {
+                var faction = _uiState.PlayerFaction;
+                if (faction == null || !faction.TryGetDataBlob<GovernmentDB>(out var gov))
+                {
+                    _governmentStatus = "No player faction / GovernmentDB to set.";
+                    return;
+                }
+                gov.Authority = authority; gov.Economy = economy; gov.Openness = openness; gov.Militarism = militarism;
+                _governmentStatus = $"Government -> {gov.Name()}";
+                DevLog($"Government set -> {gov.Name()} ({gov.Description()})");
+            }
+            catch (Exception ex)
+            {
+                _governmentStatus = $"Government error: {ex.Message}";
+            }
+        }
+
+        // Age the running game to a staged state (thin wrapper over the CI-tested engine GameStageFactory).
+        // Logs the engine's summary of what it layered on so a play-test can see it in the flushed log.
+        void AgeGalaxy(GameStage stage)
+        {
+            try
+            {
+                if (_uiState.Game == null || _uiState.PlayerFaction == null)
+                {
+                    _stageStatus = "Age galaxy: no game / player faction.";
+                    return;
+                }
+                string summary = GameStageFactory.AgeTo(_uiState.Game, _uiState.PlayerFaction, stage);
+                _stageStatus = summary;
+                DevLog(summary);
+                DevLog("  (Dump Society to read the new colonies / diplomacy / rebellion state.)");
+            }
+            catch (Exception ex)
+            {
+                _stageStatus = $"Age galaxy error: {ex.Message}";
+            }
+        }
+
+        void DumpSociety()
+        {
+            var sys = _uiState.SelectedSystem;
+            if (sys == null) { _spawnStatus = "Dump Society: no system selected."; return; }
+
+            var colonies = sys.GetAllEntitiesWithDataBlob<ColonyInfoDB>();
+            DevLog($"SOCIETY DUMP — {colonies.Count} colony(ies) in this system:");
+            foreach (var c in colonies)
+                DevLog("  " + SocietyReadout.Colony(c));
+            DevLog("  government: " + SocietyReadout.Government(_uiState.PlayerFaction));
+            DevLog("  " + SocietyReadout.Diplomacy(_uiState.PlayerFaction));
+
+            _spawnStatus = $"Society: dumped {colonies.Count} colony(ies) to console_output.txt (close the game to read it).";
+        }
+
         // Keeps the Spawn Ship dropdown in step with the player's ship designs every frame, so a ship you just
         // made in the Ship Design window shows up here immediately instead of only after "Refresh Lists".
         // Deliberately lighter than HardRefresh(): it touches ONLY the ship-design arrays (not bodies/minerals)
@@ -211,6 +281,45 @@ namespace Pulsar4X.Client
                 ImGui.SameLine();
                 if (ImGui.Button("Dump State (log)"))
                     DumpState();
+                ImGui.SameLine();
+                if (ImGui.Button("Dump Society (log)"))
+                    DumpSociety();
+
+                // ── Government (test regimes) ─────────────────────
+                // Set the player faction's GovernmentDB to a preset regime so a play-test can watch the #30
+                // dials bite (tax ceiling, crew policy, research speed, morale weight, war pride). No UI existed
+                // to leave the neutral Mid default, so C3 was untestable; these three cover the extremes. Then
+                // Dump Society to read the effects.
+                ImGui.Separator();
+                ImGui.Text("[ Government (test regimes) ]");
+                ImGui.TextDisabled("Flip the player regime, then Dump Society / advance time to watch the dials bite.");
+                if (ImGui.Button("Federal Republic (Mid — neutral)"))
+                    SetGovernment(GovNotch.Mid, GovNotch.Mid, GovNotch.Mid, GovNotch.Mid);
+                ImGui.SameLine();
+                if (ImGui.Button("Totalitarian War-State"))
+                    SetGovernment(GovNotch.High, GovNotch.High, GovNotch.Low, GovNotch.High);
+                ImGui.SameLine();
+                if (ImGui.Button("Liberal Democracy"))
+                    SetGovernment(GovNotch.Low, GovNotch.Low, GovNotch.High, GovNotch.Low);
+                if (_governmentStatus.Length > 0) ImGui.TextDisabled(_governmentStatus);
+
+                // ── Age the galaxy (staged states) ────────────────
+                // Jump the running game to a later stage so the late-triggering political cluster is visible
+                // without playing for hours: Early = a frontier colony; Mid = met rivals + a treaty; Late = an
+                // active war + a rebelling colony. Cumulative + convergent (safe to click through Early→Mid→Late).
+                // Thin wrapper over the CI-tested engine GameStageFactory; then Dump Society to read the result.
+                ImGui.Separator();
+                ImGui.Text("[ Age the galaxy (staged states) ]");
+                ImGui.TextDisabled("Layer the game up so diplomacy / war / rebellion are visible now. Then Dump Society.");
+                if (ImGui.Button("→ Early (frontier colony)"))
+                    AgeGalaxy(GameStage.Early);
+                ImGui.SameLine();
+                if (ImGui.Button("→ Mid (rivals + treaty)"))
+                    AgeGalaxy(GameStage.Mid);
+                ImGui.SameLine();
+                if (ImGui.Button("→ Late (war + rebellion)"))
+                    AgeGalaxy(GameStage.Late);
+                if (_stageStatus.Length > 0) ImGui.TextDisabled(_stageStatus);
 
                 // ── Faction Switcher (SM) ─────────────────────────
                 ImGui.Separator();

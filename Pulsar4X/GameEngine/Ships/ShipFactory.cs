@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Pulsar4X.Orbital;
 using Pulsar4X.Datablobs;
 using Pulsar4X.Fleets;
@@ -249,6 +250,20 @@ namespace Pulsar4X.Ships
                 CommanderFactory.DestroyCommander(commanderEntity);
             }
 
+
+            // M3-2b: release the crew this ship drew back to its source colony's manpower pool (freed to build
+            // again). No-op for start-fleet / DevTools / station ships (CrewSourceColonyId == -1) and if the
+            // source colony no longer exists. (The harsher casualties-shrink-population sting is parked for local
+            // calibration — see docs/MORALE-AND-POPULATION-DESIGN.md.)
+            if (shipToDestroy.TryGetDataBlob<ShipInfoDB>(out var crewInfo)
+                && crewInfo.CrewSourceColonyId >= 0
+                && crewInfo.Design != null
+                && faction.TryGetDataBlob<FactionInfoDB>(out var factionInfoDB))
+            {
+                var sourceColony = factionInfoDB.Colonies.FirstOrDefault(c => c.Id == crewInfo.CrewSourceColonyId);
+                if (sourceColony != null)
+                    Pulsar4X.Colonies.ManpowerTools.ReleaseCrew(sourceColony, crewInfo.Design.CrewReq);
+            }
 
             // Remove the ship entity from the game
             shipToDestroy.Destroy();

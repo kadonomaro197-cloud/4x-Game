@@ -36,11 +36,13 @@ namespace Pulsar4X.Industry
 
         public void ProcessEntity(Entity entity, int deltaSeconds)
         {
-            if(entity.TryGetDataBlob<ColonyInfoDB>(out var colonyInfoDB)
-                && colonyInfoDB.PlanetEntity.TryGetDataBlob<MineralsDB>(out var mineralsDB)
+            // Host-agnostic: a colony mines off its planet, a station off its hosting body. Both reach the
+            // same MineResources path once the resource body is resolved (see MiningHelper.TryGetMiningBody).
+            if(MiningHelper.TryGetMiningBody(entity, out var bodyEntity)
+                && bodyEntity.TryGetDataBlob<MineralsDB>(out var mineralsDB)
                 && entity.TryGetDataBlob<MiningDB>(out var miningDB)
                 && entity.TryGetDataBlob<CargoStorageDB>(out var stockpile))
-                MineResources(entity, colonyInfoDB, mineralsDB, miningDB, stockpile);
+                MineResources(entity, mineralsDB, miningDB, stockpile);
         }
 
         public int ProcessManager(EntityManager manager, int deltaSeconds)
@@ -53,13 +55,13 @@ namespace Pulsar4X.Industry
             return entities.Count;
         }
 
-        private void MineResources(Entity colonyEntity, ColonyInfoDB colonyInfoDB, MineralsDB mineralsDB, MiningDB miningDB, CargoStorageDB stockpile)
+        private void MineResources(Entity miningEntity, MineralsDB mineralsDB, MiningDB miningDB, CargoStorageDB stockpile)
         {
             Dictionary<int, long> actualMiningRates = miningDB.ActualMiningRate;
             Dictionary<int, MineralDeposit> planetMinerals = mineralsDB.Minerals;
 
-            // Mines are buildings too: scale their output by the colony's infrastructure capacity.
-            double infraEfficiency = InfrastructureProcessor.GetEfficiency(colonyEntity);
+            // Mines are buildings too: scale their output by the host's infrastructure capacity (colony or station).
+            double infraEfficiency = InfrastructureProcessor.GetEfficiency(miningEntity);
 
             foreach (var kvp in actualMiningRates)
             {
@@ -131,8 +133,9 @@ namespace Pulsar4X.Industry
 
             miningDB.BaseMiningRate = rates;
 
-            // Calculate the actual mining rates if the planet entity has minerals
-            if (colonyEntity.TryGetDataBlob<ColonyInfoDB>(out var colonyInfoDB) && colonyInfoDB.PlanetEntity.HasDataBlob<MineralsDB>())
+            // Calculate the actual mining rates if the host's resource body (colony planet or station
+            // hosting body) has minerals.
+            if (MiningHelper.TryGetMiningBody(colonyEntity, out var bodyEntity) && bodyEntity.HasDataBlob<MineralsDB>())
             {
                 miningDB.ActualMiningRate = MiningHelper.CalculateActualMiningRates(colonyEntity);
             }

@@ -2,6 +2,8 @@
 
 **What it needs to do:** Let factions have relationships with each other — allies, enemies, and everyone in between. Right now the game treats every non-player faction as hostile by definition, with no state machine, no treaties, and no way for factions to cooperate. This document maps what exists, what's missing, and what to build.
 
+> **Two halves of this doc.** The **Survey + mechanical Design Plan** below (Steps 1–6) is the *substrate* — the data model (`DiplomacyDB`, `RelationshipState`), IFF, first-contact wiring, commerce. It's correct and stays. Layered ON TOP of it is **"EXTERNAL politics — politics with teeth"** (near the end, added 2026-06-30) — the *decision-engine* design that makes diplomacy a thing a player can MAIN or delegate, to the same **Every-Layer-a-Complete-Game** bar as the INTERNAL politics layer (`docs/GOVERNMENT-AND-POLITICS-DESIGN.md`). The substrate is the plumbing; the teeth section is what makes it a game. Read both; build the substrate first.
+
 ---
 
 ## Survey Findings — What Currently Exists
@@ -247,9 +249,232 @@ Steps 4 are the same order classes the player uses. The NPC sets `RequestingFact
 
 ---
 
+## EXTERNAL politics — politics with teeth (the decision-engine layer) — LOCKED 2026-06-30
+
+The substrate above (Steps 1–6) gives factions *relationships*. This section makes those relationships a **game** — a pillar a player can MAIN (a whole playthrough won by diplomacy, never firing a shot) or **delegate and ignore** (a Foreign Minister runs it while you play conqueror). Same bar as the INTERNAL layer in `docs/GOVERNMENT-AND-POLITICS-DESIGN.md`; this is its outward-facing twin. **Two theaters: INTERNAL = hold your own house; EXTERNAL = deal with the neighbours.** They share one engine and constantly hand off to each other.
+
+> **The developer's framing (why this matters):** *"x4 games make these lack. Think of a player that auto-resolves everything — combat and colony building — because those aspects are well done. That's a milestone. Vice versa as well."* The bar is symmetric: diplomacy must be good enough that a player would happily auto-resolve **combat** to focus on **politics**, exactly as today a player auto-resolves politics to focus on combat. Neither side is the throwaway.
+
+### The core decision (the lever)
+**Who do you make a friend, who do you make an enemy, and what does each cost you — abroad AND at home?** Every foreign move (open trade, sign a pact, demand tribute, declare war) has a price paid in two currencies at once: the **foreign** ledger (the other faction's relation score, their allies' reactions) and the **domestic** ledger (your blocs and legitimacy — see INTERNAL). A trade deal that enriches you may enrage your Militarists; a war your Militarists demanded bleeds morale through war-weariness if it drags. **There is no free foreign policy** — that two-front cost IS the depth.
+
+### First contact — the EVENT (the Star Trek / Babylon 5 aspect)
+First contact is a **moment, not a line item.** When your sensors first resolve a contact belonging to an unknown faction (the substrate's Step 2 wiring on `SensorScan` → populate `KnownFactions` + fire the event), the game **stops and tells you** — a real event with a decision attached, not a silent dictionary insert:
+- **Who blinked first** matters — did you detect them (you hold the information edge, ties to DETECTION/EMCON: a dark first-contact is a different opening than being hailed loud) or did they hail you?
+- The **opening stance** is set by *their* archetype + *your* government lean, not hardwired Hostile — a pacifist explorer meeting a fellow trader opens Neutral-curious; a militarist meeting a known raider opens at the edge of war.
+- The first decision: **how do you answer** — hail openly (loud, builds relation, reveals you), observe silently (keep the edge, learn first), or warn off (stake a border). This is the cradle of the whole relationship.
+
+First contact is where the **late-game frontier** lives too: a *super-alien* / precursor power or a **crisis faction** (the parked "late-game crisis" aspect) arrives through exactly this path — a first-contact event with a power you can't simply fight, forcing diplomacy as survival. The event system is the same; the stakes scale.
+
+### The relationship as a TRACK (earned cradle-to-grave)
+The substrate's `RelationScore` (−100…+100) and `DiplomaticStance` ladder (War ▸ Hostile ▸ Neutral ▸ Friendly ▸ Allied) are the meter. The TEETH are that the score is **earned and lost through actions the player takes**, never a number you set:
+- **Earns up:** honoured treaties, delivered trade, joint war against a common enemy, gifts/aid, time at peace.
+- **Earns down:** broken treaties (the big one — betrayal craters the score AND signals every *other* faction you're untrustworthy), border incursions, espionage caught, backing their enemy, sanctions.
+- **It's a memory, not a mood** — a faction remembers what you did. This makes the score a *reputation* (your standing with the whole neighbourhood), which is what lets a "diplomatic playthrough" exist: you build a web of trust that's an asset as real as a fleet, and one betrayal can burn it.
+
+### Treaties — the levers (each a real, costed decision)
+Treaties are the moves. The substrate stores them as flags on `RelationshipState` (`TradeAgreement`, `LogisticsAccess`, `MilitaryAccess`); the teeth give each one a **cost, a benefit, and a domestic consequence** so signing is a decision, not a checkbox:
+
+| Treaty | Foreign effect | Domestic consequence (INTERNAL handoff) |
+|---|---|---|
+| **Non-aggression** | locks stance ≥ Neutral; breaking it is the betrayal penalty | calms war-demands; Militarists grumble |
+| **Trade agreement** | opens inter-faction commerce (Step 6); both profit | pleases Merchants; may anger Labor (foreign competition) |
+| **Logistics/transit access** | their ships use your bases / cross your space | Order/security blocs uneasy (foreigners in your space) |
+| **Defensive pact** | drags you into their wars (and them into yours) | Militarists pleased; Pacifists alarmed; a real entanglement |
+| **Tribute / vassalage** | one pays the other; the strong lever over the weak | pride vs. coffers — the tributary's blocs seethe |
+
+Each treaty is **proposed → considered → accepted/countered/refused** (their archetype + relation score decides), and each one you sign **ripples into your INTERNAL politics** — which is the whole point: foreign policy is a domestic act.
+
+### Casus belli — war needs a REASON (the militarism gate)
+You cannot declare war for free. **A war without justification is a legitimacy/morale hit** (your own people ask "why are we dying for this?"); a war with a **casus belli** (a border dispute, a broken treaty, a "Confront [Rival]" demand your own Militarists raised, defence of an ally) is *accepted* by your population. The cost of war is gated by the **MILITARISM dial** (`GOVERNMENT-AND-POLITICS-DESIGN.md`):
+- **Militarist regime** → casus belli is cheap/easy, war is martial pride (morale **bonus**), conquest is legitimate.
+- **Pacifist regime** → casus belli is expensive, war is war-weariness (morale **penalty** that compounds the longer it runs), an unjustified war can topple you.
+This is the seam where EXTERNAL war meets INTERNAL legitimacy — and it's why the militarism dial earns its place (it's the coefficient on this exact trade).
+
+### The handoff — INTERNAL ⟷ EXTERNAL (the two engines, one loop)
+The layers are not separate games; they feed each other every cycle:
+- INTERNAL → EXTERNAL: a **"Confront [Rival]"** demand from your Militarists *is* a casus belli your population already backs; a "Lower Taxes" demand pushes you toward a **trade agreement** for revenue; an "End the War" demand forces you to **sue for peace**.
+- EXTERNAL → INTERNAL: a **war outcome** feeds **legitimacy** (win → up, lose → down, per the per-system model); a **broken treaty** by a rival can rally your blocs; **war-weariness** is a standing morale input while a war runs; a lucrative **trade deal** grows the Merchant bloc.
+- The **delegate** symmetry holds: just as the Interior Minister auto-runs INTERNAL, the **Foreign Minister** auto-runs EXTERNAL.
+
+### Government RE-SKINS external politics too (consistent with the internal tweak)
+Same modulator principle as the INTERNAL layer's re-skin: government type changes the **vocabulary and process** of foreign policy, not just the numbers. A **democracy** ratifies treaties (a legislative act, slow, public, hard to break); a **dictatorship** issues pacts by fiat (fast, personal, as brittle as the ruler); a **theocracy** frames relations as crusade/communion (the faithful vs. the heathen); a **hive** barely does diplomacy at all (it expands or it doesn't). The same `DiplomacyDB` underneath; the string table + process flags (from `GovernmentDB`) re-skin how it reads and how fast/bindingly treaties move.
+
+### The delegate — the Foreign Minister (the auto-resolve path)
+A commander (talent-gated, M3 people pool), seated as **Foreign Minister**. The player sets a **doctrine/stance** ("seek allies," "isolationist," "expand by tribute," "keep the peace"), and the minister **auto-handles first-contacts and treaty proposals per that stance, at a competence cost** (a skilled minister lands good deals and reads rivals; a poor one signs bad pacts and misses betrayals). So a war-focused player delegates foreign policy and is merely *notified* of the big moments; a diplomacy-focused player handles every contact personally and never delegates combat instead. **That symmetry is the Every-Layer bar, applied outward.**
+
+### The EXTERNAL frontier — espionage, wormhole networks, super-aliens, the crisis (placed, not parked-blindly)
+These are the *deeper* external aspects the developer named. They are **later**, but they belong on this same spine, not as bolt-ons:
+- **Espionage / covert agents** (the B5 "politics with teeth" underside) — **now designed in full: `docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md`.** It's the **hidden-information ENGINE** that makes the locked full-version diplomacy actually a reading game: the per-rival **Information Ledger** (Inferred→Confirmed→Stale facets — fog-of-war for politics), agents as the M3 intelligence arm (Spymaster delegate + operatives), the broad **covert-action catalog** (gather / steal-tech / sabotage / sow-unrest / turn / disinformation / counter-intel), and the **risk/reward detection bet** (caught = relation-hit → betrayal penalty → casus belli for THEM; agents caught/killed/turned). EXTERNAL-reaches-into-their-INTERNAL via *sow unrest*; the mirror (NPCs spy on you) makes counter-intel a standing decision. Rides the detection-quality fix.
+- **Wormhole / jump-gate networks** (the Stargate aspect) — already partly real (jump points + `KnownJumpPoints`); the political layer is **who controls the gate** — a gated chokepoint is a diplomatic asset (grant/deny transit = the logistics-access treaty with a map behind it), and connectivity feeds the per-system legitimacy model (a well-gated province is easier to hold).
+- **Super-aliens / late-game crisis** — arrives via the first-contact event with stakes that **force** cooperation (a power you can't out-build), the pressure-release the developer wants so the late game doesn't go stale. Diplomacy-as-survival. **LOCKED 2026-06-30 (options pass, "A"): build A1 → A2 → toward the A3 vision.** A1 = **an awakening super-power** (a faction tier *above* normal rivals, arriving through the first-contact event; you can't out-build it head-on) — this is the capstone, and the **key reason it matters: a crisis is the only thing that makes a *dominant* player NEED allies**, so it's what makes the entire external-politics cluster pay off when it's hardest to. A2 = a **systemic crisis** (plague / AI-revolt / resource-collapse / hazard-escalation, riding existing systems) added next as a **mid-game** pressure that kills mid-game staleness too. A1-then-A2 together **achieve the A3 vision** (escalating tiers across the whole game) without committing to the full tiered build up front.
+
+### Cradle to grave (external politics)
+> **first contact** (the EVENT — you learn a faction exists) → a **relationship TRACK** built/burned by your **actions** (treaties honoured, betrayals committed) → **treaties** as levers (trade/access/pact/tribute), each with a **domestic** cost → **casus belli** gates war (justified = accepted, unjustified = legitimacy bleed) → **war/peace outcomes** feed back into INTERNAL legitimacy + morale → a relationship can **die** (betrayal, conquest, your faction or theirs destroyed) — and a burned reputation is a real, lasting loss, the grave rung of the diplomatic game.
+
+### Connections (Prime Directive)
+- **Detection/sensors** (built) — first contact rides `SensorScan`; who-sees-whom-first sets the opening edge; EMCON shapes the meeting.
+- **INTERNAL politics / government** (designed) — the constant two-way handoff above; government re-skins + modulates external policy; militarism gates casus belli.
+- **Combat / fleets** (built) — war is the EXTERNAL lever's violent end; defensive pacts pull fleets into others' wars; IFF (Step 4) makes "who can shoot whom" a diplomacy query.
+- **Economy / logistics / commerce** (built/substrate) — trade and access treaties open the inter-faction money + base-sharing paths (Steps 3, 6).
+- **People** (M3 talent) — the Foreign Minister and covert agents are people-resources.
+- **NPC doctrine** (`DoctrineVector`, `NPCDecisionProcessor` skeleton) — archetypes decide how a faction answers contact, proposes/accepts treaties, and chooses war; this layer gives the dormant processor its *foreign* goals (the trap: faction entities live in `GlobalManager`, which `MasterTimePulse` doesn't iterate — the same wiring problem as the internal layer; solve once for both).
+
+### Build order (design now; build after the INTERNAL layer + substrate)
+substrate Steps 1–6 (`DiplomacyDB` + relations + IFF + first-contact wiring + commerce) → first-contact **EVENT** (the moment + opening-stance rules) → treaties as **costed levers** with the INTERNAL handoff → **casus belli** + the militarism gate → war-outcome → legitimacy/morale feedback → the **Foreign Minister** delegate → *(frontier, later)* espionage → gate-control politics → the late-game crisis. **Solve the GlobalManager-not-iterated processor trap once** — it blocks both the internal demand engine and the NPC foreign loop.
+
+### Open (decide when we build)
+- Relation-score dynamics (how fast trust builds vs. how hard betrayal craters it) — calibration/feel.
+- Whether the player can target an **Allied** faction's ships (Aurora says yes; the substrate Step 4 leans yes — confirm).
+- First-contact event cadence + how much info a contact reveals at first sight (ties to the degenerate detection-quality signal — see `GameEngine/Sensors/CLAUDE.md`).
+- How "enough provinces rebel" (INTERNAL central collapse) interacts with a rival **exploiting** your unrest via espionage (the EXTERNAL-into-INTERNAL reach).
+
+---
+
+## Making politics FUN + the CONNECTION layer — LOCKED 2026-06-30
+
+This is the lock that turns the substrate + the teeth into a *game*. It answers the developer's two demands: **(1) make "playing politics" actually fun** (4X has always failed here), and **(2) connect everything** — a diplomatic deal must reach down into the physical systems and make them act. The unifying goal the developer set: **the more that can be exchanged between two factions — and the more the world reacts on its own — the deeper and more fun diplomacy gets.**
+
+### Why 4X politics is boring, and the fix
+4X diplomacy is a **spreadsheet between empires**: you move a slider, click "propose trade," watch a number. It's dead because (a) it's a number you set, not a thing you *do*; (b) the other side is a black box — you never know *why* they act; (c) there's no *face*; (d) it's optional flavor you can ignore and still win; (e) perfect information means no bluff, no reading, no poker. The games that got pieces right — Crusader Kings (politics as *people* with secrets and schemes), the board game Diplomacy (*negotiation + betrayal under hidden information*), Alpha Centauri (*leaders with faces*) — all point the same way: **people, hidden information, and stakes that hit home.**
+
+### The three fun pillars (LOCKED — full version)
+1. **People, not numbers.** Rival factions are led by a **character** (a commander entity with archetype + traits + a readable agenda); your diplomats are characters too (skill + traits that change outcomes and spawn stories). Politics is "Ambassador Chen vs. Chancellor Vex," never "+trade with Faction 3."
+2. **Hidden information is the core (FULL version locked).** You do NOT see a rival's true stance or intent — you see their **behavior** (fleet moves, who they treat with, message tone) and must **infer** it, like reading a sonar contact from its noise. **Intelligence is the currency that buys the truth** — a posted ambassador or a spy converts *hidden → known*. This makes diplomacy a *reading* game (poker/CK3 fun), makes **bluffing** real (mass a fleet under EMCON-dark and strike a "friend"; rattle a sabre you won't swing), and gives **espionage a load-bearing job** instead of being a bolt-on. *(Accepted cost: the full version makes detection-quality and the GlobalManager fix HARD prerequisites — see the blast radius.)*
+3. **Negotiation is a scene, not a menu.** A treaty is tabled → countered → sweetened/threatened, with the diplomat's skill + the relation + their archetype setting how hard they bargain. **Leverage decides terms** (a fleet on their border, a resource they need, dirt from a spy). The developer's framing, locked as the design metaphor: **diplomacy is a closing fight** — you have positions, apply pressure, read the enemy through the fog, and **commit or bluff**. Standoff-vs-brawl ⟷ pressure-vs-concede. The nudge-back-and-forth IS the gamble.
+
+> **Negotiation depth — LOCKED 2026-06-30 (options pass, "C"):** the target is **C2, the leverage-exchange SCENE** (table offer → counter → adjust with leverage), and **C2 is the CONVERGENCE INTERFACE** — diplomat skill + military/economic leverage + espionage intel all flow *into* this one interaction; it's the payoff screen for the whole external cluster. C2 is also the **foundation for C3** (character-driven intrigue): C3's best bit — *leader agendas you can learn and exploit* — folds in **for free via espionage** (the Information Ledger learns a rival's disposition/secrets; C2 spends that intel as leverage), so we grow toward C3 without a separate build. **C1 (bare costed-flags) is rejected as the experience** — it's only the under-the-hood substrate/MVP fallback, never the thing the player feels. Build: C2 scene on top of the costed-lever substrate; deepen toward C3 as espionage + leader-character data arrive.
+
+Three supports: **scarcity** (few good diplomats + limited attention = you can't court everyone, so *who* you invest in is the strategy), **memory/reputation** (the relationship TRACK — betrayals remembered and avenged, the source of retold stories), and **load-bearing stakes** (a diplomatic path to victory AND to ruin — if you can ignore it and still win, it's flavor; we wire it so you can't).
+
+### Diplomats — the people arm of politics (how they tie in)
+Diplomats are the **politics arm of the M3 people-as-a-resource pool** — the same unifying pattern as everywhere else in the game:
+
+| Pillar | The people who run it |
+|---|---|
+| Combat | Admirals (doctrine) |
+| Colonies | Governors |
+| Research | Scientists |
+| **Politics** | **Diplomats** |
+
+- **Roles** (one person grows through them): **Envoy** (sent for a specific negotiation — skill sets the terms), **Ambassador** (POSTED at a foreign court — the continuous *window into their intentions*, the hidden-info reveal), **Spy/Agent** (the espionage arm — steal hidden info, sabotage).
+- **Two tiers** (the Every-Layer symmetry): the **Foreign Minister** is the delegate-autopilot (hand him the portfolio + a stance, ignore politics — the conqueror's path); individual diplomats are the **hands** you task personally (the politics-mainer's path).
+- **Grave rung:** a diplomat can fail, provoke an incident, be expelled, be caught spying (→ the betrayal penalty), be assassinated, or be **turned and defect** (a rival spymaster reaching into your house — the mirror). Losing a master diplomat hurts like losing a veteran admiral.
+
+### The COMMITMENT model — a deal emits real orders (the keystone connection)
+**This is the connective tissue that makes politics load-bearing.** A treaty is not a flag that sits there — it is a **promise with teeth** that reaches into the physical systems:
+- An exchange is either an **instant transfer** (money/tech/cargo *now*) or a **standing commitment** (recurring supply, a posted fleet, a pact that triggers on a condition).
+- A standing commitment **emits real orders** into the existing systems each cycle: "send a defense fleet to planet A" emits a **fleet move order** + a standing ROE; "send supplies" emits a **logistics route**; "pay tribute" emits a recurring **money transfer**.
+- **Promised vs. delivered is tracked.** There is a gap between the ambassador *agreeing* and the admiral *actually sailing the ships* — and that gap is the **betrayal mechanic**. Each cycle the system checks: did you honor it? Honor → reputation climbs; renege → the betrayal penalty craters your standing with the whole neighbourhood. *(This honor-check is one of the autonomous loops blocked by the GlobalManager trap — see prerequisites.)*
+
+### The EXCHANGE CATALOG — everything two factions can trade, and why (LOCKED: build broad)
+The developer's depth principle: **the more that can be exchanged, the deeper diplomacy gets.** Build the catalog *broad*. Every entry names what's exchanged, why each side wants it, instant-vs-standing, and — crucially — **which physical system it routes into** (so the catalog IS the connection map; each row is a wire into a system that already exists or is named in the blast radius).
+
+| Category | Exchange | Why / leverage | Type | Routes into (system) |
+|---|---|---|---|---|
+| **Economic** | Lump-sum payment / gift | buy goodwill, seal a deal | instant | Ledger (cross-faction transfer) |
+| | Subsidy / recurring payment | prop up a client | standing | Ledger |
+| | Tribute / vassal payment | the strong bleed the weak | standing | Ledger |
+| | Loan / reparations | finance or apologise-with-cash | standing | Ledger |
+| | Trade agreement (open commerce + tariff terms) | mutual profit | standing | Logistics + Ledger (commerce) |
+| | One-time cargo (minerals/materials/fuel/ordnance/provisions) | cover a shortage | instant | Logistics (cross-faction cargo order) |
+| | Standing supply line | sustained shortage (the developer's "request supplies") | standing commitment | Logistics (route) |
+| | Resource access rights (mine in my territory) | exploit what they can't reach | standing | Mining/Logistics + access gate |
+| | Sell/gift a ship or whole fleet | offload hulls / arm a proxy | instant | Fleets (transfer ownership) |
+| **Military** | Station a defense fleet at their world | answer a pirate/crisis threat (the developer's example) | standing commitment | Fleets/Orders (move + ROE) |
+| | Hired/mercenary fleet (rent force for money) | force without a pact | standing | Fleets + Ledger |
+| | Loan ground troops / an army | help take or hold a planet | standing | Ground combat + Fleets (transport) |
+| | Coordinate an attack on a common enemy | concentrate force | event/standing | Combat (joint targeting) |
+| | Defensive pact (auto-join if attacked) | deterrence; entanglement | standing trigger | Combat/IFF + Fleets |
+| | Military alliance / joint war declaration | win a war together | standing | Combat/IFF |
+| | Non-aggression pact | buy a quiet border | standing state | Combat/IFF (stance lock) |
+| | Ceasefire / armistice / peace | end a war | state change | Combat/IFF |
+| | Military access / transit rights | move through their space | standing access | Movement + access gate |
+| | Basing rights | forward-deploy at their base | standing access | Logistics/Fleets + gate |
+| | Demilitarized-zone / border agreement | reduce friction | standing state | Combat trigger (no-engage zone) |
+| **Information** | Sensor / contact-data sharing (shared fog) | see what they see | standing | Sensors (share `SensorContacts`) |
+| | Star charts / jump-point maps | reveal the map | instant | `KnownSystems`/`KnownJumpPoints` |
+| | Technology exchange / tech gift or sale | leap a research gap | instant | Research/`FactionTechDB` |
+| | Sell a third party's secret (dirt) | intel as a tradable good | instant | Espionage/Events |
+| | Joint-espionage pact / no-spy pact | gang up, or stand down | standing state | Espionage |
+| **Territorial** | Jump-gate / wormhole transit grant | control the chokepoint (Stargate aspect) | standing access | Movement + gate-control |
+| | Logistics-base access | use each other's depots | standing access | Logistics (the gate, already diplomacy-shaped) |
+| | Colonization rights (you settle X, I won't) | carve up the frontier | standing agreement | Galaxy/colony claims |
+| | Cede / hand over a colony or station | spoils, or a desperate trade | instant | Colony/Station ownership transfer |
+| **Political** | Open relations / recognition | acknowledge they exist / their claim | state | DiplomacyDB |
+| | Embassy exchange (post ambassadors) | the info window (hidden-info reveal) | standing | People (Ambassador) |
+| | Vassalage / protectorate / federation membership | fold a weaker power in | standing state | DiplomacyDB + internal politics |
+| | Ultimatum / demand (give me X or war) | coercion from strength | event | DiplomacyDB → casus belli |
+| | Apology / reparation for an incident | cool a grudge | instant | DiplomacyDB (relation repair) |
+| | Hostage / guarantee exchange | bind a fragile deal | standing | People |
+| **People** | Extradite a defector / hand over a prisoner | a person as a bargaining chip | instant | Commanders/People |
+| | Loan a specialist (scientist/admiral) | rent talent | standing | People (M3 pool) |
+| | Grant asylum to their defector | take their person (an incident) | event | People → relation hit |
+| **Coercive** | Sanctions (cut trade) | pressure without war | standing state | Logistics/Ledger (deny) |
+| | Blockade threat / saber-rattling | leverage via the fog (maybe a bluff) | event | Fleets + Sensors |
+| | Declare casus belli / war | the violent end of the lever | state | Combat/IFF |
+
+*(The list is meant to grow — the lock is "build it broad and data-driven," not "this exact set." New rows are cheap because each is just a transfer or a standing-commitment that emits an order into a system that already exists.)*
+
+### Reactive diplomacy — the world acts on its own (the "Are we good?" engine)
+The developer's depth example: *the AI sees a fleet identified as yours near their space and messages a diplomat asking "Are we good?"* **Lock this as a first-class system, and build it as the same emergent engine as internal demands, pointed outward.**
+
+- INTERNAL (built/designed): a sim **PRESSURE** → a **BLOC** voices a **DEMAND** → you enact/refuse.
+- EXTERNAL reactive (this): a sim **OBSERVATION** (a fleet position, a war, a weakness, a shortage) → a faction generates an **OVERTURE / QUERY / DEMAND** → you **respond** (reassure / dodge / concede / threaten) → the response nudges the relation + reveals or conceals your intent.
+
+Same generate-from-state machinery — **big reuse, not a new engine.** Examples of observation → overture:
+
+| The AI observes (through ITS fog) | It generates |
+|---|---|
+| your fleet near their border | **"Are we good?"** — a low-stakes intent probe (the developer's example) |
+| you at war with their enemy | an alliance offer |
+| you at war with their friend | a warning / demand to stop |
+| you weak (lost a battle, internal unrest) | presses the advantage — a demand, vassalization, or war |
+| you strong / winning | seeks favor — tribute, a protection deal |
+| a pirate/crisis threat on their border | **requests a defense fleet** (→ the commitment that sails your ships) |
+| a resource they lack that you hold | a trade proposal |
+| you broke a treaty (with anyone) | distrust — guard rises, deals dry up |
+| you honored treaties over time | trust — offers deeper deals |
+| their own Militarist bloc rose (their internal politics) | more aggressive overtures |
+
+**Two payoffs:** the galaxy feels *alive* (factions act on what they see, not a hidden timer), and **fog cuts both ways** — they react to what *they* can detect of *you*, so EMCON-dark movement can avoid provoking the "Are we good?" probe entirely (sneak the fleet) or you can move loud to *intimidate*. The probe→answer loop is the nudge-gamble in miniature: a cheap, frequent reading contest that keeps the relationship live between the big treaty moments.
+
+### The blast radius — the Prime-Directive map (what the full version touches)
+Wide but **funneled through three keystones**. The full hidden-information version lives or dies on them, so they are **hard prerequisites**, built in this order:
+
+1. **The GlobalManager-not-iterated trap** (`MasterTimePulse` doesn't run faction-level processors, so `NPCDecisionProcessor` is dormant). This single fix unblocks *all* the autonomous loops at once — the NPC foreign AI, the internal demand engine, the reactive-diplomacy engine, AND the commitment honor-check. **Do it first; it pays for itself many times.**
+2. **Detection-quality is degenerate** (any contact above threshold = full info; see `GameEngine/Sensors/CLAUDE.md`). The light version tolerates this; **the full hidden-information version requires graduated quality** — it's the difference between real poker and a fog toggle. Promoted from "flagged bug" to "required foundation."
+3. **Hostility-from-diplomacy** — today "hostile" = "different faction + detected," and fire control has no IFF. The combat trigger (`CombatEngagement`) and fire control must consult `DiplomacyDB` before engaging, so a Neutral/Allied fleet in range doesn't auto-brawl. Touches every "who is hostile" check.
+
+| System | State | The change |
+|---|---|---|
+| Fleets / Orders | ✅ order system is faction-agnostic (NPC issues the same orders) | small wire — a commitment→order translator |
+| Logistics | ✅ routes exist; gate already faction-aware | medium — cross-faction access + cargo order + payment |
+| Combat / IFF | ⚠️ works, but hostility isn't diplomacy-driven; no IFF | **keystone 3** — hostility from `DiplomacyDB` |
+| Money / Ledger | ⚠️ single-faction | medium — add cross-faction `Transfer` |
+| Sensors / Detection / EMCON | ⚠️ contacts + fog + EMCON work; quality degenerate | **keystone 2** — graduated detection quality |
+| Espionage | ❌ none | new build — agents as M3 people, covert actions, detection risk |
+| People / Commanders | ✅ commander entities + M3 pool | medium — diplomat roles/skill/traits + rival-leader agenda |
+| Government / Internal politics | ✅ built / designed | wire the handoff |
+| NPC AI / Doctrine | ⚠️ `NPCDecisionProcessor` dormant | real build — foreign goals + negotiation behavior (rides keystone 1) |
+| Time loop (`MasterTimePulse`) | ❌ GlobalManager trap | **keystone 1** — run faction-level processors |
+| Events / UI | ❌ stubs | new UI layer (the Visibility Gate — you can't play politics you can't see) |
+
+**Prerequisite chain (the build spine):** fix the time-loop trap → fix detection-quality → wire hostility-from-diplomacy → *then* the substrate (DiplomacyDB/relations/commerce) → the commitment model + exchange catalog → reactive-diplomacy engine → negotiation/diplomats → espionage → the UI. **Nobody builds espionage before the foundation is poured.**
+
+### Locked (developer, 2026-06-30)
+- **FULL hidden-information version** — accepting detection-quality + the GlobalManager fix as hard prerequisites.
+- **The COMMITMENT model** — treaties emit real orders into fleets/logistics/money; promised-vs-delivered tracked (the betrayal hook). The connective tissue.
+- **Build the exchange catalog BROAD and data-driven** — the more that can be exchanged, the deeper; new exchanges are cheap (each is a transfer or a standing-commitment emitting an order).
+- **Reactive diplomacy is first-class** — the "Are we good?" engine, built as the internal emergent-demand engine pointed outward (big reuse); fog cuts both ways.
+- **Diplomacy-as-a-closing-fight** is the design metaphor for negotiation (pressure / leverage / read / commit / bluff).
+- **Diplomats = the politics arm of the M3 people pool** (Envoy / Ambassador / Spy; Foreign Minister = the delegate).
+
+---
+
 ## What NOT to Build Yet
 
-- Complex treaty negotiation UI — the data model (Step 1) is sufficient for now; treaties are just setting boolean flags
-- Espionage / infiltration — entirely new system, flag for later
-- Reputation with minor factions — needs faction archetypes first (Step 5)
-- Population happiness from foreign relations — hooks into colony system, flag for later
+- Complex treaty negotiation UI — the data model (Step 1) is sufficient for now; treaties are just setting boolean flags (the *costed-lever* teaty design above is the eventual shape, but v1 ships the flags).
+- Espionage / infiltration — **placed** on the external spine above (the EXTERNAL frontier), built **after** the relationship/treaty/casus-belli core lands; not a v1 item.
+- Reputation with minor factions — the relationship TRACK above is the model; needs faction archetypes first (Step 5).
+- Population happiness from foreign relations — this is now **designed** as the INTERNAL⟷EXTERNAL handoff (trade pleases Merchants, war-weariness bleeds morale); it hooks into the colony/morale system that's now built, so it lands *with* the teeth layer, not "for later."
