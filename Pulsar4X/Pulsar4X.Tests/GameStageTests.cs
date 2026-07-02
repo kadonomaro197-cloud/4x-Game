@@ -16,9 +16,14 @@ namespace Pulsar4X.Tests
     [TestFixture]
     public class GameStageTests
     {
+        // At least one faction OTHER than the player that owns a colony (a real rival empire).
+        private static int RivalEmpireCount(TestScenario s)
+            => s.Game.Factions.Values.Count(f => f.Id != s.Faction.Id
+                && f.TryGetDataBlob<FactionInfoDB>(out var fi) && fi.Colonies.Count > 0);
+
         [Test]
-        [Description("Early adds a second (frontier) colony — the economy becomes multi-world.")]
-        public void Early_AddsAFrontierColony()
+        [Description("Early makes the player multi-world (several colonies) — the economy is no longer one planet.")]
+        public void Early_MakesThePlayerMultiWorld()
         {
             var s = TestScenario.CreateWithColony();
             int before = s.Faction.GetDataBlob<FactionInfoDB>().Colonies.Count;
@@ -26,13 +31,13 @@ namespace Pulsar4X.Tests
             GameStageFactory.AgeTo(s.Game, s.Faction, GameStage.Early);
 
             Assert.That(s.Faction.GetDataBlob<FactionInfoDB>().Colonies.Count,
-                Is.GreaterThanOrEqualTo(2), "a frontier colony should be added");
+                Is.GreaterThanOrEqualTo(2), "frontier colonies should be added");
             Assert.That(s.Faction.GetDataBlob<FactionInfoDB>().Colonies.Count, Is.GreaterThan(before));
         }
 
         [Test]
-        [Description("Mid establishes met rivals — one friendly (with a treaty), one hostile — so the diplomacy readout has both ends.")]
-        public void Mid_EstablishesRivalsWithVariedRelations()
+        [Description("Mid establishes rival EMPIRES — one friendly (with a treaty), one hostile — each with its OWN colonies.")]
+        public void Mid_EstablishesRivalEmpiresWithColonies()
         {
             var s = TestScenario.CreateWithColony();
             GameStageFactory.AgeTo(s.Game, s.Faction, GameStage.Mid);
@@ -44,18 +49,24 @@ namespace Pulsar4X.Tests
             Assert.That(dip.Relationships.Values.Any(r =>
                     r.TradeAgreement || r.NonAggressionPact || r.LogisticsAccess || r.MilitaryAccess || r.DefensivePact),
                 Is.True, "a standing treaty was signed");
+            // The rivals are real empires, not just contacts — they own colonies of their own.
+            Assert.That(RivalEmpireCount(s), Is.GreaterThanOrEqualTo(1),
+                "at least one rival faction should own colonies");
         }
 
         [Test]
-        [Description("Late brings an active war and a colony in open rebellion — the full drama is visible.")]
-        public void Late_BringsWarAndRebellion()
+        [Description("Late is a mature galaxy: several player colonies, multiple rival empires, an active war, and a colony in open rebellion.")]
+        public void Late_IsAMatureGalaxy()
         {
             var s = TestScenario.CreateWithColony();
             GameStageFactory.AgeTo(s.Game, s.Faction, GameStage.Late);
 
-            Assert.That(s.Faction.GetDataBlob<DiplomacyDB>().IsAtWarWithAnyone(), Is.True, "at war with a rival");
-
             var colonies = s.Faction.GetDataBlob<FactionInfoDB>().Colonies;
+            Assert.That(colonies.Count, Is.GreaterThanOrEqualTo(3), "the player has grown to several colonies");
+            Assert.That(s.Game.Factions.Values.Count(f => f.Id != s.Faction.Id
+                && f.TryGetDataBlob<FactionInfoDB>(out var fi) && fi.Colonies.Count > 0),
+                Is.GreaterThanOrEqualTo(2), "multiple rival empires with colonies");
+            Assert.That(s.Faction.GetDataBlob<DiplomacyDB>().IsAtWarWithAnyone(), Is.True, "at war with a rival");
             Assert.That(colonies.Any(c => c.TryGetDataBlob<RebellionDB>(out var reb) && reb.IsRebelling),
                 Is.True, "a frontier colony should be in rebellion");
         }
