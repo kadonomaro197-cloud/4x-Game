@@ -62,7 +62,8 @@ These are self-maintaining (CI gates them red/green every push). Listed so we kn
 
 #### A1 — Society readout (the instrument panel) — 🟡 PENDING
 - **What:** DevTools → **Dump Society (log)** prints each colony's pop · morale (+factor breakdown) · workforce/talent · tax→income, plus the player government.
-- **Why:** the entire M-ECON layer has no other UI yet — this is the *only* way to see morale/manpower/economy/government in a live game. It's also the gauge for every later M-ECON test.
+- **Why:** the gauge for every later M-ECON test (a greppable log snapshot).
+- **PLAYER-FACING READOUT NOW EXISTS (2026-07-02):** the same numbers now render in a colour-banded **Society tab on ColonyManagementWindow** (toolbar → Colony Management → Society), visible in NORMAL play (not SM). So there are two gauges: the DevTools log dump (diagnostic, greppable) and the in-game Society tab (player-facing, at-a-glance). Verify the tab renders live + the colours read right. The **diplomacy** ledger is still Dump-Society-only (no player tab yet).
 - **Method:** SM mode → Dev Tools → "Dump Society (log)" → close → read `console_output.txt` for `[DevTools] SOCIETY DUMP`.
 - **What right looks like:** on the Earth start, **neutral** numbers — morale ~50 (factors all ~0), tax 0% → 0/mo, workforce ~half of pop, "no government set". Neutral is correct; it proves the gauge reads real state.
 - **Most likely failure:** a `TryGetDataBlob` miss prints fewer fields than expected (a colony built by an older path lacks a blob) — degrades gracefully, not a crash.
