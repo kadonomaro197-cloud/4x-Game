@@ -185,6 +185,7 @@ namespace Pulsar4X.Client
             foreach (var c in colonies)
                 DevLog("  " + SocietyReadout.Colony(c));
             DevLog("  government: " + SocietyReadout.Government(_uiState.PlayerFaction));
+            DevLog("  " + SocietyReadout.Diplomacy(_uiState.PlayerFaction));
 
             _spawnStatus = $"Society: dumped {colonies.Count} colony(ies) to console_output.txt (close the game to read it).";
         }
