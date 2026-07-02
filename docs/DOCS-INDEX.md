@@ -4,7 +4,7 @@
 
 **THE RULE (not optional):** when a commit changes a doc — or changes code that makes a doc newly-true or newly-stale — update that doc's row here **in the same commit**. A row's *status* is the maintained truth (git already knows the last-touch sha; what git can't tell you is whether the content still reflects reality). Keep the "As of" stamp current on any substantive pass.
 
-**As of:** 2026-07-02 · branch `claude/space-economy-morale` · last verified-green HEAD `02baffa` (engine + client CI green).
+**As of:** 2026-07-02 · testing branch `claude/4x-game-testing-strategy-19xw8q` (merged to main once, now carrying the freeze + weapon-range fixes) · **first live-run results captured** in `docs/TESTING-TRACKER.md` (the M-ECON/politics/staged-galaxy layer is confirmed live; two bugs found→fixed on branch, awaiting merge).
 
 **Current focus (what's being worked on):** the space-economy / morale / political-substrate branch, driven "to the PC line" — everything cloud-doable wired + CI-green; what remains is local runtime testing + a few design decisions. Latest landings: the diplomacy reactive-drift + observability readouts + the DevTools government lever, and the **staged game-state generator** (`GameStageFactory` — Age the galaxy to Early/Mid/Late so the late-triggering political cluster is visible without hours of play). See `docs/TESTING-TRACKER.md` for the live PC-test queue and the design/PC-gated list.
 
@@ -67,7 +67,7 @@ Build column (for design docs): ✅ built · 🏗 building · ⚫ design-only (n
 | Doc | Purpose | Status | Notes |
 |-----|---------|--------|-------|
 | `docs/DOCS-INDEX.md` | **This file** — every doc's purpose + status | ♻️ 🟢 | Keep commit-current (the rule at the top) |
-| `docs/TESTING-TRACKER.md` | Standing global test ledger (CI layers + the Layer-3 PC-test queue), 7 fields/row | ♻️ 🟢 | CURRENT to HEAD (updated this session: C1/C3 wired, D3 drift, design/PC-gated list) |
+| `docs/TESTING-TRACKER.md` | Standing global test ledger (CI layers + the Layer-3 PC-test queue), 7 fields/row | ♻️ 🟢 | CURRENT — **now holds the 2026-07-02 LIVE-RUN RESULTS** (T0/A1/D2/C6/#39 + all new levers PASSED live; B5 perf data; two bugs found→fixed on branch). See the "Live-run results" table atop Layer 3 |
 | `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` | Living map of every SYSTEM, its state + gauge + "connected to" | ♻️ 🟡 | **STALE since 2026-06-29** — doesn't yet reflect this session's morale/gov/diplomacy/crew/stations landings. Refresh the changed rows next docs pass. Meanwhile TESTING-TRACKER is authoritative for status |
 | `docs/CLIENT-TEST-CHECKLIST.md` | This branch's client RUNTIME test scratchpad (what only the PC build can check) | ♻️ 🟢 | Refreshed 2026-07-02 with the economy/morale/politics PC-tests (T0, Dump Society, gov dials, morale-moves-pop, crew gate, drift) |
 | `SESSION_STATE.md` | Session-close handoff ("read first after CLAUDE.md") + play-by-play + lessons | 🟢 | Refreshed 2026-07-02 with the current branch state (older sessions collapsed under a details fold) |
