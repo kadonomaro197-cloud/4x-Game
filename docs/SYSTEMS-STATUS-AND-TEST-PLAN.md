@@ -1,5 +1,7 @@
 # Pulsar4X — Systems Status & Test Plan (Living Map)
 
+> ⚠ **STALE since 2026-06-29 (flagged 2026-07-02).** This map doesn't yet reflect the `claude/space-economy-morale` landings — morale/population (M1–M5), government-as-modulator, diplomacy substrate+teeth+drift, crew/manpower enforcement, legitimacy/rebellion, and stations are all built + CI-green but their rows here show earlier states. **For current status use `docs/TESTING-TRACKER.md` (tests) + `docs/DOCS-INDEX.md` (overview) until these rows are refreshed** (doc-debt #1 in DOCS-INDEX).
+
 **What this is:** one place that lists *every* system in the game, what state it's in, whether we can
 *see* it (a gauge/test), and what it's *wired to*. It exists so we stop pivoting from one shiny broken
 thing to the next. Pick the next job off this map, not off whatever we happened to trip over.

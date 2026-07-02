@@ -6,11 +6,31 @@ This document tracks what we know about the codebase state at the close of each 
 
 ## Last Updated
 
+**2026-07-02** — space-economy + political-substrate branch driven "to the PC line" (see the ⏩ Session 2026-07-02 block below; live status is in `docs/DOCS-INDEX.md` + `docs/TESTING-TRACKER.md`).
+
+<details><summary>Earlier: Session 2026-06-26 — detection / EMCON / fog-of-war</summary>
+
 Session 2026-06-26 — **detection / EMCON / fog-of-war BUILT, plus the logging that makes a session reviewable, on `claude/focused-ritchie-debock`.** Since the last live test the whole detection layer landed in CI-gauged slices (all engine work CI-green): the fog-of-war combat seam (you fight what you DETECT), dynamic ship signatures + the **EMCON posture lever** (Full/Cruise/Silent) + the activity processor (a lit drive plume betrays you even on Silent), the **grave rung** (shoot a ship's sensors off → it goes blind), a real **reactor-Load bug fix**, and **first-strike** (detect-first → shoot-first). Then the player-facing layer (client, CI-blind): **EMCON UI**, and **fog of war for units on the map** — detected foreign units show as limited-info **contact blips**, undetected ones are **hidden** (everyone sees the star, not the fleet around it). Plus a **logging overhaul** so a remote review can reconstruct a whole session: processor-liveness `[ENGINE]` counters (is the scan / battle-trigger even firing?), `[DETECT]`/`[EMCON]` snapshots, and the log now **rolls into read-sized `game_logs/` pages**. Still standing from earlier this session: the `SessionLog` flight recorder, the dead-ship click-crash / ghost-icon fixes, and the **combat interrupt** (stops the clock at first contact, otherwise runs at the player's set speed). Open threads: the warp→Sun teleport (pre-existing, auto-detected, not root-fixed) and a flagged **detection-quality units bug** (`SensorTools.cs:173`). **Full consolidation + this test's watch list ↓; the older "WHERE TO RESUME" plan predates this work — treat it as the M1 lever map, not the to-do.**
+
+</details>
 
 ---
 
-## ⏩ Session 2026-06-28 — hazard cradle-to-grave loop BUILT (discover→research→rated armour); render gauge; email scrub (READ FIRST)
+## ⏩ Session 2026-07-02 — space-economy + political-substrate driven "to the PC line" (READ FIRST)
+
+On branch **`claude/space-economy-morale`** (67 commits ahead of main). **All engine work CI-green** (HEAD `b2d2e60` verified: engine suite + client compile both pass); client work is CI-compile-checked but runtime-blind (developer's local build only). This branch built the **empire layer** on top of the existing physics/combat: morale/population, government, diplomacy, stations, internal politics.
+
+**Status now = "to the PC line":** everything cloud-doable is wired + green; what remains is (a) local runtime testing and (b) a few design decisions. The **authoritative live status is now three dashboards** — read them, not this paragraph, for detail: `docs/DOCS-INDEX.md` (every doc's status), `docs/TESTING-TRACKER.md` (the PC-test queue + design/PC-gated list), `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` (systems map — ⚠ itself stale, refresh pending).
+
+**Built + green this branch (headlines):** stations (parallel host, v1); morale/population M1–M5 (morale valve → migration, jobs/housing, manpower + **crew gate** "can't build a ship you can't crew", tax→Ledger, power/food shortage); **government-as-modulator** (dials read live by processors); **diplomacy** (relationship track + IFF + first-contact + commerce + treaties + casus-belli + war→legitimacy + **live reactive drift**); **legitimacy + rebellion first rung**; the GlobalManager keystone (faction processors now fire); enriched **SocietyReadout** + DevTools **government test-lever** + **Dump Society/Diplomacy** for observability.
+
+**Genuinely PC/design-gated (NOT cloud gaps — do not build blind):** secession ownership-transfer (three-place ownership + breakaway viability), NPC treaty-proposal policy + a border model, M2 employment calibration, and the three unbuilt mega-systems (delegation/ministers, espionage D–H, late-game crisis).
+
+**Next action:** T0 boot test (pull, run, send `console_output.txt`), then work the tracker's D-list top-down (morale moves pop → gov dials bite → crew gate → sustenance → legitimacy/rebellion → diplomacy drift).
+
+---
+
+## ⏩ Session 2026-06-28 — hazard cradle-to-grave loop BUILT (discover→research→rated armour); render gauge; email scrub
 
 On branch `claude/4x-space-entities-reality-hl4r19`. All engine work **CI-green**; client work is CI-blind (developer's local build only). **The repo is now safe to make PUBLIC** — git history was rewritten to swap the developer's gmail for a GitHub noreply on both `main` and the feature branch (file content byte-identical; 144 upstream Pulsar4X authors untouched). NOTE: the rewrite changed every commit hash — the developer must **re-clone or `git reset --hard origin/<branch>`**, and set `git config user.email` to the noreply so future commits don't re-add the gmail.
 

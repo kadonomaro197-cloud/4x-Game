@@ -9,6 +9,15 @@
 ## ⚠ FIRST — confirm the build config change didn't break your local build
 - [ ] **The game still builds AND launches locally.** I changed `Pulsar4X.Client.csproj` (fixed two `HintPath`s: `Libs\ImGui.NET.dll` and `Libs\SDL3-CS.dll` — they were pointing at non-existent subfolders, so a clean checkout couldn't build). CI proved it *compiles* on Linux; you confirm it *runs* on Windows. If the build or launch breaks, that's the first thing to fix.
 
+## Space economy / morale / politics (branch `claude/space-economy-morale`, added 2026-07-02)
+All engine-green; these are the *runtime/feel* checks. Full detail + what-right-looks-like is in `docs/TESTING-TRACKER.md` (rows T0, A2, C1, C2, C3, D0–D3).
+- [ ] **T0 — New Game boots + clock runs** (the gate): New Game → press play → advance several months → close; `console_output.txt` clean, no exception. Confirms the new blobs/processors (legitimacy, sustenance, manpower, government, diplomacy) don't crash boot or the tick.
+- [ ] **Dump Society reads sensibly.** DevTools → **Dump Society (log)** → close → read a `game_logs/` page: each colony shows pop / morale (+factors) / legitimacy / workforce+talent / **pwr-short/food-short** / tax; plus the **government** name and the **diplomacy** ledger line.
+- [ ] **Government dials bite (C3).** DevTools → **Government (test regimes)** → *Totalitarian War-State* → Dump Society (name changes) → advance time and watch the effects (tax ceiling higher, research slower under low openness, crew conscripted for a build a consent regime would block). *Liberal Democracy* is the mirror; *Federal Republic* resets.
+- [ ] **Morale moves population (A2).** DevTools → Create Colony on Venus/Mercury (hostile) → Dump Society (lower morale) → advance months → Dump again (population emigrated).
+- [ ] **Crew gate (C1).** Build a large fleet (or drain the pool) → a ship build **blocks** under the default regime; flip to Totalitarian → it **conscripts** (builds understaffed).
+- [ ] **Reactive diplomacy drift (D3).** Spawn a hostile fleet (first contact) → set that faction militarist → advance several months → Dump Society: your view of them cools toward Hostile on its own.
+
 ## Fleet UX
 - [ ] **Left-click a fleet selects it immediately** — no menu, no dead-click, no "click elsewhere first." Click straight from one fleet to another and it just selects.
 - [ ] **Right-click shows the context menu** (the menu moved to right-click only).

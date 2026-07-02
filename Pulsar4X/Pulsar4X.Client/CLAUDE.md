@@ -374,6 +374,14 @@ flagship's icon — until it's broken up. Wiring:
   selects the flagship, and individual ships are managed in the Fleet window; **expand-on-select / expand-on-zoom**
   (Aurora's tactical view) is not built — v1 is always-collapsed-until-broken-up (the developer's literal ask).
 
+### DevTools — society / economy / politics levers (2026-06-29 → 2026-07-02)
+
+The M-ECON + political systems have **no dedicated player UI yet**, so their observability + test levers live in `DevToolsWindow` (all thin callers over CI-tested engine logic — the runtime-blind discipline):
+- **Dump Society (log)** → `SocietyReadout.Colony` per colony + `SocietyReadout.Government` + `SocietyReadout.Diplomacy` (2026-07-02) for the player faction. Prints morale (+factors) / legitimacy (+ rebellion window countdown) / workforce+talent / **power-food shortage** / tax→income, the government name, and the diplomacy ledger (stance/score/treaties). The engine formats it (CI-tested); this is an iterate-and-log wrapper. Reads via the flushed `game_logs/` pages.
+- **Government (test regimes)** (2026-07-02) → three preset buttons (Federal Republic/Mid reset · Totalitarian War-State · Liberal Democracy) set the player faction's `GovernmentDB` dials via public setters, so a play-test can flip a non-Mid regime and watch the #30 wires bite (tax ceiling, crew policy, research speed, morale weight, war pride). Guarded (null faction / missing blob).
+
+These are the levers the TESTING-TRACKER C1/C3/D3 rows drive. **CI compiles them; runtime is the developer's local build.**
+
 ### GroundCombatWindow — MISSING ENTIRELY
 
 No window exists for ground combat. When `GroundCombatDB` (to be created) is present on a colony entity, a new `GroundCombatWindow` should be reachable from `PlanetaryWindow` tabs and from the system map context menu.
