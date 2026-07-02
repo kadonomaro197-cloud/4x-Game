@@ -63,6 +63,9 @@ namespace Pulsar4X.Client
         // ── Government (test regimes) ──────────────────
         private string _governmentStatus = "";
 
+        // ── Age the galaxy (staged states) ─────────────
+        private string _stageStatus = "";
+
         private DevToolsWindow()
         {
             _flags = ImGuiWindowFlags.AlwaysAutoResize;
@@ -201,6 +204,28 @@ namespace Pulsar4X.Client
             }
         }
 
+        // Age the running game to a staged state (thin wrapper over the CI-tested engine GameStageFactory).
+        // Logs the engine's summary of what it layered on so a play-test can see it in the flushed log.
+        void AgeGalaxy(GameStage stage)
+        {
+            try
+            {
+                if (_uiState.Game == null || _uiState.PlayerFaction == null)
+                {
+                    _stageStatus = "Age galaxy: no game / player faction.";
+                    return;
+                }
+                string summary = GameStageFactory.AgeTo(_uiState.Game, _uiState.PlayerFaction, stage);
+                _stageStatus = summary;
+                DevLog(summary);
+                DevLog("  (Dump Society to read the new colonies / diplomacy / rebellion state.)");
+            }
+            catch (Exception ex)
+            {
+                _stageStatus = $"Age galaxy error: {ex.Message}";
+            }
+        }
+
         void DumpSociety()
         {
             var sys = _uiState.SelectedSystem;
@@ -277,6 +302,24 @@ namespace Pulsar4X.Client
                 if (ImGui.Button("Liberal Democracy"))
                     SetGovernment(GovNotch.Low, GovNotch.Low, GovNotch.High, GovNotch.Low);
                 if (_governmentStatus.Length > 0) ImGui.TextDisabled(_governmentStatus);
+
+                // ── Age the galaxy (staged states) ────────────────
+                // Jump the running game to a later stage so the late-triggering political cluster is visible
+                // without playing for hours: Early = a frontier colony; Mid = met rivals + a treaty; Late = an
+                // active war + a rebelling colony. Cumulative + convergent (safe to click through Early→Mid→Late).
+                // Thin wrapper over the CI-tested engine GameStageFactory; then Dump Society to read the result.
+                ImGui.Separator();
+                ImGui.Text("[ Age the galaxy (staged states) ]");
+                ImGui.TextDisabled("Layer the game up so diplomacy / war / rebellion are visible now. Then Dump Society.");
+                if (ImGui.Button("→ Early (frontier colony)"))
+                    AgeGalaxy(GameStage.Early);
+                ImGui.SameLine();
+                if (ImGui.Button("→ Mid (rivals + treaty)"))
+                    AgeGalaxy(GameStage.Mid);
+                ImGui.SameLine();
+                if (ImGui.Button("→ Late (war + rebellion)"))
+                    AgeGalaxy(GameStage.Late);
+                if (_stageStatus.Length > 0) ImGui.TextDisabled(_stageStatus);
 
                 // ── Faction Switcher (SM) ─────────────────────────
                 ImGui.Separator();
