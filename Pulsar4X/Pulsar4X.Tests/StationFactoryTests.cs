@@ -19,6 +19,7 @@ using Pulsar4X.Orbits;
 using Pulsar4X.Movement;
 using Pulsar4X.Orbital;
 using Pulsar4X.Sensors;
+using Pulsar4X.Fleets;
 
 namespace Pulsar4X.Tests
 {
@@ -418,6 +419,10 @@ namespace Pulsar4X.Tests
             var anchor = ship.GetSOIParentEntity();
             Assert.That(anchor, Is.Not.Null, "a ship parked at the star is in the star's SOI");
 
+            // Deploying now COSTS refined materials (Slice F) — load the constructor's hold with the frame material.
+            long steelBefore = SeedFrameMaterialFull(s, ship);
+            Assert.That(steelBefore, Is.GreaterThan(0), "precondition: the constructor carries frame material to spend");
+
             int stationsBefore = factionInfo.Stations.Count;
             var command = DeployStationOrder.CreateCommand(ship);
             Assert.That(command.IsValidCommand(s.Game), Is.True, "a hauler parked at a body is a valid construction vessel");
@@ -431,6 +436,13 @@ namespace Pulsar4X.Tests
             Assert.That(station.HasDataBlob<IndustryAbilityDB>(), Is.True,
                 "the deployed platform should carry a starter constructor (an in-situ build line)");
             Assert.That(ship.IsValid, Is.True, "a reusable constructor vessel survives the deploy and can deploy again");
+
+            // Slice F: the deploy consumed frame materials from the ship's hold…
+            Assert.That(SteelUnits(s, ship), Is.LessThan(steelBefore),
+                "deploying should consume frame materials from the construction ship's hold");
+            // …and the deployed station has a REAL (seeded) cargo hold from its starter warehouse — not the empty-hold trap.
+            Assert.That(station.GetDataBlob<CargoStorageDB>().TypeStores.ContainsKey("general-storage"), Is.True,
+                "the deployed platform carries a warehouse, so its hold is a real seeded store (can receive materials for in-situ builds)");
         }
 
         [Test]
@@ -551,6 +563,99 @@ namespace Pulsar4X.Tests
             bool detected = stationSees.Any(c => c.Item1.Id == bogey.Id && c.Item2.SignalStrength_kW > 0.0);
             Assert.That(detected, Is.True,
                 "the listening-outpost station's own sensor should detect the hostile ship after its scheduled scan (host-agnostic detection)");
+        }
+
+        [Test]
+        [Description("FLEET-POOLED MATERIALS (Slice F): a construction ship whose OWN hold is empty of frame material still deploys a station by drawing the materials from a FLEET-MATE's hold — the fleet-wide cargo pool (send a constructor + freighters together). The freighter's frame material is what gets consumed.")]
+        public void ConstructionShip_PoolsFleetMaterials_OnDeploy()
+        {
+            var s = TestScenario.CreateWithColony();
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+            Entity star = s.StartingSystem.GetAllEntitiesWithDataBlob<StarInfoDB>().First();
+
+            var constructor = BuildCargoShip(s, star, "Constructor");
+            var freighter = BuildCargoShip(s, star, "Freighter");
+
+            // Put the two ships in ONE fleet — the pool the deploy will draw from.
+            var fleet = FleetFactory.Create(s.StartingSystem, s.Faction.Id, "Task Group");
+            fleet.GetDataBlob<FleetDB>().AddChild(constructor);
+            fleet.GetDataBlob<FleetDB>().AddChild(freighter);
+
+            // The CONSTRUCTOR carries none; the FREIGHTER is loaded with the frame material.
+            SeedFrameMaterialEmptyHold(s, constructor);              // gives it a hold (so a cost exists) but 0 material
+            long freighterSteel = SeedFrameMaterialFull(s, freighter);
+            Assert.That(SteelUnits(s, constructor), Is.EqualTo(0), "precondition: the constructor itself carries no frame material");
+            Assert.That(freighterSteel, Is.GreaterThan(0), "precondition: the freighter carries the frame material");
+
+            int before = factionInfo.Stations.Count;
+            var command = DeployStationOrder.CreateCommand(constructor);
+            command.Execute(s.Game.TimePulse.GameGlobalDateTime);
+
+            Assert.That(factionInfo.Stations.Count, Is.EqualTo(before + 1),
+                "the deploy should succeed by drawing materials from the fleet-mate's hold (the fleet-wide cargo pool)");
+            Assert.That(SteelUnits(s, freighter), Is.LessThan(freighterSteel),
+                "the frame materials should have been drawn from the freighter, not conjured");
+        }
+
+        [Test]
+        [Description("FRAME COST — REFUSAL (Slice F): with NO frame material in the construction ship or any fleet, the deploy is REFUSED — no station is created (the cost is a real gate, not a suggestion). A refused deploy consumes nothing.")]
+        public void ConstructionShip_InsufficientMaterials_RefusesDeploy()
+        {
+            var s = TestScenario.CreateWithColony();
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+            Entity star = s.StartingSystem.GetAllEntitiesWithDataBlob<StarInfoDB>().First();
+
+            var constructor = BuildCargoShip(s, star, "Constructor");
+            SeedFrameMaterialEmptyHold(s, constructor); // has a hold (so a cost is computed) but no material, and no fleet
+
+            int before = factionInfo.Stations.Count;
+            var command = DeployStationOrder.CreateCommand(constructor);
+            Assert.That(command.IsValidCommand(s.Game), Is.True, "the ship is a structurally-valid constructor (has a hold, parked at a body)");
+            command.Execute(s.Game.TimePulse.GameGlobalDateTime);
+
+            Assert.That(factionInfo.Stations.Count, Is.EqualTo(before),
+                "with no frame material in the ship or a fleet, the deploy must be REFUSED — no station created");
+        }
+
+        // ---- Slice F helpers ----
+
+        /// <summary>Build a ship carrying a cargo hold, parked at <paramref name="parent"/> (mirrors the A2 selection).</summary>
+        private static Entity BuildCargoShip(TestScenario s, Entity parent, string name)
+        {
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+            foreach (var kv in factionInfo.ShipDesigns)
+            {
+                var candidate = ShipFactory.CreateShip(kv.Value, s.Faction, parent, name);
+                if (candidate.HasDataBlob<CargoStorageDB>()) return candidate;
+                candidate.Destroy();
+            }
+            return ShipFactory.CreateShip(factionInfo.ShipDesigns.Values.First(), s.Faction, parent, name);
+        }
+
+        /// <summary>Guarantee a general-storage hold on the ship (install a cargo module) but leave it EMPTY of frame material.</summary>
+        private static void SeedFrameMaterialEmptyHold(TestScenario s, Entity ship)
+        {
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+            var cargoHold = (ComponentDesign)factionInfo.IndustryDesigns["default-design-cargo-hold-5t"];
+            ship.AddComponent(cargoHold); // seeds a general-storage TypeStore so a cost is computed and material can be added
+        }
+
+        /// <summary>Guarantee a general-storage hold and FILL it with stainless-steel frame material. Returns units stored.</summary>
+        private static long SeedFrameMaterialFull(TestScenario s, Entity ship)
+        {
+            SeedFrameMaterialEmptyHold(s, ship);
+            var steel = s.Faction.GetDataBlob<FactionInfoDB>().Data.CargoGoods.GetAny("stainless-steel");
+            var hold = ship.GetDataBlob<CargoStorageDB>();
+            long freeUnits = hold.GetFreeUnitSpace(steel, true); // fill exactly to capacity so the seed always covers the cost
+            hold.AddCargoByUnit(steel, freeUnits);
+            return hold.GetUnitsStored(steel, false);
+        }
+
+        /// <summary>Units of stainless-steel currently in the entity's hold.</summary>
+        private static long SteelUnits(TestScenario s, Entity ship)
+        {
+            var steel = s.Faction.GetDataBlob<FactionInfoDB>().Data.CargoGoods.GetAny("stainless-steel");
+            return ship.GetDataBlob<CargoStorageDB>().GetUnitsStored(steel, false);
         }
     }
 }
