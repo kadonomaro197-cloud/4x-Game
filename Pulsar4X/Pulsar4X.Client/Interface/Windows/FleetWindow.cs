@@ -1406,9 +1406,18 @@ namespace Pulsar4X.Client
                 DisplayHelpers.DescriptiveTooltip(name, "Fleet", description);
 
             // Context menu (RIGHT-click) + drag/drop — once per fleet, regardless of open/closed.
+            // Sub-breadcrumbs (2026-07-03): a native ImGui mouse-button ASSERT in the fleet list pops a MODAL
+            // dialog that blocks the main thread, so the watchdog reports [HANG] at whatever stage was active —
+            // 'FleetWindow/List'. Stamp the exact list op so the next occurrence names ContextMenu/DragSource/
+            // DropTarget (the drag-drop delivery — AcceptDragDropPayload's internal IsMouseReleased(bad button) —
+            // is the prime suspect). Cheap volatile writes; no behaviour change.
+            SessionLog.CurrentStage = "FleetWindow/List/ContextMenu";
             DisplayContextMenu(fleet);
+            SessionLog.CurrentStage = "FleetWindow/List/DragSource";
             DisplayDropSource(fleet, name);
+            SessionLog.CurrentStage = "FleetWindow/List/DropTarget";
             DisplayDropTarget(fleet);
+            SessionLog.CurrentStage = "FleetWindow/List";
 
             if(isTreeOpen)
             {
