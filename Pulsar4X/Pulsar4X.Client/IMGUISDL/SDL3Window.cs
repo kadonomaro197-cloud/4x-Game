@@ -133,8 +133,10 @@ namespace Pulsar4X.Client
             // Setup screen clip rect
             SetupScreenClipRect();
 
-            // Set the background color
-            SetRenderDrawColor(0, 0, 28, 255);
+            // Set the background (space) color — deep near-black navy. Darkened from (0,0,28) 2026-07-03
+            // (developer's "make the background of space darker"). Also re-applied each frame before RenderClear
+            // (see BeginFrame), since RenderClear uses the CURRENT draw colour and rendering changes it mid-frame.
+            SetRenderDrawColor(0, 0, 12, 255);
         }
 
         public bool IsVisible => (Flags & SDL.WindowFlags.Hidden) == 0;
@@ -222,7 +224,10 @@ namespace Pulsar4X.Client
             ImGuiRenderer.NewFrame();
             ImGui.NewFrame();
 
-            // Clear the buffer
+            // Clear the buffer to the space background colour. Set it explicitly here EVERY frame: RenderClear uses
+            // the current draw colour, and mid-frame rendering leaves it as some other colour, so the one-time init
+            // set alone wouldn't reliably paint the background. Deep near-black navy (darker space, 2026-07-03).
+            SetRenderDrawColor(0, 0, 12, 255);
             SDL.RenderClear(Renderer);
 
             // Reset the clip rect to the screen size

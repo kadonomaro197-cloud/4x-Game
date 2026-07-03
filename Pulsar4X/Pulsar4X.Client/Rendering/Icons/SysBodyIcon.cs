@@ -176,11 +176,15 @@ namespace Pulsar4X.Client
 
                     if (radius > 0)
                     {
-                        // Brighter fill color derived from the body's base color, dimmed for moons
+                        // Fill color derived from the body's base color, dimmed for moons. The additive lift used
+                        // to be +80, which washed the discs out to pale tints; cut to +30 (2026-07-03, developer's
+                        // "deeper shades of what they are") so a planet reads as a richer, deeper version of its hue
+                        // while the disc still reads as filled (not the same as the dim base/outline colour).
+                        const int fillLift = 30;
                         float brighten = _bodyType == BodyType.Moon ? 0.8f : 1.0f;
-                        byte fillR = (byte)Math.Min(255, (int)((shape.Color.R + 80) * brighten));
-                        byte fillG = (byte)Math.Min(255, (int)((shape.Color.G + 80) * brighten));
-                        byte fillB = (byte)Math.Min(255, (int)((shape.Color.B + 80) * brighten));
+                        byte fillR = (byte)Math.Min(255, (int)((shape.Color.R + fillLift) * brighten));
+                        byte fillG = (byte)Math.Min(255, (int)((shape.Color.G + fillLift) * brighten));
+                        byte fillB = (byte)Math.Min(255, (int)((shape.Color.B + fillLift) * brighten));
                         SDL.SetRenderDrawColor(rendererPtr, fillR, fillG, fillB, shape.Color.A);
                         for (int y = -radius; y <= radius; y++)
                         {
