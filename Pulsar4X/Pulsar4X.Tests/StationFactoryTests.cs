@@ -426,7 +426,7 @@ namespace Pulsar4X.Tests
             int stationsBefore = factionInfo.Stations.Count;
             var command = DeployStationOrder.CreateCommand(ship);
             Assert.That(command.IsValidCommand(s.Game), Is.True, "a hauler parked at a body is a valid construction vessel");
-            command.Execute(s.Game.TimePulse.GameGlobalDateTime);
+            SubmitDeployAsPlayer(s, command); // submit through the real order handler, exactly as the map button does
 
             Assert.That(factionInfo.Stations.Count, Is.EqualTo(stationsBefore + 1),
                 "deploying should register exactly one new station on the faction");
@@ -589,7 +589,7 @@ namespace Pulsar4X.Tests
 
             int before = factionInfo.Stations.Count;
             var command = DeployStationOrder.CreateCommand(constructor);
-            command.Execute(s.Game.TimePulse.GameGlobalDateTime);
+            SubmitDeployAsPlayer(s, command); // submit through the real order handler, exactly as the map button does
 
             Assert.That(factionInfo.Stations.Count, Is.EqualTo(before + 1),
                 "the deploy should succeed by drawing materials from the fleet-mate's hold (the fleet-wide cargo pool)");
@@ -611,13 +611,27 @@ namespace Pulsar4X.Tests
             int before = factionInfo.Stations.Count;
             var command = DeployStationOrder.CreateCommand(constructor);
             Assert.That(command.IsValidCommand(s.Game), Is.True, "the ship is a structurally-valid constructor (has a hold, parked at a body)");
-            command.Execute(s.Game.TimePulse.GameGlobalDateTime);
+            SubmitDeployAsPlayer(s, command); // submit through the real order handler, exactly as the map button does
 
             Assert.That(factionInfo.Stations.Count, Is.EqualTo(before),
                 "with no frame material in the ship or a fleet, the deploy must be REFUSED — no station created");
         }
 
         // ---- Slice F helpers ----
+
+        /// <summary>
+        /// Submit a deploy order the way a PLAYER does — through the real order handler
+        /// (`Game.OrderHandler.HandleOrder`), the exact call the "Deploy Station Here" map button makes
+        /// (`Pulsar4X.Client … EntityContextMenu`). This is the STANDING pattern for station-deploy tests: it
+        /// exercises the true player submission path — `IsValidCommand` gating, the combat engagement lock, the
+        /// action-lane queue onto the ship's `OrderableDB`, and the `OrderableProcessor` running the order — rather
+        /// than a direct `command.Execute(...)` that skips all of it. For an `InstantOrder` with a due `ActionOnDate`
+        /// this completes synchronously, so tests can assert immediately after. (Note: `HandleOrder` contains + logs
+        /// any exception the order throws — the same guard the live UI relies on — so a throwing deploy shows up as a
+        /// silently-failed order, i.e. "no station", with the trace on the console, not as a test-thread crash.)
+        /// </summary>
+        private static void SubmitDeployAsPlayer(TestScenario s, DeployStationOrder command)
+            => s.Game.OrderHandler.HandleOrder(command);
 
         /// <summary>Build a ship carrying a cargo hold, parked at <paramref name="parent"/> (mirrors the A2 selection).</summary>
         private static Entity BuildCargoShip(TestScenario s, Entity parent, string name)
