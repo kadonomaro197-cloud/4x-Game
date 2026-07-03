@@ -1406,9 +1406,18 @@ namespace Pulsar4X.Client
                 DisplayHelpers.DescriptiveTooltip(name, "Fleet", description);
 
             // Context menu (RIGHT-click) + drag/drop — once per fleet, regardless of open/closed.
+            // Sub-breadcrumbs (2026-07-03): a native ImGui mouse-button ASSERT in the fleet list pops a MODAL
+            // dialog that blocks the main thread, so the watchdog reports [HANG] at whatever stage was active —
+            // 'FleetWindow/List'. Stamp the exact list op so the next occurrence names ContextMenu/DragSource/
+            // DropTarget (the drag-drop delivery — AcceptDragDropPayload's internal IsMouseReleased(bad button) —
+            // is the prime suspect). Cheap volatile writes; no behaviour change.
+            SessionLog.CurrentStage = "FleetWindow/List/ContextMenu";
             DisplayContextMenu(fleet);
+            SessionLog.CurrentStage = "FleetWindow/List/DragSource";
             DisplayDropSource(fleet, name);
+            SessionLog.CurrentStage = "FleetWindow/List/DropTarget";
             DisplayDropTarget(fleet);
+            SessionLog.CurrentStage = "FleetWindow/List";
 
             if(isTreeOpen)
             {
@@ -1551,7 +1560,14 @@ namespace Pulsar4X.Client
         {
             if(ImGui.BeginDragDropTarget())
             {
-                ImGui.AcceptDragDropPayload("FLEET", ImGuiDragDropFlags.None);
+                // AcceptBeforeDelivery (2026-07-03 fix): ImGui's DEFAULT AcceptDragDropPayload path runs an
+                // internal `IsMouseReleased(g.DragDropMouseButton)`, and when that button field is out of the
+                // valid 0..4 range it fires the native assert `button >= 0 && button < 5` (imgui.cpp) — a modal
+                // dialog that blocks the main thread and reads as a freeze in the fleet list. AcceptBeforeDelivery
+                // SKIPS that internal mouse query; the drop-on-release is still gated by the client's own valid
+                // IsMouseReleased(Left) check just below, so behaviour is unchanged. Diagnosed via two agents +
+                // the FleetWindow/List/DropTarget breadcrumb. The drag-drop code predates this branch.
+                ImGui.AcceptDragDropPayload("FLEET", ImGuiDragDropFlags.AcceptBeforeDelivery);
                 if(ImGui.IsMouseReleased(ImGuiMouseButton.Left) && dragEntity != Entity.InvalidEntity)
                 {
                     if(factionRoot != null && factionRoot.OwningEntity !=null)
@@ -1569,7 +1585,14 @@ namespace Pulsar4X.Client
             // Begin Drag Target
             if (ImGui.BeginDragDropTarget())
             {
-                ImGui.AcceptDragDropPayload("FLEET", ImGuiDragDropFlags.None);
+                // AcceptBeforeDelivery (2026-07-03 fix): ImGui's DEFAULT AcceptDragDropPayload path runs an
+                // internal `IsMouseReleased(g.DragDropMouseButton)`, and when that button field is out of the
+                // valid 0..4 range it fires the native assert `button >= 0 && button < 5` (imgui.cpp) — a modal
+                // dialog that blocks the main thread and reads as a freeze in the fleet list. AcceptBeforeDelivery
+                // SKIPS that internal mouse query; the drop-on-release is still gated by the client's own valid
+                // IsMouseReleased(Left) check just below, so behaviour is unchanged. Diagnosed via two agents +
+                // the FleetWindow/List/DropTarget breadcrumb. The drag-drop code predates this branch.
+                ImGui.AcceptDragDropPayload("FLEET", ImGuiDragDropFlags.AcceptBeforeDelivery);
                 if(ImGui.IsMouseReleased(ImGuiMouseButton.Left) && dragEntity != Entity.InvalidEntity)
                 {
                     var order = FleetOrder.ChangeParent(factionID, dragEntity, fleet);
