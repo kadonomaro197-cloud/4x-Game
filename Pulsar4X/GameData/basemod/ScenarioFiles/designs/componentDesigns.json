@@ -306,6 +306,21 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-outpost-sensor",
+      "Name": "Deep-Space Listening Array",
+      "TemplateId": "passive-sensor",
+      "Properties": [
+        { "Key": "Antenna Size", "Value": 12000 },
+        { "Key": "Ideal Detection Wavelength", "Value": 470 },
+        { "Key": "Detection Bandwidth", "Value": 300 },
+        { "Key": "Resolution", "Value": 200 },
+        { "Key": "Scan Time", "Value": 3600 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-missle-sensors",
       "Name": "Passive Yellow Sensor 1MP",
       "TemplateId": "missle-electronics-suite",

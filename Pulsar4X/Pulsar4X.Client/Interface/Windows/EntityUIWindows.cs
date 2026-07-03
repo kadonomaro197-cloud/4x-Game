@@ -9,6 +9,7 @@ using Pulsar4X.JumpPoints;
 using Pulsar4X.Storage;
 using Pulsar4X.Weapons;
 using Pulsar4X.Movement;
+using Pulsar4X.Stations;
 
 
 namespace Pulsar4X.Client
@@ -145,7 +146,17 @@ namespace Pulsar4X.Client
             {
                 return true;
             }
+            //if entity is a space station (parallel host to a colony) → its management window
+            else if (_entityState.Entity.HasDataBlob<StationInfoDB>() && T == typeof(StationWindow))
+            {
+                return true;
+            }
             else if (_entityState.BodyType != UserOrbitSettings.OrbitBodyType.Ship && T == typeof(PlanetaryWindow))
+            {
+                return true;
+            }
+            //if entity is a body with a surface region layer → the planet (ground) view
+            else if (_entityState.Entity.HasDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>() && T == typeof(PlanetViewWindow))
             {
                 return true;
             }
@@ -269,6 +280,16 @@ namespace Pulsar4X.Client
                 else if (T == typeof(PlanetaryWindow))
                 {
                     var instance = PlanetaryWindow.GetInstance(_entityState, _state);
+                    instance.ToggleActive();
+                }
+                else if (T == typeof(PlanetViewWindow))
+                {
+                    var instance = PlanetViewWindow.GetInstance(_entityState, _state);
+                    instance.ToggleActive();
+                }
+                else if (T == typeof(StationWindow))
+                {
+                    var instance = StationWindow.GetInstance(_entityState, _state);
                     instance.ToggleActive();
                 }
                 else if (T == typeof(OrdersListWindow))

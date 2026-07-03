@@ -63,6 +63,7 @@ namespace Pulsar4X.Stations
             blobs.Add(new LegitimacyDB());          // a station holds its OWN legitimacy (LegitimacyProcessor recomputes it from morale) — the fragile frontier node
             blobs.Add(new RebellionDB());           // and can break away on its own (rebellion state driven off legitimacy collapse)
             blobs.Add(new ColonySustenanceDB());    // power/food shortage gauges (M5b) — inert until demand is calibrated locally
+            blobs.Add(new StationEconomyDB());       // operating-cost side (Slice C) — StationUpkeepProcessor bills the faction monthly
 
             Entity stationEntity = Entity.Create();
             stationEntity.FactionOwnerID = factionEntity.Id;
@@ -79,6 +80,58 @@ namespace Pulsar4X.Stations
             }
 
             return stationEntity;
+        }
+
+        /// <summary>
+        /// The GRAVE RUNG (Slice B, 2026-07-03) — the inverse of <see cref="CreateStation"/>. Called when a station's
+        /// structural integrity is exhausted (<see cref="Pulsar4X.Damage.DamageProcessor"/> → <c>OnStationDamage</c>).
+        /// A station being "cheap to KILL" is the whole point of it being its own host, but a station the player can
+        /// destroy but that leaves dangling references or keeps producing from the grave is a bug, not a decision —
+        /// so this tears the station cleanly out of the game, mirroring <see cref="ShipFactory.DestroyShip"/>:
+        ///  • tears down SPAWNED SUB-ENTITIES (a research lab's ResearcherDB lives on a SEPARATE entity referenced by
+        ///    <see cref="Pulsar4X.Components.ComponentInstance.SpawnedEntityId"/>; RemoveComponentInstance does NOT
+        ///    clean these up, so without this a destroyed research station would ORPHAN its researcher and keep
+        ///    accruing research from a dead station — the cradle-to-grave leak the grave rung closes),
+        ///  • loses the population with the station,
+        ///  • unregisters from the faction (the inverse of the CreateStation registration — otherwise the entity
+        ///    lingers in <see cref="FactionInfoDB.Stations"/> with IsValid == false, a dangling ref that survives
+        ///    save/load), then
+        ///  • removes the entity from the game.
+        /// </summary>
+        public static void DestroyStation(Entity stationToDestroy)
+        {
+            var manager = stationToDestroy.Manager;
+            var game = manager?.Game;
+
+            // Tear down spawned sub-entities (e.g. the research lab's ResearcherDB) so a dead station stops working.
+            if (stationToDestroy.TryGetDataBlob<ComponentInstancesDB>(out var componentsDB))
+            {
+                foreach (var instance in componentsDB.AllComponents.Values)
+                {
+                    if (instance.SpawnedEntityId >= 0
+                        && manager != null
+                        && manager.TryGetEntityById(instance.SpawnedEntityId, out var spawned))
+                    {
+                        manager.TagEntityForRemoval(spawned);
+                    }
+                }
+            }
+
+            // The people are lost with the station.
+            if (stationToDestroy.TryGetDataBlob<StationInfoDB>(out var stationInfo))
+                stationInfo.Population.Clear();
+
+            // Unregister from the faction (inverse of CreateStation). Capture the faction BEFORE RemoveEntity,
+            // which zeroes FactionOwnerID.
+            if (game != null && game.Factions.TryGetValue(stationToDestroy.FactionOwnerID, out var factionEntity))
+            {
+                if (factionEntity.TryGetDataBlob<FactionInfoDB>(out var factionInfo))
+                    factionInfo.Stations.Remove(stationToDestroy);
+                if (factionEntity.TryGetDataBlob<FactionOwnerDB>(out var ownerDB))
+                    ownerDB.RemoveEntity(stationToDestroy);
+            }
+
+            stationToDestroy.Destroy();
         }
     }
 }

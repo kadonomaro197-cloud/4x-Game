@@ -7,14 +7,30 @@ name: CI
 # on every commit — including a system the commit didn't touch.
 #
 # Scope note: the `test` job builds GameEngine + Pulsar4X.OrbitalMath (via the test project)
-# and runs all tests. The `build-client` job COMPILES the SDL2/OpenGL client (it does NOT run
+# and runs the tests. The `build-client` job COMPILES the SDL2/OpenGL client (it does NOT run
 # it — the client is display-coupled and can't run headless, but it CAN compile headless: the
 # SDL/OpenGL natives are runtime-only deps, the references are managed wrappers). This catches
 # the #1 client-blind failure — a compile break that sails through green CI and only surfaces
 # on the developer's local Windows build. Engine/data/logic regressions show up in `test`;
 # client compile breaks now show up in `build-client`.
 #
-# Readouts (added 2026-06-22): beyond pass/fail, the test step writes a TRX result file
+# SHARDING (2026-07-03): the suite is split across 3 PARALLEL `test` jobs by fixture, so the
+# wall-clock is the slowest single shard, not the sum. The dominant cost is that
+# `TestScenario.CreateWithColony()` re-parses ALL the mod JSON on every call, and the three
+# heaviest fixtures call it per-test — StationFactoryTests alone was ~11 min. The suite CANNOT
+# be parallelised in-process: several tests share static counters (SensorScan.ScanCount,
+# CombatEngagement.TickCount, NPCDecisionProcessor.TickCount), so fixtures would race — only
+# process-level sharding (separate jobs) is safe. Shards, balanced by measured fixture time:
+#   • stations — StationFactoryTests (the ~11-min bottleneck, on its own)
+#   • economy  — ScenarioHarnessTests + ProductionBuildTests + MoraleTests
+#   • rest     — EVERYTHING ELSE (the complement filter, so a NEW fixture lands here by default)
+# A red on ANY shard reds the run. Each shard publishes its own per-test report + artifact.
+# NOTE: the deeper win (cache the parsed mod data so CreateWithColony stops re-parsing every
+# call) is deferred — it needs verification that GameFactory.CreateGame treats the ModDataStore
+# read-only, or it would leak state across tests. Rebalance the shard filters if a new fixture
+# becomes a heavy outlier (read the TRX "duration" column).
+#
+# Readouts (added 2026-06-22): beyond pass/fail, each test step writes a TRX result file
 # that is (a) rendered as an inline per-test results table on the run via dorny/test-reporter,
 # and (b) uploaded as a downloadable artifact. So a red run shows exactly WHICH test failed,
 # its message, and per-test durations — not just a count. The reporter is set fail-on-error:
@@ -26,8 +42,18 @@ on:
 
 jobs:
   test:
-    name: Build & test (engine + NUnit suite)
+    name: Build & test (${{ matrix.name }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false     # one shard failing must not cancel the others — we want every shard's result
+      matrix:
+        include:
+          - name: stations
+            filter: "FullyQualifiedName~StationFactoryTests"
+          - name: economy
+            filter: "FullyQualifiedName~ScenarioHarnessTests|FullyQualifiedName~ProductionBuildTests|FullyQualifiedName~MoraleTests"
+          - name: rest
+            filter: "FullyQualifiedName!~StationFactoryTests&FullyQualifiedName!~ScenarioHarnessTests&FullyQualifiedName!~ProductionBuildTests&FullyQualifiedName!~MoraleTests"
     permissions:
       contents: read
       checks: write          # lets the test-reporter publish the per-test results table
@@ -46,16 +72,17 @@ jobs:
         run: >
           dotnet test Pulsar4X/Pulsar4X.Tests/Pulsar4X.Tests.csproj
           --no-restore
+          --filter "${{ matrix.filter }}"
           --logger "console;verbosity=normal"
-          --logger "trx;LogFileName=test-results.trx"
+          --logger "trx;LogFileName=test-results-${{ matrix.name }}.trx"
           --results-directory TestResults
 
       - name: Publish per-test report
         uses: dorny/test-reporter@v1
         if: always()           # run even when tests failed, so the failing test is shown
         with:
-          name: NUnit results
-          path: TestResults/test-results.trx
+          name: NUnit results (${{ matrix.name }})
+          path: TestResults/test-results-${{ matrix.name }}.trx
           reporter: dotnet-trx
           fail-on-error: false # a reporting hiccup must never fail the build
 
@@ -63,7 +90,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results
+          name: test-results-${{ matrix.name }}
           path: TestResults/**
           if-no-files-found: warn
 

@@ -9,7 +9,8 @@ public enum TransactionCategory
 {
     InitialInvestment,
     Research,
-    ColonyTax
+    ColonyTax,
+    StationUpkeep
 }
 
 public class Transaction

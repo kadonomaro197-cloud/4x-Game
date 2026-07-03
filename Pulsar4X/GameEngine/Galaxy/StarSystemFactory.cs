@@ -110,6 +110,12 @@ namespace Pulsar4X.Galaxy
             JPSurveyFactory.GenerateJPSurveyPoints(newSystem);
             JPFactory.GenerateJumpPoints(this, newSystem, stars[0].GetDataBlob<PositionDB>().Root);
 
+            // Lagrange-point anchor markers (L4/L5) for star-planet pairs — deployable station anchors. Defensive/idempotent.
+            LagrangeFactory.GenerateForSystem(newSystem);
+
+            // Surface REGION layer (ground map). A procedurally generated world's geography is UNKNOWN until scanned. Defensive/idempotent.
+            PlanetRegionsFactory.GenerateForSystem(newSystem, surveyed: false);
+
             // Go through all the created entities and set them to be neutral
             foreach(var entity in newSystem.GetAllEntites())
             {
@@ -247,6 +253,12 @@ namespace Pulsar4X.Galaxy
             JPSurveyFactory.GenerateJPSurveyPoints(sol);
             JPFactory.GenerateJumpPoints(this, sol, sun.GetDataBlob<PositionDB>().Root);
 
+            // Lagrange-point anchor markers (L4/L5) for Sol's planets — deployable station anchors. Defensive/idempotent.
+            LagrangeFactory.GenerateForSystem(sol);
+
+            // Surface REGION layer. Sol is authored — its geography is known (surveyed). Defensive/idempotent.
+            PlanetRegionsFactory.GenerateForSystem(sol, surveyed: true);
+
             game.GameMasterFaction.GetDataBlob<FactionInfoDB>().KnownSystems.Add(sol.ID);
             return sol;
         }
@@ -360,6 +372,12 @@ namespace Pulsar4X.Galaxy
 
             JPSurveyFactory.GenerateJPSurveyPoints(sol);
             JPFactory.GenerateJumpPoints(this, sol, sun.GetDataBlob<PositionDB>().Root);
+
+            // Lagrange-point anchor markers (L4/L5) for Sol's planets — deployable station anchors. Defensive/idempotent.
+            LagrangeFactory.GenerateForSystem(sol);
+
+            // Surface REGION layer. Sol is authored — its geography is known (surveyed). Defensive/idempotent.
+            PlanetRegionsFactory.GenerateForSystem(sol, surveyed: true);
 
             // Go through all the created entities and set them to be neutral
             foreach(var entity in sol.GetAllEntites())
@@ -598,6 +616,10 @@ namespace Pulsar4X.Galaxy
             {
                 JPFactory.GenerateJumpPoints(galaxyGen.StarSystemFactory, system, rootStar.GetDataBlob<PositionDB>().Root);
             }
+
+            // Surface REGION layer (ground map). A blueprint-authored system (the player's start, e.g. Sol) has
+            // known geography → surveyed. Defensive/idempotent; the harness + live New Game both ride this path.
+            PlanetRegionsFactory.GenerateForSystem(system, surveyed: true);
 
             // Go through all the created entities and set them to be neutral
             foreach(var entity in system.GetAllEntites())

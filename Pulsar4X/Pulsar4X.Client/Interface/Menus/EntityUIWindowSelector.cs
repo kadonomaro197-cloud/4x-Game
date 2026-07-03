@@ -156,6 +156,7 @@ namespace Pulsar4X.Client
 
                     //Makes all small buttons
                     ActionButton(typeof(PlanetaryWindow));
+                    ActionButton(typeof(PlanetViewWindow));
                     ActionButton(typeof(GotoSystemBlankMenuHelper));
                     ActionButton(typeof(WarpOrderWindow));
                     ActionButton(typeof(ChangeCurrentOrbitWindow));

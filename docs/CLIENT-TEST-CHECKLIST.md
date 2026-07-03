@@ -9,6 +9,22 @@
 ## ⚠ FIRST — confirm the build config change didn't break your local build
 - [ ] **The game still builds AND launches locally.** I changed `Pulsar4X.Client.csproj` (fixed two `HintPath`s: `Libs\ImGui.NET.dll` and `Libs\SDL3-CS.dll` — they were pointing at non-existent subfolders, so a clean checkout couldn't build). CI proved it *compiles* on Linux; you confirm it *runs* on Windows. If the build or launch breaks, that's the first thing to fix.
 
+## ⭐ THIS BRANCH — `claude/4x-space-stations-design-t0a4b0` (space stations + the ground map) — added 2026-07-03
+
+Everything below is engine-CI-green; these are the *runtime/render* checks only your local build can do. Full seven-field detail is in `docs/TESTING-TRACKER.md` (rows **G3**, **G4**). Work top to bottom — the ground-map items are the headline.
+
+### Ground map — the planet surface (slices 3 + 4, the new work)
+- [ ] **G3 — the Planet View window opens and draws.** Start a New Game → click **Earth** on the system map → right-click it → context menu → **"Planet view (regions)"**. A window should open showing **three region columns** (the centre region plus its two ring neighbours), each painted as **stacked terrain bands** (blue ocean, green forest, grey mountains, etc.) with a label per band. Below is a detail strip: area, crossing-time, installations. *What right looks like:* three coloured columns, sensible terrain, no blank window. *If it's wrong:* send me the `game_logs/` page — a draw fault logs `[RenderError] PlanetViewWindow` once instead of blanking the UI.
+- [ ] **G3 — the ring rotates (no seam).** In that window, click **◀ West** / **East ▶** (or click a side column). The centre should swing to the next region, and rotating past the last region should **wrap back to the first** — no dead end, no gap. This is the "Pacific survives" topology: the four regions are a ring, and you're always looking at three of them.
+- [ ] **G3 — Earth is surveyed, a strange world is fog.** Earth's regions should show real terrain (it's a known world). Open the Planet view of a body you have NOT surveyed (a planet in another system, or use SM tools) — its regions should show grey **"? UNSURVEYED"** fog instead of terrain.
+- [ ] **G4 — surveying a fogged world lifts the fog LIVE.** Open the Planet view of an *unsurveyed* world (fog) and leave it open → send a **survey ship** to it and let the geological survey finish → the fog columns should turn into **real terrain the moment the survey completes**, in the open window, with no reopen needed. (The engine reveal is CI-proven; this confirms the window re-reads it live.) *Likely snag:* if the world can't be surveyed at all, it has no `GeoSurveyableDB` — tell me and I'll note the data gap.
+
+### Space stations (slices A / A2 / D / E / F — earlier this branch)
+- [ ] **Deploy a station from a construction ship.** Right-click one of your **cargo/construction ships** → **"Deploy Station Here"**. A station should anchor at the ship's current spot (works even at a star or belt, nowhere you'd colonise), and the ship survives to do it again. Confirm a station entity appears.
+- [ ] **Manage the deployed station.** Right-click the new station → **"Manage Station"**. The window should show its host body / structural-integrity (durability) / population / operating cost, and — if it has a constructor module — let you queue+install modules in place.
+- [ ] **Materials are pooled from the fleet on deploy.** Deploying consumes frame material (stainless-steel) from the *fleet's* cargo holds, not just the one ship. With enough steel in the fleet it deploys; with too little it should **refuse** (no station, a message). (Engine `StationFactoryTests` prove the math; this is the live feel.)
+- [ ] **(Optional) Lagrange markers + listening outpost.** L4/L5 Trojan points should appear as stable named points near a planet's orbit (a deploy can anchor to them). A listening-outpost station flavor runs a sensor scan after deploy.
+
 ## Space economy / morale / politics (branch `claude/space-economy-morale`, added 2026-07-02)
 All engine-green; these are the *runtime/feel* checks. Full detail + what-right-looks-like is in `docs/TESTING-TRACKER.md` (rows T0, A2, C1, C2, C3, D0–D3).
 - [ ] **T0 — New Game boots + clock runs** (the gate): New Game → press play → advance several months → close; `console_output.txt` clean, no exception. Confirms the new blobs/processors (legitimacy, sustenance, manpower, government, diplomacy) don't crash boot or the tick.

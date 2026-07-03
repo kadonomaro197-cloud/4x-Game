@@ -139,6 +139,10 @@ public class SystemWindow : PulsarGuiWindow
                     var command = CreateColonyOrder.CreateCommand(_uiState.Faction, species, entity);
                     _uiState.Game.OrderHandler.HandleOrder(command);
                 }
+                // NOTE: station deployment is deliberately NOT here. A station is deployed from a CONSTRUCTION
+                // SHIP at its current location (right-click the ship → "Deploy Station Here"), so it can anchor to
+                // a star / belt / anomaly you'd never colonize — not just a surveyed body in this list. See
+                // DeployStationOrder + EntityContextMenu.
             }
             else
             {

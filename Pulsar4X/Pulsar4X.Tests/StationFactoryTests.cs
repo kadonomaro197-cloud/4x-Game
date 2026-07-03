@@ -13,6 +13,13 @@ using Pulsar4X.Components;
 using Pulsar4X.Extensions;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Technology;
+using Pulsar4X.Damage;
+using Pulsar4X.Ships;
+using Pulsar4X.Orbits;
+using Pulsar4X.Movement;
+using Pulsar4X.Orbital;
+using Pulsar4X.Sensors;
+using Pulsar4X.Fleets;
 
 namespace Pulsar4X.Tests
 {
@@ -295,6 +302,374 @@ namespace Pulsar4X.Tests
 
             Assert.That(tech.ResearchProgress > progressBefore || tech.Level > levelBefore, Is.True,
                 "the research station should have accrued research points toward the queued tech");
+        }
+
+        // A bombardment hit packet. A station never runs the per-pixel wavelength sim (it has no
+        // EntityDamageProfileDB), so only Energy is read — Position/Signature are set for shape only.
+        private static DamageFragment Hit(double energy) => new DamageFragment
+        {
+            Energy = energy,
+            Position = (0, 0),
+            Signature = DamageSignature.Kinetic,
+        };
+
+        [Test]
+        [Description("GRAVE RUNG (Slice B): a station is no longer a 'ghost target'. A weapon hit routes through DamageProcessor.OnStationDamage, deals real damage (> 0, closing the return-0 hole), and drains the station's structural-integrity pool — but a survivable hit does NOT destroy it.")]
+        public void Station_TakesDamage_DrainsStructuralIntegrity_ButSurvivesASmallHit()
+        {
+            var s = TestScenario.CreateWithColony();
+            var station = StationFactory.CreateStation(s.Faction, s.StartingBody);
+
+            double integrityBefore = station.GetDataBlob<StationInfoDB>().StructuralIntegrity;
+            Assert.That(integrityBefore, Is.EqualTo(StationInfoDB.BaseStructuralIntegrity),
+                "a fresh station starts at full structural integrity");
+
+            // A modest hit: 1e10 J → damageStrength 100, well under the 500 pool.
+            var result = DamageProcessor.OnTakingDamage(station, Hit(1e10));
+
+            Assert.That(result.Damage, Is.GreaterThan(0),
+                "a station must take REAL damage now (the ghost-target return-0 hole is closed)");
+            Assert.That(result.Destroyed, Is.False, "a small hit should not destroy the station");
+            Assert.That(station.GetDataBlob<StationInfoDB>().StructuralIntegrity, Is.LessThan(integrityBefore),
+                "the hit should have drained the structural-integrity pool");
+            Assert.That(station.IsValid, Is.True, "a surviving station is still a live entity");
+        }
+
+        [Test]
+        [Description("GRAVE RUNG (Slice B): a hit that exhausts the structural pool DESTROYS the station and unregisters it cleanly — removed from FactionInfoDB.Stations and un-owned (no dangling reference), the inverse of CreateStation.")]
+        public void Station_DestroyedWhenStructuralIntegrityExhausted_AndUnregisters()
+        {
+            var s = TestScenario.CreateWithColony();
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+            var station = StationFactory.CreateStation(s.Faction, s.StartingBody);
+            Assert.That(factionInfo.Stations, Does.Contain(station), "precondition: registered on the faction");
+
+            // An overwhelming hit: 1e12 J → damageStrength 10,000, far above the 500 pool.
+            var result = DamageProcessor.OnTakingDamage(station, Hit(1e12));
+
+            Assert.That(result.Destroyed, Is.True, "an overwhelming hit should destroy the station");
+            Assert.That(factionInfo.Stations, Does.Not.Contain(station),
+                "a destroyed station must be removed from the faction's Stations registry (no dangling ref)");
+            Assert.That(station.FactionOwnerID, Is.EqualTo(-1),
+                "a destroyed station must be un-owned (FactionOwnerDB.RemoveEntity)");
+        }
+
+        [Test]
+        [Description("GRAVE RUNG (Slice B): destroying a station tears down its SPAWNED sub-entities. A research station's ResearcherDB lives on a separate entity that RemoveComponentInstance never cleans up — so without the teardown a dead station keeps researching. DestroyStation must kill the researcher.")]
+        public void DestroyedStation_TearsDownSpawnedResearcher()
+        {
+            var s = TestScenario.CreateWithColony();
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+            var planet = s.Colony.GetDataBlob<ColonyInfoDB>().PlanetEntity;
+            var labDesign = (ComponentDesign)factionInfo.IndustryDesigns["default-design-research-lab"];
+
+            var station = StationFactory.CreateStation(s.Faction, planet);
+            station.AddComponent(labDesign);
+
+            Entity labEntity = null;
+            foreach (var e in station.Manager.GetAllEntitiesWithDataBlob<ResearcherDB>())
+            {
+                if (e.GetDataBlob<ResearcherDB>().LocationId == station.Id) { labEntity = e; break; }
+            }
+            Assert.That(labEntity, Is.Not.Null, "precondition: the lab spawned a researcher tied to the station");
+            Assert.That(labEntity.IsValid, Is.True);
+
+            StationFactory.DestroyStation(station);
+
+            Assert.That(labEntity.IsValid, Is.False,
+                "the destroyed station's spawned researcher must be torn down (no orphan researching from the grave)");
+        }
+
+        [Test]
+        [Description("GRAVE RUNG (Slice B): orbital bombardment of a MANNED station kills people (the population half of the grave rung), the same 250k/unit casualty math a colony takes.")]
+        public void MannedStation_Bombardment_KillsPopulation()
+        {
+            var s = TestScenario.CreateWithColony();
+            // A large population + a small hit → PARTIAL casualties (250k dead), so the station survives to be measured.
+            var station = StationFactory.CreateStation(s.Faction, s.StartingBody, 30_000_000, s.Species);
+            long before = station.GetDataBlob<StationInfoDB>().Population[s.Species.Id];
+
+            var result = DamageProcessor.OnTakingDamage(station, Hit(1e8)); // damageStrength 1 → 250k casualties
+
+            Assert.That(result.Destroyed, Is.False, "the station should survive a single small hit");
+            long after = station.GetDataBlob<StationInfoDB>().Population[s.Species.Id];
+            Assert.That(after, Is.LessThan(before), "a bombardment hit should kill some of the station's population");
+        }
+
+        [Test]
+        [Description("FRONT DOOR (Slice A2): a station is deployed from a CONSTRUCTION SHIP at wherever it is parked — including in orbit of a STAR, the canonical research-station target you'd never colonize. The station anchors to the ship's SOI body, carries a starter constructor (in-situ builder), and the reusable vessel survives to deploy again.")]
+        public void ConstructionShip_DeploysStation_AtAStar_AndSurvives()
+        {
+            var s = TestScenario.CreateWithColony();
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+
+            // The STAR — a place you'd never colonize; the whole reason a station beats a planet here.
+            Entity star = s.StartingSystem.GetAllEntitiesWithDataBlob<StarInfoDB>().First();
+
+            // A construction/hauler ship (has a cargo hold), created parked at the STAR.
+            Entity ship = null;
+            foreach (var kv in factionInfo.ShipDesigns)
+            {
+                var candidate = ShipFactory.CreateShip(kv.Value, s.Faction, star, "Constructor");
+                if (candidate.HasDataBlob<CargoStorageDB>()) { ship = candidate; break; }
+                candidate.Destroy();
+            }
+            Assert.That(ship, Is.Not.Null, "precondition: a start ship design with a cargo hold to act as the constructor vessel");
+
+            var anchor = ship.GetSOIParentEntity();
+            Assert.That(anchor, Is.Not.Null, "a ship parked at the star is in the star's SOI");
+
+            // Deploying now COSTS refined materials (Slice F) — load the constructor's hold with the frame material.
+            long steelBefore = SeedFrameMaterialFull(s, ship);
+            Assert.That(steelBefore, Is.GreaterThan(0), "precondition: the constructor carries frame material to spend");
+
+            int stationsBefore = factionInfo.Stations.Count;
+            var command = DeployStationOrder.CreateCommand(ship);
+            Assert.That(command.IsValidCommand(s.Game), Is.True, "a hauler parked at a body is a valid construction vessel");
+            SubmitDeployAsPlayer(s, command); // submit through the real order handler, exactly as the map button does
+
+            Assert.That(factionInfo.Stations.Count, Is.EqualTo(stationsBefore + 1),
+                "deploying should register exactly one new station on the faction");
+            var station = factionInfo.Stations[factionInfo.Stations.Count - 1];
+            Assert.That(station.GetDataBlob<StationInfoDB>().HostingBodyEntity.Id, Is.EqualTo(anchor.Id),
+                "the station should anchor to the body the construction ship was parked at (the star / its SOI) — NOT a colonized planet");
+            Assert.That(station.HasDataBlob<IndustryAbilityDB>(), Is.True,
+                "the deployed platform should carry a starter constructor (an in-situ build line)");
+            Assert.That(ship.IsValid, Is.True, "a reusable constructor vessel survives the deploy and can deploy again");
+
+            // Slice F: the deploy consumed frame materials from the ship's hold…
+            Assert.That(SteelUnits(s, ship), Is.LessThan(steelBefore),
+                "deploying should consume frame materials from the construction ship's hold");
+            // …and the deployed station has a REAL (seeded) cargo hold from its starter warehouse — not the empty-hold trap.
+            Assert.That(station.GetDataBlob<CargoStorageDB>().TypeStores.ContainsKey("general-storage"), Is.True,
+                "the deployed platform carries a warehouse, so its hold is a real seeded store (can receive materials for in-situ builds)");
+        }
+
+        [Test]
+        [Description("COST CURVE (Slice C): a station bills a monthly operating cost to its faction that RISES with function-diversity — the 'cheap while focused, expensive as a planet-replacement' gradient. A multi-function station costs more than a focused one, and upkeep drains faction funds over time.")]
+        public void StationUpkeep_DrainsFunds_AndScalesWithFunctionDiversity()
+        {
+            var s = TestScenario.CreateWithColony();
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+            var planet = s.Colony.GetDataBlob<ColonyInfoDB>().PlanetEntity;
+
+            // Several DISTINCT module designs from the colony, to give stations different function-diversity.
+            var colonyComps = s.Colony.GetDataBlob<ComponentInstancesDB>();
+            var industryDesigns = colonyComps.GetDesignsByType(typeof(IndustryAtb));
+            Assert.That(industryDesigns.Count, Is.GreaterThan(1),
+                "precondition: the colony has multiple distinct constructor designs to vary function-diversity");
+
+            // A FOCUSED station carries ONE module; a GENERAL station carries many DISTINCT modules.
+            var focused = StationFactory.CreateStation(s.Faction, planet);
+            focused.AddComponent(industryDesigns[0]);
+
+            var general = StationFactory.CreateStation(s.Faction, planet);
+            foreach (var d in industryDesigns)
+                general.AddComponent(d);
+
+            // The gradient: a do-more station costs more to run than a focused one.
+            decimal focusedCost = StationEconomyDB.OperatingCost(focused);
+            decimal generalCost = StationEconomyDB.OperatingCost(general);
+            Assert.That(generalCost, Is.GreaterThan(focusedCost),
+                "a station with more distinct functions should have a higher operating cost (the cost gradient)");
+
+            // Upkeep actually draws down the faction's funds over time (monthly billing).
+            decimal fundsBefore = factionInfo.Money.GetCurrentFunds();
+            s.AdvanceTime(TimeSpan.FromDays(90)); // ~3 monthly upkeep billings
+            decimal fundsAfter = factionInfo.Money.GetCurrentFunds();
+            Assert.That(fundsAfter, Is.LessThan(fundsBefore),
+                "station upkeep should draw down the faction's funds each month");
+        }
+
+        [Test]
+        [Description("LAGRANGE ANCHORS (Slice D): a star-planet pair gets L4/L5 marker entities at the stable Trojan points — STATIC, named anchor POINTS in space (60° ahead/behind the planet on its orbit) to deploy a station at, not random empty spots. The marker is a fixed point (no OrbitDB, so it never enters the orbit processor — mirrors the JP survey-marker recipe) sitting on the planet's own orbital radius with a finite position. Generation is idempotent.")]
+        public void LagrangeMarkers_AreGeneratedForPlanets_AtTheTrojanPoints()
+        {
+            var s = TestScenario.CreateWithColony();
+
+            // Idempotent — generate if the gen path didn't already (the test shouldn't depend on which path built Sol).
+            Pulsar4X.Galaxy.LagrangeFactory.GenerateForSystem(s.StartingSystem);
+
+            var markers = s.StartingSystem.GetAllEntitiesWithDataBlob<LagrangePointDB>();
+            Assert.That(markers.Count, Is.GreaterThan(0), "Sol's planets should each get L4/L5 Lagrange markers");
+
+            var marker = markers[0];
+            var lp = marker.GetDataBlob<LagrangePointDB>();
+            Assert.That(lp.PointIndex == 4 || lp.PointIndex == 5, Is.True, "v1 generates the stable Trojan points L4/L5");
+
+            // A STATIC point, not an orbiting body: no OrbitDB (so it sidesteps the parallel orbit processor — a
+            // first cut gave it the planet's orbit to co-orbit "for free" and crashed that processor on a worker thread).
+            Assert.That(marker.HasDataBlob<OrbitDB>(), Is.False,
+                "an L4/L5 marker is a fixed point, not an orbiting body (no OrbitDB)");
+
+            // L4/L5 sit on the planet's own orbit, 60° along it — so the marker's distance from the star equals the
+            // planet's distance from the star (a 60° rotation of the star->planet vector preserves its length).
+            var star = lp.Primary;
+            var planetOrbit = lp.Secondary.GetDataBlob<OrbitDB>();
+            Vector3 starPos = star.TryGetDataBlob<PositionDB>(out var sp) ? sp.AbsolutePosition : new Vector3(0, 0, 0);
+            Vector3 planetPos = OrbitMath.GetAbsolutePosition(planetOrbit, planetOrbit.Epoch);
+            Vector3 markerPos = marker.GetDataBlob<PositionDB>().AbsolutePosition;
+
+            double planetRadius = (planetPos - starPos).Length();
+            double markerRadius = (markerPos - starPos).Length();
+            Assert.That(markerRadius, Is.EqualTo(planetRadius).Within(0.001).Percent,
+                "an L4/L5 marker sits on the planet's own orbital radius (60° along that orbit)");
+
+            Assert.That(double.IsFinite(markerPos.X) && double.IsFinite(markerPos.Y) && double.IsFinite(markerPos.Z), Is.True,
+                "the marker has a finite position");
+
+            // Idempotent: a second generation adds nothing.
+            int before = markers.Count;
+            Pulsar4X.Galaxy.LagrangeFactory.GenerateForSystem(s.StartingSystem);
+            Assert.That(s.StartingSystem.GetAllEntitiesWithDataBlob<LagrangePointDB>().Count, Is.EqualTo(before),
+                "Lagrange generation is idempotent (no duplicate markers)");
+        }
+
+        [Test]
+        [Description("LISTENING OUTPOST (Slice E): a station carrying a passive sensor is a detection post — sensors are host-agnostic, so no station-specific code. It ALSO proves the mid-game first-scan kick: installing the sensor on the already-live station SCHEDULES its first SensorScan (the harness never calls PostNewGameInitialization, and SetInstances alone doesn't schedule) — so with only the clock advancing (no hand-fired scan), the station's OWN SensorAbilityDB detects a hostile ship. Reading the station's own contacts, not the faction list, isolates it from the colony's scanner.")]
+        public void ListeningOutpostStation_DetectsHostileShip_ViaInstallScheduledScan()
+        {
+            var s = TestScenario.CreateWithColony();
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+            var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+
+            // A hostile ship parked at the same body, emitting a signature to be seen (a reactor-bearing hull).
+            var shipDesigns = factionInfo.ShipDesigns;
+            var enemyDesign = shipDesigns.TryGetValue("default-ship-design-test-capital", out var capital)
+                ? capital : shipDesigns.Values.First();
+            var bogey = ShipFactory.CreateShip(enemyDesign, s.Faction, s.StartingBody, "Bogey");
+            bogey.FactionOwnerID = enemyFaction.Id;
+            Assert.That(bogey.HasDataBlob<SensorProfileDB>(), Is.True, "precondition: the target ship emits a sensor signature");
+
+            // The listening outpost: a bare station carrying the big deep-space listening array (the outpost sensor).
+            var sensorDesign = (ComponentDesign)factionInfo.IndustryDesigns["default-design-outpost-sensor"];
+            var station = StationFactory.CreateStation(s.Faction, s.StartingBody);
+            Assert.That(station.HasDataBlob<SensorAbilityDB>(), Is.False, "a bare station has no sensor ability yet");
+
+            long scansBefore = SensorScan.ScanCount;
+            station.AddComponent(sensorDesign); // installing the sensor must (a) give a SensorAbilityDB, (b) SCHEDULE the first scan
+
+            Assert.That(station.HasDataBlob<SensorAbilityDB>(), Is.True,
+                "installing a passive sensor gives the station a sensor ability (host-agnostic — no station code)");
+
+            // NO hand-fired scan: only the clock advances. If the install-kick is missing, the station's scan is
+            // never scheduled and it stays deaf forever — so this run guards that fix, not just the detection math.
+            s.AdvanceTime(TimeSpan.FromDays(2));
+
+            Assert.That(SensorScan.ScanCount, Is.GreaterThan(scansBefore),
+                "installing a sensor on a live station must schedule its first scan (the mid-game first-scan kick); no scan fired = the kick is missing");
+
+            var stationSees = station.GetDataBlob<SensorAbilityDB>().CurrentContacts;
+            bool detected = stationSees.Any(c => c.Item1.Id == bogey.Id && c.Item2.SignalStrength_kW > 0.0);
+            Assert.That(detected, Is.True,
+                "the listening-outpost station's own sensor should detect the hostile ship after its scheduled scan (host-agnostic detection)");
+        }
+
+        [Test]
+        [Description("FLEET-POOLED MATERIALS (Slice F): a construction ship whose OWN hold is empty of frame material still deploys a station by drawing the materials from a FLEET-MATE's hold — the fleet-wide cargo pool (send a constructor + freighters together). The freighter's frame material is what gets consumed.")]
+        public void ConstructionShip_PoolsFleetMaterials_OnDeploy()
+        {
+            var s = TestScenario.CreateWithColony();
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+            Entity star = s.StartingSystem.GetAllEntitiesWithDataBlob<StarInfoDB>().First();
+
+            var constructor = BuildCargoShip(s, star, "Constructor");
+            var freighter = BuildCargoShip(s, star, "Freighter");
+
+            // Put the two ships in ONE fleet — the pool the deploy will draw from.
+            var fleet = FleetFactory.Create(s.StartingSystem, s.Faction.Id, "Task Group");
+            fleet.GetDataBlob<FleetDB>().AddChild(constructor);
+            fleet.GetDataBlob<FleetDB>().AddChild(freighter);
+
+            // The CONSTRUCTOR carries none; the FREIGHTER is loaded with the frame material.
+            SeedFrameMaterialEmptyHold(s, constructor);              // gives it a hold (so a cost exists) but 0 material
+            long freighterSteel = SeedFrameMaterialFull(s, freighter);
+            Assert.That(SteelUnits(s, constructor), Is.EqualTo(0), "precondition: the constructor itself carries no frame material");
+            Assert.That(freighterSteel, Is.GreaterThan(0), "precondition: the freighter carries the frame material");
+
+            int before = factionInfo.Stations.Count;
+            var command = DeployStationOrder.CreateCommand(constructor);
+            SubmitDeployAsPlayer(s, command); // submit through the real order handler, exactly as the map button does
+
+            Assert.That(factionInfo.Stations.Count, Is.EqualTo(before + 1),
+                "the deploy should succeed by drawing materials from the fleet-mate's hold (the fleet-wide cargo pool)");
+            Assert.That(SteelUnits(s, freighter), Is.LessThan(freighterSteel),
+                "the frame materials should have been drawn from the freighter, not conjured");
+        }
+
+        [Test]
+        [Description("FRAME COST — REFUSAL (Slice F): with NO frame material in the construction ship or any fleet, the deploy is REFUSED — no station is created (the cost is a real gate, not a suggestion). A refused deploy consumes nothing.")]
+        public void ConstructionShip_InsufficientMaterials_RefusesDeploy()
+        {
+            var s = TestScenario.CreateWithColony();
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+            Entity star = s.StartingSystem.GetAllEntitiesWithDataBlob<StarInfoDB>().First();
+
+            var constructor = BuildCargoShip(s, star, "Constructor");
+            SeedFrameMaterialEmptyHold(s, constructor); // has a hold (so a cost is computed) but no material, and no fleet
+
+            int before = factionInfo.Stations.Count;
+            var command = DeployStationOrder.CreateCommand(constructor);
+            Assert.That(command.IsValidCommand(s.Game), Is.True, "the ship is a structurally-valid constructor (has a hold, parked at a body)");
+            SubmitDeployAsPlayer(s, command); // submit through the real order handler, exactly as the map button does
+
+            Assert.That(factionInfo.Stations.Count, Is.EqualTo(before),
+                "with no frame material in the ship or a fleet, the deploy must be REFUSED — no station created");
+        }
+
+        // ---- Slice F helpers ----
+
+        /// <summary>
+        /// Submit a deploy order the way a PLAYER does — through the real order handler
+        /// (`Game.OrderHandler.HandleOrder`), the exact call the "Deploy Station Here" map button makes
+        /// (`Pulsar4X.Client … EntityContextMenu`). This is the STANDING pattern for station-deploy tests: it
+        /// exercises the true player submission path — `IsValidCommand` gating, the combat engagement lock, the
+        /// action-lane queue onto the ship's `OrderableDB`, and the `OrderableProcessor` running the order — rather
+        /// than a direct `command.Execute(...)` that skips all of it. For an `InstantOrder` with a due `ActionOnDate`
+        /// this completes synchronously, so tests can assert immediately after. (Note: `HandleOrder` contains + logs
+        /// any exception the order throws — the same guard the live UI relies on — so a throwing deploy shows up as a
+        /// silently-failed order, i.e. "no station", with the trace on the console, not as a test-thread crash.)
+        /// </summary>
+        private static void SubmitDeployAsPlayer(TestScenario s, DeployStationOrder command)
+            => s.Game.OrderHandler.HandleOrder(command);
+
+        /// <summary>Build a ship carrying a cargo hold, parked at <paramref name="parent"/> (mirrors the A2 selection).</summary>
+        private static Entity BuildCargoShip(TestScenario s, Entity parent, string name)
+        {
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+            foreach (var kv in factionInfo.ShipDesigns)
+            {
+                var candidate = ShipFactory.CreateShip(kv.Value, s.Faction, parent, name);
+                if (candidate.HasDataBlob<CargoStorageDB>()) return candidate;
+                candidate.Destroy();
+            }
+            return ShipFactory.CreateShip(factionInfo.ShipDesigns.Values.First(), s.Faction, parent, name);
+        }
+
+        /// <summary>Guarantee a general-storage hold on the ship (install a cargo module) but leave it EMPTY of frame material.</summary>
+        private static void SeedFrameMaterialEmptyHold(TestScenario s, Entity ship)
+        {
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+            var cargoHold = (ComponentDesign)factionInfo.IndustryDesigns["default-design-cargo-hold-5t"];
+            ship.AddComponent(cargoHold); // seeds a general-storage TypeStore so a cost is computed and material can be added
+        }
+
+        /// <summary>Guarantee a general-storage hold and FILL it with stainless-steel frame material. Returns units stored.</summary>
+        private static long SeedFrameMaterialFull(TestScenario s, Entity ship)
+        {
+            SeedFrameMaterialEmptyHold(s, ship);
+            var steel = s.Faction.GetDataBlob<FactionInfoDB>().Data.CargoGoods.GetAny("stainless-steel");
+            var hold = ship.GetDataBlob<CargoStorageDB>();
+            long freeUnits = hold.GetFreeUnitSpace(steel, true); // fill exactly to capacity so the seed always covers the cost
+            hold.AddCargoByUnit(steel, freeUnits);
+            return hold.GetUnitsStored(steel, false);
+        }
+
+        /// <summary>Units of stainless-steel currently in the entity's hold.</summary>
+        private static long SteelUnits(TestScenario s, Entity ship)
+        {
+            var steel = s.Faction.GetDataBlob<FactionInfoDB>().Data.CargoGoods.GetAny("stainless-steel");
+            return ship.GetDataBlob<CargoStorageDB>().GetUnitsStored(steel, false);
         }
     }
 }

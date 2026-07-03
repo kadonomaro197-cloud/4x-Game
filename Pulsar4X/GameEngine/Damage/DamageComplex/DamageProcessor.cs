@@ -8,6 +8,7 @@ using Pulsar4X.Galaxy;
 using Pulsar4X.Movement;
 using Pulsar4X.Orbits;
 using Pulsar4X.Ships;
+using Pulsar4X.Stations;
 
 namespace Pulsar4X.Damage
 {
@@ -50,6 +51,12 @@ namespace Pulsar4X.Damage
                 else if (damageableEntity.HasDataBlob<ColonyInfoDB>())
                 {
                     return OnColonyDamage(damageableEntity, damageFragment);
+                }
+                else if (damageableEntity.HasDataBlob<StationInfoDB>())
+                {
+                    // A station is the "cheap to kill" host — it routes to its OWN bombardment path (population +
+                    // module damage like a colony, PLUS a structural-integrity kill trigger a planet doesn't have).
+                    return OnStationDamage(damageableEntity, damageFragment);
                 }
                 //return;
             }
@@ -290,26 +297,11 @@ namespace Pulsar4X.Damage
             // Tuning: adjust the divisor when warhead energy values are finalized.
             int damageStrength = Math.Max(1, (int)(damageFragment.Energy / 1e8));
 
-            // Population casualties: quarter million dead per damage unit.
-            if (colonyInfoDB.Population.Count > 0)
-            {
-                long totalPop = 0;
-                foreach (var pop in colonyInfoDB.Population.Values)
-                    totalPop += pop;
+            // Population casualties: quarter million dead per damage unit (shared with the station bombardment path).
+            ApplyPopulationCasualties(colonyInfoDB.Population, damageStrength);
 
-                if (totalPop > 0)
-                {
-                    long casualties = Math.Min(damageStrength * 250_000L, totalPop);
-                    var speciesIds = new List<int>(colonyInfoDB.Population.Keys);
-                    foreach (int speciesId in speciesIds)
-                    {
-                        long share = (long)((double)colonyInfoDB.Population[speciesId] / totalPop * casualties);
-                        colonyInfoDB.Population[speciesId] = Math.Max(0L, colonyInfoDB.Population[speciesId] - share);
-                    }
-                }
-            }
-
-            // Atmospheric contamination from explosions: raise dust and radiation.
+            // Atmospheric contamination from explosions: raise dust and radiation. (Planet-only — a station has no
+            // atmosphere to poison, which is why OnStationDamage skips this step.)
             if (colonyInfoDB.PlanetEntity.TryGetDataBlob<SystemBodyInfoDB>(out var sysBodyInfo))
             {
                 float contamination = damageStrength * 0.001f;
@@ -317,40 +309,112 @@ namespace Pulsar4X.Damage
                 sysBodyInfo.RadiationLevel   = Math.Min(10.0f, sysBodyInfo.RadiationLevel   + contamination);
             }
 
-            // Installation damage: randomly pick and damage installations until
-            // the damage budget is spent or all installations are destroyed.
-            if (colonyEntity.TryGetDataBlob<ComponentInstancesDB>(out var installsDB))
-            {
-                var targets = new List<ComponentInstance>(installsDB.AllComponents.Values);
-                int budget = damageStrength;
-                int misses = 0;
-
-                while (budget > 0 && targets.Count > 0 && misses < 20)
-                {
-                    int idx = starSystem.RNGNext(targets.Count);
-                    var target = targets[idx];
-
-                    if (target.HealthPercent > 0)
-                    {
-                        float drain = Math.Min(budget * 0.001f, target.HealthPercent);
-                        target.HealthPercent -= drain;
-                        budget -= Math.Max(1, (int)(drain * 1000));
-
-                        if (target.HealthPercent <= 0)
-                        {
-                            installsDB.RemoveComponentInstance(target);
-                            targets.RemoveAt(idx);
-                        }
-                    }
-                    else
-                    {
-                        misses++;
-                    }
-                }
-            }
+            // Installation damage (shared with the station bombardment path).
+            ApplyInstallationDamage(colonyEntity, starSystem, damageStrength);
 
             ReCalcProcessor.ReCalcAbilities(colonyEntity);
             return new DamageResult { Damage = damageStrength, Destroyed = false };
+        }
+
+        /// <summary>
+        /// Orbital bombardment of a STATION — the parallel to <see cref="OnColonyDamage"/>. Reached when a weapon
+        /// strikes a station entity (<see cref="Pulsar4X.Stations.StationInfoDB"/>) directly. It shares the colony's
+        /// population-casualty and module-damage passes, but differs in the two ways that make a station the cheap,
+        /// fragile alternative to a planet (docs/SPACE-STATIONS-DESIGN.md):
+        ///  • NO atmospheric contamination (a sealed habitat has no atmosphere to poison), and
+        ///  • a STRUCTURAL-INTEGRITY kill trigger — unlike a colony (which this path never destroys), a station is
+        ///    DESTROYED once its <see cref="StationInfoDB.StructuralIntegrity"/> pool is exhausted. That finite pool
+        ///    vs. the planet's effectively-infinite one IS the durability asymmetry ("a fraction of the effort to
+        ///    destroy that a planet does"). The pool is a PLACEHOLDER ratio (Slice B) — tune when the numbers lock.
+        /// </summary>
+        private static DamageResult OnStationDamage(Entity stationEntity, DamageFragment damageFragment)
+        {
+            var stationInfo = stationEntity.GetDataBlob<StationInfoDB>();
+            var starSystem = stationEntity.Manager as StarSystem;
+            if (starSystem == null)
+                return new DamageResult { Damage = 0, Destroyed = false };
+
+            // Same energy → damage-strength scale the colony bombardment path uses (100 MJ per unit).
+            int damageStrength = Math.Max(1, (int)(damageFragment.Energy / 1e8));
+
+            ApplyPopulationCasualties(stationInfo.Population, damageStrength);
+            ApplyInstallationDamage(stationEntity, starSystem, damageStrength);
+
+            // The "cheap to kill" structural pool: a station dies when its integrity is spent (a planet has no such
+            // trigger). This is what makes destroying a station an attacker's quick choice rather than a campaign.
+            stationInfo.StructuralIntegrity -= damageStrength;
+            if (stationInfo.StructuralIntegrity <= 0)
+            {
+                StationFactory.DestroyStation(stationEntity);
+                return new DamageResult { Damage = damageStrength, Destroyed = true };
+            }
+
+            ReCalcProcessor.ReCalcAbilities(stationEntity);
+            return new DamageResult { Damage = damageStrength, Destroyed = false };
+        }
+
+        /// <summary>
+        /// Population casualties from a bombardment hit — a quarter million dead per damage unit, capped at the total
+        /// population and spread proportionally across the species present. Shared by the colony and station paths so
+        /// the two hosts never drift apart in how a strike kills people.
+        /// </summary>
+        private static void ApplyPopulationCasualties(Dictionary<int, long> population, int damageStrength)
+        {
+            if (population.Count == 0)
+                return;
+
+            long totalPop = 0;
+            foreach (var pop in population.Values)
+                totalPop += pop;
+
+            if (totalPop <= 0)
+                return;
+
+            long casualties = Math.Min(damageStrength * 250_000L, totalPop);
+            var speciesIds = new List<int>(population.Keys);
+            foreach (int speciesId in speciesIds)
+            {
+                long share = (long)((double)population[speciesId] / totalPop * casualties);
+                population[speciesId] = Math.Max(0L, population[speciesId] - share);
+            }
+        }
+
+        /// <summary>
+        /// Installation / module damage from a bombardment hit — randomly pick and drain installed components until
+        /// the damage budget is spent or all are destroyed (20 consecutive misses breaks out). Destroyed components
+        /// are removed. Shared by the colony and station paths.
+        /// </summary>
+        private static void ApplyInstallationDamage(Entity entity, StarSystem starSystem, int damageStrength)
+        {
+            if (!entity.TryGetDataBlob<ComponentInstancesDB>(out var installsDB))
+                return;
+
+            var targets = new List<ComponentInstance>(installsDB.AllComponents.Values);
+            int budget = damageStrength;
+            int misses = 0;
+
+            while (budget > 0 && targets.Count > 0 && misses < 20)
+            {
+                int idx = starSystem.RNGNext(targets.Count);
+                var target = targets[idx];
+
+                if (target.HealthPercent > 0)
+                {
+                    float drain = Math.Min(budget * 0.001f, target.HealthPercent);
+                    target.HealthPercent -= drain;
+                    budget -= Math.Max(1, (int)(drain * 1000));
+
+                    if (target.HealthPercent <= 0)
+                    {
+                        installsDB.RemoveComponentInstance(target);
+                        targets.RemoveAt(idx);
+                    }
+                }
+                else
+                {
+                    misses++;
+                }
+            }
         }
 
         /// <summary>
