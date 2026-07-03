@@ -97,6 +97,30 @@ namespace Pulsar4X.Galaxy
 
         public override object Clone() => new PlanetRegionsDB(this);
 
+        /// <summary>
+        /// Reveal every region — its geography is now KNOWN. Called when a geological survey of this body
+        /// completes (the exploration→map link, slice 4). Returns true if anything actually changed, so a caller
+        /// can skip a no-op (a re-survey of an already-known world).
+        ///
+        /// v1 reveal is WORLD-LEVEL and faction-agnostic: a single <see cref="Region.Surveyed"/> bool per region,
+        /// matching the design's "scanning a world reveals its geography." Per-faction region fog (so an NPC's
+        /// survey doesn't reveal the world to YOU) is a documented refinement — the same pattern the mineral
+        /// partial-access mask already uses.
+        /// </summary>
+        public bool RevealAll()
+        {
+            bool changed = false;
+            foreach (var region in Regions)
+            {
+                if (!region.Surveyed)
+                {
+                    region.Surveyed = true;
+                    changed = true;
+                }
+            }
+            return changed;
+        }
+
         public new static List<Type> GetDependencies() => new List<Type>() { typeof(NameDB) };
     }
 }

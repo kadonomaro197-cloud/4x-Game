@@ -1,10 +1,12 @@
 using System.Linq;
+using System.Collections.Generic;
 using NUnit.Framework;
 using Pulsar4X.Engine;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Factions;
 using Pulsar4X.Colonies;
 using Pulsar4X.Datablobs;
+using Pulsar4X.GeoSurveys;
 
 namespace Pulsar4X.Tests
 {
@@ -139,6 +141,59 @@ namespace Pulsar4X.Tests
             s.Game.OrderHandler.HandleOrder(cmd); // the handler validates → no-op
             Assert.That(s.Colony.GetDataBlob<ComponentInstancesDB>().AllComponents.Count, Is.EqualTo(before),
                 "nothing is built for an invalid region");
+        }
+
+        [Test]
+        [Description("SURVEY REVEAL (slice 4) — the reveal primitive: RevealAll flips every fogged region to KNOWN and reports it changed; a second call is a no-op (an already-known world isn't re-revealed). This is the exploration→map link's inner mechanism.")]
+        public void SurveyReveal_RevealAll_FlipsFogToKnown_Idempotently()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var regionsDB = s.StartingBody.GetDataBlob<PlanetRegionsDB>();
+
+            // Put the world into fog, as a procedurally-generated (unscanned) world starts.
+            foreach (var r in regionsDB.Regions) r.Surveyed = false;   // internal set, reachable via InternalsVisibleTo
+
+            Assert.That(regionsDB.RevealAll(), Is.True, "revealing a fogged world reports a change");
+            Assert.That(regionsDB.Regions.All(r => r.Surveyed), Is.True, "every region is now known");
+            Assert.That(regionsDB.RevealAll(), Is.False, "re-revealing an already-known world is a no-op (idempotent)");
+        }
+
+        [Test]
+        [Description("SURVEY REVEAL (slice 4) — the CONNECTION: completing a geological survey of a fogged world reveals its regions. Driven through the REAL GeoSurveyProcessor completion path (a player fleet with enough survey speed), so the exploration system → ground map wire is exercised, not just the primitive.")]
+        public void SurveyReveal_CompletingGeoSurvey_RevealsRegions()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var planet = s.StartingBody;
+            var regionsDB = planet.GetDataBlob<PlanetRegionsDB>();
+
+            // Precondition: put the world back into fog (as an unscanned procedural world would be).
+            foreach (var r in regionsDB.Regions) r.Surveyed = false;
+            Assert.That(regionsDB.Regions.All(r => !r.Surveyed), Is.True, "precondition: the world starts unsurveyed (fog)");
+
+            // Make the body geo-surveyable with a low bar, cleared of any prior progress.
+            if (!planet.TryGetDataBlob<GeoSurveyableDB>(out var geo))
+            {
+                geo = new GeoSurveyableDB { PointsRequired = 10 };
+                planet.SetDataBlob(geo);
+            }
+            else
+            {
+                geo.PointsRequired = 10;
+                geo.GeoSurveyStatus.Clear();
+            }
+
+            // A player-owned survey fleet with more than enough survey speed (100 ≥ 10 → completes in one pass).
+            var fleet = Entity.Create(s.Faction.Id);
+            s.StartingSystem.AddEntity(fleet, new List<BaseDataBlob> { new GeoSurveyAbilityDB { Speed = 100 } });
+
+            var proc = new GeoSurveyProcessor(fleet, planet);
+            proc.ProcessEntity(planet, s.Game.TimePulse.GameGlobalDateTime);
+
+            Assert.That(regionsDB.Regions.All(r => r.Surveyed), Is.True,
+                "completing the geo survey should reveal every region — fog → known (the exploration→map link)");
+            Log($"survey reveal: {regionsDB.Regions.Count(r => r.Surveyed)}/{regionsDB.Regions.Count} regions now known after geo survey");
         }
     }
 }

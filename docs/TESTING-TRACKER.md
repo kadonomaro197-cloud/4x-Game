@@ -316,6 +316,13 @@ The engine layers (slice 1 `PlanetRegionsDB` + generation, slice 2 `PlaceInstall
 - **Most likely failure:** a draw fault (the try/catch logs `[RenderError] PlanetViewWindow threw…` once and shows an error line instead of blanking the UI) or the menu button not appearing (gate on `PlanetRegionsDB` — confirm the body actually carries it).
 - **Mitigation in place:** thin defensive draw — all reads off the CI-tested blob, whole body wrapped so a throw can't skip `Window.End()`, no hard-indexing; gated on `PlanetRegionsDB` so it only offers where data exists. **Unblocks:** slice 4 (survey-reveal flips the fog) and the eventual ground-combat window.
 
+#### G4 — Surveying a fogged world flips its planet-view fog to terrain (LIVE) — 🟡 PENDING (engine half CI-GREEN)
+- **What:** the *engine* reveal is CI-gauged (`PlanetRegionsTests.SurveyReveal_*`, incl. the real `GeoSurveyProcessor` path). The live check is the **loop end-to-end**: open the planet view of an *unsurveyed* world (fog), run a geological survey of it to completion, and watch its regions flip from fog to real terrain **in the open window** (the window reads `Region.Surveyed` live each frame — no client change was needed).
+- **Why:** confirms the exploration→map wire fires in the full sim (the survey processor actually completes on a real fleet+target and the window re-reads the flag), not just in the unit test.
+- **Method:** `launch.bat` → find/generate an unsurveyed world (a body in another system, or SM-clear Earth's survey) → open its Planet view (should be fog) → send a survey ship → advance to survey completion → the fog should become terrain live.
+- **What right looks like:** the region columns change from grey "? UNSURVEYED" to coloured terrain bands the frame after the survey completes; no `[RenderError]`.
+- **Most likely failure:** the world has no `GeoSurveyableDB` (can't be surveyed — a data gap, note it) or the window doesn't re-read (it does — reads the flag every frame). **Mitigation:** engine reveal is CI-proven; the window's live read is the same pattern the rest of the UI uses. **Unblocks:** confidence in the exploration loop; pairs with G3.
+
 ---
 
 ## The process (how this doc stays true)

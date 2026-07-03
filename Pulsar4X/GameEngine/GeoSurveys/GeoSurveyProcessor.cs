@@ -44,6 +44,16 @@ public class GeoSurveyProcessor : IInstanceProcessor
                     mineralsDB.GrantFactionPartialAccess(factionMask);
                 }
 
+                // Reveal the planet's surface regions — a completed geo survey now KNOWS the geography
+                // (the exploration→ground-map link, slice 4). A procedurally-generated world's regions start
+                // as fog (surveyed:false at gen); surveying it flips them to known so the planet-view map and
+                // any ground decisions can read real terrain. Defensive: bodies without a region layer (asteroids,
+                // comets) simply skip. See docs/GROUND-COMBAT-MAP-DESIGN.md slice 4.
+                if (Target.TryGetDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>(out var regionsDB))
+                {
+                    regionsDB.RevealAll();
+                }
+
                 EventManager.Instance.Publish(
                     Event.Create(
                         EventType.GeoSurveyCompleted,
