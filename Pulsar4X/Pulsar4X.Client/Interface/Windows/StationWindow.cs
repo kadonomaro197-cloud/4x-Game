@@ -101,6 +101,11 @@ namespace Pulsar4X.Client
             long pop = 0;
             foreach (var kv in stationInfo.Population) pop += kv.Value;
             ImGui.TextUnformatted("Population: " + pop.ToString("#,##0"));
+
+            // Operating cost (Slice C) — a live preview of the monthly upkeep drain, which climbs with the station's
+            // size + function-diversity ("cheap while focused, expensive as a planet-replacement").
+            decimal upkeep = StationEconomyDB.OperatingCost(entity);
+            ImGui.TextUnformatted("Operating cost: " + upkeep.ToString("#,##0") + " / month");
         }
     }
 }

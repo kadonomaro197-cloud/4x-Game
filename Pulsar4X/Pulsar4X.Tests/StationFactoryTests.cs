@@ -409,5 +409,41 @@ namespace Pulsar4X.Tests
             Assert.That(station.HasDataBlob<IndustryAbilityDB>(), Is.True,
                 "the deployed bare platform should carry a starter constructor (an in-situ build line)");
         }
+
+        [Test]
+        [Description("COST CURVE (Slice C): a station bills a monthly operating cost to its faction that RISES with function-diversity — the 'cheap while focused, expensive as a planet-replacement' gradient. A multi-function station costs more than a focused one, and upkeep drains faction funds over time.")]
+        public void StationUpkeep_DrainsFunds_AndScalesWithFunctionDiversity()
+        {
+            var s = TestScenario.CreateWithColony();
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+            var planet = s.Colony.GetDataBlob<ColonyInfoDB>().PlanetEntity;
+
+            // Several DISTINCT module designs from the colony, to give stations different function-diversity.
+            var colonyComps = s.Colony.GetDataBlob<ComponentInstancesDB>();
+            var industryDesigns = colonyComps.GetDesignsByType(typeof(IndustryAtb));
+            Assert.That(industryDesigns.Count, Is.GreaterThan(1),
+                "precondition: the colony has multiple distinct constructor designs to vary function-diversity");
+
+            // A FOCUSED station carries ONE module; a GENERAL station carries many DISTINCT modules.
+            var focused = StationFactory.CreateStation(s.Faction, planet);
+            focused.AddComponent(industryDesigns[0]);
+
+            var general = StationFactory.CreateStation(s.Faction, planet);
+            foreach (var d in industryDesigns)
+                general.AddComponent(d);
+
+            // The gradient: a do-more station costs more to run than a focused one.
+            decimal focusedCost = StationEconomyDB.OperatingCost(focused);
+            decimal generalCost = StationEconomyDB.OperatingCost(general);
+            Assert.That(generalCost, Is.GreaterThan(focusedCost),
+                "a station with more distinct functions should have a higher operating cost (the cost gradient)");
+
+            // Upkeep actually draws down the faction's funds over time (monthly billing).
+            decimal fundsBefore = factionInfo.Money.GetCurrentFunds();
+            s.AdvanceTime(TimeSpan.FromDays(90)); // ~3 monthly upkeep billings
+            decimal fundsAfter = factionInfo.Money.GetCurrentFunds();
+            Assert.That(fundsAfter, Is.LessThan(fundsBefore),
+                "station upkeep should draw down the faction's funds each month");
+        }
     }
 }
