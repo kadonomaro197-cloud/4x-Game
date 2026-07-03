@@ -10,6 +10,7 @@ using Pulsar4X.GeoSurveys;
 using Pulsar4X.Industry;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Movement;
+using Pulsar4X.Stations;
 
 namespace Pulsar4X.Client;
 public class SystemWindow : PulsarGuiWindow
@@ -139,8 +140,21 @@ public class SystemWindow : PulsarGuiWindow
                     var command = CreateColonyOrder.CreateCommand(_uiState.Faction, species, entity);
                     _uiState.Game.OrderHandler.HandleOrder(command);
                 }
+                ImGui.SameLine();
             }
-            else
+
+            // A station can be deployed at ANY surveyed body (a colonizeable planet OR an asteroid you'd never
+            // colonize) — the cheap/fast off-world alternative to a colony. Deploy-bare-build-in-situ: the order
+            // drops a platform carrying a starter constructor so the player can then build modules onto it.
+            if(isSurveyComplete && _uiState.Faction != null)
+            {
+                if(ImGui.SmallButton("Deploy Station###deploystation" + entity.Id))
+                {
+                    var command = DeployStationOrder.CreateCommand(_uiState.Faction, entity);
+                    _uiState.Game.OrderHandler.HandleOrder(command);
+                }
+            }
+            else if(!(isSurveyComplete && entity.HasDataBlob<ColonizeableDB>()))
             {
                 ImGui.Text("");
             }

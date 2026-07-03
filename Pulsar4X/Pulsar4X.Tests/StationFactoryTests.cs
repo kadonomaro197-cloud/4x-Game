@@ -389,5 +389,25 @@ namespace Pulsar4X.Tests
             long after = station.GetDataBlob<StationInfoDB>().Population[s.Species.Id];
             Assert.That(after, Is.LessThan(before), "a bombardment hit should kill some of the station's population");
         }
+
+        [Test]
+        [Description("FRONT DOOR (Slice A): DeployStationOrder is the player's reachable path to a station — it deploys a platform at a body, registers it on the faction, and (deploy-bare-build-in-situ) installs a starter constructor so the platform is immediately an in-situ builder.")]
+        public void DeployStationOrder_DeploysAFunctionalPlatform()
+        {
+            var s = TestScenario.CreateWithColony();
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+            int stationsBefore = factionInfo.Stations.Count;
+
+            var command = DeployStationOrder.CreateCommand(s.Faction, s.StartingBody);
+            command.Execute(s.Game.TimePulse.GameGlobalDateTime);
+
+            Assert.That(factionInfo.Stations.Count, Is.EqualTo(stationsBefore + 1),
+                "deploying should register exactly one new station on the faction");
+            var station = factionInfo.Stations[factionInfo.Stations.Count - 1];
+            Assert.That(station.GetDataBlob<StationInfoDB>().HostingBodyEntity, Is.EqualTo(s.StartingBody),
+                "the deployed station should orbit the chosen body");
+            Assert.That(station.HasDataBlob<IndustryAbilityDB>(), Is.True,
+                "the deployed bare platform should carry a starter constructor (an in-situ build line)");
+        }
     }
 }

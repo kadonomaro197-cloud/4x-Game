@@ -76,7 +76,7 @@ Build column (for design docs): ✅ built · 🏗 building · ⚫ design-only (n
 
 | Doc | Purpose | Status | Build | Notes |
 |-----|---------|--------|-------|-------|
-| `docs/SPACE-STATIONS-DESIGN.md` | Station-as-universal-off-world-host (parallel to colony) | 🔒 | ✅ | v1 + grave rung (Slice B: killable/destroyable, placeholder durability) delivered CI-green; efficiency-catch claim corrected. Front-door UI (Slice A) + cost curve (Slice C) pending |
+| `docs/SPACE-STATIONS-DESIGN.md` | Station-as-universal-off-world-host (parallel to colony) | 🔒 | ✅ | v1 + grave rung (Slice B) + front door (Slice A: DeployStationOrder + StationWindow, engine CI-gauged / UI compile-only) delivered; efficiency-catch claim corrected. Cost/upkeep curve (Slice C) pending |
 | `docs/MORALE-AND-POPULATION-DESIGN.md` | Morale as the population-tank valve; people as a finite draw (M1–M5) | 🔒 | ✅ | M1–M5 built + green this session. Open = employment numbers + base-low **calibration** (PC) |
 | `docs/GOVERNMENT-AND-POLITICS-DESIGN.md` | Government-as-modulator (dials) + internal politics (legitimacy/rebellion/demands) | 🔒 | ➕ | Government dials ✅ wired; legitimacy ✅ live; rebellion first rung ✅. Demands-engine + Interior Minister ⚫ (blocked on delegation) |
 | `docs/DIPLOMACY-DESIGN.md` | External politics: relationship track, IFF, first-contact, treaties, casus belli, reactive engine | 🔒 | ➕ | Substrate + teeth + first-contact + commerce + reactive DRIFT ✅. Commitment executor / treaty-proposal policy / negotiation UI ⚫ future |

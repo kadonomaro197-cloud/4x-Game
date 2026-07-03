@@ -41,6 +41,7 @@ namespace Pulsar4X.Client
             ContextButton(typeof(FireControl));
             ContextButton(typeof(CargoTransferWindow));
             ContextButton(typeof(ColonyPanel));
+            ContextButton(typeof(StationWindow));
             ContextButton(typeof(PlanetaryWindow));
             ContextButton(typeof(GotoSystemBlankMenuHelper));
             ContextButton(typeof(WarpOrderWindow));
