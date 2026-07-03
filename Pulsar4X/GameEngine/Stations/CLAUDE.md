@@ -18,8 +18,8 @@ A station does the same off-world jobs a colony does — mine, refine, research,
 
 | File | Purpose |
 |------|---------|
-| `StationInfoDB.cs` | Core station DataBlob — the parallel to `ColonyInfoDB`. Fields: `Population` (species ID → count, manned stations only), `ComponentStockpile`, `HostingBodyEntity` (the body/belt/anomaly it orbits — the parallel to `ColonyInfoDB.PlanetEntity`). Copy-ctor + `Clone()`; `GetDependencies()` → `NameDB`. |
-| `StationFactory.cs` | `CreateStation(faction, hostingBody, initialPopulation=0, species=null)` — creates the station entity, attaches the SHARED blob set (incl. `ColonyMoraleDB`), registers it on `FactionInfoDB.Stations`, and grants the faction mineral access on the hosting body. The parallel to `ColonyFactory.CreateColony`. |
+| `StationInfoDB.cs` | Core station DataBlob — the parallel to `ColonyInfoDB`. Fields: `Population` (species ID → count, manned stations only), `ComponentStockpile`, `HostingBodyEntity` (the body/belt/anomaly it orbits — the parallel to `ColonyInfoDB.PlanetEntity`), **`StructuralIntegrity`** (the "cheap to kill" durability pool — Slice B). Copy-ctor + `Clone()`; `GetDependencies()` → `NameDB`. |
+| `StationFactory.cs` | `CreateStation(faction, hostingBody, initialPopulation=0, species=null)` — creates the station entity, attaches the SHARED blob set (incl. `ColonyMoraleDB`), registers it on `FactionInfoDB.Stations`, and grants the faction mineral access on the hosting body. The parallel to `ColonyFactory.CreateColony`. **`DestroyStation(station)`** (Slice B — the grave rung) — the inverse: tears down spawned sub-entities (the research lab's `ResearcherDB`), clears population, unregisters from `FactionInfoDB.Stations` + `FactionOwnerDB`, then destroys the entity. The parallel to `ShipFactory.DestroyShip`. |
 | `StationPopulationProcessor.cs` | `IHotloopProcessor` keyed on `StationInfoDB` (parallel to `Colonies/PopulationProcessor`). Grows/starves a MANNED station's population against its **habitat-module life-support cap** (sealed-habitat model — no planet `ColonyCost`); reuses the host-agnostic `ColonyMoraleDB` math. Keyed on its own blob type so it never collides with the colony hotloop. |
 
 ---
@@ -49,11 +49,24 @@ So a station that carries the matching components is mined / built / researched 
 
 ---
 
+## The grave rung — a station is now KILLABLE and LOSE-ABLE (Slice B, 2026-07-03)
+
+The whole reason a station is its OWN host (not a planet-less colony) is the durability asymmetry: it's **cheap to build, cheap to kill** — an attacker's quick choice, not a planet's long ground war. Before Slice B a station was a **ghost target**: a weapon could lock and fire on it, but `DamageProcessor.OnTakingDamage` hit no branch for it and **returned 0 damage** — invulnerable, and if it *had* been destroyed it would have leaked dangling refs. Slice B closes that:
+
+- **`StationInfoDB.StructuralIntegrity`** — a FLAT placeholder durability pool (`BaseStructuralIntegrity = 500`). It is **the placeholder ratio**: a planet has NO kill trigger (`OnColonyDamage` never destroys a colony → effectively ∞), a station has this modest finite pool → "a fraction of the effort to destroy that a planet does." Deliberately **not** scaled by module count — a bigger station has more to *lose*, not more to *survive*.
+- **`DamageProcessor.OnStationDamage`** (routed from `OnTakingDamage` via a `StationInfoDB` branch) — mirrors `OnColonyDamage` (population casualties + random module damage, factored into shared `ApplyPopulationCasualties`/`ApplyInstallationDamage` helpers so the two hosts never drift), but **skips atmospheric contamination** (no atmosphere) and **adds the structural-integrity kill**: drain the pool, and at ≤ 0 call `StationFactory.DestroyStation`.
+- **`StationFactory.DestroyStation`** — the clean teardown (see file map). Critically it tears down **spawned sub-entities**: a research lab's `ResearcherDB` lives on a SEPARATE entity (`ComponentInstance.SpawnedEntityId`) that `RemoveComponentInstance` does NOT clean up — so without this a dead research station would keep researching from the grave.
+
+**This wires the DIRECT weapon-hit path** (`BeamWeaponProcessor.OnHit` / `MissileImpactProcessor` → `DamageProcessor.OnTakingDamage`) — a ship that fires on a station now damages/destroys it. **Follow-on (NOT in Slice B):** the fleet **auto-resolve** engine (`Combat/CombatEngagement`) is `FleetDB`-keyed, so a station is not yet a target *inside a fleet battle* — that needs a non-fleet "installation combatant" representation (or a dedicated bombardment order). And **invasion/capture** (taking a station intact rather than destroying it) is unbuilt — it rides on ground combat (`docs/aurora/GROUND-COMBAT.md`). Gauges: `StationFactoryTests` — `Station_TakesDamage_DrainsStructuralIntegrity_ButSurvivesASmallHit`, `Station_DestroyedWhenStructuralIntegrityExhausted_AndUnregisters`, `DestroyedStation_TearsDownSpawnedResearcher`, `MannedStation_Bombardment_KillsPopulation`.
+
+---
+
 ## Gotchas
 
 1. **`PositionDB`'s active class is in `Pulsar4X.Movement`, not `Datablobs`** (the Datablobs copy is commented out). `StationFactory` imports `Pulsar4X.Movement` for it — the same trap that bit the test harness.
-2. **`FactionInfoDB.Stations` must be added to the FactionInfoDB copy-ctor**, or it's dropped on `Clone()` / save-load round-trip. It is (mirrors the `Colonies` line). Any new faction-level list needs the same treatment.
-3. **A bare station does nothing yet.** This foundation slice builds the host; the economy wiring (task #17) and the first real flavor — the research station (task #18) — are what make it a cradle-to-grave decision. Don't ship a station the player can build but that has no product/loss — that's the "pretty, not a decision" anti-pattern.
+2. **`FactionInfoDB.Stations` must be added to the FactionInfoDB copy-ctor**, or it's dropped on `Clone()` / save-load round-trip. It is (mirrors the `Colonies` line). Any new faction-level list needs the same treatment. **`StructuralIntegrity` likewise must be in the `StationInfoDB` copy-ctor** (it is) or a damaged station heals to full on save/load.
+3. **A bare station is now a cradle-to-grave decision, but the PLAYER can't reach it yet.** The economy wiring (task #17), the research-station flavor (task #18), and the grave rung (Slice B) are built — but there is still **no deploy order / management UI** (Slice A). Don't mistake "the engine can build/kill a station" for "the player can": `StationFactory.CreateStation`/`DestroyStation` are engine calls with no UI front door yet.
+4. **`DestroyStation` must run BEFORE `FactionOwnerDB.RemoveEntity` zeroes `FactionOwnerID`.** It captures the owning faction first, then unregisters — reversing the order would lose the faction handle.
 
 ---
 

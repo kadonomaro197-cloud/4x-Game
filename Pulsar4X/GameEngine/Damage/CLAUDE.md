@@ -9,7 +9,7 @@ Three implementations exist: `Simple/` (dead code), `DamageComplex/` (active —
 | File | Purpose |
 |------|---------|
 | `Simple/SimpleDamage.cs` | Dead code. Not called from any active path — preserved for test reference. |
-| `DamageComplex/DamageProcessor.cs` | Active damage path. `OnTakingDamage()` routes ships through `DealDamageEnergyBeamSim()` and colonies through `OnColonyDamage()`. |
+| `DamageComplex/DamageProcessor.cs` | Active damage path. `OnTakingDamage()` routes ships through `DealDamageEnergyBeamSim()`, colonies through `OnColonyDamage()`, and **stations through `OnStationDamage()`** (Slice B — the station grave rung). The colony/station casualty + module passes are shared via `ApplyPopulationCasualties()` / `ApplyInstallationDamage()`. |
 | `DamageComplex/DamageTools.cs` | `DealDamageEnergyBeamSim()` — spatial component damage kernel. |
 | `DamageComplex/EntityDamageProfileDB.cs` | DataBlob: HTK remaining per component instance on a ship. Created lazily on first hit. |
 | `DamageComplex/ComponentPlacement.cs` | Spatial placement data for components in a ship cross-section. |
@@ -124,6 +124,15 @@ JSON must use `"UniqueID"` field for the byte IDCode (mapped via `[JsonProperty(
 **Installation damage:** picks random `ComponentInstance`s from `ComponentInstancesDB.AllComponents`, drains `HealthPercent` until the damage budget is spent or 20 consecutive misses exhaust the attempt cap. Destroyed installations are removed via `RemoveComponentInstance()`. Calls `ReCalcProcessor.ReCalcAbilities()` after.
 
 **Important:** `OnColonyDamage` is only reachable if a weapon actually targets the colony *entity*, not just the planet body. Missiles must have their target set to the colony entity. Currently only beam weapons call `OnTakingDamage()` — missile guidance is incomplete (see `Weapons/CLAUDE.md`).
+
+### OnStationDamage() — the station grave rung (Slice B, 2026-07-03)
+
+`OnTakingDamage()` routes to `OnStationDamage()` when the target has `StationInfoDB` but is neither a ship nor a colony. It is the parallel to `OnColonyDamage()` and **shares** its two heavy passes (`ApplyPopulationCasualties`, `ApplyInstallationDamage`), so a station and a colony can never drift apart in how a strike kills people / wrecks installations. Two deliberate differences make a station the cheap, fragile alternative to a planet:
+
+- **No atmospheric contamination** — a sealed habitat has no atmosphere to poison.
+- **A structural-integrity KILL trigger** — the hit drains `StationInfoDB.StructuralIntegrity` (a flat placeholder pool, base 500) and, at ≤ 0, calls `StationFactory.DestroyStation()` and returns `Destroyed = true`. A colony has NO such trigger (a planet is effectively infinite on this scale) — that ratio IS the design's durability asymmetry. **Placeholder — tune when the station durability/invasion numbers lock (`docs/SPACE-STATIONS-DESIGN.md`).**
+
+Before this, a station had no branch here and `OnTakingDamage` returned `Damage = 0` — a "ghost target" that could be fired on but never damaged. Only the DIRECT weapon-hit path (beam/missile) reaches it; the fleet auto-resolve engine (`Combat/CombatEngagement`, `FleetDB`-keyed) does not yet see stations — a follow-on.
 
 ---
 

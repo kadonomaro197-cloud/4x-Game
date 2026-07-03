@@ -13,6 +13,7 @@ using Pulsar4X.Components;
 using Pulsar4X.Extensions;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Technology;
+using Pulsar4X.Damage;
 
 namespace Pulsar4X.Tests
 {
@@ -295,6 +296,98 @@ namespace Pulsar4X.Tests
 
             Assert.That(tech.ResearchProgress > progressBefore || tech.Level > levelBefore, Is.True,
                 "the research station should have accrued research points toward the queued tech");
+        }
+
+        // A bombardment hit packet. A station never runs the per-pixel wavelength sim (it has no
+        // EntityDamageProfileDB), so only Energy is read — Position/Signature are set for shape only.
+        private static DamageFragment Hit(double energy) => new DamageFragment
+        {
+            Energy = energy,
+            Position = (0, 0),
+            Signature = DamageSignature.Kinetic,
+        };
+
+        [Test]
+        [Description("GRAVE RUNG (Slice B): a station is no longer a 'ghost target'. A weapon hit routes through DamageProcessor.OnStationDamage, deals real damage (> 0, closing the return-0 hole), and drains the station's structural-integrity pool — but a survivable hit does NOT destroy it.")]
+        public void Station_TakesDamage_DrainsStructuralIntegrity_ButSurvivesASmallHit()
+        {
+            var s = TestScenario.CreateWithColony();
+            var station = StationFactory.CreateStation(s.Faction, s.StartingBody);
+
+            double integrityBefore = station.GetDataBlob<StationInfoDB>().StructuralIntegrity;
+            Assert.That(integrityBefore, Is.EqualTo(StationInfoDB.BaseStructuralIntegrity),
+                "a fresh station starts at full structural integrity");
+
+            // A modest hit: 1e10 J → damageStrength 100, well under the 500 pool.
+            var result = DamageProcessor.OnTakingDamage(station, Hit(1e10));
+
+            Assert.That(result.Damage, Is.GreaterThan(0),
+                "a station must take REAL damage now (the ghost-target return-0 hole is closed)");
+            Assert.That(result.Destroyed, Is.False, "a small hit should not destroy the station");
+            Assert.That(station.GetDataBlob<StationInfoDB>().StructuralIntegrity, Is.LessThan(integrityBefore),
+                "the hit should have drained the structural-integrity pool");
+            Assert.That(station.IsValid, Is.True, "a surviving station is still a live entity");
+        }
+
+        [Test]
+        [Description("GRAVE RUNG (Slice B): a hit that exhausts the structural pool DESTROYS the station and unregisters it cleanly — removed from FactionInfoDB.Stations and un-owned (no dangling reference), the inverse of CreateStation.")]
+        public void Station_DestroyedWhenStructuralIntegrityExhausted_AndUnregisters()
+        {
+            var s = TestScenario.CreateWithColony();
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+            var station = StationFactory.CreateStation(s.Faction, s.StartingBody);
+            Assert.That(factionInfo.Stations, Does.Contain(station), "precondition: registered on the faction");
+
+            // An overwhelming hit: 1e12 J → damageStrength 10,000, far above the 500 pool.
+            var result = DamageProcessor.OnTakingDamage(station, Hit(1e12));
+
+            Assert.That(result.Destroyed, Is.True, "an overwhelming hit should destroy the station");
+            Assert.That(factionInfo.Stations, Does.Not.Contain(station),
+                "a destroyed station must be removed from the faction's Stations registry (no dangling ref)");
+            Assert.That(station.FactionOwnerID, Is.EqualTo(-1),
+                "a destroyed station must be un-owned (FactionOwnerDB.RemoveEntity)");
+        }
+
+        [Test]
+        [Description("GRAVE RUNG (Slice B): destroying a station tears down its SPAWNED sub-entities. A research station's ResearcherDB lives on a separate entity that RemoveComponentInstance never cleans up — so without the teardown a dead station keeps researching. DestroyStation must kill the researcher.")]
+        public void DestroyedStation_TearsDownSpawnedResearcher()
+        {
+            var s = TestScenario.CreateWithColony();
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+            var planet = s.Colony.GetDataBlob<ColonyInfoDB>().PlanetEntity;
+            var labDesign = (ComponentDesign)factionInfo.IndustryDesigns["default-design-research-lab"];
+
+            var station = StationFactory.CreateStation(s.Faction, planet);
+            station.AddComponent(labDesign);
+
+            Entity labEntity = null;
+            foreach (var e in station.Manager.GetAllEntitiesWithDataBlob<ResearcherDB>())
+            {
+                if (e.GetDataBlob<ResearcherDB>().LocationId == station.Id) { labEntity = e; break; }
+            }
+            Assert.That(labEntity, Is.Not.Null, "precondition: the lab spawned a researcher tied to the station");
+            Assert.That(labEntity.IsValid, Is.True);
+
+            StationFactory.DestroyStation(station);
+
+            Assert.That(labEntity.IsValid, Is.False,
+                "the destroyed station's spawned researcher must be torn down (no orphan researching from the grave)");
+        }
+
+        [Test]
+        [Description("GRAVE RUNG (Slice B): orbital bombardment of a MANNED station kills people (the population half of the grave rung), the same 250k/unit casualty math a colony takes.")]
+        public void MannedStation_Bombardment_KillsPopulation()
+        {
+            var s = TestScenario.CreateWithColony();
+            // A large population + a small hit → PARTIAL casualties (250k dead), so the station survives to be measured.
+            var station = StationFactory.CreateStation(s.Faction, s.StartingBody, 30_000_000, s.Species);
+            long before = station.GetDataBlob<StationInfoDB>().Population[s.Species.Id];
+
+            var result = DamageProcessor.OnTakingDamage(station, Hit(1e8)); // damageStrength 1 → 250k casualties
+
+            Assert.That(result.Destroyed, Is.False, "the station should survive a single small hit");
+            long after = station.GetDataBlob<StationInfoDB>().Population[s.Species.Id];
+            Assert.That(after, Is.LessThan(before), "a bombardment hit should kill some of the station's population");
         }
     }
 }

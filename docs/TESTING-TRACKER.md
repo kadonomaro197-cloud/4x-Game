@@ -231,10 +231,10 @@ The fleet-menu freeze took **three** fix attempts before the gauge nailed it. Ev
 - **Most likely failure:** the GlobalManager-not-iterated trap if any lever is read by a faction-level processor → **mitigated** (design says read per-colony, pass the regime down).
 - **Unblocks:** the politics layer (regime change, popular demands).
 
-#### C4 — Stations reachable + economic (#17/#18) — ⚫ NOT-YET
-- **What right looks like:** a station is buildable/placeable from the UI and, carrying the shared blobs, shows up in Dump Society with morale/manpower/economy like a colony; mining/research run on it.
-- **Method:** spawn/build a station → Dump Society → advance time → confirm it mines/researches/grows.
-- **Most likely failure:** `PopulationProcessor` (keyed on `ColonyInfoDB`) skips a `StationInfoDB` host → station has no morale/population (the known wiring gap).
+#### C4 — Stations reachable + economic (#17/#18) — 🟡 PARTIAL (engine grave rung built; UI front door pending)
+- **What right looks like:** a station is buildable/placeable from the UI and, carrying the shared blobs, shows up in Dump Society with morale/manpower/economy like a colony; mining/research run on it; and it can be **destroyed** (cheap to kill), losing its product.
+- **Method:** spawn/build a station → Dump Society → advance time → confirm it mines/researches/grows; fire on it → confirm it takes damage and dies.
+- **Progress (2026-07-03):** the population wiring gap is closed (`StationPopulationProcessor`, #17); the **grave rung is built + CI-green (Slice B)** — `DamageProcessor.OnStationDamage` + `StationInfoDB.StructuralIntegrity` (placeholder) + `StationFactory.DestroyStation`; gauges `StationFactoryTests.Station_TakesDamage_*` / `Station_DestroyedWhenStructuralIntegrityExhausted_*` / `DestroyedStation_TearsDownSpawnedResearcher` / `MannedStation_Bombardment_KillsPopulation`. **Still LEFT:** the deploy order + management UI (Slice A) — the player can't yet build/select/manage a station; and fleet **auto-resolve** targeting + **invasion/capture** (follow-ons).
 - **Unblocks:** the BSG-nomad pillar; the space-economy alternative to planets.
 
 #### C5 — Ground combat loop (MVP M2) — ⚫ NOT-YET

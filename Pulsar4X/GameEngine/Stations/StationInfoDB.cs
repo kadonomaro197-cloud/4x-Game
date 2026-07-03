@@ -45,6 +45,26 @@ namespace Pulsar4X.Stations
         [JsonProperty]
         public Entity HostingBodyEntity { get; internal set; } = Entity.InvalidEntity;
 
+        /// <summary>
+        /// PLACEHOLDER RATIO (Slice B — grave rung, 2026-07-03). The "cheap to kill" durability pool: a station is
+        /// DESTROYED once this reaches zero (<see cref="StationFactory.DestroyStation"/>). This is the mechanical
+        /// half of the design's durability asymmetry — "a station takes a FRACTION of the effort to destroy that a
+        /// planet does" (docs/SPACE-STATIONS-DESIGN.md, "Why PARALLEL"). A colony has NO kill trigger at all
+        /// (<c>DamageProcessor.OnColonyDamage</c> never destroys the colony — a planet is effectively infinite on
+        /// this scale), so the RATIO the design calls for ("blowing on a flower vs. pushing a Seawolf") is carried
+        /// here: planet = ∞, station = this modest FLAT pool. It is deliberately NOT scaled by installed modules —
+        /// "however much infrastructure you stack on a station, it takes a fraction of the effort to destroy" — a
+        /// bigger station has more to LOSE, not more to survive. Tune when the durability/invasion numbers are
+        /// locked (a currently-open question in the design doc).
+        /// </summary>
+        public const double BaseStructuralIntegrity = 500.0;
+
+        /// <summary>
+        /// Remaining structural integrity (the durability pool above). Damage drains it; at ≤ 0 the station dies.
+        /// </summary>
+        [JsonProperty]
+        public double StructuralIntegrity { get; internal set; } = BaseStructuralIntegrity;
+
         public StationInfoDB() { }
 
         /// <param name="hostingBody">the body / belt / anomaly this station orbits</param>
@@ -65,6 +85,7 @@ namespace Pulsar4X.Stations
             Population = new Dictionary<int, long>(other.Population);
             ComponentStockpile = new Dictionary<string, int>(other.ComponentStockpile);
             HostingBodyEntity = other.HostingBodyEntity;
+            StructuralIntegrity = other.StructuralIntegrity;
         }
 
         public override object Clone()
