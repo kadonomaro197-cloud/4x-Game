@@ -1,4 +1,4 @@
-=== Pulsar4X session started 2026-07-02 17:40:57 ===
+=== Pulsar4X session started 2026-07-03 00:31:06 ===
 Log: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\game_logs (rolling pages game_log_000.txt, _001, …)
 File not found: Resources\CancelIco.bmp
 File not found: Resources\CargoIco.bmp
@@ -29,972 +29,167 @@ Found mod 'Pulsar4x-Testing' from C:\Users\DeeDiebS\AppData\Roaming\Pulsar4X\Pul
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\pulsar4x-menu.png
 Successfully loaded: pulsar4x-menu
 Format: .png
-Texture pointer: 24526020F90
+Texture pointer: 28A7BB82AF0
 Dimensions: 400x200
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\discord-mark-white.png
 Successfully loaded: discord
 Format: .png
-Texture pointer: 2452A4021E0
+Texture pointer: 28A7BB82D70
 Dimensions: 619x469
 --------------------------------------------------
-[STATE] ⏱ slow frame 1826ms — stage breakdown: update(state+transforms) 0 / map-draw(SDL lines) 0 / ui(windows) 0 ms — the biggest number is the culprit
-[STATE] ⏱ slow frame 380ms — stage breakdown: update(state+transforms) 0 / map-draw(SDL lines) 0 / ui(windows) 378 ms — the biggest number is the culprit
-New Game: SpeciesId='species-human' ColonyId='colony-earth' SystemId='system-sol' BodyId='planet-earth' EnabledSystems=1
-[VIEW] now viewing faction id=1228 (UEC) [player]
-Ship icon texture loaded: 28x14
-Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\DesignComponentIco.bmp
-Successfully loaded: DesComp
-Format: .bmp
-Texture pointer: 2452A7948E0
-Dimensions: 256x256
---------------------------------------------------
-Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\DesignShipIco.bmp
-Successfully loaded: DesShip
-Format: .bmp
-Texture pointer: 2452A7947A0
-Dimensions: 256x256
---------------------------------------------------
-Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\IndustryIco.bmp
-Successfully loaded: Industry
-Format: .bmp
-Texture pointer: 2452A793DA0
-Dimensions: 256x256
---------------------------------------------------
-Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\ResearchIco.bmp
-Successfully loaded: Research
-Format: .bmp
-Texture pointer: 2452A792FE0
-Dimensions: 256x256
---------------------------------------------------
-Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\SelectIco.bmp
-Successfully loaded: Select
-Format: .bmp
-Texture pointer: 2452A794020
-Dimensions: 256x256
---------------------------------------------------
-Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\GalaxyMapIco.bmp
-Successfully loaded: GalMap
-Format: .bmp
-Texture pointer: 2452A794A20
-Dimensions: 256x256
---------------------------------------------------
-Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\RulerIco.bmp
-Successfully loaded: Ruler
-Format: .bmp
-Texture pointer: 2452A792C20
-Dimensions: 256x256
---------------------------------------------------
-Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\TreeIco.bmp
-Successfully loaded: Tree
-Format: .bmp
-Texture pointer: 2452A7943E0
-Dimensions: 256x256
---------------------------------------------------
-[DevTools] Refresh: 13 ship design(s), 281 body(ies), 5 cargo target(s), 15 mineral(s)
-[STATE] ⏱ slow frame 1042ms — stage breakdown: update(state+transforms) 0 / map-draw(SDL lines) 0 / ui(windows) 1040 ms — the biggest number is the culprit
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=5
-[ENGINE] sensor scans 6 (+6), battle-trigger passes 0 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy no enemy ships
-[EMCON] your 4 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[ACTION] [range-ring] all-ranges rebuilt: 3 unit(s) + 1 place(s) = 8 ring(s)
-[STATE] ⏱ map breakdown ms — orbits u1.0/d1.2 (275) | rings(widgets) u0.8/d0.5 (9) | ships u1.4/d0.5 (8) | bodies u0.6/d4.1 (270) | moves d0.0 | contacts d0.0 | labels u0.4/d2.7 (278)
-Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\Play.bmp
-Successfully loaded: PlayImg
-Format: .bmp
-Texture pointer: 2452A793C60
-Dimensions: 256x256
---------------------------------------------------
-Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\OneStep.bmp
-Successfully loaded: OneStepImg
-Format: .bmp
-Texture pointer: 2452A792EA0
-Dimensions: 256x256
---------------------------------------------------
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=5
-[ENGINE] sensor scans 6 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy no enemy ships
-[EMCON] your 4 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-01 00:00 paused step=2592000s selected=(none) ships-in-view=5
-[ENGINE] sensor scans 6 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy no enemy ships
-[EMCON] your 4 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-01 00:00 paused step=2592000s selected=(none) ships-in-view=5
-[ENGINE] sensor scans 6 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy no enemy ships
-[EMCON] your 4 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[TIME] one step (2592000s)
-Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\Pause.bmp
-Successfully loaded: PauseImg
-Format: .bmp
-Texture pointer: 2452A7938A0
-Dimensions: 256x256
---------------------------------------------------
-[ACTION] [range-ring] all-ranges rebuilt: 4 unit(s) + 1 place(s) = 10 ring(s)
-[CAMERA] pan -> 150.1,-7.6 Gm
-[STATE] heartbeat t=2050-01-01 00:00 RUNNING step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 174 (+168), battle-trigger passes 20557 (+20557) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.1,-7.6 Gm
-[CAMERA] pan -> 150.3,-7.5 Gm
-[CAMERA] pan -> 151.4,-6.9 Gm
-[CAMERA] pan -> 158.1,-2.1 Gm
-[CAMERA] pan -> 188.9,20.1 Gm
-[STATE] heartbeat t=2050-01-01 00:00 RUNNING step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 624 (+450), battle-trigger passes 74731 (+54174) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 200.4,179.2 Gm
-[STATE] ⏱ map breakdown ms — orbits u1.1/d4.4 (276) | rings(widgets) u0.1/d0.3 (11) | ships u0.0/d0.0 (9) | bodies u0.5/d2.5 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.1 (19)
-[STATE] heartbeat t=2050-01-01 00:00 RUNNING step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 1092 (+468), battle-trigger passes 130984 (+56253) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] ⏱ map breakdown ms — orbits u1.7/d4.8 (276) | rings(widgets) u0.1/d0.6 (11) | ships u0.0/d0.0 (9) | bodies u0.7/d2.5 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.0 (19)
-[STATE] heartbeat t=2050-01-01 00:00 RUNNING step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 1566 (+474), battle-trigger passes 187228 (+56244) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] ⏱ map breakdown ms — orbits u1.7/d4.7 (276) | rings(widgets) u0.1/d0.7 (11) | ships u0.0/d0.0 (9) | bodies u0.7/d2.5 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.0 (19)
-[STATE] heartbeat t=2050-01-01 00:00 RUNNING step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 2028 (+462), battle-trigger passes 243180 (+55952) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-01 00:00 RUNNING step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 2502 (+474), battle-trigger passes 299579 (+56399) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-01 00:00 RUNNING step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 2970 (+468), battle-trigger passes 355943 (+56364) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-01 00:00 RUNNING step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 3438 (+468), battle-trigger passes 412297 (+56354) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-01 00:00 RUNNING step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 3900 (+462), battle-trigger passes 467700 (+55403) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-01 00:00 RUNNING step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+426), battle-trigger passes 560865 (+93165) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 255.5,25.1 Gm
-[STATE] ⏱ map breakdown ms — orbits u1.1/d2.7 (276) | rings(widgets) u0.1/d0.3 (11) | ships u0.0/d0.0 (9) | bodies u0.5/d1.5 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d2.3 (21)
-[CAMERA] pan -> 198,66.2 Gm
-[STATE] heartbeat t=2050-01-01 00:00 RUNNING step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1009526 (+448661) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+27276) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 118,106.9 Gm
-[CAMERA] pan -> 125.1,89 Gm
-[CAMERA] pan -> 129.3,79.2 Gm
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] ⏱ map breakdown ms — orbits u1.7/d2.7 (276) | rings(widgets) u0.1/d0.6 (11) | ships u0.0/d0.0 (9) | bodies u0.8/d2.2 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.0 (24)
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] ⏱ map breakdown ms — orbits u1.2/d2.8 (276) | rings(widgets) u0.1/d0.6 (11) | ships u0.0/d0.0 (9) | bodies u1.0/d2.2 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.0 (24)
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] ⏱ map breakdown ms — orbits u1.1/d5.1 (276) | rings(widgets) u0.1/d2.0 (11) | ships u0.0/d0.0 (9) | bodies u0.5/d4.6 (270) | moves d0.0 | contacts d0.0 | labels u0.1/d0.0 (24)
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[VIEW] now viewing faction id=0 ()
-[STATE] ship positions (after view switch): 6 ship(s)
-[STATE]   ship #1234 'Planet Express Ship' faction=1228 sun-dist=148.96Gm parent=Earth
-[STATE]   ship #1237 'Serial Peacemaker' faction=1228 sun-dist=148.97Gm parent=Earth
-[STATE]   ship #1239 'Prevailing Stillness' faction=1228 sun-dist=148.96Gm parent=Earth
-[STATE]   ship #1242 'Surveyor I' faction=1228 sun-dist=148.97Gm parent=Earth
-[STATE]   ship #1244 'SensorSat I' faction=1228 sun-dist=148.95Gm parent=Earth
-[STATE]   ship #1249 'ISS Hermes' faction=1228 sun-dist=148.96Gm parent=Earth
-[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 0 place(s) = 0 ring(s)
-[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 0 place(s) = 0 ring(s)
-[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 0 place(s) = 0 ring(s)
-[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 0 place(s) = 0 ring(s)
-[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 0 place(s) = 0 ring(s)
-[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 0 place(s) = 0 ring(s)
-[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 0 place(s) = 0 ring(s)
-[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 0 place(s) = 0 ring(s)
-[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 0 place(s) = 0 ring(s)
-[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 0 place(s) = 0 ring(s)
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[DevTools] Age galaxy → Late: [player colonies: 3] [Vega Combine: 1 colonies, rel +30] [player colonies: 4] [Vega Combine: 2 colonies, rel +45 +treaty] [Crimson Hegemony: 2 colonies, rel -40] [player colonies: 5] [Terran League: 1 colonies, rel +65 +treaty] [WAR declared] [frontier REBELLING] 
-[DevTools]   (Dump Society to read the new colonies / diplomacy / rebellion state.)
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[DevTools] SOCIETY DUMP — 5 colony(ies) in this system:
-[DevTools]   Earth HQ: pop 8,445,327,838 | morale 70.0 [conditions 0, crowding 0, employment 0, comfort +20.0, tax 0, power 0, food 0] | legitimacy 50.0 | pwr-short 0% food-short 0% | workforce 4,222,663,919/4,222,663,919 talent 42,226,639/42,226,639 | tax 0% -> 0/mo
-[DevTools]   Mercury Colony: pop 800,000,000 | morale 10.0 | legitimacy 10.0 !REBELLING (180d left) | pwr-short 0% food-short 0% | workforce 400,000,000/400,000,000 talent 4,000,000/4,000,000 | tax 0% -> 0/mo
-[DevTools]   Venus Colony: pop 800,000,000 | morale 50.0 | legitimacy 50.0 | pwr-short 0% food-short 0% | workforce 400,000,000/400,000,000 talent 4,000,000/4,000,000 | tax 0% -> 0/mo
-[DevTools]   Luna Colony: pop 800,000,000 | morale 50.0 | legitimacy 50.0 | pwr-short 0% food-short 0% | workforce 400,000,000/400,000,000 talent 4,000,000/4,000,000 | tax 0% -> 0/mo
-[DevTools]   Mars Colony: pop 800,000,000 | morale 50.0 | legitimacy 50.0 | pwr-short 0% food-short 0% | workforce 400,000,000/400,000,000 talent 4,000,000/4,000,000 | tax 0% -> 0/mo
-[DevTools]   government: Federal Republic — a guarded, mixed-economy, balanced representative state
-[DevTools]   United Earth Corp diplomacy:
-  SpaceMaster Faction: Neutral (0)
-  Vega Combine: Friendly (+55) [Trade]
-  Crimson Hegemony: War (-100) [WAR]
-  Terran League: Friendly (+65)
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[DevTools] Sustenance demand set on 'Venus Colony': power=1 food=1 per-capita
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[DevTools] Diplomacy: set 'Crimson Hegemony' militarism -> High
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[VIEW] now viewing faction id=1228 (UEC)
-[STATE] ship positions (after view switch): 6 ship(s)
-[STATE]   ship #1234 'Planet Express Ship' faction=1228 sun-dist=148.96Gm parent=Earth
-[STATE]   ship #1237 'Serial Peacemaker' faction=1228 sun-dist=148.97Gm parent=Earth
-[STATE]   ship #1239 'Prevailing Stillness' faction=1228 sun-dist=148.96Gm parent=Earth
-[STATE]   ship #1242 'Surveyor I' faction=1228 sun-dist=148.97Gm parent=Earth
-[STATE]   ship #1244 'SensorSat I' faction=1228 sun-dist=148.95Gm parent=Earth
-[STATE]   ship #1249 'ISS Hermes' faction=1228 sun-dist=148.96Gm parent=Earth
-[ACTION] [range-ring] all-ranges rebuilt: 4 unit(s) + 5 place(s) = 10 ring(s)
-[STATE] ⏱ map breakdown ms — orbits u1.2/d1.6 (276) | rings(widgets) u0.1/d0.3 (11) | ships u0.0/d0.0 (9) | bodies u3.6/d1.3 (270) | moves d0.0 | contacts d0.0 | labels u0.1/d0.0 (24)
-[STATE] heartbeat t=2050-01-31 00:00 paused step=2592000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=23328000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=15552000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=15552000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 120.1,78.8 Gm
-[CAMERA] pan -> 120.1,78.8 Gm
-[CAMERA] pan -> 120.1,78.8 Gm
-[CAMERA] pan -> 120.1,78.8 Gm
-[CAMERA] pan -> 120.1,78.8 Gm
-[CAMERA] pan -> 120.1,78.8 Gm
-[CAMERA] pan -> 120.1,78.8 Gm
-[CAMERA] pan -> 120.1,78.8 Gm
-[CAMERA] pan -> 120.1,78.8 Gm
-[CAMERA] pan -> 120.1,78.8 Gm
-[STATE] heartbeat t=2050-01-31 00:00 paused step=15552000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=15552000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 paused step=15552000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4326 (+0), battle-trigger passes 1036802 (+0) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[TIME] one step (15552000s)
-[STATE] heartbeat t=2050-01-31 00:00 RUNNING step=15552000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 4614 (+288), battle-trigger passes 1071541 (+34739) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 RUNNING step=15552000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 5070 (+456), battle-trigger passes 1126167 (+54626) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 RUNNING step=15552000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 5520 (+450), battle-trigger passes 1180403 (+54236) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 RUNNING step=15552000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 5976 (+456), battle-trigger passes 1235215 (+54812) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 RUNNING step=15552000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 6426 (+450), battle-trigger passes 1289143 (+53928) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 RUNNING step=15552000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 6882 (+456), battle-trigger passes 1343761 (+54618) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 RUNNING step=15552000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 7338 (+456), battle-trigger passes 1398448 (+54687) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 RUNNING step=15552000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 7794 (+456), battle-trigger passes 1453099 (+54651) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] ⏱ map breakdown ms — orbits u1.1/d4.0 (276) | rings(widgets) u0.1/d0.6 (11) | ships u0.0/d0.0 (9) | bodies u0.5/d2.5 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.0 (23)
-[STATE] heartbeat t=2050-01-31 00:00 RUNNING step=15552000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 8250 (+456), battle-trigger passes 1507892 (+54793) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 RUNNING step=15552000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 8700 (+450), battle-trigger passes 1562101 (+54209) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 RUNNING step=15552000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 9156 (+456), battle-trigger passes 1617061 (+54960) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] heartbeat t=2050-01-31 00:00 RUNNING step=15552000s selected=(none) ships-in-view=6
-[ENGINE] sensor scans 9612 (+456), battle-trigger passes 1671612 (+54551) since last beat
-[DETECT] United Earth Corp holds 1 contact(s); 0 other-faction ship(s) in-system, detects 0 (0 hidden from you)
-[REACH] best sensor reach 341459744.512 Gm (ISS Hermes); nearest enemy no enemy ships
-[EMCON] your 5 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[STATE] ⏱ map breakdown ms — orbits u1.7/d4.0 (276) | rings(widgets) u0.1/d0.6 (11) | ships u0.0/d0.0 (9) | bodies u0.7/d1.7 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.0 (23)
-[STATE] heartbeat t=2050-01-31 00:00 RUNNING step=15552000s selected=(none) ships-in-view=6
+[RenderError] LoadGame threw and was skipped this frame (logged once per unique error). Fix the cause:
+System.NullReferenceException: Object reference not set to an instance of an object.
+   at Pulsar4X.Industry.IndustryJob..ctor(FactionInfoDB factionInfo, String itemID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Industry\IndustryJob.cs:line 17
+   at Void .ctor(Pulsar4X.Factions.FactionInfoDB, System.String)(Object[])
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObjectUsingCreatorWithParameters(JsonReader reader, JsonObjectContract contract, JsonProperty containerProperty, ObjectConstructor`1 creator, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateNewObject(JsonReader reader, JsonObjectContract objectContract, JsonProperty containerMember, JsonProperty containerProperty, String id, Boolean& createdFromNonDefaultCreator)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateList(IList list, JsonReader reader, JsonArrayContract contract, JsonProperty containerProperty, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateList(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, Object existingValue, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.SetPropertyValue(JsonProperty property, JsonConverter propertyConverter, JsonContainerContract containerContract, JsonProperty containerProperty, JsonReader reader, Object target)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateObject(Object newObject, JsonReader reader, JsonObjectContract contract, JsonProperty member, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.SetPropertyValue(JsonProperty property, JsonConverter propertyConverter, JsonContainerContract containerContract, JsonProperty containerProperty, JsonReader reader, Object target)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateObject(Object newObject, JsonReader reader, JsonObjectContract contract, JsonProperty member, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateDictionary(IDictionary dictionary, JsonReader reader, JsonDictionaryContract contract, JsonProperty containerProperty, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.SetPropertyValue(JsonProperty property, JsonConverter propertyConverter, JsonContainerContract containerContract, JsonProperty containerProperty, JsonReader reader, Object target)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateObject(Object newObject, JsonReader reader, JsonObjectContract contract, JsonProperty member, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateDictionary(IDictionary dictionary, JsonReader reader, JsonDictionaryContract contract, JsonProperty containerProperty, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.SetPropertyValue(JsonProperty property, JsonConverter propertyConverter, JsonContainerContract containerContract, JsonProperty containerProperty, JsonReader reader, Object target)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateObject(Object newObject, JsonReader reader, JsonObjectContract contract, JsonProperty member, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateDictionary(IDictionary dictionary, JsonReader reader, JsonDictionaryContract contract, JsonProperty containerProperty, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.Deserialize(JsonReader reader, Type objectType, Boolean checkAdditionalContent)
+   at Newtonsoft.Json.Serialization.JsonSerializerProxy.DeserializeInternal(JsonReader reader, Type objectType)
+   at Newtonsoft.Json.JsonSerializer.Deserialize(JsonReader reader, Type objectType)
+   at Pulsar4X.DataStructures.SafeDictionaryConverter.ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.DeserializeConvertable(JsonConverter converter, JsonReader reader, Type objectType, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateDictionary(IDictionary dictionary, JsonReader reader, JsonDictionaryContract contract, JsonProperty containerProperty, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.Deserialize(JsonReader reader, Type objectType, Boolean checkAdditionalContent)
+   at Newtonsoft.Json.Serialization.JsonSerializerProxy.DeserializeInternal(JsonReader reader, Type objectType)
+   at Newtonsoft.Json.JsonSerializer.Deserialize(JsonReader reader, Type objectType)
+   at Pulsar4X.DataStructures.SafeDictionaryConverter.ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.DeserializeConvertable(JsonConverter converter, JsonReader reader, Type objectType, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.SetPropertyValue(JsonProperty property, JsonConverter propertyConverter, JsonContainerContract containerContract, JsonProperty containerProperty, JsonReader reader, Object target)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateObject(Object newObject, JsonReader reader, JsonObjectContract contract, JsonProperty member, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateDictionary(IDictionary dictionary, JsonReader reader, JsonDictionaryContract contract, JsonProperty containerProperty, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.Deserialize(JsonReader reader, Type objectType, Boolean checkAdditionalContent)
+   at Newtonsoft.Json.Serialization.JsonSerializerProxy.DeserializeInternal(JsonReader reader, Type objectType)
+   at Newtonsoft.Json.JsonSerializer.Deserialize(JsonReader reader, Type objectType)
+   at Pulsar4X.DataStructures.SafeDictionaryConverter.ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.DeserializeConvertable(JsonConverter converter, JsonReader reader, Type objectType, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.SetPropertyValue(JsonProperty property, JsonConverter propertyConverter, JsonContainerContract containerContract, JsonProperty containerProperty, JsonReader reader, Object target)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateObject(Object newObject, JsonReader reader, JsonObjectContract contract, JsonProperty member, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.Deserialize(JsonReader reader, Type objectType, Boolean checkAdditionalContent)
+   at Newtonsoft.Json.JsonSerializer.DeserializeInternal(JsonReader reader, Type objectType)
+   at Newtonsoft.Json.JsonSerializer.Deserialize(JsonReader reader, Type objectType)
+   at Newtonsoft.Json.JsonConvert.DeserializeObject(String value, Type type, JsonSerializerSettings settings)
+   at Newtonsoft.Json.JsonConvert.DeserializeObject[T](String value, JsonSerializerSettings settings)
+   at Pulsar4X.Engine.Game.Load(String json)
+   at Pulsar4X.Client.Interface.Menus.LoadGame.LoadFile(String filenamepath)
+   at Pulsar4X.Client.Interface.Menus.LoadGame.Display()
+   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render)
+[RenderError] MainMenuItems threw and was skipped this frame (logged once per unique error). Fix the cause:
+System.NullReferenceException: Object reference not set to an instance of an object.
+   at Pulsar4X.Industry.IndustryJob..ctor(FactionInfoDB factionInfo, String itemID) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Industry\IndustryJob.cs:line 17
+   at Void .ctor(Pulsar4X.Factions.FactionInfoDB, System.String)(Object[])
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObjectUsingCreatorWithParameters(JsonReader reader, JsonObjectContract contract, JsonProperty containerProperty, ObjectConstructor`1 creator, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateNewObject(JsonReader reader, JsonObjectContract objectContract, JsonProperty containerMember, JsonProperty containerProperty, String id, Boolean& createdFromNonDefaultCreator)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateList(IList list, JsonReader reader, JsonArrayContract contract, JsonProperty containerProperty, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateList(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, Object existingValue, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.SetPropertyValue(JsonProperty property, JsonConverter propertyConverter, JsonContainerContract containerContract, JsonProperty containerProperty, JsonReader reader, Object target)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateObject(Object newObject, JsonReader reader, JsonObjectContract contract, JsonProperty member, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.SetPropertyValue(JsonProperty property, JsonConverter propertyConverter, JsonContainerContract containerContract, JsonProperty containerProperty, JsonReader reader, Object target)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateObject(Object newObject, JsonReader reader, JsonObjectContract contract, JsonProperty member, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateDictionary(IDictionary dictionary, JsonReader reader, JsonDictionaryContract contract, JsonProperty containerProperty, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.SetPropertyValue(JsonProperty property, JsonConverter propertyConverter, JsonContainerContract containerContract, JsonProperty containerProperty, JsonReader reader, Object target)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateObject(Object newObject, JsonReader reader, JsonObjectContract contract, JsonProperty member, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateDictionary(IDictionary dictionary, JsonReader reader, JsonDictionaryContract contract, JsonProperty containerProperty, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.SetPropertyValue(JsonProperty property, JsonConverter propertyConverter, JsonContainerContract containerContract, JsonProperty containerProperty, JsonReader reader, Object target)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateObject(Object newObject, JsonReader reader, JsonObjectContract contract, JsonProperty member, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateDictionary(IDictionary dictionary, JsonReader reader, JsonDictionaryContract contract, JsonProperty containerProperty, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.Deserialize(JsonReader reader, Type objectType, Boolean checkAdditionalContent)
+   at Newtonsoft.Json.Serialization.JsonSerializerProxy.DeserializeInternal(JsonReader reader, Type objectType)
+   at Newtonsoft.Json.JsonSerializer.Deserialize(JsonReader reader, Type objectType)
+   at Pulsar4X.DataStructures.SafeDictionaryConverter.ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.DeserializeConvertable(JsonConverter converter, JsonReader reader, Type objectType, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateDictionary(IDictionary dictionary, JsonReader reader, JsonDictionaryContract contract, JsonProperty containerProperty, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.Deserialize(JsonReader reader, Type objectType, Boolean checkAdditionalContent)
+   at Newtonsoft.Json.Serialization.JsonSerializerProxy.DeserializeInternal(JsonReader reader, Type objectType)
+   at Newtonsoft.Json.JsonSerializer.Deserialize(JsonReader reader, Type objectType)
+   at Pulsar4X.DataStructures.SafeDictionaryConverter.ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.DeserializeConvertable(JsonConverter converter, JsonReader reader, Type objectType, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.SetPropertyValue(JsonProperty property, JsonConverter propertyConverter, JsonContainerContract containerContract, JsonProperty containerProperty, JsonReader reader, Object target)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateObject(Object newObject, JsonReader reader, JsonObjectContract contract, JsonProperty member, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateDictionary(IDictionary dictionary, JsonReader reader, JsonDictionaryContract contract, JsonProperty containerProperty, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.Deserialize(JsonReader reader, Type objectType, Boolean checkAdditionalContent)
+   at Newtonsoft.Json.Serialization.JsonSerializerProxy.DeserializeInternal(JsonReader reader, Type objectType)
+   at Newtonsoft.Json.JsonSerializer.Deserialize(JsonReader reader, Type objectType)
+   at Pulsar4X.DataStructures.SafeDictionaryConverter.ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.DeserializeConvertable(JsonConverter converter, JsonReader reader, Type objectType, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.SetPropertyValue(JsonProperty property, JsonConverter propertyConverter, JsonContainerContract containerContract, JsonProperty containerProperty, JsonReader reader, Object target)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateObject(Object newObject, JsonReader reader, JsonObjectContract contract, JsonProperty member, String id)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   at Newtonsoft.Json.Serialization.JsonSerializerInternalReader.Deserialize(JsonReader reader, Type objectType, Boolean checkAdditionalContent)
+   at Newtonsoft.Json.JsonSerializer.DeserializeInternal(JsonReader reader, Type objectType)
+   at Newtonsoft.Json.JsonSerializer.Deserialize(JsonReader reader, Type objectType)
+   at Newtonsoft.Json.JsonConvert.DeserializeObject(String value, Type type, JsonSerializerSettings settings)
+   at Newtonsoft.Json.JsonConvert.DeserializeObject[T](String value, JsonSerializerSettings settings)
+   at Pulsar4X.Engine.Game.Load(String json)
+   at Pulsar4X.Client.Interface.Menus.LoadGame.LoadFile(String filenamepath)
+   at Pulsar4X.Client.Interface.Menus.LoadGame.LoadLatest()
+   at Pulsar4X.Client.MainMenuItems.Display()
+   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render)
+[RenderError] MainMenuItems threw and was skipped this frame (logged once per unique error). Fix the cause:
+System.InvalidOperationException: Begin("Pulsar4X Main Menu") called while already inside window "Pulsar4X Main Menu". Must call End() before starting a new window.
+   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
+   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, Boolean& isActive, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 44
+   at Pulsar4X.Client.MainMenuItems.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Menus\MainMenuItems.cs:line 41
+   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 465
