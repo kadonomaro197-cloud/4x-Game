@@ -155,6 +155,11 @@ namespace Pulsar4X.Client
             {
                 return true;
             }
+            //if entity is a body with a surface region layer → the planet (ground) view
+            else if (_entityState.Entity.HasDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>() && T == typeof(PlanetViewWindow))
+            {
+                return true;
+            }
             // if entity can be given orders
             else if (_entityState.Entity.HasDataBlob<OrderableDB>() && T == typeof(OrdersListWindow))
             {
@@ -275,6 +280,11 @@ namespace Pulsar4X.Client
                 else if (T == typeof(PlanetaryWindow))
                 {
                     var instance = PlanetaryWindow.GetInstance(_entityState, _state);
+                    instance.ToggleActive();
+                }
+                else if (T == typeof(PlanetViewWindow))
+                {
+                    var instance = PlanetViewWindow.GetInstance(_entityState, _state);
                     instance.ToggleActive();
                 }
                 else if (T == typeof(StationWindow))

@@ -304,6 +304,20 @@ These are built + CI-verified but have **no live effect** until their wiring/UI 
 
 ---
 
+## Ground-map (planet surface) — Layer-3 backlog
+
+The engine layers (slice 1 `PlanetRegionsDB` + generation, slice 2 `PlaceInstallationInRegionOrder`) are Layer-1/2 — CI-green via `PlanetRegionsTests` (`Planet_GetsFourRegions_InARing`, `WetWorld_HasAnOceanFeature`, `RegionLayer_ClonesDeeply`, `Generation_IsIdempotent`, `BuildInRegion_*`), self-maintaining. The first runtime (client) item is the planet view:
+
+#### G3 — Planet view window opens + renders the region ring — 🟡 PENDING ⭐ (first ground-map runtime check)
+- **What:** right-click a planet (Earth) → context menu → **"Planet view (regions)"** opens `PlanetViewWindow`; it draws three region columns (centre + two neighbours) as coloured terrain bands, ◀/▶ rotate through the 4-region ring, clicking a side region re-centres it, and the detail strip shows area / crossing-time / installations. Earth's regions should be **surveyed** (real terrain, not fog); a procedurally-generated world in another system should show **fog** until scanned.
+- **Why:** first client window over the new `PlanetRegionsDB`; a canvas draw (draw-list rects + text) is exactly the kind of client code CI compiles but can't run — a bad read or an unbalanced ImGui call only shows at runtime.
+- **Method:** `launch.bat` → New Game → click Earth → context menu → "Planet view (regions)"; rotate the ring; open a body in another system for the fog case; close; read `game_logs/` for any `[RenderError] PlanetViewWindow`.
+- **What right looks like:** window opens, three terrain columns render with sensible colours + labels, ◀/▶ and side-clicks rotate the ring seamlessly (no seam), Earth surveyed / far world fogged, no `[RenderError]`, clean close.
+- **Most likely failure:** a draw fault (the try/catch logs `[RenderError] PlanetViewWindow threw…` once and shows an error line instead of blanking the UI) or the menu button not appearing (gate on `PlanetRegionsDB` — confirm the body actually carries it).
+- **Mitigation in place:** thin defensive draw — all reads off the CI-tested blob, whole body wrapped so a throw can't skip `Window.End()`, no hard-indexing; gated on `PlanetRegionsDB` so it only offers where data exists. **Unblocks:** slice 4 (survey-reveal flips the fog) and the eventual ground-combat window.
+
+---
+
 ## The process (how this doc stays true)
 
 1. **Build something testable → add its row here** (CI row if automated; a Layer-3 entry with the seven fields if it needs a run). Designing the test *before/with* the build is the no-untested-system rule.

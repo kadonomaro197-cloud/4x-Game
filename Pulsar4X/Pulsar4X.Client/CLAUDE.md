@@ -93,6 +93,7 @@ internal override void Display()
 | `FleetWindow` | `FleetWindow.cs` | ✅ Functional | Fleet listing, selection, basic orders. **+ Combat tab (2026-06-25)** — see "Fleet Combat tab" below. |
 | `ColonyManagementWindow` | `ColonyManagementWindow.cs` | ✅ **Full economy UI** (verified in code 2026-06-24) | Colony picker + tabs: **Summary** (planet/pop/infra-efficiency/installed components/stockpile of raw+refined), **Society** (2026-07-02 — morale+factors / legitimacy+rebellion / manpower / sustenance / tax→income / government, colour-banded; see below), **Production** (`IndustryDisplay` — queue refine/build jobs via `IndustryOrder2`: batch/repeat/auto-install/priority/cancel), **Construction**, **Mining** (per-mineral rate/annual production/years-to-depletion). The minerals→refined→components loop is fully see-and-do here. **Live-behaviour unverified** (CI can't build the client). |
 | `PlanetaryWindow` | `PlanetaryWindow.cs` | ✅ (installations fixed 2026-06-24) | General info ✅ / Mineral deposits ✅ / **Installations ✅ — tab now gates on `ComponentInstancesDB` and renders via `componentsDB.Display(...)` (`:102,220`), NOT the dead `InstallationsDB`.** |
+| `PlanetViewWindow` | `PlanetViewWindow.cs` | ✅ New 2026-07-03 (ground-map slice 3 — compile-checked, runtime-unverified) | The **planet surface as the flat 3-region view** of the 4-slice ring (`PlanetRegionsDB`). Per-body window (context menu "Planet view (regions)", gated on `PlanetRegionsDB`); shows the centre region + its two ring neighbours, rotate with ◀/▶ or by clicking a side region (the ring wraps → no seam → the Pacific survives). Each region is painted as stacked terrain bands (ocean/mountains/forest/… sized by coverage) with an area / crossing-time / installation-count detail strip; an UNSURVEYED region draws as fog (exploration gate). Thin defensive draw — all reads off the CI-tested blob, body wrapped in try/catch so a throw can't skip `Window.End`, no hard-indexing. **Runtime render/feel unverified (CI can't run the client).** Design: `docs/GROUND-COMBAT-MAP-DESIGN.md`. |
 | `StationWindow` | `StationWindow.cs` | ✅ New 2026-07-03 (Slice A/A2 — compile-checked, runtime-unverified) | The space-station front door's management half — a per-entity window opened from the map context menu ("Manage Station", gated on `StationInfoDB`). Header (hosting body / structural-integrity durability pool / population / operating cost) + the **host-agnostic `IndustryDisplay`** so a deployed platform with a constructor can queue+install modules in-situ. Thin defensive draw: `Window.Begin/End` wrapper + try/catch body so a throw can't skip `End`. **Deploy side (Slice A2): a "Deploy Station Here" action on a CONSTRUCTION SHIP's context menu** (`EntityContextMenu`, gated on `ShipInfoDB`+`CargoStorageDB`+own-faction) → ship-issued `DeployStationOrder` anchors a station at the ship's location (star/belt/planet). The old survey-gated `SystemWindow` "Deploy Station" button was removed (couldn't reach a star). |
 | `ShipDesignWindow` | `ShipDesignWindow.cs` | ✅ Functional | Ship design and component assignment |
 | `ComponentDesignWindow` | `ComponentDesignWindow.cs` | ✅ Functional | Component designer with NCalc formulas |
@@ -411,9 +412,24 @@ The M-ECON + political systems have **no dedicated player UI yet**, so their obs
 
 These are the levers the TESTING-TRACKER C1/C2/C3/C6/D3 rows drive. **CI compiles them; runtime is the developer's local build.**
 
+### PlanetViewWindow — the planet SURFACE map (BUILT 2026-07-03, ground-map slice 3)
+
+The first piece of the ground layer's UI. `PlanetRegionsDB` gives every major body a surface of regions (the 4-slice
+ring — see `docs/GROUND-COMBAT-MAP-DESIGN.md`); `PlanetViewWindow` is the player's window onto it. It's the developer's
+"flat 3-region view": the centre region flanked by its two ring neighbours, rotated with ◀/▶ or by clicking a side region
+(the ring has no seam, so this is the "see 3, wrap the edge" model — the topology that keeps the Pacific theatre whole).
+Regions paint as stacked terrain bands coloured by feature (`RegionFeatureType` → colour table in the window), sized by
+each feature's coverage; an unsurveyed region is fog until it's scanned. Reachable from the planet's right-click context
+menu ("Planet view (regions)"), gated on the body carrying a `PlanetRegionsDB`. Built to the CI-blind discipline: a thin
+draw over the CI-tested engine blob, the whole body wrapped so a throw logs `[RenderError]` once and still runs
+`Window.End()`. **Live render is the developer's local build.** Next slices: survey-reveal (flip fog off on scan), then
+ground units + a real combat window.
+
 ### GroundCombatWindow — MISSING ENTIRELY
 
-No window exists for ground combat. When `GroundCombatDB` (to be created) is present on a colony entity, a new `GroundCombatWindow` should be reachable from `PlanetaryWindow` tabs and from the system map context menu.
+No window exists for ground *combat* yet (the `PlanetViewWindow` above is the surface MAP, not the battle). When
+`GroundCombatDB` (to be created, slice 5) is present on a colony/region, a `GroundCombatWindow` — or a combat tab on
+`PlanetViewWindow` — should show unit positions and orders.
 
 #### Target Lines — Visual Design Spec
 

@@ -54,6 +54,7 @@ namespace Pulsar4X.Client
             {typeof(GotoSystemBlankMenuHelper), "Go to system"},
             {typeof(SelectPrimaryBlankMenuHelper), "Select as primary"},
             {typeof(PlanetaryWindow), "Planetary window"},
+            {typeof(PlanetViewWindow), "Planet view (regions)"},
             {typeof(NavWindow), "Nav Window"},
             {typeof(OrdersListWindow), "Orders Window"},
             {typeof(OrderCreationWindow), "Order Creation"},
