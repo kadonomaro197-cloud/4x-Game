@@ -222,8 +222,10 @@ All reads are defensive (`TryGet` + `IsValid` + snapshot-to-array) because the b
 this state on another thread — and a ship killed mid-battle lingers in the fleet's child list with `IsValid=false`
 until cleanup, so alive/loss counts **filter on `IsValid`** (don't drop that filter).
 
+**Update (2026-07-03) — a New Game now has fleets AND enemies by default.** Two things changed the "empty New Game" situation gotcha 8 described: (a) the start colony blueprint now nests its own `Fleets` (Freight/Military/Science), which `ColonyFactory` builds on the wizard path, so a New Game gives you controllable ships; and (b) `NewGameMenu.CreateGameCore` now auto-runs `CombatSandbox.SpawnCombatScenario` on every New Game/Quickstart (gated on `NewGameMenu.AutoSpawnCombatScenario`, default **true**, toggle in DevTools) — so a fresh game already has **four rival factions + capital-led squadrons at Luna/Venus/Mercury/Mars** plus two player task forces at Earth. So the manual spawn workflow below is now for *ad-hoc* fights; the default game is already combat-ready. Enemies sit at other bodies, so nothing auto-engages on spawn — you sail out (or issue an Attack order) to start a fight.
+
 **Testing caveat — sections 2 and 3 verify on an IDLE fleet (no enemy needed); section 1 needs a live battle.**
-A fresh New Game has **no fleet at all** (gotcha 8) and **no hostile faction**. The enemy-spawn tooling now exists
+A fresh New Game has controllable fleets and (by default) hostile factions; the manual enemy-spawn tooling also exists
 — **DevTools → "Combat Sandbox" → Spawn Hostile Fleet** (a thin wrapper over the CI-proven
 `Combat.CombatSandbox.SpawnHostileFleet`), plus a **"Tick Combat (force a salvo)"** button that drives
 `CombatEngagement.Tick` manually. To exercise the whole thing: Fleet window → *Create New Fleet* → DevTools (SM

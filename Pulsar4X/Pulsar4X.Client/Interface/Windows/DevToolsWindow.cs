@@ -756,6 +756,12 @@ namespace Pulsar4X.Client
                 if (ImGui.Checkbox("First-shot trigger — weapons-hold fleets sit in a standoff##devfirstshot", ref CombatEngagement.RequireWeaponsReleaseToEngage))
                     DevLog($"First-shot trigger (RequireWeaponsReleaseToEngage) = {CombatEngagement.RequireWeaponsReleaseToEngage}");
 
+                // Auto-spawn-on-New-Game toggle (ALPHA): when on, every New Game/Quickstart builds this same
+                // scenario automatically (no button press needed). Toggling here affects the NEXT new game, not
+                // the current one.
+                if (ImGui.Checkbox("Auto-spawn this scenario on New Game##devautoscenario", ref NewGameMenu.AutoSpawnCombatScenario))
+                    DevLog($"Auto-spawn combat scenario on New Game = {NewGameMenu.AutoSpawnCombatScenario} (applies to the next New Game)");
+
                 // Premade combat scenario: 2 well-rounded player task forces at Earth + hostile squadrons at
                 // Luna/Venus/Mercury/Mars — for generating rich live combat/closing data in one click.
                 if (ImGui.Button("Spawn Combat Scenario##devscenario"))
