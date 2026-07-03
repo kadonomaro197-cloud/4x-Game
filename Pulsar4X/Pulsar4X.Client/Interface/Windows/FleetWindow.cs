@@ -176,6 +176,11 @@ namespace Pulsar4X.Client
 
             if(Window.Begin("Fleet Management", ref IsActive, _flags))
             {
+                // Finer hang breadcrumbs (2026-07-03): the [HANG] watchdog reads SessionLog.CurrentStage, which
+                // SafeRender set to just 'FleetWindow' — too coarse to tell WHICH section wedged. Stamping the
+                // sub-section here means the next freeze names List/Ships/Orders/Tabs (and DisplayTabs stamps the
+                // tab) instead of the whole window. Cheap volatile write; no behaviour change.
+                SessionLog.CurrentStage = "FleetWindow/List";
                 t0 = sw.ElapsedTicks; DisplayFleetList(); tList = sw.ElapsedTicks - t0;
 
                 if(SelectedFleet != null)
@@ -183,15 +188,19 @@ namespace Pulsar4X.Client
                     ImGui.SameLine();
                     ImGui.SetCursorPosY(27f);
                     var ysize = ImGui.GetContentRegionAvail().Y;
+                    SessionLog.CurrentStage = "FleetWindow/Ships";
                     t0 = sw.ElapsedTicks; DisplayShips(); tShips = sw.ElapsedTicks - t0;
                     ImGui.SetCursorPosY(ysize * 0.5f);
+                    SessionLog.CurrentStage = "FleetWindow/Orders";
                     t0 = sw.ElapsedTicks; DisplayOrders(); tOrders = sw.ElapsedTicks - t0;
 
                     ImGui.SameLine();
                     ImGui.SetCursorPosY(27f);
 
+                    SessionLog.CurrentStage = "FleetWindow/Tabs";
                     t0 = sw.ElapsedTicks; DisplayTabs(); tTabs = sw.ElapsedTicks - t0;
                 }
+                SessionLog.CurrentStage = "FleetWindow";
             }
             Window.End();
 
@@ -220,6 +229,7 @@ namespace Pulsar4X.Client
 
                 if(ImGui.BeginTabItem("Summary"))
                 {
+                    SessionLog.CurrentStage = "FleetWindow/Tabs/Summary";
                     Vector2 windowContentSize = ImGui.GetContentRegionAvail();
                     var firstChildSize = new Vector2(windowContentSize.X * 0.99f, windowContentSize.Y);
                     var secondChildSize = new Vector2(windowContentSize.X * 0.5f - (windowContentSize.X * 0.01f), windowContentSize.Y);
@@ -308,6 +318,7 @@ namespace Pulsar4X.Client
 
                 if (ImGui.BeginTabItem("Issue Orders"))
                 {
+                    SessionLog.CurrentStage = "FleetWindow/Tabs/IssueOrders";
                     var size = ImGui.GetContentRegionAvail();
                     var firstChildSize = new Vector2(size.X * 0.27f, size.Y);
                     var secondChildSize = new Vector2(size.X * 0.73f - (size.X * 0.01f), size.Y);
@@ -344,6 +355,7 @@ namespace Pulsar4X.Client
 
                 if(ImGui.BeginTabItem("Standing Orders"))
                 {
+                    SessionLog.CurrentStage = "FleetWindow/Tabs/StandingOrders";
                     var size = ImGui.GetContentRegionAvail();
                     var firstChildSize = new Vector2(size.X * 0.33f, size.Y);
                     var secondChildSize = new Vector2(size.X * 0.67f - (size.X * 0.01f), size.Y);
@@ -564,6 +576,7 @@ namespace Pulsar4X.Client
         private void DisplayCombatTab()
         {
             if (!ImGui.BeginTabItem("Combat")) return;
+            SessionLog.CurrentStage = "FleetWindow/Tabs/Combat";
 
             if (SelectedFleet != null && selectedFleetDB != null)
             {
