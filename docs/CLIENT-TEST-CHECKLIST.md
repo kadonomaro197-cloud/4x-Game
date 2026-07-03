@@ -18,9 +18,18 @@ All engine-green; these are the *runtime/feel* checks. Full detail + what-right-
 - [ ] **Crew gate (C1).** Build a large fleet (or drain the pool) → a ship build **blocks** under the default regime; flip to Totalitarian → it **conscripts** (builds understaffed).
 - [ ] **Reactive diplomacy drift (D3).** Spawn a hostile fleet (first contact) → set that faction militarist → advance several months → Dump Society: your view of them cools toward Hostile on its own.
 
-## Fleet UX
-- [ ] **Left-click a fleet selects it immediately** — no menu, no dead-click, no "click elsewhere first." Click straight from one fleet to another and it just selects.
-- [ ] **Right-click shows the context menu** (the menu moved to right-click only).
+## Fleet UX — ✅ PASSED 2026-07-03 (after the fleet-menu freeze fix)
+- [x] **Left-click a fleet selects it immediately** — no menu, no dead-click, no "click elsewhere first." **PASSED.**
+- [x] **Right-click shows the context menu** (right-click only). **PASSED.**
+- [x] **The Fleet Management window is USABLE.** It used to hard-freeze the instant its list rendered a fleet — a native ImGui assert in `BeginPopupContextItem` (its internal mouse-button query), which reads as a `[HANG]` because the assert's modal blocks the main thread. Fixed by converting all three fleet-window context menus to the explicit `IsItemClicked(Right)+OpenPopup(id)+BeginPopup(id)` pattern. Confirmed live ("it worked").
+
+## ⭐ Branch `claude/4x-game-testing-strategy-19xw8q` — confirmed live 2026-07-03
+- [x] **T0 — New Game boots + clock runs** with the full auto-spawn scenario (43 ships, 4 rival factions), no `[FATAL]`/`⚠ TELEPORT`.
+- [x] **New Game auto-spawns the combat scenario by default** — 2 player task forces + 4 rival factions (capital-led) at Luna/Venus/Mercury/Mars, no SM button. Toggle off in DevTools › Detection/Fog for a clean start.
+- [x] **Large Earth stockpiles** — building isn't resource-gated (50 M minerals + refined materials, warehouse ×10).
+- [x] **Visual pass** — planets deeper shades, space darker.
+- [ ] **Save/load a PLAYED game** (D1) — the one remaining "survives a session" risk. Play a bit → Save → Load → confirm no exception + state persists. (Engine `SaveLoadWithJobTests` covers the queued-job NRE that was fixed; the full played-game round-trip is the live check.)
+- [ ] **Range-ring hover tooltips render** — hover a weapons/sensor/EMCON ring line → a label names the unit + which ring. CI-green; live render unconfirmed.
 
 ## Hazards — the headline (the whole cradle-to-grave loop)
 - [ ] **Hazards render on the system map.** Corona = faint red-orange ring at the star; solar flare = bright orange (transient). *Note:* gas cloud, debris field, ion storm, and gravimetric anomaly currently **all render the same green** — distinct colors per type is a flagged follow-on, not built yet. So you'll see green blobs; that's expected for now.

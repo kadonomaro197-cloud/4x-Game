@@ -76,6 +76,50 @@ The developer merged the testing levers + Society tab to main and ran one dense 
 
 *Re-test priority next session (on the merged fixes): the effects-over-time re-dump, the Society tab render, a real in-weapon-range fight, and a perf re-measure.*
 
+### 📋 Live-run results — 2026-07-03 (branch `claude/4x-game-testing-strategy-19xw8q`, merged to main across the session)
+
+This branch's work — the DevTools test levers, the **auto-spawn combat scenario on New Game**, alpha stockpiles, a visual pass, and a run of client crash fixes — was merged and play-tested across several sessions, with the **`game_logs/` folder now COMMITTED** so each crash shipped its own trace. The two 2026-07-02 bugs (Battle-Report freeze, out-of-weapon-range combat) are now **merged**. Net: the near-term runtime foundations are confirmed and the **fleet UI is usable** (was a hard freeze).
+
+| Item | Result | Reading / note |
+|---|---|---|
+| **T0** New Game boots + clock + the auto-scenario | 🟢 **PASS** | boots with the full auto-spawn scenario (43 ships in-view, 4 rival factions), clock runs, sensors scan (44 passes), detection holds 15 contacts, zero `[FATAL]`/`⚠ TELEPORT` |
+| **New-Game auto-scenario** (this branch) | 🟢 **PASS** | `SpawnCombatScenario` fires on every New Game (`NewGameMenu.AutoSpawnCombatScenario`, default on, DevTools-toggleable): 2 player task forces + **4 distinct rival factions** with capital-led squadrons at Luna/Venus/Mercury/Mars — enemies present by default, no SM button |
+| **Large Earth stockpiles** (this branch) | 🟢 **PASS** | 50 M each of minerals + the refined ship-build materials; warehouse ×10 for volume headroom — building is no longer resource-gated in alpha |
+| **Fleet Management window usable** (this branch — the headline) | 🟢 **PASS** | the fleet-menu freeze is FIXED; selecting fleets from the menu/entity-list + right-click context menus now work (was: instant freeze the moment the list rendered a fleet) |
+| **Visual pass** (this branch) | 🟢 **PASS** | planets render as deeper shades of their hue; space background darkened — confirmed on pull |
+| **Save/load with a queued production job** (D1, half) | 🔵 **CI-GREEN + fix live** | `IndustryJob [JsonConstructor]` fixes the "save didn't work" NRE (loading any save with a queued job); gauge `SaveLoadWithJobTests`. Full played-game save/load round-trip still 🟡 |
+| **Range-ring hover tooltips** | 🟡 **render-pending** | CI-green; the live hover render/label wasn't separately confirmed |
+
+### 🎯 Test-completion scorecard — "how much is left to test" (as of 2026-07-03)
+
+**Headline: ~50 % of the near-term runtime backlog is verified live — and NONE of the unverified half BLOCKS design development.** The foundations (boot, sim, movement integrity, combat trigger, the political cluster observable, the fleet UI) are all 🟢, so continued design/build can begin now. The pending half is dominated by *calibration-feel* (local tuning, not "does it work") plus a handful of *does-it-render* checks.
+
+Counting the 21 near-term Layer-3 runtime checks (excludes ⚫ NOT-YET features — those are BUILD work, not test debt):
+
+| Bucket | Count | Items |
+|---|---|---|
+| 🟢 **Verified live** | **10 (~48 %)** | T0 boot · A1 Dump-Society · B1 combat-trigger+interrupt · B2 no-teleport · B4 fleet-UX (menu+select now work) · C6 diplomacy IFF/drivable · D2 legitimacy · #39 staged-galaxy · New-Game auto-scenario · fleet-menu-usable |
+| 🟡 **Pending — "does it work/render"** | **5 (~24 %)** | A1b Society-**tab** render · A3 hazards live · B1b a real **in-weapon-range** fight · B3 economy-UI tabs · D1 played-game **save/load** |
+| 🟡 **Pending — "does it FEEL calibrated"** (local tuning; non-blocking) | **6 (~28 %)** | A2 morale magnitude · B5 perf number · C1 crew-gate feel · C2 sustenance calibration · C3 government feel · D3 drift feel |
+
+**Read it as three layers of confidence:**
+- **"Boots & doesn't crash" (foundations):** ~**95 %** proven — this is the gate for everything and it's essentially closed.
+- **"Each system works/renders live":** ~**65 %** proven (5 work/render checks remain).
+- **"Feels calibrated":** ~**20 %** — mostly *deliberately parked* for local number-tuning (the coefficients ship neutral; direction is CI-locked, magnitude is a PC dial).
+
+**What's genuinely LEFT (ranked, for the next PC session):** ① a played-game **save/load** round-trip (D1) — the one remaining "does it survive a session" risk; ② the **Society tab** + **economy-UI tabs** render (A1b/B3) — pure "does it draw"; ③ a **real in-weapon-range fight** (B1b) — combat's last live gap; ④ **hazards live** (A3); ⑤ the **effects-over-time** calibration re-dumps (A2/C1/C2/C3/D3) — apply a lever → advance months → Dump again to watch it *bite*. **Ground combat (C5) and stations (C4) are NOT on this list — they're unbuilt, i.e. they ARE the design development, not test debt.**
+
+### 🔬 Diagnostic methodology — what the fleet-menu bug-hunt taught (2026-07-03, bank these)
+
+The fleet-menu freeze took **three** fix attempts before the gauge nailed it. Every lesson is a Visibility-Gate corollary and will recur:
+
+1. **Commit the `game_logs/` folder — it was the single biggest diagnostic unlock.** `.gitignore` used to drop it; it's now tracked. Each crash then shipped its own `[HANG]`/breadcrumb trace, turning "reproduce and guess" into "read the line." **Every crash report should arrive with the pushed `game_logs/` page.**
+2. **A native ImGui assert reads as a `[HANG]`, not a crash.** The assert pops a MODAL dialog that blocks the main thread → the hang-watchdog fires with no stack trace. So `[HANG] wedged in <stage>` can mean "an assert dialog is open at <stage>", not "an infinite loop." (Here it was `BeginPopupContextItem`'s internal mouse-button query.)
+3. **Put the gauge at the granularity of the thing that fails.** `[HANG] wedged in 'FleetWindow'` was too coarse to act on; finer `SessionLog.CurrentStage` sub-breadcrumbs (`FleetWindow/List/ContextMenu`) named the exact method. **Rule: after a fix MISSES, add the finer gauge FIRST — do not guess again** (proven twice this session; the first two fixes were confident guesses that missed).
+4. **The gauge beats the theory — even a confident one.** Two independent agents *and* the primary all concluded "drag-drop"; the breadcrumb overruled all three (it was the context menu). Don't ship a fix built on inference when a cheap gauge can confirm the exact line.
+5. **Agents are excellent for parallel EXONERATION.** Two agents ran git-archaeology across both merged branches at once — one proved the fleet-tree data is well-formed (not the cause), one traced the offending code as *predating both branches*. Ruling suspects out narrowed the hunt even without pinning the exact call.
+6. **`BeginPopupContextItem` is effectively banned in this codebase now** — its internal mouse-button query trips a native assert in the bundled ImGui build. Use the explicit `IsItemClicked(Right)` + `OpenPopup(id)` + `BeginPopup(id)` pattern (all three fleet-window menus converted).
+
 ### ⭐ The always-first test, every branch
 
 #### T0 — New Game boots and the clock runs — 🟢 PASSED 2026-07-02 (main @ Society-tab merge; RE-RUN after the freeze + weapon-range fixes merge)
@@ -141,8 +185,9 @@ The developer merged the testing levers + Society tab to main and ran one dense 
 - **Mitigation:** the defensive cargo-lookup fixes (#11); SafeRender names a faulting window in the log.
 - **Unblocks:** MVP Stage-0 "economy is real and visible" → ground-unit build path.
 
-#### B4 — Fleet UX + detection/fog live — 🟡 PENDING
-- See `docs/CLIENT-TEST-CHECKLIST.md` "Fleet UX" + the client `CLAUDE.md` detection sections: left-click selects a fleet immediately; fog hides undetected foreign units; EMCON Silent shrinks the amber ring live. Engine green; UI feel unverified.
+#### B4 — Fleet UX + detection/fog live — 🟢 FLEET-UX PASSED 2026-07-03 (menu select + context menus work; the freeze is fixed); fog/EMCON *feel* still 🟡
+- **Fleet UX — PASSED:** left-click selects a fleet immediately; selecting via the menu/entity-list works; right-click context menus open. This was BLOCKED by a hard freeze — selecting a fleet through the menu instantly hung the client (a native ImGui assert in `BeginPopupContextItem`, misread as a `[HANG]`). Fixed 2026-07-03 (all three fleet-window context menus converted to the explicit `IsItemClicked(Right)+OpenPopup+BeginPopup` pattern); confirmed live ("it worked").
+- **Still 🟡 (detection/fog *feel*):** fog hides undetected foreign units; EMCON Silent shrinks the amber ring live. Engine green; the live visual feel is unverified. See `docs/CLIENT-TEST-CHECKLIST.md` "Fleet UX" + the client `CLAUDE.md` detection sections.
 
 #### B5 — Performance / the map-breakdown number — 🟡 PENDING (DATA NEEDED)
 - **What:** the `⏱ map breakdown` per-icon-list timing on a busy frame.
@@ -269,4 +314,4 @@ These are built + CI-verified but have **no live effect** until their wiring/UI 
 - **Next slice:** a DevTools "Age the galaxy → Early/Mid/Late" button (thin wrapper) so the developer loads a rich state instantly at the PC. Then: save-file fixtures once the DataBlob schema stabilises (post-MVP), with a load-old-save regression test.
 - **PC-test:** 🟢 **PASSED 2026-07-02** — DevTools → Age → Late → Dump Society showed exactly this live: `5 player colonies`, a rebelling frontier (`Mercury … !REBELLING (180d left)`), and the ledger with `Vega Friendly+Trade`, `Crimson War`, `Terran Friendly+treaty`.
 
-*Where we're at (2026-07-02): the M-ECON + politics + staged-galaxy layer is **confirmed live** — boot, Society readout, legitimacy/rebellion, the full diplomacy ledger, and every new DevTools lever fired in one session (see "Live-run results" at the top of Layer 3). Two bugs the run surfaced — a Battle-Report freeze and out-of-weapon-range combat — are FIXED on `claude/4x-game-testing-strategy-19xw8q`, awaiting merge. **Next session (on the merged fixes):** (1) re-run T0 + read `game_logs/` for a clean, hang-free session; (2) the effects-over-time re-dump (apply a lever → advance months → Dump again to see it BITE); (3) the Society-tab render; (4) a real in-weapon-range fight; (5) a perf re-measure (the 1219ms `ui(windows)` frame should drop with the Battle-Report fix).*
+*Where we're at (2026-07-03): the M-ECON + politics + staged-galaxy layer is **confirmed live**, the 2026-07-02 fixes are **merged**, the New Game now **auto-spawns the combat scenario** (enemies present by default), and the **fleet UI is usable** after a three-attempt bug-hunt fixed the fleet-menu freeze. Per the scorecard above, **~50 % of the near-term runtime backlog is verified and none of the rest blocks design work** — the foundations are 🟢. **Next PC session (ranked):** (1) a played-game **save/load** round-trip (D1 — the last "survives a session" risk); (2) the **Society-tab** + **economy-UI-tabs** render (A1b/B3 — pure does-it-draw); (3) a **real in-weapon-range fight** (B1b); (4) **hazards live** (A3); (5) the **effects-over-time** calibration re-dumps (apply a lever → advance months → Dump again to watch it BITE). **Design development can proceed in parallel** — ground combat (C5) and stations (C4) are the next BUILD targets, not test debt.*
