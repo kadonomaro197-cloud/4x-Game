@@ -9,9 +9,9 @@ namespace Pulsar4X.Tests
 {
     /// <summary>
     /// Gauges the premade combat scenario (`CombatSandbox.SpawnCombatScenario`) — two well-rounded PLAYER task
-    /// forces at Earth and a well-rounded HOSTILE squadron at each of Luna / Venus / Mercury / Mars, for generating
-    /// rich live combat data. CI-side proof the spawn stands up real, combat-rated fleets; the live behaviour (the
-    /// fights, the closing log) is the developer's play-test.
+    /// forces at Earth and a beefed-up, capital-led HOSTILE squadron — each its OWN rival faction — at Luna / Venus
+    /// / Mercury / Mars, for generating rich live combat data. CI-side proof the spawn stands up real, combat-rated,
+    /// MULTI-FACTION fleets; the live behaviour (the fights, the closing log) is the developer's play-test.
     /// </summary>
     [TestFixture]
     public class CombatScenarioTests
@@ -20,7 +20,8 @@ namespace Pulsar4X.Tests
 
         [Test]
         [Description("SpawnCombatScenario stands up 2 player task forces at Earth + 4 hostile squadrons (Luna/Venus/" +
-                     "Mercury/Mars), each well-rounded (5 ships: beam+railgun+flak+2 fighters) and combat-rated.")]
+                     "Mercury/Mars), each its OWN faction and beefed-up (7 ships: capital + 2 beam + railgun + flak + " +
+                     "2 fighters) and combat-rated.")]
         public void SpawnCombatScenario_StandsUpPlayerAndEnemyFleets()
         {
             var s = TestScenario.CreateWithColony();
@@ -28,19 +29,26 @@ namespace Pulsar4X.Tests
             foreach (var bn in new[] { "Earth", "Luna", "Venus", "Mercury", "Mars" })
                 Log($"body '{bn}' found in system: {CombatSandbox.FindBody(s.StartingSystem, bn) != null}");
 
-            var enemy = CombatSandbox.SpawnCombatScenario(s.Game, s.StartingSystem, s.Faction);
-            Assert.That(enemy, Is.Not.Null, "the scenario returns the hostile faction");
+            var enemies = CombatSandbox.SpawnCombatScenario(s.Game, s.StartingSystem, s.Faction);
+            Assert.That(enemies, Is.Not.Null.And.Count.EqualTo(4), "the scenario returns FOUR distinct hostile factions (one per body)");
+            Log($"hostile factions: {string.Join(", ", enemies.Select(e => e.GetDefaultName()))}");
+            Assert.That(enemies.Select(e => e.Id).Distinct().Count(), Is.EqualTo(4), "each squadron is a DIFFERENT faction — multi-faction combat");
+            var enemyIds = enemies.Select(e => e.Id).ToHashSet();
 
-            // Four hostile squadrons (filter by name so the faction's empty root fleet isn't counted).
+            // Four hostile squadrons — one per rival faction (filter by name so each faction's empty root fleet
+            // isn't counted).
             var enemySquadrons = s.StartingSystem.GetAllEntitiesWithDataBlob<FleetDB>()
-                .Where(f => f.FactionOwnerID == enemy.Id && f.GetDefaultName().Contains("Squadron")).ToList();
+                .Where(f => enemyIds.Contains(f.FactionOwnerID) && f.GetDefaultName().Contains("Squadron")).ToList();
             Log($"hostile squadrons spawned: {enemySquadrons.Count} ({string.Join(", ", enemySquadrons.Select(f => f.GetDefaultName()))})");
             Assert.That(enemySquadrons.Count, Is.EqualTo(4), "a hostile squadron at Luna, Venus, Mercury, and Mars");
+            // Each squadron belongs to a DISTINCT faction (no two share an owner).
+            Assert.That(enemySquadrons.Select(f => f.FactionOwnerID).Distinct().Count(), Is.EqualTo(4),
+                "the four squadrons are owned by four different factions");
 
             foreach (var fleet in enemySquadrons)
             {
                 var ships = fleet.GetDataBlob<FleetDB>().GetChildren().Where(c => c.IsValid && !c.HasDataBlob<FleetDB>()).ToList();
-                Assert.That(ships.Count, Is.EqualTo(5), "well-rounded = beam + railgun + flak + 2 fighters");
+                Assert.That(ships.Count, Is.EqualTo(7), "beefed-up = capital + 2 beam + railgun + flak + 2 fighters");
                 foreach (var ship in ships)
                     Assert.That(ship.HasDataBlob<ShipCombatValueDB>(), Is.True, "each ship is combat-rated at build");
             }
