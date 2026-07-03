@@ -7,6 +7,9 @@ using Pulsar4X.Extensions;
 using Pulsar4X.Factions;
 using Pulsar4X.Components;
 using Pulsar4X.Storage;
+using Pulsar4X.Movement;
+using Pulsar4X.Galaxy;
+using Pulsar4X.Orbital;
 
 namespace Pulsar4X.Stations
 {
@@ -83,9 +86,10 @@ namespace Pulsar4X.Stations
             var game = ship?.Manager?.Game;
             if (game == null) return;
 
-            // The station anchors to whatever body the construction ship is in the SOI of — a star, a belt body, a
-            // planet, whatever it's parked at. This is what lets a research station orbit a star you'll never colonize.
-            var hostingBody = ship.GetSOIParentEntity();
+            // Prefer a LAGRANGE-POINT marker the ship is sitting near (a stable, named anchor) — that's the "build
+            // in space at a real place, not a random point" path. Otherwise anchor to whatever body the ship is in
+            // the SOI of (a star / belt / planet). Either lets a station sit where you'd never put a colony.
+            var hostingBody = FindNearbyLagrangeMarker(ship) ?? ship.GetSOIParentEntity();
             if (hostingBody == null || !hostingBody.IsValid) return;
 
             if (!game.Factions.TryGetValue(ship.FactionOwnerID, out var factionEntity)) return;
@@ -121,6 +125,33 @@ namespace Pulsar4X.Stations
             return _entityCommanding != null
                 && _entityCommanding.HasDataBlob<CargoStorageDB>()
                 && _entityCommanding.GetSOIParentEntity() != null;
+        }
+
+        /// <summary>
+        /// PLACEHOLDER capture radius (Slice D) — how close a construction ship must be to a Lagrange marker to
+        /// deploy AT it. Tune with the real numbers.
+        /// </summary>
+        private const double LagrangeCaptureRadius_m = 5e9; // 5 Gm
+
+        /// <summary>The nearest Lagrange-point marker within capture range of the ship, or null. Never throws.</summary>
+        private static Entity FindNearbyLagrangeMarker(Entity ship)
+        {
+            try
+            {
+                if (ship?.Manager == null || !ship.TryGetDataBlob<PositionDB>(out var shipPos))
+                    return null;
+                Vector3 shipAbs = shipPos.AbsolutePosition;
+                Entity nearest = null;
+                double nearestDist = LagrangeCaptureRadius_m;
+                foreach (var marker in ship.Manager.GetAllEntitiesWithDataBlob<LagrangePointDB>())
+                {
+                    if (!marker.TryGetDataBlob<PositionDB>(out var mp)) continue;
+                    double d = (mp.AbsolutePosition - shipAbs).Length();
+                    if (d <= nearestDist) { nearestDist = d; nearest = marker; }
+                }
+                return nearest;
+            }
+            catch { return null; }
         }
     }
 }

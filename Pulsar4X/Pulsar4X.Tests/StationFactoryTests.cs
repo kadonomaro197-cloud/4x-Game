@@ -15,6 +15,8 @@ using Pulsar4X.Galaxy;
 using Pulsar4X.Technology;
 using Pulsar4X.Damage;
 using Pulsar4X.Ships;
+using Pulsar4X.Orbits;
+using Pulsar4X.Movement;
 
 namespace Pulsar4X.Tests
 {
@@ -463,6 +465,40 @@ namespace Pulsar4X.Tests
             decimal fundsAfter = factionInfo.Money.GetCurrentFunds();
             Assert.That(fundsAfter, Is.LessThan(fundsBefore),
                 "station upkeep should draw down the faction's funds each month");
+        }
+
+        [Test]
+        [Description("LAGRANGE ANCHORS (Slice D): a star-planet pair gets L4/L5 marker entities that ride the planet's orbit (offset in mean anomaly, so they co-orbit) with a finite position — stable, named anchor POINTS in space to deploy a station at, not random empty spots. Generation is idempotent.")]
+        public void LagrangeMarkers_AreGeneratedForPlanets_AtTheTrojanPoints()
+        {
+            var s = TestScenario.CreateWithColony();
+
+            // Idempotent — generate if the gen path didn't already (the test shouldn't depend on which path built Sol).
+            Pulsar4X.Galaxy.LagrangeFactory.GenerateForSystem(s.StartingSystem);
+
+            var markers = s.StartingSystem.GetAllEntitiesWithDataBlob<LagrangePointDB>();
+            Assert.That(markers.Count, Is.GreaterThan(0), "Sol's planets should each get L4/L5 Lagrange markers");
+
+            var marker = markers[0];
+            var lp = marker.GetDataBlob<LagrangePointDB>();
+            Assert.That(lp.PointIndex == 4 || lp.PointIndex == 5, Is.True, "v1 generates the stable Trojan points L4/L5");
+
+            var planetOrbit = lp.Secondary.GetDataBlob<OrbitDB>();
+            var markerOrbit = marker.GetDataBlob<OrbitDB>();
+            Assert.That(markerOrbit.SemiMajorAxis, Is.EqualTo(planetOrbit.SemiMajorAxis).Within(0.001).Percent,
+                "an L4/L5 marker rides the planet's own orbit");
+            Assert.That(markerOrbit.MeanAnomalyAtEpoch, Is.Not.EqualTo(planetOrbit.MeanAnomalyAtEpoch),
+                "the marker is offset from the planet along that orbit (leading/trailing = a Trojan point)");
+
+            var pos = marker.GetDataBlob<PositionDB>().AbsolutePosition;
+            Assert.That(double.IsFinite(pos.X) && double.IsFinite(pos.Y) && double.IsFinite(pos.Z), Is.True,
+                "the marker has a finite position");
+
+            // Idempotent: a second generation adds nothing.
+            int before = markers.Count;
+            Pulsar4X.Galaxy.LagrangeFactory.GenerateForSystem(s.StartingSystem);
+            Assert.That(s.StartingSystem.GetAllEntitiesWithDataBlob<LagrangePointDB>().Count, Is.EqualTo(before),
+                "Lagrange generation is idempotent (no duplicate markers)");
         }
     }
 }

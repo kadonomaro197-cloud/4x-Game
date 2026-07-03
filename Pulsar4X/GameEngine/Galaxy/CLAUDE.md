@@ -26,6 +26,8 @@
 | `RuinsDB.cs` | Alien ruins on a body (exploration reward). |
 | `PopulationSupportAtbDB.cs` | Component attribute for infrastructure items that support colonists. `PopulationCapacity` = how many million people this unit of infrastructure supports at CC 1.0. |
 | `VisibleByDefaultDB.cs` | Tag blob — entities with this are visible without sensors (stars, known bodies). |
+| `LagrangePointDB.cs` | **NEW (Slice D, 2026-07-03)** Tags an entity as a Lagrange-point ANCHOR marker (Primary/Secondary bodies + PointIndex). A named, stable point in space a station can deploy at (instead of a random spot). |
+| `LagrangeFactory.cs` | **NEW (Slice D)** `GenerateForSystem(system)` — creates **L4/L5 Trojan markers** for each star-planet pair (mirrors `JPSurveyFactory`'s non-body-marker recipe: NameDB + token `MassVolumeDB` + PositionDB + `VisibleByDefaultDB` + `LagrangePointDB`). The marker is the planet's orbit offset ±60° in mean anomaly, so it **co-orbits for free** via the orbit processor. **Fully defensive + idempotent** (hooked into New-Game-critical system gen — must never throw or double-generate). Hooked at the main + Sol gen paths in `StarSystemFactory`. Deploy anchors to it via `DeployStationOrder`'s nearby-marker preference. L1/L2/L3 + planet-moon pairs are refinements. |
 
 ---
 

@@ -110,6 +110,9 @@ namespace Pulsar4X.Galaxy
             JPSurveyFactory.GenerateJPSurveyPoints(newSystem);
             JPFactory.GenerateJumpPoints(this, newSystem, stars[0].GetDataBlob<PositionDB>().Root);
 
+            // Lagrange-point anchor markers (L4/L5) for star-planet pairs — deployable station anchors. Defensive/idempotent.
+            LagrangeFactory.GenerateForSystem(newSystem);
+
             // Go through all the created entities and set them to be neutral
             foreach(var entity in newSystem.GetAllEntites())
             {
@@ -247,6 +250,9 @@ namespace Pulsar4X.Galaxy
             JPSurveyFactory.GenerateJPSurveyPoints(sol);
             JPFactory.GenerateJumpPoints(this, sol, sun.GetDataBlob<PositionDB>().Root);
 
+            // Lagrange-point anchor markers (L4/L5) for Sol's planets — deployable station anchors. Defensive/idempotent.
+            LagrangeFactory.GenerateForSystem(sol);
+
             game.GameMasterFaction.GetDataBlob<FactionInfoDB>().KnownSystems.Add(sol.ID);
             return sol;
         }
@@ -360,6 +366,9 @@ namespace Pulsar4X.Galaxy
 
             JPSurveyFactory.GenerateJPSurveyPoints(sol);
             JPFactory.GenerateJumpPoints(this, sol, sun.GetDataBlob<PositionDB>().Root);
+
+            // Lagrange-point anchor markers (L4/L5) for Sol's planets — deployable station anchors. Defensive/idempotent.
+            LagrangeFactory.GenerateForSystem(sol);
 
             // Go through all the created entities and set them to be neutral
             foreach(var entity in sol.GetAllEntites())
