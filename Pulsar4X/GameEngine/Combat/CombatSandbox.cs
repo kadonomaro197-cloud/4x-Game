@@ -75,7 +75,8 @@ namespace Pulsar4X.Combat
         /// <summary>The "well-rounded" design set for a good combat-data fleet: BEAM (Aegis) + RAILGUN (Lancer) +
         /// FLAK (Bulwark) + two FIGHTERS (Wasp). Deliberately NO Leviathan capital — it carries all three weapon
         /// flavors (the whole triangle) and a range spread (long beam / mid railgun / short flak), so a fight gives
-        /// rich closing/dodge data. Pulls the design objects from a faction that has them in <c>ShipDesigns</c>.</summary>
+        /// rich closing/dodge data. Pulls the design objects from a faction that has them in <c>ShipDesigns</c>.
+        /// (This is the PLAYER task-force set; the enemy uses the beefier <see cref="HostileSquadronSet"/>.)</summary>
         public static List<ShipDesign> WellRoundedDesignSet(FactionInfoDB info)
         {
             string[] ids =
@@ -86,10 +87,50 @@ namespace Pulsar4X.Combat
                 "default-ship-design-test-fighter",   // Wasp — fighter (evasive screen)
                 "default-ship-design-test-fighter",   // Wasp — a second fighter
             };
+            return ResolveDesigns(info, ids);
+        }
+
+        /// <summary>A BEEFED-UP hostile squadron (the developer's "beef up the enemy fleets"): the well-rounded
+        /// weapon spread PLUS a Leviathan CAPITAL and a doubled beam line — a genuine threat, not a token picket.
+        /// Seven ships: capital + 2 beam + railgun + flak + 2 fighters. Used by <see cref="SpawnCombatScenario"/>
+        /// so each rival faction fields a real fleet. Pulls design objects from a faction that holds them.</summary>
+        public static List<ShipDesign> HostileSquadronSet(FactionInfoDB info)
+        {
+            string[] ids =
+            {
+                "default-ship-design-test-capital",   // Leviathan — capital ship (the beef)
+                "default-ship-design-test-warship",   // Aegis — beams
+                "default-ship-design-test-warship",   // a second Aegis
+                "default-ship-design-test-railgun",   // Lancer — railguns
+                "default-ship-design-test-flak",      // Bulwark — flak screen
+                "default-ship-design-test-fighter",   // Wasp — fighter
+                "default-ship-design-test-fighter",   // Wasp — a second fighter
+            };
+            return ResolveDesigns(info, ids);
+        }
+
+        // Look each design id up in a faction's ShipDesigns; skip any it doesn't hold (defensive — never throws).
+        private static List<ShipDesign> ResolveDesigns(FactionInfoDB info, string[] ids)
+        {
             var set = new List<ShipDesign>();
             foreach (var id in ids)
                 if (info.ShipDesigns.TryGetValue(id, out var d)) set.Add(d);
             return set;
+        }
+
+        /// <summary>Create + register a hostile NPC faction set up to PERSIST like a real one: it's added to
+        /// <c>game.Factions</c> (with a root FleetDB) by <see cref="FactionFactory.CreateBasicFaction"/>, told the
+        /// system exists (<c>KnownSystems</c>), and handed the player's ship designs — the recipe that makes its
+        /// owner-flipped ships survive a clock advance. The shared setup behind every enemy the sandbox stands up.</summary>
+        public static Entity SetupHostileFaction(Game game, string name, string abbr, EntityManager system, FactionInfoDB playerInfo)
+        {
+            var faction = FactionFactory.CreateBasicFaction(game, name, abbr, 0);
+            var info = faction.GetDataBlob<FactionInfoDB>();
+            if (!info.KnownSystems.Contains(system.ManagerID))
+                info.KnownSystems.Add(system.ManagerID);
+            foreach (var kv in playerInfo.ShipDesigns)
+                info.ShipDesigns[kv.Key] = kv.Value;
+            return faction;
         }
 
         /// <summary>Spawn ONE fleet of the given designs (one ship each), owned by <paramref name="owningFaction"/>,
@@ -126,16 +167,23 @@ namespace Pulsar4X.Combat
             return null;
         }
 
-        /// <summary>Stand up a ready-to-watch COMBAT SCENARIO: two well-rounded PLAYER task forces at Earth, and
-        /// well-rounded HOSTILE squadrons at Luna, Venus, Mercury, and Mars. Luna is inside the auto-engage range, so
-        /// that fight starts at once (instant data); Venus/Mercury/Mars are far, so the player sails a task force out
-        /// to them (closing data). Returns the hostile faction. The DevTools "Spawn Combat Scenario" button calls this.</summary>
-        public static Entity SpawnCombatScenario(Game game, EntityManager system, Entity playerFaction)
+        /// <summary>Stand up a ready-to-watch COMBAT SCENARIO: two well-rounded PLAYER task forces at Earth, and a
+        /// beefed-up HOSTILE squadron — each its OWN rival faction — at Luna, Venus, Mercury, and Mars. FOUR distinct
+        /// enemy factions (2026-07-03, the developer's "beef up the enemy fleets and make them different factions"),
+        /// so this also exercises MULTI-FACTION combat / IFF, each fielding a capital-led squadron
+        /// (<see cref="HostileSquadronSet"/>). Luna is inside the auto-engage range, so that fight starts at once
+        /// (instant data); Venus/Mercury/Mars are far, so the player sails a task force out to them (closing data).
+        /// Because they're different factions they're hostile to the player AND each other, but they sit at separate
+        /// bodies, so each only fights whoever comes to it. Returns the list of hostile factions (one per body found).
+        /// The DevTools "Spawn Combat Scenario" button calls this.</summary>
+        public static List<Entity> SpawnCombatScenario(Game game, EntityManager system, Entity playerFaction)
         {
             var playerInfo = playerFaction.GetDataBlob<FactionInfoDB>();
-            List<ShipDesign> RoundSet() => WellRoundedDesignSet(playerInfo);
+            List<ShipDesign> RoundSet() => WellRoundedDesignSet(playerInfo);   // player task-force set
+            List<ShipDesign> BeefSet()  => HostileSquadronSet(playerInfo);     // beefier enemy set (capital-led)
 
-            // Player task forces at Earth — the home base; send them out to the enemies.
+            // Player task forces at Earth — the home base; send them out to the enemies. (Unchanged — the scenario's
+            // own ships stay the well-rounded set; only the ENEMY was beefed up.)
             var earth = FindBody(system, "Earth");
             if (earth != null)
             {
@@ -143,34 +191,29 @@ namespace Pulsar4X.Combat
                 SpawnMixedFleet(game, system, playerFaction, playerFaction, RoundSet(), earth, "2nd Task Force");
             }
 
-            // One hostile faction (set up to persist like a real NPC: knows the system, holds the designs), with a
-            // well-rounded squadron at each of the four bodies.
-            var enemy = FactionFactory.CreateBasicFaction(game, "Hostiles", "FOE", 0);
-            var enemyInfo = enemy.GetDataBlob<FactionInfoDB>();
-            if (!enemyInfo.KnownSystems.Contains(system.ManagerID))
-                enemyInfo.KnownSystems.Add(system.ManagerID);
-            foreach (var kv in playerInfo.ShipDesigns)
-                enemyInfo.ShipDesigns[kv.Key] = kv.Value;
-
-            // A MIX of engagement postures so the first-shot / standoff mechanic has something to show: some attack
-            // on sight, one only returns fire, one holds fire entirely. (Postures only BITE when the first-shot
-            // trigger flag — RequireWeaponsReleaseToEngage — is on; with it off, everyone fights on proximity.)
+            // One DISTINCT rival faction per body, each fielding a beefed-up squadron, with a MIX of engagement
+            // postures so the first-shot / standoff mechanic has something to show: some attack on sight, one only
+            // returns fire, one holds fire entirely. (Postures only BITE when the first-shot trigger flag —
+            // RequireWeaponsReleaseToEngage — is on; with it off, everyone fights on proximity.)
             var enemyPlan = new[]
             {
-                ("Luna",    EngagementPosture.WeaponsFree),  // attack first — and it's in auto-engage range, so it opens the fight
-                ("Venus",   EngagementPosture.ReturnFire),   // only shoots if shot at
-                ("Mercury", EngagementPosture.WeaponsHold),  // won't attack at all — a passive picket (standoff unless you fire)
-                ("Mars",    EngagementPosture.WeaponsFree),  // attack first
+                ("Luna",    "Lunar Free State",    "LFS", EngagementPosture.WeaponsFree),  // attack first — in auto-engage range, opens the fight
+                ("Venus",   "Venusian Compact",    "VNC", EngagementPosture.ReturnFire),   // only shoots if shot at
+                ("Mercury", "Mercury Combine",     "MRC", EngagementPosture.WeaponsHold),  // won't attack — a passive picket (standoff unless you fire)
+                ("Mars",    "Martian Directorate", "MRD", EngagementPosture.WeaponsFree),  // attack first
             };
-            foreach (var (bodyName, posture) in enemyPlan)
+            var factions = new List<Entity>();
+            foreach (var (bodyName, factionName, abbr, posture) in enemyPlan)
             {
                 var body = FindBody(system, bodyName);
                 if (body == null) continue;
-                var squadron = SpawnMixedFleet(game, system, enemy, playerFaction, RoundSet(), body,
-                    $"Hostile {bodyName} Squadron ({PostureLabel(posture)})");
+                var enemy = SetupHostileFaction(game, factionName, abbr, system, playerInfo);
+                factions.Add(enemy);
+                var squadron = SpawnMixedFleet(game, system, enemy, playerFaction, BeefSet(), body,
+                    $"{factionName} {bodyName} Squadron ({PostureLabel(posture)})");
                 FleetDoctrine.SetEngagementPosture(squadron, posture);
             }
-            return enemy;
+            return factions;
         }
 
         private static string PostureLabel(EngagementPosture p) => p switch

@@ -8,6 +8,7 @@ using ImGuiNET;
 using Pulsar4X.Blueprints;
 using Pulsar4X.Client.Interface.Widgets;
 using Pulsar4X.Colonies;
+using Pulsar4X.Combat;
 using Pulsar4X.DataStructures;
 using Pulsar4X.Engine;
 using Pulsar4X.Extensions;
@@ -42,6 +43,12 @@ public class NewGameMenu : PulsarGuiWindow
     private const string DEFAULT_ABBREVIATION = "UEC";
     private const int MIN_STARTING_FUNDS = 1_000_000;
     private const int MAX_STARTING_FUNDS = 1_000_000_000;
+
+    // ALPHA (2026-07-03): auto-build the combat scenario on every New Game / Quickstart — the same thing the
+    // DevTools "Spawn Combat Scenario" button does, but on by default (the developer's ask). So a fresh game
+    // already has the four rival factions + squadrons at Luna/Venus/Mercury/Mars to fight, no SM-mode button
+    // needed. Flip to false for a clean, empty-sky New Game. See CreateGameCore.
+    public static bool AutoSpawnCombatScenario = true;
 
     Page _currentPage = Page.SelectMods;
     ModLoader _modLoader = new ModLoader();
@@ -622,6 +629,26 @@ public class NewGameMenu : PulsarGuiWindow
                 BonusCategory.ResearchPoints,
                 "tech-category-power-propulsion"
             ));
+        }
+
+        // ALPHA: stand up the premade combat scenario by default (see AutoSpawnCombatScenario above) — the four
+        // rival factions + capital-led squadrons at Luna/Venus/Mercury/Mars, plus two player task forces at Earth.
+        // The exact same engine call the DevTools "Spawn Combat Scenario" button makes, run here so a New Game
+        // already has enemies to fight. Wrapped so a scenario-spawn hiccup can NEVER break New Game itself — a
+        // failure just logs and you get the normal (enemy-less) start. Runs BEFORE PostNewGameInitialization so
+        // the first sensor scan it schedules already sees the spawned ships. Enemies sit at other bodies (not
+        // Earth), so nothing auto-engages on spawn — you close to fight.
+        if (AutoSpawnCombatScenario)
+        {
+            try
+            {
+                var enemyFactions = CombatSandbox.SpawnCombatScenario(game, startingSystem, playerFaction);
+                Console.WriteLine($"[NewGame] Auto-spawned combat scenario: {enemyFactions.Count} rival faction(s) at Luna/Venus/Mercury/Mars + 2 player task forces at Earth.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[NewGame] Auto-spawn combat scenario FAILED (New Game continues without it): {ex}");
+            }
         }
 
         game.PostNewGameInitialization();

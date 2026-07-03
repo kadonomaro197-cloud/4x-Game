@@ -17,6 +17,7 @@ using Pulsar4X.Movement;
 using Pulsar4X.Sensors;
 using Pulsar4X.Combat;
 using SDL3;
+using ImGuiNET;
 
 namespace Pulsar4X.Client.Rendering
 {
@@ -843,20 +844,26 @@ namespace Pulsar4X.Client.Rendering
             foreach (var k in _allRangeKeys) UIWidgets.Remove(k);
             _allRangeKeys.Clear();
 
-            void Ring(string key, PositionDB center, double range_m, byte r, byte g, byte b, byte a)
+            // Resolve a unit/place's name for the hover tooltip (the player's name for it; falls back to the id).
+            string NameOf(Entity e) => e.TryGetDataBlob<NameDB>(out var n) ? n.GetName(facId) : ("#" + e.Id);
+
+            void Ring(string key, PositionDB center, double range_m, byte r, byte g, byte b, byte a, string label)
             {
                 if (range_m <= 0 || center == null) return;
-                UIWidgets[key] = new SimpleCircle(center, Pulsar4X.Orbital.Distance.MToAU(range_m),
+                var circle = new SimpleCircle(center, Pulsar4X.Orbital.Distance.MToAU(range_m),
                     new SDL3.SDL.Color { R = r, G = g, B = b, A = a });
+                circle.HoverLabel = label;   // shown when the mouse hovers this ring's line
+                UIWidgets[key] = circle;
                 _allRangeKeys.Add(key);
             }
 
             foreach (var ship in ownShips)
             {
                 var pos = ship.GetDataBlob<PositionDB>();
-                Ring("allrange_" + ship.Id + "_beam",   pos, WeaponUtils.GetMaxBeamRange_m(ship),   225, 90, 70, 70);  // red: how far it can SHOOT
-                Ring("allrange_" + ship.Id + "_sensor", pos, SensorTools.SensorReachRange_m(ship),   80, 210, 110, 55); // green: how far it can SEE
-                Ring("allrange_" + ship.Id + "_detect", pos, SensorTools.DetectabilityRange_m(ship), 240, 160, 40, 60); // amber: how far it can BE SEEN
+                string nm = NameOf(ship);
+                Ring("allrange_" + ship.Id + "_beam",   pos, WeaponUtils.GetMaxBeamRange_m(ship),   225, 90, 70, 70,  nm + " — Weapons reach (how far it can SHOOT)");
+                Ring("allrange_" + ship.Id + "_sensor", pos, SensorTools.SensorReachRange_m(ship),   80, 210, 110, 55, nm + " — Sensor reach (how far it can SEE)");
+                Ring("allrange_" + ship.Id + "_detect", pos, SensorTools.DetectabilityRange_m(ship), 240, 160, 40, 60, nm + " — Detectability / EMCON (how far it can BE SEEN)");
             }
 
             foreach (var colony in ownColonies)
@@ -867,10 +874,47 @@ namespace Pulsar4X.Client.Rendering
                 double placeReach = refTarget != null
                     ? SensorTools.DetectionRangeAgainst(colony, refTarget)
                     : SensorTools.SensorReachRange_m(colony);
-                Ring("allrange_colony_" + colony.Id + "_sensor", colony.GetDataBlob<PositionDB>(), placeReach, 80, 210, 110, 45);
+                Ring("allrange_colony_" + colony.Id + "_sensor", colony.GetDataBlob<PositionDB>(), placeReach, 80, 210, 110, 45,
+                    NameOf(colony) + " (station/colony) — Detection range (how far it SEES)");
             }
 
             SessionLog.Action($"[range-ring] all-ranges rebuilt: {ownShips.Count} unit(s) + {ownColonies.Count} place(s) = {_allRangeKeys.Count} ring(s)");
+        }
+
+        // Hover tooltip for the range-ring LINES (weapons/sensor/detectability + colony detection). Called each frame
+        // during the ImGui pass: if the mouse is on/near a ring's circumference (and not over a UI panel), show the
+        // ring's stamped HoverLabel — "<unit> — Weapons reach" etc. A ring is a circle, so the hit-test is
+        // |distance(mouse, centre) − screenRadius| < a few px. Picks the closest match if rings overlap. Defensive:
+        // never throws (a diagnostic overlay must not break the frame). Screen-space assumes the map viewport fills
+        // the window (ImGui mouse px == the camera's ViewScreenPos px); flagged if that ever drifts.
+        public void RangeRingTooltip()
+        {
+            try
+            {
+                var io = ImGui.GetIO();
+                if (io.WantCaptureMouse) return;   // mouse is over a window/panel — that owns the tooltip
+                var m = ImGui.GetMousePos();
+
+                double bestDelta = 7.0;            // hover tolerance from the line, in pixels
+                string label = null;
+                foreach (var kv in UIWidgets)
+                {
+                    if (kv.Value is not SimpleCircle c || c.HoverLabel == null) continue;
+                    double r = c.ScreenRadiusPx;
+                    if (!double.IsFinite(r) || r < 3) continue;   // culled/degenerate ring
+                    double dx = m.X - c.ViewScreenPos.X, dy = m.Y - c.ViewScreenPos.Y;
+                    double delta = System.Math.Abs(System.Math.Sqrt(dx * dx + dy * dy) - r);
+                    if (delta < bestDelta) { bestDelta = delta; label = c.HoverLabel; }
+                }
+
+                if (label != null)
+                {
+                    ImGui.BeginTooltip();
+                    ImGui.TextUnformatted(label);   // Unformatted: a name with a literal % must not be read as printf
+                    ImGui.EndTooltip();
+                }
+            }
+            catch { }
         }
 
         // Draws each space hazard (gas cloud / solar flare) as a coloured circle marking the area it covers — the

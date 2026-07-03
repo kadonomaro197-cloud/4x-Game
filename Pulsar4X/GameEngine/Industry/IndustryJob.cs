@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using Pulsar4X.DataStructures;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
@@ -10,6 +11,16 @@ namespace Pulsar4X.Industry
     {
         internal string TypeID;
         public IndustryJobStatus Status { get; internal set; } = IndustryJobStatus.Queued;
+
+        /// <summary>
+        /// Deserialization constructor. WITHOUT this, Newtonsoft used the <c>(FactionInfoDB, string)</c> ctor below
+        /// on load — but it can't supply a FactionInfoDB, so it passed null and <c>factionInfo.IndustryDesigns[...]</c>
+        /// threw NullReferenceException, breaking LOAD of ANY save that has a queued production job (the "save didn't
+        /// work" bug, 2026-07-03). This parameterless ctor is what Json.NET now uses; it then populates the serialized
+        /// fields (ItemGuid/TypeID/Name/costs/points/Status/…) directly. Gauge: SaveLoadWithJobTests.
+        /// </summary>
+        [JsonConstructor]
+        private IndustryJob() { }
 
         public IndustryJob(FactionInfoDB factionInfo, string itemID)
         {

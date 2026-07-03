@@ -59,6 +59,11 @@ namespace Pulsar4X.Client
         // ── Combat Sandbox ─────────────────────────────
         private int _hostileCount = 3;
         private string _hostileStatus = "";
+        // Each "Spawn Hostile Fleet" press stands up a NEW faction; rotate distinct names so repeated spawns are
+        // genuinely DIFFERENT factions (not four things all called "Hostiles") — multi-faction combat / IFF material.
+        private int _hostileSpawnIndex = 0;
+        private static readonly string[] _hostileFactionNames =
+            { "Crimson Fleet", "Iron Legion", "Black Sun Cartel", "Ashen Concord", "Void Reavers", "Kestrel Syndicate" };
 
         // ── Government (test regimes) ──────────────────
         private string _governmentStatus = "";
@@ -692,14 +697,17 @@ namespace Pulsar4X.Client
                         {
                             var design = _shipDesignValues[_selectedDesign];
                             var body = _bodyEntities[_selectedSpawnParent];
+                            // A distinct faction name per press → each spawn is its own rival faction.
+                            var factionName = _hostileFactionNames[_hostileSpawnIndex % _hostileFactionNames.Length];
+                            _hostileSpawnIndex++;
                             // CombatSandbox builds a registered enemy faction + fleet + ships (owner-flipped) — the
                             // CI-proven engine helper, so this client call stays a thin wrapper.
                             var fleet = CombatSandbox.SpawnHostileFleet(
                                 _uiState.Game, _uiState.SelectedSystem, _uiState.PlayerFaction,
-                                design, _hostileCount, body, "Hostiles");
-                            _hostileStatus = $"Spawned {_hostileCount}x '{design.Name}' as a HOSTILE fleet orbiting {GetEntityName(body)}. "
+                                design, _hostileCount, body, factionName);
+                            _hostileStatus = $"Spawned {_hostileCount}x '{design.Name}' as the '{factionName}' fleet orbiting {GetEntityName(body)}. "
                                 + "Put your fleet at the same body, then press play (or click 'Tick Combat') to fight.";
-                            DevLog($"Spawn Hostile Fleet OK: {_hostileCount}x '{design.Name}' around '{GetEntityName(body)}', fleet id={fleet.Id}");
+                            DevLog($"Spawn Hostile Fleet OK: {_hostileCount}x '{design.Name}' as '{factionName}' around '{GetEntityName(body)}', fleet id={fleet.Id}");
                         }
                         catch (Exception ex)
                         {
@@ -748,15 +756,21 @@ namespace Pulsar4X.Client
                 if (ImGui.Checkbox("First-shot trigger — weapons-hold fleets sit in a standoff##devfirstshot", ref CombatEngagement.RequireWeaponsReleaseToEngage))
                     DevLog($"First-shot trigger (RequireWeaponsReleaseToEngage) = {CombatEngagement.RequireWeaponsReleaseToEngage}");
 
+                // Auto-spawn-on-New-Game toggle (ALPHA): when on, every New Game/Quickstart builds this same
+                // scenario automatically (no button press needed). Toggling here affects the NEXT new game, not
+                // the current one.
+                if (ImGui.Checkbox("Auto-spawn this scenario on New Game##devautoscenario", ref NewGameMenu.AutoSpawnCombatScenario))
+                    DevLog($"Auto-spawn combat scenario on New Game = {NewGameMenu.AutoSpawnCombatScenario} (applies to the next New Game)");
+
                 // Premade combat scenario: 2 well-rounded player task forces at Earth + hostile squadrons at
                 // Luna/Venus/Mercury/Mars — for generating rich live combat/closing data in one click.
                 if (ImGui.Button("Spawn Combat Scenario##devscenario"))
                 {
                     try
                     {
-                        var enemy = CombatSandbox.SpawnCombatScenario(_uiState.Game, _uiState.SelectedSystem, _uiState.PlayerFaction);
-                        _hostileStatus = "Spawned: 2 player task forces (Earth) + hostile squadrons at Luna/Venus/Mercury/Mars.";
-                        DevLog($"Spawn Combat Scenario OK: hostile faction id={enemy.Id}; player fleets at Earth, enemies at Luna/Venus/Mercury/Mars");
+                        var enemies = CombatSandbox.SpawnCombatScenario(_uiState.Game, _uiState.SelectedSystem, _uiState.PlayerFaction);
+                        _hostileStatus = $"Spawned: 2 player task forces (Earth) + {enemies.Count} rival factions with capital-led squadrons at Luna/Venus/Mercury/Mars.";
+                        DevLog($"Spawn Combat Scenario OK: {enemies.Count} hostile factions (ids {string.Join(", ", enemies.Select(e => e.Id))}); player fleets at Earth, enemies at Luna/Venus/Mercury/Mars");
                     }
                     catch (System.Exception ex)
                     {

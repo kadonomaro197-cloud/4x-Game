@@ -151,6 +151,12 @@ namespace Pulsar4X.Client
 
         }
 
+        // Delegates the range-ring hover tooltip to the currently-viewed system map (called during the ImGui pass).
+        internal void RangeRingTooltip()
+        {
+            try { SelectedSysMapRender?.RangeRingTooltip(); } catch { }
+        }
+
         internal void DrawNameIcons()
         {
             var zoomlvl = _state.Camera.ZoomLevel;

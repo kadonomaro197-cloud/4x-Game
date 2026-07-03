@@ -211,6 +211,14 @@ namespace Pulsar4X.Client
         protected Vector3 _worldPosition;
         public SDL.Point ViewScreenPos;
 
+        /// <summary>This frame's on-screen radius in pixels (set in OnFrameUpdate). NaN before the first update.
+        /// Used to hit-test the mouse against the ring's circumference for the hover tooltip.</summary>
+        public double ScreenRadiusPx = double.NaN;
+
+        /// <summary>Optional tooltip text shown when the mouse hovers this circle's line (null = no tooltip). Set by
+        /// whatever builds the circle (e.g. the range rings stamp "&lt;unit&gt; — Weapons reach").</summary>
+        public string HoverLabel;
+
         bool positionByDB;
 
         // On-screen-size cull (mirrors OrbitEllipseIcon, root CLAUDE.md gotcha #15). When you zoom in past a circle
@@ -281,6 +289,7 @@ namespace Pulsar4X.Client
             _offScreenSkip = false;
             var radiusPoint = matrix.TransformD(_shape.Points[0].X, _shape.Points[0].Y);
             double screenRadius = Math.Sqrt(radiusPoint.X * radiusPoint.X + radiusPoint.Y * radiusPoint.Y);
+            ScreenRadiusPx = screenRadius;   // expose for the hover-tooltip hit-test (culled rings get a huge value → never match)
             if (!double.IsFinite(screenRadius) || screenRadius > MaxScreenRadiusPx)
             {
                 _offScreenSkip = true;
