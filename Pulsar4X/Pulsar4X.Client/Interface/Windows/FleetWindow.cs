@@ -293,7 +293,9 @@ namespace Pulsar4X.Client
                             }
                             ImGui.NextColumn();
                             ImGui.Separator();
-                            DisplayHelpers.PrintRow("Ships", SelectedFleet.GetDataBlob<FleetDB>().GetChildren().Count(x => !x.HasDataBlob<FleetDB>()).ToString());
+                            int shipCount = SelectedFleet.TryGetDataBlob<FleetDB>(out var summaryFleetDB)
+                                ? summaryFleetDB.GetChildren().Count(x => !x.HasDataBlob<FleetDB>()) : 0;
+                            DisplayHelpers.PrintRow("Ships", shipCount.ToString());
                         }
                         ImGui.Columns(1);
                     }

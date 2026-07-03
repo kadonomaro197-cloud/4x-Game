@@ -7,9 +7,10 @@ Pulsar4X/Pulsar4X.Client/Data/*
 Pulsar4X/Benchmarks/BenchmarksDotNet.Artifacts/*
 Pulsar4X/Pulsar4X.Tests/TestResults/
 
-# Session logs (runtime play-by-play from Program.cs / RotatingLogWriter.cs — never commit a play session).
-# These are .txt, so the *.log rule below does NOT catch them; list them explicitly.
-game_logs/
+# Session logs (runtime play-by-play from Program.cs / RotatingLogWriter.cs).
+# The game_logs/ folder is DELIBERATELY tracked (2026-07-03, developer's call): the developer commits a play
+# session's rolling pages so a remote review can read the actual crash/behaviour trace instead of guessing.
+# The single-file fallback game_log.txt stays ignored (it's the pre-rotation legacy path, superseded by game_logs/).
 game_log.txt
 
 # Doxygen output
