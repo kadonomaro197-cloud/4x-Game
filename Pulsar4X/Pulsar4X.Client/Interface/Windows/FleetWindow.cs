@@ -388,7 +388,9 @@ namespace Pulsar4X.Client
                                 {
                                     SelectOrder(orders[i]);
                                 }
-                                if(ImGui.BeginPopupContextItem())
+                                if(ImGui.IsItemClicked(ImGuiMouseButton.Right))
+                                    ImGui.OpenPopup("orderctx");   // scoped by the PushID above; opened explicitly
+                                if(ImGui.BeginPopup("orderctx"))
                                 {
                                     if(i > 0 && ImGui.MenuItem("Move Up"))
                                     {
@@ -1278,6 +1280,11 @@ namespace Pulsar4X.Client
                         {
                             selectedShips[ship] = !selectedShips[ship];
                         }
+                        // Open the ship context menu on right-click of THIS row (explicit valid button), before the
+                        // tooltip renders — replaces BeginPopupContextItem() in DisplayShipContextMenu (same
+                        // internal-mouse-query assert as the fleet menu, 2026-07-03).
+                        if(ImGui.IsItemClicked(ImGuiMouseButton.Right))
+                            ImGui.OpenPopup("shipctx##" + ship.Id);
                         DisplayHelpers.ShipTooltip(ship, factionID);
                         DisplayShipContextMenu(selectedShips, ship);
                     }
@@ -1336,6 +1343,8 @@ namespace Pulsar4X.Client
                         {
                             selectedUnattachedShips[ship] = !selectedUnattachedShips[ship];
                         }
+                        if(ImGui.IsItemClicked(ImGuiMouseButton.Right))
+                            ImGui.OpenPopup("shipctx##" + ship.Id);
                         DisplayHelpers.ShipTooltip(ship, factionID);
                         DisplayShipContextMenu(selectedUnattachedShips, ship, isUnattached: true);
                     }
@@ -1401,6 +1410,13 @@ namespace Pulsar4X.Client
             {
                 SelectFleet(fleet);
             }
+            // Open the context menu on a RIGHT-click of THIS tree node, using explicit valid button args. This
+            // replaces BeginPopupContextItem(null, MouseButtonRight) in DisplayContextMenu, whose ImGui-INTERNAL
+            // IsMouseReleased(g...MouseButton) query was firing the native `button >= 0 && button < 5` assert every
+            // frame — the modal that read as [HANG] wedged in FleetWindow/List/ContextMenu (2026-07-03). Detected
+            // HERE (right after the node) so it keys off the tree node, not the tooltip's last-item.
+            if(ImGui.IsItemClicked(ImGuiMouseButton.Right))
+                ImGui.OpenPopup("fleetctx##" + fleet.Id);
 
             if(ImGui.IsItemHovered())
                 DisplayHelpers.DescriptiveTooltip(name, "Fleet", description);
@@ -1432,8 +1448,11 @@ namespace Pulsar4X.Client
 
         private void DisplayContextMenu(Entity fleet)
         {
-            // RIGHT-click only (explicit), so a LEFT-click never opens this menu — left-click just selects the fleet.
-            if(ImGui.BeginPopupContextItem(null, ImGuiPopupFlags.MouseButtonRight))
+            // The popup is OPENED by the explicit right-click check in DisplayFleetItem (ImGui.OpenPopup). Here we
+            // only RENDER it via BeginPopup(id) — which takes NO mouse button, so it can't hit the ImGui-internal
+            // IsMouseReleased(bad button) assert that BeginPopupContextItem(null, MouseButtonRight) was tripping
+            // every frame (the fleet-list freeze, 2026-07-03). Same id string the OpenPopup call uses.
+            if(ImGui.BeginPopup("fleetctx##" + fleet.Id))
             {
                 if(ImGui.MenuItem("Rename"))
                 {
@@ -1457,7 +1476,9 @@ namespace Pulsar4X.Client
         {
             if(SelectedFleet == null || factionRoot == null) return;
 
-            if(ImGui.BeginPopupContextItem())
+            // Rendered via BeginPopup(id) — opened by the explicit right-click check at the ship row. No internal
+            // mouse-button query (unlike BeginPopupContextItem), so it can't hit the native button assert.
+            if(ImGui.BeginPopup("shipctx##" + ship.Id))
             {
                 if(ImGui.MenuItem("View Ship"))
                 {
