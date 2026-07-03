@@ -59,9 +59,9 @@ Gauge: `Pulsar4X.Tests/PlanetRegionsTests.cs` — 4-region ring + wrapping adjac
 
 ### Slice plan (each its own CI-gated commit)
 
-1. **Region layer** — `PlanetRegionsDB` + generation + tests. *(this commit)*
-2. **Build at a region** — place an installation *in a chosen region* via the real `OrderHandler.HandleOrder` player-path (deploy-at-a-location, one level down from the station deploy). No economy disruption — a **new located axis**; the colony's existing abstract installations are left untouched (migration is a later, careful slice).
-3. **Planet view (client)** — a flat 3-region `PlanetViewWindow` (an ImGui window modelled on `ColonyHexMapWindow`, reachable from the planet's context menu). CI-blind → local-build check.
+1. **Region layer** — `PlanetRegionsDB` + generation + tests. **✅ built + green.**
+2. **Build at a region** — `PlaceInstallationInRegionOrder`: place an installation *in a chosen region* via the real `OrderHandler.HandleOrder` player-path (deploy-at-a-location, one level down from the station deploy), commanded by the colony. Records the instance id in `Region.InstallationIds` — a **new located axis**; the colony's existing abstract installations are left untouched. **✅ built** (gauge `PlanetRegionsTests.BuildInRegion_*`). *(Refinements: materials + build-time via a region-targeted `IndustryJob`; building on an uncolonised region via a construction unit.)*
+3. **Planet view (client)** — a flat 3-region `PlanetViewWindow` (an ImGui window modelled on `ColonyHexMapWindow`, reachable from the planet's context menu). CI-blind → local-build check. **← next.**
 4. **Survey reveal** — scanning a world flips `Surveyed` and reveals its features; wires into `GeoSurveys`/`Sensors` (the detection-quality fix already landed as the prerequisite).
 5. **Ground units** — `GroundUnitDesign : IConstructableDesign` + `GroundForcesDB` + a `GroundCombatProcessor` mirroring `AutoResolve`; move between regions on the crossing-time edges; capture by flipping `FactionOwnerID`.
 6. **Tactical hex** — the existing `ColonyHexMapDB` battlefield nested inside a region (persistence fixed first); the "zoom to high accuracy" layer.
