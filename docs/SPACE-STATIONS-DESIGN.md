@@ -105,6 +105,19 @@ So the full chain — *ship materials to the platform → its constructor fabric
 
 ---
 
+## Developer directions — deploy mechanics + flavors + anchors (captured 2026-07-03)
+
+Four directions the developer set after the first deploy path landed (feasibility being verified against the code; capture here so nothing's lost):
+
+1. **The construction vessel is REUSABLE and consumes resources scaled to how it's built.** A construction ship survives its deploy and can deploy again; **how much it can build is a function of its CARGO CAPACITY** (a bigger hauler carries more of the materials a station needs). This is the materials-supply loop, now with a design: the deploy/build DRAWS materials, capacity-limited — not free.
+2. **Fleet-pooled materials.** If the construction ship is **part of a FLEET, the build draws on the materials stored across the OTHER ships in that fleet** — a fleet-wide cargo pool, not just the one hull. So you send a construction ship + freighters together and the whole fleet's holds feed the station.
+3. **The "listening outpost" flavor.** A sensor/listening station built out at a **distant star system** for early warning / detection coverage — the detection-arm station flavor (alongside research / mining / commerce / population). Likely mostly a LOADOUT (station + a big sensor module) if the sensor system runs on a station host.
+4. **Lagrange-point anchors — build in space, not at "random points."** Mark the **Lagrange points (L1–L5) around planet/star/moon pairs** as named anchor locations, so a station deploys at a *stable, meaningful point in space* rather than an arbitrary spot. The construction ship flies to an L-point marker and deploys there. This gives "a station between the asteroids / out in the deep" a real, selectable home. (New galaxy-gen feature: generate L-point marker entities a station can anchor to; the station host today wants a body with a name + a radius — an L-point marker needs to satisfy or relax that.)
+
+**Build-order read (pending the feasibility ledgers):** (3) listening outpost is likely the cheapest (a loadout, if sensors run on a station); (1)+(2) materials/fleet-pool is the meaty economy loop (the deferred `LogiBaseDB`/cargo work, now scoped); (4) Lagrange anchors is a self-contained galaxy-gen + deploy-target feature. Lock each as its own slice.
+
+---
+
 ## Where this plugs in (connections to map before building)
 
 - **Colonies** (`GameEngine/Colonies/`) — the **reference chassis** the parallel `StationInfoDB` mirrors (NOT generalized — `ColonyInfoDB` stays planet-tied); the morale/population loop must be shared so it runs on both hosts.
