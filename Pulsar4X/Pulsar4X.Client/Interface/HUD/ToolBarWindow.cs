@@ -111,6 +111,16 @@ namespace Pulsar4X.Client
 
             btn = new ToolBarOption()
             {
+                Picture = _uiState.Img_Select(),   // placeholder icon (no dedicated diplomacy art yet)
+                TooltipText = "Diplomacy: your standing with other factions",
+                OnClick = new Action(DiplomacyWindow.GetInstance().ToggleActive),
+                GetActive = new Func<bool>(DiplomacyWindow.GetInstance().GetActive)
+                //Opens the diplomacy ledger (stance / score / treaties per met faction)
+            };
+            ToolButtons.Add(btn);
+
+            btn = new ToolBarOption()
+            {
                 Picture = _uiState.Img_Ruler(),
                 TooltipText = "Measure distance",
                 OnClick = new Action(DistanceRuler.GetInstance().ToggleActive),
