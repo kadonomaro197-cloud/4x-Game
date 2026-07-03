@@ -1,4 +1,4 @@
-=== Pulsar4X session started 2026-07-03 01:56:09 ===
+=== Pulsar4X session started 2026-07-03 02:25:38 ===
 Log: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\game_logs (rolling pages game_log_000.txt, _001, …)
 File not found: Resources\CancelIco.bmp
 File not found: Resources\CargoIco.bmp
@@ -29,121 +29,238 @@ Found mod 'Pulsar4x-Testing' from C:\Users\DeeDiebS\AppData\Roaming\Pulsar4X\Pul
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\pulsar4x-menu.png
 Successfully loaded: pulsar4x-menu
 Format: .png
-Texture pointer: 2307B5D86F0
+Texture pointer: 21972CA26C0
 Dimensions: 400x200
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\discord-mark-white.png
 Successfully loaded: discord
 Format: .png
-Texture pointer: 2307B5D8E70
+Texture pointer: 21972CA2300
 Dimensions: 619x469
 --------------------------------------------------
-[STATE] ⏱ slow frame 396ms — stage breakdown: update(state+transforms) 0 / map-draw(SDL lines) 0 / ui(windows) 395 ms — the biggest number is the culprit
-New Game: SpeciesId='species-human' ColonyId='colony-earth' SystemId='system-sol' BodyId='planet-earth' EnabledSystems=1
 [NewGame] Auto-spawned combat scenario: 4 rival faction(s) at Luna/Venus/Mercury/Mars + 2 player task forces at Earth.
-[VIEW] now viewing faction id=1443 (UEC) [player]
+[VIEW] now viewing faction id=776 (UEC) [player]
 Ship icon texture loaded: 28x14
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\DesignComponentIco.bmp
 Successfully loaded: DesComp
 Format: .bmp
-Texture pointer: 2307B81EA40
+Texture pointer: 2197A875600
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\DesignShipIco.bmp
 Successfully loaded: DesShip
 Format: .bmp
-Texture pointer: 2307B81EE00
+Texture pointer: 2197A876A00
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\IndustryIco.bmp
 Successfully loaded: Industry
 Format: .bmp
-Texture pointer: 2307B81E180
+Texture pointer: 2197A876500
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\ResearchIco.bmp
 Successfully loaded: Research
 Format: .bmp
-Texture pointer: 2307B81F6C0
+Texture pointer: 2197A876780
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\SelectIco.bmp
 Successfully loaded: Select
 Format: .bmp
-Texture pointer: 2307B81E2C0
+Texture pointer: 2197A8759C0
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\GalaxyMapIco.bmp
 Successfully loaded: GalMap
 Format: .bmp
-Texture pointer: 2307B81DF00
+Texture pointer: 2197A875380
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\RulerIco.bmp
 Successfully loaded: Ruler
 Format: .bmp
-Texture pointer: 2307B81DC80
+Texture pointer: 2197A875B00
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\TreeIco.bmp
 Successfully loaded: Tree
 Format: .bmp
-Texture pointer: 2307B81F800
+Texture pointer: 2197A875D80
 Dimensions: 256x256
 --------------------------------------------------
 [DevTools] Refresh: 13 ship design(s), 319 body(ies), 31 cargo target(s), 15 mineral(s)
-[STATE] ⏱ slow frame 1169ms — stage breakdown: update(state+transforms) 0 / map-draw(SDL lines) 0 / ui(windows) 1168 ms — the biggest number is the culprit
+[STATE] ⏱ slow frame 1429ms — stage breakdown: update(state+transforms) 0 / map-draw(SDL lines) 0 / ui(windows) 1427 ms — the biggest number is the culprit
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
 [ENGINE] sensor scans 44 (+44), battle-trigger passes 0 (+0) since last beat
 [DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
-[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.384 Gm (DETECTED)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
 [EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
 [ACTION] [range-ring] all-ranges rebuilt: 5 unit(s) + 1 place(s) = 14 ring(s)
-[STATE] ⏱ map breakdown ms — orbits u1.0/d1.3 (285) | rings(widgets) u0.8/d0.6 (15) | ships u1.4/d0.5 (18) | bodies u0.6/d4.6 (270) | moves d0.0 | contacts d3.7 | labels u0.4/d2.9 (279)
+[STATE] ⏱ map breakdown ms — orbits u1.0/d1.5 (285) | rings(widgets) u0.8/d0.6 (15) | ships u1.4/d0.5 (18) | bodies u0.7/d5.0 (270) | moves d0.0 | contacts d3.4 | labels u0.4/d2.7 (278)
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\Play.bmp
 Successfully loaded: PlayImg
 Format: .bmp
-Texture pointer: 2307FE79F10
+Texture pointer: 2197AEC0DE0
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\OneStep.bmp
 Successfully loaded: OneStepImg
 Format: .bmp
-Texture pointer: 2307FE7A050
+Texture pointer: 2197AEC08E0
 Dimensions: 256x256
 --------------------------------------------------
+[CAMERA] pan -> 150.1,-7.6 Gm
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
 [ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
-[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.384 Gm (DETECTED)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
 [EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 150.1,-7.6 Gm
+[STATE] ⏱ map breakdown ms — orbits u0.3/d0.3 (285) | rings(widgets) u0.1/d0.1 (15) | ships u0.0/d0.0 (18) | bodies u0.5/d6.6 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.1 (279)
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[STATE] ⏱ map breakdown ms — orbits u0.3/d0.1 (285) | rings(widgets) u0.0/d0.1 (15) | ships u0.0/d0.0 (18) | bodies u0.6/d114.1 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.1 (243)
+[CAMERA] pan -> 150.1,-7.6 Gm
+[STATE] ⏱ slow frame 320ms — stage breakdown: update(state+transforms) 25 / map-draw(SDL lines) 215 / ui(windows) 0 ms — the biggest number is the culprit
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
 [ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
-[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.384 Gm (DETECTED)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
 [EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[SELECT] Primary click on '1st Task Force Aegis Test Warship 1' (entity #1465, faction 1443)
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[STATE] ⏱ map breakdown ms — orbits u0.4/d0.1 (285) | rings(widgets) u0.0/d0.1 (15) | ships u0.0/d0.0 (18) | bodies u0.6/d460.7 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.1 (210)
+[STATE] ⏱ slow frame 650ms — stage breakdown: update(state+transforms) 24 / map-draw(SDL lines) 462 / ui(windows) 0 ms — the biggest number is the culprit
+[CAMERA] pan -> 150.1,-7.6 Gm
+[STATE] ⏱ slow frame 621ms — stage breakdown: update(state+transforms) 2 / map-draw(SDL lines) 460 / ui(windows) 0 ms — the biggest number is the culprit
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
+[ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] ⏱ map breakdown ms — orbits u0.2/d0.0 (285) | rings(widgets) u0.0/d0.1 (15) | ships u0.0/d0.0 (18) | bodies u0.6/d461.3 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.1 (206)
+[STATE] ⏱ slow frame 585ms — stage breakdown: update(state+transforms) 1 / map-draw(SDL lines) 462 / ui(windows) 0 ms — the biggest number is the culprit
+[STATE] ⏱ slow frame 576ms — stage breakdown: update(state+transforms) 2 / map-draw(SDL lines) 455 / ui(windows) 0 ms — the biggest number is the culprit
+[STATE] ⏱ map breakdown ms — orbits u0.3/d0.0 (285) | rings(widgets) u0.0/d0.1 (15) | ships u0.0/d0.0 (18) | bodies u0.6/d454.5 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.1 (206)
+[STATE] ⏱ slow frame 575ms — stage breakdown: update(state+transforms) 1 / map-draw(SDL lines) 455 / ui(windows) 0 ms — the biggest number is the culprit
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
+[ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] ⏱ slow frame 577ms — stage breakdown: update(state+transforms) 1 / map-draw(SDL lines) 456 / ui(windows) 0 ms — the biggest number is the culprit
+[STATE] ⏱ map breakdown ms — orbits u0.2/d0.0 (285) | rings(widgets) u0.0/d0.1 (15) | ships u0.0/d0.0 (18) | bodies u0.6/d455.0 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.1 (206)
+[STATE] ⏱ slow frame 576ms — stage breakdown: update(state+transforms) 1 / map-draw(SDL lines) 455 / ui(windows) 1 ms — the biggest number is the culprit
+[STATE] ⏱ slow frame 581ms — stage breakdown: update(state+transforms) 1 / map-draw(SDL lines) 458 / ui(windows) 0 ms — the biggest number is the culprit
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
+[ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] ⏱ map breakdown ms — orbits u0.3/d0.0 (285) | rings(widgets) u0.0/d0.1 (15) | ships u0.0/d0.0 (18) | bodies u0.6/d457.2 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.1 (206)
+[STATE] ⏱ slow frame 579ms — stage breakdown: update(state+transforms) 1 / map-draw(SDL lines) 458 / ui(windows) 0 ms — the biggest number is the culprit
+[STATE] ⏱ slow frame 577ms — stage breakdown: update(state+transforms) 1 / map-draw(SDL lines) 457 / ui(windows) 0 ms — the biggest number is the culprit
+[STATE] ⏱ map breakdown ms — orbits u0.3/d0.0 (285) | rings(widgets) u0.0/d0.1 (15) | ships u0.0/d0.0 (18) | bodies u0.6/d457.9 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.1 (206)
+[STATE] ⏱ slow frame 579ms — stage breakdown: update(state+transforms) 2 / map-draw(SDL lines) 458 / ui(windows) 0 ms — the biggest number is the culprit
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
+[ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] ⏱ slow frame 578ms — stage breakdown: update(state+transforms) 1 / map-draw(SDL lines) 458 / ui(windows) 0 ms — the biggest number is the culprit
+[STATE] ⏱ map breakdown ms — orbits u0.3/d0.0 (285) | rings(widgets) u0.0/d0.1 (15) | ships u0.0/d0.0 (18) | bodies u0.6/d455.3 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.1 (206)
+[STATE] ⏱ slow frame 588ms — stage breakdown: update(state+transforms) 1 / map-draw(SDL lines) 456 / ui(windows) 0 ms — the biggest number is the culprit
+[STATE] ⏱ slow frame 577ms — stage breakdown: update(state+transforms) 1 / map-draw(SDL lines) 456 / ui(windows) 0 ms — the biggest number is the culprit
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
+[ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 150.1,-7.6 Gm
+[STATE] ⏱ map breakdown ms — orbits u0.3/d0.1 (285) | rings(widgets) u0.0/d0.1 (15) | ships u0.0/d0.0 (18) | bodies u0.6/d366.1 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.1 (210)
+[STATE] ⏱ slow frame 487ms — stage breakdown: update(state+transforms) 24 / map-draw(SDL lines) 366 / ui(windows) 0 ms — the biggest number is the culprit
+[CAMERA] pan -> 150.1,-7.6 Gm
+[STATE] ⏱ slow frame 375ms — stage breakdown: update(state+transforms) 2 / map-draw(SDL lines) 296 / ui(windows) 0 ms — the biggest number is the culprit
+[STATE] ⏱ map breakdown ms — orbits u0.3/d0.1 (285) | rings(widgets) u0.0/d0.1 (15) | ships u0.0/d0.0 (18) | bodies u0.6/d290.3 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.1 (211)
+[STATE] ⏱ slow frame 366ms — stage breakdown: update(state+transforms) 1 / map-draw(SDL lines) 291 / ui(windows) 0 ms — the biggest number is the culprit
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
+[ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] ⏱ slow frame 370ms — stage breakdown: update(state+transforms) 1 / map-draw(SDL lines) 294 / ui(windows) 0 ms — the biggest number is the culprit
+[STATE] ⏱ map breakdown ms — orbits u0.3/d0.1 (285) | rings(widgets) u0.0/d0.1 (15) | ships u0.0/d0.0 (18) | bodies u0.6/d291.3 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.1 (211)
+[STATE] ⏱ slow frame 368ms — stage breakdown: update(state+transforms) 1 / map-draw(SDL lines) 292 / ui(windows) 0 ms — the biggest number is the culprit
+[STATE] ⏱ slow frame 369ms — stage breakdown: update(state+transforms) 1 / map-draw(SDL lines) 293 / ui(windows) 1 ms — the biggest number is the culprit
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
+[ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] ⏱ map breakdown ms — orbits u0.3/d0.1 (285) | rings(widgets) u0.0/d0.1 (15) | ships u0.0/d0.0 (18) | bodies u0.6/d291.2 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.1 (211)
+[STATE] ⏱ slow frame 370ms — stage breakdown: update(state+transforms) 2 / map-draw(SDL lines) 291 / ui(windows) 0 ms — the biggest number is the culprit
+[SELECT] Primary click on '1st Task Force Aegis Test Warship 1' (entity #798, faction 776)
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\PinIco.bmp
 Successfully loaded: Pin
 Format: .bmp
-Texture pointer: 2307FE79DD0
+Texture pointer: 2197AEBF620
 Dimensions: 256x256
 --------------------------------------------------
+[STATE] ⏱ slow frame 375ms — stage breakdown: update(state+transforms) 1 / map-draw(SDL lines) 297 / ui(windows) 1 ms — the biggest number is the culprit
+[STATE] ⏱ map breakdown ms — orbits u0.3/d0.1 (285) | rings(widgets) u0.0/d0.1 (15) | ships u0.0/d0.0 (18) | bodies u0.6/d294.5 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.1 (211)
+[STATE] ⏱ slow frame 372ms — stage breakdown: update(state+transforms) 1 / map-draw(SDL lines) 295 / ui(windows) 0 ms — the biggest number is the culprit
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=1st Task Force Aegis Test Warship 1 ships-in-view=43
 [ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
-[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.384 Gm (DETECTED)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
 [EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[SELECT] Primary click on '1st Task Force Aegis Test Warship 1' (entity #1465, faction 1443)
+[STATE] ⏱ slow frame 376ms — stage breakdown: update(state+transforms) 1 / map-draw(SDL lines) 297 / ui(windows) 1 ms — the biggest number is the culprit
+[STATE] ⏱ map breakdown ms — orbits u0.3/d0.1 (285) | rings(widgets) u0.0/d0.1 (15) | ships u0.0/d0.0 (18) | bodies u1.2/d295.8 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.1 (211)
+[STATE] ⏱ slow frame 374ms — stage breakdown: update(state+transforms) 2 / map-draw(SDL lines) 296 / ui(windows) 1 ms — the biggest number is the culprit
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=1st Task Force Aegis Test Warship 1 ships-in-view=43
 [ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
-[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.384 Gm (DETECTED)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
 [EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[SELECT] Primary click on '1st Task Force Aegis Test Warship 1' (entity #1465, faction 1443)
+[STATE] ⏱ slow frame 378ms — stage breakdown: update(state+transforms) 1 / map-draw(SDL lines) 298 / ui(windows) 1 ms — the biggest number is the culprit
+[STATE] ⏱ map breakdown ms — orbits u0.3/d0.1 (285) | rings(widgets) u0.0/d0.1 (15) | ships u0.0/d0.0 (18) | bodies u0.6/d297.3 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.1 (211)
+[STATE] ⏱ slow frame 376ms — stage breakdown: update(state+transforms) 2 / map-draw(SDL lines) 297 / ui(windows) 1 ms — the biggest number is the culprit
+[STATE] ⏱ slow frame 377ms — stage breakdown: update(state+transforms) 1 / map-draw(SDL lines) 299 / ui(windows) 1 ms — the biggest number is the culprit
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=1st Task Force Aegis Test Warship 1 ships-in-view=43
 [ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
-[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.384 Gm (DETECTED)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
 [EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[HANG] main loop STALLED ~5s (frozen, or stuck in a long native/render call) — wedged in stage: 'FleetWindow/List' (the lines just above this are the last activity before it)
+[STATE] ⏱ map breakdown ms — orbits u0.3/d0.1 (285) | rings(widgets) u0.0/d0.1 (15) | ships u0.0/d0.0 (18) | bodies u0.6/d297.1 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.1 (211)
+[STATE] ⏱ slow frame 374ms — stage breakdown: update(state+transforms) 1 / map-draw(SDL lines) 298 / ui(windows) 0 ms — the biggest number is the culprit
+[CAMERA] pan -> 150.1,-7.6 Gm
+[STATE] ⏱ slow frame 326ms — stage breakdown: update(state+transforms) 25 / map-draw(SDL lines) 241 / ui(windows) 0 ms — the biggest number is the culprit
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[STATE] ⏱ map breakdown ms — orbits u0.3/d0.1 (285) | rings(widgets) u0.0/d0.1 (15) | ships u0.0/d0.0 (18) | bodies u0.6/d77.4 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.1 (262)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=1st Task Force Aegis Test Warship 1 ships-in-view=43
+[ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[CAMERA] pan -> 150.1,-7.6 Gm
+[STATE] ⏱ map breakdown ms — orbits u0.3/d0.3 (285) | rings(widgets) u0.1/d0.1 (15) | ships u0.0/d0.0 (18) | bodies u0.9/d6.1 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.1 (279)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=1st Task Force Aegis Test Warship 1 ships-in-view=43
+[ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] ⏱ map breakdown ms — orbits u0.3/d0.3 (285) | rings(widgets) u0.1/d0.1 (15) | ships u0.0/d0.0 (18) | bodies u0.5/d6.0 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.4 (279)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=1st Task Force Aegis Test Warship 1 ships-in-view=43
+[ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[STATE] ⏱ map breakdown ms — orbits u0.7/d0.3 (285) | rings(widgets) u0.1/d0.1 (15) | ships u0.0/d0.0 (18) | bodies u0.5/d6.1 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.1 (279)
+[HANG] main loop STALLED ~5s (frozen, or stuck in a long native/render call) — wedged in stage: 'FleetWindow/List/ContextMenu' (the lines just above this are the last activity before it)
