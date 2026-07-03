@@ -1607,7 +1607,16 @@ namespace Pulsar4X.Client
                 return positionDB.Parent;
 
             var parent = positionDB.Parent;
-            while (parent != null)
+            // Cycle guard (fixes the "click a fleet -> game freezes in FleetWindow" HANG, 2026-07-03). The engine
+            // SELF-PARENTS root bodies — a root star's PositionDB.Parent points at ITSELF, not null (MoveState/
+            // PositionDB.AbsolutePosition special-case `Parent == OwningEntity`). This walk only stops on null, a
+            // visible parent, or a parent with no PositionDB — so if it reaches a self-parented node (or any
+            // parent-chain cycle) that ISN'T in AllEntities, `parent = parentPositionDB.Parent` returns the same
+            // entity forever and the main loop wedges. `visited.Add` returns false the moment we revisit an id,
+            // breaking the loop. (The engine guards this same self-parent case in its own position math; this UI
+            // walk didn't.)
+            var visited = new HashSet<int>();
+            while (parent != null && visited.Add(parent.Id))
             {
                 // Check if this parent is visible to the faction
                 if (systemState.AllEntities.ContainsKey(parent.Id))
