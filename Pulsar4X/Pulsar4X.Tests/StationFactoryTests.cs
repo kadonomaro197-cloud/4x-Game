@@ -14,6 +14,7 @@ using Pulsar4X.Extensions;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Technology;
 using Pulsar4X.Damage;
+using Pulsar4X.Ships;
 
 namespace Pulsar4X.Tests
 {
@@ -391,23 +392,41 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("FRONT DOOR (Slice A): DeployStationOrder is the player's reachable path to a station — it deploys a platform at a body, registers it on the faction, and (deploy-bare-build-in-situ) installs a starter constructor so the platform is immediately an in-situ builder.")]
-        public void DeployStationOrder_DeploysAFunctionalPlatform()
+        [Description("FRONT DOOR (Slice A2): a station is deployed from a CONSTRUCTION SHIP at wherever it is parked — including in orbit of a STAR, the canonical research-station target you'd never colonize. The station anchors to the ship's SOI body, carries a starter constructor (in-situ builder), and the reusable vessel survives to deploy again.")]
+        public void ConstructionShip_DeploysStation_AtAStar_AndSurvives()
         {
             var s = TestScenario.CreateWithColony();
             var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
-            int stationsBefore = factionInfo.Stations.Count;
 
-            var command = DeployStationOrder.CreateCommand(s.Faction, s.StartingBody);
+            // The STAR — a place you'd never colonize; the whole reason a station beats a planet here.
+            Entity star = s.StartingSystem.GetAllEntitiesWithDataBlob<StarInfoDB>().First();
+
+            // A construction/hauler ship (has a cargo hold), created parked at the STAR.
+            Entity ship = null;
+            foreach (var kv in factionInfo.ShipDesigns)
+            {
+                var candidate = ShipFactory.CreateShip(kv.Value, s.Faction, star, "Constructor");
+                if (candidate.HasDataBlob<CargoStorageDB>()) { ship = candidate; break; }
+                candidate.Destroy();
+            }
+            Assert.That(ship, Is.Not.Null, "precondition: a start ship design with a cargo hold to act as the constructor vessel");
+
+            var anchor = ship.GetSOIParentEntity();
+            Assert.That(anchor, Is.Not.Null, "a ship parked at the star is in the star's SOI");
+
+            int stationsBefore = factionInfo.Stations.Count;
+            var command = DeployStationOrder.CreateCommand(ship);
+            Assert.That(command.IsValidCommand(s.Game), Is.True, "a hauler parked at a body is a valid construction vessel");
             command.Execute(s.Game.TimePulse.GameGlobalDateTime);
 
             Assert.That(factionInfo.Stations.Count, Is.EqualTo(stationsBefore + 1),
                 "deploying should register exactly one new station on the faction");
             var station = factionInfo.Stations[factionInfo.Stations.Count - 1];
-            Assert.That(station.GetDataBlob<StationInfoDB>().HostingBodyEntity, Is.EqualTo(s.StartingBody),
-                "the deployed station should orbit the chosen body");
+            Assert.That(station.GetDataBlob<StationInfoDB>().HostingBodyEntity.Id, Is.EqualTo(anchor.Id),
+                "the station should anchor to the body the construction ship was parked at (the star / its SOI) — NOT a colonized planet");
             Assert.That(station.HasDataBlob<IndustryAbilityDB>(), Is.True,
-                "the deployed bare platform should carry a starter constructor (an in-situ build line)");
+                "the deployed platform should carry a starter constructor (an in-situ build line)");
+            Assert.That(ship.IsValid, Is.True, "a reusable constructor vessel survives the deploy and can deploy again");
         }
 
         [Test]
