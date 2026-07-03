@@ -1,4 +1,4 @@
-=== Pulsar4X session started 2026-07-03 01:28:40 ===
+=== Pulsar4X session started 2026-07-03 01:39:09 ===
 Log: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\game_logs (rolling pages game_log_000.txt, _001, …)
 File not found: Resources\CancelIco.bmp
 File not found: Resources\CargoIco.bmp
@@ -29,112 +29,190 @@ Found mod 'Pulsar4x-Testing' from C:\Users\DeeDiebS\AppData\Roaming\Pulsar4X\Pul
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\pulsar4x-menu.png
 Successfully loaded: pulsar4x-menu
 Format: .png
-Texture pointer: 200ABAB2310
+Texture pointer: 23E18DA24A0
 Dimensions: 400x200
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\discord-mark-white.png
 Successfully loaded: discord
 Format: .png
-Texture pointer: 200ABAB2090
+Texture pointer: 23E18DA20E0
 Dimensions: 619x469
 --------------------------------------------------
-[STATE] ⏱ slow frame 416ms — stage breakdown: update(state+transforms) 0 / map-draw(SDL lines) 0 / ui(windows) 414 ms — the biggest number is the culprit
+[STATE] ⏱ slow frame 362ms — stage breakdown: update(state+transforms) 0 / map-draw(SDL lines) 0 / ui(windows) 361 ms — the biggest number is the culprit
 New Game: SpeciesId='species-human' ColonyId='colony-earth' SystemId='system-sol' BodyId='planet-earth' EnabledSystems=1
 [NewGame] Auto-spawned combat scenario: 4 rival faction(s) at Luna/Venus/Mercury/Mars + 2 player task forces at Earth.
-[VIEW] now viewing faction id=917 (UEC) [player]
+[VIEW] now viewing faction id=1197 (UEC) [player]
 Ship icon texture loaded: 28x14
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\DesignComponentIco.bmp
 Successfully loaded: DesComp
 Format: .bmp
-Texture pointer: 200AC0C40A0
+Texture pointer: 23E20BF4390
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\DesignShipIco.bmp
 Successfully loaded: DesShip
 Format: .bmp
-Texture pointer: 200AC0C36A0
+Texture pointer: 23E20BF44D0
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\IndustryIco.bmp
 Successfully loaded: Industry
 Format: .bmp
-Texture pointer: 200AC0C2CA0
+Texture pointer: 23E20BF2E50
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\ResearchIco.bmp
 Successfully loaded: Research
 Format: .bmp
-Texture pointer: 200AC0C41E0
+Texture pointer: 23E20BF3710
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\SelectIco.bmp
 Successfully loaded: Select
 Format: .bmp
-Texture pointer: 200AC0C4460
+Texture pointer: 23E20BF4890
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\GalaxyMapIco.bmp
 Successfully loaded: GalMap
 Format: .bmp
-Texture pointer: 200AC0C3CE0
+Texture pointer: 23E20BF3850
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\RulerIco.bmp
 Successfully loaded: Ruler
 Format: .bmp
-Texture pointer: 200AC0C2A20
+Texture pointer: 23E20BF4610
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\TreeIco.bmp
 Successfully loaded: Tree
 Format: .bmp
-Texture pointer: 200AC0C4320
+Texture pointer: 23E20BF3210
 Dimensions: 256x256
 --------------------------------------------------
 [DevTools] Refresh: 13 ship design(s), 319 body(ies), 31 cargo target(s), 15 mineral(s)
-[STATE] ⏱ slow frame 1086ms — stage breakdown: update(state+transforms) 0 / map-draw(SDL lines) 0 / ui(windows) 1084 ms — the biggest number is the culprit
+[STATE] ⏱ slow frame 1102ms — stage breakdown: update(state+transforms) 0 / map-draw(SDL lines) 1 / ui(windows) 1099 ms — the biggest number is the culprit
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
 [ENGINE] sensor scans 44 (+44), battle-trigger passes 0 (+0) since last beat
 [DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
 [REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
 [EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
 [ACTION] [range-ring] all-ranges rebuilt: 5 unit(s) + 1 place(s) = 14 ring(s)
-[STATE] ⏱ map breakdown ms — orbits u1.0/d1.5 (285) | rings(widgets) u0.8/d0.6 (15) | ships u1.4/d0.5 (18) | bodies u0.6/d5.3 (270) | moves d0.0 | contacts d3.6 | labels u0.4/d2.9 (279)
+[STATE] ⏱ map breakdown ms — orbits u1.0/d1.4 (285) | rings(widgets) u0.9/d0.6 (15) | ships u1.4/d0.5 (18) | bodies u0.6/d4.7 (270) | moves d0.0 | contacts d3.2 | labels u0.4/d2.9 (278)
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\Play.bmp
 Successfully loaded: PlayImg
 Format: .bmp
-Texture pointer: 200ABEEC050
+Texture pointer: 23E20DD8590
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\OneStep.bmp
 Successfully loaded: OneStepImg
 Format: .bmp
-Texture pointer: 200ABEEAB10
+Texture pointer: 23E20DD8090
 Dimensions: 256x256
 --------------------------------------------------
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
+[ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
 [CAMERA] pan -> 150,-7.6 Gm
-[CAMERA] pan -> 150,-7.7 Gm
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
-[ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
-[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
-[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
-[CAMERA] pan -> 149.9,-7.7 Gm
+[CAMERA] pan -> 150,-7.6 Gm
 [CAMERA] pan -> 149.8,-7.7 Gm
-[CAMERA] pan -> 149.6,-7.7 Gm
-[CAMERA] pan -> 148.9,-7.7 Gm
-[CAMERA] pan -> 145.1,-8 Gm
-[CAMERA] pan -> 118.6,-12.3 Gm
+[CAMERA] pan -> 149.7,-7.8 Gm
+[CAMERA] pan -> 150.7,-8.4 Gm
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
 [ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
 [REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
 [EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 145.8,-6.9 Gm
+[CAMERA] pan -> 104.6,8.7 Gm
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
 [ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
 [REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
 [EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 72.1,105.1 Gm
+[CAMERA] pan -> 81.8,317.2 Gm
+[CAMERA] pan -> 44,421 Gm
+[CAMERA] pan -> -59.1,690.2 Gm
+[CAMERA] pan -> -95.7,783.6 Gm
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
+[ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> -96.8,800 Gm
+[CAMERA] pan -> -96.6,806.5 Gm
+[CAMERA] pan -> -96.3,807 Gm
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
+[ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> -96.1,794.9 Gm
+[CAMERA] pan -> -102.2,774.1 Gm
+[CAMERA] pan -> -131.5,703.3 Gm
+[CAMERA] pan -> -69,745.8 Gm
+[CAMERA] pan -> 114,865.3 Gm
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
+[ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 430.4,656.5 Gm
+[CAMERA] pan -> 392.1,243 Gm
+[CAMERA] pan -> 316.2,201.6 Gm
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
+[ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 171.1,101.5 Gm
+[CAMERA] pan -> 122.6,33.9 Gm
+[CAMERA] pan -> 131.2,6.3 Gm
+[CAMERA] pan -> 140.5,-17.8 Gm
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
+[ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 152.1,-17.6 Gm
+[CAMERA] pan -> 151.9,-15.5 Gm
+[CAMERA] pan -> 150.9,-10.2 Gm
+[CAMERA] pan -> 149.9,-9.3 Gm
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
+[ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 150.2,-8.7 Gm
+[CAMERA] pan -> 150.9,-8.3 Gm
+[CAMERA] pan -> 150.5,-8 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
+[ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[STATE] ⏱ map breakdown ms — orbits u0.3/d0.1 (285) | rings(widgets) u0.1/d0.0 (15) | ships u0.0/d0.0 (18) | bodies u0.5/d7.4 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.0 (279)
+[STATE] ⏱ map breakdown ms — orbits u0.3/d0.1 (285) | rings(widgets) u0.1/d0.0 (15) | ships u0.0/d0.0 (18) | bodies u0.5/d7.5 (270) | moves d0.0 | contacts d0.0 | labels u0.2/d0.1 (279)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
+[ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
+[REACH] best sensor reach 0.857 Gm (Planet Express Ship); nearest enemy 0.387 Gm (DETECTED)
+[EMCON] your 14 ship(s): hot(loud)=0 dark(quiet)=0 blind=0; loudest Planet Express Ship x1, quietest Planet Express Ship x1
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.4,-7.9 Gm
+[CAMERA] pan -> 150.3,-7.9 Gm
+[CAMERA] pan -> 150.3,-7.9 Gm
+[CAMERA] pan -> 150.2,-7.9 Gm
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=43
 [ENGINE] sensor scans 44 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] United Earth Corp holds 15 contact(s); 28 other-faction ship(s) in-system, detects 14 (14 hidden from you)
