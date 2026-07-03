@@ -18,6 +18,7 @@ using Pulsar4X.Ships;
 using Pulsar4X.Orbits;
 using Pulsar4X.Movement;
 using Pulsar4X.Orbital;
+using Pulsar4X.Sensors;
 
 namespace Pulsar4X.Tests
 {
@@ -510,6 +511,46 @@ namespace Pulsar4X.Tests
             Pulsar4X.Galaxy.LagrangeFactory.GenerateForSystem(s.StartingSystem);
             Assert.That(s.StartingSystem.GetAllEntitiesWithDataBlob<LagrangePointDB>().Count, Is.EqualTo(before),
                 "Lagrange generation is idempotent (no duplicate markers)");
+        }
+
+        [Test]
+        [Description("LISTENING OUTPOST (Slice E): a station carrying a passive sensor is a detection post — sensors are host-agnostic, so no station-specific code. It ALSO proves the mid-game first-scan kick: installing the sensor on the already-live station SCHEDULES its first SensorScan (the harness never calls PostNewGameInitialization, and SetInstances alone doesn't schedule) — so with only the clock advancing (no hand-fired scan), the station's OWN SensorAbilityDB detects a hostile ship. Reading the station's own contacts, not the faction list, isolates it from the colony's scanner.")]
+        public void ListeningOutpostStation_DetectsHostileShip_ViaInstallScheduledScan()
+        {
+            var s = TestScenario.CreateWithColony();
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+            var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+
+            // A hostile ship parked at the same body, emitting a signature to be seen (a reactor-bearing hull).
+            var shipDesigns = factionInfo.ShipDesigns;
+            var enemyDesign = shipDesigns.TryGetValue("default-ship-design-test-capital", out var capital)
+                ? capital : shipDesigns.Values.First();
+            var bogey = ShipFactory.CreateShip(enemyDesign, s.Faction, s.StartingBody, "Bogey");
+            bogey.FactionOwnerID = enemyFaction.Id;
+            Assert.That(bogey.HasDataBlob<SensorProfileDB>(), Is.True, "precondition: the target ship emits a sensor signature");
+
+            // The listening outpost: a bare station carrying the big deep-space listening array (the outpost sensor).
+            var sensorDesign = (ComponentDesign)factionInfo.IndustryDesigns["default-design-outpost-sensor"];
+            var station = StationFactory.CreateStation(s.Faction, s.StartingBody);
+            Assert.That(station.HasDataBlob<SensorAbilityDB>(), Is.False, "a bare station has no sensor ability yet");
+
+            long scansBefore = SensorScan.ScanCount;
+            station.AddComponent(sensorDesign); // installing the sensor must (a) give a SensorAbilityDB, (b) SCHEDULE the first scan
+
+            Assert.That(station.HasDataBlob<SensorAbilityDB>(), Is.True,
+                "installing a passive sensor gives the station a sensor ability (host-agnostic — no station code)");
+
+            // NO hand-fired scan: only the clock advances. If the install-kick is missing, the station's scan is
+            // never scheduled and it stays deaf forever — so this run guards that fix, not just the detection math.
+            s.AdvanceTime(TimeSpan.FromDays(2));
+
+            Assert.That(SensorScan.ScanCount, Is.GreaterThan(scansBefore),
+                "installing a sensor on a live station must schedule its first scan (the mid-game first-scan kick); no scan fired = the kick is missing");
+
+            var stationSees = station.GetDataBlob<SensorAbilityDB>().CurrentContacts;
+            bool detected = stationSees.Any(c => c.Item1.Id == bogey.Id && c.Item2.SignalStrength_kW > 0.0);
+            Assert.That(detected, Is.True,
+                "the listening-outpost station's own sensor should detect the hostile ship after its scheduled scan (host-agnostic detection)");
         }
     }
 }

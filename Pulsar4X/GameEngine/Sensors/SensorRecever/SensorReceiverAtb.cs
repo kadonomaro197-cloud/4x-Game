@@ -118,6 +118,25 @@ namespace Pulsar4X.Sensors
         {
             //add the instance atb to the ship SensorAbilityDB.
             SensorTools.SetInstances(parentEntity);
+
+            // Kick off the FIRST scan. SetInstances only rebuilds the receiver cache — it does NOT schedule a scan.
+            // At New Game, Game.PostNewGameInitialization fires the first scan on every sensor-bearing entity to
+            // bootstrap SensorScan's self-rescheduling loop. But a sensor installed MID-GAME — a freshly built
+            // listening-outpost station, a DevTools-spawned ship — never passes through that path, so without this
+            // it would sit deaf forever (SensorScan reschedules itself, but only once it has fired at least once).
+            // Schedule the first scan one ScanTime out; SensorScan.ProcessEntity self-reschedules from there.
+            // Guarded and future-dated off StarSysDateTime so it can never throw the "interrupt in the past" during
+            // construction. Harmless if PostNewGameInitialization also fires it (idempotent scan; TimeQueue tolerates
+            // a duplicate time).
+            var manager = parentEntity?.Manager;
+            if (manager != null)
+            {
+                int scanTime = ScanTime > 0 ? ScanTime : 3600;
+                manager.ManagerSubpulses.AddEntityInterupt(
+                    manager.StarSysDateTime + System.TimeSpan.FromSeconds(scanTime),
+                    nameof(SensorScan),
+                    parentEntity);
+            }
         }
 
         public void OnComponentUninstallation(Entity parentEntity, ComponentInstance componentInstance)
