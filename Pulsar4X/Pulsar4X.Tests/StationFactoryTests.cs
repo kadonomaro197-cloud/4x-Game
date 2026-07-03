@@ -17,6 +17,7 @@ using Pulsar4X.Damage;
 using Pulsar4X.Ships;
 using Pulsar4X.Orbits;
 using Pulsar4X.Movement;
+using Pulsar4X.Orbital;
 
 namespace Pulsar4X.Tests
 {
@@ -468,7 +469,7 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("LAGRANGE ANCHORS (Slice D): a star-planet pair gets L4/L5 marker entities that ride the planet's orbit (offset in mean anomaly, so they co-orbit) with a finite position — stable, named anchor POINTS in space to deploy a station at, not random empty spots. Generation is idempotent.")]
+        [Description("LAGRANGE ANCHORS (Slice D): a star-planet pair gets L4/L5 marker entities at the stable Trojan points — STATIC, named anchor POINTS in space (60° ahead/behind the planet on its orbit) to deploy a station at, not random empty spots. The marker is a fixed point (no OrbitDB, so it never enters the orbit processor — mirrors the JP survey-marker recipe) sitting on the planet's own orbital radius with a finite position. Generation is idempotent.")]
         public void LagrangeMarkers_AreGeneratedForPlanets_AtTheTrojanPoints()
         {
             var s = TestScenario.CreateWithColony();
@@ -483,15 +484,25 @@ namespace Pulsar4X.Tests
             var lp = marker.GetDataBlob<LagrangePointDB>();
             Assert.That(lp.PointIndex == 4 || lp.PointIndex == 5, Is.True, "v1 generates the stable Trojan points L4/L5");
 
-            var planetOrbit = lp.Secondary.GetDataBlob<OrbitDB>();
-            var markerOrbit = marker.GetDataBlob<OrbitDB>();
-            Assert.That(markerOrbit.SemiMajorAxis, Is.EqualTo(planetOrbit.SemiMajorAxis).Within(0.001).Percent,
-                "an L4/L5 marker rides the planet's own orbit");
-            Assert.That(markerOrbit.MeanAnomalyAtEpoch, Is.Not.EqualTo(planetOrbit.MeanAnomalyAtEpoch),
-                "the marker is offset from the planet along that orbit (leading/trailing = a Trojan point)");
+            // A STATIC point, not an orbiting body: no OrbitDB (so it sidesteps the parallel orbit processor — a
+            // first cut gave it the planet's orbit to co-orbit "for free" and crashed that processor on a worker thread).
+            Assert.That(marker.HasDataBlob<OrbitDB>(), Is.False,
+                "an L4/L5 marker is a fixed point, not an orbiting body (no OrbitDB)");
 
-            var pos = marker.GetDataBlob<PositionDB>().AbsolutePosition;
-            Assert.That(double.IsFinite(pos.X) && double.IsFinite(pos.Y) && double.IsFinite(pos.Z), Is.True,
+            // L4/L5 sit on the planet's own orbit, 60° along it — so the marker's distance from the star equals the
+            // planet's distance from the star (a 60° rotation of the star->planet vector preserves its length).
+            var star = lp.Primary;
+            var planetOrbit = lp.Secondary.GetDataBlob<OrbitDB>();
+            Vector3 starPos = star.TryGetDataBlob<PositionDB>(out var sp) ? sp.AbsolutePosition : new Vector3(0, 0, 0);
+            Vector3 planetPos = OrbitMath.GetAbsolutePosition(planetOrbit, planetOrbit.Epoch);
+            Vector3 markerPos = marker.GetDataBlob<PositionDB>().AbsolutePosition;
+
+            double planetRadius = (planetPos - starPos).Length();
+            double markerRadius = (markerPos - starPos).Length();
+            Assert.That(markerRadius, Is.EqualTo(planetRadius).Within(0.001).Percent,
+                "an L4/L5 marker sits on the planet's own orbital radius (60° along that orbit)");
+
+            Assert.That(double.IsFinite(markerPos.X) && double.IsFinite(markerPos.Y) && double.IsFinite(markerPos.Z), Is.True,
                 "the marker has a finite position");
 
             // Idempotent: a second generation adds nothing.

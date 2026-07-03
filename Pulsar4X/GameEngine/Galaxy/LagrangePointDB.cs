@@ -12,10 +12,12 @@ namespace Pulsar4X.Galaxy
     /// station can be anchored, instead of a random empty-space spot (the developer's ask, 2026-07-03).
     ///
     /// v1 generates only the stable TROJAN points L4/L5 (60° ahead / behind the secondary on its orbit) for
-    /// star–planet pairs. The marker is built with the secondary's own orbit offset ±60° in mean anomaly, so it
-    /// CO-ORBITS for free via the existing orbit processor — it genuinely sits at L4/L5, not a static drift. L4/L5
-    /// are the stable points where a permanent station belongs; the collinear (unstable) L1/L2/L3 and planet–moon
-    /// pairs are a documented refinement.
+    /// star–planet pairs. The marker is a STATIC point (no OrbitDB, PositionDB with MoveType.None) at the L4/L5
+    /// position — the star→planet vector rotated ±60° in the orbital plane. (A first cut gave it the secondary's
+    /// orbit offset ±60° to co-orbit "for free," but that crashed the parallel orbit processor with a PositionDB
+    /// lookup on a worker thread — so v1 is a fixed point at the epoch L-point, and letting it co-orbit is a
+    /// documented refinement.) L4/L5 are the stable points where a permanent station belongs; the collinear
+    /// (unstable) L1/L2/L3 and planet–moon pairs are a documented refinement.
     /// </summary>
     public class LagrangePointDB : BaseDataBlob
     {
