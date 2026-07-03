@@ -26,7 +26,9 @@
 
 ## Layer 1 — Engine tests (CI-green, automated). *Correctness only.*
 
-These are self-maintaining (CI gates them red/green every push). Listed so we know what IS and ISN'T covered. Full inventory: `Pulsar4X.Tests/CLAUDE.md`.
+These are self-maintaining (CI gates them red/green every push). Listed so we know what IS and ISN'T covered. Full inventory: `Pulsar4X.Tests/CLAUDE.md`. **(CI runs SHARDED across 3 parallel jobs as of 2026-07-03 — ~33 → ~13 min; see `Pulsar4X.Tests/CLAUDE.md`.)**
+
+> **🚧 QUARANTINED test (known pre-existing failure, `[Ignore]`'d 2026-07-03):** `EconomyReadoutTests.Economy_BaselineReadout_OverOneYear` — the refinery produces **no Space-Crete over a game-year** (the refining job sits at `MissingResources`: its mineral inputs aren't mined/stocked in the harness). A real economy-pipeline gap, red since before the current work, unrelated to it — and it ran ~7.5 min (the single slowest test). Kept in the suite as the tracking record; **re-enable when the refining-input pipeline is wired** (mine/stock the inputs the refinery needs, or fix the job's resource resolution). This is the one deliberately-red engine gap right now.
 
 | Suite / area | Guards | Status |
 |---|---|---|

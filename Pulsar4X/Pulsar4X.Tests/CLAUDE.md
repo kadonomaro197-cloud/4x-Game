@@ -4,6 +4,8 @@ NUnit 3 test project. Runs in CI (`.github/workflows/ci.yml`) on every push/PR, 
 
 > **CI builds the engine + tests only — NOT the SDL client.** Client (UI) bugs are invisible here; they surface only in the developer's local build / the `launch.bat` console loop. See root `CLAUDE.md` → "The Visibility Gate" and the CI note.
 
+> **CI is SHARDED across 3 parallel jobs (2026-07-03)** — wall-clock ≈ the slowest single shard, not the sum (~33 min → ~13 min). The suite **cannot** run in-process-parallel: several tests share static counters (`SensorScan.ScanCount`, `CombatEngagement.TickCount`, `NPCDecisionProcessor.TickCount`), so only process-level sharding is safe. Split by measured fixture time: **stations** = `StationFactoryTests` (the ~11-min bottleneck, alone), **economy** = `ScenarioHarnessTests`+`ProductionBuildTests`+`MoraleTests`, **rest** = the complement filter (a NEW fixture lands here by default). A red on any shard reds the run; each shard publishes its own TRX report. The root cause of the slowness is that `CreateWithColony()` re-parses ALL the mod JSON every call and the heavy fixtures call it per-test — the deferred deeper fix is to cache that parse (needs `GameFactory.CreateGame` verified read-only on the `ModDataStore`). If a new fixture becomes a heavy outlier, rebalance the shard filters in `ci.yml` (read the TRX duration column). **`EconomyReadoutTests.Economy_BaselineReadout_OverOneYear` is `[Ignore]`-quarantined** — a known pre-existing failure (the refinery produces no Space-Crete over a game-year; refining-input pipeline gap) that also ran ~7.5 min; re-enable when that pipeline is wired.
+
 ---
 
 ## How to run
