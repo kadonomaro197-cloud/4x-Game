@@ -513,6 +513,9 @@ namespace Pulsar4X.Client
 
             // Render the maneuver node panel overlay (if active)
             SafeRender("ManeuverNodePanel", () => _state.DisplayManeuverNodePanel());
+
+            // Range-ring hover tooltip — last, so it reads the current WantCaptureMouse and draws over the map.
+            SafeRender("RangeRingTooltip", () => _state.GalacticMap?.RangeRingTooltip());
         }
 
         public override void Exit()
