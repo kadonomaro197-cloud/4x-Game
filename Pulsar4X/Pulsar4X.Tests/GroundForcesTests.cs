@@ -382,6 +382,31 @@ namespace Pulsar4X.Tests
             Log($"located {located} start installation(s) in the capital region at colony creation");
         }
 
+        [Test]
+        [Description("Default HOME GARRISON: RaiseForFactionColonies gives the faction's home colony a starting ground garrison in the capital region (the New-Game default so the tactical map isn't empty). NOT auto-raised by the harness (runs on the New-Game path only); idempotent.")]
+        public void StartGarrison_RaisedOnFactionHomeColony()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            Assert.That(body.HasDataBlob<PlanetRegionsDB>(), Is.True, "the home body has a region layer");
+
+            int expected = GroundStartGarrison.Composition.Sum(c => c.count);
+            int raised = GroundStartGarrison.RaiseForFactionColonies(s.Game, s.Faction);
+            Assert.That(raised, Is.EqualTo(expected), "the whole garrison composition is raised");
+
+            var forces = body.GetDataBlob<GroundForcesDB>();
+            int mine = forces.Units.Count(u => u.FactionOwnerID == s.Faction.Id);
+            Assert.That(mine, Is.EqualTo(expected), "the garrison belongs to the player faction");
+            Assert.That(forces.Units.Where(u => u.FactionOwnerID == s.Faction.Id).All(u => u.RegionIndex == 0), Is.True,
+                "the garrison musters in the capital region (0)");
+
+            // Idempotent — re-running raises nothing (already garrisoned).
+            int again = GroundStartGarrison.RaiseForFactionColonies(s.Game, s.Faction);
+            Assert.That(again, Is.EqualTo(0), "idempotent — no double garrison");
+
+            Log($"home garrison: raised {raised} unit(s) in the capital region");
+        }
+
         // ───────────────────────── E1/E2/E3 — planetary ENVIRONMENTS (the ground hazard layer) ─────────────────────────
 
         [Test]

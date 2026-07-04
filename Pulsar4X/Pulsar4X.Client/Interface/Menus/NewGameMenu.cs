@@ -50,6 +50,10 @@ public class NewGameMenu : PulsarGuiWindow
     // needed. Flip to false for a clean, empty-sky New Game. See CreateGameCore.
     public static bool AutoSpawnCombatScenario = true;
 
+    // ALPHA: raise a default HOME GARRISON on the player's colony (Earth) on every New Game, so the ground tactical
+    // map already has units to command without DevTools. Engine call (CI-tested); flip false for an ungarrisoned start.
+    public static bool AutoRaiseHomeGarrison = true;
+
     Page _currentPage = Page.SelectMods;
     ModLoader _modLoader = new ModLoader();
     ModDataStore _modDataStore = new ModDataStore();
@@ -648,6 +652,22 @@ public class NewGameMenu : PulsarGuiWindow
             catch (Exception ex)
             {
                 Console.WriteLine($"[NewGame] Auto-spawn combat scenario FAILED (New Game continues without it): {ex}");
+            }
+        }
+
+        // Give the player's home colony (Earth) a starting ground garrison so the tactical Planet View isn't empty on
+        // a fresh game — the ground echo of the auto-spawned space scenario. Engine call (CI-tested); wrapped so a
+        // hiccup never breaks New Game.
+        if (AutoRaiseHomeGarrison)
+        {
+            try
+            {
+                int garrison = Pulsar4X.GroundCombat.GroundStartGarrison.RaiseForFactionColonies(game, playerFaction);
+                Console.WriteLine($"[NewGame] Raised home garrison: {garrison} ground unit(s) on the player's colony(ies).");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[NewGame] Home garrison raise FAILED (New Game continues without it): {ex}");
             }
         }
 
