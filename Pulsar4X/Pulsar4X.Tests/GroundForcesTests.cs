@@ -634,145 +634,215 @@ namespace Pulsar4X.Tests
             Log($"stance: dig-in defender {dug.Health:0} hp vs no-stance defender {open.Health:0} hp after 3 salvos");
         }
 
-        // ───────────────────────── H2 — hex movement + pathfinding (docs/HEX-GROUND-AND-ORDERS-DESIGN.md) ─────────────────────────
+        // ───────────────────────── HEX MOVEMENT + PATHFINDING (H2) ─────────────────────────
+        //
+        // A ground unit stands on a HEX within its region (H1's Region.Hexes); the pathfinder plots a terrain-weighted
+        // A* path across those hexes, crossing region borders at the patch-edge gates (seam-free ring). Cost depends on
+        // the unit's MovementDomain (a tank bogs in mountains and can't cross ocean; an aircraft flies straight).
 
-        /// <summary>Build an open hex disk of the given radius (all one terrain) — the shape PlanetHexFactory generates.</summary>
-        private static List<GroundHex> OpenDisk(int radius, RegionFeatureType fill = RegionFeatureType.Plains)
+        /// <summary>Build a region as a hex DISK of one uniform terrain, with the ring's west/east neighbour indices.</summary>
+        private static Region MakeDiskRegion(int index, int radius, RegionFeatureType fill, double crossing, int westNbr, int eastNbr)
         {
-            var list = new List<GroundHex>();
+            var reg = new Region { Index = index, CrossingTimeSeconds = crossing, Surveyed = true };
+            reg.Neighbors.Add(westNbr); // [0] = west  (PlanetRegionsFactory convention)
+            reg.Neighbors.Add(eastNbr); // [1] = east
+            reg.Features.Add(new RegionFeature(fill, 1.0));
             for (int q = -radius; q <= radius; q++)
             {
                 int rLo = System.Math.Max(-radius, -q - radius);
                 int rHi = System.Math.Min(radius, -q + radius);
                 for (int r = rLo; r <= rHi; r++)
-                    list.Add(new GroundHex(q, r, fill));
+                    reg.Hexes.Add(new GroundHex(q, r, fill));
             }
-            return list;
+            return reg;
         }
 
-        [Test]
-        [Description("H2: A* across an all-open patch is a straight line — its step count equals the hex distance from start to destination.")]
-        public void HexPath_StraightLineAcrossOpenPatch_LengthEqualsDistance()
+        private static void SetHexTerrain(Region reg, int q, int r, RegionFeatureType t)
         {
-            var disk = OpenDisk(2);
-            var path = HexPathfinder.FindPath(disk, -2, 0, 2, 0);
-            Assert.That(path.Count, Is.EqualTo(4), "distance from (-2,0) to (2,0) is 4 hexes, all open → a 4-step path");
-            Assert.That(path[path.Count - 1].Q, Is.EqualTo(2));
-            Assert.That(path[path.Count - 1].R, Is.EqualTo(0), "the path ends on the destination hex");
-            Log($"open straight line: {path.Count} steps to (2,0)");
+            foreach (var h in reg.Hexes) if (h.Q == q && h.R == r) { h.Terrain = t; return; }
         }
 
         [Test]
-        [Description("H2: terrain steers the route — A* detours around a wall of rough hexes rather than paying the ×2.5 to bull through.")]
-        public void HexPath_RoutesAroundRough_AvoidsTheExpensiveWall()
+        [Description("H2: the developer-approved terrain cost scheme is UNIT-dependent — land is slowed by rough ground and stopped by ocean; water floats only on ocean/coast; air flies over everything flat.")]
+        public void HexMovement_TerrainCost_MatchesApprovedScheme_PerDomain()
         {
-            var disk = OpenDisk(2);
-            // Block the straight r=0 corridor with mountains (×2.5 each) — a cheaper open detour exists off-axis.
-            for (int i = 0; i < disk.Count; i++)
-                if (disk[i].R == 0 && (disk[i].Q == -1 || disk[i].Q == 0 || disk[i].Q == 1))
-                    disk[i] = new GroundHex(disk[i].Q, disk[i].R, RegionFeatureType.Mountains);
-
-            var path = HexPathfinder.FindPath(disk, -2, 0, 2, 0);
-            Assert.That(path.Count, Is.GreaterThan(0), "a route exists");
-            Assert.That(path.Any(h => h.Terrain == RegionFeatureType.Mountains), Is.False,
-                "the cheaper open detour is taken — no mountain hex is on the path");
-            Log($"rough-avoiding route: {path.Count} steps, 0 mountain hexes");
+            // LAND
+            Assert.That(HexMovement.TerrainCost(MovementDomain.Land, RegionFeatureType.Plains), Is.EqualTo(1.0), "open ×1");
+            Assert.That(HexMovement.TerrainCost(MovementDomain.Land, RegionFeatureType.Forest), Is.EqualTo(1.6), "vegetated ×1.6");
+            Assert.That(HexMovement.TerrainCost(MovementDomain.Land, RegionFeatureType.Mountains), Is.EqualTo(2.5), "elevated ×2.5");
+            Assert.That(HexMovement.TerrainCost(MovementDomain.Land, RegionFeatureType.Ice), Is.EqualTo(2.0), "ice ×2");
+            Assert.That(double.IsPositiveInfinity(HexMovement.TerrainCost(MovementDomain.Land, RegionFeatureType.Ocean)), Is.True, "ocean impassable to land");
+            // WATER
+            Assert.That(HexMovement.TerrainCost(MovementDomain.Water, RegionFeatureType.Ocean), Is.EqualTo(1.0), "water on ocean ×1");
+            Assert.That(HexMovement.TerrainCost(MovementDomain.Water, RegionFeatureType.Coast), Is.EqualTo(1.0), "coast is water-passable");
+            Assert.That(double.IsPositiveInfinity(HexMovement.TerrainCost(MovementDomain.Water, RegionFeatureType.Plains)), Is.True, "water can't go on land");
+            // AIR
+            Assert.That(HexMovement.TerrainCost(MovementDomain.Air, RegionFeatureType.Mountains), Is.EqualTo(1.0), "air flies over mountains flat");
+            Assert.That(HexMovement.TerrainCost(MovementDomain.Air, RegionFeatureType.Ocean), Is.EqualTo(1.0), "air flies over ocean flat");
+            // COAST is passable to both land and water (the boundary).
+            Assert.That(HexMovement.IsPassable(MovementDomain.Land, RegionFeatureType.Coast), Is.True);
+            Assert.That(HexMovement.IsPassable(MovementDomain.Water, RegionFeatureType.Coast), Is.True);
+            Log("terrain cost: land plains 1 / forest 1.6 / mtn 2.5 / ocean ∞; water ocean 1 / land ∞; air flat 1");
         }
 
         [Test]
-        [Description("H2: pathfinder guard rails — an off-patch destination and a start-equals-destination both return an empty path (no move).")]
-        public void HexPath_Guards_OffPatchAndAlreadyThere_ReturnEmpty()
-        {
-            var disk = OpenDisk(2);
-            Assert.That(HexPathfinder.FindPath(disk, 0, 0, 9, 9).Count, Is.EqualTo(0), "(9,9) is outside the patch → no path");
-            Assert.That(HexPathfinder.FindPath(disk, 1, 0, 1, 0).Count, Is.EqualTo(0), "already on the destination → no path");
-        }
-
-        [Test]
-        [Description("H2b: OCEAN is impassable to ground units (the developer's call) — a march never steps onto a water hex, and a destination ON water is unreachable. Ice stays passable.")]
-        public void HexPath_Ocean_IsImpassable_ButIceIsFine()
-        {
-            Assert.That(HexPathfinder.IsImpassable(RegionFeatureType.Ocean), Is.True, "ocean blocks ground units");
-            Assert.That(HexPathfinder.IsImpassable(RegionFeatureType.Ice), Is.False, "ice is passable (rough)");
-            Assert.That(HexPathfinder.HexMoveMult(RegionFeatureType.Ice), Is.EqualTo(2.5), "ice is rough-cost");
-
-            // A patch with a wall of ocean along the r=0 corridor: the march must detour around it (never onto water).
-            var disk = OpenDisk(2);
-            for (int i = 0; i < disk.Count; i++)
-                if (disk[i].R == 0 && (disk[i].Q == -1 || disk[i].Q == 0 || disk[i].Q == 1))
-                    disk[i] = new GroundHex(disk[i].Q, disk[i].R, RegionFeatureType.Ocean);
-
-            var around = HexPathfinder.FindPath(disk, -2, 0, 2, 0);
-            Assert.That(around.Count, Is.GreaterThan(0), "an over-land route around the water exists");
-            Assert.That(around.Any(h => h.Terrain == RegionFeatureType.Ocean), Is.False, "no step is ever on a water hex");
-
-            // A destination that IS a water hex is unreachable — no march onto open water.
-            var onWater = HexPathfinder.FindPath(disk, -2, 0, 0, 0);
-            Assert.That(onWater.Count, Is.EqualTo(0), "can't order a march onto an ocean hex");
-            Log($"ocean impassable: routed {around.Count} land hexes around the water; on-water dest rejected");
-        }
-
-        [Test]
-        [Description("H2: the move-cost tiers are the developer's Moderate call (open ×1, cover ×1.5, rough ×2.5); per-hex base time is derived from the region's crossing-time datum, not a magic number.")]
-        public void HexPath_CostModel_TiersAndDerivedBaseTime()
-        {
-            Assert.That(HexPathfinder.HexMoveMult(RegionFeatureType.Plains), Is.EqualTo(1.0));
-            Assert.That(HexPathfinder.HexMoveMult(RegionFeatureType.Forest), Is.EqualTo(1.5));
-            Assert.That(HexPathfinder.HexMoveMult(RegionFeatureType.Mountains), Is.EqualTo(2.5));
-
-            var region = new Region { CrossingTimeSeconds = 1000.0, Hexes = OpenDisk(5) };
-            // patch radius 5 → 10 hexes across → one open hex ≈ 1000/10 = 100s.
-            Assert.That(HexPathfinder.PerHexBaseSeconds(region), Is.EqualTo(100.0).Within(0.001));
-            Log("cost model: ×1/×1.5/×2.5, per-open-hex 100s from a 1000s region");
-        }
-
-        [Test]
-        [Description("H2 WIRING: order a real garrisoned unit to a hex across its region and drive the ground processor — it walks the A* path hex-by-hex and arrives on the destination hex (the London→Paris transit-in-ticks behaviour).")]
-        public void OrderMoveToHex_UnitWalksHexByHex_AndArrives()
+        [Description("H2: a raised unit musters at its region's hex-patch centre (0,0) and snapshots its design's movement domain (Land by default); the position + domain survive a clone.")]
+        public void RaiseUnit_StampsHexCentre_AndDomain()
         {
             var s = TestScenario.CreateWithColony();
-            var body = s.StartingBody;   // the home world — ColonyFactory generated its hex patches
-            Assert.That(body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB), Is.True);
-            var region0 = regionsDB.Regions[0];
-            Assert.That(region0.Hexes.Count, Is.GreaterThan(0), "the home world's capital region carries a hex patch (lazy gen at colony creation)");
+            var body = s.StartingBody;
+            var land = GroundForces.RaiseUnit(body, MakeInfantryDesign(), s.Faction.Id, regionIndex: 0);
+            Assert.That(land.HexQ, Is.EqualTo(0));
+            Assert.That(land.HexR, Is.EqualTo(0), "a fresh unit musters at the patch centre");
+            Assert.That(land.Domain, Is.EqualTo(MovementDomain.Land), "Infantry is a land unit");
 
-            var unit = GroundForces.RaiseUnit(body, MakeInfantryDesign(), s.Faction.Id, regionIndex: 0);
-            Assert.That(unit.HexQ, Is.EqualTo(0));
-            Assert.That(unit.HexR, Is.EqualTo(0), "a fresh unit stands at the patch centre");
+            var airDesign = MakeInfantryDesign();
+            airDesign.Domain = MovementDomain.Air;
+            var air = GroundForces.RaiseUnit(body, airDesign, s.Faction.Id, regionIndex: 0);
+            Assert.That(air.Domain, Is.EqualTo(MovementDomain.Air), "domain snapshotted from the design");
 
-            // Pick the farthest-out hex that's actually REACHABLE over land (ocean is impassable, and water could cut
-            // a distant hex off) — the first candidate, by descending distance, that A* can actually reach.
-            var origin = new Pulsar4X.Colonies.HexCoordinate(0, 0);
-            GroundHex dest = null;
-            foreach (var h in region0.Hexes
-                         .Where(h => !(h.Q == 0 && h.R == 0))
-                         .OrderByDescending(h => new Pulsar4X.Colonies.HexCoordinate(h.Q, h.R).DistanceTo(origin)))
+            var forces = body.GetDataBlob<GroundForcesDB>();
+            var clone = (GroundForcesDB)forces.Clone();
+            var airClone = clone.Units.First(u => u.UnitId == air.UnitId);
+            Assert.That(airClone.Domain, Is.EqualTo(MovementDomain.Air), "domain deep-copied");
+            Log($"raise: land unit hex ({land.HexQ},{land.HexR}) domain {land.Domain}; air unit domain {air.Domain}");
+        }
+
+        [Test]
+        [Description("H2: A* over one region's hexes finds a straight open path, and the total time ≈ the region's coarse CrossingTimeSeconds (the fine map stays consistent with the strategic one).")]
+        public void FindPath_WithinRegion_StraightAcross_TotalsTheCrossingTime()
+        {
+            double crossing = 8000;
+            var reg = MakeDiskRegion(0, 2, RegionFeatureType.Plains, crossing, westNbr: -1, eastNbr: -1);
+            var regions = new PlanetRegionsDB(new List<Region> { reg });
+
+            var path = HexPathfinder.FindPath(regions, 0, -2, 0, 0, 2, 0, MovementDomain.Land);
+            Assert.That(path.Count, Is.EqualTo(4), "west edge to east edge of a radius-2 disk is 4 hex steps");
+            Assert.That(path.Last().Q, Is.EqualTo(2), "arrives at the goal hex");
+            double total = path.Sum(st => st.Seconds);
+            Assert.That(total, Is.EqualTo(crossing).Within(1e-6), "crossing the fine hexes edge-to-edge ≈ the coarse region crossing time");
+            Log($"straight path: {path.Count} steps, {total:0}s (region crossing {crossing:0}s)");
+        }
+
+        [Test]
+        [Description("H2: A* routes AROUND impassable terrain — a land unit detours through the one gap in an ocean wall and never steps on an ocean hex.")]
+        public void FindPath_Land_RoutesAroundAnImpassableWall()
+        {
+            var reg = MakeDiskRegion(0, 3, RegionFeatureType.Plains, 8000, -1, -1);
+            // Ocean wall down the q=0 column (fully separates west from east) EXCEPT one gap at (0,3).
+            for (int r = -3; r <= 3; r++) SetHexTerrain(reg, 0, r, RegionFeatureType.Ocean);
+            SetHexTerrain(reg, 0, 3, RegionFeatureType.Plains); // the gap the land unit must find
+            var regions = new PlanetRegionsDB(new List<Region> { reg });
+
+            var path = HexPathfinder.FindPath(regions, 0, -3, 0, 0, 3, 0, MovementDomain.Land);
+            Assert.That(path.Count, Is.GreaterThan(0), "a route exists through the gap");
+            Assert.That(path.Any(st => st.Q == 0 && st.R == 3), Is.True, "the path threads the gap hex (0,3)");
+            // no step lands on an ocean hex
+            foreach (var st in path)
             {
-                if (HexPathfinder.FindPath(region0.Hexes, 0, 0, h.Q, h.R).Count > 0) { dest = h; break; }
+                var terr = reg.Hexes.First(h => h.Q == st.Q && h.R == st.R).Terrain;
+                Assert.That(terr, Is.Not.EqualTo(RegionFeatureType.Ocean), "the land unit never enters ocean");
             }
-            Assert.That(dest, Is.Not.Null, "at least one hex in the patch is reachable over land");
+            Log($"detour: {path.Count} steps around the ocean wall, through the (0,3) gap");
+        }
 
-            bool ordered = GroundForces.OrderMoveToHex(body, unit, dest.Q, dest.R);
-            Assert.That(ordered, Is.True, "a reachable hex in the patch is a valid order");
-            Assert.That(unit.HexPath, Is.Not.Null.And.Count.GreaterThan(0), "the unit has a stored hex path");
-            int steps = unit.HexPath.Count;
+        [Test]
+        [Description("H2: cost is UNIT-dependent — a full ocean wall STOPS a land unit (no path) but an air unit flies straight across it.")]
+        public void FindPath_ImpassableWall_BlocksLand_ButAirCrosses()
+        {
+            var reg = MakeDiskRegion(0, 3, RegionFeatureType.Plains, 8000, -1, -1);
+            for (int r = -3; r <= 3; r++) SetHexTerrain(reg, 0, r, RegionFeatureType.Ocean); // full wall, no gap
+            var regions = new PlanetRegionsDB(new List<Region> { reg });
+
+            var land = HexPathfinder.FindPath(regions, 0, -3, 0, 0, 3, 0, MovementDomain.Land);
+            Assert.That(land.Count, Is.EqualTo(0), "the ocean wall fully blocks the land unit");
+            var air = HexPathfinder.FindPath(regions, 0, -3, 0, 0, 3, 0, MovementDomain.Air);
+            Assert.That(air.Count, Is.GreaterThan(0), "the air unit flies over the ocean");
+            Assert.That(air.Any(st => st.Q == 0), Is.True, "the air path crosses the ocean column");
+            Log($"land blocked ({land.Count} steps); air crosses ({air.Count} steps)");
+        }
+
+        [Test]
+        [Description("H2: A* crosses a REGION border — a path from region 0 to the adjacent region 1 transits through region 0's east gate into region 1's west gate (the seam-free patch-edge crossing), and arrives.")]
+        public void FindPath_CrossesRegionBorder_ViaEdgeGates()
+        {
+            // A 4-region ring, radius-2 plains patches. Region i: west=(i+3)%4, east=(i+1)%4.
+            var list = new List<Region>();
+            for (int i = 0; i < 4; i++)
+                list.Add(MakeDiskRegion(i, 2, RegionFeatureType.Plains, 8000, (i + 3) % 4, (i + 1) % 4));
+            var regions = new PlanetRegionsDB(list);
+
+            var path = HexPathfinder.FindPath(regions, 0, 0, 0, 1, 0, 0, MovementDomain.Land);
+            Assert.That(path.Count, Is.GreaterThan(0), "a cross-border route exists");
+            Assert.That(path.Any(st => st.RegionIndex == 1), Is.True, "the path enters region 1");
+            var last = path.Last();
+            Assert.That((last.RegionIndex, last.Q, last.R), Is.EqualTo((1, 0, 0)), "arrives at region 1's centre");
+
+            // The crossing: region 0 east gate (2,0) immediately followed by region 1 west gate (-2,0).
+            int gateIdx = path.FindIndex(st => st.RegionIndex == 0 && st.Q == 2 && st.R == 0);
+            Assert.That(gateIdx, Is.GreaterThanOrEqualTo(0), "reaches region 0's east gate");
+            Assert.That((path[gateIdx + 1].RegionIndex, path[gateIdx + 1].Q, path[gateIdx + 1].R),
+                Is.EqualTo((1, -2, 0)), "then bridges into region 1's west gate");
+            Log($"cross-border: {path.Count} steps, region0 east gate (2,0) → region1 west gate (-2,0) → (1,0,0)");
+        }
+
+        [Test]
+        [Description("H2: pathfinding is deterministic (same inputs → identical path) and trivial cases (same hex / invalid region) return an empty path.")]
+        public void FindPath_Deterministic_AndTrivialCasesEmpty()
+        {
+            var reg = MakeDiskRegion(0, 3, RegionFeatureType.Plains, 8000, -1, -1);
+            var regions = new PlanetRegionsDB(new List<Region> { reg });
+
+            var a = HexPathfinder.FindPath(regions, 0, -3, 1, 0, 2, -1, MovementDomain.Land);
+            var b = HexPathfinder.FindPath(regions, 0, -3, 1, 0, 2, -1, MovementDomain.Land);
+            Assert.That(a.Count, Is.EqualTo(b.Count), "same length every run");
+            for (int i = 0; i < a.Count; i++)
+                Assert.That((a[i].RegionIndex, a[i].Q, a[i].R), Is.EqualTo((b[i].RegionIndex, b[i].Q, b[i].R)), "identical step sequence");
+
+            Assert.That(HexPathfinder.FindPath(regions, 0, 0, 0, 0, 0, 0, MovementDomain.Land).Count, Is.EqualTo(0), "already there → empty");
+            Assert.That(HexPathfinder.FindPath(regions, 0, 0, 0, 9, 0, 0, MovementDomain.Land).Count, Is.EqualTo(0), "invalid region → empty");
+            Log($"deterministic path length {a.Count}; trivial cases empty");
+        }
+
+        [Test]
+        [Description("H2b: a formation ordered to a target HEX in an ADJACENT region transits hex-by-hex across the border over MULTIPLE ticks (the London→Paris behaviour) and arrives standing on the target hex — it does not teleport, and the whole block moves as one.")]
+        public void OrderFormationMove_ToHex_TransitsHexByHex_AcrossRegions()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+
+            // Replace the home world's regions with a clean 2-region ring of all-plains radius-2 patches, so the march
+            // is deterministic (no random ocean to route around). r0.east = r1, r1.west = r0 (the shared border).
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            double crossing = 6000;
+            regionsDB.Regions.Clear();
+            regionsDB.Regions.Add(MakeDiskRegion(0, 2, RegionFeatureType.Plains, crossing, westNbr: 1, eastNbr: 1));
+            regionsDB.Regions.Add(MakeDiskRegion(1, 2, RegionFeatureType.Plains, crossing, westNbr: 0, eastNbr: 0));
+
+            var design = MakeInfantryDesign();
+            var u1 = GroundForces.RaiseUnit(body, design, s.Faction.Id, regionIndex: 0);
+            var u2 = GroundForces.RaiseUnit(body, design, s.Faction.Id, regionIndex: 0);
+            var formation = GroundForces.CreateFormation(body, s.Faction.Id, "Expeditionary");
+            GroundForces.AssignUnit(formation, u1);
+            GroundForces.AssignUnit(formation, u2);
+
+            // London (region 0 centre) → Paris (region 1 centre).
+            int moved = GroundForces.OrderFormationMove(body, formation, toRegion: 1, toQ: 0, toR: 0);
+            Assert.That(moved, Is.EqualTo(2), "both members received a hex route to the target");
+            Assert.That(u1.Path, Is.Not.Null, "the leader has a plotted route");
+            Assert.That(u1.Path.Count, Is.GreaterThan(3), "the route is several hexes + the border crossing, not a single hop");
+            Assert.That(u1.MovingToRegion, Is.EqualTo(1), "flagged in-transit toward the destination region");
 
             var proc = new GroundForcesProcessor();
-            // Advance well past the whole march (each step ≤ base×2.5; a long tick clears them all).
-            proc.ProcessEntity(body, 100 * 24 * 3600);
+            int ticks = 0;
+            while (u1.MovingToRegion >= 0 && ticks < 500) { proc.ProcessEntity(body, 3600); ticks++; }
 
-            Assert.That(unit.HexQ, Is.EqualTo(dest.Q));
-            Assert.That(unit.HexR, Is.EqualTo(dest.R), "the unit arrived on the destination hex");
-            Assert.That(unit.HexPath, Is.Null, "and is no longer hex-marching");
-
-            // Save-safety: a mid-march unit's path survives a clone.
-            var unit2 = GroundForces.RaiseUnit(body, MakeInfantryDesign(), s.Faction.Id, regionIndex: 0);
-            GroundForces.OrderMoveToHex(body, unit2, dest.Q, dest.R);
-            var clone = (GroundForcesDB)body.GetDataBlob<GroundForcesDB>().Clone();
-            var clonedMarcher = clone.Units.First(u => u.UnitId == unit2.UnitId);
-            Assert.That(clonedMarcher.HexPath, Is.Not.Null.And.Count.GreaterThan(0), "an in-transit hex path survives a clone (save-safe)");
-
-            Log($"hex march: unit walked {steps} hexes to ({dest.Q},{dest.R}) and arrived; path clone-safe");
+            Assert.That(ticks, Is.GreaterThan(1), "the march took MULTIPLE ticks — it transited hex-by-hex, it did not teleport");
+            Assert.That(u1.RegionIndex, Is.EqualTo(1), "arrived in the destination region");
+            Assert.That((u1.HexQ, u1.HexR), Is.EqualTo((0, 0)), "standing on the target hex (Paris)");
+            Assert.That(u1.Path == null || u1.Path.Count == 0, Is.True, "the route was consumed on arrival");
+            Assert.That(u2.RegionIndex, Is.EqualTo(1), "the whole formation moved as one");
+            Log($"London→Paris: formation of 2 crossed region 0→1 to the target hex in {ticks} ticks ({u1.Path?.Count ?? 0} steps left)");
         }
     }
 }
