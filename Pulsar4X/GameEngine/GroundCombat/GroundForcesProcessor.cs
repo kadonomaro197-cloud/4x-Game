@@ -171,7 +171,17 @@ namespace Pulsar4X.GroundCombat
                 var holders = new HashSet<int>();
                 foreach (var u in units) if (u.Health > 0) holders.Add(u.FactionOwnerID);
                 if (holders.Count == 1 && regionsDB != null && kv.Key >= 0 && kv.Key < regionsDB.Regions.Count)
-                    regionsDB.Regions[kv.Key].OwnerFactionID = holders.First();
+                {
+                    int captor = holders.First();
+                    var reg = regionsDB.Regions[kv.Key];
+                    if (reg.OwnerFactionID != captor)
+                    {
+                        reg.OwnerFactionID = captor;
+                        // War-map layer (W1): taking the region takes the strategic buildings on its hexes —
+                        // "capturing the hex captures what's on it" (docs/GROUND-CITY-AND-WARMAP-DESIGN.md).
+                        GroundBuildings.CaptureRegionHexContents(regionsDB, kv.Key, captor);
+                    }
+                }
             }
 
             // Remove destroyed units.

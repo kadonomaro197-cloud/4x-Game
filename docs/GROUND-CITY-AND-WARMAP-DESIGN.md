@@ -1,6 +1,8 @@
 # Ground: the War-Map layer and the City sub-grid (two zooms, one physical thing)
 
-**As of 2026-07-04.** Status: **design captured; War-map layer (W-track) is the next build, City sub-grid (C-track) follows.** Extends `docs/HEX-GROUND-AND-ORDERS-DESIGN.md` (the operational hex grid we built) and the **LOCKED PRINCIPLE** in `GameEngine/GroundCombat/CLAUDE.md` ("everything I build that's selectable in space is a real building on the ground"). Read those first.
+**As of 2026-07-04.** Status: **W-track (War-map layer) BUILT on the engine + CI-gauged; City sub-grid (C-track) follows.** Extends `docs/HEX-GROUND-AND-ORDERS-DESIGN.md` (the operational hex grid we built) and the **LOCKED PRINCIPLE** in `GameEngine/GroundCombat/CLAUDE.md` ("everything I build that's selectable in space is a real building on the ground"). Read those first.
+
+> **W-track build note (2026-07-04):** shipped — `GroundHex.InstallationIds` (the building slot on the operational hex) + `GroundFootprintAtb` (the "occupies-a-tile" component attribute; the base-mod **Bunker** carries it, so a fort is a real capture/bombard target) + `GroundBuildings` (locate-on-hex, capture-captures-contents, bombard-damages-contents), wired into `ColonyFactory` (locate) and `GroundForcesProcessor` (capture). Gauges: `GroundForcesTests.WarMap_*`. **Deferred to follow-ons:** routing the auto orbital-strike (`OnColonyDamage`) at a specific hex's buildings (the `BombardHex` primitive exists + is gauged; the damage-path integration is next), a player-buildable non-Bunker footprint (spaceport/HQ), and the client draw of a hex's strategic presence. Then C-track (the city builder).
 
 ---
 

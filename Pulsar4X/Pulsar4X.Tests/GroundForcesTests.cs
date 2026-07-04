@@ -382,6 +382,104 @@ namespace Pulsar4X.Tests
             Log($"located {located} start installation(s) in the capital region at colony creation");
         }
 
+        // ───────────────────────── War-map layer (W1) — a building occupies an operational hex ─────────────────────────
+
+        [Test]
+        [Description("War-map W1 (data): a GroundHex's building list deep-copies on clone, so a hex-located base is save-safe like the rest of the hex.")]
+        public void WarMap_GroundHexInstallations_SurviveClone()
+        {
+            var hex = new GroundHex(0, 0, RegionFeatureType.Plains);
+            hex.InstallationIds.Add(42);
+            var clone = new GroundHex(hex);
+            Assert.That(clone.InstallationIds, Does.Contain(42), "the building ref copies onto the clone");
+            clone.InstallationIds.Add(99);
+            Assert.That(hex.InstallationIds, Does.Not.Contain(99), "the copy is DEEP — mutating the clone doesn't touch the original");
+        }
+
+        [Test]
+        [Description("War-map W1 (the loop): the base-mod Bunker (now a GroundFootprintAtb strategic building) LANDS on its region's centre hex, CAPTURING the hex takes it, and BOMBING the hex destroys it (gone from the hex AND the colony). A non-footprint building is not a war-map target.")]
+        public void WarMap_FootprintBuilding_LandsOnHex_CapturedAndBombed()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            Assert.That(body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB), Is.True);
+            var region0 = regionsDB.Regions[0];
+            Assert.That(region0.Hexes != null && region0.Hexes.Count > 0, Is.True, "the capital region carries a hex patch");
+            var centre = region0.Hexes.First(h => h.Q == 0 && h.R == 0);
+
+            // Clean slate for determinism (CreateWithColony already located the start colony's buildings).
+            foreach (var h in region0.Hexes) h.InstallationIds.Clear();
+            region0.InstallationIds.Clear();
+
+            var fi = s.Faction.GetDataBlob<FactionInfoDB>();
+            var bunkerDesign = (ComponentDesign)fi.IndustryDesigns["default-design-bunker"];
+            Assert.That(GroundBuildings.IsFootprint(bunkerDesign), Is.True, "a Bunker is a war-map footprint building (carries GroundFootprintAtb)");
+
+            var bunker = new ComponentInstance(bunkerDesign);
+            s.Colony.AddComponent(bunker);
+            region0.InstallationIds.Add(bunker.ID);
+
+            // A non-footprint building on the same colony/region — it must NOT become a war-map target.
+            var nonFootprint = fi.IndustryDesigns.Values.OfType<ComponentDesign>().FirstOrDefault(d => !GroundBuildings.IsFootprint(d));
+            Assert.That(nonFootprint, Is.Not.Null, "the faction has at least one non-footprint installation design");
+            var panel = new ComponentInstance(nonFootprint);
+            s.Colony.AddComponent(panel);
+            region0.InstallationIds.Add(panel.ID);
+
+            // LOCATE — footprint lands on the region's centre hex; the non-footprint does not.
+            int placed = GroundBuildings.LocateFootprintsOnHexes(s.Colony);
+            Assert.That(placed, Is.EqualTo(1), "only the footprint building is placed on a hex");
+            Assert.That(centre.InstallationIds, Does.Contain(bunker.ID), "the footprint building sits on the operational hex");
+            Assert.That(centre.InstallationIds, Does.Not.Contain(panel.ID), "a non-footprint building is not a war-map target");
+            Assert.That(GroundBuildings.LocateFootprintsOnHexes(s.Colony), Is.EqualTo(0), "re-locating adds nothing (idempotent)");
+
+            // CAPTURE — taking the hex captures what's on it.
+            int captured = GroundBuildings.CaptureRegionHexContents(regionsDB, 0, InvaderFaction);
+            Assert.That(captured, Is.GreaterThanOrEqualTo(1));
+            Assert.That(centre.OwnerFactionID, Is.EqualTo(InvaderFaction), "capturing the hex captures the base on it");
+
+            // BOMBARD — bombing the hex destroys what's on it (the grave rung).
+            int destroyed = GroundBuildings.BombardHex(body, 0, 0, 0, strength: 5.0);
+            Assert.That(destroyed, Is.EqualTo(1), "the bombed base is destroyed");
+            Assert.That(centre.InstallationIds, Is.Empty, "and is gone from the hex");
+            Assert.That(s.Colony.GetDataBlob<ComponentInstancesDB>().AllComponents.Values.Any(c => c.ID == bunker.ID), Is.False,
+                "and gone from the colony's components — a real loss, not just off the map");
+
+            Log($"war-map: bunker placed on hex (0,0), captured by {InvaderFaction}, then bombed to rubble");
+        }
+
+        [Test]
+        [Description("War-map W1 (processor wiring): taking a region THROUGH THE COMBAT PROCESSOR carries the strategic buildings on its hexes to the captor — capturing the region captures what's built on it.")]
+        public void WarMap_RegionCapture_CarriesHexBuildings_ThroughProcessor()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();   // isolate from attrition
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            var region0 = regionsDB.Regions[0];
+            var centre = region0.Hexes.First(h => h.Q == 0 && h.R == 0);
+            foreach (var h in region0.Hexes) h.InstallationIds.Clear();
+            region0.InstallationIds.Clear();
+            region0.OwnerFactionID = s.Faction.Id;   // the defender initially holds the region + its base
+
+            var fi = s.Faction.GetDataBlob<FactionInfoDB>();
+            var bunker = new ComponentInstance((ComponentDesign)fi.IndustryDesigns["default-design-bunker"]);
+            s.Colony.AddComponent(bunker);
+            region0.InstallationIds.Add(bunker.ID);
+            GroundBuildings.LocateFootprintsOnHexes(s.Colony);
+            Assert.That(centre.InstallationIds, Does.Contain(bunker.ID), "the base is on the capital hex");
+            Assert.That(centre.OwnerFactionID, Is.Not.EqualTo(InvaderFaction));
+
+            // Only an INVADER stands in region 0 (no defender units) → the processor flips the region to the invader.
+            GroundForces.RaiseUnit(body, MakeInfantryDesign(), InvaderFaction, 0);
+            new GroundForcesProcessor().ProcessEntity(body, 3600);
+
+            Assert.That(region0.OwnerFactionID, Is.EqualTo(InvaderFaction), "the invader takes the region");
+            Assert.That(centre.OwnerFactionID, Is.EqualTo(InvaderFaction),
+                "and the hex-building flips with it — capturing the region captures what's built on it");
+            Log($"war-map capture via processor: region 0 + its bunker hex now held by {InvaderFaction}");
+        }
+
         [Test]
         [Description("Default HOME GARRISON: RaiseForFactionColonies gives the faction's home colony a starting ground garrison in the capital region (the New-Game default so the tactical map isn't empty). NOT auto-raised by the harness (runs on the New-Game path only); idempotent.")]
         public void StartGarrison_RaisedOnFactionHomeColony()
