@@ -24,9 +24,11 @@ namespace Pulsar4X.Galaxy
         /// <summary>v1: four slices in a ring.</summary>
         public const int RegionCount = 4;
 
-        /// <summary>PLACEHOLDER surface march speed (km per game-second) used to turn a region's width into a
-        /// crossing time. ~72 km/h. Tune later — it's the "units take thousands of miles / logical time" dial.</summary>
-        private const double PlaceholderMarch_KmPerSec = 0.02;
+        /// <summary>Base surface march speed (km per game-second) used to turn a region's width into a crossing time
+        /// for a STANDARD (speed-1.0) unit — a unit's own <c>MovementSpeed</c> multiplier then divides this (V1). Tuned
+        /// so one Earth-size region (¼ of the planet, ~10,000 km) ≈ 1 game-DAY for a standard unit (the developer's
+        /// "~1 day per region" baseline; ~5.8 days at the old 0.02 was imperceptible). Moddable dial.</summary>
+        private const double BaseMarch_KmPerSec = 0.116;   // 10,000 km ÷ 0.116 ≈ 86,200 s ≈ 1 day
 
         /// <summary>
         /// Attach a region layer to every major body in the system that lacks one. <paramref name="surveyed"/> is
@@ -81,7 +83,7 @@ namespace Pulsar4X.Galaxy
                     Index = i,
                     Surveyed = surveyed,
                     Area_km2 = surface_km2 / RegionCount * (0.85 + system.RNGNextDouble() * 0.30),
-                    CrossingTimeSeconds = sliceWidthKm / PlaceholderMarch_KmPerSec,
+                    CrossingTimeSeconds = sliceWidthKm / BaseMarch_KmPerSec,
                 };
                 r.Neighbors.Add((i + RegionCount - 1) % RegionCount); // west
                 r.Neighbors.Add((i + 1) % RegionCount);               // east

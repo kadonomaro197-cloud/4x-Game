@@ -844,5 +844,36 @@ namespace Pulsar4X.Tests
             Assert.That(u2.RegionIndex, Is.EqualTo(1), "the whole formation moved as one");
             Log($"London→Paris: formation of 2 crossed region 0→1 to the target hex in {ticks} ticks ({u1.Path?.Count ?? 0} steps left)");
         }
+
+        [Test]
+        [Description("V1: movement time depends on the UNIT's speed — a 2.0-speed unit arrives in HALF the time of a standard 1.0-speed unit on the same region hop, so a tick between the two arrival times lands the fast one and leaves the standard one still marching.")]
+        public void MovementSpeed_FasterUnitArrivesSooner()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            regionsDB.Regions.Clear();
+            regionsDB.Regions.Add(MakeDiskRegion(0, 2, RegionFeatureType.Plains, 8000, 1, 1));
+            regionsDB.Regions.Add(MakeDiskRegion(1, 2, RegionFeatureType.Plains, 8000, 0, 0));
+
+            var slowDesign = MakeInfantryDesign(); slowDesign.MovementSpeed = 1.0;
+            var fastDesign = MakeInfantryDesign(); fastDesign.UniqueID = "test-fast"; fastDesign.MovementSpeed = 2.0;
+            var slow = GroundForces.RaiseUnit(body, slowDesign, s.Faction.Id, 0);
+            var fast = GroundForces.RaiseUnit(body, fastDesign, s.Faction.Id, 0);
+
+            Assert.That(GroundForces.OrderMove(body, slow, 1), Is.True);
+            Assert.That(GroundForces.OrderMove(body, fast, 1), Is.True);
+            Assert.That(slow.TransitSecondsRemaining, Is.EqualTo(8000).Within(1e-6), "standard unit: full crossing time");
+            Assert.That(fast.TransitSecondsRemaining, Is.EqualTo(4000).Within(1e-6), "2× speed: half the crossing time");
+
+            var proc = new GroundForcesProcessor();
+            proc.ProcessEntity(body, 5000);   // > the fast unit's 4000 s, < the standard unit's 8000 s
+
+            Assert.That(fast.RegionIndex, Is.EqualTo(1), "the fast unit arrived");
+            Assert.That(fast.MovingToRegion, Is.EqualTo(-1));
+            Assert.That(slow.RegionIndex, Is.EqualTo(0), "the standard unit is still marching");
+            Assert.That(slow.MovingToRegion, Is.EqualTo(1));
+            Log($"speed: fast arrived (region {fast.RegionIndex}); standard still en route ({slow.TransitSecondsRemaining:0}s left)");
+        }
     }
 }

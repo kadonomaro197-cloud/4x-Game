@@ -291,11 +291,11 @@ namespace Pulsar4X.Tests
             Assert.That(total, Is.EqualTo(regionsDB.Regions.Count * expectedPerRegion), "total = regions × per-region");
             Assert.That(total, Is.GreaterThan(300), "an Earth-sized world has a real (Operational-density) hex map");
 
-            // Every hex has a terrain, and it comes from the region's feature set (fine realization of the coarse map).
+            // Every hex has a real terrain (V2: terrain now comes from the planet-wide coherent field, NOT the coarse
+            // region.Features mix — coherence across regions is gauged by Terrain_IsCoherentPlanetWide_NotRandomSmatter).
             var region0 = regionsDB.Regions[0];
-            var featureTypes = region0.Features.Select(f => f.Type).ToHashSet();
-            Assert.That(region0.Hexes.All(h => featureTypes.Contains(h.Terrain)), Is.True,
-                "each hex's terrain is one of the region's features");
+            Assert.That(region0.Hexes.All(h => h.Terrain != RegionFeatureType.Unknown), Is.True,
+                "each hex has a real (non-Unknown) terrain");
 
             // Idempotent — re-running generates nothing new.
             int before = total;
@@ -308,6 +308,67 @@ namespace Pulsar4X.Tests
             Assert.That(clone.Regions[0].Hexes[0].Terrain, Is.EqualTo(region0.Hexes[0].Terrain), "hex data deep-copied");
 
             Log($"hex patches: {regionsDB.Regions.Count} regions, {total} hexes total; region0 terrains: {string.Join(",", region0.Hexes.Select(h => h.Terrain).Distinct())}");
+        }
+
+        [Test]
+        [Description("V2: terrain is a PLANET-WIDE coherent field, not a per-hex/per-region random smatter. (a) It is CONTINUOUS across region borders — the hex at a region's east edge matches the hex at the next region's west edge (same global longitude) — so continents/oceans span regions. (b) Adjacent hexes share terrain far more than a spatially-shuffled version of the same hexes (real coherence vs a smatter).")]
+        public void Terrain_IsCoherentPlanetWide_NotRandomSmatter()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            int n = regionsDB.Regions.Count;
+            int R = PlanetHexFactory.HexPatchRadiusFor(body.GetDataBlob<MassVolumeDB>().RadiusInM);
+
+            // (a) Border continuity: region i's east-edge hex (q=+R, r=0) == region (i+1)'s west-edge hex (q=-R, r=0).
+            for (int i = 0; i < n; i++)
+            {
+                var east = FindHex(regionsDB.Regions[i], R, 0);
+                var west = FindHex(regionsDB.Regions[(i + 1) % n], -R, 0);
+                Assert.That(east, Is.Not.Null, "east-edge hex exists");
+                Assert.That(west, Is.Not.Null, "next region's west-edge hex exists");
+                Assert.That(east.Terrain, Is.EqualTo(west.Terrain),
+                    $"terrain is continuous across the region {i}→{(i + 1) % n} border (a coherent world spanning regions)");
+            }
+
+            // (b) Neighbour coherence vs a spatial SHUFFLE of the same terrains (self-calibrating — no magic threshold).
+            var hexes = regionsDB.Regions[0].Hexes;
+            double real = NeighbourMatchFraction(hexes, shuffle: false);
+            double shuffled = NeighbourMatchFraction(hexes, shuffle: true);
+            int distinct = hexes.Select(h => h.Terrain).Distinct().Count();
+            if (distinct > 1)   // (a uniform world is trivially "coherent"; the shuffle test only means something with variety)
+                Assert.That(real, Is.GreaterThan(shuffled),
+                    "adjacent hexes share terrain more than a spatially-shuffled smatter of the same hexes → it's coherent");
+            Log($"terrain coherence: border-continuous across all {n} borders; neighbour-match real {real:0.00} vs shuffled {shuffled:0.00}");
+        }
+
+        private static GroundHex FindHex(Region region, int q, int r)
+        {
+            foreach (var h in region.Hexes) if (h.Q == q && h.R == r) return h;
+            return null;
+        }
+
+        /// <summary>Fraction of adjacent hex pairs that share terrain. With shuffle=true, terrains are rotated among the
+        /// hexes first (same multiset, spatial correlation destroyed) — the smatter baseline.</summary>
+        private static double NeighbourMatchFraction(System.Collections.Generic.List<GroundHex> hexes, bool shuffle)
+        {
+            var terrain = new System.Collections.Generic.Dictionary<(int, int), RegionFeatureType>();
+            int count = hexes.Count;
+            for (int k = 0; k < count; k++)
+            {
+                var src = shuffle ? hexes[(k + count / 2) % count] : hexes[k];
+                terrain[(hexes[k].Q, hexes[k].R)] = src.Terrain;
+            }
+            var dirs = new (int dq, int dr)[] { (1, 0), (1, -1), (0, -1), (-1, 0), (-1, 1), (0, 1) };
+            long pairs = 0, matches = 0;
+            foreach (var h in hexes)
+                foreach (var d in dirs)
+                    if (terrain.TryGetValue((h.Q + d.dq, h.R + d.dr), out var nt))
+                    {
+                        pairs++;
+                        if (nt == terrain[(h.Q, h.R)]) matches++;
+                    }
+            return pairs > 0 ? (double)matches / pairs : 0.0;
         }
     }
 }
