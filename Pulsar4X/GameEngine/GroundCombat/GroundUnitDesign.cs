@@ -41,6 +41,10 @@ namespace Pulsar4X.GroundCombat
         /// <summary>How this design's units cross ground (H2). Today's ground units are all <see cref="MovementDomain.Land"/>;
         /// the field lets naval/air designs opt into the water/air cost rules the pathfinder already understands.</summary>
         [JsonProperty] public MovementDomain Domain { get; set; } = MovementDomain.Land;
+        /// <summary>How fast this design crosses ground, as a MULTIPLIER on the base march pace (1.0 = standard foot
+        /// infantry; 2.0 = twice as fast). The developer's call: movement time depends on the UNIT's speed. Snapshotted
+        /// onto the raised unit; the processor divides a step's terrain-weighted time by this. Moddable per-design.</summary>
+        [JsonProperty] public double MovementSpeed { get; set; } = 1.0;
         [JsonProperty] public double Attack { get; set; }
         [JsonProperty] public double Defense { get; set; }
         [JsonProperty] public double HitPoints { get; set; }

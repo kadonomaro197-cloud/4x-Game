@@ -64,20 +64,34 @@ namespace Pulsar4X.GroundCombat
             //      terrain-weighted time; it arrives when the last hex is reached (the London→Paris transit).
             //    - REGION HOP (5b, coarse fallback): a unit ordered region→region lands at the new region's centre
             //      when its crossing time elapses (kept working until the client is hex-native).
+            int marching = 0, arrivedNow = 0;   // V1 gauge: proves the processor FIRES and moves units (game_logs [ground]).
             foreach (var unit in forces.Units)
             {
-                if (unit.Path != null && unit.Path.Count > 0) { AdvanceHexPath(unit, deltaSeconds); continue; }
+                bool wasMoving = (unit.Path != null && unit.Path.Count > 0) || unit.MovingToRegion >= 0;
+                if (!wasMoving) continue;
 
-                if (unit.MovingToRegion < 0) continue;
-                unit.TransitSecondsRemaining -= deltaSeconds;
-                if (unit.TransitSecondsRemaining <= 0)
+                if (unit.Path != null && unit.Path.Count > 0)
                 {
-                    unit.RegionIndex = unit.MovingToRegion;
-                    unit.MovingToRegion = -1;
-                    unit.TransitSecondsRemaining = 0;
-                    unit.HexQ = 0; unit.HexR = 0;   // a coarse region hop musters at the new region's patch centre
+                    AdvanceHexPath(unit, deltaSeconds);
                 }
+                else   // region hop (coarse fallback)
+                {
+                    unit.TransitSecondsRemaining -= deltaSeconds;
+                    if (unit.TransitSecondsRemaining <= 0)
+                    {
+                        unit.RegionIndex = unit.MovingToRegion;
+                        unit.MovingToRegion = -1;
+                        unit.TransitSecondsRemaining = 0;
+                        unit.HexQ = 0; unit.HexR = 0;   // a coarse region hop musters at the new region's patch centre
+                    }
+                }
+
+                bool stillMoving = (unit.Path != null && unit.Path.Count > 0) || unit.MovingToRegion >= 0;
+                if (stillMoving) marching++;
+                else { arrivedNow++; Console.WriteLine($"[ground] '{unit.Name}' arrived at region {unit.RegionIndex} hex ({unit.HexQ},{unit.HexR})"); }
             }
+            if (marching > 0 || arrivedNow > 0)
+                Console.WriteLine($"[ground] move tick Δ{deltaSeconds}s: {marching} marching, {arrivedNow} arrived");
 
             // 1b) ENVIRONMENTAL ATTRITION (E3): a unit STANDING in a region with a DAMAGING environmental hazard
             //     (fire tornadoes, corrosive superstorm, radiation zone) bleeds health each tick — the ground twin

@@ -63,6 +63,10 @@ namespace Pulsar4X.GroundCombat
         /// <summary>How this unit crosses ground — the snapshot that makes terrain cost UNIT-dependent (a tank bogs in
         /// mountains and can't cross ocean; an aircraft flies straight). Snapshotted from the design at raise time.</summary>
         [JsonProperty] public MovementDomain Domain { get; internal set; } = MovementDomain.Land;
+        /// <summary>How fast this unit crosses ground, a MULTIPLIER on the base march pace (1.0 = standard; 2.0 = twice as
+        /// fast). Snapshotted from the design (V1). Transit time is divided by this, so a faster unit arrives sooner —
+        /// the developer's "movement depends on the unit's speed."</summary>
+        [JsonProperty] public double MovementSpeed { get; internal set; } = 1.0;
         /// <summary>The remaining HEX route this unit is walking (H2b) — the queued waypoints from the pathfinder, front =
         /// the next hex to enter. Non-empty ⇒ the unit is marching hex-by-hex (<see cref="MovingToRegion"/> is set to the
         /// destination region); <c>GroundForcesProcessor</c> pops the front as each hex is reached. null/empty = standing still.</summary>
@@ -93,7 +97,7 @@ namespace Pulsar4X.GroundCombat
             DesignId = o.DesignId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
             UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health;
             MovingToRegion = o.MovingToRegion; TransitSecondsRemaining = o.TransitSecondsRemaining;
-            HexQ = o.HexQ; HexR = o.HexR; Domain = o.Domain;
+            HexQ = o.HexQ; HexR = o.HexR; Domain = o.Domain; MovementSpeed = o.MovementSpeed;
             if (o.Path != null)
             {
                 Path = new List<HexWaypoint>(o.Path.Count);
@@ -206,6 +210,7 @@ namespace Pulsar4X.GroundCombat
                 RegionIndex = regionIndex,
                 UnitType = design.UnitType,
                 Domain = design.Domain,           // snapshot the movement domain (H2) — like the combat stats
+                MovementSpeed = design.MovementSpeed > 0 ? design.MovementSpeed : 1.0,   // speed multiplier (V1)
                 Attack = design.Attack,
                 Defense = design.Defense,
                 MaxHealth = design.HitPoints,
@@ -236,7 +241,8 @@ namespace Pulsar4X.GroundCombat
             if (!regions[unit.RegionIndex].Neighbors.Contains(toRegion)) return false;   // must be adjacent
 
             unit.MovingToRegion = toRegion;
-            unit.TransitSecondsRemaining = regions[unit.RegionIndex].CrossingTimeSeconds;
+            // Transit time = the region's base crossing time ÷ the unit's speed (V1: movement depends on unit speed).
+            unit.TransitSecondsRemaining = regions[unit.RegionIndex].CrossingTimeSeconds / Math.Max(0.05, unit.MovementSpeed);
             return true;
         }
 
@@ -259,7 +265,9 @@ namespace Pulsar4X.GroundCombat
             if (steps.Count == 0) return false;
 
             var path = new List<HexWaypoint>(steps.Count);
-            foreach (var s in steps) path.Add(new HexWaypoint(s.RegionIndex, s.Q, s.R, s.Seconds));
+            // Divide each step's terrain-weighted time by the unit's speed (V1: a faster unit walks each hex quicker).
+            double speed = Math.Max(0.05, unit.MovementSpeed);
+            foreach (var s in steps) path.Add(new HexWaypoint(s.RegionIndex, s.Q, s.R, s.Seconds / speed));
             unit.Path = path;
             unit.TransitSecondsRemaining = path[0].Seconds;
             unit.MovingToRegion = toRegion;   // in-transit flag (the final destination region)
