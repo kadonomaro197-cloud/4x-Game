@@ -72,7 +72,11 @@ namespace Pulsar4X.Movement
 
             foreach(var ship in ships)
             {
-                if(!ship.HasDataBlob<WarpAbilityDB>()) continue;
+                // Must have a warp drive with a REAL (positive) speed. A hull with a WarpAbilityDB but MaxSpeed 0
+                // can't actually warp, and letting it through drove distance/0 → ∞ in the intercept math →
+                // TimeSpan overflow → a background-thread [FATAL] (found via a committed game_logs/ crash ordering a
+                // fleet to Luna). Skip it here; WarpMoveCommand logs its "CAN'T WARP" reason separately.
+                if(!ship.TryGetDataBlob<WarpAbilityDB>(out var shipWarp) || !(shipWarp.MaxSpeed > 0)) continue;
                 if(!ship.TryGetDataBlob<PositionDB>(out var shipPositionDB)) continue;
 
                 var shipMass = ship.GetDataBlob<MassVolumeDB>().MassTotal;

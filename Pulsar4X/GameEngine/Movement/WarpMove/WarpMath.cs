@@ -112,6 +112,18 @@ public static class WarpMath
     /// <returns></returns>
     public static (Vector3 position, DateTime etiDateTime) GetInterceptPosition_m(Vector3 moverAbsolutePos, double speed, OrbitDB targetOrbit, DateTime atDateTime, Vector3 offsetPosition = new Vector3())
     {
+        // GUARD (regression, found via a committed game_logs/ [FATAL], 2026-07-04): a non-positive or non-finite
+        // warp speed makes the intercept time blow up — the loops below compute tt = distance/speed, so speed ≤ 0
+        // gives tt = ∞, and `atDateTime + TimeSpan.FromSeconds(∞)` throws OverflowException. That throw happens on
+        // the BACKGROUND sim thread (an unobservable [FATAL] that can kill the clock), reached when a FLEET is
+        // ordered to a body and a member has a WarpAbilityDB with MaxSpeed 0 (a hull that can't actually warp). A
+        // ship that can't warp has nothing to intercept → return the mover's own position/time so the caller
+        // NO-OPS instead of crashing. Same bail for a degenerate (non-finite/non-positive) orbital period.
+        if (!(speed > 0) || double.IsInfinity(speed))
+            return (moverAbsolutePos, atDateTime);
+        double targetPeriod = targetOrbit.OrbitalPeriod.TotalSeconds;
+        if (!(targetPeriod > 0) || double.IsInfinity(targetPeriod))
+            return (moverAbsolutePos, atDateTime);
 
         var pos = moverAbsolutePos;
         double tim = 0;
