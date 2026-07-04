@@ -100,5 +100,95 @@ namespace Pulsar4X.Tests
             Assert.That(forces.Units[0].Health, Is.EqualTo(100),
                 "the unit list was deep-cloned, not shared — the roster would corrupt on transfer/save otherwise");
         }
+
+        private const int InvaderFaction = 900001;
+
+        [Test]
+        [Description("5b MOVE: a unit ordered to an ADJACENT region enters transit for that region's crossing time, then arrives once the processor has advanced enough game-seconds. Units traverse the surface on the map's real travel-time edges.")]
+        public void MoveUnit_ToAdjacentRegion_ArrivesAfterCrossingTime()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            var regions = body.GetDataBlob<PlanetRegionsDB>().Regions;
+            var unit = GroundForces.RaiseUnit(body, MakeInfantryDesign(), s.Faction.Id, regionIndex: 0);
+
+            int destination = regions[0].Neighbors[0];   // an adjacent region on the ring
+            bool ordered = GroundForces.OrderMove(body, unit, destination);
+            Assert.That(ordered, Is.True, "moving to a neighbouring region is a valid order");
+            Assert.That(unit.MovingToRegion, Is.EqualTo(destination));
+            Assert.That(unit.TransitSecondsRemaining, Is.EqualTo(regions[0].CrossingTimeSeconds));
+
+            var proc = new GroundForcesProcessor();
+            proc.ProcessEntity(body, (int)regions[0].CrossingTimeSeconds + 1);   // advance past the crossing time
+
+            Assert.That(unit.RegionIndex, Is.EqualTo(destination), "the unit has arrived in the destination region");
+            Assert.That(unit.MovingToRegion, Is.EqualTo(-1), "and is no longer in transit");
+            Log($"unit marched region 0 → {destination} over {regions[0].CrossingTimeSeconds:N0}s");
+        }
+
+        [Test]
+        [Description("5b bounds: a unit cannot jump to a NON-adjacent region (v1 is one hop at a time along the ring) — the order is rejected and the unit stays put.")]
+        public void MoveUnit_ToNonAdjacentRegion_IsRejected()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            var unit = GroundForces.RaiseUnit(body, MakeInfantryDesign(), s.Faction.Id, regionIndex: 0);
+
+            // Region 2 is opposite region 0 on a 4-slice ring (neighbours of 0 are 1 and 3) — not adjacent.
+            bool ordered = GroundForces.OrderMove(body, unit, 2);
+            Assert.That(ordered, Is.False, "region 2 is not a neighbour of region 0");
+            Assert.That(unit.MovingToRegion, Is.EqualTo(-1), "the unit did not enter transit");
+        }
+
+        [Test]
+        [Description("5c FIGHT + 5d region CAPTURE: two opposing garrisons in one region resolve by strength-math — the stronger (more total attack) wipes the weaker over successive salvos — and the surviving faction then OWNS the region.")]
+        public void RegionCombat_StrongerGarrisonWins_AndTakesTheRegion()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            var design = MakeInfantryDesign();
+
+            // Defender (the player) fields 3 units in region 0; the invader fields 1 — same stats, so numbers decide.
+            GroundForces.RaiseUnit(body, design, s.Faction.Id, 0);
+            GroundForces.RaiseUnit(body, design, s.Faction.Id, 0);
+            GroundForces.RaiseUnit(body, design, s.Faction.Id, 0);
+            GroundForces.RaiseUnit(body, design, InvaderFaction, 0);
+
+            var proc = new GroundForcesProcessor();
+            for (int i = 0; i < 8; i++) proc.ProcessEntity(body, 3600);   // 8 salvos
+
+            var forces = body.GetDataBlob<GroundForcesDB>();
+            Assert.That(forces.Units.Any(u => u.FactionOwnerID == InvaderFaction), Is.False, "the weaker invader garrison is wiped");
+            Assert.That(forces.Units.Any(u => u.FactionOwnerID == s.Faction.Id), Is.True, "the stronger defender survives");
+            Assert.That(body.GetDataBlob<PlanetRegionsDB>().Regions[0].OwnerFactionID, Is.EqualTo(s.Faction.Id),
+                "the surviving faction owns the contested region");
+            Log($"region 0 held by faction {s.Faction.Id}; {forces.Units.Count} defender unit(s) survived");
+        }
+
+        [Test]
+        [Description("5d WHOLE-PLANET CAPTURE (the 'you can take a planet' moment): when every region of a world is held by a single invader, the planet's colony flips to that faction.")]
+        public void WholePlanetCapture_FlipsTheColony_WhenAllRegionsHeld()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.Colony.GetDataBlob<ColonyInfoDB>().PlanetEntity;
+            var regions = body.GetDataBlob<PlanetRegionsDB>().Regions;
+
+            Assert.That(s.Colony.FactionOwnerID, Is.EqualTo(s.Faction.Id), "precondition: the colony starts owned by the player");
+
+            // The invader holds every region (an uncontested landing across the whole surface), with a unit present
+            // so the ground processor runs on this body.
+            foreach (var r in regions) r.OwnerFactionID = InvaderFaction;
+            GroundForces.RaiseUnit(body, MakeInfantryDesign(), InvaderFaction, 0);
+
+            new GroundForcesProcessor().ProcessEntity(body, 3600);
+
+            Assert.That(s.Colony.FactionOwnerID, Is.EqualTo(InvaderFaction),
+                "with every region held by the invader, the colony (the planet) is taken");
+            Log($"planet taken — colony now faction {s.Colony.FactionOwnerID}");
+        }
     }
 }

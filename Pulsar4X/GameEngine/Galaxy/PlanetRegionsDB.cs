@@ -57,6 +57,9 @@ namespace Pulsar4X.Galaxy
         [JsonProperty] public List<RegionFeature> Features { get; internal set; } = new List<RegionFeature>();
         /// <summary>Entity ids of installations placed in this region (populated by the build-at-a-region slice).</summary>
         [JsonProperty] public List<int> InstallationIds { get; internal set; } = new List<int>();
+        /// <summary>Which faction holds this region on the ground (-1 = unowned/uncontested). Ground combat flips it
+        /// when a garrison is cleared (slice 5d); when every region flips to one invader the planet's colony is taken.</summary>
+        [JsonProperty] public int OwnerFactionID { get; internal set; } = -1;
 
         public Region() { }
         public Region(Region other)
@@ -65,6 +68,7 @@ namespace Pulsar4X.Galaxy
             Area_km2 = other.Area_km2;
             CrossingTimeSeconds = other.CrossingTimeSeconds;
             Surveyed = other.Surveyed;
+            OwnerFactionID = other.OwnerFactionID;
             Neighbors = new List<int>(other.Neighbors);
             InstallationIds = new List<int>(other.InstallationIds);
             Features = new List<RegionFeature>();

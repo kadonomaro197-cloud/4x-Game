@@ -41,12 +41,17 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public double MaxHealth { get; internal set; }
         /// <summary>Current health; a fresh unit starts full, combat whittles it, 0 = destroyed (slice 5c/5d).</summary>
         [JsonProperty] public double Health { get; internal set; }
+        /// <summary>The region this unit is MARCHING to (-1 = standing still). While in transit it doesn't fight (5b).</summary>
+        [JsonProperty] public int MovingToRegion { get; internal set; } = -1;
+        /// <summary>Game-seconds left in the current march; counts down to 0 = arrived (the region's crossing time).</summary>
+        [JsonProperty] public double TransitSecondsRemaining { get; internal set; }
 
         public GroundUnit() { }
         public GroundUnit(GroundUnit o)
         {
             DesignId = o.DesignId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
             UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health;
+            MovingToRegion = o.MovingToRegion; TransitSecondsRemaining = o.TransitSecondsRemaining;
         }
     }
 
@@ -103,6 +108,26 @@ namespace Pulsar4X.GroundCombat
             };
             forces.Units.Add(unit);
             return unit;
+        }
+
+        /// <summary>
+        /// Order a unit to MARCH to an ADJACENT region (5b). Sets the transit clock to the current region's
+        /// crossing time — the "units take thousands of miles / logical time" datum. Returns false (no move) if the
+        /// body has no region layer, the target is out of range, it's the same region, or the target is not a
+        /// neighbour (v1: one hop at a time along the ring; multi-hop pathing is a later refinement).
+        /// </summary>
+        public static bool OrderMove(Entity body, GroundUnit unit, int toRegion)
+        {
+            if (unit == null) return false;
+            if (!body.TryGetDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>(out var regionsDB)) return false;
+            var regions = regionsDB.Regions;
+            if (unit.RegionIndex < 0 || unit.RegionIndex >= regions.Count) return false;
+            if (toRegion < 0 || toRegion >= regions.Count || toRegion == unit.RegionIndex) return false;
+            if (!regions[unit.RegionIndex].Neighbors.Contains(toRegion)) return false;   // must be adjacent
+
+            unit.MovingToRegion = toRegion;
+            unit.TransitSecondsRemaining = regions[unit.RegionIndex].CrossingTimeSeconds;
+            return true;
         }
     }
 }
