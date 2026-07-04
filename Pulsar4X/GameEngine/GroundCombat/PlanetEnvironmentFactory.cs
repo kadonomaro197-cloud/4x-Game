@@ -55,7 +55,10 @@ namespace Pulsar4X.GroundCombat
             }
         }
 
-        /// <summary>The gate: a gas/ice giant / gas-dwarf has no solid surface, so no surface environments.</summary>
+        /// <summary>The gate (SURFACE-ONLY): a gas/ice giant / gas-dwarf has no solid surface, so no surface
+        /// environments. It is NOT inert — a gas giant has its own AERIAL environment class (diamond-hail supersonic
+        /// winds à la Neptune/Uranus, pressure/storm bands) hosted by floating platforms, a deferred branch that
+        /// reuses this same typed-effect infrastructure. See docs/ENVIRONMENTS-DESIGN.md → "Gas giants aren't inert."</summary>
         private static bool HasSurface(BodyType t)
             => t == BodyType.Terrestrial || t == BodyType.Moon || t == BodyType.DwarfPlanet
             || t == BodyType.Asteroid || t == BodyType.Comet;
