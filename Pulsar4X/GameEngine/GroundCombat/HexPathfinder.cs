@@ -35,10 +35,15 @@ namespace Pulsar4X.GroundCombat
         public const double Move_Cover = 1.5;    // forest / jungle / wetland — slower
         public const double Move_Rough = 2.5;    // mountains / highlands / volcanic — a real barrier (and water, v1)
 
+        /// <summary>OCEAN is IMPASSABLE to ground units (the developer's call, 2026-07-04): a march can't cross open
+        /// water — it routes around it, and a destination on a water hex is unreachable. (Amphibious/transport gating
+        /// that would let some units cross is a cradle-to-grave follow-on.) ICE stays passable-but-rough. An impassable
+        /// hex is left OUT of the pathfinding graph entirely (cleaner than an infinite cost).</summary>
+        public static bool IsImpassable(RegionFeatureType terrain) => terrain == RegionFeatureType.Ocean;
+
         /// <summary>How much this hex's terrain slows a march across it (the cost to ENTER it). Uses the same
         /// open/cover/rough sorting the combat terrain (<see cref="GroundTerrain.Classify"/>) uses, but for movement.
-        /// (v1 note: Ocean/Ice are costed as rough — passable but slow — a transparent placeholder; true
-        /// impassable-water / amphibious gating is a documented follow-on, see the design doc.)</summary>
+        /// (Ocean is impassable — see <see cref="IsImpassable"/> — so it never reaches a cost query; Ice is rough.)</summary>
         public static double HexMoveMult(RegionFeatureType terrain)
         {
             switch (terrain)
@@ -46,8 +51,7 @@ namespace Pulsar4X.GroundCombat
                 case RegionFeatureType.Mountains:
                 case RegionFeatureType.Highlands:
                 case RegionFeatureType.Volcanic:
-                case RegionFeatureType.Ocean:      // v1: water is slow-but-passable (placeholder — see design doc)
-                case RegionFeatureType.Ice:
+                case RegionFeatureType.Ice:        // frozen ground — passable but treacherous/slow (rough)
                     return Move_Rough;
                 case RegionFeatureType.Forest:
                 case RegionFeatureType.Jungle:
@@ -76,7 +80,8 @@ namespace Pulsar4X.GroundCombat
 
             var startKey = (startQ, startR);
             var destKey = (destQ, destR);
-            if (!byCoord.ContainsKey(destKey)) return result;   // can't march to a hex outside the patch
+            if (!byCoord.TryGetValue(destKey, out var destHex)) return result;   // can't march to a hex outside the patch
+            if (IsImpassable(destHex.Terrain)) return result;                    // can't march ONTO open water
 
             var dest = new HexCoordinate(destQ, destR);
             var gScore = new Dictionary<(int, int), double> { [startKey] = 0.0 };
@@ -95,6 +100,7 @@ namespace Pulsar4X.GroundCombat
                 {
                     var nkey = (nb.Q, nb.R);
                     if (!byCoord.TryGetValue(nkey, out var nhex)) continue;   // off the patch
+                    if (IsImpassable(nhex.Terrain)) continue;                 // can't step into open water — route around
                     double tentative = baseG + HexMoveMult(nhex.Terrain);     // cost to ENTER the neighbour
                     if (gScore.TryGetValue(nkey, out var known) && tentative >= known) continue;
                     gScore[nkey] = tentative;

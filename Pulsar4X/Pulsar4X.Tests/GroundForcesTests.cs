@@ -689,6 +689,30 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("H2b: OCEAN is impassable to ground units (the developer's call) — a march never steps onto a water hex, and a destination ON water is unreachable. Ice stays passable.")]
+        public void HexPath_Ocean_IsImpassable_ButIceIsFine()
+        {
+            Assert.That(HexPathfinder.IsImpassable(RegionFeatureType.Ocean), Is.True, "ocean blocks ground units");
+            Assert.That(HexPathfinder.IsImpassable(RegionFeatureType.Ice), Is.False, "ice is passable (rough)");
+            Assert.That(HexPathfinder.HexMoveMult(RegionFeatureType.Ice), Is.EqualTo(2.5), "ice is rough-cost");
+
+            // A patch with a wall of ocean along the r=0 corridor: the march must detour around it (never onto water).
+            var disk = OpenDisk(2);
+            for (int i = 0; i < disk.Count; i++)
+                if (disk[i].R == 0 && (disk[i].Q == -1 || disk[i].Q == 0 || disk[i].Q == 1))
+                    disk[i] = new GroundHex(disk[i].Q, disk[i].R, RegionFeatureType.Ocean);
+
+            var around = HexPathfinder.FindPath(disk, -2, 0, 2, 0);
+            Assert.That(around.Count, Is.GreaterThan(0), "an over-land route around the water exists");
+            Assert.That(around.Any(h => h.Terrain == RegionFeatureType.Ocean), Is.False, "no step is ever on a water hex");
+
+            // A destination that IS a water hex is unreachable — no march onto open water.
+            var onWater = HexPathfinder.FindPath(disk, -2, 0, 0, 0);
+            Assert.That(onWater.Count, Is.EqualTo(0), "can't order a march onto an ocean hex");
+            Log($"ocean impassable: routed {around.Count} land hexes around the water; on-water dest rejected");
+        }
+
+        [Test]
         [Description("H2: the move-cost tiers are the developer's Moderate call (open ×1, cover ×1.5, rough ×2.5); per-hex base time is derived from the region's crossing-time datum, not a magic number.")]
         public void HexPath_CostModel_TiersAndDerivedBaseTime()
         {
@@ -716,9 +740,17 @@ namespace Pulsar4X.Tests
             Assert.That(unit.HexQ, Is.EqualTo(0));
             Assert.That(unit.HexR, Is.EqualTo(0), "a fresh unit stands at the patch centre");
 
-            // Pick the farthest-out hex in the patch as the destination (a real cross-region march).
-            var dest = region0.Hexes.OrderByDescending(h =>
-                new Pulsar4X.Colonies.HexCoordinate(h.Q, h.R).DistanceTo(new Pulsar4X.Colonies.HexCoordinate(0, 0))).First();
+            // Pick the farthest-out hex that's actually REACHABLE over land (ocean is impassable, and water could cut
+            // a distant hex off) — the first candidate, by descending distance, that A* can actually reach.
+            var origin = new Pulsar4X.Colonies.HexCoordinate(0, 0);
+            GroundHex dest = null;
+            foreach (var h in region0.Hexes
+                         .Where(h => !(h.Q == 0 && h.R == 0))
+                         .OrderByDescending(h => new Pulsar4X.Colonies.HexCoordinate(h.Q, h.R).DistanceTo(origin)))
+            {
+                if (HexPathfinder.FindPath(region0.Hexes, 0, 0, h.Q, h.R).Count > 0) { dest = h; break; }
+            }
+            Assert.That(dest, Is.Not.Null, "at least one hex in the patch is reachable over land");
 
             bool ordered = GroundForces.OrderMoveToHex(body, unit, dest.Q, dest.R);
             Assert.That(ordered, Is.True, "a reachable hex in the patch is a valid order");
