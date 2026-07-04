@@ -34,13 +34,9 @@ namespace Pulsar4X.GroundCombat
         /// space <c>SalvoDamageScale</c>). 1.0 = full; lower stretches a battle over more ticks. Tune live.</summary>
         public const double SalvoScale = 1.0;
 
-        // --- FORTIFICATION (5h): buildings in a region make its DEFENDER (the region owner) harder to dislodge — the
-        //     "fortify your capital / dig in" decision, and the combat payoff for placing a base via the tactical map
-        //     (each map-placed installation lands in Region.InstallationIds). A modest, CAPPED edge (like terrain
-        //     cover), not a wall. v1 counts ALL located installations equally; a dedicated ground-defence component
-        //     attribute (a real bunker/bastion, so a solar panel doesn't fortify) is the depth pass. ---
-        public const double FortifyPerBuilding = 0.15;   // each located installation: +15% defender protection
-        public const double FortifyMaxBonus = 1.0;       // capped at +100% (a fully built-up region halves incoming)
+        // FORTIFICATION (5h) is now DESIGN-DRIVEN — a building fortifies its region (and projects to adjacent friendly
+        // regions) only if its design carries a GroundDefenseAtb (a Bunker, not a solar panel). The math + the
+        // colony→component resolver live in GroundFortification; ResolveRegionCombat applies it to the defender.
 
         public void Init(Game game) { }
 
@@ -113,6 +109,11 @@ namespace Pulsar4X.GroundCombat
                 list.Add(unit);
             }
 
+            // Build the design-driven fortification resolver once (installation id → GroundDefenseAtb, from the body's
+            // colonies) — so a Bunker in a region hardens its defender (and shields adjacent friendly regions).
+            var allRegions = regionsDB?.Regions;
+            var fortResolve = GroundFortification.BuildResolver(body);
+
             // 2) COMBAT (5c) + 3) REGION CAPTURE (5d), per region.
             foreach (var kv in byRegion)
             {
@@ -124,7 +125,7 @@ namespace Pulsar4X.GroundCombat
                 {
                     Region region = (regionsDB != null && kv.Key >= 0 && kv.Key < regionsDB.Regions.Count)
                         ? regionsDB.Regions[kv.Key] : null;
-                    ResolveRegionCombat(forces, units, region);
+                    ResolveRegionCombat(forces, units, region, allRegions, fortResolve);
                 }
 
                 // Whoever holds the only live units here now owns the region.
@@ -152,7 +153,8 @@ namespace Pulsar4X.GroundCombat
         /// OWNER (the defender) additionally divides its incoming by the terrain COVER. Simultaneous (snapshot before
         /// apply), deterministic, no overkill (pool carries). Reads <see cref="GroundTerrain"/> — the ground twin of
         /// SpaceHazardTools.</summary>
-        private static void ResolveRegionCombat(GroundForcesDB forces, List<GroundUnit> units, Region region)
+        private static void ResolveRegionCombat(GroundForcesDB forces, List<GroundUnit> units, Region region,
+            List<Region> allRegions, System.Func<int, GroundDefenseAtb> fortResolve)
         {
             var terrain = GroundTerrain.Classify(region);
             int defenderFaction = region != null ? region.OwnerFactionID : -1;
@@ -182,8 +184,10 @@ namespace Pulsar4X.GroundCombat
                         pool += atk * AvgTriangleVs(u.UnitType, byFaction[g]);
                     }
                     pool *= SalvoScale;
-                    // The defender (region owner) divides incoming by terrain COVER × FORTIFICATION (its buildings).
-                    if (g == defenderFaction) pool /= (GroundTerrain.CoverDefenseMult(terrain) * FortificationDefenseMult(region));
+                    // The defender (region owner) divides incoming by terrain COVER × FORTIFICATION (its Bunkers, local
+                    // + adjacent-friendly projection — GroundFortification, design-driven).
+                    if (g == defenderFaction)
+                        pool /= (GroundTerrain.CoverDefenseMult(terrain) * GroundFortification.DefenseMult(region, allRegions, defenderFaction, fortResolve));
                     incoming[g] += pool;
                 }
             }
@@ -221,16 +225,6 @@ namespace Pulsar4X.GroundCombat
                 acc += t.Health * GroundTerrain.TriangleMult(attackerType, t.UnitType);
             }
             return totalH > 0 ? acc / totalH : 1.0;
-        }
-
-        /// <summary>The DEFENDER's fortification multiplier from the buildings located in this region (5h): its
-        /// incoming damage is divided by this, so a built-up region is a fortress. 1.0 = no buildings; capped so it's
-        /// an edge, not an impregnable wall. Public so the gauge can assert the curve directly.</summary>
-        public static double FortificationDefenseMult(Region region)
-        {
-            if (region == null || region.InstallationIds == null || region.InstallationIds.Count == 0) return 1.0;
-            double bonus = Math.Min(FortifyMaxBonus, region.InstallationIds.Count * FortifyPerBuilding);
-            return 1.0 + bonus;
         }
 
         /// <summary>Keep each formation's leader valid after casualties: if the leader unit is gone, leadership passes
