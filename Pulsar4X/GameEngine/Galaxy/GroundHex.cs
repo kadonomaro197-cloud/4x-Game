@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Pulsar4X.Galaxy
@@ -23,8 +24,26 @@ namespace Pulsar4X.Galaxy
         /// <summary>Which faction holds this hex on the ground (-1 = uncontested). Ground combat flips it (H3).</summary>
         [JsonProperty] public int OwnerFactionID { get; internal set; } = -1;
 
+        /// <summary>Instance ids of the FOOTPRINT buildings that occupy THIS operational hex (War-map layer, W1) — the
+        /// finer-than-region location of a strategic base (a fort / spaceport / HQ). This is the "ship icon" the war
+        /// map fights over: capturing the hex captures what's on it, bombing it damages what's on it. Only buildings
+        /// whose design carries a <c>GroundCombat.GroundFootprintAtb</c> land here (a solar panel doesn't); the region
+        /// keeps its full <c>Region.InstallationIds</c> for the economy + fortification. Save-safe (deep-copied).
+        /// Design: docs/GROUND-CITY-AND-WARMAP-DESIGN.md.</summary>
+        [JsonProperty] public List<int> InstallationIds { get; internal set; } = new List<int>();
+
+        /// <summary>The FINE city grid you zoom into (C-track) — null until this operational hex is DEVELOPED by a
+        /// colony (lazy, so an undeveloped hex costs nothing). Its tiles' buildings roll up to
+        /// <see cref="InstallationIds"/>. Deep-copied below. Design: docs/GROUND-CITY-AND-WARMAP-DESIGN.md.</summary>
+        [JsonProperty] public CityGrid CityGrid { get; internal set; }
+
         public GroundHex() { }
         public GroundHex(int q, int r, RegionFeatureType terrain) { Q = q; R = r; Terrain = terrain; }
-        public GroundHex(GroundHex o) { Q = o.Q; R = o.R; Terrain = o.Terrain; OwnerFactionID = o.OwnerFactionID; }
+        public GroundHex(GroundHex o)
+        {
+            Q = o.Q; R = o.R; Terrain = o.Terrain; OwnerFactionID = o.OwnerFactionID;
+            InstallationIds = o.InstallationIds != null ? new List<int>(o.InstallationIds) : new List<int>();
+            CityGrid = o.CityGrid != null ? new CityGrid(o.CityGrid) : null;
+        }
     }
 }

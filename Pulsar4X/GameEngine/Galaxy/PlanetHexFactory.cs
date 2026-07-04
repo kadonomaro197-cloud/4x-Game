@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Pulsar4X.Engine;
+using Pulsar4X.DataStructures;
 
 namespace Pulsar4X.Galaxy
 {
@@ -101,6 +102,7 @@ namespace Pulsar4X.Galaxy
         private const double MountainThresh = 0.85;    // → mountains
         private const double ColdC = -10.0;            // ≤ this surface °C → an icy world
         private const double HotC = 50.0;              // ≥ this → a scorching world
+        private const int MusterCoreRadius = 1;        // patch centre + its immediate ring = guaranteed passable land
         private const double TwoPi = 2.0 * Math.PI;
 
         private readonly bool _gas, _tectonic;
@@ -148,7 +150,13 @@ namespace Pulsar4X.Galaxy
             double elev = Field(lon, lat, _ePhaseLon, _ePhaseLat);
             double moist = Field(lon, lat, _mPhaseLon, _mPhaseLat);
 
-            if (elev < _seaLevel) return RegionFeatureType.Ocean;
+            // The muster/landing CORE — the patch centre (0,0), where units are raised, plus its immediate ring — is
+            // guaranteed passable land: a colony's landing zone sits on solid ground. Without this, a coherent ocean
+            // world (Earth floods ~62% of the elevation range) can put OPEN WATER on the muster hex, which the
+            // pathfinder treats as impassable — stranding a raised garrison with no reachable hex. Below sea level in
+            // the core reads as Coast (a beachhead), not Ocean; everything beyond the core is the honest field.
+            bool inMusterCore = (Math.Abs(q) + Math.Abs(q + r) + Math.Abs(r)) / 2 <= MusterCoreRadius;
+            if (elev < _seaLevel) return inMusterCore ? RegionFeatureType.Coast : RegionFeatureType.Ocean;
             if (elev < _seaLevel + CoastBand) return RegionFeatureType.Coast;
 
             // Land — the world's CLIMATE first (temperature), then relief + moisture.

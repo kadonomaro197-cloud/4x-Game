@@ -176,7 +176,6 @@ namespace Pulsar4X.Client
             Attack = 100,
             Defense = 10,
             HitPoints = 500,
-            MovementSpeed = type == GroundUnitType.Armor ? 2.0 : (type == GroundUnitType.Artillery ? 1.2 : 1.0),   // V1 speed
             IndustryPointCosts = 0,
             IndustryTypeID = "installation",
         };

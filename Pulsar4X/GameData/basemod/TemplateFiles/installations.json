@@ -1145,6 +1145,20 @@
           "GuiHint": "None",
           "PropertyFormula": "AtbConstrArgs(PropertyValue('LocalFortify'), PropertyValue('AdjacentProjection'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundDefenseAtb"
+        },
+        {
+          "Name": "TileFootprint",
+          "Units": "tiles",
+          "DescriptionFormula": "'How many fine city-tiles this base occupies once the city sub-grid is built.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "4"
+        },
+        {
+          "Name": "groundFootprintAtbArgs",
+          "DescriptionFormula": "'double tileFootprint — makes the bunker a strategic presence on the operational war map (a capture/bombard target).'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('TileFootprint'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundFootprintAtb"
         }
       ]
     }

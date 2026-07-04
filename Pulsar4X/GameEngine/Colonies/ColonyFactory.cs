@@ -123,6 +123,10 @@ namespace Pulsar4X.Colonies
             // so they draw on the planet view + count for fortification. Defensive (no region layer → no-op).
             Pulsar4X.GroundCombat.GroundInstallations.LocateColonyInstallations(colonyEntity);
 
+            // War-map layer (W1): also drop FOOTPRINT buildings (a Bunker/fort — a GroundFootprintAtb) onto their
+            // region's centre hex, so a strategic base is a capture/bombard target on the operational war map.
+            Pulsar4X.GroundCombat.GroundBuildings.LocateFootprintsOnHexes(colonyEntity);
+
             // Add starting colony cargo
             LoadCargo(colonyEntity, factionInfo.Data, colonyBlueprint.Cargo);
 
