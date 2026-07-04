@@ -803,5 +803,46 @@ namespace Pulsar4X.Tests
             Assert.That(HexPathfinder.FindPath(regions, 0, 0, 0, 9, 0, 0, MovementDomain.Land).Count, Is.EqualTo(0), "invalid region → empty");
             Log($"deterministic path length {a.Count}; trivial cases empty");
         }
+
+        [Test]
+        [Description("H2b: a formation ordered to a target HEX in an ADJACENT region transits hex-by-hex across the border over MULTIPLE ticks (the London→Paris behaviour) and arrives standing on the target hex — it does not teleport, and the whole block moves as one.")]
+        public void OrderFormationMove_ToHex_TransitsHexByHex_AcrossRegions()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+
+            // Replace the home world's regions with a clean 2-region ring of all-plains radius-2 patches, so the march
+            // is deterministic (no random ocean to route around). r0.east = r1, r1.west = r0 (the shared border).
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            double crossing = 6000;
+            regionsDB.Regions.Clear();
+            regionsDB.Regions.Add(MakeDiskRegion(0, 2, RegionFeatureType.Plains, crossing, westNbr: 1, eastNbr: 1));
+            regionsDB.Regions.Add(MakeDiskRegion(1, 2, RegionFeatureType.Plains, crossing, westNbr: 0, eastNbr: 0));
+
+            var design = MakeInfantryDesign();
+            var u1 = GroundForces.RaiseUnit(body, design, s.Faction.Id, regionIndex: 0);
+            var u2 = GroundForces.RaiseUnit(body, design, s.Faction.Id, regionIndex: 0);
+            var formation = GroundForces.CreateFormation(body, s.Faction.Id, "Expeditionary");
+            GroundForces.AssignUnit(formation, u1);
+            GroundForces.AssignUnit(formation, u2);
+
+            // London (region 0 centre) → Paris (region 1 centre).
+            int moved = GroundForces.OrderFormationMove(body, formation, toRegion: 1, toQ: 0, toR: 0);
+            Assert.That(moved, Is.EqualTo(2), "both members received a hex route to the target");
+            Assert.That(u1.Path, Is.Not.Null, "the leader has a plotted route");
+            Assert.That(u1.Path.Count, Is.GreaterThan(3), "the route is several hexes + the border crossing, not a single hop");
+            Assert.That(u1.MovingToRegion, Is.EqualTo(1), "flagged in-transit toward the destination region");
+
+            var proc = new GroundForcesProcessor();
+            int ticks = 0;
+            while (u1.MovingToRegion >= 0 && ticks < 500) { proc.ProcessEntity(body, 3600); ticks++; }
+
+            Assert.That(ticks, Is.GreaterThan(1), "the march took MULTIPLE ticks — it transited hex-by-hex, it did not teleport");
+            Assert.That(u1.RegionIndex, Is.EqualTo(1), "arrived in the destination region");
+            Assert.That((u1.HexQ, u1.HexR), Is.EqualTo((0, 0)), "standing on the target hex (Paris)");
+            Assert.That(u1.Path == null || u1.Path.Count == 0, Is.True, "the route was consumed on arrival");
+            Assert.That(u2.RegionIndex, Is.EqualTo(1), "the whole formation moved as one");
+            Log($"London→Paris: formation of 2 crossed region 0→1 to the target hex in {ticks} ticks ({u1.Path?.Count ?? 0} steps left)");
+        }
     }
 }

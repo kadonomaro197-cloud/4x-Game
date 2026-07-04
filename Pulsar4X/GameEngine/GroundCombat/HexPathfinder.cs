@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using Pulsar4X.Galaxy;
 
 namespace Pulsar4X.GroundCombat
@@ -15,6 +16,23 @@ namespace Pulsar4X.GroundCombat
         public HexStep(int regionIndex, int q, int r, double seconds)
         { RegionIndex = regionIndex; Q = q; R = r; Seconds = seconds; }
         public override string ToString() => $"R{RegionIndex}({Q},{R}) {Seconds:0}s";
+    }
+
+    /// <summary>A stored, SAVE-SAFE step of a unit's remaining hex route (the persistent twin of <see cref="HexStep"/> —
+    /// a class with [JsonProperty] + a copy ctor so it round-trips a save, unlike the readonly-struct pathfinder result).
+    /// A unit's <c>Path</c> is a list of these; <c>GroundForcesProcessor</c> pops the front as each hex is entered (H2b).</summary>
+    public class HexWaypoint
+    {
+        /// <summary>Region this hex belongs to (a route may cross region borders).</summary>
+        [JsonProperty] public int Region { get; internal set; }
+        [JsonProperty] public int Q { get; internal set; }
+        [JsonProperty] public int R { get; internal set; }
+        /// <summary>Game-seconds to move INTO this hex (its terrain-weighted step cost).</summary>
+        [JsonProperty] public double Seconds { get; internal set; }
+
+        public HexWaypoint() { }
+        public HexWaypoint(int region, int q, int r, double seconds) { Region = region; Q = q; R = r; Seconds = seconds; }
+        public HexWaypoint(HexWaypoint o) { Region = o.Region; Q = o.Q; R = o.R; Seconds = o.Seconds; }
     }
 
     /// <summary>

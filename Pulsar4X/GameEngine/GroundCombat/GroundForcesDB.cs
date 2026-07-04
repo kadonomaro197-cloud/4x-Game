@@ -63,6 +63,10 @@ namespace Pulsar4X.GroundCombat
         /// <summary>How this unit crosses ground — the snapshot that makes terrain cost UNIT-dependent (a tank bogs in
         /// mountains and can't cross ocean; an aircraft flies straight). Snapshotted from the design at raise time.</summary>
         [JsonProperty] public MovementDomain Domain { get; internal set; } = MovementDomain.Land;
+        /// <summary>The remaining HEX route this unit is walking (H2b) — the queued waypoints from the pathfinder, front =
+        /// the next hex to enter. Non-empty ⇒ the unit is marching hex-by-hex (<see cref="MovingToRegion"/> is set to the
+        /// destination region); <c>GroundForcesProcessor</c> pops the front as each hex is reached. null/empty = standing still.</summary>
+        [JsonProperty] public List<HexWaypoint> Path { get; internal set; }
 
         /// <summary>
         /// ENVIRONMENTAL GEAR (E4) — the ground echo of a ship's <c>HazardResistanceAtb</c>: per-hazard-effect
@@ -90,6 +94,11 @@ namespace Pulsar4X.GroundCombat
             UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health;
             MovingToRegion = o.MovingToRegion; TransitSecondsRemaining = o.TransitSecondsRemaining;
             HexQ = o.HexQ; HexR = o.HexR; Domain = o.Domain;
+            if (o.Path != null)
+            {
+                Path = new List<HexWaypoint>(o.Path.Count);
+                foreach (var w in o.Path) Path.Add(new HexWaypoint(w));
+            }
             if (o.EnvResistance != null) EnvResistance = new Dictionary<HazardEffectType, double>(o.EnvResistance);
         }
     }
@@ -231,6 +240,32 @@ namespace Pulsar4X.GroundCombat
             return true;
         }
 
+        /// <summary>
+        /// Order a unit to march to a specific HEX — <paramref name="toQ"/>,<paramref name="toR"/> in region
+        /// <paramref name="toRegion"/> (H2). Plots a terrain-weighted A* route from the unit's current hex
+        /// (<see cref="HexPathfinder"/>, honouring its <see cref="GroundUnit.Domain"/>), stores it as the unit's
+        /// <see cref="GroundUnit.Path"/>, and the processor walks it hex-by-hex over ticks — the London→Paris transit,
+        /// crossing region borders as the route requires. Returns false if there's no region layer or no route exists
+        /// (e.g. a land unit asked to reach an ocean-locked hex). This is the fine-grained twin of the region-hop
+        /// <see cref="OrderMove(Entity, GroundUnit, int)"/> overload (kept as the coarse fallback).
+        /// </summary>
+        public static bool OrderMove(Entity body, GroundUnit unit, int toRegion, int toQ, int toR)
+        {
+            if (unit == null) return false;
+            if (!body.TryGetDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>(out var regionsDB)) return false;
+
+            var steps = HexPathfinder.FindPath(regionsDB, unit.RegionIndex, unit.HexQ, unit.HexR,
+                toRegion, toQ, toR, unit.Domain);
+            if (steps.Count == 0) return false;
+
+            var path = new List<HexWaypoint>(steps.Count);
+            foreach (var s in steps) path.Add(new HexWaypoint(s.RegionIndex, s.Q, s.R, s.Seconds));
+            unit.Path = path;
+            unit.TransitSecondsRemaining = path[0].Seconds;
+            unit.MovingToRegion = toRegion;   // in-transit flag (the final destination region)
+            return true;
+        }
+
         // ───────────────────────── FORMATIONS (the ground echo of fleet grouping) ─────────────────────────
         // Mirrors the FleetOrder verbs (Create / AssignShip / UnassignShip / SetFlagShip / Disband), one level over
         // from entities to data objects. Membership lives on the unit (GroundUnit.FormationId), like a ship's parent
@@ -312,6 +347,27 @@ namespace Pulsar4X.GroundCombat
                 if (u.FormationId != formation.FormationId) continue;
                 if (u.RegionIndex != rallyRegion || u.MovingToRegion >= 0) continue;
                 if (OrderMove(body, u, toRegion)) moved++;
+            }
+            return moved;
+        }
+
+        /// <summary>March a whole formation to a target HEX (H2) — the fine-grained twin of the region-hop
+        /// <see cref="OrderFormationMove(Entity, GroundFormation, int)"/>. Every member standing with the LEADER
+        /// (in the leader's region, not already moving) is given its OWN terrain-weighted A* route to
+        /// <paramref name="toRegion"/>,<paramref name="toQ"/>,<paramref name="toR"/> (each from its own hex, so the
+        /// block converges on the objective), transiting hex-by-hex over ticks. Returns how many members marched.</summary>
+        public static int OrderFormationMove(Entity body, GroundFormation formation, int toRegion, int toQ, int toR)
+        {
+            if (formation == null || !body.TryGetDataBlob<GroundForcesDB>(out var forces)) return 0;
+            int rallyRegion = LeaderRegion(forces, formation);
+            if (rallyRegion < 0) return 0;
+
+            int moved = 0;
+            foreach (var u in forces.Units.ToArray())
+            {
+                if (u.FormationId != formation.FormationId) continue;
+                if (u.RegionIndex != rallyRegion || u.MovingToRegion >= 0 || (u.Path != null && u.Path.Count > 0)) continue;
+                if (OrderMove(body, u, toRegion, toQ, toR)) moved++;
             }
             return moved;
         }

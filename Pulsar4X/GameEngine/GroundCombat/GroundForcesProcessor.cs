@@ -59,9 +59,15 @@ namespace Pulsar4X.GroundCombat
             if (!body.TryGetDataBlob<GroundForcesDB>(out var forces) || forces.Units.Count == 0)
                 return;
 
-            // 1) MOVEMENT (5b): advance in-transit units; a unit arrives when its crossing time has elapsed.
+            // 1) MOVEMENT: advance in-transit units.
+            //    - HEX PATH (H2): a unit with a plotted hex route walks it hex-by-hex, each step costing its
+            //      terrain-weighted time; it arrives when the last hex is reached (the London→Paris transit).
+            //    - REGION HOP (5b, coarse fallback): a unit ordered region→region lands at the new region's centre
+            //      when its crossing time elapses (kept working until the client is hex-native).
             foreach (var unit in forces.Units)
             {
+                if (unit.Path != null && unit.Path.Count > 0) { AdvanceHexPath(unit, deltaSeconds); continue; }
+
                 if (unit.MovingToRegion < 0) continue;
                 unit.TransitSecondsRemaining -= deltaSeconds;
                 if (unit.TransitSecondsRemaining <= 0)
@@ -69,6 +75,7 @@ namespace Pulsar4X.GroundCombat
                     unit.RegionIndex = unit.MovingToRegion;
                     unit.MovingToRegion = -1;
                     unit.TransitSecondsRemaining = 0;
+                    unit.HexQ = 0; unit.HexR = 0;   // a coarse region hop musters at the new region's patch centre
                 }
             }
 
@@ -225,6 +232,30 @@ namespace Pulsar4X.GroundCombat
                 acc += t.Health * GroundTerrain.TriangleMult(attackerType, t.UnitType);
             }
             return totalH > 0 ? acc / totalH : 1.0;
+        }
+
+        /// <summary>Walk a unit along its plotted HEX path (H2): count down the current step's time and, each time it
+        /// elapses, step INTO the next hex — updating its region + (q,r) — carrying any overshoot into the following
+        /// step (so a long tick can cross several hexes at once, and a full march totals the derived crossing time).
+        /// When the last hex is reached the path is consumed and the unit stops (MovingToRegion cleared).</summary>
+        private static void AdvanceHexPath(GroundUnit unit, int deltaSeconds)
+        {
+            unit.TransitSecondsRemaining -= deltaSeconds;
+            while (unit.Path.Count > 0 && unit.TransitSecondsRemaining <= 0)
+            {
+                var step = unit.Path[0];
+                unit.RegionIndex = step.Region;
+                unit.HexQ = step.Q;
+                unit.HexR = step.R;
+                unit.Path.RemoveAt(0);
+                if (unit.Path.Count > 0)
+                    unit.TransitSecondsRemaining += unit.Path[0].Seconds;   // carry the overshoot into the next hop
+                else
+                {
+                    unit.TransitSecondsRemaining = 0;
+                    unit.MovingToRegion = -1;   // arrived — no longer in transit
+                }
+            }
         }
 
         /// <summary>Keep each formation's leader valid after casualties: if the leader unit is gone, leadership passes
