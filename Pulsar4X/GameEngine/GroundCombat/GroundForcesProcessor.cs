@@ -137,6 +137,10 @@ namespace Pulsar4X.GroundCombat
             // Remove destroyed units.
             forces.Units.RemoveAll(u => u.Health <= 0);
 
+            // FORMATIONS: a formation whose LEADER just died reassigns leadership to a surviving member (fleet-like —
+            // the flagship echo; no combat penalty, per the locked design). An empty formation keeps LeaderUnitId = -1.
+            MaintainFormations(forces);
+
             // 4) WHOLE-PLANET CAPTURE (5d — the "take a planet" moment): if EVERY region is held by a single
             //    faction that isn't the colony's current owner, the planet's colony flips to that faction.
             TryCapturePlanet(body, regionsDB);
@@ -221,6 +225,25 @@ namespace Pulsar4X.GroundCombat
             if (region == null || region.InstallationIds == null || region.InstallationIds.Count == 0) return 1.0;
             double bonus = Math.Min(FortifyMaxBonus, region.InstallationIds.Count * FortifyPerBuilding);
             return 1.0 + bonus;
+        }
+
+        /// <summary>Keep each formation's leader valid after casualties: if the leader unit is gone, leadership passes
+        /// to a surviving member (or -1 if the formation was wiped). Fleet-like reassignment, no penalty.</summary>
+        private static void MaintainFormations(GroundForcesDB forces)
+        {
+            if (forces.Formations == null || forces.Formations.Count == 0) return;
+            foreach (var f in forces.Formations)
+            {
+                bool leaderAlive = false;
+                int firstMemberId = -1;
+                foreach (var u in forces.Units)
+                {
+                    if (u.FormationId != f.FormationId) continue;
+                    if (firstMemberId < 0) firstMemberId = u.UnitId;
+                    if (u.UnitId == f.LeaderUnitId) { leaderAlive = true; break; }
+                }
+                if (!leaderAlive) f.LeaderUnitId = firstMemberId;   // -1 if the formation is now empty
+            }
         }
 
         private static bool IsDamageEffect(HazardEffectType t)

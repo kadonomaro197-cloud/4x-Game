@@ -424,5 +424,63 @@ namespace Pulsar4X.Tests
             Assert.That(geared.Health, Is.GreaterThan(plain.Health), "geared unit outlasts the unprotected one");
             Log($"E4 gear: plain -{plain0 - plain.Health:0}, shielded(0.8) -{geared0 - geared.Health:0}, immune(1.0) -{immune0 - immune.Health:0} hp/hr in fire");
         }
+
+        // ───────────────────────── 5h — FORMATIONS (the ground echo of fleet grouping) ─────────────────────────
+
+        [Test]
+        [Description("5h formations mirror the fleet's SHAPE: create a named formation, assign units (first = leader/flagship), move the whole block with ONE order, and on the leader's death leadership reassigns to a survivor (fleet-like, no penalty). Membership + leader survive a clone.")]
+        public void Formation_MirrorsFleet_CreateAssignMoveAndLeaderReassign()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();   // no attrition during the long move tick
+
+            var design = MakeInfantryDesign();
+            var u1 = GroundForces.RaiseUnit(body, design, s.Faction.Id, 0);
+            var u2 = GroundForces.RaiseUnit(body, design, s.Faction.Id, 0);
+            var u3 = GroundForces.RaiseUnit(body, design, s.Faction.Id, 0);
+
+            // Units get stable ids (the ground echo of entity ids).
+            Assert.That(new[] { u1.UnitId, u2.UnitId, u3.UnitId }.Distinct().Count(), Is.EqualTo(3), "each unit gets a unique id");
+
+            // Create + assign (first assigned = leader, the flagship default).
+            var formation = GroundForces.CreateFormation(body, s.Faction.Id, "1st Armoured");
+            Assert.That(GroundForces.AssignUnit(formation, u1), Is.True);
+            Assert.That(GroundForces.AssignUnit(formation, u2), Is.True);
+            Assert.That(GroundForces.AssignUnit(formation, u3), Is.True);
+
+            var forces = body.GetDataBlob<GroundForcesDB>();
+            Assert.That(GroundFormationTools.MemberCount(forces, formation), Is.EqualTo(3), "all three joined");
+            Assert.That(formation.LeaderUnitId, Is.EqualTo(u1.UnitId), "the first unit assigned is the leader (flagship default)");
+            Assert.That(GroundFormationTools.Leader(forces, formation).UnitId, Is.EqualTo(u1.UnitId));
+
+            // ONE order marches the whole block to an adjacent region.
+            int moved = GroundForces.OrderFormationMove(body, formation, 1);
+            Assert.That(moved, Is.EqualTo(3), "the formation moves as one — all three marched");
+            Assert.That(forces.Units.Where(u => u.FormationId == formation.FormationId).All(u => u.MovingToRegion == 1), Is.True);
+
+            var proc = new GroundForcesProcessor();
+            proc.ProcessEntity(body, 100 * 24 * 3600);   // long tick so the march completes
+            Assert.That(forces.Units.Where(u => u.FormationId == formation.FormationId).All(u => u.RegionIndex == 1), Is.True,
+                "the whole formation arrived in region 1");
+
+            // Leader dies → leadership reassigns to a surviving member (fleet-like).
+            u1.Health = 0;
+            proc.ProcessEntity(body, 3600);
+            Assert.That(forces.Units.Any(u => u.UnitId == u1.UnitId), Is.False, "the dead leader is removed");
+            Assert.That(formation.LeaderUnitId, Is.Not.EqualTo(-1), "the formation still has a leader");
+            Assert.That(formation.LeaderUnitId, Is.AnyOf(u2.UnitId, u3.UnitId), "leadership passed to a survivor");
+            Assert.That(GroundFormationTools.MemberCount(forces, formation), Is.EqualTo(2), "two members remain");
+
+            // Membership + leader survive a clone (save-safety).
+            var clone = (GroundForcesDB)forces.Clone();
+            var clonedFormation = clone.Formations.Find(f => f.FormationId == formation.FormationId);
+            Assert.That(clonedFormation, Is.Not.Null);
+            Assert.That(clonedFormation.LeaderUnitId, Is.EqualTo(formation.LeaderUnitId), "leader survives clone");
+            Assert.That(GroundFormationTools.MemberCount(clone, clonedFormation), Is.EqualTo(2), "membership survives clone");
+
+            Log($"formation '1st Armoured': moved 3 as one, leader reassigned {u1.UnitId}→{formation.LeaderUnitId} on death, 2 survive");
+        }
     }
 }
