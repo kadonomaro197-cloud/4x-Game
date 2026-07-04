@@ -467,6 +467,18 @@ DYNAMICALLY-built installations at their install site; v1 covers the start colon
 `docs/GROUND-COMBAT-MAP-DESIGN.md` → "LOCKED PRINCIPLE." **Next: the "40k" ground-combat depth pass + a per-unit combat
 readout** (the ground echo of the Fleet Combat tab).
 
+**HEX drill-in view (H4, 2026-07-04).** A **⬡ Hex view / ▦ Region view** toggle (shown when the centre region carries a
+hex patch) swaps the 3-region strip for the centre region's **fine HEX grid** (Planet → Region → Hex). Hexes draw as
+terrain-coloured hexagons (`AddNgonFilled(..., 6)`, reusing `_featureColors`); each `GroundUnit` sits on its `(HexQ,HexR)`
+as an owner-coloured marker + type/count (`I3`, `»` when hex-marching); the selected group's hexes get a yellow ring.
+**Click a hex** → select your units there (toggle), or with a group selected, march it to that hex via
+`GroundForces.OrderMoveToHex` (A* per unit, ocean impassable) — the London→Paris move on the fine grid. Click resolves to
+the nearest hex centre (robust vs. polygon hit-testing). The caption surfaces the **H3 range readout** —
+`GroundRangeTools.RealReachKm(unit.Range, region)` — so the selected group shows "strike range 3 hex ≈ N km" (the
+"1 hex ≠ same distance body-to-body" insight, visible). Same thin-defensive discipline: reads CI-tested blobs, orders
+through CI-tested engine paths, inside the window's `[RenderError]` try/catch, no hard-indexing. **Runtime render/feel is
+the developer's local build (CI compiles the client, can't run it).** Design: `docs/HEX-GROUND-AND-ORDERS-DESIGN.md` (H4).
+
 ### GroundCombatWindow — MISSING ENTIRELY
 
 No window exists for ground *combat* yet (the `PlanetViewWindow` above is the surface MAP, not the battle). When

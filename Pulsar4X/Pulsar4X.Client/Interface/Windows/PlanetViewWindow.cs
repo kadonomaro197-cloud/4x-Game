@@ -42,6 +42,9 @@ namespace Pulsar4X.Client
         // Which region sits in the middle column. Rotating changes this; the ring wraps modulo region count.
         private int _centerRegion = 0;
 
+        // H4: hex drill-in. When on, the centre region is drawn as its fine HEX grid instead of the 3-region strip.
+        private bool _hexView = false;
+
         // The selected unit GROUP (region, owner faction, type) — the thing a March order acts on. -1 region = none.
         private int _selRegion = -1;
         private int _selFaction = -1;
@@ -173,8 +176,23 @@ namespace Pulsar4X.Client
                 ImGui.SameLine();
                 ImGui.TextColored(new Vector4(0.6f, 0.9f, 0.6f, 1f), "  " + _status);
             }
+
+            // H4: the HEX drill-in toggle — the centre region's fine grid (Planet → Region → Hex).
+            bool hasHexes = _centerRegion < regions.Count && regions[_centerRegion].Hexes != null && regions[_centerRegion].Hexes.Count > 0;
+            if (hasHexes)
+            {
+                ImGui.SameLine();
+                if (ImGui.Button(_hexView ? "▦ Region view" : "⬡ Hex view")) _hexView = !_hexView;
+            }
             ImGui.Separator();
 
+            // ── The map canvas: HEX drill-in (H4) or the coarse three-region strip ──────
+            if (_hexView && hasHexes)
+            {
+                DrawHexMap(regions[_centerRegion], body, myFaction, forcesDB);
+            }
+            else
+            {
             // ── The three-region strip ──────────────────────────────────────────────────
             var drawList = ImGui.GetWindowDrawList();
             var canvasPos = ImGui.GetCursorScreenPos();
@@ -234,6 +252,7 @@ namespace Pulsar4X.Client
                     }
                 }
             }
+            }   // end else (region-strip view)
 
             // ── Below the canvas: selection actions, build panel, region detail ─────────
             ImGui.Separator();
@@ -692,6 +711,136 @@ namespace Pulsar4X.Client
             ImGui.SameLine(); ImGui.TextColored(new Vector4(0.85f, 0.25f, 0.2f, 1f), "■ hostile");
             ImGui.SameLine(); ImGui.TextDisabled("  I=Infantry A=Armor R=Artillery  »=marching");
         }
+
+        // ── H4: the HEX drill-in — the centre region's fine grid (Planet → Region → Hex) ─
+        private void DrawHexMap(Region region, Entity body, int myFaction, GroundForcesDB forcesDB)
+        {
+            var hexes = region.Hexes;
+            if (hexes == null || hexes.Count == 0) { ImGui.TextDisabled("This region has no hex detail yet."); return; }
+
+            var drawList = ImGui.GetWindowDrawList();
+            var canvasPos = ImGui.GetCursorScreenPos();
+            var canvasSize = ImGui.GetContentRegionAvail();
+            float mapHeight = Math.Max(200f, canvasSize.Y * 0.62f);
+            var mapSize = new Vector2(canvasSize.X, mapHeight);
+
+            ImGui.InvisibleButton("hexcanvas", mapSize);
+            bool clicked = ImGui.IsItemHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
+            var mp = ImGui.GetIO().MousePos;
+
+            // Size a hex so the whole patch fits (a radius-R disk spans ~2R+1 hexes each way).
+            int R = HexPathfinder.PatchRadius(hexes);
+            float span = 2 * R + 1.6f;
+            float size = Math.Max(4f, Math.Min(mapSize.X / (1.7320508f * span), mapSize.Y / (1.5f * span)));
+            var center = new Vector2(canvasPos.X + mapSize.X * 0.5f, canvasPos.Y + mapSize.Y * 0.5f);
+
+            uint hexBorder = ImGui.ColorConvertFloat4ToU32(new Vector4(0f, 0f, 0f, 0.35f));
+            foreach (var h in hexes)
+            {
+                var c = HexCenter(center, size, h.Q, h.R);
+                var col = _featureColors.TryGetValue(h.Terrain, out var vc) ? vc : _featureColors[RegionFeatureType.Barren];
+                drawList.AddNgonFilled(c, size, ImGui.ColorConvertFloat4ToU32(col), 6);
+                drawList.AddNgon(c, size, hexBorder, 6, 1f);
+            }
+
+            // Units stacked on their hex, grouped by (hex, faction) — a marker + count, coloured by owner.
+            var occ = new Dictionary<(int q, int r, int fac), (int n, int type, int moving)>();
+            if (forcesDB != null)
+            {
+                foreach (var u in forcesDB.Units)
+                {
+                    if (u.RegionIndex != region.Index) continue;
+                    var key = (u.HexQ, u.HexR, u.FactionOwnerID);
+                    occ.TryGetValue(key, out var g);
+                    g.n += 1; g.type = (int)u.UnitType;
+                    if (u.HexPath != null && u.HexPath.Count > 0) g.moving += 1;
+                    occ[key] = g;
+                }
+            }
+            foreach (var kv in occ)
+            {
+                var c = HexCenter(center, size, kv.Key.q, kv.Key.r);
+                float mr = Math.Max(3f, size * 0.55f);
+                drawList.AddCircleFilled(c, mr, ImGui.ColorConvertFloat4ToU32(OwnerColor(kv.Key.fac, myFaction)), 16);
+                drawList.AddCircle(c, mr, ImGui.ColorConvertFloat4ToU32(new Vector4(0f, 0f, 0f, 0.8f)), 16, 1.5f);
+                if (size > 8f)
+                {
+                    string tag = $"{TypeInitial((GroundUnitType)kv.Value.type)}{kv.Value.n}" + (kv.Value.moving > 0 ? "»" : "");
+                    var tsz = ImGui.CalcTextSize(tag);
+                    drawList.AddText(new Vector2(c.X - tsz.X * 0.5f, c.Y - tsz.Y * 0.5f),
+                        ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 1f, 1f)), tag);
+                }
+                // Highlight the hexes holding the selected group.
+                if (HasSelection && _selRegion == region.Index && _selFaction == kv.Key.fac && _selType == (GroundUnitType)kv.Value.type)
+                    drawList.AddNgon(c, size, ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 0.3f, 1f)), 6, 2.5f);
+            }
+
+            // Click: pick the nearest hex centre to the cursor (robust vs. exact polygon hit-testing).
+            if (clicked)
+            {
+                GroundHex best = null; float bestD = size * 1.2f;
+                foreach (var h in hexes)
+                {
+                    float d = Vector2.Distance(HexCenter(center, size, h.Q, h.R), mp);
+                    if (d < bestD) { bestD = d; best = h; }
+                }
+                if (best != null) HandleHexClick(region, body, myFaction, forcesDB, best);
+            }
+
+            // Caption + the H3 range readout for the selected group (hex range → real km on THIS body).
+            ImGui.Text($"Hex view — Region {region.Index + 1}  ({hexes.Count} hexes)");
+            if (HasSelection && _selFaction == myFaction)
+            {
+                var rep = forcesDB?.Units.FirstOrDefault(u => u.RegionIndex == _selRegion && u.FactionOwnerID == myFaction && u.UnitType == _selType);
+                int range = rep?.Range ?? 0;
+                double km = GroundRangeTools.RealReachKm(range, region);
+                ImGui.TextDisabled($"Selected {_selType}: click a destination hex to march (strike range {range} hex ≈ {km:N0} km). Ocean is impassable.");
+            }
+            else
+            {
+                ImGui.TextDisabled("Click a hex with your units to select them, then click a destination hex to march them there.");
+            }
+        }
+
+        /// <summary>Click on a hex: select your units standing there, or (with a group selected) march it to that hex.</summary>
+        private void HandleHexClick(Region region, Entity body, int myFaction, GroundForcesDB forcesDB, GroundHex hex)
+        {
+            var mineHere = forcesDB?.Units.FirstOrDefault(u =>
+                u.RegionIndex == region.Index && u.HexQ == hex.Q && u.HexR == hex.R && u.FactionOwnerID == myFaction);
+            if (mineHere != null)
+            {
+                // Toggle selection of your units on this hex (by type — the group model the region view uses).
+                if (HasSelection && _selRegion == region.Index && _selFaction == myFaction && _selType == mineHere.UnitType)
+                    ClearSelection();
+                else { _selRegion = region.Index; _selFaction = myFaction; _selType = mineHere.UnitType; _status = ""; }
+                return;
+            }
+            // Empty (or enemy-only) hex + a selection of yours in this region → march there.
+            if (HasSelection && _selFaction == myFaction && _selRegion == region.Index)
+                MoveSelectedToHex(body, hex.Q, hex.R);
+        }
+
+        /// <summary>March every orderable unit in the selected group to a target HEX within its region (A* per unit).</summary>
+        private void MoveSelectedToHex(Entity body, int destQ, int destR)
+        {
+            if (!body.TryGetDataBlob<GroundForcesDB>(out var forcesDB)) return;
+            if (_selFaction != (_uiState.Faction?.Id ?? -1)) { _status = "those aren't your units"; return; }
+
+            int moved = 0;
+            foreach (var u in forcesDB.Units.ToArray())
+            {
+                if (u.RegionIndex != _selRegion || u.FactionOwnerID != _selFaction || u.UnitType != _selType) continue;
+                if (u.MovingToRegion >= 0) continue;   // busy on a coarse region hop
+                if (GroundForces.OrderMoveToHex(body, u, destQ, destR)) moved++;
+            }
+            _status = moved > 0
+                ? $"marched {moved}× {_selType} to hex ({destQ},{destR})"
+                : "no march (unreachable / impassable water / already there)";
+        }
+
+        /// <summary>Axial hex (q,r) → screen position (pointy-top layout), centred on <paramref name="origin"/>.</summary>
+        private static Vector2 HexCenter(Vector2 origin, float size, int q, int r)
+            => new Vector2(origin.X + size * 1.7320508f * (q + r * 0.5f), origin.Y + size * 1.5f * r);
 
         // ── Small helpers ───────────────────────────────────────────────────────────────
         private static char TypeInitial(GroundUnitType t) => t switch
