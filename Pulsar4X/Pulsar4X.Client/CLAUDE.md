@@ -445,8 +445,12 @@ navigate units on, plot where I'll make military bases, use topography to my adv
 - **Formations** (2026-07-04, the fleet echo) — a "Formations" panel under the Build panel: **Form up** all your idle units
   in the centre region into a named `GroundFormation` (the ground echo of a fleet), then a selectable list of your
   formations (name · member count · rally region) with **March formation ◀/▶** (moves the whole block one hop via
-  `GroundForces.OrderFormationMove`) and **Disband**. Selecting a formation navigates the map to its rally region. All thin
-  callers over the CI-tested `GroundForces` formation API + `GroundFormationTools` reads.
+  `GroundForces.OrderFormationMove`) and **Disband**. Selecting a formation navigates the map to its rally region. A
+  **stance selector** (the ground echo of the Fleet-window doctrine selector) shows the formation's current stance +
+  attack/damage-taken mults and a combo of the moddable `Game.StartingGameData.GroundStances` catalog (Offensive Push /
+  Dig In / Balanced) + a **Set stance** button calling `GroundFormationDoctrine.TrySetStance` (game time from the body's
+  `StarSysDateTime`, greyed out on cooldown — mirrors `FleetDoctrine.TrySetDoctrine`). All thin callers over the CI-tested
+  `GroundForces`/`GroundFormationDoctrine` APIs + `GroundFormationTools` reads.
 
 Built to the CI-blind discipline: a thin draw over CI-tested engine blobs, all orders through CI-tested engine paths
 (`GroundForces.OrderMove` / `OrderFormationMove` / `PlaceInstallationInRegionOrder`), the whole body wrapped so a throw logs

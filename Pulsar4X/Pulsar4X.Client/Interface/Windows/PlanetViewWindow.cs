@@ -52,6 +52,8 @@ namespace Pulsar4X.Client
 
         // The selected FORMATION (its FormationId) for the formation command panel; -1 = none.
         private int _selFormationId = -1;
+        // The stance-combo index for the selected formation's stance selector.
+        private int _stanceChoice = 0;
 
         // A transient status line ("marched 3 units east", "built Barracks in region 2") shown under the controls.
         private string _status = "";
@@ -586,7 +588,51 @@ namespace Pulsar4X.Client
                         catch (Exception ex) { Console.WriteLine($"[RenderError] PlanetViewWindow disband threw: {ex}"); }
                         break;   // list mutated — stop iterating this frame
                     }
+
+                    DrawStanceSelector(f);
                 }
+            }
+        }
+
+        // The formation STANCE selector (the ground echo of the Fleet-window doctrine selector).
+        private void DrawStanceSelector(GroundFormation formation)
+        {
+            if (_uiState.Game == null) return;
+            var catalog = _uiState.Game.StartingGameData.GroundStances;
+            if (catalog == null || catalog.Count == 0) return;
+
+            var stances = catalog.Values.ToArray();
+            var names = stances.Select(st => $"{st.DisplayName} [{st.Family}]").ToArray();
+            _stanceChoice = Math.Clamp(_stanceChoice, 0, stances.Length - 1);
+
+            string current = string.IsNullOrEmpty(formation.StanceId) ? "Balanced (none)" : $"{formation.StanceId} [{formation.StanceFamily}]";
+            ImGui.TextDisabled($"Stance: {current}  (atk ×{formation.AttackMult:0.00}, dmg-taken ×{formation.DamageTakenMult:0.00})");
+
+            ImGui.SetNextItemWidth(200f);
+            ImGui.Combo($"##stance{formation.FormationId}", ref _stanceChoice, names, names.Length);
+
+            var body = _lookedAtEntity.Entity;
+            bool haveTime = body.Manager != null;
+            DateTime now = haveTime ? body.StarSysDateTime : DateTime.MinValue;
+            bool onCooldown = haveTime && now < formation.SwitchableAfter;
+
+            ImGui.SameLine();
+            if (!haveTime || onCooldown) ImGui.BeginDisabled();
+            if (ImGui.Button($"Set stance##st{formation.FormationId}"))
+            {
+                try
+                {
+                    var bp = stances[_stanceChoice];
+                    bool ok = GroundFormationDoctrine.TrySetStance(formation, bp, now);
+                    _status = ok ? $"stance: {bp.DisplayName}" : "on cooldown — can't switch yet";
+                }
+                catch (Exception ex) { _status = "set stance failed (logged)"; Console.WriteLine($"[RenderError] PlanetViewWindow set stance threw: {ex}"); }
+            }
+            if (!haveTime || onCooldown) ImGui.EndDisabled();
+            if (onCooldown)
+            {
+                ImGui.SameLine();
+                ImGui.TextDisabled($"switch in {(formation.SwitchableAfter - now).TotalSeconds:0}s");
             }
         }
 
