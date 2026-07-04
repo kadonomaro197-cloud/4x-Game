@@ -476,7 +476,21 @@ DYNAMICALLY-built installations at their install site; v1 covers the start colon
 `docs/GROUND-COMBAT-MAP-DESIGN.md` → "LOCKED PRINCIPLE." **Next: the "40k" ground-combat depth pass + a per-unit combat
 readout** (the ground echo of the Fleet Combat tab).
 
-**HEX drill-in view (H4, 2026-07-04).** A **⬡ Hex view / ▦ Region view** toggle (shown when the centre region carries a
+**The 3-REGION HEX MAP is now the DEFAULT + ONLY surface view (V3 re-apply, 2026-07-04).** The developer's call: the hex
+grid — not a coverage/percentage readout — IS the surface view (the coarse terrain-band strip `DrawRegionColumn` and the
+`⬡ Hex view` toggle are retired/dead). `DrawTacticalMap` now always calls **`DrawThreeRegionHexMap`**: the centre region
+flanked by its two ring neighbours (West │ Centre │ East) drawn as **one continuous hex field in longitude order**, offset
+by `qStep = 2R+2` so V2's planet-wide coherent terrain (`GroundHex.Terrain`) **flows across the region seams** (continents
+span borders), with a **2-hex gap + a divider line + a region label** at each seam so you can still tell where one region
+ends and the next begins (the developer's two complaints — "can't tell regions apart" + "terrain doesn't flow" — solved
+together: the gap marks the boundary, V2's matching terrain across it gives the flow). Units draw on their `(HexQ,HexR)`
+per region; **click a hex in the CENTRE region** = full hex ops (select / march via `GroundForces.OrderMoveToHex` /
+Shift-queue a waypoint — `HandleHexClick`); **click a SIDE region** = coarse-march a selection there (if adjacent) or
+recentre. Reuses `HexCenter`/`_featureColors`/`OwnerColor`/`TypeInitial`. The zoomed city/fortification grid (C-track) is
+the separate deeper view. **Runtime render/feel is the developer's local build (CI compiles, can't run).** The old
+single-region drill-in (below) is superseded.
+
+**(superseded) HEX drill-in view (H4, 2026-07-04).** A **⬡ Hex view / ▦ Region view** toggle (shown when the centre region carries a
 hex patch) swaps the 3-region strip for the centre region's **fine HEX grid** (Planet → Region → Hex). Hexes draw as
 terrain-coloured hexagons (`AddNgonFilled(..., 6)`, reusing `_featureColors`); each `GroundUnit` sits on its `(HexQ,HexR)`
 as an owner-coloured marker + type/count (`I3`, `»` when hex-marching); the selected group's hexes get a yellow ring.

@@ -42,9 +42,6 @@ namespace Pulsar4X.Client
         // Which region sits in the middle column. Rotating changes this; the ring wraps modulo region count.
         private int _centerRegion = 0;
 
-        // H4: hex drill-in. When on, the centre region is drawn as its fine HEX grid instead of the 3-region strip.
-        private bool _hexView = false;
-
         // The selected unit GROUP (region, owner faction, type) — the thing a March order acts on. -1 region = none.
         private int _selRegion = -1;
         private int _selFaction = -1;
@@ -177,82 +174,18 @@ namespace Pulsar4X.Client
                 ImGui.TextColored(new Vector4(0.6f, 0.9f, 0.6f, 1f), "  " + _status);
             }
 
-            // H4: the HEX drill-in toggle — the centre region's fine grid (Planet → Region → Hex).
-            bool hasHexes = _centerRegion < regions.Count && regions[_centerRegion].Hexes != null && regions[_centerRegion].Hexes.Count > 0;
-            if (hasHexes)
-            {
-                ImGui.SameLine();
-                if (ImGui.Button(_hexView ? "▦ Region view" : "⬡ Hex view")) _hexView = !_hexView;
-            }
             ImGui.Separator();
 
-            // ── The map canvas: HEX drill-in (H4) or the coarse three-region strip ──────
-            if (_hexView && hasHexes)
-            {
-                DrawHexMap(regions[_centerRegion], body, myFaction, forcesDB);
-            }
+            // ── The map canvas: the 3-REGION HEX MAP is the default + only surface view (V3). ──
+            // West | Centre | East drawn as one continuous hex field in longitude order, so V2's planet-wide coherent
+            // terrain (continents/coastlines) FLOWS across the region seams; a gap + divider + label marks each
+            // boundary so you can still tell where one region ends and the next begins. (Zoom to the city/fortification
+            // grid is the separate C-track view.)
+            bool hasHexes = _centerRegion < regions.Count && regions[_centerRegion].Hexes != null && regions[_centerRegion].Hexes.Count > 0;
+            if (hasHexes)
+                DrawThreeRegionHexMap(regions, body, myFaction, forcesDB, left, _centerRegion, right);
             else
-            {
-            // ── The three-region strip ──────────────────────────────────────────────────
-            var drawList = ImGui.GetWindowDrawList();
-            var canvasPos = ImGui.GetCursorScreenPos();
-            var canvasSize = ImGui.GetContentRegionAvail();
-            float mapHeight = Math.Max(150f, canvasSize.Y * 0.58f);
-            var mapSize = new Vector2(canvasSize.X, mapHeight);
-
-            ImGui.InvisibleButton("planetcanvas", mapSize);
-            bool hovered = ImGui.IsItemHovered();
-            bool clicked = hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
-            var mp = ImGui.GetIO().MousePos;
-
-            float gap = 8f;
-            float colW = (mapSize.X - gap * 2f) / 3f;
-            int[] cols = { left, _centerRegion, right };
-
-            _tokenHits.Clear();
-            for (int c = 0; c < 3; c++)
-            {
-                float x0 = canvasPos.X + c * (colW + gap);
-                var colMin = new Vector2(x0, canvasPos.Y);
-                var colMax = new Vector2(x0 + colW, canvasPos.Y + mapHeight);
-                DrawRegionColumn(drawList, colMin, colMax, regions[cols[c]], c == 1, myFaction, forcesDB, envDB);
-            }
-
-            // ── Click resolution: a UNIT TOKEN wins over the column background ───────────
-            if (clicked)
-            {
-                bool tokenHit = false;
-                foreach (var t in _tokenHits)
-                {
-                    if (mp.X >= t.min.X && mp.X <= t.max.X && mp.Y >= t.min.Y && mp.Y <= t.max.Y)
-                    {
-                        // Toggle selection of this group (only YOUR units are orderable).
-                        if (HasSelection && _selRegion == t.region && _selFaction == t.faction && _selType == t.type)
-                            ClearSelection();
-                        else { _selRegion = t.region; _selFaction = t.faction; _selType = t.type; _status = ""; }
-                        tokenHit = true;
-                        break;
-                    }
-                }
-
-                if (!tokenHit)
-                {
-                    // Column background: MOVE if a group is selected and this column is an adjacent region; else rotate.
-                    for (int c = 0; c < 3; c++)
-                    {
-                        float x0 = canvasPos.X + c * (colW + gap);
-                        if (mp.X < x0 || mp.X > x0 + colW) continue;
-                        int target = cols[c];
-                        if (HasSelection && _selFaction == myFaction && target != _selRegion
-                            && _selRegion < regions.Count && regions[_selRegion].Neighbors.Contains(target))
-                            MarchSelectedTo(regions, target);
-                        else
-                            _centerRegion = target;   // navigate
-                        break;
-                    }
-                }
-            }
-            }   // end else (region-strip view)
+                ImGui.TextDisabled("This world isn't surveyed yet — scan it to reveal its surface hexes.");
 
             // ── Below the canvas: selection actions, build panel, region detail ─────────
             ImGui.Separator();
@@ -262,6 +195,140 @@ namespace Pulsar4X.Client
             ImGui.Separator();
             DrawRegionDetail(regions[_centerRegion], forcesDB, envDB);
             DrawLegend();
+        }
+
+        // ── The 3-REGION HEX MAP — the default + only surface view (V3 re-apply, 2026-07-04) ─────────────
+        // West | Centre | East as one continuous hex field (longitude order), so V2's coherent terrain flows across
+        // the seams; a 2-hex gap + a divider line + a region label marks each boundary so regions read as distinct.
+        private void DrawThreeRegionHexMap(List<Region> regions, Entity body, int myFaction, GroundForcesDB forcesDB,
+            int left, int centre, int right)
+        {
+            var drawList = ImGui.GetWindowDrawList();
+            var canvasPos = ImGui.GetCursorScreenPos();
+            var canvasSize = ImGui.GetContentRegionAvail();
+            float mapHeight = Math.Max(220f, canvasSize.Y * 0.66f);
+            var mapSize = new Vector2(canvasSize.X, mapHeight);
+
+            ImGui.InvisibleButton("planethexcanvas", mapSize);
+            bool clicked = ImGui.IsItemHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
+            var mp = ImGui.GetIO().MousePos;
+
+            int[] cols = { left, centre, right };
+            int R = 2;
+            foreach (var ri in cols)
+                if (regions[ri].Hexes != null && regions[ri].Hexes.Count > 0)
+                    R = Math.Max(R, HexPathfinder.PatchRadius(regions[ri].Hexes));
+
+            int qStep = 2 * R + 2;                    // one region's q-width + a 2-hex gap for the boundary
+            float spanX = 6 * R + 6;
+            float spanY = 2 * R + 2;
+            float size = Math.Max(3f, Math.Min(mapSize.X / (1.7320508f * spanX), mapSize.Y / (1.5f * spanY)));
+            var center = new Vector2(canvasPos.X + mapSize.X * 0.5f, canvasPos.Y + mapSize.Y * 0.5f);
+            uint hexBorder = ImGui.ColorConvertFloat4ToU32(new Vector4(0f, 0f, 0f, 0.30f));
+
+            // 1) terrain hexes — each region offset into one shared field, so continents span the seams.
+            for (int c = 0; c < 3; c++)
+            {
+                var region = regions[cols[c]];
+                if (region.Hexes == null) continue;
+                int qOff = (c - 1) * qStep;
+                foreach (var h in region.Hexes)
+                {
+                    var pc = HexCenter(center, size, h.Q + qOff, h.R);
+                    Vector4 col = region.Surveyed
+                        ? (_featureColors.TryGetValue(h.Terrain, out var vc) ? vc : _featureColors[RegionFeatureType.Barren])
+                        : _featureColors[RegionFeatureType.Unknown];
+                    drawList.AddNgonFilled(pc, size, ImGui.ColorConvertFloat4ToU32(col), 6);
+                    if (size > 5f) drawList.AddNgon(pc, size, hexBorder, 6, 1f);
+                }
+            }
+
+            // 2) units on their hexes (grouped per hex + faction, coloured by owner).
+            for (int c = 0; c < 3; c++)
+            {
+                var region = regions[cols[c]];
+                int qOff = (c - 1) * qStep;
+                var occ = new Dictionary<(int q, int r, int fac), (int n, int type, int moving)>();
+                if (forcesDB != null)
+                    foreach (var u in forcesDB.Units)
+                    {
+                        if (u.RegionIndex != region.Index) continue;
+                        var key = (u.HexQ, u.HexR, u.FactionOwnerID);
+                        occ.TryGetValue(key, out var g); g.n++; g.type = (int)u.UnitType;
+                        if (u.HexPath != null && u.HexPath.Count > 0) g.moving++;
+                        occ[key] = g;
+                    }
+                foreach (var kv in occ)
+                {
+                    var pc = HexCenter(center, size, kv.Key.q + qOff, kv.Key.r);
+                    float mr = Math.Max(2.5f, size * 0.55f);
+                    drawList.AddCircleFilled(pc, mr, ImGui.ColorConvertFloat4ToU32(OwnerColor(kv.Key.fac, myFaction)), 16);
+                    drawList.AddCircle(pc, mr, ImGui.ColorConvertFloat4ToU32(new Vector4(0f, 0f, 0f, 0.8f)), 16, 1.5f);
+                    if (size > 8f)
+                    {
+                        string tag = $"{TypeInitial((GroundUnitType)kv.Value.type)}{kv.Value.n}" + (kv.Value.moving > 0 ? "»" : "");
+                        var tsz = ImGui.CalcTextSize(tag);
+                        drawList.AddText(new Vector2(pc.X - tsz.X * 0.5f, pc.Y - tsz.Y * 0.5f),
+                            ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 1f, 1f)), tag);
+                    }
+                    if (HasSelection && _selRegion == region.Index && _selFaction == kv.Key.fac && _selType == (GroundUnitType)kv.Value.type)
+                        drawList.AddNgon(pc, size, ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 0.3f, 1f)), 6, 2.5f);
+                }
+            }
+
+            // 3) region boundaries + labels (so you can tell where one region ends and the next begins).
+            uint divCol = ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 0.95f, 0.6f, 0.55f));
+            for (int c = 0; c < 3; c++)
+            {
+                int qOff = (c - 1) * qStep;
+                string lbl = $"Region {regions[cols[c]].Index + 1}" + (c == 1 ? "  (centre)" : "");
+                var lsz = ImGui.CalcTextSize(lbl);
+                float lx = HexCenter(center, size, qOff, 0).X;
+                drawList.AddText(new Vector2(lx - lsz.X * 0.5f, canvasPos.Y + 2f),
+                    ImGui.ColorConvertFloat4ToU32(c == 1 ? new Vector4(1f, 1f, 0.7f, 1f) : new Vector4(0.8f, 0.8f, 0.85f, 1f)), lbl);
+                if (c > 0)   // a divider on the left of the centre and right columns (the two internal seams)
+                {
+                    float divX = HexCenter(center, size, qOff - (R + 1), 0).X;
+                    drawList.AddLine(new Vector2(divX, canvasPos.Y + 18f), new Vector2(divX, canvasPos.Y + mapHeight), divCol, 2f);
+                }
+            }
+
+            // 4) click resolution — centre region = full hex ops; a side region = coarse-march there (if adjacent) or recentre.
+            if (clicked)
+            {
+                GroundHex best = null; int bestRegion = -1; float bestD = size * 1.2f;
+                for (int c = 0; c < 3; c++)
+                {
+                    var region = regions[cols[c]];
+                    if (region.Hexes == null) continue;
+                    int qOff = (c - 1) * qStep;
+                    foreach (var h in region.Hexes)
+                    {
+                        float d = Vector2.Distance(HexCenter(center, size, h.Q + qOff, h.R), mp);
+                        if (d < bestD) { bestD = d; best = h; bestRegion = region.Index; }
+                    }
+                }
+                if (best != null)
+                {
+                    if (bestRegion == centre)
+                        HandleHexClick(regions[centre], body, myFaction, forcesDB, best);
+                    else if (HasSelection && _selFaction == myFaction && _selRegion != bestRegion
+                             && _selRegion < regions.Count && regions[_selRegion].Neighbors.Contains(bestRegion))
+                        MarchSelectedTo(regions, bestRegion);
+                    else
+                        _centerRegion = bestRegion;
+                }
+            }
+
+            // 5) caption + the H3 range readout for the selected group.
+            ImGui.Text($"Surface — West ◂ Region {regions[centre].Index + 1} ▸ East   (click a hex; click a side region to go there)");
+            if (HasSelection && _selFaction == myFaction)
+            {
+                var rep = forcesDB?.Units.FirstOrDefault(u => u.RegionIndex == _selRegion && u.FactionOwnerID == myFaction && u.UnitType == _selType);
+                int range = rep?.Range ?? 0;
+                double km = _selRegion < regions.Count ? GroundRangeTools.RealReachKm(range, regions[_selRegion]) : 0;
+                ImGui.TextDisabled($"Selected {_selType} in Region {_selRegion + 1}: click a destination hex (same region) to march — strike range {range} hex ≈ {km:N0} km. Ocean impassable.");
+            }
         }
 
         private void DrawRegionColumn(ImDrawListPtr drawList, Vector2 min, Vector2 max, Region region,
