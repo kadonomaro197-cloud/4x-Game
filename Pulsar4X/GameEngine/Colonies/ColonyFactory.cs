@@ -63,7 +63,12 @@ namespace Pulsar4X.Colonies
             // its siblings (Luna, Mars, …) stay fog until a geo survey scans them. Defensive: a body with no
             // region layer (asteroid, etc.) simply skips. See docs/GROUND-COMBAT-MAP-DESIGN.md slice 4.
             if (systemBody.TryGetDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>(out var homeRegions))
+            {
                 homeRegions.RevealAll();
+                // You HOLD the ground where you settle — the home world's regions start owned by this faction, so a
+                // ground invasion has a defender (who gets the terrain-defence bonus) and capture means flipping them.
+                foreach (var r in homeRegions.Regions) r.OwnerFactionID = faction.Id;
+            }
 
             var blobs = new List<BaseDataBlob>();
 

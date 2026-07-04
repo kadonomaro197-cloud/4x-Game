@@ -115,6 +115,8 @@ namespace Pulsar4X.Galaxy
 
             // Surface REGION layer (ground map). A procedurally generated world's geography is UNKNOWN until scanned. Defensive/idempotent.
             PlanetRegionsFactory.GenerateForSystem(newSystem, surveyed: false);
+            // Dynamic environmental HAZARDS (the ground twin of space hazards) — physics-driven, gas-giant-gated.
+            Pulsar4X.GroundCombat.PlanetEnvironmentFactory.GenerateForSystem(newSystem);
 
             // Go through all the created entities and set them to be neutral
             foreach(var entity in newSystem.GetAllEntites())
@@ -260,6 +262,8 @@ namespace Pulsar4X.Galaxy
             // (the home colony reveals its own world) or where you've SCANNED it. So Sol's non-home bodies
             // (Luna, Mars, …) begin as fog to explore. Defensive/idempotent.
             PlanetRegionsFactory.GenerateForSystem(sol, surveyed: false);
+            // Dynamic environmental HAZARDS (the ground twin of space hazards) — physics-driven, gas-giant-gated.
+            Pulsar4X.GroundCombat.PlanetEnvironmentFactory.GenerateForSystem(sol);
 
             game.GameMasterFaction.GetDataBlob<FactionInfoDB>().KnownSystems.Add(sol.ID);
             return sol;
@@ -382,6 +386,8 @@ namespace Pulsar4X.Galaxy
             // (the home colony reveals its own world) or where you've SCANNED it. So Sol's non-home bodies
             // (Luna, Mars, …) begin as fog to explore. Defensive/idempotent.
             PlanetRegionsFactory.GenerateForSystem(sol, surveyed: false);
+            // Dynamic environmental HAZARDS (the ground twin of space hazards) — physics-driven, gas-giant-gated.
+            Pulsar4X.GroundCombat.PlanetEnvironmentFactory.GenerateForSystem(sol);
 
             // Go through all the created entities and set them to be neutral
             foreach(var entity in sol.GetAllEntites())
@@ -625,6 +631,8 @@ namespace Pulsar4X.Galaxy
             // world (ColonyFactory), everything else is fog until scanned. Defensive/idempotent; the harness +
             // live New Game both ride this path.
             PlanetRegionsFactory.GenerateForSystem(system, surveyed: false);
+            // Dynamic environmental HAZARDS (the ground twin of space hazards) — physics-driven, gas-giant-gated.
+            Pulsar4X.GroundCombat.PlanetEnvironmentFactory.GenerateForSystem(system);
 
             // Go through all the created entities and set them to be neutral
             foreach(var entity in system.GetAllEntites())

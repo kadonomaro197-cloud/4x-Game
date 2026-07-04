@@ -425,6 +425,12 @@ draw over the CI-tested engine blob, the whole body wrapped so a throw logs `[Re
 `Window.End()`. **Live render is the developer's local build.** Next slices: survey-reveal (flip fog off on scan), then
 ground units + a real combat window.
 
+**LOCKED PRINCIPLE for this window (2026-07-04): every buildable is a real building on the ground.** The developer's
+rule — *"everything I build on a planet that's selectable in space is represented by an actual building on the planet
+itself."* So the tactical upgrade (slice 5e) must **draw each `Region.InstallationIds` entry as a building** and give
+every colony installation a home region — the colony economy list and this map are two views of the same physical
+things. Full rationale + slice mapping: `docs/GROUND-COMBAT-MAP-DESIGN.md` → "LOCKED PRINCIPLE."
+
 ### GroundCombatWindow — MISSING ENTIRELY
 
 No window exists for ground *combat* yet (the `PlanetViewWindow` above is the surface MAP, not the battle). When
