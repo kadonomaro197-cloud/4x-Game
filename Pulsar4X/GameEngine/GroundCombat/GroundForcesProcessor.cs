@@ -59,16 +59,40 @@ namespace Pulsar4X.GroundCombat
             if (!body.TryGetDataBlob<GroundForcesDB>(out var forces) || forces.Units.Count == 0)
                 return;
 
-            // 1) MOVEMENT (5b): advance in-transit units; a unit arrives when its crossing time has elapsed.
+            // 1) MOVEMENT: advance in-transit units.
+            //    (a) COARSE region march (5b): a whole-region hop, arrives when the region's crossing time has elapsed.
+            //    (b) FINE hex march (H2): walk the stored A* path one hex at a time — each step costs the region's
+            //        per-hex base × the entered hex's terrain multiplier, so a march through mountains takes longer.
+            //        A single tick can clear several cheap hexes (the while-loop carries the leftover time forward).
             foreach (var unit in forces.Units)
             {
-                if (unit.MovingToRegion < 0) continue;
-                unit.TransitSecondsRemaining -= deltaSeconds;
-                if (unit.TransitSecondsRemaining <= 0)
+                if (unit.MovingToRegion >= 0)   // (a) coarse region hop takes priority (a unit isn't doing both)
                 {
-                    unit.RegionIndex = unit.MovingToRegion;
-                    unit.MovingToRegion = -1;
-                    unit.TransitSecondsRemaining = 0;
+                    unit.TransitSecondsRemaining -= deltaSeconds;
+                    if (unit.TransitSecondsRemaining <= 0)
+                    {
+                        unit.RegionIndex = unit.MovingToRegion;
+                        unit.MovingToRegion = -1;
+                        unit.TransitSecondsRemaining = 0;
+                    }
+                    continue;
+                }
+
+                if (unit.HexPath != null && unit.HexPath.Count > 0)   // (b) fine hex march
+                {
+                    unit.HexTransitSecondsRemaining -= deltaSeconds;
+                    while (unit.HexPath.Count > 0 && unit.HexTransitSecondsRemaining <= 0)
+                    {
+                        var step = unit.HexPath[0];
+                        unit.HexQ = step.Q;
+                        unit.HexR = step.R;
+                        unit.HexPath.RemoveAt(0);
+                        // Carry the leftover (negative) time into the next step so a fast tick can cross several hexes.
+                        unit.HexTransitSecondsRemaining += (unit.HexPath.Count > 0)
+                            ? unit.HexStepBaseSeconds * HexPathfinder.HexMoveMult(unit.HexPath[0].Terrain)
+                            : 0.0;
+                    }
+                    if (unit.HexPath.Count == 0) { unit.HexPath = null; unit.HexTransitSecondsRemaining = 0; }
                 }
             }
 
@@ -96,11 +120,13 @@ namespace Pulsar4X.GroundCombat
 
             body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB);
 
-            // Group the units that are STANDING (not on the road) and alive, by region.
+            // Group the units that are STANDING (not on the road — neither a coarse region hop NOR a fine hex march) and
+            // alive, by region. A marching unit doesn't stand and fight (combat stays region-level in H2; the migration
+            // to hex-adjacency is H3).
             var byRegion = new Dictionary<int, List<GroundUnit>>();
             foreach (var unit in forces.Units)
             {
-                if (unit.MovingToRegion >= 0 || unit.Health <= 0) continue;
+                if (unit.MovingToRegion >= 0 || (unit.HexPath != null && unit.HexPath.Count > 0) || unit.Health <= 0) continue;
                 if (!byRegion.TryGetValue(unit.RegionIndex, out var list))
                 {
                     list = new List<GroundUnit>();
