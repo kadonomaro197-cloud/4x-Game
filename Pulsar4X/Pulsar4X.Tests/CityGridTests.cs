@@ -143,5 +143,59 @@ namespace Pulsar4X.Tests
             Assert.That(opHex.CityGrid.Tiles.Any(t => t.BuildingInstanceId == bunker.ID), Is.False,
                 "and the fine city tile it sat on is empty — the roll-up invariant holds through the grave rung");
         }
+
+        // ── GLOBAL grid (G4) — the same city/roll-up/grave-rung on the ONE continuous cylinder ─────────────────────
+
+        [Test]
+        [Description("G4 (global city gen): EnsureCityForGlobalHex resolves a hex by GLOBAL (Q,R) on the cylinder grid and builds its fine city (127 tiles at r=6, terrain inherited), idempotent, labelled with the correct column band.")]
+        public void EnsureCityForGlobalHex_GeneratesOnTheCylinder_AndIsIdempotent()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            int rc = regionsDB.Regions.Count;
+
+            var grid = PlanetGridFactory.EnsureGridForBody(body);
+            Assert.That(grid, Is.Not.Null, "the cylinder grid generates");
+            int gQ = PlanetGridFactory.BandCentreColumn(1, grid.Cols, rc);   // band 1's muster column
+            int gR = grid.Rows / 2;
+            var opHex = CityGridFactory.ResolveGlobalHex(body, gQ, gR);
+            Assert.That(opHex, Is.Not.Null, "the global hex resolves");
+            Assert.That(opHex.CityGrid, Is.Null, "undeveloped — lazy, costs nothing");
+
+            var city = CityGridFactory.EnsureCityForGlobalHex(body, gQ, gR);
+            Assert.That(city, Is.Not.Null);
+            Assert.That(city.Tiles.Count, Is.EqualTo(CityGridFactory.CityTileCount(CityGridFactory.CityPatchRadius)));
+            Assert.That(city.Tiles.All(t => t.Terrain == opHex.Terrain), Is.True, "v1 tiles inherit the operational hex's terrain");
+            Assert.That(city.RegionIndex, Is.EqualTo(PlanetGridFactory.RegionOfColumn(opHex.Q, grid.Cols, rc)),
+                "the city is labelled with the column band its hex falls in");
+            Assert.That(CityGridFactory.EnsureCityForGlobalHex(body, gQ, gR), Is.SameAs(city), "idempotent");
+        }
+
+        [Test]
+        [Description("G4 (global roll-up + grave rung): placing a building on a global hex's fine tile rolls up to that hex's InstallationIds; bombing the global hex destroys the building AND empties the fine tile — the two-zoom invariant holds on the cylinder exactly as on the disks.")]
+        public void GlobalPlaceRollsUp_AndGlobalBombardClearsTheTile()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            int rc = regionsDB.Regions.Count;
+            var grid = PlanetGridFactory.EnsureGridForBody(body);
+            int gQ = PlanetGridFactory.BandCentreColumn(0, grid.Cols, rc);
+            int gR = grid.Rows / 2;
+            var opHex = CityGridFactory.ResolveGlobalHex(body, gQ, gR);
+
+            var bunker = InstallBunker(s);
+            Assert.That(CityBuilder.PlaceBuildingOnGlobalTile(body, gQ, gR, 1, 0, bunker.ID), Is.True, "placed on an empty global tile");
+            Assert.That(opHex.InstallationIds, Does.Contain(bunker.ID), "roll-up: shows on the operational (global) hex");
+            Assert.That(opHex.CityGrid.TileAt(1, 0).BuildingInstanceId, Is.EqualTo(bunker.ID), "and sits on that fine tile");
+            Assert.That(CityBuilder.PlaceBuildingOnGlobalTile(body, gQ, gR, 1, 0, 999), Is.False, "1:1 — occupied tile refuses a second");
+
+            int destroyed = GroundBuildings.BombardGlobalHex(body, gQ, gR, strength: 5.0);
+            Assert.That(destroyed, Is.EqualTo(1), "the bunker is destroyed by the strike");
+            Assert.That(opHex.InstallationIds, Does.Not.Contain(bunker.ID), "gone from the global roll-up");
+            Assert.That(opHex.CityGrid.Tiles.Any(t => t.BuildingInstanceId == bunker.ID), Is.False,
+                "and the fine tile it sat on is empty — the invariant holds through the grave rung on the cylinder");
+        }
     }
 }
