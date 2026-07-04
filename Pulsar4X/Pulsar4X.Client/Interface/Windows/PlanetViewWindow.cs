@@ -610,8 +610,46 @@ namespace Pulsar4X.Client
 
                     DrawStanceSelector(f);
                     DrawRoeSelector(f);
+                    DrawOrderQueue(body, forcesDB, f, regions, left, right);
                 }
             }
+        }
+
+        // ── The ORDER QUEUE (O1) — build a sequential plan for the formation ("move → move → dig in") ──
+        private void DrawOrderQueue(Entity body, GroundForcesDB forcesDB, GroundFormation f, List<Region> regions, int left, int right)
+        {
+            ImGui.Separator();
+            if (f.Orders != null && f.Orders.Count > 0)
+            {
+                ImGui.TextColored(new Vector4(0.8f, 0.9f, 1f, 1f), $"Plan ({f.Orders.Count} order{(f.Orders.Count == 1 ? "" : "s")}):");
+                for (int i = 0; i < f.Orders.Count; i++)
+                    ImGui.TextDisabled($"   {i + 1}. {f.Orders[i].Describe()}");
+                if (ImGui.Button($"Clear plan##oq{f.FormationId}")) { GroundForces.ClearFormationOrders(f); _status = "plan cleared"; }
+            }
+            else
+            {
+                ImGui.TextDisabled("No queued plan. Add orders below, or Shift-click a hex (Hex view) to add a move waypoint.");
+            }
+
+            // Queue MOVE-to-region waypoints (visible ring neighbours of the formation's rally region).
+            int rally = GroundForces.LeaderRegion(forcesDB, f);
+            var rallyRegion = (rally >= 0 && rally < regions.Count) ? regions[rally] : null;
+            if (rallyRegion != null)
+            {
+                if (rallyRegion.Neighbors.Contains(left) && ImGui.Button($"+ March → R{left + 1}##oq{f.FormationId}"))
+                { GroundForces.QueueFormationOrder(f, GroundOrder.MoveRegion(left)); _status = $"queued → region {left + 1}"; }
+                if (rallyRegion.Neighbors.Contains(left)) ImGui.SameLine();
+                if (rallyRegion.Neighbors.Contains(right) && ImGui.Button($"+ March → R{right + 1}##oq{f.FormationId}"))
+                { GroundForces.QueueFormationOrder(f, GroundOrder.MoveRegion(right)); _status = $"queued → region {right + 1}"; }
+                if (rallyRegion.Neighbors.Contains(right)) ImGui.SameLine();
+            }
+
+            // Queue non-spatial orders (a timed hold + ROE switches — "then dig in / then stand off").
+            if (ImGui.Button($"+ Hold 6h##oq{f.FormationId}")) { GroundForces.QueueFormationOrder(f, GroundOrder.Hold(6 * 3600)); _status = "queued hold 6h"; }
+            ImGui.SameLine();
+            if (ImGui.Button($"+ ROE Stand-off##oq{f.FormationId}")) { GroundForces.QueueFormationOrder(f, GroundOrder.Roe(GroundEngagementStance.StandOff)); _status = "queued ROE stand-off"; }
+            ImGui.SameLine();
+            if (ImGui.Button($"+ ROE Close##oq{f.FormationId}")) { GroundForces.QueueFormationOrder(f, GroundOrder.Roe(GroundEngagementStance.CloseToEngage)); _status = "queued ROE close"; }
         }
 
         // The RULES OF ENGAGEMENT selector — the commander's maneuver intent (the ground echo of the space
@@ -831,9 +869,22 @@ namespace Pulsar4X.Client
             }
         }
 
-        /// <summary>Click on a hex: select your units standing there, or (with a group selected) march it to that hex.</summary>
+        /// <summary>Click on a hex: SHIFT-click with a formation selected QUEUES a move waypoint (build a plan);
+        /// otherwise select your units standing there, or (with a group selected) march it there now.</summary>
         private void HandleHexClick(Region region, Entity body, int myFaction, GroundForcesDB forcesDB, GroundHex hex)
         {
+            // Shift-click with a formation selected → append a move waypoint to its plan (RTS-style queueing).
+            if (ImGui.GetIO().KeyShift && _selFormationId >= 0 && forcesDB != null)
+            {
+                var sf = forcesDB.Formations.FirstOrDefault(x => x.FormationId == _selFormationId && x.FactionOwnerID == myFaction);
+                if (sf != null)
+                {
+                    GroundForces.QueueFormationOrder(sf, GroundOrder.MoveHex(hex.Q, hex.R));
+                    _status = $"queued → hex ({hex.Q},{hex.R})  [{sf.Orders.Count} in plan]";
+                    return;
+                }
+            }
+
             var mineHere = forcesDB?.Units.FirstOrDefault(u =>
                 u.RegionIndex == region.Index && u.HexQ == hex.Q && u.HexR == hex.R && u.FactionOwnerID == myFaction);
             if (mineHere != null)
