@@ -173,17 +173,25 @@ namespace Pulsar4X.GroundCombat
             TryCapturePlanet(body, regionsDB);
         }
 
-        /// <summary>One salvo in a contested region — TERRAIN- and TYPE-aware (5f/5g). Each faction takes the
-        /// combined attack of all others, but each attacker's damage is scaled by the weapon TRIANGLE (vs the enemy's
-        /// composition) and its TERRAIN affinity (armour bad in rough, artillery loves high ground); the region's
-        /// OWNER (the defender) additionally divides its incoming by the terrain COVER. Simultaneous (snapshot before
-        /// apply), deterministic, no overkill (pool carries). Reads <see cref="GroundTerrain"/> — the ground twin of
-        /// SpaceHazardTools.</summary>
+        /// <summary>One salvo in a contested region — TERRAIN-, TYPE- and now RANGE-aware (5f/5g/H3). Directed fire: an
+        /// attacker only damages enemies within its own strike <see cref="GroundUnit.Range"/> (in hexes), so a
+        /// longer-ranged unit hits a shorter-ranged one as it CLOSES without being hit back until the enemy reaches ITS
+        /// range — the ground echo of the space first-strike ("a clone trooper has the advantage over a zerg swarm
+        /// until they reach him"). Each attacker's output is still scaled by the weapon TRIANGLE (vs the enemies it can
+        /// actually reach) and its TERRAIN affinity, and a defender in the region owner's seat divides incoming by
+        /// terrain COVER × FORTIFICATION. Simultaneous (all incoming computed from the pre-salvo state, then applied),
+        /// deterministic. <b>Co-located units (same hex, distance 0) are always in range of each other, so a stacked
+        /// fight is identical to the pre-hex region resolver</b> — the migration adds range without changing a
+        /// same-hex battle. (Terrain here is still the region's dominant feature; reading terrain from the DEFENDER's
+        /// own hex is the H3b follow-on.) Reads <see cref="GroundTerrain"/> — the ground twin of SpaceHazardTools.</summary>
         private static void ResolveRegionCombat(GroundForcesDB forces, List<GroundUnit> units, Region region,
             List<Region> allRegions, System.Func<int, GroundDefenseAtb> fortResolve)
         {
             var terrain = GroundTerrain.Classify(region);
             int defenderFaction = region != null ? region.OwnerFactionID : -1;
+            // Terrain cover × design-driven fortification — the defender's incoming is divided by this (per-region).
+            double coverFort = GroundTerrain.CoverDefenseMult(terrain)
+                * GroundFortification.DefenseMult(region, allRegions, defenderFaction, fortResolve);
 
             var byFaction = new Dictionary<int, List<GroundUnit>>();
             foreach (var u in units)
@@ -192,52 +200,65 @@ namespace Pulsar4X.GroundCombat
                 l.Add(u);
             }
 
-            // Incoming damage pool per faction, computed from the PRE-salvo state (simultaneous exchange).
-            var incoming = new Dictionary<int, double>();
-            foreach (var g in byFaction.Keys) incoming[g] = 0.0;
+            // Per-TARGET incoming (not per-faction) so range gating lands damage on exactly the units an attacker can
+            // reach. Computed entirely from the PRE-salvo state (Health read here, applied below) → simultaneous.
+            var incoming = new Dictionary<GroundUnit, double>();
 
             foreach (var f in byFaction.Keys)
             {
                 foreach (var g in byFaction.Keys)
                 {
                     if (f == g) continue;
-                    double pool = 0.0;
+                    bool gIsDefender = (g == defenderFaction);
                     foreach (var u in byFaction[f])
                     {
                         if (u.Health <= 0) continue;
-                        // × terrain affinity × the formation STANCE's attack mult (offensive hits harder, 5h doctrine).
+
+                        // The g-units THIS attacker can actually reach (within its hex Range). Co-located → all of g.
+                        List<GroundUnit> reachable = null;
+                        foreach (var t in byFaction[g])
+                        {
+                            if (t.Health <= 0) continue;
+                            if (HexDist(u, t) > u.Range) continue;   // out of this attacker's reach → it can't hit t
+                            (reachable ??= new List<GroundUnit>()).Add(t);
+                        }
+                        if (reachable == null) continue;             // nothing in range → this unit fires nothing this salvo
+
+                        // Output = attack × terrain affinity × stance, scaled by the avg triangle vs the reachable mix.
                         double atk = u.Attack * GroundTerrain.TerrainAttackMult(u.UnitType, terrain) * GroundFormationDoctrine.AttackMult(forces, u);
-                        pool += atk * AvgTriangleVs(u.UnitType, byFaction[g]);
+                        double pool = atk * AvgTriangleVs(u.UnitType, reachable) * SalvoScale;
+                        if (gIsDefender && coverFort > 0) pool /= coverFort;
+
+                        // Spread this attacker's pool across its reachable targets, health-weighted (matches the old
+                        // resolver's focus-fire: triangle is already in the total via the avg, distribution is by health).
+                        double totalH = 0.0;
+                        foreach (var t in reachable) totalH += t.Health;
+                        if (totalH <= 0) continue;
+                        foreach (var t in reachable)
+                        {
+                            incoming.TryGetValue(t, out var acc);
+                            incoming[t] = acc + pool * (t.Health / totalH);
+                        }
                     }
-                    pool *= SalvoScale;
-                    // The defender (region owner) divides incoming by terrain COVER × FORTIFICATION (its Bunkers, local
-                    // + adjacent-friendly projection — GroundFortification, design-driven).
-                    if (g == defenderFaction)
-                        pool /= (GroundTerrain.CoverDefenseMult(terrain) * GroundFortification.DefenseMult(region, allRegions, defenderFaction, fortResolve));
-                    incoming[g] += pool;
                 }
             }
 
-            // Apply each faction's incoming, focus-fired across its units (pool carries — no overkill waste). A unit's
-            // formation STANCE scales the DAMAGE IT TAKES (defensive soaks more raw pool per point of health; offensive
-            // dies faster) — the ground echo of the space resolver's per-ship ToughnessMult, 5h doctrine.
-            foreach (var g in byFaction.Keys)
+            // Apply each unit's accumulated incoming, scaled by its formation STANCE's damage-taken mult (defensive
+            // soaks more health per point; offensive dies faster — the ground echo of the space per-ship ToughnessMult),
+            // capped at its health.
+            foreach (var kv in incoming)
             {
-                double pool = incoming[g];
-                if (pool <= 0) continue;
-                foreach (var u in byFaction[g])
-                {
-                    if (u.Health <= 0) continue;
-                    if (pool <= 0) break;
-                    double dtm = GroundFormationDoctrine.DamageTakenMult(forces, u);
-                    if (dtm <= 0) dtm = 1.0;
-                    // Raw pool this unit can absorb before dying = Health / dtm; the health it loses = raw × dtm.
-                    double raw = Math.Min(u.Health / dtm, pool);
-                    u.Health -= raw * dtm;
-                    pool -= raw;
-                }
+                var t = kv.Key;
+                if (t.Health <= 0) continue;
+                double dtm = GroundFormationDoctrine.DamageTakenMult(forces, t);
+                if (dtm <= 0) dtm = 1.0;
+                t.Health -= Math.Min(t.Health, kv.Value * dtm);
             }
         }
+
+        /// <summary>Hex distance between two units on their region's patch (0 = same hex). Reused for the range gate.</summary>
+        private static int HexDist(GroundUnit a, GroundUnit b)
+            => new HexCoordinate(a.HexQ, a.HexR).DistanceTo(new HexCoordinate(b.HexQ, b.HexR));
 
         /// <summary>Health-weighted average triangle multiplier of an attacker TYPE against an enemy faction's mix —
         /// so bringing the right counter to their composition pays off.</summary>

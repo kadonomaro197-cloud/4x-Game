@@ -774,5 +774,86 @@ namespace Pulsar4X.Tests
 
             Log($"hex march: unit walked {steps} hexes to ({dest.Q},{dest.R}) and arrived; path clone-safe");
         }
+
+        // ───────────────────────── H3 — range-based directed combat (docs/HEX-GROUND-AND-ORDERS-DESIGN.md) ─────────────────────────
+
+        private static GroundUnitDesign MakeDesign(string id, string name, GroundUnitType type, int range, double hp = 1000) => new GroundUnitDesign
+        {
+            UniqueID = id, Name = name, UnitType = type, Range = range,
+            Attack = 100, Defense = 10, HitPoints = hp,
+            IndustryPointCosts = 100, IndustryTypeID = "installation", ResourceCosts = new Dictionary<string, long>(),
+        };
+
+        [Test]
+        [Description("H3 defaults: strike range is a per-type default when a design leaves it unset — artillery (3) outranges infantry/armor (1); and a raised unit snapshots it.")]
+        public void RangeDefaults_ArtilleryOutrangesInfantryAndArmor()
+        {
+            Assert.That(GroundRangeTools.DefaultRangeFor(GroundUnitType.Infantry), Is.EqualTo(1));
+            Assert.That(GroundRangeTools.DefaultRangeFor(GroundUnitType.Armor), Is.EqualTo(1));
+            Assert.That(GroundRangeTools.DefaultRangeFor(GroundUnitType.Artillery), Is.EqualTo(3));
+
+            var s = TestScenario.CreateWithColony();
+            var noRangeArty = new GroundUnitDesign
+            {
+                UniqueID = "arty-norange", Name = "Guns", UnitType = GroundUnitType.Artillery,
+                Attack = 100, HitPoints = 100, IndustryTypeID = "installation", ResourceCosts = new Dictionary<string, long>(),
+            };
+            var u = GroundForces.RaiseUnit(s.StartingBody, noRangeArty, s.Faction.Id, 0);
+            Assert.That(u.Range, Is.EqualTo(3), "an artillery design with no explicit range gets the type default (3)");
+        }
+
+        [Test]
+        [Description("H3 THE HEADLINE (clone-vs-zerg): a longer-ranged unit hits a shorter-ranged one while it CLOSES, taking no fire back until the enemy reaches its own range — the ground echo of the space first-strike.")]
+        public void RangeCombat_OutRangerHitsCloserUnitFirst_CloneVsZerg()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();   // isolate combat from attrition
+            var regions = body.GetDataBlob<PlanetRegionsDB>().Regions;
+            regions[0].OwnerFactionID = -1;   // neutral ground — no defender cover bias, so we measure pure range
+
+            // The "clone trooper": long reach (3 hexes), holds at the patch centre. Same type as the zerg so the weapon
+            // triangle is neutral — this isolates RANGE as the only variable.
+            var clone = GroundForces.RaiseUnit(body, MakeDesign("clone", "Clone Trooper", GroundUnitType.Infantry, range: 3), s.Faction.Id, 0);
+            clone.HexQ = 0; clone.HexR = 0;
+            // The "zerg": melee reach (1 hex), starts 3 hexes away — out of its OWN range, inside the clone's.
+            var zerg = GroundForces.RaiseUnit(body, MakeDesign("zerg", "Zergling", GroundUnitType.Infantry, range: 1), InvaderFaction, 0);
+            zerg.HexQ = 3; zerg.HexR = 0;
+
+            var proc = new GroundForcesProcessor();
+            proc.ProcessEntity(body, 3600);
+
+            Assert.That(clone.Health, Is.EqualTo(clone.MaxHealth),
+                "the clone is untouched — the zerg is out of its own range and can't shoot back");
+            Assert.That(zerg.Health, Is.LessThan(zerg.MaxHealth),
+                "the zerg takes fire while it is still closing (the standoff advantage)");
+            Log($"standoff (dist 3): clone {clone.Health:0}/{clone.MaxHealth:0} unhit, zerg {zerg.Health:0}/{zerg.MaxHealth:0} hit");
+
+            // The zerg closes to its own melee range (1 hex) — now it fights back.
+            zerg.HexQ = 1; zerg.HexR = 0;
+            double cloneBefore = clone.Health;
+            proc.ProcessEntity(body, 3600);
+            Assert.That(clone.Health, Is.LessThan(cloneBefore),
+                "once the zerg has closed into ITS range, the clone finally takes damage too");
+            Log($"closed (dist 1): clone {clone.Health:0}, zerg {zerg.Health:0} — both now trading fire");
+        }
+
+        [Test]
+        [Description("H3 readout — the developer's insight made visible: a hex range converts to a real distance that DIFFERS by body (a hex on a big world covers more real km than on a small one). Combat stays in hex-space; this is only the gauge.")]
+        public void RealReach_HexRangeToKm_VariesByBodyHexSize()
+        {
+            var big = new Region { Area_km2 = 1_000_000, Hexes = OpenDisk(2) };     // 19 hexes
+            double pitchBig = GroundRangeTools.HexPitchKm(big);
+            Assert.That(pitchBig, Is.GreaterThan(0));
+            Assert.That(GroundRangeTools.RealReachKm(3, big), Is.EqualTo(3 * pitchBig).Within(1e-6));
+            Assert.That(GroundRangeTools.RealReachKm(0, big), Is.EqualTo(0.0), "zero range = zero reach");
+
+            var small = new Region { Area_km2 = 100_000, Hexes = OpenDisk(2) };
+            Assert.That(GroundRangeTools.HexPitchKm(small), Is.LessThan(pitchBig),
+                "the same hex range covers less real distance on a smaller world (1 hex ≠ the same distance everywhere)");
+            Assert.That(GroundRangeTools.HexPitchKm(new Region()), Is.EqualTo(0.0), "no hex patch / no area → no readout");
+            Log($"readout: a 3-hex gun ≈ {GroundRangeTools.RealReachKm(3, big):N0} km on the big region vs {GroundRangeTools.RealReachKm(3, small):N0} km on the small one");
+        }
     }
 }

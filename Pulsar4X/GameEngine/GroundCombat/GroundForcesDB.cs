@@ -49,6 +49,10 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public double MaxHealth { get; internal set; }
         /// <summary>Current health; a fresh unit starts full, combat whittles it, 0 = destroyed (slice 5c/5d).</summary>
         [JsonProperty] public double Health { get; internal set; }
+        /// <summary>Strike RANGE in HEXES (H3) — max hex-distance this unit can hit an enemy (snapshot of the design's
+        /// <c>Range</c>). Directed fire: a unit only damages enemies within this reach, so a longer-ranged unit hits a
+        /// closing shorter-ranged one without being hit back. 0 = same hex only.</summary>
+        [JsonProperty] public int Range { get; internal set; }
         /// <summary>The region this unit is MARCHING to (-1 = standing still). While in transit it doesn't fight (5b).</summary>
         [JsonProperty] public int MovingToRegion { get; internal set; } = -1;
         /// <summary>Game-seconds left in the current march; counts down to 0 = arrived (the region's crossing time).</summary>
@@ -95,7 +99,7 @@ namespace Pulsar4X.GroundCombat
         {
             UnitId = o.UnitId; FormationId = o.FormationId;
             DesignId = o.DesignId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
-            UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health;
+            UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health; Range = o.Range;
             MovingToRegion = o.MovingToRegion; TransitSecondsRemaining = o.TransitSecondsRemaining;
             HexQ = o.HexQ; HexR = o.HexR; HexTransitSecondsRemaining = o.HexTransitSecondsRemaining; HexStepBaseSeconds = o.HexStepBaseSeconds;
             if (o.HexPath != null)
@@ -213,6 +217,8 @@ namespace Pulsar4X.GroundCombat
                 Defense = design.Defense,
                 MaxHealth = design.HitPoints,
                 Health = design.HitPoints,
+                // Strike range in hexes (H3): the design's, or a per-type default if the design left it unset.
+                Range = design.Range > 0 ? design.Range : GroundRangeTools.DefaultRangeFor(design.UnitType),
                 // Snapshot the design's environmental gear onto the unit (E4) — like the combat stats above.
                 EnvResistance = (design.EnvironmentalResistance != null && design.EnvironmentalResistance.Count > 0)
                     ? new Dictionary<HazardEffectType, double>(design.EnvironmentalResistance)

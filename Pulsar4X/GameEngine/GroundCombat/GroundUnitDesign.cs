@@ -41,6 +41,15 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public double Attack { get; set; }
         [JsonProperty] public double Defense { get; set; }
         [JsonProperty] public double HitPoints { get; set; }
+        /// <summary>Strike RANGE in HEXES (H3) — the max hex-distance at which this unit can hit an enemy (0 = same hex
+        /// only, 1 = also the adjacent ring, 3 = out to three rings). The unit's operational REACH: a longer-ranged
+        /// unit damages a shorter-ranged one as it closes, without being hit back until the enemy is in ITS range — the
+        /// ground echo of the space first-strike ("clone trooper vs a zerg swarm has the advantage until they reach
+        /// them"). Range is in HEXES, not real metres, because at operational scale a hex is continental and its real
+        /// size differs body-to-body (Earth vs Io) — <see cref="GroundRangeTools.RealReachKm"/> converts it for the
+        /// readout. 0/unset → a per-type default (<see cref="GroundRangeTools.DefaultRangeFor"/>: Infantry 1, Armor 1,
+        /// Artillery 3). Moddable per design.</summary>
+        [JsonProperty] public int Range { get; set; }
         /// <summary>ENVIRONMENTAL GEAR (E4) — per-hazard protection this design's units carry, keyed by the shared
         /// <see cref="Pulsar4X.Hazards.HazardEffectType"/>. Value 0..1 = fraction of that hazard's attrition negated
         /// (a "heat-shielded" design has <c>{HeatDamage: 0.8}</c>). Snapshotted onto each raised <see cref="GroundUnit"/>.
