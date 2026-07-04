@@ -68,6 +68,8 @@ namespace Pulsar4X.Colonies
                 // You HOLD the ground where you settle — the home world's regions start owned by this faction, so a
                 // ground invasion has a defender (who gets the terrain-defence bonus) and capture means flipping them.
                 foreach (var r in homeRegions.Regions) r.OwnerFactionID = faction.Id;
+                // Generate the fine HEX patches for the home world (lazy — only theatres carry hexes). Planet→Region→Hex.
+                Pulsar4X.Galaxy.PlanetHexFactory.EnsureHexesForBody(systemBody);
             }
 
             var blobs = new List<BaseDataBlob>();

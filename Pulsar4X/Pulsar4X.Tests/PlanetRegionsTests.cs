@@ -219,5 +219,58 @@ namespace Pulsar4X.Tests
                 "completing the geo survey should reveal every region — fog → known (the exploration→map link)");
             Log($"survey reveal: {regionsDB.Regions.Count(r => r.Surveyed)}/{regionsDB.Regions.Count} regions now known after geo survey");
         }
+
+        // ───────────────────────── HEX layer (H1 — Planet → Region → Hex) ─────────────────────────
+
+        [Test]
+        [Description("H1 density math: the hex-patch radius scales linearly with planet radius (Earth → 12, clamped [2,24]); a radius-12 disk is 469 hexes — so Earth ≈ 4×469 ≈ 1876 hexes total (the 'Operational' density).")]
+        public void HexDensity_ScalesWithPlanetRadius_Pure()
+        {
+            Assert.That(PlanetHexFactory.HexPatchRadiusFor(6.371e6), Is.EqualTo(12), "Earth-sized → radius-12 patch");
+            Assert.That(PlanetHexFactory.HexPatchRadiusFor(3.39e6), Is.EqualTo(6), "Mars-sized → about half");
+            Assert.That(PlanetHexFactory.HexPatchRadiusFor(1.0e5), Is.EqualTo(2), "tiny body clamps to the minimum");
+            Assert.That(PlanetHexFactory.HexPatchRadiusFor(1.0e9), Is.EqualTo(24), "giant body clamps to the maximum");
+            Assert.That(PlanetHexFactory.HexDiskCount(12), Is.EqualTo(469), "radius-12 disk = 3·144+3·12+1 = 469 hexes");
+            Log($"hex density: Earth patch r=12 → {PlanetHexFactory.HexDiskCount(12)} hexes/region → ≈{4 * PlanetHexFactory.HexDiskCount(12)} total");
+        }
+
+        [Test]
+        [Description("H1: the start colony's world gets its fine HEX patches at colony creation (lazy gen) — each region is filled with hexes (≈469 on Earth), every hex has a terrain drawn from the region's feature mix, and the patch is idempotent + clone-safe.")]
+        public void HexPatches_GeneratedOnHomeWorld_TerrainAndCloneSafe()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            Assert.That(body.HasDataBlob<PlanetRegionsDB>(), Is.True, "home world has a region layer");
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+
+            // ColonyFactory generated the patches at creation. Derive the expected size from the body's real radius so
+            // the gauge holds whatever exact value earth.json uses.
+            double radiusM = body.GetDataBlob<MassVolumeDB>().RadiusInM;
+            int expectedR = PlanetHexFactory.HexPatchRadiusFor(radiusM);
+            int expectedPerRegion = PlanetHexFactory.HexDiskCount(expectedR);
+            Assert.That(regionsDB.Regions.All(r => r.Hexes.Count == expectedPerRegion), Is.True,
+                $"every region is a radius-{expectedR} disk ({expectedPerRegion} hexes)");
+            int total = regionsDB.Regions.Sum(r => r.Hexes.Count);
+            Assert.That(total, Is.EqualTo(regionsDB.Regions.Count * expectedPerRegion), "total = regions × per-region");
+            Assert.That(total, Is.GreaterThan(300), "an Earth-sized world has a real (Operational-density) hex map");
+
+            // Every hex has a terrain, and it comes from the region's feature set (fine realization of the coarse map).
+            var region0 = regionsDB.Regions[0];
+            var featureTypes = region0.Features.Select(f => f.Type).ToHashSet();
+            Assert.That(region0.Hexes.All(h => featureTypes.Contains(h.Terrain)), Is.True,
+                "each hex's terrain is one of the region's features");
+
+            // Idempotent — re-running generates nothing new.
+            int before = total;
+            PlanetHexFactory.EnsureHexesForBody(body);
+            Assert.That(regionsDB.Regions.Sum(r => r.Hexes.Count), Is.EqualTo(before), "hex gen is idempotent");
+
+            // Clone-safe (the old ColonyHexMapDB's fatal flaw — this one survives).
+            var clone = (PlanetRegionsDB)regionsDB.Clone();
+            Assert.That(clone.Regions.Sum(r => r.Hexes.Count), Is.EqualTo(before), "hexes survive a clone");
+            Assert.That(clone.Regions[0].Hexes[0].Terrain, Is.EqualTo(region0.Hexes[0].Terrain), "hex data deep-copied");
+
+            Log($"hex patches: {regionsDB.Regions.Count} regions, {total} hexes total; region0 terrains: {string.Join(",", region0.Hexes.Select(h => h.Terrain).Distinct())}");
+        }
     }
 }
