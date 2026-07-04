@@ -76,6 +76,21 @@ namespace Pulsar4X.GroundCombat
         /// the march because a fine march stays within one region.</summary>
         [JsonProperty] public double HexStepBaseSeconds { get; internal set; }
 
+        // ── GLOBAL GRID POSITION + MOVEMENT (G-track, G3) — the unit's place on the ONE continuous cylinder
+        //    (Q = longitude column, R = latitude row; region = a column BAND) and its global hex march via
+        //    HexPathfinder.FindGlobalPath (no edge gates — crossing a band border is just the next column). ADDITIVE
+        //    alongside the per-region HexQ/HexR above during the migration. Design: docs/GLOBAL-HEX-GRID-DESIGN.md.
+        /// <summary>Global longitude column on the body's <c>SurfaceGrid</c> (-1 until placed on the grid).</summary>
+        [JsonProperty] public int GlobalQ { get; internal set; } = -1;
+        /// <summary>Global latitude row on the body's <c>SurfaceGrid</c>.</summary>
+        [JsonProperty] public int GlobalR { get; internal set; } = -1;
+        /// <summary>Remaining GLOBAL hex steps (current→destination) of a cylinder march; null/empty = not global-marching.</summary>
+        [JsonProperty] public List<Pulsar4X.Galaxy.GroundHex> GlobalPath { get; internal set; }
+        /// <summary>Game-seconds left to reach the FRONT hex of <see cref="GlobalPath"/>.</summary>
+        [JsonProperty] public double GlobalTransitSecondsRemaining { get; internal set; }
+        /// <summary>Per-open-hex base crossing time for the global march (from the region band's crossing-time datum).</summary>
+        [JsonProperty] public double GlobalStepBaseSeconds { get; internal set; }
+
         /// <summary>
         /// ENVIRONMENTAL GEAR (E4) — the ground echo of a ship's <c>HazardResistanceAtb</c>: per-hazard-effect
         /// protection this unit carries (heat-shielding, hazmat sealing, mountaineering rig…), keyed by the SHARED
@@ -106,6 +121,13 @@ namespace Pulsar4X.GroundCombat
             {
                 HexPath = new List<Pulsar4X.Galaxy.GroundHex>();
                 foreach (var h in o.HexPath) HexPath.Add(new Pulsar4X.Galaxy.GroundHex(h));
+            }
+            GlobalQ = o.GlobalQ; GlobalR = o.GlobalR;
+            GlobalTransitSecondsRemaining = o.GlobalTransitSecondsRemaining; GlobalStepBaseSeconds = o.GlobalStepBaseSeconds;
+            if (o.GlobalPath != null)
+            {
+                GlobalPath = new List<Pulsar4X.Galaxy.GroundHex>();
+                foreach (var h in o.GlobalPath) GlobalPath.Add(new Pulsar4X.Galaxy.GroundHex(h));
             }
             if (o.EnvResistance != null) EnvResistance = new Dictionary<HazardEffectType, double>(o.EnvResistance);
         }
@@ -314,8 +336,23 @@ namespace Pulsar4X.GroundCombat
                     : null,
             };
             unit.UnitId = forces.NextUnitId++;   // stable id (the ground echo of a ship's entity id)
+            // G3: also place the unit on the ONE continuous grid — at its region BAND's centre column (the global twin
+            // of the disk's (0,0) muster). Additive; the per-region HexQ/HexR (0,0) is unchanged.
+            StampGlobalMuster(body, unit, regionIndex);
             forces.Units.Add(unit);
             return unit;
+        }
+
+        /// <summary>Place a unit at its region BAND's centre column on the body's global <c>SurfaceGrid</c> (G3 muster —
+        /// the global twin of the disk's (0,0)). Generates the grid on demand. Defensive: no region layer / no grid →
+        /// leaves GlobalQ/GlobalR at -1.</summary>
+        private static void StampGlobalMuster(Entity body, GroundUnit unit, int regionIndex)
+        {
+            if (body == null || !body.TryGetDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>(out var regionsDB) || regionsDB.Regions.Count == 0) return;
+            var grid = Pulsar4X.Galaxy.PlanetGridFactory.EnsureGridForBody(body);
+            if (grid == null || grid.Cols <= 0 || grid.Rows <= 0) return;
+            unit.GlobalQ = Pulsar4X.Galaxy.PlanetGridFactory.BandCentreColumn(regionIndex, grid.Cols, regionsDB.Regions.Count);
+            unit.GlobalR = grid.Rows / 2;
         }
 
         /// <summary>
@@ -371,6 +408,50 @@ namespace Pulsar4X.GroundCombat
             unit.HexStepBaseSeconds = HexPathfinder.PerHexBaseSeconds(region);
             unit.HexTransitSecondsRemaining = unit.HexStepBaseSeconds * HexPathfinder.HexMoveMult(unit.HexPath[0].Terrain);
             return true;
+        }
+
+        // ───────────────────────── GLOBAL HEX MOVEMENT (G-track, G3 — one continuous world, no edge gates) ─────────
+        // The G-track twin of OrderMoveToHex: march the unit across the ONE continuous SurfaceGrid to a GLOBAL (Q,R),
+        // crossing region BAND borders with no stitching (it's just the next column). Additive alongside the per-region
+        // path above; walked by GroundForcesProcessor's global-path step. Design: docs/GLOBAL-HEX-GRID-DESIGN.md.
+
+        /// <summary>
+        /// Order a unit to march to GLOBAL grid hex (<paramref name="destQ"/>,<paramref name="destR"/>) on the body's
+        /// cylinder <c>SurfaceGrid</c> — pathing around ocean, crossing region-band borders seamlessly (no edge gates).
+        /// Generates the grid on demand. Returns false — no move — if the body has no region layer / grid, the unit isn't
+        /// on the grid yet, it's already there, the destination is impassable/off-grid, or no route exists.
+        /// </summary>
+        public static bool OrderMoveToGlobalHex(Entity body, GroundUnit unit, int destQ, int destR)
+        {
+            if (unit == null || body == null) return false;
+            if (unit.MovingToRegion >= 0) return false;   // a coarse region hop wins
+            var grid = Pulsar4X.Galaxy.PlanetGridFactory.EnsureGridForBody(body);
+            if (grid == null || grid.Cols <= 0) return false;
+            if (unit.GlobalQ < 0 || unit.GlobalR < 0) StampGlobalMuster(body, unit, unit.RegionIndex);   // ensure it's on the grid
+            if (unit.GlobalQ < 0) return false;
+
+            var path = HexPathfinder.FindGlobalPath(grid, unit.GlobalQ, unit.GlobalR, destQ, destR);
+            if (path.Count == 0) return false;   // already there / unreachable / dest off-grid or impassable
+
+            unit.GlobalPath = new List<Pulsar4X.Galaxy.GroundHex>(path.Count);
+            foreach (var h in path) unit.GlobalPath.Add(new Pulsar4X.Galaxy.GroundHex(h));
+            unit.GlobalStepBaseSeconds = GlobalStepSecondsFor(body, unit.GlobalQ);
+            unit.GlobalTransitSecondsRemaining = unit.GlobalStepBaseSeconds * HexPathfinder.HexMoveMult(unit.GlobalPath[0].Terrain);
+            return true;
+        }
+
+        /// <summary>Per-open-hex base march time on the global grid, derived from the region BAND's crossing-time datum
+        /// (no new constant): a band is <c>Cols/RegionCount</c> columns wide, so one open hex ≈ the band's crossing time
+        /// ÷ that width. Uses the band the unit starts in.</summary>
+        private static double GlobalStepSecondsFor(Entity body, int globalQ)
+        {
+            if (!body.TryGetDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>(out var regionsDB) || regionsDB.SurfaceGrid == null) return 0.0;
+            var grid = regionsDB.SurfaceGrid;
+            int rc = regionsDB.Regions.Count;
+            int region = Pulsar4X.Galaxy.PlanetGridFactory.RegionOfColumn(globalQ, grid.Cols, rc);
+            int bandWidth = System.Math.Max(1, grid.Cols / System.Math.Max(1, rc));
+            double crossing = (region >= 0 && region < regionsDB.Regions.Count) ? regionsDB.Regions[region].CrossingTimeSeconds : 0.0;
+            return crossing / bandWidth;
         }
 
         /// <summary>March a whole formation to hex (<paramref name="destQ"/>,<paramref name="destR"/>) as a block (the
