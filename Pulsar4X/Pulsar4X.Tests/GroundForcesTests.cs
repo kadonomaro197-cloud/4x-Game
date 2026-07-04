@@ -361,6 +361,27 @@ namespace Pulsar4X.Tests
             Log($"bunker cradle-to-grave: bunkered defender {bunkered.Health:0} hp vs open {open.Health:0} hp after 3 salvos");
         }
 
+        [Test]
+        [Description("#5 LOCKED principle: the start colony's existing installations get a home region at creation (ColonyFactory hook), so Region.InstallationIds is non-empty (they draw on the planet view + count for fortification). Located in the capital region; idempotent (re-running adds nothing).")]
+        public void Installations_LocatedInCapitalRegion_AtColonyCreation()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            Assert.That(body.HasDataBlob<PlanetRegionsDB>(), Is.True, "the home body has a region layer");
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+
+            int located = regionsDB.Regions.Sum(r => r.InstallationIds.Count);
+            Assert.That(located, Is.GreaterThan(0),
+                "the start colony's installations are located on the ground (so they draw on the map + count for fortification)");
+            Assert.That(regionsDB.Regions[0].InstallationIds.Count, Is.GreaterThan(0), "they land in the capital region (0)");
+
+            // Idempotent — re-running the locator places nothing new (map-placed buildings keep their own region).
+            int again = GroundInstallations.LocateColonyInstallations(s.Colony);
+            Assert.That(again, Is.EqualTo(0), "re-locating adds nothing (idempotent)");
+
+            Log($"located {located} start installation(s) in the capital region at colony creation");
+        }
+
         // ───────────────────────── E1/E2/E3 — planetary ENVIRONMENTS (the ground hazard layer) ─────────────────────────
 
         [Test]

@@ -459,9 +459,11 @@ Built to the CI-blind discipline: a thin draw over CI-tested engine blobs, all o
 
 **LOCKED PRINCIPLE for this window (2026-07-04): every buildable is a real building on the ground.** The developer's rule —
 *"everything I build on a planet that's selectable in space is represented by an actual building on the planet itself."*
-Slice 5e delivers the *placement* half (build at a region → drawn as ⚙). **Still owed: give every EXISTING colony
-installation a home `RegionIndex`** so normal-economy buildings (placed with no region chosen) also draw on the map — the
-colony economy list and this map should be two views of the same physical things. Full rationale + slice mapping:
+Slice 5e delivers the *placement* half (build at a region → drawn as ⚙), and **#5 (2026-07-04) closes the loop for the
+start colony**: `GroundInstallations.LocateColonyInstallations` (hooked in `ColonyFactory.CreateFromBlueprint`) gives the
+start colony's existing installations a home region (the capital, region 0), so they draw on the map + count for
+fortification — the colony economy list and this map are now two views of the same physical things. (Follow-up: locate
+DYNAMICALLY-built installations at their install site; v1 covers the start colony.) Full rationale + slice mapping:
 `docs/GROUND-COMBAT-MAP-DESIGN.md` → "LOCKED PRINCIPLE." **Next: the "40k" ground-combat depth pass + a per-unit combat
 readout** (the ground echo of the Fleet Combat tab).
 

@@ -117,6 +117,10 @@ namespace Pulsar4X.Colonies
                 );
             }
 
+            // Give those installations a home REGION (item #5, LOCKED principle): drop them into the capital region
+            // so they draw on the planet view + count for fortification. Defensive (no region layer → no-op).
+            Pulsar4X.GroundCombat.GroundInstallations.LocateColonyInstallations(colonyEntity);
+
             // Add starting colony cargo
             LoadCargo(colonyEntity, factionInfo.Data, colonyBlueprint.Cargo);
 
