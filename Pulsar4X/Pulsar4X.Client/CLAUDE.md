@@ -412,6 +412,8 @@ The M-ECON + political systems have **no dedicated player UI yet**, so their obs
 
 These are the levers the TESTING-TRACKER C1/C2/C3/C6/D3 rows drive. **CI compiles them; runtime is the developer's local build.**
 
+- **Raise Ground Unit** (2026-07-04) → the placement tool that makes the `PlanetViewWindow` tactical map (slice 5e) testable in a stock New Game — there's no build-a-ground-unit-from-industry path yet (the base-mod `GroundUnitDesign` JSON template is deferred). Uses the shared "Orbit around" body picker; a type/count/region and two buttons: **"Raise (your faction)"** and **"Raise (enemy)"** (thin callers over the CI-tested `GroundForces.RaiseUnit` with a throwaway `MakeDevGroundDesign` preset). The enemy button resolves a real rival faction id via `ResolveEnemyFactionId` (first non-player/non-GM faction — the auto-spawn scenario provides rivals — else a synthetic sentinel), so raising yours + an enemy in the SAME region drives the ground fight + capture. Guarded (body must carry a `PlanetRegionsDB`); region clamped to the layer's count.
+
 ### PlanetViewWindow — the planet SURFACE tactical map (BUILT 2026-07-03 slice 3 → tactical 2026-07-04 slice 5e)
 
 The ground layer's UI. `PlanetRegionsDB` gives every major body a surface of regions (the 4-slice ring — see
