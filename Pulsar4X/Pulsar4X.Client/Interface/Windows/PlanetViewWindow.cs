@@ -60,9 +60,10 @@ namespace Pulsar4X.Client
 
         // ── HEX ZOOM (U3): -1 = the region-ring view; >=0 = that region's Region.Hexes drawn as a hex grid.
         //    A source hex (with your units) is selected, then a target hex is clicked to march (H2 hex pathfinder). ──
-        private int _hexZoomRegion = -1;
-        private bool _hexSelActive = false;
-        private int _selHexQ, _selHexR;
+        private int _hexZoomRegion = -1;   // legacy single-region zoom (superseded by the 3-region hex map, V3) — kept for the old helpers, always -1
+        private bool _hexSelActive = false;             // a source hex (with your units) is selected, awaiting a target-hex click
+        private int _selHexRegion = -1, _selHexQ, _selHexR;   // the selected source hex (region-aware for cross-region march, V3)
+        private float _hexSize = 0f;                    // hex draw size in px (0 = auto-fit; mouse wheel zooms) — V3
 
         // Token hit-rects gathered during the draw, resolved against the click AFTER the columns are drawn.
         private readonly List<(Vector2 min, Vector2 max, int region, int faction, GroundUnitType type)> _tokenHits = new();
@@ -179,9 +180,6 @@ namespace Pulsar4X.Client
             int count = regions.Count;
             _centerRegion = ((_centerRegion % count) + count) % count;   // keep in range
 
-            // U3: if zoomed into a region, draw its hex grid instead of the ring.
-            if (_hexZoomRegion >= 0 && _hexZoomRegion < count) { DrawHexZoom(regions); return; }
-
             int left = ((_centerRegion - 1) % count + count) % count;
             int right = (_centerRegion + 1) % count;
 
@@ -190,18 +188,15 @@ namespace Pulsar4X.Client
             body.TryGetDataBlob<GroundForcesDB>(out var forcesDB);
             body.TryGetDataBlob<PlanetEnvironmentsDB>(out var envDB);
 
-            // ── Controls ────────────────────────────────────────────────────────────────
-            if (ImGui.Button("◀ West")) { _centerRegion = left; }
+            // ── Controls (cycle regions) ──
+            if (ImGui.Button("◀ West")) { _centerRegion = left; _hexSelActive = false; }
             ImGui.SameLine();
             ImGui.Text($"Region {_centerRegion + 1} of {count}");
             ImGui.SameLine();
-            if (ImGui.Button("East ▶")) { _centerRegion = right; }
-            ImGui.SameLine();
-            if (ImGui.Button("⊞ Hexes")) { _hexZoomRegion = _centerRegion; _hexSelActive = false; }   // zoom into this region's hex grid (U3)
-
+            if (ImGui.Button("East ▶")) { _centerRegion = right; _hexSelActive = false; }
             int surveyed = regions.Count(r => r.Surveyed);
             ImGui.SameLine();
-            ImGui.TextDisabled($"   surveyed {surveyed}/{count}");
+            ImGui.TextDisabled($"  surveyed {surveyed}/{count}  ·  scroll to zoom · click a side region to recentre");
             if (!string.IsNullOrEmpty(_status))
             {
                 ImGui.SameLine();
@@ -209,65 +204,9 @@ namespace Pulsar4X.Client
             }
             ImGui.Separator();
 
-            // ── The three-region strip ──────────────────────────────────────────────────
-            var drawList = ImGui.GetWindowDrawList();
-            var canvasPos = ImGui.GetCursorScreenPos();
-            var canvasSize = ImGui.GetContentRegionAvail();
-            float mapHeight = Math.Max(150f, canvasSize.Y * 0.58f);
-            var mapSize = new Vector2(canvasSize.X, mapHeight);
-
-            ImGui.InvisibleButton("planetcanvas", mapSize);
-            bool hovered = ImGui.IsItemHovered();
-            bool clicked = hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
-            var mp = ImGui.GetIO().MousePos;
-
-            float gap = 8f;
-            float colW = (mapSize.X - gap * 2f) / 3f;
-            int[] cols = { left, _centerRegion, right };
-
-            _tokenHits.Clear();
-            for (int c = 0; c < 3; c++)
-            {
-                float x0 = canvasPos.X + c * (colW + gap);
-                var colMin = new Vector2(x0, canvasPos.Y);
-                var colMax = new Vector2(x0 + colW, canvasPos.Y + mapHeight);
-                DrawRegionColumn(drawList, colMin, colMax, regions[cols[c]], c == 1, myFaction, forcesDB, envDB);
-            }
-
-            // ── Click resolution: a UNIT TOKEN wins over the column background ───────────
-            if (clicked)
-            {
-                bool tokenHit = false;
-                foreach (var t in _tokenHits)
-                {
-                    if (mp.X >= t.min.X && mp.X <= t.max.X && mp.Y >= t.min.Y && mp.Y <= t.max.Y)
-                    {
-                        // Toggle selection of this group (only YOUR units are orderable).
-                        if (HasSelection && _selRegion == t.region && _selFaction == t.faction && _selType == t.type)
-                            ClearSelection();
-                        else { _selRegion = t.region; _selFaction = t.faction; _selType = t.type; _status = ""; }
-                        tokenHit = true;
-                        break;
-                    }
-                }
-
-                if (!tokenHit)
-                {
-                    // Column background: MOVE if a group is selected and this column is an adjacent region; else rotate.
-                    for (int c = 0; c < 3; c++)
-                    {
-                        float x0 = canvasPos.X + c * (colW + gap);
-                        if (mp.X < x0 || mp.X > x0 + colW) continue;
-                        int target = cols[c];
-                        if (HasSelection && _selFaction == myFaction && target != _selRegion
-                            && _selRegion < regions.Count && regions[_selRegion].Neighbors.Contains(target))
-                            MarchSelectedTo(regions, target);
-                        else
-                            _centerRegion = target;   // navigate
-                        break;
-                    }
-                }
-            }
+            // ── The 3-region HEX map (V3 default): centre region + its two ring neighbours drawn as hex patches;
+            //    scroll to zoom, click a hex with your units then a target hex to march (H2 pathfinder, cross-region). ──
+            DrawThreeRegionHexMap(regions, forcesDB, myFaction, left, _centerRegion, right);
 
             // ── Below the canvas: selection/march actions + region detail (build → Colony tab,
             //    formations → Ground forces tab; the map stays "see + move on the surface"). ─────────
@@ -276,6 +215,131 @@ namespace Pulsar4X.Client
             ImGui.Separator();
             DrawRegionDetail(regions[_centerRegion], forcesDB, envDB);
             DrawLegend();
+        }
+
+        // ── The 3-region HEX map (V3 default) — centre region + its two ring neighbours drawn side-by-side as hex
+        //    patches (terrain-coloured, units on hexes). Scroll to zoom; click a hex with your units then a target hex
+        //    (in ANY of the three) to march via the H2 pathfinder (cross-region); click empty space in a side region to
+        //    recentre. This is the "colony hex map" as the default surface, on the save-safe Region.Hexes layer. ──
+        private void DrawThreeRegionHexMap(List<Region> regions, GroundForcesDB forcesDB, int myFaction, int left, int center, int right)
+        {
+            var drawList = ImGui.GetWindowDrawList();
+            var canvasPos = ImGui.GetCursorScreenPos();
+            var canvasSize = ImGui.GetContentRegionAvail();
+            float availH = Math.Max(180f, canvasSize.Y * 0.62f);
+
+            ImGui.InvisibleButton("planethexcanvas", new Vector2(canvasSize.X, availH));
+            bool hovered = ImGui.IsItemHovered();
+            bool clicked = hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
+            var mp = ImGui.GetIO().MousePos;
+
+            int[] slots = { left, center, right };
+            const float gap = 10f;
+            float slotW = (canvasSize.X - gap * 2f) / 3f;
+
+            // Patch radius (max hex distance from centre) across the visible regions.
+            int radius = 0;
+            foreach (var si in slots)
+            {
+                var hx = regions[si].Hexes;
+                if (hx == null) continue;
+                foreach (var h in hx) { int d = (Math.Abs(h.Q) + Math.Abs(h.R) + Math.Abs(h.Q + h.R)) / 2; if (d > radius) radius = d; }
+            }
+            if (radius <= 0)
+            {
+                ImGui.SetCursorScreenPos(new Vector2(canvasPos.X, canvasPos.Y + 8f));
+                ImGui.TextWrapped("No hex grid for these regions yet — colonise the world or complete a geological survey to generate its hexes.");
+                return;
+            }
+
+            // Auto-fit one region's disk to a slot, then apply the wheel-zoom.
+            float fit = Math.Min(slotW / (3f * radius + 3f), availH / (1.7320508f * (2 * radius + 1) + 2f));
+            if (_hexSize <= 0f) _hexSize = fit;
+            if (hovered)
+            {
+                float wheel = ImGui.GetIO().MouseWheel;
+                if (wheel != 0f) _hexSize = Math.Clamp(_hexSize + wheel * Math.Max(0.5f, _hexSize * 0.15f), fit * 0.5f, fit * 6f);
+            }
+            float size = Math.Clamp(_hexSize, 2f, 60f);
+
+            // Draw each visible region as a hex disk centred in its slot.
+            for (int c = 0; c < 3; c++)
+            {
+                int ri = slots[c];
+                var region = regions[ri];
+                var origin = new Vector2(canvasPos.X + c * (slotW + gap) + slotW * 0.5f, canvasPos.Y + availH * 0.5f);
+
+                if (region.Hexes != null)
+                    foreach (var h in region.Hexes)
+                    {
+                        var col = _featureColors.TryGetValue(h.Terrain, out var fc) ? fc : new Vector4(0.30f, 0.30f, 0.32f, 1f);
+                        DrawHexFilled(drawList, HexCenter(h.Q, h.R, origin, size), size * 0.94f, ImGui.ColorConvertFloat4ToU32(col));
+                    }
+
+                if (forcesDB != null)
+                {
+                    var perHex = new Dictionary<(int, int, int), int>();
+                    foreach (var u in forcesDB.Units)
+                    {
+                        if (u.RegionIndex != ri) continue;
+                        var key = (u.HexQ, u.HexR, u.FactionOwnerID);
+                        perHex[key] = perHex.TryGetValue(key, out var nn) ? nn + 1 : 1;
+                    }
+                    foreach (var kv in perHex)
+                    {
+                        var cc = HexCenter(kv.Key.Item1, kv.Key.Item2, origin, size);
+                        drawList.AddCircleFilled(cc, size * 0.42f, ImGui.ColorConvertFloat4ToU32(OwnerColor(kv.Key.Item3, myFaction)));
+                        if (size > 12f) { string lbl = kv.Value.ToString(); var ts = ImGui.CalcTextSize(lbl); drawList.AddText(cc - ts * 0.5f, 0xFF000000, lbl); }
+                    }
+                }
+
+                if (_hexSelActive && _selHexRegion == ri)
+                    DrawHexOutline(drawList, HexCenter(_selHexQ, _selHexR, origin, size), size * 0.94f, 0xFFFFFFFF, 2.5f);
+
+                string hdr = "R" + (ri + 1) + (c == 1 ? " (centre)" : "");
+                drawList.AddText(new Vector2(canvasPos.X + c * (slotW + gap) + 4f, canvasPos.Y + 2f), 0xFFCFCFCF, hdr);
+            }
+
+            // Click: pick a hex (in whichever slot), then select-your-units / march / recentre.
+            if (clicked)
+            {
+                int slot = (int)((mp.X - canvasPos.X) / (slotW + gap));
+                if (slot >= 0 && slot < 3)
+                {
+                    int ri = slots[slot];
+                    var region = regions[ri];
+                    var origin = new Vector2(canvasPos.X + slot * (slotW + gap) + slotW * 0.5f, canvasPos.Y + availH * 0.5f);
+                    GroundHex hit = null; float best = size;
+                    if (region.Hexes != null)
+                        foreach (var h in region.Hexes)
+                        {
+                            float dist = Vector2.Distance(mp, HexCenter(h.Q, h.R, origin, size));
+                            if (dist <= size * 0.96f && dist < best) { best = dist; hit = h; }
+                        }
+                    if (hit != null)
+                    {
+                        if (!_hexSelActive)
+                        {
+                            if (AnyOwnUnitOnHex(forcesDB, ri, hit.Q, hit.R, myFaction))
+                            { _hexSelActive = true; _selHexRegion = ri; _selHexQ = hit.Q; _selHexR = hit.R; _status = ""; }
+                        }
+                        else if (_selHexRegion == ri && hit.Q == _selHexQ && hit.R == _selHexR)
+                        {
+                            _hexSelActive = false;   // click the source again to deselect
+                        }
+                        else
+                        {
+                            int moved = MarchOwnUnitsHex(_lookedAtEntity.Entity, forcesDB, _selHexRegion, _selHexQ, _selHexR, ri, hit.Q, hit.R, myFaction);
+                            _status = moved > 0 ? $"marched {moved} → R{ri + 1}({hit.Q},{hit.R})" : "no route";
+                            _hexSelActive = false;
+                        }
+                    }
+                    else if (slot != 1)
+                    {
+                        _centerRegion = ri; _hexSelActive = false;   // empty space in a side region → recentre
+                    }
+                }
+            }
         }
 
         // ── Ground forces tab: organise units into formations + set their stance (the "manage your army"
@@ -459,7 +523,7 @@ namespace Pulsar4X.Client
                     }
                     else
                     {
-                        int moved = MarchOwnUnitsHex(_lookedAtEntity.Entity, forcesDB, ri, _selHexQ, _selHexR, hit.Q, hit.R, myFaction);
+                        int moved = MarchOwnUnitsHex(_lookedAtEntity.Entity, forcesDB, ri, _selHexQ, _selHexR, ri, hit.Q, hit.R, myFaction);
                         _status = moved > 0 ? $"marched {moved} to ({hit.Q},{hit.R})" : "no route";
                         _hexSelActive = false;
                     }
@@ -477,16 +541,16 @@ namespace Pulsar4X.Client
 
         /// <summary>March every standing OWN unit on the source hex to the target hex via the H2 hex pathfinder
         /// (<see cref="GroundForces.OrderMove(Entity, GroundUnit, int, int, int)"/>). Returns how many got a route.</summary>
-        private int MarchOwnUnitsHex(Entity body, GroundForcesDB forcesDB, int ri, int fromQ, int fromR, int toQ, int toR, int myFaction)
+        private int MarchOwnUnitsHex(Entity body, GroundForcesDB forcesDB, int fromRegion, int fromQ, int fromR, int toRegion, int toQ, int toR, int myFaction)
         {
             if (forcesDB == null) return 0;
             int moved = 0;
             foreach (var u in forcesDB.Units.ToArray())
             {
-                if (u.FactionOwnerID != myFaction || u.RegionIndex != ri) continue;
+                if (u.FactionOwnerID != myFaction || u.RegionIndex != fromRegion) continue;
                 if (u.HexQ != fromQ || u.HexR != fromR) continue;
                 if (u.MovingToRegion >= 0 || (u.Path != null && u.Path.Count > 0)) continue;
-                if (GroundForces.OrderMove(body, u, ri, toQ, toR)) moved++;
+                if (GroundForces.OrderMove(body, u, toRegion, toQ, toR)) moved++;   // H2 pathfinder crosses region borders
             }
             return moved;
         }
