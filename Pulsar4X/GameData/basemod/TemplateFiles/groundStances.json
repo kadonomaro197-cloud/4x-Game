@@ -1,0 +1,35 @@
+[
+  {
+    "Type": "GroundStance",
+    "Payload": {
+      "UniqueID": "ground-balanced",
+      "DisplayName": "Balanced",
+      "Family": "Balanced",
+      "AttackMult": 1.0,
+      "DamageTakenMult": 1.0,
+      "CooldownSeconds": 60
+    }
+  },
+  {
+    "Type": "GroundStance",
+    "Payload": {
+      "UniqueID": "ground-offensive",
+      "DisplayName": "Offensive Push",
+      "Family": "Offensive",
+      "AttackMult": 1.25,
+      "DamageTakenMult": 1.25,
+      "CooldownSeconds": 300
+    }
+  },
+  {
+    "Type": "GroundStance",
+    "Payload": {
+      "UniqueID": "ground-defensive",
+      "DisplayName": "Dig In",
+      "Family": "Defensive",
+      "AttackMult": 0.75,
+      "DamageTakenMult": 0.75,
+      "CooldownSeconds": 300
+    }
+  }
+]

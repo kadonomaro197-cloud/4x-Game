@@ -128,6 +128,9 @@ namespace Pulsar4X.Modding
                 case ModInstruction.DataType.CombatDoctrine:
                     ApplyModGeneric<CombatDoctrineBlueprint>(baseData.CombatDoctrines, mod, modNamespace);
                     break;
+                case ModInstruction.DataType.GroundStance:
+                    ApplyModGeneric<GroundStanceBlueprint>(baseData.GroundStances, mod, modNamespace);
+                    break;
             }
         }
 

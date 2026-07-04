@@ -34,6 +34,10 @@ namespace Pulsar4X.GroundCombat
         /// space <c>SalvoDamageScale</c>). 1.0 = full; lower stretches a battle over more ticks. Tune live.</summary>
         public const double SalvoScale = 1.0;
 
+        // FORTIFICATION (5h) is now DESIGN-DRIVEN — a building fortifies its region (and projects to adjacent friendly
+        // regions) only if its design carries a GroundDefenseAtb (a Bunker, not a solar panel). The math + the
+        // colony→component resolver live in GroundFortification; ResolveRegionCombat applies it to the defender.
+
         public void Init(Game game) { }
 
         public void ProcessEntity(Entity entity, int deltaSeconds)
@@ -81,7 +85,10 @@ namespace Pulsar4X.GroundCombat
                     foreach (var env in envDB.ForRegion(unit.RegionIndex))
                     {
                         if (!IsDamageEffect(env.Effect)) continue;
-                        unit.Health -= env.Magnitude * (deltaSeconds / 3600.0);
+                        // E4: the unit's environmental GEAR negates a fraction of the hazard's attrition (heat-shielding,
+                        // hazmat sealing…) — the ground echo of a ship's HazardResistanceAtb. 1.0 resistance = immune.
+                        double resist = unit.ResistanceTo(env.Effect);
+                        unit.Health -= env.Magnitude * (deltaSeconds / 3600.0) * (1.0 - resist);
                         if (unit.Health < 0) unit.Health = 0;
                     }
                 }
@@ -102,6 +109,11 @@ namespace Pulsar4X.GroundCombat
                 list.Add(unit);
             }
 
+            // Build the design-driven fortification resolver once (installation id → GroundDefenseAtb, from the body's
+            // colonies) — so a Bunker in a region hardens its defender (and shields adjacent friendly regions).
+            var allRegions = regionsDB?.Regions;
+            var fortResolve = GroundFortification.BuildResolver(body);
+
             // 2) COMBAT (5c) + 3) REGION CAPTURE (5d), per region.
             foreach (var kv in byRegion)
             {
@@ -113,7 +125,7 @@ namespace Pulsar4X.GroundCombat
                 {
                     Region region = (regionsDB != null && kv.Key >= 0 && kv.Key < regionsDB.Regions.Count)
                         ? regionsDB.Regions[kv.Key] : null;
-                    ResolveRegionCombat(units, region);
+                    ResolveRegionCombat(forces, units, region, allRegions, fortResolve);
                 }
 
                 // Whoever holds the only live units here now owns the region.
@@ -126,6 +138,10 @@ namespace Pulsar4X.GroundCombat
             // Remove destroyed units.
             forces.Units.RemoveAll(u => u.Health <= 0);
 
+            // FORMATIONS: a formation whose LEADER just died reassigns leadership to a surviving member (fleet-like —
+            // the flagship echo; no combat penalty, per the locked design). An empty formation keeps LeaderUnitId = -1.
+            MaintainFormations(forces);
+
             // 4) WHOLE-PLANET CAPTURE (5d — the "take a planet" moment): if EVERY region is held by a single
             //    faction that isn't the colony's current owner, the planet's colony flips to that faction.
             TryCapturePlanet(body, regionsDB);
@@ -137,7 +153,8 @@ namespace Pulsar4X.GroundCombat
         /// OWNER (the defender) additionally divides its incoming by the terrain COVER. Simultaneous (snapshot before
         /// apply), deterministic, no overkill (pool carries). Reads <see cref="GroundTerrain"/> — the ground twin of
         /// SpaceHazardTools.</summary>
-        private static void ResolveRegionCombat(List<GroundUnit> units, Region region)
+        private static void ResolveRegionCombat(GroundForcesDB forces, List<GroundUnit> units, Region region,
+            List<Region> allRegions, System.Func<int, GroundDefenseAtb> fortResolve)
         {
             var terrain = GroundTerrain.Classify(region);
             int defenderFaction = region != null ? region.OwnerFactionID : -1;
@@ -162,16 +179,22 @@ namespace Pulsar4X.GroundCombat
                     foreach (var u in byFaction[f])
                     {
                         if (u.Health <= 0) continue;
-                        double atk = u.Attack * GroundTerrain.TerrainAttackMult(u.UnitType, terrain);
+                        // × terrain affinity × the formation STANCE's attack mult (offensive hits harder, 5h doctrine).
+                        double atk = u.Attack * GroundTerrain.TerrainAttackMult(u.UnitType, terrain) * GroundFormationDoctrine.AttackMult(forces, u);
                         pool += atk * AvgTriangleVs(u.UnitType, byFaction[g]);
                     }
                     pool *= SalvoScale;
-                    if (g == defenderFaction) pool /= GroundTerrain.CoverDefenseMult(terrain);   // the defender's cover
+                    // The defender (region owner) divides incoming by terrain COVER × FORTIFICATION (its Bunkers, local
+                    // + adjacent-friendly projection — GroundFortification, design-driven).
+                    if (g == defenderFaction)
+                        pool /= (GroundTerrain.CoverDefenseMult(terrain) * GroundFortification.DefenseMult(region, allRegions, defenderFaction, fortResolve));
                     incoming[g] += pool;
                 }
             }
 
-            // Apply each faction's incoming, focus-fired across its units (pool carries — no overkill waste).
+            // Apply each faction's incoming, focus-fired across its units (pool carries — no overkill waste). A unit's
+            // formation STANCE scales the DAMAGE IT TAKES (defensive soaks more raw pool per point of health; offensive
+            // dies faster) — the ground echo of the space resolver's per-ship ToughnessMult, 5h doctrine.
             foreach (var g in byFaction.Keys)
             {
                 double pool = incoming[g];
@@ -180,9 +203,12 @@ namespace Pulsar4X.GroundCombat
                 {
                     if (u.Health <= 0) continue;
                     if (pool <= 0) break;
-                    double take = Math.Min(u.Health, pool);
-                    u.Health -= take;
-                    pool -= take;
+                    double dtm = GroundFormationDoctrine.DamageTakenMult(forces, u);
+                    if (dtm <= 0) dtm = 1.0;
+                    // Raw pool this unit can absorb before dying = Health / dtm; the health it loses = raw × dtm.
+                    double raw = Math.Min(u.Health / dtm, pool);
+                    u.Health -= raw * dtm;
+                    pool -= raw;
                 }
             }
         }
@@ -199,6 +225,25 @@ namespace Pulsar4X.GroundCombat
                 acc += t.Health * GroundTerrain.TriangleMult(attackerType, t.UnitType);
             }
             return totalH > 0 ? acc / totalH : 1.0;
+        }
+
+        /// <summary>Keep each formation's leader valid after casualties: if the leader unit is gone, leadership passes
+        /// to a surviving member (or -1 if the formation was wiped). Fleet-like reassignment, no penalty.</summary>
+        private static void MaintainFormations(GroundForcesDB forces)
+        {
+            if (forces.Formations == null || forces.Formations.Count == 0) return;
+            foreach (var f in forces.Formations)
+            {
+                bool leaderAlive = false;
+                int firstMemberId = -1;
+                foreach (var u in forces.Units)
+                {
+                    if (u.FormationId != f.FormationId) continue;
+                    if (firstMemberId < 0) firstMemberId = u.UnitId;
+                    if (u.UnitId == f.LeaderUnitId) { leaderAlive = true; break; }
+                }
+                if (!leaderAlive) f.LeaderUnitId = firstMemberId;   // -1 if the formation is now empty
+            }
         }
 
         private static bool IsDamageEffect(HazardEffectType t)

@@ -18,6 +18,7 @@ using Pulsar4X.Industry;
 using Pulsar4X.Galaxy; // MassVolumeDB lives here on this branch (namespace drifted from the branch this file was written on)
 using Pulsar4X.Combat;
 using Pulsar4X.Sensors;
+using Pulsar4X.GroundCombat;
 
 namespace Pulsar4X.Client
 {
@@ -83,6 +84,13 @@ namespace Pulsar4X.Client
         // ── Diplomacy levers (stance / treaties / war) ──
         private int _selectedDipFaction = 0;
         private string _diploStatus = "";
+
+        // ── Raise Ground Unit (populate the tactical map to test it) ──
+        private int _groundUnitType = 0;   // index into _groundTypeNames
+        private int _groundCount = 3;
+        private int _groundRegion = 0;
+        private string _groundStatus = "";
+        private static readonly string[] _groundTypeNames = { "Infantry", "Armor", "Artillery" };
 
         private DevToolsWindow()
         {
@@ -155,6 +163,36 @@ namespace Pulsar4X.Client
             if (e.TryGetDataBlob<NameDB>(out var nameDB))
                 return nameDB.OwnersName;
             return $"Entity {e.Id}";
+        }
+
+        /// <summary>A throwaway ground-unit design for the DevTools raise buttons (there's no base-mod JSON template
+        /// yet — deferred in slice 5a to keep the six-point registration off the New-Game path). Uniform stats; the
+        /// terrain/triangle math differentiates the types. Stats snapshot onto the raised unit like a real build.</summary>
+        static GroundUnitDesign MakeDevGroundDesign(GroundUnitType type) => new GroundUnitDesign
+        {
+            UniqueID = "dev-ground-" + type,
+            Name = "Dev " + type,
+            UnitType = type,
+            Attack = 100,
+            Defense = 10,
+            HitPoints = 500,
+            IndustryPointCosts = 0,
+            IndustryTypeID = "installation",
+        };
+
+        /// <summary>Pick a faction to own "enemy" ground units: the first registered faction that isn't the player or
+        /// the Game Master (the auto-spawn combat scenario provides rivals), else a synthetic sentinel id so the fight
+        /// still has two sides. Keeps the map colours/labels honest (own = cyan, everything else = hostile red).</summary>
+        int ResolveEnemyFactionId()
+        {
+            int playerId = _uiState.PlayerFaction?.Id ?? _uiState.Faction.Id;
+            int gmId = _uiState.Game?.GameMasterFaction?.Id ?? int.MinValue;
+            if (_uiState.Game != null)
+            {
+                foreach (var kv in _uiState.Game.Factions)
+                    if (kv.Key != playerId && kv.Key != gmId) return kv.Key;
+            }
+            return -7777;   // synthetic "ground hostiles" — combat groups by faction id, so a distinct int is enough
         }
 
         // Writes a DevTools diagnostic line and FLUSHES immediately. When launch.bat redirects the game's
@@ -735,6 +773,69 @@ namespace Pulsar4X.Client
                     }
                     if (!string.IsNullOrEmpty(_hostileStatus))
                         ImGui.TextColored(new Vector4(1f, 0.6f, 0.4f, 1f), _hostileStatus);
+                }
+
+                // ── Raise Ground Unit (populate the tactical map) ──
+                ImGui.Separator();
+                ImGui.Text("[ Raise Ground Unit ]");
+                ImGui.TextDisabled("Drop ground units onto a body's surface so the Planet View tactical map has something");
+                ImGui.TextDisabled("to navigate. Raise YOURS + an ENEMY in the same region to test the fight + capture.");
+
+                if (_bodyEntities.Length == 0)
+                {
+                    ImGui.TextDisabled("No body selected (see the 'Orbit around' picker under Spawn Ship).");
+                }
+                else
+                {
+                    var groundBody = _bodyEntities[_selectedSpawnParent];
+                    bool hasRegions = groundBody.TryGetDataBlob<PlanetRegionsDB>(out var groundRegions) && groundRegions.Regions.Count > 0;
+                    ImGui.Text($"Body: {GetEntityName(groundBody)}");
+                    if (!hasRegions)
+                    {
+                        ImGui.TextDisabled("This body has no region layer (not a major body) — pick a planet/moon.");
+                    }
+                    else
+                    {
+                        int regionCount = groundRegions.Regions.Count;
+                        ImGui.SetNextItemWidth(160f);
+                        ImGui.Combo("Type##devgroundtype", ref _groundUnitType, _groundTypeNames, _groundTypeNames.Length);
+                        ImGui.SameLine(); ImGui.SetNextItemWidth(90f);
+                        ImGui.InputInt("Count##devgroundcount", ref _groundCount);
+                        if (_groundCount < 1) _groundCount = 1;
+                        ImGui.SameLine(); ImGui.SetNextItemWidth(90f);
+                        ImGui.InputInt($"Region (0-{regionCount - 1})##devgroundregion", ref _groundRegion);
+                        _groundRegion = Math.Max(0, Math.Min(_groundRegion, regionCount - 1));
+
+                        var design = MakeDevGroundDesign((GroundUnitType)_groundUnitType);
+
+                        if (ImGui.Button("Raise (your faction)##devgroundmine"))
+                        {
+                            try
+                            {
+                                int fac = _uiState.PlayerFaction?.Id ?? _uiState.Faction.Id;
+                                for (int i = 0; i < _groundCount; i++)
+                                    GroundForces.RaiseUnit(groundBody, design, fac, _groundRegion);
+                                _groundStatus = $"Raised {_groundCount}x {design.UnitType} (YOURS) in region {_groundRegion} of {GetEntityName(groundBody)}. Open its Planet View.";
+                                DevLog($"Raise Ground Unit OK: {_groundCount}x {design.UnitType} faction={fac} region={_groundRegion} body='{GetEntityName(groundBody)}'");
+                            }
+                            catch (Exception ex) { _groundStatus = $"Error: {ex.Message}"; DevLog($"Raise Ground Unit FAILED: {ex}"); }
+                        }
+                        ImGui.SameLine();
+                        if (ImGui.Button("Raise (enemy)##devgroundenemy"))
+                        {
+                            try
+                            {
+                                int enemyFac = ResolveEnemyFactionId();
+                                for (int i = 0; i < _groundCount; i++)
+                                    GroundForces.RaiseUnit(groundBody, design, enemyFac, _groundRegion);
+                                _groundStatus = $"Raised {_groundCount}x {design.UnitType} (ENEMY faction {enemyFac}) in region {_groundRegion}. Put YOUR units in the same region, then press play to fight/capture.";
+                                DevLog($"Raise Ground Unit (ENEMY) OK: {_groundCount}x {design.UnitType} faction={enemyFac} region={_groundRegion} body='{GetEntityName(groundBody)}'");
+                            }
+                            catch (Exception ex) { _groundStatus = $"Error: {ex.Message}"; DevLog($"Raise Ground Unit (enemy) FAILED: {ex}"); }
+                        }
+                        if (!string.IsNullOrEmpty(_groundStatus))
+                            ImGui.TextColored(new Vector4(0.4f, 1f, 0.6f, 1f), _groundStatus);
+                    }
                 }
 
                 // ── Battle Report ─────────────────────────────────

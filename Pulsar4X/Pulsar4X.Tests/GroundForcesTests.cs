@@ -10,6 +10,7 @@ using Pulsar4X.Storage;
 using Pulsar4X.DataStructures;
 using Pulsar4X.Hazards;
 using Pulsar4X.GroundCombat;
+using Pulsar4X.Components;
 
 namespace Pulsar4X.Tests
 {
@@ -263,6 +264,149 @@ namespace Pulsar4X.Tests
             Log($"terrain: mountain defender {mountainDefender.Health:0} hp vs plains defender {plainsDefender.Health:0} hp after 3 salvos");
         }
 
+        [Test]
+        [Description("5h fortification is DESIGN-DRIVEN: a Bunker (GroundDefenseAtb) fortifies its region + projects to ADJACENT FRIENDLY regions; a plain building (no attribute) does nothing; an enemy-held neighbour doesn't project; the bonus is capped. Pure math via GroundFortification.DefenseMult with a stub resolver (no JSON needed).")]
+        public void Fortification_DesignDriven_LocalPlusAdjacentCappedAndOwned()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            var regions = body.GetDataBlob<PlanetRegionsDB>().Regions;
+
+            // A Bunker = +25% local / +12% adjacent; ids 1 & 2 are bunkers, id 9 is a plain (non-defence) building.
+            var bunker = new GroundDefenseAtb(0.25, 0.12);
+            System.Func<int, GroundDefenseAtb> resolve = id => (id == 1 || id == 2) ? bunker : null;
+
+            int fac = s.Faction.Id;
+            regions[0].InstallationIds.Clear(); regions[0].InstallationIds.Add(1); regions[0].InstallationIds.Add(9);
+            regions[1].InstallationIds.Clear(); regions[1].InstallationIds.Add(2);
+            regions[0].OwnerFactionID = fac;
+            regions[1].OwnerFactionID = fac;   // a FRIENDLY neighbour → projects
+            Assert.That(regions[0].Neighbors.Contains(1), Is.True, "ring adjacency 0↔1");
+
+            // Local +0.25 (the plain building adds 0) + adjacent-friendly +0.12 = ×1.37.
+            Assert.That(GroundFortification.DefenseMult(regions[0], regions, fac, resolve), Is.EqualTo(1.37).Within(1e-9),
+                "local +25% + adjacent friendly +12%");
+
+            // An ENEMY-held neighbour doesn't project → only local +25%.
+            regions[1].OwnerFactionID = InvaderFaction;
+            Assert.That(GroundFortification.DefenseMult(regions[0], regions, fac, resolve), Is.EqualTo(1.25).Within(1e-9),
+                "an enemy neighbour's bunkers don't fortify you");
+
+            // A plain (non-defence) building alone = no fortification.
+            regions[2].InstallationIds.Clear(); regions[2].InstallationIds.Add(9);
+            regions[2].OwnerFactionID = fac;
+            Assert.That(GroundFortification.DefenseMult(regions[2], regions, fac, resolve), Is.EqualTo(1.0).Within(1e-9),
+                "a non-defence building does not fortify");
+
+            // Cap: pile many bunkers into region 3 → capped at 1 + Cap.
+            regions[3].InstallationIds.Clear();
+            for (int i = 100; i < 120; i++) regions[3].InstallationIds.Add(i);
+            regions[3].OwnerFactionID = fac;
+            System.Func<int, GroundDefenseAtb> allBunkers = id => bunker;
+            Assert.That(GroundFortification.DefenseMult(regions[3], regions, fac, allBunkers), Is.EqualTo(1.0 + GroundFortification.Cap).Within(1e-9),
+                "fortification is capped");
+
+            Log($"design-driven fortification: Bunker local+adj ×1.37, enemy-neighbour local-only ×1.25, plain-building ×1.00");
+        }
+
+        [Test]
+        [Description("5h fortification CRADLE-TO-GRAVE: build the base-mod BUNKER from the faction's designs (proves the JSON→GroundDefenseAtb binding), install it in a region, and a real fight favours the fortified region's defender over an identical unfortified one.")]
+        public void Fortification_BaseModBunker_BuildsAndWinsTheFight()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();
+            var regions = body.GetDataBlob<PlanetRegionsDB>().Regions;
+
+            regions[0].Features.Clear(); regions[0].Features.Add(new RegionFeature(RegionFeatureType.Plains, 1.0));
+            regions[1].Features.Clear(); regions[1].Features.Add(new RegionFeature(RegionFeatureType.Plains, 1.0));
+            regions[0].OwnerFactionID = s.Faction.Id;
+            regions[1].OwnerFactionID = s.Faction.Id;
+
+            // The base-mod Bunker is a real ComponentDesign in the faction's designs, and it carries the attribute
+            // (this asserts the six-point JSON registration + the AtbConstrArgs binding all worked).
+            var fi = s.Faction.GetDataBlob<FactionInfoDB>();
+            Assert.That(fi.IndustryDesigns.ContainsKey("default-design-bunker"), Is.True, "the bunker design is unlocked");
+            var bunkerDesign = (ComponentDesign)fi.IndustryDesigns["default-design-bunker"];
+            Assert.That(bunkerDesign.HasAttribute<GroundDefenseAtb>(), Is.True, "the JSON bound a GroundDefenseAtb onto the bunker");
+            var atb = bunkerDesign.GetAttribute<GroundDefenseAtb>();
+            Assert.That(atb.LocalFortify, Is.EqualTo(0.25).Within(1e-6), "bunker local +25%");
+            Assert.That(atb.AdjacentProjection, Is.EqualTo(0.12).Within(1e-6), "bunker adjacent +12%");
+
+            // Install a bunker in region 0 (the start colony sits on this body) and record it there.
+            var colony = s.Colony;
+            var instance = new ComponentInstance(bunkerDesign);
+            colony.AddComponent(instance);
+            regions[0].InstallationIds.Clear(); regions[0].InstallationIds.Add(instance.ID);
+            regions[1].InstallationIds.Clear();
+
+            var design = MakeInfantryDesign();
+            GroundForces.RaiseUnit(body, design, s.Faction.Id, 0);
+            GroundForces.RaiseUnit(body, design, InvaderFaction, 0);
+            GroundForces.RaiseUnit(body, design, s.Faction.Id, 1);
+            GroundForces.RaiseUnit(body, design, InvaderFaction, 1);
+
+            var proc = new GroundForcesProcessor();
+            for (int i = 0; i < 3; i++) proc.ProcessEntity(body, 3600);
+
+            var forces = body.GetDataBlob<GroundForcesDB>();
+            var bunkered = forces.Units.FirstOrDefault(u => u.FactionOwnerID == s.Faction.Id && u.RegionIndex == 0);
+            var open = forces.Units.FirstOrDefault(u => u.FactionOwnerID == s.Faction.Id && u.RegionIndex == 1);
+            Assert.That(bunkered, Is.Not.Null, "the bunkered defender survives");
+            Assert.That(open, Is.Not.Null, "the open-ground defender survives");
+            Assert.That(bunkered.Health, Is.GreaterThan(open.Health),
+                "a real Bunker fortifies its region — its defender takes less than the identical unfortified one");
+            Log($"bunker cradle-to-grave: bunkered defender {bunkered.Health:0} hp vs open {open.Health:0} hp after 3 salvos");
+        }
+
+        [Test]
+        [Description("#5 LOCKED principle: the start colony's existing installations get a home region at creation (ColonyFactory hook), so Region.InstallationIds is non-empty (they draw on the planet view + count for fortification). Located in the capital region; idempotent (re-running adds nothing).")]
+        public void Installations_LocatedInCapitalRegion_AtColonyCreation()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            Assert.That(body.HasDataBlob<PlanetRegionsDB>(), Is.True, "the home body has a region layer");
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+
+            int located = regionsDB.Regions.Sum(r => r.InstallationIds.Count);
+            Assert.That(located, Is.GreaterThan(0),
+                "the start colony's installations are located on the ground (so they draw on the map + count for fortification)");
+            Assert.That(regionsDB.Regions[0].InstallationIds.Count, Is.GreaterThan(0), "they land in the capital region (0)");
+
+            // Idempotent — re-running the locator places nothing new (map-placed buildings keep their own region).
+            int again = GroundInstallations.LocateColonyInstallations(s.Colony);
+            Assert.That(again, Is.EqualTo(0), "re-locating adds nothing (idempotent)");
+
+            Log($"located {located} start installation(s) in the capital region at colony creation");
+        }
+
+        [Test]
+        [Description("Default HOME GARRISON: RaiseForFactionColonies gives the faction's home colony a starting ground garrison in the capital region (the New-Game default so the tactical map isn't empty). NOT auto-raised by the harness (runs on the New-Game path only); idempotent.")]
+        public void StartGarrison_RaisedOnFactionHomeColony()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            Assert.That(body.HasDataBlob<PlanetRegionsDB>(), Is.True, "the home body has a region layer");
+
+            int expected = GroundStartGarrison.Composition.Sum(c => c.count);
+            int raised = GroundStartGarrison.RaiseForFactionColonies(s.Game, s.Faction);
+            Assert.That(raised, Is.EqualTo(expected), "the whole garrison composition is raised");
+
+            var forces = body.GetDataBlob<GroundForcesDB>();
+            int mine = forces.Units.Count(u => u.FactionOwnerID == s.Faction.Id);
+            Assert.That(mine, Is.EqualTo(expected), "the garrison belongs to the player faction");
+            Assert.That(forces.Units.Where(u => u.FactionOwnerID == s.Faction.Id).All(u => u.RegionIndex == 0), Is.True,
+                "the garrison musters in the capital region (0)");
+
+            // Idempotent — re-running raises nothing (already garrisoned).
+            int again = GroundStartGarrison.RaiseForFactionColonies(s.Game, s.Faction);
+            Assert.That(again, Is.EqualTo(0), "idempotent — no double garrison");
+
+            Log($"home garrison: raised {raised} unit(s) in the capital region");
+        }
+
         // ───────────────────────── E1/E2/E3 — planetary ENVIRONMENTS (the ground hazard layer) ─────────────────────────
 
         [Test]
@@ -337,6 +481,157 @@ namespace Pulsar4X.Tests
             Assert.That(unit.Health, Is.LessThan(before), "a unit in a fire hazard loses health");
             Assert.That(unit.Health, Is.EqualTo(before - 100.0).Within(1.0), "one hour of a 100/hr hazard = 100 attrition");
             Log($"environmental attrition: unit {before:0} → {unit.Health:0} hp after 1 hour in a fire hazard");
+        }
+
+        [Test]
+        [Description("E4 cradle-to-grave counter: a unit built from a HEAT-SHIELDED design (EnvironmentalResistance {HeatDamage:0.8}) bleeds far less in a fire hazard than an unprotected one, and an IMMUNE (1.0) unit takes zero — the ground echo of a ship's HazardResistanceAtb. Resistance is snapshotted onto the raised unit and survives a clone.")]
+        public void EnvironmentalGear_ReducesHazardAttrition()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+
+            if (!body.TryGetDataBlob<PlanetEnvironmentsDB>(out var envDB))
+            {
+                envDB = new PlanetEnvironmentsDB();
+                body.SetDataBlob(envDB);
+            }
+            envDB.Environments.Add(new RegionEnvironment(0, "Test Inferno", HazardEffectType.HeatDamage, 100.0));   // 100/hour
+
+            var plain = GroundForces.RaiseUnit(body, MakeInfantryDesign(), s.Faction.Id, 0);
+
+            var shielded = MakeInfantryDesign();
+            shielded.UniqueID = "test-ground-infantry-heatshield";
+            shielded.EnvironmentalResistance = new Dictionary<HazardEffectType, double> { { HazardEffectType.HeatDamage, 0.8 } };
+            var geared = GroundForces.RaiseUnit(body, shielded, s.Faction.Id, 0);
+
+            var immuneDesign = MakeInfantryDesign();
+            immuneDesign.UniqueID = "test-ground-infantry-immune";
+            immuneDesign.EnvironmentalResistance = new Dictionary<HazardEffectType, double> { { HazardEffectType.HeatDamage, 1.0 } };
+            var immune = GroundForces.RaiseUnit(body, immuneDesign, s.Faction.Id, 0);
+
+            // Resistance is snapshotted onto the unit (and must survive a clone of the roster).
+            Assert.That(geared.ResistanceTo(HazardEffectType.HeatDamage), Is.EqualTo(0.8).Within(1e-9), "gear snapshots onto the unit");
+            var rosterClone = (GroundForcesDB)body.GetDataBlob<GroundForcesDB>().Clone();
+            Assert.That(rosterClone.Units.Find(u => u.DesignId == "test-ground-infantry-heatshield").ResistanceTo(HazardEffectType.HeatDamage),
+                Is.EqualTo(0.8).Within(1e-9), "gear survives a clone");
+
+            double plain0 = plain.Health, geared0 = geared.Health, immune0 = immune.Health;
+            new GroundForcesProcessor().ProcessEntity(body, 3600);   // one hour
+
+            Assert.That(plain0 - plain.Health, Is.EqualTo(100.0).Within(1.0), "unprotected: full 100/hr attrition");
+            Assert.That(geared0 - geared.Health, Is.EqualTo(20.0).Within(1.0), "0.8 heat-shield negates 80% → 20 attrition");
+            Assert.That(immune0 - immune.Health, Is.EqualTo(0.0).Within(1e-6), "1.0 resistance = immune, zero attrition");
+            Assert.That(geared.Health, Is.GreaterThan(plain.Health), "geared unit outlasts the unprotected one");
+            Log($"E4 gear: plain -{plain0 - plain.Health:0}, shielded(0.8) -{geared0 - geared.Health:0}, immune(1.0) -{immune0 - immune.Health:0} hp/hr in fire");
+        }
+
+        // ───────────────────────── 5h — FORMATIONS (the ground echo of fleet grouping) ─────────────────────────
+
+        [Test]
+        [Description("5h formations mirror the fleet's SHAPE: create a named formation, assign units (first = leader/flagship), move the whole block with ONE order, and on the leader's death leadership reassigns to a survivor (fleet-like, no penalty). Membership + leader survive a clone.")]
+        public void Formation_MirrorsFleet_CreateAssignMoveAndLeaderReassign()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();   // no attrition during the long move tick
+
+            var design = MakeInfantryDesign();
+            var u1 = GroundForces.RaiseUnit(body, design, s.Faction.Id, 0);
+            var u2 = GroundForces.RaiseUnit(body, design, s.Faction.Id, 0);
+            var u3 = GroundForces.RaiseUnit(body, design, s.Faction.Id, 0);
+
+            // Units get stable ids (the ground echo of entity ids).
+            Assert.That(new[] { u1.UnitId, u2.UnitId, u3.UnitId }.Distinct().Count(), Is.EqualTo(3), "each unit gets a unique id");
+
+            // Create + assign (first assigned = leader, the flagship default).
+            var formation = GroundForces.CreateFormation(body, s.Faction.Id, "1st Armoured");
+            Assert.That(GroundForces.AssignUnit(formation, u1), Is.True);
+            Assert.That(GroundForces.AssignUnit(formation, u2), Is.True);
+            Assert.That(GroundForces.AssignUnit(formation, u3), Is.True);
+
+            var forces = body.GetDataBlob<GroundForcesDB>();
+            Assert.That(GroundFormationTools.MemberCount(forces, formation), Is.EqualTo(3), "all three joined");
+            Assert.That(formation.LeaderUnitId, Is.EqualTo(u1.UnitId), "the first unit assigned is the leader (flagship default)");
+            Assert.That(GroundFormationTools.Leader(forces, formation).UnitId, Is.EqualTo(u1.UnitId));
+
+            // ONE order marches the whole block to an adjacent region.
+            int moved = GroundForces.OrderFormationMove(body, formation, 1);
+            Assert.That(moved, Is.EqualTo(3), "the formation moves as one — all three marched");
+            Assert.That(forces.Units.Where(u => u.FormationId == formation.FormationId).All(u => u.MovingToRegion == 1), Is.True);
+
+            var proc = new GroundForcesProcessor();
+            proc.ProcessEntity(body, 100 * 24 * 3600);   // long tick so the march completes
+            Assert.That(forces.Units.Where(u => u.FormationId == formation.FormationId).All(u => u.RegionIndex == 1), Is.True,
+                "the whole formation arrived in region 1");
+
+            // Leader dies → leadership reassigns to a surviving member (fleet-like).
+            u1.Health = 0;
+            proc.ProcessEntity(body, 3600);
+            Assert.That(forces.Units.Any(u => u.UnitId == u1.UnitId), Is.False, "the dead leader is removed");
+            Assert.That(formation.LeaderUnitId, Is.Not.EqualTo(-1), "the formation still has a leader");
+            Assert.That(formation.LeaderUnitId, Is.AnyOf(u2.UnitId, u3.UnitId), "leadership passed to a survivor");
+            Assert.That(GroundFormationTools.MemberCount(forces, formation), Is.EqualTo(2), "two members remain");
+
+            // Membership + leader survive a clone (save-safety).
+            var clone = (GroundForcesDB)forces.Clone();
+            var clonedFormation = clone.Formations.Find(f => f.FormationId == formation.FormationId);
+            Assert.That(clonedFormation, Is.Not.Null);
+            Assert.That(clonedFormation.LeaderUnitId, Is.EqualTo(formation.LeaderUnitId), "leader survives clone");
+            Assert.That(GroundFormationTools.MemberCount(clone, clonedFormation), Is.EqualTo(2), "membership survives clone");
+
+            Log($"formation '1st Armoured': moved 3 as one, leader reassigned {u1.UnitId}→{formation.LeaderUnitId} on death, 2 survive");
+        }
+
+        [Test]
+        [Description("5h formation STANCE mirrors the fleet doctrine catalog: the moddable GroundStance catalog loads from JSON (±25% trade-off), TrySetStance applies the mults + honours the switch cooldown, and a DIG-IN (defensive) formation's defender takes less than an identical no-stance defender in the same fight.")]
+        public void FormationStance_Catalog_TrySet_AndDefensiveSoaksLess()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();
+            var regions = body.GetDataBlob<PlanetRegionsDB>().Regions;
+
+            regions[0].Features.Clear(); regions[0].Features.Add(new RegionFeature(RegionFeatureType.Plains, 1.0));
+            regions[1].Features.Clear(); regions[1].Features.Add(new RegionFeature(RegionFeatureType.Plains, 1.0));
+            regions[0].OwnerFactionID = s.Faction.Id;
+            regions[1].OwnerFactionID = s.Faction.Id;
+
+            // The moddable catalog loaded from groundStances.json (the fleet-doctrine mirror).
+            var stances = s.Game.StartingGameData.GroundStances;
+            Assert.That(stances.ContainsKey("ground-offensive") && stances.ContainsKey("ground-defensive") && stances.ContainsKey("ground-balanced"),
+                Is.True, "the ground stance catalog loaded from JSON");
+            Assert.That(stances["ground-offensive"].AttackMult, Is.EqualTo(1.25).Within(1e-9), "offensive deals +25%");
+            Assert.That(stances["ground-offensive"].DamageTakenMult, Is.EqualTo(1.25).Within(1e-9), "offensive takes +25%");
+            Assert.That(stances["ground-defensive"].DamageTakenMult, Is.EqualTo(0.75).Within(1e-9), "defensive takes -25%");
+
+            var design = MakeInfantryDesign();
+            var d0 = GroundForces.RaiseUnit(body, design, s.Faction.Id, 0);
+            GroundForces.RaiseUnit(body, design, InvaderFaction, 0);
+            GroundForces.RaiseUnit(body, design, s.Faction.Id, 1);
+            GroundForces.RaiseUnit(body, design, InvaderFaction, 1);
+            var forces = body.GetDataBlob<GroundForcesDB>();
+
+            // Form up region-0 defender and set DIG IN; the cooldown then blocks an immediate re-switch.
+            var formation = GroundForces.CreateFormation(body, s.Faction.Id, "Home Guard");
+            GroundForces.AssignUnit(formation, d0);
+            var now = s.Game.TimePulse.GameGlobalDateTime;
+            Assert.That(GroundFormationDoctrine.TrySetStance(formation, stances["ground-defensive"], now), Is.True, "stance applied");
+            Assert.That(formation.DamageTakenMult, Is.EqualTo(0.75).Within(1e-9), "the mult is cached on the formation");
+            Assert.That(GroundFormationDoctrine.TrySetStance(formation, stances["ground-offensive"], now), Is.False, "cooldown blocks an immediate switch");
+
+            var proc = new GroundForcesProcessor();
+            for (int i = 0; i < 3; i++) proc.ProcessEntity(body, 3600);
+
+            var dug = forces.Units.FirstOrDefault(u => u.FactionOwnerID == s.Faction.Id && u.RegionIndex == 0);
+            var open = forces.Units.FirstOrDefault(u => u.FactionOwnerID == s.Faction.Id && u.RegionIndex == 1);
+            Assert.That(dug, Is.Not.Null, "the dug-in defender survives");
+            Assert.That(open, Is.Not.Null, "the no-stance defender survives");
+            Assert.That(dug.Health, Is.GreaterThan(open.Health),
+                "the Dig-In (defensive) formation takes LESS than the identical no-stance defender in the same fight");
+            Log($"stance: dig-in defender {dug.Health:0} hp vs no-stance defender {open.Health:0} hp after 3 salvos");
         }
     }
 }

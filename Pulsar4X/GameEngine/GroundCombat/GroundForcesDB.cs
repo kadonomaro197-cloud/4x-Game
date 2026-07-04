@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using Pulsar4X.Engine;
 using Pulsar4X.Datablobs;
+using Pulsar4X.Hazards;
 
 namespace Pulsar4X.GroundCombat
 {
@@ -26,6 +27,13 @@ namespace Pulsar4X.GroundCombat
     /// </summary>
     public class GroundUnit
     {
+        /// <summary>A stable id for this unit within its body's roster (the ground echo of a ship's entity Id) —
+        /// assigned by <see cref="GroundForces.RaiseUnit"/>. Lets a <see cref="GroundFormation"/> reference its leader
+        /// + members by id, the way a <c>FleetDB</c> references ships by entity id. 0 = not yet assigned.</summary>
+        [JsonProperty] public int UnitId { get; internal set; }
+        /// <summary>The <see cref="GroundFormation"/> this unit belongs to (-1 = unformed) — the ground echo of a ship
+        /// holding its parent-fleet id (fleet membership lives on the SHIP side; formation membership lives here).</summary>
+        [JsonProperty] public int FormationId { get; internal set; } = -1;
         [JsonProperty] public string DesignId { get; internal set; }
         [JsonProperty] public string Name { get; internal set; }
         /// <summary>Which faction owns this unit — capture flips this (slice 5d), same primitive as a ship.</summary>
@@ -46,12 +54,77 @@ namespace Pulsar4X.GroundCombat
         /// <summary>Game-seconds left in the current march; counts down to 0 = arrived (the region's crossing time).</summary>
         [JsonProperty] public double TransitSecondsRemaining { get; internal set; }
 
+        /// <summary>
+        /// ENVIRONMENTAL GEAR (E4) — the ground echo of a ship's <c>HazardResistanceAtb</c>: per-hazard-effect
+        /// protection this unit carries (heat-shielding, hazmat sealing, mountaineering rig…), keyed by the SHARED
+        /// <see cref="HazardEffectType"/> vocabulary. Value 0..1 = the FRACTION of that hazard's attrition negated
+        /// (0 = none, 1 = immune). A snapshot from the design at build time (like Attack/HP), so a fielded unit's
+        /// protection is fixed — you re-equip by building a better-geared design. null / empty = unprotected.
+        /// Consumed by <c>GroundForcesProcessor</c>'s environmental-attrition step.
+        /// </summary>
+        [JsonProperty] public Dictionary<HazardEffectType, double> EnvResistance { get; internal set; }
+
+        /// <summary>Fraction (0..1) of <paramref name="effect"/>'s attrition this unit's gear negates (0 if none).</summary>
+        public double ResistanceTo(HazardEffectType effect)
+        {
+            if (EnvResistance != null && EnvResistance.TryGetValue(effect, out var r))
+                return r < 0 ? 0 : (r > 1 ? 1 : r);
+            return 0;
+        }
+
         public GroundUnit() { }
         public GroundUnit(GroundUnit o)
         {
+            UnitId = o.UnitId; FormationId = o.FormationId;
             DesignId = o.DesignId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
             UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health;
             MovingToRegion = o.MovingToRegion; TransitSecondsRemaining = o.TransitSecondsRemaining;
+            if (o.EnvResistance != null) EnvResistance = new Dictionary<HazardEffectType, double>(o.EnvResistance);
+        }
+    }
+
+    /// <summary>
+    /// A named GROUPING of <see cref="GroundUnit"/>s that move and fight as one — the ground echo of a <c>FleetDB</c>,
+    /// mirroring its SHAPE within the data-object model (units aren't entities in v1, so a formation is a serializable
+    /// data object too, not an entity with a tree). Like a fleet it has a NAME, a LEADER (the ground echo of the
+    /// flagship — <see cref="LeaderUnitId"/>), and MEMBERS (tracked on the unit side via <see cref="GroundUnit.FormationId"/>,
+    /// exactly as a ship holds its parent-fleet id). One order marches the whole block (<see cref="GroundForces.OrderFormationMove"/>).
+    ///
+    /// Deliberately mirrors the fleet's CORE grouping; the layers a fleet adds on top — a DOCTRINE/stance with combat
+    /// multipliers (<c>FleetDoctrineDB</c>) and nesting SUB-formations (the fleet tree) — are follow-up formation slices
+    /// (each its own gauged step), not folded in here. Design: docs/GROUND-COMBAT-MAP-DESIGN.md (slice 5h formations).
+    /// </summary>
+    public class GroundFormation
+    {
+        /// <summary>Stable id within the roster (the ground echo of the fleet entity id).</summary>
+        [JsonProperty] public int FormationId { get; internal set; }
+        /// <summary>Player-facing name — "1st Armoured", "Home Guard".</summary>
+        [JsonProperty] public string Name { get; internal set; }
+        [JsonProperty] public int FactionOwnerID { get; internal set; }
+        /// <summary>The leader unit's <see cref="GroundUnit.UnitId"/> — the ground echo of <c>FleetDB.FlagShipID</c>.
+        /// -1 = no leader (empty formation). On the leader's death it REASSIGNS to a surviving member (fleet-like), no
+        /// combat penalty — see <c>GroundForcesProcessor</c>.</summary>
+        [JsonProperty] public int LeaderUnitId { get; internal set; } = -1;
+
+        // ── STANCE (the ground echo of FleetDoctrineDB) — set from the moddable GroundStance catalog via
+        //    GroundFormationDoctrine.TrySetStance; read-time mults on the resolver, so switching is reversible. ──
+        /// <summary>The active stance's catalog id ("" = none = Balanced/neutral).</summary>
+        [JsonProperty] public string StanceId { get; internal set; } = "";
+        /// <summary>Offensive | Defensive | Balanced — the stance family (for the readout).</summary>
+        [JsonProperty] public string StanceFamily { get; internal set; } = "";
+        /// <summary>Multiplier on this formation's units' ATTACK (1.0 = neutral).</summary>
+        [JsonProperty] public double AttackMult { get; internal set; } = 1.0;
+        /// <summary>Multiplier on the DAMAGE this formation's units TAKE (1.0 = neutral; &gt;1 = more, &lt;1 = less).</summary>
+        [JsonProperty] public double DamageTakenMult { get; internal set; } = 1.0;
+        /// <summary>Game time at/after which this formation may switch stance again (the switch cooldown clock).</summary>
+        [JsonProperty] public DateTime SwitchableAfter { get; internal set; } = DateTime.MinValue;
+
+        public GroundFormation() { }
+        public GroundFormation(GroundFormation o)
+        {
+            FormationId = o.FormationId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; LeaderUnitId = o.LeaderUnitId;
+            StanceId = o.StanceId; StanceFamily = o.StanceFamily; AttackMult = o.AttackMult; DamageTakenMult = o.DamageTakenMult;
+            SwitchableAfter = o.SwitchableAfter;
         }
     }
 
@@ -67,12 +140,23 @@ namespace Pulsar4X.GroundCombat
     public class GroundForcesDB : BaseDataBlob
     {
         [JsonProperty] public List<GroundUnit> Units { get; internal set; } = new List<GroundUnit>();
+        /// <summary>The body's ground FORMATIONS (the ground echo of a faction's fleets). Members are tracked on the
+        /// unit side (<see cref="GroundUnit.FormationId"/>), so this holds only the formation records themselves.</summary>
+        [JsonProperty] public List<GroundFormation> Formations { get; internal set; } = new List<GroundFormation>();
+        /// <summary>Next stable <see cref="GroundUnit.UnitId"/> to hand out (save-safe id seed, mirrors the entity id generator).</summary>
+        [JsonProperty] public int NextUnitId { get; internal set; } = 1;
+        /// <summary>Next stable <see cref="GroundFormation.FormationId"/> to hand out.</summary>
+        [JsonProperty] public int NextFormationId { get; internal set; } = 1;
 
         public GroundForcesDB() { }
         public GroundForcesDB(GroundForcesDB other)
         {
             Units = new List<GroundUnit>();
             foreach (var u in other.Units) Units.Add(new GroundUnit(u));
+            Formations = new List<GroundFormation>();
+            foreach (var f in other.Formations) Formations.Add(new GroundFormation(f));
+            NextUnitId = other.NextUnitId;
+            NextFormationId = other.NextFormationId;
         }
 
         public override object Clone() => new GroundForcesDB(this);
@@ -105,7 +189,12 @@ namespace Pulsar4X.GroundCombat
                 Defense = design.Defense,
                 MaxHealth = design.HitPoints,
                 Health = design.HitPoints,
+                // Snapshot the design's environmental gear onto the unit (E4) — like the combat stats above.
+                EnvResistance = (design.EnvironmentalResistance != null && design.EnvironmentalResistance.Count > 0)
+                    ? new Dictionary<HazardEffectType, double>(design.EnvironmentalResistance)
+                    : null,
             };
+            unit.UnitId = forces.NextUnitId++;   // stable id (the ground echo of a ship's entity id)
             forces.Units.Add(unit);
             return unit;
         }
@@ -128,6 +217,158 @@ namespace Pulsar4X.GroundCombat
             unit.MovingToRegion = toRegion;
             unit.TransitSecondsRemaining = regions[unit.RegionIndex].CrossingTimeSeconds;
             return true;
+        }
+
+        // ───────────────────────── FORMATIONS (the ground echo of fleet grouping) ─────────────────────────
+        // Mirrors the FleetOrder verbs (Create / AssignShip / UnassignShip / SetFlagShip / Disband), one level over
+        // from entities to data objects. Membership lives on the unit (GroundUnit.FormationId), like a ship's parent
+        // fleet id; the formation record holds the name + leader (the flagship echo).
+
+        /// <summary>Create a named, empty formation on <paramref name="body"/> (the ground echo of
+        /// <c>FleetFactory.Create</c>). Creates the roster on demand and hands out a stable FormationId.</summary>
+        public static GroundFormation CreateFormation(Entity body, int factionId, string name)
+        {
+            if (!body.TryGetDataBlob<GroundForcesDB>(out var forces))
+            {
+                forces = new GroundForcesDB();
+                body.SetDataBlob(forces);
+            }
+            var formation = new GroundFormation
+            {
+                FormationId = forces.NextFormationId++,
+                Name = string.IsNullOrWhiteSpace(name) ? $"Formation {forces.NextFormationId - 1}" : name,
+                FactionOwnerID = factionId,
+            };
+            forces.Formations.Add(formation);
+            return formation;
+        }
+
+        /// <summary>Add a unit to a formation (the ground echo of <c>FleetOrder.AssignShip</c>). The FIRST unit
+        /// assigned becomes the leader (the flagship default). Only same-faction units join (a formation is one
+        /// faction's, like a fleet). Returns false if the unit is null or a different faction.</summary>
+        public static bool AssignUnit(GroundFormation formation, GroundUnit unit)
+        {
+            if (formation == null || unit == null) return false;
+            if (unit.FactionOwnerID != formation.FactionOwnerID) return false;
+            unit.FormationId = formation.FormationId;
+            if (formation.LeaderUnitId < 0) formation.LeaderUnitId = unit.UnitId;   // first in = flagship
+            return true;
+        }
+
+        /// <summary>Remove a unit from its formation (the ground echo of <c>FleetOrder.UnassignShip</c>). If it was the
+        /// leader, leadership passes to another member (fleet-like), or -1 if the formation is now empty.</summary>
+        public static void UnassignUnit(GroundForcesDB forces, GroundFormation formation, GroundUnit unit)
+        {
+            if (formation == null || unit == null) return;
+            unit.FormationId = -1;
+            if (formation.LeaderUnitId == unit.UnitId)
+                formation.LeaderUnitId = FirstMemberId(forces, formation.FormationId);
+        }
+
+        /// <summary>Set the formation's leader to a member unit (the ground echo of <c>FleetOrder.SetFlagShip</c>).
+        /// No-op if the unit isn't a member of this formation.</summary>
+        public static bool SetLeader(GroundFormation formation, GroundUnit unit)
+        {
+            if (formation == null || unit == null || unit.FormationId != formation.FormationId) return false;
+            formation.LeaderUnitId = unit.UnitId;
+            return true;
+        }
+
+        /// <summary>Disband a formation (the ground echo of <c>FleetOrder.Disband</c>): its members become unformed,
+        /// and the record is removed. The units themselves are untouched.</summary>
+        public static void DisbandFormation(GroundForcesDB forces, GroundFormation formation)
+        {
+            if (forces == null || formation == null) return;
+            foreach (var u in forces.Units)
+                if (u.FormationId == formation.FormationId) u.FormationId = -1;
+            forces.Formations.Remove(formation);
+        }
+
+        /// <summary>March a whole formation ONE hop as a block (the ground echo of a fleet move order): every member
+        /// standing with the LEADER (in the leader's region, not already in transit) is ordered to <paramref name="toRegion"/>
+        /// via <see cref="OrderMove"/> (which validates adjacency). Members separated from the leader don't move (v1 —
+        /// keeping the block together is the "formation moves as one" contract). Returns how many units marched.</summary>
+        public static int OrderFormationMove(Entity body, GroundFormation formation, int toRegion)
+        {
+            if (formation == null || !body.TryGetDataBlob<GroundForcesDB>(out var forces)) return 0;
+            int rallyRegion = LeaderRegion(forces, formation);
+            if (rallyRegion < 0) return 0;
+
+            int moved = 0;
+            foreach (var u in forces.Units.ToArray())
+            {
+                if (u.FormationId != formation.FormationId) continue;
+                if (u.RegionIndex != rallyRegion || u.MovingToRegion >= 0) continue;
+                if (OrderMove(body, u, toRegion)) moved++;
+            }
+            return moved;
+        }
+
+        /// <summary>The region the formation's LEADER stands in (its rally point) — or the first member's region if the
+        /// leader is unset/missing, or -1 if the formation has no members.</summary>
+        public static int LeaderRegion(GroundForcesDB forces, GroundFormation formation)
+        {
+            if (forces == null || formation == null) return -1;
+            GroundUnit first = null;
+            foreach (var u in forces.Units)
+            {
+                if (u.FormationId != formation.FormationId) continue;
+                if (first == null) first = u;
+                if (u.UnitId == formation.LeaderUnitId) return u.RegionIndex;
+            }
+            return first?.RegionIndex ?? -1;
+        }
+
+        private static int FirstMemberId(GroundForcesDB forces, int formationId)
+        {
+            if (forces == null) return -1;
+            foreach (var u in forces.Units)
+                if (u.FormationId == formationId) return u.UnitId;
+            return -1;
+        }
+    }
+
+    /// <summary>Read-only helpers for the formation layer — the ground echo of <c>FleetTools</c> (the client draws +
+    /// commands formations through these). Pure queries, defensive; no mutation.</summary>
+    public static class GroundFormationTools
+    {
+        /// <summary>Every unit in a formation.</summary>
+        public static List<GroundUnit> MembersOf(GroundForcesDB forces, GroundFormation formation)
+        {
+            var list = new List<GroundUnit>();
+            if (forces == null || formation == null) return list;
+            foreach (var u in forces.Units)
+                if (u.FormationId == formation.FormationId) list.Add(u);
+            return list;
+        }
+
+        /// <summary>How many units are in a formation.</summary>
+        public static int MemberCount(GroundForcesDB forces, GroundFormation formation)
+        {
+            int n = 0;
+            if (forces == null || formation == null) return 0;
+            foreach (var u in forces.Units)
+                if (u.FormationId == formation.FormationId) n++;
+            return n;
+        }
+
+        /// <summary>The leader unit of a formation, or null if unset/missing.</summary>
+        public static GroundUnit Leader(GroundForcesDB forces, GroundFormation formation)
+        {
+            if (forces == null || formation == null || formation.LeaderUnitId < 0) return null;
+            foreach (var u in forces.Units)
+                if (u.UnitId == formation.LeaderUnitId) return u;
+            return null;
+        }
+
+        /// <summary>A faction's formations on this body.</summary>
+        public static List<GroundFormation> FormationsFor(GroundForcesDB forces, int factionId)
+        {
+            var list = new List<GroundFormation>();
+            if (forces == null) return list;
+            foreach (var f in forces.Formations)
+                if (f.FactionOwnerID == factionId) list.Add(f);
+            return list;
         }
     }
 }
