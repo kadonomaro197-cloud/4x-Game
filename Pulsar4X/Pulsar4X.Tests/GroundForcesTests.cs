@@ -263,6 +263,49 @@ namespace Pulsar4X.Tests
             Log($"terrain: mountain defender {mountainDefender.Health:0} hp vs plains defender {plainsDefender.Health:0} hp after 3 salvos");
         }
 
+        [Test]
+        [Description("5h FORTIFICATION: a defender in a region with BUILDINGS (Region.InstallationIds) takes less than the identical defender in an empty region — placing a base on the tactical map fortifies that ground. Also asserts the capped multiplier curve directly.")]
+        public void Fortification_BuildingsFavourTheDefender_InAFight()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();   // isolate from attrition
+            var regions = body.GetDataBlob<PlanetRegionsDB>().Regions;
+
+            // Identical terrain in both regions — isolate the fortification effect from terrain cover.
+            regions[0].Features.Clear(); regions[0].Features.Add(new RegionFeature(RegionFeatureType.Plains, 1.0));
+            regions[1].Features.Clear(); regions[1].Features.Add(new RegionFeature(RegionFeatureType.Plains, 1.0));
+            regions[0].OwnerFactionID = s.Faction.Id;
+            regions[1].OwnerFactionID = s.Faction.Id;
+
+            // Region 0 is FORTIFIED (4 located buildings); region 1 is open ground.
+            regions[0].InstallationIds.Clear(); regions[0].InstallationIds.AddRange(new[] { 1, 2, 3, 4 });
+            regions[1].InstallationIds.Clear();
+
+            // Curve: 4 buildings → 1 + min(1.0, 4×0.15) = 1.6 ; empty region → 1.0
+            Assert.That(GroundForcesProcessor.FortificationDefenseMult(regions[0]), Is.EqualTo(1.6).Within(1e-9), "4 buildings → ×1.6");
+            Assert.That(GroundForcesProcessor.FortificationDefenseMult(regions[1]), Is.EqualTo(1.0).Within(1e-9), "no buildings → ×1.0");
+
+            var design = MakeInfantryDesign();
+            GroundForces.RaiseUnit(body, design, s.Faction.Id, 0);
+            GroundForces.RaiseUnit(body, design, InvaderFaction, 0);
+            GroundForces.RaiseUnit(body, design, s.Faction.Id, 1);
+            GroundForces.RaiseUnit(body, design, InvaderFaction, 1);
+
+            var proc = new GroundForcesProcessor();
+            for (int i = 0; i < 3; i++) proc.ProcessEntity(body, 3600);
+
+            var forces = body.GetDataBlob<GroundForcesDB>();
+            var fortDefender = forces.Units.FirstOrDefault(u => u.FactionOwnerID == s.Faction.Id && u.RegionIndex == 0);
+            var openDefender = forces.Units.FirstOrDefault(u => u.FactionOwnerID == s.Faction.Id && u.RegionIndex == 1);
+            Assert.That(fortDefender, Is.Not.Null, "the fortified defender is still standing");
+            Assert.That(openDefender, Is.Not.Null, "the open-ground defender is still standing");
+            Assert.That(fortDefender.Health, Is.GreaterThan(openDefender.Health),
+                "the defender in the fortified region takes LESS — buildings fortify the ground (the tactical-map base has a combat payoff)");
+            Log($"fortification: fortified defender {fortDefender.Health:0} hp vs open defender {openDefender.Health:0} hp after 3 salvos");
+        }
+
         // ───────────────────────── E1/E2/E3 — planetary ENVIRONMENTS (the ground hazard layer) ─────────────────────────
 
         [Test]

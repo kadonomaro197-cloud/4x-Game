@@ -34,6 +34,14 @@ namespace Pulsar4X.GroundCombat
         /// space <c>SalvoDamageScale</c>). 1.0 = full; lower stretches a battle over more ticks. Tune live.</summary>
         public const double SalvoScale = 1.0;
 
+        // --- FORTIFICATION (5h): buildings in a region make its DEFENDER (the region owner) harder to dislodge — the
+        //     "fortify your capital / dig in" decision, and the combat payoff for placing a base via the tactical map
+        //     (each map-placed installation lands in Region.InstallationIds). A modest, CAPPED edge (like terrain
+        //     cover), not a wall. v1 counts ALL located installations equally; a dedicated ground-defence component
+        //     attribute (a real bunker/bastion, so a solar panel doesn't fortify) is the depth pass. ---
+        public const double FortifyPerBuilding = 0.15;   // each located installation: +15% defender protection
+        public const double FortifyMaxBonus = 1.0;       // capped at +100% (a fully built-up region halves incoming)
+
         public void Init(Game game) { }
 
         public void ProcessEntity(Entity entity, int deltaSeconds)
@@ -169,7 +177,8 @@ namespace Pulsar4X.GroundCombat
                         pool += atk * AvgTriangleVs(u.UnitType, byFaction[g]);
                     }
                     pool *= SalvoScale;
-                    if (g == defenderFaction) pool /= GroundTerrain.CoverDefenseMult(terrain);   // the defender's cover
+                    // The defender (region owner) divides incoming by terrain COVER × FORTIFICATION (its buildings).
+                    if (g == defenderFaction) pool /= (GroundTerrain.CoverDefenseMult(terrain) * FortificationDefenseMult(region));
                     incoming[g] += pool;
                 }
             }
@@ -202,6 +211,16 @@ namespace Pulsar4X.GroundCombat
                 acc += t.Health * GroundTerrain.TriangleMult(attackerType, t.UnitType);
             }
             return totalH > 0 ? acc / totalH : 1.0;
+        }
+
+        /// <summary>The DEFENDER's fortification multiplier from the buildings located in this region (5h): its
+        /// incoming damage is divided by this, so a built-up region is a fortress. 1.0 = no buildings; capped so it's
+        /// an edge, not an impregnable wall. Public so the gauge can assert the curve directly.</summary>
+        public static double FortificationDefenseMult(Region region)
+        {
+            if (region == null || region.InstallationIds == null || region.InstallationIds.Count == 0) return 1.0;
+            double bonus = Math.Min(FortifyMaxBonus, region.InstallationIds.Count * FortifyPerBuilding);
+            return 1.0 + bonus;
         }
 
         private static bool IsDamageEffect(HazardEffectType t)
