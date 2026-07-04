@@ -11,6 +11,7 @@ using Pulsar4X.DataStructures;
 using Pulsar4X.Hazards;
 using Pulsar4X.GroundCombat;
 using Pulsar4X.Components;
+using Pulsar4X.Datablobs;   // ComponentInstancesDB lives here (namespace ≠ folder)
 
 namespace Pulsar4X.Tests
 {
