@@ -120,13 +120,20 @@ namespace Pulsar4X.GroundCombat
 
             body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB);
 
-            // Group the units that are STANDING (not on the road — neither a coarse region hop NOR a fine hex march) and
-            // alive, by region. A marching unit doesn't stand and fight (combat stays region-level in H2; the migration
-            // to hex-adjacency is H3).
+            // 1c) RULES OF ENGAGEMENT (the commander's maneuver intent) — before the fight, auto-move each ROE
+            //     formation's IDLE units one hex toward (Close) or away (Stand-off) from the nearest enemy, so the H3
+            //     range advantage is used without micro (the clone auto-kites the zerg). The ground echo of the space
+            //     closing model. Only issues to units not already moving; a hex-marching unit still FIGHTS this tick
+            //     (below), so a kiting unit fires WHILE it repositions.
+            ApplyEngagementManeuvers(forces, regionsDB, body);
+
+            // Group the units that are STANDING FOR BATTLE — alive and not on a strategic REGION hop. A fine HEX march
+            // (a battlefield reposition) still fights: a unit fires from its current hex as it moves (H3 range + the
+            // ROE kite). Only a whole-region journey (MovingToRegion) takes a unit out of the fight.
             var byRegion = new Dictionary<int, List<GroundUnit>>();
             foreach (var unit in forces.Units)
             {
-                if (unit.MovingToRegion >= 0 || (unit.HexPath != null && unit.HexPath.Count > 0) || unit.Health <= 0) continue;
+                if (unit.MovingToRegion >= 0 || unit.Health <= 0) continue;
                 if (!byRegion.TryGetValue(unit.RegionIndex, out var list))
                 {
                     list = new List<GroundUnit>();
@@ -259,6 +266,80 @@ namespace Pulsar4X.GroundCombat
         /// <summary>Hex distance between two units on their region's patch (0 = same hex). Reused for the range gate.</summary>
         private static int HexDist(GroundUnit a, GroundUnit b)
             => new HexCoordinate(a.HexQ, a.HexR).DistanceTo(new HexCoordinate(b.HexQ, b.HexR));
+
+        /// <summary>
+        /// RULES OF ENGAGEMENT maneuver (the ground echo of the space closing model): for each formation whose
+        /// <see cref="GroundEngagementStance"/> isn't HoldGround, order each of its IDLE units one hex toward
+        /// (CloseToEngage) or away (StandOff) from the nearest enemy in its region — so the H3 range advantage is used
+        /// automatically. A unit already moving is left alone (it re-evaluates when it arrives), so a kite is a steady
+        /// step-back-and-fire, not thrash. Issues through <see cref="GroundForces.OrderMoveToHex"/> (which enforces
+        /// patch bounds + ocean-impassability), so it never places a unit somewhere illegal.
+        /// </summary>
+        private static void ApplyEngagementManeuvers(GroundForcesDB forces, PlanetRegionsDB regionsDB, Entity body)
+        {
+            if (regionsDB == null || forces.Formations == null || forces.Formations.Count == 0) return;
+            bool anyRoe = false;
+            foreach (var f in forces.Formations)
+                if (f.Engagement != GroundEngagementStance.HoldGround) { anyRoe = true; break; }
+            if (!anyRoe) return;
+
+            foreach (var unit in forces.Units)
+            {
+                if (unit.Health <= 0 || unit.MovingToRegion >= 0) continue;
+                if (unit.HexPath != null && unit.HexPath.Count > 0) continue;   // already repositioning — let it arrive
+                var stance = GroundFormationDoctrine.EngagementOf(forces, unit);
+                if (stance == GroundEngagementStance.HoldGround) continue;
+                if (unit.RegionIndex < 0 || unit.RegionIndex >= regionsDB.Regions.Count) continue;
+                var region = regionsDB.Regions[unit.RegionIndex];
+                if (region.Hexes == null || region.Hexes.Count == 0) continue;
+
+                // Nearest enemy in the same region.
+                GroundUnit enemy = null; int best = int.MaxValue;
+                foreach (var e in forces.Units)
+                {
+                    if (e.Health <= 0 || e.FactionOwnerID == unit.FactionOwnerID || e.RegionIndex != unit.RegionIndex) continue;
+                    int d = HexDist(unit, e);
+                    if (d < best) { best = d; enemy = e; }
+                }
+                if (enemy == null) continue;
+
+                bool moveAway;
+                if (stance == GroundEngagementStance.CloseToEngage)
+                {
+                    if (best <= unit.Range) continue;            // already in my range → hold and fire
+                    moveAway = false;                            // close the gap
+                }
+                else // StandOff — keep the enemy beyond ITS reach
+                {
+                    if (best <= enemy.Range) moveAway = true;    // enemy can hit me → open the gap (kite)
+                    else if (best > unit.Range) moveAway = false;// I can't hit them → close into my range
+                    else continue;                               // in my range, out of theirs → hold + fire (the sweet spot)
+                }
+
+                var step = PickStepHex(region, unit.HexQ, unit.HexR, enemy.HexQ, enemy.HexR, moveAway);
+                if (step != null) GroundForces.OrderMoveToHex(body, unit, step.Value.q, step.Value.r);
+            }
+        }
+
+        /// <summary>The adjacent in-patch, PASSABLE hex that most decreases (toward) / increases (away) the hex distance
+        /// to (<paramref name="toQ"/>,<paramref name="toR"/>). Null if no neighbour improves on standing still.</summary>
+        private static (int q, int r)? PickStepHex(Region region, int fromQ, int fromR, int toQ, int toR, bool away)
+        {
+            var byCoord = new Dictionary<(int, int), GroundHex>();
+            foreach (var h in region.Hexes) byCoord[(h.Q, h.R)] = h;
+
+            var to = new HexCoordinate(toQ, toR);
+            int score = new HexCoordinate(fromQ, fromR).DistanceTo(to);   // current distance = the bar to beat
+            (int q, int r)? bestHex = null;
+            foreach (var nb in new HexCoordinate(fromQ, fromR).GetNeighbors())
+            {
+                if (!byCoord.TryGetValue((nb.Q, nb.R), out var hx)) continue;   // off the patch
+                if (HexPathfinder.IsImpassable(hx.Terrain)) continue;          // can't stand on open water
+                int d = nb.DistanceTo(to);
+                if (away ? d > score : d < score) { score = d; bestHex = (nb.Q, nb.R); }
+            }
+            return bestHex;
+        }
 
         /// <summary>Health-weighted average triangle multiplier of an attacker TYPE against an enemy faction's mix —
         /// so bringing the right counter to their composition pays off.</summary>

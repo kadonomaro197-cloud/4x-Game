@@ -52,5 +52,23 @@ namespace Pulsar4X.GroundCombat
             formation.SwitchableAfter = now + TimeSpan.FromSeconds(stance.CooldownSeconds);
             return true;
         }
+
+        /// <summary>
+        /// Set a formation's RULES OF ENGAGEMENT — its maneuver intent (Hold / Close / Stand-off), the ground echo of
+        /// <c>FleetDoctrine.SetEngagementPosture</c>. A direct call (like the space posture), so it works mid-battle
+        /// and is separate from the combat-mult stance above. Instant (no cooldown — an intent, not a costed switch).
+        /// </summary>
+        public static void SetEngagementStance(GroundFormation formation, GroundEngagementStance stance)
+        {
+            if (formation == null) return;
+            formation.Engagement = stance;
+        }
+
+        /// <summary>A unit's formation ROE (HoldGround if unformed / no formation) — read by the maneuver step.</summary>
+        public static GroundEngagementStance EngagementOf(GroundForcesDB forces, GroundUnit unit)
+        {
+            var f = FormationOf(forces, unit);
+            return f != null ? f.Engagement : GroundEngagementStance.HoldGround;
+        }
     }
 }

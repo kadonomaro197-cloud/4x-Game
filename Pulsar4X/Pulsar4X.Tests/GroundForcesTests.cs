@@ -855,5 +855,120 @@ namespace Pulsar4X.Tests
             Assert.That(GroundRangeTools.HexPitchKm(new Region()), Is.EqualTo(0.0), "no hex patch / no area → no readout");
             Log($"readout: a 3-hex gun ≈ {GroundRangeTools.RealReachKm(3, big):N0} km on the big region vs {GroundRangeTools.RealReachKm(3, small):N0} km on the small one");
         }
+
+        // ───────────────────────── ROE — commander engagement rules (the space closing-model echo) ─────────────────────────
+
+        private static void PaveRegionHexes(Entity body, PlanetRegionsDB regionsDB, int regionIndex)
+        {
+            Pulsar4X.Galaxy.PlanetHexFactory.EnsureHexesForBody(body);
+            foreach (var h in regionsDB.Regions[regionIndex].Hexes) h.Terrain = RegionFeatureType.Plains;   // deterministic, passable
+        }
+
+        private static int HexDistBetween(GroundUnit a, GroundUnit b)
+            => new Pulsar4X.Colonies.HexCoordinate(a.HexQ, a.HexR).DistanceTo(new Pulsar4X.Colonies.HexCoordinate(b.HexQ, b.HexR));
+
+        [Test]
+        [Description("ROE set/read: SetEngagementStance stores the maneuver intent on the formation; EngagementOf reads it (HoldGround if unformed).")]
+        public void Roe_SetAndReadEngagementStance()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            var u = GroundForces.RaiseUnit(body, MakeDesign("u", "U", GroundUnitType.Infantry, 3), s.Faction.Id, 0);
+            var forces = body.GetDataBlob<GroundForcesDB>();
+
+            Assert.That(GroundFormationDoctrine.EngagementOf(forces, u), Is.EqualTo(GroundEngagementStance.HoldGround), "an unformed unit holds ground by default");
+            var f = GroundForces.CreateFormation(body, s.Faction.Id, "Recon");
+            GroundForces.AssignUnit(f, u);
+            GroundFormationDoctrine.SetEngagementStance(f, GroundEngagementStance.StandOff);
+            Assert.That(GroundFormationDoctrine.EngagementOf(forces, u), Is.EqualTo(GroundEngagementStance.StandOff));
+        }
+
+        [Test]
+        [Description("ROE StandOff (the auto-KITE): a Stand-off formation whose enemy is inside ITS reach auto-orders a step AWAY, opening the gap so the longer-ranged unit keeps hitting from beyond the enemy's range.")]
+        public void Roe_StandOff_OrdersAStepAway_ToKeepRange()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            PaveRegionHexes(body, regionsDB, 0);
+
+            var clone = GroundForces.RaiseUnit(body, MakeDesign("clone", "Clone", GroundUnitType.Infantry, range: 3), s.Faction.Id, 0);
+            clone.HexQ = 3; clone.HexR = 0;
+            var zerg = GroundForces.RaiseUnit(body, MakeDesign("zerg", "Zerg", GroundUnitType.Infantry, range: 1), InvaderFaction, 0);
+            zerg.HexQ = 4; zerg.HexR = 0;   // distance 1 → inside the zerg's reach → the clone should back off
+
+            var forces = body.GetDataBlob<GroundForcesDB>();
+            var f = GroundForces.CreateFormation(body, s.Faction.Id, "Clones");
+            GroundForces.AssignUnit(f, clone);
+            GroundFormationDoctrine.SetEngagementStance(f, GroundEngagementStance.StandOff);
+
+            int distBefore = HexDistBetween(clone, zerg);   // 1
+            new GroundForcesProcessor().ProcessEntity(body, 1);   // tiny tick: issue the maneuver, don't complete the walk
+
+            Assert.That(clone.HexPath, Is.Not.Null.And.Count.GreaterThan(0), "the stand-off clone was auto-ordered to reposition");
+            var dest = clone.HexPath[clone.HexPath.Count - 1];
+            int destDist = new Pulsar4X.Colonies.HexCoordinate(dest.Q, dest.R).DistanceTo(new Pulsar4X.Colonies.HexCoordinate(zerg.HexQ, zerg.HexR));
+            Assert.That(destDist, Is.GreaterThan(distBefore), "it kites — the ordered hex is FARTHER from the enemy");
+            Log($"ROE stand-off: clone auto-kites from dist {distBefore} → dist {destDist}");
+        }
+
+        [Test]
+        [Description("ROE CloseToEngage (the auto-CLOSE): a Close formation whose enemy is beyond its reach auto-orders a step TOWARD, shrinking the gap to get into its own range (the zerg rush).")]
+        public void Roe_CloseToEngage_OrdersAStepToward_ToShrinkTheGap()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            PaveRegionHexes(body, regionsDB, 0);
+
+            var brawler = GroundForces.RaiseUnit(body, MakeDesign("brawler", "Zergling", GroundUnitType.Infantry, range: 1), s.Faction.Id, 0);
+            brawler.HexQ = 0; brawler.HexR = 0;
+            var target = GroundForces.RaiseUnit(body, MakeDesign("tgt", "Sniper", GroundUnitType.Infantry, range: 1), InvaderFaction, 0);
+            target.HexQ = 4; target.HexR = 0;   // distance 4 → far beyond the brawler's reach 1 → it should close
+
+            var f = GroundForces.CreateFormation(body, s.Faction.Id, "Rush");
+            GroundForces.AssignUnit(f, brawler);
+            GroundFormationDoctrine.SetEngagementStance(f, GroundEngagementStance.CloseToEngage);
+
+            int distBefore = HexDistBetween(brawler, target);   // 4
+            new GroundForcesProcessor().ProcessEntity(body, 1);
+
+            Assert.That(brawler.HexPath, Is.Not.Null.And.Count.GreaterThan(0), "the closing brawler was auto-ordered to advance");
+            var dest = brawler.HexPath[brawler.HexPath.Count - 1];
+            int destDist = new Pulsar4X.Colonies.HexCoordinate(dest.Q, dest.R).DistanceTo(new Pulsar4X.Colonies.HexCoordinate(target.HexQ, target.HexR));
+            Assert.That(destDist, Is.LessThan(distBefore), "it closes — the ordered hex is NEARER the enemy");
+            Log($"ROE close: brawler auto-advances from dist {distBefore} → dist {destDist}");
+        }
+
+        [Test]
+        [Description("A unit maneuvering on the battlefield (a fine HEX march) STILL FIGHTS — it fires from its current hex as it repositions (so a kiting unit shoots while backing away). Only a strategic REGION hop takes a unit out of the fight.")]
+        public void HexMarchingUnit_StillFights()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            PaveRegionHexes(body, regionsDB, 0);
+            regionsDB.Regions[0].OwnerFactionID = -1;
+
+            var mover = GroundForces.RaiseUnit(body, MakeDesign("mv", "Mover", GroundUnitType.Infantry, range: 3), s.Faction.Id, 0);
+            mover.HexQ = 0; mover.HexR = 0;
+            var shooter = GroundForces.RaiseUnit(body, MakeDesign("sh", "Shooter", GroundUnitType.Infantry, range: 3), InvaderFaction, 0);
+            shooter.HexQ = 0; shooter.HexR = 0;   // co-located → in range
+
+            Assert.That(GroundForces.OrderMoveToHex(body, mover, 2, 0), Is.True, "the mover sets off on a hex march");
+            Assert.That(mover.HexPath, Is.Not.Null.And.Count.GreaterThan(0));
+
+            double before = mover.Health;
+            new GroundForcesProcessor().ProcessEntity(body, 1);   // tiny tick: still mid-march, but combat runs
+            Assert.That(mover.HexPath, Is.Not.Null.And.Count.GreaterThan(0), "still mid-march (the tick was too short to arrive)");
+            Assert.That(mover.Health, Is.LessThan(before), "a hex-marching unit still takes fire — it fights while repositioning");
+            Log($"hex-marcher fights: mover took {before - mover.Health:0} dmg while mid-march");
+        }
     }
 }

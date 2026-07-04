@@ -112,6 +112,24 @@ namespace Pulsar4X.GroundCombat
     }
 
     /// <summary>
+    /// A formation's RULES OF ENGAGEMENT — the movement intent a commander sets, the ground echo of the space
+    /// CLOSING model (docs/FLEET-COMBAT-CLOSING-DESIGN.md: a fast long-range fleet kites, a brawler forces the merge).
+    /// It tells the surface processor how a formation should MANEUVER relative to the enemy each tick, so the H3 range
+    /// advantage is used automatically instead of by micro:
+    /// </summary>
+    public enum GroundEngagementStance : byte
+    {
+        /// <summary>Hold ground — stand and fight where you are (the default; no auto-movement).</summary>
+        HoldGround,
+        /// <summary>Close to the enemy — advance toward the nearest enemy until in your own strike range (the brawler /
+        /// the zerg rush). A short-ranged unit uses this to CLOSE the gap a longer-ranged enemy is exploiting.</summary>
+        CloseToEngage,
+        /// <summary>Stand off — keep the enemy at arm's length: back away when an enemy is within ITS range, so a
+        /// longer-ranged unit hits from beyond the enemy's reach (the clone kiting the zerg). Auto-kite.</summary>
+        StandOff,
+    }
+
+    /// <summary>
     /// A named GROUPING of <see cref="GroundUnit"/>s that move and fight as one — the ground echo of a <c>FleetDB</c>,
     /// mirroring its SHAPE within the data-object model (units aren't entities in v1, so a formation is a serializable
     /// data object too, not an entity with a tree). Like a fleet it has a NAME, a LEADER (the ground echo of the
@@ -147,12 +165,18 @@ namespace Pulsar4X.GroundCombat
         /// <summary>Game time at/after which this formation may switch stance again (the switch cooldown clock).</summary>
         [JsonProperty] public DateTime SwitchableAfter { get; internal set; } = DateTime.MinValue;
 
+        /// <summary>The RULES OF ENGAGEMENT — how this formation MANEUVERS relative to the enemy (the ground echo of the
+        /// space closing model). Default <see cref="GroundEngagementStance.HoldGround"/> = stand and fight (no
+        /// auto-movement), so a formation with no ROE set behaves exactly as before. Set via
+        /// <c>GroundFormationDoctrine.SetEngagementStance</c>; read by <c>GroundForcesProcessor</c>'s maneuver step.</summary>
+        [JsonProperty] public GroundEngagementStance Engagement { get; internal set; } = GroundEngagementStance.HoldGround;
+
         public GroundFormation() { }
         public GroundFormation(GroundFormation o)
         {
             FormationId = o.FormationId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; LeaderUnitId = o.LeaderUnitId;
             StanceId = o.StanceId; StanceFamily = o.StanceFamily; AttackMult = o.AttackMult; DamageTakenMult = o.DamageTakenMult;
-            SwitchableAfter = o.SwitchableAfter;
+            SwitchableAfter = o.SwitchableAfter; Engagement = o.Engagement;
         }
     }
 
