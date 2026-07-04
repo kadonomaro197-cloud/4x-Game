@@ -81,7 +81,10 @@ namespace Pulsar4X.GroundCombat
                     foreach (var env in envDB.ForRegion(unit.RegionIndex))
                     {
                         if (!IsDamageEffect(env.Effect)) continue;
-                        unit.Health -= env.Magnitude * (deltaSeconds / 3600.0);
+                        // E4: the unit's environmental GEAR negates a fraction of the hazard's attrition (heat-shielding,
+                        // hazmat sealing…) — the ground echo of a ship's HazardResistanceAtb. 1.0 resistance = immune.
+                        double resist = unit.ResistanceTo(env.Effect);
+                        unit.Health -= env.Magnitude * (deltaSeconds / 3600.0) * (1.0 - resist);
                         if (unit.Health < 0) unit.Health = 0;
                     }
                 }

@@ -41,6 +41,14 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public double Attack { get; set; }
         [JsonProperty] public double Defense { get; set; }
         [JsonProperty] public double HitPoints { get; set; }
+        /// <summary>ENVIRONMENTAL GEAR (E4) — per-hazard protection this design's units carry, keyed by the shared
+        /// <see cref="Pulsar4X.Hazards.HazardEffectType"/>. Value 0..1 = fraction of that hazard's attrition negated
+        /// (a "heat-shielded" design has <c>{HeatDamage: 0.8}</c>). Snapshotted onto each raised <see cref="GroundUnit"/>.
+        /// The cradle-to-grave counter: in the full model this is a researched/installed GEAR component (like a ship's
+        /// <c>HazardResistanceAtb</c>); v1 folds it into the design (its cost already rides <see cref="ResourceCosts"/>),
+        /// with gear-as-a-swappable-component the v2 promotion alongside units-as-entities.</summary>
+        [JsonProperty] public Dictionary<Pulsar4X.Hazards.HazardEffectType, double> EnvironmentalResistance { get; set; }
+            = new Dictionary<Pulsar4X.Hazards.HazardEffectType, double>();
         /// <summary>Which region a completed build musters into (v1: the capital region 0; a chosen muster point is a
         /// refinement). Clamped to the world's real region count at placement.</summary>
         [JsonProperty] public int DefaultRegionIndex { get; set; } = 0;

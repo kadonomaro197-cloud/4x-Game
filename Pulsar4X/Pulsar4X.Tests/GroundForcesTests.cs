@@ -338,5 +338,48 @@ namespace Pulsar4X.Tests
             Assert.That(unit.Health, Is.EqualTo(before - 100.0).Within(1.0), "one hour of a 100/hr hazard = 100 attrition");
             Log($"environmental attrition: unit {before:0} → {unit.Health:0} hp after 1 hour in a fire hazard");
         }
+
+        [Test]
+        [Description("E4 cradle-to-grave counter: a unit built from a HEAT-SHIELDED design (EnvironmentalResistance {HeatDamage:0.8}) bleeds far less in a fire hazard than an unprotected one, and an IMMUNE (1.0) unit takes zero — the ground echo of a ship's HazardResistanceAtb. Resistance is snapshotted onto the raised unit and survives a clone.")]
+        public void EnvironmentalGear_ReducesHazardAttrition()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+
+            if (!body.TryGetDataBlob<PlanetEnvironmentsDB>(out var envDB))
+            {
+                envDB = new PlanetEnvironmentsDB();
+                body.SetDataBlob(envDB);
+            }
+            envDB.Environments.Add(new RegionEnvironment(0, "Test Inferno", HazardEffectType.HeatDamage, 100.0));   // 100/hour
+
+            var plain = GroundForces.RaiseUnit(body, MakeInfantryDesign(), s.Faction.Id, 0);
+
+            var shielded = MakeInfantryDesign();
+            shielded.UniqueID = "test-ground-infantry-heatshield";
+            shielded.EnvironmentalResistance = new Dictionary<HazardEffectType, double> { { HazardEffectType.HeatDamage, 0.8 } };
+            var geared = GroundForces.RaiseUnit(body, shielded, s.Faction.Id, 0);
+
+            var immuneDesign = MakeInfantryDesign();
+            immuneDesign.UniqueID = "test-ground-infantry-immune";
+            immuneDesign.EnvironmentalResistance = new Dictionary<HazardEffectType, double> { { HazardEffectType.HeatDamage, 1.0 } };
+            var immune = GroundForces.RaiseUnit(body, immuneDesign, s.Faction.Id, 0);
+
+            // Resistance is snapshotted onto the unit (and must survive a clone of the roster).
+            Assert.That(geared.ResistanceTo(HazardEffectType.HeatDamage), Is.EqualTo(0.8).Within(1e-9), "gear snapshots onto the unit");
+            var rosterClone = (GroundForcesDB)body.GetDataBlob<GroundForcesDB>().Clone();
+            Assert.That(rosterClone.Units.Find(u => u.DesignId == "test-ground-infantry-heatshield").ResistanceTo(HazardEffectType.HeatDamage),
+                Is.EqualTo(0.8).Within(1e-9), "gear survives a clone");
+
+            double plain0 = plain.Health, geared0 = geared.Health, immune0 = immune.Health;
+            new GroundForcesProcessor().ProcessEntity(body, 3600);   // one hour
+
+            Assert.That(plain0 - plain.Health, Is.EqualTo(100.0).Within(1.0), "unprotected: full 100/hr attrition");
+            Assert.That(geared0 - geared.Health, Is.EqualTo(20.0).Within(1.0), "0.8 heat-shield negates 80% → 20 attrition");
+            Assert.That(immune0 - immune.Health, Is.EqualTo(0.0).Within(1e-6), "1.0 resistance = immune, zero attrition");
+            Assert.That(geared.Health, Is.GreaterThan(plain.Health), "geared unit outlasts the unprotected one");
+            Log($"E4 gear: plain -{plain0 - plain.Health:0}, shielded(0.8) -{geared0 - geared.Health:0}, immune(1.0) -{immune0 - immune.Health:0} hp/hr in fire");
+        }
     }
 }

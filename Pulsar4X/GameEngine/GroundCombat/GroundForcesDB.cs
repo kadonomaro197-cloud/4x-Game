@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using Pulsar4X.Engine;
 using Pulsar4X.Datablobs;
+using Pulsar4X.Hazards;
 
 namespace Pulsar4X.GroundCombat
 {
@@ -46,12 +47,31 @@ namespace Pulsar4X.GroundCombat
         /// <summary>Game-seconds left in the current march; counts down to 0 = arrived (the region's crossing time).</summary>
         [JsonProperty] public double TransitSecondsRemaining { get; internal set; }
 
+        /// <summary>
+        /// ENVIRONMENTAL GEAR (E4) — the ground echo of a ship's <c>HazardResistanceAtb</c>: per-hazard-effect
+        /// protection this unit carries (heat-shielding, hazmat sealing, mountaineering rig…), keyed by the SHARED
+        /// <see cref="HazardEffectType"/> vocabulary. Value 0..1 = the FRACTION of that hazard's attrition negated
+        /// (0 = none, 1 = immune). A snapshot from the design at build time (like Attack/HP), so a fielded unit's
+        /// protection is fixed — you re-equip by building a better-geared design. null / empty = unprotected.
+        /// Consumed by <c>GroundForcesProcessor</c>'s environmental-attrition step.
+        /// </summary>
+        [JsonProperty] public Dictionary<HazardEffectType, double> EnvResistance { get; internal set; }
+
+        /// <summary>Fraction (0..1) of <paramref name="effect"/>'s attrition this unit's gear negates (0 if none).</summary>
+        public double ResistanceTo(HazardEffectType effect)
+        {
+            if (EnvResistance != null && EnvResistance.TryGetValue(effect, out var r))
+                return r < 0 ? 0 : (r > 1 ? 1 : r);
+            return 0;
+        }
+
         public GroundUnit() { }
         public GroundUnit(GroundUnit o)
         {
             DesignId = o.DesignId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
             UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health;
             MovingToRegion = o.MovingToRegion; TransitSecondsRemaining = o.TransitSecondsRemaining;
+            if (o.EnvResistance != null) EnvResistance = new Dictionary<HazardEffectType, double>(o.EnvResistance);
         }
     }
 
@@ -105,6 +125,10 @@ namespace Pulsar4X.GroundCombat
                 Defense = design.Defense,
                 MaxHealth = design.HitPoints,
                 Health = design.HitPoints,
+                // Snapshot the design's environmental gear onto the unit (E4) — like the combat stats above.
+                EnvResistance = (design.EnvironmentalResistance != null && design.EnvironmentalResistance.Count > 0)
+                    ? new Dictionary<HazardEffectType, double>(design.EnvironmentalResistance)
+                    : null,
             };
             forces.Units.Add(unit);
             return unit;
