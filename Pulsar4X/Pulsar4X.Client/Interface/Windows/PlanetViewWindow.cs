@@ -219,12 +219,18 @@ namespace Pulsar4X.Client
                 if (regions[ri].Hexes != null && regions[ri].Hexes.Count > 0)
                     R = Math.Max(R, HexPathfinder.PatchRadius(regions[ri].Hexes));
 
-            int qStep = 2 * R + 2;                    // one region's q-width + a 2-hex gap for the boundary
-            float spanX = 6 * R + 6;
-            float spanY = 2 * R + 2;
-            float size = Math.Max(3f, Math.Min(mapSize.X / (1.7320508f * spanX), mapSize.Y / (1.5f * spanY)));
+            // ONE seamless hex field: the CENTRE region in FULL, its two neighbours bleeding in at the left/right
+            // margins (only the border fraction that fits). Size so the centre patch fills the height and ≤ ~62% of the
+            // width (leaving margins for the neighbours); the neighbours are offset by a full patch width (seamless — no
+            // gap) and CULLED to the visible canvas, so you see the whole centre and just the overlapping edge of each side.
+            float span = 2 * R + 1.6f;
+            int qStep = 2 * R + 1;                     // full patch width → the side regions sit flush against the centre
+            float sizeH = mapSize.Y / (1.5f * span);
+            float sizeW = mapSize.X * 0.62f / (1.7320508f * span);
+            float size = Math.Max(3f, Math.Min(sizeH, sizeW));
             var center = new Vector2(canvasPos.X + mapSize.X * 0.5f, canvasPos.Y + mapSize.Y * 0.5f);
             uint hexBorder = ImGui.ColorConvertFloat4ToU32(new Vector4(0f, 0f, 0f, 0.30f));
+            float xLo = canvasPos.X - size, xHi = canvasPos.X + mapSize.X + size;   // cull neighbours to the visible canvas
 
             // 1) terrain hexes — each region offset into one shared field, so continents span the seams.
             for (int c = 0; c < 3; c++)
@@ -235,6 +241,7 @@ namespace Pulsar4X.Client
                 foreach (var h in region.Hexes)
                 {
                     var pc = HexCenter(center, size, h.Q + qOff, h.R);
+                    if (pc.X < xLo || pc.X > xHi) continue;   // neighbour hexes past the margin aren't drawn
                     Vector4 col = region.Surveyed
                         ? (_featureColors.TryGetValue(h.Terrain, out var vc) ? vc : _featureColors[RegionFeatureType.Barren])
                         : _featureColors[RegionFeatureType.Unknown];
@@ -261,6 +268,7 @@ namespace Pulsar4X.Client
                 foreach (var kv in occ)
                 {
                     var pc = HexCenter(center, size, kv.Key.q + qOff, kv.Key.r);
+                    if (pc.X < xLo || pc.X > xHi) continue;
                     float mr = Math.Max(2.5f, size * 0.55f);
                     drawList.AddCircleFilled(pc, mr, ImGui.ColorConvertFloat4ToU32(OwnerColor(kv.Key.fac, myFaction)), 16);
                     drawList.AddCircle(pc, mr, ImGui.ColorConvertFloat4ToU32(new Vector4(0f, 0f, 0f, 0.8f)), 16, 1.5f);
@@ -276,22 +284,17 @@ namespace Pulsar4X.Client
                 }
             }
 
-            // 3) region boundaries + labels (so you can tell where one region ends and the next begins).
-            uint divCol = ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 0.95f, 0.6f, 0.55f));
-            for (int c = 0; c < 3; c++)
-            {
-                int qOff = (c - 1) * qStep;
-                string lbl = $"Region {regions[cols[c]].Index + 1}" + (c == 1 ? "  (centre)" : "");
-                var lsz = ImGui.CalcTextSize(lbl);
-                float lx = HexCenter(center, size, qOff, 0).X;
-                drawList.AddText(new Vector2(lx - lsz.X * 0.5f, canvasPos.Y + 2f),
-                    ImGui.ColorConvertFloat4ToU32(c == 1 ? new Vector4(1f, 1f, 0.7f, 1f) : new Vector4(0.8f, 0.8f, 0.85f, 1f)), lbl);
-                if (c > 0)   // a divider on the left of the centre and right columns (the two internal seams)
-                {
-                    float divX = HexCenter(center, size, qOff - (R + 1), 0).X;
-                    drawList.AddLine(new Vector2(divX, canvasPos.Y + 18f), new Vector2(divX, canvasPos.Y + mapHeight), divCol, 2f);
-                }
-            }
+            // 3) a subtle seam line at each EDGE of the centre region + region labels — so you can still tell where the
+            //    centre ends and a neighbour begins, without breaking the seamless look.
+            uint divCol = ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 0.95f, 0.6f, 0.45f));
+            float seamW = HexCenter(center, size, -R, 0).X - size * 0.87f;   // just outside the centre's west edge
+            float seamE = HexCenter(center, size,  R, 0).X + size * 0.87f;   // just outside the centre's east edge
+            if (seamW > canvasPos.X) drawList.AddLine(new Vector2(seamW, canvasPos.Y + 18f), new Vector2(seamW, canvasPos.Y + mapHeight), divCol, 2f);
+            if (seamE < canvasPos.X + mapSize.X) drawList.AddLine(new Vector2(seamE, canvasPos.Y + 18f), new Vector2(seamE, canvasPos.Y + mapHeight), divCol, 2f);
+
+            DrawRegionLabel(drawList, $"R{regions[centre].Index + 1} (centre)", center.X, canvasPos, mapSize, true);
+            DrawRegionLabel(drawList, $"◂ R{regions[left].Index + 1}", canvasPos.X + 4f, canvasPos, mapSize, false);
+            DrawRegionLabel(drawList, $"R{regions[right].Index + 1} ▸", canvasPos.X + mapSize.X - 4f, canvasPos, mapSize, false);
 
             // 4) click resolution — centre region = full hex ops; a side region = coarse-march there (if adjacent) or recentre.
             if (clicked)
@@ -304,7 +307,9 @@ namespace Pulsar4X.Client
                     int qOff = (c - 1) * qStep;
                     foreach (var h in region.Hexes)
                     {
-                        float d = Vector2.Distance(HexCenter(center, size, h.Q + qOff, h.R), mp);
+                        var pc = HexCenter(center, size, h.Q + qOff, h.R);
+                        if (pc.X < xLo || pc.X > xHi) continue;
+                        float d = Vector2.Distance(pc, mp);
                         if (d < bestD) { bestD = d; best = h; bestRegion = region.Index; }
                     }
                 }
@@ -329,6 +334,14 @@ namespace Pulsar4X.Client
                 double km = _selRegion < regions.Count ? GroundRangeTools.RealReachKm(range, regions[_selRegion]) : 0;
                 ImGui.TextDisabled($"Selected {_selType} in Region {_selRegion + 1}: click a destination hex (same region) to march — strike range {range} hex ≈ {km:N0} km. Ocean impassable.");
             }
+        }
+
+        private static void DrawRegionLabel(ImDrawListPtr drawList, string lbl, float x, Vector2 canvasPos, Vector2 mapSize, bool isCentre)
+        {
+            var lsz = ImGui.CalcTextSize(lbl);
+            float px = Math.Clamp(x - lsz.X * 0.5f, canvasPos.X + 2f, canvasPos.X + mapSize.X - lsz.X - 2f);
+            drawList.AddText(new Vector2(px, canvasPos.Y + 2f),
+                ImGui.ColorConvertFloat4ToU32(isCentre ? new Vector4(1f, 1f, 0.7f, 1f) : new Vector4(0.75f, 0.75f, 0.8f, 1f)), lbl);
         }
 
         private void DrawRegionColumn(ImDrawListPtr drawList, Vector2 min, Vector2 max, Region region,
