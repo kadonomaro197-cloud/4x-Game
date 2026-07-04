@@ -442,10 +442,16 @@ navigate units on, plot where I'll make military bases, use topography to my adv
   `PlanetEnvironmentsDB` environments as coloured hazard chips (fire=red / corrosive=green / storm-jam=amber), ownership,
   and the ⚙ building count per `Region.InstallationIds`.
 
+- **Formations** (2026-07-04, the fleet echo) — a "Formations" panel under the Build panel: **Form up** all your idle units
+  in the centre region into a named `GroundFormation` (the ground echo of a fleet), then a selectable list of your
+  formations (name · member count · rally region) with **March formation ◀/▶** (moves the whole block one hop via
+  `GroundForces.OrderFormationMove`) and **Disband**. Selecting a formation navigates the map to its rally region. All thin
+  callers over the CI-tested `GroundForces` formation API + `GroundFormationTools` reads.
+
 Built to the CI-blind discipline: a thin draw over CI-tested engine blobs, all orders through CI-tested engine paths
-(`GroundForces.OrderMove` / `PlaceInstallationInRegionOrder`), the whole body wrapped so a throw logs `[RenderError]` once
-and still runs `Window.End()`, nothing hard-indexed (colony/faction lookups are `TryGet`/guarded). **Live render + feel is
-the developer's local build.**
+(`GroundForces.OrderMove` / `OrderFormationMove` / `PlaceInstallationInRegionOrder`), the whole body wrapped so a throw logs
+`[RenderError]` once and still runs `Window.End()`, nothing hard-indexed (colony/faction lookups are `TryGet`/guarded).
+**Live render + feel is the developer's local build.**
 
 **LOCKED PRINCIPLE for this window (2026-07-04): every buildable is a real building on the ground.** The developer's rule —
 *"everything I build on a planet that's selectable in space is represented by an actual building on the planet itself."*

@@ -50,6 +50,9 @@ namespace Pulsar4X.Client
         // The installation the Build panel will place (index into the faction's placeable designs, rebuilt each frame).
         private int _buildChoice = 0;
 
+        // The selected FORMATION (its FormationId) for the formation command panel; -1 = none.
+        private int _selFormationId = -1;
+
         // A transient status line ("marched 3 units east", "built Barracks in region 2") shown under the controls.
         private string _status = "";
 
@@ -234,6 +237,7 @@ namespace Pulsar4X.Client
             ImGui.Separator();
             DrawSelectionBar(regions, forcesDB, myFaction, left, right);
             DrawBuildPanel(body, myFaction);
+            DrawFormationPanel(body, forcesDB, myFaction, regions, left, right);
             ImGui.Separator();
             DrawRegionDetail(regions[_centerRegion], forcesDB, envDB);
             DrawLegend();
@@ -512,6 +516,88 @@ namespace Pulsar4X.Client
             }
             catch { }
             return list;
+        }
+
+        // ── Formations — command a group of units as one (the fleet echo) ───────────────
+        private void DrawFormationPanel(Entity body, GroundForcesDB forcesDB, int myFaction, List<Region> regions, int left, int right)
+        {
+            if (forcesDB == null) return;
+            ImGui.Separator();
+            ImGui.TextDisabled("Formations (move a whole group as one — the ground echo of a fleet):");
+
+            // Create a formation from all YOUR units standing in the centre region.
+            int ownHere = forcesDB.Units.Count(u => u.FactionOwnerID == myFaction && u.RegionIndex == _centerRegion && u.MovingToRegion < 0);
+            if (ownHere > 0)
+            {
+                if (ImGui.Button($"Form up {ownHere} unit(s) in Region {_centerRegion + 1}"))
+                {
+                    try
+                    {
+                        var f = GroundForces.CreateFormation(body, myFaction, "");
+                        foreach (var u in forcesDB.Units.Where(u => u.FactionOwnerID == myFaction && u.RegionIndex == _centerRegion && u.MovingToRegion < 0).ToArray())
+                            GroundForces.AssignUnit(f, u);
+                        _selFormationId = f.FormationId;
+                        _status = $"formed '{f.Name}' — {ownHere} unit(s)";
+                    }
+                    catch (Exception ex) { _status = "form-up failed (logged)"; Console.WriteLine($"[RenderError] PlanetViewWindow form-up threw: {ex}"); }
+                }
+            }
+            else
+            {
+                ImGui.TextDisabled($"(No idle units of yours in Region {_centerRegion + 1} to form up.)");
+            }
+
+            // List your formations; select one to command it.
+            var mine = GroundFormationTools.FormationsFor(forcesDB, myFaction);
+            if (mine.Count == 0) return;
+
+            foreach (var f in mine)
+            {
+                int count = GroundFormationTools.MemberCount(forcesDB, f);
+                int rally = GroundForces.LeaderRegion(forcesDB, f);
+                bool sel = f.FormationId == _selFormationId;
+                string label = $"{f.Name} — {count} unit(s)" + (rally >= 0 ? $" @ Region {rally + 1}" : " (empty)") + $"##form{f.FormationId}";
+                if (ImGui.Selectable(label, sel))
+                {
+                    _selFormationId = f.FormationId;
+                    if (rally >= 0) _centerRegion = rally;   // navigate to the formation
+                }
+
+                if (sel)
+                {
+                    // March the whole formation to a visible adjacent region (of its rally region), or disband.
+                    var rallyRegion = (rally >= 0 && rally < regions.Count) ? regions[rally] : null;
+                    if (rallyRegion != null && count > 0)
+                    {
+                        if (rallyRegion.Neighbors.Contains(left))
+                        {
+                            if (ImGui.Button($"◀ March formation to Region {left + 1}##fm{f.FormationId}")) MarchFormation(body, f, left);
+                            ImGui.SameLine();
+                        }
+                        if (rallyRegion.Neighbors.Contains(right))
+                        {
+                            if (ImGui.Button($"March formation to Region {right + 1} ▶##fm{f.FormationId}")) MarchFormation(body, f, right);
+                            ImGui.SameLine();
+                        }
+                    }
+                    if (ImGui.Button($"Disband##fm{f.FormationId}"))
+                    {
+                        try { GroundForces.DisbandFormation(forcesDB, f); _selFormationId = -1; _status = "formation disbanded"; }
+                        catch (Exception ex) { Console.WriteLine($"[RenderError] PlanetViewWindow disband threw: {ex}"); }
+                        break;   // list mutated — stop iterating this frame
+                    }
+                }
+            }
+        }
+
+        private void MarchFormation(Entity body, GroundFormation formation, int target)
+        {
+            try
+            {
+                int moved = GroundForces.OrderFormationMove(body, formation, target);
+                _status = moved > 0 ? $"'{formation.Name}' marches {moved} unit(s) to Region {target + 1}" : "formation couldn't march (adjacency/transit)";
+            }
+            catch (Exception ex) { _status = "formation march failed (logged)"; Console.WriteLine($"[RenderError] PlanetViewWindow formation march threw: {ex}"); }
         }
 
         // ── Detail + legend ─────────────────────────────────────────────────────────────
