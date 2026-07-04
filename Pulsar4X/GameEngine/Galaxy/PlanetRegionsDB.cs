@@ -55,6 +55,9 @@ namespace Pulsar4X.Galaxy
         [JsonProperty] public List<int> Neighbors { get; internal set; } = new List<int>();
         /// <summary>The geography of this region — a bundle of features, not a single type.</summary>
         [JsonProperty] public List<RegionFeature> Features { get; internal set; } = new List<RegionFeature>();
+        /// <summary>The region's HEX patch (Planet → Region → Hex) — the fine tiles terrain/units live on. Empty until
+        /// <see cref="PlanetHexFactory"/> generates them LAZILY (only when the body becomes a theatre). Save-safe.</summary>
+        [JsonProperty] public List<GroundHex> Hexes { get; internal set; } = new List<GroundHex>();
         /// <summary>Entity ids of installations placed in this region (populated by the build-at-a-region slice).</summary>
         [JsonProperty] public List<int> InstallationIds { get; internal set; } = new List<int>();
         /// <summary>Which faction holds this region on the ground (-1 = unowned/uncontested). Ground combat flips it
@@ -73,6 +76,8 @@ namespace Pulsar4X.Galaxy
             InstallationIds = new List<int>(other.InstallationIds);
             Features = new List<RegionFeature>();
             foreach (var f in other.Features) Features.Add(new RegionFeature(f));
+            Hexes = new List<GroundHex>();
+            foreach (var h in other.Hexes) Hexes.Add(new GroundHex(h));
         }
     }
 
