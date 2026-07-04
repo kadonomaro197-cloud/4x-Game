@@ -633,5 +633,114 @@ namespace Pulsar4X.Tests
                 "the Dig-In (defensive) formation takes LESS than the identical no-stance defender in the same fight");
             Log($"stance: dig-in defender {dug.Health:0} hp vs no-stance defender {open.Health:0} hp after 3 salvos");
         }
+
+        // ───────────────────────── H2 — hex movement + pathfinding (docs/HEX-GROUND-AND-ORDERS-DESIGN.md) ─────────────────────────
+
+        /// <summary>Build an open hex disk of the given radius (all one terrain) — the shape PlanetHexFactory generates.</summary>
+        private static List<GroundHex> OpenDisk(int radius, RegionFeatureType fill = RegionFeatureType.Plains)
+        {
+            var list = new List<GroundHex>();
+            for (int q = -radius; q <= radius; q++)
+            {
+                int rLo = System.Math.Max(-radius, -q - radius);
+                int rHi = System.Math.Min(radius, -q + radius);
+                for (int r = rLo; r <= rHi; r++)
+                    list.Add(new GroundHex(q, r, fill));
+            }
+            return list;
+        }
+
+        [Test]
+        [Description("H2: A* across an all-open patch is a straight line — its step count equals the hex distance from start to destination.")]
+        public void HexPath_StraightLineAcrossOpenPatch_LengthEqualsDistance()
+        {
+            var disk = OpenDisk(2);
+            var path = HexPathfinder.FindPath(disk, -2, 0, 2, 0);
+            Assert.That(path.Count, Is.EqualTo(4), "distance from (-2,0) to (2,0) is 4 hexes, all open → a 4-step path");
+            Assert.That(path[path.Count - 1].Q, Is.EqualTo(2));
+            Assert.That(path[path.Count - 1].R, Is.EqualTo(0), "the path ends on the destination hex");
+            Log($"open straight line: {path.Count} steps to (2,0)");
+        }
+
+        [Test]
+        [Description("H2: terrain steers the route — A* detours around a wall of rough hexes rather than paying the ×2.5 to bull through.")]
+        public void HexPath_RoutesAroundRough_AvoidsTheExpensiveWall()
+        {
+            var disk = OpenDisk(2);
+            // Block the straight r=0 corridor with mountains (×2.5 each) — a cheaper open detour exists off-axis.
+            for (int i = 0; i < disk.Count; i++)
+                if (disk[i].R == 0 && (disk[i].Q == -1 || disk[i].Q == 0 || disk[i].Q == 1))
+                    disk[i] = new GroundHex(disk[i].Q, disk[i].R, RegionFeatureType.Mountains);
+
+            var path = HexPathfinder.FindPath(disk, -2, 0, 2, 0);
+            Assert.That(path.Count, Is.GreaterThan(0), "a route exists");
+            Assert.That(path.Any(h => h.Terrain == RegionFeatureType.Mountains), Is.False,
+                "the cheaper open detour is taken — no mountain hex is on the path");
+            Log($"rough-avoiding route: {path.Count} steps, 0 mountain hexes");
+        }
+
+        [Test]
+        [Description("H2: pathfinder guard rails — an off-patch destination and a start-equals-destination both return an empty path (no move).")]
+        public void HexPath_Guards_OffPatchAndAlreadyThere_ReturnEmpty()
+        {
+            var disk = OpenDisk(2);
+            Assert.That(HexPathfinder.FindPath(disk, 0, 0, 9, 9).Count, Is.EqualTo(0), "(9,9) is outside the patch → no path");
+            Assert.That(HexPathfinder.FindPath(disk, 1, 0, 1, 0).Count, Is.EqualTo(0), "already on the destination → no path");
+        }
+
+        [Test]
+        [Description("H2: the move-cost tiers are the developer's Moderate call (open ×1, cover ×1.5, rough ×2.5); per-hex base time is derived from the region's crossing-time datum, not a magic number.")]
+        public void HexPath_CostModel_TiersAndDerivedBaseTime()
+        {
+            Assert.That(HexPathfinder.HexMoveMult(RegionFeatureType.Plains), Is.EqualTo(1.0));
+            Assert.That(HexPathfinder.HexMoveMult(RegionFeatureType.Forest), Is.EqualTo(1.5));
+            Assert.That(HexPathfinder.HexMoveMult(RegionFeatureType.Mountains), Is.EqualTo(2.5));
+
+            var region = new Region { CrossingTimeSeconds = 1000.0, Hexes = OpenDisk(5) };
+            // patch radius 5 → 10 hexes across → one open hex ≈ 1000/10 = 100s.
+            Assert.That(HexPathfinder.PerHexBaseSeconds(region), Is.EqualTo(100.0).Within(0.001));
+            Log("cost model: ×1/×1.5/×2.5, per-open-hex 100s from a 1000s region");
+        }
+
+        [Test]
+        [Description("H2 WIRING: order a real garrisoned unit to a hex across its region and drive the ground processor — it walks the A* path hex-by-hex and arrives on the destination hex (the London→Paris transit-in-ticks behaviour).")]
+        public void OrderMoveToHex_UnitWalksHexByHex_AndArrives()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;   // the home world — ColonyFactory generated its hex patches
+            Assert.That(body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB), Is.True);
+            var region0 = regionsDB.Regions[0];
+            Assert.That(region0.Hexes.Count, Is.GreaterThan(0), "the home world's capital region carries a hex patch (lazy gen at colony creation)");
+
+            var unit = GroundForces.RaiseUnit(body, MakeInfantryDesign(), s.Faction.Id, regionIndex: 0);
+            Assert.That(unit.HexQ, Is.EqualTo(0));
+            Assert.That(unit.HexR, Is.EqualTo(0), "a fresh unit stands at the patch centre");
+
+            // Pick the farthest-out hex in the patch as the destination (a real cross-region march).
+            var dest = region0.Hexes.OrderByDescending(h =>
+                new Pulsar4X.Colonies.HexCoordinate(h.Q, h.R).DistanceTo(new Pulsar4X.Colonies.HexCoordinate(0, 0))).First();
+
+            bool ordered = GroundForces.OrderMoveToHex(body, unit, dest.Q, dest.R);
+            Assert.That(ordered, Is.True, "a reachable hex in the patch is a valid order");
+            Assert.That(unit.HexPath, Is.Not.Null.And.Count.GreaterThan(0), "the unit has a stored hex path");
+            int steps = unit.HexPath.Count;
+
+            var proc = new GroundForcesProcessor();
+            // Advance well past the whole march (each step ≤ base×2.5; a long tick clears them all).
+            proc.ProcessEntity(body, 100 * 24 * 3600);
+
+            Assert.That(unit.HexQ, Is.EqualTo(dest.Q));
+            Assert.That(unit.HexR, Is.EqualTo(dest.R), "the unit arrived on the destination hex");
+            Assert.That(unit.HexPath, Is.Null, "and is no longer hex-marching");
+
+            // Save-safety: a mid-march unit's path survives a clone.
+            var unit2 = GroundForces.RaiseUnit(body, MakeInfantryDesign(), s.Faction.Id, regionIndex: 0);
+            GroundForces.OrderMoveToHex(body, unit2, dest.Q, dest.R);
+            var clone = (GroundForcesDB)body.GetDataBlob<GroundForcesDB>().Clone();
+            var clonedMarcher = clone.Units.First(u => u.UnitId == unit2.UnitId);
+            Assert.That(clonedMarcher.HexPath, Is.Not.Null.And.Count.GreaterThan(0), "an in-transit hex path survives a clone (save-safe)");
+
+            Log($"hex march: unit walked {steps} hexes to ({dest.Q},{dest.R}) and arrived; path clone-safe");
+        }
     }
 }
