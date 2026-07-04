@@ -454,6 +454,12 @@ navigate units on, plot where I'll make military bases, use topography to my adv
   Hold Ground / Close to Engage / Stand Off (auto-kite) combo calling `GroundFormationDoctrine.SetEngagementStance` — the
   commander's maneuver intent (the ground echo of the Fleet-window engagement-posture selector), applied immediately (no
   cooldown). This is what makes the H3 range advantage automatic: set Stand Off on a long-range formation and it auto-kites.
+  **+ an ORDER-QUEUE panel (O1b, 2026-07-04):** `DrawOrderQueue` lists the formation's queued plan (`GroundOrder.Describe()`
+  each) with a Clear button, and buttons to queue non-spatial orders (Hold 6h, ROE Stand-off/Close) + a MoveToRegion
+  waypoint to each visible ring neighbour. **Move waypoints are added by SHIFT-clicking a hex** in Hex view (RTS-style
+  queueing — `HandleHexClick` checks `ImGui.GetIO().KeyShift` + the selected formation and calls
+  `GroundForces.QueueFormationOrder(MoveHex)`); a plain click still moves-now. So you build "move → move → dig in" plans
+  visually. All thin callers over the CI-tested `GroundForces.QueueFormationOrder`/`SetFormationOrder`/`ClearFormationOrders`.
 
 Built to the CI-blind discipline: a thin draw over CI-tested engine blobs, all orders through CI-tested engine paths
 (`GroundForces.OrderMove` / `OrderFormationMove` / `PlaceInstallationInRegionOrder`), the whole body wrapped so a throw logs
