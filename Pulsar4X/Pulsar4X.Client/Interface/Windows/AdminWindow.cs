@@ -68,25 +68,6 @@ namespace Pulsar4X.Client
             //var _uiState.Game.GlobalManager.GetAllDataBlobsOfType<AdminSpaceDB>()
         }
 
-        private void OpenColonyHexMap()
-        {
-            // Find the first colony entity for the current faction
-            if (_uiState.Faction == null || _uiState.SelectedSystemState == null)
-                return;
-
-            var colonies = _uiState.SelectedSystemState.GetFilteredEntities(
-                DataStructures.EntityFilter.Friendly,
-                _uiState.Faction.Id,
-                typeof(ColonyInfoDB));
-
-            if (colonies.Any())
-            {
-                var firstColony = colonies.First().Entity;
-                var hexMapWindow = ColonyHexMapWindow.GetInstance();
-                hexMapWindow.SetSelectedColony(firstColony);
-                hexMapWindow.ToggleActive();
-            }
-        }
 
         internal override void Display()
         {
@@ -119,11 +100,10 @@ namespace Pulsar4X.Client
                 {
                     DisplayHelpers.Header("Admin Posts");
 
-                    // Add button to open hex map
-                    if (ImGui.Button("Open Colony Hex Map"))
-                    {
-                        OpenColonyHexMap();
-                    }
+                    // The old prototype colony hex map is retired (it was a non-persistent city-builder grid wired to
+                    // nothing). The real, save-safe hex grid lives on the planet's regions now — open it from a planet's
+                    // right-click → Planet view → Surface map → "⊞ Hexes" (U3).
+                    ImGui.TextDisabled("Hex map → Planet view ▸ Surface map ▸ ⊞ Hexes");
                     ImGui.Separator();
 
                     DisplayLabs();
