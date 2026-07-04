@@ -54,6 +54,16 @@ namespace Pulsar4X.GroundCombat
         /// <summary>Game-seconds left in the current march; counts down to 0 = arrived (the region's crossing time).</summary>
         [JsonProperty] public double TransitSecondsRemaining { get; internal set; }
 
+        // ── HEX POSITION (H2) — where the unit stands WITHIN its region's hex patch (Planet → Region → Hex). ──
+        /// <summary>Axial Q of the hex this unit occupies in <see cref="RegionIndex"/>'s patch (0,0 = patch centre,
+        /// where units muster). The fine-grained position the hex pathfinder plots over (H2).</summary>
+        [JsonProperty] public int HexQ { get; internal set; }
+        /// <summary>Axial R of the hex this unit occupies in its region's patch.</summary>
+        [JsonProperty] public int HexR { get; internal set; }
+        /// <summary>How this unit crosses ground — the snapshot that makes terrain cost UNIT-dependent (a tank bogs in
+        /// mountains and can't cross ocean; an aircraft flies straight). Snapshotted from the design at raise time.</summary>
+        [JsonProperty] public MovementDomain Domain { get; internal set; } = MovementDomain.Land;
+
         /// <summary>
         /// ENVIRONMENTAL GEAR (E4) — the ground echo of a ship's <c>HazardResistanceAtb</c>: per-hazard-effect
         /// protection this unit carries (heat-shielding, hazmat sealing, mountaineering rig…), keyed by the SHARED
@@ -79,6 +89,7 @@ namespace Pulsar4X.GroundCombat
             DesignId = o.DesignId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
             UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health;
             MovingToRegion = o.MovingToRegion; TransitSecondsRemaining = o.TransitSecondsRemaining;
+            HexQ = o.HexQ; HexR = o.HexR; Domain = o.Domain;
             if (o.EnvResistance != null) EnvResistance = new Dictionary<HazardEffectType, double>(o.EnvResistance);
         }
     }
@@ -185,6 +196,7 @@ namespace Pulsar4X.GroundCombat
                 FactionOwnerID = factionId,
                 RegionIndex = regionIndex,
                 UnitType = design.UnitType,
+                Domain = design.Domain,           // snapshot the movement domain (H2) — like the combat stats
                 Attack = design.Attack,
                 Defense = design.Defense,
                 MaxHealth = design.HitPoints,

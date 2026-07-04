@@ -38,6 +38,9 @@ namespace Pulsar4X.GroundCombat
 
         // --- ground combat stats (snapshotted onto each raised unit) ---
         [JsonProperty] public GroundUnitType UnitType { get; set; } = GroundUnitType.Infantry;
+        /// <summary>How this design's units cross ground (H2). Today's ground units are all <see cref="MovementDomain.Land"/>;
+        /// the field lets naval/air designs opt into the water/air cost rules the pathfinder already understands.</summary>
+        [JsonProperty] public MovementDomain Domain { get; set; } = MovementDomain.Land;
         [JsonProperty] public double Attack { get; set; }
         [JsonProperty] public double Defense { get; set; }
         [JsonProperty] public double HitPoints { get; set; }
