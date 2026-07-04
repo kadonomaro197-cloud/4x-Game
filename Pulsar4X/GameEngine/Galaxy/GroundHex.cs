@@ -32,12 +32,18 @@ namespace Pulsar4X.Galaxy
         /// Design: docs/GROUND-CITY-AND-WARMAP-DESIGN.md.</summary>
         [JsonProperty] public List<int> InstallationIds { get; internal set; } = new List<int>();
 
+        /// <summary>The FINE city grid you zoom into (C-track) — null until this operational hex is DEVELOPED by a
+        /// colony (lazy, so an undeveloped hex costs nothing). Its tiles' buildings roll up to
+        /// <see cref="InstallationIds"/>. Deep-copied below. Design: docs/GROUND-CITY-AND-WARMAP-DESIGN.md.</summary>
+        [JsonProperty] public CityGrid CityGrid { get; internal set; }
+
         public GroundHex() { }
         public GroundHex(int q, int r, RegionFeatureType terrain) { Q = q; R = r; Terrain = terrain; }
         public GroundHex(GroundHex o)
         {
             Q = o.Q; R = o.R; Terrain = o.Terrain; OwnerFactionID = o.OwnerFactionID;
             InstallationIds = o.InstallationIds != null ? new List<int>(o.InstallationIds) : new List<int>();
+            CityGrid = o.CityGrid != null ? new CityGrid(o.CityGrid) : null;
         }
     }
 }

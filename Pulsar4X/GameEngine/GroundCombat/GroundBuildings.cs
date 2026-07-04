@@ -138,6 +138,7 @@ namespace Pulsar4X.GroundCombat
                 {
                     comps.RemoveComponentInstance(inst);
                     region.InstallationIds?.Remove(id);
+                    CityBuilder.ClearBuildingFromCity(hex, id);   // roll-up: a bombed base also empties its fine city tile
                     destroyed++;
                 }
                 else survivors.Add(id);

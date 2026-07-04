@@ -68,15 +68,27 @@ mineral → material → **footprint building** (a Bunker/Spaceport/HQ Component
 
 ---
 
-## C-track — the City sub-grid (build after W-track is green)
+## C-track — the City sub-grid (W-track is green; building now)
 
-**Goal:** zoom into an operational hex that holds a colony → its own **fine hex grid**, every building on its own tile, with terrain-matched placement + adjacency economy.
+**Goal:** zoom into an operational hex that holds a colony → its own **fine hex grid**, every building on its own tile, with terrain-matched placement + adjacency economy. The "compartment diagram" to the operational hex's "ship icon."
 
-- **Lazy, per-developed-hex.** Only a hex with a colony gets a fine grid (radius ~5–8, a few hundred tiles). Same anti-bloat rule as operational hexes; generated on first open, idempotent, save-safe — mirrors `PlanetHexFactory.EnsureHexesForBody` one zoom down.
-- **The two grids are the same buildings.** A building placed on a fine city-tile IS the footprint on the operational hex (W-track's `GroundHex.InstallationIds` is the roll-up). Placement/economy live in the fine grid; capture/bombard read the operational roll-up.
-- **The builder is the subsystem.** A placement UI (the Civ layer), terrain affinity per fine tile, adjacency bonuses, and the scarcity that makes "running out of good tiles" a real decision. This is the big piece — deferred until the war-map connection is proven.
+### The locked model
 
-*(Detailed C-track model — fine-grid generation, placement rules, adjacency economy, the client zoom view — to be written when W-track lands.)*
+- **Lazy, per-developed-hex.** Only a hex a colony DEVELOPS gets a fine grid (radius ~5–8 → a few hundred tiles). Same anti-bloat rule as operational hexes; generated on first develop/open, idempotent, save-safe — mirrors `PlanetHexFactory.EnsureHexesForBody` **one zoom down**.
+- **Where it lives: `GroundHex.CityGrid` (nullable).** The fine grid hangs off the operational hex it details — null until developed (so an undeveloped hex costs nothing), deep-copied by `GroundHex`'s existing clone (save-safe for free, no new blob to register). NOT the old non-persistent `Colonies.ColonyHexMapDB` — that's the city-builder this whole design replaces.
+- **1:1 placement.** A `CityTile` holds one building instance id (`BuildingInstanceId`, -1 = empty) + its own fine terrain. A building is a `ComponentInstance` on the colony (the same economy object W-track and the colony screen already use) — the city grid just says *which fine tile it sits on*.
+- **The two grids are the SAME buildings — the roll-up invariant.** `GroundHex.InstallationIds` (operational, W-track) == the set of building ids placed on that hex's city tiles. Placing a building on a fine tile ADDS its id to the operational hex's roll-up; removing it (or bombing the operational hex) removes it from both. So **capture/bombard (W-track) act on the operational roll-up; placement/economy (C-track) act on the fine tiles — and they can never disagree.**
+- **The builder is the subsystem.** Terrain affinity per fine tile (a farm wants plains, a mine wants highlands), adjacency bonuses (buildings boost neighbours), and the scarcity that makes "running out of good tiles" a real decision. That economy is what makes placement a *decision*, not decoration.
+
+### Slices (engine-first, CI-gauged)
+
+- **C1 — the fine-grid data layer (the substrate).** `CityTile` + `CityGrid` (save-safe data objects) + `GroundHex.CityGrid` (lazy, deep-copied) + `CityGridFactory.EnsureCityForHex(body, region, q, r)` (builds the fine disk, terrain seeded from the operational hex + system RNG, idempotent, defensive — the `PlanetHexFactory` twin one zoom down) + the placement primitive `CityBuilder.PlaceBuildingOnTile` / `RemoveBuildingFromTile` that **keeps the roll-up invariant** (`GroundHex.InstallationIds` stays == the placed set) + `DevelopColonyHex` (generate a colony hex's city grid and lay its existing footprint buildings onto tiles — the migration from W-track's coarse "it's here" to the fine "it's on THIS tile"). Gauge: `CityGridTests` (lazy gen + scaling + clone-safety; place/remove keeps the roll-up in sync; develop lays the colony's buildings; a bombed operational hex clears its city tiles). **← START HERE.**
+- **C2 — the placement economy.** Terrain affinity (a tile's suitability for a building type) + adjacency bonuses + the scarcity of good tiles. The rules that make *where* you place matter — the decision layer.
+- **C3 — the client zoom view.** `PlanetViewWindow`: zoom from the operational hex into its city grid, drag-place buildings on tiles, see terrain/adjacency feedback. The Civ layer made visible. (CI compiles it; feel is the developer's local build.)
+
+### Cradle-to-grave (C-track)
+
+mineral → material → **building** (a `ComponentInstance` on the colony) → **placed on a fine city-tile** (`CityTile.BuildingInstanceId`, gated by terrain affinity + adjacency — C2) → rolls up to the operational hex's footprint (`GroundHex.InstallationIds`) → the **decision** (lay out your base to win the adjacency economy AND survive a strike) → **bombed/captured** on the operational hex → the fine tile is cleared too (roll-up invariant). One physical building, two zooms, one grave.
 
 ---
 
