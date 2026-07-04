@@ -80,8 +80,6 @@ namespace Pulsar4X.GroundCombat
             Attack = type == GroundUnitType.Artillery ? 160 : (type == GroundUnitType.Armor ? 140 : 100),
             Defense = type == GroundUnitType.Armor ? 15 : (type == GroundUnitType.Artillery ? 5 : 10),
             HitPoints = type == GroundUnitType.Armor ? 700 : (type == GroundUnitType.Artillery ? 400 : 500),
-            // V1: speed multiplier on the base march pace — armour is fast, artillery a touch faster than foot (moddable).
-            MovementSpeed = type == GroundUnitType.Armor ? 2.0 : (type == GroundUnitType.Artillery ? 1.2 : 1.0),
         };
     }
 }

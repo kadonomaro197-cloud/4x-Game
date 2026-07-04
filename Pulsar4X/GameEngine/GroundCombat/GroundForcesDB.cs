@@ -49,28 +49,32 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public double MaxHealth { get; internal set; }
         /// <summary>Current health; a fresh unit starts full, combat whittles it, 0 = destroyed (slice 5c/5d).</summary>
         [JsonProperty] public double Health { get; internal set; }
+        /// <summary>Strike RANGE in HEXES (H3) — max hex-distance this unit can hit an enemy (snapshot of the design's
+        /// <c>Range</c>). Directed fire: a unit only damages enemies within this reach, so a longer-ranged unit hits a
+        /// closing shorter-ranged one without being hit back. 0 = same hex only.</summary>
+        [JsonProperty] public int Range { get; internal set; }
         /// <summary>The region this unit is MARCHING to (-1 = standing still). While in transit it doesn't fight (5b).</summary>
         [JsonProperty] public int MovingToRegion { get; internal set; } = -1;
         /// <summary>Game-seconds left in the current march; counts down to 0 = arrived (the region's crossing time).</summary>
         [JsonProperty] public double TransitSecondsRemaining { get; internal set; }
 
-        // ── HEX POSITION (H2) — where the unit stands WITHIN its region's hex patch (Planet → Region → Hex). ──
-        /// <summary>Axial Q of the hex this unit occupies in <see cref="RegionIndex"/>'s patch (0,0 = patch centre,
-        /// where units muster). The fine-grained position the hex pathfinder plots over (H2).</summary>
+        // ── HEX POSITION + FINE MOVEMENT (H2) — where the unit stands WITHIN its region's hex patch, and its
+        //    hex-by-hex march. The coarse region march above (MovingToRegion) hops whole regions; this walks the fine
+        //    grid inside one. A unit is raised at the patch centre (0,0). Design: docs/HEX-GROUND-AND-ORDERS-DESIGN.md.
+        /// <summary>Axial Q of the hex this unit stands on within its region's patch (patch centre = 0,0).</summary>
         [JsonProperty] public int HexQ { get; internal set; }
-        /// <summary>Axial R of the hex this unit occupies in its region's patch.</summary>
+        /// <summary>Axial R of the hex this unit stands on within its region's patch.</summary>
         [JsonProperty] public int HexR { get; internal set; }
-        /// <summary>How this unit crosses ground — the snapshot that makes terrain cost UNIT-dependent (a tank bogs in
-        /// mountains and can't cross ocean; an aircraft flies straight). Snapshotted from the design at raise time.</summary>
-        [JsonProperty] public MovementDomain Domain { get; internal set; } = MovementDomain.Land;
-        /// <summary>How fast this unit crosses ground, a MULTIPLIER on the base march pace (1.0 = standard; 2.0 = twice as
-        /// fast). Snapshotted from the design (V1). Transit time is divided by this, so a faster unit arrives sooner —
-        /// the developer's "movement depends on the unit's speed."</summary>
-        [JsonProperty] public double MovementSpeed { get; internal set; } = 1.0;
-        /// <summary>The remaining HEX route this unit is walking (H2b) — the queued waypoints from the pathfinder, front =
-        /// the next hex to enter. Non-empty ⇒ the unit is marching hex-by-hex (<see cref="MovingToRegion"/> is set to the
-        /// destination region); <c>GroundForcesProcessor</c> pops the front as each hex is reached. null/empty = standing still.</summary>
-        [JsonProperty] public List<HexWaypoint> Path { get; internal set; }
+        /// <summary>The remaining hex STEPS of a fine march (ordered, current→destination), each a deep copy carrying its
+        /// terrain so the processor can time the step without a lookup. null / empty = not hex-marching. Set by
+        /// <see cref="GroundForces.OrderMoveToHex"/>, walked down by <c>GroundForcesProcessor</c>.</summary>
+        [JsonProperty] public List<Pulsar4X.Galaxy.GroundHex> HexPath { get; internal set; }
+        /// <summary>Game-seconds left to reach the FRONT hex of <see cref="HexPath"/> (counts to 0 = that hex reached).</summary>
+        [JsonProperty] public double HexTransitSecondsRemaining { get; internal set; }
+        /// <summary>Per-open-hex base crossing time for the region this march runs in (captured at order time from the
+        /// region's crossing-time datum). A step's time = this × the entered hex's terrain move-multiplier. Stable for
+        /// the march because a fine march stays within one region.</summary>
+        [JsonProperty] public double HexStepBaseSeconds { get; internal set; }
 
         /// <summary>
         /// ENVIRONMENTAL GEAR (E4) — the ground echo of a ship's <c>HazardResistanceAtb</c>: per-hazard-effect
@@ -95,15 +99,91 @@ namespace Pulsar4X.GroundCombat
         {
             UnitId = o.UnitId; FormationId = o.FormationId;
             DesignId = o.DesignId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
-            UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health;
+            UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health; Range = o.Range;
             MovingToRegion = o.MovingToRegion; TransitSecondsRemaining = o.TransitSecondsRemaining;
-            HexQ = o.HexQ; HexR = o.HexR; Domain = o.Domain; MovementSpeed = o.MovementSpeed;
-            if (o.Path != null)
+            HexQ = o.HexQ; HexR = o.HexR; HexTransitSecondsRemaining = o.HexTransitSecondsRemaining; HexStepBaseSeconds = o.HexStepBaseSeconds;
+            if (o.HexPath != null)
             {
-                Path = new List<HexWaypoint>(o.Path.Count);
-                foreach (var w in o.Path) Path.Add(new HexWaypoint(w));
+                HexPath = new List<Pulsar4X.Galaxy.GroundHex>();
+                foreach (var h in o.HexPath) HexPath.Add(new Pulsar4X.Galaxy.GroundHex(h));
             }
             if (o.EnvResistance != null) EnvResistance = new Dictionary<HazardEffectType, double>(o.EnvResistance);
+        }
+    }
+
+    /// <summary>
+    /// A formation's RULES OF ENGAGEMENT — the movement intent a commander sets, the ground echo of the space
+    /// CLOSING model (docs/FLEET-COMBAT-CLOSING-DESIGN.md: a fast long-range fleet kites, a brawler forces the merge).
+    /// It tells the surface processor how a formation should MANEUVER relative to the enemy each tick, so the H3 range
+    /// advantage is used automatically instead of by micro:
+    /// </summary>
+    public enum GroundEngagementStance : byte
+    {
+        /// <summary>Hold ground — stand and fight where you are (the default; no auto-movement).</summary>
+        HoldGround,
+        /// <summary>Close to the enemy — advance toward the nearest enemy until in your own strike range (the brawler /
+        /// the zerg rush). A short-ranged unit uses this to CLOSE the gap a longer-ranged enemy is exploiting.</summary>
+        CloseToEngage,
+        /// <summary>Stand off — keep the enemy at arm's length: back away when an enemy is within ITS range, so a
+        /// longer-ranged unit hits from beyond the enemy's reach (the clone kiting the zerg). Auto-kite.</summary>
+        StandOff,
+    }
+
+    /// <summary>The kind of queued formation order (O1). A formation carries an ordered LIST of these and executes them
+    /// one at a time, in sequence — a real "then" waypoint chain ("move to London, THEN move to Paris, THEN dig in"),
+    /// the thing the fleet action-lane model doesn't give. New order kinds are added here.</summary>
+    public enum GroundOrderType : byte
+    {
+        MoveToHex,      // march the formation to a hex within its region (fine grid)
+        MoveToRegion,   // march the formation to an adjacent region (coarse ring hop)
+        HoldFor,        // hold position for a set number of game-seconds (a timed wait / dig-in pause)
+        SetStance,      // switch the formation's combat stance (from the GroundStance catalog)
+        SetEngagement,  // switch the formation's ROE (Hold / Close / Stand-off)
+    }
+
+    /// <summary>
+    /// One queued order for a <see cref="GroundFormation"/> (O1) — the ground echo of an <c>EntityCommand</c>, kept as a
+    /// save-safe DATA object (formations aren't entities, so their orders aren't <c>EntityCommand</c>s either — the same
+    /// data-object choice the formation itself makes). A formation's <see cref="GroundFormation.Orders"/> list runs these
+    /// in sequence; each carries only the fields its <see cref="Type"/> needs. Design: docs/HEX-GROUND-AND-ORDERS-DESIGN.md (O1).
+    /// </summary>
+    public class GroundOrder
+    {
+        [JsonProperty] public GroundOrderType Type { get; internal set; }
+        /// <summary>Set once the processor has kicked this order off (so a march isn't re-issued every tick).</summary>
+        [JsonProperty] public bool Issued { get; internal set; }
+        [JsonProperty] public int TargetQ { get; internal set; }        // MoveToHex
+        [JsonProperty] public int TargetR { get; internal set; }        // MoveToHex
+        [JsonProperty] public int TargetRegion { get; internal set; }   // MoveToRegion
+        [JsonProperty] public double SecondsRemaining { get; internal set; }   // HoldFor (counts down)
+        [JsonProperty] public string StanceId { get; internal set; }    // SetStance (catalog id)
+        [JsonProperty] public GroundEngagementStance Engagement { get; internal set; }   // SetEngagement
+
+        public GroundOrder() { }
+        public GroundOrder(GroundOrder o)
+        {
+            Type = o.Type; Issued = o.Issued; TargetQ = o.TargetQ; TargetR = o.TargetR;
+            TargetRegion = o.TargetRegion; SecondsRemaining = o.SecondsRemaining; StanceId = o.StanceId; Engagement = o.Engagement;
+        }
+
+        public static GroundOrder MoveHex(int q, int r) => new GroundOrder { Type = GroundOrderType.MoveToHex, TargetQ = q, TargetR = r };
+        public static GroundOrder MoveRegion(int region) => new GroundOrder { Type = GroundOrderType.MoveToRegion, TargetRegion = region };
+        public static GroundOrder Hold(double seconds) => new GroundOrder { Type = GroundOrderType.HoldFor, SecondsRemaining = seconds };
+        public static GroundOrder Stance(string stanceId) => new GroundOrder { Type = GroundOrderType.SetStance, StanceId = stanceId };
+        public static GroundOrder Roe(GroundEngagementStance e) => new GroundOrder { Type = GroundOrderType.SetEngagement, Engagement = e };
+
+        /// <summary>Short human label for a readout ("→ hex (3,-1)", "dig in 2h", "ROE: StandOff").</summary>
+        public string Describe()
+        {
+            switch (Type)
+            {
+                case GroundOrderType.MoveToHex: return $"→ hex ({TargetQ},{TargetR})";
+                case GroundOrderType.MoveToRegion: return $"→ region {TargetRegion + 1}";
+                case GroundOrderType.HoldFor: return $"hold {SecondsRemaining / 3600.0:0.#}h";
+                case GroundOrderType.SetStance: return $"stance: {StanceId}";
+                case GroundOrderType.SetEngagement: return $"ROE: {Engagement}";
+                default: return Type.ToString();
+            }
         }
     }
 
@@ -143,12 +223,25 @@ namespace Pulsar4X.GroundCombat
         /// <summary>Game time at/after which this formation may switch stance again (the switch cooldown clock).</summary>
         [JsonProperty] public DateTime SwitchableAfter { get; internal set; } = DateTime.MinValue;
 
+        /// <summary>The RULES OF ENGAGEMENT — how this formation MANEUVERS relative to the enemy (the ground echo of the
+        /// space closing model). Default <see cref="GroundEngagementStance.HoldGround"/> = stand and fight (no
+        /// auto-movement), so a formation with no ROE set behaves exactly as before. Set via
+        /// <c>GroundFormationDoctrine.SetEngagementStance</c>; read by <c>GroundForcesProcessor</c>'s maneuver step.</summary>
+        [JsonProperty] public GroundEngagementStance Engagement { get; internal set; } = GroundEngagementStance.HoldGround;
+
+        /// <summary>The formation's ORDER QUEUE (O1) — a sequence of <see cref="GroundOrder"/>s run one at a time, in
+        /// order ("move to London, THEN Paris, THEN dig in"). Empty = the formation is free (ROE auto-maneuver, if any,
+        /// takes over). The processor pops the front order when it completes. Deep-copied for save-safety.</summary>
+        [JsonProperty] public List<GroundOrder> Orders { get; internal set; } = new List<GroundOrder>();
+
         public GroundFormation() { }
         public GroundFormation(GroundFormation o)
         {
             FormationId = o.FormationId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; LeaderUnitId = o.LeaderUnitId;
             StanceId = o.StanceId; StanceFamily = o.StanceFamily; AttackMult = o.AttackMult; DamageTakenMult = o.DamageTakenMult;
-            SwitchableAfter = o.SwitchableAfter;
+            SwitchableAfter = o.SwitchableAfter; Engagement = o.Engagement;
+            Orders = new List<GroundOrder>();
+            if (o.Orders != null) foreach (var ord in o.Orders) Orders.Add(new GroundOrder(ord));
         }
     }
 
@@ -209,12 +302,12 @@ namespace Pulsar4X.GroundCombat
                 FactionOwnerID = factionId,
                 RegionIndex = regionIndex,
                 UnitType = design.UnitType,
-                Domain = design.Domain,           // snapshot the movement domain (H2) — like the combat stats
-                MovementSpeed = design.MovementSpeed > 0 ? design.MovementSpeed : 1.0,   // speed multiplier (V1)
                 Attack = design.Attack,
                 Defense = design.Defense,
                 MaxHealth = design.HitPoints,
                 Health = design.HitPoints,
+                // Strike range in hexes (H3): the design's, or a per-type default if the design left it unset.
+                Range = design.Range > 0 ? design.Range : GroundRangeTools.DefaultRangeFor(design.UnitType),
                 // Snapshot the design's environmental gear onto the unit (E4) — like the combat stats above.
                 EnvResistance = (design.EnvironmentalResistance != null && design.EnvironmentalResistance.Count > 0)
                     ? new Dictionary<HazardEffectType, double>(design.EnvironmentalResistance)
@@ -241,37 +334,65 @@ namespace Pulsar4X.GroundCombat
             if (!regions[unit.RegionIndex].Neighbors.Contains(toRegion)) return false;   // must be adjacent
 
             unit.MovingToRegion = toRegion;
-            // Transit time = the region's base crossing time ÷ the unit's speed (V1: movement depends on unit speed).
-            unit.TransitSecondsRemaining = regions[unit.RegionIndex].CrossingTimeSeconds / Math.Max(0.05, unit.MovementSpeed);
+            unit.TransitSecondsRemaining = regions[unit.RegionIndex].CrossingTimeSeconds;
             return true;
         }
 
+        // ───────────────────────── FINE HEX MOVEMENT (H2 — the London→Paris march) ─────────────────────────
+        // The coarse OrderMove above hops whole regions; this walks the hex grid WITHIN the unit's region. A* over the
+        // region's hex patch (terrain-weighted), stored on the unit, walked hex-by-hex by GroundForcesProcessor.
+
         /// <summary>
-        /// Order a unit to march to a specific HEX — <paramref name="toQ"/>,<paramref name="toR"/> in region
-        /// <paramref name="toRegion"/> (H2). Plots a terrain-weighted A* route from the unit's current hex
-        /// (<see cref="HexPathfinder"/>, honouring its <see cref="GroundUnit.Domain"/>), stores it as the unit's
-        /// <see cref="GroundUnit.Path"/>, and the processor walks it hex-by-hex over ticks — the London→Paris transit,
-        /// crossing region borders as the route requires. Returns false if there's no region layer or no route exists
-        /// (e.g. a land unit asked to reach an ocean-locked hex). This is the fine-grained twin of the region-hop
-        /// <see cref="OrderMove(Entity, GroundUnit, int)"/> overload (kept as the coarse fallback).
+        /// Order a unit to march to hex (<paramref name="destQ"/>,<paramref name="destR"/>) WITHIN its current region,
+        /// pathing around rough terrain (A*). Lazily generates the body's hex patches if it hasn't become a theatre yet
+        /// (ordering a hex move IS "the tactical view was opened here"). Returns false — no move — if the body has no
+        /// region layer, the unit's region is out of range, the destination isn't in the patch, it's already there, or
+        /// no route exists. Cross-region hex marches use the coarse <see cref="OrderMove"/> to hop the border, then a
+        /// fresh hex order in the new region (each region's patch has its own local origin — border-stitching is a
+        /// documented follow-on).
         /// </summary>
-        public static bool OrderMove(Entity body, GroundUnit unit, int toRegion, int toQ, int toR)
+        public static bool OrderMoveToHex(Entity body, GroundUnit unit, int destQ, int destR)
         {
-            if (unit == null) return false;
+            if (unit == null || body == null) return false;
+            if (unit.MovingToRegion >= 0) return false;   // can't hex-march while crossing a region border (coarse hop wins)
             if (!body.TryGetDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>(out var regionsDB)) return false;
+            if (unit.RegionIndex < 0 || unit.RegionIndex >= regionsDB.Regions.Count) return false;
 
-            var steps = HexPathfinder.FindPath(regionsDB, unit.RegionIndex, unit.HexQ, unit.HexR,
-                toRegion, toQ, toR, unit.Domain);
-            if (steps.Count == 0) return false;
+            // This body is now a theatre — make sure its hex patches exist (idempotent, no-op if already generated).
+            Pulsar4X.Galaxy.PlanetHexFactory.EnsureHexesForBody(body);
 
-            var path = new List<HexWaypoint>(steps.Count);
-            // Divide each step's terrain-weighted time by the unit's speed (V1: a faster unit walks each hex quicker).
-            double speed = Math.Max(0.05, unit.MovementSpeed);
-            foreach (var s in steps) path.Add(new HexWaypoint(s.RegionIndex, s.Q, s.R, s.Seconds / speed));
-            unit.Path = path;
-            unit.TransitSecondsRemaining = path[0].Seconds;
-            unit.MovingToRegion = toRegion;   // in-transit flag (the final destination region)
+            var region = regionsDB.Regions[unit.RegionIndex];
+            var path = HexPathfinder.FindPath(region.Hexes, unit.HexQ, unit.HexR, destQ, destR);
+            if (path.Count == 0) return false;   // already there / unreachable / dest off-patch
+
+            // Store deep copies (don't alias the region's live hex objects), and capture the region's per-hex base time.
+            unit.HexPath = new List<Pulsar4X.Galaxy.GroundHex>(path.Count);
+            foreach (var h in path) unit.HexPath.Add(new Pulsar4X.Galaxy.GroundHex(h));
+            unit.HexStepBaseSeconds = HexPathfinder.PerHexBaseSeconds(region);
+            unit.HexTransitSecondsRemaining = unit.HexStepBaseSeconds * HexPathfinder.HexMoveMult(unit.HexPath[0].Terrain);
             return true;
+        }
+
+        /// <summary>March a whole formation to hex (<paramref name="destQ"/>,<paramref name="destR"/>) as a block (the
+        /// hex-scale echo of <see cref="OrderFormationMove"/>): every member standing with the LEADER (in the leader's
+        /// region, not already marching) paths to the destination via <see cref="OrderMoveToHex"/>. Members path
+        /// independently to the same hex (v1 — spreading a block across adjacent hexes is a refinement). Returns how
+        /// many units set out.</summary>
+        public static int OrderFormationMoveToHex(Entity body, GroundFormation formation, int destQ, int destR)
+        {
+            if (formation == null || !body.TryGetDataBlob<GroundForcesDB>(out var forces)) return 0;
+            int rallyRegion = LeaderRegion(forces, formation);
+            if (rallyRegion < 0) return 0;
+
+            int moved = 0;
+            foreach (var u in forces.Units.ToArray())
+            {
+                if (u.FormationId != formation.FormationId) continue;
+                if (u.RegionIndex != rallyRegion || u.MovingToRegion >= 0) continue;
+                if (u.HexPath != null && u.HexPath.Count > 0) continue;   // already hex-marching
+                if (OrderMoveToHex(body, u, destQ, destR)) moved++;
+            }
+            return moved;
         }
 
         // ───────────────────────── FORMATIONS (the ground echo of fleet grouping) ─────────────────────────
@@ -359,25 +480,31 @@ namespace Pulsar4X.GroundCombat
             return moved;
         }
 
-        /// <summary>March a whole formation to a target HEX (H2) — the fine-grained twin of the region-hop
-        /// <see cref="OrderFormationMove(Entity, GroundFormation, int)"/>. Every member standing with the LEADER
-        /// (in the leader's region, not already moving) is given its OWN terrain-weighted A* route to
-        /// <paramref name="toRegion"/>,<paramref name="toQ"/>,<paramref name="toR"/> (each from its own hex, so the
-        /// block converges on the objective), transiting hex-by-hex over ticks. Returns how many members marched.</summary>
-        public static int OrderFormationMove(Entity body, GroundFormation formation, int toRegion, int toQ, int toR)
-        {
-            if (formation == null || !body.TryGetDataBlob<GroundForcesDB>(out var forces)) return 0;
-            int rallyRegion = LeaderRegion(forces, formation);
-            if (rallyRegion < 0) return 0;
+        // ───────────────────────── FORMATION ORDER QUEUE (O1 — sequential "then" waypoints) ─────────────────────────
 
-            int moved = 0;
-            foreach (var u in forces.Units.ToArray())
-            {
-                if (u.FormationId != formation.FormationId) continue;
-                if (u.RegionIndex != rallyRegion || u.MovingToRegion >= 0 || (u.Path != null && u.Path.Count > 0)) continue;
-                if (OrderMove(body, u, toRegion, toQ, toR)) moved++;
-            }
-            return moved;
+        /// <summary>Append an order to a formation's queue (it runs after everything already queued). The ground echo of
+        /// giving a fleet a waypoint. Returns false if the formation is null.</summary>
+        public static bool QueueFormationOrder(GroundFormation formation, GroundOrder order)
+        {
+            if (formation == null || order == null) return false;
+            (formation.Orders ??= new List<GroundOrder>()).Add(order);
+            return true;
+        }
+
+        /// <summary>Replace a formation's whole queue with a single order (the "do THIS now, forget the rest" verb).</summary>
+        public static void SetFormationOrder(GroundFormation formation, GroundOrder order)
+        {
+            if (formation == null) return;
+            formation.Orders = new List<GroundOrder>();
+            if (order != null) formation.Orders.Add(order);
+        }
+
+        /// <summary>Clear a formation's order queue (cancel the plan). In-transit units keep their current march until it
+        /// completes; only the QUEUE is emptied.</summary>
+        public static void ClearFormationOrders(GroundFormation formation)
+        {
+            if (formation == null) return;
+            formation.Orders = new List<GroundOrder>();
         }
 
         /// <summary>The region the formation's LEADER stands in (its rally point) — or the first member's region if the

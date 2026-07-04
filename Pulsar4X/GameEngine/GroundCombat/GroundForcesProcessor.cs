@@ -60,21 +60,13 @@ namespace Pulsar4X.GroundCombat
                 return;
 
             // 1) MOVEMENT: advance in-transit units.
-            //    - HEX PATH (H2): a unit with a plotted hex route walks it hex-by-hex, each step costing its
-            //      terrain-weighted time; it arrives when the last hex is reached (the London→Paris transit).
-            //    - REGION HOP (5b, coarse fallback): a unit ordered region→region lands at the new region's centre
-            //      when its crossing time elapses (kept working until the client is hex-native).
-            int marching = 0, arrivedNow = 0;   // V1 gauge: proves the processor FIRES and moves units (game_logs [ground]).
+            //    (a) COARSE region march (5b): a whole-region hop, arrives when the region's crossing time has elapsed.
+            //    (b) FINE hex march (H2): walk the stored A* path one hex at a time — each step costs the region's
+            //        per-hex base × the entered hex's terrain multiplier, so a march through mountains takes longer.
+            //        A single tick can clear several cheap hexes (the while-loop carries the leftover time forward).
             foreach (var unit in forces.Units)
             {
-                bool wasMoving = (unit.Path != null && unit.Path.Count > 0) || unit.MovingToRegion >= 0;
-                if (!wasMoving) continue;
-
-                if (unit.Path != null && unit.Path.Count > 0)
-                {
-                    AdvanceHexPath(unit, deltaSeconds);
-                }
-                else   // region hop (coarse fallback)
+                if (unit.MovingToRegion >= 0)   // (a) coarse region hop takes priority (a unit isn't doing both)
                 {
                     unit.TransitSecondsRemaining -= deltaSeconds;
                     if (unit.TransitSecondsRemaining <= 0)
@@ -82,16 +74,27 @@ namespace Pulsar4X.GroundCombat
                         unit.RegionIndex = unit.MovingToRegion;
                         unit.MovingToRegion = -1;
                         unit.TransitSecondsRemaining = 0;
-                        unit.HexQ = 0; unit.HexR = 0;   // a coarse region hop musters at the new region's patch centre
                     }
+                    continue;
                 }
 
-                bool stillMoving = (unit.Path != null && unit.Path.Count > 0) || unit.MovingToRegion >= 0;
-                if (stillMoving) marching++;
-                else { arrivedNow++; Console.WriteLine($"[ground] '{unit.Name}' arrived at region {unit.RegionIndex} hex ({unit.HexQ},{unit.HexR})"); }
+                if (unit.HexPath != null && unit.HexPath.Count > 0)   // (b) fine hex march
+                {
+                    unit.HexTransitSecondsRemaining -= deltaSeconds;
+                    while (unit.HexPath.Count > 0 && unit.HexTransitSecondsRemaining <= 0)
+                    {
+                        var step = unit.HexPath[0];
+                        unit.HexQ = step.Q;
+                        unit.HexR = step.R;
+                        unit.HexPath.RemoveAt(0);
+                        // Carry the leftover (negative) time into the next step so a fast tick can cross several hexes.
+                        unit.HexTransitSecondsRemaining += (unit.HexPath.Count > 0)
+                            ? unit.HexStepBaseSeconds * HexPathfinder.HexMoveMult(unit.HexPath[0].Terrain)
+                            : 0.0;
+                    }
+                    if (unit.HexPath.Count == 0) { unit.HexPath = null; unit.HexTransitSecondsRemaining = 0; }
+                }
             }
-            if (marching > 0 || arrivedNow > 0)
-                Console.WriteLine($"[ground] move tick Δ{deltaSeconds}s: {marching} marching, {arrivedNow} arrived");
 
             // 1b) ENVIRONMENTAL ATTRITION (E3): a unit STANDING in a region with a DAMAGING environmental hazard
             //     (fire tornadoes, corrosive superstorm, radiation zone) bleeds health each tick — the ground twin
@@ -117,7 +120,22 @@ namespace Pulsar4X.GroundCombat
 
             body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB);
 
-            // Group the units that are STANDING (not on the road) and alive, by region.
+            // 1b2) FORMATION ORDER QUEUE (O1) — run each formation's queued plan one order at a time, in sequence
+            //      ("move to London, THEN Paris, THEN dig in"). A move order is kicked off once and popped when the
+            //      formation's leader arrives; a hold counts down; a stance/ROE order applies instantly. This runs
+            //      BEFORE the ROE maneuver so an explicit queued order takes precedence over auto-kite/close.
+            ProcessFormationOrders(body, forces, regionsDB, deltaSeconds);
+
+            // 1c) RULES OF ENGAGEMENT (the commander's maneuver intent) — before the fight, auto-move each ROE
+            //     formation's IDLE units one hex toward (Close) or away (Stand-off) from the nearest enemy, so the H3
+            //     range advantage is used without micro (the clone auto-kites the zerg). The ground echo of the space
+            //     closing model. Only issues to units not already moving; a hex-marching unit still FIGHTS this tick
+            //     (below), so a kiting unit fires WHILE it repositions.
+            ApplyEngagementManeuvers(forces, regionsDB, body);
+
+            // Group the units that are STANDING FOR BATTLE — alive and not on a strategic REGION hop. A fine HEX march
+            // (a battlefield reposition) still fights: a unit fires from its current hex as it moves (H3 range + the
+            // ROE kite). Only a whole-region journey (MovingToRegion) takes a unit out of the fight.
             var byRegion = new Dictionary<int, List<GroundUnit>>();
             foreach (var unit in forces.Units)
             {
@@ -168,17 +186,25 @@ namespace Pulsar4X.GroundCombat
             TryCapturePlanet(body, regionsDB);
         }
 
-        /// <summary>One salvo in a contested region — TERRAIN- and TYPE-aware (5f/5g). Each faction takes the
-        /// combined attack of all others, but each attacker's damage is scaled by the weapon TRIANGLE (vs the enemy's
-        /// composition) and its TERRAIN affinity (armour bad in rough, artillery loves high ground); the region's
-        /// OWNER (the defender) additionally divides its incoming by the terrain COVER. Simultaneous (snapshot before
-        /// apply), deterministic, no overkill (pool carries). Reads <see cref="GroundTerrain"/> — the ground twin of
-        /// SpaceHazardTools.</summary>
+        /// <summary>One salvo in a contested region — TERRAIN-, TYPE- and now RANGE-aware (5f/5g/H3). Directed fire: an
+        /// attacker only damages enemies within its own strike <see cref="GroundUnit.Range"/> (in hexes), so a
+        /// longer-ranged unit hits a shorter-ranged one as it CLOSES without being hit back until the enemy reaches ITS
+        /// range — the ground echo of the space first-strike ("a clone trooper has the advantage over a zerg swarm
+        /// until they reach him"). Each attacker's output is still scaled by the weapon TRIANGLE (vs the enemies it can
+        /// actually reach) and its TERRAIN affinity, and a defender in the region owner's seat divides incoming by
+        /// terrain COVER × FORTIFICATION. Simultaneous (all incoming computed from the pre-salvo state, then applied),
+        /// deterministic. <b>Co-located units (same hex, distance 0) are always in range of each other, so a stacked
+        /// fight is identical to the pre-hex region resolver</b> — the migration adds range without changing a
+        /// same-hex battle. (Terrain here is still the region's dominant feature; reading terrain from the DEFENDER's
+        /// own hex is the H3b follow-on.) Reads <see cref="GroundTerrain"/> — the ground twin of SpaceHazardTools.</summary>
         private static void ResolveRegionCombat(GroundForcesDB forces, List<GroundUnit> units, Region region,
             List<Region> allRegions, System.Func<int, GroundDefenseAtb> fortResolve)
         {
             var terrain = GroundTerrain.Classify(region);
             int defenderFaction = region != null ? region.OwnerFactionID : -1;
+            // Terrain cover × design-driven fortification — the defender's incoming is divided by this (per-region).
+            double coverFort = GroundTerrain.CoverDefenseMult(terrain)
+                * GroundFortification.DefenseMult(region, allRegions, defenderFaction, fortResolve);
 
             var byFaction = new Dictionary<int, List<GroundUnit>>();
             foreach (var u in units)
@@ -187,51 +213,222 @@ namespace Pulsar4X.GroundCombat
                 l.Add(u);
             }
 
-            // Incoming damage pool per faction, computed from the PRE-salvo state (simultaneous exchange).
-            var incoming = new Dictionary<int, double>();
-            foreach (var g in byFaction.Keys) incoming[g] = 0.0;
+            // Per-TARGET incoming (not per-faction) so range gating lands damage on exactly the units an attacker can
+            // reach. Computed entirely from the PRE-salvo state (Health read here, applied below) → simultaneous.
+            var incoming = new Dictionary<GroundUnit, double>();
 
             foreach (var f in byFaction.Keys)
             {
                 foreach (var g in byFaction.Keys)
                 {
                     if (f == g) continue;
-                    double pool = 0.0;
+                    bool gIsDefender = (g == defenderFaction);
                     foreach (var u in byFaction[f])
                     {
                         if (u.Health <= 0) continue;
-                        // × terrain affinity × the formation STANCE's attack mult (offensive hits harder, 5h doctrine).
+
+                        // The g-units THIS attacker can actually reach (within its hex Range). Co-located → all of g.
+                        List<GroundUnit> reachable = null;
+                        foreach (var t in byFaction[g])
+                        {
+                            if (t.Health <= 0) continue;
+                            if (HexDist(u, t) > u.Range) continue;   // out of this attacker's reach → it can't hit t
+                            (reachable ??= new List<GroundUnit>()).Add(t);
+                        }
+                        if (reachable == null) continue;             // nothing in range → this unit fires nothing this salvo
+
+                        // Output = attack × terrain affinity × stance, scaled by the avg triangle vs the reachable mix.
                         double atk = u.Attack * GroundTerrain.TerrainAttackMult(u.UnitType, terrain) * GroundFormationDoctrine.AttackMult(forces, u);
-                        pool += atk * AvgTriangleVs(u.UnitType, byFaction[g]);
+                        double pool = atk * AvgTriangleVs(u.UnitType, reachable) * SalvoScale;
+                        if (gIsDefender && coverFort > 0) pool /= coverFort;
+
+                        // Spread this attacker's pool across its reachable targets, health-weighted (matches the old
+                        // resolver's focus-fire: triangle is already in the total via the avg, distribution is by health).
+                        double totalH = 0.0;
+                        foreach (var t in reachable) totalH += t.Health;
+                        if (totalH <= 0) continue;
+                        foreach (var t in reachable)
+                        {
+                            incoming.TryGetValue(t, out var acc);
+                            incoming[t] = acc + pool * (t.Health / totalH);
+                        }
                     }
-                    pool *= SalvoScale;
-                    // The defender (region owner) divides incoming by terrain COVER × FORTIFICATION (its Bunkers, local
-                    // + adjacent-friendly projection — GroundFortification, design-driven).
-                    if (g == defenderFaction)
-                        pool /= (GroundTerrain.CoverDefenseMult(terrain) * GroundFortification.DefenseMult(region, allRegions, defenderFaction, fortResolve));
-                    incoming[g] += pool;
                 }
             }
 
-            // Apply each faction's incoming, focus-fired across its units (pool carries — no overkill waste). A unit's
-            // formation STANCE scales the DAMAGE IT TAKES (defensive soaks more raw pool per point of health; offensive
-            // dies faster) — the ground echo of the space resolver's per-ship ToughnessMult, 5h doctrine.
-            foreach (var g in byFaction.Keys)
+            // Apply each unit's accumulated incoming, scaled by its formation STANCE's damage-taken mult (defensive
+            // soaks more health per point; offensive dies faster — the ground echo of the space per-ship ToughnessMult),
+            // capped at its health.
+            foreach (var kv in incoming)
             {
-                double pool = incoming[g];
-                if (pool <= 0) continue;
-                foreach (var u in byFaction[g])
-                {
-                    if (u.Health <= 0) continue;
-                    if (pool <= 0) break;
-                    double dtm = GroundFormationDoctrine.DamageTakenMult(forces, u);
-                    if (dtm <= 0) dtm = 1.0;
-                    // Raw pool this unit can absorb before dying = Health / dtm; the health it loses = raw × dtm.
-                    double raw = Math.Min(u.Health / dtm, pool);
-                    u.Health -= raw * dtm;
-                    pool -= raw;
-                }
+                var t = kv.Key;
+                if (t.Health <= 0) continue;
+                double dtm = GroundFormationDoctrine.DamageTakenMult(forces, t);
+                if (dtm <= 0) dtm = 1.0;
+                t.Health -= Math.Min(t.Health, kv.Value * dtm);
             }
+        }
+
+        /// <summary>Hex distance between two units on their region's patch (0 = same hex). Reused for the range gate.</summary>
+        private static int HexDist(GroundUnit a, GroundUnit b)
+            => new HexCoordinate(a.HexQ, a.HexR).DistanceTo(new HexCoordinate(b.HexQ, b.HexR));
+
+        /// <summary>
+        /// RULES OF ENGAGEMENT maneuver (the ground echo of the space closing model): for each formation whose
+        /// <see cref="GroundEngagementStance"/> isn't HoldGround, order each of its IDLE units one hex toward
+        /// (CloseToEngage) or away (StandOff) from the nearest enemy in its region — so the H3 range advantage is used
+        /// automatically. A unit already moving is left alone (it re-evaluates when it arrives), so a kite is a steady
+        /// step-back-and-fire, not thrash. Issues through <see cref="GroundForces.OrderMoveToHex"/> (which enforces
+        /// patch bounds + ocean-impassability), so it never places a unit somewhere illegal.
+        /// </summary>
+        private static void ApplyEngagementManeuvers(GroundForcesDB forces, PlanetRegionsDB regionsDB, Entity body)
+        {
+            if (regionsDB == null || forces.Formations == null || forces.Formations.Count == 0) return;
+            bool anyRoe = false;
+            foreach (var f in forces.Formations)
+                if (f.Engagement != GroundEngagementStance.HoldGround) { anyRoe = true; break; }
+            if (!anyRoe) return;
+
+            foreach (var unit in forces.Units)
+            {
+                if (unit.Health <= 0 || unit.MovingToRegion >= 0) continue;
+                if (unit.HexPath != null && unit.HexPath.Count > 0) continue;   // already repositioning — let it arrive
+                if (FormationHasOrders(forces, unit)) continue;                 // an explicit queued plan overrides auto-ROE
+                var stance = GroundFormationDoctrine.EngagementOf(forces, unit);
+                if (stance == GroundEngagementStance.HoldGround) continue;
+                if (unit.RegionIndex < 0 || unit.RegionIndex >= regionsDB.Regions.Count) continue;
+                var region = regionsDB.Regions[unit.RegionIndex];
+                if (region.Hexes == null || region.Hexes.Count == 0) continue;
+
+                // Nearest enemy in the same region.
+                GroundUnit enemy = null; int best = int.MaxValue;
+                foreach (var e in forces.Units)
+                {
+                    if (e.Health <= 0 || e.FactionOwnerID == unit.FactionOwnerID || e.RegionIndex != unit.RegionIndex) continue;
+                    int d = HexDist(unit, e);
+                    if (d < best) { best = d; enemy = e; }
+                }
+                if (enemy == null) continue;
+
+                bool moveAway;
+                if (stance == GroundEngagementStance.CloseToEngage)
+                {
+                    if (best <= unit.Range) continue;            // already in my range → hold and fire
+                    moveAway = false;                            // close the gap
+                }
+                else // StandOff — keep the enemy beyond ITS reach
+                {
+                    if (best <= enemy.Range) moveAway = true;    // enemy can hit me → open the gap (kite)
+                    else if (best > unit.Range) moveAway = false;// I can't hit them → close into my range
+                    else continue;                               // in my range, out of theirs → hold + fire (the sweet spot)
+                }
+
+                var step = PickStepHex(region, unit.HexQ, unit.HexR, enemy.HexQ, enemy.HexR, moveAway);
+                if (step != null) GroundForces.OrderMoveToHex(body, unit, step.Value.q, step.Value.r);
+            }
+        }
+
+        /// <summary>The adjacent in-patch, PASSABLE hex that most decreases (toward) / increases (away) the hex distance
+        /// to (<paramref name="toQ"/>,<paramref name="toR"/>). Null if no neighbour improves on standing still.</summary>
+        private static (int q, int r)? PickStepHex(Region region, int fromQ, int fromR, int toQ, int toR, bool away)
+        {
+            var byCoord = new Dictionary<(int, int), GroundHex>();
+            foreach (var h in region.Hexes) byCoord[(h.Q, h.R)] = h;
+
+            var to = new HexCoordinate(toQ, toR);
+            int score = new HexCoordinate(fromQ, fromR).DistanceTo(to);   // current distance = the bar to beat
+            (int q, int r)? bestHex = null;
+            foreach (var nb in new HexCoordinate(fromQ, fromR).GetNeighbors())
+            {
+                if (!byCoord.TryGetValue((nb.Q, nb.R), out var hx)) continue;   // off the patch
+                if (HexPathfinder.IsImpassable(hx.Terrain)) continue;          // can't stand on open water
+                int d = nb.DistanceTo(to);
+                if (away ? d > score : d < score) { score = d; bestHex = (nb.Q, nb.R); }
+            }
+            return bestHex;
+        }
+
+        /// <summary>True if the unit's formation has a non-empty order queue (a queued plan overrides auto-ROE).</summary>
+        private static bool FormationHasOrders(GroundForcesDB forces, GroundUnit unit)
+        {
+            if (unit.FormationId < 0 || forces.Formations == null) return false;
+            foreach (var f in forces.Formations)
+                if (f.FormationId == unit.FormationId) return f.Orders != null && f.Orders.Count > 0;
+            return false;
+        }
+
+        /// <summary>
+        /// FORMATION ORDER QUEUE (O1): run each formation's FRONT order; pop it when it completes so the next begins —
+        /// sequential "then" semantics (a real waypoint chain). A move order is kicked off once (<c>Issued</c>) and
+        /// completes when the leader arrives; a hold counts down; a stance/ROE order applies instantly. Defensive: an
+        /// order that can't make progress (missing region layer, empty formation) is dropped so the queue never wedges.
+        /// </summary>
+        private static void ProcessFormationOrders(Entity body, GroundForcesDB forces, PlanetRegionsDB regionsDB, int deltaSeconds)
+        {
+            if (forces.Formations == null) return;
+            foreach (var f in forces.Formations)
+            {
+                if (f.Orders == null || f.Orders.Count == 0) continue;
+                var order = f.Orders[0];
+                bool done;
+                switch (order.Type)
+                {
+                    case GroundOrderType.MoveToRegion:
+                        if (!order.Issued) { GroundForces.OrderFormationMove(body, f, order.TargetRegion); order.Issued = true; done = false; }
+                        else done = LeaderIdle(forces, f);   // resolved when the leader stops moving (arrived, or couldn't)
+                        break;
+
+                    case GroundOrderType.MoveToHex:
+                        if (!order.Issued) { GroundForces.OrderFormationMoveToHex(body, f, order.TargetQ, order.TargetR); order.Issued = true; done = false; }
+                        else done = LeaderIdle(forces, f);
+                        break;
+
+                    case GroundOrderType.HoldFor:
+                        order.SecondsRemaining -= deltaSeconds;
+                        done = order.SecondsRemaining <= 0;
+                        break;
+
+                    case GroundOrderType.SetStance:
+                        TryApplyStanceOrder(body, f, order.StanceId);
+                        done = true;
+                        break;
+
+                    case GroundOrderType.SetEngagement:
+                        GroundFormationDoctrine.SetEngagementStance(f, order.Engagement);
+                        done = true;
+                        break;
+
+                    default:
+                        done = true;   // unknown order → drop it (never wedge the queue)
+                        break;
+                }
+                if (done) f.Orders.RemoveAt(0);   // pop → the next order starts next tick
+            }
+        }
+
+        /// <summary>A move is resolved when the formation's LEADER has stopped moving — it either arrived at the target
+        /// or couldn't proceed (unreachable). Popping on idle (not on exact arrival) means a blocked move never wedges
+        /// the queue. Empty formation → treated as idle (nothing to move).</summary>
+        private static bool LeaderIdle(GroundForcesDB forces, GroundFormation f)
+        {
+            var leader = GroundFormationTools.Leader(forces, f) ?? FirstMember(forces, f);
+            if (leader == null) return true;
+            return leader.MovingToRegion < 0 && (leader.HexPath == null || leader.HexPath.Count == 0);
+        }
+
+        private static GroundUnit FirstMember(GroundForcesDB forces, GroundFormation f)
+        {
+            foreach (var u in forces.Units) if (u.FormationId == f.FormationId) return u;
+            return null;
+        }
+
+        /// <summary>Apply a queued SetStance order by looking the id up in the body's mod stance catalog (defensive).</summary>
+        private static void TryApplyStanceOrder(Entity body, GroundFormation f, string stanceId)
+        {
+            if (string.IsNullOrEmpty(stanceId)) return;
+            var catalog = body.Manager?.Game?.StartingGameData?.GroundStances;
+            if (catalog == null || !catalog.TryGetValue(stanceId, out var bp)) return;
+            GroundFormationDoctrine.TrySetStance(f, bp, body.StarSysDateTime);
         }
 
         /// <summary>Health-weighted average triangle multiplier of an attacker TYPE against an enemy faction's mix —
@@ -246,30 +443,6 @@ namespace Pulsar4X.GroundCombat
                 acc += t.Health * GroundTerrain.TriangleMult(attackerType, t.UnitType);
             }
             return totalH > 0 ? acc / totalH : 1.0;
-        }
-
-        /// <summary>Walk a unit along its plotted HEX path (H2): count down the current step's time and, each time it
-        /// elapses, step INTO the next hex — updating its region + (q,r) — carrying any overshoot into the following
-        /// step (so a long tick can cross several hexes at once, and a full march totals the derived crossing time).
-        /// When the last hex is reached the path is consumed and the unit stops (MovingToRegion cleared).</summary>
-        private static void AdvanceHexPath(GroundUnit unit, int deltaSeconds)
-        {
-            unit.TransitSecondsRemaining -= deltaSeconds;
-            while (unit.Path.Count > 0 && unit.TransitSecondsRemaining <= 0)
-            {
-                var step = unit.Path[0];
-                unit.RegionIndex = step.Region;
-                unit.HexQ = step.Q;
-                unit.HexR = step.R;
-                unit.Path.RemoveAt(0);
-                if (unit.Path.Count > 0)
-                    unit.TransitSecondsRemaining += unit.Path[0].Seconds;   // carry the overshoot into the next hop
-                else
-                {
-                    unit.TransitSecondsRemaining = 0;
-                    unit.MovingToRegion = -1;   // arrived — no longer in transit
-                }
-            }
         }
 
         /// <summary>Keep each formation's leader valid after casualties: if the leader unit is gone, leadership passes
