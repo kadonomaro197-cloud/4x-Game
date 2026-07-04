@@ -36,7 +36,7 @@ A `GroundUnit` is a plain serializable object inside `GroundForcesDB`, not a ful
 - **Colonies / `ColonyInfoDB.PlanetEntity`** — the build hook resolves colony → its planet → the roster.
 - **Combat / `AutoResolve`** — the strength-math **shape** slice 5c mirrors for ground battles.
 - **Capture** — clearing a region's garrison flips `FactionOwnerID` (5d), the "take a planet" moment; reuses the fleet-capture primitive and ties into the live colony-damage path (orbital bombardment softens a garrison).
-- **Client / `PlanetViewWindow`** — 5e draws units in their region + click-to-move/place (the map's upgrade from readout to navigable surface).
+- **Client / `PlanetViewWindow`** — 5e (built 2026-07-04) draws units in their region (faction+type tokens with health), click-to-move (`GroundForces.OrderMove`), click-to-place a base (`PlaceInstallationInRegionOrder`), and shows terrain class + `PlanetEnvironmentsDB` hazards — the map's upgrade from readout to navigable surface. Runtime is the developer's local build (CI-blind).
 
 ## Gotchas
 
