@@ -58,6 +58,13 @@ namespace Pulsar4X.Colonies
                 ShipDesignFromJson.Create(faction, factionInfo.Data, game.StartingGameData.ShipDesigns[id]);
             }
 
+            // You KNOW the ground where you settle: reveal this world's surface regions (ground map). Nothing is
+            // pre-surveyed at generation any more, so this is what makes the HOME planet's geography known while
+            // its siblings (Luna, Mars, …) stay fog until a geo survey scans them. Defensive: a body with no
+            // region layer (asteroid, etc.) simply skips. See docs/GROUND-COMBAT-MAP-DESIGN.md slice 4.
+            if (systemBody.TryGetDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>(out var homeRegions))
+                homeRegions.RevealAll();
+
             var blobs = new List<BaseDataBlob>();
 
             string planetName = systemBody.GetDataBlob<NameDB>().GetName(faction.Id);
@@ -168,6 +175,12 @@ namespace Pulsar4X.Colonies
             string planetName = planetEntity.GetDataBlob<NameDB>().GetName(factionEntity.Id);
             NameDB name = new NameDB(planetName + " Colony"); // TODO: Review default name.
             name.SetName(factionEntity.Id, name.DefaultName);
+
+            // You KNOW the ground where you settle: reveal this world's surface regions (ground map). Same rule as
+            // the blueprint path — colonising a world makes its geography known; uncolonised worlds stay fog until
+            // scanned. Defensive: a body with no region layer simply skips.
+            if (planetEntity.TryGetDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>(out var homeRegions))
+                homeRegions.RevealAll();
 
             var pos = new Vector3(planetEntity.GetDataBlob<MassVolumeDB>().RadiusInM, 0, 0);
 

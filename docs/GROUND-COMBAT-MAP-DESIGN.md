@@ -39,7 +39,7 @@ A **`PlanetRegionsDB`** is attached to the **planet body entity** (the parallel 
 - **`Index`** + ring **`Neighbors`** (east/west) — the seam-free topology.
 - **`Area_km2`** — the true-size datum (from the body's radius, split across the ring with variation).
 - **`CrossingTimeSeconds`** — the distance datum movement will read (from region width ÷ a placeholder march speed). Data now; movement later.
-- **`Surveyed`** — features are only "known" once true. **Authored worlds (Earth) start surveyed; procedurally generated worlds start UNKNOWN until scanned** — this is where exploration meets the map.
+- **`Surveyed`** — features are only "known" once true. **You know the ground where you SETTLE: nothing is pre-surveyed at generation — a colony reveals its own world (`ColonyFactory`, `RevealAll()`), and everything else is fog until a geo survey scans it.** So Earth (home) is known, but Luna, Mars, and Alpha Centauri all start as fog to explore. *(Corrected 2026-07-04 from the earlier "authored worlds start surveyed" rule — even in Sol, only the world you actually colonise is known; the rest are survey targets. This is what makes "survey Luna" a real test.)*
 - **`Features`** — a **bundle** of `RegionFeature` (`Ocean`, `Coast`, `Mountains`, `Forest`, `Desert`, `Ice`, …), *not* a single type. A region is mountains + forest + coast at once.
 - **`InstallationIds`** — what's built here (populated by the build-at-a-region slice).
 
@@ -47,9 +47,9 @@ A **`PlanetRegionsDB`** is attached to the **planet body entity** (the parallel 
 
 ## Generation (`GameEngine/Galaxy/PlanetRegionsFactory.cs`)
 
-`GenerateForSystem(system, surveyed)` — mirrors `LagrangeFactory`: defensive, idempotent, seeded by the system RNG. For each major body (planets/giants/dwarfs) it builds 4 ring regions and rolls **random-but-logical** features from the world's own reliable scalars — a wet world (`AtmosphereDB.HydrosphereExtent`) gets ocean/coast; a tectonically active world gets mountains; a gas giant gets gas layers. `surveyed` is **false** from the procedural path (`CreateSystem`) and **true** from the authored/blueprint paths (`LoadFromBlueprint`, the Sol builders) — so Earth is known and Alpha Centauri is a mystery until you scan it. Hooked at all four gen paths in `StarSystemFactory`.
+`GenerateForSystem(system, surveyed)` — mirrors `LagrangeFactory`: defensive, idempotent, seeded by the system RNG. For each major body — **planets, giants, dwarfs, AND moons** (Luna/Ganymede are ground-combat places you fight over, so moons get a region layer too, added 2026-07-04) — it builds 4 ring regions and rolls **random-but-logical** features from the world's own reliable scalars — a wet world (`AtmosphereDB.HydrosphereExtent`) gets ocean/coast; a tectonically active world gets mountains; a gas giant gets gas layers. **`surveyed` is now `false` from ALL four gen paths** (procedural + Sol + blueprint); the "known" state comes from `ColonyFactory` calling `RevealAll()` on the world you colonise — so the home planet is known and its siblings are fog. Hooked at all four gen paths in `StarSystemFactory`.
 
-Gauge: `Pulsar4X.Tests/PlanetRegionsTests.cs` — 4-region ring + wrapping adjacency, area/crossing-time, authored-surveyed, wet-world-has-ocean (the "logical" gauge), deep-clone (persistence), idempotency.
+Gauge: `Pulsar4X.Tests/PlanetRegionsTests.cs` — 4-region ring + wrapping adjacency, area/crossing-time, home-surveyed-siblings-fogged (the reveal-on-colony model), moon-gets-a-layer (Luna is surveyable), wet-world-has-ocean (the "logical" gauge), deep-clone (persistence), idempotency, and the survey-reveal wire (`SurveyReveal_*`).
 
 ---
 
@@ -67,6 +67,19 @@ Gauge: `Pulsar4X.Tests/PlanetRegionsTests.cs` — 4-region ring + wrapping adjac
 6. **Tactical hex** — the existing `ColonyHexMapDB` battlefield nested inside a region (persistence fixed first); the "zoom to high accuracy" layer.
 
 Deferred beyond that: the to-scale globe renderer, base-defends-adjacent-city coverage, terrain combat modifiers, gas-giant platform hosts (reuse the station host), and colony-onto-region migration.
+
+---
+
+## Planet-view evolution — from "readout" to "navigable tactical map" (live-test feedback, 2026-07-04)
+
+First live look at the slice-3 `PlanetViewWindow`: *"it's just regions with topography percentages — it's OK but it's not a map I can navigate units on, plot where I'll make military bases, or use topography to my advantage."* Correct, and expected — slice 3 was the **legible base** (prove the ring reads + the data shows), not the tactical surface. The next evolution turns the readout INTO the map:
+
+- **Spatial, not columnar** — draw each region as an actual area you point at and click *within* (a slice/wedge of the disc, or a 2D panel), not a labelled bar of percentages. Terrain becomes a thing you read positionally.
+- **Place things at a spot** — click a region → "build here" (the slice-2 `PlaceInstallationInRegionOrder` already exists; this gives it a *map* front end instead of a menu), so you plot military bases / mines / defenses on the surface.
+- **Units live on it and move** — once ground units exist (slice 5), they render *in* their region and you order region→region moves along the crossing-time edges. **This is why the map and the units land together** — a "navigable map" with nothing to navigate is half a feature. So the map's tactical upgrade is co-designed with slice 5, not before it.
+- **Topography as leverage** — terrain modifies combat/defence (mountains favour the defender, etc.), so *where* you fight and build matters. That's the `terrain combat modifiers` line above, promoted from "deferred" to "part of what makes the map worth navigating."
+
+Net: slice 3 stays the base; the tactical map is **slice 5's client half** (units + placement + terrain-as-leverage on the same region graph), so the two ship together as "a map you actually play on." The globe/zoom-to-hex fidelity remains a later skin on the same graph.
 
 ---
 

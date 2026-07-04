@@ -57,7 +57,8 @@ namespace Pulsar4X.Galaxy
 
         private static bool IsMajorBody(BodyType t)
             => t == BodyType.Terrestrial || t == BodyType.GasGiant || t == BodyType.IceGiant
-            || t == BodyType.DwarfPlanet || t == BodyType.GasDwarf;
+            || t == BodyType.DwarfPlanet || t == BodyType.GasDwarf
+            || t == BodyType.Moon;   // moons are ground-combat places too (Luna, Ganymede, …) — surveyable + fightable
 
         private static PlanetRegionsDB BuildRegions(StarSystem system, Entity body, SystemBodyInfoDB info, bool surveyed)
         {

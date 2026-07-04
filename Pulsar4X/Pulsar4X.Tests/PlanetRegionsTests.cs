@@ -6,6 +6,7 @@ using Pulsar4X.Galaxy;
 using Pulsar4X.Factions;
 using Pulsar4X.Colonies;
 using Pulsar4X.Datablobs;
+using Pulsar4X.DataStructures;
 using Pulsar4X.GeoSurveys;
 
 namespace Pulsar4X.Tests
@@ -49,13 +50,36 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("An authored world (Earth, via the blueprint start path) has KNOWN geography — its regions start surveyed. A procedurally generated world starts unsurveyed instead (that path is exercised live by CreateSystem's surveyed:false hook).")]
-        public void AuthoredWorld_StartsSurveyed()
+        [Description("SURVEY MODEL: you KNOW the ground where you SETTLE. After a normal start, the home colony's world (Earth) is surveyed — revealed on colony creation — but an uncolonised sibling body in the same system starts as FOG. Nothing is pre-surveyed at generation; a colony reveals its own world, and everything else must be scanned. This is what makes Luna/Mars real survey targets.")]
+        public void HomeColony_WorldSurveyed_SiblingsFogged()
         {
             var s = TestScenario.CreateWithColony();
-            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
-            var regions = s.StartingBody.GetDataBlob<PlanetRegionsDB>().Regions;
-            Assert.That(regions.All(r => r.Surveyed), Is.True, "Earth's geography is known — its regions start surveyed");
+
+            // Home world (where the colony sits) has known geography.
+            Assert.That(s.StartingBody.HasDataBlob<PlanetRegionsDB>(), Is.True, "the home world has a region layer");
+            Assert.That(s.StartingBody.GetDataBlob<PlanetRegionsDB>().Regions.All(r => r.Surveyed), Is.True,
+                "the home colony's world is surveyed (revealed on colony creation)");
+
+            // At least one OTHER body in the system has a region layer and is still fogged.
+            var siblings = s.StartingSystem.GetAllEntitiesWithDataBlob<PlanetRegionsDB>()
+                .Where(b => b.Id != s.StartingBody.Id).ToList();
+            Assert.That(siblings.Count, Is.GreaterThan(0), "Sol has other major bodies with a region layer");
+            bool anyFogged = siblings.Any(b => b.GetDataBlob<PlanetRegionsDB>().Regions.Any(r => !r.Surveyed));
+            Assert.That(anyFogged, Is.True, "an uncolonised world starts as fog — the survey target (e.g. Luna)");
+            Log($"survey model: home surveyed; {siblings.Count(b => b.GetDataBlob<PlanetRegionsDB>().Regions.Any(r => !r.Surveyed))} sibling world(s) fogged");
+        }
+
+        [Test]
+        [Description("Moons get a region layer too — Luna/Ganymede are ground-combat places you can survey and fight over, not just planets. Confirms IsMajorBody includes Moon, so the developer's 'survey Luna' test is actually reachable.")]
+        public void Moon_GetsRegionLayer_SoLunaIsSurveyable()
+        {
+            var s = TestScenario.CreateWithColony();
+            var moons = s.StartingSystem.GetAllEntitiesWithDataBlob<SystemBodyInfoDB>()
+                .Where(b => b.TryGetDataBlob<SystemBodyInfoDB>(out var info) && info.BodyType == BodyType.Moon)
+                .ToList();
+            Assert.That(moons.Count, Is.GreaterThan(0), "Sol has moons (Luna, …)");
+            Assert.That(moons.Any(b => b.HasDataBlob<PlanetRegionsDB>()), Is.True,
+                "a moon (Luna) gets a region layer, so it can be surveyed and fought over");
         }
 
         [Test]
