@@ -220,6 +220,43 @@ namespace Pulsar4X.Tests
             Log($"survey reveal: {regionsDB.Regions.Count(r => r.Surveyed)}/{regionsDB.Regions.Count} regions now known after geo survey");
         }
 
+        [Test]
+        [Description("U1: completing a geo survey also GENERATES the world's fine HEX grid (the developer's call — hexes exist for every SURVEYED world, so the planet-view hex map is never empty on a world you've scanned). Driven through the REAL GeoSurveyProcessor completion path (beside the reveal).")]
+        public void SurveyGen_CompletingGeoSurvey_GeneratesHexGrid()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var planet = s.StartingBody;
+            var regionsDB = planet.GetDataBlob<PlanetRegionsDB>();
+
+            // Precondition: an UNSCANNED world — fog AND no fine hexes yet. Clear the colony-gen hexes to simulate a
+            // sibling world (Luna/Mars) that has coarse regions but was never a theatre, so the survey does the gen.
+            foreach (var r in regionsDB.Regions) { r.Surveyed = false; r.Hexes.Clear(); }
+            Assert.That(regionsDB.Regions.Sum(r => r.Hexes.Count), Is.EqualTo(0), "precondition: no fine hexes before survey");
+
+            if (!planet.TryGetDataBlob<GeoSurveyableDB>(out var geo))
+            {
+                geo = new GeoSurveyableDB { PointsRequired = 10 };
+                planet.SetDataBlob(geo);
+            }
+            else
+            {
+                geo.PointsRequired = 10;
+                geo.GeoSurveyStatus.Clear();
+            }
+
+            var fleet = Entity.Create(s.Faction.Id);
+            s.StartingSystem.AddEntity(fleet, new List<BaseDataBlob> { new GeoSurveyAbilityDB { Speed = 100 } });
+
+            var proc = new GeoSurveyProcessor(fleet, planet);
+            proc.ProcessEntity(planet, s.Game.TimePulse.GameGlobalDateTime);
+
+            int total = regionsDB.Regions.Sum(r => r.Hexes.Count);
+            Assert.That(total, Is.GreaterThan(0), "completing the geo survey generates the world's fine hex grid");
+            Assert.That(regionsDB.Regions.All(r => r.Hexes.Count > 0), Is.True, "every region gets its hex patch on survey");
+            Log($"survey hex-gen: {total} hexes across {regionsDB.Regions.Count} regions after geo survey");
+        }
+
         // ───────────────────────── HEX layer (H1 — Planet → Region → Hex) ─────────────────────────
 
         [Test]

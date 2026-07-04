@@ -52,6 +52,11 @@ public class GeoSurveyProcessor : IInstanceProcessor
                 if (Target.TryGetDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>(out var regionsDB))
                 {
                     regionsDB.RevealAll();
+                    // ...and generate its FINE hex grid (the developer's call: hexes exist for every SURVEYED world,
+                    // so the planet-view hex map is never empty on a world you've actually scanned). Lazy still holds —
+                    // an unsurveyed world carries none; only the coarse regions (4/body) are galaxy-wide. Idempotent +
+                    // defensive (a re-survey is a no-op; a body without a region layer is skipped inside).
+                    Pulsar4X.Galaxy.PlanetHexFactory.EnsureHexesForBody(Target);
                 }
 
                 EventManager.Instance.Publish(
