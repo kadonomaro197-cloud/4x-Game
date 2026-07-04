@@ -120,6 +120,12 @@ namespace Pulsar4X.GroundCombat
 
             body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB);
 
+            // 1b2) FORMATION ORDER QUEUE (O1) — run each formation's queued plan one order at a time, in sequence
+            //      ("move to London, THEN Paris, THEN dig in"). A move order is kicked off once and popped when the
+            //      formation's leader arrives; a hold counts down; a stance/ROE order applies instantly. This runs
+            //      BEFORE the ROE maneuver so an explicit queued order takes precedence over auto-kite/close.
+            ProcessFormationOrders(body, forces, regionsDB, deltaSeconds);
+
             // 1c) RULES OF ENGAGEMENT (the commander's maneuver intent) — before the fight, auto-move each ROE
             //     formation's IDLE units one hex toward (Close) or away (Stand-off) from the nearest enemy, so the H3
             //     range advantage is used without micro (the clone auto-kites the zerg). The ground echo of the space
@@ -287,6 +293,7 @@ namespace Pulsar4X.GroundCombat
             {
                 if (unit.Health <= 0 || unit.MovingToRegion >= 0) continue;
                 if (unit.HexPath != null && unit.HexPath.Count > 0) continue;   // already repositioning — let it arrive
+                if (FormationHasOrders(forces, unit)) continue;                 // an explicit queued plan overrides auto-ROE
                 var stance = GroundFormationDoctrine.EngagementOf(forces, unit);
                 if (stance == GroundEngagementStance.HoldGround) continue;
                 if (unit.RegionIndex < 0 || unit.RegionIndex >= regionsDB.Regions.Count) continue;
@@ -339,6 +346,89 @@ namespace Pulsar4X.GroundCombat
                 if (away ? d > score : d < score) { score = d; bestHex = (nb.Q, nb.R); }
             }
             return bestHex;
+        }
+
+        /// <summary>True if the unit's formation has a non-empty order queue (a queued plan overrides auto-ROE).</summary>
+        private static bool FormationHasOrders(GroundForcesDB forces, GroundUnit unit)
+        {
+            if (unit.FormationId < 0 || forces.Formations == null) return false;
+            foreach (var f in forces.Formations)
+                if (f.FormationId == unit.FormationId) return f.Orders != null && f.Orders.Count > 0;
+            return false;
+        }
+
+        /// <summary>
+        /// FORMATION ORDER QUEUE (O1): run each formation's FRONT order; pop it when it completes so the next begins —
+        /// sequential "then" semantics (a real waypoint chain). A move order is kicked off once (<c>Issued</c>) and
+        /// completes when the leader arrives; a hold counts down; a stance/ROE order applies instantly. Defensive: an
+        /// order that can't make progress (missing region layer, empty formation) is dropped so the queue never wedges.
+        /// </summary>
+        private static void ProcessFormationOrders(Entity body, GroundForcesDB forces, PlanetRegionsDB regionsDB, int deltaSeconds)
+        {
+            if (forces.Formations == null) return;
+            foreach (var f in forces.Formations)
+            {
+                if (f.Orders == null || f.Orders.Count == 0) continue;
+                var order = f.Orders[0];
+                bool done;
+                switch (order.Type)
+                {
+                    case GroundOrderType.MoveToRegion:
+                        if (!order.Issued) { GroundForces.OrderFormationMove(body, f, order.TargetRegion); order.Issued = true; done = false; }
+                        else done = LeaderIdle(forces, f);   // resolved when the leader stops moving (arrived, or couldn't)
+                        break;
+
+                    case GroundOrderType.MoveToHex:
+                        if (!order.Issued) { GroundForces.OrderFormationMoveToHex(body, f, order.TargetQ, order.TargetR); order.Issued = true; done = false; }
+                        else done = LeaderIdle(forces, f);
+                        break;
+
+                    case GroundOrderType.HoldFor:
+                        order.SecondsRemaining -= deltaSeconds;
+                        done = order.SecondsRemaining <= 0;
+                        break;
+
+                    case GroundOrderType.SetStance:
+                        TryApplyStanceOrder(body, f, order.StanceId);
+                        done = true;
+                        break;
+
+                    case GroundOrderType.SetEngagement:
+                        GroundFormationDoctrine.SetEngagementStance(f, order.Engagement);
+                        done = true;
+                        break;
+
+                    default:
+                        done = true;   // unknown order → drop it (never wedge the queue)
+                        break;
+                }
+                if (done) f.Orders.RemoveAt(0);   // pop → the next order starts next tick
+            }
+        }
+
+        /// <summary>A move is resolved when the formation's LEADER has stopped moving — it either arrived at the target
+        /// or couldn't proceed (unreachable). Popping on idle (not on exact arrival) means a blocked move never wedges
+        /// the queue. Empty formation → treated as idle (nothing to move).</summary>
+        private static bool LeaderIdle(GroundForcesDB forces, GroundFormation f)
+        {
+            var leader = GroundFormationTools.Leader(forces, f) ?? FirstMember(forces, f);
+            if (leader == null) return true;
+            return leader.MovingToRegion < 0 && (leader.HexPath == null || leader.HexPath.Count == 0);
+        }
+
+        private static GroundUnit FirstMember(GroundForcesDB forces, GroundFormation f)
+        {
+            foreach (var u in forces.Units) if (u.FormationId == f.FormationId) return u;
+            return null;
+        }
+
+        /// <summary>Apply a queued SetStance order by looking the id up in the body's mod stance catalog (defensive).</summary>
+        private static void TryApplyStanceOrder(Entity body, GroundFormation f, string stanceId)
+        {
+            if (string.IsNullOrEmpty(stanceId)) return;
+            var catalog = body.Manager?.Game?.StartingGameData?.GroundStances;
+            if (catalog == null || !catalog.TryGetValue(stanceId, out var bp)) return;
+            GroundFormationDoctrine.TrySetStance(f, bp, body.StarSysDateTime);
         }
 
         /// <summary>Health-weighted average triangle multiplier of an attacker TYPE against an enemy faction's mix —

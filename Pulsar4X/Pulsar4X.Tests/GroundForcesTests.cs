@@ -970,5 +970,116 @@ namespace Pulsar4X.Tests
             Assert.That(mover.Health, Is.LessThan(before), "a hex-marching unit still takes fire — it fights while repositioning");
             Log($"hex-marcher fights: mover took {before - mover.Health:0} dmg while mid-march");
         }
+
+        // ───────────────────────── O1 — formation order QUEUE (sequential waypoints) ─────────────────────────
+
+        [Test]
+        [Description("O1 queue API: Queue appends, Set replaces the whole plan with one order, Clear empties it.")]
+        public void Orders_QueueApi_QueueSetClear()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            GroundForces.RaiseUnit(body, MakeDesign("u", "U", GroundUnitType.Infantry, 1), s.Faction.Id, 0);
+            var f = GroundForces.CreateFormation(body, s.Faction.Id, "Column");
+
+            Assert.That(GroundForces.QueueFormationOrder(f, GroundOrder.MoveHex(1, 0)), Is.True);
+            GroundForces.QueueFormationOrder(f, GroundOrder.MoveHex(2, 0));
+            Assert.That(f.Orders.Count, Is.EqualTo(2), "Queue appends");
+            GroundForces.SetFormationOrder(f, GroundOrder.Hold(3600));
+            Assert.That(f.Orders.Count, Is.EqualTo(1), "Set replaces the whole plan");
+            Assert.That(f.Orders[0].Type, Is.EqualTo(GroundOrderType.HoldFor));
+            GroundForces.ClearFormationOrders(f);
+            Assert.That(f.Orders.Count, Is.EqualTo(0), "Clear empties the queue");
+        }
+
+        [Test]
+        [Description("O1 THE HEADLINE — sequential waypoints: a formation queued 'move to hex A, THEN hex B' runs them in order and its leader ends on the final waypoint (the London→Paris→… chain the fleet lane-model can't express).")]
+        public void Orders_SequentialWaypoints_LeaderEndsAtFinalHex()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            PaveRegionHexes(body, regionsDB, 0);
+
+            var u = GroundForces.RaiseUnit(body, MakeDesign("u", "U", GroundUnitType.Infantry, 1), s.Faction.Id, 0);
+            u.HexQ = 0; u.HexR = 0;
+            var forces = body.GetDataBlob<GroundForcesDB>();
+            var f = GroundForces.CreateFormation(body, s.Faction.Id, "Column");
+            GroundForces.AssignUnit(f, u);
+
+            GroundForces.QueueFormationOrder(f, GroundOrder.MoveHex(2, 0));   // waypoint 1
+            GroundForces.QueueFormationOrder(f, GroundOrder.MoveHex(2, 2));   // waypoint 2
+            Assert.That(f.Orders.Count, Is.EqualTo(2));
+
+            var proc = new GroundForcesProcessor();
+            for (int i = 0; i < 300 && f.Orders.Count > 0; i++) proc.ProcessEntity(body, 24 * 3600);   // a day per tick
+
+            Assert.That(f.Orders.Count, Is.EqualTo(0), "both waypoints completed and popped");
+            var leader = GroundFormationTools.Leader(forces, f);
+            Assert.That(leader.HexQ, Is.EqualTo(2));
+            Assert.That(leader.HexR, Is.EqualTo(2), "the leader finished at the FINAL waypoint (it ran the chain in order)");
+            Log($"O1 waypoints: leader walked (0,0) → (2,0) → (2,2), queue drained");
+        }
+
+        [Test]
+        [Description("O1 HoldFor: a queued hold counts down over game-time and pops when it elapses — the 'dig in for N hours' wait between waypoints.")]
+        public void Orders_HoldFor_CountsDownThenPops()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            GroundForces.RaiseUnit(body, MakeDesign("u", "U", GroundUnitType.Infantry, 1), s.Faction.Id, 0);
+            var f = GroundForces.CreateFormation(body, s.Faction.Id, "Guard");
+            GroundForces.QueueFormationOrder(f, GroundOrder.Hold(7200));   // 2 game-hours
+
+            var proc = new GroundForcesProcessor();
+            proc.ProcessEntity(body, 3600);   // 1h elapses
+            Assert.That(f.Orders.Count, Is.EqualTo(1), "still holding after 1 of 2 hours");
+            proc.ProcessEntity(body, 3600);   // 2nd hour
+            Assert.That(f.Orders.Count, Is.EqualTo(0), "the hold elapsed and popped");
+        }
+
+        [Test]
+        [Description("O1 instant order: a queued SetEngagement applies the ROE and pops immediately — so 'move to Paris THEN stand off' switches posture on arrival.")]
+        public void Orders_SetEngagement_AppliesInstantly()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            GroundForces.RaiseUnit(body, MakeDesign("u", "U", GroundUnitType.Infantry, 3), s.Faction.Id, 0);
+            var forces = body.GetDataBlob<GroundForcesDB>();
+            var f = GroundForces.CreateFormation(body, s.Faction.Id, "Snipers");
+            GroundForces.QueueFormationOrder(f, GroundOrder.Roe(GroundEngagementStance.StandOff));
+
+            new GroundForcesProcessor().ProcessEntity(body, 1);
+            Assert.That(f.Engagement, Is.EqualTo(GroundEngagementStance.StandOff), "the queued ROE order applied");
+            Assert.That(f.Orders.Count, Is.EqualTo(0), "and popped (instant order)");
+        }
+
+        [Test]
+        [Description("O1 precedence: an explicit queued order OVERRIDES the auto-ROE — a Stand-off formation with a queued Hold does NOT auto-kite (the plan wins over the standing posture).")]
+        public void Orders_QueuedPlan_SuppressesAutoRoe()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            PaveRegionHexes(body, regionsDB, 0);
+
+            var clone = GroundForces.RaiseUnit(body, MakeDesign("clone", "Clone", GroundUnitType.Infantry, range: 3), s.Faction.Id, 0);
+            clone.HexQ = 3; clone.HexR = 0;
+            var zerg = GroundForces.RaiseUnit(body, MakeDesign("zerg", "Zerg", GroundUnitType.Infantry, range: 1), InvaderFaction, 0);
+            zerg.HexQ = 4; zerg.HexR = 0;   // dist 1 → StandOff alone would auto-kite away
+
+            var f = GroundForces.CreateFormation(body, s.Faction.Id, "Clones");
+            GroundForces.AssignUnit(f, clone);
+            GroundFormationDoctrine.SetEngagementStance(f, GroundEngagementStance.StandOff);
+            GroundForces.QueueFormationOrder(f, GroundOrder.Hold(7200));   // an explicit plan is running
+
+            new GroundForcesProcessor().ProcessEntity(body, 1);
+            Assert.That(clone.HexPath, Is.Null, "the queued Hold order suppresses the auto-kite — the plan overrides the posture");
+            Log("O1 precedence: queued plan overrides auto-ROE (no auto-kite while executing orders)");
+        }
     }
 }

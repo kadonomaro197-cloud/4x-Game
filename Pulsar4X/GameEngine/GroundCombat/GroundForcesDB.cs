@@ -129,6 +129,64 @@ namespace Pulsar4X.GroundCombat
         StandOff,
     }
 
+    /// <summary>The kind of queued formation order (O1). A formation carries an ordered LIST of these and executes them
+    /// one at a time, in sequence — a real "then" waypoint chain ("move to London, THEN move to Paris, THEN dig in"),
+    /// the thing the fleet action-lane model doesn't give. New order kinds are added here.</summary>
+    public enum GroundOrderType : byte
+    {
+        MoveToHex,      // march the formation to a hex within its region (fine grid)
+        MoveToRegion,   // march the formation to an adjacent region (coarse ring hop)
+        HoldFor,        // hold position for a set number of game-seconds (a timed wait / dig-in pause)
+        SetStance,      // switch the formation's combat stance (from the GroundStance catalog)
+        SetEngagement,  // switch the formation's ROE (Hold / Close / Stand-off)
+    }
+
+    /// <summary>
+    /// One queued order for a <see cref="GroundFormation"/> (O1) — the ground echo of an <c>EntityCommand</c>, kept as a
+    /// save-safe DATA object (formations aren't entities, so their orders aren't <c>EntityCommand</c>s either — the same
+    /// data-object choice the formation itself makes). A formation's <see cref="GroundFormation.Orders"/> list runs these
+    /// in sequence; each carries only the fields its <see cref="Type"/> needs. Design: docs/HEX-GROUND-AND-ORDERS-DESIGN.md (O1).
+    /// </summary>
+    public class GroundOrder
+    {
+        [JsonProperty] public GroundOrderType Type { get; internal set; }
+        /// <summary>Set once the processor has kicked this order off (so a march isn't re-issued every tick).</summary>
+        [JsonProperty] public bool Issued { get; internal set; }
+        [JsonProperty] public int TargetQ { get; internal set; }        // MoveToHex
+        [JsonProperty] public int TargetR { get; internal set; }        // MoveToHex
+        [JsonProperty] public int TargetRegion { get; internal set; }   // MoveToRegion
+        [JsonProperty] public double SecondsRemaining { get; internal set; }   // HoldFor (counts down)
+        [JsonProperty] public string StanceId { get; internal set; }    // SetStance (catalog id)
+        [JsonProperty] public GroundEngagementStance Engagement { get; internal set; }   // SetEngagement
+
+        public GroundOrder() { }
+        public GroundOrder(GroundOrder o)
+        {
+            Type = o.Type; Issued = o.Issued; TargetQ = o.TargetQ; TargetR = o.TargetR;
+            TargetRegion = o.TargetRegion; SecondsRemaining = o.SecondsRemaining; StanceId = o.StanceId; Engagement = o.Engagement;
+        }
+
+        public static GroundOrder MoveHex(int q, int r) => new GroundOrder { Type = GroundOrderType.MoveToHex, TargetQ = q, TargetR = r };
+        public static GroundOrder MoveRegion(int region) => new GroundOrder { Type = GroundOrderType.MoveToRegion, TargetRegion = region };
+        public static GroundOrder Hold(double seconds) => new GroundOrder { Type = GroundOrderType.HoldFor, SecondsRemaining = seconds };
+        public static GroundOrder Stance(string stanceId) => new GroundOrder { Type = GroundOrderType.SetStance, StanceId = stanceId };
+        public static GroundOrder Roe(GroundEngagementStance e) => new GroundOrder { Type = GroundOrderType.SetEngagement, Engagement = e };
+
+        /// <summary>Short human label for a readout ("→ hex (3,-1)", "dig in 2h", "ROE: StandOff").</summary>
+        public string Describe()
+        {
+            switch (Type)
+            {
+                case GroundOrderType.MoveToHex: return $"→ hex ({TargetQ},{TargetR})";
+                case GroundOrderType.MoveToRegion: return $"→ region {TargetRegion + 1}";
+                case GroundOrderType.HoldFor: return $"hold {SecondsRemaining / 3600.0:0.#}h";
+                case GroundOrderType.SetStance: return $"stance: {StanceId}";
+                case GroundOrderType.SetEngagement: return $"ROE: {Engagement}";
+                default: return Type.ToString();
+            }
+        }
+    }
+
     /// <summary>
     /// A named GROUPING of <see cref="GroundUnit"/>s that move and fight as one — the ground echo of a <c>FleetDB</c>,
     /// mirroring its SHAPE within the data-object model (units aren't entities in v1, so a formation is a serializable
@@ -171,12 +229,19 @@ namespace Pulsar4X.GroundCombat
         /// <c>GroundFormationDoctrine.SetEngagementStance</c>; read by <c>GroundForcesProcessor</c>'s maneuver step.</summary>
         [JsonProperty] public GroundEngagementStance Engagement { get; internal set; } = GroundEngagementStance.HoldGround;
 
+        /// <summary>The formation's ORDER QUEUE (O1) — a sequence of <see cref="GroundOrder"/>s run one at a time, in
+        /// order ("move to London, THEN Paris, THEN dig in"). Empty = the formation is free (ROE auto-maneuver, if any,
+        /// takes over). The processor pops the front order when it completes. Deep-copied for save-safety.</summary>
+        [JsonProperty] public List<GroundOrder> Orders { get; internal set; } = new List<GroundOrder>();
+
         public GroundFormation() { }
         public GroundFormation(GroundFormation o)
         {
             FormationId = o.FormationId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; LeaderUnitId = o.LeaderUnitId;
             StanceId = o.StanceId; StanceFamily = o.StanceFamily; AttackMult = o.AttackMult; DamageTakenMult = o.DamageTakenMult;
             SwitchableAfter = o.SwitchableAfter; Engagement = o.Engagement;
+            Orders = new List<GroundOrder>();
+            if (o.Orders != null) foreach (var ord in o.Orders) Orders.Add(new GroundOrder(ord));
         }
     }
 
@@ -413,6 +478,33 @@ namespace Pulsar4X.GroundCombat
                 if (OrderMove(body, u, toRegion)) moved++;
             }
             return moved;
+        }
+
+        // ───────────────────────── FORMATION ORDER QUEUE (O1 — sequential "then" waypoints) ─────────────────────────
+
+        /// <summary>Append an order to a formation's queue (it runs after everything already queued). The ground echo of
+        /// giving a fleet a waypoint. Returns false if the formation is null.</summary>
+        public static bool QueueFormationOrder(GroundFormation formation, GroundOrder order)
+        {
+            if (formation == null || order == null) return false;
+            (formation.Orders ??= new List<GroundOrder>()).Add(order);
+            return true;
+        }
+
+        /// <summary>Replace a formation's whole queue with a single order (the "do THIS now, forget the rest" verb).</summary>
+        public static void SetFormationOrder(GroundFormation formation, GroundOrder order)
+        {
+            if (formation == null) return;
+            formation.Orders = new List<GroundOrder>();
+            if (order != null) formation.Orders.Add(order);
+        }
+
+        /// <summary>Clear a formation's order queue (cancel the plan). In-transit units keep their current march until it
+        /// completes; only the QUEUE is emptied.</summary>
+        public static void ClearFormationOrders(GroundFormation formation)
+        {
+            if (formation == null) return;
+            formation.Orders = new List<GroundOrder>();
         }
 
         /// <summary>The region the formation's LEADER stands in (its rally point) — or the first member's region if the
