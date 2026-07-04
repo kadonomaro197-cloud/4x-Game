@@ -10,6 +10,7 @@ using Pulsar4X.Storage;
 using Pulsar4X.DataStructures;
 using Pulsar4X.Hazards;
 using Pulsar4X.GroundCombat;
+using Pulsar4X.Components;
 
 namespace Pulsar4X.Tests
 {
@@ -307,6 +308,57 @@ namespace Pulsar4X.Tests
                 "fortification is capped");
 
             Log($"design-driven fortification: Bunker local+adj ×1.37, enemy-neighbour local-only ×1.25, plain-building ×1.00");
+        }
+
+        [Test]
+        [Description("5h fortification CRADLE-TO-GRAVE: build the base-mod BUNKER from the faction's designs (proves the JSON→GroundDefenseAtb binding), install it in a region, and a real fight favours the fortified region's defender over an identical unfortified one.")]
+        public void Fortification_BaseModBunker_BuildsAndWinsTheFight()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();
+            var regions = body.GetDataBlob<PlanetRegionsDB>().Regions;
+
+            regions[0].Features.Clear(); regions[0].Features.Add(new RegionFeature(RegionFeatureType.Plains, 1.0));
+            regions[1].Features.Clear(); regions[1].Features.Add(new RegionFeature(RegionFeatureType.Plains, 1.0));
+            regions[0].OwnerFactionID = s.Faction.Id;
+            regions[1].OwnerFactionID = s.Faction.Id;
+
+            // The base-mod Bunker is a real ComponentDesign in the faction's designs, and it carries the attribute
+            // (this asserts the six-point JSON registration + the AtbConstrArgs binding all worked).
+            var fi = s.Faction.GetDataBlob<FactionInfoDB>();
+            Assert.That(fi.IndustryDesigns.ContainsKey("default-design-bunker"), Is.True, "the bunker design is unlocked");
+            var bunkerDesign = (ComponentDesign)fi.IndustryDesigns["default-design-bunker"];
+            Assert.That(bunkerDesign.HasAttribute<GroundDefenseAtb>(), Is.True, "the JSON bound a GroundDefenseAtb onto the bunker");
+            var atb = bunkerDesign.GetAttribute<GroundDefenseAtb>();
+            Assert.That(atb.LocalFortify, Is.EqualTo(0.25).Within(1e-6), "bunker local +25%");
+            Assert.That(atb.AdjacentProjection, Is.EqualTo(0.12).Within(1e-6), "bunker adjacent +12%");
+
+            // Install a bunker in region 0 (the start colony sits on this body) and record it there.
+            var colony = s.Colony;
+            var instance = new ComponentInstance(bunkerDesign);
+            colony.AddComponent(instance);
+            regions[0].InstallationIds.Clear(); regions[0].InstallationIds.Add(instance.ID);
+            regions[1].InstallationIds.Clear();
+
+            var design = MakeInfantryDesign();
+            GroundForces.RaiseUnit(body, design, s.Faction.Id, 0);
+            GroundForces.RaiseUnit(body, design, InvaderFaction, 0);
+            GroundForces.RaiseUnit(body, design, s.Faction.Id, 1);
+            GroundForces.RaiseUnit(body, design, InvaderFaction, 1);
+
+            var proc = new GroundForcesProcessor();
+            for (int i = 0; i < 3; i++) proc.ProcessEntity(body, 3600);
+
+            var forces = body.GetDataBlob<GroundForcesDB>();
+            var bunkered = forces.Units.FirstOrDefault(u => u.FactionOwnerID == s.Faction.Id && u.RegionIndex == 0);
+            var open = forces.Units.FirstOrDefault(u => u.FactionOwnerID == s.Faction.Id && u.RegionIndex == 1);
+            Assert.That(bunkered, Is.Not.Null, "the bunkered defender survives");
+            Assert.That(open, Is.Not.Null, "the open-ground defender survives");
+            Assert.That(bunkered.Health, Is.GreaterThan(open.Health),
+                "a real Bunker fortifies its region — its defender takes less than the identical unfortified one");
+            Log($"bunker cradle-to-grave: bunkered defender {bunkered.Health:0} hp vs open {open.Health:0} hp after 3 salvos");
         }
 
         // ───────────────────────── E1/E2/E3 — planetary ENVIRONMENTS (the ground hazard layer) ─────────────────────────

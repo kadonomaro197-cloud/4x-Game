@@ -505,5 +505,13 @@
       "Name": "Launch Complex",
       "TemplateId": "launch-complex"
     }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-bunker",
+      "Name": "Bunker",
+      "TemplateId": "bunker"
+    }
   }
 ]

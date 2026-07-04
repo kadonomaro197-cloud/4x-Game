@@ -1098,5 +1098,55 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "bunker",
+      "Name": "Bunker",
+      "Formulas": {
+        "Description": "A hardened defensive emplacement. Fortifies the region it stands in and projects cover to adjacent friendly regions — the ground-combat counter to an invasion (a Bunker fortifies; a solar panel does not).",
+        "Mass": "50000",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "1.0",
+        "CrewReq": "50",
+        "ResearchCost": "0",
+        "CreditCost": "200",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "iron": "[Mass] * 0.3",
+        "stainless-steel": "[Mass] * 0.2",
+        "space-crete": "[Mass] * 0.3",
+        "aluminium": "[Mass] * 0.1"
+      },
+      "ComponentType": "Facility",
+      "MountType": "PlanetInstallation",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "LocalFortify",
+          "Units": "fraction",
+          "DescriptionFormula": "'How much this bunker fortifies its own region (0..1 = +% defence).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0.25"
+        },
+        {
+          "Name": "AdjacentProjection",
+          "Units": "fraction",
+          "DescriptionFormula": "'How much it projects to each adjacent friendly region.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0.12"
+        },
+        {
+          "Name": "groundDefenseAtbArgs",
+          "DescriptionFormula": "'double localFortify, double adjacentProjection'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('LocalFortify'), PropertyValue('AdjacentProjection'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundDefenseAtb"
+        }
+      ]
+    }
   }
 ]
