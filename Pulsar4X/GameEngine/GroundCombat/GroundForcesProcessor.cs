@@ -5,6 +5,7 @@ using Pulsar4X.Engine;
 using Pulsar4X.Interfaces;
 using Pulsar4X.Colonies;
 using Pulsar4X.Galaxy;
+using Pulsar4X.Hazards;
 
 namespace Pulsar4X.GroundCombat
 {
@@ -67,6 +68,25 @@ namespace Pulsar4X.GroundCombat
                 }
             }
 
+            // 1b) ENVIRONMENTAL ATTRITION (E3): a unit STANDING in a region with a DAMAGING environmental hazard
+            //     (fire tornadoes, corrosive superstorm, radiation zone) bleeds health each tick — the ground twin
+            //     of a ship taking damage inside a space hazard. Per-hour magnitude, scaled by the tick. The stat
+            //     effects (SensorJam / MovementDrag) are carried by the data + generator but applied in a later wire
+            //     (ground detection/movement hooks) — this slice lands the attrition.
+            if (body.TryGetDataBlob<PlanetEnvironmentsDB>(out var envDB))
+            {
+                foreach (var unit in forces.Units)
+                {
+                    if (unit.MovingToRegion >= 0 || unit.Health <= 0) continue;
+                    foreach (var env in envDB.ForRegion(unit.RegionIndex))
+                    {
+                        if (!IsDamageEffect(env.Effect)) continue;
+                        unit.Health -= env.Magnitude * (deltaSeconds / 3600.0);
+                        if (unit.Health < 0) unit.Health = 0;
+                    }
+                }
+            }
+
             body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB);
 
             // Group the units that are STANDING (not on the road) and alive, by region.
@@ -90,7 +110,11 @@ namespace Pulsar4X.GroundCombat
                 var factions = new HashSet<int>();
                 foreach (var u in units) factions.Add(u.FactionOwnerID);
                 if (factions.Count >= 2)
-                    ResolveRegionCombat(units);
+                {
+                    Region region = (regionsDB != null && kv.Key >= 0 && kv.Key < regionsDB.Regions.Count)
+                        ? regionsDB.Regions[kv.Key] : null;
+                    ResolveRegionCombat(units, region);
+                }
 
                 // Whoever holds the only live units here now owns the region.
                 var holders = new HashSet<int>();
@@ -107,32 +131,54 @@ namespace Pulsar4X.GroundCombat
             TryCapturePlanet(body, regionsDB);
         }
 
-        /// <summary>One salvo in a contested region: snapshot each faction's total attack, then every faction takes
-        /// the combined attack of all OTHERS, focus-fired across its units (whole-unit health loss). Simultaneous
-        /// (snapshot before apply) and deterministic. Defense is a v1 hook the terrain/type passes will read.</summary>
-        private static void ResolveRegionCombat(List<GroundUnit> units)
+        /// <summary>One salvo in a contested region — TERRAIN- and TYPE-aware (5f/5g). Each faction takes the
+        /// combined attack of all others, but each attacker's damage is scaled by the weapon TRIANGLE (vs the enemy's
+        /// composition) and its TERRAIN affinity (armour bad in rough, artillery loves high ground); the region's
+        /// OWNER (the defender) additionally divides its incoming by the terrain COVER. Simultaneous (snapshot before
+        /// apply), deterministic, no overkill (pool carries). Reads <see cref="GroundTerrain"/> — the ground twin of
+        /// SpaceHazardTools.</summary>
+        private static void ResolveRegionCombat(List<GroundUnit> units, Region region)
         {
-            var attackByFaction = new Dictionary<int, double>();
+            var terrain = GroundTerrain.Classify(region);
+            int defenderFaction = region != null ? region.OwnerFactionID : -1;
+
+            var byFaction = new Dictionary<int, List<GroundUnit>>();
             foreach (var u in units)
             {
-                attackByFaction.TryGetValue(u.FactionOwnerID, out var a);
-                attackByFaction[u.FactionOwnerID] = a + u.Attack;
+                if (!byFaction.TryGetValue(u.FactionOwnerID, out var l)) { l = new List<GroundUnit>(); byFaction[u.FactionOwnerID] = l; }
+                l.Add(u);
             }
-            double totalAttackAll = 0;
-            foreach (var v in attackByFaction.Values) totalAttackAll += v;
 
-            // Snapshot incoming damage per faction BEFORE applying any of it (simultaneous exchange).
-            var incomingByFaction = new Dictionary<int, double>();
-            foreach (var f in attackByFaction.Keys)
-                incomingByFaction[f] = (totalAttackAll - attackByFaction[f]) * SalvoScale;
+            // Incoming damage pool per faction, computed from the PRE-salvo state (simultaneous exchange).
+            var incoming = new Dictionary<int, double>();
+            foreach (var g in byFaction.Keys) incoming[g] = 0.0;
 
-            foreach (var f in incomingByFaction.Keys)
+            foreach (var f in byFaction.Keys)
             {
-                double pool = incomingByFaction[f];
-                if (pool <= 0) continue;
-                foreach (var u in units)
+                foreach (var g in byFaction.Keys)
                 {
-                    if (u.FactionOwnerID != f || u.Health <= 0) continue;
+                    if (f == g) continue;
+                    double pool = 0.0;
+                    foreach (var u in byFaction[f])
+                    {
+                        if (u.Health <= 0) continue;
+                        double atk = u.Attack * GroundTerrain.TerrainAttackMult(u.UnitType, terrain);
+                        pool += atk * AvgTriangleVs(u.UnitType, byFaction[g]);
+                    }
+                    pool *= SalvoScale;
+                    if (g == defenderFaction) pool /= GroundTerrain.CoverDefenseMult(terrain);   // the defender's cover
+                    incoming[g] += pool;
+                }
+            }
+
+            // Apply each faction's incoming, focus-fired across its units (pool carries — no overkill waste).
+            foreach (var g in byFaction.Keys)
+            {
+                double pool = incoming[g];
+                if (pool <= 0) continue;
+                foreach (var u in byFaction[g])
+                {
+                    if (u.Health <= 0) continue;
                     if (pool <= 0) break;
                     double take = Math.Min(u.Health, pool);
                     u.Health -= take;
@@ -140,6 +186,25 @@ namespace Pulsar4X.GroundCombat
                 }
             }
         }
+
+        /// <summary>Health-weighted average triangle multiplier of an attacker TYPE against an enemy faction's mix —
+        /// so bringing the right counter to their composition pays off.</summary>
+        private static double AvgTriangleVs(GroundUnitType attackerType, List<GroundUnit> enemies)
+        {
+            double totalH = 0.0, acc = 0.0;
+            foreach (var t in enemies)
+            {
+                if (t.Health <= 0) continue;
+                totalH += t.Health;
+                acc += t.Health * GroundTerrain.TriangleMult(attackerType, t.UnitType);
+            }
+            return totalH > 0 ? acc / totalH : 1.0;
+        }
+
+        private static bool IsDamageEffect(HazardEffectType t)
+            => t == HazardEffectType.HeatDamage || t == HazardEffectType.RadiationDamage
+            || t == HazardEffectType.KineticDamage || t == HazardEffectType.CorrosiveDamage
+            || t == HazardEffectType.EMDamage || t == HazardEffectType.GravimetricDamage;
 
         private static void TryCapturePlanet(Entity body, PlanetRegionsDB regionsDB)
         {

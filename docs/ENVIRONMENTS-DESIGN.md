@@ -105,12 +105,14 @@ Authored worlds (Sol) can still be hand-tuned, but the *default* is physics-deri
 
 ## Build plan (CI-gated slices, when we build — AFTER this design is agreed)
 
-- **E1 — the vocabulary + region host.** Lock the data-model decision (reuse `HazardEffect` vs parallel), add the region-hosted typed-effect layer, persistent. Gauge: a region round-trips its effects.
-- **E2 — the physics→environment GENERATOR (the intelligence).** `PlanetEnvironmentProfile` reads the scalars above and emits the environment list per region, **gas-giant-gated**. Defensive/idempotent like `PlanetRegionsFactory`. Gauge: a scorching world gets fire/thermal, a sulphur world gets corrosive, a **gas giant gets NONE**, Earth gets mild.
-- **E3 — apply the effects.** The `GroundForcesProcessor` pushes per-tick hazard damage/drag to units in a hazardous region (mirroring `SpaceHazardProcessor`); combat/movement pull jam/cover. Gauge: a unit in a lava field bleeds health; radar-jam shrinks detection.
-- **E4 — unit environmental gear (cradle-to-grave).** Type-affinity → a researched resistance component; grave-rung on loss. Gauge: a hardened unit survives where a bare one dies.
-- **E5 — fix SPACE with the SAME generator.** Point the contextual profile at `StarInfoDB` to replace the flagged flat-RNG system-hazard placement — one intelligence, both hosts.
-- **Transient lifecycle** — roaming fire tornadoes / passing storms, mirroring the flare grow→fade.
+- **E1 — the vocabulary + region host. ✅ built (2026-07-04).** Data-model decision LOCKED: **reuse `HazardEffectType`** (read-only) hosted on a region via `GroundCombat/PlanetEnvironmentsDB.cs` (`RegionEnvironment` = effect kind + magnitude + name + region index; persistent `Clone`). Gauge: `PlanetEnvironments_ClonesDeeply`.
+- **E2 — the physics→environment GENERATOR (the intelligence). ✅ built (2026-07-04).** `GroundCombat/PlanetEnvironmentFactory.GenerateForSystem` reads `AtmosphereDB`/`SystemBodyInfoDB` and emits environments (scorching→fire · sulphur→corrosive · dry→dust · thick→lightning · tectonic→ash), guaranteeing a qualifying menace in ≥1 region; **gas-giant-gated** (`HasSurface`). Defensive/idempotent, hooked at all four `StarSystemFactory` paths. Gauges: `EnvironmentGeneration_GasGiantHasNoSurfaceHazards` (the load-bearing gate) + `EnvironmentGeneration_ScorchingWorld_GetsFireHazards`.
+- **E3 — apply the effects. ✅ (attrition) built (2026-07-04).** `GroundForcesProcessor` pushes per-tick **damage** attrition to units standing in a hazardous region (fire/corrosive/radiation), scaled by the tick — the ground twin of `SpaceHazardProcessor`. Gauge: `Environment_DamagesAUnitStandingInIt`. *(Follow-up: the STAT effects — `SensorJam` shrinking ground detection, `MovementDrag` slowing a march — are carried by the data + generator but their apply-wire lands once ground detection/movement have the hooks.)*
+- **E4 — unit environmental gear (cradle-to-grave).** Type-affinity → a researched resistance component; grave-rung on loss. Gauge: a hardened unit survives where a bare one dies. *(design; not built)*
+- **E5 — fix SPACE with the SAME generator.** Point the contextual profile at `StarInfoDB` to replace the flagged flat-RNG system-hazard placement — one intelligence, both hosts. *(design; not built)*
+- **Transient lifecycle** — roaming fire tornadoes / passing storms, mirroring the flare grow→fade. *(design; not built)*
+
+**Status: the INFRASTRUCTURE is built (E1–E3) — "more environments" is now a data/rule change** (a new physics rule + effect combo in `PlanetEnvironmentFactory`), never new engine code. E4/E5/transience + the exotic-catalog expansion (the creative sweep) are the "come back to it later" work.
 
 The **combat mechanic** (`GroundTerrain`: cover/triangle/type-affinity, 5f/5g) is independent and can land before or alongside — it *consumes* whatever a region holds, biome or fire-tornado alike.
 

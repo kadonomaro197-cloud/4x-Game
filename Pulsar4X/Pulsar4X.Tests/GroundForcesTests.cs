@@ -7,6 +7,8 @@ using Pulsar4X.Colonies;
 using Pulsar4X.Factions;
 using Pulsar4X.Industry;
 using Pulsar4X.Storage;
+using Pulsar4X.DataStructures;
+using Pulsar4X.Hazards;
 using Pulsar4X.GroundCombat;
 
 namespace Pulsar4X.Tests
@@ -189,6 +191,152 @@ namespace Pulsar4X.Tests
             Assert.That(s.Colony.FactionOwnerID, Is.EqualTo(InvaderFaction),
                 "with every region held by the invader, the colony (the planet) is taken");
             Log($"planet taken — colony now faction {s.Colony.FactionOwnerID}");
+        }
+
+        // ───────────────────────── 5f/5g — TERRAIN + the ground triangle ─────────────────────────
+
+        [Test]
+        [Description("5g: the classic ground triangle Armor ▸ Infantry ▸ Artillery ▸ Armor — the winning attacker deals more, the reverse pairing less, same type neutral.")]
+        public void Triangle_ClassicCycle_ArmorBeatsInfantryBeatsArtilleryBeatsArmor()
+        {
+            Assert.That(GroundTerrain.TriangleMult(GroundUnitType.Armor, GroundUnitType.Infantry), Is.GreaterThan(1.0));
+            Assert.That(GroundTerrain.TriangleMult(GroundUnitType.Infantry, GroundUnitType.Artillery), Is.GreaterThan(1.0));
+            Assert.That(GroundTerrain.TriangleMult(GroundUnitType.Artillery, GroundUnitType.Armor), Is.GreaterThan(1.0));
+            // the reverse pairings are the disadvantage
+            Assert.That(GroundTerrain.TriangleMult(GroundUnitType.Infantry, GroundUnitType.Armor), Is.LessThan(1.0));
+            Assert.That(GroundTerrain.TriangleMult(GroundUnitType.Artillery, GroundUnitType.Infantry), Is.LessThan(1.0));
+            Assert.That(GroundTerrain.TriangleMult(GroundUnitType.Armor, GroundUnitType.Artillery), Is.LessThan(1.0));
+            // same type is neutral
+            Assert.That(GroundTerrain.TriangleMult(GroundUnitType.Infantry, GroundUnitType.Infantry), Is.EqualTo(1.0));
+        }
+
+        [Test]
+        [Description("5f: terrain classifies from a region's dominant feature, and the combat dials mirror it — rough terrain gives the defender more cover, armour fights worse in the rough, artillery gains from high ground.")]
+        public void Terrain_ClassifiesFeatures_AndCoverAndAffinityFollow()
+        {
+            var mountains = new Region(); mountains.Features.Add(new RegionFeature(RegionFeatureType.Mountains, 1.0));
+            var plains = new Region(); plains.Features.Add(new RegionFeature(RegionFeatureType.Plains, 1.0));
+            var forest = new Region(); forest.Features.Add(new RegionFeature(RegionFeatureType.Forest, 1.0));
+
+            Assert.That(GroundTerrain.Classify(mountains), Is.EqualTo(GroundTerrainClass.Rough));
+            Assert.That(GroundTerrain.Classify(plains), Is.EqualTo(GroundTerrainClass.Open));
+            Assert.That(GroundTerrain.Classify(forest), Is.EqualTo(GroundTerrainClass.Cover));
+
+            Assert.That(GroundTerrain.CoverDefenseMult(GroundTerrainClass.Rough),
+                Is.GreaterThan(GroundTerrain.CoverDefenseMult(GroundTerrainClass.Open)), "rough terrain protects the defender more than open");
+            Assert.That(GroundTerrain.TerrainAttackMult(GroundUnitType.Armor, GroundTerrainClass.Rough),
+                Is.LessThan(GroundTerrain.TerrainAttackMult(GroundUnitType.Armor, GroundTerrainClass.Open)), "armour is worse in the rough than the open");
+            Assert.That(GroundTerrain.TerrainAttackMult(GroundUnitType.Artillery, GroundTerrainClass.Rough), Is.GreaterThan(1.0), "artillery gains from high ground");
+        }
+
+        [Test]
+        [Description("5f INTEGRATION: the SAME fight favours the defender in rough terrain — a defender in the mountains takes less than the identical defender on the open plains.")]
+        public void Terrain_RoughFavoursTheDefender_InAFight()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();   // isolate terrain from attrition
+            var regions = body.GetDataBlob<PlanetRegionsDB>().Regions;
+
+            regions[0].Features.Clear(); regions[0].Features.Add(new RegionFeature(RegionFeatureType.Mountains, 1.0));
+            regions[1].Features.Clear(); regions[1].Features.Add(new RegionFeature(RegionFeatureType.Plains, 1.0));
+            regions[0].OwnerFactionID = s.Faction.Id;
+            regions[1].OwnerFactionID = s.Faction.Id;
+
+            var design = MakeInfantryDesign();
+            GroundForces.RaiseUnit(body, design, s.Faction.Id, 0);
+            GroundForces.RaiseUnit(body, design, InvaderFaction, 0);
+            GroundForces.RaiseUnit(body, design, s.Faction.Id, 1);
+            GroundForces.RaiseUnit(body, design, InvaderFaction, 1);
+
+            var proc = new GroundForcesProcessor();
+            for (int i = 0; i < 3; i++) proc.ProcessEntity(body, 3600);
+
+            var forces = body.GetDataBlob<GroundForcesDB>();
+            var mountainDefender = forces.Units.FirstOrDefault(u => u.FactionOwnerID == s.Faction.Id && u.RegionIndex == 0);
+            var plainsDefender = forces.Units.FirstOrDefault(u => u.FactionOwnerID == s.Faction.Id && u.RegionIndex == 1);
+            Assert.That(mountainDefender, Is.Not.Null, "the mountain defender is still standing");
+            Assert.That(plainsDefender, Is.Not.Null, "the plains defender is still standing");
+            Assert.That(mountainDefender.Health, Is.GreaterThan(plainsDefender.Health),
+                "the same defender takes LESS damage in the mountains than on the open plains — terrain favours the defender");
+            Log($"terrain: mountain defender {mountainDefender.Health:0} hp vs plains defender {plainsDefender.Health:0} hp after 3 salvos");
+        }
+
+        // ───────────────────────── E1/E2/E3 — planetary ENVIRONMENTS (the ground hazard layer) ─────────────────────────
+
+        [Test]
+        [Description("E1: the planet-environments layer deep-clones (survives save/load) — the persistence discipline, on the dynamic-hazard layer.")]
+        public void PlanetEnvironments_ClonesDeeply()
+        {
+            var env = new PlanetEnvironmentsDB();
+            env.Environments.Add(new RegionEnvironment(0, "Fire Tornadoes", HazardEffectType.HeatDamage, 40));
+            var clone = (PlanetEnvironmentsDB)env.Clone();
+            Assert.That(clone.Environments.Count, Is.EqualTo(1));
+            clone.Environments[0].Magnitude = 999;
+            Assert.That(env.Environments[0].Magnitude, Is.EqualTo(40), "the effect list was deep-cloned, not shared");
+        }
+
+        [Test]
+        [Description("E2 — THE LOAD-BEARING GATE: a gas/ice giant has no surface, so the physics generator emits NO surface environments for it. Meanwhile a surface world can carry hazards.")]
+        public void EnvironmentGeneration_GasGiantHasNoSurfaceHazards()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            PlanetEnvironmentFactory.GenerateForSystem(s.StartingSystem);   // idempotent
+
+            var gasGiants = s.StartingSystem.GetAllEntitiesWithDataBlob<SystemBodyInfoDB>()
+                .Where(b => b.TryGetDataBlob<SystemBodyInfoDB>(out var info)
+                            && (info.BodyType == BodyType.GasGiant || info.BodyType == BodyType.IceGiant || info.BodyType == BodyType.GasDwarf))
+                .ToList();
+            Assert.That(gasGiants.Count, Is.GreaterThan(0), "Sol has gas/ice giants");
+            Assert.That(gasGiants.All(b => !b.HasDataBlob<PlanetEnvironmentsDB>()), Is.True,
+                "a gas giant has no surface → the generator emits no surface environments for it (the load-bearing gate)");
+            Log($"gate: {gasGiants.Count} giant(s), 0 with surface environments");
+        }
+
+        [Test]
+        [Description("E2: environments are a fingerprint of PHYSICS — force a world scorching and the generator gives it fire/thermal hazards (guaranteed in at least one region).")]
+        public void EnvironmentGeneration_ScorchingWorld_GetsFireHazards()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+
+            Assert.That(body.TryGetDataBlob<AtmosphereDB>(out var atmo), Is.True, "the start world has an atmosphere");
+            atmo.SurfaceTemperature = 500f;                                        // make it scorching (internal set, via InternalsVisibleTo)
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();
+            PlanetEnvironmentFactory.GenerateForSystem(s.StartingSystem);          // regenerate this now-hostile world
+
+            Assert.That(body.HasDataBlob<PlanetEnvironmentsDB>(), Is.True);
+            var envs = body.GetDataBlob<PlanetEnvironmentsDB>().Environments;
+            Assert.That(envs.Any(e => e.Effect == HazardEffectType.HeatDamage), Is.True, "a 500°C world gets fire/thermal hazards");
+            Log($"scorching world → {envs.Count} environmental hazard(s), incl. {envs.First(e => e.Effect == HazardEffectType.HeatDamage).Name}");
+        }
+
+        [Test]
+        [Description("E3: a unit STANDING in a region with a damaging environmental hazard bleeds health each tick — the ground twin of a ship taking damage inside a space hazard.")]
+        public void Environment_DamagesAUnitStandingInIt()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+
+            if (!body.TryGetDataBlob<PlanetEnvironmentsDB>(out var envDB))
+            {
+                envDB = new PlanetEnvironmentsDB();
+                body.SetDataBlob(envDB);
+            }
+            envDB.Environments.Add(new RegionEnvironment(0, "Test Inferno", HazardEffectType.HeatDamage, 100.0));   // 100/hour
+
+            var unit = GroundForces.RaiseUnit(body, MakeInfantryDesign(), s.Faction.Id, 0);
+            double before = unit.Health;
+
+            new GroundForcesProcessor().ProcessEntity(body, 3600);   // one hour
+
+            Assert.That(unit.Health, Is.LessThan(before), "a unit in a fire hazard loses health");
+            Assert.That(unit.Health, Is.EqualTo(before - 100.0).Within(1.0), "one hour of a 100/hr hazard = 100 attrition");
+            Log($"environmental attrition: unit {before:0} → {unit.Health:0} hp after 1 hour in a fire hazard");
         }
     }
 }
