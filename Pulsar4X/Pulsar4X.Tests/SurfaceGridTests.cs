@@ -1,6 +1,8 @@
+using System.Linq;
 using NUnit.Framework;
 using Pulsar4X.Engine;
 using Pulsar4X.Galaxy;
+using Pulsar4X.GroundCombat;
 using Pulsar4X.DataStructures;
 
 namespace Pulsar4X.Tests
@@ -108,6 +110,64 @@ namespace Pulsar4X.Tests
             Assert.That(clone.Hexes.Count, Is.EqualTo(grid.Hexes.Count));
             clone.Hexes[0].InstallationIds.Add(4242);
             Assert.That(grid.Hexes[0].InstallationIds, Does.Not.Contain(4242), "deep copy — the clone's hex is its own object");
+        }
+
+        // ── G2 — global A* on the wrapping cylinder (no edge gates) ────────────────────────────────────────────────
+
+        private static SurfaceGrid PlainsGrid(int cols, int rows)
+        {
+            var g = new SurfaceGrid(cols, rows);
+            for (int r = 0; r < rows; r++)
+                for (int q = 0; q < cols; q++)
+                    g.Hexes.Add(new GroundHex(q, r, RegionFeatureType.Plains));
+            return g;
+        }
+
+        [Test]
+        [Description("G2: a straight walk over open ground is the direct number of steps (excludes start, includes dest).")]
+        public void FindGlobalPath_StraightWalk_OpenGround()
+        {
+            var g = PlainsGrid(10, 5);
+            var path = HexPathfinder.FindGlobalPath(g, 2, 2, 5, 2);
+            Assert.That(path.Count, Is.EqualTo(3), "three steps east: (3,2)(4,2)(5,2)");
+            Assert.That(path.Last().Q, Is.EqualTo(5));
+            Assert.That(path.Last().R, Is.EqualTo(2));
+        }
+
+        [Test]
+        [Description("G2: a march routes AROUND ocean — the direct corridor is blocked, so the path detours and never steps on water.")]
+        public void FindGlobalPath_RoutesAroundOcean()
+        {
+            var g = PlainsGrid(12, 6);
+            g.HexAt(3, 2).Terrain = RegionFeatureType.Ocean;   // block the straight row-2 corridor from (2,2) to (6,2)
+            g.HexAt(4, 2).Terrain = RegionFeatureType.Ocean;
+            g.HexAt(5, 2).Terrain = RegionFeatureType.Ocean;
+
+            var path = HexPathfinder.FindGlobalPath(g, 2, 2, 6, 2);
+            Assert.That(path, Is.Not.Empty, "still reachable around the water");
+            Assert.That(path.Any(h => h.Terrain == RegionFeatureType.Ocean), Is.False, "never steps onto open water");
+            Assert.That(path.Count, Is.GreaterThan(4), "the detour is longer than the 4-step direct line");
+            Assert.That((path.Last().Q, path.Last().R), Is.EqualTo((6, 2)), "arrives at the destination");
+        }
+
+        [Test]
+        [Description("G2 THE POINT — the path WRAPS THE SEAM: from a low column to a high one the shortest route goes the short way across the longitude seam (no edge gates), not the long way around.")]
+        public void FindGlobalPath_WrapsTheSeam()
+        {
+            var g = PlainsGrid(10, 5);
+            // Column 1 → column 8: the long way (1→2→…→8) is 7 steps; the short way across the seam (1→0→9→8) is 3.
+            var path = HexPathfinder.FindGlobalPath(g, 1, 2, 8, 2);
+            Assert.That(path.Count, Is.EqualTo(3), "it goes the SHORT way across the seam, not the long way round");
+            Assert.That(path.Any(h => h.Q == 0 || h.Q == 9), Is.True, "the route crosses the longitude seam (through column 0/9)");
+        }
+
+        [Test]
+        [Description("G2: a destination on open water is unreachable (empty path).")]
+        public void FindGlobalPath_DestOnOcean_Unreachable()
+        {
+            var g = PlainsGrid(10, 5);
+            g.HexAt(5, 2).Terrain = RegionFeatureType.Ocean;
+            Assert.That(HexPathfinder.FindGlobalPath(g, 2, 2, 5, 2), Is.Empty, "can't march onto open water");
         }
     }
 }
