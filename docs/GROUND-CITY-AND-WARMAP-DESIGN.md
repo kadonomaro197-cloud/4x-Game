@@ -17,6 +17,15 @@ Think of the operational map like the **fleet plot** — a ship is one icon. But
 
 The fine grid does **not** try to fill the whole 560 km — it's just the **developed footprint** of that base (a patch of radius ~5–8, a few hundred fine tiles), generated **lazily** only for a hex that actually has a colony. Same anti-bloat rule as the operational hexes: undeveloped wilderness never gets a fine grid; only the places you build do.
 
+## Scale reconciliation — "occupies a hex" is about ZOOM, not physical size (2026-07-04)
+
+A spaceport does **NOT** physically fill an operational hex (that's hundreds of km — nothing is). "Occupies the operational hex" was v1 shorthand; the honest model **decouples two separate things**:
+
+- **Physical footprint = mini hexes** (`GroundFootprintAtb.TileFootprint`): a factory = 1 mini hex, a spaceport = a *handful*, a megastructure = many. A spaceport is bigger than a factory — but by a few mini hexes, **not by a whole operational hex**.
+- **War-map presence = a strategic FLAG** (carrying `GroundFootprintAtb` at all): is this a *capture/bomb/defend objective* — a reason the hex matters at the war-map zoom? A spaceport / fort / HQ: **yes** (it shows on the operational map as that hex's strategic feature). A factory / farm / power plant: **no** (local economy, only in the city grid; captured as collateral when the hex falls).
+
+So a strategic building **flies a marker on the war-map hex** (roll-up in `GroundHex.InstallationIds`) AND physically sits on a few **mini** tiles in the city grid — like a country map's ✈ icon ("this city has an airport") versus the airport's actual few-blocks footprint when you zoom in. The two are the same building at two zooms; neither is hex-sized. (Engine already has both knobs — `TileFootprint` + the `GroundFootprintAtb` presence — so this is a framing fix, not a rebuild.)
+
 ## Why this is load-bearing
 
 The two grids are the **same physical buildings at two zooms**. A power plant you place on a fine city-tile *is* the "power/industry presence" on the operational hex. So:
