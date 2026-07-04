@@ -125,14 +125,20 @@ namespace Pulsar4X.Client
             {
                 try
                 {
+                    // ONE window, THREE tabs (the developer's unified planet view): the SURFACE map (regions → hexes),
+                    // your GROUND forces (formations + stance), and the COLONY (planet data + population + build).
                     if (!_lookedAtEntity.Entity.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB)
                         || regionsDB.Regions == null || regionsDB.Regions.Count == 0)
                     {
                         ImGui.TextWrapped("This body has no surface regions (it isn't a major body, or the region layer hasn't generated).");
                     }
-                    else
+                    else if (ImGui.BeginTabBar("planetview_tabs"))
                     {
-                        DrawTacticalMap(regionsDB.Regions);
+                        var regions = regionsDB.Regions;
+                        SafeTab("Surface map",   () => DrawTacticalMap(regions));
+                        SafeTab("Ground forces", () => DrawGroundForcesTab(regions));
+                        SafeTab("Colony",        () => DrawColonyTab(regionsDB));
+                        ImGui.EndTabBar();
                     }
                 }
                 catch (Exception ex)
@@ -143,6 +149,22 @@ namespace Pulsar4X.Client
                 }
             }
             Window.End();
+        }
+
+        /// <summary>Render one tab body, guaranteeing <c>EndTabItem</c> always runs so a tab throw can't leave the
+        /// tab bar / window stack unbalanced (the "a throwing tab cascaded the whole UI" gotcha — Client CLAUDE.md).</summary>
+        private void SafeTab(string label, Action body)
+        {
+            if (ImGui.BeginTabItem(label))
+            {
+                try { body(); }
+                catch (Exception ex)
+                {
+                    ImGui.TextUnformatted(label + " tab error (logged).");
+                    Console.WriteLine($"[RenderError] PlanetViewWindow/{label} threw: {ex}");
+                }
+                finally { ImGui.EndTabItem(); }
+            }
         }
 
         // ── The map ──────────────────────────────────────────────────────────────────────
@@ -235,14 +257,80 @@ namespace Pulsar4X.Client
                 }
             }
 
-            // ── Below the canvas: selection actions, build panel, region detail ─────────
+            // ── Below the canvas: selection/march actions + region detail (build → Colony tab,
+            //    formations → Ground forces tab; the map stays "see + move on the surface"). ─────────
             ImGui.Separator();
             DrawSelectionBar(regions, forcesDB, myFaction, left, right);
-            DrawBuildPanel(body, myFaction);
-            DrawFormationPanel(body, forcesDB, myFaction, regions, left, right);
             ImGui.Separator();
             DrawRegionDetail(regions[_centerRegion], forcesDB, envDB);
             DrawLegend();
+        }
+
+        // ── Ground forces tab: organise units into formations + set their stance (the "manage your army"
+        //    view; you SEE and MOVE them on the Surface map tab). ─────────────────────────────────────
+        private void DrawGroundForcesTab(List<Region> regions)
+        {
+            var body = _lookedAtEntity.Entity;
+            int myFaction = _uiState.Faction?.Id ?? -1;
+            body.TryGetDataBlob<GroundForcesDB>(out var forcesDB);
+
+            int count = regions.Count;
+            _centerRegion = ((_centerRegion % count) + count) % count;
+            int left = ((_centerRegion - 1) % count + count) % count;
+            int right = (_centerRegion + 1) % count;
+
+            if (forcesDB == null || forcesDB.Units.Count == 0)
+            {
+                ImGui.TextWrapped("No ground forces on this world yet. Raise units (DevTools → Raise Ground Unit) or build them, then form them up here.");
+                return;
+            }
+
+            ImGui.TextDisabled("Form up idle units in the current region into a formation, then march/stance them as one. Move on the Surface map tab.");
+            ImGui.Separator();
+            DrawFormationPanel(body, forcesDB, myFaction, regions, left, right);
+        }
+
+        // ── Colony tab: the planet + colony readout and the build-a-base placement (the old PlanetaryWindow,
+        //    folded into the one unified window). Thin, guarded reads off the same blobs. ────────────────
+        private void DrawColonyTab(PlanetRegionsDB regionsDB)
+        {
+            var body = _lookedAtEntity.Entity;
+            int myFaction = _uiState.Faction?.Id ?? -1;
+
+            // Planet summary — reads off the body (present on any major body).
+            if (body.TryGetDataBlob<SystemBodyInfoDB>(out var sb))
+                ImGui.Text("Type: " + sb.BodyType.ToString());
+            if (body.TryGetDataBlob<MassVolumeDB>(out var mv))
+                ImGui.Text($"Radius: {mv.RadiusInM / 1000.0:0} km");
+            if (body.TryGetDataBlob<AtmosphereDB>(out var atmo))
+            {
+                string water = atmo.Hydrosphere ? atmo.HydrosphereExtent.ToString() + "% water" : "no hydrosphere";
+                // TextUnformatted: the water string can contain a literal '%', which ImGui.Text would parse as a
+                // printf format specifier (Client CLAUDE.md printf trap).
+                ImGui.TextUnformatted($"Surface temp: {atmo.SurfaceTemperature:0.0} °C  ({water})");
+            }
+
+            // Your colony on this world, if any.
+            var colony = FindOwnColony(body, myFaction);
+            if (colony != null && colony.TryGetDataBlob<ColonyInfoDB>(out var ci))
+            {
+                long pop = 0;
+                foreach (var kv in ci.Population) pop += kv.Value;
+                ImGui.Text($"Population: {pop:N0}");
+            }
+            else
+            {
+                ImGui.TextDisabled("No colony of yours on this world.");
+            }
+
+            // Surface buildings = the located installations drawn on the map (Region.InstallationIds).
+            int buildings = 0;
+            foreach (var r in regionsDB.Regions) buildings += r.InstallationIds?.Count ?? 0;
+            ImGui.Text($"Surface buildings: {buildings}");
+
+            ImGui.Separator();
+            // Place a base at the current region (the LOCKED-principle placement — a real building on the ground).
+            DrawBuildPanel(body, myFaction);
         }
 
         private void DrawRegionColumn(ImDrawListPtr drawList, Vector2 min, Vector2 max, Region region,
