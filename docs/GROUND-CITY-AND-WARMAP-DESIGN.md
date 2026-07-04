@@ -17,6 +17,15 @@ Think of the operational map like the **fleet plot** — a ship is one icon. But
 
 The fine grid does **not** try to fill the whole 560 km — it's just the **developed footprint** of that base (a patch of radius ~5–8, a few hundred fine tiles), generated **lazily** only for a hex that actually has a colony. Same anti-bloat rule as the operational hexes: undeveloped wilderness never gets a fine grid; only the places you build do.
 
+## Locked layer split — buildings live on MINI hexes; units fight on OPERATIONAL hexes (2026-07-04)
+
+The two grids each do ONE job, and the operational hex is a **pure roll-up** of what's built inside it (not a second place you drop buildings):
+
+- **Mini-hex grid = the CONSTRUCTION layer.** *Every* building physically lives here — factory / farm / power plant AND fort / spaceport / HQ (the strategic ones are just a few mini tiles, not a whole hex). Placement, terrain-match, adjacency all happen here. You build by zooming into a developed operational hex's city grid.
+- **Operational grid = the WAR layer.** Units move, fight, capture here. Battles stay at this scale (never per-mini-tile). The operational hex **reads the roll-up** of the buildings on its mini tiles (`GroundHex.InstallationIds` = the aggregate) → it knows "this hex contains a spaceport" (strategic marker + capture/bomb/fortify target), without any building being placed on it directly.
+
+**One placement path** (place on a mini tile → it rolls up), **one connection** (the roll-up invariant), no double-bookkeeping. This RETIRES the v1 "place a footprint building directly on the operational hex" path (`W1 LocateFootprintsOnHexes` / `PlaceInstallationInRegionOrder`) in favour of "develop the hex → build on mini tiles → roll up" once C-track lands. Beats the alternatives: no "spaceport fills a hex" absurdity, no simulating combat across a hundred-thousand mini tiles, and it keeps the LOCKED PRINCIPLE (every building is a real, capturable place). Tradeoff: you zoom in to build — but strategic buildings still show at the war zoom via the roll-up.
+
 ## Scale reconciliation — "occupies a hex" is about ZOOM, not physical size (2026-07-04)
 
 A spaceport does **NOT** physically fill an operational hex (that's hundreds of km — nothing is). "Occupies the operational hex" was v1 shorthand; the honest model **decouples two separate things**:
