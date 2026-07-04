@@ -124,7 +124,7 @@ namespace Pulsar4X.GroundCombat
                 {
                     Region region = (regionsDB != null && kv.Key >= 0 && kv.Key < regionsDB.Regions.Count)
                         ? regionsDB.Regions[kv.Key] : null;
-                    ResolveRegionCombat(units, region);
+                    ResolveRegionCombat(forces, units, region);
                 }
 
                 // Whoever holds the only live units here now owns the region.
@@ -152,7 +152,7 @@ namespace Pulsar4X.GroundCombat
         /// OWNER (the defender) additionally divides its incoming by the terrain COVER. Simultaneous (snapshot before
         /// apply), deterministic, no overkill (pool carries). Reads <see cref="GroundTerrain"/> — the ground twin of
         /// SpaceHazardTools.</summary>
-        private static void ResolveRegionCombat(List<GroundUnit> units, Region region)
+        private static void ResolveRegionCombat(GroundForcesDB forces, List<GroundUnit> units, Region region)
         {
             var terrain = GroundTerrain.Classify(region);
             int defenderFaction = region != null ? region.OwnerFactionID : -1;
@@ -177,7 +177,8 @@ namespace Pulsar4X.GroundCombat
                     foreach (var u in byFaction[f])
                     {
                         if (u.Health <= 0) continue;
-                        double atk = u.Attack * GroundTerrain.TerrainAttackMult(u.UnitType, terrain);
+                        // × terrain affinity × the formation STANCE's attack mult (offensive hits harder, 5h doctrine).
+                        double atk = u.Attack * GroundTerrain.TerrainAttackMult(u.UnitType, terrain) * GroundFormationDoctrine.AttackMult(forces, u);
                         pool += atk * AvgTriangleVs(u.UnitType, byFaction[g]);
                     }
                     pool *= SalvoScale;
@@ -187,7 +188,9 @@ namespace Pulsar4X.GroundCombat
                 }
             }
 
-            // Apply each faction's incoming, focus-fired across its units (pool carries — no overkill waste).
+            // Apply each faction's incoming, focus-fired across its units (pool carries — no overkill waste). A unit's
+            // formation STANCE scales the DAMAGE IT TAKES (defensive soaks more raw pool per point of health; offensive
+            // dies faster) — the ground echo of the space resolver's per-ship ToughnessMult, 5h doctrine.
             foreach (var g in byFaction.Keys)
             {
                 double pool = incoming[g];
@@ -196,9 +199,12 @@ namespace Pulsar4X.GroundCombat
                 {
                     if (u.Health <= 0) continue;
                     if (pool <= 0) break;
-                    double take = Math.Min(u.Health, pool);
-                    u.Health -= take;
-                    pool -= take;
+                    double dtm = GroundFormationDoctrine.DamageTakenMult(forces, u);
+                    if (dtm <= 0) dtm = 1.0;
+                    // Raw pool this unit can absorb before dying = Health / dtm; the health it loses = raw × dtm.
+                    double raw = Math.Min(u.Health / dtm, pool);
+                    u.Health -= raw * dtm;
+                    pool -= raw;
                 }
             }
         }

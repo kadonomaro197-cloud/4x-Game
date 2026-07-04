@@ -106,10 +106,25 @@ namespace Pulsar4X.GroundCombat
         /// combat penalty — see <c>GroundForcesProcessor</c>.</summary>
         [JsonProperty] public int LeaderUnitId { get; internal set; } = -1;
 
+        // ── STANCE (the ground echo of FleetDoctrineDB) — set from the moddable GroundStance catalog via
+        //    GroundFormationDoctrine.TrySetStance; read-time mults on the resolver, so switching is reversible. ──
+        /// <summary>The active stance's catalog id ("" = none = Balanced/neutral).</summary>
+        [JsonProperty] public string StanceId { get; internal set; } = "";
+        /// <summary>Offensive | Defensive | Balanced — the stance family (for the readout).</summary>
+        [JsonProperty] public string StanceFamily { get; internal set; } = "";
+        /// <summary>Multiplier on this formation's units' ATTACK (1.0 = neutral).</summary>
+        [JsonProperty] public double AttackMult { get; internal set; } = 1.0;
+        /// <summary>Multiplier on the DAMAGE this formation's units TAKE (1.0 = neutral; &gt;1 = more, &lt;1 = less).</summary>
+        [JsonProperty] public double DamageTakenMult { get; internal set; } = 1.0;
+        /// <summary>Game time at/after which this formation may switch stance again (the switch cooldown clock).</summary>
+        [JsonProperty] public DateTime SwitchableAfter { get; internal set; } = DateTime.MinValue;
+
         public GroundFormation() { }
         public GroundFormation(GroundFormation o)
         {
             FormationId = o.FormationId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; LeaderUnitId = o.LeaderUnitId;
+            StanceId = o.StanceId; StanceFamily = o.StanceFamily; AttackMult = o.AttackMult; DamageTakenMult = o.DamageTakenMult;
+            SwitchableAfter = o.SwitchableAfter;
         }
     }
 

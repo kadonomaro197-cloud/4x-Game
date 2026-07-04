@@ -33,5 +33,6 @@ namespace Pulsar4X.Modding
         public Dictionary<string, ComponentDesignBlueprint> ComponentDesigns { get; set; } = new ();
         public Dictionary<string, ShipDesignBlueprint> ShipDesigns { get; set; } = new ();
         public Dictionary<string, CombatDoctrineBlueprint> CombatDoctrines { get; set; } = new ();
+        public Dictionary<string, GroundStanceBlueprint> GroundStances { get; set; } = new ();
     }
 }

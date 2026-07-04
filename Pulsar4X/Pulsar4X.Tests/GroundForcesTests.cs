@@ -482,5 +482,55 @@ namespace Pulsar4X.Tests
 
             Log($"formation '1st Armoured': moved 3 as one, leader reassigned {u1.UnitId}→{formation.LeaderUnitId} on death, 2 survive");
         }
+
+        [Test]
+        [Description("5h formation STANCE mirrors the fleet doctrine catalog: the moddable GroundStance catalog loads from JSON (±25% trade-off), TrySetStance applies the mults + honours the switch cooldown, and a DIG-IN (defensive) formation's defender takes less than an identical no-stance defender in the same fight.")]
+        public void FormationStance_Catalog_TrySet_AndDefensiveSoaksLess()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();
+            var regions = body.GetDataBlob<PlanetRegionsDB>().Regions;
+
+            regions[0].Features.Clear(); regions[0].Features.Add(new RegionFeature(RegionFeatureType.Plains, 1.0));
+            regions[1].Features.Clear(); regions[1].Features.Add(new RegionFeature(RegionFeatureType.Plains, 1.0));
+            regions[0].OwnerFactionID = s.Faction.Id;
+            regions[1].OwnerFactionID = s.Faction.Id;
+
+            // The moddable catalog loaded from groundStances.json (the fleet-doctrine mirror).
+            var stances = s.Game.StartingGameData.GroundStances;
+            Assert.That(stances.ContainsKey("ground-offensive") && stances.ContainsKey("ground-defensive") && stances.ContainsKey("ground-balanced"),
+                Is.True, "the ground stance catalog loaded from JSON");
+            Assert.That(stances["ground-offensive"].AttackMult, Is.EqualTo(1.25).Within(1e-9), "offensive deals +25%");
+            Assert.That(stances["ground-offensive"].DamageTakenMult, Is.EqualTo(1.25).Within(1e-9), "offensive takes +25%");
+            Assert.That(stances["ground-defensive"].DamageTakenMult, Is.EqualTo(0.75).Within(1e-9), "defensive takes -25%");
+
+            var design = MakeInfantryDesign();
+            var d0 = GroundForces.RaiseUnit(body, design, s.Faction.Id, 0);
+            GroundForces.RaiseUnit(body, design, InvaderFaction, 0);
+            GroundForces.RaiseUnit(body, design, s.Faction.Id, 1);
+            GroundForces.RaiseUnit(body, design, InvaderFaction, 1);
+            var forces = body.GetDataBlob<GroundForcesDB>();
+
+            // Form up region-0 defender and set DIG IN; the cooldown then blocks an immediate re-switch.
+            var formation = GroundForces.CreateFormation(body, s.Faction.Id, "Home Guard");
+            GroundForces.AssignUnit(formation, d0);
+            var now = s.Game.TimePulse.GameGlobalDateTime;
+            Assert.That(GroundFormationDoctrine.TrySetStance(formation, stances["ground-defensive"], now), Is.True, "stance applied");
+            Assert.That(formation.DamageTakenMult, Is.EqualTo(0.75).Within(1e-9), "the mult is cached on the formation");
+            Assert.That(GroundFormationDoctrine.TrySetStance(formation, stances["ground-offensive"], now), Is.False, "cooldown blocks an immediate switch");
+
+            var proc = new GroundForcesProcessor();
+            for (int i = 0; i < 3; i++) proc.ProcessEntity(body, 3600);
+
+            var dug = forces.Units.FirstOrDefault(u => u.FactionOwnerID == s.Faction.Id && u.RegionIndex == 0);
+            var open = forces.Units.FirstOrDefault(u => u.FactionOwnerID == s.Faction.Id && u.RegionIndex == 1);
+            Assert.That(dug, Is.Not.Null, "the dug-in defender survives");
+            Assert.That(open, Is.Not.Null, "the no-stance defender survives");
+            Assert.That(dug.Health, Is.GreaterThan(open.Health),
+                "the Dig-In (defensive) formation takes LESS than the identical no-stance defender in the same fight");
+            Log($"stance: dig-in defender {dug.Health:0} hp vs no-stance defender {open.Health:0} hp after 3 salvos");
+        }
     }
 }

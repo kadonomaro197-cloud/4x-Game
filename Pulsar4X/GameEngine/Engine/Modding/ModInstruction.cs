@@ -32,6 +32,7 @@ namespace Pulsar4X.Modding
             ComponentDesign,
             ShipDesign,
             CombatDoctrine,
+            GroundStance,
         }
         public enum OperationType { Default, Remove }
         public enum CollectionOperationType { Add, Remove, Overwrite }
@@ -132,6 +133,9 @@ namespace Pulsar4X.Modding
                     break;
                 case ModInstruction.DataType.CombatDoctrine:
                     instruction.Data = jObject["Payload"].ToObject<CombatDoctrineBlueprint>();
+                    break;
+                case ModInstruction.DataType.GroundStance:
+                    instruction.Data = jObject["Payload"].ToObject<GroundStanceBlueprint>();
                     break;
             }
 
