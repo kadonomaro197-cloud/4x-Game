@@ -609,8 +609,37 @@ namespace Pulsar4X.Client
                     }
 
                     DrawStanceSelector(f);
+                    DrawRoeSelector(f);
                 }
             }
+        }
+
+        // The RULES OF ENGAGEMENT selector — the commander's maneuver intent (the ground echo of the space
+        // engagement-posture selector). Hold / Close / Stand-off; applied immediately (no cooldown — an intent).
+        private void DrawRoeSelector(GroundFormation formation)
+        {
+            var stances = new[] { GroundEngagementStance.HoldGround, GroundEngagementStance.CloseToEngage, GroundEngagementStance.StandOff };
+            var names = new[] { "Hold Ground", "Close to Engage", "Stand Off (auto-kite)" };
+            int cur = Array.IndexOf(stances, formation.Engagement);
+            if (cur < 0) cur = 0;
+
+            ImGui.TextDisabled("ROE:");
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(190f);
+            int choice = cur;
+            if (ImGui.Combo($"##roe{formation.FormationId}", ref choice, names, names.Length) && choice != cur && choice >= 0 && choice < stances.Length)
+            {
+                try
+                {
+                    GroundFormationDoctrine.SetEngagementStance(formation, stances[choice]);
+                    _status = $"ROE: {names[choice]}";
+                }
+                catch (Exception ex) { _status = "set ROE failed (logged)"; Console.WriteLine($"[RenderError] PlanetViewWindow set ROE threw: {ex}"); }
+            }
+            ImGui.SameLine();
+            ImGui.TextDisabled(formation.Engagement == GroundEngagementStance.StandOff ? "(kites to hold range)"
+                : formation.Engagement == GroundEngagementStance.CloseToEngage ? "(advances to contact)"
+                : "(stands and fights)");
         }
 
         // The formation STANCE selector (the ground echo of the Fleet-window doctrine selector).

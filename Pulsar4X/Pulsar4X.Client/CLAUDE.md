@@ -450,7 +450,10 @@ navigate units on, plot where I'll make military bases, use topography to my adv
   attack/damage-taken mults and a combo of the moddable `Game.StartingGameData.GroundStances` catalog (Offensive Push /
   Dig In / Balanced) + a **Set stance** button calling `GroundFormationDoctrine.TrySetStance` (game time from the body's
   `StarSysDateTime`, greyed out on cooldown — mirrors `FleetDoctrine.TrySetDoctrine`). All thin callers over the CI-tested
-  `GroundForces`/`GroundFormationDoctrine` APIs + `GroundFormationTools` reads.
+  `GroundForces`/`GroundFormationDoctrine` APIs + `GroundFormationTools` reads. **+ an ROE selector (2026-07-04):** a
+  Hold Ground / Close to Engage / Stand Off (auto-kite) combo calling `GroundFormationDoctrine.SetEngagementStance` — the
+  commander's maneuver intent (the ground echo of the Fleet-window engagement-posture selector), applied immediately (no
+  cooldown). This is what makes the H3 range advantage automatic: set Stand Off on a long-range formation and it auto-kites.
 
 Built to the CI-blind discipline: a thin draw over CI-tested engine blobs, all orders through CI-tested engine paths
 (`GroundForces.OrderMove` / `OrderFormationMove` / `PlaceInstallationInRegionOrder`), the whole body wrapped so a throw logs
