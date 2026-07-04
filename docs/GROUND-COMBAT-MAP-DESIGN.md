@@ -69,7 +69,7 @@ Gauge: `Pulsar4X.Tests/PlanetRegionsTests.cs` — 4-region ring + wrapping adjac
 - **5b — move it. ✅ built (2026-07-04).** `GroundForces.OrderMove(body, unit, toRegion)` marches a unit to an ADJACENT region, setting its transit clock to that region's `CrossingTimeSeconds` (ground units need no `NewtonMoveDB` — tactical scale); `GroundForcesProcessor` counts it down and lands the unit. v1 is one hop at a time along the ring (multi-hop pathing later). Gauge: move-to-adjacent arrives · move-to-non-adjacent rejected.
 - **5c — fight. ✅ built (2026-07-04).** `GroundForcesProcessor` resolves each contested region by strength-math **mirroring `AutoResolve`'s salvo loop** over `GroundUnit`s (each tick = one salvo; every faction takes the combined attack of all others, focus-fired; 0-health units removed). Deterministic, no RNG. Gauge: the stronger (more total attack) garrison wipes the weaker.
 - **5d — CAPTURE (the "you can take a planet" MVP moment). ✅ built (2026-07-04).** Two rungs, both in `GroundForcesProcessor`: a cleared region's sole surviving faction takes it (`Region.OwnerFactionID` flip); and when EVERY region of a world is held by one invader, the planet's **colony** flips (`FactionOwnerID`) — same primitive as fleet capture. Gauges: cleared region owned by the victor · all-regions-held flips the colony. *(v1 is the ownership flip; deeper colony transfer + the orbital-bombardment-softens-the-garrison wire come later.)*
-- **5e — the tactical MAP (client).** The `PlanetViewWindow` upgrade from *readout* to *navigable surface*: units drawn IN their region, **click-to-move**, **click-to-place a base**. This is the developer's "a map I can navigate, not just percentages." (CI-blind → local check.)
+- **5e — the tactical MAP (client) + LOCATE the colony's installations.** The `PlanetViewWindow` upgrade from *readout* to *navigable surface*: units drawn IN their region, **click-to-move**, **click-to-place a base**, AND — per the LOCKED principle below — **every colony installation drawn as a building in its region** (engine half: give each installation a `RegionIndex`, defaulting to the capital region; render each `Region.InstallationIds` entry). This is the developer's "a map I can navigate, not just percentages" *and* "what I build in space is a real building on the ground." (CI-blind → local check.)
 - **5f — terrain-as-leverage.** Region features modify the fight (mountains/highlands favour the defender, open plains the attacker) — so *where* you fight and build matters. Gauge: same forces, different terrain → different outcome.
 - **5g — unit TYPES + the ground triangle.** Infantry / armour / artillery with a rock-paper-scissors edge (the ground echo of the space weapon triangle). Gauge: type A beats B beats C on equal strength.
 - **5h — base-defends-city coverage + formations.** A military base projects defence over adjacent regions (not just its own); units group into formations that fight/move as one (the ground echo of the fleet). Gauge: a base blunts an attack on the region next door.
@@ -92,10 +92,27 @@ Net: slice 3 stays the base; the tactical map is **slice 5's client half** (unit
 
 ---
 
+## LOCKED PRINCIPLE (2026-07-04): every buildable is a REAL building on the ground
+
+**The developer's rule:** *"All things I build on the planet that can be selected in space are represented by an actual building on the planet itself."* This is the load-bearing idea that makes the planet-infrastructure system whole — the colony economy and the ground map are **two views of the SAME physical things**, not two parallel bookkeepings.
+
+- **One truth, two views.** A colony's installations (mines, factories, refineries, life-support, a military base…) are `ComponentInstance`s in its `ComponentInstancesDB` — the "selectable in space" abstract list the colony economy UI shows. Under this rule, **each of those also occupies a REGION** and draws as a building on the planet view. Selecting it in space and finding it on the ground are the same object seen two ways.
+- **Nothing is abstract-only.** If you can build it and see it in the space/colony view, it has a **place** — a region, and (later, at high zoom) a spot within that region. An installation with no location is a bug against this rule, not a feature.
+- **Why it matters (the whole point).** This is what turns "a colony is a bag of numbers" into "a colony is a PLACE you can bombard, invade, defend region-by-region." Orbital bombardment hits *a region's* buildings; a ground invasion takes *the regions the buildings sit in*; losing a region means losing what's built there. The infrastructure only earns its weight once it's located — abstract installations can't be fought over.
+
+**Build state vs. this rule (the reconciliation, a planned slice):**
+- **Already true for NEW located builds:** slice 2's `PlaceInstallationInRegionOrder` builds an installation *at a chosen region* and records it in `Region.InstallationIds` — the located axis. That path already honours the rule.
+- **NOT yet true for the colony's existing installations:** an installation built the *normal* way (colony economy UI → `ComponentInstancesDB`, no region chosen) has **no region** yet. To satisfy the rule everywhere, every colony installation must get a home region (default: the colony's capital region; player-placeable when built through the map), and the **planet view must render each `Region.InstallationIds` entry as a building**. That's the **"locate + draw the colony's installations"** work — it rides with **slice 5e** (the tactical map: buildings drawn in regions, click-to-place), with the engine half being "give every installation a `RegionIndex`."
+- **The reverse link (5d already respects it):** capturing a region should hand its buildings to the new owner; taking every region takes the colony. v1 flips ownership; wiring each building's control to its region's owner is the depth pass.
+
+**Rule for anyone building here:** when you add a new planet buildable (installation, base, defense, ground unit facility), it MUST be reachable as a component (`CONVENTIONS.md` §6) AND carry a region location so it appears on the ground map. "Built in space, invisible on the ground" fails this principle.
+
+---
+
 ## Connections (Prime Directive)
 
 - **Galaxy / `StarSystemFactory`** — generation hook (done, 4 paths). **`SystemBodyInfoDB` / `AtmosphereDB`** — the feature-gen inputs (body type, tectonics, hydrosphere).
-- **Colonies** — a colony sits on a planet that now has regions; **not** disturbed in slice 1 (new axis). Migration later.
+- **Colonies / `ComponentInstancesDB`** — a colony sits on a planet that now has regions; slice 1 left the colony undisturbed (new axis). **Per the LOCKED principle** (every buildable is a building on the ground), the reconciliation is to give each colony installation a `RegionIndex` and draw it on the planet view (rides slice 5e). Migration of the colony *itself* onto a region is a later pass.
 - **Stations** (`docs/SPACE-STATIONS-DESIGN.md`) — the host pattern this copies; a gas-giant "platform" region reuses the station host later.
 - **Industry / `IConstructableDesign`** — installations and (later) ground units build on the existing production rails; "build at a region" adds only a *where*.
 - **Orders / `OrderHandler`** — build-at-a-region rides the verified player-path.

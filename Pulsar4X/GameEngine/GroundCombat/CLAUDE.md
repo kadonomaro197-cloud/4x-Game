@@ -6,6 +6,10 @@ The planet-surface war layer: units you build, station in regions, move, and fig
 
 ---
 
+## LOCKED PRINCIPLE — every buildable is a real building on the ground (2026-07-04)
+
+The developer's rule: *"everything I build on a planet that's selectable in space is represented by an actual building on the planet itself."* The colony economy (`ComponentInstancesDB` installations) and this ground map are **two views of the SAME physical things** — nothing is abstract-only. So any new planet buildable must be a component (`CONVENTIONS.md` §6) AND carry a **region location** so it draws on the planet view. The reconciliation (give every existing colony installation a `RegionIndex`, render each `Region.InstallationIds` entry as a building) rides slice 5e. Full rationale + slice mapping: `docs/GROUND-COMBAT-MAP-DESIGN.md` → "LOCKED PRINCIPLE." This is *why* the infrastructure system exists: a located building can be bombarded, invaded, defended, and lost region-by-region; an abstract one can't be fought over.
+
 ## The model in one line
 
 A planet body carries a **`GroundForcesDB`** (a roster of `GroundUnit`s). Each `GroundUnit` knows its **region**, its **owner faction**, and its **combat stats** — so one roster holds both sides of a contested world. Units are **built** at a colony through the normal industry rails (`GroundUnitDesign : IConstructableDesign`), **moved** region→region on the region graph's crossing-time edges (5b), **fought** by a strength-math resolver mirroring the space `AutoResolve` (5c), and **captured** by flipping `FactionOwnerID` (5d) — the same primitive as a ship/fleet.
