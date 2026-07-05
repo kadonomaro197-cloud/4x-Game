@@ -47,6 +47,32 @@ So the ground-unit track is **the prototype of the universal assembler**, not a 
 
 ---
 
+## 2a. Components are universal by TYPE, not by SETTING (developer's call, 2026-07-05)
+
+**There is no per-setting component category. One designer per component KIND. To make a weapon you pick a TYPE
+(beam / kinetic / missile / melee …) and dial its specs — full stop. The resulting design is setting-agnostic;
+whether it ends up on infantry, a tank, a ship, or an installation is decided by the MOUNT + the chassis's carry
+capacity, never by a category label.** The same rule holds for every component kind (armor, sensor, engine,
+reactor, …): pick the type, spec it, and it's usable anywhere its mount and scale allow.
+
+- **"Ground weapon" is NOT a category.** A laser is a laser whether it's an infantry sidearm, a tank turret, or a
+  ship spinal mount — same TYPE, different scale/mount. The player designs *a beam weapon*, then the carry gate +
+  the resolver decide where it can fight.
+- **The scale/upgrade techs are per-TYPE and setting-agnostic** — "Beam Focusing Range," "Kinetic Yield" — not
+  "Ground Weapon Yield." A research investment in beams improves *every* beam, on the ground or in space.
+
+**Current violation (the thing to unify — task #3):** ground combat carries `GroundWeaponAtb` (Attack/Range/Mode,
+read by the `GroundForcesProcessor` hex resolver) as a **separate weapon system** from the space weapon attributes
+(`GenericBeamWeaponAtb`/`RailgunWeaponAtb`/`FlakWeaponAtb`, read by `ShipCombatValueDB` auto-resolve). So an "energy
+weapon" exists **twice** (`GroundWeaponAtb` `Mode=Energy` vs `GenericBeamWeaponAtb`) — the exact duplication this
+principle forbids. `tech-ground-weapon-yield` / `tech-category-ground-combat` likewise bake the rejected "ground
+weapon" category. **Target:** one universal weapon design (TYPE + specs) that BOTH resolvers read; the mount decides
+the setting. The weapon-designer scale-span work (`GROUND-UNIT-DESIGNER-DESIGN.md` §6a-ii) is being pointed this way
+— its type-based gates (e.g. beam range under Energy Weapons) are correct; its ground-specific one is the artifact to
+fold in. This is an architectural project (design doc + phased plan before code); captured, sequenced with the developer.
+
+---
+
 ## 3. Current state (survey, 2026-07-05)
 
 | Buildable | Assembly of components today? | Structural gate? | Notes |
