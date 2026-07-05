@@ -205,6 +205,33 @@ reusing the space dodge/triangle math). That wiring is the first real gameplay s
 **Build order:** ① (combat depth, reuses space) → ② (mobility) → ③ (combined arms) → ④ (economy/Count). Parts are
 added as each system gives them meaning, not ahead of it.
 
+### 6c. The four are NOT a cage on the designer (2026-07-05)
+
+A fair worry: *doesn't consolidating into four systems impede creativity in the designer?* No — because the four
+consolidate the gameplay **mechanics** (what combat *reads* about a build), **not** the designer's expressive
+space (what you can *build*). The parts bin stays unlimited: any frame + any weapons + any armour + any augments,
+any numbers. **The reframe:** consolidation isn't the enemy of creativity — *meaningless knobs* are. Fifty knobs
+where only four change how a unit plays is *illusory* creativity (you "designed" something that fights like
+everything else). The four systems are the guarantee that **every choice in the designer actually does
+something.** Three safeguards keep the space open, not pigeonholed:
+
+1. **Continuous & high-dimensional, not buckets.** System ① isn't "pick armour/shield/dodge"; it's a continuous
+   vector (this much evasion, this kinetic-resist, this energy-resist, alpha vs. sustained…). A **Jedi**
+   (high-evasion → beats sustained fire, dies to saturation/AoE) and a **shielded knight** (high-shield → beats
+   alpha/kinetic, drops once the shield's down) sit at opposite points of the SAME system with **opposite
+   counters.** Huge space, not a pigeonhole.
+2. **Open families, not fixed enums.** "Role" is not a dropdown; it *emerges* from the ability-components you
+   mount (a heal-aura part, an AA-targeting part). Each of the four is a **family of component-effects combat
+   knows how to read**, and every family stays open to new members. The designer is still a parts bin.
+3. **An unbounded fifth slot — special abilities.** The genuinely exotic (teleport, self-destruct, morph, summon,
+   cloak, terror-aura) is NOT force-fit into the four. It's an open-ended **special-abilities system** — each
+   novel mechanic its own small thing; when a unit needs something none of the four express, we add a *new*
+   family, never a workaround.
+
+So the honest framing is **"four deep, continuous, open common systems + an unbounded special-ability slot, all
+reading a parts bin that stays unlimited"** — legible where units are common, unbounded where they're exotic.
+That is what "recreate ANY sci-fi unit's essence" requires; the four make the essence *matter*, they don't cap it.
+
 ---
 
 ## 7. Reconciliation with the earlier fixed-stat units (A1/A2)
