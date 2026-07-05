@@ -70,5 +70,29 @@ namespace Pulsar4X.Tests
             Assert.That(au.StrengthBonus, Is.EqualTo(300), "power-armour strength boost from JSON (lets a frame carry heavier gear)");
             Assert.That(au.ToughnessBonus, Is.EqualTo(0.2), "toughness from JSON");
         }
+
+        [Test]
+        [Description("Weapon-designer scale span (slice 1): the ground-weapon knobs are now DIALABLE, not baked. The SAME rifle template builds at siege scale — Attack dials from its default 40 up to a battle-cannon, Range past 1 hex — proving GroundWeaponAtb accepts the full continuous span from the base-mod template. This is the ground echo of dialing a beam from blaster pistol to phaser array. The DEFAULT (40/1) is unchanged — GroundParts_LoadFromJson gauges that; this dials it UP.")]
+        public void GroundWeapon_KnobsAreDialable_SameTemplateBuildsAtSiegeScale()
+        {
+            var s = TestScenario.CreateWithColony();
+            var dataStore = s.Faction.GetDataBlob<FactionInfoDB>().Data;
+            Assert.That(dataStore.ComponentTemplates.ContainsKey("ground-rifle"), Is.True, "the ground-weapon template is loaded");
+
+            var tmpl = dataStore.ComponentTemplates["ground-rifle"];
+            var designer = new ComponentDesigner(tmpl, dataStore, s.Faction.GetDataBlob<FactionTechDB>());
+            foreach (var attr in designer.ComponentDesignAttributes.Values) attr.SetValue();   // start from the template defaults
+
+            // dial the weapon WAY up — a battle-cannon, not a service rifle (the knobs are live now, not read-only)
+            designer.ComponentDesignAttributes["Attack"].SetValueFromInput(3000);
+            designer.ComponentDesignAttributes["Range"].SetValueFromInput(8);
+            var big = designer.CreateDesign(s.Faction);
+            var w = big.GetAttribute<GroundWeaponAtb>();
+            Log($"dialed rifle → attack {w.Attack:0}, range {w.Range} (the template default is 40 / 1 hex)");
+
+            Assert.That(w.Attack, Is.EqualTo(3000), "the Attack knob spans to siege scale — NOT clamped to the rifle's default 40");
+            Assert.That(w.Range, Is.EqualTo(8), "and Range dials past 1 — the knob is a live slider, not a baked readout");
+            Assert.That(w.Attack, Is.GreaterThan(40 * 10), "same template, an order of magnitude bigger — the pistol→cannon span is real on the engine side");
+        }
     }
 }

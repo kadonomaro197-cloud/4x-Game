@@ -1464,25 +1464,37 @@
         {
           "Name": "CarryMass",
           "DescriptionFormula": "'What the frame must bear.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "10"
         },
         {
           "Name": "Attack",
           "DescriptionFormula": "'Firepower added to the unit.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "40"
         },
         {
           "Name": "Range",
           "DescriptionFormula": "'Reach in hexes.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "10",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "1"
         },
         {
           "Name": "Mode",
           "DescriptionFormula": "'0=Melee 1=Ballistic 2=Energy 3=Artillery.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "3",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "1"
         },
         {
@@ -1638,25 +1650,37 @@
         {
           "Name": "CarryMass",
           "DescriptionFormula": "'What the frame must bear.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "120"
         },
         {
           "Name": "Attack",
           "DescriptionFormula": "'Firepower added.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "140"
         },
         {
           "Name": "Range",
           "DescriptionFormula": "'Reach in hexes.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "10",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "2"
         },
         {
           "Name": "Mode",
           "DescriptionFormula": "'0=Melee 1=Ballistic 2=Energy 3=Artillery.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "3",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "1"
         },
         {
@@ -1760,25 +1784,37 @@
         {
           "Name": "CarryMass",
           "DescriptionFormula": "'What the frame must bear.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "300"
         },
         {
           "Name": "Attack",
           "DescriptionFormula": "'Firepower added.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "220"
         },
         {
           "Name": "Range",
           "DescriptionFormula": "'Reach in hexes.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "10",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "3"
         },
         {
           "Name": "Mode",
           "DescriptionFormula": "'0=Melee 1=Ballistic 2=Energy 3=Artillery.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "3",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "3"
         },
         {
@@ -1882,25 +1918,37 @@
         {
           "Name": "CarryMass",
           "DescriptionFormula": "'What the frame must bear.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "40"
         },
         {
           "Name": "Attack",
           "DescriptionFormula": "'Firepower added.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "90"
         },
         {
           "Name": "Range",
           "DescriptionFormula": "'Reach in hexes.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "10",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "2"
         },
         {
           "Name": "Mode",
           "DescriptionFormula": "'0=Melee 1=Ballistic 2=Energy 3=Artillery.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "3",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "2"
         },
         {
@@ -2132,25 +2180,37 @@
         {
           "Name": "CarryMass",
           "DescriptionFormula": "'What the frame must bear.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "2"
         },
         {
           "Name": "Attack",
           "DescriptionFormula": "'Firepower added.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "20"
         },
         {
           "Name": "Range",
           "DescriptionFormula": "'Reach in hexes (0 = melee).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "10",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "0"
         },
         {
           "Name": "Mode",
           "DescriptionFormula": "'0=Melee 1=Ballistic 2=Energy 3=Artillery.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "3",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "0"
         },
         {

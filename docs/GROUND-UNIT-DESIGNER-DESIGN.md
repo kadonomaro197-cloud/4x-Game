@@ -218,6 +218,30 @@ defaults — the per-unit `Defense` values themselves are moddable design data. 
 **Build order:** ① (combat depth, reuses space) → ② (mobility) → ③ (combined arms) → ④ (economy/Count). Parts are
 added as each system gives them meaning, not ahead of it.
 
+### 6a-ii. Weapon-designer SCALE SPAN — "design anything within its purview" (2026-07-05)
+
+The developer's rule for every component designer: within a weapon's field you should be able to design *anything* on
+its scale — blaster pistol → phaser array → superlaser for beams; laspistol → battle-cannon → siege gun for ground.
+An audit (task #1) of all weapon families found the *engine* is ready almost everywhere; the blockers are artificial
+data ceilings, not code:
+- **Beam / Railgun / Flak / Missile (space):** already knob-driven (`GuiSelectionMaxMin` sliders), but fenced by flat
+  `MaxFormula` constants (beam range/lens/chamber = 10000; railgun 10 MJ; missile warhead 500 kg) — and beam pulse
+  energy is stored as `int` (~2.1 GJ hard stop). PARTIAL.
+- **Ground weapon:** the opposite — `GroundWeaponAtb` accepts any scale, but the base-mod templates baked every knob
+  as read-only `GuiTextDisplay`. TEMPLATE (fixed).
+- **Generic:** the reload-cadence helper, no scale axis (N/A).
+
+**✅ Slice 1 BUILT (2026-07-05) — ground weapons dialable.** The five ground-weapon templates
+(`installations.json`: rifle/autocannon/cannon/plasma/claws) had their four knobs (CarryMass/Attack/Range/Mode) flipped
+from read-only `GuiTextDisplay` to `GuiSelectionMaxMin`(`Int`) — so the same template now builds from a service rifle
+(default 40/1) up to a battle-cannon (dialed 3000/8) with zero engine change; defaults preserved so the presets and
+assembly tests are unchanged (developer's call: *keep presets, make them dialable*). Gauge:
+`GroundUnitPartsBaseModTests.GroundWeapon_KnobsAreDialable_SameTemplateBuildsAtSiegeScale`.
+**Flagged interim numbers:** the slider bounds (CarryMass 1–2000, Attack 1–5000, Range 1–10, Mode 0–3) are flat
+defaults — the developer chose **research-gating** for the *top* of the scale, so slice 2 replaces these flat maxima
+(ground **and** space) with `TechData('...')`-driven ceilings (the pattern already used for factory/shipyard size),
+and fixes the `int` energy / missile-warhead caps. Full audit + build plan: task #2.
+
 ### 6c. The four are NOT a cage on the designer (2026-07-05)
 
 A fair worry: *doesn't consolidating into four systems impede creativity in the designer?* No — because the four
