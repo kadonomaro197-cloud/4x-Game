@@ -104,5 +104,36 @@ namespace Pulsar4X.Tests
             var onHuman = GroundUnitAssembly.Compute(human, new List<(ComponentDesign, int)> { (Part("default-design-ground-cannon"), 1) });
             Assert.That(onHuman.Valid, Is.False, "no human frame can shoulder a 300-mass tank cannon");
         }
+
+        [Test]
+        [Description("G-D3c the CONNECT: an assembly becomes a BUILDABLE unit and, when raised, the unit carries the EMERGENT stats. ToGroundUnitDesign(frame+parts) → a GroundUnitDesign with summed stats + costs → GroundForces.RaiseUnit → a GroundUnit whose attack/HP are the assembly's. The designer is now wired to a real unit on the ground.")]
+        public void Assembly_BecomesABuildableUnit_ThatRaisesWithEmergentStats()
+        {
+            _s = TestScenario.CreateWithColony();
+            var frame = Part("default-design-human-frame");
+            var parts = new List<(ComponentDesign, int)>
+            {
+                (Part("default-design-ground-rifle"), 1),
+                (Part("default-design-ground-plating"), 1),
+            };
+
+            var design = GroundUnitAssembly.ToGroundUnitDesign("test-guardsman", "Guardsman", frame, parts);
+            Assert.That(design.Attack, Is.EqualTo(40), "the buildable design carries the emergent attack");
+            Assert.That(design.HitPoints, Is.EqualTo(350), "…and the emergent HP");
+            Assert.That(design.Range, Is.EqualTo(1), "…and reach");
+            Assert.That(design.UnitType, Is.EqualTo(GroundUnitType.Infantry), "a foot/personnel frame → Infantry (triangle still works)");
+            Assert.That(design.ResourceCosts, Is.Not.Empty, "cost = the sum of the parts' costs (frame + rifle + plating)");
+            Assert.That(design.IndustryPointCosts, Is.GreaterThan(0), "and build points sum too");
+
+            // the full chain: build it → a real unit on the ground with the assembled stats
+            var unit = GroundForces.RaiseUnit(_s.StartingBody, design, _s.Faction.Id, 0, "1st Guards");
+            Assert.That(unit.Attack, Is.EqualTo(40), "the RAISED unit fights with the assembly's attack");
+            Assert.That(unit.MaxHealth, Is.EqualTo(350), "and the assembly's HP — parts → design → unit, end to end");
+
+            // a vehicle assembly derives Armor
+            var tank = GroundUnitAssembly.ToGroundUnitDesign("test-tank", "Tank", Part("default-design-vehicle-frame"),
+                new List<(ComponentDesign, int)> { (Part("default-design-ground-cannon"), 1) });
+            Assert.That(tank.UnitType, Is.EqualTo(GroundUnitType.Armor), "a vehicle frame → Armor");
+        }
     }
 }

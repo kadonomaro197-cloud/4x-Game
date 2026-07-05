@@ -111,5 +111,59 @@ namespace Pulsar4X.GroundCombat
             r.Valid = r.Problems.Count == 0;
             return r;
         }
+
+        /// <summary>Bridge an assembly to a BUILDABLE unit: turn a <paramref name="frame"/> + <paramref name="parts"/>
+        /// into a <see cref="GroundUnitDesign"/> whose combat stats and costs are the assembly's computed totals, so it
+        /// rides the existing industry rails and its build raises a <see cref="GroundUnit"/> with the EMERGENT stats.
+        /// This is the connect that makes the assembler real — design parts → buildable unit → raised unit. The caller
+        /// should check <see cref="Compute"/>'s <c>Valid</c> first (the carry gate); this builds the design regardless
+        /// (the gate is a UI/order concern). Never throws.</summary>
+        public static GroundUnitDesign ToGroundUnitDesign(string uniqueId, string name, ComponentDesign frame,
+            IEnumerable<(ComponentDesign design, int count)> parts)
+        {
+            var r = Compute(frame, parts);
+            var design = new GroundUnitDesign
+            {
+                UniqueID = uniqueId,
+                Name = name,
+                UnitType = DeriveType(frame, parts),
+                Attack = r.Attack,
+                Defense = r.Defense,
+                HitPoints = r.HitPoints,
+                Range = r.Range,
+                IndustryTypeID = string.IsNullOrEmpty(frame?.IndustryTypeID) ? "installation-construction" : frame.IndustryTypeID,
+            };
+            // costs = frame + every part (× count) — the same sum the ship designer does
+            if (frame != null) { AddCosts(design.ResourceCosts, frame.ResourceCosts); design.IndustryPointCosts += frame.IndustryPointCosts; }
+            if (parts != null)
+                foreach (var (d, c) in parts)
+                {
+                    if (d == null || c <= 0) continue;
+                    for (int i = 0; i < c; i++) { AddCosts(design.ResourceCosts, d.ResourceCosts); design.IndustryPointCosts += d.IndustryPointCosts; }
+                }
+            return design;
+        }
+
+        // A vehicle frame → Armor; a personnel frame whose reaching weapon is indirect → Artillery; else Infantry.
+        // (v1 mapping so the combat triangle keeps working; a per-frame UnitType hint is a later refinement.)
+        private static GroundUnitType DeriveType(ComponentDesign frame, IEnumerable<(ComponentDesign design, int count)> parts)
+        {
+            if (frame != null && frame.HasAttribute<GroundChassisAtb>()
+                && frame.GetAttribute<GroundChassisAtb>().CarryClass == GroundCarryClass.Vehicle)
+                return GroundUnitType.Armor;
+            if (parts != null)
+                foreach (var (d, c) in parts)
+                    if (d != null && d.HasAttribute<GroundWeaponAtb>()
+                        && d.GetAttribute<GroundWeaponAtb>().Mode == GroundWeaponMode.Artillery)
+                        return GroundUnitType.Artillery;
+            return GroundUnitType.Infantry;
+        }
+
+        private static void AddCosts(Dictionary<string, long> into, Dictionary<string, long> from)
+        {
+            if (from == null) return;
+            foreach (var kv in from)
+                into[kv.Key] = (into.TryGetValue(kv.Key, out var v) ? v : 0) + kv.Value;
+        }
     }
 }
