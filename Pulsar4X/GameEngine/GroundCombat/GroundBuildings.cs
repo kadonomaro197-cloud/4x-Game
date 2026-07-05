@@ -115,6 +115,29 @@ namespace Pulsar4X.GroundCombat
 
             GroundHex hex = null;
             foreach (var h in region.Hexes) if (h.Q == q && h.R == r) { hex = h; break; }
+            return BombardResolvedHex(body, hex, region, strength);
+        }
+
+        /// <summary>Bomb the GLOBAL hex at (<paramref name="gQ"/>,<paramref name="gR"/>) on the cylinder grid — the
+        /// G-track twin of <see cref="BombardHex"/> (same drain/destroy/roll-up, addressed by global coords instead of
+        /// region+local). The economy removal (<c>region.InstallationIds</c>) targets the column BAND the hex falls in.
+        /// Returns how many footprint buildings were destroyed. Defensive.</summary>
+        public static int BombardGlobalHex(Entity body, int gQ, int gR, double strength)
+        {
+            if (body == null || !body.IsValid || !body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB)) return 0;
+            var hex = CityGridFactory.ResolveGlobalHex(body, gQ, gR);
+            if (hex == null) return 0;
+            int cols = regionsDB.SurfaceGrid?.Cols ?? 0;
+            int band = PlanetGridFactory.RegionOfColumn(hex.Q, cols, regionsDB.Regions.Count);
+            Region region = (band >= 0 && band < regionsDB.Regions.Count) ? regionsDB.Regions[band] : null;
+            return BombardResolvedHex(body, hex, region, strength);
+        }
+
+        /// <summary>Shared bombard core (used by both the per-region and the global address paths). Drains
+        /// <paramref name="strength"/> across the hex's footprint buildings; a building reduced to ≤0 is removed from its
+        /// colony, from the region economy list, and from its fine city tile (roll-up). Returns how many were destroyed.</summary>
+        private static int BombardResolvedHex(Entity body, GroundHex hex, Region region, double strength)
+        {
             if (hex == null || hex.InstallationIds == null || hex.InstallationIds.Count == 0) return 0;
 
             // Index the body's colony components by instance id, so we can damage the real building behind a hex id.
@@ -137,7 +160,7 @@ namespace Pulsar4X.GroundCombat
                 if (inst.HealthPercent <= 0f)
                 {
                     comps.RemoveComponentInstance(inst);
-                    region.InstallationIds?.Remove(id);
+                    region?.InstallationIds?.Remove(id);
                     CityBuilder.ClearBuildingFromCity(hex, id);   // roll-up: a bombed base also empties its fine city tile
                     destroyed++;
                 }

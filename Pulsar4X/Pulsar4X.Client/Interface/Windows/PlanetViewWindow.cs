@@ -42,6 +42,12 @@ namespace Pulsar4X.Client
         // Which region sits in the middle column. Rotating changes this; the ring wraps modulo region count.
         private int _centerRegion = 0;
 
+        // G5 — the CONTINUOUS-GLOBE view: the map as a sliding WINDOW over the one cylinder grid (PlanetRegionsDB.SurfaceGrid),
+        // centred on a longitude column that WRAPS at the seam. _centerCol = the window's centre column (lazily set to the
+        // centre region's band centre). _globalView = use the cylinder window (default) vs. the legacy per-region disk view.
+        private int _centerCol = -1;
+        private bool _globalView = true;
+
         // The selected unit GROUP (region, owner faction, type) — the thing a March order acts on. -1 region = none.
         private int _selRegion = -1;
         private int _selFaction = -1;
@@ -158,12 +164,23 @@ namespace Pulsar4X.Client
             body.TryGetDataBlob<GroundForcesDB>(out var forcesDB);
             body.TryGetDataBlob<PlanetEnvironmentsDB>(out var envDB);
 
+            // G5 — make sure the ONE cylinder grid exists (lazy + idempotent, same pattern as the disks); the global
+            // window renders it. Null on a body with no region layer → fall back to the legacy per-region disk view.
+            var grid = PlanetGridFactory.EnsureGridForBody(body);
+            bool canGlobal = grid != null && grid.Hexes != null && grid.Hexes.Count > 0;
+
             // ── Controls ────────────────────────────────────────────────────────────────
-            if (ImGui.Button("◀ West")) { _centerRegion = left; }
+            if (ImGui.Button("◀ West")) { _centerRegion = left; SyncCenterCol(grid, count); }
             ImGui.SameLine();
             ImGui.Text($"Region {_centerRegion + 1} of {count}");
             ImGui.SameLine();
-            if (ImGui.Button("East ▶")) { _centerRegion = right; }
+            if (ImGui.Button("East ▶")) { _centerRegion = right; SyncCenterCol(grid, count); }
+
+            if (canGlobal)
+            {
+                ImGui.SameLine();
+                if (ImGui.Button(_globalView ? "◑ Globe view" : "▦ Band view")) _globalView = !_globalView;
+            }
 
             int surveyed = regions.Count(r => r.Surveyed);
             ImGui.SameLine();
@@ -182,7 +199,12 @@ namespace Pulsar4X.Client
             // boundary so you can still tell where one region ends and the next begins. (Zoom to the city/fortification
             // grid is the separate C-track view.)
             bool hasHexes = _centerRegion < regions.Count && regions[_centerRegion].Hexes != null && regions[_centerRegion].Hexes.Count > 0;
-            if (hasHexes)
+            if (canGlobal && _globalView)
+            {
+                if (_centerCol < 0) SyncCenterCol(grid, count);   // first paint: centre on the current region's band
+                DrawGlobalHexWindow(grid, regions, body, myFaction, forcesDB);
+            }
+            else if (hasHexes)
                 DrawThreeRegionHexMap(regions, body, myFaction, forcesDB, left, _centerRegion, right);
             else
                 ImGui.TextDisabled("This world isn't surveyed yet — scan it to reveal its surface hexes.");
@@ -343,6 +365,190 @@ namespace Pulsar4X.Client
             drawList.AddText(new Vector2(px, canvasPos.Y + 2f),
                 ImGui.ColorConvertFloat4ToU32(isCentre ? new Vector4(1f, 1f, 0.7f, 1f) : new Vector4(0.75f, 0.75f, 0.8f, 1f)), lbl);
         }
+
+        // ── G5: the CONTINUOUS-GLOBE window — a sliding view over the ONE cylinder grid (SurfaceGrid) ─────────────
+        // The payoff of the global grid: instead of three stitched disks, the map is a WINDOW onto one wrapping world.
+        // It's centred on a longitude column (_centerCol) and shows a slice ~2 region-bands wide — the centre band in
+        // full, the neighbouring bands bleeding in at the margins — and WRAPS at the seam, so any place shows up in
+        // every window whose longitude reaches it. Terrain is continuous by construction; a faint seam line + label
+        // marks each region-band boundary. Units draw at their GLOBAL (Q,R); click a hex to select/march
+        // (GroundForces.OrderMoveToGlobalHex — no edge gates).
+        private void DrawGlobalHexWindow(SurfaceGrid grid, List<Region> regions, Entity body, int myFaction, GroundForcesDB forcesDB)
+        {
+            int cols = grid.Cols, rows = grid.Rows, rc = Math.Max(1, regions.Count);
+            int bandW = Math.Max(1, cols / rc);
+            int halfW = bandW;                       // window half-width in columns → ~2 bands visible (centre full + neighbours' inner halves)
+            int winCols = 2 * halfW + 1;
+
+            var drawList = ImGui.GetWindowDrawList();
+            var canvasPos = ImGui.GetCursorScreenPos();
+            var canvasSize = ImGui.GetContentRegionAvail();
+            float mapHeight = Math.Max(220f, canvasSize.Y * 0.66f);
+            var mapSize = new Vector2(canvasSize.X, mapHeight);
+
+            ImGui.InvisibleButton("planetglobecanvas", mapSize);
+            bool clicked = ImGui.IsItemHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
+            var mp = ImGui.GetIO().MousePos;
+
+            // Size a hex so the window (winCols × rows, odd-r offset) fits, then centre it in the canvas.
+            float sizeW = mapSize.X / ((winCols + 0.5f) * 1.7320508f);
+            float sizeH = mapSize.Y / (rows * 1.5f + 0.5f);
+            float size = Math.Max(2f, Math.Min(sizeW, sizeH));
+            float gridW = (winCols + 0.5f) * 1.7320508f * size;
+            float gridH = (rows * 1.5f + 0.5f) * size;
+            var origin = new Vector2(
+                canvasPos.X + (mapSize.X - gridW) * 0.5f + 1.7320508f * size,
+                canvasPos.Y + (mapSize.Y - gridH) * 0.5f + size);
+
+            uint hexBorder = ImGui.ColorConvertFloat4ToU32(new Vector4(0f, 0f, 0f, 0.28f));
+
+            // 1) terrain — every visible column (wraps), every row.
+            for (int sc = 0; sc < winCols; sc++)
+            {
+                int gq = grid.WrapCol(_centerCol - halfW + sc);
+                for (int r = 0; r < rows; r++)
+                {
+                    var h = grid.HexAt(gq, r);
+                    if (h == null) continue;
+                    var pc = HexCenterOffset(origin, size, sc, r);
+                    var col = _featureColors.TryGetValue(h.Terrain, out var vc) ? vc : _featureColors[RegionFeatureType.Barren];
+                    drawList.AddNgonFilled(pc, size, ImGui.ColorConvertFloat4ToU32(col), 6);
+                    if (size > 4f) drawList.AddNgon(pc, size, hexBorder, 6, 1f);
+                }
+            }
+
+            // 2) region-band seam lines + centre label (a band boundary is where RegionOfColumn changes).
+            uint seamCol = ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 0.95f, 0.6f, 0.4f));
+            for (int sc = 0; sc <= winCols; sc++)
+            {
+                int gqL = grid.WrapCol(_centerCol - halfW + sc - 1);
+                int gqR = grid.WrapCol(_centerCol - halfW + sc);
+                if (PlanetGridFactory.RegionOfColumn(gqL, cols, rc) != PlanetGridFactory.RegionOfColumn(gqR, cols, rc))
+                {
+                    float x = HexCenterOffset(origin, size, sc, 0).X - 1.7320508f * size * 0.5f;
+                    drawList.AddLine(new Vector2(x, canvasPos.Y + 16f), new Vector2(x, canvasPos.Y + mapHeight), seamCol, 1.5f);
+                }
+            }
+            int centreBand = PlanetGridFactory.RegionOfColumn(_centerCol, cols, rc);
+            DrawRegionLabel(drawList, $"R{regions[centreBand].Index + 1} (centre)", canvasPos.X + mapSize.X * 0.5f, canvasPos, mapSize, true);
+
+            // 3) units at their GLOBAL (Q,R), grouped per (gq, gr, faction).
+            var occ = new Dictionary<(int gq, int gr, int fac), (int n, int type, int moving)>();
+            if (forcesDB != null)
+                foreach (var u in forcesDB.Units)
+                {
+                    if (u.GlobalQ < 0 || u.GlobalR < 0) continue;
+                    int dc = WrapDelta(u.GlobalQ - _centerCol, cols);
+                    if (dc < -halfW || dc > halfW) continue;    // outside the window
+                    var key = (u.GlobalQ, u.GlobalR, u.FactionOwnerID);
+                    occ.TryGetValue(key, out var g); g.n++; g.type = (int)u.UnitType;
+                    if (u.GlobalPath != null && u.GlobalPath.Count > 0) g.moving++;
+                    occ[key] = g;
+                }
+            foreach (var kv in occ)
+            {
+                int dc = WrapDelta(kv.Key.gq - _centerCol, cols);
+                int sc = dc + halfW;
+                var pc = HexCenterOffset(origin, size, sc, kv.Key.gr);
+                float mr = Math.Max(2.5f, size * 0.55f);
+                drawList.AddCircleFilled(pc, mr, ImGui.ColorConvertFloat4ToU32(OwnerColor(kv.Key.fac, myFaction)), 16);
+                drawList.AddCircle(pc, mr, ImGui.ColorConvertFloat4ToU32(new Vector4(0f, 0f, 0f, 0.8f)), 16, 1.5f);
+                if (size > 8f)
+                {
+                    string tag = $"{TypeInitial((GroundUnitType)kv.Value.type)}{kv.Value.n}" + (kv.Value.moving > 0 ? "»" : "");
+                    var tsz = ImGui.CalcTextSize(tag);
+                    drawList.AddText(new Vector2(pc.X - tsz.X * 0.5f, pc.Y - tsz.Y * 0.5f),
+                        ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 1f, 1f)), tag);
+                }
+                if (HasSelection && _selFaction == kv.Key.fac && _selType == (GroundUnitType)kv.Value.type
+                    && _selRegion == PlanetGridFactory.RegionOfColumn(kv.Key.gq, cols, rc))
+                    drawList.AddNgon(pc, size, ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 0.3f, 1f)), 6, 2.5f);
+            }
+
+            // 4) click → nearest visible hex → select your units there / march a selected group there (global A*).
+            if (clicked)
+            {
+                int bestGq = -1, bestR = -1; float bestD = size * 1.3f;
+                for (int sc = 0; sc < winCols; sc++)
+                {
+                    int gq = grid.WrapCol(_centerCol - halfW + sc);
+                    for (int r = 0; r < rows; r++)
+                    {
+                        float d = Vector2.Distance(HexCenterOffset(origin, size, sc, r), mp);
+                        if (d < bestD) { bestD = d; bestGq = gq; bestR = r; }
+                    }
+                }
+                if (bestGq >= 0) HandleGlobalHexClick(grid, regions, body, myFaction, forcesDB, bestGq, bestR);
+            }
+
+            // 5) caption + the H3 range readout for the selected group.
+            ImGui.Text($"Surface (globe) — one continuous world, centred on Region {regions[centreBand].Index + 1}; ◀/▶ pans, click a hex to select/march.");
+            if (HasSelection && _selFaction == myFaction && _selRegion < regions.Count)
+            {
+                var rep = forcesDB?.Units.FirstOrDefault(u => u.RegionIndex == _selRegion && u.FactionOwnerID == myFaction && u.UnitType == _selType);
+                int range = rep?.Range ?? 0;
+                double km = GroundRangeTools.RealReachKm(range, regions[_selRegion]);
+                ImGui.TextDisabled($"Selected {_selType} (Region {_selRegion + 1}): click a destination hex to march — strike range {range} hex ≈ {km:N0} km. Ocean impassable.");
+            }
+        }
+
+        /// <summary>Click on a GLOBAL hex: select your units standing there (toggle), or march the selected group there
+        /// via the wrapping global A* (no edge gates). Also recentres the region-based panels on the clicked band.</summary>
+        private void HandleGlobalHexClick(SurfaceGrid grid, List<Region> regions, Entity body, int myFaction, GroundForcesDB forcesDB, int gq, int gr)
+        {
+            int band = PlanetGridFactory.RegionOfColumn(gq, grid.Cols, Math.Max(1, regions.Count));
+            _centerRegion = band;                     // keep the region-based panels tracking what you clicked
+
+            var mineHere = forcesDB?.Units.FirstOrDefault(u => u.GlobalQ == gq && u.GlobalR == gr && u.FactionOwnerID == myFaction);
+            if (mineHere != null)
+            {
+                if (HasSelection && _selFaction == myFaction && _selRegion == mineHere.RegionIndex && _selType == mineHere.UnitType)
+                    ClearSelection();
+                else { _selRegion = mineHere.RegionIndex; _selFaction = myFaction; _selType = mineHere.UnitType; _status = ""; }
+                return;
+            }
+            if (HasSelection && _selFaction == myFaction)
+                MoveSelectedToGlobalHex(body, forcesDB, gq, gr);
+        }
+
+        /// <summary>March every orderable unit in the selected group to a target GLOBAL hex (wrapping A* per unit).</summary>
+        private void MoveSelectedToGlobalHex(Entity body, GroundForcesDB forcesDB, int destQ, int destR)
+        {
+            if (forcesDB == null || _selFaction != (_uiState.Faction?.Id ?? -1)) { _status = "those aren't your units"; return; }
+            int moved = 0;
+            foreach (var u in forcesDB.Units.ToArray())
+            {
+                if (u.RegionIndex != _selRegion || u.FactionOwnerID != _selFaction || u.UnitType != _selType) continue;
+                if (u.MovingToRegion >= 0) continue;
+                if (GroundForces.OrderMoveToGlobalHex(body, u, destQ, destR)) moved++;
+            }
+            _status = moved > 0
+                ? $"marched {moved}× {_selType} → global hex ({destQ},{destR})"
+                : "no march (unreachable / impassable water / already there)";
+        }
+
+        /// <summary>Recentre the globe window on a region's band-centre column (keeps ◀/▶ + the region panels in sync).</summary>
+        private void SyncCenterCol(SurfaceGrid grid, int regionCount)
+        {
+            if (grid == null || grid.Cols <= 0) { _centerCol = 0; return; }
+            _centerCol = PlanetGridFactory.BandCentreColumn(_centerRegion, grid.Cols, Math.Max(1, regionCount));
+        }
+
+        /// <summary>Signed shortest column delta on the cylinder (wraps): result in [-cols/2, cols/2].</summary>
+        private static int WrapDelta(int d, int cols)
+        {
+            if (cols <= 0) return d;
+            d = ((d % cols) + cols) % cols;
+            if (d > cols / 2) d -= cols;
+            return d;
+        }
+
+        /// <summary>Odd-r OFFSET hex layout (pointy-top) — screen position of window column <paramref name="sc"/>, row
+        /// <paramref name="r"/>. Unlike the axial <see cref="HexCenter"/> (which shears with r), this keeps the grid
+        /// RECTANGULAR (odd rows nudged half a hex), so a wide cylinder window reads as a proper map — matching the
+        /// odd-r neighbour model the global pathfinder (G2) uses.</summary>
+        private static Vector2 HexCenterOffset(Vector2 origin, float size, int sc, int r)
+            => new Vector2(origin.X + size * 1.7320508f * (sc + 0.5f * (r & 1)), origin.Y + size * 1.5f * r);
 
         private void DrawRegionColumn(ImDrawListPtr drawList, Vector2 min, Vector2 max, Region region,
             bool isCenter, int myFaction, GroundForcesDB forcesDB, PlanetEnvironmentsDB envDB)

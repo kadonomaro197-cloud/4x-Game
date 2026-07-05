@@ -142,21 +142,34 @@ namespace Pulsar4X.Galaxy
         /// borders, wrapping the ring); r gives latitude. So the field is one coherent world, not per-region.</summary>
         public RegionFeatureType TerrainAt(int region, int regionCount, int q, int r, int radius)
         {
-            if (_gas) return RegionFeatureType.GasLayers;
-            if (radius <= 0 || regionCount <= 0) return RegionFeatureType.Plains;
+            if (radius <= 0 || regionCount <= 0) return _gas ? RegionFeatureType.GasLayers : RegionFeatureType.Plains;
 
             double lon = (region + (q + radius) / (2.0 * radius)) / regionCount;   // 0..1 around the ring (wraps)
             double lat = (r + radius) / (2.0 * radius);                             // 0..1 pole → pole
-            double elev = Field(lon, lat, _ePhaseLon, _ePhaseLat);
-            double moist = Field(lon, lat, _mPhaseLon, _mPhaseLat);
 
             // The muster/landing CORE — the patch centre (0,0), where units are raised, plus its immediate ring — is
             // guaranteed passable land: a colony's landing zone sits on solid ground. Without this, a coherent ocean
             // world (Earth floods ~62% of the elevation range) can put OPEN WATER on the muster hex, which the
-            // pathfinder treats as impassable — stranding a raised garrison with no reachable hex. Below sea level in
-            // the core reads as Coast (a beachhead), not Ocean; everything beyond the core is the honest field.
+            // pathfinder treats as impassable — stranding a raised garrison with no reachable hex.
             bool inMusterCore = (Math.Abs(q) + Math.Abs(q + r) + Math.Abs(r)) / 2 <= MusterCoreRadius;
-            if (elev < _seaLevel) return inMusterCore ? RegionFeatureType.Coast : RegionFeatureType.Ocean;
+            return Classify(lon, lat, inMusterCore);
+        }
+
+        /// <summary>Terrain at a raw GLOBAL (lon, lat) on the planet — the cylinder-grid entry point (G1). Same field +
+        /// climate rules as the per-region path, without the disk's muster-core land guard (the global grid guarantees
+        /// land at a region BAND's centre column instead — a G3 concern). <paramref name="lon"/> wraps 0..1.</summary>
+        public RegionFeatureType TerrainForLonLat(double lon, double lat) => Classify(lon, lat, false);
+
+        /// <summary>Classify one (lon,lat) sample: sea level → ocean/coast, then CLIMATE (temp) → relief + moisture.
+        /// <paramref name="musterCoreLand"/> promotes a below-sea-level sample to Coast (a beachhead) so a landing core
+        /// is never impassable water. The shared core of the per-region and global-grid terrain (identical output).</summary>
+        private RegionFeatureType Classify(double lon, double lat, bool musterCoreLand)
+        {
+            if (_gas) return RegionFeatureType.GasLayers;
+            double elev = Field(lon, lat, _ePhaseLon, _ePhaseLat);
+            double moist = Field(lon, lat, _mPhaseLon, _mPhaseLat);
+
+            if (elev < _seaLevel) return musterCoreLand ? RegionFeatureType.Coast : RegionFeatureType.Ocean;
             if (elev < _seaLevel + CoastBand) return RegionFeatureType.Coast;
 
             // Land — the world's CLIMATE first (temperature), then relief + moisture.

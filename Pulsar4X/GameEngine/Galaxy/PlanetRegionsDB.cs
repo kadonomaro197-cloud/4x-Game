@@ -96,12 +96,18 @@ namespace Pulsar4X.Galaxy
     {
         [JsonProperty] public List<Region> Regions { get; internal set; } = new List<Region>();
 
+        /// <summary>The ONE continuous cylinder hex grid (G-track) — null until generated (lazy). Regions are column
+        /// BANDS over this. Additive alongside the per-region <c>Region.Hexes</c> disks during the migration; the disks
+        /// are retired once consumers ride the grid (docs/GLOBAL-HEX-GRID-DESIGN.md, G6).</summary>
+        [JsonProperty] public SurfaceGrid SurfaceGrid { get; internal set; }
+
         public PlanetRegionsDB() { }
         public PlanetRegionsDB(List<Region> regions) { Regions = regions; }
         public PlanetRegionsDB(PlanetRegionsDB other)
         {
             Regions = new List<Region>();
             foreach (var r in other.Regions) Regions.Add(new Region(r));
+            SurfaceGrid = other.SurfaceGrid != null ? new SurfaceGrid(other.SurfaceGrid) : null;
         }
 
         public override object Clone() => new PlanetRegionsDB(this);

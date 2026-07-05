@@ -874,6 +874,55 @@ namespace Pulsar4X.Tests
             Log($"hex march: unit walked {steps} hexes to ({dest.Q},{dest.R}) and arrived; path clone-safe");
         }
 
+        // ───────────────────────── G3 — units on the ONE continuous global grid (docs/GLOBAL-HEX-GRID-DESIGN.md) ─────────────────────────
+
+        [Test]
+        [Description("G3: a raised unit is ALSO placed on the global cylinder grid — at its region BAND's centre column (the global twin of the disk's (0,0) muster).")]
+        public void RaiseUnit_MustersOnGlobalGrid_InItsBand()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            var unit = GroundForces.RaiseUnit(body, MakeInfantryDesign(), s.Faction.Id, regionIndex: 2);
+
+            Assert.That(body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB), Is.True);
+            Assert.That(regionsDB.SurfaceGrid, Is.Not.Null, "raising a unit generated the body's global grid");
+            Assert.That(unit.GlobalQ, Is.GreaterThanOrEqualTo(0), "the unit is placed on the grid");
+            int band = PlanetGridFactory.RegionOfColumn(unit.GlobalQ, regionsDB.SurfaceGrid.Cols, regionsDB.Regions.Count);
+            Assert.That(band, Is.EqualTo(2), "it musters in region 2's column band");
+        }
+
+        [Test]
+        [Description("G3 THE POINT — a unit marches across a region BAND border on the continuous grid with NO edge gate: order a global move one band east, advance time, and it arrives with its region index updated (it just walked across the seam column, not through a stitch).")]
+        public void OrderMoveToGlobalHex_MarchesAcrossBandBorder_NoGate()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            var unit = GroundForces.RaiseUnit(body, MakeInfantryDesign(), s.Faction.Id, regionIndex: 0);
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            var grid = regionsDB.SurfaceGrid;
+            Assert.That(grid, Is.Not.Null);
+
+            // Make the whole world land so the march is deterministic (isolates the border-crossing from terrain routing).
+            foreach (var h in grid.Hexes) h.Terrain = RegionFeatureType.Plains;
+
+            int rc = regionsDB.Regions.Count;
+            int bandWidth = grid.Cols / rc;
+            int startBand = PlanetGridFactory.RegionOfColumn(unit.GlobalQ, grid.Cols, rc);
+            int targetQ = (unit.GlobalQ + bandWidth) % grid.Cols;         // one full band east → an ADJACENT band
+            int targetBand = PlanetGridFactory.RegionOfColumn(targetQ, grid.Cols, rc);
+            Assert.That(targetBand, Is.Not.EqualTo(startBand), "the target is across a region-band border");
+
+            Assert.That(GroundForces.OrderMoveToGlobalHex(body, unit, targetQ, unit.GlobalR), Is.True, "a reachable global hex is a valid order");
+            Assert.That(unit.GlobalPath, Is.Not.Null.And.Count.GreaterThan(0));
+
+            new GroundForcesProcessor().ProcessEntity(body, 100 * 24 * 3600);   // long tick clears the whole march
+
+            Assert.That(unit.GlobalQ, Is.EqualTo(targetQ), "it arrived at the destination column");
+            Assert.That(unit.GlobalR, Is.EqualTo(unit.GlobalR));
+            Assert.That(unit.GlobalPath, Is.Null, "no longer marching");
+            Assert.That(unit.RegionIndex, Is.EqualTo(targetBand), "its region followed it across the band border — no edge gate");
+        }
+
         // ───────────────────────── H3 — range-based directed combat (docs/HEX-GROUND-AND-ORDERS-DESIGN.md) ─────────────────────────
 
         private static GroundUnitDesign MakeDesign(string id, string name, GroundUnitType type, int range, double hp = 1000) => new GroundUnitDesign

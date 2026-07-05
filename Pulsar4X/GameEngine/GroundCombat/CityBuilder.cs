@@ -43,6 +43,39 @@ namespace Pulsar4X.GroundCombat
             return true;
         }
 
+        // ── GLOBAL grid (G4) — the same place/remove + roll-up, addressed on the cylinder by global (Q,R) ─────────────
+
+        /// <summary>Place a building on a fine tile of the GLOBAL hex at (<paramref name="gQ"/>,<paramref name="gR"/>) —
+        /// the cylinder-addressed twin of <see cref="PlaceBuildingOnTile"/>. Generates the hex's city grid on demand,
+        /// sets the tile, and adds the id to the operational hex's roll-up (<see cref="GroundHex.InstallationIds"/>).
+        /// Returns false if the hex/tile can't be resolved or the tile is taken.</summary>
+        public static bool PlaceBuildingOnGlobalTile(Entity body, int gQ, int gR, int tileQ, int tileR, int buildingInstanceId)
+        {
+            var hex = CityGridFactory.ResolveGlobalHex(body, gQ, gR);
+            if (hex == null) return false;
+            var grid = CityGridFactory.EnsureCityForGlobalHex(body, gQ, gR);
+            var tile = grid?.TileAt(tileQ, tileR);
+            if (tile == null || tile.BuildingInstanceId != -1) return false;
+
+            tile.BuildingInstanceId = buildingInstanceId;
+            if (!hex.InstallationIds.Contains(buildingInstanceId)) hex.InstallationIds.Add(buildingInstanceId);   // roll-up
+            return true;
+        }
+
+        /// <summary>Remove the building on a fine tile of the GLOBAL hex — clears the tile AND drops its id from the
+        /// operational hex's roll-up. Returns false if the hex/tile can't be resolved or the tile is empty.</summary>
+        public static bool RemoveBuildingFromGlobalTile(Entity body, int gQ, int gR, int tileQ, int tileR)
+        {
+            var hex = CityGridFactory.ResolveGlobalHex(body, gQ, gR);
+            var tile = hex?.CityGrid?.TileAt(tileQ, tileR);
+            if (tile == null || tile.BuildingInstanceId == -1) return false;
+
+            int id = tile.BuildingInstanceId;
+            tile.BuildingInstanceId = -1;
+            hex.InstallationIds?.Remove(id);   // roll-up
+            return true;
+        }
+
         /// <summary>Clear a specific building from a hex's city grid (used by the grave rung — a bombed operational hex
         /// must also empty the fine tile it sat on, so the roll-up stays honest). Returns true if a tile was cleared.</summary>
         public static bool ClearBuildingFromCity(GroundHex hex, int buildingInstanceId)

@@ -64,6 +64,10 @@ namespace Pulsar4X.GroundCombat
             //    (b) FINE hex march (H2): walk the stored A* path one hex at a time — each step costs the region's
             //        per-hex base × the entered hex's terrain multiplier, so a march through mountains takes longer.
             //        A single tick can clear several cheap hexes (the while-loop carries the leftover time forward).
+            //    (c) GLOBAL cylinder march (G3): walk the stored global A* path; band (RegionIndex) updates by column.
+            body.TryGetDataBlob<PlanetRegionsDB>(out var gRegions);
+            int gCols = gRegions?.SurfaceGrid?.Cols ?? 0;
+            int gRc = gRegions?.Regions.Count ?? 0;
             foreach (var unit in forces.Units)
             {
                 if (unit.MovingToRegion >= 0)   // (a) coarse region hop takes priority (a unit isn't doing both)
@@ -93,6 +97,23 @@ namespace Pulsar4X.GroundCombat
                             : 0.0;
                     }
                     if (unit.HexPath.Count == 0) { unit.HexPath = null; unit.HexTransitSecondsRemaining = 0; }
+                }
+
+                if (unit.GlobalPath != null && unit.GlobalPath.Count > 0)   // (c) GLOBAL cylinder march (G3) — no edge gates
+                {
+                    unit.GlobalTransitSecondsRemaining -= deltaSeconds;
+                    while (unit.GlobalPath.Count > 0 && unit.GlobalTransitSecondsRemaining <= 0)
+                    {
+                        var step = unit.GlobalPath[0];
+                        unit.GlobalQ = step.Q;
+                        unit.GlobalR = step.R;
+                        if (gCols > 0 && gRc > 0) unit.RegionIndex = PlanetGridFactory.RegionOfColumn(step.Q, gCols, gRc);   // band = region
+                        unit.GlobalPath.RemoveAt(0);
+                        unit.GlobalTransitSecondsRemaining += (unit.GlobalPath.Count > 0)
+                            ? unit.GlobalStepBaseSeconds * HexPathfinder.HexMoveMult(unit.GlobalPath[0].Terrain)
+                            : 0.0;
+                    }
+                    if (unit.GlobalPath.Count == 0) { unit.GlobalPath = null; unit.GlobalTransitSecondsRemaining = 0; }
                 }
             }
 

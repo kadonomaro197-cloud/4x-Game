@@ -111,6 +111,90 @@ namespace Pulsar4X.GroundCombat
             return result;   // unreachable
         }
 
+        // ── GLOBAL grid pathfinding (G-track, G2) — A* over the ONE continuous cylinder, no edge gates ────────────────
+
+        // Offset (odd-r, pointy-top) neighbour deltas: the 6 neighbours differ by row parity. Column WRAPS (handled by
+        // SurfaceGrid.WrapCol), row is bounded (a neighbour off the poles simply doesn't exist).
+        private static readonly (int dq, int dr)[] _evenRow = { (+1, 0), (0, -1), (-1, -1), (-1, 0), (-1, +1), (0, +1) };
+        private static readonly (int dq, int dr)[] _oddRow  = { (+1, 0), (+1, -1), (0, -1), (-1, 0), (0, +1), (+1, +1) };
+
+        /// <summary>
+        /// A* across the ONE continuous cylinder <see cref="SurfaceGrid"/> (G2) — the global twin of <see cref="FindPath"/>,
+        /// with NO edge-gate stitching: the longitude column simply WRAPS (crossing a "region border" is just stepping to
+        /// the next column, and the shortest path from a low column to a high one may go the short way across the seam).
+        /// Terrain-weighted by <see cref="HexMoveMult"/>, ocean impassable. Returns the ordered hexes to step onto —
+        /// EXCLUDING the start, INCLUDING the destination — or empty if the grid is empty, the destination is off-grid or
+        /// impassable, start == dest, or no route exists. Deterministic.
+        /// </summary>
+        public static List<GroundHex> FindGlobalPath(SurfaceGrid grid, int fromQ, int fromR, int toQ, int toR)
+        {
+            var result = new List<GroundHex>();
+            if (grid == null || grid.Cols <= 0 || grid.Rows <= 0 || grid.Hexes == null || grid.Hexes.Count == 0) return result;
+
+            int cols = grid.Cols;
+            int sQ = grid.WrapCol(fromQ), sR = fromR;
+            int dQ = grid.WrapCol(toQ),   dR = toR;
+            if (sR < 0 || sR >= grid.Rows || dR < 0 || dR >= grid.Rows) return result;
+            if (sQ == dQ && sR == dR) return result;   // already there
+
+            var destHex = grid.HexAt(dQ, dR);
+            if (destHex == null || IsImpassable(destHex.Terrain)) return result;   // can't march onto open water / off-grid
+
+            var startKey = (sQ, sR);
+            var destKey = (dQ, dR);
+            var gScore = new Dictionary<(int, int), double> { [startKey] = 0.0 };
+            var cameFrom = new Dictionary<(int, int), (int, int)>();
+            var open = new PriorityQueue<(int, int), double>();
+            open.Enqueue(startKey, GlobalHeuristic(sQ, sR, dQ, dR, cols));
+
+            while (open.Count > 0)
+            {
+                var current = open.Dequeue();
+                if (current == destKey) return ReconstructGlobal(cameFrom, grid, startKey, destKey);
+
+                double baseG = gScore[current];
+                var deltas = (current.Item2 & 1) == 0 ? _evenRow : _oddRow;
+                foreach (var (dq, dr) in deltas)
+                {
+                    int nr = current.Item2 + dr;
+                    if (nr < 0 || nr >= grid.Rows) continue;        // off the poles
+                    int nq = grid.WrapCol(current.Item1 + dq);      // longitude wraps
+                    var nkey = (nq, nr);
+                    var nhex = grid.HexAt(nq, nr);
+                    if (nhex == null || IsImpassable(nhex.Terrain)) continue;   // route around open water
+                    double tentative = baseG + HexMoveMult(nhex.Terrain);
+                    if (gScore.TryGetValue(nkey, out var known) && tentative >= known) continue;
+                    gScore[nkey] = tentative;
+                    cameFrom[nkey] = current;
+                    open.Enqueue(nkey, tentative + GlobalHeuristic(nq, nr, dQ, dR, cols));
+                }
+            }
+            return result;   // unreachable
+        }
+
+        /// <summary>Admissible A* heuristic on the cylinder: the WRAPPED column distance and the row distance are each a
+        /// lower bound on step count (a step changes each by ≤ 1), so their max never overestimates. ×Move_Open.</summary>
+        private static double GlobalHeuristic(int q, int r, int toQ, int toR, int cols)
+        {
+            int dc = Math.Abs(q - toQ) % cols;
+            dc = Math.Min(dc, cols - dc);              // the short way around the ring
+            return Math.Max(dc, Math.Abs(r - toR)) * Move_Open;
+        }
+
+        private static List<GroundHex> ReconstructGlobal(Dictionary<(int, int), (int, int)> cameFrom,
+            SurfaceGrid grid, (int, int) startKey, (int, int) destKey)
+        {
+            var steps = new List<GroundHex>();
+            var cur = destKey;
+            while (cur != startKey)
+            {
+                steps.Add(grid.HexAt(cur.Item1, cur.Item2));
+                cur = cameFrom[cur];
+            }
+            steps.Reverse();
+            return steps;
+        }
+
         private static List<GroundHex> Reconstruct(Dictionary<(int, int), (int, int)> cameFrom,
             Dictionary<(int, int), GroundHex> byCoord, (int, int) startKey, (int, int) destKey)
         {
