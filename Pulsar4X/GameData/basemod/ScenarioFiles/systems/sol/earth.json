@@ -168,7 +168,8 @@
         "bunker",
         "infantry-unit",
         "armor-unit",
-        "artillery-unit"
+        "artillery-unit",
+        "troop-bay"
       ],
       "ComponentDesigns": [
         "default-design-alcubierre-2k",
@@ -215,7 +216,8 @@
         "default-design-bunker",
         "default-design-infantry",
         "default-design-armor",
-        "default-design-artillery"
+        "default-design-artillery",
+        "default-design-troop-bay"
       ],
       "ShipDesigns": [
         "default-ship-design-courier",
