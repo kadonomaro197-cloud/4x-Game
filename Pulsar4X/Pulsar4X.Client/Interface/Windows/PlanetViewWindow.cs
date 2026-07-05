@@ -8,7 +8,6 @@ using Pulsar4X.Galaxy;
 using Pulsar4X.GroundCombat;
 using Pulsar4X.Colonies;
 using Pulsar4X.Components;
-using Pulsar4X.Datablobs;   // ComponentInstancesDB (namespace ≠ folder)
 using Pulsar4X.DataStructures;
 using Pulsar4X.Client.Interface.Widgets;
 
@@ -463,7 +462,7 @@ namespace Pulsar4X.Client
             var center = new Vector2(canvasPos.X + mapSize.X * 0.5f, canvasPos.Y + mapSize.Y * 0.5f);
             uint hexBorder = ImGui.ColorConvertFloat4ToU32(new Vector4(0f, 0f, 0f, 0.30f));
 
-            var names = BuildingIndex(body);   // instance id → design name (for the readout)
+            var names = GroundBuildings.BuildingNamesOnBody(body);   // engine accessor (ComponentInstancesDB.AllComponents is internal)
             foreach (var t in city.Tiles)
             {
                 var pc = AxialHexCenter(center, size, t.Q, t.R);
@@ -511,21 +510,6 @@ namespace Pulsar4X.Client
                     && colony.FactionOwnerID == myFaction)
                     return colony;
             return null;
-        }
-
-        /// <summary>Building instance id → design name, across the body's colonies (for the city-tile readout).</summary>
-        private static Dictionary<int, string> BuildingIndex(Entity body)
-        {
-            var map = new Dictionary<int, string>();
-            if (body?.Manager == null) return map;
-            foreach (var colony in body.Manager.GetAllEntitiesWithDataBlob<ColonyInfoDB>())
-            {
-                if (!colony.TryGetDataBlob<ColonyInfoDB>(out var ci) || ci.PlanetEntity == null || ci.PlanetEntity.Id != body.Id) continue;
-                if (!colony.TryGetDataBlob<ComponentInstancesDB>(out var comps)) continue;
-                foreach (var inst in comps.AllComponents.Values)
-                    map[inst.ID] = inst.Design?.Name ?? ("building #" + inst.ID);
-            }
-            return map;
         }
 
         private void DrawRegionColumn(ImDrawListPtr drawList, Vector2 min, Vector2 max, Region region,

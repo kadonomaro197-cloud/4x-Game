@@ -244,6 +244,23 @@ namespace Pulsar4X.GroundCombat
             return map;
         }
 
+        /// <summary>Building instance id → design name, across the body's colonies — a PUBLIC engine accessor for the
+        /// client's city-tile readout. (<c>ComponentInstancesDB.AllComponents</c> is INTERNAL, so the client can't walk
+        /// it directly — client CLAUDE.md rule #2; this keeps the lookup engine-side.) Defensive; never throws.</summary>
+        public static Dictionary<int, string> BuildingNamesOnBody(Entity body)
+        {
+            var map = new Dictionary<int, string>();
+            if (body?.Manager == null) return map;
+            foreach (var colony in body.Manager.GetAllEntitiesWithDataBlob<ColonyInfoDB>())
+            {
+                if (!colony.TryGetDataBlob<ColonyInfoDB>(out var ci) || ci.PlanetEntity == null || ci.PlanetEntity.Id != body.Id) continue;
+                if (!colony.TryGetDataBlob<ComponentInstancesDB>(out var comps)) continue;
+                foreach (var inst in comps.AllComponents.Values)
+                    map[inst.ID] = inst.Design?.Name ?? ("building #" + inst.ID);
+            }
+            return map;
+        }
+
         private static Entity FindOwningColony(Entity body)
         {
             if (body?.Manager == null) return null;
