@@ -3,6 +3,7 @@ using NUnit.Framework;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
 using Pulsar4X.Components;
+using Pulsar4X.Datablobs;   // ComponentInstancesDB (namespace ≠ folder)
 using Pulsar4X.DataStructures;
 using Pulsar4X.GroundCombat;
 
@@ -61,6 +62,31 @@ namespace Pulsar4X.Tests
                 Assert.That(design.ComponentMountType.HasFlag(ComponentMountType.PlanetInstallation), Is.True,
                     $"{e.id}: mounts as a PlanetInstallation — so building it auto-installs on the colony and raises the unit");
             }
+        }
+
+        [Test]
+        [Description("A1×A2 cradle-to-grave, through the REAL path: installing a real base-mod infantry component on the colony via Entity.AddComponent (the exact call ComponentDesign.OnConstructionComplete makes when a built PlanetInstallation auto-installs) raises an Infantry unit on the planet and leaves NO lingering component. Proves the raise+remove hook is safe when driven through AddComponent's attribute loop, not just called directly.")]
+        public void BuildingAnInfantryComponent_ThroughAddComponent_RaisesAUnit_AndLeavesNoInstallation()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            var infantry = (ComponentDesign)s.Faction.GetDataBlob<FactionInfoDB>().IndustryDesigns["default-design-infantry"];
+            var comps = s.Colony.GetDataBlob<ComponentInstancesDB>();
+
+            int unitsBefore = body.TryGetDataBlob<GroundForcesDB>(out var pre) ? pre.Units.Count : 0;
+
+            // the exact entry point OnConstructionComplete uses for an auto-installed PlanetInstallation
+            var instance = new ComponentInstance(infantry);
+            s.Colony.AddComponent(instance);
+
+            Assert.That(body.TryGetDataBlob<GroundForcesDB>(out var forces), Is.True, "a roster exists on the body");
+            Assert.That(forces.Units.Count, Is.EqualTo(unitsBefore + 1), "exactly one Infantry unit was raised by the build→deploy hook");
+            var raised = forces.Units[forces.Units.Count - 1];
+            Assert.That(raised.UnitType, Is.EqualTo(GroundUnitType.Infantry), "an Infantry unit (the design's type carried through)");
+            Assert.That(raised.Attack, Is.EqualTo(100), "with the design's attack stat");
+
+            Assert.That(comps.AllComponents.ContainsKey(instance.UniqueID), Is.False,
+                "no lingering infantry INSTALLATION — the component deployed as a ground force and removed itself (safe mid-AddComponent-loop)");
         }
     }
 }
