@@ -77,15 +77,18 @@ namespace Pulsar4X.Tests
         {
             var s = TestScenario.CreateWithColony();
             var dataStore = s.Faction.GetDataBlob<FactionInfoDB>().Data;
-            Assert.That(dataStore.ComponentTemplates.ContainsKey("ground-rifle"), Is.True, "the ground-weapon template is loaded");
+            // the template may be in the unlocked OR the locked store — check both (it drives the designer either way)
+            var tmpl = dataStore.ComponentTemplates.ContainsKey("ground-rifle")
+                ? dataStore.ComponentTemplates["ground-rifle"]
+                : dataStore.LockedComponentTemplates["ground-rifle"];
+            Assert.That(tmpl, Is.Not.Null, "the ground-weapon template is loaded");
 
-            var tmpl = dataStore.ComponentTemplates["ground-rifle"];
             var designer = new ComponentDesigner(tmpl, dataStore, s.Faction.GetDataBlob<FactionTechDB>());
-            foreach (var attr in designer.ComponentDesignAttributes.Values) attr.SetValue();   // start from the template defaults
+            foreach (var prop in designer.ComponentDesignProperties.Values) prop.SetValue();   // start from the template defaults
 
             // dial the weapon WAY up — a battle-cannon, not a service rifle (the knobs are live now, not read-only)
-            designer.ComponentDesignAttributes["Attack"].SetValueFromInput(3000);
-            designer.ComponentDesignAttributes["Range"].SetValueFromInput(8);
+            designer.ComponentDesignProperties["Attack"].SetValueFromInput(3000);
+            designer.ComponentDesignProperties["Range"].SetValueFromInput(8);
             var big = designer.CreateDesign(s.Faction);
             var w = big.GetAttribute<GroundWeaponAtb>();
             Log($"dialed rifle → attack {w.Attack:0}, range {w.Range} (the template default is 40 / 1 hex)");
