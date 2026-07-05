@@ -165,7 +165,10 @@
         "solarArray",
         "local-construction",
         "launch-complex",
-        "bunker"
+        "bunker",
+        "infantry-unit",
+        "armor-unit",
+        "artillery-unit"
       ],
       "ComponentDesigns": [
         "default-design-alcubierre-2k",

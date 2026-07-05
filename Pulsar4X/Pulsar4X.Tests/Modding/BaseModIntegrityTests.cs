@@ -68,6 +68,17 @@ namespace Pulsar4X.Tests
                         failures.Add($"design '{designId}' uses TemplateId '{design.TemplateId}', which is not defined");
                         continue;
                     }
+                    // The template must also be UNLOCKED into the faction store (via StartingItems or a starting
+                    // tech) — ComponentDesigner reads factionData.ComponentTemplates (unlocked), NOT the global set.
+                    // A design listed in ComponentDesigns whose template isn't unlocked throws "not found in the
+                    // faction data store" deep in colony creation (crashed New Game for the ground-unit designs,
+                    // 2026-07-05: they were in ComponentDesigns but not StartingItems). This is the 6th registration
+                    // point (gotcha #10) the material check below can't see.
+                    if (!factionData.ComponentTemplates.ContainsKey(design.TemplateId))
+                        failures.Add(
+                            $"colony '{colonyId}': starting design '{designId}' uses template '{design.TemplateId}', " +
+                            $"which its StartingItems never unlock — add '{design.TemplateId}' to StartingItems " +
+                            $"(ComponentDesigner throws 'not found in the faction data store' at New Game otherwise)");
                     if (template.ResourceCost == null)
                         continue;
 
