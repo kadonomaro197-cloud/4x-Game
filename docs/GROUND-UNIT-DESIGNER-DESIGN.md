@@ -182,6 +182,29 @@ The ⚠️ builds above point at things the current 5-part model doesn't yet exp
 They're the backlog that grows the parts bin toward "full scope" — pick them off as dedicated slices, each with
 its numbers flagged.
 
+### 6b. Consolidation — the 12 axes → FOUR gameplay decision-systems (2026-07-05)
+
+The essence axes (§1a) and the §6a gaps are a *coverage* checklist — necessary, but a knob is only worth building
+if it's the source of a **player DECISION that stacks** (`docs/REALISM-VS-GAMEPLAY-AUDIT.md`). So the sprawl
+consolidates into **four general systems**, each of which turns a whole cluster of axes into one real decision.
+*"You can build any unit"* only becomes *"any unit plays differently and there's a reason to build each"* once
+these exist. **This is the gameplay roadmap; the parts bin is just the vocabulary these systems read.**
+
+| # | System — the decision | Consolidates (axes/gaps) | Reuse / status | Makes real |
+|---|------------------------|--------------------------|----------------|-----------|
+| **①** | **Damage ↔ Defense Matchup** — *"build the counter."* A rock-paper-scissors of damage-profiles × defense-profiles (kinetic▸armor, energy▸shield, saturation▸dodge, alpha▸HP…). | firepower · range · delivery (rate/alpha/AoE) · damage-type · survivability (armor/shield/dodge) | **Port the SPACE weapon triangle + dodge/saturation** (`WEAPONS-AND-DODGE-DESIGN.md`) to ground — mostly porting, not inventing. **Highest priority.** | rate/alpha, damage-type, shield, dodge all start to matter |
+| **②** | **Mobility & Reach** — *"control the range."* Kite-or-brawl, terrain access, where/how you deploy. | mobility (speed/locomotion) · air/teleport/burrow · deployment | partly there (hex range + ROE + terrain); add per-unit speed, locomotion×terrain, air layer, deploy methods | speed, terrain, deployment matter |
+| **③** | **Combined Arms & Roles** — *"compose the force."* Interdependent roles instead of one spammed super-unit. | role · support/heal auras · anti-air · EW · engineer/action utilities · command/leader | new-ish; utilities become roles that need each other | army composition becomes a decision |
+| **④** | **Economy & Attrition** — *"quantity or quality."* Cheap hordes vs elite few, consumables, replaceability. | scale · economy · swarm-vs-elite · consumables · build-quantity **Count "bunch"** | cost already sums from parts; the Count bunch is designed not built | swarm-vs-elite becomes an economic decision |
+
+**The load-bearing gap this exposes:** the assembler already *computes* damage-type / evasion / shield, but the
+**raised unit doesn't carry them and the ground resolver doesn't read them** — so system ① is blocked on
+(a) `GroundUnit` carrying evasion/shield/damage-profile, and (b) `ResolveRegionCombat` consuming them (ideally by
+reusing the space dodge/triangle math). That wiring is the first real gameplay slice after the designer spine.
+
+**Build order:** ① (combat depth, reuses space) → ② (mobility) → ③ (combined arms) → ④ (economy/Count). Parts are
+added as each system gives them meaning, not ahead of it.
+
 ---
 
 ## 7. Reconciliation with the earlier fixed-stat units (A1/A2)
