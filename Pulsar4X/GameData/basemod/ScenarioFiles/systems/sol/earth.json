@@ -176,7 +176,9 @@
         "power-armor",
         "ground-autocannon",
         "vehicle-frame",
-        "ground-cannon"
+        "ground-cannon",
+        "walker-frame",
+        "energy-weapon"
       ],
       "ComponentDesigns": [
         "default-design-alcubierre-2k",
@@ -231,7 +233,9 @@
         "default-design-power-armor",
         "default-design-ground-autocannon",
         "default-design-vehicle-frame",
-        "default-design-ground-cannon"
+        "default-design-ground-cannon",
+        "default-design-walker-frame",
+        "default-design-energy-weapon"
       ],
       "ShipDesigns": [
         "default-ship-design-courier",

@@ -601,5 +601,21 @@
       "Name": "Tank Cannon",
       "TemplateId": "ground-cannon"
     }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-walker-frame",
+      "Name": "Bipedal Walker Frame",
+      "TemplateId": "walker-frame"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-energy-weapon",
+      "Name": "Plasma Projector",
+      "TemplateId": "energy-weapon"
+    }
   }
 ]

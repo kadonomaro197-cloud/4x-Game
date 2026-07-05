@@ -135,5 +135,23 @@ namespace Pulsar4X.Tests
                 new List<(ComponentDesign, int)> { (Part("default-design-ground-cannon"), 1) });
             Assert.That(tank.UnitType, Is.EqualTo(GroundUnitType.Armor), "a vehicle frame → Armor");
         }
+
+        [Test]
+        [Description("G-D3d mobility + damage-type axes: a Battlemech (walker frame + energy weapon + plating) assembles — the same parts bin now spans a striding energy-armed war-machine, extending coverage past infantry and tracked vehicles.")]
+        public void Battlemech_AssemblesOnAWalkerFrame_WithAnEnergyWeapon()
+        {
+            _s = TestScenario.CreateWithColony();
+            var r = GroundUnitAssembly.Compute(Part("default-design-walker-frame"), new List<(ComponentDesign, int)>
+            {
+                (Part("default-design-energy-weapon"), 1),
+                (Part("default-design-ground-plating"), 1),
+            });
+            Log($"Mech: valid={r.Valid} atk={r.Attack:0} range={r.Range} hp={r.HitPoints:0} class={r.CarryClass}");
+            Assert.That(r.Valid, Is.True, "the walker frame (strength 400) carries the plasma projector easily");
+            Assert.That(r.Attack, Is.EqualTo(90), "attack = the energy weapon (emergent)");
+            Assert.That(r.Range, Is.EqualTo(2), "reach = the energy weapon");
+            Assert.That(r.HitPoints, Is.EqualTo(1150), "HP = walker frame 1000 + plating 150");
+            Assert.That(r.CarryClass, Is.EqualTo(GroundCarryClass.Vehicle), "a walker is a vehicle-class unit");
+        }
     }
 }
