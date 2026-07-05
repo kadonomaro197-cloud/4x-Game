@@ -10,6 +10,11 @@
 
 ---
 
+> **This is one realization of a bigger principle.** `docs/UNIVERSAL-ASSEMBLY-DESIGN.md` (2026-07-05) raises this
+> same model to the WHOLE build system: *everything* buildable (unit / ship / installation / station /
+> super-weapon / world-ship) is a chassis + components at some scale. The ground-unit designer below is that
+> principle's first full realization + prototype — the assembler here (`GroundUnitAssembly`) is the general core.
+
 ## 1. The objective (the north star for this system) — **EXACT essence recreation of ANY sci-fi unit**
 
 **The success criterion (the developer's call, 2026-07-05): you can recreate the ESSENCE of *any and every*
