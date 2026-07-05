@@ -180,7 +180,9 @@
         "walker-frame",
         "energy-weapon",
         "shield-generator",
-        "reflex-booster"
+        "reflex-booster",
+        "swarm-frame",
+        "claw-weapon"
       ],
       "ComponentDesigns": [
         "default-design-alcubierre-2k",
@@ -239,7 +241,9 @@
         "default-design-walker-frame",
         "default-design-energy-weapon",
         "default-design-shield-generator",
-        "default-design-reflex-booster"
+        "default-design-reflex-booster",
+        "default-design-swarm-frame",
+        "default-design-claw-weapon"
       ],
       "ShipDesigns": [
         "default-ship-design-courier",

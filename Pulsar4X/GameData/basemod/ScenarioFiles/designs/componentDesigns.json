@@ -633,5 +633,21 @@
       "Name": "Reflex Booster",
       "TemplateId": "reflex-booster"
     }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-swarm-frame",
+      "Name": "Swarmling Frame",
+      "TemplateId": "swarm-frame"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-claw-weapon",
+      "Name": "Rending Claws",
+      "TemplateId": "claw-weapon"
+    }
   }
 ]

@@ -184,5 +184,45 @@ namespace Pulsar4X.Tests
             Assert.That(shieldedUnit.Shield, Is.EqualTo(150), "and the RAISED unit carries the shield");
             Assert.That(shieldedUnit.DamageType, Is.EqualTo(GroundWeaponMode.Energy), "and its damage-type — the matrix (slice A) will read these");
         }
+
+        [Test]
+        [Description("The Clone-vs-Zergling proof: two units from the SAME parts bin that share almost no gameplay DNA. A Clone (human + plasma + plating + shield) is a ranged, durable, shielded soak-tank; a Zergling (swarm frame + claws + reflex) is a fragile, cheap, melee dodger. Both assemble legally; every System-① field is opposite.")]
+        public void CloneTrooper_vs_Zergling_AreOppositeUnits_FromOneBin()
+        {
+            _s = TestScenario.CreateWithColony();
+
+            var clone = GroundUnitAssembly.ToGroundUnitDesign("test-clone", "Clone Trooper",
+                Part("default-design-human-frame"), new List<(ComponentDesign, int)>
+            {
+                (Part("default-design-energy-weapon"), 1),
+                (Part("default-design-ground-plating"), 1),
+                (Part("default-design-shield-generator"), 1),
+            });
+            var zergling = GroundUnitAssembly.ToGroundUnitDesign("test-zergling", "Zergling",
+                Part("default-design-swarm-frame"), new List<(ComponentDesign, int)>
+            {
+                (Part("default-design-claw-weapon"), 1),
+                (Part("default-design-reflex-booster"), 1),
+            });
+            Log($"Clone: hp={clone.HitPoints:0} atk={clone.Attack:0} range={clone.Range} shield={clone.Shield:0} dmg={clone.DamageType} | " +
+                $"Zergling: hp={zergling.HitPoints:0} atk={zergling.Attack:0} range={zergling.Range} evasion={zergling.Evasion:0.##} dmg={zergling.DamageType}");
+
+            // Clone — ranged, durable, shielded, energy
+            Assert.That(clone.HitPoints, Is.EqualTo(350), "Clone: soak-tank HP (frame + plating)");
+            Assert.That(clone.Range, Is.EqualTo(2), "Clone: fights at range");
+            Assert.That(clone.Shield, Is.EqualTo(150), "Clone: survives by a shield pool");
+            Assert.That(clone.DamageType, Is.EqualTo(GroundWeaponMode.Energy), "Clone: energy weapon");
+
+            // Zergling — fragile, melee, dodgy, cheap
+            Assert.That(zergling.HitPoints, Is.EqualTo(40), "Zergling: paper-thin");
+            Assert.That(zergling.Range, Is.EqualTo(0), "Zergling: must close to melee");
+            Assert.That(zergling.Evasion, Is.EqualTo(0.4), "Zergling: survives by dodging, not soaking");
+            Assert.That(zergling.DamageType, Is.EqualTo(GroundWeaponMode.Melee), "Zergling: claws");
+
+            // opposite on every survival + reach axis, and the Zergling costs a fraction of the Clone
+            Assert.That(zergling.HitPoints, Is.LessThan(clone.HitPoints));
+            Assert.That(zergling.Range, Is.LessThan(clone.Range));
+            Assert.That(zergling.IndustryPointCosts, Is.LessThan(clone.IndustryPointCosts), "a Zergling is far cheaper — you field a thousand");
+        }
     }
 }
