@@ -1,5 +1,6 @@
 using Pulsar4X.Engine;
-using Pulsar4X.Datablobs;   // PositionDB, ComponentInstancesDB (namespace ≠ folder)
+using Pulsar4X.Datablobs;   // ComponentInstancesDB (namespace ≠ folder)
+using Pulsar4X.Movement;    // PositionDB — the ACTIVE class lives here, not in Datablobs (see Tests/CLAUDE.md)
 using Pulsar4X.Components;
 using Pulsar4X.Ships;
 
