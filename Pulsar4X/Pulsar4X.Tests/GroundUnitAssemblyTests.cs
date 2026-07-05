@@ -186,6 +186,40 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("System ① cradle-to-grave for ARMOUR: the base-mod plating part carries a Defense value that flows part → assembly → design → RAISED unit, and that flowed Defense actually bites in the resolver's own math (GroundDamageMatrix.ArmourSoak reduces a hit for the plated unit, not the bare one). This closes the vertical loop for flat armour — the third defence flavour is reachable from the designer, not just synthetic test units.")]
+        public void Armour_Defense_FlowsFromThePlatingPart_ToTheRaisedUnit_AndBitesInCombat()
+        {
+            _s = TestScenario.CreateWithColony();
+            var human = Part("default-design-human-frame");
+            var plating = Part("default-design-ground-plating");
+            double platingDef = plating.GetAttribute<GroundArmorAtb>().Defense;   // read the part's value — no hardcoded number
+            Assert.That(platingDef, Is.GreaterThan(0), "precondition: the plating part actually carries damage mitigation (Defense)");
+
+            // bare (frame + rifle) vs plated (frame + rifle + plating) — the ONLY difference is the armour part
+            var bare = GroundUnitAssembly.ToGroundUnitDesign("test-bare", "Bare", human,
+                new List<(ComponentDesign, int)> { (Part("default-design-ground-rifle"), 1) });
+            var plated = GroundUnitAssembly.ToGroundUnitDesign("test-plated", "Plated", human,
+                new List<(ComponentDesign, int)> { (Part("default-design-ground-rifle"), 1), (plating, 1) });
+
+            Assert.That(bare.Defense, Is.EqualTo(0), "a frame + rifle contribute no armour — Defense is 0");
+            Assert.That(plated.Defense, Is.EqualTo(platingDef), "the plating's Defense is the design's armour (frame + rifle add none)");
+
+            // …and it flows to the RAISED unit (the build-time snapshot the resolver reads)
+            var platedUnit = GroundForces.RaiseUnit(_s.StartingBody, plated, _s.Faction.Id, 0, "Plated");
+            var bareUnit = GroundForces.RaiseUnit(_s.StartingBody, bare, _s.Faction.Id, 1, "Bare");
+            Assert.That(platedUnit.Defense, Is.EqualTo(platingDef), "the raised plated unit carries the armour — part → design → unit");
+            Assert.That(bareUnit.Defense, Is.EqualTo(0), "the raised bare unit has none");
+
+            // …and that flowed Defense actually reduces a hit in the resolver's own armour math
+            const double oneHit = 20.0;
+            double platedTakes = GroundDamageMatrix.ArmourSoak(platedUnit.Defense, oneHit);
+            double bareTakes = GroundDamageMatrix.ArmourSoak(bareUnit.Defense, oneHit);
+            Assert.That(platedTakes, Is.LessThan(bareTakes), "the plated unit soaks part of each incoming volley; the bare one takes it full");
+            Assert.That(bareTakes, Is.EqualTo(oneHit), "no armour → full damage");
+            Log($"armour cradle-to-grave: plating Defense {platingDef:0} → unit → a {oneHit:0} hit lands as {platedTakes:0} (plated) vs {bareTakes:0} (bare)");
+        }
+
+        [Test]
         [Description("The Clone-vs-Zergling proof: two units from the SAME parts bin that share almost no gameplay DNA. A Clone (human + plasma + plating + shield) is a ranged, durable, shielded soak-tank; a Zergling (swarm frame + claws + reflex) is a fragile, cheap, melee dodger. Both assemble legally; every System-① field is opposite.")]
         public void CloneTrooper_vs_Zergling_AreOppositeUnits_FromOneBin()
         {

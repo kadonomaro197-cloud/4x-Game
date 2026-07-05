@@ -210,7 +210,8 @@ unit's `Defense`, previously a dead stat), floored so it's never total immunity.
 *armour*: a swarm's many little volleys are mostly bounced while one big alpha punches through the same plating — the
 counter to chip-damage-by-numbers that % shield and dodge structurally can't be. Gauges: `GroundDamageMatrixTests`
 (dodge/shield/armour math incl. the swarm-vs-alpha identity) + `GroundForcesTests.Armour_InAFight_*` (the resolver
-reads Defense). **Flagged for tuning:** `ArmourSoakPerPoint` (1.5) and `ArmourMinPassFraction` (0.1) are engine
+reads Defense) + `GroundUnitAssemblyTests.Armour_Defense_FlowsFromThePlatingPart_*` (cradle-to-grave — the base-mod
+plating part's `Defense` flows part → assembly → design → raised unit → bites in the resolver's armour math). **Flagged for tuning:** `ArmourSoakPerPoint` (1.5) and `ArmourMinPassFraction` (0.1) are engine
 defaults — the per-unit `Defense` values themselves are moddable design data. All System-① constants are flagged in
 `GroundDamageMatrix.cs` for a balance pass.
 
