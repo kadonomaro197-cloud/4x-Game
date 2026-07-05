@@ -1668,5 +1668,127 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "vehicle-frame",
+      "Name": "Tracked Vehicle Frame",
+      "Formulas": {
+        "Description": "An armoured tracked chassis — the tank/vehicle frame. Huge carry strength (mounts heavy guns a human never could) and hauled by a VEHICLE bay, not a troop bay.",
+        "Mass": "4000",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "1.0",
+        "CrewReq": "0",
+        "ResearchCost": "0",
+        "CreditCost": "[Mass] * 0.1",
+        "BuildPointCost": "[Mass] * 3"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.5",
+        "aluminium": "[Mass] * 0.3"
+      },
+      "ComponentType": "Chassis",
+      "MountType": "GroundUnit",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "BaseStrength",
+          "DescriptionFormula": "'Carry-capacity budget.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "800"
+        },
+        {
+          "Name": "BaseHP",
+          "DescriptionFormula": "'Frame toughness before armour.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "1500"
+        },
+        {
+          "Name": "Size",
+          "DescriptionFormula": "'Bulk (feeds transport carry-size).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "6"
+        },
+        {
+          "Name": "Locomotion",
+          "DescriptionFormula": "'0=Foot 1=Tracked 2=Walker 3=Hover.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "1"
+        },
+        {
+          "Name": "CarryClass",
+          "DescriptionFormula": "'0=Personnel 1=Vehicle.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "1"
+        },
+        {
+          "Name": "vehicleframeArgs",
+          "DescriptionFormula": "'atb args'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('BaseStrength'), PropertyValue('BaseHP'), PropertyValue('Size'), PropertyValue('Locomotion'), PropertyValue('CarryClass'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundChassisAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "ground-cannon",
+      "Name": "Tank Cannon",
+      "Formulas": {
+        "Description": "A vehicle main gun — long reach and heavy hitting, far too heavy for any infantry frame.",
+        "Mass": "PropertyValue('CarryMass')",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "1.0",
+        "CrewReq": "0",
+        "ResearchCost": "0",
+        "CreditCost": "[Mass] * 0.1",
+        "BuildPointCost": "[Mass] * 3"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.5",
+        "aluminium": "[Mass] * 0.3"
+      },
+      "ComponentType": "Ground Weapon",
+      "MountType": "GroundUnit",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "CarryMass",
+          "DescriptionFormula": "'What the frame must bear.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "300"
+        },
+        {
+          "Name": "Attack",
+          "DescriptionFormula": "'Firepower added.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "220"
+        },
+        {
+          "Name": "Range",
+          "DescriptionFormula": "'Reach in hexes.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "3"
+        },
+        {
+          "Name": "Mode",
+          "DescriptionFormula": "'0=Melee 1=Ballistic 2=Energy 3=Artillery.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "3"
+        },
+        {
+          "Name": "groundcannonArgs",
+          "DescriptionFormula": "'atb args'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundWeaponAtb"
+        }
+      ]
+    }
   }
 ]

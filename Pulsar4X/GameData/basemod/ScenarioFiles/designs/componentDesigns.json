@@ -585,5 +585,21 @@
       "Name": "Heavy Autocannon",
       "TemplateId": "ground-autocannon"
     }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-vehicle-frame",
+      "Name": "Tracked Vehicle Frame",
+      "TemplateId": "vehicle-frame"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-ground-cannon",
+      "Name": "Tank Cannon",
+      "TemplateId": "ground-cannon"
+    }
   }
 ]

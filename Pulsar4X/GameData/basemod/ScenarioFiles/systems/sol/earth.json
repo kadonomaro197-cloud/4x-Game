@@ -174,7 +174,9 @@
         "ground-rifle",
         "ground-plating",
         "power-armor",
-        "ground-autocannon"
+        "ground-autocannon",
+        "vehicle-frame",
+        "ground-cannon"
       ],
       "ComponentDesigns": [
         "default-design-alcubierre-2k",
@@ -227,7 +229,9 @@
         "default-design-ground-rifle",
         "default-design-ground-plating",
         "default-design-power-armor",
-        "default-design-ground-autocannon"
+        "default-design-ground-autocannon",
+        "default-design-vehicle-frame",
+        "default-design-ground-cannon"
       ],
       "ShipDesigns": [
         "default-ship-design-courier",

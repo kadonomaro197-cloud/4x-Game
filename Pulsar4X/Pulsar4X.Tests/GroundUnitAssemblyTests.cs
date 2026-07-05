@@ -78,5 +78,31 @@ namespace Pulsar4X.Tests
             Assert.That(r.Attack, Is.EqualTo(140), "and it hits with the autocannon (emergent)");
             Assert.That(r.HitPoints, Is.EqualTo(240), "HP = frame 200 × 1.2 toughness from the power armour");
         }
+
+        [Test]
+        [Description("G-D3b the SAME assembler builds a VEHICLE (essence-axis coverage): a Battle Tank = tracked vehicle frame + tank cannon + plating assembles legally, its big frame carries the heavy cannon a human never could, its stats emerge, and it's a Vehicle carry-class (hauled by a vehicle bay, not a troop bay).")]
+        public void BattleTank_AssemblesOnAVehicleFrame_AndIsVehicleCarryClass()
+        {
+            _s = TestScenario.CreateWithColony();
+            var frame = Part("default-design-vehicle-frame");
+            var parts = new List<(ComponentDesign, int)>
+            {
+                (Part("default-design-ground-cannon"), 1),
+                (Part("default-design-ground-plating"), 1),
+            };
+            var r = GroundUnitAssembly.Compute(frame, parts);
+            Log($"Tank: valid={r.Valid} cap={r.CarryCapacity:0} used={r.UsedCapacity:0} atk={r.Attack:0} range={r.Range} hp={r.HitPoints:0} class={r.CarryClass}");
+
+            Assert.That(r.Valid, Is.True, "the vehicle frame (strength 800) easily carries the 300-mass cannon");
+            Assert.That(r.Attack, Is.EqualTo(220), "attack = the tank cannon (emergent)");
+            Assert.That(r.Range, Is.EqualTo(3), "reach = the cannon");
+            Assert.That(r.HitPoints, Is.EqualTo(1650), "HP = frame 1500 + plating 150");
+            Assert.That(r.CarryClass, Is.EqualTo(GroundCarryClass.Vehicle), "a vehicle — hauled by a vehicle bay, not a troop bay");
+
+            // and the cannon is beyond ANY infantry frame — the gate holds across scales
+            var human = Part("default-design-human-frame");
+            var onHuman = GroundUnitAssembly.Compute(human, new List<(ComponentDesign, int)> { (Part("default-design-ground-cannon"), 1) });
+            Assert.That(onHuman.Valid, Is.False, "no human frame can shoulder a 300-mass tank cannon");
+        }
     }
 }
