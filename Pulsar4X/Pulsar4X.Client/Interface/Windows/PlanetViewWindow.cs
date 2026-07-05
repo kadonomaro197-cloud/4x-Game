@@ -476,7 +476,11 @@ namespace Pulsar4X.Client
                 var labels = new string[unplaced.Count + 1];
                 labels[0] = "(pick a building to place)";
                 for (int i = 0; i < unplaced.Count; i++)
-                    labels[i + 1] = names.TryGetValue(unplaced[i], out var nm) ? nm : "building #" + unplaced[i];
+                {
+                    string nm = names.TryGetValue(unplaced[i], out var n0) ? n0 : "building #" + unplaced[i];
+                    int fp = GroundBuildings.FootprintTilesFor(body, unplaced[i]);
+                    labels[i + 1] = fp > 1 ? $"{nm} ({fp} tiles)" : nm;
+                }
                 if (_placeChoice < 0 || _placeChoice >= labels.Length) _placeChoice = 0;
                 ImGui.SameLine();
                 ImGui.SetNextItemWidth(240f);
@@ -544,7 +548,7 @@ namespace Pulsar4X.Client
                 }
             }
 
-            ImGui.Text($"{city.Tiles.Count} mini-hex tiles — buildings occupy them 1:1 (▧). \"Bring buildings here\" → pick one → click an empty tile to place it; \"Develop hex\" auto-lays them. Click a tile to inspect.");
+            ImGui.Text($"{city.Tiles.Count} mini-hex tiles — a building occupies as many tiles as its footprint (▧; a spaceport spans more than a factory). \"Bring buildings here\" → pick one → click an empty tile to place it; \"Develop hex\" auto-lays them. Click a tile to inspect.");
         }
 
         /// <summary>Axial hex (q,r) → screen position (pointy-top), centred on <paramref name="origin"/> — for the city

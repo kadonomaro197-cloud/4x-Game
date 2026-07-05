@@ -246,8 +246,34 @@ namespace Pulsar4X.Tests
             Assert.That(GroundBuildings.LocateFootprintsOnGlobalHex(s.Colony, gQ, gR), Is.EqualTo(0), "idempotent — already located, not re-located");
 
             Assert.That(CityBuilder.PlaceBuildingOnGlobalTile(body, gQ, gR, 1, 0, bunker.ID), Is.True, "placed on the chosen tile (1,0)");
-            Assert.That(hex.CityGrid.TileAt(1, 0).BuildingInstanceId, Is.EqualTo(bunker.ID), "it now sits on that specific mini-hex tile");
+            Assert.That(hex.CityGrid.TileAt(1, 0).BuildingInstanceId, Is.EqualTo(bunker.ID), "it now sits on that specific mini-hex tile (anchor)");
             Assert.That(hex.InstallationIds, Does.Contain(bunker.ID), "roll-up still holds");
+        }
+
+        [Test]
+        [Description("C-track (multi-tile footprint): a building occupies its design's TileFootprint many CONTIGUOUS mini-hex tiles (the base-mod Bunker = 4), but is ONE entry in the roll-up; removing/bombing it clears ALL its tiles. A spaceport spans more than a factory.")]
+        public void MultiTileFootprint_OccupiesFootprintTiles_AndClearsThemAllOnRemoval()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            var grid = PlanetGridFactory.EnsureGridForBody(body);
+            int gQ = PlanetGridFactory.BandCentreColumn(0, grid.Cols, regionsDB.Regions.Count);
+            int gR = grid.Rows / 2;
+            var hex = grid.HexAt(gQ, gR);
+
+            var bunker = InstallBunker(s);
+            int fp = GroundBuildings.FootprintTilesFor(body, bunker.ID);
+            Assert.That(fp, Is.EqualTo(4), "the base-mod Bunker's footprint is 4 tiles (installations.json)");
+
+            Assert.That(CityBuilder.PlaceBuildingOnGlobalTile(body, gQ, gR, 0, 0, bunker.ID), Is.True, "placed (anchored at 0,0)");
+            int occupied = hex.CityGrid.Tiles.Count(t => t.BuildingInstanceId == bunker.ID);
+            Assert.That(occupied, Is.EqualTo(4), "it occupies its full 4-tile footprint");
+            Assert.That(hex.InstallationIds.Count(id => id == bunker.ID), Is.EqualTo(1), "but is ONE building in the operational roll-up");
+
+            Assert.That(CityBuilder.RemoveBuildingFromGlobalTile(body, gQ, gR, 0, 0), Is.True, "removed via one of its tiles");
+            Assert.That(hex.CityGrid.Tiles.Any(t => t.BuildingInstanceId == bunker.ID), Is.False, "removal clears ALL four tiles, not just the one clicked");
+            Assert.That(hex.InstallationIds, Does.Not.Contain(bunker.ID), "and drops from the roll-up");
         }
     }
 }

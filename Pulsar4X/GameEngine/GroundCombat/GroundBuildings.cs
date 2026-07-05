@@ -281,6 +281,24 @@ namespace Pulsar4X.GroundCombat
             return map;
         }
 
+        /// <summary>How many fine city-tiles a building occupies — its design's <see cref="GroundFootprintAtb.TileFootprint"/>
+        /// (≥1; default 1 for a building with no footprint attribute or one we can't resolve). PUBLIC engine accessor so
+        /// the city builder + client can size a multi-tile footprint without reading the internal component store.
+        /// Defensive; never throws.</summary>
+        public static int FootprintTilesFor(Entity body, int buildingInstanceId)
+        {
+            if (body?.Manager == null) return 1;
+            foreach (var colony in body.Manager.GetAllEntitiesWithDataBlob<ColonyInfoDB>())
+            {
+                if (!colony.TryGetDataBlob<ColonyInfoDB>(out var ci) || ci.PlanetEntity == null || ci.PlanetEntity.Id != body.Id) continue;
+                if (!colony.TryGetDataBlob<ComponentInstancesDB>(out var comps)) continue;
+                foreach (var inst in comps.AllComponents.Values)
+                    if (inst.ID == buildingInstanceId && inst.Design != null && inst.Design.TryGetAttribute<GroundFootprintAtb>(out var atb))
+                        return atb.TileFootprint < 1 ? 1 : atb.TileFootprint;
+            }
+            return 1;
+        }
+
         /// <summary>Building instance id → design name, across the body's colonies — a PUBLIC engine accessor for the
         /// client's city-tile readout. (<c>ComponentInstancesDB.AllComponents</c> is INTERNAL, so the client can't walk
         /// it directly — client CLAUDE.md rule #2; this keeps the lookup engine-side.) Defensive; never throws.</summary>

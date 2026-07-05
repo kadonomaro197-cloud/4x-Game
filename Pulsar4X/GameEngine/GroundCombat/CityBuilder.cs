@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Pulsar4X.Engine;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Colonies;
@@ -45,24 +46,32 @@ namespace Pulsar4X.GroundCombat
 
         // ── GLOBAL grid (G4) — the same place/remove + roll-up, addressed on the cylinder by global (Q,R) ─────────────
 
-        /// <summary>Place a building on a fine tile of the GLOBAL hex at (<paramref name="gQ"/>,<paramref name="gR"/>) —
-        /// the cylinder-addressed twin of <see cref="PlaceBuildingOnTile"/>. Generates the hex's city grid on demand,
-        /// sets the tile, and adds the id to the operational hex's roll-up (<see cref="GroundHex.InstallationIds"/>).
-        /// Returns false if the hex/tile can't be resolved or the tile is taken.</summary>
+        /// <summary>Place a building on the GLOBAL hex at (<paramref name="gQ"/>,<paramref name="gR"/>), anchored at fine
+        /// tile (<paramref name="tileQ"/>,<paramref name="tileR"/>) — the cylinder-addressed twin of
+        /// <see cref="PlaceBuildingOnTile"/>. <b>MULTI-TILE (C-track):</b> the building occupies its design's
+        /// <see cref="GroundFootprintAtb.TileFootprint"/> many CONTIGUOUS empty tiles (a spaceport spans more than a
+        /// factory), gathered outward from the anchor; a single id is added to the roll-up
+        /// (<see cref="GroundHex.InstallationIds"/>) once. Returns false if the hex/anchor can't be resolved, the anchor
+        /// is taken, or there isn't enough contiguous empty room for the whole footprint (an all-or-nothing place).</summary>
         public static bool PlaceBuildingOnGlobalTile(Entity body, int gQ, int gR, int tileQ, int tileR, int buildingInstanceId)
         {
             var hex = CityGridFactory.ResolveGlobalHex(body, gQ, gR);
             if (hex == null) return false;
             var grid = CityGridFactory.EnsureCityForGlobalHex(body, gQ, gR);
-            var tile = grid?.TileAt(tileQ, tileR);
-            if (tile == null || tile.BuildingInstanceId != -1) return false;
+            var anchor = grid?.TileAt(tileQ, tileR);
+            if (anchor == null || anchor.BuildingInstanceId != -1) return false;
 
-            tile.BuildingInstanceId = buildingInstanceId;
-            if (!hex.InstallationIds.Contains(buildingInstanceId)) hex.InstallationIds.Add(buildingInstanceId);   // roll-up
+            int need = GroundBuildings.FootprintTilesFor(body, buildingInstanceId);   // ≥ 1
+            var footprint = GatherContiguousEmptyTiles(grid, anchor, need);
+            if (footprint == null) return false;   // not enough contiguous empty room for the whole footprint
+
+            foreach (var t in footprint) t.BuildingInstanceId = buildingInstanceId;
+            if (!hex.InstallationIds.Contains(buildingInstanceId)) hex.InstallationIds.Add(buildingInstanceId);   // roll-up (once)
             return true;
         }
 
-        /// <summary>Remove the building on a fine tile of the GLOBAL hex — clears the tile AND drops its id from the
+        /// <summary>Remove the building occupying the GLOBAL-hex fine tile (<paramref name="tileQ"/>,<paramref name="tileR"/>)
+        /// — clears ALL the tiles that building sits on (its whole multi-tile footprint) AND drops its id from the
         /// operational hex's roll-up. Returns false if the hex/tile can't be resolved or the tile is empty.</summary>
         public static bool RemoveBuildingFromGlobalTile(Entity body, int gQ, int gR, int tileQ, int tileR)
         {
@@ -71,19 +80,45 @@ namespace Pulsar4X.GroundCombat
             if (tile == null || tile.BuildingInstanceId == -1) return false;
 
             int id = tile.BuildingInstanceId;
-            tile.BuildingInstanceId = -1;
+            ClearBuildingFromCity(hex, id);    // clears EVERY tile this building occupies
             hex.InstallationIds?.Remove(id);   // roll-up
             return true;
         }
 
-        /// <summary>Clear a specific building from a hex's city grid (used by the grave rung — a bombed operational hex
-        /// must also empty the fine tile it sat on, so the roll-up stays honest). Returns true if a tile was cleared.</summary>
+        /// <summary>Clear a specific building from a hex's city grid — empties EVERY fine tile it occupies (its whole
+        /// multi-tile footprint), used by the grave rung (a bombed operational hex must empty all its tiles so the
+        /// roll-up stays honest). Returns true if any tile was cleared.</summary>
         public static bool ClearBuildingFromCity(GroundHex hex, int buildingInstanceId)
         {
             if (hex?.CityGrid?.Tiles == null) return false;
+            bool cleared = false;
             foreach (var t in hex.CityGrid.Tiles)
-                if (t.BuildingInstanceId == buildingInstanceId) { t.BuildingInstanceId = -1; return true; }
-            return false;
+                if (t.BuildingInstanceId == buildingInstanceId) { t.BuildingInstanceId = -1; cleared = true; }
+            return cleared;
+        }
+
+        /// <summary>Gather <paramref name="need"/> CONTIGUOUS empty tiles starting at <paramref name="anchor"/> (BFS over
+        /// the 6 axial neighbours) — the footprint blob for a multi-tile building. Returns exactly <paramref name="need"/>
+        /// tiles, or null if the connected empty region around the anchor is too small. The anchor must already be empty.</summary>
+        private static List<CityTile> GatherContiguousEmptyTiles(CityGrid grid, CityTile anchor, int need)
+        {
+            if (grid == null || anchor == null || need < 1) return null;
+            var result = new List<CityTile>();
+            var seen = new HashSet<(int, int)> { (anchor.Q, anchor.R) };
+            var queue = new Queue<CityTile>();
+            queue.Enqueue(anchor);
+            int[][] deltas = { new[]{1,0}, new[]{-1,0}, new[]{0,1}, new[]{0,-1}, new[]{1,-1}, new[]{-1,1} };   // axial neighbours
+            while (queue.Count > 0 && result.Count < need)
+            {
+                var t = queue.Dequeue();
+                result.Add(t);
+                foreach (var d in deltas)
+                {
+                    var n = grid.TileAt(t.Q + d[0], t.R + d[1]);
+                    if (n != null && n.BuildingInstanceId == -1 && seen.Add((n.Q, n.R))) queue.Enqueue(n);
+                }
+            }
+            return result.Count >= need ? result.GetRange(0, need) : null;
         }
 
         /// <summary>DEVELOP a colony's capital hex: generate its city grid and lay the operational hex's existing
@@ -130,16 +165,16 @@ namespace Pulsar4X.GroundCombat
             var grid = CityGridFactory.EnsureCityForGlobalHex(body, gQ, gR);
             if (grid?.Tiles == null) return 0;
 
-            var onTile = new System.Collections.Generic.HashSet<int>();
+            var onTile = new HashSet<int>();
             foreach (var t in grid.Tiles) if (t.BuildingInstanceId != -1) onTile.Add(t.BuildingInstanceId);
 
             int placed = 0;
-            foreach (var id in hex.InstallationIds)
+            foreach (var id in new List<int>(hex.InstallationIds))   // copy — PlaceBuildingOnGlobalTile may touch InstallationIds
             {
                 if (onTile.Contains(id)) continue;
                 var empty = NextEmptyTile(grid);
                 if (empty == null) break;   // city is full
-                empty.BuildingInstanceId = id;
+                if (!PlaceBuildingOnGlobalTile(body, gQ, gR, empty.Q, empty.R, id)) break;   // footprint-aware; no room → stop
                 onTile.Add(id);
                 placed++;
             }
