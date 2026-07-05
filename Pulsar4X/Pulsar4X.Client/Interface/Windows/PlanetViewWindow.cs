@@ -42,11 +42,11 @@ namespace Pulsar4X.Client
         // Which region sits in the middle column. Rotating changes this; the ring wraps modulo region count.
         private int _centerRegion = 0;
 
-        // G5 — the CONTINUOUS-GLOBE view: the map as a sliding WINDOW over the one cylinder grid (PlanetRegionsDB.SurfaceGrid),
-        // centred on a longitude column that WRAPS at the seam. _centerCol = the window's centre column (lazily set to the
-        // centre region's band centre). _globalView = use the cylinder window (default) vs. the legacy per-region disk view.
+        // G5/G6 — the CONTINUOUS-GLOBE view: the map is a sliding WINDOW over the one cylinder grid
+        // (PlanetRegionsDB.SurfaceGrid), centred on a longitude column that WRAPS at the seam. _centerCol = the window's
+        // centre column (lazily set to the centre region's band centre). This is the ONLY surface view now — G6 retired
+        // the old per-region disk ("band") view the developer asked to drop.
         private int _centerCol = -1;
-        private bool _globalView = true;
 
         // The selected unit GROUP (region, owner faction, type) — the thing a March order acts on. -1 region = none.
         private int _selRegion = -1;
@@ -164,8 +164,8 @@ namespace Pulsar4X.Client
             body.TryGetDataBlob<GroundForcesDB>(out var forcesDB);
             body.TryGetDataBlob<PlanetEnvironmentsDB>(out var envDB);
 
-            // G5 — make sure the ONE cylinder grid exists (lazy + idempotent, same pattern as the disks); the global
-            // window renders it. Null on a body with no region layer → fall back to the legacy per-region disk view.
+            // G5/G6 — the ONE cylinder grid is the surface view. Lazy + idempotent (same pattern as the old disks);
+            // null only on a body with no region layer (then there's nothing to draw yet).
             var grid = PlanetGridFactory.EnsureGridForBody(body);
             bool canGlobal = grid != null && grid.Hexes != null && grid.Hexes.Count > 0;
 
@@ -175,12 +175,6 @@ namespace Pulsar4X.Client
             ImGui.Text($"Region {_centerRegion + 1} of {count}");
             ImGui.SameLine();
             if (ImGui.Button("East ▶")) { _centerRegion = right; SyncCenterCol(grid, count); }
-
-            if (canGlobal)
-            {
-                ImGui.SameLine();
-                if (ImGui.Button(_globalView ? "◑ Globe view" : "▦ Band view")) _globalView = !_globalView;
-            }
 
             int surveyed = regions.Count(r => r.Surveyed);
             ImGui.SameLine();
@@ -193,21 +187,17 @@ namespace Pulsar4X.Client
 
             ImGui.Separator();
 
-            // ── The map canvas: the 3-REGION HEX MAP is the default + only surface view (V3). ──
-            // West | Centre | East drawn as one continuous hex field in longitude order, so V2's planet-wide coherent
-            // terrain (continents/coastlines) FLOWS across the region seams; a gap + divider + label marks each
-            // boundary so you can still tell where one region ends and the next begins. (Zoom to the city/fortification
-            // grid is the separate C-track view.)
-            bool hasHexes = _centerRegion < regions.Count && regions[_centerRegion].Hexes != null && regions[_centerRegion].Hexes.Count > 0;
-            if (canGlobal && _globalView)
+            // ── The map canvas: the CONTINUOUS-GLOBE window is the surface view (G6, the developer's call). ──
+            // One wrapping cylinder grid rendered as a sliding window — the centre band in full, its neighbours bleeding
+            // in at the margins, seamless at the wrap — so terrain FLOWS across region boundaries and any place shows up
+            // in every window whose longitude reaches it. (The zoomed city/fortification grid is the separate C-track view.)
+            if (canGlobal)
             {
                 if (_centerCol < 0) SyncCenterCol(grid, count);   // first paint: centre on the current region's band
                 DrawGlobalHexWindow(grid, regions, body, myFaction, forcesDB);
             }
-            else if (hasHexes)
-                DrawThreeRegionHexMap(regions, body, myFaction, forcesDB, left, _centerRegion, right);
             else
-                ImGui.TextDisabled("This world isn't surveyed yet — scan it to reveal its surface hexes.");
+                ImGui.TextDisabled("This world isn't surveyed yet — scan it to reveal its surface.");
 
             // ── Below the canvas: selection actions, build panel, region detail ─────────
             ImGui.Separator();
@@ -217,145 +207,6 @@ namespace Pulsar4X.Client
             ImGui.Separator();
             DrawRegionDetail(regions[_centerRegion], forcesDB, envDB);
             DrawLegend();
-        }
-
-        // ── The 3-REGION HEX MAP — the default + only surface view (V3 re-apply, 2026-07-04) ─────────────
-        // West | Centre | East as one continuous hex field (longitude order), so V2's coherent terrain flows across
-        // the seams; a 2-hex gap + a divider line + a region label marks each boundary so regions read as distinct.
-        private void DrawThreeRegionHexMap(List<Region> regions, Entity body, int myFaction, GroundForcesDB forcesDB,
-            int left, int centre, int right)
-        {
-            var drawList = ImGui.GetWindowDrawList();
-            var canvasPos = ImGui.GetCursorScreenPos();
-            var canvasSize = ImGui.GetContentRegionAvail();
-            float mapHeight = Math.Max(220f, canvasSize.Y * 0.66f);
-            var mapSize = new Vector2(canvasSize.X, mapHeight);
-
-            ImGui.InvisibleButton("planethexcanvas", mapSize);
-            bool clicked = ImGui.IsItemHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
-            var mp = ImGui.GetIO().MousePos;
-
-            int[] cols = { left, centre, right };
-            int R = 2;
-            foreach (var ri in cols)
-                if (regions[ri].Hexes != null && regions[ri].Hexes.Count > 0)
-                    R = Math.Max(R, HexPathfinder.PatchRadius(regions[ri].Hexes));
-
-            // ONE seamless hex field: the CENTRE region in FULL, its two neighbours bleeding in at the left/right
-            // margins (only the border fraction that fits). Size so the centre patch fills the height and ≤ ~62% of the
-            // width (leaving margins for the neighbours); the neighbours are offset by a full patch width (seamless — no
-            // gap) and CULLED to the visible canvas, so you see the whole centre and just the overlapping edge of each side.
-            float span = 2 * R + 1.6f;
-            int qStep = 2 * R + 1;                     // full patch width → the side regions sit flush against the centre
-            float sizeH = mapSize.Y / (1.5f * span);
-            float sizeW = mapSize.X * 0.62f / (1.7320508f * span);
-            float size = Math.Max(3f, Math.Min(sizeH, sizeW));
-            var center = new Vector2(canvasPos.X + mapSize.X * 0.5f, canvasPos.Y + mapSize.Y * 0.5f);
-            uint hexBorder = ImGui.ColorConvertFloat4ToU32(new Vector4(0f, 0f, 0f, 0.30f));
-            float xLo = canvasPos.X - size, xHi = canvasPos.X + mapSize.X + size;   // cull neighbours to the visible canvas
-
-            // 1) terrain hexes — each region offset into one shared field, so continents span the seams.
-            for (int c = 0; c < 3; c++)
-            {
-                var region = regions[cols[c]];
-                if (region.Hexes == null) continue;
-                int qOff = (c - 1) * qStep;
-                foreach (var h in region.Hexes)
-                {
-                    var pc = HexCenter(center, size, h.Q + qOff, h.R);
-                    if (pc.X < xLo || pc.X > xHi) continue;   // neighbour hexes past the margin aren't drawn
-                    Vector4 col = region.Surveyed
-                        ? (_featureColors.TryGetValue(h.Terrain, out var vc) ? vc : _featureColors[RegionFeatureType.Barren])
-                        : _featureColors[RegionFeatureType.Unknown];
-                    drawList.AddNgonFilled(pc, size, ImGui.ColorConvertFloat4ToU32(col), 6);
-                    if (size > 5f) drawList.AddNgon(pc, size, hexBorder, 6, 1f);
-                }
-            }
-
-            // 2) units on their hexes (grouped per hex + faction, coloured by owner).
-            for (int c = 0; c < 3; c++)
-            {
-                var region = regions[cols[c]];
-                int qOff = (c - 1) * qStep;
-                var occ = new Dictionary<(int q, int r, int fac), (int n, int type, int moving)>();
-                if (forcesDB != null)
-                    foreach (var u in forcesDB.Units)
-                    {
-                        if (u.RegionIndex != region.Index) continue;
-                        var key = (u.HexQ, u.HexR, u.FactionOwnerID);
-                        occ.TryGetValue(key, out var g); g.n++; g.type = (int)u.UnitType;
-                        if (u.HexPath != null && u.HexPath.Count > 0) g.moving++;
-                        occ[key] = g;
-                    }
-                foreach (var kv in occ)
-                {
-                    var pc = HexCenter(center, size, kv.Key.q + qOff, kv.Key.r);
-                    if (pc.X < xLo || pc.X > xHi) continue;
-                    float mr = Math.Max(2.5f, size * 0.55f);
-                    drawList.AddCircleFilled(pc, mr, ImGui.ColorConvertFloat4ToU32(OwnerColor(kv.Key.fac, myFaction)), 16);
-                    drawList.AddCircle(pc, mr, ImGui.ColorConvertFloat4ToU32(new Vector4(0f, 0f, 0f, 0.8f)), 16, 1.5f);
-                    if (size > 8f)
-                    {
-                        string tag = $"{TypeInitial((GroundUnitType)kv.Value.type)}{kv.Value.n}" + (kv.Value.moving > 0 ? "»" : "");
-                        var tsz = ImGui.CalcTextSize(tag);
-                        drawList.AddText(new Vector2(pc.X - tsz.X * 0.5f, pc.Y - tsz.Y * 0.5f),
-                            ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 1f, 1f)), tag);
-                    }
-                    if (HasSelection && _selRegion == region.Index && _selFaction == kv.Key.fac && _selType == (GroundUnitType)kv.Value.type)
-                        drawList.AddNgon(pc, size, ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 0.3f, 1f)), 6, 2.5f);
-                }
-            }
-
-            // 3) a subtle seam line at each EDGE of the centre region + region labels — so you can still tell where the
-            //    centre ends and a neighbour begins, without breaking the seamless look.
-            uint divCol = ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 0.95f, 0.6f, 0.45f));
-            float seamW = HexCenter(center, size, -R, 0).X - size * 0.87f;   // just outside the centre's west edge
-            float seamE = HexCenter(center, size,  R, 0).X + size * 0.87f;   // just outside the centre's east edge
-            if (seamW > canvasPos.X) drawList.AddLine(new Vector2(seamW, canvasPos.Y + 18f), new Vector2(seamW, canvasPos.Y + mapHeight), divCol, 2f);
-            if (seamE < canvasPos.X + mapSize.X) drawList.AddLine(new Vector2(seamE, canvasPos.Y + 18f), new Vector2(seamE, canvasPos.Y + mapHeight), divCol, 2f);
-
-            DrawRegionLabel(drawList, $"R{regions[centre].Index + 1} (centre)", center.X, canvasPos, mapSize, true);
-            DrawRegionLabel(drawList, $"◂ R{regions[left].Index + 1}", canvasPos.X + 4f, canvasPos, mapSize, false);
-            DrawRegionLabel(drawList, $"R{regions[right].Index + 1} ▸", canvasPos.X + mapSize.X - 4f, canvasPos, mapSize, false);
-
-            // 4) click resolution — centre region = full hex ops; a side region = coarse-march there (if adjacent) or recentre.
-            if (clicked)
-            {
-                GroundHex best = null; int bestRegion = -1; float bestD = size * 1.2f;
-                for (int c = 0; c < 3; c++)
-                {
-                    var region = regions[cols[c]];
-                    if (region.Hexes == null) continue;
-                    int qOff = (c - 1) * qStep;
-                    foreach (var h in region.Hexes)
-                    {
-                        var pc = HexCenter(center, size, h.Q + qOff, h.R);
-                        if (pc.X < xLo || pc.X > xHi) continue;
-                        float d = Vector2.Distance(pc, mp);
-                        if (d < bestD) { bestD = d; best = h; bestRegion = region.Index; }
-                    }
-                }
-                if (best != null)
-                {
-                    if (bestRegion == centre)
-                        HandleHexClick(regions[centre], body, myFaction, forcesDB, best);
-                    else if (HasSelection && _selFaction == myFaction && _selRegion != bestRegion
-                             && _selRegion < regions.Count && regions[_selRegion].Neighbors.Contains(bestRegion))
-                        MarchSelectedTo(regions, bestRegion);
-                    else
-                        _centerRegion = bestRegion;
-                }
-            }
-
-            // 5) caption + the H3 range readout for the selected group.
-            ImGui.Text($"Surface — West ◂ Region {regions[centre].Index + 1} ▸ East   (click a hex; click a side region to go there)");
-            if (HasSelection && _selFaction == myFaction)
-            {
-                var rep = forcesDB?.Units.FirstOrDefault(u => u.RegionIndex == _selRegion && u.FactionOwnerID == myFaction && u.UnitType == _selType);
-                int range = rep?.Range ?? 0;
-                double km = _selRegion < regions.Count ? GroundRangeTools.RealReachKm(range, regions[_selRegion]) : 0;
-                ImGui.TextDisabled($"Selected {_selType} in Region {_selRegion + 1}: click a destination hex (same region) to march — strike range {range} hex ≈ {km:N0} km. Ocean impassable.");
-            }
         }
 
         private static void DrawRegionLabel(ImDrawListPtr drawList, string lbl, float x, Vector2 canvasPos, Vector2 mapSize, bool isCentre)
@@ -1056,157 +907,48 @@ namespace Pulsar4X.Client
             }
         }
 
+        // G6 — the DETAILED map legend at the bottom of the globe view (the developer's ask). A collapsible header so it
+        // stays out of the way once learned; explains every colour on the map — unit ownership, the unit-type initials,
+        // the selection ring, and each terrain colour (grouped, with Ocean flagged impassable) — plus the seam/label cues.
         private void DrawLegend()
         {
             ImGui.Spacing();
-            ImGui.TextDisabled("Legend:  ");
-            ImGui.SameLine(); ImGui.TextColored(OwnerColor(_uiState.Faction?.Id ?? -1, _uiState.Faction?.Id ?? -1), "■ yours");
+            if (!ImGui.CollapsingHeader("Map legend", ImGuiTreeNodeFlags.DefaultOpen)) return;
+
+            int me = _uiState.Faction?.Id ?? -1;
+
+            ImGui.TextDisabled("Units:");
+            ImGui.SameLine(); ImGui.TextColored(OwnerColor(me, me), "■ yours");
             ImGui.SameLine(); ImGui.TextColored(new Vector4(0.85f, 0.25f, 0.2f, 1f), "■ hostile");
-            ImGui.SameLine(); ImGui.TextDisabled("  I=Infantry A=Armor R=Artillery  »=marching");
+            ImGui.SameLine(); ImGui.TextColored(new Vector4(0.6f, 0.6f, 0.6f, 1f), "■ unowned");
+            ImGui.SameLine(); ImGui.TextColored(new Vector4(1f, 1f, 0.3f, 1f), "▢ selected group");
+            ImGui.TextDisabled("   I = Infantry   A = Armor   R = Artillery      number = units on that hex      » = marching");
+
+            ImGui.Separator();
+            ImGui.TextDisabled("Terrain (one continuous world — colours flow across the region seams):");
+            LegendRow("Water:  ", (RegionFeatureType.Ocean, "Ocean (impassable)"), (RegionFeatureType.Coast, "Coast"), (RegionFeatureType.Wetland, "Wetland"));
+            LegendRow("Lowland:", (RegionFeatureType.Plains, "Plains"), (RegionFeatureType.Forest, "Forest"), (RegionFeatureType.Jungle, "Jungle"), (RegionFeatureType.Desert, "Desert"), (RegionFeatureType.Barren, "Barren"));
+            LegendRow("Upland: ", (RegionFeatureType.Highlands, "Highlands"), (RegionFeatureType.Mountains, "Mountains"), (RegionFeatureType.Volcanic, "Volcanic"));
+            LegendRow("Cold:   ", (RegionFeatureType.Tundra, "Tundra"), (RegionFeatureType.Ice, "Ice"));
+            LegendRow("Gas:    ", (RegionFeatureType.GasLayers, "Gas layers"));
+
+            ImGui.Separator();
+            ImGui.TextDisabled("A faint yellow vertical line marks a region-band boundary; \"R# (centre)\" labels the band under the middle of the window.");
+            ImGui.TextDisabled("◀ / ▶ pans the globe in longitude — it wraps around the far side, so every place is reachable.");
         }
 
-        // ── H4: the HEX drill-in — the centre region's fine grid (Planet → Region → Hex) ─
-        private void DrawHexMap(Region region, Entity body, int myFaction, GroundForcesDB forcesDB)
+        /// <summary>One labelled row of terrain swatches for the legend (a coloured ■ + name per terrain).</summary>
+        private static void LegendRow(string label, params (RegionFeatureType t, string name)[] items)
         {
-            var hexes = region.Hexes;
-            if (hexes == null || hexes.Count == 0) { ImGui.TextDisabled("This region has no hex detail yet."); return; }
-
-            var drawList = ImGui.GetWindowDrawList();
-            var canvasPos = ImGui.GetCursorScreenPos();
-            var canvasSize = ImGui.GetContentRegionAvail();
-            float mapHeight = Math.Max(200f, canvasSize.Y * 0.62f);
-            var mapSize = new Vector2(canvasSize.X, mapHeight);
-
-            ImGui.InvisibleButton("hexcanvas", mapSize);
-            bool clicked = ImGui.IsItemHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
-            var mp = ImGui.GetIO().MousePos;
-
-            // Size a hex so the whole patch fits (a radius-R disk spans ~2R+1 hexes each way).
-            int R = HexPathfinder.PatchRadius(hexes);
-            float span = 2 * R + 1.6f;
-            float size = Math.Max(4f, Math.Min(mapSize.X / (1.7320508f * span), mapSize.Y / (1.5f * span)));
-            var center = new Vector2(canvasPos.X + mapSize.X * 0.5f, canvasPos.Y + mapSize.Y * 0.5f);
-
-            uint hexBorder = ImGui.ColorConvertFloat4ToU32(new Vector4(0f, 0f, 0f, 0.35f));
-            foreach (var h in hexes)
+            ImGui.TextDisabled(label);
+            foreach (var (t, name) in items)
             {
-                var c = HexCenter(center, size, h.Q, h.R);
-                var col = _featureColors.TryGetValue(h.Terrain, out var vc) ? vc : _featureColors[RegionFeatureType.Barren];
-                drawList.AddNgonFilled(c, size, ImGui.ColorConvertFloat4ToU32(col), 6);
-                drawList.AddNgon(c, size, hexBorder, 6, 1f);
-            }
-
-            // Units stacked on their hex, grouped by (hex, faction) — a marker + count, coloured by owner.
-            var occ = new Dictionary<(int q, int r, int fac), (int n, int type, int moving)>();
-            if (forcesDB != null)
-            {
-                foreach (var u in forcesDB.Units)
-                {
-                    if (u.RegionIndex != region.Index) continue;
-                    var key = (u.HexQ, u.HexR, u.FactionOwnerID);
-                    occ.TryGetValue(key, out var g);
-                    g.n += 1; g.type = (int)u.UnitType;
-                    if (u.HexPath != null && u.HexPath.Count > 0) g.moving += 1;
-                    occ[key] = g;
-                }
-            }
-            foreach (var kv in occ)
-            {
-                var c = HexCenter(center, size, kv.Key.q, kv.Key.r);
-                float mr = Math.Max(3f, size * 0.55f);
-                drawList.AddCircleFilled(c, mr, ImGui.ColorConvertFloat4ToU32(OwnerColor(kv.Key.fac, myFaction)), 16);
-                drawList.AddCircle(c, mr, ImGui.ColorConvertFloat4ToU32(new Vector4(0f, 0f, 0f, 0.8f)), 16, 1.5f);
-                if (size > 8f)
-                {
-                    string tag = $"{TypeInitial((GroundUnitType)kv.Value.type)}{kv.Value.n}" + (kv.Value.moving > 0 ? "»" : "");
-                    var tsz = ImGui.CalcTextSize(tag);
-                    drawList.AddText(new Vector2(c.X - tsz.X * 0.5f, c.Y - tsz.Y * 0.5f),
-                        ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 1f, 1f)), tag);
-                }
-                // Highlight the hexes holding the selected group.
-                if (HasSelection && _selRegion == region.Index && _selFaction == kv.Key.fac && _selType == (GroundUnitType)kv.Value.type)
-                    drawList.AddNgon(c, size, ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 0.3f, 1f)), 6, 2.5f);
-            }
-
-            // Click: pick the nearest hex centre to the cursor (robust vs. exact polygon hit-testing).
-            if (clicked)
-            {
-                GroundHex best = null; float bestD = size * 1.2f;
-                foreach (var h in hexes)
-                {
-                    float d = Vector2.Distance(HexCenter(center, size, h.Q, h.R), mp);
-                    if (d < bestD) { bestD = d; best = h; }
-                }
-                if (best != null) HandleHexClick(region, body, myFaction, forcesDB, best);
-            }
-
-            // Caption + the H3 range readout for the selected group (hex range → real km on THIS body).
-            ImGui.Text($"Hex view — Region {region.Index + 1}  ({hexes.Count} hexes)");
-            if (HasSelection && _selFaction == myFaction)
-            {
-                var rep = forcesDB?.Units.FirstOrDefault(u => u.RegionIndex == _selRegion && u.FactionOwnerID == myFaction && u.UnitType == _selType);
-                int range = rep?.Range ?? 0;
-                double km = GroundRangeTools.RealReachKm(range, region);
-                ImGui.TextDisabled($"Selected {_selType}: click a destination hex to march (strike range {range} hex ≈ {km:N0} km). Ocean is impassable.");
-            }
-            else
-            {
-                ImGui.TextDisabled("Click a hex with your units to select them, then click a destination hex to march them there.");
+                ImGui.SameLine();
+                var c = _featureColors.TryGetValue(t, out var vc) ? vc : _featureColors[RegionFeatureType.Barren];
+                ImGui.TextColored(c, "■ " + name);
             }
         }
 
-        /// <summary>Click on a hex: SHIFT-click with a formation selected QUEUES a move waypoint (build a plan);
-        /// otherwise select your units standing there, or (with a group selected) march it there now.</summary>
-        private void HandleHexClick(Region region, Entity body, int myFaction, GroundForcesDB forcesDB, GroundHex hex)
-        {
-            // Shift-click with a formation selected → append a move waypoint to its plan (RTS-style queueing).
-            if (ImGui.GetIO().KeyShift && _selFormationId >= 0 && forcesDB != null)
-            {
-                var sf = forcesDB.Formations.FirstOrDefault(x => x.FormationId == _selFormationId && x.FactionOwnerID == myFaction);
-                if (sf != null)
-                {
-                    GroundForces.QueueFormationOrder(sf, GroundOrder.MoveHex(hex.Q, hex.R));
-                    _status = $"queued → hex ({hex.Q},{hex.R})  [{sf.Orders.Count} in plan]";
-                    return;
-                }
-            }
-
-            var mineHere = forcesDB?.Units.FirstOrDefault(u =>
-                u.RegionIndex == region.Index && u.HexQ == hex.Q && u.HexR == hex.R && u.FactionOwnerID == myFaction);
-            if (mineHere != null)
-            {
-                // Toggle selection of your units on this hex (by type — the group model the region view uses).
-                if (HasSelection && _selRegion == region.Index && _selFaction == myFaction && _selType == mineHere.UnitType)
-                    ClearSelection();
-                else { _selRegion = region.Index; _selFaction = myFaction; _selType = mineHere.UnitType; _status = ""; }
-                return;
-            }
-            // Empty (or enemy-only) hex + a selection of yours in this region → march there.
-            if (HasSelection && _selFaction == myFaction && _selRegion == region.Index)
-                MoveSelectedToHex(body, hex.Q, hex.R);
-        }
-
-        /// <summary>March every orderable unit in the selected group to a target HEX within its region (A* per unit).</summary>
-        private void MoveSelectedToHex(Entity body, int destQ, int destR)
-        {
-            if (!body.TryGetDataBlob<GroundForcesDB>(out var forcesDB)) return;
-            if (_selFaction != (_uiState.Faction?.Id ?? -1)) { _status = "those aren't your units"; return; }
-
-            int moved = 0;
-            foreach (var u in forcesDB.Units.ToArray())
-            {
-                if (u.RegionIndex != _selRegion || u.FactionOwnerID != _selFaction || u.UnitType != _selType) continue;
-                if (u.MovingToRegion >= 0) continue;   // busy on a coarse region hop
-                if (GroundForces.OrderMoveToHex(body, u, destQ, destR)) moved++;
-            }
-            _status = moved > 0
-                ? $"marched {moved}× {_selType} to hex ({destQ},{destR})"
-                : "no march (unreachable / impassable water / already there)";
-        }
-
-        /// <summary>Axial hex (q,r) → screen position (pointy-top layout), centred on <paramref name="origin"/>.</summary>
-        private static Vector2 HexCenter(Vector2 origin, float size, int q, int r)
-            => new Vector2(origin.X + size * 1.7320508f * (q + r * 0.5f), origin.Y + size * 1.5f * r);
 
         // ── Small helpers ───────────────────────────────────────────────────────────────
         private static char TypeInitial(GroundUnitType t) => t switch
