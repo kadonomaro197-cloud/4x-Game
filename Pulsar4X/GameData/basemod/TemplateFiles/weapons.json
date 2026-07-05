@@ -33,9 +33,9 @@
         {
           "Name": "Range",
           "Units": "m",
-          "DescriptionFormula": "'(Legacy) Maximum range at which the laser can fire at'",
+          "DescriptionFormula": "'Maximum range at which the laser can fire. Long range is EARNED — its ceiling rises with the Beam Focusing Range tech.'",
           "GuiHint": "GuiSelectionMaxMin",
-          "MaxFormula": "10000",
+          "MaxFormula": "TechData('tech-beam-range')",
           "MinFormula": "1000",
           "StepFormula": "10",
           "PropertyFormula": "5000"

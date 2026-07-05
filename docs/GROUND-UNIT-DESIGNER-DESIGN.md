@@ -258,6 +258,17 @@ These set *how steep* ground-weapon power climbs with research. **Follow-ups:** 
 weapon mass/cost scale with Attack so a maxed gun isn't cheap — a flagged balance hole); then the same `TechData`
 conversion for the space weapons' flat caps (beam range/lens/chamber, railgun KE, flak, missile warhead).
 
+**✅ Slice 3 BUILT (2026-07-05) — BEAM range research-gated (first space weapon).** Same proven pattern: the laser's
+`Range` `MaxFormula` (was flat `10000`) now reads `TechData('tech-beam-range')` — a new tech (category
+`tech-category-energy-weapons`) in the `tech-modern-technology` cascade (crash-safe; the laser already depends on
+cascade-unlocked `tech-capacitors`/`tech-conductors`, proving it builds post-unlock). `DataFormula =
+(1 + [Level]) * 10000` → level 0 == today's cap; research raises the reach — the developer's *"long range is EARNED,
+not given"* rule made real. Gauge: `WeaponScaleGateTests.BeamRangeCeiling_RisesWithResearch`. **FLAGGED (tune in
+techs.json):** base `10000` m, `+10000`/level, `MaxLevel 10` — the developer likely wants this STEEPER (their vision is
+range climbing to sci-fi/thousands-of-km at high tech), so the growth formula is the key dial. **Still owed:** the
+other beam caps (lens/chamber/power → pulse energy), railgun KE, flak, missile warhead; the missile `CanLoadOrdnance`
+no-op.
+
 ### 6c. The four are NOT a cage on the designer (2026-07-05)
 
 A fair worry: *doesn't consolidating into four systems impede creativity in the designer?* No — because the four

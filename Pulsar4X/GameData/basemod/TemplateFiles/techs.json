@@ -514,6 +514,7 @@
           "tech-antenna-bandwidth",
           "tech-factory-max-size",
           "tech-ground-weapon-yield",
+          "tech-beam-range",
           "tech-shipyard-slip-max-size",
           "tech-geo-surveyor",
           "tech-administration-level",
@@ -548,6 +549,18 @@
       "Category": "tech-category-ground-combat",
       "MaxLevel": 10,
       "DataFormula": "(1 + [Level]) * 5000",
+      "CostFormula": "(1 + [Level]) * 2500"
+    }
+  },
+  {
+    "Type": "Tech",
+    "Payload": {
+      "UniqueID": "tech-beam-range",
+      "Name": "Beam Focusing Range",
+      "Description": "Research into keeping a beam coherent over greater distance — raises the maximum range a beam-weapon design can reach. The developer's rule made real: 'long range is earned, not given.' A starting laser is a short-legged knife-fighter; research is what climbs it toward sci-fi reach.",
+      "Category": "tech-category-energy-weapons",
+      "MaxLevel": 10,
+      "DataFormula": "(1 + [Level]) * 10000",
       "CostFormula": "(1 + [Level]) * 2500"
     }
   },
