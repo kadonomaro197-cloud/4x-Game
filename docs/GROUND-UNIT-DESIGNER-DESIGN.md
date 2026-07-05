@@ -10,17 +10,47 @@
 
 ---
 
-## 1. The objective (the north star for this system)
+## 1. The objective (the north star for this system) — **EXACT essence recreation of ANY sci-fi unit**
 
-**Give the player the tools to build *any* ground unit they can imagine — within reason — the same way they
-build a ship: by assembling components.** A Guardsman, a Space Marine, a Zergling, a Siege Tank, an AT-AT and a
-Jedi should all be things a player can *design*, not things we hard-code. "Within reason" is enforced by
-**physics (mass vs. strength)**, never by a category whitelist.
+**The success criterion (the developer's call, 2026-07-05): you can recreate the ESSENCE of *any and every*
+sci-fi ground unit you can think of.** Names need not match; the essence must — *exactly*. If there is a unit we
+can imagine but cannot build, **the parts bin has a hole, and the designer is not done.** This is not "assemble
+from parts" as a nice-to-have; total expressive coverage of the sci-fi design space **is the goal of the system.**
 
-The load-bearing principle (the developer's call): **ground units are as LOOSE as ships.** A ship in this engine
-has no hull class — `ShipDesign` is just *a name + a list of components + armor*, and its stats are the **sum of
-the parts** (`ShipDesign.Recalculate`). Ground units follow the identical pattern, with **one extra rule ships
-don't have** (a carry-capacity gate — see §4).
+The way we get there: build *any* unit the way you build a ship — by **assembling components** — with "within
+reason" enforced by **physics (mass vs. strength)**, never by a category whitelist. A Guardsman, a Space Marine, a
+Zergling, a Siege Tank, an AT-AT and a Jedi are all things a player *designs*, not things we hard-code.
+
+The load-bearing principle: **ground units are as LOOSE as ships.** A ship here has no hull class — `ShipDesign`
+is just *a name + a list of components + armor*, stats = the **sum of the parts** (`ShipDesign.Recalculate`).
+Ground units follow the identical pattern, plus **one rule ships lack** (a carry-capacity gate — §4).
+
+### 1a. The completeness gate — the ESSENCE AXES (how we prove "any unit")
+
+To guarantee *any* unit — not just the ones we happened to list — the parts bin must let the player set each of
+these orthogonal **essence axes** independently. A unit is fully specified by where it sits on every axis; if the
+bin can't move an axis, a whole class of units is unbuildable. **The designer is "done" only when every axis is
+independently expressible.** This table is the standing coverage gate — update it as parts land.
+
+| Essence axis | Spanned by | Coverage (2026-07-05) |
+|---|---|---|
+| **Scale** — lone soldier ↔ km Titan | Frame Size × build-Count | ✅ |
+| **Firepower** — how much hurt | Weapon Attack | ✅ |
+| **Range** — melee ↔ orbital artillery | Weapon Range | ✅ |
+| **Delivery** — alpha vs sustained vs saturation/AoE, direct vs indirect | Weapon knobs | ⚠️ gap (rate/alpha/AoE) |
+| **Damage type** — kinetic/energy/plasma/psychic/bio/EMP | Weapon Mode → resistances | ⚠️ partial |
+| **Survivability** — soak / dodge / shield(+regen) / self-heal / numbers | Armor + Augment | ⚠️ gap (regen, self-heal) |
+| **Mobility** — speed + foot/tread/walk/**hover/fly/teleport/burrow/jump** | Frame Locomotion | ⚠️ gap (air, teleport, speed) |
+| **Role** — line/assault/support/heal/build/scout/EW/AA/transport | Weapon + Utility | ⚠️ gap (support, actions, AA, EW) |
+| **Nature** — bio/mech/energy/synthetic/undead/psychic | Frame flavor → healing, morale, env-resist | ⚠️ partial |
+| **Economy** — expendable swarm ↔ elite few | part cost × Count | ✅ |
+| **Special mechanics** — self-destruct / teleport-deploy / summon / morph / cloak / terror-aura | Utility + flags | ⚠️ gap |
+| **Command** — faceless swarm ↔ named hero | Formation + Count | ✅ |
+
+**Read:** ~5 axes fully spanned, ~7 partial/gap. The holes concentrate in **weapon delivery, survivability modes,
+mobility modes, roles/utilities, and special mechanics** — the priority work to reach "any unit," matching the
+§6a gaps. Closing an axis unlocks a whole class of units. The §6 catalog is how we *find* axis holes; this table
+is how we *track* them.
 
 ---
 
