@@ -94,18 +94,58 @@ part *designs* (instantiated once) → *unit designs* (assembled once) → built
 
 ---
 
-## 6. Proof the model holds — 6 units, 3 franchises, one parts bin
+## 6. Reference build catalog (the coverage test — **GROWING**)
 
-Every unit below is `Frame + Weapon + Armor + Augment` with different numbers and a name — **nothing hand-coded**:
+This is a **living catalog**, not a one-time proof. Its job: keep adding archetypes from across sci-fi until we're
+confident the parts bin covers the whole design space — and **the builds that DON'T fit are the point**, because
+each one that needs something we don't have reveals a missing part-type, knob, or a scope decision (§6a). Add a
+row whenever a new archetype comes up; move the ⚠️ gaps into §6a and resolve or defer them **before locking G-D3**.
 
-| Unit | Frame | Weapon | Armor | Augment | What it proves |
-|------|-------|--------|-------|---------|----------------|
-| **Space Marine** (40K) | Human | Bolter (heavy) | Ceramite | **Power Armor (+str)** | augment unlocks a weapon a bare frame can't lift |
-| **Imperial Knight** (40K) | Huge walker | Battle Cannon | Adamantium | Ion Shield | top end — huge frame swallows huge guns |
-| **Zergling** (SC) | Tiny organic | Claws (melee) | thin carapace | Adrenal (+evasion) | low strength is fine (light weapon); tiny carry-size → hordes per dropship |
-| **Siege Tank** (SC) | Tracked | Siege Cannon | composite | **Siege-Mode (utility posture)** | a Utility can carry a stance |
-| **AT-AT** (SW) | Huge walker | many mid lasers | massive plate | — | same walker template as the Knight, wildly different look |
-| **Jedi** (SW) | Human | Lightsaber (melee) | **none** | **Force (+evasion, +shield/deflect)** | survive with no armor — dodging, not soaking |
+Every ✅ build is `Frame + Weapon + Armor + Augment (+Utility/Supply)` with different numbers and a name —
+nothing hand-coded.
+
+| # | Unit (source) | Composition (the parts) | What it stresses | Verdict |
+|---|---------------|-------------------------|------------------|---------|
+| 1 | **Space Marine** (40K) | Human frame · Power Armor (+str) · Bolter (heavy ballistic) · Ceramite plate | augment unlocks a weapon a bare frame can't lift | ✅ covered |
+| 2 | **Imperial Knight** (40K) | Huge walker · Battle Cannon (artillery) · Ion Shield (augment) · Adamantium | top end — huge frame swallows huge guns | ✅ |
+| 3 | **Zergling** (SC) | Tiny organic frame · Claws (melee) · thin carapace · Adrenal (+evasion) | bottom end; low str is fine (light weapon); tiny carry-size → hordes per dropship | ✅ |
+| 4 | **Siege Tank** (SC) | Tracked frame · Siege Cannon (artillery) · composite · **Siege-Mode (utility posture)** | a Utility can carry a stance/posture | ✅ |
+| 5 | **AT-AT** (SW) | Huge walker · many mid Lasers (energy) · massive plate | many-mid-guns vs. one-big-gun; same walker template as the Knight | ✅ |
+| 6 | **Jedi** (SW) | Human frame · Lightsaber (melee) · **no armor** · Force (augment: +evasion, +shield/deflect) | survive by dodging, not soaking | ✅ |
+| 7 | **Ork Boy / Ogryn** (40K) | Big organic frame (high HP, mid str) · Choppa (melee) · thick hide | cheap-tough-melee horde on a *bigger* frame | ✅ |
+| 8 | **Artillery Battery** | Static/wheeled frame · Long Gun (artillery, huge range) · minimal armor | extreme range, (near-)immobile — pure indirect fire | ✅ |
+| 9 | **Vindicare / Sniper** (40K) | Human frame · Long Rifle (single-shot, huge range, low rate) · light armor · Camo (augment) | one big accurate shot ≠ a machine-gun at the same DPS | ⚠️ **weapon knobs** |
+| 10 | **Protoss Zealot** (SC) | Bipedal frame · Psi Blades (melee) · **Plasma Shield that regenerates** | a shield that *recharges* out of combat | ⚠️ **shield regen** |
+| 11 | **Terminator** (40K) | Human frame · Tactical Dreadnought Armor (augment) · Assault Cannon · **Teleport** | a unit that **deploys** by teleport/drop-pod (bypasses the dropship) | ⚠️ **deployment methods** |
+| 12 | **Combat Engineer / Sapper** | Human frame · sidearm · **Demo Charge + Fortify Kit** | a unit whose job is an **action** (build / repair / demolish), not damage | ⚠️ **action utilities** |
+| 13 | **Field Medic / Apothecary** | Human frame · sidearm · **Medical Suite (heals adjacent friendlies)** | a **support** unit that buffs/heals *other* units | ⚠️ **friendly auras** |
+| 14 | **Gunship / Valkyrie** | **Hover frame (air)** · door guns · light armor · troop bay | the **air layer**, and a unit that itself **carries** other units | ⚠️ **air + unit-as-transport** |
+| 15 | **Kamikaze Drone / Bomber** | Tiny cheap frame · **Warhead (one huge hit, consumes the unit)** | a **single-use / self-destruct** unit | ⚠️ **consumable units** |
+| 16 | **Hover Cavalry / Bike** | Fast Hover frame · light gun/melee · — | **speed** as the defining trait — is unit speed a first-class stat? | ⚠️ **per-unit speed** |
+
+### 6a. Coverage gaps surfaced by the catalog (resolve or defer before locking G-D3)
+
+The ⚠️ builds above point at things the current 5-part model doesn't yet express. Each is a design question:
+
+- **Weapon needs more than flat `Attack`** — rate-of-fire / alpha-strike / accuracy, so a sniper (one big shot)
+  differs from a machine-gun at the same average DPS. *(Likely: add knobs to `GroundWeaponAtb`, mirroring the ship
+  weapon-flavor system.)*
+- **Shield regen** — an augment shield that recharges out of combat, not just a flat soak. *(Add a regen knob.)*
+- **Deployment methods** — teleport / drop-pod / orbital insertion that bypass the dropship. *(Ties to Transport
+  T1; probably a Utility or a frame trait.)*
+- **Action utilities** — units that DO things (build fortifications, repair, demolish, capture faster). Needs a
+  Utility "effect" vocabulary, not just passive stats.
+- **Friendly auras (support)** — heal / buff *nearby friendly* units. A whole support dimension the resolver
+  doesn't model yet.
+- **Air layer + unit-as-transport** — can ground units engage flyers? can a *unit* carry other units (a gunship,
+  an APC)? Big scope decision.
+- **Consumable / single-use units** — self-destruct, one-shot. Needs a "consumes self on use" flag.
+- **Per-unit speed** — today movement uses region/hex crossing-time; is there a per-unit speed stat that a fast
+  frame/augment raises? (Confirm vs. the H2 hex-movement model.)
+
+**None of these block the G-D3 assembler** (it computes stats + enforces the carry gate from the parts that exist).
+They're the backlog that grows the parts bin toward "full scope" — pick them off as dedicated slices, each with
+its numbers flagged.
 
 ---
 
@@ -163,3 +203,27 @@ questions to settle *before* G-D4:
 
 **Rule:** every new gameplay number introduced by any slice above (part stats, gate fractions, costs) is put in
 JSON as a sensible default and **flagged for the developer in the slice report** — never silently hardcoded.
+
+---
+
+## 11. The SPACE (ship) designer — apply the lessons back (flagged, 2026-07-05)
+
+The developer flagged that **"we'll probably need to fix the space version as well."** The ground designer forced
+us to name things the ship designer never made explicit, and once the ground UX is settled we should audit the
+ship designer against the same principles. Not yet scoped — recorded so it isn't lost. Candidate items to decide:
+
+- **Part-category clarity.** The ground bin has clean functional types (Frame/Weapon/Armor/Augment/Utility/Supply).
+  `ShipDesignWindow` today just lists *all* `ComponentDesigns` grouped by a free-text `ComponentType` string (it
+  doesn't even filter to `ShipComponent` mount — ground parts would show up in it until we filter). Worth a clean
+  category model + mount filter.
+- **The "does it fit / what does it cost" readout.** Ground gets an explicit carry-capacity gate + a live cost
+  sum. Ships have the cost sum but no equivalent "budget bar" — should they, and should the two designers present
+  it the same way?
+- **Generalize-by-function audit.** Ship weapons are already template+knobs (good); check the rest of the ship
+  parts follow the same "one general type, not per-flavor" rule.
+- **Convergence question (the big one).** Should ship / ordnance / ground designers become **one assembly UX**
+  (pick a chassis/hull, drop parts, see budget + emergent stats + cost), or stay three windows? This is the §10
+  "how all the component designers work" question, one level up.
+
+**Do not touch the ship designer as part of the ground track** — this is a separate, later effort that starts with
+its own design pass. It's here as a pointer, not a to-do for the current slices.
