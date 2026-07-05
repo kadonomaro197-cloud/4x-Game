@@ -197,5 +197,83 @@ namespace Pulsar4X.Tests
             Assert.That(opHex.CityGrid.Tiles.Any(t => t.BuildingInstanceId == bunker.ID), Is.False,
                 "and the fine tile it sat on is empty — the invariant holds through the grave rung on the cylinder");
         }
+
+        [Test]
+        [Description("C-track (global develop): LocateFootprintsOnGlobalHexes drops a colony's footprint building onto its region band's muster hex on the cylinder; DevelopGlobalHex then lays it onto a fine city tile — the coarse 'it's in this band' becomes the fine 'it's on THIS mini-hex'.")]
+        public void LocateAndDevelop_OnTheGlobalGrid_LaysFootprintsOntoMiniHexTiles()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            var grid = PlanetGridFactory.EnsureGridForBody(body);
+            int rc = regionsDB.Regions.Count;
+
+            var bunker = InstallBunker(s);
+            regionsDB.Regions[0].InstallationIds.Add(bunker.ID);   // the colony located it in the capital band
+
+            int located = GroundBuildings.LocateFootprintsOnGlobalHexes(s.Colony);
+            Assert.That(located, Is.GreaterThanOrEqualTo(1), "the footprint bunker lands on the global grid");
+            int gQ = PlanetGridFactory.BandCentreColumn(0, grid.Cols, rc), gR = grid.Rows / 2;
+            var musterHex = grid.HexAt(gQ, gR);
+            Assert.That(musterHex.InstallationIds, Does.Contain(bunker.ID), "it sits on the capital band's muster hex");
+            Assert.That(GroundBuildings.LocateFootprintsOnGlobalHexes(s.Colony), Is.EqualTo(0), "idempotent — already located");
+
+            int laid = CityBuilder.DevelopGlobalHex(body, gQ, gR);
+            Assert.That(laid, Is.GreaterThanOrEqualTo(1), "developing the hex lays the bunker onto a fine tile");
+            Assert.That(musterHex.CityGrid.Tiles.Any(t => t.BuildingInstanceId == bunker.ID), Is.True, "it now sits on a specific mini-hex tile");
+            Assert.That(CityBuilder.DevelopGlobalHex(body, gQ, gR), Is.EqualTo(0), "idempotent — re-developing lays nothing new");
+        }
+
+        [Test]
+        [Description("C-track (per-tile placement): LocateFootprintsOnGlobalHex puts a colony's footprint building on the SPECIFIC hex the player zoomed into (leaving it un-placed, not auto-laid), then PlaceBuildingOnGlobalTile drops it on a chosen mini-hex tile — the 'plot where I'll build' flow. Idempotent (a located building isn't re-located).")]
+        public void LocateOnChosenHex_ThenPlaceOnChosenTile()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            var grid = PlanetGridFactory.EnsureGridForBody(body);
+            int rc = regionsDB.Regions.Count;
+            int gQ = PlanetGridFactory.BandCentreColumn(2, grid.Cols, rc) + 1;   // a hex that ISN'T a band-centre muster hex
+            int gR = grid.Rows / 2 + 1;
+            var hex = grid.HexAt(gQ, gR);
+
+            var bunker = InstallBunker(s);
+            int located = GroundBuildings.LocateFootprintsOnGlobalHex(s.Colony, gQ, gR);
+            Assert.That(located, Is.GreaterThanOrEqualTo(1), "footprint buildings land on the chosen hex");
+            Assert.That(hex.InstallationIds, Does.Contain(bunker.ID), "the bunker is on THIS hex (the one we targeted), not the muster hex");
+            bool onTile = hex.CityGrid != null && hex.CityGrid.Tiles.Any(t => t.BuildingInstanceId == bunker.ID);
+            Assert.That(onTile, Is.False, "located but NOT auto-placed on a tile — per-tile placement is manual");
+            Assert.That(GroundBuildings.LocateFootprintsOnGlobalHex(s.Colony, gQ, gR), Is.EqualTo(0), "idempotent — already located, not re-located");
+
+            Assert.That(CityBuilder.PlaceBuildingOnGlobalTile(body, gQ, gR, 1, 0, bunker.ID), Is.True, "placed on the chosen tile (1,0)");
+            Assert.That(hex.CityGrid.TileAt(1, 0).BuildingInstanceId, Is.EqualTo(bunker.ID), "it now sits on that specific mini-hex tile (anchor)");
+            Assert.That(hex.InstallationIds, Does.Contain(bunker.ID), "roll-up still holds");
+        }
+
+        [Test]
+        [Description("C-track (multi-tile footprint): a building occupies its design's TileFootprint many CONTIGUOUS mini-hex tiles (the base-mod Bunker = 4), but is ONE entry in the roll-up; removing/bombing it clears ALL its tiles. A spaceport spans more than a factory.")]
+        public void MultiTileFootprint_OccupiesFootprintTiles_AndClearsThemAllOnRemoval()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            var grid = PlanetGridFactory.EnsureGridForBody(body);
+            int gQ = PlanetGridFactory.BandCentreColumn(0, grid.Cols, regionsDB.Regions.Count);
+            int gR = grid.Rows / 2;
+            var hex = grid.HexAt(gQ, gR);
+
+            var bunker = InstallBunker(s);
+            int fp = GroundBuildings.FootprintTilesFor(body, bunker.ID);
+            Assert.That(fp, Is.EqualTo(4), "the base-mod Bunker's footprint is 4 tiles (installations.json)");
+
+            Assert.That(CityBuilder.PlaceBuildingOnGlobalTile(body, gQ, gR, 0, 0, bunker.ID), Is.True, "placed (anchored at 0,0)");
+            int occupied = hex.CityGrid.Tiles.Count(t => t.BuildingInstanceId == bunker.ID);
+            Assert.That(occupied, Is.EqualTo(4), "it occupies its full 4-tile footprint");
+            Assert.That(hex.InstallationIds.Count(id => id == bunker.ID), Is.EqualTo(1), "but is ONE building in the operational roll-up");
+
+            Assert.That(CityBuilder.RemoveBuildingFromGlobalTile(body, gQ, gR, 0, 0), Is.True, "removed via one of its tiles");
+            Assert.That(hex.CityGrid.Tiles.Any(t => t.BuildingInstanceId == bunker.ID), Is.False, "removal clears ALL four tiles, not just the one clicked");
+            Assert.That(hex.InstallationIds, Does.Not.Contain(bunker.ID), "and drops from the roll-up");
+        }
     }
 }

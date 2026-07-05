@@ -988,6 +988,52 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("System ① — flat ARMOUR in a REAL fight (proves the resolver reads a unit's Defense): two identical infantry defenders each face an identical swarm of small-attack attackers; the ARMOURED one (high Defense) ends with far more health, because flat armour bounces most of each little volley. The wiring half of the pure-math armour gauge (GroundDamageMatrixTests).")]
+        public void Armour_InAFight_ArmouredDefenderOutlastsUnarmoured_VsASwarm()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();   // isolate armour from attrition
+            var regions = body.GetDataBlob<PlanetRegionsDB>().Regions;
+            regions[0].OwnerFactionID = -1; regions[1].OwnerFactionID = -1;   // neutral ground → no cover bias, so we measure pure armour
+            // identical, open terrain in both regions → the ONLY difference between the two fights is the defender's Defense
+            regions[0].Features.Clear(); regions[0].Features.Add(new RegionFeature(RegionFeatureType.Plains, 1.0));
+            regions[1].Features.Clear(); regions[1].Features.Add(new RegionFeature(RegionFeatureType.Plains, 1.0));
+
+            GroundUnitDesign Defender(string id, double defense) => new GroundUnitDesign
+            {
+                UniqueID = id, Name = id, UnitType = GroundUnitType.Infantry,
+                Attack = 0, Defense = defense, HitPoints = 1000, Range = 1,   // Attack 0 → a punching bag, so the swarm stays intact and we measure ONLY armour
+                IndustryTypeID = "installation", ResourceCosts = new Dictionary<string, long>(),
+            };
+            GroundUnitDesign Attacker() => new GroundUnitDesign
+            {
+                UniqueID = "swarm", Name = "Swarm", UnitType = GroundUnitType.Infantry,
+                Attack = 20, Defense = 0, HitPoints = 100, Range = 1,        // small per-source hits → exactly what flat armour bounces
+                IndustryTypeID = "installation", ResourceCosts = new Dictionary<string, long>(),
+            };
+
+            // region 0: an ARMOURED defender vs a 4-unit swarm; region 1: an UNARMOURED defender vs the same swarm.
+            var armoured = GroundForces.RaiseUnit(body, Defender("armoured", 30), s.Faction.Id, 0);
+            var bare = GroundForces.RaiseUnit(body, Defender("bare", 0), s.Faction.Id, 1);
+            for (int i = 0; i < 4; i++)
+            {
+                GroundForces.RaiseUnit(body, Attacker(), InvaderFaction, 0);
+                GroundForces.RaiseUnit(body, Attacker(), InvaderFaction, 1);
+            }
+
+            var proc = new GroundForcesProcessor();
+            for (int i = 0; i < 4; i++) proc.ProcessEntity(body, 3600);
+
+            Assert.That(armoured.Health, Is.GreaterThan(bare.Health),
+                "the armoured defender soaked the swarm's chip damage; the unarmoured one bled far more");
+            Assert.That(armoured.Health, Is.GreaterThan(0.9 * armoured.MaxHealth),
+                "flat armour bounces most of each little volley — the armoured unit is barely scratched");
+            Log($"armour fight: armoured {armoured.Health:0}/{armoured.MaxHealth:0} vs bare {bare.Health:0}/{bare.MaxHealth:0} after 4 salvos");
+        }
+
+        [Test]
         [Description("H3 readout — the developer's insight made visible: a hex range converts to a real distance that DIFFERS by body (a hex on a big world covers more real km than on a small one). Combat stays in hex-space; this is only the gauge.")]
         public void RealReach_HexRangeToKm_VariesByBodyHexSize()
         {

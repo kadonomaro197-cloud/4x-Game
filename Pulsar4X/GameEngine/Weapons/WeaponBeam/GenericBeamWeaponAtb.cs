@@ -19,8 +19,11 @@ namespace Pulsar4X.Weapons
         [JsonProperty]
         public double WaveLength { get; internal set; } = 700;
 
+        // Pulse energy in joules. DOUBLE, not int: a superlaser-scale design exceeds int.MaxValue (~2.1 GJ) and the
+        // whole downstream chain (FireBeamWeapon, ShipCombatValueDB firepower, the power-draw check) is already double —
+        // the old int silently overflowed (wrapped negative) at the top of the beam scale.
         [JsonProperty]
-        public int Energy { get; internal set; }
+        public double Energy { get; internal set; }
 
         // Distance at which beam is at peak focus and full energy.
         // Beyond this the beam spreads; damage scales inverse-square out to MaxRange.
@@ -53,7 +56,7 @@ namespace Pulsar4X.Weapons
         {
             MaxRange = maxRange;
             WaveLength = waveLen;
-            Energy = (int)jules;
+            Energy = jules;
             OptimalRange_m = focalLength > 0 ? focalLength : maxRange * 0.5;
             // INVARIANT (the established physics): MaxRange is ALWAYS the outer bound. Full damage at/inside
             // OptimalRange; degraded (inverse-square) from OptimalRange out to MaxRange; no fire beyond MaxRange.

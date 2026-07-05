@@ -50,6 +50,12 @@ namespace Pulsar4X.GroundCombat
         /// readout. 0/unset → a per-type default (<see cref="GroundRangeTools.DefaultRangeFor"/>: Infantry 1, Armor 1,
         /// Artillery 3). Moddable per design.</summary>
         [JsonProperty] public int Range { get; set; }
+        /// <summary>SYSTEM ① survivability-by-dodge (0..1) — Σ augment evasion; snapshotted onto each raised unit.</summary>
+        [JsonProperty] public double Evasion { get; set; }
+        /// <summary>SYSTEM ① survivability-by-shield — flat incoming-damage soak pool; Σ augment shield.</summary>
+        [JsonProperty] public double Shield { get; set; }
+        /// <summary>SYSTEM ① primary damage flavour (from the heaviest weapon), for the future damage×defence matrix.</summary>
+        [JsonProperty] public GroundWeaponMode DamageType { get; set; } = GroundWeaponMode.Ballistic;
         /// <summary>ENVIRONMENTAL GEAR (E4) — per-hazard protection this design's units carry, keyed by the shared
         /// <see cref="Pulsar4X.Hazards.HazardEffectType"/>. Value 0..1 = fraction of that hazard's attrition negated
         /// (a "heat-shielded" design has <c>{HeatDamage: 0.8}</c>). Snapshotted onto each raised <see cref="GroundUnit"/>.

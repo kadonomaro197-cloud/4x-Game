@@ -294,5 +294,53 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "troop-bay",
+      "Name": "Troop Bay",
+      "Formulas": {
+        "Description": "A pressurised bay that carries embarked infantry from a colony to a battlefield. Load troops at a friendly colony, win the orbit over the target, and land them to invade.",
+        "Mass": "5000",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "0.5",
+        "CrewReq": "10",
+        "ResearchCost": "0",
+        "CreditCost": "[Mass] * 0.12",
+        "BuildPointCost": "[Mass] * 4.5"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.5",
+        "aluminium": "[Mass] * 0.3"
+      },
+      "ComponentType": "Troop Bay",
+      "MountType": "ShipComponent",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "Capacity",
+          "Units": "troops",
+          "DescriptionFormula": "'How many infantry (by carry-size) this bay holds.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "6"
+        },
+        {
+          "Name": "CarryClass",
+          "Units": "class",
+          "DescriptionFormula": "'0 = Personnel (troops), 1 = Vehicle (armour/artillery).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "groundBayAtbArgs",
+          "DescriptionFormula": "'double capacity, double carryClass'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Capacity'), PropertyValue('CarryClass'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundBayAtb"
+        }
+      ]
+    }
   }
 ]

@@ -53,6 +53,16 @@ namespace Pulsar4X.GroundCombat
         /// <c>Range</c>). Directed fire: a unit only damages enemies within this reach, so a longer-ranged unit hits a
         /// closing shorter-ranged one without being hit back. 0 = same hex only.</summary>
         [JsonProperty] public int Range { get; internal set; }
+        /// <summary>SYSTEM ① survivability-by-dodge — chance to avoid a hit (0..1), snapshot of the design's Σ augment
+        /// evasion. Carried now (slice B plumbing); the resolver consumes it in the damage×defence matrix (slice A).
+        /// A dodger (Jedi / Zergling) is high here; a walking bunker is ~0.</summary>
+        [JsonProperty] public double Evasion { get; internal set; }
+        /// <summary>SYSTEM ① survivability-by-shield — a flat incoming-damage soak pool (energy shield / Force ward),
+        /// snapshot of Σ augment shield. Carried now; consumed in slice A.</summary>
+        [JsonProperty] public double Shield { get; internal set; }
+        /// <summary>SYSTEM ① — this unit's primary damage flavour (from its heaviest weapon), for the future
+        /// damage×defence matrix. Carried now; consumed in slice A.</summary>
+        [JsonProperty] public GroundWeaponMode DamageType { get; internal set; } = GroundWeaponMode.Ballistic;
         /// <summary>The region this unit is MARCHING to (-1 = standing still). While in transit it doesn't fight (5b).</summary>
         [JsonProperty] public int MovingToRegion { get; internal set; } = -1;
         /// <summary>Game-seconds left in the current march; counts down to 0 = arrived (the region's crossing time).</summary>
@@ -115,6 +125,7 @@ namespace Pulsar4X.GroundCombat
             UnitId = o.UnitId; FormationId = o.FormationId;
             DesignId = o.DesignId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
             UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health; Range = o.Range;
+            Evasion = o.Evasion; Shield = o.Shield; DamageType = o.DamageType;
             MovingToRegion = o.MovingToRegion; TransitSecondsRemaining = o.TransitSecondsRemaining;
             HexQ = o.HexQ; HexR = o.HexR; HexTransitSecondsRemaining = o.HexTransitSecondsRemaining; HexStepBaseSeconds = o.HexStepBaseSeconds;
             if (o.HexPath != null)
@@ -231,6 +242,10 @@ namespace Pulsar4X.GroundCombat
         /// -1 = no leader (empty formation). On the leader's death it REASSIGNS to a surviving member (fleet-like), no
         /// combat penalty — see <c>GroundForcesProcessor</c>.</summary>
         [JsonProperty] public int LeaderUnitId { get; internal set; } = -1;
+        /// <summary>Parent formation's <see cref="FormationId"/> (-1 = top-level) — the sub-fleet TREE (System ③), the
+        /// ground echo of a sub-fleet nesting under a fleet via <c>TreeHierarchyDB</c>. A "Battle Group" parents a
+        /// "Front Line" + an "Artillery" sub-formation, each with its OWN stance, all commanded as one block.</summary>
+        [JsonProperty] public int ParentFormationId { get; internal set; } = -1;
 
         // ── STANCE (the ground echo of FleetDoctrineDB) — set from the moddable GroundStance catalog via
         //    GroundFormationDoctrine.TrySetStance; read-time mults on the resolver, so switching is reversible. ──
@@ -260,6 +275,7 @@ namespace Pulsar4X.GroundCombat
         public GroundFormation(GroundFormation o)
         {
             FormationId = o.FormationId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; LeaderUnitId = o.LeaderUnitId;
+            ParentFormationId = o.ParentFormationId;
             StanceId = o.StanceId; StanceFamily = o.StanceFamily; AttackMult = o.AttackMult; DamageTakenMult = o.DamageTakenMult;
             SwitchableAfter = o.SwitchableAfter; Engagement = o.Engagement;
             Orders = new List<GroundOrder>();
@@ -330,6 +346,9 @@ namespace Pulsar4X.GroundCombat
                 Health = design.HitPoints,
                 // Strike range in hexes (H3): the design's, or a per-type default if the design left it unset.
                 Range = design.Range > 0 ? design.Range : GroundRangeTools.DefaultRangeFor(design.UnitType),
+                Evasion = design.Evasion,
+                Shield = design.Shield,
+                DamageType = design.DamageType,
                 // Snapshot the design's environmental gear onto the unit (E4) — like the combat stats above.
                 EnvResistance = (design.EnvironmentalResistance != null && design.EnvironmentalResistance.Count > 0)
                     ? new Dictionary<HazardEffectType, double>(design.EnvironmentalResistance)
@@ -339,6 +358,31 @@ namespace Pulsar4X.GroundCombat
             // G3: also place the unit on the ONE continuous grid — at its region BAND's centre column (the global twin
             // of the disk's (0,0) muster). Additive; the per-region HexQ/HexR (0,0) is unchanged.
             StampGlobalMuster(body, unit, regionIndex);
+            forces.Units.Add(unit);
+            return unit;
+        }
+
+        /// <summary>Place an EXISTING unit (one that came off a ship's bay — transport landing, T1b) onto
+        /// <paramref name="body"/>'s region <paramref name="regionIndex"/>, keeping its identity and health. Unlike
+        /// <see cref="RaiseUnit"/> this does NOT build a fresh full-health unit — it re-homes the same object: it gets a
+        /// fresh <see cref="GroundUnit.UnitId"/> for THIS body's roster (ids are per-body), drops its old formation
+        /// (formations are per-body too), clears any in-flight march, and musters at the region's centre hex. Creates
+        /// the roster on demand. This is how a landed invader appears on a (possibly enemy) world. Never throws.</summary>
+        public static GroundUnit PlaceExistingUnit(Entity body, GroundUnit unit, int regionIndex)
+        {
+            if (body == null || unit == null) return null;
+            if (!body.TryGetDataBlob<GroundForcesDB>(out var forces))
+            {
+                forces = new GroundForcesDB();
+                body.SetDataBlob(forces);
+            }
+            unit.RegionIndex = regionIndex < 0 ? 0 : regionIndex;
+            unit.FormationId = -1;                 // formations are per-body — a landed unit arrives unformed
+            unit.MovingToRegion = -1; unit.TransitSecondsRemaining = 0;
+            unit.HexPath = null; unit.HexQ = 0; unit.HexR = 0; unit.HexTransitSecondsRemaining = 0;
+            unit.GlobalPath = null; unit.GlobalQ = -1; unit.GlobalR = -1; unit.GlobalTransitSecondsRemaining = 0;
+            unit.UnitId = forces.NextUnitId++;     // fresh id on this body's roster
+            StampGlobalMuster(body, unit, unit.RegionIndex);
             forces.Units.Add(unit);
             return unit;
         }
@@ -483,7 +527,7 @@ namespace Pulsar4X.GroundCombat
 
         /// <summary>Create a named, empty formation on <paramref name="body"/> (the ground echo of
         /// <c>FleetFactory.Create</c>). Creates the roster on demand and hands out a stable FormationId.</summary>
-        public static GroundFormation CreateFormation(Entity body, int factionId, string name)
+        public static GroundFormation CreateFormation(Entity body, int factionId, string name, int parentFormationId = -1)
         {
             if (!body.TryGetDataBlob<GroundForcesDB>(out var forces))
             {
@@ -495,9 +539,50 @@ namespace Pulsar4X.GroundCombat
                 FormationId = forces.NextFormationId++,
                 Name = string.IsNullOrWhiteSpace(name) ? $"Formation {forces.NextFormationId - 1}" : name,
                 FactionOwnerID = factionId,
+                ParentFormationId = parentFormationId,   // -1 = top-level; a valid id nests it as a sub-formation (System ③)
             };
             forces.Formations.Add(formation);
             return formation;
+        }
+
+        /// <summary>Re-parent <paramref name="child"/> under <paramref name="parentId"/> (-1 = make it top-level) — the
+        /// sub-fleet nesting op (System ③). Refuses a cycle (can't parent a formation under itself or one of its own
+        /// descendants). Returns false if the child is null or the move would create a cycle. Never throws.</summary>
+        public static bool SetParentFormation(GroundForcesDB forces, GroundFormation child, int parentId)
+        {
+            if (forces == null || child == null) return false;
+            if (parentId == child.FormationId) return false;                 // can't parent to itself
+            // walk UP from the proposed parent; if we reach the child, this would make a cycle
+            int walk = parentId;
+            int guard = 0;
+            while (walk >= 0 && guard++ < 512)
+            {
+                if (walk == child.FormationId) return false;                 // proposed parent is a descendant of child
+                var pf = FindFormation(forces, walk);
+                if (pf == null) break;
+                walk = pf.ParentFormationId;
+            }
+            child.ParentFormationId = parentId;
+            return true;
+        }
+
+        private static GroundFormation FindFormation(GroundForcesDB forces, int formationId)
+        {
+            if (forces?.Formations == null) return null;
+            foreach (var f in forces.Formations) if (f.FormationId == formationId) return f;
+            return null;
+        }
+
+        /// <summary>Order a whole formation TREE (a formation and every sub-formation under it) to march to a hex — the
+        /// command-hierarchy payoff of nesting: one order moves the entire battle group, sub-groups and all. Returns the
+        /// number of units set marching. Never throws.</summary>
+        public static int OrderFormationTreeMoveToHex(Entity body, GroundForcesDB forces, GroundFormation formation, int destQ, int destR)
+        {
+            if (body == null || forces == null || formation == null) return 0;
+            int moved = 0;
+            foreach (var f in GroundFormationTools.SubtreeFormations(forces, formation))
+                moved += OrderFormationMoveToHex(body, f, destQ, destR);
+            return moved;
         }
 
         /// <summary>Add a unit to a formation (the ground echo of <c>FleetOrder.AssignShip</c>). The FIRST unit
@@ -653,6 +738,49 @@ namespace Pulsar4X.GroundCombat
             foreach (var f in forces.Formations)
                 if (f.FactionOwnerID == factionId) list.Add(f);
             return list;
+        }
+
+        // ── SUB-FORMATION TREE (System ③, the sub-fleet nesting) ──────────────────────────────────────────────────
+        /// <summary>The DIRECT sub-formations of <paramref name="parent"/> (its immediate children).</summary>
+        public static List<GroundFormation> ChildFormations(GroundForcesDB forces, GroundFormation parent)
+        {
+            var list = new List<GroundFormation>();
+            if (forces?.Formations == null || parent == null) return list;
+            foreach (var f in forces.Formations)
+                if (f.ParentFormationId == parent.FormationId) list.Add(f);
+            return list;
+        }
+
+        /// <summary>A formation AND every sub-formation beneath it (the whole subtree, the formation itself first).
+        /// The set a tree-order (move / stance-broadcast) applies to. Cycle-safe (visited guard).</summary>
+        public static List<GroundFormation> SubtreeFormations(GroundForcesDB forces, GroundFormation root)
+        {
+            var list = new List<GroundFormation>();
+            if (forces?.Formations == null || root == null) return list;
+            var seen = new HashSet<int>();
+            var stack = new Stack<GroundFormation>();
+            stack.Push(root);
+            while (stack.Count > 0)
+            {
+                var f = stack.Pop();
+                if (f == null || !seen.Add(f.FormationId)) continue;   // cycle / duplicate guard
+                list.Add(f);
+                foreach (var c in ChildFormations(forces, f)) stack.Push(c);
+            }
+            return list;
+        }
+
+        /// <summary>Every unit in a formation's whole subtree (its members + all sub-formations' members) — what a
+        /// battle-group-level command touches.</summary>
+        public static List<GroundUnit> SubtreeUnits(GroundForcesDB forces, GroundFormation root)
+        {
+            var units = new List<GroundUnit>();
+            if (forces == null || root == null) return units;
+            var ids = new HashSet<int>();
+            foreach (var f in SubtreeFormations(forces, root)) ids.Add(f.FormationId);
+            foreach (var u in forces.Units)
+                if (ids.Contains(u.FormationId)) units.Add(u);
+            return units;
         }
     }
 }

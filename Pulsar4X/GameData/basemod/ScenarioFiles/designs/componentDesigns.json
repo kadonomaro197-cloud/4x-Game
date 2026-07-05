@@ -513,5 +513,141 @@
       "Name": "Bunker",
       "TemplateId": "bunker"
     }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-infantry",
+      "Name": "Infantry",
+      "TemplateId": "infantry-unit"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-armor",
+      "Name": "Armor",
+      "TemplateId": "armor-unit"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-artillery",
+      "Name": "Artillery",
+      "TemplateId": "artillery-unit"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-troop-bay",
+      "Name": "Troop Bay",
+      "TemplateId": "troop-bay"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-human-frame",
+      "Name": "Human Frame",
+      "TemplateId": "human-frame"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-ground-rifle",
+      "Name": "Service Rifle",
+      "TemplateId": "ground-rifle"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-ground-plating",
+      "Name": "Composite Plating",
+      "TemplateId": "ground-plating"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-power-armor",
+      "Name": "Power Armour",
+      "TemplateId": "power-armor"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-ground-autocannon",
+      "Name": "Heavy Autocannon",
+      "TemplateId": "ground-autocannon"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-vehicle-frame",
+      "Name": "Tracked Vehicle Frame",
+      "TemplateId": "vehicle-frame"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-ground-cannon",
+      "Name": "Tank Cannon",
+      "TemplateId": "ground-cannon"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-walker-frame",
+      "Name": "Bipedal Walker Frame",
+      "TemplateId": "walker-frame"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-energy-weapon",
+      "Name": "Plasma Projector",
+      "TemplateId": "energy-weapon"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-shield-generator",
+      "Name": "Shield Generator",
+      "TemplateId": "shield-generator"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-reflex-booster",
+      "Name": "Reflex Booster",
+      "TemplateId": "reflex-booster"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-swarm-frame",
+      "Name": "Swarmling Frame",
+      "TemplateId": "swarm-frame"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-claw-weapon",
+      "Name": "Rending Claws",
+      "TemplateId": "claw-weapon"
+    }
   }
 ]

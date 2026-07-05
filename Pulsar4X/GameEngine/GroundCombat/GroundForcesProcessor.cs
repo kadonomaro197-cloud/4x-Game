@@ -280,8 +280,16 @@ namespace Pulsar4X.GroundCombat
                         if (totalH <= 0) continue;
                         foreach (var t in reachable)
                         {
+                            // SYSTEM ① — the damage×defence matchup: scale this attacker's share by how its damage
+                            // flavour meets the target's dodge/shield (a Zergling shrugs off rifles but eats a shell;
+                            // a shielded Clone soaks bullets but energy bleeds through), THEN take a flat ARMOUR soak
+                            // off this one source (the target's Defense) — flat-per-source, so a swarm's many little
+                            // volleys are mostly bounced while one big alpha punches through the same plating.
+                            double matchup = GroundDamageMatrix.Matchup(u.DamageType, t);
+                            double contribution = pool * (t.Health / totalH) * matchup;
+                            contribution = GroundDamageMatrix.ArmourSoak(t.Defense, contribution);
                             incoming.TryGetValue(t, out var acc);
-                            incoming[t] = acc + pool * (t.Health / totalH);
+                            incoming[t] = acc + contribution;
                         }
                     }
                 }

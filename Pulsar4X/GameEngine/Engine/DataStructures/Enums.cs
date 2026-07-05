@@ -139,6 +139,8 @@ namespace Pulsar4X.DataStructures
         Fighter             = 1 << 4,
         [Description("Missle")]
         Missile             = 1 << 5,
+        [Description("Ground Unit")]
+        GroundUnit          = 1 << 6,
     }
 
     [Flags]

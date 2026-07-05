@@ -73,6 +73,87 @@ namespace Pulsar4X.GroundCombat
             return added;
         }
 
+        /// <summary>Global-grid twin of <see cref="LocateFootprintsOnHexes"/> (C-track) — drop a colony's FOOTPRINT
+        /// installations onto their region BAND's muster hex on the continuous cylinder (band-centre column, middle row —
+        /// the same hex units muster on, so a base and its garrison share a tile). Idempotent (an id already on any
+        /// global hex is skipped). Returns how many were newly placed. Defensive.</summary>
+        public static int LocateFootprintsOnGlobalHexes(Entity colony)
+        {
+            if (colony == null || !colony.TryGetDataBlob<ColonyInfoDB>(out var ci)) return 0;
+            var body = ci.PlanetEntity;
+            if (body == null || !body.IsValid || !body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB) || regionsDB.Regions.Count == 0)
+                return 0;
+            if (!colony.TryGetDataBlob<ComponentInstancesDB>(out var comps)) return 0;
+            var grid = PlanetGridFactory.EnsureGridForBody(body);
+            if (grid == null || grid.Cols <= 0) return 0;
+
+            var footprintIds = new HashSet<int>();
+            foreach (var inst in comps.AllComponents.Values)
+                if (IsFootprint(inst.Design)) footprintIds.Add(inst.ID);
+            if (footprintIds.Count == 0) return 0;
+
+            // ids already on SOME global hex (idempotency — don't double-place).
+            var onAHex = new HashSet<int>();
+            foreach (var h in grid.Hexes)
+                if (h.InstallationIds != null)
+                    foreach (var id in h.InstallationIds) onAHex.Add(id);
+
+            int rc = regionsDB.Regions.Count;
+            int added = 0;
+            for (int i = 0; i < rc; i++)
+            {
+                var region = regionsDB.Regions[i];
+                if (region.InstallationIds == null) continue;
+                var hex = grid.HexAt(PlanetGridFactory.BandCentreColumn(i, grid.Cols, rc), grid.Rows / 2);
+                if (hex == null) continue;
+                foreach (var id in region.InstallationIds)
+                {
+                    if (!footprintIds.Contains(id) || onAHex.Contains(id)) continue;
+                    hex.InstallationIds.Add(id);
+                    onAHex.Add(id);
+                    added++;
+                }
+            }
+            return added;
+        }
+
+        /// <summary>Locate a colony's not-yet-placed footprint buildings onto a SPECIFIC global hex (C-track per-tile
+        /// placement) — the per-hex twin of <see cref="LocateFootprintsOnGlobalHexes"/>, so the client's "bring buildings
+        /// here" targets the hex the player zoomed into rather than the band's muster hex. Idempotent (an id already on
+        /// ANY global hex is skipped, so it never double-locates or steals a building off another hex). Returns how many
+        /// were newly placed on this hex. Defensive.</summary>
+        public static int LocateFootprintsOnGlobalHex(Entity colony, int gQ, int gR)
+        {
+            if (colony == null || !colony.TryGetDataBlob<ColonyInfoDB>(out var ci)) return 0;
+            var body = ci.PlanetEntity;
+            if (body == null || !body.IsValid || !body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB) || regionsDB.Regions.Count == 0)
+                return 0;
+            if (!colony.TryGetDataBlob<ComponentInstancesDB>(out var comps)) return 0;
+            var grid = PlanetGridFactory.EnsureGridForBody(body);
+            var hex = grid?.HexAt(gQ, gR);
+            if (hex == null) return 0;
+
+            var footprintIds = new HashSet<int>();
+            foreach (var inst in comps.AllComponents.Values)
+                if (IsFootprint(inst.Design)) footprintIds.Add(inst.ID);
+            if (footprintIds.Count == 0) return 0;
+
+            var onAHex = new HashSet<int>();
+            foreach (var h in grid.Hexes)
+                if (h.InstallationIds != null)
+                    foreach (var id in h.InstallationIds) onAHex.Add(id);
+
+            int added = 0;
+            foreach (var id in footprintIds)
+            {
+                if (onAHex.Contains(id)) continue;   // already located somewhere → leave it there
+                hex.InstallationIds.Add(id);
+                onAHex.Add(id);
+                added++;
+            }
+            return added;
+        }
+
         /// <summary>The footprint building ids on a hex (never null).</summary>
         public static IReadOnlyList<int> BuildingsOnHex(GroundHex hex)
             => hex?.InstallationIds ?? (IReadOnlyList<int>)System.Array.Empty<int>();
@@ -196,6 +277,41 @@ namespace Pulsar4X.GroundCombat
                 if (!colony.TryGetDataBlob<ComponentInstancesDB>(out var comps)) continue;
                 foreach (var inst in comps.AllComponents.Values)
                     map[inst.ID] = (comps, inst);
+            }
+            return map;
+        }
+
+        /// <summary>How many fine city-tiles a building occupies — its design's <see cref="GroundFootprintAtb.TileFootprint"/>
+        /// (≥1; default 1 for a building with no footprint attribute or one we can't resolve). PUBLIC engine accessor so
+        /// the city builder + client can size a multi-tile footprint without reading the internal component store.
+        /// Defensive; never throws.</summary>
+        public static int FootprintTilesFor(Entity body, int buildingInstanceId)
+        {
+            if (body?.Manager == null) return 1;
+            foreach (var colony in body.Manager.GetAllEntitiesWithDataBlob<ColonyInfoDB>())
+            {
+                if (!colony.TryGetDataBlob<ColonyInfoDB>(out var ci) || ci.PlanetEntity == null || ci.PlanetEntity.Id != body.Id) continue;
+                if (!colony.TryGetDataBlob<ComponentInstancesDB>(out var comps)) continue;
+                foreach (var inst in comps.AllComponents.Values)
+                    if (inst.ID == buildingInstanceId && inst.Design != null && inst.Design.TryGetAttribute<GroundFootprintAtb>(out var atb))
+                        return atb.TileFootprint < 1 ? 1 : atb.TileFootprint;
+            }
+            return 1;
+        }
+
+        /// <summary>Building instance id → design name, across the body's colonies — a PUBLIC engine accessor for the
+        /// client's city-tile readout. (<c>ComponentInstancesDB.AllComponents</c> is INTERNAL, so the client can't walk
+        /// it directly — client CLAUDE.md rule #2; this keeps the lookup engine-side.) Defensive; never throws.</summary>
+        public static Dictionary<int, string> BuildingNamesOnBody(Entity body)
+        {
+            var map = new Dictionary<int, string>();
+            if (body?.Manager == null) return map;
+            foreach (var colony in body.Manager.GetAllEntitiesWithDataBlob<ColonyInfoDB>())
+            {
+                if (!colony.TryGetDataBlob<ColonyInfoDB>(out var ci) || ci.PlanetEntity == null || ci.PlanetEntity.Id != body.Id) continue;
+                if (!colony.TryGetDataBlob<ComponentInstancesDB>(out var comps)) continue;
+                foreach (var inst in comps.AllComponents.Values)
+                    map[inst.ID] = inst.Design?.Name ?? ("building #" + inst.ID);
             }
             return map;
         }
