@@ -1162,5 +1162,215 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "infantry-unit",
+      "Name": "Infantry",
+      "Formulas": {
+        "Description": "Boots on the ground - cheap, holds terrain, the baseline of any invasion or defence. Fights up close (1 hex). Building it raises an Infantry unit on the planet.",
+        "Mass": "20000",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "1.0",
+        "CrewReq": "100",
+        "ResearchCost": "0",
+        "CreditCost": "80",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "iron": "[Mass] * 0.3",
+        "stainless-steel": "[Mass] * 0.2",
+        "aluminium": "[Mass] * 0.2"
+      },
+      "ComponentType": "Facility",
+      "MountType": "PlanetInstallation",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "UnitType",
+          "Units": "enum",
+          "DescriptionFormula": "'0 = Infantry, 1 = Armor, 2 = Artillery.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "Attack",
+          "Units": "str",
+          "DescriptionFormula": "'Damage this unit deals per salvo to enemies in range.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "100"
+        },
+        {
+          "Name": "Defense",
+          "Units": "str",
+          "DescriptionFormula": "'Reduces damage this unit takes (soaks incoming fire).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "10"
+        },
+        {
+          "Name": "HitPoints",
+          "Units": "hp",
+          "DescriptionFormula": "'How much damage this unit can absorb before it is destroyed.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "500"
+        },
+        {
+          "Name": "Range",
+          "Units": "hex",
+          "DescriptionFormula": "'Strike range in hexes (how far it can hit; artillery reaches farther).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "1"
+        },
+        {
+          "Name": "groundUnitAtbArgs",
+          "DescriptionFormula": "'double unitType, double attack, double defense, double hitPoints, double range'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('UnitType'), PropertyValue('Attack'), PropertyValue('Defense'), PropertyValue('HitPoints'), PropertyValue('Range'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundUnitAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "armor-unit",
+      "Name": "Armor",
+      "Formulas": {
+        "Description": "Shock armour - strong in the open, weaker in rough terrain, tough to kill. Fights up close (1 hex). Building it raises an Armor unit on the planet.",
+        "Mass": "40000",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "1.0",
+        "CrewReq": "60",
+        "ResearchCost": "0",
+        "CreditCost": "150",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "iron": "[Mass] * 0.3",
+        "stainless-steel": "[Mass] * 0.2",
+        "aluminium": "[Mass] * 0.2"
+      },
+      "ComponentType": "Facility",
+      "MountType": "PlanetInstallation",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "UnitType",
+          "Units": "enum",
+          "DescriptionFormula": "'0 = Infantry, 1 = Armor, 2 = Artillery.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "1"
+        },
+        {
+          "Name": "Attack",
+          "Units": "str",
+          "DescriptionFormula": "'Damage this unit deals per salvo to enemies in range.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "140"
+        },
+        {
+          "Name": "Defense",
+          "Units": "str",
+          "DescriptionFormula": "'Reduces damage this unit takes (soaks incoming fire).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "15"
+        },
+        {
+          "Name": "HitPoints",
+          "Units": "hp",
+          "DescriptionFormula": "'How much damage this unit can absorb before it is destroyed.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "700"
+        },
+        {
+          "Name": "Range",
+          "Units": "hex",
+          "DescriptionFormula": "'Strike range in hexes (how far it can hit; artillery reaches farther).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "1"
+        },
+        {
+          "Name": "groundUnitAtbArgs",
+          "DescriptionFormula": "'double unitType, double attack, double defense, double hitPoints, double range'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('UnitType'), PropertyValue('Attack'), PropertyValue('Defense'), PropertyValue('HitPoints'), PropertyValue('Range'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundUnitAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "artillery-unit",
+      "Name": "Artillery",
+      "Formulas": {
+        "Description": "Reach - hits hard from 3 hexes away and can shoot while repositioning, but fragile if the enemy closes. Building it raises an Artillery unit on the planet.",
+        "Mass": "30000",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "1.0",
+        "CrewReq": "40",
+        "ResearchCost": "0",
+        "CreditCost": "120",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "iron": "[Mass] * 0.3",
+        "stainless-steel": "[Mass] * 0.2",
+        "aluminium": "[Mass] * 0.2"
+      },
+      "ComponentType": "Facility",
+      "MountType": "PlanetInstallation",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "UnitType",
+          "Units": "enum",
+          "DescriptionFormula": "'0 = Infantry, 1 = Armor, 2 = Artillery.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "2"
+        },
+        {
+          "Name": "Attack",
+          "Units": "str",
+          "DescriptionFormula": "'Damage this unit deals per salvo to enemies in range.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "160"
+        },
+        {
+          "Name": "Defense",
+          "Units": "str",
+          "DescriptionFormula": "'Reduces damage this unit takes (soaks incoming fire).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "5"
+        },
+        {
+          "Name": "HitPoints",
+          "Units": "hp",
+          "DescriptionFormula": "'How much damage this unit can absorb before it is destroyed.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "400"
+        },
+        {
+          "Name": "Range",
+          "Units": "hex",
+          "DescriptionFormula": "'Strike range in hexes (how far it can hit; artillery reaches farther).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "3"
+        },
+        {
+          "Name": "groundUnitAtbArgs",
+          "DescriptionFormula": "'double unitType, double attack, double defense, double hitPoints, double range'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('UnitType'), PropertyValue('Attack'), PropertyValue('Defense'), PropertyValue('HitPoints'), PropertyValue('Range'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundUnitAtb"
+        }
+      ]
+    }
   }
 ]

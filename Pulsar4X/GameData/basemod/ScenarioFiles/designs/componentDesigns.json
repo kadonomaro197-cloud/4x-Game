@@ -513,5 +513,29 @@
       "Name": "Bunker",
       "TemplateId": "bunker"
     }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-infantry",
+      "Name": "Infantry",
+      "TemplateId": "infantry-unit"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-armor",
+      "Name": "Armor",
+      "TemplateId": "armor-unit"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-artillery",
+      "Name": "Artillery",
+      "TemplateId": "artillery-unit"
+    }
   }
 ]

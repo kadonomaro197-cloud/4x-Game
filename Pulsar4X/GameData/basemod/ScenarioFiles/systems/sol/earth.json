@@ -209,7 +209,10 @@
         "default-design-battery-25kg",
         "default-design-local-construction",
         "default-design-launch-complex",
-        "default-design-bunker"
+        "default-design-bunker",
+        "default-design-infantry",
+        "default-design-armor",
+        "default-design-artillery"
       ],
       "ShipDesigns": [
         "default-ship-design-courier",
