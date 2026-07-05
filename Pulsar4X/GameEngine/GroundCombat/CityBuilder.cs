@@ -119,6 +119,33 @@ namespace Pulsar4X.GroundCombat
             return placed;
         }
 
+        /// <summary>Global-grid twin of <see cref="DevelopColonyHex"/> (C-track) — develop the GLOBAL operational hex at
+        /// (<paramref name="gQ"/>,<paramref name="gR"/>): ensure its city grid and lay the hex's footprint buildings
+        /// (already in <see cref="GroundHex.InstallationIds"/> via <c>GroundBuildings.LocateFootprintsOnGlobalHexes</c>)
+        /// onto empty fine tiles (first-fit). Returns how many were newly placed. Idempotent. Defensive.</summary>
+        public static int DevelopGlobalHex(Entity body, int gQ, int gR)
+        {
+            var hex = CityGridFactory.ResolveGlobalHex(body, gQ, gR);
+            if (hex == null || hex.InstallationIds == null) return 0;
+            var grid = CityGridFactory.EnsureCityForGlobalHex(body, gQ, gR);
+            if (grid?.Tiles == null) return 0;
+
+            var onTile = new System.Collections.Generic.HashSet<int>();
+            foreach (var t in grid.Tiles) if (t.BuildingInstanceId != -1) onTile.Add(t.BuildingInstanceId);
+
+            int placed = 0;
+            foreach (var id in hex.InstallationIds)
+            {
+                if (onTile.Contains(id)) continue;
+                var empty = NextEmptyTile(grid);
+                if (empty == null) break;   // city is full
+                empty.BuildingInstanceId = id;
+                onTile.Add(id);
+                placed++;
+            }
+            return placed;
+        }
+
         private static CityTile NextEmptyTile(CityGrid grid)
         {
             foreach (var t in grid.Tiles) if (t.BuildingInstanceId == -1) return t;

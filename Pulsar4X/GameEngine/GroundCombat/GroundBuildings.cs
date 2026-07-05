@@ -73,6 +73,50 @@ namespace Pulsar4X.GroundCombat
             return added;
         }
 
+        /// <summary>Global-grid twin of <see cref="LocateFootprintsOnHexes"/> (C-track) — drop a colony's FOOTPRINT
+        /// installations onto their region BAND's muster hex on the continuous cylinder (band-centre column, middle row —
+        /// the same hex units muster on, so a base and its garrison share a tile). Idempotent (an id already on any
+        /// global hex is skipped). Returns how many were newly placed. Defensive.</summary>
+        public static int LocateFootprintsOnGlobalHexes(Entity colony)
+        {
+            if (colony == null || !colony.TryGetDataBlob<ColonyInfoDB>(out var ci)) return 0;
+            var body = ci.PlanetEntity;
+            if (body == null || !body.IsValid || !body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB) || regionsDB.Regions.Count == 0)
+                return 0;
+            if (!colony.TryGetDataBlob<ComponentInstancesDB>(out var comps)) return 0;
+            var grid = PlanetGridFactory.EnsureGridForBody(body);
+            if (grid == null || grid.Cols <= 0) return 0;
+
+            var footprintIds = new HashSet<int>();
+            foreach (var inst in comps.AllComponents.Values)
+                if (IsFootprint(inst.Design)) footprintIds.Add(inst.ID);
+            if (footprintIds.Count == 0) return 0;
+
+            // ids already on SOME global hex (idempotency — don't double-place).
+            var onAHex = new HashSet<int>();
+            foreach (var h in grid.Hexes)
+                if (h.InstallationIds != null)
+                    foreach (var id in h.InstallationIds) onAHex.Add(id);
+
+            int rc = regionsDB.Regions.Count;
+            int added = 0;
+            for (int i = 0; i < rc; i++)
+            {
+                var region = regionsDB.Regions[i];
+                if (region.InstallationIds == null) continue;
+                var hex = grid.HexAt(PlanetGridFactory.BandCentreColumn(i, grid.Cols, rc), grid.Rows / 2);
+                if (hex == null) continue;
+                foreach (var id in region.InstallationIds)
+                {
+                    if (!footprintIds.Contains(id) || onAHex.Contains(id)) continue;
+                    hex.InstallationIds.Add(id);
+                    onAHex.Add(id);
+                    added++;
+                }
+            }
+            return added;
+        }
+
         /// <summary>The footprint building ids on a hex (never null).</summary>
         public static IReadOnlyList<int> BuildingsOnHex(GroundHex hex)
             => hex?.InstallationIds ?? (IReadOnlyList<int>)System.Array.Empty<int>();

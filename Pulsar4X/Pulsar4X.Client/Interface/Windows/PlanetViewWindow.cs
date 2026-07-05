@@ -8,6 +8,7 @@ using Pulsar4X.Galaxy;
 using Pulsar4X.GroundCombat;
 using Pulsar4X.Colonies;
 using Pulsar4X.Components;
+using Pulsar4X.Datablobs;   // ComponentInstancesDB (namespace ≠ folder)
 using Pulsar4X.DataStructures;
 using Pulsar4X.Client.Interface.Widgets;
 
@@ -47,6 +48,11 @@ namespace Pulsar4X.Client
         // centre column (lazily set to the centre region's band centre). This is the ONLY surface view now — G6 retired
         // the old per-region disk ("band") view the developer asked to drop.
         private int _centerCol = -1;
+
+        // C-track — the CITY zoom: which GLOBAL operational hex we've zoomed into (mini-hex grid under it). -1 = not
+        // zoomed (globe view). Double-click a hex on the globe to zoom in; "Back to globe" clears it.
+        private int _zoomQ = -1;
+        private int _zoomR = -1;
 
         // The selected unit GROUP (region, owner faction, type) — the thing a March order acts on. -1 region = none.
         private int _selRegion = -1;
@@ -191,7 +197,9 @@ namespace Pulsar4X.Client
             // One wrapping cylinder grid rendered as a sliding window — the centre band in full, its neighbours bleeding
             // in at the margins, seamless at the wrap — so terrain FLOWS across region boundaries and any place shows up
             // in every window whose longitude reaches it. (The zoomed city/fortification grid is the separate C-track view.)
-            if (canGlobal)
+            if (canGlobal && _zoomQ >= 0)
+                DrawCityZoom(grid, regions, body, myFaction);      // C-track: zoomed into one operational hex's mini-hex grid
+            else if (canGlobal)
             {
                 if (_centerCol < 0) SyncCenterCol(grid, count);   // first paint: centre on the current region's band
                 DrawGlobalHexWindow(grid, regions, body, myFaction, forcesDB);
@@ -239,6 +247,7 @@ namespace Pulsar4X.Client
 
             ImGui.InvisibleButton("planetglobecanvas", mapSize);
             bool clicked = ImGui.IsItemHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
+            bool dbl = ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left);   // double-click a hex → zoom into its city
             var mp = ImGui.GetIO().MousePos;
 
             // Size a hex so the window (winCols × rows, odd-r offset) fits, then centre it in the canvas.
@@ -316,8 +325,9 @@ namespace Pulsar4X.Client
                     drawList.AddNgon(pc, size, ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 0.3f, 1f)), 6, 2.5f);
             }
 
-            // 4) click → nearest visible hex → select your units there / march a selected group there (global A*).
-            if (clicked)
+            // 4) click → nearest visible hex. DOUBLE-click zooms into that hex's city (C-track); single-click
+            //    selects your units there / marches a selected group there (global A*).
+            if (clicked || dbl)
             {
                 int bestGq = -1, bestR = -1; float bestD = size * 1.3f;
                 for (int sc = 0; sc < winCols; sc++)
@@ -329,11 +339,15 @@ namespace Pulsar4X.Client
                         if (d < bestD) { bestD = d; bestGq = gq; bestR = r; }
                     }
                 }
-                if (bestGq >= 0) HandleGlobalHexClick(grid, regions, body, myFaction, forcesDB, bestGq, bestR);
+                if (bestGq >= 0)
+                {
+                    if (dbl) { _zoomQ = bestGq; _zoomR = bestR; _status = $"zoomed into hex ({bestGq},{bestR}) — city view"; }
+                    else HandleGlobalHexClick(grid, regions, body, myFaction, forcesDB, bestGq, bestR);
+                }
             }
 
             // 5) caption + the H3 range readout for the selected group.
-            ImGui.Text($"Surface (globe) — one continuous world, centred on Region {regions[centreBand].Index + 1}; ◀/▶ pans, click a hex to select/march.");
+            ImGui.Text($"Surface (globe) — one continuous world, centred on Region {regions[centreBand].Index + 1}; ◀/▶ pans, click a hex to select/march, double-click to zoom into its city.");
             if (HasSelection && _selFaction == myFaction && _selRegion < regions.Count)
             {
                 var rep = forcesDB?.Units.FirstOrDefault(u => u.RegionIndex == _selRegion && u.FactionOwnerID == myFaction && u.UnitType == _selType);
@@ -395,11 +409,124 @@ namespace Pulsar4X.Client
         }
 
         /// <summary>Odd-r OFFSET hex layout (pointy-top) — screen position of window column <paramref name="sc"/>, row
-        /// <paramref name="r"/>. Unlike the axial <see cref="HexCenter"/> (which shears with r), this keeps the grid
-        /// RECTANGULAR (odd rows nudged half a hex), so a wide cylinder window reads as a proper map — matching the
-        /// odd-r neighbour model the global pathfinder (G2) uses.</summary>
+        /// <paramref name="r"/>. Keeps the grid RECTANGULAR (odd rows nudged half a hex), so a wide cylinder window reads
+        /// as a proper map — matching the odd-r neighbour model the global pathfinder (G2) uses.</summary>
         private static Vector2 HexCenterOffset(Vector2 origin, float size, int sc, int r)
             => new Vector2(origin.X + size * 1.7320508f * (sc + 0.5f * (r & 1)), origin.Y + size * 1.5f * r);
+
+        // ── C-track: the CITY zoom — the mini-hex grid UNDER one operational hex (Planet → Region → Hex → CityTile) ──
+        // Double-clicking a hex on the globe zooms here. Buildings occupy mini-hex tiles 1:1 (the roll-up invariant);
+        // "Develop hex" locates the colony's footprint buildings onto this hex and lays them onto tiles. v1 is a VIEW +
+        // develop; per-tile placement of new buildings + the area-scaled ("more not bigger") tile count are follow-ups.
+        private void DrawCityZoom(SurfaceGrid grid, List<Region> regions, Entity body, int myFaction)
+        {
+            int rc = Math.Max(1, regions.Count);
+            int band = PlanetGridFactory.RegionOfColumn(_zoomQ, grid.Cols, rc);
+
+            if (ImGui.Button("⤢ Back to globe")) { _zoomQ = -1; _zoomR = -1; return; }
+            ImGui.SameLine();
+            ImGui.Text($"City view — operational hex ({_zoomQ},{_zoomR}), Region {(band < regions.Count ? regions[band].Index + 1 : band + 1)}");
+            ImGui.SameLine();
+            if (ImGui.Button("Develop hex"))
+            {
+                var colony = FindMyColony(body, myFaction);
+                if (colony != null)
+                {
+                    GroundBuildings.LocateFootprintsOnGlobalHexes(colony);
+                    int laid = CityBuilder.DevelopGlobalHex(body, _zoomQ, _zoomR);
+                    _status = laid > 0 ? $"developed hex — {laid} building(s) laid onto mini-hex tiles"
+                                       : "nothing new to lay (already developed, or no footprint buildings here)";
+                }
+                else _status = "you have no colony on this world to develop";
+            }
+
+            var hex = CityGridFactory.ResolveGlobalHex(body, _zoomQ, _zoomR);
+            var city = CityGridFactory.EnsureCityForGlobalHex(body, _zoomQ, _zoomR);
+            if (hex == null || city?.Tiles == null || city.Tiles.Count == 0)
+            {
+                ImGui.TextDisabled("This hex has no city grid.");
+                return;
+            }
+
+            var drawList = ImGui.GetWindowDrawList();
+            var canvasPos = ImGui.GetCursorScreenPos();
+            var canvasSize = ImGui.GetContentRegionAvail();
+            float mapHeight = Math.Max(220f, canvasSize.Y * 0.66f);
+            var mapSize = new Vector2(canvasSize.X, mapHeight);
+            ImGui.InvisibleButton("citycanvas", mapSize);
+            bool clicked = ImGui.IsItemHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
+            var mp = ImGui.GetIO().MousePos;
+
+            int R = Math.Max(1, city.Radius);
+            float span = 2 * R + 1.6f;
+            float size = Math.Max(3f, Math.Min(mapSize.X / (1.7320508f * span), mapSize.Y / (1.5f * span)));
+            var center = new Vector2(canvasPos.X + mapSize.X * 0.5f, canvasPos.Y + mapSize.Y * 0.5f);
+            uint hexBorder = ImGui.ColorConvertFloat4ToU32(new Vector4(0f, 0f, 0f, 0.30f));
+
+            var names = BuildingIndex(body);   // instance id → design name (for the readout)
+            foreach (var t in city.Tiles)
+            {
+                var pc = AxialHexCenter(center, size, t.Q, t.R);
+                var col = _featureColors.TryGetValue(t.Terrain, out var vc) ? vc : _featureColors[RegionFeatureType.Barren];
+                drawList.AddNgonFilled(pc, size, ImGui.ColorConvertFloat4ToU32(col), 6);
+                if (size > 4f) drawList.AddNgon(pc, size, hexBorder, 6, 1f);
+                if (t.BuildingInstanceId != -1)   // a building occupies this mini-hex
+                {
+                    float mr = Math.Max(2.5f, size * 0.5f);
+                    drawList.AddRectFilled(new Vector2(pc.X - mr, pc.Y - mr), new Vector2(pc.X + mr, pc.Y + mr),
+                        ImGui.ColorConvertFloat4ToU32(new Vector4(0.92f, 0.85f, 0.35f, 1f)));
+                    drawList.AddRect(new Vector2(pc.X - mr, pc.Y - mr), new Vector2(pc.X + mr, pc.Y + mr),
+                        ImGui.ColorConvertFloat4ToU32(new Vector4(0f, 0f, 0f, 0.8f)));
+                }
+            }
+
+            if (clicked)
+            {
+                CityTile best = null; float bestD = size * 1.2f;
+                foreach (var t in city.Tiles)
+                {
+                    float d = Vector2.Distance(AxialHexCenter(center, size, t.Q, t.R), mp);
+                    if (d < bestD) { bestD = d; best = t; }
+                }
+                if (best != null)
+                    _status = best.BuildingInstanceId != -1
+                        ? $"tile ({best.Q},{best.R}): {(names.TryGetValue(best.BuildingInstanceId, out var nm) ? nm : "building #" + best.BuildingInstanceId)}"
+                        : $"tile ({best.Q},{best.R}): empty";
+            }
+
+            ImGui.Text($"{city.Tiles.Count} mini-hex tiles — buildings occupy them 1:1 (▧). Click a tile to inspect it; \"Develop hex\" lays this hex's footprint buildings onto tiles.");
+        }
+
+        /// <summary>Axial hex (q,r) → screen position (pointy-top), centred on <paramref name="origin"/> — for the city
+        /// DISK (a hexagon centred at the origin, so axial layout is right; the globe window uses odd-r offset instead).</summary>
+        private static Vector2 AxialHexCenter(Vector2 origin, float size, int q, int r)
+            => new Vector2(origin.X + size * 1.7320508f * (q + r * 0.5f), origin.Y + size * 1.5f * r);
+
+        /// <summary>The player's colony on this body (owned by <paramref name="myFaction"/>), or null. Defensive.</summary>
+        private static Entity FindMyColony(Entity body, int myFaction)
+        {
+            if (body?.Manager == null) return null;
+            foreach (var colony in body.Manager.GetAllEntitiesWithDataBlob<ColonyInfoDB>())
+                if (colony.TryGetDataBlob<ColonyInfoDB>(out var ci) && ci.PlanetEntity != null && ci.PlanetEntity.Id == body.Id
+                    && colony.FactionOwnerID == myFaction)
+                    return colony;
+            return null;
+        }
+
+        /// <summary>Building instance id → design name, across the body's colonies (for the city-tile readout).</summary>
+        private static Dictionary<int, string> BuildingIndex(Entity body)
+        {
+            var map = new Dictionary<int, string>();
+            if (body?.Manager == null) return map;
+            foreach (var colony in body.Manager.GetAllEntitiesWithDataBlob<ColonyInfoDB>())
+            {
+                if (!colony.TryGetDataBlob<ColonyInfoDB>(out var ci) || ci.PlanetEntity == null || ci.PlanetEntity.Id != body.Id) continue;
+                if (!colony.TryGetDataBlob<ComponentInstancesDB>(out var comps)) continue;
+                foreach (var inst in comps.AllComponents.Values)
+                    map[inst.ID] = inst.Design?.Name ?? ("building #" + inst.ID);
+            }
+            return map;
+        }
 
         private void DrawRegionColumn(ImDrawListPtr drawList, Vector2 min, Vector2 max, Region region,
             bool isCenter, int myFaction, GroundForcesDB forcesDB, PlanetEnvironmentsDB envDB)

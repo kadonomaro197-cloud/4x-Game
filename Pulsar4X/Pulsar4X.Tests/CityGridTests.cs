@@ -197,5 +197,31 @@ namespace Pulsar4X.Tests
             Assert.That(opHex.CityGrid.Tiles.Any(t => t.BuildingInstanceId == bunker.ID), Is.False,
                 "and the fine tile it sat on is empty — the invariant holds through the grave rung on the cylinder");
         }
+
+        [Test]
+        [Description("C-track (global develop): LocateFootprintsOnGlobalHexes drops a colony's footprint building onto its region band's muster hex on the cylinder; DevelopGlobalHex then lays it onto a fine city tile — the coarse 'it's in this band' becomes the fine 'it's on THIS mini-hex'.")]
+        public void LocateAndDevelop_OnTheGlobalGrid_LaysFootprintsOntoMiniHexTiles()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            var grid = PlanetGridFactory.EnsureGridForBody(body);
+            int rc = regionsDB.Regions.Count;
+
+            var bunker = InstallBunker(s);
+            regionsDB.Regions[0].InstallationIds.Add(bunker.ID);   // the colony located it in the capital band
+
+            int located = GroundBuildings.LocateFootprintsOnGlobalHexes(s.Colony);
+            Assert.That(located, Is.GreaterThanOrEqualTo(1), "the footprint bunker lands on the global grid");
+            int gQ = PlanetGridFactory.BandCentreColumn(0, grid.Cols, rc), gR = grid.Rows / 2;
+            var musterHex = grid.HexAt(gQ, gR);
+            Assert.That(musterHex.InstallationIds, Does.Contain(bunker.ID), "it sits on the capital band's muster hex");
+            Assert.That(GroundBuildings.LocateFootprintsOnGlobalHexes(s.Colony), Is.EqualTo(0), "idempotent — already located");
+
+            int laid = CityBuilder.DevelopGlobalHex(body, gQ, gR);
+            Assert.That(laid, Is.GreaterThanOrEqualTo(1), "developing the hex lays the bunker onto a fine tile");
+            Assert.That(musterHex.CityGrid.Tiles.Any(t => t.BuildingInstanceId == bunker.ID), Is.True, "it now sits on a specific mini-hex tile");
+            Assert.That(CityBuilder.DevelopGlobalHex(body, gQ, gR), Is.EqualTo(0), "idempotent — re-developing lays nothing new");
+        }
     }
 }
