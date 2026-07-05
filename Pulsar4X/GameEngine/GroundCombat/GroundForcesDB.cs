@@ -343,6 +343,31 @@ namespace Pulsar4X.GroundCombat
             return unit;
         }
 
+        /// <summary>Place an EXISTING unit (one that came off a ship's bay — transport landing, T1b) onto
+        /// <paramref name="body"/>'s region <paramref name="regionIndex"/>, keeping its identity and health. Unlike
+        /// <see cref="RaiseUnit"/> this does NOT build a fresh full-health unit — it re-homes the same object: it gets a
+        /// fresh <see cref="GroundUnit.UnitId"/> for THIS body's roster (ids are per-body), drops its old formation
+        /// (formations are per-body too), clears any in-flight march, and musters at the region's centre hex. Creates
+        /// the roster on demand. This is how a landed invader appears on a (possibly enemy) world. Never throws.</summary>
+        public static GroundUnit PlaceExistingUnit(Entity body, GroundUnit unit, int regionIndex)
+        {
+            if (body == null || unit == null) return null;
+            if (!body.TryGetDataBlob<GroundForcesDB>(out var forces))
+            {
+                forces = new GroundForcesDB();
+                body.SetDataBlob(forces);
+            }
+            unit.RegionIndex = regionIndex < 0 ? 0 : regionIndex;
+            unit.FormationId = -1;                 // formations are per-body — a landed unit arrives unformed
+            unit.MovingToRegion = -1; unit.TransitSecondsRemaining = 0;
+            unit.HexPath = null; unit.HexQ = 0; unit.HexR = 0; unit.HexTransitSecondsRemaining = 0;
+            unit.GlobalPath = null; unit.GlobalQ = -1; unit.GlobalR = -1; unit.GlobalTransitSecondsRemaining = 0;
+            unit.UnitId = forces.NextUnitId++;     // fresh id on this body's roster
+            StampGlobalMuster(body, unit, unit.RegionIndex);
+            forces.Units.Add(unit);
+            return unit;
+        }
+
         /// <summary>Place a unit at its region BAND's centre column on the body's global <c>SurfaceGrid</c> (G3 muster —
         /// the global twin of the disk's (0,0)). Generates the grid on demand. Defensive: no region layer / no grid →
         /// leaves GlobalQ/GlobalR at -1.</summary>
