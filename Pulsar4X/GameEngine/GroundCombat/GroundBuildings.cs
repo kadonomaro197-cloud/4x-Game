@@ -117,6 +117,43 @@ namespace Pulsar4X.GroundCombat
             return added;
         }
 
+        /// <summary>Locate a colony's not-yet-placed footprint buildings onto a SPECIFIC global hex (C-track per-tile
+        /// placement) — the per-hex twin of <see cref="LocateFootprintsOnGlobalHexes"/>, so the client's "bring buildings
+        /// here" targets the hex the player zoomed into rather than the band's muster hex. Idempotent (an id already on
+        /// ANY global hex is skipped, so it never double-locates or steals a building off another hex). Returns how many
+        /// were newly placed on this hex. Defensive.</summary>
+        public static int LocateFootprintsOnGlobalHex(Entity colony, int gQ, int gR)
+        {
+            if (colony == null || !colony.TryGetDataBlob<ColonyInfoDB>(out var ci)) return 0;
+            var body = ci.PlanetEntity;
+            if (body == null || !body.IsValid || !body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB) || regionsDB.Regions.Count == 0)
+                return 0;
+            if (!colony.TryGetDataBlob<ComponentInstancesDB>(out var comps)) return 0;
+            var grid = PlanetGridFactory.EnsureGridForBody(body);
+            var hex = grid?.HexAt(gQ, gR);
+            if (hex == null) return 0;
+
+            var footprintIds = new HashSet<int>();
+            foreach (var inst in comps.AllComponents.Values)
+                if (IsFootprint(inst.Design)) footprintIds.Add(inst.ID);
+            if (footprintIds.Count == 0) return 0;
+
+            var onAHex = new HashSet<int>();
+            foreach (var h in grid.Hexes)
+                if (h.InstallationIds != null)
+                    foreach (var id in h.InstallationIds) onAHex.Add(id);
+
+            int added = 0;
+            foreach (var id in footprintIds)
+            {
+                if (onAHex.Contains(id)) continue;   // already located somewhere → leave it there
+                hex.InstallationIds.Add(id);
+                onAHex.Add(id);
+                added++;
+            }
+            return added;
+        }
+
         /// <summary>The footprint building ids on a hex (never null).</summary>
         public static IReadOnlyList<int> BuildingsOnHex(GroundHex hex)
             => hex?.InstallationIds ?? (IReadOnlyList<int>)System.Array.Empty<int>();

@@ -52,6 +52,9 @@ namespace Pulsar4X.Client
         // zoomed (globe view). Double-click a hex on the globe to zoom in; "Back to globe" clears it.
         private int _zoomQ = -1;
         private int _zoomR = -1;
+        // The armed building for per-tile placement in the city zoom (combo index into the hex's un-placed footprint
+        // buildings; 0 = none). Click an empty mini-hex tile with one armed to place it there.
+        private int _placeChoice = 0;
 
         // The selected unit GROUP (region, owner faction, type) — the thing a March order acts on. -1 region = none.
         private int _selRegion = -1;
@@ -447,6 +450,41 @@ namespace Pulsar4X.Client
                 return;
             }
 
+            var names = GroundBuildings.BuildingNamesOnBody(body);   // engine accessor (ComponentInstancesDB.AllComponents is internal)
+
+            // ── per-tile placement: bring the colony's footprint buildings to THIS hex, arm one, click an empty tile ──
+            var placedIds = new HashSet<int>();
+            foreach (var t in city.Tiles) if (t.BuildingInstanceId != -1) placedIds.Add(t.BuildingInstanceId);
+            var unplaced = new List<int>();
+            if (hex.InstallationIds != null)
+                foreach (var id in hex.InstallationIds) if (!placedIds.Contains(id)) unplaced.Add(id);
+
+            if (ImGui.Button("Bring buildings here"))
+            {
+                var colony = FindMyColony(body, myFaction);
+                if (colony != null)
+                {
+                    int n = GroundBuildings.LocateFootprintsOnGlobalHex(colony, _zoomQ, _zoomR);
+                    _status = n > 0 ? $"brought {n} building(s) here — pick one and click an empty tile"
+                                    : "no un-located footprint buildings to bring (they're placed on another hex already)";
+                }
+                else _status = "you have no colony on this world";
+            }
+            int armedId = -1;
+            if (unplaced.Count > 0)
+            {
+                var labels = new string[unplaced.Count + 1];
+                labels[0] = "(pick a building to place)";
+                for (int i = 0; i < unplaced.Count; i++)
+                    labels[i + 1] = names.TryGetValue(unplaced[i], out var nm) ? nm : "building #" + unplaced[i];
+                if (_placeChoice < 0 || _placeChoice >= labels.Length) _placeChoice = 0;
+                ImGui.SameLine();
+                ImGui.SetNextItemWidth(240f);
+                ImGui.Combo("##placepick", ref _placeChoice, labels, labels.Length);
+                if (_placeChoice >= 1 && _placeChoice <= unplaced.Count) armedId = unplaced[_placeChoice - 1];
+            }
+            else _placeChoice = 0;
+
             var drawList = ImGui.GetWindowDrawList();
             var canvasPos = ImGui.GetCursorScreenPos();
             var canvasSize = ImGui.GetContentRegionAvail();
@@ -462,7 +500,6 @@ namespace Pulsar4X.Client
             var center = new Vector2(canvasPos.X + mapSize.X * 0.5f, canvasPos.Y + mapSize.Y * 0.5f);
             uint hexBorder = ImGui.ColorConvertFloat4ToU32(new Vector4(0f, 0f, 0f, 0.30f));
 
-            var names = GroundBuildings.BuildingNamesOnBody(body);   // engine accessor (ComponentInstancesDB.AllComponents is internal)
             foreach (var t in city.Tiles)
             {
                 var pc = AxialHexCenter(center, size, t.Q, t.R);
@@ -477,6 +514,8 @@ namespace Pulsar4X.Client
                     drawList.AddRect(new Vector2(pc.X - mr, pc.Y - mr), new Vector2(pc.X + mr, pc.Y + mr),
                         ImGui.ColorConvertFloat4ToU32(new Vector4(0f, 0f, 0f, 0.8f)));
                 }
+                else if (armedId >= 0 && size > 4f)   // empty tile + a building armed → hint it's a drop target
+                    drawList.AddNgon(pc, size * 0.5f, ImGui.ColorConvertFloat4ToU32(new Vector4(0.9f, 0.9f, 0.4f, 0.5f)), 6, 1f);
             }
 
             if (clicked)
@@ -488,12 +527,24 @@ namespace Pulsar4X.Client
                     if (d < bestD) { bestD = d; best = t; }
                 }
                 if (best != null)
-                    _status = best.BuildingInstanceId != -1
-                        ? $"tile ({best.Q},{best.R}): {(names.TryGetValue(best.BuildingInstanceId, out var nm) ? nm : "building #" + best.BuildingInstanceId)}"
-                        : $"tile ({best.Q},{best.R}): empty";
+                {
+                    if (armedId >= 0 && best.BuildingInstanceId == -1)   // drop the armed building on this empty tile
+                    {
+                        if (CityBuilder.PlaceBuildingOnGlobalTile(body, _zoomQ, _zoomR, best.Q, best.R, armedId))
+                        {
+                            _status = $"placed {(names.TryGetValue(armedId, out var pn) ? pn : "building #" + armedId)} on tile ({best.Q},{best.R})";
+                            _placeChoice = 0;
+                        }
+                        else _status = "couldn't place there";
+                    }
+                    else   // inspect
+                        _status = best.BuildingInstanceId != -1
+                            ? $"tile ({best.Q},{best.R}): {(names.TryGetValue(best.BuildingInstanceId, out var nm) ? nm : "building #" + best.BuildingInstanceId)}"
+                            : $"tile ({best.Q},{best.R}): empty";
+                }
             }
 
-            ImGui.Text($"{city.Tiles.Count} mini-hex tiles — buildings occupy them 1:1 (▧). Click a tile to inspect it; \"Develop hex\" lays this hex's footprint buildings onto tiles.");
+            ImGui.Text($"{city.Tiles.Count} mini-hex tiles — buildings occupy them 1:1 (▧). \"Bring buildings here\" → pick one → click an empty tile to place it; \"Develop hex\" auto-lays them. Click a tile to inspect.");
         }
 
         /// <summary>Axial hex (q,r) → screen position (pointy-top), centred on <paramref name="origin"/> — for the city

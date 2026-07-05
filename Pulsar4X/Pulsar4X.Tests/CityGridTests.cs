@@ -223,5 +223,31 @@ namespace Pulsar4X.Tests
             Assert.That(musterHex.CityGrid.Tiles.Any(t => t.BuildingInstanceId == bunker.ID), Is.True, "it now sits on a specific mini-hex tile");
             Assert.That(CityBuilder.DevelopGlobalHex(body, gQ, gR), Is.EqualTo(0), "idempotent — re-developing lays nothing new");
         }
+
+        [Test]
+        [Description("C-track (per-tile placement): LocateFootprintsOnGlobalHex puts a colony's footprint building on the SPECIFIC hex the player zoomed into (leaving it un-placed, not auto-laid), then PlaceBuildingOnGlobalTile drops it on a chosen mini-hex tile — the 'plot where I'll build' flow. Idempotent (a located building isn't re-located).")]
+        public void LocateOnChosenHex_ThenPlaceOnChosenTile()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            var grid = PlanetGridFactory.EnsureGridForBody(body);
+            int rc = regionsDB.Regions.Count;
+            int gQ = PlanetGridFactory.BandCentreColumn(2, grid.Cols, rc) + 1;   // a hex that ISN'T a band-centre muster hex
+            int gR = grid.Rows / 2 + 1;
+            var hex = grid.HexAt(gQ, gR);
+
+            var bunker = InstallBunker(s);
+            int located = GroundBuildings.LocateFootprintsOnGlobalHex(s.Colony, gQ, gR);
+            Assert.That(located, Is.GreaterThanOrEqualTo(1), "footprint buildings land on the chosen hex");
+            Assert.That(hex.InstallationIds, Does.Contain(bunker.ID), "the bunker is on THIS hex (the one we targeted), not the muster hex");
+            bool onTile = hex.CityGrid != null && hex.CityGrid.Tiles.Any(t => t.BuildingInstanceId == bunker.ID);
+            Assert.That(onTile, Is.False, "located but NOT auto-placed on a tile — per-tile placement is manual");
+            Assert.That(GroundBuildings.LocateFootprintsOnGlobalHex(s.Colony, gQ, gR), Is.EqualTo(0), "idempotent — already located, not re-located");
+
+            Assert.That(CityBuilder.PlaceBuildingOnGlobalTile(body, gQ, gR, 1, 0, bunker.ID), Is.True, "placed on the chosen tile (1,0)");
+            Assert.That(hex.CityGrid.TileAt(1, 0).BuildingInstanceId, Is.EqualTo(bunker.ID), "it now sits on that specific mini-hex tile");
+            Assert.That(hex.InstallationIds, Does.Contain(bunker.ID), "roll-up still holds");
+        }
     }
 }
