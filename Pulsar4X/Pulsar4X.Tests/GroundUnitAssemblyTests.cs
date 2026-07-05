@@ -153,5 +153,36 @@ namespace Pulsar4X.Tests
             Assert.That(r.HitPoints, Is.EqualTo(1150), "HP = walker frame 1000 + plating 150");
             Assert.That(r.CarryClass, Is.EqualTo(GroundCarryClass.Vehicle), "a walker is a vehicle-class unit");
         }
+
+        [Test]
+        [Description("System ① plumbing (slice B): evasion, shield, and damage-type now flow from the parts all the way to the RAISED unit. An evasive unit (reflex booster) carries its dodge; a shielded unit (shield generator) carries its soak pool; and the unit's damage-type is its heaviest weapon's flavour. Nothing reads these yet (that's the matrix, slice A) — this proves they're carried.")]
+        public void Evasion_Shield_AndDamageType_FlowFromPartsToTheRaisedUnit()
+        {
+            _s = TestScenario.CreateWithColony();
+            var human = Part("default-design-human-frame");
+
+            // a dodger — reflex booster gives evasion; rifle is ballistic
+            var dodger = GroundUnitAssembly.ToGroundUnitDesign("test-dodger", "Scout", human, new List<(ComponentDesign, int)>
+            {
+                (Part("default-design-ground-rifle"), 1),
+                (Part("default-design-reflex-booster"), 1),
+            });
+            Assert.That(dodger.Evasion, Is.EqualTo(0.4), "the design carries the reflex booster's evasion");
+            Assert.That(dodger.DamageType, Is.EqualTo(GroundWeaponMode.Ballistic), "its damage flavour is the rifle's (ballistic)");
+            var dodgerUnit = GroundForces.RaiseUnit(_s.StartingBody, dodger, _s.Faction.Id, 0, "Scout");
+            Assert.That(dodgerUnit.Evasion, Is.EqualTo(0.4), "and the RAISED unit carries it — survivability-by-dodge is on the unit now");
+
+            // a shielded energy trooper — shield generator gives a soak pool; energy weapon sets the flavour
+            var shielded = GroundUnitAssembly.ToGroundUnitDesign("test-shielded", "Guardian", human, new List<(ComponentDesign, int)>
+            {
+                (Part("default-design-energy-weapon"), 1),
+                (Part("default-design-shield-generator"), 1),
+            });
+            Assert.That(shielded.Shield, Is.EqualTo(150), "the design carries the shield generator's soak pool");
+            Assert.That(shielded.DamageType, Is.EqualTo(GroundWeaponMode.Energy), "its damage flavour is the plasma weapon's (energy)");
+            var shieldedUnit = GroundForces.RaiseUnit(_s.StartingBody, shielded, _s.Faction.Id, 0, "Guardian");
+            Assert.That(shieldedUnit.Shield, Is.EqualTo(150), "and the RAISED unit carries the shield");
+            Assert.That(shieldedUnit.DamageType, Is.EqualTo(GroundWeaponMode.Energy), "and its damage-type — the matrix (slice A) will read these");
+        }
     }
 }

@@ -617,5 +617,21 @@
       "Name": "Plasma Projector",
       "TemplateId": "energy-weapon"
     }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-shield-generator",
+      "Name": "Shield Generator",
+      "TemplateId": "shield-generator"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-reflex-booster",
+      "Name": "Reflex Booster",
+      "TemplateId": "reflex-booster"
+    }
   }
 ]

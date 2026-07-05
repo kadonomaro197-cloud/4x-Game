@@ -53,6 +53,16 @@ namespace Pulsar4X.GroundCombat
         /// <c>Range</c>). Directed fire: a unit only damages enemies within this reach, so a longer-ranged unit hits a
         /// closing shorter-ranged one without being hit back. 0 = same hex only.</summary>
         [JsonProperty] public int Range { get; internal set; }
+        /// <summary>SYSTEM ① survivability-by-dodge — chance to avoid a hit (0..1), snapshot of the design's Σ augment
+        /// evasion. Carried now (slice B plumbing); the resolver consumes it in the damage×defence matrix (slice A).
+        /// A dodger (Jedi / Zergling) is high here; a walking bunker is ~0.</summary>
+        [JsonProperty] public double Evasion { get; internal set; }
+        /// <summary>SYSTEM ① survivability-by-shield — a flat incoming-damage soak pool (energy shield / Force ward),
+        /// snapshot of Σ augment shield. Carried now; consumed in slice A.</summary>
+        [JsonProperty] public double Shield { get; internal set; }
+        /// <summary>SYSTEM ① — this unit's primary damage flavour (from its heaviest weapon), for the future
+        /// damage×defence matrix. Carried now; consumed in slice A.</summary>
+        [JsonProperty] public GroundWeaponMode DamageType { get; internal set; } = GroundWeaponMode.Ballistic;
         /// <summary>The region this unit is MARCHING to (-1 = standing still). While in transit it doesn't fight (5b).</summary>
         [JsonProperty] public int MovingToRegion { get; internal set; } = -1;
         /// <summary>Game-seconds left in the current march; counts down to 0 = arrived (the region's crossing time).</summary>
@@ -115,6 +125,7 @@ namespace Pulsar4X.GroundCombat
             UnitId = o.UnitId; FormationId = o.FormationId;
             DesignId = o.DesignId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
             UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health; Range = o.Range;
+            Evasion = o.Evasion; Shield = o.Shield; DamageType = o.DamageType;
             MovingToRegion = o.MovingToRegion; TransitSecondsRemaining = o.TransitSecondsRemaining;
             HexQ = o.HexQ; HexR = o.HexR; HexTransitSecondsRemaining = o.HexTransitSecondsRemaining; HexStepBaseSeconds = o.HexStepBaseSeconds;
             if (o.HexPath != null)
@@ -330,6 +341,9 @@ namespace Pulsar4X.GroundCombat
                 Health = design.HitPoints,
                 // Strike range in hexes (H3): the design's, or a per-type default if the design left it unset.
                 Range = design.Range > 0 ? design.Range : GroundRangeTools.DefaultRangeFor(design.UnitType),
+                Evasion = design.Evasion,
+                Shield = design.Shield,
+                DamageType = design.DamageType,
                 // Snapshot the design's environmental gear onto the unit (E4) — like the combat stats above.
                 EnvResistance = (design.EnvironmentalResistance != null && design.EnvironmentalResistance.Count > 0)
                     ? new Dictionary<HazardEffectType, double>(design.EnvironmentalResistance)

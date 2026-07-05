@@ -14,6 +14,7 @@ namespace Pulsar4X.GroundCombat
         public double HitPoints;
         public double Evasion;
         public double Shield;
+        public GroundWeaponMode DamageType = GroundWeaponMode.Ballistic;   // the heaviest weapon's flavour (System ①)
         public double Mass;            // total build mass (frame + parts) — feeds cost + transport carry-size
         public double CarryCapacity;   // frame strength + augment strength bonuses
         public double UsedCapacity;    // sum of mounted-part carry mass
@@ -72,6 +73,7 @@ namespace Pulsar4X.GroundCombat
             // pass 2 — sum stats + carry mass, check the per-item limit
             double used = 0;
             double toughness = 0;   // accumulated, applied to the final HP pool below (order-independent)
+            double topWeaponAttack = 0;   // the heaviest hitter sets the unit's damage flavour
             foreach (var (d, c) in list)
             {
                 double itemMass = 0;
@@ -81,6 +83,7 @@ namespace Pulsar4X.GroundCombat
                     itemMass = w.Mass;
                     r.Attack += w.Attack * c;
                     if (w.Range > r.Range) r.Range = w.Range;   // reach = the longest weapon
+                    if (w.Attack > topWeaponAttack) { topWeaponAttack = w.Attack; r.DamageType = w.Mode; }
                 }
                 if (d.HasAttribute<GroundArmorAtb>())
                 {
@@ -131,6 +134,9 @@ namespace Pulsar4X.GroundCombat
                 Defense = r.Defense,
                 HitPoints = r.HitPoints,
                 Range = r.Range,
+                Evasion = r.Evasion,
+                Shield = r.Shield,
+                DamageType = r.DamageType,
                 IndustryTypeID = string.IsNullOrEmpty(frame?.IndustryTypeID) ? "installation-construction" : frame.IndustryTypeID,
             };
             // costs = frame + every part (× count) — the same sum the ship designer does

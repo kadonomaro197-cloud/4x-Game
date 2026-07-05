@@ -178,7 +178,9 @@
         "vehicle-frame",
         "ground-cannon",
         "walker-frame",
-        "energy-weapon"
+        "energy-weapon",
+        "shield-generator",
+        "reflex-booster"
       ],
       "ComponentDesigns": [
         "default-design-alcubierre-2k",
@@ -235,7 +237,9 @@
         "default-design-vehicle-frame",
         "default-design-ground-cannon",
         "default-design-walker-frame",
-        "default-design-energy-weapon"
+        "default-design-energy-weapon",
+        "default-design-shield-generator",
+        "default-design-reflex-booster"
       ],
       "ShipDesigns": [
         "default-ship-design-courier",

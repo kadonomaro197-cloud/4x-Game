@@ -1912,5 +1912,133 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "shield-generator",
+      "Name": "Shield Generator",
+      "Formulas": {
+        "Description": "A personal energy shield — a flat pool of incoming damage it soaks before HP is touched (survive-by-shield; drops once depleted).",
+        "Mass": "PropertyValue('CarryMass')",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "1.0",
+        "CrewReq": "0",
+        "ResearchCost": "0",
+        "CreditCost": "[Mass] * 0.1",
+        "BuildPointCost": "[Mass] * 3"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.5",
+        "aluminium": "[Mass] * 0.3"
+      },
+      "ComponentType": "Augment",
+      "MountType": "GroundUnit",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "CarryMass",
+          "DescriptionFormula": "'What the frame must bear.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "20"
+        },
+        {
+          "Name": "StrengthBonus",
+          "DescriptionFormula": "'ADDED to the frame's carry budget.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "EvasionBonus",
+          "DescriptionFormula": "'Dodge bonus (System 1 survivability).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "ToughnessBonus",
+          "DescriptionFormula": "'Survivability multiplier.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "Shield",
+          "DescriptionFormula": "'Flat incoming-damage soak (System 1 survivability).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "150"
+        },
+        {
+          "Name": "shieldgeneratorArgs",
+          "DescriptionFormula": "'atb args'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('StrengthBonus'), PropertyValue('EvasionBonus'), PropertyValue('ToughnessBonus'), PropertyValue('Shield'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundAugmentAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "reflex-booster",
+      "Name": "Reflex Booster",
+      "Formulas": {
+        "Description": "Reflex-enhancing wetware/servos — raises the unit's chance to simply avoid a hit (survive-by-dodge; useless against saturation fire).",
+        "Mass": "PropertyValue('CarryMass')",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "1.0",
+        "CrewReq": "0",
+        "ResearchCost": "0",
+        "CreditCost": "[Mass] * 0.1",
+        "BuildPointCost": "[Mass] * 3"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.5",
+        "aluminium": "[Mass] * 0.3"
+      },
+      "ComponentType": "Augment",
+      "MountType": "GroundUnit",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "CarryMass",
+          "DescriptionFormula": "'What the frame must bear.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "15"
+        },
+        {
+          "Name": "StrengthBonus",
+          "DescriptionFormula": "'ADDED to the frame's carry budget.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "EvasionBonus",
+          "DescriptionFormula": "'Dodge bonus (System 1 survivability).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0.4"
+        },
+        {
+          "Name": "ToughnessBonus",
+          "DescriptionFormula": "'Survivability multiplier.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "Shield",
+          "DescriptionFormula": "'Flat incoming-damage soak (System 1 survivability).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "reflexboosterArgs",
+          "DescriptionFormula": "'atb args'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('StrengthBonus'), PropertyValue('EvasionBonus'), PropertyValue('ToughnessBonus'), PropertyValue('Shield'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundAugmentAtb"
+        }
+      ]
+    }
   }
 ]
