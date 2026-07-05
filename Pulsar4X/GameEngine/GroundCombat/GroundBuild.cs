@@ -100,6 +100,21 @@ namespace Pulsar4X.GroundCombat
             return satisfied;
         }
 
+        /// <summary>The set of fine-tile (Q,R) coords on the GLOBAL hex (<paramref name="gQ"/>,<paramref name="gR"/>)
+        /// that have a pending build reservation — for the client to draw "under construction" markers. Never null;
+        /// empty if the body has no queue. Public read accessor so the client needn't touch the blob's list.</summary>
+        public static HashSet<(int, int)> ReservedTilesOn(Entity body, int gQ, int gR)
+        {
+            var set = new HashSet<(int, int)>();
+            if (body == null || !body.TryGetDataBlob<GroundBuildQueueDB>(out var queue)) return set;
+            if (!body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB) || regionsDB.SurfaceGrid == null) return set;
+            var hex = regionsDB.SurfaceGrid.HexAt(gQ, gR);
+            if (hex == null) return set;
+            foreach (var r in queue.Reservations)
+                if (r.GQ == hex.Q && r.GR == hex.R) set.Add((r.TileQ, r.TileR));
+            return set;
+        }
+
         // ── helpers ──────────────────────────────────────────────────────────────────────────────────────────────
 
         private static GroundBuildQueueDB EnsureQueue(Entity body)

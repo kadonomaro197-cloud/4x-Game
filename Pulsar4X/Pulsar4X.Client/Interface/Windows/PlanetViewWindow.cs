@@ -55,6 +55,8 @@ namespace Pulsar4X.Client
         // The armed building for per-tile placement in the city zoom (combo index into the hex's un-placed footprint
         // buildings; 0 = none). Click an empty mini-hex tile with one armed to place it there.
         private int _placeChoice = 0;
+        // The installation design armed to BUILD-here (queue a real production job) in the city zoom; 0 = none.
+        private int _buildInstallChoice = 0;
 
         // The selected unit GROUP (region, owner faction, type) — the thing a March order acts on. -1 region = none.
         private int _selRegion = -1;
@@ -489,6 +491,26 @@ namespace Pulsar4X.Client
             }
             else _placeChoice = 0;
 
+            // ── BUILD-here (C3 economy wire): queue a NEW installation through real production, targeted at an empty tile ──
+            ComponentDesign armedBuildDesign = null;
+            var placeable = PlaceableInstallations(myFaction);
+            if (placeable.Count > 0)
+            {
+                var blabels = new string[placeable.Count + 1];
+                blabels[0] = "(build a new installation…)";
+                for (int i = 0; i < placeable.Count; i++) blabels[i + 1] = placeable[i].Name;
+                if (_buildInstallChoice < 0 || _buildInstallChoice >= blabels.Length) _buildInstallChoice = 0;
+                ImGui.SetNextItemWidth(260f);
+                ImGui.Combo("##buildinstall", ref _buildInstallChoice, blabels, blabels.Length);
+                if (_buildInstallChoice >= 1 && _buildInstallChoice <= placeable.Count) armedBuildDesign = placeable[_buildInstallChoice - 1];
+                if (armedBuildDesign != null)
+                {
+                    ImGui.SameLine();
+                    ImGui.TextDisabled("→ click an empty tile to queue the build (materials + time)");
+                }
+            }
+            var reserved = GroundBuild.ReservedTilesOn(body, _zoomQ, _zoomR);   // tiles with a build already queued
+
             var drawList = ImGui.GetWindowDrawList();
             var canvasPos = ImGui.GetCursorScreenPos();
             var canvasSize = ImGui.GetContentRegionAvail();
@@ -518,7 +540,9 @@ namespace Pulsar4X.Client
                     drawList.AddRect(new Vector2(pc.X - mr, pc.Y - mr), new Vector2(pc.X + mr, pc.Y + mr),
                         ImGui.ColorConvertFloat4ToU32(new Vector4(0f, 0f, 0f, 0.8f)));
                 }
-                else if (armedId >= 0 && size > 4f)   // empty tile + a building armed → hint it's a drop target
+                else if (reserved.Contains((t.Q, t.R)) && size > 3f)   // a build is queued here — under construction
+                    drawList.AddNgon(pc, size * 0.6f, ImGui.ColorConvertFloat4ToU32(new Vector4(0.95f, 0.6f, 0.2f, 0.9f)), 6, 2f);
+                else if ((armedId >= 0 || armedBuildDesign != null) && size > 4f)   // empty tile + something armed → drop-target hint
                     drawList.AddNgon(pc, size * 0.5f, ImGui.ColorConvertFloat4ToU32(new Vector4(0.9f, 0.9f, 0.4f, 0.5f)), 6, 1f);
             }
 
@@ -532,7 +556,16 @@ namespace Pulsar4X.Client
                 }
                 if (best != null)
                 {
-                    if (armedId >= 0 && best.BuildingInstanceId == -1)   // drop the armed building on this empty tile
+                    if (armedBuildDesign != null && best.BuildingInstanceId == -1)   // queue a NEW build (economy) on this empty tile
+                    {
+                        var colony = FindMyColony(body, myFaction);
+                        if (colony != null && GroundBuild.QueueBuildOnTile(colony, _zoomQ, _zoomR, best.Q, best.R, armedBuildDesign.UniqueID))
+                            _status = $"queued {armedBuildDesign.Name} → building on tile ({best.Q},{best.R}) — materials + time; it lands here when done";
+                        else
+                            _status = colony == null ? "you have no colony on this world to build from"
+                                                     : "couldn't build there (tile taken/reserved, or no room for its footprint)";
+                    }
+                    else if (armedId >= 0 && best.BuildingInstanceId == -1)   // drop an already-built building on this empty tile
                     {
                         if (CityBuilder.PlaceBuildingOnGlobalTile(body, _zoomQ, _zoomR, best.Q, best.R, armedId))
                         {
@@ -541,14 +574,14 @@ namespace Pulsar4X.Client
                         }
                         else _status = "couldn't place there";
                     }
-                    else   // inspect
-                        _status = best.BuildingInstanceId != -1
-                            ? $"tile ({best.Q},{best.R}): {(names.TryGetValue(best.BuildingInstanceId, out var nm) ? nm : "building #" + best.BuildingInstanceId)}"
-                            : $"tile ({best.Q},{best.R}): empty";
+                    else if (best.BuildingInstanceId != -1)   // inspect an occupied tile
+                        _status = $"tile ({best.Q},{best.R}): {(names.TryGetValue(best.BuildingInstanceId, out var nm) ? nm : "building #" + best.BuildingInstanceId)}";
+                    else
+                        _status = reserved.Contains((best.Q, best.R)) ? $"tile ({best.Q},{best.R}): reserved (build queued)" : $"tile ({best.Q},{best.R}): empty";
                 }
             }
 
-            ImGui.Text($"{city.Tiles.Count} mini-hex tiles — a building occupies as many tiles as its footprint (▧; a spaceport spans more than a factory). \"Bring buildings here\" → pick one → click an empty tile to place it; \"Develop hex\" auto-lays them. Click a tile to inspect.");
+            ImGui.Text($"{city.Tiles.Count} mini-hex tiles — buildings occupy their footprint (▧). \"Build a new installation\" → click an empty tile to queue it through production (⬡ orange = under construction); \"Bring buildings here\" places already-built ones; \"Develop hex\" auto-lays. Click a tile to inspect.");
         }
 
         /// <summary>Axial hex (q,r) → screen position (pointy-top), centred on <paramref name="origin"/> — for the city
