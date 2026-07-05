@@ -232,6 +232,32 @@ So the honest framing is **"four deep, continuous, open common systems + an unbo
 reading a parts bin that stays unlimited"** — legible where units are common, unbounded where they're exotic.
 That is what "recreate ANY sci-fi unit's essence" requires; the four make the essence *matter*, they don't cap it.
 
+### 6d. Ground combat mirrors the FLEET STACK (parity — ~85% built; sub-formations = System ③)
+
+Ground combat is deliberately the space-combat structure, one axis over — same doctrine / formations / sub-fleets /
+closing model / auto-resolve. Most of it is **already built**:
+
+| Space | Ground | Status |
+|-------|--------|--------|
+| `FleetDB` (entity + tree) | `GroundFormation` | ✅ name · leader · members · move-as-one · leader-reassign |
+| `FleetDB.FlagShipID` | `GroundFormation.LeaderUnitId` | ✅ |
+| `FleetDoctrineDB` + catalog | `GroundFormationDoctrine` + `groundStances.json` | ✅ Offensive / Dig-In / Balanced (±25%) + switch cooldown |
+| Fleet closing model / ROE | `GroundEngagementStance` (Hold / Close / Stand-off) | ✅ the kite-or-brawl maneuver |
+| `AutoResolve` salvo loop | `ResolveRegionCombat` | ✅ *explicitly* mirrors the space salvo loop over `GroundUnit`s |
+| fleet order lane | `GroundFormation.Orders` queue | ✅ (sequential "then" waypoints — ahead of the fleet side) |
+| **sub-fleets** (Front Line / Flank / Rear Guard / Artillery, each own doctrine; `FleetDB` nests via `TreeHierarchyDB`) | **sub-formations** — nesting `GroundFormation` | ⚫ **NOT built** — the code flags it as a follow-up; ground formations are currently FLAT |
+
+**The one remaining structural piece is sub-formation nesting — and it IS System ③ (Combined Arms).** Splitting a
+force into role sub-groups (tanks up front, artillery in the rear, fast flankers on the wing), each with its own
+posture, is exactly the sub-fleet model and exactly where the *designer* (what a unit is) meets the *battlefield*
+(how you arrange them). It's mostly a **PORT**, not an invention: nest `GroundFormation` the way `FleetDB` nests
+(`TreeHierarchyDB`), and have `ResolveRegionCombat` read `GroundFormationDoctrine` per sub-formation the way the
+space engagement reads per sub-fleet. So **System ③'s structural half = port the space sub-fleet tree to ground.**
+
+**"Finish combat" = two slices:** **A** (the damage×defence matrix — the resolver reads evasion/shield/damage-type,
+System ①) + **System ③** (sub-formation nesting, the port above). Doctrine, ROE, formations, order queue, and the
+auto-resolve loop are already done.
+
 ---
 
 ## 7. Reconciliation with the earlier fixed-stat units (A1/A2)
