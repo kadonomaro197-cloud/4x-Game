@@ -242,6 +242,22 @@ defaults — the developer chose **research-gating** for the *top* of the scale,
 (ground **and** space) with `TechData('...')`-driven ceilings (the pattern already used for factory/shipyard size),
 and fixes the `int` energy / missile-warhead caps. Full audit + build plan: task #2.
 
+**✅ Slice 2a BUILT (2026-07-05) — beam pulse energy `int`→`double`.** `GenericBeamWeaponAtb.Energy` was an `int`
+that silently overflowed (wrapped negative) past ~2.1 GJ, capping a superlaser; the whole downstream chain was already
+double. No new numbers. Gauge: `GenericBeamWeaponAtbTests`.
+
+**✅ Slice 2b BUILT (2026-07-05) — ground-weapon Attack ceiling is research-gated.** The five ground-weapon templates'
+Attack `MaxFormula` (was flat `5000`) now reads `TechData('tech-ground-weapon-yield')` — a NEW tech (techs.json,
+category `tech-category-ground-combat`), added to `tech-modern-technology`'s unlock cascade so it's in the faction's
+`Techs` at level 0 (crash-safe: `TechData` throws on an un-unlocked tech). Its `DataFormula = (1 + [Level]) * 5000`
+means **level 0 == today's flat cap (start unchanged, no test breakage), and each research level RAISES the ceiling**
+toward siege scale — the ground echo of researching a bigger beam. Gauge:
+`GroundUnitPartsBaseModTests.GroundWeapon_AttackCeiling_RisesWithResearch`. **FLAGGED new numbers (tune in
+techs.json):** the yield base `5000`, `+5000`/level, `MaxLevel 10` (→ 55000 fully researched), cost `(1+[Level])*2500`.
+These set *how steep* ground-weapon power climbs with research. **Follow-ups:** gate CarryMass/Range too (and make
+weapon mass/cost scale with Attack so a maxed gun isn't cheap — a flagged balance hole); then the same `TechData`
+conversion for the space weapons' flat caps (beam range/lens/chamber, railgun KE, flak, missile warhead).
+
 ### 6c. The four are NOT a cage on the designer (2026-07-05)
 
 A fair worry: *doesn't consolidating into four systems impede creativity in the designer?* No — because the four

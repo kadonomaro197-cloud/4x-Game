@@ -513,6 +513,7 @@
           "tech-antenna-efficiency",
           "tech-antenna-bandwidth",
           "tech-factory-max-size",
+          "tech-ground-weapon-yield",
           "tech-shipyard-slip-max-size",
           "tech-geo-surveyor",
           "tech-administration-level",
@@ -536,6 +537,18 @@
       "MaxLevel": 10,
       "DataFormula": "(1 + [Level]) * 1000",
       "CostFormula":"(1 + [Level]) * 2500"
+    }
+  },
+  {
+    "Type": "Tech",
+    "Payload": {
+      "UniqueID": "tech-ground-weapon-yield",
+      "Name": "Ground Weapon Yield",
+      "Description": "Research into higher-yield ground weapons — raises the maximum firepower (Attack) a ground-weapon design can reach. The ground echo of raising a beam's power ceiling: a starting design tops out modestly; research lets the same designer build a siege-scale weapon.",
+      "Category": "tech-category-ground-combat",
+      "MaxLevel": 10,
+      "DataFormula": "(1 + [Level]) * 5000",
+      "CostFormula": "(1 + [Level]) * 2500"
     }
   },
   {

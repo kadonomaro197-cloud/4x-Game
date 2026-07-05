@@ -97,5 +97,35 @@ namespace Pulsar4X.Tests
             Assert.That(w.Range, Is.EqualTo(8), "and Range dials past 1 — the knob is a live slider, not a baked readout");
             Assert.That(w.Attack, Is.GreaterThan(40 * 10), "same template, an order of magnitude bigger — the pistol→cannon span is real on the engine side");
         }
+
+        [Test]
+        [Description("Weapon-designer RESEARCH GATE (slice 2b): the ground-weapon Attack ceiling is now TechData-driven (tech-ground-weapon-yield), so RESEARCH raises the top of the scale — the same designer builds a bigger gun only once you've researched it (the ground echo of raising a beam's power ceiling). Also proves the tech is UNLOCKED at start (TechData resolves without the KeyNotFound crash). Starting cap + per-level growth are FLAGGED tunables in techs.json DataFormula.")]
+        public void GroundWeapon_AttackCeiling_RisesWithResearch()
+        {
+            var s = TestScenario.CreateWithColony();
+            var data = s.Faction.GetDataBlob<FactionInfoDB>().Data;
+            var tmpl = data.ComponentTemplates.ContainsKey("ground-rifle")
+                ? data.ComponentTemplates["ground-rifle"]
+                : data.LockedComponentTemplates["ground-rifle"];
+
+            double AttackCap()
+            {
+                var dz = new ComponentDesigner(tmpl, data, s.Faction.GetDataBlob<FactionTechDB>());
+                var p = dz.ComponentDesignProperties["Attack"];
+                p.SetMax();   // evaluate the MaxFormula = TechData('tech-ground-weapon-yield') at the faction's current level
+                return p.MaxValue;
+            }
+
+            double before = AttackCap();
+            Assert.That(before, Is.GreaterThan(0),
+                "the Attack ceiling is a real, tech-driven number — TechData resolved, so the tech IS unlocked at start (no KeyNotFound crash)");
+
+            data.IncrementTechLevel("tech-ground-weapon-yield");   // research one level
+            double after = AttackCap();
+
+            Assert.That(after, Is.GreaterThan(before),
+                "researching ground-weapon yield raises the ceiling — the same designer now builds a bigger gun than at game start");
+            Log($"ground-weapon attack ceiling: {before:0} (start) -> {after:0} (after +1 research level)");
+        }
     }
 }

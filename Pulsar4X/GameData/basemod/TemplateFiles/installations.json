@@ -1474,7 +1474,7 @@
           "Name": "Attack",
           "DescriptionFormula": "'Firepower added to the unit.'",
           "GuiHint": "GuiSelectionMaxMin",
-          "MaxFormula": "5000",
+          "MaxFormula": "TechData('tech-ground-weapon-yield')",
           "MinFormula": "1",
           "StepFormula": "1",
           "PropertyFormula": "40"
@@ -1660,7 +1660,7 @@
           "Name": "Attack",
           "DescriptionFormula": "'Firepower added.'",
           "GuiHint": "GuiSelectionMaxMin",
-          "MaxFormula": "5000",
+          "MaxFormula": "TechData('tech-ground-weapon-yield')",
           "MinFormula": "1",
           "StepFormula": "1",
           "PropertyFormula": "140"
@@ -1794,7 +1794,7 @@
           "Name": "Attack",
           "DescriptionFormula": "'Firepower added.'",
           "GuiHint": "GuiSelectionMaxMin",
-          "MaxFormula": "5000",
+          "MaxFormula": "TechData('tech-ground-weapon-yield')",
           "MinFormula": "1",
           "StepFormula": "1",
           "PropertyFormula": "220"
@@ -1928,7 +1928,7 @@
           "Name": "Attack",
           "DescriptionFormula": "'Firepower added.'",
           "GuiHint": "GuiSelectionMaxMin",
-          "MaxFormula": "5000",
+          "MaxFormula": "TechData('tech-ground-weapon-yield')",
           "MinFormula": "1",
           "StepFormula": "1",
           "PropertyFormula": "90"
@@ -2190,7 +2190,7 @@
           "Name": "Attack",
           "DescriptionFormula": "'Firepower added.'",
           "GuiHint": "GuiSelectionMaxMin",
-          "MaxFormula": "5000",
+          "MaxFormula": "TechData('tech-ground-weapon-yield')",
           "MinFormula": "1",
           "StepFormula": "1",
           "PropertyFormula": "20"
