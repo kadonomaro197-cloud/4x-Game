@@ -169,7 +169,11 @@
         "infantry-unit",
         "armor-unit",
         "artillery-unit",
-        "troop-bay"
+        "troop-bay",
+        "human-frame",
+        "ground-rifle",
+        "ground-plating",
+        "power-armor"
       ],
       "ComponentDesigns": [
         "default-design-alcubierre-2k",
@@ -217,7 +221,11 @@
         "default-design-infantry",
         "default-design-armor",
         "default-design-artillery",
-        "default-design-troop-bay"
+        "default-design-troop-bay",
+        "default-design-human-frame",
+        "default-design-ground-rifle",
+        "default-design-ground-plating",
+        "default-design-power-armor"
       ],
       "ShipDesigns": [
         "default-ship-design-courier",

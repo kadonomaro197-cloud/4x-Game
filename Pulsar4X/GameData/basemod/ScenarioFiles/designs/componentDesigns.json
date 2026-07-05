@@ -545,5 +545,37 @@
       "Name": "Troop Bay",
       "TemplateId": "troop-bay"
     }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-human-frame",
+      "Name": "Human Frame",
+      "TemplateId": "human-frame"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-ground-rifle",
+      "Name": "Service Rifle",
+      "TemplateId": "ground-rifle"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-ground-plating",
+      "Name": "Composite Plating",
+      "TemplateId": "ground-plating"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-power-armor",
+      "Name": "Power Armour",
+      "TemplateId": "power-armor"
+    }
   }
 ]
