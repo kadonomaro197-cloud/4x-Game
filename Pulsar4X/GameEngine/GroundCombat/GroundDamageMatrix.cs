@@ -12,10 +12,15 @@ namespace Pulsar4X.GroundCombat
     ///     or a shell. "Saturation beats dodge."
     ///   • SHIELD is an innate % damage reduction (v1: a toughness stat, NOT yet a depleting pool — that's v2), and it
     ///     is WEAKER vs Energy, which overloads it. So a shielded soldier soaks bullets but energy bleeds through.
+    ///   • ARMOUR (the unit's Defense stat) is a FLAT reduction taken off EACH incoming attacker-source (a "volley"),
+    ///     floored so a source always lands a minimum fraction. This is the THIRD, DISTINCT defence flavour and the one
+    ///     that makes armour armour: because the soak is flat-PER-SOURCE, a swarm of many small attackers has most of
+    ///     each little volley bounced off (armour ≈ negates it), while ONE big alpha strike barely notices the flat
+    ///     plating and punches through. Flat armour is the counter to chip-damage-by-numbers; % shield and dodge are not.
     ///
-    /// A pure multiplier (≤ 1), so it drops straight into the proportional salvo resolver (multiply the damage an
-    /// attacker deals to a target). Armour/Defense is deliberately out of v1 (it's currently unused by the resolver;
-    /// folding it in is a separate rebalance). ALL constants are flagged for the developer. Applied by
+    /// The dodge×shield part is a pure multiplier (≤ 1) via <see cref="Matchup"/>; the flat armour part needs the
+    /// ABSOLUTE per-source damage so it lives in <see cref="ArmourSoak"/> (the resolver calls it once per attacker→target
+    /// contribution, AFTER the matchup multiplier). ALL constants are flagged for the developer. Applied by
     /// <c>GroundForcesProcessor.ResolveRegionCombat</c>. Design: docs/GROUND-UNIT-DESIGNER-DESIGN.md §6b system ①.
     /// </summary>
     public static class GroundDamageMatrix
@@ -32,6 +37,13 @@ namespace Pulsar4X.GroundCombat
         public const double ShieldEffVsEnergy = 0.5;
         public const double ShieldEffVsArtillery = 0.75;
         public const double ShieldEffVsPhysical = 1.0;   // Ballistic + Melee
+        /// <summary>Damage soaked off EACH incoming attacker-source, per point of the target's Defense (armour).
+        /// Flat — the whole point is that it scales with the NUMBER of volleys, not their size, so many small hits are
+        /// bounced while one big hit isn't. Bigger = armour matters more.</summary>
+        public const double ArmourSoakPerPoint = 1.5;
+        /// <summary>A source always lands at least this fraction of its damage no matter how much armour it meets — so
+        /// flat armour is never total immunity (the counterpart to the evasion/shield caps).</summary>
+        public const double ArmourMinPassFraction = 0.1;
 
         /// <summary>Only aimed fire can be dodged; area (Artillery) and contact (Melee) can't.</summary>
         public static bool IsAimed(GroundWeaponMode t) => t == GroundWeaponMode.Ballistic || t == GroundWeaponMode.Energy;
@@ -67,6 +79,21 @@ namespace Pulsar4X.GroundCombat
             }
 
             return m < 0 ? 0 : m;
+        }
+
+        /// <summary>Flat ARMOUR soak for ONE attacker-source's contribution: subtract a flat amount (scaled by the
+        /// target's Defense), floored so the source always lands <see cref="ArmourMinPassFraction"/> of its damage.
+        /// Called per attacker→target contribution AFTER <see cref="Matchup"/> — because it's flat-per-source, N small
+        /// volleys lose N×(flat) total while one big volley loses only (flat): armour bounces the swarm, the alpha
+        /// punches through. <paramref name="sourceDamage"/> is one attacker's post-matchup contribution to this target.
+        /// Never throws.</summary>
+        public static double ArmourSoak(double defense, double sourceDamage)
+        {
+            if (sourceDamage <= 0) return 0.0;
+            if (defense <= 0) return sourceDamage;
+            double floor = sourceDamage * ArmourMinPassFraction;
+            double after = sourceDamage - defense * ArmourSoakPerPoint;
+            return after < floor ? floor : after;
         }
     }
 }

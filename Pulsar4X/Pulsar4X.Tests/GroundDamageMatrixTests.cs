@@ -63,5 +63,44 @@ namespace Pulsar4X.Tests
             Assert.That(GroundDamageMatrix.Matchup(GroundWeaponMode.Energy, clone),
                 Is.GreaterThan(GroundDamageMatrix.Matchup(GroundWeaponMode.Ballistic, clone)), "energy beats the line's shield");
         }
+
+        // ── SYSTEM ① — FLAT ARMOUR (the third, distinct defence flavour) ─────────────────────────────────────────────
+
+        [Test]
+        [Description("Flat ARMOUR is what makes armour armour: because the soak is flat PER SOURCE, the SAME total damage delivered as many small volleys is mostly bounced, while one big alpha strike punches through the same plating. This is the property % shield and dodge CANNOT have (they scale with the hit, so concentration doesn't matter to them) — it's the counter to chip-damage-by-numbers.")]
+        public void Armour_IsFlatPerSource_SwarmBouncesButAlphaPunchesThrough()
+        {
+            const double defense = 20;
+            // one big alpha of 100 damage — loses only ONE flat soak
+            double big = GroundDamageMatrix.ArmourSoak(defense, 100.0);
+            // the SAME 100 total delivered as ten little 10-damage volleys — each meets the flat soak
+            double swarmTotal = 0;
+            for (int i = 0; i < 10; i++) swarmTotal += GroundDamageMatrix.ArmourSoak(defense, 10.0);
+
+            Assert.That(big, Is.EqualTo(100.0 - defense * GroundDamageMatrix.ArmourSoakPerPoint).Within(1e-9),
+                "the big hit loses just one flat soak and mostly gets through");
+            Assert.That(swarmTotal, Is.EqualTo(10 * (10.0 * GroundDamageMatrix.ArmourMinPassFraction)).Within(1e-9),
+                "each little volley is soaked past the floor, so only the min-pass fraction of each lands");
+            Assert.That(big, Is.GreaterThan(swarmTotal),
+                "same total damage: the alpha punches through where the swarm bounces off");
+        }
+
+        [Test]
+        [Description("Armour is never total immunity: no matter how much Defense a hit meets, it always lands at least the min-pass fraction (the counterpart to the evasion/shield caps).")]
+        public void Armour_IsNeverTotalImmunity_FlooredAtMinPass()
+        {
+            double landed = GroundDamageMatrix.ArmourSoak(defense: 1000, sourceDamage: 50.0);
+            Assert.That(landed, Is.EqualTo(50.0 * GroundDamageMatrix.ArmourMinPassFraction).Within(1e-9),
+                "even absurd armour lets the min-pass fraction through");
+            Assert.That(landed, Is.GreaterThan(0), "so nothing is ever fully immune to a hit");
+        }
+
+        [Test]
+        [Description("Defense is opt-in: a unit with no armour (Defense 0) takes its full post-matchup damage — the soak only bites when there's plating.")]
+        public void Armour_ZeroDefense_LandsFull()
+        {
+            Assert.That(GroundDamageMatrix.ArmourSoak(0, 42.0), Is.EqualTo(42.0).Within(1e-9));
+            Assert.That(GroundDamageMatrix.ArmourSoak(10, 0.0), Is.EqualTo(0.0), "no incoming damage → nothing to soak");
+        }
     }
 }

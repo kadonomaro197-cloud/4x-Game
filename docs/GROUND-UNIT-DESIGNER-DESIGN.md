@@ -202,6 +202,18 @@ these exist. **This is the gameplay roadmap; the parts bin is just the vocabular
 (a) `GroundUnit` carrying evasion/shield/damage-profile, and (b) `ResolveRegionCombat` consuming them (ideally by
 reusing the space dodge/triangle math). That wiring is the first real gameplay slice after the designer spine.
 
+**✅ System ① is BUILT (2026-07-05).** (a) slice B — `GroundUnit` now carries `Evasion`/`Shield`/`DamageType`
+(snapshotted in `RaiseUnit`); (b) slice A — `GroundDamageMatrix.Matchup` (dodge beats aimed fire only; shield is a %
+reduction weaker vs energy) is applied per attacker→target in `ResolveRegionCombat`; (c) **armour** — the third,
+distinct defence flavour: `GroundDamageMatrix.ArmourSoak` takes a **flat** amount off *each* incoming source (the
+unit's `Defense`, previously a dead stat), floored so it's never total immunity. Flat-per-source is what makes armour
+*armour*: a swarm's many little volleys are mostly bounced while one big alpha punches through the same plating — the
+counter to chip-damage-by-numbers that % shield and dodge structurally can't be. Gauges: `GroundDamageMatrixTests`
+(dodge/shield/armour math incl. the swarm-vs-alpha identity) + `GroundForcesTests.Armour_InAFight_*` (the resolver
+reads Defense). **Flagged for tuning:** `ArmourSoakPerPoint` (1.5) and `ArmourMinPassFraction` (0.1) are engine
+defaults — the per-unit `Defense` values themselves are moddable design data. All System-① constants are flagged in
+`GroundDamageMatrix.cs` for a balance pass.
+
 **Build order:** ① (combat depth, reuses space) → ② (mobility) → ③ (combined arms) → ④ (economy/Count). Parts are
 added as each system gives them meaning, not ahead of it.
 
