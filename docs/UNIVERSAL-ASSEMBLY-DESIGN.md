@@ -61,15 +61,20 @@ reactor, …): pick the type, spec it, and it's usable anywhere its mount and sc
 - **The scale/upgrade techs are per-TYPE and setting-agnostic** — "Beam Focusing Range," "Kinetic Yield" — not
   "Ground Weapon Yield." A research investment in beams improves *every* beam, on the ground or in space.
 
-**Current violation (the thing to unify — task #3):** ground combat carries `GroundWeaponAtb` (Attack/Range/Mode,
-read by the `GroundForcesProcessor` hex resolver) as a **separate weapon system** from the space weapon attributes
-(`GenericBeamWeaponAtb`/`RailgunWeaponAtb`/`FlakWeaponAtb`, read by `ShipCombatValueDB` auto-resolve). So an "energy
-weapon" exists **twice** (`GroundWeaponAtb` `Mode=Energy` vs `GenericBeamWeaponAtb`) — the exact duplication this
-principle forbids. `tech-ground-weapon-yield` / `tech-category-ground-combat` likewise bake the rejected "ground
-weapon" category. **Target:** one universal weapon design (TYPE + specs) that BOTH resolvers read; the mount decides
-the setting. The weapon-designer scale-span work (`GROUND-UNIT-DESIGNER-DESIGN.md` §6a-ii) is being pointed this way
-— its type-based gates (e.g. beam range under Energy Weapons) are correct; its ground-specific one is the artifact to
-fold in. This is an architectural project (design doc + phased plan before code); captured, sequenced with the developer.
+**Unifying (task #3) — progress + what's left:**
+- ✅ **Designer category unified (2026-07-05).** The ground weapons' `ComponentType` was `"Ground Weapon"` (a second
+  weapon category — `ComponentDesignWindow` groups tabs by `ComponentType`); changed to `"Weapon"` so all weapons sit
+  in ONE designer category. The `MountType` (`GroundUnit`/`ShipComponent`) still gates where each installs. Gauge:
+  `WeaponScaleGateTests.Weapons_ShareOneDesignerCategory_NotSplitBySetting`.
+- ✅ **The per-setting weapon tech reverted.** `tech-ground-weapon-yield` / `tech-category-ground-combat` (a ground-only
+  weapon-yield tech) was removed; weapon-scale techs stay per-TYPE (e.g. `tech-beam-range` under Energy Weapons).
+- ⏳ **The DEEP one (still owed):** ground combat carries `GroundWeaponAtb` (Attack/Range/Mode, read by the
+  `GroundForcesProcessor` hex resolver) as a **separate weapon system** from the space weapon attributes
+  (`GenericBeamWeaponAtb`/`RailgunWeaponAtb`/`FlakWeaponAtb`, read by `ShipCombatValueDB` auto-resolve). So an "energy
+  weapon" still exists **twice** (`GroundWeaponAtb` `Mode=Energy` vs `GenericBeamWeaponAtb`). **Target:** one universal
+  weapon design (TYPE + specs) that BOTH resolvers read; the mount decides the setting. This is the architectural piece
+  — it needs a design doc + phased plan (two live combat resolvers) **before** code, not a blind refactor. Sequenced
+  with the developer.
 
 ---
 

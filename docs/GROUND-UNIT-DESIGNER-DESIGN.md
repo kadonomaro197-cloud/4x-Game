@@ -246,17 +246,26 @@ and fixes the `int` energy / missile-warhead caps. Full audit + build plan: task
 that silently overflowed (wrapped negative) past ~2.1 GJ, capping a superlaser; the whole downstream chain was already
 double. No new numbers. Gauge: `GenericBeamWeaponAtbTests`.
 
-**✅ Slice 2b BUILT (2026-07-05) — ground-weapon Attack ceiling is research-gated.** The five ground-weapon templates'
-Attack `MaxFormula` (was flat `5000`) now reads `TechData('tech-ground-weapon-yield')` — a NEW tech (techs.json,
-category `tech-category-ground-combat`), added to `tech-modern-technology`'s unlock cascade so it's in the faction's
-`Techs` at level 0 (crash-safe: `TechData` throws on an un-unlocked tech). Its `DataFormula = (1 + [Level]) * 5000`
-means **level 0 == today's flat cap (start unchanged, no test breakage), and each research level RAISES the ceiling**
-toward siege scale — the ground echo of researching a bigger beam. Gauge:
-`GroundUnitPartsBaseModTests.GroundWeapon_AttackCeiling_RisesWithResearch`. **FLAGGED new numbers (tune in
-techs.json):** the yield base `5000`, `+5000`/level, `MaxLevel 10` (→ 55000 fully researched), cost `(1+[Level])*2500`.
-These set *how steep* ground-weapon power climbs with research. **Follow-ups:** gate CarryMass/Range too (and make
-weapon mass/cost scale with Attack so a maxed gun isn't cheap — a flagged balance hole); then the same `TechData`
-conversion for the space weapons' flat caps (beam range/lens/chamber, railgun KE, flak, missile warhead).
+**⏮ Slice 2b BUILT then REVERTED (2026-07-05) — was `tech-ground-weapon-yield` under `tech-category-ground-combat`.**
+It research-gated the ground-weapon Attack ceiling via a NEW ground-category tech. **Reverted on the developer's
+correction:** *"ground weapons isnt a design component category — weapons should just be applicable to all settings."*
+A per-SETTING weapon-yield tech is the wrong shape; weapon-scale techs must be per-TYPE and setting-agnostic (like the
+beam gate below). The tech + its cascade entry + the 5 `TechData` Attack caps + the gauge were removed; ground weapons
+are back to a flat, **dialable** cap (slice 1). Proper research-gating returns type-based once the weapon systems are
+unified (task #3 / `UNIVERSAL-ASSEMBLY-DESIGN.md` §2a). See the CATEGORY-UNIFICATION note below.
+
+**✅ Weapon designer CATEGORY unified (2026-07-05) — one "Weapon" category, not per-setting.** The five ground-weapon
+templates' `ComponentType` was `"Ground Weapon"` (a *second* weapon category — `ComponentDesignWindow` groups its tabs
+by `ComponentType`, `ComponentDesignWindow.cs:42`), while space weapons are `"Weapon"`. Changed the ground weapons to
+`"Weapon"` so **all weapons live in ONE designer category** — you pick a weapon and spec it, you don't choose "ground"
+vs "space." Safe (nothing keyed off the string — only `GroundWeaponAtb.AtbName()`, a display label); the `MountType`
+(`GroundUnit` vs `ShipComponent`) still gates where each can install. Gauge:
+`WeaponScaleGateTests.Weapons_ShareOneDesignerCategory_NotSplitBySetting`. **Still owed (task #3, the deep one):**
+`GroundWeaponAtb` is still a parallel weapon system to the space atbs (an "energy weapon" exists twice) — merging them
+so ONE weapon design feeds BOTH resolvers is the architectural project, designed before code.
+
+**Follow-ups (post-unification):** gate weapon scale per-TYPE (beam done below; kinetic/missile next); make weapon
+mass/cost scale with firepower so a maxed gun isn't cheap (a flagged balance hole).
 
 **✅ Slice 3 BUILT (2026-07-05) — BEAM range research-gated (first space weapon).** Same proven pattern: the laser's
 `Range` `MaxFormula` (was flat `10000`) now reads `TechData('tech-beam-range')` — a new tech (category

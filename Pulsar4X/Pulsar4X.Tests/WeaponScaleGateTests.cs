@@ -30,6 +30,22 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("Weapon designer is ONE category, not split by setting (developer's call: 'ground weapons isnt a design component category'). Ground weapons and space weapons now share the same ComponentType ('Weapon'), so ComponentDesignWindow groups them under a single 'Weapon' tab — you pick a weapon and spec it, you don't choose 'ground weapon' vs 'space weapon'. The MOUNT (GroundUnit vs ShipComponent) decides where each can go, not the designer category.")]
+        public void Weapons_ShareOneDesignerCategory_NotSplitBySetting()
+        {
+            var s = TestScenario.CreateWithColony();
+            var data = s.Faction.GetDataBlob<FactionInfoDB>().Data;
+            string TypeOf(string id) => (data.ComponentTemplates.ContainsKey(id)
+                ? data.ComponentTemplates[id]
+                : data.LockedComponentTemplates[id]).ComponentType;
+
+            Assert.That(TypeOf("laser-weapon"), Is.EqualTo("Weapon"), "the beam is a 'Weapon'");
+            Assert.That(TypeOf("ground-rifle"), Is.EqualTo("Weapon"), "the rifle is a 'Weapon' too — NOT a separate 'Ground Weapon' category");
+            Assert.That(TypeOf("ground-cannon"), Is.EqualTo(TypeOf("railgun-weapon")),
+                "ground and space weapons live in the SAME designer category — one weapon designer, pick a type");
+        }
+
+        [Test]
         [Description("BEAM range: the laser's Range ceiling is TechData-driven (tech-beam-range), so RESEARCH raises how far a beam reaches — the developer's 'long range is earned, not given' principle. Level 0 == the previous flat cap (start unchanged); +1 research level raises it. Starting cap + growth are flagged tunables in techs.json.")]
         public void BeamRangeCeiling_RisesWithResearch()
         {
