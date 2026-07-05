@@ -1610,5 +1610,63 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "ground-autocannon",
+      "Name": "Heavy Autocannon",
+      "Formulas": {
+        "Description": "A heavy support weapon — too heavy for a bare human frame to shoulder (needs a strong frame or power armour), but devastating.",
+        "Mass": "PropertyValue('CarryMass')",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "1.0",
+        "CrewReq": "0",
+        "ResearchCost": "0",
+        "CreditCost": "[Mass] * 0.1",
+        "BuildPointCost": "[Mass] * 3"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.5",
+        "aluminium": "[Mass] * 0.3"
+      },
+      "ComponentType": "Ground Weapon",
+      "MountType": "GroundUnit",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "CarryMass",
+          "DescriptionFormula": "'What the frame must bear.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "120"
+        },
+        {
+          "Name": "Attack",
+          "DescriptionFormula": "'Firepower added.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "140"
+        },
+        {
+          "Name": "Range",
+          "DescriptionFormula": "'Reach in hexes.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "2"
+        },
+        {
+          "Name": "Mode",
+          "DescriptionFormula": "'0=Melee 1=Ballistic 2=Energy 3=Artillery.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "1"
+        },
+        {
+          "Name": "autocannonArgs",
+          "DescriptionFormula": "'atb args'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundWeaponAtb"
+        }
+      ]
+    }
   }
 ]

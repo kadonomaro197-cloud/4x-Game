@@ -577,5 +577,13 @@
       "Name": "Power Armour",
       "TemplateId": "power-armor"
     }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-ground-autocannon",
+      "Name": "Heavy Autocannon",
+      "TemplateId": "ground-autocannon"
+    }
   }
 ]
