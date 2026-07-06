@@ -102,6 +102,11 @@ namespace Pulsar4X.Galaxy
         private const double MountainThresh = 0.85;    // → mountains
         private const double ColdC = -10.0;            // ≤ this surface °C → an icy world
         private const double HotC = 50.0;              // ≥ this → a scorching world
+        // Cold-world lowland biome dials (tunable classification thresholds, like the temperate ones below): keep a
+        // frozen world from collapsing to ONE biome. A dry cold world (Mars/Luna) is rock+dust, not tundra.
+        private const double DryWorldHydro = 0.2;      // < this hydrosphere → a DRY world (rock/dust, not tundra)
+        private const double ColdDryMoist = 0.5;       // dry cold lowland: > this moisture → dusty desert, else barren rock
+        private const double ColdDampMoist = 0.4;      // damp cold lowland: > this moisture → tundra, else barren
         private const int MusterCoreRadius = 1;        // patch centre + its immediate ring = guaranteed passable land
         private const double TwoPi = 2.0 * Math.PI;
 
@@ -137,18 +142,57 @@ namespace Pulsar4X.Galaxy
             bool gas = info != null && (info.BodyType == BodyType.GasGiant || info.BodyType == BodyType.GasDwarf || info.BodyType == BodyType.IceGiant);
             bool tectonic = info != null && info.Tectonics != TectonicActivity.Dead && info.Tectonics != TectonicActivity.Unknown;
 
-            // Sea level rises with hydrosphere: a ~70%-water world floods ~70% of the elevation range → mostly ocean;
-            // a dry world barely any. Bounded so an ocean world keeps some land and a desert world some lowland.
-            double seaLevel = 0.12 + hydroFrac * 0.72;
-
             var el = new double[Octaves]; var et = new double[Octaves]; var ml = new double[Octaves]; var mt = new double[Octaves];
             for (int k = 0; k < Octaves; k++)
             {
                 el[k] = Rnd(system) * TwoPi; et[k] = Rnd(system) * TwoPi;
                 ml[k] = Rnd(system) * TwoPi; mt[k] = Rnd(system) * TwoPi;
             }
+
+            // Sea level = the elevation below which `hydroFrac` of the surface lies (the hydrosphere QUANTILE of the
+            // actual elevation field). So ocean coverage TRACKS the hydrosphere — a 71%-water world is ~71% ocean —
+            // instead of the old `0.12 + 0.72*hydro` linear guess, which drowned ~82% because the sum-of-sines field
+            // bunches near its mean. Read from el/et (already drawn — NO extra RNG), so world regen stays deterministic.
+            double seaLevel = SeaLevelForHydrosphere(hydroFrac, el, et);
             return new WorldTerrain(gas, seaLevel, temp, tectonic, hydroFrac, el, et, ml, mt, authored);
         }
+
+        /// <summary>The sea-level elevation for a target ocean fraction: the <paramref name="hydroFrac"/>-quantile of the
+        /// elevation field, sampled on a coarse grid (once per world — cheap). hydro≤0 → below the field (no ocean);
+        /// hydro≥1 → above it (all ocean). Pure; reads only the already-drawn phases, so it adds no RNG draws.</summary>
+        private static double SeaLevelForHydrosphere(double hydroFrac, double[] ePhaseLon, double[] ePhaseLat)
+        {
+            if (hydroFrac <= 0.0) return -1.0;   // dry world → nothing is below sea level → no ocean
+            if (hydroFrac >= 1.0) return 2.0;    // waterworld → everything below sea level → all ocean
+            const int SC = 48, SR = 24;          // coarse sample grid — enough to pin the quantile
+            var samples = new double[SC * SR];
+            int idx = 0;
+            for (int r = 0; r < SR; r++)
+            {
+                double lat = r / (double)(SR - 1);
+                for (int c = 0; c < SC; c++)
+                    samples[idx++] = Field(c / (double)SC, lat, ePhaseLon, ePhaseLat);
+            }
+            System.Array.Sort(samples);
+            int k = (int)(hydroFrac * samples.Length);
+            if (k >= samples.Length) k = samples.Length - 1;
+            return samples[k];
+        }
+
+        // ── Test seam (InternalsVisibleTo Pulsar4X.Tests) — build + sample a NOISE world from explicit scalars, no
+        //    Entity scaffolding, deterministically seeded, so the generator's calibration is directly gauge-able. ──
+        internal static WorldTerrain ForTest(double hydroFrac, double temp, bool tectonic, int seed)
+        {
+            var rng = new System.Random(seed);
+            var el = new double[Octaves]; var et = new double[Octaves]; var ml = new double[Octaves]; var mt = new double[Octaves];
+            for (int k = 0; k < Octaves; k++)
+            {
+                el[k] = rng.NextDouble() * TwoPi; et[k] = rng.NextDouble() * TwoPi;
+                ml[k] = rng.NextDouble() * TwoPi; mt[k] = rng.NextDouble() * TwoPi;
+            }
+            return new WorldTerrain(false, SeaLevelForHydrosphere(hydroFrac, el, et), temp, tectonic, hydroFrac, el, et, ml, mt, null);
+        }
+        internal RegionFeatureType ClassifyForTest(double lon, double lat) => Classify(lon, lat, false);
 
         /// <summary>Terrain for one hex from its GLOBAL position: region+q give longitude (continuous across region
         /// borders, wrapping the ring); r gives latitude. So the field is one coherent world, not per-region.</summary>
@@ -196,8 +240,15 @@ namespace Pulsar4X.Galaxy
 
             // Land — the world's CLIMATE first (temperature), then relief + moisture.
             if (_temp <= ColdC)
-                return elev > MountainThresh ? RegionFeatureType.Ice
-                     : (elev > HighlandThresh ? RegionFeatureType.Highlands : RegionFeatureType.Tundra);
+            {
+                if (elev > MountainThresh) return RegionFeatureType.Ice;         // frozen peaks
+                if (elev > HighlandThresh) return RegionFeatureType.Highlands;
+                // Lowland cold: a DRY cold world (Mars/Luna) is rock and dust, not tundra; a damp cold world gets
+                // tundra where moist, barren where not — so a frozen world isn't one flat grey biome.
+                if (_hydroFrac < DryWorldHydro)
+                    return moist < ColdDryMoist ? RegionFeatureType.Barren : RegionFeatureType.Desert;
+                return moist > ColdDampMoist ? RegionFeatureType.Tundra : RegionFeatureType.Barren;
+            }
             if (_temp >= HotC)
                 return elev > MountainThresh ? RegionFeatureType.Volcanic
                      : (moist > 0.6 ? RegionFeatureType.Plains : RegionFeatureType.Desert);
