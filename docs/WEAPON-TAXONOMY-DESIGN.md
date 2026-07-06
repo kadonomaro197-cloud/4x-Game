@@ -160,3 +160,35 @@ Each is its own designer; each is universal (ground + space) and gated by the ch
 
 **Recommendation:** confirm the split (Q1) and do the widening as part of P1/P3 of the merge — the unification is
 already going to touch the weapon model, so widen it once rather than twice.
+
+---
+
+## 6. DECIDED (2026-07-06, the developer)
+
+**Q1–Q3 = strong YES.** The two-axis split is confirmed; v1 supports all four **Natures** (Kinetic/Energy/Explosive/
+**Exotic**) and all six **Deliveries** (Beam/Bolt/Slug/Cloud/Guided/Blast); the triangle position EMERGES from the
+specs. **Foundation LANDED (2026-07-06):** `WeaponNature` + `WeaponDelivery` enums + `WeaponProfile.Nature`/`.Delivery`
+(additive; `WeaponClass` untouched so combat is byte-identical); the base-mod beam/railgun/flak/missile profiles are
+tagged (Energy·Beam / Kinetic·Slug / Kinetic·Cloud / Explosive·Guided). Gauge: `WeaponAxesTests` (a blaster = Energy +
+dodgeable Bolt is now expressible). Next: make `WeaponClass` a *computed* readout of the specs, then add Bolt/Blast to
+the resolve + the base-mod bolt/plasma weapons.
+
+**Q4 (Exotic) — conditional: "only works if we can determine how it will be demonstrated in game."** Correct bar —
+an exotic effect is real only if it produces a VISIBLE state change. Worked through each candidate against the actual
+combat model:
+
+| Exotic effect | In-game DEMONSTRATION | Hook that exists today | Verdict |
+|---|---|---|---|
+| **Disable / EMP / ion** | temporarily zeroes a target's firepower (systems offline N s) WITHOUT killing it → shows as a firepower drop / "DISABLED" status in the Battle Report; a ground unit fires nothing that salvo | `ShipCombatValueDB.Firepower` (a temporary suppression mult, same shape as `HealthPercent`); ground unit's Attack | **✅ v1** — clean, visible |
+| **Bypass-armour / matter-strip (gauss)** | ignores the armour term → kills an armoured capital faster, visibly out-of-proportion vs its toughness | skip the armour contribution to `Toughness` for that weapon; ground `Defense` (`GroundDamageMatrix`) | **✅ v1** — visible |
+| **Bypass-shield / anti-shield** | ignores the shield reduction → energy-vs-shield but total | ground `Shield` (`GroundDamageMatrix`) exists; **space has NO shield layer yet** | **⚠ v1 GROUND only** — space needs a shield system first (flagged) |
+| **Stun (zat)** | incapacitate → **capture** instead of destroy | needs a NEW incapacitated/captured state (no such state today) | **⏳ DEFER** — build the capture state first |
+| **Chain (tesla)** | arcs to several targets | overlaps the **Blast** delivery (area/multi-target) | **↩ FOLD into Blast** — not a separate exotic |
+
+**Decision:** model exotic effects as **bolt-on special-ability components** (`CONVENTIONS §6`) that any weapon can
+carry — so "an ion *version* of any gun" — but ship v1 with ONLY the demonstrable ones: **Disable** and
+**Bypass-armour** (both space+ground, visible in the Battle Report), plus **Bypass-shield** on the ground (space when a
+shield layer exists). **Stun/capture** waits for a capture state; **Chain** folds into Blast. Each shipped exotic MUST
+write a visible line to the combat readout — that's the acceptance test the developer set. **Open for the developer:**
+does space want a real **shield layer** (would unlock anti-shield + Dune-lasgun interactions in space), or stay
+armour/toughness-only for now?

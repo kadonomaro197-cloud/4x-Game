@@ -163,7 +163,7 @@ namespace Pulsar4X.Combat
                             double period = beam.ChargePeriod > 0 ? beam.ChargePeriod : 1.0;
                             double dps = (beam.Energy / period) * comp.HealthPercent;
                             // Range (Root A): beams carry their design MaxRange (0 = unbounded, the legacy convention).
-                            weapons.Add(new WeaponProfile(WeaponClass.Beam, dps, beam.BeamSpeed, beam.BaseHitChance, 1.0 / period, beam.MaxRange));
+                            weapons.Add(new WeaponProfile(WeaponClass.Beam, dps, beam.BeamSpeed, beam.BaseHitChance, 1.0 / period, beam.MaxRange, WeaponNature.Energy, WeaponDelivery.Beam));
                         }
                     }
                 }
@@ -183,7 +183,7 @@ namespace Pulsar4X.Combat
                             // (and so "outside detection range"). v1 class-default; a per-design field (an Atb + JSON,
                             // like beam's MaxRange) is the next step. Only bites when EnableClosingRange is on (live);
                             // with it off (the headless fixtures) SeparationOf is 0 so the range gate is a no-op.
-                            weapons.Add(new WeaponProfile(WeaponClass.Railgun, dps, rg.MuzzleVelocity_mps, rg.Tracking, rg.RoundsPerSecond, RailgunRange_m));
+                            weapons.Add(new WeaponProfile(WeaponClass.Railgun, dps, rg.MuzzleVelocity_mps, rg.Tracking, rg.RoundsPerSecond, RailgunRange_m, WeaponNature.Kinetic, WeaponDelivery.Slug));
                         }
                     }
                 }
@@ -200,7 +200,7 @@ namespace Pulsar4X.Combat
                             double saturation = flak.RoundsPerSecond * flak.PelletsPerShot;
                             double dps = flak.DamagePerPellet_J * saturation * comp.HealthPercent;
                             // Range (the authentic-closing pass): flak is SHORT-ranged point defense (hard cutoff).
-                            weapons.Add(new WeaponProfile(WeaponClass.Flak, dps, flak.MuzzleVelocity_mps, flak.Tracking, saturation, FlakRange_m));
+                            weapons.Add(new WeaponProfile(WeaponClass.Flak, dps, flak.MuzzleVelocity_mps, flak.Tracking, saturation, FlakRange_m, WeaponNature.Kinetic, WeaponDelivery.Cloud));
                         }
                     }
                 }
@@ -213,7 +213,7 @@ namespace Pulsar4X.Combat
                     {
                         double dps = MissileLauncherFirepowerStub * comp.HealthPercent;
                         // Range (the authentic-closing pass): missiles are the LONG-range standoff opener (hard cutoff).
-                        weapons.Add(new WeaponProfile(WeaponClass.Missile, dps, MissileVelocityStub_mps, MissileTrackingStub, MissileSaturationStub, MissileRange_m));
+                        weapons.Add(new WeaponProfile(WeaponClass.Missile, dps, MissileVelocityStub_mps, MissileTrackingStub, MissileSaturationStub, MissileRange_m, WeaponNature.Explosive, WeaponDelivery.Guided));
                     }
                 }
             }
