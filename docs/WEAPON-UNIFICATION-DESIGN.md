@@ -75,8 +75,9 @@ class→type hierarchy) ARE the weapon designer for everything.
           carry. No base-mod magazine exists yet, so the gate BITES for every ammo weapon (correct — no live designer UI can
           hit it). NO new gameplay numbers. Gauge: `GroundAmmoGateTests` (flak needs a magazine, laser doesn't).
         - **P2c-b ✅ the buildable magazine (2026-07-06).** A base-mod `ground-magazine` `ComponentTemplate` +
-          `default-design-ground-magazine` + earth.json registration (six-point, gotcha #10; reuses the already-unlocked
-          stainless-steel/aluminium so `StartingItems` is untouched). Binds `GroundMagazineAtb` from JSON, mounts on a
+          `default-design-ground-magazine` + earth.json registration (six-point, gotcha #10: template in `StartingItems`
+          to UNLOCK it — the rung a first push MISSED, red-caught by the colony-build tests — plus the design in
+          `ComponentDesigns`; materials reuse the already-unlocked stainless-steel/aluminium). Binds `GroundMagazineAtb` from JSON, mounts on a
           ground unit, and now SATISFIES the gate. **FLAGGED numbers (all in `installations.json`, tune freely):** default
           `Capacity` 500 kg (range 100–5000), magazine `Mass` = 2 × Capacity, `CreditCost` = 0.2 × Mass, `CrewReq` 5, the
           material fractions. Gauge: `GroundAmmoGateTests.Magazine_SatisfiesTheAmmoGate` + `BaseModIntegrityTests`.
