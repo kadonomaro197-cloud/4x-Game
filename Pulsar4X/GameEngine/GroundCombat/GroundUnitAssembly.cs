@@ -21,6 +21,7 @@ namespace Pulsar4X.GroundCombat
         public double MaxItemWeight;   // heaviest single part the frame can bear
         public double EnergyDemand_W;  // Σ power draw of the mounted energy weapons (P2 supply gate)
         public double ReactorSupply_W; // Σ sustained output of the mounted reactors (P2 supply gate)
+        public double AmmoCapacity_kg; // Σ magazine capacity (kg) — the ammo store (P2c ammo gate)
         public GroundCarryClass CarryClass = GroundCarryClass.Personnel;
         public bool Valid;
         public List<string> Problems = new List<string>();
@@ -78,6 +79,8 @@ namespace Pulsar4X.GroundCombat
             double topWeaponAttack = 0;   // the heaviest hitter sets the unit's damage flavour
             double energyDemand = 0;   // Σ watts drawn by energy weapons (WeaponSupply)
             double reactorSupply = 0;  // Σ watts supplied by mounted reactors (WeaponSupply)
+            double ammoCapacity = 0;   // Σ magazine capacity kg (WeaponSupply) — the ammo store
+            bool anyAmmoWeapon = false;// is an ammo-fed weapon mounted? (needs a magazine)
             foreach (var (d, c) in list)
             {
                 double itemMass = 0;
@@ -112,6 +115,9 @@ namespace Pulsar4X.GroundCombat
                 // P2 supply gate — accumulate power drawn (energy weapons) and power supplied (reactors)
                 energyDemand += WeaponSupply.PowerDraw_W(d) * c;
                 reactorSupply += WeaponSupply.ReactorOutput_W(d) * c;
+                // P2c ammo gate — accumulate magazine capacity + note whether any weapon needs feeding
+                ammoCapacity += WeaponSupply.MagazineCapacity_kg(d) * c;
+                if (WeaponSupply.DrawsAmmo(d)) anyAmmoWeapon = true;
                 used += itemMass * c;
                 r.Mass += d.MassPerUnit * c;
                 if (itemMass > r.MaxItemWeight)
@@ -122,11 +128,15 @@ namespace Pulsar4X.GroundCombat
             r.UsedCapacity = used;
             r.EnergyDemand_W = energyDemand;
             r.ReactorSupply_W = reactorSupply;
+            r.AmmoCapacity_kg = ammoCapacity;
             if (used > capacity)
                 r.Problems.Add($"over carry capacity: mounted {used:0} > budget {capacity:0}. Drop gear, add a strength augment, or use a bigger frame.");
             // The SUPPLY gate (P2b, hard — the developer's call): the guns can't draw more power than the reactors make.
             if (energyDemand > reactorSupply)
                 r.Problems.Add($"under-powered: energy weapons draw {energyDemand:0} W but reactors supply {reactorSupply:0} W — mount a reactor (or a bigger one), or drop an energy weapon.");
+            // The AMMO gate (P2c-a, hard): an ammo-fed weapon (flak, railgun, ...) needs a magazine (mass) to feed it.
+            if (anyAmmoWeapon && ammoCapacity <= 0)
+                r.Problems.Add("no magazine: an ammo-fed weapon (flak / railgun) needs an ammo magazine to feed it — mount a magazine.");
 
             r.Valid = r.Problems.Count == 0;
             return r;

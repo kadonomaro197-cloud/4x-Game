@@ -53,6 +53,20 @@ namespace Pulsar4X.GroundCombat
             return m == WeaponSupplyMode.Energy || m == WeaponSupplyMode.Both;
         }
 
+        /// <summary>Does this weapon draw from an ammo magazine (mode Ammo or Both)? (P2c ammo gate.)</summary>
+        public static bool DrawsAmmo(ComponentDesign design)
+        {
+            var m = DefaultModeFor(design);
+            return m == WeaponSupplyMode.Ammo || m == WeaponSupplyMode.Both;
+        }
+
+        /// <summary>The ammo (kg) a part holds if it's a magazine, else 0. (P2c ammo gate — the mass-based store.)</summary>
+        public static double MagazineCapacity_kg(ComponentDesign design)
+        {
+            if (design == null || !design.HasAttribute<GroundMagazineAtb>()) return 0;
+            return design.GetAttribute<GroundMagazineAtb>().Capacity_kg;
+        }
+
         /// <summary>The weapon's power appetite in WATTS = its own energy flux (energy per shot × rate, or beam energy ÷
         /// charge period). 0 for an ammo-only weapon (its pellet energy is chemical, from the magazine, not the reactor)
         /// or a non-weapon. Never throws (a zero/absent charge period is treated as 1 s).</summary>

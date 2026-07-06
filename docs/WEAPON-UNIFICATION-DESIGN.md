@@ -67,10 +67,19 @@ class→type hierarchy) ARE the weapon designer for everything.
       The only flagged number is the kW→W unit constant (arithmetic). Gauge: `GroundPowerGateTests` (calibration-independent:
       laser draws / flak doesn't / a reactor clears the gate). **Note:** old ground weapons (`GroundWeaponAtb`) draw 0 —
       only the unified space weapons are power-gated (they merge into one at P4).
-    - **P2c — the AMMO gate (next).** Build the magazine component + the ammo side: an Ammo/Both weapon (flak, railgun,
-      missiles) needs a magazine to fire, and magazine size = how long it fights before resupply (a real logistics lever).
-      Ammo store does NOT exist yet for guns (only missiles have ordnance) — this one is more build than connect. The plasma
-      Energy-vs-Both player choice ships here (it only bites once ammo is a cost).
+    - **P2c — the AMMO gate.** The ammo-axis twin of the power gate. **Developer's ammo model (2026-07-06): magazines
+      measured in MASS (kg); ammo DEPLETES in combat; units RESUPPLY from ships / other units / bases.** Phased:
+        - **P2c-a ✅ the design-time ammo gate (2026-07-06).** `GroundMagazineAtb` (a mass-based ammo store `Capacity_kg`,
+          a component like the reactor) + `WeaponSupply.DrawsAmmo`/`MagazineCapacity_kg` + `GroundUnitAssembly` hard-refuses
+          an Ammo/Both weapon (flak, railgun) with no magazine (exposes `AmmoCapacity_kg`); magazine mass counts against
+          carry. No base-mod magazine exists yet, so the gate BITES for every ammo weapon (correct — no live designer UI can
+          hit it). NO new gameplay numbers. Gauge: `GroundAmmoGateTests` (flak needs a magazine, laser doesn't).
+        - **P2c-b — the buildable magazine (next).** A base-mod magazine `ComponentDesign` (six-point registration,
+          gotcha #10) so a player can actually satisfy the gate; its `Capacity_kg` default is a FLAGGED number.
+        - **P2c-c — combat depletion.** A `GroundUnit` carries an ammo pool (from magazine capacity); the resolver drains it
+          per shot (ammo-mass-per-shot DERIVED from the weapon's KE = ½mv², no new number); empty → ammo weapons stop firing.
+        - **P2c-d — resupply** from ships / units / bases (refill the pool). The plasma Energy-vs-Both player override ships
+          in this arc (it only bites once ammo is a real cost).
 - **P3 — Ground reads the weapon PROFILE + triangle.** `GroundUnit` derives its combat contribution from its mounted
   universal weapons' `WeaponProfile`s; `GroundForcesProcessor` resolves via the weapon triangle (shared with space),
   behind a parallel/flag until numbers match the current garrison (existing ground gauges stay green).
