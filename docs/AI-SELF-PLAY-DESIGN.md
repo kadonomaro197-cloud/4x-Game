@@ -225,11 +225,84 @@ Leaders are **produced by installations** — schools / colleges / universities 
 
 **The one core new mechanic — the competence generator:** at graduation, **roll the leader's `BonusesDB` values**, scaled by `(design tier + material investment) × populousness × development level × teacher competence`. That single roll IS "the leaders produced and their inherent value." It emits into the shape (`BonusesDB`) the rest of the pipeline already consumes.
 
+**The roll's math (reuses existing machinery).** Each graduate rolls a competence `score` (0–100) on a bell curve — reusing `NextBellCurve(RNG, floor, ceiling, mean, stddev)`, already used for `ExperienceCap` (`NavalAcademyProcessor.cs:31`). The four inputs **shift the mean** (and tier sets the ceiling); they do **not** flat-add to the result:
+
+```
+mean =  BaseMean(designTier)          // school ~30 · college ~50 · university ~70   [DESIGNABLE, dominant]
+      + MaterialInvestment(materials) //                                            [DESIGNABLE]
+      + Populousness(pop)             // log-scaled, diminishing                     [modifier]
+      + Development(colonyDevelopment) // the ColonyDevelopment accessor             [modifier]
+      + Teacher(teacherCompetence)     // capped/diminishing (runaway control)       [modifier]
+score = NextBellCurve(RNG, floor, ceiling = TierCap(designTier), mean, stddev)
+```
+
+- **Mean-shift, not flat-add**, so variance survives: the odd prodigy from a poor school, the odd dud from a university. Loaded dice, not rigged — keeps "good officers are scarce" real.
+- `score` drives two outputs: the **`BonusesDB` value** (inherent competence, rung 4 reads it) and the **eligibility ceiling** (which rung they qualify for, hard-capped by tier).
+- **Quantity vs quality is a design choice:** `ClassSize` sets *how many*; the mean sets *how good* — a mass academy (big class, low mean) vs an elite one (small class, high mean).
+- **Diminishing returns on the three soft modifiers** so none dominates and the teacher loop can't runaway (the contract also locks the teacher in place).
+- **v1:** one primary competence bonus (`FilterId` = the pillar); secondary aptitudes / traits parked. The roll is *starting* competence; retraining (rung 5) adds more over a career.
+
 **Tier = ceiling, competence = value.** The installation *tier* (school → college → university) sets the **highest rung** a graduate is eligible for; their rolled competence + record decides how good they are and which seats they qualify for. (The `COLONY-PROGRESSION` tier ladder, when built, is the natural backing for a higher academy tier on a more-developed world.)
 
 **Colony development level — one accessor, swappable backing.** No colony-wide development number exists (only per-hex `InfrastructureLevel`). Build a single `ColonyDevelopment` accessor that **aggregates the hex infra levels now**, and is forward-compatible with the `COLONY-PROGRESSION-DESIGN.md` tier ladder later (the tier becomes a factor inside the same accessor). One figure, never two competing ones (`CONVENTIONS.md` §6). Its grave rung matches the progression doc's open question — a bombarded world both *demotes* and *starves its leader pipeline*.
 
 **The installation's own cradle-to-grave (vertical):** designed → built from minerals/materials → installed → draws talent → produces leaders → **destroyed** (bombardment / captured when the planet falls) → **the leader pipeline goes dark.** That grave rung is strategic — hitting an enemy's universities starves their *future* leadership, wiring this system straight into ground combat and orbital bombardment.
+
+### Rung 4 in depth — "Acts" (the competence → outcome pattern, generalized)
+
+The scientist→research chain is the one place this works end-to-end; every leader reuses its four parts:
+
+1. **The target is a `ModifiableValue<T>`** — the number the leader moves (research: `ResearcherDB.PointsPerDay`).
+2. **A `Refresh…Modifiers()` method** folds modifiers in priority order: `base → funding(×) → local bonus → the seated officer's BonusesDB` (matched by `FilterId`) — `ResearchProcessor.cs:292-333`.
+3. **Consume reads `GetValue()`** at use-time (`:87`).
+4. **Rebuild is event-driven** (assign / unassign / funding / stance change), **not per tick** — cheap, which matters for the AI-cost bill.
+
+**Two flavors of "Acts" — keep them distinct:**
+- **(a) Passive competence bonus** — the officer makes a standing number *better*, continuously (Governor → legitimacy). Pure `ModifiableValue` + `Refresh`. No orders.
+- **(b) Active orders** — the officer *issues orders* per their stance (Admiral moves fleets, Spymaster runs ops, Governor queues builds). This is what fills the dead `NPCDecisionProcessor` stub.
+
+Competence modulates *how well* both go; the **stance** decides *what* the active ones do.
+
+**The two-layer modifier model (already half-built):** *local post competence* (the seated officer's `BonusesDB` folded into the target) vs the *empire-wide modulator* applied after `GetValue()` (research already does this: `× GovernmentTools…ResearchMultiplier()`, `:91`). That maps exactly onto our hierarchy — the **leader's competence** is the modifier; the **Head of State's regime** is the modulator on top.
+
+**Per-pillar targets** (name the `ModifiableValue`, copy `RefreshPointModifiers`):
+
+| Leader | Target the competence moves | Passive / Active |
+|--------|-----------------------------|------------------|
+| Chief Scientist / Lab | research points | passive (built) |
+| Governor | colony legitimacy (`GovernorCompetence` slot) + build orders | both |
+| Fleet Commander | fleet firepower/toughness/speed (`FleetDoctrineDB`) + move/engage orders | both |
+| System Admiral | which fleets move where | active |
+| Spymaster | op success / counter-intel + op orders | both |
+| Foreign Minister | deal quality / relation drift + treaty proposals | both |
+| Trade Minister | trade income & route efficiency + route orders | both |
+| Academy teacher | the graduate competence roll | passive (a rung-4 act pointed back at rung 1) |
+
+The same code path runs whether the actor is player, delegate, or NPC — a seated delegate's `Refresh` runs automatically; the player dropping in sets the value directly. One implementation, not two.
+
+### Stances — the decision surface
+
+A **stance is a small, named bundle of standing orders** the player or NPC picks — *presets, not sliders*. The stance **is the decision the leader owns**; competence is only how well it's executed.
+
+**Templates already shipped:**
+- **`FleetDoctrineDB`** (built) — families Offensive / Defensive / Utilitarian + ROE (WeaponsFree / Hold / ReturnFire) + a **switch cooldown**.
+- **`GroundFormationDoctrine`** (built, **data-driven**) — stances defined in `groundStances.json` as `GroundStanceBlueprint`s. **This moddable-JSON-catalog pattern is the one to reuse for every pillar** — a stance = coefficient tweaks + a behavior rule, defined in data.
+- **`DoctrineVector`** on `FactionInfoDB` (four floats: Economic / Military / Tech / Expansion) is the NPC "personality" that **biases which stance an NPC picks**. Filling the `NPCDecisionProcessor` stub = *DoctrineVector biases stance choice → the seated delegate executes it → emits orders through rung 4.*
+
+**Example preset sets (3–4 per pillar, from the design docs):**
+
+| Leader | Stances |
+|--------|---------|
+| Governor | Growth · Industry · Fortress · Balanced |
+| System Governor | Breadbasket · Mining Hub · Fortress |
+| Fleet Commander *(built)* | Offensive · Defensive · Utilitarian + ROE |
+| Planetary General | Hold Ground · Counter-attack · Fighting Withdrawal |
+| Foreign Minister | Seek Allies · Isolationist · Expand by Tribute · Keep the Peace |
+| Interior Minister | Favor Stability · Favor Military · Low Taxes · Balance the Blocs |
+| Spymaster | Steal Tech · Counter-intel · Destabilize [rival] · Keep Us Informed |
+| Trade Minister | Maximize Income · Stockpile Strategic · Free Trade · Autarky |
+
+**Three points:** (1) stance = the stacking *decision*, competence = *texture* — keeps every seat honest against the realism firewall; (2) the existing switch **cooldown composes with contracts** — a leader on contract runs their stance for the term, no per-tick flip-flopping (good for feel and the AI-cost bill); (3) whether stances **re-skin by government type** (a dictatorship's "Favor Stability" reaching for harsher tools) is the one open call — the `GovernmentDB` dial hook to do it already exists.
 
 ### The retraining loop (rung 1 + rung 5, merged)
 
@@ -287,12 +360,14 @@ Cheapest end-to-end proof, because the grave-end target already exists and is al
 - **One `ColonyDevelopment` accessor** — aggregates hex infra now, tier-ladder-ready later (never two competing development numbers).
 - **Retraining loop replaces passive XP** (rung 5) — leaders improve only by deliberate, costly re-enrollment.
 - **Contracts = the universal commitment term** — every assignment is fixed-term; caps the teacher loop, makes seating a durable strategic choice.
+- **Rung 4 "Acts" pattern** — `ModifiableValue` + `Refresh…Modifiers` reading `BonusesDB` (copy the research chain); the two-layer split (leader competence = modifier, regime = post-`GetValue` modulator); passive-bonus vs active-orders as the two flavors.
+- **Stances = data-driven presets** (reuse the `GroundStanceBlueprint`/JSON-catalog pattern), biased for NPCs by `DoctrineVector`; stance = decision, competence = texture.
+- **Competence roll = mean-shifted bell curve with a tier-gated ceiling** (`NextBellCurve`); inputs shift the mean, not the result.
 
 **Open (decide when we build):**
 - The **empire-scope ground ceiling** — a "High Command"/Field Marshal, a joint Supreme Commander over both, or nothing. Deferred.
-- **Stance presets per pillar** — how many, what they're called (the actual decision surface an NPC sets).
-- **How competence maps to outcomes** per pillar (curve vs notches).
-- **The competence roll's exact shape** — the distribution, and how the four inputs weight it.
+- **Stance count + names per pillar**, and whether stances **re-skin by government type** (the `GovernmentDB` hook exists).
+- **The competence-roll numbers** — base means per tier, stddev, and the weights/caps on the three soft modifiers.
 - **Contract term lengths + early-break penalty** — the numbers.
 - **Ruins/anomalies** as survey content (the one net-new exploration piece).
 - The **commerce money-wire** that must precede a Trade Minister.
