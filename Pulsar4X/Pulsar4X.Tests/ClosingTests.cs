@@ -35,7 +35,7 @@ namespace Pulsar4X.Tests
 
             var cv = new ShipCombatValueDB(firepower, toughness, 1.0);
             cv.Evasion = evasion;
-            cv.Weapons = new List<WeaponProfile> { new WeaponProfile(WeaponClass.Beam, firepower, 3e8, 1.0, 1.0, range_m) };
+            cv.Weapons = new List<WeaponProfile> { new WeaponProfile(firepower, 3e8, 1.0, 1.0, range_m) };
             ship.SetDataBlob(cv);
             return ship;
         }

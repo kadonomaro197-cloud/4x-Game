@@ -649,5 +649,37 @@
       "Name": "Rending Claws",
       "TemplateId": "claw-weapon"
     }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-deflector-array",
+      "Name": "Deflector Array",
+      "TemplateId": "deflector-array"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-disruptor-weapon",
+      "Name": "Ion Disruptor",
+      "TemplateId": "disruptor-weapon"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-plasma-repeater",
+      "Name": "Plasma Repeater",
+      "TemplateId": "plasma-repeater"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-ground-magazine",
+      "Name": "Ammo Magazine",
+      "TemplateId": "ground-magazine"
+    }
   }
 ]

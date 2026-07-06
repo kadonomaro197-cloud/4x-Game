@@ -49,6 +49,13 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public double MaxHealth { get; internal set; }
         /// <summary>Current health; a fresh unit starts full, combat whittles it, 0 = destroyed (slice 5c/5d).</summary>
         [JsonProperty] public double Health { get; internal set; }
+        /// <summary>AMMO pool (kg) — the mass of ammunition this unit carries, snapshot of the design's Σ magazine
+        /// capacity (weapon-unification B). 0 = no ammo weapons / no magazine. The ground echo of a magazine on a ship.</summary>
+        [JsonProperty] public double MaxAmmo_kg { get; internal set; }
+        /// <summary>Ammo remaining (kg). A fresh unit starts full; firing an ammo weapon drains it; 0 = DRY — its ammo
+        /// weapons go silent but the unit keeps fighting with any energy/melee weapons (the developer's call). Refilled
+        /// by a resupply order. The in-combat drain rides the resolver merge; this is the durable pool + helper (B).</summary>
+        [JsonProperty] public double CurrentAmmo_kg { get; internal set; }
         /// <summary>Strike RANGE in HEXES (H3) — max hex-distance this unit can hit an enemy (snapshot of the design's
         /// <c>Range</c>). Directed fire: a unit only damages enemies within this reach, so a longer-ranged unit hits a
         /// closing shorter-ranged one without being hit back. 0 = same hex only.</summary>
@@ -125,6 +132,7 @@ namespace Pulsar4X.GroundCombat
             UnitId = o.UnitId; FormationId = o.FormationId;
             DesignId = o.DesignId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
             UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health; Range = o.Range;
+            MaxAmmo_kg = o.MaxAmmo_kg; CurrentAmmo_kg = o.CurrentAmmo_kg;
             Evasion = o.Evasion; Shield = o.Shield; DamageType = o.DamageType;
             MovingToRegion = o.MovingToRegion; TransitSecondsRemaining = o.TransitSecondsRemaining;
             HexQ = o.HexQ; HexR = o.HexR; HexTransitSecondsRemaining = o.HexTransitSecondsRemaining; HexStepBaseSeconds = o.HexStepBaseSeconds;
@@ -344,6 +352,9 @@ namespace Pulsar4X.GroundCombat
                 Defense = design.Defense,
                 MaxHealth = design.HitPoints,
                 Health = design.HitPoints,
+                // Ammo pool (B): a fresh unit musters full, from the design's Σ magazine capacity (0 = no ammo weapons).
+                MaxAmmo_kg = design.AmmoCapacity_kg,
+                CurrentAmmo_kg = design.AmmoCapacity_kg,
                 // Strike range in hexes (H3): the design's, or a per-type default if the design left it unset.
                 Range = design.Range > 0 ? design.Range : GroundRangeTools.DefaultRangeFor(design.UnitType),
                 Evasion = design.Evasion,
@@ -360,6 +371,25 @@ namespace Pulsar4X.GroundCombat
             StampGlobalMuster(body, unit, regionIndex);
             forces.Units.Add(unit);
             return unit;
+        }
+
+        /// <summary>MANUAL RESUPPLY (weapon-unification B, the developer's call): top a unit's ammo back to full IF it
+        /// can draw from a source. **v1 source rule (FLAGGED):** the unit is on FRIENDLY-held ground — its region is
+        /// owned by its own faction (a depot/base in your own territory rearms it). Ship-in-orbit and dedicated
+        /// supply-unit sources are a follow-on. Returns the kg refilled (0 if it has no ammo pool or can't resupply
+        /// here). Resolver-independent — the player/UI invokes it (units aren't entities, so this is the action a
+        /// resupply order/button calls). Never throws.</summary>
+        public static double ResupplyUnit(Entity body, GroundUnit unit)
+        {
+            if (body == null || unit == null || unit.MaxAmmo_kg <= 0) return 0;
+            // Must be on friendly-controlled ground (a base/depot to draw from). If the body has a region layer and the
+            // unit's region isn't owned by its faction, there's nowhere to rearm from. No region layer → allow (no
+            // ownership to check — benefit of the doubt for a bare test body).
+            if (body.TryGetDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>(out var regions)
+                && unit.RegionIndex >= 0 && unit.RegionIndex < regions.Regions.Count
+                && regions.Regions[unit.RegionIndex].OwnerFactionID != unit.FactionOwnerID)
+                return 0;
+            return GroundAmmo.Refill(unit);
         }
 
         /// <summary>Place an EXISTING unit (one that came off a ship's bay — transport landing, T1b) onto

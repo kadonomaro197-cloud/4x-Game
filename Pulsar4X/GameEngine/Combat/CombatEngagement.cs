@@ -93,6 +93,40 @@ namespace Pulsar4X.Combat
         /// </summary>
         public const double SalvoDamageScale = 0.1;
 
+        // --- SHIELD layer (option B, docs/WEAPON-TAXONOMY-DESIGN.md §6) ----------------------------------------
+        //
+        // A depleting/regenerating energy POOL that soaks incoming fire BEFORE the hull's toughness. The
+        // weapon-NATURE matchup is mirrored from the ground GroundDamageMatrix (kinetic soaked best, energy
+        // bleeds through, area partly bypasses, exotic anti-shield ignores it) so the two systems stay consistent.
+        // ADDITIVE: a fleet with no generator has a 0-capacity pool → the whole shield step is a no-op and combat
+        // is byte-identical. ALL four fractions are flagged defaults for the developer's balance pass.
+
+        /// <summary>Fraction of a KINETIC salvo the shield can absorb — mass-at-velocity is what a shield stops best
+        /// (ground <c>ShieldEffVsPhysical</c> = 1.0).</summary>
+        public const double ShieldSoakVsKinetic = 1.0;
+        /// <summary>Fraction of an ENERGY salvo the shield can absorb — coherent energy overloads and BLEEDS through
+        /// a shield (ground <c>ShieldEffVsEnergy</c> = 0.5). This is the Enterprise-vs-Galactica seam: an energy ship
+        /// leaks past a kinetic-tuned shield.</summary>
+        public const double ShieldSoakVsEnergy = 0.5;
+        /// <summary>Fraction of an EXPLOSIVE (blast/warhead) salvo the shield can absorb — an area detonation partly
+        /// bypasses (ground <c>ShieldEffVsArtillery</c> = 0.75).</summary>
+        public const double ShieldSoakVsExplosive = 0.75;
+        /// <summary>Fraction of an EXOTIC salvo the shield can absorb — v1 treats all Exotic as the ANTI-SHIELD
+        /// archetype (ion/matter-strip), DESIGNED to ignore the shield: 0 = full bypass straight to the hull. (Finer
+        /// exotic sub-effects — disable/stun — are the parked exotic-effects build, WEAPON-TAXONOMY §5.)</summary>
+        public const double ShieldSoakVsExotic = 0.0;
+
+        /// <summary>How much of a nature's damage the shield is ABLE to stop (the rest bleeds through no matter the
+        /// charge). Mirrors ground <c>GroundDamageMatrix.ShieldEff</c>.</summary>
+        private static double ShieldSoakFraction(WeaponNature nature) => nature switch
+        {
+            WeaponNature.Kinetic => ShieldSoakVsKinetic,
+            WeaponNature.Energy => ShieldSoakVsEnergy,
+            WeaponNature.Explosive => ShieldSoakVsExplosive,
+            WeaponNature.Exotic => ShieldSoakVsExotic,
+            _ => ShieldSoakVsKinetic,
+        };
+
         /// <summary>Liveness counter (diagnostic only): how many trigger passes the battle engine has run across the
         /// whole game. The client logs this each heartbeat so a remote review can tell "no battle because nothing's
         /// hostile/in-range/detected" apart from "the battle trigger never fires on play" — a documented open
@@ -579,6 +613,11 @@ namespace Pulsar4X.Combat
                 // SalvoDamageScale is the combat-pace dial: only this fraction of the raw salvo energy counts
                 // toward kills, so battles play out over many salvos instead of ending in 2–4 (see the const).
                 double dmgThisSalvo = TotalDamage(incoming) * dt * SalvoDamageScale;
+                // SHIELD (option B): the fleet's shield pool soaks part of the salvo before it reaches the hull, with
+                // the nature matchup (kinetic soaked, energy bleeds, exotic bypasses). No-op — and byte-identical —
+                // for an unshielded fleet (0 capacity). The exact aggregate `dmgThisSalvo` above is preserved so the
+                // unshielded path is untouched to the bit; the shield only ever SUBTRACTS what it absorbs.
+                dmgThisSalvo = ApplyShield(live[i], ships[i], state, incoming, dt, dmgThisSalvo);
                 state.DamageTakenPool += dmgThisSalvo;
                 string attackerLabel = FleetLabel(live[attackersOf[i][0]])
                     + (attackersOf[i].Count > 1 ? " +" + (attackersOf[i].Count - 1) + " more" : "");
@@ -962,15 +1001,23 @@ namespace Pulsar4X.Combat
             }
         }
 
-        private static List<WeaponProfile> BuildFireMix(List<CombatShip> ships, double separation_m = 0)
+        // Internal (not private) so the aggregation invariant is unit-testable (WeaponClassifierTests) — the codebase's
+        // internal-for-test pattern (cf. HitFraction / SoakFractionOf / WithinWeaponRange).
+        internal static List<WeaponProfile> BuildFireMix(List<CombatShip> ships, double separation_m = 0)
         {
-            // class -> (total damage, damage-weighted velocity, tracking, saturation)
-            var byClass = new Dictionary<WeaponClass, (double dmg, double velW, double trkW, double satW)>();
-            void Add(WeaponClass cls, double dmg, double vel, double trk, double sat)
+            // (class, NATURE, DELIVERY) -> (total damage, damage-weighted velocity, tracking, saturation). Bucketing on
+            // BOTH axes keeps the full two-axis identity alive through the aggregation: Nature drives the SHIELD matchup
+            // (kinetic vs energy vs exotic soak differently), and Delivery is what the computed `WeaponProfile.Class`
+            // reads — so the emergent corner survives aggregation; without it a missile aggregated to the default Slug
+            // delivery would misclassify as a railgun.
+            // class→nature→delivery is 1:1 today, so the bucket count is unchanged and the resolve is byte-identical.
+            var byClass = new Dictionary<(WeaponClass cls, WeaponNature nat, WeaponDelivery del), (double dmg, double velW, double trkW, double satW)>();
+            void Add(WeaponClass cls, WeaponNature nat, WeaponDelivery del, double dmg, double vel, double trk, double sat)
             {
                 if (dmg <= 0) return;
-                byClass.TryGetValue(cls, out var e);
-                byClass[cls] = (e.dmg + dmg, e.velW + vel * dmg, e.trkW + trk * dmg, e.satW + sat * dmg);
+                var key = (cls, nat, del);
+                byClass.TryGetValue(key, out var e);
+                byClass[key] = (e.dmg + dmg, e.velW + vel * dmg, e.trkW + trk * dmg, e.satW + sat * dmg);
             }
 
             foreach (var cs in ships)
@@ -984,12 +1031,15 @@ namespace Pulsar4X.Combat
                         // separation 0 (flag off / point blank) or a 0/unbounded weapon range => always fires, so
                         // this is a no-op in the pre-closing path (every existing fixture is unchanged).
                         if (separation_m > 0 && w.Range_m > 0 && w.Range_m < separation_m) continue;
-                        Add(w.Class, w.DamagePerSecond * cs.FirepowerMult, w.Velocity, w.Tracking, w.Saturation);
+                        Add(w.Class, w.Nature, w.Delivery, w.DamagePerSecond * cs.FirepowerMult, w.Velocity, w.Tracking, w.Saturation);
                     }
                 }
                 else if (cv.Firepower > 0)
                 {
-                    Add(WeaponClass.Beam, cv.Firepower * cs.FirepowerMult, FallbackBeamVelocity_mps, 1.0, double.PositiveInfinity);
+                    // Old-style combat value (firepower, no profiles): fires as a light-speed always-hits beam — an
+                    // ENERGY beam, so it half-bleeds a shield (consistent with "fires as a beam"). No shield present in
+                    // the pre-shield fixtures, so this nature choice can't change any existing outcome.
+                    Add(WeaponClass.Beam, WeaponNature.Energy, WeaponDelivery.Beam, cv.Firepower * cs.FirepowerMult, FallbackBeamVelocity_mps, 1.0, double.PositiveInfinity);
                 }
             }
 
@@ -997,7 +1047,7 @@ namespace Pulsar4X.Combat
             foreach (var kv in byClass)
             {
                 double d = kv.Value.dmg;
-                mix.Add(new WeaponProfile(kv.Key, d, kv.Value.velW / d, kv.Value.trkW / d, kv.Value.satW / d));
+                mix.Add(new WeaponProfile(d, kv.Value.velW / d, kv.Value.trkW / d, kv.Value.satW / d, 0, kv.Key.nat, kv.Key.del));
             }
             return mix;
         }
@@ -1009,6 +1059,91 @@ namespace Pulsar4X.Combat
             return sum;
         }
 
+        // ─── Shield layer (option B) ─────────────────────────────────────────────────────────────────────────────
+
+        /// <summary>A fleet's total shield generator capacity + regen (joules, joules/sec), summed health-scaled over
+        /// its ships' cached <see cref="ShipCombatValueDB"/>. 0/0 for an unshielded fleet. v1: raw capacity — NOT
+        /// scaled by doctrine (a "shields hold better on the defensive" dial is a flagged follow-up).</summary>
+        private static (double capacity, double regen) FleetShield(List<CombatShip> ships)
+        {
+            double cap = 0, regen = 0;
+            foreach (var cs in ships)
+            {
+                var cv = CombatValue(cs.Ship);
+                cap += cv.ShieldCapacity_J;
+                regen += cv.ShieldRegen_Jps;
+            }
+            return (cap, regen);
+        }
+
+        /// <summary>The damage-weighted fraction of an incoming fire mix a shield CAN stop — the nature matchup rolled
+        /// up over the salvo (all-kinetic → 1.0, all-energy → 0.5, all-exotic → 0.0, mixes interpolate). Pure; internal
+        /// so it's directly unit-testable like <see cref="HitFraction"/>.</summary>
+        internal static double SoakFractionOf(List<WeaponProfile> incoming)
+        {
+            double total = 0, soak = 0;
+            foreach (var w in incoming)
+            {
+                total += w.DamagePerSecond;
+                soak += w.DamagePerSecond * ShieldSoakFraction(w.Nature);
+            }
+            return total > 0 ? soak / total : 0;
+        }
+
+        /// <summary>Pure shield-soak math (internal for direct unit testing, like <see cref="HitFraction"/> /
+        /// <see cref="WithinWeaponRange(double,double,double)"/>). Given the pool's current charge, capacity, regen, the
+        /// salvo's total hull-damage, the salvo's soakable FRACTION (<see cref="SoakFractionOf"/>) and dt: absorb the
+        /// soakable part up to the charge, then regenerate toward capacity. Returns how much was ABSORBED and the pool
+        /// AFTER. Assumes <paramref name="pool"/> ≥ 0 (the caller lazy-seeds the -1 sentinel). A 0-capacity (unshielded)
+        /// pool absorbs nothing — byte-identical.</summary>
+        internal static (double absorbed, double newPool) ResolveShield(
+            double pool, double capacity, double regen, double salvoDamage, double soakFraction, double dt)
+        {
+            double absorbed = 0;
+            if (capacity > 0 && pool > 0 && soakFraction > 0 && salvoDamage > 0)
+            {
+                double soakable = salvoDamage * soakFraction;
+                absorbed = soakable < pool ? soakable : pool;
+                pool -= absorbed;
+            }
+            // Recharge toward full for the next salvo (the "shields recovering" beat between volleys).
+            if (regen > 0 && pool < capacity)
+                pool = System.Math.Min(capacity, pool + regen * dt);
+            return (absorbed, pool);
+        }
+
+        /// <summary>Drain a fleet's shield pool against this salvo and return the joules that reach the hull
+        /// (<see cref="FleetCombatStateDB.DamageTakenPool"/>). Handles the lazy seed (-1 → full capacity, 0 for an
+        /// unshielded fleet), the nature matchup (via <see cref="SoakFractionOf"/> + <see cref="ResolveShield"/>), and
+        /// the "shields at X% … DOWN!" narration. ADDITIVE: an unshielded fleet (0 capacity) returns the salvo
+        /// unchanged, so combat is byte-identical. v1: the fleet regenerates only on salvos it is under fire (the pool
+        /// only matters when it's being shot) — a flagged simplification.</summary>
+        private static double ApplyShield(Entity fleet, List<CombatShip> ships, FleetCombatStateDB state, List<WeaponProfile> incoming, double dt, double dmgThisSalvo)
+        {
+            var (capacity, regen) = FleetShield(ships);
+            if (state.ShieldPool_J < 0) state.ShieldPool_J = capacity;   // lazy seed: full at first contact (0 if unshielded)
+            if (capacity <= 0) return dmgThisSalvo;                       // no generator → nothing to soak (byte-identical)
+            if (state.ShieldPool_J > capacity) state.ShieldPool_J = capacity;  // ships lost this fight shrink the pool
+
+            double soakFraction = SoakFractionOf(incoming);
+            double before = state.ShieldPool_J;
+            var (absorbed, newPool) = ResolveShield(before, capacity, regen, dmgThisSalvo, soakFraction, dt);
+            state.ShieldPool_J = newPool;
+
+            // Narration (client-on): the Battle Report's "shields holding … DOWN!" beat — only when a shield actually
+            // engaged the fire (soakFraction > 0), and called out ONCE on the salvo it collapses.
+            if (NarrateToLog && soakFraction > 0)
+            {
+                double pct = capacity > 0 ? (newPool / capacity) * 100.0 : 0;
+                if (newPool <= 0 && before > 0)
+                    CombatLog($"{FleetLabel(fleet)} SHIELDS DOWN — {FmtEnergy(absorbed)} absorbed, fire now reaches the hull");
+                else if (newPool > 0)
+                    CombatLog($"{FleetLabel(fleet)} shields at {pct:0}% ({FmtEnergy(newPool)}/{FmtEnergy(capacity)}) — absorbed {FmtEnergy(absorbed)}");
+            }
+
+            return dmgThisSalvo - absorbed;
+        }
+
         /// <summary>Append one fleet's class-aggregated fire to a combined incoming mix, scaling its damage by
         /// <paramref name="scale"/> (an attacker divides its fire among the enemy fleets it faces). Velocity /
         /// tracking / saturation are unchanged — only the amount of that flavor changes. Keeps the incoming list
@@ -1017,7 +1152,7 @@ namespace Pulsar4X.Combat
         {
             if (fire == null || scale <= 0) return;
             foreach (var w in fire)
-                into.Add(new WeaponProfile(w.Class, w.DamagePerSecond * scale, w.Velocity, w.Tracking, w.Saturation));
+                into.Add(new WeaponProfile(w.DamagePerSecond * scale, w.Velocity, w.Tracking, w.Saturation, 0, w.Nature, w.Delivery));
         }
 
         /// <summary>The damage-weighted fraction of an incoming fire mix that LANDS on a ship with the given

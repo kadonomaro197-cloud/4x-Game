@@ -104,5 +104,36 @@ namespace Pulsar4X.Combat
             }
             return reach;
         }
+
+        /// <summary>
+        /// The fleet's total SHIELD pool (joules) — the SUM of every ship's installed shield-generator capacity
+        /// (docs/WEAPON-TAXONOMY-DESIGN.md §6). The defensive twin of <see cref="FirepowerAtRange"/>: firepower is
+        /// what the fleet dishes out, this is the buffer it soaks before its hulls take hits. Summing (not max) is
+        /// correct here — the resolver pools shields per fleet, so this read-model matches how combat actually spends
+        /// them. 0 = an unshielded fleet. What the Fleet Combat tab shows as "Shields". Reads cached
+        /// <see cref="ShipCombatValueDB.ShieldCapacity_J"/>.
+        /// </summary>
+        public static double ShieldCapacity(Entity fleet)
+        {
+            double cap = 0;
+            foreach (var ship in Ships(fleet))
+                if (ship.TryGetDataBlob<ShipCombatValueDB>(out var cv))
+                    cap += cv.ShieldCapacity_J;
+            return cap;
+        }
+
+        /// <summary>
+        /// The fleet's total shield RECHARGE rate (joules/sec) — how fast its pooled shields refill between salvos.
+        /// Sum over ships; 0 for an unshielded fleet. Pairs with <see cref="ShieldCapacity"/> for the defensive
+        /// readout (a big pool that recharges slowly holds a different fight than a small one that snaps back).
+        /// </summary>
+        public static double ShieldRegen(Entity fleet)
+        {
+            double regen = 0;
+            foreach (var ship in Ships(fleet))
+                if (ship.TryGetDataBlob<ShipCombatValueDB>(out var cv))
+                    regen += cv.ShieldRegen_Jps;
+            return regen;
+        }
     }
 }

@@ -170,11 +170,13 @@ This is the active direction on DevBranch. It's a full 2D particle physics simul
 
 ## Ground Combat Extension Points
 
-**Colony orbital bombardment** — done. `OnColonyDamage()` handles population, atmosphere, and installation damage when a weapon hits a colony entity.
+**Colony orbital bombardment** — done. `OnColonyDamage()` handles population, atmosphere, installation damage, **and (2026-07-06) softening the DEFENDING GROUND GARRISON** when a weapon hits a colony entity.
+
+**Garrison softening (2026-07-06) — the space→ground link for "take a planet".** `OnColonyDamage` now calls `ApplyGroundBombardment(planetBody, colonyOwnerFaction, damageStrength)`: an AREA strike deals `GroundBombardmentDamagePerStrength` (**0.01, flagged placeholder**) × `damageStrength` RAW health to every **defending** unit (the colony owner's) on the body, **REDUCED by that unit's own defences through the same `GroundCombat.GroundDamageMatrix` the ground resolver uses** — treated as an undodgeable `Artillery`-class attack, so dodge doesn't help but a **shield soaks a fraction** and **flat armour bounces a little** off the (single, big) source. So a shielded/armoured garrison genuinely resists softening — "build to survive the bombardment" is a real decision. Dead units removed. Defensive (no `GroundForcesDB` / no garrison → no-op, so every existing colony-damage test is byte-identical). v1 flags: whole-surface (not region-targeted); softens only the DEFENDER (friendly-fire on a landed invader is a v2 targeting nuance); bombardment classed as `Artillery`. Calibration is tied to the same unfinalized warhead-energy scale as the colony divisor (gotcha #2) — a beam (strength ~1) barely scratches, a missile/heavy strike genuinely softens. Gauge: `GroundBombardmentTests` (defenders lose health + some die; a non-defender invader is untouched; **a shielded defender resists better than an identical unshielded one**).
 
 **Remaining work for full ground combat integration:**
-1. Create `GroundUnitDamageProfileDB` mirroring `EntityDamageProfileDB` for ground unit formations.
-2. Add ground unit damage routing in `OnTakingDamage()` — check for `GroundUnitDB` (to be created) the same way colony checks for `ColonyInfoDB`.
+1. **Region-targeted** orbital strikes (hit a chosen region's units, not the whole surface).
+2. Optionally a `GroundUnitDamageProfileDB` mirroring `EntityDamageProfileDB` if per-unit spatial damage is ever wanted (v1 uses flat health drain on the data-object units, which is enough).
 3. Wire the missile guidance path to actually call `OnTakingDamage()` on impact — currently missiles are launched but never connect (guidance incomplete, see `Weapons/CLAUDE.md`).
 
 ---

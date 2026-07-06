@@ -67,6 +67,11 @@ namespace Pulsar4X.Combat
         /// missile (long) → flak/railgun (mid, railgun rangeless-but-inaccurate) → beam (knife).</summary>
         public const double MissileRange_m = 1_000_000.0; // ~1000 km
 
+        /// <summary>Ion disruptor (anti-shield exotic) effective range (m) — MID. A coherent ion lance that reaches
+        /// like a light gun but pays for its shield-piercing exotic nature with a modest raw yield. v1 class-default
+        /// (a per-design range field is the follow-up, like beam's MaxRange). FLAGGED default for the balance pass.</summary>
+        public const double DisruptorRange_m = 400_000.0; // ~400 km (mid: reaches, but not a standoff missile)
+
         /// <summary>Role weight for a hull that carries no weapons (utility/transport). v1 stub.</summary>
         public const double UtilityRoleWeight = 0.25;
 
@@ -90,6 +95,10 @@ namespace Pulsar4X.Combat
         /// and enough volume of fire saturates any dodge). v1 stub.</summary>
         public const double EvasionCap = 0.95;
 
+        /// <summary>Speed of light (m/s) — the muzzle velocity a light-speed weapon (a beam / ion lance) reports, so
+        /// the dodge model treats it as undodgeable (velocity ≫ the dodge reference).</summary>
+        public const double LightSpeed_mps = 299_792_458.0;
+
         /// <summary>Damage-per-second the ship can deal (joules/sec). Higher = stronger.</summary>
         [JsonProperty] public double Firepower { get; internal set; }
 
@@ -111,6 +120,14 @@ namespace Pulsar4X.Combat
         /// per-weapon-type breakdown the dodge model + weapon triangle read. <see cref="Firepower"/> is the sum of
         /// these profiles' damage. Empty for an unarmed hull. See docs/WEAPONS-AND-DODGE-DESIGN.md.</summary>
         [JsonProperty] public List<WeaponProfile> Weapons { get; internal set; } = new();
+
+        /// <summary>The SHIELD pool in joules (sum of installed shield generators, health-scaled) — a depleting/regen
+        /// buffer the resolve drains BEFORE toughness (docs/WEAPON-TAXONOMY-DESIGN.md §6). 0 = no shield generator, so
+        /// combat is byte-identical for an unshielded ship until the resolve wiring lands.</summary>
+        [JsonProperty] public double ShieldCapacity_J { get; internal set; }
+
+        /// <summary>How fast the shield pool refills (joules/sec) — the "shields recharging" rate between salvos.</summary>
+        [JsonProperty] public double ShieldRegen_Jps { get; internal set; }
 
         public ShipCombatValueDB() { }
 
@@ -145,6 +162,7 @@ namespace Pulsar4X.Combat
         {
             double toughness = 0;
             var weapons = new List<WeaponProfile>();
+            double shieldCapacity = 0, shieldRegen = 0;   // the space shield pool (0 if no generator → combat unchanged)
 
             if (ship.TryGetDataBlob<ComponentInstancesDB>(out var instances))
             {
@@ -163,7 +181,7 @@ namespace Pulsar4X.Combat
                             double period = beam.ChargePeriod > 0 ? beam.ChargePeriod : 1.0;
                             double dps = (beam.Energy / period) * comp.HealthPercent;
                             // Range (Root A): beams carry their design MaxRange (0 = unbounded, the legacy convention).
-                            weapons.Add(new WeaponProfile(WeaponClass.Beam, dps, beam.BeamSpeed, beam.BaseHitChance, 1.0 / period, beam.MaxRange));
+                            weapons.Add(new WeaponProfile(dps, beam.BeamSpeed, beam.BaseHitChance, 1.0 / period, beam.MaxRange, WeaponNature.Energy, WeaponDelivery.Beam));
                         }
                     }
                 }
@@ -183,7 +201,7 @@ namespace Pulsar4X.Combat
                             // (and so "outside detection range"). v1 class-default; a per-design field (an Atb + JSON,
                             // like beam's MaxRange) is the next step. Only bites when EnableClosingRange is on (live);
                             // with it off (the headless fixtures) SeparationOf is 0 so the range gate is a no-op.
-                            weapons.Add(new WeaponProfile(WeaponClass.Railgun, dps, rg.MuzzleVelocity_mps, rg.Tracking, rg.RoundsPerSecond, RailgunRange_m));
+                            weapons.Add(new WeaponProfile(dps, rg.MuzzleVelocity_mps, rg.Tracking, rg.RoundsPerSecond, RailgunRange_m, WeaponNature.Kinetic, WeaponDelivery.Slug));
                         }
                     }
                 }
@@ -200,7 +218,42 @@ namespace Pulsar4X.Combat
                             double saturation = flak.RoundsPerSecond * flak.PelletsPerShot;
                             double dps = flak.DamagePerPellet_J * saturation * comp.HealthPercent;
                             // Range (the authentic-closing pass): flak is SHORT-ranged point defense (hard cutoff).
-                            weapons.Add(new WeaponProfile(WeaponClass.Flak, dps, flak.MuzzleVelocity_mps, flak.Tracking, saturation, FlakRange_m));
+                            weapons.Add(new WeaponProfile(dps, flak.MuzzleVelocity_mps, flak.Tracking, saturation, FlakRange_m, WeaponNature.Kinetic, WeaponDelivery.Cloud));
+                        }
+                    }
+                }
+
+                // Ion disruptors: the ANTI-SHIELD exotic (docs/WEAPON-TAXONOMY-DESIGN.md §5, Phase D). Light-speed
+                // (undodgeable, tracks perfectly like a beam) but EXOTIC nature — the shield's exotic-soak is 0, so it
+                // bypasses the pool and strikes the hull. damage/sec = energy/shot × rounds/sec.
+                if (instances.TryGetComponentsByAttribute<DisruptorWeaponAtb>(out var disruptors))
+                {
+                    foreach (var comp in disruptors)
+                    {
+                        if (comp.Design.TryGetAttribute<DisruptorWeaponAtb>(out var dis))
+                        {
+                            double dps = dis.EnergyPerShot_J * dis.RoundsPerSecond * comp.HealthPercent;
+                            // Light-speed delivery (undodgeable, tracks 1.0) so it lands like a beam; Exotic nature so
+                            // it bypasses shields. Delivery.Beam, Nature.Exotic — the two-axis split in action.
+                            weapons.Add(new WeaponProfile(dps, LightSpeed_mps, 1.0, dis.RoundsPerSecond, DisruptorRange_m, WeaponNature.Exotic, WeaponDelivery.Beam));
+                        }
+                    }
+                }
+
+                // Plasma repeaters: the two-axis corner the old enum couldn't name — ENERGY nature (a shield only
+                // half-soaks it, it bleeds through like a beam) but a finite-velocity BOLT delivery (dodgeable like a
+                // slug, unlike a beam). Reads as Railgun-CLASS in the dodge model (finite velocity → juke-able), but its
+                // Energy nature is what meets the shield. damage/sec = energy/shot × rounds/sec.
+                if (instances.TryGetComponentsByAttribute<PlasmaBoltWeaponAtb>(out var plasmas))
+                {
+                    foreach (var comp in plasmas)
+                    {
+                        if (comp.Design.TryGetAttribute<PlasmaBoltWeaponAtb>(out var pl))
+                        {
+                            double dps = pl.EnergyPerShot_J * pl.RoundsPerSecond * comp.HealthPercent;
+                            // Class Railgun (dodge behaviour = finite-velocity ballistic), Nature Energy, Delivery Bolt —
+                            // the split axes in action. Reuses the mid RailgunRange_m (a bolt reaches like a light gun).
+                            weapons.Add(new WeaponProfile(dps, pl.MuzzleVelocity_mps, pl.Tracking, pl.RoundsPerSecond, RailgunRange_m, WeaponNature.Energy, WeaponDelivery.Bolt));
                         }
                     }
                 }
@@ -213,7 +266,22 @@ namespace Pulsar4X.Combat
                     {
                         double dps = MissileLauncherFirepowerStub * comp.HealthPercent;
                         // Range (the authentic-closing pass): missiles are the LONG-range standoff opener (hard cutoff).
-                        weapons.Add(new WeaponProfile(WeaponClass.Missile, dps, MissileVelocityStub_mps, MissileTrackingStub, MissileSaturationStub, MissileRange_m));
+                        weapons.Add(new WeaponProfile(dps, MissileVelocityStub_mps, MissileTrackingStub, MissileSaturationStub, MissileRange_m, WeaponNature.Explosive, WeaponDelivery.Guided));
+                    }
+                }
+
+                // SHIELD generators — the space shield pool (docs/WEAPON-TAXONOMY-DESIGN.md §6). A depleting/regen
+                // energy pool the resolve will drain before the hull's toughness (a later slice). Scaled by the
+                // generator's own health (a damaged/shot-off generator projects a weaker/no shield — the grave rung).
+                if (instances.TryGetComponentsByAttribute<ShieldAtb>(out var shieldGens))
+                {
+                    foreach (var comp in shieldGens)
+                    {
+                        if (comp.Design.TryGetAttribute<ShieldAtb>(out var sh))
+                        {
+                            shieldCapacity += sh.Capacity_J * comp.HealthPercent;
+                            shieldRegen += sh.RegenRate_Jps * comp.HealthPercent;
+                        }
                     }
                 }
             }
@@ -233,6 +301,8 @@ namespace Pulsar4X.Combat
             {
                 Evasion = CalculateEvasion(ship),
                 Weapons = weapons,
+                ShieldCapacity_J = shieldCapacity,
+                ShieldRegen_Jps = shieldRegen,
             };
         }
 

@@ -242,6 +242,52 @@ defaults — the developer chose **research-gating** for the *top* of the scale,
 (ground **and** space) with `TechData('...')`-driven ceilings (the pattern already used for factory/shipyard size),
 and fixes the `int` energy / missile-warhead caps. Full audit + build plan: task #2.
 
+**✅ Slice 2a BUILT (2026-07-05) — beam pulse energy `int`→`double`.** `GenericBeamWeaponAtb.Energy` was an `int`
+that silently overflowed (wrapped negative) past ~2.1 GJ, capping a superlaser; the whole downstream chain was already
+double. No new numbers. Gauge: `GenericBeamWeaponAtbTests`.
+
+**⏮ Slice 2b BUILT then REVERTED (2026-07-05) — was `tech-ground-weapon-yield` under `tech-category-ground-combat`.**
+It research-gated the ground-weapon Attack ceiling via a NEW ground-category tech. **Reverted on the developer's
+correction:** *"ground weapons isnt a design component category — weapons should just be applicable to all settings."*
+A per-SETTING weapon-yield tech is the wrong shape; weapon-scale techs must be per-TYPE and setting-agnostic (like the
+beam gate below). The tech + its cascade entry + the 5 `TechData` Attack caps + the gauge were removed; ground weapons
+are back to a flat, **dialable** cap (slice 1). Proper research-gating returns type-based once the weapon systems are
+unified (task #3 / `UNIVERSAL-ASSEMBLY-DESIGN.md` §2a). See the CATEGORY-UNIFICATION note below.
+
+**✅ Weapon designer CATEGORY unified (2026-07-05) — one "Weapon" category, not per-setting.** The five ground-weapon
+templates' `ComponentType` was `"Ground Weapon"` (a *second* weapon category — `ComponentDesignWindow` groups its tabs
+by `ComponentType`, `ComponentDesignWindow.cs:42`), while space weapons are `"Weapon"`. Changed the ground weapons to
+`"Weapon"` so **all weapons live in ONE designer category** — you pick a weapon and spec it, you don't choose "ground"
+vs "space." Safe (nothing keyed off the string — only `GroundWeaponAtb.AtbName()`, a display label); the `MountType`
+(`GroundUnit` vs `ShipComponent`) still gates where each can install. Gauge:
+`WeaponScaleGateTests.Weapons_ShareOneDesignerCategory_NotSplitBySetting`. **Still owed (task #3, the deep one):**
+`GroundWeaponAtb` is still a parallel weapon system to the space atbs (an "energy weapon" exists twice) — merging them
+so ONE weapon design feeds BOTH resolvers is the architectural project, designed before code.
+
+**Follow-ups (post-unification):** gate weapon scale per-TYPE (beam done below; kinetic/missile next); make weapon
+mass/cost scale with firepower so a maxed gun isn't cheap (a flagged balance hole).
+
+**✅ Slice 3 BUILT (2026-07-05) — BEAM range research-gated (first space weapon).** Same proven pattern: the laser's
+`Range` `MaxFormula` (was flat `10000`) now reads `TechData('tech-beam-range')` — a new tech (category
+`tech-category-energy-weapons`) in the `tech-modern-technology` cascade (crash-safe; the laser already depends on
+cascade-unlocked `tech-capacitors`/`tech-conductors`, proving it builds post-unlock). `DataFormula =
+(1 + [Level]) * 10000` → level 0 == today's cap; research raises the reach — the developer's *"long range is EARNED,
+not given"* rule made real. Gauge: `WeaponScaleGateTests.BeamRangeCeiling_RisesWithResearch`. **Growth is MULTIPLICATIVE (2026-07-06, developer's call):**
+`DataFormula = 10000 * Pow(2, [Level])` — doubles each research level (level 0 == 10 km unchanged; ~10,000 km at max
+level 10). **FLAGGED tunables (techs.json):** the ×2 multiplier + `MaxLevel 10` set the sci-fi ceiling.
+
+**✅ Slice 4 BUILT (2026-07-05) — KINETIC yield research-gated.** Same pattern, type-based: the railgun's `Kinetic
+Energy Per Shot` `MaxFormula` (was flat `1e7`) now reads `TechData('tech-kinetic-yield')` — a new tech (category
+`tech-category-missiles-kinetic-weapons`) in the `tech-modern-technology` cascade. `DataFormula = (1 + [Level]) *
+10000000` → level 0 == today's cap; research raises how hard a slug hits. A per-TYPE, **setting-agnostic** weapon
+tech (lifts the ceiling for any kinetic weapon, ship or ground — the correct shape post-category-fix). Gauge:
+`WeaponScaleGateTests.RailgunKineticEnergyCeiling_RisesWithResearch`. **Growth MULTIPLICATIVE (2026-07-06):**
+`DataFormula = 10000000 * Pow(2, [Level])` (level 0 == 10 MJ unchanged; ~10 GJ at max). **FLAGGED (techs.json):** the
+×2 multiplier + `MaxLevel 10`. **Still owed:** the other beam caps (lens/chamber/power → pulse energy), flak
+saturation, missile warhead. **NOTE (2026-07-06):** the DEEP weapon unification is now DECIDED — one designer for
+everything, delete the ground weapon system, ground reads the weapon triangle at full fidelity (`WEAPON-UNIFICATION-DESIGN.md`
+§0). These space-cap gates continue as type-based (they survive the merge).
+
 ### 6c. The four are NOT a cage on the designer (2026-07-05)
 
 A fair worry: *doesn't consolidating into four systems impede creativity in the designer?* No — because the four

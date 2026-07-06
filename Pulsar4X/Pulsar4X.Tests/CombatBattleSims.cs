@@ -84,7 +84,7 @@ namespace Pulsar4X.Tests
 
         // A fresh evasive railgun screen of n ships (the dodging defenders), sized so the 50%-loss retreat never bites in-window.
         private static Entity Screen(TestScenario s, Entity faction, int n, double evasion, double tough, string tag)
-            => Squadron(s, faction, n, 100, tough, evasion, new WeaponProfile(WeaponClass.Railgun, 100, 50_000, 0.05, 5), tag);
+            => Squadron(s, faction, n, 100, tough, evasion, new WeaponProfile(100, 50_000, 0.05, 5), tag);
 
         // Fire one stamped battery (huge toughness) at a fresh evasive screen for a fixed window; return kills.
         private static int KilledInWindow(TestScenario s, Entity red, WeaponProfile gun, int n, double ev, double tough, int steps)
@@ -103,9 +103,9 @@ namespace Pulsar4X.Tests
         {
             var fleet = MakeFleet(s, faction, tag);
             for (int i = 0; i < nFighters; i++)
-                Stamp(s, faction, fleet, 5_000, 100_000, 0.9, new WeaponProfile(WeaponClass.Railgun, 5_000, 50_000, 0.05, 5), tag + "f" + i);
+                Stamp(s, faction, fleet, 5_000, 100_000, 0.9, new WeaponProfile(5_000, 50_000, 0.05, 5), tag + "f" + i);
             for (int i = 0; i < nCaps; i++)
-                Stamp(s, faction, fleet, 50_000, 500_000, 0.0, new WeaponProfile(WeaponClass.Railgun, 50_000, 50_000, 0.05, 5), tag + "c" + i);
+                Stamp(s, faction, fleet, 50_000, 500_000, 0.0, new WeaponProfile(50_000, 50_000, 0.05, 5), tag + "c" + i);
             return fleet;
         }
 
@@ -131,8 +131,8 @@ namespace Pulsar4X.Tests
         {
             var s = TestScenario.CreateWithColony();
             var red = FactionFactory.CreateBasicFaction(s.Game, "R", "RED", 0);
-            var blue = Squadron(s, s.Faction, 50, 10_000, 200_000, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "blue");
-            var redf = Squadron(s, red, 50, 10_000, 200_000, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "red");
+            var blue = Squadron(s, s.Faction, 50, 10_000, 200_000, 0.3, new WeaponProfile(10_000, 50_000, 0.05, 5), "blue");
+            var redf = Squadron(s, red, 50, 10_000, 200_000, 0.3, new WeaponProfile(10_000, 50_000, 0.05, 5), "red");
             var (bl, rd, steps) = Resolve(blue, redf, 5000);
             Assert.That(steps, Is.GreaterThan(15), $"[BSIM-01] 50v50 mirror resolved in {steps} salvos = {steps * 5}s game-time (blue={bl} red={rd}) -> battles last many salvos now, not 2-4.");
         }
@@ -145,8 +145,8 @@ namespace Pulsar4X.Tests
             var red = FactionFactory.CreateBasicFaction(s.Game, "R", "RED", 0);
             int Steps(double tough)
             {
-                var b = Squadron(s, s.Faction, 20, 10_000, tough, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "b" + tough);
-                var r = Squadron(s, red, 20, 10_000, tough, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "r" + tough);
+                var b = Squadron(s, s.Faction, 20, 10_000, tough, 0.3, new WeaponProfile(10_000, 50_000, 0.05, 5), "b" + tough);
+                var r = Squadron(s, red, 20, 10_000, tough, 0.3, new WeaponProfile(10_000, 50_000, 0.05, 5), "r" + tough);
                 return Resolve(b, r, 5000).steps;
             }
             int s1 = Steps(200_000), s4 = Steps(800_000), s16 = Steps(3_200_000);
@@ -160,7 +160,7 @@ namespace Pulsar4X.Tests
         {
             var s = TestScenario.CreateWithColony();
             var red = FactionFactory.CreateBasicFaction(s.Game, "R", "RED", 0);
-            int K(double sat) => KilledInWindow(s, red, new WeaponProfile(WeaponClass.Railgun, 200_000, 50_000, 0.05, sat), 100, 0.9, 100_000, 40);
+            int K(double sat) => KilledInWindow(s, red, new WeaponProfile(200_000, 50_000, 0.05, sat), 100, 0.9, 100_000, 40);
             int k1 = K(1), k10 = K(10), k100 = K(100), k1000 = K(1000);
             Assert.That(k1000, Is.GreaterThan(k1), $"[BSIM-03] saturation curve (kills of 100, ev0.9, 40 salvos): sat1={k1} sat10={k10} sat100={k100} sat1000={k1000} -> more rate-of-fire defeats more dodge.");
             Assert.That(k100, Is.GreaterThan(k10), $"[BSIM-03] the curve is monotonic: sat1={k1} sat10={k10} sat100={k100} sat1000={k1000}.");
@@ -172,7 +172,7 @@ namespace Pulsar4X.Tests
         {
             var s = TestScenario.CreateWithColony();
             var red = FactionFactory.CreateBasicFaction(s.Game, "R", "RED", 0);
-            int K(double ev) => KilledInWindow(s, red, new WeaponProfile(WeaponClass.Railgun, 200_000, 50_000, 0.05, 5), 100, ev, 100_000, 40);
+            int K(double ev) => KilledInWindow(s, red, new WeaponProfile(200_000, 50_000, 0.05, 5), 100, ev, 100_000, 40);
             int e0 = K(0.0), e30 = K(0.3), e60 = K(0.6), e90 = K(0.9), e95 = K(0.95);
             Assert.That(e0, Is.GreaterThan(e95), $"[BSIM-04] evasion curve (kills of 100, slug, 40 salvos): ev0={e0} ev0.3={e30} ev0.6={e60} ev0.9={e90} ev0.95={e95} -> evasion saves ships.");
             Assert.That(e30, Is.GreaterThan(e90), $"[BSIM-04] the curve is monotonic: ev0={e0} ev0.3={e30} ev0.6={e60} ev0.9={e90} ev0.95={e95}.");
@@ -186,12 +186,12 @@ namespace Pulsar4X.Tests
             var red = FactionFactory.CreateBasicFaction(s.Game, "R", "RED", 0);
             int combinedLeft = MixSurvivors(s, red, new[]
             {
-                new WeaponProfile(WeaponClass.Railgun, 400_000, 50_000, 0.05, 5),
-                new WeaponProfile(WeaponClass.Flak, 400_000, 20_000, 0.10, 300),
+                new WeaponProfile(400_000, 50_000, 0.05, 5),
+                new WeaponProfile(400_000, 20_000, 0.10, 300),
             }, 50);
             int monoLeft = MixSurvivors(s, red, new[]
             {
-                new WeaponProfile(WeaponClass.Railgun, 800_000, 50_000, 0.05, 5),
+                new WeaponProfile(800_000, 50_000, 0.05, 5),
             }, 50);
             Assert.That(combinedLeft, Is.LessThan(monoLeft),
                 $"[BSIM-05] mixed enemy (80 fighters ev0.9 + 20 caps) survivors after 50 salvos: vs combined(railgun+flak)={combinedLeft}, vs mono-railgun={monoLeft} -> combined arms clears more.");
@@ -203,8 +203,8 @@ namespace Pulsar4X.Tests
         {
             var s = TestScenario.CreateWithColony();
             var red = FactionFactory.CreateBasicFaction(s.Game, "R", "RED", 0);
-            var heavy = Squadron(s, s.Faction, 5, 40_000, 400_000, 0.0, new WeaponProfile(WeaponClass.Railgun, 40_000, 50_000, 0.05, 5), "heavy");
-            var light = Squadron(s, red, 50, 4_000, 40_000, 0.0, new WeaponProfile(WeaponClass.Railgun, 4_000, 50_000, 0.05, 5), "light");
+            var heavy = Squadron(s, s.Faction, 5, 40_000, 400_000, 0.0, new WeaponProfile(40_000, 50_000, 0.05, 5), "heavy");
+            var light = Squadron(s, red, 50, 4_000, 40_000, 0.0, new WeaponProfile(4_000, 50_000, 0.05, 5), "light");
             var (hv, lt, steps) = Resolve(heavy, light, 5000);
             Assert.That(hv, Is.GreaterThan(0), $"[BSIM-06] quality(5x fp40k/tough400k) vs quantity(50x fp4k/tough40k), equal totals: {steps} salvos, heavy={hv}/5 light={lt}/50 -> the concentrated force survives.");
             Assert.That(hv / 5.0, Is.GreaterThan(lt / 50.0), $"[BSIM-06] quality keeps a higher FRACTION than quantity: heavy {hv}/5 vs light {lt}/50 ({steps} salvos).");
@@ -217,9 +217,9 @@ namespace Pulsar4X.Tests
             var s = TestScenario.CreateWithColony();
             var f2 = FactionFactory.CreateBasicFaction(s.Game, "G", "GRN", 0);
             var f3 = FactionFactory.CreateBasicFaction(s.Game, "P", "PUR", 0);
-            var a = Squadron(s, s.Faction, 10, 10_000, 200_000, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "A");
-            var b = Squadron(s, f2, 10, 10_000, 200_000, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "B");
-            var c = Squadron(s, f3, 10, 10_000, 200_000, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "C");
+            var a = Squadron(s, s.Faction, 10, 10_000, 200_000, 0.3, new WeaponProfile(10_000, 50_000, 0.05, 5), "A");
+            var b = Squadron(s, f2, 10, 10_000, 200_000, 0.3, new WeaponProfile(10_000, 50_000, 0.05, 5), "B");
+            var c = Squadron(s, f3, 10, 10_000, 200_000, 0.3, new WeaponProfile(10_000, 50_000, 0.05, 5), "C");
             CombatEngagement.EnsureInCombat(a, b.Id);
             CombatEngagement.EnsureInCombat(b, c.Id);
             CombatEngagement.EnsureInCombat(c, a.Id);
@@ -239,14 +239,14 @@ namespace Pulsar4X.Tests
             var red = FactionFactory.CreateBasicFaction(s.Game, "R", "RED", 0);
 
             // Control: 10 player vs 20 enemy — the player is out-gunned 2:1 and breaks off, the enemy barely scratched.
-            var pc = Squadron(s, s.Faction, 10, 10_000, 200_000, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "pc");
-            var ec = Squadron(s, red, 20, 10_000, 200_000, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "ec");
+            var pc = Squadron(s, s.Faction, 10, 10_000, 200_000, 0.3, new WeaponProfile(10_000, 50_000, 0.05, 5), "pc");
+            var ec = Squadron(s, red, 20, 10_000, 200_000, 0.3, new WeaponProfile(10_000, 50_000, 0.05, 5), "ec");
             var (pcl, ecl, ccs) = Resolve(pc, ec, 5000);
 
             // Reinforced: same 10 vs 20, but a 15-ship ally JOINS after the fight is underway.
-            var pt = Squadron(s, s.Faction, 10, 10_000, 200_000, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "pt");
-            var et = Squadron(s, red, 20, 10_000, 200_000, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "et");
-            var relief = Squadron(s, s.Faction, 15, 10_000, 200_000, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "relief");
+            var pt = Squadron(s, s.Faction, 10, 10_000, 200_000, 0.3, new WeaponProfile(10_000, 50_000, 0.05, 5), "pt");
+            var et = Squadron(s, red, 20, 10_000, 200_000, 0.3, new WeaponProfile(10_000, 50_000, 0.05, 5), "et");
+            var relief = Squadron(s, s.Faction, 15, 10_000, 200_000, 0.3, new WeaponProfile(10_000, 50_000, 0.05, 5), "relief");
             CombatEngagement.EnsureInCombat(pt, et.Id);
             CombatEngagement.EnsureInCombat(et, pt.Id);
             var group = new List<Entity> { pt, et, relief };
@@ -269,13 +269,13 @@ namespace Pulsar4X.Tests
             var aggro = new CombatDoctrineBlueprint { UniqueID = "b09-aggro", DisplayName = "aggro", Family = "Offensive", FirepowerMult = 2.0, ToughnessMult = 1.0, CooldownSeconds = 0 };
 
             // Control: even mirror, nobody switches.
-            var pc = Squadron(s, s.Faction, 30, 10_000, 200_000, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "pc");
-            var ec = Squadron(s, red, 30, 10_000, 200_000, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "ec");
+            var pc = Squadron(s, s.Faction, 30, 10_000, 200_000, 0.3, new WeaponProfile(10_000, 50_000, 0.05, 5), "pc");
+            var ec = Squadron(s, red, 30, 10_000, 200_000, 0.3, new WeaponProfile(10_000, 50_000, 0.05, 5), "ec");
             var (pcl, ecl, ccs) = Resolve(pc, ec, 5000);
 
             // Test: fight neutral a while, then switch the player to all-out-attack mid-engagement.
-            var pt = Squadron(s, s.Faction, 30, 10_000, 200_000, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "pt");
-            var et = Squadron(s, red, 30, 10_000, 200_000, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "et");
+            var pt = Squadron(s, s.Faction, 30, 10_000, 200_000, 0.3, new WeaponProfile(10_000, 50_000, 0.05, 5), "pt");
+            var et = Squadron(s, red, 30, 10_000, 200_000, 0.3, new WeaponProfile(10_000, 50_000, 0.05, 5), "et");
             CombatEngagement.StartEngagement(pt, et);
             int k = 0;
             for (; k < 8 && pt.HasDataBlob<FleetCombatStateDB>() && et.HasDataBlob<FleetCombatStateDB>(); k++)
@@ -296,8 +296,8 @@ namespace Pulsar4X.Tests
             var s = TestScenario.CreateWithColony();
             var red = FactionFactory.CreateBasicFaction(s.Game, "R", "RED", 0);
             var dread = MakeFleet(s, s.Faction, "Dreadnought");
-            Stamp(s, s.Faction, dread, 5_000_000, 50_000_000, 0.0, new WeaponProfile(WeaponClass.Railgun, 5_000_000, 50_000, 0.05, 5), "Dread");
-            var gnats = Squadron(s, red, 1000, 5_000, 50_000, 0.5, new WeaponProfile(WeaponClass.Railgun, 5_000, 50_000, 0.05, 5), "gnat");
+            Stamp(s, s.Faction, dread, 5_000_000, 50_000_000, 0.0, new WeaponProfile(5_000_000, 50_000, 0.05, 5), "Dread");
+            var gnats = Squadron(s, red, 1000, 5_000, 50_000, 0.5, new WeaponProfile(5_000, 50_000, 0.05, 5), "gnat");
 
             CombatEngagement.StartEngagement(dread, gnats);
             var sw = System.Diagnostics.Stopwatch.StartNew();

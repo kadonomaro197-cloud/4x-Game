@@ -24,9 +24,9 @@ namespace Pulsar4X.Tests
         [Description("Hit fraction: beams ignore evasion; ballistic slugs are dodged by the evasive but land on the sluggish; flak's saturation floors it above a slug.")]
         public void HitFraction_BeamsIgnoreEvasion_SlugsAreDodged_FlakFloors()
         {
-            var beam = new WeaponProfile(WeaponClass.Beam, 1000, 3e8, 0.95, 0.5);
-            var slug = new WeaponProfile(WeaponClass.Railgun, 1000, 50_000, 0.05, 5);
-            var flak = new WeaponProfile(WeaponClass.Flak, 1000, 20_000, 0.10, 2000);
+            var beam = new WeaponProfile(1000, 3e8, 0.95, 0.5);
+            var slug = new WeaponProfile(1000, 50_000, 0.05, 5);
+            var flak = new WeaponProfile(1000, 20_000, 0.10, 2000);
 
             double beamVsFighter = CombatEngagement.HitFraction(beam, 0.9);
             double slugVsFighter = CombatEngagement.HitFraction(slug, 0.9);
@@ -48,9 +48,9 @@ namespace Pulsar4X.Tests
                      "legacy 2-arg curve exactly, so the pre-closing resolve is byte-identical.")]
         public void HitFraction_RangeDegradesBallistics_NotBeamsOrGuided()
         {
-            var beam    = new WeaponProfile(WeaponClass.Beam, 1000, 3e8, 0.95, 0.5);     // light-speed
-            var slug    = new WeaponProfile(WeaponClass.Railgun, 1000, 5_000, 0.05, 5);  // slow, DUMB (low tracking)
-            var missile = new WeaponProfile(WeaponClass.Missile, 1000, 5_000, 0.9, 5);   // slow but GUIDED (high tracking)
+            var beam    = new WeaponProfile(1000, 3e8, 0.95, 0.5);     // light-speed
+            var slug    = new WeaponProfile(1000, 5_000, 0.05, 5);  // slow, DUMB (low tracking)
+            var missile = new WeaponProfile(1000, 5_000, 0.9, 5);   // slow but GUIDED (high tracking)
 
             const double ev = 0.9;            // a nimble target
             const double far = 1_000_000.0;   // a 1000 km gap
@@ -80,7 +80,7 @@ namespace Pulsar4X.Tests
                      "(the developer's 'no combat within weapons range' play-test).")]
         public void HitFraction_RangeDegradesBallistics_EvenVsSittingTarget()
         {
-            var slug = new WeaponProfile(WeaponClass.Railgun, 1000, 5_000, 0.05, 5);   // slow, DUMB (low tracking)
+            var slug = new WeaponProfile(1000, 5_000, 0.05, 5);   // slow, DUMB (low tracking)
             double near = CombatEngagement.HitFraction(slug, 0.0, 0);                  // point blank vs a 0-evasion hull
             double far  = CombatEngagement.HitFraction(slug, 0.0, 1_000_000);          // 1000 km vs the SAME hull
             TestContext.Progress.WriteLine($"[dodge] slug vs 0-evasion: near={near:0.###} far={far:0.###}");
@@ -90,7 +90,7 @@ namespace Pulsar4X.Tests
 
             // A GUIDED weapon resists the base miss even at range (it corrects in flight) — so the falloff is the
             // ballistic weapon's problem, not a flat distance penalty on everything.
-            var missile = new WeaponProfile(WeaponClass.Missile, 1000, 5_000, 0.9, 5);
+            var missile = new WeaponProfile(1000, 5_000, 0.9, 5);
             double missFar = CombatEngagement.HitFraction(missile, 0.0, 1_000_000);
             Assert.That(missFar, Is.GreaterThan(far), "a guided missile holds accuracy at the range a dumb slug loses it");
         }
@@ -110,7 +110,7 @@ namespace Pulsar4X.Tests
         }
 
         private static ShipCombatValueDB Railgunner(double dps)
-            => new ShipCombatValueDB(dps, 100_000, 1.0) { Weapons = { new WeaponProfile(WeaponClass.Railgun, dps, 50_000, 0.05, 5) } };
+            => new ShipCombatValueDB(dps, 100_000, 1.0) { Weapons = { new WeaponProfile(dps, 50_000, 0.05, 5) } };
 
         // An unarmed defender hull — same toughness, differing only in evasion (so evasion is the only variable).
         private static ShipCombatValueDB Hull(double evasion, double toughness)

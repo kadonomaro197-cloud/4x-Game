@@ -100,13 +100,13 @@ namespace Pulsar4X.Tests
             const double dps = 40_000; // equal for both attackers — only the flavor differs
 
             var beamGun = MakeFleet(s, red, "Beam Battery");
-            AddGun(s, red, beamGun, new WeaponProfile(WeaponClass.Beam, dps, 3e8, 0.95, 0.5), "Beamer");
+            AddGun(s, red, beamGun, new WeaponProfile(dps, 3e8, 0.95, 0.5), "Beamer");
             var beamScreen = MakeFleet(s, s.Faction, "Beam-side Screen");
             for (int i = 0; i < screen; i++) AddReal(s, s.Faction, beamScreen, Fighter, "BW" + i);
             int survivesBeam = RunBattle(beamGun, beamScreen, 400);
 
             var slugGun = MakeFleet(s, red, "Slug Battery");
-            AddGun(s, red, slugGun, new WeaponProfile(WeaponClass.Railgun, dps, 50_000, 0.05, 5), "Slugger");
+            AddGun(s, red, slugGun, new WeaponProfile(dps, 50_000, 0.05, 5), "Slugger");
             var slugScreen = MakeFleet(s, s.Faction, "Slug-side Screen");
             for (int i = 0; i < screen; i++) AddReal(s, s.Faction, slugScreen, Fighter, "SW" + i);
             int survivesRailgun = RunBattle(slugGun, slugScreen, 400);
@@ -126,13 +126,13 @@ namespace Pulsar4X.Tests
             const double dps = 40_000;
 
             var slugGun = MakeFleet(s, red, "Slug Battery");
-            AddGun(s, red, slugGun, new WeaponProfile(WeaponClass.Railgun, dps, 50_000, 0.05, 5), "Slugger");
+            AddGun(s, red, slugGun, new WeaponProfile(dps, 50_000, 0.05, 5), "Slugger");
             var slugScreen = MakeFleet(s, s.Faction, "Slug-side Screen");
             for (int i = 0; i < screen; i++) AddReal(s, s.Faction, slugScreen, Fighter, "SW" + i);
             int survivesRailgun = RunBattle(slugGun, slugScreen, 400);
 
             var flakGun = MakeFleet(s, red, "Flak Battery");
-            AddGun(s, red, flakGun, new WeaponProfile(WeaponClass.Flak, dps, 20_000, 0.10, 300), "Flakker");
+            AddGun(s, red, flakGun, new WeaponProfile(dps, 20_000, 0.10, 300), "Flakker");
             var flakScreen = MakeFleet(s, s.Faction, "Flak-side Screen");
             for (int i = 0; i < screen; i++) AddReal(s, s.Faction, flakScreen, Fighter, "FW" + i);
             int survivesFlak = RunBattle(flakGun, flakScreen, 400);

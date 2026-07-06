@@ -49,9 +49,9 @@ namespace Pulsar4X.Tests
                 "the armoured capital out-toughs the paper-thin fighter (the other half of the trade)");
 
             // The three dodge edges, evaluated against the fighter's REAL evasion (and the capital's, for the slug).
-            var beam = new WeaponProfile(WeaponClass.Beam, 1000, 3e8, 0.95, 0.5);      // ≈ light-speed
-            var slug = new WeaponProfile(WeaponClass.Railgun, 1000, 50_000, 0.05, 5);  // ballistic, low saturation
-            var flak = new WeaponProfile(WeaponClass.Flak, 1000, 20_000, 0.10, 300);   // high saturation
+            var beam = new WeaponProfile(1000, 3e8, 0.95, 0.5);      // ≈ light-speed
+            var slug = new WeaponProfile(1000, 50_000, 0.05, 5);  // ballistic, low saturation
+            var flak = new WeaponProfile(1000, 20_000, 0.10, 300);   // high saturation
 
             double beamVsFighter = CombatEngagement.HitFraction(beam, fighter.Evasion);
             double slugVsFighter = CombatEngagement.HitFraction(slug, fighter.Evasion);

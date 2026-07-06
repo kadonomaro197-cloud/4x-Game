@@ -21,7 +21,7 @@
         "fissile-fuels": "PropertyValue('Fuel Consumption') * 3600 * PropertyValue('Lifetime')"
       },
       "ComponentType": "Facility",
-      "MountType": "ShipComponent, ShipCargo, Fighter",
+      "MountType": "ShipComponent, ShipCargo, Fighter, GroundUnit",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "component-construction",
       "Properties": [
@@ -154,7 +154,7 @@
         "copper": "PropertyValue('Electrics and wiring')"
       },
       "ComponentType": "Energy Generator",
-      "MountType": "ShipComponent, ShipCargo, Fighter",
+      "MountType": "ShipComponent, ShipCargo, Fighter, GroundUnit",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "component-construction",
       "Properties": [
@@ -279,7 +279,7 @@
         
       },
       "ComponentType": "Energy Generator",
-      "MountType": "ShipComponent, ShipCargo, Fighter",
+      "MountType": "ShipComponent, ShipCargo, Fighter, GroundUnit",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "component-construction",
       "Properties": [

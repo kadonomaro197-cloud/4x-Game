@@ -97,5 +97,6 @@ namespace Pulsar4X.Tests
             Assert.That(w.Range, Is.EqualTo(8), "and Range dials past 1 — the knob is a live slider, not a baked readout");
             Assert.That(w.Attack, Is.GreaterThan(40 * 10), "same template, an order of magnitude bigger — the pistol→cannon span is real on the engine side");
         }
+
     }
 }

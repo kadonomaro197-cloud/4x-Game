@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Pulsar4X.Components;
+using Pulsar4X.Factions;
+using Pulsar4X.Interfaces;
 
 namespace Pulsar4X.GroundCombat
 {
@@ -19,6 +21,9 @@ namespace Pulsar4X.GroundCombat
         public double CarryCapacity;   // frame strength + augment strength bonuses
         public double UsedCapacity;    // sum of mounted-part carry mass
         public double MaxItemWeight;   // heaviest single part the frame can bear
+        public double EnergyDemand_W;  // Σ power draw of the mounted energy weapons (P2 supply gate)
+        public double ReactorSupply_W; // Σ sustained output of the mounted reactors (P2 supply gate)
+        public double AmmoCapacity_kg; // Σ magazine capacity (kg) — the ammo store (P2c ammo gate)
         public GroundCarryClass CarryClass = GroundCarryClass.Personnel;
         public bool Valid;
         public List<string> Problems = new List<string>();
@@ -70,10 +75,14 @@ namespace Pulsar4X.GroundCombat
             r.CarryCapacity = capacity;
             r.MaxItemWeight = capacity * MaxItemFraction;
 
-            // pass 2 — sum stats + carry mass, check the per-item limit
+            // pass 2 — sum stats + carry mass, check the per-item limit, and the P2 supply gate (power in vs power out)
             double used = 0;
             double toughness = 0;   // accumulated, applied to the final HP pool below (order-independent)
             double topWeaponAttack = 0;   // the heaviest hitter sets the unit's damage flavour
+            double energyDemand = 0;   // Σ watts drawn by energy weapons (WeaponSupply)
+            double reactorSupply = 0;  // Σ watts supplied by mounted reactors (WeaponSupply)
+            double ammoCapacity = 0;   // Σ magazine capacity kg (WeaponSupply) — the ammo store
+            bool anyAmmoWeapon = false;// is an ammo-fed weapon mounted? (needs a magazine)
             foreach (var (d, c) in list)
             {
                 double itemMass = 0;
@@ -100,6 +109,17 @@ namespace Pulsar4X.GroundCombat
                     r.Shield += g.Shield * c;
                     toughness += g.ToughnessBonus * c;
                 }
+                // A part that isn't one of the ground-specific kinds (a universal weapon or a reactor, P1/P2a) has no
+                // ground carry-mass field — count its real component mass so it still consumes the carry budget. This is
+                // what makes the two gates COMPOSE: infantry can't power the big laser because it can't CARRY the reactor.
+                bool hasGroundAtb = d.HasAttribute<GroundWeaponAtb>() || d.HasAttribute<GroundArmorAtb>() || d.HasAttribute<GroundAugmentAtb>();
+                if (!hasGroundAtb) itemMass = d.MassPerUnit;
+                // P2 supply gate — accumulate power drawn (energy weapons) and power supplied (reactors)
+                energyDemand += WeaponSupply.PowerDraw_W(d) * c;
+                reactorSupply += WeaponSupply.ReactorOutput_W(d) * c;
+                // P2c ammo gate — accumulate magazine capacity + note whether any weapon needs feeding
+                ammoCapacity += WeaponSupply.MagazineCapacity_kg(d) * c;
+                if (WeaponSupply.DrawsAmmo(d)) anyAmmoWeapon = true;
                 used += itemMass * c;
                 r.Mass += d.MassPerUnit * c;
                 if (itemMass > r.MaxItemWeight)
@@ -108,8 +128,17 @@ namespace Pulsar4X.GroundCombat
             // toughness hardens the whole HP pool (frame + armour), applied once so it's order-independent
             if (toughness != 0) r.HitPoints *= 1 + toughness;
             r.UsedCapacity = used;
+            r.EnergyDemand_W = energyDemand;
+            r.ReactorSupply_W = reactorSupply;
+            r.AmmoCapacity_kg = ammoCapacity;
             if (used > capacity)
                 r.Problems.Add($"over carry capacity: mounted {used:0} > budget {capacity:0}. Drop gear, add a strength augment, or use a bigger frame.");
+            // The SUPPLY gate (P2b, hard — the developer's call): the guns can't draw more power than the reactors make.
+            if (energyDemand > reactorSupply)
+                r.Problems.Add($"under-powered: energy weapons draw {energyDemand:0} W but reactors supply {reactorSupply:0} W — mount a reactor (or a bigger one), or drop an energy weapon.");
+            // The AMMO gate (P2c-a, hard): an ammo-fed weapon (flak, railgun, ...) needs a magazine (mass) to feed it.
+            if (anyAmmoWeapon && ammoCapacity <= 0)
+                r.Problems.Add("no magazine: an ammo-fed weapon (flak / railgun) needs an ammo magazine to feed it — mount a magazine.");
 
             r.Valid = r.Problems.Count == 0;
             return r;
@@ -136,6 +165,7 @@ namespace Pulsar4X.GroundCombat
                 Range = r.Range,
                 Evasion = r.Evasion,
                 Shield = r.Shield,
+                AmmoCapacity_kg = r.AmmoCapacity_kg,
                 DamageType = r.DamageType,
                 IndustryTypeID = string.IsNullOrEmpty(frame?.IndustryTypeID) ? "installation-construction" : frame.IndustryTypeID,
             };
@@ -147,6 +177,21 @@ namespace Pulsar4X.GroundCombat
                     if (d == null || c <= 0) continue;
                     for (int i = 0; i < c; i++) { AddCosts(design.ResourceCosts, d.ResourceCosts); design.IndustryPointCosts += d.IndustryPointCosts; }
                 }
+            return design;
+        }
+
+        /// <summary>SLICE A — the CONNECT: assemble a frame + parts into a <see cref="GroundUnitDesign"/> AND register it
+        /// on the faction as a buildable design, so it rides the normal industry rails (queue → consume materials →
+        /// <see cref="GroundUnitDesign.OnConstructionComplete"/> raises the fielded unit on the colony's planet). This is
+        /// the single entry point a unit-designer UI (later) and tests call to make a player-designed unit real. Returns
+        /// the registered design. Never throws on the assembly itself; the caller may check <see cref="Compute"/>'s
+        /// <c>Valid</c> first (the gates) — registration is a UI/order concern, so this registers regardless.</summary>
+        public static GroundUnitDesign RegisterAssembledDesign(FactionInfoDB faction, string uniqueId, string name,
+            ComponentDesign frame, IEnumerable<(ComponentDesign design, int count)> parts)
+        {
+            var design = ToGroundUnitDesign(uniqueId, name, frame, parts);
+            if (faction != null)
+                faction.IndustryDesigns[design.UniqueID] = (IConstructableDesign)design;
             return design;
         }
 

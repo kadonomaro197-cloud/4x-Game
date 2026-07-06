@@ -26,16 +26,16 @@
         "ree-magnetics": "[Mass] * 0.02"
       },
       "ComponentType": "Weapon",
-      "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, GroundUnit",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "component-construction",
       "Properties": [
         {
           "Name": "Range",
           "Units": "m",
-          "DescriptionFormula": "'(Legacy) Maximum range at which the laser can fire at'",
+          "DescriptionFormula": "'Maximum range at which the laser can fire. Long range is EARNED — its ceiling rises with the Beam Focusing Range tech.'",
           "GuiHint": "GuiSelectionMaxMin",
-          "MaxFormula": "10000",
+          "MaxFormula": "TechData('tech-beam-range')",
           "MinFormula": "1000",
           "StepFormula": "10",
           "PropertyFormula": "5000"
@@ -364,7 +364,7 @@
         "graphite": "[Mass] * 0.05"
       },
       "ComponentType": "Weapon",
-      "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, GroundUnit",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "component-construction",
       "Properties": [
@@ -381,9 +381,9 @@
         {
           "Name": "Kinetic Energy Per Shot",
           "Units": "J",
-          "DescriptionFormula": "'Damage delivered by one slug on impact.'",
+          "DescriptionFormula": "'Damage delivered by one slug on impact. Its ceiling rises with the Kinetic Yield tech.'",
           "GuiHint": "GuiSelectionMaxMin",
-          "MaxFormula": "10000000",
+          "MaxFormula": "TechData('tech-kinetic-yield')",
           "MinFormula": "1000",
           "StepFormula": "1000",
           "PropertyFormula": "200000"
@@ -439,7 +439,7 @@
         "graphite": "[Mass] * 0.05"
       },
       "ComponentType": "Weapon",
-      "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, GroundUnit",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "component-construction",
       "Properties": [
@@ -496,6 +496,190 @@
           "GuiHint": "None",
           "PropertyFormula": "AtbConstrArgs(PropertyValue('Muzzle Velocity'), PropertyValue('Damage Per Pellet'), PropertyValue('Rounds Per Second'), PropertyValue('Pellets Per Shot'), PropertyValue('Tracking'))",
           "AttributeType": "Pulsar4X.Weapons.FlakWeaponAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "deflector-array",
+      "Name": "Deflector Array",
+      "Formulas": {
+        "Description": "A projected energy SHIELD — a regenerating pool of joules it soaks before the hull is touched. Best against kinetic fire; energy weapons half-bleed through it and exotic anti-shield weapons ignore it. Drops when depleted, recharges between salvos. The defence twin of the beam.",
+        "Mass": "PropertyValue('Shield Capacity') / 5000 + PropertyValue('Recharge Rate') / 500",
+        "Volume": "[Mass] * 0.4",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.05",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.3",
+        "aluminium": "[Mass] * 0.3",
+        "copper": "[Mass] * 0.2"
+      },
+      "ComponentType": "Defense",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Shield Capacity",
+          "Units": "J",
+          "DescriptionFormula": "'The size of the shield pool — joules of fire it soaks before the hull is touched. Depletes as it absorbs, recharges between salvos.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "50000000",
+          "MinFormula": "100000",
+          "StepFormula": "100000",
+          "PropertyFormula": "5000000"
+        },
+        {
+          "Name": "Recharge Rate",
+          "Units": "J/s",
+          "DescriptionFormula": "'How fast the pool refills between salvos — the shields-recovering rate.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5000000",
+          "MinFormula": "1000",
+          "StepFormula": "1000",
+          "PropertyFormula": "100000"
+        },
+        {
+          "Name": "deflectorAtbArgs",
+          "DescriptionFormula": "'double capacity_J, double regenRate_Jps'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Shield Capacity'), PropertyValue('Recharge Rate'))",
+          "AttributeType": "Pulsar4X.Combat.ShieldAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "disruptor-weapon",
+      "Name": "Ion Disruptor",
+      "Formulas": {
+        "Description": "An anti-shield ion lance. Light-speed (can't be dodged) and its EXOTIC nature bypasses shields to strike the hull — the answer to a shielded warship. Modest raw yield, so it isn't just a better beam; its whole value is the shield matchup.",
+        "Mass": "PropertyValue('Energy Per Shot') / 2000 + PropertyValue('Rounds Per Second') * 40",
+        "Volume": "[Mass] * 0.5",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.1",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "aluminium": "[Mass] * 0.2",
+        "stainless-steel": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.25",
+        "tungsten": "[Mass] * 0.15"
+      },
+      "ComponentType": "Weapon",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, GroundUnit",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Energy Per Shot",
+          "Units": "J",
+          "DescriptionFormula": "'Damage delivered by one ion lance on impact. Bypasses shields (exotic), so this lands on the hull directly.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "10000000",
+          "MinFormula": "1000",
+          "StepFormula": "1000",
+          "PropertyFormula": "150000"
+        },
+        {
+          "Name": "Rounds Per Second",
+          "Units": "1/s",
+          "DescriptionFormula": "'Rate of fire. Drives damage/sec.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100",
+          "MinFormula": "0.1",
+          "StepFormula": "0.1",
+          "PropertyFormula": "2"
+        },
+        {
+          "Name": "disruptorAtbArgs",
+          "DescriptionFormula": "'double energyPerShot, double roundsPerSecond'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Energy Per Shot'), PropertyValue('Rounds Per Second'))",
+          "AttributeType": "Pulsar4X.Weapons.DisruptorWeaponAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "plasma-repeater",
+      "Name": "Plasma Repeater",
+      "Formulas": {
+        "Description": "A rapid-fire plasma bolt-thrower. Its bolts are ENERGY in nature (a shield only half-soaks them — they bleed through like a beam) but travel at a FINITE velocity (a nimble ship can dodge them, unlike a beam) — the dodgeable energy weapon the weapon triangle had no cell for until Nature and Delivery split.",
+        "Mass": "PropertyValue('Energy Per Shot') / 2000 + PropertyValue('Rounds Per Second') * 30",
+        "Volume": "[Mass] * 0.5",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.1",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "aluminium": "[Mass] * 0.2",
+        "stainless-steel": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.25",
+        "titanium": "[Mass] * 0.1"
+      },
+      "ComponentType": "Weapon",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, GroundUnit",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Energy Per Shot",
+          "Units": "J",
+          "DescriptionFormula": "'Damage delivered by one plasma bolt. Energy nature — a shield only half-soaks it.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "10000000",
+          "MinFormula": "1000",
+          "StepFormula": "1000",
+          "PropertyFormula": "100000"
+        },
+        {
+          "Name": "Rounds Per Second",
+          "Units": "1/s",
+          "DescriptionFormula": "'Rate of fire. Drives damage/sec and saturation (how much still lands on a dodger).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100",
+          "MinFormula": "0.1",
+          "StepFormula": "0.1",
+          "PropertyFormula": "3"
+        },
+        {
+          "Name": "Bolt Velocity",
+          "Units": "m/s",
+          "DescriptionFormula": "'How fast a bolt travels. FINITE — a nimble ship can dodge it (a beam cannot be dodged).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1000000",
+          "MinFormula": "10000",
+          "StepFormula": "10000",
+          "PropertyFormula": "200000"
+        },
+        {
+          "Name": "Tracking",
+          "Units": "",
+          "DescriptionFormula": "'How well it follows an evasive target (0..1). A dumb bolt is low.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0.1"
+        },
+        {
+          "Name": "plasmaAtbArgs",
+          "DescriptionFormula": "'double energyPerShot, double roundsPerSecond, double muzzleVelocity, double tracking'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Energy Per Shot'), PropertyValue('Rounds Per Second'), PropertyValue('Bolt Velocity'), PropertyValue('Tracking'))",
+          "AttributeType": "Pulsar4X.Weapons.PlasmaBoltWeaponAtb"
         }
       ]
     }
