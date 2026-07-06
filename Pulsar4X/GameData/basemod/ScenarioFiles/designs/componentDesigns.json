@@ -649,5 +649,13 @@
       "Name": "Rending Claws",
       "TemplateId": "claw-weapon"
     }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-deflector-array",
+      "Name": "Deflector Array",
+      "TemplateId": "deflector-array"
+    }
   }
 ]

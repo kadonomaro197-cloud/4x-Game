@@ -499,5 +499,60 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "deflector-array",
+      "Name": "Deflector Array",
+      "Formulas": {
+        "Description": "A projected energy SHIELD — a regenerating pool of joules it soaks before the hull is touched. Best against kinetic fire; energy weapons half-bleed through it and exotic anti-shield weapons ignore it. Drops when depleted, recharges between salvos. The defence twin of the beam.",
+        "Mass": "PropertyValue('Shield Capacity') / 5000 + PropertyValue('Recharge Rate') / 500",
+        "Volume": "[Mass] * 0.4",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.05",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.3",
+        "aluminium": "[Mass] * 0.3",
+        "copper": "[Mass] * 0.2"
+      },
+      "ComponentType": "Defense",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Shield Capacity",
+          "Units": "J",
+          "DescriptionFormula": "'The size of the shield pool — joules of fire it soaks before the hull is touched. Depletes as it absorbs, recharges between salvos.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "50000000",
+          "MinFormula": "100000",
+          "StepFormula": "100000",
+          "PropertyFormula": "5000000"
+        },
+        {
+          "Name": "Recharge Rate",
+          "Units": "J/s",
+          "DescriptionFormula": "'How fast the pool refills between salvos — the shields-recovering rate.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5000000",
+          "MinFormula": "1000",
+          "StepFormula": "1000",
+          "PropertyFormula": "100000"
+        },
+        {
+          "Name": "deflectorAtbArgs",
+          "DescriptionFormula": "'double capacity_J, double regenRate_Jps'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Shield Capacity'), PropertyValue('Recharge Rate'))",
+          "AttributeType": "Pulsar4X.Combat.ShieldAtb"
+        }
+      ]
+    }
   }
 ]

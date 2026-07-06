@@ -223,5 +223,12 @@ Dune lasgun-vs-shield interaction becomes a special-ability effect). Cradle-to-g
   bypasses). Flagged v1 simplifications: one aggregate pool per fleet, regen only under fire, capacity not doctrine-scaled,
   the four soak fractions are balance defaults.
 
-**Next:** a base-mod shield generator + a shielded example ship (Phase C — the six-point registration + a live gauge);
-then the anti-shield exotic weapon + the Dune lasgun-vs-shield special effect (Phase D).
+- **Phase C** — the base-mod **Deflector Array** (a ship shield generator — `deflector-array` template binding
+  `Combat.ShieldAtb`, `Shield Capacity` + `Recharge Rate` dials; six-point registration) + a shielded example ship, the
+  **Bastion Shielded Cruiser** (`default-ship-design-test-shielded` — energy lasers + 2 deflectors = the Enterprise
+  archetype). Closes cradle-to-grave (researched→built→installed→lost). Gauge: `ShieldBaseModTests` (the JSON
+  `deflector-array` → `ShieldAtb` → `ShipCombatValueDB` pool binding through the real build path, the shield twin of
+  `RailgunWeaponTests`; an unshielded Aegis reads 0). Flagged new numbers (JSON defaults for the developer's balance
+  pass): Shield Capacity **5 MJ**, Recharge Rate **100 kJ/s**, and the mass/cost coefficients.
+
+**Next:** the anti-shield exotic weapon + the Dune lasgun-vs-shield special effect (Phase D).

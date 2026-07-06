@@ -182,7 +182,8 @@
         "shield-generator",
         "reflex-booster",
         "swarm-frame",
-        "claw-weapon"
+        "claw-weapon",
+        "deflector-array"
       ],
       "ComponentDesigns": [
         "default-design-alcubierre-2k",
@@ -243,7 +244,8 @@
         "default-design-shield-generator",
         "default-design-reflex-booster",
         "default-design-swarm-frame",
-        "default-design-claw-weapon"
+        "default-design-claw-weapon",
+        "default-design-deflector-array"
       ],
       "ShipDesigns": [
         "default-ship-design-courier",
@@ -258,7 +260,8 @@
         "default-ship-design-test-railgun",
         "default-ship-design-test-flak",
         "default-ship-design-test-fighter",
-        "default-ship-design-test-capital"
+        "default-ship-design-test-capital",
+        "default-ship-design-test-shielded"
       ],
       "LaunchQueue": [
         { "DesignId": "default-ship-design-courier", "Name": "ISS Hermes" }
