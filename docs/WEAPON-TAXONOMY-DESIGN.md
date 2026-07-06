@@ -189,6 +189,22 @@ combat model:
 carry — so "an ion *version* of any gun" — but ship v1 with ONLY the demonstrable ones: **Disable** and
 **Bypass-armour** (both space+ground, visible in the Battle Report), plus **Bypass-shield** on the ground (space when a
 shield layer exists). **Stun/capture** waits for a capture state; **Chain** folds into Blast. Each shipped exotic MUST
-write a visible line to the combat readout — that's the acceptance test the developer set. **Open for the developer:**
-does space want a real **shield layer** (would unlock anti-shield + Dune-lasgun interactions in space), or stay
-armour/toughness-only for now?
+write a visible line to the combat readout — that's the acceptance test the developer set.
+
+**Space SHIELD layer — DECIDED YES (2026-07-06).** Space gets a real shield layer (it only had toughness/armour;
+ground already has a shield in `GroundDamageMatrix`). This is the "shield" mechanism on the defence axis
+(`UNIVERSAL-ASSEMBLY-DESIGN.md` §2b) — the space twin of the ground rule, **reusing the same nature-matchup**: a
+shield soaks **Kinetic** well, **Energy bleeds through**, Explosive partial, **Exotic anti-shield bypasses** (and the
+Dune lasgun-vs-shield interaction becomes a special-ability effect). Cradle-to-grave: a **shield-generator component**
+(`ShieldAtb`) researched→built→installed→lost; `ShipCombatValueDB` sums it into a `Shield` value (0 if none →
+**additive-safe: every existing combat fixture is byte-identical**); the resolve applies it *before* toughness.
+
+**The one sub-decision (the demonstration knob):**
+- **A — % reduction** (like ground v1): shield = an innate % damage cut, weaker vs energy. Stateless, drops into the
+  aggregate resolver as a multiplier. *Less demonstrable* — no "shields at 40%."
+- **B — depleting + regenerating POOL** (recommended): shield = an HP pool that absorbs, **depletes** ("shields at
+  40%!"), regenerates between salvos, and once down the hull takes hits. *Highly demonstrable* (Battle Report shows
+  shield %, "shields down!" is a real beat) — matches the developer's must-be-visible bar. Feasible in the bucketed
+  resolver via the **already-flagged condition-tier seam** (ships bucket by combat value; shield-remaining is another
+  bucket dimension — same mechanism as the parked "aggregate force condition" tiers, `Combat/CLAUDE.md`). More work
+  than A, but on-brand and reuses an existing seam.
