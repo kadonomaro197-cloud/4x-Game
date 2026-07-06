@@ -437,6 +437,11 @@ Cheapest end-to-end proof, because the grave-end target already exists and is al
 - **Commerce / Trade Minister** — build the trade-money wire (and the Trade Minister) **after all of the above is established.**
 - **Ruins / anomalies** — **completely in**, but it becomes **its own system**; note to develop later (not part of the leader pipeline build).
 
+**Parked design threads (explored the roster, not yet the depth):**
+- **Foreign Minister pillar** — the external-politics delegate (empire-wide + per-met-faction) with the Ambassador / Envoy / Agent field hands under it. Design pass owed; rides `docs/DIPLOMACY-DESIGN.md`.
+- **Race / species trait system** — became load-bearing this session (it sets leader **lifespan**, biases **doctrine lean**, and plausibly **espionage aptitude**). Needs its own design pass; wires to the species system (`ColonyInfoDB.Population` is already per-species).
+- **Spymaster / espionage pillar** — being explored now; the depth already lives in `docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md`; this pass is about seating it in the leader pipeline.
+
 **Path forward (build order — after the shared prerequisites):**
 1. **Build the scaling gauge** (Visibility Gate) — the faction/entity performance benchmark, before any AI logic.
 2. **Finish the delegate substrate** (per the governance doc): generalize `AdministratorDB` → the universal delegate record → close the `CommanderDB` skill-field gap → **make seating durable** (fix the `AdminSpaceProcessor` seat-reset + the `DestroyCommander` dangling-reference leak; add the one `LeaderLost` vacate handler). This is the shared prerequisite for rungs 3 and 6.
