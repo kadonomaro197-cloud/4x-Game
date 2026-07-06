@@ -44,9 +44,20 @@ class→type hierarchy) ARE the weapon designer for everything.
   change** (a ground unit that mounts one contributes nothing to combat until P2/P3 wire the supply gate + profile read;
   the enum flag has no consumer yet, so no player-facing behaviour changes). No new gameplay numbers. Gauge:
   `WeaponGroundMountTests` (the direct-fire five carry the flag + keep their ship mount; the excluded two don't).
-- **P2 — The SUPPLY gate.** Extend the ground assembler's carry gate (mass vs frame strength) to also check the
-  weapon's **energy + ammo** requirements against the chassis's provision — the "a Titan can, infantry can't" rule.
-  (Ground power/ammo provision is the new dimension; v1 may fold energy into mass-budget with a flag, then deepen.)
+- **P2 — The SUPPLY gate** (the "a Titan can, infantry can't" rule). **Decided 2026-07-06 (developer's call): power is a
+  mounted REACTOR COMPONENT, not a magic frame stat — the same part a ship uses (full cradle-to-grave), and the gate is
+  HARD (an under-powered design is illegal, mirroring the carry gate).** Key finding — it's mostly CONNECT: the supply
+  part exists (`Energy/EnergyGenerationAtb.PowerOutputMax`, kW; three buildable generators — `reactor`/`rtg`/
+  `steam-turbine-reactor` — that even carry fuel + lifetime, a free grave/logistics rung), and the demand exists (a
+  beam's `Energy` J ÷ `ChargePeriod` s = watts drawn). **The two gates COMPOSE — "infantry can't power the big laser" is
+  really "infantry can't CARRY a reactor big enough," so no new "infantry vs Titan" balance knob is needed** (it falls
+  out of the existing carry gate + reactor mass). Two slices:
+    - **P2a ✅ Reactors ground-mountable (2026-07-06).** The three fuel-burning generators carry
+      `ComponentMountType.GroundUnit` (the P1 move, supply side); `battery-bank` (storage) + `solarArray` stay ship-only.
+      Purely additive, no new numbers. Gauge: `PowerPlantGroundMountTests`.
+    - **P2b — the assembler power gate.** `GroundUnitAssembly` sums reactor `PowerOutputMax` vs Σ weapon watts and marks
+      the assembly Invalid if draw > supply (pure + unit-tested: infantry+ship-laser → rejected, Titan+reactor+laser →
+      valid). The only coefficient is a J-per-charge ↔ kW unit conversion (arithmetic, flagged — not a balance dial).
 - **P3 — Ground reads the weapon PROFILE + triangle.** `GroundUnit` derives its combat contribution from its mounted
   universal weapons' `WeaponProfile`s; `GroundForcesProcessor` resolves via the weapon triangle (shared with space),
   behind a parallel/flag until numbers match the current garrison (existing ground gauges stay green).
