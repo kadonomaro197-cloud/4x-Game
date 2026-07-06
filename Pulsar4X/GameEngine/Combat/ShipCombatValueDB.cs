@@ -112,6 +112,14 @@ namespace Pulsar4X.Combat
         /// these profiles' damage. Empty for an unarmed hull. See docs/WEAPONS-AND-DODGE-DESIGN.md.</summary>
         [JsonProperty] public List<WeaponProfile> Weapons { get; internal set; } = new();
 
+        /// <summary>The SHIELD pool in joules (sum of installed shield generators, health-scaled) — a depleting/regen
+        /// buffer the resolve drains BEFORE toughness (docs/WEAPON-TAXONOMY-DESIGN.md §6). 0 = no shield generator, so
+        /// combat is byte-identical for an unshielded ship until the resolve wiring lands.</summary>
+        [JsonProperty] public double ShieldCapacity_J { get; internal set; }
+
+        /// <summary>How fast the shield pool refills (joules/sec) — the "shields recharging" rate between salvos.</summary>
+        [JsonProperty] public double ShieldRegen_Jps { get; internal set; }
+
         public ShipCombatValueDB() { }
 
         public ShipCombatValueDB(double firepower, double toughness, double roleWeight)
@@ -145,6 +153,7 @@ namespace Pulsar4X.Combat
         {
             double toughness = 0;
             var weapons = new List<WeaponProfile>();
+            double shieldCapacity = 0, shieldRegen = 0;   // the space shield pool (0 if no generator → combat unchanged)
 
             if (ship.TryGetDataBlob<ComponentInstancesDB>(out var instances))
             {
@@ -216,6 +225,21 @@ namespace Pulsar4X.Combat
                         weapons.Add(new WeaponProfile(WeaponClass.Missile, dps, MissileVelocityStub_mps, MissileTrackingStub, MissileSaturationStub, MissileRange_m, WeaponNature.Explosive, WeaponDelivery.Guided));
                     }
                 }
+
+                // SHIELD generators — the space shield pool (docs/WEAPON-TAXONOMY-DESIGN.md §6). A depleting/regen
+                // energy pool the resolve will drain before the hull's toughness (a later slice). Scaled by the
+                // generator's own health (a damaged/shot-off generator projects a weaker/no shield — the grave rung).
+                if (instances.TryGetComponentsByAttribute<ShieldAtb>(out var shieldGens))
+                {
+                    foreach (var comp in shieldGens)
+                    {
+                        if (comp.Design.TryGetAttribute<ShieldAtb>(out var sh))
+                        {
+                            shieldCapacity += sh.Capacity_J * comp.HealthPercent;
+                            shieldRegen += sh.RegenRate_Jps * comp.HealthPercent;
+                        }
+                    }
+                }
             }
 
             // Armour thickness adds straight to toughness (joules).
@@ -233,6 +257,8 @@ namespace Pulsar4X.Combat
             {
                 Evasion = CalculateEvasion(ship),
                 Weapons = weapons,
+                ShieldCapacity_J = shieldCapacity,
+                ShieldRegen_Jps = shieldRegen,
             };
         }
 

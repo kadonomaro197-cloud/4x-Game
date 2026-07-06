@@ -27,6 +27,8 @@ It deliberately does **not** use the per-pixel damage sim (`Damage/DamageComplex
 
 *Fleet components (step 6) reuse `FleetDB` sub-fleets + `FleetDoctrineDB` — no new file; see "Fleet components" below. (Retreat, step 7, adds rows as it lands.)*
 
+| `ShieldAtb.cs` | **NEW (space SHIELD layer, Phase A, 2026-07-06)** The shield-generator **component** (`IComponentDesignAttribute`; `Capacity_J` pool + `RegenRate_Jps`, double-arg NCalc ctor L7) — the space "shield" on the defence axis (`docs/UNIVERSAL-ASSEMBLY-DESIGN.md` §2b), a depleting/regen POOL (option B) that the resolve will drain BEFORE toughness with the weapon-**nature** matchup (soaks Kinetic, Energy bleeds through, Exotic anti-shield bypasses). `ShipCombatValueDB.Calculate` sums installed generators (health-scaled) into `ShieldCapacity_J`/`ShieldRegen_Jps` — **0 if none → additive, combat byte-identical**. Cradle-to-grave (a shot-off generator drops the shield). **Phase A = the component + the combat-value hook, INERT (not yet in the resolve).** Gauge `ShieldTests`. Next: the resolve depletion/regen ("shields at 40%!") + a base-mod generator + a shielded ship + the anti-shield exotic. | ✅ Phase A (inert) |
+
 ---
 
 ## ShipCombatValueDB — the spec sheet

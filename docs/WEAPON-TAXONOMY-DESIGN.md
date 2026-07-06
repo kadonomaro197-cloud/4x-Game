@@ -208,3 +208,10 @@ Dune lasgun-vs-shield interaction becomes a special-ability effect). Cradle-to-g
   resolver via the **already-flagged condition-tier seam** (ships bucket by combat value; shield-remaining is another
   bucket dimension — same mechanism as the parked "aggregate force condition" tiers, `Combat/CLAUDE.md`). More work
   than A, but on-brand and reuses an existing seam.
+
+**DECIDED: B (the pool). Phase A BUILT (2026-07-06).** `ShieldAtb` (a shield-generator component — `Capacity_J` pool +
+`RegenRate_Jps`) + `ShipCombatValueDB.ShieldCapacity_J`/`.ShieldRegen_Jps` (summed, health-scaled; 0 if no generator →
+**additive, combat byte-identical**). Gauge: `ShieldTests`. **Next:** the resolve drains the pool before toughness with
+the nature-matchup (Kinetic soaked / Energy bleeds / Exotic bypasses), regenerates it between salvos, and the Battle
+Report shows "shields at 40% … shields DOWN"; then a base-mod shield generator + a shielded example ship; then the
+anti-shield exotic + the Dune lasgun-vs-shield special effect.
