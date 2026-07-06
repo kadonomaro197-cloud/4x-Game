@@ -63,9 +63,13 @@ namespace Pulsar4X.Combat
     /// </summary>
     public class WeaponProfile
     {
-        /// <summary>Which corner of the weapon triangle this weapon is. (Transitional: today authored; the taxonomy
-        /// plan makes it a COMPUTED readout derived from Nature × Delivery × the specs — see WEAPON-TAXONOMY-DESIGN.md.)</summary>
-        [JsonProperty] public WeaponClass Class { get; internal set; }
+        /// <summary>Which corner of the weapon triangle this weapon is — now a COMPUTED read-out, DERIVED from the two
+        /// axes + the dials (Delivery × Velocity × Tracking × Saturation) via <see cref="WeaponClassifier"/>, NOT an
+        /// authored choice (the developer's "the axes are the filing-cabinet path; the type emerges from the drawer you
+        /// opened + the dials inside, not a hand-picked label"). Not serialized — recomputed from the serialized axes on
+        /// load. The ctors still accept a <c>cls</c> arg for call-site compatibility but IGNORE it; removing that
+        /// vestigial arg across the ~89 call sites is the follow-up "clean pass". See docs/WEAPON-TAXONOMY-DESIGN.md.</summary>
+        [JsonIgnore] public WeaponClass Class => WeaponClassifier.Classify(Delivery, Velocity, Tracking, Saturation);
 
         /// <summary>Damage nature (Kinetic/Energy/Explosive/Exotic) — what it does to the defence. Axis 1 of 2.</summary>
         [JsonProperty] public WeaponNature Nature { get; internal set; } = WeaponNature.Kinetic;
@@ -94,19 +98,16 @@ namespace Pulsar4X.Combat
         /// railgun/flak/missile default to 0 (rangeless) until their own range fields are added — a flagged follow-up.</summary>
         [JsonProperty] public double Range_m { get; internal set; }
 
-        /// <summary>The triangle corner DERIVED from this weapon's Delivery + specs (via <see cref="WeaponClassifier"/>)
-        /// — the unification read-out. Not serialized; computed on demand. For every real weapon today it equals the
-        /// authored <see cref="Class"/> (the invariant that lets a later slice drop the authored field and make the
-        /// class purely emergent). See docs/WEAPON-TAXONOMY-DESIGN.md.</summary>
-        [JsonIgnore]
-        public WeaponClass ComputedClass => WeaponClassifier.Classify(Delivery, Velocity, Tracking, Saturation);
+        /// <summary>Now redundant with <see cref="Class"/> (both compute the corner from the axes) — kept as a thin
+        /// alias so existing gauges compile; removed in the "clean pass". Prefer <see cref="Class"/>.</summary>
+        [JsonIgnore] public WeaponClass ComputedClass => Class;
 
         public WeaponProfile() { }
 
         public WeaponProfile(WeaponClass cls, double damagePerSecond, double velocity, double tracking, double saturation, double range_m = 0,
             WeaponNature nature = WeaponNature.Kinetic, WeaponDelivery delivery = WeaponDelivery.Slug)
         {
-            Class = cls;
+            _ = cls;   // IGNORED — Class is now computed from the axes; the arg stays only for call-site compatibility
             DamagePerSecond = damagePerSecond;
             Velocity = velocity;
             Tracking = tracking;
@@ -118,7 +119,6 @@ namespace Pulsar4X.Combat
 
         public WeaponProfile(WeaponProfile p)
         {
-            Class = p.Class;
             DamagePerSecond = p.DamagePerSecond;
             Velocity = p.Velocity;
             Tracking = p.Tracking;

@@ -262,8 +262,18 @@ aggregation (gauged by `WeaponClassifierTests.Aggregation_PreservesNatureAndDeli
 missile would aggregate to the default Slug delivery and misclassify as a railgun — the latent blocker to making `Class`
 emergent everywhere, now cleared on the engine side.
 
-**Next:** dropping the authored `WeaponClass` field itself is a **wide, supervised refactor, NOT an autonomous slice** —
-`new WeaponProfile(class, …)` has **89 call sites** (mostly stress-test fixtures that deliberately author a class that
-won't match `ComputedClass`), so flipping `Class` to computed would ripple through all of them. Do it with the developer.
-The rest: the fuller P1–P5 designer merge (`WEAPON-UNIFICATION-DESIGN.md`); and the Dune lasgun-vs-shield special effect
-(a lasgun hitting a shield = mutual catastrophic destruction — a bespoke interaction, a later slice).
+**`WeaponClass` is now COMPUTED (2026-07-06, developer-approved).** `WeaponProfile.Class` is an expression-bodied
+read-out — `=> WeaponClassifier.Classify(Delivery, Velocity, Tracking, Saturation)` — no longer an authored, serialized
+field. This is the developer's "the axes are the filing-cabinet path (Nature × Delivery); the type EMERGES from the
+drawer you opened + the dials, not a hand-picked label" — so **the dials always win**. Done as the **safe incremental**:
+the ctors still accept a `cls` arg for call-site compatibility but IGNORE it (a discard), so none of the ~89
+`new WeaponProfile(class, …)` sites changed — removing that vestigial arg is the follow-up "clean pass". Proved
+byte-identical by audit, not luck: `.Class` is only READ in the fire-mix bucket key + the readout; every real base-mod
+weapon computes to its authored class (the invariant test), the one mixed-weapon fixture (`CombatBattleSims` B05
+railgun+flak) computes cleanly, and the handful of deliberately-contradictory stress weapons (a railgun with flak-level
+saturation, etc.) are all LONE weapons whose bucket label is inert — plus the dodge tests pass their profiles straight to
+`HitFraction`, which never reads the class. Serialization-safe (recomputed from the serialized axes on load).
+
+**Next / still with-the-developer:** the "clean pass" removing the now-vestigial `cls` ctor arg across the ~89 sites (pure
+churn, do when convenient); the fuller P1–P5 designer merge (`WEAPON-UNIFICATION-DESIGN.md`); and the Dune lasgun-vs-shield
+special effect (a lasgun hitting a shield = mutual catastrophic destruction — a bespoke interaction, a later slice).
