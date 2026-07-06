@@ -425,8 +425,37 @@ namespace Pulsar4X.GroundCombat
             if (body == null || !body.TryGetDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>(out var regionsDB) || regionsDB.Regions.Count == 0) return;
             var grid = Pulsar4X.Galaxy.PlanetGridFactory.EnsureGridForBody(body);
             if (grid == null || grid.Cols <= 0 || grid.Rows <= 0) return;
-            unit.GlobalQ = Pulsar4X.Galaxy.PlanetGridFactory.BandCentreColumn(regionIndex, grid.Cols, regionsDB.Regions.Count);
-            unit.GlobalR = grid.Rows / 2;
+            int q = Pulsar4X.Galaxy.PlanetGridFactory.BandCentreColumn(regionIndex, grid.Cols, regionsDB.Regions.Count);
+            int r = grid.Rows / 2;
+            SnapToPassable(grid, ref q, ref r);   // an ocean band-centre (common on a real Earth) would strand the unit
+            unit.GlobalQ = q;
+            unit.GlobalR = r;
+        }
+
+        /// <summary>Nudge a muster point off impassable water onto the nearest LAND hex. The band-centre column sits at
+        /// a region's mid-longitude, which on a real Earth (or any ocean-heavy world) can fall in open ocean — an
+        /// impassable start hex that would strand a raised garrison (no reachable neighbour, no valid march). Searches
+        /// outward in a growing box (rows clamped at the poles, columns wrapped) for the nearest passable hex; leaves
+        /// the point unchanged if the whole world is water (nothing better to pick). Pure, defensive.</summary>
+        private static void SnapToPassable(Pulsar4X.Galaxy.SurfaceGrid grid, ref int q, ref int r)
+        {
+            var here = grid.HexAt(grid.WrapCol(q), r);
+            if (here != null && !HexPathfinder.IsImpassable(here.Terrain)) return;   // already on land
+
+            int maxRadius = System.Math.Max(grid.Cols, grid.Rows);
+            for (int rad = 1; rad <= maxRadius; rad++)
+                for (int dr = -rad; dr <= rad; dr++)
+                {
+                    int rr = r + dr;
+                    if (rr < 0 || rr >= grid.Rows) continue;
+                    for (int dc = -rad; dc <= rad; dc++)
+                    {
+                        if (System.Math.Abs(dr) != rad && System.Math.Abs(dc) != rad) continue;   // ring edge only
+                        int qq = grid.WrapCol(q + dc);
+                        var h = grid.HexAt(qq, rr);
+                        if (h != null && !HexPathfinder.IsImpassable(h.Terrain)) { q = qq; r = rr; return; }
+                    }
+                }
         }
 
         /// <summary>

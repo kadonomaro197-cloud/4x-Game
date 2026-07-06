@@ -78,6 +78,7 @@ A `GroundUnit` is a plain serializable object inside `GroundForcesDB`, not a ful
 
 ## Gotchas
 
+0. **Muster snaps to LAND (`StampGlobalMuster` → `SnapToPassable`, 2026-07-06).** A raised unit musters at its region BAND's centre column on the global grid — which on a real Earth (or any ocean-heavy world) can be **open ocean** (impassable → a stranded garrison with no valid march). `SnapToPassable` nudges the muster point outward (rows clamp at the poles, columns wrap) to the nearest passable hex. General fix (helps procedural ocean worlds too), tied to the Earth-map change (`Galaxy/EarthTerrainMap.cs`) that made ocean band-centres common.
 1. **`GroundForcesDB` is on the PLANET BODY, not the colony** — parallel to `PlanetRegionsDB`. Forces are *of the planet* so an unowned world can hold a defending garrison. Don't attach it to the colony entity.
 2. **Unit stats are a build-time SNAPSHOT on the `GroundUnit`** (not looked up from the design each time) — the same choice `ShipCombatValueDB` makes. Changing a design later does not retroactively change units already raised.
 3. **`OnConstructionComplete` must never throw** — it runs in the daily industry hotloop (a throw there crashes the sim, GameEngine gotcha #1). It's guarded on colony/planet/region-layer/production-line presence.
