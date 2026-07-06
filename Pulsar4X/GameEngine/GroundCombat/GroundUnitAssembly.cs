@@ -165,6 +165,7 @@ namespace Pulsar4X.GroundCombat
                 Range = r.Range,
                 Evasion = r.Evasion,
                 Shield = r.Shield,
+                AmmoCapacity_kg = r.AmmoCapacity_kg,
                 DamageType = r.DamageType,
                 IndustryTypeID = string.IsNullOrEmpty(frame?.IndustryTypeID) ? "installation-construction" : frame.IndustryTypeID,
             };

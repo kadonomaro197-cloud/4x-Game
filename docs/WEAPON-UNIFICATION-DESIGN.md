@@ -105,8 +105,13 @@ class→type hierarchy) ARE the weapon designer for everything.
           ground unit, and now SATISFIES the gate. **FLAGGED numbers (all in `installations.json`, tune freely):** default
           `Capacity` 500 kg (range 100–5000), magazine `Mass` = 2 × Capacity, `CreditCost` = 0.2 × Mass, `CrewReq` 5, the
           material fractions. Gauge: `GroundAmmoGateTests.Magazine_SatisfiesTheAmmoGate` + `BaseModIntegrityTests`.
-        - **P2c-c — combat depletion.** A `GroundUnit` carries an ammo pool (from magazine capacity); the resolver drains it
-          per shot (ammo-mass-per-shot DERIVED from the weapon's KE = ½mv², no new number); empty → ammo weapons stop firing.
+        - **P2c-c — combat depletion.** **Foundation ✅ (2026-07-06):** a `GroundUnit` carries an ammo pool
+          (`MaxAmmo_kg`/`CurrentAmmo_kg`, snapshot of the design's Σ magazine capacity at raise) + the pure `GroundAmmo`
+          helper (`Consume`/`IsDry`/`Refill`/`Fraction`) — resolver-agnostic, so it survives the resolver merge. Gauge:
+          `GroundAmmoTests`. **Still owed (rides the resolver merge, next branch):** the in-combat DRAIN call site
+          (fire → `Consume`) + the silence-when-dry read (dry → the unit's ammo weapons go quiet, it fights on with
+          energy/melee), and the **ammo-per-shot WEAPON-DESIGNER spec** (the kg a burst consumes) — deferred to the merge
+          because per-weapon firing lives there, and to avoid baking it into the soon-replaced ground resolver.
         - **P2c-d — resupply** from ships / units / bases (refill the pool). The plasma Energy-vs-Both player override ships
           in this arc (it only bites once ammo is a real cost).
 - **P3 — Ground reads the weapon PROFILE + triangle.** `GroundUnit` derives its combat contribution from its mounted

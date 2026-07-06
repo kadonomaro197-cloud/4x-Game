@@ -54,6 +54,9 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public double Evasion { get; set; }
         /// <summary>SYSTEM ① survivability-by-shield — flat incoming-damage soak pool; Σ augment shield.</summary>
         [JsonProperty] public double Shield { get; set; }
+        /// <summary>AMMO magazine capacity (kg) — Σ mounted magazines (weapon-unification B). Snapshotted onto each
+        /// raised unit's <see cref="GroundUnit.MaxAmmo_kg"/>. 0 = no magazine / no ammo weapons.</summary>
+        [JsonProperty] public double AmmoCapacity_kg { get; set; }
         /// <summary>SYSTEM ① primary damage flavour (from the heaviest weapon), for the future damage×defence matrix.</summary>
         [JsonProperty] public GroundWeaponMode DamageType { get; set; } = GroundWeaponMode.Ballistic;
         /// <summary>ENVIRONMENTAL GEAR (E4) — per-hazard protection this design's units carry, keyed by the shared
