@@ -26,7 +26,7 @@
         "ree-magnetics": "[Mass] * 0.02"
       },
       "ComponentType": "Weapon",
-      "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, GroundUnit",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "component-construction",
       "Properties": [
@@ -364,7 +364,7 @@
         "graphite": "[Mass] * 0.05"
       },
       "ComponentType": "Weapon",
-      "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, GroundUnit",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "component-construction",
       "Properties": [
@@ -439,7 +439,7 @@
         "graphite": "[Mass] * 0.05"
       },
       "ComponentType": "Weapon",
-      "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, GroundUnit",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "component-construction",
       "Properties": [
@@ -577,7 +577,7 @@
         "tungsten": "[Mass] * 0.15"
       },
       "ComponentType": "Weapon",
-      "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, GroundUnit",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "component-construction",
       "Properties": [
@@ -633,7 +633,7 @@
         "titanium": "[Mass] * 0.1"
       },
       "ComponentType": "Weapon",
-      "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, GroundUnit",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "component-construction",
       "Properties": [

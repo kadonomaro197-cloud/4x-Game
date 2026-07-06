@@ -36,8 +36,14 @@ class→type hierarchy) ARE the weapon designer for everything.
 ### Revised phased plan (per §0)
 
 - **P0 ✅ Growth curves multiplicative** (techs.json). Done.
-- **P1 — Universal weapons mountable on ground.** Add `GroundUnit` to the beam/railgun/flak `MountType` (+ any designer
-  filter) so the ONE designer offers them for a ground chassis. No resolver change yet.
+- **P1 ✅ Universal weapons mountable on ground (2026-07-06).** The five base-mod direct-fire weapon templates —
+  `laser-weapon` / `railgun-weapon` / `flak-weapon` / `disruptor-weapon` / `plasma-repeater` (`weapons.json`) — now carry
+  `ComponentMountType.GroundUnit` alongside their existing Ship/PDC/installation mounts, so the ONE designer offers the
+  SAME weapon design for a ground chassis. Deliberately weapons-only: the `missile-launcher` (an ordnance/ammo subsystem)
+  and the `deflector-array` (defensive, not a weapon) are left ship-only for this slice. **Purely additive — no resolver
+  change** (a ground unit that mounts one contributes nothing to combat until P2/P3 wire the supply gate + profile read;
+  the enum flag has no consumer yet, so no player-facing behaviour changes). No new gameplay numbers. Gauge:
+  `WeaponGroundMountTests` (the direct-fire five carry the flag + keep their ship mount; the excluded two don't).
 - **P2 — The SUPPLY gate.** Extend the ground assembler's carry gate (mass vs frame strength) to also check the
   weapon's **energy + ammo** requirements against the chassis's provision — the "a Titan can, infantry can't" rule.
   (Ground power/ammo provision is the new dimension; v1 may fold energy into mass-budget with a flag, then deepen.)
