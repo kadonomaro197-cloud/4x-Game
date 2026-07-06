@@ -105,16 +105,18 @@ namespace Pulsar4X.Galaxy
         private const int MusterCoreRadius = 1;        // patch centre + its immediate ring = guaranteed passable land
         private const double TwoPi = 2.0 * Math.PI;
 
-        private readonly bool _gas, _tectonic, _earth;
+        private readonly bool _gas, _tectonic;
         private readonly double _seaLevel, _temp, _hydroFrac;
         private readonly double[] _ePhaseLon, _ePhaseLat, _mPhaseLon, _mPhaseLat;
+        private readonly System.Func<double, double, RegionFeatureType> _authored;   // real map (Earth/Mars/…) or null = noise field
 
         private WorldTerrain(bool gas, double seaLevel, double temp, bool tectonic, double hydroFrac,
-            double[] ePhaseLon, double[] ePhaseLat, double[] mPhaseLon, double[] mPhaseLat, bool earth)
+            double[] ePhaseLon, double[] ePhaseLat, double[] mPhaseLon, double[] mPhaseLat,
+            System.Func<double, double, RegionFeatureType> authored)
         {
             _gas = gas; _seaLevel = seaLevel; _temp = temp; _tectonic = tectonic; _hydroFrac = hydroFrac;
             _ePhaseLon = ePhaseLon; _ePhaseLat = ePhaseLat; _mPhaseLon = mPhaseLon; _mPhaseLat = mPhaseLat;
-            _earth = earth;
+            _authored = authored;
         }
 
         public static WorldTerrain ForBody(Entity body, StarSystem system, int regionCount)
@@ -122,13 +124,14 @@ namespace Pulsar4X.Galaxy
             body.TryGetDataBlob<AtmosphereDB>(out var atmo);
             body.TryGetDataBlob<SystemBodyInfoDB>(out var info);
 
-            // Our Earth is the ONE authored world — it samples the real Earth map (EarthTerrainMap), not the noise
-            // field, so the Sol homeworld looks like home. Keyed on the body's default name being exactly "Earth"
-            // (the Sol quickstart's homeworld; a random-galaxy body is never named that), gated to a real terrestrial
-            // world so an oddly-named gas giant can't trip it.
-            bool earth = !( info != null && (info.BodyType == BodyType.GasGiant || info.BodyType == BodyType.GasDwarf || info.BodyType == BodyType.IceGiant))
-                         && body.TryGetDataBlob<Pulsar4X.Names.NameDB>(out var nameDb)
-                         && nameDb.DefaultName == "Earth";
+            // The KNOWN worlds (Earth, Mars, …) sample their REAL baked map instead of the noise field, so the Sol
+            // playtest bodies look like themselves. Keyed on the body's default name via RealSurfaceMaps, gated to a
+            // real (non-gas) body so an oddly-named gas giant can't trip a surface map. Any other world → null → noise.
+            bool gasBody = info != null && (info.BodyType == BodyType.GasGiant || info.BodyType == BodyType.GasDwarf || info.BodyType == BodyType.IceGiant);
+            System.Func<double, double, RegionFeatureType> authored =
+                (!gasBody && body.TryGetDataBlob<Pulsar4X.Names.NameDB>(out var nameDb))
+                    ? RealSurfaceMaps.SamplerForName(nameDb.DefaultName)
+                    : null;
             double hydroFrac = atmo != null ? Math.Max(0.0, Math.Min(1.0, (double)atmo.HydrosphereExtent / 100.0)) : 0.0;
             double temp = atmo != null ? atmo.SurfaceTemperature : 15.0;
             bool gas = info != null && (info.BodyType == BodyType.GasGiant || info.BodyType == BodyType.GasDwarf || info.BodyType == BodyType.IceGiant);
@@ -144,7 +147,7 @@ namespace Pulsar4X.Galaxy
                 el[k] = Rnd(system) * TwoPi; et[k] = Rnd(system) * TwoPi;
                 ml[k] = Rnd(system) * TwoPi; mt[k] = Rnd(system) * TwoPi;
             }
-            return new WorldTerrain(gas, seaLevel, temp, tectonic, hydroFrac, el, et, ml, mt, earth);
+            return new WorldTerrain(gas, seaLevel, temp, tectonic, hydroFrac, el, et, ml, mt, authored);
         }
 
         /// <summary>Terrain for one hex from its GLOBAL position: region+q give longitude (continuous across region
@@ -176,12 +179,13 @@ namespace Pulsar4X.Galaxy
         {
             if (_gas) return RegionFeatureType.GasLayers;
 
-            // Earth samples the real map, not the noise field. The muster-core guard still applies — an ocean sample
-            // on a landing core is promoted to Coast so a raised garrison never starts on impassable water.
-            if (_earth)
+            // A known world (Earth/Mars/…) samples its real baked map, not the noise field. The muster-core guard still
+            // applies — an ocean sample on a landing core is promoted to Coast so a raised garrison never starts on
+            // impassable water (a no-op on dry worlds like Mars, which have no ocean).
+            if (_authored != null)
             {
-                var e = EarthTerrainMap.Sample(lon, lat);
-                return (e == RegionFeatureType.Ocean && musterCoreLand) ? RegionFeatureType.Coast : e;
+                var a = _authored(lon, lat);
+                return (a == RegionFeatureType.Ocean && musterCoreLand) ? RegionFeatureType.Coast : a;
             }
 
             double elev = Field(lon, lat, _ePhaseLon, _ePhaseLat);

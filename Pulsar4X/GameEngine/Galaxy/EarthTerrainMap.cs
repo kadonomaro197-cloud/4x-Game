@@ -67,28 +67,6 @@ namespace Pulsar4X.Galaxy
             "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
         };
 
-        /// <summary>Map one authored letter to a <see cref="RegionFeatureType"/>. Anything unrecognized reads as Plains
-        /// (a safe, passable default) so a typo in the map can never produce impassable garbage.</summary>
-        private static RegionFeatureType CharToFeature(char ch)
-        {
-            switch (ch)
-            {
-                case '.': return RegionFeatureType.Ocean;
-                case 'c': return RegionFeatureType.Coast;
-                case 'w': return RegionFeatureType.Wetland;
-                case 'f': return RegionFeatureType.Forest;
-                case 'j': return RegionFeatureType.Jungle;
-                case 'p': return RegionFeatureType.Plains;
-                case 'd': return RegionFeatureType.Desert;
-                case 'b': return RegionFeatureType.Barren;
-                case 'h': return RegionFeatureType.Highlands;
-                case 'm': return RegionFeatureType.Mountains;
-                case 't': return RegionFeatureType.Tundra;
-                case 'i': return RegionFeatureType.Ice;
-                default:  return RegionFeatureType.Plains;
-            }
-        }
-
         /// <summary>
         /// The terrain of real Earth at a fractional position: <paramref name="lon"/> 0..1 wraps eastward from 180°W,
         /// <paramref name="lat"/> 0 = north pole → 1 = south pole (the same sample space <see cref="WorldTerrain"/>
@@ -104,7 +82,7 @@ namespace Pulsar4X.Galaxy
             int row = (int)(lat * Rows);
             if (row < 0) row = 0; else if (row >= Rows) row = Rows - 1;
 
-            return CharToFeature(Map[row][col]);
+            return RealSurfaceMaps.CharToFeature(Map[row][col]);
         }
 
         /// <summary>Guard the baked table's shape — every row is exactly <see cref="Cols"/> chars and there are
