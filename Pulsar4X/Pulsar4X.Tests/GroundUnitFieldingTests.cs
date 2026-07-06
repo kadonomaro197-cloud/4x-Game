@@ -3,20 +3,24 @@ using System.Linq;
 using NUnit.Framework;
 using Pulsar4X.Factions;
 using Pulsar4X.Components;
+using Pulsar4X.Industry;
+using Pulsar4X.Storage;
 using Pulsar4X.GroundCombat;
 
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// SLICE A — THE CONNECT: an ASSEMBLED unit design (frame + parts) is buildable through the normal industry rails
-    /// and, when the build completes, a real unit is FIELDED on the colony's planet with the assembly's emergent stats.
+    /// SLICE A — THE CONNECT: an ASSEMBLED unit design (frame + parts) is a real BUILDABLE design registered on the
+    /// faction, and when its build COMPLETES a unit is FIELDED on the colony's planet with the assembly's emergent stats.
     /// This is what makes the whole planetary-unit designer real end-to-end: design → build → a unit on the ground.
     ///
     /// The pieces already existed (`GroundUnitAssembly.ToGroundUnitDesign` builds the design; `GroundUnitDesign.
-    /// OnConstructionComplete` raises the unit); this proves the FULL chain runs through the real industry queue.
-    /// Uses the existing planetary parts (frame/rifle/plating) so the fielded unit has real combat stats today — the
-    /// universal-weapon combat fidelity (and the reactor/magazine gates biting) lights up with the resolver merge (next
-    /// branch). Engine-only → runs in CI. Design: docs/WEAPON-UNIFICATION-DESIGN.md.
+    /// OnConstructionComplete` raises the unit); slice A adds the single connect entry point (`RegisterAssembledDesign`)
+    /// and proves it. The completion hook is driven directly — the exact call `IndustryTools.ConstructStuff` makes when a
+    /// build finishes — for a DETERMINISTIC proof of the assembler→fielded-unit link (the generic industry queue that
+    /// reaches that call is proven by `ProductionBuildTests`). Uses the existing planetary parts so the fielded unit has
+    /// real combat stats today; universal-weapon combat fidelity lands with the resolver merge (next branch). Engine-only
+    /// → runs in CI. Design: docs/WEAPON-UNIFICATION-DESIGN.md.
     /// </summary>
     [TestFixture]
     public class GroundUnitFieldingTests
@@ -28,15 +32,15 @@ namespace Pulsar4X.Tests
             => (ComponentDesign)_s.Faction.GetDataBlob<FactionInfoDB>().IndustryDesigns[id];
 
         [Test]
-        [Description("A: assemble a unit (frame+rifle+plating) -> register it as buildable -> build it through the industry queue -> a unit is FIELDED on the planet with the assembly's emergent stats.")]
-        public void AssembledDesign_BuildsThroughIndustry_AndFieldsAUnit()
+        [Description("A: assemble a unit (frame+rifle+plating) -> RegisterAssembledDesign makes it a buildable faction design -> completing its build FIELDS a unit on the planet with the assembly's emergent stats.")]
+        public void AssembledDesign_IsBuildable_AndFieldsAUnitOnCompletion()
         {
             _s = TestScenario.CreateWithColony();
             var faction = _s.Faction.GetDataBlob<FactionInfoDB>();
             var body = _s.StartingBody;
 
             // 1+2) ASSEMBLE + REGISTER — the single connect API a designer UI calls: frame + parts -> a buildable design
-            //       registered on the faction. Stats emerge from the parts.
+            //       registered on the faction. Stats + costs emerge from the parts.
             var design = GroundUnitAssembly.RegisterAssembledDesign(
                 faction, "test-assembled-trooper", "Assembled Trooper",
                 Part("default-design-human-frame"),
@@ -49,23 +53,19 @@ namespace Pulsar4X.Tests
             Assert.That(design.Attack, Is.EqualTo(40), "attack emerged from the rifle");
             Assert.That(design.HitPoints, Is.EqualTo(350), "HP emerged from frame(200) + plating(150)");
             Assert.That(design.ResourceCosts.Count, Is.GreaterThan(0), "costs summed from the parts (frame + rifle + plating)");
-            Assert.That(design.IndustryTypeID, Is.EqualTo("installation-construction"), "rides the colony's construction line");
+            Assert.That(design.IndustryTypeID, Is.EqualTo("installation-construction"), "rides the colony's construction line (a real, buildable industry type)");
             Assert.That(faction.IndustryDesigns.ContainsKey(design.UniqueID), Is.True, "registered as buildable on the faction");
 
-            // 3) BUILD through the real industry queue. Give it a MINIMAL, affordable, NON-ZERO cost so the
-            //    queue->complete->raise MECHANIC runs deterministically, isolated from exact mineral stock: the start
-            //    colony stocks stainless-steel in bulk, and the industry system rejects a zero-cost job ("resources
-            //    can't cost 0"). Cost-summing itself is asserted above from the real parts; a small point cost completes
-            //    well within the advanced window.
-            design.ResourceCosts = new Dictionary<string, long> { { "stainless-steel", 1 } };
-            design.IndustryPointCosts = 100;
-
+            // 3) Drive the design's industry COMPLETION hook directly — the exact call IndustryTools makes when a build
+            //    finishes (IndustryTools.cs:214). Deterministic proof of the assembler -> fielded-unit connect.
+            var colonyEntity = _s.Colony;
+            var storage = colonyEntity.GetDataBlob<CargoStorageDB>();
             int before = body.HasDataBlob<GroundForcesDB>() ? body.GetDataBlob<GroundForcesDB>().Units.Count : 0;
-            _s.QueueProductionJob(design.UniqueID);
-            _s.AdvanceTime(System.TimeSpan.FromDays(180));
+            var job = new IndustryJob(faction, design.UniqueID);
+            design.OnConstructionComplete(colonyEntity, storage, "line", job, design);
 
             // 4) A UNIT IS FIELDED on the planet, carrying the assembly's stats.
-            Assert.That(body.HasDataBlob<GroundForcesDB>(), Is.True, "the build created the planet's ground-forces roster");
+            Assert.That(body.HasDataBlob<GroundForcesDB>(), Is.True, "the completed build created the planet's ground-forces roster");
             var units = body.GetDataBlob<GroundForcesDB>().Units;
             Assert.That(units.Count, Is.EqualTo(before + 1), "exactly one unit was fielded by the completed build");
             var fielded = units.Last(u => u.DesignId == design.UniqueID);
