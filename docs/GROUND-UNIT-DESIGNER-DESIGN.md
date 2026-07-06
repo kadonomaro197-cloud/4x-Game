@@ -272,18 +272,21 @@ mass/cost scale with firepower so a maxed gun isn't cheap (a flagged balance hol
 `tech-category-energy-weapons`) in the `tech-modern-technology` cascade (crash-safe; the laser already depends on
 cascade-unlocked `tech-capacitors`/`tech-conductors`, proving it builds post-unlock). `DataFormula =
 (1 + [Level]) * 10000` → level 0 == today's cap; research raises the reach — the developer's *"long range is EARNED,
-not given"* rule made real. Gauge: `WeaponScaleGateTests.BeamRangeCeiling_RisesWithResearch`. **FLAGGED (tune in
-techs.json):** base `10000` m, `+10000`/level, `MaxLevel 10` — the developer likely wants this STEEPER (their vision is
-range climbing to sci-fi/thousands-of-km at high tech), so the growth formula is the key dial.
+not given"* rule made real. Gauge: `WeaponScaleGateTests.BeamRangeCeiling_RisesWithResearch`. **Growth is MULTIPLICATIVE (2026-07-06, developer's call):**
+`DataFormula = 10000 * Pow(2, [Level])` — doubles each research level (level 0 == 10 km unchanged; ~10,000 km at max
+level 10). **FLAGGED tunables (techs.json):** the ×2 multiplier + `MaxLevel 10` set the sci-fi ceiling.
 
 **✅ Slice 4 BUILT (2026-07-05) — KINETIC yield research-gated.** Same pattern, type-based: the railgun's `Kinetic
 Energy Per Shot` `MaxFormula` (was flat `1e7`) now reads `TechData('tech-kinetic-yield')` — a new tech (category
 `tech-category-missiles-kinetic-weapons`) in the `tech-modern-technology` cascade. `DataFormula = (1 + [Level]) *
 10000000` → level 0 == today's cap; research raises how hard a slug hits. A per-TYPE, **setting-agnostic** weapon
 tech (lifts the ceiling for any kinetic weapon, ship or ground — the correct shape post-category-fix). Gauge:
-`WeaponScaleGateTests.RailgunKineticEnergyCeiling_RisesWithResearch`. **FLAGGED (techs.json):** base `1e7` J,
-`+1e7`/level, `MaxLevel 10`. **Still owed:** the other beam caps (lens/chamber/power → pulse energy), flak saturation,
-missile warhead; the missile `CanLoadOrdnance` no-op.
+`WeaponScaleGateTests.RailgunKineticEnergyCeiling_RisesWithResearch`. **Growth MULTIPLICATIVE (2026-07-06):**
+`DataFormula = 10000000 * Pow(2, [Level])` (level 0 == 10 MJ unchanged; ~10 GJ at max). **FLAGGED (techs.json):** the
+×2 multiplier + `MaxLevel 10`. **Still owed:** the other beam caps (lens/chamber/power → pulse energy), flak
+saturation, missile warhead. **NOTE (2026-07-06):** the DEEP weapon unification is now DECIDED — one designer for
+everything, delete the ground weapon system, ground reads the weapon triangle at full fidelity (`WEAPON-UNIFICATION-DESIGN.md`
+§0). These space-cap gates continue as type-based (they survive the merge).
 
 ### 6c. The four are NOT a cage on the designer (2026-07-05)
 

@@ -548,8 +548,8 @@
       "Description": "Research into keeping a beam coherent over greater distance — raises the maximum range a beam-weapon design can reach. The developer's rule made real: 'long range is earned, not given.' A starting laser is a short-legged knife-fighter; research is what climbs it toward sci-fi reach.",
       "Category": "tech-category-energy-weapons",
       "MaxLevel": 10,
-      "DataFormula": "(1 + [Level]) * 10000",
-      "CostFormula": "(1 + [Level]) * 2500"
+      "DataFormula": "10000 * Pow(2, [Level])",
+      "CostFormula": "2500 * Pow(2, [Level])"
     }
   },
   {
@@ -560,8 +560,8 @@
       "Description": "Research into denser projectiles and higher launch energies — raises the maximum kinetic energy per shot a slug-thrower design can reach. A type-based weapon tech (kinetic), setting-agnostic: it lifts the ceiling for any railgun/mass-driver, on a ship or a ground mount. A starting slug hits modestly; research is what makes it a capital-scale round.",
       "Category": "tech-category-missiles-kinetic-weapons",
       "MaxLevel": 10,
-      "DataFormula": "(1 + [Level]) * 10000000",
-      "CostFormula": "(1 + [Level]) * 2500"
+      "DataFormula": "10000000 * Pow(2, [Level])",
+      "CostFormula": "2500 * Pow(2, [Level])"
     }
   },
   {
