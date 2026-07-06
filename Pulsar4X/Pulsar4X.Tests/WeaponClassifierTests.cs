@@ -3,6 +3,7 @@ using NUnit.Framework;
 using Pulsar4X.Combat;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
+using Pulsar4X.Fleets;
 using Pulsar4X.Ships;
 
 namespace Pulsar4X.Tests
@@ -72,6 +73,28 @@ namespace Pulsar4X.Tests
             }
             Log($"verified computed==authored class on {weaponsChecked} real weapon profiles across {shipIds.Length} ships");
             Assert.That(weaponsChecked, Is.GreaterThanOrEqualTo(shipIds.Length), "checked at least one weapon per ship");
+        }
+
+        [Test]
+        [Description("The two axes survive fire-mix AGGREGATION: BuildFireMix now buckets by (class, nature, DELIVERY), so a real Vanguard's plasma fire aggregates to a profile that still carries Nature=Energy AND Delivery=Bolt (not defaulted away) — the prerequisite for later making Class emergent everywhere (a missile would otherwise aggregate to the default Slug delivery and misclassify).")]
+        public void Aggregation_PreservesNatureAndDelivery()
+        {
+            var s = TestScenario.CreateWithColony();
+            var designs = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns;
+            var fleet = FleetFactory.Create(s.StartingSystem, s.Faction.Id, "Skirmishers");
+            var ship = ShipFactory.CreateShip(designs["default-ship-design-test-plasma"], s.Faction, s.StartingBody, "Vanguard");
+            ship.FactionOwnerID = s.Faction.Id;
+            s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(s.Faction.Id, fleet, ship));
+
+            var combatShips = CombatEngagement.GetCombatShips(fleet);
+            var mix = CombatEngagement.BuildFireMix(combatShips);
+            Assert.That(mix.Count, Is.EqualTo(1), "the Vanguard's 3 identical plasma repeaters aggregate to ONE bucket");
+            var plasma = mix[0];
+            Log($"aggregated: class={plasma.Class} nature={plasma.Nature} delivery={plasma.Delivery} computed={plasma.ComputedClass}");
+
+            Assert.That(plasma.Nature, Is.EqualTo(WeaponNature.Energy), "aggregation preserves the Energy nature (the shield matchup survives)");
+            Assert.That(plasma.Delivery, Is.EqualTo(WeaponDelivery.Bolt), "aggregation preserves the Bolt delivery (it was dropped to the Slug default before this fix)");
+            Assert.That(plasma.ComputedClass, Is.EqualTo(plasma.Class), "so ComputedClass==Class survives aggregation");
         }
     }
 }

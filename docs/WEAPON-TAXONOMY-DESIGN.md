@@ -256,7 +256,14 @@ it directly: the plasma bolt and a kinetic railgun are the SAME dodge-class yet 
 1.0) — same Delivery, different Nature, the axes independent. Flagged JSON defaults: Energy/Shot **100 kJ**, RoF **3/s**,
 Bolt Velocity **200 km/s**, Tracking **0.1**, mass/cost coefficients.
 
-**Next:** drop the authored `WeaponClass` at the profile-build sites (make `Class` computed from `ComputedClass` —
-requires every profile, incl. the aggregated fire-mix + the missile stub, to carry its real `Delivery` first), then the
-fuller P1–P5 designer merge (`WEAPON-UNIFICATION-DESIGN.md`); and the Dune lasgun-vs-shield special effect (a lasgun
-hitting a shield = mutual catastrophic destruction — a bespoke interaction, a later slice).
+**Aggregation now carries both axes (2026-07-06):** `CombatEngagement.BuildFireMix` buckets by (class, **nature,
+delivery**) — so the aggregated fire-mix keeps each weapon's real `Delivery`, and `ComputedClass == Class` survives
+aggregation (gauged by `WeaponClassifierTests.Aggregation_PreservesNatureAndDelivery` on a real Vanguard). Without this a
+missile would aggregate to the default Slug delivery and misclassify as a railgun — the latent blocker to making `Class`
+emergent everywhere, now cleared on the engine side.
+
+**Next:** dropping the authored `WeaponClass` field itself is a **wide, supervised refactor, NOT an autonomous slice** —
+`new WeaponProfile(class, …)` has **89 call sites** (mostly stress-test fixtures that deliberately author a class that
+won't match `ComputedClass`), so flipping `Class` to computed would ripple through all of them. Do it with the developer.
+The rest: the fuller P1–P5 designer merge (`WEAPON-UNIFICATION-DESIGN.md`); and the Dune lasgun-vs-shield special effect
+(a lasgun hitting a shield = mutual catastrophic destruction — a bespoke interaction, a later slice).

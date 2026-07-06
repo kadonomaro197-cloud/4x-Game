@@ -1001,16 +1001,21 @@ namespace Pulsar4X.Combat
             }
         }
 
-        private static List<WeaponProfile> BuildFireMix(List<CombatShip> ships, double separation_m = 0)
+        // Internal (not private) so the aggregation invariant is unit-testable (WeaponClassifierTests) — the codebase's
+        // internal-for-test pattern (cf. HitFraction / SoakFractionOf / WithinWeaponRange).
+        internal static List<WeaponProfile> BuildFireMix(List<CombatShip> ships, double separation_m = 0)
         {
-            // (class, NATURE) -> (total damage, damage-weighted velocity, tracking, saturation). Bucketing also on
-            // Nature keeps the SHIELD matchup alive through the aggregation (kinetic vs energy vs exotic soak
-            // differently) — the class alone would lose it. Class→nature is 1:1 today, so the bucket count is unchanged.
-            var byClass = new Dictionary<(WeaponClass cls, WeaponNature nat), (double dmg, double velW, double trkW, double satW)>();
-            void Add(WeaponClass cls, WeaponNature nat, double dmg, double vel, double trk, double sat)
+            // (class, NATURE, DELIVERY) -> (total damage, damage-weighted velocity, tracking, saturation). Bucketing on
+            // BOTH axes keeps the full two-axis identity alive through the aggregation: Nature drives the SHIELD matchup
+            // (kinetic vs energy vs exotic soak differently), and Delivery is what `WeaponProfile.ComputedClass` reads —
+            // so the emergent-class invariant survives aggregation (the prerequisite for later making Class emergent
+            // everywhere; without it a missile aggregated to the default Slug delivery would misclassify as a railgun).
+            // class→nature→delivery is 1:1 today, so the bucket count is unchanged and the resolve is byte-identical.
+            var byClass = new Dictionary<(WeaponClass cls, WeaponNature nat, WeaponDelivery del), (double dmg, double velW, double trkW, double satW)>();
+            void Add(WeaponClass cls, WeaponNature nat, WeaponDelivery del, double dmg, double vel, double trk, double sat)
             {
                 if (dmg <= 0) return;
-                var key = (cls, nat);
+                var key = (cls, nat, del);
                 byClass.TryGetValue(key, out var e);
                 byClass[key] = (e.dmg + dmg, e.velW + vel * dmg, e.trkW + trk * dmg, e.satW + sat * dmg);
             }
@@ -1026,7 +1031,7 @@ namespace Pulsar4X.Combat
                         // separation 0 (flag off / point blank) or a 0/unbounded weapon range => always fires, so
                         // this is a no-op in the pre-closing path (every existing fixture is unchanged).
                         if (separation_m > 0 && w.Range_m > 0 && w.Range_m < separation_m) continue;
-                        Add(w.Class, w.Nature, w.DamagePerSecond * cs.FirepowerMult, w.Velocity, w.Tracking, w.Saturation);
+                        Add(w.Class, w.Nature, w.Delivery, w.DamagePerSecond * cs.FirepowerMult, w.Velocity, w.Tracking, w.Saturation);
                     }
                 }
                 else if (cv.Firepower > 0)
@@ -1034,7 +1039,7 @@ namespace Pulsar4X.Combat
                     // Old-style combat value (firepower, no profiles): fires as a light-speed always-hits beam — an
                     // ENERGY beam, so it half-bleeds a shield (consistent with "fires as a beam"). No shield present in
                     // the pre-shield fixtures, so this nature choice can't change any existing outcome.
-                    Add(WeaponClass.Beam, WeaponNature.Energy, cv.Firepower * cs.FirepowerMult, FallbackBeamVelocity_mps, 1.0, double.PositiveInfinity);
+                    Add(WeaponClass.Beam, WeaponNature.Energy, WeaponDelivery.Beam, cv.Firepower * cs.FirepowerMult, FallbackBeamVelocity_mps, 1.0, double.PositiveInfinity);
                 }
             }
 
@@ -1042,7 +1047,7 @@ namespace Pulsar4X.Combat
             foreach (var kv in byClass)
             {
                 double d = kv.Value.dmg;
-                mix.Add(new WeaponProfile(kv.Key.cls, d, kv.Value.velW / d, kv.Value.trkW / d, kv.Value.satW / d, 0, kv.Key.nat));
+                mix.Add(new WeaponProfile(kv.Key.cls, d, kv.Value.velW / d, kv.Value.trkW / d, kv.Value.satW / d, 0, kv.Key.nat, kv.Key.del));
             }
             return mix;
         }
