@@ -104,7 +104,7 @@ namespace Pulsar4X.Tests
                                                       TargetFleet(s, s.Faction, "Unshielded", 0), salvos);
 
             // A KINETIC gun of the SAME firepower vs the SAME shield — the shield SHOULD soak this.
-            var kineticGun = new WeaponProfile(WeaponClass.Railgun, cv.Firepower, 50_000, 0.05, 5, 0, WeaponNature.Kinetic, WeaponDelivery.Slug);
+            var kineticGun = new WeaponProfile(cv.Firepower, 50_000, 0.05, 5, 0, WeaponNature.Kinetic, WeaponDelivery.Slug);
             double shieldedVsKinetic = HullDamage(GunFleet(s, red, kineticGun, "Slugger"),
                                                   TargetFleet(s, s.Faction, "ShieldedB", capacity), salvos);
 

@@ -49,7 +49,7 @@ namespace Pulsar4X.Tests
         [Description("Phase B math #1 — SoakFractionOf rolls the nature matchup over a salvo: all-kinetic fully soakable (1.0), all-energy half (0.5), all-exotic none (0.0), and a 50/50 kinetic+exotic damage mix interpolates to 0.5.")]
         public void SoakFraction_RollsUpTheNatureMatchup()
         {
-            WeaponProfile Gun(double dps, WeaponNature nat) => new WeaponProfile(WeaponClass.Beam, dps, 1e6, 1, 1, 0, nat);
+            WeaponProfile Gun(double dps, WeaponNature nat) => new WeaponProfile(dps, 1e6, 1, 1, 0, nat);
 
             Assert.That(CombatEngagement.SoakFractionOf(new List<WeaponProfile> { Gun(100, WeaponNature.Kinetic) }),
                 Is.EqualTo(CombatEngagement.ShieldSoakVsKinetic), "kinetic is fully soakable");
@@ -136,12 +136,12 @@ namespace Pulsar4X.Tests
             const int salvos = 20;
 
             // A kinetic slug (nature Kinetic) vs no shield, and vs the same shield.
-            var kineticGun = new WeaponProfile(WeaponClass.Railgun, dps, 50_000, 0.05, 5, 0, WeaponNature.Kinetic, WeaponDelivery.Slug);
+            var kineticGun = new WeaponProfile(dps, 50_000, 0.05, 5, 0, WeaponNature.Kinetic, WeaponDelivery.Slug);
             double unshielded = HullDamageAfter(s, red, kineticGun, shieldCapacity: 0, shieldRegen: 0, salvos: salvos);
             double shieldedVsKinetic = HullDamageAfter(s, red, kineticGun, shieldCapacity: capacity, shieldRegen: 0, salvos: salvos);
 
             // The SAME shield vs an EXOTIC (anti-shield) attacker of the SAME dps — the shield should give no benefit.
-            var exoticGun = new WeaponProfile(WeaponClass.Beam, dps, 3e8, 0.95, 1, 0, WeaponNature.Exotic, WeaponDelivery.Beam);
+            var exoticGun = new WeaponProfile(dps, 3e8, 0.95, 1, 0, WeaponNature.Exotic, WeaponDelivery.Beam);
             double shieldedVsExotic = HullDamageAfter(s, red, exoticGun, shieldCapacity: capacity, shieldRegen: 0, salvos: salvos);
 
             Log($"hull damage after {salvos} salvos — unshielded={unshielded:0}, shielded(kinetic)={shieldedVsKinetic:0}, shielded(exotic)={shieldedVsExotic:0}");

@@ -1007,9 +1007,9 @@ namespace Pulsar4X.Combat
         {
             // (class, NATURE, DELIVERY) -> (total damage, damage-weighted velocity, tracking, saturation). Bucketing on
             // BOTH axes keeps the full two-axis identity alive through the aggregation: Nature drives the SHIELD matchup
-            // (kinetic vs energy vs exotic soak differently), and Delivery is what `WeaponProfile.ComputedClass` reads —
-            // so the emergent-class invariant survives aggregation (the prerequisite for later making Class emergent
-            // everywhere; without it a missile aggregated to the default Slug delivery would misclassify as a railgun).
+            // (kinetic vs energy vs exotic soak differently), and Delivery is what the computed `WeaponProfile.Class`
+            // reads — so the emergent corner survives aggregation; without it a missile aggregated to the default Slug
+            // delivery would misclassify as a railgun.
             // class→nature→delivery is 1:1 today, so the bucket count is unchanged and the resolve is byte-identical.
             var byClass = new Dictionary<(WeaponClass cls, WeaponNature nat, WeaponDelivery del), (double dmg, double velW, double trkW, double satW)>();
             void Add(WeaponClass cls, WeaponNature nat, WeaponDelivery del, double dmg, double vel, double trk, double sat)
@@ -1047,7 +1047,7 @@ namespace Pulsar4X.Combat
             foreach (var kv in byClass)
             {
                 double d = kv.Value.dmg;
-                mix.Add(new WeaponProfile(kv.Key.cls, d, kv.Value.velW / d, kv.Value.trkW / d, kv.Value.satW / d, 0, kv.Key.nat, kv.Key.del));
+                mix.Add(new WeaponProfile(d, kv.Value.velW / d, kv.Value.trkW / d, kv.Value.satW / d, 0, kv.Key.nat, kv.Key.del));
             }
             return mix;
         }
@@ -1152,7 +1152,7 @@ namespace Pulsar4X.Combat
         {
             if (fire == null || scale <= 0) return;
             foreach (var w in fire)
-                into.Add(new WeaponProfile(w.Class, w.DamagePerSecond * scale, w.Velocity, w.Tracking, w.Saturation, 0, w.Nature, w.Delivery));
+                into.Add(new WeaponProfile(w.DamagePerSecond * scale, w.Velocity, w.Tracking, w.Saturation, 0, w.Nature, w.Delivery));
         }
 
         /// <summary>The damage-weighted fraction of an incoming fire mix that LANDS on a ship with the given

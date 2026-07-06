@@ -34,7 +34,7 @@ namespace Pulsar4X.Tests
             s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(owner.Id, fleet, ship));
 
             var cv = new ShipCombatValueDB(1e6, 1e7, 1.0);
-            cv.Weapons = new List<WeaponProfile> { new WeaponProfile(WeaponClass.Beam, 1e6, 3e8, 1.0, 1.0, range_m) };
+            cv.Weapons = new List<WeaponProfile> { new WeaponProfile(1e6, 3e8, 1.0, 1.0, range_m) };
             ship.SetDataBlob(cv);
 
             ship.SetDataBlob(new PositionDB { AbsolutePosition = new Vector3(x, 0, 0) });

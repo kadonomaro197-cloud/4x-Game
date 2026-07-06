@@ -31,7 +31,7 @@ namespace Pulsar4X.Tests
 
         // A strong railgun attacker, and a defenceless hull that can't dodge — so the fight resolves in a few salvos.
         private static ShipCombatValueDB Slugger(double dps)
-            => new ShipCombatValueDB(dps, 100_000, 1.0) { Weapons = { new WeaponProfile(WeaponClass.Railgun, dps, 50_000, 0.05, 5) } };
+            => new ShipCombatValueDB(dps, 100_000, 1.0) { Weapons = { new WeaponProfile(dps, 50_000, 0.05, 5) } };
         private static ShipCombatValueDB SoftHull(double toughness)
             => new ShipCombatValueDB(0, toughness, 1.0) { Evasion = 0.0 };
 

@@ -52,7 +52,7 @@ namespace Pulsar4X.Tests
         {
             var fleet = MakeFleet(s, faction, tag);
             for (int i = 0; i < n; i++)
-                Stamp(s, faction, fleet, 100, tough, evasion, new WeaponProfile(WeaponClass.Railgun, 100, 50_000, 0.05, 5), tag + i);
+                Stamp(s, faction, fleet, 100, tough, evasion, new WeaponProfile(100, 50_000, 0.05, 5), tag + i);
             return fleet;
         }
 
@@ -87,8 +87,8 @@ namespace Pulsar4X.Tests
         {
             var s = TestScenario.CreateWithColony();
             var red = FactionFactory.CreateBasicFaction(s.Game, "R", "RED", 0);
-            int hi = Killed(s, red, new WeaponProfile(WeaponClass.Railgun, 200_000, 50_000, 0.05, 1000), 100, 0.9, 100_000, 40);
-            int lo = Killed(s, red, new WeaponProfile(WeaponClass.Railgun, 200_000, 50_000, 0.05, 5), 100, 0.9, 100_000, 40);
+            int hi = Killed(s, red, new WeaponProfile(200_000, 50_000, 0.05, 1000), 100, 0.9, 100_000, 40);
+            int lo = Killed(s, red, new WeaponProfile(200_000, 50_000, 0.05, 5), 100, 0.9, 100_000, 40);
             Assert.That(hi, Is.GreaterThan(lo), $"[STRESS-01] vs 100 evasive(0.9) fighters/40 steps: spinal slug (saturation 1000) killed {hi}, normal railgun (saturation 5) killed {lo} -> rate-of-fire defeats the dodge.");
         }
 
@@ -98,8 +98,8 @@ namespace Pulsar4X.Tests
         {
             var s = TestScenario.CreateWithColony();
             var red = FactionFactory.CreateBasicFaction(s.Game, "R", "RED", 0);
-            int fast = Killed(s, red, new WeaponProfile(WeaponClass.Flak, 200_000, 20_000, 0.10, 300), 100, 0.9, 100_000, 40);
-            int slow = Killed(s, red, new WeaponProfile(WeaponClass.Flak, 200_000, 20_000, 0.10, 0.02), 100, 0.9, 100_000, 40);
+            int fast = Killed(s, red, new WeaponProfile(200_000, 20_000, 0.10, 300), 100, 0.9, 100_000, 40);
+            int slow = Killed(s, red, new WeaponProfile(200_000, 20_000, 0.10, 0.02), 100, 0.9, 100_000, 40);
             Assert.That(fast, Is.GreaterThan(slow), $"[STRESS-02] vs 100 evasive(0.9) fighters/40 steps: fast flak (saturation 300) killed {fast}, a 1/min flak (saturation 0.02) killed {slow} -> slow flak is useless.");
         }
 
@@ -109,8 +109,8 @@ namespace Pulsar4X.Tests
         {
             var s = TestScenario.CreateWithColony();
             var red = FactionFactory.CreateBasicFaction(s.Game, "R", "RED", 0);
-            int light = Killed(s, red, new WeaponProfile(WeaponClass.Railgun, 200_000, 3e8, 0.05, 5), 100, 0.9, 100_000, 40);
-            int slow = Killed(s, red, new WeaponProfile(WeaponClass.Railgun, 200_000, 50_000, 0.05, 5), 100, 0.9, 100_000, 40);
+            int light = Killed(s, red, new WeaponProfile(200_000, 3e8, 0.05, 5), 100, 0.9, 100_000, 40);
+            int slow = Killed(s, red, new WeaponProfile(200_000, 50_000, 0.05, 5), 100, 0.9, 100_000, 40);
             Assert.That(light, Is.GreaterThan(slow), $"[STRESS-03] vs 100 evasive(0.9) fighters/40 steps: near-light railgun (vel 3e8) killed {light}, normal railgun (vel 5e4) killed {slow} -> muzzle velocity defeats the dodge.");
         }
 
@@ -120,8 +120,8 @@ namespace Pulsar4X.Tests
         {
             var s = TestScenario.CreateWithColony();
             var red = FactionFactory.CreateBasicFaction(s.Game, "R", "RED", 0);
-            int extreme = Killed(s, red, new WeaponProfile(WeaponClass.Flak, 500_000, 20_000, 0.10, 100_000), 100, 0.95, 100_000, 16);
-            int normalSlug = Killed(s, red, new WeaponProfile(WeaponClass.Railgun, 500_000, 50_000, 0.05, 5), 100, 0.95, 100_000, 16);
+            int extreme = Killed(s, red, new WeaponProfile(500_000, 20_000, 0.10, 100_000), 100, 0.95, 100_000, 16);
+            int normalSlug = Killed(s, red, new WeaponProfile(500_000, 50_000, 0.05, 5), 100, 0.95, 100_000, 16);
             Assert.That(extreme, Is.GreaterThan(normalSlug), $"[STRESS-04] vs 100 MAX-evasion(0.95) fighters/16 steps: extreme-saturation flak killed {extreme}, a normal slug killed {normalSlug} -> the floor means nothing is untouchable.");
         }
 
@@ -132,9 +132,9 @@ namespace Pulsar4X.Tests
             var s = TestScenario.CreateWithColony();
             var red = FactionFactory.CreateBasicFaction(s.Game, "R", "RED", 0);
             var glass = MakeFleet(s, s.Faction, "glass");
-            var glassShip = Stamp(s, s.Faction, glass, 1e7, 50_000, 0, new WeaponProfile(WeaponClass.Beam, 1e7, 3e8, 0.95, 0.5), "Glass");
+            var glassShip = Stamp(s, s.Faction, glass, 1e7, 50_000, 0, new WeaponProfile(1e7, 3e8, 0.95, 0.5), "Glass");
             var brick = MakeFleet(s, red, "brick");
-            var brickShip = Stamp(s, red, brick, 1_000, 1e8, 0, new WeaponProfile(WeaponClass.Beam, 1_000, 3e8, 0.95, 0.5), "Brick");
+            var brickShip = Stamp(s, red, brick, 1_000, 1e8, 0, new WeaponProfile(1_000, 3e8, 0.95, 0.5), "Brick");
             var (g, b, steps) = Resolve(glass, brick, 5000);
             Assert.That(brickShip.IsValid, Is.False, $"[STRESS-05] glass cannon vs brick in {steps} steps: glass alive={glassShip.IsValid}, brick alive={brickShip.IsValid} -> alpha-strike kills the brick.");
             Assert.That(glassShip.IsValid, Is.True, "the glass cannon outruns the brick's attrition and survives");
@@ -150,8 +150,8 @@ namespace Pulsar4X.Tests
             var redf = MakeFleet(s, red, "red");
             for (int i = 0; i < 100; i++)
             {
-                Stamp(s, s.Faction, blue, 10_000, 200_000, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "B" + i);
-                Stamp(s, red, redf, 10_000, 200_000, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "R" + i);
+                Stamp(s, s.Faction, blue, 10_000, 200_000, 0.3, new WeaponProfile(10_000, 50_000, 0.05, 5), "B" + i);
+                Stamp(s, red, redf, 10_000, 200_000, 0.3, new WeaponProfile(10_000, 50_000, 0.05, 5), "R" + i);
             }
             var (bl, rd, steps) = Resolve(blue, redf, 5000);
             Assert.That(Math.Abs(bl - rd), Is.LessThanOrEqualTo(4), $"[STRESS-06] 100v100 mirror in {steps} steps: blue={bl}, red={rd} -> a fair fight is near-perfectly even.");
@@ -166,9 +166,9 @@ namespace Pulsar4X.Tests
             var red = FactionFactory.CreateBasicFaction(s.Game, "R", "RED", 0);
             var swarm = MakeFleet(s, s.Faction, "swarm");
             for (int i = 0; i < 400; i++)
-                Stamp(s, s.Faction, swarm, 50_000, 100_000, 0.85, new WeaponProfile(WeaponClass.Railgun, 50_000, 50_000, 0.05, 5), "F" + i);
+                Stamp(s, s.Faction, swarm, 50_000, 100_000, 0.85, new WeaponProfile(50_000, 50_000, 0.05, 5), "F" + i);
             var cap = MakeFleet(s, red, "cap");
-            Stamp(s, red, cap, 5e6, 5e7, 0, new WeaponProfile(WeaponClass.Railgun, 5e6, 50_000, 0.05, 5), "SuperCap");
+            Stamp(s, red, cap, 5e6, 5e7, 0, new WeaponProfile(5e6, 50_000, 0.05, 5), "SuperCap");
             var (sw, cp, steps) = Resolve(swarm, cap, 5000);
             Assert.That(cp, Is.EqualTo(0), $"[STRESS-07] 400 evasive(0.85) fighters vs 1 super-capital in {steps} steps: fighters left={sw}/400, capital left={cp} -> a big enough swarm overwhelms it.");
             Assert.That(sw, Is.GreaterThan(0), "but the swarm wins at heavy cost (a brutal exchange ratio)");
@@ -184,8 +184,8 @@ namespace Pulsar4X.Tests
             var def = MakeFleet(s, red, "plain");
             for (int i = 0; i < 50; i++)
             {
-                Stamp(s, s.Faction, off, 10_000, 200_000, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "O" + i);
-                Stamp(s, red, def, 10_000, 200_000, 0.3, new WeaponProfile(WeaponClass.Railgun, 10_000, 50_000, 0.05, 5), "D" + i);
+                Stamp(s, s.Faction, off, 10_000, 200_000, 0.3, new WeaponProfile(10_000, 50_000, 0.05, 5), "O" + i);
+                Stamp(s, red, def, 10_000, 200_000, 0.3, new WeaponProfile(10_000, 50_000, 0.05, 5), "D" + i);
             }
             FleetDoctrine.TrySetDoctrine(off, new CombatDoctrineBlueprint { UniqueID = "aggro", DisplayName = "aggro", Family = "Offensive", FirepowerMult = 2.0, ToughnessMult = 1.0, CooldownSeconds = 0 }, off.StarSysDateTime);
             var (o, d, steps) = Resolve(off, def, 5000);
@@ -199,13 +199,13 @@ namespace Pulsar4X.Tests
             var s = TestScenario.CreateWithColony();
             var red = FactionFactory.CreateBasicFaction(s.Game, "R", "RED", 0);
             var beamFleet = MakeFleet(s, red, "beams");
-            for (int i = 0; i < 30; i++) Stamp(s, red, beamFleet, 20_000, 1e9, 0, new WeaponProfile(WeaponClass.Beam, 20_000, 3e8, 0.95, 0.5), "Bm" + i);
+            for (int i = 0; i < 30; i++) Stamp(s, red, beamFleet, 20_000, 1e9, 0, new WeaponProfile(20_000, 3e8, 0.95, 0.5), "Bm" + i);
             var screenA = Screen(s, s.Faction, 100, 0.85, 150_000, "sA");
             CombatEngagement.StartEngagement(beamFleet, screenA);
             for (int i = 0; i < 40 && screenA.HasDataBlob<FleetCombatStateDB>(); i++) CombatEngagement.StepEngagement(beamFleet, screenA, 5);
             int beamScreenLeft = CombatEngagement.GetFleetShips(screenA).Count;
             var slugFleet = MakeFleet(s, red, "slugs");
-            for (int i = 0; i < 30; i++) Stamp(s, red, slugFleet, 20_000, 1e9, 0, new WeaponProfile(WeaponClass.Railgun, 20_000, 50_000, 0.05, 5), "Sg" + i);
+            for (int i = 0; i < 30; i++) Stamp(s, red, slugFleet, 20_000, 1e9, 0, new WeaponProfile(20_000, 50_000, 0.05, 5), "Sg" + i);
             var screenB = Screen(s, s.Faction, 100, 0.85, 150_000, "sB");
             CombatEngagement.StartEngagement(slugFleet, screenB);
             for (int i = 0; i < 40 && screenB.HasDataBlob<FleetCombatStateDB>(); i++) CombatEngagement.StepEngagement(slugFleet, screenB, 5);
@@ -224,9 +224,9 @@ namespace Pulsar4X.Tests
             foreach (int n in new[] { 5, 10, 25, 50, 100 })
             {
                 var swarm = MakeFleet(s, s.Faction, "sw" + n);
-                for (int i = 0; i < n; i++) Stamp(s, s.Faction, swarm, 50_000, 100_000, 0.85, new WeaponProfile(WeaponClass.Railgun, 50_000, 50_000, 0.05, 5), "f" + n + "_" + i);
+                for (int i = 0; i < n; i++) Stamp(s, s.Faction, swarm, 50_000, 100_000, 0.85, new WeaponProfile(50_000, 50_000, 0.05, 5), "f" + n + "_" + i);
                 var cap = MakeFleet(s, red, "cap" + n);
-                Stamp(s, red, cap, 4e6, 2.5e6, 0.1, new WeaponProfile(WeaponClass.Railgun, 4e6, 50_000, 0.05, 5), "Cap" + n);
+                Stamp(s, red, cap, 4e6, 2.5e6, 0.1, new WeaponProfile(4e6, 50_000, 0.05, 5), "Cap" + n);
                 var (sw, cp, st) = Resolve(swarm, cap, 5000);
                 results.Add($"N={n}->fighters {sw}, capital {cp} in {st} steps");
                 if (breakeven < 0 && cp == 0 && sw > 0) breakeven = n;

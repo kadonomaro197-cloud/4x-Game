@@ -40,7 +40,7 @@ namespace Pulsar4X.Tests
             var ship = ShipFactory.CreateShip(designs[PlasmaShip], s.Faction, s.StartingBody, "Vanguard");
             var cv = ship.GetDataBlob<ShipCombatValueDB>();
             var plasma = cv.Weapons.FirstOrDefault(w => w.Delivery == WeaponDelivery.Bolt);
-            Log($"Vanguard: firepower={cv.Firepower:0}; plasma profile: nature={plasma?.Nature} delivery={plasma?.Delivery} vel={plasma?.Velocity:0} class={plasma?.Class} computed={plasma?.ComputedClass}");
+            Log($"Vanguard: firepower={cv.Firepower:0}; plasma profile: nature={plasma?.Nature} delivery={plasma?.Delivery} vel={plasma?.Velocity:0} class={plasma?.Class}");
 
             Assert.That(cv.Firepower, Is.GreaterThan(0), "the Vanguard is armed (plasma firepower flows into the combat value)");
             Assert.That(plasma, Is.Not.Null, "a Plasma Repeater produced a Bolt-delivery profile — JSON template → PlasmaBoltWeaponAtb → combat value is wired");
@@ -48,9 +48,8 @@ namespace Pulsar4X.Tests
             Assert.That(plasma.Delivery, Is.EqualTo(WeaponDelivery.Bolt), "...delivered as a discrete dodgeable bolt");
             Assert.That(plasma.Velocity, Is.LessThan(WeaponClassifier.BeamVelocityThreshold_mps),
                 "finite velocity → dodgeable (a beam is not)");
-            Assert.That(plasma.ComputedClass, Is.EqualTo(WeaponClass.Railgun),
-                "in the dodge model it reads as Railgun-class (finite-velocity, dodgeable) ...");
-            Assert.That(plasma.ComputedClass, Is.EqualTo(plasma.Class), "...and the computed class matches the authored one (the unification invariant)");
+            Assert.That(plasma.Class, Is.EqualTo(WeaponClass.Railgun),
+                "in the dodge model it computes to Railgun-class (finite-velocity, dodgeable) — same dodge-class as a kinetic railgun, but Energy in nature");
 
             // DODGEABLE like a railgun: a nimble ship evades much of it (a beam it could not).
             double vsSluggish = CombatEngagement.HitFraction(plasma, 0.0);
@@ -62,7 +61,7 @@ namespace Pulsar4X.Tests
             // ENERGY vs shields: a shield only HALF-soaks the plasma (it bleeds through), where a same-dodge-class
             // KINETIC railgun is FULLY soaked. That difference is the whole point of splitting Nature from Delivery.
             double plasmaSoak = CombatEngagement.SoakFractionOf(new List<WeaponProfile> { plasma });
-            var kineticRailgun = new WeaponProfile(WeaponClass.Railgun, 1, 50_000, 0.05, 5, 0, WeaponNature.Kinetic, WeaponDelivery.Slug);
+            var kineticRailgun = new WeaponProfile(1, 50_000, 0.05, 5, 0, WeaponNature.Kinetic, WeaponDelivery.Slug);
             double kineticSoak = CombatEngagement.SoakFractionOf(new List<WeaponProfile> { kineticRailgun });
             Log($"shield soak fraction: plasma(energy)={plasmaSoak:0.##}, railgun(kinetic)={kineticSoak:0.##}");
 

@@ -63,12 +63,12 @@ namespace Pulsar4X.Combat
     /// </summary>
     public class WeaponProfile
     {
-        /// <summary>Which corner of the weapon triangle this weapon is — now a COMPUTED read-out, DERIVED from the two
+        /// <summary>Which corner of the weapon triangle this weapon is — a COMPUTED read-out, DERIVED from the two
         /// axes + the dials (Delivery × Velocity × Tracking × Saturation) via <see cref="WeaponClassifier"/>, NOT an
         /// authored choice (the developer's "the axes are the filing-cabinet path; the type emerges from the drawer you
         /// opened + the dials inside, not a hand-picked label"). Not serialized — recomputed from the serialized axes on
-        /// load. The ctors still accept a <c>cls</c> arg for call-site compatibility but IGNORE it; removing that
-        /// vestigial arg across the ~89 call sites is the follow-up "clean pass". See docs/WEAPON-TAXONOMY-DESIGN.md.</summary>
+        /// load. There is NO type argument to the ctor: you set the axes + dials and the corner falls out.
+        /// See docs/WEAPON-TAXONOMY-DESIGN.md.</summary>
         [JsonIgnore] public WeaponClass Class => WeaponClassifier.Classify(Delivery, Velocity, Tracking, Saturation);
 
         /// <summary>Damage nature (Kinetic/Energy/Explosive/Exotic) — what it does to the defence. Axis 1 of 2.</summary>
@@ -98,16 +98,11 @@ namespace Pulsar4X.Combat
         /// railgun/flak/missile default to 0 (rangeless) until their own range fields are added — a flagged follow-up.</summary>
         [JsonProperty] public double Range_m { get; internal set; }
 
-        /// <summary>Now redundant with <see cref="Class"/> (both compute the corner from the axes) — kept as a thin
-        /// alias so existing gauges compile; removed in the "clean pass". Prefer <see cref="Class"/>.</summary>
-        [JsonIgnore] public WeaponClass ComputedClass => Class;
-
         public WeaponProfile() { }
 
-        public WeaponProfile(WeaponClass cls, double damagePerSecond, double velocity, double tracking, double saturation, double range_m = 0,
+        public WeaponProfile(double damagePerSecond, double velocity, double tracking, double saturation, double range_m = 0,
             WeaponNature nature = WeaponNature.Kinetic, WeaponDelivery delivery = WeaponDelivery.Slug)
         {
-            _ = cls;   // IGNORED — Class is now computed from the axes; the arg stays only for call-site compatibility
             DamagePerSecond = damagePerSecond;
             Velocity = velocity;
             Tracking = tracking;

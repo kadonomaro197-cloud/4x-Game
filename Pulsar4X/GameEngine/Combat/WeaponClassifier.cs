@@ -3,12 +3,10 @@ namespace Pulsar4X.Combat
     /// <summary>
     /// Computes a weapon's TRIANGLE CORNER (<see cref="WeaponClass"/>) from its DELIVERY axis + its dialled specs —
     /// the first concrete step of the weapon-designer UNIFICATION (docs/WEAPON-TAXONOMY-DESIGN.md, the developer's
-    /// "one weapon designer, pick Nature × Delivery, the triangle EMERGES"). Today <see cref="WeaponClass"/> is still
-    /// AUTHORED at the profile-build sites in <see cref="ShipCombatValueDB"/>; this classifier proves the axes + specs
-    /// carry enough to DERIVE it, so a later slice can drop the authored field and make Class a pure read-out (a
-    /// computed label, not a design choice). It is deliberately consistent with the authored mapping so
-    /// <see cref="WeaponProfile.ComputedClass"/> == the authored <see cref="WeaponProfile.Class"/> for every real
-    /// weapon (the invariant the unification rests on — gauged by <c>WeaponClassifierTests</c>).
+    /// "one weapon designer, pick Nature × Delivery, the triangle EMERGES"). <see cref="WeaponProfile.Class"/> is now a
+    /// pure computed read-out backed by this classifier — there is NO authored type field and no type argument to the
+    /// <see cref="WeaponProfile"/> ctor; you set the axes + dials and the corner falls out (gauged by
+    /// <c>WeaponClassifierTests</c>: every real base-mod weapon computes to its expected corner).
     ///
     /// PURE + deterministic → unit-testable, no engine state. The class is a READOUT of how the weapon behaves in the
     /// dodge model, so the thresholds mirror the dodge references in <see cref="CombatEngagement"/>.

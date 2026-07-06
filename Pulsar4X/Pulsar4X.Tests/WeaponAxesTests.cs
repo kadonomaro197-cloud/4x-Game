@@ -19,13 +19,13 @@ namespace Pulsar4X.Tests
         public void WeaponProfile_CarriesNatureAndDeliveryAxes_Independently()
         {
             // a phaser: energy nature, beam delivery (~c → undodgeable)
-            var phaser = new WeaponProfile(WeaponClass.Beam, damagePerSecond: 100, velocity: 3e8, tracking: 0.9, saturation: 1, range_m: 5000,
+            var phaser = new WeaponProfile(damagePerSecond: 100, velocity: 3e8, tracking: 0.9, saturation: 1, range_m: 5000,
                 nature: WeaponNature.Energy, delivery: WeaponDelivery.Beam);
             Assert.That(phaser.Nature, Is.EqualTo(WeaponNature.Energy));
             Assert.That(phaser.Delivery, Is.EqualTo(WeaponDelivery.Beam));
 
             // the build the OLD model couldn't express: a blaster — ENERGY nature but a slow, DODGEABLE Bolt
-            var blaster = new WeaponProfile(WeaponClass.Beam, damagePerSecond: 40, velocity: 500, tracking: 0.1, saturation: 2, range_m: 2000,
+            var blaster = new WeaponProfile(damagePerSecond: 40, velocity: 500, tracking: 0.1, saturation: 2, range_m: 2000,
                 nature: WeaponNature.Energy, delivery: WeaponDelivery.Bolt);
             Assert.That(blaster.Nature, Is.EqualTo(phaser.Nature), "same nature as the phaser (energy — bleeds through shields)");
             Assert.That(blaster.Delivery, Is.Not.EqualTo(phaser.Delivery), "but a DIFFERENT delivery (dodgeable bolt) — the two axes are independent");
@@ -40,7 +40,7 @@ namespace Pulsar4X.Tests
         [Description("The old fused-class default is preserved for callers that don't specify the axes (backward-compatible): a WeaponProfile built without Nature/Delivery reads the Kinetic/Slug default, so nothing that pre-dates the axes changes behaviour.")]
         public void WeaponProfile_DefaultsToKineticSlug_WhenAxesUnspecified()
         {
-            var legacy = new WeaponProfile(WeaponClass.Railgun, damagePerSecond: 50, velocity: 5e4, tracking: 0.05, saturation: 5);
+            var legacy = new WeaponProfile(damagePerSecond: 50, velocity: 5e4, tracking: 0.05, saturation: 5);
             Assert.That(legacy.Nature, Is.EqualTo(WeaponNature.Kinetic));
             Assert.That(legacy.Delivery, Is.EqualTo(WeaponDelivery.Slug));
         }

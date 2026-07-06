@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Pulsar4X.Combat;
@@ -9,13 +10,13 @@ using Pulsar4X.Ships;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Weapon-designer UNIFICATION, step 1 — the triangle corner (<see cref="WeaponClass"/>) is DERIVABLE from the
-    /// Delivery axis + specs, not just authored (docs/WEAPON-TAXONOMY-DESIGN.md, the developer's "one designer, the
-    /// triangle EMERGES"). Two gauges:
+    /// Weapon-designer UNIFICATION — the triangle corner (<see cref="WeaponClass"/>) EMERGES from the axes + dials
+    /// (docs/WEAPON-TAXONOMY-DESIGN.md, the developer's "the axes are the filing-cabinet path; the type falls out of
+    /// the drawer you opened + the dials, not a hand-picked label"). `WeaponProfile.Class` is now a pure computed
+    /// read-out — there is no authored type field. Three gauges:
     ///   • the pure classifier hits each corner (beam / railgun / flak / missile) + the disambiguating edges;
-    ///   • THE INVARIANT, on real built ships: every base-mod weapon's <see cref="WeaponProfile.ComputedClass"/> equals
-    ///     its AUTHORED <see cref="WeaponProfile.Class"/>. That agreement is the green light for a later slice to drop
-    ///     the authored field and make the class a pure read-out — if this ever diverges, the unification isn't safe yet.
+    ///   • on every real built base-mod weapon, the computed <see cref="WeaponProfile.Class"/> is the EXPECTED corner;
+    ///   • the corner survives fire-mix AGGREGATION (the mix keeps each weapon's real Nature + Delivery).
     /// Engine-only → runs in CI.
     /// </summary>
     [TestFixture]
@@ -41,42 +42,42 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("THE INVARIANT: on every real base-mod weapon (laser / railgun / flak / ion disruptor), the class COMPUTED from the axes equals the AUTHORED class — so the authored field is fully recoverable and can later become a pure read-out.")]
-        public void ComputedClass_MatchesAuthoredClass_OnEveryRealBaseModWeapon()
+        [Description("On every real base-mod weapon, the computed WeaponProfile.Class is the EXPECTED triangle corner — laser→Beam, railgun→Railgun, flak→Flak, ion-disruptor→Beam (an exotic weapon delivered as a beam). The type is emergent from the axes, with no authored field.")]
+        public void Class_ComputesToTheExpectedCorner_OnEveryRealBaseModWeapon()
         {
             var s = TestScenario.CreateWithColony();
             var designs = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns;
 
-            // one ship per corner that actually carries weapons in the base mod
-            string[] shipIds =
+            // one ship per corner that actually carries weapons in the base mod → the corner every weapon must compute to
+            var expected = new Dictionary<string, WeaponClass>
             {
-                "default-ship-design-test-warship",  // Aegis  — lasers (Beam)
-                "default-ship-design-test-railgun",  // Lancer — railguns (Railgun)
-                "default-ship-design-test-flak",     // Bulwark — flak (Flak)
-                "default-ship-design-test-disruptor" // Ravager — ion disruptors (Exotic, Beam-class)
+                { "default-ship-design-test-warship",   WeaponClass.Beam    }, // Aegis  — lasers
+                { "default-ship-design-test-railgun",   WeaponClass.Railgun }, // Lancer — railguns
+                { "default-ship-design-test-flak",      WeaponClass.Flak    }, // Bulwark — flak
+                { "default-ship-design-test-disruptor", WeaponClass.Beam    }, // Ravager — ion disruptors (exotic, beam-delivery)
             };
 
             int weaponsChecked = 0;
-            foreach (var id in shipIds)
+            foreach (var kv in expected)
             {
-                Assert.That(designs.ContainsKey(id), Is.True, $"{id} loads from the base mod");
-                var ship = ShipFactory.CreateShip(designs[id], s.Faction, s.StartingBody, id);
+                Assert.That(designs.ContainsKey(kv.Key), Is.True, $"{kv.Key} loads from the base mod");
+                var ship = ShipFactory.CreateShip(designs[kv.Key], s.Faction, s.StartingBody, kv.Key);
                 var cv = ship.GetDataBlob<ShipCombatValueDB>();
-                Assert.That(cv.Weapons.Count, Is.GreaterThan(0), $"{id} is armed");
+                Assert.That(cv.Weapons.Count, Is.GreaterThan(0), $"{kv.Key} is armed");
 
                 foreach (var w in cv.Weapons)
                 {
-                    Assert.That(w.ComputedClass, Is.EqualTo(w.Class),
-                        $"{id}: a {w.Nature}/{w.Delivery} weapon authored as {w.Class} must COMPUTE to {w.Class} (vel={w.Velocity:0}, sat={w.Saturation:0.##})");
+                    Assert.That(w.Class, Is.EqualTo(kv.Value),
+                        $"{kv.Key}: a {w.Nature}/{w.Delivery} weapon (vel={w.Velocity:0}, sat={w.Saturation:0.##}) must COMPUTE to {kv.Value}");
                     weaponsChecked++;
                 }
             }
-            Log($"verified computed==authored class on {weaponsChecked} real weapon profiles across {shipIds.Length} ships");
-            Assert.That(weaponsChecked, Is.GreaterThanOrEqualTo(shipIds.Length), "checked at least one weapon per ship");
+            Log($"verified the computed corner on {weaponsChecked} real weapon profiles across {expected.Count} ships");
+            Assert.That(weaponsChecked, Is.GreaterThanOrEqualTo(expected.Count), "checked at least one weapon per ship");
         }
 
         [Test]
-        [Description("The two axes survive fire-mix AGGREGATION: BuildFireMix now buckets by (class, nature, DELIVERY), so a real Vanguard's plasma fire aggregates to a profile that still carries Nature=Energy AND Delivery=Bolt (not defaulted away) — the prerequisite for later making Class emergent everywhere (a missile would otherwise aggregate to the default Slug delivery and misclassify).")]
+        [Description("The two axes survive fire-mix AGGREGATION: BuildFireMix buckets by (class, nature, DELIVERY), so a real Vanguard's plasma fire aggregates to a profile that still carries Nature=Energy AND Delivery=Bolt (not defaulted away), so its computed corner (Railgun-class, dodgeable) is preserved through aggregation.")]
         public void Aggregation_PreservesNatureAndDelivery()
         {
             var s = TestScenario.CreateWithColony();
@@ -90,11 +91,11 @@ namespace Pulsar4X.Tests
             var mix = CombatEngagement.BuildFireMix(combatShips);
             Assert.That(mix.Count, Is.EqualTo(1), "the Vanguard's 3 identical plasma repeaters aggregate to ONE bucket");
             var plasma = mix[0];
-            Log($"aggregated: class={plasma.Class} nature={plasma.Nature} delivery={plasma.Delivery} computed={plasma.ComputedClass}");
+            Log($"aggregated: class={plasma.Class} nature={plasma.Nature} delivery={plasma.Delivery}");
 
             Assert.That(plasma.Nature, Is.EqualTo(WeaponNature.Energy), "aggregation preserves the Energy nature (the shield matchup survives)");
             Assert.That(plasma.Delivery, Is.EqualTo(WeaponDelivery.Bolt), "aggregation preserves the Bolt delivery (it was dropped to the Slug default before this fix)");
-            Assert.That(plasma.ComputedClass, Is.EqualTo(plasma.Class), "so ComputedClass==Class survives aggregation");
+            Assert.That(plasma.Class, Is.EqualTo(WeaponClass.Railgun), "so the emergent corner (dodgeable Railgun-class) survives aggregation");
         }
     }
 }

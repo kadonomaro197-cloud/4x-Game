@@ -53,7 +53,7 @@ namespace Pulsar4X.Tests
             // The payoff: flak's saturation FLOORS the hit fraction, so it lands heavily even on a high-evasion
             // target — where a low-saturation ballistic slug (same nimble target) gets dodged.
             double flakVsNimble = CombatEngagement.HitFraction(first, 0.9);
-            var slug = new WeaponProfile(WeaponClass.Railgun, 1000, 50_000, 0.05, 5); // low-saturation ballistic
+            var slug = new WeaponProfile(1000, 50_000, 0.05, 5); // low-saturation ballistic
             double slugVsNimble = CombatEngagement.HitFraction(slug, 0.9);
             Log($"vs nimble (ev=0.9): flak={flakVsNimble:0.###} slug={slugVsNimble:0.###}");
 

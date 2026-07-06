@@ -23,7 +23,7 @@ namespace Pulsar4X.Tests
             var ship = ShipFactory.CreateShip(design, s.Faction, s.StartingBody, name); // build under player faction
             ship.FactionOwnerID = faction.Id;                                            // then assign true owner
             ship.SetDataBlob(new ShipCombatValueDB(40_000, 100_000, 1.0)                 // a plain armed value
-            { Weapons = { new WeaponProfile(WeaponClass.Railgun, 40_000, 50_000, 0.05, 5) } });
+            { Weapons = { new WeaponProfile(40_000, 50_000, 0.05, 5) } });
             s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(faction.Id, fleet, ship));
             return ship;
         }

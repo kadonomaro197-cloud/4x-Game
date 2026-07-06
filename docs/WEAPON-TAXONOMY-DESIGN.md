@@ -241,11 +241,10 @@ Dune lasgun-vs-shield interaction becomes a special-ability effect). Cradle-to-g
   Flagged new numbers (JSON defaults): Energy/Shot **150 kJ**, RoF **2/s**, `DisruptorRange_m` **400 km**, mass/cost coefficients.
 
 **Unification step 1 BUILT (2026-07-06):** `WeaponClassifier.Classify(delivery, velocity, tracking, saturation)` DERIVES
-the triangle corner (`WeaponClass`) from the Delivery axis + specs, exposed as the computed `WeaponProfile.ComputedClass`.
-The INVARIANT — `ComputedClass == the authored Class` for every real base-mod weapon (laser/railgun/flak/ion-disruptor) —
-is gauged by `WeaponClassifierTests`. That agreement is the green light for a later slice to DROP the authored `Class`
-field and make the corner a pure read-out (the class stops being a design choice and becomes emergent). Nature is a
-separate axis, so an exotic ion beam still classifies as Beam by delivery — the two axes stay independent.
+the triangle corner (`WeaponClass`) from the Delivery axis + specs. Gauged by `WeaponClassifierTests` (every real base-mod
+weapon computes to its expected corner: laser→Beam, railgun→Railgun, flak→Flak, ion-disruptor→Beam). Nature is a separate
+axis, so an exotic ion beam still classifies as Beam by delivery — the two axes stay independent. (This was the foundation
+for making `Class` fully computed + deleting the type slot — see below.)
 
 **The two-axis payoff DEMONSTRATED (2026-07-06):** the base-mod **Plasma Repeater** (`plasma-repeater` template binding
 `Weapons.PlasmaBoltWeaponAtb`; example ship the **Vanguard**, `default-ship-design-test-plasma`) is the corner the fused
@@ -257,23 +256,22 @@ it directly: the plasma bolt and a kinetic railgun are the SAME dodge-class yet 
 Bolt Velocity **200 km/s**, Tracking **0.1**, mass/cost coefficients.
 
 **Aggregation now carries both axes (2026-07-06):** `CombatEngagement.BuildFireMix` buckets by (class, **nature,
-delivery**) — so the aggregated fire-mix keeps each weapon's real `Delivery`, and `ComputedClass == Class` survives
+delivery**) — so the aggregated fire-mix keeps each weapon's real `Delivery`, and the computed corner survives
 aggregation (gauged by `WeaponClassifierTests.Aggregation_PreservesNatureAndDelivery` on a real Vanguard). Without this a
 missile would aggregate to the default Slug delivery and misclassify as a railgun — the latent blocker to making `Class`
-emergent everywhere, now cleared on the engine side.
+emergent everywhere, cleared on the engine side.
 
-**`WeaponClass` is now COMPUTED (2026-07-06, developer-approved).** `WeaponProfile.Class` is an expression-bodied
-read-out — `=> WeaponClassifier.Classify(Delivery, Velocity, Tracking, Saturation)` — no longer an authored, serialized
-field. This is the developer's "the axes are the filing-cabinet path (Nature × Delivery); the type EMERGES from the
-drawer you opened + the dials, not a hand-picked label" — so **the dials always win**. Done as the **safe incremental**:
-the ctors still accept a `cls` arg for call-site compatibility but IGNORE it (a discard), so none of the ~89
-`new WeaponProfile(class, …)` sites changed — removing that vestigial arg is the follow-up "clean pass". Proved
-byte-identical by audit, not luck: `.Class` is only READ in the fire-mix bucket key + the readout; every real base-mod
-weapon computes to its authored class (the invariant test), the one mixed-weapon fixture (`CombatBattleSims` B05
-railgun+flak) computes cleanly, and the handful of deliberately-contradictory stress weapons (a railgun with flak-level
-saturation, etc.) are all LONE weapons whose bucket label is inert — plus the dodge tests pass their profiles straight to
-`HitFraction`, which never reads the class. Serialization-safe (recomputed from the serialized axes on load).
+**`WeaponClass` is now COMPUTED, and the type slot is GONE (2026-07-06, developer-approved + clean pass done).**
+`WeaponProfile.Class` is an expression-bodied read-out — `=> WeaponClassifier.Classify(Delivery, Velocity, Tracking,
+Saturation)` — no longer an authored, serialized field. This is the developer's "the axes are the filing-cabinet path
+(Nature × Delivery); the type EMERGES from the drawer you opened + the dials, not a hand-picked label" — so **the dials
+always win**. Landed in two commits: (1) the safe incremental (compute `Class`, keep an ignored `cls` ctor arg) — proved
+byte-identical by CI; then (2) the **clean pass** — **the type argument is deleted from the ctor and all ~86 call sites**
+(the 3 copy-ctor calls untouched), and the redundant `ComputedClass` alias removed. So a `new WeaponProfile(...)` now
+takes only the dials; there is no way to hand-pick a type. Byte-identical was proved by audit + CI: `.Class` is only READ
+in the fire-mix bucket key + the readout; every real base-mod weapon computes to its expected corner (the invariant test),
+the one mixed-weapon fixture (`CombatBattleSims` B05 railgun+flak) computes cleanly, and the deliberately-contradictory
+stress weapons are LONE weapons whose bucket label is inert. Serialization-safe (recomputed from the serialized axes).
 
-**Next / still with-the-developer:** the "clean pass" removing the now-vestigial `cls` ctor arg across the ~89 sites (pure
-churn, do when convenient); the fuller P1–P5 designer merge (`WEAPON-UNIFICATION-DESIGN.md`); and the Dune lasgun-vs-shield
+**Next / still with-the-developer:** the fuller P1–P5 designer merge (`WEAPON-UNIFICATION-DESIGN.md`); and the Dune lasgun-vs-shield
 special effect (a lasgun hitting a shield = mutual catastrophic destruction — a bespoke interaction, a later slice).
