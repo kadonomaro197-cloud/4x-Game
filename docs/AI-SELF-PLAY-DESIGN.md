@@ -188,11 +188,82 @@ The Prime-Directive pass (2026-07-06) found the substrate in far better shape th
 
 ---
 
+## The leader cradle-to-grave pipeline (born → grave)
+
+A leader isn't mined, so it doesn't ride the mineral→component chain — it rides the **people chain**, and it's the **same six rungs for all 19 roles**. The whole point: don't build 19 leaders — build **one pipeline**, prove it on one role, then every other role is configuration (a `BonusCategory` + a `Refresh` method), not a rebuild.
+
+Navy picture: how you get an officer from nothing to running a department — recruited → rated at a school → assigned to a billet → stands the watch (his skill runs the plant) → advances with quals → transferred/lost, billet gapped.
+
+| Rung | What it means | State in the code today (file:line) |
+|------|---------------|-------------------------------------|
+| **1. Born** | a leader is generated *with a competence value* | ⚠️ **Weakest.** `NavalAcademyProcessor` graduates Navy officers with a bell-curve `Experience` int (`NavalAcademyProcessor.cs:31-46`) but **no competence bonuses** — the graduate's `BonusesDB` is left **empty** (`CommanderFactory.cs:24`). The one "skilled" example hardcodes `0.1` in `NewGameMenu.cs:629`. **No competence generator exists.** |
+| **2. Skilled** | competence stored in a reusable container | ✅ **Built & reusable.** `BonusesDB.Bonuses` — `Bonus(Value, Type, FilterId)`; `FilterId` routes a bonus to a scope (`BonusesDB.cs:20-47`). |
+| **3. Seated** | the leader put in a post with command scope | ✅ **Strongest.** `AdminSpace` seat ladder (11 levels Ship→Empire), `AssignAdministratorOrder` links both ways, `FundingLevel 0–5`. The billet exists only because you **built the command component** that opens it (`AdminSpaceAtb`) — so leaders connect back to the mineral→material→component chain. |
+| **4. Acts** | competence multiplies a real game number | 🔸 **Works in exactly one place, as a copyable pattern.** Only research: target holds a `ModifiableValue`, `RefreshPointModifiers` folds the officer's `BonusesDB` in, `GetValue()` reads it (`ResearchProcessor.cs:87,292-333`). Dead for the other 18 roles. |
+| **5. Improves** | leader gets better with tenure/success | ❌ **Absent** as an auto-loop — `Experience` is stored and never read into any computation. **Replaced by the retraining loop below** (deliberate re-enrollment, not passive XP). |
+| **6. Lost** | killed/defected/HQ-destroyed → seat empties, effect reverts | 🔸 **Partial.** A seat can be unassigned; "destroy the HQ → seat collapses" is designed, not wired; a ground formation's leader dying reassigns with *no penalty*. No stakes yet. |
+
+**The essence:** rungs 2 and 3 are built and reusable; rung 4 exists once as a pattern to copy; rungs 1, 5, 6 are the real work — and even the proven example lacks a competence generator (1) and growth (5).
+
+### Rung 1 in depth — Leader Academies (the installation)
+
+Leaders are **produced by installations** — schools / colleges / universities — that take a fraction of a colony's citizens and turn them into placeable leaders. This is the bottom rung: *it takes from the colony and gives the player/NPC leaders to use.* It is mostly **connect-and-generalize**, because the pieces are already half-built:
+
+| Design element | Today | Move |
+|----------------|-------|------|
+| Installation = a designed component | `NavalAcademyAtb : IComponentDesignAttribute` with design-tunable `ClassSize`, `TrainingPeriodInMonths` (`NavalAcademyAtb.cs:9-12`) | **Connect** — generalize off "Navy only" |
+| Design knob: quality via training investment | `TrainingPeriodInMonths` already shifts graduate quality via a bell-curve mean (`NavalAcademyProcessor.cs:31`) | **Exists** |
+| Design knob: which type/tier it produces | academy hardcodes `CommanderTypes.Navy` | **Small build** — make type/tier a design field |
+| "More valuable resources → better output" | component is built from materials; `CostPerDay` pattern on `ResearcherDB` | **Connect** — add a per-cycle material draw |
+| Modifier: colony populousness | `ColonyInfoDB.Population.Values.Sum()` | **Exists** — plugs in |
+| Modifier: colony development level | ❌ no colony-wide stat (only per-hex `HexTile.InfrastructureLevel:47`) | **Build one accessor** (see below) |
+| Modifier: a leader assigned to *teach* | the scientist-seated-at-a-lab pattern (`AssignScientistOrder` + `ResearcherDB.ScientistId`) | **Connect** — copy assignment + the `RefreshModifiers` competence read |
+| "Takes a fraction of citizens" | `ColonyManpowerDB.TalentPool` (pop × 0.005) + `AvailableTalent`/`CommitTalent` — **purpose-built for "officers, scientists, governors," zero consumers today** (`ColonyManpowerDB.cs:15,27,61`) | **Connect** — the academy is the first thing to draw talent |
+| Output: leaders with *inherent value* (competence) | ❌ graduates get only an `Experience` int; `BonusesDB` is **empty** | **THE core build** — the competence generator |
+
+**Two purpose-built sockets nobody has plugged into:** the **talent pool** (a scarce population slice literally documented for officers/scientists/governors, never drawn) and the **empty `BonusesDB`** on every officer (the competence slot rung 4 already reads). Your academy is the first consumer of both.
+
+**The one core new mechanic — the competence generator:** at graduation, **roll the leader's `BonusesDB` values**, scaled by `(design tier + material investment) × populousness × development level × teacher competence`. That single roll IS "the leaders produced and their inherent value." It emits into the shape (`BonusesDB`) the rest of the pipeline already consumes.
+
+**Tier = ceiling, competence = value.** The installation *tier* (school → college → university) sets the **highest rung** a graduate is eligible for; their rolled competence + record decides how good they are and which seats they qualify for. (The `COLONY-PROGRESSION` tier ladder, when built, is the natural backing for a higher academy tier on a more-developed world.)
+
+**Colony development level — one accessor, swappable backing.** No colony-wide development number exists (only per-hex `InfrastructureLevel`). Build a single `ColonyDevelopment` accessor that **aggregates the hex infra levels now**, and is forward-compatible with the `COLONY-PROGRESSION-DESIGN.md` tier ladder later (the tier becomes a factor inside the same accessor). One figure, never two competing ones (`CONVENTIONS.md` §6). Its grave rung matches the progression doc's open question — a bombarded world both *demotes* and *starves its leader pipeline*.
+
+**The installation's own cradle-to-grave (vertical):** designed → built from minerals/materials → installed → draws talent → produces leaders → **destroyed** (bombardment / captured when the planet falls) → **the leader pipeline goes dark.** That grave rung is strategic — hitting an enemy's universities starves their *future* leadership, wiring this system straight into ground combat and orbital bombardment.
+
+### The retraining loop (rung 1 + rung 5, merged)
+
+Leaders don't improve on their own (passive `Experience` is dead). Instead, **a leader can be sent back to school to gain more modifiers** — re-enrolling in an academy as a student. This is a deliberate, costly decision: it takes a school slot, costs time, and pulls the leader **out of service** while they train. It reuses the academy mechanic wholesale (the leader is a student again), gives academies permanent relevance beyond first spawn, and makes competence growth something you *invest in and plan around* — never automatic. This is how "Improves" is delivered.
+
+### Contracts — the universal commitment term (and the runaway fix)
+
+The teacher-feedback loop (a great leader teaching → better graduates) would spiral if you could cycle your best officer through the academy every year. The fix generalizes into the connective tissue for rungs 3→6:
+
+**Every assignment is a fixed-term contract.** When a leader is seated — as a teacher, a governor, an admiral — they're committed for a term and **locked in place** for it.
+
+- Caps the teacher loop (a star teacher can't be cycled).
+- Makes "which leader, which post" a **durable strategic choice**, not per-turn optimization — parking your one genius admiral at the war college for a decade means he's *not* on the front for a decade. Real opportunity cost.
+- **Net-new but small** — today's assignment orders are instant with no duration; add a term-end date + an early-break cost (payout / morale hit / reputation ding).
+- Preserves the governance rule "dropping in for one decision never un-seats the delegate" (you take the conn without breaking the contract).
+- Quietly helps the performance bill — leaders don't get reassigned every tick.
+
+Navy framing: a commission/enlistment term. You don't PCS a department head every week; cutting a tour short is a real event with real cost. "Back to school" is that officer going to the War College mid-career — off the watch bill, back sharper.
+
+### First vertical slice — the Governor (proves the whole pipeline)
+
+Cheapest end-to-end proof, because the grave-end target already exists and is already dead-wired for it: `LegitimacyDB.GovernorCompetence` is a `0..1` slot feeding a `×15` legitimacy bonus that **nothing has ever written to** (`LegitimacyDB.cs:88-92,128,138`), and `AdministratorDB` is already a near-identical copy of the working `ResearcherDB`. The slice: **generate an officer with rolled competence (build rung 1) → seat via the existing `AdminSpace` order (rung 3, done) → copy `RefreshPointModifiers` to write competence into `GovernorCompetence` (rung 4) → watch legitimacy move.** It forces the reusable pieces into existence; after that, the System Admiral, Spymaster, and Trade Minister are the same wiring pointed at a different `ModifiableValue`.
+
+---
+
 ## Connections (Prime Directive)
 
 - **`docs/GOVERNANCE-AND-DELEGATION-DESIGN.md`** — the mechanism this doc rides on. That doc is the "one delegate shape + span of control"; this doc is the full roster, the AI-self-play framing, and the cost analysis. Keep them in sync.
 - **`MasterTimePulse` / the GlobalManager keystone** — the shared prerequisite for every empire-level (cabinet) delegate; already in place. Colony/fleet delegates ride processors that already fire.
 - **People / Commanders** (built, no bonus fields) — delegates ARE commanders; the skill-bonus gap must be closed (mirror the `Scientist`/`BonusesDB` path). The academy supplies them.
+- **Leader academies (rung 1)** — generalize `NavalAcademyAtb` (`People/`) off Navy-only; first consumer of `ColonyManpowerDB.TalentPool` (the unused talent draw); emits competence into the empty `BonusesDB`. Feeds every seat above.
+- **Colony development** — a new single `ColonyDevelopment` accessor aggregating `HexTile.InfrastructureLevel`, forward-compatible with `docs/COLONY-PROGRESSION-DESIGN.md`'s tier ladder. Read by the academy competence roll; a bombarded world demotes it AND starves the pipeline (shared grave rung).
+- **Legitimacy / colony happiness** (`Colonies/LegitimacyDB.cs`, `ColonyMoraleDB.cs`) — the Governor's `Acts` target: the dead `GovernorCompetence` slot (`×15` bonus) is the first payoff to wire. Legitimacy → `RebellionDB` is the downstream stake.
+- **Contracts** — a net-new fixed-term on assignment (extends `AssignAdministratorOrder`); the commitment layer for rungs 3→6; caps the teacher loop and throttles AI reassignment churn.
 - **Combat / fleets** (`docs/COMBAT-DESIGN.md`, `docs/FLEET-COMBAT-CLOSING-DESIGN.md`) — the Admiral chain and Fleet Commander are delegates over the already-built doctrine/auto-resolve.
 - **Ground combat** (`docs/GROUND-COMBAT-MAP-DESIGN.md`, `docs/HEX-GROUND-AND-ORDERS-DESIGN.md`) — the General chain sits over the built formation/doctrine layer; the person-commander is the net-new wrapper.
 - **Diplomacy / espionage / internal politics** (`docs/DIPLOMACY-DESIGN.md`, `docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md`, `docs/GOVERNMENT-AND-POLITICS-DESIGN.md`) — Foreign Minister, Spymaster, Interior Minister are delegates of this exact shape.
@@ -211,17 +282,26 @@ The Prime-Directive pass (2026-07-06) found the substrate in far better shape th
 - **Interior Minister and Planetary General report under the Planetary Governor**; **System General reports under the System Governor**; **the System Admiral (mobile) stays on the naval operational line and only coordinates with the System Governor.**
 - **No leaders for leaders' sake** — every seat must own a distinct decision; competence is texture, not the justification.
 - **Ship Captain cut** (a lone ship is a fleet of one); **company/unit commander deferred to v2** (keeps the AI-seat count honest).
+- **One six-rung people pipeline** (born → skilled → seated → acts → improves → lost) for all 19 roles — build once, prove on the Governor, reuse.
+- **Leaders are produced by academy installations** (rung 1) — generalize `NavalAcademyAtb`; draw the (unused) talent pool; the **competence generator** rolls `BonusesDB` from `(design tier + materials) × populousness × development × teacher`. Tier = eligibility ceiling; competence = value.
+- **One `ColonyDevelopment` accessor** — aggregates hex infra now, tier-ladder-ready later (never two competing development numbers).
+- **Retraining loop replaces passive XP** (rung 5) — leaders improve only by deliberate, costly re-enrollment.
+- **Contracts = the universal commitment term** — every assignment is fixed-term; caps the teacher loop, makes seating a durable strategic choice.
 
 **Open (decide when we build):**
 - The **empire-scope ground ceiling** — a "High Command"/Field Marshal, a joint Supreme Commander over both, or nothing. Deferred.
 - **Stance presets per pillar** — how many, what they're called (the actual decision surface an NPC sets).
 - **How competence maps to outcomes** per pillar (curve vs notches).
+- **The competence roll's exact shape** — the distribution, and how the four inputs weight it.
+- **Contract term lengths + early-break penalty** — the numbers.
 - **Ruins/anomalies** as survey content (the one net-new exploration piece).
 - The **commerce money-wire** that must precede a Trade Minister.
 
 **Path forward (build order — after the shared prerequisites):**
 1. **Build the scaling gauge** (Visibility Gate) — the faction/entity performance benchmark, before any AI logic.
 2. **Finish the delegate substrate** (per the governance doc): generalize `AdministratorDB` → the universal delegate record → close the `CommanderDB` skill-field gap.
-3. **The Governor auto-runner** (highest-value, most-asked: worlds that maintain themselves) — proves the delegate=AI loop end-to-end on one pillar.
-4. **Fill the `NPCDecisionProcessor` stub** — translate the doctrine vector into real orders through the delegates.
-5. **Level-of-Detail for distant empires** — the affordability lever, once there's a gauge to prove it works.
+3. **Rung 1 — leader academies**: generalize the academy, wire the talent draw, build the competence generator + the `ColonyDevelopment` accessor. This is the cradle that makes every later rung have something to seat.
+4. **The Governor vertical slice** (rungs 1→4 end-to-end): rolled officer → `AdminSpace` seat → competence into the dead `GovernorCompetence` slot → legitimacy moves. Proves the whole pipeline.
+5. **Contracts + retraining** (rungs 5–6 connective tissue) once one role is seated and acting.
+6. **Fill the `NPCDecisionProcessor` stub** — translate the doctrine vector into real orders through the seated delegates.
+7. **Level-of-Detail for distant empires** — the affordability lever, once there's a gauge to prove it works.
