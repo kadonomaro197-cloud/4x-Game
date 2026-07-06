@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Pulsar4X.Components;
+using Pulsar4X.Factions;
+using Pulsar4X.Interfaces;
 
 namespace Pulsar4X.GroundCombat
 {
@@ -174,6 +176,21 @@ namespace Pulsar4X.GroundCombat
                     if (d == null || c <= 0) continue;
                     for (int i = 0; i < c; i++) { AddCosts(design.ResourceCosts, d.ResourceCosts); design.IndustryPointCosts += d.IndustryPointCosts; }
                 }
+            return design;
+        }
+
+        /// <summary>SLICE A — the CONNECT: assemble a frame + parts into a <see cref="GroundUnitDesign"/> AND register it
+        /// on the faction as a buildable design, so it rides the normal industry rails (queue → consume materials →
+        /// <see cref="GroundUnitDesign.OnConstructionComplete"/> raises the fielded unit on the colony's planet). This is
+        /// the single entry point a unit-designer UI (later) and tests call to make a player-designed unit real. Returns
+        /// the registered design. Never throws on the assembly itself; the caller may check <see cref="Compute"/>'s
+        /// <c>Valid</c> first (the gates) — registration is a UI/order concern, so this registers regardless.</summary>
+        public static GroundUnitDesign RegisterAssembledDesign(FactionInfoDB faction, string uniqueId, string name,
+            ComponentDesign frame, IEnumerable<(ComponentDesign design, int count)> parts)
+        {
+            var design = ToGroundUnitDesign(uniqueId, name, frame, parts);
+            if (faction != null)
+                faction.IndustryDesigns[design.UniqueID] = (IConstructableDesign)design;
             return design;
         }
 
