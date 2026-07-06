@@ -247,6 +247,16 @@ is gauged by `WeaponClassifierTests`. That agreement is the green light for a la
 field and make the corner a pure read-out (the class stops being a design choice and becomes emergent). Nature is a
 separate axis, so an exotic ion beam still classifies as Beam by delivery — the two axes stay independent.
 
-**Next:** drop the authored `WeaponClass` at the profile-build sites (make `Class` computed from `ComputedClass`), then
-the fuller P1–P5 designer merge (`WEAPON-UNIFICATION-DESIGN.md`); and the Dune lasgun-vs-shield special effect (a lasgun
+**The two-axis payoff DEMONSTRATED (2026-07-06):** the base-mod **Plasma Repeater** (`plasma-repeater` template binding
+`Weapons.PlasmaBoltWeaponAtb`; example ship the **Vanguard**, `default-ship-design-test-plasma`) is the corner the fused
+enum had no cell for — `ShipCombatValueDB` reads it into a **`WeaponNature.Energy` + `WeaponDelivery.Bolt`** profile: a
+finite-velocity bolt that reads as **Railgun-CLASS in the dodge model** (a nimble ship jukes it, like a slug) but whose
+**Energy nature** means a shield only HALF-soaks it (it bleeds through, like a beam). Gauge `PlasmaBoltWeaponTests` proves
+it directly: the plasma bolt and a kinetic railgun are the SAME dodge-class yet the shield soaks them differently (0.5 vs
+1.0) — same Delivery, different Nature, the axes independent. Flagged JSON defaults: Energy/Shot **100 kJ**, RoF **3/s**,
+Bolt Velocity **200 km/s**, Tracking **0.1**, mass/cost coefficients.
+
+**Next:** drop the authored `WeaponClass` at the profile-build sites (make `Class` computed from `ComputedClass` —
+requires every profile, incl. the aggregated fire-mix + the missile stub, to carry its real `Delivery` first), then the
+fuller P1–P5 designer merge (`WEAPON-UNIFICATION-DESIGN.md`); and the Dune lasgun-vs-shield special effect (a lasgun
 hitting a shield = mutual catastrophic destruction — a bespoke interaction, a later slice).

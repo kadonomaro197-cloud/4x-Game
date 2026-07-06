@@ -240,6 +240,24 @@ namespace Pulsar4X.Combat
                     }
                 }
 
+                // Plasma repeaters: the two-axis corner the old enum couldn't name — ENERGY nature (a shield only
+                // half-soaks it, it bleeds through like a beam) but a finite-velocity BOLT delivery (dodgeable like a
+                // slug, unlike a beam). Reads as Railgun-CLASS in the dodge model (finite velocity → juke-able), but its
+                // Energy nature is what meets the shield. damage/sec = energy/shot × rounds/sec.
+                if (instances.TryGetComponentsByAttribute<PlasmaBoltWeaponAtb>(out var plasmas))
+                {
+                    foreach (var comp in plasmas)
+                    {
+                        if (comp.Design.TryGetAttribute<PlasmaBoltWeaponAtb>(out var pl))
+                        {
+                            double dps = pl.EnergyPerShot_J * pl.RoundsPerSecond * comp.HealthPercent;
+                            // Class Railgun (dodge behaviour = finite-velocity ballistic), Nature Energy, Delivery Bolt —
+                            // the split axes in action. Reuses the mid RailgunRange_m (a bolt reaches like a light gun).
+                            weapons.Add(new WeaponProfile(WeaponClass.Railgun, dps, pl.MuzzleVelocity_mps, pl.Tracking, pl.RoundsPerSecond, RailgunRange_m, WeaponNature.Energy, WeaponDelivery.Bolt));
+                        }
+                    }
+                }
+
                 // Missile launchers: flat damage stub each (warhead energy is v2); slow + guided (tracks) — the
                 // weapon flak answers. Velocity/tracking/saturation are v1 stubs.
                 if (instances.TryGetComponentsByAttribute<MissileLauncherAtb>(out var launchers))

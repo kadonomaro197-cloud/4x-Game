@@ -665,5 +665,13 @@
       "Name": "Ion Disruptor",
       "TemplateId": "disruptor-weapon"
     }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-plasma-repeater",
+      "Name": "Plasma Repeater",
+      "TemplateId": "plasma-repeater"
+    }
   }
 ]

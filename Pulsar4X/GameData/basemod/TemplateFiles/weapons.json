@@ -610,5 +610,78 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "plasma-repeater",
+      "Name": "Plasma Repeater",
+      "Formulas": {
+        "Description": "A rapid-fire plasma bolt-thrower. Its bolts are ENERGY in nature (a shield only half-soaks them — they bleed through like a beam) but travel at a FINITE velocity (a nimble ship can dodge them, unlike a beam) — the dodgeable energy weapon the weapon triangle had no cell for until Nature and Delivery split.",
+        "Mass": "PropertyValue('Energy Per Shot') / 2000 + PropertyValue('Rounds Per Second') * 30",
+        "Volume": "[Mass] * 0.5",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.1",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "aluminium": "[Mass] * 0.2",
+        "stainless-steel": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.25",
+        "titanium": "[Mass] * 0.1"
+      },
+      "ComponentType": "Weapon",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Energy Per Shot",
+          "Units": "J",
+          "DescriptionFormula": "'Damage delivered by one plasma bolt. Energy nature — a shield only half-soaks it.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "10000000",
+          "MinFormula": "1000",
+          "StepFormula": "1000",
+          "PropertyFormula": "100000"
+        },
+        {
+          "Name": "Rounds Per Second",
+          "Units": "1/s",
+          "DescriptionFormula": "'Rate of fire. Drives damage/sec and saturation (how much still lands on a dodger).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100",
+          "MinFormula": "0.1",
+          "StepFormula": "0.1",
+          "PropertyFormula": "3"
+        },
+        {
+          "Name": "Bolt Velocity",
+          "Units": "m/s",
+          "DescriptionFormula": "'How fast a bolt travels. FINITE — a nimble ship can dodge it (a beam cannot be dodged).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1000000",
+          "MinFormula": "10000",
+          "StepFormula": "10000",
+          "PropertyFormula": "200000"
+        },
+        {
+          "Name": "Tracking",
+          "Units": "",
+          "DescriptionFormula": "'How well it follows an evasive target (0..1). A dumb bolt is low.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0.1"
+        },
+        {
+          "Name": "plasmaAtbArgs",
+          "DescriptionFormula": "'double energyPerShot, double roundsPerSecond, double muzzleVelocity, double tracking'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Energy Per Shot'), PropertyValue('Rounds Per Second'), PropertyValue('Bolt Velocity'), PropertyValue('Tracking'))",
+          "AttributeType": "Pulsar4X.Weapons.PlasmaBoltWeaponAtb"
+        }
+      ]
+    }
   }
 ]
