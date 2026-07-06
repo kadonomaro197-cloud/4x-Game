@@ -42,14 +42,14 @@ namespace Pulsar4X.Tests
             double defHpBefore = forces.Units.Where(u => u.FactionOwnerID == defenderFaction).Sum(u => u.Health);
             Assert.That(defBefore, Is.GreaterThan(0), "there are defenders to soften");
 
-            // A heavy orbital strike: 5e12 J → damageStrength ~50,000 → ~500 health per defending unit (enough to kill
-            // the lighter units and wound the heavier ones).
+            // A heavy orbital strike: 1e13 J → damageStrength ~100,000 → ~1000 raw health per defending unit — enough to
+            // punch through the light garrison's small flat armour and kill units.
             var frag = new DamageFragment
             {
                 Velocity = new Vector2(1, 0),   // non-zero (the harness's 1/|v| guard)
                 Position = (0, 0),
                 Mass = 1f, Density = 1000f, Momentum = 1f, Length = 1f,
-                Energy = 5e12,
+                Energy = 1e13,
             };
             DamageProcessor.OnTakingDamage(s.Colony, frag);
 
@@ -63,6 +63,40 @@ namespace Pulsar4X.Tests
             Assert.That(invader, Is.Not.Null, "the invader unit is still present");
             Assert.That(invader.Health, Is.EqualTo(500.0),
                 "a non-defender (a landed invader) is NOT hit by bombardment aimed at the defender — the friendly-fire guard");
+        }
+
+        [Test]
+        [Description("Bombardment respects a ground unit's DEFENCES (via the same GroundDamageMatrix the ground resolver uses): a SHIELDED defender retains more health than an identical unshielded one under the same orbital strike — 'build defended ground units to survive the softening' is a real decision.")]
+        public void OrbitalBombardment_ShieldedDefenderResistsBetter()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.Colony.GetDataBlob<ColonyInfoDB>().PlanetEntity;
+            int faction = s.Colony.FactionOwnerID;
+
+            // Stand up two identical DEFENDING units — same faction, same HP, no armour — differing ONLY in shield.
+            if (!body.TryGetDataBlob<GroundForcesDB>(out var forces))
+            {
+                forces = new GroundForcesDB();
+                body.SetDataBlob(forces);
+            }
+            var bare    = new GroundUnit { FactionOwnerID = faction, RegionIndex = 0, MaxHealth = 1000, Health = 1000, Defense = 0, Shield = 0,   Name = "Bare" };
+            var warded  = new GroundUnit { FactionOwnerID = faction, RegionIndex = 0, MaxHealth = 1000, Health = 1000, Defense = 0, Shield = 300, Name = "Warded" };
+            forces.Units.Add(bare);
+            forces.Units.Add(warded);
+
+            // A moderate strike (5e12 J → ~500 raw): the shield soaks a fraction, so the warded unit keeps more health.
+            var frag = new DamageFragment
+            {
+                Velocity = new Vector2(1, 0), Position = (0, 0),
+                Mass = 1f, Density = 1000f, Momentum = 1f, Length = 1f,
+                Energy = 5e12,
+            };
+            DamageProcessor.OnTakingDamage(s.Colony, frag);
+
+            Log($"after strike — bare hp={bare.Health:0}, warded hp={warded.Health:0}");
+            Assert.That(bare.Health, Is.LessThan(1000), "the unshielded defender was softened");
+            Assert.That(warded.Health, Is.GreaterThan(bare.Health),
+                "the SHIELDED defender kept more health under the same strike — its shield soaked part of the bombardment");
         }
     }
 }
