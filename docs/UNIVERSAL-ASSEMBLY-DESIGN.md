@@ -78,6 +78,34 @@ reactor, …): pick the type, spec it, and it's usable anywhere its mount and sc
 
 ---
 
+## 2b. The AXIS pattern — every component designer, not just weapons (developer's call, 2026-07-06)
+
+The weapon taxonomy (`WEAPON-TAXONOMY-DESIGN.md`) found the *shape* of a component designer, and **it is the shape
+of ALL of them:** you pick a component's **1–2 defining AXES** (a "what/nature" axis, usually × a "how/mode" axis),
+dial the **SPECS**, and the component's **role/identity EMERGES from the numbers** — never a picked label. Weapons
+proved it (Nature × Delivery → the triangle position emerges from velocity/saturation/tracking). The pattern
+generalises; only the axes change per kind:
+
+| Component | Axis 1 — nature / what | Axis 2 — mode / how | Role EMERGES from the specs |
+|---|---|---|---|
+| **Weapon** | Kinetic · Energy · Explosive · Exotic | Beam · Bolt · Slug · Cloud · Guided · Blast | triangle position (velocity → dodge, saturation → floor, tracking → follow) |
+| **Armour / defence** | soak-plate · ablative · reactive · shield · deflector | *vs which nature* it resists best | survivability profile — flat-soak (bounces a swarm) vs %-shield (weak to alpha) vs dodge (beats aimed) |
+| **Sensor** | EM/radar · thermal · optical · gravitic · subspace/FTL | **active** (loud, sees far, is seen) vs **passive** (quiet, shorter) | detection profile — range vs stealth vs resolution vs what-bands |
+| **Propulsion** | reaction (chem · ion · fusion-torch · antimatter) · field (gravitic · warp · jump) | sublight-maneuver vs strategic-FTL | thrust-vs-efficiency, Δv, FTL reach — a burst fighter drive vs a freighter cruiser vs a jump drive |
+| **Power** | fission · fusion · antimatter · exotic (ZPM/naquadah) | baseload vs burst/capacitor | output-per-mass — AND it's the **supply** that gates weapons (a reactor powers a beam; the weapon-merge P2 gate) |
+
+**The load-bearing unification:** the **defence axes are the MIRROR of the weapon axes** — armour resists a *nature*
+(kinetic/energy/…), a dodge/shield beats a *delivery* (aimed vs saturation vs guided). So the weapon triangle and the
+armour matchup are **two halves of ONE system** — exactly what `GroundDamageMatrix` already is (dodge × shield ×
+armour vs a weapon's flavour). Getting weapons' two axes right *defines the defence axes for free*, and the same
+`nature × mode → emergent role` engine is reused, not rebuilt, for each kind.
+
+**Build rule:** when we build ANY component designer, name its two axes first, make the role a **computed readout** of
+the specs (like `WeaponClass` is becoming), and gate the top of its scale by research (`TechData`, per-type). One
+engine, N kinds. This is the through-line for the whole build.
+
+---
+
 ## 3. Current state (survey, 2026-07-05)
 
 | Buildable | Assembly of components today? | Structural gate? | Notes |
