@@ -60,5 +60,21 @@ namespace Pulsar4X.Tests
                 "researching Beam Focusing Range raises the reach — long range is earned, not handed out at game start");
             Log($"beam range ceiling: {before:0} m (start) -> {after:0} m (after +1 research level)");
         }
+
+        [Test]
+        [Description("KINETIC yield (railgun): the slug's Kinetic-Energy-Per-Shot ceiling is TechData-driven (tech-kinetic-yield), so RESEARCH raises how hard a railgun hits. A per-TYPE, setting-agnostic weapon tech — it lifts the ceiling for any kinetic weapon, ship or ground. Level 0 == the previous flat cap (start unchanged); +1 research level raises it. Starting cap + growth are flagged tunables in techs.json.")]
+        public void RailgunKineticEnergyCeiling_RisesWithResearch()
+        {
+            var s = TestScenario.CreateWithColony();
+            double before = Ceiling(s, "railgun-weapon", "Kinetic Energy Per Shot");
+            Assert.That(before, Is.GreaterThan(0),
+                "the railgun kinetic-energy ceiling resolves — tech-kinetic-yield is unlocked at start (no KeyNotFound crash from TechData)");
+
+            s.Faction.GetDataBlob<FactionInfoDB>().Data.IncrementTechLevel("tech-kinetic-yield");
+            double after = Ceiling(s, "railgun-weapon", "Kinetic Energy Per Shot");
+            Assert.That(after, Is.GreaterThan(before),
+                "researching Kinetic Yield raises how hard a slug hits — a capital-scale round is earned by research");
+            Log($"railgun kinetic-energy ceiling: {before:0} J (start) -> {after:0} J (after +1 research level)");
+        }
     }
 }

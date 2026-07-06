@@ -514,6 +514,7 @@
           "tech-antenna-bandwidth",
           "tech-factory-max-size",
           "tech-beam-range",
+          "tech-kinetic-yield",
           "tech-shipyard-slip-max-size",
           "tech-geo-surveyor",
           "tech-administration-level",
@@ -548,6 +549,18 @@
       "Category": "tech-category-energy-weapons",
       "MaxLevel": 10,
       "DataFormula": "(1 + [Level]) * 10000",
+      "CostFormula": "(1 + [Level]) * 2500"
+    }
+  },
+  {
+    "Type": "Tech",
+    "Payload": {
+      "UniqueID": "tech-kinetic-yield",
+      "Name": "Kinetic Yield",
+      "Description": "Research into denser projectiles and higher launch energies — raises the maximum kinetic energy per shot a slug-thrower design can reach. A type-based weapon tech (kinetic), setting-agnostic: it lifts the ceiling for any railgun/mass-driver, on a ship or a ground mount. A starting slug hits modestly; research is what makes it a capital-scale round.",
+      "Category": "tech-category-missiles-kinetic-weapons",
+      "MaxLevel": 10,
+      "DataFormula": "(1 + [Level]) * 10000000",
       "CostFormula": "(1 + [Level]) * 2500"
     }
   },

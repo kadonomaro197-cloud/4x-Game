@@ -274,9 +274,16 @@ cascade-unlocked `tech-capacitors`/`tech-conductors`, proving it builds post-unl
 (1 + [Level]) * 10000` → level 0 == today's cap; research raises the reach — the developer's *"long range is EARNED,
 not given"* rule made real. Gauge: `WeaponScaleGateTests.BeamRangeCeiling_RisesWithResearch`. **FLAGGED (tune in
 techs.json):** base `10000` m, `+10000`/level, `MaxLevel 10` — the developer likely wants this STEEPER (their vision is
-range climbing to sci-fi/thousands-of-km at high tech), so the growth formula is the key dial. **Still owed:** the
-other beam caps (lens/chamber/power → pulse energy), railgun KE, flak, missile warhead; the missile `CanLoadOrdnance`
-no-op.
+range climbing to sci-fi/thousands-of-km at high tech), so the growth formula is the key dial.
+
+**✅ Slice 4 BUILT (2026-07-05) — KINETIC yield research-gated.** Same pattern, type-based: the railgun's `Kinetic
+Energy Per Shot` `MaxFormula` (was flat `1e7`) now reads `TechData('tech-kinetic-yield')` — a new tech (category
+`tech-category-missiles-kinetic-weapons`) in the `tech-modern-technology` cascade. `DataFormula = (1 + [Level]) *
+10000000` → level 0 == today's cap; research raises how hard a slug hits. A per-TYPE, **setting-agnostic** weapon
+tech (lifts the ceiling for any kinetic weapon, ship or ground — the correct shape post-category-fix). Gauge:
+`WeaponScaleGateTests.RailgunKineticEnergyCeiling_RisesWithResearch`. **FLAGGED (techs.json):** base `1e7` J,
+`+1e7`/level, `MaxLevel 10`. **Still owed:** the other beam caps (lens/chamber/power → pulse energy), flak saturation,
+missile warhead; the missile `CanLoadOrdnance` no-op.
 
 ### 6c. The four are NOT a cage on the designer (2026-07-05)
 

@@ -381,9 +381,9 @@
         {
           "Name": "Kinetic Energy Per Shot",
           "Units": "J",
-          "DescriptionFormula": "'Damage delivered by one slug on impact.'",
+          "DescriptionFormula": "'Damage delivered by one slug on impact. Its ceiling rises with the Kinetic Yield tech.'",
           "GuiHint": "GuiSelectionMaxMin",
-          "MaxFormula": "10000000",
+          "MaxFormula": "TechData('tech-kinetic-yield')",
           "MinFormula": "1000",
           "StepFormula": "1000",
           "PropertyFormula": "200000"
