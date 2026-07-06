@@ -55,9 +55,22 @@ class→type hierarchy) ARE the weapon designer for everything.
     - **P2a ✅ Reactors ground-mountable (2026-07-06).** The three fuel-burning generators carry
       `ComponentMountType.GroundUnit` (the P1 move, supply side); `battery-bank` (storage) + `solarArray` stay ship-only.
       Purely additive, no new numbers. Gauge: `PowerPlantGroundMountTests`.
-    - **P2b — the assembler power gate.** `GroundUnitAssembly` sums reactor `PowerOutputMax` vs Σ weapon watts and marks
-      the assembly Invalid if draw > supply (pure + unit-tested: infantry+ship-laser → rejected, Titan+reactor+laser →
-      valid). The only coefficient is a J-per-charge ↔ kW unit conversion (arithmetic, flagged — not a balance dial).
+    - **P2b ✅ the assembler power gate + supply mode (2026-07-06).** `WeaponSupply` (pure, the ground echo of
+      `WeaponClassifier`): a weapon's **supply mode** — Energy / Ammo / Both — with smart defaults from its own physics
+      (laser/plasma/disruptor→Energy, railgun→**Both** [power+slug], flak→**Ammo**), and its `PowerDraw_W` = its own energy
+      flux (energy/shot × rate, or beam energy ÷ charge — **no efficiency coefficient invented**; that's a later flagged
+      knob). `GroundUnitAssembly.Compute` now sums reactor output (`EnergyGenerationAtb.PowerOutputMax` × 1000, kW→W) vs Σ
+      weapon watts and hard-refuses the design if draw > supply (exposes `EnergyDemand_W`/`ReactorSupply_W` gauges). Also:
+      a non-ground part (universal weapon / reactor) now counts its component mass against the carry budget, so the two
+      gates COMPOSE. **Developer's supply-mode calls (2026-07-06): railgun = Both (confirmed); plasma = the PLAYER's option
+      (Energy or Both) — so the mode is an overridable designer setting, landing with P2c when Energy-vs-Both changes cost.**
+      The only flagged number is the kW→W unit constant (arithmetic). Gauge: `GroundPowerGateTests` (calibration-independent:
+      laser draws / flak doesn't / a reactor clears the gate). **Note:** old ground weapons (`GroundWeaponAtb`) draw 0 —
+      only the unified space weapons are power-gated (they merge into one at P4).
+    - **P2c — the AMMO gate (next).** Build the magazine component + the ammo side: an Ammo/Both weapon (flak, railgun,
+      missiles) needs a magazine to fire, and magazine size = how long it fights before resupply (a real logistics lever).
+      Ammo store does NOT exist yet for guns (only missiles have ordnance) — this one is more build than connect. The plasma
+      Energy-vs-Both player choice ships here (it only bites once ammo is a cost).
 - **P3 — Ground reads the weapon PROFILE + triangle.** `GroundUnit` derives its combat contribution from its mounted
   universal weapons' `WeaponProfile`s; `GroundForcesProcessor` resolves via the weapon triangle (shared with space),
   behind a parallel/flag until numbers match the current garrison (existing ground gauges stay green).

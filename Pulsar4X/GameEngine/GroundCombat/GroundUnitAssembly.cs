@@ -19,6 +19,8 @@ namespace Pulsar4X.GroundCombat
         public double CarryCapacity;   // frame strength + augment strength bonuses
         public double UsedCapacity;    // sum of mounted-part carry mass
         public double MaxItemWeight;   // heaviest single part the frame can bear
+        public double EnergyDemand_W;  // Σ power draw of the mounted energy weapons (P2 supply gate)
+        public double ReactorSupply_W; // Σ sustained output of the mounted reactors (P2 supply gate)
         public GroundCarryClass CarryClass = GroundCarryClass.Personnel;
         public bool Valid;
         public List<string> Problems = new List<string>();
@@ -70,10 +72,12 @@ namespace Pulsar4X.GroundCombat
             r.CarryCapacity = capacity;
             r.MaxItemWeight = capacity * MaxItemFraction;
 
-            // pass 2 — sum stats + carry mass, check the per-item limit
+            // pass 2 — sum stats + carry mass, check the per-item limit, and the P2 supply gate (power in vs power out)
             double used = 0;
             double toughness = 0;   // accumulated, applied to the final HP pool below (order-independent)
             double topWeaponAttack = 0;   // the heaviest hitter sets the unit's damage flavour
+            double energyDemand = 0;   // Σ watts drawn by energy weapons (WeaponSupply)
+            double reactorSupply = 0;  // Σ watts supplied by mounted reactors (WeaponSupply)
             foreach (var (d, c) in list)
             {
                 double itemMass = 0;
@@ -100,6 +104,14 @@ namespace Pulsar4X.GroundCombat
                     r.Shield += g.Shield * c;
                     toughness += g.ToughnessBonus * c;
                 }
+                // A part that isn't one of the ground-specific kinds (a universal weapon or a reactor, P1/P2a) has no
+                // ground carry-mass field — count its real component mass so it still consumes the carry budget. This is
+                // what makes the two gates COMPOSE: infantry can't power the big laser because it can't CARRY the reactor.
+                bool hasGroundAtb = d.HasAttribute<GroundWeaponAtb>() || d.HasAttribute<GroundArmorAtb>() || d.HasAttribute<GroundAugmentAtb>();
+                if (!hasGroundAtb) itemMass = d.MassPerUnit;
+                // P2 supply gate — accumulate power drawn (energy weapons) and power supplied (reactors)
+                energyDemand += WeaponSupply.PowerDraw_W(d) * c;
+                reactorSupply += WeaponSupply.ReactorOutput_W(d) * c;
                 used += itemMass * c;
                 r.Mass += d.MassPerUnit * c;
                 if (itemMass > r.MaxItemWeight)
@@ -108,8 +120,13 @@ namespace Pulsar4X.GroundCombat
             // toughness hardens the whole HP pool (frame + armour), applied once so it's order-independent
             if (toughness != 0) r.HitPoints *= 1 + toughness;
             r.UsedCapacity = used;
+            r.EnergyDemand_W = energyDemand;
+            r.ReactorSupply_W = reactorSupply;
             if (used > capacity)
                 r.Problems.Add($"over carry capacity: mounted {used:0} > budget {capacity:0}. Drop gear, add a strength augment, or use a bigger frame.");
+            // The SUPPLY gate (P2b, hard — the developer's call): the guns can't draw more power than the reactors make.
+            if (energyDemand > reactorSupply)
+                r.Problems.Add($"under-powered: energy weapons draw {energyDemand:0} W but reactors supply {reactorSupply:0} W — mount a reactor (or a bigger one), or drop an energy weapon.");
 
             r.Valid = r.Problems.Count == 0;
             return r;
