@@ -54,5 +54,26 @@ namespace Pulsar4X.Tests
             Assert.That(WeaponSupply.DrawsAmmo(Part("default-design-railgun-weapon")), Is.True, "railgun = Both (also draws ammo)");
             Assert.That(WeaponSupply.DrawsAmmo(Part("default-design-laser-weapon")), Is.False, "laser = Energy (no ammo)");
         }
+
+        [Test]
+        [Description("P2c-b: the buildable base-mod magazine SATISFIES the gate — flak + a magazine is legal, and the JSON binds GroundMagazineAtb (gotcha-10).")]
+        public void Magazine_SatisfiesTheAmmoGate()
+        {
+            _s = TestScenario.CreateWithColony();
+            var frame = Part("default-design-walker-frame");
+
+            // the base-mod magazine binds its atb from JSON (the six-point registration sensor)
+            var mag = Part("default-design-ground-magazine");
+            Assert.That(mag.HasAttribute<GroundMagazineAtb>(), Is.True, "the JSON template binds GroundMagazineAtb");
+
+            var withMag = GroundUnitAssembly.Compute(frame, new List<(ComponentDesign, int)>
+            {
+                (Part("default-design-flak-weapon"), 1),
+                (mag, 1),
+            });
+            Log($"flak + magazine: ammoCap={withMag.AmmoCapacity_kg:0} kg ammoProblem={HasAmmoProblem(withMag)}");
+            Assert.That(withMag.AmmoCapacity_kg, Is.GreaterThan(0), "the magazine holds ammo (mass)");
+            Assert.That(HasAmmoProblem(withMag), Is.False, "flak + magazine: the ammo gate is satisfied");
+        }
     }
 }

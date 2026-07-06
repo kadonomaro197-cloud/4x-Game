@@ -673,5 +673,13 @@
       "Name": "Plasma Repeater",
       "TemplateId": "plasma-repeater"
     }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-ground-magazine",
+      "Name": "Ammo Magazine",
+      "TemplateId": "ground-magazine"
+    }
   }
 ]

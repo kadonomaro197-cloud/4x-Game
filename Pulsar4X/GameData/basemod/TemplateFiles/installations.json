@@ -2222,5 +2222,49 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "ground-magazine",
+      "Name": "Ammo Magazine",
+      "Formulas": {
+        "Description": "A mass-based ammunition magazine - feeds the ammo weapons (flak, railgun) a ground unit carries. Bigger holds more before it runs dry and must resupply.",
+        "Mass": "PropertyValue('Capacity') * 2",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "0.5",
+        "CrewReq": "5",
+        "ResearchCost": "0",
+        "CreditCost": "[Mass] * 0.2",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.5",
+        "aluminium": "[Mass] * 0.3"
+      },
+      "ComponentType": "Facility",
+      "MountType": "GroundUnit",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "Capacity",
+          "Units": "kg",
+          "DescriptionFormula": "'Ammo the magazine holds, in kg.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5000",
+          "MinFormula": "100",
+          "StepFormula": "1",
+          "PropertyFormula": "500"
+        },
+        {
+          "Name": "groundMagazineArgs",
+          "DescriptionFormula": "'double capacity_kg'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Capacity'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundMagazineAtb"
+        }
+      ]
+    }
   }
 ]

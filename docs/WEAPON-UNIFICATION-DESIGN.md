@@ -74,8 +74,12 @@ class→type hierarchy) ARE the weapon designer for everything.
           an Ammo/Both weapon (flak, railgun) with no magazine (exposes `AmmoCapacity_kg`); magazine mass counts against
           carry. No base-mod magazine exists yet, so the gate BITES for every ammo weapon (correct — no live designer UI can
           hit it). NO new gameplay numbers. Gauge: `GroundAmmoGateTests` (flak needs a magazine, laser doesn't).
-        - **P2c-b — the buildable magazine (next).** A base-mod magazine `ComponentDesign` (six-point registration,
-          gotcha #10) so a player can actually satisfy the gate; its `Capacity_kg` default is a FLAGGED number.
+        - **P2c-b ✅ the buildable magazine (2026-07-06).** A base-mod `ground-magazine` `ComponentTemplate` +
+          `default-design-ground-magazine` + earth.json registration (six-point, gotcha #10; reuses the already-unlocked
+          stainless-steel/aluminium so `StartingItems` is untouched). Binds `GroundMagazineAtb` from JSON, mounts on a
+          ground unit, and now SATISFIES the gate. **FLAGGED numbers (all in `installations.json`, tune freely):** default
+          `Capacity` 500 kg (range 100–5000), magazine `Mass` = 2 × Capacity, `CreditCost` = 0.2 × Mass, `CrewReq` 5, the
+          material fractions. Gauge: `GroundAmmoGateTests.Magazine_SatisfiesTheAmmoGate` + `BaseModIntegrityTests`.
         - **P2c-c — combat depletion.** A `GroundUnit` carries an ammo pool (from magazine capacity); the resolver drains it
           per shot (ammo-mass-per-shot DERIVED from the weapon's KE = ½mv², no new number); empty → ammo weapons stop firing.
         - **P2c-d — resupply** from ships / units / bases (refill the pool). The plasma Energy-vs-Both player override ships
