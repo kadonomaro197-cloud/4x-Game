@@ -240,6 +240,13 @@ Dune lasgun-vs-shield interaction becomes a special-ability effect). Cradle-to-g
   shielded hull takes the same disruptor fire as an unshielded one, while an equal-power kinetic gun is soaked).
   Flagged new numbers (JSON defaults): Energy/Shot **150 kJ**, RoF **2/s**, `DisruptorRange_m` **400 km**, mass/cost coefficients.
 
-**Next:** the Dune lasgun-vs-shield special effect (a lasgun hitting a shield = mutual catastrophic destruction — a
-bespoke interaction, a later slice); and the deeper weapon-designer unification (one designer, `WeaponClass` becomes a
-computed readout) — the P1–P5 merge in `WEAPON-UNIFICATION-DESIGN.md`.
+**Unification step 1 BUILT (2026-07-06):** `WeaponClassifier.Classify(delivery, velocity, tracking, saturation)` DERIVES
+the triangle corner (`WeaponClass`) from the Delivery axis + specs, exposed as the computed `WeaponProfile.ComputedClass`.
+The INVARIANT — `ComputedClass == the authored Class` for every real base-mod weapon (laser/railgun/flak/ion-disruptor) —
+is gauged by `WeaponClassifierTests`. That agreement is the green light for a later slice to DROP the authored `Class`
+field and make the corner a pure read-out (the class stops being a design choice and becomes emergent). Nature is a
+separate axis, so an exotic ion beam still classifies as Beam by delivery — the two axes stay independent.
+
+**Next:** drop the authored `WeaponClass` at the profile-build sites (make `Class` computed from `ComputedClass`), then
+the fuller P1–P5 designer merge (`WEAPON-UNIFICATION-DESIGN.md`); and the Dune lasgun-vs-shield special effect (a lasgun
+hitting a shield = mutual catastrophic destruction — a bespoke interaction, a later slice).

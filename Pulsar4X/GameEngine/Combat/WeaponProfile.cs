@@ -94,6 +94,13 @@ namespace Pulsar4X.Combat
         /// railgun/flak/missile default to 0 (rangeless) until their own range fields are added — a flagged follow-up.</summary>
         [JsonProperty] public double Range_m { get; internal set; }
 
+        /// <summary>The triangle corner DERIVED from this weapon's Delivery + specs (via <see cref="WeaponClassifier"/>)
+        /// — the unification read-out. Not serialized; computed on demand. For every real weapon today it equals the
+        /// authored <see cref="Class"/> (the invariant that lets a later slice drop the authored field and make the
+        /// class purely emergent). See docs/WEAPON-TAXONOMY-DESIGN.md.</summary>
+        [JsonIgnore]
+        public WeaponClass ComputedClass => WeaponClassifier.Classify(Delivery, Velocity, Tracking, Saturation);
+
         public WeaponProfile() { }
 
         public WeaponProfile(WeaponClass cls, double damagePerSecond, double velocity, double tracking, double saturation, double range_m = 0,
