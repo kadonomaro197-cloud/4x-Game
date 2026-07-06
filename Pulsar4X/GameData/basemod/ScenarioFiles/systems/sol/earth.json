@@ -183,7 +183,8 @@
         "reflex-booster",
         "swarm-frame",
         "claw-weapon",
-        "deflector-array"
+        "deflector-array",
+        "disruptor-weapon"
       ],
       "ComponentDesigns": [
         "default-design-alcubierre-2k",
@@ -245,7 +246,8 @@
         "default-design-reflex-booster",
         "default-design-swarm-frame",
         "default-design-claw-weapon",
-        "default-design-deflector-array"
+        "default-design-deflector-array",
+        "default-design-disruptor-weapon"
       ],
       "ShipDesigns": [
         "default-ship-design-courier",
@@ -261,7 +263,8 @@
         "default-ship-design-test-flak",
         "default-ship-design-test-fighter",
         "default-ship-design-test-capital",
-        "default-ship-design-test-shielded"
+        "default-ship-design-test-shielded",
+        "default-ship-design-test-disruptor"
       ],
       "LaunchQueue": [
         { "DesignId": "default-ship-design-courier", "Name": "ISS Hermes" }

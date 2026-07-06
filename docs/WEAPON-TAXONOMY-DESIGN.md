@@ -231,4 +231,15 @@ Dune lasgun-vs-shield interaction becomes a special-ability effect). Cradle-to-g
   `RailgunWeaponTests`; an unshielded Aegis reads 0). Flagged new numbers (JSON defaults for the developer's balance
   pass): Shield Capacity **5 MJ**, Recharge Rate **100 kJ/s**, and the mass/cost coefficients.
 
-**Next:** the anti-shield exotic weapon + the Dune lasgun-vs-shield special effect (Phase D).
+- **Phase D** — the **anti-shield exotic weapon** is BUILT: the base-mod **Ion Disruptor** (`disruptor-weapon` template
+  binding `Weapons.DisruptorWeaponAtb`; `ShipCombatValueDB` reads it into a **light-speed (undodgeable), `WeaponNature.Exotic`**
+  `WeaponProfile`) + a shield-piercing example ship, the **Ravager Ion Frigate** (`default-ship-design-test-disruptor`).
+  Because the shield's exotic-soak is 0 (Phase B), it BYPASSES the pool and strikes the hull — the rock to the shield's
+  scissors, and it isn't a strictly-better beam (modest raw yield, its whole value is the matchup). Six-point registration;
+  cradle-to-grave closed. Gauge: `DisruptorWeaponTests` (JSON→atb→exotic profile through the real build path; end-to-end a
+  shielded hull takes the same disruptor fire as an unshielded one, while an equal-power kinetic gun is soaked).
+  Flagged new numbers (JSON defaults): Energy/Shot **150 kJ**, RoF **2/s**, `DisruptorRange_m` **400 km**, mass/cost coefficients.
+
+**Next:** the Dune lasgun-vs-shield special effect (a lasgun hitting a shield = mutual catastrophic destruction — a
+bespoke interaction, a later slice); and the deeper weapon-designer unification (one designer, `WeaponClass` becomes a
+computed readout) — the P1–P5 merge in `WEAPON-UNIFICATION-DESIGN.md`.

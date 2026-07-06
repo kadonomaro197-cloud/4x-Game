@@ -657,5 +657,13 @@
       "Name": "Deflector Array",
       "TemplateId": "deflector-array"
     }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-disruptor-weapon",
+      "Name": "Ion Disruptor",
+      "TemplateId": "disruptor-weapon"
+    }
   }
 ]

@@ -554,5 +554,61 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "disruptor-weapon",
+      "Name": "Ion Disruptor",
+      "Formulas": {
+        "Description": "An anti-shield ion lance. Light-speed (can't be dodged) and its EXOTIC nature bypasses shields to strike the hull — the answer to a shielded warship. Modest raw yield, so it isn't just a better beam; its whole value is the shield matchup.",
+        "Mass": "PropertyValue('Energy Per Shot') / 2000 + PropertyValue('Rounds Per Second') * 40",
+        "Volume": "[Mass] * 0.5",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.1",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "aluminium": "[Mass] * 0.2",
+        "stainless-steel": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.25",
+        "tungsten": "[Mass] * 0.15"
+      },
+      "ComponentType": "Weapon",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Energy Per Shot",
+          "Units": "J",
+          "DescriptionFormula": "'Damage delivered by one ion lance on impact. Bypasses shields (exotic), so this lands on the hull directly.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "10000000",
+          "MinFormula": "1000",
+          "StepFormula": "1000",
+          "PropertyFormula": "150000"
+        },
+        {
+          "Name": "Rounds Per Second",
+          "Units": "1/s",
+          "DescriptionFormula": "'Rate of fire. Drives damage/sec.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100",
+          "MinFormula": "0.1",
+          "StepFormula": "0.1",
+          "PropertyFormula": "2"
+        },
+        {
+          "Name": "disruptorAtbArgs",
+          "DescriptionFormula": "'double energyPerShot, double roundsPerSecond'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Energy Per Shot'), PropertyValue('Rounds Per Second'))",
+          "AttributeType": "Pulsar4X.Weapons.DisruptorWeaponAtb"
+        }
+      ]
+    }
   }
 ]

@@ -67,6 +67,11 @@ namespace Pulsar4X.Combat
         /// missile (long) → flak/railgun (mid, railgun rangeless-but-inaccurate) → beam (knife).</summary>
         public const double MissileRange_m = 1_000_000.0; // ~1000 km
 
+        /// <summary>Ion disruptor (anti-shield exotic) effective range (m) — MID. A coherent ion lance that reaches
+        /// like a light gun but pays for its shield-piercing exotic nature with a modest raw yield. v1 class-default
+        /// (a per-design range field is the follow-up, like beam's MaxRange). FLAGGED default for the balance pass.</summary>
+        public const double DisruptorRange_m = 400_000.0; // ~400 km (mid: reaches, but not a standoff missile)
+
         /// <summary>Role weight for a hull that carries no weapons (utility/transport). v1 stub.</summary>
         public const double UtilityRoleWeight = 0.25;
 
@@ -89,6 +94,10 @@ namespace Pulsar4X.Combat
         /// <summary>Hard cap on <see cref="Evasion"/> — nothing is ever fully untouchable (a beam is light-speed,
         /// and enough volume of fire saturates any dodge). v1 stub.</summary>
         public const double EvasionCap = 0.95;
+
+        /// <summary>Speed of light (m/s) — the muzzle velocity a light-speed weapon (a beam / ion lance) reports, so
+        /// the dodge model treats it as undodgeable (velocity ≫ the dodge reference).</summary>
+        public const double LightSpeed_mps = 299_792_458.0;
 
         /// <summary>Damage-per-second the ship can deal (joules/sec). Higher = stronger.</summary>
         [JsonProperty] public double Firepower { get; internal set; }
@@ -210,6 +219,23 @@ namespace Pulsar4X.Combat
                             double dps = flak.DamagePerPellet_J * saturation * comp.HealthPercent;
                             // Range (the authentic-closing pass): flak is SHORT-ranged point defense (hard cutoff).
                             weapons.Add(new WeaponProfile(WeaponClass.Flak, dps, flak.MuzzleVelocity_mps, flak.Tracking, saturation, FlakRange_m, WeaponNature.Kinetic, WeaponDelivery.Cloud));
+                        }
+                    }
+                }
+
+                // Ion disruptors: the ANTI-SHIELD exotic (docs/WEAPON-TAXONOMY-DESIGN.md §5, Phase D). Light-speed
+                // (undodgeable, tracks perfectly like a beam) but EXOTIC nature — the shield's exotic-soak is 0, so it
+                // bypasses the pool and strikes the hull. damage/sec = energy/shot × rounds/sec.
+                if (instances.TryGetComponentsByAttribute<DisruptorWeaponAtb>(out var disruptors))
+                {
+                    foreach (var comp in disruptors)
+                    {
+                        if (comp.Design.TryGetAttribute<DisruptorWeaponAtb>(out var dis))
+                        {
+                            double dps = dis.EnergyPerShot_J * dis.RoundsPerSecond * comp.HealthPercent;
+                            // Light-speed delivery (undodgeable, tracks 1.0) so it lands like a beam; Exotic nature so
+                            // it bypasses shields. Delivery.Beam, Nature.Exotic — the two-axis split in action.
+                            weapons.Add(new WeaponProfile(WeaponClass.Beam, dps, LightSpeed_mps, 1.0, dis.RoundsPerSecond, DisruptorRange_m, WeaponNature.Exotic, WeaponDelivery.Beam));
                         }
                     }
                 }
