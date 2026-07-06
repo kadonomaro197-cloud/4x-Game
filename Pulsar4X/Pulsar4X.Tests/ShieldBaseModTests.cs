@@ -2,6 +2,7 @@ using NUnit.Framework;
 using Pulsar4X.Combat;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
+using Pulsar4X.Fleets;
 using Pulsar4X.Ships;
 
 namespace Pulsar4X.Tests
@@ -57,6 +58,33 @@ namespace Pulsar4X.Tests
             Log($"Aegis (no deflector): shieldCapacity={aegisCv.ShieldCapacity_J:0} J");
             Assert.That(aegisCv.ShieldCapacity_J, Is.EqualTo(0),
                 "a ship with no deflector reads a 0 pool — combat is byte-identical for the unshielded");
+        }
+
+        [Test]
+        [Description("The FLEET-level shield readout (FleetCombat.ShieldCapacity/ShieldRegen) sums its ships' deflector pools — the defensive twin of the firepower readout, so the Fleet Combat tab can show 'Shields'. An unshielded fleet reads 0.")]
+        public void FleetShieldReadout_SumsInstalledDeflectors_AndReadsZeroUnshielded()
+        {
+            var s = TestScenario.CreateWithColony();
+            var designs = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns;
+
+            // A fleet with a shielded Bastion — the fleet readout should equal the ship's own pool.
+            var wall = FleetFactory.Create(s.StartingSystem, s.Faction.Id, "Shield Wall");
+            var bastion = ShipFactory.CreateShip(designs[ShieldedShip], s.Faction, s.StartingBody, "Bastion");
+            bastion.FactionOwnerID = s.Faction.Id;
+            s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(s.Faction.Id, wall, bastion));
+
+            double shipPool = bastion.GetDataBlob<ShipCombatValueDB>().ShieldCapacity_J;
+            Log($"fleet shield readout: capacity={FleetCombat.ShieldCapacity(wall):0} J (ship pool {shipPool:0}), regen={FleetCombat.ShieldRegen(wall):0} J/s");
+            Assert.That(FleetCombat.ShieldCapacity(wall), Is.EqualTo(shipPool).Within(1),
+                "the fleet readout sums its ships' deflector pools (one Bastion → its own pool)");
+            Assert.That(FleetCombat.ShieldRegen(wall), Is.GreaterThan(0), "...and their recharge rate");
+
+            // An unshielded fleet (an Aegis) reads a 0 pool.
+            var bare = FleetFactory.Create(s.StartingSystem, s.Faction.Id, "Bare Squadron");
+            var aegis = ShipFactory.CreateShip(designs[UnshieldedShip], s.Faction, s.StartingBody, "Aegis");
+            aegis.FactionOwnerID = s.Faction.Id;
+            s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(s.Faction.Id, bare, aegis));
+            Assert.That(FleetCombat.ShieldCapacity(bare), Is.EqualTo(0), "an unshielded fleet reads a 0 shield pool");
         }
     }
 }
