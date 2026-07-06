@@ -32,6 +32,30 @@ class→type hierarchy) ARE the weapon designer for everything.
    `base * Pow(2, [Level])` (double each research level; level 0 == the old cap so start is unchanged; ~1024× at max
    level 10 → ~10,000 km beam range / ~10 GJ kinetic). **FLAGGED tunables:** the ×2 multiplier and `MaxLevel 10` set
    the ceiling — steepen/extend to taste.
+6. **ONE resolver — planetary combat is the SAME resolver + physical modifiers (LOCKED 2026-07-06 pm).** Reaffirms
+   point 1, pushing back on a drift toward a projection/second resolver. The developer's words: *"there is no ground
+   tactics, there are just tactics. There is only one weapon triangle. Why would there need to be a whole separate
+   resolver?"* Consequences:
+   - **Range is ABSOLUTE.** A weapon with 100 km reach has 100 km in orbit and on a surface alike — no hex-conversion of
+     range. The hex board is only a discretization of real metric distance (`GroundRangeTools.RealReachKm` already maps
+     real km ↔ hexes per body). Reach is governed by the weapon's real metres, everywhere.
+   - **What makes planetary combat different is PHYSICS, not rules:** terrain (cover/rough), real-distance positioning,
+     atmosphere, and the **air/altitude layer — aircraft and helicopters are planetary combatants.** These are INPUTS to
+     the one resolver, never a second resolver. **Terminology: "planetary" combat, NOT "ground"** (it includes the air).
+   - **Why a separate `GroundForcesProcessor.ResolveRegionCombat` exists today (the honest answer):** purely an
+     implementation artifact — planetary units are lightweight DATA OBJECTS (`GroundUnit`), not `Entity`s, so they could
+     not reuse the entity-based `AutoResolve` verbatim and the salvo math got mirrored/duplicated. Not a real difference
+     in the combat model.
+   - **The fix (this is what P3 becomes):** extract the shared weapon-triangle / dodge / shield / armour salvo math onto
+     a neutral **COMBATANT view** that BOTH a ship entity and a planetary unit present, and route both paths through it.
+     Planetary then contributes terrain + metric positioning + the air layer as modifiers. Then DELETE the duplicated
+     ground math (P4).
+7. **Ammo model — the answers (LOCKED 2026-07-06 pm).** **Ammo-per-shot is a WEAPON-DESIGNER SPEC** (one of the dials
+   that defines a weapon — not a derived-only value); depletion consumes it, magazines (kg) hold it. **Out-of-ammo:** an
+   ammo weapon goes SILENT but the unit keeps fighting with any energy/melee weapons it carries (a mixed loadout degrades
+   gracefully). **Resupply:** a MANUAL order targeting a source (base / supply ship in orbit / supply unit); v1 refills
+   when the order resolves at a source, a rated kg/time version is a later refinement. (Power stays SUSTAIN-ONLY — the
+   reactor keeps up in-battle; only ammo depletes.)
 
 ### Revised phased plan (per §0)
 
