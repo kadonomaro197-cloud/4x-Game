@@ -23,6 +23,7 @@ namespace Pulsar4X.Galaxy
             {
                 case "Earth": return EarthTerrainMap.Sample;
                 case "Mars":  return MarsTerrainMap.Sample;
+                case "Luna":  return LunaTerrainMap.Sample;
                 default:      return null;
             }
         }
