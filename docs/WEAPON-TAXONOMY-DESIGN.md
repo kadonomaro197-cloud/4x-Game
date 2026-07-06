@@ -209,9 +209,19 @@ Dune lasgun-vs-shield interaction becomes a special-ability effect). Cradle-to-g
   bucket dimension — same mechanism as the parked "aggregate force condition" tiers, `Combat/CLAUDE.md`). More work
   than A, but on-brand and reuses an existing seam.
 
-**DECIDED: B (the pool). Phase A BUILT (2026-07-06).** `ShieldAtb` (a shield-generator component — `Capacity_J` pool +
-`RegenRate_Jps`) + `ShipCombatValueDB.ShieldCapacity_J`/`.ShieldRegen_Jps` (summed, health-scaled; 0 if no generator →
-**additive, combat byte-identical**). Gauge: `ShieldTests`. **Next:** the resolve drains the pool before toughness with
-the nature-matchup (Kinetic soaked / Energy bleeds / Exotic bypasses), regenerates it between salvos, and the Battle
-Report shows "shields at 40% … shields DOWN"; then a base-mod shield generator + a shielded example ship; then the
-anti-shield exotic + the Dune lasgun-vs-shield special effect.
+**DECIDED: B (the pool). Phase A + B BUILT (2026-07-06).**
+- **Phase A** — `ShieldAtb` (a shield-generator component — `Capacity_J` pool + `RegenRate_Jps`) +
+  `ShipCombatValueDB.ShieldCapacity_J`/`.ShieldRegen_Jps` (summed, health-scaled; 0 if no generator → **additive, combat
+  byte-identical**).
+- **Phase B** — the pool is WIRED into the live stepped resolver (`CombatEngagement`): each salvo a fleet's aggregate
+  pool (`FleetCombatStateDB.ShieldPool_J`, lazy-seeded full at first contact) soaks the **soakable** part of the incoming
+  fire — the **nature matchup** mirrored from ground `GroundDamageMatrix`: Kinetic `1.0` / Energy `0.5` (bleeds) /
+  Explosive `0.75` / Exotic `0.0` (anti-shield bypass) — before the hull's `DamageTakenPool`, then regenerates toward
+  capacity; the Battle Report narrates "shields at X% … DOWN". To keep the matchup alive through the O(ships) class-bucket
+  aggregation, the fire mix now carries **Nature**. Still additive (unshielded = byte-identical). Gauges: `ShieldTests`
+  (pure soak-fraction + drain/regen math; end-to-end — a shielded hull takes less kinetic fire, an exotic attacker
+  bypasses). Flagged v1 simplifications: one aggregate pool per fleet, regen only under fire, capacity not doctrine-scaled,
+  the four soak fractions are balance defaults.
+
+**Next:** a base-mod shield generator + a shielded example ship (Phase C — the six-point registration + a live gauge);
+then the anti-shield exotic weapon + the Dune lasgun-vs-shield special effect (Phase D).

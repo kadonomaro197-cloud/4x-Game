@@ -52,6 +52,15 @@ namespace Pulsar4X.Combat
         /// range per engagement group (per-sub-fleet ranges are Phase 4).</summary>
         [JsonProperty] public double Separation_m { get; internal set; }
 
+        /// <summary>The fleet's current SHIELD charge (joules) — the depleting/regenerating pool (option B,
+        /// docs/WEAPON-TAXONOMY-DESIGN.md §6). Each salvo the resolver drains this BEFORE the hull's
+        /// <see cref="DamageTakenPool"/>, with the weapon-NATURE matchup (Kinetic fully soaked, Energy half-bleeds,
+        /// Explosive partly bypasses, Exotic anti-shield ignores it), then refills it toward the fleet's total generator
+        /// capacity. <b>-1 = "not yet seeded"</b> — the resolver lazily fills it to full capacity on the first salvo the
+        /// fleet takes; for an UNSHIELDED fleet (no generator → capacity 0) it seeds to 0 and the shield step is a no-op,
+        /// so combat is byte-identical. v1: one aggregate pool for the whole fleet (per-ship shields are a later slice).</summary>
+        [JsonProperty] public double ShieldPool_J { get; internal set; } = -1;
+
         public FleetCombatStateDB() { }
 
         public FleetCombatStateDB(int opponentFleetId)
@@ -73,6 +82,7 @@ namespace Pulsar4X.Combat
             InitialShipCount = db.InitialShipCount;
             Separation_m = db.Separation_m;
             ManeuverBudget = db.ManeuverBudget;
+            ShieldPool_J = db.ShieldPool_J;
         }
 
         public override object Clone()
