@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
+using Pulsar4X.Galaxy;
 using Pulsar4X.GroundCombat;
 
 namespace Pulsar4X.Tests
@@ -59,6 +60,32 @@ namespace Pulsar4X.Tests
             Assert.That(GroundAmmo.IsDry(noMag), Is.False, "no magazine → never dry");
             Assert.That(GroundAmmo.Fraction(noMag), Is.EqualTo(1.0));
             Assert.That(GroundAmmo.Consume(noMag, 100), Is.EqualTo(0), "no pool to draw from");
+        }
+
+        [Test]
+        [Description("B resupply (manual): a dry unit on FRIENDLY-held ground rearms to full; on enemy/neutral ground it can't (v1 source = your own territory).")]
+        public void Resupply_RefillsOnFriendlyGround_NotOnEnemyGround()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            var regions = body.GetDataBlob<PlanetRegionsDB>().Regions;
+
+            var unit = GroundForces.RaiseUnit(body, Design("gunner", 500), s.Faction.Id, 0);
+            GroundAmmo.Consume(unit, 500);
+            Assert.That(GroundAmmo.IsDry(unit), Is.True, "fired dry");
+
+            // friendly-held region 0 -> a depot rearms it
+            regions[0].OwnerFactionID = s.Faction.Id;
+            Assert.That(GroundForces.ResupplyUnit(body, unit), Is.EqualTo(500), "rearmed to full on friendly ground");
+            Assert.That(unit.CurrentAmmo_kg, Is.EqualTo(500));
+            Assert.That(GroundAmmo.IsDry(unit), Is.False);
+
+            // drain again, flip region to enemy/neutral -> no depot, can't resupply
+            GroundAmmo.Consume(unit, 500);
+            regions[0].OwnerFactionID = -1;
+            Assert.That(GroundForces.ResupplyUnit(body, unit), Is.EqualTo(0), "no depot on enemy/neutral ground");
+            Assert.That(GroundAmmo.IsDry(unit), Is.True, "still dry - no resupply");
         }
     }
 }

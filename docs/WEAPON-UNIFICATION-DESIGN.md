@@ -112,8 +112,12 @@ class→type hierarchy) ARE the weapon designer for everything.
           (fire → `Consume`) + the silence-when-dry read (dry → the unit's ammo weapons go quiet, it fights on with
           energy/melee), and the **ammo-per-shot WEAPON-DESIGNER spec** (the kg a burst consumes) — deferred to the merge
           because per-weapon firing lives there, and to avoid baking it into the soon-replaced ground resolver.
-        - **P2c-d — resupply** from ships / units / bases (refill the pool). The plasma Energy-vs-Both player override ships
-          in this arc (it only bites once ammo is a real cost).
+        - **P2c-d — resupply (manual). v1 ✅ (2026-07-06):** `GroundForces.ResupplyUnit(body, unit)` tops a unit's ammo to
+          full when it's on FRIENDLY-held ground (its region is owned by its faction — a depot in your own territory), the
+          resolver-independent action a resupply order/button calls (units aren't entities). **FLAGGED v1 source rule:**
+          friendly-territory only; ship-in-orbit + dedicated supply-unit sources are the follow-on. Gauge:
+          `GroundAmmoTests.Resupply_*`. The plasma Energy-vs-Both player override ships with the merge (it only bites once
+          ammo is a real in-combat cost).
 - **P3 — Ground reads the weapon PROFILE + triangle.** `GroundUnit` derives its combat contribution from its mounted
   universal weapons' `WeaponProfile`s; `GroundForcesProcessor` resolves via the weapon triangle (shared with space),
   behind a parallel/flag until numbers match the current garrison (existing ground gauges stay green).

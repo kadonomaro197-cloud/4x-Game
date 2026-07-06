@@ -373,6 +373,25 @@ namespace Pulsar4X.GroundCombat
             return unit;
         }
 
+        /// <summary>MANUAL RESUPPLY (weapon-unification B, the developer's call): top a unit's ammo back to full IF it
+        /// can draw from a source. **v1 source rule (FLAGGED):** the unit is on FRIENDLY-held ground — its region is
+        /// owned by its own faction (a depot/base in your own territory rearms it). Ship-in-orbit and dedicated
+        /// supply-unit sources are a follow-on. Returns the kg refilled (0 if it has no ammo pool or can't resupply
+        /// here). Resolver-independent — the player/UI invokes it (units aren't entities, so this is the action a
+        /// resupply order/button calls). Never throws.</summary>
+        public static double ResupplyUnit(Entity body, GroundUnit unit)
+        {
+            if (body == null || unit == null || unit.MaxAmmo_kg <= 0) return 0;
+            // Must be on friendly-controlled ground (a base/depot to draw from). If the body has a region layer and the
+            // unit's region isn't owned by its faction, there's nowhere to rearm from. No region layer → allow (no
+            // ownership to check — benefit of the doubt for a bare test body).
+            if (body.TryGetDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>(out var regions)
+                && unit.RegionIndex >= 0 && unit.RegionIndex < regions.Regions.Count
+                && regions.Regions[unit.RegionIndex].OwnerFactionID != unit.FactionOwnerID)
+                return 0;
+            return GroundAmmo.Refill(unit);
+        }
+
         /// <summary>Place an EXISTING unit (one that came off a ship's bay — transport landing, T1b) onto
         /// <paramref name="body"/>'s region <paramref name="regionIndex"/>, keeping its identity and health. Unlike
         /// <see cref="RaiseUnit"/> this does NOT build a fresh full-health unit — it re-homes the same object: it gets a
