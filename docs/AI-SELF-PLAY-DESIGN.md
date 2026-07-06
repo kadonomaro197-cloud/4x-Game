@@ -201,7 +201,7 @@ Navy picture: how you get an officer from nothing to running a department — re
 | **3. Seated** | the leader put in a post with command scope | ✅ **Strongest.** `AdminSpace` seat ladder (11 levels Ship→Empire), `AssignAdministratorOrder` links both ways, `FundingLevel 0–5`. The billet exists only because you **built the command component** that opens it (`AdminSpaceAtb`) — so leaders connect back to the mineral→material→component chain. |
 | **4. Acts** | competence multiplies a real game number | 🔸 **Works in exactly one place, as a copyable pattern.** Only research: target holds a `ModifiableValue`, `RefreshPointModifiers` folds the officer's `BonusesDB` in, `GetValue()` reads it (`ResearchProcessor.cs:87,292-333`). Dead for the other 18 roles. |
 | **5. Improves** | leader gets better with tenure/success | ❌ **Absent** as an auto-loop — `Experience` is stored and never read into any computation. **Replaced by the retraining loop below** (deliberate re-enrollment, not passive XP). |
-| **6. Lost** | killed/defected/HQ-destroyed → seat empties, effect reverts | 🔸 **Partial.** A seat can be unassigned; "destroy the HQ → seat collapses" is designed, not wired; a ground formation's leader dying reassigns with *no penalty*. No stakes yet. |
+| **6. Lost** | killed/captured/turned/died → seat empties, delegation collapses | 🔸 **Mostly absent + a bug.** Only a ship's captain dies today (`ShipFactory.cs:247`); it leaks dangling seat refs, and `AdminSpaceProcessor` resets seats each pass. Fix = one `LeaderLost` handler (the `CrewLosses` event is already published, unconsumed). See Rung 6 in depth — the rung that makes the player *care*. |
 
 **The essence:** rungs 2 and 3 are built and reusable; rung 4 exists once as a pattern to copy; rungs 1, 5, 6 are the real work — and even the proven example lacks a competence generator (1) and growth (5).
 
@@ -322,6 +322,39 @@ The teacher-feedback loop (a great leader teaching → better graduates) would s
 
 Navy framing: a commission/enlistment term. You don't PCS a department head every week; cutting a tour short is a real event with real cost. "Back to school" is that officer going to the War College mid-career — off the watch bill, back sharper.
 
+### Rung 6 in depth — "Lost" (the rung that makes the player care)
+
+**This is the load-bearing rung for the whole design's *feel*.** A leader you can't lose is just a permanent modifier — and modifiers don't get names, don't get protected, don't get mourned. A leader you *can* lose — killed, captured, turned, retired — is someone the player invests in, escorts, and grieves, and someone whose enemies they hunt. **Loss with real cost is what converts a stat into a character the player cares about.** Everything below serves that.
+
+**The reframe — one event, one handler.** Every way a leader dies is just a *producer* of a single **`LeaderLost` event**; **one handler** consumes it — vacate the seat, drop the competence, collapse the delegation. The event effectively **already exists and is unconsumed**: `DestroyCommander` publishes `EventType.CrewLosses` (`CommanderFactory.cs:115`) and *nothing listens.* So the spine is cheap: add the one subscriber.
+
+**Prerequisite (and it fixes a real bug).** Today `DestroyCommander` clears **none** of the back-references — not `CommanderDB.AssignedTo`, not the seat's `CommanderID`/`Commander`, not `ShipInfoDB.CommanderID` — and `AdminSpaceProcessor.CalcEntityAdminSpace` **rebuilds the seat list from scratch each pass with `CommanderID = -1`** (the code flags it: *"need to check if we want that"*). So seating isn't durable and death leaks dangling references. **Fix first:** make seat occupancy durable (reconcile, don't reset) and route every removal through the one vacate handler. This is a prerequisite for rung 3 being durable and the Governor slice too — it pays for itself as a bug fix before it's a feature.
+
+**Current state of the four causes:**
+
+| Cause | Today |
+|-------|-------|
+| Killed (ship) | 🔸 Partial — captain killed via `DestroyShip`→`DestroyCommander` (`ShipFactory.cs:247-251`); only the captain; leaves dangling refs |
+| Killed (colony bombardment) | ❌ absent for leaders |
+| Captured (planet falls) | ❌ absent — capture only flips `FactionOwnerID` (`GroundForcesProcessor.cs:528`, "deeper transfer later"); seated officers orphaned |
+| Turned / defected | ❌ no code |
+| Died / retired (age) | ❌ commanders are immortal — no aging/lifespan/mortality anywhere |
+| Decapitation (seat-host destroyed) | ❌ seat silently stops regenerating |
+
+**The four causes, each a producer of `LeaderLost`:**
+- **Killed** — *ship* exists (extend past the captain, route through the handler); *colony bombardment* hooks a casualty roll into `DamageProcessor.OnColonyDamage` (already exists). → **combat + damage.**
+- **Captured** — the "deeper transfer later" hook. A captured leader becomes a **prisoner**: intel windfall + bargaining chip (ransom / exchange). v1 = removed + intel chance; full = a diplomacy sub-game. → **ground combat + diplomacy.**
+- **Turned / defected** — the espionage grave rung (already named in `ESPIONAGE-AND-INTELLIGENCE-DESIGN.md`). Clean defection (they leave) or a **mole** (stays seated, leaks/sabotages until counter-intel catches them). → **espionage + the Information Ledger.**
+- **Died / retired** — give commanders a lifespan and a mortality/retirement processor. Ties to **contracts** (a term can end in retirement) and keeps the **academy permanently relevant** — rungs 1 and 6 are the loop: leaders are born and lost, forever. Without it you accumulate immortal god-officers.
+
+**What "collapse" means (the stakes the handler enforces):** the scope loses the competence bonus (rung-4 `Refresh` re-runs, the `ModifiableValue` drops); a *delegate* seat's delegation **collapses** — reverts to hands-on for the player, or **rudderless for an NPC** (stops executing its stance, loses coordination); the seat empties → back to rung 1 to appoint/train a replacement. A master admiral killed = years to replace. It is *felt*.
+
+**Decapitation — the vertical grave rung.** Seats come from a **built command component** (`AdminSpaceAtb` — flag bridge / HQ / sector capital). Destroying it should publish `LeaderLost` for every commander under it → same handler → the delegation it held falls apart. Kill the enemy flagship or bomb their sector capital and their fleets/colonies go rudderless until re-seated. Makes command infrastructure a **target**, gives "who's holding this together" teeth, and closes the `AdminSpaceAtb` component's own cradle-to-grave.
+
+**The gameplay it unlocks (earns-weight check):** *protect yours* (don't post your best governor on a frontier world; escort the flagship; garrison the capital), *hunt theirs* (assassination, decapitation strikes, turn their best officer into your mole), *the churn* (death/retirement keeps every good officer genuinely scarce and the academy always in play).
+
+**Open decisions:** (1) mole vs clean defection for a turned leader (mole is the best gameplay but needs counter-intel; v1 could be defection-only); (2) prisoner depth on capture (full interrogation+ransom, or v1 removed+intel-chance); (3) mortality tuning (long enough to matter, short enough to keep the academy relevant); (4) whether to revisit the ground-formation "leader dies → reassign, no penalty" rule for consistency (it's a `GroundUnit` data-object leader, a different system).
+
 ### First vertical slice — the Governor (proves the whole pipeline)
 
 Cheapest end-to-end proof, because the grave-end target already exists and is already dead-wired for it: `LegitimacyDB.GovernorCompetence` is a `0..1` slot feeding a `×15` legitimacy bonus that **nothing has ever written to** (`LegitimacyDB.cs:88-92,128,138`), and `AdministratorDB` is already a near-identical copy of the working `ResearcherDB`. The slice: **generate an officer with rolled competence (build rung 1) → seat via the existing `AdminSpace` order (rung 3, done) → copy `RefreshPointModifiers` to write competence into `GovernorCompetence` (rung 4) → watch legitimacy move.** It forces the reusable pieces into existence; after that, the System Admiral, Spymaster, and Trade Minister are the same wiring pointed at a different `ModifiableValue`.
@@ -337,6 +370,7 @@ Cheapest end-to-end proof, because the grave-end target already exists and is al
 - **Colony development** — a new single `ColonyDevelopment` accessor aggregating `HexTile.InfrastructureLevel`, forward-compatible with `docs/COLONY-PROGRESSION-DESIGN.md`'s tier ladder. Read by the academy competence roll; a bombarded world demotes it AND starves the pipeline (shared grave rung).
 - **Legitimacy / colony happiness** (`Colonies/LegitimacyDB.cs`, `ColonyMoraleDB.cs`) — the Governor's `Acts` target: the dead `GovernorCompetence` slot (`×15` bonus) is the first payoff to wire. Legitimacy → `RebellionDB` is the downstream stake.
 - **Contracts** — a net-new fixed-term on assignment (extends `AssignAdministratorOrder`); the commitment layer for rungs 3→6; caps the teacher loop and throttles AI reassignment churn.
+- **Loss (rung 6)** — one `LeaderLost` handler (consume the already-published, unconsumed `EventType.CrewLosses`) vacates the seat + collapses delegation; producers wire in from **damage** (`DamageProcessor.OnColonyDamage` casualty roll), **ground capture** (`GroundForcesProcessor.TryCapturePlanet`), **espionage** (turn/defect), and a new **mortality/retirement** processor. Fixes the dangling-reference bug in `DestroyCommander` + the seat-reset in `AdminSpaceProcessor`.
 - **Combat / fleets** (`docs/COMBAT-DESIGN.md`, `docs/FLEET-COMBAT-CLOSING-DESIGN.md`) — the Admiral chain and Fleet Commander are delegates over the already-built doctrine/auto-resolve.
 - **Ground combat** (`docs/GROUND-COMBAT-MAP-DESIGN.md`, `docs/HEX-GROUND-AND-ORDERS-DESIGN.md`) — the General chain sits over the built formation/doctrine layer; the person-commander is the net-new wrapper.
 - **Diplomacy / espionage / internal politics** (`docs/DIPLOMACY-DESIGN.md`, `docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md`, `docs/GOVERNMENT-AND-POLITICS-DESIGN.md`) — Foreign Minister, Spymaster, Interior Minister are delegates of this exact shape.
@@ -363,20 +397,22 @@ Cheapest end-to-end proof, because the grave-end target already exists and is al
 - **Rung 4 "Acts" pattern** — `ModifiableValue` + `Refresh…Modifiers` reading `BonusesDB` (copy the research chain); the two-layer split (leader competence = modifier, regime = post-`GetValue` modulator); passive-bonus vs active-orders as the two flavors.
 - **Stances = data-driven presets** (reuse the `GroundStanceBlueprint`/JSON-catalog pattern), biased for NPCs by `DoctrineVector`; stance = decision, competence = texture.
 - **Competence roll = mean-shifted bell curve with a tier-gated ceiling** (`NextBellCurve`); inputs shift the mean, not the result.
+- **Rung 6 = one `LeaderLost` event + one vacate/collapse handler** (leaders aren't modifiers — the player must be able to *lose* them). Four causes (killed / captured / turned / died); seat-durability fix is the prerequisite; decapitation collapses a whole scope.
 
 **Open (decide when we build):**
 - The **empire-scope ground ceiling** — a "High Command"/Field Marshal, a joint Supreme Commander over both, or nothing. Deferred.
 - **Stance count + names per pillar**, and whether stances **re-skin by government type** (the `GovernmentDB` hook exists).
 - **The competence-roll numbers** — base means per tier, stddev, and the weights/caps on the three soft modifiers.
 - **Contract term lengths + early-break penalty** — the numbers.
+- **Rung 6 depth calls** — mole vs clean-defection for a turned leader; prisoner depth on capture (interrogation+ransom vs removed+intel-chance); mortality/lifespan tuning; whether to revisit the ground-formation "no penalty" leader-loss rule.
 - **Ruins/anomalies** as survey content (the one net-new exploration piece).
 - The **commerce money-wire** that must precede a Trade Minister.
 
 **Path forward (build order — after the shared prerequisites):**
 1. **Build the scaling gauge** (Visibility Gate) — the faction/entity performance benchmark, before any AI logic.
-2. **Finish the delegate substrate** (per the governance doc): generalize `AdministratorDB` → the universal delegate record → close the `CommanderDB` skill-field gap.
+2. **Finish the delegate substrate** (per the governance doc): generalize `AdministratorDB` → the universal delegate record → close the `CommanderDB` skill-field gap → **make seating durable** (fix the `AdminSpaceProcessor` seat-reset + the `DestroyCommander` dangling-reference leak; add the one `LeaderLost` vacate handler). This is the shared prerequisite for rungs 3 and 6.
 3. **Rung 1 — leader academies**: generalize the academy, wire the talent draw, build the competence generator + the `ColonyDevelopment` accessor. This is the cradle that makes every later rung have something to seat.
 4. **The Governor vertical slice** (rungs 1→4 end-to-end): rolled officer → `AdminSpace` seat → competence into the dead `GovernorCompetence` slot → legitimacy moves. Proves the whole pipeline.
-5. **Contracts + retraining** (rungs 5–6 connective tissue) once one role is seated and acting.
+5. **Contracts, retraining, and loss** (rungs 5–6) once one role is seated and acting: wire the `LeaderLost` producers (bombardment casualty roll, colony-capture, mortality/retirement, then espionage turning) so a leader can actually be *lost* — the rung that makes the player care.
 6. **Fill the `NPCDecisionProcessor` stub** — translate the doctrine vector into real orders through the seated delegates.
 7. **Level-of-Detail for distant empires** — the affordability lever, once there's a gauge to prove it works.
