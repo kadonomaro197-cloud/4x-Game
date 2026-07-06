@@ -5,6 +5,7 @@ using Pulsar4X.Components;
 using Pulsar4X.Datablobs;
 using Pulsar4X.Engine;
 using Pulsar4X.Galaxy;
+using Pulsar4X.GroundCombat;
 using Pulsar4X.Movement;
 using Pulsar4X.Orbits;
 using Pulsar4X.Ships;
@@ -312,8 +313,53 @@ namespace Pulsar4X.Damage
             // Installation damage (shared with the station bombardment path).
             ApplyInstallationDamage(colonyEntity, starSystem, damageStrength);
 
+            // Orbital bombardment ALSO softens the planet's DEFENDING GROUND GARRISON — the "soften them from orbit
+            // before you land" step the MVP's "you can take a planet" needs (docs/MVP.md). Area effect on the colony
+            // owner's units; defensive + never throws (no garrison → no-op).
+            ApplyGroundBombardment(colonyInfoDB.PlanetEntity, colonyEntity.FactionOwnerID, damageStrength);
+
             ReCalcProcessor.ReCalcAbilities(colonyEntity);
             return new DamageResult { Damage = damageStrength, Destroyed = false };
+        }
+
+        /// <summary>Ground-unit health drained PER defending unit PER unit of colony damage-strength by orbital
+        /// bombardment — the "soften the garrison before you land" conversion. Area effect: every defending unit takes
+        /// this × damageStrength. FLAGGED PLACEHOLDER, tied to the same unfinalized warhead-energy calibration as the
+        /// colony energy divisor (Damage/CLAUDE.md gotcha #2): on the 100 MJ/strength scale a ship's beam (strength ~1)
+        /// barely scratches a garrison, a missile/heavy strike genuinely softens or devastates it. Tune when warhead
+        /// energies + ground-unit HP lock.</summary>
+        public const double GroundBombardmentDamagePerStrength = 0.01;
+
+        /// <summary>
+        /// Apply orbital bombardment to the planet's DEFENDING ground garrison (the colony owner's units) — the space
+        /// combat → ground combat connection the "take a planet" milestone needs. Area effect: each defending unit on
+        /// the body loses <see cref="GroundBombardmentDamagePerStrength"/> × <paramref name="damageStrength"/> health;
+        /// units driven to 0 are removed (a stale-leader formation is fixed by the next GroundForcesProcessor tick,
+        /// exactly like a combat casualty). Defensive: no body / no garrison / no defenders → a clean no-op, so a
+        /// colony with no ground forces (every current colony-damage test) is byte-identical. Never throws.
+        ///
+        /// v1 scope (flagged): whole-surface (not region-targeted) area bombardment, applied FLAT (the
+        /// dodge/shield/armour <c>GroundDamageMatrix</c> vs an orbital strike is a v2 refinement), and it softens only
+        /// the DEFENDER (the colony owner) — friendly-fire on a landed invader's own troops is a v2 targeting nuance.
+        /// </summary>
+        private static void ApplyGroundBombardment(Entity planetBody, int defenderFactionId, int damageStrength)
+        {
+            if (planetBody == null || !planetBody.TryGetDataBlob<GroundForcesDB>(out var forces)) return;
+            if (forces.Units.Count == 0) return;
+
+            double perUnit = damageStrength * GroundBombardmentDamagePerStrength;
+            if (perUnit <= 0) return;
+
+            List<GroundUnit> dead = null;
+            foreach (var u in forces.Units)
+            {
+                if (u.FactionOwnerID != defenderFactionId) continue;   // soften the DEFENDER, not a landed invader
+                u.Health -= perUnit;
+                if (u.Health <= 0)
+                    (dead ??= new List<GroundUnit>()).Add(u);
+            }
+            if (dead != null)
+                foreach (var d in dead) forces.Units.Remove(d);
         }
 
         /// <summary>
