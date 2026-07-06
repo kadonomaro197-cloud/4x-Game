@@ -248,6 +248,15 @@ score = NextBellCurve(RNG, floor, ceiling = TierCap(designTier), mean, stddev)
 
 **The installation's own cradle-to-grave (vertical):** designed → built from minerals/materials → installed → draws talent → produces leaders → **destroyed** (bombardment / captured when the planet falls) → **the leader pipeline goes dark.** That grave rung is strategic — hitting an enemy's universities starves their *future* leadership, wiring this system straight into ground combat and orbital bombardment.
 
+### Rung 3 in depth — "Seated" (command capacity you build up)
+
+Delegation is never free — you **earn** command capacity by building it, which is the span-of-control limiter that stops "delegate the whole empire on turn 1."
+
+- **Seats come from components built onto installations** (the command components — HQ, flag bridge, sector capital). Generalizes the existing `AdminSpaceAtb` (a component that grants seats at an `AdminLevel`).
+- **You start from nothing. Your first HQ grants 1 seat.** Every position must be **filled as you progress** — more command infrastructure → more seats → more of the empire you can delegate. Total hands-off is a thing you *build toward*, not a default.
+- **`FundingLevel` (0–5) = a spend dial** — crank it up and the post runs harder at higher daily cost. Same knob for every pillar (labs → points, governors → budget, spymasters → ops, admirals → readiness).
+- **Grave-rung tie-in:** because a seat is a built component, destroying it (decapitation, rung 6) collapses the seat and its delegation. Command infrastructure you build is command infrastructure the enemy can blow up.
+
 ### Rung 4 in depth — "Acts" (the competence → outcome pattern, generalized)
 
 The scientist→research chain is the one place this works end-to-end; every leader reuses its four parts:
@@ -304,6 +313,15 @@ A **stance is a small, named bundle of standing orders** the player or NPC picks
 
 **Three points:** (1) stance = the stacking *decision*, competence = *texture* — keeps every seat honest against the realism firewall; (2) the existing switch **cooldown composes with contracts** — a leader on contract runs their stance for the term, no per-tick flip-flopping (good for feel and the AI-cost bill); (3) whether stances **re-skin by government type** (a dictatorship's "Favor Stability" reaching for harsher tools) is the one open call — the `GovernmentDB` dial hook to do it already exists.
 
+### Two empire-level modulators — race and government
+
+Beyond the leader's own competence, two empire-wide factors shape the whole pipeline. Both are the **modulator layer** (applied on top, like the regime multiplier on research) — not per-leader stats:
+
+- **Race (species setup)** — sets leader **lifespan** (rung 6 mortality) and biases **doctrine tendencies** (which stances an NPC of that race leans toward, rung 4). Different species live and lead differently. Wires to the species system (`ColonyInfoDB.Population` is already per-species; verify/define the trait hooks — lifespan, doctrine lean — when we build).
+- **Government (regime)** — **renames and re-tools stances**: a communist state's stances are named and behave differently from a republic's (rung 4). Uses the `GovernmentDB` dial hook.
+
+This is why stance content and mortality aren't fixed constants — they're modulated by *who you are*.
+
 ### The retraining loop (rung 1 + rung 5, merged)
 
 Leaders don't improve on their own (passive `Experience` is dead). Instead, **a leader can be sent back to school to gain more modifiers** — re-enrolling in an academy as a student. This is a deliberate, costly decision: it takes a school slot, costs time, and pulls the leader **out of service** while they train. It reuses the academy mechanic wholesale (the leader is a student again), gives academies permanent relevance beyond first spawn, and makes competence growth something you *invest in and plan around* — never automatic. This is how "Improves" is delivered.
@@ -316,7 +334,7 @@ The teacher-feedback loop (a great leader teaching → better graduates) would s
 
 - Caps the teacher loop (a star teacher can't be cycled).
 - Makes "which leader, which post" a **durable strategic choice**, not per-turn optimization — parking your one genius admiral at the war college for a decade means he's *not* on the front for a decade. Real opportunity cost.
-- **Net-new but small** — today's assignment orders are instant with no duration; add a term-end date + an early-break cost (payout / morale hit / reputation ding).
+- **Net-new but small** — today's assignment orders are instant with no duration; add a term-end date + an early-break cost (payout / morale hit / reputation ding). **Default term: 5 years** (calibrate later).
 - Preserves the governance rule "dropping in for one decision never un-seats the delegate" (you take the conn without breaking the contract).
 - Quietly helps the performance bill — leaders don't get reassigned every tick.
 
@@ -353,7 +371,11 @@ Navy framing: a commission/enlistment term. You don't PCS a department head ever
 
 **The gameplay it unlocks (earns-weight check):** *protect yours* (don't post your best governor on a frontier world; escort the flagship; garrison the capital), *hunt theirs* (assassination, decapitation strikes, turn their best officer into your mole), *the churn* (death/retirement keeps every good officer genuinely scarce and the academy always in play).
 
-**Open decisions:** (1) mole vs clean defection for a turned leader (mole is the best gameplay but needs counter-intel; v1 could be defection-only); (2) prisoner depth on capture (full interrogation+ransom, or v1 removed+intel-chance); (3) mortality tuning (long enough to matter, short enough to keep the academy relevant); (4) whether to revisit the ground-formation "leader dies → reassign, no penalty" rule for consistency (it's a `GroundUnit` data-object leader, a different system).
+**Resolved (2026-07-06):**
+- **Turned leader → both outcomes, decided by `RNG × counter-intel × leader stats`.** A defection attempt can land the leader as a **mole** (stays seated, feeds the enemy), a **clean defection** (they leave), or a caught/failed attempt — the roll and your counter-intel decide which. Not a fixed v1 pick; it's a probabilistic outcome.
+- **Captured leader → both, same model.** Killed / prisoner (intel + ransom) / escape is decided the same way (`RNG × counter-intel × leader stats`).
+- **Ground-formation leader loss → leave the no-penalty reassign, but notify the player** when it happens (visibility, no mechanical change).
+- **Mortality → race-dependent lifespan** (see the race modulator above); no single global number.
 
 ### First vertical slice — the Governor (proves the whole pipeline)
 
@@ -398,15 +420,22 @@ Cheapest end-to-end proof, because the grave-end target already exists and is al
 - **Stances = data-driven presets** (reuse the `GroundStanceBlueprint`/JSON-catalog pattern), biased for NPCs by `DoctrineVector`; stance = decision, competence = texture.
 - **Competence roll = mean-shifted bell curve with a tier-gated ceiling** (`NextBellCurve`); inputs shift the mean, not the result.
 - **Rung 6 = one `LeaderLost` event + one vacate/collapse handler** (leaders aren't modifiers — the player must be able to *lose* them). Four causes (killed / captured / turned / died); seat-durability fix is the prerequisite; decapitation collapses a whole scope.
+- **Rung 3 seating = built command capacity** — seats come from components built onto installations; you start from nothing, the first HQ grants 1 seat, and every position is filled as you progress. `FundingLevel` = a 0–5 spend dial (output↑, cost↑) on any post.
+- **Two empire modulators — race and government.** Race sets leader **lifespan** and biases **doctrine tendencies**; government **renames and re-tools stances**. Both are the modulator layer, not per-leader stats.
+- **Contracts default to a 5-year term.**
+- **Rung 6 outcomes are probabilistic, not fixed picks** — a turned leader lands as mole / clean defection / caught, and a captured leader as killed / prisoner / escape, both decided by `RNG × counter-intel × leader stats`. Ground-formation leader loss keeps the no-penalty reassign but **notifies the player**.
 
 **Open (decide when we build):**
-- The **empire-scope ground ceiling** — a "High Command"/Field Marshal, a joint Supreme Commander over both, or nothing. Deferred.
-- **Stance count + names per pillar**, and whether stances **re-skin by government type** (the `GovernmentDB` hook exists).
-- **The competence-roll numbers** — base means per tier, stddev, and the weights/caps on the three soft modifiers.
-- **Contract term lengths + early-break penalty** — the numbers.
-- **Rung 6 depth calls** — mole vs clean-defection for a turned leader; prisoner depth on capture (interrogation+ransom vs removed+intel-chance); mortality/lifespan tuning; whether to revisit the ground-formation "no penalty" leader-loss rule.
-- **Ruins/anomalies** as survey content (the one net-new exploration piece).
-- The **commerce money-wire** that must precede a Trade Minister.
+- The **empire-scope ground ceiling** — a "High Command"/Field Marshal, a joint Supreme Commander over both, or nothing. **Deferred (nothing for now).**
+- **The actual stance names** per pillar per government type (the fact that they re-skin by government is locked; the specific names come with the government content).
+- **How race biases doctrine/stance selection** — the trait→lean mapping (locked that it's race-driven; the mapping itself is content).
+- **The competence-roll numbers** — base means per tier, stddev, weights/caps on the three soft modifiers.
+- **Contract early-break penalty** — the number/shape (term = 5y locked).
+- **Race lifespan values** — per-species numbers.
+
+**Sequencing notes (decided, deferred — do NOT build yet):**
+- **Commerce / Trade Minister** — build the trade-money wire (and the Trade Minister) **after all of the above is established.**
+- **Ruins / anomalies** — **completely in**, but it becomes **its own system**; note to develop later (not part of the leader pipeline build).
 
 **Path forward (build order — after the shared prerequisites):**
 1. **Build the scaling gauge** (Visibility Gate) — the faction/entity performance benchmark, before any AI logic.
