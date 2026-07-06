@@ -52,10 +52,12 @@ namespace Pulsar4X.Tests
             Assert.That(design.IndustryTypeID, Is.EqualTo("installation-construction"), "rides the colony's construction line");
             Assert.That(faction.IndustryDesigns.ContainsKey(design.UniqueID), Is.True, "registered as buildable on the faction");
 
-            // 3) BUILD through the real industry queue. Neutralise material cost so the queue->complete->raise MECHANIC is
-            //    isolated from mineral stock (cost-summing itself is asserted above); a small point cost completes in the
-            //    advanced window, exactly like the proven GroundForcesTests / ProductionBuildTests pattern.
-            design.ResourceCosts = new Dictionary<string, long>();
+            // 3) BUILD through the real industry queue. Give it a MINIMAL, affordable, NON-ZERO cost so the
+            //    queue->complete->raise MECHANIC runs deterministically, isolated from exact mineral stock: the start
+            //    colony stocks stainless-steel in bulk, and the industry system rejects a zero-cost job ("resources
+            //    can't cost 0"). Cost-summing itself is asserted above from the real parts; a small point cost completes
+            //    well within the advanced window.
+            design.ResourceCosts = new Dictionary<string, long> { { "stainless-steel", 1 } };
             design.IndustryPointCosts = 100;
 
             int before = body.HasDataBlob<GroundForcesDB>() ? body.GetDataBlob<GroundForcesDB>().Units.Count : 0;
