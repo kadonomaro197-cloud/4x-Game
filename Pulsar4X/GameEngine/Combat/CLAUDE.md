@@ -6,6 +6,8 @@ It deliberately does **not** use the per-pixel damage sim (`Damage/DamageComplex
 
 > **Status: under construction.** Built piece-by-piece, each under a test, in the order in `docs/COMBAT-DESIGN.md` -> "Build order". This file grows as each piece lands.
 
+> **DECIDED 2026-07-06 — this resolver becomes THE resolver (ship AND planetary).** The developer's call: *"there is no ground tactics, just tactics; there is one weapon triangle; why a separate resolver?"* Today `GroundForcesProcessor.ResolveRegionCombat` DUPLICATES this salvo/triangle/dodge/shield/armour math over data-object `GroundUnit`s (only because they aren't entities). The next combat branch **extracts the shared damage math onto a neutral COMBATANT view** both a ship entity and a planetary unit present, routes both through it, and deletes the ground duplicate. Planetary combat then contributes terrain + **absolute metric range** (a 100 km weapon is 100 km on a surface too; hexes are just the board — `GroundRangeTools.RealReachKm`) + the **air/altitude layer**; the Armor▸Infantry▸Artillery type-triangle DISSOLVES into weapon×armour matchups. It's a rewrite of the only green combat code — do it as additive CI-gated slices (kernel first, no behaviour change), with the developer's go. Full plan: `docs/WEAPON-UNIFICATION-DESIGN.md` §0 pt 6.
+
 ---
 
 ## File Map
