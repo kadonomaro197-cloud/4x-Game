@@ -21,7 +21,7 @@ namespace Pulsar4X.Galaxy
         {
             "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
             "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
-            "ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt",
+            "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt",
             "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
             "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
             "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
@@ -51,8 +51,8 @@ namespace Pulsar4X.Galaxy
             "hhhhhhhhhhhhhhhhhhhhhhhhbbbbbbhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
             "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
             "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
-            "ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt",
-            "ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt",
+            "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt",
+            "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt",
             "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
             "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
         };
