@@ -54,6 +54,11 @@ public class NewGameMenu : PulsarGuiWindow
     // BAREBONES: no default home garrison (see above). Flip true (or DevTools) to garrison the start colony.
     public static bool AutoRaiseHomeGarrison = false;
 
+    // BAREBONES: build the start colony's nested fleets (Freight/Military/Science) on New Game. Default OFF — a truly
+    // minimal start is your faction + the Earth colony and NO ships (build your own). Flip true (or DevTools) for the
+    // start fleets. Passed to ColonyFactory.CreateFromBlueprint; tests keep fleets (that call defaults buildFleets=true).
+    public static bool AutoBuildStartFleets = false;
+
     Page _currentPage = Page.SelectMods;
     ModLoader _modLoader = new ModLoader();
     ModDataStore _modDataStore = new ModDataStore();
@@ -613,7 +618,7 @@ public class NewGameMenu : PulsarGuiWindow
         playerFaction.GetDataBlob<FactionInfoDB>().Species.Add(playerSpecies);
 
         // Setup the starting colony
-        ColonyFactory.CreateFromBlueprint(game, playerFaction, playerSpecies, startingSystem, startingBody, p.ModDataStore.Colonies[p.ColonyId]);
+        ColonyFactory.CreateFromBlueprint(game, playerFaction, playerSpecies, startingSystem, startingBody, p.ModDataStore.Colonies[p.ColonyId], AutoBuildStartFleets);
         if (p.EleStart && !p.SystemId.Equals("random"))
             AsteroidFactory.CreateAsteroid(startingSystem, startingBody, game.TimePulse.GameGlobalDateTime + TimeSpan.FromDays(365));
 
