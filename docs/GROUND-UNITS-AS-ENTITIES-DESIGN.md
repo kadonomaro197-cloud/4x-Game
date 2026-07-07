@@ -45,4 +45,5 @@ The existing `GroundUnit` data-object is read all over (resolver, movement, form
 
 | Slice | State |
 |-------|-------|
-| 1 design-keeps-components · 2 entity-backing · 3 radar-reveal · 4 speed · 5 crew · 6 compose+UI | ⚫ not started (design-locked) |
+| **1 design-keeps-components** | ✅ built — `GroundUnitDesign.ComponentDesignIds` (frame+parts, id→count), populated by `GroundUnitAssembly.ToGroundUnitDesign`; additive, flat stats unchanged. Gauge: `GroundUnitComponentsTests`. |
+| 2 entity-backing · 3 radar-reveal · 4 speed · 5 crew · 6 compose+UI | ⚫ not started |
