@@ -236,6 +236,23 @@ namespace Pulsar4X.Client
         // every window whose longitude reaches it. Terrain is continuous by construction; a faint seam line + label
         // marks each region-band boundary. Units draw at their GLOBAL (Q,R); click a hex to select/march
         // (GroundForces.OrderMoveToGlobalHex — no edge gates).
+        /// <summary>Resolve mineral id → name for the deposit labels, defensively (never throws; tolerates a viewed
+        /// faction with no/locked mineral data — gotcha #10/#11). Cheap (~15 entries), rebuilt per frame.</summary>
+        private Dictionary<int, string> BuildMineralNames()
+        {
+            var names = new Dictionary<int, string>();
+            try
+            {
+                var faction = _uiState.Faction;
+                if (faction != null && faction.TryGetDataBlob<Pulsar4X.Factions.FactionInfoDB>(out var fi)
+                    && fi.Data?.CargoGoods != null)
+                    foreach (var m in fi.Data.CargoGoods.GetMineralsList())
+                        if (m != null) names[m.ID] = m.Name;
+            }
+            catch { }
+            return names;
+        }
+
         private void DrawGlobalHexWindow(SurfaceGrid grid, List<Region> regions, Entity body, int myFaction, GroundForcesDB forcesDB)
         {
             int cols = grid.Cols, rows = grid.Rows, rc = Math.Max(1, regions.Count);
@@ -266,10 +283,17 @@ namespace Pulsar4X.Client
 
             uint hexBorder = ImGui.ColorConvertFloat4ToU32(new Vector4(0f, 0f, 0f, 0.28f));
 
-            // 1) terrain — every visible column (wraps), every row.
+            // Mineral deposit names (id → name), resolved once, defensively (tolerant of foreign/locked faction data).
+            var mineralNames = BuildMineralNames();
+
+            // 1) terrain + located mineral DEPOSITS — every visible column (wraps), every row.
             for (int sc = 0; sc < winCols; sc++)
             {
                 int gq = grid.WrapCol(_centerCol - halfW + sc);
+                // Deposits are only known POST-SCAN: show them only where this column's region band is surveyed
+                // (home starts surveyed; a fogged world reveals its deposits once you geo-survey it).
+                int band = PlanetGridFactory.RegionOfColumn(gq, cols, rc);
+                bool bandSurveyed = band >= 0 && band < regions.Count && regions[band].Surveyed;
                 for (int r = 0; r < rows; r++)
                 {
                     var h = grid.HexAt(gq, r);
@@ -278,6 +302,23 @@ namespace Pulsar4X.Client
                     var col = _featureColors.TryGetValue(h.Terrain, out var vc) ? vc : _featureColors[RegionFeatureType.Barren];
                     drawList.AddNgonFilled(pc, size, ImGui.ColorConvertFloat4ToU32(col), 6);
                     if (size > 4f) drawList.AddNgon(pc, size, hexBorder, 6, 1f);
+
+                    // A LOCATED mineral deposit — "resources HERE" (Industry.HexMinerals). A gold gem + short mineral
+                    // name; a mine built here draws its ⚙/token ON TOP (the LOCKED PRINCIPLE — mine sits on the deposit).
+                    if (h.DepositMineralId >= 0 && bandSurveyed)
+                    {
+                        float gr = size * 0.30f; if (gr < 2f) gr = 2f;
+                        var gemPos = new Vector2(pc.X, pc.Y - size * 0.32f);
+                        drawList.AddNgonFilled(gemPos, gr, ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 0.85f, 0.25f, 1f)), 4);
+                        drawList.AddNgon(gemPos, gr, ImGui.ColorConvertFloat4ToU32(new Vector4(0.25f, 0.18f, 0f, 1f)), 4, 1.5f);
+                        if (size > 9f && mineralNames.TryGetValue(h.DepositMineralId, out var mn) && !string.IsNullOrEmpty(mn))
+                        {
+                            string lbl = mn.Length > 4 ? mn.Substring(0, 4) : mn;
+                            var tsz = ImGui.CalcTextSize(lbl);
+                            drawList.AddText(new Vector2(pc.X - tsz.X * 0.5f, pc.Y + size * 0.10f),
+                                ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 0.95f, 0.7f, 1f)), lbl);
+                        }
+                    }
                 }
             }
 
@@ -1130,6 +1171,11 @@ namespace Pulsar4X.Client
             LegendRow("Upland: ", (RegionFeatureType.Highlands, "Highlands"), (RegionFeatureType.Mountains, "Mountains"), (RegionFeatureType.Volcanic, "Volcanic"));
             LegendRow("Cold:   ", (RegionFeatureType.Tundra, "Tundra"), (RegionFeatureType.Ice, "Ice"));
             LegendRow("Gas:    ", (RegionFeatureType.GasLayers, "Gas layers"));
+
+            ImGui.Separator();
+            ImGui.TextDisabled("Resources:");
+            ImGui.SameLine(); ImGui.TextColored(new Vector4(1f, 0.85f, 0.25f, 1f), "◆ mineral deposit");
+            ImGui.SameLine(); ImGui.TextDisabled("(the 4-letter tag names the mineral) — build a mine on the hex to work it.");
 
             ImGui.Separator();
             ImGui.TextDisabled("A faint yellow vertical line marks a region-band boundary; \"R# (centre)\" labels the band under the middle of the window.");
