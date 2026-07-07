@@ -63,12 +63,6 @@ namespace Pulsar4X.Galaxy
         /// <summary>Which faction holds this region on the ground (-1 = unowned/uncontested). Ground combat flips it
         /// when a garrison is cleared (slice 5d); when every region flips to one invader the planet's colony is taken.</summary>
         [JsonProperty] public int OwnerFactionID { get; internal set; } = -1;
-        /// <summary>This region's SHARE (0..1) of each of the body's mineral deposits — mineral id → fraction, summing to
-        /// ~1 across the body's regions per mineral. A region's LOCATED deposit amount = fraction × the body's live
-        /// <see cref="Industry.MineralsDB"/> amount, so a deposit is a PLACE on the surface (the LOCKED PRINCIPLE) and
-        /// still depletes as you mine — one truth, two views, no parallel bookkeeping. Filled deterministically +
-        /// terrain-weighted by <c>RegionMinerals.Distribute</c>; empty until then.</summary>
-        [JsonProperty] public Dictionary<int, double> MineralConcentration { get; internal set; } = new Dictionary<int, double>();
 
         public Region() { }
         public Region(Region other)
@@ -80,7 +74,6 @@ namespace Pulsar4X.Galaxy
             OwnerFactionID = other.OwnerFactionID;
             Neighbors = new List<int>(other.Neighbors);
             InstallationIds = new List<int>(other.InstallationIds);
-            MineralConcentration = new Dictionary<int, double>(other.MineralConcentration);
             Features = new List<RegionFeature>();
             foreach (var f in other.Features) Features.Add(new RegionFeature(f));
             Hexes = new List<GroundHex>();

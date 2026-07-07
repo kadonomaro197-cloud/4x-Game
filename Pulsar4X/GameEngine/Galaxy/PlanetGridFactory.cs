@@ -64,6 +64,9 @@ namespace Pulsar4X.Galaxy
                         grid.Hexes.Add(new GroundHex(q, r, world.TerrainForLonLat(lon, lat)));
                     }
                 regionsDB.SurfaceGrid = grid;
+                // Seed mineral DEPOSITS onto the hexes now the grid exists — "there are resources HERE", terrain-flavored,
+                // so the map can flag them post-scan and a mine gets built on the actual deposit (defensive; never throws).
+                Pulsar4X.Industry.HexMinerals.SeedDeposits(body, grid);
                 return grid;
             }
             catch { return null; }   // grid gen is a nicety — never break the game over it
