@@ -31,7 +31,9 @@ Each facet has an **intel level**, roughly three bands (calibration later):
 - **Confirmed** — you've raised intel on that facet: the estimate sharpens or the truth is revealed.
 - **Stale** — intel **decays**; a confirmed picture drifts back toward inferred as the world changes, so you must *refresh* (you can't learn a rival once and know them forever).
 
-**This is fog-of-war for politics**, and it's the same idea as the combat fog already built — extended from "where are their ships" to "what are they thinking." It rides the **detection substrate** (sensors/EMCON), which is why fixing the **degenerate detection-quality signal** (`GameEngine/Sensors/CLAUDE.md`) is a hard prerequisite: how much you can *infer from behavior* depends on detection quality carrying graduated information.
+**This is fog-of-war for politics**, and it's the same idea as the combat fog already built — extended from "where are their ships" to "what are they thinking." It rides the **detection substrate** (sensors/EMCON), but the **graduated richness lives HERE, in the Ledger** — driven by agents + ambassadors + decay — **not** in a sensor field.
+
+> **UPDATE 2026-07-07 — the "detection-quality fix" is no longer a prerequisite; `SignalQuality` is being CUT** (`docs/DETECTION-DESIGN.md` decision banner). The passive-sensor contribution to the Ledger is now **binary**: *physical detection on a rival → their Military facet is known at **Inferred** level.* The Inferred→Confirmed→Stale gradient is produced by the Ledger's own systems working together (agents raise it, decay lowers it), not by a graduated sensor-resolution number. This is cleaner — the graduated-ness is in one place, and the prerequisite becomes "cut a field," which is free.
 
 ---
 
@@ -96,7 +98,7 @@ Every rung is reachable and losable — it is NOT a parachuted-in "spy points" a
 
 ## Connections (Prime Directive)
 
-- **Detection / sensors / EMCON** (built; quality degenerate) — the **inference substrate**: how much you read from behavior is detection quality. **Hard prerequisite:** fix the degenerate detection-quality signal. EMCON-dark hides your buildup from their passive intel (the bluff).
+- **Detection / sensors / EMCON** (built) — the **inference substrate**: physical detection on a rival feeds their Military facet at **Inferred** (binary). **No longer a prerequisite** — `SignalQuality` is CUT (2026-07-07); the gradient lives in the Ledger, not the sensor. EMCON-dark still hides your buildup from their passive intel (the bluff), via *strength*.
 - **Diplomacy** (designed) — intel is **negotiation leverage** (dirt at the table); caught espionage **craters the relation TRACK** and can hand the other side a casus belli. The ambassador is the *passive* intel feed.
 - **Internal politics** (designed) — *sow unrest* reaches into a rival's **blocs / per-system legitimacy**; their agents do it to **you** → counter-intel defends your provinces. The reactive demand-engine can surface "we are being destabilised by [Rival]."
 - **People** (M3 talent) — Spymaster + agents are the intelligence arm; *turn/assassinate* hits the **people grave rung** (theirs and yours).
@@ -124,6 +126,16 @@ Every rung is reachable and losable — it is NOT a parachuted-in "spy points" a
 - **The MIRROR is always on** — NPCs spy on you; **counter-intelligence is a standing decision**, not opt-in.
 - **Spy capability is a COMPONENT** (research → build → install → lose) — an intelligence HQ is the capacity seat; not a bespoke "spy points" flag.
 
+**Locked (developer, 2026-07-07) — seating espionage in the leader pipeline (`docs/AI-SELF-PLAY-DESIGN.md`):**
+- **Agents are full leader-entities** — they ride the whole born→skilled→seated→acts→improves→lost pipeline (a new `CommanderType`, academy-trained, scarce). Losing one *hurts* — that's the point.
+- **Espionage org mirrors the Foreign Minister:** an empire-wide **Director of Intelligence** (cabinet, sets doctrine, owns empire-wide counter-intel) → a **per-faction Spymaster / station chief** (offense against that rival) → **agents** under them.
+- **Counter-intel = the same agent, target = your own faction** (not a separate mechanic). Assign an agent against a rival = offense; assign it to your own house = it hunts enemy agents/moles. The "focus" cost is the opportunity cost — a guard isn't out stealing. Empire-wide defense sits under the Director.
+- **`SignalQuality` is CUT** — the passive-sensor feed is binary (detection → Inferred); the gradient lives in this Ledger. Retires the old detection-quality prerequisite.
+- **NOT a parallel system** (`CONVENTIONS.md` §6) — espionage is espionage-specific *people* (agents/spymasters, on the leader pipeline), *components* (Intelligence HQ, on the component/designer architecture), and *data* (this Ledger + the covert catalog). Shared substrate (sensors, academy, money ledger) is *ridden*, not duplicated.
+
+**Open (added 2026-07-07):**
+- **Agent delivery — abstract vs physical.** Do agents deploy abstractly (assign-to-target + travel delay, Aurora-style), or must they physically ride a ship to the target system (ties espionage to movement; makes a courier/recon ship — a normal ship with the right components, not a new unit class — real and interceptable)? *The one genuine "do we build new units" fork.*
+
 **Open (decide when we build):**
 - Information-ledger granularity (per-facet bands vs. a finer score) + the **decay rate** (how fast confirmed intel goes stale).
 - Detection-roll math (agent skill + spymaster stance vs. counter-intel) — calibration/feel.
@@ -131,5 +143,7 @@ Every rung is reachable and losable — it is NOT a parachuted-in "spy points" a
 - Disinformation mechanics (how you plant false intel; how the target can detect they were played).
 - Whether intel is **shareable** as a diplomacy exchange (sell dirt — already a row in the exchange catalog; confirm it reads the ledger).
 
-**Build order (after the keystone + diplomacy substrate; rides the detection-quality fix):**
-detection-quality fix (prereq) → the **Information Ledger** (per-rival intel state + the Inferred/Confirmed/Stale bands) → **passive intel** (ambassador + sensors raise it) → the **agent/Spymaster** people layer → the **covert-action catalog** (gather FIRST — the pure hidden-info lever — then steal/sabotage, then sow-unrest) → **detection + counter-intel + caught-consequences** (the risk side) → the **NPC mirror** (they spy on you; reactive "we are being destabilised") → **disinformation** (last; the bluff weaponised).
+**Build order (after the keystone + diplomacy substrate + the LEADER PIPELINE):**
+**cut `SignalQuality`** (free; replaces the old "detection-quality fix" prereq) → the **Information Ledger** (per-rival intel state + the Inferred/Confirmed/Stale bands) → **passive intel** (ambassador + physical detection feed it, binary → Inferred) → the **agent/Spymaster** people layer (rides the leader pipeline) → the **covert-action catalog** (gather FIRST — the pure hidden-info lever — then steal/sabotage, then sow-unrest) → **detection + counter-intel + caught-consequences** (the risk side) → the **NPC mirror** (they spy on you; reactive "we are being destabilised") → **disinformation** (last; the bluff weaponised).
+
+> **The Spymaster MVP (2026-07-07):** Information Ledger + passive intel + a per-faction Spymaster seat + full-entity agents running the `gather` op. Delivers the poker-of-intent core without the balance-sensitive hard ops. It is the **second** leader vertical slice (after the Governor) — it proves the pipeline generalizes AND stands up the Ledger. Prereqs: the leader pipeline (agents/spymasters are leaders) + cutting `SignalQuality`.
