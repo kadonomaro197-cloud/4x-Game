@@ -88,6 +88,50 @@ This is the loop that makes the **diplomacy-as-a-closing-fight** metaphor real: 
 
 ---
 
+## Espionage in gameplay — physical delivery + the NPC counterparty (2026-07-07)
+
+**The load-bearing rule (developer): none of this earns its keep unless the NPC can DETECT these actions and REACT to them.** A player running spycraft against a blind, inert opponent is solitaire with extra steps. **The value is the STACK — your ops × the NPC's detection-and-reaction — never the ops alone.** Everything below serves that.
+
+### Physical delivery — agents travel to their targets (resolving the abstract-vs-physical fork → PHYSICAL, with a delegate shortcut)
+
+An agent is a person who must physically reach the target to operate. That turns espionage from a menu into a loop the player lives inside, and it's ~90% **CONNECT** (feasibility-traced 2026-07-07): it reuses the troop-transport pipeline, movement/jump, EMCON, and trade/diplomatic access.
+
+**The delivery arc — each stage a decision on an existing system:**
+```
+pick COVER → run the ROUTE (chokepoints) → INSERTION roll → OPERATE (heat builds) → EXTRACT or embed
+```
+- **Cover** (three routes, each riding a different system): **stealth** (run EMCON-dark — the run-cold mechanic IS the stealth-insertion mechanic), **trade cover** (hide in legitimate traffic — needs a `LogisticsAccess` grant), **diplomatic cover** (insert via a posted ambassador — needs the embassy).
+- **Route** — jump points are the **border chokepoints**; the detection asymmetry lets a cold spy ship *see the pickets before they see it* and time its run.
+- **Insertion** — a detection roll (your stealth + agent skill vs their counter-intel / border security), gated by `HasOrbitalControl` (can't insert where an enemy fleet holds the orbit).
+- **Operate** — embedded; **discovery heat builds over time** → the sleeper-vs-active tension (extract safe, or stay embedded and ready but accumulating risk).
+- **Extract** — the reverse delivery, or leave them as a long-term sleeper/mole.
+
+**The reuse map (feasibility 2026-07-07):**
+- **Model on troop transport** — `GroundBayAtb` carrier + `GroundTransportDB` store + `TryLoadUnit`/`TryLandUnit` gates (`ShipIsAtBody`, `HasOrbitalControl`) are the exact pipeline to copy.
+- **No cloak substrate exists — and that's correct.** "Stealth" = EMCON-dark + timing + the detection asymmetry (all built). A spy ship is detectable and **interceptable en route** — the tension we want, for free.
+- **Agents stay full leader-entities (Option A).** A separate entity does NOT auto-follow a ship through a jump (jump transfers only the ship), so the delivery action **explicitly co-transports** the agent via `EntityManager.Transfer`. Small extra plumbing; preserves the leader pipeline (competence/experience/loss). *Do NOT* model the agent as fungible cargo (identity mismatch) or rely on passenger plumbing (doesn't exist).
+- **The one genuinely new mechanic: "attach as infiltrator."** Troop landing drops a unit onto a visible region roster; a spy instead **attaches to the target colony hidden from that faction, accumulating discovery heat.** That attach-and-hide state is the real new code — and it's what makes an embedded agent a *place on the map*, not a menu entry.
+
+### The NPC counterparty — detect + react (the co-requisite, not a follow-on)
+
+Because the value is the stack, the NPC's ability to detect and react is built **with** the core, not after it. And it needs no bespoke spy-AI — it's the **mirror**: the NPC runs the same systems, pointed at you.
+
+- **NPC detects** via: its own **sensors** (catch your spy ship in transit), its **counter-intel agents (target = itself)** rolling against your embedded agent's skill + heat, and the graduated op outcome (**clean / traced / caught**).
+- **NPC reacts** via three escalating wires: (1) **catch/kill/turn your agent** → feeds *your* rung 6 (the loss has teeth); (2) **relationship + suspicion** → the reactive-diplomacy engine drops relations, repeated *traced* events build a **suspicion state** until they're sure → **casus belli** (gated by their militarism → possible war); (3) **posture shift + retaliation** → the NPC's Director-of-Intelligence delegate raises counter-intel focus and/or spies back.
+- **Deniability makes reaction meaningful:** *traced* = "they know *someone* spied" (suspicion climbs); *caught* = "they know it's *you*" (full reaction). The NPC must hold and act on a suspicion state — the poker, from the other side.
+- **It's bidirectional by construction** — the NPC gathers on you; your counter-intel catches *their* agent; you choose to kill/turn them. Both directions, same code.
+
+**Why this is the right kind of expensive — it ties back to the whole design.** The NPC's spy-and-counter-spy behavior is the **delegate = NPC AI** principle: the NPC's Director delegate + the reactive-diplomacy engine, both built anyway. **So espionage value is downstream of the NPC-delegate loop actually firing and deciding** (today: the stubbed `NPCDecisionProcessor` + unbuilt delegate auto-runners + partial `ReactiveDiplomacy`). Espionage isn't a side-quest from the AI work — it's the AI work's **showcase**.
+
+**Visibility Gate — both ways.** The reaction must be *legible* or the tension evaporates: the player must SEE they were traced/caught, relations drop, an agent hunted — and equally see "we caught an enemy spy" when defending. Feedback is part of the build, not polish.
+
+### The reshaped MVP
+
+The counterparty is inside the MVP, not after it:
+> player `gather` + **NPC counter-intel detection** (rolls against the op) + **minimal NPC reaction** (relation hit + suspicion + surfaced) + **the mirror** (NPC gathers on you; you detect + react). Physical delivery for the hands-on player; the Spymaster delegate auto-runs it for the CEO-altitude player.
+
+Still the **second** leader vertical slice (after the Governor), and still gated on the leader pipeline + cutting `SignalQuality`. But its worth is now correctly tied to the NPC being a live opponent — which is the point.
+
 ## Cradle to grave (espionage)
 
 > research **spy tech** → design/build the **gear** (a covert-ops component / an intelligence HQ — the seat that gives intelligence capacity) → recruit/train an **agent** (people, M3) → seat a **Spymaster** delegate or task the agent directly → spend scarce **intelligence capacity** on a **covert op** from the catalog → **roll detection** vs their counter-intel → success raises **intel** or lands the **effect**; caught = the **betrayal penalty** + a **casus belli for them** + the **agent is lost** (captured/killed/turned — the grave rung) → re-research / re-recruit / re-run. Destroy a rival's **intelligence HQ** (sabotage or war) and you blind their spy network — the grave rung wired to the damage system.
@@ -133,8 +177,9 @@ Every rung is reachable and losable — it is NOT a parachuted-in "spy points" a
 - **`SignalQuality` is CUT** — the passive-sensor feed is binary (detection → Inferred); the gradient lives in this Ledger. Retires the old detection-quality prerequisite.
 - **NOT a parallel system** (`CONVENTIONS.md` §6) — espionage is espionage-specific *people* (agents/spymasters, on the leader pipeline), *components* (Intelligence HQ, on the component/designer architecture), and *data* (this Ledger + the covert catalog). Shared substrate (sensors, academy, money ledger) is *ridden*, not duplicated.
 
-**Open (added 2026-07-07):**
-- **Agent delivery — abstract vs physical.** Do agents deploy abstractly (assign-to-target + travel delay, Aurora-style), or must they physically ride a ship to the target system (ties espionage to movement; makes a courier/recon ship — a normal ship with the right components, not a new unit class — real and interceptable)? *The one genuine "do we build new units" fork.*
+**Resolved (added 2026-07-07):**
+- **Agent delivery = PHYSICAL, with a delegate shortcut.** Agents ride a ship to the target and are inserted (the delivery arc above); the Spymaster delegate auto-runs it for players who don't want the micro. Reuses troop-transport + movement + EMCON; the only new mechanic is "attach as infiltrator." No new unit class (a courier/recon ship is a normal ship designed with the right components).
+- **The NPC counterparty (detect + react) is a MVP co-requisite, not a follow-on** — the value is the stack; it rides the mirror + reactive-diplomacy + the NPC delegate loop.
 
 **Open (decide when we build):**
 - Information-ledger granularity (per-facet bands vs. a finer score) + the **decay rate** (how fast confirmed intel goes stale).
