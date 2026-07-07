@@ -863,6 +863,11 @@ namespace Pulsar4X.Client
                 if (ImGui.Checkbox("Auto-spawn this scenario on New Game##devautoscenario", ref NewGameMenu.AutoSpawnCombatScenario))
                     DevLog($"Auto-spawn combat scenario on New Game = {NewGameMenu.AutoSpawnCombatScenario} (applies to the next New Game)");
 
+                // Companion barebones toggle (default OFF): raise a home garrison on the player's colony on New Game,
+                // so the ground tactical map has units without DevTools. Applies to the NEXT new game.
+                if (ImGui.Checkbox("Auto-raise home garrison on New Game##devautogarrison", ref NewGameMenu.AutoRaiseHomeGarrison))
+                    DevLog($"Auto-raise home garrison on New Game = {NewGameMenu.AutoRaiseHomeGarrison} (applies to the next New Game)");
+
                 // Premade combat scenario: 2 well-rounded player task forces at Earth + hostile squadrons at
                 // Luna/Venus/Mercury/Mars — for generating rich live combat/closing data in one click.
                 if (ImGui.Button("Spawn Combat Scenario##devscenario"))
