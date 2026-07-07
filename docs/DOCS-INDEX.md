@@ -59,6 +59,7 @@ Build column (for design docs): ✅ built · 🏗 building · ⚫ design-only (n
 | `docs/NORTH-STAR-VISION.md` | The ceiling: stage aspects of the great sci-fi universes; the extracted-mechanics pillars | 🟢 📚 | Raises the ceiling; does not lower the bar |
 | `OBJECTIVE.md` | The concrete end-state spec (what "done" looks like, build order) | 🟢 📚 | Goal-level; stable |
 | `docs/MVP.md` | **Scope firewall** — the v1 finish line ("you can take a planet") + parking lot | 🟢 ♻️ | The live plan (superseded `PLAN.md`); read before adding any feature |
+| `docs/PLAY-TO-MARS-WALKTHROUGH.md` | Button-by-button trace of a full New Game → invade Mars in the NORMAL UI, with every gap + proposed fixes | 🟢 | NEW 2026-07-07 (verification branch): the honest "can a player actually do this" audit. Blockers = load/land transport (no order/button), no enemy on Mars (gated), no first-class bombardment order; ends are playable |
 | `docs/REALISM-VS-GAMEPLAY-AUDIT.md` | **Weight firewall** — every system must be the source of a stacking player DECISION; the cheap-wiring list | 🟢 ♻️ | Framework still governs; the verdict board is the thing to refresh as systems get wired |
 | `docs/BEYOND-PROTOCOL-REFERENCE.md` | Second design north-star (the strategic/human layer alongside Aurora's physics) | 🟢 📚 | |
 
