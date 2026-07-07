@@ -63,6 +63,10 @@ namespace Pulsar4X.Client
         private int _selFaction = -1;
         private GroundUnitType _selType = GroundUnitType.Infantry;
 
+        // The last GLOBAL hex the player clicked — the target for "build a mine on this deposit". -1 = none.
+        private int _selGQ = -1;
+        private int _selGR = -1;
+
         // The installation the Build panel will place (index into the faction's placeable designs, rebuilt each frame).
         private int _buildChoice = 0;
 
@@ -408,6 +412,7 @@ namespace Pulsar4X.Client
         {
             int band = PlanetGridFactory.RegionOfColumn(gq, grid.Cols, Math.Max(1, regions.Count));
             _centerRegion = band;                     // keep the region-based panels tracking what you clicked
+            _selGQ = gq; _selGR = gr;                 // remember the clicked hex — the target for build-a-mine-on-a-deposit
 
             var mineHere = forcesDB?.Units.FirstOrDefault(u => u.GlobalQ == gq && u.GlobalR == gr && u.FactionOwnerID == myFaction);
             if (mineHere != null)
@@ -878,6 +883,41 @@ namespace Pulsar4X.Client
                     Console.WriteLine($"[RenderError] PlanetViewWindow build order threw: {ex}");
                 }
             }
+
+            // ── Build a MINE on a located deposit hex — the "build a mine ON that deposit" connection ────────
+            // The last hex you clicked is the build target; if it holds a mineral deposit, offer to plant a mine
+            // ON the ore via PlaceInstallationOnHexOrder (the CI-tested engine path). The mine draws body-wide for
+            // now; per-hex depletion (the mine works ITS deposit) is the flagged follow-up.
+            try
+            {
+                var grid = PlanetGridFactory.EnsureGridForBody(body);
+                var hex = (grid != null && _selGQ >= 0) ? grid.HexAt(_selGQ, _selGR) : null;
+                if (hex != null && hex.DepositMineralId >= 0)
+                {
+                    var mineDesign = designs.FirstOrDefault(d => d.HasAttribute<Pulsar4X.Industry.MineResourcesAtbDB>());
+                    var names = BuildMineralNames();
+                    string mineral = names.TryGetValue(hex.DepositMineralId, out var mn) && !string.IsNullOrEmpty(mn)
+                        ? mn : $"mineral #{hex.DepositMineralId}";
+                    ImGui.Separator();
+                    if (mineDesign == null)
+                        ImGui.TextDisabled($"◆ {mineral} deposit at ({_selGQ},{_selGR}) — design a Mine to work it.");
+                    else if (ImGui.Button($"Build {mineDesign.Name} on this {mineral} deposit ({_selGQ},{_selGR})"))
+                    {
+                        try
+                        {
+                            var order = PlaceInstallationOnHexOrder.CreateCommand(colony, _selGQ, _selGR, mineDesign.UniqueID);
+                            _uiState.Game.OrderHandler.HandleOrder(order);
+                            _status = $"queued {mineDesign.Name} on {mineral} deposit ({_selGQ},{_selGR})";
+                        }
+                        catch (Exception ex)
+                        {
+                            _status = "mine-on-hex order failed (logged)";
+                            Console.WriteLine($"[RenderError] PlanetViewWindow mine-on-hex order threw: {ex}");
+                        }
+                    }
+                }
+            }
+            catch { }
         }
 
         /// <summary>The player's colony sitting on THIS body, if any (a build order is issued to a colony).</summary>
