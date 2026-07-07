@@ -57,6 +57,13 @@ public class GeoSurveyProcessor : IInstanceProcessor
                     // an unsurveyed world carries none; only the coarse regions (4/body) are galaxy-wide. Idempotent +
                     // defensive (a re-survey is a no-op; a body without a region layer is skipped inside).
                     Pulsar4X.Galaxy.PlanetHexFactory.EnsureHexesForBody(Target);
+                    // ...and build its continuous cylinder grid, which ALSO seeds the located mineral DEPOSITS onto
+                    // hexes (Industry.HexMinerals). This makes "there are resources HERE" authoritative engine state
+                    // the instant a world is scanned — for EVERY planet and moon, not just the home world and not
+                    // only when the player opens the planet view. Post-survey the map flags them and a mine gets built
+                    // on the deposit. Lazy/idempotent/defensive: a world with no minerals seeds nothing, a re-survey
+                    // is a no-op, a body without a region layer is skipped inside.
+                    Pulsar4X.Galaxy.PlanetGridFactory.EnsureGridForBody(Target);
                 }
 
                 EventManager.Instance.Publish(
