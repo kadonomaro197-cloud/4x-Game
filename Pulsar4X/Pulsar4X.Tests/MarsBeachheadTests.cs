@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Pulsar4X.Combat;
@@ -27,7 +28,13 @@ namespace Pulsar4X.Tests
         public void SpawnCombatScenario_GivesMars_AnEnemyColonyAndGarrison_StillFogged()
         {
             var s = TestScenario.CreateWithColony();
-            var enemies = CombatSandbox.SpawnCombatScenario(s.Game, s.StartingSystem, s.Faction);
+            // The beachhead is OFF by default (no Earth-Mars war in a normal game); enable it for this gauge, and
+            // reset in a finally so the static flag never leaks into another fixture in the same process.
+            List<Entity> enemies;
+            bool prev = CombatSandbox.SpawnMarsBeachhead;
+            CombatSandbox.SpawnMarsBeachhead = true;
+            try { enemies = CombatSandbox.SpawnCombatScenario(s.Game, s.StartingSystem, s.Faction); }
+            finally { CombatSandbox.SpawnMarsBeachhead = prev; }
             var enemyIds = enemies.Select(e => e.Id).ToHashSet();
             int playerId = s.Faction.Id;
 

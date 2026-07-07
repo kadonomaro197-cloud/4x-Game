@@ -173,6 +173,12 @@ namespace Pulsar4X.Combat
         /// capture prize, small enough to fall to an invasion.</summary>
         private const long MarsColonyPopulation = 500_000_000L;
 
+        /// <summary>Whether the combat scenario gives Mars a GROUND BEACHHEAD (enemy colony + garrison = a world you can
+        /// invade and TAKE). **Default OFF** — a normal New Game has the fleet-only Mars rival, no Earth-Mars ground war;
+        /// flip this on (DevTools / a test) to stage the take-Mars playtest. Kept off by the developer's "hold off on the
+        /// Earth-Mars war" call while the work stays available.</summary>
+        public static bool SpawnMarsBeachhead = false;
+
         /// <summary>
         /// Give an NPC faction a holdable GROUND BEACHHEAD on a body: a minimal colony (a capture TARGET — clearing its
         /// garrison flips ownership) plus a defending home garrison (region 0). This is what turns a fleet-only rival
@@ -249,8 +255,9 @@ namespace Pulsar4X.Combat
 
                 // MARS is the GROUND front: give the Martian Directorate a holdable colony + garrison, so Mars is a
                 // world you can actually invade and TAKE (survey -> beat the squadron -> bombard -> land -> capture),
-                // not just a fleet to shoot. The other rivals stay fleet-only for now.
-                if (bodyName == "Mars")
+                // not just a fleet to shoot. Gated OFF by default (SpawnMarsBeachhead) — no Earth-Mars ground war in a
+                // normal New Game; flip it on to stage the take-Mars playtest. The other rivals stay fleet-only.
+                if (bodyName == "Mars" && SpawnMarsBeachhead)
                     SetupGroundBeachhead(game, enemy, playerInfo.Species.FirstOrDefault(), body, MarsColonyPopulation);
             }
             return factions;
