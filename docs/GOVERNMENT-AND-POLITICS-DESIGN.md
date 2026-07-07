@@ -168,6 +168,7 @@ legitimacy meter (derived, **per-system**) → blocs + emergent support → the 
 **Locked (developer, 2026-06-29) — sub-decisions:**
 - **THREE NOTCHES per dial (Low / Mid / High)**, not free sliders. Each notch = one fixed coefficient/rule set (no interpolation). The classifier reads the notch combo directly (the combo *is* the key). 4 dials × 3 notches = 81 combos; hand-name the ~12 iconic ones, auto-describe the rest.
 - **FOURTH DIAL = MILITARISM** (Pacifist ⟷ Militarist). Chosen over Tradition/Religion because it plugs into systems already being built (combat, armies, M3 manpower) and sharpens the war-weariness case. (Religion/Tradition remains a candidate 5th civic later. Developer may swap.)
+  - **Update 2026-07-07 — the religion 5th-dial is reframed into something bigger.** It becomes the **Secular⟷Spiritual dial** that sets *capacity + style* (L1) of **Influence — the fourth conquest pillar** (`docs/INFLUENCE-PILLAR-DESIGN.md`): conquest by belief/culture/ideology, no weapons, by converting a rival's population until the world secedes. Religion is flavor #1 (culture/ideology #2/#3). The **domestic** side (a Faithful bloc + schism) rides this doc's demand engine + per-system rebellion model; the **offensive** side rides legitimacy-as-a-battlefield and unifies with espionage `sow-unrest`.
 
 ---
 
