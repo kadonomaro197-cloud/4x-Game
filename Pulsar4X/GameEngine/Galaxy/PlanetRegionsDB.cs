@@ -136,6 +136,17 @@ namespace Pulsar4X.Galaxy
             return changed;
         }
 
+        /// <summary>Reveal ONE region by index (the per-region counterpart to <see cref="RevealAll"/>): a ground radar
+        /// reveals the region(s) within its reach one at a time. Returns true if newly revealed (idempotent +
+        /// bounds-safe — an out-of-range or already-surveyed index is a no-op).</summary>
+        public bool RevealRegion(int index)
+        {
+            if (index < 0 || index >= Regions.Count) return false;
+            if (Regions[index].Surveyed) return false;
+            Regions[index].Surveyed = true;
+            return true;
+        }
+
         public new static List<Type> GetDependencies() => new List<Type>() { typeof(NameDB) };
     }
 }

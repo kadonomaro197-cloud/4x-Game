@@ -59,6 +59,10 @@ namespace Pulsar4X.GroundCombat
             if (!body.TryGetDataBlob<GroundForcesDB>(out var forces) || forces.Units.Count == 0)
                 return;
 
+            // 0) RADAR: a unit carrying a GroundSensorAtb reveals the map within its reach (the ability falls out of the
+            //    unit's component store — units-as-entities). Real range → hexes → region bands. Idempotent + defensive.
+            GroundSensors.RevealFromUnits(body);
+
             // 1) MOVEMENT: advance in-transit units.
             //    (a) COARSE region march (5b): a whole-region hop, arrives when the region's crossing time has elapsed.
             //    (b) FINE hex march (H2): walk the stored A* path one hex at a time — each step costs the region's
