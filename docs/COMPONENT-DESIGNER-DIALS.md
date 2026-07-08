@@ -10,8 +10,8 @@
 |---|----------|------|-------|
 | — | *(framework)* | Universal dials + Emergent-constraint (physical budget) model | 🔒 **LOCKED §0** |
 | 1 | Weapons | **Energy** | 🔒 **LOCKED §1.1** |
-| 2 | Weapons | **Ballistic** | 🟡 **proposed §1.2** (awaiting lock) |
-| 3 | Weapons | Melee | ⚫ pending |
+| 2 | Weapons | **Ballistic** | 🔒 **LOCKED §1.2** |
+| 3 | Weapons | **Melee** | 🟡 **proposed §1.3** (awaiting lock) |
 | 4 | Weapons | Guided | ⚫ pending |
 | 5 | Weapons | Exotic | ⚫ pending |
 | 6–37 | Propulsion · Sensors · Power · Defense · Enhancers · Industrial · Logistical · Civic · Command · Chassis | (all doors) | ⚫ pending |
@@ -318,4 +318,88 @@ Same lesson as the Death Star, kinetic flavour: the **mass driver** confines its
 
 ---
 
-*(Melee, Guided, Exotic — and the other 32 doors — pending, one lock at a time.)*
+### 1.3 Weapons ▸ MELEE  🟡 *proposed*
+*Close combat: blades, clubs, claws, power fists, energy swords, boarding gear, ramming prows. The forcing inverts — **no ammo and little/no power** (melee's whole payoff: no magazine mass, no fuel, no logistics, never runs dry) — but **range ≈ 0**, so the weapon is worthless until the unit **closes to contact.** Melee trades all the weapon-supply overhead for a *positioning* problem, and pays it back as **undodgeable, high-alpha contact damage** (you can't juke a sword in a grapple).*
+
+**The melee identity (the standing trade):** you save the mass a gun spends on ammo/reactor, and you spend it instead on **mobility + armour to survive the approach.** A slow melee unit is dead weight; a fast or armoured one that reaches you is terrifying. Damage also scales with the chassis's **strength** (servo/mass) and **Enhancers** (a power-armour bio-mod hits harder) — so melee is partly emergent from the *body*, not just the weapon.
+
+**A. Reach**
+| Option | Why | The catch |
+|--------|-----|-----------|
+| **Short (knife/fist/claw)** | fast, light, concealable | body-to-body — zero reach, must fully close |
+| **Long (spear/pike/lance)** | **out-reaches** other melee → strikes first in the clash | slower, unwieldy in tight quarters |
+| **Flexible (whip/flail)** | reach + a sweeping **arc** (multi-target) | low per-hit, hard to control |
+
+**B. Damage mode**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Cutting (blade)** | clean high damage, sever | glances off very hard armour |
+| **Crushing (club/hammer/fist)** | **ignores armour by brute force**, staggers/knockback | slow, no finesse |
+| **Piercing (spike/drill)** | **penetrates armour** | narrow, no splash |
+| **Energy (plasma blade/lightsaber)** | cuts nearly anything + can **parry** | draws a little power; a dead reactor = a heavy stick |
+
+**C. Power source**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Unpowered** | zero power, zero ammo, zero logistics — brutally simple | capped by muscle/servo strength (leans on chassis + Enhancers) |
+| **Powered (chainsword/power fist/energy blade)** | far higher damage, cuts armour, enables parry | small power draw; loses its edge if the host is drained |
+
+**D. Strike speed**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Flurry (fast)** | many strikes → overwhelms even a dodger, good vs light foes | low per-hit; stamina |
+| **Heavy (wind-up)** | massive per-blow **alpha**, staggers | slow enough that a nimble foe *can* slip between blows (the one way melee gets evaded) |
+
+**E. Parry — the defensive function (H7: weapon that's also defense)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Offense-only** | full damage | no protection |
+| **Parry-capable** | deflects incoming **melee**, and (energy blade) some **ranged** — the sword-and-board / lightsaber | trades some attack for defense; parrying *ranged* takes skill (a People/Enhancer trait, not the weapon alone) |
+
+**F. Control — strike vs grapple**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Strike** | pure damage | — |
+| **Grapple / bind (claw, net, boarding clamp)** | immobilizes or **captures** the target — boarding a ship, taking a unit intact (the capture effect) | no damage; loses if the target is stronger |
+
+**G. Closer — melee's answer to its own range problem**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Static** | relies on the chassis's own mobility to close | a slow platform never reaches the enemy — melee dead weight |
+| **Lunge / charge / boarding tube / grapnel** | a built-in dash that **closes the gap** to strike | one-shot/cooldown, and **committing** — exposed if it whiffs |
+
+**Physical demands (the forcing — reach & closing, not mass):**
+- **No ammo, minimal power** → the lightest weapon-supply footprint in the game; this saved mass is melee's dividend.
+- **Range ≈ 0** → the real cost. The weapon is gated by the unit's **mobility** (Propulsion) — melee "forces" a mobility/armour investment the way a gun forces a magazine/reactor. The trade is spatial, not tonnage.
+- **Damage scales with chassis strength + Enhancers** → a bigger/stronger body hits harder (a Titan's fist, a power-armoured marine) — emergent from the host, not authored on the weapon.
+
+**Modellability audit (§0d):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| Melee = **undodgeable contact** | ✅ | **already built** — `GroundDamageMatrix` ("dodge beats aimed fire only, *not* area/melee") |
+| Damage · strike speed | ✅ | firepower / rate |
+| Reach (range 0/1) + must-close | ✅ | the ground H3 range model + the closing/movement system (a melee unit has to reach the target) |
+| Crushing-ignores-armour · piercing-penetration | ✅ | `ArmourSoak` variants (a nature that beats flat armour) |
+| Powered (energy blade) draw | ✅ | the supply model |
+| Damage-scales-with-strength | ◐ **wire** | read the chassis strength/mass + Enhancer bonus into the melee damage term |
+| Parry (melee) · Grapple→capture | ◐ **wire** | a melee-vs-melee defense mod; capture reuses the boarding-capture primitive (H9) |
+| Lunge / charge closer | ◐ **wire** | a movement burst (movement system exists) |
+| **Parry RANGED (the lightsaber deflect)** | ⏳ **defer** | needs the **effect-bus + a skill/People trait** (H4/H7) — the saber is gear, the deflect is the *being* |
+
+**Reading:** melee is **strongly modellable** — the resolver *already* treats melee as undodgeable (`GroundDamageMatrix`), and the closing/range model already governs "you must reach the enemy." A few **wires** (strength-scaling, parry-melee, grapple-capture, lunge), and only the **lightsaber's ranged-deflect** is deferred to the effect-bus/People-trait work.
+
+**Preset coordinates — the span:**
+| Weapon | Reach | Mode | Power | The trade it chose |
+|--------|-------|------|-------|--------------------|
+| **Combat knife** | short | cutting | unpowered | free backup — zero supply, zero reach |
+| **Power fist / chainsword** | short | crushing/cutting | powered | armour-cleaving alpha (the marine); must close, draws power |
+| **Lightsaber** | short | energy | powered | cuts anything + parries ranged *(deferred)*; the saber is gear, the Force does the deflect |
+| **Boarding claw** | short | grapple | powered | **captures** a ship intact; no damage, needs to dock |
+| **Titan chainfist** | short | crushing | powered | wrecks a building/capital up close; needs a huge strong chassis to swing |
+| **Ramming prow** | contact | piercing (kinetic) | unpowered | a hull *is* the weapon — massive one-shot; you must survive closing to zero range |
+
+The melee lesson: it's the one door where the forcing isn't tonnage but **space** — the numbers don't funnel you to a bigger chassis, they punish you for not being able to *arrive*.
+
+---
+
+*(Guided, Exotic — and the other 32 doors — pending, one lock at a time.)*
