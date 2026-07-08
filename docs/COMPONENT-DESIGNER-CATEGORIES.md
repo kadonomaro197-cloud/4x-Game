@@ -54,7 +54,7 @@ The designer makes **gear**. It does **not** make the *being* that uses it. Inna
 
 ## 4. Stress test — 12 iconic units across three franchises
 
-Each unit was "built" through the designer to find where it strains. ✅ = maps cleanly. ⚠ = exposes a hole (catalogued in §5).
+Each unit was "built" through the designer to find where it strains. ✅ = maps cleanly. ⚠ = exposes a hole (catalogued in §5). **Full door-by-door build of every unit + the detailed hole-plugging analysis is in the companion `docs/COMPONENT-DESIGNER-STRESS-TEST.md`.**
 
 ### Star Trek
 1. **Galaxy-class *Enterprise*** — Chassis ▸ Hull (large) · Propulsion ▸ Warp + Reaction (impulse) · Weapons ▸ Energy (phasers) + Guided (photon torpedoes) · Defense ▸ Shields · Sensors ▸ Detection + Survey (science ship) · Civic ▸ Habitation + Development (families + labs aboard). ✅ mostly — but **saucer separation** ⚠H5 (one chassis → two operational ships) and the **transporter** ⚠H1 (beam matter/people point-to-point) have no home.
