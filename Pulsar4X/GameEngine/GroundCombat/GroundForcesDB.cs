@@ -35,6 +35,10 @@ namespace Pulsar4X.GroundCombat
         /// holding its parent-fleet id (fleet membership lives on the SHIP side; formation membership lives here).</summary>
         [JsonProperty] public int FormationId { get; internal set; } = -1;
         [JsonProperty] public string DesignId { get; internal set; }
+        /// <summary>The BACKING ENTITY that carries this unit's components (units-as-entities, Option A) — a real entity
+        /// with a <c>ComponentInstancesDB</c>, the same store a ship has, so every ability falls out via
+        /// <c>TryGetComponentsByAttribute</c>. -1 = none (a monolithic unit not yet backed). See <see cref="GroundUnitEntity"/>.</summary>
+        [JsonProperty] public int BackingEntityId { get; internal set; } = -1;
         [JsonProperty] public string Name { get; internal set; }
         /// <summary>Which faction owns this unit — capture flips this (slice 5d), same primitive as a ship.</summary>
         [JsonProperty] public int FactionOwnerID { get; internal set; }
@@ -130,7 +134,7 @@ namespace Pulsar4X.GroundCombat
         public GroundUnit(GroundUnit o)
         {
             UnitId = o.UnitId; FormationId = o.FormationId;
-            DesignId = o.DesignId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
+            DesignId = o.DesignId; BackingEntityId = o.BackingEntityId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
             UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health; Range = o.Range;
             MaxAmmo_kg = o.MaxAmmo_kg; CurrentAmmo_kg = o.CurrentAmmo_kg;
             Evasion = o.Evasion; Shield = o.Shield; DamageType = o.DamageType;
@@ -366,6 +370,10 @@ namespace Pulsar4X.GroundCombat
                     : null,
             };
             unit.UnitId = forces.NextUnitId++;   // stable id (the ground echo of a ship's entity id)
+            // Units-as-entities (Option A): give the unit a BACKING ENTITY carrying its design's components, so every
+            // ability falls out of the shared component store (radar/speed/crew). -1 for a design with no component
+            // list (monolithic units, backed in a later slice). Defensive — never throws in the raise path.
+            unit.BackingEntityId = GroundUnitEntity.BuildBacking(body, design, factionId);
             // G3: also place the unit on the ONE continuous grid — at its region BAND's centre column (the global twin
             // of the disk's (0,0) muster). Additive; the per-region HexQ/HexR (0,0) is unchanged.
             StampGlobalMuster(body, unit, regionIndex);

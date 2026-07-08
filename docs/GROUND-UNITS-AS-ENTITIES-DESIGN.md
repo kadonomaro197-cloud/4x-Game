@@ -46,4 +46,5 @@ The existing `GroundUnit` data-object is read all over (resolver, movement, form
 | Slice | State |
 |-------|-------|
 | **1 design-keeps-components** | ✅ built — `GroundUnitDesign.ComponentDesignIds` (frame+parts, id→count), populated by `GroundUnitAssembly.ToGroundUnitDesign`; additive, flat stats unchanged. Gauge: `GroundUnitComponentsTests`. |
-| 2 entity-backing · 3 radar-reveal · 4 speed · 5 crew · 6 compose+UI | ⚫ not started |
+| **2 entity-backing** | ✅ built — `GroundUnitEntity.BuildBacking` gives a raised unit a backing `Entity` + `ComponentInstancesDB` from its component list (`GroundUnit.BackingEntityId`); populated low-level (no install hook / ReCalc → inert entity); abilities fall out via `TryGetComponentsByAttribute`. Only assembler designs (with a component list) are backed; monolithic get theirs later. Defensive (any failure → no backing, never throws). Gauge: `GroundUnitEntityTests`. **Follow-up: a save/load round-trip test for a backed unit.** |
+| 3 radar-reveal · 4 speed · 5 crew · 6 compose+UI | ⚫ not started |
