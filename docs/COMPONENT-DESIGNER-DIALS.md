@@ -358,6 +358,21 @@ The Death Star is the payoff: you can *dial* a planet-cracker onto any chassis, 
 
 **Reading:** Ballistic is **even more ready than Energy** — the ammo half (the biggest new system a projectile weapon needs) is *already built* (`GroundAmmo`), and velocity/flak/nature all map to the resolver. Three small **wires** (recoil→accuracy, multi-ammo switch, recoilless bleed) and one **deferred** dial (indirect-fire needs LOS + a spotter mechanic first).
 
+**Numbers (calibrated §0e):**
+| Dial | Unit | Range (tech-scaled) | Pins to |
+|------|------|---------------------|---------|
+| **Output (KE = ½mv²)** | J | rifle ~2 kJ → sabot ~2 MJ → railgun ~100 MJ → mass driver 10¹²⁺ J | damage in joules; **velocity dominates (v²)** |
+| **Muzzle velocity** | m/s | howitzer ~300 · cannon ~1500 · railgun 10⁶–10⁷ | dodge (< 10⁷ dodgeable; railgun nears hitscan) |
+| **Caliber / shell mass** | kg | bullet 0.01 · shell 10 · railgun slug 100 · driver round tons | KE + magazine mass |
+| **Rate** | rounds/s | 0.2 (tank) → 20 (autocannon) | firepower + ammo drain |
+| **Magazine** | kg (Σ shell mass) | the ammo cascade (`GroundAmmo.MaxAmmo_kg`) | chassis-mass forcing + runs-dry |
+| **Recoil** | N·s (= m×v) | accuracy penalty = recoil ÷ chassis-mass | big gun on small hull can't aim |
+| **Nature** | kinetic | shield soak **1.0** (shields wall kinetic); armour is the counter (penetration) | `ShieldSoakVsKinetic 1.0` |
+| **Power** (railgun only) | W | KE × rate ÷ eff (hyper-velocity → huge) | dual-supply cascade |
+| **Range** | m | autocannon ~50 km → railgun 500 km | range ladder |
+
+**Sanity-check:** a **2 MJ sabot** vs the 500 kJ frigate, kinetic + penetration beating armour, unshielded: 2 MJ × 0.1 = 200 kJ/salvo → **~3 salvos.** But vs a **shielded** hull, kinetic is *fully* soaked (1.0) → walled until the shield drops. So Ballistic is the **mirror of Energy**: armour-cracker but shield-walled, where Energy is shield-bleeding but armour-scattered. The matchup is symmetric — neither dominates.
+
 **Preset coordinates — the span, each a distinct point:**
 | Weapon | Projectile | Velocity | Rate | The trade it chose |
 |--------|-----------|----------|------|--------------------|
@@ -441,6 +456,18 @@ Same lesson as the Death Star, kinetic flavour: the **mass driver** confines its
 | **Parry RANGED (the lightsaber deflect)** | ⏳ **defer** | needs the **effect-bus + a skill/People trait** (H4/H7) — the saber is gear, the deflect is the *being* |
 
 **Reading:** melee is **strongly modellable** — the resolver *already* treats melee as undodgeable (`GroundDamageMatrix`), and the closing/range model already governs "you must reach the enemy." A few **wires** (strength-scaling, parry-melee, grapple-capture, lunge), and only the **lightsaber's ranged-deflect** is deferred to the effect-bus/People-trait work.
+
+**Numbers (calibrated §0e):**
+| Dial | Unit | Range | Pins to |
+|------|------|-------|---------|
+| **Damage / strike** | J (× strength) | knife ~2 kJ → power fist ~500 kJ → chainfist ~10 MJ → ram = ½mv² of the hull (GJ⁺) | joules; scales with chassis strength + Enhancers |
+| **Strike rate** | strikes/s | 0.5 (heavy) → 5 (flurry) | firepower |
+| **Reach** | m | 0 (fist) → ~5 (lance); ≈ 1 hex | must close (the range/closing model) |
+| **Nature** | physical | **undodgeable** (Matchup ×1 vs evasion); shield soak **1.0** (shields wall melee) | `GroundDamageMatrix` (melee ignores dodge) |
+| **Power** (energy blade) | W | small (powered) / 0 (unpowered) | supply |
+| **Strength mult** | × | 1 (baseline) → high (Titan / power-armour) | chassis + Enhancers |
+
+**Sanity-check:** a **500 kJ power-fist** strike, undodgeable, unshielded: 500 kJ × 0.1 = 50 kJ/salvo → **~10 strikes** to fell the 500 kJ frigate — *once it has closed to range 0.* Against a **0.9-evasion dodger** a gun lands ×0.1 but the fist lands ×1 → melee is **10× better vs dodgers**; against a **shield** it's soaked 1.0 → walled. So melee is the **anti-dodger, shield-walled, contact-gated** corner — devastating if it arrives, useless if it can't.
 
 **Preset coordinates — the span:**
 | Weapon | Reach | Mode | Power | The trade it chose |
@@ -532,6 +559,20 @@ The melee lesson: it's the one door where the forcing isn't tonnage but **space*
 
 **Reading:** Guided is **the most-already-built weapon door** — Pulsar's ordnance system is real and functional (design a missile, launch it, it flies and impacts), and the projectile is *already* a mini-assembly. The saturation-vs-PD dynamic maps to the flak model. Wires: interception timing, drone recovery. Only **seeker jamming** waits — on the EW door.
 
+**Numbers (calibrated §0e — anchored to the live missile stubs):**
+| Dial | Unit | Range | Pins to |
+|------|------|-------|---------|
+| **Warhead output** | J | ASM ~5 MJ → torpedo ~1 GJ → nuke 10¹²⁺ J → MIRV = N×small | joules (`MissileLauncherFirepowerStub 100 kJ` → GJ kinetic on impact) |
+| **Projectile velocity** | m/s | sprint ~10⁴ · cruise slower (`MissileVelocityStub 5000`) | below beam threshold → **interceptable/dodgeable** (the point) |
+| **Range** | m | 1000 km (`MissileRange_m`) → strategic farther | range ladder |
+| **Missile mass** | kg | 100s kg → tons | magazine cascade + fewer-carried tradeoff |
+| **Salvo size** | count | alpha **> 50** saturates PD | `SaturationReference 50` |
+| **Cost / shot** | materials + build-time | each a built consumable | the **economy** forcing (not chassis) |
+| **Seeker tracking** | 0–1 | 0.9 homing (`MissileTrackingStub`) · 0 unguided | vs evasion; jammable (EW) |
+| **Warhead nature** | HE 0.75 · kinetic 1.0 · nuke exotic-ish | shield soak | `ShieldSoakVsExplosive 0.75` |
+
+**Sanity-check:** an **ASM ~5 MJ warhead** reaching the 500 kJ frigate: 5 MJ × 0.1 = 500 kJ → **one-shots it** (matches the live "missiles one-shot" calibration note). *But* it can be **intercepted in flight** (flak saturation vs the missile's own evasion), it **costs** a whole built missile, and it **arrives late** (flight time). So Guided is balanced **not by the joule scale but by point-defense + economy + delay** — huge alpha you have to *afford, protect, and time.*
+
 **Preset coordinates — the span:**
 | Weapon | Warhead | Engine | Seeker | The trade it chose |
 |--------|---------|--------|--------|--------------------|
@@ -614,6 +655,20 @@ Exotic's gate is rarely mass — it's **research** (deep tech to unlock the effe
 | **Temporal** | ⏳ **defer** | needs an **action-rate debuff** — new |
 
 **Reading:** Exotic is **honestly the least-ready door** — several effects need a new mechanic first (a status/debuff system, resource-transfer, the grab effect, action-rate dilation). That is the *right* answer: Exotic is the late-game frontier, and the modellability test turns each effect into an explicit build item, gated behind the **effect bus**. Exotic is future-proof *by design* — new effects slot in without new doors.
+
+**Numbers (calibrated §0e — most finalize *with* their prerequisite mechanic; the framework is set now):**
+| Effect | Magnitude unit | Anchor / note |
+|--------|----------------|---------------|
+| **Annihilation** | J, **Exotic nature (shield soak 0.0)** + bypasses armour | the one pure-damage exotic — anchors cleanly to the joule scale, ignores all defence (`ShieldSoakVsExotic 0.0`) |
+| **Gravitic** | N (force) · m (pull/pin) | vs target mass × engine thrust — pins if force > thrust (deferred: grab effect) |
+| **Disable / EMP** | seconds (subsystem offline) | deferred: needs the status/debuff mechanic |
+| **Drain** | J/s transferred | deferred: resource-transfer mechanic |
+| **Temporal** | × action-rate (0–1) | deferred: action-rate debuff |
+| **Conversion** | probability 0–1 per hit | reuses the capture primitive |
+| **Plague** | crew-kills/s + spread rate | partial: colony/crew attrition exists |
+| **Gate (all exotics)** | tech-level (very high) + instability = backlash self-damage (J) | tech is the primary gate, not mass |
+
+**Sanity-check (the one damage-exotic):** an **annihilation beam ~2 MJ, Exotic nature** vs the 500 kJ frigate — shields soak **0.0** and armour is bypassed, so it lands the full 2 MJ × 0.1 = **200 kJ/salvo → ~3 salvos, and *nothing* the target builds reduces it.** That's why Exotic is gated by **ruinous tech + instability** rather than the matchup: it's the "no counter, so make it rare and costly" corner. The effect-only exotics (EMP/drain/grab/temporal) get their numbers when their mechanic lands — the calibration *slot* is reserved, not filled.
 
 **Preset coordinates — the span:**
 | Weapon | Effect | Delivery | The trade it chose |
