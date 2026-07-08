@@ -681,5 +681,21 @@
       "Name": "Ammo Magazine",
       "TemplateId": "ground-magazine"
     }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-ground-locomotion",
+      "Name": "Locomotion Drive",
+      "TemplateId": "ground-locomotion"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-ground-radar",
+      "Name": "Ground Radar",
+      "TemplateId": "ground-radar"
+    }
   }
 ]

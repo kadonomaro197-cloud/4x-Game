@@ -2266,5 +2266,110 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "ground-locomotion",
+      "Name": "Locomotion Drive",
+      "Formulas": {
+        "Description": "A DESIGNABLE drive you mount on a ground unit - tweak the dials to build any locomotion for any environment (a cheap fast wheel for open plains, an all-terrain track for the mountains, an amphibious skimmer for a water world). Foot is the 1.0 baseline; higher speed, better rough-terrain handling, and amphibious ability each add mass and cost.",
+        "Mass": "100 * PropertyValue('SpeedFactor') * (1 + PropertyValue('RoughHandling')) * (1 + PropertyValue('Amphibious'))",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "0.5",
+        "CrewReq": "2",
+        "ResearchCost": "0",
+        "CreditCost": "[Mass] * 0.2",
+        "BuildPointCost": "[Mass] * 2"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.5",
+        "aluminium": "[Mass] * 0.3"
+      },
+      "ComponentType": "Engine",
+      "MountType": "GroundUnit",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "SpeedFactor",
+          "DescriptionFormula": "'March-speed multiplier (1.0 = Foot baseline; higher = faster = pricier and heavier). The BENEFIT dial.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5",
+          "MinFormula": "1",
+          "StepFormula": "0.1",
+          "PropertyFormula": "1.5"
+        },
+        {
+          "Name": "RoughHandling",
+          "DescriptionFormula": "'Rough-terrain handling, 0..1 (0 = wheels, slowed hard in rough; 1 = tracks/walker, crosses broken ground evenly). Costs more the higher it is. The all-terrain dial.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1",
+          "MinFormula": "0",
+          "StepFormula": "0.05",
+          "PropertyFormula": "0.5"
+        },
+        {
+          "Name": "Amphibious",
+          "DescriptionFormula": "'Can it cross water? 0 = no, 1 = yes. Roughly doubles the mass/cost - the water-world option.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1",
+          "MinFormula": "0",
+          "StepFormula": "1",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "groundLocomotionArgs",
+          "DescriptionFormula": "'double speedFactor, double roughHandling, double amphibious'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('SpeedFactor'), PropertyValue('RoughHandling'), PropertyValue('Amphibious'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundLocomotionAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "ground-radar",
+      "Name": "Ground Radar",
+      "Formulas": {
+        "Description": "A ground radar you mount on a unit to REVEAL THE MAP. Each tick the carrying unit sees and surveys the ground within its detection range - the way to explore a fogged world without waiting for a geo-survey. Longer range sees farther but costs more mass. Mount it on a fast, low-support chassis to make a scout.",
+        "Mass": "PropertyValue('Range') * 0.5",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "0.5",
+        "CrewReq": "3",
+        "ResearchCost": "0",
+        "CreditCost": "[Mass] * 0.3",
+        "BuildPointCost": "[Mass] * 2"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.3",
+        "electronics": "[Mass] * 0.2"
+      },
+      "ComponentType": "Sensor",
+      "MountType": "GroundUnit",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "Range",
+          "Units": "km",
+          "DescriptionFormula": "'Detection range in real kilometres - how far the radar sees on the ground (translated to hexes on the planet map, since a hex is bigger on Earth than on Io).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2000",
+          "MinFormula": "50",
+          "StepFormula": "10",
+          "PropertyFormula": "300"
+        },
+        {
+          "Name": "groundRadarArgs",
+          "DescriptionFormula": "'double range_km'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Range'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundSensorAtb"
+        }
+      ]
+    }
   }
 ]
