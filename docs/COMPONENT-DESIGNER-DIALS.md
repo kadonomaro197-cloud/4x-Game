@@ -67,6 +67,45 @@ The yardstick for **weapon** dials is the aggregate combat resolver: `ShipCombat
 
 **This test also drives the build order:** a ⏳ dial's prerequisite mechanic is a work item that must land *before* the dial. It's how the designer stays honest — every knob is wired to a consequence.
 
+### 0e. The number model — calibration anchor (battles auto-resolve on THESE numbers)
+Battles auto-resolve on `ShipCombatValueDB` (firepower vs toughness) through `CombatEngagement` / `AutoResolve`. **We do not invent a number scale — we express every dial in the scale the resolver already reads.** The anchor, from the live code:
+
+**One currency: ENERGY (joules) — for damage AND hit-points.**
+| Anchor | Value | Source |
+|--------|-------|--------|
+| A component's hit-points | **100 kJ** (`ComponentHitPoints_J = 100_000`) | `ShipCombatValueDB.cs:81` |
+| Armour hit-points | `thickness × 100 kJ` (`ArmorHitPointsPerThickness_J`) | `:84` |
+| **Toughness** of a unit | Σ component-HP + armour, in joules | ShipCombatValueDB |
+| **Firepower** of a unit | Σ weapon salvo-energy (J) × hit-fraction × matchup | ShipCombatValueDB |
+| **Combat-pace dial** | `SalvoDamageScale = 0.1` — only 10% of a salvo's energy counts toward kills | `CombatEngagement.cs:94` |
+
+**The balance constants are already in the code — the dials feed *these*, they don't replace them:**
+| Constant | Value | Role |
+|----------|-------|------|
+| `EvasionCap` | 0.9–0.95 | most a dodger avoids (nothing untouchable) |
+| Shield reduction | `Shield/(Shield+150)`, cap 0.75 | innate % soak (`ShieldRefK=150`) |
+| Shield-vs-nature | Kinetic **1.0** · Explosive 0.75 · Energy **0.5** · Exotic **0.0** | the nature matchup (`ShieldSoakVsX`) |
+| Armour soak | **1.5 / point, flat, per source**, floored at 0.1 | swarm-bounces / alpha-punches (`ArmourSoakPerPoint`) |
+| `SaturationReference` | 50 | saturation at/above this floors dodge (flak) |
+| `BeamVelocityThreshold` | 10^7 m/s | at/above = hitscan (undodgeable); below = dodgeable |
+| Range ladder | flak 50 km · disruptor 400 km · railgun 500 km · missile 1000 km · engagement bubble 1 Gm | the reference envelope |
+
+**The scale ladder (orders of magnitude by chassis tier — all joules):**
+| Tier | Damage / HP range | e.g. |
+|------|-------------------|------|
+| Personnel | ~10³–10⁵ J (kJ) | rifle shot, a soldier |
+| Vehicle | ~10⁵–10⁷ J | tank gun, a tank |
+| Hull (ship) | ~10⁶–10⁹ J (MJ–GJ) | beam, missile, a warship |
+| Structure / Mega | ~10⁹–10¹⁵⁺ J | station, a Death-Star beam |
+Tiers overlap by ~an order of magnitude; **tech multiplies the achievable max** (multiplicative growth, `UNIVERSAL-ASSEMBLY-DESIGN.md`; `TechData` formulas like beam-range `10000 × 2^level`).
+
+**How a dial becomes a number, and how the forcing emerges:**
+1. A dial sets a physical quantity in the anchor units (output in J, velocity in m/s vs the 10⁷ threshold, saturation vs 50, range in m, nature → the soak row).
+2. `Mass = f(those quantities, tech)` — output/rate scale mass; **this is the cascade** (bigger number → bigger mass → bigger chassis). Already how Pulsar computes `Mass` (the NCalc formulas).
+3. The resolver combines firepower vs toughness through the matchup constants above. **Balance is holistic because every weapon lands on the same joule scale and passes through the same matchup** — a build is strong only where the matchup favours it (energy vs unshielded, kinetic vs shielded, saturation vs dodgers, alpha vs armour). *We inherit the balance; we don't re-derive it.*
+
+**Calibration method going forward:** for each door, give every dial its **unit + range + the anchor it pins to**, then a **numeric preset table**, then sanity-check one exchange through the resolver (does a reference weapon kill a reference hull in a sane number of salvos?).
+
 ---
 
 ## §1 — Weapons
@@ -200,6 +239,21 @@ The five doors differ in **how the hit is delivered and what it beats** (the nat
 | **Medium performance** | ⏳ **defer** | needs a **combat-environment modifier** (space / atmosphere / water) — space combat doesn't tag a medium yet |
 
 **Reading of the audit:** the Energy door is **overwhelmingly modellable today** — the aggregate resolver already speaks in nature × delivery × saturation × tracking × armour/shield, which is most of these dials. Four need a small **wire** to an adjacent system that already exists. Only **three** must **wait on a prerequisite mechanic** (adaptive shields, a combat-medium modifier, and finer combat timing) — and those three become explicit build items *before* their dials ship. No dead knobs.
+
+**Numbers (calibrated to §0e — units, ranges, and the anchor each pins to):**
+| Dial | Unit | Range (tech-scaled max) | Pins to |
+|------|------|--------------------------|---------|
+| **Output** | J / shot | ~1 kJ (lazpistol) → 10¹⁵⁺ J (Death Star) | component HP = 100 kJ (so 100 kJ ≈ one component/shot) |
+| **Rate** | shots/s | 0.001 (charge siege) → ~10 (repeater) | firepower = output × rate |
+| **Delivery (velocity)** | m/s | bolt 10⁴–10⁶ · beam ≥ **10⁷** (hitscan) · light 3×10⁸ | `BeamVelocityThreshold 10⁷` → dodge on/off |
+| **Tracking** | 0–1 | 0.1 (dumb) → 0.9 (`MissileTrackingStub`) | vs `EvasionCap 0.9` |
+| **Nature** | enum | Thermal/Particle/Plasma = **Energy soak 0.5** · Ion/Graviton = **Exotic 0.0** (bypass) | `ShieldSoakVsX` |
+| **Saturation (scatter/focus)** | pellets·rate | 1 (lance) → ≥ **50** (flak floors dodge) | `SaturationReference 50` |
+| **Range** | m | 500 m (pistol) → 400 km (disruptor) → farther w/ tech | the range ladder |
+| **Power draw** (derived) | W | output × rate ÷ efficiency | the generator-mass cascade |
+| **Mass** (derived) | kg | scales with output × rate × tech | the chassis-budget forcing |
+
+**Sanity-check one exchange (does it resolve sanely?):** a **1 MJ hitscan beam** (velocity ≥ 10⁷ → undodgeable) vs a **5-component frigate** (toughness 5 × 100 kJ = 500 kJ), thermal nature vs an unshielded hull (soak 1.0): landed = 1 MJ × `SalvoDamageScale 0.1` = **100 kJ/salvo** → **~5 salvos to kill**. Against a *shielded* hull the same beam is halved (Energy soak 0.5) → ~10 salvos; a *kinetic* railgun of equal energy is soaked 1.0 → ~5 — so nature flips the fight, exactly as the matchup intends. This lands in the same ballpark as the measured `CombatStressLab` battles (a 50v50 mirror ≈ 38 salvos), so the calibration is consistent with the live resolver.
 
 **Physical demands (what the dials cost — throttles and mass, never a rulebook, per §0b):**
 - **Power draw** = output × rate. Not "required" — *unmet → the beam auto-throttles to available power* (a Death-Star dial on a frigate fires like a pop-gun). The player adds a generator because the readout shows the shortfall, then finds the generator's **mass** funnels the chassis size.
