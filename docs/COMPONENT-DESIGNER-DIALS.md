@@ -12,8 +12,8 @@
 | 1 | Weapons | **Energy** | 🔒 **LOCKED §1.1** |
 | 2 | Weapons | **Ballistic** | 🔒 **LOCKED §1.2** |
 | 3 | Weapons | **Melee** | 🔒 **LOCKED §1.3** |
-| 4 | Weapons | **Guided** | 🟡 **proposed §1.4** (awaiting lock) |
-| 5 | Weapons | Exotic | ⚫ pending |
+| 4 | Weapons | **Guided** | 🔒 **LOCKED §1.4** |
+| 5 | Weapons | **Exotic** | 🟡 **proposed §1.5** (awaiting lock) |
 | 6–37 | Propulsion · Sensors · Power · Defense · Enhancers · Industrial · Logistical · Civic · Command · Chassis | (all doors) | ⚫ pending |
 
 ---
@@ -492,4 +492,91 @@ The Guided lesson: it's the door that recurses (a missile is a mini-unit) and th
 
 ---
 
-*(Exotic — and the other 32 doors — pending, one lock at a time.)*
+### 1.5 Weapons ▸ EXOTIC  🟡 *proposed*
+*Everything that doesn't obey the other four families' physics: gravitic, EMP, temporal, bio, warp-disruption, mind-control, annihilation. The key reframe: **Exotic is not a weapon type — it's the extensibility slot.** The other four doors deal conventional **damage**; an Exotic weapon delivers an **effect from the shared EFFECT BUS** (`COMPONENT-DESIGNER-STRESS-TEST.md` §2) — disable, drain, grab, capture, phase, kill-crew — usually *instead of* HP damage. Its dials **compose an effect**, so adding a new sci-fi weapon later = adding an effect to the bus and exposing it here, **never a new door.***
+
+**The Exotic identity (the standing trade):** hyper-specialist and late-game. An Exotic weapon is typically **"I win vs X, useless vs Y"** — the most extreme anti-dominance in the game — gated by heavy **tech**, and usually carrying a **cost/instability** or **political** price. It's the end-game frontier, and (honestly) the **least-built** door — most of its effects are ⏳ *build-the-mechanic-first*.
+
+**A. Effect — what it does (drawn from the effect bus; this is the core dial)**
+| Effect | What it does | Countered by |
+|--------|-------------|--------------|
+| **Disable / EMP** | shuts a subsystem (power/shields/sensors) down for a duration | Defense ▸ Hardening |
+| **Drain** | steals energy/shields/ammo → to you | insulation/shielding |
+| **Gravitic / tractor** | grab, pin, pull, crush — move or immobilize a target | mass + engine thrust to break free |
+| **Warp-disruption (interdictor)** | prevents FTL/jump — pins a fleet in realspace (can't flee) | a counter-field / anchor |
+| **Temporal** | slows the target's action-rate (time dilation) | temporal shielding |
+| **Conversion / subversion** | flips the target to your side (assimilate, mind-control) | counter-intel / firewalls |
+| **Bio / plague** | kills crew/population, spreads, leaves the hull intact | quarantine / sealed environments |
+| **Annihilation** | deletes matter — bypasses armour AND shields | *(nothing — but extreme cost)* |
+
+**B. Delivery** *(the effect is portable — it can ride other doors' delivery)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Beam / field (direct)** | precise, immediate | LOS + range-limited |
+| **Area / burst** | hits a whole zone | **indiscriminate** — friendly-fire risk |
+| **Loaded on a Guided projectile** | a plague-missile, an EMP-torpedo — reach + fire-and-forget | interceptable; the effect bus makes effects portable across delivery |
+| **Persistent zone** | a lingering field (grav-well, temporal minefield) | static, telegraphed |
+
+**C. Persistence**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Pulse** | one-shot | wears off — must re-apply |
+| **Sustained** | holds while maintained | ties up the weapon + power |
+| **Permanent** | irreversible (annihilate, convert) | huge cost |
+
+**D. Instability — the exotic tax**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Stable** | reliable | weaker effect |
+| **Unstable / overload** | devastating | **backlash** — self-damage, AoE-on-self, or one-use |
+
+**E. Selectivity — the matchup skew (Exotic's signature)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Broad** | affects most targets | mild effect |
+| **Specialist** | *devastating* vs its type (anti-machine / anti-organic / anti-shield / anti-FTL) | **no effect at all** vs everything else |
+
+**F. Escalation — the political price** *(some exotics have consequences past the battle)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Conventional** | no fallout | — |
+| **Taboo (bio / temporal / annihilation)** | wins the fight | **diplomatic blowback** — using it turns others against you (a casus belli), via the Diplomacy/Government systems |
+
+**Physical demands (the forcing — tech + instability + politics, not tonnage):**
+Exotic's gate is rarely mass — it's **research** (deep tech to unlock the effect), **instability** (backlash risk), and sometimes **diplomatic cost** (taboo weapons). A few (annihilation, gravitic) still carry enormous power/mass demands that cascade the chassis like Energy.
+
+**Modellability audit (§0d) — Exotic is where the deferrals live, and that's correct:**
+| Effect | Verdict | Prerequisite / how |
+|--------|---------|--------------------|
+| Warp-disruption (interdictor) | ◐ **wire** | Pulsar has jump/warp mechanics (`JumpPoints`) — hook a jump-inhibit field |
+| Conversion / subversion | ◐ **wire** | reuse the **capture** primitive (owner-flip, H9) |
+| Bio / plague | ◐ **wire** | crew/population attrition **exists** (colony damage, morale); the *spread* is new |
+| Annihilation | ◐ **wire** | a bypass-all damage nature (like Energy's graviton) |
+| Escalation / taboo | ◐ **wire** | Diplomacy exists (`DiplomacyDB`, casus belli) — hook "used a WMD → relation hit" |
+| Instability / backlash | ◐ **wire** | a self-damage rule (like overcharge) |
+| **Disable / EMP** | ⏳ **defer** | needs a **temporary-subsystem-debuff (status)** system — new |
+| **Drain** | ⏳ **defer** | needs **resource-transfer-between-units** — new |
+| **Gravitic / tractor** | ⏳ **defer** | needs the **grab/push effect** (move another unit) — the effect bus, new |
+| **Temporal** | ⏳ **defer** | needs an **action-rate debuff** — new |
+
+**Reading:** Exotic is **honestly the least-ready door** — several effects need a new mechanic first (a status/debuff system, resource-transfer, the grab effect, action-rate dilation). That is the *right* answer: Exotic is the late-game frontier, and the modellability test turns each effect into an explicit build item, gated behind the **effect bus**. Exotic is future-proof *by design* — new effects slot in without new doors.
+
+**Preset coordinates — the span:**
+| Weapon | Effect | Delivery | The trade it chose |
+|--------|--------|----------|--------------------|
+| **Tractor beam** | gravitic grab | beam | pins/pulls a target; no damage, needs LOS + power |
+| **EMP cannon** | disable | burst | shuts down systems; nothing vs hardened, wears off |
+| **Interdictor** | warp-disruption | persistent zone | stops the enemy fleeing; static + telegraphed |
+| **Stasis projector** | temporal | beam | freezes a threat; extreme tech, sustained |
+| **Plague warhead** | bio | Guided projectile | kills crews, takes the hull intact; **taboo** (diplomatic blowback) |
+| **Mind-control ray** | conversion | beam | steals a unit; countered by counter-intel |
+| **Disintegrator** | annihilation | beam | deletes matter, bypasses all defense; ruinous cost + instability |
+
+The Exotic lesson: it's the door that **grows with the game** — every deferred effect is a future mechanic, and once the effect bus exists, "invent a weird weapon" becomes "pick an effect + a delivery + a cost," with no new category ever needed.
+
+---
+
+## ✅ Weapons category — COMPLETE (5/5 doors locked/proposed)
+Energy 🔒 · Ballistic 🔒 · Melee 🔒 · Guided 🔒 · Exotic 🟡. **The pattern for the other 32 doors is now set:** for each door — (1) dials with *every option justified* (anti-dominance), (2) the *physical forcing* (what number funnels the build — power/ammo/recoil/reach/economy/tech), (3) the *modellability audit* (§0d — Modelled / Wire / Defer), (4) a *preset table* proving the franchise span. The four concrete doors are grounded in real physics + the existing combat resolver; the fifth (Exotic) is the open extensibility slot that grows with the effect bus.
+
+*(Propulsion, Sensors, Power, Defense, Enhancers, Industrial, Logistical, Civic, Command, Chassis — pending, one lock at a time.)*
