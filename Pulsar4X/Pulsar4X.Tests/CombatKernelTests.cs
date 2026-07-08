@@ -38,11 +38,15 @@ namespace Pulsar4X.Tests
             Assert.That(CombatKernel.HitFraction(Slug(100), evasion: 0.5), Is.EqualTo(0.75).Within(1e-9),
                 "a finite-velocity slug is dodged by an evasive target");
 
-            // A perfect dodger still eats the saturation floor (MinLandedFraction) from a low-saturation slug.
-            double floored = CombatKernel.HitFraction(Slug(100), evasion: 1.0);
+            // A perfect dodger vs a genuinely SLOW shot (velocity ≪ VelocityReference, so velocityTerm→~0 and
+            // dodgeChance→~1) is floored at MinLandedFraction by the weapon's own saturation floor — enough volume
+            // still lands. (A fast 1e6 m/s slug has velocityTerm 0.5, so a perfect dodger only reaches hit 0.5 and
+            // the floor never binds — the arithmetic that makes the floor matter needs a slow weapon.)
+            var slowShot = new WeaponProfile(100, 1.0, 0.0, 1.0, 0, WeaponNature.Kinetic, WeaponDelivery.Slug);
+            double floored = CombatKernel.HitFraction(slowShot, evasion: 1.0);
             Assert.That(floored, Is.EqualTo(CombatKernel.MinLandedFraction).Within(1e-9),
                 "enough volume lands even on a perfect dodger");
-            Log($"beam=1.0  slug@0.5={CombatKernel.HitFraction(Slug(100), 0.5)}  slug@1.0={floored}");
+            Log($"beam=1.0  slug@0.5={CombatKernel.HitFraction(Slug(100), 0.5)}  slowShot@1.0={floored}");
         }
 
         [Test]
