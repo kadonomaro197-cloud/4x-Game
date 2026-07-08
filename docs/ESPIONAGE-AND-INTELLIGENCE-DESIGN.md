@@ -132,6 +132,31 @@ The counterparty is inside the MVP, not after it:
 
 Still the **second** leader vertical slice (after the Governor), and still gated on the leader pipeline + cutting `SignalQuality`. But its worth is now correctly tied to the NPC being a live opponent — which is the point.
 
+## Covert weapons — the bioweapon flagship (2026-07-07)
+
+A **covert weapon** is a designed component like any other (cradle-to-grave, built in the weapon designer), but its "combat" happens in the **population / espionage / influence** systems, not the fleet auto-resolve. This class is espionage's WMD tier. The flagship is the **bioweapon**; the class also holds cyber/logic bombs (wreck a rival's networks), assassination toxins/devices (kill a specific leader → rung 6), memetic/propaganda payloads (an influence weapon → spread unrest), and sabotage charges.
+
+**Why it belongs here and not in the weapon triangle:** a covert weapon is delivered and defended-against through espionage/influence, and its effect lands on *population and legitimacy*, not hulls. It is the intersection weapon — deliberately requiring a *multitude of systems* to pull off.
+
+### The bioweapon cradle-to-grave (the connect showcase)
+
+| Stage | What happens | System it lights up |
+|-------|-------------|---------------------|
+| **1. Target research** | Understand a *specific species'* biology. Two acquisition routes: **abduction** (fast — an espionage op to grab specimens, risky) or **study-at-a-distance** (slow, safe, passive observation) | Xenobiology → **fills the empty Biology & Genetics tech category**; ties to the native-biosphere field-site (`docs/EXPLORATION-CONTENT-DESIGN.md`) |
+| **2. Design** | The weapon designer, full intricate detail: lethality, contagiousness, incubation, **species-specificity** (a targeted strain vs broad-spectrum), persistence, detectability | The universal-assembly weapon designer |
+| **3. Build** | From bio-materials / a bio-lab | Industry / materials |
+| **4. Deliver** | **(a)** a vessel you fly (military / scout / **science** / **trade** — cover matters; a trade/science ship is plausible, a warship screams intent); **(b)** the espionage delivery loop (an agent plants it — the infiltrator mechanic above); **(c)** the **proxy route** — fund or incite a terrorist group / rebellion to deploy it (deniable) | Movement + the spy-delivery loop + the influence/rebellion system |
+| **5. Effect** | Casualties, contamination, morale + legitimacy collapse; can **tip the world into rebellion**; a contagious strain can **spread between worlds** | `DamageProcessor.OnColonyDamage` (built) + rebellion + influence |
+| **6. Grave / blowback** | Detection = a **WMD-scale provocation** (relations crater with *everyone*, casus belli, coalitions form); a contagious weapon can **spread back** to your worlds or neutrals (MAD); the delivery asset is lost | Diplomacy reputation + the mirror |
+
+### Earns its weight (not a "click to genocide" button)
+
+Every stage is a decision that stacks: acquire *fast-and-risky vs slow-and-safe*; design *contagious vs targeted / lethal vs incapacitating*; deliver *by control vs by deniability*; and the **go/no-go** itself. It's expensive and scarce (a whole research→design→build→deliver chain), so it's a **strategic weapon of last resort**, not spam. The **blowback + war-crime reputation** make "should I even build this" the real decision — a villain/desperation path that can turn the galaxy against you. That reputation weight is the balancing force.
+
+### The proxy / terrorist route (generalizes beyond bioweapons)
+
+*Deniable warfare:* rather than deliver it yourself, **fund a rival's rebels, incite a coup, create a terror cell, or arm a secessionist world**, and let *them* act. Ties espionage (funding = a covert action) → the influence pillar (inciting rebellion = the belief-war attack on legitimacy, `docs/INFLUENCE-PILLAR-DESIGN.md`) → the built rebellion system. A proxy war with no fingerprints — and a delivery vector that keeps *your* name off the bioweapon. This is a covert-action-catalog entry in its own right (arm-the-rebels / back-the-coup), not just a bioweapon delivery.
+
 ## Cradle to grave (espionage)
 
 > research **spy tech** → design/build the **gear** (a covert-ops component / an intelligence HQ — the seat that gives intelligence capacity) → recruit/train an **agent** (people, M3) → seat a **Spymaster** delegate or task the agent directly → spend scarce **intelligence capacity** on a **covert op** from the catalog → **roll detection** vs their counter-intel → success raises **intel** or lands the **effect**; caught = the **betrayal penalty** + a **casus belli for them** + the **agent is lost** (captured/killed/turned — the grave rung) → re-research / re-recruit / re-run. Destroy a rival's **intelligence HQ** (sabotage or war) and you blind their spy network — the grave rung wired to the damage system.
