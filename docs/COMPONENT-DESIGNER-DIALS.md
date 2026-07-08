@@ -67,49 +67,99 @@ The five doors differ in **how the hit is delivered and what it beats** (the nat
 ### 1.1 Weapons ▸ ENERGY  🟡 *proposed*
 *Directed energy: light, particle, plasma, ion. Everything from a lazpistol to a Death-Star beam falls out of these dials.*
 
-**Delivery dials (how the energy arrives — the big diversity axis):**
-| Dial | Range of settings | Real effect |
-|------|-------------------|-------------|
-| **Beam ↔ Bolt** | sustained beam · pulsed beam · bolt · burst | **beam ignores dodge; bolt is dodgeable** (sets the evasion matchup) |
-| **Focus** | tight ↔ wide | tight = long-range, single-target, high per-hit; wide = short cone, splits/AoE (the phaser wide-stun, a scatter emitter) |
-| **Charge-up** | instant ↔ long charge | instant = light repeater; long = big alpha (siege beam) — ⛓ a long charge needs a capacitor |
-| **Dwell / sustain** | per-pulse ↔ continuous | continuous beams deal damage over dwell time on target |
+**The anti-dominance rule (the whole point):** every option must **buy** its advantage with a real cost, so no setting is a free win. "A beam can't be dodged" is only balanced because a beam **pays** for it (dwell, range, power). Each dial below lists its options with *why you'd pick it* AND *the catch* — if an option has no catch, it's a bug in the design.
 
-**Matchup dials (what it's good/bad against):**
-| Dial | Settings | Real effect |
-|------|----------|-------------|
-| **Energy nature** | Thermal · Particle · Plasma · **Ion (anti-shield)** · Graviton (exotic) | sets the damage-vs-defense matchup (ion bypasses shields, thermal is mirror-scattered, etc.) |
-| **Penetration ↔ Splash** | pierce ↔ area | armor-piercing single-target vs soft-target/AoE |
+**A. Delivery — how the energy arrives**
+| Option | Why pick it | The catch (why not always) |
+|--------|-------------|----------------------------|
+| **Continuous Beam** | **undodgeable** — hits any target it can track | must **dwell** (damage ramps while locked; a juking target that breaks your track resets it); **short** effective range (beam divergence/bloom); **heavy continuous** power drain while firing |
+| **Pulse** | balanced — partial dodge, decent range, recovers power between pulses | master of nothing; a nimble target still juki some pulses |
+| **Bolt** | **long range** + **power-efficient** (fire-recover, reactor rests) + big **per-shot alpha** (punch-through / first-strike) | **dodgeable** (travel time) — wasted on fast evasive targets |
+| **Scatter / Burst** | many weak packets = **saturation floors dodge** (the energy-flak — anti-fighter/anti-missile) | **short range**, low per-hit, bounces off armor |
 
-**Creative / diversity dials (each still moves a real stat):**
-| Dial | Real effect |
-|------|-------------|
-| **Frequency modulation** | resists **adaptive shields** (the Borg counter, H2b) — costs mass/power |
-| **Overcharge headroom** | dump stored power for a bigger shot at heat/cooldown risk (risk-reward alpha) |
-| **Thermal bloom** | firing spikes your **signature** (Detection/EW) — a stealth build dials this down, trading output |
-| **Medium performance** | atmospheric / underwater scatter — does it work in air/water? (a laser blooms in fog; gates a submarine or atmo energy weapon) |
-| **Cooling need** | sustained rate is throttled by heat unless ◐ cooled |
+*So you pick Bolt over Beam when the enemy is slow (dodge is moot), or you need reach, or you're power-starved, or you want alpha. You pick Beam when hunting fast dodgers up close with power to spare.* Both are non-dominated.
+
+**B. Focus — beam geometry**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Lance (tight)** | max **range** + **penetration**, all energy on one point | single target; misses reward evasion |
+| **Standard** | balanced | — |
+| **Wide cone** | hits an **arc / multiple** targets; the wide-stun / crowd-sweep | **short** range, low per-target damage |
+
+**C. Charge behavior**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Instant / repeater** | fires now — **responsive**, high rate, **no capacitor needed** | low per-shot alpha |
+| **Capacitor / charge** | huge **alpha** (one-shot kills, first-strike) | wind-up **telegraph** (vulnerable while charging) + ⛓ **requires a capacitor** |
+| **Overload / hold** | the longer you hold, the bigger the dump | risks **burnout** (component HTK) + big signature |
+
+**D. Nature — the energy type (the matchup; this is *what it beats*)**
+| Option | Strong vs | Weak vs / catch |
+|--------|-----------|-----------------|
+| **Thermal (laser)** | cheap, hitscan-fast, high volume; great vs **unshielded** | **mirror/ablative armor scatters it**; blooms in atmosphere |
+| **Particle** | all-rounder; partial shield bleed-through | jack of all trades |
+| **Plasma** | heavy **anti-armor** damage + splash | slow (bolt = dodgeable), heavy, hot |
+| **Ion / Disruptor** | **bypasses/overloads shields** | **wasted vs unshielded** (low HP damage) — a real reason not to default to it |
+| **Graviton / Exotic** | ignores conventional defense | enormous **cost + tech**; overkill vs cheap targets |
+
+**E. Penetration ↔ Splash**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Penetrating** | punches **through armor** into one hard target | wasted on soft/swarm (over-penetrates) |
+| **Splash / AoE** | clears **swarms / soft targets** | **bounces off armor** |
+
+**F. Range profile**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Point-blank** | massive close damage; brawler / PD | falls off fast — useless at standoff |
+| **Balanced** | flexible | peak nowhere |
+| **Standoff / sniper** | out-ranges the enemy (first-shot advantage) | low close-in damage; needs ◐ Fire Control to land |
+
+**G. Frequency modulation** *(anti-adaptation)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Fixed** | cheapest, max output | **adaptive shields learn it** (Borg counter, H2b) |
+| **Modulating** | stays ahead of adaptive defenses | costs output + mass — **wasted vs enemies that don't adapt** (most of them) |
+
+**H. Thermal signature** *(the stealth tradeoff)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Hot / unbaffled** | max output/rate | **firing spikes your signature** — seen from far (Detection/EW) |
+| **Baffled / cool** | ambush-friendly, low emission | lower output/rate |
+
+**I. Cooling**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Uncooled** | lighter, cheaper | sustained rate **throttles** under heat — a burst weapon |
+| **Cooled** | sustains high rate-of-fire | heavier + ◐ requires a cooling system |
+
+**J. Medium performance** *(where it works)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Vacuum-tuned** | best in space | **scatters in atmosphere / water** |
+| **Atmospheric / submersible** | works in air/fog/underwater (a sub's or tank's energy gun) | lower peak range/output |
 
 **Derived stats (computed, shown to the player):**
 `power draw = output × rate ÷ efficiency` · damage/salvo · sustained DPS · dodge-fraction (delivery × tracking) · signature spike (output × thermal-bloom) · mass · cost.
 
 **Dependencies:**
 - ⛓ **Chassis hardpoint** (mount) — universal.
-- ⛓ **Power ≥ draw** — Generation and/or Storage on the same host. *This is the "tank needs power" edge: an Energy weapon cannot exist on a chassis that can't feed it.*
-- ⛓ **Energy Storage (capacitor)** — *only if* charge-up/alpha delivery is dialed up (you must buffer the shot before you can release it).
-- ◐ **Fire Control** (Sensors) — long-range accuracy; without it, hit-chance at range collapses.
-- ◐ **Cooling** (Systems/thermal) — sustained rate; without it, high rate-of-fire overheats and throttles.
+- ⛓ **Power ≥ draw** — Generation and/or Storage on the same host. *The "tank needs power" edge: an Energy weapon cannot exist on a chassis that can't feed it.*
+- ⛓ **Capacitor** — *only if* Charge or Overload is dialed up (you must buffer the shot to release it).
+- ◐ **Fire Control** (Sensors) — long-range accuracy; without it, standoff hit-chance collapses.
+- ◐ **Cooling** (Systems/thermal) — sustained rate; without it, high rate-of-fire throttles.
 
-**Preset coordinates — proof the dials span the franchises:**
-| Weapon | Output | Delivery | Focus | Nature | Notable dial | Dependency bite |
-|--------|--------|----------|-------|--------|--------------|-----------------|
-| **Lazpistol** | tiny | bolt | tight | thermal | stun/kill mode | tiny cell — mounts on Personnel |
-| **Phaser array** | med | continuous beam | adjustable (wide-stun↔tight-kill) | particle | stun/kill + wide-arc | ship reactor |
-| **Turbolaser** | high | bolt | tight | plasma | high penetration | ⛓ big reactor |
-| **Ion / disruptor** | med | bolt/beam | tight | **Ion** | shield-bypass | reactor |
-| **Death-Star beam** | planet-scale | beam | convergent | graviton | very long charge | ⛓ **Mega chassis + huge reactor + capacitor bank** — the deps make it *only* buildable at Mega scale |
+**Preset coordinates — proof the dials span the franchises (each a distinct point in the option space):**
+| Weapon | Delivery | Focus | Charge | Nature | Range | The trade it chose |
+|--------|----------|-------|--------|--------|-------|--------------------|
+| **Lazpistol** | Bolt | Lance | Instant | Thermal | Point-blank | cheap + light (fits Personnel), pays in range/alpha |
+| **Phaser array** | Beam | Wide↔Lance | Instant | Particle | Balanced | undodgeable + stun-mode, pays in reactor draw |
+| **Turbolaser** | Bolt | Lance | Instant | Plasma | Standoff | reach + anti-armor alpha, pays in dodge-ability + ⛓ big reactor |
+| **Ion / disruptor** | Bolt | Standard | Instant | **Ion** | Balanced | ignores shields, **useless vs unshielded** |
+| **Flak-laser (PD)** | Scatter | Wide | Instant | Thermal | Point-blank | floors fighter dodge, pays in range |
+| **Death-Star beam** | Beam | Lance | **Charge** | Graviton | Standoff | plate-cracking alpha, pays in ⛓ **Mega chassis + huge reactor + capacitor** + a long telegraph |
 
-The Death Star is the point: you can *dial* a planet-cracker on any chassis, but the **dependency gate** (power + capacitor + budget) means only a Mega chassis can actually supply it — the design falls out of the dials, the *feasibility* falls out of the graph.
+The Death Star is the payoff: you can *dial* a planet-cracker on any chassis, but the **dependency graph** (power + capacitor + budget) confines it to a Mega chassis — the design falls out of the dials, the *feasibility* out of the graph.
 
 ---
 
