@@ -135,3 +135,17 @@ To make the **➕** dials authentic, the resolver needs exactly this — small, 
 - Because the resolver is an **aggregate salvo engine** (non-positional, non-per-shot-timed, whole-ship casualties), a few dials (arc, charge-telegraph) can't be authentic without changing the resolver's *nature* — those are honestly marked ⚙/drop, not pretended into the salvo math.
 
 **The build order that falls out:** ship the ✅ dials with the doors; land the six §4 extensions (Penetration first — it's the armour half of the matchup) so the ➕ dials go live; schedule the ⚙ mechanics as their own gated slices (they're the same list the effect bus + adaptive-shield work already owns). Calibrate each against the §0e joule scale and sanity-check one exchange, exactly as the Weapons doors already do.
+
+---
+
+## 6. Scale & composition — VERIFIED (any number of ships/soldiers, any combination)
+
+Checked against the code, because the guarantee has to be real, not asserted.
+
+**Ships — VERIFIED ✅.** `StepEngagementGroup` fire-mixes by weapon **class** (≤~6 buckets) and `ApplyCasualties` buckets defenders by combat value `(toughnessMult, evasion, toughness, role)` → cost is **O(buckets), not O(ships)**. Multi-party is native — any number of fleets, either side, fire divided 1/N (firepower conserved). Proven: `CombatPerformanceTests` (200 real warships in ms), `CombatBattleSims` B10 (1 dreadnought vs **1000** gnats ~9 ms), `MultiPartyEngagementTests` (assist / join mid-fight / fire-split). **So a dial that writes a `WeaponProfile` field impacts the resolve identically at any N and any composition** — a 1000-ship bucket resolves exactly as the per-ship math; a mixed fleet is just more class-buckets.
+
+**Soldiers — AUTHENTIC MATH, but a PARALLEL resolver (the honest caveat).** `GroundForcesProcessor.ResolveRegionCombat` reads the **same matchup** (`GroundDamageMatrix.Matchup`/`ArmourSoak`, the triangle, cover/fortification, stance) — so a dial that writes the shared matchup DOES impact ground combat authentically. **But** it is a **separate implementation**, and it is **per-unit pairwise — O(units²) per region, NOT bucketed** (`foreach attacker-faction → foreach defender-faction → foreach unit → foreach reachable target`), over ground-specific stat fields on `GroundUnit` (a parallel to `WeaponProfile`). Consequences: (a) huge battalion counts scale **worse** than ships and have **no perf gauge**; (b) **every new dial term must be built TWICE** (ship `WeaponProfile` + ground `GroundUnit`) until the resolvers merge.
+
+**The prerequisite that makes the guarantee uniform — the resolver MERGE (DECIDED 2026-07-06, `Combat/CLAUDE.md`).** Extract the shared salvo/matchup math onto a neutral **COMBATANT** view that both a ship entity and a soldier present, route both through the ONE bucketed resolver, delete the ground duplicate. After the merge: **one bucketed O(buckets) path for ships AND soldiers**, and every dial term is wired **once**.
+
+> **Recommendation:** land the resolver merge **before (or as the first slice of)** the §4 resolver-extensions — so each dial's resolver term is built once, bucketed, and scales for **both** fleets and battalions. Until then, the "any number, any combination" guarantee is **fully true for ships** and **true-but-un-bucketed-and-duplicated for soldiers.**
