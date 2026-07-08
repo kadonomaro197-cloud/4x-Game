@@ -57,6 +57,16 @@ The *thing* being supplied changes with scale, but the gate is the same:
 - **Personnel:** carry-weight / stamina (a soldier has no reactor; a self-powered sidearm just *weighs* something).
 So "requires power" means **reactor watts** on a tank and **battery/cell + carry-weight** on a trooper — same ⛓ edge, chassis-appropriate currency.
 
+### 0d. The modellability test — the standing gate on EVERY dial
+Before a dial ships, it must answer: **can the sim actually model this decision? If not, what's the prerequisite?** Three verdicts:
+- ✅ **Modelled** — the resolver already reads an equivalent stat. Ship it.
+- ◐ **Wire** — an adjacent system exists; it needs a small hook. Ship it *with* the hook.
+- ⏳ **Needs-mechanic-first** — nothing reads it yet. **Name the prerequisite mechanic and DEFER the dial** until that's built. *Never ship a dead knob* — a dial the sim ignores is exactly the "fidelity nobody acts on" the audit warns against.
+
+The yardstick for **weapon** dials is the aggregate combat resolver: `ShipCombatValueDB` → `WeaponProfile` (**nature × delivery × velocity × tracking × saturation × rate**) resolved through the **dodge / shield / armour matchup** (`GroundDamageMatrix`, `SoakFractionOf`, `ArmourSoak`, the `HitFraction` curve). A weapon dial is ✅ if it maps onto one of those axes. Each category will get its own yardstick (Propulsion → the Newtonian move/closing model; Sensors → the detection math; etc.).
+
+**This test also drives the build order:** a ⏳ dial's prerequisite mechanic is a work item that must land *before* the dial. It's how the designer stays honest — every knob is wired to a consequence.
+
 ---
 
 ## §1 — Weapons
@@ -149,8 +159,47 @@ The five doors differ in **how the hit is delivered and what it beats** (the nat
 | **Vacuum-tuned** | best in space | **scatters in atmosphere / water** |
 | **Atmospheric / submersible** | works in air/fog/underwater (a sub's or tank's energy gun) | lower peak range/output |
 
+**K. Efficiency** *(damage per watt — a supply/mass decision)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **High-efficiency** | less draw → a smaller/lighter generator → lighter build | lower peak output per shot |
+| **Brute-force** | max damage | power-hungry → a bigger generator → heavier build (the mass forcing bites harder) |
+
+**L. Linked fire** *(emitter count — alpha vs coverage)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Linked** | all emitters fire as one → **big combined hit** (beats flat armour) | one shot = one target; a miss wastes all of it |
+| **Independent** | each emitter engages separately → **splits fire** across targets | small per-hit — bounces off armour |
+
+**M. Point-defense capability** *(can it shoot down incoming?)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **PD-capable** | intercepts incoming **missiles / fighters** | needs fast tracking + short range — a compromise vs its anti-ship role |
+| **Anti-ship only** | full output/range vs big targets | helpless against a saturating missile swarm |
+
 **Derived stats (computed, shown to the player):**
 `power draw = output × rate ÷ efficiency` · damage/salvo · sustained DPS · dodge-fraction (delivery × tracking) · signature spike (output × thermal-bloom) · mass · cost.
+
+**Modellability audit (the §0d gate applied — what the resolver actually reads):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| Output · Rate · Tracking | ✅ | firepower / sustained-DPS / hit-fraction in `ShipCombatValueDB` |
+| Delivery (beam/bolt/scatter) | ✅ | `WeaponProfile.Delivery` → the `HitFraction` dodge curve (beam ignores evasion; scatter = saturation floors it) |
+| Nature (thermal/ion/…) | ✅ | shield `SoakFractionOf` + `WeaponNature` matchup (ion = exotic bypass, per `DisruptorWeaponTests`) |
+| Penetration ↔ Splash | ✅ | `ArmourSoak` (flat-per-source — penetration beats it, splash bounces) |
+| Focus · Linked fire | ✅ | saturation + the existing **fire-split** across targets (`MultiPartyEngagement`) |
+| Range profile | ✅ | the weapon-range engagement trigger / closing model |
+| Efficiency | ✅ | scales power draw → feeds the mass-forcing (§0b) |
+| Thermal bloom / signature | ◐ **wire** | EMCON *already* reads `ShotsFiredThisTick` → activity (`EmconActivityProcessor`); the dial just scales that firing-heat term |
+| Cooling / heat | ◐ **wire** | effective rate = f(heat, cooling); the resolver already reads rate |
+| Overcharge / burnout | ◐ **wire** | a self-damage-on-overcharge rule (the damage system already removes components) |
+| Point-defense | ◐ **wire** | intercept incoming ordnance (`MissileImpactProcessor` + the flak anti-missile role exist; needs the PD-targeting hook) |
+| Charge (the damage profile) | ✅ | high-damage / low-effective-rate — the aggregate resolver represents this natively |
+| Charge (the "vulnerable telegraph" window) | ⏳ **defer** | the salvo resolver isn't per-shot-timed; **abstract to hi-dmg/lo-rate for now**, revisit if combat goes finer-grained |
+| **Frequency modulation** | ⏳ **defer** | needs **adaptive shields (H2b)** built first — with no adaptive defense there is nothing to modulate against |
+| **Medium performance** | ⏳ **defer** | needs a **combat-environment modifier** (space / atmosphere / water) — space combat doesn't tag a medium yet |
+
+**Reading of the audit:** the Energy door is **overwhelmingly modellable today** — the aggregate resolver already speaks in nature × delivery × saturation × tracking × armour/shield, which is most of these dials. Four need a small **wire** to an adjacent system that already exists. Only **three** must **wait on a prerequisite mechanic** (adaptive shields, a combat-medium modifier, and finer combat timing) — and those three become explicit build items *before* their dials ship. No dead knobs.
 
 **Physical demands (what the dials cost — throttles and mass, never a rulebook, per §0b):**
 - **Power draw** = output × rate. Not "required" — *unmet → the beam auto-throttles to available power* (a Death-Star dial on a frigate fires like a pop-gun). The player adds a generator because the readout shows the shortfall, then finds the generator's **mass** funnels the chassis size.
