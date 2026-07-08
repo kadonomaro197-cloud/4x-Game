@@ -40,15 +40,47 @@ namespace Pulsar4X.GroundCombat
             try
             {
                 if (GroundUnitEntity.TryGetBacking(body, unit, out var backing)
-                    && backing.TryGetDataBlob<ComponentInstancesDB>(out var cidb)
-                    && cidb.TryGetComponentsByAttribute<GroundChassisAtb>(out var chassis) && chassis.Count > 0)
+                    && backing.TryGetDataBlob<ComponentInstancesDB>(out var cidb))
                 {
-                    var atb = chassis[0].Design?.GetAttribute<GroundChassisAtb>();
-                    if (atb != null) return SpeedMultFor(atb.Locomotion);
+                    // A designed, parametric LOCOMOTION component wins — the player's own drive (best mounted).
+                    if (cidb.TryGetComponentsByAttribute<GroundLocomotionAtb>(out var locos) && locos.Count > 0)
+                    {
+                        double best = 0;
+                        foreach (var l in locos)
+                        {
+                            var la = l.Design?.GetAttribute<GroundLocomotionAtb>();
+                            if (la != null && la.SpeedFactor > best) best = la.SpeedFactor;
+                        }
+                        if (best > 0) return best;
+                    }
+                    // Fallback: the chassis frame's coarse Locomotion enum (slice 4) for units with no locomotion component.
+                    if (cidb.TryGetComponentsByAttribute<GroundChassisAtb>(out var chassis) && chassis.Count > 0)
+                    {
+                        var atb = chassis[0].Design?.GetAttribute<GroundChassisAtb>();
+                        if (atb != null) return SpeedMultFor(atb.Locomotion);
+                    }
                 }
             }
             catch { }
-            return 1.0;
+            return 1.0;   // Foot baseline / no backing
+        }
+
+        /// <summary>The unit's rough-terrain handling (0..1) from its designed locomotion component, or a moderate 0.5
+        /// default if it has none. Consumed by the terrain move-penalty (slice 5b). Never throws.</summary>
+        public static double RoughHandlingForUnit(Entity body, GroundUnit unit)
+        {
+            try
+            {
+                if (GroundUnitEntity.TryGetBacking(body, unit, out var backing)
+                    && backing.TryGetDataBlob<ComponentInstancesDB>(out var cidb)
+                    && cidb.TryGetComponentsByAttribute<GroundLocomotionAtb>(out var locos) && locos.Count > 0)
+                {
+                    var la = locos[0].Design?.GetAttribute<GroundLocomotionAtb>();
+                    if (la != null) return la.RoughHandling;
+                }
+            }
+            catch { }
+            return 0.5;
         }
     }
 }
