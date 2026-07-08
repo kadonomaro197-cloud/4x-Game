@@ -9,8 +9,8 @@
 | # | Category | Door | State |
 |---|----------|------|-------|
 | — | *(framework)* | Universal dials + Emergent-constraint (physical budget) model | 🔒 **LOCKED §0** |
-| 1 | Weapons | **Energy** | 🟡 **proposed §1.1** (awaiting lock) |
-| 2 | Weapons | Ballistic | ⚫ pending |
+| 1 | Weapons | **Energy** | 🔒 **LOCKED §1.1** |
+| 2 | Weapons | **Ballistic** | 🟡 **proposed §1.2** (awaiting lock) |
 | 3 | Weapons | Melee | ⚫ pending |
 | 4 | Weapons | Guided | ⚫ pending |
 | 5 | Weapons | Exotic | ⚫ pending |
@@ -222,4 +222,100 @@ The Death Star is the payoff: you can *dial* a planet-cracker onto any chassis, 
 
 ---
 
-*(Ballistic, Melee, Guided, Exotic — and the other 32 doors — pending, one lock at a time.)*
+### 1.2 Weapons ▸ BALLISTIC  🟡 *proposed*
+*Kinetic projectiles: rifles, autocannons, tank guns, railguns, flak, mass drivers. Same scaffold as Energy, but the physics **forces differently** — the cascade is **ammo mass** (a magazine that runs dry) instead of power draw, and the stability cost is **recoil** instead of heat. Everything from an assault rifle to a planet-bombarding mass driver falls out of these dials.*
+
+**Anti-dominance rule applies** (every option buys its edge with a real cost). And two ballistic-only forcings you'll see throughout:
+- **Ammo mass cascade** — shells have mass; magazine mass = shell-mass × capacity. A high-rate big-bore gun demands a huge magazine → huge mass → a bigger chassis (the ammo twin of Energy's generator-mass cascade). And it **runs dry** → resupply (this is *already built*: `GroundAmmo` — `MaxAmmo_kg`/`CurrentAmmo_kg`/`IsDry`/resupply).
+- **Recoil forcing** — firing shoves the platform; recoil is absorbed by **chassis mass**. A battleship gun on a frigate can't be aimed (or shoves the hull) → another reason big guns funnel to big chassis, by the numbers.
+
+**A. Projectile — what you throw (the core ballistic axis)**
+| Option | Why | The catch |
+|--------|-----|-----------|
+| **Solid slug (kinetic)** | cheap, dense, high **penetration** by pure KE | no splash (over-penetrates soft targets); dodgeable |
+| **Explosive shell (HE)** | **splash/AoE** — clears soft targets & clusters | bounces off heavy armour; heavier per round (magazine fills faster) |
+| **Sabot / AP dart** | **max armour penetration** | wasted on soft/swarm; costly ammo |
+| **Flak / canister (pellets)** | many pellets = **saturation floors dodge** (anti-fighter/missile) | short range, low per-hit, useless vs armour |
+
+**B. Muzzle velocity — the accelerator (ballistic "delivery")**
+| Option | Why | The catch |
+|--------|-----|-----------|
+| **Low (howitzer/mortar)** | lobs heavy shells, **low recoil**, cheap, can arc indirect | slow → very **dodgeable**, short direct range |
+| **High (cannon)** | flatter, longer direct range, more KE | more recoil, barrel wear |
+| **Hyper (railgun/gauss)** | near-hitscan → **hard to dodge**, extreme range + KE | huge recoil + **draws power to accelerate the slug** (this is what naturally makes a railgun "ammo **and** power" — the "Both" supply, emergent from the dial, no special rule) |
+
+**C. Rate / feed**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Single-shot** | max per-shot power, light, sips ammo | slow — misses hurt, bad vs fast targets |
+| **Autocannon (rapid)** | high rate + **suppression/saturation** | **drains the magazine fast** + more recoil + wear |
+
+**D. Caliber / shell mass**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Small** | light ammo (more rounds per magazine-mass), high rate | weak vs armour |
+| **Large** | huge per-hit, anti-armour/capital | heavy ammo (magazine fills fast), slow, big recoil |
+
+**E. Recoil management — the stability cost (ballistic analog of cooling)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Unbraced** | light, cheap | recoil **wrecks accuracy on a light chassis** (penalty scales recoil ÷ chassis-mass); can shove a small unit |
+| **Compensated (brake/dampers)** | stable on lighter platforms | adds mass |
+| **Recoilless** | fire a big gun off a tiny frame | **bleeds muzzle energy** → less range/penetration |
+
+**F. Fuzing (unguided — not the Guided door)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Contact** | full damage on a direct hit | must hit directly |
+| **Proximity (airburst)** | detonates near the target → **floors evasion** without a direct hit (the flak fuze) | needs a sensor fuze (cost); less than a direct-hit's damage |
+| **Delayed/penetrating** | punch in *then* detonate (bunker-buster) | needs the right depth setting; wasted on soft targets |
+
+**G. Ammo loadout — selectable rounds**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Single type** | full magazine of one round, simple | wrong vs off-matchup targets |
+| **Multi-ammo (switchable)** | swap AP/HE/flak to match the target in-fight | splits magazine capacity; a switch costs a reload cycle |
+
+**H. Trajectory**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Direct-fire** | flat, precise, immediate | blocked by terrain/cover |
+| **Indirect (arcing artillery)** | lobs over cover/terrain, hits from beyond line-of-sight | needs a **spotter** for accuracy; slow shells (dodgeable) |
+
+**Physical demands (the forcing — mass + recoil, never a rulebook, per §0b):**
+- **Ammo mass** = shell-mass × capacity → the magazine's mass funnels the chassis size, and the gun **runs dry** → resupply (Logistical). *Already modelled* (`GroundAmmo`).
+- **Recoil** → accuracy penalty = recoil ÷ chassis-mass; big gun on a small hull = can't aim. The chassis mass is the recoil sink → big guns force big chassis.
+- **Power** — *only* if velocity is dialed to hyper (railgun); the power demand appears on its own and cascades the generator mass, exactly as in Energy. This is where a railgun becomes a dual-supply weapon with no authored flag.
+- **Mass** of the gun scales with caliber × velocity.
+
+**Modellability audit (§0d — what the resolver reads):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| Projectile (slug/HE/sabot/flak) | ✅ | `WeaponNature` kinetic + splash/penetration (`ArmourSoak`) + flak saturation (`FlakWeaponTests`) |
+| Muzzle velocity | ✅ | velocity is a `WeaponProfile` axis → dodge-ability (`RailgunWeaponTests`: finite-velocity, dodgeable) |
+| Rate · Caliber | ✅ | firepower / saturation / rate |
+| **Ammo mass / runs-dry** | ✅ | **already built** — `GroundAmmo` (`MaxAmmo_kg`, `IsDry`, resupply) |
+| Fuzing — proximity/airburst | ✅ | saturation-floors-dodge (the flak model) |
+| Power (hyper-velocity) | ✅ | the supply model already rates railgun as ammo+power ("Both") |
+| **Recoil → accuracy** | ◐ **wire** | accuracy = f(recoil ÷ chassis-mass); resolver reads accuracy, the chassis-mass term needs a hook |
+| Multi-ammo switching | ◐ **wire** | swap the active `WeaponProfile` (firing-mode style); resolver reads one profile at a time |
+| Recoilless (energy bleed) | ◐ **wire** | a range/penetration reduction term |
+| **Indirect / arcing + spotter** | ⏳ **defer** | needs **line-of-sight/terrain blocking + a spotter relay**; ground has terrain+hexes (partial), space has no LOS block — build the LOS+spotter mechanic before this dial |
+
+**Reading:** Ballistic is **even more ready than Energy** — the ammo half (the biggest new system a projectile weapon needs) is *already built* (`GroundAmmo`), and velocity/flak/nature all map to the resolver. Three small **wires** (recoil→accuracy, multi-ammo switch, recoilless bleed) and one **deferred** dial (indirect-fire needs LOS + a spotter mechanic first).
+
+**Preset coordinates — the span, each a distinct point:**
+| Weapon | Projectile | Velocity | Rate | The trade it chose |
+|--------|-----------|----------|------|--------------------|
+| **Assault rifle** | small slug | high | rapid | light, sips ammo (fits Personnel); weak vs armour |
+| **Autocannon (PD)** | HE/flak | high | rapid | saturation vs fighters/missiles; short range |
+| **Tank cannon** | sabot/HE | high | single | anti-armour alpha; big recoil → needs a Vehicle to brace |
+| **Railgun** | slug | **hyper** | single/burst | undodgeable + reach; pays in **recoil + power** (dual-supply) |
+| **Howitzer** | large HE | **low, indirect** | single | lobs over cover; ⏳ needs a spotter; slow shells |
+| **Mass driver** | huge slug | hyper | single | planet bombardment; its **shell mass + recoil + power** overflow everything below a Mega chassis |
+
+Same lesson as the Death Star, kinetic flavour: the **mass driver** confines itself to Mega because a planet-cracking slug's mass, magazine, recoil sink, and railgun power simply won't fit smaller — the numbers force it.
+
+---
+
+*(Melee, Guided, Exotic — and the other 32 doors — pending, one lock at a time.)*
