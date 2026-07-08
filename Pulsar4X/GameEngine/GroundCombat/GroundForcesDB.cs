@@ -482,7 +482,8 @@ namespace Pulsar4X.GroundCombat
             if (!regions[unit.RegionIndex].Neighbors.Contains(toRegion)) return false;   // must be adjacent
 
             unit.MovingToRegion = toRegion;
-            unit.TransitSecondsRemaining = regions[unit.RegionIndex].CrossingTimeSeconds;
+            // Speed falls out of the chassis: a faster frame (Tracked/Hover/Walker) crosses in less time (Foot = ×1.0).
+            unit.TransitSecondsRemaining = regions[unit.RegionIndex].CrossingTimeSeconds / GroundMobility.SpeedMultForUnit(body, unit);
             return true;
         }
 
@@ -516,7 +517,7 @@ namespace Pulsar4X.GroundCombat
             // Store deep copies (don't alias the region's live hex objects), and capture the region's per-hex base time.
             unit.HexPath = new List<Pulsar4X.Galaxy.GroundHex>(path.Count);
             foreach (var h in path) unit.HexPath.Add(new Pulsar4X.Galaxy.GroundHex(h));
-            unit.HexStepBaseSeconds = HexPathfinder.PerHexBaseSeconds(region);
+            unit.HexStepBaseSeconds = HexPathfinder.PerHexBaseSeconds(region) / GroundMobility.SpeedMultForUnit(body, unit);
             unit.HexTransitSecondsRemaining = unit.HexStepBaseSeconds * HexPathfinder.HexMoveMult(unit.HexPath[0].Terrain);
             return true;
         }
@@ -546,7 +547,7 @@ namespace Pulsar4X.GroundCombat
 
             unit.GlobalPath = new List<Pulsar4X.Galaxy.GroundHex>(path.Count);
             foreach (var h in path) unit.GlobalPath.Add(new Pulsar4X.Galaxy.GroundHex(h));
-            unit.GlobalStepBaseSeconds = GlobalStepSecondsFor(body, unit.GlobalQ);
+            unit.GlobalStepBaseSeconds = GlobalStepSecondsFor(body, unit.GlobalQ) / GroundMobility.SpeedMultForUnit(body, unit);
             unit.GlobalTransitSecondsRemaining = unit.GlobalStepBaseSeconds * HexPathfinder.HexMoveMult(unit.GlobalPath[0].Terrain);
             return true;
         }
