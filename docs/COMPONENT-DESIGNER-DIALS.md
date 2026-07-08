@@ -11,8 +11,8 @@
 | — | *(framework)* | Universal dials + Emergent-constraint (physical budget) model | 🔒 **LOCKED §0** |
 | 1 | Weapons | **Energy** | 🔒 **LOCKED §1.1** |
 | 2 | Weapons | **Ballistic** | 🔒 **LOCKED §1.2** |
-| 3 | Weapons | **Melee** | 🟡 **proposed §1.3** (awaiting lock) |
-| 4 | Weapons | Guided | ⚫ pending |
+| 3 | Weapons | **Melee** | 🔒 **LOCKED §1.3** |
+| 4 | Weapons | **Guided** | 🟡 **proposed §1.4** (awaiting lock) |
 | 5 | Weapons | Exotic | ⚫ pending |
 | 6–37 | Propulsion · Sensors · Power · Defense · Enhancers · Industrial · Logistical · Civic · Command · Chassis | (all doors) | ⚫ pending |
 
@@ -402,4 +402,94 @@ The melee lesson: it's the one door where the forcing isn't tonnage but **space*
 
 ---
 
-*(Guided, Exotic — and the other 32 doors — pending, one lock at a time.)*
+### 1.4 Weapons ▸ GUIDED  🟡 *proposed*
+*Self-propelled seeking munitions: missiles, torpedoes, drones, guided bombs. The **two-stage** door — you design a **launcher** (mounted on the chassis) AND a **projectile** (a mini-assembly with its own engine, seeker, and warhead that flies to the target and is consumed). This is where the designer **recurses**: a missile is a tiny unit built from the same category doors, at mini-scale.*
+
+**The Guided identity (the standing trade):** enormous **range** + heavy **payload** + **fire-and-forget** — but every shot is a **costly consumable** that **takes time to arrive** and **can be shot down** in flight. So Guided doesn't force a bigger *chassis* so much as a bigger *economy* (keep building and hauling missiles — it ties Weapons to Industrial/Logistical), and it rewards **saturation** (alpha-strike to swamp the enemy's point-defense).
+
+#### Stage 1 — the LAUNCHER (mounted on the host)
+**A. Launch method**
+| Option | Why | The catch |
+|--------|-----|-----------|
+| **Cell / VLS** | protected, reliable, reloads from the magazine | launch rate capped by cell count |
+| **Rail / arm** | fast cheap salvo | exposed, slow reload |
+| **Bay (drone launch)** | launches big **recoverable** projectiles | slow cycle, needs recovery |
+
+**B. Salvo discipline**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Trickle fire** | steady pressure, ammo lasts | PD **picks them off one by one** |
+| **Alpha salvo** | **saturates point-defense** — too many to intercept | empties the magazine; a mis-timed salvo is a huge ammo/cost loss |
+
+**C. Magazine size** — the ammo-mass cascade (like Ballistic): more missiles = more mass = bigger chassis; runs dry → resupply (`GroundAmmo` / ordnance logistics).
+
+#### Stage 2 — the PROJECTILE (a mini-assembly — recurses the whole designer)
+**D. Warhead** *(Weapons-in-miniature — what it delivers on arrival)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **HE / blast** | reliable splash | soaked by armour/shields |
+| **Shaped / AP** | cracks a capital's armour | wasted on soft/swarm |
+| **Kinetic (torpedo)** | mass × velocity, nothing to soak | must actually connect |
+| **Nuclear / antimatter** | fleet-clearing AoE | scarce, costly, **escalatory** (political weight) |
+| **MIRV / submunitions** | splits → saturates PD, hits many | each sub is weak |
+| **Special (EMP / ion / bio)** | disables instead of destroying | situational |
+
+**E. Projectile propulsion** *(its engine → range vs survival)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Sprint (fast, short burn)** | crosses the gap fast → **less time to be intercepted/dodged** | short range |
+| **Cruise (efficient, long burn)** | **strike from beyond return fire** | slow → a big interception/evasion window |
+
+**F. Seeker / guidance** *(its sensor → how well it tracks)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Unguided ballistic** | cheap, **un-jammable** | only hits slow/dumb targets |
+| **Active homing** | fire-and-forget, tracks maneuvering targets | **jammable/spoofable** (EW counter) + a seeker costs mass/money |
+| **Command / wire-guided** | precise, jam-resistant | ties up your fire control; link-range-limited |
+
+**G. Projectile survivability** *(vs point-defense)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Bare** | cheap, small, fast | PD swats it |
+| **Hardened / evasive / stealthed** | survives to reach the target | heavier/costlier → fewer carried |
+
+**H. Reusability** *(where Guided blurs into a carrier)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Expendable (missile)** | high performance, one-way | gone after one shot — a pure consumable |
+| **Recoverable (drone/fighter)** | returns to rearm — amortized, persistent | slow cycle, needs a bay + recovery; a kill is a big loss. *(At the limit this **is** a Fighter — Chassis ▸ Hull + weapons — launched from a carrier bay, H6.)* |
+
+**Physical demands (the forcing — economy + logistics, not chassis tonnage):**
+- **Magazine mass** → finite shots, resupply; the mass cascade (like Ballistic).
+- **Cost per shot** → each missile is a fully-built consumable (materials + build time) → **you cannot spam nukes**; Guided is throttled by your Industrial output, not your reactor. The launcher itself sips power (missiles are self-powered).
+- **Missile mass vs count** → a big long-range nuke = few carried; a small sprint interceptor = many. The projectile's own design trades against how many fit in the magazine.
+
+**Modellability audit (§0d):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| Missile flight / impact | ✅ | **already built** — `OrdnanceDesign`, `MissileLauncherAtb`, `MissileImpactProcessor` (guidance fixed 2026-06-21, `ThrustToTargetCmd`) |
+| Warhead types | ✅ | `OrdnancePayloadAtb` (explosive / shaped / submunitions in `ordnance.json`) |
+| Projectile = mini-assembly (engine/seeker/warhead) | ✅ | `OrdnanceDesign` already assembles the three missile-part templates |
+| Salvo saturates PD · PD interception | ✅ | the flak anti-missile saturation model (`FlakWeaponTests` — "the fighter/missile killer") |
+| Cost-per-shot / build-and-haul | ✅ | ordnance rides the industry rails (`OrdnanceDesign : IConstructableDesign`) |
+| Sprint-vs-cruise (time-to-target window) | ◐ **wire** | the closing/interception timing — missile speed vs PD engagement window |
+| Recoverable drones | ◐ **wire** | launch/recover via the carrier bay (units-as-entities, H6) |
+| **Seeker jamming / spoofing** | ⏳ **defer** | needs the **EW** door built (jam/spoof is itself a new capability) |
+
+**Reading:** Guided is **the most-already-built weapon door** — Pulsar's ordnance system is real and functional (design a missile, launch it, it flies and impacts), and the projectile is *already* a mini-assembly. The saturation-vs-PD dynamic maps to the flak model. Wires: interception timing, drone recovery. Only **seeker jamming** waits — on the EW door.
+
+**Preset coordinates — the span:**
+| Weapon | Warhead | Engine | Seeker | The trade it chose |
+|--------|---------|--------|--------|--------------------|
+| **Anti-ship missile** | shaped | cruise | homing | standoff strike; slow enough to intercept |
+| **Interceptor (PD missile)** | small HE | sprint | homing | kills other missiles/fighters; short range |
+| **Torpedo (photon/proton)** | kinetic/big | short | homing | capital-cracker; must survive to connect |
+| **Nuke / antimatter missile** | nuclear | cruise | homing | fleet-clearing; scarce + escalatory |
+| **MIRV** | submunitions | cruise | homing | swamps PD; weak per sub |
+| **Drone / fighter** | (its own guns) | reusable | its own sensors | persistent, returns to rearm — **it's a Fighter** (carrier link) |
+
+The Guided lesson: it's the door that recurses (a missile is a mini-unit) and the one forced by your **factories**, not your frame — the constraint is how fast you can *build and replace* what you fire.
+
+---
+
+*(Exotic — and the other 32 doors — pending, one lock at a time.)*
