@@ -60,5 +60,25 @@ namespace Pulsar4X.Tests
             Assert.That(GroundMobility.SpeedMultFor(GroundLocomotion.Tracked), Is.GreaterThan(1.0));
             Assert.That(GroundMobility.SpeedMultFor(GroundLocomotion.Walker), Is.GreaterThan(1.0));
         }
+
+        [Test]
+        [Description("TerrainMult (slice 5b): rough-terrain handling is the DIAL — a good drive eases the rough penalty, a wheeled one worsens it, 0.5 is neutral (old behaviour), open ground is never penalised.")]
+        public void TerrainMult_RoughHandling_EasesOrWorsensThePenalty()
+        {
+            // Open ground (baseMult ≤ 1): never penalised, whatever the handling.
+            Assert.That(GroundMobility.TerrainMult(1.0, 0.2), Is.EqualTo(1.0), "open ground: no penalty");
+            Assert.That(GroundMobility.TerrainMult(1.0, 1.0), Is.EqualTo(1.0), "open ground: no penalty even for a great drive");
+
+            // Rough ground (baseMult 2.5): 0.5 handling reproduces the un-tuned behaviour exactly.
+            Assert.That(GroundMobility.TerrainMult(2.5, 0.5), Is.EqualTo(2.5).Within(1e-9), "handling 0.5 is neutral — old ×2.5 penalty");
+
+            // A tracked/walker drive (high handling) EASES the rough penalty; wheels (low) WORSEN it.
+            double tracked = GroundMobility.TerrainMult(2.5, 1.0);
+            double wheeled = GroundMobility.TerrainMult(2.5, 0.0);
+            Assert.That(tracked, Is.LessThan(2.5), "good rough handling eases the penalty");
+            Assert.That(tracked, Is.GreaterThanOrEqualTo(1.0), "but never below open-ground time");
+            Assert.That(wheeled, Is.GreaterThan(2.5), "poor rough handling worsens the penalty");
+            Log($"rough ×2.5 → tracked {tracked:0.00} < neutral 2.50 < wheeled {wheeled:0.00}");
+        }
     }
 }

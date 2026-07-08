@@ -97,7 +97,7 @@ namespace Pulsar4X.GroundCombat
                         unit.HexPath.RemoveAt(0);
                         // Carry the leftover (negative) time into the next step so a fast tick can cross several hexes.
                         unit.HexTransitSecondsRemaining += (unit.HexPath.Count > 0)
-                            ? unit.HexStepBaseSeconds * HexPathfinder.HexMoveMult(unit.HexPath[0].Terrain)
+                            ? GroundMobility.StepSecondsFor(body, unit, unit.HexStepBaseSeconds, unit.HexPath[0].Terrain)
                             : 0.0;
                     }
                     if (unit.HexPath.Count == 0) { unit.HexPath = null; unit.HexTransitSecondsRemaining = 0; }
@@ -114,7 +114,7 @@ namespace Pulsar4X.GroundCombat
                         if (gCols > 0 && gRc > 0) unit.RegionIndex = PlanetGridFactory.RegionOfColumn(step.Q, gCols, gRc);   // band = region
                         unit.GlobalPath.RemoveAt(0);
                         unit.GlobalTransitSecondsRemaining += (unit.GlobalPath.Count > 0)
-                            ? unit.GlobalStepBaseSeconds * HexPathfinder.HexMoveMult(unit.GlobalPath[0].Terrain)
+                            ? GroundMobility.StepSecondsFor(body, unit, unit.GlobalStepBaseSeconds, unit.GlobalPath[0].Terrain)
                             : 0.0;
                     }
                     if (unit.GlobalPath.Count == 0) { unit.GlobalPath = null; unit.GlobalTransitSecondsRemaining = 0; }

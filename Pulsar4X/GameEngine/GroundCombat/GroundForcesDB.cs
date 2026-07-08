@@ -518,7 +518,7 @@ namespace Pulsar4X.GroundCombat
             unit.HexPath = new List<Pulsar4X.Galaxy.GroundHex>(path.Count);
             foreach (var h in path) unit.HexPath.Add(new Pulsar4X.Galaxy.GroundHex(h));
             unit.HexStepBaseSeconds = HexPathfinder.PerHexBaseSeconds(region) / GroundMobility.SpeedMultForUnit(body, unit);
-            unit.HexTransitSecondsRemaining = unit.HexStepBaseSeconds * HexPathfinder.HexMoveMult(unit.HexPath[0].Terrain);
+            unit.HexTransitSecondsRemaining = GroundMobility.StepSecondsFor(body, unit, unit.HexStepBaseSeconds, unit.HexPath[0].Terrain);
             return true;
         }
 
@@ -548,7 +548,7 @@ namespace Pulsar4X.GroundCombat
             unit.GlobalPath = new List<Pulsar4X.Galaxy.GroundHex>(path.Count);
             foreach (var h in path) unit.GlobalPath.Add(new Pulsar4X.Galaxy.GroundHex(h));
             unit.GlobalStepBaseSeconds = GlobalStepSecondsFor(body, unit.GlobalQ) / GroundMobility.SpeedMultForUnit(body, unit);
-            unit.GlobalTransitSecondsRemaining = unit.GlobalStepBaseSeconds * HexPathfinder.HexMoveMult(unit.GlobalPath[0].Terrain);
+            unit.GlobalTransitSecondsRemaining = GroundMobility.StepSecondsFor(body, unit, unit.GlobalStepBaseSeconds, unit.GlobalPath[0].Terrain);
             return true;
         }
 

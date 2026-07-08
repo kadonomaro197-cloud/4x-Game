@@ -1,5 +1,6 @@
 using Pulsar4X.Engine;
 using Pulsar4X.Datablobs;
+using Pulsar4X.Galaxy;
 
 namespace Pulsar4X.GroundCombat
 {
@@ -81,6 +82,27 @@ namespace Pulsar4X.GroundCombat
             }
             catch { }
             return 0.5;
+        }
+
+        /// <summary>Adjust a terrain move-penalty by a unit's rough-terrain handling. PURE. Open terrain (baseMult ≤ 1)
+        /// is never penalised. rough handling 0.5 is NEUTRAL (reproduces the un-tuned behaviour); a higher-handling
+        /// drive (tracks/walker) EASES the rough penalty, a lower one (wheels) WORSENS it. ⚠ FLAGGED slope (the 1.5 −
+        /// handling curve) — tunable.</summary>
+        public static double TerrainMult(double baseMult, double roughHandling)
+        {
+            if (baseMult <= 1.0) return baseMult;          // open ground: no penalty to ease
+            double f = 1.5 - roughHandling;                // rh 0.5 → ×1 (neutral); 1 → ×0.5 (eased); 0 → ×1.5 (worse)
+            if (f < 0.1) f = 0.1;
+            double eff = 1.0 + (baseMult - 1.0) * f;
+            return eff < 1.0 ? 1.0 : eff;
+        }
+
+        /// <summary>The per-step march seconds for a <paramref name="unit"/> entering a hex of <paramref name="terrain"/>:
+        /// the step base × the terrain penalty adjusted by the unit's rough-terrain handling (falls out of its designed
+        /// locomotion). Centralises the four march-timing sites. Never throws (defaults to neutral handling).</summary>
+        public static double StepSecondsFor(Entity body, GroundUnit unit, double stepBaseSeconds, RegionFeatureType terrain)
+        {
+            return stepBaseSeconds * TerrainMult(HexPathfinder.HexMoveMult(terrain), RoughHandlingForUnit(body, unit));
         }
     }
 }
