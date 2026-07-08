@@ -8,7 +8,7 @@
 
 | # | Category | Door | State |
 |---|----------|------|-------|
-| — | *(framework)* | Universal dials + Dependency model | 🔒 **LOCKED §0** |
+| — | *(framework)* | Universal dials + Emergent-constraint (physical budget) model | 🔒 **LOCKED §0** |
 | 1 | Weapons | **Energy** | 🟡 **proposed §1.1** (awaiting lock) |
 | 2 | Weapons | Ballistic | ⚫ pending |
 | 3 | Weapons | Melee | ⚫ pending |
@@ -33,13 +33,23 @@
 
 Each door adds its *specific* dials on top of these seven.
 
-### 0b. The dependency model — "you can't have a tank without power"
-Every component declares what it needs from the rest of the assembly. Two strengths:
+### 0b. Emergent constraint — the NUMBERS force the build, never a rulebook
+**The player is never told "you must add X."** They dial the **outcome they want**; every dial emits **physical quantities** (energy demand, mass, volume, heat, recoil, crew-load…); the assembly bookkeeps them; and physics does the forcing. There is **no authored requirement graph** — just three physical facts:
 
-- **⛓ REQUIRES (hard)** — the assembly is **invalid** without it. The supply gate refuses to build it. *Example: an Energy weapon ⛓ requires a power source supplying ≥ its draw.*
-- **◐ BENEFITS-FROM (soft)** — it works without, but **degraded**. *Example: a weapon ◐ benefits from Fire Control — without it, long-range accuracy tanks.*
+1. **Unmet demand throttles the output (soft, and visible).** A beam with no power source reads **output: 0 (no power)** — so the player naturally bolts on a generator. Under-fed, the beam auto-throttles to the power actually available. The player is steered by *the result being wrong*, not by a rule.
+2. **Mass/volume is the one hard wall — and it's a physical *container*, not a rule.** Everything mounted (the beam + the generator feeding it + the capacitor buffering it) has mass. The **sum vs the chassis's structural budget** is the only hard gate, and it's just "a box can't hold more than it can hold." Nothing says "planet-cracker → Mega"; the *tonnage* of a planet-cracker says it.
+3. **The dials auto-accommodate.** Mount an over-spec part on an under-spec chassis and its **effective** stats throttle down to what the chassis can feed/hold — shown live. Your Death-Star-dialed beam performs like a pop-gun on a frigate, telling you plainly: *find more chassis.*
 
-This is a **requirement graph** over the assembly, checked at Level-2 (assembly), the general form of the existing power/ammo/crew gates.
+**The Death Star, done right (numbers, not rules):**
+1. Player wants a planet-cracker → dials beam **output** to max.
+2. That output demands enormous **energy** → the beam does nothing until fed → player adds a **generator** big enough to feed it.
+3. Beam mass and generator mass both scale with output → their combined mass is astronomical.
+4. That mass **overflows** every Personnel/Vehicle/Hull chassis → the only container with the budget is **Mega**.
+5. The player never set out to "use a big chassis." **The numbers put them there.**
+
+> An authored graph *tells* you the rules. The physical budget *lets you find out.* We build the second.
+
+**This is already how Pulsar computes things** — a component's `Mass` is derived from its design dials (the NCalc formulas), and a hull carries a tonnage/volume budget. So "the numbers force it" is *native*, not a new system to bolt on. The only engine work is (a) making under-supply **throttle** the effective stat instead of hard-failing, and (b) surfacing the live effective-vs-dialed readout so the forcing is legible.
 
 ### 0c. The supply currency scales with the chassis
 The *thing* being supplied changes with scale, but the gate is the same:
@@ -142,12 +152,12 @@ The five doors differ in **how the hit is delivered and what it beats** (the nat
 **Derived stats (computed, shown to the player):**
 `power draw = output × rate ÷ efficiency` · damage/salvo · sustained DPS · dodge-fraction (delivery × tracking) · signature spike (output × thermal-bloom) · mass · cost.
 
-**Dependencies:**
-- ⛓ **Chassis hardpoint** (mount) — universal.
-- ⛓ **Power ≥ draw** — Generation and/or Storage on the same host. *The "tank needs power" edge: an Energy weapon cannot exist on a chassis that can't feed it.*
-- ⛓ **Capacitor** — *only if* Charge or Overload is dialed up (you must buffer the shot to release it).
-- ◐ **Fire Control** (Sensors) — long-range accuracy; without it, standoff hit-chance collapses.
-- ◐ **Cooling** (Systems/thermal) — sustained rate; without it, high rate-of-fire throttles.
+**Physical demands (what the dials cost — throttles and mass, never a rulebook, per §0b):**
+- **Power draw** = output × rate. Not "required" — *unmet → the beam auto-throttles to available power* (a Death-Star dial on a frigate fires like a pop-gun). The player adds a generator because the readout shows the shortfall, then finds the generator's **mass** funnels the chassis size.
+- **Buffered energy (capacitor)** — a Charge/Overload shot can only accumulate as much as you can store; **no capacitor = no big alpha** (the dial caps itself), not an error.
+- **Heat** — sustained fire builds heat; undissipated heat **throttles rate** automatically. Add cooling (which adds mass) to sustain it.
+- **Accuracy at range** — without Fire Control the standoff hit-chance is just *low* (a number); a standoff build naturally wants one.
+- **Mass** — the real forcer. Output/rate/nature/cooling all add mass; that mass + the generator's + the capacitor's is the tonnage the chassis budget must physically hold. This is the only hard wall, and it's a container, not a rule.
 
 **Preset coordinates — proof the dials span the franchises (each a distinct point in the option space):**
 | Weapon | Delivery | Focus | Charge | Nature | Range | The trade it chose |
@@ -157,9 +167,9 @@ The five doors differ in **how the hit is delivered and what it beats** (the nat
 | **Turbolaser** | Bolt | Lance | Instant | Plasma | Standoff | reach + anti-armor alpha, pays in dodge-ability + ⛓ big reactor |
 | **Ion / disruptor** | Bolt | Standard | Instant | **Ion** | Balanced | ignores shields, **useless vs unshielded** |
 | **Flak-laser (PD)** | Scatter | Wide | Instant | Thermal | Point-blank | floors fighter dodge, pays in range |
-| **Death-Star beam** | Beam | Lance | **Charge** | Graviton | Standoff | plate-cracking alpha, pays in ⛓ **Mega chassis + huge reactor + capacitor** + a long telegraph |
+| **Death-Star beam** | Beam | Lance | **Charge** | Graviton | Standoff | plate-cracking alpha; its output demands a huge generator + capacitor, whose **mass** overflows everything below **Mega** — plus a long telegraph |
 
-The Death Star is the payoff: you can *dial* a planet-cracker on any chassis, but the **dependency graph** (power + capacitor + budget) confines it to a Mega chassis — the design falls out of the dials, the *feasibility* out of the graph.
+The Death Star is the payoff: you can *dial* a planet-cracker onto any chassis, but the **tonnage** of the beam + the generator that feeds it + the capacitor that buffers it won't fit anything under Mega — and on a smaller hull the effective output just throttles to a pop-gun. The design falls out of the dials; the Mega chassis falls out of the *numbers*, never a rule.
 
 ---
 
