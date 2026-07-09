@@ -2449,3 +2449,102 @@ The new/changed docs: **AI-SELF-PLAY-DESIGN.md** (new, the leadership layer), **
 ## Net effect on the blueprint
 
 The merge is **good news for the blueprint's honesty**: three of the biggest ⏳ NET-NEW items we flagged as "undesigned" now have **real designs behind them** — the Survey field-site loop (build-list #8), the Command delegation/competence layer (#5 + #7), and the shared person-modifies-outcome wire (#5). One concept two wires leaned on (`SignalQuality`) was design-cut, and those wires are corrected. **No door needs re-locking; the wire audit is unchanged.** The build-list keystones (chassis mass-cap #1, refining feed #2, armour nature #3, upkeep #4) are entirely untouched by the merge.
+
+---
+
+# 🧭 Essence Extensions — the gear the merged-docs essence demands (2026-07-09) 🟡 *proposed*
+
+The Main-Merge Delta (above) established the merge changes no wire. This section is the **creative follow-on the developer asked for**: with a deep read of what those five merged docs *mean*, what can be **added** to the designer — categories, doors, dials — that **matches and enhances that essence**, and how it all wires. Five essence-agents mined one doc each; a sixth synthesized. **Status: proposed — lock door-by-door in the established rhythm.**
+
+## E0 — The one essence, and the single highest-leverage structural move
+
+Across all five docs the same instruction repeats in five costumes: **build ONE parametric shape, let the specifics be data/configuration/emergence, make the NPC run it too, and make both sides see it.** The pillar skeleton (`INFLUENCE-PILLAR-DESIGN.md`) = one shape, four media. Delegation = NPC AI (`AI-SELF-PLAY-DESIGN.md`) = one machinery, run both ways. The field-site loop (`EXPLORATION-CONTENT-DESIGN.md`) = one loop, every type is data. The Living Galaxy (`LIVING-GALAXY-DESIGN.md`) = don't build the emergence, build deep+connected+observable parts and refuse a director.
+
+**The honest finding: the essence does NOT say "grow three new pillar categories for Espionage/Diplomacy/Influence."** The non-military pillars are *correctly* dominated by People + the legitimacy/relationship resolvers — that is the gear-vs-being boundary working, not a gap. Diplomacy is honestly gear-thin (its medium is *relationships*); Influence routes ~90% to non-gear systems; Espionage is thinly served but real. What every pillar in the skeleton **does** share is a **PROJECTION slot and a COUNTER slot** — and *those two slots are the physical, deliverable parts that legitimately are gear.* The designer under-serves that **seam**, not for lack of categories but because the seam is scattered and implicit.
+
+**The keystone move (adds ZERO doors, moves ZERO boundaries, builds NO new loop):** promote the `WeaponProfile` from a combat-only footprint into a **medium-agnostic PROJECTION/COUNTER schema** — a cross-cutting **tag** (`pillar` + `skeleton-role`) over a shared dial-spine, authored once and graded against **each pillar's own resolver**. The `WeaponProfile` (nature × delivery × velocity × tracking × saturation × rate, resolved through the dodge/shield/armour matchup) already *is* a range/rate/selectivity/counter grammar — it has just been pretending it's only about weapons.
+
+### E0a — The shared PROJECTOR ⛓ COUNTER dial-spine (the WeaponProfile, generalized)
+
+| Shared dial | Military | Espionage | Influence | graded against… |
+|---|---|---|---|---|
+| **Reach** (range / insertion-depth / campaign-radius) | weapon range | agent insertion depth | culture-field radius | that pillar's resolver |
+| **Cadence** (rate) | rate of fire | op tempo | conversion rate | " |
+| **Selectivity** (target + what it beats + effect-bus) | nature-matchup + stun/capture | target-facet | flavor vs a pop's insulation | " |
+| **Delivery** (how it arrives) | beam/bolt/missile | agent-as-hand vs remote | missionary-as-hand vs field | " |
+| **⛓ Counter** (co-required, same spine) | armor/shields/PD | counter-intel/cipher | censorship/insulation | " |
+
+Two pieces of metadata do the work on each existing projector/counter door: `pillar` (Military/Espionage/Diplomacy/Influence) and `skeleton-role` (Projection/Counter/Medium/Detection). What the tag buys: (1) **the §0d modellability test runs across pillars** — an influence projector is ✅/◐/⏳ against the *legitimacy/belief-pressure resolver*, an espionage projector against the *Information Ledger*, never against the combat resolver it doesn't belong to (this is §0f lifted from "consumers" to "media"); (2) **the anti-dominance law (§1.1: "every advantage must be bought; every projector has a counter") becomes cross-pillar** — you cannot ship a belief-projector without naming the insulation that beats it. The grammar is already latent: §1.5 Exotic carries a **Selectivity** dial (species-specific bioweapon) and the effect-bus already reaches from damage toward **capture/convert** — which is the homeless hole **H9** finally getting a home (a `Selectivity = convert` projector graded against the legitimacy resolver).
+
+### E0b — §0g proposed: THREE acceptance criteria, not one
+
+Cradle-to-grave is a solitaire, player-side, vertical test (it proves the *player* can reach and lose a thing). The essence adds the two axes it never covered:
+
+> **§0g — Three acceptance criteria.** **Reachable** (cradle-to-grave, player-side) — miss it → a parachuted-in engine abstraction. **Mirrored** (opponent-side) — name how the NPC runs this same gear against the player *through the identical order path* (delegation = NPC AI; no player-only code). Miss it → solitaire (the inert-AI trap). *(Nuance: a pure-infrastructure door the NPC uses FOR itself, not AT you — but it must still USE it.)* **Observable** (the gauge, both sides) — name the readout that shows both sides this gear working. Miss it → `pretty` / an invisible bug (usually cheap Failure-A: the number exists, just unwired — build it). A door that passes only cradle-to-grave is a display piece.
+
+Both criteria are nearly free because they **reuse the designer's own machinery**: the Mirror is cheap *because* a capability is a component on a shared door (the NPC mounting it is the same act as the player mounting it), and Visibility reuses §0b's live effective-vs-dialed throttle readout, extended to "shown to the target too."
+
+### E0c — The authoring law: COUNT RESOLVERS, NOT DOORS
+
+Exploration proved "build one loop, every type is data." Applied to the whole designer: **the 37 doors are not 37 loops — they are ~7 resolver-shaped loops, and the 37 doors + hundreds of presets are DATA those loops read** — the §0b physical-budget loop (all 37 doors), the combat resolver (Weapons+Defense), the detection math (Sensors), the move/closing model (Propulsion), the industry/economy loop (Industrial+Logistical), the field-site loop (all 11 exploration types = the lab loop reused), the delegation loop (all 19 leader roles = config on one pipeline). **The test before adding any door/flavor/site-type/leader-role: "is this a new LOOP, or DATA for an existing loop?"** A new door with no new resolver is data (tag it, table it, done). A new door claiming a new resolver must PROVE the resolver is genuinely distinct under §0d — otherwise it is a director in a costume (`LIVING-GALAXY`'s cardinal sin). `INFLUENCE-PILLAR` passes perfectly: "the rebellion model IS the kill; influence is just a new attacker on the same battlefield" — one new input, zero new loops.
+
+## E1 — The gear, pillar by pillar (all dials on existing doors unless flagged NEW DOOR)
+
+### E1a — Leadership essence → Command & Control gear (`AI-SELF-PLAY-DESIGN.md`)
+*Finding: the leader layer is ~95% seats-and-people already scaffolded; the missing GEAR is command CONNECTIVITY.*
+
+| Proposal | Door | Grade | Wire (file:line) |
+|---|---|---|---|
+| **Command Reach** — how far a seat's authority carries (Local / In-system / Interstellar-networked) | dial on §10.1 Command | ◐ Wire | `CommandReach_m` computed like detection range (`SensorTools.cs:425`, EMCON `:308`); the delegate order path checks it before reaching a unit; it's an emission the enemy sensor grid sees |
+| **Academy Type/Tier + Competence Investment** — what leader a school makes, and how good (Navy/Ground/Civil/Science/Covert × school/college/university × mass-vs-elite) | dial on §9.2 Civic Development | ◐ Wire | `NavalAcademyProcessor` already rolls `NextBellCurve` (`:31`); wire writes the roll into the empty `BonusesDB` (rung-4 reads it) + draws scarce `ColonyManpowerDB.TalentPool` — the same handle that gates §6.2 elites (build once, both light up) |
+| **Command-node Redundancy/Hardening** — single (cheap, decapitates) vs hardened (HTK) vs distributed (demotes instead of collapsing) | dial on §10.1 Command | ◐ Wire | on the decapitation handler: whether a lost node **empties** or **demotes** the scope; needs `AdminSpaceAtb.OnComponentUninstallation` implemented (currently throws, `People/AdminSpaceAtb.cs:42-45`) |
+| **★ C3 / RELAY network node** — the connectivity of your whole command net; where orders travel = where the enemy can cut them | **NEW DOOR §10.2 Command▸Relay** | ◐ Wire / ⏳ Defer (addressing) | fills hole **H8**. `RelayRange_m` + a network-connectivity boolean between nodes → feeds Command Reach's interstellar scope; a relay is a `SensorProfileDB` emitter → **found, jammed (§3.4), destroyed** → the sever. Earns a door (not a dial) because it grants NO seat and holds NO officer — seat-less C2 plumbing, a different physical object with a different consumer (EW/detection) |
+
+*Prerequisite bug-fixes the essence names: make seat occupancy durable (`AdminSpaceProcessor.CalcEntityAdminSpace` resets each pass, `:31-37`); implement `OnComponentUninstallation`; add one `LeaderLost` subscriber (`DestroyCommander` already publishes an unconsumed `EventType.CrewLosses`, `CommanderFactory.cs:115`).*
+
+### E1b — Exploration essence → expedition & network gear (`EXPLORATION-CONTENT-DESIGN.md`)
+*Finding: CONNECT-heavy, not build-heavy — the loop machinery exists; the gaps are three dead stubs.*
+
+| Proposal | Door | Grade | Wire (file:line) |
+|---|---|---|---|
+| **Field-Lab deployment** — lab at home vs mobile ship-lab vs droppable field-station (hosts the scientist posting at a site) | dial on §9.2 Civic Development | ◐ Wire | reuses `ResearcherDB` + funding machinery (`ResearchProcessor.cs:87,180`); wire = a deployment flag + a `siteId` target |
+| **Excavation medium** — pull a yield from a *site* (ore/gas/**site**) | dial on §7.1 Industrial Extraction | ⏳ Defer | mirrors `MineResourcesProcessor`; consumes `RuinsDB` once the `SystemBodyFactory.cs:1418` **tautology bug** is fixed (always early-returns → ruins never generate) |
+| **Salvage / recovery** — a wreck: strip for mass / recover the design / recover survivors | dial on §7.2 Industrial Fabrication (recycle arm) | ⏳ Defer | needs `DamageProcessor.SpawnWreck` (`:478`, a stub that just deletes the ship) finished; unused events `WreckSalvaged`/`WreckComponents` (`EventTypes.cs:247,350`) are the hooks |
+| **Tow / grapple** — move a whole *entity* (a drifting derelict), not just cargo | dial on §8.2 Logistical Transfer | ◐ Wire | `CargoTransferAtb` reused as tow throughput; towed mass drags the tug's `NewtonThrustAbilityDB` accel (the honest cost) |
+| **Counter-interference** — how much hazard the scanner sees through (treasure hides in hazards) | dial on §3.2 Sensors Survey | ◐ Wire | `HazardResistanceAtb` (`:13`, stacks/scales by health) already exists; let a Survey component carry it so the `SpaceHazardTools.cs:112` sensor-cut shrinks |
+| **★ ROUTE WORKS** — a studied anomaly → a PERMANENT route (wormhole stabilizer / precursor-gate reactivation / built jump gate) | **NEW DOOR** (or §2.4 Propulsion▸Warp▸gate + a Fabrication megaproject) | ⏳ Defer (deepest item) | fills hole **H8** (same hole as the C3 Relay). `JPFactory.CreateConnection` (`:124`) is a **dead stub**; `LinkJumpPoints` (`:135`) already pairs two JPs — the gear calls it in-play after a scientist posting resolves an anomaly. Stability 0–1 = the collapse/grave rung |
+
+### E1c — Influence essence → soft-power projection gear (`INFLUENCE-PILLAR-DESIGN.md`)
+*Finding: NO new door/category — confirms the Main-Merge Delta's "Influence = no door" for v1; the gear seam opens only at the essence's own "Influence 2.0" (the culture-field), and even then slots into existing doors. One new engine field: `ExternalBeliefPressure` on `LegitimacyInputs` (`Colonies/LegitimacyDB.cs:119`), the first purely-external attacker on that input surface, beside the existing `GovernorCompetence` slot.*
+
+| Proposal | Door | Grade | Wire (file:line) |
+|---|---|---|---|
+| **SWAY (belief-pressure)** — the culture-field emitter; flavor (Religious/Cultural/Ideological) × persistent-zone delivery × magnitude×radius; zero effect vs a hive/machine | effect on §1.5 Weapons▸Exotic (the effect-bus — "never a new door") | ⏳ Defer | drives `ExternalBeliefPressure` → subtracted in `ComputeLegitimacy` (`LegitimacyDB.cs:66`) → toward `CollapseThreshold` 20 → `RebellionDB` (`LegitimacyProcessor.cs:77`) = the kill. Never touches the combat resolver (§0f) |
+| **Broadcast Jamming** — active counter-influence (barrage vs targeted censor; costs your own morale) | dial on §3.4 Sensors EW | ◐ Wire | EW jamming (shrink `DetectionRange_m`) pointed at the emitter's belief-radius; a reduction on summed incoming pressure in `LegitimacyProcessor.cs:47` |
+| **Cultural Insulation** — passive counter-influence (light vs heavy; dead weight vs an enemy running no influence) | dial on §5.3 Defense Hardening | ◐ Wire | Hardening's identity ("resist an incoming pressure the resolver never reads") + a belief-resist term on the defending world's `ExternalBeliefPressure` |
+
+*Explicitly NOT gear: missionary/prophet/Influence-Minister = Beings (People); the domestic temple / state religion = a government-modulator flavor + an exploration holy-world field-site. Only the outward emitter + the insulation/censor hardware are buildable.*
+
+### E1d — Espionage essence → intelligence & covert gear (`ESPIONAGE-AND-INTELLIGENCE-DESIGN.md`)
+*Finding: NO new door — the sensing/denial/delivery substrate is all built; the net-new engine object is the Information Ledger every wire points into. The agent stays a Being (needs a new `CommanderTypes.Agent`, `Enums.cs:263` — not gear).*
+
+| Proposal | Door | Grade | Wire (file:line) |
+|---|---|---|---|
+| **ELINT/SIGINT flavor** — a firing solution vs an intelligence take (Tactical / ELINT / Multi-role) | flavor on §3.1 Sensors Detection | ◐ Wire | **re-homes the SignalQuality-cut `Resolution` dial** (`SensorReceiverAtb.cs:30`) from a dead detection field to *Information-Ledger confidence*: a Tactical contact stamps a rival's Military facet at binary **Inferred**; an ELINT take raises the band toward **Confirmed**. Rides the built `FirstContact.OnDetection` path |
+| **Counter-intel / cipher cluster** — how hard your OWN faction is to read (ECCM / comms-cipher / counter-intel screen); the always-on mirror made buildable, works with no agent seated | dials on §3.4 Sensors EW | ◐ Wire / ⏳ Defer | a defensive term on the (net-new) covert-op detection roll + the enemy's Ledger-confidence gain vs your facets; one code path, both directions (the mirror). Mounts on a Structure = a colony's counter-intel directorate |
+| **Covert-insertion / infiltration bay** — get an operative into a hostile system undetected (stealth-cover / trade-cover / diplomatic-cover) | dial on §8.2 Logistical Transfer | ◐ Wire | mirrors `GroundTransport.TryLoadUnit/TryLandUnit` (`:82/104`) but gated by the **inverse** of `HasOrbitalControl` (`:120`) — insert where you DON'T hold orbit — and "attach as infiltrator" (hidden state) instead of a visible region roster. Interceptable by the live sensor loop |
+| **Covert-weapon warhead** — enrich the Bio/plague effect: Selectivity (species-specific strain, gated by net-new Biology tech) + incubation + detectability sub-dials | dials on §1.5 Weapons▸Exotic | ◐ Wire | effect lands via `DamageProcessor.OnColonyDamage` (`:289`, built) + morale/legitimacy; blowback via `DiplomacyDB`; delivery rides Guided (§1.4) or the infiltration bay above. Proxy route = an espionage action, out of scope for gear |
+
+## E2 — The convergence: the essence points at exactly TWO holes, not three pillars
+
+The two genuinely-new **doors** the whole exploration surfaced — the leadership **C3 Relay** and exploration's **Route Works** (jump gate) — **fill the same designer hole, H8 (`COMPONENT-DESIGNER-CATEGORIES.md` §5: "network/relay infrastructure — addressable, many-to-one").** A subspace command relay and a hyperlane gate are the same physical shape: an addressable network node whose destruction severs a link. And the influence/espionage **convert** effect fills the other open hole, **H9 (conversion/assimilation — ties to the espionage system)**, via the projector tag's `Selectivity = convert`. So the merged-docs essence does not sprawl the designer — it lands precisely on its two known-open holes. **Everything else is dials on existing doors: the 11-category / 37-door structure was right; the merge deepens it, it does not grow it.**
+
+## E3 — Proposed build order (highest essence-leverage first)
+
+1. **The three §0/framework moves** (paper, no code): stamp §0g (three acceptance criteria) + the projector/counter tag (E0a) + count-resolvers-not-doors (E0c) onto the framework. These cost nothing and make every later door land right.
+2. **Fix the three dead stubs** exploration depends on, in order: `GenerateRuins` tautology (`SystemBodyFactory.cs:1418`) → the field-site loop → `SpawnWreck` (`DamageProcessor.cs:478`) → `JPFactory.CreateConnection` (`:124`). Lights exploration end-to-end (its own named order).
+3. **The command-connectivity gear** (E1a): the durable-seat + `OnComponentUninstallation` + `LeaderLost` bug-fixes, then Command Reach, then the **C3 Relay door (H8)** — makes decapitation real.
+4. **The ELINT re-home** (E1d): wire the now-free `Resolution` dial into the Information Ledger — the cheapest post-merge win, and it makes the SignalQuality cut *pay*.
+5. **The person-modifies-outcome wire + Academy dials** (E1a) — build-list #5, lights commander competence AND §6.2 elites at once.
+6. **Influence 2.0 gear** (E1c): the `ExternalBeliefPressure` input + the SWAY effect + its two counters — the "war without a weapon" made buildable.
+7. **Route Works (H8) + the covert/salvage deferrals** — the deepest, most franchise-earning items last.
