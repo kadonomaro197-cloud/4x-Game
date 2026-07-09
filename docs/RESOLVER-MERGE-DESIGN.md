@@ -93,3 +93,19 @@ The definitive statement of what this merge is FOR. Quoted essence: *"ground uni
 **Why the kernel merge is the enabler:** the closing model + the damage math must be **one** implementation, or the two domains drift. Slices 1–2 put the ship damage math in `CombatKernel`; 3a puts armour there; 3b puts the ground damage on it; slice 4 brings the closing model to ground; slice 5 gives formations fleet-parity aggregation + sub-formation ranges + buckets the ground side. The zergling/Titan example is the acceptance test for "done."
 
 **Bucketing resolves the scale (corrected 2026-07-08):** 100 interchangeable zerglings collapse to **one** combat-value bucket; the unique Titan is a **bucket of one** — exactly the ship model (100 fighters + 1 dreadnought). Per-unit identity lives at the **sub-formation** level (swarm / column / Titan), not the individual, so bucketing loses nothing the player cares about.
+
+### 7.1 The vocabulary + the "compute one, distribute across N" model (developer, 2026-07-08)
+
+**Locked naming — the SAME two-level shape, one label set per domain:**
+
+| Level | Space | Planetary |
+|-------|-------|-----------|
+| The whole force (the fleet-equivalent you select + order) | **Fleet** | **Battalion** |
+| A sub-group inside it with its OWN doctrine | **Group** (was "sub-fleet") | **Formation** |
+| The individuals | units (ships) | units (space marines, clone troopers…) |
+
+So: **Fleet ▸ Groups ▸ ships** and **Battalion ▸ Formations ▸ soldiers**. Selecting a Fleet/Battalion and opening its info shows a **Group/Formation breakdown, split by units** (e.g. space marines and clone troopers in the same Battalion but different Formations). *(Naming reconciliation for slice 5: today's `GroundFormation` class sits at the **fleet/Battalion** level — "the ground echo of a fleet." Under this vocabulary a **Battalion** is that top grouping and a **Formation** is the sub-group. Slice 5 either renames or nests so the ground hierarchy reads Battalion ▸ Formation ▸ units. Pure orchestration above the kernel — no kernel change.)*
+
+**Doctrine lives on the Group/Formation, not the whole force.** Each Group/Formation carries its own doctrine that dictates its behaviour in the fight — hang back, retreat out of range, rush the enemy, kite, hold, etc. (space: `FleetDoctrineDB` per Group — already the per-component doctrine model; ground: `GroundFormationDoctrine` + `GroundEngagementStance` per Formation — already built). The closing model (slice 4) reads each Group/Formation's doctrine to decide close/kite/hold, so the Titan's Group kites while the zergling Formation rushes, in one battle.
+
+**The math the developer wants — "do the math for ONE unit + its doctrine, then distribute across N":** the resolver computes the outcome for a **single representative** — one unit, folding in its Group/Formation's doctrine, the opposing side, environmental effects, unit statuses, and any other modifiers — and then **distributes that result across the 50 / 100 / 10,000 identical units** in that bucket. This IS the bucketing model, stated as a design intent: the expensive per-salvo math (`CombatKernel.HitFraction`/shield/armour) runs **once per (representative × doctrine × situation) bucket**, and the caller scales it by the unit count. It's why "any number of soldiers, any battalion combination" stays O(buckets), not O(units) — and why the kernel is a set of **pure per-combatant functions** (compute-one) with the count/distribution handled by the orchestration (distribute-across-N). The refinement CONFIRMS the slice 1–3 kernel shape; nothing changes below the orchestration.
