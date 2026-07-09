@@ -17,14 +17,16 @@ namespace Pulsar4X.Combat
     /// no clock. That is what keeps combat DETERMINISTIC (the locked rule: fast-forward must equal watch). The caller
     /// applies the results (destroys a ship / drains a unit's Health); the kernel only computes them.
     ///
-    /// **Slice 1 (this file) is ADDITIVE and UNWIRED.** The constants and formulas below are copied byte-for-byte from
-    /// the live ship math in <see cref="CombatEngagement"/> (<c>HitFraction</c> / <c>SoakFractionOf</c> /
-    /// <c>ResolveShield</c> / <c>LandedFraction</c>) and the live ground math in
-    /// <c>GroundCombat.GroundDamageMatrix</c> (<c>ArmourSoak</c>). Nothing calls the kernel yet, so ship and ground
-    /// behaviour are unchanged. Slice 2 routes the SHIP resolver through here and DELETES the duplicated ship copies
-    /// (the ship fixtures are the byte-identity tripwire); slice 3 routes the PLANETARY resolver through here. The
-    /// duplication lives for exactly those slices — <see cref="CombatKernelTests"/> pins these outputs so a future
-    /// edit to either copy that diverges is caught. See docs/RESOLVER-MERGE-DESIGN.md §5.
+    /// **Wiring status: SHIP side routes through here as of slice 2 (2026-07-08).** The dodge/shield arithmetic
+    /// (<c>HitFraction</c> / <c>LandedFraction</c> / <c>SoakFractionOf</c> / <c>ResolveShield</c> /
+    /// <c>ShieldSoakFraction</c>) now lives ONLY here — <see cref="CombatEngagement"/>'s same-named helpers are thin
+    /// delegators to this class, and the tuning constants there forward to the ones below, so the kernel is the single
+    /// source of truth for the ship path (no drift possible). The ship combat fixtures (CombatPerformance / Dodge /
+    /// Shield / Triangle / Stress / BattleSims) are the byte-identity tripwire that proved the delegation moved no
+    /// number. <c>ArmourSoak</c> is still a copy of <c>GroundCombat.GroundDamageMatrix.ArmourSoak</c> — the PLANETARY
+    /// side adopts this kernel in slice 3, which is when that duplication collapses too. <see cref="CombatKernelTests"/>
+    /// pins these outputs and cross-checks <c>ArmourSoak</c> against the live ground function. See
+    /// docs/RESOLVER-MERGE-DESIGN.md §5.
     /// </summary>
     public static class CombatKernel
     {
@@ -48,9 +50,9 @@ namespace Pulsar4X.Combat
         public const double FlightTimeReference_s = 10.0;
 
         /// <summary>Evasion-independent base miss added to the range term, so even a 0-evasion hull is hard to hit
-        /// with a dumb slug at long range (forces fleets to close). Mirror of the live-tuned
-        /// <see cref="CombatEngagement.RangeBaseMiss"/> dial (its default value). Slice 2 makes the ship path read
-        /// the one dial; until then this is the default.</summary>
+        /// with a dumb slug at long range (forces fleets to close). The kernel OWNS this dial as of slice 2 —
+        /// <see cref="CombatEngagement.RangeBaseMiss"/> is a forwarding property onto it, so the ship path and the
+        /// shared kernel can never read different values. Live-tuned; 0 = old evasion-only behaviour.</summary>
         public static double RangeBaseMiss = 0.9;
 
         // ── Shield nature matchup (copied from CombatEngagement — the same numbers the ground GroundDamageMatrix uses)
