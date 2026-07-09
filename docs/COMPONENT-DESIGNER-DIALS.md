@@ -15,7 +15,7 @@
 | 2 | Weapons | **Ballistic** | 🔒 **LOCKED §1.2** |
 | 3 | Weapons | **Melee** | 🔒 **LOCKED §1.3** |
 | 4 | Weapons | **Guided** | 🔒 **LOCKED §1.4** |
-| 5 | Weapons | **Exotic** | 🟡 **proposed §1.5** (awaiting lock) |
+| 5 | Weapons | **Exotic** | 🔒 **LOCKED §1.5** (bioweapon + SWAY effects settled by the essence pass) |
 | 6 | Propulsion | **Reaction** (Newtonian main-drive) | 🔒 **LOCKED §2.1** |
 | 7 | Propulsion | **Traction** (surface locomotion) | 🔒 **LOCKED §2.2** |
 | 8 | Propulsion | **Fluid** (atmospheric + naval) | 🔒 **LOCKED §2.3** |
@@ -46,6 +46,11 @@
 | 33 | Chassis | **Hull** (ship) | 🔒 **LOCKED §11.3** |
 | 34 | Chassis | **Structure** (station) | 🔒 **LOCKED §11.4** |
 | 35 | Chassis | **Mega** | 🔒 **LOCKED §11.5** |
+| **— essence extensions (LOCKED 2026-07-09, first-class, wired alongside) —** | | | |
+| 36 | Command | **Relay** (C3 network node) — **NEW DOOR** | 🔒 **LOCKED §10.2** · fills H8 · dossier ⚙10 |
+| 37 | Warp + Industrial | **Route Works** (gate / wormhole construction) — **NEW cross-door capability** | 🔒 **LOCKED** · fills H8 · reuses the jump-network resolver (§0i) · dossiers ⚙2/⚙7 |
+
+**Essence-extension DIALS — LOCKED 2026-07-09, first-class on already-locked doors** (full wiring in each category's ⚙ dossier + §🧭 E1): Weapons▸Exotic **SWAY** belief-effect + **bioweapon** Selectivity/incubation/detectability · Sensors▸Detection **ELINT/SIGINT** flavor (re-homes the cut `Resolution` → Information Ledger) · Sensors▸EW **counter-intel/cipher** + **broadcast-jamming** · Sensors▸Survey **counter-interference** · Defense▸Hardening **cultural insulation** · Command §10.1 **Command Reach** + **Redundancy/Hardening** + **Contracts** · Civic▸Development **Academy Type/Tier** + **Field-Lab deployment** · Industrial▸Extraction **excavation medium** · Industrial▸Fabrication **salvage/recovery** · Logistical▸Transfer **tow/grapple** + **covert-insertion bay**. Framework rules **§0g** (three acceptance criteria) · **§0h** (projector⛓counter tag) · **§0i** (count-resolvers) are locked into §0. *One new engine object underpins several: the **Information Ledger** (§🧭E1d); one new field: **`ExternalBeliefPressure`** on `LegitimacyInputs` (§🧭E1c).*
 
 ---
 
@@ -186,7 +191,7 @@ On top of the universal seven, every weapon has:
 
 The five doors differ in **how the hit is delivered and what it beats** (the nature × delivery axes). Door-specific dials below.
 
-### 1.1 Weapons ▸ ENERGY  🟡 *proposed*
+### 1.1 Weapons ▸ ENERGY  🔒 *locked*
 *Directed energy: light, particle, plasma, ion. Everything from a lazpistol to a Death-Star beam falls out of these dials.*
 
 **The anti-dominance rule (the whole point):** every option must **buy** its advantage with a real cost, so no setting is a free win. "A beam can't be dodged" is only balanced because a beam **pays** for it (dwell, range, power). Each dial below lists its options with *why you'd pick it* AND *the catch* — if an option has no catch, it's a bug in the design.
@@ -339,7 +344,7 @@ The Death Star is the payoff: you can *dial* a planet-cracker onto any chassis, 
 
 ---
 
-### 1.2 Weapons ▸ BALLISTIC  🟡 *proposed*
+### 1.2 Weapons ▸ BALLISTIC  🔒 *locked*
 *Kinetic projectiles: rifles, autocannons, tank guns, railguns, flak, mass drivers. Same scaffold as Energy, but the physics **forces differently** — the cascade is **ammo mass** (a magazine that runs dry) instead of power draw, and the stability cost is **recoil** instead of heat. Everything from an assault rifle to a planet-bombarding mass driver falls out of these dials.*
 
 **Anti-dominance rule applies** (every option buys its edge with a real cost). And two ballistic-only forcings you'll see throughout:
@@ -450,7 +455,7 @@ Same lesson as the Death Star, kinetic flavour: the **mass driver** confines its
 
 ---
 
-### 1.3 Weapons ▸ MELEE  🟡 *proposed*
+### 1.3 Weapons ▸ MELEE  🔒 *locked*
 *Close combat: blades, clubs, claws, power fists, energy swords, boarding gear, ramming prows. The forcing inverts — **no ammo and little/no power** (melee's whole payoff: no magazine mass, no fuel, no logistics, never runs dry) — but **range ≈ 0**, so the weapon is worthless until the unit **closes to contact.** Melee trades all the weapon-supply overhead for a *positioning* problem, and pays it back as **undodgeable, high-alpha contact damage** (you can't juke a sword in a grapple).*
 
 **The melee identity (the standing trade):** you save the mass a gun spends on ammo/reactor, and you spend it instead on **mobility + armour to survive the approach.** A slow melee unit is dead weight; a fast or armoured one that reaches you is terrifying. Damage also scales with the chassis's **strength** (servo/mass) and **Enhancers** (a power-armour bio-mod hits harder) — so melee is partly emergent from the *body*, not just the weapon.
@@ -546,7 +551,7 @@ The melee lesson: it's the one door where the forcing isn't tonnage but **space*
 
 ---
 
-### 1.4 Weapons ▸ GUIDED  🟡 *proposed*
+### 1.4 Weapons ▸ GUIDED  🔒 *locked*
 *Self-propelled seeking munitions: missiles, torpedoes, drones, guided bombs. The **two-stage** door — you design a **launcher** (mounted on the chassis) AND a **projectile** (a mini-assembly with its own engine, seeker, and warhead that flies to the target and is consumed). This is where the designer **recurses**: a missile is a tiny unit built from the same category doors, at mini-scale.*
 
 **The Guided identity (the standing trade):** enormous **range** + heavy **payload** + **fire-and-forget** — but every shot is a **costly consumable** that **takes time to arrive** and **can be shot down** in flight. So Guided doesn't force a bigger *chassis* so much as a bigger *economy* (keep building and hauling missiles — it ties Weapons to Industrial/Logistical), and it rewards **saturation** (alpha-strike to swamp the enemy's point-defense).
@@ -650,7 +655,7 @@ The Guided lesson: it's the door that recurses (a missile is a mini-unit) and th
 
 ---
 
-### 1.5 Weapons ▸ EXOTIC  🟡 *proposed*
+### 1.5 Weapons ▸ EXOTIC  🔒 *locked*
 *Everything that doesn't obey the other four families' physics: gravitic, EMP, temporal, bio, warp-disruption, mind-control, annihilation. The key reframe: **Exotic is not a weapon type — it's the extensibility slot.** The other four doors deal conventional **damage**; an Exotic weapon delivers an **effect from the shared EFFECT BUS** (`COMPONENT-DESIGNER-STRESS-TEST.md` §2) — disable, drain, grab, capture, phase, kill-crew — usually *instead of* HP damage. Its dials **compose an effect**, so adding a new sci-fi weapon later = adding an effect to the bus and exposing it here, **never a new door.***
 
 **The Exotic identity (the standing trade):** hyper-specialist and late-game. An Exotic weapon is typically **"I win vs X, useless vs Y"** — the most extreme anti-dominance in the game — gated by heavy **tech**, and usually carrying a **cost/instability** or **political** price. It's the end-game frontier, and (honestly) the **least-built** door — most of its effects are ⏳ *build-the-mechanic-first*.
@@ -748,8 +753,8 @@ The Exotic lesson: it's the door that **grows with the game** — every deferred
 
 ---
 
-## ✅ Weapons category — COMPLETE (5/5 doors locked/proposed)
-Energy 🔒 · Ballistic 🔒 · Melee 🔒 · Guided 🔒 · Exotic 🟡. **The pattern for the other 32 doors is now set:** for each door — (1) dials with *every option justified* (anti-dominance), (2) the *physical forcing* (what number funnels the build — power/ammo/recoil/reach/economy/tech), (3) the *modellability audit* (§0d — Modelled / Wire / Defer), (4) a *preset table* proving the franchise span. The four concrete doors are grounded in real physics + the existing combat resolver; the fifth (Exotic) is the open extensibility slot that grows with the effect bus.
+## ✅ Weapons category — COMPLETE (5/5 doors 🔒 LOCKED)
+Energy 🔒 · Ballistic 🔒 · Melee 🔒 · Guided 🔒 · Exotic 🔒. **The pattern for the other 32 doors is now set:** for each door — (1) dials with *every option justified* (anti-dominance), (2) the *physical forcing* (what number funnels the build — power/ammo/recoil/reach/economy/tech), (3) the *modellability audit* (§0d — Modelled / Wire / Defer), (4) a *preset table* proving the franchise span. The four concrete doors are grounded in real physics + the existing combat resolver; the fifth (Exotic) is the open extensibility slot that grows with the effect bus.
 
 *(All 11 categories are now locked; each carries its own ⚙ Wiring Dossier below.)*
 
@@ -3607,7 +3612,7 @@ Chassis is the ultimate shared-state partner: **it holds EVERY component**, so i
 
 # 🏁 BLUEPRINT COMPLETE — all 11 categories / 37 doors specified
 
-Every door of the component designer is now run through the full pipeline (dials → justified options → modellability → numbers → resolver/system insertion) and **all 37 doors are 🔒 LOCKED** (Chassis locked 2026-07-09; only Weapons▸Exotic §1.5 carries a design-refresh flag from the bioweapon slice). The 67 hand-authored templates collapse into **11 parametric categories**; specific things (phaser, submarine, AT-M6, bunker, Space Marine, Millennium Falcon, Death Star) fall out of dials; the multi-consumer rule (§0f) holds throughout; and every door names its Modelled ✅ / Wire ◐ / Defer ⏳ state honestly against the real engine.
+Every door of the component designer is now run through the full pipeline (dials → justified options → modellability → numbers → resolver/system insertion) and **all 37 base doors + the essence extensions are 🔒 LOCKED** (Weapons▸Exotic and the essence extensions locked 2026-07-09 — the two new-door capabilities C3 Relay §10.2 and Route Works are doors #36–#37, and every essence-extension dial is first-class in its category dossier). The 67 hand-authored templates collapse into **11 parametric categories**; specific things (phaser, submarine, AT-M6, bunker, Space Marine, Millennium Falcon, Death Star) fall out of dials; the multi-consumer rule (§0f) holds throughout; and every door names its Modelled ✅ / Wire ◐ / Defer ⏳ state honestly against the real engine.
 
 **The top cross-category build-list the whole blueprint surfaced (highest leverage first):**
 1. **The chassis mass-budget cap for ships + stations** (§11) — *the keystone.* Makes §0b ("the numbers force the build") real across all scales, not just ground. Mirror the working `GroundUnitAssembly` carry gate.
@@ -3642,7 +3647,7 @@ The new/changed docs: **AI-SELF-PLAY-DESIGN.md** (new, the leadership layer), **
 | **§6.2 Unit Caliber** | The shared **"a person's skill modifies an outcome"** wire (§6 ∩ §10, build-list #5) is now **designed end-to-end** as Command's rung 4. The academy's **scarce talent draw** (`ColonyManpowerDB.TalentPool`) is designed, and the commander-buffs-from-above path (officer `BonusesDB` combat `FilterId` → `FleetDoctrineDB`) gets a home. **Keep the door's spine intact:** unit caliber stays the **unit's `Quality` multiplier** ("it's the unit, not the commander"); the merge designs the *separate, stacking commander* side, not the unit side. | **No.** No new dial; add cross-refs to `AI-SELF-PLAY-DESIGN.md` rung 4 on the Academy/Scarcity rows. |
 | **§3.1 Detection (Dial E) + §3.4 EW (Jamming)** | **`SignalQuality` is DESIGN-CUT** (the engine field still exists — this is a decision to stop using it, not a code removal). Detection collapses to *strength only*. Our two wires cited `SignalQuality`, so they're re-described: coarse contact size → `SignalStrength_kW × cross-section` (automatic); fine class/IFF → the espionage **Information Ledger**; jamming → shrink `DetectionRange_m` / raise the strength threshold. **(Fixed inline above.)** | **No** (both were ◐ wire and stay ◐ wire) — but the wires are now factually correct against `main`. |
 | **§3.4 EW Spoof/decoy** | Its deferral to "the intelligence/information-ledger layer" is **re-scoped + better-anchored, not resolved**: the target is now a locked layer (Spymaster MVP = Information Ledger + passive intel + per-faction seat + gather op, the *second* leader vertical slice). Spoofing itself = the **disinformation** build-order tail (sequenced last). The false-contact *injector* half stays a doable Wire; the *decide-what's-real* half stays deferred, now to a named layer. | **No.** Deferral pointer stays; update it to cite the Spymaster MVP / disinformation tail. |
-| **§1.5 Weapons ▸ Exotic** | The new **bioweapon / covert-weapon** slice lands squarely on the **existing Exotic Bio/plague effect** — confirming the door, **not** adding one ("roles are dials, not doors"). It enriches three dials: finer **Selectivity** (species-specific strain, gated by a new **Biology & Genetics tech**), plus candidate new sub-dials **incubation** and **detectability**. The covert **delivery/proxy routes** (agent-plants-it, fund-a-proxy) are **out of scope** — espionage actions, not designer components. | **No** (§1.5 is still 🟡 proposed) — enrich the Exotic dials when it's drafted/locked. |
+| **§1.5 Weapons ▸ Exotic** | The new **bioweapon / covert-weapon** slice lands squarely on the **existing Exotic Bio/plague effect** — confirming the door, **not** adding one ("roles are dials, not doors"). It enriches three dials: finer **Selectivity** (species-specific strain, gated by a new **Biology & Genetics tech**), plus candidate new sub-dials **incubation** and **detectability**. The covert **delivery/proxy routes** (agent-plants-it, fund-a-proxy) are **out of scope** — espionage actions, not designer components. | **No** (§1.5 now 🔒 locked 2026-07-09; the bioweapon + SWAY dials are first-class in dossier ⚙1). |
 
 ## Out of scope (strategic layers, not the component designer)
 
@@ -3655,11 +3660,11 @@ The merge is **good news for the blueprint's honesty**: three of the biggest ⏳
 
 ---
 
-# 🧭 Essence Extensions — the gear the merged-docs essence demands (2026-07-09) 🟡 *proposed*
+# 🧭 Essence Extensions — the gear the merged-docs essence demands (2026-07-09) 🔒 *LOCKED*
 
 > *Distributed 2026-07-09: the per-category gear (E1a–E1d) is now folded into each category's **⚙ Wiring Dossier** as first-class dial rows; the framework moves (E0a–E0c) are promoted to §0g/§0h/§0i. This section is kept as the origin/rationale — the essence synthesis and the two-hole convergence. For wiring, read the dossier + §0.*
 
-The Main-Merge Delta (above) established the merge changes no wire. This section is the **creative follow-on the developer asked for**: with a deep read of what those five merged docs *mean*, what can be **added** to the designer — categories, doors, dials — that **matches and enhances that essence**, and how it all wires. Five essence-agents mined one doc each; a sixth synthesized. **Status: proposed — lock door-by-door in the established rhythm.**
+The Main-Merge Delta (above) established the merge changes no wire. This section is the **creative follow-on the developer asked for**: with a deep read of what those five merged docs *mean*, what can be **added** to the designer — categories, doors, dials — that **matches and enhances that essence**, and how it all wires. Five essence-agents mined one doc each; a sixth synthesized. **Status: 🔒 LOCKED 2026-07-09 — first-class alongside the 37 base doors (see the Progress table's "essence extensions" block); wired from each category's ⚙ dossier.** The framework moves are locked into §0g/§0h/§0i; the per-category gear is locked as first-class dial rows in the dossiers; the two new-door capabilities (C3 Relay §10.2, Route Works) are doors #36–#37.
 
 ## E0 — The one essence, and the single highest-leverage structural move
 
@@ -3681,7 +3686,7 @@ Across all five docs the same instruction repeats in five costumes: **build ONE 
 
 Two pieces of metadata do the work on each existing projector/counter door: `pillar` (Military/Espionage/Diplomacy/Influence) and `skeleton-role` (Projection/Counter/Medium/Detection). What the tag buys: (1) **the §0d modellability test runs across pillars** — an influence projector is ✅/◐/⏳ against the *legitimacy/belief-pressure resolver*, an espionage projector against the *Information Ledger*, never against the combat resolver it doesn't belong to (this is §0f lifted from "consumers" to "media"); (2) **the anti-dominance law (§1.1: "every advantage must be bought; every projector has a counter") becomes cross-pillar** — you cannot ship a belief-projector without naming the insulation that beats it. The grammar is already latent: §1.5 Exotic carries a **Selectivity** dial (species-specific bioweapon) and the effect-bus already reaches from damage toward **capture/convert** — which is the homeless hole **H9** finally getting a home (a `Selectivity = convert` projector graded against the legitimacy resolver).
 
-### E0b — §0g proposed: THREE acceptance criteria, not one
+### E0b — §0g (LOCKED into §0): THREE acceptance criteria, not one
 
 Cradle-to-grave is a solitaire, player-side, vertical test (it proves the *player* can reach and lose a thing). The essence adds the two axes it never covered:
 
