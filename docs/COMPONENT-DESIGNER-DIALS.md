@@ -1341,3 +1341,184 @@ Detection 🔒 · Survey 🔒 · Fire Control 🔒 · Electronic Warfare 🔒. *
 **Build-list items that fall out:** (1) the **Fire-Control wire** — small, high-payoff; (2) the **survey-result exposure** cluster (cartography/habitability/life/hazard — cheap, the data's already in `SystemBodyInfoDB`/`Hazards`/first-contact); (3) two **net-new science systems** — the **anomaly/mystery-box** engine and the **xenoarchaeology/relic** system (both franchise-earning, both currently absent); (4) the **EW detection-delta layer** + its deferred **intelligence/information-ledger** partner for spoofing.
 
 > **The §0f lens is now standing for every followup category** (Power, Defense, Enhancers, Industrial, Logistical, Civic, Command, Chassis): grade each door against *whatever system consumes it* — civilian, scientific, industrial, and infrastructural, on facilities as much as ships — never combat alone. Sensors is where it first changed a verdict (Survey thin → rich); expect it to change more.
+
+---
+
+## §4 — Power
+
+Power is the **substrate every other component draws on** — and the category where §0b ("the numbers force the build, never a rulebook") stops being a slogan and becomes literal machinery. A beam with no reactor reads **output: 0**; a ship with a flat battery **can't warp**. Nothing else in the designer is this universal: weapons, warp, sensors, shields, industry, and a colony's whole population all bottom out in watts and stored joules. So this is the **multi-consumer rule (§0f) at maximum** — Power has no "combat vs civilian" split because *everything* is its consumer.
+
+**The category yardstick — the SUPPLY GATE, not the salvo math.** Power doesn't write a `WeaponProfile` field; it decides whether the other doors' dials get to *function*. Two currencies, and the split is the whole category:
+- **Sustained generation** (`EnergyGenAbilityDB.TotalOutputMax`, kW) — the steady baseload a reactor/solar makes, capped at load 1.0. Feeds the **ground supply gate** (`ReactorSupply_W`), **colony life-support** (`SustenanceProcessor`), and (via surplus) charges the battery.
+- **Stored energy** (`EnergyGenAbilityDB.EnergyStored`, KJ) — the bank a battery/capacitor holds, for **spikes the reactor can't deliver instantly**: a warp jump (`BubbleCreationCost`) or a weapon alpha (`Energy/1000`). Every stored-energy consumer *hard-gates* on it (won't warp / won't fire when it's too low).
+
+**Honest state of the forcing (a flagged wire).** §0b's ideal is a **soft throttle** — under-fed, a beam auto-throttles to available power. The engine today does a **hard block** instead: `WarpMoveProcessor.cs:235` won't *start* a jump under-charged, `GenericFiringWeaponsProcessor.cs:69` *skips* the shot. Same design intent (the numbers steer you to add a generator), blunter mechanism. Making under-supply *throttle* rather than *block* is a named wire, not a redesign.
+
+**The consumer map (per §0f — this IS the category):**
+| Consumer | Reads | Gate today | Status |
+|----------|-------|-----------|--------|
+| **Weapons** (beam fire) | `EnergyStored` (spike) | hard block — no power, no shot (`GenericFiringWeaponsProcessor:69`) | ✅ |
+| **Warp** (jump) | `EnergyStored` (spike) | hard block — won't start under-charged (`WarpMoveProcessor:235`) | ✅ |
+| **Ground units** (supply gate) | `ReactorSupply_W` vs `EnergyDemand_W` | hard block — design Invalid if demand > supply (`GroundUnitAssembly:137`) | ✅ |
+| **Colony life-support** | `TotalOutputMax` (sustained) | `PowerShortage` → morale/starvation | ◐ inert (`PerCapitaPowerDemand` defaults 0) |
+| **Sensors** (active ping) | — | none — active-ping cost is EMCON, not a power draw | ◐ wire |
+| **Shields** (regen) | — | none — shield pool isn't fed from power | ◐ wire |
+
+### §4.0 Shared power dials (both doors)
+On top of the universal seven (§0a):
+| Dial | Drives (real stat) |
+|------|--------------------|
+| **Energy type** | `EnergyTypeID` — which energy good (electricity…); a consumer only draws its own type |
+| **Output / capacity** | the headline number — kW made (Generation) or KJ banked (Storage) |
+| **Mass** (the cascade) | output/capacity scale mass → chassis budget; **this is the Death-Star forcing** (a planet-cracker's generator won't fit under Mega) |
+| **Signature / heat** | a running plant emits — feeds EMCON/Detection (a quiet ship runs cold or dark) |
+| **Safety / containment** | stored energy is a bomb if the component is hit — the grave rung |
+
+### 4.1 Power ▸ GENERATION  🟡 *proposed*
+*The powerplant — reactors, solar, RTGs, the exotic cores. What turns fuel (or sunlight, or decay heat) into the watts every other component spends. Everything from a chemical genset to a fusion torch-reactor to a solar wing to an antimatter core to a Death-Star generator falls out of these dials.*
+
+**The core decision — WHAT TO BURN, and HOW MUCH: output vs fuel-dependence vs safety/signature.** A fuel-burning reactor makes big steady power but must be **fed** (mine → refine → burn, and it runs out) and it's a **hazard** (hot signature, a bomb if breached). A fuel-free source (solar, RTG) needs no logistics but is **constrained** — solar dies far from a star or in shadow; an RTG is reliable but weak. You pick where on the *output ↔ independence ↔ safety* triangle you sit; nothing gives all three.
+
+**A. Source — what powers it (the core dial, like a weapon's Nature)**
+| Option | Why pick it | The catch (anti-dominance) |
+|--------|-------------|----------------------------|
+| **Combustion / chemical** | cheap, low-tech, instant | **thirsty** + low output — a stopgap genset |
+| **Fission reactor** | high steady output, mature tech | needs **refined fuel** (logistics, runs out) + heat/signature + breach hazard |
+| **Fusion** | **higher output**, cleaner burn, less fuel per watt | higher tech; hot, heavy |
+| **RTG** | **fuel-free**, tiny, reliable, huge lifetime — the deep-space/unmanned choice | **low output** — powers a probe, not a warship |
+| **Solar** | **free** power, no fuel, no heat signature | **falls off with distance from the star**, zero in shadow/deep space; big fragile area |
+| **Antimatter / exotic** | **enormous** output in little mass — the capital/Death-Star tier | extreme fuel cost + tech; **catastrophic if hit** |
+| **Zero-point / exotic** | the free-energy endgame — output with no fuel | ⏳ deep-tech; a deferred net-new source |
+
+**B. Output level — the raw scale (`PowerOutputMax`, kW)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Low** | light, cheap, sips fuel | powers little — under-feeds a hungry weapon/warp loadout (hard block today) |
+| **High** | feeds a heavy weapons/warp/shield loadout | **heavy + thirsty** — the mass funnels the chassis (the §0b forcing) |
+
+**C. Fuel & lifetime — what it eats and for how long (`FuelType` / `FuelUsedAtMax` / `Lifetime`)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Thirsty / high-burn** | max output now | drains `LocalFuel` fast → frequent resupply (Logistical) |
+| **Frugal / long-life** | runs for ages between refuels (the RTG/deep-mission trait) | lower output per unit mass |
+
+**D. Response — baseload vs the battery's job (`CalcLoad`, reactor capped at load 1.0)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Baseload reactor** | steady, efficient at a constant load | **can't surge** — a spike (warp jump, weapon alpha) beyond `TotalOutputMax` is met by the **battery**, not by over-driving the reactor (the Generation↔Storage division of labour) |
+| **Load-following** | ramps with demand | more complex/costly; still capped at load 1.0 |
+
+**E. Signature / heat** *(the stealth tradeoff — the Detection tie-in)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Hot / unbaffled** | max output/mass | a running reactor **emits** — seen from far (a loud plant lights up a "dark" ship) |
+| **Baffled / cold-running** | ambush-friendly, low emission | lower output; solar/RTG are naturally cold |
+
+**F. Safety / containment** *(the grave rung)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Unshielded** | light, cheap, max output | a breach is a **catastrophe** — a hit reactor is stored energy going off inside your hull |
+| **Contained / SCRAM** | survives damage, fails safe | heavy; caps peak output |
+
+**Modellability audit (§0d — graded against the SUPPLY GATE, its real consumer):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| Source — fission/fusion (fuel-burning) | ✅ | `EnergyGenerationAtb` → `EnergyGenAbilityDB.MaxOutputFromReactor` → `TotalOutputMax` |
+| Source — solar | ✅ | `EnergySolarGenerationAtb` → `EnergyGenHotloopProcessor.ComputeSolarMax` (sums panels, **attenuated by distance from each star** via `SensorTools.AttenuatedForDistanceList`) → `MaxOutputFromSolar` |
+| Source — RTG | ◐ **wire** | expressible as a low-`PowerOutputMax`, huge-`Lifetime` `EnergyGenerationAtb` today; a first-class "fuel-free reliable" framing is the dial |
+| Source — antimatter / zero-point | ⏳ **defer** | high-output is expressible; the **catastrophe-on-breach** + exotic-fuel identity needs the safety/meltdown mechanic (F) |
+| Output level | ✅ | `PowerOutputMax` (kW) → the reactor total → the supply gate |
+| Fuel & lifetime | ✅ | `FuelType` / `FuelUsedAtMax` (kg/s) / `Lifetime` → `LocalFuel` drain (`LocalFuel -= fuelUseAtMax × load × Δt`) |
+| Response / load | ✅ | `CalcLoad(demand, max)` clamps 0..1; over-demand met by battery discharge, reactor never over-driven |
+| Signature / heat | ◐ **wire** | reactor `Load` → EMCON is **unblocked-but-deferred** (`EmconActivityProcessor.cs:32-33` notes it) |
+| Safety / containment (breach) | ⏳ **defer** | no meltdown mechanic — a **reactor-breach-damages-ship** rule (ties to the damage system, the grave rung) |
+
+> **Dead-legacy flag (gotcha):** `SensorReceiverAtb.IsEnergyGen` (a bool on the *sensor* attribute) looks like the solar path but is **vestigial** — its `SensorScan` branch only sets `LocalFuel`, it adds **nothing** to power output. The *working* solar is `EnergySolarGenerationAtb`. Don't build on `IsEnergyGen`; treat it as dead (a Landmine-Index L1 "dead code that looks live").
+
+**Reading:** Generation is **mostly Modelled** — the fuel-reactor and the (distance-attenuated) solar paths both run live and already feed the supply gate + colony life-support. The gradient: fission/fusion/solar/output/fuel/response all ✅; RTG is a ◐ framing wire (a long-life low-output reactor exists, first-class it); signature is a ◐ wire onto the EMCON hook already flagged in-engine; and the **exotic sources + the meltdown grave-rung** ⏳ defer on the one net-new mechanic this door wants — a **containment/breach** rule (which is also what makes antimatter *dangerous*, not just powerful).
+
+**Numbers (calibrated to the live power scale):**
+| Dial | Unit | Range | Pins to |
+|------|------|-------|---------|
+| **Output** | kW | genset (low) → antimatter core (10⁶⁺) | `PowerOutputMax` → `TotalOutputMax` |
+| **Fuel burn** | kg/s | frugal → thirsty | `FuelUsedAtMax` → `LocalFuel` drain |
+| **Lifetime** | s | short → RTG-huge | seeds `LocalFuel = burn × Lifetime` |
+| **Solar area** | m² | small wing → vast array | `Area_m2` × distance-attenuated star flux |
+| **Mass** (emergent) | kg | scales output × tech | chassis budget (§0b) |
+
+**Sanity-check (the forcing, in real units):** a beam shot costs `Energy/1000` KJ; a warp jump costs ~**1,000,000 KJ** (alcubierre-2k). A reactor making **1,000 kW** refills that jump's worth of battery in ~1,000 s of surplus — so a warship that wants to jump *and* alpha-strike needs either a big reactor (heavy) or a big battery (Storage's job). The trade between "more reactor" and "more battery" is the two Power doors talking to each other, in the same KJ currency the consumers spend.
+
+**Preset coordinates — the span (ship + facility, all consumers):**
+| Plant | Source | Output | The trade it chose |
+|-------|--------|--------|--------------------|
+| **Chemical genset** | combustion | low | cheap stopgap; thirsty, weak |
+| **Fission reactor** | fission | high | the workhorse; needs fuel + containment |
+| **Fusion core** | fusion | very high | capital-grade; hot, high-tech |
+| **RTG** | decay | very low | fuel-free, reliable — the probe/beacon plant |
+| **Solar wing** | solar | var. w/ distance | free near a star; dead in the deep dark |
+| **Antimatter core** | antimatter | enormous | dreadnought/Death-Star tier; a bomb if hit |
+| **Geothermal plant** *(FACILITY)* | planetary heat | steady | a colony's baseload — location-locked, no fuel ship |
+
+### 4.2 Power ▸ STORAGE  🟡 *proposed*
+*The battery and the capacitor — the bank that lets you spend energy faster than the reactor makes it. A reactor is capped at a steady load; storage is how a warship dumps a **warp jump** or a **weapon alpha** in one instant, then recharges from the reactor's surplus. Everything from a small buffer cell to a heavy endurance bank to a fast alpha-strike capacitor to a colony's grid storage falls out of these dials.*
+
+**The core decision — BUFFER THE SPIKES: capacity vs burst vs mass.** The reactor makes power *steadily* (load ≤ 1.0); the fight and the jump need it *all at once*. Storage banks the reactor's surplus so you can exceed `TotalOutputMax` for a moment — the warp bubble, the charge-weapon alpha. You choose **how much** you bank (capacity → how many jumps/alphas before you're dry) and **how fast you can dump it** (a capacitor's burst vs a battery's endurance). Big capacity is heavy; fast burst leaks and costs.
+
+**A. Capacity — how much you bank (`MaxStore`, KJ)**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **Small buffer** | light, cheap — smooths normal draw | can't afford a spike — **won't warp / can't alpha** (the hard gate) |
+| **Large bank** | banks a **jump + an alpha** with reserve | **heavy** — the mass funnels the chassis, same as a reactor |
+
+**B. Burst / discharge type — how fast you can dump it**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Battery (endurance)** | holds a big charge a long time, steady draw | **slow dump** — can't feed a huge one-instant alpha |
+| **Capacitor (burst)** | **dumps fast** → the charge-weapon / first-strike alpha enabler | **leaks** (self-discharge), lower capacity per mass, ⛓ pairs with a charge weapon |
+
+**C. Charge rate — how fast it refills from the reactor**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Slow charge** | cheap, light | one big shot then a long wait — bad cadence |
+| **Fast charge** | recovers **between volleys** — sustained alpha cadence | costlier; stresses the reactor (draws its surplus hard) |
+
+**D. Safety** *(the grave rung)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Standard cell** | light, cheap | a fully-charged bank is **stored energy** — a bomb if the component is hit |
+| **Hardened / fused** | fails safe on damage | heavier, lower peak store |
+
+**Modellability audit (§0d — graded against the warp/weapon spike gates):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| **Capacity** | ✅ | `EnergyStoreAtb.MaxStore` (KJ) → `EnergyGenAbilityDB.EnergyStoreMax` → the warp gate (`WarpMoveProcessor:235`) + the beam gate (`GenericFiringWeaponsProcessor:69`). **This is what makes a ship warp/fire** — `ChargeReactors` tops it to full |
+| Charge behaviour (surplus → battery) | ✅ | `EnergyGenProcessor.EnergyGen` charges the store from generation surplus, bounded by free capacity; discharges on shortfall — the passive balancer |
+| **Burst / discharge rate** | ◐ **wire** | **no discharge-rate field exists** — rate is implicit today; add a `MaxDischarge_KJps` to make the **capacitor-vs-battery** (alpha vs endurance) distinction real |
+| **Charge rate** | ◐ **wire** | implicit in `EnergyGenProcessor` (bounded by free capacity + surplus); expose a per-cell charge-rate dial for cadence |
+| Safety / breach | ⏳ **defer** | same containment/breach mechanic Generation ▸ F wants — a charged bank that goes off when hit |
+
+**Reading:** Storage's **core is fully Modelled** — capacity is the single most load-bearing number in the ship (a flat battery is the literal "spawned ship won't move / won't fire" bug), and the charge-from-surplus balancer runs live. The depth dials — **discharge rate** (the capacitor's fast-dump, which is what an alpha-strike/charge-weapon *needs*) and **charge rate** (volley cadence) — are ◐ **wire**: the capacity field exists, the *rate* fields don't yet, so today a battery and a capacitor differ only in size, not in how fast they dump. Adding one `MaxDischarge_KJps` field turns "storage is just capacity" into the real battery-vs-capacitor decision. Safety ⏳ shares Generation's containment mechanic.
+
+**Numbers (calibrated to the stored-energy scale):**
+| Dial | Unit | Range | Pins to |
+|------|------|-------|---------|
+| **Capacity** | KJ | small cell → heavy bank | `MaxStore` — reference: battery-2t = **1,000,000 KJ** = one alcubierre-2k jump |
+| **Discharge rate** (new) | KJ/s | battery (slow) → capacitor (huge) | ◐ the alpha-strike gate (how big a one-instant dump) |
+| **Charge rate** (new) | KJ/s | slow → fast | ◐ volley cadence |
+| **Mass** (emergent) | kg | scales capacity × tech | chassis budget |
+
+**Sanity-check:** one **battery-2t** (1,000,000 KJ) buffers exactly **one warp jump** (alcubierre-2k = 1,000,000 KJ) *or* a big beam alpha (a shot = `Energy/1000` KJ, so hundreds of KJ each → thousands of shots' worth, or one charge-weapon dump). So "how many jumps/alphas before I'm dry" is literally `MaxStore ÷ cost` — the player reads it straight off the two numbers. Want to jump *and* fight? Carry more banks (mass) or a bigger reactor to recharge between (Generation). The two doors trade in one currency.
+
+**Preset coordinates — the span:**
+| Cell | Type | Capacity | The role it fills |
+|------|------|----------|-------------------|
+| **Buffer cell** | battery | small | smooths normal draw on a utility hull |
+| **Endurance bank** | battery | large | a long-range ship's reserve — many jumps |
+| **Alpha capacitor** | capacitor | mid, fast-dump | the charge-weapon / first-strike buffer (◐ needs the rate field) |
+| **Warp capacitor** | capacitor | ~1 jump | banks exactly one bubble for a jump-raider |
+| **Grid storage** *(FACILITY)* | battery | huge | a colony's load-leveller — banks solar/reactor surplus for peak demand |
+
+---
+
+## §4 Power — status (both doors proposed, awaiting lock)
+Generation 🟡 · Storage 🟡. **Yardstick = the SUPPLY GATE**, not the salvo math — Power decides whether every *other* door's dials get to function (a beam with no reactor = output 0; a flat battery = no warp). This is the **multi-consumer rule (§0f) at maximum**: Power has no combat/civilian split because everything is its consumer (weapons · warp · ground units ✅ today; colony life-support ◐ inert; sensors + shields ◐ not-yet-wired). Headline readings: **Generation is mostly Modelled** — fuel reactors + distance-attenuated solar run live and feed the gate; RTG is a framing wire, exotic sources + the meltdown grave-rung defer on one net-new **containment/breach** mechanic. **Storage's core is fully Modelled** (capacity = the literal warp/fire gate — the most load-bearing number on a ship), with the **battery-vs-capacitor** depth waiting on one ◐ wire (a `MaxDischarge_KJps` rate field — today all storage differs only by size). **The whole category is where §0b LIVES** — "the numbers force the build" is real machinery here, with one honest gap: under-supply currently **hard-blocks** (won't warp / won't fire) where §0b wants a **soft throttle** — a flagged wire, not a redesign. Build-list items: (1) the `MaxDischarge_KJps` storage-rate field (unlocks capacitor-vs-battery); (2) the **containment/breach** grave-rung (unlocks exotic sources + makes a hit reactor/bank matter); (3) the **soft-throttle** conversion (under-supply throttles, not blocks); (4) wire **sensors + shields** as power consumers (the §0f expansion); (5) calibrate **colony `PerCapitaPowerDemand`** (turn life-support from inert to a real load).
