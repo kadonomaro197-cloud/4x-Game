@@ -272,9 +272,14 @@ namespace Pulsar4X.GroundCombat
                         }
                         if (reachable == null) continue;             // nothing in range → this unit fires nothing this salvo
 
-                        // Output = attack × terrain affinity × stance, scaled by the avg triangle vs the reachable mix.
+                        // Output = attack × terrain affinity × stance. The Armor▸Infantry▸Artillery TRIANGLE has
+                        // DISSOLVED (resolver merge, slice 3b-ii — docs/RESOLVER-MERGE-DESIGN.md §7, developer's call
+                        // 2026-07-08): the type edge is no longer a flat ×1.5/×0.67 multiplier — it now emerges from a
+                        // unit's raw stats (attack / armour / HP) × weapon-nature vs the target's evasion/shield/armour,
+                        // the same way a ship's does. (`GroundTerrain.TriangleMult` is retained as a readout/helper but
+                        // no longer scales the fight.)
                         double atk = u.Attack * GroundTerrain.TerrainAttackMult(u.UnitType, terrain) * GroundFormationDoctrine.AttackMult(forces, u);
-                        double pool = atk * AvgTriangleVs(u.UnitType, reachable) * SalvoScale;
+                        double pool = atk * SalvoScale;
                         if (gIsDefender && coverFort > 0) pool /= coverFort;
 
                         // Spread this attacker's pool across its reachable targets, health-weighted (matches the old
@@ -474,19 +479,6 @@ namespace Pulsar4X.GroundCombat
             GroundFormationDoctrine.TrySetStance(f, bp, body.StarSysDateTime);
         }
 
-        /// <summary>Health-weighted average triangle multiplier of an attacker TYPE against an enemy faction's mix —
-        /// so bringing the right counter to their composition pays off.</summary>
-        private static double AvgTriangleVs(GroundUnitType attackerType, List<GroundUnit> enemies)
-        {
-            double totalH = 0.0, acc = 0.0;
-            foreach (var t in enemies)
-            {
-                if (t.Health <= 0) continue;
-                totalH += t.Health;
-                acc += t.Health * GroundTerrain.TriangleMult(attackerType, t.UnitType);
-            }
-            return totalH > 0 ? acc / totalH : 1.0;
-        }
 
         /// <summary>Keep each formation's leader valid after casualties: if the leader unit is gone, leadership passes
         /// to a surviving member (or -1 if the formation was wiped). Fleet-like reassignment, no penalty.</summary>
