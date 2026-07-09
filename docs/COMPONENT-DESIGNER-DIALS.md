@@ -15,11 +15,15 @@
 | 4 | Weapons | **Guided** | 🔒 **LOCKED §1.4** |
 | 5 | Weapons | **Exotic** | 🟡 **proposed §1.5** (awaiting lock) |
 | 6 | Propulsion | **Reaction** (Newtonian main-drive) | 🔒 **LOCKED §2.1** |
-| 7 | Propulsion | **Traction** (surface locomotion) | 🟡 **proposed §2.2** (awaiting lock) |
-| 8 | Propulsion | **Fluid** (atmospheric + naval) | 🟡 **proposed §2.3** (awaiting lock) |
-| 9 | Propulsion | **Warp** (FTL — warp bubble + jump) | 🟡 **proposed §2.4** (awaiting lock) |
-| 10 | Propulsion | **Exotic** (reactionless / gravitic) | 🟡 **proposed §2.5** (awaiting lock) |
-| 11–37 | Sensors · Power · Defense · Enhancers · Industrial · Logistical · Civic · Command · Chassis | (all doors) | ⚫ pending |
+| 7 | Propulsion | **Traction** (surface locomotion) | 🔒 **LOCKED §2.2** |
+| 8 | Propulsion | **Fluid** (atmospheric + naval) | 🔒 **LOCKED §2.3** |
+| 9 | Propulsion | **Warp** (FTL — warp bubble + jump) | 🔒 **LOCKED §2.4** |
+| 10 | Propulsion | **Exotic** (reactionless / gravitic) | 🔒 **LOCKED §2.5** |
+| 11 | Sensors | **Detection** | 🟡 **proposed §3.1** (awaiting lock) |
+| 12 | Sensors | **Survey** | 🟡 **proposed §3.2** (awaiting lock) |
+| 13 | Sensors | **Fire Control** | 🟡 **proposed §3.3** (awaiting lock) |
+| 14 | Sensors | **Electronic Warfare** | 🟡 **proposed §3.4** (awaiting lock) |
+| 15–37 | Power · Defense · Enhancers · Industrial · Logistical · Civic · Command · Chassis | (all doors) | ⚫ pending |
 
 ---
 
@@ -800,7 +804,7 @@ The lesson mirrors the weapons doors: you never *choose* "sprinter" or "cruiser"
 
 ---
 
-### 2.2 Propulsion ▸ TRACTION  🟡 *proposed*
+### 2.2 Propulsion ▸ TRACTION  🔒 *locked*
 *Surface locomotion: wheels, tracks, legs, hover/grav-plates — push against the **ground**. This is Reaction's ground twin (the same sprint-vs-reach decision on a surface), and it's wired to the ground closing model the resolver merge just built. Everything from an infantry squad's boots to a wheeled APC to an AT-AT walker to a hovertank falls out of these dials.*
 
 **The core decision — CAN IT REACH THE FIGHT, and on what ground?** Ground combat is a closing fight over hexes (`GroundMobility` speed → the hex-march; H3 range-based directed combat). A unit that can't close is dead weight — a short-range or melee unit that's too slow never lands a blow; a fast unit dictates the engagement. But speed on open ground is bought against **terrain**: the fast drive bogs in the mud the slow one crawls through. So the trade is **speed ↔ all-terrain ↔ cost**, and the numbers (SpeedFactor × the terrain's roughness) decide who arrives.
@@ -867,7 +871,7 @@ The locomotion's tonnage scales with drive type × speed × terrain-handling. It
 
 ---
 
-### 2.3 Propulsion ▸ FLUID  🟡 *proposed*
+### 2.3 Propulsion ▸ FLUID  🔒 *locked*
 *Lift and buoyancy: aircraft wings, jets, VTOL rotors, airships, ships, submarines — push against a **fluid medium** (air or water) instead of thrown mass or solid ground. Everything from a fighter jet to a submarine to a gas-giant cloud-skimmer falls out of these dials. This is the FIRST propulsion door with real deferrals — because the sim doesn't yet model an **air/altitude/depth layer**, so the door ships its shallow half now and names the prerequisite for the deep half.*
 
 **The honest framing (why this door is partly deferred):** Fluid's payoff is a **plane of movement the enemy may not reach** — air superiority (only anti-air touches a flyer), a submarine's underwater ambush, a skimmer working a gas giant's cloud deck. That payoff needs a **combat medium/altitude layer** the engine doesn't have (space combat tags no medium; ground has surface hexes but no air or sea band) — the exact prerequisite the Weapons ▸ Energy "Medium performance" dial was deferred on. So we do the disciplined thing (§0d): **ship the dials that ride mobility today, defer the altitude/depth dials until that layer is built, and never ship a dead knob.**
@@ -928,7 +932,7 @@ The locomotion's tonnage scales with drive type × speed × terrain-handling. It
 
 ---
 
-### 2.4 Propulsion ▸ WARP  🟡 *proposed*
+### 2.4 Propulsion ▸ WARP  🔒 *locked*
 *Faster-than-light: the Alcubierre warp bubble and jump-point traversal — how a ship crosses **between stars**. This is the strategic-map drive, distinct from the tactical Reaction sublight drive (a ship carries both, like Trek's warp + impulse). Everything from a plodding freighter warp to a Star Destroyer hyperdrive to a Stargate falls out of these dials — and the whole system already exists in the engine, so Warp is nearly as ready as Reaction.*
 
 **The core decision — GO-ANYWHERE WARP vs ON-RAILS JUMP.** A self-powered **warp drive** takes you anywhere in a straight line, but it's slow and needs a big battery to open and hold the bubble. A **jump** is instant and cheap but only between fixed, surveyed **jump points** — you travel the network, not the void. It's the strategic mirror of the standoff-vs-brawl trade: **freedom vs speed**. (And the deep-tech answer is "both" — a self-opening jump drive — at a steep tech/cost.)
@@ -987,7 +991,7 @@ Drive mass drags `MaxSpeed` (WarpMath reads mass) and eats the chassis budget �
 
 ---
 
-### 2.5 Propulsion ▸ EXOTIC  🟡 *proposed*
+### 2.5 Propulsion ▸ EXOTIC  🔒 *locked*
 *The extensibility slot — reactionless drives, inertialess drives, gravity manipulation, the physics-breakers. Like Weapons ▸ Exotic, this door **grows as new mechanics land**; today it's the home for "a drive that violates a rule the other doors pay," and it's mostly a set of **named deferrals** — each impossible drive escapes one constraint, and each names the prerequisite mechanic it waits on, so the physics-breakers are designed-in, not bolted-on.*
 
 **The identity — each exotic drive BREAKS a constraint the honest doors pay, and must pay for it in tech + cost + a real drawback** (or it's the free win the anti-dominance rule forbids). Reaction pays the fuel/Δv trade; Traction pays the terrain trade; an exotic drive buys its way *out* of one of those — at a price steep enough that it doesn't dominate.
@@ -1032,5 +1036,5 @@ Drive mass drags `MaxSpeed` (WarpMath reads mass) and eats the chassis budget �
 
 ---
 
-## §2 Propulsion — status (Reaction locked; Traction/Fluid/Warp/Exotic proposed)
-Reaction 🔒 · Traction 🟡 · Fluid 🟡 · Warp 🟡 · Exotic 🟡. **The category's yardstick is the Newtonian move + closing model** (accel→Evasion, Δv→`ManeuverBudget`, speed→the hex-march), not the joule damage scale. Headline reading: propulsion is the **most Modelled-today category so far** — Reaction (Newtonian physics live), Traction (the ground-locomotion stack live), and Warp (the whole warp-bubble + jump-point system live) are almost entirely ✅ with nothing to defer; **Fluid** is the honest split (access dials wire now, the altitude/depth *combat* payoff defers on one named prerequisite — the air/medium layer); **Exotic** is the backlog slot (reactionless is a near-free Reaction variant, the other three each name their one prerequisite). Two prerequisite mechanics fall out for the build list: the **air/altitude/depth combat layer** (unblocks Fluid's deep half + Exotic-gravitic) and the **H8 gate-network + H1 teleport** layers (unblock Warp-gate + Exotic-teleport).
+## ✅ §2 Propulsion — COMPLETE (5/5 doors locked)
+Reaction 🔒 · Traction 🔒 · Fluid 🔒 · Warp 🔒 · Exotic 🔒. **The category's yardstick is the Newtonian move + closing model** (accel→Evasion, Δv→`ManeuverBudget`, speed→the hex-march), not the joule damage scale. Headline reading: propulsion is the **most Modelled-today category so far** — Reaction (Newtonian physics live), Traction (the ground-locomotion stack live), and Warp (the whole warp-bubble + jump-point system live) are almost entirely ✅ with nothing to defer; **Fluid** is the honest split (access dials wire now, the altitude/depth *combat* payoff defers on one named prerequisite — the air/medium layer); **Exotic** is the backlog slot (reactionless is a near-free Reaction variant, the other three each name their one prerequisite). Two prerequisite mechanics fall out for the build list: the **air/altitude/depth combat layer** (unblocks Fluid's deep half + Exotic-gravitic) and the **H8 gate-network + H1 teleport** layers (unblock Warp-gate + Exotic-teleport).
