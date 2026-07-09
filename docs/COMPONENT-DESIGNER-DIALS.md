@@ -1674,9 +1674,9 @@ On top of the universal seven (§0a):
 | Resisted effect + fraction | ✅ | `HazardResistanceAtb` (`ResistedEffectTypeId` + `ResistanceFraction`) → `SpaceHazardTools.ResistanceFraction` → consumed by `SensorScan`/`WarpMoveProcessor`/`SpaceHazardProcessor` + ground `GroundUnit.EnvResistance`. **A new counter is DATA, not code** (generic attribute) |
 | — but the combat resolver reads NONE of it | — | Hardening is a **hazard/survival** dial, not a salvo dial — graded against its real consumer (§0f) |
 | Radiation/EMP → crew & electronics survival | ⏳ **defer** | the hazard *damage* kinds exist, but crew-knockout / system-disable isn't a combat mechanic yet |
-| Redundancy / damage-control | ⏳ **defer** | ties to the **degraded-condition** model (`docs/WEAPONS-AND-DODGE-DESIGN.md`); note `GroundAugmentAtb.ToughnessBonus` is a **fully DEAD field** to wire here |
+| Redundancy / damage-control | ⏳ **defer** | ties to the **degraded-condition** model (`docs/WEAPONS-AND-DODGE-DESIGN.md`) — a genuinely net-new hook |
 
-**Reading:** Hardening is the honest odd-one-out — its **hazard-resistance core is Modelled** (a clean, data-driven generic attribute; a new resistance is JSON, not C#), but **the combat resolver never reads it**: this is the *survive-the-environment* door, and its consumer is the hazard/attrition system, crew survival, and system integrity. That's a legitimate protection axis (Expanse radiation, nebula ops, EMP warfare), not a flaw — you just name the right consumer. It also surfaces two dead/missing hooks: the **dead `ToughnessBonus` field** and the **redundancy/damage-control** door, both of which point at the parked degraded-condition model.
+**Reading:** Hardening is the honest odd-one-out — its **hazard-resistance core is Modelled** (a clean, data-driven generic attribute; a new resistance is JSON, not C#), but **the combat resolver never reads it**: this is the *survive-the-environment* door, and its consumer is the hazard/attrition system, crew survival, and system integrity. That's a legitimate protection axis (Expanse radiation, nebula ops, EMP warfare), not a flaw — you just name the right consumer. It also surfaces the **redundancy/damage-control** door (net-new), which points at the parked degraded-condition model. *(Correction, verified in the Enhancers survey: `GroundAugmentAtb.ToughnessBonus` — earlier flagged here as "dead" — is actually **read and applied** as an HP multiplier in `GroundUnitAssembly:110,129`; it's Modelled-but-not-surfaced as a standalone stat, not dead. See §6.1.)*
 
 **Numbers:** `ResistanceFraction` (0..1) per `HazardEffectType` (Radiation/Heat/EMP/SensorJam/WarpInhibit/Drag/Corrosive/Gravimetric). Cradle-to-grave: hardening is a **component** (the base-mod `sensor-hardening-module` is the worked example).
 
@@ -1724,4 +1724,156 @@ On top of the universal seven (§0a):
 ---
 
 ## ✅ §5 Defense — COMPLETE (4/4 doors locked)
-Armor 🔒 · Shields 🔒 · Hardening 🔒 · Fortification 🔒. **Yardstick = the damage matchup + the survival systems.** Headline readings: **Shields is the most-Modelled door** — the depleting pool + nature matchup (K 1.0/E 0.5/exotic 0.0) run live for ship AND ground through the shared `CombatKernel`; depth wires are small (nature-tuning as a per-component dial; ground regen as a dial). **Armor is the door with the category's two best CONNECT wires:** (1) space armour's flat-per-source soak is **DEAD** (ship `Combatant.Armour` unpopulated → a ship gets no swarm-bounce; the resolver-merge math is built, just unfed), and (2) armour has **no nature dimension to combat** (its material is hazard-only) — giving armour a nature-resistance (ablative walls energy, composite walls kinetic) is **the single richest wire in the category**, doubling the matchup into real rock-paper-scissors. **Hardening is honestly NOT a combat door** — its clean, data-driven hazard-resistance is Modelled but the resolver never reads it; it's the *survive-the-environment* axis (radiation/EMP/nebula), and it surfaces the dead `ToughnessBonus` field + the redundancy/damage-control gap (the degraded-condition tie-in). **Fortification is fully Modelled + clean** (ground-only local/adjacent bonuses, capped at halving incoming; a space "fort" is a Station, built from Chassis + the other Defense doors). Build-list: (1) **populate ship `Combatant.Armour`** (space flat-per-source soak — swarm-bounce parity with ground); (2) **armour nature-resistance dimension** (the matchup-doubler — the top item); (3) **shield nature-tuning** as a per-component dial; (4) **ground shield regen** as a dial (it's a constant); (5) wire the dead **`ToughnessBonus`** + the **redundancy/damage-control** door (degraded-condition).
+Armor 🔒 · Shields 🔒 · Hardening 🔒 · Fortification 🔒. **Yardstick = the damage matchup + the survival systems.** Headline readings: **Shields is the most-Modelled door** — the depleting pool + nature matchup (K 1.0/E 0.5/exotic 0.0) run live for ship AND ground through the shared `CombatKernel`; depth wires are small (nature-tuning as a per-component dial; ground regen as a dial). **Armor is the door with the category's two best CONNECT wires:** (1) space armour's flat-per-source soak is **DEAD** (ship `Combatant.Armour` unpopulated → a ship gets no swarm-bounce; the resolver-merge math is built, just unfed), and (2) armour has **no nature dimension to combat** (its material is hazard-only) — giving armour a nature-resistance (ablative walls energy, composite walls kinetic) is **the single richest wire in the category**, doubling the matchup into real rock-paper-scissors. **Hardening is honestly NOT a combat door** — its clean, data-driven hazard-resistance is Modelled but the resolver never reads it; it's the *survive-the-environment* axis (radiation/EMP/nebula), and it surfaces the redundancy/damage-control gap (the degraded-condition tie-in). **Fortification is fully Modelled + clean** (ground-only local/adjacent bonuses, capped at halving incoming; a space "fort" is a Station, built from Chassis + the other Defense doors). Build-list: (1) **populate ship `Combatant.Armour`** (space flat-per-source soak — swarm-bounce parity with ground); (2) **armour nature-resistance dimension** (the matchup-doubler — the top item); (3) **shield nature-tuning** as a per-component dial; (4) **ground shield regen** as a dial (it's a constant); (5) the **redundancy/damage-control** door (degraded-condition, net-new).
+
+---
+
+## §6 — Enhancers
+
+Enhancers is the **force-multiplier layer — what makes a veteran ≠ a conscript.** It's one of the two genuinely **net-new categories** (the categories doc: "net-new otherwise"), and the honest headline is: *most of it isn't built yet.* Weapons/Propulsion/Sensors/Power/Defense were largely "expose + wire what exists"; Enhancers is largely "here is the layer the game is missing, defined cleanly so it can be built." That's the right job for a design doc — name the gap precisely, not paper over it.
+
+**The load-bearing thing this category settles — the GEAR-vs-BEING boundary (hole H4).** The designer makes **gear**: a buildable component (an `IComponentDesignAttribute` the assembler/resolver reads) that you research → build → mount → lose. It does **not** make the *being* that uses the gear. Innate ability — a species trait, raw talent, veterancy earned in blood, "the Force" — is **not a component**; it lives in the **People / crew / species / morale** system. Enhancers is the **buildable bridge** across that line (power armour, a training program, an AI co-pilot — all things you *build and install*), but the line itself is firm: a Jedi's telekinesis is a pilot trait, not a part in the store. This category is where that boundary gets drawn, because it's the category most tempted to cross it.
+
+> **The boundary, concretely (from the engine survey):**
+> - **Buildable Enhancer (this category):** carries an `IComponentDesignAttribute` the assembler reads — today that's `GroundAugmentAtb` (Strength/Evasion/Toughness/Shield). Cradle-to-grave.
+> - **People/species trait (NOT the store):** `SpeciesDB` (environmental tolerances only — **zero combat trait today**), `CommanderDB.Experience` (written by the academy, **never read by combat**), `BonusesDB` (has research/mining categories, **no combat category**). These are innate/attached-to-a-being and currently inert for combat — the home for veterancy/pilot-skill/species-talent, none of which is a component.
+
+**The §0f multi-consumer angle — Enhancers multiply ANY task, not just combat.** A power-armoured marine hits harder (combat); a bio-augment lets a colonist work in high-G or vacuum (labour); a training program makes a survey crew scan faster (exploration); an AI system runs a factory with less crew (industry). So even though the examples read military, the category feeds the whole game — the same reason it's worth building.
+
+### §6.0 Shared enhancer dials (all three doors)
+On top of the universal seven (§0a):
+| Dial | Drives (real stat) |
+|------|--------------------|
+| **What it boosts** | which stat/task it multiplies — attack/evasion/toughness (combat) OR survey/build/research speed (labour) |
+| **Magnitude** | how big the multiplier — mild + cheap vs radical + costly |
+| **Host** | who wears/runs it — a soldier (ground), a ship's crew (net-new), a facility's workforce |
+| **Cost / side-effect** | the price — mass, power, upkeep, a drug crash, a medical/ethical cost |
+| **Grave rung** | destroyed/killed = the multiplier is gone (a shot-off exo, a dead veteran, a fried computer) |
+
+### 6.1 Enhancers ▸ BIO-AUGMENTATION  🟡 *proposed*
+*Upgrade the body — power armour, reflex boosters, combat drugs, gene-mods, cybernetics. The one door in this category that's **actually built** (ground-side): everything from a stim to a power-armour exoskeleton to a full conversion-cyborg falls out of these dials, and power-armour + reflex-booster are buildable in the base mod today.*
+
+**The core decision — HOW FAR to push the body, against cost and side-effect.** A mild augment is cheap and clean; a radical one (combat drugs, heavy cybernetics) is a huge boost that costs money, medical/ethical price, or a crash afterward. You pick which attribute to raise and how hard to push it.
+
+**A. Augment type — what it boosts (maps to the real `GroundAugmentAtb` fields)**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **Strength** (myomer/servo) | more carry-budget + melee/heavy-weapon capacity | bulky; a strength rig doesn't help you dodge |
+| **Reflex** (booster/wired) | **raises evasion** — the hardest-to-hit operative | fragile once hit; expensive neural work |
+| **Constitution** (subdermal/organ) | **more HP** (a toughness multiplier) | heavy; slows you |
+| **Ward** (personal shield) | a personal energy shield (the depleting pool, at unit scale) | power/mass; the shield-nature matchup still applies |
+
+**B. Magnitude — mild ↔ radical**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Mild** | cheap, clean, no downside | modest edge |
+| **Radical** | huge multiplier (power armour, heavy cyber) | costly; ⏳ side-effects (a drug's crash, cyber-rejection) are net-new |
+
+**C. Delivery — worn ↔ implanted ↔ chemical**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Worn (exo/power armour)** | removable, transferable — adds mass | can be shot off (the grave rung) |
+| **Implanted (cybernetic/gene)** | permanent, no external mass | medical cost; can't un-install |
+| **Chemical (combat drugs)** | a cheap temporary spike | ⏳ temporary + a crash afterward (net-new timing) |
+
+**D. Host — soldier (built) vs ship-crew (net-new)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Personnel (ground)** | live today — `GroundAugmentAtb` on a ground unit | ground-only |
+| **Ship crew** | augmented crew = a better-fought ship | ⏳ **net-new** — no ship-crew augment exists |
+
+**Modellability audit (§0d — the one mostly-Modelled door in the category):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| Strength | ✅ | `GroundAugmentAtb.StrengthBonus` → carry-budget (`GroundUnitAssembly:72`) |
+| Reflex / evasion | ✅ | `GroundAugmentAtb.EvasionBonus` → `GroundUnit.Evasion` (`GroundUnitAssembly:108`) |
+| Constitution / toughness | ✅ | `GroundAugmentAtb.ToughnessBonus` → HP multiplier `HitPoints *= 1 + toughness` (`GroundUnitAssembly:110,129`) — **Modelled** (a Defense-doc note called it "dead"; that was a **false positive** — it's read and applied, just not surfaced as a standalone stat) |
+| Ward / personal shield | ✅ | `GroundAugmentAtb.Shield` → `GroundUnit.Shield` (the depleting pool) |
+| Magnitude / side-effects | ◐ **wire** / ⏳ | the bonus scales ✅; a drug **crash / temporary** timing is ⏳ net-new |
+| **Ship-crew augment** | ⏳ **defer** | augmentation is **ground-only**; a space bio-augment (crew-quality) is net-new |
+
+**Reading:** Bio-augmentation is **real and buildable today on the ground** — all four `GroundAugmentAtb` fields are read into the unit, and power-armour + reflex-booster ship in the base mod. The design work is (a) **surface `ToughnessBonus`** as a visible stat (it's Modelled, just invisible — the false-positive lesson), (b) add **combat-drug timing** (temporary spike + crash — net-new), and (c) a **ship-crew augment** (the space twin — net-new). Cradle-to-grave is closed on the ground: research → build the augment → install on a unit → lose it when the unit dies.
+
+**Numbers:** `StrengthBonus`/`EvasionBonus`/`ToughnessBonus`/`Shield` (the `GroundAugmentAtb` fields, health-scaled). Reference: base-mod `reflex-booster` (evasion) + `power-armor` (strength+toughness).
+
+**Preset coordinates:** reflex booster (evasion) · power armour (strength+toughness) · combat stims (temporary, ⏳) · personal shield generator (ward) · conversion cyborg (radical, all-round) · **labour exo** *(a civilian strength rig — work in high-G/vacuum, the §0f non-combat use)*.
+
+### 6.2 Enhancers ▸ TRAINING / DOCTRINE  🟡 *proposed*
+*Make a veteran — drilled skill that raises a unit's baseline without new hardware. The green conscript vs the hardened elite. **Mostly net-new:** the "veteran ≠ conscript" promise is exactly what the game doesn't have yet — the scaffolding exists (an academy that produces officers, an experience number that ticks up) but **nothing reads it into the fight.***
+
+**Distinct from fleet/formation POSTURE (don't conflate).** `FleetDoctrineDB` / `GroundFormationDoctrine` (the switchable Offensive/Defensive stance a commander picks mid-battle) already exist and live in the **combat/Command** layer — that's a *posture*, chosen per fight. This door is the unit's **baked-in competence** — the drilled skill it carries into every fight, earned or trained. Posture is the stance; training is the soldier.
+
+**The core decision — EARN IT or TRAIN IT, and in WHAT.** A veteran is better at a specific thing (gunnery, dodging, holding under fire, or a non-combat craft). You choose the skill focus and how the unit gets there — an academy program (built), blood-earned experience (accrued), or an installed doctrine/training package.
+
+**A. Skill focus — what the training sharpens**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **Gunnery** | raises accuracy/attack — lands more fire | narrow — a crack shot who can't dodge |
+| **Evasion / survival** | dodges better, holds under fire (discipline) | doesn't hit harder |
+| **Operations** (non-combat) | faster survey / build / research — the §0f labour use | no combat benefit |
+
+**B. Level — green → elite (the veterancy tier)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Green** | cheap, plentiful — a conscript | worse at everything until blooded |
+| **Elite** | a big multiplier across the board | expensive, slow to make, irreplaceable if lost (the grave rung bites hardest) |
+
+**C. Source — academy ↔ combat-earned ↔ doctrine-package**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Academy-trained** | build it deliberately (the `NavalAcademy` produces officers today) | ⏳ officers have **no combat effect** yet |
+| **Combat-earned** | free — units improve by fighting | ⏳ `CommanderDB.Experience` ticks up but is **never read**; no per-unit XP stat exists |
+| **Doctrine package** (installed) | a buildable training program — treat competence as a component | ⏳ net-new |
+
+**Modellability audit (§0d — mostly net-new; the scaffolding is there, the payoff isn't):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| Academy (officer production) | ✅ | `NavalAcademyAtb.ClassSize`/`TrainingPeriodInMonths` → `NavalAcademyProcessor` graduates commanders — **production is real** |
+| Officer → combat effect | ⏳ **defer** | `CommanderDB.Experience` is **written but never read**; `BonusesDB` has **no combat category** — needs a combat `BonusCategory` + a person→ship/unit combat-attach |
+| Per-unit veterancy | ⏳ **defer** | `GroundUnit` / `ShipCombatValueDB` have **no experience field** (the crew-XP v2 stub) — a veterancy stat the resolver reads is net-new |
+| Skill focus / level | ⏳ **defer** | rides the per-unit veterancy stat above |
+| Operations (non-combat) | ◐ **wire** | a training bonus onto survey/build/research rates (the existing `BonusesDB` pattern, extended) |
+
+**Reading:** Training/Doctrine is **the most net-new door so far** — and that's the honest finding. The game *produces* officers (the academy works) and *stores* an experience number, but **nothing reads either into a fight**, so a veteran and a conscript are identical in the resolver today. The build is a clear chain: add a **combat `BonusCategory`** to `BonusesDB` → **attach** a commander/veterancy to a ship/unit → give the resolver a **veterancy term** (modifies hit/evasion). Until that exists, "veteran ≠ conscript" is a promise, not a mechanic. (The non-combat half — training that speeds labour — is a cheaper ◐ wire onto the existing bonus pattern.)
+
+**Numbers:** a veterancy tier (green→elite) → a small multiplier on hit/evasion (to be calibrated against `EvasionCap 0.95` and the `HitFraction` tracking term, once the stat exists). Cradle-to-grave: training is either a **built program** (academy/doctrine-package component) or an **earned stat** — and an elite lost in battle is gone (re-train from green).
+
+**Preset coordinates:** green conscript · drilled regular · elite veteran · academy officer (⏳ needs the combat-attach) · ace pilot (⏳) · **veteran survey crew** *(faster scans — the §0f labour use)*.
+
+### 6.3 Enhancers ▸ SYSTEMS  🟡 *proposed*
+*Let the machine help — a targeting computer, a battle-management AI, an astromech co-pilot, an automation suite. Multiplies what the crew/unit can do without changing the body or the training. **Essentially net-new for the live combat engine:** the auto-resolver derives hit chance purely from weapon-vs-evasion — there is no computer term — and the one existing piece (fire-control) feeds only the parked per-pixel sim.*
+
+**The core decision — ASSIST or REPLACE the crew.** A system either helps a crew do better (a targeting computer sharpens their fire) or does the job *instead* of a crew (an AI runs the ship / an automated factory). The first is a force-multiplier; the second bleeds into crewless operation (a Command/People question).
+
+**A. System type — what it multiplies**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **Targeting computer** | raises **hit chance** (the accuracy term) — lands fire on dodgers | ⏳ the auto-resolver has no computer term; overlaps the Sensors ▸ Fire-Control wire |
+| **Battle-management** | **coordinates** the fleet/formation — a firepower/focus multiplier | ⏳ net-new — no coordination term |
+| **AI co-pilot** (astromech) | reaction/evasion assist — the R2 slot | ⏳ net-new; a crew-slot filled by a machine |
+| **Automation** (non-combat) | run with **less crew** / faster industry — the §0f efficiency | ◐ wire onto the crew/industry systems |
+
+**B. Level — basic → advanced AI**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Basic** | cheap assist | modest |
+| **Advanced AI** | big multiplier, low crew | costly, high-tech; ⏳ an autonomous AI raises the crewless/Command question |
+
+**Modellability audit (§0d — the door with the least engine hook):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| Targeting computer (hit chance) | ⏳ **defer** | the auto-resolver's `HitFraction` has **no computer term** (pure weapon-vs-evasion); `BeamFireControlAtbDB` exists but feeds the **parked** per-pixel sim, not the resolver — **overlaps the Sensors ▸ Fire-Control wire** (build once, both doors light up) |
+| Battle-management / coordination | ⏳ **defer** | no firepower-coordination term in the resolver |
+| AI co-pilot | ⏳ **defer** | no crew-slot / reaction model the resolver reads |
+| Automation (non-combat) | ◐ **wire** | a "runs with less crew / faster industry" bonus onto the manpower/industry systems (the `BonusesDB` pattern) |
+
+**Reading:** Systems is **essentially net-new for combat** — its whole premise (a computer that makes you fight better) has no hook in the auto-resolver, which decides hits from weapon specs vs evasion alone. Its one foothold, **fire-control**, lives on the parked per-pixel sim and is the *same* dead-knob wire as Sensors ▸ Fire Control — so a **targeting-computer term in `HitFraction`** is the shared build that lights up both. The cheapest live win here is the **non-combat** half: automation as a crew-reduction / industry-speed bonus, which rides the existing bonus pattern. Honest verdict: the combat side is a build item, the labour side is a wire.
+
+**Numbers:** a computer's accuracy/coordination bonus → the `HitFraction` tracking term + a firepower coefficient (net-new terms, calibrated once built). Cradle-to-grave: a system is a **component** (research the AI/computer tech → build → install → fried when the ship's hit).
+
+**Preset coordinates:** targeting computer · battle-management AI · astromech co-pilot · automation suite (crewless efficiency, ◐) · tactical network · **factory AI** *(faster industry — the §0f use)*.
+
+---
+
+## §6 Enhancers — status (all three doors proposed, awaiting lock)
+Bio-augmentation 🟡 · Training/Doctrine 🟡 · Systems 🟡. **This is the honest NET-NEW category** — the "veteran ≠ conscript" force-multiplier layer the game mostly lacks; the design job is to define it cleanly and hold the gear-vs-being line, not pretend it's built. Headline readings: **Bio-augmentation is the one mostly-Modelled door** (`GroundAugmentAtb` — strength/evasion/toughness/shield all read; power-armour + reflex-booster buildable today; ship-crew augment is the net-new twin) — *and it corrects a Defense-doc false positive: `ToughnessBonus` is Modelled (HP multiplier), not dead.* **Training/Doctrine is mostly net-new** — the academy produces officers and `CommanderDB.Experience` ticks up, but **nothing reads either into a fight** (a veteran = a conscript in the resolver today); the build is a combat `BonusCategory` + a person→unit combat-attach + a per-unit veterancy stat. **Systems is essentially net-new** — the auto-resolver has no computer term (hit chance is pure weapon-vs-evasion), and its one foothold (fire-control) lives on the parked sim + overlaps the Sensors ▸ Fire-Control wire. **The load-bearing decision is the BOUNDARY (H4):** buildable **gear** (an `IComponentDesignAttribute` the resolver reads — `GroundAugmentAtb`) is this category; innate **being** (species trait, raw talent, the Force) lives in **People/species/crew** — and `SpeciesDB` has **zero combat trait today**, so even that is net-new, and it stays **out** of the component store. Build-list: (1) surface `ToughnessBonus` (Modelled, invisible) — **done: Defense-doc corrected**; (2) ship-crew bio-augment (the space twin); (3) combat-drug timing (temporary + crash); (4) a combat `BonusCategory` + person→unit attach (make officers/experience matter); (5) a per-unit veterancy stat the resolver reads; (6) a targeting/battle-computer term in `HitFraction` (Systems, shares the FC wire); (7) hold the line — innate traits go to People, not here.
