@@ -29,10 +29,12 @@
 | 18 | Defense | **Shields** | 🔒 **LOCKED §5.2** |
 | 19 | Defense | **Hardening** | 🔒 **LOCKED §5.3** |
 | 20 | Defense | **Fortification** | 🔒 **LOCKED §5.4** |
-| 21 | Enhancers | **Bio-augmentation** | 🟡 **proposed §6.1** (awaiting lock) |
-| 22 | Enhancers | **Training / Doctrine** | 🟡 **proposed §6.2** (awaiting lock) |
-| 23 | Enhancers | **Systems** | 🟡 **proposed §6.3** (awaiting lock) |
-| 24–37 | Industrial · Logistical · Civic · Command · Chassis | (all doors) | ⚫ pending |
+| 21 | Enhancers | **Bio-augmentation** | 🔒 **LOCKED §6.1** |
+| 22 | Enhancers | **Training / Doctrine** (Unit Caliber) | 🔒 **LOCKED §6.2** |
+| 23 | Enhancers | **Systems** | 🔒 **LOCKED §6.3** |
+| 24 | Industrial | **Extraction** | 🟡 **proposed §7.1** (awaiting lock) |
+| 25 | Industrial | **Fabrication** | 🟡 **proposed §7.2** (awaiting lock) |
+| 26–37 | Logistical · Civic · Command · Chassis | (all doors) | ⚫ pending |
 
 ---
 
@@ -1750,7 +1752,7 @@ On top of the universal seven (§0a):
 | **Cost / side-effect** | the price — mass, power, upkeep, a drug crash, a medical/ethical cost |
 | **Grave rung** | destroyed/killed = the multiplier is gone (a shot-off exo, a dead veteran, a fried computer) |
 
-### 6.1 Enhancers ▸ BIO-AUGMENTATION  🟡 *proposed*
+### 6.1 Enhancers ▸ BIO-AUGMENTATION  🔒 *locked*
 *Upgrade the body — power armour, reflex boosters, combat drugs, gene-mods, cybernetics. The one door in this category that's **actually built** (ground-side): everything from a stim to a power-armour exoskeleton to a full conversion-cyborg falls out of these dials, and power-armour + reflex-booster are buildable in the base mod today.*
 
 **The core decision — HOW FAR to push the body, against cost and side-effect.** A mild augment is cheap and clean; a radical one (combat drugs, heavy cybernetics) is a huge boost that costs money, medical/ethical price, or a crash afterward. You pick which attribute to raise and how hard to push it.
@@ -1798,7 +1800,7 @@ On top of the universal seven (§0a):
 
 **Preset coordinates:** reflex booster (evasion) · power armour (strength+toughness) · combat stims (temporary, ⏳) · personal shield generator (ward) · conversion cyborg (radical, all-round) · **labour exo** *(a civilian strength rig — work in high-G/vacuum, the §0f non-combat use)*.
 
-### 6.2 Enhancers ▸ TRAINING / DOCTRINE  🟡 *proposed*
+### 6.2 Enhancers ▸ TRAINING / DOCTRINE (Unit Caliber)  🔒 *locked*
 *The **unit QUALITY / caliber** dial — the thing that stamps "elite" onto a unit at design time. This is what lets you build a **Space Marine** instead of a Guardsman, an **ace** instead of a rookie, the **Millennium Falcon** instead of a stock freighter — the same chassis and gear, but a higher-caliber crew that hits harder, dodges better, and holds under fire. It is **not the commander** (a formation/fleet leader is a separate thing that buffs from above) and **not the gear** (armour/weapons/augments are other doors); caliber is **intrinsic to the unit** and stacks with both. Mostly net-new today — but the reframe makes it a clean build.*
 
 **The core decision — WHAT CALIBER of unit.** You choose a **quality tier** when you design the unit and pay for it upfront: a conscript is cheap and plentiful; an elite is a big across-the-board multiplier but **expensive and FEW** (elites draw from a scarce talent pool — you can't field an army of Space Marines). That single choice is what separates two units built from the *identical* chassis + weapons + armour. Caliber can also be **earned** (a green unit that survives becomes a veteran) or **trained** (an academy program) — but the primary lever is the design-time quality dial, the same way armour thickness is a design choice.
@@ -1853,7 +1855,7 @@ On top of the universal seven (§0a):
 | **Millennium Falcon** | Elite (ship crew) | crew caliber on a freighter chassis — "she's got it where it counts" |
 | **Veteran survey crew** *(civilian)* | Veteran (operations) | faster scans — the §0f labour use |
 
-### 6.3 Enhancers ▸ SYSTEMS  🟡 *proposed*
+### 6.3 Enhancers ▸ SYSTEMS  🔒 *locked*
 *Let the machine help — a targeting computer, a battle-management AI, an astromech co-pilot, an automation suite. Multiplies what the crew/unit can do without changing the body or the training. **Essentially net-new for the live combat engine:** the auto-resolver derives hit chance purely from weapon-vs-evasion — there is no computer term — and the one existing piece (fire-control) feeds only the parked per-pixel sim.*
 
 **The core decision — ASSIST or REPLACE the crew.** A system either helps a crew do better (a targeting computer sharpens their fire) or does the job *instead* of a crew (an AI runs the ship / an automated factory). The first is a force-multiplier; the second bleeds into crewless operation (a Command/People question).
@@ -1888,5 +1890,5 @@ On top of the universal seven (§0a):
 
 ---
 
-## §6 Enhancers — status (all three doors proposed, awaiting lock)
-Bio-augmentation 🟡 · Training/Doctrine 🟡 · Systems 🟡. **This is the honest NET-NEW category** — the "veteran ≠ conscript" force-multiplier layer the game mostly lacks; the design job is to define it cleanly and hold the gear-vs-being line, not pretend it's built. Headline readings: **Bio-augmentation is the one mostly-Modelled door** (`GroundAugmentAtb` — strength/evasion/toughness/shield all read; power-armour + reflex-booster buildable today; ship-crew augment is the net-new twin) — *and it corrects a Defense-doc false positive: `ToughnessBonus` is Modelled (HP multiplier), not dead.* **Training/Doctrine is the unit-CALIBER door** (reframed per the developer): a **design-time quality tier** that stamps "elite" onto a unit — a **Space Marine** vs a Guardsman, an **ace** vs a rookie, the **Millennium Falcon** vs a stock freighter, on the *same* chassis and gear. It's **the unit's own stat, not the commander** (a separate stacking modifier) and not the gear (other doors). Net-new but **clean**: the spine is a single `Quality` multiplier field on the unit design, read by the resolver (hit/evasion) — simpler than an XP engine, with anti-dominance built in (elites draw a **scarce talent pool**, so you can't mass-produce Space Marines). Combat-earned XP + the academy are optional secondary sources. Holds the H4 line on Jedi: this builds the elite *warrior*; the *Force* stays a People being-trait. **Systems is essentially net-new** — the auto-resolver has no computer term (hit chance is pure weapon-vs-evasion), and its one foothold (fire-control) lives on the parked sim + overlaps the Sensors ▸ Fire-Control wire. **The load-bearing decision is the BOUNDARY (H4):** buildable **gear** (an `IComponentDesignAttribute` the resolver reads — `GroundAugmentAtb`) is this category; innate **being** (species trait, raw talent, the Force) lives in **People/species/crew** — and `SpeciesDB` has **zero combat trait today**, so even that is net-new, and it stays **out** of the component store. Build-list: (1) surface `ToughnessBonus` (Modelled, invisible) — **done: Defense-doc corrected**; (2) ship-crew bio-augment (the space twin); (3) combat-drug timing (temporary + crash); (4) a per-unit **`Quality` multiplier** field (the caliber spine — makes Space Marine ≠ Guardsman, Falcon ≠ freighter) read by the resolver + drawn from the scarce **talent pool** (`ManpowerDB`); (5) optional secondary paths — combat-earned XP raising `Quality`, and a combat `BonusCategory` for officer/commander effect; (6) a targeting/battle-computer term in `HitFraction` (Systems, shares the FC wire); (7) hold the line — innate traits (the Force) go to People, not here.
+## ✅ §6 Enhancers — COMPLETE (3/3 doors locked)
+Bio-augmentation 🔒 · Training/Doctrine (Unit Caliber) 🔒 · Systems 🔒. **This is the honest NET-NEW category** — the "veteran ≠ conscript" force-multiplier layer the game mostly lacks; the design job is to define it cleanly and hold the gear-vs-being line, not pretend it's built. Headline readings: **Bio-augmentation is the one mostly-Modelled door** (`GroundAugmentAtb` — strength/evasion/toughness/shield all read; power-armour + reflex-booster buildable today; ship-crew augment is the net-new twin) — *and it corrects a Defense-doc false positive: `ToughnessBonus` is Modelled (HP multiplier), not dead.* **Training/Doctrine is the unit-CALIBER door** (reframed per the developer): a **design-time quality tier** that stamps "elite" onto a unit — a **Space Marine** vs a Guardsman, an **ace** vs a rookie, the **Millennium Falcon** vs a stock freighter, on the *same* chassis and gear. It's **the unit's own stat, not the commander** (a separate stacking modifier) and not the gear (other doors). Net-new but **clean**: the spine is a single `Quality` multiplier field on the unit design, read by the resolver (hit/evasion) — simpler than an XP engine, with anti-dominance built in (elites draw a **scarce talent pool**, so you can't mass-produce Space Marines). Combat-earned XP + the academy are optional secondary sources. Holds the H4 line on Jedi: this builds the elite *warrior*; the *Force* stays a People being-trait. **Systems is essentially net-new** — the auto-resolver has no computer term (hit chance is pure weapon-vs-evasion), and its one foothold (fire-control) lives on the parked sim + overlaps the Sensors ▸ Fire-Control wire. **The load-bearing decision is the BOUNDARY (H4):** buildable **gear** (an `IComponentDesignAttribute` the resolver reads — `GroundAugmentAtb`) is this category; innate **being** (species trait, raw talent, the Force) lives in **People/species/crew** — and `SpeciesDB` has **zero combat trait today**, so even that is net-new, and it stays **out** of the component store. Build-list: (1) surface `ToughnessBonus` (Modelled, invisible) — **done: Defense-doc corrected**; (2) ship-crew bio-augment (the space twin); (3) combat-drug timing (temporary + crash); (4) a per-unit **`Quality` multiplier** field (the caliber spine — makes Space Marine ≠ Guardsman, Falcon ≠ freighter) read by the resolver + drawn from the scarce **talent pool** (`ManpowerDB`); (5) optional secondary paths — combat-earned XP raising `Quality`, and a combat `BonusCategory` for officer/commander effect; (6) a targeting/battle-computer term in `HitFraction` (Systems, shares the FC wire); (7) hold the line — innate traits (the Force) go to People, not here.
