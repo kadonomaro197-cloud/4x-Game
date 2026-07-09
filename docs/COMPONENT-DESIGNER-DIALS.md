@@ -39,11 +39,11 @@
 | 28 | Civic | **Habitation** | 🔒 **LOCKED §9.1** |
 | 29 | Civic | **Development** | 🔒 **LOCKED §9.2** |
 | 30 | Command | **Command** (colony/fleet scale dial) | 🔒 **LOCKED §10.1** |
-| 31 | Chassis | **Personnel** | 🟡 **proposed §11.1** (awaiting lock) |
-| 32 | Chassis | **Vehicle** | 🟡 **proposed §11.2** (awaiting lock) |
-| 33 | Chassis | **Hull** (ship) | 🟡 **proposed §11.3** (awaiting lock) |
-| 34 | Chassis | **Structure** (station) | 🟡 **proposed §11.4** (awaiting lock) |
-| 35 | Chassis | **Mega** | 🟡 **proposed §11.5** (awaiting lock) |
+| 31 | Chassis | **Personnel** | 🔒 **LOCKED §11.1** |
+| 32 | Chassis | **Vehicle** | 🔒 **LOCKED §11.2** |
+| 33 | Chassis | **Hull** (ship) | 🔒 **LOCKED §11.3** |
+| 34 | Chassis | **Structure** (station) | 🔒 **LOCKED §11.4** |
+| 35 | Chassis | **Mega** | 🔒 **LOCKED §11.5** |
 
 ---
 
@@ -2362,35 +2362,35 @@ So the founding promise of the entire component designer — *the numbers force 
 | **Hardpoints / slots** | how many mounts (ground: a per-item weight cap; ship/station: net-new) |
 | **Grave rung** | a wrecked frame spills everything mounted on it — the ultimate loss |
 
-### 11.1 Chassis ▸ PERSONNEL  🟡 *proposed*
+### 11.1 Chassis ▸ PERSONNEL  🔒 *locked*
 *The soldier's own frame — a human (or xeno) body's carry budget. The lightest chassis: a rifle, a pack, an augment, and not much else. Everything from a conscript to a power-armoured marine sits on this frame (the armour + caliber ride on top, from the Defense + Enhancers doors).*
 **Core decision — how much can one body haul.** A small `BaseStrength` budget; overload it and the design is invalid. This is the frame the Enhancers strength-augment *raises* (the §0b "carry more" upgrade).
 **Dials:** `BaseStrength` (carry budget) · `BaseHP` · `Locomotion` (Foot) · `CarryClass` (**Personnel**).
 **Modellability:** ✅ **Modelled** — `GroundChassisAtb` + the `GroundUnitAssembly` hard carry cap; augments raise the budget (the live §0b upgrade).
 **Presets:** conscript body · trooper · power-armour frame *(+ Bio-augmentation)*.
 
-### 11.2 Chassis ▸ VEHICLE  🟡 *proposed*
+### 11.2 Chassis ▸ VEHICLE  🔒 *locked*
 *The machine frame — wheels, tracks, legs, hover. A far bigger carry budget than a body, so it mounts the heavy weapons, reactors, and armour a trooper can't. The AT-M6, a tank, a hovertank all sit here (legs + heavy laser + reactor + armour → the mass forces this frame, per the AT-M6 walkthrough).*
 **Core decision — a vehicle-scale budget on a chosen locomotion.** Bigger `BaseStrength`; the mass of a heavy cannon + its reactor + thick armour fits here where it'd overflow a Personnel frame.
 **Dials:** `BaseStrength` (big budget) · `Size` · `Locomotion` (**Tracked/Walker/Hover**) · `CarryClass` (**Vehicle**).
 **Modellability:** ✅ **Modelled** (same hard cap as Personnel). *Net-new:* **walker + swarm as distinct carry classes** — today "walker" is a `GroundLocomotion` value, not a class, and there's no swarm class (a many-tiny-bodies frame).
 **Presets:** wheeled APC · main battle tank · **AT-M6 walker** *(heavy Vehicle budget)* · hovertank.
 
-### 11.3 Chassis ▸ HULL  🟡 *proposed*
+### 11.3 Chassis ▸ HULL  🔒 *locked*
 *The ship's frame — a spaceframe's tonnage class, hardpoints, and hull toughness. **The door where §0b is NOT yet real for space:** a ship is IMPLICIT today (a bag of components with no hull object and no tonnage cap), so a corvette and a dreadnought differ only in the emergent sum of what you bolted on — nothing forces the frame.*
 **Core decision — what tonnage class of ship, and how many hardpoints.** A frigate hull vs a battleship hull vs a Star-Destroyer hull: each *should* cap the mass/volume it holds and the number of weapon mounts, so an over-gunned design overflows the hull and forces a bigger class (the Defiant-is-over-gunned lesson).
 **Dials:** **tonnage/volume ceiling** · **hardpoint count** · **hull structural HP** · size class.
 **Modellability:** ⏳ **NET-NEW** — "ship hulls become real designs." `ShipInfoDB.Tonnage` is commented out; `ShipDesign.Recalculate` accumulates uncapped. The build: a **hull component/attribute carrying the mass/volume ceiling + hardpoint budget + a design-time validity check** mirroring `GroundUnitAssembly.Compute` (the ground cap that already works).
 **Presets:** fighter hull · frigate hull · cruiser hull · capital/dreadnought hull *(all net-new as capped frames)*.
 
-### 11.4 Chassis ▸ STRUCTURE  🟡 *proposed*
+### 11.4 Chassis ▸ STRUCTURE  🔒 *locked*
 *The station's frame — an off-world platform that hosts modules, population, industry, and defences. A **real host but not yet a real design:** stations exist and work (they mine, build, house pop — the parallel to a colony we saw throughout), but they're assembled by accretion (modules grown onto `ComponentInstancesDB`) with no design class and no module budget.*
 **Core decision — a station's module budget + structural class.** How many modules a platform holds before it needs a bigger frame; and its structural integrity.
 **Dials:** **module budget** · **structural integrity** (today flat 500, not scaled) · mount class.
 **Modellability:** ◐ **WIRE** — the host (`StationInfoDB` + `StationFactory`) is real and the industry rails build modules onto it; the wire is a **station design class + a module budget** (closing the `DESIGNER-AUDIT` "no station design class" gap) + optionally scaling `StructuralIntegrity`.
 **Presets:** orbital platform · research station · **shipyard station** · defence station · O'Neill habitat *(the Civic space-habitat on a Structure frame)*.
 
-### 11.5 Chassis ▸ MEGA  🟡 *proposed*
+### 11.5 Chassis ▸ MEGA  🔒 *locked*
 *The super-scale frame — the Death Star, a Titan, a Dyson swarm, a world-ship. **The tier every category footer promised — and it doesn't exist.** This is §0b's ultimate payoff: a planet-cracker beam's output demands a generator whose mass demands a hull whose tonnage **overflows everything below Mega**, so the numbers put you here — except there's no Mega frame to land in yet.*
 **Core decision — the impossible-scale build.** The one frame with the budget for a weapon/reactor/structure so massive nothing smaller can hold it. It's not chosen from a menu; the tonnage *forces* it (the whole point of §0b).
 **Dials:** an enormous **mass/volume budget** (orders of magnitude past Structure) · a Mega mount class · structural HP at the 10⁹–10¹⁵ J scale (§0e's top tier).
@@ -2399,14 +2399,14 @@ So the founding promise of the entire component designer — *the numbers force 
 
 ---
 
-## §11 Chassis — status (all five doors proposed, awaiting lock)
-Personnel 🟡 · Vehicle 🟡 · Hull 🟡 · Structure 🟡 · Mega 🟡. **The capstone — where §0b lives, and it's only one-fifth built.** The mass/volume budget that the ENTIRE 37-door designer leans on is a **real hard cap for exactly ONE door pair (Personnel/Vehicle)** — `GroundUnitAssembly.Compute` genuinely rejects an over-budget design (`GroundChassisAtb.BaseStrength`), and augments raise the budget — so §0b is *live* on the ground. But **Hull is net-new** (ships are implicit bags of components; `ShipDesign.Recalculate` accumulates `MassPerUnit` uncapped; `Tonnage` is commented out), **Structure is a wire** (a real station host with no design class or module budget), and **Mega doesn't exist at all**. Plus the mount system (`ComponentMountType` flags) is **Modelled as data but enforced only by UI filtering** — no engine-level "this component fits this chassis" gate. **The single highest-leverage build for the whole component designer:** **port the ground carry gate to ships + stations** — a chassis-supplied mass/volume ceiling + a design-time validity check (mirroring `GroundUnitAssembly.Compute`), a **Hull design class**, a **Station design class + module budget**, the **Mega tier**, and an **engine-level mount-compatibility check**. Do that, and "the numbers force the build" — the founding promise of the entire designer — becomes real across *all* scales instead of just the ground. This is the keystone that makes the §0b-forcing in the other 36 doors true. Build-list: (1) **the ship/station mass-budget cap + validity check** (the keystone — makes §0b real for space); (2) **Hull as a real design** (tonnage class + hardpoints); (3) **Station design class + module budget** (closes the DESIGNER-AUDIT gap); (4) the **Mega tier** (+ mount flag) — the Death-Star/Titan frame; (5) **engine-level mount enforcement** (today UI-filter only); (6) **walker/swarm** as distinct ground carry classes.
+## §11 Chassis — status (all five doors 🔒 LOCKED 2026-07-09)
+Personnel 🔒 · Vehicle 🔒 · Hull 🔒 · Structure 🔒 · Mega 🔒. **The capstone — where §0b lives, and it's only one-fifth built.** The mass/volume budget that the ENTIRE 37-door designer leans on is a **real hard cap for exactly ONE door pair (Personnel/Vehicle)** — `GroundUnitAssembly.Compute` genuinely rejects an over-budget design (`GroundChassisAtb.BaseStrength`), and augments raise the budget — so §0b is *live* on the ground. But **Hull is net-new** (ships are implicit bags of components; `ShipDesign.Recalculate` accumulates `MassPerUnit` uncapped; `Tonnage` is commented out), **Structure is a wire** (a real station host with no design class or module budget), and **Mega doesn't exist at all**. Plus the mount system (`ComponentMountType` flags) is **Modelled as data but enforced only by UI filtering** — no engine-level "this component fits this chassis" gate. **The single highest-leverage build for the whole component designer:** **port the ground carry gate to ships + stations** — a chassis-supplied mass/volume ceiling + a design-time validity check (mirroring `GroundUnitAssembly.Compute`), a **Hull design class**, a **Station design class + module budget**, the **Mega tier**, and an **engine-level mount-compatibility check**. Do that, and "the numbers force the build" — the founding promise of the entire designer — becomes real across *all* scales instead of just the ground. This is the keystone that makes the §0b-forcing in the other 36 doors true. Build-list: (1) **the ship/station mass-budget cap + validity check** (the keystone — makes §0b real for space); (2) **Hull as a real design** (tonnage class + hardpoints); (3) **Station design class + module budget** (closes the DESIGNER-AUDIT gap); (4) the **Mega tier** (+ mount flag) — the Death-Star/Titan frame; (5) **engine-level mount enforcement** (today UI-filter only); (6) **walker/swarm** as distinct ground carry classes.
 
 ---
 
 # 🏁 BLUEPRINT COMPLETE — all 11 categories / 37 doors specified
 
-Every door of the component designer is now run through the full pipeline (dials → justified options → modellability → numbers → resolver/system insertion) and locked or proposed. The 67 hand-authored templates collapse into **11 parametric categories**; specific things (phaser, submarine, AT-M6, bunker, Space Marine, Millennium Falcon, Death Star) fall out of dials; the multi-consumer rule (§0f) holds throughout; and every door names its Modelled ✅ / Wire ◐ / Defer ⏳ state honestly against the real engine.
+Every door of the component designer is now run through the full pipeline (dials → justified options → modellability → numbers → resolver/system insertion) and **all 37 doors are 🔒 LOCKED** (Chassis locked 2026-07-09; only Weapons▸Exotic §1.5 carries a design-refresh flag from the bioweapon slice). The 67 hand-authored templates collapse into **11 parametric categories**; specific things (phaser, submarine, AT-M6, bunker, Space Marine, Millennium Falcon, Death Star) fall out of dials; the multi-consumer rule (§0f) holds throughout; and every door names its Modelled ✅ / Wire ◐ / Defer ⏳ state honestly against the real engine.
 
 **The top cross-category build-list the whole blueprint surfaced (highest leverage first):**
 1. **The chassis mass-budget cap for ships + stations** (§11) — *the keystone.* Makes §0b ("the numbers force the build") real across all scales, not just ground. Mirror the working `GroundUnitAssembly` carry gate.
