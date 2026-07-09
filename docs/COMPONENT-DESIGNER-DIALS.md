@@ -117,6 +117,21 @@ Tiers overlap by ~an order of magnitude; **tech multiplies the achievable max** 
 
 **The resolver's exact input surface + where every dial inserts is audited in `docs/AUTO-RESOLVER-ANATOMY.md`** — the salvo engine taken apart bit by bit: the `WeaponProfile` 7-field footprint the salvo math reads, which dials write an existing field (✅), which need one of six named new fields/terms (➕ — Penetration first), and which need a deferred mechanic (⚙). That doc is the resolver-wiring backlog behind these dials.
 
+### 0f. Every component serves the WHOLE game, not just war — the multi-consumer rule (applies to EVERY door)
+**A dial is real if *a sim system* acts on it — combat is only ONE consumer, and rarely the main one.** Weapons was combat-first because that's what weapons are *for*; almost every other category is not. A survey sensor that reveals a habitable world drives a **colonization** decision as real as a beam driving a combat decision. So when grading a non-weapon door, do **not** measure it against the combat resolver alone — measure it against **whatever system consumes it**, and name that system. The consumers, all first-class:
+
+| Consumer system | Example dial that feeds it | The decision it creates |
+|-----------------|----------------------------|-------------------------|
+| **Combat resolver** | weapon output, evasion, detection (fog) | who wins the fight |
+| **Economy / industry** | geo-survey → minerals; extraction rate | what you can mine/build |
+| **Expansion / navigation** | grav-survey → jump points; hazard-mapping | where you can go safely |
+| **Colonization / habitability** | atmospheric survey → world viability | where you can settle |
+| **Research / tech** | anomaly + xenoarchaeology survey; a lab's output | what you can unlock |
+| **Diplomacy / first-contact** | life-sign + civ detection | who you meet, and how |
+| **Population / morale / logistics** | habitation, storage, life-support | whether people stay + supplied |
+
+**The corollary — a component is for ALL chassis, civilian and military, ship AND facility.** The same sensor door that arms a warship's targeting also builds a colony's **deep-space observatory**, a spaceport's **traffic-control array**, and a survey ship's **science suite** — because a component mounts on any Chassis that can supply it (§0b), a *facility* is just another Chassis (Structure/Mega). So every door must ask "what does the **civilian / scientific / industrial** version of this look like, on a **station or colony**, not just a warship?" — and the modellability audit grades it against **that** consumer too. *A door graded only by its combat use is a door half-designed.* **This rule governs every remaining category and every followup — Sensors first applies it in earnest (Survey especially), and it carries forward to Power, Industrial, Logistical, Civic, and the rest.**
+
 ---
 
 ## §1 — Weapons
@@ -1043,13 +1058,23 @@ Reaction 🔒 · Traction 🔒 · Fluid 🔒 · Warp 🔒 · Exotic 🔒. **The 
 
 ## §3 — Sensors
 
-Sensors decide **what you know** — and in this game knowledge is a weapon. The combat resolver already runs a fog-of-war layer (`RequireDetectionToEngage`): a fight only forms once someone *detects* the enemy, the side that sees first shoots first, and a blinded fleet takes fire without returning it (the `FirstStrike_SeerWipesBlindEnemy_Unscathed` gauge). So a sensor dial has real teeth — it changes who can shoot whom, not just what's drawn on the map.
+Sensors decide **what you know** — and knowledge drives half the game, not just the fight. Yes, in combat knowledge is a weapon (the resolver runs a fog layer: a fight only forms once someone *detects* the enemy, the side that sees first shoots first, and a blinded fleet takes fire without returning it — the `FirstStrike_SeerWipesBlindEnemy_Unscathed` gauge). But this is the category where the **multi-consumer rule (§0f)** bites hardest: the *same* sensor technology is a warship's targeting array, a **survey ship's science suite**, a **colony's deep-space observatory**, a **spaceport's traffic-control grid**, and an **explorer's tricorder**. Star Trek, Stargate, Mass Effect, and Stellaris are *exploration and science* franchises first — grading Sensors by combat alone would design half the category. So this category is graded against **all** its consumers.
 
-**The category's yardsticks (it has TWO, honestly):**
-- **Detection · Fire Control · Electronic Warfare → the combat resolver.** Detection feeds the **contact/attenuation math** (`SensorScan` → `SystemSensorContacts` → the fog gate `FleetDetects` → the first-strike resolver `CanEngageTarget`). Fire Control feeds the **`HitFraction` tracking term** (how well your guns land on a dodger). EW acts *on* detection (jam/spoof/cloak change what the enemy detects).
-- **Survey → the reveal/economy system.** Geo survey unlocks minerals to mine; grav survey unlocks jump points to expand through. Its consequence is economic/strategic, not a salvo — and that's fine (name the decision the dial serves).
+**The category's consumers (per §0f — combat is one of five):**
+- **Combat resolver** — Detection (the fog gate `FleetDetects` → the first-strike resolver `CanEngageTarget`), Fire Control (the `HitFraction` tracking term — how well your guns land on a dodger), EW (jam/spoof/cloak change what the enemy detects).
+- **Exploration / science / research** — Survey's stellar-cartography, anomaly-hunting, and xenoarchaeology feed the **tech + discovery** loop (the Stellaris/Stargate mystery-box; the Mass Effect scan-a-planet loop).
+- **Economy / industry** — geo-survey → the minerals you can mine.
+- **Expansion / navigation** — grav-survey → jump points; hazard-survey → safe routes.
+- **Colonization** — atmospheric/biosphere survey → which worlds are habitable.
+- **Diplomacy / first-contact** — life-sign + civilization detection → who's out there, and whether that world is already someone's home.
 
-**The load-bearing find from the engine audit:** the detection engine is **richly built** (a real EM-signature + attenuation + threshold + band + EMCON model — `SensorReceiverAtb`, `SensorProfileDB`, `AttenuationCalc`, `DetectionRange_m`, `FleetEmcon`), so Detection is overwhelmingly **Modelled**. But **Fire Control is a nest of DEAD KNOBS** — `BeamFireControlAtbDB` carries `Range`/`TrackingSpeed`/`FinalFireOnly` and **nothing reads them** (hit chance comes off the weapon, not the fire-control) — the exact "fidelity nobody acts on" the audit hunts. And **Electronic Warfare is net-new** (no jam/spoof/cloak component exists) — but the detection engine hands it a ready insertion surface. So this category is the cleanest showcase of Keep/Cut/Add/**CONNECT**: Detection = keep+expose, Fire Control = **connect the built-but-dead knobs**, EW = add onto the existing detection math.
+**The load-bearing finds from the engine audit:**
+- **Detection is richly built** (a real EM-signature + attenuation + threshold + band + EMCON model — `SensorReceiverAtb`, `SensorProfileDB`, `AttenuationCalc`, `DetectionRange_m`, `FleetEmcon`) → overwhelmingly **Modelled**, and it serves navigation/SAR/observatory duty as readily as targeting.
+- **Survey is NOT thin** — it only *looked* thin graded against combat. Widen the lens to the whole sci-fi survey space (cartography, life, atmosphere, anomalies, xeno-ruins, hazards) and it's one of the game's richest exploration doors — with two **franchise-earning net-new systems** hiding in it (the exploration mystery-box + xenoarchaeology).
+- **Fire Control is a nest of DEAD KNOBS** — `BeamFireControlAtbDB` carries `Range`/`TrackingSpeed`/`FinalFireOnly` and **nothing reads them** — the exact "fidelity nobody acts on" the audit hunts; the door's job is to CONNECT them. (And the *precision-pointing* tech generalizes past weapons — mining lasers, tractor beams, docking, comms-laser aiming.)
+- **Electronic Warfare is net-new** (no jam/spoof/cloak component exists) — but the detection engine hands it a ready insertion surface (and its civilian cousin is comms/signal management).
+
+So this category is the cleanest showcase of Keep/Cut/Add/**CONNECT**, now read across *all* consumers: Detection = keep+expose (military AND civilian), Survey = **expose the whole exploration space** + flag two net-new science loops, Fire Control = **connect the built-but-dead knobs**, EW = add onto the existing detection math.
 
 ### 3.0 Shared sensor dials (common to all four doors)
 On top of the universal seven (§0a), every sensor has:
@@ -1131,41 +1156,89 @@ The doors differ in **what the knowledge is FOR** — spotting the enemy (Detect
 | **Active radar** | radar | active | mid | finds cold/stealthed hulls; lights you up (seen at 2× your reach) |
 | **Multi-band suite** | wide | switchable | sensitive | the stealth-hunter — covers every band; heavy + costly |
 
+**Beyond combat (§0f) — the same door builds the civilian & facility sensors:** detection isn't only "spot the enemy." The identical dials build a spaceport's **traffic-control array** (track friendly hulls to avoid collisions), a colony's **planetary early-warning grid** (a FACILITY watching the sky), a **search-and-rescue** receiver tuned to distress beacons, a **navigation** sensor that flags debris/hazards on a route, and a **solar-flare warning** watch (paired with the hazard system). A detection component on a **Structure chassis** *is* a fixed sensor installation — the observatory's military cousin. So the audit's "✅ Modelled, gates combat" doubles as "✅ Modelled, serves navigation/SAR/traffic-control," same engine, different consumer.
+
 ### 3.2 Sensors ▸ SURVEY  🟡 *proposed*
-*The prospector's and cartographer's eyes: geological survey (find minerals to mine) and gravitational survey (find jump points to expand through). Not a combat door — its yardstick is the reveal/economy system, and its consequence is what you can dig up and where you can travel. The shallowest sensor door (one real numeric dial), and honestly so.*
+*The science suite — the eyes of every EXPLORER, prospector, colonist, and first-contact mission. This is the "explore" pillar of the 4X in one door: it answers the questions that drive expansion and discovery — **what's out there** (cartography), **what's it made of** (geology), **is it alive** (biosphere), **can we live there** (habitability), **is it safe** (hazards), **where can we go** (jump points), and **what did the ancients leave behind** (xenoarchaeology). Graded against combat alone it looked thin; graded against the whole sci-fi survey space (per §0f) it's one of the richest doors in the game — and it surfaces **two franchise-earning systems the game doesn't have yet** (the exploration mystery-box + xenoarchaeology). The Enterprise, the Normandy's planet-scanner, a Stargate survey team, a Stellaris science ship, a deep-space observatory — all fall out of these dials.*
 
-**The core decision — WHAT to map, and how fast.** Survey capacity is a rate you point at a target: geo-survey a body to reveal its mineral deposits (feeds mining/economy), or grav-survey a location to discover a jump point (feeds expansion). More survey speed = faster reveal, at more mass/cost. The decision is *prospect-for-resources vs scout-for-routes* + how much of your hull you spend on it.
+**The core decision — WHAT to look for, HOW DEEP, and from HOW FAR.** A survey suite is a bundle of scanning **modes**; a mining prospector, a science explorer, and a xeno-dig ship are the *same door* with different modes dialed up. On top of *which* modes you carry, you choose **depth** (a quick "minerals here" flag vs a deep multi-pass analysis that reads exact deposit sizes / atmosphere composition / anomaly resolution) and **reach** (scan from orbit, from a safe standoff, or land-and-dig). The trade is *breadth vs depth vs cost* — a do-everything science flagship is huge and expensive; a single-mode probe is cheap but blind to everything else.
 
-**A. Survey type — what it reveals**
-| Option | Why pick it | The catch |
-|--------|-------------|-----------|
-| **Geological** | reveals a body's **mineral deposits** (+ ground regions) → what you can mine | useless for finding travel routes |
-| **Gravitational** | reveals **jump points** → new systems to expand into | useless for finding minerals |
+**A. Survey mode — WHAT you're scanning for (the rich core dial; each mode feeds a different consumer, §0f)**
+| Mode | Reveals → feeds | Consumer |
+|------|-----------------|----------|
+| **Geological** | a body's **mineral deposits** (+ ground regions) | economy / mining |
+| **Gravitational** | **jump points**, gravity wells, stable lanes | expansion / navigation |
+| **Stellar / cartography** | bodies + system layout **from afar** (a telescope maps a system before you send a ship) | expansion / exploration |
+| **Atmospheric / planetary** | atmosphere, gravity, temperature → **habitability** | colonization |
+| **Biosphere / life-signs** | **is this world alive? inhabited?** ("life signs, Captain") | colonization + first-contact |
+| **Anomaly / phenomena** | spatial anomalies, derelicts, subspace echoes — **the mystery-box** | research / exploration |
+| **Xenoarchaeology** | **ruins & artifacts** on a surface → ancient tech | research |
+| **Hazard / navigational** | asteroid fields, radiation, nebulae, **solar-flare forecast** → safe routes | navigation / safety |
 
-**B. Survey speed — how fast it completes (`Speed`, points/tick)**
+**B. Survey depth / resolution — how much you learn per pass**
 | Option | Why | Catch |
 |--------|-----|-------|
-| **Slow** | light, cheap survey rig | a body/point takes many ticks to finish |
-| **Fast** | clears survey points quickly — map more, sooner | heavier, costlier; more hull spent on non-combat gear |
+| **Quick / shallow** | fast "there's *something* here" flag; light, cheap | no detail — you know a deposit exists, not its size or grade |
+| **Deep / analytical** | the full breakdown (exact tonnages, atmosphere mix, anomaly resolved) | slow, needs onboard analysis or a data-center to process |
 
-**C. Survey range** *(how close you must get)*
+**C. Survey speed — how fast a target completes (`Speed`, points/tick — the one dial the engine has today)**
 | Option | Why | Catch |
 |--------|-----|-------|
-| **Short** | cheap | must park almost on top of the target (grav survey's gate is ~100 km today) |
-| **Long** | survey from a safer standoff | ◐ the range is currently **hardcoded** (a flagged FIXME) — a real dial is a small wire |
+| **Slow** | light, cheap rig | a body/point takes many ticks |
+| **Fast** | clears survey points quickly — map more, sooner | heavier, costlier |
 
-**Modellability audit (§0d — Modelled but thin):**
-| Dial | Verdict | How the sim models it |
-|------|---------|------------------------|
-| Survey type (geo/grav) | ✅ | `GeoSurveyAtb` → `GeoSurveyProcessor` (reveals minerals/regions) · `GravSurveyAtb` → `JPSurveyProcessor` (discovers jump points) |
-| Survey speed | ✅ | `Speed` (points/tick) consumed against a `PointsRequired` pool (`GeoSurveyableDB` / `JPSurveyableDB`) |
-| Survey range | ◐ **wire** | the JP distance gate is **hardcoded ~100 km** (`JPSurveyProcessor`, flagged FIXME "needs to be an attribute") — expose it as a dial |
+**D. Reach / access mode — orbit vs standoff vs surface**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Remote / long-range** (telescope, deep-space array) | survey from a safe standoff or **another system** (astronomy) — the FACILITY observatory | lower detail at extreme range; can't ground-truth |
+| **Orbital** | park and scan — the workhorse | must reach the body (the grav gate is ~100 km today — ◐ a hardcoded FIXME to expose as a dial) |
+| **Contact / surface** (lander, dig, away-team) | the only way to **xenoarchaeology** or ground-truth geology | slow, exposed, needs to physically land |
 
-**Reading:** Survey is **Modelled but shallow** — both survey abilities exist and run (`Speed` → points → reveal), so the door is real, but it's essentially *one* numeric dial (speed) plus a type toggle. That's the honest shape: survey earns its keep as the front end of the economy (minerals) and expansion (jump points), not as a deep decision space. One ◐ wire (the hardcoded survey range → a real dial). It does **not** feed the combat resolver — and doesn't pretend to.
+**E. Data processing — turning raw scans into knowledge**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Onboard analysis** | the ship reads its own scans → instant knowledge | adds mass/power/crew (a science lab aboard) |
+| **Gather-and-relay** | a light collector ships raw data home to a **survey-data center** (a FACILITY) for processing | knowledge lags until it's processed; needs the facility |
 
-**Numbers:** `Speed` (points/tick, geo + grav) vs each target's `PointsRequired`; the ~100 km grav gate (to become a dial). Cradle-to-grave: survey is a **component** on a survey ship (build/install), lost if the ship is destroyed.
+**F. Autonomy — crewed vessel vs probe/drone**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Crewed science vessel** | reusable, adaptive — can **react to an anomaly** it finds (the Enterprise) | expensive, risks a crew |
+| **Autonomous probe** | cheap, expendable, one **deep scan** then done (Voyager, a Mass Effect probe) | one-shot, can't adapt, no crew to make a judgment call |
 
-**Preset coordinates:** geo-prospector (slow, cheap, minerals) · deep-survey cruiser (fast geo + grav, expensive) · grav-scout (fast grav, finds routes) · science flagship (both, high speed).
+**Modellability audit (§0d, graded against the WHOLE exploration pillar per §0f — a spectrum, honestly):**
+| Dial / mode | Verdict | How the sim models it (and which consumer) |
+|-------------|---------|---------------------------------------------|
+| **Geological** | ✅ | `GeoSurveyAtb` → `GeoSurveyProcessor` reveals minerals/regions → **economy** |
+| **Gravitational** | ✅ | `GravSurveyAtb` → `JPSurveyProcessor` discovers jump points → **expansion** |
+| Survey speed | ✅ | `Speed` (points/tick) vs a `PointsRequired` pool |
+| Survey range / reach | ◐ **wire** | the ~100 km grav gate is hardcoded (`JPSurveyProcessor` FIXME) — expose as a dial |
+| **Stellar / cartography** | ◐ **wire** | the galaxy is generated + a fog/reveal exists (survey is world-level v1) — extend to **long-range system-reveal** (see a system's bodies before you visit) → **expansion** |
+| **Atmospheric / habitability** | ◐ **wire** | `SystemBodyInfoDB` already holds atmosphere/gravity/temperature + `CanStartHere` — expose them as a **survey RESULT that gates colonization** → **colonization** |
+| **Biosphere / life-signs** | ◐ **wire** | colony/population data exists — expose "is this world inhabited?" as a survey result feeding the **first-contact** path (which exists, `DiplomacyFirstContactTests`) → **diplomacy** |
+| **Hazard / navigational** | ◐ **wire** | `Hazards/` exists (gas clouds, solar flares) — a survey that **reveals/forecasts** them → **navigation/safety** |
+| Survey depth / resolution | ◐ **wire** | `Resolution` is stored (like Detection's) — drive the detail level of a reveal |
+| Data processing (facility analysis) | ◐ **wire** | a survey-data **facility** (Structure chassis) that converts raw scans → knowledge (ties to the research/Civic consumer) |
+| Autonomy (probe) | ◐ **wire** | a cheap one-shot survey entity — reuses the survey component on a minimal chassis |
+| **Anomaly / phenomena (the mystery-box)** | ⏳ **defer — NET-NEW** | needs an **anomaly/event spawn + investigation-reward loop** — the Stellaris/Star Trek exploration engine. *The game has no anomaly system.* **Franchise-earning: this IS how you stage "explore the unknown."** |
+| **Xenoarchaeology** | ⏳ **defer — NET-NEW** | needs a **ruins-on-body + research-reward** system — Stargate/Mass Effect Prothean-ruins/Stellaris precursors. *The game has no relic/archaeology system.* **Franchise-earning.** |
+
+**Reading:** Survey is **not thin — it was mis-measured.** Graded against combat it's one dial; graded against the exploration pillar it *belongs* to (§0f) it spans **eight scanning modes** feeding five different consumers, with an honest gradient: two ✅ **built** (geo/grav), a broad band of ◐ **wire** where the *data or system already exists and just needs exposing as a survey result* (cartography, habitability, life-signs, hazards — the biggest cheap-win cluster in the category, because `SystemBodyInfoDB`/`Hazards`/first-contact are all already in-engine), and two ⏳ **net-new systems that are genuinely missing AND franchise-earning** — the **exploration mystery-box** (anomalies) and **xenoarchaeology** (ancient tech). Those two aren't "thin door" filler; they're the **explore-and-discover half of the 4X** the game doesn't have yet, and naming them here (with their prerequisite systems) is exactly the design doc's job — it turns "Survey is shallow" into "Survey surfaces the two missing science loops the north-star franchises are built on." *This is the multi-consumer rule (§0f) paying for itself.*
+
+**Numbers:** `Speed` (points/tick) vs each mode's `PointsRequired`; `Resolution` (depth); range (m — the ~100 km gate → a dial). The two net-new loops define their own reward scales (anomaly → a research/event payout; xenoarchaeology → a tech unlock) when built. Cradle-to-grave: survey is a **component** on a science ship **or a facility** (observatory / data-center); the anomaly + xenoarchaeology loops would research-gate their capability and reward *new* tech — closing the vertical (research → build the scanner → discover → unlock more research).
+
+**Preset coordinates — the sci-fi span (ship AND facility, all civilian):**
+| Unit | Modes | Reach | The role it fills |
+|------|-------|-------|-------------------|
+| **Prospector** | geological | orbital | the miner's scout — finds ore to dig |
+| **Science vessel / explorer** | cartography + life + atmosphere + anomaly | orbital, crewed | the Enterprise / Normandy — the do-everything discoverer |
+| **Deep-space observatory** *(FACILITY)* | stellar cartography | remote (system-wide) | maps distant systems from a colony before any ship sails |
+| **Survey probe** | one deep mode | orbital, autonomous | Voyager — cheap, expendable, one-shot deep scan |
+| **Xeno-dig ship** | xenoarchaeology + geology | surface / away-team | Stargate/Prothean-ruins — lands to unearth ancient tech |
+| **Pathfinder** | hazard + gravitational | remote | maps safe routes + jump points ahead of a fleet or colony wave |
+| **Survey-data center** *(FACILITY)* | data processing | — | turns the fleet's raw scans into unlocked knowledge (the research front-end) |
+
+The lesson mirrors the weapons/propulsion doors: you don't pick "science ship" from a menu — you dial which **modes** and how much **depth/reach/autonomy**, and the archetype falls out. A probe is a probe because you dialed autonomy up and breadth down; the Enterprise is the Enterprise because you carried every mode on a big crewed hull. And crucially, the **facility** presets (observatory, data-center) prove the door is for *infrastructure*, not just ships — the §0f corollary in action.
 
 ### 3.3 Sensors ▸ FIRE CONTROL  🟡 *proposed*
 *The gun-layer: the fire-control system that points your weapons — tracking a dodging target, reaching to a weapon's max range, and splitting fire across multiple targets. A good fire-control **multiplies the guns you already have** without adding a barrel. **This door's headline is a real engine find:** the fire-control component EXISTS with dials (`Range`, `TrackingSpeed`, `FinalFireOnly`) — but the resolver **doesn't read a single one of them**. Hit chance comes off the weapon, not the fire-control. So today these are **dead knobs**, and this door's entire job is to CONNECT them — the cleanest Keep/Cut/Add/**Connect** case in the game.*
@@ -1205,7 +1278,9 @@ The doors differ in **what the knowledge is FOR** — spotting the enemy (Detect
 
 **Numbers:** `TrackingSpeed` → the `HitFraction` tracking term (0..1, vs `EvasionCap` 0.95); `Range` → the weapon-range gate (m, the range ladder); targets-tracked → the fire-split N. Calibrated to the *same* dodge/range constants the weapons doors use — fire control just *feeds* them from the director instead of the gun.
 
-**Preset coordinates:** point-defense director (fast track, short range, PD-only) · main-battery director (long range, single-target, slow track) · fleet-track director (multi-target, mid everything) · fighter-killer (max tracking, short range).
+**Beyond combat (§0f) — precision-pointing is a general capability, not just gun-laying:** the underlying tech — *hold a directed system precisely on a moving target at range* — is the same whether the directed thing is a weapon, a **mining laser** (hold the cut on an ore vein), a **tractor/pusher beam** (grapple a tumbling hull or nudge an asteroid), a **precision docking** guide (mate a freighter to a station), a **comms laser** (keep a tight-beam link locked on a distant relay), or a **point-to-point transfer** targeter. So the Fire Control door is really the **targeting/directing** door; its combat face is the loudest consumer, but the wire that makes it real (read the director's tracking/range instead of hard-coding the weapon's) is the same wire that lets a civilian rig aim *anything*. A tracking director on a Structure chassis aims a colony's ground-based defense grid or a station's docking control.
+
+**Preset coordinates:** point-defense director (fast track, short range, PD-only) · main-battery director (long range, single-target, slow track) · fleet-track director (multi-target, mid everything) · fighter-killer (max tracking, short range) · **mining/utility director** (a civilian tracking rig for lasers/tractors — the same door, no weapon).
 
 ### 3.4 Sensors ▸ ELECTRONIC WARFARE  🟡 *proposed*
 *The information-denial suite: jamming, spoofing/decoys, cloaking, and counter-EW — the counter to Detection. If you can't out-gun the enemy, you blind them, lie to them, or hide from them. This is a **net-new** capability (no EW component exists in the engine today), and the categories doc says it **earns** its own door. It is NOT a blank slate, though: the detection engine hands every EW effect a ready insertion surface, and cloak is nearly free (EMCON already does most of it).*
@@ -1248,9 +1323,19 @@ The doors differ in **what the knowledge is FOR** — spotting the enemy (Detect
 
 **Numbers:** jam → a reduction on enemy `DetectionRange_m` / `SignalQuality`; cloak → your `ActivityMultiplier` (vs EMCON's 0.15 Silent floor — a cloak pushes lower); decoy → a false `SensorContact` with a chosen apparent signature. Calibrated to the *same* attenuation/EMCON constants Detection uses — EW just pushes them the other way. Cradle-to-grave: an EW suite is a **component** (research the net-new tech → build → install → lose it and your edge evaporates).
 
-**Preset coordinates — the span:** escort jammer (barrage jam, blinds the enemy screen) · stealth raider (full cloak, first-strike ambush) · decoy tender (spoof drones, pads the plot) · ECCM flagship (counter-EW, keeps the fleet's picture clean).
+**Beyond combat (§0f) — signal management is the civilian cousin of EW:** the same "shape what signals go where" technology runs a **comms relay** (route + boost friendly signal across a system — the constructive twin of jamming), a smuggler's **civilian stealth** (run quiet past a patrol — cloak without a war), and a colony's **signal-discipline** posture. The cloak dial is literally a stronger EMCON, and EMCON is already every ship's peacetime *and* wartime lever. So while EW's *offensive* face (jam/spoof) is a combat/espionage tool, its substrate (signature control + signal routing) is a standing civilian capability — an EW/comms suite on a Structure chassis is a colony's communications-and-countermeasures array.
+
+**Preset coordinates — the span:** escort jammer (barrage jam, blinds the enemy screen) · stealth raider (full cloak, first-strike ambush) · decoy tender (spoof drones, pads the plot) · ECCM flagship (counter-EW, keeps the fleet's picture clean) · **comms relay** *(FACILITY/ship — the constructive cousin: routes + boosts friendly signal)*.
 
 ---
 
 ## §3 Sensors — status (all four doors proposed, awaiting lock)
-Detection 🟡 · Survey 🟡 · Fire Control 🟡 · Electronic Warfare 🟡. **Split yardstick:** Detection/Fire-Control/EW → the combat resolver (fog gate + the `HitFraction` tracking term + first-strike); Survey → the reveal/economy system. Headline readings: **Detection is the most-built door in the category** (the whole EM-signature/attenuation/threshold/EMCON engine is live and already *gates combat* — nearly all ✅). **Fire Control is the purest CONNECT door** — its dials (`Range`/`TrackingSpeed`/`FinalFireOnly`) are **built but dead** (unread by the resolver); the door's job is the wire, three existing fields → three resolver terms the salvo math already has. **Survey is Modelled-but-thin** (one real dial: speed) and honestly economic, not combat. **EW is net-new** but rides the detection engine's ready surface (cloak ≈ a stronger EMCON, nearly free; jam/decoy = deltas on the live signal math; only the spoof "what's real" reading game defers to the intelligence layer). Two prerequisite mechanics fall out for the build list: **the Fire-Control wire** (small, high-payoff — turns a dead component into a real decision) and **the EW detection-delta layer** (jam/cloak/decoy terms on the scan) + its deferred **intelligence/information-ledger** partner for spoofing.
+Detection 🟡 · Survey 🟡 · Fire Control 🟡 · Electronic Warfare 🟡. **Multi-consumer yardstick (§0f) — combat is ONE of five.** Detection → combat fog + navigation/SAR/traffic-control/observatory; Fire Control → combat targeting + precision-pointing of mining/tractor/docking/comms; EW → combat jam/spoof/cloak + civilian comms/signal-discipline; Survey → **the entire explore-and-discover pillar** (economy · expansion · colonization · research · first-contact). Headline readings, now read across all consumers:
+- **Detection is the most-built door** — the whole EM-signature/attenuation/threshold/EMCON engine is live and already *gates combat*, and the same engine serves the civilian/facility sensors (nearly all ✅).
+- **Survey is one of the RICHEST doors, not the thinnest** — it only looked thin measured by combat. Widened to the sci-fi survey space it spans **eight scanning modes** across five consumers: two ✅ built (geo/grav), a big ◐ **wire** cluster where the data/system already exists and just needs exposing as a survey result (cartography, habitability, life-signs, hazards — the category's biggest cheap-win pile), and **two ⏳ net-new, FRANCHISE-EARNING science loops the game lacks — the exploration mystery-box (anomalies) and xenoarchaeology (ancient tech)**. Surfacing those is the headline: they're the explore/discover half of the 4X.
+- **Fire Control is the purest CONNECT door** — its dials (`Range`/`TrackingSpeed`/`FinalFireOnly`) are **built but dead** (unread by the resolver); the door's job is the wire (three existing fields → three resolver terms the salvo math already has), and that same wire generalizes to civilian precision-pointing.
+- **EW is net-new** but rides the detection engine's ready surface (cloak ≈ a stronger EMCON, nearly free; jam/decoy = deltas on the live signal math; only the spoof "what's real" reading game defers to the intelligence layer).
+
+**Build-list items that fall out:** (1) the **Fire-Control wire** — small, high-payoff; (2) the **survey-result exposure** cluster (cartography/habitability/life/hazard — cheap, the data's already in `SystemBodyInfoDB`/`Hazards`/first-contact); (3) two **net-new science systems** — the **anomaly/mystery-box** engine and the **xenoarchaeology/relic** system (both franchise-earning, both currently absent); (4) the **EW detection-delta layer** + its deferred **intelligence/information-ledger** partner for spoofing.
+
+> **The §0f lens is now standing for every followup category** (Power, Defense, Enhancers, Industrial, Logistical, Civic, Command, Chassis): grade each door against *whatever system consumes it* — civilian, scientific, industrial, and infrastructural, on facilities as much as ships — never combat alone. Sensors is where it first changed a verdict (Survey thin → rich); expect it to change more.
