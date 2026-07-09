@@ -1038,3 +1038,219 @@ Drive mass drags `MaxSpeed` (WarpMath reads mass) and eats the chassis budget �
 
 ## ✅ §2 Propulsion — COMPLETE (5/5 doors locked)
 Reaction 🔒 · Traction 🔒 · Fluid 🔒 · Warp 🔒 · Exotic 🔒. **The category's yardstick is the Newtonian move + closing model** (accel→Evasion, Δv→`ManeuverBudget`, speed→the hex-march), not the joule damage scale. Headline reading: propulsion is the **most Modelled-today category so far** — Reaction (Newtonian physics live), Traction (the ground-locomotion stack live), and Warp (the whole warp-bubble + jump-point system live) are almost entirely ✅ with nothing to defer; **Fluid** is the honest split (access dials wire now, the altitude/depth *combat* payoff defers on one named prerequisite — the air/medium layer); **Exotic** is the backlog slot (reactionless is a near-free Reaction variant, the other three each name their one prerequisite). Two prerequisite mechanics fall out for the build list: the **air/altitude/depth combat layer** (unblocks Fluid's deep half + Exotic-gravitic) and the **H8 gate-network + H1 teleport** layers (unblock Warp-gate + Exotic-teleport).
+
+---
+
+## §3 — Sensors
+
+Sensors decide **what you know** — and in this game knowledge is a weapon. The combat resolver already runs a fog-of-war layer (`RequireDetectionToEngage`): a fight only forms once someone *detects* the enemy, the side that sees first shoots first, and a blinded fleet takes fire without returning it (the `FirstStrike_SeerWipesBlindEnemy_Unscathed` gauge). So a sensor dial has real teeth — it changes who can shoot whom, not just what's drawn on the map.
+
+**The category's yardsticks (it has TWO, honestly):**
+- **Detection · Fire Control · Electronic Warfare → the combat resolver.** Detection feeds the **contact/attenuation math** (`SensorScan` → `SystemSensorContacts` → the fog gate `FleetDetects` → the first-strike resolver `CanEngageTarget`). Fire Control feeds the **`HitFraction` tracking term** (how well your guns land on a dodger). EW acts *on* detection (jam/spoof/cloak change what the enemy detects).
+- **Survey → the reveal/economy system.** Geo survey unlocks minerals to mine; grav survey unlocks jump points to expand through. Its consequence is economic/strategic, not a salvo — and that's fine (name the decision the dial serves).
+
+**The load-bearing find from the engine audit:** the detection engine is **richly built** (a real EM-signature + attenuation + threshold + band + EMCON model — `SensorReceiverAtb`, `SensorProfileDB`, `AttenuationCalc`, `DetectionRange_m`, `FleetEmcon`), so Detection is overwhelmingly **Modelled**. But **Fire Control is a nest of DEAD KNOBS** — `BeamFireControlAtbDB` carries `Range`/`TrackingSpeed`/`FinalFireOnly` and **nothing reads them** (hit chance comes off the weapon, not the fire-control) — the exact "fidelity nobody acts on" the audit hunts. And **Electronic Warfare is net-new** (no jam/spoof/cloak component exists) — but the detection engine hands it a ready insertion surface. So this category is the cleanest showcase of Keep/Cut/Add/**CONNECT**: Detection = keep+expose, Fire Control = **connect the built-but-dead knobs**, EW = add onto the existing detection math.
+
+### 3.0 Shared sensor dials (common to all four doors)
+On top of the universal seven (§0a), every sensor has:
+| Dial | Drives (real stat) |
+|------|--------------------|
+| **What it detects (waveform band)** | `SensorReceiverAtb.RecevingWaveformCapabilty` — which EM band it's tuned to (thermal / radar / visual); narrow = deep in one band, wide = shallow across many |
+| **Sensitivity / reach** | `BestSensitivity_kW` (the threshold — lower = fainter targets seen) → `DetectionRange_m` (via `RangeForSignal`) |
+| **Refresh rate** | `ScanTime` (s) — how often the picture updates (fast = catches movers, costs more) |
+| **Active ↔ passive posture** | active = ping (see cold/hidden targets, but light yourself up via `ActivityMultiplier`); passive = listen (silent, only sees emitters) |
+| **Signature contribution** | a sensor that pings *emits* — feeds the EMCON/Detection loop back on itself |
+
+The doors differ in **what the knowledge is FOR** — spotting the enemy (Detection), mapping the world (Survey), pointing the guns (Fire Control), or denying the enemy their knowledge (EW).
+
+### 3.1 Sensors ▸ DETECTION  🟡 *proposed*
+*The eyes: passive and active sensors that build the contact picture — who's out there, where, how far. Everything from a cheap thermal eyeball to a deep-space active array to a stealth-hunting multi-band suite falls out of these dials. The engine already runs the whole contact/attenuation/threshold model, so this door is overwhelmingly Modelled — it exposes dials onto a live system that already gates combat.*
+
+**The core decision — SEE FURTHER vs STAY HIDDEN (the loud/quiet bet, the EMCON lever).** You cannot both blast active radar to see everything AND stay dark. An active ping reveals cold, silent, stealthed targets (their *reflected* return) — but it **lights you up** far louder than you can see (`AttenuationCalc` is 1/4πd² each way, so your ping is seen at ~twice your own detection range). Passive listening is silent but only catches things that *emit* (a running engine, a firing gun). The decision is *dark-vs-loud* (`docs/DETECTION-DESIGN.md`), not wavelength-tuning — the band math is hidden behind the gameplay.
+
+**A. Sensitivity — how faint a signal it catches (the reach dial)**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **Coarse (high threshold)** | cheap, light, low power | **short range** — only sees loud/close targets |
+| **Sensitive (low threshold)** | sees **faint + far** (fainter `BestSensitivity_kW` → longer `DetectionRange_m`) | big, power-hungry, costly; a huge dish is heavy |
+
+**B. Waveform band — WHAT part of the spectrum it sees**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Narrow / tuned** | **deep** in one band — sees a specific signature (heat) very far | **blind** to everything outside the band (a thermal eye misses a cold hull) |
+| **Wide / multi-band** | catches many signature types — a stealth hull hiding in one band shows in another | shallower in each — **master of none**, more mass/cost |
+
+**C. Active ↔ passive — ping or listen (the EMCON decision)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Passive (listen)** | **silent** — you see without being seen; the ambush/scout posture | only catches **emitters** (running/firing targets); a dark drifting hull is invisible |
+| **Active (ping)** | sees **cold/stealthed** targets via their reflection (the only way to find a dark hull) | **lights you up** (`ActivityMultiplier` ↑) — seen from ~2× your own range; you find them AND announce yourself |
+
+**D. Refresh rate — how fresh the picture is (`ScanTime`)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Fast sweep** | fresh track — catches **fast movers**, tight firing solution | more power/heat; a rapidly-pinging active is even louder |
+| **Slow sweep** | cheaper, can integrate for **more range** | **stale** track — a fast target has moved since the last look |
+
+**E. Resolution — contact DETAIL (`Resolution`, MP)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Low-res** | a blip — "something's there" | can't tell one ship from a fleet, or a freighter from a battleship (IFF/class unknown) |
+| **High-res** | reads the contact's **class + count** (is that a picket or a dreadnought?) | heavier, costlier; ◐ currently stored but not yet driving contact quality |
+
+**Derived stats (computed, shown to the player):**
+`detection range = RangeForSignal(target signature, threshold)` · self-detection range (how far *you're* seen) · refresh interval · which bands you cover · active-emission spike · mass · cost.
+
+**Modellability audit (§0d — the detection engine is live and gates combat):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| Sensitivity / reach | ✅ | `SensorReceiverAtb.BestSensitivity_kW` → `SensorTools.RangeForSignal` / `DetectionRange_m` (the reverse-solve; master knob `DetectionSensitivityScale 1e6`) |
+| Waveform band | ✅ | `RecevingWaveformCapabilty` (`EMWaveForm` peak ± bandwidth) vs the target's `SensorProfileDB` spectra (`DetectonQuality` band-overlap) |
+| Active ↔ passive | ✅ | `SensorProfileDB.ActivityMultiplier` (active ping raises your own signature) + reflected-vs-emitted spectra; the EMCON posture (`FleetEmcon` Full/Cruise/Silent 1.0/0.5/0.15) |
+| Refresh rate | ✅ | `SensorReceiverAtb.ScanTime` → the `SensorScan` reschedule cadence |
+| Resolution / contact detail | ◐ **wire** | `Resolution` (MP) is stored but **not yet** driving contact quality/IFF confidence — a small wire to `SensorReturnValues.SignalQuality` / the contact's class read-out |
+| **→ the combat resolver** | ✅ | contacts populate `SystemSensorContacts` → the fog gate `FleetDetects` (`RequireDetectionToEngage`) → the first-strike resolver `CanEngageTarget` (see-first-shoot-first) |
+| Sensors boost evasion (harder to hit if you see the shot coming) | ⏳ **defer** | a flagged v2 hook in `ShipCombatValueDB` (Evasion currently leaves sensors/crew out) |
+
+**Reading:** Detection is **the most-built door in Sensors** — the entire contact/attenuation/threshold/band/EMCON stack exists and already *decides combat* (fog of war + first strike). Nearly everything is ✅; one ◐ wire (resolution → contact detail) and one ⏳ (sensors→evasion, a v2 combat refinement). Cradle-to-grave is closed: a sensor is a **component** (researched/built/installed), and a **shot-off** receiver blinds you — the grave rung is *already wired* (`SensorTools.SetInstances` empties the cache on damage; the `FirstStrike` gauge exploits exactly this).
+
+**Numbers (calibrated to the live detection math):**
+| Dial | Unit | Range | Pins to |
+|------|------|-------|---------|
+| **Sensitivity threshold** | kW | lower = better (fainter seen) | `BestSensitivity_kW` → `RangeForSignal` |
+| **Waveform band** | nm (peak ± bandwidth) | tuned narrow → wide | `RecevingWaveformCapabilty` vs target spectra |
+| **Active emission** | ×mult | Silent 0.15 · Cruise 0.5 · Full 1.0 (+ heat: thrust ×4, firing ×1) | `ActivityMultiplier` / `EmconActivityProcessor` |
+| **Scan time** | s | fast → slow sweep | `ScanTime` reschedule |
+| **Master scale** | — | `DetectionSensitivityScale 1e6` | the one tuning knob behind all ranges |
+
+**Preset coordinates — the span:**
+| Sensor | Band | Posture | Sensitivity | The trade it chose |
+|--------|------|---------|-------------|--------------------|
+| **Thermal eyeball** | narrow (heat) | passive | coarse | cheap, silent, sees hot engines close; blind to cold/stealth |
+| **Deep-space array** | narrow | passive | very sensitive | sees emitters system-wide; huge, blind to dark hulls |
+| **Active radar** | radar | active | mid | finds cold/stealthed hulls; lights you up (seen at 2× your reach) |
+| **Multi-band suite** | wide | switchable | sensitive | the stealth-hunter — covers every band; heavy + costly |
+
+### 3.2 Sensors ▸ SURVEY  🟡 *proposed*
+*The prospector's and cartographer's eyes: geological survey (find minerals to mine) and gravitational survey (find jump points to expand through). Not a combat door — its yardstick is the reveal/economy system, and its consequence is what you can dig up and where you can travel. The shallowest sensor door (one real numeric dial), and honestly so.*
+
+**The core decision — WHAT to map, and how fast.** Survey capacity is a rate you point at a target: geo-survey a body to reveal its mineral deposits (feeds mining/economy), or grav-survey a location to discover a jump point (feeds expansion). More survey speed = faster reveal, at more mass/cost. The decision is *prospect-for-resources vs scout-for-routes* + how much of your hull you spend on it.
+
+**A. Survey type — what it reveals**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **Geological** | reveals a body's **mineral deposits** (+ ground regions) → what you can mine | useless for finding travel routes |
+| **Gravitational** | reveals **jump points** → new systems to expand into | useless for finding minerals |
+
+**B. Survey speed — how fast it completes (`Speed`, points/tick)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Slow** | light, cheap survey rig | a body/point takes many ticks to finish |
+| **Fast** | clears survey points quickly — map more, sooner | heavier, costlier; more hull spent on non-combat gear |
+
+**C. Survey range** *(how close you must get)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Short** | cheap | must park almost on top of the target (grav survey's gate is ~100 km today) |
+| **Long** | survey from a safer standoff | ◐ the range is currently **hardcoded** (a flagged FIXME) — a real dial is a small wire |
+
+**Modellability audit (§0d — Modelled but thin):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| Survey type (geo/grav) | ✅ | `GeoSurveyAtb` → `GeoSurveyProcessor` (reveals minerals/regions) · `GravSurveyAtb` → `JPSurveyProcessor` (discovers jump points) |
+| Survey speed | ✅ | `Speed` (points/tick) consumed against a `PointsRequired` pool (`GeoSurveyableDB` / `JPSurveyableDB`) |
+| Survey range | ◐ **wire** | the JP distance gate is **hardcoded ~100 km** (`JPSurveyProcessor`, flagged FIXME "needs to be an attribute") — expose it as a dial |
+
+**Reading:** Survey is **Modelled but shallow** — both survey abilities exist and run (`Speed` → points → reveal), so the door is real, but it's essentially *one* numeric dial (speed) plus a type toggle. That's the honest shape: survey earns its keep as the front end of the economy (minerals) and expansion (jump points), not as a deep decision space. One ◐ wire (the hardcoded survey range → a real dial). It does **not** feed the combat resolver — and doesn't pretend to.
+
+**Numbers:** `Speed` (points/tick, geo + grav) vs each target's `PointsRequired`; the ~100 km grav gate (to become a dial). Cradle-to-grave: survey is a **component** on a survey ship (build/install), lost if the ship is destroyed.
+
+**Preset coordinates:** geo-prospector (slow, cheap, minerals) · deep-survey cruiser (fast geo + grav, expensive) · grav-scout (fast grav, finds routes) · science flagship (both, high speed).
+
+### 3.3 Sensors ▸ FIRE CONTROL  🟡 *proposed*
+*The gun-layer: the fire-control system that points your weapons — tracking a dodging target, reaching to a weapon's max range, and splitting fire across multiple targets. A good fire-control **multiplies the guns you already have** without adding a barrel. **This door's headline is a real engine find:** the fire-control component EXISTS with dials (`Range`, `TrackingSpeed`, `FinalFireOnly`) — but the resolver **doesn't read a single one of them**. Hit chance comes off the weapon, not the fire-control. So today these are **dead knobs**, and this door's entire job is to CONNECT them — the cleanest Keep/Cut/Add/**Connect** case in the game.*
+
+**The core decision — POINT THE GUNS: reach vs tracking vs fire-splitting.** Your weapons have raw range and accuracy; fire control is the force-multiplier that decides how much of it you actually land. A fast-tracking director lands shots on nimble dodgers (beats evasion); a long-range director lets your guns open fire sooner; a multi-target director splits fire across a swarm instead of over-killing one hull. You can't max all three cheaply — the trade is *precision vs reach vs breadth*.
+
+**A. Tracking speed — landing shots on dodgers (`TrackingSpeed`, currently INERT)**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **Slow tracking** | cheap, light — fine vs big slow capitals | a nimble fighter **juki your fire** (low effective tracking → the dodge wins) |
+| **Fast tracking** | lands on **evasive** targets (raises the resolver's Tracking term → beats evasion) | heavier, costlier; overkill vs sluggish hulls |
+
+**B. Fire-control range — how soon you can open fire (`Range`, currently INERT)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Short** | cheap, compact | you must **close** before the guns bear — even a long-range weapon is gated by the director |
+| **Long** | opens fire at the **weapon's** full reach (the standoff enabler) | big, costly; the director's reach is only useful if the weapon's range matches |
+
+**C. Fire allocation — one target or many (`FinalFireOnly` + a targets-tracked dial)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Single-target** | concentrates all fire — kills one hard target fast | over-kills a swarm; can't spread to multiple threats |
+| **Multi-target** | **splits fire** across several contacts (feeds the multi-party fire-division) | thinner per-target — slow to kill any one |
+| **Point-defense only** (`FinalFireOnly`) | dedicates the director to **intercepting incoming** ordnance | not available for anti-ship fire |
+
+**Physical demands / the honest state:** fire control adds mass + crew + power like any component, but its real cost today is that **none of it is wired** — the dials sit on `BeamFireControlAtbDB` and the resolver reads the *weapon's* `BaseHitChance`/`MaxRange` instead. Building the door **is** building the wire.
+
+**Modellability audit (§0d — the whole door is ◐ Wire: built component, unread by the resolver):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| Tracking speed | ◐ **wire** | `BeamFireControlAtbDB.TrackingSpeed` **exists but is unread** → wire it into the `HitFraction` **Tracking** term (the field that beats evasion) |
+| Fire-control range | ◐ **wire** | `BeamFireControlAtbDB.Range` **exists but is unread** → wire it into the weapon-range engagement gate (a director-gated reach) |
+| Fire allocation / multi-target | ◐ **wire** | `FinalFireOnly` **exists but is unread** + a new targets-tracked dial → the multi-party **fire-split** (`StepEngagementGroup` already divides fire 1/N; make N a director property) |
+| PD-only mode | ◐ **wire** | `FinalFireOnly` → the point-defense role (pairs with the weapons-door PD wire + missiles-as-targets) |
+
+**Reading:** Fire Control is the **purest Connect door** — the component and its dials are *already built* (`BeamFireControlAtbDB`), they're just **dead** because the resolver never reads them (Failure A from `docs/INFORMATION-DELTA-DESIGN.md`: the number exists, unwired — cheap). The door's whole value is the wire, and it's a **small, concrete** one: three existing fields → three resolver terms the salvo math already has slots for (Tracking, the range gate, fire-split). This is exactly the audit's "stop feeding the pretty — connect it" — a built system currently earning nothing, turned into a real decision by wiring, not building.
+
+**Numbers:** `TrackingSpeed` → the `HitFraction` tracking term (0..1, vs `EvasionCap` 0.95); `Range` → the weapon-range gate (m, the range ladder); targets-tracked → the fire-split N. Calibrated to the *same* dodge/range constants the weapons doors use — fire control just *feeds* them from the director instead of the gun.
+
+**Preset coordinates:** point-defense director (fast track, short range, PD-only) · main-battery director (long range, single-target, slow track) · fleet-track director (multi-target, mid everything) · fighter-killer (max tracking, short range).
+
+### 3.4 Sensors ▸ ELECTRONIC WARFARE  🟡 *proposed*
+*The information-denial suite: jamming, spoofing/decoys, cloaking, and counter-EW — the counter to Detection. If you can't out-gun the enemy, you blind them, lie to them, or hide from them. This is a **net-new** capability (no EW component exists in the engine today), and the categories doc says it **earns** its own door. It is NOT a blank slate, though: the detection engine hands every EW effect a ready insertion surface, and cloak is nearly free (EMCON already does most of it).*
+
+**The core decision — WIN THE INFORMATION FIGHT (turn the fog against the enemy).** The combat resolver already rewards seeing first (first strike: a blinded fleet takes fire without returning it — the `FirstStrike_SeerWipesBlindEnemy` gauge). EW is how you *manufacture* that blindness on the enemy: shrink what they detect (jam), fill their plot with ghosts (spoof), or drop off it yourself (cloak). Each buys an information edge and pays in mass, power, and — for active jamming — a signature spike that can give you away.
+
+**A. Jamming — degrade enemy detection**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **Barrage jam** | **shrinks the enemy's detection range** / degrades their contact quality on you and your fleet | a loud active jammer is itself a **beacon** (you're easy to find, just hard to resolve) |
+| **Targeted jam** | blinds a **specific** sensor/fire-control (break their firing solution) | narrow — one target at a time; needs to detect them first |
+
+**B. Spoofing / decoys — inject false contacts**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Decoy drone** | a cheap emitter that **reads as a warship** — soaks fire, pads your apparent numbers | consumable; a high-resolution sensor can tell it's a ghost |
+| **Spoof / phantom fleet** | fills the enemy plot with **fake contacts** — they can't tell the real strike from the noise | the full "which contact is real" payoff needs the intelligence layer (below) |
+
+**C. Cloak / stealth — suppress your own signature**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Signature damping** | drops your emitted/reflected signature → seen only up close (the ambush enabler) | costs mass/power; and it's a **posture** — firing or hard-burning breaks it (heat spikes the signature) |
+| **Full cloak** | near-invisible until you fire | expensive, high-tech; usually forces you dark (no active sensors while cloaked) |
+
+**D. Counter-EW / ECCM — resist their EW**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **ECCM hardening** | burns through jamming / filters spoofed contacts — keeps your picture real | dead weight vs an enemy with no EW (most of them); needs the jam mechanic to exist first |
+
+**Modellability audit (§0d — net-new, but every effect has a named hook on the detection engine):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| **Jamming** (degrade enemy detection) | ◐ **wire** | push the enemy's `SensorReturnValues.SignalQuality` down / shrink their `DetectionRange_m` against you — the detection math exists; add a jammer term to the scan |
+| **Cloak / signature damping** | ◐ **wire** | push your own `ActivityMultiplier` / `SignatureBaseMultiplier` down — **EMCON already does this** (`FleetEmcon` Silent 0.15); a cloak is a stronger, component-based EMCON |
+| **Decoy / spoof** (false contacts) | ◐ **wire** (injector) + ⏳ **defer** (the reading game) | inject a false `SensorContact` into the enemy track table (the table + `SensorContact` exist); but the "decide what's real" gameplay wants the **intelligence/information-ledger layer** (`docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md`) for its full payoff |
+| **Counter-EW / ECCM** | ⏳ **defer** | the mirror of jamming — needs the **jam mechanic built first**, then a resist term |
+| **→ the combat resolver** | ✅ (via detection) | all of the above act on what `FleetDetects` returns → the first-strike resolver already honours a blinded fleet (`CanEngageTarget`), so EW × Detection × Weapons *stacks today* the moment the detection deltas are wired |
+
+**Reading:** EW is the **one Sensors door that's mostly Wire/Defer** — the counter-detection layer genuinely isn't built (no jam/spoof/cloak component). But it is **not vaporware**: the rich detection engine (signature multipliers, signal quality, the contact table, EMCON) gives every EW effect a concrete hook, and **cloak is nearly free** (it's a stronger EMCON, which already runs). The one true deferral is the *decide-what's-real* spoofing game, which rightly waits on the intelligence layer. And because the resolver's fog + first-strike are already live, EW's payoff lands the instant its detection-deltas are wired — no new resolver work, it rides the same fog gate detection does.
+
+**Numbers:** jam → a reduction on enemy `DetectionRange_m` / `SignalQuality`; cloak → your `ActivityMultiplier` (vs EMCON's 0.15 Silent floor — a cloak pushes lower); decoy → a false `SensorContact` with a chosen apparent signature. Calibrated to the *same* attenuation/EMCON constants Detection uses — EW just pushes them the other way. Cradle-to-grave: an EW suite is a **component** (research the net-new tech → build → install → lose it and your edge evaporates).
+
+**Preset coordinates — the span:** escort jammer (barrage jam, blinds the enemy screen) · stealth raider (full cloak, first-strike ambush) · decoy tender (spoof drones, pads the plot) · ECCM flagship (counter-EW, keeps the fleet's picture clean).
+
+---
+
+## §3 Sensors — status (all four doors proposed, awaiting lock)
+Detection 🟡 · Survey 🟡 · Fire Control 🟡 · Electronic Warfare 🟡. **Split yardstick:** Detection/Fire-Control/EW → the combat resolver (fog gate + the `HitFraction` tracking term + first-strike); Survey → the reveal/economy system. Headline readings: **Detection is the most-built door in the category** (the whole EM-signature/attenuation/threshold/EMCON engine is live and already *gates combat* — nearly all ✅). **Fire Control is the purest CONNECT door** — its dials (`Range`/`TrackingSpeed`/`FinalFireOnly`) are **built but dead** (unread by the resolver); the door's job is the wire, three existing fields → three resolver terms the salvo math already has. **Survey is Modelled-but-thin** (one real dial: speed) and honestly economic, not combat. **EW is net-new** but rides the detection engine's ready surface (cloak ≈ a stronger EMCON, nearly free; jam/decoy = deltas on the live signal math; only the spoof "what's real" reading game defers to the intelligence layer). Two prerequisite mechanics fall out for the build list: **the Fire-Control wire** (small, high-payoff — turns a dead component into a real decision) and **the EW detection-delta layer** (jam/cloak/decoy terms on the scan) + its deferred **intelligence/information-ledger** partner for spoofing.
