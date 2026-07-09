@@ -2262,3 +2262,74 @@ On top of the universal seven (§0a):
 
 ## ✅ §9 Civic — COMPLETE (2/2 doors locked)
 Habitation 🔒 · Development 🔒. **The human backbone — MIXED, and full of connections.** Headline readings: **Habitation is mostly Modelled and quietly load-bearing** — the standout is that **infrastructure is a REAL economy multiplier** (`InfrastructureDB.Efficiency` scales ALL industry + mining, so an under-built colony genuinely produces less), population-support is real carrying capacity (hostile-world ÷colony-cost + over-cap die-off — what makes Mars *hard*), housing-comfort is real morale, and sealed **space-habitats** house population off-world on any body; two spots are switched off — **sustenance** (power/food → starvation, inert until calibrated; food is net-new) and **employment** (built but **data-dead** — morale reads jobs, no template grants them → always neutral; a cheap wire). **Development is split** — **research** (the tech engine that gates every other door, ✅ host-agnostic + specialties) and **officer training** (academy, ✅ production; its combat *effect* is the Enhancers side) work, but the **deep half — improving the WORLD (terraforming / colony development) — is MISSING** (net-new; hooks designed, no processor). That's the franchise-earning gap (turn Mars green / Dune / the 4X terraform). **The cross-connects make Civic the hub:** population → the **manpower/talent pool** that mans industry, crews ships, AND supplies the scarce talent that gates the **Enhancers unit-caliber ELITES** (a Space Marine draws talent a colony produces); research → the tech that unlocks **every door**; morale → migration → stability → `LegitimacyDB`/rebellion. Build-list: (1) **terraforming / world-development** (the missing deep half — franchise-earning); (2) calibrate **sustenance** + add a **food good** (turn starvation on); (3) grant **`EmploymentAtbDB.Jobs`** in templates (un-dead employment → real morale); (4) a **per-colony development ladder** (`ColonyBonusesDB` is an empty shell).
+
+---
+
+## §10 — Command
+
+Command is the **"play at your own altitude"** layer — the single shape that lets you either **hand-fly** a colony or a fleet yourself, or **seat a capable officer and hand it off.** It's one door because it's *one shape at different scales*: an **admin-complex** governs a colony, a **ship-command** bridge commands a fleet, and they bind the **same** component attribute (`AdminSpaceAtb`) — just at a different rung on the span-of-control ladder (Ship → TaskUnit → … → Colony → … → Empire). This is the anti-"the game feels like a job" valve: delegate the routine, micromanage the fights that matter.
+
+**The honest headline — the chairs are built, but nobody's running anything.** This is the least-wired category so far. The **seat substrate is genuinely Modelled** (you can install a command node and seat an officer in it), and it's the right shape. But **every consequence a seat should have is stub or net-new**: a seat gates nothing, a seated officer gives no bonus, the "funded delegate post" record is **built-but-completely-dead** (and duplicated), and the whole delegation *decision loop* is unbuilt. So Command today is a set of chairs with nobody actually empowered to run a colony or fleet.
+
+**The yardstick — the delegation/span-of-control system** (`AdminSpaceProcessor` + the seat/assign orders + the governance design), not the combat resolver. Command is a single door; its dials are the facets of one delegation decision.
+
+### 10.1 Command ▸ COMMAND  🟡 *proposed*
+*The command node — a colony HQ or a ship's bridge — and the officer you seat in it. One shape governs a colony OR commands a fleet, at whatever scope you dial. You choose the **scope** (how high up the ladder this node sits), whether to **seat an officer** and delegate, how much to **fund/trust** them, and their standing **stance** — so you can run an empire at the altitude you want, hand-flying what matters and delegating the rest.*
+
+**The core decision — HAND-FLY or DELEGATE, and at what SCALE.** Every command node answers one question: *do you run this yourself, or does an officer?* Seat a good, well-funded officer with a sensible standing stance and the colony/fleet runs itself (freeing your attention); leave the seat empty and you're hand-flying it. The scope dial (Ship → Empire) sets *what* the node runs — a bridge steers a task unit, a sector HQ oversees whole systems.
+
+**A. Scope / admin level (`AdminSpaceAtb.AdminLevel`) — the "one shape, two altitudes" dial**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **Low (Ship / TaskUnit)** — a bridge | commands a ship or a small task unit — the ship-command component | can't oversee a colony or a fleet-of-fleets |
+| **Colony / Planet** — an admin-complex | governs a whole colony (default HQ level) | tech-gated to go higher |
+| **High (Sector / Empire)** — a sector HQ | oversees whole systems/sectors — run an empire from one chair | huge, costly, tech-gated; a fat decapitation target |
+
+**B. Capacity / span (`ConsoleSpace` / `Office Space`) — how much it oversees**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Small** | cheap, compact node | ◐ **span isn't actually enforced today** — one component = one seat regardless of ConsoleSpace; the only live effect is the colony hex-map radius |
+| **Large** | *should* let a node run more sub-units | the `ConsoleSpace → seat-count` math is **dead** (computed, never stored) — a wire to make span-of-control real |
+
+**C. Seat an officer — delegate the post**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Empty (hand-fly)** | full personal control | you micromanage everything at this scope |
+| **Seated (delegate)** | assign a commander → the post runs without you | ◐ **the officer currently affects nothing** — a seated commander gives no bonus (competence unread) |
+
+**D. Funding / attention (`FundingLevel` 0–5, cost curve 1×/3×/7×/13×/22×)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Low funding** | cheap — a skeleton post | less output from the delegate |
+| **High funding** | more output — a well-resourced governor/admiral | steeply rising cost (the attention-vs-money tradeoff) — ◐/⏳ the funding record is **built-but-DEAD** for admin (see the flag) |
+
+**E. Stance / standing orders — the post's default behaviour**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Standing stance** | a governor's economic priority, an admiral's ROE — the post acts on your intent without micromanagement | ⏳ **NET-NEW** — the stance/standing-orders decision loop doesn't exist |
+
+**F. Competence — a good officer beats a green one** ⏳ *net-new* — the officer's experience/skill actually giving a bonus (today `Experience` is written by the academy but **never read**).
+
+**Modellability audit (§0d — seats Modelled; consequences stub/net-new):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| Scope / admin level | ✅ | `AdminSpaceAtb.AdminLevel` (the Ship→Empire enum ladder) → one `AdminSpaceDB.CommanderSeat` per node, stamped with its level (`admin-complex` = Colony+, `ship-command` = Ship/TaskUnit — **same atb**) |
+| Seat + assign an officer | ✅ (seating) / ◐ (effect) | `AssignAdministratorOrder`/`Unassign` seat/un-seat a `CommanderDB` in `AdminSpaceAbilityState`; **but the seated officer feeds nothing** |
+| Capacity / span-of-control | ◐ **wire** (dead math) | `ConsoleSpace → seat-count` is computed then discarded (one component = one seat); span is unenforced; the only live effect of Office Space is `ColonyHexMapProcessor` radius |
+| Funding / attention | ◐ **wire** (dead record) | `AdministratorDB` (FundingLevel + PointsPerDay + BonusCategories) exists but has **ZERO consumers** — a detached copy of the live `ResearcherDB` (see flag) |
+| Competence (officer skill) | ⏳ **net-new** | `CommanderDB.Experience` is written by academies but **never read**; no bonus fields; combat reads `FleetDoctrineDB`, not a commander |
+| Stance / auto-run loop | ⏳ **net-new** | the delegation decision loop (standing stance, funding-vs-attention charging money, Governor/Minister/Admiral auto-runners) is designed-only |
+| Grave rung (decapitation) | ◐ **unbuilt** | `AdminSpaceAtb.OnComponentUninstallation` throws `NotImplementedException` — losing a command node should collapse its delegation |
+
+> **🐞 Correction to flag (and a consolidation) — the delegate record is dead + duplicated.** The governance design doc says colony/research delegation runs on "`AdministratorDB` + `ResearchProcessor`." **That's inaccurate:** `AdministratorDB` has **zero consumers** — nothing constructs or reads it. Research actually runs on a **separate, identical twin, `ResearcherDB`** (same `FundingLevel`/`PointsPerDay`/`BonusCategories` fields), which the `ResearchProcessor` + `FundingChangedOrder` really read. So the "funded officer post with competence" record exists **twice** — one live (research), one dead (admin). The build here is to **consolidate onto ONE live delegate record** the way the governance doc *intends*, and fix that doc. This is a clean example of the Landmine-L1 "dead code that looks live" trap — the design pointed at the corpse.
+
+**Reading:** Command is the "seats exist, everything they should DO is net-new" category — and that's the honest, useful finding. The **scaffolding is real and the right shape**: one `AdminSpaceAtb` powers both a colony HQ (`admin-complex`) and a ship bridge (`ship-command`), you can seat an officer, and academies supply them — the "one shape, two altitudes" vision is genuinely built at the *seat* level. But the delegation *consequences* are all missing: **span isn't enforced** (capacity math is dead), **a seated officer does nothing** (competence unread), the **funding record is dead + duplicated** (`AdministratorDB` vs the live `ResearcherDB`), and the **decision loop** (stance, funding-vs-attention, auto-runners) is net-new. Command is where the "play at your own altitude" fantasy has its chairs bolted down but no one yet empowered to sit in them and actually run the empire. **The connective payoff:** wiring competence here overlaps the Enhancers unit-caliber wire (a commander bonus is the fleet/colony twin of a unit's quality) — build the "a person's skill modifies an outcome" hook once, and it lights up both.
+
+**Numbers:** `AdminLevel` (the enum ladder, tech-gated ceiling); `Office Space` 10–10,000 (colony) / `Console Space` 1–20 (ship); `FundingLevel` 0–5 with the 1×/3×/7×/13×/22× cost curve (from the live `ResearcherDB` pattern). Cradle-to-grave: a command node is a **component** (built → installed → seated → **destroyed = delegation collapses** — once the grave rung is built).
+
+**Preset coordinates — the same door at different rungs:** ship's bridge *(command a task unit)* · fleet flagship *(admiral — fleet scope)* · colony admin complex *(governor — Colony scope)* · sector HQ *(Empire scope — run it all from one chair)*.
+
+---
+
+## §10 Command — status (proposed, awaiting lock)
+Command 🟡 (single door). **The "play at your own altitude" delegation layer — the least-wired category so far, and honestly so.** The **seat substrate is Modelled and the right shape**: one `AdminSpaceAtb` binds BOTH the colony `admin-complex` (governor, Colony+ scope) and the ship `ship-command` bridge (admiral, Ship/TaskUnit scope) — "one shape, two altitudes" — and `AssignAdministratorOrder` genuinely seats a `CommanderDB` officer supplied by the academies. **But every consequence is stub or net-new:** span-of-control **isn't enforced** (the `ConsoleSpace → seat-count` math is dead; the only live effect of admin capacity is the colony hex-map radius), a seated officer **gives no bonus** (`CommanderDB.Experience` is written-never-read; combat reads `FleetDoctrineDB`, not a commander), the **funding/delegate record is built-but-DEAD and duplicated** (`AdministratorDB` has zero consumers — research really runs on the identical twin `ResearcherDB`; the governance doc points at the corpse), the **grave rung is unbuilt** (`OnComponentUninstallation` throws), and the whole **delegation decision loop** (standing stance per post, funding-vs-attention charging money, Governor/Minister/Admiral auto-runners, seat-nesting) is designed-only. Build-list: (1) **wire competence** — a seated officer's skill actually modifies the colony/fleet outcome (overlaps the Enhancers unit-caliber "person modifies outcome" wire — build once, lights up both); (2) **consolidate the delegate record** onto ONE live `FundingLevel`/`BonusCategories` post (kill the dead `AdministratorDB`, unify with `ResearcherDB`) + fix the governance doc; (3) **enforce span-of-control** (make capacity gate how many sub-units a node runs; walk the AdminLevel ladder as a real hierarchy); (4) the **delegation decision loop** (stance/standing-orders, funding-vs-attention, auto-runners — the net-new heart); (5) the **grave rung** (a decapitation strike collapses delegation).
