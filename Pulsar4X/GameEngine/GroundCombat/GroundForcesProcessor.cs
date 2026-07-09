@@ -34,6 +34,20 @@ namespace Pulsar4X.GroundCombat
         /// space <c>SalvoDamageScale</c>). 1.0 = full; lower stretches a battle over more ticks. Tune live.</summary>
         public const double SalvoScale = 1.0;
 
+        /// <summary>Ground COMBAT INTERRUPT flag (4b) — the ground mirror of
+        /// <c>Combat.CombatEngagement.InterruptTimeOnNewEngagement</c>. When true, the first tick a NEW planetary
+        /// battle forms on a body, the processor calls <c>MasterTimePulse.RequestCombatHalt()</c> so the clock stops
+        /// and the player is notified (the client already surfaces <c>CombatInterruptPending</c> as an on-screen
+        /// banner — space and ground share it). Default FALSE so headless tests advance deterministically; the client
+        /// turns it on at startup next to the space combat flags.</summary>
+        public static bool InterruptTimeOnNewBattle = false;
+
+        /// <summary>Shield pool regeneration per game-hour, as a FRACTION of the unit's shield CAPACITY (resolver merge
+        /// 3c). Between salvos a unit's <c>CurrentShield</c> recharges toward its <c>Shield</c> max by this × the tick's
+        /// hours — so a depleted shield recovers over ~1/this hours (0.34 ≈ full recharge in ~3 game-hours). Flagged
+        /// balance default; 0 = a knocked-down shield stays down for the fight.</summary>
+        public const double ShieldRegenPerHourFraction = 0.34;
+
         // FORTIFICATION (5h) is now DESIGN-DRIVEN — a building fortifies its region (and projects to adjacent friendly
         // regions) only if its design carries a GroundDefenseAtb (a Bunker, not a solar panel). The math + the
         // colony→component resolver live in GroundFortification; ResolveRegionCombat applies it to the defender.
@@ -58,6 +72,10 @@ namespace Pulsar4X.GroundCombat
         {
             if (!body.TryGetDataBlob<GroundForcesDB>(out var forces) || forces.Units.Count == 0)
                 return;
+
+            // 0) RADAR: a unit carrying a GroundSensorAtb reveals the map within its reach (the ability falls out of the
+            //    unit's component store — units-as-entities). Real range → hexes → region bands. Idempotent + defensive.
+            GroundSensors.RevealFromUnits(body);
 
             // 1) MOVEMENT: advance in-transit units.
             //    (a) COARSE region march (5b): a whole-region hop, arrives when the region's crossing time has elapsed.
@@ -93,7 +111,7 @@ namespace Pulsar4X.GroundCombat
                         unit.HexPath.RemoveAt(0);
                         // Carry the leftover (negative) time into the next step so a fast tick can cross several hexes.
                         unit.HexTransitSecondsRemaining += (unit.HexPath.Count > 0)
-                            ? unit.HexStepBaseSeconds * HexPathfinder.HexMoveMult(unit.HexPath[0].Terrain)
+                            ? GroundMobility.StepSecondsFor(body, unit, unit.HexStepBaseSeconds, unit.HexPath[0].Terrain)
                             : 0.0;
                     }
                     if (unit.HexPath.Count == 0) { unit.HexPath = null; unit.HexTransitSecondsRemaining = 0; }
@@ -110,7 +128,7 @@ namespace Pulsar4X.GroundCombat
                         if (gCols > 0 && gRc > 0) unit.RegionIndex = PlanetGridFactory.RegionOfColumn(step.Q, gCols, gRc);   // band = region
                         unit.GlobalPath.RemoveAt(0);
                         unit.GlobalTransitSecondsRemaining += (unit.GlobalPath.Count > 0)
-                            ? unit.GlobalStepBaseSeconds * HexPathfinder.HexMoveMult(unit.GlobalPath[0].Terrain)
+                            ? GroundMobility.StepSecondsFor(body, unit, unit.GlobalStepBaseSeconds, unit.GlobalPath[0].Terrain)
                             : 0.0;
                     }
                     if (unit.GlobalPath.Count == 0) { unit.GlobalPath = null; unit.GlobalTransitSecondsRemaining = 0; }
@@ -175,6 +193,7 @@ namespace Pulsar4X.GroundCombat
             var fortResolve = GroundFortification.BuildResolver(body);
 
             // 2) COMBAT (5c) + 3) REGION CAPTURE (5d), per region.
+            bool anyFightThisTick = false;
             foreach (var kv in byRegion)
             {
                 var units = kv.Value;
@@ -185,7 +204,7 @@ namespace Pulsar4X.GroundCombat
                 {
                     Region region = (regionsDB != null && kv.Key >= 0 && kv.Key < regionsDB.Regions.Count)
                         ? regionsDB.Regions[kv.Key] : null;
-                    ResolveRegionCombat(forces, units, region, allRegions, fortResolve);
+                    if (ResolveRegionCombat(forces, units, region, allRegions, fortResolve, deltaSeconds)) anyFightThisTick = true;
                 }
 
                 // Whoever holds the only live units here now owns the region.
@@ -204,6 +223,15 @@ namespace Pulsar4X.GroundCombat
                     }
                 }
             }
+
+            // GROUND COMBAT INTERRUPT (4b): the first tick a NEW planetary battle forms (not-fighting → fighting),
+            // halt the clock so the player is notified and can watch/steer — the ground mirror of the space
+            // combat-pause (CombatEngagement.EnsureInCombat → RequestCombatHalt). The WasInBattle latch means an
+            // ONGOING fight doesn't re-halt every tick; it clears when the fighting stops, so a later fresh battle
+            // pauses again. Gated by the flag (client-on) so headless tests advance deterministically. Defensive.
+            if (anyFightThisTick && !forces.WasInBattle && InterruptTimeOnNewBattle)
+                body.Manager?.Game?.TimePulse?.RequestCombatHalt();
+            forces.WasInBattle = anyFightThisTick;
 
             // Remove destroyed units.
             forces.Units.RemoveAll(u => u.Health <= 0);
@@ -228,8 +256,10 @@ namespace Pulsar4X.GroundCombat
         /// fight is identical to the pre-hex region resolver</b> — the migration adds range without changing a
         /// same-hex battle. (Terrain here is still the region's dominant feature; reading terrain from the DEFENDER's
         /// own hex is the H3b follow-on.) Reads <see cref="GroundTerrain"/> — the ground twin of SpaceHazardTools.</summary>
-        private static void ResolveRegionCombat(GroundForcesDB forces, List<GroundUnit> units, Region region,
-            List<Region> allRegions, System.Func<int, GroundDefenseAtb> fortResolve)
+        /// <summary>Returns TRUE if a real exchange happened (any damage was dealt to a target this salvo) — the signal
+        /// the ground combat-interrupt (4b) reads to detect a battle.</summary>
+        private static bool ResolveRegionCombat(GroundForcesDB forces, List<GroundUnit> units, Region region,
+            List<Region> allRegions, System.Func<int, GroundDefenseAtb> fortResolve, int deltaSeconds)
         {
             var terrain = GroundTerrain.Classify(region);
             int defenderFaction = region != null ? region.OwnerFactionID : -1;
@@ -243,6 +273,14 @@ namespace Pulsar4X.GroundCombat
                 if (!byFaction.TryGetValue(u.FactionOwnerID, out var l)) { l = new List<GroundUnit>(); byFaction[u.FactionOwnerID] = l; }
                 l.Add(u);
             }
+
+            // SHIELD POOL regen (resolver merge 3c): between salvos a unit's shield recharges toward its capacity, so a
+            // shield is burst-resistant then brittle (the ship model), not a permanent % discount. Unshielded units
+            // (Shield 0) are untouched → byte-identical.
+            if (deltaSeconds > 0)
+                foreach (var u in units)
+                    if (u.Shield > 0 && u.CurrentShield < u.Shield)
+                        u.CurrentShield = System.Math.Min(u.Shield, u.CurrentShield + u.Shield * ShieldRegenPerHourFraction * (deltaSeconds / 3600.0));
 
             // Per-TARGET incoming (not per-faction) so range gating lands damage on exactly the units an attacker can
             // reach. Computed entirely from the PRE-salvo state (Health read here, applied below) → simultaneous.
@@ -268,9 +306,14 @@ namespace Pulsar4X.GroundCombat
                         }
                         if (reachable == null) continue;             // nothing in range → this unit fires nothing this salvo
 
-                        // Output = attack × terrain affinity × stance, scaled by the avg triangle vs the reachable mix.
+                        // Output = attack × terrain affinity × stance. The Armor▸Infantry▸Artillery TRIANGLE has
+                        // DISSOLVED (resolver merge, slice 3b-ii — docs/RESOLVER-MERGE-DESIGN.md §7, developer's call
+                        // 2026-07-08): the type edge is no longer a flat ×1.5/×0.67 multiplier — it now emerges from a
+                        // unit's raw stats (attack / armour / HP) × weapon-nature vs the target's evasion/shield/armour,
+                        // the same way a ship's does. (`GroundTerrain.TriangleMult` is retained as a readout/helper but
+                        // no longer scales the fight.)
                         double atk = u.Attack * GroundTerrain.TerrainAttackMult(u.UnitType, terrain) * GroundFormationDoctrine.AttackMult(forces, u);
-                        double pool = atk * AvgTriangleVs(u.UnitType, reachable) * SalvoScale;
+                        double pool = atk * SalvoScale;
                         if (gIsDefender && coverFort > 0) pool /= coverFort;
 
                         // Spread this attacker's pool across its reachable targets, health-weighted (matches the old
@@ -278,15 +321,30 @@ namespace Pulsar4X.GroundCombat
                         double totalH = 0.0;
                         foreach (var t in reachable) totalH += t.Health;
                         if (totalH <= 0) continue;
+
+                        // Route this attacker's fire through the SHARED KERNEL (resolver merge 3c): its ground weapon
+                        // becomes a WeaponProfile, and dodge + shield + armour resolve the same way a ship's do — the
+                        // ground triangle/dodge/shield now EMERGE from the weapon spec (no bolted-on GroundDamageMatrix
+                        // multiplier). The profile is built once per attacker.
+                        var profile = GroundCombatant.ToWeaponProfile(u);
+                        double shieldSoakFrac = Pulsar4X.Combat.CombatKernel.ShieldSoakFraction(profile.Nature);
                         foreach (var t in reachable)
                         {
-                            // SYSTEM ① — the damage×defence matchup: scale this attacker's share by how its damage
-                            // flavour meets the target's dodge/shield (a Zergling shrugs off rifles but eats a shell;
-                            // a shielded Clone soaks bullets but energy bleeds through), THEN take a flat ARMOUR soak
-                            // off this one source (the target's Defense) — flat-per-source, so a swarm's many little
-                            // volleys are mostly bounced while one big alpha punches through the same plating.
-                            double matchup = GroundDamageMatrix.Matchup(u.DamageType, t);
-                            double contribution = pool * (t.Health / totalH) * matchup;
+                            // DODGE (kernel HitFraction): an aimed slug is dodged ~(1−evasion); an area/beam shot lands
+                            // ~fully — the same curve a ship uses.
+                            double contribution = pool * (t.Health / totalH)
+                                * Pulsar4X.Combat.CombatKernel.HitFraction(profile, t.Evasion);
+                            // SHIELD POOL (3c): the target's depleting shield soaks the soakable fraction (by weapon
+                            // nature — kinetic fully, energy half-bleeds, exotic bypasses) up to its CURRENT charge,
+                            // BEFORE armour. Draining per-source is deterministic (stable iteration → fast-forward==watch).
+                            if (t.CurrentShield > 0 && shieldSoakFrac > 0 && contribution > 0)
+                            {
+                                double absorbed = System.Math.Min(contribution * shieldSoakFrac, t.CurrentShield);
+                                t.CurrentShield -= absorbed;
+                                contribution -= absorbed;
+                            }
+                            // ARMOUR: flat-per-source plating bounces what's left (the swarm-vs-alpha identity) — the
+                            // shared CombatKernel.ArmourSoak (via GroundDamageMatrix's delegator, slice 3a).
                             contribution = GroundDamageMatrix.ArmourSoak(t.Defense, contribution);
                             incoming.TryGetValue(t, out var acc);
                             incoming[t] = acc + contribution;
@@ -306,6 +364,8 @@ namespace Pulsar4X.GroundCombat
                 if (dtm <= 0) dtm = 1.0;
                 t.Health -= Math.Min(t.Health, kv.Value * dtm);
             }
+
+            return incoming.Count > 0;   // a real exchange happened this salvo (the combat-interrupt signal, 4b)
         }
 
         /// <summary>Hex distance between two units on their region's patch (0 = same hex). Reused for the range gate.</summary>
@@ -470,19 +530,6 @@ namespace Pulsar4X.GroundCombat
             GroundFormationDoctrine.TrySetStance(f, bp, body.StarSysDateTime);
         }
 
-        /// <summary>Health-weighted average triangle multiplier of an attacker TYPE against an enemy faction's mix —
-        /// so bringing the right counter to their composition pays off.</summary>
-        private static double AvgTriangleVs(GroundUnitType attackerType, List<GroundUnit> enemies)
-        {
-            double totalH = 0.0, acc = 0.0;
-            foreach (var t in enemies)
-            {
-                if (t.Health <= 0) continue;
-                totalH += t.Health;
-                acc += t.Health * GroundTerrain.TriangleMult(attackerType, t.UnitType);
-            }
-            return totalH > 0 ? acc / totalH : 1.0;
-        }
 
         /// <summary>Keep each formation's leader valid after casualties: if the leader unit is gone, leadership passes
         /// to a surviving member (or -1 if the formation was wiped). Fleet-like reassignment, no penalty.</summary>

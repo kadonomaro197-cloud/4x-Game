@@ -71,6 +71,15 @@ namespace Pulsar4X.GroundCombat
         /// refinement). Clamped to the world's real region count at placement.</summary>
         [JsonProperty] public int DefaultRegionIndex { get; set; } = 0;
 
+        /// <summary>The COMPONENTS this unit is built from — the mounted component-design ids → count (frame + parts).
+        /// KEEPING these (instead of only the flattened combat stats above) is the foundation of units-as-entities
+        /// (Option A, docs/GROUND-UNITS-AS-ENTITIES-DESIGN.md): once a raised unit carries these as real
+        /// <c>ComponentInstance</c>s, every ability (radar-reveal / speed / crew / weapons) falls out of the SAME
+        /// component infrastructure a ship uses, with no per-ability special-casing. Populated by the assembler; the
+        /// chassis is identified by its <see cref="GroundChassisAtb"/>, not a separate flag. Additive — the flat stats
+        /// stay the combat read-model until every reader is migrated off them (slice 6).</summary>
+        [JsonProperty] public Dictionary<string, int> ComponentDesignIds { get; set; } = new Dictionary<string, int>();
+
         /// <summary>
         /// The industry processor calls this when a build finishes. Mirrors <c>ComponentDesign.OnConstructionComplete</c>'s
         /// batch bookkeeping, but instead of installing a component it PLACES a ground unit on the colony's planet.

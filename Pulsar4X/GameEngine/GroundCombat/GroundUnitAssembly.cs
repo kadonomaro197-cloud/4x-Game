@@ -177,6 +177,18 @@ namespace Pulsar4X.GroundCombat
                     if (d == null || c <= 0) continue;
                     for (int i = 0; i < c; i++) { AddCosts(design.ResourceCosts, d.ResourceCosts); design.IndustryPointCosts += d.IndustryPointCosts; }
                 }
+
+            // KEEP the component list (units-as-entities slice 1) — the mounted component-design ids → count, so a
+            // raised unit can later be built as an entity carrying these as real ComponentInstances and every ability
+            // falls out. Additive: the flattened stats above stay the combat read-model. Frame + each part.
+            if (frame != null && !string.IsNullOrEmpty(frame.UniqueID))
+                design.ComponentDesignIds[frame.UniqueID] = design.ComponentDesignIds.TryGetValue(frame.UniqueID, out var fc) ? fc + 1 : 1;
+            if (parts != null)
+                foreach (var (d, c) in parts)
+                {
+                    if (d == null || c <= 0 || string.IsNullOrEmpty(d.UniqueID)) continue;
+                    design.ComponentDesignIds[d.UniqueID] = design.ComponentDesignIds.TryGetValue(d.UniqueID, out var pc) ? pc + c : c;
+                }
             return design;
         }
 

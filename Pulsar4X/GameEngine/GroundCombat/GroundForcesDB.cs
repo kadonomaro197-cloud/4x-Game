@@ -35,6 +35,10 @@ namespace Pulsar4X.GroundCombat
         /// holding its parent-fleet id (fleet membership lives on the SHIP side; formation membership lives here).</summary>
         [JsonProperty] public int FormationId { get; internal set; } = -1;
         [JsonProperty] public string DesignId { get; internal set; }
+        /// <summary>The BACKING ENTITY that carries this unit's components (units-as-entities, Option A) — a real entity
+        /// with a <c>ComponentInstancesDB</c>, the same store a ship has, so every ability falls out via
+        /// <c>TryGetComponentsByAttribute</c>. -1 = none (a monolithic unit not yet backed). See <see cref="GroundUnitEntity"/>.</summary>
+        [JsonProperty] public int BackingEntityId { get; internal set; } = -1;
         [JsonProperty] public string Name { get; internal set; }
         /// <summary>Which faction owns this unit — capture flips this (slice 5d), same primitive as a ship.</summary>
         [JsonProperty] public int FactionOwnerID { get; internal set; }
@@ -64,9 +68,15 @@ namespace Pulsar4X.GroundCombat
         /// evasion. Carried now (slice B plumbing); the resolver consumes it in the damage×defence matrix (slice A).
         /// A dodger (Jedi / Zergling) is high here; a walking bunker is ~0.</summary>
         [JsonProperty] public double Evasion { get; internal set; }
-        /// <summary>SYSTEM ① survivability-by-shield — a flat incoming-damage soak pool (energy shield / Force ward),
-        /// snapshot of Σ augment shield. Carried now; consumed in slice A.</summary>
+        /// <summary>SYSTEM ① survivability-by-shield — the shield POOL CAPACITY (energy shield / Force ward), snapshot
+        /// of Σ augment shield. As of the resolver-merge 3c this is the pool's MAX (the value <see cref="CurrentShield"/>
+        /// recharges toward), read by the resolver as a depleting pool the ship way — not the old innate-% reduction.</summary>
         [JsonProperty] public double Shield { get; internal set; }
+        /// <summary>The shield pool's CURRENT charge (resolver merge 3c). Seeded to <see cref="Shield"/> at raise; the
+        /// resolver drains it by the soakable fraction (weapon nature) before armour, and regenerates it toward
+        /// <see cref="Shield"/> between salvos — so a shield is burst-resistant then brittle (the ship model), not a
+        /// permanent % discount. 0 for an unshielded unit → the pool step is a no-op (byte-identical).</summary>
+        [JsonProperty] public double CurrentShield { get; internal set; }
         /// <summary>SYSTEM ① — this unit's primary damage flavour (from its heaviest weapon), for the future
         /// damage×defence matrix. Carried now; consumed in slice A.</summary>
         [JsonProperty] public GroundWeaponMode DamageType { get; internal set; } = GroundWeaponMode.Ballistic;
@@ -130,10 +140,10 @@ namespace Pulsar4X.GroundCombat
         public GroundUnit(GroundUnit o)
         {
             UnitId = o.UnitId; FormationId = o.FormationId;
-            DesignId = o.DesignId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
+            DesignId = o.DesignId; BackingEntityId = o.BackingEntityId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
             UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health; Range = o.Range;
             MaxAmmo_kg = o.MaxAmmo_kg; CurrentAmmo_kg = o.CurrentAmmo_kg;
-            Evasion = o.Evasion; Shield = o.Shield; DamageType = o.DamageType;
+            Evasion = o.Evasion; Shield = o.Shield; CurrentShield = o.CurrentShield; DamageType = o.DamageType;
             MovingToRegion = o.MovingToRegion; TransitSecondsRemaining = o.TransitSecondsRemaining;
             HexQ = o.HexQ; HexR = o.HexR; HexTransitSecondsRemaining = o.HexTransitSecondsRemaining; HexStepBaseSeconds = o.HexStepBaseSeconds;
             if (o.HexPath != null)
@@ -311,6 +321,12 @@ namespace Pulsar4X.GroundCombat
         /// <summary>Next stable <see cref="GroundFormation.FormationId"/> to hand out.</summary>
         [JsonProperty] public int NextFormationId { get; internal set; } = 1;
 
+        /// <summary>RUNTIME-ONLY latch (not serialized, not cloned): was any region on this body in an active fight on
+        /// the previous processor tick? The ground combat-interrupt (4b) uses it so the clock halts ONCE when a NEW
+        /// planetary battle forms (the not-fighting → fighting transition), not every tick of an ongoing fight — the
+        /// ground echo of the space per-fleet "in combat" flag.</summary>
+        [JsonIgnore] internal bool WasInBattle;
+
         public GroundForcesDB() { }
         public GroundForcesDB(GroundForcesDB other)
         {
@@ -359,6 +375,7 @@ namespace Pulsar4X.GroundCombat
                 Range = design.Range > 0 ? design.Range : GroundRangeTools.DefaultRangeFor(design.UnitType),
                 Evasion = design.Evasion,
                 Shield = design.Shield,
+                CurrentShield = design.Shield,   // the shield pool musters full (resolver merge 3c)
                 DamageType = design.DamageType,
                 // Snapshot the design's environmental gear onto the unit (E4) — like the combat stats above.
                 EnvResistance = (design.EnvironmentalResistance != null && design.EnvironmentalResistance.Count > 0)
@@ -366,6 +383,10 @@ namespace Pulsar4X.GroundCombat
                     : null,
             };
             unit.UnitId = forces.NextUnitId++;   // stable id (the ground echo of a ship's entity id)
+            // Units-as-entities (Option A): give the unit a BACKING ENTITY carrying its design's components, so every
+            // ability falls out of the shared component store (radar/speed/crew). -1 for a design with no component
+            // list (monolithic units, backed in a later slice). Defensive — never throws in the raise path.
+            unit.BackingEntityId = GroundUnitEntity.BuildBacking(body, design, factionId);
             // G3: also place the unit on the ONE continuous grid — at its region BAND's centre column (the global twin
             // of the disk's (0,0) muster). Additive; the per-region HexQ/HexR (0,0) is unchanged.
             StampGlobalMuster(body, unit, regionIndex);
@@ -425,8 +446,37 @@ namespace Pulsar4X.GroundCombat
             if (body == null || !body.TryGetDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>(out var regionsDB) || regionsDB.Regions.Count == 0) return;
             var grid = Pulsar4X.Galaxy.PlanetGridFactory.EnsureGridForBody(body);
             if (grid == null || grid.Cols <= 0 || grid.Rows <= 0) return;
-            unit.GlobalQ = Pulsar4X.Galaxy.PlanetGridFactory.BandCentreColumn(regionIndex, grid.Cols, regionsDB.Regions.Count);
-            unit.GlobalR = grid.Rows / 2;
+            int q = Pulsar4X.Galaxy.PlanetGridFactory.BandCentreColumn(regionIndex, grid.Cols, regionsDB.Regions.Count);
+            int r = grid.Rows / 2;
+            SnapToPassable(grid, ref q, ref r);   // an ocean band-centre (common on a real Earth) would strand the unit
+            unit.GlobalQ = q;
+            unit.GlobalR = r;
+        }
+
+        /// <summary>Nudge a muster point off impassable water onto the nearest LAND hex. The band-centre column sits at
+        /// a region's mid-longitude, which on a real Earth (or any ocean-heavy world) can fall in open ocean — an
+        /// impassable start hex that would strand a raised garrison (no reachable neighbour, no valid march). Searches
+        /// outward in a growing box (rows clamped at the poles, columns wrapped) for the nearest passable hex; leaves
+        /// the point unchanged if the whole world is water (nothing better to pick). Pure, defensive.</summary>
+        private static void SnapToPassable(Pulsar4X.Galaxy.SurfaceGrid grid, ref int q, ref int r)
+        {
+            var here = grid.HexAt(grid.WrapCol(q), r);
+            if (here != null && !HexPathfinder.IsImpassable(here.Terrain)) return;   // already on land
+
+            int maxRadius = System.Math.Max(grid.Cols, grid.Rows);
+            for (int rad = 1; rad <= maxRadius; rad++)
+                for (int dr = -rad; dr <= rad; dr++)
+                {
+                    int rr = r + dr;
+                    if (rr < 0 || rr >= grid.Rows) continue;
+                    for (int dc = -rad; dc <= rad; dc++)
+                    {
+                        if (System.Math.Abs(dr) != rad && System.Math.Abs(dc) != rad) continue;   // ring edge only
+                        int qq = grid.WrapCol(q + dc);
+                        var h = grid.HexAt(qq, rr);
+                        if (h != null && !HexPathfinder.IsImpassable(h.Terrain)) { q = qq; r = rr; return; }
+                    }
+                }
         }
 
         /// <summary>
@@ -435,7 +485,7 @@ namespace Pulsar4X.GroundCombat
         /// body has no region layer, the target is out of range, it's the same region, or the target is not a
         /// neighbour (v1: one hop at a time along the ring; multi-hop pathing is a later refinement).
         /// </summary>
-        public static bool OrderMove(Entity body, GroundUnit unit, int toRegion)
+        public static bool OrderMove(Entity body, GroundUnit unit, int toRegion, double speedMultOverride = 0)
         {
             if (unit == null) return false;
             if (!body.TryGetDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>(out var regionsDB)) return false;
@@ -445,7 +495,10 @@ namespace Pulsar4X.GroundCombat
             if (!regions[unit.RegionIndex].Neighbors.Contains(toRegion)) return false;   // must be adjacent
 
             unit.MovingToRegion = toRegion;
-            unit.TransitSecondsRemaining = regions[unit.RegionIndex].CrossingTimeSeconds;
+            // Speed falls out of the chassis: a faster frame (Tracked/Hover/Walker) crosses in less time (Foot = ×1.0).
+            // speedMultOverride > 0 forces a SHARED pace (a formation moves as one, timed by its slowest member — 5a).
+            double speed = speedMultOverride > 0 ? speedMultOverride : GroundMobility.SpeedMultForUnit(body, unit);
+            unit.TransitSecondsRemaining = regions[unit.RegionIndex].CrossingTimeSeconds / speed;
             return true;
         }
 
@@ -462,7 +515,7 @@ namespace Pulsar4X.GroundCombat
         /// fresh hex order in the new region (each region's patch has its own local origin — border-stitching is a
         /// documented follow-on).
         /// </summary>
-        public static bool OrderMoveToHex(Entity body, GroundUnit unit, int destQ, int destR)
+        public static bool OrderMoveToHex(Entity body, GroundUnit unit, int destQ, int destR, double speedMultOverride = 0)
         {
             if (unit == null || body == null) return false;
             if (unit.MovingToRegion >= 0) return false;   // can't hex-march while crossing a region border (coarse hop wins)
@@ -477,10 +530,12 @@ namespace Pulsar4X.GroundCombat
             if (path.Count == 0) return false;   // already there / unreachable / dest off-patch
 
             // Store deep copies (don't alias the region's live hex objects), and capture the region's per-hex base time.
+            // speedMultOverride > 0 → the block's shared (slowest-member) pace, so a formation stays together (5a).
+            double speed = speedMultOverride > 0 ? speedMultOverride : GroundMobility.SpeedMultForUnit(body, unit);
             unit.HexPath = new List<Pulsar4X.Galaxy.GroundHex>(path.Count);
             foreach (var h in path) unit.HexPath.Add(new Pulsar4X.Galaxy.GroundHex(h));
-            unit.HexStepBaseSeconds = HexPathfinder.PerHexBaseSeconds(region);
-            unit.HexTransitSecondsRemaining = unit.HexStepBaseSeconds * HexPathfinder.HexMoveMult(unit.HexPath[0].Terrain);
+            unit.HexStepBaseSeconds = HexPathfinder.PerHexBaseSeconds(region) / speed;
+            unit.HexTransitSecondsRemaining = GroundMobility.StepSecondsFor(body, unit, unit.HexStepBaseSeconds, unit.HexPath[0].Terrain);
             return true;
         }
 
@@ -509,8 +564,8 @@ namespace Pulsar4X.GroundCombat
 
             unit.GlobalPath = new List<Pulsar4X.Galaxy.GroundHex>(path.Count);
             foreach (var h in path) unit.GlobalPath.Add(new Pulsar4X.Galaxy.GroundHex(h));
-            unit.GlobalStepBaseSeconds = GlobalStepSecondsFor(body, unit.GlobalQ);
-            unit.GlobalTransitSecondsRemaining = unit.GlobalStepBaseSeconds * HexPathfinder.HexMoveMult(unit.GlobalPath[0].Terrain);
+            unit.GlobalStepBaseSeconds = GlobalStepSecondsFor(body, unit.GlobalQ) / GroundMobility.SpeedMultForUnit(body, unit);
+            unit.GlobalTransitSecondsRemaining = GroundMobility.StepSecondsFor(body, unit, unit.GlobalStepBaseSeconds, unit.GlobalPath[0].Terrain);
             return true;
         }
 
@@ -539,13 +594,15 @@ namespace Pulsar4X.GroundCombat
             int rallyRegion = LeaderRegion(forces, formation);
             if (rallyRegion < 0) return 0;
 
+            // Cohesive march (5a): the whole block moves at its SLOWEST member's pace, so it arrives together.
+            double blockSpeed = GroundFormationTools.FormationSpeedMult(body, forces, formation);
             int moved = 0;
             foreach (var u in forces.Units.ToArray())
             {
                 if (u.FormationId != formation.FormationId) continue;
                 if (u.RegionIndex != rallyRegion || u.MovingToRegion >= 0) continue;
                 if (u.HexPath != null && u.HexPath.Count > 0) continue;   // already hex-marching
-                if (OrderMoveToHex(body, u, destQ, destR)) moved++;
+                if (OrderMoveToHex(body, u, destQ, destR, blockSpeed)) moved++;
             }
             return moved;
         }
@@ -666,12 +723,14 @@ namespace Pulsar4X.GroundCombat
             int rallyRegion = LeaderRegion(forces, formation);
             if (rallyRegion < 0) return 0;
 
+            // Cohesive march (5a): the whole block crosses at its SLOWEST member's pace, so it arrives together.
+            double blockSpeed = GroundFormationTools.FormationSpeedMult(body, forces, formation);
             int moved = 0;
             foreach (var u in forces.Units.ToArray())
             {
                 if (u.FormationId != formation.FormationId) continue;
                 if (u.RegionIndex != rallyRegion || u.MovingToRegion >= 0) continue;
-                if (OrderMove(body, u, toRegion)) moved++;
+                if (OrderMove(body, u, toRegion, blockSpeed)) moved++;
             }
             return moved;
         }
@@ -768,6 +827,60 @@ namespace Pulsar4X.GroundCombat
             foreach (var f in forces.Formations)
                 if (f.FactionOwnerID == factionId) list.Add(f);
             return list;
+        }
+
+        // ── AGGREGATION (the battalion↔fleet-parity reads, slice 5a — the developer's "a joined force moves at the
+        //    pace of its slowest unit but can see/strike as far as its longest, and hits with the sum"; the ground twin
+        //    of Combat.FleetCombat's WarpSpeedFloor / SensorReach / summed Firepower). v1 aggregates a formation's
+        //    DIRECT members (its own units); rolling up the whole sub-formation TREE is a documented follow-up. ──
+
+        /// <summary>The formation's march speed = the MIN speed multiplier over its living members — it moves as ONE,
+        /// bound by its SLOWEST unit (`FleetCombat.WarpSpeedFloor` twin). 1.0 (Foot) for an empty formation. Used by the
+        /// cohesive-march wiring in <see cref="GroundForces.OrderFormationMove"/>.</summary>
+        public static double FormationSpeedMult(Entity body, GroundForcesDB forces, GroundFormation formation)
+        {
+            double min = double.PositiveInfinity;
+            foreach (var u in MembersOf(forces, formation))
+            {
+                if (u.Health <= 0) continue;
+                double s = GroundMobility.SpeedMultForUnit(body, u);
+                if (s < min) min = s;
+            }
+            return double.IsInfinity(min) ? 1.0 : min;
+        }
+
+        /// <summary>The formation's REACH in hexes = the MAX strike range over its living members — it can hit (and, as
+        /// range is the v1 vision proxy, "see") as far as its LONGEST-ranged unit (`FleetCombat.SensorReach` twin).
+        /// 0 for an empty formation.</summary>
+        public static int FormationReachHexes(GroundForcesDB forces, GroundFormation formation)
+        {
+            int max = 0;
+            foreach (var u in MembersOf(forces, formation))
+                if (u.Health > 0 && u.Range > max) max = u.Range;
+            return max;
+        }
+
+        /// <summary>The formation's total firepower = Σ living-member Attack (the "hits with the sum" — a fleet's summed
+        /// Firepower twin).</summary>
+        public static double FormationStrength(GroundForcesDB forces, GroundFormation formation)
+        {
+            double sum = 0;
+            foreach (var u in MembersOf(forces, formation))
+                if (u.Health > 0) sum += u.Attack;
+            return sum;
+        }
+
+        /// <summary>The formation's total current / max health (Σ over members) — the battalion's staying power at a
+        /// glance (dead members contribute 0 current but still count toward max until removed).</summary>
+        public static (double current, double max) FormationHealth(GroundForcesDB forces, GroundFormation formation)
+        {
+            double cur = 0, mx = 0;
+            foreach (var u in MembersOf(forces, formation))
+            {
+                if (u.Health > 0) cur += u.Health;
+                mx += u.MaxHealth;
+            }
+            return (cur, mx);
         }
 
         // ── SUB-FORMATION TREE (System ③, the sub-fleet nesting) ──────────────────────────────────────────────────

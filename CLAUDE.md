@@ -15,6 +15,8 @@ The developer is hands-on technical (US Navy nuclear-trained machinist's mate) b
 - **Short sentences. Concrete examples. Name the file and what it's for**, not abstract patterns.
 - When something genuinely is complex, say so plainly and walk through it step by step rather than hiding it behind a term.
 
+> **⛔ DO NOT USE the `AskUserQuestion` tool (the multiple-choice question picker). It is BROKEN in this environment** (the permission stream closes before a response is received, every time — confirmed by the developer 2026-07-07). Calling it wastes a turn and returns an error. **Instead: pick the most sensible default, state plainly in chat what you chose and why, and proceed** — the developer will redirect in prose if they want something different. If you genuinely need a decision from the developer, ask it as a normal sentence in your reply and keep working on what you can in the meantime.
+
 ---
 
 ## Developer Objective (this fork)

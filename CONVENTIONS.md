@@ -237,6 +237,12 @@ When you change a subsystem that has a `CLAUDE.md`, **update that `CLAUDE.md` in
 
 ---
 
+## 16. Designer transparency — every option shows its benefits AND costs as stats (2026-07-08)
+
+The developer's rule, applicable to **every designer in the game** (components, ships, ground units, locomotion, weapons, armor — anything a player selects or tweaks): **an option the player can pick must make its benefits AND its costs apparent through visible stats, so the choice is understood, not guessed.** A faster drive shows the speed it buys *and* the mass/credits/fragility it costs; a bigger weapon shows the damage *and* the power/crew draw. Prefer PARAMETRIC dials (tunable properties → emergent stats + cost, like the mine's `Area` or a locomotion component's speed/rough-handling/amphibious) over fixed menus of presets, so the player can build anything — but always surface the derived trade so the dial is legible. The engine's job is to make the stat EXIST (a readout/derived value); the designer UI's job is to SHOW it next to the choice. A knob with no visible consequence is a trap; a preset with a hidden downside is worse.
+
+---
+
 ## Quick "am I coding like Pulsar?" checklist
 
 - [ ] New capability modelled as **component + `*Atb` + processor**, not a bespoke registry?

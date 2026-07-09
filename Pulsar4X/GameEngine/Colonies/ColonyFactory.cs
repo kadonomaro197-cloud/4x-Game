@@ -23,7 +23,7 @@ namespace Pulsar4X.Colonies
     {
         public const string DEFAULT_SUFFIX = "HQ";
 
-        public static Entity CreateFromBlueprint(Game game, Entity faction, Entity species, StarSystem startingSystem, Entity systemBody, ColonyBlueprint colonyBlueprint)
+        public static Entity CreateFromBlueprint(Game game, Entity faction, Entity species, StarSystem startingSystem, Entity systemBody, ColonyBlueprint colonyBlueprint, bool buildFleets = true)
         {
             var factionInfo = faction.GetDataBlob<FactionInfoDB>();
 
@@ -149,7 +149,9 @@ namespace Pulsar4X.Colonies
             var scientistEntity = CommanderFactory.CreateScientist(faction, colonyEntity);
             colonyEntity.GetDataBlob<TeamsHousedDB>().AddTeam(scientistEntity);
 
-            // Add starting fleets
+            // Add starting fleets — skipped for a BAREBONES start (buildFleets=false), so a New Game can begin with
+            // no ships at all (the caller's call). Default true keeps every other caller (tests, scenarios) unchanged.
+            if (buildFleets)
             foreach(var fleet in colonyBlueprint.Fleets)
             {
                 var fleetEntity = FleetFactory.Create(startingSystem, faction.Id, fleet.Name);

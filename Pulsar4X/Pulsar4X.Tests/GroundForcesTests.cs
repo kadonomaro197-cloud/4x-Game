@@ -1165,6 +1165,152 @@ namespace Pulsar4X.Tests
             Log($"hex-marcher fights: mover took {before - mover.Health:0} dmg while mid-march");
         }
 
+        [Test]
+        [Description("NORTH STAR — the closing fight END-TO-END (docs/RESOLVER-MERGE-DESIGN §7, the zergling/Titan acceptance test). A long-range unit (reach 3) and an EQUAL-stats short-range unit (reach 1) start 3 hexes apart; the short-range one RUSHES (CloseToEngage). The long-range unit fires across the whole approach while the rusher can't shoot back until it closes — so the range advantage, played out over the battle's DURATION tick by tick, decides it: the rusher ends far more damaged (or dead) than the kiter. Range is the ONLY difference between the two, so this isolates the closing advantage the auto-resolver simulates.")]
+        public void ClosingFight_LongRangeWhittlesTheRusherDuringTheApproach()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();  // no attrition skew
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            PaveRegionHexes(body, regionsDB, 0);
+            regionsDB.Regions[0].OwnerFactionID = -1;   // neutral ground → no fortification/cover skew for either side
+
+            // Equal stats EXCEPT reach — range is the only variable, so the fight isolates the closing advantage.
+            var kiter = GroundForces.RaiseUnit(body, MakeDesign("kiter", "LongGun", GroundUnitType.Infantry, range: 3), s.Faction.Id, 0);
+            kiter.HexQ = 0; kiter.HexR = 0;
+            var rusher = GroundForces.RaiseUnit(body, MakeDesign("rusher", "Zergling", GroundUnitType.Infantry, range: 1), InvaderFaction, 0);
+            rusher.HexQ = 3; rusher.HexR = 0;   // distance 3: inside the kiter's reach, OUTSIDE the rusher's
+
+            // The rusher's formation is ordered to CLOSE; the kiter has no formation, so it holds ground and fires.
+            var f = GroundForces.CreateFormation(body, InvaderFaction, "Swarm");
+            GroundForces.AssignUnit(f, rusher);
+            GroundFormationDoctrine.SetEngagementStance(f, GroundEngagementStance.CloseToEngage);
+
+            var forces = body.GetDataBlob<GroundForcesDB>();
+            var proc = new GroundForcesProcessor();
+            int startDist = HexDistBetween(kiter, rusher);
+            // Play the battle out over many game-hours — the resolver closes the gap and trades fire tick by tick.
+            for (int i = 0; i < 60 && forces.Units.Count > 1; i++)
+                proc.ProcessEntity(body, 3600);
+
+            // The unit objects persist even after a death removes them from the roster, so read their final Health directly.
+            Log($"closing fight from dist {startDist}: kiter(reach 3) ends {kiter.Health:0} hp, rusher(reach 1) ends {rusher.Health:0} hp");
+            Assert.That(rusher.Health, Is.LessThan(kiter.Health),
+                "the long-range unit's free shots during the approach decide the fight — the rusher ends more damaged");
+            Assert.That(kiter.Health, Is.GreaterThan(0),
+                "the long-range unit survives: it whittled the rusher before it could close to trade evenly");
+        }
+
+        [Test]
+        [Description("4b GROUND COMBAT INTERRUPT — the ground mirror of the space combat-pause: the first tick a NEW planetary battle forms, the processor calls RequestCombatHalt so the clock stops and the player is notified (the client's CombatInterruptPending banner, shared with space). Gated by a flag (default off, so headless advances deterministically); the WasInBattle latch means an ONGOING fight doesn't re-halt every tick.")]
+        public void GroundCombatInterrupt_HaltsTheClockOnANewBattle_NotEveryTick()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            PaveRegionHexes(body, regionsDB, 0);
+            regionsDB.Regions[0].OwnerFactionID = -1;
+
+            // Two hostile units co-located (distance 0 → in range) → they fight, so a battle forms.
+            var a = GroundForces.RaiseUnit(body, MakeDesign("a", "A", GroundUnitType.Infantry, range: 1), s.Faction.Id, 0);
+            a.HexQ = 0; a.HexR = 0;
+            var b = GroundForces.RaiseUnit(body, MakeDesign("b", "B", GroundUnitType.Infantry, range: 1), InvaderFaction, 0);
+            b.HexQ = 0; b.HexR = 0;
+
+            var tp = s.Game.TimePulse;
+            var forces = body.GetDataBlob<GroundForcesDB>();
+            Assert.That(GroundForcesProcessor.InterruptTimeOnNewBattle, Is.False, "the ground interrupt flag defaults OFF");
+
+            // Flag OFF → the clock is never halted by a ground battle.
+            tp.CombatInterruptPending = false;
+            forces.WasInBattle = false;
+            new GroundForcesProcessor().ProcessEntity(body, 3600);
+            Assert.That(tp.CombatInterruptPending, Is.False, "flag off → a planetary battle does NOT halt the clock");
+
+            try
+            {
+                GroundForcesProcessor.InterruptTimeOnNewBattle = true;
+
+                // A NEW battle (fresh transition) halts the clock.
+                forces.WasInBattle = false;
+                tp.CombatInterruptPending = false;
+                new GroundForcesProcessor().ProcessEntity(body, 3600);
+                Assert.That(tp.CombatInterruptPending, Is.True, "a NEW planetary battle halts the clock (the player is notified)");
+
+                // The SAME ongoing fight the next tick does NOT re-halt (the WasInBattle latch).
+                tp.CombatInterruptPending = false;
+                new GroundForcesProcessor().ProcessEntity(body, 3600);
+                Assert.That(tp.CombatInterruptPending, Is.False, "an ongoing fight does not re-halt every tick");
+            }
+            finally { GroundForcesProcessor.InterruptTimeOnNewBattle = false; }
+        }
+
+        [Test]
+        [Description("3c SHIELD as a DEPLETING POOL (routed through the shared kernel): a ground unit's shield is now a pool that DRAINS in combat (not the old permanent %), and the weapon-NATURE matchup falls out of the kernel — a KINETIC attacker is fully soaked by the shield while an ENERGY attacker half-bleeds through. Two identical shielded targets in separate regions, one hit by kinetic fire, one by energy: the energy-hit target takes MORE health damage, and both targets' shield pools drain.")]
+        public void GroundShield_IsADepletingPool_EnergyBleedsWhereKineticIsSoaked()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            PaveRegionHexes(body, regionsDB, 0);
+            PaveRegionHexes(body, regionsDB, 1);
+            regionsDB.Regions[0].OwnerFactionID = -1;
+            regionsDB.Regions[1].OwnerFactionID = -1;
+
+            // Region 0: a KINETIC attacker vs a shielded target. Region 1: an ENERGY attacker vs an identical target.
+            var kinetic = GroundForces.RaiseUnit(body, MakeDesign("kin", "Rifles", GroundUnitType.Infantry, range: 1), InvaderFaction, 0);
+            var tgtK = GroundForces.RaiseUnit(body, MakeDesign("tk", "ShieldedK", GroundUnitType.Infantry, range: 1), s.Faction.Id, 0);
+            var energy = GroundForces.RaiseUnit(body, MakeDesign("eng", "Lasers", GroundUnitType.Infantry, range: 1), InvaderFaction, 1);
+            energy.DamageType = GroundWeaponMode.Energy;
+            var tgtE = GroundForces.RaiseUnit(body, MakeDesign("te", "ShieldedE", GroundUnitType.Infantry, range: 1), s.Faction.Id, 1);
+            foreach (var t in new[] { tgtK, tgtE }) { t.Shield = 300; t.CurrentShield = 300; }
+
+            new GroundForcesProcessor().ProcessEntity(body, 3600);
+
+            Log($"kinetic-hit target: {tgtK.Health:0} hp, shield {tgtK.CurrentShield:0}/300 | energy-hit target: {tgtE.Health:0} hp, shield {tgtE.CurrentShield:0}/300");
+            Assert.That(tgtK.CurrentShield, Is.LessThan(300), "the shield is a POOL — kinetic fire drains it");
+            Assert.That(tgtE.CurrentShield, Is.LessThan(300), "energy fire drains the pool too");
+            Assert.That(tgtE.Health, Is.LessThan(tgtK.Health),
+                "ENERGY bleeds through a shield where KINETIC is soaked — the nature matchup, from the kernel");
+        }
+
+        [Test]
+        [Description("5a battalion/formation AGGREGATION (the fleet-parity reads, developer's call): a formation moves at its SLOWEST member's pace, strikes/sees as far as its LONGEST-ranged member, and hits with the SUM of member attack — the ground twin of a fleet's WarpSpeedFloor / SensorReach / summed Firepower. Plus the cohesive march: OrderFormationMove times every member on the shared (slowest) pace, so the block arrives together instead of the fast units outrunning the slow.")]
+        public void FormationAggregation_SlowestSpeed_LongestReach_SummedStrength_AndCohesiveMarch()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+
+            var shortR = GroundForces.RaiseUnit(body, MakeDesign("sr", "Rifles", GroundUnitType.Infantry, range: 1), s.Faction.Id, 0);
+            var longR = GroundForces.RaiseUnit(body, MakeDesign("lr", "Artillery", GroundUnitType.Infantry, range: 3), s.Faction.Id, 0);
+            var f = GroundForces.CreateFormation(body, s.Faction.Id, "Battalion");
+            GroundForces.AssignUnit(f, shortR);
+            GroundForces.AssignUnit(f, longR);
+            GroundForces.SetLeader(f, shortR);
+            var forces = body.GetDataBlob<GroundForcesDB>();
+
+            Assert.That(GroundFormationTools.FormationReachHexes(forces, f), Is.EqualTo(3), "reach = the LONGEST-ranged member (sees/strikes as far as its longest)");
+            Assert.That(GroundFormationTools.FormationStrength(forces, f), Is.EqualTo(200), "strength = Σ member attack (hits with the sum)");
+            Assert.That(GroundFormationTools.FormationSpeedMult(body, forces, f), Is.EqualTo(1.0), "speed = the SLOWEST member (Foot ×1.0 here)");
+            var (cur, max) = GroundFormationTools.FormationHealth(forces, f);
+            Assert.That(cur, Is.EqualTo(2000)); Assert.That(max, Is.EqualTo(2000));
+
+            // Cohesive march: order the whole formation to an adjacent region; every member is timed on the SAME pace.
+            int adj = regionsDB.Regions[0].Neighbors.FirstOrDefault();
+            int moved = GroundForces.OrderFormationMove(body, f, adj);
+            Assert.That(moved, Is.EqualTo(2), "both members march as a block");
+            Assert.That(shortR.TransitSecondsRemaining, Is.EqualTo(longR.TransitSecondsRemaining).Within(1e-6),
+                "the block moves as ONE — every member on the shared slowest pace, so they arrive together");
+        }
+
         // ───────────────────────── O1 — formation order QUEUE (sequential waypoints) ─────────────────────────
 
         [Test]

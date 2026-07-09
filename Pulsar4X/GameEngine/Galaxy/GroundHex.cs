@@ -24,6 +24,16 @@ namespace Pulsar4X.Galaxy
         /// <summary>Which faction holds this hex on the ground (-1 = uncontested). Ground combat flips it (H3).</summary>
         [JsonProperty] public int OwnerFactionID { get; internal set; } = -1;
 
+        /// <summary>The MINERAL deposit ON this hex (-1 = none) — the "there are resources HERE" the map flags post-scan,
+        /// so you build a mine on the actual deposit (the LOCKED PRINCIPLE applied to minerals; docs/RESOURCES-AND-
+        /// MATERIALS-DESIGN.md). Seeded terrain-flavored by <c>Industry.HexMinerals</c> when the body's surface grid is
+        /// generated (post-survey). v1: one mineral per deposit hex, for a legible map. <see cref="DepositAmount"/> is
+        /// the accessible tonnes located here — a share of the body's real deposit (mining stays colony-wide in v1;
+        /// per-hex mining that draws THIS deposit is the follow-up). Save-safe (copied below).</summary>
+        [JsonProperty] public int DepositMineralId { get; internal set; } = -1;
+        /// <summary>Accessible amount of <see cref="DepositMineralId"/> located on this hex (0 if none).</summary>
+        [JsonProperty] public long DepositAmount { get; internal set; }
+
         /// <summary>Instance ids of the FOOTPRINT buildings that occupy THIS operational hex (War-map layer, W1) — the
         /// finer-than-region location of a strategic base (a fort / spaceport / HQ). This is the "ship icon" the war
         /// map fights over: capturing the hex captures what's on it, bombing it damages what's on it. Only buildings
@@ -42,6 +52,7 @@ namespace Pulsar4X.Galaxy
         public GroundHex(GroundHex o)
         {
             Q = o.Q; R = o.R; Terrain = o.Terrain; OwnerFactionID = o.OwnerFactionID;
+            DepositMineralId = o.DepositMineralId; DepositAmount = o.DepositAmount;
             InstallationIds = o.InstallationIds != null ? new List<int>(o.InstallationIds) : new List<int>();
             CityGrid = o.CityGrid != null ? new CityGrid(o.CityGrid) : null;
         }

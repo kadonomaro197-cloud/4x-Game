@@ -6,6 +6,8 @@ using Pulsar4X.Factions;
 using Pulsar4X.Fleets;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Ships;
+using Pulsar4X.Colonies;
+using Pulsar4X.GroundCombat;
 
 namespace Pulsar4X.Combat
 {
@@ -167,6 +169,44 @@ namespace Pulsar4X.Combat
             return null;
         }
 
+        /// <summary>Starting population of an NPC beachhead colony. FLAGGED number (balance) — big enough to be a real
+        /// capture prize, small enough to fall to an invasion.</summary>
+        private const long MarsColonyPopulation = 500_000_000L;
+
+        /// <summary>Whether the combat scenario gives Mars a GROUND BEACHHEAD (enemy colony + garrison = a world you can
+        /// invade and TAKE). **Default OFF** — a normal New Game has the fleet-only Mars rival, no Earth-Mars ground war;
+        /// flip this on (DevTools / a test) to stage the take-Mars playtest. Kept off by the developer's "hold off on the
+        /// Earth-Mars war" call while the work stays available.</summary>
+        public static bool SpawnMarsBeachhead = false;
+
+        /// <summary>
+        /// Give an NPC faction a holdable GROUND BEACHHEAD on a body: a minimal colony (a capture TARGET — clearing its
+        /// garrison flips ownership) plus a defending home garrison (region 0). This is what turns a fleet-only rival
+        /// into a world you can TAKE. Reuses the passed species (an NPC "human" colony — fine for a playtest; flagged).
+        ///
+        /// Fog: <see cref="ColonyFactory.CreateColony"/> reveals the world on colony creation (survey is world-level in
+        /// v1). We RE-FOG it afterward if it was fogged before, so the player still has to send a survey ship to see the
+        /// surface (the "only your home starts surveyed" rule). The enemy garrison mustered fine before the re-fog;
+        /// re-fogging only flips the per-region 'known' bool the player reads. Defensive — never throws.
+        /// </summary>
+        public static Entity SetupGroundBeachhead(Game game, Entity faction, Entity species, Entity body, long population)
+        {
+            if (game == null || faction == null || species == null || body == null) return Entity.InvalidEntity;
+
+            // Was this world fogged (unsurveyed) before we colonised it? Only the player's home starts surveyed.
+            bool wasFogged = body.TryGetDataBlob<PlanetRegionsDB>(out var regions)
+                             && regions.Regions.Any(r => !r.Surveyed);
+
+            var colony = ColonyFactory.CreateColony(faction, species, body, population);  // a capturable colony (reveals the world)
+            GroundStartGarrison.RaiseHomeGarrison(body, faction.Id);                      // a defending garrison in region 0
+
+            if (wasFogged && regions != null)                                            // re-fog: the player must scan it themselves
+                foreach (var r in regions.Regions)
+                    r.Surveyed = false;
+
+            return colony;
+        }
+
         /// <summary>Stand up a ready-to-watch COMBAT SCENARIO: two well-rounded PLAYER task forces at Earth, and a
         /// beefed-up HOSTILE squadron — each its OWN rival faction — at Luna, Venus, Mercury, and Mars. FOUR distinct
         /// enemy factions (2026-07-03, the developer's "beef up the enemy fleets and make them different factions"),
@@ -212,6 +252,13 @@ namespace Pulsar4X.Combat
                 var squadron = SpawnMixedFleet(game, system, enemy, playerFaction, BeefSet(), body,
                     $"{factionName} {bodyName} Squadron ({PostureLabel(posture)})");
                 FleetDoctrine.SetEngagementPosture(squadron, posture);
+
+                // MARS is the GROUND front: give the Martian Directorate a holdable colony + garrison, so Mars is a
+                // world you can actually invade and TAKE (survey -> beat the squadron -> bombard -> land -> capture),
+                // not just a fleet to shoot. Gated OFF by default (SpawnMarsBeachhead) — no Earth-Mars ground war in a
+                // normal New Game; flip it on to stage the take-Mars playtest. The other rivals stay fleet-only.
+                if (bodyName == "Mars" && SpawnMarsBeachhead)
+                    SetupGroundBeachhead(game, enemy, playerInfo.Species.FirstOrDefault(), body, MarsColonyPopulation);
             }
             return factions;
         }

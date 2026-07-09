@@ -44,15 +44,20 @@ public class NewGameMenu : PulsarGuiWindow
     private const int MIN_STARTING_FUNDS = 1_000_000;
     private const int MAX_STARTING_FUNDS = 1_000_000_000;
 
-    // ALPHA (2026-07-03): auto-build the combat scenario on every New Game / Quickstart — the same thing the
-    // DevTools "Spawn Combat Scenario" button does, but on by default (the developer's ask). So a fresh game
-    // already has the four rival factions + squadrons at Luna/Venus/Mercury/Mars to fight, no SM-mode button
-    // needed. Flip to false for a clean, empty-sky New Game. See CreateGameCore.
-    public static bool AutoSpawnCombatScenario = true;
+    // BAREBONES VERIFICATION (2026-07-06, developer's call): a New Game is stripped to the CORE so a hands-on
+    // play-through surfaces the real issues instead of being buried under auto-injected content. Both auto-spawns
+    // now default OFF — no rival factions/fleets, no ground garrison; you get your faction + the Earth colony (with
+    // its nested Freight/Military/Science fleets) and the rest of a fogged Sol. Re-enable per playtest in DevTools
+    // ("Auto-spawn this scenario on New Game") or by flipping these back. See CreateGameCore.
+    public static bool AutoSpawnCombatScenario = false;
 
-    // ALPHA: raise a default HOME GARRISON on the player's colony (Earth) on every New Game, so the ground tactical
-    // map already has units to command without DevTools. Engine call (CI-tested); flip false for an ungarrisoned start.
-    public static bool AutoRaiseHomeGarrison = true;
+    // BAREBONES: no default home garrison (see above). Flip true (or DevTools) to garrison the start colony.
+    public static bool AutoRaiseHomeGarrison = false;
+
+    // BAREBONES: build the start colony's nested fleets (Freight/Military/Science) on New Game. Default OFF — a truly
+    // minimal start is your faction + the Earth colony and NO ships (build your own). Flip true (or DevTools) for the
+    // start fleets. Passed to ColonyFactory.CreateFromBlueprint; tests keep fleets (that call defaults buildFleets=true).
+    public static bool AutoBuildStartFleets = false;
 
     Page _currentPage = Page.SelectMods;
     ModLoader _modLoader = new ModLoader();
@@ -613,7 +618,7 @@ public class NewGameMenu : PulsarGuiWindow
         playerFaction.GetDataBlob<FactionInfoDB>().Species.Add(playerSpecies);
 
         // Setup the starting colony
-        ColonyFactory.CreateFromBlueprint(game, playerFaction, playerSpecies, startingSystem, startingBody, p.ModDataStore.Colonies[p.ColonyId]);
+        ColonyFactory.CreateFromBlueprint(game, playerFaction, playerSpecies, startingSystem, startingBody, p.ModDataStore.Colonies[p.ColonyId], AutoBuildStartFleets);
         if (p.EleStart && !p.SystemId.Equals("random"))
             AsteroidFactory.CreateAsteroid(startingSystem, startingBody, game.TimePulse.GameGlobalDateTime + TimeSpan.FromDays(365));
 

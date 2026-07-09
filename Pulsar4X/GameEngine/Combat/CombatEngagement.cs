@@ -49,15 +49,15 @@ namespace Pulsar4X.Combat
 
         /// <summary>Shot velocity (m/s) at which a weapon half-defeats evasion. A light-speed beam is far above
         /// this (≈always hits); a finite-velocity slug is far below (its shots can be dodged).</summary>
-        public const double VelocityReference_mps = 1_000_000.0;
+        public const double VelocityReference_mps = CombatKernel.VelocityReference_mps;
 
         /// <summary>Saturation (tracks/sec) at which a weapon half-guarantees a hit regardless of dodge — high for
         /// flak (fills the sky), low for a single slow slug.</summary>
-        public const double SaturationReference = 50.0;
+        public const double SaturationReference = CombatKernel.SaturationReference;
 
         /// <summary>Floor on the fraction of fire that lands, so even a perfect dodger eventually dies to enough
         /// volume of fire — nothing is truly untouchable.</summary>
-        public const double MinLandedFraction = 0.02;
+        public const double MinLandedFraction = CombatKernel.MinLandedFraction;
 
         /// <summary>Flight time (seconds) at which a ballistic shot's RANGE penalty reaches half its max — the
         /// "accuracy falls off with distance" knob. A shot crossing the gap takes flightTime = gap/velocity; the
@@ -65,7 +65,7 @@ namespace Pulsar4X.Combat
         /// A light-speed beam has ~0 flight time (no range penalty); a slow slug accrues it fast. Guided weapons
         /// (high Tracking) correct for it. Only applies once a closing separation is set (Phase 1+); at separation
         /// 0 the term is inert, so the pre-closing resolve is byte-identical. Tunable like SalvoDamageScale.</summary>
-        public const double FlightTimeReference_s = 10.0;
+        public const double FlightTimeReference_s = CombatKernel.FlightTimeReference_s;
 
         /// <summary>An old-style combat value with no <c>WeaponProfile</c>s fires as if a light-speed beam that
         /// always lands — so the dodge model degrades exactly to the pre-dodge behaviour. Backward-compat.</summary>
@@ -103,29 +103,21 @@ namespace Pulsar4X.Combat
 
         /// <summary>Fraction of a KINETIC salvo the shield can absorb — mass-at-velocity is what a shield stops best
         /// (ground <c>ShieldEffVsPhysical</c> = 1.0).</summary>
-        public const double ShieldSoakVsKinetic = 1.0;
+        public const double ShieldSoakVsKinetic = CombatKernel.ShieldSoakVsKinetic;
         /// <summary>Fraction of an ENERGY salvo the shield can absorb — coherent energy overloads and BLEEDS through
         /// a shield (ground <c>ShieldEffVsEnergy</c> = 0.5). This is the Enterprise-vs-Galactica seam: an energy ship
         /// leaks past a kinetic-tuned shield.</summary>
-        public const double ShieldSoakVsEnergy = 0.5;
+        public const double ShieldSoakVsEnergy = CombatKernel.ShieldSoakVsEnergy;
         /// <summary>Fraction of an EXPLOSIVE (blast/warhead) salvo the shield can absorb — an area detonation partly
         /// bypasses (ground <c>ShieldEffVsArtillery</c> = 0.75).</summary>
-        public const double ShieldSoakVsExplosive = 0.75;
+        public const double ShieldSoakVsExplosive = CombatKernel.ShieldSoakVsExplosive;
         /// <summary>Fraction of an EXOTIC salvo the shield can absorb — v1 treats all Exotic as the ANTI-SHIELD
         /// archetype (ion/matter-strip), DESIGNED to ignore the shield: 0 = full bypass straight to the hull. (Finer
         /// exotic sub-effects — disable/stun — are the parked exotic-effects build, WEAPON-TAXONOMY §5.)</summary>
-        public const double ShieldSoakVsExotic = 0.0;
+        public const double ShieldSoakVsExotic = CombatKernel.ShieldSoakVsExotic;
 
-        /// <summary>How much of a nature's damage the shield is ABLE to stop (the rest bleeds through no matter the
-        /// charge). Mirrors ground <c>GroundDamageMatrix.ShieldEff</c>.</summary>
-        private static double ShieldSoakFraction(WeaponNature nature) => nature switch
-        {
-            WeaponNature.Kinetic => ShieldSoakVsKinetic,
-            WeaponNature.Energy => ShieldSoakVsEnergy,
-            WeaponNature.Explosive => ShieldSoakVsExplosive,
-            WeaponNature.Exotic => ShieldSoakVsExotic,
-            _ => ShieldSoakVsKinetic,
-        };
+        // The nature→soak-fraction lookup lives in CombatKernel.ShieldSoakFraction now (resolver merge, slice 2);
+        // SoakFractionOf below delegates to the kernel, so there is no CombatEngagement copy of it any more.
 
         /// <summary>Liveness counter (diagnostic only): how many trigger passes the battle engine has run across the
         /// whole game. The client logs this each heartbeat so a remote review can tell "no battle because nothing's
@@ -373,8 +365,15 @@ namespace Pulsar4X.Combat
         /// railguns resolve a fight at 10,000 km, before anyone closed to beam/flak range. This adds a base miss that
         /// applies even to a sitting target (the firing solution + the target's own orbital drift degrade over a long
         /// flight time), scaled by flight-time and by (1−Tracking) so a beam (≈0 flight time) and a guided weapon
-        /// (high Tracking) are barely affected — a dumb slug at long range is. 0 = old evasion-only behaviour.</summary>
-        public static double RangeBaseMiss = 0.9;
+        /// (high Tracking) are barely affected — a dumb slug at long range is. 0 = old evasion-only behaviour.
+        /// Forwards to <see cref="CombatKernel.RangeBaseMiss"/> (the resolver merge, slice 2) — the kernel owns the
+        /// single dial storage so the ship path and the shared kernel can never read different values; this preserves
+        /// the <c>CombatEngagement.RangeBaseMiss</c> read/write API the client/tuning uses.</summary>
+        public static double RangeBaseMiss
+        {
+            get => CombatKernel.RangeBaseMiss;
+            set => CombatKernel.RangeBaseMiss = value;
+        }
 
         /// <summary>Phase 2 (kiting counter): Δv (m/s) a fleet spends per game-second it CONTROLS the range. A kiter
         /// holding the gap burns this each step; when its <see cref="FleetCombatStateDB.ManeuverBudget"/> runs dry it can
@@ -1079,16 +1078,7 @@ namespace Pulsar4X.Combat
         /// <summary>The damage-weighted fraction of an incoming fire mix a shield CAN stop — the nature matchup rolled
         /// up over the salvo (all-kinetic → 1.0, all-energy → 0.5, all-exotic → 0.0, mixes interpolate). Pure; internal
         /// so it's directly unit-testable like <see cref="HitFraction"/>.</summary>
-        internal static double SoakFractionOf(List<WeaponProfile> incoming)
-        {
-            double total = 0, soak = 0;
-            foreach (var w in incoming)
-            {
-                total += w.DamagePerSecond;
-                soak += w.DamagePerSecond * ShieldSoakFraction(w.Nature);
-            }
-            return total > 0 ? soak / total : 0;
-        }
+        internal static double SoakFractionOf(List<WeaponProfile> incoming) => CombatKernel.SoakFractionOf(incoming);
 
         /// <summary>Pure shield-soak math (internal for direct unit testing, like <see cref="HitFraction"/> /
         /// <see cref="WithinWeaponRange(double,double,double)"/>). Given the pool's current charge, capacity, regen, the
@@ -1098,19 +1088,7 @@ namespace Pulsar4X.Combat
         /// pool absorbs nothing — byte-identical.</summary>
         internal static (double absorbed, double newPool) ResolveShield(
             double pool, double capacity, double regen, double salvoDamage, double soakFraction, double dt)
-        {
-            double absorbed = 0;
-            if (capacity > 0 && pool > 0 && soakFraction > 0 && salvoDamage > 0)
-            {
-                double soakable = salvoDamage * soakFraction;
-                absorbed = soakable < pool ? soakable : pool;
-                pool -= absorbed;
-            }
-            // Recharge toward full for the next salvo (the "shields recovering" beat between volleys).
-            if (regen > 0 && pool < capacity)
-                pool = System.Math.Min(capacity, pool + regen * dt);
-            return (absorbed, pool);
-        }
+            => CombatKernel.ResolveShield(pool, capacity, regen, salvoDamage, soakFraction, dt);
 
         /// <summary>Drain a fleet's shield pool against this salvo and return the joules that reach the hull
         /// (<see cref="FleetCombatStateDB.DamageTakenPool"/>). Handles the lazy seed (-1 → full capacity, 0 for an
@@ -1158,15 +1136,7 @@ namespace Pulsar4X.Combat
         /// <summary>The damage-weighted fraction of an incoming fire mix that LANDS on a ship with the given
         /// evasion. Beams (≈light-speed) land fully; ballistic slugs are dodged by the evasive; flak floors it.</summary>
         private static double LandedFraction(List<WeaponProfile> fire, double evasion, double separation_m = 0)
-        {
-            double total = 0, landed = 0;
-            foreach (var w in fire)
-            {
-                total += w.DamagePerSecond;
-                landed += w.DamagePerSecond * HitFraction(w, evasion, separation_m);
-            }
-            return total > 0 ? landed / total : 1.0;
-        }
+            => CombatKernel.LandedFraction(fire, evasion, separation_m);
 
         /// <summary>Fraction of one weapon's shots that land on a target with the given evasion, at the given
         /// engagement separation. Fast/guided weapons defeat evasion (a beam ignores it); high saturation floors the
@@ -1175,37 +1145,7 @@ namespace Pulsar4X.Combat
         /// 0 = point blank / closing off, so the range term is inert and the result equals the pre-closing curve.
         /// Internal so the dodge curve can be unit-tested directly.</summary>
         internal static double HitFraction(WeaponProfile w, double evasion, double separation_m = 0)
-        {
-            double velocityTerm = w.Velocity / (w.Velocity + VelocityReference_mps);                  // beam → ~1, slug → low
-            double trackingEffectiveness = velocityTerm > w.Tracking ? velocityTerm : w.Tracking;     // guided tracks even when slow
-            double dodgeChance = evasion * (1.0 - trackingEffectiveness);
-
-            // RANGE term (the "accuracy falls off with distance" physics): a shot crossing the gap takes
-            // flightTime = gap/velocity; the longer it flies, the more the target displaces, so it's easier to
-            // dodge. timeFactor saturates 0→1 with flight time. Guided weapons (high Tracking) correct for it, so
-            // the penalty scales by (1 − Tracking) — a beam (≈light-speed → ~0 flight time) is unaffected, a guided
-            // missile barely loses accuracy, a dumb slug loses a lot at range. Inert at separation 0.
-            if (separation_m > 0 && w.Velocity > 0)
-            {
-                double flightTime = separation_m / w.Velocity;
-                double timeFactor = flightTime / (flightTime + FlightTimeReference_s);
-                double tracking = w.Tracking < 0 ? 0 : w.Tracking > 1 ? 1 : w.Tracking;
-                // (evasion + RangeBaseMiss): the target's dodge PLUS an evasion-independent base miss, so even a
-                // sitting (0-evasion) hull is hard to hit with a dumb slug at long range — the "accuracy falls off
-                // with distance" that forces fleets to CLOSE for a decisive hit instead of resolving at standoff.
-                // Both scale by flight-time and (1−Tracking): a beam / guided weapon shrugs it off, a dumb slug doesn't.
-                dodgeChance += (evasion + RangeBaseMiss) * timeFactor * (1.0 - tracking);
-            }
-            if (dodgeChance > 1.0) dodgeChance = 1.0;
-
-            double saturationFloor = double.IsInfinity(w.Saturation) ? 1.0 : w.Saturation / (w.Saturation + SaturationReference);
-            if (saturationFloor < MinLandedFraction) saturationFloor = MinLandedFraction;
-
-            double hit = 1.0 - dodgeChance;
-            if (hit < saturationFloor) hit = saturationFloor;
-            if (hit > 1.0) hit = 1.0;
-            return hit;
-        }
+            => CombatKernel.HitFraction(w, evasion, separation_m);
 
         private static ShipCombatValueDB CombatValue(Entity ship)
         {
