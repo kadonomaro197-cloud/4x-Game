@@ -15,7 +15,11 @@
 | 4 | Weapons | **Guided** | 🔒 **LOCKED §1.4** |
 | 5 | Weapons | **Exotic** | 🟡 **proposed §1.5** (awaiting lock) |
 | 6 | Propulsion | **Reaction** (Newtonian main-drive) | 🔒 **LOCKED §2.1** |
-| 7–37 | Propulsion (Traction · Fluid · Warp · Exotic) · Sensors · Power · Defense · Enhancers · Industrial · Logistical · Civic · Command · Chassis | (remaining doors) | ⚫ pending |
+| 7 | Propulsion | **Traction** (surface locomotion) | 🟡 **proposed §2.2** (awaiting lock) |
+| 8 | Propulsion | **Fluid** (atmospheric + naval) | 🟡 **proposed §2.3** (awaiting lock) |
+| 9 | Propulsion | **Warp** (FTL — warp bubble + jump) | 🟡 **proposed §2.4** (awaiting lock) |
+| 10 | Propulsion | **Exotic** (reactionless / gravitic) | 🟡 **proposed §2.5** (awaiting lock) |
+| 11–37 | Sensors · Power · Defense · Enhancers · Industrial · Logistical · Civic · Command · Chassis | (all doors) | ⚫ pending |
 
 ---
 
@@ -793,3 +797,240 @@ The drive's own tonnage scales with thrust × Ve × tech. It is **not** a knob t
 | **Antimatter torch** | very high | very high (10⁶⁺) | exotic | the deep-tech payoff — both ends at once; its rare fuel + drive mass funnel it to a big chassis |
 
 The lesson mirrors the weapons doors: you never *choose* "sprinter" or "cruiser" from a menu — you dial thrust and exhaust velocity, and the archetype **falls out of where Tsiolkovsky lets you sit.** The chemical booster is a sprinter because low Ve *makes* it one; the ion cruiser kites because high Ve *makes* it one. The numbers force the identity, never a label.
+
+---
+
+### 2.2 Propulsion ▸ TRACTION  🟡 *proposed*
+*Surface locomotion: wheels, tracks, legs, hover/grav-plates — push against the **ground**. This is Reaction's ground twin (the same sprint-vs-reach decision on a surface), and it's wired to the ground closing model the resolver merge just built. Everything from an infantry squad's boots to a wheeled APC to an AT-AT walker to a hovertank falls out of these dials.*
+
+**The core decision — CAN IT REACH THE FIGHT, and on what ground?** Ground combat is a closing fight over hexes (`GroundMobility` speed → the hex-march; H3 range-based directed combat). A unit that can't close is dead weight — a short-range or melee unit that's too slow never lands a blow; a fast unit dictates the engagement. But speed on open ground is bought against **terrain**: the fast drive bogs in the mud the slow one crawls through. So the trade is **speed ↔ all-terrain ↔ cost**, and the numbers (SpeedFactor × the terrain's roughness) decide who arrives.
+
+**A. Drive type — what it rolls/walks/floats on (the core traction axis)**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **Wheeled** | **fast + cheap + light** on good ground (road/plain) → reaches the fight first | **bogs in rough/soft terrain** (low rough-handling) — the closing speed collapses off-road |
+| **Tracked** | **all-terrain** — crosses mud/rubble/slope at a steady pace | slower top speed, heavier, costlier than wheels |
+| **Legged (walker/mech)** | climbs **anything** — steep, broken, vertical; ignores most terrain penalties | **slow + expensive + heavy**; the AT-AT trade (goes anywhere, crawls doing it) |
+| **Hover / grav** | **skims over terrain AND water** at high speed — terrain-blind | **power-hungry** (needs a reactor) + fragile; loses its skim if drained |
+
+**B. Terrain handling** *(how little rough ground slows you — the `RoughHandling` dial)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Road-bound (low)** | max speed on good ground, lightest | crawls in rough — a mobility trap off the beaten path |
+| **All-terrain (high)** | holds its speed across mud/slope/rubble | costs mass + money for the suspension/tracks |
+
+**C. Amphibious / water-crossing** *(the medium-crossing dial)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Land-only** | lighter, cheaper | **ocean is impassable** (locked H2b) — the hex-pathfinder routes around water, so a lake or strait is a wall |
+| **Amphibious** | fords rivers, crosses coast/ocean hexes — opens flanking routes others can't take | slower on land, adds mass/cost (sealing + flotation) |
+
+**D. Motive power** *(muscle ↔ engine ↔ reactor — the supply rung)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Unpowered (muscle/legs)** | zero fuel, zero supply — infantry that never runs dry | capped, slow (leans on the chassis + Enhancers for speed) |
+| **Engine-driven** | real speed on burned fuel | a fuel/supply load (Logistical) |
+| **Reactor-driven (hover/heavy)** | powers a hover/grav skim or a heavy walker | ⛓ needs power on the platform (the supply gate) — a drained unit stops |
+
+**E. Drive mass (emergent — the same feedback as Reaction)**
+The locomotion's tonnage scales with drive type × speed × terrain-handling. It consumes the chassis budget (§0b) **and** feeds back into speed (a heavier drive on the same chassis moves slower) — so "just dial speed to max" pays for itself in mass, exactly as thrust does on a rocket. A walker that climbs anything is heavy *because* legs are heavy; the number forces it.
+
+**Modellability audit (§0d — the ground yardstick; nearly all ✅ Modelled today):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| **Drive type / speed** | ✅ | `GroundLocomotionAtb.SpeedFactor` → `GroundMobility.SpeedMultForUnit` → the hex-march speed (`OrderMove`) → the closing fight (H3) |
+| **Terrain handling** | ✅ | `GroundLocomotionAtb.RoughHandling` + `HexPathfinder` (terrain-weighted A\* — rough hexes cost more) |
+| **Amphibious / water** | ✅ | `GroundLocomotionAtb.Amphibious` + `HexPathfinder` passability (ocean impassable → passable for amphibious; ice already passable — locked H2b) |
+| **Motive power** | ✅ | the ground supply gate (`GroundUnitAssembly` power/ammo gates — a reactor-driven drive draws watts) |
+| **Drive mass** (emergent) | ✅ | ground-unit mass → speed feedback + the chassis budget |
+| **Terrain COMBAT bonus** (traction's edge on its own ground) | ◐ **wire** | movement-through-terrain is Modelled; a *combat* bonus for being on your preferred terrain rides **H3 hex-terrain-in-combat** (a flagged follow-on) — the hook exists, the term is the wire |
+
+**Reading:** Traction is as ready as Reaction — the whole ground-locomotion stack (`GroundLocomotionAtb` + `GroundMobility` + terrain-weighted `HexPathfinder`) already exists and already feeds the closing fight. The absorbed `GroundLocomotionAtb` becomes the concrete dials of this universal door (per the categories doc: the parallel ground systems die into the universal ones). One ◐ wire (terrain giving a *combat* edge, not just a movement one).
+
+**Numbers (calibrated to the ground yardstick):**
+| Dial | Unit | Range | Pins to |
+|------|------|-------|---------|
+| **SpeedFactor** | ×mult | 0.1 (floor) · 1.0 baseline · ~2–3 hover | `GroundMobility.SpeedMultForUnit` → hex-march |
+| **RoughHandling** | 0–1 | 0 (road-bound) → 1 (all-terrain) | `HexPathfinder` rough-hex cost |
+| **Amphibious** | bool | land-only / amphibious | `HexPathfinder` water passability |
+| **Drive mass** (emergent) | kg | scales type × speed | speed feedback + chassis budget |
+
+**Preset coordinates — the span:**
+| Unit | Drive | Speed | Terrain | The trade it chose |
+|------|-------|-------|---------|--------------------|
+| **Infantry** | unpowered legs | low | good | zero supply, goes most places slowly; leans on numbers |
+| **Wheeled APC** | wheels | high | poor | races down roads; bogs off-road |
+| **Main battle tank** | tracks | mid | high | all-terrain workhorse; heavier/costlier |
+| **AT-AT walker** | legs | low | max | climbs anything; slow + expensive + a big target |
+| **Hovertank** | grav | high | terrain-blind + water | skims over everything fast; power-hungry + fragile |
+| **Amphibious assault** | tracks + amphib | mid | high + water | takes the coast route others can't; slower, heavier |
+
+---
+
+### 2.3 Propulsion ▸ FLUID  🟡 *proposed*
+*Lift and buoyancy: aircraft wings, jets, VTOL rotors, airships, ships, submarines — push against a **fluid medium** (air or water) instead of thrown mass or solid ground. Everything from a fighter jet to a submarine to a gas-giant cloud-skimmer falls out of these dials. This is the FIRST propulsion door with real deferrals — because the sim doesn't yet model an **air/altitude/depth layer**, so the door ships its shallow half now and names the prerequisite for the deep half.*
+
+**The honest framing (why this door is partly deferred):** Fluid's payoff is a **plane of movement the enemy may not reach** — air superiority (only anti-air touches a flyer), a submarine's underwater ambush, a skimmer working a gas giant's cloud deck. That payoff needs a **combat medium/altitude layer** the engine doesn't have (space combat tags no medium; ground has surface hexes but no air or sea band) — the exact prerequisite the Weapons ▸ Energy "Medium performance" dial was deferred on. So we do the disciplined thing (§0d): **ship the dials that ride mobility today, defer the altitude/depth dials until that layer is built, and never ship a dead knob.**
+
+**The structural insight — Fluid is usually a MODIFIER on another drive.** A jet is a **Reaction** drive (thrust) + wings (lift); a hovercraft is a **Traction** hover + a fluid seal. Fluid rarely stands alone — it's the *lift/buoyancy layer* that lets another propulsion door work in air or water. That's why most of its combat depth lives in the (future) medium layer, not in a new thrust model.
+
+**A. Medium — where it operates (gates where it works AT ALL)**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **Air (winged/rotor)** | reach + speed over any surface terrain; the air-superiority plane | ⏳ full payoff needs the **altitude layer**; **useless in vacuum** (a medium constraint — Modelled as "can't operate here") |
+| **Water surface (ship/hydrofoil)** | carries huge mass/cargo on water; naval reach | slow; surface-bound — exposed |
+| **Submerged (submarine)** | **hides underwater** — ambush, stealth | ⏳ the hide needs the **depth layer**; slow, crush-depth limits |
+| **Dense-atmosphere skim (gas-giant)** | works a cloud deck no lander can | niche; needs the atmosphere to be there |
+
+**B. Lift type — how it stays up (speed ↔ hover ↔ endurance)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Fixed-wing** | **fast + long-range** | **can't hover / hold station**; needs room (runway/space) to get airborne |
+| **Rotor / VTOL** | **hover + vertical** takeoff, holds station | slower, fuel-hungry, mechanically fragile |
+| **Lighter-than-air (airship)** | enormous **lift + endurance** for its cost | very slow, big + fragile target |
+| **Buoyancy (ship/sub hull)** | carries the **most mass** (heavy cargo/guns on water) | slow, medium-locked |
+
+**C. Altitude / depth band** *(the exposure dial — mostly deferred)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **High / deep** | out of short-range fire — safe from ground guns | ⏳ needs the altitude/depth layer; less accurate on targets below/above |
+| **Nap-of-earth / periscope** | hugs terrain for cover, ambush | in range of everything |
+
+**D. Medium transition** *(air↔ground, surface↔submerged)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Single-medium** | optimized, lighter | stuck in one plane |
+| **Transitioning (VTOL land, sub surface/dive)** | flexes between planes — a flyer that lands, a sub that surfaces | ◐ wire; costs mass; slow in the off-medium |
+
+**Modellability audit (§0d — the honest mixed door):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| **Medium access / can-cross-water** | ◐ **wire** | rides `GroundLocomotionAtb.Amphibious` + `HexPathfinder` passability (a flyer/ship "reaches a hex others can't") — the *access* is wireable now |
+| **Vacuum constraint** (air drive dead in space) | ✅ | a medium tag "this drive needs atmosphere" — the same medium-constraint the categories doc calls a Propulsion medium dial (AT-AT "atmosphere-only") |
+| **Lift type / cruise speed / lift capacity** | ◐ **wire** | speed + carry-mass ride the mobility + cargo stats; the read exists, the fluid framing is the wire |
+| **Altitude / depth band (the combat payoff)** | ⏳ **defer** | needs the **air/altitude + depth combat layer** (HEX-GROUND future) — air-superiority, submarine stealth, over/under fire all wait on it |
+| **Air-vs-ground targeting** (only AA hits a flyer) | ⏳ **defer** | same prerequisite — a target-medium gate in the resolver (who can shoot what plane) |
+| **Medium transition** (VTOL land / sub dive) | ◐ **wire** | a state toggle on the mobility model (like Traction's amphibious), once the medium tag exists |
+
+**Reading:** Fluid is **half-ready, honestly split.** Its *access* dials (cross water, reach an isolated hex, dead-in-vacuum constraint) wire onto the ground mobility + medium-tag today; its *payoff* dials (altitude bands, submarine stealth, air-only-hit-by-AA) **defer** on one named prerequisite — the **air/altitude/depth combat layer** (a HEX-GROUND future item). That prerequisite becomes an explicit build item *before* the deferred dials ship. No dead knobs: we don't offer an "altitude" slider the sim ignores.
+
+**Numbers:** lift capacity (kg), cruise speed (m/s), ceiling/depth (m — the future altitude layer's axis); the shallow half pins to mobility + cargo, the deep half to the (future) medium layer.
+
+**Preset coordinates — the span (✅ = shallow-shippable, ⏳ = needs the medium layer):**
+| Unit | Medium | Lift | The trade it chose | State |
+|------|--------|------|--------------------|-------|
+| **Fighter jet** | air | fixed-wing | fast air reach, dead in vacuum | ⏳ air layer for superiority |
+| **VTOL gunship** | air | rotor | hover + vertical, fuel-hungry | ⏳ |
+| **Naval destroyer** | water surface | buoyancy | big guns on water, slow | ◐ water access ✅ |
+| **Submarine** | submerged | buoyancy | underwater ambush | ⏳ depth layer for the hide |
+| **Airship carrier** | air | lighter-than-air | huge lift/endurance, slow | ⏳ |
+| **Gas-giant skimmer** | dense-atmo | fixed-wing | works a cloud deck | ⏳ |
+
+---
+
+### 2.4 Propulsion ▸ WARP  🟡 *proposed*
+*Faster-than-light: the Alcubierre warp bubble and jump-point traversal — how a ship crosses **between stars**. This is the strategic-map drive, distinct from the tactical Reaction sublight drive (a ship carries both, like Trek's warp + impulse). Everything from a plodding freighter warp to a Star Destroyer hyperdrive to a Stargate falls out of these dials — and the whole system already exists in the engine, so Warp is nearly as ready as Reaction.*
+
+**The core decision — GO-ANYWHERE WARP vs ON-RAILS JUMP.** A self-powered **warp drive** takes you anywhere in a straight line, but it's slow and needs a big battery to open and hold the bubble. A **jump** is instant and cheap but only between fixed, surveyed **jump points** — you travel the network, not the void. It's the strategic mirror of the standoff-vs-brawl trade: **freedom vs speed**. (And the deep-tech answer is "both" — a self-opening jump drive — at a steep tech/cost.)
+
+**A. FTL method — the core split**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **Continuous warp (Alcubierre)** | go **anywhere** — no infrastructure, no lanes; arrive by a straight line | **slow** (sublight-of-FTL) + **big power draw** to create/sustain the bubble → a heavy battery; a drained ship can't warp |
+| **Jump-drive** | **instant** traversal + cheap per trip | **only at jump points** (surveyed nodes) — you're on the network's rails; a self-opened jump is high-tech |
+| **Gate-user (no drive)** | rides fixed infrastructure (a lane/Stargate) — **cheapest**, needs nothing aboard | ⏳ needs the **network/addressing layer** (H8 — which node reaches which); fully dependent on someone building the gate |
+
+**B. Warp speed** *(how fast the bubble travels — the `MaxSpeed` dial)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Slow (freighter)** | cheap, low power, light drive | long transit times — vulnerable in the open |
+| **Fast (warship/courier)** | crosses systems quickly, outruns pursuit | more engine power → bigger drive/battery → more mass |
+
+**C. Bubble power** *(the energy to open, hold, and drop the bubble — paid in stored electricity)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Low-draw** | a small battery serves; light | caps speed/range; a small buffer = short hops |
+| **High-draw (fast/heavy)** | powers a big fast bubble | ⛓ needs a **big charged battery** — an uncharged ship sits still (the "spawned ship won't move" gotcha: warp is paid from stored energy, not fuel) |
+
+**D. Drive mass (emergent) + E. Fleet coupling (emergent)**
+Drive mass drags `MaxSpeed` (WarpMath reads mass) and eats the chassis budget — the same feedback as every drive. And a **fleet warps as one at its slowest member** (`WarpSpeedFloor` / `DeltaVFloor`, min over ships) — mix a fast courier into a slow convoy and the whole fleet crawls. Both fall out of the existing aggregation, no new rule.
+
+**Modellability audit (§0d — the whole warp+jump system is already live):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| **Continuous warp** | ✅ | `WarpAbilityDB` (`MaxSpeed`, `TotalWarpPower`, bubble costs) + `WarpMoveCommand` — the live drive |
+| **Warp speed** | ✅ | `WarpMath.MaxSpeedCalc(power, mass)` — more engine power + less mass = faster |
+| **Bubble power (create/sustain/collapse)** | ✅ | `WarpAbilityDB.BubbleCreationCost`/`SustainCost`/`CollapseCost`, paid from stored electricity (`ChargeReactors`) |
+| **Jump-drive** | ✅ | the jump-point system (`JumpPointDB`, `JumpOrder`, `InterSystemJumpProcessor`; survey-gated via `JPSurvey`) |
+| **Drive mass** (emergent) | ✅ | `MassVolumeDB` → WarpMath speed + chassis budget |
+| **Fleet coupling** (emergent) | ✅ | `FleetCombat.WarpSpeedFloor` / `DeltaVFloor` (min over ships — the fleet moves as one) |
+| **Gate-user / network node** (Stargate) | ⏳ **defer** | needs the **H8 network/addressing layer** (which gate connects to which) — a node is more than a drive; named prerequisite in the categories doc |
+
+**Reading:** Warp is **nearly as ready as Reaction** — the entire warp-bubble drive AND the jump-point network already exist and run in the live game (a spawned ship warps once charged; fleets warp at their slowest member). The only ⏳ is the **gate-as-addressable-network** (Stargate/hyperlane) — the H8 hole, which needs an addressing layer built first. Everything else maps to a stat the movement system reads today.
+
+**Numbers (from the live warp system):**
+| Dial | Unit | Range | Pins to |
+|------|------|-------|---------|
+| **MaxSpeed** | m/s | freighter (low) → hyperdrive (high) | `WarpMath.MaxSpeedCalc(power, mass)` |
+| **BubbleCreationCost** | KJ (stored energy) | e.g. alcubierre-2k = 1,000,000 KJ/bubble (a charged battery holds 2–4×) | `WarpAbilityDB` + the battery (`EnergyStoreMax`) |
+| **Bubble sustain/collapse** | KJ | scales with speed/mass | the stored-energy budget |
+| **Drive mass** (emergent) | kg | scales power × speed | WarpMath speed feedback + chassis |
+
+**Preset coordinates — the span:**
+| Drive | Method | Speed | Power | The trade it chose |
+|-------|--------|-------|-------|--------------------|
+| **Freighter warp** | continuous | slow | low | cheap, light — long, exposed transits |
+| **Warship warp** | continuous | fast | high | outruns pursuit; big charged battery |
+| **Hyperdrive** | continuous | very fast | very high | strategic speed; heavy drive + huge buffer |
+| **Jump-drive raider** | jump | instant | per-jump | strikes across the network; on-rails to the nodes |
+| **Stargate** | gate-user | instant | none aboard | rides fixed infrastructure; ⏳ needs the network layer |
+
+---
+
+### 2.5 Propulsion ▸ EXOTIC  🟡 *proposed*
+*The extensibility slot — reactionless drives, inertialess drives, gravity manipulation, the physics-breakers. Like Weapons ▸ Exotic, this door **grows as new mechanics land**; today it's the home for "a drive that violates a rule the other doors pay," and it's mostly a set of **named deferrals** — each impossible drive escapes one constraint, and each names the prerequisite mechanic it waits on, so the physics-breakers are designed-in, not bolted-on.*
+
+**The identity — each exotic drive BREAKS a constraint the honest doors pay, and must pay for it in tech + cost + a real drawback** (or it's the free win the anti-dominance rule forbids). Reaction pays the fuel/Δv trade; Traction pays the terrain trade; an exotic drive buys its way *out* of one of those — at a price steep enough that it doesn't dominate.
+
+**A. Reactionless thrust** *(breaks Tsiolkovsky — thrust with no propellant)*
+| Why pick it | The catch |
+|-------------|-----------|
+| **Infinite Δv** — accelerate forever, never refuel, never run the tank dry (escapes the sprint/endurance wall on the *reach* axis) | enormous **power + tech**; the drawback is the cost, not a fuel limit |
+
+**B. Inertialess / mass-decoupled maneuver** *(breaks `accel = Thrust ÷ MassDry`)*
+| Why | Catch |
+|-----|-------|
+| Evasion **decoupled from mass** — a capital ship dodges like a fighter (turn on a dime regardless of tonnage) | ⏳ needs an **evasion-override term** that bypasses the mass feedback in `CalculateEvasion` — a named new field; hugely powerful, so gated behind extreme tech |
+
+**C. Gravitic / medium-independent** *(breaks the medium requirement)*
+| Why | Catch |
+|-----|-------|
+| Works in **any medium** — vacuum, air, water, underground — with no fuel and no fluid to push | ⏳ overlaps Fluid's medium layer; defer to that same air/depth-medium prerequisite |
+
+**D. Teleport / instantaneous transport** *(breaks distance — the transporter/ring, H1)*
+| Why | Catch |
+|-----|-------|
+| Instant point-to-point matter/crew move — the transporter, the Goa'uld rings, the Stargate's "through itself" | ⏳ the **H1 hole** — needs a **Transfer ▸ teleport mode** (flagged in the categories doc); not a drive per se, it's cousin to Warp ▸ gate (H8) |
+
+**Modellability audit (§0d — the honest backlog door):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| **Reactionless thrust** | ◐ **wire** | it's a **Reaction drive with the fuel dial at zero** — the engine reads `ThrustInNewtons` directly and Δv is only bounded by fuel, so "no fuel + direct thrust" is nearly Modelled today; the wire is letting a drive declare no propellant + a big power/tech cost. The cheapest exotic to ship |
+| **Inertialess maneuver** | ⏳ **defer** | needs an **evasion-override term** bypassing `accel = Thrust ÷ MassDry` (a named new field on `CalculateEvasion`) |
+| **Gravitic / medium-independent** | ⏳ **defer** | needs the **air/depth medium layer** (shared with Fluid) |
+| **Teleport (H1)** | ⏳ **defer** | needs the **Transfer ▸ teleport mechanic** (the H1 hole; categories/stress-test docs) |
+
+**Reading:** Exotic propulsion is deliberately a **backlog holder**, exactly like Weapons ▸ Exotic — it names the franchise "impossible drives" and the one prerequisite mechanic each waits on, so they arrive designed-in. Only **reactionless thrust** is nearly free today (Reaction with no fuel + a steep power/tech cost); the other three each wait on a single named mechanic (evasion-override, the medium layer, the teleport mode). No dead knobs: we don't ship an "inertialess" slider the resolver ignores — we ship it *with* the override term, or not yet.
+
+**Preset coordinates — the span (each breaks one rule):**
+| Drive | Breaks | The payoff | State |
+|-------|--------|-----------|-------|
+| **Reactionless drive** | Tsiolkovsky (fuel/Δv) | infinite reach, never refuels | ◐ wire (Reaction, no fuel) |
+| **Inertialess drive** | mass→evasion | a battleship dodges like a fighter | ⏳ evasion-override term |
+| **Gravitic drive** | the medium requirement | works anywhere, no fuel | ⏳ medium layer |
+| **Transporter / rings** | distance | instant matter/crew teleport | ⏳ Transfer ▸ teleport (H1) |
+
+---
+
+## §2 Propulsion — status (Reaction locked; Traction/Fluid/Warp/Exotic proposed)
+Reaction 🔒 · Traction 🟡 · Fluid 🟡 · Warp 🟡 · Exotic 🟡. **The category's yardstick is the Newtonian move + closing model** (accel→Evasion, Δv→`ManeuverBudget`, speed→the hex-march), not the joule damage scale. Headline reading: propulsion is the **most Modelled-today category so far** — Reaction (Newtonian physics live), Traction (the ground-locomotion stack live), and Warp (the whole warp-bubble + jump-point system live) are almost entirely ✅ with nothing to defer; **Fluid** is the honest split (access dials wire now, the altitude/depth *combat* payoff defers on one named prerequisite — the air/medium layer); **Exotic** is the backlog slot (reactionless is a near-free Reaction variant, the other three each name their one prerequisite). Two prerequisite mechanics fall out for the build list: the **air/altitude/depth combat layer** (unblocks Fluid's deep half + Exotic-gravitic) and the **H8 gate-network + H1 teleport** layers (unblock Warp-gate + Exotic-teleport).
