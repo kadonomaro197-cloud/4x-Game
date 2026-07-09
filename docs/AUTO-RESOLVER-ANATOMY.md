@@ -149,3 +149,69 @@ Checked against the code, because the guarantee has to be real, not asserted.
 **The prerequisite that makes the guarantee uniform — the resolver MERGE (DECIDED 2026-07-06, `Combat/CLAUDE.md`).** Extract the shared salvo/matchup math onto a neutral **COMBATANT** view that both a ship entity and a soldier present, route both through the ONE bucketed resolver, delete the ground duplicate. After the merge: **one bucketed O(buckets) path for ships AND soldiers**, and every dial term is wired **once**.
 
 > **Recommendation:** land the resolver merge **before (or as the first slice of)** the §4 resolver-extensions — so each dial's resolver term is built once, bucketed, and scales for **both** fleets and battalions. Until then, the "any number, any combination" guarantee is **fully true for ships** and **true-but-un-bucketed-and-duplicated for soldiers.**
+
+---
+
+## 7. Propulsion dial-insertion map — the MOVEMENT/CLOSING surface (Propulsion category, §2)
+
+The weapon map above (§2–§4) is the **salvo-damage** surface. Propulsion lands on a **second, adjacent surface** the resolver already reads: **Evasion** (per-ship, feeds `HitFraction`) + the **closing-fight state** (`FleetCombatStateDB.Separation_m` / `ManeuverBudget`, and `FleetCombat`'s fleet-aggregation reads). The headline finding is the opposite of weapons: **the locked Propulsion doors need ZERO new resolver fields — the engine already runs Newtonian physics, and every dial writes a stat the resolver reads today.** Only Exotic ▸ inertialess needs one new term (➕); three exotic/fluid dials defer on a named mechanic (⚙).
+
+### 7a. The propulsion input surface (what a propulsion dial can touch)
+| Stat | Where it lives | Read by | Source dial |
+|------|----------------|---------|-------------|
+| **Evasion** (0..0.95) | per-ship `ShipCombatValueDB.Evasion` | `HitFraction` (dodge) | Reaction thrust → `accel = Thrust ÷ MassDry` → `CalculateEvasion` (`ShipCombatValueDB.cs:314`) |
+| **DeltaV** (m/s) | per-ship `NewtonThrustAbilityDB.DeltaV` | `FleetCombat.DeltaVFloor` (min over fleet, `:60`) → seeds `ManeuverBudget` (`CombatEngagement.cs:449,524`) | Reaction exhaust-velocity/Isp (Tsiolkovsky) |
+| **ManeuverBudget** (Δv reserve) | `FleetCombatStateDB.ManeuverBudget` (`:45`) | `AdvanceClosing` — only a fleet with budget controls the range; spends `ManeuverBurnRate × dt` | Δv (above) → the kiting clock |
+| **Controller (who dictates range)** | `FleetManeuver(ships)` (`CombatEngagement.cs:889`) | `AdvanceClosing` (`:847`) — highest maneuver = min evasion picks the closing direction | Reaction thrust/accel (via Evasion) |
+| **Separation_m** (the gap) | `FleetCombatStateDB.Separation_m` (`:53`) | `BuildFireMix` weapon-range gate + `HitFraction` range term | closing rate (below) × drives |
+| **Closing rate** | `ClosingSpeedScale_mps × dt` (`CombatEngagement.cs:353`) | `AdvanceClosing` moves the gap toward the controller's preferred range | Reaction accel (fast brawler forces merge / fast kiter opens) |
+| **WarpSpeedFloor** (m/s) | `FleetCombat.WarpSpeedFloor` (min over fleet, `:44`) | strategic-map transit + fleet-moves-as-one | Warp `WarpAbilityDB.MaxSpeed` |
+| **Ground SpeedMult** | `GroundMobility.SpeedMultForUnit` | the ground hex-march (`OrderMove`) + H3 closing | Traction `GroundLocomotionAtb.SpeedFactor` |
+
+### 7b. Calibration anchors (the movement/closing constants — already tuned, live)
+| Constant | Value | Role |
+|----------|-------|------|
+| `AgilityReference_mps2` | 5.0 | accel at which agility half-contributes to Evasion (thrust ÷ mass) |
+| `EvasionCap` | 0.95 | hard ceiling on Evasion — nothing untouchable |
+| `SizeReference_m3` | 1,000 | volume at which size half-contributes to Evasion (big = easy to hit) |
+| `ClosingSpeedScale_mps` | 1e6 | how fast the gap closes per step (live-tuned 2026-06-27) |
+| `InitialSeparationDefault_m` | 1e6 (missile range) | where a fallback-seeded fight opens |
+| `ManeuverBurnRate` | 5.0 | Δv the controller spends per step to hold the range — the kiting clock's drain |
+
+These are the propulsion equivalents of §0e's joule anchors: a Reaction dial expresses itself in **m/s² of accel** (vs `AgilityReference 5.0`), **m/s of Δv** (→ `ManeuverBudget`), and **m/s of warp speed** — the scale the closing resolver already reads.
+
+### 7c. Dial-insertion map — every LOCKED propulsion dial → where it lands
+Legend as §3: **✅ field exists** · **➕ new term** · **⚙ deferred mechanic**.
+
+| Door | Dial | Lands on | Status |
+|------|------|----------|--------|
+| **Reaction** | Thrust class | **Evasion** (`accel = Thrust÷MassDry` → `CalculateEvasion`) + **FleetManeuver** (who dictates range) | ✅ |
+| Reaction | Exhaust velocity / Isp | **DeltaV** (Tsiolkovsky) → **DeltaVFloor** → **ManeuverBudget** (kiting clock) | ✅ |
+| Reaction | Fuel type | fuel economy / `FillFuelTanks` — **build/logistics-side**, not the salvo (correct) | — (economy-side) |
+| Reaction | Drive mass (emergent) | **MassDry** → feeds back into Evasion + chassis budget | ✅ |
+| **Traction** | Drive type / SpeedFactor | **GroundMobility.SpeedMultForUnit** → hex-march + H3 closing | ✅ |
+| Traction | Terrain handling / Amphibious | `HexPathfinder` terrain-cost + water passability | ✅ |
+| Traction | Terrain **combat** bonus | a matchup term for fighting on your preferred terrain | ➕ **H3 hex-terrain-in-combat** |
+| **Fluid** | Medium access / cross-water | rides `Amphibious` + passability (the *access* half) | ✅ (access) |
+| Fluid | Vacuum/medium constraint | a "needs atmosphere/water" tag gates where the drive works | ➕ medium tag |
+| Fluid | Altitude/depth band (the *combat* payoff) | air-superiority / sub-stealth / over-under fire | ⚙ **air/altitude/depth combat layer** |
+| **Warp** | MaxSpeed | **WarpSpeedFloor** (strategic transit; fleet moves as one) | ✅ |
+| Warp | Bubble power (create/sustain) | stored-electricity gate (`ChargeReactors`) — **movement-side**, not the salvo | ✅ (movement) |
+| Warp | Jump-drive | jump-point network (`JumpOrder`, `InterSystemJumpProcessor`) | ✅ |
+| Warp | Gate-user / network node | which gate reaches which (Stargate) | ⚙ **H8 gate-network/addressing** |
+| **Exotic** | Reactionless thrust | Reaction drive with **FuelBurnRate=0** (Δv only bounded by fuel; direct `ThrustInNewtons`) | ➕ small: no-fuel flag |
+| Exotic | Inertialess maneuver | **evasion-override term** bypassing `accel = Thrust÷MassDry` in `CalculateEvasion` | ➕ **new Evasion term** |
+| Exotic | Gravitic / medium-independent | works in any medium, no fuel | ⚙ medium layer (shared w/ Fluid) |
+| Exotic | Teleport / rings (H1) | instant point-to-point matter move | ⚙ **Transfer ▸ teleport (H1)** |
+
+### 7d. The propulsion resolver-extension backlog (tiny, vs weapons' six)
+Because the movement surface is already wired, the propulsion doors add only:
+1. **Evasion-override term** (Exotic ▸ inertialess) — a `CalculateEvasion` path where evasion is set directly, decoupled from `accel = Thrust÷MassDry`. Small, self-contained. *Unlocks:* a capital that dodges like a fighter.
+2. **Reactionless no-fuel flag** (Exotic) — let a Reaction drive declare zero propellant (infinite Δv) at a big power/tech cost. Nearly free — the engine already reads `ThrustInNewtons` directly.
+3. **Terrain-combat term** (Traction) — the H3 hex-terrain-in-combat follow-on already on the ground roadmap; a drive's preferred terrain gives a matchup edge, not just a movement one.
+
+**Deferred mechanics (⚙ — each gates its dials):** the **air/altitude/depth combat layer** (Fluid's deep half + Exotic-gravitic) · the **H8 gate-network/addressing** (Warp-gate/Stargate) · the **Transfer ▸ teleport mode** (Exotic-teleport/H1). These are the same two prerequisite mechanics the §2 Propulsion category footer names — designed-in, not bolted-on.
+
+### 7e. What this proves (propulsion)
+- The **closing/evasion core** (thrust→evasion→dodge, Δv→kiting clock→who-dictates-range, warp speed→transit, ground speed→the march) is **fully wired AND already gauged** — `ShipEvasionTests` (thrust/mass → evasion), `ClosingTests` (who-dictates + the P2 kiting clock), `FleetAggregationTests` (the fleet floors), `GroundForcesTests` (the hex-march). No new gauges needed for the locked dials; the connection is proven.
+- Propulsion is the **cheapest category to wire** so far: **zero new fields for the four Reaction/Traction/Fluid-access/Warp cores**, three tiny extensions (§7d), and the same two deferred mechanics the category already flagged. Calibration is inherited (the closing constants were live-tuned 2026-06-27), so a Reaction dial sanity-checks exactly as the doors show (ev 0.48 sprinter vs 0.02 cruiser, §2.1).
