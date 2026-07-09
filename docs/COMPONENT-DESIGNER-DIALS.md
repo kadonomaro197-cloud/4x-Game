@@ -1526,3 +1526,199 @@ On top of the universal seven (§0a):
 
 ## ✅ §4 Power — COMPLETE (2/2 doors locked)
 Generation 🔒 · Storage 🔒. **Yardstick = the SUPPLY GATE**, not the salvo math — Power decides whether every *other* door's dials get to function (a beam with no reactor = output 0; a flat battery = no warp). This is the **multi-consumer rule (§0f) at maximum**: Power has no combat/civilian split because everything is its consumer (weapons · warp · ground units ✅ today; colony life-support ◐ inert; sensors + shields ◐ not-yet-wired). Headline readings: **Generation is mostly Modelled** — fuel reactors + distance-attenuated solar run live and feed the gate; RTG is a framing wire, exotic sources + the meltdown grave-rung defer on one net-new **containment/breach** mechanic. **Storage's core is fully Modelled** (capacity = the literal warp/fire gate — the most load-bearing number on a ship), with the **battery-vs-capacitor** depth waiting on one ◐ wire (a `MaxDischarge_KJps` rate field — today all storage differs only by size). **The whole category is where §0b LIVES** — "the numbers force the build" is real machinery here, with one honest gap: under-supply currently **hard-blocks** (won't warp / won't fire) where §0b wants a **soft throttle** — a flagged wire, not a redesign. Build-list items: (1) the `MaxDischarge_KJps` storage-rate field (unlocks capacitor-vs-battery); (2) the **containment/breach** grave-rung (unlocks exotic sources + makes a hit reactor/bank matter); (3) the **soft-throttle** conversion (under-supply throttles, not blocks); (4) wire **sensors + shields** as power consumers (the §0f expansion); (5) calibrate **colony `PerCapitaPowerDemand`** (turn life-support from inert to a real load).
+
+---
+
+## §5 — Defense
+
+Defense is the **other half of the combat matchup** — the doors that decide what *survives* the weapons doors' output. And thanks to the resolver merge (`CombatKernel`, 2026-07-08), armour + shield math is now **one definition** both a ship and a ground unit read, so two of these four doors are already deeply Modelled on both sides. The category's shape: **Armor** (passive flat soak — kinetic's friend), **Shields** (active depleting pool — the nature matchup, energy-porous), **Hardening** (resistance to the *environment*, not weapons), **Fortification** (the ground defensive position).
+
+**The yardstick — the damage matchup + the survival systems.** Armor and Shields land squarely on the combat resolver (`Toughness`, `ArmourSoak`, `ShieldPool_J`, `SoakFractionOf`). Hardening's real consumer is the **hazard/attrition system**, not the salvo math (honest: it barely touches combat). Fortification lands on the **ground** resolve (`DefenseMult`). Per §0f, each is graded against its *actual* consumer.
+
+**Two CONNECT findings this category surfaces (the design headlines):**
+1. **Space armour's flat-per-source soak is DEAD.** Ground armour gets the swarm-bounces/alpha-punches behaviour (`CombatKernel.ArmourSoak`, 1.5/point); ship armour does **not** — the ship resolve still folds armour into the `Toughness` HP pool and never populates `Combatant.Armour` (the reconciliation flagged at `CombatKernel.cs:104-105`). So a swarm of chip-damage hits a ship's armour as if it were just more HP, instead of *bouncing*. A wire, not a rebuild.
+2. **Armour has NO nature dimension to combat.** Only **shields** carry the matchup (kinetic 1.0 / energy 0.5 / exotic 0.0). Space armour's material (`armorType` / `ArmorBlueprint.SignatureResistance`) is real **only vs hazards** — dead to the auto-resolver; ground armour has no material at all. Giving armour a nature-resistance (ablative beats energy, reactive/composite beats kinetic) would **double the matchup depth** and make the armour-vs-shield choice a real rock-paper-scissors. The single richest wire in the category.
+
+### §5.0 Shared defense dials (all four doors)
+On top of the universal seven (§0a):
+| Dial | Drives (real stat) |
+|------|--------------------|
+| **What it stops** | the damage/effect it mitigates — a *weapon* (Armor/Shields), the *environment* (Hardening), or *by position* (Fortification) |
+| **Mitigation strength** | how much — HP pool (Armor), joules soaked (Shields), a % or fraction (Hardening/Fortification) |
+| **Mass / footprint** | armour IS mass (the cheapest protection-per-ton, drags evasion); a shield is power-hungry; a fort is fixed |
+| **Grave rung** | a shot-off generator drops the shield; spalled armour is gone — you lose the protection you built |
+
+### 5.1 Defense ▸ ARMOR  🟡 *proposed*
+*The passive plate — the cheapest tonnage-for-protection in the game. It soaks damage as raw hit-points AND (done right) bounces small hits while letting a big alpha punch through. Armour is **kinetic's friend and the shield's opposite**: it stops the penetrator a shield lets through, and shrugs the swarm a shield would drain against. Everything from a frigate's belt to reactive tank plating to a capital's meters of composite falls out of these dials.*
+
+**The core decision — MASS vs PROTECTION vs the MATCHUP.** Armour is cheap and always-on (no power, no regen delay), but every centimetre is **mass** that drags your evasion and funnels the chassis — and it's **flat**: a hail of chip-damage *bounces*, but one big shell *punches through*. You choose how thick (HP), how hard (the flat soak), and — the missing dial today — what it's *made of* (which damage nature it resists).
+
+**A. Thickness / HP — the soak pool**
+| Option | Why pick it | The catch (anti-dominance) |
+|--------|-------------|----------------------------|
+| **Thin** | light, cheap — keeps evasion up | small HP pool — folds fast under sustained fire |
+| **Thick** | a deep HP pool — capital-grade staying power | **heavy** — drags evasion, funnels the chassis (§0b) |
+
+**B. Hardness — the flat-per-source soak (swarm-bounce vs alpha-punch)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Soft** | cheap; fine vs big alpha hits (they get through anyway) | chip damage adds up — a swarm chews it |
+| **Hard** | **bounces** small hits (swarm-proof) — the anti-flak/anti-fighter plate | a big alpha **punches through** regardless; costlier |
+
+**C. Material / nature-resistance — WHAT it's made for (the missing matchup dial)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Composite (anti-kinetic)** | shrugs slugs/sabot — the armour-cracker's counter | energy weapons still burn through |
+| **Ablative (anti-energy)** | boils away to defeat beams/plasma — the Dune-lasgun answer | spent after heavy energy fire; weak vs kinetic |
+| **Reactive** | defeats shaped/penetrating hits | one-shot cells; dead weight vs energy |
+
+**D. Coverage — where the plate is**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **All-round** | protected from any angle | the most mass |
+| **Belt / glacis (partial)** | heavy armour only where it matters — lighter | a flank/rear hit finds thin plate |
+
+**E. Mass (emergent — the cascade)** — armour *is* mass; it's the cheapest protection-per-ton but the most direct evasion/chassis drag.
+
+**Modellability audit (§0d — armour is half-Modelled, half the category's best wires):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| Thickness / HP | ✅ | space: `EntityDamageProfileDB.Armor.thickness × ArmorHitPointsPerThickness_J` (100 kJ) → `Toughness`; ground: `GroundArmorAtb.HP` → `GroundUnit.MaxHealth` |
+| Hardness (flat soak) — GROUND | ✅ | `GroundArmorAtb.Defense` → `GroundDamageMatrix.ArmourSoak` → `CombatKernel.ArmourSoak` (1.5/point, floor 0.1 — swarm bounces, alpha punches) |
+| Hardness (flat soak) — SPACE | ◐ **wire** | **DEAD** — ship armour folds into `Toughness`; `Combatant.Armour` is never populated, so a ship gets NO swarm-bounce. Populate it (the `CombatKernel.cs:104-105` reconciliation) |
+| **Material / nature-resistance** | ◐ **wire** (the big one) | space `armorType` material EXISTS but is **hazard-only, dead to the auto-resolver**; ground has none. Give armour a nature-soak table (mirror shields) → the matchup-doubler |
+| Coverage | ⏳ **defer** | `ArmorVertex` geometry is per-pixel-sim only; the aggregate resolver is non-positional |
+| Mass | ✅ | armour mass → `MassVolumeDB` → evasion + chassis budget |
+
+**Reading:** Armour's **toughness core is Modelled** on both sides, and the **flat-per-source soak is live on the ground** through the shared kernel. But the two best wires in Defense live here: (1) **populate ship `Combatant.Armour`** so space armour bounces swarms like ground does (the resolver-merge already built the math — it's just unfed on the ship side), and (2) **give armour a nature dimension** so the armour-vs-shield decision becomes real rock-paper-scissors (composite walls kinetic, ablative walls energy) instead of armour being a flat scalar while shields carry the whole matchup.
+
+**Numbers:** thickness → HP (× 100 kJ); `Defense` → flat soak (1.5/point, floor 0.1); nature-resist (new) → a soak table mirroring shields (K/E/X). Cradle-to-grave: armour is a **component** (mine ore → refine plate → install → spall off under fire).
+
+**Preset coordinates:** light plating (thin) · composite belt (anti-kinetic) · reactive plating (anti-penetrator) · ablative armour (anti-energy, ◐ needs nature dial) · heavy capital armour (thick, all-round) · ground plating (`GroundArmorAtb`).
+
+### 5.2 Defense ▸ SHIELDS  🟡 *proposed*
+*The active bubble — a regenerating energy buffer that soaks a torrent, then recharges between blows. Shields are **the armour's mirror in the matchup**: kinetic hammers straight through them (soak 1.0), energy only half-bleeds (0.5), and an exotic/ion weapon **bypasses entirely** (0.0). The cleanest Modelled door in Defense — the whole depleting-pool + nature-matchup runs live for ship AND ground through the shared kernel.*
+
+**The core decision — REGENERATING BUFFER vs the MATCHUP.** A shield soaks *far* more than its mass in armour would — but it **depletes** (drop it and you're bare until it regens) and it's **porous to the wrong weapon** (kinetic walls it, energy leaks, exotic ignores it). You choose how big the pool (capacity), how fast it comes back (regen), and — the missing dial — what nature it's tuned against.
+
+**A. Capacity — the pool size (`Capacity_J`)**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **Small** | cheap, light, low power | **cracks fast** — a big alpha drops it and the hull is bare |
+| **Large** | soaks a sustained torrent; buys time | heavy + **power-hungry** (a big generator → the Power doors bite) |
+
+**B. Regen rate — how fast it recovers (`RegenRate_Jps`)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Slow** | cheaper, bigger capacity per mass | one big absorb, then **down for the fight** |
+| **Fast** | **shrugs sustained fire** — recovers between volleys (the attrition-tank) | lower capacity per mass; heavy power draw |
+
+**C. Nature tuning — WHAT it's hardened against (the missing dial)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Kinetic-hardened** | walls slugs/flak even better | still leaks energy |
+| **Energy-hardened** | closes the 0.5 energy-bleed — the anti-beam screen | costlier; kinetic still hammers |
+
+**D. Coverage — fleet bubble vs per-unit**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Aggregate (space v1)** | one pool protects the fleet — simple, cheap to resolve | a focused strike can't be soaked by *one* ship's shield; it's a shared pool |
+| **Per-unit (ground)** | each unit's own bubble | more bookkeeping |
+
+**Modellability audit (§0d — the cleanest door; fully live both domains):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| Capacity | ✅ | `ShieldAtb.Capacity_J` → `ShipCombatValueDB.ShieldCapacity_J` → `FleetCombatStateDB.ShieldPool_J`; ground `GroundAugmentAtb.Shield` → `GroundUnit.Shield`/`CurrentShield` |
+| Regen — SPACE | ✅ | `ShieldAtb.RegenRate_Jps` → the pool regen in `ApplyShield` |
+| Regen — GROUND | ◐ **wire** | ground regen is a **global constant** (`ShieldRegenPerHourFraction 0.34`), not a per-component dial — make it a dial |
+| **Nature tuning** | ◐ **wire** | the matchup (K 1.0/E 0.5/Exp 0.75/exotic 0.0) is a **fixed engine table** (`CombatKernel.ShieldSoakFraction`), not a per-component dial — make it tunable for a hardened shield |
+| Coverage (per-ship) | ◐ **wire** | space pool is per-**fleet** aggregate (v1); a per-ship shield is a refinement |
+| Grave rung | ✅ | a shot-off `ShieldAtb` generator drops the pool (cradle-to-grave, already wired) |
+
+**Reading:** Shields is **the most-Modelled door in Defense** — capacity, regen, the nature matchup, drain-before-armour, and the depleting+regen pool all run live for ship (`ApplyShield`/`ResolveShield`) and ground (`GroundForcesProcessor`) through the *same* `CombatKernel`. The depth wires are small: make the **nature-resistance tunable** (today every shield has the identical K/E/X profile — a kinetic-hardened vs energy-hardened choice is a per-component dial away) and make **ground regen a dial** (it's a constant). Note the honest v1 stub: the space pool is per-**fleet**, not per-ship.
+
+**Numbers:** `Capacity_J` (J pool) · `RegenRate_Jps` (J/s) · nature soak (K 1.0/E 0.5/Exp 0.75/exotic 0.0). Reference: base-mod Deflector = 5 MJ capacity, 100 kJ/s regen. Cradle-to-grave: a shield generator is a **component** (research → build → install → lose).
+
+**Preset coordinates:** light deflector · heavy shield bank (large capacity) · fast-regen screen (attrition-tank) · kinetic/energy-hardened barrier (◐ needs the nature dial) · **planetary shield dome** *(FACILITY — the Shields door on a Structure chassis: Halo/Gungan/Trek city shield)*.
+
+### 5.3 Defense ▸ HARDENING  🟡 *proposed*
+*Surviving the **environment**, not the weapon. Hardening is what keeps you working inside a radiation belt, a jamming nebula, an EMP burst, a warp-inhibitor field, a corrosive cloud. Its consumer is the **hazard/attrition system + crew and system survival** — NOT the salvo math. Honest upfront: this door barely touches combat, and that's correct — it's a different kind of protection (against the battlefield, not the enemy's guns).*
+
+**The core decision — SURVIVE HOSTILE SPACE.** The galaxy itself is dangerous: flares, nebulae, ion storms, hard vacuum, EMP. Hardening buys operation where an unhardened hull degrades or fails. You pick *which* hazards to resist and *how much* — a deep-nebula science ship, an EMP-hardened warship, a radiation-rated colony.
+
+**A. Resisted effect — WHICH hazard (`ResistedEffectTypeId`)**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **Radiation / heat** | operate near a star, in a belt, after a nuke | narrow — a radiation suit doesn't stop jamming |
+| **EMP / EM** | systems survive an ion storm / EMP weapon | dead weight where there's no EM threat |
+| **Sensor-jam / warp-inhibit / drag** | see, jump, and move through a nebula that blinds others | situational — clear space doesn't need it |
+
+**B. Resistance fraction — partial vs full (`ResistanceFraction`, 0..1)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Partial** | cheap, light — takes the edge off | still degrades in a strong hazard |
+| **Full immunity** | operate freely in the worst of it | heavy, costly, single-purpose |
+
+**C. Redundancy / damage-control — crit-resistance** *(the sci-fi "it doesn't cascade" dial)*
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Bare** | light, cheap | one hit can cascade — a critical loss |
+| **Redundant / DC teams** | a hit is contained — degrades gracefully, not catastrophically | mass/crew; ⏳ needs the degraded-condition model |
+
+**Modellability audit (§0d — honestly NOT a combat door; consumer = hazards):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| Resisted effect + fraction | ✅ | `HazardResistanceAtb` (`ResistedEffectTypeId` + `ResistanceFraction`) → `SpaceHazardTools.ResistanceFraction` → consumed by `SensorScan`/`WarpMoveProcessor`/`SpaceHazardProcessor` + ground `GroundUnit.EnvResistance`. **A new counter is DATA, not code** (generic attribute) |
+| — but the combat resolver reads NONE of it | — | Hardening is a **hazard/survival** dial, not a salvo dial — graded against its real consumer (§0f) |
+| Radiation/EMP → crew & electronics survival | ⏳ **defer** | the hazard *damage* kinds exist, but crew-knockout / system-disable isn't a combat mechanic yet |
+| Redundancy / damage-control | ⏳ **defer** | ties to the **degraded-condition** model (`docs/WEAPONS-AND-DODGE-DESIGN.md`); note `GroundAugmentAtb.ToughnessBonus` is a **fully DEAD field** to wire here |
+
+**Reading:** Hardening is the honest odd-one-out — its **hazard-resistance core is Modelled** (a clean, data-driven generic attribute; a new resistance is JSON, not C#), but **the combat resolver never reads it**: this is the *survive-the-environment* door, and its consumer is the hazard/attrition system, crew survival, and system integrity. That's a legitimate protection axis (Expanse radiation, nebula ops, EMP warfare), not a flaw — you just name the right consumer. It also surfaces two dead/missing hooks: the **dead `ToughnessBonus` field** and the **redundancy/damage-control** door, both of which point at the parked degraded-condition model.
+
+**Numbers:** `ResistanceFraction` (0..1) per `HazardEffectType` (Radiation/Heat/EMP/SensorJam/WarpInhibit/Drag/Corrosive/Gravimetric). Cradle-to-grave: hardening is a **component** (the base-mod `sensor-hardening-module` is the worked example).
+
+**Preset coordinates:** radiation shielding · EMP hardening · sensor-hardening module · deep-nebula hull (multi-hazard) · damage-control suite *(redundancy, ⏳)*.
+
+### 5.4 Defense ▸ FORTIFICATION  🟡 *proposed*
+*The dug-in position — trade mobility for a defensive multiplier. A fortified ground unit in cover or a bunker takes far less; a bunker network projects that protection to its neighbours. **Ground-only by nature** — a "space fortress" isn't a fortification dial, it's a **station** (Chassis ▸ Structure with the other Defense doors mounted on it), so the fortress falls out of chassis + armour + shields, not a separate knob.*
+
+**The core decision — DIG IN.** A position is protection you can't carry: cover, entrenchment, a hardened bunker. You give up mobility (a fort doesn't move) for a multiplier on everything that hits you — and you can **project** it to adjacent friendly ground (a defensive belt). The catch: a hard fixed position is a **known target** (it occupies a war-map hex the enemy can bombard or must capture).
+
+**A. Local fortify — dig-in bonus to your own region (`LocalFortify`)**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **Light entrenchment** | cheap, fast to raise — some cover | modest multiplier |
+| **Hardened bunker** | big local bonus (base-mod Bunker +25%) — halves incoming at the cap | costly, fixed, a bombard target |
+
+**B. Adjacent projection — extend the bonus to neighbours (`AdjacentProjection`)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Self-only** | all the protection stays home | a breakthrough next door is unprotected |
+| **Projecting (bunker network)** | +12% to adjacent friendly regions — a defensive belt | thinner than a local fort; only same-faction ground |
+
+**C. Cover / terrain — stack with the ground**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Open ground** | mobile, no penalty | no cover bonus |
+| **Dig into terrain** | stacks `CoverDefenseMult` with the fort bonus | terrain-locked; slow to reposition |
+
+**D. Footprint — targetability (`TileFootprint`)** — a big fort **occupies a war-map hex**: it becomes a capture/bombard target. Not a combat *bonus* — the *vulnerability* side of digging in (a hard point is a fixed point).
+
+**Modellability audit (§0d — clean, fully Modelled, ground-only):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| Local fortify | ✅ | `GroundDefenseAtb.LocalFortify` → `GroundFortification.DefenseMult` → `GroundForcesProcessor:317` (`pool /= coverFort` — divides the attacker's damage) |
+| Adjacent projection | ✅ | `GroundDefenseAtb.AdjacentProjection` → `SumAdjacent` (same-faction gate), capped at +100% (halves incoming) |
+| Cover / terrain | ✅ | `GroundTerrain.CoverDefenseMult` stacks in the same `coverFort` term |
+| Footprint / targetability | ✅ | `GroundFootprintAtb.TileFootprint` → the war-map capture/bombard system (`GroundBuildings`) — orthogonal to the combat bonus |
+
+**Reading:** Fortification is **fully Modelled and clean** — the local + adjacent bonuses run live through `GroundFortification.DefenseMult`, capped at halving incoming, and stack with terrain cover. It's **ground-only on purpose**: space's "defensive position" is a *station*, which the Chassis + Armor + Shields doors already build. The base-mod Bunker (+25% local / +12% adjacent, both JSON data) is the worked example, and it doubles as a war-map target via its footprint — the honest tradeoff of a fixed strongpoint.
+
+**Numbers:** `LocalFortify` / `AdjacentProjection` (fractions, e.g. 0.25 / 0.12; per-design JSON) → `DefenseMult = 1 + min(1.0, Σ)`; cap +100%. Cradle-to-grave: a fortification is a **built installation** (the Bunker) — captured with the region, destroyed by bombardment.
+
+**Preset coordinates:** foxhole / dig-in (light) · Bunker (+25% local) · bunker network (adjacency belt) · hardened silo · fortress city (big footprint = a bombard/capture prize).
+
+---
+
+## §5 Defense — status (all four doors proposed, awaiting lock)
+Armor 🟡 · Shields 🟡 · Hardening 🟡 · Fortification 🟡. **Yardstick = the damage matchup + the survival systems.** Headline readings: **Shields is the most-Modelled door** — the depleting pool + nature matchup (K 1.0/E 0.5/exotic 0.0) run live for ship AND ground through the shared `CombatKernel`; depth wires are small (nature-tuning as a per-component dial; ground regen as a dial). **Armor is the door with the category's two best CONNECT wires:** (1) space armour's flat-per-source soak is **DEAD** (ship `Combatant.Armour` unpopulated → a ship gets no swarm-bounce; the resolver-merge math is built, just unfed), and (2) armour has **no nature dimension to combat** (its material is hazard-only) — giving armour a nature-resistance (ablative walls energy, composite walls kinetic) is **the single richest wire in the category**, doubling the matchup into real rock-paper-scissors. **Hardening is honestly NOT a combat door** — its clean, data-driven hazard-resistance is Modelled but the resolver never reads it; it's the *survive-the-environment* axis (radiation/EMP/nebula), and it surfaces the dead `ToughnessBonus` field + the redundancy/damage-control gap (the degraded-condition tie-in). **Fortification is fully Modelled + clean** (ground-only local/adjacent bonuses, capped at halving incoming; a space "fort" is a Station, built from Chassis + the other Defense doors). Build-list: (1) **populate ship `Combatant.Armour`** (space flat-per-source soak — swarm-bounce parity with ground); (2) **armour nature-resistance dimension** (the matchup-doubler — the top item); (3) **shield nature-tuning** as a per-component dial; (4) **ground shield regen** as a dial (it's a constant); (5) wire the dead **`ToughnessBonus`** + the **redundancy/damage-control** door (degraded-condition).
