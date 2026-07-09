@@ -2151,3 +2151,113 @@ On top of the universal seven (§0a):
 
 ## ✅ §8 Logistical — COMPLETE (2/2 doors locked)
 Storage 🔒 · Transfer 🔒. **The hold-and-move backbone, mostly Modelled** — the twin of Industrial (it *builds*, Logistical *stores + ships*), pure support/economy feeding fuel→Δv, ordnance→resupply, troops→invasion. Headline readings: **Storage's hold layer is fully Modelled** — one universal volume-partitioned `CargoStorageDB` (general/fuel/ordnance/passenger) + a *separate* class-matched troop/vehicle bay (`GroundBayAtb` → `GroundTransportDB`, the invasion carry). **Transfer is fully Modelled AND deep** — manual rate/range move + spaceport surface↔orbit + a **functional automated freight market** (`LogiBaseDB` desired-levels + `LogiShipperDB` bidding). **The developer's MOTHBALL/RESERVE ask is the one honest gap** — and a valuable one: **there is NO upkeep for ships/units to reduce** (only stations have upkeep, `StationUpkeepProcessor`), so "store at reduced upkeep" is a **two-part build**: (1) a ship/unit **upkeep clock** (net-new, mirrors the station pattern + a new `TransactionCategory`) — worth building on its own, since with no upkeep a giant standing fleet has zero downside and there's no reason to demobilize; (2) the **reserve discount** on top (a cheap wire once upkeep exists; stations get it as a wire today). Build-list: (1) **ship/unit upkeep clock** (prerequisite for mothball + the missing economic pressure); (2) **reserve/mothball discount** on top; (3) fix the **bare-`CargoStorageDB` silent no-op** trap; (4) missile transfer-range stub; (5) the `LogiBaseDB` Clone save-bug. Dead/absent flags: Aurora MSP + dedicated supply ships confirmed absent (the automated market partly covers the supply-ship role).
+
+---
+
+## §9 — Civic
+
+Civic is the **human backbone** — the colony and its people. It's the category everything else ultimately runs on: **population** becomes the workforce that mans your factories and the crew that flies your ships (and the scarce **talent** that makes an Enhancers elite); **research** unlocks the tech that gates every other door; **morale** decides whether people stay or flee. Two doors: **Habitation** (what lets people *live* somewhere — on a planet or sealed off-world) and **Development** (what makes a colony *better* — research, training, and improving the world itself). Pure non-combat, and a **mixed** modellability picture: Habitation is mostly Modelled and load-bearing; Development is split between a working tech/training engine and a **missing deep half** (you can't yet improve a world).
+
+**The yardstick — the colony/population system** (`InfrastructureProcessor` + `PopulationProcessor` + `ResearchProcessor` + `ColonyMoraleDB`), not the combat resolver. And the standout finding: **infrastructure is a real, live economy multiplier** — under-build it and your whole colony works at a fraction.
+
+### §9.0 Shared civic dials (both doors)
+On top of the universal seven (§0a):
+| Dial | Drives (real stat) |
+|------|--------------------|
+| **What it supports** | population (life-support) · efficiency (infrastructure) · morale (comfort) · output (research/training) |
+| **Capacity / rate** | how much — pop ceiling, efficiency capacity, research points/day |
+| **Host + world type** | colony (tolerance-gated by gravity/pressure) OR sealed station-habitat (no tolerance gate) |
+| **Tolerance gating** | a hostile world (`ColonyCost > 0`) divides carrying capacity — you need MORE to hold the same pop |
+| **Grave rung** | a bombed colony loses infrastructure → efficiency craters → the economy collapses |
+
+### 9.1 Civic ▸ HABITATION  🟡 *proposed*
+*Let people live and work somewhere — the life-support, infrastructure, and housing that turn a barren rock or an orbital shell into a place a population survives, works efficiently, and stays content. Everything from a starter colony's infrastructure to a hostile-world life-support complex to a sealed O'Neill space-habitat falls out of these dials — and the three things habitation provides are genuinely distinct: **can they live here** (capacity), **how well do they work** (efficiency), **how content are they** (morale).*
+
+**The core decision — CAPACITY vs EFFICIENCY vs COMFORT, against the world's hostility.** Three separate stats, and you invest in each: **life-support** raises how many people the colony can hold (and on a hostile world that ceiling is *divided* by how hostile it is); **infrastructure** raises how efficiently they produce (a live multiplier on your whole economy); **housing/comfort** raises morale (content, not more alive). A friendly homeworld needs little; a Mars or a deep-space station needs a lot.
+
+**A. Life-support / population capacity (`PopulationSupportAtbDB.PopulationCapacity`)**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **Light** | cheap on a friendly world (native worlds are uncapped anyway) | on a **hostile** world the pop ceiling is `support ÷ colonyCost` — under-build it and pop over the cap **dies off (−50%)** |
+| **Heavy** | holds a big population on Mars/Venus/a moon | costly, massive; and it's **tolerance-gated** (out-of-gravity/pressure → 0) |
+
+**B. Infrastructure / efficiency (`InfrastructureCapacityAtb.Capacity`) — the economy multiplier**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **Under-built** | cheap now | **your whole colony works at a fraction** — `Efficiency = Provided ÷ Required` scales EVERY industry + mining rate |
+| **Well-provisioned** | full efficiency — factories and mines run at 100% | ongoing footprint; efficiency caps at 1.0 (no over-building bonus) |
+
+**C. Housing / comfort (`HousingAtbDB.Comfort`) — morale**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Basic** | cheap — people live, if grumbly | lower morale → emigration, lower income |
+| **Comfortable** | +morale (capped +20) → people stay, income rises | doesn't raise the pop cap — "content, not alive" |
+
+**D. Sustenance — power & food (`ColonySustenanceDB`)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Provisioned** | power + food keep people alive | ⏳/◐ **currently INERT** — `PerCapitaPowerDemand`/`FoodDemand` default 0, and **no food good exists**; starvation is switched off until calibrated (+ food is net-new) |
+
+**E. World type / medium — where the habitat sits**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Native world** | uncapped population, no colony-cost | only your homeworld(s) |
+| **Hostile world** | colonize Mars/Venus — capacity ÷ colony-cost | needs heavy life-support; die-off over cap |
+| **Sealed habitat** (space-habitat) | houses population on **ANY body** — no gravity/pressure gate (the O'Neill/orbital) | every person depends on the shell; no module → cap 0 → die-off |
+
+**Modellability audit (§0d — mostly Modelled + load-bearing; two inert/dead spots):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| **Infrastructure / efficiency** | ✅ **(load-bearing)** | `InfrastructureCapacityAtb.Capacity` → `InfrastructureDB.Efficiency` (Provided÷Required, cap 1.0) → **scales ALL production (`IndustryTools`) + mining (`MineResourcesProcessor`)** |
+| Life-support / pop capacity | ✅ | `PopulationSupportAtbDB.PopulationCapacity` → `ColonyLifeSupportDB.MaxPopulation`; hostile-world ÷colonyCost + over-cap die-off (`PopulationProcessor`) |
+| Housing / comfort | ✅ | `HousingAtbDB.Comfort` → `MoraleInputs.Comfort` → morale (cap +20) |
+| Space-habitat (off-world) | ✅ | `space-habitat` carries the same attrs with **no tolerance gate** → `StationPopulationProcessor` (parallel to colony) |
+| **Sustenance (power/food)** | ◐ **inert** / ⏳ | `ColonySustenanceDB` demand defaults 0; **food good doesn't exist** — starvation is off until calibrated (food = net-new) |
+| **Employment (a morale input)** | ◐ **data-dead** | `EmploymentAtbDB.Jobs` is read by morale, but **no base-mod template grants it** → jobs = 0 → employment always neutral. A wire: grant jobs on the work buildings |
+
+**Reading:** Habitation is **mostly Modelled and quietly load-bearing** — the headline is that **infrastructure is a real economy multiplier** (an under-infrastructured colony genuinely produces less across the board), population-support is real carrying capacity (with the hostile-world colony-cost division and over-cap die-off that make Mars *hard*), housing-comfort is real morale, and sealed space-habitats extend all of it off-world. Two spots are switched off: **sustenance** (power/food → starvation exists but is inert — a calibration, and food itself is net-new) and **employment** (built but data-dead — the morale system asks "are people employed?" but nothing grants jobs, so it always reads neutral; a cheap wire).
+
+**Numbers:** `PopulationCapacity` (pop at ColonyCost 1.0; infra reference 10,000); `InfrastructureCapacityAtb.Capacity` (support units; "Support Capacity" 1000); `HousingAtbDB.Comfort` (5 default → cap +20 morale); required-capacity `= mass/1000 + crew` per installation. Cradle-to-grave: habitation is **built installations** — bomb them and efficiency/capacity collapse (the grave rung that makes a colony *takeable*).
+
+**Preset coordinates:** colony infrastructure · arcology *(high pop-support)* · habitat domes *(comfort → morale)* · **sealed space-habitat** *(off-world, any body)* · **hostile-world life-support** *(heavy — the Mars/Venus complex)*.
+
+### 9.2 Civic ▸ DEVELOPMENT  🟡 *proposed*
+*Make the colony BETTER over time — research new tech, train officers, and improve the world itself. Everything from a research lab to a naval academy to a **terraforming station** falls out of these dials. **Split status:** the research + training engines are Modelled and load-bearing, but the deep half — actually improving a WORLD (terraforming, development level) — is MISSING, and it's the franchise-earning one.*
+
+**The core decision — WHAT to grow: knowledge, people, or the world.** A colony's development capacity can go into **research** (the tech that unlocks every other door), **officer training** (the academy that produces commanders), or **improving the planet** (terraforming a hostile world toward habitable — the one that isn't built). You choose what a colony specializes in.
+
+**A. Research (`ResearchPointsAtbDB`: `PointsPerEconTick` · `CostPerDay` · `BonusCategory`) — the tech engine**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **General lab** | steady research → tech unlocks (which gate every door) | costs upkeep (`CostPerDay`) |
+| **Specialized institute** | a **bonus category** (+10% to one field) — a weapons lab, a propulsion institute | narrow — only boosts its specialty |
+
+**B. Officer training (`NavalAcademyAtb`: `ClassSize` · `TrainingPeriodInMonths`)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Academy** | produces **officers** (graduates → commanders) | colony-bound (PlanetInstallation); *(placement note: the academy BUILDING is Civic ▸ Development; the officer's combat EFFECT is Enhancers ▸ Unit-Caliber — build here, consume there)* |
+
+**C. World development / terraforming — improve the WORLD (the missing deep half)**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **Terraform** | lower a hostile world's **colony-cost** over time → hold more pop, need less life-support (Mars-green, Dune, the 4X terraform) | ⏳ **MISSING (net-new)** — `AtmosphereDB.Composition` supports it, the hook is designed, but **no `TerraformingProcessor` exists** |
+| **Develop** (level up a colony) | raise a colony's baseline output/capability over time | ⏳ **MISSING** — `ColonyBonusesDB` is an empty shell (only reads faction-wide bonuses); no per-colony development ladder |
+
+**Modellability audit (§0d — split: engine Modelled, world-improvement missing):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| **Research** | ✅ **(load-bearing)** | `ResearchPointsAtbDB` → `ResearcherDB` → `ResearchProcessor` (daily) → tech unlocks; **host-agnostic** (colony OR station), `BonusCategory` for specialties |
+| Officer training (production) | ✅ | `NavalAcademyAtb` → `NavalAcademyProcessor` → graduates commanders |
+| **Terraforming** | ⏳ **MISSING (net-new)** | hook designed (`AtmosphereDB.Composition`) but **no processor** — the franchise-earning world-improvement mechanic |
+| **Development level / growth** | ⏳ **MISSING** | `ColonyBonusesDB` empty shell; the progression ladder is doc-only |
+
+**Reading:** Development is **split down the middle.** The **research engine is Modelled and load-bearing** — labs produce the tech that gates literally every other category's dials, host-agnostic, with specialty bonuses; and the **academy** produces officers (its *building* is here; the officer's *combat effect* is the Enhancers net-new). But the **deep half is missing**: you can *settle* a hostile world (Habitation) but you can't *improve* it — **terraforming and colony development don't exist** (hooks designed, no processor). That's the franchise-earning gap (turning Mars green, the Dune dream, every 4X's terraform), and it's the honest headline for this door.
+
+**Numbers:** `ResearchPointsAtbDB.PointsPerEconTick` (research/day) + `CostPerDay` + `BonusCategory` (+10%); `NavalAcademyAtb.ClassSize` (10–2500) + `TrainingPeriodInMonths` (1–48). Terraforming/development define their own rates when built. Cradle-to-grave: labs/academies are **built installations**; terraforming would be a slow world-change over years.
+
+**Preset coordinates:** research lab · specialized institute *(bonus category)* · naval academy · **terraforming station** *(⏳ missing — the world-improver)* · development office *(⏳ missing)*.
+
+---
+
+## §9 Civic — status (both doors proposed, awaiting lock)
+Habitation 🟡 · Development 🟡. **The human backbone — MIXED, and full of connections.** Headline readings: **Habitation is mostly Modelled and quietly load-bearing** — the standout is that **infrastructure is a REAL economy multiplier** (`InfrastructureDB.Efficiency` scales ALL industry + mining, so an under-built colony genuinely produces less), population-support is real carrying capacity (hostile-world ÷colony-cost + over-cap die-off — what makes Mars *hard*), housing-comfort is real morale, and sealed **space-habitats** house population off-world on any body; two spots are switched off — **sustenance** (power/food → starvation, inert until calibrated; food is net-new) and **employment** (built but **data-dead** — morale reads jobs, no template grants them → always neutral; a cheap wire). **Development is split** — **research** (the tech engine that gates every other door, ✅ host-agnostic + specialties) and **officer training** (academy, ✅ production; its combat *effect* is the Enhancers side) work, but the **deep half — improving the WORLD (terraforming / colony development) — is MISSING** (net-new; hooks designed, no processor). That's the franchise-earning gap (turn Mars green / Dune / the 4X terraform). **The cross-connects make Civic the hub:** population → the **manpower/talent pool** that mans industry, crews ships, AND supplies the scarce talent that gates the **Enhancers unit-caliber ELITES** (a Space Marine draws talent a colony produces); research → the tech that unlocks **every door**; morale → migration → stability → `LegitimacyDB`/rebellion. Build-list: (1) **terraforming / world-development** (the missing deep half — franchise-earning); (2) calibrate **sustenance** + add a **food good** (turn starvation on); (3) grant **`EmploymentAtbDB.Jobs`** in templates (un-dead employment → real morale); (4) a **per-colony development ladder** (`ColonyBonusesDB` is an empty shell).
