@@ -2031,3 +2031,121 @@ On top of the universal seven (§0a):
 
 ## ✅ §7 Industrial — COMPLETE (2/2 doors locked)
 Extraction 🔒 · Fabrication 🔒. **The economic SPINE, mostly Modelled** — mine→refine→build all run live through daily processors, host-agnostic (colony OR station), and the purest non-combat category (§0f trivially satisfied: Industrial *is* the backbone everything else draws on). Two genuinely-different engine subsystems (mining is NOT an industry type), hence two doors. Headline readings: **Extraction is live + solid** — the mine→cargo loop with realistic deposit depletion (accessibility decays cubically), automine mobility, and station-or-colony hosting; the one real hole is **gas/atmosphere harvesting** (net-new — the gas-giant fuel play), plus small wires (per-mineral focus; per-hex deposits as source-of-truth). **Fabrication's routing/rate/cost spine is fully Modelled** (one ability routed by `IndustryTypeID`), but it holds the category's **one load-bearing gap: the refining feed is BROKEN** — the refinery works but its mineral inputs aren't auto-supplied, so materials never get made (the quarantined economy test). This is the **#1 build item** for the whole game economy. **Adapted per the developer** with two facility additions: a **`unit-assembly` type** (tanks/walkers/aircraft — the vehicle-foundry twin of `ship-assembly`, so the AT-M6 has a real facility to build in) and a generalized **assembly-bay size gate** (wires the inert `MaxVolume` field + extends it past ships to vehicle/air bays — the AT-M6/Titan size forcing, §0b, made a real limit); plus the natural **reverse operations** (repair/refit + recycle, ⏳). Two cleanups fold in: the inert slip-cap becomes part of the bay-size wire; the **dual construction systems** (IndustryAtb vs LocalConstruction) still want unifying. Dead-code flags held: `InstallationsDB` is dead (installations are `ComponentInstancesDB`), `Fighter Construction Points` hardcoded 0. **Cross-category:** "store units at reduced upkeep" (mothball/reserve) is **Logistical ▸ Storage** (door 26), not here — captured for the next category (needs an upkeep-cost model to discount against). Build-list: (1) **fix the refining input feed** (top — unblocks the materials economy); (2) **`unit-assembly` type + a vehicle-foundry/aircraft-plant facility** (the AT-M6 build path); (3) **wire + generalize the assembly-bay size gate** (ships slip + vehicle bay + aircraft hangar — the size forcing); (4) **gas/atmosphere harvester** (net-new extraction medium); (5) unify the **two construction paths**; (6) repair/refit (waits on degraded-condition) + recycle/scrap (net-new); (7) per-mineral extraction focus + per-hex mining as source-of-truth.
+
+---
+
+## §8 — Logistical
+
+Logistical is the **hold-and-move backbone** — where everything the game makes gets *kept* and *carried*. It's the twin of Industrial: Industrial *builds*, Logistical *stores and ships*. Pure support/economy (no direct combat consumer, though it feeds combat through fuel → Δv, ordnance → resupply, and troops → invasion), and **mostly Modelled** — one universal cargo hold, a dedicated troop bay, a manual transfer, and a *functional automated supply market* all run live. The one honest headline is the developer's **mothball/reserve** request, which surfaces a genuine missing system: **there is no upkeep for ships or units to reduce.**
+
+**The yardstick — the storage/transfer system** (`CargoStorageDB` + `CargoTransferProcessor` + the `Logistics/` market), not the combat resolver. Two doors, two verbs: **Storage** (hold it) and **Transfer** (move it).
+
+### §8.0 Shared logistical dials (both doors)
+On top of the universal seven (§0a):
+| Dial | Drives (real stat) |
+|------|--------------------|
+| **Capacity / rate** | volume held (m³) or throughput moved (kg/s) — the headline number |
+| **What it holds / moves** | the **cargo type** — general · fuel · ordnance · passenger · (troops = a separate bay) |
+| **Host** | ship, colony, OR station — a hold/transfer ability lives on any |
+| **Mass / footprint** | scale the capacity → mass + a war-map footprint (a warehouse is a capture/bombard target) |
+| **Grave rung** | a hit hold spills/loses its cargo; a destroyed tanker loses the fuel |
+
+### 8.1 Logistical ▸ STORAGE  🟡 *proposed*
+*Hold things — cargo, fuel, ammunition, and whole units. One universal hold, partitioned by cargo type, plus a dedicated bay for carrying troops/vehicles. Everything from a freighter's cargo bay to a fuel tank to a missile magazine to a dropship's vehicle bay to a **mothball reserve yard** falls out of these dials.*
+
+**The core decision — WHAT to hold, and HOW MUCH of each.** A hold is **volume** (m³), partitioned by **cargo type** — a bay only accepts cargo whose type matches a pool it has. You choose which types (general goods / fuel / ordnance / passengers) and how much volume of each, plus the special cases: fuel (a cargo type that becomes your Δv), ordnance (a reserve that resupplies your magazines), units (a *separate* troop/vehicle bay), and — the one that isn't built — a reserve/mothball state.
+
+**A. Cargo type + volume — the core hold (`CargoStorageAtb.StoreTypeID` + `MaxVolume`)**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **General storage** | holds minerals, materials, trade goods | the bulk hold — nothing special |
+| **Dedicated type** (fuel/ordnance/passenger) | a hold tuned to one cargo type | won't accept anything else — a fuel tank can't carry ore |
+| **Big volume** | fewer trips, deep stockpile | heavy + a big footprint |
+
+**B. Fuel storage — a tank IS a fuel-type hold (`"fuel-storage"`)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Small tank** | light — a short-legged ship | refuels often (low Δv) |
+| **Large tank** | deep Δv / long range | heavy — fuel mass drags acceleration (the Propulsion trade) |
+
+**C. Ordnance / magazine — the reserve that resupplies the guns**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Ship ordnance hold** (`"ordnance-storage"`) | a missile reserve → reloads the launcher's internal magazine | mass; a hit magazine is a hazard |
+| **Ground magazine** (`GroundMagazineAtb`) | a unit's ammo pool (kg) → the ammo gate + `GroundAmmo` resupply | runs dry → the weapon goes silent until resupplied |
+
+**D. Unit / troop bay — carrying whole units (a SEPARATE bay, not the cargo hold)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Personnel bay** | carries infantry/personnel-class units to the drop | can't hold vehicles (class-matched) |
+| **Vehicle bay** | carries tanks/walkers (the AT-M6 dropship) | bigger, heavier; a bay only carries its own carry-class |
+
+**E. Mothball / reserve — store a unit ready at reduced upkeep** *(the developer's ask)*
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **Active** | fully crewed, ready to fight now | full upkeep |
+| **Reserve / mothballed** | **cheaper to keep** — stored ready, not maintained at full readiness | a **reactivation delay** to bring it back to the line |
+
+**Modellability audit (§0d — holds are Modelled; mothball needs a prerequisite):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| Cargo type + volume | ✅ | `CargoStorageAtb.StoreTypeID`/`MaxVolume` → `CargoStorageDB.TypeStores` (volume pool per type) → `StorageSpaceProcessor` |
+| Fuel storage | ✅ | `"fuel-storage"` pool → `CargoTransferProcessor.UpdateMassFuelAndDeltaV` → `NewtonThrustAbilityDB.SetFuel` → Δv |
+| Ordnance (ship + ground) | ✅ | `"ordnance-storage"` hold → launcher magazine reload; `GroundMagazineAtb.Capacity_kg` → `GroundAmmo` |
+| Unit / troop bay | ✅ | `GroundBayAtb` (`Capacity`, `CarryClass`) → `GroundTransportDB.LoadedUnits` (loading moves the unit off the planet roster) |
+| **Mothball / reserve (ships/units)** | ⏳ **net-new** | **there is NO upkeep for ships/units to reduce** — nothing to discount (see the callout) |
+| Mothball / reserve (stations) | ◐ **wire** | stations DO have upkeep (`StationEconomyDB.OperatingCost`) — scale it by a stored/active flag |
+| Bare-hold silent no-op | ◐ **wire** (bug) | a `CargoStorageDB` with no `CargoStorageAtb`-seeded `TypeStore` silently accepts nothing — a real trap to guard |
+
+> **🔎 The mothball finding — the game has NO fleet/army upkeep.** The developer's "store units at reduced upkeep" surfaced a genuine gap: **once built, a ship or ground unit costs nothing to keep** (only fuel when it moves). The `TransactionCategory` enum has just `InitialInvestment / Research / ColonyTax / StationUpkeep` — no ShipUpkeep, no ArmyUpkeep; Aurora's Maintenance Supply Points are confirmed absent. **Only space stations** are billed ongoing upkeep (`StationUpkeepProcessor`, every 30 days, placeholder credits). So the mothball mechanic is a **TWO-PART build**: **(1)** a **ship/unit upkeep clock** — net-new, but it *mirrors the existing `StationUpkeepProcessor`* + a new `TransactionCategory`; **(2)** then the **reserve discount** is a small Wire on top. This is a "the feature you asked for reveals a deeper missing system" case — and the deeper system is worth building on its own: **with no upkeep, a giant standing fleet has zero downside**, so there's no pressure to demobilize, no logistics-strategy depth, no reason to mothball. Building upkeep *creates* the pressure that makes mothballing (and the whole reserve/reactivation decision) matter. Stations already prove the pattern.
+
+**Reading:** Storage's **hold layer is fully Modelled** — one universal volume-partitioned hold covers cargo, fuel (→ Δv), and ordnance (→ resupply), with a *separate* class-matched bay for carrying units (the invasion transport). The developer's mothball/reserve is the honest exception: it's **net-new for ships/units** because there's no upkeep to reduce — a two-part build (upkeep clock, then the discount), where part 1 is a valuable system the game lacks and part 2 is a cheap wire once part 1 exists (stations already have the pattern). One real bug to fix: a bare hold silently swallows nothing.
+
+**Numbers:** `MaxVolume` (m³, "Storage Volume" 10–10,000); fuel/ordnance in the same m³ pools; `GroundBayAtb.Capacity` (carry-size units); `GroundMagazineAtb.Capacity_kg` (kg ammo). Upkeep (future) → credits/month like `StationEconomyDB` (placeholder). Cradle-to-grave: a hold is a **component** (built → installed → holds → a hit spills it).
+
+**Preset coordinates:** cargo hold (general) · fuel tank · ordnance magazine · **troop bay** (personnel) · **vehicle bay** (the AT-M6 dropship) · warehouse *(facility)* · **mothball yard** *(⏳ needs the upkeep clock)*.
+
+### 8.2 Logistical ▸ TRANSFER  🟡 *proposed*
+*Move things between holds, colonies, and orbit — by hand, by spaceport, or by a standing automated supply line. Everything from a cargo shuttle to a planet's spaceport to a fleet-wide freight network falls out of these dials. Fully Modelled — the transfer engine AND a functional profit-based supply market both run live.*
+
+**The core decision — HOW FAST, HOW FAR, and BY HAND or AUTOMATIC.** Moving cargo is a **rate** (kg/s) over a **range** (how far apart the two holds can be, in Δv). You choose the throughput/reach, and whether hauling is a **manual** point-to-point transfer, a **spaceport** (the surface↔orbit elevator), or a **standing automated route** that hauls supply without you touching it.
+
+**A. Transfer rate + range (`CargoTransferAtb.TransferRate_kgs` / `TransferRange_ms`)**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **Fast / short** | shift a lot of tonnage quickly, dock-to-dock | only works close (low Δv reach) |
+| **Slow / long** | reach a distant hold (a far orbit) | a trickle — slow to move bulk (rate summed, range averaged across components) |
+
+**B. Facility — what does the moving**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Cargo shuttle** (ship) | mobile hauling between any two holds | its own mass/fuel |
+| **Spaceport** *(facility)* | the **surface↔orbit** elevator — loads ships from the colony fast | fixed to the colony; a footprint target |
+| **Launch complex** *(facility)* | lifts whole **ships** to orbit (tonnage-gated pads) | ship-elevator, not cargo; costs fuel-to-orbit |
+
+**C. Automated supply — the logistics office (`LogiBaseAtb.LogisicCapacity`)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Manual only** | full control — you order every transfer | micromanagement at scale |
+| **Standing route** (logistics office) | set **desired stock levels** (min/max) and a **freight market** auto-hauls to keep colonies supplied | you cede control to the market; faction-gated (needs logistics access) |
+
+**Modellability audit (§0d — fully Modelled, including the automated network):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| Transfer rate / range | ✅ | `CargoTransferAtb.TransferRate_kgs`/`TransferRange_ms` → `CargoStorageDB.TransferRate`/`TransferRangeDv_mps` → `CargoTransferProcessor` (every 1 min, escrow move) |
+| Spaceport (surface↔orbit) | ✅ | `spaceport` = a `CargoTransferAtb` carrier contributing rate+range to the colony hold |
+| Launch complex (ships to orbit) | ✅ | `LaunchComplexProcessor` — tonnage-gated pads, deducts fuel-to-orbit |
+| Automated supply network | ✅ | `LogiBaseDB` (`Capacity`, `DesiredLevels` min/max) + `LogiShipperDB` (bidding) + `LogisticsProcessor` (6 h) — a **functional profit-based freight market** |
+| Missile transfer range | ◐ **wire** (stub) | `MissileLauncherAtb.IsInRange` returns `true` — affects the ordnance-resupply picture |
+| `LogiBaseDB` Clone drops levels | ◐ **wire** (bug) | copy-ctor loses `DesiredLevels`/`ItemsInTransit` — a latent save/transfer bug |
+
+**Reading:** Transfer is **fully Modelled and surprisingly deep** — beyond the manual rate/range move and the spaceport surface↔orbit elevator, there's a **working automated supply market**: set min/max stock levels on a logistics office and a freight-bidding network hauls to keep your colonies topped up. That's real logistics-strategy depth already in the engine. Only two small fixes surface (a missile-range stub, a Clone save-bug) — no design gaps. Cradle-to-grave: a transfer facility is a **component/installation** (spaceport/shuttle/logistics office — built, installed, a bombard target).
+
+**Numbers:** `TransferRate_kgs` (kg/s, default 1); `TransferRange_ms` (Δv m/s, default 100); `LogiBaseAtb.LogisicCapacity` (route capacity). Cradle-to-grave as above.
+
+**Preset coordinates:** cargo shuttle · **spaceport** *(facility — surface↔orbit)* · **logistics office** *(facility — automated supply routes)* · fuel tanker · freight hauler · launch complex *(facility — ships to orbit)*.
+
+---
+
+## §8 Logistical — status (both doors proposed, awaiting lock)
+Storage 🟡 · Transfer 🟡. **The hold-and-move backbone, mostly Modelled** — the twin of Industrial (it *builds*, Logistical *stores + ships*), pure support/economy feeding fuel→Δv, ordnance→resupply, troops→invasion. Headline readings: **Storage's hold layer is fully Modelled** — one universal volume-partitioned `CargoStorageDB` (general/fuel/ordnance/passenger) + a *separate* class-matched troop/vehicle bay (`GroundBayAtb` → `GroundTransportDB`, the invasion carry). **Transfer is fully Modelled AND deep** — manual rate/range move + spaceport surface↔orbit + a **functional automated freight market** (`LogiBaseDB` desired-levels + `LogiShipperDB` bidding). **The developer's MOTHBALL/RESERVE ask is the one honest gap** — and a valuable one: **there is NO upkeep for ships/units to reduce** (only stations have upkeep, `StationUpkeepProcessor`), so "store at reduced upkeep" is a **two-part build**: (1) a ship/unit **upkeep clock** (net-new, mirrors the station pattern + a new `TransactionCategory`) — worth building on its own, since with no upkeep a giant standing fleet has zero downside and there's no reason to demobilize; (2) the **reserve discount** on top (a cheap wire once upkeep exists; stations get it as a wire today). Build-list: (1) **ship/unit upkeep clock** (prerequisite for mothball + the missing economic pressure); (2) **reserve/mothball discount** on top; (3) fix the **bare-`CargoStorageDB` silent no-op** trap; (4) missile transfer-range stub; (5) the `LogiBaseDB` Clone save-bug. Dead/absent flags: Aurora MSP + dedicated supply ships confirmed absent (the automated market partly covers the supply-ship role).
