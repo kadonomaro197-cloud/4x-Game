@@ -23,10 +23,11 @@ namespace Pulsar4X.Combat
     /// delegators to this class, and the tuning constants there forward to the ones below, so the kernel is the single
     /// source of truth for the ship path (no drift possible). The ship combat fixtures (CombatPerformance / Dodge /
     /// Shield / Triangle / Stress / BattleSims) are the byte-identity tripwire that proved the delegation moved no
-    /// number. <c>ArmourSoak</c> is still a copy of <c>GroundCombat.GroundDamageMatrix.ArmourSoak</c> — the PLANETARY
-    /// side adopts this kernel in slice 3, which is when that duplication collapses too. <see cref="CombatKernelTests"/>
-    /// pins these outputs and cross-checks <c>ArmourSoak</c> against the live ground function. See
-    /// docs/RESOLVER-MERGE-DESIGN.md §5.
+    /// number. <c>ArmourSoak</c> is ALSO wired as of slice 3a — <c>GroundCombat.GroundDamageMatrix.ArmourSoak</c> and
+    /// its two armour constants now delegate/forward here, so the kernel is the single source of truth for the flat
+    /// armour math on BOTH domains. The rest of the planetary resolver (weapon profiles, the dodge/shield reconcile,
+    /// the closing model on the hex board) adopts this kernel in slice 3b+. <see cref="CombatKernelTests"/> pins these
+    /// outputs. See docs/RESOLVER-MERGE-DESIGN.md §5.
     /// </summary>
     public static class CombatKernel
     {

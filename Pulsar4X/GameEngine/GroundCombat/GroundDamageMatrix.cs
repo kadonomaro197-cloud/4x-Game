@@ -39,11 +39,14 @@ namespace Pulsar4X.GroundCombat
         public const double ShieldEffVsPhysical = 1.0;   // Ballistic + Melee
         /// <summary>Damage soaked off EACH incoming attacker-source, per point of the target's Defense (armour).
         /// Flat — the whole point is that it scales with the NUMBER of volleys, not their size, so many small hits are
-        /// bounced while one big hit isn't. Bigger = armour matters more.</summary>
-        public const double ArmourSoakPerPoint = 1.5;
+        /// bounced while one big hit isn't. Bigger = armour matters more. Forwards to
+        /// <c>Combat.CombatKernel.ArmourSoakPerPoint</c> (resolver merge, slice 3a) — the shared kernel owns the single
+        /// value so the ground path and the kernel can never read different armour numbers.</summary>
+        public const double ArmourSoakPerPoint = Pulsar4X.Combat.CombatKernel.ArmourSoakPerPoint;
         /// <summary>A source always lands at least this fraction of its damage no matter how much armour it meets — so
-        /// flat armour is never total immunity (the counterpart to the evasion/shield caps).</summary>
-        public const double ArmourMinPassFraction = 0.1;
+        /// flat armour is never total immunity (the counterpart to the evasion/shield caps). Forwards to
+        /// <c>Combat.CombatKernel.ArmourMinPassFraction</c> (resolver merge, slice 3a).</summary>
+        public const double ArmourMinPassFraction = Pulsar4X.Combat.CombatKernel.ArmourMinPassFraction;
 
         /// <summary>Only aimed fire can be dodged; area (Artillery) and contact (Melee) can't.</summary>
         public static bool IsAimed(GroundWeaponMode t) => t == GroundWeaponMode.Ballistic || t == GroundWeaponMode.Energy;
@@ -88,12 +91,6 @@ namespace Pulsar4X.GroundCombat
         /// punches through. <paramref name="sourceDamage"/> is one attacker's post-matchup contribution to this target.
         /// Never throws.</summary>
         public static double ArmourSoak(double defense, double sourceDamage)
-        {
-            if (sourceDamage <= 0) return 0.0;
-            if (defense <= 0) return sourceDamage;
-            double floor = sourceDamage * ArmourMinPassFraction;
-            double after = sourceDamage - defense * ArmourSoakPerPoint;
-            return after < floor ? floor : after;
-        }
+            => Pulsar4X.Combat.CombatKernel.ArmourSoak(defense, sourceDamage);
     }
 }
