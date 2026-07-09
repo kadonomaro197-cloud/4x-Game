@@ -1249,6 +1249,37 @@ namespace Pulsar4X.Tests
             finally { GroundForcesProcessor.InterruptTimeOnNewBattle = false; }
         }
 
+        [Test]
+        [Description("3c SHIELD as a DEPLETING POOL (routed through the shared kernel): a ground unit's shield is now a pool that DRAINS in combat (not the old permanent %), and the weapon-NATURE matchup falls out of the kernel — a KINETIC attacker is fully soaked by the shield while an ENERGY attacker half-bleeds through. Two identical shielded targets in separate regions, one hit by kinetic fire, one by energy: the energy-hit target takes MORE health damage, and both targets' shield pools drain.")]
+        public void GroundShield_IsADepletingPool_EnergyBleedsWhereKineticIsSoaked()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            PaveRegionHexes(body, regionsDB, 0);
+            PaveRegionHexes(body, regionsDB, 1);
+            regionsDB.Regions[0].OwnerFactionID = -1;
+            regionsDB.Regions[1].OwnerFactionID = -1;
+
+            // Region 0: a KINETIC attacker vs a shielded target. Region 1: an ENERGY attacker vs an identical target.
+            var kinetic = GroundForces.RaiseUnit(body, MakeDesign("kin", "Rifles", GroundUnitType.Infantry, range: 1), InvaderFaction, 0);
+            var tgtK = GroundForces.RaiseUnit(body, MakeDesign("tk", "ShieldedK", GroundUnitType.Infantry, range: 1), s.Faction.Id, 0);
+            var energy = GroundForces.RaiseUnit(body, MakeDesign("eng", "Lasers", GroundUnitType.Infantry, range: 1), InvaderFaction, 1);
+            energy.DamageType = GroundWeaponMode.Energy;
+            var tgtE = GroundForces.RaiseUnit(body, MakeDesign("te", "ShieldedE", GroundUnitType.Infantry, range: 1), s.Faction.Id, 1);
+            foreach (var t in new[] { tgtK, tgtE }) { t.Shield = 300; t.CurrentShield = 300; }
+
+            new GroundForcesProcessor().ProcessEntity(body, 3600);
+
+            Log($"kinetic-hit target: {tgtK.Health:0} hp, shield {tgtK.CurrentShield:0}/300 | energy-hit target: {tgtE.Health:0} hp, shield {tgtE.CurrentShield:0}/300");
+            Assert.That(tgtK.CurrentShield, Is.LessThan(300), "the shield is a POOL — kinetic fire drains it");
+            Assert.That(tgtE.CurrentShield, Is.LessThan(300), "energy fire drains the pool too");
+            Assert.That(tgtE.Health, Is.LessThan(tgtK.Health),
+                "ENERGY bleeds through a shield where KINETIC is soaked — the nature matchup, from the kernel");
+        }
+
         // ───────────────────────── O1 — formation order QUEUE (sequential waypoints) ─────────────────────────
 
         [Test]

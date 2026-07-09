@@ -68,9 +68,15 @@ namespace Pulsar4X.GroundCombat
         /// evasion. Carried now (slice B plumbing); the resolver consumes it in the damage×defence matrix (slice A).
         /// A dodger (Jedi / Zergling) is high here; a walking bunker is ~0.</summary>
         [JsonProperty] public double Evasion { get; internal set; }
-        /// <summary>SYSTEM ① survivability-by-shield — a flat incoming-damage soak pool (energy shield / Force ward),
-        /// snapshot of Σ augment shield. Carried now; consumed in slice A.</summary>
+        /// <summary>SYSTEM ① survivability-by-shield — the shield POOL CAPACITY (energy shield / Force ward), snapshot
+        /// of Σ augment shield. As of the resolver-merge 3c this is the pool's MAX (the value <see cref="CurrentShield"/>
+        /// recharges toward), read by the resolver as a depleting pool the ship way — not the old innate-% reduction.</summary>
         [JsonProperty] public double Shield { get; internal set; }
+        /// <summary>The shield pool's CURRENT charge (resolver merge 3c). Seeded to <see cref="Shield"/> at raise; the
+        /// resolver drains it by the soakable fraction (weapon nature) before armour, and regenerates it toward
+        /// <see cref="Shield"/> between salvos — so a shield is burst-resistant then brittle (the ship model), not a
+        /// permanent % discount. 0 for an unshielded unit → the pool step is a no-op (byte-identical).</summary>
+        [JsonProperty] public double CurrentShield { get; internal set; }
         /// <summary>SYSTEM ① — this unit's primary damage flavour (from its heaviest weapon), for the future
         /// damage×defence matrix. Carried now; consumed in slice A.</summary>
         [JsonProperty] public GroundWeaponMode DamageType { get; internal set; } = GroundWeaponMode.Ballistic;
@@ -137,7 +143,7 @@ namespace Pulsar4X.GroundCombat
             DesignId = o.DesignId; BackingEntityId = o.BackingEntityId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
             UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health; Range = o.Range;
             MaxAmmo_kg = o.MaxAmmo_kg; CurrentAmmo_kg = o.CurrentAmmo_kg;
-            Evasion = o.Evasion; Shield = o.Shield; DamageType = o.DamageType;
+            Evasion = o.Evasion; Shield = o.Shield; CurrentShield = o.CurrentShield; DamageType = o.DamageType;
             MovingToRegion = o.MovingToRegion; TransitSecondsRemaining = o.TransitSecondsRemaining;
             HexQ = o.HexQ; HexR = o.HexR; HexTransitSecondsRemaining = o.HexTransitSecondsRemaining; HexStepBaseSeconds = o.HexStepBaseSeconds;
             if (o.HexPath != null)
@@ -369,6 +375,7 @@ namespace Pulsar4X.GroundCombat
                 Range = design.Range > 0 ? design.Range : GroundRangeTools.DefaultRangeFor(design.UnitType),
                 Evasion = design.Evasion,
                 Shield = design.Shield,
+                CurrentShield = design.Shield,   // the shield pool musters full (resolver merge 3c)
                 DamageType = design.DamageType,
                 // Snapshot the design's environmental gear onto the unit (E4) — like the combat stats above.
                 EnvResistance = (design.EnvironmentalResistance != null && design.EnvironmentalResistance.Count > 0)

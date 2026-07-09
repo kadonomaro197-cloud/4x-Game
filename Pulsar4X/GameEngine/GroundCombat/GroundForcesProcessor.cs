@@ -42,6 +42,12 @@ namespace Pulsar4X.GroundCombat
         /// turns it on at startup next to the space combat flags.</summary>
         public static bool InterruptTimeOnNewBattle = false;
 
+        /// <summary>Shield pool regeneration per game-hour, as a FRACTION of the unit's shield CAPACITY (resolver merge
+        /// 3c). Between salvos a unit's <c>CurrentShield</c> recharges toward its <c>Shield</c> max by this × the tick's
+        /// hours — so a depleted shield recovers over ~1/this hours (0.34 ≈ full recharge in ~3 game-hours). Flagged
+        /// balance default; 0 = a knocked-down shield stays down for the fight.</summary>
+        public const double ShieldRegenPerHourFraction = 0.34;
+
         // FORTIFICATION (5h) is now DESIGN-DRIVEN — a building fortifies its region (and projects to adjacent friendly
         // regions) only if its design carries a GroundDefenseAtb (a Bunker, not a solar panel). The math + the
         // colony→component resolver live in GroundFortification; ResolveRegionCombat applies it to the defender.
@@ -198,7 +204,7 @@ namespace Pulsar4X.GroundCombat
                 {
                     Region region = (regionsDB != null && kv.Key >= 0 && kv.Key < regionsDB.Regions.Count)
                         ? regionsDB.Regions[kv.Key] : null;
-                    if (ResolveRegionCombat(forces, units, region, allRegions, fortResolve)) anyFightThisTick = true;
+                    if (ResolveRegionCombat(forces, units, region, allRegions, fortResolve, deltaSeconds)) anyFightThisTick = true;
                 }
 
                 // Whoever holds the only live units here now owns the region.
@@ -253,7 +259,7 @@ namespace Pulsar4X.GroundCombat
         /// <summary>Returns TRUE if a real exchange happened (any damage was dealt to a target this salvo) — the signal
         /// the ground combat-interrupt (4b) reads to detect a battle.</summary>
         private static bool ResolveRegionCombat(GroundForcesDB forces, List<GroundUnit> units, Region region,
-            List<Region> allRegions, System.Func<int, GroundDefenseAtb> fortResolve)
+            List<Region> allRegions, System.Func<int, GroundDefenseAtb> fortResolve, int deltaSeconds)
         {
             var terrain = GroundTerrain.Classify(region);
             int defenderFaction = region != null ? region.OwnerFactionID : -1;
@@ -267,6 +273,14 @@ namespace Pulsar4X.GroundCombat
                 if (!byFaction.TryGetValue(u.FactionOwnerID, out var l)) { l = new List<GroundUnit>(); byFaction[u.FactionOwnerID] = l; }
                 l.Add(u);
             }
+
+            // SHIELD POOL regen (resolver merge 3c): between salvos a unit's shield recharges toward its capacity, so a
+            // shield is burst-resistant then brittle (the ship model), not a permanent % discount. Unshielded units
+            // (Shield 0) are untouched → byte-identical.
+            if (deltaSeconds > 0)
+                foreach (var u in units)
+                    if (u.Shield > 0 && u.CurrentShield < u.Shield)
+                        u.CurrentShield = System.Math.Min(u.Shield, u.CurrentShield + u.Shield * ShieldRegenPerHourFraction * (deltaSeconds / 3600.0));
 
             // Per-TARGET incoming (not per-faction) so range gating lands damage on exactly the units an attacker can
             // reach. Computed entirely from the PRE-salvo state (Health read here, applied below) → simultaneous.
@@ -307,15 +321,30 @@ namespace Pulsar4X.GroundCombat
                         double totalH = 0.0;
                         foreach (var t in reachable) totalH += t.Health;
                         if (totalH <= 0) continue;
+
+                        // Route this attacker's fire through the SHARED KERNEL (resolver merge 3c): its ground weapon
+                        // becomes a WeaponProfile, and dodge + shield + armour resolve the same way a ship's do — the
+                        // ground triangle/dodge/shield now EMERGE from the weapon spec (no bolted-on GroundDamageMatrix
+                        // multiplier). The profile is built once per attacker.
+                        var profile = GroundCombatant.ToWeaponProfile(u);
+                        double shieldSoakFrac = Pulsar4X.Combat.CombatKernel.ShieldSoakFraction(profile.Nature);
                         foreach (var t in reachable)
                         {
-                            // SYSTEM ① — the damage×defence matchup: scale this attacker's share by how its damage
-                            // flavour meets the target's dodge/shield (a Zergling shrugs off rifles but eats a shell;
-                            // a shielded Clone soaks bullets but energy bleeds through), THEN take a flat ARMOUR soak
-                            // off this one source (the target's Defense) — flat-per-source, so a swarm's many little
-                            // volleys are mostly bounced while one big alpha punches through the same plating.
-                            double matchup = GroundDamageMatrix.Matchup(u.DamageType, t);
-                            double contribution = pool * (t.Health / totalH) * matchup;
+                            // DODGE (kernel HitFraction): an aimed slug is dodged ~(1−evasion); an area/beam shot lands
+                            // ~fully — the same curve a ship uses.
+                            double contribution = pool * (t.Health / totalH)
+                                * Pulsar4X.Combat.CombatKernel.HitFraction(profile, t.Evasion);
+                            // SHIELD POOL (3c): the target's depleting shield soaks the soakable fraction (by weapon
+                            // nature — kinetic fully, energy half-bleeds, exotic bypasses) up to its CURRENT charge,
+                            // BEFORE armour. Draining per-source is deterministic (stable iteration → fast-forward==watch).
+                            if (t.CurrentShield > 0 && shieldSoakFrac > 0 && contribution > 0)
+                            {
+                                double absorbed = System.Math.Min(contribution * shieldSoakFrac, t.CurrentShield);
+                                t.CurrentShield -= absorbed;
+                                contribution -= absorbed;
+                            }
+                            // ARMOUR: flat-per-source plating bounces what's left (the swarm-vs-alpha identity) — the
+                            // shared CombatKernel.ArmourSoak (via GroundDamageMatrix's delegator, slice 3a).
                             contribution = GroundDamageMatrix.ArmourSoak(t.Defense, contribution);
                             incoming.TryGetValue(t, out var acc);
                             incoming[t] = acc + contribution;
