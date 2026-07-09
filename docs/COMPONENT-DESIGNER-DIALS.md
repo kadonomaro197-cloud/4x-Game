@@ -1892,3 +1892,126 @@ On top of the universal seven (§0a):
 
 ## ✅ §6 Enhancers — COMPLETE (3/3 doors locked)
 Bio-augmentation 🔒 · Training/Doctrine (Unit Caliber) 🔒 · Systems 🔒. **This is the honest NET-NEW category** — the "veteran ≠ conscript" force-multiplier layer the game mostly lacks; the design job is to define it cleanly and hold the gear-vs-being line, not pretend it's built. Headline readings: **Bio-augmentation is the one mostly-Modelled door** (`GroundAugmentAtb` — strength/evasion/toughness/shield all read; power-armour + reflex-booster buildable today; ship-crew augment is the net-new twin) — *and it corrects a Defense-doc false positive: `ToughnessBonus` is Modelled (HP multiplier), not dead.* **Training/Doctrine is the unit-CALIBER door** (reframed per the developer): a **design-time quality tier** that stamps "elite" onto a unit — a **Space Marine** vs a Guardsman, an **ace** vs a rookie, the **Millennium Falcon** vs a stock freighter, on the *same* chassis and gear. It's **the unit's own stat, not the commander** (a separate stacking modifier) and not the gear (other doors). Net-new but **clean**: the spine is a single `Quality` multiplier field on the unit design, read by the resolver (hit/evasion) — simpler than an XP engine, with anti-dominance built in (elites draw a **scarce talent pool**, so you can't mass-produce Space Marines). Combat-earned XP + the academy are optional secondary sources. Holds the H4 line on Jedi: this builds the elite *warrior*; the *Force* stays a People being-trait. **Systems is essentially net-new** — the auto-resolver has no computer term (hit chance is pure weapon-vs-evasion), and its one foothold (fire-control) lives on the parked sim + overlaps the Sensors ▸ Fire-Control wire. **The load-bearing decision is the BOUNDARY (H4):** buildable **gear** (an `IComponentDesignAttribute` the resolver reads — `GroundAugmentAtb`) is this category; innate **being** (species trait, raw talent, the Force) lives in **People/species/crew** — and `SpeciesDB` has **zero combat trait today**, so even that is net-new, and it stays **out** of the component store. Build-list: (1) surface `ToughnessBonus` (Modelled, invisible) — **done: Defense-doc corrected**; (2) ship-crew bio-augment (the space twin); (3) combat-drug timing (temporary + crash); (4) a per-unit **`Quality` multiplier** field (the caliber spine — makes Space Marine ≠ Guardsman, Falcon ≠ freighter) read by the resolver + drawn from the scarce **talent pool** (`ManpowerDB`); (5) optional secondary paths — combat-earned XP raising `Quality`, and a combat `BonusCategory` for officer/commander effect; (6) a targeting/battle-computer term in `HitFraction` (Systems, shares the FC wire); (7) hold the line — innate traits (the Force) go to People, not here.
+
+---
+
+## §7 — Industrial
+
+Industrial is the **economic spine** — the front end of the whole game: **mine → refine → build**. Everything else in the designer is *made here*: a weapon, a reactor, a shield, a ship, a colony installation all come out of this category's output. It is the purest **non-combat** category (no combat consumer at all — §0f is trivially satisfied: Industrial *is* the backbone every other system draws on), and it's **mostly Modelled** — the extraction and fabrication loops both run live through daily processors, host-agnostic (a **colony OR a station** mines and builds identically). The honest work here isn't design gaps — it's a **cluster of real engine gaps** (a broken refining feed, missing gas harvesting, an inert slip-cap, two overlapping build paths) that the door-by-door audit surfaces.
+
+**The yardstick — the production system** (`MineResourcesProcessor` + `IndustryProcessor`, both daily), not the combat resolver. Two distinct engine subsystems, which is exactly why there are two doors:
+- **Extraction** = `MineResourcesAtbDB` → `MiningDB` → minerals pulled from a body's deposits. *Mining is NOT an industry type* — it's its own system.
+- **Fabrication** = one `IndustryAbilityDB` / `IndustryJob` / `IndustryProcessor`, routed by **`IndustryTypeID`** (refining / component / installation / ordnance / ship-assembly). A refinery, a factory, and a shipyard are the *same ability* specialized to different type-rates.
+
+### §7.0 Shared industrial dials (both doors)
+On top of the universal seven (§0a):
+| Dial | Drives (real stat) |
+|------|--------------------|
+| **Output rate** | units/day (extraction) or points/day (fabrication) — the headline throughput |
+| **What it makes / pulls** | the routing — which mineral (extraction) or which `IndustryTypeID` (fabrication) |
+| **Input consumed** | resources drawn from `CargoStorageDB` each tick (fabrication) / deposit drawn down (extraction) |
+| **Host** | colony OR station — **host-agnostic** (`MiningHelper.TryGetMiningBody`; industry ability on either) |
+| **Mass / footprint** | scale the throughput → mass + a war-map footprint (a factory is a capture/bombard target) |
+
+### 7.1 Industrial ▸ EXTRACTION  🟡 *proposed*
+*Pull raw resources out of the ground (or the sky). Mines, automated robo-miners, and — eventually — gas-giant skimmers. Everything from a hand-dug surface mine to a self-directing asteroid RoboMiner falls out of these dials; the one real hole is **gas/atmosphere harvesting**, which doesn't exist yet.*
+
+**The core decision — WHAT to pull, HOW FAST, and WHETHER it can move.** A mine extracts minerals from a body's finite deposits; the deposit **depletes** and gets **harder to reach** (accessibility decays cubically as it empties — diminishing returns that push you to find fresh ground). You choose the extraction rate (bigger = faster but heavier), whether the miner is **planted** (a fixed mine) or **mobile** (an automine you drop on an asteroid and pick up later), and — the missing option — what *medium* you pull from (solid ore vs gas).
+
+**A. Extraction rate — how fast it pulls (`ResourcesPerEconTick` / `MiningAmount`)**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **Small** | light, cheap, low footprint | slow — a trickle of ore |
+| **Large** | fast throughput — feeds a hungry industry | heavy + big footprint; **exhausts a deposit faster** (accessibility craters sooner) |
+
+**B. Target resource — flat vs focused**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Broad (all minerals)** | one mine pulls every mineral present (today's default) | no specialization — spread thin on a rich single-ore body |
+| **Focused (per-mineral)** | pour capacity into the one rich/scarce ore you need | ◐ the rate field **is** per-mineral (`ResourcesPerEconTick`), but templates fill it **flat** — a focus dial is a small wire |
+
+**C. Automation / mobility — planted vs mobile**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Fixed mine** (`Area × 0.00001`) | cheap per unit of rate on a big body | can't relocate — planted where you built it |
+| **Automine / RoboMiner** (`Size × 0.005`) | **transportable** (ShipCargo + PlanetInstallation) — drop on an asteroid, retrieve later; the belt-mining play | costlier per unit; smaller scale |
+
+**D. Medium — solid vs gas (the missing option)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Solid (minerals)** | the built path — ore from a rocky body | — |
+| **Gas / atmosphere** (skimmer) | harvest sorium/fuel from a gas giant or atmosphere — the Expanse/fuel play | ⏳ **MISSING** — no gas-harvest component/ability exists (net-new) |
+
+**Modellability audit (§0d — mostly Modelled; one net-new medium):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| Extraction rate | ✅ | `MineResourcesAtbDB.ResourcesPerEconTick` → `MiningDB.BaseMiningRate` → `MineResourcesProcessor` (daily): `actualRate = base × colonyBonus × accessibility` |
+| Deposit depletion / accessibility | ✅ | `MineralsDB.MineralDeposit` (`Amount`, `Accessibility`); accessibility **decays cubically** as the deposit empties (the "move on" pressure) |
+| Automine / mobility | ✅ | `automine` (RoboMiner) — same atb, `Size`-based rate, transportable mount |
+| Host (colony/station) | ✅ | `MiningHelper.TryGetMiningBody` — a station mines its body exactly like a colony |
+| Target resource (focus) | ◐ **wire** | the rate is per-mineral, but templates fill it flat — expose a per-mineral focus dial |
+| **Gas / atmosphere harvest** | ⏳ **defer/net-new** | **no** gas/sorium harvester exists — a new extraction medium |
+| Per-hex mining | ◐ **wire** | `HexMinerals` seeds deposits onto surface hexes but is **view-only**; the body-wide pool is still the source of truth |
+
+**Reading:** Extraction is **live and solid** — the mine→cargo loop runs daily, deposits deplete with realistic diminishing returns, and it's host-agnostic (colony or station). The one genuine hole is **gas/atmosphere harvesting** (net-new — the gas-giant fuel play the north-star franchises lean on), plus two small wires (per-mineral focus; making the per-hex deposits the real source instead of a view). Cradle-to-grave is closed: the mine is a **component** (built → installed → mines → the deposit runs dry, so you re-survey and relocate).
+
+**Numbers:** `MiningAmount` (units/mineral/day) — a 1M m² mine ≈ **10 units/mineral/day**, max ~1,000/day; automine `Size × 0.005`. Accessibility 0.1–1.0 (decays cubically). Consumer: the whole materials economy downstream.
+
+**Preset coordinates:** surface mine (small, cheap) · deep/heavy mine (high rate) · **RoboMiner** (automine — asteroid/belt) · gas skimmer *(⏳ missing — the net-new one)* · **orbital mining station** *(host-agnostic — a station mines like a colony)*.
+
+### 7.2 Industrial ▸ FABRICATION  🟡 *proposed*
+*Turn raw resources into everything — refine minerals into materials, manufacture components, construct installations, assemble ordnance, and build ships. One production ability, routed by **industry type**: a refinery, a factory, and a shipyard are the same machine specialized to different jobs. Mostly Modelled — with the category's one load-bearing gap (the refining feed) sitting right in the middle of it.*
+
+**The core decision — WHAT to make, and HOW MUCH throughput.** A fabrication facility carries **points/day** for one or more **industry types**; a job only progresses if its facility has points for *its* type and the input resources are in stock. You choose the type mix (a pure refinery vs a general factory vs a shipyard) and the throughput (bigger = faster but heavier), and you feed it materials — starve it and the job stalls.
+
+**A. Industry type — WHAT it makes (the routing dial, `IndustryAtb.IndustryPoints` per type)**
+| Type | Makes | Consumer |
+|------|-------|----------|
+| **Refining** | minerals → **materials** (space-crete, steel…) | the whole materials economy |
+| **Component-construction** | weapons, reactors, shields… | ship/unit designs |
+| **Installation-construction** | colony buildings (mines, factories, defences) | the colony |
+| **Ordnance-construction** | missiles/ammo → magazine | weapons |
+| **Ship-assembly** | ships | fleets |
+
+**B. Throughput — points/day (`IndustryAtb.IndustryPoints`)**
+| Option | Why pick it | The catch |
+|--------|-------------|-----------|
+| **Small** | light, cheap facility | slow builds — a long queue |
+| **Large** | fast throughput — clears the queue | heavy + big footprint (a bombard/capture target) |
+
+**C. Specialization — dedicated vs general**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Dedicated line** (one type) | all points in one job type — a pure refinery / pure shipyard | idle when there's no work of that type |
+| **General factory** (many types) | one facility covers component + installation + ordnance | jack of all — splits its day across types |
+
+**D. Ship-slip tonnage — the max hull a shipyard can build (`Slip Size`)**
+| Option | Why | Catch |
+|--------|-----|-------|
+| **Small slip** | cheap — builds corvettes/frigates | can't lay down a capital |
+| **Capital slip** | builds the big hulls | huge, costly — and ◐ **the cap is currently INERT** on the build path (stored as `MaxVolume`, never enforced in `ConstructStuff`); the real tonnage gate lives only in the `LaunchComplex` (a redundancy to consolidate) |
+
+**Modellability audit (§0d — Modelled spine, one broken feed, some redundancy to clean):**
+| Dial | Verdict | How the sim models it |
+|------|---------|------------------------|
+| Industry-type routing | ✅ | `IndustryAtb.IndustryPoints` (points/day per type) → `IndustryJob.TypeID` → `IndustryTools.ConstructStuff` routes by type; a design declares `IConstructableDesign.IndustryTypeID` |
+| Throughput / build-time | ✅ | `industryPointsRemaining[type] = rate × infraEfficiency`; job completes when points spent + resources consumed |
+| Resource consumption | ✅ | `ConsumeResources` pulls `ResourceCosts` from `CargoStorageDB` each tick; no stock → `MissingResources` |
+| Specialization (dedicated/general) | ✅ | refinery = 1 type, factory = 3 types, shipyard = component + ship-assembly — all just different `IndustryPoints` maps |
+| Host (colony/station) | ✅ | the industry ability lives on either |
+| **Refining (mechanic)** | ✅ **but dead-in-practice** | `refinery` → `ProcessedMaterial` (`refining` type) works, **BUT the mine→refine input feed isn't auto-supplied** — refining jobs stall at `MissingResources` (the quarantined `EconomyReadoutTests`). **The top build item — it blocks the materials economy.** |
+| **Ship-slip tonnage cap** | ◐ **wire** | `Slip Size`/`MaxVolume` is **stored but never read** on the build path; the real gate is duplicated in `LaunchComplexAtb.MaxTonnage` — enforce or consolidate |
+| **Dual construction paths** | ◐ **wire** | `IndustryAtb` + `installation-construction` **and** the separate `LocalConstructionAtb`/`LocalConstructionProcessor` FIFO **both** build installations — a redundancy to unify |
+
+> **Dead-code flags (don't build on them):** `InstallationsDB` is **confirmed dead** (never attached, no `[JsonProperty]`) — installations are components in `ComponentInstancesDB`, NOT this blob (Landmine L1). `Fighter Construction Points` is hardcoded 0 (defer).
+
+**Reading:** Fabrication's **routing + rate + cost spine is fully Modelled** — one ability, one job, one processor, cleanly routed by industry type, consuming stocked materials daily. But the category's honest headline lives here: **the refining feed is broken** — the refinery *works*, but nothing auto-supplies its mineral inputs, so materials never actually get made (the game-year economy test is quarantined for exactly this). That's the **#1 build item** for the whole category, because every downstream build waits on refined materials. Two smaller cleanups: the **shipyard slip-cap is inert** (real gate duplicated in LaunchComplex — consolidate), and there are **two overlapping construction systems** (IndustryAtb vs LocalConstruction — unify). None of these are design gaps; they're plumbing to finish.
+
+**Numbers:** refinery ≈ 500 refining-pts/day (Size 5000 × 0.1); factory Size × 0.1 per type; shipyard `CrewSize × 0.02` ship-assembly; build-time = `ProductionPointsCost ÷ (rate × infraEfficiency)`. Cradle-to-grave: a facility is a **built installation** (a factory is itself built by construction) — captured with the colony, bombarded as a footprint target.
+
+**Preset coordinates:** refinery (dedicated `refining`) · factory (general — component+installation+ordnance) · component works · ordnance plant · shipyard (+ slip tonnage) · **local-construction yard** *(the FIFO twin — the redundant path to unify)*.
+
+---
+
+## §7 Industrial — status (both doors proposed, awaiting lock)
+Extraction 🟡 · Fabrication 🟡. **The economic SPINE, mostly Modelled** — mine→refine→build all run live through daily processors, host-agnostic (colony OR station), and the purest non-combat category (§0f trivially satisfied: Industrial *is* the backbone everything else draws on). Two genuinely-different engine subsystems (mining is NOT an industry type), hence two doors. Headline readings: **Extraction is live + solid** — the mine→cargo loop with realistic deposit depletion (accessibility decays cubically), automine mobility, and station-or-colony hosting; the one real hole is **gas/atmosphere harvesting** (net-new — the gas-giant fuel play), plus small wires (per-mineral focus; per-hex deposits as source-of-truth). **Fabrication's routing/rate/cost spine is fully Modelled** (one ability routed by `IndustryTypeID` across refining/component/installation/ordnance/ship-assembly), but it holds the category's **one load-bearing gap: the refining feed is BROKEN** — the refinery works but its mineral inputs aren't auto-supplied, so materials never get made (the quarantined economy test). This is the **#1 build item** for the whole game economy. Two cleanups: the **inert shipyard slip-cap** (real gate duplicated in LaunchComplex) and the **dual construction systems** (IndustryAtb vs LocalConstruction). Dead-code flags held: `InstallationsDB` is dead (installations are `ComponentInstancesDB`), `Fighter Construction Points` hardcoded 0. Build-list: (1) **fix the refining input feed** (top — unblocks the materials economy); (2) **gas/atmosphere harvester** (net-new extraction medium); (3) enforce/consolidate the **ship-slip tonnage cap**; (4) unify the **two construction paths**; (5) per-mineral extraction focus + per-hex mining as source-of-truth.
