@@ -1165,6 +1165,44 @@ namespace Pulsar4X.Tests
             Log($"hex-marcher fights: mover took {before - mover.Health:0} dmg while mid-march");
         }
 
+        [Test]
+        [Description("NORTH STAR — the closing fight END-TO-END (docs/RESOLVER-MERGE-DESIGN §7, the zergling/Titan acceptance test). A long-range unit (reach 3) and an EQUAL-stats short-range unit (reach 1) start 3 hexes apart; the short-range one RUSHES (CloseToEngage). The long-range unit fires across the whole approach while the rusher can't shoot back until it closes — so the range advantage, played out over the battle's DURATION tick by tick, decides it: the rusher ends far more damaged (or dead) than the kiter. Range is the ONLY difference between the two, so this isolates the closing advantage the auto-resolver simulates.")]
+        public void ClosingFight_LongRangeWhittlesTheRusherDuringTheApproach()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();  // no attrition skew
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            PaveRegionHexes(body, regionsDB, 0);
+            regionsDB.Regions[0].OwnerFactionID = -1;   // neutral ground → no fortification/cover skew for either side
+
+            // Equal stats EXCEPT reach — range is the only variable, so the fight isolates the closing advantage.
+            var kiter = GroundForces.RaiseUnit(body, MakeDesign("kiter", "LongGun", GroundUnitType.Infantry, range: 3), s.Faction.Id, 0);
+            kiter.HexQ = 0; kiter.HexR = 0;
+            var rusher = GroundForces.RaiseUnit(body, MakeDesign("rusher", "Zergling", GroundUnitType.Infantry, range: 1), InvaderFaction, 0);
+            rusher.HexQ = 3; rusher.HexR = 0;   // distance 3: inside the kiter's reach, OUTSIDE the rusher's
+
+            // The rusher's formation is ordered to CLOSE; the kiter has no formation, so it holds ground and fires.
+            var f = GroundForces.CreateFormation(body, InvaderFaction, "Swarm");
+            GroundForces.AssignUnit(f, rusher);
+            GroundFormationDoctrine.SetEngagementStance(f, GroundEngagementStance.CloseToEngage);
+
+            var forces = body.GetDataBlob<GroundForcesDB>();
+            var proc = new GroundForcesProcessor();
+            int startDist = HexDistBetween(kiter, rusher);
+            // Play the battle out over many game-hours — the resolver closes the gap and trades fire tick by tick.
+            for (int i = 0; i < 60 && forces.Units.Count > 1; i++)
+                proc.ProcessEntity(body, 3600);
+
+            // The unit objects persist even after a death removes them from the roster, so read their final Health directly.
+            Log($"closing fight from dist {startDist}: kiter(reach 3) ends {kiter.Health:0} hp, rusher(reach 1) ends {rusher.Health:0} hp");
+            Assert.That(rusher.Health, Is.LessThan(kiter.Health),
+                "the long-range unit's free shots during the approach decide the fight — the rusher ends more damaged");
+            Assert.That(kiter.Health, Is.GreaterThan(0),
+                "the long-range unit survives: it whittled the rusher before it could close to trade evenly");
+        }
+
         // ───────────────────────── O1 — formation order QUEUE (sequential waypoints) ─────────────────────────
 
         [Test]
