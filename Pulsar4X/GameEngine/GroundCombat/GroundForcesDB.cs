@@ -485,7 +485,7 @@ namespace Pulsar4X.GroundCombat
         /// body has no region layer, the target is out of range, it's the same region, or the target is not a
         /// neighbour (v1: one hop at a time along the ring; multi-hop pathing is a later refinement).
         /// </summary>
-        public static bool OrderMove(Entity body, GroundUnit unit, int toRegion)
+        public static bool OrderMove(Entity body, GroundUnit unit, int toRegion, double speedMultOverride = 0)
         {
             if (unit == null) return false;
             if (!body.TryGetDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>(out var regionsDB)) return false;
@@ -496,7 +496,9 @@ namespace Pulsar4X.GroundCombat
 
             unit.MovingToRegion = toRegion;
             // Speed falls out of the chassis: a faster frame (Tracked/Hover/Walker) crosses in less time (Foot = ×1.0).
-            unit.TransitSecondsRemaining = regions[unit.RegionIndex].CrossingTimeSeconds / GroundMobility.SpeedMultForUnit(body, unit);
+            // speedMultOverride > 0 forces a SHARED pace (a formation moves as one, timed by its slowest member — 5a).
+            double speed = speedMultOverride > 0 ? speedMultOverride : GroundMobility.SpeedMultForUnit(body, unit);
+            unit.TransitSecondsRemaining = regions[unit.RegionIndex].CrossingTimeSeconds / speed;
             return true;
         }
 
@@ -513,7 +515,7 @@ namespace Pulsar4X.GroundCombat
         /// fresh hex order in the new region (each region's patch has its own local origin — border-stitching is a
         /// documented follow-on).
         /// </summary>
-        public static bool OrderMoveToHex(Entity body, GroundUnit unit, int destQ, int destR)
+        public static bool OrderMoveToHex(Entity body, GroundUnit unit, int destQ, int destR, double speedMultOverride = 0)
         {
             if (unit == null || body == null) return false;
             if (unit.MovingToRegion >= 0) return false;   // can't hex-march while crossing a region border (coarse hop wins)
@@ -528,9 +530,11 @@ namespace Pulsar4X.GroundCombat
             if (path.Count == 0) return false;   // already there / unreachable / dest off-patch
 
             // Store deep copies (don't alias the region's live hex objects), and capture the region's per-hex base time.
+            // speedMultOverride > 0 → the block's shared (slowest-member) pace, so a formation stays together (5a).
+            double speed = speedMultOverride > 0 ? speedMultOverride : GroundMobility.SpeedMultForUnit(body, unit);
             unit.HexPath = new List<Pulsar4X.Galaxy.GroundHex>(path.Count);
             foreach (var h in path) unit.HexPath.Add(new Pulsar4X.Galaxy.GroundHex(h));
-            unit.HexStepBaseSeconds = HexPathfinder.PerHexBaseSeconds(region) / GroundMobility.SpeedMultForUnit(body, unit);
+            unit.HexStepBaseSeconds = HexPathfinder.PerHexBaseSeconds(region) / speed;
             unit.HexTransitSecondsRemaining = GroundMobility.StepSecondsFor(body, unit, unit.HexStepBaseSeconds, unit.HexPath[0].Terrain);
             return true;
         }
@@ -590,13 +594,15 @@ namespace Pulsar4X.GroundCombat
             int rallyRegion = LeaderRegion(forces, formation);
             if (rallyRegion < 0) return 0;
 
+            // Cohesive march (5a): the whole block moves at its SLOWEST member's pace, so it arrives together.
+            double blockSpeed = GroundFormationTools.FormationSpeedMult(body, forces, formation);
             int moved = 0;
             foreach (var u in forces.Units.ToArray())
             {
                 if (u.FormationId != formation.FormationId) continue;
                 if (u.RegionIndex != rallyRegion || u.MovingToRegion >= 0) continue;
                 if (u.HexPath != null && u.HexPath.Count > 0) continue;   // already hex-marching
-                if (OrderMoveToHex(body, u, destQ, destR)) moved++;
+                if (OrderMoveToHex(body, u, destQ, destR, blockSpeed)) moved++;
             }
             return moved;
         }
@@ -717,12 +723,14 @@ namespace Pulsar4X.GroundCombat
             int rallyRegion = LeaderRegion(forces, formation);
             if (rallyRegion < 0) return 0;
 
+            // Cohesive march (5a): the whole block crosses at its SLOWEST member's pace, so it arrives together.
+            double blockSpeed = GroundFormationTools.FormationSpeedMult(body, forces, formation);
             int moved = 0;
             foreach (var u in forces.Units.ToArray())
             {
                 if (u.FormationId != formation.FormationId) continue;
                 if (u.RegionIndex != rallyRegion || u.MovingToRegion >= 0) continue;
-                if (OrderMove(body, u, toRegion)) moved++;
+                if (OrderMove(body, u, toRegion, blockSpeed)) moved++;
             }
             return moved;
         }
@@ -819,6 +827,60 @@ namespace Pulsar4X.GroundCombat
             foreach (var f in forces.Formations)
                 if (f.FactionOwnerID == factionId) list.Add(f);
             return list;
+        }
+
+        // ── AGGREGATION (the battalion↔fleet-parity reads, slice 5a — the developer's "a joined force moves at the
+        //    pace of its slowest unit but can see/strike as far as its longest, and hits with the sum"; the ground twin
+        //    of Combat.FleetCombat's WarpSpeedFloor / SensorReach / summed Firepower). v1 aggregates a formation's
+        //    DIRECT members (its own units); rolling up the whole sub-formation TREE is a documented follow-up. ──
+
+        /// <summary>The formation's march speed = the MIN speed multiplier over its living members — it moves as ONE,
+        /// bound by its SLOWEST unit (`FleetCombat.WarpSpeedFloor` twin). 1.0 (Foot) for an empty formation. Used by the
+        /// cohesive-march wiring in <see cref="GroundForces.OrderFormationMove"/>.</summary>
+        public static double FormationSpeedMult(Entity body, GroundForcesDB forces, GroundFormation formation)
+        {
+            double min = double.PositiveInfinity;
+            foreach (var u in MembersOf(forces, formation))
+            {
+                if (u.Health <= 0) continue;
+                double s = GroundMobility.SpeedMultForUnit(body, u);
+                if (s < min) min = s;
+            }
+            return double.IsInfinity(min) ? 1.0 : min;
+        }
+
+        /// <summary>The formation's REACH in hexes = the MAX strike range over its living members — it can hit (and, as
+        /// range is the v1 vision proxy, "see") as far as its LONGEST-ranged unit (`FleetCombat.SensorReach` twin).
+        /// 0 for an empty formation.</summary>
+        public static int FormationReachHexes(GroundForcesDB forces, GroundFormation formation)
+        {
+            int max = 0;
+            foreach (var u in MembersOf(forces, formation))
+                if (u.Health > 0 && u.Range > max) max = u.Range;
+            return max;
+        }
+
+        /// <summary>The formation's total firepower = Σ living-member Attack (the "hits with the sum" — a fleet's summed
+        /// Firepower twin).</summary>
+        public static double FormationStrength(GroundForcesDB forces, GroundFormation formation)
+        {
+            double sum = 0;
+            foreach (var u in MembersOf(forces, formation))
+                if (u.Health > 0) sum += u.Attack;
+            return sum;
+        }
+
+        /// <summary>The formation's total current / max health (Σ over members) — the battalion's staying power at a
+        /// glance (dead members contribute 0 current but still count toward max until removed).</summary>
+        public static (double current, double max) FormationHealth(GroundForcesDB forces, GroundFormation formation)
+        {
+            double cur = 0, mx = 0;
+            foreach (var u in MembersOf(forces, formation))
+            {
+                if (u.Health > 0) cur += u.Health;
+                mx += u.MaxHealth;
+            }
+            return (cur, mx);
         }
 
         // ── SUB-FORMATION TREE (System ③, the sub-fleet nesting) ──────────────────────────────────────────────────

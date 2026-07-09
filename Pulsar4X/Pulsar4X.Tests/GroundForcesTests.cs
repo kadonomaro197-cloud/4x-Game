@@ -1280,6 +1280,37 @@ namespace Pulsar4X.Tests
                 "ENERGY bleeds through a shield where KINETIC is soaked — the nature matchup, from the kernel");
         }
 
+        [Test]
+        [Description("5a battalion/formation AGGREGATION (the fleet-parity reads, developer's call): a formation moves at its SLOWEST member's pace, strikes/sees as far as its LONGEST-ranged member, and hits with the SUM of member attack — the ground twin of a fleet's WarpSpeedFloor / SensorReach / summed Firepower. Plus the cohesive march: OrderFormationMove times every member on the shared (slowest) pace, so the block arrives together instead of the fast units outrunning the slow.")]
+        public void FormationAggregation_SlowestSpeed_LongestReach_SummedStrength_AndCohesiveMarch()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+
+            var shortR = GroundForces.RaiseUnit(body, MakeDesign("sr", "Rifles", GroundUnitType.Infantry, range: 1), s.Faction.Id, 0);
+            var longR = GroundForces.RaiseUnit(body, MakeDesign("lr", "Artillery", GroundUnitType.Infantry, range: 3), s.Faction.Id, 0);
+            var f = GroundForces.CreateFormation(body, s.Faction.Id, "Battalion");
+            GroundForces.AssignUnit(f, shortR);
+            GroundForces.AssignUnit(f, longR);
+            GroundForces.SetLeader(f, shortR);
+            var forces = body.GetDataBlob<GroundForcesDB>();
+
+            Assert.That(GroundFormationTools.FormationReachHexes(forces, f), Is.EqualTo(3), "reach = the LONGEST-ranged member (sees/strikes as far as its longest)");
+            Assert.That(GroundFormationTools.FormationStrength(forces, f), Is.EqualTo(200), "strength = Σ member attack (hits with the sum)");
+            Assert.That(GroundFormationTools.FormationSpeedMult(body, forces, f), Is.EqualTo(1.0), "speed = the SLOWEST member (Foot ×1.0 here)");
+            var (cur, max) = GroundFormationTools.FormationHealth(forces, f);
+            Assert.That(cur, Is.EqualTo(2000)); Assert.That(max, Is.EqualTo(2000));
+
+            // Cohesive march: order the whole formation to an adjacent region; every member is timed on the SAME pace.
+            int adj = regionsDB.Regions[0].Neighbors.FirstOrDefault();
+            int moved = GroundForces.OrderFormationMove(body, f, adj);
+            Assert.That(moved, Is.EqualTo(2), "both members march as a block");
+            Assert.That(shortR.TransitSecondsRemaining, Is.EqualTo(longR.TransitSecondsRemaining).Within(1e-6),
+                "the block moves as ONE — every member on the shared slowest pace, so they arrive together");
+        }
+
         // ───────────────────────── O1 — formation order QUEUE (sequential waypoints) ─────────────────────────
 
         [Test]

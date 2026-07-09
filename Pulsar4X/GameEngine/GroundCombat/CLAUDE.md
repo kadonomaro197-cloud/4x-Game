@@ -67,7 +67,8 @@ A **`GroundFormation`** is a named grouping of units that move and fight as one 
 | `FleetDB.FlagShipID` | `GroundFormation.LeaderUnitId` (references a `GroundUnit.UnitId` — a new stable id, the ground echo of an entity id) |
 | `FleetFactory.Create` / `FleetOrder.AssignShip` / `UnassignShip` / `SetFlagShip` / `Disband` | `GroundForces.CreateFormation` / `AssignUnit` / `UnassignUnit` / `SetLeader` / `DisbandFormation` |
 | fleet move order (moves as one) | `GroundForces.OrderFormationMove` (marches every member with the leader, one hop) |
-| `FleetTools` (read helpers for the map) | `GroundFormationTools` (`MembersOf` / `MemberCount` / `Leader` / `FormationsFor`) |
+| `FleetTools` (read helpers for the map) | `GroundFormationTools` (`MembersOf` / `MemberCount` / `Leader` / `FormationsFor`; **+ 5a AGGREGATION**: `FormationSpeedMult` = MIN speed / `FormationReachHexes` = MAX range / `FormationStrength` = Σ attack / `FormationHealth` — the `FleetCombat.WarpSpeedFloor`/`SensorReach`/summed-Firepower twins) |
+| fleet moves as one (min speed) | `GroundForces.OrderFormationMove`/`OrderFormationMoveToHex` now march the block on the **shared SLOWEST pace** (`OrderMove`/`OrderMoveToHex` gained a `speedMultOverride`), so it arrives together (5a cohesive march) |
 | `FleetDoctrineDB` + `CombatDoctrineBlueprint` catalog (`FleetDoctrine.TrySetDoctrine`) | `GroundFormation` stance fields + `GroundStanceBlueprint` catalog (`GroundFormationDoctrine.TrySetStance`) |
 
 **Leader loss = reassign, no penalty** (the locked decision — exactly what a fleet does): `GroundForcesProcessor.MaintainFormations` (runs after casualties are removed each tick) passes leadership to a surviving member, or -1 if the formation was wiped. Gauge: `GroundForcesTests.Formation_MirrorsFleet_CreateAssignMoveAndLeaderReassign`.
