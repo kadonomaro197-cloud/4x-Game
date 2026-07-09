@@ -38,8 +38,12 @@
 | 27 | Logistical | **Transfer** | 🔒 **LOCKED §8.2** |
 | 28 | Civic | **Habitation** | 🔒 **LOCKED §9.1** |
 | 29 | Civic | **Development** | 🔒 **LOCKED §9.2** |
-| 30 | Command | **Command** (colony/fleet scale dial) | 🟡 **proposed §10.1** (awaiting lock) |
-| 31–37 | Chassis (Personnel · Vehicle · Hull · Structure · Mega) | (all doors) | ⚫ pending |
+| 30 | Command | **Command** (colony/fleet scale dial) | 🔒 **LOCKED §10.1** |
+| 31 | Chassis | **Personnel** | 🟡 **proposed §11.1** (awaiting lock) |
+| 32 | Chassis | **Vehicle** | 🟡 **proposed §11.2** (awaiting lock) |
+| 33 | Chassis | **Hull** (ship) | 🟡 **proposed §11.3** (awaiting lock) |
+| 34 | Chassis | **Structure** (station) | 🟡 **proposed §11.4** (awaiting lock) |
+| 35 | Chassis | **Mega** | 🟡 **proposed §11.5** (awaiting lock) |
 
 ---
 
@@ -2273,7 +2277,7 @@ Command is the **"play at your own altitude"** layer — the single shape that l
 
 **The yardstick — the delegation/span-of-control system** (`AdminSpaceProcessor` + the seat/assign orders + the governance design), not the combat resolver. Command is a single door; its dials are the facets of one delegation decision.
 
-### 10.1 Command ▸ COMMAND  🟡 *proposed*
+### 10.1 Command ▸ COMMAND  🔒 *locked*
 *The command node — a colony HQ or a ship's bridge — and the officer you seat in it. One shape governs a colony OR commands a fleet, at whatever scope you dial. You choose the **scope** (how high up the ladder this node sits), whether to **seat an officer** and delegate, how much to **fund/trust** them, and their standing **stance** — so you can run an empire at the altitude you want, hand-flying what matters and delegating the rest.*
 
 **The core decision — HAND-FLY or DELEGATE, and at what SCALE.** Every command node answers one question: *do you run this yourself, or does an officer?* Seat a good, well-funded officer with a sensible standing stance and the colony/fleet runs itself (freeing your attention); leave the seat empty and you're hand-flying it. The scope dial (Ship → Empire) sets *what* the node runs — a bridge steers a task unit, a sector HQ oversees whole systems.
@@ -2331,5 +2335,5 @@ Command is the **"play at your own altitude"** layer — the single shape that l
 
 ---
 
-## §10 Command — status (proposed, awaiting lock)
-Command 🟡 (single door). **The "play at your own altitude" delegation layer — the least-wired category so far, and honestly so.** The **seat substrate is Modelled and the right shape**: one `AdminSpaceAtb` binds BOTH the colony `admin-complex` (governor, Colony+ scope) and the ship `ship-command` bridge (admiral, Ship/TaskUnit scope) — "one shape, two altitudes" — and `AssignAdministratorOrder` genuinely seats a `CommanderDB` officer supplied by the academies. **But every consequence is stub or net-new:** span-of-control **isn't enforced** (the `ConsoleSpace → seat-count` math is dead; the only live effect of admin capacity is the colony hex-map radius), a seated officer **gives no bonus** (`CommanderDB.Experience` is written-never-read; combat reads `FleetDoctrineDB`, not a commander), the **funding/delegate record is built-but-DEAD and duplicated** (`AdministratorDB` has zero consumers — research really runs on the identical twin `ResearcherDB`; the governance doc points at the corpse), the **grave rung is unbuilt** (`OnComponentUninstallation` throws), and the whole **delegation decision loop** (standing stance per post, funding-vs-attention charging money, Governor/Minister/Admiral auto-runners, seat-nesting) is designed-only. Build-list: (1) **wire competence** — a seated officer's skill actually modifies the colony/fleet outcome (overlaps the Enhancers unit-caliber "person modifies outcome" wire — build once, lights up both); (2) **consolidate the delegate record** onto ONE live `FundingLevel`/`BonusCategories` post (kill the dead `AdministratorDB`, unify with `ResearcherDB`) + fix the governance doc; (3) **enforce span-of-control** (make capacity gate how many sub-units a node runs; walk the AdminLevel ladder as a real hierarchy); (4) the **delegation decision loop** (stance/standing-orders, funding-vs-attention, auto-runners — the net-new heart); (5) the **grave rung** (a decapitation strike collapses delegation).
+## ✅ §10 Command — COMPLETE (1/1 door locked)
+Command 🔒 (single door). **The "play at your own altitude" delegation layer — the least-wired category so far, and honestly so.** The **seat substrate is Modelled and the right shape**: one `AdminSpaceAtb` binds BOTH the colony `admin-complex` (governor, Colony+ scope) and the ship `ship-command` bridge (admiral, Ship/TaskUnit scope) — "one shape, two altitudes" — and `AssignAdministratorOrder` genuinely seats a `CommanderDB` officer supplied by the academies. **But every consequence is stub or net-new:** span-of-control **isn't enforced** (the `ConsoleSpace → seat-count` math is dead; the only live effect of admin capacity is the colony hex-map radius), a seated officer **gives no bonus** (`CommanderDB.Experience` is written-never-read; combat reads `FleetDoctrineDB`, not a commander), the **funding/delegate record is built-but-DEAD and duplicated** (`AdministratorDB` has zero consumers — research really runs on the identical twin `ResearcherDB`; the governance doc points at the corpse), the **grave rung is unbuilt** (`OnComponentUninstallation` throws), and the whole **delegation decision loop** (standing stance per post, funding-vs-attention charging money, Governor/Minister/Admiral auto-runners, seat-nesting) is designed-only. Build-list: (1) **wire competence** — a seated officer's skill actually modifies the colony/fleet outcome (overlaps the Enhancers unit-caliber "person modifies outcome" wire — build once, lights up both); (2) **consolidate the delegate record** onto ONE live `FundingLevel`/`BonusCategories` post (kill the dead `AdministratorDB`, unify with `ResearcherDB`) + fix the governance doc; (3) **enforce span-of-control** (make capacity gate how many sub-units a node runs; walk the AdminLevel ladder as a real hierarchy); (4) the **delegation decision loop** (stance/standing-orders, funding-vs-attention, auto-runners — the net-new heart); (5) the **grave rung** (a decapitation strike collapses delegation).
