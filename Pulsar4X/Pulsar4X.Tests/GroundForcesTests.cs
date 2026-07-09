@@ -1203,6 +1203,52 @@ namespace Pulsar4X.Tests
                 "the long-range unit survives: it whittled the rusher before it could close to trade evenly");
         }
 
+        [Test]
+        [Description("4b GROUND COMBAT INTERRUPT — the ground mirror of the space combat-pause: the first tick a NEW planetary battle forms, the processor calls RequestCombatHalt so the clock stops and the player is notified (the client's CombatInterruptPending banner, shared with space). Gated by a flag (default off, so headless advances deterministically); the WasInBattle latch means an ONGOING fight doesn't re-halt every tick.")]
+        public void GroundCombatInterrupt_HaltsTheClockOnANewBattle_NotEveryTick()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            PaveRegionHexes(body, regionsDB, 0);
+            regionsDB.Regions[0].OwnerFactionID = -1;
+
+            // Two hostile units co-located (distance 0 → in range) → they fight, so a battle forms.
+            var a = GroundForces.RaiseUnit(body, MakeDesign("a", "A", GroundUnitType.Infantry, range: 1), s.Faction.Id, 0);
+            a.HexQ = 0; a.HexR = 0;
+            var b = GroundForces.RaiseUnit(body, MakeDesign("b", "B", GroundUnitType.Infantry, range: 1), InvaderFaction, 0);
+            b.HexQ = 0; b.HexR = 0;
+
+            var tp = s.Game.TimePulse;
+            var forces = body.GetDataBlob<GroundForcesDB>();
+            Assert.That(GroundForcesProcessor.InterruptTimeOnNewBattle, Is.False, "the ground interrupt flag defaults OFF");
+
+            // Flag OFF → the clock is never halted by a ground battle.
+            tp.CombatInterruptPending = false;
+            forces.WasInBattle = false;
+            new GroundForcesProcessor().ProcessEntity(body, 3600);
+            Assert.That(tp.CombatInterruptPending, Is.False, "flag off → a planetary battle does NOT halt the clock");
+
+            try
+            {
+                GroundForcesProcessor.InterruptTimeOnNewBattle = true;
+
+                // A NEW battle (fresh transition) halts the clock.
+                forces.WasInBattle = false;
+                tp.CombatInterruptPending = false;
+                new GroundForcesProcessor().ProcessEntity(body, 3600);
+                Assert.That(tp.CombatInterruptPending, Is.True, "a NEW planetary battle halts the clock (the player is notified)");
+
+                // The SAME ongoing fight the next tick does NOT re-halt (the WasInBattle latch).
+                tp.CombatInterruptPending = false;
+                new GroundForcesProcessor().ProcessEntity(body, 3600);
+                Assert.That(tp.CombatInterruptPending, Is.False, "an ongoing fight does not re-halt every tick");
+            }
+            finally { GroundForcesProcessor.InterruptTimeOnNewBattle = false; }
+        }
+
         // ───────────────────────── O1 — formation order QUEUE (sequential waypoints) ─────────────────────────
 
         [Test]

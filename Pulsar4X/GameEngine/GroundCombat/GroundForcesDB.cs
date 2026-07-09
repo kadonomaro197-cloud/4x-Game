@@ -315,6 +315,12 @@ namespace Pulsar4X.GroundCombat
         /// <summary>Next stable <see cref="GroundFormation.FormationId"/> to hand out.</summary>
         [JsonProperty] public int NextFormationId { get; internal set; } = 1;
 
+        /// <summary>RUNTIME-ONLY latch (not serialized, not cloned): was any region on this body in an active fight on
+        /// the previous processor tick? The ground combat-interrupt (4b) uses it so the clock halts ONCE when a NEW
+        /// planetary battle forms (the not-fighting → fighting transition), not every tick of an ongoing fight — the
+        /// ground echo of the space per-fleet "in combat" flag.</summary>
+        [JsonIgnore] internal bool WasInBattle;
+
         public GroundForcesDB() { }
         public GroundForcesDB(GroundForcesDB other)
         {

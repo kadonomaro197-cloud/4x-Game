@@ -34,6 +34,14 @@ namespace Pulsar4X.GroundCombat
         /// space <c>SalvoDamageScale</c>). 1.0 = full; lower stretches a battle over more ticks. Tune live.</summary>
         public const double SalvoScale = 1.0;
 
+        /// <summary>Ground COMBAT INTERRUPT flag (4b) — the ground mirror of
+        /// <c>Combat.CombatEngagement.InterruptTimeOnNewEngagement</c>. When true, the first tick a NEW planetary
+        /// battle forms on a body, the processor calls <c>MasterTimePulse.RequestCombatHalt()</c> so the clock stops
+        /// and the player is notified (the client already surfaces <c>CombatInterruptPending</c> as an on-screen
+        /// banner — space and ground share it). Default FALSE so headless tests advance deterministically; the client
+        /// turns it on at startup next to the space combat flags.</summary>
+        public static bool InterruptTimeOnNewBattle = false;
+
         // FORTIFICATION (5h) is now DESIGN-DRIVEN — a building fortifies its region (and projects to adjacent friendly
         // regions) only if its design carries a GroundDefenseAtb (a Bunker, not a solar panel). The math + the
         // colony→component resolver live in GroundFortification; ResolveRegionCombat applies it to the defender.
@@ -179,6 +187,7 @@ namespace Pulsar4X.GroundCombat
             var fortResolve = GroundFortification.BuildResolver(body);
 
             // 2) COMBAT (5c) + 3) REGION CAPTURE (5d), per region.
+            bool anyFightThisTick = false;
             foreach (var kv in byRegion)
             {
                 var units = kv.Value;
@@ -189,7 +198,7 @@ namespace Pulsar4X.GroundCombat
                 {
                     Region region = (regionsDB != null && kv.Key >= 0 && kv.Key < regionsDB.Regions.Count)
                         ? regionsDB.Regions[kv.Key] : null;
-                    ResolveRegionCombat(forces, units, region, allRegions, fortResolve);
+                    if (ResolveRegionCombat(forces, units, region, allRegions, fortResolve)) anyFightThisTick = true;
                 }
 
                 // Whoever holds the only live units here now owns the region.
@@ -208,6 +217,15 @@ namespace Pulsar4X.GroundCombat
                     }
                 }
             }
+
+            // GROUND COMBAT INTERRUPT (4b): the first tick a NEW planetary battle forms (not-fighting → fighting),
+            // halt the clock so the player is notified and can watch/steer — the ground mirror of the space
+            // combat-pause (CombatEngagement.EnsureInCombat → RequestCombatHalt). The WasInBattle latch means an
+            // ONGOING fight doesn't re-halt every tick; it clears when the fighting stops, so a later fresh battle
+            // pauses again. Gated by the flag (client-on) so headless tests advance deterministically. Defensive.
+            if (anyFightThisTick && !forces.WasInBattle && InterruptTimeOnNewBattle)
+                body.Manager?.Game?.TimePulse?.RequestCombatHalt();
+            forces.WasInBattle = anyFightThisTick;
 
             // Remove destroyed units.
             forces.Units.RemoveAll(u => u.Health <= 0);
@@ -232,7 +250,9 @@ namespace Pulsar4X.GroundCombat
         /// fight is identical to the pre-hex region resolver</b> — the migration adds range without changing a
         /// same-hex battle. (Terrain here is still the region's dominant feature; reading terrain from the DEFENDER's
         /// own hex is the H3b follow-on.) Reads <see cref="GroundTerrain"/> — the ground twin of SpaceHazardTools.</summary>
-        private static void ResolveRegionCombat(GroundForcesDB forces, List<GroundUnit> units, Region region,
+        /// <summary>Returns TRUE if a real exchange happened (any damage was dealt to a target this salvo) — the signal
+        /// the ground combat-interrupt (4b) reads to detect a battle.</summary>
+        private static bool ResolveRegionCombat(GroundForcesDB forces, List<GroundUnit> units, Region region,
             List<Region> allRegions, System.Func<int, GroundDefenseAtb> fortResolve)
         {
             var terrain = GroundTerrain.Classify(region);
@@ -315,6 +335,8 @@ namespace Pulsar4X.GroundCombat
                 if (dtm <= 0) dtm = 1.0;
                 t.Health -= Math.Min(t.Health, kv.Value * dtm);
             }
+
+            return incoming.Count > 0;   // a real exchange happened this salvo (the combat-interrupt signal, 4b)
         }
 
         /// <summary>Hex distance between two units on their region's patch (0 = same hex). Reused for the range gate.</summary>

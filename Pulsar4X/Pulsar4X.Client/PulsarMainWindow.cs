@@ -81,6 +81,11 @@ namespace Pulsar4X.Client
             // on for the game. The auto-pause is surfaced by the banner + SessionLog line in Render/PostFrameUpdate.
             Pulsar4X.Combat.CombatEngagement.InterruptTimeOnNewEngagement = true;
 
+            // The GROUND twin (4b): stop the clock the instant a NEW planetary battle begins, so an invasion/ground
+            // fight doesn't resolve invisibly on fast-forward — the same auto-pause + CombatInterruptPending banner
+            // as space, now for the surface war. Off by default in the engine (deterministic tests); on for the game.
+            Pulsar4X.GroundCombat.GroundForcesProcessor.InterruptTimeOnNewBattle = true;
+
             // Narrate the warp lifecycle ([WARP] departure → arrival) so a ship's journey is legible in the log —
             // and a warp that departs but never arrives stands out right next to a ⚠ TELEPORT flag (the open
             // warp-detach bug). Off by default in the engine (tests stay quiet); on for the game.
