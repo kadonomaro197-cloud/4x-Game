@@ -1,6 +1,8 @@
 # The Universal Component Designer — Categories, Doors & Dials
 
-**As of:** 2026-07-08 · branch `claude/sol-playtest-earth-map-8r59j6` · **status: DESIGN-LOCKED (categories), stress-tested, holes catalogued.**
+**As of:** 2026-07-09 · branch `claude/sol-playtest-earth-map-8r59j6` · **status: DESIGN-LOCKED — all 11 categories / 37 doors locked, stress-tested, holes catalogued + dispositioned, and WIRING-READY.**
+
+> **⚙ WIRING-READY (2026-07-09).** This doc is the **map** (the 11 categories, the boundary, the stress test, the holes). The **wiring reference for each category is its self-contained ⚙ Wiring Dossier** in `COMPONENT-DESIGNER-DIALS.md` (`⚙ 1`…`⚙ 11`) — dials → engine-wire (file:line) → resolver insertion → dead stubs → §0g stamp, all verified against the live engine. **To wire a category, read its dossier; read this doc for the boundary rules and the hole it owns.** Together, these two docs are the only reference needed to wire — every external source (the resolver anatomy, the five merged strategic docs) has been transferred, translated, and folded into the dossiers.
 
 > The decision doc for collapsing Pulsar's **67 hand-authored component templates** into **11 parametric designer categories**. Supersedes the "author a new template per thing" model and the "reconcile the two parallel (space/ground) systems" plan (`WEAPON-UNIFICATION-DESIGN.md`, deleted). The current-state evidence this replaces is `docs/DESIGNER-AUDIT/`. The governing principle is `docs/UNIVERSAL-ASSEMBLY-DESIGN.md`.
 
@@ -97,6 +99,21 @@ Ranked by how often they recurred across franchises and how load-bearing they ar
 | **H11** | **Scale extremes** — planet-sized (Death Star, Cube) to nanite (Replicator block) | Mega + sub-Personnel ends | validate the **Chassis scale dial + tech/scale caps** span ~10 orders of magnitude cleanly. | LOW |
 | **H12** | **Exotic power source** — effectively unlimited / no-fuel | Asgard, advanced tech | likely just a **Power ▸ Generation source dial** (very high output, no fuel). Validates Power. | LOW |
 
+### Hole disposition (2026-07-09) — where each hole now lives, per the ⚙ Wiring Dossiers
+Every hole now has a named home + status in a category dossier (`COMPONENT-DESIGNER-DIALS.md`):
+- **H1** teleport → Logistical ▸ Transfer teleport-mode *(open; home named — dossier ⚙ 8)*.
+- **H2** adaptive/self-repair → Defense adaptation dial + Enhancers self-repair regen *(both blocked on the parked per-component degraded-condition model — ⚙ 5 / ⚙ 6)*.
+- **H3** self-replication/mobile-fab → Industrial: mobile-fabrication = a cheap universal-mount *(home Industrial ⚙ 7)*; self-replication deferred.
+- **H4** innate/pilot "magic" → **owned** as the gear-vs-being boundary (Enhancers ⚙ 6 is the buildable bridge; the innate part is People).
+- **H5** modular/config/separable chassis → Chassis *(open — ⚙ 11)*.
+- **H6** carrier/nested → Logistical *(resolved for ground units; one verify item: nested-**chassis** launch reuses the tow re-parent — ⚙ 8)*.
+- **H7** hybrid/cross-category weapon → Weapons *(a component carrying two doors — ⚙ 1)*.
+- **H8** network/relay → **the two new-door candidates fill it**: the C3 Relay (Command §10.2, ⚙ 10) and Route Works / jump-gate (⚙ 2 / exploration) — the same physical shape.
+- **H9** conversion/assimilation → Weapons ▸ Exotic `Selectivity = convert` via the §0h projector tag, graded against the legitimacy resolver *(⚙ 1)*.
+- **H10** crewless/hive → Enhancers ▸ Systems automation + a Command shared-span variant *(⚙ 6 / ⚙ 10)*.
+- **H11** scale extremes → Chassis ▸ Mega *(⚙ 11)*.
+- **H12** exotic power → Power ▸ Generation source dial *(low; its one net-new need is the containment/meltdown mechanic, which the reactor grave-rung fix feeds — ⚙ 4)*.
+
 ### The two holes that matter most
 - **H1 (teleportation)** is the most *recurring* — every franchise has instant matter transport, and it's neither Warp (moves the whole chassis) nor normal Transfer (local, rate-limited). It wants a **Transfer ▸ teleport mode**, and it's cousin to **H8 (gate networks)** — both are "instant point-to-point," one for matter, one for the whole ship.
 - **H4 (innate powers)** is the most *conceptual* — it draws the designer's edge. The designer builds **gear**; the **People system** provides the **being**. Getting this line right is what keeps "the Force" from becoming a fake component. It's the same boundary Enhancers walks: buildable augments on the component side, innate traits on the People side.
@@ -108,9 +125,9 @@ Cloaking → **EW** door (new, earns it). The Goa'uld symbiote → **Enhancers �
 
 ## 6. Next steps
 
-This doc locks the **categories**. Before any code:
-1. **Resolve the top holes** (H1 teleport-transfer, H4 the People boundary, H2 adaptive defense) into concrete dials/mechanics — they change the door specs.
-2. **Sequence the build** off `DESIGNER-AUDIT/00-EXECUTIVE-SUMMARY.md` — but note the fix approach is now **"collapse to these families + delete the parallels,"** not the audit's older "unify the 9 pairs" framing.
-3. Weapons is the pilot category (most-designed, already mid-way): build the 5-door Weapons designer first, prove the parametric + universal-mount + supply-gate loop end-to-end, then replicate the pattern across the other ten.
+This doc locks the **categories**; the design is complete and **wiring-ready** (each category's ⚙ Wiring Dossier is the reference). The path to code:
+1. ~~**Resolve the top holes**~~ — DONE: every hole is dispositioned above and homed in a dossier.
+2. **Land the shared prerequisites first** (they recur across dossiers, cheap, and unblock many doors): the **resolver merge** (`RESOLVER-MERGE-DESIGN.md` — so each dial's term is built once, bucketed, for ships AND soldiers); the **§0b mass-budget cap ported to ships+stations** (⚙ 11 — makes "the numbers force the build" real at all scales); the **durable-seat + `LeaderLost` + `OnComponentUninstallation`** fixes (⚙ 10 — unblocks all of Command); the **broken refining feed** (⚙ 7 — unblocks the materials economy); and the **`BonusCategory` combat entry + the copyable rung-4 wire** (⚙ 6 — lights commander competence AND unit-caliber elites at once).
+3. Weapons is the pilot category (most-designed): build the 5-door Weapons designer first, prove the parametric + universal-mount + supply-gate loop end-to-end against dossier ⚙ 1, then replicate the pattern across the other ten — each already carries its own wiring dossier.
 
 **The bar:** a franchise fan should be able to sit down at **Weapons ▸ Energy** and build a phaser, a lazpistol, and a Death-Star beam from the same sliders — and have each mount on any chassis that can supply it.

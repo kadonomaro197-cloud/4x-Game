@@ -4,6 +4,8 @@
 
 **The governing rule:** *a dial is only real if it moves a number the simulation reads.* No cosmetic knobs. Every dial bottoms out in an emergent stat a resolver consumes, and every benefit shows a cost (the `CONVENTIONS §16` transparency rule).
 
+> **⚙ WIRING-READY (2026-07-09).** Every category now carries a self-contained **⚙ Wiring Dossier** at the end of its section (`⚙ 1`…`⚙ 11`). **To wire a category, that dossier is the only reference you need** — it consolidates, verified against the live engine (file:line): the complete dial → derived-stat → engine-wire table (with the essence-extension dials folded in as first-class rows), the resolver/system insertion points (from `AUTO-RESOLVER-ANATOMY.md`, adapted), the prerequisite fixes & dead stubs, the design essence captured inline (so the five merged strategic docs aren't needed), the §0g Reachable/Mirrored/Observable stamp, the cross-category shared state, and the holes the category owns. The cross-cutting appendices (📎 Main-Merge Delta, 🧭 Essence Extensions) and `AUTO-RESOLVER-ANATOMY.md` remain the *origin/rationale*; their per-category content is now **distributed into the dossiers**, which are the wiring authority.
+
 ## Progress
 
 | # | Category | Door | State |
@@ -749,7 +751,169 @@ The Exotic lesson: it's the door that **grows with the game** — every deferred
 ## ✅ Weapons category — COMPLETE (5/5 doors locked/proposed)
 Energy 🔒 · Ballistic 🔒 · Melee 🔒 · Guided 🔒 · Exotic 🟡. **The pattern for the other 32 doors is now set:** for each door — (1) dials with *every option justified* (anti-dominance), (2) the *physical forcing* (what number funnels the build — power/ammo/recoil/reach/economy/tech), (3) the *modellability audit* (§0d — Modelled / Wire / Defer), (4) a *preset table* proving the franchise span. The four concrete doors are grounded in real physics + the existing combat resolver; the fifth (Exotic) is the open extensibility slot that grows with the effect bus.
 
-*(Sensors, Power, Defense, Enhancers, Industrial, Logistical, Civic, Command, Chassis — pending, one lock at a time.)*
+*(All 11 categories are now locked; each carries its own ⚙ Wiring Dossier below.)*
+
+---
+
+## ⚙ 1 — WEAPONS · WIRING DOSSIER (self-contained)
+*Everything needed to wire this category — no other doc required.*
+
+The Weapons category has **five doors** — Energy · Ballistic · Melee · Guided · Exotic. All four conventional doors deal **damage** through one shared salvo resolver; Exotic is the **extensibility slot** that delivers an *effect from the effect bus* (disable/drain/capture/convert/bio/belief) usually *instead of* HP damage. The core finding: a weapon dial is authentic **only if it writes the resolver's input surface** — the 7-field `WeaponProfile` + a few per-ship values (§0i). Most weapon dials already do; the rest need a **named new `WeaponProfile` field + one resolver term** (a short, ordered backlog, Penetration first) or a **deferred subsystem**.
+
+---
+
+### Pillar tags (§0h) — each door → (pillar · skeleton-role)
+
+| Door | pillar · skeleton-role | Graded against which resolver (§0i) |
+|------|------------------------|--------------------------------------|
+| **Energy** | Military · **Projection** | combat salvo resolver (`CombatEngagement`/`CombatKernel`) |
+| **Ballistic** | Military · **Projection** | combat salvo resolver (+ ammo economy) |
+| **Melee** | Military · **Projection** | combat salvo resolver (undodgeable path) / ground `GroundDamageMatrix` |
+| **Guided** | Military · **Projection** | combat salvo resolver (+ ordnance/industry economy) |
+| **Exotic — pure-damage effects** (annihilation) | Military · **Projection** | combat salvo resolver (`Nature=Exotic`, shield soak 0.0) |
+| **Exotic — bioweapon/plague effect** | **Espionage** · **Projection** | population/legitimacy resolver (`OnColonyDamage` + morale/`Legitimacy`), NOT combat |
+| **Exotic — SWAY belief-pressure effect** | **Influence** · **Projection** | legitimacy/rebellion resolver (`ComputeLegitimacy` → `RebellionDB`), NOT combat |
+
+The ⛓ **counter** for every Projection door (§0h co-required slot) lives in the **Defense** category, not Weapons — Energy/Ballistic/Melee/Guided are countered by armor/shields/PD; the Exotic bio/belief projectors are countered by Hardening (sensor/bio hardening → Cultural Insulation) and counter-intel/censorship (EW). Anti-dominance law: you cannot ship a projector without naming the insulation that beats it.
+
+---
+
+### Complete dial → derived-stat → engine-wire table (VERIFIED)
+
+Grade: ✅ resolver reads it today · ◐ small wire to an existing adjacent system · ⏳ deferred (needs a prerequisite subsystem). Resolver-insertion legend: **✅ field** = writes an existing `WeaponProfile`/per-ship field · **➕** = needs a named new field + one resolver term · **⚙** = deferred mechanic.
+
+| Door | Dial | Derived stat | Grade | Engine wire (file:line) | Resolver insertion |
+|------|------|--------------|-------|--------------------------|---------------------|
+| Shared | Output (J/shot) × Rate | DamagePerSecond (J/s) + Saturation (rate) | ✅ | `ShipCombatValueDB.cs:295` sums `w.DamagePerSecond`→Firepower; beam dps `:184` | ✅ `DamagePerSecond` + `Saturation` |
+| Shared | Tracking / accuracy | Tracking 0..1 | ✅ | `WeaponProfile.cs:87`; read `CombatKernel.cs:147` HitFraction | ✅ `Tracking` |
+| Shared | Range / standoff | Range_m (m; 0=unbounded) | ✅ | `WeaponProfile.cs:99`; gate `CombatEngagement.cs:574` BuildFireMix | ✅ `Range_m` (+ range term) |
+| Shared | Mount / traverse arc | which targets bear | ⏳ | — (aggregate resolver is non-positional) | ⚙ positional (or drop as flavour) |
+| Shared | Firing modes / effect-bus (stun→capture) | non-lethal effect | ⏳ | — | ⚙ effect bus + capture primitive |
+| **Energy** | Delivery: Beam/Bolt/Scatter | Velocity + Delivery + Saturation | ✅ | beam profile `ShipCombatValueDB.cs:184` (`Delivery.Beam`); classify `WeaponClassifier.cs:33,41` | ✅ `Velocity`/`Delivery` |
+| Energy | Nature: thermal/ion/plasma/graviton | Nature → shield soak | ✅ | `WeaponProfile.cs:75`; soak `CombatKernel.cs:135-139`; ion=Exotic bypass, disruptor `ShipCombatValueDB.cs:238` | ✅ `Nature` |
+| Energy | Focus: lance ↔ wide cone | wide→Saturation; lance→Penetration | ◐ (wide ✅ / lance ➕) | wide = saturation ✅; lance armour-pen has **no field** | ➕ **Penetration** |
+| Energy | Penetration ↔ Splash | armour-crack vs anti-swarm | ➕ | `CombatKernel.ArmourSoak(armour, sourceDamage)` `:224` has **NO per-weapon penetration arg** (verified — grep found no `Penetration` in Combat/ or Weapons/) | ➕ **Penetration** (armour-pen term) |
+| Energy | Linked fire / per-shot alpha | PerShotEnergy | ➕ | `BuildFireMix` `CombatEngagement.cs:1005` aggregates dps and **loses per-shot size** — a beam and a repeater of equal dps are indistinguishable to armour | ➕ **PerShotEnergy** |
+| Energy | Charge damage profile (hi-alpha/lo-rate) | high dps / low saturation | ✅ | represented natively by dps×saturation | ✅ (dials) |
+| Energy | Charge telegraph window | per-shot timing | ⏳ | — (salvo resolver isn't per-shot-timed) | ⚙ per-shot timing |
+| Energy | Overcharge / burnout | self-damage on fire | ⏳ | damage system removes components (`DamageProcessor`) but no self-damage rule | ⚙ self-damage rule |
+| Energy | Frequency modulation | vs adaptive shields | ⏳ | no adaptive-shield mechanic (H2b) | ⚙ adaptive shields |
+| Energy | Cooling / heat → sustained rate | effective dps under heat | ◐ | resolver reads rate; needs a heat term | ➕ heat/rate term |
+| Energy | Thermal bloom / signature | firing-heat → detection | ◐ | EMCON already reads `ShotsFiredThisTick`→activity (`EmconActivityProcessor`) | — detection-side (correct) |
+| Energy | Efficiency (dmg/watt) | power draw → mass | ✅ | build-side: power→generator mass, funnels chassis (§0b) | — build-side (correct) |
+| Energy | Medium (vacuum/atmo/water) | output/range by medium | ⏳ | space combat doesn't tag a medium | ⚙ environment modifier |
+| Energy | Point-defense capability | intercept incoming | ◐ | flak anti-missile role + `MissileImpactProcessor` exist; needs PD-targeting hook | ⚙ missiles-as-targets |
+| **Ballistic** | Projectile: slug/HE/sabot/flak | Nature(kinetic)+pen/splash+flak sat | ✅ | flak profile `ShipCombatValueDB.cs:221` (`Delivery.Cloud`, saturation=rof×pellets); railgun slug `:204` | ✅ (splash→Saturation; **AP/sabot→Penetration** ➕) |
+| Ballistic | Muzzle velocity | Velocity → dodgeability | ✅ | railgun `ShipCombatValueDB.cs:204` finite `MuzzleVelocity_mps` → `Delivery.Slug` (dodgeable) | ✅ `Velocity` |
+| Ballistic | Rate / caliber | firepower + saturation | ✅ | dps=energy×rof, saturation=rof `:204` | ✅ |
+| Ballistic | **Ammo mass / runs-dry** | magazine depletion | ✅ (ground) / ➕ (space) | **built ground-side**: `GroundAmmo.cs:19` CarriesAmmo, `:23` IsDry, `MaxAmmo_kg`; space stepped resolve does **not** drain a pool | ➕ **AmmoPool** in `StepEngagementGroup` |
+| Ballistic | Fuzing: proximity/airburst | saturation-floors-dodge | ✅ | the flak model | ✅ `Saturation` |
+| Ballistic | Recoil → accuracy | eff. Tracking −= recoil÷mass | ➕ | resolver reads Tracking; no recoil÷chassis-mass term | ➕ recoil→Tracking term |
+| Ballistic | Multi-ammo switch (AP/HE/flak) | swap active profile | ◐ | resolver reads one `WeaponProfile` at a time | ⚙ profile-swap |
+| Ballistic | Recoilless (energy bleed) | range/pen reduction | ◐ | a range/pen term | ➕ small term |
+| Ballistic | Indirect / arcing + spotter | over-cover fire | ⏳ | ground has terrain+hexes (partial); space has no LOS block | ⚙ LOS/terrain + spotter |
+| Ballistic | Power (hyper-velocity railgun) | dual-supply cascade | ✅ | supply model rates railgun as ammo+power (build-side) | — build-side (correct) |
+| **Melee** | Melee = undodgeable contact | Matchup ×1 vs evasion | ✅ | **built**: `GroundDamageMatrix.cs:63` Matchup (dodge beats aimed fire only, not melee); space = Velocity≈∞-equiv/`Delivery` | ✅ (ground matrix) |
+| Melee | Damage · strike speed | firepower / rate | ✅ | firepower/saturation | ✅ |
+| Melee | Reach (0/1) + must-close | range/closing gate | ✅ | closing model + `Range_m≈0`; ground H3 range | ✅ `Range_m` |
+| Melee | Crushing-ignores-armour · piercing | armour-beating nature | ➕ | rides `ArmourSoak` `CombatKernel.cs:224` — same missing Penetration field | ➕ **Penetration** |
+| Melee | Damage-scales-with-strength | chassis strength/mass + Enhancer | ◐ | read chassis strength/mass + Enhancer bonus into the melee damage term | ➕ strength term |
+| Melee | Parry (melee) · Grapple→capture | melee-defense mod / capture | ◐ | melee-vs-melee mod; capture reuses boarding primitive (H9) | ⚙ effect bus + capture |
+| Melee | Lunge / charge closer | movement burst | ◐ | movement system exists | ◐ movement-side |
+| Melee | Parry RANGED (lightsaber deflect) | deflect incoming fire | ⏳ | the saber is gear; the deflect is a **People/pilot trait** (H4/H7) | ⚙ effect bus + People trait |
+| **Guided** | Warhead output · seeker tracking · range | dps / Tracking / Range_m | ✅ (stub→real) | missile profile `ShipCombatValueDB.cs:269` **v1 stub** (`MissileLauncherFirepowerStub 100k`, `:38`); `OrdnanceDesign`/`MissileImpactProcessor` real | ✅ fields (wire real values) |
+| Guided | Warhead types (HE/shaped/MIRV/special) | Nature + payload | ✅ | `OrdnancePayloadAtb` / `ordnance.json`; missile Nature=Explosive `:269` | ✅ `Nature` |
+| Guided | Projectile = mini-assembly | engine/seeker/warhead | ✅ | `OrdnanceDesign` assembles the three missile-part templates | ✅ |
+| Guided | Salvo size vs PD | Saturation vs `SaturationReference 50` | ✅ | flak saturation model (`FlakWeaponTests`); ref `CombatEngagement.cs:56` | ✅ `Saturation` (proxy) |
+| Guided | Ammo / runs-dry mid-battle | magazine drain | ➕ | ground `GroundAmmo` exists; space resolve doesn't drain | ➕ **AmmoPool** |
+| Guided | Sprint vs cruise (time-to-target) | interception window | ◐ | closing/interception timing — missile speed vs PD window | ◐ closing-timing wire |
+| Guided | PD intercepts a missile | missiles as targets | ⏳ | missiles are a firepower stub, not resolvable projectiles; flak saturation is a proxy | ⚙ missiles-as-targets + PD-capable flag |
+| Guided | Recoverable drone → fighter | launch/recover | ◐ | carrier bay, units-as-entities (H6) | ◐ carrier-bay wire |
+| Guided | Seeker jamming / spoofing | vs EW | ⏳ | needs the EW door built | ⚙ EW door |
+| **Exotic** | Effect (from the effect bus) | disable/drain/grab/convert/… | ⏳ | most need a status/debuff, resource-transfer, or grab mechanic | ⚙ effect bus |
+| Exotic | Annihilation (pure damage) | Nature=Exotic, bypass armour+shield | ✅ | shield soak 0.0 `CombatKernel.cs:68`; anchors to joule scale | ✅ `Nature=Exotic` (+ armour-bypass) |
+| Exotic | Selectivity (species-specific / anti-type) | matchup skew | ◐ | the effect-bus Selectivity dial; H9 convert = `Selectivity=convert` | ➕ Selectivity/effect-bus |
+| Exotic | Warp-disruption (interdictor) | jump-inhibit | ◐ | Pulsar has `JumpPoints` — hook a jump-inhibit field | ◐ jump-inhibit wire |
+| Exotic | Conversion / subversion | owner-flip (H9) | ◐ | reuse the **capture** primitive (owner-flip) | ⚙ capture + effect bus |
+| Exotic | Escalation / taboo (WMD) | relation hit → casus belli | ◐ | `DiplomacyDB` casus belli exists — hook "used a WMD → relation crater" | ◐ diplomacy wire |
+| **Exotic — bioweapon warhead** (E1d) | **Selectivity** (species-specific strain) | matchup vs a pop's insulation | ◐ | gated by net-new Biology & Genetics tech; effect lands `DamageProcessor.OnColonyDamage:289` + morale/legitimacy | ➕ effect-bus (population resolver, NOT combat §0f) |
+| Exotic — bioweapon | **incubation** (delay to onset) | latency | ◐ | candidate new sub-dial; rides `OnColonyDamage` casualty pass | ⚙ status/timer on the population resolver |
+| Exotic — bioweapon | **detectability** (deniability) | traced/caught → blowback | ◐ | blowback via `DiplomacyDB` (relation crater, casus belli); delivery rides Guided §1.4 or infiltration bay | ◐ diplomacy + espionage-detection wire |
+| **Exotic — SWAY belief-effect** (E1c) | belief-pressure (flavor × zone × magnitude×radius) | `ExternalBeliefPressure` | ⏳ | **new field** on `LegitimacyInputs` (`LegitimacyDB.cs:119` — verified NOT present today, beside `GovernorCompetence:128`) → subtracted in `ComputeLegitimacy:66` → toward `CollapseThreshold 20` (`:42`) → `RebellionDB` (`LegitimacyProcessor.cs:73`) = the kill | ➕ `ExternalBeliefPressure` on the **legitimacy resolver** (never touches combat §0f) |
+
+---
+
+### Resolver insertion points (from the anatomy, adapted to Weapons)
+
+The salvo resolver reads a **fixed input surface**; a Weapons dial is authentic only if it writes it.
+
+**✅ Fields the resolver writes/reads today (the fight-deciding core — fully wired):**
+- Per-weapon `WeaponProfile` (7 fields, `WeaponProfile.cs`): **DamagePerSecond** `:81` · **Velocity** `:84` · **Tracking** `:87` · **Saturation** `:91` · **Range_m** `:99` · **Nature** `:75` · **Delivery** `:78` (+ computed **`Class`** `:72` via `WeaponClassifier.Classify` `:29`).
+- Per-ship: **Firepower** (`ShipCombatValueDB.cs:295`, Σ dps) · **Toughness** (`:106`, components `ComponentHitPoints_J 100k :81` + armour `:291`) · **Evasion** (`CalculateEvasion :314`) · **RoleWeight** · **ShieldCapacity_J/Regen** (`:304`, Σ `ShieldAtb`).
+- Resolver math (single source of truth in `CombatKernel.cs`, ship path delegates): **HitFraction** `:147` · **LandedFraction** `:180` · **SoakFractionOf** `:188` (nature→shield: Kinetic 1.0 `:62` / Energy 0.5 `:64` / Explosive 0.75 `:66` / Exotic 0.0 `:68`) · **ResolveShield** · **ArmourSoak** `:224` (flat, `ArmourSoakPerPoint 1.5 :75`). `BuildFireMix` (`CombatEngagement.cs:1005`) buckets fire by `(Class, Nature, Delivery)` `:1013` so the matchup survives the O(buckets) aggregation. Pace dial `SalvoDamageScale 0.1` `:94`.
+
+**➕ New `WeaponProfile` fields / resolver terms needed (the concrete backlog — ordered by payoff):**
+1. **`Penetration` field + `ArmourSoak` penetration term.** `CombatKernel.ArmourSoak(armour, sourceDamage)` `:224` currently soaks a flat amount with **no per-weapon penetration** (verified: no `Penetration` symbol anywhere in `Combat/` or `Weapons/`). Add `WeaponProfile.Penetration`; `ArmourSoak` reduces its flat soak by it. **Unlocks: lance/sabot/AP/piercing (Energy, Ballistic, Melee) as real armour-crackers, Splash as the anti-swarm opposite. Highest payoff — the armour half of the matchup.**
+2. **`PerShotEnergy` field.** `BuildFireMix` `:1005` aggregates dps and loses per-shot size, so "one big alpha punches armour, a swarm of chips bounces" can't be expressed by a beam vs a repeater of equal dps. Add it so `ArmourSoak` sees alpha vs chip. **Unlocks: Linked-fire, charge-alpha.**
+3. **Mid-battle `AmmoPool` drain in `StepEngagementGroup`.** Ground has it (`GroundAmmo.MaxAmmo_kg`/`IsDry` `:19,:23`); the space stepped resolve never dries a magazine. **Unlocks: Ballistic/Guided depletion, resupply-as-pressure.**
+4. **Recoil → Tracking term.** Effective Tracking −= f(recoil ÷ chassis-mass). **Unlocks: Ballistic recoil.**
+5. **Heat → sustained-rate term.** Throttle effective dps under sustained fire. **Unlocks: Energy cooling, burst-vs-sustained.**
+6. **Missiles as resolvable targets + PD-capable flag.** Missiles are a firepower stub (`ShipCombatValueDB.cs:269`), not projectiles the salvo loop can shoot down. **Unlocks: real point-defense, the salvo-vs-PD duel.**
+7. **`Selectivity`/effect-bus tag** (Exotic) — carries the target-facet + effect, graded against the *right* resolver per its pillar tag (§0h). Fills **H9** as `Selectivity=convert`.
+
+**⚙ Deferred mechanics (each gates its dials):** adaptive shields (→ frequency modulation) · combat-environment/medium modifier · per-shot timing (→ charge telegraph) · self-damage rule (→ overcharge/instability) · profile-swap (→ multi-ammo) · positional/arc (→ mount traverse, or drop) · the **effect bus + capture primitive** (→ stun/convert/grab/EMP/drain/temporal, and Melee grapple-capture + lightsaber ranged-deflect).
+
+> **The resolver-MERGE caveat (from AUTO-RESOLVER-ANATOMY §6):** ships resolve **bucketed O(buckets)** through `CombatEngagement`/`CombatKernel`; soldiers resolve through a **parallel, un-bucketed O(units²)** `GroundForcesProcessor.ResolveRegionCombat` over `GroundUnit` fields. `CombatKernel` (slices 1–2, ship side wired) is the shared home; slice 3 routes the ground side through it. **Until the merge finishes, every ➕ term above must be built TWICE** (ship `WeaponProfile` + ground `GroundUnit`). Recommendation: land the merge before/as the first slice of the extensions so each term is built once.
+
+---
+
+### Prerequisite fixes & dead stubs (file:line)
+
+- **No `Penetration`/`PerShotEnergy`/`AmmoPool` on the space `WeaponProfile`** — verified absent (grep of `Combat/`+`Weapons/`). The ➕ backlog is genuinely un-built, not hidden.
+- **`ExternalBeliefPressure` not yet on `LegitimacyInputs`** (`LegitimacyDB.cs:119`) — the SWAY door's one required engine field; must be added beside `GovernorCompetence` (`:128`) and subtracted in `ComputeLegitimacy` (`:66`).
+- **Missile firepower is a stub** — `ShipCombatValueDB.cs:269`/`:38` (`MissileLauncherFirepowerStub 100_000`); Guided reads real geometry from `OrdnanceDesign` but its combat contribution is a flat placeholder until warhead energy is wired.
+- **Colony/garrison damage energy scale is placeholder** — `OnColonyDamage` 1e8 J/unit divisor and `ApplyGroundBombardment` `GroundBombardmentDamagePerStrength 0.01` (`DamageProcessor.cs:289,:349`) — the bioweapon and orbital-bombardment magnitudes calibrate against unfinalized warhead-energy data.
+- **`SpawnWreck` is a stub that just deletes the ship** (`DamageProcessor.cs:478`) — not a weapons blocker, but the salvage/recovery follow-on (out of the Weapons category) depends on finishing it.
+- **Dead-code guard:** the per-pixel damage sim (`DamageComplex`/`DamageVeryComplex`) is **parked** — combat casualties are strength-math (whole-ship removal), NOT `DamageProcessor.OnTakingDamage`. Do not route weapon dials through the pixel sim (Combat gotcha #1). The one exception is colony/station/garrison hits, which *do* route through `OnColonyDamage`/`OnStationDamage` — the seam the bioweapon Projection uses.
+
+---
+
+### Design essence captured inline (so the external docs are NOT needed)
+
+**Bioweapon — the deniable-warfare model (`ESPIONAGE-AND-INTELLIGENCE-DESIGN.md` §"Covert weapons", origin/main).** A bioweapon is a **designed component like any other** — cradle-to-grave in the weapon designer (research → design its lethality/contagiousness/incubation/species-specificity/detectability → build → deliver) — but its "combat" happens in the **population / legitimacy** systems, not the fleet auto-resolve (this is why its pillar tag is Espionage·Projection graded against the population resolver, not Military). Delivery has three routes, each a decision that stacks: **(a)** fly it in on a vessel where *cover* matters (a trade/science ship is plausible, a warship screams intent); **(b)** an agent plants it (the infiltration-bay mechanic); **(c)** the **proxy route** — fund a rival's rebels/coup/terror-cell and let *them* deploy it, keeping your name off it. The balancing force is the **grave/blowback rung**: detection is a WMD-scale provocation (relations crater with *everyone*, casus belli, coalitions form), and a contagious strain can **spread back** to your own or neutral worlds (MAD). Deniability is the whole game — *traced* ("someone spied") vs *caught* ("it's you") drives a per-rival suspicion meter — which is why **detectability** is a first-class design dial, not flavor. So "should I even build this" is the real decision; it's a strategic weapon of last resort, not spam.
+
+**SWAY / belief-pressure — the kill via `LegitimacyInputs` (`INFLUENCE-PILLAR-DESIGN.md`, origin/main).** Influence is a **fourth conquest vector — "war without a weapon"** — and its kill **reuses the built legitimacy/rebellion system** rather than adding a loop (§0i passes perfectly). A world's allegiance is a tug-of-war: the owner's **governance** (governor competence, morale, met demands) props legitimacy **up**; your influence campaign pushes it **down from the outside**. Mechanically this is one new attacker on the same battlefield: `LegitimacyInputs` already carries hook-slots like `GovernorCompetence` (`LegitimacyDB.cs:128`) that a source populates — SWAY adds **exactly one more input, `ExternalBeliefPressure`** (parallel, purely-external), subtracted in `ComputeLegitimacy` (`:66`); past `CollapseThreshold 20` (`:42`) the world secedes into `RebellionDB` (`LegitimacyProcessor.cs:73`) — and if you've been converting it, it secedes *to your faith/culture*. The SWAY emitter itself is the only buildable gear (flavor Religious/Cultural/Ideological × persistent-zone delivery × magnitude×radius; **zero effect vs a hive/machine** — the anti-dominance catch); the missionary/prophet/Influence-Minister who runs it are **Beings** (People system), not components — the gear-vs-being boundary. Its two counters are gear: **Broadcast Jamming** (EW, §3.4) and **Cultural Insulation** (Defense Hardening, §5.3). It **never touches the combat resolver** (§0f) — an Influence·Projection door is graded only against the legitimacy resolver.
+
+---
+
+### §0g stamp — the three acceptance criteria
+
+- **Reachable (cradle→grave).** mineral (mined) → material (refined) → **built at a colony** → **component** in the weapon designer (e.g. `deflector-array`/`disruptor-weapon`/`railgun-weapon` via the **six-point registration**: `*Atb` C# + `weapons.json` template + `componentDesigns.json` + `earth.json` StartingItems + ComponentDesigns + a ship design — gotcha #6/#10) → gated by **research** (tech unlocks the template; bioweapon Selectivity gated by a net-new Biology & Genetics tech) → **installed** on a hull/unit → the **in-play decision** (which weapon, which posture, open fire / hold / standoff-vs-brawl) → **damaged/destroyed** (a shot-off weapon drops that `WeaponProfile`; `ShipCombatValueDB` is v1 computed-once, recalc-on-damage is the parked degraded-condition hook). Every rung is real for the four conventional doors; Exotic effect-dials name their missing rung honestly.
+- **Mirrored (NPC runs it back through the identical order path).** A weapon is a **component on a shared door**, so an NPC mounting/firing it is the *same act* as the player's — the auto-trigger (`CombatEngagement.Tick`) reads only `FactionOwnerID`, and hostile fleets fire the exact same `WeaponProfile`/salvo math (`CombatSandbox.SpawnHostileFleet` spawns real rival factions that engage). The bioweapon/SWAY mirror is the same: the NPC populates `ExternalBeliefPressure`/plague-damage against *your* worlds through the same legitimacy/`OnColonyDamage` inputs (the always-on mirror — you must run counter-intel/insulation as a standing decision).
+- **Observable (a gauge both sides see).** The **Battle Report / per-salvo play-by-play** (`BattleLog.cs`, `CombatEngagement.NarrateToLog`) names the weapon **classes** in the incoming fire mix, the ship-count-weighted **landed fraction** (hit-vs-dodge), **damage dealt**, and **ships destroyed by name** — e.g. *"took Railgun + Beam fire at 8.5 km — 42% on target (58% dodged), 0.82 GJ dealt; destroyed 'Cargo Courier'; 3 left."* The Fleet Combat tab shows Firepower-at-range + Shields. Bioweapon/SWAY effects surface on the target world's legitimacy/morale/rebellion readouts. Honest limit: v1 is whole-ship (no per-component hull %), the parked degraded-condition tier model is the follow-on.
+
+---
+
+### Cross-category shared state (Prime Directive)
+
+- **Feeds IN → Weapons:** `ComponentInstancesDB.AllComponents` (+ `HealthPercent`) and the weapon `*Atb`s (`GenericBeamWeaponAtb`, `RailgunWeaponAtb`, `FlakWeaponAtb`, `DisruptorWeaponAtb`, `MissileLauncherAtb`, `OrdnancePayloadAtb`) → read by `ShipCombatValueDB.Calculate` (`:161`). **Power** (Generation/Storage) supplies firing draw + capacitor alpha; **Industrial/Logistical** supply ammo/ordnance (`GroundAmmo`, `OrdnanceDesign : IConstructableDesign`); **research/Tech** gates every template; **Chassis** supplies the mass budget that funnels big weapons to big frames (§0b).
+- **Weapons feeds OUT →:** the **Combat** salvo resolver (`CombatEngagement`/`CombatKernel`/`AutoResolve`) via `Firepower`/`Weapons[]`; the **Damage** system for colony/station/garrison hits (`OnColonyDamage:289`, `ApplyGroundBombardment:349`, `OnStationDamage`); the **legitimacy/rebellion** resolver (SWAY `ExternalBeliefPressure`, bioweapon casualties+morale); **Diplomacy** (`DiplomacyDB` — WMD/taboo → relation crater, casus belli, and the `AreHostile` suppression that decides who even fights).
+- **Shares STATE with:** **Defense** — the ⛓ counter half of every projector: `ShieldAtb`/`ShieldCapacity_J` (shield pool, nature-soaked via `SoakFractionOf`) and armour (`ArmourSoak`, folded into Toughness) are read *by the weapon salvo* — Weapons and Defense are two ends of one matchup and **must be balanced together**. **Sensors/EW** share the detection state that gates firing (fog-of-war → `RequireDetectionToEngage`; EW jams both weapon fire-control and SWAY belief-radius). **Propulsion** shares Evasion + closing state (who gets into weapon range).
+- **Weapons TRIGGERS:** ship destruction (the one combat piece with live side effects), the **combat-interrupt** clock halt at first contact, `FleetRetreatDB`/engagement-end, colony population casualties + atmospheric contamination + installation/garrison damage, and (SWAY/bio) legitimacy collapse → `RebellionDB` → secession.
+
+---
+
+### Holes this category owns / resolves
+
+| Hole | What it is | Status → home |
+|------|-----------|----------------|
+| **H7** | Hybrid / cross-category weapon — one item, two roles (staff weapon = Energy+Melee; lightsaber = weapon+defense) | **Owned by Weapons.** Fix = allow a component to carry **two doors** (a weapon spanning families) + weapon×defense cross-links (a blade that parries). Priority MEDIUM. The Melee **Parry** dial is the weapon-as-defense probe; ⏳ deferred to the effect-bus + a People/pilot trait (the saber is gear, the ranged-deflect is the *being*, H4). |
+| **H9** | Conversion / assimilation weapon — turn an enemy into you; mind-control | **Resolved via the Exotic Selectivity/effect-bus.** A `Selectivity = convert` projector (reuse the **capture** owner-flip primitive) graded against the **legitimacy resolver**, tagged Espionage/Influence·Projection — so H9 finally gets a home through the projector tag (§0h/E0a). ⚙ needs the effect bus + capture primitive. |
+| **H2b** | Adaptive shields (weapon-side dependency) | Weapons' **Frequency Modulation** dial ⏳ **defers on H2b** — with no adaptive defense there is nothing to modulate against; build adaptive shields (Defense) first. |
+| **H1 / H8** (adjacent) | Teleport-delivery / gate-network (Guided/Exotic delivery can ride these) | NOT owned by Weapons — H1 → Logistical ▸ Transfer teleport mode; H8 → the C3 Relay / Route Works doors. Weapons only *rides* them as delivery once built. |
+
+---
+*Verified against the C# source 2026-07-09; every file:line checked by grep/read, not trusted from prose.*
 
 ---
 
@@ -1091,6 +1255,125 @@ Reaction 🔒 · Traction 🔒 · Fluid 🔒 · Warp 🔒 · Exotic 🔒. **The 
 
 ---
 
+## ⚙ 2 — PROPULSION · WIRING DOSSIER (self-contained)
+*Everything needed to wire this category — no other doc required.*
+
+Propulsion is *how a thing moves*, and in this engine movement is a **combat input**, not decoration. It lands on a **second resolver surface** adjacent to the weapon/damage one: **Evasion** (per-ship, feeds the dodge math) + the **closing-fight state** (`Separation_m` / `ManeuverBudget`) + the **strategic transit** floors (warp/Δv) + the **ground hex-march** (speed). The headline finding, verified against the engine below: the five locked propulsion doors need **ZERO new resolver fields** except one — Exotic ▸ inertialess (an evasion-override term). The engine already runs Newtonian thrust, Tsiolkovsky Δv, the warp-bubble+jump system, and the ground-locomotion stack; nearly every dial writes a stat the resolver reads *today*. Propulsion is the cheapest category to wire so far.
+
+Five doors, all 🔒 locked: **Reaction** (Newtonian rocket), **Traction** (surface/ground), **Fluid** (air/water lift+buoyancy), **Warp** (FTL/jump), **Exotic** (reactionless/gravitic/teleport — the physics-breaker slot).
+
+---
+
+### Pillar tags (§0h — PROJECTOR⛓COUNTER, pillar + skeleton-role)
+
+Propulsion is **Military · Medium/Mobility** — it is not a projector (it fires nothing) and not a counter (it blocks nothing). Its skeleton-role is **Mobility/Medium**: it sets *reach and evasion*, the substrate every projector and counter is delivered across. In §0h terms, propulsion supplies the **Reach** and **positioning** on which a weapon's projection is graded — the fast hull dictates the range at which the weapon triangle resolves; the sluggish hull eats fire. So propulsion is graded against the **move/closing resolver** (the Newtonian/hex yardstick), NOT the joule combat resolver.
+
+- **Pillar:** Military (primary). Secondary consumers via §0f multi-consumer rule: Logistical (transit/reach for freighters & convoys), Exploration (survey reach, network-reshaping via Warp▸gate).
+- **Skeleton-role:** **Medium / Mobility** — never Projection, never Counter. (Contrast: Weapons = Projection, Defense = Counter.)
+- **Graded against:** the move/closing model (`CalculateEvasion`, `AdvanceClosing`, `DeltaVFloor`/`WarpSpeedFloor`, `GroundMobility`), which §0i (count-resolvers-not-doors) names as **one of the ~7 resolver-shaped loops** — the "move/closing model." All 5 propulsion doors are **DATA on that one loop**, not 5 new loops.
+
+---
+
+### Complete dial → derived-stat → engine-wire table (VERIFIED)
+
+Legend: **✅** field exists, dial writes it today · **➕** new term (one small resolver addition) · **⚙** deferred mechanic (needs a subsystem first). Every file:line checked against source.
+
+| Door | Dial | Derived stat | Grade | Engine wire (file:line) | Resolver insertion |
+|------|------|--------------|-------|--------------------------|--------------------|
+| **Reaction** | Thrust class | Acceleration → **Evasion** + who-dictates-range | ✅ | `NewtonThrustAbilityDB.ThrustInNewtons` (`Movement/NewtonMove/NewtonThrustAbilityDB.cs:10`) → `accel = thrust.ThrustInNewtons / mv.MassDry` → `CalculateEvasion` (`Combat/ShipCombatValueDB.cs:314,325`) | ✅ writes **Evasion** |
+| Reaction | Exhaust velocity / Isp | **Δv** (Tsiolkovsky) → kiting clock | ✅ | `ExhaustVelocity` (`NewtonThrustAbilityDB.cs:13`) → `DeltaV = OrbitMath.TsiolkovskyRocketEquation(...)` (`:35,:46`) → `FleetCombat.DeltaVFloor` (`Combat/FleetCombat.cs:60,65`) → seeds `ManeuverBudget` (`Combat/CombatEngagement.cs:449,524`) | ✅ writes **ManeuverBudget** |
+| Reaction | Fuel type / burn rate | Fuel economy / endurance | ✅ | `FuelBurnRate` (`NewtonThrustAbilityDB.cs:21`); `Thrust = Ve × FuelBurnRate`; refuel via `ShipFactory.FillFuelTanks` | — build/logistics-side (correct, not the salvo) |
+| Reaction | Drive mass (emergent) | **MassDry** → feeds back into Evasion | ✅ | `MassVolumeDB.MassDry` read by `CalculateEvasion` (`ShipCombatValueDB.cs:325`) — heavier drive drags its own accel/evasion | ✅ writes **Evasion** (feedback) |
+| **Traction** | Drive type / SpeedFactor | Ground march speed → H3 closing | ✅ | `GroundLocomotionAtb.SpeedFactor` → `GroundMobility.SpeedMultForUnit` (`GroundCombat/GroundMobility.cs:39,53`) → hex-march (`OrderMove`) | ✅ ground move surface |
+| Traction | Terrain handling / RoughHandling | Off-road speed retention | ✅ | `GroundLocomotionAtb.RoughHandling` → `GroundMobility.RoughHandlingForUnit` (`:71,80`) → `TerrainMult(HexPathfinder.HexMoveMult,...)` (`:105`) | ✅ hex path cost |
+| Traction | Amphibious / water-crossing | Passability (access) | ✅ | `GroundLocomotionAtb.Amphibious` + `HexPathfinder` water passability (ocean impassable → passable) | ✅ pathfinder gate |
+| Traction | **Terrain COMBAT bonus** | Matchup edge on preferred ground | ➕ | rides **H3 hex-terrain-in-combat** (movement-through-terrain wired; a *combat* term is the add) | ➕ terrain-combat term |
+| **Fluid** | Medium access / cross-water | Reach an isolated hex | ✅ (access) | rides `GroundLocomotionAtb.Amphibious` + `HexPathfinder` passability | ✅ (access half only) |
+| Fluid | Vacuum/medium constraint | "needs atmosphere/water" gate | ➕ | a medium tag "this drive needs medium X" gating where it works | ➕ medium tag |
+| Fluid | Lift type / cruise speed / capacity | Speed + carry-mass | ✅ (rides mobility) | speed + carry ride mobility + cargo stats; fluid framing is the wire | ✅ (shallow) |
+| Fluid | **Altitude / depth band** (combat payoff) | Air-superiority / sub-stealth / over-under fire | ⚙ | needs the **air/altitude/depth combat layer** (space tags no medium; ground has no air/sea band) | ⚙ medium/altitude layer |
+| Fluid | Air-vs-ground targeting (only AA hits a flyer) | Target-medium gate | ⚙ | same prerequisite — a target-medium gate in the resolver | ⚙ medium layer |
+| **Warp** | FTL method (continuous / jump / gate) | Strategic transit mode | ✅ | `WarpAbilityDB` (`Movement/WarpMove/WarpAbilityDB.cs:6`) + jump-point system (`JumpOrder`, `InterSystemJumpProcessor`) | ✅ strategic map |
+| Warp | MaxSpeed | **WarpSpeedFloor** (fleet moves as one) | ✅ | `WarpAbilityDB.MaxSpeed` (`WarpAbilityDB.cs:12`) → `FleetCombat.WarpSpeedFloor` (`FleetCombat.cs:44`, min over fleet) | ✅ writes transit floor |
+| Warp | Bubble power (create/sustain/collapse) | Stored-electricity gate | ✅ (movement-side) | `WarpAbilityDB.BubbleCreationCost` (`WarpAbilityDB.cs:18`), paid from stored energy (`ChargeReactors`) | ✅ (movement, not salvo) |
+| Warp | Drive mass (emergent) + fleet coupling | Speed drag + slowest-member | ✅ | `MassVolumeDB` → `WarpMath.MaxSpeedCalc(power,mass)`; `FleetCombat.WarpSpeedFloor`/`DeltaVFloor` min-over-fleet | ✅ aggregation |
+| Warp | **Gate-user / network node** (Stargate) | Which gate reaches which | ⚙ | needs **H8 network/addressing layer**; `JPFactory.CreateConnection` is a dead stub (`JumpPoints/JPFactory.cs:124-132`) | ⚙ H8 gate-network |
+| **Exotic** | Reactionless thrust | Infinite Δv, no propellant | ➕ (small) | a Reaction drive declaring `FuelBurnRate=0`; engine reads `ThrustInNewtons` directly (`NewtonThrustAbilityDB.cs:10`) | ➕ no-fuel flag (nearly free) |
+| Exotic | **Inertialess maneuver** | Evasion decoupled from mass | ➕ | **the ONE genuinely new field** — an evasion-override path bypassing `accel = Thrust÷MassDry` in `CalculateEvasion` (`ShipCombatValueDB.cs:325-328`) | ➕ **new Evasion term** |
+| Exotic | Gravitic / medium-independent | Works in any medium, no fuel | ⚙ | shares Fluid's air/depth medium layer | ⚙ medium layer |
+| Exotic | Teleport / rings (H1) | Instant point-to-point matter move | ⚙ | **Transfer ▸ teleport mode** (H1); cousin to Warp▸gate (H8) | ⚙ H1 teleport |
+
+---
+
+### Resolver insertion points (from anatomy §7, adapted)
+
+**The movement/evasion/closing surface — what a propulsion dial can touch (all live today):**
+- **Evasion** (0..0.95), per-ship `ShipCombatValueDB.Evasion` — read by the dodge math (`HitFraction`). Written by Reaction thrust via `accel = ThrustInNewtons ÷ MassDry` → `CalculateEvasion` (`ShipCombatValueDB.cs:314`). Constants: `AgilityReference_mps2 = 5.0` (`:92`, accel at which agility half-contributes), `EvasionCap = 0.95` (`:96`), `SizeReference_m3 = 1000` (`:88`). Formula: `Evasion = EvasionCap × sizeFactor × agilityFactor`, `sizeFactor = SizeReference/(SizeReference+Volume)`, `agilityFactor = accel/(AgilityReference+accel)` (`:320,326,328`).
+- **DeltaV** (m/s), per-ship `NewtonThrustAbilityDB.DeltaV` (`NewtonThrustAbilityDB.cs:35`, Tsiolkovsky at `:46`) → `FleetCombat.DeltaVFloor` (min over fleet, `FleetCombat.cs:60`) → seeds `FleetCombatStateDB.ManeuverBudget` at `CombatEngagement.cs:449,524`.
+- **ManeuverBudget** (the kiting clock) — `AdvanceClosing` (`CombatEngagement.cs:847`): only a fleet with budget controls the range; the controller spends `ManeuverBurnRate × dt` (`:382 = 5.0`, drain at `:870`); a dry kiter loses control (`:857-858`) and the enemy closes.
+- **Separation_m** (the gap) — `FleetCombatStateDB.Separation_m`, set at `CombatEngagement.cs:447-448`; read by `BuildFireMix` weapon-range gate + the `HitFraction` range term; advanced toward the controller's preferred range at `ClosingSpeedScale_mps × dt` (`:353 = 1e6`, `InitialSeparationDefault_m :360 = 1e6`).
+- **Controller (who dictates range)** — `FleetManeuver(ships)` (`CombatEngagement.cs:889`): highest maneuver = min evasion picks the closing direction (`AdvanceClosing :860`).
+- **WarpSpeedFloor** (m/s) — `FleetCombat.WarpSpeedFloor` (`FleetCombat.cs:44`, min over fleet) → strategic transit, fleet-moves-as-one.
+- **Ground SpeedMult** — `GroundMobility.SpeedMultForUnit` (`GroundMobility.cs:39`) → the hex-march.
+
+**The tiny extensions (3 items — vs weapons' six):**
+1. **Evasion-override term** (Exotic ▸ inertialess) — a `CalculateEvasion` path (`ShipCombatValueDB.cs:314`) where Evasion is set directly, decoupled from `accel = Thrust÷MassDry`. Small, self-contained. *This is the ONLY genuinely-new resolver field the whole category needs.* Unlocks: a capital that dodges like a fighter.
+2. **Reactionless no-fuel flag** (Exotic) — let a Reaction drive declare zero propellant (infinite Δv) at a big power/tech cost. Nearly free — engine already reads `ThrustInNewtons` directly.
+3. **Terrain-combat term** (Traction) — the H3 hex-terrain-in-combat follow-on; a drive's preferred terrain gives a matchup edge, not just a movement one.
+
+**The deferred mechanics (⚙ — each gates its dials, each a subsystem):**
+- **Air/altitude/depth combat layer** — Fluid's deep half (altitude bands, submarine stealth, air-only-hit-by-AA) + Exotic-gravitic. Space combat tags no medium; ground has surface hexes but no air/sea band. Same prerequisite the Weapons▸Energy "Medium performance" dial deferred on.
+- **H8 gate-network/addressing** — Warp ▸ gate / Stargate (which node reaches which). Same hole as the leadership C3 Relay door.
+- **H1 Transfer ▸ teleport mode** — Exotic teleport / transporter / rings.
+
+---
+
+### Prerequisite fixes & dead stubs (file:line)
+
+- **`JPFactory.CreateConnection` — a DEAD STUB** (`JumpPoints/JPFactory.cs:124-132`). The body is entirely commented out ("FIXME: commented out because it wasn't implemented"). This is the hook that would let survey/exploration *create* a jump route (Warp▸gate, network-reshaping) rather than only reveal one. The sibling `LinkJumpPoints` (`:134-141`) DOES work — it pairs two JPs by setting `DestinationId` both ways — so the reshaping gear calls `LinkJumpPoints` in-play once an anomaly resolves; `CreateConnection` is the stub that must first come alive. Named in the exploration essence and the E1b/E2 build order as the gate for Warp▸gate + Route Works (fills hole H8).
+- **`JPSurveyProcessor` 100 km hardcode** (`JumpPoints/JPSurveyProcessor.cs:47`): `if (distance < 100000) // FIXME: needs to be an attribute of the JPSurveyAbilityDB`. Survey range is a magic constant, not a designed dial — blocks a Sensors▸Survey / Warp-adjacent reach dial from being authentic until it reads a component attribute.
+- **No prerequisite fixes block the four ready cores** (Reaction / Traction / Warp / Fluid-access). Reaction's Δv→ManeuverBudget seam is confirmed wired (`FleetCombat.DeltaVFloor` → `CombatEngagement.cs:449,524`) and gauged (`ClosingTests` P2 kiting clock).
+
+---
+
+### Design essence captured inline (the network-reshaping / gate mechanic Warp▸gate must serve)
+
+Deep-space exploration can **change the map, not just reveal it** — the headline of the merged `EXPLORATION-CONTENT-DESIGN.md` (origin/main). A precursor **gate** = a permanent shortcut; a studied **anomaly** = a *hidden* jump point, a **wormhole** (risky, maybe one-way), or a route you can **stabilize** — so exploring becomes *building your own strategic geography*: the shortcut that flanks a rival, the back door into their core. This is exactly what Warp▸gate (the ⚙ H8 dial) and the Route-Works megaproject exist to serve, and it is where the dead `JPFactory.CreateConnection` stub (`:124`) "comes alive" — a scientist posting resolves a site, the gear calls the working `LinkJumpPoints` (`:135`) in-play, and a route persists with a stability 0–1 that is its collapse/grave rung (a destabilized wormhole, a lost gate). A gate is therefore **an addressable network node whose destruction severs a link (H8)**, not merely a drive — the same physical shape as the leadership C3/Relay node, which is why §E2 collapses both onto the single hole H8.
+
+---
+
+### §0g stamp — Reachable · Mirrored · Observable
+
+- **Reachable (cradle-to-grave, player-side):** ✅ Full chain lives. Fuel is the spine — mineral (mined) → propellant material (refined, e.g. `ntp`/deuterium) → stocked at a colony (`StartingItems`/`FillFuelTanks`) → burned by the drive → **runs dry** (empty tank = 0 thrust = dead in space → resupply). Drive is a **component** (`NewtonThrustAbilityDB`/`WarpAbilityDB`/`GroundLocomotionAtb`), designed/researched/built/installed; a destroyed drive is the grave rung (immobilized hull). No parachuted abstraction.
+- **Mirrored (NPC runs it too, identical order path):** ✅ Propulsion is pure infrastructure the NPC uses *for* itself — the closing/kiting resolver (`AdvanceClosing`, `FleetManeuver`) is symmetric: an NPC fleet with more Δv dictates range and kites the player exactly as the player kites it; NPC ground units run the same `GroundMobility` hex-march. No player-only code — a fast NPC hull forces the merge, a fast NPC kiter opens the range.
+- **Observable (the gauge, both sides):** ✅ Already gauged. `ShipEvasionTests` (thrust/mass → Evasion), `ClosingTests` (who-dictates-range + the P2 kiting clock), `FleetAggregationTests` (WarpSpeed/DeltaV floors), `GroundForcesTests` (hex-march). The readouts: **Evasion** (0..0.95), the **closing/Separation gap** with `ManeuverBudget` reserve (`CombatEngagement.cs:970-975,995-998` narrate "gap … reserve … IN RANGE/OUT"), Δv, warp-speed floor. INFORMATION-DELTA note: the engagement-range and Δv/ETA gauges are the exact numbers this door needs shown — the value exists (Failure-A, cheap wire), not missing.
+
+---
+
+### Cross-category shared state (Prime Directive)
+
+Propulsion does not stand alone — it writes to state that other categories read/co-own:
+
+- **⇄ Weapons / Defense (combat resolver):** Propulsion's **Evasion** feeds the weapons `HitFraction` dodge term, and **Separation_m** is the range gate `BuildFireMix` uses to drop out-of-range weapons. A fast hull's evasion is only meaningful against a weapon's tracking/saturation — the propulsion × weapon-triangle stack IS the fight. Shared blob: `ShipCombatValueDB` (holds both Evasion and Weapons), `FleetCombatStateDB` (Separation/ManeuverBudget).
+- **⇄ Chassis (§11) / Power (§4):** Drive mass consumes the §0b chassis mass-budget AND feeds back into `MassDry` → Evasion. Ion/plasma/hover/warp drives draw electricity — a supply gate on Power▸Generation/Storage (`ChargeReactors`, warp bubble paid from stored energy). An uncharged ship won't warp; a drained hover unit stops.
+- **⇄ Logistical (§8) / Industrial (§7):** Fuel is mined (§7 Extraction) → refined (§7 Fabrication) → stocked & moved (§8) → burned. A drive can burn a fuel the faction hasn't unlocked (the `ntp` gotcha) = no move.
+- **⇄ Sensors / EW (§3):** A hot high-thrust burn spikes the thermal signature (Detection/EW) — the propulsion twin of a weapon's firing-heat, onto the same EMCON activity term. (◐ noted for the EMCON pass, not a Reaction-specific build.)
+- **⇄ Exploration:** Warp▸gate + Route Works reshape the jump network (`JPFactory`), a second consumer of the survey/field-site loop.
+
+---
+
+### Holes owned / resolved (H8, H1, H11) → status + home
+
+| Hole | What it is | Status | Home |
+|------|-----------|--------|------|
+| **H8** | Network/relay infrastructure — addressable, instant, many-to-one (Stargate network, hyperlane gates) | ⚙ **DEFERRED, designed** | **Warp ▸ gate** dial (§2.4) + a Fabrication megaproject (Route Works). Needs the addressing layer + the dead `JPFactory.CreateConnection` (`:124`) revived. Converges with the leadership **C3/Relay** door (§E2) — same physical shape, same hole. |
+| **H1** | Matter teleportation — beam matter/crew point-to-point instantly (transporter, rings, Stargate-through-itself) | ⚙ **DEFERRED, designed** | **Exotic ▸ teleport** dial (§2.5 D) → a **Logistical ▸ Transfer teleport mode** (instant, ranged, capacity-limited). Cousin to H8 (both "instant point-to-point," one for matter, one for the whole ship). Most-recurring hole across franchises. |
+| **H11** | Scale extremes — planet-sized (Death Star) to nanite (Replicator) | **RESOLVED elsewhere** | NOT a propulsion hole — it validates the **Chassis scale dial + tech/scale caps** span ~10 orders of magnitude (§11). Propulsion inherits it: the same thrust/speed dials scale across the chassis range (a booster to an antimatter torch) without a new door. Nothing propulsion owns. |
+
+**Convergence (§E2):** the propulsion category surfaces exactly one net-new door-shaped hole — **H8 (Warp▸gate)** — and it lands on the *same* hole as the leadership C3/Relay. H1 rides on top of it (instant point-to-point). Everything else in the category is **dials on existing doors** (§0i: 5 doors = DATA on the one move/closing resolver, not 5 new loops). The two deferred mechanics for the build list: the **air/altitude/depth combat layer** (Fluid deep half + Exotic-gravitic) and the **H8 gate-network + H1 teleport** layers.
+
+---
+
 ## §3 — Sensors
 
 Sensors decide **what you know** — and knowledge drives half the game, not just the fight. Yes, in combat knowledge is a weapon (the resolver runs a fog layer: a fight only forms once someone *detects* the enemy, the side that sees first shoots first, and a blinded fleet takes fire without returning it — the `FirstStrike_SeerWipesBlindEnemy_Unscathed` gauge). But this is the category where the **multi-consumer rule (§0f)** bites hardest: the *same* sensor technology is a warship's targeting array, a **survey ship's science suite**, a **colony's deep-space observatory**, a **spaceport's traffic-control grid**, and an **explorer's tricorder**. Star Trek, Stargate, Mass Effect, and Stellaris are *exploration and science* franchises first — grading Sensors by combat alone would design half the category. So this category is graded against **all** its consumers.
@@ -1377,6 +1660,173 @@ Detection 🔒 · Survey 🔒 · Fire Control 🔒 · Electronic Warfare 🔒. *
 
 ---
 
+## ⚙ 3 — SENSORS · WIRING DOSSIER (self-contained)
+*Everything needed to wire this category — no other doc required.*
+
+Sensors is the **"what you know" category**, and knowledge is a cross-pillar currency: the same EM/attenuation engine that gates combat also feeds navigation, survey/science, first-contact, and (post-merge) the espionage **Information Ledger**. The category's north-star reading: **Detection is the most-built door (nearly all ✅), Survey is one of the richest (mis-measured as thin), Fire Control is the purest CONNECT door (built-but-dead knobs), EW is net-new but rides the live detection math.** Four doors, all 🔒 locked. The detection engine is genuinely live and already decides combat — this dossier is mostly *how the existing wires run*, plus the few net-new deltas (EW deltas, the Information Ledger, the Fire-Control connect).
+
+Verified against engine on 2026-07-09. Every file:line below was opened, not asserted.
+
+---
+
+### Pillar tags (§0h) — per door (note the multi-pillar Detection/EW)
+
+Two metadata fields per door: `pillar` (Military / Espionage / Diplomacy / Influence) and `skeleton-role` (Projection / Counter / Medium / Detection). Sensors is the category that most obviously **spans pillars** — the same physical gear is graded against *different resolvers* depending on what it's pointed at.
+
+| Door | pillar(s) | skeleton-role | Graded against (the resolver — §0d/§0h) |
+|------|-----------|---------------|------------------------------------------|
+| **3.1 Detection** | **Military·Detection AND Espionage·Detection** (multi-pillar) | **Detection** | Military: the combat fog gate (`FleetDetects`→`CanEngageTarget`). Espionage: the **Information Ledger** — a physical detection stamps a rival's Military facet at binary **Inferred** (ELINT flavor raises the band). Same contact, two consumers. |
+| **3.2 Survey** | **Exploration** (economy·expansion·colonization·research·diplomacy consumers) | **Detection** (discovery-of-world, not of-enemy) | NOT the combat resolver. Graded against the *exploration pillar's* consumers: geo→economy, grav→expansion, atmo/life→colonization/first-contact, anomaly/xeno→the field-site loop (research). |
+| **3.3 Fire Control** | **Military·Medium** (the director that *aims* a projector; civilian face = precision-pointing) | **Medium** (points the projector; grants no seat, holds no weapon of its own) | The combat resolver's `HitFraction` **tracking** term + the weapon-range gate. Civilian: aims mining lasers / tractors / docking / comms. |
+| **3.4 Electronic Warfare** | **Military·Counter AND Espionage·Counter** (+ **Influence·Counter** for broadcast-jamming) | **Counter** (the counter to Detection) / partly **Detection** (ELINT-adjacent) | Military/Espionage: acts on what `FleetDetects` returns (jam/cloak/decoy push the detection deltas the *other* way). Influence: broadcast-jamming points at a belief-radius (graded against the legitimacy resolver, not combat). |
+
+**Anti-dominance law (§0h):** every projector needs a named counter. Here **Detection IS the projector-to-be-countered, and EW IS the counter** — the two are each other's law. You cannot ship a stronger sensor (Detection) without EW being the insulation that beats it, and cloak/jam only matter because Detection gates first-strike.
+
+---
+
+### Complete dial → derived-stat → engine-wire table (VERIFIED)
+
+Grades: ✅ Modelled (resolver reads an equivalent stat today) · ◐ Wire (adjacent system exists, needs a small hook) · ⏳ Defer (nothing reads it yet — name the prerequisite).
+
+#### 3.0 Shared sensor dials (all four doors) + universal seven (§0a)
+Every sensor also carries the universal seven (Mass, Size/mount, Materials/cost, Durability/HTK, Crew, Tech level, Signature contribution). On top:
+
+| Door | Dial | Derived stat | Grade | Engine wire (file:line) | Resolver/system insertion |
+|------|------|--------------|-------|--------------------------|----------------------------|
+| Shared | Waveform band (what it detects) | tuned peak ± bandwidth | ✅ | `SensorReceiverAtb.RecevingWaveformCapabilty` — `SensorReceiverAtb.cs:13` (`EMWaveForm`, built in ctor `:75`) | band-overlap scored in `SensorTools.DetectonQuality` `SensorTools.cs:51` |
+| Shared | Sensitivity / reach | `DetectionRange_m` (reverse-solve) | ✅ | `SensorReceiverAtb.BestSensitivity_kW` `:19` (`WorstSensitivity_kW` `:25`) → `SensorTools.RangeForSignal` `SensorTools.cs:409` → `DetectionRange_m` `:425`; master knob `DetectionSensitivityScale = 1e6` `:365` | populates the per-faction contact track table (feeds the fog gate) |
+| Shared | Refresh rate | scan cadence (s) | ✅ | `SensorReceiverAtb.ScanTime` `:35` → reschedule `SensorScan.cs:132` (`AddEntityInterupt`) | `SensorScan` IInstanceProcessor `SensorScan.cs:12` |
+| Shared | Active ↔ passive posture | self-emission spike | ✅ | `SensorProfileDB.ActivityMultiplier` `SensorProfileDB.cs:91` (base `SignatureBaseMultiplier` `:102`); emitted signal scaled by it in `SensorTools.cs:308` | EMCON posture (below) |
+| Shared | Signature contribution (a sensor that pings emits) | adds to own emitted spectra | ✅ | `SensorEmitter/SensorSignatureAtb.cs` writes `SensorProfileDB.EmittedEMSpectra`; active ping raises `ActivityMultiplier` | loops back into the same detection math — you find them AND announce yourself |
+
+#### 3.1 DETECTION (Military·Detection + Espionage·Detection)
+| Dial | Derived stat | Grade | Engine wire (file:line) | Resolver/system insertion |
+|------|--------------|-------|--------------------------|----------------------------|
+| Sensitivity / reach | detection range | ✅ | `SensorReceiverAtb.BestSensitivity_kW:19` → `RangeForSignal SensorTools.cs:409` / `DetectionRange_m:425` | contact table → fog gate |
+| Waveform band | band-overlap detect | ✅ | `RecevingWaveformCapabilty:13` vs target `SensorProfileDB` spectra → `DetectonQuality SensorTools.cs:51` | — |
+| Active ↔ passive (EMCON) | self-detection range ↑ when active | ✅ | `SensorProfileDB.ActivityMultiplier:91`; EMCON `FleetEmcon.cs:23-25` (Full 1.0 / Cruise 0.5 / Silent 0.15), `PostureMultiplier:29`; heat `EmconActivityProcessor.cs:52 HeatFactor` / `:57 ComputeActivityMultiplier` / writes `:92` | `EmconActivityProcessor` recomputes each tick |
+| Refresh rate | track freshness | ✅ | `ScanTime:35` → `SensorScan.cs:132` | `SensorScan` |
+| **Resolution / contact detail** | contact class/IFF detail | ◐ **wire → RE-HOMED** | `SensorReceiverAtb.Resolution (MP) :30` stored, **not driving contact detail**. Coarse read (blip vs. big) now falls out of `SignalStrength_kW × cross-section` automatically (no dial). Fine read (class/IFF) **moves out of the sensor** into the espionage Information Ledger. See ELINT flavor below. | Ledger, not sensor |
+| **ELINT/SIGINT flavor** (essence-ext E1d) — Tactical / ELINT / Multi-role | Ledger-confidence band | ◐ **wire** | **Re-homes the SignalQuality-cut `Resolution` dial** (`SensorReceiverAtb.cs:30`): a Tactical contact stamps a rival's Military facet at binary **Inferred**; an ELINT take raises the band toward **Confirmed**. Rides the built detection→contact path `SensorScan.cs:120` → `FirstContact.OnDetection` `Factions/FirstContact.cs:40` | writes the **Information Ledger** (net-new — below) |
+| → the combat resolver | fog + first-strike | ✅ | contacts → `FleetDetects CombatEngagement.cs:1312` → `CanEngageTarget:1327` (gated by `RequireDetectionToEngage:318`, checked `:177/:283/:475/:505/:584`) | THE detection × weapons seam |
+| Sensors boost evasion (see the shot coming) | evasion term | ⏳ **defer** | flagged v2 hook in `ShipCombatValueDB` (Evasion currently leaves sensors/crew out) | needs the evasion term to read a sensor input first |
+| Grave rung (shot-off receiver blinds you) | detection → 0 | ✅ | `SensorTools.SetInstances SensorTools.cs:208` empties the ability cache on receiver loss → scan loop iterates nothing → you go blind | ReCalcProcessor after damage; the `FirstStrike` gauge exploits this |
+
+#### 3.2 SURVEY (Exploration pillar — combat is NOT its consumer)
+| Dial / mode | Derived stat | Grade | Engine wire (file:line) | Resolver/system insertion |
+|-------------|--------------|-------|--------------------------|----------------------------|
+| **Geological** | reveal minerals/regions | ✅ | `GeoSurveys/GeoSurveyAtb.cs` → `GeoSurveys/GeoSurveyProcessor.cs` | economy / mining |
+| **Gravitational** | reveal jump points | ✅ | `JumpPoints/GravSurveyAtb.cs` → `JumpPoints/JPSurveyProcessor.cs` | expansion / navigation |
+| Survey speed | points/tick vs pool | ✅ | `Speed` (points/tick) vs `PointsRequired` | — |
+| Survey range / reach | scan-from-distance | ◐ **wire** | the ~100 km grav gate is hardcoded — `JPSurveyProcessor.cs:47` (`if (distance < 100000) // FIXME: needs to be an attribute`) — expose as a dial | — |
+| Stellar / cartography | long-range system reveal | ◐ **wire** | galaxy is generated + a fog/reveal exists; extend to see a system's bodies before you visit | expansion |
+| Atmospheric / habitability | gate colonization | ◐ **wire** | `SystemBodyInfoDB` holds atmosphere/gravity/temperature + `CanStartHere` — expose as a survey RESULT | colonization |
+| Biosphere / life-signs | "is it inhabited?" | ◐ **wire** | colony/population data exists → expose feeding first-contact (`FirstContact.cs:40`; `DiplomacyFirstContactTests`) | diplomacy / first-contact |
+| Hazard / navigational | reveal/forecast hazards | ◐ **wire** | `Hazards/` exists (gas clouds, solar flares) | navigation / safety |
+| **Counter-interference** (essence-ext E1b) — how much hazard the scanner sees through | shrink the sensor-cut | ◐ **wire** | `Hazards/HazardResistanceAtb.cs:20` already exists (stacks/scales by health) + `SpaceHazardTools.ApplyResistance` `SpaceHazardTools.cs:~115`; let a Survey component carry resistance so the sensor-cut shrinks | navigation/exploration (treasure hides in hazards) |
+| Survey depth / resolution | detail per pass | ◐ **wire** | `Resolution` stored (like Detection's) | drive detail level of a reveal |
+| Data processing (facility) | raw scans → knowledge | ◐ **wire** | a survey-data facility (Structure chassis) | research/Civic |
+| Autonomy (probe) | one-shot deep scan | ◐ **wire** | survey component on a minimal chassis | — |
+| **Anomaly / mystery-box** | research + event chain | ⏳ **defer — NET-NEW, now DESIGNED** | one catalog entry on the field-site loop (`docs/EXPLORATION-CONTENT-DESIGN.md`); no anomaly system in engine yet | research / late-game-crisis seed |
+| **Xenoarchaeology** | tech windfall / unique blueprint | ⏳ **defer — NET-NEW, now DESIGNED** | "Ancient ruins" catalog entry on the same loop; **first build step = fix the `SystemBodyFactory.GenerateRuins` tautology bug (`SystemBodyFactory.cs:~1418`, always early-returns → ruins never generate)** | research |
+
+#### 3.3 FIRE CONTROL (Military·Medium — the purest CONNECT door: dials built, dead)
+| Dial | Derived stat | Grade | Engine wire (file:line) | Resolver/system insertion |
+|------|--------------|-------|--------------------------|----------------------------|
+| Tracking speed | beat evasion | ◐ **wire (DEAD KNOB)** | `BeamFireControlAtbDB.TrackingSpeed` **exists `:21`, VERIFIED unread** (0 usages in `Combat/` or `BeamWeapons/`) → wire into the `HitFraction` **Tracking** term | `HitFraction` in `Combat/CombatKernel.cs` / `CombatEngagement.cs` |
+| Fire-control range | open fire sooner | ◐ **wire (DEAD KNOB)** | `BeamFireControlAtbDB.Range` **exists `:15`, unread** → wire into the weapon-range engagement gate (director-gated reach) | the range ladder / `InRange` gate |
+| Fire allocation / multi-target | split fire across N | ◐ **wire** | `FinalFireOnly` **exists `:27`, unread** + a new targets-tracked dial → make N a director property (`StepEngagementGroup` already divides fire 1/N) | multi-party fire-split |
+| PD-only mode | intercept ordnance | ◐ **wire** | `FinalFireOnly:27` → the point-defense role | pairs with weapons-door PD wire + missiles-as-targets |
+
+*Honest state: the whole door is ◐ Wire — the component (`BeamFireControlAtbDB.cs:9`) and its three dials are built; the resolver reads the **weapon's** `BaseHitChance`/`MaxRange` instead. Building the door IS building the wire (Failure-A: the number exists, unwired).*
+
+#### 3.4 ELECTRONIC WARFARE (Military·Counter + Espionage·Counter + Influence·Counter)
+| Dial | Derived stat | Grade | Engine wire (file:line) | Resolver/system insertion |
+|------|--------------|-------|--------------------------|----------------------------|
+| **Jamming** (degrade enemy detection) | shrink enemy `DetectionRange_m` | ◐ **wire** | add a jammer term to the scan: shrink `DetectionRange_m SensorTools.cs:425` / raise the `SignalStrength_kW`-vs-sensitivity threshold. **Works on the strength substrate** (`SignalStrength_kW SensorReturnValues.cs:7`) — NOT the design-cut `SignalQuality` | acts on `FleetDetects` → the fog gate |
+| **Cloak / signature damping** | push own signature down | ◐ **wire (nearly free)** | push `ActivityMultiplier SensorProfileDB.cs:91` / `SignatureBaseMultiplier:102` down — **EMCON already does this** (`FleetEmcon.cs:25 Silent 0.15`); a cloak is a stronger, component-based EMCON | same emitted-signal math (`SensorTools.cs:308`) |
+| **Decoy / spoof** (false contacts) | inject a false `SensorContact` | ◐ **wire (injector)** + ⏳ **defer (reading game)** | the track table + `SensorContact` exist (`Sensors/SensorContacts/SensorContact.cs`); injector half is doable. The "decide what's real" payoff waits on the **intelligence/Information-Ledger layer** (now the Spymaster-MVP / disinformation tail) | enemy track table |
+| **Counter-EW / ECCM** | resist their EW | ⏳ **defer** | the mirror of jamming — needs the **jam mechanic built first**, then a resist term | — |
+| **Broadcast Jamming** (essence-ext E1c) — active counter-influence | reduce incoming belief-pressure | ◐ **wire** | EW jamming (shrink `DetectionRange_m`) pointed at an emitter's belief-radius → a reduction on summed incoming pressure in the legitimacy processor (`LegitimacyProcessor.cs:~47`); costs your own morale | **legitimacy resolver, NOT combat** (Influence pillar) |
+| **Counter-intel / cipher cluster** (essence-ext E1d) — how hard your OWN faction is to read | defensive term on covert-op detection + enemy Ledger-gain vs your facets | ◐ **wire** / ⏳ **defer** | one code path, both directions (the always-on mirror); a defensive term on the net-new covert-op detection roll. Mounts on a Structure = a colony's counter-intel directorate | the **Information Ledger** (enemy's, about you) |
+| → the combat resolver | via detection | ✅ | all of the above act on what `FleetDetects CombatEngagement.cs:1312` returns → `CanEngageTarget:1327` already honours a blinded fleet | **EW × Detection × Weapons stacks TODAY** the moment the detection deltas are wired |
+
+---
+
+### Resolver/system insertion points (the fog gate + the Information Ledger)
+
+**A. The combat detection fog gate (BUILT, live).** This is the detection × weapons seam that makes EW and Detection matter in combat:
+- Contacts land in the per-faction track table via `SensorScan` (`SensorScan.cs:12`).
+- `FleetDetects(detector, target)` (`CombatEngagement.cs:1312`) asks: does the detector's faction hold a contact for any ship in the target fleet?
+- `CanEngageTarget(attacker, target)` (`CombatEngagement.cs:1327`) = `!RequireDetectionToEngage || FleetDetects(…)` — **the engine of first-strike**: see first → shoot first; a blind fleet takes fire without returning it.
+- Gated by the flag `RequireDetectionToEngage` (`CombatEngagement.cs:318`, default **false** so combat fixtures stay deterministic); consumed at `:177`, `:283`, `:475`, `:505`, `:584`.
+- **Everything EW does is push what `FleetDetects` returns** — jam shrinks the detector's reach, cloak shrinks the target's emission, decoy adds a false contact. No new resolver work: EW rides the same gate Detection does.
+
+**B. The Information Ledger — the ONE net-new engine object this category points into.** Not built. It is a **per-rival, per-facet intel table** (facets: disposition / military / economy / internal-politics / secrets), each at one of three bands:
+- **Inferred** (default) — you see only *behavior* + a fuzzy estimate (poker default).
+- **Confirmed** — you've raised intel: the estimate sharpens / the truth reveals.
+- **Stale** — intel decays back toward Inferred; you must refresh (can't learn a rival once and know them forever).
+
+It is **fog-of-war for politics**, riding the same detection substrate but keeping the graduated richness in ONE place (the Ledger), not scattered in a sensor field. **Where ELINT writes it:** a physical detection on a rival (the built path `SensorScan.cs:120` → `FirstContact.OnDetection` `Factions/FirstContact.cs:40`) stamps that rival's **Military facet at binary Inferred**. The re-homed `Resolution`/ELINT flavor (`SensorReceiverAtb.cs:30`) is what *raises the band* toward Confirmed — a Tactical contact = Inferred, an ELINT take = a push toward Confirmed. Decay and agents produce the rest of the gradient. The counter-intel/cipher cluster (EW) is the defensive term on the same table (how fast an *enemy* raises confidence about *your* facets — the mirror).
+
+---
+
+### Prerequisite fixes & dead stubs (file:line)
+
+| Item | Status | file:line |
+|------|--------|-----------|
+| **`SignalQuality` — DESIGN-CUT** (a decision to stop using it, NOT a code removal) | field still in code, cut from use | `SensorReturnValues.cs:8` (declared); computed in `SensorTools.DetectonQuality` `:194-195`; the survey body-ID path was its only consumer. Detection now collapses to **strength only** (`SignalStrength_kW SensorReturnValues.cs:7`). Cutting it retired the old "detection-quality fix" prerequisite (now free) and deletes 3 bugs by deletion (byte-overflow at `SensorTools.cs:~185`, multi-band overwrite, range-invariance). |
+| **`Resolution` dial — orphaned by the cut** | stored, unread; RE-HOME target for ELINT | `SensorReceiverAtb.cs:30` — no longer a detection dial; its real home is Ledger-confidence (ELINT) + the Survey survey-points mechanic |
+| **Fire-control dials — DEAD KNOBS** | built, VERIFIED zero reads | `BeamFireControlAtbDB.cs` — `Range:15`, `TrackingSpeed:21`, `FinalFireOnly:27` (grepped `Combat/`+`BeamWeapons/`: no `.TrackingSpeed`/`.FinalFireOnly` reads). The door's whole job is to wire these. |
+| **The Information Ledger** | **UNBUILT** (net-new engine object) | no file yet — every ELINT/counter-intel/spoof wire points into it; it is the Spymaster-MVP's core deliverable |
+| **Grav-survey ~100 km gate** | hardcoded FIXME | `JPSurveyProcessor.cs:47` (`if (distance < 100000) // FIXME`) — expose as a dial |
+| **`GenerateRuins` tautology bug** | dead stub (blocks xenoarchaeology) | `SystemBodyFactory.cs:~1418` — always early-returns → ruins never generate; the first build step of the field-site loop |
+| **EW jam/spoof/cloak-as-component** | **NET-NEW** (no EW component exists) — but every effect has a named detection hook | insertion surface = `DetectionRange_m:425` / `ActivityMultiplier:91` / the contact table |
+
+---
+
+### Design essence captured inline
+
+**The strength-only detection collapse (decision 2026-07-07).** Detection used to carry two outputs per contact: `SignalStrength_kW` (how loud, range-dependent) and `SignalQuality` (a 0–1 "how well resolved / what class" score). `SignalQuality` was **cut** — it was pretty-and-complicated, carried no graduated *range* information (it was range-invariant), and its only consumer was a redundant survey body-ID path. Detection now answers exactly two questions: **do I see it, and how loud is it** — which is all combat and EMCON need. "Big vs. small contact" still falls out automatically from `SignalStrength_kW × cross-section` (no dial). **The Information Ledger** is where the graduated-ness went: fine classification (a rival's class / IFF / intent) is an *espionage* question, not a sensor field — a per-rival, per-facet fog-of-war table (Inferred → Confirmed → decays to Stale) fed *binary* by passive detection (physical contact → Military facet at Inferred) and *raised* by ELINT/agents. This is cleaner in one stroke: the graduated-ness lives in one place, the SignalQuality prerequisite becomes "cut a field" (free), and three latent bugs vanish by deletion. The category's cross-pillar nature is the payoff — the same contact that gates a gunfight (Military) also seeds the poker-of-intent (Espionage), through the identical `FirstContact.OnDetection` path.
+
+---
+
+### §0g stamp — three acceptance criteria
+
+- **Reachable** (cradle-to-grave, player-side): ✅ **closed for Detection/Fire-Control/EW today.** A sensor is a **component** — mineral → material → built at a colony → designed (waveform/sensitivity/scan dials) → research-gated → installed on any chassis (ship, station, colony observatory) → the in-play decision (EMCON dark-vs-loud; where to point the array) → **the grave rung is already wired**: a shot-off receiver empties the ability cache (`SensorTools.SetInstances:208`) and you go blind. EW/Fire-Control ride the same chain (net-new EW tech; Fire-Control component already exists). Survey's two net-new loops (anomaly/xeno) research-gate their own capability and reward new tech.
+- **Mirrored** (opponent-side — the always-on spy mirror): ✅ by construction. Because detection is a **component on a shared door**, the NPC mounting a sensor/jammer/ELINT suite is the *same act* as the player mounting one — no player-only code. The mirror is literal: **NPCs ELINT and jam you** through the identical scan/contact path, and the counter-intel/cipher cluster is *one code path, both directions* (their confidence-gain vs your facets = your confidence-gain vs theirs). EMCON runs on every faction's fleets; `FirstContact.OnDetection` records a **mutual** relationship row on both `DiplomacyDB`s. The Information Ledger is inherently two-sided.
+- **Observable** (the gauge, both sides): ✅ the **contact table** is the detection gauge (contacts drawn as contacts = fog made visible; the `FirstStrike_SeerWipesBlindEnemy_Unscathed` gauge reads it); the **intel-confidence readout** (Inferred/Confirmed/Stale per facet) is the Ledger's gauge, shown to the *reader* of a rival; the EMCON self-detection readout (`SelfDetectionRange_m SensorTools.cs:484` — "how far am I seen") shows the target's side of the loud/quiet bet. Fire-Control's gauge is the effective hit-fraction once its dials are wired.
+
+---
+
+### Cross-category shared state (Prime Directive)
+
+| Seam | What crosses | Where it wires |
+|------|--------------|----------------|
+| **Detection × Weapons** (the load-bearing one) | contacts decide who can shoot — first-strike | `FleetDetects`/`CanEngageTarget` `CombatEngagement.cs:1312/1327`; `SalvoDamageScale:94` is the pace dial the fog rides on |
+| **Detection × Damage** (the grave rung) | a shot-off receiver → you go blind | `SensorTools.SetInstances:208` empties the cache on receiver loss |
+| **Detection × EMCON × Propulsion/Weapons** (heat) | thrusting/firing spikes your signature (can't burn or shoot quietly) | `EmconActivityProcessor.cs:52 HeatFactor`/`:57`/`:92`; reads `NewtonMoveDB` (thrust) + `GenericFiringWeaponsDB.ShotsFiredThisTick` (firing) |
+| **Fire Control × Weapons** | the director feeds the `HitFraction` tracking term + the range gate (instead of the gun hard-coding them) | `BeamFireControlAtbDB.cs:15/21/27` → `HitFraction` in `CombatKernel.cs`/`CombatEngagement.cs` |
+| **EW × Influence** (broadcast-jamming) | jamming pointed at a belief-radius reduces incoming legitimacy pressure | `LegitimacyProcessor.cs:~47` — graded against the **legitimacy** resolver, not combat (§0f/§0h) |
+| **ELINT × the political layer** (Espionage pillar) | passive detection → binary Inferred on a rival's Military facet; ELINT raises the band | `SensorScan.cs:120` → `FirstContact.OnDetection Factions/FirstContact.cs:40` → the **Information Ledger** (net-new) |
+| **Survey × economy/expansion/colonization/diplomacy** | each survey mode feeds a different consumer | geo→`GeoSurveyProcessor`; grav→`JPSurveyProcessor`; atmo/life→`SystemBodyInfoDB`+first-contact; hazard→`Hazards/` |
+| **Survey × Hazards** (counter-interference) | a hazard-resistant scanner sees through gas/radiation | `HazardResistanceAtb.cs:20` + `SpaceHazardTools.ApplyResistance` |
+
+---
+
+### Holes owned/resolved → status + home
+
+| Hole (`COMPONENT-DESIGNER-CATEGORIES.md §5`) | Status | Home |
+|----------------------------------------------|--------|------|
+| **H9 — Conversion / assimilation weapons** (turn an enemy into you; ties to the espionage system) | **partially routed through this category** | Homed at §1.5 Weapons▸Exotic via the projector tag `Selectivity = convert`, graded against the **legitimacy resolver** — but its *espionage* face (subversion/turn-an-agent) is fed by the **Information Ledger** and EW's counter-intel cluster this category stands up. LOW-MEDIUM priority. |
+| **H8 — Network / relay infrastructure** (addressable, many-to-one) | **adjacent, not owned here** | The C3 Relay (essence-ext E1a) is a `SensorProfileDB` emitter → **found, jammed (§3.4 EW), destroyed**. EW is the sever mechanism; the door itself is NEW DOOR §10.2 Command▸Relay. MEDIUM. |
+| **Detection-quality fix** (was a listed espionage prerequisite) | **RESOLVED by deletion** | `SignalQuality` cut (2026-07-07) — the prerequisite became "cut a field" (free); the gradient moved to the Information Ledger. |
+| **The Information Ledger** | **OPEN — net-new, unbuilt** | The Spymaster-MVP's core deliverable; every ELINT/counter-intel/spoof wire in this category points into it. |
+| Anomaly mystery-box + Xenoarchaeology (Survey §3.2) | **OPEN — designed, unbuilt** | Collapsed to the one field-site loop (`docs/EXPLORATION-CONTENT-DESIGN.md`); first build step = fix `SystemBodyFactory.GenerateRuins` (`SystemBodyFactory.cs:~1418`). |
+| EW jam/spoof/cloak/ECCM | **OPEN — net-new; cloak nearly free** | Cloak ≈ stronger EMCON (`FleetEmcon.cs`); jam/decoy = deltas on the live detection math; spoof's "what's real" reading defers to the Ledger. |
+
+---
+
 ## §4 — Power
 
 Power is the **substrate every other component draws on** — and the category where §0b ("the numbers force the build, never a rulebook") stops being a slogan and becomes literal machinery. A beam with no reactor reads **output: 0**; a ship with a flat battery **can't warp**. Nothing else in the designer is this universal: weapons, warp, sensors, shields, industry, and a colony's whole population all bottom out in watts and stored joules. So this is the **multi-consumer rule (§0f) at maximum** — Power has no "combat vs civilian" split because *everything* is its consumer.
@@ -1555,6 +2005,104 @@ On top of the universal seven (§0a):
 
 ## ✅ §4 Power — COMPLETE (2/2 doors locked)
 Generation 🔒 · Storage 🔒. **Yardstick = the SUPPLY GATE**, not the salvo math — Power decides whether every *other* door's dials get to function (a beam with no reactor = output 0; a flat battery = no warp). This is the **multi-consumer rule (§0f) at maximum**: Power has no combat/civilian split because everything is its consumer (weapons · warp · ground units ✅ today; colony life-support ◐ inert; sensors + shields ◐ not-yet-wired). Headline readings: **Generation is mostly Modelled** — fuel reactors + distance-attenuated solar run live and feed the gate; RTG is a framing wire, exotic sources + the meltdown grave-rung defer on one net-new **containment/breach** mechanic. **Storage's core is fully Modelled** (capacity = the literal warp/fire gate — the most load-bearing number on a ship), with the **battery-vs-capacitor** depth waiting on one ◐ wire (a `MaxDischarge_KJps` rate field — today all storage differs only by size). **The whole category is where §0b LIVES** — "the numbers force the build" is real machinery here, with one honest gap: under-supply currently **hard-blocks** (won't warp / won't fire) where §0b wants a **soft throttle** — a flagged wire, not a redesign. Build-list items: (1) the `MaxDischarge_KJps` storage-rate field (unlocks capacitor-vs-battery); (2) the **containment/breach** grave-rung (unlocks exotic sources + makes a hit reactor/bank matter); (3) the **soft-throttle** conversion (under-supply throttles, not blocks); (4) wire **sensors + shields** as power consumers (the §0f expansion); (5) calibrate **colony `PerCapitaPowerDemand`** (turn life-support from inert to a real load).
+
+---
+
+## ⚙ 4 — POWER · WIRING DOSSIER (self-contained)
+*Everything needed to wire this category — no other doc required.*
+
+Power is the **supply substrate**: it does not write a `WeaponProfile` field or land on the salvo math. It decides whether every *other* door's dials get to **function** — a beam with no reactor reads output 0; a ship with a flat battery can't warp. Two doors: **Generation** (reactors/solar/RTG — makes watts) and **Storage** (batteries/capacitors — banks joules for spikes). Two currencies, and the split IS the category:
+- **Sustained generation** — `EnergyGenAbilityDB.TotalOutputMax` (kW), capped at load 1.0. The steady baseload.
+- **Stored energy** — `EnergyGenAbilityDB.EnergyStored` (KJ). The bank for spikes the reactor can't deliver instantly (a warp jump, a weapon alpha).
+
+Both live on ONE shared blob: `EnergyGenAbilityDB` (`Pulsar4X/GameEngine/Energy/EnergyGenAbilityDB.cs`). Both attribute install-hooks (`EnergyGenerationAtb`, `EnergyStoreAtb`, `EnergySolarGenerationAtb`) create-or-append to it, so a ship's whole power plant aggregates into a single record per entity. Consumer only draws its own `EnergyTypeID` (electricity today).
+
+### Pillar tags (§0h)
+- **PROJECTOR⛓COUNTER: NEITHER.** Power is the **enabling substrate**, not a projector. It writes no `WeaponProfile`, has no COUNTER slot — it is the wall socket every projector and counter plugs into.
+- **Pillar: Military · Medium / Support** — but per §0f it has **no combat/civilian split at all**: *everything* is its consumer (weapons, warp, ground units, sensors, shields, colony life-support, industry). It is the multi-consumer rule at maximum.
+- **§0i — Power's "resolver" is NOT a salvo count-resolver.** Its resolver is the **§0b supply-gate loop** — the demand/generation/store bookkeeping in `EnergyGenProcessor.EnergyGen` — a per-entity balancer, not an O(buckets) battle kernel. It never appears in `AutoResolve`/`CombatKernel`.
+
+### Complete dial → derived-stat → engine-wire table (VERIFIED)
+
+**GENERATION (door 4.1)** — attribute `EnergyGenerationAtb` (`Energy/EnergyGenerationAtb.cs:10-16`), install hook `:31`.
+
+| Door | Dial | Derived stat | Grade | Engine wire (file:line) | System insertion (the supply gate — which loop reads it) |
+|------|------|--------------|-------|-------------------------|----------------------------------------------------------|
+| Gen | Source (fission/fusion, fuel-burning) | `PowerOutputMax` → reactor total | ✅ | `EnergyGenerationAtb.cs:57` `genDB.MaxOutputFromReactor += PowerOutputMax` → `EnergyGenAbilityDB.cs:17-20` `TotalOutputMax = Reactor + Solar` | read by `EnergyGenProcessor.EnergyGen` (`:24 output = TotalOutputMax − Demand`); feeds ground supply gate + colony life-support |
+| Gen | Source (solar) | `MaxOutputFromSolar` | ✅ | `EnergySolarGenerationAtb.cs:67` adds panel to `SolarPanels`; `EnergySolarGenProcessor.cs:37` `MaxOutputFromSolar = ComputeSolarMax(entity)` — sums panels **attenuated by distance from each star** (`:40-64`, via `SensorTools.AttenuatedForDistanceList`, `:58`) | recomputed **every hourly hotloop tick** (`EnergyGenHotloopProcessor`, `RunFrequency 1hr` `:16`, keyed to `EnergyGenAbilityDB` `:20`) → into `TotalOutputMax` |
+| Gen | Source (RTG) | low-output / huge-lifetime `EnergyGenerationAtb` | ◐ wire | expressible today via the `rtg` template (`energy.json:135-254`, `Efficiency = TechData('tech-conductors')+10` `:200`); no first-class "fuel-free reliable" framing | same gate as any reactor |
+| Gen | Source (antimatter / zero-point / exotic) | very-high `PowerOutputMax`, no fuel | ⏳ defer (H12) | high output is expressible; the **catastrophe-on-breach** identity needs the missing containment/meltdown mechanic | — |
+| Gen | Output level | `PowerOutputMax` (kW) | ✅ | `EnergyGenerationAtb.cs:15` → `:57` | the reactor total → supply gate |
+| Gen | Fuel & lifetime | `FuelType` / `FuelUsedAtMax` (kg/s) / `Lifetime` (s) | ✅ | `EnergyGenerationAtb.cs:12,13,17`; `:58-60` sets `TotalFuelUseAtMax` + seeds `LocalFuel = maxUse × Lifetime` | drained in `EnergyGenProcessor.cs:46-47` `LocalFuel -= TotalFuelUseAtMax.maxUse × Load × Δt` |
+| Gen | Response / load (baseload, can't surge) | `Load` (0..1), `Output` | ✅ | `EnergyGenProcessor.CalcLoad(demand, totalOutputMax)` clamps `demand/max` to [0,1] (`:94-99`); over-demand met by **battery discharge**, reactor never over-driven | `EnergyGen` `:43-45` sets `Load`/`Output` |
+| Gen | Signature / heat | reactor `Load` → EMCON | ◐ wire (unblocked, deferred) | `SensorSignatureAtb` on templates (`energy.json:70-76`); reactor-load-into-heat hook flagged at `Sensors/Emcon/EmconActivityProcessor.cs:31-34` (the `Load` inversion bug is FIXED, so it's now wireable, just not wired) | detection side, not the salvo |
+| Gen | Safety / containment (breach) | — | ⏳ defer | **no meltdown mechanic exists**; a reactor-breach-damages-ship rule is the missing grave rung | — |
+
+**STORAGE (door 4.2)** — attribute `EnergyStoreAtb` (`Energy/EnergyStoreAtb.cs:7-14`), install hook `:22`.
+
+| Door | Dial | Derived stat | Grade | Engine wire (file:line) | System insertion (the supply gate — which loop reads it) |
+|------|------|--------------|-------|-------------------------|----------------------------------------------------------|
+| Store | **Capacity** (the single most load-bearing number on a ship) | `MaxStore` (KJ) → `EnergyStoreMax` | ✅ | `EnergyStoreAtb.cs:14` `MaxStore`; `:35-43` `genDB.EnergyStoreMax[EnergyTypeID] += MaxStore` | read by the **warp gate** (`WarpMoveProcessor.cs:233,235`) + the **beam gate** (`GenericFiringWeaponsProcessor.cs:69`); topped to full by `ShipFactory.ChargeReactors` (`:195-210`) |
+| Store | Charge behaviour (surplus → battery) | `EnergyStored` | ✅ | `EnergyGenProcessor.cs:26-27` `output = clamp(TotalOutputMax−Demand, −stored, freestore); EnergyStored += output` — charges from surplus, discharges on shortfall (the passive balancer) | the supply-gate loop itself |
+| Store | **Burst / discharge rate** (capacitor vs battery) | — | ◐ wire | **no discharge-rate field exists** — a `MaxDischarge_KJps` would make the alpha-strike/capacitor distinction real; today battery and capacitor differ only in size | — |
+| Store | Charge rate (volley cadence) | implicit | ◐ wire | rate is implicit in `EnergyGenProcessor` (bounded by free capacity + surplus, `:20,26`); expose a per-cell charge-rate dial | — |
+| Store | Safety / breach | — | ⏳ defer | shares Generation's containment mechanic — a charged bank is a bomb when hit | — |
+
+**Note — a reactor also seeds 1s of store.** `EnergyGenerationAtb.cs:63-71` adds `PowerOutputMax` KJ of `EnergyStoreMax` on install (enough energy for one second of running) even with no battery. So a bare reactor holds a sliver of buffer; a real spike still needs a `battery-bank`.
+
+### The supply-gate loop (§0b) — how generation/storage feed EVERY other door
+**This is Power's "resolver": `EnergyGenProcessor.EnergyGen(entity, atDateTime)` (`Energy/EnergyGenProcessor.cs:11-79`), an `IInstanceProcessor` (`:8`, `ProcessEntity :101`).** It is interrupt-driven, not a hotloop tick — a consumer calls `EnergyGenAbilityDB.AddDemand(demand, atDateTime)` (`EnergyGenAbilityDB.cs:45-50`), which **runs `EnergyGen` immediately** (`:48`) then `Demand += demand`, and `EnergyGen` schedules the next interrupt for when the store will fill or empty.
+
+The bookkeeping, step by step (`EnergyGenProcessor.cs`):
+1. `freestore = max(0, storeMax − stored)` (`:20`) — headroom in the battery.
+2. `output = TotalOutputMax − Demand` (`:24`) — reactor surplus (negative = shortfall).
+3. `output = Clamp(output, −stored, freestore)` (`:26`) — can't charge past full, can't discharge past empty.
+4. `EnergyStored += output` (`:27`) — the store integrates the surplus/shortfall.
+5. Schedule the next interrupt: if charging, `timeToFill = ceil(freestore/output)` → interrupt (`:29-34`); if discharging, `timeToEmpty = ceil(|stored/output|)` → interrupt (`:35-40`). So the sim wakes exactly when the tank hits full or empty.
+6. `Load = CalcLoad(Demand, TotalOutputMax)` clamped 0..1 (`:43,94-99`); `LocalFuel −= maxUse × Load × Δt` (`:46-47`).
+7. Rolling `Histogram` of (output, demand, store) for the power UI (`:51-78`).
+
+**Throttle-or-hard-block behavior (the honest §0b gap).** §0b's *ideal* is a **soft throttle** — under-fed, a beam auto-throttles to available power. The engine today does a **hard BLOCK** at each stored-energy consumer instead:
+
+| Consumer | Reads | Gate today (file:line) | Status |
+|----------|-------|------------------------|--------|
+| **Weapons** (beam fire) | `EnergyStored` (spike) | `GenericFiringWeaponsProcessor.cs:65-72` — deduct `beamAtb.Energy/1000` KJ; if `stored < costKJ` → `canFire = false` (skips the shot) | ✅ hard block |
+| **Warp** (jump) | `EnergyStored` (spike) | `WarpMoveProcessor.cs:233,235` — `if (creationCost <= estored)` else won't start; then `AddDemand(creationCost…)` `:244-246` and collapse `:265-267` | ✅ hard block |
+| **Ground units** (design-time supply gate) | `ReactorSupply_W` vs `EnergyDemand_W` | `GroundUnitAssembly.cs:131-132,137-138` — `if (energyDemand > reactorSupply)` → design **Invalid**. Supply = `WeaponSupply.ReactorOutput_W` = `EnergyGenerationAtb.PowerOutputMax × 1000` (kW→W) | ✅ hard block |
+| **Colony life-support** | `TotalOutputMax` (sustained) | `Colonies/SustenanceProcessor.cs:49-51` — `powerDemand = pop × PerCapitaPowerDemand; powerSupply = EnergyGenAbilityDB.TotalOutputMax; PowerShortage = Shortage(demand,supply)` | ◐ inert (`PerCapitaPowerDemand` defaults 0) |
+| **Sensors** (active ping) | — | none — active-ping cost is EMCON, not a power draw | ◐ wire |
+| **Shields** (regen) | — | none — the shield pool isn't fed from power | ◐ wire |
+
+The design intent (the numbers steer you to add a generator) is identical; only the mechanism is blunt. Converting under-supply to *throttle* rather than *block* is a **named wire, not a redesign** — flagged, not owed.
+
+### Prerequisite fixes & dead stubs (file:line)
+1. **The under-supply HARD-BLOCK vs the wanted SOFT-THROTTLE (the headline gap).** `WarpMoveProcessor.cs:235` refuses to *start* a jump when under-charged; `GenericFiringWeaponsProcessor.cs:69-72` *skips* the shot. §0b wants both to auto-throttle to available power instead. Named wire.
+2. **⚠ GRAVE-RUNG GAP (found in this pass — cradle-to-grave is BROKEN on the loss rung for reactors + batteries).** `MaxOutputFromReactor` and `EnergyStoreMax` are **only ever incremented** (`EnergyGenerationAtb.cs:57`, `EnergyStoreAtb.cs:37`) and **never decremented**: both attributes' `OnComponentUninstallation` are **no-ops** (`EnergyGenerationAtb.cs:75-78`, `EnergyStoreAtb.cs:46-49`), and `EnergyGenAbilityDB` is **NOT in `ReCalcProcessor.TypeProcessorMap`** (`Engine/Processors/RecalcProcessor.cs:16-35` — only `ComponentInstancesDB` and `SensorAbilityDB` are). So when the damage system destroys a reactor or battery and calls `ReCalcProcessor.ReCalcAbilities` (`DamageProcessor.cs:156,238`), the ship's reactor output and battery capacity **do not drop**. Losing your power plant to a hit is currently free. (Solar is the partial exception — `EnergySolarGenerationAtb.OnComponentUninstallation` removes the panel `EnergySolarGenerationAtb.cs:71-75`, and `MaxOutputFromSolar` is recomputed each tick — but only if uninstall actually fires on damage-destroy.) This must be fixed for the "destroyed → re-mine/re-build" rung to be real.
+3. **Dead-legacy flag (L1 "dead code that looks live").** `SensorReceiverAtb.IsEnergyGen` (a bool on the *sensor* attribute) looks like the solar path but is **vestigial** — its `SensorScan` branch only sets `LocalFuel`, adds nothing to power output. The working solar is `EnergySolarGenerationAtb`. Don't build on `IsEnergyGen`.
+4. **`EnergyGenerationAtb` throws if a ship mixes energy types or fuel types** (`:50` "cannot use two different energy types", `:54` "cannot have power plants that use different fuel types"). A deliberate simplification — noted so a multi-fuel design doesn't surprise-crash.
+5. **Storage depth fields don't exist** (`MaxDischarge_KJps`, per-cell charge-rate) — the ◐ wires above.
+
+### Design essence captured inline (merged-doc relevance)
+**None load-bearing.** Power carries no franchise/design-essence merge — it is pure enabling infrastructure. The only cross-doc dependency is downstream: every other category's footer bottoms out here ("the mass funnels the chassis," "output 0 with no reactor"). The one design nuance worth holding inline is the **Generation↔Storage division of labour**: a reactor is capped at load 1.0 (`CalcLoad` `:94-99`) and *cannot surge*; a spike (warp bubble ~1,000,000 KJ, or a weapon alpha) is met by the **battery discharging** (`EnergyGen` `:26` clamps output to `−stored`), then recharged from reactor surplus. The two doors trade in one KJ currency — "more reactor (heavy) vs more battery (heavy)" is the player decision, read straight off `TotalOutputMax` and `MaxStore`.
+
+### §0g stamp
+- **Reachable (cradle-to-grave):** ✅ **on the build side, ⚠ BROKEN on the loss rung.** mineral (fissile-fuels / lithium / silicon, mined) → material (refined stainless-steel / plastic / lithium / copper, `energy.json` `ResourceCost`) → production (`IndustryTypeID: component-construction`) → component (`reactor` / `battery-bank` / `rtg` / `steam-turbine-reactor` / `solarArray` templates, `energy.json`) → **research** (`TechData('tech-battery-capacity')` `:123`, `TechData('tech-conductors')` `:200`, `TechData('tech-panel-efficiency')`/`-bandwidth`/`-density` on solar) → installed (`EnergyGenAbilityDB`) → decision (reactor-vs-battery mass trade; source triangle output↔independence↔safety) → **loss: currently a no-op for reactors/batteries** (finding #2 above). Fix the loss rung and the chain closes.
+- **Mirrored (NPC must generate/store power too):** ✅ **automatic and free** — power is a component on a shared door, so an NPC ship built through the same `ShipFactory`/industry rails carries the same `EnergyGenAbilityDB`, draws warp/weapon energy through the same `AddDemand` path, and is hand-charged by the same `DefaultStartFactory` (`:325-330`) / `ChargeReactors`. No player-only code; the supply gate binds identically on both sides.
+- **Observable (the power-balance readout):** ✅ **BUILT — Failure-A resolved.** The gauge exists and is wired: `EnergyGenAbilityDB.Histogram` (output/demand/store over time, `:89`) drives `PowerGenWindow` (`Pulsar4X.Client/Interface/Windows/PowerGenWindow.cs:91`) and `PowerDBDisplay` (`:31`), plus the reactor total in `DebugWindow.cs:465` (`Stringify.Power(powerDB.MaxOutputFromReactor)`). The number exists AND is shown. The remaining *observability* gap is not the balance readout but the **inert consumers** (colony `PerCapitaPowerDemand` = 0, so life-support shortage never shows a real load) — a calibration wire, not a missing gauge.
+
+### Cross-category shared state (Prime Directive — Power gates Weapons / Sensors / Propulsion / Industrial)
+Everything below **shares the single `EnergyGenAbilityDB` blob** on the entity — none of them call Power; they read the same memory (`EnergyStored` / `TotalOutputMax`).
+- **Weapons ▸ Beam** — reads/deducts `EnergyStored` before every shot (`GenericFiringWeaponsProcessor.cs:65-72`). No power → no shot. (Auto-resolve firepower folds weapon efficiency into **Mass**, not the salvo — `AUTO-RESOLVER-ANATOMY.md:101` "build-side, correct"; the resolver never reads power directly.)
+- **Propulsion ▸ Warp** — the bubble is paid from **stored electricity**, not fuel (`WarpMoveProcessor.cs:233,244-246,265-267`). A flat battery is the literal "spawned ship won't move" bug; `ChargeReactors` is the fix. `AUTO-RESOLVER-ANATOMY.md:199`: warp power is **movement-side, not the salvo**.
+- **Defense ▸ Shields** — ◐ shield regen is **not yet** fed from power (a named §0f expansion wire).
+- **Sensors ▸ EMCON** — active-ping heat is EMCON, not a power draw today; the reactor-`Load`→heat hook is flagged wireable at `EmconActivityProcessor.cs:31-34`. Solar generation itself *reads* the sensor layer (`SensorProfileDB` stars) for attenuation (`EnergySolarGenProcessor.cs:46-58`).
+- **Colonies ▸ Life-support** — `SustenanceProcessor.cs:49-51` reads `TotalOutputMax` as the colony power supply vs `pop × PerCapitaPowerDemand`; ◐ inert until `PerCapitaPowerDemand` is calibrated.
+- **Ground ▸ Unit assembly** — the design-time hard power gate (`GroundUnitAssembly.cs:137`); supply = `WeaponSupply.ReactorOutput_W(EnergyGenerationAtb.PowerOutputMax × 1000)`.
+- **Chassis (§0b Mass cascade)** — reactor/battery `Mass` (`energy.json` `Mass` dial, e.g. reactor 1000–25000 kg, `Power Output = 50 × Mass`) funnels the chassis budget — the Death-Star forcing (a planet-cracker's generator won't fit under Mega).
+- **Industrial** — every power component is built through `component-construction` and consumes refined materials; `fissile-fuels` cost scales with `Fuel Consumption × 3600 × Lifetime` (`energy.json:21`).
+
+### Holes owned/resolved (H12)
+- **H12 — Exotic power source** (effectively unlimited / no-fuel; e.g. Asgard/Stargate tech). **Status: resolved as a Generation ▸ Source *dial*, LOW priority.** It maps cleanly to a very-high-`PowerOutputMax`, no/low-fuel `EnergyGenerationAtb` — the source triangle already has the slot. **Home:** this dossier, Generation door, Source row (antimatter / zero-point / exotic, ⏳ **defer**). The one thing that makes it more than "a big reactor" — the **catastrophe-on-breach identity** — waits on the single net-new mechanic this whole category defers: the **containment / meltdown grave-rung** (also what makes antimatter *dangerous*, not just powerful, and what finding #2's loss-rung fix feeds into). No new door, no new resolver — it is DATA for the existing Generation loop.
 
 ---
 
@@ -1754,6 +2302,93 @@ Armor 🔒 · Shields 🔒 · Hardening 🔒 · Fortification 🔒. **Yardstick 
 
 ---
 
+## ⚙ 5 — DEFENSE · WIRING DOSSIER (self-contained)
+*Everything needed to wire this category — no other doc required.*
+
+Defense is the **survivability half of every fight** — the four ways a unit refuses to die: soak it (Armor), buffer it (Shields), endure the environment (Hardening), or dig in (Fortification). Three of the four land on the **combat resolver**; Hardening lands on the **hazard/survival** system instead (that's correct, not a flaw). The single richest un-built wire in the whole category is giving **armour a "nature" (material) dimension** so armour ↔ shield becomes real rock-paper-scissors — today shields carry the entire damage-nature matchup and armour is a flat scalar. The second-richest is **populating a ship's flat armour soak** (built math, unfed on the ship side). Both are traced below to file:line.
+
+### Pillar tags (§0h) — note Hardening carries an Influence·Counter role (cultural insulation)
+Every projector needs a counter; Defense **is** the counter slot. Tags (`pillar` + `skeleton-role`, per §0h / essence-ext E0a):
+
+| Door | `pillar` | `skeleton-role` | Counters what |
+|------|----------|------------------|---------------|
+| 5.1 Armor | Military | **Counter** | the kinetic penetrator / the swarm (bounce) |
+| 5.2 Shields | Military | **Counter** | the energy torrent / sustained fire (buffer) |
+| 5.3 Hardening | Military | **Counter** (vs the *environment*, not the enemy — hazards) | radiation / EMP / nebula / drag |
+| 5.3 Hardening ▸ **Cultural Insulation** (essence-ext E1c dial) | **Influence** | **Counter** | an enemy's incoming *belief pressure* (soft-power SWAY) — the Influence·Counter slot |
+| 5.4 Fortification | Military | **Counter** (ground-only positional multiplier) | any incoming fire, by dug-in position |
+
+So Hardening is the one door that is **dual-pillar**: its combat/hazard face is Military·Counter; its new Cultural-Insulation dial is the **Influence·Counter** slot (the "state religion / censorship / cultural insulation" cell of the pillar skeleton). Same door, two media — because both are "resist an incoming pressure the combat resolver never reads" (hazards for one, belief for the other).
+
+### Complete dial → derived-stat → engine-wire table (VERIFIED)
+Grade legend: ✅ live today · ◐ **wire** (stat/math exists, one connection missing) · ⏳ defer (needs a subsystem first).
+
+| Door | Dial | Derived stat | Grade | Engine wire (file:line) | Resolver insertion |
+|------|------|--------------|-------|--------------------------|--------------------|
+| **5.1 Armor** | Thickness / HP (space) | `Toughness` (J) | ✅ | ship: `EntityDamageProfileDB.Armor.thickness` (`Damage/DamageComplex/EntityDamageProfileDB.cs:14`) × `ArmorHitPointsPerThickness_J`=100 kJ (`Combat/ShipCombatValueDB.cs:84`) → `toughness +=` (`ShipCombatValueDB.cs:290-291`) | folded into per-ship Toughness (casualty math) |
+| 5.1 | Thickness / HP (ground) | `GroundUnit.MaxHealth` | ✅ | `GroundArmorAtb.HP` (`GroundCombat/GroundArmorAtb.cs:23`) → unit health pool | seeds `Combatant.Health/MaxHealth` |
+| 5.1 | **Hardness — flat-per-source soak (ground)** | `Combatant.Armour` | ✅ | `GroundArmorAtb.Defense` (`GroundArmorAtb.cs:25`) → `GroundUnit.Defense` → `GroundCombatant.ToCombatant` sets `Armour = unit.Defense` (`GroundCombat/GroundCombatant.cs:100`) → `CombatKernel.ArmourSoak` (`Combat/CombatKernel.cs:224-231`) | flat subtract per attacker-source, floored at `ArmourMinPassFraction`=0.1 (`CombatKernel.cs:78`) |
+| 5.1 | **Hardness — flat-per-source soak (SPACE)** | `Combatant.Armour` (ship) | **◐ wire — DEAD** | field EXISTS (`CombatKernel.cs:106`) and math EXISTS (`ArmourSoak` `:224`), but **no ship code populates it** — `CombatEngagement.cs` never sets `.Armour` and does not build a `Combatant`; ship armour only folds into Toughness (`ShipCombatValueDB.cs:290`). **THE FIX: populate ship `Combatant.Armour`** so a ship bounces swarms like a ground unit (the "swarm-bounce" wire). | route ship salvo through `CombatKernel.ArmourSoak` per fire-mix source |
+| 5.1 | **Material / nature-resistance** (the flagged **armour-NATURE dimension** — richest wire in the category) | *new:* per-armour nature-soak table | **◐ wire (top item)** | space `armorType` material exists but is **hazard/pixel-sim-only** — read only by the damage-pixel painter (`Damage/DamageComplex/ComponentPlacement.cs:243`, `DamageProcessor.cs:259`), **dead to the auto-resolver**. Ground armour has no nature axis at all. **THE FIX: give `Combatant.Armour` a per-nature soak table mirroring shields** (composite walls Kinetic, ablative walls Energy, reactive vs Explosive) → doubles the matchup into rock-paper-scissors. | new resolver term inside `ArmourSoak` keyed on `WeaponProfile.Nature` |
+| 5.1 | Coverage (all-round vs belt) | `ArmorVertex` geometry | ⏳ defer | positional; the aggregate resolver is non-positional | none (drop or per-pixel-sim only) |
+| 5.1 | Mass (emergent) | `MassVolumeDB` → Evasion | ✅ | armour mass drags evasion + chassis budget | `CalculateEvasion` (`ShipCombatValueDB.cs`) |
+| **5.2 Shields** | Capacity (space) | `ShieldCapacity_J` → pool | ✅ | `ShieldAtb.Capacity_J` (`Combat/ShieldAtb.cs:22`) → `ShipCombatValueDB.ShieldCapacity_J` (`:127`), summed × health (`:281-283`) → `Combatant.ShieldCapacity` (`CombatKernel.cs:113`) | `ResolveShield` drains before Health (`CombatKernel.cs:205-217`) |
+| 5.2 | Regen (space) | `ShieldRegen_Jps` | ✅ | `ShieldAtb.RegenRate_Jps` (`ShieldAtb.cs:25`) → `ShipCombatValueDB.ShieldRegen_Jps` (`:130`, summed `:282`) → `Combatant.ShieldRegen` (`CombatKernel.cs:116`) | recharge tail of `ResolveShield` (`CombatKernel.cs:214-216`) |
+| 5.2 | Capacity / shield (ground) | `GroundUnit.Shield` | ✅ | `GroundAugmentAtb.Shield` (`GroundCombat/GroundAugmentAtb.cs:36`) → `GroundUnit.Shield` → `ToCombatant` seeds `ShieldPool`+`ShieldCapacity` (`GroundCombatant.cs:101-102`) | shared `ResolveShield` |
+| 5.2 | **Regen (ground)** | *(none per-component)* | ◐ wire | ground `ShieldRegen = 0` hard-coded in `ToCombatant` (`GroundCombatant.cs:103`); regen is a global constant elsewhere — **make it a per-component dial** | feed a real regen into `ResolveShield` |
+| 5.2 | **Nature tuning** (kinetic- vs energy-hardened) | shield-soak-by-Nature | **◐ wire** | the matchup is a **fixed engine table**: `ShieldSoakVsKinetic`=1.0, `VsEnergy`=0.5, `VsExplosive`=0.75, `VsExotic`=0.0 (`CombatKernel.cs:62-68`), dispatched by `ShieldSoakFraction` (`:133-139`). **THE FIX: make the per-nature fraction a per-component dial** so a hardened shield closes the 0.5 energy bleed. | override the constant with a per-`Combatant` soak vector inside `ShieldSoakFraction`/`SoakFractionOf` (`CombatKernel.cs:188-199`) |
+| 5.2 | Coverage (fleet pool vs per-ship) | `FleetCombatStateDB.ShieldPool_J` | ◐ wire | space pool is per-**fleet** aggregate (honest v1 stub); a per-ship pool is a refinement | per-ship `Combatant.ShieldPool` (field already exists `:110`) |
+| 5.2 | Grave rung | pool shrinks when generator shot off | ✅ | capacity scaled by `comp.HealthPercent` (`ShipCombatValueDB.cs:281-282`) — a dead generator = no pool | already wired |
+| **5.3 Hardening** | Resisted effect (which hazard) | `HazardResistanceAtb.ResistedEffectTypeId` | ✅ (hazard-side) | `Hazards/HazardResistanceAtb.cs:23` → `SpaceHazardTools.ResistanceFraction` (`Hazards/SpaceHazardTools.cs:91`) → consumed by `SpaceHazardProcessor.cs:115` / SensorScan / WarpMove + ground `GroundUnit.EnvResistance`. **A new counter is JSON DATA, not code** (generic attribute). | **NOT the combat resolver** — hazard/attrition consumer (§0f) |
+| 5.3 | Resistance fraction (partial↔full) | `HazardResistanceAtb.ResistanceFraction` (0..1) | ✅ (hazard-side) | `HazardResistanceAtb.cs:26` | hazard system |
+| 5.3 | Radiation/EMP → crew & electronics survival | *(none)* | ⏳ defer | hazard *damage kinds* exist; crew-knockout / system-disable is not a combat mechanic yet | none yet |
+| 5.3 | Redundancy / damage-control (crit-resist) | *(none)* | ⏳ defer | ties to the parked degraded-condition model (`WEAPONS-AND-DODGE-DESIGN.md`) — net-new hook. **This is hole H2's own resolution point** (see below). | none yet |
+| 5.3 ▸ **CULTURAL INSULATION** (essence-ext E1c — Influence·Counter dial) | Belief-resist (light↔heavy) | *new:* resist term on `ExternalBeliefPressure` | **◐ wire** | Hardening's identity ("resist an incoming pressure the resolver never reads") pointed at the **legitimacy** input surface: a new `ExternalBeliefPressure` field on `LegitimacyInputs` (`Colonies/LegitimacyDB.cs:119` struct) — the first purely-external attacker beside the existing `GovernorCompetence` slot (`LegitimacyDB.cs:89-90`). Insulation **subtracts from** that incoming pressure before `ComputeLegitimacy` (`LegitimacyDB.cs:66`) folds it toward `CollapseThreshold`=20 (`:42`) → rebellion (`LegitimacyProcessor.cs:77`, `IsCollapsing`). Dead weight vs an enemy running no influence. | **NOT the combat resolver** — the legitimacy/rebellion resolver (§0f); mirrors Hardening's hazard-side pattern exactly |
+| **5.4 Fortification** (ground-only) | Local fortify (dig-in) | `GroundFortification.DefenseMult` | ✅ | `GroundDefenseAtb.LocalFortify` (`GroundCombat/GroundDefenseAtb.cs:30`) → `GroundFortification.DefenseMult` (`GroundCombat/GroundFortification.cs`) → `coverFort` (`GroundForcesProcessor.cs:267-268`) → `pool /= coverFort` divides attacker damage (`GroundForcesProcessor.cs:317`) | ground resolver pre-divide |
+| 5.4 | Adjacent projection | same-faction `DefenseMult` sum | ✅ | `GroundDefenseAtb.AdjacentProjection` (`GroundDefenseAtb.cs:32`), same-faction gate, cap +100% (halves incoming) | same `coverFort` term |
+| 5.4 | Cover / terrain | `GroundTerrain.CoverDefenseMult` | ✅ | stacks in `coverFort` (`GroundForcesProcessor.cs:267`) | same term |
+| 5.4 | Footprint / targetability | `GroundFootprintAtb.TileFootprint` | ✅ | `GroundCombat/GroundFootprintAtb.cs:31` → war-map capture/bombard (`GroundBuildings.cs:297`) — the *vulnerability* side, orthogonal to the bonus | war-map system, not the salvo |
+
+### Resolver insertion points (from AUTO-RESOLVER-ANATOMY §1–§4)
+The DEFENSE half of one salvo step (`CombatKernel`, byte-for-byte shared by ship `CombatEngagement` and ground `GroundForcesProcessor`):
+
+1. **ApplyShield — SoakFractionOf by Nature (drain-before-hull).** `SoakFractionOf(incoming)` (`CombatKernel.cs:188-199`) rolls the fire mix's damage-weighted **soakable fraction** using the fixed nature table `ShieldSoakFraction` (`:133-139`): Kinetic **1.0** (walls it) · Energy **0.5** (half-bleeds) · Explosive **0.75** · Exotic **0.0** (ignores the shield). Then `ResolveShield(pool, capacity, regen, salvoDamage, soakFraction, dt)` (`:205-217`) absorbs `salvoDamage × soakFraction` up to the current charge, subtracts it, then recharges by `regen × dt` toward capacity. **Nature-tuning dial inserts here** by replacing the constant fractions with a per-`Combatant` vector.
+2. **ApplyCasualties — ArmourSoak flat-per-source + ArmourSoakPerPoint 1.5.** After shields, `ArmourSoak(armour, sourceDamage)` (`CombatKernel.cs:224-231`) subtracts a **flat** `armour × ArmourSoakPerPoint` (=1.5, `:75`) from EACH attacker-source, floored so every source still lands `ArmourMinPassFraction`=0.1 (`:78`) of its damage. Because it's flat-per-source, **N chip volleys lose N×flat total but one alpha loses only flat** — armour bounces the swarm, the alpha punches through. **The ship side never calls this** (its `Combatant.Armour` is unpopulated) — that's the swarm-bounce wire.
+3. **The Penetration extension = the armour half of the matchup (anatomy §4 #1).** Today armour is flat with **no per-weapon penetration**. Adding `WeaponProfile.Penetration` + reducing `ArmourSoak`'s flat term by penetration is the resolver's #1 backlog item — it makes lance/sabot/AP real armour-crackers and Splash the anti-swarm opposite. This is the **weapons-side counterpart** to the armour-nature dial: nature decides *what* armour resists, penetration decides *whether it's bypassed*.
+4. **ShieldCapacity / Regen inputs** come from `ShipCombatValueDB.cs:276-285` (space, summed shield generators × health) and `GroundCombatant.cs:101-103` (ground, seeded from `GroundUnit.Shield`, regen 0).
+
+### Prerequisite fixes & dead stubs (file:line)
+- **Ship `Combatant.Armour` unpopulated (DEAD wire).** Field `CombatKernel.cs:106` + math `ArmourSoak` `CombatKernel.cs:224` are built and unit-tested, but no ship code sets `.Armour` — `CombatEngagement.cs` doesn't construct a `Combatant` and `ShipCombatValueDB.Calculate` folds armour into `Toughness` only (`ShipCombatValueDB.cs:290-291`). Until fixed, **a ship gets zero swarm-bounce**. (This is a *resolver-merge* follow-on: ground already presents a `Combatant` via `GroundCombatant.ToCombatant`; ships must too.)
+- **Space `armorType` material is combat-dead.** `EntityDamageProfileDB.Armor.armorType` (`Damage/DamageComplex/EntityDamageProfileDB.cs:14`) is read ONLY by the pixel-sim painter (`ComponentPlacement.cs:243`, `DamageProcessor.cs:259`) — the auto-resolver never sees material. Needed base for the armour-nature dial.
+- **Shield nature matchup is a hard-coded constant table** (`CombatKernel.cs:62-68`) — not yet a per-component dial. No bug, but the wire point for nature-tuning.
+- **Ground shield regen hard-coded to 0** (`GroundCombatant.cs:103`) — make it a dial.
+- **`ExternalBeliefPressure` field does not yet exist** on `LegitimacyInputs` (`LegitimacyDB.cs:119`) — must be added (beside `GovernorCompetence`) before Cultural Insulation can subtract from it. This is the ONE new engine field the whole Influence-2.0 gear seam needs (essence-ext E1c).
+- **Redundancy/damage-control (H2 partial) blocked on the degraded-condition model** — no per-component partial-damage state exists in the resolver (v1 casualty model is whole-ship removal, anatomy §1).
+
+### Design essence captured inline (cultural insulation; H2 adaptive defense)
+**Cultural Insulation = resist ExternalBeliefPressure.** In the merged Influence pillar (`git show origin/main:docs/INFLUENCE-PILLAR-DESIGN.md`), a world's allegiance is a tug-of-war: the owner's governance props legitimacy up, an enemy's influence campaign pushes it down from outside, and past `CollapseThreshold`=20 the world secedes — "a planet taken without a shot." Influence's *kill* reuses the existing legitimacy/rebellion system by adding **one new input, external belief-pressure**, exactly parallel to the built `GovernorCompetence` slot. Cultural Insulation is that attack's **passive counter** — the Defense category's Hardening door pointed at belief instead of radiation: a heavy-insulation world subtracts from the incoming pressure before it hits legitimacy, and is dead weight against an enemy running no influence (the same "buy every advantage" anti-dominance law). It is the Influence·Counter slot made buildable — the only gear half of soft-power defense (the missionary/censor Being stays in People).
+
+**H2 adaptive / self-repairing defense** (`COMPONENT-DESIGNER-CATEGORIES.md` §5, MEDIUM-HIGH): become immune to a weapon after one hit (Borg shields), regrow armour/hull (Replicator, regenerating ablative). The categories doc's resolution is a two-part split: (1) a Defense **"adaptation" dial** where resistance *grows with exposure* — nature-soak that climbs each time a given nature hits (rides the same per-nature shield/armour soak vector the nature-tuning dials add), and (2) **Enhancers ▸ Systems self-repair** — regen a Health/armour pool over time (the same shape as shield regen, `ResolveShield`'s recharge tail, applied to hull). Both are ◐/⏳: the soak-vector plumbing is the nature-dial work above; the exposure-climb and hull-regen are the net-new terms. H2 is the hole this Defense door **owns half of** (adaptive shields/armour); Enhancers owns the self-repair half.
+
+### §0g stamp — Reachable · Mirrored · Observable
+- **Reachable (cradle-to-grave, ✅ for the built dials):** armour = mine ore → refine plate → `GroundArmorAtb`/ship armour design → install → spall off under fire (Toughness/`Combatant.Health` drops). Shields = research → build `ShieldAtb` generator → install → a shot-off generator drops the pool (`ShipCombatValueDB.cs:281`, the grave rung). Fortification = build the Bunker installation → captured with the region / destroyed by bombardment. Cultural Insulation = research → build the insulation hardware → lose it (◐, pending the `ExternalBeliefPressure` field).
+- **Mirrored (§0g opponent-side):** because every Defense capability is a **component on a shared door**, the NPC mounting armour/shields/a bunker is the *same act* as the player — `ShipCombatValueDB.Calculate` and `GroundCombatant.ToCombatant` are faction-agnostic (`Combatant.FactionId` `CombatKernel.cs:90`), so an NPC fleet's shields soak and its ground units bounce swarms through the identical kernel. For Cultural Insulation the mirror is automatic: the same `ExternalBeliefPressure` input runs on the NPC's worlds, so **an NPC insulates its own worlds** against the player's influence exactly as the player insulates against theirs (the always-on mirror the pillar skeleton demands).
+- **Observable (the gauges):** the **shield pool** is a live number (`Combatant.ShieldPool` / `FleetCombatStateDB.ShieldPool_J`) — show charge/max + the soak-absorbed per volley (`ResolveShield` returns `absorbed`). The **armour soak** gauge is damage-blocked-per-source (the `ArmourSoak` delta). Fortification's gauge is the `DefenseMult` shown on the region. Cultural Insulation's gauge is the **legitimacy readout** with the pressure-in vs insulation-resisted delta (both sides see it). Missing gauges are cheap Failure-A (the number exists, just unwired) — except the armour-nature and belief-pressure deltas, which need their field built first (Failure-B).
+
+### Cross-category shared state (Prime Directive)
+- **Defense × Weapons — the matchup (the load-bearing coupling).** Shields read `WeaponProfile.Nature` via `ShieldSoakFraction` (`CombatKernel.cs:133`); the armour-nature dial and the weapons-side `Penetration` extension (anatomy §4 #1) are **two halves of one rock-paper-scissors** — you cannot tune one without the other. Kinetic ▸ armour's friend / shield's bane; Energy ▸ the reverse; Exotic ▸ ignores shields (0.0). Any change to the nature table or the fire-mix touches both categories.
+- **Hardening × Hazards.** `HazardResistanceAtb` (`Hazards/HazardResistanceAtb.cs`) is consumed by `SpaceHazardProcessor`/SensorScan/WarpMove/ground `EnvResistance` — the combat resolver never reads it. Hardening's real blast radius is the Hazards subsystem, not Weapons.
+- **Hardening × Influence (Cultural Insulation).** Shares state with the **Colonies/legitimacy** system: `LegitimacyDB`/`LegitimacyInputs` (`Colonies/LegitimacyDB.cs`), `LegitimacyProcessor` (rebellion trigger), and the Espionage `sow-unrest` action (the covert twin that feeds the *same* legitimacy input). A change to `ExternalBeliefPressure` touches Influence, Espionage, and Government/rebellion at once.
+- **Defense × Propulsion (mass).** Armour mass → `MassVolumeDB` → Evasion (`CalculateEvasion`) → the closing/dodge surface — thicker plate lowers evasion, a genuine cross-category cost.
+- **Shields × Power.** Shield capacity/regen draw power (the generator's build-side cost) — a big shield bites the Power doors, not the salvo.
+- **Fortification × Ground war-map.** `TileFootprint` (`GroundFootprintAtb.cs:31`) feeds the capture/bombard war-map (`GroundBuildings.cs`) — a fort is both a combat bonus and a targetable objective.
+
+### Holes owned/resolved (H2) → status + home
+- **H2 (Adaptive / self-repairing defense) — Defense owns the ADAPTIVE half; ⏳ partially resolved, home named.** Resolution: a Defense **"adaptation" dial** (per-nature soak that *climbs with exposure*) rides the same per-`Combatant` nature-soak vector introduced by the armour-nature + shield-nature-tuning dials above (◐ — depends on that vector existing). The **self-repairing half** (regrow hull/armour) is delegated to **Enhancers ▸ Systems self-repair** (a pool-regen term, same shape as `ResolveShield`'s recharge). Both blocked on the parked **degraded-condition / per-component-damage** model (the v1 resolver is whole-ship removal, anatomy §1), which is also the home of the Hardening ▸ redundancy/damage-control dial. **Status: designed, not built; owner = this Defense category (adaptive) + Enhancers (self-repair); prerequisite = per-component partial-damage state.**
+- No other §5 holes owned. Fortification is fully modelled/clean; Hardening's hazard core is modelled (a new resistance is JSON, not code); Shields is the most-modelled door in the category.
+
+---
+
 ## §6 — Enhancers
 
 Enhancers is the **force-multiplier layer — what makes a veteran ≠ a conscript.** It's one of the two genuinely **net-new categories** (the categories doc: "net-new otherwise"), and the honest headline is: *most of it isn't built yet.* Weapons/Propulsion/Sensors/Power/Defense were largely "expose + wire what exists"; Enhancers is largely "here is the layer the game is missing, defined cleanly so it can be built." That's the right job for a design doc — name the gap precisely, not paper over it.
@@ -1919,6 +2554,86 @@ Bio-augmentation 🔒 · Training/Doctrine (Unit Caliber) 🔒 · Systems 🔒. 
 
 ---
 
+## ⚙ 6 — ENHANCERS · WIRING DOSSIER (self-contained)
+*Everything needed to wire this category — no other doc required.*
+
+Enhancers is the **force-multiplier layer — what makes a veteran ≠ a conscript.** Three doors: **Bio-augmentation** (upgrade the body — power armour, reflex boosters, gene-mods), **Training/Doctrine = Unit Caliber** (stamp "elite" onto a unit at design time — Space Marine ≠ Guardsman, Falcon ≠ freighter), and **Systems** (let the machine help — targeting computer, battle-AI, automation). Bio-augmentation is the one **mostly-built** door (ground-side); the other two are **net-new but clean**. The load-bearing rule the whole category enforces is the **GEAR-vs-BEING boundary (hole H4)**: the designer builds buildable **gear** (an `IComponentDesignAttribute` the assembler/resolver reads); it does NOT build the innate *being* (species trait, veterancy, the Force) — that lives in the People/species/crew system and stays OUT of the component store.
+
+### Pillar tags (§0h)
+- **Pillar:** **Military · Modifier** — Enhancers is a *force-multiplier on units*, NOT a projector itself. It has no `WeaponProfile`, launches nothing, holds no reach/cadence of its own. It multiplies the numbers OTHER doors' projectors/counters feed into (attack, evasion, toughness, hit-fraction) — so it carries **neither a PROJECTION slot nor a COUNTER slot** (§0h PROJECTOR⛓COUNTER). It is graded against the **combat auto-resolver** (`CombatEngagement`/`ShipCombatValueDB`) for its combat half, and against the **industry/economy + detection loops** for its §0f non-combat half (a labour exo, a factory-AI, a faster survey crew).
+- **skeleton-role:** none (Modifier, not Projection/Counter/Medium/Detection). The tag on an Enhancer component is `pillar=Military`, `skeleton-role=Modifier`.
+- **Multi-consumer (§0f):** every door multiplies ANY task, not just combat — combat (marine hits harder), labour (bio-augment works in high-G/vacuum), exploration (trained survey crew scans faster), industry (AI runs a factory with less crew).
+
+### Complete dial → derived-stat → engine-wire table (VERIFIED)
+
+| Door | Dial | Derived stat | Grade | Engine wire (file:line) | Resolver insertion |
+|------|------|--------------|-------|--------------------------|--------------------|
+| **6.1 Bio-augment** | Strength (myomer/servo) | carry-budget +N | ✅ Modelled | `GroundAugmentAtb.StrengthBonus` (`GroundCombat/GroundAugmentAtb.cs:30`) → `capacity += StrengthBonus*c` (`GroundCombat/GroundUnitAssembly.cs:74`) | assembler pass-1: augments raise the frame's carry budget → gates what gear the unit can mount |
+| **6.1 Bio-augment** | Reflex (booster/wired) | evasion +N | ✅ Modelled | `GroundAugmentAtb.EvasionBonus` (`GroundAugmentAtb.cs:32`) → `r.Evasion += EvasionBonus*c` (`GroundUnitAssembly.cs:108`) | feeds `GroundUnit.Evasion` → dodge term in the ground hit-resolve (same evasion currency as ship dodge) |
+| **6.1 Bio-augment** | Constitution (subdermal/organ) | HP multiplier ×(1+t) | ✅ **Modelled** (NOT dead — Defense-doc false positive) | `GroundAugmentAtb.ToughnessBonus` (`GroundAugmentAtb.cs:34`) → accumulate `toughness += ToughnessBonus*c` (`GroundUnitAssembly.cs:110`) → applied once `if(toughness!=0) r.HitPoints *= 1 + toughness` (`GroundUnitAssembly.cs:129`) | multiplies the whole HP pool (frame + armour), order-independent. **Modelled-but-not-surfaced** as a standalone stat — the only open work is a UI readout |
+| **6.1 Bio-augment** | Ward (personal shield) | depleting shield pool | ✅ Modelled | `GroundAugmentAtb.Shield` (`GroundAugmentAtb.cs:36`) → `r.Shield += g.Shield*c` (`GroundUnitAssembly.cs:109`) → `GroundUnit.Shield`/`CurrentShield` | flat incoming-damage soak at unit scale; shield-nature matchup still applies |
+| **6.1 Bio-augment** | Magnitude (mild↔radical) | bonus scale | ◐ Wire | bonus scales ✅; a **drug crash / temporary timing** is ⏳ net-new (no timed-effect model) | — |
+| **6.1 Bio-augment** | Host: ship-crew augment | crew quality | ⏳ Defer (net-new) | augmentation is **ground-only** — no ship-crew `GroundAugmentAtb` twin exists | the space twin lands on the same `Quality`-mult resolver hook below |
+| **6.2 Unit-Caliber** | **Quality tier** (conscript/regular/veteran/elite) — the CORE design-time dial | a single **`Quality` multiplier** stamped on the unit design | ⏳ **net-new (clean)** | NO `Quality` field exists yet on `GroundUnit` or `ShipCombatValueDB` (grep confirms zero `Quality` in `Combat/` + `GroundCombat/`). The spine to add: one static multiplier field baked at build | **THE insertion point:** multiply per-ship `cv.Firepower` and `cv.Toughness` by `Quality` **exactly where the doctrine mult already lands** — `CombatEngagement.cs:707-713` (`CombatShip.FirepowerMult`/`ToughnessMult` struct), applied at `:1033`/`:1041` (firepower × `FirepowerMult`) and `:744` (`EffToughness = cv.Toughness * cs.ToughnessMult`). A unit `Quality` rides the identical multiplier slot |
+| **6.2 Unit-Caliber** | Skill focus (gunnery/evasion/operations) | which stat the tier weights | ⏳ Defer | rides the `Quality` field (attack-vs-evasion weighting) | same slot, weighted |
+| **6.2 Unit-Caliber** | **Scarcity cost** (elites draw a scarce talent pool) | talent drawn per elite | ◐ **Wire** | `ColonyManpowerDB.TalentPool(pop)=pop×0.005` (`Colonies/ColonyManpowerDB.cs:27,48`); `AvailableTalent` (`:54`), `CanCommitTalent` (`:57`), `CommitTalent`/`ReleaseTalent` (`:61-62`) — **purpose-built for "officers/scientists/governors," ZERO consumers today** | the anti-dominance handle: building an elite commits scarce talent → can't mass-produce Space Marines |
+| **6.2 Unit-Caliber** | Source: combat-earned XP | `Quality` climbs on survival | ⏳ Defer | `CommanderDB.Experience` (`People/CommanderDB.cs:21`) is **written by the academy, never read by combat** — a per-unit XP accrual is the harder second path | — |
+| **6.2 Unit-Caliber** | Source: academy-trained | academy graduates officers | ✅ (production) / ⏳ (combat effect) | `NavalAcademyAtb` design dials `ClassSize`/`TrainingPeriodInMonths` (`People/NavalAcademyAtb.cs:11-12`); `NavalAcademyProcessor` rolls `ExperienceCap` on `NextBellCurve` (`:31`) + `Experience` (`:42`) — **real production**; the officer→combat effect is net-new (`BonusesDB` has **no combat category**) | — |
+| **6.2 Unit-Caliber** | Operations (non-combat) | survey/build/research +% | ◐ Wire | a caliber bonus onto the existing `BonusesDB` pattern (`People/BonusesDB.cs:43-47`) | rides the rung-4 wire below, pointed at industry/survey rates |
+| **§E1a shared** | **"a person's skill modifies an outcome"** wire (Command's rung 4) | officer `BonusesDB` → a real combat number | ⏳ build-once | **the copyable pattern:** `ResearchProcessor.RefreshPointModifiers` (`Tech/ResearchProcessor.cs:246`) folds the seated officer's `BonusesDB` into a `ModifiableValue` by `FilterId` match (`:295` reads `scientist.BonusesDB`, `:302` matches `currentTech.Category == bonus.FilterId`, `:304+` `AddModifier`); target is `ResearcherDB.PointsPerDay` = `ModifiableValue<int>` (`Tech/ResearcherDB.cs:16`) | copy this shape to fold a commander's combat-`FilterId` `BonusesDB` into `FleetDoctrine.FirepowerMult`/`ToughnessMult` (`Combat/FleetDoctrine.cs:16-17`) — the **commander** side that STACKS on the **unit** `Quality` side. ONE hook lights BOTH §6.2 elites and Command competence |
+| **§E1a shared** | **Academy talent draw + competence generator** | graduate `BonusesDB` gets a rolled value + commits talent | ◐ Wire | academy rolls `NextBellCurve` today (`NavalAcademyProcessor.cs:31`) but writes only an `Experience` int → the graduate's `BonusesDB` is **empty** (`People/CommanderFactory.cs:24`, `blobs.Add(new BonusesDB())`); wire = write the roll into `BonusesDB` (rung-4 reads it) + draw scarce `ColonyManpowerDB.TalentPool` | same talent handle gates §6.2 elites — build once, both light up |
+| **6.3 Systems** | Targeting computer | hit-chance +N | ⏳ Defer | the auto-resolver's hit-fraction is pure weapon-vs-evasion — **no computer term**; `BeamFireControlAtbDB` feeds only the **parked** per-pixel sim | overlaps the Sensors ▸ Fire-Control wire — a targeting term added to `HitFraction`/`LandedFraction` lights both doors |
+| **6.3 Systems** | Battle-management / coordination | firepower/focus mult | ⏳ Defer | no firepower-coordination term in `CombatEngagement` | — |
+| **6.3 Systems** | AI co-pilot (astromech) | reaction/evasion assist | ⏳ Defer | no crew-slot/reaction model the resolver reads | — |
+| **6.3 Systems** | Automation (non-combat) | run with less crew / faster industry | ◐ Wire | a crew-reduction / industry-speed bonus onto the manpower/industry systems via the `BonusesDB` pattern (`BonusesDB.cs:43-47`) | the cheapest live win in this door |
+
+### Resolver insertion points
+
+**1. The unit `Quality` multiplier lands where the doctrine mult already lands — a proven, per-ship slot (no new resolver).**
+The auto-resolver already carries a per-ship firepower/toughness multiplier: the `CombatShip` struct (`Combat/CombatEngagement.cs:707-713`) holds `FirepowerMult` + `ToughnessMult`, collected per-ship from the fleet's doctrine at `CombatEngagement.cs:1220-1221` (`FleetDoctrine.FirepowerMult(fleet)` / `ToughnessMult(fleet)`). Those multipliers are applied:
+- **Firepower:** `CombatEngagement.cs:1033` (`w.DamagePerSecond * cs.FirepowerMult`) and `:1041` (fallback `cv.Firepower * cs.FirepowerMult`).
+- **Toughness:** the casualty bucket key includes `ToughnessMult` (`:736`) and `EffToughness = cv.Toughness * cs.ToughnessMult / landed` (`:744`).
+A unit's `Quality` is the SAME shape — a scalar that multiplies `cv.Firepower` / `cv.Toughness` (and weights evasion) per unit. Insert it by folding `Quality` into `FirepowerMult`/`ToughnessMult` when the `CombatShip` is constructed, or by multiplying `cv.*` alongside. Because the bucket key already keys on `ToughnessMult`, distinct-caliber units naturally split into their own buckets — the O(buckets) aggregation (§0i, count-resolvers) still holds, no per-unit cost. This is **DATA for the existing combat loop, not a new loop** (§0i / §0E1c).
+
+**2. The BonusesDB→outcome wire — the ONE hook that lights §6.2 elites AND Command competence (build once).**
+This is the "a person's skill modifies an outcome" wire, designed as Command's **rung 4**. The unit `Quality` (spine above) is the unit's OWN stat; the **commander** is a separate, stacking modifier — but both land through the same machinery. Copy the ONLY working instance of the pattern:
+- **The research pattern to copy (`Tech/ResearchProcessor.cs:246` `RefreshPointModifiers`):**
+  1. Target is a `ModifiableValue<T>` — the number the leader moves (research: `ResearcherDB.PointsPerDay`, `Tech/ResearcherDB.cs:16`).
+  2. `RefreshPointModifiers` clears + re-folds modifiers in priority order: base → funding (`:252` `ClearAllModifiers`, funding multiplier `:255+`) → the seated officer's `BonusesDB`, matched by `FilterId` (`:295` reads `scientist.BonusesDB`, `:302` `currentTech.Category.Equals(bonus.FilterId)`, `:304+` `AddModifier`).
+  3. `GetValue()` reads the folded result.
+- **The combat analogue:** make `FleetDoctrine.FirepowerMult`/`ToughnessMult` (`Combat/FleetDoctrine.cs:16-17`, today reading `FleetDoctrineDB`) into a `ModifiableValue`, and fold the seated commander's `BonusesDB` bonuses whose `FilterId` = a combat category. **This requires adding a combat `BonusCategory`** — today the enum is `None/ResearchPoints/ResearchCosts/Mining` only (`People/BonusesDB.cs:7-13`), zero combat category. Add e.g. `Firepower`/`Toughness`/`Accuracy`; the `Bonus.FilterId` free-string field (`:31`) already routes it.
+- **The payoff (Prime Directive):** the unit `Quality` (spine #1) and the commander bonus (this wire) both terminate at `FirepowerMult`/`ToughnessMult` — they STACK. Build the rung-4 fold once and it lights §6.2's commander-effect row AND Command's whole competence layer (governor→legitimacy, admiral→fleet, minister→policy).
+
+**3. The academy talent-pool / scarcity resolver.**
+No combat resolver — the scarcity check is at *build time*: `ColonyManpowerDB.CanCommitTalent(pop, n)` (`Colonies/ColonyManpowerDB.cs:57`) gates whether an elite unit / high-competence officer can be produced; `CommitTalent` (`:61`) draws the pool (`TalentPool = pop × 0.005`, `:27,48`), `ReleaseTalent` (`:62`) returns it on death. This is the anti-dominance economy — the same handle for §6.2 elites and academy graduates.
+
+### Prerequisite fixes & dead stubs (file:line)
+- **The empty `BonusesDB` on academy graduates — the core build gap.** Every officer is created with `blobs.Add(new BonusesDB())` (`People/CommanderFactory.cs:24`) — an empty list. The academy rolls `NextBellCurve` but writes it only to `CommanderDB.Experience`/`ExperienceCap` (`People/NavalAcademyProcessor.cs:31,42`), which combat never reads. Fix: at graduation, roll `BonusesDB.Bonuses` values (reuse `NextBellCurve`) scaled by (design tier + investment) × populousness × dev level × teacher competence, and write them into the empty `BonusesDB` — the shape rung 4 already consumes.
+- **The near-unreachable lab-competence default path.** The ONLY place a `BonusesDB` is ever given a real competence value is a hardcoded one-off in new-game setup: `NewGameMenu.cs:632-638` (`Pulsar4X.Client/Interface/Menus/NewGameMenu.cs`) adds a single `Bonus(…, 0.1, …, BonusCategory.ResearchPoints)` to the starting scientist. There is **no competence generator** — outside that one hardcode, every officer/scientist runs on an empty `BonusesDB`, so the rung-4 machinery has almost nothing to fold. Building the generator (above) is what makes the default path reachable.
+- **`CommanderDB.Experience` written-never-read by combat** (`People/CommanderDB.cs:21,23`) — scaffolding for the earned/trained paths, inert until a consumer reads it.
+- **No `Quality` field exists** on `GroundUnit` / `ShipCombatValueDB` (grep: zero `Quality` in `Combat/`+`GroundCombat/`) — the §6.2 spine is a net-new field to add (then wire into the mult slot above).
+- **No combat `BonusCategory`** (`People/BonusesDB.cs:7-13`) — must be added before a commander bonus can route to a combat number.
+- **`GroundAugmentAtb` is inert on install** (`OnComponentInstallation`/`OnComponentUninstallation` are empty, `GroundAugmentAtb.cs:53-54`) — correct by design; the *assembler* reads the fields at build time (`GroundUnitAssembly.cs:74,108-110,129`), not on install.
+
+### Design essence captured inline (rung-4 competence + the gear-vs-being boundary H4)
+**Rung 4 — "a person's skill modifies a real number."** A leader's competence is not why a seat exists; it is the dial on *how well* the seat's decision executes (a master governor keeps the queue full and morale up; a green one lets the colony drift). Mechanically it is proven in exactly one place — research — as a copyable three-step pattern: the target is a `ModifiableValue<T>`, a `Refresh…Modifiers()` method folds the seated officer's `BonusesDB` in by `FilterId`, and `GetValue()` reads the result (`ResearchProcessor.cs:246`, `ResearcherDB.cs:16`). The academy is the competence *generator*: one bell-curve roll at graduation writes the officer's inherent competence into the `BonusesDB` and commits a slice of the scarce talent pool — quantity vs quality is a design choice (big class + low mean = mass academy; small class + high mean = elite). **The gear-vs-being boundary (H4)** is the line this whole category walks: the designer builds buildable **gear** (an `IComponentDesignAttribute` the assembler/resolver reads — today `GroundAugmentAtb`, tomorrow a `Quality` field); the innate **being** — a species trait, veterancy earned in blood, "the Force," psionics — is NOT a component and lives in People/species/crew (`SpeciesDB` has zero combat trait today; `CommanderDB.Experience` is inert for combat). So "a Jedi" = elite martial **caliber** (§6.2 `Quality`) + a lightsaber (Weapons ▸ Melee) + a small Force **being-trait** in People — we build the warrior; the Force stays a trait, out of the store.
+
+### §0g stamp
+- **Reachable (cradle-to-grave, player-side):** ✅ for Bio-augmentation on the ground — research → build the augment → mount on a unit → the assembler reads its four fields (`GroundUnitAssembly.cs:74,108-110,129`) → the augmented unit fights → the unit dies and the augment is lost. ⏳ for §6.2 `Quality` and §6.3 Systems — the vertical chain is designed (design-time tier / researched computer → built → installed → destroyed) but the resolver field is net-new. Named mineral→material→component→research→unit→decision→loss chain is complete for augments; the missing rung for caliber is the `Quality` field itself.
+- **Mirrored (NPC fields elites/veterans too):** ✅ cheap **because a capability is a component on a shared door** — an NPC mounting `GroundAugmentAtb` or stamping a `Quality` tier is the SAME act as the player doing it (no player-only code). The NPC's caliber/augment choice flows through the identical build path and lands in the same `FirepowerMult`/`ToughnessMult` resolver slot. Delegation = NPC AI: the same academy/talent-pool scarcity constrains the NPC's elites, so it cannot mass-produce Space Marines either.
+- **Observable (the gauge, both sides):** the **caliber/competence readout** — the unit's `Quality` tier + effective firepower/toughness shown in the unit designer and combat readout; the officer's rolled `BonusesDB` competence shown on the commander; and the current gap: `ToughnessBonus` is Modelled but **not surfaced** as a standalone stat (`GroundUnitAssembly.cs:110,129`) — a cheap Failure-A (the number exists, just unwired to the UI). Building that readout is the first Observable task.
+
+### Cross-category shared state (Prime Directive)
+- **Enhancers × Command [the shared wire]:** both terminate at the SAME resolver multipliers (`FirepowerMult`/`ToughnessMult`, `CombatEngagement.cs:707-713,1220-1221`). Unit `Quality` (§6.2, the unit's own stat) and commander competence (§10, a stacking modifier) STACK there. The rung-4 fold (`ResearchProcessor.cs:246` pattern → `FleetDoctrine.cs:16-17`) is built ONCE and lights both. Shared state = the mult slot + the `BonusesDB` shape + the (net-new) combat `BonusCategory`.
+- **Enhancers × Civic [academy / talent]:** the academy BUILDING is Civic ▸ Development (`NavalAcademyAtb`, `People/NavalAcademyAtb.cs`); its officers' combat EFFECT is consumed here. Both §6.2 elites and academy officers draw the SAME scarce `ColonyManpowerDB.TalentPool` (`Colonies/ColonyManpowerDB.cs:27,48,57,61`) — population is the shared resource that caps how many elites/officers exist. Build here, produce there.
+- **Enhancers × Chassis [augment raises the budget]:** a Bio-augment's `StrengthBonus` raises the frame's carry budget (`GroundUnitAssembly.cs:74`, assembler pass-1) — the §0b "carry more" upgrade. Shared state = the chassis `BaseStrength` carry budget that the Personnel/Vehicle frame sets and the augment increases; overloading it invalidates the design.
+
+### Holes owned/resolved (H4, H10) → status + home
+- **H4 — Innate / pilot "magic"** (the Force, psionics, hand-device; `COMPONENT-DESIGNER-CATEGORIES.md` §5 line 88, boundary line 51). **Status: RESOLVED as a BOUNDARY, owned here.** This category draws the gear-vs-being line: buildable gear (`GroundAugmentAtb`, the net-new `Quality` field) is Enhancers; the innate part (species trait, veterancy, the Force) is **NOT a component** and lives in **People / crew / commander / species** (`SpeciesDB` — zero combat trait today; `CommanderDB` — `Experience` inert for combat). Home for the innate half: the People system. Enhancers is the buildable *bridge* across the line, never the crossing.
+- **H10 — Autonomous / crewless / hive units** (Borg, Replicators, drones; §5 line 96). **Status: partially owned, mostly deferred.** The buildable half routes through **Enhancers ▸ Systems** automation → an AI that drives crew requirement toward zero (◐ Wire, onto the manpower/crew systems via the `BonusesDB` pattern). The **hive** half (many bodies sharing one mind, one span) is a **Command/formation variant** (shared span-of-control), not an Enhancer — home: the Command category. Both are ⏳ pending: the automation crew-reduction term and the shared-span Command variant are net-new.
+
+---
+
 ## §7 — Industrial
 
 Industrial is the **economic spine** — the front end of the whole game: **mine → refine → build**. Everything else in the designer is *made here*: a weapon, a reactor, a shield, a ship, a colony installation all come out of this category's output. It is the purest **non-combat** category (no combat consumer at all — §0f is trivially satisfied: Industrial *is* the backbone every other system draws on), and it's **mostly Modelled** — the extraction and fabrication loops both run live through daily processors, host-agnostic (a **colony OR a station** mines and builds identically). The honest work here isn't design gaps — it's a **cluster of real engine gaps** (a broken refining feed, missing gas harvesting, an inert slip-cap, two overlapping build paths) that the door-by-door audit surfaces.
@@ -2056,6 +2771,82 @@ Extraction 🔒 · Fabrication 🔒. **The economic SPINE, mostly Modelled** —
 
 ---
 
+## ⚙ 7 — INDUSTRIAL · WIRING DOSSIER (self-contained)
+*Everything needed to wire this category — no other doc required.*
+
+Industrial is the **economic spine — the front end of the whole game: mine → refine → build.** Everything else the designer makes (a weapon, a reactor, a shield, a ship, a colony installation, a tank) comes out of *this* category's output. It is the purest **non-combat** category: it has no combat consumer at all — Industrial *is* the backbone every other system draws on. Two doors because there are two genuinely-distinct engine subsystems: **Extraction** (mining — NOT an industry type; its own processor) and **Fabrication** (one industry ability routed by type: refine / component / installation / ordnance / ship-assembly / [new] unit-assembly). Both run live through **daily processors** and are **host-agnostic** — a colony *or* a station mines and builds identically. The honest work here is not design gaps; it's a cluster of real engine gaps, the biggest being **the broken refining feed** (materials never get made).
+
+### Pillar tags (§0h)
+- **Pillar:** Military / Economy — **Medium** (the *production substrate*). Industrial is not a projector or a counter; it is the **Medium** every projector is *made from*. In PROJECTOR⛓COUNTER terms (E0a) it sits under the shared spine as the thing that manufactures both the projector and its counter — a weapon and its armor both leave an Industrial facility.
+- **skeleton-role:** **Medium / infrastructure.** No seat, no officer, no target-facet; it produces the physical objects the other pillars wield.
+- **§0h nuance — the pure-infrastructure NPC clause applies:** an NPC uses Industrial **FOR itself** (to mine/refine/build its fleets), not **AT** you. That still counts as Mirrored *provided the NPC actually runs the loop* — an NPC that never refines is the inert-AI trap (see §0g stamp).
+- **§0i count-resolvers-not-doors:** Industrial's resolver is **the industry/economy loop** (`MineResourcesProcessor` + `IndustryProcessor`, both daily) — NOT the combat resolver. Every dial below must bottom out in a number one of those two daily processors reads. Extraction and Fabrication are the same *economy loop* specialized; the ~7 preset facilities (mine, refinery, factory, foundry, shipyard, robo-miner, gas-skimmer) are **DATA that loop reads**, not new loops.
+
+### Complete dial → derived-stat → engine-wire table (VERIFIED)
+
+| Door | Dial | Derived stat | Grade | Engine wire (file:line) | System insertion (the industry loop) |
+|------|------|--------------|-------|--------------------------|--------------------------------------|
+| **7.1 Extraction** | Extraction rate (small↔large) | units/mineral/day | ✅ | `MineResourcesAtbDB.ResourcesPerEconTick` (`Industry/MineResourcesAtbDB.cs:11`) → `MiningDB.BaseMiningRate` (`Industry/MiningDB.cs:11`) | `MineResourcesProcessor.ProcessEntity` (`Industry/MineResourcesProcessor.cs:37`) draws down the deposit daily |
+| 7.1 | Deposit depletion / accessibility | 0.1–1.0, **decays cubically** as deposit empties | ✅ | `MineResourcesProcessor.cs:98-100` — `accessability = (newAmount/HalfOriginalAmount)^3 × Accessibility`, clamped ≥0.1 | the "move on / re-survey" pressure — diminishing returns force relocation |
+| 7.1 | Colony/host bonus | actual = base × miningBonus × accessibility | ✅ | `MiningHelper.CalculateActualMiningRates` (`Industry/MiningHelper.cs:37`); reads `ColonyBonusesDB.GetBonus(AbilityType.Mine)` (`:48-50`) × per-mineral `Accessibility` (`:59`); written to `MiningDB.ActualMiningRate` (`Industry/MiningDB.cs:13`) at `MineResourcesProcessor.cs:140` | actual rate the daily loop applies |
+| 7.1 | Automation / mobility (fixed mine ↔ automine/RoboMiner) | fixed = Area×0.00001 · automine = Size×0.005, **transportable** | ✅ | same `MineResourcesAtbDB` atb; `automine` template is Size-based + mounts as ShipCargo/PlanetInstallation | drop a RoboMiner on an asteroid, retrieve later — the belt-mining play |
+| 7.1 | Host (colony ↔ station) | host-agnostic | ✅ | `MiningHelper.TryGetMiningBody` — a station mines its body exactly like a colony | colony OR station, no code fork |
+| 7.1 | Target-resource focus (broad ↔ per-mineral) | per-mineral rate | ◐ **wire** | rate field `ResourcesPerEconTick` **is** per-mineral (`MineResourcesAtbDB.cs:11`) but templates fill it flat — expose a focus dial | pour capacity into one scarce ore |
+| 7.1 | **Medium — solid ↔ gas/atmosphere (skimmer)** | fuel/sorium from a gas giant | ⏳ **MISSING (net-new)** | **no** gas-harvest component/ability exists — a new extraction medium mirroring the mining atb | the Expanse/gas-giant fuel play — the one real *design* hole |
+| 7.1 | Per-hex deposit source-of-truth | per-hex minerals | ◐ **wire** | `HexMinerals` (`Industry/HexMinerals.cs`) seeds surface hexes but is **view-only**; body-wide pool is still source of truth | make hexes the real deposit |
+| 7.1 (ESSENCE) | **★ Excavation medium — pull a yield from a *site*** (ore/gas/**site**) | one-shot/over-time yield from `RuinsDB` | ⏳ **Defer** | mirrors `MineResourcesProcessor`; **consumes `RuinsDB` (`Galaxy/RuinsDB.cs`) ONCE the `SystemBodyFactory.cs:1418-1420` tautology bug is fixed** (ruins never generate today) | the field-site expedition arm of Extraction — a scientist posting pulls a tech-windfall/blueprint from an ancient site |
+| **7.2 Fabrication** | Industry-type routing (refine/component/installation/ordnance/ship-assembly/**unit-assembly**) | points/day **per type** | ✅ | `IndustryAtb.IndustryPoints` (`Industry/IndustryAtb.cs:14`, dict type→pts) → `IndustryJob.TypeID` → `IndustryTools.ConstructStuff` routes by `designInfo.IndustryTypeID` (`Industry/IndustryTools.cs:126`) | a design declares `IConstructableDesign.IndustryTypeID`; a job only progresses if its facility has points for *its* type |
+| 7.2 | Throughput (small ↔ large) | points/day × infra efficiency | ✅ | `IndustryTools.cs:121` — `industryPointsRemaining[type] = rate × infraEfficiency`; efficiency from `InfrastructureProcessor.GetEfficiency` (`:115`) | clears the queue faster; heavy = bigger bombard/capture footprint |
+| 7.2 | Resource consumption (input feed) | draws `ResourceCosts` from stock each tick | ✅ | `IndustryTools.ConsumeResources` (`:173` call, `:221` def) pulls from `CargoStorageDB`; no stock → `IndustryJobStatus.MissingResources` (`:146`, `:204`) | the build stalls visibly when short — the gauge |
+| 7.2 | Specialization (dedicated ↔ general) | 1-type vs multi-type points map | ✅ | just different `IndustryAtb.IndustryPoints` maps — refinery=1 type, factory=3, shipyard=component+ship-assembly | idle-when-no-work vs jack-of-all-trades |
+| 7.2 | Host (colony ↔ station) | host-agnostic | ✅ | `IndustryAbilityDB` lives on either entity (`IndustryAtb.OnComponentInstallation`, `IndustryAtb.cs:46-64`) | station factory = colony factory |
+| 7.2 | **Refining (mineral → material)** | `ProcessedMaterial` output added to storage | ✅ mechanic **but DEAD-IN-PRACTICE** | refinery → `refining` type → `ProcessedMaterial.OnConstructionComplete` adds cargo (`Industry/ProcessedMaterial.cs:34-40`) works — **BUT the mineral input feed isn't auto-supplied**, so refining jobs stall at `MissingResources` (`IndustryTools.cs:146/:204`). **The #1 build item for the whole game economy.** | see the dedicated section below |
+| 7.2 (NEW) | **Unit-assembly (tanks/walkers/aircraft)** | a new `IndustryTypeID` + foundry template | ◐ **wire** | ground units build through generic `component-construction` today; add a **`unit-assembly` type** to the `IndustryTypeID` routing (`IndustryTools.cs:126`) + a foundry template granting `IndustryAtb.IndustryPoints["unit-assembly"]` — mirrors `ship-assembly`, a data+routing change | the vehicle-foundry / aircraft-plant so the AT-M6 has a real facility |
+| 7.2 (NEW) | **Assembly-bay size gate** (slip ▸ vehicle-bay ▸ hangar) | max whole-unit mass the bay can assemble | ◐ **wire — inert field** | `IndustryAbilityDB.MaxVolume` (`Industry/IndustryAbilityDB.cs:15`) is **stored, NEVER READ** in `ConstructStuff`; set from `IndustryAtb.MaxProductionVolume` (`IndustryAtb.cs:17,50`, defaults `PositiveInfinity` at `:25`). Ship gate is **duplicated** in `LaunchComplexAtb.MaxTonnage` (`Ships/LaunchComplexAtb.cs:11`), read at `LaunchComplexProcessor.cs:58` (`shipDesign.MassPerUnit > pad.MaxTonnage`) | wire `MaxVolume` into `ConstructStuff` AND generalize past ships → the AT-M6/Titan size forcing (§0b) made a real gate |
+| 7.2 | **Repair / refit** (reverse op) | restore/rebuild a unit | ⏳ **Defer** | partial-damage repair needs the **degraded-condition** model (combat is whole-unit v1); refit-to-new-design is a construction job (◐) | a shipyard/foundry maintains, not just builds |
+| 7.2 | **Recycle / scrap** (reverse op) | reclaim materials from a scrapped/captured unit | ⏳ **net-new** | no path reclaims materials — the reverse-build arrow that closes mine→build→**scrap** | decommission → materials back to stock |
+| 7.2 (ESSENCE) | **★ Salvage / recovery** — a wreck: strip mass / recover design / recover survivors | wreck yield (materials + a ship design + population) | ⏳ **Defer** | this is the recycle arm pointed at a **wreck**; **needs `DamageProcessor.SpawnWreck` finished** (`Damage/DamageComplex/DamageProcessor.cs:478` — a stub that just `TagEntityForRemoval`s the ship, no wreck created); the unused events `WreckSalvaged` / `WreckComponents` (`Engine/Events/EventTypes.cs:247,350`) are the ready hooks | the field-site recovery arm of Fabrication — BSG derelict salvage |
+| 7.2 | Dual construction paths | installation build (redundant) | ◐ **wire (cleanup)** | `IndustryAtb` + `installation-construction` **AND** the separate `LocalConstructionAtb` (`Industry/LocalConstructionAtb.cs:7`) / `LocalConstructionProcessor` (`Industry/LocalConstructionProcessor.cs:12`) FIFO **both** build installations — unify | one build path, not two |
+
+### The industry/economy loop — mine → refine → build (file:line); and THE BROKEN REFINING FEED
+
+**The full loop, verified:**
+1. **MINE** — `MineResourcesProcessor` (daily `IHotloopProcessor`, `Industry/MineResourcesProcessor.cs:37`) reads `MiningDB.ActualMiningRate` (computed by `MiningHelper.CalculateActualMiningRates`, `MiningHelper.cs:37`, = base × colony `AbilityType.Mine` bonus × cubic-decaying `Accessibility`) and adds raw **minerals** to the host's `CargoStorageDB`.
+2. **REFINE** — `IndustryProcessor` (daily `IHotloopProcessor`, `Industry/IndustryProcessor.cs:7,23-25`) calls `IndustryTools.ConstructStuff` (`Industry/IndustryTools.cs:90`). A `refining`-type job spends `IndustryAtb.IndustryPoints["refining"]`, calls `ConsumeResources` (`:173`) to pull mineral inputs from cargo, and on completion `ProcessedMaterial.OnConstructionComplete` (`Industry/ProcessedMaterial.cs:34`) adds the **material** to storage.
+3. **BUILD** — the same `ConstructStuff` runs `component`/`installation`/`ordnance`/`ship-assembly` jobs, routed by `designInfo.IndustryTypeID` (`:126`), each consuming its `ResourceCosts` (materials) from cargo.
+
+**THE BROKEN REFINING FEED — the #1 gap.** The refining *mechanic* is whole and correct — step 2 above runs end to end **when the mineral inputs are in the refinery's `CargoStorageDB`.** The break: **nothing auto-supplies those mineral inputs to the refining job.** `ConsumeResources` (`IndustryTools.cs:221`) only draws from what is already in local cargo; there is no wire that routes mined minerals INTO the refinery's input stock. So refining jobs stall permanently at `IndustryJobStatus.MissingResources` (`IndustryTools.cs:146` / `:204`) and **materials never get made** — which starves every downstream `component`/`installation`/`ordnance`/`ship-assembly` build (all consume materials, not raw minerals). This is caught and quarantined by `EconomyReadoutTests` (`Pulsar4X.Tests/EconomyReadoutTests.cs`).
+- **What to wire:** a feed that makes a mined mineral available to a refining job's `ConsumeResources` draw — either (a) the mine and refinery share the same host `CargoStorageDB` so mined minerals land where `ConsumeResources` looks, or (b) a logistics/supply link that stages the mineral inputs into the refinery's stock before `ConstructStuff` runs. The exact insertion point is between `MineResourcesProcessor` output and `IndustryTools.ConsumeResources` (`IndustryTools.cs:173,221`). Until this is fixed, the materials economy is inert — **fix it first; everything else Industrial waits on it.**
+
+### Prerequisite fixes & dead stubs (file:line)
+
+1. **[#1 — refining feed]** The mine→refine input feed is not auto-supplied — refining stalls at `MissingResources` (`Industry/IndustryTools.cs:146,204`; consumer `ConsumeResources` `:221`). **Top build item — blocks the whole materials economy.** (See section above.)
+2. **[GenerateRuins tautology — blocks Excavation]** `SystemBodyFactory.GenerateRuins` (`Galaxy/SystemBodyFactory.cs:1411`) has a **logical tautology at `:1419-1420`**: `if (bodyType != BodyType.Terrestrial || bodyType != BodyType.Moon) return;` — a value can never equal *both* Terrestrial *and* Moon, so at least one inequality is always true → the guard **always early-returns** → `RuinsDB` (`Galaxy/RuinsDB.cs`) is never populated → nothing to excavate. Fix: change `||` to `&&`. Prerequisite for the Excavation-medium dial.
+3. **[SpawnWreck stub — blocks Salvage]** `DamageProcessor.SpawnWreck` (`Damage/DamageComplex/DamageProcessor.cs:478`, called on ship death at `:152`) is a **stub that just `TagEntityForRemoval`s the destroyed ship** — it creates no wreck entity. Salvage/recovery needs it finished (spawn a wreck carrying the dead ship's design + materials + survivors). Hooks already exist: `WreckSalvaged` / `WreckComponents` events (`Engine/Events/EventTypes.cs:247,350`) — declared, unconsumed.
+4. **[Dead code — don't build on]** `InstallationsDB` (`Industry/InstallationsDB.cs`) is **confirmed dead** (never attached, no `[JsonProperty]` state) — installations are components in `ComponentInstancesDB`, NOT this blob (Landmine L1). `Fighter Construction Points` hardcoded 0 (defer).
+5. **[Cleanup — dual construction]** `IndustryAtb`+`installation-construction` and the separate `LocalConstructionAtb`/`LocalConstructionProcessor` FIFO (`Industry/LocalConstructionAtb.cs:7`, `Industry/LocalConstructionProcessor.cs:12`) both build installations — unify.
+6. **[Cleanup — inert slip-cap folds into bay-size wire]** `IndustryAbilityDB.MaxVolume` (`Industry/IndustryAbilityDB.cs:15`) stored, never read; ship gate duplicated in `LaunchComplexAtb.MaxTonnage` (`Ships/LaunchComplexAtb.cs:11`, read `LaunchComplexProcessor.cs:58`). Wiring the bay-size gate resolves both.
+
+### Design essence captured inline (the field-site excavation/salvage loop)
+The merged Exploration essence gives Industrial two **field-site** arms — the same "assign a specialist, pull a yield" loop reused (§0i: it's the lab loop, not a new resolver). **Excavation** is Extraction pointed at a *site*: a scientist posting at ancient ruins pulls a one-shot **tech windfall or a unique blueprint you can't research normally** (Stargate/Mass Effect/Halo), with the catch that guardians/traps can kill the team. **Salvage** is Fabrication's recycle arm pointed at a *wreck*: strip it for mass, recover its **ship design**, or recover **survivors** (population — even a stranded leader), with the catch that it may be booby-trapped or something is still aboard (BSG). Both are ⏳ Defer because each sits behind a dead stub — Excavation behind the `RuinsDB` tautology (ruins never generate), Salvage behind `SpawnWreck` (wrecks never spawn). Fix those two one-liners-plus-consumer and Industrial gains the whole "exploration has something to *take*" layer for cheap, because the field-site loop machinery already exists.
+
+### §0g stamp — three acceptance criteria
+- **Reachable (cradle-to-grave, player-side):** ✅ **PASS.** A facility is a **component** the player researches → designs → builds from materials → installs on a colony/station → runs (mine/refine/build) → loses when the colony is captured or the installation is bombarded (a war-foundry is itself a big build and a footprint target). The mine's grave rung is the *deposit running dry* (cubic accessibility decay, `MineResourcesProcessor.cs:98-100`) — you re-survey and relocate. Every rung is named and wired.
+- **Mirrored (opponent-side):** ◐ **CONDITIONAL — this is the live risk.** Industrial is the §0h "pure-infrastructure" case: the NPC uses it **FOR itself** (to mine/refine/build its fleets), not AT you. The Mirror passes **only if the NPC actually runs the loop.** The daily processors (`MineResourcesProcessor`, `IndustryProcessor`) are entity-driven and will fire on NPC-owned colonies/stations — but the NPC decision layer must *queue the jobs*: `NPCDecisionProcessor.cs:80` names "prioritize colony construction / refinery queues" as intent. **An NPC that never queues a refining job = the inert-AI trap** (solitaire). Verify the NPC brain actually issues `IndustryOrder2` build/refine jobs through the identical order path the player uses — no player-only build code. And note the Mirror inherits the #1 gap: an NPC's refining stalls at `MissingResources` exactly like the player's until the feed is fixed.
+- **Observable (the gauge, both sides):** ✅ **PASS (player-side; extend to enemy-side).** `ColonyManagementWindow` (`Pulsar4X.Client/Interface/Windows/ColonyManagementWindow.cs`) already renders the readouts: **Summary** (`:122` — population + infrastructure efficiency + installed components + raw *and* refined stockpiles), **Production** (`:124` `DisplayIndustry`/`IndustryDisplay` — the job queue, batch/repeat/priority/cancel), **Construction** (`:125`), **Mining** (`:126` `DisplayMining` — per-mineral rates, annual production, years-to-depletion). The stall gauge is live: a job at `MissingResources` (`IndustryTools.cs:146,204`) shows in the Production tab — so the refining feed break is *visible*, not silent. The extension owed by §0g: show the same working on an *enemy* facility you've scouted (a Failure-A wire, the number exists).
+
+### Cross-category shared state (Prime Directive)
+- **Industrial × EVERYTHING** — it *builds every component in the designer.* Any door's output design declares `IConstructableDesign.IndustryTypeID` + `ResourceCosts`; those are what `ConstructStuff` (`IndustryTools.cs:90`) consumes and produces. Change the industry-type enum or the material-cost contract and every category's build path is affected.
+- **Industrial × Logistical (doors 26–27, the feed):** the whole loop reads/writes `CargoStorageDB`; the refining-feed fix is fundamentally a **logistics/supply** wire (get minerals to the refinery's input stock). Also: "store finished units at reduced upkeep" (mothball/reserve) is **Logistical ▸ Storage**, NOT Industrial — Fabrication *builds* the unit, Logistical *stores* it (needs an upkeep-cost model to discount against; verify when Logistical is built).
+- **Industrial × Exploration (the field-site loop):** Excavation consumes `RuinsDB` (`Galaxy/RuinsDB.cs`, gated by the `SystemBodyFactory.cs:1418` tautology); Salvage consumes wrecks (gated by `SpawnWreck`, `DamageProcessor.cs:478`). Both are the same expedition loop as the science lab (§0i).
+- **Industrial × Damage/Combat (grave rung + salvage source):** `DamageProcessor.SpawnWreck` (`Damage/DamageComplex/DamageProcessor.cs:478`) is *where* a killed ship becomes salvageable stock — combat feeds Industrial's recycle arm. A bombarded factory is Industrial's loss rung on the war map.
+- **Industrial × Infrastructure/Colony:** throughput scales by `InfrastructureProcessor.GetEfficiency` (`IndustryTools.cs:115`) and mining by `ColonyBonusesDB.GetBonus(AbilityType.Mine)` (`MiningHelper.cs:48-50`) — the colony's condition throttles both loops.
+
+### Holes owned/resolved
+- **H3 — Self-replication / mobile fabrication** (`COMPONENT-DESIGNER-CATEGORIES.md:91`): **PARTIALLY RESOLVED — home = Industrial.** *Mobile fabrication* (an Industrial door mounted on any chassis — a carrier building fighters, a mobile shipyard) is the **cheap half**: `IndustryAtb`/`MineResourcesAtbDB` are `IComponentDesignAttribute`s that already install on any host entity (`IndustryAtb.OnComponentInstallation`, `IndustryAtb.cs:46`; host-agnostic `MiningHelper.TryGetMiningBody`), so it is a small **universal-mount** change — let Industrial doors mount on Vehicle/Hull chassis, not just colony/station. *Self-replication* (a unit building a copy of **its own design** from raw matter) is the **deep half — still open**: a new mechanic, deferred. Status: **mobile-fabrication ◐ wire (home: Industrial, this category); self-replication ⏳ Defer (net-new).**
+
+---
+
 ## §8 — Logistical
 
 Logistical is the **hold-and-move backbone** — where everything the game makes gets *kept* and *carried*. It's the twin of Industrial: Industrial *builds*, Logistical *stores and ships*. Pure support/economy (no direct combat consumer, though it feeds combat through fuel → Δv, ordnance → resupply, and troops → invasion), and **mostly Modelled** — one universal cargo hold, a dedicated troop bay, a manual transfer, and a *functional automated supply market* all run live. The one honest headline is the developer's **mothball/reserve** request, which surfaces a genuine missing system: **there is no upkeep for ships or units to reduce.**
@@ -2174,6 +2965,127 @@ Storage 🔒 · Transfer 🔒. **The hold-and-move backbone, mostly Modelled** �
 
 ---
 
+## ⚙ 8 — LOGISTICAL · WIRING DOSSIER (self-contained)
+*Everything needed to wire this category — no other doc required.*
+
+Logistical is the **hold-and-move backbone** — the twin of Industrial (Industrial *builds*; Logistical *stores + ships*). Pure support/economy that FEEDS the other categories: fuel→Δv, ordnance→gun-resupply, troops→invasion, materials→colonies. Two doors: **8.1 Storage** (hold things) and **8.2 Transfer** (move things). Both LOCKED. The hold layer + the transfer engine + a working automated freight market all run live in the engine today; the one honest design gap is the developer's **mothball/reserve** ask, which is blocked on a missing system (fleet/army upkeep) — see the UPKEEP GAP section.
+
+---
+
+### Pillar tags (§0h) — note the covert-insertion bay is Espionage·Delivery
+
+The universal PROJECTOR⛓COUNTER tag (§0h): what does a door PROJECT, and what COUNTERS it. Logistical is normally **Military/Economy · Medium reach** — it doesn't project force itself, it *enables* the force projector (a troop bay carries the invasion; a fuel tank extends the reach).
+
+| Door / mode | Pillar tag (§0h) | Projects | Countered by |
+|---|---|---|---|
+| 8.1 Storage (cargo / fuel / ordnance hold) | **Economy · Medium** | supply throughput / Δv range / resupply depth | a hold hit spills its contents (fuel = a hazard); mass drags accel |
+| 8.1 Storage ▸ troop/vehicle bay (`GroundBayAtb`) | **Military · Medium (Delivery)** | ground force onto a hostile world (the invasion lift) | must win the orbit first (`HasOrbitalControl`); a bay shot off takes its units |
+| 8.2 Transfer (rate/range · spaceport · freight market) | **Economy · Medium** | keeps colonies/fleets supplied without micro | route capacity; faction-gated (needs `LogisticsAccess`); a damaged arm stops contributing |
+| 8.2 Transfer ▸ **TOW/GRAPPLE mode** (E1b) | **Economy/Exploration · Medium** | recover a whole drifting entity (a derelict) | towed mass drags the tug's own accel (the honest cost) |
+| 8.2 Transfer ▸ **COVERT-INSERTION bay** (E1d) | **★ Espionage · Delivery** (NOT Military — the espionage-delivery slot) | an operative into a hostile system, hidden | the live sensor loop (interceptable); a detection roll replaces the orbital-control gate |
+
+**Why the covert-insertion bay is tagged differently:** a troop bay projects MILITARY force onto ground you control the orbit over; a covert-insertion bay projects an ESPIONAGE agent into ground you do NOT control — same physical shape (a bay that carries a passenger off-ship), opposite gate, and its "combat" lands in the Information-Ledger / population layer, never the fleet resolver (§0f).
+
+---
+
+### Complete dial → derived-stat → engine-wire table (VERIFIED)
+
+| Door | Dial | Derived stat | Grade | Engine wire (file:line) | System insertion |
+|---|---|---|---|---|---|
+| **8.1 Storage** | Cargo TYPE (general/fuel/ordnance/passenger) | which `TypeStore` pool the hold accepts | ✅ Modelled | `CargoStorageAtb(storeTypeID, maxVolume)` `Storage/CargoStorageAtb.cs:12`; seeds pool in `OnComponentInstallation` `:18-38` → `CargoStorageDB.TypeStores` (`SafeDictionary<string,TypeStore>`) `Storage/CargoStorageDB.cs:14` | a pool per type; a bay only accepts matching-type cargo. StoreTypeIDs live in `GameData/basemod/TemplateFiles/storage.json` (`general-storage`, `fuel-storage`, `ordnance-storage`) |
+| 8.1 Storage | VOLUME (m³, "Storage Volume" 10–10,000) | `TypeStore.MaxVolume` / `FreeVolume` | ✅ | `CargoStorageAtb.MaxVolume` `Storage/CargoStorageAtb.cs:10`; `TypeStore` `Storage/CargoStorageDB.cs:79-98`; recalculated by `StorageSpaceProcessor.CalculatedMaxStorage` `Storage/StorageSpaceProcessor.cs:88` | bigger volume = fewer trips + heavier footprint |
+| 8.1 Storage | FUEL tank (a `"fuel-storage"`-type hold) | fuel mass → `NewtonThrustAbilityDB` Δv | ✅ | fuel pool read in `CargoTransferProcessor.UpdateMassFuelAndDeltaV` `Storage/CargoTransferProcessor.cs:168-183` → `newtdb.SetFuel(fuelMass, massTotal)` `:182` | a fuel tank IS your Δv; fuel mass drags accel (the Propulsion trade) |
+| 8.1 Storage | ORDNANCE / ship magazine (`"ordnance-storage"` hold) | reload pool for launcher magazines | ✅ | same `CargoStorageAtb`/`CargoStorageDB` typed pool; ordnance store defined `storage.json` (`ordnance-storage`) | a missile reserve → reloads the launcher's internal magazine; a hit magazine is a hazard |
+| 8.1 Storage | GROUND magazine (a unit's ammo pool) | `GroundMagazineAtb.Capacity_kg` → `GroundUnit.MaxAmmo_kg` | ✅ | `GroundMagazineAtb.Capacity_kg` `GroundCombat/GroundMagazineAtb.cs:25`; snapshot `GroundUnitDesign.AmmoCapacity_kg` `GroundCombat/GroundUnitDesign.cs:59`; pool logic `GroundCombat/GroundAmmo.cs:19-47` (`CarriesAmmo`/`IsDry`/`Consume`/`Refill`) | runs dry → the weapon goes silent until resupplied (`GroundForces.ResupplyUnit` tops it on friendly ground, `GroundAmmo.cs`) |
+| 8.1 Storage | **UNIT / TROOP bay** (SEPARATE bay, not the cargo hold) | `GroundBayAtb.Capacity` + `CarryClass` | ✅ | `GroundBayAtb` `GroundCombat/GroundBayAtb.cs:34`; `Capacity` `:37`, `CarryClass` `:39`, ctor(capacity, carryClass) `:45`; class enum `GroundCarryClass{Personnel,Vehicle}` `:13`; capacity summed on demand `GroundTransport.BayCapacity` `GroundCombat/GroundTransport.cs:40` | Personnel bay carries infantry, Vehicle bay carries armour/artillery; a bay carries only its own carry-class (can't cram a tank into a troop bay) |
+| 8.1 Storage | **MOTHBALL / RESERVE** (developer's ask) | reduced-upkeep stored state | ⏳ **net-new** (ships/units) / ◐ **wire** (stations) | **nothing to discount for ships/units** — no ShipUpkeep/ArmyUpkeep exists (`TransactionCategory` `Factions/Ledger.cs:8-14`); stations DO have it (`StationEconomyDB.OperatingCost` `Stations/StationEconomyDB.cs:53`) | **TWO-PART build — see UPKEEP GAP section** |
+| 8.1 Storage | *bare-hold no-op* (the trap) | a `CargoStorageDB` with no seeded `TypeStore` silently accepts nothing | ◐ **wire (bug)** | a fresh `new CargoStorageDB()` has empty `TypeStores` `Storage/CargoStorageDB.cs:33-36`; every `AddCargoByUnit`/`RemoveCargoByUnit` then returns 0 and no-ops (all `CargoMath` logging commented out) | guard on design; install a cargo/`CargoStorageAtb` module to make a hold real (Stations Slice F hit this) |
+| **8.2 Transfer** | RATE (kg/s) + RANGE (Δv m/s) | `CargoTransferAtb.TransferRate_kgs` / `TransferRange_ms` | ✅ | `CargoTransferAtb.TransferRate_kgs` `Storage/CargoTransferAtb.cs:15`, `TransferRange_ms` `:20`, ctor(rate_kgs, rangeDV_ms) `:22`; recalc → `CargoStorageDB.TransferRate` `Storage/CargoStorageDB.cs:29` / `TransferRangeDv_mps` `:31` via `StorageSpaceProcessor.CalcRateAndRange` (**rate summed** `:77`, **range averaged** `range/i` `:85`) | fast/short vs slow/long. **Rate summed, range averaged across a ship's components; a damaged arm (below `StopWorkingAtPercent`) contributes nothing** `StorageSpaceProcessor.cs:75-80` |
+| 8.2 Transfer | the actual escrow move | mass moved per tick within Δv range | ✅ | `CargoTransferProcessor` (every **1 min** `:17`) `Storage/CargoTransferProcessor.cs:45-63`; out-of-range early-out `if(dv_mps > transferRange)` `:54`; Δv gap via Hohmann `CalcDVDifference_m` `:192-227` | two holds transfer only if their Δv separation ≤ range; escrow model |
+| 8.2 Transfer | SPACEPORT (surface↔orbit elevator, facility) | a colony-mounted `CargoTransferAtb` carrier | ✅ | `spaceport` template `GameData/basemod/TemplateFiles/storage.json:108` carrying `CargoTransferAtb` `:169` → contributes rate+range to the colony hold | loads ships from the colony fast; fixed to the colony, a footprint target |
+| 8.2 Transfer | LAUNCH COMPLEX (ships to orbit, facility) | tonnage-gated pads, fuel-to-orbit | ✅ | `LaunchComplexProcessor` (daily `:16`) `Ships/LaunchComplexProcessor.cs:14`; `LaunchComplexAtb` / `LaunchComplexDB` (`Ships/`) | lifts whole SHIPS to orbit, deducts fuel-to-orbit; ship-elevator, not cargo |
+| 8.2 Transfer | **AUTOMATED supply network** (logistics office) | `LogiBaseAtb.LogisicCapacity` + desired min/max | ✅ | `LogiBaseAtb.LogisicCapacity` `Logistics/LogiBaseAtb.cs:11`; creates `LogiBaseDB` on install `:12-29`; `LogiBaseDB.DesiredLevels` (min/max) `Logistics/LogiBaseDB.cs:17`, `ListedItems` `:18`; bidding ships `LogiShipperDB.States` `Logistics/LogiShipperDB.cs:11`; run by `LogiBaseProcessor`+`LogiShipProcessor` (every **6 h**) + `LogisticsCycle.LogiBaseBidding/LogiShipBidding` | set min/max stock; a **profit-based freight market** auto-hauls to keep colonies topped up (you cede control to the market) |
+| 8.2 Transfer | faction-access gate on the market | who a freighter may service | ✅ | `LogisticsCycle.LogisticsAccessAllowed(baseFaction, shipFaction, game)` — same-faction OR base granted `RelationshipState.LogisticsAccess` (Logistics/CLAUDE.md:77; `DiplomacyDB`) | the "run your freighters through my supply network" treaty flag; defaults false = same-faction-only |
+| 8.2 Transfer | **TOW / GRAPPLE mode** (E1b) | reuse transfer throughput to move a whole *entity* | ◐ **Wire** | `CargoTransferAtb` reused as tow throughput; towed mass drags the tug's `NewtonThrustAbilityDB` accel (the honest cost) — DIALS §E1b `COMPONENT-DESIGNER-DIALS.md:2513` | recover a drifting DERELICT (not just cargo). Re-parent the towed entity's `PositionDB` to the tug; blocked-on the exploration `SpawnWreck`/derelict content to have something to tow |
+| 8.2 Transfer | **COVERT-INSERTION / infiltration bay** (E1d) | a bay that inserts an operative | ◐ **Wire** | mirrors `GroundTransport.TryLoadUnit/TryLandUnit` `GroundCombat/GroundTransport.cs:82/104` but gated by the **INVERSE** of `HasOrbitalControl` `:120` (insert where you DON'T hold orbit) + "attach as infiltrator" (hidden state) instead of a visible region roster — DIALS §E1d `COMPONENT-DESIGNER-DIALS.md:2535` | get an operative into a hostile system undetected (stealth/trade/diplomatic cover); interceptable by the live sensor loop; the effect lands in the espionage Information Ledger, never the fleet resolver |
+| 8.2 Transfer | *missile transfer-range* | launcher in-range check | ◐ **wire (stub)** | `IFireWeaponInstr.IsInRange => true` `Weapons/IFireWeaponInstr.cs:25` (MissileLauncherAtb inherits) — always true; a proper Δv range check is deferred | affects the ordnance-resupply / firing picture; drawing a missile range ring today would lie |
+| 8.2 Transfer | *`LogiBaseDB` Clone save-bug* | copy-ctor drops route state | ◐ **wire (bug)** | `LogiBaseDB` copy-ctor `Logistics/LogiBaseDB.cs:35-44` copies `ListedItems`/`ItemsWaitingPickup`/`TradeShipBids` but **NOT `DesiredLevels` (`:17`) nor `ItemsInTransit` (`:21`)** → a logistics office loses its min/max levels + in-flight cargo on Clone/save-load | latent: an automated route silently forgets what it was maintaining after a save |
+
+---
+
+### System insertion points
+
+**The cargo/transfer machinery (the spine everything hangs on).**
+- A hold is a `CargoStorageDB` (`Storage/CargoStorageDB.cs:11`) carrying one `TypeStore` per cargo type (`:79`). A component seeds/extends it via `CargoStorageAtb.OnComponentInstallation` (`Storage/CargoStorageAtb.cs:18`). Rate/range come from `CargoTransferAtb` components, summed/averaged by `StorageSpaceProcessor.CalcRateAndRange` (`Storage/StorageSpaceProcessor.cs:60,109`) into the DB's `TransferRate`/`TransferRangeDv_mps`.
+- The move itself: `CargoTransferProcessor` runs every 1 minute (`Storage/CargoTransferProcessor.cs:17`), escrow-moves mass between two holds only when their Δv gap (Hohmann, `:192`) is inside the averaged range (`:54`), then re-derives fuel→Δv on both ends (`UpdateMassFuelAndDeltaV :168` → `newtdb.SetFuel :182`). **This is where fuel storage becomes propulsion.**
+
+**The freight market (the automated network).** Install a logistics-office component (`LogiBaseAtb`, `Logistics/LogiBaseAtb.cs:9`) → it attaches a `LogiBaseDB` (`Logistics/LogiBaseDB.cs`) holding `DesiredLevels` (min/max). Two 6-hour hotloops (`LogiBaseProcessor`/`LogiShipProcessor`) run `LogisticsCycle.LogiBaseBidding`/`LogiShipBidding`: a base lists a shortage/surplus, a `LogiShipperDB`-bearing freighter (`Logistics/LogiShipperDB.cs`) computes profit = sell − fuel − transit, bids the most profitable run, then flies it on the normal Movement orders. Cross-faction service is gated by `LogisticsAccessAllowed` (diplomacy).
+
+**The entity-TOW re-parent (E1b — new).** Insertion point: reuse `CargoTransferAtb` throughput as a tow rate, but instead of moving *cargo units* between `TypeStore`s, re-parent the towed entity's `PositionDB.Parent` to the tug and fold its mass into the tug's `MassVolumeDB` so `UpdateMassFuelAndDeltaV` (`CargoTransferProcessor.cs:168`) drags the tug's accel. The grave/honest cost is automatic (heavier tug = worse Δv). Prereq: exploration must actually spawn a derelict (`DamageProcessor.SpawnWreck` is a stub — DIALS §E1b).
+
+**The infiltration "attach as hidden" mechanic (E1d — new), gated by inverse-`HasOrbitalControl`.** Troop landing (`GroundTransport.TryLandUnit`, `GroundCombat/GroundTransport.cs:104`) requires `HasOrbitalControl(ship, body) == true` (`:120` — no foreign ship over the target) and drops the unit onto the visible `GroundForcesDB` region roster (`:112`). The covert-insertion bay **removes/inverts that gate** — the whole point is inserting where you do NOT hold the orbit — and replaces the visible roster placement with an "attach as infiltrator" hidden state on the target colony (accumulating discovery heat, read by the espionage Information Ledger). (Nuance from `ESPIONAGE-AND-INTELLIGENCE-DESIGN.md:105`: an *actively present* enemy fleet can still contest the insertion via the detection roll — so it's "you needn't own the orbit" rather than "orbit is irrelevant." The insertion roll = your stealth/agent skill vs their counter-intel; interceptable by the live `SensorScan` loop.) **The one genuinely new code is the attach-and-hide state** — a spy is a hidden *place on the map*, not a menu entry.
+
+---
+
+### The UPKEEP gap — the game has no fleet/army upkeep (only stations)
+
+**The finding:** once built, a ship or ground unit costs **nothing** to keep — only fuel when it moves. The whole transaction taxonomy is `InitialInvestment / Research / ColonyTax / StationUpkeep` (`Factions/Ledger.cs:8-14`) — there is **no ShipUpkeep, no ArmyUpkeep**. Aurora's Maintenance Supply Points (MSP) are confirmed absent (Logistics/CLAUDE.md:71). So the developer's "store units at reduced upkeep" (mothball) has **nothing to discount**.
+
+**Where station upkeep lives (the pattern to mirror):**
+- `StationUpkeepProcessor` — `IHotloopProcessor` keyed on `StationEconomyDB`, runs every **30 days** (`Stations/StationUpkeepProcessor.cs:22-25`); `BillUpkeep` (`:40`) charges the owning faction `factionInfo.Money.AddExpense(..., TransactionCategory.StationUpkeep, cost)` (`:57-61`), no-op on a neutral/unowned station.
+- `StationEconomyDB.OperatingCost(station)` — the pure formula (`Stations/StationEconomyDB.cs:53`): `Base 10 + PerModule 5×modules + PerFunction 25×distinctDesigns + PerPop 1×pop/1000` (`:28-31`, placeholders).
+
+**What a ship/unit upkeep clock would hook into:** a new `IHotloopProcessor` (monthly, mirroring `StationUpkeepProcessor`) keyed on a blob every ship carries (e.g. `ShipInfoDB`) — landmine L9 forbids a second hotloop on a blob another processor already owns, so key it on its own or an unclaimed blob — that computes an operating cost from the ship's installed `ComponentInstancesDB` (same `AllComponents`/`AllDesigns` shape `OperatingCost` reads) and bills a **new `TransactionCategory.ShipUpkeep`/`ArmyUpkeep`** (add to `Factions/Ledger.cs:8-14`). The ground twin keys on `GroundForcesDB` (the planet-body roster) and bills per unit.
+
+**The two-part mothball build:**
+1. **Part 1 — the upkeep clock (net-new, but a mirror not a from-scratch).** Add the `TransactionCategory` + the processor above. This is worth building *on its own*: with no upkeep, a giant standing fleet has **zero downside**, so there's no pressure to demobilize, no logistics-strategy depth, no reason to ever mothball. Building upkeep CREATES the economic pressure that makes the whole reserve/reactivation decision matter. Stations already prove the pattern works.
+2. **Part 2 — the reserve discount (a cheap wire on top).** A stored/active flag (a Storage dial → a state on the ship/unit) that scales the upkeep bill down, plus a **reactivation delay** to bring it back to the line. On a station this is a wire *today* (`OperatingCost` × a stored flag); on ships/units it becomes a wire the instant Part 1 exists.
+
+---
+
+### Prerequisite fixes & dead stubs (file:line)
+
+| Fix | Where | Why it blocks |
+|---|---|---|
+| **Bare-hold silent no-op** (guard/bug) | fresh `new CargoStorageDB()` has empty `TypeStores` `Storage/CargoStorageDB.cs:33-36`; `CargoMath` add/remove then no-op silently (logging commented out) | a hold that "exists" but holds nothing; bit Stations Slice F (the deploy warehouse fix) |
+| **`LogiBaseDB` Clone drops route state** (bug) | copy-ctor `Logistics/LogiBaseDB.cs:35-44` omits `DesiredLevels` `:17` + `ItemsInTransit` `:21` | an automated supply route silently forgets its min/max + in-flight cargo across a save/entity-transfer |
+| **Missile transfer-range stub** | `IFireWeaponInstr.IsInRange => true` `Weapons/IFireWeaponInstr.cs:25` (inherited by MissileLauncherAtb) | missiles always "in range"; a real Δv range check is deferred (do not draw a missile ring — it would lie) |
+| **No fleet/army upkeep** (missing system) | `TransactionCategory` `Factions/Ledger.cs:8-14` has no Ship/Army term | blocks mothball Part 1; is itself the missing economic pressure |
+| **`SpawnWreck` stub** (blocks TOW content) | `DamageProcessor.SpawnWreck` (`:478`, deletes the ship) per DIALS §E1b `:2512` | nothing to tow/salvage until a real derelict exists |
+
+---
+
+### Design essence captured inline
+
+**Transient-find recovery (E1b — Exploration).** The merged `EXPLORATION-CONTENT-DESIGN.md` adds things worth *going to get*: drifting derelicts, lost colonies, wrecks on decaying orbits. You recover them — strip for mass, recover a ship design, recover **survivors** (a population/leader source) — but a transient find is a *timing* decision (a decaying orbit or a periodic comet gives you a window; reuses the hazard-transience seam), and the best loot **hides in hazards** (a derelict in a gas cloud only a counter-interference scanner can find). The Transfer TOW/GRAPPLE mode is the gear that makes "recover a whole entity" real: the tug's own physics pays the cost (a heavy derelict wrecks your Δv). Almost pure CONNECT — the hazard system and the "gravitational anomaly" naming already exist; the derelict content and `SpawnWreck` are the missing rungs.
+
+**Covert physical delivery (E1d — Espionage).** The merged `ESPIONAGE-AND-INTELLIGENCE-DESIGN.md` makes agents PHYSICAL: pick a cover (stealth = run EMCON-dark; trade = hide in legit traffic, needs `LogisticsAccess`; diplomatic = insert via an embassy) → run the route → an **insertion roll** (your stealth + agent skill vs their counter-intel) → operate while **discovery heat builds** → extract or embed. The covert-insertion bay is the delivery hardware, and it deliberately **inverts** the troop-landing gate: a marine lands where you HOLD the orbit; a spy inserts where you DON'T. The one genuinely new mechanic is "**attach as infiltrator**" — instead of dropping onto a visible region roster, the agent attaches hidden to the target colony, becoming an embedded *place on the map* that accumulates risk. Its payload (bioweapon, cipher bomb, assassination toxin) lands in population/legitimacy/espionage, never the fleet resolver — the intersection weapon that needs a multitude of systems to pull off.
+
+---
+
+### §0g stamp — the three acceptance criteria
+
+- **Reachable (cradle-to-grave).** Every Logistical capability is a **component** on the normal rails: mineral → material → a hold/bay/transfer-arm/logistics-office DESIGNED in the component designer (`CargoStorageAtb`/`CargoTransferAtb`/`GroundBayAtb`/`GroundMagazineAtb`/`LogiBaseAtb`, all `IComponentDesignAttribute`) → research-gated → built at a colony → installed → in-play decision (what to hold, how fast to move, manual vs automated route) → **a hit spills the hold / a bay shot off takes its units / a damaged transfer arm stops contributing** (`StorageSpaceProcessor.cs:75` health gate). The spaceport/logistics-office/launch-complex facilities ride the same chain. (Mothball's grave rung is blocked on the upkeep clock — the one net-new rung.)
+- **Mirrored (NPC too).** NPCs haul, tow, and insert on the same code: the freight market is faction-agnostic (any `LogiShipperDB` freighter bids, gated only by `LogisticsAccess`); `GroundTransport` load/land is owner-neutral; the covert-insertion mirror is explicit in the espionage doc ("NPC gathers on you; you detect + react"). No player-only path.
+- **Observable (the gauges).** The player can SEE it: `CargoStorageDB.TotalStoredMass` + per-`TypeStore` counts (the stockpile readout), fuel→Δv on `NewtonThrustAbilityDB` (the range gauge), `TransferRate`/`TransferRangeDv_mps` (the throughput/reach numbers), `LogiBaseDB.DesiredLevels`/`ItemsInTransit` (route state), `StationEconomyDB.LastOperatingCost` (the upkeep readout the ship/army clock would mirror). The one thing you must NOT show is a missile range ring (the stub would lie).
+
+---
+
+### Cross-category shared state (Prime Directive)
+
+- **Logistical × Industrial [FEED].** The hold is the buffer between them: Industrial mines/refines/builds INTO a `CargoStorageDB`; Logistical moves it out. Shared state = `CargoStorageDB.TypeStores` (a mine deposits, a transfer arm withdraws) and the material stockpile the industry consume-loop (`IndustryTools.ConsumeResources`) drains — the exact same hold the freight market tops up. Ordnance storage feeds the weapon magazines; ground magazines feed `GroundAmmo`.
+- **Logistical × Chassis [carrier/bay].** A troop/vehicle bay (`GroundBayAtb`) and a covert-insertion bay are components mounted on a hull — the carrier hole (H6): a chassis that HOUSES and LAUNCHES smaller units. Shared state = `ComponentInstancesDB` (the bay is an installed component summed on demand by `GroundTransport.BayCapacity`) + `GroundTransportDB.LoadedUnits` (who's aboard). Mass of the loaded units feeds the chassis `MassVolumeDB` → Δv.
+- **Logistical × Espionage [insertion].** The covert-insertion bay is Espionage·Delivery: it shares the `GroundTransport` load/land primitives but writes to the espionage Information Ledger (hidden infiltrator state) instead of the visible `GroundForcesDB` roster, and its gate is the INVERSE of `HasOrbitalControl` read by the sensor/detection loop. Shared state = the target colony (a hidden attach) + the detection roll (sensors × counter-intel).
+
+---
+
+### Holes owned/resolved (H1, H6) → status + home
+
+- **H1 — Matter teleportation** (transporter / ring transport / Asgard beaming / the Stargate itself; recurs in ALL THREE franchises — the most *recurring* hole). **Status: OPEN, home assigned.** Its home is a **Transfer ▸ "ranged/teleport" mode** — instant, ranged, capacity-limited (`COMPONENT-DESIGNER-CATEGORIES.md` §5, H1, priority HIGH). It is NOT normal Transfer (which is local + Δv-rate-limited via `CargoTransferProcessor`'s Hohmann gate `:192`) and NOT Warp (which moves the whole chassis). Wiring seam: a Transfer mode that bypasses the `dv_mps > transferRange` early-out (`CargoTransferProcessor.cs:54`) with an instant capacity-limited move; cousin to **H8 (gate networks)** — both are "instant point-to-point," one for matter, one for the whole ship. The covert-insertion bay is an adjacent, lower-tech instance of the same "move a passenger a way the normal hold can't" idea.
+- **H6 — Carrier / nested assemblies** (Star Destroyer TIEs, Ha'tak gliders, AT-AT troops; a chassis that houses & launches smaller chassis). **Status: RESOLVED (mostly), one verify item.** Home = **Logistical ▸ Storage holds units, Transfer launches** — and it is BUILT for ground: `GroundBayAtb` holds units (`GroundCombat/GroundBayAtb.cs:34`), `GroundTransport.TryLoadUnit`/`TryLandUnit` (`:82`/`:104`) are the load/launch. `COMPONENT-DESIGNER-CATEGORIES.md` §5 grades H6 LOW-MEDIUM ("mostly covered — verify nested-chassis + launch/recover actually resolves"). **The open verify:** a bay carries ground *units* (data objects) today; carrying/launching a smaller *chassis* (a fighter as its own entity) is the un-verified nested-assembly case — the same re-parent primitive the TOW mode needs (`PositionDB.Parent`). Recommend the same wire for both.
+
+---
+
 ## §9 — Civic
 
 Civic is the **human backbone** — the colony and its people. It's the category everything else ultimately runs on: **population** becomes the workforce that mans your factories and the crew that flies your ships (and the scarce **talent** that makes an Enhancers elite); **research** unlocks the tech that gates every other door; **morale** decides whether people stay or flee. Two doors: **Habitation** (what lets people *live* somewhere — on a planet or sealed off-world) and **Development** (what makes a colony *better* — research, training, and improving the world itself). Pure non-combat, and a **mixed** modellability picture: Habitation is mostly Modelled and load-bearing; Development is split between a working tech/training engine and a **missing deep half** (you can't yet improve a world).
@@ -2284,6 +3196,97 @@ Habitation 🔒 · Development 🔒. **The human backbone — MIXED, and full of
 
 ---
 
+## ⚙ 9 — CIVIC · WIRING DOSSIER (self-contained)
+*Everything needed to wire this category — no other doc required.*
+
+Civic is the **human backbone**: the colony and its people. Two doors — **Habitation** (§9.1: what lets people *live* somewhere — life-support, infrastructure, housing, sealed off-world habitats) and **Development** (§9.2: what makes a colony *better* — research, officer-training, and improving the world itself). It is the category everything else runs on: population becomes the **workforce** that mans factories and the **crew** that flies ships, plus the scarce **talent** that gates the Enhancers elites; research unlocks the **tech that gates every other door**; morale decides whether people stay or flee. Modellability is **MIXED**: Habitation is mostly Modelled and quietly load-bearing (infrastructure is a REAL economy multiplier); Development is split — research + academy work, but the deep half (terraforming / world-improvement) is MISSING.
+
+The yardstick is **the colony/population system**, not the combat resolver: `InfrastructureProcessor` + `PopulationProcessor` + `ResearchProcessor` + `ColonyMoraleDB` / `SustenanceProcessor`.
+
+### Pillar tags (§0h)
+Per the E0a PROJECTOR⛓COUNTER schema, every door carries two metadata tags — `pillar` (Military / Espionage / Diplomacy / Influence) and `skeleton-role` (Projection / Counter / **Medium** / Detection). Civic is graded against the **population/economy resolver**, never the combat resolver.
+
+- **`pillar` = Economy/Population (the substrate the other pillars draw on).** Civic is not a weapon-pillar; it is the **HUB the pillars are fed from**.
+- **`skeleton-role` = MEDIUM.** Civic is the population/economy *medium* — the reservoir. It emits two flows the rest of the designer consumes: **talent → Enhancers** (§6.1/§6.2 elites draw the scarce `ColonyManpowerDB.TalentPool` a colony produces) and **research → every door** (tech unlocks gate every category's dials). It is not itself a Projection or a Counter; it is the tank both sides pull from.
+  - Sub-role nuance: the **academy** is a *talent-Projection generator into the leader pipeline* (rung-1 competence), and **terraforming** (when built) would be a *Projection onto the WORLD* (a component that mutates the planet). Neither exists as a weapon; both are Medium-internal transforms.
+- **Counter side:** Civic's "counter" is the **grave rung** — a bombed colony loses infrastructure → `Efficiency` craters → the whole economy collapses; the counter to your talent/research engine is *hitting the colony that produces it* (routes through the Damage system, `DamageProcessor.OnColonyDamage`).
+
+### Complete dial → derived-stat → engine-wire table (VERIFIED)
+
+| Door | Dial | Derived stat | Grade | Engine wire (file:line) | System insertion |
+|------|------|--------------|-------|--------------------------|------------------|
+| §9.1 Habitation | **Life-support / pop capacity** | `PopulationSupportAtbDB.PopulationCapacity` (pop at ColonyCost 1.0; infra ref 10 000) | ✅ Modelled | `Galaxy/PopulationSupportAtbDB.cs:18` → summed on demand `Engine/Components/ComponentInstancesDBExtensions.cs` `GetPopulationSupportValue` (tolerance-gated) → `Colonies/ColonyLifeSupportDB.MaxPopulation` set in `PopulationProcessor.ReCalcMaxPopulation` `:158,167` | Sets the pop ceiling. Hostile world: ceiling `= support ÷ colonyCost` (`PopulationProcessor.cs:115`); over cap → **die-off** (`growthRate = -50.0`, `PopulationProcessor.cs:118-119` → floored at 0). This is what makes Mars *hard*. |
+| §9.1 Habitation | **Infrastructure / efficiency** (the economy multiplier) | `InfrastructureCapacityAtb.Capacity` → `InfrastructureDB.Efficiency` = Provided÷Required, capped 1.0 | ✅ **Modelled (load-bearing)** | `Industry/InfrastructureCapacityAtb.cs`; `Industry/InfrastructureDB.cs:30-38` (Efficiency getter); summed in `Industry/InfrastructureProcessor.cs:38-39,53,86`; **consumed** at `Industry/IndustryTools.cs:115` (scales EVERY production rate) and `Industry/MineResourcesProcessor.cs:64,71` (scales EVERY mining rate) | THE standout: under-build infra and the *whole colony works at a fraction*. Provided sums only in-tolerance, enabled, health-scaled infra components (`InfrastructureProcessor.cs:63-83`); Required = `mass/1000 + crew` over every OTHER installation (`:86-101`). |
+| §9.1 Habitation | **Housing / comfort** | `HousingAtbDB.Comfort` (5 default → cap +20 morale) | ✅ Modelled | `Colonies/HousingAtbDB.cs:22`; summed `ComponentInstancesDBExtensions.GetHousingComfort` (`:35`); read `PopulationProcessor.cs:77` → `MoraleInputs.Comfort` → `ColonyMoraleDB.ComputeMorale` | Morale (content, not more alive). Doesn't raise the pop cap. |
+| §9.1 Habitation | **Sustenance — power & food** | `ColonySustenanceDB.PerCapitaPowerDemand` / `PerCapitaFoodDemand` → `PowerShortage`/`FoodShortage` | ◐ **INERT** | `Colonies/ColonySustenanceDB.cs:21,23` (both default **0.0**), `:31` MaxStarvationDeathRate 0.10; `Colonies/SustenanceProcessor.cs:49-57` computes shortage; read `PopulationProcessor.cs:52-57` (starvation), `:88-98` (morale). **No food good exists.** | Starvation is *switched off* until demand is calibrated + a food good is added (net-new). Ships neutral (demand 0 → shortage 0). |
+| §9.1 Habitation | **Employment** (a morale input) | `EmploymentAtbDB.Jobs` → `EmploymentRatio` | ◐ **DATA-DEAD** | `Colonies/EmploymentAtbDB.cs:20`; summed `ComponentInstancesDBExtensions.GetTotalJobs` (`:19,24`); read `PopulationProcessor.cs:74-76` (jobs÷workforce, sentinel **-1** = no data); `ColonyMoraleDB.cs:126-133,188` (neutral when negative). **No base-mod template grants Jobs** (grep of `Pulsar4X/GameData/**.json` for `Employment`/`Jobs` = zero hits). | Morale asks "employed?" but nothing grants jobs → ratio always -1 → neutral. A cheap wire: add `Jobs` to work-building templates. |
+| §9.1 Habitation | **World type / medium** (native / hostile / sealed habitat) | `space-habitat` template carries the same attrs with **no tolerance gate** | ✅ Modelled | Templates: `GameData/basemod/TemplateFiles/installations.json`, `GameData/basemod/ScenarioFiles/systems/sol/earth.json`; parallel host `Stations/StationPopulationProcessor.cs:17,26,58-60` (`GetPopulationSupportValue`, capacity by module NOT ColonyCost) | Sealed habitat houses pop on ANY body — no gravity/pressure gate. Every person depends on the shell; no module → cap 0 → die-off. |
+| §9.2 Development | **Research** (general lab / specialized institute) | `ResearchPointsAtbDB.PointsPerEconTick` · `CostPerDay` · `BonusCategory` (+10%) | ✅ **Modelled (load-bearing)** | `Tech/ResearchPointsAtbDB.cs:13,17,25`; installed → `Tech/ResearcherDB.cs` (`PointsPerDay` `:16`, `BonusCategories` `:24`, `CostPerDay` `:29`, `FundingLevel` 0-5 `:41`, `ScientistId` `:53`); daily loop `Tech/ResearchProcessor.cs:87` (points), `:180-184` (scientist bonus) → tech unlocks | **Host-agnostic** (colony OR station). The tech engine that gates literally every other door's dials. Specialty = `BonusCategory`. |
+| §9.2 Development | **Officer training** (academy) | `NavalAcademyAtb.ClassSize` (10-2500) · `TrainingPeriodInMonths` (1-48) | ✅ Modelled (production) | `People/NavalAcademyAtb.cs:11-12`; `People/NavalAcademyProcessor.cs:18-32` (graduate loop; `CommanderFactory.CreateAcademyGraduate` `:21`; `ExperienceCap` on `NextBellCurve` `:32`) | **The BUILDING is Civic ▸ Development; the officer's combat EFFECT is Enhancers ▸ Unit-Caliber** — build here, consume there. Gear-vs-being boundary: the school is gear, the graduate is a Being (People). |
+| §9.2 Development | **Terraforming** — improve the WORLD | lower a hostile world's colony-cost over time | ⏳ **MISSING (net-new)** | Hook: `Galaxy/AtmosphereDB.cs:67` `Composition` (Dict) + `:44` `GreenhousePressure`; the number it would lower is read in `People/SpeciesDBExtensions.cs:30` `ColonyCost`. **NO `TerraformingProcessor` exists** (confirmed below). | The franchise-earning gap (Mars-green, Dune, the 4X terraform). Would be a slow world-change over years. |
+| §9.2 Development | **Development level / growth** | raise a colony's baseline output over time | ⏳ **MISSING** | `Colonies/ColonyBonusesDB.cs:10-30` is an **empty shell** — `GetBonus` only reads faction-wide `FactionAbilitiesDB.AbilityBonuses` (`:14`); sector/planet/race bonuses are commented out (`:28`). No per-colony ladder. | Doc-only progression. |
+| **§E1a essence-ext** — §9.2 Development | **★ Academy Type/Tier + Competence-Investment** — what leader a school makes (Navy/Ground/Civil/Science/Covert × school/college/university × mass-vs-elite) | school produces a graduate with a **competence roll** written into their `BonusesDB` | ◐ **Wire** | `NavalAcademyProcessor` already rolls `NextBellCurve` (`People/NavalAcademyProcessor.cs:32`); wire = write the roll into the empty `People/BonusesDB.cs:46` (`Bonuses` list; rung-4 competence reads it) **+ draw scarce `Colonies/ColonyManpowerDB.cs:48` `TalentPool`** — the SAME handle that gates §6.2 Enhancers elites (build once, both light up). | Rung-1 competence generator → the leader pipeline. Type = which chain (Navy/Ground/Civil/Science/Covert); Tier = ClassSize÷TrainingPeriod trade; Investment = mass-vs-elite = how much talent it burns. |
+| **§E1b essence-ext** — §9.2 Development | **★ Field-Lab deployment** — lab at home vs mobile ship-lab vs droppable field-station (hosts a scientist posting at a site) | a deployment flag + a `siteId` target on the researcher | ◐ **Wire** | Reuses `Tech/ResearcherDB.cs` (has `ScientistId` `:53`, `FundingLevel` `:41`, `BonusCategories` `:24`) + funding machinery `Tech/ResearchProcessor.cs:87,180`. Wire = **add a deployment flag + a `siteId` field** (ResearcherDB has NO siteId today) so the same lab loop runs on a location. | "A lab on a location" — the field-site loop (§0i) is the lab loop reused. Hosts the scientist posting that resolves an anomaly / xeno-dig / ruins at a site. |
+
+### System insertion points
+
+**1. `InfrastructureDB.Efficiency` — the economy multiplier (the load-bearing seam).**
+`InfrastructureProcessor.SumProvidedCapacity` sums in-tolerance, enabled, health-scaled infra components (`InfrastructureProcessor.cs:53-83`); `SumRequiredCapacity` sums `mass/1000 + crew` over every *other* installation (`:86-101`); `Efficiency = Provided÷Required` capped 1.0 (`InfrastructureDB.cs:30-38`). It is READ by exactly two consumers via `InfrastructureProcessor.GetEfficiency` (`:46`): **all production** (`IndustryTools.cs:115` — scales every `IndustryTypeRates` value) and **all mining** (`MineResourcesProcessor.cs:64,71`). Grave rung: bomb the infra components → Provided drops → Efficiency < 1 → economy craters. **This is the single most load-bearing wire in Civic — any change to how infra is summed or consumed touches the entire economy.**
+
+**2. The research / `ResearcherDB` loop.** `ResearchPointsAtbDB` (component design) instantiates a `ResearcherDB` on the host; `ResearchProcessor` runs daily (`:87` points, `:180-184` scientist bonus, gov modulator `:91`), draining `CostPerDay` and adding `PointsPerDay` to a queued tech until unlock. Host-agnostic (colony or station). This is the loop the **field-lab dial** rides (add a `siteId`), and the loop **every other door depends on** (tech gates every dial).
+
+**3. The academy competence generator.** `NavalAcademyProcessor` (an `IInstanceProcessor`, fires at graduation) loops `ClassSize` times, calls `CommanderFactory.CreateAcademyGraduate`, and rolls `ExperienceCap` on a bell curve (`:32`). The **Type/Tier essence-wire** hooks HERE: the roll already exists; write it into `BonusesDB` (rung-4 competence) and debit `ColonyManpowerDB.TalentPool` (`ColonyManpowerDB.cs:48`, = population × TalentFraction; `AvailableTalent` `:54` = pool − CommittedTalent).
+
+**4. The field-lab `siteId` host.** `ResearcherDB` today has `ScientistId` (`:53`) but **no siteId** — that is the missing field. The field-lab dial adds a deployment flag + `siteId` so the ResearcherDB loop runs at a location (a lab dropped on a ruins/anomaly site), which is the exploration field-site loop (§0i) reusing the lab loop verbatim.
+
+### The TERRAFORMING gap + the switched-off spots
+
+**TERRAFORMING — confirmed ABSENT.** There is **no `TerraformingProcessor`** anywhere in the engine (`find -iname "*terraform*"` = nothing; the only `.cs` hits are inert): `AbilityType.Terraforming` (`Engine/DataStructures/Enums.cs:242`), a faction-wide `terraformingBonus` with no consumer (`Factions/FactionAbilitiesDB.cs:36,54`), two unused events `TerraformingCompleted`/`TerraformingReport` (`Engine/Events/EventTypes.cs:114-115`), a doc-comment link (`Galaxy/AtmosphereDBExtensions.cs:10`), and a `//do Terraforming` comment in the damage path (`Damage/DamageComplex/DamageProcessor.cs:162`). **What a terraform component would hook into:** it would mutate `AtmosphereDB.Composition` (`Galaxy/AtmosphereDB.cs:67`) + `GreenhousePressure` (`:44`) over years; that flows into `SpeciesDBExtensions.ColonyCost` (`People/SpeciesDBExtensions.cs:30`, which reads the atmosphere) → lowering ColonyCost raises the pop ceiling in `PopulationProcessor.cs:115` and lifts infra tolerance gates. So the entire *downstream* plumbing (ColonyCost → capacity → die-off) already exists; the ONLY missing piece is a processor that slowly writes `Composition`. This is the franchise-earning "improve a world" arc (Mars-green / Dune / every 4X terraform) — the honest headline for Development.
+
+**Sustenance — INERT (calibration, + food is net-new).** `ColonySustenanceDB.PerCapitaPowerDemand`/`PerCapitaFoodDemand` default 0.0 (`ColonySustenanceDB.cs:21,23`), so `SustenanceProcessor` (`:49-57`) always computes zero shortage; starvation (`PopulationProcessor.cs:52-57`) and the power/food morale inputs (`:88-98`) read neutral. Deliberately avoids the "a default deficit tanks every colony" trap (`ColonySustenanceDB.cs:14`). Turn-on = calibrate demand + add a **food good** (net-new — no food cargo type exists).
+
+**Employment — DATA-DEAD.** `EmploymentAtbDB.Jobs` (`EmploymentAtbDB.cs:20`) is summed (`GetTotalJobs`, `ComponentInstancesDBExtensions.cs:19`) and read by morale (`PopulationProcessor.cs:74-76` → sentinel -1 when jobs 0 → `ColonyMoraleDB.cs:128-133` neutral), but **no base-mod JSON template grants Jobs** (grep confirmed zero). Cheap wire: add `Jobs` to the work-building templates → employment morale goes live.
+
+### Prerequisite fixes & dead stubs (file:line)
+- **`ColonyBonusesDB` is an empty shell** — `Colonies/ColonyBonusesDB.cs:10-30`: `GetBonus` only reads faction-wide `FactionAbilitiesDB.AbilityBonuses`; the per-colony sector/planet/race path is a commented-out line (`:28`). The "development level" ladder must fill this (or replace it).
+- **`ResearcherDB` has no `siteId`** — `Tech/ResearcherDB.cs:53` has `ScientistId` only. The field-lab dial must add a `siteId` + deployment flag.
+- **No `TerraformingProcessor`** — the whole world-improvement processor is missing; hooks (`AtmosphereDB.Composition`, `AbilityType.Terraforming`, `TerraformingCompleted` event) are vestigial with no producer.
+- **Sustenance demand defaults 0** — `ColonySustenanceDB.cs:21,23`; and no food cargo good exists.
+- **No template grants `EmploymentAtbDB.Jobs`** — data gap, not a code stub.
+- **Academy roll not persisted to competence** — `NavalAcademyProcessor.cs:32` rolls `ExperienceCap` but nothing writes a competence bonus into `BonusesDB` (the rung-4 target, `People/BonusesDB.cs:46`).
+
+### Design essence captured inline
+**The academy as rung-1 competence generator (`AI-SELF-PLAY-DESIGN.md`):** the academy BUILDING is Civic ▸ Development gear (a school), but the *graduate* is a Being who enters the leader pipeline (People). The essence adds a **Type/Tier + Competence-Investment** dial: a school is Navy/Ground/Civil/Science/Covert × school/college/university × mass-vs-elite, and the quality of graduate it stamps is a competence roll written into the officer's `BonusesDB` (which rung-4 delegation later reads as a `ModifiableValue` multiplier on a real game number). Crucially the elite tier draws the **scarce `ColonyManpowerDB.TalentPool`** — the exact same finite handle that gates the Enhancers §6.2 unit-caliber ELITES, so a Space Marine and a brilliant admiral compete for the same talent a colony produces (build the draw once, both light up).
+
+**The field-lab-on-a-location loop (`EXPLORATION-CONTENT-DESIGN.md`):** the exploration field-site loop is *not a new engine* — it is the `ResearcherDB` lab loop deployed to a site. A field-lab dial adds a deployment flag + a `siteId` so a scientist posting (funding 0-5, specialty bonus, cost/day — all existing `ResearcherDB` machinery) runs at a ruins/anomaly/xeno-dig site instead of at home. This is §0i in action: count resolvers, not doors — all 11 exploration site-types are DATA for the one lab loop.
+
+### §0g stamp — three acceptance criteria
+- **Reachable (cradle-to-grave, player-side): ✅ for the built half.** Infra/life-support/housing/lab/academy are **built installations** (mineral → material → production → component-in-designer → research-gated → installed on a colony → the decision (how much to invest) → the loss (bombed → efficiency/capacity collapse, the grave rung that makes a colony *takeable*)). **⏳ for terraforming + development-level** (no component, no processor — a design gap, not a deferral) and for sustenance/food (food good net-new).
+- **Mirrored (opponent-side): ✅ (infrastructure-FOR-itself nuance).** These are pure-infrastructure doors the NPC uses *for* its own colonies, not *at* the player — but it must still USE them: the NPC develops colonies (builds infra/labs/academies) and trains leaders through the *same* processors and component path (delegation = NPC AI; no player-only code). The academy→talent→leader pipeline is the NPC's leader-generation too. Terraforming, once built, is likewise a self-directed NPC colony action.
+- **Observable (the gauge, both sides): ✅ live for the built half; data-dead/absent otherwise.** The colony economy UI EXISTS (`ColonyManagementWindow` + tabs). **Live readouts:** infrastructure efficiency — `EntityWindow.cs:594-595` ("X / Y capacity · Z% output"), `IndustryPanel.cs:176` ("OVER CAPACITY - output at X%"), `ColonyHexMapWindow.cs:112,272` (efficiency %); morale + **talent** — `SocietyReadout.Colony` (`SocietyReadout.cs:32` morale, `:60` talent pool) piped to the DevTools log (`DevToolsWindow.cs:299`); research — `ResearchWindow.cs`. **Data-dead / no readout:** employment (always neutral), sustenance/starvation (inert), terraforming/development-level (absent). Gauge-first note: employment & sustenance are cheap Failure-A (the number exists, just unfed).
+
+### Cross-category shared state (Prime Directive — Civic is the HUB)
+- **Population → talent → Enhancers.** `PopulationProcessor` grows the pop tank; `ColonyManpowerDB.TalentPool` (`:48`) = pop × TalentFraction; `AvailableTalent` (`:54`) is drawn by BOTH the §9.2 academy elite tier AND the §6.1/§6.2 Enhancers unit-caliber elites — **shared finite handle** (a Space Marine and an elite admiral compete for it).
+- **Population → workforce/crew → Industrial + Fleets.** `ColonyManpowerDB.Workforce` (read `PopulationProcessor.cs:75`) mans industry; the same pop pool crews ships (Chassis/Fleets supply gate).
+- **Infrastructure → Industrial + Mining.** `InfrastructureDB.Efficiency` scales `IndustryTools` (`:115`) and `MineResourcesProcessor` (`:64`) — Civic gates the entire economy's throughput.
+- **Research → EVERY door.** `ResearchProcessor` unlocks the tech that gates every category's dial ranges (`TechData`).
+- **Morale → migration → stability.** `HousingAtbDB`/`EmploymentAtbDB`/`ColonySustenanceDB`/tax → `ColonyMoraleDB.ComputeMorale` → `MigrationRate` (`PopulationProcessor.cs:101`) → `LegitimacyDB`/`RebellionDB` (stability, the internal-politics kill).
+- **Government modulator (#30).** `GovernmentTools` re-skins Civic: `ResearchMultiplier` (`ResearchProcessor.cs:91`), `TaxCeiling`/`MoraleWeight` (`PopulationProcessor.cs:95,101`) — inert at the Mid default.
+- **Damage → grave rung.** `DamageProcessor.OnColonyDamage` destroys infra/pop → the counter to Civic (bomb the colony that produces the talent/research).
+- **Atmosphere ↔ ColonyCost (the terraform seam).** `AtmosphereDB.Composition` → `SpeciesDBExtensions.ColonyCost` (`:30`) → `PopulationProcessor` capacity — the pipeline a `TerraformingProcessor` would drive.
+- **Field-lab → Exploration.** A deployed `ResearcherDB` (needs `siteId`) hosts a scientist posting at an exploration site (the field-site loop = the lab loop).
+
+### Holes owned/resolved → status + home
+- **Terraforming / world-development** — ⏳ **OPEN (net-new, franchise-earning).** Home: §9.2 Development; needs a `TerraformingProcessor` writing `AtmosphereDB.Composition`. Build-list #1.
+- **Development-level ladder** — ⏳ **OPEN.** `ColonyBonusesDB` empty shell (`:10-30`). Home: §9.2 Development. Build-list #4.
+- **Sustenance calibration + food good** — ◐ **INERT.** `ColonySustenanceDB` demand 0; no food cargo. Home: §9.1 Habitation. Build-list #2.
+- **Employment jobs** — ◐ **DATA-DEAD.** No template grants `EmploymentAtbDB.Jobs`. Home: §9.1 Habitation (data fix). Build-list #3.
+- **Academy Type/Tier + Competence-Investment (E1a)** — ◐ **Wire.** Write `NavalAcademyProcessor` roll into `BonusesDB` + draw `TalentPool`. Home: §9.2 Development + §10.1 Command (rung-4).
+- **Field-Lab deployment (E1b)** — ◐ **Wire.** Add `siteId` + deployment flag to `ResearcherDB`. Home: §9.2 Development + Exploration field-site loop.
+- **Talent-pool draw wiring** — ◐ **shared with §6.2.** `ColonyManpowerDB.AvailableTalent` exists; the *debit* by academy elites / Enhancers elites is the one-build-both-light-up wire.
+
+---
+
 ## §10 — Command
 
 Command is the **"play at your own altitude"** layer — the single shape that lets you either **hand-fly** a colony or a fleet yourself, or **seat a capable officer and hand it off.** It's one door because it's *one shape at different scales*: an **admin-complex** governs a colony, a **ship-command** bridge commands a fleet, and they bind the **same** component attribute (`AdminSpaceAtb`) — just at a different rung on the span-of-control ladder (Ship → TaskUnit → … → Colony → … → Empire). This is the anti-"the game feels like a job" valve: delegate the routine, micromanage the fights that matter.
@@ -2355,6 +3358,119 @@ Command 🔒 (single door). **The "play at your own altitude" delegation layer �
 
 ---
 
+## ⚙ 10 — COMMAND · WIRING DOSSIER (self-contained)
+*Everything needed to wire this category — no other doc required.*
+
+**What this category is, in one breath.** Command is the "play at your own altitude" layer: a **command node** (a colony HQ or a ship's bridge — the *same* component atb at two scales) into which you may seat an **officer** and hand off the running of that scope. Seat a good, well-funded officer with a sensible standing **stance** and the colony/fleet runs itself; leave the seat empty and you hand-fly it. The load-bearing finding: **the seats are built and the right shape, but every consequence a seat should have is stub-or-net-new.** And the single deepest idea underneath it — **delegation IS the NPC AI** (a seated officer running a colony for a lazy *player* is the exact same machinery as "the AI" running an *NPC's* colony; there is no separate AI code path) — means wiring Command is simultaneously wiring the opponent's brain.
+
+Engine home: `Pulsar4X/GameEngine/People/` (seats + officers) and `Pulsar4X/GameEngine/Factions/NPCDecisionProcessor.cs` (the auto-runner). Category maps the old templates `admin-complex` + `ship-command` (`COMPONENT-DESIGNER-CATEGORIES.md` §2, row 10) onto **one door** with a scale dial.
+
+---
+
+### Pillar tags (§0h — the PROJECTOR⛓COUNTER cross-cut)
+
+The §0h tag stamps two pieces of metadata on every door — `pillar` (Military/Espionage/Diplomacy/Influence/—) and `skeleton-role` (Projection / Counter / Medium / Detection / network-infra). Command is unusual: it is not a projector or a counter — it is the **Medium itself**.
+
+| Object | `pillar` | `skeleton-role` | Why |
+|--------|----------|-----------------|-----|
+| **§10.1 Command door** (the seat) | **cross-pillar (—)** | **Medium** | Delegation is the *medium every pillar flows through* — a Governor runs Economy, an Admiral runs Military, a Spymaster runs Espionage, a Foreign Minister runs Diplomacy. One shape, all four media. It projects nothing and counters nothing; it is the conduit the other doors' gear is *operated through*. (This is why the §0i resolver below is "the delegation loop," and why §0g's **Mirror** criterion is the *central* one here — the medium and the NPC brain are literally the same object.) |
+| **★ §10.2 Command▸Relay** (the C3 node, NEW DOOR) | **Military** | **network-infra** (a Counter-side target: found/jammed/killed) | Seat-less C2 plumbing. It grants no seat and holds no officer — it is the wire the *medium travels on*, and its physical consumer is EW/detection (a `SensorProfileDB` emitter the enemy grid sees). It fills hole **H8** (network/relay infrastructure). Tagged Military because the connectivity it carries is command connectivity, and its grave rung is a battlefield sever. |
+
+---
+
+### Complete dial → derived-stat → engine-wire table (VERIFIED)
+
+All file:line verified against the engine on this branch. `People/*` = `Pulsar4X/GameEngine/People/`; SensorTools real path = `Pulsar4X/GameEngine/Sensors/SensorRecever/SensorTools.cs`.
+
+| Door | Dial | Derived stat | Grade | Engine wire (file:line) | System insertion (the delegation loop) |
+|------|------|--------------|-------|-------------------------|----------------------------------------|
+| **§10.1 Command** | **A. Scope / admin level** — Ship/TaskUnit → Colony/Planet → Sector/Empire | `AdminSpaceAtb.AdminLevel` (the 11-rung `AdminLevel` enum Ship..Empire) → one `AdminSpaceAbilityState` per node stamped with its level | ✅ **Modelled** | `People/AdminSpaceAtb.cs:7-20` (enum), `:24` (`AdminLevel` prop), stamped into the seat at `People/AdminSpaceProcessor.cs:45` (`new AdminSpaceAbilityState(atb.AdminLevel, …)`) | Sets *what* the node runs — a bridge steers a task unit, a sector HQ oversees whole systems. `admin-complex` = Colony+, `ship-command` = Ship/TaskUnit — **same atb**, the "one shape, two altitudes" vision, built at the seat level. |
+| **§10.1 Command** | **B. Capacity / span** (`ConsoleSpace` / Office Space) — how many sub-units a node runs | `seats += atb.ConsoleSpace` — **computed then DISCARDED** | ◐ **Wire (dead math)** | `People/AdminSpaceAtb.cs:25` (`ConsoleSpace` prop), summed at `People/AdminSpaceProcessor.cs:43` (`seats += atb.ConsoleSpace`) but the local `seats` var is **never stored on `AdminSpaceDB`** — one component = one seat regardless. Only live effect of admin capacity = the colony hex-map radius (`AdminSpaceProcessor.cs:19-21` → `ColonyHexMapProcessor.ForceUpdateColonyHexMap`). | Span-of-control is **unenforced**. The wire: store the seat-count and gate how many sub-units a node may run, walking the `AdminLevel` ladder as a real hierarchy. |
+| **§10.1 Command** | **C. Seat an officer** — Empty (hand-fly) vs Seated (delegate) | A `CommanderDB` bound into `AdminSpaceAbilityState.CommanderID`/`.Commander` | ✅ **(seating)** / ◐ **(effect)** | Order path: `People/Orders/AssignAdministratorOrder.cs:44-80` seats a commander (`post.CommanderID = _administratorId; post.Commander = commanderDB`), `UnassignAdministratorOrder.cs` un-seats. Seat struct: `People/AdminSpaceAbilityState.cs:9-18` (`CommanderID` default -1, `TryGetCommander`). Client UI: `Pulsar4X.Client/Interface/Windows/AdminWindow.cs`. | Seating **works**; the seated officer **feeds nothing** — no bonus is read from the seat (see D/F). Also the durable-seat bug (below) wipes the assignment on the next processor pass. |
+| **§10.1 Command** | **D. Funding / attention** — `FundingLevel` 0–5, cost curve 1×/3×/7×/13×/22× | `AdministratorDB.FundingLevel` × `PointsPerDay`, `× CostPerDay` | ◐ **Wire (dead record)** | `People/AdministratorDB.cs:41` (`FundingLevel` 0–5), `:16` (`PointsPerDay`), `:23` (`BonusCategories`), `:29` (`CostPerDay`). **`AdministratorDB` has ZERO consumers — nothing constructs or reads it.** It is a detached copy of the **live twin `ResearcherDB`** (`Tech/ResearcherDB.cs`), which `ResearchProcessor` really reads: `FundingLevel` at `Tech/ResearchProcessor.cs:201,255`, `BonusCategories` at `:273`. | The attention-vs-money tradeoff. **Consolidate onto ONE live record** (kill dead `AdministratorDB`, generalize `ResearcherDB` → the universal delegate record) — the governance doc points at the corpse (Landmine-L1). |
+| **§10.1 Command** | **E. Stance / standing orders** — the post's default behaviour (a governor's economic priority, an admiral's ROE) | a named preset bundle biasing what the auto-runner emits | ⏳ **NET-NEW** | No engine field today. Pattern to reuse: `GroundFormationDoctrine` stances are **data-driven JSON** (`groundStances.json` → `GroundStanceBlueprint`) — the moddable-catalog shape to copy. The NPC's stance *choice* is biased by `FactionInfoDB.Doctrine` (`DoctrineVector`, four floats). | **The stance IS the decision the leader owns**; competence (F) is only *how well* it's executed. This is the heart of the delegation loop — feeds the auto-runner (below). |
+| **§10.1 Command** | **F. Competence** — a good officer beats a green one (rung 4 of the pipeline) | the officer's `BonusesDB` values fold into a real target number via `ModifiableValue` | ⏳ **NET-NEW** | `CommanderDB.Experience` written by academies (`CommanderDB.cs:21`) but **never read**. The container exists & is reusable: `BonusesDB.Bonuses` (`Bonus(Value, Type, FilterId)`) — but `CommanderFactory.Create` attaches an **empty** `BonusesDB` (`People/CommanderFactory.cs:24`). The rung-4 pattern works in exactly ONE place to copy: research folds an officer's `BonusesDB` into a `ModifiableValue` (`Tech/ResearchProcessor.cs:87` + the Refresh path). | **Wire competence** = build the "a person's skill modifies an outcome" hook once → lights up BOTH commander competence AND §6.2 Enhancers unit-caliber elites (build-list #5). Combat currently reads `FleetDoctrineDB`, not a commander. |
+| **§10.1 Command** | **G. Command Reach** (essence-ext E1a) — Local / In-system / Interstellar-networked | `CommandReach_m` (computed like detection range) | ◐ **Wire** | Compute mirrors `SensorTools.DetectionRange_m` (`Sensors/SensorRecever/SensorTools.cs:425`) and `RangeForSignal` (`:409`); it is an **emission the enemy sensor grid sees**, scaled by EMCON/activity exactly as detection is (`SensorTools.cs:308,328`). | The delegate order path checks Reach before an order can reach a unit; interstellar scope is granted by a networked relay (door §10.2). Where your orders travel = where the enemy can cut them. |
+| **§10.1 Command** | **H. Redundancy / Hardening** (essence-ext E1a) — single (decapitates) vs hardened (HTK) vs distributed (demotes) | on the decapitation handler: a lost node **empties** vs **demotes** the scope | ◐ **Wire** | Rides `AdminSpaceAtb.OnComponentUninstallation` — **currently throws `NotImplementedException`** (`People/AdminSpaceAtb.cs:42-45`). Implementing it *is* the grave rung. | A single cheap node = a fat decapitation target (empties the scope); a distributed net demotes to the next rung instead of collapsing. |
+| **§10.1 Command** | **Contracts** (Main-Merge Delta, NEW dial) — fixed-term assignment (5-yr default + early-break cost) | a term + break-cost on the seat | ⏳ **NET-NEW (designed-only)** | No engine field; designed in `AI-SELF-PLAY-DESIGN.md`. Composes with the existing doctrine-switch **cooldown** (a leader on contract runs their stance for the term — no per-tick flip-flop, good for the AI-cost bill). | The commitment texture on a delegation: you can't cheaply re-shuffle a cabinet mid-crisis. |
+| **★ §10.2 Command▸Relay** (NEW DOOR, essence-ext E1a / fills H8) | **RelayRange_m** + a network-connectivity boolean between nodes | the connectivity of your whole command net → feeds Command Reach's interstellar scope | ◐ **Wire / ⏳ Defer (addressing)** | A relay is a `SensorProfileDB` **emitter** → **found** (the live sensor loop), **jammed** (EW §3.4 — shrink its effective reach), **destroyed** (damage) → the sever. Range compute reuses `SensorTools.DetectionRange_m` (`:425`). The many-to-one *addressing* layer (which node connects to which) is the deferred half. | Earns a **door, not a dial**: it grants NO seat and holds NO officer — seat-less C2 plumbing, a different physical object with a different consumer (EW/detection). Its destruction **severs delegation** on the links it carried. |
+
+---
+
+### The delegation loop (§0g Mirror is CENTRAL here — delegation IS the NPC AI)
+
+**§0i says: count resolvers, not doors.** Command has exactly ONE resolver — **the delegation loop** — and all 19 leader roles (Governor / Admiral / Foreign Minister / Spymaster / Chief Scientist / …) are *configuration* on that one pipeline, not 19 separate systems (`AI-SELF-PLAY-DESIGN.md`: "don't build 19 leaders — build one pipeline, prove it on one role, then every other role is a `BonusCategory` + a `Refresh` method"). The loop is the count-resolver §0i names.
+
+**The chain the loop runs (seat → stance → competence → order):**
+
+1. **Seat** — an officer (`CommanderDB`) is bound into a node's `AdminSpaceAbilityState` via `AssignAdministratorOrder.Execute` (`People/Orders/AssignAdministratorOrder.cs:44-80`, sets `post.CommanderID`/`post.Commander`).
+2. **Stance** — the seat carries a standing-order preset (dial E, net-new; reuse the `GroundStanceBlueprint` JSON-catalog pattern). The stance decides *what* the delegate does.
+3. **Competence** (rung 4) — the officer's `BonusesDB` folds into the target number via `ModifiableValue` + a `Refresh` (the exact pattern live only in `ResearchProcessor.cs:87`). Competence decides *how well*.
+4. **Order emission** — the delegate issues the **same** `IndustryOrder2` / fleet / tax orders the player uses — there is no special AI code path. This is what fills the dead auto-runner.
+
+**The dead auto-runner the loop fills: `NPCDecisionProcessor`.** It is a live-but-hollow `IHotloopProcessor` on `FactionInfoDB`, monthly (`FirstRunOffset` 5d / `RunFrequency` 30d), gated on `IsNPC` (`Factions/NPCDecisionProcessor.cs:17-46`). **The GlobalManager wiring gap is FIXED** (keystone, 2026-06-30 — `MasterTimePulse.SimulateTimeUntil` now iterates `GlobalManager.ManagerSubpulses`, so it genuinely fires; liveness gauge `NPCDecisionProcessor.TickCount:29`). But its **decision body is a stub**: `Tick` computes the dominant `DoctrineVector` axis then hits a `// TODO: translate dominant axis into actual orders` (`NPCDecisionProcessor.cs:71-84`). Only `RunDiplomaticDrift` (`:97-124`) does live work. **Filling this stub = the delegation loop's active arm:** `DoctrineVector` biases which stance an NPC picks → the seated delegate executes that stance → emits orders through rung 4. The player's off-switch-for-micro and the NPC's brain are the identical machinery — which is why §0g's **Mirror** criterion is not a checkbox here but the *architecture*.
+
+---
+
+### The decapitation substrate — the LeaderLost/CrewLosses event (unconsumed), OnComponentUninstallation (throws), the durable-seat bug
+
+Three engine facts make "lose a command node → delegation collapses" **almost** buildable — the hooks exist, they're just unfinished:
+
+- **The event is already published, unconsumed.** `CommanderFactory.DestroyCommander` (`People/CommanderFactory.cs:105-126`) removes the officer from the faction roster (`:112`) and **publishes `EventType.CrewLosses`** ("…has been killed", `:115-123`) then `Destroy()`s the entity (`:125`). **Nothing subscribes.** The grave rung needs one `LeaderLost` subscriber that reads this event and empties/demotes the seat it was in. (A ship's captain is the only officer that dies today — `ShipFactory.DestroyShip` — and it leaks dangling seat refs.)
+- **The uninstall hook throws.** `AdminSpaceAtb.OnComponentUninstallation` is `throw new NotImplementedException()` (`People/AdminSpaceAtb.cs:42-45`). Implementing it is dial **H** (Redundancy/Hardening): a lost node either **empties** its scope (single/cheap = decapitated) or **demotes** to the next rung (distributed).
+- **The durable-seat bug — the prerequisite that blocks everything.** `AdminSpaceProcessor.CalcEntityAdminSpace` **rebuilds `CommanderSeats` from scratch every pass**: it allocates `new List<AdminSpaceAbilityState>()` and assigns it to `adminSpaceDB.CommanderSeats` (`People/AdminSpaceProcessor.cs:36-37`), then repopulates from the component list (`:38-47`) with **fresh, un-seated** states — so an officer assigned by `AssignAdministratorOrder` is **wiped on the next processor run** (the new `AdminSpaceAbilityState` has `CommanderID = -1`). Its own comment flags the doubt: *"Currently this resets the list, need to check if we want that"* (`:27`). **Until seat occupancy is durable, nothing downstream — competence, stance, decapitation — can hold.**
+- **The C3 Relay sever (§10.2).** A destroyed relay severs the command net on the links it carried → any seat whose Command Reach depended on that relay loses interstellar scope (demotes to in-system). The relay is a `SensorProfileDB` emitter, so it is **found → jammed (§3.4 EW) → destroyed** by the ordinary sensor/EW/damage loop — command connectivity you build is connectivity the enemy can cut.
+
+---
+
+### Prerequisite fixes & dead stubs (file:line)
+
+The essence names these in build order (`AI-SELF-PLAY-DESIGN.md`; DIALS §E1a `:2503`, E3 `:2546`):
+
+1. **Durable seats** — stop `CalcEntityAdminSpace` from resetting occupancy each pass. `People/AdminSpaceProcessor.cs:31-49` (the `new List<>` at `:36-37` is the wipe; preserve existing `CommanderID`/`Commander` when rebuilding). **This is the hard prerequisite — do it first.**
+2. **Implement `OnComponentUninstallation`** — replace the throw (`People/AdminSpaceAtb.cs:42-45`) with empty-or-demote logic (dial H).
+3. **Add one `LeaderLost` subscriber** — consume the already-published `EventType.CrewLosses` (`People/CommanderFactory.cs:115-123`) to empty the seat the dead officer held.
+4. **Consolidate the dead delegate record onto the live pattern** — `AdministratorDB` (`People/AdministratorDB.cs`, zero consumers) is a detached duplicate of the **live** `ResearcherDB` (`Tech/ResearcherDB.cs`, read by `ResearchProcessor.cs:201,255,273`). Kill `AdministratorDB`, generalize `ResearcherDB` into the universal funded-officer record (`FundingLevel`/`PointsPerDay`/`BonusCategories`), and **fix the governance doc that points at the corpse** (classic Landmine-L1 "dead code that looks live").
+5. **Fill the auto-runner** — `NPCDecisionProcessor.Tick`'s `// TODO` (`Factions/NPCDecisionProcessor.cs:79-84`): DoctrineVector → stance → delegate order emission.
+6. **Wire rung-4 competence** — copy the `ResearchProcessor.cs:87` `BonusesDB`→`ModifiableValue`→`Refresh` pattern to the seat, and populate the empty `BonusesDB` at graduation (`CommanderFactory.cs:24` currently attaches it empty; `CommanderDB.Experience:21` is written-never-read).
+
+---
+
+### Design essence captured inline
+
+**Delegation = NPC AI.** The single deepest idea: a Governor running a colony to a stance for a lazy *player* is the exact same machinery as "the AI" running an *NPC's* colony — the delegate issues the same `IndustryOrder2`/tax/fleet orders the player would, so there is **no special AI code path** (`AI-SELF-PLAY-DESIGN.md`; governance doc's locked rule). Build the delegation loop once and you have built both the player's off-switch-for-micro and the opponent's brain. **The six-rung leader pipeline** (born → skilled → seated → **acts** → grows → lost) is one pipeline for all 19 roles: rungs 2–3 (the `BonusesDB` container + seat) are built and reusable, rung 4 exists exactly once as a copyable pattern (research), and rungs 1/5/6 (a competence *generator* at the academy, career growth, and the decapitation grave rung) are the real remaining work. **Rung 4 — "competence modifies outcome" — is the keystone wire:** the officer's `BonusesDB` folds into a real game number through a `ModifiableValue` + event-driven `Refresh` (not per-tick — cheap, which matters for the AI-cost bill), where the local officer's competence is the *modifier* and the empire's `GovernmentDB` regime is the *modulator* stacked on top. Crucially, the **stance is the stacking decision; competence is only the texture on how well that decision executes** — which keeps every seat honest against the realism-vs-gameplay firewall (a seat earns its keep by owning a *decision*, not by granting a +2).
+
+---
+
+### §0g stamp — the three acceptance criteria
+
+- **Reachable** (cradle-to-grave, player-side) — ◐ **partial.** A command node is a **component**: designed → built from materials → installed (`AdminSpaceAtb.OnComponentInstallation`, `People/AdminSpaceAtb.cs:32-40`) → seated (`AssignAdministratorOrder`) → the decision (stance, net-new) → **destroyed** (`OnComponentUninstallation`, currently throws). The officer rides the *people* chain (academy → graduate), not the mineral chain. Missing rungs: stance decision, competence, and the grave rung.
+- **Mirrored** (opponent-side) — ✅ **THE key door, by construction.** A seat *is* the NPC's brain — the same `AdminSpaceAbilityState` + delegation loop the player uses is the NPC's decision engine; the NPC "runs its gear at you" through the identical `NPCDecisionProcessor` → delegate → order path (`Factions/NPCDecisionProcessor.cs`). No player-only code, so no solitaire/inert-AI trap. This is why Command's honest headline is "seats built, everything they DO is net-new" and *not* "player-only feature."
+- **Observable** (the gauge, both sides) — ◐ **wire (Failure-A: the numbers exist, unwired).** The command/delegation readout: which seats are filled and by whom (`AdminSpaceDB.CommanderSeats` + `AdminSpaceAbilityState.CommanderID`), Command Reach (computable via `SensorTools.RangeForSignal`), and the auto-runner liveness gauge already ticks (`NPCDecisionProcessor.TickCount`). The delta: a UI panel (`AdminWindow.cs` exists as the seat) surfacing *stance + competence + reach* so the player can see a delegate working — and its enemy-facing half (the relay is an emission the target's grid reads).
+
+---
+
+### Cross-category shared state (Prime Directive)
+
+| Shares state with | The shared wire (file:line) | Consequence |
+|-------------------|------------------------------|-------------|
+| **§6 Enhancers (Unit Caliber)** | The **"a person's skill modifies an outcome"** hook — one `BonusesDB`→`ModifiableValue`→`Refresh` pattern (`Tech/ResearchProcessor.cs:87`) | Build-list #5: build the competence wire ONCE and it lights up **both** commander competence (§10 rung 4) *and* §6.2 elite unit caliber. A commander bonus is the fleet/colony twin of a unit's quality. |
+| **§9 Civic (Development / Academy)** | `NavalAcademyProcessor` graduates officers on a bell curve (`NextBellCurve`) but writes only `Experience` (int) — leaves `BonusesDB` empty (`CommanderFactory.cs:24`); draws the never-used scarce `ColonyManpowerDB.TalentPool` | Academy Type/Tier + Competence-Investment dials (essence-ext E1a) live on §9.2 but **feed Command's rung 1** (the competence generator). The academy is the first consumer of both the talent pool and the empty `BonusesDB`. |
+| **§3 Sensors / §3.4 EW** | Command Reach is computed like detection range (`SensorTools.cs:425`) and the **C3 Relay is a `SensorProfileDB` emitter** — found/jammed by the same sensor+EW loop (`SensorTools.cs:308,328`) | Where your orders travel = where the enemy can cut them. The relay's grave rung is delivered by the ordinary detection→jam→damage chain, not a bespoke path. |
+| **§11 Chassis** | The seat is a component **mounted on a chassis** — `admin-complex` on a Structure/colony, `ship-command` on a Hull bridge — via `ComponentInstancesDB.TryGetComponentsByAttribute<AdminSpaceAtb>` (`AdminSpaceProcessor.cs:34`) | The chassis is what *grants* the seat; a wrecked chassis (decapitation strike) takes the seat and its delegation with it. Ties Command's grave rung to §11 + the damage system. |
+| **Factions / Diplomacy / Government** | The empire-cabinet seats (Foreign Minister, Spymaster, Grand Admiral, Chief Scientist) are the **same seat shape at cabinet scope**; `GovernmentDB` re-skins stances, species sets leader lifespan | Command's one shape scales up to the whole 19-role, two-chain roster; the regime is the empire-wide *modulator* stacked on the local officer's competence *modifier*. |
+
+---
+
+### Holes owned/resolved
+
+| Hole | Description | Resolution | Status + home |
+|------|-------------|------------|---------------|
+| **H8** | Network / relay infrastructure — addressable, many-to-one; destruction severs a link (`COMPONENT-DESIGNER-CATEGORIES.md` §5) | The **★ C3 / RELAY door (§10.2 Command▸Relay)** — a seat-less network node, a `SensorProfileDB` emitter, found/jammed/killed → the sever. (Shares this hole with exploration's Route Works / jump-gate, which is the same physical shape.) | **RESOLVED (design-locked, unbuilt).** Home: §10.2 Command▸Relay. Grade ◐ Wire (range) / ⏳ Defer (the many-to-one addressing layer). |
+| **H10** | Autonomous / crewless / hive units — zero crew, or many sharing one mind (Borg collective, drones) | The **shared-span** case: a hive is a **Command/formation variant** where one span covers many bodies. Enhancers ▸ Systems automation drops crew→zero (AI); the *shared mind* is a Command span dial (one seat, many units) — i.e. the span-of-control wire (dial B) generalized past the dead `ConsoleSpace` math. | **PARTIALLY OWNED (LOW-MEDIUM priority).** Home split: automation → §6 Enhancers ▸ Systems; shared-span → §10.1 Command (the same `ConsoleSpace`→seat-count wire that's currently dead, `AdminSpaceProcessor.cs:43`). Not yet designed to lock. |
+
+---
+
 ## §11 — Chassis
 
 Chassis is the **final category and the capstone** — the container everything else has been mounting *into* for all 36 doors before it. Every category footer so far ended the same way: *"the mass funnels the chassis," "overflows everything below Mega," "the numbers force the build."* Chassis is the frame that's supposed to **catch** all that tonnage and force the decision. Five doors, one per scale: **Personnel** (a soldier) · **Vehicle** (a tank/walker) · **Hull** (a ship) · **Structure** (a station) · **Mega** (a Death-Star/Titan/Dyson). Each provides a **mass/volume budget** + the **mount class** it accepts + structural HP; the tier a build lands in *falls out of its tonnage* (§0b), never a rulebook.
@@ -2419,6 +3535,76 @@ Personnel 🔒 · Vehicle 🔒 · Hull 🔒 · Structure 🔒 · Mega 🔒. **Th
 
 ---
 
+## ⚙ 11 — CHASSIS · WIRING DOSSIER (self-contained)
+*Everything needed to wire this category — no other doc required.*
+
+Chassis is the **final category and the capstone**: the container every one of the other 36 doors mounts *into*. Five doors, one per scale — **Personnel** (a soldier) · **Vehicle** (a tank/walker) · **Hull** (a ship) · **Structure** (a station) · **Mega** (a Death-Star/Titan/Dyson). Each is supposed to provide a **mass/volume budget** + the **mount class** it accepts + structural HP, and the tier a build lands in is meant to *fall out of its tonnage* (§0b), never a rulebook. **The capstone finding: §0b is enforced in exactly ONE of the five doors.**
+
+The single most important fact in this whole blueprint lives here: the mass/volume budget that the ENTIRE 37-door designer leans on ("the mass funnels the chassis," "overflows everything below Mega," "the numbers force the build") is a **real hard cap for only the Personnel/Vehicle pair** — the ground assembler. Hull accumulates mass uncapped, Structure has no design at all, Mega doesn't exist, and mount flags are enforced only by UI filtering. Porting the ground cap to ships + stations is the highest-leverage build in the designer.
+
+### Pillar tags (§0h)
+- **`pillar` = universal / infrastructure.** Chassis is not a projector and not a counter — it is the **Medium/container** every pillar's gear sits inside. A hull holds the weapons (Military projectors) AND the sensors (Detection) AND the relay (Espionage/Command). It has no Reach·Cadence·Selectivity of its own; it *supplies the budget* that lets a mounted projector function.
+- **`skeleton-role` = Medium (container).** In the §0h Projection/Counter/Medium/Detection scheme, Chassis is the pure **Medium** slot — the physical thing every other role bolts onto. Its "counter" is not a defense dial but the §0b budget wall itself (you cannot mount what the frame cannot hold) and, at the grave rung, the destruction of the chassis (which takes every mounted ability with it).
+- **§0i resolver:** Chassis's "resolver" is **the §0b physical-budget loop — the ONE loop all 37 doors share** (§0i names it first: "the §0b physical-budget loop (all 37 doors)"). Chassis is not a new loop; it is the *frame the loop measures against*. Every other door's mass number is only meaningful because a Chassis provides the ceiling it's checked against. This is why fixing the cap here makes 36 other doors' forcing become real at once.
+
+### Complete dial → derived-stat → engine-wire table (VERIFIED, all 5 doors)
+
+| Door | Dial | Derived stat | Grade | Engine wire (file:line) | System insertion (the §0b budget loop) |
+|------|------|--------------|-------|-------------------------|-----------------------------------------|
+| **11.1 Personnel** | `BaseStrength` (carry budget) · `BaseHP` · `Size` · `Locomotion`=Foot · `CarryClass`=**Personnel** | carry-capacity currency; heaviest single item (via `MaxItemFraction` 0.5) | ✅ **Modelled** | `GroundChassisAtb.cs:39` (`BaseStrength`), `:41` (`BaseHP`), `:43` (`Size`), `:44` (`Locomotion`), `:46` (`CarryClass`) | **THE live §0b cap.** `GroundUnitAssembly.Compute` reads `chassis.BaseStrength` as `capacity` (`GroundUnitAssembly.cs:66`), sums mounted part carry-mass into `used` (`:123`), and **rejects over-budget → design Invalid** (`:134` `if (used > capacity)`). Per-item wall at `:125`. Augments RAISE the budget (`:72–74`, `GroundAugmentAtb.StrengthBonus`). |
+| **11.2 Vehicle** | `BaseStrength` (big budget) · `Size` · `Locomotion`=**Tracked/Walker/Hover** · `CarryClass`=**Vehicle** | vehicle-scale carry budget; heavy weapon+reactor+armour fit here | ✅ **Modelled** | Same `GroundChassisAtb.cs` fields; `GroundLocomotion` enum `:10–16` (Foot/Tracked/Walker/Hover); `GroundCarryClass` Personnel/Vehicle used at `GroundChassisAtb.cs:46` | Same `GroundUnitAssembly.Compute` cap as Personnel — a larger `BaseStrength` is the only difference; the AT-M6's heavy cannon + reactor + armour **fit** the Vehicle budget where they'd overflow Personnel. `DeriveType` maps a Vehicle `CarryClass` → `GroundUnitType.Armor` (`GroundUnitAssembly.cs:214`). |
+| **11.3 Hull (ship)** | `MassPerUnit` (emergent, uncapped) · tonnage class (**absent**) · hardpoint budget (**absent**) | ship mass = Σ components + armour; cost only | ⏳ **NET-NEW** | `ShipDesign.Recalculate` sums `MassPerUnit += component.MassPerUnit × count` **with no ceiling** (`ShipDesign.cs:151`); cost = `MassPerUnit × 0.1`, never rejected (`:171`). `ShipInfoDB.Tonnage` **commented out** (`ShipInfoDB.cs:50`, `:52`, `:80`). | **NO budget loop.** A ship is a bag of components; a corvette and a dreadnought differ only in the emergent sum. The ONLY mass gate is the *launch-site* pad tonnage — `LaunchComplexProcessor.cs:58` (`if (shipDesign.MassPerUnit > pad.MaxTonnage)`), a launch gate, not a hull budget. |
+| **11.4 Structure (station)** | module budget (**absent**) · `StructuralIntegrity` (flat 500) · mount class | modules by accretion; no budget | ◐ **WIRE** | `StationFactory.CreateStation` grows modules onto `ComponentInstancesDB` (`StationFactory.cs:60`) with **no design class**; `StructuralIntegrity` is a flat `BaseStructuralIntegrity = 500` pool on `StationInfoDB` (not scaled by module count — "more to lose, not more to survive"). | **NO budget loop.** A station is a **host, not a design** — there is no `StationDesign` class, no `Recalculate`, no module ceiling. Modules accrete freely. The wire is a station design class + a module budget. |
+| **11.5 Mega** | enormous mass/volume budget · a **Mega mount flag** (absent) · HP at 10⁹–10¹⁵ J | — | ⏳ **ENTIRELY NET-NEW** | **Nothing exists.** No Mega tier at any scale (ship/station/ground); `ComponentMountType` (`Enums.cs:126–144`) has no `Mega` flag — the flags stop at `GroundUnit = 1 << 6` (`:143`). | **The tier every category footer promised, absent.** §0b's ultimate payoff (a planet-cracker's generator mass overflows everything below Mega) has no frame to land in. The last thing between a *dialed* Death Star and a *buildable* one. |
+
+### THE §0b MASS-BUDGET KEYSTONE — the single highest-leverage build for the WHOLE designer
+
+**What's LIVE (the one working door pair):** `GroundUnitAssembly.Compute` (`GroundUnitAssembly.cs:54`) is a **real hard cap**. It reads the frame's `GroundChassisAtb.BaseStrength` as the carry budget (`:66`), accumulates every mounted part's carry-mass into `used` (`:123`), and at `:134` (`if (used > capacity)`) marks the whole design **Invalid** with a reason. There's a per-item wall too (`:125`, heaviest single part ≤ `MaxItemFraction` 0.5 of capacity). Augments RAISE the budget (`:72–74` — a power-armour `GroundAugmentAtb.StrengthBonus` adds to `capacity`, the live §0b "carry more" upgrade). **That IS §0b, running, for Personnel + Vehicle only.**
+
+**What's NET-NEW / a WIRE (the other four-fifths):**
+- **Hull uncapped:** `ShipDesign.Recalculate` (`ShipDesign.cs:137`) accumulates `MassPerUnit` (`:151`) with no ceiling and never rejects a design; `ShipInfoDB.Tonnage` is commented out (`ShipInfoDB.cs:50`). Ships are implicit — no hull object, no tonnage class. Only a launch-pad gate exists (`LaunchComplexProcessor.cs:58`).
+- **Structure has no class:** `StationFactory.CreateStation` (`StationFactory.cs:31`) attaches a `ComponentInstancesDB` (`:60`) modules accrete onto — there is no station *design* type and no module budget anywhere.
+- **Mega absent:** no tier, no `Mega` mount flag (`Enums.cs:126`).
+- **Mount enforcement is UI-only:** `ComponentMountType` (`Enums.cs:126–144`) is a `[Flags]` enum stored on every design (`ComponentDesign.cs:56`, set from the template at `ComponentDesigner.cs:50`), but **no engine path gates installation on it**. Enforcement is purely the client filtering pick-lists: `ShipDesignWindow.cs:568` (only shows `ShipComponent`-flagged designs), `ConstructionDisplay.cs:60` (`PlanetInstallation` only), `IndustryDisplay.cs:415`, `PlanetViewWindow.cs:950`, `CargoListPanelComplex.cs:139/151`. Nothing in `Entity.AddComponent` / the industry install path checks "does this component fit this chassis."
+
+**The build-list (highest leverage first):**
+1. **Ship/station mass-budget cap + validity check** — *the keystone.* Mirror `GroundUnitAssembly.Compute`: give a chassis a mass/volume ceiling, sum mounted component mass, reject (mark `IsValid=false`) when the sum exceeds it — the exact shape that already works on the ground. Makes §0b real for space.
+2. **Hull as a real design** — a hull component/attribute carrying the tonnage/volume ceiling + hardpoint budget; un-comment/replace `ShipInfoDB.Tonnage`; add the validity check to `ShipDesign.Recalculate`.
+3. **Station design class + module budget** — a `StationDesign` (the missing type; closes the DESIGNER-AUDIT "no station design class" gap) with a module ceiling; optionally scale `StructuralIntegrity` off it.
+4. **Mega tier + mount flag** — a new `ComponentMountType.Mega` (`1 << 7`) + a Mega-scale budget frame; the Death-Star/Titan/Dyson container.
+5. **Engine-level mount enforcement** — gate `AddComponent`/the install path on `ComponentMountType` compatibility so the mount flags mean something without the UI (today UI-filter only).
+6. **Walker/swarm carry classes** — extend `GroundCarryClass` (today only Personnel/Vehicle, `GroundChassisAtb.cs:46`) with distinct Walker/Swarm classes so a Titan-walker and a swarm-block route to their own bay/behaviour (the `Locomotion` enum already has `Walker`, `:12`).
+
+### Prerequisite fixes & dead stubs (file:line)
+- **`ShipInfoDB.Tonnage` — dead/commented** (`ShipInfoDB.cs:50`, `:52` `TCS`, `:80`). A resurrection point for the Hull budget, but as written it's a corpse — don't assume a ship has a tonnage number; it doesn't.
+- **No `StationDesign` type at all** — `StationFactory.cs` builds an entity from a hardcoded blob list (`:33–67`); there is no design/blueprint to hang a budget on. Net-new class, not a wire on an existing one.
+- **`ComponentMountType` enforced nowhere in the engine** — the flag is set (`ComponentDesigner.cs:50`) and read only by client filters (list above). A component with the wrong mount flag is *never* rejected engine-side; it just doesn't appear in the relevant UI pick-list. Any test that "proves a mount rule" today is asserting on the flag value (e.g. `GroundUnitBaseModTests.cs:62`), not on an enforcement path.
+- **`GroundUnitAssembly.MaxItemFraction = 0.5`** (`GroundUnitAssembly.cs:49`) is a flagged NUMBER-TO-REVIEW, not a locked constant.
+- **`InstallationsDB` is dead** (per root gotcha L1 / Industrial §7 footer) — installations live on `ComponentInstancesDB`; do not route a station "structure" budget through `InstallationsDB`.
+
+### Design essence captured inline (why the mass-budget is the keystone at ALL scales)
+The founding promise of the whole designer is §0b: *the numbers force the build, never a rulebook.* Nothing in the catalog says "a planet-cracker must be a Mega" — the **tonnage** of the beam plus the generator that feeds it plus the capacitor that buffers it is what won't fit anything smaller, so the physical budget *lets you find out* rather than an authored graph *telling* you. That promise is real machinery in exactly one place — the ground carry cap — and a slogan everywhere else, because Hull accumulates mass with no wall and Structure has no design to weigh at all. The keystone is not building a new idea; it is **porting an idea that already works up two scales.** Once a chassis at every tier supplies a ceiling and the design is checked against it, the mass number that every one of the other 36 doors already computes (a beam's mass, a reactor's mass, a drive's mass) suddenly *matters* everywhere — the Death Star's generator overflows the corvette, the torch-drive funnels you to a bigger hull, the sprawling station needs a bigger frame — and the §0b forcing becomes true across ships, stations, and megastructures instead of only on the battlefield. That is why one gate, mirrored from `GroundUnitAssembly.Compute`, is worth more than any other single build in the designer.
+
+### §0g stamp
+- **Reachable** — ✅ on Personnel/Vehicle: a frame is a `GroundChassisAtb` component, designed/researched/built/mounted/lost like any part (`GroundChassisAtb` is `IComponentDesignAttribute`, `GroundChassisAtb.cs:36`); the whole cradle-to-grave runs. ⏳ on Hull/Structure/Mega: a hull/station/mega frame is not yet a reachable buildable design (Hull is implicit, Structure is a host with no design, Mega is absent) — so those three fail the cradle-to-grave rung until the build-list above lands.
+- **Mirrored** — the NPC designs hulls/stations against the **same budget loop** through the identical design/industry path (there is no player-only chassis code; `GroundUnitAssembly.RegisterAssembledDesign` and `ShipDesign.Initialise` are faction-agnostic). Once the cap exists, an NPC over-budget design is rejected by the same `Compute`/`Recalculate` check — delegation = NPC AI, no separate path.
+- **Observable** — the gauge §0b mandates is the **live effective-vs-dialed throttle readout**: the ground assembler already surfaces it (`GroundUnitAssemblyResult.Valid` + `.Problems` list the over-budget reason, `GroundUnitAssembly.cs:29`, `:135`), shown live in the unit-designer UI. The space side needs the same readout wired onto the Hull/Structure validity check so an over-budget ship/station names *why* it won't build — without it the cap is an invisible bug (Failure-A: the number exists, just unshown).
+
+### Cross-category shared state (Prime Directive)
+Chassis is the ultimate shared-state partner: **it holds EVERY component**, so its budget gate binds all 36 other doors.
+- **Weapons / Power / Propulsion / Defense / Sensors / Industrial / Logistical / Command** — each door's emergent **Mass** feeds the chassis budget (every footer says so: "the mass funnels the chassis," §1 Death-Star generator, §2 drive mass, §5 thick armour, §8 assembly-bay, §10 relay). The chassis is the single consumer that turns all those mass numbers from cosmetic into load-bearing.
+- **`ComponentInstancesDB`** — the shared store where a chassis's mounted modules physically live (a station's `StationFactory.cs:60`; a ground unit's backing entity; a ship's component list `ShipDesign.cs:49`). Read the same memory the industry/damage/economy processors read.
+- **`MassVolumeDB`** — the mass sink every drive/armour/generator writes into and the chassis budget reads back (§0b feedback: a heavier drive both eats budget AND drags its own accel).
+- **Damage system (grave rung)** — destroying a chassis takes every mounted ability with it (`StationFactory.DestroyStation` tears down spawned sub-entities, `StationFactory.cs:101`; a ship's `ShipFactory.DestroyShip`; a ground unit's death). A decapitation strike on the frame collapses everything it carried.
+- **Carrier / nesting (H6)** — a chassis housing smaller chassis (Star Destroyer TIEs, AT-AT troops, Ha'tak gliders) is shared state between Chassis and **Logistical ▸ Storage** (the bay holds units) + **Transfer** (launch/recover). Verify nested-chassis resolves through those doors, not a new Chassis knob.
+
+### Holes owned/resolved (H5, H11, H6) → status + home
+- **H5 — Modular / config / separable chassis** (saucer separation, S-foils, Replicator blocks). **Status: OPEN, MEDIUM.** Two sub-cases (`CATEGORIES.md §5`, H5 row): **(a)** chassis *config-states* — a toggle that swaps stats/mounts (S-foils cruise↔attack), cheap; **(b)** *separable sub-chassis* — one design → two independent units (saucer sep), harder. **Home: Chassis (this category)** — a config-toggle dial + a separable-sub-chassis mechanic; neither exists today (no config-state field on `GroundChassisAtb`/`ShipDesign`).
+- **H11 — Scale extremes** (Death Star / Cube down to nanite / Replicator block). **Status: OPEN, LOW.** The ask is to *validate* the Chassis scale dial + tech/scale caps span ~10 orders of magnitude cleanly. **Home: Chassis** — specifically the **Mega tier (11.5)** at the top and a sub-Personnel end at the bottom. Blocked on Mega existing at all; resolve alongside build-list item 4.
+- **H6 — Carrier / nested assemblies** (a chassis that houses & launches smaller chassis). **Status: MOSTLY COVERED, LOW-MEDIUM — needs verification.** Per `CATEGORIES.md §5` H6 row: Logistical ▸ Storage holds units and Transfer launches them, so the mechanism largely exists; the open item is to **verify nested-chassis + launch/recover actually resolves** end-to-end. **Home: Logistical ▸ Storage / Transfer (door 26/27), NOT a new Chassis knob** — Chassis only supplies the bay-carrying frame; the carrier behaviour is Logistical's. (Cross-ref: §8 Industrial footer's inert assembly-bay `MaxVolume` gate is the related wire.)
+
+---
+
 # 🏁 BLUEPRINT COMPLETE — all 11 categories / 37 doors specified
 
 Every door of the component designer is now run through the full pipeline (dials → justified options → modellability → numbers → resolver/system insertion) and **all 37 doors are 🔒 LOCKED** (Chassis locked 2026-07-09; only Weapons▸Exotic §1.5 carries a design-refresh flag from the bioweapon slice). The 67 hand-authored templates collapse into **11 parametric categories**; specific things (phaser, submarine, AT-M6, bunker, Space Marine, Millennium Falcon, Death Star) fall out of dials; the multi-consumer rule (§0f) holds throughout; and every door names its Modelled ✅ / Wire ◐ / Defer ⏳ state honestly against the real engine.
@@ -2438,6 +3624,8 @@ The designer's founding idea is sound and mostly *there*; the blueprint's value 
 ---
 
 # 📎 Main-Merge Delta — the `ai-faction-perf-planning` merge (2026-07-09)
+
+> *Distributed 2026-07-09: the per-category corrections below now live inside each category's **⚙ Wiring Dossier**. This appendix is kept as the origin/rationale — the analysis of how the merge landed. For wiring, read the dossier.*
 
 **What happened:** `main` merged the `claude/ai-faction-perf-planning-z5vl4w` branch (PR #77). We did a four-agent deep dive to see how it changes this blueprint's categories, doors, dials, and wires.
 
@@ -2468,6 +3656,8 @@ The merge is **good news for the blueprint's honesty**: three of the biggest ⏳
 ---
 
 # 🧭 Essence Extensions — the gear the merged-docs essence demands (2026-07-09) 🟡 *proposed*
+
+> *Distributed 2026-07-09: the per-category gear (E1a–E1d) is now folded into each category's **⚙ Wiring Dossier** as first-class dial rows; the framework moves (E0a–E0c) are promoted to §0g/§0h/§0i. This section is kept as the origin/rationale — the essence synthesis and the two-hole convergence. For wiring, read the dossier + §0.*
 
 The Main-Merge Delta (above) established the merge changes no wire. This section is the **creative follow-on the developer asked for**: with a deep read of what those five merged docs *mean*, what can be **added** to the designer — categories, doors, dials — that **matches and enhances that essence**, and how it all wires. Five essence-agents mined one doc each; a sixth synthesized. **Status: proposed — lock door-by-door in the established rhythm.**
 
