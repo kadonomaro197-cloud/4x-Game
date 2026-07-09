@@ -1799,46 +1799,59 @@ On top of the universal seven (§0a):
 **Preset coordinates:** reflex booster (evasion) · power armour (strength+toughness) · combat stims (temporary, ⏳) · personal shield generator (ward) · conversion cyborg (radical, all-round) · **labour exo** *(a civilian strength rig — work in high-G/vacuum, the §0f non-combat use)*.
 
 ### 6.2 Enhancers ▸ TRAINING / DOCTRINE  🟡 *proposed*
-*Make a veteran — drilled skill that raises a unit's baseline without new hardware. The green conscript vs the hardened elite. **Mostly net-new:** the "veteran ≠ conscript" promise is exactly what the game doesn't have yet — the scaffolding exists (an academy that produces officers, an experience number that ticks up) but **nothing reads it into the fight.***
+*The **unit QUALITY / caliber** dial — the thing that stamps "elite" onto a unit at design time. This is what lets you build a **Space Marine** instead of a Guardsman, an **ace** instead of a rookie, the **Millennium Falcon** instead of a stock freighter — the same chassis and gear, but a higher-caliber crew that hits harder, dodges better, and holds under fire. It is **not the commander** (a formation/fleet leader is a separate thing that buffs from above) and **not the gear** (armour/weapons/augments are other doors); caliber is **intrinsic to the unit** and stacks with both. Mostly net-new today — but the reframe makes it a clean build.*
 
-**Distinct from fleet/formation POSTURE (don't conflate).** `FleetDoctrineDB` / `GroundFormationDoctrine` (the switchable Offensive/Defensive stance a commander picks mid-battle) already exist and live in the **combat/Command** layer — that's a *posture*, chosen per fight. This door is the unit's **baked-in competence** — the drilled skill it carries into every fight, earned or trained. Posture is the stance; training is the soldier.
+**The core decision — WHAT CALIBER of unit.** You choose a **quality tier** when you design the unit and pay for it upfront: a conscript is cheap and plentiful; an elite is a big across-the-board multiplier but **expensive and FEW** (elites draw from a scarce talent pool — you can't field an army of Space Marines). That single choice is what separates two units built from the *identical* chassis + weapons + armour. Caliber can also be **earned** (a green unit that survives becomes a veteran) or **trained** (an academy program) — but the primary lever is the design-time quality dial, the same way armour thickness is a design choice.
 
-**The core decision — EARN IT or TRAIN IT, and in WHAT.** A veteran is better at a specific thing (gunnery, dodging, holding under fire, or a non-combat craft). You choose the skill focus and how the unit gets there — an academy program (built), blood-earned experience (accrued), or an installed doctrine/training package.
+> **Why it's the unit, not the commander (your call, and the right one):** a Space Marine squad is elite whether or not an officer is attached; the Falcon flies like the Falcon because of Han + Chewie's skill and its tuning, not because an admiral is in the system. So caliber lives **on the unit's own design**, read by the resolver directly. A commander is a *separate* modifier (the Command category) that stacks on top — "they have a commander sure, but it's the training that tells them apart."
 
-**A. Skill focus — what the training sharpens**
-| Option | Why pick it | The catch |
-|--------|-------------|-----------|
+> **The H4 line, held (the Jedi caveat):** this dial builds the **elite-warrior** part of a Jedi — the reflexes, the lightsaber skill, the discipline (a very high quality tier). The **supernatural** part — telekinesis, precognition, the Force itself — is a *being-trait*, and per the gear-vs-being boundary it lives in People/species, **not** here. So "a Jedi" is *mostly* this dial (elite martial caliber) + a lightsaber (Weapons ▸ Melee) + a small being-trait for the Force. We build the warrior; the Force stays a trait.
+
+**A. Quality tier — the caliber (the core, design-time dial)**
+| Option | Why pick it | The catch (anti-dominance) |
+|--------|-------------|----------------------------|
+| **Conscript** | cheap, plentiful — mass you can spend | worse at everything; folds against elites |
+| **Regular** | a solid, affordable baseline | outclassed by veteran+ formations |
+| **Veteran** | a strong multiplier — the professional force | costly; draws trained manpower |
+| **Elite** (Space Marine / ace) | the **best** — hits, dodges, and holds far above baseline | **expensive AND scarce** (a small talent pool); irreplaceable if lost (the grave rung bites hardest) |
+
+**B. Skill focus — what the caliber sharpens**
+| Option | Why | Catch |
+|--------|-----|-------|
 | **Gunnery** | raises accuracy/attack — lands more fire | narrow — a crack shot who can't dodge |
 | **Evasion / survival** | dodges better, holds under fire (discipline) | doesn't hit harder |
 | **Operations** (non-combat) | faster survey / build / research — the §0f labour use | no combat benefit |
 
-**B. Level — green → elite (the veterancy tier)**
+**C. Source — how a unit reaches its caliber**
 | Option | Why | Catch |
 |--------|-----|-------|
-| **Green** | cheap, plentiful — a conscript | worse at everything until blooded |
-| **Elite** | a big multiplier across the board | expensive, slow to make, irreplaceable if lost (the grave rung bites hardest) |
+| **Designed elite** (pay upfront) | stamp the tier at design time — the Space Marine chapter, the crack regiment, the ace squadron | costs money + **scarce talent**; the primary lever |
+| **Combat-earned** | free — a green unit that survives climbs the tiers | slow, and you risk the unit to level it |
+| **Academy-trained** | deliberate production of high-caliber units/officers | ⏳ the `NavalAcademy` produces officers today but they have no combat effect yet |
 
-**C. Source — academy ↔ combat-earned ↔ doctrine-package**
-| Option | Why | Catch |
-|--------|-----|-------|
-| **Academy-trained** | build it deliberately (the `NavalAcademy` produces officers today) | ⏳ officers have **no combat effect** yet |
-| **Combat-earned** | free — units improve by fighting | ⏳ `CommanderDB.Experience` ticks up but is **never read**; no per-unit XP stat exists |
-| **Doctrine package** (installed) | a buildable training program — treat competence as a component | ⏳ net-new |
-
-**Modellability audit (§0d — mostly net-new; the scaffolding is there, the payoff isn't):**
+**Modellability audit (§0d — net-new, but a CLEAN net-new: one design-time multiplier, not an XP engine):**
 | Dial | Verdict | How the sim models it |
 |------|---------|------------------------|
-| Academy (officer production) | ✅ | `NavalAcademyAtb.ClassSize`/`TrainingPeriodInMonths` → `NavalAcademyProcessor` graduates commanders — **production is real** |
-| Officer → combat effect | ⏳ **defer** | `CommanderDB.Experience` is **written but never read**; `BonusesDB` has **no combat category** — needs a combat `BonusCategory` + a person→ship/unit combat-attach |
-| Per-unit veterancy | ⏳ **defer** | `GroundUnit` / `ShipCombatValueDB` have **no experience field** (the crew-XP v2 stub) — a veterancy stat the resolver reads is net-new |
-| Skill focus / level | ⏳ **defer** | rides the per-unit veterancy stat above |
-| Operations (non-combat) | ◐ **wire** | a training bonus onto survey/build/research rates (the existing `BonusesDB` pattern, extended) |
+| **Quality tier (design-time)** | ⏳ **net-new (clean)** | a single **`Quality` multiplier field** on the unit design (`GroundUnit` / `ShipCombatValueDB`) → the resolver multiplies hit/evasion by it. Simpler than earned-XP: it's a static stat baked at build, read like armour thickness. **Applies to ships (crew caliber — the Falcon) AND ground (the Space Marine).** |
+| Skill focus | ⏳ **defer** | which stat the tier weights (attack vs evasion) — rides the quality field |
+| Combat-earned | ⏳ **defer** | `CommanderDB.Experience` ticks up but is **never read**; a per-unit XP accrual that raises `Quality` is the harder second path |
+| Academy (production) | ✅ (production) / ⏳ (effect) | `NavalAcademyAtb` graduates officers — **real**; but the officer→combat effect (`BonusesDB` has **no combat category**) is net-new |
+| Scarcity cost | ◐ **wire** | elites draw a **scarce talent pool** — ties to the Manpower system (`ManpowerDB` talent pool already exists) so you *can't* mass-produce Space Marines |
+| Operations (non-combat) | ◐ **wire** | a caliber bonus onto survey/build/research rates (the existing `BonusesDB` pattern) |
 
-**Reading:** Training/Doctrine is **the most net-new door so far** — and that's the honest finding. The game *produces* officers (the academy works) and *stores* an experience number, but **nothing reads either into a fight**, so a veteran and a conscript are identical in the resolver today. The build is a clear chain: add a **combat `BonusCategory`** to `BonusesDB` → **attach** a commander/veterancy to a ship/unit → give the resolver a **veterancy term** (modifies hit/evasion). Until that exists, "veteran ≠ conscript" is a promise, not a mechanic. (The non-combat half — training that speeds labour — is a cheaper ◐ wire onto the existing bonus pattern.)
+**Reading:** Reframed as **unit caliber**, this door is a *clean* net-new, not a vague one. The primary build is a **single `Quality` multiplier** stamped on a unit's design and read by the resolver — that alone makes a Space Marine ≠ a Guardsman and the Falcon ≠ a stock freighter, on the same chassis. It's simpler than an experience-grind system (that's the optional second source), and it already has an anti-dominance cost handle: **scarce talent** (the Manpower talent pool means elites are few, so quality is a real trade against quantity). The academy and `CommanderDB.Experience` are useful scaffolding for the *earned/trained* paths, but the door doesn't depend on them — the design-time quality dial is the spine. Distinct from **posture** (`FleetDoctrineDB`, the switchable stance — that's Command) and from the **commander** (a separate stacking modifier).
 
-**Numbers:** a veterancy tier (green→elite) → a small multiplier on hit/evasion (to be calibrated against `EvasionCap 0.95` and the `HitFraction` tracking term, once the stat exists). Cradle-to-grave: training is either a **built program** (academy/doctrine-package component) or an **earned stat** — and an elite lost in battle is gone (re-train from green).
+**Numbers:** `Quality` = a multiplier tier (e.g. conscript ×0.8 · regular ×1.0 · veteran ×1.25 · elite ×1.6) on the unit's hit/evasion, calibrated against `EvasionCap 0.95` and the `HitFraction` tracking term; cost + talent-draw scale with the tier. Cradle-to-grave: caliber is set at **design/build** (or earned), draws **scarce manpower**, and an elite lost in battle is **gone** — you re-raise from a small talent pool, which is exactly why losing a veteran formation *hurts*.
 
-**Preset coordinates:** green conscript · drilled regular · elite veteran · academy officer (⏳ needs the combat-attach) · ace pilot (⏳) · **veteran survey crew** *(faster scans — the §0f labour use)*.
+**Preset coordinates — the span (ground AND ship, the north-star units):**
+| Unit | Tier | The point |
+|------|------|-----------|
+| **Conscript levy** | Conscript | cheap mass — quantity over quality |
+| **Line regular** | Regular | the affordable baseline army |
+| **Space Marine** | Elite (+ Bio-augmentation) | design-time elite caliber + power armour/gene-mods (door 6.1) — the two Enhancer doors stacked |
+| **Ace squadron** | Elite (gunnery/evasion) | a few pilots worth a wing of rookies |
+| **Millennium Falcon** | Elite (ship crew) | crew caliber on a freighter chassis — "she's got it where it counts" |
+| **Veteran survey crew** *(civilian)* | Veteran (operations) | faster scans — the §0f labour use |
 
 ### 6.3 Enhancers ▸ SYSTEMS  🟡 *proposed*
 *Let the machine help — a targeting computer, a battle-management AI, an astromech co-pilot, an automation suite. Multiplies what the crew/unit can do without changing the body or the training. **Essentially net-new for the live combat engine:** the auto-resolver derives hit chance purely from weapon-vs-evasion — there is no computer term — and the one existing piece (fire-control) feeds only the parked per-pixel sim.*
@@ -1876,4 +1889,4 @@ On top of the universal seven (§0a):
 ---
 
 ## §6 Enhancers — status (all three doors proposed, awaiting lock)
-Bio-augmentation 🟡 · Training/Doctrine 🟡 · Systems 🟡. **This is the honest NET-NEW category** — the "veteran ≠ conscript" force-multiplier layer the game mostly lacks; the design job is to define it cleanly and hold the gear-vs-being line, not pretend it's built. Headline readings: **Bio-augmentation is the one mostly-Modelled door** (`GroundAugmentAtb` — strength/evasion/toughness/shield all read; power-armour + reflex-booster buildable today; ship-crew augment is the net-new twin) — *and it corrects a Defense-doc false positive: `ToughnessBonus` is Modelled (HP multiplier), not dead.* **Training/Doctrine is mostly net-new** — the academy produces officers and `CommanderDB.Experience` ticks up, but **nothing reads either into a fight** (a veteran = a conscript in the resolver today); the build is a combat `BonusCategory` + a person→unit combat-attach + a per-unit veterancy stat. **Systems is essentially net-new** — the auto-resolver has no computer term (hit chance is pure weapon-vs-evasion), and its one foothold (fire-control) lives on the parked sim + overlaps the Sensors ▸ Fire-Control wire. **The load-bearing decision is the BOUNDARY (H4):** buildable **gear** (an `IComponentDesignAttribute` the resolver reads — `GroundAugmentAtb`) is this category; innate **being** (species trait, raw talent, the Force) lives in **People/species/crew** — and `SpeciesDB` has **zero combat trait today**, so even that is net-new, and it stays **out** of the component store. Build-list: (1) surface `ToughnessBonus` (Modelled, invisible) — **done: Defense-doc corrected**; (2) ship-crew bio-augment (the space twin); (3) combat-drug timing (temporary + crash); (4) a combat `BonusCategory` + person→unit attach (make officers/experience matter); (5) a per-unit veterancy stat the resolver reads; (6) a targeting/battle-computer term in `HitFraction` (Systems, shares the FC wire); (7) hold the line — innate traits go to People, not here.
+Bio-augmentation 🟡 · Training/Doctrine 🟡 · Systems 🟡. **This is the honest NET-NEW category** — the "veteran ≠ conscript" force-multiplier layer the game mostly lacks; the design job is to define it cleanly and hold the gear-vs-being line, not pretend it's built. Headline readings: **Bio-augmentation is the one mostly-Modelled door** (`GroundAugmentAtb` — strength/evasion/toughness/shield all read; power-armour + reflex-booster buildable today; ship-crew augment is the net-new twin) — *and it corrects a Defense-doc false positive: `ToughnessBonus` is Modelled (HP multiplier), not dead.* **Training/Doctrine is the unit-CALIBER door** (reframed per the developer): a **design-time quality tier** that stamps "elite" onto a unit — a **Space Marine** vs a Guardsman, an **ace** vs a rookie, the **Millennium Falcon** vs a stock freighter, on the *same* chassis and gear. It's **the unit's own stat, not the commander** (a separate stacking modifier) and not the gear (other doors). Net-new but **clean**: the spine is a single `Quality` multiplier field on the unit design, read by the resolver (hit/evasion) — simpler than an XP engine, with anti-dominance built in (elites draw a **scarce talent pool**, so you can't mass-produce Space Marines). Combat-earned XP + the academy are optional secondary sources. Holds the H4 line on Jedi: this builds the elite *warrior*; the *Force* stays a People being-trait. **Systems is essentially net-new** — the auto-resolver has no computer term (hit chance is pure weapon-vs-evasion), and its one foothold (fire-control) lives on the parked sim + overlaps the Sensors ▸ Fire-Control wire. **The load-bearing decision is the BOUNDARY (H4):** buildable **gear** (an `IComponentDesignAttribute` the resolver reads — `GroundAugmentAtb`) is this category; innate **being** (species trait, raw talent, the Force) lives in **People/species/crew** — and `SpeciesDB` has **zero combat trait today**, so even that is net-new, and it stays **out** of the component store. Build-list: (1) surface `ToughnessBonus` (Modelled, invisible) — **done: Defense-doc corrected**; (2) ship-crew bio-augment (the space twin); (3) combat-drug timing (temporary + crash); (4) a per-unit **`Quality` multiplier** field (the caliber spine — makes Space Marine ≠ Guardsman, Falcon ≠ freighter) read by the resolver + drawn from the scarce **talent pool** (`ManpowerDB`); (5) optional secondary paths — combat-earned XP raising `Quality`, and a combat `BonusCategory` for officer/commander effect; (6) a targeting/battle-computer term in `HitFraction` (Systems, shares the FC wire); (7) hold the line — innate traits (the Force) go to People, not here.
