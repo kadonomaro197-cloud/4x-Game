@@ -23,9 +23,13 @@
 | 12 | Sensors | **Survey** | 🔒 **LOCKED §3.2** |
 | 13 | Sensors | **Fire Control** | 🔒 **LOCKED §3.3** |
 | 14 | Sensors | **Electronic Warfare** | 🔒 **LOCKED §3.4** |
-| 15 | Power | **Generation** | 🟡 **proposed §4.1** (awaiting lock) |
-| 16 | Power | **Storage** | 🟡 **proposed §4.2** (awaiting lock) |
-| 17–37 | Defense · Enhancers · Industrial · Logistical · Civic · Command · Chassis | (all doors) | ⚫ pending |
+| 15 | Power | **Generation** | 🔒 **LOCKED §4.1** |
+| 16 | Power | **Storage** | 🔒 **LOCKED §4.2** |
+| 17 | Defense | **Armor** | 🟡 **proposed §5.1** (awaiting lock) |
+| 18 | Defense | **Shields** | 🟡 **proposed §5.2** (awaiting lock) |
+| 19 | Defense | **Hardening** | 🟡 **proposed §5.3** (awaiting lock) |
+| 20 | Defense | **Fortification** | 🟡 **proposed §5.4** (awaiting lock) |
+| 21–37 | Enhancers · Industrial · Logistical · Civic · Command · Chassis | (all doors) | ⚫ pending |
 
 ---
 
@@ -1374,7 +1378,7 @@ On top of the universal seven (§0a):
 | **Signature / heat** | a running plant emits — feeds EMCON/Detection (a quiet ship runs cold or dark) |
 | **Safety / containment** | stored energy is a bomb if the component is hit — the grave rung |
 
-### 4.1 Power ▸ GENERATION  🟡 *proposed*
+### 4.1 Power ▸ GENERATION  🔒 *locked*
 *The powerplant — reactors, solar, RTGs, the exotic cores. What turns fuel (or sunlight, or decay heat) into the watts every other component spends. Everything from a chemical genset to a fusion torch-reactor to a solar wing to an antimatter core to a Death-Star generator falls out of these dials.*
 
 **The core decision — WHAT TO BURN, and HOW MUCH: output vs fuel-dependence vs safety/signature.** A fuel-burning reactor makes big steady power but must be **fed** (mine → refine → burn, and it runs out) and it's a **hazard** (hot signature, a bomb if breached). A fuel-free source (solar, RTG) needs no logistics but is **constrained** — solar dies far from a star or in shadow; an RTG is reliable but weak. You pick where on the *output ↔ independence ↔ safety* triangle you sit; nothing gives all three.
@@ -1459,7 +1463,7 @@ On top of the universal seven (§0a):
 | **Antimatter core** | antimatter | enormous | dreadnought/Death-Star tier; a bomb if hit |
 | **Geothermal plant** *(FACILITY)* | planetary heat | steady | a colony's baseload — location-locked, no fuel ship |
 
-### 4.2 Power ▸ STORAGE  🟡 *proposed*
+### 4.2 Power ▸ STORAGE  🔒 *locked*
 *The battery and the capacitor — the bank that lets you spend energy faster than the reactor makes it. A reactor is capped at a steady load; storage is how a warship dumps a **warp jump** or a **weapon alpha** in one instant, then recharges from the reactor's surplus. Everything from a small buffer cell to a heavy endurance bank to a fast alpha-strike capacitor to a colony's grid storage falls out of these dials.*
 
 **The core decision — BUFFER THE SPIKES: capacity vs burst vs mass.** The reactor makes power *steadily* (load ≤ 1.0); the fight and the jump need it *all at once*. Storage banks the reactor's surplus so you can exceed `TotalOutputMax` for a moment — the warp bubble, the charge-weapon alpha. You choose **how much** you bank (capacity → how many jumps/alphas before you're dry) and **how fast you can dump it** (a capacitor's burst vs a battery's endurance). Big capacity is heavy; fast burst leaks and costs.
@@ -1520,5 +1524,5 @@ On top of the universal seven (§0a):
 
 ---
 
-## §4 Power — status (both doors proposed, awaiting lock)
-Generation 🟡 · Storage 🟡. **Yardstick = the SUPPLY GATE**, not the salvo math — Power decides whether every *other* door's dials get to function (a beam with no reactor = output 0; a flat battery = no warp). This is the **multi-consumer rule (§0f) at maximum**: Power has no combat/civilian split because everything is its consumer (weapons · warp · ground units ✅ today; colony life-support ◐ inert; sensors + shields ◐ not-yet-wired). Headline readings: **Generation is mostly Modelled** — fuel reactors + distance-attenuated solar run live and feed the gate; RTG is a framing wire, exotic sources + the meltdown grave-rung defer on one net-new **containment/breach** mechanic. **Storage's core is fully Modelled** (capacity = the literal warp/fire gate — the most load-bearing number on a ship), with the **battery-vs-capacitor** depth waiting on one ◐ wire (a `MaxDischarge_KJps` rate field — today all storage differs only by size). **The whole category is where §0b LIVES** — "the numbers force the build" is real machinery here, with one honest gap: under-supply currently **hard-blocks** (won't warp / won't fire) where §0b wants a **soft throttle** — a flagged wire, not a redesign. Build-list items: (1) the `MaxDischarge_KJps` storage-rate field (unlocks capacitor-vs-battery); (2) the **containment/breach** grave-rung (unlocks exotic sources + makes a hit reactor/bank matter); (3) the **soft-throttle** conversion (under-supply throttles, not blocks); (4) wire **sensors + shields** as power consumers (the §0f expansion); (5) calibrate **colony `PerCapitaPowerDemand`** (turn life-support from inert to a real load).
+## ✅ §4 Power — COMPLETE (2/2 doors locked)
+Generation 🔒 · Storage 🔒. **Yardstick = the SUPPLY GATE**, not the salvo math — Power decides whether every *other* door's dials get to function (a beam with no reactor = output 0; a flat battery = no warp). This is the **multi-consumer rule (§0f) at maximum**: Power has no combat/civilian split because everything is its consumer (weapons · warp · ground units ✅ today; colony life-support ◐ inert; sensors + shields ◐ not-yet-wired). Headline readings: **Generation is mostly Modelled** — fuel reactors + distance-attenuated solar run live and feed the gate; RTG is a framing wire, exotic sources + the meltdown grave-rung defer on one net-new **containment/breach** mechanic. **Storage's core is fully Modelled** (capacity = the literal warp/fire gate — the most load-bearing number on a ship), with the **battery-vs-capacitor** depth waiting on one ◐ wire (a `MaxDischarge_KJps` rate field — today all storage differs only by size). **The whole category is where §0b LIVES** — "the numbers force the build" is real machinery here, with one honest gap: under-supply currently **hard-blocks** (won't warp / won't fire) where §0b wants a **soft throttle** — a flagged wire, not a redesign. Build-list items: (1) the `MaxDischarge_KJps` storage-rate field (unlocks capacitor-vs-battery); (2) the **containment/breach** grave-rung (unlocks exotic sources + makes a hit reactor/bank matter); (3) the **soft-throttle** conversion (under-supply throttles, not blocks); (4) wire **sensors + shields** as power consumers (the §0f expansion); (5) calibrate **colony `PerCapitaPowerDemand`** (turn life-support from inert to a real load).
