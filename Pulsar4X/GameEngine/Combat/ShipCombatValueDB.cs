@@ -129,6 +129,13 @@ namespace Pulsar4X.Combat
         /// <summary>How fast the shield pool refills (joules/sec) — the "shields recharging" rate between salvos.</summary>
         [JsonProperty] public double ShieldRegen_Jps { get; internal set; }
 
+        /// <summary>The AMMO magazine capacity in kg (sum of installed <see cref="ShipMagazineAtb"/> magazines,
+        /// health-scaled) — Weapons pilot W3, the space echo of the ground magazine. Seeds the fleet's combat ammo pool
+        /// (`FleetCombatStateDB.AmmoPool_kg`), which the resolve drains as the fleet's ammo weapons fire; when dry those
+        /// weapons go silent. <b>0 = no magazine</b> → the ammo pool is disabled and combat is byte-identical (every
+        /// current ship, until the W3c base-mod magazine). v1: one aggregate pool per fleet, like the shield.</summary>
+        [JsonProperty] public double AmmoCapacity_kg { get; internal set; }
+
         public ShipCombatValueDB() { }
 
         public ShipCombatValueDB(double firepower, double toughness, double roleWeight)
@@ -144,6 +151,7 @@ namespace Pulsar4X.Combat
             Toughness = db.Toughness;
             RoleWeight = db.RoleWeight;
             Evasion = db.Evasion;
+            AmmoCapacity_kg = db.AmmoCapacity_kg;
             Weapons = new List<WeaponProfile>();
             if (db.Weapons != null)
                 foreach (var w in db.Weapons) Weapons.Add(new WeaponProfile(w));
@@ -163,6 +171,7 @@ namespace Pulsar4X.Combat
             double toughness = 0;
             var weapons = new List<WeaponProfile>();
             double shieldCapacity = 0, shieldRegen = 0;   // the space shield pool (0 if no generator → combat unchanged)
+            double ammoCapacity = 0;                      // the ammo magazine pool (0 if no magazine → combat unchanged, W3)
 
             if (ship.TryGetDataBlob<ComponentInstancesDB>(out var instances))
             {
@@ -284,6 +293,17 @@ namespace Pulsar4X.Combat
                         }
                     }
                 }
+
+                // Ammo magazines (W3): sum the installed magazines' kg (health-scaled — a shot-off magazine feeds
+                // less). 0 if none → the fleet's ammo pool stays disabled and combat is byte-identical.
+                if (instances.TryGetComponentsByAttribute<ShipMagazineAtb>(out var mags))
+                {
+                    foreach (var comp in mags)
+                    {
+                        if (comp.Design.TryGetAttribute<ShipMagazineAtb>(out var mag))
+                            ammoCapacity += mag.Capacity_kg * comp.HealthPercent;
+                    }
+                }
             }
 
             // Armour thickness adds straight to toughness (joules).
@@ -303,6 +323,7 @@ namespace Pulsar4X.Combat
                 Weapons = weapons,
                 ShieldCapacity_J = shieldCapacity,
                 ShieldRegen_Jps = shieldRegen,
+                AmmoCapacity_kg = ammoCapacity,
             };
         }
 

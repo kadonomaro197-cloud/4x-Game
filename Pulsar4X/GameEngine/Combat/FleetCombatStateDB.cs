@@ -61,6 +61,15 @@ namespace Pulsar4X.Combat
         /// so combat is byte-identical. v1: one aggregate pool for the whole fleet (per-ship shields are a later slice).</summary>
         [JsonProperty] public double ShieldPool_J { get; internal set; } = -1;
 
+        /// <summary>The fleet's current AMMO charge (kg) — the depleting magazine pool (Weapons pilot W3, the ship echo
+        /// of the ground <c>GroundAmmo</c>). Each salvo the fleet's AMMO-fed weapons (Kinetic/Explosive nature — railgun,
+        /// flak, missiles) drain this; when it hits 0 those weapons go SILENT and the fleet fights on with its energy
+        /// weapons only. <b>-1 = "not yet seeded"</b> — the resolver lazily fills it to the fleet's total magazine
+        /// capacity on the first salvo; for a fleet with NO magazine (capacity 0) it stays disabled and the ammo step is
+        /// a no-op, so combat is byte-identical. v1: one aggregate pool for the whole fleet (per-ship magazines are a
+        /// later slice), matching the shield pool.</summary>
+        [JsonProperty] public double AmmoPool_kg { get; internal set; } = -1;
+
         public FleetCombatStateDB() { }
 
         public FleetCombatStateDB(int opponentFleetId)
@@ -83,6 +92,7 @@ namespace Pulsar4X.Combat
             Separation_m = db.Separation_m;
             ManeuverBudget = db.ManeuverBudget;
             ShieldPool_J = db.ShieldPool_J;
+            AmmoPool_kg = db.AmmoPool_kg;
         }
 
         public override object Clone()
