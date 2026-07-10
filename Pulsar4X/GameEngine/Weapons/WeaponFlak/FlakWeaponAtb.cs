@@ -40,16 +40,24 @@ namespace Pulsar4X.Weapons
         /// slug (the spread helps), well below a guided missile.</summary>
         [JsonProperty] public double Tracking { get; internal set; }
 
+        /// <summary>RECOIL — the kick per burst (Weapons pilot W4; the same model as the railgun's). A rapid-fire flak
+        /// mount on a light hull shakes it off aim, so <see cref="Pulsar4X.Combat.ShipCombatValueDB"/> reduces effective
+        /// tracking by <c>chassisMass / (chassisMass + Recoil)</c> at build. 0 = no penalty (byte-identical). Trailing
+        /// ctor arg so a template that omits it binds at 0.</summary>
+        [JsonProperty] public double Recoil { get; internal set; }
+
         public FlakWeaponAtb() { }
 
         /// <summary>JSON constructor. Arg order MUST match <c>AtbConstrArgs(...)</c> in weapons.json.</summary>
-        public FlakWeaponAtb(double muzzleVelocity, double damagePerPellet, double roundsPerSecond, double pelletsPerShot, double tracking)
+        public FlakWeaponAtb(double muzzleVelocity, double damagePerPellet, double roundsPerSecond, double pelletsPerShot, double tracking,
+            double recoil = 0)
         {
             MuzzleVelocity_mps = muzzleVelocity;
             DamagePerPellet_J = damagePerPellet;
             RoundsPerSecond = roundsPerSecond;
             PelletsPerShot = pelletsPerShot;
             Tracking = tracking;
+            Recoil = recoil < 0 ? 0 : recoil;
         }
 
         public FlakWeaponAtb(FlakWeaponAtb db)
@@ -59,6 +67,7 @@ namespace Pulsar4X.Weapons
             RoundsPerSecond = db.RoundsPerSecond;
             PelletsPerShot = db.PelletsPerShot;
             Tracking = db.Tracking;
+            Recoil = db.Recoil;
         }
 
         // No-op install/uninstall: flak contributes to the combat VALUE (auto-resolve), not the parked per-pixel

@@ -172,6 +172,9 @@ namespace Pulsar4X.Combat
             var weapons = new List<WeaponProfile>();
             double shieldCapacity = 0, shieldRegen = 0;   // the space shield pool (0 if no generator → combat unchanged)
             double ammoCapacity = 0;                      // the ammo magazine pool (0 if no magazine → combat unchanged, W3)
+            // Chassis mass (kg) for the recoil→tracking penalty (W4): a heavy kinetic gun shakes a light hull off aim.
+            // 0 if unknown → RecoilTrackingFactor returns 1.0 (no penalty). Every weapon defaults Recoil 0 → byte-identical.
+            double chassisMass = ship.TryGetDataBlob<MassVolumeDB>(out var chassisMv) && chassisMv.MassDry > 0 ? chassisMv.MassDry : 0;
 
             if (ship.TryGetDataBlob<ComponentInstancesDB>(out var instances))
             {
@@ -205,12 +208,14 @@ namespace Pulsar4X.Combat
                         if (comp.Design.TryGetAttribute<RailgunWeaponAtb>(out var rg))
                         {
                             double dps = rg.KineticEnergyPerShot_J * rg.RoundsPerSecond * comp.HealthPercent;
+                            // Recoil (W4): a heavy slug-thrower on a light hull tracks worse (its kick shakes the ship).
+                            double rgTracking = rg.Tracking * RecoilTrackingFactor(rg.Recoil, chassisMass);
                             // Range: a finite MID range (RailgunRange_m) so the closing model holds railgun fire until
                             // the gap is within it — the fix for railguns firing across the whole engagement bubble
                             // (and so "outside detection range"). v1 class-default; a per-design field (an Atb + JSON,
                             // like beam's MaxRange) is the next step. Only bites when EnableClosingRange is on (live);
                             // with it off (the headless fixtures) SeparationOf is 0 so the range gate is a no-op.
-                            weapons.Add(new WeaponProfile(dps, rg.MuzzleVelocity_mps, rg.Tracking, rg.RoundsPerSecond, RailgunRange_m, WeaponNature.Kinetic, WeaponDelivery.Slug));
+                            weapons.Add(new WeaponProfile(dps, rg.MuzzleVelocity_mps, rgTracking, rg.RoundsPerSecond, RailgunRange_m, WeaponNature.Kinetic, WeaponDelivery.Slug));
                         }
                     }
                 }
@@ -226,8 +231,10 @@ namespace Pulsar4X.Combat
                         {
                             double saturation = flak.RoundsPerSecond * flak.PelletsPerShot;
                             double dps = flak.DamagePerPellet_J * saturation * comp.HealthPercent;
+                            // Recoil (W4): a heavy rapid-fire mount on a light hull shakes it off aim.
+                            double flakTracking = flak.Tracking * RecoilTrackingFactor(flak.Recoil, chassisMass);
                             // Range (the authentic-closing pass): flak is SHORT-ranged point defense (hard cutoff).
-                            weapons.Add(new WeaponProfile(dps, flak.MuzzleVelocity_mps, flak.Tracking, saturation, FlakRange_m, WeaponNature.Kinetic, WeaponDelivery.Cloud));
+                            weapons.Add(new WeaponProfile(dps, flak.MuzzleVelocity_mps, flakTracking, saturation, FlakRange_m, WeaponNature.Kinetic, WeaponDelivery.Cloud));
                         }
                     }
                 }
@@ -332,6 +339,21 @@ namespace Pulsar4X.Combat
         /// pull. Small + nimble = high; big + sluggish = ~0. A ship with no engine (no thrust) can't dodge at all.
         /// Defensive: missing mass/thrust data => 0. v1 stub: sensors + crew experience not yet factored.
         /// </summary>
+        /// <summary>Reference for the recoil→tracking penalty (Weapons pilot W4). Recoil is in mass-comparable units,
+        /// so the penalty factor is <c>mass / (mass + Recoil × this)</c>; 1.0 keeps recoil directly comparable to hull
+        /// mass. Flagged BALANCE dial.</summary>
+        public const double RecoilTrackingReference = 1.0;
+
+        /// <summary>The factor a kinetic weapon's TRACKING is multiplied by because its recoil shakes the firing ship
+        /// (W4): <c>chassisMass / (chassisMass + recoil × RecoilTrackingReference)</c> — a heavy gun (high recoil) on a
+        /// light hull (low mass) tracks much worse; the same gun on a battleship barely notices. Returns 1.0 (no
+        /// penalty) when recoil ≤ 0 or the mass is unknown, so a recoilless/undialled weapon is byte-identical.</summary>
+        public static double RecoilTrackingFactor(double recoil, double chassisMass)
+        {
+            if (recoil <= 0 || chassisMass <= 0) return 1.0;
+            return chassisMass / (chassisMass + recoil * RecoilTrackingReference);
+        }
+
         public static double CalculateEvasion(Entity ship)
         {
             if (!ship.TryGetDataBlob<MassVolumeDB>(out var mv) || mv.Volume_m3 <= 0 || mv.MassDry <= 0)
