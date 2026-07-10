@@ -94,6 +94,13 @@ namespace Pulsar4X.Combat
         /// </summary>
         public const double SalvoDamageScale = 0.1;
 
+        /// <summary>AMMO burn (Weapons pilot W3): kilograms of magazine drained per JOULE of ammo-fed fire a fleet
+        /// delivers in a salvo. A fleet's Kinetic/Explosive (railgun/flak/missile) fire drains its
+        /// <see cref="FleetCombatStateDB.AmmoPool_kg"/> by <c>(ammo J/s × dt) × this</c>; when the pool empties those
+        /// weapons go silent. Flagged BALANCE value — it's calibrated against the base-mod magazine capacity (W3c) to
+        /// set how many salvos a loadout sustains. Inert until a ship carries a magazine (capacity 0 → pool disabled).</summary>
+        public static double AmmoBurnKgPerJoule = 1e-4;
+
         // --- SHIELD layer (option B, docs/WEAPON-TAXONOMY-DESIGN.md §6) ----------------------------------------
         //
         // A depleting/regenerating energy POOL that soaks incoming fire BEFORE the hull's toughness. The
@@ -589,6 +596,29 @@ namespace Pulsar4X.Combat
                     }
                 }
 
+            // --- AMMO phase (W3): each fleet's AMMO-FED weapons (Kinetic/Explosive — railgun/flak/missile) drain its
+            // magazine pool this salvo; when the pool is dry those weapons go SILENT (dropped from its outgoing fire)
+            // and it fights on with energy weapons. Runs BEFORE the damage phase so a dry fleet's silenced fire never
+            // reaches its targets this step. GATED on the fleet actually carrying a magazine (capacity > 0): a fleet
+            // with no magazine keeps AmmoPool_kg disabled and its fire untouched, so combat is byte-identical (every
+            // current ship, until the W3c base-mod magazine). One aggregate pool per fleet, mirroring the shield.
+            for (int i = 0; i < n; i++)
+            {
+                if (!live[i].TryGetDataBlob<FleetCombatStateDB>(out var ammoState)) continue;
+                double ammoCap = FleetAmmoCapacity(ships[i]);
+                if (ammoCap <= 0) continue;                                  // no magazine → disabled → byte-identical
+                if (ammoState.AmmoPool_kg < 0) ammoState.AmmoPool_kg = ammoCap;          // lazy seed: full at first contact
+                if (ammoState.AmmoPool_kg > ammoCap) ammoState.AmmoPool_kg = ammoCap;    // ships lost this fight shrink the pool
+                if (ammoState.AmmoPool_kg <= 0)
+                {
+                    SilenceAmmoWeapons(fire[i]);                             // dry → ammo weapons stop firing
+                    continue;
+                }
+                double ammoJoules = AmmoFireDamage(fire[i]) * dt;           // ammo-fed damage delivered this salvo
+                ammoState.AmmoPool_kg -= ammoJoules * AmmoBurnKgPerJoule;
+                if (ammoState.AmmoPool_kg < 0) ammoState.AmmoPool_kg = 0;
+            }
+
             // --- DAMAGE phase: each fleet takes the COMBINED fire of all fleets hostile to it. An attacker that
             // faces several enemy fleets DIVIDES its fire across them (conserves firepower — outnumbering a side
             // doesn't multiply your guns). Within a target fleet the dodge/bucket resolve still concentrates on the
@@ -1075,6 +1105,34 @@ namespace Pulsar4X.Combat
             }
             return (cap, regen);
         }
+
+        // ─── Ammo layer (Weapons pilot W3) ───────────────────────────────────────────────────────────────────────────
+
+        /// <summary>Is this weapon AMMO-FED (draws from a magazine) rather than powered? Kinetic (railgun/flak slugs) and
+        /// Explosive (missiles/warheads) consume physical ammo; Energy (beams/plasma) and Exotic (disruptors) draw power,
+        /// not ammo. So a fleet that runs dry keeps fighting with its energy weapons — the ship echo of the ground rule.</summary>
+        internal static bool IsAmmoNature(WeaponNature nature) => nature == WeaponNature.Kinetic || nature == WeaponNature.Explosive;
+
+        /// <summary>The damage/sec in a fire mix that comes from AMMO-FED weapons (the part that drains a magazine).</summary>
+        internal static double AmmoFireDamage(List<WeaponProfile> fire)
+        {
+            double sum = 0;
+            foreach (var w in fire) if (IsAmmoNature(w.Nature)) sum += w.DamagePerSecond;
+            return sum;
+        }
+
+        /// <summary>A fleet's total ammo-magazine capacity (kg), summed health-scaled over its ships' cached
+        /// <see cref="ShipCombatValueDB.AmmoCapacity_kg"/>. 0 for a fleet with no magazine (→ ammo pool disabled).</summary>
+        private static double FleetAmmoCapacity(List<CombatShip> ships)
+        {
+            double cap = 0;
+            foreach (var cs in ships) cap += CombatValue(cs.Ship).AmmoCapacity_kg;
+            return cap;
+        }
+
+        /// <summary>Silence a DRY fleet's ammo-fed weapons — drop the Kinetic/Explosive profiles from its outgoing fire
+        /// so only its energy weapons still contribute. Mutates the passed mix in place.</summary>
+        private static void SilenceAmmoWeapons(List<WeaponProfile> fire) => fire.RemoveAll(w => IsAmmoNature(w.Nature));
 
         /// <summary>The damage-weighted fraction of an incoming fire mix a shield CAN stop — the nature matchup rolled
         /// up over the salvo (all-kinetic → 1.0, all-energy → 0.5, all-exotic → 0.0, mixes interpolate). Pure; internal

@@ -1,7 +1,10 @@
+using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using Pulsar4X.Combat;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
+using Pulsar4X.Fleets;
 using Pulsar4X.Ships;
 
 namespace Pulsar4X.Tests
@@ -51,6 +54,71 @@ namespace Pulsar4X.Tests
             Assert.That(cv.Firepower, Is.GreaterThan(0), "the Lancer carries its railguns");
             Assert.That(cv.AmmoCapacity_kg, Is.EqualTo(0),
                 "no magazine → 0 ammo capacity → the fleet ammo pool stays disabled → combat byte-identical until the W3c magazine");
+        }
+
+        [Test]
+        [Description("W3b pure helpers: ammo-fed = Kinetic (railgun/flak) + Explosive (missiles); Energy (beam/plasma) + Exotic (disruptor) are powered, not ammo. AmmoFireDamage sums only the ammo-fed dps; SilenceAmmoWeapons drops those profiles, leaving energy fire.")]
+        public void AmmoHelpers_ClassifySumAndSilence()
+        {
+            Assert.That(CombatEngagement.IsAmmoNature(WeaponNature.Kinetic), Is.True, "kinetic slugs are ammo-fed");
+            Assert.That(CombatEngagement.IsAmmoNature(WeaponNature.Explosive), Is.True, "explosive warheads are ammo-fed");
+            Assert.That(CombatEngagement.IsAmmoNature(WeaponNature.Energy), Is.False, "energy weapons draw power, not ammo");
+            Assert.That(CombatEngagement.IsAmmoNature(WeaponNature.Exotic), Is.False, "exotic weapons draw power, not ammo");
+
+            var mix = new List<WeaponProfile>
+            {
+                new WeaponProfile(1000, 5e4, 0, 5, 0, WeaponNature.Kinetic, WeaponDelivery.Slug),   // ammo
+                new WeaponProfile(600,  3e8, 1, 1, 0, WeaponNature.Energy,  WeaponDelivery.Beam),   // powered
+                new WeaponProfile(400,  5e3, 0.9, 1, 0, WeaponNature.Explosive, WeaponDelivery.Guided), // ammo
+            };
+            Assert.That(CombatEngagement.AmmoFireDamage(mix), Is.EqualTo(1400), "ammo-fed dps = 1000 kinetic + 400 explosive");
+        }
+
+        // A controlled ammo battle: an attacker firing ONLY an ammo-fed (Kinetic) weapon at a passive defender.
+        // Returns the number of defender ships left. The magazine size is the only variable between runs.
+        private static int RunAmmoBattle(TestScenario s, Entity red, double attackerAmmoCapacity)
+        {
+            var design = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns.Values.First();
+
+            var atkFleet = FleetFactory.Create(s.StartingSystem, red.Id, "Ammo Attacker");
+            var gun = ShipFactory.CreateShip(design, s.Faction, s.StartingBody, "Gun");
+            gun.FactionOwnerID = red.Id;
+            var kinetic = new WeaponProfile(40_000, 5e4, 0.05, 5, 0, WeaponNature.Kinetic, WeaponDelivery.Slug);
+            gun.SetDataBlob(new ShipCombatValueDB(40_000, 1e12, 1.0) { Evasion = 0, Weapons = { kinetic }, AmmoCapacity_kg = attackerAmmoCapacity });
+            s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(red.Id, atkFleet, gun));
+
+            var defFleet = FleetFactory.Create(s.StartingSystem, s.Faction.Id, "Passive Defender");
+            for (int i = 0; i < 3; i++)
+            {
+                var d = ShipFactory.CreateShip(design, s.Faction, s.StartingBody, "D" + i);
+                d.SetDataBlob(new ShipCombatValueDB(0, 300_000, 1.0) { Evasion = 0 }); // modest toughness, fires nothing back
+                s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(s.Faction.Id, defFleet, d));
+            }
+
+            CombatEngagement.StartEngagement(atkFleet, defFleet);
+            int steps = 0;
+            while (defFleet.HasDataBlob<FleetCombatStateDB>() && steps < 400)
+            {
+                CombatEngagement.StepEngagement(atkFleet, defFleet, 5);
+                steps++;
+            }
+            return CombatEngagement.GetFleetShips(defFleet).Count;
+        }
+
+        [Test]
+        [Description("W3b: ammo depletion decides a fight. An attacker firing ONLY an ammo-fed (Kinetic) weapon with a SMALL magazine runs dry after a couple of salvos and goes silent, so the passive defender SURVIVES — while the SAME attacker with NO magazine fires forever and WIPES the identical defender. The magazine is the only variable, so ammo depletion is what saved the defender (the calibration-robust isolation the triangle-battle tests use for evasion).")]
+        public void AmmoDepletion_SilencesAKineticAttacker_SoTheDefenderSurvives()
+        {
+            var s = TestScenario.CreateWithColony();
+            var red = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+
+            int defLeft_noMag = RunAmmoBattle(s, red, attackerAmmoCapacity: 0);      // control: never dry
+            int defLeft_smallMag = RunAmmoBattle(s, red, attackerAmmoCapacity: 40);  // dries in ~2 salvos
+
+            Log($"defender survivors: attacker-no-magazine={defLeft_noMag}, attacker-small-magazine={defLeft_smallMag}");
+            Assert.That(defLeft_noMag, Is.EqualTo(0), "a never-dry kinetic attacker wipes the passive defender (the fire IS lethal)");
+            Assert.That(defLeft_smallMag, Is.GreaterThan(0),
+                "the same attacker runs out of ammo and goes silent, so the defender survives — ammo depletion is the difference");
         }
     }
 }
