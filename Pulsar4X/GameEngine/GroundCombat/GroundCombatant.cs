@@ -81,7 +81,7 @@ namespace Pulsar4X.GroundCombat
                     velocity = AimedVelocity_mps; tracking = 0.0; saturation = PointSaturation;
                     break;
             }
-            return new WeaponProfile(unit.Attack, velocity, tracking, saturation, range_m, nature, delivery);
+            return new WeaponProfile(unit.Attack, velocity, tracking, saturation, range_m, nature, delivery, unit.Penetration);
         }
 
         /// <summary>Present a <see cref="GroundUnit"/> as the neutral <see cref="CombatKernel.Combatant"/> the shared

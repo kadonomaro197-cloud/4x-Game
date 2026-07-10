@@ -344,8 +344,11 @@ namespace Pulsar4X.GroundCombat
                                 contribution -= absorbed;
                             }
                             // ARMOUR: flat-per-source plating bounces what's left (the swarm-vs-alpha identity) — the
-                            // shared CombatKernel.ArmourSoak (via GroundDamageMatrix's delegator, slice 3a).
-                            contribution = GroundDamageMatrix.ArmourSoak(t.Defense, contribution);
+                            // shared CombatKernel.ArmourSoak (via GroundDamageMatrix's delegator, slice 3a), now reduced
+                            // by the firing weapon's PENETRATION (W1b): an AP/sabot round cancels the target's Defense
+                            // point-for-point, so it cracks plate a normal round bounces off. Penetration 0 (every unit
+                            // today, until the W1c base-mod dial) is byte-identical to the old flat soak.
+                            contribution = GroundDamageMatrix.ArmourSoak(t.Defense, contribution, profile.Penetration);
                             incoming.TryGetValue(t, out var acc);
                             incoming[t] = acc + contribution;
                         }

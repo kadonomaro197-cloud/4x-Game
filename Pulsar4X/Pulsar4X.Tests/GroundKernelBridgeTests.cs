@@ -79,6 +79,33 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("PENETRATION (Weapons pilot W1b) cracks armour through the GROUND soak: a unit's Penetration flows into its synthesized WeaponProfile, and the resolver's own GroundDamageMatrix.ArmourSoak call (with that penetration) cancels the target's Defense point-for-point — so an AP unit lands far more on a heavily-plated defender than an identical non-AP unit that bounces off. Penetration 0 is byte-identical to the old flat soak, so an ordinary unit is unchanged.")]
+        public void Penetration_FlowsToTheProfile_AndCracksArmourThroughTheGroundSoak()
+        {
+            // The dial flows unit → synthesized profile.
+            var ap = Unit(GroundWeaponMode.Ballistic, attack: 100);
+            ap.Penetration = 80;
+            var apProfile = GroundCombatant.ToWeaponProfile(ap);
+            Assert.That(apProfile.Penetration, Is.EqualTo(80), "the unit's Penetration flows into its WeaponProfile");
+
+            var normal = Unit(GroundWeaponMode.Ballistic, attack: 100); // Penetration 0 (default)
+            var normalProfile = GroundCombatant.ToWeaponProfile(normal);
+            Assert.That(normalProfile.Penetration, Is.EqualTo(0), "an ordinary unit has no penetration");
+
+            // Through the RESOLVER's OWN soak call — GroundDamageMatrix.ArmourSoak(defense, dmg, weapon penetration):
+            // a heavily-plated defender (Defense 100) bounces the normal round (floored) but the AP round cracks it.
+            const double defense = 100, oneHit = 100;
+            double apLands = GroundDamageMatrix.ArmourSoak(defense, oneHit, apProfile.Penetration);
+            double normalLands = GroundDamageMatrix.ArmourSoak(defense, oneHit, normalProfile.Penetration);
+            Log($"vs Defense {defense}: AP(pen {apProfile.Penetration}) lands {apLands}, normal(pen 0) lands {normalLands}");
+
+            Assert.That(apLands, Is.GreaterThan(normalLands), "an AP weapon cracks plate a normal round bounces off");
+            // Byte-identity: penetration 0 is the old 2-arg flat soak, so a non-AP unit is unchanged by W1b.
+            Assert.That(normalLands, Is.EqualTo(GroundDamageMatrix.ArmourSoak(defense, oneHit)).Within(1e-12),
+                "an ordinary unit's soak is byte-identical to the pre-W1b flat soak");
+        }
+
+        [Test]
         [Description("ToCombatant maps a GroundUnit onto the neutral view the kernel reads: faction, health, evasion, flat armour, a seeded shield pool, and exactly one synthesized weapon profile.")]
         public void ToCombatant_MapsTheUnitOntoTheNeutralView()
         {

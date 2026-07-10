@@ -92,5 +92,12 @@ namespace Pulsar4X.GroundCombat
         /// Never throws.</summary>
         public static double ArmourSoak(double defense, double sourceDamage)
             => Pulsar4X.Combat.CombatKernel.ArmourSoak(defense, sourceDamage);
+
+        /// <summary>Flat ARMOUR soak WITH the firing weapon's PENETRATION (Weapons pilot W1b) — penetration cancels
+        /// the target's Defense point-for-point before the flat soak, so an AP/sabot/lance weapon cracks plate a
+        /// normal round bounces off. Forwards to the shared <c>CombatKernel.ArmourSoak</c> 3-arg. Penetration 0 is
+        /// byte-for-byte the 2-arg soak above (so an ordinary unit is unchanged). Never throws.</summary>
+        public static double ArmourSoak(double defense, double sourceDamage, double penetration)
+            => Pulsar4X.Combat.CombatKernel.ArmourSoak(defense, sourceDamage, penetration);
     }
 }
