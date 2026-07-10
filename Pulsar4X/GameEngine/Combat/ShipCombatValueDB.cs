@@ -400,19 +400,50 @@ namespace Pulsar4X.Combat
 
         public static double CalculateEvasion(Entity ship)
         {
-            if (!ship.TryGetDataBlob<MassVolumeDB>(out var mv) || mv.Volume_m3 <= 0 || mv.MassDry <= 0)
-                return 0;
+            double evasion = 0;
+            if (ship.TryGetDataBlob<MassVolumeDB>(out var mv) && mv.Volume_m3 > 0 && mv.MassDry > 0)
+            {
+                // Small target = hard to hit: 1.0 when tiny, falls toward 0 as volume grows past the reference.
+                double sizeFactor = SizeReference_m3 / (SizeReference_m3 + mv.Volume_m3);
 
-            // Small target = hard to hit: 1.0 when tiny, falls toward 0 as volume grows past the reference.
-            double sizeFactor = SizeReference_m3 / (SizeReference_m3 + mv.Volume_m3);
+                // Agile target = hard to track: acceleration is thrust ÷ mass (rate of vector change, not top speed).
+                double accel = 0;
+                if (ship.TryGetDataBlob<NewtonThrustAbilityDB>(out var thrust) && thrust.ThrustInNewtons > 0)
+                    accel = thrust.ThrustInNewtons / mv.MassDry;
+                double agilityFactor = accel / (AgilityReference_mps2 + accel); // 0 when sluggish, → 1 when nimble
 
-            // Agile target = hard to track: acceleration is thrust ÷ mass (rate of vector change, not top speed).
-            double accel = 0;
-            if (ship.TryGetDataBlob<NewtonThrustAbilityDB>(out var thrust) && thrust.ThrustInNewtons > 0)
-                accel = thrust.ThrustInNewtons / mv.MassDry;
-            double agilityFactor = accel / (AgilityReference_mps2 + accel); // 0 when sluggish, → 1 when nimble
+                evasion = EvasionCap * sizeFactor * agilityFactor;
+            }
 
-            return EvasionCap * sizeFactor * agilityFactor;
+            // Inertialess drive (Exotic propulsion, ⚙2): breaks the mass↔evasion coupling — the hull maneuvers
+            // without inertia, so it dodges at least this well REGARDLESS of its mass (a capital that dodges like a
+            // fighter). It's a FLOOR, not a set: a ship whose ordinary evasion is already higher keeps it. 0 (no such
+            // drive, health-scaled) → evasion is the ordinary mass-bound value → byte-identical for every current ship.
+            double inertialessFloor = InertialessEvasionFloor(ship);
+            if (inertialessFloor > evasion) evasion = inertialessFloor;
+            if (evasion > EvasionCap) evasion = EvasionCap;   // nothing is ever fully untouchable
+            return evasion;
+        }
+
+        /// <summary>The evasion floor an inertialess drive guarantees a hull (0 if none) — the greatest installed
+        /// <see cref="InertialessDriveAtb.EvasionOverride"/>, each scaled by the drive's current health (a shot-off
+        /// drive drops toward no override — the grave rung). Defensive: no components → 0.</summary>
+        internal static double InertialessEvasionFloor(Entity ship)
+        {
+            if (!ship.TryGetDataBlob<ComponentInstancesDB>(out var instances)) return 0;
+            double best = 0;
+            if (instances.TryGetComponentsByAttribute<InertialessDriveAtb>(out var drives))
+            {
+                foreach (var comp in drives)
+                {
+                    if (comp.Design.TryGetAttribute<InertialessDriveAtb>(out var drive))
+                    {
+                        double floor = drive.EvasionOverride * comp.HealthPercent;
+                        if (floor > best) best = floor;
+                    }
+                }
+            }
+            return best;
         }
     }
 }

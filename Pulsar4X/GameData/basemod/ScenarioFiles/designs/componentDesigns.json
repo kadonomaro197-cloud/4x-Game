@@ -725,6 +725,14 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-inertialess-drive",
+      "Name": "Inertialess Drive",
+      "TemplateId": "inertialess-drive"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-pulse-laser",
       "Name": "Pulse Laser",
       "TemplateId": "pulse-laser"
