@@ -1,8 +1,10 @@
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using Pulsar4X.Combat;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
+using Pulsar4X.Fleets;
 using Pulsar4X.Ships;
 
 namespace Pulsar4X.Tests
@@ -92,6 +94,57 @@ namespace Pulsar4X.Tests
             // The cap holds even for absurd PD.
             Assert.That(CombatEngagement.PointDefenseInterceptFraction(1e12, 1000), Is.EqualTo(CombatEngagement.PointDefenseMaxIntercept).Within(1e-9),
                 "nothing is ever fully immune — the intercept fraction can't exceed the cap");
+        }
+
+        // A controlled missile battle: an attacker firing ONLY guided missiles at a passive defender. The defender's
+        // fleet point-defense rating is the only variable — enough PD shoots the missiles down, none/too little lets
+        // them through.
+        private static int RunMissileBattle(TestScenario s, Entity red, double defenderPDPerShip)
+        {
+            var design = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns.Values.First();
+
+            var atkFleet = FleetFactory.Create(s.StartingSystem, red.Id, "Missile Boat");
+            var boat = ShipFactory.CreateShip(design, s.Faction, s.StartingBody, "Boat");
+            boat.FactionOwnerID = red.Id;
+            // A pure MISSILE profile: Explosive nature, GUIDED delivery — the interceptable kind. No magazine on the
+            // fleet (AmmoCapacity 0), so the ammo pass leaves it firing (byte-identical ammo path).
+            var missile = new WeaponProfile(40_000, 5_000, 0.9, 1.0, 0, WeaponNature.Explosive, WeaponDelivery.Guided);
+            boat.SetDataBlob(new ShipCombatValueDB(40_000, 1e12, 1.0) { Evasion = 0, Weapons = { missile } });
+            s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(red.Id, atkFleet, boat));
+
+            var defFleet = FleetFactory.Create(s.StartingSystem, s.Faction.Id, "Screened Defender");
+            for (int i = 0; i < 3; i++)
+            {
+                var d = ShipFactory.CreateShip(design, s.Faction, s.StartingBody, "D" + i);
+                // Modest toughness, fires nothing back; carries the PD screen under test (per-ship, summed by the fleet).
+                d.SetDataBlob(new ShipCombatValueDB(0, 300_000, 1.0) { Evasion = 0, PointDefense_Jps = defenderPDPerShip });
+                s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(s.Faction.Id, defFleet, d));
+            }
+
+            CombatEngagement.StartEngagement(atkFleet, defFleet);
+            int steps = 0;
+            while (defFleet.HasDataBlob<FleetCombatStateDB>() && steps < 60)
+            {
+                CombatEngagement.StepEngagement(atkFleet, defFleet, 5);
+                steps++;
+            }
+            return CombatEngagement.GetFleetShips(defFleet).Count;
+        }
+
+        [Test]
+        [Description("W6b: point-defense decides a missile fight. A defender under pure missile fire with a BIG PD screen shoots the missiles down and holds all its ships; the SAME defender with NO PD takes the missiles full and gets ground down (loses ships / retreats). The PD rating is the only variable, so interception is the difference — the anti-missile screen as a real decision.")]
+        public void PointDefense_ShootsDownMissiles_SoTheScreenedDefenderSurvives()
+        {
+            var s = TestScenario.CreateWithColony();
+            var red = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+
+            int defLeft_bigPD = RunMissileBattle(s, red, defenderPDPerShip: 150_000); // fleet PD 450k ≫ 40k salvo → most stopped
+            int defLeft_noPD = RunMissileBattle(s, red, defenderPDPerShip: 0);         // no screen → missiles land
+
+            Log($"defender survivors (of 3): big-PD-screen={defLeft_bigPD}, no-PD={defLeft_noPD}");
+            Assert.That(defLeft_noPD, Is.LessThan(3), "with no point-defense the missiles land and grind the defender down (real losses)");
+            Assert.That(defLeft_bigPD, Is.GreaterThan(defLeft_noPD),
+                "the screened defender shoots the missiles down and keeps more ships — point-defense is the difference");
         }
     }
 }

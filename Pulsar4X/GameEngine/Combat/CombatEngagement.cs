@@ -674,6 +674,14 @@ namespace Pulsar4X.Combat
                     if (split <= 0) continue;
                     AddScaledFire(incoming, fire[g], 1.0 / split);
                 }
+                // POINT-DEFENSE (W6): this fleet's PD screen intercepts a saturating fraction of the incoming GUIDED
+                // (missile) fire, shooting those missiles out of the salvo before it's totalled — so a big anti-missile
+                // screen shrugs off a light strike but a swarm saturates it and leaks through. GATED on the fleet
+                // actually carrying PD (rating > 0): a PD-less fleet leaves `incoming` untouched, so combat is
+                // byte-identical (every current ship, until the W6c PD mount faces a missile ship). Non-guided fire
+                // (beams/slugs/flak) is never intercepted.
+                double pdRating = FleetPointDefense(ships[i]);
+                if (pdRating > 0) InterceptMissiles(incoming, pdRating);
                 // SalvoDamageScale is the combat-pace dial: only this fraction of the raw salvo energy counts
                 // toward kills, so battles play out over many salvos instead of ending in 2–4 (see the const).
                 double dmgThisSalvo = TotalDamage(incoming) * dt * SalvoDamageScale;
@@ -1244,6 +1252,23 @@ namespace Pulsar4X.Combat
             if (pdRating <= 0 || missileDamage <= 0) return 0;
             double frac = pdRating / (pdRating + missileDamage);
             return frac > PointDefenseMaxIntercept ? PointDefenseMaxIntercept : frac;
+        }
+
+        /// <summary>Reduce the GUIDED (missile) portion of an incoming fire mix by a fleet's point-defense intercept
+        /// fraction — the PD shoots those missiles out of the salvo before they reach the hull. Mutates the mix in place;
+        /// non-guided fire (beams/slugs/flak) is untouched. No-op when there's no guided fire OR no interception, so a
+        /// non-missile salvo (every current fight, until a missile ship faces PD) is byte-identical. Returns the joules/sec
+        /// of missile fire intercepted (0 if none) for the readout.</summary>
+        private static double InterceptMissiles(List<WeaponProfile> incoming, double pdRating)
+        {
+            double missileDamage = MissileFireDamage(incoming);
+            if (missileDamage <= 0) return 0;
+            double frac = PointDefenseInterceptFraction(pdRating, missileDamage);
+            if (frac <= 0) return 0;
+            double survive = 1.0 - frac;
+            foreach (var w in incoming)
+                if (IsInterceptable(w.Delivery)) w.DamagePerSecond *= survive;
+            return missileDamage * frac;
         }
 
         /// <summary>The damage-weighted fraction of an incoming fire mix a shield CAN stop — the nature matchup rolled
