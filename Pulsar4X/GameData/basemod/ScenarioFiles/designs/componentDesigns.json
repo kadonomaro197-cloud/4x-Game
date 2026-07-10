@@ -717,6 +717,14 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-point-defense-mount",
+      "Name": "Point Defense Mount",
+      "TemplateId": "point-defense-mount"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-pulse-laser",
       "Name": "Pulse Laser",
       "TemplateId": "pulse-laser"

@@ -146,5 +146,45 @@ namespace Pulsar4X.Tests
             Assert.That(defLeft_bigPD, Is.GreaterThan(defLeft_noPD),
                 "the screened defender shoots the missiles down and keeps more ships — point-defense is the difference");
         }
+
+        private const string ScreenShip = "default-ship-design-test-screen";  // Barricade — PD mounts + lasers
+        private const string MissileShip = "default-ship-design-test-missile"; // Javelin — missile launchers
+
+        [Test]
+        [Description("W6c cradle-to-grave (the SINK): the base-mod Barricade PD Escort builds from JSON — its point-defense mounts give it a real PointDefense_Jps (the JSON point-defense-mount template → PointDefenseAtb → ShipCombatValueDB, six-point registration). So a player-built PD ship carries the missile-killer the W6b resolver reads — designed → built → installed → shoots down missiles. The gotcha-10 JSON→atb sensor for the space PD (the ShieldBaseModTests equivalent).")]
+        public void TheBarricadePDEscort_HasPointDefense_FromJson()
+        {
+            var s = TestScenario.CreateWithColony();
+            var designs = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns;
+            Assert.That(designs.ContainsKey(ScreenShip), Is.True,
+                "the Barricade loads onto the faction — the JSON point-defense-mount template + design + earth.json entries wired up (six-point registration)");
+
+            var ship = ShipFactory.CreateShip(designs[ScreenShip], s.Faction, s.StartingBody, "Barricade");
+            var cv = ship.GetDataBlob<ShipCombatValueDB>();
+            Log($"Barricade: firepower={cv.Firepower:0}, pointDefense={cv.PointDefense_Jps:0} J/s");
+
+            Assert.That(cv.PointDefense_Jps, Is.GreaterThan(0),
+                "its point-defense mounts give it a real intercept rating — JSON point-defense-mount → PointDefenseAtb → ShipCombatValueDB is wired");
+            Assert.That(cv.Firepower, Is.GreaterThan(0), "the Barricade also carries lasers, so it's a real combatant (not a pure utility hull)");
+        }
+
+        [Test]
+        [Description("W6c cradle-to-grave (the SOURCE): the base-mod Javelin Missile Cruiser builds from JSON and its missile launchers project a GUIDED WeaponProfile (WeaponDelivery.Guided) — the interceptable fire a PD screen answers. So the missile SOURCE and the PD SINK the W6b resolver balances are BOTH player-buildable: missiles were a template+design that was never unlocked for the start faction, now they are. Together with the Barricade this closes the missile↔point-defense loop cradle-to-grave.")]
+        public void TheJavelinMissileCruiser_ProjectsGuidedFire_FromJson()
+        {
+            var s = TestScenario.CreateWithColony();
+            var designs = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns;
+            Assert.That(designs.ContainsKey(MissileShip), Is.True,
+                "the Javelin loads onto the faction — the JSON missile-launcher template + design + earth.json entries wired up (missiles are now player-buildable)");
+
+            var ship = ShipFactory.CreateShip(designs[MissileShip], s.Faction, s.StartingBody, "Javelin");
+            var cv = ship.GetDataBlob<ShipCombatValueDB>();
+            double guidedFire = cv.Weapons.Where(w => CombatEngagement.IsInterceptable(w.Delivery)).Sum(w => w.DamagePerSecond);
+            Log($"Javelin: firepower={cv.Firepower:0}, guided (interceptable) fire={guidedFire:0} J/s");
+
+            Assert.That(cv.Firepower, Is.GreaterThan(0), "the Javelin carries its missile launchers (firepower)");
+            Assert.That(guidedFire, Is.GreaterThan(0),
+                "the missile launchers project GUIDED fire — the interceptable kind a point-defense screen shoots down (WeaponDelivery.Guided)");
+        }
     }
 }

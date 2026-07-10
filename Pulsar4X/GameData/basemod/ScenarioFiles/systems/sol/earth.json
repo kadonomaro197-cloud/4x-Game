@@ -196,7 +196,9 @@
         "pulse-laser",
         "siege-railgun",
         "disruptor-weapon",
-        "plasma-repeater"
+        "plasma-repeater",
+        "point-defense-mount",
+        "missile-launcher"
       ],
       "ComponentDesigns": [
         "default-design-alcubierre-2k",
@@ -270,7 +272,9 @@
         "default-design-pulse-laser",
         "default-design-siege-railgun",
         "default-design-disruptor-weapon",
-        "default-design-plasma-repeater"
+        "default-design-plasma-repeater",
+        "default-design-point-defense-mount",
+        "default-design-missle-tube-500"
       ],
       "ShipDesigns": [
         "default-ship-design-courier",
@@ -291,7 +295,9 @@
         "default-ship-design-test-plasma",
         "default-ship-design-test-munitions",
         "default-ship-design-test-bombard",
-        "default-ship-design-test-ember"
+        "default-ship-design-test-ember",
+        "default-ship-design-test-missile",
+        "default-ship-design-test-screen"
       ],
       "LaunchQueue": [
         { "DesignId": "default-ship-design-courier", "Name": "ISS Hermes" }

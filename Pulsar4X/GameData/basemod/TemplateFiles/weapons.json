@@ -728,6 +728,51 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "point-defense-mount",
+      "Name": "Point Defense Mount",
+      "Formulas": {
+        "Description": "A rapid-tracking point-defense mount — its whole job is shooting down incoming missiles before they reach the hull. A fleet's point-defense intercepts a fraction of the guided (missile) fire aimed at it; a strong screen shrugs off a light strike, but a big enough missile swarm saturates the defenses and leaks through. The answer to a missile boat.",
+        "Mass": "PropertyValue('Intercept Rating') / 2000 + 100",
+        "Volume": "[Mass] * 0.5",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.05",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.3",
+        "aluminium": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.2"
+      },
+      "ComponentType": "Defense",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Intercept Rating",
+          "Units": "J/s",
+          "DescriptionFormula": "'How much incoming guided (missile) fire this mount can shoot down per second. The fleet's mounts sum; a bigger total intercepts more of a missile salvo before it is saturated by a swarm.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5000000",
+          "MinFormula": "10000",
+          "StepFormula": "10000",
+          "PropertyFormula": "200000"
+        },
+        {
+          "Name": "pointDefenseAtbArgs",
+          "DescriptionFormula": "'double interceptRating_Jps'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Intercept Rating'))",
+          "AttributeType": "Pulsar4X.Combat.PointDefenseAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "pulse-laser",
       "Name": "Pulse Laser",
       "Formulas": {
