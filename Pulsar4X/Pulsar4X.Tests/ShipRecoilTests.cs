@@ -4,6 +4,7 @@ using Pulsar4X.Combat;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
 using Pulsar4X.Components;
+using Pulsar4X.Galaxy;   // MassVolumeDB
 using Pulsar4X.Ships;
 using Pulsar4X.Weapons;
 
@@ -60,6 +61,30 @@ namespace Pulsar4X.Tests
 
             Assert.That(railgunProfile.Tracking, Is.EqualTo(rgAtb.Tracking).Within(1e-12),
                 "recoil 0 → factor 1.0 → the built profile's tracking equals the atb's, so combat is byte-identical");
+        }
+
+        [Test]
+        [Description("W4b cradle-to-grave: the base-mod Bombard Siege Cruiser builds from JSON, its siege-railgun binds a real Recoil (the 5-arg AtbConstrArgs → the recoil ctor — the gotcha-#0 sensor), and on the Bombard's light hull that recoil CUTS the built weapon's tracking by exactly chassisMass/(chassisMass+Recoil). So a player-built high-recoil gun tracks worse — designed → built → installed → the aim suffers.")]
+        public void BuildingTheBombard_HighRecoilSiegeGun_CutsTrackingOnALightHull()
+        {
+            var s = TestScenario.CreateWithColony();
+            var fac = s.Faction.GetDataBlob<FactionInfoDB>();
+
+            var siegeAtb = ((ComponentDesign)fac.IndustryDesigns["default-design-siege-railgun"]).GetAttribute<RailgunWeaponAtb>();
+            Assert.That(siegeAtb.Recoil, Is.GreaterThan(0),
+                "the siege railgun binds a real Recoil from JSON (5-value AtbConstrArgs → the recoil-carrying ctor; the exact-arity binder gotcha)");
+
+            var ship = ShipFactory.CreateShip(fac.ShipDesigns["default-ship-design-test-bombard"], s.Faction, s.StartingBody, "Bombard");
+            var cv = ship.GetDataBlob<ShipCombatValueDB>();
+            var siegeProfile = cv.Weapons.First(w => w.Delivery == WeaponDelivery.Slug && w.Nature == WeaponNature.Kinetic);
+            double mass = ship.GetDataBlob<MassVolumeDB>().MassDry;
+            double expected = siegeAtb.Tracking * ShipCombatValueDB.RecoilTrackingFactor(siegeAtb.Recoil, mass);
+            Log($"Bombard mass={mass:0} kg, siege recoil={siegeAtb.Recoil:0}, atb.Tracking={siegeAtb.Tracking}, profile.Tracking={siegeProfile.Tracking:0.0000}, expected={expected:0.0000}");
+
+            Assert.That(siegeProfile.Tracking, Is.LessThan(siegeAtb.Tracking),
+                "the built siege gun tracks worse than its raw spec — recoil throws off a light hull's aim (cradle-to-grave)");
+            Assert.That(siegeProfile.Tracking, Is.EqualTo(expected).Within(1e-9),
+                "the reduction is exactly the recoil factor applied to the ship's real mass");
         }
     }
 }

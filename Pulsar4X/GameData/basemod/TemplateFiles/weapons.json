@@ -418,6 +418,88 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "siege-railgun",
+      "Name": "Siege Railgun",
+      "Formulas": {
+        "Description": "A massive spinal mass driver — one huge slug per shot, brutal against armour. Its violent RECOIL kicks the whole ship, so on a light hull it throws its aim off badly (low effective tracking); a heavy warship absorbs the kick and keeps tracking. The recoil is the price of the punch.",
+        "Mass": "PropertyValue('Kinetic Energy Per Shot') / 1000 + PropertyValue('Rounds Per Second') * 50",
+        "Volume": "[Mass] * 0.5",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.1",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "aluminium": "[Mass] * 0.2",
+        "stainless-steel": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.15",
+        "tungsten": "[Mass] * 0.3",
+        "titanium": "[Mass] * 0.1",
+        "graphite": "[Mass] * 0.05"
+      },
+      "ComponentType": "Weapon",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, GroundUnit",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Muzzle Velocity",
+          "Units": "m/s",
+          "DescriptionFormula": "'How fast the slug leaves the barrel. Fast, but FINITE — a nimble ship can dodge it.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "500000",
+          "MinFormula": "1000",
+          "StepFormula": "1000",
+          "PropertyFormula": "50000"
+        },
+        {
+          "Name": "Kinetic Energy Per Shot",
+          "Units": "J",
+          "DescriptionFormula": "'Damage delivered by one huge slug on impact — a siege gun hits far harder per shot than a standard railgun.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "TechData('tech-kinetic-yield')",
+          "MinFormula": "1000",
+          "StepFormula": "1000",
+          "PropertyFormula": "800000"
+        },
+        {
+          "Name": "Rounds Per Second",
+          "Units": "1/s",
+          "DescriptionFormula": "'Rate of fire. A siege gun is slow — one big slug at a time.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1000",
+          "MinFormula": "0.1",
+          "StepFormula": "0.1",
+          "PropertyFormula": "2"
+        },
+        {
+          "Name": "Tracking",
+          "Units": "",
+          "DescriptionFormula": "'How well it follows an evasive target (0..1). Ballistic, so near zero — and recoil cuts it further on a light hull.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0.05"
+        },
+        {
+          "Name": "Recoil",
+          "Units": "kg",
+          "DescriptionFormula": "'How hard the gun kicks its own ship each shot. On a light hull this throws the aim off (lower effective tracking = chassisMass/(chassisMass+Recoil)); a heavy warship barely notices.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "50000"
+        },
+        {
+          "Name": "siegeRailgunAtbArgs",
+          "DescriptionFormula": "'double muzzleVelocity, double kineticEnergyPerShot, double roundsPerSecond, double tracking, double recoil'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Muzzle Velocity'), PropertyValue('Kinetic Energy Per Shot'), PropertyValue('Rounds Per Second'), PropertyValue('Tracking'), PropertyValue('Recoil'))",
+          "AttributeType": "Pulsar4X.Weapons.RailgunWeaponAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "flak-weapon",
       "Name": "Flak / Point-Defense Gun",
       "Formulas": {
