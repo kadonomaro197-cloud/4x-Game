@@ -785,6 +785,13 @@
           "PropertyFormula": "300000"
         },
         {
+          "Name": "genericWpnAtbArgs",
+          "DescriptionFormula": "'int magSize, int reloadPerSec, int amountPerShot, int minShotsPerfire — the firing-sim magazine every beam weapon carries alongside its beam atb.'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(100, Max(1, Ceiling(100 / PropertyValue('Charge Period'))), 100, 1)",
+          "AttributeType": "Pulsar4X.Weapons.GenericWeaponAtb"
+        },
+        {
           "Name": "pulseLaserAtbArgs",
           "DescriptionFormula": "'double maxRange, double wavelength, double pulseEnergy, double focalLength, double chargePeriod, double thermalOutput_W, double allowThermalOverride, double combatHeat_kJps'",
           "GuiHint": "None",
