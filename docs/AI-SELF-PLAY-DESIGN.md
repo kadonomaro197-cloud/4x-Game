@@ -195,6 +195,33 @@ Plus the already-flagged **dark pillars** (owner in the roster, engine system un
 
 **So:** seating all 19 today produces an empire that can fight, research, survey, and expand its *existing templates* — but **cannot design new ships, organize hulls into fleets, choose where to plant colonies, allocate a budget, or set taxes.** Design (#1) is the category-defining hole: it needs both a new order-type and a new seat, and until it's closed the "no special AI code path" promise is violated for the single most important 4X activity.
 
+### RESOLVED — the DESIGN hole: authored faction ladders + AI research-targeting (developer's call, 2026-07-10)
+
+The developer's reframe dissolves Gap #1 so the AI **never solves generative ship design at all:**
+
+- **Factions are authored top-to-bottom.** A faction ships as a fully dialed-in artifact — e.g. the post-Dominion-War Federation with its complete design ladder (Miranda → … → Defiant) and full tech tree. This is *content the developer/modder wants to make*, not an AI job.
+- **The AI starts with what it ALREADY has, not the whole tree.** A scenario Federation might know only the Miranda; it does NOT get the Defiant or transwarp on day one. It builds and fights with its current, already-designed ships.
+- **The AI's "design" decision becomes RESEARCH-TARGETING, driven by observed threat.** The loop: spy Faction A's frigate (or lose a fight to it) → "my Miranda can't match that, but I *know of* the Defiant" → set research objectives to unlock the Defiant's prerequisites, across whatever pillars they span (weapons + power + hull). *"I need a Defiant; I only know how to build a Miranda; let me research everything in the Defiant's direction so I can keep up."*
+
+**Why it's the right solution:**
+- **Sidesteps the single hardest AI problem** (inventing a good hull from parts) — the good ships already exist as authored designs; the AI only has to *reach* for one.
+- **The AI issues only orders that already exist** (research queue + build) — no "special AI path," no generative-design AI, no new design *order* needed for the AI (it unlocks a pre-authored design via research; it never creates geometry). The UI-only design path stays for the *player's* generative freedom.
+- **Fuses the pillars into ONE stacking loop** (the north-star made concrete): espionage → threat assessment → design goal → multi-pillar research → industry → combat → now-I-match-them. A faction visibly *reaches* for the Defiant — its tech priorities swing when it sees a threat.
+
+**Owner: the science chain — NOT a Chief Engineer.** Because "design" is now a research-direction decision, it folds into science leadership: **Chief Scientist #5** owns empire research direction *including the design goals*, with a per-system **Head Scientist** rung owning local research/design-targeting (developer's "system Head scientist"). **This RETIRES the earlier proposed seat #20 (Chief Engineer)** — no generative-designer seat is needed.
+
+**What it needs (build/verify):**
+1. **Authored design ladders** — pre-author a faction's full design tree, each ship tech/component-gated so researching the prereqs unlocks *buildability* of an already-designed ship. **FEASIBILITY TO VERIFY in code:** how the engine represents a design the faction "knows of" but can't yet build (designs live in `ShipDesigns`; templates gate on `StartingItems` + tech — confirm a full *locked* ladder can be authored and progressively unlocked).
+2. **Threat→design-goal map** — rank the faction's own authored designs by capability; see an enemy's capability; pick the target design that closes the gap.
+3. **Research back-solve** — given a target design, set research objectives for its missing prerequisites (the design→component→tech chain already exists).
+
+**Dependency + v1 fallback:** the *proactive* spy-driven version leans on espionage (unbuilt, a dark pillar). **The v1 fallback needs no espionage: the AI reacts to combat OUTCOMES** — gets mauled → researches up to its next authored design. Full spy-driven targeting lands when espionage does.
+
+### Other resolutions (developer's calls, 2026-07-10)
+- **Gap #3 Colonization target → System Governor #7.** Locked (Head-of-State Expansion dial as modulator).
+- **Character-assignment ("HR") → a Head-of-State numbers game.** No dedicated seat: the HoS AI runs a best-fit match (each officer's competence + traits scored against each open seat → assign the best pairing). Locked.
+- **STILL OPEN:** Gap #2 fleet-composition owner (proposed System Admiral #9), Gap #5 tax/stockpile lever (`SetColonyPolicyOrder` — small build), Gap #4 empire budget (build a pool vs defer), and the civilian-economy structural call (policy-only vs delegable-with-override).
+
 ### The automation model — three modes, not two (the DW lesson to lock)
 
 Distant Worlds' identity is "play as much or as little as you want," and it's delivered by **three control modes per seat, not two** — this is the piece to adopt wholesale, and it's already latent in our autonomy dial (`AI-COMMAND…DESIGN §5`: "execute freely / hold-and-report / ask-first"):
