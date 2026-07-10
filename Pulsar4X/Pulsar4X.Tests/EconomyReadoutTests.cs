@@ -40,28 +40,18 @@ namespace Pulsar4X.Tests
         private static void Log(string msg) => TestContext.Progress.WriteLine("[econ] " + msg);
 
         [Test]
-        [Ignore("QUARANTINED (2026-07-03; ROOT CAUSE FOUND 2026-07-10): the refinery produces no Space-Crete over " +
-                "a game-year. Real cause is NOT 'inputs not mined' — it's a STORAGE VOLUME CAP that jams the whole " +
-                "colony economy. The earth.json Cargo block stocks 50M of ~17 general-storage goods, but 10 " +
-                "warehouses only hold ~6.5 of them; the CI readout shows only the first 6 minerals at 50M, then " +
-                "Lithium partial, Titanium at -3, and Silicon/Regolith/Water/Space-Crete/etc. all clamped to 0. " +
-                "Because storage is FULL: (a) mined output has nowhere to go, so deposits deplete only ~11 units/yr; " +
-                "(b) three of Space-Crete's five inputs (silicon/regolith/water) sit at 0, so the refining job " +
-                "crawls to 3/25 pts over a year and never completes a batch. A first fix that merely ADDED " +
-                "regolith/water to the Cargo list failed — they clamp to 0 like the rest (run #786). The real fix " +
-                "is a storage/stockpile rebalance (more warehouse volume, or smaller per-good amounts) so the " +
-                "economy isn't storage-locked — verify the CargoMath volume mechanism first, then re-enable. It " +
-                "also runs ~7.5 min (a full game-year sim). See docs/TESTING-TRACKER.md.")]
         [Description("Read the starting colony economy, advance one game-year, and report what the economy did.")]
         public void Economy_BaselineReadout_OverOneYear()
         {
             var s = TestScenario.CreateWithColony();
 
             // Give the Refinery a job, or it sits idle all year. Space-Crete is built from regolith/silicon/
-            // aluminium/iron/water — every input is a mineral the mine now produces, and regolith+water START AT
-            // ZERO (they only exist because mining runs). So this closes the mine -> refine loop end to end, and
-            // Space-Crete is exactly the material a colony needs to build more mines. Standing order (repeat) so
-            // it keeps refining as minerals accumulate.
+            // aluminium/iron/water — all five are now in the start cargo (the fix that un-quarantined this test,
+            // 2026-07-10: the warehouse Storage Volume was silently clamped to 10k m^3, so 50M of ~17 goods
+            // overflowed and most minerals clamped to 0 — jamming the whole economy; the stockpiles are now 1M
+            // each, which FITS in the 100k m^3 the 10 warehouses hold, ~62% full). So the refinery runs from tick 1.
+            // The mine ALSO produces these inputs; this test just no longer HANGS on storage. Standing order
+            // (repeat) so it keeps refining as minerals accumulate.
             s.QueueProductionJob("space-crete", count: 1, repeat: true);
 
             Log("================ STARTING COLONY ================");
@@ -102,13 +92,16 @@ namespace Pulsar4X.Tests
                 "Planet mineral deposits did not deplete over a game-year — the mine did no work. " +
                 "Check StartingSystem.ActivityState (Stasis = system not processed) and the mining-chain rates above.");
 
-            // The refinery's ONE job: turn mined minerals into refined materials. Space-Crete starts at ZERO and
-            // is built only from mined inputs, so any positive amount proves the full mine->refine pipeline ran.
-            // Regression sensor for the production stage (and a second witness to the Stasis freeze).
+            // The refinery's ONE job: turn stored minerals into refined materials. With all five inputs stocked
+            // and storage no longer full, any positive Space-Crete delta over the year proves the production
+            // pipeline ran (job queued -> inputs consumed -> output produced). Regression sensor for the production
+            // stage — and for the storage-volume-cap jam this test's fix removed (a full store starves the refinery
+            // AND re-freezes mining), plus a second witness to the Stasis freeze.
             Assert.That(spaceCreteEnd, Is.GreaterThan(spaceCreteStart),
                 "Refinery produced no Space-Crete over a game-year — the production pipeline did no work. " +
                 "Check the queued job's Status in the industry readout (MissingResources = inputs never arrived; " +
-                "Queued = line not processing) and that the system is not in Stasis.");
+                "Queued = line not processing), that cargo storage isn't full (the volume-cap jam), and that the " +
+                "system is not in Stasis.");
         }
 
         private static void ReportInstallations(TestScenario s)
