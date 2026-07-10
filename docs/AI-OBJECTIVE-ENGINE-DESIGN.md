@@ -1,6 +1,6 @@
 # AI Objective Engine — the DESTINATION half (what a faction wants, and how it becomes a cascade)
 
-> **Status: v0.1 DISCUSSION DRAFT (2026-07-10).** The **"destination"** half of the faction AI — the counterpart to `AI-COMMAND-AND-COMMUNICATION-DESIGN.md` (the "how": delegates / mandates / traits). The developer's original framing was *"the big AI sets the destination, the small AIs decide how to get there."* We designed the small AIs in depth; **this doc designs the destination.** Built on the identity+mood model (`AI-COMMAND…DESIGN §3`) and feeds the mandate cascade (`§2`). Design decisions here are the developer's calls from the 2026-07-10 objective-system conversation.
+> **Status: v0.2 DISCUSSION DRAFT (2026-07-10).** **v0.2: the needs-hierarchy is FRACTAL** — every level (planet→system→empire) runs its own ladder read from its own aggregate, bubbling up from the planet, so levels sit at different tiers at once (§2a); each tier is also a to-do list of advancement objectives that climb to the next (§2b); blended tiers + small weighted stack confirmed at every level (§7 resolved). The **"destination"** half of the faction AI — the counterpart to `AI-COMMAND-AND-COMMUNICATION-DESIGN.md` (the "how": delegates / mandates / traits). The developer's original framing was *"the big AI sets the destination, the small AIs decide how to get there."* We designed the small AIs in depth; **this doc designs the destination.** Built on the identity+mood model (`AI-COMMAND…DESIGN §3`) and feeds the mandate cascade (`§2`). Design decisions here are the developer's calls from the 2026-07-10 objective-system conversation.
 
 ---
 
@@ -38,6 +38,29 @@ A **Maslow's-hierarchy for factions.** The faction's *current tier* is read from
 - **Legible + dynamic** — read the state, know the tier, know the *kind* of aim. No opaque black-box goal-picking.
 - **It handles the tutorial asymmetry FOR FREE, zero scripting.** Earth (one planet, losing to Mars) is *automatically pinned at Tier 0 — Survive*; Mars (winning) sits at Tier 3 pursuing "conquer Earth." The scenario's whole shape **emerges from each side's state.** As the player rebuilds Earth it climbs the ladder on its own (Survive → Stabilize → Thrive → its own ambition — retake Sol?). The comeback isn't scripted; the ladder produces it.
 - It **is** the developer's "very base instinct is to survive; as it grows and becomes stable and efficient it shifts from surviving to thriving and so on."
+
+### 2a. The hierarchy is FRACTAL — every level runs it, and it starts at the PLANET (developer's call, 2026-07-10)
+
+The needs-ladder is **not** empire-only / HoS-only. **EVERY level runs its own ladder, read from its own aggregated state:**
+- A **planet** reads its own survival (besieged? starving? stable? prospering?).
+- A **System Governor** reads the **aggregate of all its planets** — a system with nine healthy worlds and one under siege sits in **Thrive** even while that one world is in **Survive**.
+- The **HoS** reads the **aggregate of all its systems**.
+
+**It starts at the planet and BUBBLES UP.** The empire's tier is never *declared* — it **emerges** from the state of its parts (most planets in Survive → the empire is in Survive; core thriving while a frontier bleeds → the empire reads Thrive-with-a-wounded-edge). This is the same **subsidiarity** as decomposition (§5), applied to *state + goals*: each level assesses locally, and the assessment aggregates upward.
+
+**Levels can sit at DIFFERENT tiers at once, with no contradiction** — each reads a different aggregate. The tutorial, exactly: Mars (empire) at **Ambition**; a besieged **planet** at **Survive**; the **System Governor** at **Stabilize/Thrive** because it averages every populated place under it. One map, three tiers, simultaneously — and that's *correct*.
+
+> **This unifies the objective engine with the mandate/report protocol** (`AI-COMMAND…DESIGN §2`): "report up" now partly means *"here's my tier"* (a planet tells its system it's in Survive), the system aggregates, the empire reads; "mandate down" is *tier-appropriate objectives*. Destination-engine and communication-engine are the **same fractal structure** seen from two directions.
+
+### 2b. Climbing the ladder — each tier is also a TO-DO LIST (developer's requirement)
+
+A tier isn't just a label; **the AI must know what to DO to grow from one state to the next.** Each tier carries its **advancement objectives** — the aims whose satisfaction *is* the condition to climb:
+- **Survive → Stabilize:** secure the homeworld/defense · restore food/power · stop the bleeding · end or freeze the losing war.
+- **Stabilize → Thrive:** balance the budget · quell unrest · secure the borders · reach a defensive-tech floor.
+- **Thrive → Ambition:** hit a strength/prosperity threshold · secure a growth base · out-tech the immediate rivals.
+- **Ambition:** pursue the authored grand aim.
+
+So the ladder is **self-propelling**: pursue your tier's advancement objectives → satisfy the tier's gauges → climb → inherit the next tier's objectives. **"How do I grow from state to state" is answered by construction — the tier IS the to-do list.** Each level runs a **small weighted stack** (mostly its current tier's objectives, a sliver of the next tier's prep), so a planet 70%-secure already spends a little on stabilizing while mostly surviving — **blended tiers, not hard switches**, at every level.
 
 ---
 
@@ -83,13 +106,17 @@ Mood modulates at the tier-read and the selection steps. This is the spine that 
 
 ---
 
-## 7. Open design questions (the next rung)
+## 7. Design questions — RESOLVED + what's left (2026-07-10)
 
-1. **The exact tier ladder** — is it 4 (Survive / Stabilize / Thrive / Ambition), or finer (e.g. split Survive into "not-die" vs. "secure-the-core")?
-2. **Strict vs. blended tiers** — must a lower need be *fully* met before a higher aim activates, or does a mostly-met tier let the next partially activate (a faction 70% secure starts expanding while still shoring up)?
-3. **One objective or a weighted STACK** — does a faction pursue a single objective, or a primary + secondaries running in parallel?
-4. **How the authored Tier-3 ambition is STRUCTURED** — one authored "grand aim" per faction, or a weighted set the faction chooses among at Tier 3 (e.g. a Klingon could aim at *conquest* OR *a glorious last stand* depending on state)?
-5. **Does the needs-tier apply per-SYSTEM too** — a frontier system in Survive while the core Thrives — or only empire-wide?
+**RESOLVED (developer's calls):**
+- ✅ **Blended tiers, not strict** — a mostly-met tier lets the next partially activate; the small weighted stack expresses it (§2b).
+- ✅ **A small weighted STACK**, not one objective — one dominant objective sets the doctrine dials, 1–2 secondaries get residual effort. At **every level**.
+- ✅ **The ladder is FRACTAL / per-level** — per-planet, per-system, per-empire, read from each level's own aggregate, bubbling up from the planet (§2a). Yes to per-system (and per-planet).
+- ✅ **Each tier is a to-do list** — the advancement objectives that climb to the next tier (§2b).
+
+**Still open (minor):**
+1. **Exact ladder granularity** — 4 tiers (Survive/Stabilize/Thrive/Ambition) as-is, or split any rung finer? *(Lean: 4 is enough; split only if a rung proves too coarse in play.)*
+2. **How the authored Tier-3 ambition is STRUCTURED** — one authored "grand aim" per faction, or a weighted set it chooses among at Tier 3 (Klingon → *conquest* OR *a glorious last stand* by state)? And the fractal nuance: is the grand ambition **empire-only** (lower levels' "Tier 3" = maximally serve the empire's aim in their scope), or does each level get its own authored ambition flavor? *(Lean: grand ambition is empire-authored; a system/planet at "Ambition" pours its surplus into the empire's aim.)*
 
 ---
 
