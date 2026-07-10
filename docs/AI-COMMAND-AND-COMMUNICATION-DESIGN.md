@@ -1,6 +1,6 @@
 # AI Command & Communication Design — how the levels of a faction's mind work together
 
-> **Status: v0.1 DISCUSSION DRAFT (2026-07-10).** This is a live design conversation, not a locked plan. It answers three questions the developer posed: at each level of a faction's AI, **what can it SEE, what can it REACT to, and what can it DECIDE?** — **how do the levels TALK to each other?** — and **how does all of it stay true to the faction's own identity, character, and design?** Sits on top of `AI-SELF-PLAY-DESIGN.md` (the 19-role roster + the cradle-to-grave leader pipeline) and `GOVERNANCE-AND-DELEGATION-DESIGN.md` (the delegate mechanism). Where those describe *who the seats are*, this describes *how information and intent flow between them*.
+> **Status: v0.2 DISCUSSION DRAFT (2026-07-10).** This is a live design conversation, not a locked plan. **Settled this pass:** identity drifts (state-vs-trait, §3e); officers are full characters that drift with their careers (§3d); subordinate-autonomy is a Head-of-State/player dial and NPCs run their delegates free (so v1 needs no approval loop). **Still open:** the trait vocabulary itself (§3a/§5), tier count for v1, and the player-facing report UI. It answers three questions the developer posed: at each level of a faction's AI, **what can it SEE, what can it REACT to, and what can it DECIDE?** — **how do the levels TALK to each other?** — and **how does all of it stay true to the faction's own identity, character, and design?** Sits on top of `AI-SELF-PLAY-DESIGN.md` (the 19-role roster + the cradle-to-grave leader pipeline) and `GOVERNANCE-AND-DELEGATION-DESIGN.md` (the delegate mechanism). Where those describe *who the seats are*, this describes *how information and intent flow between them*.
 
 ---
 
@@ -92,20 +92,27 @@ This is the part that makes factions *feel* like themselves instead of like the 
 
 > **Identity is a small set of parameters carried on the faction, and it TILTS every scored decision at every level — but it expresses differently at each level. You never write a "Belter AI" and an "Earther AI"; you write ONE AI whose choices are weighted by the faction's identity data.** (This is the "no special AI code path" principle applied to *character*.)
 
-### 3a. What "identity" is made of (strawman — this is a key thing to nail down)
-Three layers, all data on the faction:
+### 3a. What "identity" is made of
+Three layers, all data on the faction — and it's important they're **distinct**, not redundant:
 
-1. **The four priority dials** (`DoctrineVector`, already exists): Economic / Military / Tech / Expansion. *What the faction cares about.*
-2. **Character traits** (proposed new, small set of 0–1 dials): e.g.
-   - **Aggression** — how readily it reaches for force vs. diplomacy.
-   - **Risk tolerance** — gambles vs. plays safe.
-   - **Ambition** — content within borders vs. relentlessly expansionist.
-   - **Honor / reliability** — keeps deals vs. betrays when convenient.
-   - **Xenophobia** — isolationist vs. cooperative.
-   *How the faction pursues what it cares about.*
+1. **The four priority dials** (`DoctrineVector`, already exists): Economic / Military / Tech / Expansion. These are the **current allocation of effort** — an *output* the Head of State sets and re-sets ("this quarter we pour into military"). Dynamic; they move with strategy. *What the faction is doing right now.*
+2. **Character traits** (proposed new, small set of 0–1 dials) — the enduring **temperament** that biases how it sets those dials and how it makes *every* scored choice. Durable; drifts only slowly (see §3e). *Who the faction is.* A high-Aggression faction tends to run a high Military dial — but a mauled high-Aggression faction may temporarily run a high Economic dial to rebuild **while staying high-Aggression.** Trait = cause, dial = current setting; that's why they're separate.
+
+   **Proposed 6-trait vocabulary (v0.2 — stress-tested against the developer's own examples; still open):**
+   - **Aggression** — reaches for *force* vs. other means.
+   - **Ambition** — content within its borders vs. an insatiable drive to grow/dominate (any pillar, not just territory).
+   - **Risk tolerance** — bold/gambles vs. cautious/methodical.
+   - **Honor** — keeps its *word* (treaties, deals) vs. betrays when convenient. *(The diplomacy-reliability axis.)*
+   - **Xenophobia** — cooperative/curious about others vs. others-are-enemies-or-resources.
+   - **Ruthlessness** — restrained in *methods* vs. will-cross-any-line (atrocities, civilian bombardment, WMDs). *(A separate axis from Honor: Honor is about promises, Ruthlessness is about methods — a faction can keep every treaty yet glass a planet it's openly at war with, or betray freely yet never commit an atrocity.)*
+   - *(candidate 7th: **Curiosity** — the tech/explore temperament: incurious vs. driven to understand/acquire knowledge.)*
+
+   **Why Honor and Ruthlessness are both load-bearing (the Klingon-vs-Borg test):** both are high-Aggression, but a Klingon is **high Honor / low Ruthlessness** (keeps its word, seeks *glorious* battle, spares civilians) while a Borg/Zerg/Tyranid/Flood is **no Honor / max Ruthlessness** (no deals exist, consume everything). Those two axes are exactly what separate an honorable warrior race from a genocidal swarm — drop either and the two collapse into "aggressive."
 3. **Government type** (already exists, `GovernmentDB`): the **modulator** — not a bias but a *rule override*. A war-state can build understaffed; a democracy has morale ceilings on aggression. *What the faction is allowed / structurally driven to do.*
 
-Together: dials (priorities) + traits (temperament) + government (rules) = the faction's identity. **These are the ONLY things that differ between two factions' AIs** — plus their situation, and the competence of the officers they happen to have.
+Together: dials (current priorities) + traits (temperament) + government (rules) = the faction's identity. **These are the ONLY things that differ between two factions' AIs** — plus their situation, and the traits + competence of the individual officers they happen to have (§3d).
+
+> **Personality ≠ mechanics (the Zerg/Borg/Replicator/Flood boundary).** The trait cluster gets a hive/assimilator race ~80% of the way — they all sit near each other (Aggression↑ Ambition-max Xenophobia-max Ruthlessness-max Honor-none), which is *correct*: they *are* close. What ultimately separates a Zerg from a Borg from a Replicator is their **unique growth/consumption MECHANIC** (evolve-biomass vs. assimilate-tech vs. self-replicate vs. infect), which is a **separate special-rules layer**, not a personality trait. Do not try to encode "assimilates tech" as a trait — traits are temperament; mechanics are a different system. This doc covers the temperament; the unique-mechanic layer is its own future design.
 
 ### 3b. How identity expresses at each level
 The same identity data reads out differently by altitude:
@@ -116,8 +123,32 @@ The same identity data reads out differently by altitude:
 ### 3c. The mechanism: identity as WEIGHTS on scored choices
 Every AI decision is a **scored choice** — list the options, score each, pick the best (or roll weighted). Identity multiplies into those scores. "Attack vs. defend" scored for an aggressive faction weights *attack* up; for a cautious one, *defend*. Because it's one scoring function with faction-supplied weights, **you get distinct-feeling factions for free**, and a modder can author a new faction's soul as a handful of numbers.
 
-### 3d. Competence is TEXTURE on top — the officer, not the faction
-The faction's identity sets the **intent**; the individual **officer's competence** sets the **quality of execution** (locked in `AI-SELF-PLAY-DESIGN.md`: "competence is texture, not justification"). Two aggressive factions with the same doctrine but a brilliant vs. a mediocre admiral fight differently — good one masses and strikes cleanly, poor one commits piecemeal. So: **faction identity = what it wants and how it wants it; officer competence = how well it pulls it off.** This is also the hook that makes losing a good officer *hurt* (the grave rung).
+### 3d. Officers are a SECOND personality — competence *and* character (DECIDED 2026-07-10)
+An officer is not just a competence number. **Each officer carries their own trait set (same §3a vocabulary) AND a competence.** When a seat makes a scored choice, the score is weighted by **both** the faction's identity **and** the seated officer's traits, blended. So:
+- **Competence** sets the **quality of execution** (a brilliant admiral masses and strikes cleanly; a poor one commits piecemeal). Faction identity says *what it wants and how*; competence says *how well it's pulled off*.
+- **Officer traits** tilt the *decisions themselves*, and can **contradict the role or the faction** — the productive friction the developer asked for. Your best-trained, fully-specialized diplomat can be personally **xenophobic**: mechanically excellent at negotiation, but every call he owns tilts toward distrust and hard terms. A cautious admiral in an aggressive faction drags the fleet toward defensive postures. This friction is a *feature* — a source of emergent story, and a reason to choose who sits where (use the xenophobe as a hawk, or replace him).
+
+**Officer traits drift with their career (DECIDED 2026-07-10) — and it must be logical for what they did.** Over time an officer gains new traits, deepens existing ones, or loses them, driven by their assignment history: an admiral who fights war after war hardens (+Aggression, +Ruthlessness, −caution); a diplomat who's been betrayed sours (+Xenophobia, −Honor-in-others' eyes); a governor who crushes a rebellion turns authoritarian. Same machine as faction drift (§3e): an *experience* applies a *pressure*, and the officer's current character shapes the actual movement. This is the officer half of the cradle-to-grave pipeline — and it's why losing a seasoned, well-shaped officer *hurts* (the grave rung).
+
+> This means officer traits use the **same 0–1 vocabulary as factions** — one trait system, two owners (a faction, a person). A seat's effective "personality" for scoring = a blend of faction identity + the officer's own traits (blend weights TBD — e.g. faction sets the baseline, officer nudges it).
+
+---
+
+### 3e. Drift — identity CHANGES with events, but stays in character (DECIDED 2026-07-10)
+Identity is **not** fixed at scenario authoring. Events reshape it — losing a war *does* make Mars vengeful. Two mechanisms, on two timescales, keep this from turning every faction into mush:
+
+**Two timescales — STATE (mood) vs. TRAIT (character):**
+- **State / mood** is fast and transient — a posture the faction snaps into and out of: *Wounded / Rebuilding / Emboldened / Vengeful / Cornered*. A single lost war drops a faction into a Wounded state.
+- **Trait / character** is slow and durable — the §3a dials. A trait only shifts after **sustained, era-defining** experience (many wars, a generational trauma), not one event.
+
+**This solves the Klingon puzzle** ("how do I make a warrior race less inclined to fight after a loss without making them un-warrior?"): you **don't** lower their Aggression trait. A defeat drops the Klingons into a **Wounded/Rebuilding STATE** that temporarily suppresses *starting new wars* — for their own survival, so they don't suicide — while their Aggression and Honor traits stay fully intact and they actually gain **+Vengeance** (a mood). They pause, rebuild, and come back *angrier*. Self-preservation without betraying character. Only if defeats pile up across an era would the durable traits themselves begin to erode.
+
+**Drift is FILTERED THROUGH the current identity — the same event pushes different factions opposite directions.** An event doesn't apply a universal rule ("defeat → +caution"); it applies a *pressure*, and the faction's existing character decides the actual movement:
+- A **proud/honorable** faction (Klingon): defeat → +Vengeance, hold Aggression, rebuild for round two.
+- A **pragmatic trader**: defeat → +Caution, −Aggression, sue for peace, pivot to economy.
+- A **ruthless swarm**: defeat → regroup and come again, unchanged — it has no other mode.
+
+Mechanically this is the *same scoring machine* as every other decision: the event proposes trait/state pressures, and the current weights shape how much (and which way) each actually moves. One system, reused. **(This applies identically to officer traits — §3d — an officer's career experiences drift *their* traits through *their* current character.)**
 
 ---
 
@@ -132,14 +163,17 @@ From the five-agent survey (2026-07-10):
 
 ---
 
-## 5. Open decisions (what we still need to settle — the point of this draft)
+## 5. Decisions — settled and still-open
 
-1. **How many tiers for v1?** The full model is 4. For the first proof ("Mars attacks Earth"), collapse to **2** (Head of State sets objective → one military delegate executes) and grow later? *(Recommendation: yes, collapse first.)*
-2. **Is identity authored-and-fixed, or does it DRIFT with events?** Does losing a war make a faction vengeful or cowed, or is character static from scenario authoring? Big lever for "feel." *(Recommendation: fixed for v1, drift as a later layer.)*
-3. **How much do INDIVIDUAL officers matter vs. the faction's abstract identity?** Is the Grand Admiral a *named person with their own temperament* (Halo/BSG flavor), or purely a competence number on top of faction identity? *(Blueprint currently says: competence texture only. The developer may want named characters.)*
-4. **Escalation authority — how much can a subordinate do without asking?** Can a System Admiral retreat, or sign a local ceasefire, on its own? This literally defines "what can be decided at each level," so it needs a rule. *(Strawman: each mandate carries an explicit autonomy level — "execute freely / hold and report / ask first.")*
-5. **Does the PLAYER see the same reports/escalations an NPC Head of State sees?** This is the payoff of "one system" — the player, as Head of State, reads the same reports and issues the same mandates. Confirm we build the player-facing report/mandate UI as the *same* thing, not a bolt-on.
-6. **Identity trait set — is the §3a list right?** Are Aggression / Risk / Ambition / Honor / Xenophobia the right five, or do we want a different vocabulary (e.g. map to a known system — Stellaris ethics, Expanse factions)?
+**SETTLED (2026-07-10 discussion):**
+- ✅ **Identity DRIFTS with events** (not fixed) — via the two-timescale **state (mood) vs. trait (character)** model, with drift **filtered through current identity** so the same event pushes different factions different ways. Solves the Klingon-loss puzzle. See §3e.
+- ✅ **Officers are full characters, not just competence numbers** — own trait set (same vocabulary), can contradict role/faction (the xenophobic master diplomat = friction-as-story), and **drift with their career** (logically tied to what they did). See §3d.
+- ✅ **Subordinate autonomy is set at the Head-of-State level, and is primarily a PLAYER feature.** The player decides how much rope each delegate gets ("execute freely / hold and report / ask first"). For **NPC** factions the Head-of-State AI runs on **auto** and simply lets its delegates run — **so v1 needs no escalation-approval loop**; the approval UI is a later, player-side layer. (Big v1 scoping win: NPC delegates run free.)
+
+**STILL OPEN:**
+1. **How many tiers for v1?** Full model is 4; for the "Mars attacks Earth" proof, collapse to **2** (Head of State sets objective → one military delegate executes), grow later. *(Recommendation: collapse first.)*
+2. **The trait vocabulary itself (§3a).** Proposed 6: **Aggression / Ambition / Risk / Honor / Xenophobia / Ruthlessness** (+ candidate **Curiosity**). Stress-tested against the hive cluster, Klingon-vs-Borg, and the xenophobic diplomat — but not locked. Open sub-questions: is 6 (or 7) the right count; do we want to instead map onto a known system (Stellaris ethics / explicit franchise archetypes); and what are the **blend weights** when a faction's identity meets a seated officer's own traits (§3d).
+3. **Does the PLAYER see the same reports/escalations an NPC Head of State would?** This is the payoff of "one system" — build the player-facing report/mandate UI as the *same* thing, not a bolt-on. *(Recommendation: yes — but it's a later slice, after the NPC loop works.)*
 
 ---
 
