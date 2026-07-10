@@ -529,7 +529,7 @@
       "Name": "Ship Hull (Light)",
       "TemplateId": "ship-hull",
       "Properties": [
-        { "Key": "Hull Mass", "Value": 2500 },
+        { "Key": "Hull Mass", "Value": 500 },
         { "Key": "Mass Budget", "Value": 25000 }
       ]
     }

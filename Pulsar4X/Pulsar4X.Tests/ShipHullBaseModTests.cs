@@ -27,7 +27,7 @@ namespace Pulsar4X.Tests
         // (designId, expected frame mass kg, expected budget kg)
         private static readonly (string id, double frameMass, double budget)[] Tiers =
         {
-            ("default-design-ship-hull-light",  2_500,   25_000),
+            ("default-design-ship-hull-light",  500,     25_000),
             ("default-design-ship-hull",        10_000,  90_000),   // template defaults = the MEDIUM tier
             ("default-design-ship-hull-heavy",  25_000,  180_000),
         };
