@@ -1,3 +1,4 @@
+using System.Linq;
 using NUnit.Framework;
 using Pulsar4X.People;
 
@@ -57,6 +58,42 @@ namespace Pulsar4X.Tests
 
             Assert.That(CommanderBonuses.CombatMultiplier(bonuses, BonusCategory.Firepower), Is.EqualTo(1.21).Within(1e-9));
             Log("two +10% bonuses compound to x1.21");
+        }
+
+        // ── Slice 3c: the academy competence GENERATOR ────────────────────────────────────────
+
+        [Test]
+        [Description("A graduate's ExperienceCap becomes Firepower+Toughness bonuses, and no potential -> none (slice 3c).")]
+        public void RollCombatCompetence_ScalesBonusesWithExperienceCap()
+        {
+            Assert.That(CommanderBonuses.RollCombatCompetence(0), Is.Empty, "a no-potential washout gets no combat bonus");
+            Assert.That(CommanderBonuses.RollCombatCompetence(-5), Is.Empty, "negative cap is safe");
+
+            var top = CommanderBonuses.RollCombatCompetence(200);
+            Assert.That(top.Count, Is.EqualTo(2), "a top graduate gets a firepower and a toughness bonus");
+            Assert.That(top.First(b => b.Category == BonusCategory.Firepower).Value,
+                Is.EqualTo(CommanderBonuses.MaxCombatCompetenceBonus).Within(1e-9), "cap 200 -> full bonus");
+            Assert.That(top.First(b => b.Category == BonusCategory.Toughness).Value,
+                Is.EqualTo(CommanderBonuses.MaxCombatCompetenceBonus).Within(1e-9));
+
+            var mid = CommanderBonuses.RollCombatCompetence(100);
+            Assert.That(mid.First(b => b.Category == BonusCategory.Firepower).Value,
+                Is.EqualTo(CommanderBonuses.MaxCombatCompetenceBonus / 2).Within(1e-9), "cap 100 -> half bonus");
+            Log("competence -> bonuses scale with ExperienceCap");
+        }
+
+        [Test]
+        [Description("The generated bonuses fold back through the read helper — the rung-4 loop closes end to end.")]
+        public void GeneratedCompetence_FoldsThroughTheReadHelper()
+        {
+            var bonuses = new BonusesDB();
+            foreach (var b in CommanderBonuses.RollCombatCompetence(200))
+                bonuses.Bonuses.Add(b);
+
+            Assert.That(CommanderBonuses.CombatMultiplier(bonuses, BonusCategory.Firepower),
+                Is.EqualTo(1.0 + CommanderBonuses.MaxCombatCompetenceBonus).Within(1e-9),
+                "generate -> read round-trips: a top graduate's firepower multiplier is 1 + the max bonus");
+            Log("academy competence -> BonusesDB -> multiplier round-trips");
         }
     }
 }
