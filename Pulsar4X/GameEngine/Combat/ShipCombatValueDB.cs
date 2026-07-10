@@ -99,6 +99,27 @@ namespace Pulsar4X.Combat
         /// the dodge model treats it as undodgeable (velocity ≫ the dodge reference).</summary>
         public const double LightSpeed_mps = 299_792_458.0;
 
+        /// <summary>FIRE CONTROL → tracking (Sensors ⚙3, Fire-Control CONNECT). Default OFF so every existing combat
+        /// fixture is byte-identical (the fire-control component already lives on the Aegis/Picket/Bastion with a
+        /// non-neutral <c>TrackingSpeed</c>, so wiring it changes those ships — this is a behaviour change, gated like
+        /// the closing-range / detection flags). The client turns it ON at startup. When on, a ship's BEAM weapons have
+        /// their <see cref="WeaponProfile.Tracking"/> raised toward 1.0 by its best installed
+        /// <see cref="Weapons.BeamFireControlAtbDB"/> director — a better director lands more fire on an evasive target.
+        /// The dead knob (`BeamFireControlAtbDB.TrackingSpeed`, verified 0 reads) comes ALIVE.</summary>
+        public static bool EnableFireControlTracking = false;
+
+        /// <summary>Tracking-speed at which a fire-control director half-closes the gap between a weapon's own tracking
+        /// and perfect (1.0). The base-mod `beam-fire-control` reports 5000, so at the reference it's a moderate ×0.5
+        /// director. Flagged BALANCE dial.</summary>
+        public const double FireControlTrackingReference = 5000.0;
+
+        /// <summary>The 0..1 factor a fire-control director's <paramref name="trackingSpeed"/> contributes:
+        /// <c>ts / (ts + FireControlTrackingReference)</c> — 0 with no director, rising toward 1 for a fast one. The
+        /// weapon's effective tracking becomes <c>base + (1 − base) × factor</c> (the director closes the gap to a
+        /// perfect track). Returns 0 for a non-positive speed. Pure.</summary>
+        public static double FireControlTrackingFactor(double trackingSpeed)
+            => trackingSpeed <= 0 ? 0 : trackingSpeed / (trackingSpeed + FireControlTrackingReference);
+
         /// <summary>Damage-per-second the ship can deal (joules/sec). Higher = stronger.</summary>
         [JsonProperty] public double Firepower { get; internal set; }
 
@@ -200,6 +221,22 @@ namespace Pulsar4X.Combat
                 foreach (var comp in instances.AllComponents.Values)
                     toughness += comp.HealthPercent * ComponentHitPoints_J;
 
+                // FIRE CONTROL → beam tracking (⚙3): the ship's best installed director (health-scaled TrackingSpeed)
+                // raises how well its beams track an evasive target. 0 unless the flag is on (default off → byte-
+                // identical; the client turns it on). A shot-off director tracks worse (health-scaled = grave rung).
+                double fcTracking = 0;
+                if (EnableFireControlTracking && instances.TryGetComponentsByAttribute<BeamFireControlAtbDB>(out var directors))
+                {
+                    double bestTrackingSpeed = 0;
+                    foreach (var comp in directors)
+                        if (comp.Design.TryGetAttribute<BeamFireControlAtbDB>(out var fc))
+                        {
+                            double ts = fc.TrackingSpeed * comp.HealthPercent;
+                            if (ts > bestTrackingSpeed) bestTrackingSpeed = ts;
+                        }
+                    fcTracking = FireControlTrackingFactor(bestTrackingSpeed);
+                }
+
                 // Beam weapons: damage/sec = Energy / ChargePeriod (scaled by health); ~light-speed; tracks well
                 // (BaseHitChance); saturation = one pulse per charge period (its rate of fire).
                 if (instances.TryGetComponentsByAttribute<GenericBeamWeaponAtb>(out var beams))
@@ -210,9 +247,12 @@ namespace Pulsar4X.Combat
                         {
                             double period = beam.ChargePeriod > 0 ? beam.ChargePeriod : 1.0;
                             double dps = (beam.Energy / period) * comp.HealthPercent;
+                            // Fire control (⚙3): the director raises the beam's tracking toward 1.0 (closes the gap).
+                            // fcTracking is 0 unless the flag is on → beamTracking = BaseHitChance → byte-identical.
+                            double beamTracking = beam.BaseHitChance + (1.0 - beam.BaseHitChance) * fcTracking;
                             // Range (Root A): beams carry their design MaxRange (0 = unbounded, the legacy convention).
                             // Combat heat (W5): a hot beam's CombatHeat_kJps flows into HeatPerSecond → the heat pool.
-                            weapons.Add(new WeaponProfile(dps, beam.BeamSpeed, beam.BaseHitChance, 1.0 / period, beam.MaxRange, WeaponNature.Energy, WeaponDelivery.Beam, 0, 0, beam.CombatHeat_kJps));
+                            weapons.Add(new WeaponProfile(dps, beam.BeamSpeed, beamTracking, 1.0 / period, beam.MaxRange, WeaponNature.Energy, WeaponDelivery.Beam, 0, 0, beam.CombatHeat_kJps));
                         }
                     }
                 }

@@ -1738,12 +1738,12 @@ Every sensor also carries the universal seven (Mass, Size/mount, Materials/cost,
 #### 3.3 FIRE CONTROL (Military·Medium — the purest CONNECT door: dials built, dead)
 | Dial | Derived stat | Grade | Engine wire (file:line) | Resolver/system insertion |
 |------|--------------|-------|--------------------------|----------------------------|
-| Tracking speed | beat evasion | ◐ **wire (DEAD KNOB)** | `BeamFireControlAtbDB.TrackingSpeed` **exists `:21`, VERIFIED unread** (0 usages in `Combat/` or `BeamWeapons/`) → wire into the `HitFraction` **Tracking** term | `HitFraction` in `Combat/CombatKernel.cs` / `CombatEngagement.cs` |
+| Tracking speed | beat evasion | ✅ **LANDED (S1, 2026-07-10)** | `BeamFireControlAtbDB.TrackingSpeed` is now READ: `ShipCombatValueDB.Calculate` raises each BEAM `WeaponProfile.Tracking` toward 1.0 by the ship's best installed director (`base + (1−base)×FireControlTrackingFactor(ts)`, `ts/(ts+5000)`), health-scaled (grave rung). Gated behind `ShipCombatValueDB.EnableFireControlTracking` (default off → byte-identical; **client-on**) because the director already lives on the base-mod warships with a non-neutral value. Gauge `ShipFireControlTests`. The dead knob is alive; the wire flows into `HitFraction`'s Tracking term via the boosted profile. | `HitFraction` reads `WeaponProfile.Tracking` |
 | Fire-control range | open fire sooner | ◐ **wire (DEAD KNOB)** | `BeamFireControlAtbDB.Range` **exists `:15`, unread** → wire into the weapon-range engagement gate (director-gated reach) | the range ladder / `InRange` gate |
 | Fire allocation / multi-target | split fire across N | ◐ **wire** | `FinalFireOnly` **exists `:27`, unread** + a new targets-tracked dial → make N a director property (`StepEngagementGroup` already divides fire 1/N) | multi-party fire-split |
 | PD-only mode | intercept ordnance | ◐ **wire** | `FinalFireOnly:27` → the point-defense role | pairs with weapons-door PD wire + missiles-as-targets |
 
-*Honest state: the whole door is ◐ Wire — the component (`BeamFireControlAtbDB.cs:9`) and its three dials are built; the resolver reads the **weapon's** `BaseHitChance`/`MaxRange` instead. Building the door IS building the wire (Failure-A: the number exists, unwired).*
+*Honest state: **TrackingSpeed is now WIRED (S1, 2026-07-10)** — the flagship dead knob is alive (flag-gated, client-on). `Range` (director-gated reach) and `FinalFireOnly` (PD-only mode) remain ◐ Wire — the next Fire-Control slices. Building the door IS building the wire (Failure-A: the number exists, unwired).*
 
 #### 3.4 ELECTRONIC WARFARE (Military·Counter + Espionage·Counter + Influence·Counter)
 | Dial | Derived stat | Grade | Engine wire (file:line) | Resolver/system insertion |

@@ -113,6 +113,12 @@ namespace Pulsar4X.Client
             Pulsar4X.Combat.CombatEngagement.RequireWeaponRangeToEngage = true;
             Pulsar4X.Combat.CombatEngagement.RequireWeaponsReleaseToEngage = true;
 
+            // Fire control → tracking (Sensors ⚙3): a ship's beam-fire-control director now actually improves how well
+            // its beams track an evasive target (the dead BeamFireControlAtbDB.TrackingSpeed knob, wired). Off by
+            // default in the engine (the fire-control component already lives on the test ships with a non-neutral
+            // value, so wiring it changes those fixtures — gated like the closing/detection flags); ON for the game.
+            Pulsar4X.Combat.ShipCombatValueDB.EnableFireControlTracking = true;
+
             try
             {
                 string? appDataDirectory = GetAppDataPath();
