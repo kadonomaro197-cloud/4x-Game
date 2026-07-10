@@ -558,6 +558,50 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "ship-magazine",
+      "Name": "Ammo Magazine",
+      "Formulas": {
+        "Description": "An ammunition magazine — the store railguns, flak, and missile launchers draw from. As the ship's ammo weapons fire it drains; when it runs dry those weapons go silent and the ship fights on with any energy weapons until it is resupplied. A bigger magazine sustains fire longer but weighs more.",
+        "Mass": "PropertyValue('Ammo Capacity') * 1.2",
+        "Volume": "[Mass] * 0.5",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.02",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.4",
+        "aluminium": "[Mass] * 0.3"
+      },
+      "ComponentType": "Defense",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Ammo Capacity",
+          "Units": "kg",
+          "DescriptionFormula": "'Kilograms of ammunition the magazine holds. Drains as the ship''s ammo weapons (railgun, flak, missiles) fire; when empty those weapons go silent until resupply.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100000",
+          "MinFormula": "100",
+          "StepFormula": "100",
+          "PropertyFormula": "5000"
+        },
+        {
+          "Name": "shipMagazineAtbArgs",
+          "DescriptionFormula": "'double capacity_kg'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Ammo Capacity'))",
+          "AttributeType": "Pulsar4X.Combat.ShipMagazineAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "disruptor-weapon",
       "Name": "Ion Disruptor",
       "Formulas": {

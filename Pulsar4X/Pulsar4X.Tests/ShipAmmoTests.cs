@@ -56,6 +56,28 @@ namespace Pulsar4X.Tests
                 "no magazine → 0 ammo capacity → the fleet ammo pool stays disabled → combat byte-identical until the W3c magazine");
         }
 
+        private const string MunitionsShip = "default-ship-design-test-munitions"; // Sabre — railguns + a ship-magazine
+
+        [Test]
+        [Description("W3c cradle-to-grave: the base-mod Sabre Munitions Cruiser builds from JSON and its real ship-magazine component projects an ammo pool into the combat value (JSON ship-magazine template → ShipMagazineAtb → ShipCombatValueDB), the gotcha-10 sensor for the magazine. So a player-built ship carries a finite magazine that the W3b resolver depletes — designed → built → installed → runs dry.")]
+        public void TheMunitionsCruiser_CarriesARealMagazine_FromJson()
+        {
+            var s = TestScenario.CreateWithColony();
+            var designs = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns;
+            Assert.That(designs.ContainsKey(MunitionsShip), Is.True,
+                "the Sabre loads onto the faction — the JSON ship-magazine template + component design + earth.json entries wired up (six-point registration)");
+
+            var ship = ShipFactory.CreateShip(designs[MunitionsShip], s.Faction, s.StartingBody, "Sabre");
+            var cv = ship.GetDataBlob<ShipCombatValueDB>();
+            Log($"Sabre: firepower={cv.Firepower:0}, ammoCapacity={cv.AmmoCapacity_kg:0} kg");
+
+            Assert.That(cv.Firepower, Is.GreaterThan(0), "the Sabre carries its railguns (an ammo-fed warship)");
+            Assert.That(cv.AmmoCapacity_kg, Is.GreaterThan(0),
+                "the magazine's pool flows into the combat value — JSON ship-magazine template → ShipMagazineAtb → ShipCombatValueDB is wired");
+            Assert.That(cv.AmmoCapacity_kg, Is.EqualTo(5000).Within(1),
+                "one 5000 kg magazine at build health → ~5000 kg capacity (the template default)");
+        }
+
         [Test]
         [Description("W3b pure helpers: ammo-fed = Kinetic (railgun/flak) + Explosive (missiles); Energy (beam/plasma) + Exotic (disruptor) are powered, not ammo. AmmoFireDamage sums only the ammo-fed dps; SilenceAmmoWeapons drops those profiles, leaving energy fire.")]
         public void AmmoHelpers_ClassifySumAndSilence()
