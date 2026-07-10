@@ -221,12 +221,24 @@ namespace Pulsar4X.Combat
         /// the source always lands <see cref="ArmourMinPassFraction"/> of its damage. Because it's flat-per-source,
         /// N small volleys lose N×(flat) total while one big volley loses only (flat): armour bounces the swarm, the
         /// alpha punches through. Never throws.</summary>
-        public static double ArmourSoak(double armour, double sourceDamage)
+        public static double ArmourSoak(double armour, double sourceDamage) => ArmourSoak(armour, sourceDamage, 0.0);
+
+        /// <summary>Flat ARMOUR soak WITH weapon PENETRATION — the armour half of the matchup
+        /// (docs/COMPONENT-DESIGNER-DIALS.md ⚙1 backlog #1). Penetration cancels armour point-for-point BEFORE the flat
+        /// soak: an AP/sabot/lance round with <paramref name="penetration"/> ≥ the target's armour meets no effective
+        /// plating and lands in full (like an unarmoured target), while a normal round (penetration 0) is byte-for-byte
+        /// the flat soak above — so this reduces to the old <see cref="ArmourSoak(double,double)"/> when penetration is
+        /// 0. Penetration is clamped at 0 (it can never make armour STRONGER). Never throws. Same flat-per-source rule,
+        /// so N small volleys still lose N×(flat) while one big alpha loses only (flat) — penetration just shrinks the
+        /// plating each source meets.</summary>
+        public static double ArmourSoak(double armour, double sourceDamage, double penetration)
         {
             if (sourceDamage <= 0) return 0.0;
-            if (armour <= 0) return sourceDamage;
+            if (penetration < 0) penetration = 0.0;
+            double effectiveArmour = armour - penetration;
+            if (effectiveArmour <= 0) return sourceDamage;   // penetration meets/beats the plating → full pass (as if unarmoured)
             double floor = sourceDamage * ArmourMinPassFraction;
-            double after = sourceDamage - armour * ArmourSoakPerPoint;
+            double after = sourceDamage - effectiveArmour * ArmourSoakPerPoint;
             return after < floor ? floor : after;
         }
     }

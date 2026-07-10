@@ -62,6 +62,37 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("Penetration is the armour half of the matchup (⚙1 backlog #1): penetration 0 reduces byte-for-byte to the old flat soak; penetration cancels armour point-for-point (a partly-penetrated plate soaks off its REMAINING points); penetration ≥ armour lands in full like an unarmoured target; a negative penetration is clamped (never makes armour stronger).")]
+        public void ArmourSoak_Penetration_CancelsArmourPointForPoint()
+        {
+            // Penetration 0 is byte-identical to the 2-arg flat soak (the byte-identity contract W1a rests on).
+            Assert.That(CombatKernel.ArmourSoak(armour: 10, sourceDamage: 100, penetration: 0),
+                Is.EqualTo(CombatKernel.ArmourSoak(armour: 10, sourceDamage: 100)).Within(1e-12),
+                "penetration 0 == the old flat soak (byte-identical)");
+
+            // Armour 100, penetration 60 → effective armour 40 → after = 100 - 40*1.5 = 40 (above the 10 floor).
+            // The SAME weapon vs the same plate with NO penetration is floored at 10 — so penetration is the difference
+            // between bouncing (10 lands) and cracking (40 lands).
+            Assert.That(CombatKernel.ArmourSoak(armour: 100, sourceDamage: 100, penetration: 60), Is.EqualTo(40).Within(1e-9),
+                "penetration cancels armour point-for-point, so the source soaks off the REMAINING plating only");
+            Assert.That(CombatKernel.ArmourSoak(armour: 100, sourceDamage: 100, penetration: 0), Is.EqualTo(10).Within(1e-9),
+                "the same round with no penetration bounces off heavy plate (floored)");
+
+            // Penetration ≥ armour → the plate is meaningless → full pass (identical to the unarmoured case).
+            Assert.That(CombatKernel.ArmourSoak(armour: 40, sourceDamage: 100, penetration: 40), Is.EqualTo(100).Within(1e-9),
+                "penetration equal to armour → lands in full, as if unarmoured");
+            Assert.That(CombatKernel.ArmourSoak(armour: 40, sourceDamage: 100, penetration: 999), Is.EqualTo(100).Within(1e-9),
+                "over-penetration doesn't over-land — it just fully bypasses");
+
+            // A negative penetration can't buff the armour (clamped to 0 → same as the plain soak).
+            Assert.That(CombatKernel.ArmourSoak(armour: 10, sourceDamage: 100, penetration: -50),
+                Is.EqualTo(CombatKernel.ArmourSoak(armour: 10, sourceDamage: 100)).Within(1e-12),
+                "negative penetration is clamped — armour never gets STRONGER");
+
+            Log($"pen0=={CombatKernel.ArmourSoak(10, 100, 0)}  crack(pen60)={CombatKernel.ArmourSoak(100, 100, 60)} vs bounce(pen0)={CombatKernel.ArmourSoak(100, 100, 0)}  fullpass(pen=armour)={CombatKernel.ArmourSoak(40, 100, 40)}");
+        }
+
+        [Test]
         [Description("ResolveShield pins the drain/regen: a charged pool absorbs the soakable damage up to its charge; regen tops it back toward capacity; a 0-capacity (unshielded) pool absorbs nothing.")]
         public void ResolveShield_PinsKnownValues()
         {

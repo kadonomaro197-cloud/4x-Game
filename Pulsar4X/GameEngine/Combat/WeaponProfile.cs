@@ -98,10 +98,19 @@ namespace Pulsar4X.Combat
         /// railgun/flak/missile default to 0 (rangeless) until their own range fields are added — a flagged follow-up.</summary>
         [JsonProperty] public double Range_m { get; internal set; }
 
+        /// <summary>ARMOUR PENETRATION — how much of the target's flat armour (its Defense) this weapon IGNORES before
+        /// the per-source soak (see <see cref="Combat.CombatKernel.ArmourSoak"/>). 0 = no penetration: the shot bounces
+        /// off plating like a normal round. A high value is an armour-CRACKER — a sabot/lance/AP weapon that treats
+        /// heavy plating as if it were light. It only bites where flat armour is applied per-source: the ground /
+        /// garrison resolver today (the ship path folds armour into Toughness, so penetration reaches ships only once
+        /// that per-source armour reconcile lands — a flagged follow-up). This is the "armour half of the matchup"
+        /// dial — docs/COMPONENT-DESIGNER-DIALS.md ⚙1 resolver backlog #1.</summary>
+        [JsonProperty] public double Penetration { get; internal set; }
+
         public WeaponProfile() { }
 
         public WeaponProfile(double damagePerSecond, double velocity, double tracking, double saturation, double range_m = 0,
-            WeaponNature nature = WeaponNature.Kinetic, WeaponDelivery delivery = WeaponDelivery.Slug)
+            WeaponNature nature = WeaponNature.Kinetic, WeaponDelivery delivery = WeaponDelivery.Slug, double penetration = 0)
         {
             DamagePerSecond = damagePerSecond;
             Velocity = velocity;
@@ -110,6 +119,7 @@ namespace Pulsar4X.Combat
             Range_m = range_m;
             Nature = nature;
             Delivery = delivery;
+            Penetration = penetration;
         }
 
         public WeaponProfile(WeaponProfile p)
@@ -121,6 +131,7 @@ namespace Pulsar4X.Combat
             Range_m = p.Range_m;
             Nature = p.Nature;
             Delivery = p.Delivery;
+            Penetration = p.Penetration;
         }
     }
 }
