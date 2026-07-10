@@ -9,7 +9,11 @@ public enum BonusCategory
     None,
     ResearchPoints,
     ResearchCosts,
-    Mining
+    Mining,
+    // Combat competence categories — a commander's skill folded into the fleet auto-resolver
+    // (the "a person's skill modifies an outcome" wire, rung 4). Read via CommanderBonuses.CombatMultiplier.
+    Firepower,
+    Toughness
 }
 
 public enum BonusType
