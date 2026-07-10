@@ -26,9 +26,9 @@
 
 ## Layer 1 — Engine tests (CI-green, automated). *Correctness only.*
 
-These are self-maintaining (CI gates them red/green every push). Listed so we know what IS and ISN'T covered. Full inventory: `Pulsar4X.Tests/CLAUDE.md`. **(CI runs SHARDED across 3 parallel jobs as of 2026-07-03 — ~33 → ~13 min; see `Pulsar4X.Tests/CLAUDE.md`.)**
+These are self-maintaining (CI gates them red/green every push). Listed so we know what IS and ISN'T covered. Full inventory: `Pulsar4X.Tests/CLAUDE.md`. **(CI runs SHARDED across 4 parallel jobs as of 2026-07-10 — ~33 → ~13 min; see `Pulsar4X.Tests/CLAUDE.md`.)**
 
-> **🚧 QUARANTINED test (known pre-existing failure, `[Ignore]`'d 2026-07-03):** `EconomyReadoutTests.Economy_BaselineReadout_OverOneYear` — the refinery produces **no Space-Crete over a game-year** (the refining job sits at `MissingResources`: its mineral inputs aren't mined/stocked in the harness). A real economy-pipeline gap, red since before the current work, unrelated to it — and it ran ~7.5 min (the single slowest test). Kept in the suite as the tracking record; **re-enable when the refining-input pipeline is wired** (mine/stock the inputs the refinery needs, or fix the job's resource resolution). This is the one deliberately-red engine gap right now.
+> **✅ RESOLVED (2026-07-10) — was the quarantined refining test:** `EconomyReadoutTests.Economy_BaselineReadout_OverOneYear` is **re-enabled and green**. Root cause was pure start-DATA: the Earth colony's `earth.json` Cargo block stocked 12 of 15 minerals but **omitted `regolith` + `water`** — two of space-crete's five recipe inputs — so the refining job sat at `MissingResources` all year. Fix: stock `regolith`, `water`, and `rare-earth-elements` at 50M like the others (all three were already unlocked in `StartingItems`, so no gotcha-#10 crash). The test now proves the refining pipeline (job queued → inputs consumed → output produced) on top of its existing deposit-depletion assertion. It runs ~7.5 min, so it got its own CI shard (`economy-readout`) to keep the `rest` shard under the stations bottleneck. **No deliberately-red engine gaps remain.**
 
 | Suite / area | Guards | Status |
 |---|---|---|
