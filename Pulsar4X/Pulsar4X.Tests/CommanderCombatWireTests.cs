@@ -1,6 +1,7 @@
 using System.Linq;
 using NUnit.Framework;
 using Pulsar4X.Combat;
+using Pulsar4X.DataStructures;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
 using Pulsar4X.Fleets;
