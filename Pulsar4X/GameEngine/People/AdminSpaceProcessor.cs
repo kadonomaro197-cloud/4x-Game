@@ -96,4 +96,51 @@ public class AdminSpaceProcessor : IInstanceProcessor
 
         return result;
     }
+
+    /// <summary>
+    /// Drop the (first) seat provided by a named command component and free any commander sitting in it —
+    /// the decapitation grave rung, called when that admin component is uninstalled or destroyed. Keyed by
+    /// component name (the same key seats are built and assigned by). Pure/list-level → unit-testable with
+    /// no game scaffolding. Returns true if a seat was dropped.
+    /// </summary>
+    internal static bool DropSeatForComponent(List<AdminSpaceAbilityState> seats, string componentName)
+    {
+        if (seats == null)
+            return false;
+
+        for (int i = 0; i < seats.Count; i++)
+        {
+            if (seats[i].ComponentName == componentName)
+            {
+                if (seats[i].Commander != null)
+                    seats[i].Commander.AssignedTo = -1;
+                seats.RemoveAt(i);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Vacate the seat currently held by the given commander (e.g. the officer was killed) so no dead
+    /// commander stays "seated". Returns true if a seat was vacated. Pure → unit-testable.
+    /// </summary>
+    internal static bool VacateSeat(AdminSpaceDB adminSpaceDB, int commanderId)
+    {
+        if (adminSpaceDB == null)
+            return false;
+
+        foreach (var seat in adminSpaceDB.CommanderSeats)
+        {
+            if (seat.CommanderID == commanderId)
+            {
+                seat.CommanderID = -1;
+                seat.Commander = null;
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

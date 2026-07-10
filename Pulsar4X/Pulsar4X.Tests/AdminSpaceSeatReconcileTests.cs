@@ -100,5 +100,74 @@ namespace Pulsar4X.Tests
             Assert.That(result, Does.Contain(seatB));
             Log("duplicate-named seats each carried exactly once");
         }
+
+        // ── Slice 2: the decapitation grave rung ──────────────────────────────────────────────
+
+        [Test]
+        [Description("Losing a command component drops that seat and frees its occupant (the OnComponentUninstallation fix).")]
+        public void DropSeatForComponent_RemovesSeat_AndUnassignsCommander()
+        {
+            var keptSeat = new AdminSpaceAbilityState(AdminLevel.Fleet, "ship-command");
+            var lostSeat = new AdminSpaceAbilityState(AdminLevel.Colony, "admin-complex");
+            var commander = new CommanderDB();
+            lostSeat.CommanderID = 42;
+            lostSeat.Commander = commander;
+            commander.AssignedTo = 7;
+            var seats = new List<AdminSpaceAbilityState> { keptSeat, lostSeat };
+
+            var dropped = AdminSpaceProcessor.DropSeatForComponent(seats, "admin-complex");
+
+            Assert.That(dropped, Is.True, "the seat for the removed component was dropped");
+            Assert.That(seats, Has.Count.EqualTo(1));
+            Assert.That(seats, Does.Contain(keptSeat), "unrelated seats are untouched");
+            Assert.That(commander.AssignedTo, Is.EqualTo(-1), "the displaced commander is freed (no dangling assignment)");
+            Log("destroyed command component dropped its seat and freed the commander");
+        }
+
+        [Test]
+        [Description("Dropping a component seat removes only the first match (duplicate-named components).")]
+        public void DropSeatForComponent_RemovesOnlyOneSeat()
+        {
+            var seatA = new AdminSpaceAbilityState(AdminLevel.Colony, "admin-complex");
+            var seatB = new AdminSpaceAbilityState(AdminLevel.Colony, "admin-complex");
+            var seats = new List<AdminSpaceAbilityState> { seatA, seatB };
+
+            var dropped = AdminSpaceProcessor.DropSeatForComponent(seats, "admin-complex");
+
+            Assert.That(dropped, Is.True);
+            Assert.That(seats, Has.Count.EqualTo(1), "only one of the two same-named seats is dropped");
+            Log("one duplicate-named seat dropped, the other kept");
+        }
+
+        [Test]
+        [Description("A killed commander is vacated from their post (the DestroyCommander decapitation half).")]
+        public void VacateSeat_ClearsSeatHeldByCommander()
+        {
+            var db = new AdminSpaceDB();
+            var seat = new AdminSpaceAbilityState(AdminLevel.Colony, "admin-complex");
+            seat.CommanderID = 42;
+            seat.Commander = new CommanderDB();
+            db.CommanderSeats.Add(seat);
+
+            var vacated = AdminSpaceProcessor.VacateSeat(db, 42);
+
+            Assert.That(vacated, Is.True, "the seat holding the killed commander was vacated");
+            Assert.That(seat.CommanderID, Is.EqualTo(-1), "seat is now empty");
+            Assert.That(seat.Commander, Is.Null, "no dead commander left in the chair");
+            Log("killed commander vacated from their post");
+        }
+
+        [Test]
+        [Description("Vacating reports false when the commander held no seat (nothing to clear).")]
+        public void VacateSeat_ReturnsFalse_WhenCommanderNotSeated()
+        {
+            var db = new AdminSpaceDB();
+            db.CommanderSeats.Add(new AdminSpaceAbilityState(AdminLevel.Colony, "admin-complex") { CommanderID = 1 });
+
+            var vacated = AdminSpaceProcessor.VacateSeat(db, 999);
+
+            Assert.That(vacated, Is.False);
+            Log("no-op when the commander wasn't seated");
+        }
     }
 }

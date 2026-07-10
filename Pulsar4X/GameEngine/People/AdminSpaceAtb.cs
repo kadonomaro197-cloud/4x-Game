@@ -41,7 +41,13 @@ public class AdminSpaceAtb  : IComponentDesignAttribute
 
     public void OnComponentUninstallation(Entity parentEntity, ComponentInstance componentInstance)
     {
-        throw new System.NotImplementedException();
+        // Losing a command component collapses the post it provided: drop that seat and free its
+        // occupant. (This hook fires BEFORE the component leaves ComponentInstancesDB — Entity.RemoveComponent
+        // — so we drop THIS component's seat by name rather than recomputing from the still-present component.)
+        if (parentEntity.TryGetDataBlob<AdminSpaceDB>(out var adminSpaceDB))
+        {
+            AdminSpaceProcessor.DropSeatForComponent(adminSpaceDB.CommanderSeats, componentInstance.Name);
+        }
     }
 
     public string AtbName()

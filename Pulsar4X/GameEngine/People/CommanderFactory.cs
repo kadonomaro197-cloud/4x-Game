@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GameEngine.People;
 using Pulsar4X.Datablobs;
 using Pulsar4X.DataStructures;
 using Pulsar4X.Engine;
@@ -110,6 +111,16 @@ namespace Pulsar4X.People
             if(faction.TryGetDataBlob<FactionInfoDB>(out var factionInfoDB))
             {
                 factionInfoDB.Commanders.Remove(commanderToDestroy);
+            }
+
+            // If this officer held an admin post, vacate the seat so no dead commander stays "seated"
+            // (the person-loss half of the decapitation grave rung).
+            if (commanderToDestroy.TryGetDataBlob<CommanderDB>(out var commanderDB)
+                && commanderDB.AssignedTo >= 0
+                && commanderToDestroy.Manager.TryGetGlobalEntityById(commanderDB.AssignedTo, out var postEntity)
+                && postEntity.TryGetDataBlob<AdminSpaceDB>(out var adminSpaceDB))
+            {
+                AdminSpaceProcessor.VacateSeat(adminSpaceDB, commanderToDestroy.Id);
             }
 
             EventManager.Instance.Publish(
