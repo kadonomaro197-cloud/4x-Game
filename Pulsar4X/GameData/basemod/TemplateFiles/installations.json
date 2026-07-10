@@ -1285,10 +1285,17 @@
           "PropertyFormula": "0"
         },
         {
+          "Name": "PerShotEnergy",
+          "Units": "str",
+          "DescriptionFormula": "'Per-shot size - how much of this unit''s attack lands in ONE shot. Small arms put many little rounds downrange (10), so they chip and mostly bounce off armour.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "10"
+        },
+        {
           "Name": "groundUnitAtbArgs",
-          "DescriptionFormula": "'double unitType, double attack, double defense, double hitPoints, double range, double penetration'",
+          "DescriptionFormula": "'double unitType, double attack, double defense, double hitPoints, double range, double penetration, double perShotEnergy'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('UnitType'), PropertyValue('Attack'), PropertyValue('Defense'), PropertyValue('HitPoints'), PropertyValue('Range'), PropertyValue('Penetration'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('UnitType'), PropertyValue('Attack'), PropertyValue('Defense'), PropertyValue('HitPoints'), PropertyValue('Range'), PropertyValue('Penetration'), PropertyValue('PerShotEnergy'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundUnitAtb"
         }
       ]
@@ -1362,10 +1369,17 @@
           "PropertyFormula": "20"
         },
         {
+          "Name": "PerShotEnergy",
+          "Units": "str",
+          "DescriptionFormula": "'Per-shot size - a tank''s main gun lands its whole attack in ONE big shell (140), an alpha that punches flat armour instead of chipping at it.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "140"
+        },
+        {
           "Name": "groundUnitAtbArgs",
-          "DescriptionFormula": "'double unitType, double attack, double defense, double hitPoints, double range, double penetration'",
+          "DescriptionFormula": "'double unitType, double attack, double defense, double hitPoints, double range, double penetration, double perShotEnergy'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('UnitType'), PropertyValue('Attack'), PropertyValue('Defense'), PropertyValue('HitPoints'), PropertyValue('Range'), PropertyValue('Penetration'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('UnitType'), PropertyValue('Attack'), PropertyValue('Defense'), PropertyValue('HitPoints'), PropertyValue('Range'), PropertyValue('Penetration'), PropertyValue('PerShotEnergy'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundUnitAtb"
         }
       ]
@@ -1439,10 +1453,17 @@
           "PropertyFormula": "8"
         },
         {
+          "Name": "PerShotEnergy",
+          "Units": "str",
+          "DescriptionFormula": "'Per-shot size - artillery fires a few big HE shells (80 each), between a tank''s single alpha and an infantry spray - each shell is a real hit against armour.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "80"
+        },
+        {
           "Name": "groundUnitAtbArgs",
-          "DescriptionFormula": "'double unitType, double attack, double defense, double hitPoints, double range, double penetration'",
+          "DescriptionFormula": "'double unitType, double attack, double defense, double hitPoints, double range, double penetration, double perShotEnergy'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('UnitType'), PropertyValue('Attack'), PropertyValue('Defense'), PropertyValue('HitPoints'), PropertyValue('Range'), PropertyValue('Penetration'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('UnitType'), PropertyValue('Attack'), PropertyValue('Defense'), PropertyValue('HitPoints'), PropertyValue('Range'), PropertyValue('Penetration'), PropertyValue('PerShotEnergy'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundUnitAtb"
         }
       ]

@@ -65,6 +65,11 @@ namespace Pulsar4X.GroundCombat
         /// raised unit's <see cref="GroundUnit.Penetration"/>. Moddable per design (the base-mod Armor unit carries it —
         /// a tank's AP main gun).</summary>
         [JsonProperty] public double Penetration { get; set; }
+        /// <summary>PER-SHOT ENERGY — how much of this design's Attack is one shot (Weapons pilot W2c; the ground echo of
+        /// <see cref="Pulsar4X.Combat.WeaponProfile.PerShotEnergy"/>). 0 = a single lump; a cannon delivers a big alpha
+        /// that punches flat armour, small arms chip and bounce. Snapshotted onto each raised unit's
+        /// <see cref="GroundUnit.PerShotEnergy"/>. Moddable per design (the base-mod Armor unit's main gun is a big alpha).</summary>
+        [JsonProperty] public double PerShotEnergy { get; set; }
         /// <summary>ENVIRONMENTAL GEAR (E4) — per-hazard protection this design's units carry, keyed by the shared
         /// <see cref="Pulsar4X.Hazards.HazardEffectType"/>. Value 0..1 = fraction of that hazard's attrition negated
         /// (a "heat-shielded" design has <c>{HeatDamage: 0.8}</c>). Snapshotted onto each raised <see cref="GroundUnit"/>.

@@ -27,14 +27,15 @@ namespace Pulsar4X.Tests
     {
         private static void Log(string m) => TestContext.Progress.WriteLine("[ground-unit] " + m);
 
-        // (designId, expected UnitType, Attack, HitPoints, Range, Penetration) — combat stats mirror GroundStartGarrison
-        // exactly; Penetration (W1c) is the new armour-crack dial: infantry small arms 0, a tank's AP gun 20, artillery
-        // HE 8 (flagged balance numbers).
-        private static readonly (string id, GroundUnitType type, double attack, double hp, int range, double pen)[] Expected =
+        // (designId, expected UnitType, Attack, HitPoints, Range, Penetration, PerShotEnergy) — combat stats mirror
+        // GroundStartGarrison exactly; Penetration (W1c) is the armour-crack dial (infantry small arms 0, tank AP 20,
+        // artillery HE 8); PerShotEnergy (W2c) is the alpha-vs-chip dial (infantry small arms 10 → many chips, tank
+        // main gun 140 → one alpha, artillery HE shells 80 → a couple big hits). Flagged balance numbers.
+        private static readonly (string id, GroundUnitType type, double attack, double hp, int range, double pen, double perShot)[] Expected =
         {
-            ("default-design-infantry",  GroundUnitType.Infantry,  100, 500, 1, 0),
-            ("default-design-armor",     GroundUnitType.Armor,     140, 700, 1, 20),
-            ("default-design-artillery", GroundUnitType.Artillery, 160, 400, 3, 8),
+            ("default-design-infantry",  GroundUnitType.Infantry,  100, 500, 1, 0,  10),
+            ("default-design-armor",     GroundUnitType.Armor,     140, 700, 1, 20, 140),
+            ("default-design-artillery", GroundUnitType.Artillery, 160, 400, 3, 8,  80),
         };
 
         [Test]
@@ -61,6 +62,7 @@ namespace Pulsar4X.Tests
                 Assert.That(atb.HitPoints, Is.EqualTo(e.hp), $"{e.id}: HP matches the garrison stat");
                 Assert.That(atb.Range, Is.EqualTo(e.range), $"{e.id}: strike range matches the garrison default");
                 Assert.That(atb.Penetration, Is.EqualTo(e.pen), $"{e.id}: armour penetration bound from the template (W1c dial)");
+                Assert.That(atb.PerShotEnergy, Is.EqualTo(e.perShot), $"{e.id}: per-shot energy bound from the template (W2c alpha-vs-chip dial)");
 
                 Assert.That(design.ComponentMountType.HasFlag(ComponentMountType.PlanetInstallation), Is.True,
                     $"{e.id}: mounts as a PlanetInstallation — so building it auto-installs on the colony and raises the unit");
@@ -114,6 +116,39 @@ namespace Pulsar4X.Tests
             Log($"vs Defense {defense}: the built AP tank (pen {tank.Penetration}) lands {apLands}, a normal round lands {normalLands}");
             Assert.That(apLands, Is.GreaterThan(normalLands),
                 "the player-built AP unit cracks armour a normal round is soaked by — the cradle-to-grave payoff");
+        }
+
+        [Test]
+        [Description("W2c cradle-to-grave: a player-built ARMOR unit carries the template's PerShotEnergy (140 → one alpha shot) onto its GroundUnit, while a built INFANTRY unit carries a small per-shot (10 → many chips). Through the shared burst armour soak, the tank's alpha punches heavy plate the infantry's chip-swarm mostly bounces off — the alpha-vs-chip identity, reachable from the designer.")]
+        public void BuildingAnArmorUnit_CarriesAlphaPerShot_ThatPunchesWhereInfantryChipsBounce()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            var fac = s.Faction.GetDataBlob<FactionInfoDB>();
+
+            s.Colony.AddComponent(new ComponentInstance((ComponentDesign)fac.IndustryDesigns["default-design-armor"]));
+            s.Colony.AddComponent(new ComponentInstance((ComponentDesign)fac.IndustryDesigns["default-design-infantry"]));
+
+            Assert.That(body.TryGetDataBlob<GroundForcesDB>(out var forces), Is.True, "a roster exists on the body");
+            var tank = forces.Units.First(u => u.UnitType == GroundUnitType.Armor);
+            var rifles = forces.Units.First(u => u.UnitType == GroundUnitType.Infantry);
+            Assert.That(tank.PerShotEnergy, Is.EqualTo(140), "the built tank carries the template's big-alpha per-shot (design → GroundUnit)");
+            Assert.That(rifles.PerShotEnergy, Is.EqualTo(10), "the built infantry carries a small chip per-shot");
+
+            var tankProfile = GroundCombatant.ToWeaponProfile(tank);
+            var rifleProfile = GroundCombatant.ToWeaponProfile(rifles);
+            int tankShots = Pulsar4X.Combat.CombatKernel.BurstShotCount(tankProfile);
+            int rifleShots = Pulsar4X.Combat.CombatKernel.BurstShotCount(rifleProfile);
+            Assert.That(tankShots, Is.EqualTo(1), "the tank's main gun is one alpha (140 atk / 140 per-shot)");
+            Assert.That(rifleShots, Is.EqualTo(10), "infantry small arms are many chips (100 atk / 10 per-shot)");
+
+            // Against heavy plate, EACH unit's whole attack as its own shot pattern: the alpha punches, the chips bounce.
+            const double defense = 100;
+            double tankLands  = GroundDamageMatrix.ArmourSoak(defense, tank.Attack,   tankShots,  tankProfile.Penetration);
+            double rifleLands = GroundDamageMatrix.ArmourSoak(defense, rifles.Attack, rifleShots, rifleProfile.Penetration);
+            Log($"vs Defense {defense}: built tank (atk {tank.Attack}, {tankShots} shot) lands {tankLands}; built infantry (atk {rifles.Attack}, {rifleShots} shots) lands {rifleLands}");
+            Assert.That(tankLands, Is.GreaterThan(rifleLands),
+                "the player-built tank's alpha punches plate the infantry's chip-swarm bounces off — alpha-vs-chip, cradle to grave");
         }
     }
 }
