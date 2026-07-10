@@ -307,5 +307,61 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "reactionless-drive",
+      "Name": "Reactionless Drive",
+      "Formulas": {
+        "Description": "An exotic drive that produces thrust with NO reaction mass — a gravitic/warp-field engine. It burns no propellant, so it never runs dry and has effectively unlimited delta-V (its fleet's maneuver reserve never depletes — it can kite forever). Heavy and power-hungry; the physics-breaker that frees you from the fuel economy.",
+        "Mass": "PropertyValue('Drive Mass')",
+        "Volume": "Max(1, [Mass] / 150)",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.05",
+        "ResearchCost": "[Mass] * 2",
+        "CreditCost": "[Mass] * 2",
+        "BuildPointCost": "[Mass] * 2"
+      },
+      "ResourceCost": {
+        "copper": "[Mass] * 0.3",
+        "aluminium": "[Mass] * 0.2",
+        "stainless-steel": "[Mass] * 0.3",
+        "tungsten": "[Mass] * 0.1"
+      },
+      "ComponentType": "Engine",
+      "MountType": "ShipComponent, ShipCargo, Fighter",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Drive Mass",
+          "Units": "kg",
+          "DescriptionFormula": "'Mass of the drive. Big and heavy — an exotic field engine.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "50000",
+          "MinFormula": "2000",
+          "StepFormula": "100",
+          "PropertyFormula": "5000"
+        },
+        {
+          "Name": "Thrust",
+          "Units": "N",
+          "DescriptionFormula": "'Thrust the drive produces, in Newtons — set directly (no propellant). Drives acceleration and evasion.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5000000",
+          "MinFormula": "1000",
+          "StepFormula": "1000",
+          "PropertyFormula": "200000"
+        },
+        {
+          "Name": "reactionlessDriveAtbArgs",
+          "DescriptionFormula": "'double thrustInNewtons, double exhaustVelocity'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Thrust'), 1000000)",
+          "AttributeType": "Pulsar4X.Movement.ReactionlessThrustAtb"
+        }
+      ]
+    }
   }
 ]

@@ -199,7 +199,8 @@
         "plasma-repeater",
         "point-defense-mount",
         "missile-launcher",
-        "inertialess-drive"
+        "inertialess-drive",
+        "reactionless-drive"
       ],
       "ComponentDesigns": [
         "default-design-alcubierre-2k",
@@ -276,7 +277,8 @@
         "default-design-plasma-repeater",
         "default-design-point-defense-mount",
         "default-design-missle-tube-500",
-        "default-design-inertialess-drive"
+        "default-design-inertialess-drive",
+        "default-design-reactionless-drive"
       ],
       "ShipDesigns": [
         "default-ship-design-courier",
@@ -300,7 +302,8 @@
         "default-ship-design-test-ember",
         "default-ship-design-test-missile",
         "default-ship-design-test-screen",
-        "default-ship-design-test-phantom"
+        "default-ship-design-test-phantom",
+        "default-ship-design-test-nomad"
       ],
       "LaunchQueue": [
         { "DesignId": "default-ship-design-courier", "Name": "ISS Hermes" }
