@@ -1202,6 +1202,50 @@ namespace Pulsar4X.Combat
                 if (!IsAmmoNature(w.Nature)) w.DamagePerSecond *= throttle;
         }
 
+        // ─── Point-defense layer (Weapons pilot W6) ──────────────────────────────────────────────────────────────────
+
+        /// <summary>Hard ceiling on the fraction of an incoming missile salvo point-defense can intercept — nothing is
+        /// ever fully immune, so a big enough swarm always leaks something through (mirrors <see
+        /// cref="ShipCombatValueDB.EvasionCap"/> and <see cref="MinLandedFraction"/>). Flagged BALANCE dial.</summary>
+        public static double PointDefenseMaxIntercept = 0.95;
+
+        /// <summary>Is this weapon INTERCEPTABLE by point-defense — a discrete GUIDED projectile (a missile) you can shoot
+        /// down on its way in? A beam/slug/bolt is not a thing PD can knock out. Keyed on <see cref="WeaponDelivery.Guided"/>,
+        /// which survives the fire-mix aggregation (BuildFireMix buckets on Delivery), so the missile fraction is legible
+        /// in the aggregated incoming fire.</summary>
+        internal static bool IsInterceptable(WeaponDelivery delivery) => delivery == WeaponDelivery.Guided;
+
+        /// <summary>The damage/sec in a fire mix that comes from INTERCEPTABLE (guided/missile) weapons — the part
+        /// point-defense can shoot down.</summary>
+        internal static double MissileFireDamage(List<WeaponProfile> fire)
+        {
+            double sum = 0;
+            foreach (var w in fire) if (IsInterceptable(w.Delivery)) sum += w.DamagePerSecond;
+            return sum;
+        }
+
+        /// <summary>A fleet's total point-defense intercept rating (J/s), summed health-scaled over its ships' cached
+        /// <see cref="ShipCombatValueDB.PointDefense_Jps"/>. 0 for a fleet with no PD (→ the intercept step is skipped and
+        /// incoming fire is byte-identical).</summary>
+        internal static double FleetPointDefense(List<CombatShip> ships)
+        {
+            double pd = 0;
+            foreach (var cs in ships) pd += CombatValue(cs.Ship).PointDefense_Jps;
+            return pd;
+        }
+
+        /// <summary>The fraction of an incoming missile salvo a fleet's point-defense intercepts — a SATURATING curve:
+        /// <c>pdRating / (pdRating + missileDamage)</c>, capped at <see cref="PointDefenseMaxIntercept"/>. Lots of PD vs a
+        /// light salvo → most is stopped; a swarm big enough to out-mass the PD → it saturates and leaks through. Returns
+        /// 0 when there's no PD or no missile fire (→ no interception, byte-identical). Pure; internal so it's directly
+        /// unit-testable like <see cref="HitFraction"/>.</summary>
+        internal static double PointDefenseInterceptFraction(double pdRating, double missileDamage)
+        {
+            if (pdRating <= 0 || missileDamage <= 0) return 0;
+            double frac = pdRating / (pdRating + missileDamage);
+            return frac > PointDefenseMaxIntercept ? PointDefenseMaxIntercept : frac;
+        }
+
         /// <summary>The damage-weighted fraction of an incoming fire mix a shield CAN stop — the nature matchup rolled
         /// up over the salvo (all-kinetic → 1.0, all-energy → 0.5, all-exotic → 0.0, mixes interpolate). Pure; internal
         /// so it's directly unit-testable like <see cref="HitFraction"/>.</summary>

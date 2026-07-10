@@ -143,6 +143,13 @@ namespace Pulsar4X.Combat
         /// until the W5c base-mod radiator). v1: one aggregate per fleet, like the shield/ammo.</summary>
         [JsonProperty] public double HeatCapacity_kJ { get; internal set; }
 
+        /// <summary>The POINT-DEFENSE intercept rating in joules/sec (sum of installed <see cref="PointDefenseAtb"/>,
+        /// health-scaled) — Weapons pilot W6. The resolver reads the fleet's total PD to intercept a saturating fraction
+        /// of incoming GUIDED (missile) fire before it reaches the hull, so an anti-missile screen is a real decision.
+        /// <b>0 = no point-defense</b> → the intercept step is skipped and incoming fire is byte-identical (every current
+        /// ship, until the W6c base-mod PD mount). v1: one aggregate per fleet, like the shield/ammo/heat.</summary>
+        [JsonProperty] public double PointDefense_Jps { get; internal set; }
+
         public ShipCombatValueDB() { }
 
         public ShipCombatValueDB(double firepower, double toughness, double roleWeight)
@@ -160,6 +167,7 @@ namespace Pulsar4X.Combat
             Evasion = db.Evasion;
             AmmoCapacity_kg = db.AmmoCapacity_kg;
             HeatCapacity_kJ = db.HeatCapacity_kJ;
+            PointDefense_Jps = db.PointDefense_Jps;
             Weapons = new List<WeaponProfile>();
             if (db.Weapons != null)
                 foreach (var w in db.Weapons) Weapons.Add(new WeaponProfile(w));
@@ -181,6 +189,7 @@ namespace Pulsar4X.Combat
             double shieldCapacity = 0, shieldRegen = 0;   // the space shield pool (0 if no generator → combat unchanged)
             double ammoCapacity = 0;                      // the ammo magazine pool (0 if no magazine → combat unchanged, W3)
             double heatCapacity = 0;                      // the radiator heat ceiling (0 if no radiator → combat unchanged, W5)
+            double pointDefense = 0;                      // the PD intercept rating (0 if no PD → combat unchanged, W6)
             // Chassis mass (kg) for the recoil→tracking penalty (W4): a heavy kinetic gun shakes a light hull off aim.
             // 0 if unknown → RecoilTrackingFactor returns 1.0 (no penalty). Every weapon defaults Recoil 0 → byte-identical.
             double chassisMass = ship.TryGetDataBlob<MassVolumeDB>(out var chassisMv) && chassisMv.MassDry > 0 ? chassisMv.MassDry : 0;
@@ -332,6 +341,18 @@ namespace Pulsar4X.Combat
                             heatCapacity += rad.Capacity_kJ * comp.HealthPercent;
                     }
                 }
+
+                // Point-defense (W6): sum the installed PD mounts' intercept rating (health-scaled — a shot-off mount
+                // stops fewer missiles). 0 if none → the resolver's intercept step stays disabled and incoming fire is
+                // byte-identical.
+                if (instances.TryGetComponentsByAttribute<PointDefenseAtb>(out var pdMounts))
+                {
+                    foreach (var comp in pdMounts)
+                    {
+                        if (comp.Design.TryGetAttribute<PointDefenseAtb>(out var pd))
+                            pointDefense += pd.InterceptRating_Jps * comp.HealthPercent;
+                    }
+                }
             }
 
             // Armour thickness adds straight to toughness (joules).
@@ -353,6 +374,7 @@ namespace Pulsar4X.Combat
                 ShieldRegen_Jps = shieldRegen,
                 AmmoCapacity_kg = ammoCapacity,
                 HeatCapacity_kJ = heatCapacity,
+                PointDefense_Jps = pointDefense,
             };
         }
 
