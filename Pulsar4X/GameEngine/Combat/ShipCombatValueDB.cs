@@ -136,6 +136,13 @@ namespace Pulsar4X.Combat
         /// current ship, until the W3c base-mod magazine). v1: one aggregate pool per fleet, like the shield.</summary>
         [JsonProperty] public double AmmoCapacity_kg { get; internal set; }
 
+        /// <summary>The HEAT radiator capacity in kJ (sum of installed <see cref="RadiatorAtb"/>, health-scaled) —
+        /// Weapons pilot W5. Sets the fleet's heat ceiling and per-salvo cooling; when the fleet's energy-weapon fire
+        /// drives its heat pool (`FleetCombatStateDB.HeatPool_kJ`) past this, its energy fire throttles (sustained-fire
+        /// limit). <b>0 = no radiator</b> → the heat step is skipped and combat is byte-identical (every current ship,
+        /// until the W5c base-mod radiator). v1: one aggregate per fleet, like the shield/ammo.</summary>
+        [JsonProperty] public double HeatCapacity_kJ { get; internal set; }
+
         public ShipCombatValueDB() { }
 
         public ShipCombatValueDB(double firepower, double toughness, double roleWeight)
@@ -152,6 +159,7 @@ namespace Pulsar4X.Combat
             RoleWeight = db.RoleWeight;
             Evasion = db.Evasion;
             AmmoCapacity_kg = db.AmmoCapacity_kg;
+            HeatCapacity_kJ = db.HeatCapacity_kJ;
             Weapons = new List<WeaponProfile>();
             if (db.Weapons != null)
                 foreach (var w in db.Weapons) Weapons.Add(new WeaponProfile(w));
@@ -172,6 +180,7 @@ namespace Pulsar4X.Combat
             var weapons = new List<WeaponProfile>();
             double shieldCapacity = 0, shieldRegen = 0;   // the space shield pool (0 if no generator → combat unchanged)
             double ammoCapacity = 0;                      // the ammo magazine pool (0 if no magazine → combat unchanged, W3)
+            double heatCapacity = 0;                      // the radiator heat ceiling (0 if no radiator → combat unchanged, W5)
             // Chassis mass (kg) for the recoil→tracking penalty (W4): a heavy kinetic gun shakes a light hull off aim.
             // 0 if unknown → RecoilTrackingFactor returns 1.0 (no penalty). Every weapon defaults Recoil 0 → byte-identical.
             double chassisMass = ship.TryGetDataBlob<MassVolumeDB>(out var chassisMv) && chassisMv.MassDry > 0 ? chassisMv.MassDry : 0;
@@ -311,6 +320,17 @@ namespace Pulsar4X.Combat
                             ammoCapacity += mag.Capacity_kg * comp.HealthPercent;
                     }
                 }
+
+                // Heat radiators (W5): sum the installed radiators' kJ (health-scaled — a shot-off radiator sheds less).
+                // 0 if none → the fleet's heat step stays disabled and energy fire is byte-identical.
+                if (instances.TryGetComponentsByAttribute<RadiatorAtb>(out var radiators))
+                {
+                    foreach (var comp in radiators)
+                    {
+                        if (comp.Design.TryGetAttribute<RadiatorAtb>(out var rad))
+                            heatCapacity += rad.Capacity_kJ * comp.HealthPercent;
+                    }
+                }
             }
 
             // Armour thickness adds straight to toughness (joules).
@@ -331,6 +351,7 @@ namespace Pulsar4X.Combat
                 ShieldCapacity_J = shieldCapacity,
                 ShieldRegen_Jps = shieldRegen,
                 AmmoCapacity_kg = ammoCapacity,
+                HeatCapacity_kJ = heatCapacity,
             };
         }
 

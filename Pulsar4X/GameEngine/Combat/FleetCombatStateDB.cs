@@ -70,6 +70,14 @@ namespace Pulsar4X.Combat
         /// later slice), matching the shield pool.</summary>
         [JsonProperty] public double AmmoPool_kg { get; internal set; } = -1;
 
+        /// <summary>The fleet's accumulated HEAT (kJ) — Weapons pilot W5, the sustained-fire limit on energy weapons.
+        /// Each salvo the fleet's ENERGY-weapon fire adds heat and its radiators shed some; when the pool exceeds the
+        /// fleet's <see cref="ShipCombatValueDB.HeatCapacity_kJ"/> the energy weapons THROTTLE (burst-vs-sustained) until
+        /// it cools. Starts at 0 (cold). A fleet with NO radiator (capacity 0) skips the heat step entirely, so its
+        /// energy fire is byte-identical — the heat model only bites once a ship carries a radiator (W5c). v1: one
+        /// aggregate pool per fleet, like the shield and ammo.</summary>
+        [JsonProperty] public double HeatPool_kJ { get; internal set; }
+
         public FleetCombatStateDB() { }
 
         public FleetCombatStateDB(int opponentFleetId)
@@ -93,6 +101,7 @@ namespace Pulsar4X.Combat
             ManeuverBudget = db.ManeuverBudget;
             ShieldPool_J = db.ShieldPool_J;
             AmmoPool_kg = db.AmmoPool_kg;
+            HeatPool_kJ = db.HeatPool_kJ;
         }
 
         public override object Clone()
