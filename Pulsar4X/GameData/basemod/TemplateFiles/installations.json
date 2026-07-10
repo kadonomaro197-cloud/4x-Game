@@ -1278,10 +1278,17 @@
           "PropertyFormula": "1"
         },
         {
+          "Name": "Penetration",
+          "Units": "str",
+          "DescriptionFormula": "'Armour penetration - how much of an enemy''s armour this unit ignores. Infantry small arms bounce off heavy plate (0).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0"
+        },
+        {
           "Name": "groundUnitAtbArgs",
-          "DescriptionFormula": "'double unitType, double attack, double defense, double hitPoints, double range'",
+          "DescriptionFormula": "'double unitType, double attack, double defense, double hitPoints, double range, double penetration'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('UnitType'), PropertyValue('Attack'), PropertyValue('Defense'), PropertyValue('HitPoints'), PropertyValue('Range'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('UnitType'), PropertyValue('Attack'), PropertyValue('Defense'), PropertyValue('HitPoints'), PropertyValue('Range'), PropertyValue('Penetration'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundUnitAtb"
         }
       ]
@@ -1348,10 +1355,17 @@
           "PropertyFormula": "1"
         },
         {
+          "Name": "Penetration",
+          "Units": "str",
+          "DescriptionFormula": "'Armour penetration - a tank''s AP main gun cracks plate that bounces small arms (ignores this much of an enemy''s Defense).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "20"
+        },
+        {
           "Name": "groundUnitAtbArgs",
-          "DescriptionFormula": "'double unitType, double attack, double defense, double hitPoints, double range'",
+          "DescriptionFormula": "'double unitType, double attack, double defense, double hitPoints, double range, double penetration'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('UnitType'), PropertyValue('Attack'), PropertyValue('Defense'), PropertyValue('HitPoints'), PropertyValue('Range'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('UnitType'), PropertyValue('Attack'), PropertyValue('Defense'), PropertyValue('HitPoints'), PropertyValue('Range'), PropertyValue('Penetration'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundUnitAtb"
         }
       ]
@@ -1418,10 +1432,17 @@
           "PropertyFormula": "3"
         },
         {
+          "Name": "Penetration",
+          "Units": "str",
+          "DescriptionFormula": "'Armour penetration - shaped-charge / HE shells shrug off some plating (ignores this much of an enemy''s Defense), between infantry and a tank''s AP gun.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "8"
+        },
+        {
           "Name": "groundUnitAtbArgs",
-          "DescriptionFormula": "'double unitType, double attack, double defense, double hitPoints, double range'",
+          "DescriptionFormula": "'double unitType, double attack, double defense, double hitPoints, double range, double penetration'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('UnitType'), PropertyValue('Attack'), PropertyValue('Defense'), PropertyValue('HitPoints'), PropertyValue('Range'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('UnitType'), PropertyValue('Attack'), PropertyValue('Defense'), PropertyValue('HitPoints'), PropertyValue('Range'), PropertyValue('Penetration'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundUnitAtb"
         }
       ]

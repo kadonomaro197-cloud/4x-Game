@@ -32,23 +32,30 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public double HitPoints { get; internal set; }
         /// <summary>Strike RANGE in hexes (H3). 0 → a per-type default at raise (<see cref="GroundRangeTools.DefaultRangeFor"/>).</summary>
         [JsonProperty] public int Range { get; internal set; }
+        /// <summary>ARMOUR PENETRATION (Weapons pilot W1c) — how much of an enemy's flat armour (Defense) this unit's
+        /// weapon IGNORES before the per-source soak. 0 = a normal round; a high value is an AP/sabot cracker (a tank's
+        /// main gun). Flows to <see cref="GroundUnit.Penetration"/> at raise and bites in the shared armour soak.</summary>
+        [JsonProperty] public double Penetration { get; internal set; }
 
         public GroundUnitAtb() { }
 
         // double args mirror the other ground atbs — the JSON binder feeds AtbConstrArgs(PropertyValue(...)) values as
         // doubles (NCalc), so the ctor must accept doubles for the base-mod component to bind (gotcha L7). Arg ORDER is
-        // the template's PropertyFormula order: (unitType, attack, defense, hitPoints, range).
-        public GroundUnitAtb(double unitType, double attack, double defense, double hitPoints, double range)
+        // the template's PropertyFormula order: (unitType, attack, defense, hitPoints, range, penetration). Penetration
+        // is LAST so it's an additive arg — a template that omits it (older mod data) simply doesn't pass it, but the
+        // base-mod templates all supply it (0 for infantry, an AP value for armor).
+        public GroundUnitAtb(double unitType, double attack, double defense, double hitPoints, double range, double penetration = 0)
         {
             UnitType = (GroundUnitType)(int)unitType;
             Attack = attack;
             Defense = defense;
             HitPoints = hitPoints;
             Range = range < 0 ? 0 : (int)range;
+            Penetration = penetration < 0 ? 0 : penetration;
         }
 
         public override object Clone()
-            => new GroundUnitAtb((double)(int)UnitType, Attack, Defense, HitPoints, Range);
+            => new GroundUnitAtb((double)(int)UnitType, Attack, Defense, HitPoints, Range, Penetration);
 
         public void OnComponentInstallation(Entity parentEntity, ComponentInstance componentInstance)
         {
@@ -73,6 +80,7 @@ namespace Pulsar4X.GroundCombat
                     Defense = Defense,
                     HitPoints = HitPoints,
                     Range = Range,
+                    Penetration = Penetration,
                 };
                 GroundForces.RaiseUnit(body, design, parentEntity.FactionOwnerID, region, design.Name);
 
@@ -87,6 +95,7 @@ namespace Pulsar4X.GroundCombat
 
         public string AtbName() => "Ground Unit";
         public string AtbDescription()
-            => $"A buildable ground force ({UnitType}) — attack {Attack:0}, defense {Defense:0}, HP {HitPoints:0}, strike range {Range} hex. Building it raises a unit on the planet.";
+            => $"A buildable ground force ({UnitType}) — attack {Attack:0}, defense {Defense:0}, HP {HitPoints:0}, strike range {Range} hex" +
+               (Penetration > 0 ? $", armour-pen {Penetration:0}" : "") + ". Building it raises a unit on the planet.";
     }
 }

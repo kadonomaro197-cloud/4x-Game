@@ -384,6 +384,8 @@ namespace Pulsar4X.GroundCombat
                 Shield = design.Shield,
                 CurrentShield = design.Shield,   // the shield pool musters full (resolver merge 3c)
                 DamageType = design.DamageType,
+                Penetration = design.Penetration,   // armour-crack (W1c) — 0 for a normal unit, high for an AP design
+
                 // Snapshot the design's environmental gear onto the unit (E4) — like the combat stats above.
                 EnvResistance = (design.EnvironmentalResistance != null && design.EnvironmentalResistance.Count > 0)
                     ? new Dictionary<HazardEffectType, double>(design.EnvironmentalResistance)

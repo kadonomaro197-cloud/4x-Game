@@ -59,6 +59,12 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public double AmmoCapacity_kg { get; set; }
         /// <summary>SYSTEM ① primary damage flavour (from the heaviest weapon), for the future damage×defence matrix.</summary>
         [JsonProperty] public GroundWeaponMode DamageType { get; set; } = GroundWeaponMode.Ballistic;
+        /// <summary>ARMOUR PENETRATION — how much of an enemy's flat armour (Defense) this unit's weapon IGNORES before
+        /// the per-source soak (Weapons pilot W1c; the ground echo of <see cref="Pulsar4X.Combat.WeaponProfile.Penetration"/>).
+        /// 0 = a normal round (bounces off heavy plate); a high value is an AP/sabot cracker. Snapshotted onto each
+        /// raised unit's <see cref="GroundUnit.Penetration"/>. Moddable per design (the base-mod Armor unit carries it —
+        /// a tank's AP main gun).</summary>
+        [JsonProperty] public double Penetration { get; set; }
         /// <summary>ENVIRONMENTAL GEAR (E4) — per-hazard protection this design's units carry, keyed by the shared
         /// <see cref="Pulsar4X.Hazards.HazardEffectType"/>. Value 0..1 = fraction of that hazard's attrition negated
         /// (a "heat-shielded" design has <c>{HeatDamage: 0.8}</c>). Snapshotted onto each raised <see cref="GroundUnit"/>.
