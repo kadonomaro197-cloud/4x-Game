@@ -3,6 +3,7 @@ using Pulsar4X.Engine;
 using Pulsar4X.Fleets;
 using Pulsar4X.Movement;
 using Pulsar4X.Orbital;
+using Pulsar4X.People;
 using Pulsar4X.Ships;
 using Pulsar4X.Names;
 
@@ -1209,24 +1210,53 @@ namespace Pulsar4X.Combat
         public static List<CombatShip> GetCombatShips(Entity fleet)
         {
             var result = new List<CombatShip>();
-            CollectCombatShips(fleet, result);
+            // The fleet's FLAGSHIP COMMANDER's competence scales the WHOLE fleet's firepower/toughness — the
+            // rung-4 "a person's skill modifies an outcome" wire. 1.0 (no effect) when there's no flagship, no
+            // commander, or no combat bonus, so this is BYTE-IDENTICAL to pre-commander combat until a commander
+            // actually carries a Firepower/Toughness bonus (every existing combat fixture is the tripwire).
+            double cmdrFire = FleetCommanderMult(fleet, BonusCategory.Firepower);
+            double cmdrTough = FleetCommanderMult(fleet, BonusCategory.Toughness);
+            CollectCombatShips(fleet, result, cmdrFire, cmdrTough);
             return result;
         }
 
-        private static void CollectCombatShips(Entity fleet, List<CombatShip> into)
+        private static void CollectCombatShips(Entity fleet, List<CombatShip> into, double cmdrFire, double cmdrTough)
         {
             if (fleet == null || !fleet.IsValid || !fleet.TryGetDataBlob<FleetDB>(out var fleetDB)) return;
-            // This node's posture applies to ships DIRECTLY in it; a sub-fleet (component) applies its OWN.
-            double fpMult = FleetDoctrine.FirepowerMult(fleet);
-            double toughMult = FleetDoctrine.ToughnessMult(fleet);
+            // This node's posture applies to ships DIRECTLY in it; a sub-fleet (component) applies its OWN. The
+            // flagship-commander multiplier rides on top of the doctrine posture for every ship in the fleet.
+            double fpMult = FleetDoctrine.FirepowerMult(fleet) * cmdrFire;
+            double toughMult = FleetDoctrine.ToughnessMult(fleet) * cmdrTough;
             foreach (var child in fleetDB.Children)
             {
                 if (child == null || !child.IsValid) continue;
                 if (child.HasDataBlob<ShipInfoDB>())
                     into.Add(new CombatShip(child, fpMult, toughMult));
                 else if (child.HasDataBlob<FleetDB>())
-                    CollectCombatShips(child, into); // sub-component → recurse with its own doctrine
+                    CollectCombatShips(child, into, cmdrFire, cmdrTough); // sub-component → own doctrine, same commander
             }
+        }
+
+        /// <summary>
+        /// The multiplier a fleet's FLAGSHIP COMMANDER contributes to the given combat category (rung-4 wire):
+        /// <c>FleetDB.FlagShipID</c> → the flagship's <c>ShipInfoDB.CommanderID</c> → that commander's
+        /// <c>BonusesDB</c> → <see cref="Pulsar4X.People.CommanderBonuses.CombatMultiplier"/>. Returns 1.0 (no
+        /// effect) if any link is missing — no flagship set, no commander aboard, or no matching bonus — so combat
+        /// is unchanged until a commander actually carries a competence bonus. Defensive; never throws.
+        /// </summary>
+        internal static double FleetCommanderMult(Entity fleet, BonusCategory category)
+        {
+            if (fleet == null || fleet.Manager == null || !fleet.TryGetDataBlob<FleetDB>(out var fleetDB) || fleetDB.FlagShipID < 0)
+                return 1.0;
+            if (!fleet.Manager.TryGetEntityById(fleetDB.FlagShipID, out var flagship) || flagship == null)
+                return 1.0;
+            if (!flagship.TryGetDataBlob<ShipInfoDB>(out var shipInfo) || shipInfo.CommanderID < 0)
+                return 1.0;
+            if (!fleet.Manager.TryGetEntityById(shipInfo.CommanderID, out var commander) || commander == null)
+                return 1.0;
+            if (!commander.TryGetDataBlob<BonusesDB>(out var bonuses))
+                return 1.0;
+            return CommanderBonuses.CombatMultiplier(bonuses, category);
         }
 
         internal static bool AreHostile(Entity a, Entity b)
