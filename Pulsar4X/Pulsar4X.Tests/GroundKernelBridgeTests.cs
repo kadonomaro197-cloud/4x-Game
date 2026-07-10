@@ -106,6 +106,37 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("PerShotEnergy (Weapons pilot W2b) — ALPHA vs CHIP through the GROUND soak: a unit's PerShotEnergy flows into its WeaponProfile and sets BurstShotCount, and the resolver's own GroundDamageMatrix burst soak splits the source into that many flat-soaked shots — so an alpha unit (few big shots) cracks plate a chip unit (many small shots) of EQUAL Attack mostly bounces off. PerShotEnergy 0 → shotCount 1 → byte-identical single-lump soak.")]
+        public void PerShotEnergy_FlowsToTheProfile_AlphaPunchesChipBouncesThroughGroundSoak()
+        {
+            var alpha = Unit(GroundWeaponMode.Ballistic, attack: 1000);
+            alpha.PerShotEnergy = 1000;   // one big shot
+            var chip = Unit(GroundWeaponMode.Ballistic, attack: 1000);
+            chip.PerShotEnergy = 10;      // 100 small shots
+
+            var alphaProfile = GroundCombatant.ToWeaponProfile(alpha);
+            var chipProfile = GroundCombatant.ToWeaponProfile(chip);
+            Assert.That(alphaProfile.PerShotEnergy, Is.EqualTo(1000), "PerShotEnergy flows into the profile");
+            Assert.That(CombatKernel.BurstShotCount(alphaProfile), Is.EqualTo(1), "a big-per-shot weapon is one alpha");
+            Assert.That(CombatKernel.BurstShotCount(chipProfile), Is.EqualTo(100), "a small-per-shot weapon is many chips (1000/10)");
+
+            // Through the resolver's OWN burst soak vs the same heavy plate: EQUAL Attack, but the alpha lands far more.
+            const double defense = 100, contribution = 1000;
+            double alphaLands = GroundDamageMatrix.ArmourSoak(defense, contribution, CombatKernel.BurstShotCount(alphaProfile), alphaProfile.Penetration);
+            double chipLands  = GroundDamageMatrix.ArmourSoak(defense, contribution, CombatKernel.BurstShotCount(chipProfile), chipProfile.Penetration);
+            Log($"vs Defense {defense} (equal {contribution} total): alpha lands {alphaLands}, chip lands {chipLands}");
+            Assert.That(alphaLands, Is.GreaterThan(chipLands), "one alpha punches plate a swarm of chips bounces off");
+
+            // An un-dialled unit (PerShotEnergy 0) is byte-identical to the single-lump flat soak.
+            var normal = Unit(GroundWeaponMode.Ballistic, attack: 1000);
+            var normalProfile = GroundCombatant.ToWeaponProfile(normal);
+            Assert.That(CombatKernel.BurstShotCount(normalProfile), Is.EqualTo(1), "no PerShotEnergy → single lump");
+            Assert.That(GroundDamageMatrix.ArmourSoak(defense, contribution, CombatKernel.BurstShotCount(normalProfile), 0),
+                Is.EqualTo(GroundDamageMatrix.ArmourSoak(defense, contribution)).Within(1e-12),
+                "an un-dialled unit's soak is byte-identical to the pre-W2 flat soak");
+        }
+
+        [Test]
         [Description("ToCombatant maps a GroundUnit onto the neutral view the kernel reads: faction, health, evasion, flat armour, a seeded shield pool, and exactly one synthesized weapon profile.")]
         public void ToCombatant_MapsTheUnitOntoTheNeutralView()
         {

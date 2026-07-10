@@ -87,6 +87,13 @@ namespace Pulsar4X.GroundCombat
         /// <see cref="Pulsar4X.Combat.WeaponProfile"/> (<c>GroundCombatant.ToWeaponProfile</c>) and bites in
         /// <c>GroundDamageMatrix.ArmourSoak</c> → the shared <c>CombatKernel</c>. Default 0 → byte-identical.</summary>
         [JsonProperty] public double Penetration { get; internal set; }
+        /// <summary>PER-SHOT ENERGY — the alpha-vs-chip dial (ground echo of
+        /// <see cref="Pulsar4X.Combat.WeaponProfile.PerShotEnergy"/>): how much of this unit's Attack is delivered in ONE
+        /// shot. A cannon (big per-shot) punches armour; a repeater/small-arms (small per-shot) chips that flat armour
+        /// mostly bounces. 0 = a single lump (the pre-W2 behaviour) → byte-identical. Snapshot at raise; flows into the
+        /// synthesized <see cref="Pulsar4X.Combat.WeaponProfile"/> and drives the resolver's
+        /// <c>GroundDamageMatrix.ArmourSoakBurst</c> shot split.</summary>
+        [JsonProperty] public double PerShotEnergy { get; internal set; }
         /// <summary>The region this unit is MARCHING to (-1 = standing still). While in transit it doesn't fight (5b).</summary>
         [JsonProperty] public int MovingToRegion { get; internal set; } = -1;
         /// <summary>Game-seconds left in the current march; counts down to 0 = arrived (the region's crossing time).</summary>
@@ -150,7 +157,7 @@ namespace Pulsar4X.GroundCombat
             DesignId = o.DesignId; BackingEntityId = o.BackingEntityId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
             UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health; Range = o.Range;
             MaxAmmo_kg = o.MaxAmmo_kg; CurrentAmmo_kg = o.CurrentAmmo_kg;
-            Evasion = o.Evasion; Shield = o.Shield; CurrentShield = o.CurrentShield; DamageType = o.DamageType; Penetration = o.Penetration;
+            Evasion = o.Evasion; Shield = o.Shield; CurrentShield = o.CurrentShield; DamageType = o.DamageType; Penetration = o.Penetration; PerShotEnergy = o.PerShotEnergy;
             MovingToRegion = o.MovingToRegion; TransitSecondsRemaining = o.TransitSecondsRemaining;
             HexQ = o.HexQ; HexR = o.HexR; HexTransitSecondsRemaining = o.HexTransitSecondsRemaining; HexStepBaseSeconds = o.HexStepBaseSeconds;
             if (o.HexPath != null)

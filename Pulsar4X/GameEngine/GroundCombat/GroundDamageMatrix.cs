@@ -99,5 +99,13 @@ namespace Pulsar4X.GroundCombat
         /// byte-for-byte the 2-arg soak above (so an ordinary unit is unchanged). Never throws.</summary>
         public static double ArmourSoak(double defense, double sourceDamage, double penetration)
             => Pulsar4X.Combat.CombatKernel.ArmourSoak(defense, sourceDamage, penetration);
+
+        /// <summary>Flat ARMOUR soak of a BURST (Weapons pilot W2b) — the source's fire is split into
+        /// <paramref name="shotCount"/> equal shots, each soaked flat (with penetration): a swarm of chips is mostly
+        /// bounced by plate, one alpha of equal total punches through. Forwards to the shared
+        /// <c>CombatKernel.ArmourSoakBurst</c>. <paramref name="shotCount"/> ≤ 1 is byte-for-byte the flat soak, so an
+        /// un-dialled unit (PerShotEnergy 0 → shotCount 1) is unchanged. Never throws.</summary>
+        public static double ArmourSoak(double defense, double sourceDamage, int shotCount, double penetration)
+            => Pulsar4X.Combat.CombatKernel.ArmourSoakBurst(defense, sourceDamage, shotCount, penetration);
     }
 }
