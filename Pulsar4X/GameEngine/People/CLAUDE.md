@@ -6,6 +6,14 @@
 
 ---
 
+## Admin delegation seats (the Command "play at your own altitude" layer)
+
+`AdminSpaceAtb` (a component attribute) grants an entity **admin seats** — one per installed admin component (an `admin-complex` on a colony, a `ship-command` bridge on a hull); `AdminLevel` (Ship→Empire) sets the seat's scope. `AdminSpaceDB.CommanderSeats` holds the seats as `AdminSpaceAbilityState` (each carries a `ComponentName` identity + the seated `CommanderDB` / `CommanderID`, -1 = empty). `AssignAdministratorOrder` seats a commander into a post by matching `ComponentName`, and sets `CommanderDB.AssignedTo`. `AdminSpaceProcessor.CalcEntityAdminSpace` (an `IInstanceProcessor`) rebuilds the seat list from the installed components.
+
+**Durable-seat fix (2026-07-09, foundation slice 1 — dossier ⚙10).** `CalcEntityAdminSpace` used to allocate a *fresh* seat list every pass, so the next processor tick silently un-seated every administrator — nothing downstream could hold an assignment (its own comment flagged the doubt). It now reconciles: the pure, unit-tested `AdminSpaceProcessor.ReconcileSeats(previous, current)` carries each existing seat (and the commander in it) across a recalc, matched by `ComponentName` — the same key `AssignAdministratorOrder` uses — adds a fresh empty seat for a new component, and drops a seat whose component was removed while clearing its occupant's `AssignedTo` (no dangling assignment). Gauge: `AdminSpaceSeatReconcileTests`. **Still open (next slices):** `AdminSpaceAtb.OnComponentUninstallation` throws `NotImplementedException` (the decapitation grave rung — publish `LeaderLost` on component loss); `ConsoleSpace` span math is computed then discarded (span-of-control unenforced); a seated officer still grants no competence bonus (the rung-4 wire, dossier ⚙6/⚙10).
+
+---
+
 ## Files
 
 | File | Role |
