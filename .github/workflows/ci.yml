@@ -14,18 +14,16 @@ name: CI
 # on the developer's local Windows build. Engine/data/logic regressions show up in `test`;
 # client compile breaks now show up in `build-client`.
 #
-# SHARDING (2026-07-03, 4th shard added 2026-07-10): the suite is split across PARALLEL `test`
-# jobs by fixture, so the wall-clock is the slowest single shard, not the sum. The dominant cost
-# is that `TestScenario.CreateWithColony()` re-parses ALL the mod JSON on every call, and the
+# SHARDING (2026-07-03): the suite is split across 3 PARALLEL `test` jobs by fixture, so the
+# wall-clock is the slowest single shard, not the sum. The dominant cost is that
+# `TestScenario.CreateWithColony()` re-parses ALL the mod JSON on every call, and the three
 # heaviest fixtures call it per-test — StationFactoryTests alone was ~11 min. The suite CANNOT
 # be parallelised in-process: several tests share static counters (SensorScan.ScanCount,
 # CombatEngagement.TickCount, NPCDecisionProcessor.TickCount), so fixtures would race — only
 # process-level sharding (separate jobs) is safe. Shards, balanced by measured fixture time:
-#   • stations        — StationFactoryTests (the ~11-min bottleneck, on its own)
-#   • economy         — ScenarioHarnessTests + ProductionBuildTests + MoraleTests
-#   • economy-readout — EconomyReadoutTests alone (a single ~7.5-min game-year sim; its own shard
-#                       so re-enabling it from quarantine can't push the "rest" shard past stations)
-#   • rest            — EVERYTHING ELSE (the complement filter, so a NEW fixture lands here by default)
+#   • stations — StationFactoryTests (the ~11-min bottleneck, on its own)
+#   • economy  — ScenarioHarnessTests + ProductionBuildTests + MoraleTests
+#   • rest     — EVERYTHING ELSE (the complement filter, so a NEW fixture lands here by default)
 # A red on ANY shard reds the run. Each shard publishes its own per-test report + artifact.
 # NOTE: the deeper win (cache the parsed mod data so CreateWithColony stops re-parsing every
 # call) is deferred — it needs verification that GameFactory.CreateGame treats the ModDataStore
@@ -54,10 +52,8 @@ jobs:
             filter: "FullyQualifiedName~StationFactoryTests"
           - name: economy
             filter: "FullyQualifiedName~ScenarioHarnessTests|FullyQualifiedName~ProductionBuildTests|FullyQualifiedName~MoraleTests"
-          - name: economy-readout
-            filter: "FullyQualifiedName~EconomyReadoutTests"
           - name: rest
-            filter: "FullyQualifiedName!~StationFactoryTests&FullyQualifiedName!~ScenarioHarnessTests&FullyQualifiedName!~ProductionBuildTests&FullyQualifiedName!~MoraleTests&FullyQualifiedName!~EconomyReadoutTests"
+            filter: "FullyQualifiedName!~StationFactoryTests&FullyQualifiedName!~ScenarioHarnessTests&FullyQualifiedName!~ProductionBuildTests&FullyQualifiedName!~MoraleTests"
     permissions:
       contents: read
       checks: write          # lets the test-reporter publish the per-test results table
