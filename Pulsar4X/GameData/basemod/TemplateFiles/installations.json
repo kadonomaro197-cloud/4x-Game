@@ -2,6 +2,50 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "ship-hull",
+      "Name": "Ship Hull",
+      "Formulas": {
+        "Description": "The structural frame a ship is built on. It sets the mass budget the ship's mounted components must fit within — the space echo of a ground unit's chassis.",
+        "Mass": "PropertyValue('Mass Budget') * 0.05",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "1.0",
+        "CrewReq": "[Mass] * 0.001",
+        "ResearchCost": "0",
+        "CreditCost": "[Mass] * 0.1",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.5",
+        "aluminium": "[Mass] * 0.3"
+      },
+      "ComponentType": "Hull",
+      "MountType": "ShipComponent, ShipCargo",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Mass Budget",
+          "Units": "kg",
+          "DescriptionFormula": "'The mass ceiling that a ship''s mounted components must fit within.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100000000",
+          "MinFormula": "1000",
+          "StepFormula": "1000",
+          "PropertyFormula": "50000000"
+        },
+        {
+          "Name": "shipHullAtbArgs",
+          "DescriptionFormula": "'double massBudget'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Mass Budget'))",
+          "AttributeType": "Pulsar4X.Ships.ShipHullAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "mine",
       "Name": "Mine",
       "Formulas": {

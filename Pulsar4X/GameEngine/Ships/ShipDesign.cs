@@ -183,10 +183,23 @@ namespace Pulsar4X.Ships
             ComponentCosts.ToList().ForEach(x => ResourceCosts[x.Key] = x.Value);
             IndustryPointCosts = (long)(MassPerUnit * 0.1);
 
-            // §0b mass-budget (dossier ⚙11), Slice A — compute & expose only; DO NOT set IsValid or gate
-            // construction here. Sourced from the design's own mass at 1.0 headroom → OverMassBudget is always
-            // false → byte-identical. Slice C swaps the source for a real hull ceiling and flips IsValid.
-            MassBudget = (long)(MassPerUnit * MassBudgetHeadroom);
+            // §0b mass-budget (dossier ⚙11), Slice D1 — a mounted HULL (ShipHullAtb) now sets the mass budget
+            // (the space echo of the ground GroundChassisAtb carry cap). A hull-less design falls back to the
+            // generous self-derived figure, so a design with no hull is byte-identical (nothing over budget) until
+            // a real hull is fitted. Still compute & EXPOSE only — IsValid is untouched and no engine construction
+            // path is gated (the client production list reads IsValid; the engine does not yet). Generous hull
+            // budgets keep OverMassBudget false even once ships mount one, per the developer's call.
+            double hullBudget = 0;
+            bool hasHull = false;
+            foreach (var component in Components)
+            {
+                if (component.design.TryGetAttribute<ShipHullAtb>(out var hull))
+                {
+                    hullBudget += hull.MassBudget * component.count;
+                    hasHull = true;
+                }
+            }
+            MassBudget = hasHull ? (long)hullBudget : (long)(MassPerUnit * MassBudgetHeadroom);
             OverMassBudget = MassPerUnit > MassBudget;
         }
 
