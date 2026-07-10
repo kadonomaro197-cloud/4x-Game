@@ -48,9 +48,16 @@ namespace Pulsar4X.Weapons
 
         public FlakWeaponAtb() { }
 
-        /// <summary>JSON constructor. Arg order MUST match <c>AtbConstrArgs(...)</c> in weapons.json.</summary>
+        /// <summary>JSON constructor (original 5-arg form). The component binder (<c>Activator.CreateInstance</c>) matches
+        /// ctors by EXACT ARITY — a default/optional param does NOT count — so this explicit 5-arg overload must stay for
+        /// the existing <c>flak-weapon</c> template's 5-value <c>AtbConstrArgs(...)</c> to bind (recoil defaults 0).</summary>
+        public FlakWeaponAtb(double muzzleVelocity, double damagePerPellet, double roundsPerSecond, double pelletsPerShot, double tracking)
+            : this(muzzleVelocity, damagePerPellet, roundsPerSecond, pelletsPerShot, tracking, 0) { }
+
+        /// <summary>JSON constructor WITH recoil (Weapons pilot W4). A template that dials recoil passes a 6th value.
+        /// Arg order MUST match <c>AtbConstrArgs(...)</c> in weapons.json.</summary>
         public FlakWeaponAtb(double muzzleVelocity, double damagePerPellet, double roundsPerSecond, double pelletsPerShot, double tracking,
-            double recoil = 0)
+            double recoil)
         {
             MuzzleVelocity_mps = muzzleVelocity;
             DamagePerPellet_J = damagePerPellet;

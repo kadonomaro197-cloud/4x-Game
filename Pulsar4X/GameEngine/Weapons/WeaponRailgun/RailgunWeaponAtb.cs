@@ -45,9 +45,16 @@ namespace Pulsar4X.Weapons
 
         public RailgunWeaponAtb() { }
 
-        /// <summary>JSON constructor. Arg order MUST match <c>AtbConstrArgs(...)</c> in weapons.json.</summary>
+        /// <summary>JSON constructor (original 4-arg form). The component binder (<c>Activator.CreateInstance</c>) matches
+        /// ctors by EXACT ARITY — a default/optional param does NOT count — so this explicit 4-arg overload must stay for
+        /// the existing <c>railgun-weapon</c> template's 4-value <c>AtbConstrArgs(...)</c> to bind (recoil defaults 0).</summary>
+        public RailgunWeaponAtb(double muzzleVelocity, double kineticEnergyPerShot, double roundsPerSecond, double tracking)
+            : this(muzzleVelocity, kineticEnergyPerShot, roundsPerSecond, tracking, 0) { }
+
+        /// <summary>JSON constructor WITH recoil (Weapons pilot W4). A template that dials recoil passes a 5th value.
+        /// Arg order MUST match <c>AtbConstrArgs(...)</c> in weapons.json.</summary>
         public RailgunWeaponAtb(double muzzleVelocity, double kineticEnergyPerShot, double roundsPerSecond, double tracking,
-            double recoil = 0)
+            double recoil)
         {
             MuzzleVelocity_mps = muzzleVelocity;
             KineticEnergyPerShot_J = kineticEnergyPerShot;
