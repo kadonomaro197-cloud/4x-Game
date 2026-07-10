@@ -237,6 +237,8 @@
         "default-design-local-construction",
         "default-design-launch-complex",
         "default-design-ship-hull",
+        "default-design-ship-hull-light",
+        "default-design-ship-hull-heavy",
         "default-design-bunker",
         "default-design-infantry",
         "default-design-armor",

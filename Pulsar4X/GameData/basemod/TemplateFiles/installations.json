@@ -5,8 +5,8 @@
       "UniqueID": "ship-hull",
       "Name": "Ship Hull",
       "Formulas": {
-        "Description": "The structural frame a ship is built on. It sets the mass budget the ship's mounted components must fit within — the space echo of a ground unit's chassis.",
-        "Mass": "PropertyValue('Mass Budget') * 0.05",
+        "Description": "The structural frame a ship is built on. It has its own mass (Hull Mass — the frame's weight, which every hulled ship carries) and it sets the mass budget the ship's mounted components must fit within. The space echo of a ground unit's chassis. Template defaults are the MEDIUM tier; the light/heavy tiers override these dials per design.",
+        "Mass": "PropertyValue('Hull Mass')",
         "Volume": "[Mass] * 0.01",
         "HTK": "1.0",
         "CrewReq": "[Mass] * 0.001",
@@ -24,14 +24,24 @@
       "IndustryTypeID": "component-construction",
       "Properties": [
         {
+          "Name": "Hull Mass",
+          "Units": "kg",
+          "DescriptionFormula": "'The frame''s own weight — every ship carries it, so a bigger hull is heavier (and dodges worse). Decoupled from the budget below.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "50000000",
+          "MinFormula": "500",
+          "StepFormula": "500",
+          "PropertyFormula": "10000"
+        },
+        {
           "Name": "Mass Budget",
           "Units": "kg",
-          "DescriptionFormula": "'The mass ceiling that a ship''s mounted components must fit within.'",
+          "DescriptionFormula": "'The mass ceiling that a ship''s mounted components must fit within (a bigger hull holds more).'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "100000000",
           "MinFormula": "1000",
           "StepFormula": "1000",
-          "PropertyFormula": "50000000"
+          "PropertyFormula": "90000"
         },
         {
           "Name": "shipHullAtbArgs",

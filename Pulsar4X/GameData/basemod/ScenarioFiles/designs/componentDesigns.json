@@ -518,8 +518,32 @@
     "Type": "ComponentDesign",
     "Payload": {
       "UniqueId": "default-design-ship-hull",
-      "Name": "Ship Hull",
+      "Name": "Ship Hull (Medium)",
       "TemplateId": "ship-hull"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-ship-hull-light",
+      "Name": "Ship Hull (Light)",
+      "TemplateId": "ship-hull",
+      "Properties": [
+        { "Key": "Hull Mass", "Value": 2500 },
+        { "Key": "Mass Budget", "Value": 25000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-ship-hull-heavy",
+      "Name": "Ship Hull (Heavy)",
+      "TemplateId": "ship-hull",
+      "Properties": [
+        { "Key": "Hull Mass", "Value": 25000 },
+        { "Key": "Mass Budget", "Value": 180000 }
+      ]
     }
   },
   {
