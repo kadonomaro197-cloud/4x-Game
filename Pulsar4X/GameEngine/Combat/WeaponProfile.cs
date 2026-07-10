@@ -117,11 +117,19 @@ namespace Pulsar4X.Combat
         /// ground/garrison resolver today.</summary>
         [JsonProperty] public double PerShotEnergy { get; internal set; }
 
+        /// <summary>WASTE HEAT this weapon dumps into its ship while firing, in kilojoules/second (Weapons pilot W5 —
+        /// heat → sustained rate). An energy weapon's sustained fire cooks the ship: the fleet's heat pool
+        /// (`FleetCombatStateDB.HeatPool_kJ`) rises by Σ this × dt each salvo, its radiators shed some, and if the pool
+        /// outruns the radiators the energy weapons THROTTLE (burst-vs-sustained). 0 = a "cool" weapon that generates no
+        /// tracked heat (every base-mod weapon today → byte-identical); a HOT high-power weapon (W5c) sets it and then
+        /// NEEDS radiators to sustain fire. Only energy-fed (Energy/Exotic) weapons meaningfully carry it.</summary>
+        [JsonProperty] public double HeatPerSecond { get; internal set; }
+
         public WeaponProfile() { }
 
         public WeaponProfile(double damagePerSecond, double velocity, double tracking, double saturation, double range_m = 0,
             WeaponNature nature = WeaponNature.Kinetic, WeaponDelivery delivery = WeaponDelivery.Slug, double penetration = 0,
-            double perShotEnergy = 0)
+            double perShotEnergy = 0, double heatPerSecond = 0)
         {
             DamagePerSecond = damagePerSecond;
             Velocity = velocity;
@@ -132,6 +140,7 @@ namespace Pulsar4X.Combat
             Delivery = delivery;
             Penetration = penetration;
             PerShotEnergy = perShotEnergy;
+            HeatPerSecond = heatPerSecond;
         }
 
         public WeaponProfile(WeaponProfile p)
@@ -145,6 +154,7 @@ namespace Pulsar4X.Combat
             Delivery = p.Delivery;
             Penetration = p.Penetration;
             PerShotEnergy = p.PerShotEnergy;
+            HeatPerSecond = p.HeatPerSecond;
         }
     }
 }

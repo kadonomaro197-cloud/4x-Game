@@ -1,7 +1,10 @@
+using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using Pulsar4X.Combat;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
+using Pulsar4X.Fleets;
 using Pulsar4X.Ships;
 
 namespace Pulsar4X.Tests
@@ -50,6 +53,65 @@ namespace Pulsar4X.Tests
             Assert.That(cv.Firepower, Is.GreaterThan(0), "the Aegis carries its lasers (energy fire)");
             Assert.That(cv.HeatCapacity_kJ, Is.EqualTo(0),
                 "no radiator → 0 heat capacity → the fleet heat step stays disabled → combat byte-identical until the W5c radiator");
+        }
+
+        [Test]
+        [Description("W5b pure helper: EnergyHeatGen sums each weapon's HeatPerSecond — a cool weapon (HeatPerSecond 0) contributes no heat, a hot one does.")]
+        public void EnergyHeatGen_SumsWeaponHeat()
+        {
+            var mix = new List<WeaponProfile>
+            {
+                new WeaponProfile(1000, 3e8, 0.95, 0.5, 0, WeaponNature.Energy, WeaponDelivery.Beam, 0, 0, heatPerSecond: 5000),  // hot
+                new WeaponProfile(600,  3e8, 0.95, 0.5, 0, WeaponNature.Energy, WeaponDelivery.Beam),                              // cool (0)
+            };
+            Assert.That(CombatEngagement.EnergyHeatGen(mix), Is.EqualTo(5000), "only the hot beam contributes heat");
+        }
+
+        // A controlled heat battle: an attacker firing ONLY a HOT energy weapon at a passive defender. The attacker's
+        // radiator capacity is the only variable — enough radiators sustain the fire, too few overheat and throttle it.
+        private static int RunHeatBattle(TestScenario s, Entity red, double attackerRadiatorCapacity)
+        {
+            var design = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns.Values.First();
+
+            var atkFleet = FleetFactory.Create(s.StartingSystem, red.Id, "Hot Beamer");
+            var gun = ShipFactory.CreateShip(design, s.Faction, s.StartingBody, "Beamer");
+            gun.FactionOwnerID = red.Id;
+            var hotBeam = new WeaponProfile(40_000, 3e8, 0.95, 0.5, 0, WeaponNature.Energy, WeaponDelivery.Beam, 0, 0, heatPerSecond: 200_000);
+            gun.SetDataBlob(new ShipCombatValueDB(40_000, 1e12, 1.0) { Evasion = 0, Weapons = { hotBeam }, HeatCapacity_kJ = attackerRadiatorCapacity });
+            s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(red.Id, atkFleet, gun));
+
+            var defFleet = FleetFactory.Create(s.StartingSystem, s.Faction.Id, "Passive Defender");
+            for (int i = 0; i < 3; i++)
+            {
+                var d = ShipFactory.CreateShip(design, s.Faction, s.StartingBody, "D" + i);
+                d.SetDataBlob(new ShipCombatValueDB(0, 300_000, 1.0) { Evasion = 0 }); // modest toughness, fires nothing back
+                s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(s.Faction.Id, defFleet, d));
+            }
+
+            CombatEngagement.StartEngagement(atkFleet, defFleet);
+            int steps = 0;
+            while (defFleet.HasDataBlob<FleetCombatStateDB>() && steps < 60)
+            {
+                CombatEngagement.StepEngagement(atkFleet, defFleet, 5);
+                steps++;
+            }
+            return CombatEngagement.GetFleetShips(defFleet).Count;
+        }
+
+        [Test]
+        [Description("W5b: heat throttling decides a fight. An attacker firing ONLY a HOT energy weapon with a BIG radiator sheds the heat and sustains full fire, grinding the passive defender down; the SAME attacker with a SMALL radiator overheats after the first salvo, throttles toward the floor, and does far less — so MORE of the defender survives. The radiator is the only variable, so heat throttling is the difference (the burst-vs-sustained decision).")]
+        public void HeatThrottling_ChokesAnUnderCooledBeamer_SoTheDefenderSurvives()
+        {
+            var s = TestScenario.CreateWithColony();
+            var red = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+
+            int defLeft_bigRad = RunHeatBattle(s, red, attackerRadiatorCapacity: 5_000_000);  // sheds the heat, sustains
+            int defLeft_smallRad = RunHeatBattle(s, red, attackerRadiatorCapacity: 100_000);   // overheats, throttles
+
+            Log($"defender survivors (of 3): attacker-big-radiator={defLeft_bigRad}, attacker-small-radiator={defLeft_smallRad}");
+            Assert.That(defLeft_bigRad, Is.LessThan(3), "the well-cooled beamer sustains full fire and grinds the defender down (real losses)");
+            Assert.That(defLeft_smallRad, Is.GreaterThan(defLeft_bigRad),
+                "the under-cooled beamer overheats and throttles, so MORE of the defender survives — heat is the difference");
         }
     }
 }

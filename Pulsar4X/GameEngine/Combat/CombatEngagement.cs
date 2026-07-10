@@ -101,6 +101,16 @@ namespace Pulsar4X.Combat
         /// set how many salvos a loadout sustains. Inert until a ship carries a magazine (capacity 0 → pool disabled).</summary>
         public static double AmmoBurnKgPerJoule = 1e-4;
 
+        /// <summary>HEAT cooling (Weapons pilot W5): the fraction of a fleet's radiator capacity shed as cooling each
+        /// salvo. A fleet's energy weapons add heat to <see cref="FleetCombatStateDB.HeatPool_kJ"/> (Σ HeatPerSecond ×
+        /// dt); its radiators remove <c>HeatCapacity × this</c>. Flagged BALANCE value.</summary>
+        public static double HeatDissipationFraction = 0.5;
+
+        /// <summary>The floor on the energy-fire throttle when a fleet is overheating (Weapons pilot W5) — even a fleet
+        /// with heat far past its radiators still fires this fraction of its energy weapons (they never fully shut off).
+        /// Flagged BALANCE value.</summary>
+        public static double HeatThrottleFloor = 0.1;
+
         // --- SHIELD layer (option B, docs/WEAPON-TAXONOMY-DESIGN.md §6) ----------------------------------------
         //
         // A depleting/regenerating energy POOL that soaks incoming fire BEFORE the hull's toughness. The
@@ -619,6 +629,30 @@ namespace Pulsar4X.Combat
                 if (ammoState.AmmoPool_kg < 0) ammoState.AmmoPool_kg = 0;
             }
 
+            // --- HEAT phase (W5): each fleet's ENERGY-weapon fire cooks the ship; its radiators shed heat each salvo.
+            // When the heat pool outruns the radiators the energy weapons THROTTLE (burst-vs-sustained), toward the
+            // floor. SELF-GATING: a fleet whose weapons generate no tracked heat (every current weapon → HeatPerSecond 0)
+            // keeps HeatPool at 0 and is skipped, so combat is byte-identical. A HOT weapon (W5c) without enough
+            // radiators throttles; more radiators sustain more fire. Runs before the damage phase so a throttled fleet's
+            // reduced energy fire is what reaches its targets this step. Kinetic/explosive fire is untouched (it burns
+            // ammo, not heat — the two limits are independent).
+            for (int i = 0; i < n; i++)
+            {
+                if (!live[i].TryGetDataBlob<FleetCombatStateDB>(out var heatState)) continue;
+                double heatGen = EnergyHeatGen(fire[i]);
+                if (heatGen <= 0 && heatState.HeatPool_kJ <= 0) continue;   // no heat in play → byte-identical
+                double heatCap = FleetHeatCapacity(ships[i]);
+                heatState.HeatPool_kJ += heatGen * dt;                      // energy fire heats the ship
+                heatState.HeatPool_kJ -= heatCap * HeatDissipationFraction; // radiators shed heat
+                if (heatState.HeatPool_kJ < 0) heatState.HeatPool_kJ = 0;
+                if (heatState.HeatPool_kJ > heatCap)                        // overheating → throttle the energy guns
+                {
+                    double throttle = heatState.HeatPool_kJ > 0 ? heatCap / heatState.HeatPool_kJ : 1.0;
+                    if (throttle < HeatThrottleFloor) throttle = HeatThrottleFloor;
+                    ThrottleEnergyFire(fire[i], throttle);
+                }
+            }
+
             // --- DAMAGE phase: each fleet takes the COMBINED fire of all fleets hostile to it. An attacker that
             // faces several enemy fleets DIVIDES its fire across them (conserves firepower — outnumbering a side
             // doesn't multiply your guns). Within a target fleet the dodge/bucket resolve still concentrates on the
@@ -1133,6 +1167,35 @@ namespace Pulsar4X.Combat
         /// <summary>Silence a DRY fleet's ammo-fed weapons — drop the Kinetic/Explosive profiles from its outgoing fire
         /// so only its energy weapons still contribute. Mutates the passed mix in place.</summary>
         private static void SilenceAmmoWeapons(List<WeaponProfile> fire) => fire.RemoveAll(w => IsAmmoNature(w.Nature));
+
+        // ─── Heat layer (Weapons pilot W5) ───────────────────────────────────────────────────────────────────────────
+
+        /// <summary>The waste-heat generation rate (kJ/s) of a fire mix — Σ each weapon's <see cref="WeaponProfile.HeatPerSecond"/>
+        /// (only energy weapons carry it). 0 for a mix of "cool" weapons → the fleet never heats up (byte-identical).</summary>
+        internal static double EnergyHeatGen(List<WeaponProfile> fire)
+        {
+            double sum = 0;
+            foreach (var w in fire) sum += w.HeatPerSecond;
+            return sum;
+        }
+
+        /// <summary>A fleet's total heat-radiator capacity (kJ), summed health-scaled over its ships' cached
+        /// <see cref="ShipCombatValueDB.HeatCapacity_kJ"/>. 0 for a fleet with no radiator (→ energy fire throttles hard
+        /// if it runs any hot weapon; but with no hot weapon there's no heat to throttle → byte-identical).</summary>
+        private static double FleetHeatCapacity(List<CombatShip> ships)
+        {
+            double cap = 0;
+            foreach (var cs in ships) cap += CombatValue(cs.Ship).HeatCapacity_kJ;
+            return cap;
+        }
+
+        /// <summary>Throttle an OVERHEATING fleet's ENERGY-fed weapons — scale the Energy/Exotic profiles' damage by the
+        /// throttle factor (kinetic/explosive fire is unaffected, it burns ammo not heat). Mutates the mix in place.</summary>
+        private static void ThrottleEnergyFire(List<WeaponProfile> fire, double throttle)
+        {
+            foreach (var w in fire)
+                if (!IsAmmoNature(w.Nature)) w.DamagePerSecond *= throttle;
+        }
 
         /// <summary>The damage-weighted fraction of an incoming fire mix a shield CAN stop — the nature matchup rolled
         /// up over the salvo (all-kinetic → 1.0, all-energy → 0.5, all-exotic → 0.0, mixes interpolate). Pure; internal
