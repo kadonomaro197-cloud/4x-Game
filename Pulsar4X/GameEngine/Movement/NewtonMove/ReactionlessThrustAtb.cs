@@ -59,7 +59,9 @@ namespace Pulsar4X.Movement
             db.Reactionless = true;                 // pins delta-V unlimited + skips the fuel machinery
             db.ThrustInNewtons += ThrustInNewtons;  // set directly — no exhaust-velocity × burn-rate
             if (ExhaustVelocity > db.ExhaustVelocity) db.ExhaustVelocity = ExhaustVelocity;
-            db.DeltaV = NewtonThrustAbilityDB.ReactionlessDeltaV; // immediately unlimited (before any SetFuel call)
+            // Pin the (unlimited) delta-V now, before any cargo update: SetFuel with Reactionless=true takes the guard
+            // path and assigns DeltaV = ReactionlessDeltaV (DeltaV's own setter is private — SetFuel is the accessor).
+            db.SetFuel(0, 0);
         }
 
         public void OnComponentUninstallation(Entity parentEntity, ComponentInstance componentInstance) { }
