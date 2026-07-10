@@ -175,6 +175,44 @@ The only remaining asymmetry is the **empire-scope ground ceiling** — deferred
 
 ---
 
+## Parity audit + the automation model (the Distant Worlds test, 2026-07-10)
+
+The acceptance question for the whole roster: **can 19 seated leaders, each with a functioning AI, do EVERYTHING a player can?** — the Distant Worlds promise (any function delegable, the AI plays the same game, take any piece back anytime). A four-agent audit (a code-side player-action sweep + a DW1/DW2 deep-dive) answered it.
+
+### Verdict: NOT YET — five holes, ranked by how badly each breaks "watch the AI play the whole game"
+
+The movement / combat / research / industry / survey / diplomacy / ground **spine is genuinely delegatable** — every one of those actions has an order or direct-call API that maps to a seat, so a brain could play them. But five gaps remain, three with **no owning seat** and one with **no order at all**:
+
+| # | Gap | Why it breaks parity | The fix (owner + what to build) |
+|---|-----|----------------------|----------------------------------|
+| 1 | **DESIGN — ship / component / ordnance / ground-unit** | *In an Aurora-lineage 4X, design IS the game.* No seat owns "compose a hull from unlocked parts," AND the mechanic is a **client-only UI mutation that never goes through `Game.OrderHandler`** (`ShipDesignWindow.cs:279`, `ComponentDesignDisplay.cs:162`, `OrdnanceDesignWindow.cs:293`) — so there's no order for a brain to issue even if you wrote one. An AI that can't design can only ever build the templates the mod shipped. | (a) build a real `*DesignOrder : EntityCommand` so design is headless-issuable; (b) a **new seat #20 — Chief Engineer / Naval Architect**, competence-gated (DW-style: a weak architect → mediocre auto-designs, a brilliant one → near-optimal; player can always take the designer). Turns auto-design into a *decision with stakes*. |
+| 2 | **Fleet formation & composition** | Nobody owns "take these built hulls and make a task force of this mix." Ships would pool at a colony, unorganized. | Order EXISTS (`FleetOrder.Create/AssignShip/SetFlagShip`) — just assign the decision to the **System Admiral #9** (or Grand Admiral #1 for force structure). Cheap, no new mechanic. |
+| 3 | **Colonization TARGET selection** | System/Planetary Governors run *existing* worlds; nobody converts "expand" into "found a colony at *that* body." The eXpand pillar has no decision-owner. | Order EXISTS (`CreateColonyOrder`) — give the **System Governor #7** "found at body X in my system," Head-of-State Expansion dial as modulator; "which system next" to Head of State or an eXpand seat. |
+| 4 | **Empire BUDGET allocation** | `AI-COMMAND…DESIGN §1` puts "the budget split across departments" at Tier 1, but **there is no budget system** — `FundingLevel` is a per-post 0–5 dial, no empire pool. The Head of State owns a decision it cannot express. | Build a `BudgetDB` empire pool; per-post `FundingLevel` draws from it; the split becomes a real issuable allocation. New substrate. |
+| 5 | **Tax / stockpile** | The Planetary Governor's headline levers aren't wired — `ColonyEconomyDB.TaxRate` is **read-only in the client, no tax order** (`EntityDisplay.cs:230` displays it, nothing sets it); no stockpile-target order. | Add a `SetColonyPolicyOrder` (tax / stockpile reserve / growth-vs-military) through `OrderHandler`, owned by Planetary Governor #8. Small — the data field already exists. |
+
+Plus the already-flagged **dark pillars** (owner in the roster, engine system unbuilt): Spymaster/Agent (no espionage engine), Interior Minister (no bloc-demand order), Trade Minister (trade earns no money). These are known-blocked, ranked lower only because the design already names them.
+
+**So:** seating all 19 today produces an empire that can fight, research, survey, and expand its *existing templates* — but **cannot design new ships, organize hulls into fleets, choose where to plant colonies, allocate a budget, or set taxes.** Design (#1) is the category-defining hole: it needs both a new order-type and a new seat, and until it's closed the "no special AI code path" promise is violated for the single most important 4X activity.
+
+### The automation model — three modes, not two (the DW lesson to lock)
+
+Distant Worlds' identity is "play as much or as little as you want," and it's delivered by **three control modes per seat, not two** — this is the piece to adopt wholesale, and it's already latent in our autonomy dial (`AI-COMMAND…DESIGN §5`: "execute freely / hold-and-report / ask-first"):
+
+- **Delegate** — the officer acts silently (DW "Automated"). = "execute freely."
+- **Advise** — the officer computes the action it *would* take and posts it as a **one-click proposal** (Accept / Dismiss); the player does zero analysis but keeps veto. (DW "Suggest.") = "ask first." **This is the bridge between "watch it play" and "hand-fly one thing," and the mode is only as good as its notification plumbing — the proposal must reach the player as a one-click decision *at the moment it matters* (Visibility-Gate applied to delegation), not buried in a log.**
+- **Hand-fly** — the player does it (DW "Manual"). = sit in the seat.
+
+Plus DW's two granularity levers, both worth stealing: an **empire-wide default per function** + a **per-object override** (automate every fleet, then grab *one* and hand-fly it), with **instant, reversible take-over** at any time. Mechanically this is a **third stance value on the delegate record** (Delegate/Advise/Hand-fly) — our officer+post+stance chassis already almost supports it. DW also confirms our core bet: **a skilled character improves the AUTO-run function** (a good admiral makes an auto-fought fleet win) — competence is the quality dial on delegated work, exactly officer+post+competence.
+
+### One structural decision DW raises (OPEN — needs the developer's call)
+
+DW runs its **entire civilian economy as an autonomous "private sector" the player can NEVER directly control at any automation level** — you set policy (taxes, subsidies, port placement), private companies decide what to haul. It's a big reason DW scales to hundreds of systems without micro drowning. Our **Trade Minister is a delegate-you-can-override.** The fork: **is our economy "delegable-but-grabbable" (current shape) or DW-style "structurally policy-only"?** Recommendation: keep override, but *guarantee a policy-only fallback* so the economy never *requires* hands — that's what keeps a big galaxy playable.
+
+**Status of this section:** audit complete; the five fixes + the three-mode dial + seat #20 are **recommendations pending ratification**, not yet locked into the roster table above.
+
+---
+
 ## Survey — what EXISTS today (this is mostly wire-and-generalize, not build)
 
 The Prime-Directive pass (2026-07-06) found the substrate in far better shape than "inert NPCs" implies:
