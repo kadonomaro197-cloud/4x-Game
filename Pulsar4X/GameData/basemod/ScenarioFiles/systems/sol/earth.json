@@ -192,6 +192,8 @@
         "claw-weapon",
         "deflector-array",
         "ship-magazine",
+        "heat-radiator",
+        "pulse-laser",
         "siege-railgun",
         "disruptor-weapon",
         "plasma-repeater"
@@ -264,6 +266,8 @@
         "default-design-claw-weapon",
         "default-design-deflector-array",
         "default-design-ship-magazine",
+        "default-design-heat-radiator",
+        "default-design-pulse-laser",
         "default-design-siege-railgun",
         "default-design-disruptor-weapon",
         "default-design-plasma-repeater"
@@ -286,7 +290,8 @@
         "default-ship-design-test-disruptor",
         "default-ship-design-test-plasma",
         "default-ship-design-test-munitions",
-        "default-ship-design-test-bombard"
+        "default-ship-design-test-bombard",
+        "default-ship-design-test-ember"
       ],
       "LaunchQueue": [
         { "DesignId": "default-ship-design-courier", "Name": "ISS Hermes" }

@@ -55,6 +55,29 @@ namespace Pulsar4X.Tests
                 "no radiator → 0 heat capacity → the fleet heat step stays disabled → combat byte-identical until the W5c radiator");
         }
 
+        private const string EmberShip = "default-ship-design-test-ember"; // pulse-lasers (hot) + heat-radiators
+
+        [Test]
+        [Description("W5c cradle-to-grave: the base-mod Ember Pulse Cruiser builds from JSON — its pulse-lasers project a HOT energy WeaponProfile (HeatPerSecond > 0, via the beam atb's Combat Heat dial → the 8-arg ctor, the exact-arity binder pattern) and its heat-radiators give it a real HeatCapacity_kJ. So a player-built hot-beam ship carries both the heat SOURCE and the SINK the W5b resolver balances — designed → built → installed → must be cooled.")]
+        public void TheEmberPulseCruiser_HasHotBeamsAndRadiators_FromJson()
+        {
+            var s = TestScenario.CreateWithColony();
+            var designs = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns;
+            Assert.That(designs.ContainsKey(EmberShip), Is.True,
+                "the Ember loads onto the faction — the JSON pulse-laser + heat-radiator templates + designs + earth.json entries wired up (six-point registration)");
+
+            var ship = ShipFactory.CreateShip(designs[EmberShip], s.Faction, s.StartingBody, "Ember");
+            var cv = ship.GetDataBlob<ShipCombatValueDB>();
+            double weaponHeat = cv.Weapons.Sum(w => w.HeatPerSecond);
+            Log($"Ember: firepower={cv.Firepower:0}, weapon heat={weaponHeat:0} kJ/s, radiator capacity={cv.HeatCapacity_kJ:0} kJ");
+
+            Assert.That(cv.Firepower, Is.GreaterThan(0), "the Ember carries its pulse-lasers (energy fire)");
+            Assert.That(weaponHeat, Is.GreaterThan(0),
+                "the pulse-lasers project a HOT WeaponProfile — the beam atb's Combat Heat dial (8-arg ctor) flows into HeatPerSecond");
+            Assert.That(cv.HeatCapacity_kJ, Is.GreaterThan(0),
+                "its heat-radiators give it a real heat ceiling — JSON heat-radiator template → RadiatorAtb → ShipCombatValueDB is wired");
+        }
+
         [Test]
         [Description("W5b pure helper: EnergyHeatGen sums each weapon's HeatPerSecond — a cool weapon (HeatPerSecond 0) contributes no heat, a hot one does.")]
         public void EnergyHeatGen_SumsWeaponHeat()

@@ -709,6 +709,22 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-heat-radiator",
+      "Name": "Heat Radiator",
+      "TemplateId": "heat-radiator"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-pulse-laser",
+      "Name": "Pulse Laser",
+      "TemplateId": "pulse-laser"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-disruptor-weapon",
       "Name": "Ion Disruptor",
       "TemplateId": "disruptor-weapon"

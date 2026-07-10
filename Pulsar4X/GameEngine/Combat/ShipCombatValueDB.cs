@@ -202,7 +202,8 @@ namespace Pulsar4X.Combat
                             double period = beam.ChargePeriod > 0 ? beam.ChargePeriod : 1.0;
                             double dps = (beam.Energy / period) * comp.HealthPercent;
                             // Range (Root A): beams carry their design MaxRange (0 = unbounded, the legacy convention).
-                            weapons.Add(new WeaponProfile(dps, beam.BeamSpeed, beam.BaseHitChance, 1.0 / period, beam.MaxRange, WeaponNature.Energy, WeaponDelivery.Beam));
+                            // Combat heat (W5): a hot beam's CombatHeat_kJps flows into HeatPerSecond → the heat pool.
+                            weapons.Add(new WeaponProfile(dps, beam.BeamSpeed, beam.BaseHitChance, 1.0 / period, beam.MaxRange, WeaponNature.Energy, WeaponDelivery.Beam, 0, 0, beam.CombatHeat_kJps));
                         }
                     }
                 }

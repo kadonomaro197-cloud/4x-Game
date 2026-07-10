@@ -684,6 +684,119 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "heat-radiator",
+      "Name": "Heat Radiator",
+      "Formulas": {
+        "Description": "A heat radiator — sheds the waste heat energy weapons dump into the ship, so it can sustain beam fire without cooking itself. Too few radiators and a hot-beam ship's guns throttle down mid-fight; more radiators sustain the barrage. Big radiators are heavy.",
+        "Mass": "PropertyValue('Heat Capacity') / 20 + 100",
+        "Volume": "[Mass] * 0.6",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.02",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "aluminium": "[Mass] * 0.5",
+        "stainless-steel": "[Mass] * 0.2"
+      },
+      "ComponentType": "Defense",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Heat Capacity",
+          "Units": "kJ",
+          "DescriptionFormula": "'How much heat this radiator can hold and shed — the ship's heat ceiling and cooling. Bigger = more sustained energy-weapon fire before the guns throttle.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "10000000",
+          "MinFormula": "10000",
+          "StepFormula": "10000",
+          "PropertyFormula": "500000"
+        },
+        {
+          "Name": "radiatorAtbArgs",
+          "DescriptionFormula": "'double capacity_kJ'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Heat Capacity'))",
+          "AttributeType": "Pulsar4X.Combat.RadiatorAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "pulse-laser",
+      "Name": "Pulse Laser",
+      "Formulas": {
+        "Description": "A high-power pulsed laser — hits hard and continuously, but dumps a LOT of waste heat into the ship. Sustained fire overheats it unless the hull carries enough radiators; without them its output throttles down mid-fight. The energy-weapon that MAKES you build radiators.",
+        "Mass": "PropertyValue('Pulse Energy') / 2000 + 100",
+        "Volume": "[Mass] * 0.5",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.1",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "aluminium": "[Mass] * 0.3",
+        "stainless-steel": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.2"
+      },
+      "ComponentType": "Weapon",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, GroundUnit",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Range",
+          "Units": "m",
+          "DescriptionFormula": "'How far the beam reaches (a knife-fight laser, space-realistic).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "5000"
+        },
+        {
+          "Name": "Pulse Energy",
+          "Units": "J",
+          "DescriptionFormula": "'Energy delivered per pulse — a hard-hitting beam.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "10000000",
+          "MinFormula": "10000",
+          "StepFormula": "10000",
+          "PropertyFormula": "500000"
+        },
+        {
+          "Name": "Charge Period",
+          "Units": "s",
+          "DescriptionFormula": "'Seconds between pulses. Drives damage/sec.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "1"
+        },
+        {
+          "Name": "Combat Heat",
+          "Units": "kJ/s",
+          "DescriptionFormula": "'Waste heat this laser dumps into the ship each second of fire. High — a pulse laser runs HOT, so it needs radiators to sustain fire or it throttles.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2000000",
+          "MinFormula": "0",
+          "StepFormula": "10000",
+          "PropertyFormula": "300000"
+        },
+        {
+          "Name": "pulseLaserAtbArgs",
+          "DescriptionFormula": "'double maxRange, double wavelength, double pulseEnergy, double focalLength, double chargePeriod, double thermalOutput_W, double allowThermalOverride, double combatHeat_kJps'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Range'), 700, PropertyValue('Pulse Energy'), PropertyValue('Range') * 0.5, PropertyValue('Charge Period'), 0, 0, PropertyValue('Combat Heat'))",
+          "AttributeType": "Pulsar4X.Weapons.GenericBeamWeaponAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "disruptor-weapon",
       "Name": "Ion Disruptor",
       "Formulas": {
