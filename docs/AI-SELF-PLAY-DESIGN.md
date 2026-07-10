@@ -147,7 +147,7 @@ HEAD OF STATE   (regime type + empire legitimacy — held DIRECTLY, no minister)
 | 2 | Foreign Minister | Empire + per-faction | Overall external posture; policy toward each rival | NEW |
 | 3 | Interior Minister | Planet (under Governor) | How to answer a world's bloc demands — stability vs tax vs military | NEW (`GovernmentDB` substrate partial) |
 | 4 | Spymaster | Empire | Which covert ops, against which rivals; counter-intel | NEW |
-| 5 | Chief Scientist | Empire | Research direction — which categories get effort | EXISTS (research funding-dial delegate is the one built example) |
+| 5 | Chief Scientist | Empire | Research direction — which categories get effort **+ the empire's design-goal targets** (the research-targeting that reaches for a known-better authored design) | EXISTS (research funding-dial delegate is the one built example) |
 | 6 | Trade Minister | Empire | Routes, tariffs, import/export | NEW (+ the trade-money wire must come first — see commerce note) |
 | 7 | System Governor | System | Where the system's economic effort flows across its worlds | NEW (seat scope `AdminLevel.System` exists) |
 | 8 | Planetary Governor | Planet | Build priorities, tax, stockpile, growth-vs-military for one world | STUB (`LegitimacyDB.GovernorCompetence` hook exists, never fed) |
@@ -160,8 +160,8 @@ HEAD OF STATE   (regime type + empire legitimacy — held DIRECTLY, no minister)
 | 15 | Envoy | Per-faction (field) | Terms of one negotiation | NEW |
 | 16 | Agent / Operative | Per-faction (field) | Which op, which target (allocation) | NEW |
 | 17 | Lab Scientist | Institution (field) | (runs research to the Chief Scientist's priorities) | EXISTS (fully wired) |
-| 18 | System Survey Scientist | System (field) | Which bodies/anomalies to survey first | WIRE (geo + JP survey fully built; only the leader wrapper is new) |
-| 19 | Planetary Survey Scientist | Planet (field) | Which world / deposit to survey first | WIRE (as above) |
+| 18 | System Scientist | System (field) | The system's whole science loop: **discover → build a research station → staff it → upgrade it** (not just "survey first") | WIRE (survey + station build/deploy + scientist-assign + upgrade orders all built; the run-the-loop delegate is new) |
+| 19 | Planetary Scientist | Planet (field) | The world's science loop: survey deposits/anomalies → build + staff + upgrade local research infrastructure | WIRE (as above) |
 
 ### Symmetry check — clean at every scope except one
 
@@ -208,7 +208,12 @@ The developer's reframe dissolves Gap #1 so the AI **never solves generative shi
 - **The AI issues only orders that already exist** (research queue + build) — no "special AI path," no generative-design AI, no new design *order* needed for the AI (it unlocks a pre-authored design via research; it never creates geometry). The UI-only design path stays for the *player's* generative freedom.
 - **Fuses the pillars into ONE stacking loop** (the north-star made concrete): espionage → threat assessment → design goal → multi-pillar research → industry → combat → now-I-match-them. A faction visibly *reaches* for the Defiant — its tech priorities swing when it sees a threat.
 
-**Owner: the science chain — NOT a Chief Engineer.** Because "design" is now a research-direction decision, it folds into science leadership: **Chief Scientist #5** owns empire research direction *including the design goals*, with a per-system **Head Scientist** rung owning local research/design-targeting (developer's "system Head scientist"). **This RETIRES the earlier proposed seat #20 (Chief Engineer)** — no generative-designer seat is needed.
+**Owner: the science chain — NOT a Chief Engineer.** Because "design" is now a research-direction decision, it folds into science leadership. **This RETIRES the earlier proposed seat #20 (Chief Engineer)** — no generative-designer seat is needed. The science chain, clarified (developer's call, 2026-07-10):
+- **Chief Scientist #5 = empire-wide DIRECTION** — the tech priorities *and* the design-goal targeting ("we're reaching for the Defiant"). Empire-level "what are we researching toward." (The design-targeting from Gap #1 lives HERE, not in a per-system rung.)
+- **System / Planetary Scientist #18/#19 = the DOMAIN SCIENCE LOOP, cradle to grave** — not "which body to survey," but *run the whole local R&D pipeline*: **discover → build → staff → upgrade.** Find a black hole in the system → issue the build order for a **research station** on it → get a **great scientist stationed** there → **keep upgrading** the station to push its science output higher. It turns map discoveries into standing research infrastructure with no player input. This is the delegate that *runs* the exploration-content field-site loop (`EXPLORATION-CONTENT-DESIGN.md`: survey → assign-scientist → yield → deplete/persist).
+  - **Why it's mostly wire-existing-levers:** survey (built), research-station build (`IndustryOrder2` + `DeployStationOrder`, built), station science (`ResearchPointsAtbDB.bonusCategory`, exists), scientist staffing (`AssignScientistOrder`, built), upgrade (component-install orders, built). **FEASIBILITY TO VERIFY:** a research *station* is a buildable that boosts science when a scientist is stationed + upgraded.
+  - **It demonstrates the mandate/report protocol on a real example:** the System Scientist reports UP "I need a top scientist for this new station"; the Head-of-State HR numbers-game (character-assignment) fulfills DOWN by matching the best available scientist to that post. Two-channel communication, working end-to-end.
+  - **It also gives a natural owner to two DW-audit orphans:** exploration-*dispatch* (who sends survey ships + prioritizes) and science-infrastructure *retrofit/upgrade* both live here.
 
 **What it needs (build/verify):**
 1. **Authored design ladders** — pre-author a faction's full design tree, each ship tech/component-gated so researching the prereqs unlocks *buildability* of an already-designed ship. **FEASIBILITY TO VERIFY in code:** how the engine represents a design the faction "knows of" but can't yet build (designs live in `ShipDesigns`; templates gate on `StartingItems` + tech — confirm a full *locked* ladder can be authored and progressively unlocked).
