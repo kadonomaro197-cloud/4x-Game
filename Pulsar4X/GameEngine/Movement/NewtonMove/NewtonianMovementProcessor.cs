@@ -392,6 +392,14 @@ namespace Pulsar4X.Movement
         {
             var factionDataStore = parentEntity.GetFactionOwner.GetDataBlob<FactionInfoDB>().Data;
             var db = parentEntity.GetDataBlob<NewtonThrustAbilityDB>();
+            // Reactionless (⚙2): no propellant, so there's no fuel material to look up (an empty FuelType has none —
+            // GetMaterial("") would throw "Sequence contains no elements"). Pin the unlimited delta-V via the guarded
+            // SetFuel and skip the fuel query. The second fuel recompute funnel beside CargoTransferProcessor's.
+            if (db.Reactionless)
+            {
+                db.SetFuel(0, parentEntity.GetDataBlob<MassVolumeDB>().MassTotal);
+                return;
+            }
             var ft = db.FuelType;
             var ev = db.ExhaustVelocity;
             var totalMass = parentEntity.GetDataBlob<MassVolumeDB>().MassTotal;
