@@ -93,6 +93,36 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("PerShotEnergy is the alpha-vs-chip dial (⚙1 backlog #2): BurstShotCount = dps/PerShotEnergy clamped (0 → 1 lump); ArmourSoakBurst splits a source into that many equal shots and soaks each flat, so a swarm of chips (many shots) is mostly bounced by plate while one alpha of EQUAL total punches through. shotCount ≤ 1 is byte-identical to the flat soak, so an un-dialled weapon is unchanged.")]
+        public void ArmourSoakBurst_AlphaPunches_ChipBounces()
+        {
+            // BurstShotCount: a cannon (huge per-shot) fires 1 alpha; a repeater (small per-shot) many; 0 → 1 lump.
+            var cannon   = new WeaponProfile(1000, 1e6, 0, 1, 0, WeaponNature.Kinetic, WeaponDelivery.Slug, 0, perShotEnergy: 1000);
+            var repeater = new WeaponProfile(1000, 1e6, 0, 1, 0, WeaponNature.Kinetic, WeaponDelivery.Slug, 0, perShotEnergy: 10);
+            var undialled = new WeaponProfile(1000, 1e6, 0, 1, 0, WeaponNature.Kinetic, WeaponDelivery.Slug); // PerShotEnergy 0
+            Assert.That(CombatKernel.BurstShotCount(cannon), Is.EqualTo(1), "a big-per-shot cannon is one alpha");
+            Assert.That(CombatKernel.BurstShotCount(repeater), Is.EqualTo(100), "a small-per-shot repeater is many chips (1000/10)");
+            Assert.That(CombatKernel.BurstShotCount(undialled), Is.EqualTo(1), "an un-dialled weapon is a single lump");
+
+            // Equal total damage (1000) vs the same plate: the alpha lands far more than the chip-burst.
+            const double armour = 100, total = 1000;
+            double alphaLands = CombatKernel.ArmourSoakBurst(armour, total, shotCount: 1);
+            double chipLands  = CombatKernel.ArmourSoakBurst(armour, total, shotCount: 100);
+            Log($"vs armour {armour}: one {total}-alpha lands {alphaLands}, a 100-chip burst of the same total lands {chipLands}");
+            Assert.That(alphaLands, Is.GreaterThan(chipLands), "one big alpha punches plate a swarm of chips bounces off");
+
+            // shotCount ≤ 1 is byte-for-byte the flat soak (an un-dialled weapon is unchanged).
+            Assert.That(CombatKernel.ArmourSoakBurst(armour, total, shotCount: 1),
+                Is.EqualTo(CombatKernel.ArmourSoak(armour, total)).Within(1e-12), "one lump == the flat soak");
+
+            // Penetration composes: an AP burst cracks more than a plain burst of the same shot count. (The chips are
+            // small — 10 each — so the penetration must bring effective armour low enough for a chunk to beat the floor:
+            // armour 100, pen 96 → effective 4 → each 10-chunk lands 10-4*1.5=4 instead of the floored 1.)
+            double apChip    = CombatKernel.ArmourSoakBurst(armour, total, shotCount: 100, penetration: 96);
+            Assert.That(apChip, Is.GreaterThan(chipLands), "penetration still helps a chip-burst crack plate");
+        }
+
+        [Test]
         [Description("ResolveShield pins the drain/regen: a charged pool absorbs the soakable damage up to its charge; regen tops it back toward capacity; a 0-capacity (unshielded) pool absorbs nothing.")]
         public void ResolveShield_PinsKnownValues()
         {

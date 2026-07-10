@@ -241,5 +241,38 @@ namespace Pulsar4X.Combat
             double after = sourceDamage - effectiveArmour * ArmourSoakPerPoint;
             return after < floor ? floor : after;
         }
+
+        /// <summary>Upper bound on how many shots a single source's fire is split into for the burst soak — keeps a
+        /// tiny-per-shot weapon (a minigun) from splitting into a pathological chunk count. Flagged balance value.</summary>
+        public const int BurstSoakMaxShots = 1000;
+
+        /// <summary>How many shots a weapon's per-second fire is treated as for the alpha-vs-chip armour soak: its
+        /// damage-per-second divided by its <see cref="WeaponProfile.PerShotEnergy"/>, clamped to [1, <see cref="BurstSoakMaxShots"/>].
+        /// A cannon (huge PerShotEnergy) → 1 (one alpha); a repeater (small PerShotEnergy) → many. 0/unspecified
+        /// PerShotEnergy → 1 (single lump), so an un-dialled weapon is byte-identical. This is the shared rule both
+        /// domains use so the granularity is defined ONCE.</summary>
+        public static int BurstShotCount(WeaponProfile w)
+        {
+            if (w == null || w.PerShotEnergy <= 0 || w.DamagePerSecond <= 0) return 1;
+            double n = Math.Round(w.DamagePerSecond / w.PerShotEnergy);
+            if (n < 1) return 1;
+            if (n > BurstSoakMaxShots) return BurstSoakMaxShots;
+            return (int)n;
+        }
+
+        /// <summary>Flat ARMOUR soak of a source whose fire is a BURST of <paramref name="shotCount"/> equal shots — the
+        /// alpha-vs-chip identity (⚙1 backlog #2). Splits the source's damage into that many equal chunks and soaks each
+        /// flat (with <paramref name="penetration"/>), then sums. Because armour is flat-per-shot, many small chunks each
+        /// lose (flat) so most is bounced, while one big chunk loses only (flat) and punches through — so a repeater and
+        /// a cannon of EQUAL total damage land very differently against plate. <paramref name="shotCount"/> ≤ 1 is
+        /// byte-for-byte <see cref="ArmourSoak(double,double,double)"/> (one lump), so an un-dialled weapon is unchanged.
+        /// Never throws.</summary>
+        public static double ArmourSoakBurst(double armour, double sourceDamage, int shotCount, double penetration = 0)
+        {
+            if (sourceDamage <= 0) return 0.0;
+            if (shotCount <= 1) return ArmourSoak(armour, sourceDamage, penetration);
+            double perChunk = sourceDamage / shotCount;
+            return ArmourSoak(armour, perChunk, penetration) * shotCount;
+        }
     }
 }

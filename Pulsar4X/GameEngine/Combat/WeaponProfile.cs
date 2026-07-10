@@ -107,10 +107,21 @@ namespace Pulsar4X.Combat
         /// dial — docs/COMPONENT-DESIGNER-DIALS.md ⚙1 resolver backlog #1.</summary>
         [JsonProperty] public double Penetration { get; internal set; }
 
+        /// <summary>PER-SHOT ENERGY (joules in ONE shot) — the alpha-vs-chip dial (docs/COMPONENT-DESIGNER-DIALS.md ⚙1
+        /// backlog #2). Its purpose is to split a weapon's damage into few-big vs many-small hits against flat armour:
+        /// because armour is soaked FLAT per hit (<see cref="Combat.CombatKernel.ArmourSoak"/>), one big alpha punches
+        /// through while a swarm of chips is mostly bounced — even at equal damage-per-second. 0 = unspecified: the
+        /// weapon's fire is treated as a single lump (the pre-⚙1-#2 behaviour), so a profile that doesn't set it is
+        /// byte-identical. The shot COUNT a salvo splits into is <see cref="Combat.CombatKernel.BurstShotCount"/>
+        /// (= dps ÷ PerShotEnergy, clamped). Like Penetration it bites where flat armour is applied per-source — the
+        /// ground/garrison resolver today.</summary>
+        [JsonProperty] public double PerShotEnergy { get; internal set; }
+
         public WeaponProfile() { }
 
         public WeaponProfile(double damagePerSecond, double velocity, double tracking, double saturation, double range_m = 0,
-            WeaponNature nature = WeaponNature.Kinetic, WeaponDelivery delivery = WeaponDelivery.Slug, double penetration = 0)
+            WeaponNature nature = WeaponNature.Kinetic, WeaponDelivery delivery = WeaponDelivery.Slug, double penetration = 0,
+            double perShotEnergy = 0)
         {
             DamagePerSecond = damagePerSecond;
             Velocity = velocity;
@@ -120,6 +131,7 @@ namespace Pulsar4X.Combat
             Nature = nature;
             Delivery = delivery;
             Penetration = penetration;
+            PerShotEnergy = perShotEnergy;
         }
 
         public WeaponProfile(WeaponProfile p)
@@ -132,6 +144,7 @@ namespace Pulsar4X.Combat
             Nature = p.Nature;
             Delivery = p.Delivery;
             Penetration = p.Penetration;
+            PerShotEnergy = p.PerShotEnergy;
         }
     }
 }
