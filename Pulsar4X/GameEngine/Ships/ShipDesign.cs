@@ -33,6 +33,19 @@ namespace Pulsar4X.Ships
         public double VolumePerUnit { get; private set; }
         public double Density { get; }
 
+        // ── §0b mass-budget cap (dossier ⚙11) — Slice A: COMPUTED & EXPOSED, NOT yet enforced ──────────
+        // The "structural budget" a ship's mounted mass must fit within — the space echo of the ground
+        // GroundUnitAssembly carry cap (which reads GroundChassisAtb.BaseStrength, sums part mass, and marks
+        // an over-budget design invalid). Ships have no hull-chassis component yet, so Slice A sources the
+        // budget from the design's OWN mass at 1.0 headroom: MassBudget == MassPerUnit, so OverMassBudget is
+        // always false here — byte-identical to pre-cap. This lands the machinery + the calibration readout
+        // (ShipMassBudgetTests prints every design's MassPerUnit). A later slice replaces this source with a
+        // real hull ceiling (sized above the heaviest base-mod ship) and lets IsValid bite. `MassPerUnit`
+        // above IS the "mass used"; no separate field needed.
+        private const double MassBudgetHeadroom = 1.0;
+        public long MassBudget { get; private set; }
+        public bool OverMassBudget { get; private set; }
+
         private int _factionId;
 
         /// <summary>
@@ -169,6 +182,12 @@ namespace Pulsar4X.Ships
             MaterialCosts.ToList().ForEach(x => ResourceCosts[x.Key] = x.Value);
             ComponentCosts.ToList().ForEach(x => ResourceCosts[x.Key] = x.Value);
             IndustryPointCosts = (long)(MassPerUnit * 0.1);
+
+            // §0b mass-budget (dossier ⚙11), Slice A — compute & expose only; DO NOT set IsValid or gate
+            // construction here. Sourced from the design's own mass at 1.0 headroom → OverMassBudget is always
+            // false → byte-identical. Slice C swaps the source for a real hull ceiling and flips IsValid.
+            MassBudget = (long)(MassPerUnit * MassBudgetHeadroom);
+            OverMassBudget = MassPerUnit > MassBudget;
         }
 
         /// <summary>
