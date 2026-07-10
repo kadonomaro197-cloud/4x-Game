@@ -312,7 +312,15 @@ namespace Pulsar4X.GroundCombat
                         // unit's raw stats (attack / armour / HP) × weapon-nature vs the target's evasion/shield/armour,
                         // the same way a ship's does. (`GroundTerrain.TriangleMult` is retained as a readout/helper but
                         // no longer scales the fight.)
-                        double atk = u.Attack * GroundTerrain.TerrainAttackMult(u.UnitType, terrain) * GroundFormationDoctrine.AttackMult(forces, u);
+                        // Terrain affinity = the unit TYPE's innate edge (TerrainAttackMult) × its DESIGNED
+                        // locomotion's edge (LocomotionTerrainMult, Propulsion ⚙2 — an all-terrain drive fights better
+                        // on constrained ground). RoughHandlingForUnit reads the unit's designed locomotion (0.5 neutral
+                        // for a unit with none → ×1.0 → byte-identical). Body = the planet the roster sits on.
+                        double roughHandling = GroundMobility.RoughHandlingForUnit(forces.OwningEntity, u);
+                        double atk = u.Attack
+                            * GroundTerrain.TerrainAttackMult(u.UnitType, terrain)
+                            * GroundTerrain.LocomotionTerrainMult(roughHandling, terrain)
+                            * GroundFormationDoctrine.AttackMult(forces, u);
                         double pool = atk * SalvoScale;
                         if (gIsDefender && coverFort > 0) pool /= coverFort;
 

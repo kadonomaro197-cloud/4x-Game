@@ -92,6 +92,24 @@ namespace Pulsar4X.GroundCombat
             }
         }
 
+        /// <summary>BALANCE dial (Propulsion ⚙2): how far a unit's designed rough-terrain handling swings its combat
+        /// output on constrained (Rough/Cover) ground. ⚠ FLAGGED — tunable.</summary>
+        public const double LocomotionCombatSpread = 0.5;
+
+        /// <summary>Propulsion ⚙2 (Traction) — a unit's DESIGNED locomotion gives it a COMBAT edge on its preferred
+        /// ground, not just a movement one. On CONSTRAINED terrain (Rough/Cover) an all-terrain drive (high
+        /// <see cref="GroundLocomotionAtb.RoughHandling"/>) fights better and a road-bound one (low) is bogged down; the
+        /// OPEN is neutral (everyone moves freely, so mobility doesn't gate the fight there — armour's open edge is the
+        /// <see cref="TerrainAttackMult"/> term). Centred on the neutral handling 0.5 → ×1.0, so a unit with NO designed
+        /// locomotion (<see cref="GroundMobility.RoughHandlingForUnit"/> returns 0.5) is BYTE-IDENTICAL — every current
+        /// unit. handling 1.0 → ×(1+spread/2), 0.0 → ×(1−spread/2); clamped ≥0.1. PURE.</summary>
+        public static double LocomotionTerrainMult(double roughHandling, GroundTerrainClass terrain)
+        {
+            if (terrain == GroundTerrainClass.Open) return 1.0;   // open ground: mobility doesn't gate the fight
+            double m = 1.0 + (roughHandling - 0.5) * LocomotionCombatSpread;
+            return m < 0.1 ? 0.1 : m;
+        }
+
         /// <summary>The COVER effect: a defender in this terrain has its incoming damage divided by this (Rough &gt; Cover &gt; Open).</summary>
         public static double CoverDefenseMult(GroundTerrainClass terrain)
         {
