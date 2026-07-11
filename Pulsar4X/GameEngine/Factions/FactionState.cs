@@ -130,6 +130,8 @@ namespace Pulsar4X.Factions
         public CargoStorageDB Cargo { get; private set; }         // null if none
         public MiningDB Mining { get; private set; }              // null if none
         public MineralsDB PlanetMinerals { get; private set; }    // the colony's body's deposits; null if none
+        public ColonyMoraleDB Morale { get; private set; }        // the unrest gauge (Consolidate reads it); null if none
+        public ColonyEconomyDB Economy { get; private set; }      // the tax lever (Consolidate eases it); null if none
         public bool HasFreeLine { get; private set; }             // any ProductionLine with an empty job queue
 
         private ColonyState() { }
@@ -139,6 +141,8 @@ namespace Pulsar4X.Factions
             colony.TryGetDataBlob<IndustryAbilityDB>(out var industry);
             colony.TryGetDataBlob<CargoStorageDB>(out var cargo);
             colony.TryGetDataBlob<MiningDB>(out var mining);
+            colony.TryGetDataBlob<ColonyMoraleDB>(out var morale);
+            colony.TryGetDataBlob<ColonyEconomyDB>(out var economy);
 
             MineralsDB planetMinerals = null;
             if (colony.TryGetDataBlob<ColonyInfoDB>(out var ci) && ci.PlanetEntity != null && ci.PlanetEntity.IsValid)
@@ -154,6 +158,8 @@ namespace Pulsar4X.Factions
                 Cargo = cargo,
                 Mining = mining,
                 PlanetMinerals = planetMinerals,
+                Morale = morale,
+                Economy = economy,
                 HasFreeLine = hasFreeLine,
             };
         }

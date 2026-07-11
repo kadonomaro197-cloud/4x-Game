@@ -26,6 +26,7 @@ namespace Pulsar4X.Factions
         private static readonly Dictionary<StrategicObjective, IObjectiveResolver> _byObjective = new()
         {
             { StrategicObjective.GrowEconomy, new GrowEconomyResolver() },
+            { StrategicObjective.Consolidate, new ConsolidateResolver() },
         };
 
         public static bool TryGet(StrategicObjective objective, out IObjectiveResolver resolver)
