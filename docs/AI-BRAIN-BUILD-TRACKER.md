@@ -14,6 +14,8 @@
 
 **The keystone gate:** `NPCDecisionProcessor.Tick` (`Factions/NPCDecisionProcessor.cs:64-84`) fires monthly per-NPC and already runs diplomatic drift + reads the dominant doctrine axis — but the **axis→orders translation is an empty `// TODO` (`:79-83`).** Filling that (plus the tiny objective/personality blobs it reads) is the gate the whole brain waits behind. Nothing structurally blocks it.
 
+**The chosen strategy — FOUNDATIONS FIRST (2026-07-11):** the six surveys sort the design into three tiers — buildable-now, net-new-but-unblocked, and blocked-behind-a-subsystem (espionage, trade-money, bloc-demands, gate-network, capability-tech). The design would let those last ones ship as inert "labeled sockets." **The developer chose to build the missing pillars FIRST**, so that when the brain goes in, *every* trait/role/rung wires into a live system — nothing on the finished brain is a dark socket. That splits the campaign into **Movement I (Foundations — level the ground)** and **Movement II (Build Up — the brain)**, both detailed below. Honest scope: Movement I is the bulk of the remaining work, because three of its tracks are full subsystems (each already has a design doc — it's *build*, not *design*).
+
 ---
 
 ## The ladder — Planck → Brane (the tracker's spine)
@@ -89,9 +91,53 @@ None of these exist in source yet (grep-confirmed: they appear only under `docs/
 
 ---
 
-## The wiring plan — ordered, bottom-up, CI-gated, byte-identical-first
+## The strategy — LEVEL THE GROUND FIRST, then build up (developer's call, 2026-07-11)
 
-Same discipline that kept the last 83 commits clean: **one slice at a time, a new field/blob defaults neutral so existing fixtures stay green, the payoff lands via a new example, push, WAIT for CI green before the next slice.** Each slice names its plug point and its gauge.
+The design's "live-when-wired" pattern would let us ship the brain with several dials dark (espionage, trade, bloc-demands, gate-network, the crisis) as **labeled sockets** — present but inert until their subsystem lands. The developer chose the opposite, deliberately: **build the missing pillars FIRST so every trait, role, and rung wires into a LIVE system — nothing on the finished brain is a dark socket.** Then build up.
+
+So the campaign is two movements:
+
+- **Movement I — Foundations (level the ground).** Build the Tier-2/Tier-3 pieces that don't exist yet: the shared prerequisites, the "eyes," and the dark subsystems (espionage, trade-money, popular-demands, gate-network, capability-tech). Most already have a design doc — this is *build*, not *design*. **Honest scope: this is the bulk of the remaining work** — three of these (espionage, the trade economy, popular-demands) are each a subsystem in their own right.
+- **Movement II — Build Up (the brain, on level ground).** The bottom-up brain phases below — but now every slice wires into a live pillar, no sockets left dark. Ends at the Brane acceptance test = *finish EVERYTHING.*
+
+---
+
+## Movement I — Foundations First (level the ground)
+
+Ordered by dependency and cheapness. Each is a build track; the "Unblocks" column ties it to the Movement-II slice(s) it lights up. Statuses all ⚫ NOT-STARTED.
+
+### Group A — cheap shared prerequisites (do first; small, each unblocks several things)
+| # | Foundation | Verified gap / plug point | Design doc | Unblocks | Status |
+|---|---|---|---|---|---|
+| **F-A1** | **Fix the degenerate detection-quality** — the remaining keystone of the diplomacy blast-radius chain (GlobalManager ✅ · detection-quality ⬅ HERE · hostility-from-DiplomacyDB ✅) | detection quality is currently degenerate; the fog is not a meaningful gauge | `docs/DETECTION-DESIGN.md` | F-B1 (the eyes), F-C3 (espionage intel) | ⚫ |
+| **F-A2** | **Make competence researchable** — a scientist/officer ships with an EMPTY `BonusesDB`; the only competence on the default path is one hardcoded line | `People/CommanderFactory.cs:63` (`CreateScientist`, empty BonusesDB); `NewGameMenu.cs:632` (the one hardcode); copy `ResearchProcessor.cs:246` `RefreshPointModifiers` | — | Organism 2.7 (officer traits), Exploration X.0 (field career) | ⚫ |
+| **F-A3** | **Faction roll-up gauges** — sum colony morale/economy + fleet strength to the system/empire tier | no helper aggregates the per-colony/per-ship gauges up | (this tracker) | Organism 2.2 (needs-ladder), F-B1 | ⚫ |
+
+### Group B — the Eyes (rival perception; the linchpin, shared with espionage)
+| # | Foundation | Verified gap / plug point | Design doc | Unblocks | Status |
+|---|---|---|---|---|---|
+| **F-B1** | **`ThreatEstimate` + the rival-intel "Information Ledger"** — a fog-limited, per-rival, per-facet estimate of strength/intent that sharpens with detection and decays to Stale. The ONE true net-new *gauge*; it is BOTH the Ecosystem's missing input AND espionage's intel arm | contacts carry position/signal, not combat value (`Engine/Entities/EntityManager.cs:638`, `Sensors/…/SensorContact.cs:42`); no faction-level intel store | `docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md` (Information Ledger), `docs/DETECTION-DESIGN.md` | Organism 2.6 (Risk), Ecosystem 3.1–3.4, Galaxy 4.2 | ⚫ |
+
+### Group C — the dark economic / political pillars (each a subsystem; already designed)
+| # | Foundation | Verified gap / plug point | Design doc | Unblocks | Status |
+|---|---|---|---|---|---|
+| **F-C1** | **Trade-as-money** — add a Trade/Commerce `TransactionCategory` + execute a "standing" trade route into the ledger, so a trade agreement earns income | `Factions/Ledger.cs:8` has NO Trade category; `ExchangeCatalog.cs` (the Ledger route exists as data, nothing executes it); `Logistics/` | `docs/DIPLOMACY-DESIGN.md` (commitment/exchange), `docs/RESOURCES-AND-MATERIALS-DESIGN.md` | role #6 Trade Minister; commerce diplomacy; Altruism (Ledger gift) | ⚫ |
+| **F-C2** | **Internal popular-demands / bloc layer** — the Stellaris-parties demand engine on the morale/legitimacy substrate; an unmet demand pressures legitimacy | no demand/bloc layer; substrate ready (`Colonies/LegitimacyDB.cs`, `ColonyMoraleDB.cs`, `Factions/GovernmentDB.cs`) | `docs/GOVERNMENT-AND-POLITICS-DESIGN.md` (popular-demands) | role #3 Interior Minister; Authoritarianism (full) | ⚫ |
+| **F-C3** | **Espionage engine** — the Information Ledger (F-B1, shared) + agents as taskable operatives (Spymaster delegate + covert-action catalog + the risk/reward detection bet) | no engine — only a route name in `ExchangeCatalog` (Espionage route) | `docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md` | Guile (full facet); roles #4 Spymaster, #16 Agent; the mirror (NPCs spy on you) | ⚫ (needs F-A1 + F-B1) |
+
+### Group D — the world / tech-model gaps
+| # | Foundation | Verified gap / plug point | Design doc | Unblocks | Status |
+|---|---|---|---|---|---|
+| **F-D1** | **Jump-network rework / gate-network** — implement the dead `CreateConnection` stub so a discovered/built connection links two systems | `JumpPoints/JPFactory.cs:124` `CreateConnection` is an empty `// FIXME` stub | (the exploration + galaxy docs; hole H8) | Exploration network finds (gate/wormhole); hole H8 | ⚫ |
+| **F-D2** | **Capability-tech model** — a tech unlock KIND that flips a capability flag, not just moves an item-ID | `Tech/Tech.cs:28` + `ResearchProcessor.cs:128` → `FactionDataStore.Unlock` moves cargo item-IDs only | `docs/AI-GALAXY-AND-CRISIS-DESIGN.md` | Galaxy 4.1–4.2 (the crisis ascension) | ⚫ |
+
+**Foundation build order:** Group A (cheap, parallelizable) → F-B1 (the eyes) → Groups C & D (independent subsystems, any order; F-C3 after F-A1+F-B1). Each track is itself CI-gated and byte-identical-first, and each has a live gauge before it's called done. When Movement I is green, the ground is level: every Movement-II trait/role/rung has a real system under it.
+
+---
+
+## Movement II — Build Up (the brain, on level ground)
+
+Same discipline that kept the last 83 commits clean: **one slice at a time, a new field/blob defaults neutral so existing fixtures stay green, the payoff lands via a new example, push, WAIT for CI green before the next slice.** Each slice names its plug point and its gauge. **Assumes the Movement-I foundation each slice needs is green** (the "Unblocks" links above are the map).
 
 ### Phase 0 — ⚛ Foundations (unblock everything)
 | # | Slice | Plug point | Gauge | Status |
@@ -167,5 +213,6 @@ Same discipline that kept the last 83 commits clean: **one slice at a time, a ne
 2. **A slice isn't done until CI is green** (both `test` + `build-client`), byte-identity held where claimed.
 3. **Correct the design docs as you build:** the surveys found stale line numbers (`ShouldRetreat` is `:1401` not `:1158`; `AreHostile/AtPeace` `:1504/1529` not `:1271`; `FirstContact.OnDetection` `:40` not `:57`) and stale "unbuilt" claims (durable seats, commander competence). Fix the doc rung you're wiring in the same commit.
 4. **Bottom-up or it doesn't work:** never start an Ecosystem/Galaxy/Brane slice before the Organism rung it composes is green.
+5. **Foundations before the brain:** a Movement-II slice may not start until the Movement-I foundation in its "Unblocks" chain is green — that's the whole point of leveling the ground first. When you finish a foundation, flip its row AND note which Movement-II slices it just unblocked.
 
 **Status legend:** ⚫ NOT-STARTED · 🟡 WIRED (CI-green, engine-verified) · 🟢 VERIFIED-LIVE (the developer's local runtime) · ⏸ BLOCKED (name the blocker) · 🔧 needs a named prereq first.
