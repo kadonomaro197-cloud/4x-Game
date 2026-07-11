@@ -734,5 +734,60 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "crew-automation",
+      "Name": "Automation Suite",
+      "Formulas": {
+        "Description": "An automation / ship-AI suite that does part of the crew's work, so the hull runs with fewer people (Enhancers: Systems - Automation). It cuts the BULK crew requirement, letting you spend mass and high tech instead of scarce workforce. It does not replace the veteran command cadre.",
+        "Mass": "PropertyValue('Automation Mass')",
+        "Volume": "Max(1, [Mass] / 150)",
+        "HTK": "0.5",
+        "CrewReq": "Max(1, [Mass] * 0.002)",
+        "ResearchCost": "[Mass] * 3",
+        "CreditCost": "[Mass] * 4",
+        "BuildPointCost": "[Mass] * 3"
+      },
+      "ResourceCost": {
+        "electronics": "[Mass] * 0.5",
+        "aluminium": "[Mass] * 0.2",
+        "stainless-steel": "[Mass] * 0.1"
+      },
+      "ComponentType": "Augment",
+      "MountType": "ShipComponent, ShipCargo",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Automation Mass",
+          "Units": "kg",
+          "DescriptionFormula": "'Mass of the automation hardware and its AI cores.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "30000",
+          "MinFormula": "1000",
+          "StepFormula": "100",
+          "PropertyFormula": "5000"
+        },
+        {
+          "Name": "Crew Reduction",
+          "Units": "crew",
+          "DescriptionFormula": "'How many bulk crew positions the automation replaces (never the veteran cadre).'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "200",
+          "MinFormula": "0",
+          "StepFormula": "5",
+          "PropertyFormula": "30"
+        },
+        {
+          "Name": "crewAutomationAtbArgs",
+          "DescriptionFormula": "'double crewReduction'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Crew Reduction'))",
+          "AttributeType": "Pulsar4X.Combat.CrewAutomationAtb"
+        }
+      ]
+    }
   }
 ]

@@ -180,6 +180,7 @@ namespace Pulsar4X.Ships
             ComponentCosts.Clear();
             ShipInstanceCost.Clear();
 
+            int crewAutomation = 0; // Enhancers ⚙6.3: bulk crew replaced by automation/AI suites (0 = no module).
             foreach (var component in Components)
             {
                 MassPerUnit += component.design.MassPerUnit * component.count;
@@ -189,6 +190,11 @@ namespace Pulsar4X.Ships
                 // for every non-caliber component → byte-identical for the entire base-mod fleet.
                 if (component.design.TryGetAttribute<Pulsar4X.Combat.UnitCaliberAtb>(out _))
                     TalentReq += component.design.CrewReq;
+                // Enhancers ⚙6.3 Systems ▸ Automation: an AI/automation suite runs part of the ship, so it needs
+                // fewer BULK crew. Accumulate the reduction (applied to the bulk workforce after the loop, never the
+                // veteran cadre). 0 for every non-automation component → byte-identical.
+                if (component.design.TryGetAttribute<Pulsar4X.Combat.CrewAutomationAtb>(out var autom))
+                    crewAutomation += (int)Math.Round(autom.CrewReduction);
                 CreditCost += component.design.CreditCost;
                 VolumePerUnit += component.design.VolumePerUnit * component.count;
                 if (ComponentCosts.ContainsKey(component.design.UniqueID))
@@ -201,6 +207,11 @@ namespace Pulsar4X.Ships
                 }
 
             }
+            // Enhancers ⚙6.3 Systems ▸ Automation: subtract the automation reduction from the BULK crew only — the
+            // total never drops below the veteran-cadre talent (you can't automate away the officers). No module →
+            // crewAutomation 0 → CrewReq = TalentReq + (CrewReq - TalentReq) = CrewReq, byte-identical.
+            if (crewAutomation > 0)
+                CrewReq = TalentReq + Math.Max(0, (CrewReq - TalentReq) - crewAutomation);
             DamageProfileDB = new EntityDamageProfileDB(Components, Armor);
             var armorMass = GetArmorMass(DamageProfileDB, faction.Data.CargoGoods);
             MassPerUnit += (long)Math.Round(armorMass);
