@@ -114,6 +114,7 @@ Grouped by the administrative spine, with the operational military line crossing
 
 ```
 HEAD OF STATE   (regime type + empire legitimacy — held DIRECTLY, no minister)
+│               · sets the empire's DESTINATION (objective) + budget; runs character-assignment (HR)
 │
 ├─ EMPIRE CABINET
 │   ├─ Grand Admiral ............ where the war effort goes (which systems)
@@ -123,20 +124,24 @@ HEAD OF STATE   (regime type + empire legitimacy — held DIRECTLY, no minister)
 │   │           ├─ Envoy ........ sent for a negotiation
 │   │           └─ Agent ........ ops against that faction  ⟵ dotted line to Spymaster
 │   ├─ Spymaster ............... espionage doctrine + counter-intel (functional home of Agents)
-│   ├─ Chief Scientist ......... research direction
-│   │     ├─ Lab Scientist ..... runs a research institution
-│   │     └─ Survey Scientists . system + planetary survey (the empire's eyes)
+│   ├─ Chief Scientist ......... research direction + the empire's DESIGN GOALS (reach-for-the-Defiant)
+│   │     └─ Lab Scientist ..... runs a research institution
 │   └─ Trade Minister .......... routes, tariffs, import/export
 │
-└─ SYSTEM SCOPE
-    ├─ System Admiral .......... fleet movement & engagement in-system  [MOBILE — coordinates with, not under, the System Governor]
-    │     └─ Fleet Commander ... one fleet's doctrine  →  [autonomous ships]
-    └─ System Governor ......... economic effort across the system's worlds
-          ├─ System General .... which worlds to reinforce / hold / invade   ⟵ also operational orders from Grand Admiral
-          └─ Planetary Governor  (one world's development)
-                ├─ Interior Minister .. that world's politics / stability / blocs
-                └─ Planetary General .. the surface campaign on this world   ⟵ also operational orders from the System General
-                      └─ Battalion Commander ... one battalion  →  [autonomous units]
+└─ SYSTEM GOVERNOR ............. the SYSTEM'S HEAD — ALL system-level leaders report here
+      │                          (owns economic effort across the system's worlds + colonization targets)
+      ├─ System Admiral ........ fleet movement & engagement in-system + fleet composition
+      │     │                     ⟵ operational orders cross in from the Grand Admiral
+      │     └─ Fleet Commander .. one fleet's doctrine  →  [autonomous ships]
+      ├─ System Scientist ...... the system's science loop: discover → build → staff → upgrade a research station
+      │                           ⟵ research direction crosses in from the Chief Scientist
+      ├─ System General ........ which worlds to reinforce / hold / invade
+      │                           ⟵ operational orders cross in from the Grand Admiral
+      └─ Planetary Governor .... one world's development (build / tax / stockpile)
+            ├─ Interior Minister .... that world's politics / stability / blocs
+            ├─ Planetary Scientist .. the world's science loop (survey → build → staff → upgrade)
+            └─ Planetary General .... the surface campaign  ⟵ operational orders from the System General
+                  └─ Battalion Commander ... one battalion  →  [autonomous units]
 ```
 
 ### The roster table
@@ -513,7 +518,7 @@ Cheapest end-to-end proof, because the grave-end target already exists and is al
 - **Delegation = NPC AI** — one system runs the player's hand-off and the NPC's brain; no separate AI path.
 - **The 19-role roster** and its two-chain (administrative + operational) structure.
 - **Head of State holds the regime directly** (government type + empire legitimacy) — no empire Interior Minister.
-- **Interior Minister and Planetary General report under the Planetary Governor**; **System General reports under the System Governor**; **the System Admiral (mobile) stays on the naval operational line and only coordinates with the System Governor.**
+- **Interior Minister and Planetary General report under the Planetary Governor**; **ALL system-level leaders report to the System Governor** — System Admiral, System Scientist, and System General alike (**updated 2026-07-10**, superseding the earlier "the mobile System Admiral only coordinates with the Governor"). The System Governor is the unambiguous **head of the system** (which is why objective-decomposition starts there — subsidiarity). The empire cabinet crosses in with **domain direction** as a matrix: the **Grand Admiral** hands the Admiral/General their operational (war-effort) orders, the **Chief Scientist** hands the System Scientist research direction — but the *reporting/administrative* line for every system leader is to the Governor.
 - **No leaders for leaders' sake** — every seat must own a distinct decision; competence is texture, not the justification.
 - **Ship Captain cut** (a lone ship is a fleet of one); **company/unit commander deferred to v2** (keeps the AI-seat count honest).
 - **One six-rung people pipeline** (born → skilled → seated → acts → improves → lost) for all 19 roles — build once, prove on the Governor, reuse.
