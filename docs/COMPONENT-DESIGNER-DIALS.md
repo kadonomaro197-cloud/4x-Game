@@ -1621,7 +1621,7 @@ The lesson mirrors the weapons/propulsion doors: you don't pick "science ship" f
 | Dial | Verdict | How the sim models it |
 |------|---------|------------------------|
 | Tracking speed | ◐ **wire** | `BeamFireControlAtbDB.TrackingSpeed` **exists but is unread** → wire it into the `HitFraction` **Tracking** term (the field that beats evasion) |
-| Fire-control range | ◐ **wire** | `BeamFireControlAtbDB.Range` **exists but is unread** → wire it into the weapon-range engagement gate (a director-gated reach) |
+| Fire-control range | ✅ **WIRED (2026-07-11)** | `BeamFireControlAtbDB.Range` (was unread) now extends a ship's beam engagement reach = `MaxRange × (1 + bestDirectorRange/100)` in `ShipCombatValueDB` (`EnableFireControlRange`, default off → byte-identical, client-on) — the director is the scope; accuracy still falls off with distance. Gauge `ShipFireControlRangeTests` |
 | Fire allocation / multi-target | ◐ **wire** | `FinalFireOnly` **exists but is unread** + a new targets-tracked dial → the multi-party **fire-split** (`StepEngagementGroup` already divides fire 1/N; make N a director property) |
 | PD-only mode | ◐ **wire** | `FinalFireOnly` → the point-defense role (pairs with the weapons-door PD wire + missiles-as-targets) |
 
@@ -1767,11 +1767,11 @@ Every sensor also carries the universal seven (Mass, Size/mount, Materials/cost,
 | Dial | Derived stat | Grade | Engine wire (file:line) | Resolver/system insertion |
 |------|--------------|-------|--------------------------|----------------------------|
 | Tracking speed | beat evasion | ✅ **LANDED (S1, 2026-07-10)** | `BeamFireControlAtbDB.TrackingSpeed` is now READ: `ShipCombatValueDB.Calculate` raises each BEAM `WeaponProfile.Tracking` toward 1.0 by the ship's best installed director (`base + (1−base)×FireControlTrackingFactor(ts)`, `ts/(ts+5000)`), health-scaled (grave rung). Gated behind `ShipCombatValueDB.EnableFireControlTracking` (default off → byte-identical; **client-on**) because the director already lives on the base-mod warships with a non-neutral value. Gauge `ShipFireControlTests`. The dead knob is alive; the wire flows into `HitFraction`'s Tracking term via the boosted profile. | `HitFraction` reads `WeaponProfile.Tracking` |
-| Fire-control range | open fire sooner | ◐ **wire (DEAD KNOB)** | `BeamFireControlAtbDB.Range` **exists `:15`, unread** → wire into the weapon-range engagement gate (director-gated reach) | the range ladder / `InRange` gate |
+| Fire-control range | open fire sooner | ✅ **WIRED (2026-07-11)** | `BeamFireControlAtbDB.Range` → beam engagement reach `× (1 + Range/100)` in `ShipCombatValueDB` (`EnableFireControlRange`, flag off → byte-identical, client-on) | the range ladder / `InRange` gate, LIVE |
 | Fire allocation / multi-target | split fire across N | ◐ **wire** | `FinalFireOnly` **exists `:27`, unread** + a new targets-tracked dial → make N a director property (`StepEngagementGroup` already divides fire 1/N) | multi-party fire-split |
 | PD-only mode | intercept ordnance | ◐ **wire** | `FinalFireOnly:27` → the point-defense role | pairs with weapons-door PD wire + missiles-as-targets |
 
-*Honest state: **TrackingSpeed is now WIRED (S1, 2026-07-10)** — the flagship dead knob is alive (flag-gated, client-on). `Range` (director-gated reach) and `FinalFireOnly` (PD-only mode) remain ◐ Wire — the next Fire-Control slices. Building the door IS building the wire (Failure-A: the number exists, unwired).*
+*Honest state: **all three fire-control dead knobs are now WIRED (flag-gated, client-on)** — TrackingSpeed (S1, 2026-07-10), FinalFireOnly PD-only mode (W6), and **Range (director-gated reach, 2026-07-11)**. The Fire-Control door is closed. Building the door IS building the wire (Failure-A: the number exists, unwired).*
 
 #### 3.4 ELECTRONIC WARFARE (Military·Counter + Espionage·Counter + Influence·Counter)
 | Dial | Derived stat | Grade | Engine wire (file:line) | Resolver/system insertion |

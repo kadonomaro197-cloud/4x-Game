@@ -120,6 +120,21 @@ namespace Pulsar4X.Combat
         public static double FireControlTrackingFactor(double trackingSpeed)
             => trackingSpeed <= 0 ? 0 : trackingSpeed / (trackingSpeed + FireControlTrackingReference);
 
+        /// <summary>FIRE CONTROL → beam RANGE (Sensors ⚙4). Default OFF → byte-identical; the client turns it on.
+        /// The director is the SCOPE: it extends how far a ship's beams can ENGAGE, out past their rated MaxRange.
+        /// (Accuracy still falls off with distance — the closing-range hit-fraction handles "hit at X, and beyond if
+        /// you're lucky" — so the extra reach is chancy, not free damage.) When on, a beam's engagement reach becomes
+        /// <c>MaxRange × (1 + bestDirectorRange/100)</c> from the best installed <see cref="Weapons.BeamFireControlAtbDB"/>
+        /// director (health-scaled — a shot-off director loses the reach). The dead knob (`BeamFireControlAtbDB.Range`,
+        /// verified 0 reads) comes ALIVE. A rangeless beam (MaxRange 0 = unbounded) stays unbounded.</summary>
+        public static bool EnableFireControlRange = false;
+
+        /// <summary>The engagement-range EXTENSION factor a director's <paramref name="range"/> dial grants, read as a
+        /// PERCENT of the weapon's rated range (Range 20 → ×1.20 reach). 1.0 (no extension) for a non-positive range.
+        /// Pure.</summary>
+        public static double FireControlRangeFactor(double range)
+            => range <= 0 ? 1.0 : 1.0 + range / 100.0;
+
         /// <summary>FIRE CONTROL → PD-only mode (Sensors ⚙3, Fire-Control CONNECT). Default OFF → byte-identical: no
         /// base ship carries a <c>FinalFireOnly</c> director, so even turned ON nothing changes until one is installed.
         /// The client turns it on. When on, a ship with a live FinalFireOnly (CIWS) director routes its BEAM weapons'
@@ -258,6 +273,22 @@ namespace Pulsar4X.Combat
                     fcTracking = FireControlTrackingFactor(bestTrackingSpeed);
                 }
 
+                // FIRE CONTROL → beam RANGE (⚙4): the director (the scope) extends how far the beams can ENGAGE, out
+                // past their rated MaxRange. 1.0 unless the flag is on AND a director is installed → byte-identical.
+                // Best (largest-range) director wins; health-scaled. Applied to each beam's MaxRange below.
+                double fcRangeFactor = 1.0;
+                if (EnableFireControlRange && instances.TryGetComponentsByAttribute<BeamFireControlAtbDB>(out var rangeDirectors))
+                {
+                    double bestRange = 0;
+                    foreach (var comp in rangeDirectors)
+                        if (comp.Design.TryGetAttribute<BeamFireControlAtbDB>(out var fc))
+                        {
+                            double r = fc.Range * comp.HealthPercent;
+                            if (r > bestRange) bestRange = r;
+                        }
+                    fcRangeFactor = FireControlRangeFactor(bestRange);
+                }
+
                 // PD-ONLY MODE (⚙3, Fire-Control CONNECT): a FinalFireOnly director (CIWS) dedicates this ship's beams
                 // to intercepting incoming ordnance — their damage/sec feeds the point-defense pool, not anti-ship
                 // firepower. Off/false unless the flag is on AND a live FinalFireOnly director is installed (no base
@@ -281,8 +312,11 @@ namespace Pulsar4X.Combat
                             // fcTracking is 0 unless the flag is on → beamTracking = BaseHitChance → byte-identical.
                             double beamTracking = beam.BaseHitChance + (1.0 - beam.BaseHitChance) * fcTracking;
                             // Range (Root A): beams carry their design MaxRange (0 = unbounded, the legacy convention).
+                            // Fire control (⚙4) extends that reach when a director is installed (fcRangeFactor 1.0 off →
+                            // byte-identical); a rangeless beam (0) stays unbounded.
                             // Combat heat (W5): a hot beam's CombatHeat_kJps flows into HeatPerSecond → the heat pool.
-                            weapons.Add(new WeaponProfile(dps, beam.BeamSpeed, beamTracking, 1.0 / period, beam.MaxRange, WeaponNature.Energy, WeaponDelivery.Beam, 0, 0, beam.CombatHeat_kJps));
+                            double beamRange = beam.MaxRange > 0 ? beam.MaxRange * fcRangeFactor : beam.MaxRange;
+                            weapons.Add(new WeaponProfile(dps, beam.BeamSpeed, beamTracking, 1.0 / period, beamRange, WeaponNature.Energy, WeaponDelivery.Beam, 0, 0, beam.CombatHeat_kJps));
                         }
                     }
                 }
