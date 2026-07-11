@@ -39,7 +39,7 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("End-to-end: with the flag OFF a ship's beam reach is exactly its rated MaxRange (byte-identical); flip the flag ON and the same hull's installed director (the scope) extends that reach — a bigger director = open fire from further. The base-mod Aegis (lasers + a beam-fire-control) reads +20% reach (Range 20).")]
+        [Description("End-to-end: with the flag OFF a ship's beam reach is exactly its rated MaxRange (byte-identical); flip the flag ON and the same hull's installed director (the scope) extends that reach — a bigger director = open fire from further. The base-mod Aegis's beam-fire-control design overrides Range to 100, so it DOUBLES the reach (FireControlRangeFactor(100) = ×2.0).")]
         public void Director_ExtendsBeamEngagementRange_WhenOn_ByteIdenticalOff()
         {
             var s = TestScenario.CreateWithColony();
@@ -59,8 +59,9 @@ namespace Pulsar4X.Tests
 
                 Assert.That(rangeOff, Is.GreaterThan(0), "the Aegis's lasers have a finite rated range to extend");
                 Assert.That(rangeOn, Is.GreaterThan(rangeOff), "the director (scope) opens fire from further out");
-                Assert.That(rangeOn, Is.EqualTo(rangeOff * 1.20).Within(rangeOff * 1e-6),
-                    "the base-mod director's Range 20 → +20% engagement reach");
+                // The base-mod beam-fire-control DESIGN overrides Range to 100 → FireControlRangeFactor(100) = ×2.0.
+                Assert.That(rangeOn, Is.EqualTo(rangeOff * ShipCombatValueDB.FireControlRangeFactor(100)).Within(rangeOff * 1e-6),
+                    "the base-mod director's Range 100 doubles the engagement reach");
             }
             finally { ShipCombatValueDB.EnableFireControlRange = prev; }
         }
