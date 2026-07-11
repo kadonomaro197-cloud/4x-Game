@@ -611,5 +611,63 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "drive-reinforcement",
+      "Name": "Drive Reinforcement",
+      "Formulas": {
+        "Description": "Reinforces a ship's sub-light drive against the MovementDrag of a thick medium — a gas/dust cloud or debris field that bogs others down. Lets you power through space that mires an unreinforced hull. The counter to a hazard's MovementDrag effect (Defense ▸ Hardening).",
+        "Mass": "PropertyValue('Mass')",
+        "Volume": "[Mass]",
+        "HTK": "0.5",
+        "CrewReq": "Max(1, [Mass] * 0.01)",
+        "ResearchCost": "[Mass] * 2",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.5",
+        "aluminium": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.1",
+        "titanium": "[Mass] * 0.2"
+      },
+      "ComponentType": "Sensor",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, Fighter",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Resisted Effect",
+          "DescriptionFormula": "'Which hazard effect this resists, as the HazardEffectType enum value (MovementDrag = 4).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "4"
+        },
+        {
+          "Name": "Resistance",
+          "Units": "fraction",
+          "DescriptionFormula": "'How strongly it shrinks the movement-drag effect (0..1). Stacks across modules.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "0.9",
+          "MinFormula": "0.1",
+          "StepFormula": "0.05",
+          "PropertyFormula": "0.6"
+        },
+        {
+          "Name": "Mass",
+          "Units": "kg",
+          "GuiHint": "None",
+          "PropertyFormula": "100 + 200 * PropertyValue('Resistance')"
+        },
+        {
+          "Name": "hazardResistAtbArgs",
+          "DescriptionFormula": "'double resistedEffectTypeId, double resistanceFraction'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Resisted Effect'), PropertyValue('Resistance'))",
+          "AttributeType": "Pulsar4X.Hazards.HazardResistanceAtb"
+        }
+      ]
+    }
   }
 ]

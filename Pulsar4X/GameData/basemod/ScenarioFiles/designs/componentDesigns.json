@@ -120,6 +120,17 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-drive-reinforcement",
+      "Name": "Drive Reinforcement",
+      "TemplateId": "drive-reinforcement",
+      "Properties": [
+        { "Key": "Resistance", "Value": 0.6 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-cargo-hold-1t",
       "Name": "Cargo Hold 1t",
       "TemplateId": "general-cargo-hold",
