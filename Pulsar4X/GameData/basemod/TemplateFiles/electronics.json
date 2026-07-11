@@ -669,5 +669,70 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "unit-caliber",
+      "Name": "Veteran Cadre",
+      "Formulas": {
+        "Description": "A veteran cadre / elite command crew embedded in the hull — training and battle-experience that make an identical chassis fight above its class (Enhancers: Unit Caliber). It multiplies the ship's firepower and toughness. Costs mass (the extra command spaces + drilled crew) and crew.",
+        "Mass": "PropertyValue('Cadre Mass')",
+        "Volume": "Max(1, [Mass] / 150)",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.2",
+        "ResearchCost": "[Mass] * 2",
+        "CreditCost": "[Mass] * 3",
+        "BuildPointCost": "[Mass] * 2"
+      },
+      "ResourceCost": {
+        "electronics": "[Mass] * 0.3",
+        "aluminium": "[Mass] * 0.2",
+        "stainless-steel": "[Mass] * 0.2"
+      },
+      "ComponentType": "Augment",
+      "MountType": "ShipComponent, ShipCargo",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Cadre Mass",
+          "Units": "kg",
+          "DescriptionFormula": "'Mass of the cadre and its command spaces.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "20000",
+          "MinFormula": "1000",
+          "StepFormula": "100",
+          "PropertyFormula": "3000"
+        },
+        {
+          "Name": "Firepower Caliber",
+          "Units": "x",
+          "DescriptionFormula": "'Firepower multiplier from the crew gunnery training (1.0 = green crew, 2.0 = elite).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2.0",
+          "MinFormula": "1.0",
+          "StepFormula": "0.05",
+          "PropertyFormula": "1.3"
+        },
+        {
+          "Name": "Toughness Caliber",
+          "Units": "x",
+          "DescriptionFormula": "'Toughness multiplier from damage-control drill (1.0 = green crew, 2.0 = elite).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2.0",
+          "MinFormula": "1.0",
+          "StepFormula": "0.05",
+          "PropertyFormula": "1.2"
+        },
+        {
+          "Name": "unitCaliberAtbArgs",
+          "DescriptionFormula": "'double firepowerMult, double toughnessMult'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Firepower Caliber'), PropertyValue('Toughness Caliber'))",
+          "AttributeType": "Pulsar4X.Combat.UnitCaliberAtb"
+        }
+      ]
+    }
   }
 ]

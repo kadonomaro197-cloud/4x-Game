@@ -131,6 +131,14 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-unit-caliber",
+      "Name": "Veteran Cadre",
+      "TemplateId": "unit-caliber"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-cargo-hold-1t",
       "Name": "Cargo Hold 1t",
       "TemplateId": "general-cargo-hold",

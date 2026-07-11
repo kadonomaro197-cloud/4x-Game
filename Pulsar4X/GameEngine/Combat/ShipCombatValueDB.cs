@@ -433,6 +433,12 @@ namespace Pulsar4X.Combat
             double firepower = 0;
             foreach (var w in weapons) firepower += w.DamagePerSecond;
 
+            // Enhancers ⚙6.2 UNIT CALIBER — a per-hull elite stamp: the best installed caliber module multiplies this
+            // hull's Firepower AND Toughness (so two identical chassis under the same admiral can fight differently —
+            // the axis doctrine/commander can't express). 1.0 when no module → byte-identical.
+            firepower *= UnitCaliberFirepowerMult(ship);
+            toughness *= UnitCaliberToughnessMult(ship);
+
             // Role: anything that can shoot is a combatant; everything else is a low-priority utility hull.
             double roleWeight = firepower > 0 ? 1.0 : UtilityRoleWeight;
 
@@ -510,6 +516,48 @@ namespace Pulsar4X.Combat
                     {
                         double floor = drive.EvasionOverride * comp.HealthPercent;
                         if (floor > best) best = floor;
+                    }
+                }
+            }
+            return best;
+        }
+
+        /// <summary>The FIREPOWER multiplier the best installed unit-caliber module grants this hull (1.0 if none) —
+        /// each module's <see cref="UnitCaliberAtb.FirepowerMult"/> health-scaled toward 1.0 (<c>1 + (mult-1)×HealthPercent</c>),
+        /// so a shot-off module reverts the hull to a green-crew baseline (the grave rung). Defensive: no components → 1.0.</summary>
+        internal static double UnitCaliberFirepowerMult(Entity ship)
+        {
+            if (!ship.TryGetDataBlob<ComponentInstancesDB>(out var instances)) return 1.0;
+            double best = 1.0;
+            if (instances.TryGetComponentsByAttribute<UnitCaliberAtb>(out var mods))
+            {
+                foreach (var comp in mods)
+                {
+                    if (comp.Design.TryGetAttribute<UnitCaliberAtb>(out var cal))
+                    {
+                        double m = 1.0 + (cal.FirepowerMult - 1.0) * comp.HealthPercent;
+                        if (m > best) best = m;
+                    }
+                }
+            }
+            return best;
+        }
+
+        /// <summary>The TOUGHNESS multiplier the best installed unit-caliber module grants this hull (1.0 if none) —
+        /// <see cref="UnitCaliberAtb.ToughnessMult"/> health-scaled toward 1.0, the toughness twin of
+        /// <see cref="UnitCaliberFirepowerMult"/>. Defensive: no components → 1.0.</summary>
+        internal static double UnitCaliberToughnessMult(Entity ship)
+        {
+            if (!ship.TryGetDataBlob<ComponentInstancesDB>(out var instances)) return 1.0;
+            double best = 1.0;
+            if (instances.TryGetComponentsByAttribute<UnitCaliberAtb>(out var mods))
+            {
+                foreach (var comp in mods)
+                {
+                    if (comp.Design.TryGetAttribute<UnitCaliberAtb>(out var cal))
+                    {
+                        double m = 1.0 + (cal.ToughnessMult - 1.0) * comp.HealthPercent;
+                        if (m > best) best = m;
                     }
                 }
             }

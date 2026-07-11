@@ -113,6 +113,7 @@
         "jammer",
         "warp-stabilizer",
         "drive-reinforcement",
+        "unit-caliber",
         "reactor",
         "battery-bank",
         "rtg",
@@ -218,6 +219,7 @@
         "default-design-jammer",
         "default-design-warp-stabilizer",
         "default-design-drive-reinforcement",
+        "default-design-unit-caliber",
         "default-design-cargo-hold-1t",
         "default-design-cargo-hold-5t",
         "default-design-f1",
@@ -329,7 +331,8 @@
         "default-ship-design-test-culverin",
         "default-ship-design-test-tempest",
         "default-ship-design-test-redoubt",
-        "default-ship-design-test-sprint"
+        "default-ship-design-test-sprint",
+        "default-ship-design-test-praetorian"
       ],
       "LaunchQueue": [
         { "DesignId": "default-ship-design-courier", "Name": "ISS Hermes" }
