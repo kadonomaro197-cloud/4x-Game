@@ -129,6 +129,10 @@ namespace Pulsar4X.Client
             // (and lights the jammer itself up as a beacon). Byte-identical until a jammer exists; ON for the game.
             Pulsar4X.Sensors.JammerAtb.EnableJamming = true;
 
+            // Reactor-load heat (Sensors ⚙3 / Power ⚙4): a ship's running reactor now adds to its emitted signature,
+            // so a hot power plant lights up an otherwise-dark hull. Byte-identical off; ON for the game.
+            Pulsar4X.Sensors.EmconActivityProcessor.EnableReactorHeat = true;
+
             try
             {
                 string? appDataDirectory = GetAppDataPath();
