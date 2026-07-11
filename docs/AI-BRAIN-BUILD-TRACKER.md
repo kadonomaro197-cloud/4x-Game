@@ -157,7 +157,7 @@ Same discipline that kept the last 83 commits clean: **one slice at a time, a ne
 ### Phase 2 — 🧬 The Organism engine (the keystone)
 | # | Slice | Plug point | Gauge | Status |
 |---|---|---|---|---|
-| 2.1 | `StrategicObjectiveDB` goal slot | new blob on faction | write/read/clone | ⚫ |
+| 2.1 | `StrategicObjectiveDB` goal slot | new blob on faction | write/read/clone | ✅ **M2-2.1** — `Factions/StrategicObjectiveDB.cs`: the goal slot (`NeedTier` Survive→Stabilize→Thrive→Ambition + `StrategicObjective` None/Defend/Consolidate/GrowEconomy/AdvanceTech/Expand/Conquer + `TargetFactionId` + `CommittedUntil` for 2.3 hysteresis) with deep Clone. A new blob attached to nothing → byte-identical. Gauge `StrategicObjectiveTests`. |
 | 2.2 | Needs-ladder read (Survive→Stabilize→Thrive→Ambition) from planet gauges + rollups | new logic over the built gauges | tier flips as morale/money/war-standing move | ⚫ |
 | 2.3 | Transition engine (commit + hysteresis) | new pure logic | no thrash under noise; re-plans on real change | ⚫ |
 | 2.4 | **Fill `NPCDecisionProcessor.Tick`** — score objective → emit orders | `NPCDecisionProcessor.cs:79-83` | an NPC colonizes/builds/attacks per its objective | ⚫ |
