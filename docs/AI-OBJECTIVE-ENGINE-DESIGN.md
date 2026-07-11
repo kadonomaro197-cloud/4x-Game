@@ -98,6 +98,48 @@ This is **subsidiarity + local-knowledge:** the HoS sets the *want*; the level w
 
 ---
 
+## 5a. The TRANSITION ENGINE — what the AI does to change state, and how the 19 leaders coordinate (developer's question, 2026-07-10)
+
+This is the mechanism that turns a tier-flag into coordinated action across the seats.
+
+### Action-plans — the catalog of ways to satisfy an advancement objective
+A tier-gap (§2b) generates an **advancement objective**; that objective is satisfied by one of a **data-driven catalog of ACTION-PLANS**, each a *coordinated bundle of leader-tasks* (not a single move). The faction **scores the plans by identity + mood + situation** and picks one (its weighted stack — a primary, maybe a hedge). Example catalog for a "losing a world" (Survive) situation:
+
+| Plan | What it does | Trait-profile it favors |
+|---|---|---|
+| **Reinforce** | transfer troops/fleet from elsewhere, pour in defenses | ambitious · values the prize · has slack |
+| **Fortify & hold** | dig in, trade space for time, out-last the assault | defensive · patient · high-Honor stand |
+| **Scorched-earth / Deny** | *"if I can't have it, nobody can"* — glass/poison/deny the prize | high **Ruthlessness / Zealotry** · **Cornered** mood |
+| **Fighting retreat** | evacuate what matters, cut losses, preserve the force | low-Zealotry pragmatist · Guile · values-each-life (Eldar) |
+| **Sue for peace** | freeze the war, buy time | diplomatic · low-aggression |
+| **Counter-attack** | best defense — hit the enemy's staging base | bold · high-Risk |
+
+**Same flag, different response** — the divergence is one scored choice at the top: a **Borg** profile scores Scorched-earth / fight-to-annihilation high (Ruthlessness + Collectivism + no-retreat); an **Eldar** profile scores Fighting-retreat / preserve high (Guile + risk-averse + values-each-life); a pragmatic **Earth** scores Reinforce-and-negotiate. Both drastic options the developer named — *transfer troops in* (Reinforce) and *deny the prize* (Scorched-earth) — are catalog entries; which fires is the trait-scored pick. Each plan is **data-driven** (author faction-appropriate plans; the trait-scoring selects), same pattern as the stance/exchange catalogs.
+
+### Coordination — mission command, not a scheduler
+The 19 leaders **self-synchronize**; they are NOT handed a micromanaged plan. Exactly the way a real military coordinates under *commander's intent*:
+1. **The chosen plan writes a tier-mandate to the shared goal-slot** — "Earth: SURVIVE, hold at all costs, plan = Fortify-and-hold." Commander's intent, visible down the chain (this IS the mandate cascade, `AI-COMMAND…DESIGN §2`).
+2. **Each involved leader, on its own cycle, reads the mandate + current state and makes its own scored decision to serve it** — Governor → defenses in the build queue; Admiral → hold orbit; General → dig in the garrison; Chief Scientist → research-target shields; Foreign Minister → sue for time; Spymaster → sabotage the invasion fleet.
+3. **Coordination emerges from three things — no scheduler:** the **shared mandate** (everyone pulls one direction), the **physical dependency** (a leader can only act on the state that exists — the General can't fight with troops the Governor hasn't raised; fortifications only matter if the Admiral holds orbit so the enemy can't just bombard them), and **light phase-gates** for the genuinely sequential (achieve orbit → *then* invade).
+4. **Report-up triggers RE-PLAN.** If a leader can't do its part — Admiral reports "can't hold orbit, outnumbered 3:1" — that escalates, the faction **re-scores the catalog**, and may drop to a more desperate plan (Fortify → Scorched-earth, or → Fighting-retreat). *This is where "if I can't have Earth, nobody can" gets chosen* — not up front, but when the hold plan fails and a Cornered/ruthless faction re-picks.
+
+**Net: the mandate aligns them, physics sequences them, escalation re-plans them.** Decentralized, robust, and the same delegate-issues-its-own-orders model as everywhere else — which is why it also closes the **"Organ" rung** (how a whole chain coordinates internally).
+
+### Worked example — the tutorial, losing Earth, three factions
+- **Pragmatic Earth (AI-run):** HoS mandate SURVIVE→hold. Plan = Fortify-and-hold + Sue-for-peace hedge. Governor builds defenses + war-taxes; General fortifies; Admiral holds Earth orbit; System General de-prioritizes the lost outer colonies; Chief Scientist reaches for shields/point-defense; Foreign Minister seeks a ceasefire/ally; Spymaster sabotages Mars's fleet. Admiral fails → re-plan to Fighting-retreat (evacuate key pop/industry).
+- **Borg profile, same situation:** no evacuation (cells expendable), no ceasefire (no diplomacy), fight in orbit to the last; on failure → Scorched-earth (deny the world).
+- **Eldar profile, same situation:** Fighting-retreat from the start — preserve the population to a refuge, strike back indirectly via Guile (sabotage, proxy), never trade lives for dirt.
+
+One catalog, one scoring engine, three completely different 19-leader campaigns.
+
+### Open (transition engine)
+- Plan **granularity** — how coarse/fine the catalog entries are (a handful of archetypes vs. many).
+- How **phase-gates** are expressed (a plan as a small ordered set of gated sub-objectives).
+- **Re-plan triggers** — what report-up conditions force a re-score, and how to avoid thrashing between plans.
+- **Authored vs. computed** — how much of a plan is authored per faction vs. assembled from generic leader-tasks.
+
+---
+
 ## 6. The full chain (Q4 — with mood)
 
 > **identity** (durable traits + authored ambition) **+ mood** (transient) → read situation as a **needs-TIER** → select the **OBJECTIVE** (scored by identity + mood) → objective sets the **DOCTRINE DIALS** (this quarter's effort split) → dials drive the **DELEGATES** (who decompose by subsidiarity and issue the orders a player would).
