@@ -42,11 +42,11 @@ namespace Pulsar4X.GroundCombat
         /// turns it on at startup next to the space combat flags.</summary>
         public static bool InterruptTimeOnNewBattle = false;
 
-        /// <summary>Shield pool regeneration per game-hour, as a FRACTION of the unit's shield CAPACITY (resolver merge
-        /// 3c). Between salvos a unit's <c>CurrentShield</c> recharges toward its <c>Shield</c> max by this × the tick's
-        /// hours — so a depleted shield recovers over ~1/this hours (0.34 ≈ full recharge in ~3 game-hours). Flagged
-        /// balance default; 0 = a knocked-down shield stays down for the fight.</summary>
-        public const double ShieldRegenPerHourFraction = 0.34;
+        // Shield pool regeneration is now a PER-UNIT designed rate (GroundUnit.ShieldRegenFraction, ⚙3), defaulting to
+        // 0.34/game-hour (≈ full recharge in ~3 hours) for every unit until a ward dials it — see the recharge step in
+        // ProcessBody. The old global ShieldRegenPerHourFraction constant was removed (2026-07-11): it was dead (the
+        // 0.34 default lives on the field initializers), so a "single anchor" it wasn't. 0 = a knocked-down shield
+        // stays down for the fight.
 
         // FORTIFICATION (5h) is now DESIGN-DRIVEN — a building fortifies its region (and projects to adjacent friendly
         // regions) only if its design carries a GroundDefenseAtb (a Bunker, not a solar panel). The math + the
@@ -281,8 +281,8 @@ namespace Pulsar4X.GroundCombat
                 foreach (var u in units)
                     if (u.Shield > 0 && u.CurrentShield < u.Shield)
                         // ⚙3 Defense: recharge at the UNIT's designed rate (a fast ward vs a slow big shield), not a
-                        // global constant. ShieldRegenFraction defaults to the old 0.34 for every unit until a ward is
-                        // fitted → byte-identical. (ShieldRegenPerHourFraction is kept as that default anchor.)
+                        // global constant. ShieldRegenFraction defaults to 0.34 for every unit until a ward is
+                        // fitted → byte-identical with the old global-constant behaviour.
                         u.CurrentShield = System.Math.Min(u.Shield, u.CurrentShield + u.Shield * u.ShieldRegenFraction * (deltaSeconds / 3600.0));
 
             // Per-TARGET incoming (not per-faction) so range gating lands damage on exactly the units an attacker can
