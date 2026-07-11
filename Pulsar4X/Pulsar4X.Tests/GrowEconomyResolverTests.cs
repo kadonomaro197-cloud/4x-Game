@@ -68,12 +68,13 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("The registry knows GrowEconomy and reports its Handles; unregistered objectives (Conquer) miss.")]
-        public void Registry_ResolvesGrowEconomyOnly()
+        [Description("The registry knows GrowEconomy and reports its Handles; the None sentinel never resolves.")]
+        public void Registry_ResolvesGrowEconomy()
         {
             Assert.That(ObjectiveResolvers.TryGet(StrategicObjective.GrowEconomy, out var r), Is.True);
             Assert.That(r.Handles, Is.EqualTo(StrategicObjective.GrowEconomy));
-            Assert.That(ObjectiveResolvers.TryGet(StrategicObjective.Conquer, out _), Is.False, "no Conquer resolver yet");
+            // Every concrete objective now has a resolver; `None` — the "no objective" sentinel — never does.
+            Assert.That(ObjectiveResolvers.TryGet(StrategicObjective.None, out _), Is.False, "None never resolves");
         }
     }
 }

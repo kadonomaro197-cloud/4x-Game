@@ -30,6 +30,7 @@ namespace Pulsar4X.Factions
             { StrategicObjective.Defend, new DefendResolver() },
             { StrategicObjective.Expand, new ExpandResolver() },
             { StrategicObjective.AdvanceTech, new AdvanceTechResolver() },
+            { StrategicObjective.Conquer, new ConquerResolver() },
         };
 
         public static bool TryGet(StrategicObjective objective, out IObjectiveResolver resolver)
