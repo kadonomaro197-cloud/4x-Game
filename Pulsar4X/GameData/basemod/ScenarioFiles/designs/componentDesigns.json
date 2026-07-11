@@ -109,6 +109,17 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-warp-stabilizer",
+      "Name": "Warp Stabilizer",
+      "TemplateId": "warp-stabilizer",
+      "Properties": [
+        { "Key": "Resistance", "Value": 0.6 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-cargo-hold-1t",
       "Name": "Cargo Hold 1t",
       "TemplateId": "general-cargo-hold",

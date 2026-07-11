@@ -111,6 +111,7 @@
         "cloak-device",
         "pd-director",
         "jammer",
+        "warp-stabilizer",
         "reactor",
         "battery-bank",
         "rtg",
@@ -214,6 +215,7 @@
         "default-design-cloak-device",
         "default-design-pd-director",
         "default-design-jammer",
+        "default-design-warp-stabilizer",
         "default-design-cargo-hold-1t",
         "default-design-cargo-hold-5t",
         "default-design-f1",
@@ -312,7 +314,8 @@
         "default-ship-design-test-nomad",
         "default-ship-design-test-wraith",
         "default-ship-design-test-sentinel",
-        "default-ship-design-test-havoc"
+        "default-ship-design-test-havoc",
+        "default-ship-design-test-pathfinder"
       ],
       "LaunchQueue": [
         { "DesignId": "default-ship-design-courier", "Name": "ISS Hermes" }

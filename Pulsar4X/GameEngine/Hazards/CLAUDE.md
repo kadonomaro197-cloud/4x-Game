@@ -68,7 +68,7 @@ A hazard that just deals unavoidable damage is "pretty, not a decision" — the 
 - The consults apply it: `SensorScan` (a hardened ship sees through a jam/blind), `WarpMoveProcessor` (a stabiliser shrinks warp inhibition), `SpaceHazardProcessor` (drag reduced by resistance).
 - **A new hazard is data** (`SystemBlueprint.Hazards` JSON — typed effects + a polar placement; see Alpha Centauri's `Centauri Gas Cloud`). **A new counter is data** (the six-point component chain — `electronics.json` template → `componentDesigns.json` → `earth.json` StartingItems + ComponentDesigns; the `sensor-hardening-module` is the worked example, reusing the ONE generic Atb, so zero new C#).
 
-**Flagged follow-ups:** more counter components as pure data (a Drive Reinforcement vs MovementDrag, a Warp Stabiliser vs WarpInhibit — each a JSON template); **research-gate** them (move the template from `StartingItems` to a tech's `Unlocks` — one JSON move; v1 ships them unlocked); a **per-ship "survivability in this hazard" readout** (the INFORMATION-DELTA principle); and the **risk/reward payoff** for entering a hazard (so avoidance is a real decision, not always-correct).
+**Flagged follow-ups:** more counter components as pure data (a Drive Reinforcement vs MovementDrag — a JSON template; **the Warp Stabiliser vs WarpInhibit is now BUILT** — the base-mod `warp-stabilizer` on the Pathfinder Nebula Runner, gauge `ShipWarpStabilizerTests`); **research-gate** them (move the template from `StartingItems` to a tech's `Unlocks` — one JSON move; v1 ships them unlocked); a **per-ship "survivability in this hazard" readout** (the INFORMATION-DELTA principle); and the **risk/reward payoff** for entering a hazard (so avoidance is a real decision, not always-correct).
 
 ---
 
