@@ -64,6 +64,26 @@ namespace Pulsar4X.Factions
         public const int XenophobiaTrustPenalty = 30;
         public const int ZealotryTrustPenalty = 20;
 
+        /// <summary>M2-1c: how hard breaking a standing pact craters the injured party's trust (applied by
+        /// <see cref="Diplomacy.BreakTreaty"/>). A betrayal is the sharpest single relation hit short of war.</summary>
+        public const int BetrayalScorePenalty = 40;
+
+        /// <summary>
+        /// M2-1c (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II — Honor → keep-faith / renege): would a faction with
+        /// this <paramref name="breaker"/> personality HONOUR a standing pact rather than break it for a payoff of
+        /// <paramref name="betrayalPayoff"/> (0..1, how much reneging would gain)? Honour resists temptation: a
+        /// high-Honor faction keeps faith even when betrayal would pay well; a low-Honor one caves to a small gain.
+        /// A null/absent personality reads <see cref="PersonalityDB.Neutral"/> Honor. (Pure decision helper — the
+        /// mechanical break is <see cref="Diplomacy.BreakTreaty"/>; nothing calls either autonomously yet, so live
+        /// behaviour is unchanged.)
+        /// </summary>
+        public static bool WouldKeepFaith(PersonalityDB breaker, double betrayalPayoff)
+        {
+            double honor = breaker == null ? PersonalityDB.Neutral : breaker.TraitOf(PersonalityTrait.Honor);
+            double temptation = betrayalPayoff < 0.0 ? 0.0 : (betrayalPayoff > 1.0 ? 1.0 : betrayalPayoff);
+            return honor >= temptation;
+        }
+
         /// <summary>
         /// The relation score the decider demands to accept the treaty, adjusted by its PERSONALITY (M2-1a): a
         /// Xenophobic decider demands more trust to entangle with a foreigner, a Zealous one likewise. Each trait is
