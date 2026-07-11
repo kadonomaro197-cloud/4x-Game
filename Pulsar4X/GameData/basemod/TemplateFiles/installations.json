@@ -1540,7 +1540,7 @@
       "Name": "Service Rifle",
       "Formulas": {
         "Description": "A standard infantry rifle — light enough for any frame to shoulder.",
-        "Mass": "PropertyValue('CarryMass')",
+        "Mass": "PropertyValue('CarryMass') + Max(0, PropertyValue('Attack') - 40) * 1",
         "Volume": "[Mass] * 0.01",
         "HTK": "1.0",
         "CrewReq": "0",
@@ -1726,7 +1726,7 @@
       "Name": "Heavy Autocannon",
       "Formulas": {
         "Description": "A heavy support weapon — too heavy for a bare human frame to shoulder (needs a strong frame or power armour), but devastating.",
-        "Mass": "PropertyValue('CarryMass')",
+        "Mass": "PropertyValue('CarryMass') + Max(0, PropertyValue('Attack') - 140) * 1",
         "Volume": "[Mass] * 0.01",
         "HTK": "1.0",
         "CrewReq": "0",
@@ -1860,7 +1860,7 @@
       "Name": "Tank Cannon",
       "Formulas": {
         "Description": "A vehicle main gun — long reach and heavy hitting, far too heavy for any infantry frame.",
-        "Mass": "PropertyValue('CarryMass')",
+        "Mass": "PropertyValue('CarryMass') + Max(0, PropertyValue('Attack') - 220) * 1",
         "Volume": "[Mass] * 0.01",
         "HTK": "1.0",
         "CrewReq": "0",
@@ -1994,7 +1994,7 @@
       "Name": "Plasma Projector",
       "Formulas": {
         "Description": "A directed-energy weapon (plasma/laser) — clean mid-weight punch at range, the energy-damage flavour.",
-        "Mass": "PropertyValue('CarryMass')",
+        "Mass": "PropertyValue('CarryMass') + Max(0, PropertyValue('Attack') - 90) * 1",
         "Volume": "[Mass] * 0.01",
         "HTK": "1.0",
         "CrewReq": "0",
@@ -2256,7 +2256,7 @@
       "Name": "Rending Claws",
       "Formulas": {
         "Description": "Natural/close-combat weapons — weigh almost nothing but reach only the same hex (melee, range 0). The swarm's teeth.",
-        "Mass": "PropertyValue('CarryMass')",
+        "Mass": "PropertyValue('CarryMass') + Max(0, PropertyValue('Attack') - 20) * 1",
         "Volume": "[Mass] * 0.01",
         "HTK": "1.0",
         "CrewReq": "0",

@@ -116,6 +116,7 @@ A dial is "free" when turning it UP gives a real, resolver-read ADVANTAGE for **
 | flak **Damage Per Pellet** | S12 | `+ Max(0, DamagePerPellet-1000)/100` |
 | reactionless **Thrust** | S13 | un-bypassable mass floor |
 | siege-railgun **Muzzle Velocity** | S14 | `+ Max(0, MuzzleVelocity-50000)/1000` |
+| ground-weapon **Attack** (rifle/autocannon/cannon/energy/claw) | S15 | build-cost `+ Max(0, Attack-baseline)*1` **AND** an un-bypassable carry-weight floor `max(CarryMass, Attack*0.1)` in `GroundUnitAssembly` (Option A, byte-identical at the min stock ratio) |
 
 **Truly-free but DELIBERATELY LEFT (verdict per the modellability test) — do NOT "fix" these blindly:**
 | Dial(s) | Verdict / why left |
@@ -123,7 +124,6 @@ A dial is "free" when turning it UP gives a real, resolver-read ADVANTAGE for **
 | flak **Muzzle Velocity** | truly free, but flak is **saturation-dominated** — velocity barely moves its `HitFraction`. Marginal; low priority. |
 | inertialess-drive **Evasion Override** | real advantage, but the shipping design sits at 0.8 of a 0.95 max — tiny headroom, and its mass is a separate `Drive Mass` dial. Marginal. |
 | ship-hull **Mass Budget** | **NOT an oversight** — this IS the hull-tier system (light/medium/heavy budgets, §0b keystone). Deliberate. |
-| ground-rifle/autocannon/cannon/energy-weapon/claw **Attack** | needs a **design decision** (Attack-vs-carry-weight has no clean mass anchor) — flagged for the developer (`GroundCombat/CLAUDE.md`). |
 | passive-sensor / missile-electronics **Antenna/Wavelength/Bandwidth/Resolution/Scan Time** | ⏳ **prerequisite first** — sensor detection-quality is a known degenerate area; costing tuning knobs before that fix is premature. |
 | reactor/rtg **Lifetime**, solarArray **wavelengths**, alcubierre **Efficiency vs Power** | consumption/efficiency not fully wired to a consequence yet — ⏳ until the mechanic reads them. |
 | installations **Cargo Transfer Rate / Transfer Range / Logistic Capacity** | economy dials — cost belongs in the economy pass, not the weapon-style mass anchor. |

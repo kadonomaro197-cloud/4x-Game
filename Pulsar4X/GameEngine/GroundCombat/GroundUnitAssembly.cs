@@ -48,6 +48,12 @@ namespace Pulsar4X.GroundCombat
         /// <summary>Heaviest single part = this fraction of the carry-capacity. NUMBER TO REVIEW (flagged): 0.5.</summary>
         public const double MaxItemFraction = 0.5;
 
+        /// <summary>A ground weapon's effective carry-mass is floored at Attack × this — so firepower ALWAYS costs
+        /// carry-weight and can't be dialed up for free. Set to the tightest stock CarryMass/Attack ratio (the claw's
+        /// 2/20 = 0.1) so every base-mod weapon sits at or below its dialed CarryMass → byte-identical; only a
+        /// heavier-hitting-than-stock design is floored up. NUMBER TO REVIEW (flagged): 0.1.</summary>
+        public const double AttackCarryFactor = 0.1;
+
         /// <summary>Compute a unit's emergent stats + carry-gate validity from a <paramref name="frame"/> (must carry a
         /// <see cref="GroundChassisAtb"/>) and its mounted <paramref name="parts"/> (weapons / armour / augments, with a
         /// count each — NOT the frame). Never throws.</summary>
@@ -89,7 +95,12 @@ namespace Pulsar4X.GroundCombat
                 if (d.HasAttribute<GroundWeaponAtb>())
                 {
                     var w = d.GetAttribute<GroundWeaponAtb>();
-                    itemMass = w.Mass;
+                    // Attack costs CARRY-WEIGHT — un-bypassable (the "Attack free dial" fix, Option A). The weapon's
+                    // effective bulk is the greater of its dialed CarryMass and a floor driven by its Attack, so a
+                    // designer can't dial firepower to the ceiling while keeping the weapon feather-light. Anchored so
+                    // every stock ground weapon (Attack×AttackCarryFactor ≤ its CarryMass) is byte-identical; only a
+                    // heavier-hitting-than-stock design pays. Pairs with the build-cost coupling in the JSON Mass formula.
+                    itemMass = Math.Max(w.Mass, w.Attack * AttackCarryFactor);
                     r.Attack += w.Attack * c;
                     if (w.Range > r.Range) r.Range = w.Range;   // reach = the longest weapon
                     if (w.Attack > topWeaponAttack) { topWeaponAttack = w.Attack; r.DamageType = w.Mode; }

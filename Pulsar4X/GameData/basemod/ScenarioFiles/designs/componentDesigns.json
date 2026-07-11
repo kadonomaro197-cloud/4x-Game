@@ -717,6 +717,17 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-heavy-rifle",
+      "Name": "Heavy Battle Rifle",
+      "TemplateId": "ground-rifle",
+      "Properties": [
+        { "Key": "Attack", "Value": 200 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-ground-plating",
       "Name": "Composite Plating",
       "TemplateId": "ground-plating"
