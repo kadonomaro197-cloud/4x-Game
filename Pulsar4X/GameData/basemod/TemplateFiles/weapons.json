@@ -908,8 +908,8 @@
       "UniqueID": "plasma-repeater",
       "Name": "Plasma Repeater",
       "Formulas": {
-        "Description": "A rapid-fire plasma bolt-thrower. Its bolts are ENERGY in nature (a shield only half-soaks them — they bleed through like a beam) but travel at a FINITE velocity (a nimble ship can dodge them, unlike a beam) — the dodgeable energy weapon the weapon triangle had no cell for until Nature and Delivery split.",
-        "Mass": "PropertyValue('Energy Per Shot') / 2000 + PropertyValue('Rounds Per Second') * 30",
+        "Description": "A rapid-fire plasma bolt-thrower. Its bolts are ENERGY in nature (a shield only half-soaks them — they bleed through like a beam) but travel at a FINITE velocity (a nimble ship can dodge them, unlike a beam) — the dodgeable energy weapon the weapon triangle had no cell for until Nature and Delivery split. Faster bolts (harder to dodge) are EARNED — a hotter accelerator, so they cost mass above the baseline.",
+        "Mass": "PropertyValue('Energy Per Shot') / 2000 + PropertyValue('Rounds Per Second') * 30 + Max(0, PropertyValue('Bolt Velocity') - 200000) / 10000",
         "Volume": "[Mass] * 0.5",
         "HTK": "0.5",
         "CrewReq": "[Mass] * 0.1",

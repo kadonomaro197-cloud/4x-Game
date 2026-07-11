@@ -290,6 +290,17 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-high-velocity-plasma",
+      "Name": "High-Velocity Plasma Repeater",
+      "TemplateId": "plasma-repeater",
+      "Properties": [
+        { "Key": "Bolt Velocity", "Value": 600000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-siege-railgun",
       "Name": "Siege Railgun",
       "TemplateId": "siege-railgun"
