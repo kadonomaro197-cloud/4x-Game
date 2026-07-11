@@ -279,6 +279,17 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-high-velocity-railgun",
+      "Name": "High-Velocity Railgun",
+      "TemplateId": "railgun-weapon",
+      "Properties": [
+        { "Key": "Muzzle Velocity", "Value": 200000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-siege-railgun",
       "Name": "Siege Railgun",
       "TemplateId": "siege-railgun"

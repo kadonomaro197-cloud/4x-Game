@@ -346,8 +346,8 @@
       "UniqueID": "railgun-weapon",
       "Name": "Railgun",
       "Formulas": {
-        "Description": "Electromagnetic mass driver: flings a solid slug at high but finite velocity. Brutal against slow targets, dodged by nimble ones.",
-        "Mass": "PropertyValue('Kinetic Energy Per Shot') / 1000 + PropertyValue('Rounds Per Second') * 50",
+        "Description": "Electromagnetic mass driver: flings a solid slug at high but finite velocity. Brutal against slow targets, dodged by nimble ones. High muzzle velocity is EARNED — bigger rails and capacitors, so it costs mass above the baseline.",
+        "Mass": "PropertyValue('Kinetic Energy Per Shot') / 1000 + PropertyValue('Rounds Per Second') * 50 + Max(0, PropertyValue('Muzzle Velocity') - 50000) / 1000",
         "Volume": "[Mass] * 0.5",
         "HTK": "0.5",
         "CrewReq": "[Mass] * 0.1",
