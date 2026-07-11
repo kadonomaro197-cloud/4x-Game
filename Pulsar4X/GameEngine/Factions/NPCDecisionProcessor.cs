@@ -109,8 +109,9 @@ namespace Pulsar4X.Factions
             if (state == null) return;                       // defensive (hotloop)
 
             PlannerAction action = resolver.Resolve(state, objective);
+            objective.LastActionKind = action.Kind;          // Visibility Gate: record what the planner decided…
+            objective.LastActionDetail = action.Detail;      // …before acting, so a stuck NPC is never silent
             action.Execute?.Invoke();                        // the ONE step (the only side effect)
-            // (a later slice records action.Detail into a plan/queue readout — the Visibility Gate)
         }
 
         /// <summary>

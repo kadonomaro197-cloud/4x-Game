@@ -68,6 +68,14 @@ namespace Pulsar4X.Factions
         /// Default <see cref="DateTime.MinValue"/> = "not committed", so a fresh objective is always free to change.</summary>
         [JsonProperty] public DateTime CommittedUntil { get; internal set; } = DateTime.MinValue;
 
+        /// <summary>P1 Visibility Gate: the KIND of the last step the planner emitted (QueueBuild / QueueMine / None …).
+        /// Empty until the planner acts. Recorded because every planner failure is otherwise SILENT.</summary>
+        [JsonProperty] public string LastActionKind { get; internal set; } = "";
+
+        /// <summary>P1 Visibility Gate: the human-readable line for the last step (what it did, or why it's stuck) —
+        /// the `PlannerAction.Detail`, surfaced by <see cref="PlanReadout"/>.</summary>
+        [JsonProperty] public string LastActionDetail { get; internal set; } = "";
+
         public StrategicObjectiveDB() { }
 
         public StrategicObjectiveDB(StrategicObjectiveDB other)
@@ -76,6 +84,8 @@ namespace Pulsar4X.Factions
             Objective = other.Objective;
             TargetFactionId = other.TargetFactionId;
             CommittedUntil = other.CommittedUntil;
+            LastActionKind = other.LastActionKind;
+            LastActionDetail = other.LastActionDetail;
         }
 
         public override object Clone() => new StrategicObjectiveDB(this);
