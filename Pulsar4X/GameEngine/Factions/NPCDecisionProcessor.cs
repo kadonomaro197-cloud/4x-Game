@@ -100,22 +100,28 @@ namespace Pulsar4X.Factions
         {
             if (!factionEntity.TryGetDataBlob<StrategicObjectiveDB>(out var objective)) return;
 
-            switch (objective.Objective)
-            {
-                case StrategicObjective.GrowEconomy:
-                    foreach (var colony in factionInfo.Colonies)
-                        if (TryQueueEconomyJob(colony, factionInfo))
-                            break;   // one job started per cycle — it fills capacity over time, no runaway
-                    break;
-                // Defend / Consolidate / AdvanceTech / Expand / Conquer → 2.4d+ (no order emitted yet).
-            }
+            // Phase-2.8 P0-b: the means-ends PLANNER. Look up the resolver for the settled objective, snapshot the
+            // faction's state, and let the resolver name the ONE step that advances the nearest unmet prerequisite;
+            // the processor runs it. Objectives with no registered resolver no-op (Expand/Conquer/Defend land later).
+            if (!ObjectiveResolvers.TryGet(objective.Objective, out var resolver)) return;
+
+            FactionState state = FactionState.Snapshot(factionEntity);
+            if (state == null) return;                       // defensive (hotloop)
+
+            PlannerAction action = resolver.Resolve(state, objective);
+            action.Execute?.Invoke();                        // the ONE step (the only side effect)
+            // (a later slice records action.Detail into a plan/queue readout — the Visibility Gate)
         }
 
         /// <summary>
+        /// SUPERSEDED by <see cref="GrowEconomyResolver"/> (Phase-2.8 P0-b) — <c>EmitOrders</c> no longer calls this;
+        /// the resolver's Rung C does the same selection AND routes the build through <c>AutoAddSubJobs</c> (which this
+        /// bare version lacked — it's blind to its own inputs). Retained only as the direct-mechanic gauge in
+        /// <c>NPCOrderEmissionTests</c>; delete with that test in a later cleanup slice.
+        ///
         /// GrowEconomy's action: queue ONE buildable design onto the first free production line on the colony that can
-        /// make it (repeat on, so an economy keeps producing). Skips a line that already has a job (so a monthly Tick
-        /// fills capacity rather than piling up). Returns true if a job was queued. No-op (false) on a colony with no
-        /// industry or nothing buildable/free.
+        /// make it (repeat on). Returns true if a job was queued. No-op (false) on a colony with no industry or
+        /// nothing buildable/free.
         /// </summary>
         internal static bool TryQueueEconomyJob(Entity colony, FactionInfoDB factionInfo)
         {
