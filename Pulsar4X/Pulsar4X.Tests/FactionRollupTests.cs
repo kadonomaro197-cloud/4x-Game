@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Pulsar4X.Colonies;
+using Pulsar4X.Combat;
 using Pulsar4X.Datablobs;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
@@ -86,6 +87,34 @@ namespace Pulsar4X.Tests
             Assert.That(FactionRollup.MeanMorale(faction), Is.EqualTo(75.0).Within(1e-9));
             // Weighted: (90*900 + 10*100)/1000 = 82.0.
             Assert.That(FactionRollup.MeanLegitimacy(faction), Is.EqualTo(82.0).Within(1e-9));
+        }
+
+        [Test]
+        [Description("F-B1a: MilitaryStrength sums the faction's OWN ships' combat value across systems, excludes rivals.")]
+        public void MilitaryStrength_SumsOwnShips_ExcludesRivals()
+        {
+            var s = TestScenario.CreateWithColony();
+            var sys = s.StartingSystem;
+            int fid = s.Faction.Id;
+
+            // Whatever the clean harness starts with — measure the delta so the test is robust to it.
+            double before = FactionRollup.MilitaryStrength(s.Faction);
+
+            AddShip(sys, fid, firepower: 1000, toughness: 2000);
+            AddShip(sys, fid, firepower: 500, toughness: 500);
+            AddShip(sys, factionId: 999999, firepower: 1_000_000, toughness: 1_000_000); // a rival's ship — must NOT count
+
+            Assert.That(FactionRollup.MilitaryStrength(s.Faction),
+                Is.EqualTo(before + (1000 + 2000) + (500 + 500)).Within(1e-6),
+                "strength is the sum of OWN ships' Firepower+Toughness; a rival's ship is excluded");
+        }
+
+        private static void AddShip(StarSystem sys, int factionId, double firepower, double toughness)
+        {
+            var ship = Entity.Create();
+            ship.FactionOwnerID = factionId;
+            sys.AddEntity(ship);
+            ship.SetDataBlob(new ShipCombatValueDB(firepower, toughness, 1.0));
         }
 
         [Test]

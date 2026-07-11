@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Pulsar4X.Colonies;
+using Pulsar4X.Combat;
 using Pulsar4X.Engine;
 
 namespace Pulsar4X.Factions
@@ -56,6 +57,34 @@ namespace Pulsar4X.Factions
         public static double MeanLegitimacy(Entity faction)
             => WeightedColonyMean(faction, LegitimacyDB.Neutral,
                 colony => colony.TryGetDataBlob<LegitimacyDB>(out var l) ? l.Legitimacy : (double?)null);
+
+        /// <summary>
+        /// F-B1a (docs/AI-BRAIN-BUILD-TRACKER.md, the "eyes" foundation): the faction's OWN total military strength —
+        /// the sum, over every ship it owns in every system, of that ship's combat value (<see cref="ShipCombatValueDB"/>
+        /// Firepower + Toughness, the two numbers the auto-resolver already rates a ship on, kept on their intentionally
+        /// shared joule-scale). This is the own-strength half of the Risk/threat read; the fog-limited ENEMY estimate is
+        /// F-B1b. Deferred out of F-A3 because — unlike the colony gauges — it needs to walk every system's entities, so
+        /// it takes the game off the faction entity's manager. Read-only → byte-identical. 0 for a fleetless faction.
+        /// </summary>
+        public static double MilitaryStrength(Entity faction)
+        {
+            var info = FactionInfo(faction);
+            var game = faction?.Manager?.Game;
+            if (info == null || game == null)
+                return 0;
+
+            int factionId = faction.Id;
+            double total = 0;
+            foreach (var system in game.Systems)
+            {
+                foreach (var ship in system.GetAllEntitiesWithDataBlob<ShipCombatValueDB>())
+                {
+                    if (ship.FactionOwnerID == factionId && ship.TryGetDataBlob<ShipCombatValueDB>(out var cv))
+                        total += cv.Firepower + cv.Toughness;
+                }
+            }
+            return total;
+        }
 
         // --- helpers ---
 
