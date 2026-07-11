@@ -68,19 +68,38 @@ namespace Pulsar4X.Factions
             // a live loop. Runs before the doctrine step so it happens every cycle regardless of doctrine weights.
             RunDiplomaticDrift(factionEntity);
 
-            var doc = factionInfoDB.Doctrine;
+            // The Organism decision (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II Phase 2): read the needs-ladder, pick
+            // an objective from tier × doctrine × personality, and commit it through the hysteresis engine. This slice
+            // (2.4b) settles + STORES the objective; the per-objective ORDER emission (build/expand/attack) is the
+            // follow-on (2.4c+). Storing a plan the NPC brain hasn't acted on yet is byte-identical.
+            UpdateStrategicObjective(factionEntity, factionInfoDB);
+        }
 
-            // Determine the dominant doctrine axis this cycle.
-            float maxWeight = Math.Max(doc.Economic, Math.Max(doc.Military, Math.Max(doc.Tech, doc.Expansion)));
+        /// <summary>
+        /// Phase-2.4b: settle this faction's <see cref="StrategicObjectiveDB"/> for the cycle. Assess the needs-tier
+        /// (<see cref="NeedsLadder"/>), select the concrete objective (<see cref="ObjectiveSelector"/> over doctrine +
+        /// personality), and commit it through the transition engine (<see cref="ObjectiveTransition"/>) so the plan
+        /// doesn't thrash. The blob is created on first run. Uses GAME time (not wall-clock) so it stays deterministic.
+        /// Defensive: a faction with no manager/game is skipped. Internal for the CI gauge.
+        /// </summary>
+        internal static void UpdateStrategicObjective(Entity factionEntity, FactionInfoDB factionInfoDB)
+        {
+            var game = factionEntity.Manager?.Game;
+            if (game == null) return;
+            DateTime now = game.TimePulse.GameGlobalDateTime;
 
-            if (maxWeight <= 0f)
-                return;
+            if (!factionEntity.TryGetDataBlob<StrategicObjectiveDB>(out var objective))
+            {
+                objective = new StrategicObjectiveDB();
+                factionEntity.SetDataBlob(objective);
+            }
 
-            // TODO: translate dominant axis into actual orders:
-            //   Economic  -> prioritize colony construction / refinery queues
-            //   Military  -> prioritize ship builds / weapon research
-            //   Tech      -> prioritize research lab staffing / funding
-            //   Expansion -> prioritize survey ships / colonization orders
+            NeedTier tier = NeedsLadder.AssessTier(factionEntity);
+            factionEntity.TryGetDataBlob<PersonalityDB>(out var personality);   // null → neutral in the selector
+            StrategicObjective chosen = ObjectiveSelector.SelectObjective(tier, factionInfoDB.Doctrine, personality);
+
+            // Target selection (which rival to Conquer) is the 2.4c refinement; keep -1 (none) for now.
+            ObjectiveTransition.Advance(objective, tier, chosen, -1, now, ObjectiveTransition.DefaultCommitFor);
         }
 
         /// <summary>
