@@ -6,7 +6,7 @@
       "Name": "EMaser Weapon",
       "Formulas": {
         "Description": "ElectroMagnetic Amplifed by Stimulated Emission of Radiation Weapon",
-        "Mass": "PropertyValue('Power Input') / 1000 + PropertyValue('Chamber Volume') + PropertyValue('Radiator Volume')",
+        "Mass": "PropertyValue('Power Input') / 1000 + PropertyValue('Chamber Volume') + PropertyValue('Radiator Volume') + Max(0, PropertyValue('Range') - 5000) * 0.5",
         "Volume": "PropertyValue('Power Input') / 1000 + PropertyValue('Chamber Volume')",
         "HTK": "0.5",
         "CrewReq": "[Mass]",

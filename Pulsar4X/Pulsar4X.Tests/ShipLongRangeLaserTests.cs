@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using Pulsar4X.Components;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
 using Pulsar4X.Ships;
@@ -18,6 +19,12 @@ namespace Pulsar4X.Tests
     /// Cradle-to-grave: JSON design (Range override) → NCalc <c>genericBeamWpnAtbArgs</c> → GenericBeamWeaponAtb.MaxRange
     /// → the range the closing-combat trigger and the firing processor both read. Additive / byte-identical (new design
     /// + new ship; no existing fixture perturbed — the default laser and every ship using it are untouched). Engine-only → CI.
+    ///
+    /// S9 — LONG RANGE IS EARNED, NOT FREE. The <c>laser-weapon</c> Mass formula now adds <c>Max(0, Range-5000) * 0.5</c>,
+    /// so extending range beyond the 5,000 m baseline costs mass (which flows on to crew/research/credits/materials via
+    /// the template's <c>[Mass]</c> cost formulas — the "fat price tag" the Weapons design principle demands). Anchored
+    /// at the default Range (5,000 m → zero extra), so every existing laser design is byte-identical; only a long-range
+    /// design pays. <see cref="TheRangeDial_CostsMass_DefaultUntouched"/> gauges the exact +2,500 delta.
     /// </summary>
     [TestFixture]
     public class ShipLongRangeLaserTests
@@ -56,6 +63,21 @@ namespace Pulsar4X.Tests
                 "the default laser is untouched at its 5,000 m default (byte-identical)");
             Assert.That(longbow, Is.EqualTo(aegis * 2).Within(1e-6),
                 "the long-range design out-reaches the default laser by the Range dial's doubling");
+        }
+
+        [Test]
+        [Description("Long range is EARNED: the long-range laser weighs exactly the range-cost term more than the default laser (Max(0, Range-5000) * 0.5 = 2500 at Range 10,000). Proves the Range dial now carries a real mass price (which flows on to crew/research/credits/materials via [Mass]) AND that the default laser — anchored at Range 5000 → zero extra — is byte-identical.")]
+        public void TheRangeDial_CostsMass_DefaultUntouched()
+        {
+            var s = TestScenario.CreateWithColony();
+            var designs = s.Faction.GetDataBlob<FactionInfoDB>().ComponentDesigns;
+            long defaultMass = designs["default-design-laser-weapon"].MassPerUnit;
+            long longRangeMass = designs["default-design-long-range-laser"].MassPerUnit;
+            Log($"default laser mass = {defaultMass}, long-range laser mass = {longRangeMass}, delta = {longRangeMass - defaultMass}");
+            Assert.That(longRangeMass, Is.GreaterThan(defaultMass),
+                "the Range dial now costs mass — long range is earned, not free");
+            Assert.That(longRangeMass - defaultMass, Is.EqualTo(2500),
+                "the extra mass is exactly the range-cost term (Range 10,000 - 5,000 anchor) * 0.5 — the default laser pays nothing (byte-identical)");
         }
     }
 }
