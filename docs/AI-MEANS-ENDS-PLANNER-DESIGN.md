@@ -117,6 +117,100 @@ Sequenced cheapest-highest-value first; each byte-identical behind `EnableOrderE
 
 ---
 
+## Build Spec — the deep dive (2026-07-11, four read-only agents)
+
+A second survey (build-spec · wiring/coexistence · testing/visibility · feasibility-oracle+mineral-floor) turned the scope map above into a **build-ready spec against a MOVING baseline** (the reactive Movement-II slices are landing in parallel). Everything below is file:line-verified on this branch.
+
+### A. The five new classes (all `Pulsar4X.Factions`, pure-helper + `internal`-for-gauge convention)
+
+| File (`GameEngine/Factions/`) | Contents | Role |
+|---|---|---|
+| `FactionState.cs` | `FactionState` (the gather-once "what I have" snapshot) + `ColonyState` + `MineralShortfall` | reads every gauge ONCE per cycle so a resolver reads memory, not the entity graph. NOT a DataBlob (per-Tick scratch). Null-safe; `Snapshot(faction)` returns null on a blob-less/manager-less faction. |
+| `PlannerAction.cs` | `PlannerAction { string Kind; string Detail; Action Execute }` + `.None` | the ONE step a resolver picks. The `Execute` closure unifies the two ways rungs reach the sim (`EntityCommand`→`OrderHandler.HandleOrder` for survey/move/found vs. the **direct** `IndustryTools.AddJob` for builds — a single return type can't express both). `Detail` feeds the visibility readout. |
+| `IObjectiveResolver.cs` | `IObjectiveResolver { StrategicObjective Handles; PlannerAction Resolve(state, objective); }` + `ObjectiveResolvers` static registry | one small backward-chainer per objective; the registry (mirrors `ExchangeCatalog`) maps objective→resolver. |
+| `GrowEconomyResolver.cs` | `GrowEconomyResolver` + `FindMineDesignFor` | the concrete P-1 resolver (algorithm below). |
+| `FeasibilityOracle.cs` | `FeasibilityOracle.CanActuallyBuild(colony, design, factionInfo, out blockedReason)` | the plan-time "will this silently stall?" predicate (spec below). |
+
+**`FactionState` read map** (the "what I have"): `Balance`/`MilitaryStrength`/`MeanMorale`/`MeanLegitimacy` ← `FactionRollup`; per-colony `Industry`(`IndustryAbilityDB`)/`Cargo`(`CargoStorageDB`)/`Mining`(`MiningDB.ActualMiningRate`)/`PlanetMinerals`(`ColonyInfoDB.PlanetEntity`→`MineralsDB.Minerals`); `StalledJobs()` = `ProductionLines[*].Jobs` where `Status==MissingResources` (`Enums.cs:175`); `MineralShortfalls()` = a stalled job's `ResourcesRequiredRemaining` (`JobBase.cs:29`) ids **absent from `IndustryDesigns`** (that absence-test IS the mineral-floor detector); `DetectedRivalStrength` ← `ThreatAssessment.DetectedStrengthOf` per rival.
+
+### B. The `EmitOrders` rewrite — REPLACE, not wrap; ONE flag
+
+The decision half (`UpdateStrategicObjective`) is untouched. The act half becomes snapshot → registry → resolve → execute, still behind the single `EnableOrderEmission` gate:
+
+```
+internal static void EmitOrders(factionEntity, factionInfo):
+    if no StrategicObjectiveDB: return
+    if !ObjectiveResolvers.TryGet(objective.Objective, out resolver): return   // objectives w/o a resolver no-op
+    state = FactionState.Snapshot(factionEntity);  if null: return
+    action = resolver.Resolve(state, objective)     // PURE decision
+    action.Execute?.Invoke()                        // the ONLY side effect
+    // (a later slice records action.Detail into the plan readout — the Visibility Gate)
+```
+
+- **REPLACE the arm body per-objective, don't wrap.** A blind reactive fallback firing when the resolver says "nothing doable" re-introduces the exact silent-stall bug the planner fixes. The resolver is a strict superset of the reactive emitter (its "inputs ready → build" branch IS `TryQueueEconomyJob`, upgraded to route through `AutoAddSubJobs`), so there's no residual behaviour to fall back to. `TryQueueEconomyJob` is **superseded** by `GrowEconomyResolver`.
+- **Keep ONE gate (`EnableOrderEmission`).** A second `EnablePlanner` flag makes a 2×2 dead-state matrix. Byte-identical-off holds automatically through the whole migration (flag off → `EmitOrders` never runs → arm shape irrelevant), so each per-arm replacement is independently safe and CI-gated.
+
+### C. `GrowEconomyResolver` — the backward-chain (nearest unmet prereq → ONE order)
+
+```
+Resolve(state, objective):
+  A. no colony with Industry            → None
+  B. for each STALLED job (MissingResources):
+     B1. job has buildable sub-demands not yet queued (id in ResourcesRequiredRemaining ∈ IndustryDesigns)
+                                          → QueueBuild: IndustryTools.AutoAddSubJobs(colony, job)   # the cheap fix
+     B2. for each mineral shortfall (id ∉ IndustryDesigns, Missing = req − GetUnitsStored):
+         → hand to the MINERAL-FLOOR BRIDGE (D): survey / mine / more-mines / logistics / escalate-to-Expand
+  C. nothing stalled → start next growth build on a free line, ROUTED THROUGH AutoAddSubJobs
+                       (gated by FeasibilityOracle.CanActuallyBuild)     → QueueBuild
+  else                                    → None
+```
+
+One step per cycle, riding the 2.3 hysteresis loop — never computes the whole plan at once (least-commitment).
+
+### D. The two hardest pieces (deep-spec'd, file:line-anchored)
+
+**D1 — `FeasibilityOracle.CanActuallyBuild` mirrors `IndustryTools.ConstructStuff`'s EXECUTION gates, in order (mirror, NOT a superset — a stricter check makes the AI refuse builds a player could make):**
+0. **Tech** — `factionInfo.IndustryDesigns.ContainsKey(design.UniqueID)` (ConstructStuff indexes it unconditionally at `IndustryTools.cs:125` → `KeyNotFoundException` if absent).
+1. **Line exists** — a `ProductionLine.IndustryTypeRates.ContainsKey(design.IndustryTypeID)` (`IndustryAbilityDB.cs:16`).
+2. **Non-zero cost** — `design.ResourceCosts.Values.Sum() > 0` (ConstructStuff throws "resources can't cost 0" at `:159`).
+3. **Capacity ≥ 1 pt/tick** — `(int)(rate × InfrastructureProcessor.GetEfficiency(colony)) ≥ 1` (ConstructStuff skips a job under 1 at `:133`).
+4. **Crew/talent — SHIP designs ONLY** (`design is ShipDesign s && s.CrewReq>0`, guard at `:141`): `ManpowerTools.ResolveBuild(colony, CrewReq−TalentReq).CanBuild && HasTalentToBuild(colony, TalentReq)`. Inert on a pool-less host (matches execution — must replicate the guard or it false-blocks stations/installations).
+5. **Materials** — replicate `AutoAddSubJobs`'s classification per cost id: satisfied if in stock (`GetUnitsStored`), else if sub-buildable (`is IConstructableDesign` → recurse, terminates at the mineral floor), else → **mineral shortfall** (the reason string carries the id+qty, the hand-off to D2).
+
+**D2 — the mineral-floor bridge (`ResolveMineralShortfall`) — the decision tree, in order:**
+1. `missingId` **not a mineral** (`CargoGoods.IsMineral` false) → defer to `AutoAddSubJobs` (engine refines it).
+2. mineral on home body (`ColonyInfoDB.PlanetEntity`→`MineralsDB`), **unsurveyed** (`Amount.For(mask)==null` / `!GeoSurveyableDB.IsSurveyComplete`) → **`GeoSurveyOrder.CreateCommand`**.
+3. surveyed+accessible, **no mining capacity** (`MiningDB.ActualMiningRate[mid]` absent/0) → **build a Mine** (`IndustryTools.AddJob`), itself pre-checked by D1.
+4. has capacity but rate too low → **build another Mine** (raise `NumberOfMines`).
+5. **not on home body but stocked/mined at a sibling colony** → **set `LogiBaseDB.DesiredLevels`** (`SetLogisticsOrder.CreateCommand_SetBaseItems`); the freight market hauls it.
+6. **nowhere reachable** → **escalate to Expand** (`CreateColonyOrder` — a new colony on a body that has it).
+
+> **⚠ The single most error-prone spot (load-bearing in BOTH D1 and D2):** resource costs are **string-keyed** (`ResourceCosts`/`ResourcesRequiredRemaining` by UniqueID) but `MineralsDB.Minerals` and `MiningDB.*MiningRate` are **int-keyed** by `Mineral.ID` (a runtime `GetEntityID()`). Convert via `factionInfo.Data.CargoGoods.GetMineral(uniqueID).ID` (exactly as `MineResourcesProcessor.cs:128` does), and check **both** `CargoGoods` and `LockedCargoGoods` (a not-yet-unlocked mineral is only in the locked library).
+
+### E. Testing + the Visibility readout (a DELIVERABLE, not an afterthought — every failure here is SILENT)
+
+- **Pure gauges** (fast, `rest` shard): resolver returns the right rung for a hand-built state (unsurveyed→Survey, no-mine→QueueMine, sibling-stock→SetLogistics, flowing→None); oracle predicates at their boundaries; **+ a pinning cross-check** — the oracle's `MissingResources` prediction must agree with what `ConstructStuff` actually sets over an input sweep (guards against plan-time/execution drift, the `CombatKernelTests` technique).
+- **Integration gauges**: reuse `CreateWithColony` + flip `IsNPC` (Path A, deterministic); create a real shortfall by draining the stockpile (`RemoveCargoByUnit`) / zeroing the deposit (`MineralsDB.Minerals[id].Amount`, internal-set) / marking it unsurveyed; call the resolver static directly (avoids hotloop-timing flake + the static-leak); assert the corrective order via the read APIs. **First triage line: assert `ActivityState != Stasis`.**
+- **"Goal becomes reachable"**: assert **PROGRESS not completion** — the stuck job leaves `MissingResources` and its points burn down — and field the corrective mine deterministically via the `OnConstructionComplete`-direct workaround (dodges the known build-to-completion flakiness).
+- **The Visibility readout** (Failure B — the number doesn't exist yet, so building it IS part of the planner): a small persisted record (a `PlanStateDB`, or three fields on `StrategicObjectiveDB`) carrying `BlockedOn` (structured: `Mineral(iron): deposit unsurveyed`) + `LastEmittedOrder`; exposed `SocietyReadout`-style (pure, missing-blob-tolerant string builder) with a `PlanReadoutTests` gauge and a client "Dump Plan" caller. Example line: `Directorate: obj GrowEconomy/Thrive | blocked-on iron [deposit unsurveyed] | emitted: survey Mars`.
+
+### F. The interleave sequence + FIT VERDICT
+
+**FIT = INTERLEAVE, per-objective, along the cost gradient — NOT a strictly-after phase, and do NOT build the reactive Conquer/Defend emitter at all.** The economy planner is the *honest continuation* of the reactive work, not a bolt-on: we fit it in by making 2.4c **correct** instead of building 2.4d shallow.
+
+Refined slice order (each byte-identical behind `EnableOrderEmission`, one CI gate each):
+- **P0-a** `FactionState` snapshot (no consumer) · gauge `FactionStateTests` (hand-sum).
+- **P0-b** `PlannerAction`+`IObjectiveResolver`+registry+`FeasibilityOracle` skeleton (capacity+tech) + `GrowEconomyResolver` Rung C only (queue-on-free-line **through `AutoAddSubJobs`** — the cheap fix) + rewire `EmitOrders`.
+- **P1-a** `StalledJobs()`+`MineralShortfalls()` sensor.
+- **P1-b** Rung B2/D2 step 3 (queue a mine) · **P1-c** logistics (D2 step 5) · **P1-d** survey (D2 step 2).
+- **P1-e** oracle teeth (crew/money/capacity — D1 checks 3-5).
+- **Cross** the plan/queue visibility readout.
+- **P-2 Expand** and **P-3 Conquer/Defend** register the same way in their own later phases (P-3's reachability/router/fuel-readiness is the one genuine deferrable sub-subsystem; share the 2.6 eyes-wire).
+
+Decision-side **2.5/2.6/2.7 run in full parallel** — they modulate `ObjectiveSelector`/`UpdateStrategicObjective`, invisible to the emit-side planner (2.6's eyes-read is a shared companion to the future Conquer resolver — build once, use twice).
+
+---
+
 ## Connections (Prime Directive)
 
 - **Feeds IN:** the whole Organism decision loop (`StrategicObjectiveDB` from `NeedsLadder`/`ObjectiveSelector`); the state reads above; the engine's dependency graph (`AutoAddSubJobs`/`ResourceCosts`).
