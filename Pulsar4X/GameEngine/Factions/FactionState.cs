@@ -3,6 +3,7 @@ using System.Linq;
 using Pulsar4X.Colonies;
 using Pulsar4X.DataStructures;
 using Pulsar4X.Engine;
+using Pulsar4X.Fleets;
 using Pulsar4X.Industry;
 using Pulsar4X.Storage;
 
@@ -67,6 +68,21 @@ namespace Pulsar4X.Factions
 
         /// <summary>Colonies that have an industry line with an empty job queue — somewhere to start new work.</summary>
         public IEnumerable<ColonyState> ColoniesWithFreeLine() => Colonies.Where(c => c.HasFreeLine);
+
+        /// <summary>
+        /// Phase-2.8 (Defend): every FLEET this faction owns, across all its systems — the postureable/taskable
+        /// fleets the crisis resolvers act on. Lazy + defensive (a null/blob-less system is skipped); read-only.
+        /// </summary>
+        public IEnumerable<Entity> OwnedFleets()
+        {
+            foreach (var system in Game.Systems)
+            {
+                if (system == null) continue;
+                foreach (var fleet in system.GetAllEntitiesWithDataBlob<FleetDB>())
+                    if (fleet.FactionOwnerID == FactionId)
+                        yield return fleet;
+            }
+        }
 
         /// <summary>
         /// Phase-2.8 P1-a: every STALLED build across all colonies — a job the engine parked at
