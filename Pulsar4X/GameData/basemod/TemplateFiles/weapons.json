@@ -504,7 +504,7 @@
       "Name": "Flak / Point-Defense Gun",
       "Formulas": {
         "Description": "Rapid-fire pellet-cloud gun. Barely scratches a capital, but its volume of fire fills the sky — the fighter and missile killer.",
-        "Mass": "PropertyValue('Rounds Per Second') * 10 + PropertyValue('Pellets Per Shot') * 2",
+        "Mass": "PropertyValue('Rounds Per Second') * 10 + PropertyValue('Pellets Per Shot') * 2 + Max(0, PropertyValue('Damage Per Pellet') - 1000) / 100",
         "Volume": "[Mass] * 0.5",
         "HTK": "0.5",
         "CrewReq": "[Mass] * 0.1",

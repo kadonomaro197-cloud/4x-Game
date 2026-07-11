@@ -325,6 +325,17 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-heavy-flak",
+      "Name": "Heavy Flak Cannon",
+      "TemplateId": "flak-weapon",
+      "Properties": [
+        { "Key": "Damage Per Pellet", "Value": 5000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-logistics-office",
       "Name": "Logistics Office",
       "TemplateId": "logistics-office"
