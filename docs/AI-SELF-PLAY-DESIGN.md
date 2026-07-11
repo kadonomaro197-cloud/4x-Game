@@ -113,35 +113,43 @@ Grouped by the administrative spine, with the operational military line crossing
 ### The tree
 
 ```
-HEAD OF STATE   (regime type + empire legitimacy — held DIRECTLY, no minister)
-│               · sets the empire's DESTINATION (objective) + budget; runs character-assignment (HR)
+HEAD OF STATE   (the empire's DESTINATION/objective + regime + budget + HR/character-assignment)
 │
-├─ EMPIRE CABINET
-│   ├─ Grand Admiral ............ where the war effort goes (which systems)
-│   ├─ Empire Foreign Minister .. overall external posture
-│   │     └─ Per-faction Foreign Minister  (one per met faction)
-│   │           ├─ Ambassador ... posted at that court
-│   │           ├─ Envoy ........ sent for a negotiation
-│   │           └─ Agent ........ ops against that faction  ⟵ dotted line to Spymaster
-│   ├─ Spymaster ............... espionage doctrine + counter-intel (functional home of Agents)
-│   ├─ Chief Scientist ......... research direction + the empire's DESIGN GOALS (reach-for-the-Defiant)
-│   │     └─ Lab Scientist ..... runs a research institution
-│   └─ Trade Minister .......... routes, tariffs, import/export
+│   ── THE TWO-AXIS RULE (2026-07-10) ──────────────────────────────────────────────
+│   Every seat has exactly TWO lines:
+│     • an ADMIN line — VERTICAL, to your Governor/HoS ("who you belong to / where you live")
+│     • a DOMAIN-DIRECTION line — ⟵ HORIZONTAL, from your empire domain-head ("what your specialty does")
+│   The civil/economic chain (Chancellor→Governor→Governor) IS the admin spine, so its seats' two
+│   lines converge; military & science seats live on the spine but take direction from their minister.
+│   ─────────────────────────────────────────────────────────────────────────────────
 │
-└─ SYSTEM GOVERNOR ............. the SYSTEM'S HEAD — ALL system-level leaders report here
-      │                          (owns economic effort across the system's worlds + colonization targets)
-      ├─ System Admiral ........ fleet movement & engagement in-system + fleet composition
-      │     │                     ⟵ operational orders cross in from the Grand Admiral
-      │     └─ Fleet Commander .. one fleet's doctrine  →  [autonomous ships]
-      ├─ System Scientist ...... the system's science loop: discover → build → staff → upgrade a research station
-      │                           ⟵ research direction crosses in from the Chief Scientist
-      ├─ System General ........ which worlds to reinforce / hold / invade
-      │                           ⟵ operational orders cross in from the Grand Admiral
-      └─ Planetary Governor .... one world's development (build / tax / stockpile)
-            ├─ Interior Minister .... that world's politics / stability / blocs
-            ├─ Planetary Scientist .. the world's science loop (survey → build → staff → upgrade)
-            └─ Planetary General .... the surface campaign  ⟵ operational orders from the System General
-                  └─ Battalion Commander ... one battalion  →  [autonomous units]
+├─ Grand Admiral ....... SPACE-military effort: which systems get the war   ─direction→ System Admiral
+├─ Field Marshal ....... GROUND-military effort: which worlds get the push  ─direction→ System / Planetary General
+├─ Chief Scientist ..... research direction + design goals ("reach for the Defiant") ─direction→ System / Planetary Scientist
+├─ Foreign Minister .... overall external posture
+│     └─ Per-faction Foreign Minister → Ambassador · Envoy · Agent  (⟵ Spymaster for tradecraft)
+├─ Spymaster ........... espionage doctrine + counter-intel (home of Agents)
+│
+└─ CHANCELLOR .......... the empire's CIVIL/ECONOMIC head — which systems get the development effort
+      │                  (the "empire Governor": top of the admin spine; civil twin of Grand Admiral/Field Marshal)
+      ├─ Trade Minister .... commerce specialist: routes / tariffs / import-export
+      └─ System Governor ... the SYSTEM'S head — ALL system-level leaders report here
+            ├─ System Admiral ...... in-system fleets + composition            ⟵ direction: Grand Admiral
+            │     └─ Fleet Commander ... one fleet's doctrine  →  [autonomous ships]
+            ├─ System Scientist .... system science loop (discover→build→staff→upgrade)  ⟵ direction: Chief Scientist
+            │     └─ Lab Scientist ..... does the research at a station
+            ├─ System General ...... which worlds to reinforce / hold / invade  ⟵ direction: Field Marshal
+            └─ Planetary Governor .. one world's development (build / tax / stockpile)
+                  ├─ Interior Minister .... that world's politics / stability / blocs
+                  ├─ Planetary Scientist .. the world's science loop            ⟵ direction: Chief Scientist
+                  └─ Planetary General .... the surface campaign                ⟵ direction: System General ↑ Field Marshal
+                        └─ Battalion Commander ... one battalion  →  [autonomous units]
+
+── THE SYMMETRY: three empire EFFORT-ALLOCATORS, each with a system EXECUTOR ──
+   Grand Admiral (space war)  → System Admiral   ·   Field Marshal (ground war) → System General
+   Chancellor  (economy/dev)  → System Governor
+   (plus Chief Scientist→Scientists · Foreign Minister/Spymaster = external · HoS = destination+regime+budget+HR)
+   Roster is now 21 (added Field Marshal #20 + Chancellor #21).
 ```
 
 ### The roster table
@@ -167,16 +175,18 @@ HEAD OF STATE   (regime type + empire legitimacy — held DIRECTLY, no minister)
 | 17 | Lab Scientist | Institution (field) | (runs research to the Chief Scientist's priorities) | EXISTS (fully wired) |
 | 18 | System Scientist | System (field) | The system's whole science loop: **discover → build a research station → staff it → upgrade it** (not just "survey first") | WIRE (survey + station build/deploy + scientist-assign + upgrade orders all built; the run-the-loop delegate is new) |
 | 19 | Planetary Scientist | Planet (field) | The world's science loop: survey deposits/anomalies → build + staff + upgrade local research infrastructure | WIRE (as above) |
+| 20 | **Field Marshal** | Empire (ground) | **Which worlds/theatres get the empire's GROUND effort** (split out from the Grand Admiral 2026-07-10; the empire-ground head) | NEW |
+| 21 | **Chancellor** | Empire (civil/economic) | **Which systems get the empire's ECONOMIC/development effort** — the "empire Governor", top of the admin spine, civil twin of Grand Admiral/Field Marshal | NEW |
 
-### Symmetry check — clean at every scope except one
+### Symmetry check — now clean at EVERY scope (2026-07-10)
 
-| Scope | Space military | Ground military | Civilian governance |
+| Scope | Space military | Ground military | Civil / economic governance |
 |-------|----------------|-----------------|---------------------|
-| **Empire** | Grand Admiral | *(deferred)* | Head of State |
+| **Empire** | Grand Admiral | **Field Marshal** | **Chancellor** |
 | **System** | System Admiral | System General | System Governor |
 | **Planet** | — (ships don't hold worlds) | Planetary General | Planetary Governor |
 
-The only remaining asymmetry is the **empire-scope ground ceiling** — deferred until multi-system ground wars are real.
+*(The Head of State sits ABOVE all three empire heads — it owns the destination, the regime, the budget, and HR, not a single domain.)* The old empire-scope asymmetries are **resolved**: the ground ceiling is now the **Field Marshal** (split from the Grand Admiral), and the civil ceiling is the **Chancellor** (the empire-level System-Governor-equivalent). Each empire effort-allocator has a matching system executor.
 
 ---
 
@@ -518,7 +528,7 @@ Cheapest end-to-end proof, because the grave-end target already exists and is al
 - **Delegation = NPC AI** — one system runs the player's hand-off and the NPC's brain; no separate AI path.
 - **The 19-role roster** and its two-chain (administrative + operational) structure.
 - **Head of State holds the regime directly** (government type + empire legitimacy) — no empire Interior Minister.
-- **Interior Minister and Planetary General report under the Planetary Governor**; **ALL system-level leaders report to the System Governor** — System Admiral, System Scientist, and System General alike (**updated 2026-07-10**, superseding the earlier "the mobile System Admiral only coordinates with the Governor"). The System Governor is the unambiguous **head of the system** (which is why objective-decomposition starts there — subsidiarity). The empire cabinet crosses in with **domain direction** as a matrix: the **Grand Admiral** hands the Admiral/General their operational (war-effort) orders, the **Chief Scientist** hands the System Scientist research direction — but the *reporting/administrative* line for every system leader is to the Governor.
+- **The TWO-AXIS RULE (2026-07-10)** governs the whole chart: every seat has an **admin line** (vertical — who you belong to) and a **domain-direction line** (horizontal — from your empire domain-head). Concretely: **Interior Minister & Planetary General report under the Planetary Governor; ALL system-level leaders (System Admiral, System Scientist, System General) report to the System Governor; the System Governor reports to the CHANCELLOR; the Chancellor reports to the HoS** — that vertical is the civil/admin spine. The specialist domains **cross in** horizontally: **Grand Admiral** → the Admiral's war-effort orders, **Field Marshal** → the General's ground orders, **Chief Scientist** → the Scientists' research direction. (Superseded the earlier "the mobile System Admiral only coordinates with the Governor.") The System Governor is the unambiguous **head of the system** — why objective-decomposition starts there (subsidiarity) — and the **Chancellor is the head of the civil empire**, the System-Governor-equivalent one scope up.
 - **No leaders for leaders' sake** — every seat must own a distinct decision; competence is texture, not the justification.
 - **Ship Captain cut** (a lone ship is a fleet of one); **company/unit commander deferred to v2** (keeps the AI-seat count honest).
 - **One six-rung people pipeline** (born → skilled → seated → acts → improves → lost) for all 19 roles — build once, prove on the Governor, reuse.
@@ -536,7 +546,7 @@ Cheapest end-to-end proof, because the grave-end target already exists and is al
 - **Rung 6 outcomes are probabilistic, not fixed picks** — a turned leader lands as mole / clean defection / caught, and a captured leader as killed / prisoner / escape, both decided by `RNG × counter-intel × leader stats`. Ground-formation leader loss keeps the no-penalty reassign but **notifies the player**.
 
 **Open (decide when we build):**
-- The **empire-scope ground ceiling** — a "High Command"/Field Marshal, a joint Supreme Commander over both, or nothing. **Deferred (nothing for now).**
+- ~~The empire-scope ground ceiling~~ **RESOLVED 2026-07-10: the empire ground head is the FIELD MARSHAL** (split from the Grand Admiral), and the empire civil head is the **CHANCELLOR** (System-Governor-equivalent). Grand Admiral + Field Marshal both report to the HoS (no joint Supreme Commander rung — the HoS is commander-in-chief; joint space→ground ops are handled by the transition engine's phase-gates, not a new seat).
 - **The actual stance names** per pillar per government type (the fact that they re-skin by government is locked; the specific names come with the government content).
 - **How race biases doctrine/stance selection** — the trait→lean mapping (locked that it's race-driven; the mapping itself is content).
 - **The competence-roll numbers** — base means per tier, stddev, weights/caps on the three soft modifiers.
