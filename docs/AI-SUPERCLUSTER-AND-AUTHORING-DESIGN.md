@@ -1,6 +1,6 @@
 # AI Supercluster & Scenario Authoring — the "multiverse" layer (staging a franchise)
 
-> **Status: v0.1 DISCUSSION DRAFT (2026-07-10).** The **final rung** — and *not new machinery.* It's the **AUTHORING layer that instantiates a "universe" (a scenario) from the engine below**, plus the **ACCEPTANCE TEST** (does the whole stack deliver the north star — can you stage an aspect of a franchise and have it play believably?). Everything below this rung is the engine; this rung spins up universes from it. Cross-links: `docs/NORTH-STAR-VISION.md` (the north star this tests), `AI-OBJECTIVE-ENGINE-DESIGN.md` / `AI-ECOSYSTEM-DESIGN.md` / `AI-GALAXY-AND-CRISIS-DESIGN.md` (the engine), the base-mod JSON + the in-game mod editor (the authoring surface).
+> **Status: v0.2 — RATIFIED (2026-07-10).** §5 resolved: the authoring spectrum with a near-term/later split (**near-term = the player authors their own faction; scenarios + mod-editor tiers are a "much later us problem," deferred**); data-driven (engine=code, mod=data); emergent = **author the setup, never the plot**, with decision-logs making emergence checkable. **This ratifies the LADDER quark→brane.** The **final rung** — and *not new machinery.* It's the **AUTHORING layer that instantiates a "universe" (a scenario) from the engine below**, plus the **ACCEPTANCE TEST** (does the whole stack deliver the north star — can you stage an aspect of a franchise and have it play believably?). Everything below this rung is the engine; this rung spins up universes from it. Cross-links: `docs/NORTH-STAR-VISION.md` (the north star this tests), `AI-OBJECTIVE-ENGINE-DESIGN.md` / `AI-ECOSYSTEM-DESIGN.md` / `AI-GALAXY-AND-CRISIS-DESIGN.md` (the engine), the base-mod JSON + the in-game mod editor (the authoring surface).
 
 ---
 
@@ -49,12 +49,17 @@ Closing the ladder lands you exactly where you'll start: **the tutorial is an au
 
 ---
 
-## 5. Open questions (with leans)
+## 5. RESOLVED (developer's calls, 2026-07-10)
 
-1. **Both authoring paths — generated galaxy AND authored scenario?** *(Lean: yes.)*
-2. **Data-driven surface — a scenario is a MOD (JSON), authored via the existing mod editor?** *(Lean: yes — same pattern as factions/ships/traits/crises.)*
-3. **Acceptance criteria — "the franchise DYNAMIC emerges, plot NOT scripted"?** *(Lean: yes — emergent feel, never canned events; that's the whole point of building the engine instead of a story.)*
-4. **Player vs. designer authoring reach?** *(Lean: player always authors their own faction; full-scenario authoring is a designer/modder capability the editor exposes to anyone who wants it.)*
+**1 & 4 — the authoring SPECTRUM (one axis), with a clear near-term vs. later split:**
+- **NEAR-TERM — the player authors their own faction, as deeply as they want.** This is the one authoring capability that matters for the build *now* — it's how a player makes their Federation, and how the tutorial's factions are defined. (The three-tier framing — new-game-setup → scenario-editor → full-mod — is the right shape, but only the faction-authoring floor is near-term.)
+- **LATER — "a MUCH later us problem":** the **collection of starting scenarios** + the mod-editor scenario/full-mod tiers. Explicitly deferred; not first-slice. The generated-galaxy **faction POOL** (authored archetypes, *not* random-dial mush — replayability is a *content* job) rides here too.
+
+**2 — Data-driven: flat yes.** A scenario is JSON over a fixed engine: **engine = the machinery (code); mod = the content (data).** Editor-extension (AI-authoring panels) is the deferred later cost — raw JSON to start.
+
+**3 — Emergent: author the SETUP, never the PLOT.** Strong *initial conditions* bias toward the franchise dynamic; **no scripted events** — the Cardassians defect *when their own engine decides it pays*, not on a timer. And **the decision-logs (the personality/objective readout gauges) are what make "did it emerge?" checkable** — the acceptance test is *playtest + confirm-via-logs*, not a vibe-check. The visibility gauges are what make the acceptance test rigorous.
+
+**→ LADDER COMPLETE & RATIFIED (2026-07-10): quark → brane.** One engine, no central AI at any scale; near-term authoring = the player's own faction; scenarios/modding deferred.
 
 ---
 
