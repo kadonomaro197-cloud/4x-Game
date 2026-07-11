@@ -12,7 +12,7 @@
 
 **The one load-bearing sequencing fact:** the upper rungs (Ecosystem, Galaxy, Brane) genuinely *compose* the lower engine — but they sit on the **Organism engine (needs-ladder + traits + mood + transition), which is design-only today.** So the build is **bottom-up**: the atomic scored-decision and the single-faction Organism come first; everything above is composition once they exist.
 
-**The keystone gate:** `NPCDecisionProcessor.Tick` (`Factions/NPCDecisionProcessor.cs:64-84`) fires monthly per-NPC and already runs diplomatic drift + reads the dominant doctrine axis — but the **axis→orders translation is an empty `// TODO` (`:79-83`).** Filling that (plus the tiny objective/personality blobs it reads) is the gate the whole brain waits behind. Nothing structurally blocks it.
+**The keystone gate — NOW OPEN (2026-07-11).** `NPCDecisionProcessor.Tick` (`Factions/NPCDecisionProcessor.cs`) fires monthly per-NPC and used to leave the axis→orders translation an empty `// TODO`. That stub is **filled (Movement II Phase 2.4b):** the Tick now reads the needs-ladder, selects a personality-shaped objective, commits it through the hysteresis engine, and stores a `StrategicObjectiveDB` on the NPC. The **DECISION loop is live**; the remaining half is turning that stored objective into actual orders (2.4c — the first behaviour-changing slice). The tiny blobs it reads (`PersonalityDB`, `StrategicObjectiveDB`) are built.
 
 **The chosen strategy — FOUNDATIONS FIRST (2026-07-11):** the six surveys sort the design into three tiers — buildable-now, net-new-but-unblocked, and blocked-behind-a-subsystem (espionage, trade-money, bloc-demands, gate-network, capability-tech). The design would let those last ones ship as inert "labeled sockets." **The developer chose to build the missing pillars FIRST**, so that when the brain goes in, *every* trait/role/rung wires into a live system — nothing on the finished brain is a dark socket. That splits the campaign into **Movement I (Foundations — level the ground)** and **Movement II (Build Up — the brain)**, both detailed below. Honest scope: Movement I is the bulk of the remaining work, because three of its tracks are full subsystems (each already has a design doc — it's *build*, not *design*).
 
@@ -24,8 +24,8 @@ The design frames itself, unironically, as *"Planck-length → multiversal-brane
 
 | Rung | What lives here | Depends on | Status |
 |---|---|---|---|
-| **⚛ Planck** — the atomic scored decision | the one trait-weighted "score the options, pick one" helper every level reuses | — (foundation) | ⚫ NOT-STARTED |
-| **🧬 Organism** — one faction's mind | needs-ladder (what it wants) · 12-trait `PersonalityDB` · mood · the Tick decision body · transition engine · officer characters | ⚛ Planck + the gauges | 🟡 STARTED — `PersonalityDB` (M2-0a) + the first trait wire (M2-1a: Xenophobia/Zealotry → treaty) built; needs-ladder + Tick body next |
+| **⚛ Planck** — the atomic scored decision | the one trait-weighted "score the options, pick one" helper every level reuses | — (foundation) | 🟢 REALIZED (in effect) — the atomic trait-weighted decision is live as `NeedsLadder` + `ObjectiveSelector` + the personality wires; a standalone `DecisionScorer` (Phase 0.2) was folded into these rather than built separately |
+| **🧬 Organism** — one faction's mind | needs-ladder (what it wants) · 12-trait `PersonalityDB` · mood · the Tick decision body · transition engine · officer characters | ⚛ Planck + the gauges | 🟡 DECISION LOOP LIVE — `PersonalityDB` + the four first-trait wires (Phase 1) + the full decision engine (needs-ladder → objective → hysteresis → the filled Tick, Phases 2.1–2.4b) all built byte-identically. Remaining: order emission (2.4c), Ambition/Aggression cadence (2.5), the eyes→Risk (2.6), officer traits (2.7) |
 | **🌐 Ecosystem** — factions vs factions | rival-intel fog · scored stance-selection · NPC treaty policy · coalitions/betrayal emerge | 🧬 Organism + rival-intel | ⚫ NOT-STARTED (diplomacy substrate ready) |
 | **🌌 Galaxy** — the arc + the crisis | early/mid/late emerges · late-game crisis = an existing faction's runaway ascension | 🌐 Ecosystem + capability-tech | ⚫ NOT-STARTED |
 | **🪐 Supercluster / Brane** — authoring a universe | stage a franchise from JSON · the north-star acceptance test | all rungs + JSON schema | ⚫ NOT-STARTED (geography/factions already JSON) |
@@ -39,7 +39,7 @@ Verified live on this branch. **Do not rebuild any of these — wire to them.**
 
 | Substrate | Verified home (file:line) | Note |
 |---|---|---|
-| **The clock** — monthly per-NPC decision loop | `Factions/NPCDecisionProcessor.cs:17,19,42`; `GlobalManager` iterated `Engine/MasterTimePulse.cs:348`; liveness gauge `TickCount:29` | Fires live (proven by `FactionEconomyTests`). Body runs drift + doctrine-max; only axis→orders is TODO (`:79`). ⚠ its own header comment `:11-16` is STALE ("not iterated") — fix when touched. |
+| **The clock** — monthly per-NPC decision loop | `Factions/NPCDecisionProcessor.cs:17,19,42`; `GlobalManager` iterated `Engine/MasterTimePulse.cs:348`; liveness gauge `TickCount:29` | Fires live (proven by `FactionEconomyTests`). Body now runs drift + `UpdateStrategicObjective` (the filled decision loop, 2.4b) — the axis→orders TODO is gone; only the ACT (order emission, 2.4c) remains. Its header comment was corrected in the 2.4b pass (the old "not iterated" STALE note is retired). |
 | **The hands** — headless order rail | `Engine/Orders/IOrderHandler.cs:10`; `StandAloneOrderHandler.cs`; ~15 sim-thread callers | A delegate issues the *same* orders a player does — no separate AI code path. |
 | **The hands** — direct-call APIs | `Combat/FleetDoctrine.cs:47,34`; `Sensors/Emcon/FleetEmcon.cs:55`; `Factions/Diplomacy.cs:19`; `Factions/Treaties.cs:32,66,37`; `Combat/CombatEngagement.cs:485` (OrderAttack); `GroundCombat/GroundForcesDB.cs:388` | Doctrine/EMCON stay live mid-battle. Diplomacy/Treaties are static utils (bypass OrderHandler — no order record for Advise-mode; a real gap for later). |
 | **The event bus** — pub/sub, ~250 kinds | `Engine/Events/EventTypes.cs:21-443`; `EventManager`; `Tech/ResearchProcessor.cs:28-33` reacts (not polls); every faction subscribes `Factions/FactionEventLog.cs:30-34` | The reactive spine: subscribe the brain the way ResearchProcessor already does. `CombatStarted` event not yet published (net-new). |
@@ -60,13 +60,13 @@ None of these exist in source yet (grep-confirmed: they appear only under `docs/
 | Rung | Net-new piece | Kind | Host / pattern to copy |
 |---|---|---|---|
 | ⚛ | **`DecisionScorer`** — score options × identity weights, pick one | pure helper (no host) | CI-testable function; inputs = `PersonalityDB` + `DoctrineVector` |
-| 🧬 | **`PersonalityDB`** — 12 traits (0–1) + mood dict + drift | blob | on faction (`FactionInfoDB.cs:125`, beside Doctrine) + `CommanderDB` |
-| 🧬 | **`StrategicObjectiveDB`** — the goal slot / mandate the Tick writes | blob | on faction; attach-blob pattern proven |
-| 🧬 | **Needs-tier field** (fractal: planet/system/empire) | field | rides colony / `AdminSpaceDB` system-seat / faction |
-| 🧬 | **Trait-weighted validity scorer + transition engine** (commit + hysteresis) | pure logic | CI-testable; no host |
-| 🧬 | **The Tick body** — read gauges → score objective → emit orders | logic | fill `NPCDecisionProcessor.cs:79-83` |
-| 🧬 | **Faction roll-up gauges** — sum colony morale/economy + fleet strength to empire tier | cheap helpers | `FactionEconomySnapshot` / `FactionStrengthRollup` |
-| 🧬 | **`ThreatEstimate`** — fog-limited enemy strength ("the eyes") | logic + slot | the one real gauge NO-SOCKET — contacts carry position/signal, not combat value (`EntityManager.cs:638`) |
+| 🧬 | **`PersonalityDB`** — 12 traits (0–1) + mood dict + drift | blob | ✅ BUILT (M2-0a) — `Factions/PersonalityDB.cs`, 12 traits @ 0.5 neutral. Mood dict + drift = a later slice |
+| 🧬 | **`StrategicObjectiveDB`** — the goal slot / mandate the Tick writes | blob | ✅ BUILT (2.1) — `Factions/StrategicObjectiveDB.cs`, written by the Tick (2.4b) |
+| 🧬 | **Needs-tier field** (fractal: planet/system/empire) | field | ✅ REALIZED at the empire tier (2.2, `NeedsLadder` → `StrategicObjectiveDB.Tier`); the planet/system-seat fractal is a later slice |
+| 🧬 | **Trait-weighted validity scorer + transition engine** (commit + hysteresis) | pure logic | ✅ BUILT (2.3, `ObjectiveTransition`) — commit + hysteresis; the objective scorer is `ObjectiveSelector` (2.4a) |
+| 🧬 | **The Tick body** — read gauges → score objective → emit orders | logic | ✅ DECISION half built (2.4b, `UpdateStrategicObjective`); the emit-orders half is 2.4c |
+| 🧬 | **Faction roll-up gauges** — sum colony morale/economy + fleet strength to empire tier | cheap helpers | ✅ BUILT (F-A3 + F-B1a) — `Factions/FactionRollup.cs` (Balance/Population/Morale/Legitimacy/MilitaryStrength) |
+| 🧬 | **`ThreatEstimate`** — fog-limited enemy strength ("the eyes") | logic + slot | ✅ BUILT (F-B1b) — `ThreatAssessment.DetectedStrengthOf` (fog-limited) + `IntelAssessment` (Confirmed→true strength). Wiring it to the Risk trait is 2.6 |
 | 🧬 | **Officer traits + tenure-weighted blend + shared drift** | fields + logic | trait fields on `CommanderDB`; tenure inputs already stored (`CommissionedOn`/`Experience`) |
 | 🌐 | **Rival-intel fog store** — "what I think faction X's power/intent is" | blob | net-new on the sensor-contact model (`SensorContact.cs:42`, `FactionSystemInfoDB.cs:12`) |
 | 🌐 | **Structural/rising-threat read** — fear rising power, not just attacks | logic | consumes rival-intel + `ThreatEstimate` |
@@ -104,7 +104,9 @@ So the campaign is two movements:
 
 ## Movement I — Foundations First (level the ground)
 
-Ordered by dependency and cheapness. Each is a build track; the "Unblocks" column ties it to the Movement-II slice(s) it lights up. Statuses all ⚫ NOT-STARTED.
+Ordered by dependency and cheapness. Each is a build track; the "Unblocks" column ties it to the Movement-II slice(s) it lights up.
+
+> **✅ MOVEMENT I COMPLETE (2026-07-11), except two deliberate deferrals.** All foundations are CI-green: the eyes (F-B1a/b), competence-researchable (F-A2), the faction roll-ups (F-A3), trade-as-money (F-C1), popular-demands (F-C2), the espionage core (F-C3), and capability-tech (F-D2). **Deferred by design:** F-D1 (gate-network — a late-game tech, developer's call) and F-B1c (the persistent Information Ledger with time-decay — the per-facet blob exists; the live monthly decay wire is a later slice). The ground is level: every Movement-II slice below wires into a live pillar.
 
 ### Group A — cheap shared prerequisites (do first; small, each unblocks several things)
 | # | Foundation | Verified gap / plug point | Design doc | Unblocks | Status |
@@ -137,14 +139,16 @@ Ordered by dependency and cheapness. Each is a build track; the "Unblocks" colum
 
 ## Movement II — Build Up (the brain, on level ground)
 
-Same discipline that kept the last 83 commits clean: **one slice at a time, a new field/blob defaults neutral so existing fixtures stay green, the payoff lands via a new example, push, WAIT for CI green before the next slice.** Each slice names its plug point and its gauge. **Assumes the Movement-I foundation each slice needs is green** (the "Unblocks" links above are the map).
+Same discipline that kept the whole campaign clean: **one slice at a time, a new field/blob defaults neutral so existing fixtures stay green, the payoff lands via a new example, push, WAIT for CI green before the next slice.** Each slice names its plug point and its gauge. **Assumes the Movement-I foundation each slice needs is green** (the "Unblocks" links above are the map).
+
+> **Progress (2026-07-11):** Phase 0 ✅ · Phase 1 (four first-trait wires) ✅ CI-green · Phase 2 the **DECISION loop** ✅ built byte-identically (2.1 goal slot → 2.2 needs-ladder → 2.3 hysteresis → 2.4a selector → 2.4b the filled Tick). **Next: 2.4c** — the first per-objective ORDER emission (the first behaviour-changing slice; build it on a CI-green decision loop), then 2.5 (Ambition/Aggression cadence), 2.6 (eyes→Risk), 2.7 (officer traits). Phases 3–5 + Exploration remain.
 
 ### Phase 0 — ⚛ Foundations (unblock everything)
 | # | Slice | Plug point | Gauge | Status |
 |---|---|---|---|---|
 | 0.1 | `PersonalityDB` blob (12 traits, 0.5 default) + JSON parse | new blob on `FactionInfoDB`; mirror `FactionFactory.cs:71-81` | load/clone/parse round-trip test | ✅ **M2-0a** — `Factions/PersonalityDB.cs` (the 12-trait blob, `TraitOf` defaults to `Neutral`=0.5, `SetTrait` clamps 0..1, deep Clone); a new blob NOT attached to any faction → byte-identical; gauge `PersonalityDBTests`. JSON-parse-onto-faction is the later authoring slice. |
-| 0.2 | `DecisionScorer` pure helper (score × identity weights) | new pure class | scorer unit test (weights bias the pick) | ⚫ |
-| 0.3 | Faction roll-up gauges (`FactionEconomySnapshot`, `FactionStrengthRollup`) | sum over `Colonies`/fleets | rollup matches hand-sum | ⚫ |
+| 0.2 | `DecisionScorer` pure helper (score × identity weights) | new pure class | scorer unit test (weights bias the pick) | ✅ FOLDED — no standalone class; the trait-weighted decision is realized directly in `NeedsLadder` (2.2) + `ObjectiveSelector` (2.4a) + the Phase-1 personality wires. Revisit only if a shared scorer is needed for Phase 3+. |
+| 0.3 | Faction roll-up gauges (`FactionEconomySnapshot`, `FactionStrengthRollup`) | sum over `Colonies`/fleets | rollup matches hand-sum | ✅ BUILT as **F-A3 + F-B1a** — `Factions/FactionRollup.cs` (Balance/TotalPopulation/ColonyCount/MeanMorale/MeanLegitimacy/MilitaryStrength); gauge `FactionRollupTests`. |
 
 ### Phase 1 — ⚛→🧬 The first traits (proof-of-concept; no Tick body needed)
 | # | Slice | Plug point | Gauge | Status |
@@ -200,10 +204,10 @@ Same discipline that kept the last 83 commits clean: **one slice at a time, a ne
 
 ## Feasibility scoreboard (from the six surveys)
 
-- **Traits (12):** 6 sit on a live decision point (buildable now) · 3 need the Tick body (Phase 2) · 3 sequenced behind an unbuilt system with a buildable down-payment (Guile→EMCON, Altruism→Ledger gift, Curiosity→exploration).
-- **19-role delegate roster:** ~3 ride a built consumer today · 1 wired-but-unfed slot (Governor) · ~15 net-new seats (3-4 hard-blocked on dark pillars: espionage, bloc-demands, trade-money).
+- **Traits (12):** 5 wired live (Phase 1: Xenophobia/Zealotry→treaty, Collectivism→retreat, Honor→renege, Authoritarianism→tax; + Aggression flips Conquer at the Ambition tier in 2.4a) · the rest ride the now-built decision loop (Ambition cadence 2.5, Risk 2.6, officer traits 2.7) or a down-payment already made (Guile→EMCON, Altruism→Ledger gift, Curiosity→exploration).
+- **19-role delegate roster:** ~3 ride a built consumer today · 1 wired-but-unfed slot (Governor) · ~15 net-new seats — but their dark pillars are now BUILT (espionage core, popular-demands, trade-money all CI-green in Movement I), so the seats are no longer hard-blocked.
 - **Wiring-map's 3 "already there" claims:** clock ✅ · event bus ✅ · order rail ✅ — all VERIFIED. Plus two branch-diff bonuses the docs miss: durable seats + commander combat-competence are already built.
-- **The recurring gap across rungs:** the **"eyes"** — a fog-limited estimate of a rival's strength (`ThreatEstimate` / rival-intel). It's the one true net-new *gauge*, and it gates Risk, structural-threat, coalitions, and the crisis.
+- **The recurring gap across rungs — NOW CLOSED:** the **"eyes"** (a fog-limited estimate of a rival's strength) was the one true net-new gauge gating Risk, structural-threat, coalitions, and the crisis. Built in Movement I (F-B1: `FactionRollup.MilitaryStrength` own-strength + `ThreatAssessment.DetectedStrengthOf` fog-limited + `IntelAssessment` confirmed-intel sharpening). 2.6 wires it to the Risk trait.
 
 ---
 

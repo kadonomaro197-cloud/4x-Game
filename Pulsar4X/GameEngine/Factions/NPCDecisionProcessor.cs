@@ -5,14 +5,16 @@ using Pulsar4X.Interfaces;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// Monthly decision loop for AI-controlled factions.
-    /// Uses DoctrineVector weights to pick the highest-priority goal each cycle.
+    /// Monthly decision loop for AI-controlled factions (the Organism brain, docs/AI-BRAIN-BUILD-TRACKER.md).
+    /// Each cycle it runs reactive-diplomacy drift and settles a strategic objective: read the needs-ladder
+    /// (<see cref="NeedsLadder"/>) → pick an objective from tier × doctrine × <see cref="PersonalityDB"/>
+    /// (<see cref="ObjectiveSelector"/>) → commit it through the hysteresis engine (<see cref="ObjectiveTransition"/>)
+    /// → store it on the faction's <see cref="StrategicObjectiveDB"/>.
     ///
-    /// NOTE: Faction entities live in the GlobalManager, which is currently not
-    /// iterated by MasterTimePulse's per-system loop. This processor skeleton
-    /// is wired and structurally correct; a future session must either register
-    /// the GlobalManager with MasterTimePulse or trigger Tick() directly from
-    /// a game-level monthly event.
+    /// Faction entities live in the GlobalManager, which <see cref="Engine.MasterTimePulse"/> DOES iterate (keystone
+    /// fixed 2026-06-30), so this fires on its schedule (proven by FactionEconomyTests). The decision loop is live;
+    /// turning the stored objective into actual ORDERS (build / expand / attack) is the follow-on (Phase 2.4c+), so
+    /// the brain currently DECIDES but does not yet ACT.
     /// </summary>
     public class NPCDecisionProcessor : IHotloopProcessor
     {
