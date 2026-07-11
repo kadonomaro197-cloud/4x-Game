@@ -111,7 +111,7 @@ Ordered by dependency and cheapness. Each is a build track; the "Unblocks" colum
 |---|---|---|---|---|---|
 | **F-A1** | **Fix the degenerate detection-quality** — the remaining keystone of the diplomacy blast-radius chain (GlobalManager ✅ · detection-quality ⬅ HERE · hostility-from-DiplomacyDB ✅) | detection quality is currently degenerate; the fog is not a meaningful gauge | `docs/DETECTION-DESIGN.md` | F-B1 (the eyes), F-C3 (espionage intel) | ⚫ |
 | **F-A2** | **Make competence researchable** — a scientist/officer ships with an EMPTY `BonusesDB`; the only competence on the default path is one hardcoded line | `People/CommanderFactory.cs:63` (`CreateScientist`, empty BonusesDB); `NewGameMenu.cs:632` (the one hardcode); copy `ResearchProcessor.cs:246` `RefreshPointModifiers` | — | Organism 2.7 (officer traits), Exploration X.0 (field career) | ⚫ |
-| **F-A3** | **Faction roll-up gauges** — sum colony morale/economy + fleet strength to the system/empire tier | no helper aggregates the per-colony/per-ship gauges up | (this tracker) | Organism 2.2 (needs-ladder), F-B1 | ⚫ |
+| **F-A3** | **Faction roll-up gauges** — sum colony population/morale/legitimacy + the ledger to the empire tier | built: `Factions/FactionRollup.cs` (`Balance`/`TotalPopulation`/`ColonyCount`/`MeanMorale`/`MeanLegitimacy`, population-weighted, read-only → byte-identical); gauge `FactionRollupTests`. *Military-strength roll-up deferred to F-B1 (needs cross-system ship enumeration).* | (this tracker) | Organism 2.2 (needs-ladder), F-B1 | 🟡 WIRED — pushed, awaiting CI |
 
 ### Group B — the Eyes (rival perception; the linchpin, shared with espionage)
 | # | Foundation | Verified gap / plug point | Design doc | Unblocks | Status |
