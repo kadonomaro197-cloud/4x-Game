@@ -1,3 +1,4 @@
+using System;
 using NUnit.Framework;
 using Pulsar4X.Factions;
 
@@ -29,6 +30,39 @@ namespace Pulsar4X.Tests
             Assert.That(TradeIncome.MonthlyIncomeFor(s.Faction),
                 Is.EqualTo(before + 2 * TradeIncome.PerAgreementMonthly),
                 "each standing trade agreement adds its monthly value; a plain relationship adds nothing");
+        }
+
+        [Test]
+        [Description("F-C1b: the payout processor books trade income into the ledger only when EnablePayout is on; off → no Trade transaction (byte-identical).")]
+        public void PayoutProcessor_BooksTradeIncome_OnlyWhenEnabled()
+        {
+            var s = TestScenario.CreateWithColony();
+            var info = s.Faction.GetDataBlob<FactionInfoDB>();
+            var diplomacy = s.Faction.GetDataBlob<DiplomacyDB>();
+            diplomacy.GetOrCreateRelationship(111).TradeAgreement = true;
+            diplomacy.GetOrCreateRelationship(222).TradeAgreement = true;
+
+            bool wasEnabled = TradeIncomeProcessor.EnablePayout;
+            try
+            {
+                // OFF (default): advancing past monthly cycles books NO trade income → byte-identical.
+                TradeIncomeProcessor.EnablePayout = false;
+                s.AdvanceTime(TimeSpan.FromDays(70));
+                Assert.That(info.Money.GetTransactionsByCategory(TransactionCategory.Trade), Is.Empty,
+                    "payout off → the trade agreements move no money");
+
+                // ON: a monthly cycle books the trade income (2 agreements × the per-agreement value).
+                TradeIncomeProcessor.EnablePayout = true;
+                s.AdvanceTime(TimeSpan.FromDays(35));
+                var tradeTxns = info.Money.GetTransactionsByCategory(TransactionCategory.Trade);
+                Assert.That(tradeTxns, Is.Not.Empty, "payout on → trade income is booked");
+                Assert.That(tradeTxns[0].Amount, Is.EqualTo(2 * TradeIncome.PerAgreementMonthly),
+                    "each booked payout = the standing agreements × the per-agreement value");
+            }
+            finally
+            {
+                TradeIncomeProcessor.EnablePayout = wasEnabled; // restore the global so other tests stay byte-identical
+            }
         }
     }
 }
