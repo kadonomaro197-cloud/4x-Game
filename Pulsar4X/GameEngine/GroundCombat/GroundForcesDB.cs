@@ -94,6 +94,18 @@ namespace Pulsar4X.GroundCombat
         /// synthesized <see cref="Pulsar4X.Combat.WeaponProfile"/> and drives the resolver's
         /// <c>GroundDamageMatrix.ArmourSoakBurst</c> shot split.</summary>
         [JsonProperty] public double PerShotEnergy { get; internal set; }
+        // ⚙3 Defense — armour NATURE tuning: how well THIS unit's plating soaks each incoming damage nature. 1.0 = a
+        // plain plate (snapshot of the design's ArmourVs*; every unit until a nature-tuned plating is fitted → the
+        // resolver passes natureFactor 1.0 → byte-identical). The resolver reads the incoming weapon's Nature and scales
+        // the flat armour soak by ArmourResistFor(nature) — so ablative plating shrugs off lasers but thins against slugs.
+        /// <summary>Armour soak effectiveness vs KINETIC damage (1.0 = plain plate).</summary>
+        [JsonProperty] public double ArmourVsKinetic { get; internal set; } = 1.0;
+        /// <summary>Armour soak effectiveness vs ENERGY damage (1.0 = plain plate).</summary>
+        [JsonProperty] public double ArmourVsEnergy { get; internal set; } = 1.0;
+        /// <summary>Armour soak effectiveness vs EXPLOSIVE damage (1.0 = plain plate).</summary>
+        [JsonProperty] public double ArmourVsExplosive { get; internal set; } = 1.0;
+        /// <summary>Armour soak effectiveness vs EXOTIC damage (1.0 = plain plate).</summary>
+        [JsonProperty] public double ArmourVsExotic { get; internal set; } = 1.0;
         /// <summary>The region this unit is MARCHING to (-1 = standing still). While in transit it doesn't fight (5b).</summary>
         [JsonProperty] public int MovingToRegion { get; internal set; } = -1;
         /// <summary>Game-seconds left in the current march; counts down to 0 = arrived (the region's crossing time).</summary>
@@ -150,6 +162,17 @@ namespace Pulsar4X.GroundCombat
             return 0;
         }
 
+        /// <summary>This unit's armour soak effectiveness (natureFactor for the shared armour soak) vs a given incoming
+        /// damage nature — the four <c>ArmourVs*</c> fields. 1.0 for a plain-plated unit → byte-identical.</summary>
+        public double ArmourResistFor(Pulsar4X.Combat.WeaponNature nature) => nature switch
+        {
+            Pulsar4X.Combat.WeaponNature.Kinetic => ArmourVsKinetic,
+            Pulsar4X.Combat.WeaponNature.Energy => ArmourVsEnergy,
+            Pulsar4X.Combat.WeaponNature.Explosive => ArmourVsExplosive,
+            Pulsar4X.Combat.WeaponNature.Exotic => ArmourVsExotic,
+            _ => 1.0,
+        };
+
         public GroundUnit() { }
         public GroundUnit(GroundUnit o)
         {
@@ -158,6 +181,7 @@ namespace Pulsar4X.GroundCombat
             UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health; Range = o.Range;
             MaxAmmo_kg = o.MaxAmmo_kg; CurrentAmmo_kg = o.CurrentAmmo_kg;
             Evasion = o.Evasion; Shield = o.Shield; CurrentShield = o.CurrentShield; DamageType = o.DamageType; Penetration = o.Penetration; PerShotEnergy = o.PerShotEnergy;
+            ArmourVsKinetic = o.ArmourVsKinetic; ArmourVsEnergy = o.ArmourVsEnergy; ArmourVsExplosive = o.ArmourVsExplosive; ArmourVsExotic = o.ArmourVsExotic;
             MovingToRegion = o.MovingToRegion; TransitSecondsRemaining = o.TransitSecondsRemaining;
             HexQ = o.HexQ; HexR = o.HexR; HexTransitSecondsRemaining = o.HexTransitSecondsRemaining; HexStepBaseSeconds = o.HexStepBaseSeconds;
             if (o.HexPath != null)
@@ -393,6 +417,12 @@ namespace Pulsar4X.GroundCombat
                 DamageType = design.DamageType,
                 Penetration = design.Penetration,   // armour-crack (W1c) — 0 for a normal unit, high for an AP design
                 PerShotEnergy = design.PerShotEnergy,   // alpha-vs-chip (W2c) — 0 = single lump, big = one alpha shot
+                // Armour NATURE tuning (⚙3): how well this unit's plating soaks each incoming nature. 1.0 = plain plate
+                // (every unit until a nature-tuned plating is fitted → resolver passes natureFactor 1.0 → byte-identical).
+                ArmourVsKinetic = design.ArmourVsKinetic,
+                ArmourVsEnergy = design.ArmourVsEnergy,
+                ArmourVsExplosive = design.ArmourVsExplosive,
+                ArmourVsExotic = design.ArmourVsExotic,
 
                 // Snapshot the design's environmental gear onto the unit (E4) — like the combat stats above.
                 EnvResistance = (design.EnvironmentalResistance != null && design.EnvironmentalResistance.Count > 0)

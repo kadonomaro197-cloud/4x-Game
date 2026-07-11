@@ -40,6 +40,13 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public GroundUnitType UnitType { get; set; } = GroundUnitType.Infantry;
         [JsonProperty] public double Attack { get; set; }
         [JsonProperty] public double Defense { get; set; }
+        // ⚙3 Defense — armour NATURE tuning: how well this design's plating soaks each incoming damage nature (the
+        // Defense-weighted combination of its GroundArmorAtb parts). 1.0 = a plain plate (every design until a
+        // nature-tuned plating is fitted → byte-identical). Snapshotted onto each raised unit's ArmourVs* fields.
+        [JsonProperty] public double ArmourVsKinetic { get; set; } = 1.0;
+        [JsonProperty] public double ArmourVsEnergy { get; set; } = 1.0;
+        [JsonProperty] public double ArmourVsExplosive { get; set; } = 1.0;
+        [JsonProperty] public double ArmourVsExotic { get; set; } = 1.0;
         [JsonProperty] public double HitPoints { get; set; }
         /// <summary>Strike RANGE in HEXES (H3) — the max hex-distance at which this unit can hit an enemy (0 = same hex
         /// only, 1 = also the adjacent ring, 3 = out to three rings). The unit's operational REACH: a longer-ranged

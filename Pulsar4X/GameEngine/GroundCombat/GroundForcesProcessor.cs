@@ -358,7 +358,11 @@ namespace Pulsar4X.GroundCombat
                             // equal total is mostly bounced. PerShotEnergy 0 → shotCount 1 (every unit until the W2c dial)
                             // → the flat single-lump soak, byte-identical to before.
                             int shotCount = Pulsar4X.Combat.CombatKernel.BurstShotCount(profile);
-                            contribution = GroundDamageMatrix.ArmourSoak(t.Defense, contribution, shotCount, profile.Penetration);
+                            // ARMOUR NATURE (⚙3): the target's plating soaks the incoming weapon's NATURE by its tuning —
+                            // ablative shrugs off energy, thins vs a slug. natureFactor 1.0 for a plain-plated unit (every
+                            // unit until a nature-tuned plating is fitted) → byte-identical to the pre-nature soak.
+                            double natureFactor = t.ArmourResistFor(profile.Nature);
+                            contribution = GroundDamageMatrix.ArmourSoak(t.Defense, contribution, shotCount, profile.Penetration, natureFactor);
                             incoming.TryGetValue(t, out var acc);
                             incoming[t] = acc + contribution;
                         }

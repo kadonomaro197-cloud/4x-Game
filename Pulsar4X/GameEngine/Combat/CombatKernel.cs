@@ -221,7 +221,7 @@ namespace Pulsar4X.Combat
         /// the source always lands <see cref="ArmourMinPassFraction"/> of its damage. Because it's flat-per-source,
         /// N small volleys lose N×(flat) total while one big volley loses only (flat): armour bounces the swarm, the
         /// alpha punches through. Never throws.</summary>
-        public static double ArmourSoak(double armour, double sourceDamage) => ArmourSoak(armour, sourceDamage, 0.0);
+        public static double ArmourSoak(double armour, double sourceDamage) => ArmourSoak(armour, sourceDamage, 0.0, 1.0);
 
         /// <summary>Flat ARMOUR soak WITH weapon PENETRATION — the armour half of the matchup
         /// (docs/COMPONENT-DESIGNER-DIALS.md ⚙1 backlog #1). Penetration cancels armour point-for-point BEFORE the flat
@@ -232,13 +232,25 @@ namespace Pulsar4X.Combat
         /// so N small volleys still lose N×(flat) while one big alpha loses only (flat) — penetration just shrinks the
         /// plating each source meets.</summary>
         public static double ArmourSoak(double armour, double sourceDamage, double penetration)
+            => ArmourSoak(armour, sourceDamage, penetration, 1.0);
+
+        /// <summary>Flat ARMOUR soak with penetration AND a per-NATURE effectiveness factor — the armour-half of the
+        /// damage×armour matchup (⚙3 Defense: ablative/composite/reactive plating). <paramref name="natureFactor"/>
+        /// scales how strongly THIS plating soaks the incoming damage's NATURE: 1.0 = the plating's rated strength
+        /// (byte-identical to the penetration overload above), &gt;1 = the plating is tuned to that nature (ablative vs
+        /// energy soaks harder), &lt;1 = a poor match (ablative vs a kinetic slug bounces less). It scales only the flat
+        /// soak AMOUNT — penetration still decides the physical breach point-for-point first, so a round that out-pens the
+        /// plate passes in full regardless of nature. Clamped at 0 (a nature match can never make armour NEGATIVE). Never
+        /// throws. natureFactor 1.0 (every unit until a nature-tuned plating is fitted) → byte-identical.</summary>
+        public static double ArmourSoak(double armour, double sourceDamage, double penetration, double natureFactor)
         {
             if (sourceDamage <= 0) return 0.0;
             if (penetration < 0) penetration = 0.0;
+            if (natureFactor < 0) natureFactor = 0.0;
             double effectiveArmour = armour - penetration;
             if (effectiveArmour <= 0) return sourceDamage;   // penetration meets/beats the plating → full pass (as if unarmoured)
             double floor = sourceDamage * ArmourMinPassFraction;
-            double after = sourceDamage - effectiveArmour * ArmourSoakPerPoint;
+            double after = sourceDamage - effectiveArmour * ArmourSoakPerPoint * natureFactor;
             return after < floor ? floor : after;
         }
 
@@ -267,12 +279,12 @@ namespace Pulsar4X.Combat
         /// a cannon of EQUAL total damage land very differently against plate. <paramref name="shotCount"/> ≤ 1 is
         /// byte-for-byte <see cref="ArmourSoak(double,double,double)"/> (one lump), so an un-dialled weapon is unchanged.
         /// Never throws.</summary>
-        public static double ArmourSoakBurst(double armour, double sourceDamage, int shotCount, double penetration = 0)
+        public static double ArmourSoakBurst(double armour, double sourceDamage, int shotCount, double penetration = 0, double natureFactor = 1.0)
         {
             if (sourceDamage <= 0) return 0.0;
-            if (shotCount <= 1) return ArmourSoak(armour, sourceDamage, penetration);
+            if (shotCount <= 1) return ArmourSoak(armour, sourceDamage, penetration, natureFactor);
             double perChunk = sourceDamage / shotCount;
-            return ArmourSoak(armour, perChunk, penetration) * shotCount;
+            return ArmourSoak(armour, perChunk, penetration, natureFactor) * shotCount;
         }
     }
 }

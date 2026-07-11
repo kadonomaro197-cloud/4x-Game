@@ -13,6 +13,12 @@ namespace Pulsar4X.GroundCombat
         public double Attack;
         public int Range;
         public double Defense;
+        // ⚙3 Defense — armour NATURE tuning: the Defense-weighted combination of the mounted plating's per-nature soak
+        // effectiveness. 1.0 = plain plate (no armour, or all plain plate) → byte-identical.
+        public double ArmourVsKinetic = 1.0;
+        public double ArmourVsEnergy = 1.0;
+        public double ArmourVsExplosive = 1.0;
+        public double ArmourVsExotic = 1.0;
         public double HitPoints;
         public double Evasion;
         public double Shield;
@@ -89,6 +95,8 @@ namespace Pulsar4X.GroundCombat
             double reactorSupply = 0;  // Σ watts supplied by mounted reactors (WeaponSupply)
             double ammoCapacity = 0;   // Σ magazine capacity kg (WeaponSupply) — the ammo store
             bool anyAmmoWeapon = false;// is an ammo-fed weapon mounted? (needs a magazine)
+            // ⚙3 armour nature: Defense-weighted sums of each plating part's per-nature soak, averaged after the loop.
+            double armWeight = 0, armVsK = 0, armVsE = 0, armVsX = 0, armVsO = 0;
             foreach (var (d, c) in list)
             {
                 double itemMass = 0;
@@ -111,6 +119,11 @@ namespace Pulsar4X.GroundCombat
                     itemMass = a.Mass;
                     r.HitPoints += a.HP * c;
                     r.Defense += a.Defense * c;
+                    // ⚙3 nature tuning: weight each plating's per-nature soak by the Defense it contributes, so a mostly-
+                    // ablative unit reads as ablative. A plain plate contributes 1.0 → pulls the average toward neutral.
+                    double w2 = a.Defense * c;
+                    armWeight += w2;
+                    armVsK += a.VsKinetic * w2; armVsE += a.VsEnergy * w2; armVsX += a.VsExplosive * w2; armVsO += a.VsExotic * w2;
                 }
                 if (d.HasAttribute<GroundAugmentAtb>())
                 {
@@ -138,6 +151,15 @@ namespace Pulsar4X.GroundCombat
             }
             // toughness hardens the whole HP pool (frame + armour), applied once so it's order-independent
             if (toughness != 0) r.HitPoints *= 1 + toughness;
+            // ⚙3 armour nature: finish the Defense-weighted average of the mounted plating (unarmoured / all-plain → the
+            // 1.0 defaults stay → byte-identical). This is the unit's "armour against WHAT" profile the resolver reads.
+            if (armWeight > 0)
+            {
+                r.ArmourVsKinetic = armVsK / armWeight;
+                r.ArmourVsEnergy = armVsE / armWeight;
+                r.ArmourVsExplosive = armVsX / armWeight;
+                r.ArmourVsExotic = armVsO / armWeight;
+            }
             r.UsedCapacity = used;
             r.EnergyDemand_W = energyDemand;
             r.ReactorSupply_W = reactorSupply;
@@ -172,6 +194,10 @@ namespace Pulsar4X.GroundCombat
                 UnitType = DeriveType(frame, parts),
                 Attack = r.Attack,
                 Defense = r.Defense,
+                ArmourVsKinetic = r.ArmourVsKinetic,
+                ArmourVsEnergy = r.ArmourVsEnergy,
+                ArmourVsExplosive = r.ArmourVsExplosive,
+                ArmourVsExotic = r.ArmourVsExotic,
                 HitPoints = r.HitPoints,
                 Range = r.Range,
                 Evasion = r.Evasion,
