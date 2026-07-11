@@ -20,6 +20,12 @@ namespace Pulsar4X.People
         /// design (a tiebreaker on top of doctrine + composition, never a replacement). Tunable balance dial.</summary>
         public const double MaxCombatCompetenceBonus = 0.15;
 
+        /// <summary>The RESEARCH bonus a maximum-potential scientist (ExperienceCap 200) contributes to their
+        /// specialty tech category — the research-side twin of <see cref="MaxCombatCompetenceBonus"/>. Modest,
+        /// tunable balance dial. (F-A2, docs/AI-BRAIN-BUILD-TRACKER.md — competence is now EARNABLE for scientists,
+        /// not just for combat officers.)</summary>
+        public const double MaxResearchCompetenceBonus = 0.15;
+
         /// <summary>
         /// Read a commander's competence in a category as a combat multiplier: each matching bonus contributes a
         /// factor of <c>(1 + Value)</c> (so a Value of 0.15 = +15%); the product across all matching bonuses, and
@@ -60,6 +66,34 @@ namespace Pulsar4X.People
 
             result.Add(new Bonus("Combat Leadership", frac, BonusType.Perentage, BonusCategory.Firepower));
             result.Add(new Bonus("Combat Leadership", frac, BonusType.Perentage, BonusCategory.Toughness));
+            return result;
+        }
+
+        /// <summary>
+        /// F-A2 (docs/AI-BRAIN-BUILD-TRACKER.md, Movement I): generate a scientist's RESEARCH competence in a tech
+        /// category — the research-side twin of <see cref="RollCombatCompetence"/>, and the missing GENERATOR the
+        /// live reader already expects. A scientist entity ships with an EMPTY <see cref="BonusesDB"/>, so
+        /// <c>ResearchProcessor.RefreshPointModifiers</c> (the read) has nothing to fold; this rolls the value it
+        /// reads. The bonus is shaped exactly for that reader: <b>FilterId = the tech category</b> (what
+        /// RefreshPointModifiers matches a scientist bonus on) and <b>Type = Percentage</b> (folded as a % increase
+        /// to that category's points/day). Scaled by <paramref name="experienceCap"/> the same way combat is: cap
+        /// 200 → the full <see cref="MaxResearchCompetenceBonus"/>, 100 → half, ≤0 → none. Deterministic/pure.
+        ///
+        /// This only MAKES competence available — it changes no default path (a scientist still ships empty unless a
+        /// caller stamps a rolled bonus), so it is byte-identical until a consumer (the field-scientist career, an
+        /// academy) wires it. That deliberate wiring is a later slice; this is the foundation it stands on.
+        /// </summary>
+        public static List<Bonus> RollResearchCompetence(int experienceCap, string techCategoryId)
+        {
+            var result = new List<Bonus>();
+            if (experienceCap <= 0 || string.IsNullOrEmpty(techCategoryId))
+                return result;
+
+            double frac = Math.Min(experienceCap, 200) / 200.0 * MaxResearchCompetenceBonus;
+            if (frac <= 0)
+                return result;
+
+            result.Add(new Bonus("Research Aptitude", frac, BonusType.Perentage, BonusCategory.ResearchPoints, techCategoryId));
             return result;
         }
     }
