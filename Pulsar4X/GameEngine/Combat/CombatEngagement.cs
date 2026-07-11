@@ -46,6 +46,13 @@ namespace Pulsar4X.Combat
         /// per-doctrine thresholds are wired.</summary>
         public const double RetreatCasualtyThreshold = 0.5;
 
+        /// <summary>M2-1b (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II): how far the faction's Collectivism trait
+        /// swings the retreat threshold off <see cref="RetreatCasualtyThreshold"/>. A collectivist force
+        /// ("fights to the last for the whole") holds on through heavier losses; an individualist one
+        /// ("flees to save the unit") breaks off early. Centered on the trait's neutral, so a neutral/absent
+        /// personality changes nothing — byte-identical.</summary>
+        public const double CollectivismRetreatSwing = 0.4;
+
         // --- dodge model tuning (docs/WEAPONS-AND-DODGE-DESIGN.md), all v1 stubs ----------------------------
 
         /// <summary>Shot velocity (m/s) at which a weapon half-defeats evasion. A light-speed beam is far above
@@ -1404,7 +1411,36 @@ namespace Pulsar4X.Combat
             if (FleetDoctrine.IsRetreat(fleet)) return true;    // withdraw posture = a standing retreat order
             if (state.InitialShipCount <= 0) return false;
             int lost = state.InitialShipCount - currentShipCount;
-            return lost >= state.InitialShipCount * RetreatCasualtyThreshold;
+            return lost >= state.InitialShipCount * RetreatThresholdFor(PersonalityOf(fleet));
+        }
+
+        /// <summary>
+        /// M2-1b: the casualty fraction a fleet endures before breaking off, tilted by its faction's Collectivism.
+        /// A neutral (or absent) personality returns exactly <see cref="RetreatCasualtyThreshold"/> (byte-identical);
+        /// high Collectivism raises it (fights on through heavier losses), low lowers it (flees to save the unit).
+        /// Clamped so a fleet always both can and eventually must break off.
+        /// </summary>
+        public static double RetreatThresholdFor(Pulsar4X.Factions.PersonalityDB personality)
+        {
+            if (personality == null) return RetreatCasualtyThreshold;
+            double collectivism = personality.TraitOf(Pulsar4X.Factions.PersonalityTrait.Collectivism);
+            double threshold = RetreatCasualtyThreshold
+                + (collectivism - Pulsar4X.Factions.PersonalityDB.Neutral) * 2.0 * CollectivismRetreatSwing;
+            if (threshold < 0.05) return 0.05;
+            if (threshold > 0.95) return 0.95;
+            return threshold;
+        }
+
+        /// <summary>The <see cref="Pulsar4X.Factions.PersonalityDB"/> of the fleet's owning faction, or null if the
+        /// faction carries none (every faction today → null → byte-identical). Defensive like <see cref="AtPeace"/>:
+        /// any missing manager/game/faction-entity/blob returns null.</summary>
+        private static Pulsar4X.Factions.PersonalityDB PersonalityOf(Entity fleet)
+        {
+            var game = fleet.Manager?.Game;
+            if (game == null) return null;
+            if (!game.Factions.TryGetValue(fleet.FactionOwnerID, out var factionEntity) || factionEntity == null || !factionEntity.IsValid)
+                return null;
+            return factionEntity.TryGetDataBlob<Pulsar4X.Factions.PersonalityDB>(out var p) ? p : null;
         }
 
         /// <summary>Flag a fleet as retreated and record the direction it would withdraw (a unit vector away from
