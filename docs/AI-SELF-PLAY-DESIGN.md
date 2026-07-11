@@ -188,6 +188,27 @@ HEAD OF STATE   (the empire's DESTINATION/objective + regime + budget + HR/chara
 
 *(The Head of State sits ABOVE all three empire heads — it owns the destination, the regime, the budget, and HR, not a single domain.)* The old empire-scope asymmetries are **resolved**: the ground ceiling is now the **Field Marshal** (split from the Grand Admiral), and the civil ceiling is the **Chancellor** (the empire-level System-Governor-equivalent). Each empire effort-allocator has a matching system executor.
 
+### The SEAT GRID — every seat owns a unique (scope × domain) cell (the no-dead-weight proof + checklist)
+
+The two-axis rule makes distinctness *structural*: every seat sits at a unique **(scope × domain)** intersection, so no two own the same decision. Lay all 21 + the HoS on the grid — nothing shares a cell, and the empty cells are intentional:
+
+| Scope | Space-mil | Ground-mil | Civil / econ | Science | Diplomacy | Espionage | Commerce | Politics |
+|---|---|---|---|---|---|---|---|---|
+| **Empire** | Grand Admiral | Field Marshal | Chancellor | Chief Scientist | Foreign Minister | Spymaster | Trade Minister | *(HoS — regime)* |
+| **System** | System Admiral | System General | System Governor | System Scientist | — | — | — | — |
+| **Planet** | — | Planetary General | Planetary Governor | Planetary Scientist | — | — | — | Interior Minister |
+| **Field / one-of** | Fleet Cmdr | Battalion Cmdr | — | Lab Scientist | Ambassador · Envoy | Agent | — | — |
+
+**Intentional blanks:** Planet×Space-mil (ships don't hold worlds); Empire×Politics is the **HoS** directly (holds the regime, no minister); the external domains (Diplomacy/Espionage/Commerce) don't nest into the territorial spine below empire because they're empire-outward.
+
+**The four TIGHT-but-distinct pairs** (each still owns a decision the other doesn't, but at *small* scale one officer holds both — you seat the split only when the empire is big enough to need it; the three-mode dial keeps the unsplit one on auto):
+- **Fleet Commander vs. System Admiral** — how one fleet *fights* vs. where the system's fleets *go*.
+- **Ambassador vs. Envoy** — a standing court presence vs. a one-off negotiation.
+- **Interior Minister vs. Planetary Governor** — a world's *politics* vs. its *economy*.
+- **Trade Minister vs. Chancellor** — commerce *flow* vs. production *allocation*.
+
+**Coverage vs. built — the honest line.** Every *aspect of the game* maps to a cell/owner (space & ground war, economy, commerce, research, ship design, science/exploration, diplomacy, espionage, internal politics, colonization, tax, budget, retrofit, mining, terraforming, migration, rebellion, character-HR; reactive events ride the spine; the crisis is deliberately ownerless = emergent). **So the leadership covers everything.** BUT *owned ≠ built* — many cells own a mechanic still on the punch-list (espionage engine, terraforming, migration, rebellion-response levers, retrofit, bloc-demands, trade-money). **The roster is complete; the engine behind it is the backlog.**
+
 ---
 
 ## Parity audit + the automation model (the Distant Worlds test, 2026-07-10)
