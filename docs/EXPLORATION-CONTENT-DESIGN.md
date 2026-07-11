@@ -1,6 +1,6 @@
 # Exploration Content — the Field-Site Loop + Catalog (design)
 
-**Status:** concepts + path forward (design conversation 2026-07-07). No engine code yet. Sits alongside `docs/DETECTION-DESIGN.md` (the survey/fog substrate this rides) and `docs/AI-SELF-PLAY-DESIGN.md` (scientists are leaders on the pipeline this gives a field career).
+**Status:** concepts + path forward (design conversation 2026-07-07; developer's-vision + incident-shape added 2026-07-11). No engine code yet. Sits alongside `docs/DETECTION-DESIGN.md` (the survey/fog substrate this rides) and `docs/AI-SELF-PLAY-DESIGN.md` (scientists are leaders on the pipeline this gives a field career).
 
 ---
 
@@ -19,6 +19,29 @@ One system closes all three: **content for eXplore, a field career that makes sc
 
 ---
 
+## The developer's vision — this IS science, and it should fill a home system for 250 years (2026-07-11)
+
+**The bar (developer's call):** *"250 years in-game and never leaving Sol is completely fine — because the time was filled."* Filled with **what** is the whole point, and it's this system. The named picture:
+
+- **Ancient ruins on Mars** — a dig that yields a windfall (the *ancient ruins* row).
+- **Stabilizing Mercury after a bad solar flare hit** — a disaster your science corps has to *respond to* and bring back from the edge.
+- **A hostile fish species that broke out of the ice during a mining incident on Europa** — an accident of your own making that unleashes a xeno-threat you now have to contain.
+- **Jupiter's Great Red Spot is full of FTL fuel — but extracting it in a corrosive atmosphere is hell** — a rich prize gated behind a brutal environmental engineering problem (the *rare/exotic resource* row × the hazard geography).
+
+**"Take the essence of that and fill science. It's essentially about four seasons' worth of Star Trek episodes."** Two design consequences fall out of that sentence:
+
+1. **DENSITY is a first-class goal, not a "later" one.** Event-chains and episodic texture were parked as the last build item below — this note *elevates the intent* (not the build order): the catalog must be deep and dense enough that **a single home system is a campaign's worth of content.** Exploration is not the reward for leaving home; it's the substance of *being* somewhere. Science stops being a tech-tree grind and becomes **the episodes**. (Calibration — how many sites/incidents per body, how often chains fire — stays "open," but the target is now explicit: *dense enough to fill Sol.*)
+
+2. **A THIRD site shape — the INCIDENT (reactive), alongside the two discovery shapes.** The catalog below is *discovery*-shaped: you survey, you find a prize, you choose to investigate. But *"stabilize Mercury after a flare"* and *"contain the Europa outbreak"* are **not things you go find — they happen TO your worlds and demand a science response.** That's a distinct shape:
+
+   > **an event fires on a body you already hold (a hazard strike, a mining accident, an outbreak, a containment failure) → it degrades that world (population/industry/stability) on a clock → you assign scientist(s) to RESOLVE it (competence + funding = how fast, how safely) → resolved: the world recovers, maybe with a bonus learned; ignored/failed: it worsens, spreads, or is lost.**
+
+   It **reuses the exact field-site loop** (assign scientists, funding dial, competence = rate/quality/risk, people-loss rung) — it's the same machine pointed at a *problem on your own turf* instead of a *prize on the frontier*. It's the reactive twin of exploration: the same science corps that digs the Mars ruin is the fire brigade for the Mercury flare. **The incident is also where hazards (which already exist) become gameplay** — a solar flare isn't just a number, it's an episode. And it ties the crisis seed in early: the Europa outbreak is a *small* version of the same "a thing got loose" shape the late-game ascension seed is the *galactic* version of.
+
+   *(This makes the site-shape flag three-valued: **persistent study · one-shot expedition · incident-response.** Add it to the catalog-entry flag; the loop is unchanged.)*
+
+---
+
 ## The spine — a "field site" is a lab on a location
 
 Right now a scientist works a **lab** (`ResearcherDB` + assigned scientist + a 0–5 funding dial → points/day). A **field site** is that exact loop moved onto a discovered location:
@@ -27,10 +50,11 @@ Right now a scientist works a **lab** (`ResearcherDB` + assigned scientist + a 0
 
 Build the loop **once**; every site *type* below is **data** in a broad catalog (the same pattern as the covert-action and exchange catalogs). This is CONNECT, not a parallel system (`CONVENTIONS.md` §6) — it reuses survey, the scientist-assignment + funding machinery, the `Masked` per-faction fog, and the people-loss rung.
 
-### Two scientist-at-a-site shapes (both exist — a flag on the catalog entry)
+### Three scientist-at-a-site shapes (a flag on the catalog entry)
 
 - **Persistent study** (a biosphere, an exotic star) — runs like a lab: yields *over time*, competence = the *rate*, the site *persists* as a standing bonus you hold.
 - **One-shot expedition** (a ruin, a derelict) — resolves *once* with a success/quality roll, competence = the *odds*, the site *depletes*.
+- **Incident-response** (a solar-flare strike, a mining accident, an outbreak — *reactive*, on a world you already hold) — an event **degrades a world on a clock**; you assign scientist(s) to *resolve* it, competence = how fast/how safely; resolved = the world recovers (maybe with a lesson learned), ignored = it worsens/spreads/is lost. The reactive twin of discovery — same loop, pointed at a problem on your own turf. See the developer's-vision note above.
 
 ### Multiple scientists per site — diminishing returns, self-balancing
 
@@ -110,7 +134,7 @@ Every rung is reachable and losable — not a parachuted-in "exploration points"
 **Locked (2026-07-07):**
 - **One universal field-site loop** for all exploration content — planetary AND space; a broad data-driven catalog, not a parallel system.
 - **All catalog types exist** (six planetary + five space) — phasing is a build-effort question, not a scope one.
-- **Both scientist-at-a-site shapes** — persistent study (lab-like, competence = rate) and one-shot expedition (competence = odds).
+- **Three scientist-at-a-site shapes** — persistent study (lab-like, competence = rate), one-shot expedition (competence = odds), and **incident-response** (reactive — a hazard/accident/outbreak degrades a held world on a clock; competence = how fast/safely you resolve it). The developer's "fill Sol for 250 years" bar (2026-07-11) makes **content density a first-class goal** — deep enough that a single home system is a campaign's worth of episodes ("four seasons of Star Trek").
 - **Multiple scientists per site with diminishing returns; no hard cap** — the scarcity/opportunity-cost self-regulates ("3 of the 4 could be doing something else"). Concentrate-vs-spread is the decision.
 - **Scarcity** — not every planet/system has something; hot spots are the point.
 - **Grave rung** — sites transfer on conquest, deplete/persist, can be destroyed, and can kill the team.
@@ -126,5 +150,6 @@ Every rung is reachable and losable — not a parachuted-in "exploration points"
 1. **Fix + wire ruins** (the tautology bug + a consumer) as the first catalog entry — proves the field-site loop end-to-end on the simplest one-shot expedition.
 2. **The field-site loop** generalized (assign scientist(s), funding, diminishing-returns team math, yield-over-time vs one-shot).
 3. **Broaden the planetary catalog** (rare resource, biosphere — fills empty tech categories).
-4. **Space catalog + the four space-special dimensions** (derelicts/stars first; network-reshaping with the jump-network rework).
-5. **Event chains / crisis seeds** (anomalies) — last, likely its own system.
+4. **Incident-response shape** (wire a hazard/accident event → a resolvable field site on a held world; reuses the loop + the existing hazard system) — this is what makes a *home system* full, so it earns early priority once the loop exists.
+5. **Space catalog + the four space-special dimensions** (derelicts/stars first; network-reshaping with the jump-network rework).
+6. **Event chains / crisis seeds** (anomalies) — last, likely its own system.
