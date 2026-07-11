@@ -97,6 +97,18 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-jammer",
+      "Name": "Barrage Jammer",
+      "TemplateId": "jammer",
+      "Properties": [
+        { "Key": "Sensitivity Degrade", "Value": 4 },
+        { "Key": "Range", "Value": 1 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-cargo-hold-1t",
       "Name": "Cargo Hold 1t",
       "TemplateId": "general-cargo-hold",

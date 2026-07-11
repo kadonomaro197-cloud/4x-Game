@@ -481,5 +481,77 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "jammer",
+      "Name": "Barrage Jammer",
+      "Formulas": {
+        "Description": "An active barrage jammer: floods the band with noise so hostile sensors detect at much shorter range — but it lights THIS ship up as a beacon (loud, just hard to resolve past). The offensive Electronic-Warfare suite: blind the enemy, paint a target on yourself.",
+        "Mass": "PropertyValue('Mass')",
+        "Volume": "[Mass]",
+        "HTK": "0.5",
+        "CrewReq": "Max(1, [Mass] * 0.01)",
+        "ResearchCost": "[Mass] * 3",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.3",
+        "aluminium": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.3",
+        "plastic": "[Mass] * 0.2"
+      },
+      "ComponentType": "Sensor",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Sensitivity Degrade",
+          "Units": "x",
+          "DescriptionFormula": "'Divides a hostile receiver usable signal within range (higher = blinder; 4x ~ halves their detection range).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "16",
+          "MinFormula": "1",
+          "StepFormula": "1",
+          "PropertyFormula": "4"
+        },
+        {
+          "Name": "Range",
+          "Units": "Gm",
+          "DescriptionFormula": "'Reach of the jamming (a hostile receiver within this distance is degraded).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5",
+          "MinFormula": "0.1",
+          "StepFormula": "0.1",
+          "PropertyFormula": "1"
+        },
+        {
+          "Name": "Self Signature Boost",
+          "Units": "x",
+          "DescriptionFormula": "'How much louder this ship own signature runs while jamming (the beacon catch).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "10",
+          "MinFormula": "1",
+          "StepFormula": "1",
+          "PropertyFormula": "5"
+        },
+        {
+          "Name": "Mass",
+          "Units": "kg",
+          "GuiHint": "None",
+          "PropertyFormula": "200 + 100 * PropertyValue('Sensitivity Degrade') + 50 * PropertyValue('Range')"
+        },
+        {
+          "Name": "jammerAtbArgs",
+          "DescriptionFormula": "'double sensitivityDegrade, double range_m, double selfSignatureBoost'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Sensitivity Degrade'), PropertyValue('Range') * 1000000000, PropertyValue('Self Signature Boost'))",
+          "AttributeType": "Pulsar4X.Sensors.JammerAtb"
+        }
+      ]
+    }
   }
 ]

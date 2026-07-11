@@ -125,6 +125,10 @@ namespace Pulsar4X.Client
             // director, but gated to match its sibling flags); ON for the game.
             Pulsar4X.Combat.ShipCombatValueDB.EnableFinalFireOnlyPD = true;
 
+            // EW barrage jamming (Sensors ⚙3 ▸ EW): a jammer floods the band so hostile sensors detect at shorter range
+            // (and lights the jammer itself up as a beacon). Byte-identical until a jammer exists; ON for the game.
+            Pulsar4X.Sensors.JammerAtb.EnableJamming = true;
+
             try
             {
                 string? appDataDirectory = GetAppDataPath();

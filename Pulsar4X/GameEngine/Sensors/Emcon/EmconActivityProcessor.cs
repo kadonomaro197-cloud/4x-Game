@@ -89,11 +89,13 @@ namespace Pulsar4X.Sensors
             // is simply skipped (defensive — no throw, the rule for any hotloop processor).
             if (!entity.TryGetDataBlob<SensorProfileDB>(out var profile)) return;
 
-            // Posture × activity gives the ship's normal loudness; a CLOAK component (if installed) then damps that
-            // emitted signature down FURTHER (best cloak, health-scaled). No cloak → CloakFactor 1.0 → byte-identical.
+            // Posture × activity gives the ship's normal loudness; a CLOAK damps that emitted signature down FURTHER
+            // (best cloak, health-scaled), while an active JAMMER pushes it UP — a barrage jammer is a loud beacon (the
+            // catch for blinding the enemy). No cloak → 1.0, no jammer → 1.0 → byte-identical.
             profile.ActivityMultiplier =
                 ComputeActivityMultiplier(profile.SignatureBaseMultiplier, IsBurning(entity), IsFiring(entity))
-                * CloakAtb.CloakFactor(entity);
+                * CloakAtb.CloakFactor(entity)
+                * JammerAtb.SelfSignatureFactor(entity);
         }
 
         public int ProcessManager(EntityManager manager, int deltaSeconds)
