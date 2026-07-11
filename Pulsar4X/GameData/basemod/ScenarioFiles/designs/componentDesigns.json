@@ -75,6 +75,17 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-cloak-device",
+      "Name": "Cloak Device",
+      "TemplateId": "cloak-device",
+      "Properties": [
+        { "Key": "Signature Multiplier", "Value": 0.2 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-cargo-hold-1t",
       "Name": "Cargo Hold 1t",
       "TemplateId": "general-cargo-hold",

@@ -108,6 +108,7 @@
         "battery-storage",
         "passive-sensor",
         "beam-fire-control",
+        "cloak-device",
         "reactor",
         "battery-bank",
         "rtg",
@@ -208,6 +209,7 @@
         "default-design-auto-mine",
         "default-design-battery-2t",
         "default-design-beam-fire-control",
+        "default-design-cloak-device",
         "default-design-cargo-hold-1t",
         "default-design-cargo-hold-5t",
         "default-design-f1",
@@ -303,7 +305,8 @@
         "default-ship-design-test-missile",
         "default-ship-design-test-screen",
         "default-ship-design-test-phantom",
-        "default-ship-design-test-nomad"
+        "default-ship-design-test-nomad",
+        "default-ship-design-test-wraith"
       ],
       "LaunchQueue": [
         { "DesignId": "default-ship-design-courier", "Name": "ISS Hermes" }
