@@ -760,6 +760,14 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-reactive-plating",
+      "Name": "Reactive Plating",
+      "TemplateId": "reactive-plating"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-power-armor",
       "Name": "Power Armour",
       "TemplateId": "power-armor"

@@ -269,6 +269,40 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("⚙3 Defense armour ROCK-PAPER-SCISSORS: Reactive Plating is the KINETIC/EXPLOSIVE counterpart to ablative — its blocks defeat slugs and shaped charges (VsKinetic>1, VsExplosive>1) but a laser burns through the light casing (VsEnergy<1). So the armour CHOICE stacks against the THREAT: vs an energy weapon the ablative unit soaks best, vs a kinetic weapon the reactive unit soaks best — the matchup flips, making 'armour against WHAT' a real decision rather than a flat +. Same Defense on both, so nature is the only variable.")]
+        public void ArmourNature_ReactiveVsAblative_IsAThreatMatchup()
+        {
+            _s = TestScenario.CreateWithColony();
+            var human = Part("default-design-human-frame");
+            var rifle = Part("default-design-ground-rifle");
+            var ablative = Part("default-design-ablative-plating");
+            var reactive = Part("default-design-reactive-plating");
+
+            var reAtb = reactive.GetAttribute<GroundArmorAtb>();
+            Assert.That(reAtb.VsKinetic, Is.GreaterThan(1.0), "reactive defeats a kinetic slug (binds from JSON)");
+            Assert.That(reAtb.VsExplosive, Is.GreaterThan(1.0), "…and a shaped-charge / HE warhead");
+            Assert.That(reAtb.VsEnergy, Is.LessThan(1.0), "…but a laser burns through the light casing");
+
+            var ablDesign = GroundUnitAssembly.ToGroundUnitDesign("test-abl2", "Ablative", human,
+                new List<(ComponentDesign, int)> { (rifle, 1), (ablative, 1) });
+            var reDesign = GroundUnitAssembly.ToGroundUnitDesign("test-re", "Reactive", human,
+                new List<(ComponentDesign, int)> { (rifle, 1), (reactive, 1) });
+            var abl = GroundForces.RaiseUnit(_s.StartingBody, ablDesign, _s.Faction.Id, 0, "Ablative");
+            var re = GroundForces.RaiseUnit(_s.StartingBody, reDesign, _s.Faction.Id, 1, "Reactive");
+
+            const double hit = 20.0; const int shots = 1; const double pen = 0;
+            double Lands(GroundUnit u, Pulsar4X.Combat.WeaponNature n)
+                => GroundDamageMatrix.ArmourSoak(u.Defense, hit, shots, pen, u.ArmourResistFor(n));
+
+            // The matchup FLIPS by threat — the whole point of the decision.
+            Assert.That(Lands(abl, Pulsar4X.Combat.WeaponNature.Energy), Is.LessThan(Lands(re, Pulsar4X.Combat.WeaponNature.Energy)),
+                "vs a laser, the ABLATIVE unit takes less — pick ablative against energy");
+            Assert.That(Lands(re, Pulsar4X.Combat.WeaponNature.Kinetic), Is.LessThan(Lands(abl, Pulsar4X.Combat.WeaponNature.Kinetic)),
+                "vs a slug, the REACTIVE unit takes less — pick reactive against kinetic");
+            Log($"energy hit: abl {Lands(abl, Pulsar4X.Combat.WeaponNature.Energy):0.0} vs re {Lands(re, Pulsar4X.Combat.WeaponNature.Energy):0.0};  kinetic hit: abl {Lands(abl, Pulsar4X.Combat.WeaponNature.Kinetic):0.0} vs re {Lands(re, Pulsar4X.Combat.WeaponNature.Kinetic):0.0}");
+        }
+
+        [Test]
         [Description("The Clone-vs-Zergling proof: two units from the SAME parts bin that share almost no gameplay DNA. A Clone (human + plasma + plating + shield) is a ranged, durable, shielded soak-tank; a Zergling (swarm frame + claws + reflex) is a fragile, cheap, melee dodger. Both assemble legally; every System-① field is opposite.")]
         public void CloneTrooper_vs_Zergling_AreOppositeUnits_FromOneBin()
         {
