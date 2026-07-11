@@ -1658,6 +1658,82 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "ablative-plating",
+      "Name": "Ablative Laminate",
+      "Formulas": {
+        "Description": "Ablative laminate armour (Enhancers/Defence: armour tuned against a damage NATURE). The outer layer boils away under coherent energy, so it shrugs off lasers and plasma — but the light laminate is thin against a solid kinetic slug that punches straight through. Same mass and mitigation as composite plating; what differs is WHAT it stops. Balance dials flagged.",
+        "Mass": "PropertyValue('CarryMass')",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "1.0",
+        "CrewReq": "0",
+        "ResearchCost": "[Mass] * 2",
+        "CreditCost": "[Mass] * 0.15",
+        "BuildPointCost": "[Mass] * 3.0"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.3",
+        "aluminium": "[Mass] * 0.5"
+      },
+      "ComponentType": "Ground Armour",
+      "MountType": "GroundUnit",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "CarryMass",
+          "DescriptionFormula": "'What the frame must bear.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "25"
+        },
+        {
+          "Name": "HP",
+          "DescriptionFormula": "'Health added to the unit's pool.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "150"
+        },
+        {
+          "Name": "Defense",
+          "DescriptionFormula": "'Damage mitigation added.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "5"
+        },
+        {
+          "Name": "VsKinetic",
+          "DescriptionFormula": "'Soak effectiveness vs KINETIC (1.0 = plain plate). FLAGGED balance value.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0.6"
+        },
+        {
+          "Name": "VsEnergy",
+          "DescriptionFormula": "'Soak effectiveness vs ENERGY (1.0 = plain plate). FLAGGED balance value.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "2.0"
+        },
+        {
+          "Name": "VsExplosive",
+          "DescriptionFormula": "'Soak effectiveness vs EXPLOSIVE (1.0 = plain plate). FLAGGED balance value.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "1.0"
+        },
+        {
+          "Name": "VsExotic",
+          "DescriptionFormula": "'Soak effectiveness vs EXOTIC (1.0 = plain plate). FLAGGED balance value.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "1.0"
+        },
+        {
+          "Name": "ablativePlatingArgs",
+          "DescriptionFormula": "'atb ctor args'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('HP'), PropertyValue('Defense'), PropertyValue('VsKinetic'), PropertyValue('VsEnergy'), PropertyValue('VsExplosive'), PropertyValue('VsExotic'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundArmorAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "power-armor",
       "Name": "Power Armour",
       "Formulas": {

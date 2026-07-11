@@ -220,6 +220,55 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("⚙3 Defense armour NATURE cradle-to-grave: the base-mod Ablative Laminate is tuned against a damage NATURE — its GroundArmorAtb binds VsEnergy>1 / VsKinetic<1 from JSON (the six-point / 7-arg-ctor sensor), the assembler flows that part → design → raised unit (ArmourVs*), and in the resolver's own soak an ENERGY hit lands LESS on the ablative unit than on an identical composite-plated unit of EQUAL Defense (it shrugs lasers), while a KINETIC slug lands MORE (the light laminate is thin vs a slug). A plain plate reads natureFactor 1.0 → byte-identical. This closes the armour-nature loop: a build decides 'armour against WHAT'.")]
+        public void ArmourNature_AblativeLaminate_ShrugsEnergy_ThinsVsKinetic_CradleToGrave()
+        {
+            _s = TestScenario.CreateWithColony();
+            var human = Part("default-design-human-frame");
+            var rifle = Part("default-design-ground-rifle");
+            var composite = Part("default-design-ground-plating");
+            var ablative = Part("default-design-ablative-plating");
+
+            // The ablative part's nature dials bound from JSON through the real 7-arg NCalc ctor (gotcha #10 sensor).
+            var abAtb = ablative.GetAttribute<GroundArmorAtb>();
+            Assert.That(abAtb.VsEnergy, Is.GreaterThan(1.0), "ablative is TUNED vs energy (binds from JSON)");
+            Assert.That(abAtb.VsKinetic, Is.LessThan(1.0), "…and a POOR match vs a kinetic slug");
+            Assert.That(abAtb.Defense, Is.EqualTo(composite.GetAttribute<GroundArmorAtb>().Defense),
+                "same mitigation as composite plating — the NATURE is the only difference (a clean comparison)");
+
+            var compDesign = GroundUnitAssembly.ToGroundUnitDesign("test-comp", "Composite", human,
+                new List<(ComponentDesign, int)> { (rifle, 1), (composite, 1) });
+            var ablDesign = GroundUnitAssembly.ToGroundUnitDesign("test-abl", "Ablative", human,
+                new List<(ComponentDesign, int)> { (rifle, 1), (ablative, 1) });
+
+            // The nature flowed part → design (a single plate → its own values; the Defense-weighted average).
+            Assert.That(ablDesign.ArmourVsEnergy, Is.EqualTo(abAtb.VsEnergy).Within(1e-9), "the design carries the ablative energy tuning");
+            Assert.That(ablDesign.ArmourVsKinetic, Is.EqualTo(abAtb.VsKinetic).Within(1e-9));
+            Assert.That(compDesign.ArmourVsEnergy, Is.EqualTo(1.0), "composite is a plain plate — neutral vs every nature (byte-identical)");
+
+            // …and onto the raised units the resolver reads.
+            var abl = GroundForces.RaiseUnit(_s.StartingBody, ablDesign, _s.Faction.Id, 0, "Ablative");
+            var comp = GroundForces.RaiseUnit(_s.StartingBody, compDesign, _s.Faction.Id, 1, "Composite");
+            Assert.That(abl.ArmourResistFor(Pulsar4X.Combat.WeaponNature.Energy), Is.GreaterThan(1.0));
+            Assert.That(comp.ArmourResistFor(Pulsar4X.Combat.WeaponNature.Energy), Is.EqualTo(1.0));
+
+            // …and it BITES in the resolver's OWN soak: same Defense, same hit, only the nature factor differs.
+            const double hit = 20.0;
+            const int shots = 1; const double pen = 0;
+            double ablVsEnergy = GroundDamageMatrix.ArmourSoak(abl.Defense, hit, shots, pen, abl.ArmourResistFor(Pulsar4X.Combat.WeaponNature.Energy));
+            double compVsEnergy = GroundDamageMatrix.ArmourSoak(comp.Defense, hit, shots, pen, comp.ArmourResistFor(Pulsar4X.Combat.WeaponNature.Energy));
+            double ablVsKinetic = GroundDamageMatrix.ArmourSoak(abl.Defense, hit, shots, pen, abl.ArmourResistFor(Pulsar4X.Combat.WeaponNature.Kinetic));
+            double compVsKinetic = GroundDamageMatrix.ArmourSoak(comp.Defense, hit, shots, pen, comp.ArmourResistFor(Pulsar4X.Combat.WeaponNature.Kinetic));
+
+            Assert.That(ablVsEnergy, Is.LessThan(compVsEnergy), "ablative shrugs off ENERGY — less lands than on identical plain plate");
+            Assert.That(ablVsKinetic, Is.GreaterThan(compVsKinetic), "…but is thin vs a KINETIC slug — more lands than on plain plate");
+            // The plain plate is byte-identical to the pre-nature soak (natureFactor 1.0).
+            Assert.That(compVsEnergy, Is.EqualTo(GroundDamageMatrix.ArmourSoak(comp.Defense, hit)).Within(1e-12),
+                "a plain plate is byte-identical to the old flat soak (natureFactor 1.0)");
+            Log($"a {hit:0} hit → ablative lands {ablVsEnergy:0.0} (energy) / {ablVsKinetic:0.0} (kinetic); composite {compVsEnergy:0.0} / {compVsKinetic:0.0}");
+        }
+
+        [Test]
         [Description("The Clone-vs-Zergling proof: two units from the SAME parts bin that share almost no gameplay DNA. A Clone (human + plasma + plating + shield) is a ranged, durable, shielded soak-tank; a Zergling (swarm frame + claws + reflex) is a fragile, cheap, melee dodger. Both assemble legally; every System-① field is opposite.")]
         public void CloneTrooper_vs_Zergling_AreOppositeUnits_FromOneBin()
         {
