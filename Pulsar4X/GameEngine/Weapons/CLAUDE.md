@@ -184,6 +184,8 @@ MissileProcessor.LaunchMissile(launcher, target, launchForce, design, count)
 
 These feed the client (Fleet Combat tab columns + fleet "Beam reach" row; Fire Control range-to-target + red **OUT OF RANGE**; map range rings). Gauged by `Pulsar4X.Tests/RangeReadoutTests.cs` (aggregation on the Aegis). Full survey + the two-failure-mode framing: `docs/INFORMATION-DELTA-DESIGN.md`. Missile range is still a stub (`IsInRange` returns true) so no missile ring is drawn — drawing one would lie.
 
+**The Range DIAL is cradle-to-grave (dossier ⚙1 Weapons▸Energy, 2026-07-11).** The `laser-weapon` template's `Range` Property has `MaxFormula = TechData('tech-beam-range')` (= 10,000 m at starting tech, doubling per level — long range is *earned*, per the §12 note above). The base-mod `default-design-long-range-laser` design turns that knob to the 10,000 m ceiling (Focal Length 5,000 m for a wide full-damage band), mounted on the **Longbow Standoff Cruiser** — proving a design's `Range` override propagates JSON → NCalc `genericBeamWpnAtbArgs` → `GenericBeamWeaponAtb.MaxRange` → the reach the closing-combat trigger and firing path both read. Gauged by `Pulsar4X.Tests/ShipLongRangeLaserTests.cs` (Longbow reaches 10,000 m; a default-laser Aegis stays at 5,000 m → the dial doubles reach, default untouched). Additive/byte-identical.
+
 ---
 
 ## Damage Status (Phase 1a + Phase 2 — DamageComplex fully wired)

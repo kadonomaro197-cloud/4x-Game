@@ -229,6 +229,7 @@
         "default-design-geo-surveyor",
         "default-design-gravitational-surveyor",
         "default-design-laser-weapon",
+        "default-design-long-range-laser",
         "default-design-railgun-weapon",
         "default-design-flak-weapon",
         "default-design-sensor-hardening-module",
@@ -317,7 +318,8 @@
         "default-ship-design-test-wraith",
         "default-ship-design-test-sentinel",
         "default-ship-design-test-havoc",
-        "default-ship-design-test-pathfinder"
+        "default-ship-design-test-pathfinder",
+        "default-ship-design-test-longbow"
       ],
       "LaunchQueue": [
         { "DesignId": "default-ship-design-courier", "Name": "ISS Hermes" }

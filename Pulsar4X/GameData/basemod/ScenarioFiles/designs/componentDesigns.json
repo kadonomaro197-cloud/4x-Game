@@ -259,6 +259,18 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-long-range-laser",
+      "Name": "Long-Range Laser",
+      "TemplateId": "laser-weapon",
+      "Properties": [
+        { "Key": "Range", "Value": 10000 },
+        { "Key": "Focal Length", "Value": 5000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-railgun-weapon",
       "Name": "Railgun",
       "TemplateId": "railgun-weapon"
