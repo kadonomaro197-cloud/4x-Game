@@ -1,5 +1,6 @@
 using System;
 using Pulsar4X.Engine;
+using Pulsar4X.Industry;
 using Pulsar4X.Interfaces;
 
 namespace Pulsar4X.Factions
@@ -29,6 +30,14 @@ namespace Pulsar4X.Factions
         /// Read by tests to prove faction-level processors fire. Not serialized; resets each process start.
         /// </summary>
         public static int TickCount;
+
+        /// <summary>
+        /// Phase-2.4c gate: when true, the Tick doesn't just DECIDE — it ACTS, emitting real orders for the settled
+        /// objective (the first behaviour-changing step). Defaults <b>false</b> so every existing test is
+        /// byte-identical (the brain decides but stays hands-off); the client turns it on. Mirrors the combat/economy
+        /// flag pattern (`RequireDetectionToEngage`, `TradeIncomeProcessor.EnablePayout`).
+        /// </summary>
+        public static bool EnableOrderEmission = false;
 
         private Game _game;
 
@@ -71,10 +80,64 @@ namespace Pulsar4X.Factions
             RunDiplomaticDrift(factionEntity);
 
             // The Organism decision (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II Phase 2): read the needs-ladder, pick
-            // an objective from tier × doctrine × personality, and commit it through the hysteresis engine. This slice
-            // (2.4b) settles + STORES the objective; the per-objective ORDER emission (build/expand/attack) is the
-            // follow-on (2.4c+). Storing a plan the NPC brain hasn't acted on yet is byte-identical.
+            // an objective from tier × doctrine × personality, and commit it through the hysteresis engine. 2.4b
+            // settles + STORES the objective (the DECISION).
             UpdateStrategicObjective(factionEntity, factionInfoDB);
+
+            // ACT on it (Phase 2.4c) — but only behind the default-off gate, so the plan-only path stays
+            // byte-identical until a client/test opts in.
+            if (EnableOrderEmission)
+                EmitOrders(factionEntity, factionInfoDB);
+        }
+
+        /// <summary>
+        /// Phase-2.4c: turn the faction's settled <see cref="StrategicObjectiveDB"/> into real orders. This slice
+        /// wires the first, safest objective — <see cref="StrategicObjective.GrowEconomy"/> → queue an industry job on
+        /// a colony (the same lever a player pulls). The other objectives (Defend/Consolidate/Expand/Conquer) are the
+        /// follow-on slices (2.4d+); they no-op here. Defensive/no-throw (runs in a hotloop). Internal for the gauge.
+        /// </summary>
+        internal static void EmitOrders(Entity factionEntity, FactionInfoDB factionInfo)
+        {
+            if (!factionEntity.TryGetDataBlob<StrategicObjectiveDB>(out var objective)) return;
+
+            switch (objective.Objective)
+            {
+                case StrategicObjective.GrowEconomy:
+                    foreach (var colony in factionInfo.Colonies)
+                        if (TryQueueEconomyJob(colony, factionInfo))
+                            break;   // one job started per cycle — it fills capacity over time, no runaway
+                    break;
+                // Defend / Consolidate / AdvanceTech / Expand / Conquer → 2.4d+ (no order emitted yet).
+            }
+        }
+
+        /// <summary>
+        /// GrowEconomy's action: queue ONE buildable design onto the first free production line on the colony that can
+        /// make it (repeat on, so an economy keeps producing). Skips a line that already has a job (so a monthly Tick
+        /// fills capacity rather than piling up). Returns true if a job was queued. No-op (false) on a colony with no
+        /// industry or nothing buildable/free.
+        /// </summary>
+        internal static bool TryQueueEconomyJob(Entity colony, FactionInfoDB factionInfo)
+        {
+            if (colony == null || !colony.TryGetDataBlob<IndustryAbilityDB>(out var industry)) return false;
+
+            foreach (var designKvp in factionInfo.IndustryDesigns)
+            {
+                IConstructableDesign design = designKvp.Value;
+                if (design == null) continue;
+
+                foreach (var lineKvp in industry.ProductionLines)
+                {
+                    if (!lineKvp.Value.IndustryTypeRates.ContainsKey(design.IndustryTypeID)) continue;
+                    if (lineKvp.Value.Jobs.Count > 0) continue;   // that line is busy — try another design/line
+
+                    var job = new IndustryJob(factionInfo, designKvp.Key);
+                    job.InitialiseJob(1, true);                   // repeat: keep the line producing
+                    IndustryTools.AddJob(colony, lineKvp.Key, job);
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>
