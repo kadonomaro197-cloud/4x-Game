@@ -86,6 +86,17 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-pd-director",
+      "Name": "Point-Defense Director",
+      "TemplateId": "pd-director",
+      "Properties": [
+        { "Key": "Tracking Speed", "Value": 20000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-cargo-hold-1t",
       "Name": "Cargo Hold 1t",
       "TemplateId": "general-cargo-hold",

@@ -419,5 +419,67 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "pd-director",
+      "Name": "Point-Defense Director",
+      "Formulas": {
+        "Description": "A final-defensive-fire (CIWS) director: dedicates the beams it controls to INTERCEPTING incoming missiles instead of anti-ship fire. Fast-tracking, short-ranged — the point-defense half of the fire-control door.",
+        "Mass": "PropertyValue('Mass')",
+        "Volume": "[Mass]",
+        "HTK": "0.5",
+        "CrewReq": "[Mass]",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.5",
+        "plastic": "[Mass] * 0.2",
+        "aluminium": "[Mass] * 0.1",
+        "copper": "[Mass] * 0.2"
+      },
+      "ComponentType": "Weapon",
+      "MountType": "ShipComponent, ShipCargo",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Range",
+          "Units": "kkm",
+          "DescriptionFormula": "'Reach of the director (short — point defense is close-in work).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "50",
+          "MinFormula": "5",
+          "StepFormula": "5",
+          "PropertyFormula": "10"
+        },
+        {
+          "Name": "Tracking Speed",
+          "Units": "km/s",
+          "DescriptionFormula": "'How fast it slews — a CIWS must track fast, jinking missiles.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "25000",
+          "MinFormula": "5000",
+          "StepFormula": "250",
+          "PropertyFormula": "20000"
+        },
+        {
+          "Name": "Mass",
+          "Units": "kg",
+          "GuiHint": "None",
+          "PropertyFormula": "(PropertyValue('Range') + PropertyValue('Tracking Speed') / 100) * 1.5"
+        },
+        {
+          "Name": "DBargs",
+          "DescriptionFormula": "'double range, double trackingSpeed, double finalFireOnly (1 = PD-only)'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Range'), PropertyValue('Tracking Speed'), 1)",
+          "AttributeType": "Pulsar4X.Weapons.BeamFireControlAtbDB"
+        }
+      ]
+    }
   }
 ]

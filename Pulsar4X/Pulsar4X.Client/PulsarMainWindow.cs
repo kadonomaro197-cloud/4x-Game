@@ -119,6 +119,12 @@ namespace Pulsar4X.Client
             // value, so wiring it changes those fixtures — gated like the closing/detection flags); ON for the game.
             Pulsar4X.Combat.ShipCombatValueDB.EnableFireControlTracking = true;
 
+            // Fire control → PD-only mode (Sensors ⚙3): a ship with a FinalFireOnly (CIWS) director routes its beams
+            // into point-defense (missile interception) instead of anti-ship fire (the dead BeamFireControlAtbDB.
+            // FinalFireOnly knob, wired). Off by default in the engine (byte-identical — no base ship has such a
+            // director, but gated to match its sibling flags); ON for the game.
+            Pulsar4X.Combat.ShipCombatValueDB.EnableFinalFireOnlyPD = true;
+
             try
             {
                 string? appDataDirectory = GetAppDataPath();

@@ -120,6 +120,27 @@ namespace Pulsar4X.Combat
         public static double FireControlTrackingFactor(double trackingSpeed)
             => trackingSpeed <= 0 ? 0 : trackingSpeed / (trackingSpeed + FireControlTrackingReference);
 
+        /// <summary>FIRE CONTROL → PD-only mode (Sensors ⚙3, Fire-Control CONNECT). Default OFF → byte-identical: no
+        /// base ship carries a <c>FinalFireOnly</c> director, so even turned ON nothing changes until one is installed.
+        /// The client turns it on. When on, a ship with a live FinalFireOnly (CIWS) director routes its BEAM weapons'
+        /// damage/sec into the <see cref="PointDefense_Jps"/> pool (missile interception) instead of anti-ship
+        /// firepower — the dead <c>BeamFireControlAtbDB.FinalFireOnly</c> knob (verified 0 reads) comes ALIVE and pairs
+        /// with the W6 point-defense system. v1: ALL the ship's beams switch (a dedicated CIWS hull); per-weapon
+        /// director→weapon assignment is the flagged follow-up.</summary>
+        public static bool EnableFinalFireOnlyPD = false;
+
+        /// <summary>True if the ship has at least one INSTALLED, undestroyed beam director set to <c>FinalFireOnly</c>
+        /// (a CIWS director). Health-gated: a shot-off director (health 0) doesn't count, so knocking out the CIWS
+        /// director reverts its beams to ordinary fire — the grave rung. Defensive: no components / no director → false.</summary>
+        public static bool HasLiveFinalFireOnlyDirector(ComponentInstancesDB instances)
+        {
+            if (instances != null && instances.TryGetComponentsByAttribute<Weapons.BeamFireControlAtbDB>(out var directors))
+                foreach (var comp in directors)
+                    if (comp.HealthPercent > 0 && comp.Design.TryGetAttribute<Weapons.BeamFireControlAtbDB>(out var fc) && fc.FinalFireOnly)
+                        return true;
+            return false;
+        }
+
         /// <summary>Damage-per-second the ship can deal (joules/sec). Higher = stronger.</summary>
         [JsonProperty] public double Firepower { get; internal set; }
 
@@ -237,6 +258,12 @@ namespace Pulsar4X.Combat
                     fcTracking = FireControlTrackingFactor(bestTrackingSpeed);
                 }
 
+                // PD-ONLY MODE (⚙3, Fire-Control CONNECT): a FinalFireOnly director (CIWS) dedicates this ship's beams
+                // to intercepting incoming ordnance — their damage/sec feeds the point-defense pool, not anti-ship
+                // firepower. Off/false unless the flag is on AND a live FinalFireOnly director is installed (no base
+                // ship has one → byte-identical). A shot-off director reverts the beams to normal fire (grave rung).
+                bool beamsArePointDefense = EnableFinalFireOnlyPD && HasLiveFinalFireOnlyDirector(instances);
+
                 // Beam weapons: damage/sec = Energy / ChargePeriod (scaled by health); ~light-speed; tracks well
                 // (BaseHitChance); saturation = one pulse per charge period (its rate of fire).
                 if (instances.TryGetComponentsByAttribute<GenericBeamWeaponAtb>(out var beams))
@@ -247,6 +274,9 @@ namespace Pulsar4X.Combat
                         {
                             double period = beam.ChargePeriod > 0 ? beam.ChargePeriod : 1.0;
                             double dps = (beam.Energy / period) * comp.HealthPercent;
+                            // PD-only director (⚙3): dedicate this beam's output to interception (Jps) — it counts as
+                            // point-defense, not anti-ship firepower. Skip adding it to the weapons list.
+                            if (beamsArePointDefense) { pointDefense += dps; continue; }
                             // Fire control (⚙3): the director raises the beam's tracking toward 1.0 (closes the gap).
                             // fcTracking is 0 unless the flag is on → beamTracking = BaseHitChance → byte-identical.
                             double beamTracking = beam.BaseHitChance + (1.0 - beam.BaseHitChance) * fcTracking;
