@@ -1,4 +1,7 @@
+using Pulsar4X.Colonies;
+using Pulsar4X.Industry;
 using Pulsar4X.Interfaces;
+using Pulsar4X.Ships;
 
 namespace Pulsar4X.Factions
 {
@@ -24,9 +27,25 @@ namespace Pulsar4X.Factions
             if (colony?.Industry == null || design == null || factionInfo == null) return false;
             if (!factionInfo.IndustryDesigns.ContainsKey(design.UniqueID)) return false;   // tech gate (unlocked?)
 
+            // P1-e crew gate — SHIP hulls only (mirrored exactly from ConstructStuff: you can't build a ship you
+            // can't crew). Inert for materials/installations and for a manpool-less host — so byte-identical for
+            // GrowEconomy's refining/installation builds.
+            if (design is ShipDesign ship && ship.CrewReq > 0)
+            {
+                var crew = ManpowerTools.ResolveBuild(colony.Colony, ship.CrewReq - ship.TalentReq);
+                if (!crew.CanBuild || !ManpowerTools.HasTalentToBuild(colony.Colony, ship.TalentReq))
+                    return false;
+            }
+
+            // P1-e capacity gate — a FREE line that runs this type AND turns over ≥ 1 pt/tick AFTER infra scaling.
+            // ConstructStuff skips a job whose infra-scaled rate is < 1 (`(int)(rate*eff) < 1 → continue`), so such a
+            // build would sit forever making no progress — the oracle refuses it up front.
+            double eff = InfrastructureProcessor.GetEfficiency(colony.Colony);
             foreach (var line in colony.Industry.ProductionLines.Values)
-                if (line.IndustryTypeRates.ContainsKey(design.IndustryTypeID) && line.Jobs.Count == 0)
-                    return true;   // a free line can run this type → won't stall on "no line"
+                if (line.IndustryTypeRates.TryGetValue(design.IndustryTypeID, out int rate)
+                    && line.Jobs.Count == 0
+                    && (int)(rate * eff) >= 1)
+                    return true;
             return false;
         }
     }
