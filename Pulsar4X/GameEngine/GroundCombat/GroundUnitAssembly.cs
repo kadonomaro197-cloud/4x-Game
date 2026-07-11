@@ -22,6 +22,9 @@ namespace Pulsar4X.GroundCombat
         public double HitPoints;
         public double Evasion;
         public double Shield;
+        // ⚙3 Defense — shield RECHARGE: the Shield-weighted combination of the mounted augments' recharge dials. Default
+        // 0.34 (the old global constant; no shield → stays 0.34, moot) → byte-identical.
+        public double ShieldRegenFraction = 0.34;
         public GroundWeaponMode DamageType = GroundWeaponMode.Ballistic;   // the heaviest weapon's flavour (System ①)
         public double Mass;            // total build mass (frame + parts) — feeds cost + transport carry-size
         public double CarryCapacity;   // frame strength + augment strength bonuses
@@ -97,6 +100,8 @@ namespace Pulsar4X.GroundCombat
             bool anyAmmoWeapon = false;// is an ammo-fed weapon mounted? (needs a magazine)
             // ⚙3 armour nature: Defense-weighted sums of each plating part's per-nature soak, averaged after the loop.
             double armWeight = 0, armVsK = 0, armVsE = 0, armVsX = 0, armVsO = 0;
+            // ⚙3 shield recharge: Shield-weighted sum of each augment's recharge dial, averaged after the loop.
+            double shieldWeight = 0, shieldRegenSum = 0;
             foreach (var (d, c) in list)
             {
                 double itemMass = 0;
@@ -132,6 +137,11 @@ namespace Pulsar4X.GroundCombat
                     r.Evasion += g.EvasionBonus * c;
                     r.Shield += g.Shield * c;
                     toughness += g.ToughnessBonus * c;
+                    // ⚙3 shield recharge: weight each augment's dial by the shield capacity it contributes, so a fast
+                    // ward reads fast. An augment with no shield contributes 0 weight → doesn't pollute the average.
+                    double sw = g.Shield * c;
+                    shieldWeight += sw;
+                    shieldRegenSum += g.ShieldRegenFraction * sw;
                 }
                 // A part that isn't one of the ground-specific kinds (a universal weapon or a reactor, P1/P2a) has no
                 // ground carry-mass field — count its real component mass so it still consumes the carry budget. This is
@@ -160,6 +170,9 @@ namespace Pulsar4X.GroundCombat
                 r.ArmourVsExplosive = armVsX / armWeight;
                 r.ArmourVsExotic = armVsO / armWeight;
             }
+            // ⚙3 shield recharge: finish the Shield-weighted average (no shield → the 0.34 default stays → byte-identical).
+            if (shieldWeight > 0)
+                r.ShieldRegenFraction = shieldRegenSum / shieldWeight;
             r.UsedCapacity = used;
             r.EnergyDemand_W = energyDemand;
             r.ReactorSupply_W = reactorSupply;
@@ -202,6 +215,7 @@ namespace Pulsar4X.GroundCombat
                 Range = r.Range,
                 Evasion = r.Evasion,
                 Shield = r.Shield,
+                ShieldRegenFraction = r.ShieldRegenFraction,
                 AmmoCapacity_kg = r.AmmoCapacity_kg,
                 DamageType = r.DamageType,
                 IndustryTypeID = string.IsNullOrEmpty(frame?.IndustryTypeID) ? "installation-construction" : frame.IndustryTypeID,

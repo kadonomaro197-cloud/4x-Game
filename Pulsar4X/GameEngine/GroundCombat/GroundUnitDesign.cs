@@ -61,6 +61,10 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public double Evasion { get; set; }
         /// <summary>SYSTEM ① survivability-by-shield — flat incoming-damage soak pool; Σ augment shield.</summary>
         [JsonProperty] public double Shield { get; set; }
+        /// <summary>⚙3 Defense — shield RECHARGE: fraction of full shield capacity restored per hour between salvos
+        /// (Shield-weighted combination of the mounted augments' dials). Default 0.34 (the old global constant) →
+        /// byte-identical. Snapshotted onto each raised unit's <see cref="GroundUnit.ShieldRegenFraction"/>.</summary>
+        [JsonProperty] public double ShieldRegenFraction { get; set; } = 0.34;
         /// <summary>AMMO magazine capacity (kg) — Σ mounted magazines (weapon-unification B). Snapshotted onto each
         /// raised unit's <see cref="GroundUnit.MaxAmmo_kg"/>. 0 = no magazine / no ammo weapons.</summary>
         [JsonProperty] public double AmmoCapacity_kg { get; set; }

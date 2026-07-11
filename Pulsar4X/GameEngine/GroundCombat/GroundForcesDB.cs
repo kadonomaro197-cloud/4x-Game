@@ -77,6 +77,10 @@ namespace Pulsar4X.GroundCombat
         /// <see cref="Shield"/> between salvos — so a shield is burst-resistant then brittle (the ship model), not a
         /// permanent % discount. 0 for an unshielded unit → the pool step is a no-op (byte-identical).</summary>
         [JsonProperty] public double CurrentShield { get; internal set; }
+        /// <summary>⚙3 Defense — shield RECHARGE fraction/hour (snapshot of the design). Default 0.34 (the old global
+        /// constant) → byte-identical. The resolver regenerates the pool by <c>Shield × ShieldRegenFraction × dt</c>,
+        /// so a high value is a fast-recharging ward and a low one a slow big shield (the capacity-vs-recharge decision).</summary>
+        [JsonProperty] public double ShieldRegenFraction { get; internal set; } = 0.34;
         /// <summary>SYSTEM ① — this unit's primary damage flavour (from its heaviest weapon), for the future
         /// damage×defence matrix. Carried now; consumed in slice A.</summary>
         [JsonProperty] public GroundWeaponMode DamageType { get; internal set; } = GroundWeaponMode.Ballistic;
@@ -180,7 +184,7 @@ namespace Pulsar4X.GroundCombat
             DesignId = o.DesignId; BackingEntityId = o.BackingEntityId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
             UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health; Range = o.Range;
             MaxAmmo_kg = o.MaxAmmo_kg; CurrentAmmo_kg = o.CurrentAmmo_kg;
-            Evasion = o.Evasion; Shield = o.Shield; CurrentShield = o.CurrentShield; DamageType = o.DamageType; Penetration = o.Penetration; PerShotEnergy = o.PerShotEnergy;
+            Evasion = o.Evasion; Shield = o.Shield; CurrentShield = o.CurrentShield; ShieldRegenFraction = o.ShieldRegenFraction; DamageType = o.DamageType; Penetration = o.Penetration; PerShotEnergy = o.PerShotEnergy;
             ArmourVsKinetic = o.ArmourVsKinetic; ArmourVsEnergy = o.ArmourVsEnergy; ArmourVsExplosive = o.ArmourVsExplosive; ArmourVsExotic = o.ArmourVsExotic;
             MovingToRegion = o.MovingToRegion; TransitSecondsRemaining = o.TransitSecondsRemaining;
             HexQ = o.HexQ; HexR = o.HexR; HexTransitSecondsRemaining = o.HexTransitSecondsRemaining; HexStepBaseSeconds = o.HexStepBaseSeconds;
@@ -414,6 +418,7 @@ namespace Pulsar4X.GroundCombat
                 Evasion = design.Evasion,
                 Shield = design.Shield,
                 CurrentShield = design.Shield,   // the shield pool musters full (resolver merge 3c)
+                ShieldRegenFraction = design.ShieldRegenFraction,   // ⚙3 shield recharge dial (0.34 default = byte-identical)
                 DamageType = design.DamageType,
                 Penetration = design.Penetration,   // armour-crack (W1c) — 0 for a normal unit, high for an AP design
                 PerShotEnergy = design.PerShotEnergy,   // alpha-vs-chip (W2c) — 0 = single lump, big = one alpha shot

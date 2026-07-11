@@ -280,7 +280,10 @@ namespace Pulsar4X.GroundCombat
             if (deltaSeconds > 0)
                 foreach (var u in units)
                     if (u.Shield > 0 && u.CurrentShield < u.Shield)
-                        u.CurrentShield = System.Math.Min(u.Shield, u.CurrentShield + u.Shield * ShieldRegenPerHourFraction * (deltaSeconds / 3600.0));
+                        // ⚙3 Defense: recharge at the UNIT's designed rate (a fast ward vs a slow big shield), not a
+                        // global constant. ShieldRegenFraction defaults to the old 0.34 for every unit until a ward is
+                        // fitted → byte-identical. (ShieldRegenPerHourFraction is kept as that default anchor.)
+                        u.CurrentShield = System.Math.Min(u.Shield, u.CurrentShield + u.Shield * u.ShieldRegenFraction * (deltaSeconds / 3600.0));
 
             // Per-TARGET incoming (not per-faction) so range gating lands damage on exactly the units an attacker can
             // reach. Computed entirely from the PRE-salvo state (Health read here, applied below) → simultaneous.

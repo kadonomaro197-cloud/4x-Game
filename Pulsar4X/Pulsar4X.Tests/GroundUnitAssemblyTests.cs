@@ -341,5 +341,49 @@ namespace Pulsar4X.Tests
             Assert.That(zergling.Range, Is.LessThan(clone.Range));
             Assert.That(zergling.IndustryPointCosts, Is.LessThan(clone.IndustryPointCosts), "a Zergling is far cheaper — you field a thousand");
         }
+
+        [Test]
+        [Description("⚙3 Defense shield RECHARGE decision (capacity vs recharge — the ground twin of the ship shield's dial): the base-mod Ward Projector holds a SMALLER pool than the standard Shield Generator but recharges much faster (ShieldRegenFraction 1.0 vs the default 0.34), binding that dial from JSON through the real 6-arg ctor. It flows part → design → raised unit, so a warded unit recovers a bigger FRACTION of its shield per hour (back to full in ~1 hour) while the big generator recovers only ~34% — a real burst-durability-vs-one-hit-buffer choice. A standard-shield or shield-less unit reads 0.34 → byte-identical.")]
+        public void ShieldRecharge_WardProjector_RechargesFasterThanTheBigGenerator()
+        {
+            _s = TestScenario.CreateWithColony();
+            var human = Part("default-design-human-frame");
+            var rifle = Part("default-design-ground-rifle");
+            var bigShield = Part("default-design-shield-generator");
+            var ward = Part("default-design-ward-projector");
+
+            // The ward's recharge dial binds from JSON via the 6-arg ctor (gotcha #10 sensor); the standard generator
+            // uses the 5-arg ctor so it defaults to 0.34 (byte-identical).
+            var wardAtb = ward.GetAttribute<GroundAugmentAtb>();
+            var bigAtb = bigShield.GetAttribute<GroundAugmentAtb>();
+            Assert.That(wardAtb.ShieldRegenFraction, Is.GreaterThan(0.34), "the ward dials a fast recharge (binds from JSON)");
+            Assert.That(bigAtb.ShieldRegenFraction, Is.EqualTo(0.34).Within(1e-9), "the standard generator keeps the old default (byte-identical)");
+            Assert.That(wardAtb.Shield, Is.LessThan(bigAtb.Shield), "the ward's pool is smaller — the trade for fast recharge");
+
+            var wardDesign = GroundUnitAssembly.ToGroundUnitDesign("test-ward", "Warded", human,
+                new List<(ComponentDesign, int)> { (rifle, 1), (ward, 1) });
+            var bigDesign = GroundUnitAssembly.ToGroundUnitDesign("test-big", "BigShield", human,
+                new List<(ComponentDesign, int)> { (rifle, 1), (bigShield, 1) });
+            var bareDesign = GroundUnitAssembly.ToGroundUnitDesign("test-bareS", "Bare", human,
+                new List<(ComponentDesign, int)> { (rifle, 1) });
+
+            Assert.That(wardDesign.ShieldRegenFraction, Is.EqualTo(wardAtb.ShieldRegenFraction).Within(1e-9), "recharge flows part → design");
+            Assert.That(bigDesign.ShieldRegenFraction, Is.EqualTo(0.34).Within(1e-9));
+            Assert.That(bareDesign.ShieldRegenFraction, Is.EqualTo(0.34).Within(1e-9), "a shield-less unit keeps the default (byte-identical, moot with no pool)");
+
+            var wardUnit = GroundForces.RaiseUnit(_s.StartingBody, wardDesign, _s.Faction.Id, 0, "Warded");
+            var bigUnit = GroundForces.RaiseUnit(_s.StartingBody, bigDesign, _s.Faction.Id, 1, "BigShield");
+            Assert.That(wardUnit.ShieldRegenFraction, Is.EqualTo(wardAtb.ShieldRegenFraction).Within(1e-9), "…and onto the raised unit");
+
+            // The resolver recovers Shield × ShieldRegenFraction × (dt/3600) per step. Over an hour, as a FRACTION of
+            // each unit's OWN pool, the ward recovers more (it's the recharge that differs, not the capacity).
+            const double oneHour = 3600.0;
+            double wardFrac = wardUnit.ShieldRegenFraction * (oneHour / 3600.0); // = its regen fraction, capped at 1 by the pool
+            double bigFrac = bigUnit.ShieldRegenFraction * (oneHour / 3600.0);
+            Assert.That(wardFrac, Is.GreaterThan(bigFrac), "the ward recharges a bigger fraction of its pool per hour");
+            Assert.That(System.Math.Min(1.0, wardFrac), Is.EqualTo(1.0).Within(1e-9), "the ward is back to full within the hour");
+            Assert.That(bigFrac, Is.LessThan(1.0), "the big shield is still recharging (only ~34% back)");
+            Log($"per hour: ward recovers {wardFrac:P0} of its {wardUnit.Shield:0} pool; big generator {bigFrac:P0} of its {bigUnit.Shield:0}");
+        }
     }
 }

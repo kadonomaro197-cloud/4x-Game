@@ -2276,6 +2276,76 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "ward-projector",
+      "Name": "Ward Projector",
+      "Formulas": {
+        "Description": "A fast-cycling shield ward (⚙3 Defence: the capacity-vs-recharge decision). It holds a SMALLER pool than a big Shield Generator, but recharges much faster between salvos — so it shrugs off sustained chip-fire (the pool is back before the next volley) where a big slow shield eats one alpha then stays down. The trade is burst-durability vs one-hit-buffer. Recharge + capacity dials flagged for a balance pass.",
+        "Mass": "PropertyValue('CarryMass')",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "1.0",
+        "CrewReq": "0",
+        "ResearchCost": "[Mass] * 2",
+        "CreditCost": "[Mass] * 0.15",
+        "BuildPointCost": "[Mass] * 3"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.3",
+        "aluminium": "[Mass] * 0.5"
+      },
+      "ComponentType": "Augment",
+      "MountType": "GroundUnit",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "CarryMass",
+          "DescriptionFormula": "'What the frame must bear.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "20"
+        },
+        {
+          "Name": "StrengthBonus",
+          "DescriptionFormula": "'ADDED to the frame's carry budget.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "EvasionBonus",
+          "DescriptionFormula": "'Dodge bonus (System 1 survivability).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "ToughnessBonus",
+          "DescriptionFormula": "'Survivability multiplier.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "Shield",
+          "DescriptionFormula": "'Flat incoming-damage soak pool (smaller than a big generator). FLAGGED balance value.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "60"
+        },
+        {
+          "Name": "ShieldRegenFraction",
+          "DescriptionFormula": "'Fraction of the pool restored per hour between salvos (0.34 = the standard generator). FLAGGED balance value.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "1.0"
+        },
+        {
+          "Name": "wardProjectorArgs",
+          "DescriptionFormula": "'atb args'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('StrengthBonus'), PropertyValue('EvasionBonus'), PropertyValue('ToughnessBonus'), PropertyValue('Shield'), PropertyValue('ShieldRegenFraction'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundAugmentAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "reflex-booster",
       "Name": "Reflex Booster",
       "Formulas": {

@@ -34,10 +34,17 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public double ToughnessBonus { get; internal set; }
         /// <summary>Flat incoming-damage soak / ranged deflection (energy shield, Force ward).</summary>
         [JsonProperty] public double Shield { get; internal set; }
+        /// <summary>How fast the shield POOL recharges — the FRACTION of full capacity restored per hour between
+        /// salvos (⚙3 Defense: the ground twin of the ship shield's Recharge dial). Default 0.34 (the old global
+        /// constant) → byte-identical. A high value is a small, fast-recharging WARD (shrugs sustained chip-fire but
+        /// folds to one alpha); a low value is a big, slow shield (eats an alpha then stays down). The capacity-vs-
+        /// recharge decision the ship shield already has.</summary>
+        [JsonProperty] public double ShieldRegenFraction { get; internal set; } = 0.34;
 
         public GroundAugmentAtb() { }
 
-        // double args for the JSON/NCalc binder (gotcha L7). Order = template PropertyFormula order.
+        // double args for the JSON/NCalc binder (gotcha L7). Order = template PropertyFormula order. The 5-arg ctor
+        // keeps every EXISTING augment template byte-identical — its ShieldRegenFraction stays the 0.34 default.
         public GroundAugmentAtb(double mass, double strengthBonus, double evasionBonus, double toughnessBonus, double shield)
         {
             Mass = mass < 0 ? 0 : mass;
@@ -47,8 +54,20 @@ namespace Pulsar4X.GroundCombat
             Shield = shield < 0 ? 0 : shield;
         }
 
+        // 6-arg ctor for an augment that DIALS its shield recharge (a fast ward vs a slow big shield). Binder matches
+        // by exact arg count (L7), so only a 6-value template reaches this — the 5-arg augments are untouched.
+        public GroundAugmentAtb(double mass, double strengthBonus, double evasionBonus, double toughnessBonus, double shield, double shieldRegenFraction)
+        {
+            Mass = mass < 0 ? 0 : mass;
+            StrengthBonus = strengthBonus;
+            EvasionBonus = evasionBonus;
+            ToughnessBonus = toughnessBonus;
+            Shield = shield < 0 ? 0 : shield;
+            ShieldRegenFraction = shieldRegenFraction < 0 ? 0 : shieldRegenFraction;
+        }
+
         public override object Clone()
-            => new GroundAugmentAtb(Mass, StrengthBonus, EvasionBonus, ToughnessBonus, Shield);
+            => new GroundAugmentAtb(Mass, StrengthBonus, EvasionBonus, ToughnessBonus, Shield, ShieldRegenFraction);
 
         public void OnComponentInstallation(Entity parentEntity, ComponentInstance componentInstance) { }
         public void OnComponentUninstallation(Entity parentEntity, ComponentInstance componentInstance) { }
