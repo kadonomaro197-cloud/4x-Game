@@ -1,6 +1,6 @@
 # AI Galaxy & Crisis — the arc of the game, and the late-game crisis
 
-> **Status: v0.1 DISCUSSION OPENING (2026-07-10).** The **Galaxy** rung — the *temporal shape* of a whole game (early → mid → late) and the **late-game CRISIS**. This rung mostly **composes** the Ecosystem (`AI-ECOSYSTEM-DESIGN.md`) rather than adding new machinery — with **one deliberate exception** (the crisis). Above it sits only the Supercluster (franchise-staging), which is the acceptance test in `docs/NORTH-STAR-VISION.md`. Cross-links: `AI-OBJECTIVE-ENGINE-DESIGN.md` (the fractal needs-ladder that *is* a faction's arc), `AI-ECOSYSTEM-DESIGN.md` (the common-enemy machinery the crisis triggers).
+> **Status: v0.2 DISCUSSION DRAFT (2026-07-10).** Core RESOLVED (§3): arc EMERGENT; **crisis = an emergent ASCENSION of an existing faction (anyone), not an injected boogeyman** — a consequence-of-play breakthrough (star→matter/unlimited-materials archetype) that makes whoever achieves it the galaxy's threat, responded to via the existing ecosystem coalition machinery; **severity scales inversely with reaction time** (early=speed-bump, late=near-extinction) = the ultimate test of the structural-threat read; a moddable catalog of ASCENSION SEEDS; and the **tutorial needs a 3rd alien faction** to test reputation/coalitions/first-contact. The **Galaxy** rung — the *temporal shape* of a whole game (early → mid → late) and the **late-game CRISIS**. This rung mostly **composes** the Ecosystem (`AI-ECOSYSTEM-DESIGN.md`) rather than adding new machinery — with **one deliberate exception** (the crisis). Above it sits only the Supercluster (franchise-staging), which is the acceptance test in `docs/NORTH-STAR-VISION.md`. Cross-links: `AI-OBJECTIVE-ENGINE-DESIGN.md` (the fractal needs-ladder that *is* a faction's arc), `AI-ECOSYSTEM-DESIGN.md` (the common-enemy machinery the crisis triggers).
 
 ---
 
@@ -15,18 +15,16 @@ The game already has a built-in arc, because the **fractal needs-ladder is a dev
 
 ---
 
-## 1. The late-game CRISIS — the ONE deliberate top-down element (but still not a galaxy-AI)
+## 1. The late-game CRISIS — an EMERGENT ascension, NOT an injected boogeyman (developer's call, 2026-07-10)
 
-A late-game **crisis** is the galaxy-wide threat that gives the endgame a *climax* instead of a slow snowball grind — the Reapers, the Flood, a Borg incursion, a machine uprising, an awakened ancient, an extragalactic swarm, a spreading cataclysm. It's the one place a *designed*, top-down element is warranted. **But it preserves the "no galaxy-AI" principle by being modeled as a special FACTION**, not a scripted galaxy-event:
+A crisis is **NOT a special faction spawned from nowhere** (no Reaper-style deus ex machina). **It EMERGES: an existing faction — ANYONE, NPC or the player — crosses a game-changing BREAKTHROUGH threshold and becomes so powerful the galaxy must unite against it or submit.** The threat is always *one of your own* (or a latent thing already present in the world that a faction **activated** through play — an ancient superweapon explored, a forbidden tech researched). **Nothing appears that wasn't already there.** Thematically: *power corrupts / the arms race / the enemy is us*, not a random apocalypse.
 
-> **The crisis is just another faction** — an **authored** one with an **overwhelming Tier-3 ambition** ("end all other life" / "assimilate everything" / "consume the galaxy"), dramatic power, and special mechanics, spawned or awakened **late**. The galaxy responds to it through the **exact ecosystem machinery already built**: it becomes the **ultimate common enemy → the ultimate forced coalition** (`AI-ECOSYSTEM-DESIGN §0` — the alliance-from-shared-adversity mechanism, at maximum stress). No new "galaxy-AI" is needed — a scary Organism is.
+- **The trigger is a consequence of play** (§Q3): a runaway breakthrough achieved by normal exploration/research. Archetype: a faction explores a system and learns to **convert a star's energy output into matter → unlimited materials → it out-builds the entire galaxy → existential threat.** Other seeds: machine-transcendence, an assimilation/conversion tech, an awakened ancient superweapon, a cataclysm unleashed.
+- **The catalog (§Q5) is a moddable set of ASCENSION SEEDS** — latent breakthroughs/phenomena seeded in the galaxy that transform *whoever achieves one*. Author them franchise-appropriately (a Reaper-tech, a Flood-release, a Borg-assimilation breakthrough) — same author-it-top-to-bottom philosophy — but they **transform a PRESENT faction, they do not spawn a new one.**
+- **The galaxy responds through the EXISTING ecosystem machinery** — the ascendant becomes the **ultimate common enemy → the ultimate forced coalition** (or others bandwagon/submit). No galaxy-AI; the crisis is the **balance-of-power machinery at maximum stakes.**
 
-This is the elegant consistency: even the game's biggest top-down moment is *a faction the emergent system reacts to*, so the whole design stays "no central mind."
-
-### Why the crisis is the RIGHT anti-snowball mechanism (not a rubber-band)
-The Ecosystem locked **no rubber-band** (`§2 Q3`: "space is unforgiving"). The crisis is the **legitimate, in-world** answer to a runaway hegemon — *not* an artificial catch-up:
-- It threatens **everyone**, including the leader — so it resets stakes without cheating.
-- It can even be **triggered by dominance or recklessness** (a hegemon's over-expansion awakens the ancient; someone researched the forbidden tech) — making the crisis a **consequence of how the game was played**, and a natural check on both snowballing *and* reckless tech-rushing, without any hidden hand tilting the odds.
+### The crisis IS the anti-snowball — because it's the runaway made flesh
+The Ecosystem locked **no rubber-band** ("space is unforgiving"). The crisis needs none, because **it literally IS a runaway advantage**, and opposing it *is* the balance-of-power response — the anti-snowball and the crisis are the same thing. And its **severity scales inversely with REACTION TIME** (§Q4): catch the ascension **early** (good intel, fast coalition, before the breakthrough consolidates) → a manageable **speed-bump**, nipped in the bud; let the faction **fully ascend** while the galaxy is blind and slow → a **brutal near-extinction reshaping.** So the crisis is the **ULTIMATE test of the structural-threat read + "intelligence is survival"** (`AI-ECOSYSTEM-DESIGN §3`) — *can the galaxy see one of its own becoming a god in time to stop it?* — the ecosystem's exact machinery with the volume at 11.
 
 ---
 
@@ -36,15 +34,17 @@ The Ecosystem locked **no rubber-band** (`§2 Q3`: "space is unforgiving"). The 
 
 ---
 
-## 3. Open design questions (with leans)
+## 3. Design questions — RESOLVED (developer's calls, 2026-07-10)
 
-1. **Arc — emergent or imposed?** *(Lean: EMERGENT from the fractal ladder + map-filling; we tune pacing, we don't script phases.)*
-2. **Is the crisis a special FACTION, not a scripted galaxy-event?** *(Lean: YES — a crisis-faction with an overwhelming ambition + trigger, responded to via the ecosystem. Preserves "no galaxy-AI.")*
-3. **What TRIGGERS the crisis?** pure time (a doomsday clock) · a **tech-threshold** (someone researched the forbidden thing) · a **dominance-threshold** (a hegemon's over-expansion awakens it) · a mix? *(Lean: CONDITION-triggered — forbidden-tech and/or over-dominance — so it's a consequence of play, not an arbitrary timer, and it doubles as the anti-snowball/anti-tech-rush check.)*
-4. **Is the crisis BEATABLE, or a reshaping force?** an insta-loss doomsday · a trivial speed-bump · or **beatable-but-brutal** (the galaxy CAN win if it unites and pays enormously, opening a weakened post-crisis phase)? *(Lean: beatable-but-brutal.)*
-5. **A CATALOG of crisis types, authored like factions?** *(Lean: YES — a small data-driven set (machine-uprising · extragalactic swarm · awakened ancient · cataclysm) so designers/modders add franchise-appropriate crises — Reaper/Flood/Borg analogs — same "author the faction top-to-bottom" philosophy.)*
+1. **Arc → EMERGENT** from the fractal ladder + map-filling; tune pacing, don't script phases.
+2. **Crisis → an EMERGENT ascension of an EXISTING faction (anyone), NOT a special faction from nowhere.** No deus ex machina; the threat is always one of your own (or a latent thing a faction activated). See §1.
+3. **Trigger → a CONSEQUENCE OF PLAY** — a game-changing breakthrough reached by normal exploration/research (the star→matter / unlimited-materials archetype), not a timer. The ascension seeds are the catalog (Q5).
+4. **BEATABLE-BUT-BRUTAL, and SEVERITY scales with reaction time** — a speed-bump of *varying size* depending on how early you catch it: nipped early = manageable; fully ascended = near-extinction reshaping (win, but the galaxy pays enormously → a weakened post-crisis board). The ultimate test of the structural-threat read.
+5. **A moddable CATALOG of ASCENSION SEEDS** (not external monsters) — latent breakthroughs/phenomena that transform whoever achieves them; author them franchise-appropriately. Same author-it-top-to-bottom philosophy.
 
-> **Build-priority note:** the crisis is a **full-game, late-game** feature — the Earth-vs-Mars tutorial is a bounded early-arc slice that needs none of it. So the Galaxy rung is a *later* build; it's designed now for completeness (quark→supercluster), not for the first slice.
+> **Build-priority note:** the crisis is a **full-game, late-game** feature — the Earth-vs-Mars tutorial needs none of it. Designed now for completeness (quark→supercluster), a *later* build.
+
+> **Scenario-testing requirement (developer's call, 2026-07-10):** **the Earth-vs-Mars tutorial needs a 3rd ALIEN faction to actually test the systems.** A 2-body war can't exercise **reputation** (needs a 3rd party — `AI-ECOSYSTEM-DESIGN §2 Q5`), **coalitions** (need 3+), or **first-contact / the reading game** (need an *unknown* to read). The 3rd alien makes the tutorial a real ecosystem test: **Earth** (surviving) + **Mars** (ascendant) + an **alien wildcard** (a possible ally for Earth vs. Mars · a first-contact unknown nobody has intel on · a live reputation test — does it trust Earth or Mars by their behavior?). Fold this into the tutorial scenario design.
 
 ---
 
