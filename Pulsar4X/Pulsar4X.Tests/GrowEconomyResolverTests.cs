@@ -1,5 +1,6 @@
 using System.Linq;
 using NUnit.Framework;
+using Pulsar4X.DataStructures;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
 using Pulsar4X.Industry;
@@ -39,6 +40,31 @@ namespace Pulsar4X.Tests
 
             action.Execute();
             Assert.That(TotalJobs(s.Colony), Is.GreaterThan(before), "Execute queues the build (+ any auto-added sub-jobs)");
+        }
+
+        [Test]
+        [Description("P1-b: a build stalled on a mineral present-but-unmined on the home body → the planner queues a Mine (Rung B beats Rung C).")]
+        public void GrowEconomy_StalledOnUnminedMineral_QueuesAMine()
+        {
+            var s = TestScenario.CreateWithColony();
+            var info = s.Faction.GetDataBlob<FactionInfoDB>();
+
+            // Stall a refining job on its raw-mineral inputs (which are present on the home body).
+            var job = new IndustryJob(info, "space-crete");
+            job.Status = IndustryJobStatus.MissingResources;
+            var industry = s.Colony.GetDataBlob<IndustryAbilityDB>();
+            string designType = info.IndustryDesigns["space-crete"].IndustryTypeID;
+            string refLine = industry.ProductionLines.First(l => l.Value.IndustryTypeRates.ContainsKey(designType)).Key;
+            IndustryTools.AddJob(s.Colony, refLine, job);
+
+            // Remove mining capacity so the shortfall reads "present but UNMINED" (the mine case).
+            s.Colony.GetDataBlob<MiningDB>().ActualMiningRate.Clear();
+
+            var state = FactionState.Snapshot(s.Faction);
+            var action = new GrowEconomyResolver().Resolve(state, new StrategicObjectiveDB { Objective = StrategicObjective.GrowEconomy });
+
+            Assert.That(action.Kind, Is.EqualTo("QueueMine"),
+                "starved for a present-but-unmined mineral, the planner reaches below the floor and builds a mine");
         }
 
         [Test]
