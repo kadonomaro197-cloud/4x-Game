@@ -314,8 +314,8 @@
       "UniqueID": "reactionless-drive",
       "Name": "Reactionless Drive",
       "Formulas": {
-        "Description": "An exotic drive that produces thrust with NO reaction mass — a gravitic/warp-field engine. It burns no propellant, so it never runs dry and has effectively unlimited delta-V (its fleet's maneuver reserve never depletes — it can kite forever). Heavy and power-hungry; the physics-breaker that frees you from the fuel economy.",
-        "Mass": "PropertyValue('Drive Mass')",
+        "Description": "An exotic drive that produces thrust with NO reaction mass — a gravitic/warp-field engine. It burns no propellant, so it never runs dry and has effectively unlimited delta-V (its fleet's maneuver reserve never depletes — it can kite forever). Heavy and power-hungry; the physics-breaker that frees you from the fuel economy. More thrust is EARNED: the drive can't weigh less than the thrust demands (a mass FLOOR that rises above the 200,000 N baseline), so you can't dial big thrust into a featherweight housing.",
+        "Mass": "Max(PropertyValue('Drive Mass'), 5000 + Max(0, PropertyValue('Thrust') - 200000) / 200)",
         "Volume": "Max(1, [Mass] / 150)",
         "HTK": "0.5",
         "CrewReq": "[Mass] * 0.05",

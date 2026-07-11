@@ -842,6 +842,17 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-high-thrust-drive",
+      "Name": "High-Thrust Reactionless Drive",
+      "TemplateId": "reactionless-drive",
+      "Properties": [
+        { "Key": "Thrust", "Value": 600000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-pulse-laser",
       "Name": "Pulse Laser",
       "TemplateId": "pulse-laser"

@@ -292,7 +292,8 @@
         "default-design-point-defense-mount",
         "default-design-missle-tube-500",
         "default-design-inertialess-drive",
-        "default-design-reactionless-drive"
+        "default-design-reactionless-drive",
+        "default-design-high-thrust-drive"
       ],
       "ShipDesigns": [
         "default-ship-design-courier",
@@ -325,7 +326,8 @@
         "default-ship-design-test-longbow",
         "default-ship-design-test-culverin",
         "default-ship-design-test-tempest",
-        "default-ship-design-test-redoubt"
+        "default-ship-design-test-redoubt",
+        "default-ship-design-test-sprint"
       ],
       "LaunchQueue": [
         { "DesignId": "default-ship-design-courier", "Name": "ISS Hermes" }
