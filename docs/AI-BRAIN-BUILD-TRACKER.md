@@ -25,7 +25,7 @@ The design frames itself, unironically, as *"Planck-length → multiversal-brane
 | Rung | What lives here | Depends on | Status |
 |---|---|---|---|
 | **⚛ Planck** — the atomic scored decision | the one trait-weighted "score the options, pick one" helper every level reuses | — (foundation) | ⚫ NOT-STARTED |
-| **🧬 Organism** — one faction's mind | needs-ladder (what it wants) · 12-trait `PersonalityDB` · mood · the Tick decision body · transition engine · officer characters | ⚛ Planck + the gauges | ⚫ NOT-STARTED (substrate ready) |
+| **🧬 Organism** — one faction's mind | needs-ladder (what it wants) · 12-trait `PersonalityDB` · mood · the Tick decision body · transition engine · officer characters | ⚛ Planck + the gauges | 🟡 STARTED — `PersonalityDB` (M2-0a) + the first trait wire (M2-1a: Xenophobia/Zealotry → treaty) built; needs-ladder + Tick body next |
 | **🌐 Ecosystem** — factions vs factions | rival-intel fog · scored stance-selection · NPC treaty policy · coalitions/betrayal emerge | 🧬 Organism + rival-intel | ⚫ NOT-STARTED (diplomacy substrate ready) |
 | **🌌 Galaxy** — the arc + the crisis | early/mid/late emerges · late-game crisis = an existing faction's runaway ascension | 🌐 Ecosystem + capability-tech | ⚫ NOT-STARTED |
 | **🪐 Supercluster / Brane** — authoring a universe | stage a franchise from JSON · the north-star acceptance test | all rungs + JSON schema | ⚫ NOT-STARTED (geography/factions already JSON) |
@@ -142,14 +142,14 @@ Same discipline that kept the last 83 commits clean: **one slice at a time, a ne
 ### Phase 0 — ⚛ Foundations (unblock everything)
 | # | Slice | Plug point | Gauge | Status |
 |---|---|---|---|---|
-| 0.1 | `PersonalityDB` blob (12 traits, 0.5 default) + JSON parse | new blob on `FactionInfoDB`; mirror `FactionFactory.cs:71-81` | load/clone/parse round-trip test | ⚫ |
+| 0.1 | `PersonalityDB` blob (12 traits, 0.5 default) + JSON parse | new blob on `FactionInfoDB`; mirror `FactionFactory.cs:71-81` | load/clone/parse round-trip test | ✅ **M2-0a** — `Factions/PersonalityDB.cs` (the 12-trait blob, `TraitOf` defaults to `Neutral`=0.5, `SetTrait` clamps 0..1, deep Clone); a new blob NOT attached to any faction → byte-identical; gauge `PersonalityDBTests`. JSON-parse-onto-faction is the later authoring slice. |
 | 0.2 | `DecisionScorer` pure helper (score × identity weights) | new pure class | scorer unit test (weights bias the pick) | ⚫ |
 | 0.3 | Faction roll-up gauges (`FactionEconomySnapshot`, `FactionStrengthRollup`) | sum over `Colonies`/fleets | rollup matches hand-sum | ⚫ |
 
 ### Phase 1 — ⚛→🧬 The first traits (proof-of-concept; no Tick body needed)
 | # | Slice | Plug point | Gauge | Status |
 |---|---|---|---|---|
-| 1.1 | **Zealotry/Xenophobia → treaty acceptance** *(the cheapest wire — start here)* | `Factions/Treaties.cs:66` `WouldAccept` (+`RequiredScore:37`) | accept-good-treaty at trait 0 vs refuse at trait 1 (two `RelationshipState`s, no processor) | ⚫ |
+| 1.1 | **Zealotry/Xenophobia → treaty acceptance** *(the cheapest wire — start here)* | `Factions/Treaties.cs:66` `WouldAccept` (+`RequiredScore:37`) | accept-good-treaty at trait 0 vs refuse at trait 1 (two `RelationshipState`s, no processor) | ✅ **M2-1a** — `Factions/Treaties.cs` gains `RequiredScoreWith(t, decider)` (base `RequiredScore` + centered Xenophobia/Zealotry penalties) + 3-arg `WouldAccept` + optional `targetPersonality` on `Propose`; the 2-arg overloads delegate to null and the entity `Propose` reads the target's `PersonalityDB` → neutral/absent is byte-identical, a xenophobe refuses a deal a neutral signs. Gauge `PersonalityTreatyTests`. |
 | 1.2 | Collectivism → retreat threshold | `Combat/CombatEngagement.cs:47` const + `:1401` `ShouldRetreat` | flees at 25% loss (0) vs fights to wipe (1) | ⚫ |
 | 1.3 | Honor → keep-faith / renege | keep-faith live at `CombatEngagement.cs:1504/1529`; +new ~12-line `Diplomacy.BreakTreaty` | pact-intact (1) vs pact-broken (0) | ⚫ |
 | 1.4 | Authoritarianism → tax-under-unrest | `GovernmentDB.cs:68` `TaxCeiling` + `RebellionDB:37`/`LegitimacyDB:107` | high-Auth holds tax under unrest, low-Auth cuts to appease | ⚫ |

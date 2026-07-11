@@ -58,19 +58,47 @@ namespace Pulsar4X.Factions
             _ => 5
         };
 
+        /// <summary>M2-1a personality dials (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II): how much a maximally
+        /// Xenophobic / Zealous decider raises the trust it demands to sign. Both are centered on the trait's neutral,
+        /// so a neutral (or absent) personality changes nothing — byte-identical.</summary>
+        public const int XenophobiaTrustPenalty = 30;
+        public const int ZealotryTrustPenalty = 20;
+
+        /// <summary>
+        /// The relation score the decider demands to accept the treaty, adjusted by its PERSONALITY (M2-1a): a
+        /// Xenophobic decider demands more trust to entangle with a foreigner, a Zealous one likewise. Each trait is
+        /// centered on <see cref="PersonalityDB.Neutral"/> (0.5) — so a neutral/absent personality returns exactly
+        /// <see cref="RequiredScore"/> (byte-identical); a high trait raises the bar, a low one lowers it.
+        /// </summary>
+        public static int RequiredScoreWith(TreatyType t, PersonalityDB decider)
+        {
+            int required = RequiredScore(t);
+            if (decider == null)
+                return required;
+
+            required += (int)Math.Round((decider.TraitOf(PersonalityTrait.Xenophobia) - PersonalityDB.Neutral) * 2.0 * XenophobiaTrustPenalty);
+            required += (int)Math.Round((decider.TraitOf(PersonalityTrait.Zealotry) - PersonalityDB.Neutral) * 2.0 * ZealotryTrustPenalty);
+            return required;
+        }
+
         /// <summary>
         /// Would the faction holding <paramref name="targetViewOfProposer"/> accept the proposed treaty? Peace is
         /// accepted only while actually at war; every other treaty needs peace first (you don't sign a trade deal
-        /// mid-war) and a relation score at or above the treaty's trust threshold.
+        /// mid-war) and a relation score at or above the treaty's trust threshold — raised/lowered by the decider's
+        /// <paramref name="deciderPersonality"/> (null/neutral → the plain threshold, byte-identical).
         /// </summary>
-        public static bool WouldAccept(RelationshipState targetViewOfProposer, TreatyType t)
+        public static bool WouldAccept(RelationshipState targetViewOfProposer, TreatyType t, PersonalityDB deciderPersonality)
         {
             if (targetViewOfProposer == null) return false;
             if (t == TreatyType.Peace)
                 return targetViewOfProposer.AtWar;                 // only meaningful during a war; always acceptable
             if (targetViewOfProposer.AtWar) return false;          // no ordinary treaties while shooting
-            return targetViewOfProposer.RelationScore >= RequiredScore(t);
+            return targetViewOfProposer.RelationScore >= RequiredScoreWith(t, deciderPersonality);
         }
+
+        /// <summary>Personality-blind overload — byte-identical to the historic behaviour (no personality pull).</summary>
+        public static bool WouldAccept(RelationshipState targetViewOfProposer, TreatyType t)
+            => WouldAccept(targetViewOfProposer, t, null);
 
         /// <summary>Apply a treaty's effect to ONE side's relationship row (the flag + the score warm-up). Called
         /// for both signers so the pact is mutual.</summary>
@@ -94,12 +122,12 @@ namespace Pulsar4X.Factions
         /// sides (flag set + score warmed + LastContact stamped) and this returns true; otherwise it returns false
         /// and nothing changes. Pure on the two DataBlobs — the entity-level overload resolves them.
         /// </summary>
-        public static bool Propose(DiplomacyDB proposerDip, int proposerId, DiplomacyDB targetDip, int targetId, TreatyType t, DateTime when)
+        public static bool Propose(DiplomacyDB proposerDip, int proposerId, DiplomacyDB targetDip, int targetId, TreatyType t, DateTime when, PersonalityDB targetPersonality = null)
         {
             if (proposerDip == null || targetDip == null) return false;
 
             var targetView = targetDip.GetOrCreateRelationship(proposerId);
-            if (!WouldAccept(targetView, t)) return false;
+            if (!WouldAccept(targetView, t, targetPersonality)) return false;
 
             var proposerView = proposerDip.GetOrCreateRelationship(targetId);
             ApplyToRow(proposerView, t); proposerView.LastContact = when;
@@ -114,7 +142,10 @@ namespace Pulsar4X.Factions
             if (proposerFaction == null || targetFaction == null) return false;
             if (!proposerFaction.TryGetDataBlob<DiplomacyDB>(out var pDip)) return false;
             if (!targetFaction.TryGetDataBlob<DiplomacyDB>(out var tDip)) return false;
-            return Propose(pDip, proposerFaction.Id, tDip, targetFaction.Id, t, when);
+            // M2-1a: the DECIDER (the target) weighs the deal through its personality. No PersonalityDB → null →
+            // byte-identical (no faction carries one until it's authored/attached).
+            targetFaction.TryGetDataBlob<PersonalityDB>(out var targetPersonality);
+            return Propose(pDip, proposerFaction.Id, tDip, targetFaction.Id, t, when, targetPersonality);
         }
     }
 }
