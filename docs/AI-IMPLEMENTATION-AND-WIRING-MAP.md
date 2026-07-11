@@ -84,4 +84,33 @@ We are not building a nervous system; we're plugging a brain into one that exist
 
 ---
 
+---
+
+## 4. SOCKET VERIFICATION — the "does every designed thing have a home?" sweep (3-agent adversarial pass, 2026-07-10)
+
+**Bottom line: NO core design gap — nothing in the AI machinery (traits · scorer · objectives · command · the 21-seat roster) is homeless.** Every element is socket-exists or a clean must-build with a *proven* home. But the adversarial sweep caught **two genuine load-bearing NO-SOCKETs** (core mechanics the design leans on — NOT dark pillars) and **one keystone hostile-socket**. Verified `file:line` by three agents.
+
+### 🔴 The two REAL gaps — fix on paper before building
+1. **Enemy-STRENGTH estimate — NO-SOCKET, and it's load-bearing.** The ecosystem's structural-threat read (`AI-ECOSYSTEM-DESIGN §1` — "the ONE thing we must get right," with **no rubber-band** to forgive a miss) needs to know *how strong* a rival is. `EntityManager.GetSensorContacts` (`Entities/EntityManager.cs:638`) returns **position/signal, not combat value** (`ShipCombatValueDB` lives on your OWN ships). No fog-limited enemy-strength estimator exists. **Build a `ThreatEstimate`** (infer strength from contact count/signal/known designs, fog-limited). *Cannot be hand-waved* — with no rubber-band, a bad read is an unrecoverable snowball loss.
+2. **The CRISIS ascension-seed — NO-SOCKET on BOTH halves.**
+   - *Activation:* the explore→discover→reward pipeline is a **throwing stub** (`Fleets/ServeyAnomalyAction.cs:14-32` — `Execute` throws `NotImplementedException`) + a **dormant data blob** (`Galaxy/RuinsDB.cs` generated but no processor reads it); `EventType.AnomalyDiscovered` exists with **no producer**. So "a latent thing a faction *activates* through play" has no home — it rides the **unbuilt exploration-content system** (`docs/EXPLORATION-CONTENT-DESIGN.md`).
+   - *The breakthrough itself:* a **tech-MODEL gap** — `Tech.Unlocks` (`Engine/Blueprints/TechBlueprint.cs:13`) only moves item IDs (Locked→buildable components); it **cannot represent a galaxy-changing capability** ("star→matter → unlimited materials"). The *trigger* (`EventType.TechDiscovered`) exists; the *effect* has no data home. **Build a tech concept for "a capability, not a component."** Confirms the crisis is the biggest must-build — and a *later* feature (not tutorial-critical).
+
+### ⚠ The KEYSTONE hostile-socket — fix FIRST, before ANY seat/officer work
+**Seat durability** — confirmed independently by two agents at `People/AdminSpaceProcessor.cs:36-46`: `CalcEntityAdminSpace` does `CommanderSeats = new List<>()` **every pass**, so any field on a seat (the three-mode dial, funding, even the assigned `CommanderID`) is **silently wiped on the next admin tick**; and `AdminSpaceAbilityState` is a plain class, not a `BaseDataBlob` (no `[JsonProperty]`). "Add a field to the seat record" is a silent-data-loss trap. **This undercuts EVERY seat-based delegate — the load-bearing prerequisite under the whole officer/seat layer.** (Two smaller hostile sockets: `InstallComponentInstanceOrder.Clone()` **throws** → blocks queueing a `RefitOrder`; `ServeyAnomalyAction` throws.)
+
+### 🟡 MUST-BUILD (clean home, just write it) — the expected new logic + the punch-list
+The whole scorer/`PersonalityDB`/objective/tier/mood/ambition core (none exists — the expected new logic; homes proven) · the goal slot (`StrategicObjectiveDB`) + mandate/report slots (proven attach-blob-to-faction pattern) · `CombatStarted` event + publish at `CombatEngagement.cs:517` · faction rollups (`FactionEconomySnapshot`/`FactionStrengthRollup` — per-unit sources exist) · reputation accumulator (clean home on `RelationshipState`) + observation-propagation · alliance-DEPTH accumulator (shared-adversity deeds; drift today reads only militarism/treaties) · the punch-list orders (`SetColonyPolicyOrder` — tax + stockpile MUST-BUILD, **specialization = NO-SOCKET/no substrate**; `RefitOrder`; `ThreatCondition`; the empty refuel/resupply `Execute` bodies; `SetGovernmentOrder`; wrap-diplomacy-statics-as-orders for Advise mode; the ground **load→move→land** order — the Generals can't project force between worlds without it) · the `AssignedOn` tenure date.
+
+### ⚫ DARK PILLARS — owner assigned, WHOLE mechanic must be built (each has its own design doc)
+Espionage (Spymaster/Agent — zero code, `ESPIONAGE-AND-INTELLIGENCE-DESIGN.md`) · bloc-demands (Interior Minister — no engine, `GOVERNMENT-AND-POLITICS-DESIGN.md`) · trade-money (Trade Minister — no `Trade` `Ledger` category, `RESOURCES-AND-MATERIALS-DESIGN.md`). Not homeless-in-design — the seats correctly own decisions over systems that don't exist yet.
+
+### 🟢 SOCKET-EXISTS (confirmed real)
+`PersonalityDB` homes (faction `FactionInfoDB.cs:125` + officer `CommanderDB.cs:10`) · the `ModifiableValue` trait→number wire (`ResearchProcessor.cs:246`, with per-id `RemoveModifier`) · the event bus + all six named interrupt EventTypes · scenario-JSON parse (`FactionFactory.cs:71-81`) + the moddable-catalog pipeline (`combatDoctrines.json` pattern) · the gauge sources (`Ledger` / `ColonyMoraleDB` / `LegitimacyDB` / `DiplomacyDB` / fog-correct `GetSensorContacts`) · the order rail + most seat levers · alliance warming→pact (already drifting, `RunDiplomaticDrift:97`) · the emergent arc (no socket needed by design).
+
+### Spec correction (applied)
+`AI-PERSONALITY-IMPLEMENTATION-SPEC.md §5` claimed the officer tenure fields (`CommissionedOn`/`RankedOn`) are "never set." **FALSE** — they're stamped in four creation paths (`DefaultStartFactory.cs:284`, `FactionFactory.cs:238`, `ColonyFactory.cs:169`, `NavalAcademyProcessor.cs:24`). The only real tenure gap is the missing `AssignedOn` date.
+
+---
+
 *Companions: `AI-PERSONALITY-IMPLEMENTATION-SPEC.md` (the trait core, code-ready), `AI-SELF-PLAY-DESIGN.md` (roster + parity + completeness punch-list), and the design docs `AI-COMMAND-AND-COMMUNICATION` / `AI-OBJECTIVE-ENGINE` / `AI-ECOSYSTEM` / `AI-GALAXY-AND-CRISIS` / `AI-SUPERCLUSTER-AND-AUTHORING`. This doc is the bridge from those to the first commit.*

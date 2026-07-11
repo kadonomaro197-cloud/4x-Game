@@ -44,6 +44,8 @@ The Ecosystem locked **no rubber-band** ("space is unforgiving"). The crisis nee
 
 > **Build-priority note:** the crisis is a **full-game, late-game** feature — the Earth-vs-Mars tutorial needs none of it. Designed now for completeness (quark→supercluster), a *later* build.
 
+> **Socket-verification (2026-07-10) — the crisis is the biggest MUST-BUILD, on TWO missing sockets:** (1) **activation** — the explore→discover→reward pipeline is a throwing stub (`Fleets/ServeyAnomalyAction.cs` `Execute` throws) + a dormant `RuinsDB` (no processor); so the ascension seed rides the **unbuilt exploration-content system** (`docs/EXPLORATION-CONTENT-DESIGN.md`) — build that first. (2) **the breakthrough effect** — a **tech-model gap**: `Tech.Unlocks` only moves item-IDs (unlock a buildable component); it **cannot represent a galaxy-changing capability**, so an ascension tech needs a *new* tech concept ("a capability, not a component"). The trigger (`EventType.TechDiscovered`) already exists. Both are later builds; noted so the crisis isn't mistaken for a wiring job.
+
 > **Scenario-testing requirement (developer's call, 2026-07-10):** **the Earth-vs-Mars tutorial needs a 3rd ALIEN faction to actually test the systems.** A 2-body war can't exercise **reputation** (needs a 3rd party — `AI-ECOSYSTEM-DESIGN §2 Q5`), **coalitions** (need 3+), or **first-contact / the reading game** (need an *unknown* to read). The 3rd alien makes the tutorial a real ecosystem test: **Earth** (surviving) + **Mars** (ascendant) + an **alien wildcard** (a possible ally for Earth vs. Mars · a first-contact unknown nobody has intel on · a live reputation test — does it trust Earth or Mars by their behavior?). Fold this into the tutorial scenario design.
 
 ---
