@@ -216,6 +216,24 @@ Same discipline that kept the whole campaign clean: **one slice at a time, a new
 
 ---
 
+## 🕳 Known gaps / parking lot — the NEXT holes (named 2026-07-11, the developer's "any more holes?" pass)
+
+Beyond the means-ends planner (2.8), these systemic gaps are named NOW so they get built or deferred **deliberately**, not rediscovered by surprise (the same discipline that turned "how do I get there?" into row 2.8). Tagged **NEW** (a genuine gap) vs **DELIBERATE** (a v1 simplification, listed so it stays a conscious choice). Ranked by how much each makes the AI feel dumb.
+
+| # | Gap | Why it matters | Tag / likely shape |
+|---|---|---|---|
+| **G1** | **Crisis paralysis** — only GrowEconomy has a resolver; Survive→**Defend** & Stabilize→**Consolidate** register nowhere → no-op | the NPC acts in good times and **FREEZES in a crisis** — exactly backwards; the most important near-term hole | **NEW, nearest-term** — register Defend/Consolidate resolvers alongside the planner (Consolidate = ease tax / raise morale / quell unrest; Defend rides the deferred P-3 military reach) |
+| **G2** | **No memory / no grudges** — every cycle re-decides from *current* state; no experiential history | can't learn from a crushed invasion, hold a betrayal grudge, or adapt — the biggest **character** gap (the intel ledger is about rivals, not the NPC's own past) | **NEW** — a `FactionMemoryDB` (recent outcomes + per-rival grudge/trust drift) |
+| **G3** | **One objective at a time** — needs-ladder → one tier → one thread, one step/cycle | a real empire grows + researches + defends + expands in parallel; the structural form of the "plodding" risk | **PARTLY DELIBERATE** (least-commitment = anti-thrash) — revisit once resolvers exist: per-colony / per-fleet sub-objectives |
+| **G4** | **Picks "first valid," not "best"** — no valuing of options | "does something legal" vs "does the *smart* thing" — no ranking of which world to settle / which rival to hit / what to build | **NEW** — an opportunity-scoring layer over the resolvers (Expand's habitability scorer is the first instance) |
+| **G5** | **Diplomacy is weather, not a weapon** — reactive drift only, never instrumental | the NPC never allies-to-survive or bribes-to-delay-a-war; diplomacy should be a planner **lever**, not just ambient drift | **NEW** — a diplomacy resolver driving `Treaties.Propose` / the `ExchangeCatalog` commitment model |
+| **G6** | **AI can't tell the PLAYER what it's doing** — the plan/visibility readout is dev-facing only | invisible intent reads as random even when clever; the Visibility Gate pointed at the **player**, not the developer (this codebase's recurring theme) | **NEW** — an in-game intent/reaction event feed ("The Directorate masses a fleet on your border") |
+| **G7** | **No long-horizon investment / no player-modeling** — greedy-nearest-step; treats the player like any faction | won't endure short-term pain for a big payoff; won't adapt to *how you* play | **DEFERRED (advanced)** — after the reactive + planner layers prove out |
+
+*Rank for "makes it feel dumb": G1 (freezes in crisis, fixable now) → G2 (goldfish memory) → G6 (can't communicate intent). G3/G7 are partly-deliberate trade-offs, not oversights.*
+
+---
+
 ## How this tracker stays true
 
 1. **Build a slice → flip its row** (⚫ NOT-STARTED → 🟡 WIRED-CI-GREEN → 🟢 verified-live), record the gauge reading, in the same commit as the code.
