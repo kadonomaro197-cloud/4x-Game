@@ -46,6 +46,13 @@ namespace Pulsar4X.Ships
         public long MassBudget { get; private set; }
         public bool OverMassBudget { get; private set; }
 
+        /// <summary>When true, an over-budget design (mass exceeds its mounted hull's Mass Budget) is marked
+        /// <see cref="IsValid"/> = false, so the client production list refuses to build it — the §0b "the physical
+        /// budget forces the build" gate made to BITE. Default OFF (every base-mod ship sits under its hull budget,
+        /// so flipping it changes nothing → byte-identical); the client turns it on. The enforcement slice the D1
+        /// comment above anticipated ("a later slice … lets IsValid bite").</summary>
+        public static bool EnforceMassBudget = false;
+
         private int _factionId;
 
         /// <summary>
@@ -201,6 +208,11 @@ namespace Pulsar4X.Ships
             }
             MassBudget = hasHull ? (long)hullBudget : (long)(MassPerUnit * MassBudgetHeadroom);
             OverMassBudget = MassPerUnit > MassBudget;
+            // §0b enforcement (dossier ⚙11, the slice D1 anticipated). Over its hull budget → the design won't build.
+            // Flag OFF by default and every base-mod ship is under budget, so this is byte-identical; the client turns
+            // it on. Only ever marks invalid — it never re-validates a design flagged invalid for another reason.
+            if (EnforceMassBudget && OverMassBudget)
+                IsValid = false;
         }
 
         /// <summary>

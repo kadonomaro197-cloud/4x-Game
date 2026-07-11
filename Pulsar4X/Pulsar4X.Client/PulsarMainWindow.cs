@@ -133,6 +133,11 @@ namespace Pulsar4X.Client
             // so a hot power plant lights up an otherwise-dark hull. Byte-identical off; ON for the game.
             Pulsar4X.Sensors.EmconActivityProcessor.EnableReactorHeat = true;
 
+            // Ship mass-budget enforcement (Chassis ⚙11): a design whose mass exceeds its mounted hull's Mass Budget
+            // is marked invalid so the production list refuses it — the §0b "the physical budget forces the build"
+            // gate made to bite. Byte-identical off (every base-mod ship is under budget); ON for the game.
+            Pulsar4X.Ships.ShipDesign.EnforceMassBudget = true;
+
             try
             {
                 string? appDataDirectory = GetAppDataPath();
