@@ -4,7 +4,6 @@ using System.IO;
 using Pulsar4X.Client.Interface.Menus;
 using System.Numerics;
 using Pulsar4X.Client.Interface.Widgets;
-using System.Diagnostics;
 using Pulsar4X.Client.ModFileEditing;
 
 namespace Pulsar4X.Client
@@ -118,24 +117,6 @@ namespace Pulsar4X.Client
                     SetActive(false);
                 }
                 
-
-                if(ImageButton.Begin(_uiState.Img_Discord(), "Discord", new Vector2(16, 12), _buttonSize))
-                {
-                    try
-                    {
-                        ProcessStartInfo psi = new ProcessStartInfo
-                        {
-                            FileName = "https://discord.gg/3uwCQSn",
-                            UseShellExecute = true
-                        };
-                        Process.Start(psi);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Handle any errors
-                        Console.WriteLine($"Error opening URL: {ex.Message}");
-                    }
-                }
 
                 if(ImGui.Button("Exit to Desktop", _buttonSize))
                 {
