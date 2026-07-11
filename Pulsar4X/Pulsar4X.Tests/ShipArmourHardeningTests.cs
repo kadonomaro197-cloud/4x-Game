@@ -4,6 +4,7 @@ using Pulsar4X.Combat;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
 using Pulsar4X.Ships;
+using CombatShip = Pulsar4X.Combat.CombatEngagement.CombatShip;
 
 namespace Pulsar4X.Tests
 {
