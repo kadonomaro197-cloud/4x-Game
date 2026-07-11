@@ -42,6 +42,21 @@ namespace Pulsar4X.Factions
         [JsonProperty]
         public CargoDefinitionsLibrary CargoGoods { get; private set; }
 
+        /// <summary>
+        /// F-D2 (docs/AI-BRAIN-BUILD-TRACKER.md): CAPABILITIES this faction has unlocked. Unlike everything above —
+        /// which are buildable/cargo IDs a tech moves locked→available — a capability is an ABILITY the sim reads
+        /// (an ascension breakthrough, a game-changing tech), NOT a thing you build. A tech grants one by listing a
+        /// "<see cref="CapabilityPrefix"/>xxx" id in its Unlocks; <see cref="Unlock"/> routes such an id here instead
+        /// of silently no-opping. Empty by default → byte-identical (no base-mod tech lists a capability id yet). The
+        /// late-game crisis (Galaxy 4.1/4.2) is the first consumer — "convert a star to matter" is a capability, not
+        /// a component.
+        /// </summary>
+        [JsonProperty]
+        public HashSet<string> Capabilities { get; private set; }
+
+        /// <summary>The id prefix marking a tech-unlock target as a CAPABILITY (routed to <see cref="Capabilities"/>).</summary>
+        public const string CapabilityPrefix = "capability-";
+
         public FactionDataStore()
         {
             LockedArmor = new ();
@@ -58,6 +73,7 @@ namespace Pulsar4X.Factions
 
             LockedCargoGoods = new ();
             CargoGoods = new ();
+            Capabilities = new ();
         }
 
         public FactionDataStore(ModDataStore modDataStore)
@@ -81,6 +97,7 @@ namespace Pulsar4X.Factions
 
             LockedCargoGoods = new CargoDefinitionsLibrary(modDataStore.Minerals.Values.ToList(), modDataStore.ProcessedMaterials.Values.ToList(), new List<ICargoable>());
             CargoGoods = new CargoDefinitionsLibrary();
+            Capabilities = new ();
         }
         public FactionDataStore(FactionDataStore other)
         {
@@ -98,6 +115,7 @@ namespace Pulsar4X.Factions
 
             LockedCargoGoods = new CargoDefinitionsLibrary(other.LockedCargoGoods);
             CargoGoods = new CargoDefinitionsLibrary(other.CargoGoods);
+            Capabilities = new HashSet<string>(other.Capabilities);
         }
 
         public void Unlock(string id)
@@ -153,7 +171,15 @@ namespace Pulsar4X.Factions
                     CargoGoods.Add(thing);
                 }
             }
+            else if(id != null && id.StartsWith(CapabilityPrefix))
+            {
+                // F-D2: a tech that grants a CAPABILITY (not a buildable) — record the ability the sim reads.
+                Capabilities.Add(id);
+            }
         }
+
+        /// <summary>True if the faction has unlocked the given capability (F-D2 — see <see cref="Capabilities"/>).</summary>
+        public bool HasCapability(string id) => id != null && Capabilities.Contains(id);
 
         public string GetName(string id)
         {
