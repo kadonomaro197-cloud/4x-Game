@@ -421,8 +421,8 @@
       "UniqueID": "siege-railgun",
       "Name": "Siege Railgun",
       "Formulas": {
-        "Description": "A massive spinal mass driver — one huge slug per shot, brutal against armour. Its violent RECOIL kicks the whole ship, so on a light hull it throws its aim off badly (low effective tracking); a heavy warship absorbs the kick and keeps tracking. The recoil is the price of the punch.",
-        "Mass": "PropertyValue('Kinetic Energy Per Shot') / 1000 + PropertyValue('Rounds Per Second') * 50",
+        "Description": "A massive spinal mass driver — one huge slug per shot, brutal against armour. Its violent RECOIL kicks the whole ship, so on a light hull it throws its aim off badly (low effective tracking); a heavy warship absorbs the kick and keeps tracking. The recoil is the price of the punch. Hypersonic muzzle velocity is EARNED — bigger rails and capacitors, so it costs mass above the baseline.",
+        "Mass": "PropertyValue('Kinetic Energy Per Shot') / 1000 + PropertyValue('Rounds Per Second') * 50 + Max(0, PropertyValue('Muzzle Velocity') - 50000) / 1000",
         "Volume": "[Mass] * 0.5",
         "HTK": "0.5",
         "CrewReq": "[Mass] * 0.1",

@@ -103,6 +103,34 @@ The yardstick for **weapon** dials is the aggregate combat resolver: `ShipCombat
 
 **This test also drives the build order:** a ⏳ dial's prerequisite mechanic is a work item that must land *before* the dial. It's how the designer stays honest — every knob is wired to a consequence.
 
+### 0d′. The FREE-DIAL cost audit — status of the "every benefit shows a cost" law (`CONVENTIONS §16`), 2026-07-11
+
+A dial is "free" when turning it UP gives a real, resolver-read ADVANTAGE for **no cost** — the audit's "pretty fidelity nobody pays for," inverted. A full base-mod sweep was run (every `TemplateFiles/*.json`), **mass-chain-resolved**: a template's real cost is `Formulas.Mass` *expanded through any `PropertyValue('Mass')` it references* — many components set a derived `Mass` **property** that already folds the functional dial in, so they are NOT free. (A shallow name-match on `Formulas.Mass` alone gives false positives — e.g. cloak/jammer/fire-control/resistance-modules all looked "free" but their derived `Mass` property is `f(the functional dial)`; they are **already costed**. Always resolve the property chain before costing a dial.)
+
+**Genuinely-free advantage dials — FIXED (cost now wired, byte-identical, anchored at the shipping value):**
+| Dial | Slice | Cost term added |
+|------|-------|-----------------|
+| laser **Range** | S9 | `+ Max(0, Range-5000)*0.5` |
+| railgun **Muzzle Velocity** | S10 | `+ Max(0, MuzzleVelocity-50000)/1000` |
+| plasma **Bolt Velocity** | S11 | `+ Max(0, BoltVelocity-200000)/10000` |
+| flak **Damage Per Pellet** | S12 | `+ Max(0, DamagePerPellet-1000)/100` |
+| reactionless **Thrust** | S13 | un-bypassable mass floor |
+| siege-railgun **Muzzle Velocity** | S14 | `+ Max(0, MuzzleVelocity-50000)/1000` |
+
+**Truly-free but DELIBERATELY LEFT (verdict per the modellability test) — do NOT "fix" these blindly:**
+| Dial(s) | Verdict / why left |
+|---------|--------------------|
+| flak **Muzzle Velocity** | truly free, but flak is **saturation-dominated** — velocity barely moves its `HitFraction`. Marginal; low priority. |
+| inertialess-drive **Evasion Override** | real advantage, but the shipping design sits at 0.8 of a 0.95 max — tiny headroom, and its mass is a separate `Drive Mass` dial. Marginal. |
+| ship-hull **Mass Budget** | **NOT an oversight** — this IS the hull-tier system (light/medium/heavy budgets, §0b keystone). Deliberate. |
+| ground-rifle/autocannon/cannon/energy-weapon/claw **Attack** | needs a **design decision** (Attack-vs-carry-weight has no clean mass anchor) — flagged for the developer (`GroundCombat/CLAUDE.md`). |
+| passive-sensor / missile-electronics **Antenna/Wavelength/Bandwidth/Resolution/Scan Time** | ⏳ **prerequisite first** — sensor detection-quality is a known degenerate area; costing tuning knobs before that fix is premature. |
+| reactor/rtg **Lifetime**, solarArray **wavelengths**, alcubierre **Efficiency vs Power** | consumption/efficiency not fully wired to a consequence yet — ⏳ until the mechanic reads them. |
+| installations **Cargo Transfer Rate / Transfer Range / Logistic Capacity** | economy dials — cost belongs in the economy pass, not the weapon-style mass anchor. |
+| laser **ReloadRate/ChargePeriod/DutyCycle/TargetWavelength/FocalLength**, pulse-laser **Combat Heat**, missile **payload geometry** | tuning knobs with tradeoffs (feed derived Pulse-Energy/rate, already reflected in Power-Input→mass) or the missile resolver is a v1 stub. Not pure free advantages. |
+
+**Headline:** after S8–S14 the component designer's cost-transparency is **substantially complete** for the combat weapon dials; the residual truly-free dials are either deliberate design, marginal, an economy-pass item, or blocked on a prerequisite (sensor detection quality) / a developer decision (ground Attack). *The vein is nearly exhausted — the next depth is CONNECTION, not more cost-wiring.*
+
 ### 0e. The number model — calibration anchor (battles auto-resolve on THESE numbers)
 Battles auto-resolve on `ShipCombatValueDB` (firepower vs toughness) through `CombatEngagement` / `AutoResolve`. **We do not invent a number scale — we express every dial in the scale the resolver already reads.** The anchor, from the live code:
 

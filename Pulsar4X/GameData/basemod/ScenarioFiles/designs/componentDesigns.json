@@ -309,6 +309,17 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-high-velocity-siege",
+      "Name": "Hypervelocity Siege Railgun",
+      "TemplateId": "siege-railgun",
+      "Properties": [
+        { "Key": "Muzzle Velocity", "Value": 250000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-sensor-hardening-module",
       "Name": "Sensor Hardening Module",
       "TemplateId": "sensor-hardening-module"
