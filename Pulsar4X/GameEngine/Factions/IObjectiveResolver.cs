@@ -28,6 +28,7 @@ namespace Pulsar4X.Factions
             { StrategicObjective.GrowEconomy, new GrowEconomyResolver() },
             { StrategicObjective.Consolidate, new ConsolidateResolver() },
             { StrategicObjective.Defend, new DefendResolver() },
+            { StrategicObjective.Expand, new ExpandResolver() },
         };
 
         public static bool TryGet(StrategicObjective objective, out IObjectiveResolver resolver)
