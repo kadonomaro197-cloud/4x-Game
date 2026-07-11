@@ -9,7 +9,7 @@ namespace Pulsar4X.Tests
     /// Phase-2.4c gauge (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the brain's first ACT.
     /// A GrowEconomy objective now queues a real industry job (the same lever a player pulls). Proves the emission
     /// gate defaults OFF (byte-identical), the GrowEconomy action queues exactly one job on a free line, and
-    /// `EmitOrders` routes by objective (GrowEconomy builds; a non-economy objective queues nothing yet).
+    /// `EmitOrders` routes by objective (a routed objective acts; an UNROUTED one — `None` — queues nothing).
     /// </summary>
     [TestFixture]
     public class NPCOrderEmissionTests
@@ -39,20 +39,22 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("EmitOrders routes by objective: GrowEconomy queues a job; a non-economy objective queues nothing (yet).")]
+        [Description("EmitOrders routes by objective: an UNROUTED objective (None) queues nothing; a routed one (GrowEconomy) queues a job.")]
         public void EmitOrders_RoutesByObjective()
         {
             var s = TestScenario.CreateWithColony();
             var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
 
-            // A non-economy objective (Defend) emits no industry order in this slice.
-            var obj = new StrategicObjectiveDB { Objective = StrategicObjective.Defend };
+            // An UNROUTED objective emits no order. Most concrete objectives now DO act (GrowEconomy / Consolidate /
+            // Defend / Expand all have resolvers), so `None` — the sentinel that never has a resolver — is the stable
+            // no-op case here (not a not-yet-built one). Defend, for instance, now queues a warship.
+            var obj = new StrategicObjectiveDB { Objective = StrategicObjective.None };
             s.Faction.SetDataBlob(obj);
             int before = TotalJobs(s.Colony);
             NPCDecisionProcessor.EmitOrders(s.Faction, factionInfo);
-            Assert.That(TotalJobs(s.Colony), Is.EqualTo(before), "Defend queues no economy job (2.4d+)");
+            Assert.That(TotalJobs(s.Colony), Is.EqualTo(before), "an unrouted objective (None) queues nothing");
 
-            // Flip the same objective to GrowEconomy → a job is queued.
+            // Flip the same objective to GrowEconomy → a job is queued (routing reaches the resolver).
             obj.Objective = StrategicObjective.GrowEconomy;
             NPCDecisionProcessor.EmitOrders(s.Faction, factionInfo);
             Assert.That(TotalJobs(s.Colony), Is.GreaterThan(before), "GrowEconomy queues an industry job");
