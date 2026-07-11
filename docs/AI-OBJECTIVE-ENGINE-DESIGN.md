@@ -132,11 +132,14 @@ The 19 leaders **self-synchronize**; they are NOT handed a micromanaged plan. Ex
 
 One catalog, one scoring engine, three completely different 19-leader campaigns.
 
-### Open (transition engine)
-- Plan **granularity** — how coarse/fine the catalog entries are (a handful of archetypes vs. many).
-- How **phase-gates** are expressed (a plan as a small ordered set of gated sub-objectives).
-- **Re-plan triggers** — what report-up conditions force a re-score, and how to avoid thrashing between plans.
-- **Authored vs. computed** — how much of a plan is authored per faction vs. assembled from generic leader-tasks.
+### Transition-engine details — RESOLVED (developer's calls, 2026-07-10)
+
+1. **Granularity → a bounded set of SITUATION-TYPES, each with ~5–8 archetype plans.** There's a finite list of strategic situations the game produces — **losing a world · a rising rival · an expansion window · an internal crisis (unrest/rebellion) · an outmatched-tech gap · first contact** — each with its own small catalog of archetype responses. Legible ("the 6 ways to handle losing a world"), tunable; grow the situation-list as systems come online. *Bounded situations × ~6 archetypes*, not one giant flat list.
+2. **Phase-gates → a short LINEAR phase list (2–4), each gated by a completion gauge. NOT a dependency graph.** A plan is a mini-sequence of sub-mandates, each with a readable "done?" gauge that opens the next ("Invade Mars" = Phase 1 *achieve space superiority [gauge: control Mars orbit]* → Phase 2 *take the surface [gauge: regions held]*). The active phase IS the current mandate; leaders read "which phase are we in" and serve it (Admiral works Phase 1, General waits for Phase 2). Reuses the tier-reading gauge machinery (§3); a linear list handles real ops without a brittle scheduler.
+3. **Re-plan → COMMIT-AND-HYSTERESIS, governed by mood (the anti-thrash design).** Commit to the plan; only re-score on **success** (objective met → climb), a **material blocker** (a leader reports genuinely-impossible, not merely hard), or a **big gauge-shift** (homeworld falls / major new threat / ally joins). Three guards stop flip-flop: a **minimum-commitment floor** (no re-plan for a while except on catastrophe), a **hysteresis band** (a new plan must beat the current by a MARGIN), and **mood sets the cadence** (Cornered/Wounded → re-plans fast + drastic; stable → holds course). Re-plans **escalate DOWN the desperation ladder** (Fortify fails → Scorched-earth), they don't flip laterally — so it reads as *progressive desperation / a faction breaking under pressure*, never indecision.
+4. **Authored vs. computed → GENERIC SKELETONS, faction-flavored, + a bespoke hook.** Archetypes are generic + shared, each defined once as {leader-tasks + phase structure + base trait-profile}. The faction flavors them via (a) **trait/ambition scoring** (which plans it favors — Borg weights Scorched-earth up), (b) **capability gates** (a plan is only *available* if the faction can do it — no Scorched-earth without orbital bombardment, no Reinforce without spare troops), and (c) an optional **authored SIGNATURE plan** for a franchise-defining unique move (Borg "assimilate the population *instead of* killing it" is a Borg-only entry). ~90% shared catalog, ~10% bespoke where earned. Universal machinery, authored flavor — same philosophy as the ship-ladder and the traits.
+
+**Interlock:** bounded situations (1) × generic-skeleton archetypes (4) = a small legible catalog; each chosen plan runs as gated linear phases (2); commit-and-hysteresis (3) governs when a faction abandons one plan for a more desperate one. Tunable, characterful, cannot thrash.
 
 ---
 
