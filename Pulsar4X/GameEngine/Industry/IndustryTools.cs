@@ -140,10 +140,15 @@ namespace Pulsar4X.Industry
                     // materials — until crew frees up (a destroyed ship returns its crew to the pool).
                     if (designInfo is Pulsar4X.Ships.ShipDesign shipToCrew && shipToCrew.CrewReq > 0)
                     {
-                        var crewDecision = Pulsar4X.Colonies.ManpowerTools.ResolveBuild(industryEntity, shipToCrew.CrewReq);
-                        if (!crewDecision.CanBuild)
+                        // Enhancers ⚙6.2: a caliber ship's crew splits — the veteran-cadre slice (TalentReq) is
+                        // gated against the SCARCE talent pool, the rest against bulk workforce. TalentReq is 0 for
+                        // every non-caliber ship, so bulk is gated on the full CrewReq and the talent wall passes —
+                        // byte-identical to the old single-pool gate for the entire base-mod fleet.
+                        var crewDecision = Pulsar4X.Colonies.ManpowerTools.ResolveBuild(industryEntity, shipToCrew.CrewReq - shipToCrew.TalentReq);
+                        bool haveTalent = Pulsar4X.Colonies.ManpowerTools.HasTalentToBuild(industryEntity, shipToCrew.TalentReq);
+                        if (!crewDecision.CanBuild || !haveTalent)
                         {
-                            batchJob.Status = IndustryJobStatus.MissingResources; // short on crew — hold the job
+                            batchJob.Status = IndustryJobStatus.MissingResources; // short on crew or veteran talent — hold the job
                             continue;
                         }
                     }

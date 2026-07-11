@@ -133,6 +133,47 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("Enhancers ⚙6.2 scarcity draw: the talent enforcement bridge commits and releases scarce talent through a real colony host — the anti-dominance handle for an elite caliber hull. Inert (0) requests no-op; a real commit reduces available talent; release frees it.")]
+        public void ManpowerTools_Talent_CommitsAndReleasesThroughHost()
+        {
+            var s = TestScenario.CreateWithColony();
+            long pop = s.Colony.GetDataBlob<ColonyInfoDB>().Population.Values.Sum();
+            var mp = s.Colony.GetDataBlob<ColonyManpowerDB>();
+            long talentBefore = mp.AvailableTalent(pop);
+            Assert.That(talentBefore, Is.GreaterThan(0), "a billions-pop colony has a real (if scarce) talent pool");
+
+            // A zero request is inert (byte-identical for a non-caliber ship, TalentReq 0).
+            ManpowerTools.CommitTalent(s.Colony, 0);
+            Assert.That(mp.AvailableTalent(pop), Is.EqualTo(talentBefore), "committing zero talent is a no-op");
+
+            ManpowerTools.CommitTalent(s.Colony, 600); // one Veteran Cadre's crew
+            Assert.That(mp.AvailableTalent(pop), Is.EqualTo(talentBefore - 600), "the cadre ties up scarce talent");
+
+            ManpowerTools.ReleaseTalent(s.Colony, 600); // the elite ship dies → its cadre returns
+            Assert.That(mp.AvailableTalent(pop), Is.EqualTo(talentBefore), "destroying the ship frees its veteran cadre");
+        }
+
+        [Test]
+        [Description("Enhancers ⚙6.2 scarcity draw: HasTalentToBuild is a HARD wall on the scarce pool — enough talent passes, a shortage blocks, and it's inert (always true) on a pool-less host or a zero request.")]
+        public void ManpowerTools_HasTalentToBuild_GatesOnScarcePool()
+        {
+            var s = TestScenario.CreateWithColony();
+            long pop = s.Colony.GetDataBlob<ColonyInfoDB>().Population.Values.Sum();
+            var mp = s.Colony.GetDataBlob<ColonyManpowerDB>();
+            long talent = mp.AvailableTalent(pop);
+
+            Assert.That(ManpowerTools.HasTalentToBuild(s.Colony, 0), Is.True, "a ship needing no cadre always passes (byte-identical)");
+            Assert.That(ManpowerTools.HasTalentToBuild(s.Colony, talent), Is.True, "exactly the free talent still builds");
+
+            // Tie up all but 5 talent → a 600-cadre elite hull can't be crewed.
+            mp.CommitTalent(talent - 5);
+            Assert.That(ManpowerTools.HasTalentToBuild(s.Colony, 600), Is.False, "a talent shortage is a hard wall — no conscripting veterans");
+
+            // Inert on a pool-less host (a station carries no ColonyManpowerDB).
+            Assert.That(ManpowerTools.HasTalentToBuild(s.StartingBody, 100000), Is.True, "a pool-less host is unenforced");
+        }
+
+        [Test]
         [Description("ManpowerDB clones deeply (survives entity transfer / save-load).")]
         public void ColonyManpowerDB_ClonesDeeply()
         {

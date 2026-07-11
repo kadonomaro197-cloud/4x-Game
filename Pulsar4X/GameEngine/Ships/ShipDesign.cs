@@ -74,6 +74,15 @@ namespace Pulsar4X.Ships
         public Dictionary<string, long> ComponentCosts = new Dictionary<string, long>();
         public Dictionary<string, long> ShipInstanceCost = new Dictionary<string, long>();
         public int CrewReq;
+        /// <summary>
+        /// The slice of <see cref="CrewReq"/> that must be drawn from the building colony's SCARCE talent pool
+        /// (veteran cadre), not bulk workforce — the anti-dominance handle for Enhancers ⚙6.2 Unit Caliber. It is
+        /// the summed crew of the design's caliber modules (a <see cref="Pulsar4X.Combat.UnitCaliberAtb"/>-carrying
+        /// component). ZERO for every ship with no caliber module → byte-identical: bulk crew commit stays CrewReq,
+        /// talent commit is nothing. When a caliber module IS fitted, that crew comes out of talent instead of bulk,
+        /// so an elite hull ties up scarce officers and can't be spammed. Computed in <see cref="Recalculate"/>.
+        /// </summary>
+        public int TalentReq;
         public long IndustryPointCosts { get; private set; }
 
         //TODO: this is one of those places where moddata has bled into hardcode...
@@ -120,7 +129,11 @@ namespace Pulsar4X.Ships
             // M3-2b: commit the crew from the building colony's manpower pool at build-complete — for BOTH the
             // direct-launch path (above) and the launch-complex queue path (the ship launches later). Inert if
             // the host has no pool (a station) — CommitCrew no-ops.
-            Pulsar4X.Colonies.ManpowerTools.CommitCrew(industryEntity, CrewReq);
+            // Enhancers ⚙6.2: the veteran-cadre slice (TalentReq) comes out of the SCARCE talent pool, the rest out
+            // of bulk workforce. TalentReq is 0 for every non-caliber ship, so this is byte-identical to the old
+            // single CommitCrew(CrewReq) for the whole base-mod fleet.
+            Pulsar4X.Colonies.ManpowerTools.CommitCrew(industryEntity, CrewReq - TalentReq);
+            Pulsar4X.Colonies.ManpowerTools.CommitTalent(industryEntity, TalentReq);
 
             if (batchJob.NumberCompleted == batchJob.NumberOrdered)
             {
@@ -158,6 +171,7 @@ namespace Pulsar4X.Ships
         {
             MassPerUnit = 0;
             CrewReq = 0;
+            TalentReq = 0;
             CreditCost = 0;
             VolumePerUnit = 0;
             ResourceCosts.Clear();
@@ -170,6 +184,11 @@ namespace Pulsar4X.Ships
             {
                 MassPerUnit += component.design.MassPerUnit * component.count;
                 CrewReq += component.design.CrewReq;
+                // Enhancers ⚙6.2: a caliber module's crew is a veteran CADRE — it draws from the scarce talent pool,
+                // not bulk workforce. Track that slice so the commit at build-complete splits crew vs talent. Zero
+                // for every non-caliber component → byte-identical for the entire base-mod fleet.
+                if (component.design.TryGetAttribute<Pulsar4X.Combat.UnitCaliberAtb>(out _))
+                    TalentReq += component.design.CrewReq;
                 CreditCost += component.design.CreditCost;
                 VolumePerUnit += component.design.VolumePerUnit * component.count;
                 if (ComponentCosts.ContainsKey(component.design.UniqueID))

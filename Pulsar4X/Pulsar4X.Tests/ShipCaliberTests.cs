@@ -64,5 +64,25 @@ namespace Pulsar4X.Tests
             Assert.That(pv.Toughness, Is.GreaterThan(av.Toughness),
                 "the veteran crew (×1.20 toughness) plus the module's own hull-points make the Praetorian tougher");
         }
+
+        [Test]
+        [Description("The SCARCITY DRAW (Enhancers ⚙6.2, economy×combat): a caliber ship's veteran-cadre crew is TalentReq — it comes out of the colony's scarce talent pool, not bulk workforce. The Praetorian (= Aegis + one Veteran Cadre) has TalentReq == the cadre's crew and its bulk (CrewReq - TalentReq) equals the plain Aegis's crew; the un-calibered Aegis has TalentReq 0 (byte-identical). So an elite hull ties up scarce officers and can't be spammed.")]
+        public void ThePraetorian_DrawsItsCadreFromTheScarceTalentPool()
+        {
+            var s = TestScenario.CreateWithColony();
+            var designs = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns;
+            var praetorian = designs[Praetorian];
+            var aegis = designs[Aegis];
+            Log($"Praetorian crew {praetorian.CrewReq} (talent {praetorian.TalentReq}, bulk {praetorian.CrewReq - praetorian.TalentReq}) vs Aegis crew {aegis.CrewReq} (talent {aegis.TalentReq})");
+
+            Assert.That(aegis.TalentReq, Is.EqualTo(0), "a hull with no caliber module draws no scarce talent (byte-identical)");
+            Assert.That(praetorian.TalentReq, Is.GreaterThan(0), "the caliber module's crew is a veteran cadre — drawn from talent");
+            // The Praetorian is an exact Aegis + one Veteran Cadre, so its bulk crew equals the plain Aegis's crew and
+            // the whole delta is the cadre — which is exactly the talent slice.
+            Assert.That(praetorian.CrewReq - praetorian.TalentReq, Is.EqualTo(aegis.CrewReq),
+                "bulk workforce is the same as the stock Aegis; only the added cadre draws talent");
+            Assert.That(praetorian.TalentReq, Is.EqualTo(praetorian.CrewReq - aegis.CrewReq),
+                "the talent draw is exactly the cadre's crew (the delta over the identical stock hull)");
+        }
     }
 }
