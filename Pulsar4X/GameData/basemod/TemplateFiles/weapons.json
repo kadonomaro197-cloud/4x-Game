@@ -640,6 +640,80 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "armour-hardening",
+      "Name": "Ablative Hull Plating",
+      "Formulas": {
+        "Description": "Nature-hardened ship plating (⚙3 Defence: armour tuned against a damage NATURE — the ship mirror of ground armour). Its ablative laminate soaks a fraction of incoming ENERGY fire (lasers/plasma) after the shields, but is thin against a kinetic slug. Tune the four soak fractions for the threat you expect. Mass rises with total hardening. Balance dials flagged.",
+        "Mass": "(PropertyValue('Soak vs Kinetic') + PropertyValue('Soak vs Energy') + PropertyValue('Soak vs Explosive') + PropertyValue('Soak vs Exotic')) * 30000",
+        "Volume": "[Mass] * 0.4",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.002",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.4",
+        "aluminium": "[Mass] * 0.4"
+      },
+      "ComponentType": "Defense",
+      "MountType": "ShipComponent, ShipCargo",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Soak vs Kinetic",
+          "Units": "x",
+          "DescriptionFormula": "'Fraction of incoming KINETIC fire this plating soaks after shields (0 = plain). FLAGGED balance value.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "0.9",
+          "MinFormula": "0",
+          "StepFormula": "0.05",
+          "PropertyFormula": "0.1"
+        },
+        {
+          "Name": "Soak vs Energy",
+          "Units": "x",
+          "DescriptionFormula": "'Fraction of incoming ENERGY fire this plating soaks after shields (0 = plain). FLAGGED balance value.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "0.9",
+          "MinFormula": "0",
+          "StepFormula": "0.05",
+          "PropertyFormula": "0.4"
+        },
+        {
+          "Name": "Soak vs Explosive",
+          "Units": "x",
+          "DescriptionFormula": "'Fraction of incoming EXPLOSIVE fire this plating soaks after shields (0 = plain). FLAGGED balance value.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "0.9",
+          "MinFormula": "0",
+          "StepFormula": "0.05",
+          "PropertyFormula": "0.2"
+        },
+        {
+          "Name": "Soak vs Exotic",
+          "Units": "x",
+          "DescriptionFormula": "'Fraction of incoming EXOTIC fire this plating soaks after shields (0 = plain). FLAGGED balance value.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "0.9",
+          "MinFormula": "0",
+          "StepFormula": "0.05",
+          "PropertyFormula": "0.0"
+        },
+        {
+          "Name": "armourHardeningAtbArgs",
+          "DescriptionFormula": "'double soakVsKinetic, double soakVsEnergy, double soakVsExplosive, double soakVsExotic'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Soak vs Kinetic'), PropertyValue('Soak vs Energy'), PropertyValue('Soak vs Explosive'), PropertyValue('Soak vs Exotic'))",
+          "AttributeType": "Pulsar4X.Combat.ArmourHardeningAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "ship-magazine",
       "Name": "Ammo Magazine",
       "Formulas": {

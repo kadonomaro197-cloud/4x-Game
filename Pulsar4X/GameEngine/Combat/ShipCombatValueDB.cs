@@ -186,6 +186,28 @@ namespace Pulsar4X.Combat
         /// <summary>How fast the shield pool refills (joules/sec) — the "shields recharging" rate between salvos.</summary>
         [JsonProperty] public double ShieldRegen_Jps { get; internal set; }
 
+        // ⚙3 Defense — NATURE-HARDENED ARMOUR (the ship mirror of the ground armour-nature dials): fraction of the
+        // matching-nature incoming fire this ship's plating soaks AFTER the shield. Best installed ArmourHardeningAtb,
+        // health-scaled. All 0 → no hardened plating → combat byte-identical (every current ship).
+        /// <summary>Fraction of incoming KINETIC fire this ship's hardened plating soaks (0 = plain armour).</summary>
+        [JsonProperty] public double ArmourSoakVsKinetic { get; internal set; }
+        /// <summary>Fraction of incoming ENERGY fire this ship's hardened plating soaks (0 = plain armour).</summary>
+        [JsonProperty] public double ArmourSoakVsEnergy { get; internal set; }
+        /// <summary>Fraction of incoming EXPLOSIVE fire this ship's hardened plating soaks (0 = plain armour).</summary>
+        [JsonProperty] public double ArmourSoakVsExplosive { get; internal set; }
+        /// <summary>Fraction of incoming EXOTIC fire this ship's hardened plating soaks (0 = plain armour).</summary>
+        [JsonProperty] public double ArmourSoakVsExotic { get; internal set; }
+
+        /// <summary>This ship's hardened-plating soak fraction vs a given incoming damage nature (0 = plain armour).</summary>
+        public double ArmourSoakFor(WeaponNature nature) => nature switch
+        {
+            WeaponNature.Kinetic => ArmourSoakVsKinetic,
+            WeaponNature.Energy => ArmourSoakVsEnergy,
+            WeaponNature.Explosive => ArmourSoakVsExplosive,
+            WeaponNature.Exotic => ArmourSoakVsExotic,
+            _ => 0,
+        };
+
         /// <summary>The AMMO magazine capacity in kg (sum of installed <see cref="ShipMagazineAtb"/> magazines,
         /// health-scaled) — Weapons pilot W3, the space echo of the ground magazine. Seeds the fleet's combat ammo pool
         /// (`FleetCombatStateDB.AmmoPool_kg`), which the resolve drains as the fleet's ammo weapons fire; when dry those
@@ -244,6 +266,7 @@ namespace Pulsar4X.Combat
             double toughness = 0;
             var weapons = new List<WeaponProfile>();
             double shieldCapacity = 0, shieldRegen = 0;   // the space shield pool (0 if no generator → combat unchanged)
+            double armSoakK = 0, armSoakE = 0, armSoakX = 0, armSoakO = 0;   // ⚙3 nature-hardened plating (best per nature, 0 if none)
             double ammoCapacity = 0;                      // the ammo magazine pool (0 if no magazine → combat unchanged, W3)
             double heatCapacity = 0;                      // the radiator heat ceiling (0 if no radiator → combat unchanged, W5)
             double pointDefense = 0;                      // the PD intercept rating (0 if no PD → combat unchanged, W6)
@@ -424,6 +447,22 @@ namespace Pulsar4X.Combat
                     }
                 }
 
+                // NATURE-HARDENED plating (⚙3, the ship mirror of the ground armour-nature dials): the best installed
+                // hardening per nature (health-scaled — a shot-off plate soaks less, the grave rung). 0 for every nature
+                // if none → the fleet armour-nature soak is disabled and combat is byte-identical (every current ship).
+                if (instances.TryGetComponentsByAttribute<ArmourHardeningAtb>(out var hardening))
+                {
+                    foreach (var comp in hardening)
+                        if (comp.Design.TryGetAttribute<ArmourHardeningAtb>(out var ah))
+                        {
+                            double h = comp.HealthPercent;
+                            if (ah.SoakVsKinetic * h > armSoakK) armSoakK = ah.SoakVsKinetic * h;
+                            if (ah.SoakVsEnergy * h > armSoakE) armSoakE = ah.SoakVsEnergy * h;
+                            if (ah.SoakVsExplosive * h > armSoakX) armSoakX = ah.SoakVsExplosive * h;
+                            if (ah.SoakVsExotic * h > armSoakO) armSoakO = ah.SoakVsExotic * h;
+                        }
+                }
+
                 // Ammo magazines (W3): sum the installed magazines' kg (health-scaled — a shot-off magazine feeds
                 // less). 0 if none → the fleet's ammo pool stays disabled and combat is byte-identical.
                 if (instances.TryGetComponentsByAttribute<ShipMagazineAtb>(out var mags))
@@ -481,6 +520,10 @@ namespace Pulsar4X.Combat
                 Evasion = CalculateEvasion(ship),
                 Weapons = weapons,
                 ShieldCapacity_J = shieldCapacity,
+                ArmourSoakVsKinetic = armSoakK,
+                ArmourSoakVsEnergy = armSoakE,
+                ArmourSoakVsExplosive = armSoakX,
+                ArmourSoakVsExotic = armSoakO,
                 ShieldRegen_Jps = shieldRegen,
                 AmmoCapacity_kg = ammoCapacity,
                 HeatCapacity_kJ = heatCapacity,

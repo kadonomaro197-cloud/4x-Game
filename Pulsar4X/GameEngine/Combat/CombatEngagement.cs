@@ -690,6 +690,13 @@ namespace Pulsar4X.Combat
                 // for an unshielded fleet (0 capacity). The exact aggregate `dmgThisSalvo` above is preserved so the
                 // unshielded path is untouched to the bit; the shield only ever SUBTRACTS what it absorbs.
                 dmgThisSalvo = ApplyShield(live[i], ships[i], state, incoming, dt, dmgThisSalvo);
+                // NATURE-HARDENED ARMOUR (⚙3, the ship mirror of the ground armour-nature): AFTER the shield, the
+                // defending fleet's hardened plating soaks a fraction of what leaks through, by the incoming salvo's
+                // NATURE — an ablative-clad fleet shrugs off an energy salvo, a composite one walls kinetic. GATED on the
+                // fleet actually carrying hardening (fraction > 0); a plain-armour fleet leaves dmgThisSalvo untouched →
+                // byte-identical (every current ship, until a nature-hardened plate is fitted).
+                double armourSoak = FleetArmourSoakFraction(ships[i], incoming);
+                if (armourSoak > 0) dmgThisSalvo *= (1.0 - armourSoak);
                 state.DamageTakenPool += dmgThisSalvo;
                 string attackerLabel = FleetLabel(live[attackersOf[i][0]])
                     + (attackersOf[i].Count > 1 ? " +" + (attackersOf[i].Count - 1) + " more" : "");
@@ -1275,6 +1282,46 @@ namespace Pulsar4X.Combat
         /// up over the salvo (all-kinetic → 1.0, all-energy → 0.5, all-exotic → 0.0, mixes interpolate). Pure; internal
         /// so it's directly unit-testable like <see cref="HitFraction"/>.</summary>
         internal static double SoakFractionOf(List<WeaponProfile> incoming) => CombatKernel.SoakFractionOf(incoming);
+
+        /// <summary>The fraction of an incoming salvo a defending fleet's NATURE-HARDENED plating soaks (⚙3, the ship
+        /// mirror of the ground armour-nature) — the TOUGHNESS-weighted fleet average of the ships' per-nature armour
+        /// soak, then weighted across the salvo's damage-by-nature mix (the same shape as <see cref="SoakFractionOf"/>).
+        /// Returns 0 (no reduction, byte-identical) when no ship carries hardening, or the fleet/salvo is empty. Applied
+        /// AFTER the shield step. Internal for direct unit testing.</summary>
+        internal static double FleetArmourSoakFraction(List<CombatShip> ships, List<WeaponProfile> incoming)
+        {
+            if (ships == null || ships.Count == 0 || incoming == null || incoming.Count == 0) return 0;
+            double totTough = 0, sK = 0, sE = 0, sX = 0, sO = 0;
+            bool anyHardening = false;
+            foreach (var cs in ships)
+            {
+                var cv = CombatValue(cs.Ship);
+                double t = cv.Toughness;
+                if (t <= 0) continue;
+                totTough += t;
+                sK += cv.ArmourSoakVsKinetic * t; sE += cv.ArmourSoakVsEnergy * t;
+                sX += cv.ArmourSoakVsExplosive * t; sO += cv.ArmourSoakVsExotic * t;
+                if (cv.ArmourSoakVsKinetic > 0 || cv.ArmourSoakVsEnergy > 0 || cv.ArmourSoakVsExplosive > 0 || cv.ArmourSoakVsExotic > 0)
+                    anyHardening = true;
+            }
+            if (!anyHardening || totTough <= 0) return 0;
+            double fK = sK / totTough, fE = sE / totTough, fX = sX / totTough, fO = sO / totTough;
+            double total = 0, soak = 0;
+            foreach (var w in incoming)
+            {
+                double d = w.DamagePerSecond;
+                total += d;
+                soak += d * (w.Nature switch
+                {
+                    WeaponNature.Kinetic => fK,
+                    WeaponNature.Energy => fE,
+                    WeaponNature.Explosive => fX,
+                    WeaponNature.Exotic => fO,
+                    _ => 0,
+                });
+            }
+            return total > 0 ? soak / total : 0;
+        }
 
         /// <summary>Pure shield-soak math (internal for direct unit testing, like <see cref="HitFraction"/> /
         /// <see cref="WithinWeaponRange(double,double,double)"/>). Given the pool's current charge, capacity, regen, the
