@@ -569,6 +569,14 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-research-academy",
+      "Name": "Research Academy",
+      "TemplateId": "research-academy"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-warehouse",
       "Name": "Warehouse",
       "TemplateId": "warehouse-facility",

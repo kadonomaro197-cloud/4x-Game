@@ -661,6 +661,68 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "research-academy",
+      "Name": "Research Academy",
+      "Formulas": {
+        "Description": "Graduates specialist scientists. A longer program graduates scientists with a higher research-competence ceiling in the academy's specialty.",
+        "Mass": "PropertyValue('Class Size') * 100",
+        "Volume": "[Mass] * 0.1",
+        "HTK": "0.5",
+        "CrewReq": "PropertyValue('Class Size') * 0.25",
+        "ResearchCost": "PropertyValue('Class Size') * 0.5",
+        "CreditCost": "120",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "iron": "[Mass] * 0.45",
+        "aluminium": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.1",
+        "plastic": "[Mass] * 0.1",
+        "stainless-steel": "[Mass] * 0.1",
+        "electronics": "[Mass] * 0.05"
+      },
+      "ComponentType": "Facility",
+      "MountType": "PlanetInstallation",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "Class Size",
+          "DescriptionFormula": "'How many scientists graduate from the academy each cycle.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "100",
+          "MinFormula": "1",
+          "StepFormula": "1",
+          "PropertyFormula": "10"
+        },
+        {
+          "Name": "Class Length",
+          "DescriptionFormula": "'How many months it takes to graduate a class. Longer training graduates scientists with a higher research-competence ceiling.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "48",
+          "MinFormula": "1",
+          "StepFormula": "1",
+          "PropertyFormula": "24"
+        },
+        {
+          "Name": "Research Specialty",
+          "DescriptionFormula": "'The tech category the academy trains its scientists in. Graduates carry a research-competence bonus in this category.'",
+          "GuiHint": "GuiTechCategorySelection",
+          "DataDict": {},
+          "PropertyFormula": "UniqueID('tech-category-power-propulsion')"
+        },
+        {
+          "Name": "DBargs",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Class Size'), PropertyValue('Class Length'), PropertyValue('Research Specialty'))",
+          "AttributeType": "Pulsar4X.People.ResearchAcademyAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "spaceport",
       "Name": "Planetary Spaceport Complex",
       "Formulas": {
