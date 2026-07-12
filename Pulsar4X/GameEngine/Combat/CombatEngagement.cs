@@ -1411,7 +1411,12 @@ namespace Pulsar4X.Combat
             if (FleetDoctrine.IsRetreat(fleet)) return true;    // withdraw posture = a standing retreat order
             if (state.InitialShipCount <= 0) return false;
             int lost = state.InitialShipCount - currentShipCount;
-            return lost >= state.InitialShipCount * RetreatThresholdFor(PersonalityOf(fleet));
+            // The nerve that decides "fight on or break off" is the fleet's Collectivism — the faction's doctrine,
+            // BLENDED with the flagship officer's own character by that officer's tenure (a green officer follows
+            // doctrine; a veteran runs on their own judgement). Neutral/green/absent officer → the faction value
+            // exactly, so this is byte-identical until a seasoned officer carries a divergent personality.
+            double collectivism = BlendedRetreatCollectivism(fleet, PersonalityOf(fleet));
+            return lost >= state.InitialShipCount * RetreatThresholdForCollectivism(collectivism);
         }
 
         /// <summary>
@@ -1423,12 +1428,57 @@ namespace Pulsar4X.Combat
         public static double RetreatThresholdFor(Pulsar4X.Factions.PersonalityDB personality)
         {
             if (personality == null) return RetreatCasualtyThreshold;
-            double collectivism = personality.TraitOf(Pulsar4X.Factions.PersonalityTrait.Collectivism);
+            return RetreatThresholdForCollectivism(personality.TraitOf(Pulsar4X.Factions.PersonalityTrait.Collectivism));
+        }
+
+        /// <summary>The break-off casualty fraction for a given Collectivism value (0..1) — the shared core of
+        /// <see cref="RetreatThresholdFor"/> and the officer-blended <see cref="ShouldRetreat"/> path. Neutral (0.5)
+        /// → exactly <see cref="RetreatCasualtyThreshold"/>; high raises it, low lowers it; clamped so a fleet always
+        /// both can and eventually must break off.</summary>
+        public static double RetreatThresholdForCollectivism(double collectivism)
+        {
             double threshold = RetreatCasualtyThreshold
                 + (collectivism - Pulsar4X.Factions.PersonalityDB.Neutral) * 2.0 * CollectivismRetreatSwing;
             if (threshold < 0.05) return 0.05;
             if (threshold > 0.95) return 0.95;
             return threshold;
+        }
+
+        /// <summary>
+        /// Phase-2.7-attach: the Collectivism the retreat decision runs on — the fleet's FLAGSHIP OFFICER's own nerve
+        /// blended toward the faction's doctrine by the officer's tenure (<see cref="OfficerCharacter.Blend"/> over
+        /// <see cref="OfficerCharacter.TenureWeight"/>). A green officer (0 tenure), an all-neutral officer, or no
+        /// flagship officer at all → the faction's own value EXACTLY, so this is byte-identical until a seasoned
+        /// officer carries an authored, divergent character. Defensive; never throws.
+        /// </summary>
+        internal static double BlendedRetreatCollectivism(Entity fleet, Pulsar4X.Factions.PersonalityDB factionPersonality)
+        {
+            double factionColl = factionPersonality == null
+                ? Pulsar4X.Factions.PersonalityDB.Neutral
+                : factionPersonality.TraitOf(Pulsar4X.Factions.PersonalityTrait.Collectivism);
+
+            var officer = FlagshipCommanderOf(fleet);
+            if (officer == null || officer.Personality == null) return factionColl;
+
+            double officerColl = officer.Personality.TraitOf(Pulsar4X.Factions.PersonalityTrait.Collectivism);
+            double tenure = Pulsar4X.People.OfficerCharacter.TenureWeight(officer.Experience, officer.ExperienceCap);
+            return Pulsar4X.People.OfficerCharacter.Blend(officerColl, factionColl, tenure);
+        }
+
+        /// <summary>The <see cref="Pulsar4X.People.CommanderDB"/> of a fleet's flagship officer, or null if any link
+        /// is missing (no flagship set, no commander aboard). Mirrors <see cref="FleetCommanderMult"/>'s
+        /// <c>FlagShipID → ShipInfoDB.CommanderID → commander</c> chain. Defensive; never throws.</summary>
+        internal static Pulsar4X.People.CommanderDB FlagshipCommanderOf(Entity fleet)
+        {
+            if (fleet == null || fleet.Manager == null || !fleet.TryGetDataBlob<FleetDB>(out var fleetDB) || fleetDB.FlagShipID < 0)
+                return null;
+            if (!fleet.Manager.TryGetEntityById(fleetDB.FlagShipID, out var flagship) || flagship == null)
+                return null;
+            if (!flagship.TryGetDataBlob<ShipInfoDB>(out var shipInfo) || shipInfo.CommanderID < 0)
+                return null;
+            if (!fleet.Manager.TryGetEntityById(shipInfo.CommanderID, out var commander) || commander == null)
+                return null;
+            return commander.TryGetDataBlob<Pulsar4X.People.CommanderDB>(out var cmdr) ? cmdr : null;
         }
 
         /// <summary>The <see cref="Pulsar4X.Factions.PersonalityDB"/> of the fleet's owning faction, or null if the
