@@ -231,7 +231,11 @@ namespace Pulsar4X.Factions
             var (chosen, reason) = ObjectiveSelector.SelectWithReason(tier, factionInfoDB.Doctrine, personality);
 
             // Target selection (which rival to Conquer) is the 2.4c refinement; keep -1 (none) for now.
-            ObjectiveTransition.Advance(objective, tier, chosen, -1, now, ObjectiveTransition.DefaultCommitFor);
+            // Phase-2.5: the commit DWELL scales with Ambition — a high-Ambition faction renews an expansion push
+            // (Expand/Conquer) on a SHORTER cadence, a low-Ambition one dwells longer. Neutral/absent personality and
+            // every non-expansion objective return the fixed DefaultCommitFor, so this stays byte-identical today.
+            TimeSpan commitFor = ObjectiveTransition.CommitFor(chosen, personality);
+            ObjectiveTransition.Advance(objective, tier, chosen, -1, now, commitFor);
 
             // Record WHY: if the transition committed the fresh choice, that's the reason; if hysteresis HELD a prior
             // objective (the brain didn't thrash), say so and note what this cycle actually read (still traceable).
