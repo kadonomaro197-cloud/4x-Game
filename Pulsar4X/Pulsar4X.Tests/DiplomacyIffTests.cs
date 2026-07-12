@@ -115,6 +115,31 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("Phase-3.4a coalition teeth: a DECLARED WAR overrides a signed pact — allies who go to war CAN shoot each other.")]
+        public void DeclaredWar_OverridesASignedPact()
+        {
+            var s = TestScenario.CreateWithColony();
+            var reds = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+            var mine = MakeShip(s, s.Faction, "Ours");
+            var theirs = MakeShip(s, reds, "Theirs");
+
+            // Sign a mutual non-aggression pact → normally that stops the fight (proven by SignedPact_StopsTheFight).
+            bool signed = Treaties.Propose(s.Faction, reds, TreatyType.NonAggression, s.Game.TimePulse.GameGlobalDateTime);
+            Assert.That(signed, Is.True, "the pact is accepted at neutral");
+            Assert.That(CombatEngagement.AreHostile(mine, theirs), Is.False, "the pact suppresses combat while at peace");
+
+            // Now DECLARE WAR — the latch overrides the lingering pact flag: they are hostile again.
+            s.Faction.GetDataBlob<DiplomacyDB>().GetOrCreateRelationship(reds.Id).DeclareWar();
+            Assert.That(CombatEngagement.AreHostile(mine, theirs), Is.True,
+                "a declared war overrides a signed pact — a pact is a promise, war is a fact, and the fact wins");
+            Log("war over pact → hostile ✓");
+
+            // The override is one-sided-sufficient: the war latch on EITHER ledger is enough (they didn't sign my war).
+            Assert.That(CombatEngagement.AreHostile(theirs, mine), Is.True, "either side's war latch re-arms the pair");
+            Log("either-side war latch → hostile ✓");
+        }
+
+        [Test]
         [Description("Same faction is never hostile (unchanged v1 rule), even with no diplomacy involved.")]
         public void SameFaction_IsNeverHostile()
         {

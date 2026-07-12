@@ -1544,6 +1544,16 @@ namespace Pulsar4X.Combat
             if (fa == fb || fa == Game.NeutralFactionId || fb == Game.NeutralFactionId)
                 return false;
 
+            // A DECLARED WAR overrides every peace-suppression below (Phase-3.4a coalitions). If either side holds
+            // an AtWar latch toward the other, they are hostile — full stop — no matter what stance or signed pact
+            // sits underneath it. This is the developer's rule that "even alliance members are still allowed to
+            // shoot each other": a pact is a promise, a declared war is a fact, and the fact wins. It's what lets a
+            // coalition have teeth — once you and an ally both declare war on a shared threat, the fight is real,
+            // and it also means a broken/betrayed pact instantly re-arms the two former allies. Checked BEFORE the
+            // AtPeace suppression so war can never be silently disarmed by a lingering treaty flag.
+            if (IsAtWar(a, fa, fb) || IsAtWar(b, fb, fa))
+                return true;
+
             // Diplomacy can only SUPPRESS the default hostility, never create it: two different non-neutral
             // factions are hostile (the v1 rule) UNLESS *both* sides hold a Friendly/Allied stance toward the
             // other (a mutual peace). A one-sided friendly declaration does NOT disarm you — if either side is
@@ -1553,6 +1563,27 @@ namespace Pulsar4X.Combat
                 return false;
 
             return true;
+        }
+
+        /// <summary>
+        /// True if <paramref name="ownFactionId"/>'s faction holds a declared-war (<see cref="Pulsar4X.Factions.RelationshipState.AtWar"/>)
+        /// latch toward <paramref name="otherFactionId"/> in its <see cref="Pulsar4X.Factions.DiplomacyDB"/>. Mirrors
+        /// <see cref="AtPeace"/>'s ledger resolution exactly, reading the AtWar flag instead of the peace ones. Only a
+        /// STORED relationship counts — an unmet faction (no record) returns false, so an ordinary different-faction
+        /// pair falls through to the existing hostility rule (byte-identical). Defensive: any missing
+        /// manager/game/faction-entity/blob returns false. The entity argument is only the handle to reach the shared Game.
+        /// </summary>
+        private static bool IsAtWar(Entity fromEntity, int ownFactionId, int otherFactionId)
+        {
+            var game = fromEntity.Manager?.Game;
+            if (game == null) return false;
+            if (!game.Factions.TryGetValue(ownFactionId, out var factionEntity) || factionEntity == null || !factionEntity.IsValid)
+                return false;
+            if (!factionEntity.TryGetDataBlob<Pulsar4X.Factions.DiplomacyDB>(out var dip))
+                return false;
+            if (!dip.HasMet(otherFactionId))   // no relationship on record → not a declared war
+                return false;
+            return dip.GetRelationship(otherFactionId).AtWar;
         }
 
         /// <summary>
