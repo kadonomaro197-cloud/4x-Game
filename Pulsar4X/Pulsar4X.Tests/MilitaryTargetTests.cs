@@ -18,16 +18,19 @@ namespace Pulsar4X.Tests
     {
         /// <summary>Give a rival faction a colony sitting on a fresh body; return that body (the strike target).</summary>
         private static Entity GiveRivalAColony(TestScenario s, Entity rival)
-        {
-            var mgr = s.Game.GlobalManager;
+            => GiveRivalAColonyInManager(s, rival, s.Game.GlobalManager, 0);
 
+        /// <summary>Give a rival a colony of a set population on a fresh body added to the given manager (so the test
+        /// controls the target's VALUE and which star system it sits in — i.e. its reach).</summary>
+        private static Entity GiveRivalAColonyInManager(TestScenario s, Entity rival, EntityManager mgr, long pop)
+        {
             var body = Entity.Create();
             mgr.AddEntity(body);
 
             var colony = Entity.Create();
             colony.FactionOwnerID = rival.Id;
             mgr.AddEntity(colony);
-            colony.SetDataBlob(new ColonyInfoDB(new Dictionary<int, long>(), body));
+            colony.SetDataBlob(new ColonyInfoDB(new Dictionary<int, long> { { 1, pop } }, body));
 
             rival.GetDataBlob<FactionInfoDB>().Colonies.Add(colony);
             return body;
@@ -62,6 +65,30 @@ namespace Pulsar4X.Tests
 
             Assert.That(MilitaryTarget.NearestEnemyColonyBody(s.Faction), Is.EqualTo(Entity.InvalidEntity),
                 "a war with no enemy colony yields no ground target (massing/patrol is the fallback, not a strike)");
+        }
+
+        [Test]
+        [Description("BestEnemyTarget scores value x reach: a SMALLER but in-system prize beats a BIGGER but distant one (best given circumstances).")]
+        public void BestEnemyTarget_PicksReachableValueOverRawSize()
+        {
+            var s = TestScenario.CreateWithColony();
+            var reds = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+            Diplomacy.DeclareWar(s.Faction, reds, CasusBelli.ConfrontRival, s.Game.TimePulse.GameGlobalDateTime);
+
+            // A BIG prize in a DISTANT system (reach 0.35): 1,000,000 pop -> score 350,000.
+            var distantBig = GiveRivalAColonyInManager(s, reds, s.Game.GlobalManager, 1_000_000);
+            // A SMALLER prize in the SAME system as our own colony (reach 1.0): 500,000 pop -> score 500,000.
+            var nearSmall = GiveRivalAColonyInManager(s, reds, s.StartingSystem, 500_000);
+
+            var best = MilitaryTarget.BestEnemyTarget(s.Faction);
+
+            Assert.That(best.IsValid, Is.True, "we're at war with a colony-owning rival, so there's a real target");
+            Assert.That(best.ColonyBody, Is.EqualTo(nearSmall),
+                "the reachable 500k world (score 500k) beats the distant 1M world (score 350k) — reach discounts distance");
+
+            // No war -> no target (the invalid, byte-identical case).
+            Diplomacy.MakePeace(s.Faction, reds, s.Game.TimePulse.GameGlobalDateTime);
+            Assert.That(MilitaryTarget.BestEnemyTarget(s.Faction).IsValid, Is.False, "at peace there is no strike target");
         }
     }
 }
