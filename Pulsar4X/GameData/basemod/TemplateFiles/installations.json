@@ -723,6 +723,61 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "intelligence-directorate",
+      "Name": "Intelligence Directorate",
+      "Formulas": {
+        "Description": "The seat of your spy network. Sets how many concurrent covert operations your agents can run and your counter-intelligence rating against enemy agents operating on your soil.",
+        "Mass": "PropertyValue('Op Capacity') * 500",
+        "Volume": "[Mass] * 0.1",
+        "HTK": "0.5",
+        "CrewReq": "PropertyValue('Op Capacity') * 5",
+        "ResearchCost": "PropertyValue('Op Capacity') * 10",
+        "CreditCost": "200",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "iron": "[Mass] * 0.45",
+        "aluminium": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.1",
+        "plastic": "[Mass] * 0.1",
+        "stainless-steel": "[Mass] * 0.1",
+        "electronics": "[Mass] * 0.05"
+      },
+      "ComponentType": "Facility",
+      "MountType": "PlanetInstallation",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "Op Capacity",
+          "DescriptionFormula": "'How many concurrent covert operations your agents can run.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "10",
+          "MinFormula": "1",
+          "StepFormula": "1",
+          "PropertyFormula": "2"
+        },
+        {
+          "Name": "Counter Intel Rating",
+          "DescriptionFormula": "'Your defensive strength against enemy agents operating on your soil.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "100",
+          "MinFormula": "0",
+          "StepFormula": "5",
+          "PropertyFormula": "20"
+        },
+        {
+          "Name": "DBargs",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Op Capacity'), PropertyValue('Counter Intel Rating'))",
+          "AttributeType": "Pulsar4X.Factions.IntelDirectorateAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "spaceport",
       "Name": "Planetary Spaceport Complex",
       "Formulas": {
