@@ -1,3 +1,4 @@
+using System;
 using Newtonsoft.Json;
 using Pulsar4X.Components;
 using Pulsar4X.Engine;
@@ -50,6 +51,12 @@ namespace Pulsar4X.Factions
                     OpCapacity = OpCapacity,
                     CounterIntelRating = CounterIntelRating
                 });
+
+                // First directorate on this colony → start the recruiting cadence (E2). Scheduled only on the FIRST
+                // install so extra directorates raise capacity without stacking duplicate recruiting timers. The
+                // processor reschedules itself; it stops when the directorate is gone (the grave rung).
+                DateTime firstRecruit = parentEntity.StarSysDateTime + TimeSpan.FromDays(IntelDirectorateProcessor.RecruitIntervalDays);
+                parentEntity.Manager.ManagerSubpulses.AddEntityInterupt(firstRecruit, nameof(IntelDirectorateProcessor), parentEntity);
             }
         }
 

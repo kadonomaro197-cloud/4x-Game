@@ -47,7 +47,7 @@
 
 ## The CommanderTypes Enum
 
-Check `CommanderDB.cs` for the full `CommanderTypes` enum, but it likely includes `Navy`. A `Ground` type does not exist yet — this is one of the additions Phase 4 will need.
+`CommanderTypes` (in `Engine/DataStructures/Enums.cs`) is Navy / Ground / Scientist / Civilian / **Intelligence**. **Intelligence (Espionage E2, 2026-07-12)** is a covert operative (spy) — recruited by an Intelligence Directorate (`Factions/IntelDirectorateProcessor`, the naval-academy pattern) via `CommanderFactory.CreateAgent`. Its skill is a `BonusCategory.Espionage` "Tradecraft" bonus (`CommanderBonuses.RollEspionageCompetence`, scaled by ExperienceCap; `MaxEspionageCompetenceBonus` 0.6) read back through `CommanderBonuses.EspionageSkill01` (0..1) into the covert-op detection roll (`Factions/CovertRisk`). So an operative is the people/skill twin of a scientist, pointed at the spy game. Gauge: `IntelOperativeTests`.
 
 ---
 

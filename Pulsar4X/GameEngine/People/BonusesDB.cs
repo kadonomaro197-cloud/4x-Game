@@ -13,7 +13,10 @@ public enum BonusCategory
     // Combat competence categories — a commander's skill folded into the fleet auto-resolver
     // (the "a person's skill modifies an outcome" wire, rung 4). Read via CommanderBonuses.CombatMultiplier.
     Firepower,
-    Toughness
+    Toughness,
+    // Espionage E2 — a covert operative's tradecraft. Read via CommanderBonuses.EspionageSkill01 into the
+    // CovertRisk detection roll: higher skill raises op success and lowers the chance of being caught.
+    Espionage
 }
 
 public enum BonusType

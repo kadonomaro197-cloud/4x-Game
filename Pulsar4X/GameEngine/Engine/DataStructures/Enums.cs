@@ -265,7 +265,10 @@ namespace Pulsar4X.DataStructures
         Navy,
         Ground,
         Scientist,
-        Civilian
+        Civilian,
+        /// <summary>Espionage E2 — a covert operative (spy). Recruited by an Intelligence Directorate; carries an
+        /// Espionage competence bonus (tradecraft) that raises op success and lowers detection.</summary>
+        Intelligence
     }
 
     public enum GuidanceTypes

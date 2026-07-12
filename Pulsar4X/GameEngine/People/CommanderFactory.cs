@@ -83,6 +83,23 @@ namespace Pulsar4X.People
             return db;
         }
 
+        /// <summary>Espionage E2 — create a covert operative (spy). The intelligence twin of
+        /// <see cref="CreateScientist(Game)"/> / <see cref="CreateAcademyGraduate"/>: a <see cref="CommanderTypes.Intelligence"/>
+        /// commander. Recruited by the Intelligence Directorate (<see cref="Pulsar4X.Factions.IntelDirectorateProcessor"/>),
+        /// which rolls its <c>ExperienceCap</c> and stamps a <see cref="CommanderBonuses.RollEspionageCompetence"/>
+        /// tradecraft bonus onto the graduate's <see cref="BonusesDB"/>.</summary>
+        public static CommanderDB CreateAgent(Game game)
+        {
+            var agent = new CommanderDB()
+            {
+                Name = NameFactory.GetCommanderName(game),
+                Rank = 1,
+                Type = CommanderTypes.Intelligence
+            };
+
+            return agent;
+        }
+
         public static Scientist CreateScientist(Entity faction, Entity location)
         {
             //all this stuff needs a proper bit of code to get names from a file or something

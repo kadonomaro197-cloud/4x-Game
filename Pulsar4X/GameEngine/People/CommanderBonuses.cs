@@ -36,6 +36,12 @@ namespace Pulsar4X.People
         /// can find-and-replace ONLY it each growth step and never disturb the graduation "Research Aptitude" bonus.</summary>
         public const string ResearchExperienceBonusName = "Research Experience";
 
+        /// <summary>The ESPIONAGE competence a maximum-potential operative (ExperienceCap 200) contributes — the spy
+        /// twin of <see cref="MaxCombatCompetenceBonus"/>. Larger, because it reads directly into the detection roll
+        /// (<see cref="CovertRisk.Resolve"/>): a master agent at 0.6 cuts a covert op's effective detection risk to
+        /// 40% of baseline, but never to zero (there is always a chance of being caught). Tunable balance dial.</summary>
+        public const double MaxEspionageCompetenceBonus = 0.6;
+
         /// <summary>
         /// Read a commander's competence in a category as a combat multiplier: each matching bonus contributes a
         /// factor of <c>(1 + Value)</c> (so a Value of 0.15 = +15%); the product across all matching bonuses, and
@@ -127,6 +133,47 @@ namespace Pulsar4X.People
 
             result.Add(new Bonus(ResearchExperienceBonusName, frac, BonusType.Perentage, BonusCategory.ResearchPoints, techCategoryId));
             return result;
+        }
+
+        /// <summary>
+        /// Espionage E2 — generate an operative's TRADECRAFT (espionage competence) scaled by their
+        /// <paramref name="experienceCap"/> (0–200, the same bell-curve ceiling the academy rolls). The spy twin of
+        /// <see cref="RollCombatCompetence"/>: cap 200 → the full <see cref="MaxEspionageCompetenceBonus"/>, 100 →
+        /// half, ≤0 → none. Deterministic/pure. This value is what <see cref="EspionageSkill01"/> reads back into the
+        /// <see cref="CovertRisk"/> detection roll — so a better agent lands ops cleaner. Recruited operatives get one
+        /// of these on their <see cref="BonusesDB"/> (the Intelligence Directorate stamps it at recruitment).
+        /// </summary>
+        public static List<Bonus> RollEspionageCompetence(int experienceCap)
+        {
+            var result = new List<Bonus>();
+            if (experienceCap <= 0)
+                return result;
+
+            double frac = Math.Min(experienceCap, 200) / 200.0 * MaxEspionageCompetenceBonus;
+            if (frac <= 0)
+                return result;
+
+            result.Add(new Bonus("Tradecraft", frac, BonusType.Perentage, BonusCategory.Espionage));
+            return result;
+        }
+
+        /// <summary>
+        /// Read an operative's espionage skill as a 0..1 fraction for the <see cref="CovertRisk"/> detection roll: the
+        /// sum of every <see cref="BonusCategory.Espionage"/> bonus value on their <see cref="BonusesDB"/>, clamped to
+        /// [0, 1]. 0 when the DB is null or the agent carries no tradecraft (a raw recruit / a non-agent). Higher skill
+        /// → lower effective detection risk in <see cref="CovertRisk.Resolve"/>.
+        /// </summary>
+        public static double EspionageSkill01(BonusesDB bonuses)
+        {
+            if (bonuses == null)
+                return 0.0;
+
+            double skill = 0.0;
+            foreach (var bonus in bonuses.Bonuses)
+                if (bonus.Category == BonusCategory.Espionage)
+                    skill += bonus.Value;
+
+            return skill < 0.0 ? 0.0 : (skill > 1.0 ? 1.0 : skill);
         }
     }
 }
