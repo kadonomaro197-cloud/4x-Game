@@ -32,6 +32,8 @@ Each day, for each entity with `EntityResearchDB`:
 
 **Scientist bonus example:** a scientist with `{"propulsion": 1.5}` makes every lab point toward propulsion tech worth 1.5 points.
 
+**Scientist experience over time (2026-07-12, Exploration X.0-3).** `DoResearch` now grows an ASSIGNED scientist ENTITY's `CommanderDB.Experience` monthly (`ExperienceGainPerMonth` = 2, on `StarSysDateTime.Day == 1`) via `ResearchProcessor.GrowScientistExperience`, which stamps a growing `"Research Experience"` bonus on the scientist's `BonusesDB` in the category they research (capped at `ExperienceCap` — the school-set ceiling from the research academy, `People/CLAUDE.md`). `RefreshPointModifiers` is re-folded so the higher competence bites immediately. This is the entity-`BonusesDB` scientist path (`ResearcherDB.ScientistId` set by `AssignScientistOrder`), NOT the legacy `Scientist`-object path — so it is **byte-identical for the default start** (legacy scientists leave `ScientistId == -1`; nothing grows). Gauge: `ResearchExperienceTests`.
+
 ---
 
 ## Tech Data Model

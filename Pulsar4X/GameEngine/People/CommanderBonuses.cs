@@ -26,6 +26,16 @@ namespace Pulsar4X.People
         /// not just for combat officers.)</summary>
         public const double MaxResearchCompetenceBonus = 0.15;
 
+        /// <summary>The EXPERIENCE bonus a fully-experienced scientist (Experience 200) contributes ON TOP of their
+        /// graduation competence — the "bonus on top" of ceiling-now-plus-bonus (X.0-3). Smaller than the graduation
+        /// <see cref="MaxResearchCompetenceBonus"/>: the school sets most of a scientist's worth; a career adds a
+        /// modest extra. Tunable balance dial.</summary>
+        public const double MaxResearchExperienceBonus = 0.10;
+
+        /// <summary>The stable Name marker on the experience bonus, so <c>ResearchProcessor.GrowScientistExperience</c>
+        /// can find-and-replace ONLY it each growth step and never disturb the graduation "Research Aptitude" bonus.</summary>
+        public const string ResearchExperienceBonusName = "Research Experience";
+
         /// <summary>
         /// Read a commander's competence in a category as a combat multiplier: each matching bonus contributes a
         /// factor of <c>(1 + Value)</c> (so a Value of 0.15 = +15%); the product across all matching bonuses, and
@@ -94,6 +104,28 @@ namespace Pulsar4X.People
                 return result;
 
             result.Add(new Bonus("Research Aptitude", frac, BonusType.Perentage, BonusCategory.ResearchPoints, techCategoryId));
+            return result;
+        }
+
+        /// <summary>
+        /// Exploration X.0-3 — generate the EXPERIENCE research bonus scaled by a scientist's CURRENT
+        /// <paramref name="experience"/> (0–200), the "bonus on top" that grows as they work a lab. The exact shape
+        /// the reader folds (FilterId = the tech category, Type = Percentage, Category = ResearchPoints), but carrying
+        /// the distinct <see cref="ResearchExperienceBonusName"/> so it never collides with the graduation
+        /// "Research Aptitude" bonus (which is rolled from the CAP and left untouched — the school-set floor). Scaled:
+        /// experience 200 → the full <see cref="MaxResearchExperienceBonus"/>, 100 → half, ≤0 → none. Deterministic/pure.
+        /// </summary>
+        public static List<Bonus> RollResearchExperienceBonus(int experience, string techCategoryId)
+        {
+            var result = new List<Bonus>();
+            if (experience <= 0 || string.IsNullOrEmpty(techCategoryId))
+                return result;
+
+            double frac = Math.Min(experience, 200) / 200.0 * MaxResearchExperienceBonus;
+            if (frac <= 0)
+                return result;
+
+            result.Add(new Bonus(ResearchExperienceBonusName, frac, BonusType.Perentage, BonusCategory.ResearchPoints, techCategoryId));
             return result;
         }
     }
