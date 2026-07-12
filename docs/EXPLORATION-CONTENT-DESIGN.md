@@ -1,6 +1,6 @@
 # Exploration Content — the Field-Site Loop + Catalog (design)
 
-**Status:** concepts + path forward (design conversation 2026-07-07; developer's-vision + incident-shape added 2026-07-11). No engine code yet. Sits alongside `docs/DETECTION-DESIGN.md` (the survey/fog substrate this rides) and `docs/AI-SELF-PLAY-DESIGN.md` (scientists are leaders on the pipeline this gives a field career).
+**Status:** concepts + path forward (design conversation 2026-07-07; developer's-vision + incident-shape added 2026-07-11; **expanded catalog / "mine all of sci-fi" variety pass added 2026-07-12**; **X.1 ruins-tautology fix SHIPPED 2026-07-12** — build item 1's generation half is done, ruins now generate, the field-site consumer is next). Sits alongside `docs/DETECTION-DESIGN.md` (the survey/fog substrate this rides) and `docs/AI-SELF-PLAY-DESIGN.md` (scientists are leaders on the pipeline this gives a field career).
 
 ---
 
@@ -153,3 +153,68 @@ Every rung is reachable and losable — not a parachuted-in "exploration points"
 4. **Incident-response shape** (wire a hazard/accident event → a resolvable field site on a held world; reuses the loop + the existing hazard system) — this is what makes a *home system* full, so it earns early priority once the loop exists.
 5. **Space catalog + the four space-special dimensions** (derelicts/stars first; network-reshaping with the jump-network rework).
 6. **Event chains / crisis seeds** (anomalies) — last, likely its own system.
+
+---
+
+## Expanded catalog — the VARIETY of "episodes" (mine all of sci-fi, 2026-07-12)
+
+**Developer's ask (2026-07-12): draw on ALL of sci-fi media to widen the catalog — more variety of "episodes."** The density bar ("fill Sol for 250 years") is really a *variety* problem, and variety is **cheap if the AXES are right**. The locked rule holds: the one field-site loop never changes; an "episode" is a **combination** —
+
+> **PAYOFF** (why it's a prize) × **SHAPE** (persistent / one-shot / incident) × **HOOK** (the twist that makes it a story) × **narrative skin** (flavor + which franchise it evokes).
+
+A dozen payoffs × three shapes × a dozen hooks = **hundreds of distinct episodes from one machine** — no new engine per episode, exactly the "catalog is DATA" rule. This section widens the axes; it does **not** add machinery.
+
+### Axis 1 — the PAYOFF (twelve reasons a place is a prize)
+
+Each feeds a system that ALREADY exists (Connect). Grouped so no two are "+research in a hat."
+
+| # | Payoff | The prize (which existing system it feeds) | Media touchstones |
+|---|--------|--------------------------------------------|-------------------|
+| 1 | **Knowledge windfall** | a lump of research points / an instant level in a category | Prothean beacon (ME), Ancient repository (SG-1), the Monolith (2001) |
+| 2 | **Unique blueprint** | a component/ship design you CANNOT research normally (into the designer) | Forerunner tech (Halo), a captured alien hull (Independence Day/BSG) |
+| 3 | **Strategic material** | a rare resource on few worlds — an economic chokepoint (economy/industry) | spice (Dune), Element Zero (ME), ZPM (SG-1), dilithium (ST), FTL fuel (dev's Red Spot) |
+| 4 | **Population** | colonists / refugees / survivors — the colonist source (population) | lost colony (BSG), cryo-sleepers (Alien/Passengers), a generation ship |
+| 5 | **Biology & genetics** | fills the EMPTY Biology tech category; medical/terraform/troop-quality bonuses | xenobiology (ST), Genesis device (ST II), the Shimmer (Annihilation) |
+| 6 | **Strategic asset / superweapon** | a working device you hold — planetary shield, planet-killer, orbital gun (military) | Halo ring, Death Star tech, planet-killer (ST "Doomsday Machine"), the Great Machine (B5) |
+| 7 | **Network / geography** | a shortcut — a new jump route / gate / wormhole that reshapes the MAP (jump network) | mass relays (ME), the Ring gates (Expanse), the Stargate, hyperspace lanes (SW) |
+| 8 | **Intelligence** | a decoded signal, a rival's secret, a star chart (espionage/diplomacy) | Arrival, Contact (the Machine blueprint), a captured databank |
+| 9 | **A leader / ally** | a stranded commander, an awakened benevolent AI, a defector (people/commanders) | a marooned hero (BSG), a friendly AI (Halo's Cortana), TARS (Interstellar) |
+| 10 | **Hazard removed** | a standing threat on a held world neutralized → the world recovers (incident payoff) | disaster-of-the-week resolved (ST) |
+| 11 | **A crisis unleashed** | you awaken/release a threat — the SEED of the late-game crisis (crisis system) | the Flood (Halo), protomolecule (Expanse), the xenomorph (Alien), the Reapers (ME) |
+| 12 | **A choice with consequences** | no loot — a decision that swings relations/legitimacy/morale (diplomacy/politics) | the Prime Directive, "who gets the superweapon", uplift-or-don't |
+
+### Axis 2 — the SHAPE (locked: three)
+
+- **Persistent study** — yields over time, competence = the rate, persists as a standing bonus you hold. *(biosphere, exotic star, a living anomaly)*
+- **One-shot expedition** — resolves once on a success/quality roll, competence = the odds, then depletes. *(ruin, derelict, beacon)*
+- **Incident-response** — a thing happens TO a world you already hold, degrades it on a clock, competence = how fast/safely you resolve it. *(flare, outbreak, containment failure)*
+
+### Axis 3 — the HOOK (the twist that makes it an episode, not a vending machine)
+
+Modifiers on ANY payoff — the same "ancient ruin" becomes six different stories. Most are a **flag + a check**, not a new system.
+
+| Hook | What it adds | Media |
+|------|-------------|-------|
+| **Guardian / trap** | the site fights back — kills the team unless you bring force or a specific counter | Stargate traps, Halo Sentinels, ME ruins |
+| **Timed / transient** | a WINDOW — a comet, a decaying-orbit derelict, an alignment | Rama (Clarke), a passing rogue planet |
+| **Contested / race** | a rival works it too — first to finish wins, or you fight over it | everyone wants the spice |
+| **Gated by capability** | can't even start without a specific tech / sensor / hazard-suit | corrosive atmosphere (dev's Red Spot), hard radiation, deep pressure |
+| **Cursed / backfire** | success can go WRONG — activation misfires, the dig wakes something | Event Horizon, the Monkey's-Paw device |
+| **Reactive / sentient** | the site responds to how you treat it — observe vs. exploit changes the outcome | Solaris, a living ship (Farscape), a space-jellyfish (ST) |
+| **Chained / breadcrumb** | finishing it reveals the NEXT site — a mystery arc | the Reaper trail (ME), the Ring mystery (Expanse) |
+| **Moral fork** | the yield costs something — uplift-or-interfere, sacrifice the inhabitants for the tech | the Prime Directive |
+
+### Signature episodes (a few fully-drawn, developer's-vision style)
+
+- **The buried fleet** *(Mars/Luna · one-shot × unique-blueprint × guardian)* — a dig turns up a *dormant precursor warship*, a hull you could never research; its automated defenses wake as you excavate, so bring a ground force or lose the team. *(Connect: ruins → blueprint into the ship designer; a ground-combat guardian fight.)*
+- **The singing star** *(a pulsar · persistent × knowledge × gated)* — only a hardened sensor can study it without frying the lab; it slowly fills the near-empty Stellar Science tree and holding the system is a standing research bonus. *(Connect: exotic-star site → Stellar Science; sensor-flavor gate; system-value.)*
+- **Cold Lazarus** *(Europa · incident × crisis-seed × contain-or-spread)* — your mine cracks the ice and something *swims out*; contain it for a xenobiology windfall + a war-beast option, or fail and it spreads to the colony then to ships in orbit — a home-grown rehearsal of the late-game crisis. *(Connect: hazard/incident loop → biology tech OR the crisis system; ground/boarding defense.)*
+- **The lighthouse** *(deep space · one-shot × network × chained)* — a decoded alien buoy reveals a *hidden jump point*, a back door into a rival's core and a breadcrumb to the next buoy. *(Connect: revive `JPFactory.CreateConnection`; the jump-network rework.)*
+- **First words** *(a pre-warp world or a signal · persistent × choice × intelligence)* — study covertly for intel and a knowledge trickle, or make contact and pay the diplomatic price. The Prime Directive as a *lever*. *(Connect: diplomacy/first-contact; the espionage ledger.)*
+
+### What's cheap CONNECT vs. what needs a small new hook
+
+- **Pure DATA on the existing loop (cheap):** payoffs 1–5, 8, 9 land on systems that already exist (research, economy, population, the designer, people). Most hooks (guardian, timed, contested, gated, cursed, moral-fork) are a **flag + a check**, not a new system.
+- **Needs a modest new hook (already in this doc's "open" frontier):** #7 network-reshaping (revive `CreateConnection`), #11 crisis-unleashed (ties to the ascension/crisis seed), and the **reactive/sentient** hook (a small "site reacts to your stance" rule).
+
+**Bottom line:** widening the catalog is an *authoring* job (more DATA rows across these axes), not an *engineering* one. Build the loop + a handful of payoff wires once; then "more episodes" is content, and the four axes make the content combinatorial — which is exactly how one home system fills with four seasons of episodes.
