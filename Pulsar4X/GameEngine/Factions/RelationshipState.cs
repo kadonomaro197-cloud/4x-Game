@@ -72,6 +72,14 @@ namespace Pulsar4X.Factions
         /// <summary>When the two factions last made contact (first-contact / last diplomatic exchange). Null = never met.</summary>
         [JsonProperty] public DateTime? LastContact { get; internal set; } = null;
 
+        /// <summary>
+        /// Espionage E3 (risk model F3, the deniability game) — how strongly THIS faction suspects the OTHER of
+        /// running covert ops against it, on a 0..100 meter. A caught op spikes it; a "traced" op (they noticed but
+        /// can't prove who) nudges it. High suspicion is what turns quiet sabotage into a justified war — you can hurt
+        /// a rival in the dark, but every trace stacks until they're sure. Fed by <see cref="Pulsar4X.Factions.CovertRisk.SuspicionAfter"/>.
+        /// </summary>
+        [JsonProperty] public double Suspicion { get; internal set; } = 0.0;
+
         public RelationshipState() { }
 
         public RelationshipState(int otherFactionId)
@@ -90,6 +98,7 @@ namespace Pulsar4X.Factions
             MilitaryAccess = other.MilitaryAccess;
             DefensivePact = other.DefensivePact;
             LastContact = other.LastContact;
+            Suspicion = other.Suspicion;
         }
 
         public RelationshipState Copy() => new RelationshipState(this);
