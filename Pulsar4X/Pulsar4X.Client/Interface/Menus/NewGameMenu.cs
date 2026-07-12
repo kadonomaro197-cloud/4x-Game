@@ -730,9 +730,14 @@ public class NewGameMenu : PulsarGuiWindow
             ModLoader modLoader = new ModLoader();
             ModDataStore modDataStore = new ModDataStore();
 
+            // Quickstart is the "just start with the sane defaults" path, so load ONLY the mods whose manifest marks
+            // them DefaultEnabled (the base mod) — never a test-only stub, and independent of whatever the New-Game
+            // mod page happened to toggle in this session. The Pulsar4x-Testing mod ships incomplete data (a few
+            // themes + one armor, no components) and breaks colony build / leaves nothing buildable if it loads, so a
+            // Quickstart must never pick it up. The full New Game wizard still honours the player's explicit mod choices.
             foreach (var modMetadata in ModsState.AvailableMods)
             {
-                if (ModsState.IsModEnabled[modMetadata.Mod.ModName])
+                if (modMetadata.Mod.DefaultEnabled)
                 {
                     modLoader.LoadModManifest(modMetadata.Path, modDataStore);
                 }
