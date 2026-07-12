@@ -122,5 +122,50 @@ namespace Pulsar4X.Tests
             Assert.That(menace.GetDataBlob<DiplomacyDB>().GetOrCreateRelationship(reds.Id).AtWar, Is.True,
                 "war is two-sided — the Menace now counts us among its enemies");
         }
+
+        [Test]
+        [Description("Phase-3.4c: once the shared threat is gone, a LOW-Honour ally BREAKS the defensive pact (the coalition cracks); a HIGH-Honour one keeps faith.")]
+        public void RunTreatyPolicy_WhenThreatIsGone_LowHonourCracksThePact_HighHonourKeepsFaith()
+        {
+            // --- Low-Honour faction: it defects once there's no common enemy left. ---
+            var s = TestScenario.CreateWithColony();
+            var faithless = FactionFactory.CreateBasicFaction(s.Game, "Faithless", "FTH", 0);
+            var ally = FactionFactory.CreateBasicFaction(s.Game, "Ally", "ALY", 0);
+
+            var faithlessDip = faithless.GetDataBlob<DiplomacyDB>();
+            var allyDip = ally.GetDataBlob<DiplomacyDB>();
+            faithlessDip.GetOrCreateRelationship(ally.Id).DefensivePact = true;
+            allyDip.GetOrCreateRelationship(faithless.Id).DefensivePact = true;
+
+            // No sensor contacts → GreatestThreatTo names nobody (the shared threat is defeated/gone).
+            var lowHonour = new PersonalityDB();
+            lowHonour.SetTrait(PersonalityTrait.Honor, 0.1);   // below the abandon temptation (0.5) → won't keep faith
+            faithless.SetDataBlob(lowHonour);
+
+            NPCDecisionProcessor.RunTreatyPolicy(faithless);
+
+            Assert.That(faithlessDip.GetOrCreateRelationship(ally.Id).DefensivePact, Is.False,
+                "with the threat gone, a low-Honour faction sheds the pact — the coalition cracks");
+            Assert.That(allyDip.GetOrCreateRelationship(faithless.Id).DefensivePact, Is.False,
+                "BreakTreaty clears the flag on BOTH ledgers — the pact no longer binds either side");
+
+            // --- High-Honour faction: same situation, but it holds the line. ---
+            var s2 = TestScenario.CreateWithColony();
+            var loyal = FactionFactory.CreateBasicFaction(s2.Game, "Loyal", "LYL", 0);
+            var friend = FactionFactory.CreateBasicFaction(s2.Game, "Friend", "FRD", 0);
+
+            var loyalDip = loyal.GetDataBlob<DiplomacyDB>();
+            loyalDip.GetOrCreateRelationship(friend.Id).DefensivePact = true;
+            friend.GetDataBlob<DiplomacyDB>().GetOrCreateRelationship(loyal.Id).DefensivePact = true;
+
+            var highHonour = new PersonalityDB();
+            highHonour.SetTrait(PersonalityTrait.Honor, 0.9);   // above the temptation → keeps faith
+            loyal.SetDataBlob(highHonour);
+
+            NPCDecisionProcessor.RunTreatyPolicy(loyal);
+
+            Assert.That(loyalDip.GetOrCreateRelationship(friend.Id).DefensivePact, Is.True,
+                "a high-Honour faction keeps the pact even with no enemy left to justify it");
+        }
     }
 }

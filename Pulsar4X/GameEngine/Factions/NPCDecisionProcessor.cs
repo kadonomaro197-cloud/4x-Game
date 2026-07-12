@@ -48,6 +48,12 @@ namespace Pulsar4X.Factions
         /// </summary>
         public static bool EnableDiplomaticProposals = false;
 
+        /// <summary>Phase-3.4c tunable: the "shed the obligation" temptation a defensive pact exerts once the shared
+        /// threat is gone, measured against a faction's Honour (<see cref="Treaties.WouldKeepFaith"/>). At 0.5 a
+        /// Neutral-Honour (or personality-less) faction sits exactly on the keep-faith line, so it does NOT break —
+        /// only a below-neutral-Honour faction cracks the coalition. Provisional; live-tunable.</summary>
+        public const double PactAbandonTemptation = 0.5;
+
         private Game _game;
 
         public void Init(Game game)
@@ -283,6 +289,31 @@ namespace Pulsar4X.Factions
             // Deliberately rare: it needs both a feared rival AND an Allied-trust (75) partner, so it fires only when a
             // real alliance-against-a-common-enemy is on the table — the diplomatic seed a coalition (3.4) grows from.
             int threatId = ThreatAssessment.GreatestThreatTo(factionEntity).rivalId;
+
+            // Pass C (Phase-3.4c — the CRACK: a coalition betrays once the shared threat DIES). A defensive pact
+            // formed against a common enemy loses its reason to exist the moment that enemy is neutralized. When we
+            // no longer fear anyone (GreatestThreatTo names nobody → threatId == -1), a LOW-HONOUR faction sheds the
+            // obligation — it BREAKS the pact for the freedom of not being entangled; a HIGH-HONOUR faction keeps
+            // faith regardless (Treaties.WouldKeepFaith: honour vs the abandon temptation). Breaking the pact re-arms
+            // the two former allies (3.4a's peace-suppression is gone the instant the flag drops), so betrayal has
+            // teeth. Gated on "no current threat," so it is mutually exclusive with Pass 1 (which needs a threat) —
+            // the alliance forms vs a riser and cracks when it dies, exactly the 3.4 acceptance line. One move/cycle.
+            if (threatId == -1)
+            {
+                factionEntity.TryGetDataBlob<PersonalityDB>(out var personality);   // null → Neutral honour (keeps faith)
+                if (!Treaties.WouldKeepFaith(personality, PactAbandonTemptation))
+                {
+                    foreach (var rel in dipDB.Relationships.Values)
+                    {
+                        if (!rel.DefensivePact) continue;                          // only a still-standing pact can crack
+                        if (rel.OtherFactionId == factionEntity.Id || rel.OtherFactionId == Game.NeutralFactionId) continue;
+                        if (!game.Factions.TryGetValue(rel.OtherFactionId, out var former)) continue;
+                        if (Diplomacy.BreakTreaty(factionEntity, former, TreatyType.DefensivePact, game.TimePulse.GameGlobalDateTime))
+                            return;   // one treaty move per cycle
+                    }
+                }
+            }
+
             if (threatId != -1)
             {
                 foreach (var rel in dipDB.Relationships.Values)
