@@ -164,7 +164,29 @@
       "MaxLevel": 15,
       "DataFormula": "0.0 + [Level] * 0.05 ",
       "Category": "tech-category-power-propulsion",
-      "CostFormula": "500 + [Level] * 500"
+      "CostFormula": "500 + [Level] * 500",
+      "Unlocks": {
+        "1": [
+          "tech-ascension"
+        ]
+      }
+    }
+  },
+  {
+    "Type": "Tech",
+    "Payload": {
+      "UniqueID": "tech-ascension",
+      "Name": "Transcendence",
+      "Description": "The apex of stellar science: to unravel and reforge matter at stellar scale. A faction that completes this research ASCENDS — it wields a power the rest of the galaxy cannot match, and becomes the shared existential threat every other power unites to stop. Grants the 'capability-ascension' galaxy-crisis capability (Galaxy phase 4.1/4.2). Gated behind mastery of the Alcubierre warp branch; cost and placement are a first cut to tune.",
+      "MaxLevel": 1,
+      "DataFormula": "1",
+      "Category": "tech-category-stellar-science",
+      "CostFormula": "250000",
+      "Unlocks": {
+        "1": [
+          "capability-ascension"
+        ]
+      }
     }
   },
   {

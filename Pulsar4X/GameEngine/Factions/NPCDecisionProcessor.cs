@@ -54,10 +54,14 @@ namespace Pulsar4X.Factions
         /// only a below-neutral-Honour faction cracks the coalition. Provisional; live-tunable.</summary>
         public const double PactAbandonTemptation = 0.5;
 
-        /// <summary>Phase-4.2b gate: when true, each cycle checks for a galaxy CRISIS (a faction that has ascended) and
-        /// forms the NPC coalition against it (declare war, reuse Phase-3.4). Defaults <b>false</b> → byte-identical
-        /// (no ascendant exists in any current game). Galaxy-level + idempotent, so running it per-NPC-tick is safe.</summary>
-        public static bool EnableGalaxyCrisis = false;
+        /// <summary>Phase-4 gate: when true, each cycle checks for a galaxy CRISIS (a faction that has ascended) and
+        /// forms the NPC coalition against it (declare war, reuse Phase-3.4). <b>LIVE by default as of the Phase-4 finish
+        /// (2026-07-12)</b> — the ascension is now reachable in a real game (the <c>tech-ascension</c> "Transcendence"
+        /// research grants <c>capability-ascension</c>), so the crisis actually triggers. Still byte-identical across the
+        /// test suite: nothing there researches the new tech, so no faction holds the capability and the coalition call
+        /// is a no-op (returns 0). Galaxy-level + idempotent, so running it per-NPC-tick is safe; kept as a flag so a
+        /// scenario/test can disable it.</summary>
+        public static bool EnableGalaxyCrisis = true;
 
         private Game _game;
 
