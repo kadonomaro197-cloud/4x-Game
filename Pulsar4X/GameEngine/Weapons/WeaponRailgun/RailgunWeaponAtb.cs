@@ -35,15 +35,32 @@ namespace Pulsar4X.Weapons
         /// this is near zero — it can't correct after the slug leaves the barrel.</summary>
         [JsonProperty] public double Tracking { get; internal set; }
 
+        /// <summary>RECOIL — the kick this gun delivers to its own ship each shot (Weapons pilot W4). A heavy gun on a
+        /// light hull throws the whole ship off its aim, so <see cref="Pulsar4X.Combat.ShipCombatValueDB"/> reduces the
+        /// weapon's EFFECTIVE tracking by <c>chassisMass / (chassisMass + Recoil)</c> at build — the same gun tracks
+        /// worse on a frigate than on a battleship. 0 = a recoilless mount / no penalty (byte-identical). Units are
+        /// mass-comparable (kg-scale) so recoil ≈ a fraction of the hull's mass is a meaningful penalty. Trailing ctor
+        /// arg so a template that omits it binds at 0.</summary>
+        [JsonProperty] public double Recoil { get; internal set; }
+
         public RailgunWeaponAtb() { }
 
-        /// <summary>JSON constructor. Arg order MUST match <c>AtbConstrArgs(...)</c> in weapons.json.</summary>
+        /// <summary>JSON constructor (original 4-arg form). The component binder (<c>Activator.CreateInstance</c>) matches
+        /// ctors by EXACT ARITY — a default/optional param does NOT count — so this explicit 4-arg overload must stay for
+        /// the existing <c>railgun-weapon</c> template's 4-value <c>AtbConstrArgs(...)</c> to bind (recoil defaults 0).</summary>
         public RailgunWeaponAtb(double muzzleVelocity, double kineticEnergyPerShot, double roundsPerSecond, double tracking)
+            : this(muzzleVelocity, kineticEnergyPerShot, roundsPerSecond, tracking, 0) { }
+
+        /// <summary>JSON constructor WITH recoil (Weapons pilot W4). A template that dials recoil passes a 5th value.
+        /// Arg order MUST match <c>AtbConstrArgs(...)</c> in weapons.json.</summary>
+        public RailgunWeaponAtb(double muzzleVelocity, double kineticEnergyPerShot, double roundsPerSecond, double tracking,
+            double recoil)
         {
             MuzzleVelocity_mps = muzzleVelocity;
             KineticEnergyPerShot_J = kineticEnergyPerShot;
             RoundsPerSecond = roundsPerSecond;
             Tracking = tracking;
+            Recoil = recoil < 0 ? 0 : recoil;
         }
 
         public RailgunWeaponAtb(RailgunWeaponAtb db)
@@ -52,6 +69,7 @@ namespace Pulsar4X.Weapons
             KineticEnergyPerShot_J = db.KineticEnergyPerShot_J;
             RoundsPerSecond = db.RoundsPerSecond;
             Tracking = db.Tracking;
+            Recoil = db.Recoil;
         }
 
         // No-op install/uninstall: a railgun contributes to the combat VALUE (auto-resolve), not the parked

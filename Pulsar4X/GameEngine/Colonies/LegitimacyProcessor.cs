@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Pulsar4X.Datablobs;
 using Pulsar4X.Engine;
 using Pulsar4X.Interfaces;
@@ -26,6 +27,18 @@ namespace Pulsar4X.Colonies
         public TimeSpan RunFrequency { get; } = TimeSpan.FromDays(30);
         public TimeSpan FirstRunOffset { get; } = TimeSpan.FromDays(30);
         public Type GetParameterType { get; } = typeof(LegitimacyDB);
+
+        /// <summary>
+        /// Phase gate (docs/GOVERNMENT-AND-POLITICS-DESIGN.md §Demands — the popular-demands pillar): when true, a
+        /// province's UNANSWERED political demands actually erode its legitimacy each cycle. This is the LIVE CONSUMER
+        /// for the previously-dark <see cref="Pulsar4X.Factions.DemandEngine"/> / <see cref="Pulsar4X.Factions.DemandResolution"/>
+        /// logic (built with zero callers): the processor surfaces the province's demands and applies their resolution
+        /// delta. Defaults <b>false</b> so the whole existing suite stays byte-identical until a client/test opts in —
+        /// a SIBLING of <see cref="Pulsar4X.Factions.NPCDecisionProcessor.EnableIntelLedger"/> (its own flag, flippable
+        /// alone). The v1 response model treats every surfaced demand as REFUSED (there is no minister/player-response
+        /// wiring yet — nobody enacted it), so demands are a standing legitimacy DRAG, not a swing.
+        /// </summary>
+        public static bool EnablePopularDemands = false;
 
         public void Init(Game game) { }
 
@@ -55,6 +68,17 @@ namespace Pulsar4X.Colonies
             var inputs = LegitimacyInputs.FromMorale(morale);
             inputs.WarOutcome = WarTermFor(province);   // 0 in peace; while at war, gated by militarism
             legitimacy.Legitimacy = LegitimacyDB.ComputeLegitimacy(inputs, legitimacy.Factors);
+
+            // Popular-demands pillar (F-C2, docs/GOVERNMENT-AND-POLITICS-DESIGN.md): the demand engine's UNANSWERED
+            // demands drag legitimacy down. This is the LIVE WIRE for DemandEngine + DemandResolution (built with no
+            // callers). Gated so it's byte-identical until opted in; when on, the delta is applied on top of the
+            // morale/war baseline and re-clamped, with the total recorded in the Factors gauge (why, not just the number).
+            if (EnablePopularDemands)
+            {
+                double demandDelta = DemandLegitimacyDelta(province);
+                legitimacy.Legitimacy = ClampLegitimacy(legitimacy.Legitimacy + demandDelta);
+                legitimacy.Factors["popular_demands"] = demandDelta;
+            }
 
             // Legitimacy collapse drives the REBELLION state (#38): begin a rebellion (start the reaction window)
             // when it falls into the collapse band, quell it when legitimacy is restored. The window-expiry
@@ -107,5 +131,45 @@ namespace Pulsar4X.Colonies
                 return gov.WarMoraleFactor();
             return new Pulsar4X.Factions.GovernmentDB().WarMoraleFactor();   // no regime set → neutral Mid default
         }
+
+        /// <summary>
+        /// The legitimacy delta from this province's UNANSWERED popular demands (F-C2). Surfaces the province's
+        /// political demands with <see cref="Pulsar4X.Factions.DemandEngine.SurfaceDemands"/> — which reads the SAME
+        /// <see cref="ColonyMoraleDB.Factors"/> breakdown the morale system already computes (tax/employment/
+        /// conditions/crowding), under the owning faction's government and war status — then treats each as REFUSED
+        /// (no minister/player response is wired yet) and sums <see cref="Pulsar4X.Factions.DemandResolution.LegitimacyDelta"/>.
+        /// Returns 0 when nothing organises a demand (a content province, or no morale blob). Defensive/no-throw
+        /// (runs in the monthly hotloop, gotcha L4). Internal for the CI gauge.
+        /// </summary>
+        internal static double DemandLegitimacyDelta(Entity province)
+        {
+            var government = Pulsar4X.Factions.GovernmentTools.OwnerOf(province);
+
+            Dictionary<string, double> moraleFactors = null;
+            if (province.TryGetDataBlob<ColonyMoraleDB>(out var moraleDB))
+                moraleFactors = moraleDB.Factors;
+
+            var demands = Pulsar4X.Factions.DemandEngine.SurfaceDemands(moraleFactors, government, IsOwnerAtWar(province));
+
+            double delta = 0.0;
+            foreach (var demand in demands)
+                delta += Pulsar4X.Factions.DemandResolution.LegitimacyDelta(
+                    demand, Pulsar4X.Factions.DemandResponse.Refuse, government);
+            return delta;
+        }
+
+        /// <summary>True if this province's owning faction is at war with anyone (the war-demand flavour switch).
+        /// Defensive: any missing game / faction / ledger reads as peace.</summary>
+        private static bool IsOwnerAtWar(Entity province)
+        {
+            var game = province.Manager?.Game;
+            if (game == null) return false;
+            if (!game.Factions.TryGetValue(province.FactionOwnerID, out var faction) || faction == null || !faction.IsValid)
+                return false;
+            return faction.TryGetDataBlob<Pulsar4X.Factions.DiplomacyDB>(out var dip) && dip.IsAtWarWithAnyone();
+        }
+
+        /// <summary>Clamp a legitimacy value into its 0..100 band (LegitimacyDB's own clamp is private).</summary>
+        private static double ClampLegitimacy(double v) => v < 0.0 ? 0.0 : (v > 100.0 ? 100.0 : v);
     }
 }

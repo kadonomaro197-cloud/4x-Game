@@ -46,7 +46,17 @@ namespace Pulsar4X.People
                     commanderDB.Experience = 0;
                 }
 
-                CommanderFactory.Create(entity.Manager, entity.FactionOwnerID, commanderDB);
+                var commanderEntity = CommanderFactory.Create(entity.Manager, entity.FactionOwnerID, commanderDB);
+
+                // Rung-4 GENERATOR (slice 3c): turn the graduate's competence into combat bonuses on their
+                // BonusesDB (previously left empty), scaled by ExperienceCap. When this officer is later seated as
+                // a fleet's flagship, CombatEngagement folds these via CommanderBonuses.CombatMultiplier — so a
+                // better-trained admiral wins harder. Closes the academy → skill → fight loop.
+                if (commanderEntity.TryGetDataBlob<BonusesDB>(out var bonusesDB))
+                {
+                    foreach (var bonus in CommanderBonuses.RollCombatCompetence(commanderDB.ExperienceCap))
+                        bonusesDB.Bonuses.Add(bonus);
+                }
             }
 
             // Remove the graduated class

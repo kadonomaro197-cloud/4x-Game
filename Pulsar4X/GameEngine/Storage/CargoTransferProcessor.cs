@@ -175,6 +175,13 @@ namespace Pulsar4X.Storage
                 return;
 
             massdb.UpdateMassTotal();
+            // Reactionless (⚙2): a no-propellant drive has no fuel type to look up — skip the cargo query and let
+            // SetFuel pin the (unlimited) delta-V. Guards against an empty/None FuelType reaching the cargo library.
+            if (newtdb.Reactionless)
+            {
+                newtdb.SetFuel(0, massdb.MassTotal);
+                return;
+            }
             var cargoLib = entity.GetFactionCargoDefinitions();
             var fuelTypeID = newtdb.FuelType;
             var fuelType = cargoLib.GetAny(fuelTypeID);

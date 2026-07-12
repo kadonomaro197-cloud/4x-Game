@@ -113,6 +113,31 @@ namespace Pulsar4X.Client
             Pulsar4X.Combat.CombatEngagement.RequireWeaponRangeToEngage = true;
             Pulsar4X.Combat.CombatEngagement.RequireWeaponsReleaseToEngage = true;
 
+            // Fire control → tracking (Sensors ⚙3): a ship's beam-fire-control director now actually improves how well
+            // its beams track an evasive target (the dead BeamFireControlAtbDB.TrackingSpeed knob, wired). Off by
+            // default in the engine (the fire-control component already lives on the test ships with a non-neutral
+            // value, so wiring it changes those fixtures — gated like the closing/detection flags); ON for the game.
+            Pulsar4X.Combat.ShipCombatValueDB.EnableFireControlTracking = true;
+
+            // Fire control → PD-only mode (Sensors ⚙3): a ship with a FinalFireOnly (CIWS) director routes its beams
+            // into point-defense (missile interception) instead of anti-ship fire (the dead BeamFireControlAtbDB.
+            // FinalFireOnly knob, wired). Off by default in the engine (byte-identical — no base ship has such a
+            // director, but gated to match its sibling flags); ON for the game.
+            Pulsar4X.Combat.ShipCombatValueDB.EnableFinalFireOnlyPD = true;
+
+            // EW barrage jamming (Sensors ⚙3 ▸ EW): a jammer floods the band so hostile sensors detect at shorter range
+            // (and lights the jammer itself up as a beacon). Byte-identical until a jammer exists; ON for the game.
+            Pulsar4X.Sensors.JammerAtb.EnableJamming = true;
+
+            // Reactor-load heat (Sensors ⚙3 / Power ⚙4): a ship's running reactor now adds to its emitted signature,
+            // so a hot power plant lights up an otherwise-dark hull. Byte-identical off; ON for the game.
+            Pulsar4X.Sensors.EmconActivityProcessor.EnableReactorHeat = true;
+
+            // Ship mass-budget enforcement (Chassis ⚙11): a design whose mass exceeds its mounted hull's Mass Budget
+            // is marked invalid so the production list refuses it — the §0b "the physical budget forces the build"
+            // gate made to bite. Byte-identical off (every base-mod ship is under budget); ON for the game.
+            Pulsar4X.Ships.ShipDesign.EnforceMassBudget = true;
+
             try
             {
                 string? appDataDirectory = GetAppDataPath();

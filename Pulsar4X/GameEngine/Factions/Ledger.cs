@@ -10,7 +10,14 @@ public enum TransactionCategory
     InitialInvestment,
     Research,
     ColonyTax,
-    StationUpkeep
+    StationUpkeep,
+    // F-C1 (docs/AI-BRAIN-BUILD-TRACKER.md, Movement I): income from a standing inter-faction TRADE AGREEMENT.
+    // The category the (gated) trade-payout processor books commerce income under — until now trade earned nothing,
+    // so the Trade Minister role had nothing to manage. Adding the value is byte-identical (nothing produces it yet).
+    Trade,
+    // Espionage E6: funds siphoned to/from a faction by a covert steal-funds op (both the victim's loss and the
+    // spy's gain book under this). Added last so existing integer values are stable (save-compat).
+    Espionage
 }
 
 public class Transaction

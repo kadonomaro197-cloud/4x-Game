@@ -55,5 +55,35 @@ namespace Pulsar4X.Colonies
             if (crew > 0 && sourceColony != null && sourceColony.TryGetDataBlob<ColonyManpowerDB>(out var manpower))
                 manpower.ReleaseBulk(crew);
         }
+
+        // ── TALENT (the scarce half) — the anti-dominance handle for Enhancers ⚙6.2 Unit Caliber ──
+        // A veteran cadre is drawn from a colony's SCARCE TALENT pool (officers/specialists), not bulk workforce.
+        // So an elite hull can't be spammed: talent is ~0.5% of population, and an elite ship ties some up until it
+        // dies. Mirrors the crew half exactly, INERT WHEN ABSENT (a talent-less host — or a ship with no caliber
+        // module, talentRequired 0 — always proceeds and commits nothing → byte-identical).
+
+        /// <summary>Whether <paramref name="host"/> has <paramref name="talentRequired"/> free talent to commit right
+        /// now. True when the host has no manpower pool (unenforced) or the requirement is ≤ 0. Unlike the bulk crew
+        /// gate this is a HARD wall (no conscript-understaffed policy — you can't fake a veteran crew).</summary>
+        public static bool HasTalentToBuild(Entity host, long talentRequired)
+        {
+            if (talentRequired <= 0) return true;
+            if (host == null || !host.TryGetDataBlob<ColonyManpowerDB>(out var manpower)) return true;
+            return manpower.CanCommitTalent(PopulationOf(host), talentRequired);
+        }
+
+        /// <summary>Commit scarce talent from the host's pool (no-op if the host has no pool or talent ≤ 0).</summary>
+        public static void CommitTalent(Entity host, long talent)
+        {
+            if (talent > 0 && host != null && host.TryGetDataBlob<ColonyManpowerDB>(out var manpower))
+                manpower.CommitTalent(talent);
+        }
+
+        /// <summary>Release committed talent back to the source colony's pool when the ship that drew it is destroyed.</summary>
+        public static void ReleaseTalent(Entity sourceColony, long talent)
+        {
+            if (talent > 0 && sourceColony != null && sourceColony.TryGetDataBlob<ColonyManpowerDB>(out var manpower))
+                manpower.ReleaseTalent(talent);
+        }
     }
 }

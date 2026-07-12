@@ -28,11 +28,11 @@ namespace Pulsar4X.Sensors
     /// the right key anyway: only ships have an EMCON posture + activity, so it auto-scopes to ships, and planets/
     /// stars (no ShipInfoDB) are never touched — their signature stays as-is.
     ///
-    /// NOTE — reactor load is NOT a heat input here yet (it's a marginal signal next to thrust, which already
-    /// dominates). The <c>EnergyGenAbilityDB.Load</c> inversion bug that originally blocked it was FIXED (slice D —
-    /// <c>EnergyGenProcessor.CalcLoad</c> is now <c>Demand/TotalOutputMax</c> clamped 0-1), so folding reactor-load
-    /// into the heat factor is now unblocked — just not wired (do it via the fixed <c>Load</c> if it earns its keep).
-    /// Thrust + firing are the dominant, clean signals.
+    /// REACTOR LOAD is now wired (S5, ⚙4 Power ▸ signature/heat): the heat factor gains <c>ReactorHeat × ReactorLoad</c>
+    /// (the ship's live <c>EnergyGenAbilityDB.Load</c>, 0..1) when <see cref="EnableReactorHeat"/> is on — a plant under
+    /// load emits, so a hot ship is seen farther. Gated OFF by default (a live reactor idles at some baseload, so it
+    /// changes existing signatures) → byte-identical; the client turns it on. Thrust + firing are still the dominant
+    /// signals; reactor load is the steady-state floor beneath them.
     /// </summary>
     public class EmconActivityProcessor : IHotloopProcessor
     {
@@ -44,6 +44,24 @@ namespace Pulsar4X.Sensors
         /// <summary>Heat added while firing weapons ("you can't shoot quietly"). 1.0 ⇒ ~2× louder while the guns
         /// are hot. A briefer spike than thrust; tunable.</summary>
         public const double WeaponHeat = 1.0;
+
+        /// <summary>Heat added by a reactor running at FULL load (⚙4 Power ▸ signature/heat — the dossier's ◐ wire; the
+        /// class summary above flagged it "unblocked but not wired"). A power plant under load EMITS — a loud reactor
+        /// lights up an otherwise "dark" ship. Scales with the reactor's current load (0 idle → this at full). The KEY
+        /// power-stealth tunable.</summary>
+        public const double ReactorHeat = 1.0;
+
+        /// <summary>Master gate for the reactor-load heat term. Default OFF → the term is never added → byte-identical
+        /// (a live reactor idles at some baseload, so folding it in changes existing ships' signatures — gated like the
+        /// fire-control / detection flags). The client turns it on.</summary>
+        public static bool EnableReactorHeat = false;
+
+        /// <summary>This ship's reactor load (0..1): how hard its power plant is running right now, read from
+        /// <see cref="Pulsar4X.Energy.EnergyGenAbilityDB.Load"/> (Demand ÷ TotalOutputMax, clamped by
+        /// <c>EnergyGenProcessor.CalcLoad</c>). 0 if the ship has no generator. The louder-under-load input to the heat
+        /// factor. Defensive: no reactor → 0.</summary>
+        public static double ReactorLoad(Entity ship)
+            => ship != null && ship.TryGetDataBlob<Pulsar4X.Energy.EnergyGenAbilityDB>(out var gen) ? gen.Load : 0.0;
 
         /// <summary>
         /// The activity heat factor (1.0 = cold/idle). Pure function of the two activity flags, so it's the unit
@@ -89,8 +107,16 @@ namespace Pulsar4X.Sensors
             // is simply skipped (defensive — no throw, the rule for any hotloop processor).
             if (!entity.TryGetDataBlob<SensorProfileDB>(out var profile)) return;
 
+            // Posture × activity gives the ship's normal loudness — thrust + firing, plus (when enabled) how hard the
+            // REACTOR is running (a plant under load emits — ⚙4 Power). A CLOAK then damps the total down (best cloak,
+            // health-scaled); an active JAMMER pushes it UP (a barrage jammer is a loud beacon). Reactor flag off / no
+            // cloak / no jammer → all identity → byte-identical.
+            double heat = HeatFactor(IsBurning(entity), IsFiring(entity));
+            if (EnableReactorHeat) heat += ReactorHeat * ReactorLoad(entity);
             profile.ActivityMultiplier =
-                ComputeActivityMultiplier(profile.SignatureBaseMultiplier, IsBurning(entity), IsFiring(entity));
+                profile.SignatureBaseMultiplier * heat
+                * CloakAtb.CloakFactor(entity)
+                * JammerAtb.SelfSignatureFactor(entity);
         }
 
         public int ProcessManager(EntityManager manager, int deltaSeconds)

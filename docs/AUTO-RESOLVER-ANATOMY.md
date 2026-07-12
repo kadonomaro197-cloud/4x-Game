@@ -2,6 +2,8 @@
 
 **As of:** 2026-07-08 · the resolver taken apart bit by bit, so every designer dial has a **known insertion point** and battles are authentic. Companion to `COMPONENT-DESIGNER-DIALS.md` (§0e is the number anchor). Source of truth: `GameEngine/Combat/` (`ShipCombatValueDB.cs`, `CombatEngagement.cs`, `WeaponProfile.cs`) + `Combat/CLAUDE.md`.
 
+> **⚙ Distributed 2026-07-09.** The per-category insertion points from this doc are now **folded into each category's ⚙ Wiring Dossier** in `COMPONENT-DESIGNER-DIALS.md` (`⚙ 1`…`⚙ 11`) — the self-contained wiring reference for each category. This doc remains the **cross-category resolver anatomy + the ➕ extension backlog** (the origin of those insertion points); when you wire a category, read its dossier, and come here only for the whole-resolver picture or the shared backlog.
+
 **The finding in one line:** the resolver reads a **small, fixed input surface** — one `WeaponProfile` per weapon (**7 fields**) + a handful of per-ship values + ~10 global constants. A dial is authentic **only if it lands on that surface.** Most weapon dials already do; the rest need a **named new `WeaponProfile` field + one resolver term** (a short, concrete backlog) or a **deferred mechanic**.
 
 ---

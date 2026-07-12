@@ -3,6 +3,7 @@ using Pulsar4X.Engine;
 using Pulsar4X.Fleets;
 using Pulsar4X.Movement;
 using Pulsar4X.Orbital;
+using Pulsar4X.People;
 using Pulsar4X.Ships;
 using Pulsar4X.Names;
 
@@ -44,6 +45,13 @@ namespace Pulsar4X.Combat
         /// (retreats). Per System 5 the real threshold comes from doctrine — this is a flat default until
         /// per-doctrine thresholds are wired.</summary>
         public const double RetreatCasualtyThreshold = 0.5;
+
+        /// <summary>M2-1b (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II): how far the faction's Collectivism trait
+        /// swings the retreat threshold off <see cref="RetreatCasualtyThreshold"/>. A collectivist force
+        /// ("fights to the last for the whole") holds on through heavier losses; an individualist one
+        /// ("flees to save the unit") breaks off early. Centered on the trait's neutral, so a neutral/absent
+        /// personality changes nothing — byte-identical.</summary>
+        public const double CollectivismRetreatSwing = 0.4;
 
         // --- dodge model tuning (docs/WEAPONS-AND-DODGE-DESIGN.md), all v1 stubs ----------------------------
 
@@ -92,6 +100,23 @@ namespace Pulsar4X.Combat
         /// through AutoResolve, give it the same dial.
         /// </summary>
         public const double SalvoDamageScale = 0.1;
+
+        /// <summary>AMMO burn (Weapons pilot W3): kilograms of magazine drained per JOULE of ammo-fed fire a fleet
+        /// delivers in a salvo. A fleet's Kinetic/Explosive (railgun/flak/missile) fire drains its
+        /// <see cref="FleetCombatStateDB.AmmoPool_kg"/> by <c>(ammo J/s × dt) × this</c>; when the pool empties those
+        /// weapons go silent. Flagged BALANCE value — it's calibrated against the base-mod magazine capacity (W3c) to
+        /// set how many salvos a loadout sustains. Inert until a ship carries a magazine (capacity 0 → pool disabled).</summary>
+        public static double AmmoBurnKgPerJoule = 1e-4;
+
+        /// <summary>HEAT cooling (Weapons pilot W5): the fraction of a fleet's radiator capacity shed as cooling each
+        /// salvo. A fleet's energy weapons add heat to <see cref="FleetCombatStateDB.HeatPool_kJ"/> (Σ HeatPerSecond ×
+        /// dt); its radiators remove <c>HeatCapacity × this</c>. Flagged BALANCE value.</summary>
+        public static double HeatDissipationFraction = 0.5;
+
+        /// <summary>The floor on the energy-fire throttle when a fleet is overheating (Weapons pilot W5) — even a fleet
+        /// with heat far past its radiators still fires this fraction of its energy weapons (they never fully shut off).
+        /// Flagged BALANCE value.</summary>
+        public static double HeatThrottleFloor = 0.1;
 
         // --- SHIELD layer (option B, docs/WEAPON-TAXONOMY-DESIGN.md §6) ----------------------------------------
         //
@@ -588,6 +613,53 @@ namespace Pulsar4X.Combat
                     }
                 }
 
+            // --- AMMO phase (W3): each fleet's AMMO-FED weapons (Kinetic/Explosive — railgun/flak/missile) drain its
+            // magazine pool this salvo; when the pool is dry those weapons go SILENT (dropped from its outgoing fire)
+            // and it fights on with energy weapons. Runs BEFORE the damage phase so a dry fleet's silenced fire never
+            // reaches its targets this step. GATED on the fleet actually carrying a magazine (capacity > 0): a fleet
+            // with no magazine keeps AmmoPool_kg disabled and its fire untouched, so combat is byte-identical (every
+            // current ship, until the W3c base-mod magazine). One aggregate pool per fleet, mirroring the shield.
+            for (int i = 0; i < n; i++)
+            {
+                if (!live[i].TryGetDataBlob<FleetCombatStateDB>(out var ammoState)) continue;
+                double ammoCap = FleetAmmoCapacity(ships[i]);
+                if (ammoCap <= 0) continue;                                  // no magazine → disabled → byte-identical
+                if (ammoState.AmmoPool_kg < 0) ammoState.AmmoPool_kg = ammoCap;          // lazy seed: full at first contact
+                if (ammoState.AmmoPool_kg > ammoCap) ammoState.AmmoPool_kg = ammoCap;    // ships lost this fight shrink the pool
+                if (ammoState.AmmoPool_kg <= 0)
+                {
+                    SilenceAmmoWeapons(fire[i]);                             // dry → ammo weapons stop firing
+                    continue;
+                }
+                double ammoJoules = AmmoFireDamage(fire[i]) * dt;           // ammo-fed damage delivered this salvo
+                ammoState.AmmoPool_kg -= ammoJoules * AmmoBurnKgPerJoule;
+                if (ammoState.AmmoPool_kg < 0) ammoState.AmmoPool_kg = 0;
+            }
+
+            // --- HEAT phase (W5): each fleet's ENERGY-weapon fire cooks the ship; its radiators shed heat each salvo.
+            // When the heat pool outruns the radiators the energy weapons THROTTLE (burst-vs-sustained), toward the
+            // floor. SELF-GATING: a fleet whose weapons generate no tracked heat (every current weapon → HeatPerSecond 0)
+            // keeps HeatPool at 0 and is skipped, so combat is byte-identical. A HOT weapon (W5c) without enough
+            // radiators throttles; more radiators sustain more fire. Runs before the damage phase so a throttled fleet's
+            // reduced energy fire is what reaches its targets this step. Kinetic/explosive fire is untouched (it burns
+            // ammo, not heat — the two limits are independent).
+            for (int i = 0; i < n; i++)
+            {
+                if (!live[i].TryGetDataBlob<FleetCombatStateDB>(out var heatState)) continue;
+                double heatGen = EnergyHeatGen(fire[i]);
+                if (heatGen <= 0 && heatState.HeatPool_kJ <= 0) continue;   // no heat in play → byte-identical
+                double heatCap = FleetHeatCapacity(ships[i]);
+                heatState.HeatPool_kJ += heatGen * dt;                      // energy fire heats the ship
+                heatState.HeatPool_kJ -= heatCap * HeatDissipationFraction; // radiators shed heat
+                if (heatState.HeatPool_kJ < 0) heatState.HeatPool_kJ = 0;
+                if (heatState.HeatPool_kJ > heatCap)                        // overheating → throttle the energy guns
+                {
+                    double throttle = heatState.HeatPool_kJ > 0 ? heatCap / heatState.HeatPool_kJ : 1.0;
+                    if (throttle < HeatThrottleFloor) throttle = HeatThrottleFloor;
+                    ThrottleEnergyFire(fire[i], throttle);
+                }
+            }
+
             // --- DAMAGE phase: each fleet takes the COMBINED fire of all fleets hostile to it. An attacker that
             // faces several enemy fleets DIVIDES its fire across them (conserves firepower — outnumbering a side
             // doesn't multiply your guns). Within a target fleet the dodge/bucket resolve still concentrates on the
@@ -609,6 +681,14 @@ namespace Pulsar4X.Combat
                     if (split <= 0) continue;
                     AddScaledFire(incoming, fire[g], 1.0 / split);
                 }
+                // POINT-DEFENSE (W6): this fleet's PD screen intercepts a saturating fraction of the incoming GUIDED
+                // (missile) fire, shooting those missiles out of the salvo before it's totalled — so a big anti-missile
+                // screen shrugs off a light strike but a swarm saturates it and leaks through. GATED on the fleet
+                // actually carrying PD (rating > 0): a PD-less fleet leaves `incoming` untouched, so combat is
+                // byte-identical (every current ship, until the W6c PD mount faces a missile ship). Non-guided fire
+                // (beams/slugs/flak) is never intercepted.
+                double pdRating = FleetPointDefense(ships[i]);
+                if (pdRating > 0) InterceptMissiles(incoming, pdRating);
                 // SalvoDamageScale is the combat-pace dial: only this fraction of the raw salvo energy counts
                 // toward kills, so battles play out over many salvos instead of ending in 2–4 (see the const).
                 double dmgThisSalvo = TotalDamage(incoming) * dt * SalvoDamageScale;
@@ -617,6 +697,13 @@ namespace Pulsar4X.Combat
                 // for an unshielded fleet (0 capacity). The exact aggregate `dmgThisSalvo` above is preserved so the
                 // unshielded path is untouched to the bit; the shield only ever SUBTRACTS what it absorbs.
                 dmgThisSalvo = ApplyShield(live[i], ships[i], state, incoming, dt, dmgThisSalvo);
+                // NATURE-HARDENED ARMOUR (⚙3, the ship mirror of the ground armour-nature): AFTER the shield, the
+                // defending fleet's hardened plating soaks a fraction of what leaks through, by the incoming salvo's
+                // NATURE — an ablative-clad fleet shrugs off an energy salvo, a composite one walls kinetic. GATED on the
+                // fleet actually carrying hardening (fraction > 0); a plain-armour fleet leaves dmgThisSalvo untouched →
+                // byte-identical (every current ship, until a nature-hardened plate is fitted).
+                double armourSoak = FleetArmourSoakFraction(ships[i], incoming);
+                if (armourSoak > 0) dmgThisSalvo *= (1.0 - armourSoak);
                 state.DamageTakenPool += dmgThisSalvo;
                 string attackerLabel = FleetLabel(live[attackersOf[i][0]])
                     + (attackersOf[i].Count > 1 ? " +" + (attackersOf[i].Count - 1) + " more" : "");
@@ -1010,13 +1097,16 @@ namespace Pulsar4X.Combat
             // reads — so the emergent corner survives aggregation; without it a missile aggregated to the default Slug
             // delivery would misclassify as a railgun.
             // class→nature→delivery is 1:1 today, so the bucket count is unchanged and the resolve is byte-identical.
-            var byClass = new Dictionary<(WeaponClass cls, WeaponNature nat, WeaponDelivery del), (double dmg, double velW, double trkW, double satW)>();
-            void Add(WeaponClass cls, WeaponNature nat, WeaponDelivery del, double dmg, double vel, double trk, double sat)
+            // Heat (W5) is SUMMED into the bucket (total waste-heat rate), NOT damage-weighted like vel/trk/sat — two
+            // hot beams generate twice the heat. Carried through so the aggregated mix keeps HeatPerSecond (else the
+            // heat throttle never sees it). 0 for every current weapon → byte-identical.
+            var byClass = new Dictionary<(WeaponClass cls, WeaponNature nat, WeaponDelivery del), (double dmg, double velW, double trkW, double satW, double heat)>();
+            void Add(WeaponClass cls, WeaponNature nat, WeaponDelivery del, double dmg, double vel, double trk, double sat, double heat)
             {
                 if (dmg <= 0) return;
                 var key = (cls, nat, del);
                 byClass.TryGetValue(key, out var e);
-                byClass[key] = (e.dmg + dmg, e.velW + vel * dmg, e.trkW + trk * dmg, e.satW + sat * dmg);
+                byClass[key] = (e.dmg + dmg, e.velW + vel * dmg, e.trkW + trk * dmg, e.satW + sat * dmg, e.heat + heat);
             }
 
             foreach (var cs in ships)
@@ -1030,7 +1120,7 @@ namespace Pulsar4X.Combat
                         // separation 0 (flag off / point blank) or a 0/unbounded weapon range => always fires, so
                         // this is a no-op in the pre-closing path (every existing fixture is unchanged).
                         if (separation_m > 0 && w.Range_m > 0 && w.Range_m < separation_m) continue;
-                        Add(w.Class, w.Nature, w.Delivery, w.DamagePerSecond * cs.FirepowerMult, w.Velocity, w.Tracking, w.Saturation);
+                        Add(w.Class, w.Nature, w.Delivery, w.DamagePerSecond * cs.FirepowerMult, w.Velocity, w.Tracking, w.Saturation, w.HeatPerSecond);
                     }
                 }
                 else if (cv.Firepower > 0)
@@ -1038,7 +1128,7 @@ namespace Pulsar4X.Combat
                     // Old-style combat value (firepower, no profiles): fires as a light-speed always-hits beam — an
                     // ENERGY beam, so it half-bleeds a shield (consistent with "fires as a beam"). No shield present in
                     // the pre-shield fixtures, so this nature choice can't change any existing outcome.
-                    Add(WeaponClass.Beam, WeaponNature.Energy, WeaponDelivery.Beam, cv.Firepower * cs.FirepowerMult, FallbackBeamVelocity_mps, 1.0, double.PositiveInfinity);
+                    Add(WeaponClass.Beam, WeaponNature.Energy, WeaponDelivery.Beam, cv.Firepower * cs.FirepowerMult, FallbackBeamVelocity_mps, 1.0, double.PositiveInfinity, 0);
                 }
             }
 
@@ -1046,7 +1136,9 @@ namespace Pulsar4X.Combat
             foreach (var kv in byClass)
             {
                 double d = kv.Value.dmg;
-                mix.Add(new WeaponProfile(d, kv.Value.velW / d, kv.Value.trkW / d, kv.Value.satW / d, 0, kv.Key.nat, kv.Key.del));
+                // penetration/perShotEnergy are ground-side (the ship salvo folds armour into Toughness), so 0 here;
+                // heatPerSecond (W5) is carried so the aggregated mix still heats the ship.
+                mix.Add(new WeaponProfile(d, kv.Value.velW / d, kv.Value.trkW / d, kv.Value.satW / d, 0, kv.Key.nat, kv.Key.del, 0, 0, kv.Value.heat));
             }
             return mix;
         }
@@ -1075,10 +1167,168 @@ namespace Pulsar4X.Combat
             return (cap, regen);
         }
 
+        // ─── Ammo layer (Weapons pilot W3) ───────────────────────────────────────────────────────────────────────────
+
+        /// <summary>Is this weapon AMMO-FED (draws from a magazine) rather than powered? Kinetic (railgun/flak slugs) and
+        /// Explosive (missiles/warheads) consume physical ammo; Energy (beams/plasma) and Exotic (disruptors) draw power,
+        /// not ammo. So a fleet that runs dry keeps fighting with its energy weapons — the ship echo of the ground rule.</summary>
+        internal static bool IsAmmoNature(WeaponNature nature) => nature == WeaponNature.Kinetic || nature == WeaponNature.Explosive;
+
+        /// <summary>The damage/sec in a fire mix that comes from AMMO-FED weapons (the part that drains a magazine).</summary>
+        internal static double AmmoFireDamage(List<WeaponProfile> fire)
+        {
+            double sum = 0;
+            foreach (var w in fire) if (IsAmmoNature(w.Nature)) sum += w.DamagePerSecond;
+            return sum;
+        }
+
+        /// <summary>A fleet's total ammo-magazine capacity (kg), summed health-scaled over its ships' cached
+        /// <see cref="ShipCombatValueDB.AmmoCapacity_kg"/>. 0 for a fleet with no magazine (→ ammo pool disabled).</summary>
+        private static double FleetAmmoCapacity(List<CombatShip> ships)
+        {
+            double cap = 0;
+            foreach (var cs in ships) cap += CombatValue(cs.Ship).AmmoCapacity_kg;
+            return cap;
+        }
+
+        /// <summary>Silence a DRY fleet's ammo-fed weapons — drop the Kinetic/Explosive profiles from its outgoing fire
+        /// so only its energy weapons still contribute. Mutates the passed mix in place.</summary>
+        private static void SilenceAmmoWeapons(List<WeaponProfile> fire) => fire.RemoveAll(w => IsAmmoNature(w.Nature));
+
+        // ─── Heat layer (Weapons pilot W5) ───────────────────────────────────────────────────────────────────────────
+
+        /// <summary>The waste-heat generation rate (kJ/s) of a fire mix — Σ each weapon's <see cref="WeaponProfile.HeatPerSecond"/>
+        /// (only energy weapons carry it). 0 for a mix of "cool" weapons → the fleet never heats up (byte-identical).</summary>
+        internal static double EnergyHeatGen(List<WeaponProfile> fire)
+        {
+            double sum = 0;
+            foreach (var w in fire) sum += w.HeatPerSecond;
+            return sum;
+        }
+
+        /// <summary>A fleet's total heat-radiator capacity (kJ), summed health-scaled over its ships' cached
+        /// <see cref="ShipCombatValueDB.HeatCapacity_kJ"/>. 0 for a fleet with no radiator (→ energy fire throttles hard
+        /// if it runs any hot weapon; but with no hot weapon there's no heat to throttle → byte-identical).</summary>
+        private static double FleetHeatCapacity(List<CombatShip> ships)
+        {
+            double cap = 0;
+            foreach (var cs in ships) cap += CombatValue(cs.Ship).HeatCapacity_kJ;
+            return cap;
+        }
+
+        /// <summary>Throttle an OVERHEATING fleet's ENERGY-fed weapons — scale the Energy/Exotic profiles' damage by the
+        /// throttle factor (kinetic/explosive fire is unaffected, it burns ammo not heat). Mutates the mix in place.</summary>
+        private static void ThrottleEnergyFire(List<WeaponProfile> fire, double throttle)
+        {
+            foreach (var w in fire)
+                if (!IsAmmoNature(w.Nature)) w.DamagePerSecond *= throttle;
+        }
+
+        // ─── Point-defense layer (Weapons pilot W6) ──────────────────────────────────────────────────────────────────
+
+        /// <summary>Hard ceiling on the fraction of an incoming missile salvo point-defense can intercept — nothing is
+        /// ever fully immune, so a big enough swarm always leaks something through (mirrors <see
+        /// cref="ShipCombatValueDB.EvasionCap"/> and <see cref="MinLandedFraction"/>). Flagged BALANCE dial.</summary>
+        public static double PointDefenseMaxIntercept = 0.95;
+
+        /// <summary>Is this weapon INTERCEPTABLE by point-defense — a discrete GUIDED projectile (a missile) you can shoot
+        /// down on its way in? A beam/slug/bolt is not a thing PD can knock out. Keyed on <see cref="WeaponDelivery.Guided"/>,
+        /// which survives the fire-mix aggregation (BuildFireMix buckets on Delivery), so the missile fraction is legible
+        /// in the aggregated incoming fire.</summary>
+        internal static bool IsInterceptable(WeaponDelivery delivery) => delivery == WeaponDelivery.Guided;
+
+        /// <summary>The damage/sec in a fire mix that comes from INTERCEPTABLE (guided/missile) weapons — the part
+        /// point-defense can shoot down.</summary>
+        internal static double MissileFireDamage(List<WeaponProfile> fire)
+        {
+            double sum = 0;
+            foreach (var w in fire) if (IsInterceptable(w.Delivery)) sum += w.DamagePerSecond;
+            return sum;
+        }
+
+        /// <summary>A fleet's total point-defense intercept rating (J/s), summed health-scaled over its ships' cached
+        /// <see cref="ShipCombatValueDB.PointDefense_Jps"/>. 0 for a fleet with no PD (→ the intercept step is skipped and
+        /// incoming fire is byte-identical).</summary>
+        internal static double FleetPointDefense(List<CombatShip> ships)
+        {
+            double pd = 0;
+            foreach (var cs in ships) pd += CombatValue(cs.Ship).PointDefense_Jps;
+            return pd;
+        }
+
+        /// <summary>The fraction of an incoming missile salvo a fleet's point-defense intercepts — a SATURATING curve:
+        /// <c>pdRating / (pdRating + missileDamage)</c>, capped at <see cref="PointDefenseMaxIntercept"/>. Lots of PD vs a
+        /// light salvo → most is stopped; a swarm big enough to out-mass the PD → it saturates and leaks through. Returns
+        /// 0 when there's no PD or no missile fire (→ no interception, byte-identical). Pure; internal so it's directly
+        /// unit-testable like <see cref="HitFraction"/>.</summary>
+        internal static double PointDefenseInterceptFraction(double pdRating, double missileDamage)
+        {
+            if (pdRating <= 0 || missileDamage <= 0) return 0;
+            double frac = pdRating / (pdRating + missileDamage);
+            return frac > PointDefenseMaxIntercept ? PointDefenseMaxIntercept : frac;
+        }
+
+        /// <summary>Reduce the GUIDED (missile) portion of an incoming fire mix by a fleet's point-defense intercept
+        /// fraction — the PD shoots those missiles out of the salvo before they reach the hull. Mutates the mix in place;
+        /// non-guided fire (beams/slugs/flak) is untouched. No-op when there's no guided fire OR no interception, so a
+        /// non-missile salvo (every current fight, until a missile ship faces PD) is byte-identical. Returns the joules/sec
+        /// of missile fire intercepted (0 if none) for the readout.</summary>
+        private static double InterceptMissiles(List<WeaponProfile> incoming, double pdRating)
+        {
+            double missileDamage = MissileFireDamage(incoming);
+            if (missileDamage <= 0) return 0;
+            double frac = PointDefenseInterceptFraction(pdRating, missileDamage);
+            if (frac <= 0) return 0;
+            double survive = 1.0 - frac;
+            foreach (var w in incoming)
+                if (IsInterceptable(w.Delivery)) w.DamagePerSecond *= survive;
+            return missileDamage * frac;
+        }
+
         /// <summary>The damage-weighted fraction of an incoming fire mix a shield CAN stop — the nature matchup rolled
         /// up over the salvo (all-kinetic → 1.0, all-energy → 0.5, all-exotic → 0.0, mixes interpolate). Pure; internal
         /// so it's directly unit-testable like <see cref="HitFraction"/>.</summary>
         internal static double SoakFractionOf(List<WeaponProfile> incoming) => CombatKernel.SoakFractionOf(incoming);
+
+        /// <summary>The fraction of an incoming salvo a defending fleet's NATURE-HARDENED plating soaks (⚙3, the ship
+        /// mirror of the ground armour-nature) — the TOUGHNESS-weighted fleet average of the ships' per-nature armour
+        /// soak, then weighted across the salvo's damage-by-nature mix (the same shape as <see cref="SoakFractionOf"/>).
+        /// Returns 0 (no reduction, byte-identical) when no ship carries hardening, or the fleet/salvo is empty. Applied
+        /// AFTER the shield step. Internal for direct unit testing.</summary>
+        internal static double FleetArmourSoakFraction(List<CombatShip> ships, List<WeaponProfile> incoming)
+        {
+            if (ships == null || ships.Count == 0 || incoming == null || incoming.Count == 0) return 0;
+            double totTough = 0, sK = 0, sE = 0, sX = 0, sO = 0;
+            bool anyHardening = false;
+            foreach (var cs in ships)
+            {
+                var cv = CombatValue(cs.Ship);
+                double t = cv.Toughness;
+                if (t <= 0) continue;
+                totTough += t;
+                sK += cv.ArmourSoakVsKinetic * t; sE += cv.ArmourSoakVsEnergy * t;
+                sX += cv.ArmourSoakVsExplosive * t; sO += cv.ArmourSoakVsExotic * t;
+                if (cv.ArmourSoakVsKinetic > 0 || cv.ArmourSoakVsEnergy > 0 || cv.ArmourSoakVsExplosive > 0 || cv.ArmourSoakVsExotic > 0)
+                    anyHardening = true;
+            }
+            if (!anyHardening || totTough <= 0) return 0;
+            double fK = sK / totTough, fE = sE / totTough, fX = sX / totTough, fO = sO / totTough;
+            double total = 0, soak = 0;
+            foreach (var w in incoming)
+            {
+                double d = w.DamagePerSecond;
+                total += d;
+                soak += d * (w.Nature switch
+                {
+                    WeaponNature.Kinetic => fK,
+                    WeaponNature.Energy => fE,
+                    WeaponNature.Explosive => fX,
+                    WeaponNature.Exotic => fO,
+                    _ => 0,
+                });
+            }
+            return total > 0 ? soak / total : 0;
+        }
 
         /// <summary>Pure shield-soak math (internal for direct unit testing, like <see cref="HitFraction"/> /
         /// <see cref="WithinWeaponRange(double,double,double)"/>). Given the pool's current charge, capacity, regen, the
@@ -1161,7 +1411,86 @@ namespace Pulsar4X.Combat
             if (FleetDoctrine.IsRetreat(fleet)) return true;    // withdraw posture = a standing retreat order
             if (state.InitialShipCount <= 0) return false;
             int lost = state.InitialShipCount - currentShipCount;
-            return lost >= state.InitialShipCount * RetreatCasualtyThreshold;
+            // The nerve that decides "fight on or break off" is the fleet's Collectivism — the faction's doctrine,
+            // BLENDED with the flagship officer's own character by that officer's tenure (a green officer follows
+            // doctrine; a veteran runs on their own judgement). Neutral/green/absent officer → the faction value
+            // exactly, so this is byte-identical until a seasoned officer carries a divergent personality.
+            double collectivism = BlendedRetreatCollectivism(fleet, PersonalityOf(fleet));
+            return lost >= state.InitialShipCount * RetreatThresholdForCollectivism(collectivism);
+        }
+
+        /// <summary>
+        /// M2-1b: the casualty fraction a fleet endures before breaking off, tilted by its faction's Collectivism.
+        /// A neutral (or absent) personality returns exactly <see cref="RetreatCasualtyThreshold"/> (byte-identical);
+        /// high Collectivism raises it (fights on through heavier losses), low lowers it (flees to save the unit).
+        /// Clamped so a fleet always both can and eventually must break off.
+        /// </summary>
+        public static double RetreatThresholdFor(Pulsar4X.Factions.PersonalityDB personality)
+        {
+            if (personality == null) return RetreatCasualtyThreshold;
+            return RetreatThresholdForCollectivism(personality.TraitOf(Pulsar4X.Factions.PersonalityTrait.Collectivism));
+        }
+
+        /// <summary>The break-off casualty fraction for a given Collectivism value (0..1) — the shared core of
+        /// <see cref="RetreatThresholdFor"/> and the officer-blended <see cref="ShouldRetreat"/> path. Neutral (0.5)
+        /// → exactly <see cref="RetreatCasualtyThreshold"/>; high raises it, low lowers it; clamped so a fleet always
+        /// both can and eventually must break off.</summary>
+        public static double RetreatThresholdForCollectivism(double collectivism)
+        {
+            double threshold = RetreatCasualtyThreshold
+                + (collectivism - Pulsar4X.Factions.PersonalityDB.Neutral) * 2.0 * CollectivismRetreatSwing;
+            if (threshold < 0.05) return 0.05;
+            if (threshold > 0.95) return 0.95;
+            return threshold;
+        }
+
+        /// <summary>
+        /// Phase-2.7-attach: the Collectivism the retreat decision runs on — the fleet's FLAGSHIP OFFICER's own nerve
+        /// blended toward the faction's doctrine by the officer's tenure (<see cref="OfficerCharacter.Blend"/> over
+        /// <see cref="OfficerCharacter.TenureWeight"/>). A green officer (0 tenure), an all-neutral officer, or no
+        /// flagship officer at all → the faction's own value EXACTLY, so this is byte-identical until a seasoned
+        /// officer carries an authored, divergent character. Defensive; never throws.
+        /// </summary>
+        internal static double BlendedRetreatCollectivism(Entity fleet, Pulsar4X.Factions.PersonalityDB factionPersonality)
+        {
+            double factionColl = factionPersonality == null
+                ? Pulsar4X.Factions.PersonalityDB.Neutral
+                : factionPersonality.TraitOf(Pulsar4X.Factions.PersonalityTrait.Collectivism);
+
+            var officer = FlagshipCommanderOf(fleet);
+            if (officer == null || officer.Personality == null) return factionColl;
+
+            double officerColl = officer.Personality.TraitOf(Pulsar4X.Factions.PersonalityTrait.Collectivism);
+            double tenure = Pulsar4X.People.OfficerCharacter.TenureWeight(officer.Experience, officer.ExperienceCap);
+            return Pulsar4X.People.OfficerCharacter.Blend(officerColl, factionColl, tenure);
+        }
+
+        /// <summary>The <see cref="Pulsar4X.People.CommanderDB"/> of a fleet's flagship officer, or null if any link
+        /// is missing (no flagship set, no commander aboard). Mirrors <see cref="FleetCommanderMult"/>'s
+        /// <c>FlagShipID → ShipInfoDB.CommanderID → commander</c> chain. Defensive; never throws.</summary>
+        internal static Pulsar4X.People.CommanderDB FlagshipCommanderOf(Entity fleet)
+        {
+            if (fleet == null || fleet.Manager == null || !fleet.TryGetDataBlob<FleetDB>(out var fleetDB) || fleetDB.FlagShipID < 0)
+                return null;
+            if (!fleet.Manager.TryGetEntityById(fleetDB.FlagShipID, out var flagship) || flagship == null)
+                return null;
+            if (!flagship.TryGetDataBlob<ShipInfoDB>(out var shipInfo) || shipInfo.CommanderID < 0)
+                return null;
+            if (!fleet.Manager.TryGetEntityById(shipInfo.CommanderID, out var commander) || commander == null)
+                return null;
+            return commander.TryGetDataBlob<Pulsar4X.People.CommanderDB>(out var cmdr) ? cmdr : null;
+        }
+
+        /// <summary>The <see cref="Pulsar4X.Factions.PersonalityDB"/> of the fleet's owning faction, or null if the
+        /// faction carries none (every faction today → null → byte-identical). Defensive like <see cref="AtPeace"/>:
+        /// any missing manager/game/faction-entity/blob returns null.</summary>
+        private static Pulsar4X.Factions.PersonalityDB PersonalityOf(Entity fleet)
+        {
+            var game = fleet.Manager?.Game;
+            if (game == null) return null;
+            if (!game.Factions.TryGetValue(fleet.FactionOwnerID, out var factionEntity) || factionEntity == null || !factionEntity.IsValid)
+                return null;
+            return factionEntity.TryGetDataBlob<Pulsar4X.Factions.PersonalityDB>(out var p) ? p : null;
         }
 
         /// <summary>Flag a fleet as retreated and record the direction it would withdraw (a unit vector away from
@@ -1209,24 +1538,53 @@ namespace Pulsar4X.Combat
         public static List<CombatShip> GetCombatShips(Entity fleet)
         {
             var result = new List<CombatShip>();
-            CollectCombatShips(fleet, result);
+            // The fleet's FLAGSHIP COMMANDER's competence scales the WHOLE fleet's firepower/toughness — the
+            // rung-4 "a person's skill modifies an outcome" wire. 1.0 (no effect) when there's no flagship, no
+            // commander, or no combat bonus, so this is BYTE-IDENTICAL to pre-commander combat until a commander
+            // actually carries a Firepower/Toughness bonus (every existing combat fixture is the tripwire).
+            double cmdrFire = FleetCommanderMult(fleet, BonusCategory.Firepower);
+            double cmdrTough = FleetCommanderMult(fleet, BonusCategory.Toughness);
+            CollectCombatShips(fleet, result, cmdrFire, cmdrTough);
             return result;
         }
 
-        private static void CollectCombatShips(Entity fleet, List<CombatShip> into)
+        private static void CollectCombatShips(Entity fleet, List<CombatShip> into, double cmdrFire, double cmdrTough)
         {
             if (fleet == null || !fleet.IsValid || !fleet.TryGetDataBlob<FleetDB>(out var fleetDB)) return;
-            // This node's posture applies to ships DIRECTLY in it; a sub-fleet (component) applies its OWN.
-            double fpMult = FleetDoctrine.FirepowerMult(fleet);
-            double toughMult = FleetDoctrine.ToughnessMult(fleet);
+            // This node's posture applies to ships DIRECTLY in it; a sub-fleet (component) applies its OWN. The
+            // flagship-commander multiplier rides on top of the doctrine posture for every ship in the fleet.
+            double fpMult = FleetDoctrine.FirepowerMult(fleet) * cmdrFire;
+            double toughMult = FleetDoctrine.ToughnessMult(fleet) * cmdrTough;
             foreach (var child in fleetDB.Children)
             {
                 if (child == null || !child.IsValid) continue;
                 if (child.HasDataBlob<ShipInfoDB>())
                     into.Add(new CombatShip(child, fpMult, toughMult));
                 else if (child.HasDataBlob<FleetDB>())
-                    CollectCombatShips(child, into); // sub-component → recurse with its own doctrine
+                    CollectCombatShips(child, into, cmdrFire, cmdrTough); // sub-component → own doctrine, same commander
             }
+        }
+
+        /// <summary>
+        /// The multiplier a fleet's FLAGSHIP COMMANDER contributes to the given combat category (rung-4 wire):
+        /// <c>FleetDB.FlagShipID</c> → the flagship's <c>ShipInfoDB.CommanderID</c> → that commander's
+        /// <c>BonusesDB</c> → <see cref="Pulsar4X.People.CommanderBonuses.CombatMultiplier"/>. Returns 1.0 (no
+        /// effect) if any link is missing — no flagship set, no commander aboard, or no matching bonus — so combat
+        /// is unchanged until a commander actually carries a competence bonus. Defensive; never throws.
+        /// </summary>
+        internal static double FleetCommanderMult(Entity fleet, BonusCategory category)
+        {
+            if (fleet == null || fleet.Manager == null || !fleet.TryGetDataBlob<FleetDB>(out var fleetDB) || fleetDB.FlagShipID < 0)
+                return 1.0;
+            if (!fleet.Manager.TryGetEntityById(fleetDB.FlagShipID, out var flagship) || flagship == null)
+                return 1.0;
+            if (!flagship.TryGetDataBlob<ShipInfoDB>(out var shipInfo) || shipInfo.CommanderID < 0)
+                return 1.0;
+            if (!fleet.Manager.TryGetEntityById(shipInfo.CommanderID, out var commander) || commander == null)
+                return 1.0;
+            if (!commander.TryGetDataBlob<BonusesDB>(out var bonuses))
+                return 1.0;
+            return CommanderBonuses.CombatMultiplier(bonuses, category);
         }
 
         internal static bool AreHostile(Entity a, Entity b)
@@ -1235,6 +1593,16 @@ namespace Pulsar4X.Combat
             // Same faction, or either side neutral → never hostile (the v1 rule, unchanged).
             if (fa == fb || fa == Game.NeutralFactionId || fb == Game.NeutralFactionId)
                 return false;
+
+            // A DECLARED WAR overrides every peace-suppression below (Phase-3.4a coalitions). If either side holds
+            // an AtWar latch toward the other, they are hostile — full stop — no matter what stance or signed pact
+            // sits underneath it. This is the developer's rule that "even alliance members are still allowed to
+            // shoot each other": a pact is a promise, a declared war is a fact, and the fact wins. It's what lets a
+            // coalition have teeth — once you and an ally both declare war on a shared threat, the fight is real,
+            // and it also means a broken/betrayed pact instantly re-arms the two former allies. Checked BEFORE the
+            // AtPeace suppression so war can never be silently disarmed by a lingering treaty flag.
+            if (IsAtWar(a, fa, fb) || IsAtWar(b, fb, fa))
+                return true;
 
             // Diplomacy can only SUPPRESS the default hostility, never create it: two different non-neutral
             // factions are hostile (the v1 rule) UNLESS *both* sides hold a Friendly/Allied stance toward the
@@ -1245,6 +1613,27 @@ namespace Pulsar4X.Combat
                 return false;
 
             return true;
+        }
+
+        /// <summary>
+        /// True if <paramref name="ownFactionId"/>'s faction holds a declared-war (<see cref="Pulsar4X.Factions.RelationshipState.AtWar"/>)
+        /// latch toward <paramref name="otherFactionId"/> in its <see cref="Pulsar4X.Factions.DiplomacyDB"/>. Mirrors
+        /// <see cref="AtPeace"/>'s ledger resolution exactly, reading the AtWar flag instead of the peace ones. Only a
+        /// STORED relationship counts — an unmet faction (no record) returns false, so an ordinary different-faction
+        /// pair falls through to the existing hostility rule (byte-identical). Defensive: any missing
+        /// manager/game/faction-entity/blob returns false. The entity argument is only the handle to reach the shared Game.
+        /// </summary>
+        private static bool IsAtWar(Entity fromEntity, int ownFactionId, int otherFactionId)
+        {
+            var game = fromEntity.Manager?.Game;
+            if (game == null) return false;
+            if (!game.Factions.TryGetValue(ownFactionId, out var factionEntity) || factionEntity == null || !factionEntity.IsValid)
+                return false;
+            if (!factionEntity.TryGetDataBlob<Pulsar4X.Factions.DiplomacyDB>(out var dip))
+                return false;
+            if (!dip.HasMet(otherFactionId))   // no relationship on record → not a declared war
+                return false;
+            return dip.GetRelationship(otherFactionId).AtWar;
         }
 
         /// <summary>

@@ -18,6 +18,15 @@ namespace Pulsar4X.Sensors
         public static SensorReturnValues[] GetDetectedEntites(SensorReceiverAtb sensorAtb, Vector3 position, List<Entity> detectableEntities, DateTime atDate, int factionOwnerId,  bool filterSameFaction = true)
         {
             SensorReturnValues[] detectionValues = new SensorReturnValues[detectableEntities.Count];
+
+            // BARRAGE JAMMING (⚙3 ▸ EW): a hostile jammer within range floods the band, so this receiver's usable signal
+            // is DIVIDED down (equivalent to raising its sensitivity threshold) for EVERY target it looks at — a per-scan
+            // degrade computed once, exactly like the hazard degrade the scan already applies. 1.0 (no in-range hostile
+            // jammer, or the flag off) → no scaling → byte-identical.
+            double jammingDivisor = JammerAtb.EnableJamming
+                ? JammerAtb.JammingDivisorAgainst(position, factionOwnerId, detectableEntities)
+                : 1.0;
+
             for (int i = 0; i < detectableEntities.Count; i++)
             {
                 var detectableEntity = detectableEntities[i];
@@ -39,6 +48,15 @@ namespace Pulsar4X.Sensors
                     var detectableProfile = detectableEntity.GetDataBlob<SensorProfileDB>();
                     var distance = detectablePosDB.GetDistanceTo_m(position);
                     var attentuatedSignal = AttenuatedForDistance(detectableProfile, distance);
+                    // Barrage jamming divides the usable signal down (the noise floor is up). > 1 only when a hostile
+                    // jammer is in range; otherwise this branch is skipped and the signal is untouched (byte-identical).
+                    if (jammingDivisor > 1.0)
+                    {
+                        var jammed = new Dictionary<EMWaveForm, double>(attentuatedSignal.Count);
+                        foreach (var band in attentuatedSignal)
+                            jammed[band.Key] = band.Value / jammingDivisor;
+                        attentuatedSignal = jammed;
+                    }
                     SensorReturnValues detectionValue = DetectonQuality(sensorAtb, attentuatedSignal);
                     //if(detectionValue.SignalStrength_kW > 0)
                         detectionValues[i] = detectionValue;

@@ -923,6 +923,34 @@ namespace Pulsar4X.Tests
             Assert.That(unit.RegionIndex, Is.EqualTo(targetBand), "its region followed it across the band border — no edge gate");
         }
 
+        [Test]
+        [Description("G6b (additive): a whole FORMATION marches on the GLOBAL planetary grid — OrderFormationMoveToGlobalHex sets every member standing with the leader out on a GlobalPath (the planetary-hex move order; additive so live movement is byte-identical until the order case repoints to it).")]
+        public void OrderFormationMoveToGlobalHex_MarchesTheBlockOnThePlanetaryGrid()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            var u1 = GroundForces.RaiseUnit(body, MakeInfantryDesign(), s.Faction.Id, regionIndex: 0);
+            var u2 = GroundForces.RaiseUnit(body, MakeInfantryDesign(), s.Faction.Id, regionIndex: 0);
+            var f = GroundForces.CreateFormation(body, s.Faction.Id, "Alpha");
+            GroundForces.AssignUnit(f, u1);
+            GroundForces.AssignUnit(f, u2);
+            GroundForces.SetLeader(f, u1);
+
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            var grid = regionsDB.SurfaceGrid;
+            Assert.That(grid, Is.Not.Null, "raising units generated the global grid");
+            foreach (var h in grid.Hexes) h.Terrain = RegionFeatureType.Plains;   // all land → deterministic route
+
+            int bandWidth = grid.Cols / regionsDB.Regions.Count;
+            int targetQ = (u1.GlobalQ + bandWidth) % grid.Cols;   // one band east — a real move, still on the planetary grid
+
+            int moved = GroundForces.OrderFormationMoveToGlobalHex(body, f, targetQ, u1.GlobalR);
+
+            Assert.That(moved, Is.EqualTo(2), "both members of the block set out on the planetary grid");
+            Assert.That(u1.GlobalPath, Is.Not.Null.And.Count.GreaterThan(0), "the leader has a global march path");
+            Assert.That(u2.GlobalPath, Is.Not.Null.And.Count.GreaterThan(0), "the follower has a global march path");
+        }
+
         // ───────────────────────── H3 — range-based directed combat (docs/HEX-GROUND-AND-ORDERS-DESIGN.md) ─────────────────────────
 
         private static GroundUnitDesign MakeDesign(string id, string name, GroundUnitType type, int range, double hp = 1000) => new GroundUnitDesign
@@ -1336,31 +1364,38 @@ namespace Pulsar4X.Tests
         [Description("O1 THE HEADLINE — sequential waypoints: a formation queued 'move to hex A, THEN hex B' runs them in order and its leader ends on the final waypoint (the London→Paris→… chain the fleet lane-model can't express).")]
         public void Orders_SequentialWaypoints_LeaderEndsAtFinalHex()
         {
+            // G6b-2: a queued formation waypoint chain now marches on the GLOBAL planetary grid (MoveHex coords are
+            // global cylinder columns/rows), not the per-region fine disk — the developer's "troops move on planetary
+            // hexes." The chain still runs in order and drains; the leader ends on the FINAL planetary waypoint.
             var s = TestScenario.CreateWithColony();
-            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
             var body = s.StartingBody;
-            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();
-            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
-            PaveRegionHexes(body, regionsDB, 0);
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();   // no attrition mid-march
 
             var u = GroundForces.RaiseUnit(body, MakeDesign("u", "U", GroundUnitType.Infantry, 1), s.Faction.Id, 0);
-            u.HexQ = 0; u.HexR = 0;
             var forces = body.GetDataBlob<GroundForcesDB>();
             var f = GroundForces.CreateFormation(body, s.Faction.Id, "Column");
             GroundForces.AssignUnit(f, u);
 
-            GroundForces.QueueFormationOrder(f, GroundOrder.MoveHex(2, 0));   // waypoint 1
-            GroundForces.QueueFormationOrder(f, GroundOrder.MoveHex(2, 2));   // waypoint 2
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            var grid = regionsDB.SurfaceGrid;
+            Assert.That(grid, Is.Not.Null, "raising the unit generated the global grid");
+            foreach (var h in grid.Hexes) h.Terrain = RegionFeatureType.Plains;   // all land → deterministic route
+
+            int startQ = u.GlobalQ, row = u.GlobalR;
+            int wp1 = (startQ + 2) % grid.Cols;   // planetary waypoint 1 (2 columns east, same row)
+            int wp2 = (startQ + 4) % grid.Cols;   // planetary waypoint 2 — the FINAL
+            GroundForces.QueueFormationOrder(f, GroundOrder.MoveHex(wp1, row));
+            GroundForces.QueueFormationOrder(f, GroundOrder.MoveHex(wp2, row));
             Assert.That(f.Orders.Count, Is.EqualTo(2));
 
             var proc = new GroundForcesProcessor();
-            for (int i = 0; i < 300 && f.Orders.Count > 0; i++) proc.ProcessEntity(body, 24 * 3600);   // a day per tick
+            for (int i = 0; i < 300 && f.Orders.Count > 0; i++) proc.ProcessEntity(body, 10 * 24 * 3600);   // 10 days/tick
 
-            Assert.That(f.Orders.Count, Is.EqualTo(0), "both waypoints completed and popped");
+            Assert.That(f.Orders.Count, Is.EqualTo(0), "both planetary waypoints completed and popped");
             var leader = GroundFormationTools.Leader(forces, f);
-            Assert.That(leader.HexQ, Is.EqualTo(2));
-            Assert.That(leader.HexR, Is.EqualTo(2), "the leader finished at the FINAL waypoint (it ran the chain in order)");
-            Log($"O1 waypoints: leader walked (0,0) → (2,0) → (2,2), queue drained");
+            Assert.That(leader.GlobalQ, Is.EqualTo(wp2));
+            Assert.That(leader.GlobalR, Is.EqualTo(row), "the leader finished at the FINAL planetary-hex waypoint (ran the chain in order)");
+            Log($"O1 waypoints (planetary grid): leader walked col {startQ} → {wp1} → {wp2}, queue drained");
         }
 
         [Test]

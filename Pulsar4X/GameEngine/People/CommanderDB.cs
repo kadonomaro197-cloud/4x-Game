@@ -28,6 +28,18 @@ namespace Pulsar4X.People
         [JsonProperty]
         public int AssignedTo { get; internal set; } = -1;
 
+        /// <summary>
+        /// Phase-2.7-attach: this officer's OWN character — the same 12-trait model a faction carries
+        /// (<see cref="Pulsar4X.Factions.PersonalityDB"/>). A GREEN officer defers to the faction's doctrine; only as
+        /// they gain tenure (<see cref="Experience"/> toward <see cref="ExperienceCap"/>) does their own leaning start
+        /// to override it — see <see cref="Pulsar4X.People.OfficerCharacter.Blend"/>. DEFAULTS TO ALL-NEUTRAL (an empty
+        /// trait set → every trait reads <see cref="Pulsar4X.Factions.PersonalityDB.Neutral"/> 0.5), so an officer with
+        /// no authored character is indistinguishable from today (byte-identical). Deep-copied on clone so it survives
+        /// save/load and moving the commander between managers.
+        /// </summary>
+        [JsonProperty]
+        public Pulsar4X.Factions.PersonalityDB Personality { get; internal set; } = new Pulsar4X.Factions.PersonalityDB();
+
 
         public CommanderDB() { }
 
@@ -48,6 +60,9 @@ namespace Pulsar4X.People
             ExperienceCap = commanderDB.ExperienceCap;
             CommissionedOn = commanderDB.CommissionedOn;
             RankedOn = commanderDB.RankedOn;
+            Personality = commanderDB.Personality == null
+                ? new Pulsar4X.Factions.PersonalityDB()
+                : (Pulsar4X.Factions.PersonalityDB)commanderDB.Personality.Clone();
         }
 
         public override object Clone()

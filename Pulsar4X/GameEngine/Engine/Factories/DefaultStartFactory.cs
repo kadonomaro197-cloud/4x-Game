@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json.Linq;
@@ -102,16 +103,31 @@ namespace Pulsar4X.Engine
             }
 
             var factionsToLoad = (JArray?)rootJson["factions"];
+            // Collect (faction, file) so opening diplomacy (Phase 5.1b) can run AFTER every faction exists — a
+            // faction's "openingRelations" names OTHER factions, which aren't loaded yet during the first pass.
+            var loadedFactions = new List<(Entity faction, string path)>();
             foreach(var factionToLoad in factionsToLoad)
             {
-                var faction = FactionFactory.LoadFromJson(game, Path.Combine(rootDirectory, factionToLoad.ToString()));
+                var factionPath = Path.Combine(rootDirectory, factionToLoad.ToString());
+                var faction = FactionFactory.LoadFromJson(game, factionPath);
 
                 faction.FactionOwnerID = faction.Id;
                 faction.GetDataBlob<FactionInfoDB>().KnownSystems.Add(startingSystem.ID);
+                loadedFactions.Add((faction, factionPath));
 
                 // TODO: allow the json to set this
                 if(playerFaction == null)
                     playerFaction = faction;
+            }
+
+            // Phase 5.1b — opening diplomacy: now that every faction is loaded, apply each one's authored
+            // "openingRelations" (score + opening war), resolving targets by name/abbreviation. No node → no-op.
+            var openingWhen = game.TimePulse.GameGlobalDateTime;
+            foreach(var (faction, factionPath) in loadedFactions)
+            {
+                var openingNode = JObject.Parse(File.ReadAllText(factionPath))["openingRelations"];
+                if(openingNode != null)
+                    FactionFactory.ApplyOpeningRelations(game, faction, openingNode, openingWhen);
             }
 
             var pow = startingSystem.GetAllEntitiesWithDataBlob<EnergyGenAbilityDB>();

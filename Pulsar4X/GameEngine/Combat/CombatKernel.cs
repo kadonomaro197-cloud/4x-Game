@@ -221,13 +221,70 @@ namespace Pulsar4X.Combat
         /// the source always lands <see cref="ArmourMinPassFraction"/> of its damage. Because it's flat-per-source,
         /// N small volleys lose N×(flat) total while one big volley loses only (flat): armour bounces the swarm, the
         /// alpha punches through. Never throws.</summary>
-        public static double ArmourSoak(double armour, double sourceDamage)
+        public static double ArmourSoak(double armour, double sourceDamage) => ArmourSoak(armour, sourceDamage, 0.0, 1.0);
+
+        /// <summary>Flat ARMOUR soak WITH weapon PENETRATION — the armour half of the matchup
+        /// (docs/COMPONENT-DESIGNER-DIALS.md ⚙1 backlog #1). Penetration cancels armour point-for-point BEFORE the flat
+        /// soak: an AP/sabot/lance round with <paramref name="penetration"/> ≥ the target's armour meets no effective
+        /// plating and lands in full (like an unarmoured target), while a normal round (penetration 0) is byte-for-byte
+        /// the flat soak above — so this reduces to the old <see cref="ArmourSoak(double,double)"/> when penetration is
+        /// 0. Penetration is clamped at 0 (it can never make armour STRONGER). Never throws. Same flat-per-source rule,
+        /// so N small volleys still lose N×(flat) while one big alpha loses only (flat) — penetration just shrinks the
+        /// plating each source meets.</summary>
+        public static double ArmourSoak(double armour, double sourceDamage, double penetration)
+            => ArmourSoak(armour, sourceDamage, penetration, 1.0);
+
+        /// <summary>Flat ARMOUR soak with penetration AND a per-NATURE effectiveness factor — the armour-half of the
+        /// damage×armour matchup (⚙3 Defense: ablative/composite/reactive plating). <paramref name="natureFactor"/>
+        /// scales how strongly THIS plating soaks the incoming damage's NATURE: 1.0 = the plating's rated strength
+        /// (byte-identical to the penetration overload above), &gt;1 = the plating is tuned to that nature (ablative vs
+        /// energy soaks harder), &lt;1 = a poor match (ablative vs a kinetic slug bounces less). It scales only the flat
+        /// soak AMOUNT — penetration still decides the physical breach point-for-point first, so a round that out-pens the
+        /// plate passes in full regardless of nature. Clamped at 0 (a nature match can never make armour NEGATIVE). Never
+        /// throws. natureFactor 1.0 (every unit until a nature-tuned plating is fitted) → byte-identical.</summary>
+        public static double ArmourSoak(double armour, double sourceDamage, double penetration, double natureFactor)
         {
             if (sourceDamage <= 0) return 0.0;
-            if (armour <= 0) return sourceDamage;
+            if (penetration < 0) penetration = 0.0;
+            if (natureFactor < 0) natureFactor = 0.0;
+            double effectiveArmour = armour - penetration;
+            if (effectiveArmour <= 0) return sourceDamage;   // penetration meets/beats the plating → full pass (as if unarmoured)
             double floor = sourceDamage * ArmourMinPassFraction;
-            double after = sourceDamage - armour * ArmourSoakPerPoint;
+            double after = sourceDamage - effectiveArmour * ArmourSoakPerPoint * natureFactor;
             return after < floor ? floor : after;
+        }
+
+        /// <summary>Upper bound on how many shots a single source's fire is split into for the burst soak — keeps a
+        /// tiny-per-shot weapon (a minigun) from splitting into a pathological chunk count. Flagged balance value.</summary>
+        public const int BurstSoakMaxShots = 1000;
+
+        /// <summary>How many shots a weapon's per-second fire is treated as for the alpha-vs-chip armour soak: its
+        /// damage-per-second divided by its <see cref="WeaponProfile.PerShotEnergy"/>, clamped to [1, <see cref="BurstSoakMaxShots"/>].
+        /// A cannon (huge PerShotEnergy) → 1 (one alpha); a repeater (small PerShotEnergy) → many. 0/unspecified
+        /// PerShotEnergy → 1 (single lump), so an un-dialled weapon is byte-identical. This is the shared rule both
+        /// domains use so the granularity is defined ONCE.</summary>
+        public static int BurstShotCount(WeaponProfile w)
+        {
+            if (w == null || w.PerShotEnergy <= 0 || w.DamagePerSecond <= 0) return 1;
+            double n = Math.Round(w.DamagePerSecond / w.PerShotEnergy);
+            if (n < 1) return 1;
+            if (n > BurstSoakMaxShots) return BurstSoakMaxShots;
+            return (int)n;
+        }
+
+        /// <summary>Flat ARMOUR soak of a source whose fire is a BURST of <paramref name="shotCount"/> equal shots — the
+        /// alpha-vs-chip identity (⚙1 backlog #2). Splits the source's damage into that many equal chunks and soaks each
+        /// flat (with <paramref name="penetration"/>), then sums. Because armour is flat-per-shot, many small chunks each
+        /// lose (flat) so most is bounced, while one big chunk loses only (flat) and punches through — so a repeater and
+        /// a cannon of EQUAL total damage land very differently against plate. <paramref name="shotCount"/> ≤ 1 is
+        /// byte-for-byte <see cref="ArmourSoak(double,double,double)"/> (one lump), so an un-dialled weapon is unchanged.
+        /// Never throws.</summary>
+        public static double ArmourSoakBurst(double armour, double sourceDamage, int shotCount, double penetration = 0, double natureFactor = 1.0)
+        {
+            if (sourceDamage <= 0) return 0.0;
+            if (shotCount <= 1) return ArmourSoak(armour, sourceDamage, penetration, natureFactor);
+            double perChunk = sourceDamage / shotCount;
+            return ArmourSoak(armour, perChunk, penetration, natureFactor) * shotCount;
         }
     }
 }

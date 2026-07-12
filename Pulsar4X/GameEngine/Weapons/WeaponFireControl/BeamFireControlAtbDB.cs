@@ -28,6 +28,11 @@ namespace Pulsar4X.Weapons
 
         public BeamFireControlAtbDB(double range, double trackingSpeed) : this((int)range, (int)trackingSpeed) { }
 
+        // 3-arg overload for the JSON/NCalc binder (gotcha #0 — an EXACT-arity ctor, not an optional param): a template
+        // whose AtbConstrArgs passes a third value sets FinalFireOnly (non-zero = a PD / final-defensive-fire director).
+        public BeamFireControlAtbDB(double range, double trackingSpeed, double finalFireOnly)
+            : this((int)range, (int)trackingSpeed, finalFireOnly != 0) { }
+
         [JsonConstructor]
         public BeamFireControlAtbDB(int range = 0, int trackingSpeed = 0, bool finalFireOnly = false)
         {

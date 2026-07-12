@@ -80,6 +80,14 @@ namespace Pulsar4X.Factions
                 };
             }
 
+            // Phase 5.1a — AUTHORED PERSONALITY: a scenario can hand a faction its 12-trait identity (the model the whole
+            // brain reads — retreat nerve, treaty tolerance, aggression, honour…). Only attach a PersonalityDB when the
+            // scenario names one; with no "personality" node the faction carries none and every trait read falls back to
+            // Neutral (0.5) exactly as today → byte-identical for every existing scenario file.
+            var personalityNode = rootJson["personality"];
+            if (personalityNode != null)
+                faction.SetDataBlob(PersonalityFromJson(personalityNode));
+
             var componentDesignsToLoad = (JArray?)rootJson["componentDesigns"];
             foreach(var componentDesignToLoad in componentDesignsToLoad)
             {
@@ -252,6 +260,81 @@ namespace Pulsar4X.Factions
             return faction;
         }
 
+        /// <summary>
+        /// Phase 5.1a — build a <see cref="PersonalityDB"/> from a JSON object of <c>traitName → 0..1</c> (e.g.
+        /// <c>{ "aggression": 0.8, "honor": 0.2 }</c>). Trait names match <see cref="PersonalityTrait"/> case-insensitively;
+        /// an unknown name or a null value is skipped, and any trait the scenario omits stays <see cref="PersonalityDB.Neutral"/>.
+        /// Public + static so a scenario loader OR a test can author a personality without a file (the acceptance-test rig).
+        /// </summary>
+        public static PersonalityDB PersonalityFromJson(JToken node)
+        {
+            var personality = new PersonalityDB();
+            if (node is JObject obj)
+            {
+                foreach (var kv in obj)
+                {
+                    if (kv.Value == null || kv.Value.Type == JTokenType.Null) continue;
+                    if (Enum.TryParse<PersonalityTrait>(kv.Key, ignoreCase: true, out var trait))
+                        personality.SetTrait(trait, kv.Value.Value<double>());
+                }
+            }
+            return personality;
+        }
+
+        /// <summary>
+        /// Phase 5.1b — apply a faction's authored OPENING DIPLOMACY. <paramref name="openingNode"/> is a JSON array of
+        /// <c>{ "target": "&lt;name or abbreviation&gt;", "score": &lt;int&gt;, "atWar": &lt;bool&gt; }</c> — e.g.
+        /// <c>[{ "target": "TER", "atWar": true, "score": -80 }]</c> to start the game already at war. Targets are
+        /// resolved by faction NAME or ABBREVIATION against <see cref="Game.Factions"/>, so this MUST run only after
+        /// every faction is loaded (the scenario loader's second pass) — a not-yet-loaded / unknown target is skipped,
+        /// never thrown on. Sets the relation score on BOTH ledgers (war + relationships are symmetric) and latches war
+        /// via the Phase-3.4 <see cref="Diplomacy.DeclareWar"/> machinery. Public/static so a test can drive it directly.
+        /// Defensive/no-throw.
+        /// </summary>
+        public static void ApplyOpeningRelations(Game game, Entity faction, JToken openingNode, DateTime when)
+        {
+            if (game == null || faction == null || openingNode is not JArray entries) return;
+            foreach (var entry in entries)
+            {
+                var targetKey = entry["target"]?.ToString();
+                if (string.IsNullOrEmpty(targetKey)) continue;
+
+                var target = ResolveFactionByNameOrAbbr(game, targetKey);
+                if (!target.IsValid || target == faction) continue;
+
+                int score = entry["score"]?.Value<int>() ?? 0;
+                SetRelationScore(faction, target, score);      // both directions — a relationship is two-sided
+                SetRelationScore(target, faction, score);
+
+                if (entry["atWar"]?.Value<bool>() ?? false)
+                    Diplomacy.DeclareWar(faction, target, CasusBelli.ConfrontRival, when);
+            }
+        }
+
+        /// <summary>Find a faction by its NAME or ABBREVIATION (case-insensitive), or <see cref="Entity.InvalidEntity"/>.</summary>
+        private static Entity ResolveFactionByNameOrAbbr(Game game, string key)
+        {
+            foreach (var kvp in game.Factions)
+            {
+                var f = kvp.Value;
+                if (f == null || !f.IsValid) continue;
+                if (f.TryGetDataBlob<FactionInfoDB>(out var info)
+                    && string.Equals(info.Abbreviation, key, StringComparison.OrdinalIgnoreCase))
+                    return f;
+                try { if (string.Equals(f.GetName(f.Id), key, StringComparison.OrdinalIgnoreCase)) return f; } catch { }
+            }
+            return Entity.InvalidEntity;
+        }
+
+        /// <summary>Converge <paramref name="from"/>'s view of <paramref name="to"/> to an absolute target score
+        /// (idempotent — same shape as GameStageFactory.SetRelation). No-op if the faction has no ledger.</summary>
+        private static void SetRelationScore(Entity from, Entity to, int targetScore)
+        {
+            if (!from.TryGetDataBlob<DiplomacyDB>(out var dip)) return;
+            var rel = dip.GetOrCreateRelationship(to.Id);
+            rel.AdjustScore(targetScore - rel.RelationScore);
+        }
+
         private static void LoadCargo(Entity target, FactionDataStore factionDataStore, JArray? cargoArray)
         {
             if(cargoArray == null) return;
@@ -299,6 +382,7 @@ namespace Pulsar4X.Factions
                 new OrderableDB(),
                 new DiplomacyDB(),
                 new GovernmentDB(),
+                new InformationLedgerDB(),
             };
             var factionEntity = Entity.Create();
             game.GlobalManager.AddEntity(factionEntity, blobs);
@@ -359,6 +443,7 @@ namespace Pulsar4X.Factions
                 new OrderableDB(),
                 new DiplomacyDB(),
                 new GovernmentDB(),
+                new InformationLedgerDB(),
             };
             var factionEntity = Entity.Create();
             game.GlobalManager.AddEntity(factionEntity, blobs);

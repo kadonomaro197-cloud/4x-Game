@@ -262,7 +262,13 @@ namespace Pulsar4X.Ships
             {
                 var sourceColony = factionInfoDB.Colonies.FirstOrDefault(c => c.Id == crewInfo.CrewSourceColonyId);
                 if (sourceColony != null)
-                    Pulsar4X.Colonies.ManpowerTools.ReleaseCrew(sourceColony, crewInfo.Design.CrewReq);
+                {
+                    // Enhancers ⚙6.2: release the SAME split that was committed — the veteran-cadre slice (TalentReq)
+                    // returns to the scarce talent pool, the rest to bulk. TalentReq is 0 for every non-caliber ship,
+                    // so bulk gets the full CrewReq back and talent gets nothing — byte-identical to the old release.
+                    Pulsar4X.Colonies.ManpowerTools.ReleaseCrew(sourceColony, crewInfo.Design.CrewReq - crewInfo.Design.TalentReq);
+                    Pulsar4X.Colonies.ManpowerTools.ReleaseTalent(sourceColony, crewInfo.Design.TalentReq);
+                }
             }
 
             // Remove the ship entity from the game

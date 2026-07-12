@@ -42,11 +42,11 @@ namespace Pulsar4X.GroundCombat
         /// turns it on at startup next to the space combat flags.</summary>
         public static bool InterruptTimeOnNewBattle = false;
 
-        /// <summary>Shield pool regeneration per game-hour, as a FRACTION of the unit's shield CAPACITY (resolver merge
-        /// 3c). Between salvos a unit's <c>CurrentShield</c> recharges toward its <c>Shield</c> max by this × the tick's
-        /// hours — so a depleted shield recovers over ~1/this hours (0.34 ≈ full recharge in ~3 game-hours). Flagged
-        /// balance default; 0 = a knocked-down shield stays down for the fight.</summary>
-        public const double ShieldRegenPerHourFraction = 0.34;
+        // Shield pool regeneration is now a PER-UNIT designed rate (GroundUnit.ShieldRegenFraction, ⚙3), defaulting to
+        // 0.34/game-hour (≈ full recharge in ~3 hours) for every unit until a ward dials it — see the recharge step in
+        // ProcessBody. The old global ShieldRegenPerHourFraction constant was removed (2026-07-11): it was dead (the
+        // 0.34 default lives on the field initializers), so a "single anchor" it wasn't. 0 = a knocked-down shield
+        // stays down for the fight.
 
         // FORTIFICATION (5h) is now DESIGN-DRIVEN — a building fortifies its region (and projects to adjacent friendly
         // regions) only if its design carries a GroundDefenseAtb (a Bunker, not a solar panel). The math + the
@@ -280,7 +280,10 @@ namespace Pulsar4X.GroundCombat
             if (deltaSeconds > 0)
                 foreach (var u in units)
                     if (u.Shield > 0 && u.CurrentShield < u.Shield)
-                        u.CurrentShield = System.Math.Min(u.Shield, u.CurrentShield + u.Shield * ShieldRegenPerHourFraction * (deltaSeconds / 3600.0));
+                        // ⚙3 Defense: recharge at the UNIT's designed rate (a fast ward vs a slow big shield), not a
+                        // global constant. ShieldRegenFraction defaults to 0.34 for every unit until a ward is
+                        // fitted → byte-identical with the old global-constant behaviour.
+                        u.CurrentShield = System.Math.Min(u.Shield, u.CurrentShield + u.Shield * u.ShieldRegenFraction * (deltaSeconds / 3600.0));
 
             // Per-TARGET incoming (not per-faction) so range gating lands damage on exactly the units an attacker can
             // reach. Computed entirely from the PRE-salvo state (Health read here, applied below) → simultaneous.
@@ -312,7 +315,15 @@ namespace Pulsar4X.GroundCombat
                         // unit's raw stats (attack / armour / HP) × weapon-nature vs the target's evasion/shield/armour,
                         // the same way a ship's does. (`GroundTerrain.TriangleMult` is retained as a readout/helper but
                         // no longer scales the fight.)
-                        double atk = u.Attack * GroundTerrain.TerrainAttackMult(u.UnitType, terrain) * GroundFormationDoctrine.AttackMult(forces, u);
+                        // Terrain affinity = the unit TYPE's innate edge (TerrainAttackMult) × its DESIGNED
+                        // locomotion's edge (LocomotionTerrainMult, Propulsion ⚙2 — an all-terrain drive fights better
+                        // on constrained ground). RoughHandlingForUnit reads the unit's designed locomotion (0.5 neutral
+                        // for a unit with none → ×1.0 → byte-identical). Body = the planet the roster sits on.
+                        double roughHandling = GroundMobility.RoughHandlingForUnit(forces.OwningEntity, u);
+                        double atk = u.Attack
+                            * GroundTerrain.TerrainAttackMult(u.UnitType, terrain)
+                            * GroundTerrain.LocomotionTerrainMult(roughHandling, terrain)
+                            * GroundFormationDoctrine.AttackMult(forces, u);
                         double pool = atk * SalvoScale;
                         if (gIsDefender && coverFort > 0) pool /= coverFort;
 
@@ -344,8 +355,17 @@ namespace Pulsar4X.GroundCombat
                                 contribution -= absorbed;
                             }
                             // ARMOUR: flat-per-source plating bounces what's left (the swarm-vs-alpha identity) — the
-                            // shared CombatKernel.ArmourSoak (via GroundDamageMatrix's delegator, slice 3a).
-                            contribution = GroundDamageMatrix.ArmourSoak(t.Defense, contribution);
+                            // shared CombatKernel armour soak (via GroundDamageMatrix's delegator, slice 3a), reduced by
+                            // the weapon's PENETRATION (W1b) and split into the weapon's SHOT COUNT (W2b): an AP round
+                            // cracks plate a normal one bounces off, and a big-alpha weapon punches while a chip-swarm of
+                            // equal total is mostly bounced. PerShotEnergy 0 → shotCount 1 (every unit until the W2c dial)
+                            // → the flat single-lump soak, byte-identical to before.
+                            int shotCount = Pulsar4X.Combat.CombatKernel.BurstShotCount(profile);
+                            // ARMOUR NATURE (⚙3): the target's plating soaks the incoming weapon's NATURE by its tuning —
+                            // ablative shrugs off energy, thins vs a slug. natureFactor 1.0 for a plain-plated unit (every
+                            // unit until a nature-tuned plating is fitted) → byte-identical to the pre-nature soak.
+                            double natureFactor = t.ArmourResistFor(profile.Nature);
+                            contribution = GroundDamageMatrix.ArmourSoak(t.Defense, contribution, shotCount, profile.Penetration, natureFactor);
                             incoming.TryGetValue(t, out var acc);
                             incoming[t] = acc + contribution;
                         }
@@ -478,7 +498,10 @@ namespace Pulsar4X.GroundCombat
                         break;
 
                     case GroundOrderType.MoveToHex:
-                        if (!order.Issued) { GroundForces.OrderFormationMoveToHex(body, f, order.TargetQ, order.TargetR); order.Issued = true; done = false; }
+                        // G6b-2: a queued formation move now marches on the GLOBAL planetary grid (TargetQ/TargetR are
+                        // global cylinder coords), not the per-region fine disk — the developer's "troops move on the
+                        // planetary hexes." Uses the CI-green OrderFormationMoveToGlobalHex (G6b-1).
+                        if (!order.Issued) { GroundForces.OrderFormationMoveToGlobalHex(body, f, order.TargetQ, order.TargetR); order.Issued = true; done = false; }
                         else done = LeaderIdle(forces, f);
                         break;
 
@@ -512,7 +535,12 @@ namespace Pulsar4X.GroundCombat
         {
             var leader = GroundFormationTools.Leader(forces, f) ?? FirstMember(forces, f);
             if (leader == null) return true;
-            return leader.MovingToRegion < 0 && (leader.HexPath == null || leader.HexPath.Count == 0);
+            // Idle = not marching on ANY grid: not doing a coarse region hop, no per-region fine path (ROE step),
+            // and no GLOBAL planetary path (G6b-2 formation move). Checking both grids keeps the queue correct while
+            // the ROE micro still uses the per-region path (retired in a later G6b slice).
+            bool hexMarching = leader.HexPath != null && leader.HexPath.Count > 0;
+            bool globalMarching = leader.GlobalPath != null && leader.GlobalPath.Count > 0;
+            return leader.MovingToRegion < 0 && !hexMarching && !globalMarching;
         }
 
         private static GroundUnit FirstMember(GroundForcesDB forces, GroundFormation f)

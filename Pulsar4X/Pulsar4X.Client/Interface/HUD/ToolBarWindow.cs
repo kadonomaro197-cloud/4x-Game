@@ -121,6 +121,16 @@ namespace Pulsar4X.Client
 
             btn = new ToolBarOption()
             {
+                Picture = _uiState.Img_Select(),   // placeholder icon (no dedicated intelligence art yet)
+                TooltipText = "Intelligence: your agents, covert ops, and what you know about rivals",
+                OnClick = new Action(IntelligenceWindow.GetInstance().ToggleActive),
+                GetActive = new Func<bool>(IntelligenceWindow.GetInstance().GetActive)
+                //Opens the espionage panel (agents / assign covert ops / intel ledger)
+            };
+            ToolButtons.Add(btn);
+
+            btn = new ToolBarOption()
+            {
                 Picture = _uiState.Img_Ruler(),
                 TooltipText = "Measure distance",
                 OnClick = new Action(DistanceRuler.GetInstance().ToggleActive),

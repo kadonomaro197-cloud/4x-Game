@@ -1405,41 +1405,57 @@ namespace Pulsar4X.Galaxy
         }
 
         /// <summary>
+        /// Whether a body TYPE can hold ancient ruins: a terrestrial world or a moon — somewhere with a solid
+        /// surface. Pure and directly testable. (This is the fix for a long-standing tautology bug: the old inline
+        /// check was <c>bodyType != Terrestrial || bodyType != Moon</c>, which is ALWAYS true — a body can't be both
+        /// types at once — so every body bailed and ruins never generated. The correct test is AND: reject only a
+        /// body that is NEITHER.) No atmosphere requirement: ancient ruins don't need breathable air — Mars is thin
+        /// and Luna airless, and both are canonical ruin worlds (Exploration content vision, docs/EXPLORATION-CONTENT-DESIGN.md).
+        /// </summary>
+        internal static bool CanBodyHaveRuins(BodyType bodyType)
+        {
+            return bodyType == BodyType.Terrestrial || bodyType == BodyType.Moon;
+        }
+
+        /// <summary>
         /// This function generate ruins for the specified system Body.
         /// @todo Make Ruins Generation take star age/type into consideration??
         /// </summary>
         private void GenerateRuins(StarSystem system, IHasDataBlobs body)
         {
-            // cache some DBs:
-            var atmo = body.GetDataBlob<AtmosphereDB>();
             var bodyType = body.GetDataBlob<SystemBodyInfoDB>().BodyType;
             var ruins = body.GetDataBlob<RuinsDB>();
 
-            // first we will check that this body type can have ruins on it:
-            if (bodyType != BodyType.Terrestrial
-                || bodyType != BodyType.Moon)
-            {
-                return; // wrong type.
-            }
-            else if (atmo.Exists == false && (atmo.Pressure > 2.5 || atmo.Pressure < 0.01))
-            {
-                return; // no valid atmosphere!
-            }
-            else if (system.RNGNextDouble() > _galaxyGen.Settings.RuinsGenerationChance)
-            {
-                return; // that's right... lucked out on this one.
-            }
+            // A ruin needs solid ground to sit on. (See CanBodyHaveRuins — this is the tautology fix; every body
+            // used to bail here so ruins never generated at all.)
+            if (!CanBodyHaveRuins(bodyType))
+                return;
+
+            // Roll ruins from a DEDICATED, per-body deterministic RNG (seeded from the body's own generated mass)
+            // rather than the shared system RNG. Ruins used to draw NOTHING (the tautology bailed before any RNG
+            // call), so there is no legacy stream to preserve — and keeping ruins OFF the shared stream means adding
+            // this content does NOT perturb the rest of galaxy generation (star ages, body counts, positions). That
+            // keeps the SystemGenTests golden master exact and stops an unrelated content addition from cascading
+            // through the shared RNG. Deterministic: the same galaxy seed yields the same body mass, hence the same ruins.
+            var rng = new Random((int)BitConverter.DoubleToInt64Bits(body.GetDataBlob<MassVolumeDB>().MassDry));
+
+            if (rng.NextDouble() > _galaxyGen.Settings.RuinsGenerationChance)
+                return; // scarcity — most worlds are ordinary (the hot-spot rule, EXPLORATION-CONTENT-DESIGN.md).
 
             // now if we have survived the gauntlet lets gen some Ruins!!
-            ruins.RuinSize = _galaxyGen.Settings.RuinsSizeDistribution.Select(system.RNGNext(0, 100));
+            // WeightedList.Select expects a FRACTION in [0,1) (it normalises by TotalWeight). The original code
+            // passed RNGNext(0,100) — an int 0..99 — which overshoots 1.0 and makes Select throw "Failed to choose a
+            // random value" for any roll >= 1. That bug never fired because the tautology above always bailed first;
+            // fixing the tautology exposed it. Roll fractions instead.
+            ruins.RuinSize = _galaxyGen.Settings.RuinsSizeDistribution.Select(rng.NextDouble());
 
-            int quality = system.RNGNext(0, 100);
-            ruins.RuinQuality = _galaxyGen.Settings.RuinsQualityDistribution.Select(quality);
-            if (ruins.RuinSize == RuinsDB.RSize.City && quality >= 95)
-                ruins.RuinQuality = RuinsDB.RQuality.MultipleIntact;  // special case!!
+            double qualityRoll = rng.NextDouble();
+            ruins.RuinQuality = _galaxyGen.Settings.RuinsQualityDistribution.Select(qualityRoll);
+            if (ruins.RuinSize == RuinsDB.RSize.City && qualityRoll >= 0.95)
+                ruins.RuinQuality = RuinsDB.RQuality.MultipleIntact;  // special case: top 5% quality City ruins
 
             // Ruins count:
-            ruins.RuinCount = (uint)GeneralMath.Lerp(_galaxyGen.Settings.RuinsCountRangeBySize[ruins.RuinSize], system.RNGNextDouble());
+            ruins.RuinCount = (uint)GeneralMath.Lerp(_galaxyGen.Settings.RuinsCountRangeBySize[ruins.RuinSize], rng.NextDouble());
             ruins.RuinCount = (uint)Math.Round(_galaxyGen.Settings.RuinsQualityAdjustment[ruins.RuinQuality] * ruins.RuinCount);
         }
 

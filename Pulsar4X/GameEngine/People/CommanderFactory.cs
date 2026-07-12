@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GameEngine.People;
 using Pulsar4X.Datablobs;
 using Pulsar4X.DataStructures;
 using Pulsar4X.Engine;
@@ -82,6 +83,23 @@ namespace Pulsar4X.People
             return db;
         }
 
+        /// <summary>Espionage E2 — create a covert operative (spy). The intelligence twin of
+        /// <see cref="CreateScientist(Game)"/> / <see cref="CreateAcademyGraduate"/>: a <see cref="CommanderTypes.Intelligence"/>
+        /// commander. Recruited by the Intelligence Directorate (<see cref="Pulsar4X.Factions.IntelDirectorateProcessor"/>),
+        /// which rolls its <c>ExperienceCap</c> and stamps a <see cref="CommanderBonuses.RollEspionageCompetence"/>
+        /// tradecraft bonus onto the graduate's <see cref="BonusesDB"/>.</summary>
+        public static CommanderDB CreateAgent(Game game)
+        {
+            var agent = new CommanderDB()
+            {
+                Name = NameFactory.GetCommanderName(game),
+                Rank = 1,
+                Type = CommanderTypes.Intelligence
+            };
+
+            return agent;
+        }
+
         public static Scientist CreateScientist(Entity faction, Entity location)
         {
             //all this stuff needs a proper bit of code to get names from a file or something
@@ -110,6 +128,16 @@ namespace Pulsar4X.People
             if(faction.TryGetDataBlob<FactionInfoDB>(out var factionInfoDB))
             {
                 factionInfoDB.Commanders.Remove(commanderToDestroy);
+            }
+
+            // If this officer held an admin post, vacate the seat so no dead commander stays "seated"
+            // (the person-loss half of the decapitation grave rung).
+            if (commanderToDestroy.TryGetDataBlob<CommanderDB>(out var commanderDB)
+                && commanderDB.AssignedTo >= 0
+                && commanderToDestroy.Manager.TryGetGlobalEntityById(commanderDB.AssignedTo, out var postEntity)
+                && postEntity.TryGetDataBlob<AdminSpaceDB>(out var adminSpaceDB))
+            {
+                AdminSpaceProcessor.VacateSeat(adminSpaceDB, commanderToDestroy.Id);
             }
 
             EventManager.Instance.Publish(

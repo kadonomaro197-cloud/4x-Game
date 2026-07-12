@@ -98,5 +98,38 @@ namespace Pulsar4X.Tests
             Assert.That(warded.Health, Is.GreaterThan(bare.Health),
                 "the SHIELDED defender kept more health under the same strike — its shield soaked part of the bombardment");
         }
+
+        [Test]
+        [Description("⚙3: orbital bombardment respects armour NATURE — it is EXPLOSIVE-nature HE, so a REACTIVE-plated defender (tuned vs explosive) keeps more health than an identical PLAIN-plated one under the same strike. Both have the same Defense (amount), so it's the armour TYPE that differs — 'build the right armour for the threat' extends to surviving the softening. A plain plate reads natureFactor 1.0 → byte-identical to the old nature-blind bombardment.")]
+        public void OrbitalBombardment_ReactivePlatingResistsBetter()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.Colony.GetDataBlob<ColonyInfoDB>().PlanetEntity;
+            int faction = s.Colony.FactionOwnerID;
+
+            if (!body.TryGetDataBlob<GroundForcesDB>(out var forces))
+            {
+                forces = new GroundForcesDB();
+                body.SetDataBlob(forces);
+            }
+            // Same Defense (40) and HP, NO shield — differing ONLY in armour nature vs explosive.
+            var plain    = new GroundUnit { FactionOwnerID = faction, RegionIndex = 0, MaxHealth = 1000, Health = 1000, Defense = 40, Name = "Plain" };
+            var reactive = new GroundUnit { FactionOwnerID = faction, RegionIndex = 0, MaxHealth = 1000, Health = 1000, Defense = 40, ArmourVsExplosive = 2.0, Name = "Reactive" };
+            forces.Units.Add(plain);
+            forces.Units.Add(reactive);
+
+            var frag = new DamageFragment
+            {
+                Velocity = new Vector2(1, 0), Position = (0, 0),
+                Mass = 1f, Density = 1000f, Momentum = 1f, Length = 1f,
+                Energy = 5e12,
+            };
+            DamageProcessor.OnTakingDamage(s.Colony, frag);
+
+            Log($"after strike — plain hp={plain.Health:0}, reactive hp={reactive.Health:0}");
+            Assert.That(plain.Health, Is.LessThan(1000), "the plain-plated defender was softened");
+            Assert.That(reactive.Health, Is.GreaterThan(plain.Health),
+                "the REACTIVE-plated defender (anti-explosive) kept more health under the same HE bombardment");
+        }
     }
 }

@@ -20,6 +20,10 @@ namespace Pulsar4X.Technology
 
         public Type GetParameterType => typeof(ResearcherDB);
 
+        /// <summary>X.0-3 tuning dial: EXPERIENCE a scientist earns per month of working a lab (Experience is 0–200).
+        /// Modest, so a scientist takes years to approach their school-set ceiling — a career, not an overnight jump.</summary>
+        public const int ExperienceGainPerMonth = 2;
+
         private Game _game;
 
         public void Init(Game game)
@@ -147,6 +151,48 @@ namespace Pulsar4X.Technology
                         entity.Manager.ManagerID,
                         entity.Id));
             }
+
+            // X.0-3: a scientist actually working a lab earns EXPERIENCE over time, deepening their competence in the
+            // category they research (the "bonus on top" of the school-set graduation floor). Byte-identical for the
+            // default start: the legacy scientist path leaves ScientistId == -1, so no assigned-entity scientist exists
+            // and nothing grows. Monthly cadence keeps it a slow career climb rather than a daily ratchet.
+            if (researcherDB.ScientistId >= 0
+                && entity.StarSysDateTime.Day == 1
+                && entity.Manager.TryGetGlobalEntityById(researcherDB.ScientistId, out var scientistEntity))
+            {
+                if (GrowScientistExperience(scientistEntity, tech.Category, ExperienceGainPerMonth))
+                    RefreshPointModifiers(researcherDB, tech, scientistEntity);
+            }
+        }
+
+        /// <summary>
+        /// Exploration X.0-3 — grow an assigned scientist's EXPERIENCE toward its (school-set) cap and refresh the
+        /// experience-based research bonus in the category they are working. The "bonus on top" of
+        /// ceiling-now-plus-bonus: the graduation "Research Aptitude" competence (rolled from the CAP) is left
+        /// untouched; this adds/updates a SEPARATE growing bonus keyed on CURRENT Experience. Experience never exceeds
+        /// ExperienceCap — the school still bounds a scientist's ultimate ceiling. Returns true iff experience actually
+        /// rose (so the caller re-folds PointsPerDay). Pure/testable — no clock, no scheduling.
+        /// </summary>
+        internal static bool GrowScientistExperience(Entity scientist, string techCategory, int gain)
+        {
+            if (gain <= 0 || string.IsNullOrEmpty(techCategory))
+                return false;
+            if (!scientist.TryGetDataBlob<CommanderDB>(out var commanderDB))
+                return false;
+            if (commanderDB.Experience >= commanderDB.ExperienceCap)
+                return false;   // already at the school-set ceiling — a career can't exceed the school's potential
+
+            commanderDB.Experience = Math.Min(commanderDB.ExperienceCap, commanderDB.Experience + gain);
+
+            // Replace ONLY the experience bonus in this category; the graduation "Research Aptitude" bonus is left alone.
+            if (scientist.TryGetDataBlob<BonusesDB>(out var bonusesDB))
+            {
+                bonusesDB.Bonuses.RemoveAll(b =>
+                    b.Name == CommanderBonuses.ResearchExperienceBonusName && b.FilterId == techCategory);
+                foreach (var bonus in CommanderBonuses.RollResearchExperienceBonus(commanderDB.Experience, techCategory))
+                    bonusesDB.Bonuses.Add(bonus);
+            }
+            return true;
         }
 
         private void OnTechnologyChanged(Event e)

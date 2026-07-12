@@ -43,6 +43,13 @@ namespace Pulsar4X.Weapons
         [JsonProperty]
         public bool AllowThermalOverride { get; internal set; }
 
+        // COMBAT waste heat (kJ/s) fed to the AUTO-RESOLVE heat model (Weapons pilot W5) — distinct from ThermalOutput_W
+        // (which drives the parked per-pixel firing sim). Flows into WeaponProfile.HeatPerSecond, so a HOT beam builds
+        // the fleet's heat pool and NEEDS radiators to sustain fire. 0 = a "cool" beam (every base-mod beam today →
+        // byte-identical); a pulse/heavy beam (W5c) dials it up.
+        [JsonProperty]
+        public double CombatHeat_kJps { get; internal set; }
+
         public double LenPerPulseInSeconds = 1;
 
         public double BeamSpeed { get; internal set; } = UniversalConstants.Units.SpeedOfLightInMetresPerSecond;
@@ -50,9 +57,18 @@ namespace Pulsar4X.Weapons
 
         public GenericBeamWeaponAtb() { }
 
+        // The ORIGINAL 7-arg JSON ctor. The component binder (Activator.CreateInstance) matches by EXACT ARITY, so this
+        // must stay for the existing beam templates' 7-value AtbConstrArgs to bind (Weapons/CLAUDE.md gotcha #0); it
+        // delegates to the 8-arg ctor with CombatHeat 0 → existing beams generate no combat heat (byte-identical).
         public GenericBeamWeaponAtb(double maxRange, double waveLen, double jules,
             double focalLength = 0, double chargePeriod = 1.0, double thermalOutput_W = 0,
             double allowThermalOverride = 0)
+            : this(maxRange, waveLen, jules, focalLength, chargePeriod, thermalOutput_W, allowThermalOverride, 0) { }
+
+        // The 8-arg ctor WITH combat heat (Weapons pilot W5). A hot-beam template passes an 8th value.
+        public GenericBeamWeaponAtb(double maxRange, double waveLen, double jules,
+            double focalLength, double chargePeriod, double thermalOutput_W,
+            double allowThermalOverride, double combatHeat_kJps)
         {
             MaxRange = maxRange;
             WaveLength = waveLen;
@@ -68,6 +84,7 @@ namespace Pulsar4X.Weapons
             ChargePeriod = chargePeriod;
             ThermalOutput_W = thermalOutput_W;
             AllowThermalOverride = allowThermalOverride > 0.5;
+            CombatHeat_kJps = combatHeat_kJps < 0 ? 0 : combatHeat_kJps;
         }
 
         public GenericBeamWeaponAtb(GenericBeamWeaponAtb db)
@@ -79,6 +96,7 @@ namespace Pulsar4X.Weapons
             ChargePeriod = db.ChargePeriod;
             ThermalOutput_W = db.ThermalOutput_W;
             AllowThermalOverride = db.AllowThermalOverride;
+            CombatHeat_kJps = db.CombatHeat_kJps;
         }
 
         /*

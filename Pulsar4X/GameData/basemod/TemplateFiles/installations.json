@@ -2,6 +2,60 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "ship-hull",
+      "Name": "Ship Hull",
+      "Formulas": {
+        "Description": "The structural frame a ship is built on. It has its own mass (Hull Mass — the frame's weight, which every hulled ship carries) and it sets the mass budget the ship's mounted components must fit within. The space echo of a ground unit's chassis. Template defaults are the MEDIUM tier; the light/heavy tiers override these dials per design.",
+        "Mass": "PropertyValue('Hull Mass')",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "1.0",
+        "CrewReq": "[Mass] * 0.001",
+        "ResearchCost": "0",
+        "CreditCost": "[Mass] * 0.1",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.5",
+        "aluminium": "[Mass] * 0.3"
+      },
+      "ComponentType": "Hull",
+      "MountType": "ShipComponent, ShipCargo",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Hull Mass",
+          "Units": "kg",
+          "DescriptionFormula": "'The frame''s own weight — every ship carries it, so a bigger hull is heavier (and dodges worse). Decoupled from the budget below.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "50000000",
+          "MinFormula": "500",
+          "StepFormula": "500",
+          "PropertyFormula": "10000"
+        },
+        {
+          "Name": "Mass Budget",
+          "Units": "kg",
+          "DescriptionFormula": "'The mass ceiling that a ship''s mounted components must fit within (a bigger hull holds more).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100000000",
+          "MinFormula": "1000",
+          "StepFormula": "1000",
+          "PropertyFormula": "90000"
+        },
+        {
+          "Name": "shipHullAtbArgs",
+          "DescriptionFormula": "'double massBudget'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Mass Budget'))",
+          "AttributeType": "Pulsar4X.Ships.ShipHullAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "mine",
       "Name": "Mine",
       "Formulas": {
@@ -600,6 +654,123 @@
           "GuiHint": "None",
           "PropertyFormula": "AtbConstrArgs(PropertyValue('Class Size'), PropertyValue('Class Length'))",
           "AttributeType": "Pulsar4X.Atb.NavalAcademyAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "research-academy",
+      "Name": "Research Academy",
+      "Formulas": {
+        "Description": "Graduates specialist scientists. A longer program graduates scientists with a higher research-competence ceiling in the academy's specialty.",
+        "Mass": "PropertyValue('Class Size') * 100",
+        "Volume": "[Mass] * 0.1",
+        "HTK": "0.5",
+        "CrewReq": "PropertyValue('Class Size') * 0.25",
+        "ResearchCost": "PropertyValue('Class Size') * 0.5",
+        "CreditCost": "120",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "iron": "[Mass] * 0.45",
+        "aluminium": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.1",
+        "plastic": "[Mass] * 0.1",
+        "stainless-steel": "[Mass] * 0.1",
+        "electronics": "[Mass] * 0.05"
+      },
+      "ComponentType": "Facility",
+      "MountType": "PlanetInstallation",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "Class Size",
+          "DescriptionFormula": "'How many scientists graduate from the academy each cycle.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "100",
+          "MinFormula": "1",
+          "StepFormula": "1",
+          "PropertyFormula": "10"
+        },
+        {
+          "Name": "Class Length",
+          "DescriptionFormula": "'How many months it takes to graduate a class. Longer training graduates scientists with a higher research-competence ceiling.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "48",
+          "MinFormula": "1",
+          "StepFormula": "1",
+          "PropertyFormula": "24"
+        },
+        {
+          "Name": "Research Specialty",
+          "DescriptionFormula": "'The tech category the academy trains its scientists in. Graduates carry a research-competence bonus in this category.'",
+          "GuiHint": "GuiTechCategorySelection",
+          "DataDict": {},
+          "PropertyFormula": "UniqueID('tech-category-power-propulsion')"
+        },
+        {
+          "Name": "DBargs",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Class Size'), PropertyValue('Class Length'), PropertyValue('Research Specialty'))",
+          "AttributeType": "Pulsar4X.People.ResearchAcademyAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "intelligence-directorate",
+      "Name": "Intelligence Directorate",
+      "Formulas": {
+        "Description": "The seat of your spy network. Sets how many concurrent covert operations your agents can run and your counter-intelligence rating against enemy agents operating on your soil.",
+        "Mass": "PropertyValue('Op Capacity') * 500",
+        "Volume": "[Mass] * 0.1",
+        "HTK": "0.5",
+        "CrewReq": "PropertyValue('Op Capacity') * 5",
+        "ResearchCost": "PropertyValue('Op Capacity') * 10",
+        "CreditCost": "200",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "iron": "[Mass] * 0.45",
+        "aluminium": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.1",
+        "plastic": "[Mass] * 0.1",
+        "stainless-steel": "[Mass] * 0.1",
+        "electronics": "[Mass] * 0.05"
+      },
+      "ComponentType": "Facility",
+      "MountType": "PlanetInstallation",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "Op Capacity",
+          "DescriptionFormula": "'How many concurrent covert operations your agents can run.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "10",
+          "MinFormula": "1",
+          "StepFormula": "1",
+          "PropertyFormula": "2"
+        },
+        {
+          "Name": "Counter Intel Rating",
+          "DescriptionFormula": "'Your defensive strength against enemy agents operating on your soil.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "100",
+          "MinFormula": "0",
+          "StepFormula": "5",
+          "PropertyFormula": "20"
+        },
+        {
+          "Name": "DBargs",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Op Capacity'), PropertyValue('Counter Intel Rating'))",
+          "AttributeType": "Pulsar4X.Factions.IntelDirectorateAtb"
         }
       ]
     }
@@ -1224,10 +1395,24 @@
           "PropertyFormula": "1"
         },
         {
+          "Name": "Penetration",
+          "Units": "str",
+          "DescriptionFormula": "'Armour penetration - how much of an enemy''s armour this unit ignores. Infantry small arms bounce off heavy plate (0).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "PerShotEnergy",
+          "Units": "str",
+          "DescriptionFormula": "'Per-shot size - how much of this unit''s attack lands in ONE shot. Small arms put many little rounds downrange (10), so they chip and mostly bounce off armour.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "10"
+        },
+        {
           "Name": "groundUnitAtbArgs",
-          "DescriptionFormula": "'double unitType, double attack, double defense, double hitPoints, double range'",
+          "DescriptionFormula": "'double unitType, double attack, double defense, double hitPoints, double range, double penetration, double perShotEnergy'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('UnitType'), PropertyValue('Attack'), PropertyValue('Defense'), PropertyValue('HitPoints'), PropertyValue('Range'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('UnitType'), PropertyValue('Attack'), PropertyValue('Defense'), PropertyValue('HitPoints'), PropertyValue('Range'), PropertyValue('Penetration'), PropertyValue('PerShotEnergy'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundUnitAtb"
         }
       ]
@@ -1294,10 +1479,24 @@
           "PropertyFormula": "1"
         },
         {
+          "Name": "Penetration",
+          "Units": "str",
+          "DescriptionFormula": "'Armour penetration - a tank''s AP main gun cracks plate that bounces small arms (ignores this much of an enemy''s Defense).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "20"
+        },
+        {
+          "Name": "PerShotEnergy",
+          "Units": "str",
+          "DescriptionFormula": "'Per-shot size - a tank''s main gun lands its whole attack in ONE big shell (140), an alpha that punches flat armour instead of chipping at it.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "140"
+        },
+        {
           "Name": "groundUnitAtbArgs",
-          "DescriptionFormula": "'double unitType, double attack, double defense, double hitPoints, double range'",
+          "DescriptionFormula": "'double unitType, double attack, double defense, double hitPoints, double range, double penetration, double perShotEnergy'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('UnitType'), PropertyValue('Attack'), PropertyValue('Defense'), PropertyValue('HitPoints'), PropertyValue('Range'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('UnitType'), PropertyValue('Attack'), PropertyValue('Defense'), PropertyValue('HitPoints'), PropertyValue('Range'), PropertyValue('Penetration'), PropertyValue('PerShotEnergy'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundUnitAtb"
         }
       ]
@@ -1364,10 +1563,24 @@
           "PropertyFormula": "3"
         },
         {
+          "Name": "Penetration",
+          "Units": "str",
+          "DescriptionFormula": "'Armour penetration - shaped-charge / HE shells shrug off some plating (ignores this much of an enemy''s Defense), between infantry and a tank''s AP gun.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "8"
+        },
+        {
+          "Name": "PerShotEnergy",
+          "Units": "str",
+          "DescriptionFormula": "'Per-shot size - artillery fires a few big HE shells (80 each), between a tank''s single alpha and an infantry spray - each shell is a real hit against armour.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "80"
+        },
+        {
           "Name": "groundUnitAtbArgs",
-          "DescriptionFormula": "'double unitType, double attack, double defense, double hitPoints, double range'",
+          "DescriptionFormula": "'double unitType, double attack, double defense, double hitPoints, double range, double penetration, double perShotEnergy'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('UnitType'), PropertyValue('Attack'), PropertyValue('Defense'), PropertyValue('HitPoints'), PropertyValue('Range'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('UnitType'), PropertyValue('Attack'), PropertyValue('Defense'), PropertyValue('HitPoints'), PropertyValue('Range'), PropertyValue('Penetration'), PropertyValue('PerShotEnergy'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundUnitAtb"
         }
       ]
@@ -1444,7 +1657,7 @@
       "Name": "Service Rifle",
       "Formulas": {
         "Description": "A standard infantry rifle — light enough for any frame to shoulder.",
-        "Mass": "PropertyValue('CarryMass')",
+        "Mass": "PropertyValue('CarryMass') + Max(0, PropertyValue('Attack') - 40) * 1",
         "Volume": "[Mass] * 0.01",
         "HTK": "1.0",
         "CrewReq": "0",
@@ -1562,6 +1775,158 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "ablative-plating",
+      "Name": "Ablative Laminate",
+      "Formulas": {
+        "Description": "Ablative laminate armour (Enhancers/Defence: armour tuned against a damage NATURE). The outer layer boils away under coherent energy, so it shrugs off lasers and plasma — but the light laminate is thin against a solid kinetic slug that punches straight through. Same mass and mitigation as composite plating; what differs is WHAT it stops. Balance dials flagged.",
+        "Mass": "PropertyValue('CarryMass')",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "1.0",
+        "CrewReq": "0",
+        "ResearchCost": "[Mass] * 2",
+        "CreditCost": "[Mass] * 0.15",
+        "BuildPointCost": "[Mass] * 3.0"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.3",
+        "aluminium": "[Mass] * 0.5"
+      },
+      "ComponentType": "Ground Armour",
+      "MountType": "GroundUnit",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "CarryMass",
+          "DescriptionFormula": "'What the frame must bear.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "25"
+        },
+        {
+          "Name": "HP",
+          "DescriptionFormula": "'Health added to the unit's pool.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "150"
+        },
+        {
+          "Name": "Defense",
+          "DescriptionFormula": "'Damage mitigation added.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "5"
+        },
+        {
+          "Name": "VsKinetic",
+          "DescriptionFormula": "'Soak effectiveness vs KINETIC (1.0 = plain plate). FLAGGED balance value.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0.6"
+        },
+        {
+          "Name": "VsEnergy",
+          "DescriptionFormula": "'Soak effectiveness vs ENERGY (1.0 = plain plate). FLAGGED balance value.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "2.0"
+        },
+        {
+          "Name": "VsExplosive",
+          "DescriptionFormula": "'Soak effectiveness vs EXPLOSIVE (1.0 = plain plate). FLAGGED balance value.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "1.0"
+        },
+        {
+          "Name": "VsExotic",
+          "DescriptionFormula": "'Soak effectiveness vs EXOTIC (1.0 = plain plate). FLAGGED balance value.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "1.0"
+        },
+        {
+          "Name": "ablativePlatingArgs",
+          "DescriptionFormula": "'atb ctor args'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('HP'), PropertyValue('Defense'), PropertyValue('VsKinetic'), PropertyValue('VsEnergy'), PropertyValue('VsExplosive'), PropertyValue('VsExotic'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundArmorAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "reactive-plating",
+      "Name": "Reactive Plating",
+      "Formulas": {
+        "Description": "Reactive armour (Defence: armour tuned against a damage NATURE). Explosive-filled blocks detonate outward when struck, defeating a shaped-charge/HE warhead and deflecting a solid slug — so it excels against KINETIC and EXPLOSIVE fire. But a coherent energy beam doesn't trigger the reactive charge and burns straight through the light casing, so it is POOR against energy. The kinetic/explosive counterpart to ablative laminate. Same mass and mitigation as composite; what differs is WHAT it stops. Balance dials flagged.",
+        "Mass": "PropertyValue('CarryMass')",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "1.0",
+        "CrewReq": "0",
+        "ResearchCost": "[Mass] * 2",
+        "CreditCost": "[Mass] * 0.15",
+        "BuildPointCost": "[Mass] * 3.0"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.5",
+        "aluminium": "[Mass] * 0.3"
+      },
+      "ComponentType": "Ground Armour",
+      "MountType": "GroundUnit",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "CarryMass",
+          "DescriptionFormula": "'What the frame must bear.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "25"
+        },
+        {
+          "Name": "HP",
+          "DescriptionFormula": "'Health added to the unit's pool.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "150"
+        },
+        {
+          "Name": "Defense",
+          "DescriptionFormula": "'Damage mitigation added.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "5"
+        },
+        {
+          "Name": "VsKinetic",
+          "DescriptionFormula": "'Soak effectiveness vs KINETIC (1.0 = plain plate). FLAGGED balance value.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "1.6"
+        },
+        {
+          "Name": "VsEnergy",
+          "DescriptionFormula": "'Soak effectiveness vs ENERGY (1.0 = plain plate). FLAGGED balance value.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0.6"
+        },
+        {
+          "Name": "VsExplosive",
+          "DescriptionFormula": "'Soak effectiveness vs EXPLOSIVE (1.0 = plain plate). FLAGGED balance value.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "2.0"
+        },
+        {
+          "Name": "VsExotic",
+          "DescriptionFormula": "'Soak effectiveness vs EXOTIC (1.0 = plain plate). FLAGGED balance value.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "1.0"
+        },
+        {
+          "Name": "reactivePlatingArgs",
+          "DescriptionFormula": "'atb ctor args'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('HP'), PropertyValue('Defense'), PropertyValue('VsKinetic'), PropertyValue('VsEnergy'), PropertyValue('VsExplosive'), PropertyValue('VsExotic'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundArmorAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "power-armor",
       "Name": "Power Armour",
       "Formulas": {
@@ -1630,7 +1995,7 @@
       "Name": "Heavy Autocannon",
       "Formulas": {
         "Description": "A heavy support weapon — too heavy for a bare human frame to shoulder (needs a strong frame or power armour), but devastating.",
-        "Mass": "PropertyValue('CarryMass')",
+        "Mass": "PropertyValue('CarryMass') + Max(0, PropertyValue('Attack') - 140) * 1",
         "Volume": "[Mass] * 0.01",
         "HTK": "1.0",
         "CrewReq": "0",
@@ -1764,7 +2129,7 @@
       "Name": "Tank Cannon",
       "Formulas": {
         "Description": "A vehicle main gun — long reach and heavy hitting, far too heavy for any infantry frame.",
-        "Mass": "PropertyValue('CarryMass')",
+        "Mass": "PropertyValue('CarryMass') + Max(0, PropertyValue('Attack') - 220) * 1",
         "Volume": "[Mass] * 0.01",
         "HTK": "1.0",
         "CrewReq": "0",
@@ -1898,7 +2263,7 @@
       "Name": "Plasma Projector",
       "Formulas": {
         "Description": "A directed-energy weapon (plasma/laser) — clean mid-weight punch at range, the energy-damage flavour.",
-        "Mass": "PropertyValue('CarryMass')",
+        "Mass": "PropertyValue('CarryMass') + Max(0, PropertyValue('Attack') - 90) * 1",
         "Volume": "[Mass] * 0.01",
         "HTK": "1.0",
         "CrewReq": "0",
@@ -2020,6 +2385,76 @@
           "DescriptionFormula": "'atb args'",
           "GuiHint": "None",
           "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('StrengthBonus'), PropertyValue('EvasionBonus'), PropertyValue('ToughnessBonus'), PropertyValue('Shield'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundAugmentAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "ward-projector",
+      "Name": "Ward Projector",
+      "Formulas": {
+        "Description": "A fast-cycling shield ward (⚙3 Defence: the capacity-vs-recharge decision). It holds a SMALLER pool than a big Shield Generator, but recharges much faster between salvos — so it shrugs off sustained chip-fire (the pool is back before the next volley) where a big slow shield eats one alpha then stays down. The trade is burst-durability vs one-hit-buffer. Recharge + capacity dials flagged for a balance pass.",
+        "Mass": "PropertyValue('CarryMass')",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "1.0",
+        "CrewReq": "0",
+        "ResearchCost": "[Mass] * 2",
+        "CreditCost": "[Mass] * 0.15",
+        "BuildPointCost": "[Mass] * 3"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.3",
+        "aluminium": "[Mass] * 0.5"
+      },
+      "ComponentType": "Augment",
+      "MountType": "GroundUnit",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "CarryMass",
+          "DescriptionFormula": "'What the frame must bear.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "20"
+        },
+        {
+          "Name": "StrengthBonus",
+          "DescriptionFormula": "'ADDED to the frame's carry budget.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "EvasionBonus",
+          "DescriptionFormula": "'Dodge bonus (System 1 survivability).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "ToughnessBonus",
+          "DescriptionFormula": "'Survivability multiplier.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "Shield",
+          "DescriptionFormula": "'Flat incoming-damage soak pool (smaller than a big generator). FLAGGED balance value.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "60"
+        },
+        {
+          "Name": "ShieldRegenFraction",
+          "DescriptionFormula": "'Fraction of the pool restored per hour between salvos (0.34 = the standard generator). FLAGGED balance value.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "1.0"
+        },
+        {
+          "Name": "wardProjectorArgs",
+          "DescriptionFormula": "'atb args'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('StrengthBonus'), PropertyValue('EvasionBonus'), PropertyValue('ToughnessBonus'), PropertyValue('Shield'), PropertyValue('ShieldRegenFraction'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundAugmentAtb"
         }
       ]
@@ -2160,7 +2595,7 @@
       "Name": "Rending Claws",
       "Formulas": {
         "Description": "Natural/close-combat weapons — weigh almost nothing but reach only the same hex (melee, range 0). The swarm's teeth.",
-        "Mass": "PropertyValue('CarryMass')",
+        "Mass": "PropertyValue('CarryMass') + Max(0, PropertyValue('Attack') - 20) * 1",
         "Volume": "[Mass] * 0.01",
         "HTK": "1.0",
         "CrewReq": "0",

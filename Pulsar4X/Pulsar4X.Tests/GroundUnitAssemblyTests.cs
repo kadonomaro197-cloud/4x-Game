@@ -220,6 +220,89 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("⚙3 Defense armour NATURE cradle-to-grave: the base-mod Ablative Laminate is tuned against a damage NATURE — its GroundArmorAtb binds VsEnergy>1 / VsKinetic<1 from JSON (the six-point / 7-arg-ctor sensor), the assembler flows that part → design → raised unit (ArmourVs*), and in the resolver's own soak an ENERGY hit lands LESS on the ablative unit than on an identical composite-plated unit of EQUAL Defense (it shrugs lasers), while a KINETIC slug lands MORE (the light laminate is thin vs a slug). A plain plate reads natureFactor 1.0 → byte-identical. This closes the armour-nature loop: a build decides 'armour against WHAT'.")]
+        public void ArmourNature_AblativeLaminate_ShrugsEnergy_ThinsVsKinetic_CradleToGrave()
+        {
+            _s = TestScenario.CreateWithColony();
+            var human = Part("default-design-human-frame");
+            var rifle = Part("default-design-ground-rifle");
+            var composite = Part("default-design-ground-plating");
+            var ablative = Part("default-design-ablative-plating");
+
+            // The ablative part's nature dials bound from JSON through the real 7-arg NCalc ctor (gotcha #10 sensor).
+            var abAtb = ablative.GetAttribute<GroundArmorAtb>();
+            Assert.That(abAtb.VsEnergy, Is.GreaterThan(1.0), "ablative is TUNED vs energy (binds from JSON)");
+            Assert.That(abAtb.VsKinetic, Is.LessThan(1.0), "…and a POOR match vs a kinetic slug");
+            Assert.That(abAtb.Defense, Is.EqualTo(composite.GetAttribute<GroundArmorAtb>().Defense),
+                "same mitigation as composite plating — the NATURE is the only difference (a clean comparison)");
+
+            var compDesign = GroundUnitAssembly.ToGroundUnitDesign("test-comp", "Composite", human,
+                new List<(ComponentDesign, int)> { (rifle, 1), (composite, 1) });
+            var ablDesign = GroundUnitAssembly.ToGroundUnitDesign("test-abl", "Ablative", human,
+                new List<(ComponentDesign, int)> { (rifle, 1), (ablative, 1) });
+
+            // The nature flowed part → design (a single plate → its own values; the Defense-weighted average).
+            Assert.That(ablDesign.ArmourVsEnergy, Is.EqualTo(abAtb.VsEnergy).Within(1e-9), "the design carries the ablative energy tuning");
+            Assert.That(ablDesign.ArmourVsKinetic, Is.EqualTo(abAtb.VsKinetic).Within(1e-9));
+            Assert.That(compDesign.ArmourVsEnergy, Is.EqualTo(1.0), "composite is a plain plate — neutral vs every nature (byte-identical)");
+
+            // …and onto the raised units the resolver reads.
+            var abl = GroundForces.RaiseUnit(_s.StartingBody, ablDesign, _s.Faction.Id, 0, "Ablative");
+            var comp = GroundForces.RaiseUnit(_s.StartingBody, compDesign, _s.Faction.Id, 1, "Composite");
+            Assert.That(abl.ArmourResistFor(Pulsar4X.Combat.WeaponNature.Energy), Is.GreaterThan(1.0));
+            Assert.That(comp.ArmourResistFor(Pulsar4X.Combat.WeaponNature.Energy), Is.EqualTo(1.0));
+
+            // …and it BITES in the resolver's OWN soak: same Defense, same hit, only the nature factor differs.
+            const double hit = 20.0;
+            const int shots = 1; const double pen = 0;
+            double ablVsEnergy = GroundDamageMatrix.ArmourSoak(abl.Defense, hit, shots, pen, abl.ArmourResistFor(Pulsar4X.Combat.WeaponNature.Energy));
+            double compVsEnergy = GroundDamageMatrix.ArmourSoak(comp.Defense, hit, shots, pen, comp.ArmourResistFor(Pulsar4X.Combat.WeaponNature.Energy));
+            double ablVsKinetic = GroundDamageMatrix.ArmourSoak(abl.Defense, hit, shots, pen, abl.ArmourResistFor(Pulsar4X.Combat.WeaponNature.Kinetic));
+            double compVsKinetic = GroundDamageMatrix.ArmourSoak(comp.Defense, hit, shots, pen, comp.ArmourResistFor(Pulsar4X.Combat.WeaponNature.Kinetic));
+
+            Assert.That(ablVsEnergy, Is.LessThan(compVsEnergy), "ablative shrugs off ENERGY — less lands than on identical plain plate");
+            Assert.That(ablVsKinetic, Is.GreaterThan(compVsKinetic), "…but is thin vs a KINETIC slug — more lands than on plain plate");
+            // The plain plate is byte-identical to the pre-nature soak (natureFactor 1.0).
+            Assert.That(compVsEnergy, Is.EqualTo(GroundDamageMatrix.ArmourSoak(comp.Defense, hit)).Within(1e-12),
+                "a plain plate is byte-identical to the old flat soak (natureFactor 1.0)");
+            Log($"a {hit:0} hit → ablative lands {ablVsEnergy:0.0} (energy) / {ablVsKinetic:0.0} (kinetic); composite {compVsEnergy:0.0} / {compVsKinetic:0.0}");
+        }
+
+        [Test]
+        [Description("⚙3 Defense armour ROCK-PAPER-SCISSORS: Reactive Plating is the KINETIC/EXPLOSIVE counterpart to ablative — its blocks defeat slugs and shaped charges (VsKinetic>1, VsExplosive>1) but a laser burns through the light casing (VsEnergy<1). So the armour CHOICE stacks against the THREAT: vs an energy weapon the ablative unit soaks best, vs a kinetic weapon the reactive unit soaks best — the matchup flips, making 'armour against WHAT' a real decision rather than a flat +. Same Defense on both, so nature is the only variable.")]
+        public void ArmourNature_ReactiveVsAblative_IsAThreatMatchup()
+        {
+            _s = TestScenario.CreateWithColony();
+            var human = Part("default-design-human-frame");
+            var rifle = Part("default-design-ground-rifle");
+            var ablative = Part("default-design-ablative-plating");
+            var reactive = Part("default-design-reactive-plating");
+
+            var reAtb = reactive.GetAttribute<GroundArmorAtb>();
+            Assert.That(reAtb.VsKinetic, Is.GreaterThan(1.0), "reactive defeats a kinetic slug (binds from JSON)");
+            Assert.That(reAtb.VsExplosive, Is.GreaterThan(1.0), "…and a shaped-charge / HE warhead");
+            Assert.That(reAtb.VsEnergy, Is.LessThan(1.0), "…but a laser burns through the light casing");
+
+            var ablDesign = GroundUnitAssembly.ToGroundUnitDesign("test-abl2", "Ablative", human,
+                new List<(ComponentDesign, int)> { (rifle, 1), (ablative, 1) });
+            var reDesign = GroundUnitAssembly.ToGroundUnitDesign("test-re", "Reactive", human,
+                new List<(ComponentDesign, int)> { (rifle, 1), (reactive, 1) });
+            var abl = GroundForces.RaiseUnit(_s.StartingBody, ablDesign, _s.Faction.Id, 0, "Ablative");
+            var re = GroundForces.RaiseUnit(_s.StartingBody, reDesign, _s.Faction.Id, 1, "Reactive");
+
+            const double hit = 20.0; const int shots = 1; const double pen = 0;
+            double Lands(GroundUnit u, Pulsar4X.Combat.WeaponNature n)
+                => GroundDamageMatrix.ArmourSoak(u.Defense, hit, shots, pen, u.ArmourResistFor(n));
+
+            // The matchup FLIPS by threat — the whole point of the decision.
+            Assert.That(Lands(abl, Pulsar4X.Combat.WeaponNature.Energy), Is.LessThan(Lands(re, Pulsar4X.Combat.WeaponNature.Energy)),
+                "vs a laser, the ABLATIVE unit takes less — pick ablative against energy");
+            Assert.That(Lands(re, Pulsar4X.Combat.WeaponNature.Kinetic), Is.LessThan(Lands(abl, Pulsar4X.Combat.WeaponNature.Kinetic)),
+                "vs a slug, the REACTIVE unit takes less — pick reactive against kinetic");
+            Log($"energy hit: abl {Lands(abl, Pulsar4X.Combat.WeaponNature.Energy):0.0} vs re {Lands(re, Pulsar4X.Combat.WeaponNature.Energy):0.0};  kinetic hit: abl {Lands(abl, Pulsar4X.Combat.WeaponNature.Kinetic):0.0} vs re {Lands(re, Pulsar4X.Combat.WeaponNature.Kinetic):0.0}");
+        }
+
+        [Test]
         [Description("The Clone-vs-Zergling proof: two units from the SAME parts bin that share almost no gameplay DNA. A Clone (human + plasma + plating + shield) is a ranged, durable, shielded soak-tank; a Zergling (swarm frame + claws + reflex) is a fragile, cheap, melee dodger. Both assemble legally; every System-① field is opposite.")]
         public void CloneTrooper_vs_Zergling_AreOppositeUnits_FromOneBin()
         {
@@ -257,6 +340,50 @@ namespace Pulsar4X.Tests
             Assert.That(zergling.HitPoints, Is.LessThan(clone.HitPoints));
             Assert.That(zergling.Range, Is.LessThan(clone.Range));
             Assert.That(zergling.IndustryPointCosts, Is.LessThan(clone.IndustryPointCosts), "a Zergling is far cheaper — you field a thousand");
+        }
+
+        [Test]
+        [Description("⚙3 Defense shield RECHARGE decision (capacity vs recharge — the ground twin of the ship shield's dial): the base-mod Ward Projector holds a SMALLER pool than the standard Shield Generator but recharges much faster (ShieldRegenFraction 1.0 vs the default 0.34), binding that dial from JSON through the real 6-arg ctor. It flows part → design → raised unit, so a warded unit recovers a bigger FRACTION of its shield per hour (back to full in ~1 hour) while the big generator recovers only ~34% — a real burst-durability-vs-one-hit-buffer choice. A standard-shield or shield-less unit reads 0.34 → byte-identical.")]
+        public void ShieldRecharge_WardProjector_RechargesFasterThanTheBigGenerator()
+        {
+            _s = TestScenario.CreateWithColony();
+            var human = Part("default-design-human-frame");
+            var rifle = Part("default-design-ground-rifle");
+            var bigShield = Part("default-design-shield-generator");
+            var ward = Part("default-design-ward-projector");
+
+            // The ward's recharge dial binds from JSON via the 6-arg ctor (gotcha #10 sensor); the standard generator
+            // uses the 5-arg ctor so it defaults to 0.34 (byte-identical).
+            var wardAtb = ward.GetAttribute<GroundAugmentAtb>();
+            var bigAtb = bigShield.GetAttribute<GroundAugmentAtb>();
+            Assert.That(wardAtb.ShieldRegenFraction, Is.GreaterThan(0.34), "the ward dials a fast recharge (binds from JSON)");
+            Assert.That(bigAtb.ShieldRegenFraction, Is.EqualTo(0.34).Within(1e-9), "the standard generator keeps the old default (byte-identical)");
+            Assert.That(wardAtb.Shield, Is.LessThan(bigAtb.Shield), "the ward's pool is smaller — the trade for fast recharge");
+
+            var wardDesign = GroundUnitAssembly.ToGroundUnitDesign("test-ward", "Warded", human,
+                new List<(ComponentDesign, int)> { (rifle, 1), (ward, 1) });
+            var bigDesign = GroundUnitAssembly.ToGroundUnitDesign("test-big", "BigShield", human,
+                new List<(ComponentDesign, int)> { (rifle, 1), (bigShield, 1) });
+            var bareDesign = GroundUnitAssembly.ToGroundUnitDesign("test-bareS", "Bare", human,
+                new List<(ComponentDesign, int)> { (rifle, 1) });
+
+            Assert.That(wardDesign.ShieldRegenFraction, Is.EqualTo(wardAtb.ShieldRegenFraction).Within(1e-9), "recharge flows part → design");
+            Assert.That(bigDesign.ShieldRegenFraction, Is.EqualTo(0.34).Within(1e-9));
+            Assert.That(bareDesign.ShieldRegenFraction, Is.EqualTo(0.34).Within(1e-9), "a shield-less unit keeps the default (byte-identical, moot with no pool)");
+
+            var wardUnit = GroundForces.RaiseUnit(_s.StartingBody, wardDesign, _s.Faction.Id, 0, "Warded");
+            var bigUnit = GroundForces.RaiseUnit(_s.StartingBody, bigDesign, _s.Faction.Id, 1, "BigShield");
+            Assert.That(wardUnit.ShieldRegenFraction, Is.EqualTo(wardAtb.ShieldRegenFraction).Within(1e-9), "…and onto the raised unit");
+
+            // The resolver recovers Shield × ShieldRegenFraction × (dt/3600) per step. Over an hour, as a FRACTION of
+            // each unit's OWN pool, the ward recovers more (it's the recharge that differs, not the capacity).
+            const double oneHour = 3600.0;
+            double wardFrac = wardUnit.ShieldRegenFraction * (oneHour / 3600.0); // = its regen fraction, capped at 1 by the pool
+            double bigFrac = bigUnit.ShieldRegenFraction * (oneHour / 3600.0);
+            Assert.That(wardFrac, Is.GreaterThan(bigFrac), "the ward recharges a bigger fraction of its pool per hour");
+            Assert.That(System.Math.Min(1.0, wardFrac), Is.EqualTo(1.0).Within(1e-9), "the ward is back to full within the hour");
+            Assert.That(bigFrac, Is.LessThan(1.0), "the big shield is still recharging (only ~34% back)");
+            Log($"per hour: ward recovers {wardFrac:P0} of its {wardUnit.Shield:0} pool; big generator {bigFrac:P0} of its {bigUnit.Shield:0}");
         }
     }
 }

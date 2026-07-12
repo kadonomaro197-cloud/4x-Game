@@ -360,8 +360,14 @@ namespace Pulsar4X.Damage
                 if (u.FactionOwnerID != defenderFactionId) continue;   // soften the DEFENDER, not a landed invader
                 // Orbital strike = an undodgeable AREA attack: the matchup zeroes dodge (area) and lets a shield soak a
                 // fraction; flat armour then bounces a little off the (single, big) source. Mirrors ResolveRegionCombat.
+                // ⚙3 Defense: an orbital bombardment is EXPLOSIVE-nature HE, so armour tuned vs explosive (reactive
+                // plating) resists the softening — "build to survive the bombardment" now includes armour TYPE, not just
+                // amount. A plain-plated unit reads natureFactor 1.0 → byte-identical to the old nature-blind soak.
                 double landed = GroundCombat.GroundDamageMatrix.ArmourSoak(
-                    u.Defense, raw * GroundCombat.GroundDamageMatrix.Matchup(GroundCombat.GroundWeaponMode.Artillery, u));
+                    u.Defense,
+                    raw * GroundCombat.GroundDamageMatrix.Matchup(GroundCombat.GroundWeaponMode.Artillery, u),
+                    1, 0,
+                    u.ArmourResistFor(Pulsar4X.Combat.WeaponNature.Explosive));
                 u.Health -= landed;
                 if (u.Health <= 0)
                     (dead ??= new List<GroundUnit>()).Add(u);

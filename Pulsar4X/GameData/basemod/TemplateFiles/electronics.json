@@ -367,5 +367,427 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "cloak-device",
+      "Name": "Cloak Device",
+      "Formulas": {
+        "Description": "An electronic-warfare signature-damping cloak. Multiplies the ship's emitted signature DOWN, so it is picked up only at much shorter range (detection range scales with the square root of signature). The stealth-ship maker — sneak past a picket, ambush from close, scout unseen. Damps the EMITTED signature; an active radar ping still bounces off the hull.",
+        "Mass": "PropertyValue('Mass')",
+        "Volume": "[Mass]",
+        "HTK": "0.5",
+        "CrewReq": "Max(1, [Mass] * 0.01)",
+        "ResearchCost": "[Mass] * 3",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.3",
+        "aluminium": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.3",
+        "plastic": "[Mass] * 0.2"
+      },
+      "ComponentType": "Sensor",
+      "MountType": "ShipComponent, ShipCargo",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Signature Multiplier",
+          "Units": "fraction",
+          "DescriptionFormula": "'The fraction of its normal emitted signature the ship shows at full health (lower = stealthier). 0.2 => detected at ~0.45x the normal range.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1.0",
+          "MinFormula": "0.05",
+          "StepFormula": "0.05",
+          "PropertyFormula": "0.2"
+        },
+        {
+          "Name": "Mass",
+          "Units": "kg",
+          "GuiHint": "None",
+          "PropertyFormula": "200 + 400 * (1 - PropertyValue('Signature Multiplier'))"
+        },
+        {
+          "Name": "cloakAtbArgs",
+          "DescriptionFormula": "'double signatureMultiplier'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Signature Multiplier'))",
+          "AttributeType": "Pulsar4X.Sensors.CloakAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "pd-director",
+      "Name": "Point-Defense Director",
+      "Formulas": {
+        "Description": "A final-defensive-fire (CIWS) director: dedicates the beams it controls to INTERCEPTING incoming missiles instead of anti-ship fire. Fast-tracking, short-ranged — the point-defense half of the fire-control door.",
+        "Mass": "PropertyValue('Mass')",
+        "Volume": "[Mass]",
+        "HTK": "0.5",
+        "CrewReq": "[Mass]",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.5",
+        "plastic": "[Mass] * 0.2",
+        "aluminium": "[Mass] * 0.1",
+        "copper": "[Mass] * 0.2"
+      },
+      "ComponentType": "Weapon",
+      "MountType": "ShipComponent, ShipCargo",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Range",
+          "Units": "kkm",
+          "DescriptionFormula": "'Reach of the director (short — point defense is close-in work).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "50",
+          "MinFormula": "5",
+          "StepFormula": "5",
+          "PropertyFormula": "10"
+        },
+        {
+          "Name": "Tracking Speed",
+          "Units": "km/s",
+          "DescriptionFormula": "'How fast it slews — a CIWS must track fast, jinking missiles.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "25000",
+          "MinFormula": "5000",
+          "StepFormula": "250",
+          "PropertyFormula": "20000"
+        },
+        {
+          "Name": "Mass",
+          "Units": "kg",
+          "GuiHint": "None",
+          "PropertyFormula": "(PropertyValue('Range') + PropertyValue('Tracking Speed') / 100) * 1.5"
+        },
+        {
+          "Name": "DBargs",
+          "DescriptionFormula": "'double range, double trackingSpeed, double finalFireOnly (1 = PD-only)'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Range'), PropertyValue('Tracking Speed'), 1)",
+          "AttributeType": "Pulsar4X.Weapons.BeamFireControlAtbDB"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "jammer",
+      "Name": "Barrage Jammer",
+      "Formulas": {
+        "Description": "An active barrage jammer: floods the band with noise so hostile sensors detect at much shorter range — but it lights THIS ship up as a beacon (loud, just hard to resolve past). The offensive Electronic-Warfare suite: blind the enemy, paint a target on yourself.",
+        "Mass": "PropertyValue('Mass')",
+        "Volume": "[Mass]",
+        "HTK": "0.5",
+        "CrewReq": "Max(1, [Mass] * 0.01)",
+        "ResearchCost": "[Mass] * 3",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.3",
+        "aluminium": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.3",
+        "plastic": "[Mass] * 0.2"
+      },
+      "ComponentType": "Sensor",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Sensitivity Degrade",
+          "Units": "x",
+          "DescriptionFormula": "'Divides a hostile receiver usable signal within range (higher = blinder; 4x ~ halves their detection range).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "16",
+          "MinFormula": "1",
+          "StepFormula": "1",
+          "PropertyFormula": "4"
+        },
+        {
+          "Name": "Range",
+          "Units": "Gm",
+          "DescriptionFormula": "'Reach of the jamming (a hostile receiver within this distance is degraded).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5",
+          "MinFormula": "0.1",
+          "StepFormula": "0.1",
+          "PropertyFormula": "1"
+        },
+        {
+          "Name": "Self Signature Boost",
+          "Units": "x",
+          "DescriptionFormula": "'How much louder this ship own signature runs while jamming (the beacon catch).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "10",
+          "MinFormula": "1",
+          "StepFormula": "1",
+          "PropertyFormula": "5"
+        },
+        {
+          "Name": "Mass",
+          "Units": "kg",
+          "GuiHint": "None",
+          "PropertyFormula": "200 + 100 * PropertyValue('Sensitivity Degrade') + 50 * PropertyValue('Range')"
+        },
+        {
+          "Name": "jammerAtbArgs",
+          "DescriptionFormula": "'double sensitivityDegrade, double range_m, double selfSignatureBoost'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Sensitivity Degrade'), PropertyValue('Range') * 1000000000, PropertyValue('Self Signature Boost'))",
+          "AttributeType": "Pulsar4X.Sensors.JammerAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "warp-stabilizer",
+      "Name": "Warp Stabilizer",
+      "Formulas": {
+        "Description": "Shields a ship's warp drive against a warp-inhibitor field — a nebula or hazard that strands others. Lets you jump through space that traps an unstabilized hull. The counter to a hazard's WarpInhibit effect (Defense ▸ Hardening).",
+        "Mass": "PropertyValue('Mass')",
+        "Volume": "[Mass]",
+        "HTK": "0.5",
+        "CrewReq": "Max(1, [Mass] * 0.01)",
+        "ResearchCost": "[Mass] * 2",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.4",
+        "aluminium": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.2",
+        "plastic": "[Mass] * 0.1"
+      },
+      "ComponentType": "Sensor",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, Fighter",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Resisted Effect",
+          "DescriptionFormula": "'Which hazard effect this resists, as the HazardEffectType enum value (WarpInhibit = 5).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "5"
+        },
+        {
+          "Name": "Resistance",
+          "Units": "fraction",
+          "DescriptionFormula": "'How strongly it shrinks the warp-inhibit effect (0..1). Stacks across modules.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "0.9",
+          "MinFormula": "0.1",
+          "StepFormula": "0.05",
+          "PropertyFormula": "0.6"
+        },
+        {
+          "Name": "Mass",
+          "Units": "kg",
+          "GuiHint": "None",
+          "PropertyFormula": "100 + 200 * PropertyValue('Resistance')"
+        },
+        {
+          "Name": "hazardResistAtbArgs",
+          "DescriptionFormula": "'double resistedEffectTypeId, double resistanceFraction'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Resisted Effect'), PropertyValue('Resistance'))",
+          "AttributeType": "Pulsar4X.Hazards.HazardResistanceAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "drive-reinforcement",
+      "Name": "Drive Reinforcement",
+      "Formulas": {
+        "Description": "Reinforces a ship's sub-light drive against the MovementDrag of a thick medium — a gas/dust cloud or debris field that bogs others down. Lets you power through space that mires an unreinforced hull. The counter to a hazard's MovementDrag effect (Defense ▸ Hardening).",
+        "Mass": "PropertyValue('Mass')",
+        "Volume": "[Mass]",
+        "HTK": "0.5",
+        "CrewReq": "Max(1, [Mass] * 0.01)",
+        "ResearchCost": "[Mass] * 2",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.5",
+        "aluminium": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.1",
+        "titanium": "[Mass] * 0.2"
+      },
+      "ComponentType": "Sensor",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, Fighter",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Resisted Effect",
+          "DescriptionFormula": "'Which hazard effect this resists, as the HazardEffectType enum value (MovementDrag = 4).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "4"
+        },
+        {
+          "Name": "Resistance",
+          "Units": "fraction",
+          "DescriptionFormula": "'How strongly it shrinks the movement-drag effect (0..1). Stacks across modules.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "0.9",
+          "MinFormula": "0.1",
+          "StepFormula": "0.05",
+          "PropertyFormula": "0.6"
+        },
+        {
+          "Name": "Mass",
+          "Units": "kg",
+          "GuiHint": "None",
+          "PropertyFormula": "100 + 200 * PropertyValue('Resistance')"
+        },
+        {
+          "Name": "hazardResistAtbArgs",
+          "DescriptionFormula": "'double resistedEffectTypeId, double resistanceFraction'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Resisted Effect'), PropertyValue('Resistance'))",
+          "AttributeType": "Pulsar4X.Hazards.HazardResistanceAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "unit-caliber",
+      "Name": "Veteran Cadre",
+      "Formulas": {
+        "Description": "A veteran cadre / elite command crew embedded in the hull — training and battle-experience that make an identical chassis fight above its class (Enhancers: Unit Caliber). It multiplies the ship's firepower and toughness. Costs mass (the extra command spaces + drilled crew) and crew.",
+        "Mass": "PropertyValue('Cadre Mass')",
+        "Volume": "Max(1, [Mass] / 150)",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.2",
+        "ResearchCost": "[Mass] * 2",
+        "CreditCost": "[Mass] * 3",
+        "BuildPointCost": "[Mass] * 2"
+      },
+      "ResourceCost": {
+        "electronics": "[Mass] * 0.3",
+        "aluminium": "[Mass] * 0.2",
+        "stainless-steel": "[Mass] * 0.2"
+      },
+      "ComponentType": "Augment",
+      "MountType": "ShipComponent, ShipCargo",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Cadre Mass",
+          "Units": "kg",
+          "DescriptionFormula": "'Mass of the cadre and its command spaces.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "20000",
+          "MinFormula": "1000",
+          "StepFormula": "100",
+          "PropertyFormula": "3000"
+        },
+        {
+          "Name": "Firepower Caliber",
+          "Units": "x",
+          "DescriptionFormula": "'Firepower multiplier from the crew gunnery training (1.0 = green crew, 2.0 = elite).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2.0",
+          "MinFormula": "1.0",
+          "StepFormula": "0.05",
+          "PropertyFormula": "1.3"
+        },
+        {
+          "Name": "Toughness Caliber",
+          "Units": "x",
+          "DescriptionFormula": "'Toughness multiplier from damage-control drill (1.0 = green crew, 2.0 = elite).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2.0",
+          "MinFormula": "1.0",
+          "StepFormula": "0.05",
+          "PropertyFormula": "1.2"
+        },
+        {
+          "Name": "unitCaliberAtbArgs",
+          "DescriptionFormula": "'double firepowerMult, double toughnessMult'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Firepower Caliber'), PropertyValue('Toughness Caliber'))",
+          "AttributeType": "Pulsar4X.Combat.UnitCaliberAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "crew-automation",
+      "Name": "Automation Suite",
+      "Formulas": {
+        "Description": "An automation / ship-AI suite that does part of the crew's work, so the hull runs with fewer people (Enhancers: Systems - Automation). It cuts the BULK crew requirement, letting you spend mass and high tech instead of scarce workforce. It does not replace the veteran command cadre.",
+        "Mass": "PropertyValue('Automation Mass')",
+        "Volume": "Max(1, [Mass] / 150)",
+        "HTK": "0.5",
+        "CrewReq": "Max(1, [Mass] * 0.002)",
+        "ResearchCost": "[Mass] * 3",
+        "CreditCost": "[Mass] * 4",
+        "BuildPointCost": "[Mass] * 3"
+      },
+      "ResourceCost": {
+        "electronics": "[Mass] * 0.5",
+        "aluminium": "[Mass] * 0.2",
+        "stainless-steel": "[Mass] * 0.1"
+      },
+      "ComponentType": "Augment",
+      "MountType": "ShipComponent, ShipCargo",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Automation Mass",
+          "Units": "kg",
+          "DescriptionFormula": "'Mass of the automation hardware and its AI cores.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "30000",
+          "MinFormula": "1000",
+          "StepFormula": "100",
+          "PropertyFormula": "5000"
+        },
+        {
+          "Name": "Crew Reduction",
+          "Units": "crew",
+          "DescriptionFormula": "'How many bulk crew positions the automation replaces (never the veteran cadre).'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "200",
+          "MinFormula": "0",
+          "StepFormula": "5",
+          "PropertyFormula": "30"
+        },
+        {
+          "Name": "crewAutomationAtbArgs",
+          "DescriptionFormula": "'double crewReduction'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Crew Reduction'))",
+          "AttributeType": "Pulsar4X.Combat.CrewAutomationAtb"
+        }
+      ]
+    }
   }
 ]

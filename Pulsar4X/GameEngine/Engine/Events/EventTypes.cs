@@ -231,6 +231,7 @@ namespace Pulsar4X.Events
         TechExchange,
         Communication,
         Diplomacy,
+        GalacticCrisis,   // Phase 4.2: a faction has ASCENDED — the galaxy-wide endgame crisis
         Reparations,
 
         // Ship State Events

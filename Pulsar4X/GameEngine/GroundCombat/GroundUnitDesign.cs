@@ -40,6 +40,13 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public GroundUnitType UnitType { get; set; } = GroundUnitType.Infantry;
         [JsonProperty] public double Attack { get; set; }
         [JsonProperty] public double Defense { get; set; }
+        // ⚙3 Defense — armour NATURE tuning: how well this design's plating soaks each incoming damage nature (the
+        // Defense-weighted combination of its GroundArmorAtb parts). 1.0 = a plain plate (every design until a
+        // nature-tuned plating is fitted → byte-identical). Snapshotted onto each raised unit's ArmourVs* fields.
+        [JsonProperty] public double ArmourVsKinetic { get; set; } = 1.0;
+        [JsonProperty] public double ArmourVsEnergy { get; set; } = 1.0;
+        [JsonProperty] public double ArmourVsExplosive { get; set; } = 1.0;
+        [JsonProperty] public double ArmourVsExotic { get; set; } = 1.0;
         [JsonProperty] public double HitPoints { get; set; }
         /// <summary>Strike RANGE in HEXES (H3) — the max hex-distance at which this unit can hit an enemy (0 = same hex
         /// only, 1 = also the adjacent ring, 3 = out to three rings). The unit's operational REACH: a longer-ranged
@@ -54,11 +61,26 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public double Evasion { get; set; }
         /// <summary>SYSTEM ① survivability-by-shield — flat incoming-damage soak pool; Σ augment shield.</summary>
         [JsonProperty] public double Shield { get; set; }
+        /// <summary>⚙3 Defense — shield RECHARGE: fraction of full shield capacity restored per hour between salvos
+        /// (Shield-weighted combination of the mounted augments' dials). Default 0.34 (the old global constant) →
+        /// byte-identical. Snapshotted onto each raised unit's <see cref="GroundUnit.ShieldRegenFraction"/>.</summary>
+        [JsonProperty] public double ShieldRegenFraction { get; set; } = 0.34;
         /// <summary>AMMO magazine capacity (kg) — Σ mounted magazines (weapon-unification B). Snapshotted onto each
         /// raised unit's <see cref="GroundUnit.MaxAmmo_kg"/>. 0 = no magazine / no ammo weapons.</summary>
         [JsonProperty] public double AmmoCapacity_kg { get; set; }
         /// <summary>SYSTEM ① primary damage flavour (from the heaviest weapon), for the future damage×defence matrix.</summary>
         [JsonProperty] public GroundWeaponMode DamageType { get; set; } = GroundWeaponMode.Ballistic;
+        /// <summary>ARMOUR PENETRATION — how much of an enemy's flat armour (Defense) this unit's weapon IGNORES before
+        /// the per-source soak (Weapons pilot W1c; the ground echo of <see cref="Pulsar4X.Combat.WeaponProfile.Penetration"/>).
+        /// 0 = a normal round (bounces off heavy plate); a high value is an AP/sabot cracker. Snapshotted onto each
+        /// raised unit's <see cref="GroundUnit.Penetration"/>. Moddable per design (the base-mod Armor unit carries it —
+        /// a tank's AP main gun).</summary>
+        [JsonProperty] public double Penetration { get; set; }
+        /// <summary>PER-SHOT ENERGY — how much of this design's Attack is one shot (Weapons pilot W2c; the ground echo of
+        /// <see cref="Pulsar4X.Combat.WeaponProfile.PerShotEnergy"/>). 0 = a single lump; a cannon delivers a big alpha
+        /// that punches flat armour, small arms chip and bounce. Snapshotted onto each raised unit's
+        /// <see cref="GroundUnit.PerShotEnergy"/>. Moddable per design (the base-mod Armor unit's main gun is a big alpha).</summary>
+        [JsonProperty] public double PerShotEnergy { get; set; }
         /// <summary>ENVIRONMENTAL GEAR (E4) — per-hazard protection this design's units carry, keyed by the shared
         /// <see cref="Pulsar4X.Hazards.HazardEffectType"/>. Value 0..1 = fraction of that hazard's attrition negated
         /// (a "heat-shielded" design has <c>{HeatDamage: 0.8}</c>). Snapshotted onto each raised <see cref="GroundUnit"/>.

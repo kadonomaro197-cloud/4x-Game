@@ -98,10 +98,38 @@ namespace Pulsar4X.Combat
         /// railgun/flak/missile default to 0 (rangeless) until their own range fields are added — a flagged follow-up.</summary>
         [JsonProperty] public double Range_m { get; internal set; }
 
+        /// <summary>ARMOUR PENETRATION — how much of the target's flat armour (its Defense) this weapon IGNORES before
+        /// the per-source soak (see <see cref="Combat.CombatKernel.ArmourSoak"/>). 0 = no penetration: the shot bounces
+        /// off plating like a normal round. A high value is an armour-CRACKER — a sabot/lance/AP weapon that treats
+        /// heavy plating as if it were light. It only bites where flat armour is applied per-source: the ground /
+        /// garrison resolver today (the ship path folds armour into Toughness, so penetration reaches ships only once
+        /// that per-source armour reconcile lands — a flagged follow-up). This is the "armour half of the matchup"
+        /// dial — docs/COMPONENT-DESIGNER-DIALS.md ⚙1 resolver backlog #1.</summary>
+        [JsonProperty] public double Penetration { get; internal set; }
+
+        /// <summary>PER-SHOT ENERGY (joules in ONE shot) — the alpha-vs-chip dial (docs/COMPONENT-DESIGNER-DIALS.md ⚙1
+        /// backlog #2). Its purpose is to split a weapon's damage into few-big vs many-small hits against flat armour:
+        /// because armour is soaked FLAT per hit (<see cref="Combat.CombatKernel.ArmourSoak"/>), one big alpha punches
+        /// through while a swarm of chips is mostly bounced — even at equal damage-per-second. 0 = unspecified: the
+        /// weapon's fire is treated as a single lump (the pre-⚙1-#2 behaviour), so a profile that doesn't set it is
+        /// byte-identical. The shot COUNT a salvo splits into is <see cref="Combat.CombatKernel.BurstShotCount"/>
+        /// (= dps ÷ PerShotEnergy, clamped). Like Penetration it bites where flat armour is applied per-source — the
+        /// ground/garrison resolver today.</summary>
+        [JsonProperty] public double PerShotEnergy { get; internal set; }
+
+        /// <summary>WASTE HEAT this weapon dumps into its ship while firing, in kilojoules/second (Weapons pilot W5 —
+        /// heat → sustained rate). An energy weapon's sustained fire cooks the ship: the fleet's heat pool
+        /// (`FleetCombatStateDB.HeatPool_kJ`) rises by Σ this × dt each salvo, its radiators shed some, and if the pool
+        /// outruns the radiators the energy weapons THROTTLE (burst-vs-sustained). 0 = a "cool" weapon that generates no
+        /// tracked heat (every base-mod weapon today → byte-identical); a HOT high-power weapon (W5c) sets it and then
+        /// NEEDS radiators to sustain fire. Only energy-fed (Energy/Exotic) weapons meaningfully carry it.</summary>
+        [JsonProperty] public double HeatPerSecond { get; internal set; }
+
         public WeaponProfile() { }
 
         public WeaponProfile(double damagePerSecond, double velocity, double tracking, double saturation, double range_m = 0,
-            WeaponNature nature = WeaponNature.Kinetic, WeaponDelivery delivery = WeaponDelivery.Slug)
+            WeaponNature nature = WeaponNature.Kinetic, WeaponDelivery delivery = WeaponDelivery.Slug, double penetration = 0,
+            double perShotEnergy = 0, double heatPerSecond = 0)
         {
             DamagePerSecond = damagePerSecond;
             Velocity = velocity;
@@ -110,6 +138,9 @@ namespace Pulsar4X.Combat
             Range_m = range_m;
             Nature = nature;
             Delivery = delivery;
+            Penetration = penetration;
+            PerShotEnergy = perShotEnergy;
+            HeatPerSecond = heatPerSecond;
         }
 
         public WeaponProfile(WeaponProfile p)
@@ -121,6 +152,9 @@ namespace Pulsar4X.Combat
             Range_m = p.Range_m;
             Nature = p.Nature;
             Delivery = p.Delivery;
+            Penetration = p.Penetration;
+            PerShotEnergy = p.PerShotEnergy;
+            HeatPerSecond = p.HeatPerSecond;
         }
     }
 }

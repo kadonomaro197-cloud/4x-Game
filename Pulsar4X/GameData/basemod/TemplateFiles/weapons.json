@@ -6,7 +6,7 @@
       "Name": "EMaser Weapon",
       "Formulas": {
         "Description": "ElectroMagnetic Amplifed by Stimulated Emission of Radiation Weapon",
-        "Mass": "PropertyValue('Power Input') / 1000 + PropertyValue('Chamber Volume') + PropertyValue('Radiator Volume')",
+        "Mass": "PropertyValue('Power Input') / 1000 + PropertyValue('Chamber Volume') + PropertyValue('Radiator Volume') + Max(0, PropertyValue('Range') - 5000) * 0.5",
         "Volume": "PropertyValue('Power Input') / 1000 + PropertyValue('Chamber Volume')",
         "HTK": "0.5",
         "CrewReq": "[Mass]",
@@ -346,8 +346,8 @@
       "UniqueID": "railgun-weapon",
       "Name": "Railgun",
       "Formulas": {
-        "Description": "Electromagnetic mass driver: flings a solid slug at high but finite velocity. Brutal against slow targets, dodged by nimble ones.",
-        "Mass": "PropertyValue('Kinetic Energy Per Shot') / 1000 + PropertyValue('Rounds Per Second') * 50",
+        "Description": "Electromagnetic mass driver: flings a solid slug at high but finite velocity. Brutal against slow targets, dodged by nimble ones. High muzzle velocity is EARNED — bigger rails and capacitors, so it costs mass above the baseline.",
+        "Mass": "PropertyValue('Kinetic Energy Per Shot') / 1000 + PropertyValue('Rounds Per Second') * 50 + Max(0, PropertyValue('Muzzle Velocity') - 50000) / 1000",
         "Volume": "[Mass] * 0.5",
         "HTK": "0.5",
         "CrewReq": "[Mass] * 0.1",
@@ -418,11 +418,93 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "siege-railgun",
+      "Name": "Siege Railgun",
+      "Formulas": {
+        "Description": "A massive spinal mass driver — one huge slug per shot, brutal against armour. Its violent RECOIL kicks the whole ship, so on a light hull it throws its aim off badly (low effective tracking); a heavy warship absorbs the kick and keeps tracking. The recoil is the price of the punch. Hypersonic muzzle velocity is EARNED — bigger rails and capacitors, so it costs mass above the baseline.",
+        "Mass": "PropertyValue('Kinetic Energy Per Shot') / 1000 + PropertyValue('Rounds Per Second') * 50 + Max(0, PropertyValue('Muzzle Velocity') - 50000) / 1000",
+        "Volume": "[Mass] * 0.5",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.1",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "aluminium": "[Mass] * 0.2",
+        "stainless-steel": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.15",
+        "tungsten": "[Mass] * 0.3",
+        "titanium": "[Mass] * 0.1",
+        "graphite": "[Mass] * 0.05"
+      },
+      "ComponentType": "Weapon",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, GroundUnit",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Muzzle Velocity",
+          "Units": "m/s",
+          "DescriptionFormula": "'How fast the slug leaves the barrel. Fast, but FINITE — a nimble ship can dodge it.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "500000",
+          "MinFormula": "1000",
+          "StepFormula": "1000",
+          "PropertyFormula": "50000"
+        },
+        {
+          "Name": "Kinetic Energy Per Shot",
+          "Units": "J",
+          "DescriptionFormula": "'Damage delivered by one huge slug on impact — a siege gun hits far harder per shot than a standard railgun.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "TechData('tech-kinetic-yield')",
+          "MinFormula": "1000",
+          "StepFormula": "1000",
+          "PropertyFormula": "800000"
+        },
+        {
+          "Name": "Rounds Per Second",
+          "Units": "1/s",
+          "DescriptionFormula": "'Rate of fire. A siege gun is slow — one big slug at a time.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1000",
+          "MinFormula": "0.1",
+          "StepFormula": "0.1",
+          "PropertyFormula": "2"
+        },
+        {
+          "Name": "Tracking",
+          "Units": "",
+          "DescriptionFormula": "'How well it follows an evasive target (0..1). Ballistic, so near zero — and recoil cuts it further on a light hull.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "0.05"
+        },
+        {
+          "Name": "Recoil",
+          "Units": "kg",
+          "DescriptionFormula": "'How hard the gun kicks its own ship each shot. On a light hull this throws the aim off (lower effective tracking = chassisMass/(chassisMass+Recoil)); a heavy warship barely notices.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "50000"
+        },
+        {
+          "Name": "siegeRailgunAtbArgs",
+          "DescriptionFormula": "'double muzzleVelocity, double kineticEnergyPerShot, double roundsPerSecond, double tracking, double recoil'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Muzzle Velocity'), PropertyValue('Kinetic Energy Per Shot'), PropertyValue('Rounds Per Second'), PropertyValue('Tracking'), PropertyValue('Recoil'))",
+          "AttributeType": "Pulsar4X.Weapons.RailgunWeaponAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "flak-weapon",
       "Name": "Flak / Point-Defense Gun",
       "Formulas": {
         "Description": "Rapid-fire pellet-cloud gun. Barely scratches a capital, but its volume of fire fills the sky — the fighter and missile killer.",
-        "Mass": "PropertyValue('Rounds Per Second') * 10 + PropertyValue('Pellets Per Shot') * 2",
+        "Mass": "PropertyValue('Rounds Per Second') * 10 + PropertyValue('Pellets Per Shot') * 2 + Max(0, PropertyValue('Damage Per Pellet') - 1000) / 100",
         "Volume": "[Mass] * 0.5",
         "HTK": "0.5",
         "CrewReq": "[Mass] * 0.1",
@@ -558,6 +640,289 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "armour-hardening",
+      "Name": "Ablative Hull Plating",
+      "Formulas": {
+        "Description": "Nature-hardened ship plating (⚙3 Defence: armour tuned against a damage NATURE — the ship mirror of ground armour). Its ablative laminate soaks a fraction of incoming ENERGY fire (lasers/plasma) after the shields, but is thin against a kinetic slug. Tune the four soak fractions for the threat you expect. Mass rises with total hardening. Balance dials flagged.",
+        "Mass": "(PropertyValue('Soak vs Kinetic') + PropertyValue('Soak vs Energy') + PropertyValue('Soak vs Explosive') + PropertyValue('Soak vs Exotic')) * 30000",
+        "Volume": "[Mass] * 0.4",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.002",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.4",
+        "aluminium": "[Mass] * 0.4"
+      },
+      "ComponentType": "Defense",
+      "MountType": "ShipComponent, ShipCargo",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Soak vs Kinetic",
+          "Units": "x",
+          "DescriptionFormula": "'Fraction of incoming KINETIC fire this plating soaks after shields (0 = plain). FLAGGED balance value.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "0.9",
+          "MinFormula": "0",
+          "StepFormula": "0.05",
+          "PropertyFormula": "0.1"
+        },
+        {
+          "Name": "Soak vs Energy",
+          "Units": "x",
+          "DescriptionFormula": "'Fraction of incoming ENERGY fire this plating soaks after shields (0 = plain). FLAGGED balance value.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "0.9",
+          "MinFormula": "0",
+          "StepFormula": "0.05",
+          "PropertyFormula": "0.4"
+        },
+        {
+          "Name": "Soak vs Explosive",
+          "Units": "x",
+          "DescriptionFormula": "'Fraction of incoming EXPLOSIVE fire this plating soaks after shields (0 = plain). FLAGGED balance value.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "0.9",
+          "MinFormula": "0",
+          "StepFormula": "0.05",
+          "PropertyFormula": "0.2"
+        },
+        {
+          "Name": "Soak vs Exotic",
+          "Units": "x",
+          "DescriptionFormula": "'Fraction of incoming EXOTIC fire this plating soaks after shields (0 = plain). FLAGGED balance value.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "0.9",
+          "MinFormula": "0",
+          "StepFormula": "0.05",
+          "PropertyFormula": "0.0"
+        },
+        {
+          "Name": "armourHardeningAtbArgs",
+          "DescriptionFormula": "'double soakVsKinetic, double soakVsEnergy, double soakVsExplosive, double soakVsExotic'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Soak vs Kinetic'), PropertyValue('Soak vs Energy'), PropertyValue('Soak vs Explosive'), PropertyValue('Soak vs Exotic'))",
+          "AttributeType": "Pulsar4X.Combat.ArmourHardeningAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "ship-magazine",
+      "Name": "Ammo Magazine",
+      "Formulas": {
+        "Description": "An ammunition magazine — the store railguns, flak, and missile launchers draw from. As the ship's ammo weapons fire it drains; when it runs dry those weapons go silent and the ship fights on with any energy weapons until it is resupplied. A bigger magazine sustains fire longer but weighs more.",
+        "Mass": "PropertyValue('Ammo Capacity') * 1.2",
+        "Volume": "[Mass] * 0.5",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.02",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.4",
+        "aluminium": "[Mass] * 0.3"
+      },
+      "ComponentType": "Defense",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Ammo Capacity",
+          "Units": "kg",
+          "DescriptionFormula": "'Kilograms of ammunition the magazine holds. Drains as the ship''s ammo weapons (railgun, flak, missiles) fire; when empty those weapons go silent until resupply.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100000",
+          "MinFormula": "100",
+          "StepFormula": "100",
+          "PropertyFormula": "5000"
+        },
+        {
+          "Name": "shipMagazineAtbArgs",
+          "DescriptionFormula": "'double capacity_kg'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Ammo Capacity'))",
+          "AttributeType": "Pulsar4X.Combat.ShipMagazineAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "heat-radiator",
+      "Name": "Heat Radiator",
+      "Formulas": {
+        "Description": "A heat radiator — sheds the waste heat energy weapons dump into the ship, so it can sustain beam fire without cooking itself. Too few radiators and a hot-beam ship's guns throttle down mid-fight; more radiators sustain the barrage. Big radiators are heavy.",
+        "Mass": "PropertyValue('Heat Capacity') / 20 + 100",
+        "Volume": "[Mass] * 0.6",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.02",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "aluminium": "[Mass] * 0.5",
+        "stainless-steel": "[Mass] * 0.2"
+      },
+      "ComponentType": "Defense",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Heat Capacity",
+          "Units": "kJ",
+          "DescriptionFormula": "'How much heat this radiator can hold and shed — the ship's heat ceiling and cooling. Bigger = more sustained energy-weapon fire before the guns throttle.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "10000000",
+          "MinFormula": "10000",
+          "StepFormula": "10000",
+          "PropertyFormula": "500000"
+        },
+        {
+          "Name": "radiatorAtbArgs",
+          "DescriptionFormula": "'double capacity_kJ'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Heat Capacity'))",
+          "AttributeType": "Pulsar4X.Combat.RadiatorAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "point-defense-mount",
+      "Name": "Point Defense Mount",
+      "Formulas": {
+        "Description": "A rapid-tracking point-defense mount — its whole job is shooting down incoming missiles before they reach the hull. A fleet's point-defense intercepts a fraction of the guided (missile) fire aimed at it; a strong screen shrugs off a light strike, but a big enough missile swarm saturates the defenses and leaks through. The answer to a missile boat.",
+        "Mass": "PropertyValue('Intercept Rating') / 2000 + 100",
+        "Volume": "[Mass] * 0.5",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.05",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.3",
+        "aluminium": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.2"
+      },
+      "ComponentType": "Defense",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Intercept Rating",
+          "Units": "J/s",
+          "DescriptionFormula": "'How much incoming guided (missile) fire this mount can shoot down per second. The fleet's mounts sum; a bigger total intercepts more of a missile salvo before it is saturated by a swarm.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5000000",
+          "MinFormula": "10000",
+          "StepFormula": "10000",
+          "PropertyFormula": "200000"
+        },
+        {
+          "Name": "pointDefenseAtbArgs",
+          "DescriptionFormula": "'double interceptRating_Jps'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Intercept Rating'))",
+          "AttributeType": "Pulsar4X.Combat.PointDefenseAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "pulse-laser",
+      "Name": "Pulse Laser",
+      "Formulas": {
+        "Description": "A high-power pulsed laser — hits hard and continuously, but dumps a LOT of waste heat into the ship. Sustained fire overheats it unless the hull carries enough radiators; without them its output throttles down mid-fight. The energy-weapon that MAKES you build radiators.",
+        "Mass": "PropertyValue('Pulse Energy') / 2000 + 100",
+        "Volume": "[Mass] * 0.5",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.1",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "aluminium": "[Mass] * 0.3",
+        "stainless-steel": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.2"
+      },
+      "ComponentType": "Weapon",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, GroundUnit",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Range",
+          "Units": "m",
+          "DescriptionFormula": "'How far the beam reaches (a knife-fight laser, space-realistic).'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "5000"
+        },
+        {
+          "Name": "Pulse Energy",
+          "Units": "J",
+          "DescriptionFormula": "'Energy delivered per pulse — a hard-hitting beam.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "10000000",
+          "MinFormula": "10000",
+          "StepFormula": "10000",
+          "PropertyFormula": "500000"
+        },
+        {
+          "Name": "Charge Period",
+          "Units": "s",
+          "DescriptionFormula": "'Seconds between pulses. Drives damage/sec.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "1"
+        },
+        {
+          "Name": "Combat Heat",
+          "Units": "kJ/s",
+          "DescriptionFormula": "'Waste heat this laser dumps into the ship each second of fire. High — a pulse laser runs HOT, so it needs radiators to sustain fire or it throttles.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2000000",
+          "MinFormula": "0",
+          "StepFormula": "10000",
+          "PropertyFormula": "300000"
+        },
+        {
+          "Name": "genericWpnAtbArgs",
+          "DescriptionFormula": "'int magSize, int reloadPerSec, int amountPerShot, int minShotsPerfire — the firing-sim magazine every beam weapon carries alongside its beam atb.'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(100, Max(1, Ceiling(100 / PropertyValue('Charge Period'))), 100, 1)",
+          "AttributeType": "Pulsar4X.Weapons.GenericWeaponAtb"
+        },
+        {
+          "Name": "pulseLaserAtbArgs",
+          "DescriptionFormula": "'double maxRange, double wavelength, double pulseEnergy, double focalLength, double chargePeriod, double thermalOutput_W, double allowThermalOverride, double combatHeat_kJps'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Range'), 700, PropertyValue('Pulse Energy'), PropertyValue('Range') * 0.5, PropertyValue('Charge Period'), 0, 0, PropertyValue('Combat Heat'))",
+          "AttributeType": "Pulsar4X.Weapons.GenericBeamWeaponAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "disruptor-weapon",
       "Name": "Ion Disruptor",
       "Formulas": {
@@ -617,8 +982,8 @@
       "UniqueID": "plasma-repeater",
       "Name": "Plasma Repeater",
       "Formulas": {
-        "Description": "A rapid-fire plasma bolt-thrower. Its bolts are ENERGY in nature (a shield only half-soaks them — they bleed through like a beam) but travel at a FINITE velocity (a nimble ship can dodge them, unlike a beam) — the dodgeable energy weapon the weapon triangle had no cell for until Nature and Delivery split.",
-        "Mass": "PropertyValue('Energy Per Shot') / 2000 + PropertyValue('Rounds Per Second') * 30",
+        "Description": "A rapid-fire plasma bolt-thrower. Its bolts are ENERGY in nature (a shield only half-soaks them — they bleed through like a beam) but travel at a FINITE velocity (a nimble ship can dodge them, unlike a beam) — the dodgeable energy weapon the weapon triangle had no cell for until Nature and Delivery split. Faster bolts (harder to dodge) are EARNED — a hotter accelerator, so they cost mass above the baseline.",
+        "Mass": "PropertyValue('Energy Per Shot') / 2000 + PropertyValue('Rounds Per Second') * 30 + Max(0, PropertyValue('Bolt Velocity') - 200000) / 10000",
         "Volume": "[Mass] * 0.5",
         "HTK": "0.5",
         "CrewReq": "[Mass] * 0.1",

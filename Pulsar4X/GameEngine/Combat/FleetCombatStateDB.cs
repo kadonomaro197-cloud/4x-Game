@@ -61,6 +61,23 @@ namespace Pulsar4X.Combat
         /// so combat is byte-identical. v1: one aggregate pool for the whole fleet (per-ship shields are a later slice).</summary>
         [JsonProperty] public double ShieldPool_J { get; internal set; } = -1;
 
+        /// <summary>The fleet's current AMMO charge (kg) — the depleting magazine pool (Weapons pilot W3, the ship echo
+        /// of the ground <c>GroundAmmo</c>). Each salvo the fleet's AMMO-fed weapons (Kinetic/Explosive nature — railgun,
+        /// flak, missiles) drain this; when it hits 0 those weapons go SILENT and the fleet fights on with its energy
+        /// weapons only. <b>-1 = "not yet seeded"</b> — the resolver lazily fills it to the fleet's total magazine
+        /// capacity on the first salvo; for a fleet with NO magazine (capacity 0) it stays disabled and the ammo step is
+        /// a no-op, so combat is byte-identical. v1: one aggregate pool for the whole fleet (per-ship magazines are a
+        /// later slice), matching the shield pool.</summary>
+        [JsonProperty] public double AmmoPool_kg { get; internal set; } = -1;
+
+        /// <summary>The fleet's accumulated HEAT (kJ) — Weapons pilot W5, the sustained-fire limit on energy weapons.
+        /// Each salvo the fleet's ENERGY-weapon fire adds heat and its radiators shed some; when the pool exceeds the
+        /// fleet's <see cref="ShipCombatValueDB.HeatCapacity_kJ"/> the energy weapons THROTTLE (burst-vs-sustained) until
+        /// it cools. Starts at 0 (cold). A fleet with NO radiator (capacity 0) skips the heat step entirely, so its
+        /// energy fire is byte-identical — the heat model only bites once a ship carries a radiator (W5c). v1: one
+        /// aggregate pool per fleet, like the shield and ammo.</summary>
+        [JsonProperty] public double HeatPool_kJ { get; internal set; }
+
         public FleetCombatStateDB() { }
 
         public FleetCombatStateDB(int opponentFleetId)
@@ -83,6 +100,8 @@ namespace Pulsar4X.Combat
             Separation_m = db.Separation_m;
             ManeuverBudget = db.ManeuverBudget;
             ShieldPool_J = db.ShieldPool_J;
+            AmmoPool_kg = db.AmmoPool_kg;
+            HeatPool_kJ = db.HeatPool_kJ;
         }
 
         public override object Clone()

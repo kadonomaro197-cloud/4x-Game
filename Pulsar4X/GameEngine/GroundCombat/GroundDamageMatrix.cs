@@ -92,5 +92,28 @@ namespace Pulsar4X.GroundCombat
         /// Never throws.</summary>
         public static double ArmourSoak(double defense, double sourceDamage)
             => Pulsar4X.Combat.CombatKernel.ArmourSoak(defense, sourceDamage);
+
+        /// <summary>Flat ARMOUR soak WITH the firing weapon's PENETRATION (Weapons pilot W1b) — penetration cancels
+        /// the target's Defense point-for-point before the flat soak, so an AP/sabot/lance weapon cracks plate a
+        /// normal round bounces off. Forwards to the shared <c>CombatKernel.ArmourSoak</c> 3-arg. Penetration 0 is
+        /// byte-for-byte the 2-arg soak above (so an ordinary unit is unchanged). Never throws.</summary>
+        public static double ArmourSoak(double defense, double sourceDamage, double penetration)
+            => Pulsar4X.Combat.CombatKernel.ArmourSoak(defense, sourceDamage, penetration);
+
+        /// <summary>Flat ARMOUR soak of a BURST (Weapons pilot W2b) — the source's fire is split into
+        /// <paramref name="shotCount"/> equal shots, each soaked flat (with penetration): a swarm of chips is mostly
+        /// bounced by plate, one alpha of equal total punches through. Forwards to the shared
+        /// <c>CombatKernel.ArmourSoakBurst</c>. <paramref name="shotCount"/> ≤ 1 is byte-for-byte the flat soak, so an
+        /// un-dialled unit (PerShotEnergy 0 → shotCount 1) is unchanged. Never throws.</summary>
+        public static double ArmourSoak(double defense, double sourceDamage, int shotCount, double penetration)
+            => Pulsar4X.Combat.CombatKernel.ArmourSoakBurst(defense, sourceDamage, shotCount, penetration);
+
+        /// <summary>Flat ARMOUR soak of a burst WITH a per-NATURE effectiveness factor (⚙3 Defense — nature-tuned
+        /// plating: ablative/composite/reactive). <paramref name="natureFactor"/> scales how hard THIS plating soaks the
+        /// incoming damage's nature (1.0 = rated, &gt;1 tuned-to, &lt;1 poor-match); forwards to the shared
+        /// <c>CombatKernel.ArmourSoakBurst</c>. natureFactor 1.0 is byte-for-byte the 4-arg soak above, so a unit with
+        /// no nature-tuned plating is unchanged. Never throws.</summary>
+        public static double ArmourSoak(double defense, double sourceDamage, int shotCount, double penetration, double natureFactor)
+            => Pulsar4X.Combat.CombatKernel.ArmourSoakBurst(defense, sourceDamage, shotCount, penetration, natureFactor);
     }
 }

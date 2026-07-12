@@ -13,9 +13,18 @@ namespace Pulsar4X.GroundCombat
         public double Attack;
         public int Range;
         public double Defense;
+        // ⚙3 Defense — armour NATURE tuning: the Defense-weighted combination of the mounted plating's per-nature soak
+        // effectiveness. 1.0 = plain plate (no armour, or all plain plate) → byte-identical.
+        public double ArmourVsKinetic = 1.0;
+        public double ArmourVsEnergy = 1.0;
+        public double ArmourVsExplosive = 1.0;
+        public double ArmourVsExotic = 1.0;
         public double HitPoints;
         public double Evasion;
         public double Shield;
+        // ⚙3 Defense — shield RECHARGE: the Shield-weighted combination of the mounted augments' recharge dials. Default
+        // 0.34 (the old global constant; no shield → stays 0.34, moot) → byte-identical.
+        public double ShieldRegenFraction = 0.34;
         public GroundWeaponMode DamageType = GroundWeaponMode.Ballistic;   // the heaviest weapon's flavour (System ①)
         public double Mass;            // total build mass (frame + parts) — feeds cost + transport carry-size
         public double CarryCapacity;   // frame strength + augment strength bonuses
@@ -47,6 +56,12 @@ namespace Pulsar4X.GroundCombat
     {
         /// <summary>Heaviest single part = this fraction of the carry-capacity. NUMBER TO REVIEW (flagged): 0.5.</summary>
         public const double MaxItemFraction = 0.5;
+
+        /// <summary>A ground weapon's effective carry-mass is floored at Attack × this — so firepower ALWAYS costs
+        /// carry-weight and can't be dialed up for free. Set to the tightest stock CarryMass/Attack ratio (the claw's
+        /// 2/20 = 0.1) so every base-mod weapon sits at or below its dialed CarryMass → byte-identical; only a
+        /// heavier-hitting-than-stock design is floored up. NUMBER TO REVIEW (flagged): 0.1.</summary>
+        public const double AttackCarryFactor = 0.1;
 
         /// <summary>Compute a unit's emergent stats + carry-gate validity from a <paramref name="frame"/> (must carry a
         /// <see cref="GroundChassisAtb"/>) and its mounted <paramref name="parts"/> (weapons / armour / augments, with a
@@ -83,13 +98,22 @@ namespace Pulsar4X.GroundCombat
             double reactorSupply = 0;  // Σ watts supplied by mounted reactors (WeaponSupply)
             double ammoCapacity = 0;   // Σ magazine capacity kg (WeaponSupply) — the ammo store
             bool anyAmmoWeapon = false;// is an ammo-fed weapon mounted? (needs a magazine)
+            // ⚙3 armour nature: Defense-weighted sums of each plating part's per-nature soak, averaged after the loop.
+            double armWeight = 0, armVsK = 0, armVsE = 0, armVsX = 0, armVsO = 0;
+            // ⚙3 shield recharge: Shield-weighted sum of each augment's recharge dial, averaged after the loop.
+            double shieldWeight = 0, shieldRegenSum = 0;
             foreach (var (d, c) in list)
             {
                 double itemMass = 0;
                 if (d.HasAttribute<GroundWeaponAtb>())
                 {
                     var w = d.GetAttribute<GroundWeaponAtb>();
-                    itemMass = w.Mass;
+                    // Attack costs CARRY-WEIGHT — un-bypassable (the "Attack free dial" fix, Option A). The weapon's
+                    // effective bulk is the greater of its dialed CarryMass and a floor driven by its Attack, so a
+                    // designer can't dial firepower to the ceiling while keeping the weapon feather-light. Anchored so
+                    // every stock ground weapon (Attack×AttackCarryFactor ≤ its CarryMass) is byte-identical; only a
+                    // heavier-hitting-than-stock design pays. Pairs with the build-cost coupling in the JSON Mass formula.
+                    itemMass = Math.Max(w.Mass, w.Attack * AttackCarryFactor);
                     r.Attack += w.Attack * c;
                     if (w.Range > r.Range) r.Range = w.Range;   // reach = the longest weapon
                     if (w.Attack > topWeaponAttack) { topWeaponAttack = w.Attack; r.DamageType = w.Mode; }
@@ -100,6 +124,11 @@ namespace Pulsar4X.GroundCombat
                     itemMass = a.Mass;
                     r.HitPoints += a.HP * c;
                     r.Defense += a.Defense * c;
+                    // ⚙3 nature tuning: weight each plating's per-nature soak by the Defense it contributes, so a mostly-
+                    // ablative unit reads as ablative. A plain plate contributes 1.0 → pulls the average toward neutral.
+                    double w2 = a.Defense * c;
+                    armWeight += w2;
+                    armVsK += a.VsKinetic * w2; armVsE += a.VsEnergy * w2; armVsX += a.VsExplosive * w2; armVsO += a.VsExotic * w2;
                 }
                 if (d.HasAttribute<GroundAugmentAtb>())
                 {
@@ -108,6 +137,11 @@ namespace Pulsar4X.GroundCombat
                     r.Evasion += g.EvasionBonus * c;
                     r.Shield += g.Shield * c;
                     toughness += g.ToughnessBonus * c;
+                    // ⚙3 shield recharge: weight each augment's dial by the shield capacity it contributes, so a fast
+                    // ward reads fast. An augment with no shield contributes 0 weight → doesn't pollute the average.
+                    double sw = g.Shield * c;
+                    shieldWeight += sw;
+                    shieldRegenSum += g.ShieldRegenFraction * sw;
                 }
                 // A part that isn't one of the ground-specific kinds (a universal weapon or a reactor, P1/P2a) has no
                 // ground carry-mass field — count its real component mass so it still consumes the carry budget. This is
@@ -127,6 +161,18 @@ namespace Pulsar4X.GroundCombat
             }
             // toughness hardens the whole HP pool (frame + armour), applied once so it's order-independent
             if (toughness != 0) r.HitPoints *= 1 + toughness;
+            // ⚙3 armour nature: finish the Defense-weighted average of the mounted plating (unarmoured / all-plain → the
+            // 1.0 defaults stay → byte-identical). This is the unit's "armour against WHAT" profile the resolver reads.
+            if (armWeight > 0)
+            {
+                r.ArmourVsKinetic = armVsK / armWeight;
+                r.ArmourVsEnergy = armVsE / armWeight;
+                r.ArmourVsExplosive = armVsX / armWeight;
+                r.ArmourVsExotic = armVsO / armWeight;
+            }
+            // ⚙3 shield recharge: finish the Shield-weighted average (no shield → the 0.34 default stays → byte-identical).
+            if (shieldWeight > 0)
+                r.ShieldRegenFraction = shieldRegenSum / shieldWeight;
             r.UsedCapacity = used;
             r.EnergyDemand_W = energyDemand;
             r.ReactorSupply_W = reactorSupply;
@@ -161,10 +207,15 @@ namespace Pulsar4X.GroundCombat
                 UnitType = DeriveType(frame, parts),
                 Attack = r.Attack,
                 Defense = r.Defense,
+                ArmourVsKinetic = r.ArmourVsKinetic,
+                ArmourVsEnergy = r.ArmourVsEnergy,
+                ArmourVsExplosive = r.ArmourVsExplosive,
+                ArmourVsExotic = r.ArmourVsExotic,
                 HitPoints = r.HitPoints,
                 Range = r.Range,
                 Evasion = r.Evasion,
                 Shield = r.Shield,
+                ShieldRegenFraction = r.ShieldRegenFraction,
                 AmmoCapacity_kg = r.AmmoCapacity_kg,
                 DamageType = r.DamageType,
                 IndustryTypeID = string.IsNullOrEmpty(frame?.IndustryTypeID) ? "installation-construction" : frame.IndustryTypeID,

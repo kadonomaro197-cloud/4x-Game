@@ -33,6 +33,26 @@ namespace Pulsar4X.Ships
         public double VolumePerUnit { get; private set; }
         public double Density { get; }
 
+        // ── §0b mass-budget cap (dossier ⚙11) — Slice A: COMPUTED & EXPOSED, NOT yet enforced ──────────
+        // The "structural budget" a ship's mounted mass must fit within — the space echo of the ground
+        // GroundUnitAssembly carry cap (which reads GroundChassisAtb.BaseStrength, sums part mass, and marks
+        // an over-budget design invalid). Ships have no hull-chassis component yet, so Slice A sources the
+        // budget from the design's OWN mass at 1.0 headroom: MassBudget == MassPerUnit, so OverMassBudget is
+        // always false here — byte-identical to pre-cap. This lands the machinery + the calibration readout
+        // (ShipMassBudgetTests prints every design's MassPerUnit). A later slice replaces this source with a
+        // real hull ceiling (sized above the heaviest base-mod ship) and lets IsValid bite. `MassPerUnit`
+        // above IS the "mass used"; no separate field needed.
+        private const double MassBudgetHeadroom = 1.0;
+        public long MassBudget { get; private set; }
+        public bool OverMassBudget { get; private set; }
+
+        /// <summary>When true, an over-budget design (mass exceeds its mounted hull's Mass Budget) is marked
+        /// <see cref="IsValid"/> = false, so the client production list refuses to build it — the §0b "the physical
+        /// budget forces the build" gate made to BITE. Default OFF (every base-mod ship sits under its hull budget,
+        /// so flipping it changes nothing → byte-identical); the client turns it on. The enforcement slice the D1
+        /// comment above anticipated ("a later slice … lets IsValid bite").</summary>
+        public static bool EnforceMassBudget = false;
+
         private int _factionId;
 
         /// <summary>
@@ -54,6 +74,15 @@ namespace Pulsar4X.Ships
         public Dictionary<string, long> ComponentCosts = new Dictionary<string, long>();
         public Dictionary<string, long> ShipInstanceCost = new Dictionary<string, long>();
         public int CrewReq;
+        /// <summary>
+        /// The slice of <see cref="CrewReq"/> that must be drawn from the building colony's SCARCE talent pool
+        /// (veteran cadre), not bulk workforce — the anti-dominance handle for Enhancers ⚙6.2 Unit Caliber. It is
+        /// the summed crew of the design's caliber modules (a <see cref="Pulsar4X.Combat.UnitCaliberAtb"/>-carrying
+        /// component). ZERO for every ship with no caliber module → byte-identical: bulk crew commit stays CrewReq,
+        /// talent commit is nothing. When a caliber module IS fitted, that crew comes out of talent instead of bulk,
+        /// so an elite hull ties up scarce officers and can't be spammed. Computed in <see cref="Recalculate"/>.
+        /// </summary>
+        public int TalentReq;
         public long IndustryPointCosts { get; private set; }
 
         //TODO: this is one of those places where moddata has bled into hardcode...
@@ -100,7 +129,11 @@ namespace Pulsar4X.Ships
             // M3-2b: commit the crew from the building colony's manpower pool at build-complete — for BOTH the
             // direct-launch path (above) and the launch-complex queue path (the ship launches later). Inert if
             // the host has no pool (a station) — CommitCrew no-ops.
-            Pulsar4X.Colonies.ManpowerTools.CommitCrew(industryEntity, CrewReq);
+            // Enhancers ⚙6.2: the veteran-cadre slice (TalentReq) comes out of the SCARCE talent pool, the rest out
+            // of bulk workforce. TalentReq is 0 for every non-caliber ship, so this is byte-identical to the old
+            // single CommitCrew(CrewReq) for the whole base-mod fleet.
+            Pulsar4X.Colonies.ManpowerTools.CommitCrew(industryEntity, CrewReq - TalentReq);
+            Pulsar4X.Colonies.ManpowerTools.CommitTalent(industryEntity, TalentReq);
 
             if (batchJob.NumberCompleted == batchJob.NumberOrdered)
             {
@@ -138,6 +171,7 @@ namespace Pulsar4X.Ships
         {
             MassPerUnit = 0;
             CrewReq = 0;
+            TalentReq = 0;
             CreditCost = 0;
             VolumePerUnit = 0;
             ResourceCosts.Clear();
@@ -146,10 +180,21 @@ namespace Pulsar4X.Ships
             ComponentCosts.Clear();
             ShipInstanceCost.Clear();
 
+            int crewAutomation = 0; // Enhancers ⚙6.3: bulk crew replaced by automation/AI suites (0 = no module).
             foreach (var component in Components)
             {
                 MassPerUnit += component.design.MassPerUnit * component.count;
                 CrewReq += component.design.CrewReq;
+                // Enhancers ⚙6.2: a caliber module's crew is a veteran CADRE — it draws from the scarce talent pool,
+                // not bulk workforce. Track that slice so the commit at build-complete splits crew vs talent. Zero
+                // for every non-caliber component → byte-identical for the entire base-mod fleet.
+                if (component.design.TryGetAttribute<Pulsar4X.Combat.UnitCaliberAtb>(out _))
+                    TalentReq += component.design.CrewReq;
+                // Enhancers ⚙6.3 Systems ▸ Automation: an AI/automation suite runs part of the ship, so it needs
+                // fewer BULK crew. Accumulate the reduction (applied to the bulk workforce after the loop, never the
+                // veteran cadre). 0 for every non-automation component → byte-identical.
+                if (component.design.TryGetAttribute<Pulsar4X.Combat.CrewAutomationAtb>(out var autom))
+                    crewAutomation += (int)Math.Round(autom.CrewReduction);
                 CreditCost += component.design.CreditCost;
                 VolumePerUnit += component.design.VolumePerUnit * component.count;
                 if (ComponentCosts.ContainsKey(component.design.UniqueID))
@@ -162,6 +207,11 @@ namespace Pulsar4X.Ships
                 }
 
             }
+            // Enhancers ⚙6.3 Systems ▸ Automation: subtract the automation reduction from the BULK crew only — the
+            // total never drops below the veteran-cadre talent (you can't automate away the officers). No module →
+            // crewAutomation 0 → CrewReq = TalentReq + (CrewReq - TalentReq) = CrewReq, byte-identical.
+            if (crewAutomation > 0)
+                CrewReq = TalentReq + Math.Max(0, (CrewReq - TalentReq) - crewAutomation);
             DamageProfileDB = new EntityDamageProfileDB(Components, Armor);
             var armorMass = GetArmorMass(DamageProfileDB, faction.Data.CargoGoods);
             MassPerUnit += (long)Math.Round(armorMass);
@@ -169,6 +219,30 @@ namespace Pulsar4X.Ships
             MaterialCosts.ToList().ForEach(x => ResourceCosts[x.Key] = x.Value);
             ComponentCosts.ToList().ForEach(x => ResourceCosts[x.Key] = x.Value);
             IndustryPointCosts = (long)(MassPerUnit * 0.1);
+
+            // §0b mass-budget (dossier ⚙11), Slice D1 — a mounted HULL (ShipHullAtb) now sets the mass budget
+            // (the space echo of the ground GroundChassisAtb carry cap). A hull-less design falls back to the
+            // generous self-derived figure, so a design with no hull is byte-identical (nothing over budget) until
+            // a real hull is fitted. Still compute & EXPOSE only — IsValid is untouched and no engine construction
+            // path is gated (the client production list reads IsValid; the engine does not yet). Generous hull
+            // budgets keep OverMassBudget false even once ships mount one, per the developer's call.
+            double hullBudget = 0;
+            bool hasHull = false;
+            foreach (var component in Components)
+            {
+                if (component.design.TryGetAttribute<ShipHullAtb>(out var hull))
+                {
+                    hullBudget += hull.MassBudget * component.count;
+                    hasHull = true;
+                }
+            }
+            MassBudget = hasHull ? (long)hullBudget : (long)(MassPerUnit * MassBudgetHeadroom);
+            OverMassBudget = MassPerUnit > MassBudget;
+            // §0b enforcement (dossier ⚙11, the slice D1 anticipated). Over its hull budget → the design won't build.
+            // Flag OFF by default and every base-mod ship is under budget, so this is byte-identical; the client turns
+            // it on. Only ever marks invalid — it never re-validates a design flagged invalid for another reason.
+            if (EnforceMassBudget && OverMassBudget)
+                IsValid = false;
         }
 
         /// <summary>

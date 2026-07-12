@@ -32,23 +32,37 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public double HitPoints { get; internal set; }
         /// <summary>Strike RANGE in hexes (H3). 0 → a per-type default at raise (<see cref="GroundRangeTools.DefaultRangeFor"/>).</summary>
         [JsonProperty] public int Range { get; internal set; }
+        /// <summary>ARMOUR PENETRATION (Weapons pilot W1c) — how much of an enemy's flat armour (Defense) this unit's
+        /// weapon IGNORES before the per-source soak. 0 = a normal round; a high value is an AP/sabot cracker (a tank's
+        /// main gun). Flows to <see cref="GroundUnit.Penetration"/> at raise and bites in the shared armour soak.</summary>
+        [JsonProperty] public double Penetration { get; internal set; }
+        /// <summary>PER-SHOT ENERGY (Weapons pilot W2c) — how much of this unit's Attack is delivered in ONE shot, the
+        /// alpha-vs-chip dial. A cannon (big per-shot) punches flat armour; small arms (small per-shot) chip and mostly
+        /// bounce. 0 = a single lump (byte-identical). Flows to <see cref="GroundUnit.PerShotEnergy"/> at raise and drives
+        /// the shared burst armour soak (`CombatKernel.BurstShotCount`/`ArmourSoakBurst`).</summary>
+        [JsonProperty] public double PerShotEnergy { get; internal set; }
 
         public GroundUnitAtb() { }
 
         // double args mirror the other ground atbs — the JSON binder feeds AtbConstrArgs(PropertyValue(...)) values as
         // doubles (NCalc), so the ctor must accept doubles for the base-mod component to bind (gotcha L7). Arg ORDER is
-        // the template's PropertyFormula order: (unitType, attack, defense, hitPoints, range).
-        public GroundUnitAtb(double unitType, double attack, double defense, double hitPoints, double range)
+        // the template's PropertyFormula order: (unitType, attack, defense, hitPoints, range, penetration, perShotEnergy).
+        // Penetration + PerShotEnergy are the trailing additive args — a template that omits them (older mod data) simply
+        // doesn't pass them, but the base-mod templates supply both.
+        public GroundUnitAtb(double unitType, double attack, double defense, double hitPoints, double range, double penetration = 0,
+            double perShotEnergy = 0)
         {
             UnitType = (GroundUnitType)(int)unitType;
             Attack = attack;
             Defense = defense;
             HitPoints = hitPoints;
             Range = range < 0 ? 0 : (int)range;
+            Penetration = penetration < 0 ? 0 : penetration;
+            PerShotEnergy = perShotEnergy < 0 ? 0 : perShotEnergy;
         }
 
         public override object Clone()
-            => new GroundUnitAtb((double)(int)UnitType, Attack, Defense, HitPoints, Range);
+            => new GroundUnitAtb((double)(int)UnitType, Attack, Defense, HitPoints, Range, Penetration, PerShotEnergy);
 
         public void OnComponentInstallation(Entity parentEntity, ComponentInstance componentInstance)
         {
@@ -73,6 +87,8 @@ namespace Pulsar4X.GroundCombat
                     Defense = Defense,
                     HitPoints = HitPoints,
                     Range = Range,
+                    Penetration = Penetration,
+                    PerShotEnergy = PerShotEnergy,
                 };
                 GroundForces.RaiseUnit(body, design, parentEntity.FactionOwnerID, region, design.Name);
 
@@ -87,6 +103,8 @@ namespace Pulsar4X.GroundCombat
 
         public string AtbName() => "Ground Unit";
         public string AtbDescription()
-            => $"A buildable ground force ({UnitType}) — attack {Attack:0}, defense {Defense:0}, HP {HitPoints:0}, strike range {Range} hex. Building it raises a unit on the planet.";
+            => $"A buildable ground force ({UnitType}) — attack {Attack:0}, defense {Defense:0}, HP {HitPoints:0}, strike range {Range} hex" +
+               (Penetration > 0 ? $", armour-pen {Penetration:0}" : "") +
+               (PerShotEnergy > 0 ? $", per-shot {PerShotEnergy:0}" : "") + ". Building it raises a unit on the planet.";
     }
 }

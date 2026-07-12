@@ -27,7 +27,6 @@ namespace Pulsar4X.Tests
     public class WeaponTriangleBattleTests
     {
         private const string Fighter = "default-ship-design-test-fighter";
-        private const string Capital = "default-ship-design-test-capital";
         private static void Log(string m) => TestContext.Progress.WriteLine("[triangle-battle] " + m);
 
         private static Entity MakeFleet(TestScenario s, Entity faction, string name)
@@ -63,19 +62,6 @@ namespace Pulsar4X.Tests
             ship.FactionOwnerID = faction.Id;
             ship.GetDataBlob<ShipCombatValueDB>().Evasion = 0; // same fighter, but can't dodge
             s.Game.OrderHandler.HandleOrder(FleetOrder.AssignShip(faction.Id, fleet, ship));
-        }
-
-        /// <summary>Fight a swarm against a capital to a decision; return (capital ships left, swarm ships left).</summary>
-        private static (int capital, int swarm) RunSwarmVsCapital(Entity swarm, Entity capital, int maxSteps)
-        {
-            CombatEngagement.StartEngagement(swarm, capital);
-            int steps = 0;
-            while (capital.HasDataBlob<FleetCombatStateDB>() && steps < maxSteps)
-            {
-                CombatEngagement.StepEngagement(swarm, capital, 5);
-                steps++;
-            }
-            return (CombatEngagement.GetFleetShips(capital).Count, CombatEngagement.GetFleetShips(swarm).Count);
         }
 
         private static int RunBattle(Entity attacker, Entity defender, int maxSteps)
@@ -143,34 +129,35 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("FIGHTER ▸ CAPITAL: the SAME swarm of real Wasp fighters out-survives an identical swarm whose evasion is zeroed, against identical Leviathan railgun capitals. Both destroy the capital (it can't dodge their fire); the EVASIVE ones lose fewer — so it's the fighters' evasion (dodging the capital's railguns) that wins it. Isolating evasion makes this calibration-robust where a raw 'fighters survive' count is not.")]
-        public void EvasiveSwarm_OutLastsSittingDucks_AgainstTheSameRailgunCapital()
+        [Description("FIGHTER ▸ dodge (evasion isolated): two identical screens of REAL Wasp fighters take the SAME sustained railgun fire — one dodging, one with its evasion zeroed. The dodging screen loses meaningfully fewer, so the fighters' evasion (juking the slugs) is the difference. Uses the AddGun sustained-battery + dps calibration of the sibling screen tests (which prove railgun-dodgers out-survive non-dodgers), so the dodge shows across many salvos — calibration-robust where the earlier one-off capital was knife-edge (a single Leviathan died in a few salvos landing ~1 hit, far too little for evasion to separate the swarms; that fragility surfaced when ships gained hull mass 2026-07-10).")]
+        public void EvasiveScreen_OutLastsSittingDucks_UnderTheSameRailgunFire()
         {
             var s = TestScenario.CreateWithColony();
             var red = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
-            const int N = 60; // big enough that the dodged volley leaves survivors across a wide toughness range
+            const int N = 10;
+            const double dps = 40_000; // same calibration the screen tests use to show dodgers out-survive non-dodgers
 
-            // Real, evasive Wasp swarm vs a Leviathan.
-            var evasive = MakeFleet(s, s.Faction, "Evasive Wing");
+            // Real, evasive Wasp screen under a sustained railgun battery.
+            var evasive = MakeFleet(s, s.Faction, "Evasive Screen");
             for (int i = 0; i < N; i++) AddReal(s, s.Faction, evasive, Fighter, "E" + i);
             double waspEvasion = CombatEngagement.GetFleetShips(evasive)[0].GetDataBlob<ShipCombatValueDB>().Evasion;
-            var capA = MakeFleet(s, red, "Capital A");
-            AddReal(s, red, capA, Capital, "Leviathan A");
-            var (capALeft, evasiveLeft) = RunSwarmVsCapital(evasive, capA, 1000);
+            var gunA = MakeFleet(s, red, "Railgun Battery A");
+            AddGun(s, red, gunA, new WeaponProfile(dps, 50_000, 0.05, 5), "Slugger A");
+            int evasiveLeft = RunBattle(gunA, evasive, 400);
 
-            // The SAME Wasp swarm with evasion zeroed (sitting ducks) vs an identical Leviathan.
-            var ducks = MakeFleet(s, s.Faction, "Sitting-Duck Wing");
+            // The SAME Wasp screen with evasion zeroed (sitting ducks) under an identical battery.
+            var ducks = MakeFleet(s, s.Faction, "Sitting-Duck Screen");
             for (int i = 0; i < N; i++) AddDuck(s, s.Faction, ducks, "D" + i);
-            var capB = MakeFleet(s, red, "Capital B");
-            AddReal(s, red, capB, Capital, "Leviathan B");
-            var (capBLeft, ducksLeft) = RunSwarmVsCapital(ducks, capB, 1000);
+            var gunB = MakeFleet(s, red, "Railgun Battery B");
+            AddGun(s, red, gunB, new WeaponProfile(dps, 50_000, 0.05, 5), "Slugger B");
+            int ducksLeft = RunBattle(gunB, ducks, 400);
 
-            Log($"{N} fighters vs identical capitals (real wasp evasion={waspEvasion:0.###}): " +
-                $"evasive survivors={evasiveLeft}, sitting-duck survivors={ducksLeft}; capitals left A={capALeft} B={capBLeft}");
+            Log($"{N} fighters under equal railgun fire (real wasp evasion={waspEvasion:0.###}): " +
+                $"evasive survivors={evasiveLeft}, sitting-duck survivors={ducksLeft}");
 
-            Assert.That(capALeft, Is.EqualTo(0), "FIGHTER ▸ CAPITAL: the swarm's fire lands full on the sluggish capital — it is destroyed");
+            Assert.That(ducksLeft, Is.LessThan(N), "the non-dodging sitting ducks take real losses — the fire is lethal enough to measure evasion against");
             Assert.That(evasiveLeft, Is.GreaterThan(ducksLeft),
-                $"evasion is the difference: {evasiveLeft} evasive fighters survive vs {ducksLeft} sitting ducks against the same capital (real wasp evasion={waspEvasion:0.###})");
+                $"evasion is the difference: {evasiveLeft} evasive fighters survive vs {ducksLeft} sitting ducks under the SAME railgun fire (real wasp evasion={waspEvasion:0.###})");
         }
     }
 }

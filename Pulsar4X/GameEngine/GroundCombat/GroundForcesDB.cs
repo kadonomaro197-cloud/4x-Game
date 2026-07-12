@@ -77,9 +77,39 @@ namespace Pulsar4X.GroundCombat
         /// <see cref="Shield"/> between salvos — so a shield is burst-resistant then brittle (the ship model), not a
         /// permanent % discount. 0 for an unshielded unit → the pool step is a no-op (byte-identical).</summary>
         [JsonProperty] public double CurrentShield { get; internal set; }
+        /// <summary>⚙3 Defense — shield RECHARGE fraction/hour (snapshot of the design). Default 0.34 (the old global
+        /// constant) → byte-identical. The resolver regenerates the pool by <c>Shield × ShieldRegenFraction × dt</c>,
+        /// so a high value is a fast-recharging ward and a low one a slow big shield (the capacity-vs-recharge decision).</summary>
+        [JsonProperty] public double ShieldRegenFraction { get; internal set; } = 0.34;
         /// <summary>SYSTEM ① — this unit's primary damage flavour (from its heaviest weapon), for the future
         /// damage×defence matrix. Carried now; consumed in slice A.</summary>
         [JsonProperty] public GroundWeaponMode DamageType { get; internal set; } = GroundWeaponMode.Ballistic;
+        /// <summary>ARMOUR PENETRATION — how much of an enemy's flat armour (Defense) this unit's weapon IGNORES before
+        /// the per-source soak (the ground echo of the ship <see cref="Pulsar4X.Combat.WeaponProfile.Penetration"/>).
+        /// 0 = a normal round (bounces off heavy plate); a high value is an AP/sabot/lance cracker that treats plating
+        /// as light. Snapshot from the design at raise (like Attack/Defense). Flows into the unit's synthesized
+        /// <see cref="Pulsar4X.Combat.WeaponProfile"/> (<c>GroundCombatant.ToWeaponProfile</c>) and bites in
+        /// <c>GroundDamageMatrix.ArmourSoak</c> → the shared <c>CombatKernel</c>. Default 0 → byte-identical.</summary>
+        [JsonProperty] public double Penetration { get; internal set; }
+        /// <summary>PER-SHOT ENERGY — the alpha-vs-chip dial (ground echo of
+        /// <see cref="Pulsar4X.Combat.WeaponProfile.PerShotEnergy"/>): how much of this unit's Attack is delivered in ONE
+        /// shot. A cannon (big per-shot) punches armour; a repeater/small-arms (small per-shot) chips that flat armour
+        /// mostly bounces. 0 = a single lump (the pre-W2 behaviour) → byte-identical. Snapshot at raise; flows into the
+        /// synthesized <see cref="Pulsar4X.Combat.WeaponProfile"/> and drives the resolver's
+        /// <c>GroundDamageMatrix.ArmourSoakBurst</c> shot split.</summary>
+        [JsonProperty] public double PerShotEnergy { get; internal set; }
+        // ⚙3 Defense — armour NATURE tuning: how well THIS unit's plating soaks each incoming damage nature. 1.0 = a
+        // plain plate (snapshot of the design's ArmourVs*; every unit until a nature-tuned plating is fitted → the
+        // resolver passes natureFactor 1.0 → byte-identical). The resolver reads the incoming weapon's Nature and scales
+        // the flat armour soak by ArmourResistFor(nature) — so ablative plating shrugs off lasers but thins against slugs.
+        /// <summary>Armour soak effectiveness vs KINETIC damage (1.0 = plain plate).</summary>
+        [JsonProperty] public double ArmourVsKinetic { get; internal set; } = 1.0;
+        /// <summary>Armour soak effectiveness vs ENERGY damage (1.0 = plain plate).</summary>
+        [JsonProperty] public double ArmourVsEnergy { get; internal set; } = 1.0;
+        /// <summary>Armour soak effectiveness vs EXPLOSIVE damage (1.0 = plain plate).</summary>
+        [JsonProperty] public double ArmourVsExplosive { get; internal set; } = 1.0;
+        /// <summary>Armour soak effectiveness vs EXOTIC damage (1.0 = plain plate).</summary>
+        [JsonProperty] public double ArmourVsExotic { get; internal set; } = 1.0;
         /// <summary>The region this unit is MARCHING to (-1 = standing still). While in transit it doesn't fight (5b).</summary>
         [JsonProperty] public int MovingToRegion { get; internal set; } = -1;
         /// <summary>Game-seconds left in the current march; counts down to 0 = arrived (the region's crossing time).</summary>
@@ -136,6 +166,17 @@ namespace Pulsar4X.GroundCombat
             return 0;
         }
 
+        /// <summary>This unit's armour soak effectiveness (natureFactor for the shared armour soak) vs a given incoming
+        /// damage nature — the four <c>ArmourVs*</c> fields. 1.0 for a plain-plated unit → byte-identical.</summary>
+        public double ArmourResistFor(Pulsar4X.Combat.WeaponNature nature) => nature switch
+        {
+            Pulsar4X.Combat.WeaponNature.Kinetic => ArmourVsKinetic,
+            Pulsar4X.Combat.WeaponNature.Energy => ArmourVsEnergy,
+            Pulsar4X.Combat.WeaponNature.Explosive => ArmourVsExplosive,
+            Pulsar4X.Combat.WeaponNature.Exotic => ArmourVsExotic,
+            _ => 1.0,
+        };
+
         public GroundUnit() { }
         public GroundUnit(GroundUnit o)
         {
@@ -143,7 +184,8 @@ namespace Pulsar4X.GroundCombat
             DesignId = o.DesignId; BackingEntityId = o.BackingEntityId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
             UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health; Range = o.Range;
             MaxAmmo_kg = o.MaxAmmo_kg; CurrentAmmo_kg = o.CurrentAmmo_kg;
-            Evasion = o.Evasion; Shield = o.Shield; CurrentShield = o.CurrentShield; DamageType = o.DamageType;
+            Evasion = o.Evasion; Shield = o.Shield; CurrentShield = o.CurrentShield; ShieldRegenFraction = o.ShieldRegenFraction; DamageType = o.DamageType; Penetration = o.Penetration; PerShotEnergy = o.PerShotEnergy;
+            ArmourVsKinetic = o.ArmourVsKinetic; ArmourVsEnergy = o.ArmourVsEnergy; ArmourVsExplosive = o.ArmourVsExplosive; ArmourVsExotic = o.ArmourVsExotic;
             MovingToRegion = o.MovingToRegion; TransitSecondsRemaining = o.TransitSecondsRemaining;
             HexQ = o.HexQ; HexR = o.HexR; HexTransitSecondsRemaining = o.HexTransitSecondsRemaining; HexStepBaseSeconds = o.HexStepBaseSeconds;
             if (o.HexPath != null)
@@ -185,7 +227,7 @@ namespace Pulsar4X.GroundCombat
     /// the thing the fleet action-lane model doesn't give. New order kinds are added here.</summary>
     public enum GroundOrderType : byte
     {
-        MoveToHex,      // march the formation to a hex within its region (fine grid)
+        MoveToHex,      // G6b-2: march the formation to a GLOBAL planetary-grid hex (TargetQ/TargetR = cylinder col/row)
         MoveToRegion,   // march the formation to an adjacent region (coarse ring hop)
         HoldFor,        // hold position for a set number of game-seconds (a timed wait / dig-in pause)
         SetStance,      // switch the formation's combat stance (from the GroundStance catalog)
@@ -376,7 +418,17 @@ namespace Pulsar4X.GroundCombat
                 Evasion = design.Evasion,
                 Shield = design.Shield,
                 CurrentShield = design.Shield,   // the shield pool musters full (resolver merge 3c)
+                ShieldRegenFraction = design.ShieldRegenFraction,   // ⚙3 shield recharge dial (0.34 default = byte-identical)
                 DamageType = design.DamageType,
+                Penetration = design.Penetration,   // armour-crack (W1c) — 0 for a normal unit, high for an AP design
+                PerShotEnergy = design.PerShotEnergy,   // alpha-vs-chip (W2c) — 0 = single lump, big = one alpha shot
+                // Armour NATURE tuning (⚙3): how well this unit's plating soaks each incoming nature. 1.0 = plain plate
+                // (every unit until a nature-tuned plating is fitted → resolver passes natureFactor 1.0 → byte-identical).
+                ArmourVsKinetic = design.ArmourVsKinetic,
+                ArmourVsEnergy = design.ArmourVsEnergy,
+                ArmourVsExplosive = design.ArmourVsExplosive,
+                ArmourVsExotic = design.ArmourVsExotic,
+
                 // Snapshot the design's environmental gear onto the unit (E4) — like the combat stats above.
                 EnvResistance = (design.EnvironmentalResistance != null && design.EnvironmentalResistance.Count > 0)
                     ? new Dictionary<HazardEffectType, double>(design.EnvironmentalResistance)
@@ -603,6 +655,33 @@ namespace Pulsar4X.GroundCombat
                 if (u.RegionIndex != rallyRegion || u.MovingToRegion >= 0) continue;
                 if (u.HexPath != null && u.HexPath.Count > 0) continue;   // already hex-marching
                 if (OrderMoveToHex(body, u, destQ, destR, blockSpeed)) moved++;
+            }
+            return moved;
+        }
+
+        /// <summary>
+        /// G6b (additive) — the PLANETARY-grid twin of <see cref="OrderFormationMoveToHex"/>: march a whole formation
+        /// to GLOBAL hex (<paramref name="destQ"/>,<paramref name="destR"/>) on the body's ONE continuous cylinder
+        /// grid, so troops maneuver on the whole-world planetary hexes rather than a per-region fine disk. Every member
+        /// standing with the LEADER (in the leader's region, not already global-marching) paths independently via
+        /// <see cref="OrderMoveToGlobalHex"/>. ADDITIVE this slice — nothing in live code calls it yet (the formation
+        /// order case repoints to it in the next G6b slice), so ground movement is byte-identical. v1 paces per-unit
+        /// (cohesive shared-pace is a follow-on — <see cref="OrderMoveToGlobalHex"/> has no speed override yet).
+        /// Returns how many units set out.
+        /// </summary>
+        public static int OrderFormationMoveToGlobalHex(Entity body, GroundFormation formation, int destQ, int destR)
+        {
+            if (formation == null || !body.TryGetDataBlob<GroundForcesDB>(out var forces)) return 0;
+            int rallyRegion = LeaderRegion(forces, formation);
+            if (rallyRegion < 0) return 0;
+
+            int moved = 0;
+            foreach (var u in forces.Units.ToArray())
+            {
+                if (u.FormationId != formation.FormationId) continue;
+                if (u.RegionIndex != rallyRegion || u.MovingToRegion >= 0) continue;
+                if (u.GlobalPath != null && u.GlobalPath.Count > 0) continue;   // already global-marching
+                if (OrderMoveToGlobalHex(body, u, destQ, destR)) moved++;
             }
             return moved;
         }

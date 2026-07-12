@@ -23,6 +23,22 @@ namespace Pulsar4X.Movement
         public double TotalFuel_kg { get; private set; }
 
         /// <summary>
+        /// REACTIONLESS drive (Propulsion ⚙2, Exotic): true when the entity's thrust comes from a drive that expends
+        /// no propellant — a gravitic/inertialess/warp-field engine that pushes without a reaction mass. Such a drive
+        /// has INFINITE delta-V: its <see cref="DeltaV"/> is pinned to <see cref="ReactionlessDeltaV"/> and is NOT
+        /// recomputed from the Tsiolkovsky (fuel-mass) equation, because there is no fuel to burn. A big power/tech cost
+        /// buys "never runs dry, never loses maneuver reserve." Default FALSE → the ordinary fuel-limited Tsiolkovsky
+        /// delta-V → every current ship is byte-identical. Set by <see cref="ReactionlessThrustAtb"/> at install.
+        /// </summary>
+        [JsonProperty]
+        public bool Reactionless = false;
+
+        /// <summary>The delta-V a reactionless (no-propellant) drive reports — effectively unlimited. Big enough to be
+        /// "infinite" for the maneuver/closing model (it seeds the fleet's ManeuverBudget, so a reactionless fleet
+        /// kites forever), without being an actual Infinity that could overflow a downstream TimeSpan.</summary>
+        public const double ReactionlessDeltaV = 1e12;
+
+        /// <summary>
         /// non fuel mass. will need updating when non fuel cargo is added/removed.
         /// (should be the mass of the ship plus any cargo including fuel not usable by this ship).
         /// </summary>
@@ -82,6 +98,14 @@ namespace Pulsar4X.Movement
         internal void SetFuel(double fuel, double wetMass_kg)
         {
             TotalFuel_kg = fuel;
+            // Reactionless (⚙2): no propellant to burn → delta-V is not fuel-limited; pin it to "unlimited". This is
+            // the single recompute funnel the fuel/cargo path uses (CargoTransferProcessor.UpdateMassFuelAndDeltaV),
+            // so guarding it here keeps a reactionless drive's DeltaV from being reset to a Tsiolkovsky value.
+            if (Reactionless)
+            {
+                DeltaV = ReactionlessDeltaV;
+                return;
+            }
             double dryMass = wetMass_kg - fuel;
             DeltaV = OrbitMath.TsiolkovskyRocketEquation(wetMass_kg, dryMass, ExhaustVelocity);
         }
@@ -102,6 +126,7 @@ namespace Pulsar4X.Movement
             ExhaustVelocity = db.ExhaustVelocity;
             FuelType = db.FuelType;
             FuelBurnRate = db.FuelBurnRate;
+            Reactionless = db.Reactionless;
             //DryMass_kg = db.DryMass_kg;
             TotalFuel_kg = db.TotalFuel_kg;
             DeltaV = db.DeltaV;

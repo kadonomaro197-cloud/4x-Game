@@ -65,6 +65,51 @@ namespace Pulsar4X.Factions
             return changed;
         }
 
+        /// <summary>
+        /// M2-1c: <paramref name="breakerFaction"/> RENEGES on a standing <paramref name="treaty"/> with
+        /// <paramref name="victimFaction"/> — the mechanical half of the Honor wire (whether a faction *would* is
+        /// <see cref="Treaties.WouldKeepFaith"/>). Clears the treaty flag on BOTH stored rows (the pact no longer
+        /// binds either side) and craters the VICTIM's trust in the breaker by <see cref="Treaties.BetrayalScorePenalty"/>,
+        /// then fires a diplomacy event. Returns true only if that pact was actually in force. No-op (false) for a
+        /// null/same faction, a faction missing a <see cref="DiplomacyDB"/> or a relationship row, or a treaty that
+        /// isn't currently signed. Nothing calls this autonomously yet, so live behaviour is unchanged.
+        /// </summary>
+        public static bool BreakTreaty(Entity breakerFaction, Entity victimFaction, TreatyType treaty, DateTime when)
+        {
+            if (breakerFaction == null || victimFaction == null || breakerFaction == victimFaction) return false;
+            if (!breakerFaction.TryGetDataBlob<DiplomacyDB>(out var bDip)) return false;
+            if (!victimFaction.TryGetDataBlob<DiplomacyDB>(out var vDip)) return false;
+            if (!bDip.HasMet(victimFaction.Id) || !vDip.HasMet(breakerFaction.Id)) return false;
+
+            var breakerRow = bDip.GetRelationship(victimFaction.Id);
+            var victimRow = vDip.GetRelationship(breakerFaction.Id);
+            if (!ClearTreatyFlag(breakerRow, treaty)) return false;  // no such pact in force → nothing to break
+            ClearTreatyFlag(victimRow, treaty);
+            victimRow.AdjustScore(-Treaties.BetrayalScorePenalty);   // the injured party's trust craters
+
+            EventManager.Instance.Publish(Event.Create(
+                EventType.Diplomacy, when,
+                $"{SafeName(breakerFaction)} has broken its {treaty} with {SafeName(victimFaction)}.",
+                breakerFaction.Id, null, victimFaction.Id));
+            return true;
+        }
+
+        /// <summary>Clear the flag for one treaty on a relationship row (the inverse of <see cref="Treaties"/>'
+        /// ApplyToRow). Returns true iff the flag was set (so a break of an unsigned pact is a no-op). Peace is not
+        /// a standing pact you can renege on, so it returns false.</summary>
+        private static bool ClearTreatyFlag(RelationshipState rel, TreatyType t)
+        {
+            switch (t)
+            {
+                case TreatyType.NonAggression:   if (!rel.NonAggressionPact) return false; rel.NonAggressionPact = false; return true;
+                case TreatyType.TradeAgreement:  if (!rel.TradeAgreement)    return false; rel.TradeAgreement    = false; return true;
+                case TreatyType.LogisticsAccess: if (!rel.LogisticsAccess)   return false; rel.LogisticsAccess   = false; return true;
+                case TreatyType.MilitaryAccess:  if (!rel.MilitaryAccess)    return false; rel.MilitaryAccess    = false; return true;
+                case TreatyType.DefensivePact:   if (!rel.DefensivePact)     return false; rel.DefensivePact     = false; return true;
+                default:                         return false;  // Peace has no standing flag to break
+            }
+        }
+
         private static string SafeName(Entity faction)
         {
             try { return faction.GetName(faction.Id); } catch { return "a faction"; }

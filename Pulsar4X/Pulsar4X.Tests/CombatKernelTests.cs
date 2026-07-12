@@ -62,6 +62,98 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("Penetration is the armour half of the matchup (⚙1 backlog #1): penetration 0 reduces byte-for-byte to the old flat soak; penetration cancels armour point-for-point (a partly-penetrated plate soaks off its REMAINING points); penetration ≥ armour lands in full like an unarmoured target; a negative penetration is clamped (never makes armour stronger).")]
+        public void ArmourSoak_Penetration_CancelsArmourPointForPoint()
+        {
+            // Penetration 0 is byte-identical to the 2-arg flat soak (the byte-identity contract W1a rests on).
+            Assert.That(CombatKernel.ArmourSoak(armour: 10, sourceDamage: 100, penetration: 0),
+                Is.EqualTo(CombatKernel.ArmourSoak(armour: 10, sourceDamage: 100)).Within(1e-12),
+                "penetration 0 == the old flat soak (byte-identical)");
+
+            // Armour 100, penetration 60 → effective armour 40 → after = 100 - 40*1.5 = 40 (above the 10 floor).
+            // The SAME weapon vs the same plate with NO penetration is floored at 10 — so penetration is the difference
+            // between bouncing (10 lands) and cracking (40 lands).
+            Assert.That(CombatKernel.ArmourSoak(armour: 100, sourceDamage: 100, penetration: 60), Is.EqualTo(40).Within(1e-9),
+                "penetration cancels armour point-for-point, so the source soaks off the REMAINING plating only");
+            Assert.That(CombatKernel.ArmourSoak(armour: 100, sourceDamage: 100, penetration: 0), Is.EqualTo(10).Within(1e-9),
+                "the same round with no penetration bounces off heavy plate (floored)");
+
+            // Penetration ≥ armour → the plate is meaningless → full pass (identical to the unarmoured case).
+            Assert.That(CombatKernel.ArmourSoak(armour: 40, sourceDamage: 100, penetration: 40), Is.EqualTo(100).Within(1e-9),
+                "penetration equal to armour → lands in full, as if unarmoured");
+            Assert.That(CombatKernel.ArmourSoak(armour: 40, sourceDamage: 100, penetration: 999), Is.EqualTo(100).Within(1e-9),
+                "over-penetration doesn't over-land — it just fully bypasses");
+
+            // A negative penetration can't buff the armour (clamped to 0 → same as the plain soak).
+            Assert.That(CombatKernel.ArmourSoak(armour: 10, sourceDamage: 100, penetration: -50),
+                Is.EqualTo(CombatKernel.ArmourSoak(armour: 10, sourceDamage: 100)).Within(1e-12),
+                "negative penetration is clamped — armour never gets STRONGER");
+
+            Log($"pen0=={CombatKernel.ArmourSoak(10, 100, 0)}  crack(pen60)={CombatKernel.ArmourSoak(100, 100, 60)} vs bounce(pen0)={CombatKernel.ArmourSoak(100, 100, 0)}  fullpass(pen=armour)={CombatKernel.ArmourSoak(40, 100, 40)}");
+        }
+
+        [Test]
+        [Description("Armour NATURE factor (⚙3 Defense — ablative/composite/reactive plating): natureFactor scales how hard the plating soaks the incoming nature. 1.0 is byte-for-byte the penetration overload (every plain-plated unit); >1 soaks harder (a tuned plate bounces more); <1 soaks less (a poor match lands more); it scales the flat soak only, so penetration still decides the physical breach; clamped at 0.")]
+        public void ArmourSoak_NatureFactor_ScalesTheSoak()
+        {
+            // natureFactor 1.0 is the byte-identity contract this whole slice rests on.
+            Assert.That(CombatKernel.ArmourSoak(armour: 10, sourceDamage: 100, penetration: 0, natureFactor: 1.0),
+                Is.EqualTo(CombatKernel.ArmourSoak(armour: 10, sourceDamage: 100)).Within(1e-12),
+                "natureFactor 1.0 == the old flat soak (byte-identical — a plain plate)");
+
+            // Base: armour 10 → after = 100 - 10*1.5 = 85 lands. A plate TUNED to this nature (×2) soaks twice as hard
+            // → after = 100 - 10*1.5*2 = 70 lands. A POOR match (×0.5) soaks half → after = 100 - 10*1.5*0.5 = 92.5.
+            Assert.That(CombatKernel.ArmourSoak(10, 100, 0, 1.0), Is.EqualTo(85).Within(1e-9));
+            Assert.That(CombatKernel.ArmourSoak(10, 100, 0, 2.0), Is.EqualTo(70).Within(1e-9), "tuned plate soaks harder — less lands");
+            Assert.That(CombatKernel.ArmourSoak(10, 100, 0, 0.5), Is.EqualTo(92.5).Within(1e-9), "poor match soaks less — more lands");
+
+            // Nature scales the SOAK, not the breach: penetration ≥ armour still lands in full regardless of nature.
+            Assert.That(CombatKernel.ArmourSoak(40, 100, penetration: 40, natureFactor: 5.0), Is.EqualTo(100).Within(1e-9),
+                "penetration decides the physical breach first — a fully-penetrated plate can't soak by nature");
+
+            // Clamped at 0 (a nature match can't make armour NEGATIVE / add damage).
+            Assert.That(CombatKernel.ArmourSoak(10, 100, 0, -3.0),
+                Is.EqualTo(CombatKernel.ArmourSoak(10, 100, 0, 0.0)).Within(1e-12), "negative nature factor clamps to 0 (no soak, not anti-soak)");
+            Assert.That(CombatKernel.ArmourSoak(10, 100, 0, 0.0), Is.EqualTo(100).Within(1e-9), "a totally-mismatched plate (factor 0) soaks nothing");
+
+            // The burst overload carries the same factor through the shot split.
+            Assert.That(CombatKernel.ArmourSoakBurst(10, 100, shotCount: 1, penetration: 0, natureFactor: 2.0),
+                Is.EqualTo(CombatKernel.ArmourSoak(10, 100, 0, 2.0)).Within(1e-12), "one lump == the flat nature soak");
+
+            Log($"plain(×1)={CombatKernel.ArmourSoak(10,100,0,1.0)}  tuned(×2)={CombatKernel.ArmourSoak(10,100,0,2.0)}  poor(×0.5)={CombatKernel.ArmourSoak(10,100,0,0.5)}");
+        }
+
+        [Test]
+        [Description("PerShotEnergy is the alpha-vs-chip dial (⚙1 backlog #2): BurstShotCount = dps/PerShotEnergy clamped (0 → 1 lump); ArmourSoakBurst splits a source into that many equal shots and soaks each flat, so a swarm of chips (many shots) is mostly bounced by plate while one alpha of EQUAL total punches through. shotCount ≤ 1 is byte-identical to the flat soak, so an un-dialled weapon is unchanged.")]
+        public void ArmourSoakBurst_AlphaPunches_ChipBounces()
+        {
+            // BurstShotCount: a cannon (huge per-shot) fires 1 alpha; a repeater (small per-shot) many; 0 → 1 lump.
+            var cannon   = new WeaponProfile(1000, 1e6, 0, 1, 0, WeaponNature.Kinetic, WeaponDelivery.Slug, 0, perShotEnergy: 1000);
+            var repeater = new WeaponProfile(1000, 1e6, 0, 1, 0, WeaponNature.Kinetic, WeaponDelivery.Slug, 0, perShotEnergy: 10);
+            var undialled = new WeaponProfile(1000, 1e6, 0, 1, 0, WeaponNature.Kinetic, WeaponDelivery.Slug); // PerShotEnergy 0
+            Assert.That(CombatKernel.BurstShotCount(cannon), Is.EqualTo(1), "a big-per-shot cannon is one alpha");
+            Assert.That(CombatKernel.BurstShotCount(repeater), Is.EqualTo(100), "a small-per-shot repeater is many chips (1000/10)");
+            Assert.That(CombatKernel.BurstShotCount(undialled), Is.EqualTo(1), "an un-dialled weapon is a single lump");
+
+            // Equal total damage (1000) vs the same plate: the alpha lands far more than the chip-burst.
+            const double armour = 100, total = 1000;
+            double alphaLands = CombatKernel.ArmourSoakBurst(armour, total, shotCount: 1);
+            double chipLands  = CombatKernel.ArmourSoakBurst(armour, total, shotCount: 100);
+            Log($"vs armour {armour}: one {total}-alpha lands {alphaLands}, a 100-chip burst of the same total lands {chipLands}");
+            Assert.That(alphaLands, Is.GreaterThan(chipLands), "one big alpha punches plate a swarm of chips bounces off");
+
+            // shotCount ≤ 1 is byte-for-byte the flat soak (an un-dialled weapon is unchanged).
+            Assert.That(CombatKernel.ArmourSoakBurst(armour, total, shotCount: 1),
+                Is.EqualTo(CombatKernel.ArmourSoak(armour, total)).Within(1e-12), "one lump == the flat soak");
+
+            // Penetration composes: an AP burst cracks more than a plain burst of the same shot count. (The chips are
+            // small — 10 each — so the penetration must bring effective armour low enough for a chunk to beat the floor:
+            // armour 100, pen 96 → effective 4 → each 10-chunk lands 10-4*1.5=4 instead of the floored 1.)
+            double apChip    = CombatKernel.ArmourSoakBurst(armour, total, shotCount: 100, penetration: 96);
+            Assert.That(apChip, Is.GreaterThan(chipLands), "penetration still helps a chip-burst crack plate");
+        }
+
+        [Test]
         [Description("ResolveShield pins the drain/regen: a charged pool absorbs the soakable damage up to its charge; regen tops it back toward capacity; a 0-capacity (unshielded) pool absorbs nothing.")]
         public void ResolveShield_PinsKnownValues()
         {
