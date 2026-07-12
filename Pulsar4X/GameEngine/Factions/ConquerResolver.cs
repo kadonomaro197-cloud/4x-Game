@@ -27,8 +27,36 @@ namespace Pulsar4X.Factions
         {
             if (state == null) return PlannerAction.None;
 
-            // Rung (v1) — MASS the strike fleet: queue an armed hull on a free ship-construction line. (The target /
-            // reach / fuel / strike rungs are the deferred P-3 military sub-subsystem.)
+            // Rung 1 (P-3 REACH — the STRIKE, 2026-07-12): if we hold a scored enemy target (a colony of a faction
+            // we're at war with, MilitaryTarget) AND a MASSED strike fleet (MilitaryComposition) that isn't already
+            // sailing, order that fleet to sail at the enemy world. This is the "do" that turns the coalition into a
+            // war: 3.4b DECLARES war → MilitaryTarget SCORES the world → MilitaryComposition confirms a mass fleet →
+            // here we SAIL it. Reuses the player MoveToSystemBodyOrder, which guards the warp landmines (skips
+            // 0-speed ships; the order handler try/catches). Byte-identical while order emission is off (this whole
+            // resolver runs only inside the gated EmitOrders), AND for any faction not at war (no target → skip).
+            var target = MilitaryTarget.BestEnemyTarget(state.Faction);
+            if (target.IsValid && state.Game != null)
+            {
+                var strikeFleet = MilitaryComposition.ReadyStrikeFleet(state);
+                if (strikeFleet != null && strikeFleet.IsValid && !FleetIsMoving(strikeFleet))
+                {
+                    var game = state.Game;
+                    int factionId = state.FactionId;
+                    var fleet = strikeFleet;
+                    var body = target.ColonyBody;
+                    return new PlannerAction(
+                        "StrikeFleet",
+                        $"sail strike fleet {fleet.Id} at enemy world {body.Id} (target score {target.Score:F0})",
+                        () =>
+                        {
+                            var cmd = Pulsar4X.Movement.MoveToSystemBodyOrder.CreateCommand(factionId, fleet, body);
+                            game.OrderHandler.HandleOrder(cmd);   // the ONE step (the only side effect)
+                        });
+                }
+            }
+
+            // Rung 2 (v1) — MASS the strike fleet: queue an armed hull on a free ship-construction line. (Reached
+            // while we have no target yet, or the strike group isn't massed / is already en route.)
             foreach (var colony in state.ColoniesWithFreeLine())
             {
                 if (colony.Cargo == null) continue;   // AutoAddSubJobs needs a CargoStorageDB
@@ -70,6 +98,17 @@ namespace Pulsar4X.Factions
             || ship.TryGetComponentsByAttribute<PlasmaBoltWeaponAtb>(out _)
             || ship.TryGetComponentsByAttribute<DisruptorWeaponAtb>(out _)
             || ship.TryGetComponentsByAttribute<MissileLauncherAtb>(out _);
+
+        /// <summary>True if any ship in the fleet is already in warp transit — so the strike rung doesn't re-issue the
+        /// sail order every monthly cycle (which would thrash the fleet's warp). A cheap en-route guard; a fuller
+        /// "already ordered to this target" check rides the later reach polish.</summary>
+        private static bool FleetIsMoving(Entity fleet)
+        {
+            foreach (var ship in Pulsar4X.Combat.FleetCombat.Ships(fleet))
+                if (ship != null && ship.IsValid && ship.HasDataBlob<Pulsar4X.Movement.WarpMovingDB>())
+                    return true;
+            return false;
+        }
 
         /// <summary>The id of a free (empty-queue) production line on this colony that runs the given industry type.</summary>
         private static string FreeLineFor(IndustryAbilityDB industry, string industryTypeId)
