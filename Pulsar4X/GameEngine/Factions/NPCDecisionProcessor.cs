@@ -249,6 +249,26 @@ namespace Pulsar4X.Factions
             var game = factionEntity.Manager?.Game;
             if (game == null) return;
 
+            // Pass 1 (Phase-3.4 seed — ally against a SHARED THREAT): if we fear a rival most (the strongest we can
+            // SEE that out-muscles us, 3.2), seek a DEFENSIVE PACT with a TRUSTED neighbour who isn't that threat.
+            // Deliberately rare: it needs both a feared rival AND an Allied-trust (75) partner, so it fires only when a
+            // real alliance-against-a-common-enemy is on the table — the diplomatic seed a coalition (3.4) grows from.
+            int threatId = ThreatAssessment.GreatestThreatTo(factionEntity).rivalId;
+            if (threatId != -1)
+            {
+                foreach (var rel in dipDB.Relationships.Values)
+                {
+                    if (rel.AtWar || rel.DefensivePact) continue;
+                    if (rel.OtherFactionId == factionEntity.Id || rel.OtherFactionId == Game.NeutralFactionId) continue;
+                    if (rel.OtherFactionId == threatId) continue;                       // don't ally WITH the one we fear
+                    if (!Treaties.WouldAccept(rel, TreatyType.DefensivePact)) continue; // needs Allied trust (75)
+                    if (!game.Factions.TryGetValue(rel.OtherFactionId, out var ally)) continue;
+                    if (Treaties.Propose(factionEntity, ally, TreatyType.DefensivePact, game.TimePulse.GameGlobalDateTime))
+                        return;   // one treaty move per cycle
+                }
+            }
+
+            // Pass 2 (Phase-3.3 — plain détente): otherwise seek a NonAggression pact with any qualifying neighbour.
             foreach (var rel in dipDB.Relationships.Values)
             {
                 if (rel.AtWar) continue;                                    // no ordinary treaty while shooting
