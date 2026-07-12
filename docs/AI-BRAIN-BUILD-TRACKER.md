@@ -197,8 +197,8 @@ GrowEconomy · Consolidate · Defend · Expand · AdvanceTech · Conquer each ha
 ### Phase 4 — 🌌 The Galaxy + Crisis
 | # | Slice | Plug point | Gauge | Status |
 |---|---|---|---|---|
-| 4.1 | Capability-tech concept (tech grants a capability, not a component) | extend `Tech.Unlocks` model | a tech flips a faction capability flag | ⚫ |
-| 4.2 | Ascension seed + crisis trigger → coalition | producer for `EventTypes.cs:122`; reuse 3.x | one faction ascends → galaxy coalitions vs it | ⚫ |
+| 4.1 | Capability-tech concept (tech grants a capability, not a component) | extend `Tech.Unlocks` model | a tech flips a faction capability flag | 🟡 **REALIZED — the mechanism was already built (F-D2)** + now given a capability that MATTERS: `FactionDataStore` routes any `capability-` unlock id to `Capabilities`/`HasCapability` (an unlock that grants an ABILITY, not a buildable), and `GalaxyCrisis.AscensionCapability` (`capability-ascension`) is the concrete one — researching the transcendent tech flips the flag. Gauge `GalaxyCrisisTests` (+ existing `FactionCapabilityTests`). CI-verifying with 4.2-detector. |
+| 4.2 | Ascension seed + crisis trigger → coalition | producer for `EventTypes.cs:122`; reuse 3.x | one faction ascends → galaxy coalitions vs it | 🟡 **DETECTOR built** — `GalaxyCrisis.Ascendant(game)`/`IsCrisisActive` name the faction that holds the ascension capability (or none), the pure read the crisis rides. Byte-identical (nothing consumes it yet). **Next (4.2b):** fire a one-time crisis EVENT when an ascendant first appears + the coalition RESPONSE — every other faction treats the ascendant as the shared threat and declares war (reuse the Phase-3.4 `Diplomacy.DeclareWar`/DefensivePact machinery). Gauge `GalaxyCrisisTests`. |
 
 ### Phase 5 — 🪐 The Brane (authoring / acceptance test)
 | # | Slice | Plug point | Gauge | Status |
