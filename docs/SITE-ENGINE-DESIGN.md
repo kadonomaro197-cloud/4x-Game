@@ -186,9 +186,9 @@ Each slice is CI-gated and byte-identical-first (new code gated/neutral until wi
 - **Incidents/crises bleed you, no doom clock** — steady pressure is the clock; the player chooses when/how to act.
 - **Where a leader is posted sets their incident/death risk**, mitigated by the berth's Survivability dial — one incident roll across all pillars.
 - **Transport is unit-driven, 6 steps** (§6); landing can target a specific hex, not just a region.
+- **The Command Berth dial set is LOCKED (2026-07-12):** **Role** (Tactical/Science/Diplomatic/Intelligence/Command — decides eligible leader type + pillar), **Grade** (rank tier it supports; fit-to-rank — a high leader under-uses a low berth and loses morale), **Support** (a flat competence boost to the seated leader's pillar), **Survivability** (reduces the posting-danger incident roll), **Span** (force size the leader can run — gives `AdminSpaceAtb.ConsoleSpace` teeth), **Crew & upkeep** (standard cost). **Per-role berths**, built on the one shared seat mechanism; a ship fits several (Enterprise-D). This is the §5 table, now frozen as the build target.
 
 **Open (decide when we build):**
-- Universal "command berth" vs. per-role berths at the *data* level (leaning per-role, one shared mechanism).
 - The accrue/understanding curve and how much understanding each branch requires.
 - Whether killing spawns must be paired with sealing/negotiating to actually end a crisis (leaning: yes — kill ≠ close the door).
 - Does a site under incident keep producing (pressure) or go offline (punishment)? Per-episode data, probably.
