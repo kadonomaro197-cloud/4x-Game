@@ -2,6 +2,8 @@
 
 *Draft 2026-06-26 — the design pass BEFORE we build. Detection is M1 lever #1 (`docs/MVP.md`, `docs/REALISM-VS-GAMEPLAY-AUDIT.md`). This doc is for marking up: the Keep/Cut/Add calls in §3 and the open questions in §5 are proposals, not settled.*
 
+> **DECISION 2026-07-07 — `SignalQuality` is CUT (not "keep quietly").** Detection collapses to **strength only**: *do I see it, and how loud is it.* `SignalStrength` is EMCON's entire substrate (activity → signature → detectability at range) and is all combat/EMCON needs. The `SignalQuality` classification/resolution field is deleted — it was pretty-and-complicated, carried no graduated range info (range-invariant), duplicated the graduated-ness that belongs in the espionage **Information Ledger**, and its only consumer was a redundant survey body-ID path. **This retires the "detection-quality fix" as a prerequisite for espionage** — the prerequisite becomes "cut it," which is free. Deletes three bugs by deletion (byte-overflow, multi-band overwrite, range-invariance). Size/"big vs small contact" still falls out of strength × cross-section; fine classification, if ever wanted, is an espionage (agents) question, not a sensor field. The rows below marked "quality" are superseded by this banner.
+
 ---
 
 ## 0. The point first (what detection is FOR)
@@ -53,7 +55,7 @@ The sensor subsystem (`GameEngine/Sensors/`) is **one of the most complete in th
 | **KEEP** | Emitted + reflected signature model; range attenuation | ✅ keep | This is the *substrate* of the EMCON tradeoff — don't rebuild it. |
 | **KEEP** | Last-known-position lag on contacts | ✅ keep | Free fog-of-war texture (a stale track is a real tactical fact). |
 | **KEEP** | Active vs. passive receiver concept | ✅ keep + surface it | Half the EMCON lever already exists at component level. |
-| **KEEP (quietly)** | Contact **quality 0–1** | ✅ keep, use lightly in v1 | "blip vs. full ID" is good texture; but v1 gameplay can gate on *detected y/n* and treat quality as flavor until it earns more. |
+| ~~KEEP (quietly)~~ **CUT** | Contact **quality 0–1** | ❌ **delete** (decision 2026-07-07) | Superseded by the banner: quality carried no graduated range info, duplicated the Ledger's job, only fed a redundant survey path. Detection gates on *detected y/n* (strength); size falls out of strength × cross-section. |
 | **CUT as gameplay** | EM-waveform spectrum / per-band absorption / triangular-overlap tuning | 🔇 **hide, don't delete** | Keep it computing the number; **never make the player tune wavelengths.** Per the weight rule: it adds complexity, not a decision. Collapse the player's mental model to "signature vs. sensor vs. range." |
 | **CUT** | EW / jamming | ❌ not now | Net-new, not on the path. Parking lot. |
 | **ADD** | **Fog of war in combat** | ➕ the seam | Battle trigger + fire control ask the track table "what hostile do I *detect*," not "what's present." An unseen enemy can't trigger or be targeted. *This is the core add.* |
@@ -118,7 +120,7 @@ EMCON is **not one variable** ("how hot you run") — it's a cluster of emitter 
 | **Heat sinks / radiators** | a thermal-store component — *likely absent* | design (if built) | YES — run hot, stay cold, dump heat after the strike | **LATENT** (new component) |
 | **Stealth coatings / RAM** | per-band absorption (substrate exists) → a material/hull flavor | design (a stealth hull) | YES — a real stealth-ship design tradeoff | **LATENT** (material flavor) |
 | **Environmental masking** | star emissions modeled; masking + clouds aren't | play (lurk near a star / in a cloud) | YES — positional stealth | **LATENT** (cloud/hazard seam) |
-| **Contact quality** | sensor resolution (0–1, exists) | design | a little — ID detail | **KEEP-as-flavor** v1; deepen later |
+| **Contact quality** | sensor resolution (0–1, exists) | design | a little — ID detail | ❌ **CUT** (decision 2026-07-07) — pretty, not a decision |
 
 **Insight:** the four emitters (engine / reactor / weapons / active-sensor) are **existing components** — so EMCON is *wiring their activity into a dynamic signature + one posture order*, **not a new system** (cradle-to-grave by construction; the reactor is *already* the signature driver). Today the signature is a **static** design number; **making it dynamic (thrust on, guns firing, sensors active → louder) is the actual build.** The "would the player care" filter split the cluster cleanly: emitters + sensor flavor + posture = *felt* decisions (build); cross-section + range = *automatic* (keep, no dial — a "cross-section slider" would be pretty); heat sinks / coatings / masking = real depth but **latent** until their systems exist.
 
@@ -139,7 +141,7 @@ EMCON is **not one variable** ("how hot you run") — it's a cluster of emitter 
 | **Reactor throttle / run-silent** | output fixed at max−demand; **no throttle, no power/EMCON order** | **NEEDS-CHANGE** — add `PowerThrottlePercent` | `EnergyGenProcessor.cs:24` |
 | **EMCON posture/order** | none — no order, no state, no flag | **NEEDS-BUILD** (small, mirrors doctrine) | — |
 | **Cross-section** | π·r² from ship radius; fixed geometry | **EXISTS, no lever** (keep) | `SensorProfileDB.cs:33-47` |
-| **Contact quality** | computed 0–1; **consumed for SURVEY detail** (star/planet accuracy gating), **not combat** | **EXISTS, survey-wired** — ties to the *survey* flavor; v2 for fire-control lock | `SensorReturnValues.cs:8`, `SystemBodyInfoDB.cs:154` |
+| **Contact quality** | computed 0–1; **consumed for SURVEY detail** (star/planet accuracy gating), **not combat** | ❌ **CUT (decision 2026-07-07)** — delete the field + `DetectonQuality`'s quality math; **re-point the survey body-ID** (`SystemBodyInfoDB.cs:154`, `StarInfoDB.cs:130`) onto the geo/grav **survey-points** mechanic (the real survey system) or a simple strength/range reveal; re-check survey gauges | `SensorReturnValues.cs:8`, `SystemBodyInfoDB.cs:154` |
 | **Heat / radiators** | **none** on ships (thermal math lives only in the asteroid-damage sim) | **v2 / LATENT** — not needed for EMCON v1 ("hot = loud now") | `Damage/DamageVeryComplex/` |
 | **Environmental masking** | **none** — detection is pure signal-vs-sensitivity; **author's own TODO wants it** ("ships near a sun hidden") | **v2 / LATENT** (positional stealth) | `SensorTools.cs:65` |
 | **Stealth-by-material** | emitter side is a flat `Reflectivity 0.9`; per-band material math **exists but only in the damage path** | **v2 / LATENT** (reuse the damage math) | `SensorProfileDB.cs:53`, `ArmorBlueprint.cs` |
@@ -166,7 +168,7 @@ The rigorous EM physics stays the **under-the-hood number** the heat/sensor mode
 1. **The heat lever — emergent or discrete?** Does "how hot you run" ride on what you're DOING (thrust / hot guns / active sensors auto-raise your signature) + an explicit "run silent" throttle, OR a discrete stance (Full / Cruise / Silent)? *(Lean: a discrete stance for legibility, with signature also nudged by activity underneath.)*
 2. **Per-fleet or per-ship?** Rec: **per-fleet** for v1 (matches how doctrine works), per-ship later.
 3. **Active sensors — a deliberate toggle?** Going active flushes hidden/cold ships but exposes you. Rec: **deliberate, default passive** — choosing to light up to find what's hiding *is* the decision.
-4. **Quality in v1: gate info, or flavor?** Rec: **flavor** for v1 (detected = you can engage); make quality gate detail later, so we don't front-load complexity.
+4. **Quality in v1: gate info, or flavor?** **RESOLVED 2026-07-07 — CUT entirely.** Not flavor, not a gate: deleted. Detection = strength only (see-it-or-not + how-loud). See the decision banner at the top. Sensor flavors differentiate on **reach + sensitivity** (kept), not detail (cut).
 5. **Multi-purpose sensor components in M1?** Build military-detection + heat + active/passive now, and leave **cloud-penetration / "why am I blind" / survey-habitability** as *architected-but-unbuilt seams* (they need obscuring hazards / the colonization layer to connect to). Rec: **yes — seams now, content when their connections exist** (see §3a).
 6. **EW/jamming stays parked?** Rec: yes.
 
