@@ -27,6 +27,10 @@ namespace Pulsar4X.Factions
         /// <summary>Relation-score hit when an op is CAUGHT (proof) — a hard souring toward the exposed actor.</summary>
         public const int RelationHitCaught = -15;
 
+        /// <summary>Espionage E6: the fraction of a rival's current funds a successful steal-funds op siphons to the
+        /// actor. Tunable balance dial — a bite, not a knockout.</summary>
+        public const double StealFundsFraction = 0.15;
+
         internal override void ProcessEntity(Entity agent, DateTime atDateTime)
         {
             if (!agent.TryGetDataBlob<CovertOpDB>(out var op)) return;   // no op (already resolved / cancelled)
@@ -79,18 +83,51 @@ namespace Pulsar4X.Factions
                 CommanderFactory.DestroyCommander(agent);
         }
 
-        /// <summary>The op's payoff on a successful run. E3 lands GatherIntel (raise the actor's intel on the target's
-        /// chosen facet to Confirmed — the sharpened poker read). Other catalog actions (steal-tech/sabotage/…) get
-        /// their live effects in E6; here they run clean but do nothing yet (deliberate, documented).</summary>
+        /// <summary>The op's payoff on a successful run, dispatched by action. E3 landed GatherIntel; E6 adds
+        /// StealFunds (the clean money wire). The remaining catalog actions each need their own cross-system wire and
+        /// are the deliberate next slices (named below so they're explicit deferrals, not silent gaps):
+        ///   • StealTech — copy a rival tech into the actor's <see cref="FactionDataStore"/> (needs the unlock-chain
+        ///     handling so a stolen tech doesn't corrupt the tech store);
+        ///   • Sabotage — damage a target colony installation / slow production (routes through the Damage system);
+        ///   • SowUnrest — drop a target province's legitimacy (needs a PERSISTENT legitimacy factor the
+        ///     <c>LegitimacyProcessor</c> recompute reads, or the drop is recomputed away next cycle);
+        ///   • Disinformation — plant a false record in the TARGET's ledger about the actor.
+        /// </summary>
         private static void ApplyEffect(Entity agent, int actorFactionId, CovertOpDB op, Game game, DateTime when)
         {
-            if (op.Action != CovertAction.GatherIntel) return; // steal/sabotage/… effects are E6
-
-            if (game.Factions.TryGetValue(actorFactionId, out var actorFaction)
-                && actorFaction.TryGetDataBlob<InformationLedgerDB>(out var ledger))
+            switch (op.Action)
             {
-                ledger.Confirm(op.TargetFactionId, op.TargetFacet, when);
+                case CovertAction.GatherIntel:
+                    if (game.Factions.TryGetValue(actorFactionId, out var actorFaction)
+                        && actorFaction.TryGetDataBlob<InformationLedgerDB>(out var ledger))
+                        ledger.Confirm(op.TargetFactionId, op.TargetFacet, when);
+                    break;
+
+                case CovertAction.StealFunds:
+                    StealFunds(actorFactionId, op.TargetFactionId, game, when);
+                    break;
+
+                // StealTech / Sabotage / SowUnrest / Disinformation — the deeper cross-system wires (see the summary
+                // above); each is its own next slice, no-op here until then.
             }
+        }
+
+        /// <summary>Espionage E6 — the steal-funds effect: siphon <see cref="StealFundsFraction"/> of the target's
+        /// current funds into the actor's treasury (both sides book it under <see cref="TransactionCategory.Espionage"/>).
+        /// A clean Ledger→Ledger transfer, no negative-balance games (skips a broke target). The BP "steal funds" verb.</summary>
+        private static void StealFunds(int actorFactionId, int targetFactionId, Game game, DateTime when)
+        {
+            if (!game.Factions.TryGetValue(actorFactionId, out var actor) || !actor.TryGetDataBlob<FactionInfoDB>(out var actorInfo)) return;
+            if (!game.Factions.TryGetValue(targetFactionId, out var target) || !target.TryGetDataBlob<FactionInfoDB>(out var targetInfo)) return;
+
+            decimal funds = targetInfo.Money.GetCurrentFunds();
+            if (funds <= 0) return;                                   // nothing to steal from a broke rival
+
+            decimal loot = funds * (decimal)StealFundsFraction;
+            if (loot <= 0) return;
+
+            targetInfo.Money.AddExpense(when, TransactionCategory.Espionage, "Funds siphoned by a hostile agent", loot);
+            actorInfo.Money.AddIncome(when, TransactionCategory.Espionage, "Funds stolen from a rival", loot);
         }
 
         /// <summary>The caught consequences on the TARGET's view of the ACTOR: their suspicion of the actor climbs
