@@ -31,18 +31,50 @@ namespace Pulsar4X.Factions
         Stale,
     }
 
-    /// <summary>One facet's intel: its current level + when it was last confirmed (for decay).</summary>
+    /// <summary>One facet's intel: its current level + when it was last confirmed (for decay), plus the last two
+    /// observed STRENGTH samples so a pure helper can read whether the rival is RISING over time (Phase 3.1).</summary>
     public class IntelRecord
     {
         [JsonProperty] public IntelLevel Level { get; set; } = IntelLevel.Inferred;
         [JsonProperty] public DateTime LastConfirmed { get; set; }
+
+        /// <summary>True once at least one strength sample has been recorded (distinguishes a real 0 from "never sampled").</summary>
+        [JsonProperty] public bool HasSample { get; set; }
+        /// <summary>True once at least TWO samples exist — only then is a rising/falling trend readable.</summary>
+        [JsonProperty] public bool HasPriorSample { get; set; }
+        /// <summary>The most-recently observed DETECTED strength for this facet (the latest trend sample).</summary>
+        [JsonProperty] public double LastStrength { get; set; }
+        /// <summary>The previous observed strength — kept so a pure helper can read the trend without any history buffer.</summary>
+        [JsonProperty] public double PriorStrength { get; set; }
 
         public IntelRecord() { }
         public IntelRecord(IntelRecord other)
         {
             Level = other.Level;
             LastConfirmed = other.LastConfirmed;
+            HasSample = other.HasSample;
+            HasPriorSample = other.HasPriorSample;
+            LastStrength = other.LastStrength;
+            PriorStrength = other.PriorStrength;
         }
+
+        /// <summary>Record a fresh strength observation: the current Last becomes Prior, the new value becomes Last.
+        /// The first sample only sets Last (no trend yet); the second and onward make the trend readable.</summary>
+        public void RecordSample(double strength)
+        {
+            if (HasSample)
+            {
+                PriorStrength = LastStrength;
+                HasPriorSample = true;
+            }
+            LastStrength = strength;
+            HasSample = true;
+        }
+
+        /// <summary>Pure trend read: this facet's DETECTED strength is trending UP — the last sample exceeds the prior.
+        /// False until two samples exist (no trend yet). No clock, no mutation → inherently byte-identical.</summary>
+        [JsonIgnore]
+        public bool IsRising => HasPriorSample && LastStrength > PriorStrength;
     }
 
     /// <summary>
@@ -101,6 +133,25 @@ namespace Pulsar4X.Factions
             }
             record.Level = IntelLevel.Confirmed;
             record.LastConfirmed = when;
+        }
+
+        /// <summary>Raise a facet to <see cref="IntelLevel.Confirmed"/> AND record the current DETECTED-strength sample
+        /// (<paramref name="detectedStrength"/>), so the persistent trend read (<see cref="IsRising"/>) accumulates a
+        /// prior-vs-last pair over successive cycles. This is the "populate the ledger" call the monthly driver makes.</summary>
+        public void Confirm(int rivalFactionId, IntelFacet facet, DateTime when, double detectedStrength)
+        {
+            Confirm(rivalFactionId, facet, when);       // create/raise the record (reuses the base logic)
+            Ledger[rivalFactionId][facet].RecordSample(detectedStrength);
+        }
+
+        /// <summary>Pure trend read: is a rival's DETECTED strength for <paramref name="facet"/> (Military by default)
+        /// trending UP across the last two recorded samples? <c>false</c> for an unknown rival/facet or fewer than two
+        /// samples (no trend yet). Read-only → byte-identical; the "is this rival RISING over time" AI read.</summary>
+        public bool IsRising(int rivalFactionId, IntelFacet facet = IntelFacet.Military)
+        {
+            if (Ledger.TryGetValue(rivalFactionId, out var facets) && facets.TryGetValue(facet, out var record))
+                return record.IsRising;
+            return false;
         }
 
         /// <summary>Every Confirmed record not refreshed within <paramref name="staleAfter"/> drops to Stale.</summary>

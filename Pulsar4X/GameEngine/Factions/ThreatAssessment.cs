@@ -83,5 +83,18 @@ namespace Pulsar4X.Factions
             }
             return PickGreatestThreat(byRival, own);
         }
+
+        /// <summary>
+        /// Phase-3.1 (the RISING-over-time read that <see cref="PickGreatestThreat"/> deliberately deferred): is the
+        /// observer's DETECTED read of <paramref name="rivalFactionId"/> trending UP across the persistent
+        /// <see cref="InformationLedgerDB"/>'s last two samples? This is what turns "the strongest RIGHT NOW" into "the
+        /// one who is GROWING" — the trigger an alliance-against-a-riser should read. Pure/read-only: the samples are
+        /// recorded by the monthly ledger driver, this only reads them. <c>false</c> for a null ledger or fewer than
+        /// two samples (no trend yet).
+        /// </summary>
+        public static bool IsRising(InformationLedgerDB ledger, int rivalFactionId, IntelFacet facet = IntelFacet.Military)
+        {
+            return ledger != null && ledger.IsRising(rivalFactionId, facet);
+        }
     }
 }

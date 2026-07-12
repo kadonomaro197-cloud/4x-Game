@@ -48,6 +48,21 @@ namespace Pulsar4X.Factions
         /// </summary>
         public static bool EnableDiplomaticProposals = false;
 
+        /// <summary>
+        /// Phase-3.1 gate (docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md — the Information Ledger): when true, the monthly
+        /// Tick POPULATES each NPC's persistent <see cref="InformationLedgerDB"/> — Confirming the Military facet (and
+        /// recording the current <see cref="ThreatAssessment.DetectedStrengthOf"/> sample) for every rival it currently
+        /// detects, and decaying the rest to Stale. That's what turns the inert ledger shell into a populated, decaying,
+        /// trend-readable record (<see cref="ThreatAssessment.IsRising"/>). Defaults <b>false</b> so every existing test
+        /// is byte-identical (with it off the attached ledger stays empty and nothing reads a trend). A SIBLING of
+        /// <see cref="EnableOrderEmission"/> / <see cref="EnableDiplomaticProposals"/> so it can be flipped alone.
+        /// </summary>
+        public static bool EnableIntelLedger = false;
+
+        /// <summary>Phase-3.1 tunable: a Confirmed intel record not refreshed within this span decays to Stale (you
+        /// can't know a rival forever). One game-year by default; provisional / live-tunable.</summary>
+        public static TimeSpan IntelStaleAfter = TimeSpan.FromDays(365);
+
         /// <summary>Phase-3.4c tunable: the "shed the obligation" temptation a defensive pact exerts once the shared
         /// threat is gone, measured against a faction's Honour (<see cref="Treaties.WouldKeepFaith"/>). At 0.5 a
         /// Neutral-Honour (or personality-less) faction sits exactly on the keep-faith line, so it does NOT break —
@@ -102,6 +117,12 @@ namespace Pulsar4X.Factions
             // based on what it can read of its neighbours, turning the previously-dead ReactiveDiplomacy table into
             // a live loop. Runs before the doctrine step so it happens every cycle regardless of doctrine weights.
             RunDiplomaticDrift(factionEntity);
+
+            // Phase-3.1: keep the persistent Information Ledger LIVE — Confirm+sample the rivals we currently detect,
+            // decay the rest. A real state write, so it's behind its own default-off gate (byte-identical until opted
+            // in). Runs alongside drift (every cycle, independent of doctrine) so the trend record is continuous.
+            if (EnableIntelLedger)
+                UpdateInformationLedger(factionEntity);
 
             // The Organism decision (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II Phase 2): read the needs-ladder, pick
             // an objective from tier × doctrine × personality, and commit it through the hysteresis engine. 2.4b
@@ -257,6 +278,38 @@ namespace Pulsar4X.Factions
                 if (delta != 0)
                     rel.AdjustScore(delta);
             }
+        }
+
+        /// <summary>
+        /// Phase-3.1 (docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md — the Information Ledger): drive this faction's
+        /// persistent <see cref="InformationLedgerDB"/> for the cycle. For every OTHER faction (skip self + the neutral
+        /// catch-all) it reads the fog-limited <see cref="ThreatAssessment.DetectedStrengthOf"/>: a rival it currently
+        /// SEES gets its Military facet Confirmed with that strength recorded as a fresh sample (so the last-vs-prior
+        /// pair — the <see cref="ThreatAssessment.IsRising"/> trend — accumulates); a rival it can't see is left to age.
+        /// Then <see cref="InformationLedgerDB.DecayStale"/> drops any Confirmed record it hasn't refreshed within
+        /// <see cref="IntelStaleAfter"/> to Stale (a just-refreshed record is safe: now − now = 0). Uses GAME time (not
+        /// wall-clock) so it stays deterministic. Gated by <see cref="EnableIntelLedger"/>, so default-off is
+        /// byte-identical (the ledger stays empty). Defensive/no-throw — runs in the monthly hotloop. Internal for the gauge.
+        /// </summary>
+        internal static void UpdateInformationLedger(Entity factionEntity)
+        {
+            if (factionEntity == null || !factionEntity.TryGetDataBlob<InformationLedgerDB>(out var ledger)) return;
+            var game = factionEntity.Manager?.Game;
+            if (game == null) return;
+            DateTime now = game.TimePulse.GameGlobalDateTime;
+
+            foreach (var kvp in game.Factions)
+            {
+                int rivalId = kvp.Key;
+                if (rivalId == factionEntity.Id || rivalId == Game.NeutralFactionId) continue;
+
+                double detected = ThreatAssessment.DetectedStrengthOf(factionEntity, rivalId);
+                if (detected > 0)                                           // we can SEE them → confirm + sample
+                    ledger.Confirm(rivalId, IntelFacet.Military, now, detected);
+                // else: leave the record to age; DecayStale (below) will drop it if it goes cold.
+            }
+
+            ledger.DecayStale(now, IntelStaleAfter);
         }
 
         /// <summary>
