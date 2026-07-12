@@ -1,4 +1,5 @@
 using System;
+using Newtonsoft.Json;
 using Pulsar4X.Interfaces;
 using Pulsar4X.Components;
 using Pulsar4X.Engine;
@@ -16,11 +17,19 @@ namespace Pulsar4X.People
     /// </summary>
     public class ResearchAcademyAtb : IComponentDesignAttribute
     {
-        public int ClassSize { get; internal set; }
-        public int TrainingPeriodInMonths { get; internal set; }
-        public string SpecialtyCategory { get; internal set; }
+        // [JsonProperty] on each public/internal-set auto-property so the dial VALUES survive save/load (NonPublicResolver
+        // enables the internal setter). The proven idiom of any atb that lives in a design, e.g. GroundWeaponAtb.
+        [JsonProperty] public int ClassSize { get; internal set; }
+        [JsonProperty] public int TrainingPeriodInMonths { get; internal set; }
+        [JsonProperty] public string SpecialtyCategory { get; internal set; }
 
         private ResearchAcademy _academy;
+
+        // Parameterless ctor REQUIRED for save/load: this atb is serialized inside the research-academy ComponentDesign
+        // (the design is stored on the colony), and Json.NET needs a default constructor to deserialize it — without
+        // one it throws "Unable to find a constructor to use" on Game.Load. (The naval academy gets away without one
+        // only because its design is never actually instantiated; ResearchPointsAtbDB, which IS used, has this too.)
+        public ResearchAcademyAtb() { }
 
         public ResearchAcademyAtb(double classSize, double period, string specialtyCategory)
         {
