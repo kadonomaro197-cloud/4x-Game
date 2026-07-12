@@ -23,7 +23,7 @@
 | `SystemBodyInfoDB.cs` | Body type (terrestrial, gas giant, etc.), albedo, base temperature. |
 | `AsteroidDamageDB.cs` | Damage state for asteroids (kinetic impact mechanics). |
 | `AsteroidFactory.cs` | Creates asteroid entities. |
-| `RuinsDB.cs` | Alien ruins on a body (exploration reward). |
+| `RuinsDB.cs` | Alien ruins on a body (exploration reward). **Now actually GENERATES (2026-07-12, Exploration X.1).** For the whole life of the code `GenerateRuins` gated on the tautology `bodyType != Terrestrial \|\| bodyType != Moon` (always true — a body can't be both) so EVERY body bailed and no ruin ever spawned. Fixed to the pure, tested predicate `SystemBodyFactory.CanBodyHaveRuins` (Terrestrial or Moon; no atmosphere requirement — ruins need ground not air, so airless Luna / thin-atmosphere Mars qualify). The roll now draws from a **dedicated per-body RNG seeded from the body's mass**, NOT the shared system RNG — so adding this content does not perturb the rest of galaxy gen and the `SystemGenTests` golden master stays exact (the old code drew zero from the shared stream, having bailed first). **Still latent:** nothing READS `RuinsDB` yet — the field-site consumer that turns a ruin into a scientist expedition is X.2 (`docs/EXPLORATION-CONTENT-DESIGN.md`). Gauge: `RuinsGenerationTests`. |
 | `PopulationSupportAtbDB.cs` | Component attribute for infrastructure items that support colonists. `PopulationCapacity` = how many million people this unit of infrastructure supports at CC 1.0. |
 | `VisibleByDefaultDB.cs` | Tag blob — entities with this are visible without sensors (stars, known bodies). |
 | `LagrangePointDB.cs` | **NEW (Slice D, 2026-07-03)** Tags an entity as a Lagrange-point ANCHOR marker (Primary/Secondary bodies + PointIndex). A named, stable point in space a station can deploy at (instead of a random spot). |
@@ -94,7 +94,7 @@ Where `Infrastructure = sum of PopulationCapacity across all installed units`. T
 | Atmosphere with gas composition | `AtmosphereDB.Composition` | ✅ functional |
 | Surface temperature from greenhouse | `AtmosphereProcessor` (Aurora formula, cited) | ✅ functional |
 | Hydrosphere percentage | `AtmosphereDB.HydrosphereExtent` | ✅ stored |
-| Ruins generation | `RuinsDB` | ✅ stored |
+| Ruins generation | `RuinsDB` | ✅ generates (X.1 tautology fix, 2026-07-12) — but nothing reads it yet (X.2) |
 | Colony cost calculation | `SpeciesDB.ColonyCost()` (see `People/CLAUDE.md`) | ✅ exists, verify formula |
 | Infrastructure → population capacity | `PopulationSupportAtbDB.PopulationCapacity` | ✅ stored, stub in PopulationProcessor |
 | Terraforming (modify atmosphere over time) | `AtmosphereDB` supports it; no `TerraformingProcessor` | ❌ hook exists, processor missing |
