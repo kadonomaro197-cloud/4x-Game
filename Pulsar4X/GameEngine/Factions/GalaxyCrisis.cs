@@ -1,4 +1,7 @@
+using System;
 using Pulsar4X.Engine;
+using Pulsar4X.Events;
+using Pulsar4X.Extensions;
 
 namespace Pulsar4X.Factions
 {
@@ -44,5 +47,47 @@ namespace Pulsar4X.Factions
 
         /// <summary>True if some faction has ascended — the galaxy crisis is live.</summary>
         public static bool IsCrisisActive(Game game) => Ascendant(game).IsValid;
+
+        /// <summary>
+        /// Phase 4.2b — THE COALITION RESPONSE: if a faction has ascended, every OTHER NPC faction not already at war
+        /// with it DECLARES WAR on it (reusing the Phase-3.4 <see cref="Diplomacy.DeclareWar"/> machinery — the galaxy
+        /// unites against the crisis). Only NPCs auto-join, so the PLAYER keeps agency: if an NPC ascends the player
+        /// chooses whether to fight; if the PLAYER ascends, every NPC turns on them (the "you became the crisis"
+        /// scenario). Idempotent (skips a faction already at war with the ascendant), so it's safe to poll each cycle.
+        /// Fires a one-time <see cref="EventType.GalacticCrisis"/> event on the cycle the coalition first forms (a
+        /// declaration happened). Returns how many NEW war declarations were made. Defensive/no-throw.
+        /// </summary>
+        public static int FormCoalitionAgainstAscendant(Game game, DateTime when)
+        {
+            if (game == null) return 0;
+            var ascendant = Ascendant(game);
+            if (!ascendant.IsValid) return 0;
+
+            int declared = 0;
+            foreach (var kvp in game.Factions)
+            {
+                if (kvp.Key == Game.NeutralFactionId) continue;
+                var faction = kvp.Value;
+                if (faction == null || !faction.IsValid || faction == ascendant) continue;
+                if (!faction.TryGetDataBlob<FactionInfoDB>(out var info) || !info.IsNPC) continue;   // player chooses
+                if (faction.TryGetDataBlob<DiplomacyDB>(out var dip)
+                    && dip.HasMet(ascendant.Id) && dip.GetRelationship(ascendant.Id).AtWar)
+                    continue;                                                                         // already in the war
+                if (Diplomacy.DeclareWar(faction, ascendant, CasusBelli.ConfrontRival, when))
+                    declared++;
+            }
+
+            if (declared > 0)
+                EventManager.Instance.Publish(Event.Create(
+                    EventType.GalacticCrisis, when,
+                    $"{SafeName(ascendant)} has ASCENDED — the galaxy unites against the crisis.",
+                    ascendant.Id, null, null));
+            return declared;
+        }
+
+        private static string SafeName(Entity faction)
+        {
+            try { return faction.GetName(faction.Id); } catch { return "A faction"; }
+        }
     }
 }

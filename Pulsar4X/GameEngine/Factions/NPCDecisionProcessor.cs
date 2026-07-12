@@ -54,6 +54,11 @@ namespace Pulsar4X.Factions
         /// only a below-neutral-Honour faction cracks the coalition. Provisional; live-tunable.</summary>
         public const double PactAbandonTemptation = 0.5;
 
+        /// <summary>Phase-4.2b gate: when true, each cycle checks for a galaxy CRISIS (a faction that has ascended) and
+        /// forms the NPC coalition against it (declare war, reuse Phase-3.4). Defaults <b>false</b> → byte-identical
+        /// (no ascendant exists in any current game). Galaxy-level + idempotent, so running it per-NPC-tick is safe.</summary>
+        public static bool EnableGalaxyCrisis = false;
+
         private Game _game;
 
         public void Init(Game game)
@@ -103,6 +108,15 @@ namespace Pulsar4X.Factions
             // signed treaty), so it's behind its own default-off gate — byte-identical until a client/test opts in.
             if (EnableDiplomaticProposals)
                 RunTreatyPolicy(factionEntity);
+
+            // Phase-4.2b: the galaxy crisis — if a faction has ASCENDED, the NPCs unite against it (declare war).
+            // Gated (default off) so byte-identical; galaxy-level + idempotent, so a per-NPC-tick call is safe.
+            if (EnableGalaxyCrisis)
+            {
+                var game = factionEntity.Manager?.Game;
+                if (game != null)
+                    GalaxyCrisis.FormCoalitionAgainstAscendant(game, game.TimePulse.GameGlobalDateTime);
+            }
 
             // ACT on it (Phase 2.4c) — but only behind the default-off gate, so the plan-only path stays
             // byte-identical until a client/test opts in.

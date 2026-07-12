@@ -33,5 +33,35 @@ namespace Pulsar4X.Tests
             Assert.That(GalaxyCrisis.Ascendant(s.Game), Is.EqualTo(reds), "the ascended faction IS the galaxy crisis");
             Assert.That(GalaxyCrisis.IsCrisisActive(s.Game), Is.True, "the galaxy crisis is live");
         }
+
+        [Test]
+        [Description("Phase 4.2b: when a faction ascends, the NPC coalition forms — every other NPC declares war on it; the player is left to choose; idempotent.")]
+        public void FormCoalition_NpcsUniteAgainstTheAscendant_PlayerKeepsAgency()
+        {
+            var s = TestScenario.CreateWithColony();   // s.Faction is the (non-NPC) player
+            var ascendant = FactionFactory.CreateBasicFaction(s.Game, "Ascendant", "ASC", 0);
+            var npcA = FactionFactory.CreateBasicFaction(s.Game, "Rivals A", "RVA", 0);
+            var npcB = FactionFactory.CreateBasicFaction(s.Game, "Rivals B", "RVB", 0);
+            npcA.GetDataBlob<FactionInfoDB>().IsNPC = true;
+            npcB.GetDataBlob<FactionInfoDB>().IsNPC = true;
+            var when = s.Game.TimePulse.GameGlobalDateTime;
+
+            // No crisis yet → no coalition.
+            Assert.That(GalaxyCrisis.FormCoalitionAgainstAscendant(s.Game, when), Is.EqualTo(0), "no ascendant → no war");
+
+            // The ascendant researches the transcendent tech.
+            ascendant.GetDataBlob<FactionInfoDB>().Data.Unlock(GalaxyCrisis.AscensionCapability);
+
+            int declared = GalaxyCrisis.FormCoalitionAgainstAscendant(s.Game, when);
+
+            Assert.That(declared, Is.GreaterThanOrEqualTo(2), "the NPCs unite against the crisis");
+            Assert.That(npcA.GetDataBlob<DiplomacyDB>().GetOrCreateRelationship(ascendant.Id).AtWar, Is.True, "NPC A declared war on the ascendant");
+            Assert.That(npcB.GetDataBlob<DiplomacyDB>().GetOrCreateRelationship(ascendant.Id).AtWar, Is.True, "NPC B declared war on the ascendant");
+            // The player (s.Faction, not NPC) is NOT auto-committed — they choose.
+            Assert.That(s.Faction.GetDataBlob<DiplomacyDB>().GetOrCreateRelationship(ascendant.Id).AtWar, Is.False,
+                "the player keeps agency — not dragged into the war automatically");
+            // Idempotent: a second call declares no NEW wars.
+            Assert.That(GalaxyCrisis.FormCoalitionAgainstAscendant(s.Game, when), Is.EqualTo(0), "already united → no re-declaration");
+        }
     }
 }
