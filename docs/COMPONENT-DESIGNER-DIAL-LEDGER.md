@@ -45,7 +45,7 @@ A dial that has the field but no resolver read is **⚫ design-only / dead knob*
 | 12 | Sensors ▸ Survey | 🔒 | 🟢 BUILT | 3/10 |
 | 13 | Sensors ▸ Fire Control | 🔒 | 🟢 BUILT | 3/4 |
 | 14 | Sensors ▸ Electronic Warfare | 🔒 | 🟢 BUILT | 2/5 |
-| 15 | Power ▸ Generation | 🔒 | 🟢 BUILT | 5/9 |
+| 15 | Power ▸ Generation | 🔒 | 🟢 BUILT | 6/9 (reactor-heat→EMCON corrected to built 2026-07-12) |
 | 16 | Power ▸ Storage | 🔒 | 🟢 BUILT | 2/5 |
 | 17 | Defense ▸ Armor | 🔒 | 🟢 BUILT | 3/5 (flat-per-source soak DEAD on ships) |
 | 18 | Defense ▸ Shields | 🔒 | 🟢 BUILT | 3/5 |
@@ -63,7 +63,7 @@ A dial that has the field but no resolver read is **⚫ design-only / dead knob*
 | 30 | Command ▸ Command | 🔒 | 🟡 PARTIAL | seat substrate only; consequences stub |
 | 31 | Chassis ▸ Personnel | 🔒 | 🟢 BUILT | 4/5 |
 | 32 | Chassis ▸ Vehicle | 🔒 | 🟢 BUILT | 3/5 |
-| 33 | Chassis ▸ Hull (ship) | 🔒 | 🟢 BUILT | 1/4 (mass-budget only, enforcement OFF) |
+| 33 | Chassis ▸ Hull (ship) | 🔒 | 🟢 BUILT | 1/4 (mass-budget wired + enforced client-side — CORRECTED 2026-07-12; hardpoint/hull-HP are the extension) |
 | 34 | Chassis ▸ Structure (station) | 🔒 | 🟡 PARTIAL | station entity exists; no designer hull dial |
 | 35 | Chassis ▸ Mega | 🔒 | ⚫ DESIGN-ONLY | 0 |
 | 36 | Command ▸ Relay (C3) — "NEW DOOR" | 🔒 | ⚫ DESIGN-ONLY | 0 (marked "wired alongside" — absent) |
@@ -144,7 +144,8 @@ Only ⚫ unwired dials carry a wire+test plan; ✅ rows are done. Evidence is ab
 
 ### Power ▸ Generation (5/9) — `EnergyGenerationAtb` / `EnergySolarGenerationAtb`
 ✅ Fission/fusion output · Solar (no test) · Output-level · Fuel/lifetime · Load/baseload
-⚫ RTG fuel-free framing (`IsFuelFree` flag) · ⚫ Antimatter/exotic (needs containment) · ⚫ **Reactor signature/heat→EMCON** (hook flagged, unread) → feed reactor `Load` into `EmconActivityProcessor`; test: hot reactor raises EM signature. · ⚫ Safety/containment breach (new meltdown rule).
+✅ **Reactor signature/heat→EMCON** — *CORRECTED 2026-07-12: already BUILT (gated).* `EmconActivityProcessor.cs:115` reads reactor `Load` into `ActivityMultiplier` behind `EnableReactorHeat`; gauged by `ReactorHeatTests`. Only the client flag-flip remains (this row previously read "⚫ hook flagged, unread").
+⚫ RTG fuel-free framing (`IsFuelFree` flag) · ⚫ Antimatter/exotic (needs containment) · ⚫ Safety/containment breach (new meltdown rule).
 ◆ *test gap:* solar generation wired but no unit test — add `SolarGenTests`.
 
 ### Power ▸ Storage (2/5) — `EnergyStoreAtb`
@@ -198,8 +199,7 @@ Only ⚫ unwired dials carry a wire+test plan; ✅ rows are done. Evidence is ab
 ⚫ Walker/Swarm as distinct carry-class (enum has only Personnel/Vehicle) → extend `GroundCarryClass`; test: swarm frame → own bay.
 
 ### Chassis ▸ Hull (1/4) — `ShipHullAtb`
-✅ Tonnage/volume ceiling (`MassBudget` computed) — **but `EnforceMassBudget=false`**, so it doesn't bite (every base-mod ship is under budget).
-⚫ **Make the mass-cap BITE** — flip/calibrate `EnforceMassBudget`; test: a loadout past hull budget → `IsValid=false`.
+✅ Tonnage/volume ceiling (`MassBudget` computed) — **and ENFORCED**: `ShipDesign.EnforceMassBudget` is set `true` in the client (`PulsarMainWindow.cs:139`), every base-mod ship mounts a hull, and `ShipMassBudgetEnforcementTests`/`ShipHullBaseModTests` pass in CI. *(CORRECTED 2026-07-12 — this row previously read "enforcement OFF"; the code moved past that. The remaining work is the hardpoint/hull-HP extension + a calibration tripwire, not "make it bite.")*
 ⚫ **Hardpoint count** (no field) → `HardpointBudget` + count weapon mounts (mirror `OverMassBudget`); test: N+1 weapons on an N-hardpoint hull → invalid.
 ⚫ **Hull structural HP** (no `BaseHP`; ground chassis has one) → add + fold into `Toughness`; test: a hull raises ship Toughness. (Re-baselines combat.)
 ⚫ Size-class (derive from budget bands; gate Mega-only mounts).
