@@ -206,10 +206,17 @@ namespace Pulsar4X.Factions
 
             NeedTier tier = NeedsLadder.AssessTier(factionEntity);
             factionEntity.TryGetDataBlob<PersonalityDB>(out var personality);   // null → neutral in the selector
-            StrategicObjective chosen = ObjectiveSelector.SelectObjective(tier, factionInfoDB.Doctrine, personality);
+            // Phase-5.2 decision-log: take the choice AND the reason tracing it to the driving input.
+            var (chosen, reason) = ObjectiveSelector.SelectWithReason(tier, factionInfoDB.Doctrine, personality);
 
             // Target selection (which rival to Conquer) is the 2.4c refinement; keep -1 (none) for now.
             ObjectiveTransition.Advance(objective, tier, chosen, -1, now, ObjectiveTransition.DefaultCommitFor);
+
+            // Record WHY: if the transition committed the fresh choice, that's the reason; if hysteresis HELD a prior
+            // objective (the brain didn't thrash), say so and note what this cycle actually read (still traceable).
+            objective.DecisionReason = objective.Objective == chosen
+                ? reason
+                : $"holding {objective.Objective} (hysteresis until {objective.CommittedUntil:u}); this cycle read: {reason}";
         }
 
         /// <summary>

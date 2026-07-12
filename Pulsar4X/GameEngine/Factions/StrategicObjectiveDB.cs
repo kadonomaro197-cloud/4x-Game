@@ -76,6 +76,11 @@ namespace Pulsar4X.Factions
         /// the `PlannerAction.Detail`, surfaced by <see cref="PlanReadout"/>.</summary>
         [JsonProperty] public string LastActionDetail { get; internal set; } = "";
 
+        /// <summary>Phase-5.2 decision-log: WHY this objective was chosen this cycle — the reason tracing the choice to
+        /// the driving input (tier + winning doctrine axis / personality trait), from <see cref="ObjectiveSelector.SelectWithReason"/>.
+        /// Notes hysteresis when the brain HELD a prior objective instead of switching. Empty until the brain decides.</summary>
+        [JsonProperty] public string DecisionReason { get; internal set; } = "";
+
         public StrategicObjectiveDB() { }
 
         public StrategicObjectiveDB(StrategicObjectiveDB other)
@@ -86,6 +91,7 @@ namespace Pulsar4X.Factions
             CommittedUntil = other.CommittedUntil;
             LastActionKind = other.LastActionKind;
             LastActionDetail = other.LastActionDetail;
+            DecisionReason = other.DecisionReason;
         }
 
         public override object Clone() => new StrategicObjectiveDB(this);

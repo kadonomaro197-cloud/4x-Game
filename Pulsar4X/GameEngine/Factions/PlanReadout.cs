@@ -13,9 +13,10 @@ namespace Pulsar4X.Factions
     public static class PlanReadout
     {
         /// <summary>
-        /// One line for a faction's current plan: its objective/tier and the last step the planner emitted (or why
-        /// it's idle). Empty string for a faction with no <see cref="FactionInfoDB"/>. Example:
-        /// <c>Directorate: obj GrowEconomy/Thrive | last: QueueMine — build a Mine on colony 42 to feed stalled 'iron'</c>.
+        /// One line for a faction's current plan: its objective/tier, WHY it chose that (the Phase-5.2 decision-log
+        /// reason tracing to the driving input), and the last step the planner emitted (or why it's idle). Empty
+        /// string for a faction with no <see cref="FactionInfoDB"/>. Example:
+        /// <c>Directorate: obj GrowEconomy/Thrive | why: Thrive tier: Economic 0.40 leads growth → GrowEconomy | last: QueueMine — build a Mine on colony 42 to feed stalled 'iron'</c>.
         /// </summary>
         public static string Faction(Entity faction)
         {
@@ -29,7 +30,9 @@ namespace Pulsar4X.Factions
                 ? "—"
                 : (string.IsNullOrEmpty(obj.LastActionDetail) ? obj.LastActionKind : $"{obj.LastActionKind}: {obj.LastActionDetail}");
 
-            return $"{name}: obj {obj.Objective}/{obj.Tier} | last: {last}";
+            string why = string.IsNullOrEmpty(obj.DecisionReason) ? "—" : obj.DecisionReason;
+
+            return $"{name}: obj {obj.Objective}/{obj.Tier} | why: {why} | last: {last}";
         }
 
         private static string SafeName(Entity faction)
