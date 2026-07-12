@@ -39,6 +39,15 @@ namespace Pulsar4X.Factions
         /// </summary>
         public static bool EnableOrderEmission = false;
 
+        /// <summary>
+        /// Phase-3.3 gate (docs/AI-BRAIN-BUILD-TRACKER.md — the Ecosystem): when true, the Tick lets an NPC PROPOSE
+        /// treaties to its neighbours (a real behaviour change — a signed pact), turning the built-but-uncalled
+        /// <see cref="Treaties.Propose"/> into live diplomacy. Defaults <b>false</b> so every existing test is
+        /// byte-identical. A SIBLING of <see cref="EnableOrderEmission"/> (not the same flag) so combat/economy order
+        /// tests and diplomacy tests don't couple — either can be flipped alone.
+        /// </summary>
+        public static bool EnableDiplomaticProposals = false;
+
         private Game _game;
 
         public void Init(Game game)
@@ -83,6 +92,11 @@ namespace Pulsar4X.Factions
             // an objective from tier × doctrine × personality, and commit it through the hysteresis engine. 2.4b
             // settles + STORES the objective (the DECISION).
             UpdateStrategicObjective(factionEntity, factionInfoDB);
+
+            // Reactive POLITICS (Phase 3.3): seek a pact with a qualifying neighbour. A real behaviour change (a
+            // signed treaty), so it's behind its own default-off gate — byte-identical until a client/test opts in.
+            if (EnableDiplomaticProposals)
+                RunTreatyPolicy(factionEntity);
 
             // ACT on it (Phase 2.4c) — but only behind the default-off gate, so the plan-only path stays
             // byte-identical until a client/test opts in.
@@ -211,6 +225,46 @@ namespace Pulsar4X.Factions
 
                 if (delta != 0)
                     rel.AdjustScore(delta);
+            }
+        }
+
+        /// <summary>
+        /// Phase-3.3 (docs/AI-BRAIN-BUILD-TRACKER.md — the Ecosystem): the NPC treaty POLICY — the first step of the
+        /// living galaxy. Each monthly cycle, for the first met, not-at-war rival whose standing already clears a
+        /// non-aggression pact's trust bar, the faction PROPOSES one — turning the built-but-uncalled
+        /// <see cref="Treaties.Propose"/> into live behaviour (an NPC that actively seeks détente, not just drifts).
+        /// Modeled on <see cref="RunDiplomaticDrift"/>; gated by <see cref="EnableDiplomaticProposals"/> (a real
+        /// behaviour change), so default-off is byte-identical. One proposal per cycle (least-commitment, the resolver
+        /// cadence). Defensive/no-throw — runs in the monthly hotloop. Internal for the CI gauge.
+        ///
+        /// v1 proposes only <see cref="TreatyType.NonAggression"/> — its bar (Hostile −25) is reachable by drift,
+        /// where a <see cref="TreatyType.DefensivePact"/> needs Allied 75 and rides 3.2's shared-threat read. The pact
+        /// auto-resolves through <see cref="Treaties.WouldAccept"/>; a "the player answers the offer" inbox is a later
+        /// refinement (for now an NPC↔NPC détente is the payoff).
+        /// </summary>
+        internal static void RunTreatyPolicy(Entity factionEntity)
+        {
+            if (factionEntity == null || !factionEntity.TryGetDataBlob<FactionInfoDB>(out _)) return;
+            if (!factionEntity.TryGetDataBlob<DiplomacyDB>(out var dipDB)) return;
+            var game = factionEntity.Manager?.Game;
+            if (game == null) return;
+
+            foreach (var rel in dipDB.Relationships.Values)
+            {
+                if (rel.AtWar) continue;                                    // no ordinary treaty while shooting
+                if (rel.NonAggressionPact) continue;                       // already signed — don't re-warm every cycle
+                if (rel.OtherFactionId == factionEntity.Id) continue;      // never propose to self
+                if (rel.OtherFactionId == Game.NeutralFactionId) continue; // skip the neutral catch-all
+
+                // Cheap pre-check to avoid spamming refusals (the real accept decision re-checks the TARGET's view
+                // inside Propose; this reads our own view of them as an approximation).
+                if (!Treaties.WouldAccept(rel, TreatyType.NonAggression)) continue;
+
+                if (!game.Factions.TryGetValue(rel.OtherFactionId, out var target)) continue;
+
+                // The act: propose the pact. Propose signs BOTH ledgers + warms both scores on acceptance.
+                if (Treaties.Propose(factionEntity, target, TreatyType.NonAggression, game.TimePulse.GameGlobalDateTime))
+                    return;   // one treaty move per cycle
             }
         }
     }

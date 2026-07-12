@@ -191,7 +191,7 @@ GrowEconomy · Consolidate · Defend · Expand · AdvanceTech · Conquer each ha
 |---|---|---|---|---|
 | 3.1 | Rival-intel fog store | new blob on the sensor model | intel decays; ignorance is a real gauge | ⚫ |
 | 3.2 | Structural/rising-threat read | logic over 3.1 + `ThreatEstimate` | a riser is feared before it attacks | ⚫ |
-| 3.3 | NPC treaty/stance policy (call `Treaties.Propose`) | `Treaties.cs:32` | an NPC proposes a pact against a shared threat | ⚫ |
+| 3.3 | NPC treaty/stance policy (call `Treaties.Propose`) | `Treaties.cs:32` | an NPC proposes a pact against a shared threat | 🟡 **BUILT (CI verifying)** — `NPCDecisionProcessor.RunTreatyPolicy` proposes a **NonAggression** pact to the first met, not-at-war rival whose standing clears the bar (−25), wired into the monthly `Tick` behind the new default-off `EnableDiplomaticProposals` gate (sibling of `EnableOrderEmission`, so diplomacy/order tests don't couple). Turns the built-but-uncalled `Treaties.Propose` into live behaviour; skip-if-already-signed guards re-warm churn. v1 = NonAggression only (DefensivePact's Allied-75 bar rides 3.2's shared-threat read); auto-resolves via `WouldAccept` (a "player answers the offer" inbox is later). Byte-identical off; gauge `NPCTreatyPolicyTests` (gate-off; two-sided sign; idempotent). |
 | 3.4 | Coalitions/betrayal emerge (Honor×Guile) | composition of 3.1–3.3 | alliance forms vs a riser, cracks when it dies | ⚫ |
 
 ### Phase 4 — 🌌 The Galaxy + Crisis
