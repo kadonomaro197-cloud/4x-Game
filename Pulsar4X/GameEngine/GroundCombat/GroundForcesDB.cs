@@ -659,6 +659,33 @@ namespace Pulsar4X.GroundCombat
             return moved;
         }
 
+        /// <summary>
+        /// G6b (additive) — the PLANETARY-grid twin of <see cref="OrderFormationMoveToHex"/>: march a whole formation
+        /// to GLOBAL hex (<paramref name="destQ"/>,<paramref name="destR"/>) on the body's ONE continuous cylinder
+        /// grid, so troops maneuver on the whole-world planetary hexes rather than a per-region fine disk. Every member
+        /// standing with the LEADER (in the leader's region, not already global-marching) paths independently via
+        /// <see cref="OrderMoveToGlobalHex"/>. ADDITIVE this slice — nothing in live code calls it yet (the formation
+        /// order case repoints to it in the next G6b slice), so ground movement is byte-identical. v1 paces per-unit
+        /// (cohesive shared-pace is a follow-on — <see cref="OrderMoveToGlobalHex"/> has no speed override yet).
+        /// Returns how many units set out.
+        /// </summary>
+        public static int OrderFormationMoveToGlobalHex(Entity body, GroundFormation formation, int destQ, int destR)
+        {
+            if (formation == null || !body.TryGetDataBlob<GroundForcesDB>(out var forces)) return 0;
+            int rallyRegion = LeaderRegion(forces, formation);
+            if (rallyRegion < 0) return 0;
+
+            int moved = 0;
+            foreach (var u in forces.Units.ToArray())
+            {
+                if (u.FormationId != formation.FormationId) continue;
+                if (u.RegionIndex != rallyRegion || u.MovingToRegion >= 0) continue;
+                if (u.GlobalPath != null && u.GlobalPath.Count > 0) continue;   // already global-marching
+                if (OrderMoveToGlobalHex(body, u, destQ, destR)) moved++;
+            }
+            return moved;
+        }
+
         // ───────────────────────── FORMATIONS (the ground echo of fleet grouping) ─────────────────────────
         // Mirrors the FleetOrder verbs (Create / AssignShip / UnassignShip / SetFlagShip / Disband), one level over
         // from entities to data objects. Membership lives on the unit (GroundUnit.FormationId), like a ship's parent

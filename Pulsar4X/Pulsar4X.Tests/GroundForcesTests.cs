@@ -923,6 +923,34 @@ namespace Pulsar4X.Tests
             Assert.That(unit.RegionIndex, Is.EqualTo(targetBand), "its region followed it across the band border — no edge gate");
         }
 
+        [Test]
+        [Description("G6b (additive): a whole FORMATION marches on the GLOBAL planetary grid — OrderFormationMoveToGlobalHex sets every member standing with the leader out on a GlobalPath (the planetary-hex move order; additive so live movement is byte-identical until the order case repoints to it).")]
+        public void OrderFormationMoveToGlobalHex_MarchesTheBlockOnThePlanetaryGrid()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            var u1 = GroundForces.RaiseUnit(body, MakeInfantryDesign(), s.Faction.Id, regionIndex: 0);
+            var u2 = GroundForces.RaiseUnit(body, MakeInfantryDesign(), s.Faction.Id, regionIndex: 0);
+            var f = GroundForces.CreateFormation(body, s.Faction.Id, "Alpha");
+            GroundForces.AssignUnit(f, u1);
+            GroundForces.AssignUnit(f, u2);
+            GroundForces.SetLeader(f, u1);
+
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            var grid = regionsDB.SurfaceGrid;
+            Assert.That(grid, Is.Not.Null, "raising units generated the global grid");
+            foreach (var h in grid.Hexes) h.Terrain = RegionFeatureType.Plains;   // all land → deterministic route
+
+            int bandWidth = grid.Cols / regionsDB.Regions.Count;
+            int targetQ = (u1.GlobalQ + bandWidth) % grid.Cols;   // one band east — a real move, still on the planetary grid
+
+            int moved = GroundForces.OrderFormationMoveToGlobalHex(body, f, targetQ, u1.GlobalR);
+
+            Assert.That(moved, Is.EqualTo(2), "both members of the block set out on the planetary grid");
+            Assert.That(u1.GlobalPath, Is.Not.Null.And.Count.GreaterThan(0), "the leader has a global march path");
+            Assert.That(u2.GlobalPath, Is.Not.Null.And.Count.GreaterThan(0), "the follower has a global march path");
+        }
+
         // ───────────────────────── H3 — range-based directed combat (docs/HEX-GROUND-AND-ORDERS-DESIGN.md) ─────────────────────────
 
         private static GroundUnitDesign MakeDesign(string id, string name, GroundUnitType type, int range, double hp = 1000) => new GroundUnitDesign
