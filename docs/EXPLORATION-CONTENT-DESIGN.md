@@ -1,5 +1,7 @@
 # Exploration Content — the Field-Site Loop + Catalog (design)
 
+> **Parent doc (2026-07-12): `docs/SITE-ENGINE-DESIGN.md`.** Three player walkthroughs generalized this field-site loop into ONE data-driven **Site Engine** — a located site worked by a berth-seated leader, fought over at that location, resolved down composable branches. This doc is now the **catalog chapter** (the episode types are rows across the engine's dials); the loop runtime, the Command Berth worker, the located-combat hook, and the crisis-rupture edge live in the Site Engine doc. Read that first for the architecture.
+
 **Status:** concepts + path forward (design conversation 2026-07-07; developer's-vision + incident-shape added 2026-07-11; **expanded catalog / "mine all of sci-fi" variety pass added 2026-07-12**; **X.1 ruins-tautology fix SHIPPED 2026-07-12** — build item 1's generation half is done, ruins now generate, the field-site consumer is next). Sits alongside `docs/DETECTION-DESIGN.md` (the survey/fog substrate this rides) and `docs/AI-SELF-PLAY-DESIGN.md` (scientists are leaders on the pipeline this gives a field career).
 
 ---

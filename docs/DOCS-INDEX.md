@@ -113,6 +113,8 @@ Build column (for design docs): ✅ built · 🏗 building · ⚫ design-only (n
 | `docs/COLONY-PROGRESSION-DESIGN.md` | The colony/infrastructure progression ladder (vision) | 🔒 | ⚫ | Mostly design |
 | `docs/HAZARD-DISCOVERY-RESISTANCE-RESEARCH-DESIGN.md` | Hazard discovery → resistance research → armor loop | 🔒 | ✅ | Built (hazards + research→armor) |
 | `docs/STELLAR-ENVIRONMENTS-CATALOG.md` | Catalog of stellar/space environments | 📚 | — | Reference catalog |
+| `docs/SITE-ENGINE-DESIGN.md` | **NEW 2026-07-12 — the unifying mid-game SPINE.** One data-driven engine (located site → berth-seated leader works it → fought over → composable branches → yield) that every episode across every franchise is a *row* of; the Command Berth = the worker interface; combat/research/diplomacy/economy/crisis become its consumers. Grounded in a four-agent survey (most runtime exists). Parent of `EXPLORATION-CONTENT-DESIGN.md` + the Command-Berth half of `GOVERNANCE-AND-DELEGATION-DESIGN.md`. | 🔒 | ⚫ | Architecture LOCKED, no code yet; anomaly-first build (SE-1 = the engine on a space anomaly) |
+| `docs/EXPLORATION-CONTENT-DESIGN.md` | The field-site loop + the sci-fi episode catalog (six planetary + five space + incidents) — now a **catalog chapter of the Site Engine** | 🔒 | ➕ | X.1 ruins-tautology fix shipped (ruins generate); the field-site consumer is the Site Engine build |
 
 ## 5. Aurora 4X design reference (static external spec — `docs/aurora/`)
 
