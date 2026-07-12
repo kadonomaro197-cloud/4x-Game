@@ -281,6 +281,60 @@ namespace Pulsar4X.Factions
             return personality;
         }
 
+        /// <summary>
+        /// Phase 5.1b — apply a faction's authored OPENING DIPLOMACY. <paramref name="openingNode"/> is a JSON array of
+        /// <c>{ "target": "&lt;name or abbreviation&gt;", "score": &lt;int&gt;, "atWar": &lt;bool&gt; }</c> — e.g.
+        /// <c>[{ "target": "TER", "atWar": true, "score": -80 }]</c> to start the game already at war. Targets are
+        /// resolved by faction NAME or ABBREVIATION against <see cref="Game.Factions"/>, so this MUST run only after
+        /// every faction is loaded (the scenario loader's second pass) — a not-yet-loaded / unknown target is skipped,
+        /// never thrown on. Sets the relation score on BOTH ledgers (war + relationships are symmetric) and latches war
+        /// via the Phase-3.4 <see cref="Diplomacy.DeclareWar"/> machinery. Public/static so a test can drive it directly.
+        /// Defensive/no-throw.
+        /// </summary>
+        public static void ApplyOpeningRelations(Game game, Entity faction, JToken openingNode, DateTime when)
+        {
+            if (game == null || faction == null || openingNode is not JArray entries) return;
+            foreach (var entry in entries)
+            {
+                var targetKey = entry["target"]?.ToString();
+                if (string.IsNullOrEmpty(targetKey)) continue;
+
+                var target = ResolveFactionByNameOrAbbr(game, targetKey);
+                if (!target.IsValid || target == faction) continue;
+
+                int score = entry["score"]?.Value<int>() ?? 0;
+                SetRelationScore(faction, target, score);      // both directions — a relationship is two-sided
+                SetRelationScore(target, faction, score);
+
+                if (entry["atWar"]?.Value<bool>() ?? false)
+                    Diplomacy.DeclareWar(faction, target, CasusBelli.ConfrontRival, when);
+            }
+        }
+
+        /// <summary>Find a faction by its NAME or ABBREVIATION (case-insensitive), or <see cref="Entity.InvalidEntity"/>.</summary>
+        private static Entity ResolveFactionByNameOrAbbr(Game game, string key)
+        {
+            foreach (var kvp in game.Factions)
+            {
+                var f = kvp.Value;
+                if (f == null || !f.IsValid) continue;
+                if (f.TryGetDataBlob<FactionInfoDB>(out var info)
+                    && string.Equals(info.Abbreviation, key, StringComparison.OrdinalIgnoreCase))
+                    return f;
+                try { if (string.Equals(f.GetName(f.Id), key, StringComparison.OrdinalIgnoreCase)) return f; } catch { }
+            }
+            return Entity.InvalidEntity;
+        }
+
+        /// <summary>Converge <paramref name="from"/>'s view of <paramref name="to"/> to an absolute target score
+        /// (idempotent — same shape as GameStageFactory.SetRelation). No-op if the faction has no ledger.</summary>
+        private static void SetRelationScore(Entity from, Entity to, int targetScore)
+        {
+            if (!from.TryGetDataBlob<DiplomacyDB>(out var dip)) return;
+            var rel = dip.GetOrCreateRelationship(to.Id);
+            rel.AdjustScore(targetScore - rel.RelationScore);
+        }
+
         private static void LoadCargo(Entity target, FactionDataStore factionDataStore, JArray? cargoArray)
         {
             if(cargoArray == null) return;
