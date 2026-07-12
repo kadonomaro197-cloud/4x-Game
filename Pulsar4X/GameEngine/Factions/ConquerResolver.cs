@@ -30,8 +30,9 @@ namespace Pulsar4X.Factions
 
             // Rung 1 (P-3 REACH — the STRIKE, 2026-07-12): if we hold a scored enemy target (a colony of a faction
             // we're at war with, MilitaryTarget) AND a MASSED strike fleet (MilitaryComposition) that isn't already
-            // sailing, order that fleet to sail at the enemy world. This is the "do" that turns the coalition into a
-            // war: 3.4b DECLARES war → MilitaryTarget SCORES the world → MilitaryComposition confirms a mass fleet →
+            // sailing AND that fleet can actually GET THERE (MilitaryReach), order that fleet to sail at the enemy
+            // world. This is the "do" that turns the coalition into a war: 3.4b DECLARES war → MilitaryTarget SCORES
+            // the world → MilitaryComposition confirms a mass fleet → MilitaryReach confirms the fleet can REACH it →
             // here we SAIL it. Reuses the player MoveToSystemBodyOrder, which guards the warp landmines (skips
             // 0-speed ships; the order handler try/catches). Byte-identical while order emission is off (this whole
             // resolver runs only inside the gated EmitOrders), AND for any faction not at war (no target → skip).
@@ -39,7 +40,16 @@ namespace Pulsar4X.Factions
             if (target.IsValid && state.Game != null)
             {
                 var strikeFleet = MilitaryComposition.ReadyStrikeFleet(state);
-                if (strikeFleet != null && strikeFleet.IsValid && !FleetIsMoving(strikeFleet))
+                // REACH GATE: only sail when the target is a DIRECT (same-system) warp the fleet has the fuel/range
+                // for. MoveToSystemBodyOrder warps within one system — it can't cross a jump — so a one-jump or
+                // unreachable target (or a drained/drive-less fleet) falls through to the build rung and keeps massing
+                // until a route/range exists. The multi-jump auto-router that would sail a OneJump target is the
+                // deferred reach polish (MilitaryReach documents the bound).
+                var reach = strikeFleet != null && strikeFleet.IsValid
+                    ? MilitaryReach.Assess(strikeFleet, target.ColonyBody)
+                    : MilitaryReach.ReachResult.None;
+                if (strikeFleet != null && strikeFleet.IsValid && !FleetIsMoving(strikeFleet)
+                    && reach.Tier == MilitaryReach.ReachTier.SameSystem && reach.HasRange)
                 {
                     var game = state.Game;
                     int factionId = state.FactionId;

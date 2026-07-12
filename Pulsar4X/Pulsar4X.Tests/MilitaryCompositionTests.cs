@@ -44,10 +44,13 @@ namespace Pulsar4X.Tests
             return fleet;
         }
 
-        /// <summary>Give a rival a colony on a fresh body (so MilitaryTarget can name it as a strike target).</summary>
+        /// <summary>Give a rival a colony on a fresh body in the STRIKE FLEET'S OWN system, so the P-3 MilitaryReach
+        /// gate reads it as a direct (same-system) warp the massed, charged fleet can actually make — the case where
+        /// ConquerResolver Rung 1 fires. (A cross-system body would read unreachable to MoveToSystemBodyOrder, which
+        /// warps within one system; the multi-jump route is the deferred reach polish.)</summary>
         private static void GiveRivalAColony(TestScenario s, Entity rival)
         {
-            var mgr = s.Game.GlobalManager;
+            var mgr = s.StartingSystem;
             var body = Entity.Create();
             mgr.AddEntity(body);
             var colony = Entity.Create();
