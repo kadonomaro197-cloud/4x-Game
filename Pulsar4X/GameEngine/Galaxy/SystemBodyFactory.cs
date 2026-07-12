@@ -1443,12 +1443,16 @@ namespace Pulsar4X.Galaxy
                 return; // scarcity — most worlds are ordinary (the hot-spot rule, EXPLORATION-CONTENT-DESIGN.md).
 
             // now if we have survived the gauntlet lets gen some Ruins!!
-            ruins.RuinSize = _galaxyGen.Settings.RuinsSizeDistribution.Select(rng.Next(0, 100));
+            // WeightedList.Select expects a FRACTION in [0,1) (it normalises by TotalWeight). The original code
+            // passed RNGNext(0,100) — an int 0..99 — which overshoots 1.0 and makes Select throw "Failed to choose a
+            // random value" for any roll >= 1. That bug never fired because the tautology above always bailed first;
+            // fixing the tautology exposed it. Roll fractions instead.
+            ruins.RuinSize = _galaxyGen.Settings.RuinsSizeDistribution.Select(rng.NextDouble());
 
-            int quality = rng.Next(0, 100);
-            ruins.RuinQuality = _galaxyGen.Settings.RuinsQualityDistribution.Select(quality);
-            if (ruins.RuinSize == RuinsDB.RSize.City && quality >= 95)
-                ruins.RuinQuality = RuinsDB.RQuality.MultipleIntact;  // special case!!
+            double qualityRoll = rng.NextDouble();
+            ruins.RuinQuality = _galaxyGen.Settings.RuinsQualityDistribution.Select(qualityRoll);
+            if (ruins.RuinSize == RuinsDB.RSize.City && qualityRoll >= 0.95)
+                ruins.RuinQuality = RuinsDB.RQuality.MultipleIntact;  // special case: top 5% quality City ruins
 
             // Ruins count:
             ruins.RuinCount = (uint)GeneralMath.Lerp(_galaxyGen.Settings.RuinsCountRangeBySize[ruins.RuinSize], rng.NextDouble());
