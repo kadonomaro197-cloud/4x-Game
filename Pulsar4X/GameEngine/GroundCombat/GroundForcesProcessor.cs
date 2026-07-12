@@ -498,7 +498,10 @@ namespace Pulsar4X.GroundCombat
                         break;
 
                     case GroundOrderType.MoveToHex:
-                        if (!order.Issued) { GroundForces.OrderFormationMoveToHex(body, f, order.TargetQ, order.TargetR); order.Issued = true; done = false; }
+                        // G6b-2: a queued formation move now marches on the GLOBAL planetary grid (TargetQ/TargetR are
+                        // global cylinder coords), not the per-region fine disk — the developer's "troops move on the
+                        // planetary hexes." Uses the CI-green OrderFormationMoveToGlobalHex (G6b-1).
+                        if (!order.Issued) { GroundForces.OrderFormationMoveToGlobalHex(body, f, order.TargetQ, order.TargetR); order.Issued = true; done = false; }
                         else done = LeaderIdle(forces, f);
                         break;
 
@@ -532,7 +535,12 @@ namespace Pulsar4X.GroundCombat
         {
             var leader = GroundFormationTools.Leader(forces, f) ?? FirstMember(forces, f);
             if (leader == null) return true;
-            return leader.MovingToRegion < 0 && (leader.HexPath == null || leader.HexPath.Count == 0);
+            // Idle = not marching on ANY grid: not doing a coarse region hop, no per-region fine path (ROE step),
+            // and no GLOBAL planetary path (G6b-2 formation move). Checking both grids keeps the queue correct while
+            // the ROE micro still uses the per-region path (retired in a later G6b slice).
+            bool hexMarching = leader.HexPath != null && leader.HexPath.Count > 0;
+            bool globalMarching = leader.GlobalPath != null && leader.GlobalPath.Count > 0;
+            return leader.MovingToRegion < 0 && !hexMarching && !globalMarching;
         }
 
         private static GroundUnit FirstMember(GroundForcesDB forces, GroundFormation f)

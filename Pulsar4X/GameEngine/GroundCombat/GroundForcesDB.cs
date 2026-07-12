@@ -227,7 +227,7 @@ namespace Pulsar4X.GroundCombat
     /// the thing the fleet action-lane model doesn't give. New order kinds are added here.</summary>
     public enum GroundOrderType : byte
     {
-        MoveToHex,      // march the formation to a hex within its region (fine grid)
+        MoveToHex,      // G6b-2: march the formation to a GLOBAL planetary-grid hex (TargetQ/TargetR = cylinder col/row)
         MoveToRegion,   // march the formation to an adjacent region (coarse ring hop)
         HoldFor,        // hold position for a set number of game-seconds (a timed wait / dig-in pause)
         SetStance,      // switch the formation's combat stance (from the GroundStance catalog)
