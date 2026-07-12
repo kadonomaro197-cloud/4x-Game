@@ -9,11 +9,13 @@ using Pulsar4X.People;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Espionage E5 — the always-on MIRROR: NPCs spy on their rivals, including the player. Proves that an NPC with spy
-    /// capacity (a built <see cref="IntelDirectorateDB"/>) and an idle operative tasks a covert op against its
-    /// most-hostile met rival — and that the mirror is (a) byte-identical while its gate is off, and (b) gated on
-    /// hostility (a friendly neighbour is left alone). This is what makes counter-intelligence a standing decision
-    /// rather than a one-way toy.
+    /// Espionage E5 — the always-on MIRROR: NPCs spy on their rivals, including the player. These exercise the
+    /// mechanism (<see cref="NPCDecisionProcessor.RunEspionageMirror"/>) directly: an NPC with spy capacity (a built
+    /// <see cref="IntelDirectorateDB"/>) and an idle operative tasks a covert op against its most-hostile met rival, and
+    /// is gated on hostility (a friendly neighbour is left alone) and on capacity (no directorate → no op). The
+    /// byte-identity guarantee is the default-off <see cref="NPCDecisionProcessor.EnableEspionageMirror"/> gate: the Tick
+    /// only CALLS this when the flag is on, so with it off (the default) the whole existing NPC-tick suite is unchanged
+    /// (those fixtures — NPCObjectiveTickTests etc. — run Tick without the flag and are the byte-identity tripwire).
     /// </summary>
     [TestFixture]
     public class NPCEspionageMirrorTests
@@ -48,30 +50,27 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("E5: a hostile NPC with capacity + an idle agent tasks a covert op against the player; gate off = byte-identical.")]
-        public void HostileNpc_SpiesOnThePlayer_GateGatesIt()
+        [Description("E5: the mirror gate defaults off (byte-identical) — the existing NPC-tick suite proves the gated call site is inert.")]
+        public void MirrorGate_DefaultsOff()
+        {
+            Assert.That(NPCDecisionProcessor.EnableEspionageMirror, Is.False,
+                "the espionage mirror is opt-in — default off keeps every existing NPC tick byte-identical");
+        }
+
+        [Test]
+        [Description("E5: a hostile NPC with capacity + an idle agent tasks a low-risk gather op against the player (its most-hostile met rival).")]
+        public void HostileNpc_SpiesOnThePlayer()
         {
             var s = TestScenario.CreateWithColony();
             var (npc, info, agent) = MakeNpcSpy(s, scoreTowardPlayer: -100); // fully hostile toward the player
 
-            // Gate OFF → the mirror is inert (byte-identical).
-            NPCDecisionProcessor.EnableEspionageMirror = false;
             NPCDecisionProcessor.RunEspionageMirror(npc, info);
-            Assert.That(agent.HasDataBlob<CovertOpDB>(), Is.False, "gate off → no covert op tasked");
 
-            // Gate ON → the NPC spies on its most-hostile met rival (the player).
-            NPCDecisionProcessor.EnableEspionageMirror = true;
-            try
-            {
-                NPCDecisionProcessor.RunEspionageMirror(npc, info);
-                Assert.That(agent.HasDataBlob<CovertOpDB>(), Is.True, "the NPC tasks a covert op against the hostile player");
-                Assert.That(agent.GetDataBlob<CovertOpDB>().TargetFactionId, Is.EqualTo(s.Faction.Id),
-                    "the target is the player — its most-hostile met rival");
-                Assert.That(agent.GetDataBlob<CovertOpDB>().Action, Is.EqualTo(CovertAction.GatherIntel),
-                    "the mirror runs the safe baseline (gather) — tuned LOW");
-                TestContext.Progress.WriteLine("[npc-mirror] hostile NPC tasked a gather op on the player");
-            }
-            finally { NPCDecisionProcessor.EnableEspionageMirror = false; }
+            Assert.That(agent.HasDataBlob<CovertOpDB>(), Is.True, "the NPC tasks a covert op against the hostile player");
+            var op = agent.GetDataBlob<CovertOpDB>();
+            Assert.That(op.TargetFactionId, Is.EqualTo(s.Faction.Id), "the target is the player — its most-hostile met rival");
+            Assert.That(op.Action, Is.EqualTo(CovertAction.GatherIntel), "the mirror runs the safe baseline (gather) — tuned LOW");
+            TestContext.Progress.WriteLine("[npc-mirror] hostile NPC tasked a gather op on the player");
         }
 
         [Test]
@@ -81,15 +80,11 @@ namespace Pulsar4X.Tests
             var s = TestScenario.CreateWithColony();
             var (npc, info, agent) = MakeNpcSpy(s, scoreTowardPlayer: 50); // friendly toward the player
 
-            NPCDecisionProcessor.EnableEspionageMirror = true;
-            try
-            {
-                NPCDecisionProcessor.RunEspionageMirror(npc, info);
-                Assert.That(agent.HasDataBlob<CovertOpDB>(), Is.False,
-                    "a friendly NPC does not spy — no rival at or below the hostile threshold");
-                TestContext.Progress.WriteLine("[npc-mirror] friendly NPC left the player alone (hostility gate)");
-            }
-            finally { NPCDecisionProcessor.EnableEspionageMirror = false; }
+            NPCDecisionProcessor.RunEspionageMirror(npc, info);
+
+            Assert.That(agent.HasDataBlob<CovertOpDB>(), Is.False,
+                "a friendly NPC does not spy — no rival at or below the hostile threshold");
+            TestContext.Progress.WriteLine("[npc-mirror] friendly NPC left the player alone (hostility gate)");
         }
 
         [Test]
@@ -102,14 +97,10 @@ namespace Pulsar4X.Tests
             // Strip the directorate (no capacity) — keep the hostile agent.
             info.Colonies.Clear();
 
-            NPCDecisionProcessor.EnableEspionageMirror = true;
-            try
-            {
-                NPCDecisionProcessor.RunEspionageMirror(npc, info);
-                Assert.That(agent.HasDataBlob<CovertOpDB>(), Is.False,
-                    "no built directorate → no spy capacity → no op (the E1 gear gate holds)");
-            }
-            finally { NPCDecisionProcessor.EnableEspionageMirror = false; }
+            NPCDecisionProcessor.RunEspionageMirror(npc, info);
+
+            Assert.That(agent.HasDataBlob<CovertOpDB>(), Is.False,
+                "no built directorate → no spy capacity → no op (the E1 gear gate holds)");
         }
     }
 }
