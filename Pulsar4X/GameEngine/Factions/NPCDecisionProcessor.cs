@@ -1,7 +1,9 @@
 using System;
+using Pulsar4X.DataStructures;
 using Pulsar4X.Engine;
 using Pulsar4X.Industry;
 using Pulsar4X.Interfaces;
+using Pulsar4X.People;
 
 namespace Pulsar4X.Factions
 {
@@ -62,6 +64,17 @@ namespace Pulsar4X.Factions
         /// <summary>Phase-3.1 tunable: a Confirmed intel record not refreshed within this span decays to Stale (you
         /// can't know a rival forever). One game-year by default; provisional / live-tunable.</summary>
         public static TimeSpan IntelStaleAfter = TimeSpan.FromDays(365);
+
+        /// <summary>
+        /// Espionage E5 gate (docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md §G — the ALWAYS-ON MIRROR): when true, an NPC
+        /// with spy capacity (a built <see cref="IntelDirectorateDB"/>) and an idle operative runs covert ops against
+        /// its rivals — INCLUDING the player. This is what makes counter-intelligence a standing decision rather than a
+        /// one-way toy: neglect your counter-intel rating and enemy agents raise their picture of you (and, in E6, steal
+        /// and sabotage). Tuned LOW and gated on hostility (a friendly neighbour isn't spied on). Defaults <b>false</b> so
+        /// every existing test is byte-identical (no NPC tasks an op); a SIBLING of the other espionage/AI gates so it
+        /// can be flipped alone.
+        /// </summary>
+        public static bool EnableEspionageMirror = false;
 
         /// <summary>Phase-3.4c tunable: the "shed the obligation" temptation a defensive pact exerts once the shared
         /// threat is gone, measured against a faction's Honour (<see cref="Treaties.WouldKeepFaith"/>). At 0.5 a
@@ -133,6 +146,11 @@ namespace Pulsar4X.Factions
             // signed treaty), so it's behind its own default-off gate — byte-identical until a client/test opts in.
             if (EnableDiplomaticProposals)
                 RunTreatyPolicy(factionEntity);
+
+            // The espionage MIRROR (E5): NPCs spy on their rivals — including the player — so counter-intel is a
+            // standing decision, not optional. Gated (default off) → byte-identical until opted in.
+            if (EnableEspionageMirror)
+                RunEspionageMirror(factionEntity, factionInfoDB);
 
             // Phase-4.2b: the galaxy crisis — if a faction has ASCENDED, the NPCs unite against it (declare war).
             // Gated (default off) so byte-identical; galaxy-level + idempotent, so a per-NPC-tick call is safe.
@@ -314,6 +332,65 @@ namespace Pulsar4X.Factions
             }
 
             ledger.DecayStale(now, IntelStaleAfter);
+        }
+
+        /// <summary>
+        /// Espionage E5 (docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md §G — the always-on mirror): an NPC runs a covert op
+        /// against the rival it likes LEAST. The move that makes the spy game two-sided — an NPC with a built
+        /// <see cref="IntelDirectorateDB"/> (capacity) and an idle <see cref="CommanderTypes.Intelligence"/> operative
+        /// tasks a low-risk <see cref="CovertAction.GatherIntel"/> op on its most-hostile met rival (score at or below
+        /// <see cref="RelationshipState.HostileThreshold"/>; war reads as fully hostile), which is the PLAYER whenever
+        /// the player is that rival. Tuned LOW: the natural rate-limit is the op's ~90-day duration (an agent stays busy)
+        /// plus the monthly cadence — one agent can only run one op at a time, so "scaling with hostility" here means the
+        /// hostility GATE (a friendly neighbour is never targeted). Gated by <see cref="EnableEspionageMirror"/> →
+        /// default-off is byte-identical. Steal/sabotage escalation for higher hostility is E6. Defensive/no-throw
+        /// (monthly hotloop). Internal for the CI gauge.
+        /// </summary>
+        internal static void RunEspionageMirror(Entity factionEntity, FactionInfoDB factionInfo)
+        {
+            var game = factionEntity.Manager?.Game;
+            if (game == null) return;
+            if (!factionEntity.TryGetDataBlob<DiplomacyDB>(out var dip)) return;
+
+            // Spy capacity: at least one built directorate with op capacity. No directorate → no ops (the E1 gear gate).
+            bool hasCapacity = false;
+            foreach (var colony in factionInfo.Colonies)
+                if (colony.TryGetDataBlob<IntelDirectorateDB>(out var directorate) && directorate.OpCapacity > 0)
+                {
+                    hasCapacity = true;
+                    break;
+                }
+            if (!hasCapacity) return;
+
+            // An idle operative to task (one not already busy on an op).
+            Entity agent = Entity.InvalidEntity;
+            foreach (var commander in factionInfo.Commanders)
+                if (commander.TryGetDataBlob<CommanderDB>(out var cdb) && cdb.Type == CommanderTypes.Intelligence
+                    && !commander.HasDataBlob<CovertOpDB>())
+                {
+                    agent = commander;
+                    break;
+                }
+            if (!agent.IsValid) return;
+
+            // Target the MOST-hostile met rival, and only if it's actually hostile (the "scales with hostility" gate —
+            // a friendly/neutral neighbour is left alone). War reads as the floor score.
+            int targetId = -1;
+            int worst = RelationshipState.HostileThreshold; // must be at or below this to be worth a covert op
+            foreach (var rel in dip.Relationships.Values)
+            {
+                if (rel.OtherFactionId == factionEntity.Id || rel.OtherFactionId == Game.NeutralFactionId) continue;
+                int score = rel.AtWar ? RelationshipState.MinScore : rel.RelationScore;
+                if (score <= worst)
+                {
+                    worst = score;
+                    targetId = rel.OtherFactionId;
+                }
+            }
+            if (targetId < 0) return; // no hostile rival → the mirror stays quiet
+
+            // Run the safe baseline: gather intel on their military. TaskAgent handles the guards + scheduling.
+            Espionage.TaskAgent(agent, targetId, CovertAction.GatherIntel, IntelFacet.Military, game.TimePulse.GameGlobalDateTime);
         }
 
         /// <summary>
