@@ -64,5 +64,47 @@ namespace Pulsar4X.Tests
                 TradeIncomeProcessor.EnablePayout = wasEnabled; // restore the global so other tests stay byte-identical
             }
         }
+
+        [Test]
+        [Description("F-C1b liveness: the payout processor FIRES through the live auto-discovery/schedule path (not a direct call) — its FireCount climbs after advancing the sim, gate ON or OFF — and booking follows the gate. Root-cause guard: a mis-keyed GetParameterType (a blob no faction carries) or an L9 discovery collision would freeze FireCount at 0 here.")]
+        public void PayoutProcessor_FiresThroughLiveSchedule_BooksOnlyWhenEnabled()
+        {
+            var s = TestScenario.CreateWithColony();
+            var info = s.Faction.GetDataBlob<FactionInfoDB>();
+            var diplomacy = s.Faction.GetDataBlob<DiplomacyDB>();
+            diplomacy.GetOrCreateRelationship(111).TradeAgreement = true;
+            diplomacy.GetOrCreateRelationship(222).TradeAgreement = true;
+
+            bool wasEnabled = TradeIncomeProcessor.EnablePayout;
+            try
+            {
+                // OFF: the processor must still be REACHED by the scheduler every monthly cycle — FireCount climbs —
+                // even though it books nothing. This is the discovery/schedule proof that a ledger-only check can't
+                // give: it separates "the processor ran" from "the payout gate let it book." A delta (not an absolute)
+                // keeps it robust against the shared static being bumped by other tests in the same process.
+                TradeIncomeProcessor.EnablePayout = false;
+                int fireBefore = TradeIncomeProcessor.FireCount;
+                s.AdvanceTime(TimeSpan.FromDays(70)); // spans multiple 30-day cycles past the 5-day first run
+                Assert.That(TradeIncomeProcessor.FireCount, Is.GreaterThan(fireBefore),
+                    "the processor must FIRE via auto-discovery + the GlobalManager schedule — a mis-keyed blob or an L9 collision would leave FireCount frozen");
+                Assert.That(info.Money.GetTransactionsByCategory(TransactionCategory.Trade), Is.Empty,
+                    "fired, but the default-OFF gate books no money → byte-identical");
+
+                // ON: the SAME live schedule path now books the income (no direct ProcessEntity call).
+                TradeIncomeProcessor.EnablePayout = true;
+                int fireBeforeOn = TradeIncomeProcessor.FireCount;
+                s.AdvanceTime(TimeSpan.FromDays(35));
+                Assert.That(TradeIncomeProcessor.FireCount, Is.GreaterThan(fireBeforeOn),
+                    "still firing on its schedule with the gate on");
+                var tradeTxns = info.Money.GetTransactionsByCategory(TransactionCategory.Trade);
+                Assert.That(tradeTxns, Is.Not.Empty, "payout on → the scheduled fire books trade income");
+                Assert.That(tradeTxns[0].Amount, Is.EqualTo(2 * TradeIncome.PerAgreementMonthly),
+                    "each booked payout = the standing agreements × the per-agreement value");
+            }
+            finally
+            {
+                TradeIncomeProcessor.EnablePayout = wasEnabled; // restore the global so other tests stay byte-identical
+            }
+        }
     }
 }
