@@ -92,5 +92,35 @@ namespace Pulsar4X.Tests
             Assert.That(blueDip.GetOrCreateRelationship(reds.Id).DefensivePact, Is.True, "signed on both ledgers (two-sided)");
             Assert.That(redDip.GetOrCreateRelationship(menace.Id).DefensivePact, Is.False, "we don't ally WITH the one we fear");
         }
+
+        [Test]
+        [Description("Phase-3.4b: a DefensivePact ally at war with a third faction DRAGS us in — we declare war on our ally's enemy (the coalition forms).")]
+        public void RunTreatyPolicy_JoinsAPactAllysWar_AgainstTheirEnemy()
+        {
+            var s = TestScenario.CreateWithColony();
+            var reds = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);     // us — the pact partner dragged in
+            var blues = FactionFactory.CreateBasicFaction(s.Game, "Blues", "BLU", 0);   // our defensive-pact ally
+            var menace = FactionFactory.CreateBasicFaction(s.Game, "Menace", "MEN", 0); // the ally's enemy
+
+            var redDip = reds.GetDataBlob<DiplomacyDB>();
+            var blueDip = blues.GetDataBlob<DiplomacyDB>();
+
+            // Reds & Blues hold a mutual defensive pact.
+            redDip.GetOrCreateRelationship(blues.Id).DefensivePact = true;
+            blueDip.GetOrCreateRelationship(reds.Id).DefensivePact = true;
+
+            // Blues are AT WAR with the Menace (Blues were attacked / declared — either way, war is latched).
+            blueDip.GetOrCreateRelationship(menace.Id).DeclareWar();
+
+            Assert.That(redDip.GetOrCreateRelationship(menace.Id).AtWar, Is.False, "we start neutral toward our ally's enemy");
+
+            NPCDecisionProcessor.RunTreatyPolicy(reds);   // honour the pact
+
+            Assert.That(redDip.GetOrCreateRelationship(menace.Id).AtWar, Is.True,
+                "the pact drags us into our ally's war — the coalition forms");
+            // War is symmetric (Diplomacy.DeclareWar latches both ledgers), so the Menace now sees us at war too.
+            Assert.That(menace.GetDataBlob<DiplomacyDB>().GetOrCreateRelationship(reds.Id).AtWar, Is.True,
+                "war is two-sided — the Menace now counts us among its enemies");
+        }
     }
 }

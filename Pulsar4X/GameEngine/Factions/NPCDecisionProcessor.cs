@@ -249,6 +249,35 @@ namespace Pulsar4X.Factions
             var game = factionEntity.Manager?.Game;
             if (game == null) return;
 
+            // Pass 0 (Phase-3.4b — HONOUR the pact: JOIN a DefensivePact ally's war). A defensive pact isn't just
+            // "we don't shoot each other" — it's "your enemies are my enemies." Each cycle, if a faction we hold a
+            // DefensivePact with is AtWar with some faction X (and we aren't already), we DECLARE WAR on X (casus
+            // belli AllyDefense — justified, we were dragged in). This is the move that turns two pacts into one real
+            // COALITION: the shared threat that 3.3b allied us against now faces BOTH of us. It composes straight into
+            // 3.4a — the instant we declare, combat reads us as hostile to X regardless of anything we'd signed with
+            // it. Runs BEFORE the pact-forming passes (an existing obligation outranks a new offer). One war-join per
+            // cycle (least-commitment). Breaking the pact once the threat is gone is Phase-3.4c.
+            foreach (var rel in dipDB.Relationships.Values)
+            {
+                if (!rel.DefensivePact) continue;                          // only a defensive-pact ally pulls us in
+                if (rel.OtherFactionId == factionEntity.Id || rel.OtherFactionId == Game.NeutralFactionId) continue;
+                if (!game.Factions.TryGetValue(rel.OtherFactionId, out var ally)) continue;
+                if (!ally.TryGetDataBlob<DiplomacyDB>(out var allyDip)) continue;
+
+                foreach (var allyRel in allyDip.Relationships.Values)
+                {
+                    if (!allyRel.AtWar) continue;                          // find who the ally is fighting
+                    int enemyId = allyRel.OtherFactionId;
+                    if (enemyId == factionEntity.Id || enemyId == Game.NeutralFactionId) continue; // not the ally-vs-us case
+                    if (enemyId == rel.OtherFactionId) continue;           // guard (an ally isn't at war with itself)
+                    if (dipDB.HasMet(enemyId) && dipDB.GetRelationship(enemyId).AtWar) continue;   // already in this war
+                    if (!game.Factions.TryGetValue(enemyId, out var enemy)) continue;
+
+                    if (Diplomacy.DeclareWar(factionEntity, enemy, CasusBelli.AllyDefense, game.TimePulse.GameGlobalDateTime))
+                        return;   // one war-join per cycle
+                }
+            }
+
             // Pass 1 (Phase-3.4 seed — ally against a SHARED THREAT): if we fear a rival most (the strongest we can
             // SEE that out-muscles us, 3.2), seek a DEFENSIVE PACT with a TRUSTED neighbour who isn't that threat.
             // Deliberately rare: it needs both a feared rival AND an Allied-trust (75) partner, so it fires only when a
