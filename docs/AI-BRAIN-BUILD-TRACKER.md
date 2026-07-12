@@ -203,7 +203,7 @@ GrowEconomy · Consolidate · Defend · Expand · AdvanceTech · Conquer each ha
 ### Phase 5 — 🪐 The Brane (authoring / acceptance test)
 | # | Slice | Plug point | Gauge | Status |
 |---|---|---|---|---|
-| 5.1 | Author traits/ambition/mood/opening-diplomacy as JSON | extend `FactionFactory` schema; expose `GameStageFactory.SetRelation:169` as data | a scenario JSON sets a faction's personality + opening war | ⚫ |
+| 5.1 | Author traits/ambition/mood/opening-diplomacy as JSON | extend `FactionFactory` schema; expose `GameStageFactory.SetRelation:169` as data | a scenario JSON sets a faction's personality + opening war | 🟡 **5.1a BUILT, CI-verifying** — **personality authoring**: `FactionFactory.LoadFromJson` now reads a `"personality"` JSON node (trait-name → 0..1, case-insensitive; `FactionFactory.PersonalityFromJson`) and attaches a `PersonalityDB` — so a scenario hands a faction its 12-trait identity (aggression/honour/xenophobia/…) that the whole brain already reads. Byte-identical: no node → no blob → every trait falls back to Neutral (0.5) exactly as today; no existing scenario file has the node. Gauge `PersonalityAuthoringTests`. **5.1b next**: opening diplomacy (`"openingRelations"` node → score/war), applied after all factions load (the cross-faction resolve-order pass). |
 | 5.2 | Decision-log gauges (emergence checkable) | readout over the engine | a run's decisions are legible + trace to inputs | ⚫ |
 | 5.3 | **Acceptance test** — stage one aspect of a franchise, it plays believably | the whole stack | the north-star test (`docs/NORTH-STAR-VISION.md`) | ⚫ |
 

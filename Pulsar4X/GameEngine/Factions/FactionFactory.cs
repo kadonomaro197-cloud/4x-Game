@@ -80,6 +80,14 @@ namespace Pulsar4X.Factions
                 };
             }
 
+            // Phase 5.1a — AUTHORED PERSONALITY: a scenario can hand a faction its 12-trait identity (the model the whole
+            // brain reads — retreat nerve, treaty tolerance, aggression, honour…). Only attach a PersonalityDB when the
+            // scenario names one; with no "personality" node the faction carries none and every trait read falls back to
+            // Neutral (0.5) exactly as today → byte-identical for every existing scenario file.
+            var personalityNode = rootJson["personality"];
+            if (personalityNode != null)
+                faction.SetDataBlob(PersonalityFromJson(personalityNode));
+
             var componentDesignsToLoad = (JArray?)rootJson["componentDesigns"];
             foreach(var componentDesignToLoad in componentDesignsToLoad)
             {
@@ -250,6 +258,27 @@ namespace Pulsar4X.Factions
             }
 
             return faction;
+        }
+
+        /// <summary>
+        /// Phase 5.1a — build a <see cref="PersonalityDB"/> from a JSON object of <c>traitName → 0..1</c> (e.g.
+        /// <c>{ "aggression": 0.8, "honor": 0.2 }</c>). Trait names match <see cref="PersonalityTrait"/> case-insensitively;
+        /// an unknown name or a null value is skipped, and any trait the scenario omits stays <see cref="PersonalityDB.Neutral"/>.
+        /// Public + static so a scenario loader OR a test can author a personality without a file (the acceptance-test rig).
+        /// </summary>
+        public static PersonalityDB PersonalityFromJson(JToken node)
+        {
+            var personality = new PersonalityDB();
+            if (node is JObject obj)
+            {
+                foreach (var kv in obj)
+                {
+                    if (kv.Value == null || kv.Value.Type == JTokenType.Null) continue;
+                    if (Enum.TryParse<PersonalityTrait>(kv.Key, ignoreCase: true, out var trait))
+                        personality.SetTrait(trait, kv.Value.Value<double>());
+                }
+            }
+            return personality;
         }
 
         private static void LoadCargo(Entity target, FactionDataStore factionDataStore, JArray? cargoArray)
