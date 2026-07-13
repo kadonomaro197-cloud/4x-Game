@@ -89,6 +89,27 @@ namespace Pulsar4X.Factions
             if (personalityNode != null)
                 faction.SetDataBlob(PersonalityFromJson(personalityNode));
 
+            // DevTest (2026-07-13) — "everything ENABLED": a faction can author a STARTING-ITEMS unlock list (the same
+            // kind of list earth.json uses) so the player can DESIGN and BUILD anything from turn one. LoadFromJson used
+            // to unlock nothing (its colony path is the bare ColonyFactory.CreateColony, with no StartingItems pass like
+            // CreateFromBlueprint has), so a faction had only the tech behind its pre-built designs. This mirrors that
+            // unlock loop: unlock each id into CargoGoods, research any listed tech, and sync unlocked materials into
+            // IndustryDesigns. Runs BEFORE componentDesigns so a design's ResourceCost materials are already unlocked
+            // when ComponentDesigner reads them (gotcha #4). Byte-identical for a faction with no "startingItems" node.
+            var startingItemsToLoad = (JArray?)rootJson["startingItems"];
+            if(startingItemsToLoad != null)
+            {
+                foreach(var item in startingItemsToLoad)
+                {
+                    string id = item.ToString();
+                    factionDataStore.Unlock(id);
+                    if(factionDataStore.Techs.ContainsKey(id))
+                        factionDataStore.IncrementTechLevel(id);
+                    if(factionDataStore.CargoGoods.IsMaterial(id))
+                        factionInfoDB.IndustryDesigns[id] = (IConstructableDesign)factionDataStore.CargoGoods[id];
+                }
+            }
+
             // DevTest (2026-07-13) — a faction can reference designs by ID from the consolidated mod store
             // (game.StartingGameData), the SAME store the live colony-blueprint path (ColonyFactory.CreateFromBlueprint)
             // resolves from. The old per-design files under componentDesigns/ were consolidated into designs/*.json, so
