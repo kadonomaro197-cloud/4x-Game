@@ -61,6 +61,12 @@ namespace Pulsar4X.Sites
 
             double days = deltaSeconds / 86400.0;
 
+            // SE-4c: a LIVE incident bleeds steady pressure into its region every tick — worker present or not. This is
+            // the "stop-the-bleed" clock: it harms your holding force until you contain the site. Only fires for a
+            // Shape.Incident site (SiteMachine.IsIncidentLive), so every OneShot/Persistent site is byte-identical.
+            if (SiteMachine.IsIncidentLive(site))
+                ApplyIncidentPressure(entity, site, days);
+
             // SE-3b: a surface site (on a planet's ground) is worked by a ground unit standing on it; a space anomaly
             // is worked by a ship parked at it. The two presence models are different, so branch here. Each path only
             // reaches its resolve/deliver after a real accrue, so the space path stays byte-identical.
@@ -68,6 +74,32 @@ namespace Pulsar4X.Sites
                 ProcessSurfaceWork(entity, site, days);
             else
                 ProcessSpaceWork(entity, site, days);
+        }
+
+        /// <summary>
+        /// SE-4c — bleed a live incident's steady pressure into its region for a step of <paramref name="days"/>: every
+        /// NON-menace unit standing in the site's region loses <c>CurrentPressure × days</c> health (the menace is the
+        /// SOURCE, so it's spared). The drain reuses the same Health axis the ground layer's attrition uses. v1 is
+        /// surface-only (a space incident's pressure is a later concern). Pure over game state (no RNG).
+        /// </summary>
+        private static void ApplyIncidentPressure(Entity entity, FieldSiteDB site, double days)
+        {
+            if (!site.IsSurfaceSite) return;
+            double drain = SiteMachine.CurrentPressure(site) * days;
+            if (drain <= 0) return;
+
+            if (entity.Manager == null || !entity.Manager.TryGetEntityById(site.SurfaceBodyEntityId, out var body)) return;
+            if (!body.TryGetDataBlob<Pulsar4X.GroundCombat.GroundForcesDB>(out var forces)) return;
+
+            foreach (var unit in forces.Units)
+            {
+                if (unit.Health <= 0) continue;
+                if (unit.RegionIndex != site.SurfaceRegionIndex) continue;
+                if (unit.FactionOwnerID == site.MenaceFactionId) continue; // the menace causes the bleed; it doesn't suffer it
+
+                unit.Health -= drain;
+                if (unit.Health < 0) unit.Health = 0;
+            }
         }
 
         /// <summary>SE-1b/2b/2c — the SPACE-anomaly work path: a ship parked within <see cref="PresenceRadius_m"/>
