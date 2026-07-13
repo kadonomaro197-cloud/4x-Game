@@ -1,12 +1,13 @@
 # Ground-Unit Designer — Design Record
 
-**Status:** design-locked (core model) + build-in-progress. **As of 2026-07-05.**
+**Status:** design-locked (core model) + build-in-progress. **As of 2026-07-13.**
 **Owner decisions captured from the 2026-07-05 design conversation.**
 
 > Read this before touching any ground-unit *design/assembly* code, and before building any part of the
 > ground-unit design UI. It is the single source of truth for how a player creates a ground unit. The
-> per-slice detail lives in `GameEngine/GroundCombat/CLAUDE.md`; the surrounding war layer is
-> `docs/GROUND-COMBAT-MAP-DESIGN.md`.
+> **per-slice build-state is tracked in `GameEngine/GroundCombat/CLAUDE.md`** (kept more current than the
+> roadmap table below); this doc holds the durable locked model + the essence-axes coverage gate. The
+> surrounding war layer is `docs/GROUND-COMBAT-MAP-DESIGN.md`.
 
 ---
 
@@ -373,7 +374,7 @@ only the *source of the stats* moves from a fixed number to the assembled sum.
 |-------|------|--------|
 | **G-D1** | The 4 general part attributes (`GroundChassisAtb`/`GroundWeaponAtb`/`GroundArmorAtb`/`GroundAugmentAtb`) + construction gauge | ✅ built |
 | **G-D2** | Base-mod parts (Human Frame, Service Rifle, Composite Plating, Power Armor) + `ComponentMountType.GroundUnit` + JSON→atb gauge | ✅ built |
-| **G-D3** | **The assembler:** a unit design = frame + parts; stats + cost summed; **the capacity + max-item gate enforced**; + vehicle frame / autocannon / cannon parts; + the 3 default loadouts as real assemblies | ⏳ next |
+| **G-D3** | **The assembler:** a unit design = frame + parts; stats + cost summed; **the capacity + max-item gate enforced**; + vehicle frame / autocannon / cannon parts; + the 3 default loadouts as real assemblies | ✅ built + CI-gauged (`GroundUnitAssembly.Compute` + `RegisterAssembledDesign`; gates: `GroundUnitAssemblyTests`, `GroundUnitFieldingTests`, `GroundPowerGateTests`) |
 | **G-D4** | **The client design window** — assemble a unit like a ship (pick frame, add parts, see the gate + emergent stats + cost); build with a quantity | ⏳ |
 | G-D5+ | Supply/ammo parts; the build-quantity → `GroundUnit.Count` "bunch"; Utility postures; more parts | ⏳ |
 
@@ -388,7 +389,9 @@ questions to settle *before* G-D4:
   the existing `ComponentDesignWindow` (filtered to `GroundUnit` mount)? How does the player set the knobs?
 - **The assembly UI.** How does the player pick a frame and drop parts onto it? How is the **carry gate shown**
   (a mass bar that fills; a red "over budget" state; a greyed-out too-heavy part)? Mirror `ShipDesignWindow`?
-- **Max-item fraction.** What fraction of carry-capacity is the per-item limit (a hard number to pick + flag)?
+- **Max-item fraction.** ✅ RESOLVED — the per-item limit is set to **0.5** of carry-capacity
+  (`GroundUnitAssembly.MaxItemFraction`, flagged as an engine default). (The *UI* still owes: showing the gate as a mass
+  bar / greyed-out too-heavy part — an open G-D4 item.)
 - **Hard caps.** Is there any ceiling augments *can't* exceed, or is it purely additive? (Leaning additive.)
 - **Quantity UX.** Where does the build-quantity slider live, and how does the "bunch"/Count read out in the map
   and combat?

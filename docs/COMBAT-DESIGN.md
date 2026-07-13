@@ -43,7 +43,7 @@ v1 builds the **load-bearing spine** for real and **stubs the edges** with flat 
 
 - **`ShipCombatValueDB` — the spec sheet.** When a ship is built we read its real parts and compute two numbers: how much hurt it can deal (firepower, from its weapon components) and how much it can take (toughness, from armor + hull). Cached on the ship like the displacement-and-armor-belt line on a warship's spec card; recomputed when the ship loses parts. *(Built under a test; `CombatReadoutTests` already shows how to stand up a real armed ship in the harness.)*
 
-  **Correction found while mapping the code:** the existing per-pixel damage routine (`DealDamageEnergyBeamSim`) currently deposits ~**0 damage** on a real ship — the damage *readout* gauge (`CombatReadoutTests`) showed it. That broken routine is exactly the "per-pixel sim" we're parking for v2. The auto-resolve loop **does not use it** — it computes casualties from the combat-value math, so the broken sim does **not** block v1. We route around it on purpose; we are not repairing it now.
+  **Status note (updated — was stale):** an earlier version of this line said the per-pixel damage routine (`DealDamageEnergyBeamSim`) deposited ~0 damage and was a broken routine parked for v2. **That is no longer true in the code.** `DealDamageEnergyBeamSim` (`GameEngine/Damage/DamageComplex/DamageTools.cs:216`) is now the **live beam-hit path**: a beam that hits calls `DamageProcessor.OnTakingDamage` (`BeamWeaponProcessor.cs:144`), which routes into the full two-zone/wavelength model at `DamageProcessor.cs:74`. So the two-tracks distinction still holds — the **auto-resolve loop** computes casualties from the combat-value math and does **not** call this routine — but the per-ship damage routine itself is wired and functional for the watched-battle case, not a parked stub. Runtime behavior (whether the numbers are well-calibrated on a real ship) is a tuning question only the developer's local build can answer; the wiring is in place.
 
 - **The auto-resolve loop — the gunnery table.** Add up each side's strength (combat values × doctrine × the flat stubs), trade salvos, and remove whole ships as casualties (most-exposed combatants die first, transports last). Repeat until one side is destroyed or retreats. Pure math, microseconds per battle. Round-by-round state lives in `FleetCombatStateDB` (round number, strengths, casualty counts, retreat state).
 
@@ -580,22 +580,24 @@ Systems 7 and 8 can be built in parallel with Systems 4–6 because they are mod
 
 ## What Already Exists
 
+> **This table was ~3 weeks stale (it still said the v1 spine was "Not started" after it shipped). Updated below against live source. The authoritative, always-current build ledger is `GameEngine/Combat/CLAUDE.md` + `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` — a hand-maintained status table inside a design doc rots, so treat this as a snapshot and those two as the source of truth. Three build states are kept distinct on purpose: NOT built · built-but-gated-off/unwired-to-the-player · built-and-wired (runtime behavior only the developer's local build can confirm — CI cannot run the client).**
+
 | Component | Status | Notes |
 |-----------|--------|-------|
-| Beam weapon fire | Working | BeamWeaponProcessor, fires and hits |
-| Missile launch | Working | MissileProcessor, launches but guidance is partial |
-| Hit calculation | Placeholder | 95% flat — no range, no modifiers |
-| Damage (DamageComplex) | Wired (Phase 1a) | Three calibration issues deferred |
-| Sensor system | Partial | Read Sensors/CLAUDE.md before touching |
-| Fleet system | Partial | Read Fleets/CLAUDE.md before touching |
-| Commander (People) | Exists as entity | Not wired to any combat decision |
-| Doctrine | Not started | — |
-| Retreat | Not started | — |
-| EMCON | Not started | — |
-| Auto-resolution | Not started | — |
-| Environmental hazards | Not started | — |
-| Debris/salvage | Not started | SpawnWreck() is empty hook |
-| Ground combat interface | Not started | Colony damage block commented out |
+| Beam weapon fire | Built + wired | `BeamWeaponProcessor`, fires and hits |
+| Missile launch | Built + wired | `MissileProcessor`, launches; guidance functional as of 2026-06-21 |
+| Hit calculation | Placeholder | 95% flat — no range, no modifiers (System 1 still stubbed) |
+| Damage (DamageComplex) | Built + wired | Live beam-hit path is `DealDamageEnergyBeamSim` (`DamageTools.cs:216`) via `DamageProcessor.OnTakingDamage`; calibration tuning deferred |
+| Sensor system | Built (rigorous, partly unwired) | Read `Sensors/CLAUDE.md` before touching |
+| Fleet system | Built | Read `Fleets/CLAUDE.md` before touching |
+| Commander (People) | Exists as entity | Flat commander modifier stubbed; career/skill depth not wired |
+| Doctrine | Built + wired | `FleetDoctrineDB.cs` (+ `FleetDoctrine.cs`) — the switchable-posture lever |
+| Retreat | Built + wired | `FleetRetreatDB.cs` — flag + vector, plus the engagement lock |
+| EMCON | Built (Sensors), posture lever wired | `Sensors/Emcon/` — `EmconActivityProcessor` + `FleetEmconDB` (Active/Reduced/Silent posture) |
+| Auto-resolution | Built + wired, MULTI-PARTY | `AutoResolve.cs` + `CombatEngagement.cs` (n-fleet resolver); trigger in `BattleTriggerProcessor.cs` |
+| Environmental hazards | Built end-to-end | `Hazards/` — `SpaceHazardDB`/`Processor`; six sources placed at world-gen (`StarSystemFactory.cs`) |
+| Debris/salvage | Not built | `SpawnWreck()` is still an empty hook |
+| Ground combat interface | Built (separate subsystem) | See `GameEngine/GroundCombat/CLAUDE.md`; bombardment routes via `OnColonyDamage` |
 
 ---
 

@@ -1,10 +1,12 @@
 # Auto-Resolver Anatomy & Dial-Insertion Map
 
-**As of:** 2026-07-08 · the resolver taken apart bit by bit, so every designer dial has a **known insertion point** and battles are authentic. Companion to `COMPONENT-DESIGNER-DIALS.md` (§0e is the number anchor). Source of truth: `GameEngine/Combat/` (`ShipCombatValueDB.cs`, `CombatEngagement.cs`, `WeaponProfile.cs`) + `Combat/CLAUDE.md`.
+**As of:** 2026-07-13 · the resolver taken apart bit by bit, so every designer dial has a **known insertion point** and battles are authentic. Companion to `COMPONENT-DESIGNER-DIALS.md` (§0e is the number anchor). Source of truth: `GameEngine/Combat/` (`ShipCombatValueDB.cs`, `CombatEngagement.cs`, `WeaponProfile.cs`) + `Combat/CLAUDE.md`.
+
+> **⚠ Status note (2026-07-13):** most of what this doc's §4 and §7d once listed as **➕ backlog** has since been **built and wired in code** (Penetration, PerShotEnergy, HeatPerSecond fields; mid-battle ammo drain; heat throttle; point-defense; inertialess evasion; reactionless drive). Those rows are flipped to ✅ below. **This doc no longer carries the authoritative build-state** — for whether any given dial is live, read `Combat/CLAUDE.md` and the source; the status markers here are a snapshot, not the gauge. Runtime behaviour of these is unverified by CI (it can't run the client); they exist and are wired.
 
 > **⚙ Distributed 2026-07-09.** The per-category insertion points from this doc are now **folded into each category's ⚙ Wiring Dossier** in `COMPONENT-DESIGNER-DIALS.md` (`⚙ 1`…`⚙ 11`) — the self-contained wiring reference for each category. This doc remains the **cross-category resolver anatomy + the ➕ extension backlog** (the origin of those insertion points); when you wire a category, read its dossier, and come here only for the whole-resolver picture or the shared backlog.
 
-**The finding in one line:** the resolver reads a **small, fixed input surface** — one `WeaponProfile` per weapon (**7 fields**) + a handful of per-ship values + ~10 global constants. A dial is authentic **only if it lands on that surface.** Most weapon dials already do; the rest need a **named new `WeaponProfile` field + one resolver term** (a short, concrete backlog) or a **deferred mechanic**.
+**The finding in one line:** the resolver reads a **small, fixed input surface** — one `WeaponProfile` per weapon (**10 fields as of 2026-07-13** — the original 7 plus `Penetration`, `PerShotEnergy`, `HeatPerSecond`, `WeaponProfile.cs:108,118,126`) + a handful of per-ship values + ~10 global constants. A dial is authentic **only if it lands on that surface.** Most weapon dials already do; the few that don't need a **deferred mechanic** (a subsystem first).
 
 ---
 
@@ -48,7 +50,7 @@ BATTLE ─ CombatEngagement.StepEngagementGroup(members, dt)   (every 5 s game-t
 
 **This is the whole target.** A dial is authentic iff it writes one of these.
 
-### Per-weapon — `WeaponProfile` (the 7 fields the salvo math reads)
+### Per-weapon — `WeaponProfile` (the fields the salvo math reads)
 | Field | Type | Read by | What it decides |
 |-------|------|---------|-----------------|
 | **DamagePerSecond** | J/s | firepower + fire mix | how much hurt |
@@ -58,6 +60,9 @@ BATTLE ─ CombatEngagement.StepEngagementGroup(members, dt)   (every 5 s game-t
 | **Range_m** | m | `BuildFireMix` gate + range term | reach / accuracy-at-distance |
 | **Nature** | Kinetic/Energy/Explosive/Exotic | `SoakFractionOf` | the shield matchup |
 | **Delivery** | Beam/Bolt/Slug/Cloud/Guided/Blast | `Class` (computed) | dodge behaviour flavour |
+| **Penetration** ✅ | double | `ArmourSoak` (`WeaponProfile.cs:108`) | cancels flat armour point-for-point (AP/sabot) |
+| **PerShotEnergy** ✅ | J | `ArmourSoakBurst` / burst-shot count (`WeaponProfile.cs:118`) | alpha vs chip vs flat armour |
+| **HeatPerSecond** ✅ | kJ/s | fleet `HeatPool_kJ` throttle (`WeaponProfile.cs:126`) | sustained-fire heat (inert while base-mod = 0) |
 
 ### Per-ship
 | Value | Read by |
@@ -89,11 +94,11 @@ Legend: **✅ field exists** (dial writes it today) · **➕ new field** (add a 
 | Range / standoff | **Range_m** (+ range term) | ✅ (bites when closing on) |
 | Muzzle velocity (ballistic) | **Velocity** | ✅ |
 | Melee = undodgeable, must close | **Velocity=∞-equiv / Delivery** (Matchup ×1) + Range_m≈0 | ✅ (ground matrix) |
-| **Focus lance↔wide** | wide → **Saturation** ✅ · lance → **Penetration** | ➕ Penetration |
-| **Penetration ↔ Splash** | **Penetration** (armour-pen) vs splash→Saturation | ➕ Penetration |
-| **Linked fire / per-shot alpha** | **PerShotEnergy** (so alpha beats flat armour, chip bounces) | ➕ PerShotEnergy |
-| **Recoil → accuracy** (ballistic) | reduce effective **Tracking** by recoil÷chassis-mass | ➕ a recoil term |
-| **Cooling / heat → sustained rate** | lower effective **DamagePerSecond** under sustained fire | ➕ a heat/rate term |
+| **Focus lance↔wide** | wide → **Saturation** ✅ · lance → **Penetration** | ✅ Penetration field (`WeaponProfile.cs:108`) |
+| **Penetration ↔ Splash** | **Penetration** (armour-pen) vs splash→Saturation | ✅ Penetration field |
+| **Linked fire / per-shot alpha** | **PerShotEnergy** (so alpha beats flat armour, chip bounces) | ✅ PerShotEnergy field (`WeaponProfile.cs:118`) |
+| **Recoil → accuracy** (ballistic) | reduce effective **Tracking** by recoil÷chassis-mass | ✅ recoil→tracking (`ShipCombatValueDB`, `RecoilTrackingFactor`) |
+| **Cooling / heat → sustained rate** | lower effective **DamagePerSecond** under sustained fire | ✅ HeatPool throttle (`CombatEngagement.cs:650-657`; inert while base-mod HeatPerSecond=0) |
 | **Charge damage profile** | hi **DamagePerSecond** / lo **Saturation** | ✅ |
 | Charge **telegraph window** | (no per-shot timing in the aggregate resolver) | ⚙ per-shot timing |
 | **Overcharge / burnout** | self-damage on fire | ⚙ self-damage rule |
@@ -109,34 +114,36 @@ Legend: **✅ field exists** (dial writes it today) · **➕ new field** (add a 
 |------|----------|--------|
 | Warhead output · seeker tracking · range | **DamagePerSecond / Tracking / Range_m** | ✅ (missile is a stub today → wire real values) |
 | Salvo size vs PD | **Saturation** vs `SaturationReference 50` | ✅ (proxy) |
-| **Ammo / runs-dry mid-battle** | **AmmoPool** drained per salvo (exists ground-side `GroundAmmo`) | ➕ wire the space resolver |
-| **Point-defense intercepts a missile** | missiles as **resolvable targets** in the salvo loop, PD-capable flag | ⚙ missiles-as-targets |
+| **Ammo / runs-dry mid-battle** | **AmmoPool** drained per salvo (`FleetCombatStateDB.AmmoPool_kg`) | ✅ wired (`CombatEngagement.cs:627-635`; inert until a magazine seeds a pool) |
+| **Point-defense intercepts a missile** | missile-damage intercepted by fleet PD rating | ✅ `FleetPointDefense` intercept (`CombatEngagement.cs:690`); full missiles-as-resolvable-targets still ⚙ |
 | Seeker jamming | vs EW | ⚙ EW door |
 
 ---
 
-## 4. The resolver-extension backlog (the concrete build list)
+## 4. The resolver-extension backlog — MOSTLY BUILT (status pass 2026-07-13)
 
-To make the **➕** dials authentic, the resolver needs exactly this — small, additive, each with a gauge. Ordered by payoff:
+The six extensions this section once listed as ➕ backlog have **landed in code** as of 2026-07-13. They are wired; most are **inert by default** (the base-mod weapons don't yet dial them, so live combat is byte-identical until a design turns them on) — that's build-state (b), not (c). CI can't run the client, so runtime behaviour is unverified. Read `Combat/CLAUDE.md` for the live status of each.
 
-1. **`Penetration` field + `ArmourSoak` term.** Today armour is a flat soak by target Defense (`GroundDamageMatrix.ArmourSoak`, `ArmourSoakPerPoint 1.5`) with **no per-weapon penetration**. Add `WeaponProfile.Penetration`; `ArmourSoak` reduces its flat soak by penetration. *Unlocks:* lance/sabot/AP/piercing (Energy, Ballistic, Melee) as real armour-crackers, and Splash as the anti-swarm opposite. **Highest payoff — it's the armour half of the matchup.**
-2. **`PerShotEnergy` field.** `BuildFireMix` aggregates dps and loses per-shot size, so the "one big alpha punches armour, a swarm of chips bounces" identity (the whole point of flat armour) can't be expressed by a beam vs a repeater of equal dps. Add per-shot energy so `ArmourSoak` sees alpha vs chip. *Unlocks:* Linked-fire, charge-alpha, the swarm-vs-alpha texture.
-3. **Mid-battle `AmmoPool` drain.** Ground already has it (`GroundAmmo.MaxAmmo_kg`/`IsDry`); the space stepped resolve doesn't drain ammo, so a long fight never dries out a magazine. Wire the pool into `StepEngagementGroup`. *Unlocks:* Ballistic/Guided magazine depletion, resupply as a real combat pressure.
-4. **Recoil → Tracking term.** Effective Tracking −= f(recoil ÷ chassis-mass). *Unlocks:* Ballistic recoil (big gun on small hull = can't aim).
-5. **Heat → sustained-rate term.** Effective dps throttles under sustained fire unless cooled. *Unlocks:* Energy cooling, burst-vs-sustained.
-6. **Missiles as resolvable targets + PD-capable flag.** Missiles are a firepower stub, not projectiles the salvo loop can shoot down; flak's saturation is only a proxy. Model an in-flight missile pool that PD weapons deplete. *Unlocks:* real point-defense, the salvo-vs-PD saturation duel, drone/fighter interception.
+1. **`Penetration` field + `ArmourSoak` term. ✅ BUILT.** `WeaponProfile.Penetration` (`WeaponProfile.cs:108`) cancels the target's flat armour point-for-point; `GroundDamageMatrix.ArmourSoak`'s 3-arg overload forwards to the shared `CombatKernel` (resolver merge slice 3a). *Unlocks:* lance/sabot/AP/piercing as real armour-crackers. (Base-mod weapons default Penetration 0 → byte-identical until a design dials it.)
+2. **`PerShotEnergy` field. ✅ BUILT.** `WeaponProfile.PerShotEnergy` (`WeaponProfile.cs:118`) → `CombatKernel.BurstShotCount` splits a source into flat-soaked shots, so an alpha punches armour a chip bounces off. *Unlocks:* Linked-fire, charge-alpha, the swarm-vs-alpha texture. (Default 0 → byte-identical.)
+3. **Mid-battle `AmmoPool` drain. ✅ BUILT.** `CombatEngagement.cs:627-635` drains `FleetCombatStateDB.AmmoPool_kg` per salvo and silences dry weapons (W3b). *Unlocks:* Ballistic/Guided magazine depletion. (Inert until a `ShipMagazineAtb` seeds a pool.)
+4. **Recoil → Tracking term. ✅ BUILT.** `ShipCombatValueDB.RecoilTrackingFactor(recoil, chassisMass)` cuts a kinetic weapon's built Tracking (`ShipCombatValueDB.cs:358,381`, W4). *Unlocks:* big gun on a small hull can't aim. (Every base-mod weapon Recoil 0 → byte-identical.)
+5. **Heat → sustained-rate throttle. ✅ BUILT.** `CombatEngagement.cs:650-657` accumulates each fleet's `HeatPool_kJ` (Σ HeatPerSecond × dt) and throttles the energy guns over the cap (W5b). *Unlocks:* Energy cooling, burst-vs-sustained. (Self-gating: base-mod HeatPerSecond 0 → skipped → byte-identical.)
+6. **Point-defense missile intercept. ✅ BUILT (partial).** `CombatEngagement.cs:690` applies `FleetPointDefense` intercept to incoming missile damage (W6b). The **full** "missiles as individually-resolvable in-flight targets" model is still ⚙ — today it's a fleet-PD-rating-vs-missile-damage intercept fraction, not a per-projectile shootdown loop.
 
-**Deferred mechanics (⚙ — a subsystem each, they gate their dials):** adaptive shields (→ frequency modulation) · combat-environment modifier (→ medium) · per-shot timing (→ charge telegraph) · self-damage rule (→ overcharge) · profile-swap (→ multi-ammo) · the effect bus + capture (→ stun/conversion/Exotic effects) · positional/arc (→ mount traverse, or drop as flavour).
+**Resolver merge (was a §6 prerequisite) — slices 3a/3c LANDED.** The shared flat-armour + dodge/shield math now lives in `Combat/CombatKernel.cs`; ground combat routes through it via `GroundCombatant.ToWeaponProfile` (`GroundCombat/GroundCombatant.cs:66`, called from `GroundForcesProcessor.cs:340`). So Penetration/PerShotEnergy/shield are built **once** on the kernel and shared ship↔ground, not twice. See `Combat/CLAUDE.md` and `docs/RESOLVER-MERGE-DESIGN.md`.
+
+**Still deferred (⚙ — a subsystem each, they gate their dials):** adaptive shields (→ frequency modulation) · combat-environment modifier (→ medium) · per-shot timing (→ charge telegraph) · self-damage rule (→ overcharge) · profile-swap (→ multi-ammo) · the effect bus + capture (→ stun/conversion/Exotic effects) · positional/arc (→ mount traverse, or drop as flavour) · full missiles-as-resolvable-targets (→ per-projectile PD).
 
 ---
 
-## 5. What this proves
+## 5. What the map shows
 
-- The **fight-deciding core** (output, rate, nature, velocity, tracking, saturation, range, evasion, toughness, shields, doctrine) is **fully wired today** — the resolver already reads it, and §0e calibrated it to real numbers.
-- The **depth dials** are not vaporware: each has a **named home** — an existing field, one of **six concrete resolver extensions** (§4), or a deferred subsystem. Nothing is cosmetic; nothing is hand-waved.
-- Because the resolver is an **aggregate salvo engine** (non-positional, non-per-shot-timed, whole-ship casualties), a few dials (arc, charge-telegraph) can't be authentic without changing the resolver's *nature* — those are honestly marked ⚙/drop, not pretended into the salvo math.
+- The **fight-deciding core** (output, rate, nature, velocity, tracking, saturation, range, evasion, toughness, shields, doctrine) is **wired** — the resolver reads it, and §0e calibrated it to real numbers.
+- The **depth dials** each have a **named home** — an existing field, one of the six §4 resolver extensions (**now built**, mostly inert-by-default), or a deferred subsystem.
+- Because the resolver is an **aggregate salvo engine** (non-positional, non-per-shot-timed, whole-ship casualties), a few dials (arc, charge-telegraph) can't be expressed without changing the resolver's *nature* — those are marked ⚙/drop, not folded into the salvo math.
 
-**The build order that falls out:** ship the ✅ dials with the doors; land the six §4 extensions (Penetration first — it's the armour half of the matchup) so the ➕ dials go live; schedule the ⚙ mechanics as their own gated slices (they're the same list the effect bus + adaptive-shield work already owns). Calibrate each against the §0e joule scale and sanity-check one exchange, exactly as the Weapons doors already do.
+**Where things stand:** the ✅ core dials and the six §4 extensions are in code (the extensions inert until a design dials them; runtime unverified — CI can't run the client). The remaining ⚙ mechanics are the gated slices left. For the authoritative live status of any one dial, read `Combat/CLAUDE.md` and the source — not this doc.
 
 ---
 
@@ -148,15 +155,15 @@ Checked against the code, because the guarantee has to be real, not asserted.
 
 **Soldiers — AUTHENTIC MATH, but a PARALLEL resolver (the honest caveat).** `GroundForcesProcessor.ResolveRegionCombat` reads the **same matchup** (`GroundDamageMatrix.Matchup`/`ArmourSoak`, the triangle, cover/fortification, stance) — so a dial that writes the shared matchup DOES impact ground combat authentically. **But** it is a **separate implementation**, and it is **per-unit pairwise — O(units²) per region, NOT bucketed** (`foreach attacker-faction → foreach defender-faction → foreach unit → foreach reachable target`), over ground-specific stat fields on `GroundUnit` (a parallel to `WeaponProfile`). Consequences: (a) huge battalion counts scale **worse** than ships and have **no perf gauge**; (b) **every new dial term must be built TWICE** (ship `WeaponProfile` + ground `GroundUnit`) until the resolvers merge.
 
-**The prerequisite that makes the guarantee uniform — the resolver MERGE (DECIDED 2026-07-06, `Combat/CLAUDE.md`).** Extract the shared salvo/matchup math onto a neutral **COMBATANT** view that both a ship entity and a soldier present, route both through the ONE bucketed resolver, delete the ground duplicate. After the merge: **one bucketed O(buckets) path for ships AND soldiers**, and every dial term is wired **once**.
+**The prerequisite that makes the guarantee uniform — the resolver MERGE (DECIDED 2026-07-06, `Combat/CLAUDE.md`; slices 3a/3c LANDED 2026-07-08).** Extract the shared salvo/matchup math onto a neutral **COMBATANT** view that both a ship entity and a soldier present, route both through the ONE resolver, delete the ground duplicate. **Status (2026-07-13):** the shared flat-armour + dodge/shield math is now in `Combat/CombatKernel.cs` and ground routes through it (`GroundCombatant.ToWeaponProfile` → `GroundForcesProcessor.cs:340`) — so Penetration/PerShotEnergy/shield are built **once**, ship↔ground. **What's NOT yet merged:** ground is still a **separate, per-unit O(units²) loop** (not the ship bucketing) — the math is shared, the *bucketing* isn't. So a dial term written on the kernel is wired once, but ground large-battle perf still lags ships. After full merge: **one bucketed O(buckets) path for ships AND soldiers**.
 
-> **Recommendation:** land the resolver merge **before (or as the first slice of)** the §4 resolver-extensions — so each dial's resolver term is built once, bucketed, and scales for **both** fleets and battalions. Until then, the "any number, any combination" guarantee is **fully true for ships** and **true-but-un-bucketed-and-duplicated for soldiers.**
+> **Status (2026-07-13):** the merge's *shared-math* slices landed alongside the §4 extensions, so each dial's kernel term is built once, ship↔ground. The *bucketing* half is still outstanding — so the "any number, any combination" guarantee is **fully true (bucketed) for ships** and **true-but-un-bucketed for soldiers** (ground shares the math but not the O(buckets) scaling).
 
 ---
 
 ## 7. Propulsion dial-insertion map — the MOVEMENT/CLOSING surface (Propulsion category, §2)
 
-The weapon map above (§2–§4) is the **salvo-damage** surface. Propulsion lands on a **second, adjacent surface** the resolver already reads: **Evasion** (per-ship, feeds `HitFraction`) + the **closing-fight state** (`FleetCombatStateDB.Separation_m` / `ManeuverBudget`, and `FleetCombat`'s fleet-aggregation reads). The headline finding is the opposite of weapons: **the locked Propulsion doors need ZERO new resolver fields — the engine already runs Newtonian physics, and every dial writes a stat the resolver reads today.** Only Exotic ▸ inertialess needs one new term (➕); three exotic/fluid dials defer on a named mechanic (⚙).
+The weapon map above (§2–§4) is the **salvo-damage** surface. Propulsion lands on a **second, adjacent surface** the resolver already reads: **Evasion** (per-ship, feeds `HitFraction`) + the **closing-fight state** (`FleetCombatStateDB.Separation_m` / `ManeuverBudget`, and `FleetCombat`'s fleet-aggregation reads). The headline finding is the opposite of weapons: **the locked Propulsion doors need ZERO new resolver fields — the engine already runs Newtonian physics, and every dial writes a stat the resolver reads today.** The two exotic extensions this once called ➕ (inertialess evasion, reactionless drive) are now **built** (§7d); three exotic/fluid dials still defer on a named mechanic (⚙).
 
 ### 7a. The propulsion input surface (what a propulsion dial can touch)
 | Stat | Where it lives | Read by | Source dial |
@@ -201,19 +208,19 @@ Legend as §3: **✅ field exists** · **➕ new term** · **⚙ deferred mechan
 | Warp | Bubble power (create/sustain) | stored-electricity gate (`ChargeReactors`) — **movement-side**, not the salvo | ✅ (movement) |
 | Warp | Jump-drive | jump-point network (`JumpOrder`, `InterSystemJumpProcessor`) | ✅ |
 | Warp | Gate-user / network node | which gate reaches which (Stargate) | ⚙ **H8 gate-network/addressing** |
-| **Exotic** | Reactionless thrust | Reaction drive with **FuelBurnRate=0** (Δv only bounded by fuel; direct `ThrustInNewtons`) | ➕ small: no-fuel flag |
-| Exotic | Inertialess maneuver | **evasion-override term** bypassing `accel = Thrust÷MassDry` in `CalculateEvasion` | ➕ **new Evasion term** |
+| **Exotic** | Reactionless thrust | Reaction drive with **FuelBurnRate=0** (Δv only bounded by fuel; direct `ThrustInNewtons`) | ✅ `ReactionlessThrustAtb` (`NewtonMove/ReactionlessThrustAtb.cs`; base-mod Nomad; gauge `ShipReactionlessDriveTests`) |
+| Exotic | Inertialess maneuver | **evasion-override term** bypassing `accel = Thrust÷MassDry` in `CalculateEvasion` | ✅ `InertialessDriveAtb` → `InertialessEvasionFloor` (`ShipCombatValueDB.cs:575,584`; gauge `ShipInertialessDriveTests`) |
 | Exotic | Gravitic / medium-independent | works in any medium, no fuel | ⚙ medium layer (shared w/ Fluid) |
 | Exotic | Teleport / rings (H1) | instant point-to-point matter move | ⚙ **Transfer ▸ teleport (H1)** |
 
-### 7d. The propulsion resolver-extension backlog (tiny, vs weapons' six)
-Because the movement surface is already wired, the propulsion doors add only:
-1. **Evasion-override term** (Exotic ▸ inertialess) — a `CalculateEvasion` path where evasion is set directly, decoupled from `accel = Thrust÷MassDry`. Small, self-contained. *Unlocks:* a capital that dodges like a fighter.
-2. **Reactionless no-fuel flag** (Exotic) — let a Reaction drive declare zero propellant (infinite Δv) at a big power/tech cost. Nearly free — the engine already reads `ThrustInNewtons` directly.
-3. **Terrain-combat term** (Traction) — the H3 hex-terrain-in-combat follow-on already on the ground roadmap; a drive's preferred terrain gives a matchup edge, not just a movement one.
+### 7d. The propulsion resolver-extension backlog — TWO OF THREE BUILT (status pass 2026-07-13)
+Because the movement surface is already wired, the propulsion doors added only three small terms — two now in code:
+1. **Evasion-override term** (Exotic ▸ inertialess) — ✅ **BUILT.** `InertialessDriveAtb.EvasionOverride` → `ShipCombatValueDB.InertialessEvasionFloor` reads it as a health-scaled floor in `CalculateEvasion` (`ShipCombatValueDB.cs:575,584`), decoupling evasion from `accel = Thrust÷MassDry`. Base-mod `inertialess-drive` on the Phantom Inertialess Cruiser; gauge `ShipInertialessDriveTests`. (0 = no drive → byte-identical.) *Unlocks:* a capital that dodges like a fighter.
+2. **Reactionless no-fuel flag** (Exotic) — ✅ **BUILT.** `ReactionlessThrustAtb` sets `NewtonThrustAbilityDB.ThrustInNewtons` directly + marks `Reactionless` true (unlimited Δv → `ManeuverBudget` never depletes) (`NewtonMove/ReactionlessThrustAtb.cs`, `NewtonThrustAbilityDB.cs`). Base-mod `reactionless-drive` on the Nomad; gauge `ShipReactionlessDriveTests`. **v1 = the combat/closing payoff + strategic Δv readout; the in-space burn model without consuming fuel is a flagged follow-up.** (default false → byte-identical.)
+3. **Terrain-combat term** (Traction) — ⚙ still open. The H3 hex-terrain-in-combat follow-on already on the ground roadmap; a drive's preferred terrain gives a matchup edge, not just a movement one.
 
 **Deferred mechanics (⚙ — each gates its dials):** the **air/altitude/depth combat layer** (Fluid's deep half + Exotic-gravitic) · the **H8 gate-network/addressing** (Warp-gate/Stargate) · the **Transfer ▸ teleport mode** (Exotic-teleport/H1). These are the same two prerequisite mechanics the §2 Propulsion category footer names — designed-in, not bolted-on.
 
-### 7e. What this proves (propulsion)
-- The **closing/evasion core** (thrust→evasion→dodge, Δv→kiting clock→who-dictates-range, warp speed→transit, ground speed→the march) is **fully wired AND already gauged** — `ShipEvasionTests` (thrust/mass → evasion), `ClosingTests` (who-dictates + the P2 kiting clock), `FleetAggregationTests` (the fleet floors), `GroundForcesTests` (the hex-march). No new gauges needed for the locked dials; the connection is proven.
-- Propulsion is the **cheapest category to wire** so far: **zero new fields for the four Reaction/Traction/Fluid-access/Warp cores**, three tiny extensions (§7d), and the same two deferred mechanics the category already flagged. Calibration is inherited (the closing constants were live-tuned 2026-06-27), so a Reaction dial sanity-checks exactly as the doors show (ev 0.48 sprinter vs 0.02 cruiser, §2.1).
+### 7e. What the propulsion map shows
+- The **closing/evasion core** (thrust→evasion→dodge, Δv→kiting clock→who-dictates-range, warp speed→transit, ground speed→the march) is **wired and gauged** — `ShipEvasionTests` (thrust/mass → evasion), `ClosingTests` (who-dictates + the P2 kiting clock), `FleetAggregationTests` (the fleet floors), `GroundForcesTests` (the hex-march). (These are engine gauges; client runtime is unverified — CI can't run it.)
+- Propulsion needed **zero new resolver fields for the four Reaction/Traction/Fluid-access/Warp cores**; of the three small §7d extensions, **two (inertialess evasion, reactionless drive) are now built**, one (terrain-combat term) is still open, plus the same two deferred mechanics the category flagged. Calibration is inherited (the closing constants were live-tuned 2026-06-27), so a Reaction dial sanity-checks as the doors show (ev 0.48 sprinter vs 0.02 cruiser, §2.1).

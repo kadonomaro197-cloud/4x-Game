@@ -1,6 +1,6 @@
 # AI Capability Catalog — Phase A of the Utility-Brain
 
-**As of 2026-07-12.** Status: **scan complete (knowledge artifact); the CODE catalog + scorer are Phases A-code / B / C.** Produced by a 6-way read-only scan of the buildable catalog (docs/AI-BRAIN-BUILD-TRACKER.md — the utility-brain side objective).
+**Scanned 2026-07-12; build-claims corrected 2026-07-13.** Status: **scan complete (knowledge artifact / parts manual). The ordered CODE build plan (catalog walker + needs model + scorer) now lives in `docs/CAPABILITY-BUILD-PLAN.md`, not here.** Produced by a 6-way read-only scan of the buildable catalog (docs/AI-BRAIN-BUILD-TRACKER.md — the utility-brain side objective).
 
 ---
 
@@ -46,7 +46,7 @@ Shared NEED vocabulary: **INTEL · OFFENSE · DEFENSE · ECONOMY · TECH · GROW
 ### TECH · GROWTH · PEOPLE
 - TECH: `ResearchPointsAtbDB`→`research-lab` (spawns the lab that grows the tech tree) ✅start
 - GROWTH: `HousingAtbDB` (comfort→morale), `PopulationSupportAtbDB` (life-support cap) → `infrastructure`/`space-habitat` ✅start
-- PEOPLE: `NavalAcademyAtb`→`naval-academy` (graduates officers — **NOT start-unlocked, tech-gated**); `AdminSpaceAtb`→`admin-complex`/`ship-command` (command seats/span-of-control) ✅start
+- PEOPLE: `NavalAcademyAtb`→`naval-academy` (meant to graduate officers, but **currently BROKEN/unreachable** — in no colony's `StartingItems`, and its template binds the legacy FQN `Pulsar4X.Atb.NavalAcademyAtb` while the real class is `Pulsar4X.People.NavalAcademyAtb`, so the atb won't resolve; the officer-graduation source is inert until both are fixed); `AdminSpaceAtb`→`admin-complex`/`ship-command` (command seats/span-of-control) ✅start
 - *Scientists are SPAWNED, not buildable (no scientist-academy). Ties to Exploration X.0 "make competence researchable."*
 
 ### REACH (move ships / cargo / troops)
@@ -57,31 +57,28 @@ Shared NEED vocabulary: **INTEL · OFFENSE · DEFENSE · ECONOMY · TECH · GROW
 
 ## THE GAME GAPS — needs with NO buildable (the important half)
 
-A utility AI can only choose an option that **exists as a buildable**. Four needs have **none** — so they are holes in the GAME, not the AI. Common root: **`Pulsar4X/GameEngine/Factions/` contains ZERO `IComponentDesignAttribute` classes** — those systems are strategic-AI plumbing (DataBlobs/processors/catalogs), entirely off the component/industry build rails.
+A utility AI can only choose an option that **exists as a buildable**. Three needs have **none** — so they are holes in the GAME, not the AI. (ESPIONAGE was a fourth gap when this doc was written; it is now closed — see below.) These systems are largely strategic-AI plumbing (DataBlobs/processors/catalogs), off the component/industry build rails. That was once true across the board — but it no longer holds for Factions as a whole: **`Pulsar4X/GameEngine/Factions/` now contains a real `IComponentDesignAttribute` class, `IntelDirectorateAtb`** (the espionage buildable), so the "zero component attributes in Factions" root claim is out of date.
 
 | Need | State | Verdict |
 |---|---|---|
 | **INFLUENCE** (cultural / soft-power conversion of population) | No `InfluenceAtb`, no culture component anywhere. Morale/legitimacy exist only as processor-computed gauges. | **GAP** — the AI (and player) can never "build influence." *This is exactly the developer's "convert their people instead of war" — it needs a new system before the AI can choose it.* |
 | **DIPLOMACY-as-a-buildable** | Full engine (`DiplomacyDB`/`Treaties`/`ReactiveDiplomacy`/`ExchangeCatalog`/`FirstContact`) but ZERO components — no embassy/envoy installation. | **GAP** — diplomacy is played through orders, not built. |
-| **ESPIONAGE-as-a-buildable** | `CovertActionCatalog` (StealTech/Sabotage/SowUnrest…) + `CovertRisk`/`InformationLedger` exist, but no spy-agency/intel-network component. | **GAP** — no buildable spy apparatus; catalog is data-only. |
+| **ESPIONAGE-as-a-buildable** | `CovertActionCatalog` (StealTech/Sabotage/SowUnrest…) + `CovertRisk`/`InformationLedger` exist, AND now a real buildable spy apparatus: `IntelDirectorateAtb` (`Pulsar4X/GameEngine/Factions/IntelDirectorateAtb.cs`) → the `intelligence-directorate` template (installations.json), installed on Earth's start colony; `IntelDirectorateProcessor` recruits `Intelligence` operatives. | **NOW BUILDABLE (Espionage E1–E2, 2026-07-12)** — the spy network is a constructible component; code exists and is wired. (Runtime unverified here; the always-on NPC espionage MIRROR that spends it is behind a default-false `EnableEspionageMirror` gate.) |
 | **GOVERNANCE (policy/politics)** | `GovernmentDB`/`TaxPolicy`/`PoliticalBlocs` are non-buildable modulators. Only span-of-control (`AdminSpaceAtb` → `admin-complex`/`ship-command`) is constructible. | **PARTIAL GAP** — admin capacity buildable; regime/policy is not. |
 
-**Implication:** closing the "aware of all its options" delta is *two* jobs — (1) the utility scorer over the buildables that DO exist (Phases B/C), and (2) building the missing player systems (INFLUENCE first, per the developer's interest) so those options exist to be chosen at all. The scan hands us the exact to-do list.
+**Implication:** closing the "aware of all its options" delta is *two* jobs — (1) the utility scorer over the buildables that DO exist, and (2) building the remaining missing player systems (INFLUENCE first, per the developer's interest — espionage is now off this list, having gained a buildable) so those options exist to be chosen at all. The scan hands us the exact to-do list.
 
 ---
 
 ## Data bugs the scan surfaced (worth a cheap fix pass)
 
-1. **`spaceport` UniqueID collision** — two different `ComponentTemplate`s share `UniqueID "spaceport"` (`installations.json:664` "Planetary Spaceport Complex" vs `storage.json:108` "Space Port"). Only one survives the mod-load dictionary key; the other is silently dropped.
-2. **Broken atb type ref** — `installations.json:736` binds `"Pulsar4X.Datablobs.CargoTransferAtbDB"` (no such class; real type is `Pulsar4X.Storage.CargoTransferAtb`). That transfer attribute won't resolve.
+1. **`spaceport` UniqueID collision** — two different `ComponentTemplate`s share `UniqueID "spaceport"` (installations.json "Planetary Spaceport Complex" vs storage.json "Space Port"). Only one survives the mod-load dictionary key; the other is silently dropped. (Still real; the `intelligence-directorate` template inserted above these shifted the exact line numbers, so this uses the stable UniqueID rather than a drifting `:line`.)
+2. **Broken atb type ref** — the `spaceport` template in installations.json binds `"Pulsar4X.Datablobs.CargoTransferAtbDB"` (no such class; real type is `Pulsar4X.Storage.CargoTransferAtb`). That transfer attribute won't resolve. (Still real.)
 3. **`EmploymentAtbDB` is inert** — the class exists (`Colonies/EmploymentAtbDB.cs:17`, jobs→morale) but **no JSON template instantiates it**, so the "jobs" input is dead until a template carries it.
 
 ---
 
-## Build path from here (Phases A-code → B → C)
+## Build path from here
 
-- **A-code:** a `CapabilityCatalog` that walks `ModDataStore` at game start and files each buildable under a NEED by its atb (this doc = the mapping). Gauge: a laser → OFFENSE, a lab → TECH, a sensor → INTEL.
-- **B (needs model):** extend `FactionState` to score the faction's gap on each NEED axis, per-system + empire-wide.
-- **C (the scorer):** match catalog options to the biggest gap, score by payoff-vs-cost, and convert resolvers from hardcoded rungs to "ask the scorer" — **one axis at a time** (intel → defense → economy…), not a rewrite.
-- **Parallel content track:** build the missing systems (INFLUENCE first) so the gaps become choosable.
+The build sequence that used to live here (Phases A-code → B → C) is **superseded** by `docs/CAPABILITY-BUILD-PLAN.md`, which the `docs/DOCS-INDEX.md` designates as the doc built from. This file is now the **NEED → buildables reference** (the parts manual); go there for the ordered slice plan and status. The surviving data-bugs list above is a candidate to fold into that plan's slice tracker so the fixes get scheduled rather than stranded here.
 </content>

@@ -4,9 +4,24 @@ Five parallel surveys of the entire codebase were run and merged here. This cove
 
 ---
 
+> ## ⚠️ SUPERSEDED SINCE SURVEY (banner added 2026-07-13)
+>
+> **The reference half of this doc is still good — the 15-mineral roster, the recipe tables, the "flow through each system" walkthrough, and the Key Code Locations index all still match the code. Use those freely.**
+>
+> **But the "what to build" half (Central Finding, Gap Analysis, the mineral design targets, the "Three New Recipes", the "NPC AI — What Needs to Be Built" section, and the Priority list) has been OVERTAKEN by work that shipped after this survey.** Several things this doc says are missing now exist in code. Do **not** rebuild them. What landed since the survey, verified against source 2026-07-13:
+>
+> - **NPC economic AI EXISTS** — `GameEngine/Factions/NPCDecisionProcessor.cs` is a fully-implemented, auto-discovered `IHotloopProcessor` with a needs-ladder → objective → resolver planner, including `GrowEconomyResolver.cs` (queues mines/factories/refining) and `AdvanceTechResolver.cs` (queues research). **The doc's central "you must build NPCDecisionProcessor from scratch" is done.** Caveat: its order-emission is **gated OFF by default** — `EnableOrderEmission`, `EnableDiplomaticProposals`, `EnableIntelLedger`, `EnableEspionageMirror` all default `false` (`NPCDecisionProcessor.cs:42-77`), so on a stock game the NPC brain runs but emits no orders yet. Built and wired; not yet flipped live. The AI-suite docs + `SYSTEMS-STATUS-AND-TEST-PLAN.md` now own this.
+> - **Colony tax now feeds the Ledger** — `ColonyEconomyProcessor.cs:74` books `TransactionCategory.ColonyTax` into the owning faction's `Ledger`; station upkeep books `TransactionCategory.StationUpkeep`. The Ledger is no longer "completely disconnected" from the economy. (Freight-trade *income specifically* is still off — see below.)
+> - **Logistics IS diplomacy-gated** — `LogisticsProcessor.cs:166` `LogisticsAccessAllowed(...)` gates which bases a freighter may service. Same-faction is open; a foreign faction is served only if the base owner granted `RelationshipState.LogisticsAccess`. The "enemy ships can freely haul your cargo" claim is contradicted. (The grant flag defaults false, so with no treaty it behaves like the old same-faction-only guard.)
+> - **The three "useless mineral" recipes were ADDED** — `nickel-steel`, `lithium-battery`, and `ree-magnetics` all now exist as recipes in `materials.json`. `electronics` and `ree-magnetics` are now referenced as component build costs (`weapons.json:25-26`). The "Three New Recipes to Add" section below is largely already done.
+> - **The Installations UI fix LANDED** — `PlanetaryWindow.cs:102,218` now gates on `ComponentInstancesDB` (not the dead `InstallationsDB`), and the full colony economy UI lives in `ColonyManagementWindow`. The `InstallationsDB`-gated code survives only in the dead `PlanetaryWindow.old.cs`. Priority 1 below is complete. (Runtime not re-verified — CI cannot run the client.)
+> - **STILL genuinely off:** freight *trade income* itself — `TradeIncomeProcessor.cs:25` `EnablePayout = false` — so moving freight cargo still earns no money by default. That one piece of the "trade earns no wealth" claim stands.
+
+---
+
 ## The Central Finding
 
-The game already has a working three-tier production pipeline. The pipe is built. The problem is that **nothing comes out the other end** — processed materials are producible but nowhere downstream asks for them, trade happens but no wealth is earned, and NPCs exist in the game world but have zero ability to make decisions. The infrastructure is 90% complete; the wiring between the stages is what's missing.
+The game already has a working three-tier production pipeline. The pipe is built. At survey time the problem was that **nothing came out the other end** — processed materials were producible but nowhere downstream asked for them, trade happened but no wealth was earned, and NPCs had no ability to make decisions. **Much of that wiring has since been laid** (see the SUPERSEDED banner above): NPCs now have a decision brain (`NPCDecisionProcessor`, built, gated off by default), colony tax now feeds the Ledger, logistics is diplomacy-gated, and the "useless mineral" recipes were added. The one part of this finding still true by default is that **freight trade earns no money** (`TradeIncomeProcessor.EnablePayout = false`).
 
 ---
 
@@ -46,16 +61,16 @@ All 15 minerals sit in the same cargo type ("general-storage") and are mined by 
 | hydrocarbons | Gas giants, comets | Moderate | All 4 fuel types, plastic, stainless-steel trace |
 | chromium | Terrestrial (trace) | Rare | Stainless-steel recipe feedstock |
 | copper | Asteroids (trace) | Rare | Electronics recipe; electrical wiring in weapon builds |
-| nickel | Asteroids (moderate) | Moderate | **No current use — no recipes** |
+| nickel | Asteroids (moderate) | Moderate | Now feeds the `nickel-steel` recipe (added since survey) |
 | titanium | Terrestrial (trace) | Rare | RoboMiner build cost; candidate for high-strength armor |
 | tungsten | Terrestrial (ultra-rare) | Very rare | Mine build cost only (5%) |
 | fissionables | Terrestrial (trace) | Very rare | NTP fuel recipe, fissile-fuels recipe |
-| lithium | Ice giants (trace) | Very rare | **No current use — no recipes** |
+| lithium | Ice giants (trace) | Very rare | Now feeds the `lithium-battery` recipe (added since survey) |
 | water | Comets, ice moons | Moderate | Space-crete recipe only |
 | graphite | Terrestrial | Uncommon | Mine/RoboMiner build cost only |
-| rare-earth-elements | Terrestrial (trace) | Rare | **No current use — no recipes** |
+| rare-earth-elements | Terrestrial (trace) | Rare | Now feeds the `ree-magnetics` recipe (added since survey); ree-magnetics is a weapon build cost |
 
-**Three minerals do nothing:** Nickel, lithium, and rare-earth-elements are minable but have zero downstream use. Mining them is pointless.
+**Survey-era note (since fixed):** at survey time nickel, lithium, and rare-earth-elements were minable but had zero downstream use. **All three now have recipes** — `nickel-steel`, `lithium-battery`, and `ree-magnetics` were added to `materials.json`, so none of the 15 minerals is dead any more.
 
 ---
 
@@ -70,14 +85,14 @@ Refineries run at a colony and consume raw minerals to produce these outputs. Al
 | stainless-steel | 88 iron + 11 chromium + 1 hydrocarbon → 100 | 20 | Referenced in some installation build costs |
 | plastic | 1 hydrocarbon → 2 | 5 | Referenced in some installation build costs |
 | space-crete | 70 regolith + 10 silicon + 10 aluminium + 5 iron + 5 water → 100 | 25 | Referenced in launch complex build costs |
-| electronics | 2 copper + 2 plastic + 1 aluminium + 1 silicon → 5 | 100 | **Not referenced anywhere as a build cost** |
+| electronics | 2 copper + 2 plastic + 1 aluminium + 1 silicon → 5 | 100 | **Now referenced as a weapon build cost** (`weapons.json:25` — `[Mass] * 0.05`). Survey said "unused"; that gap has been closed since. |
 | rp-1 (rocket fuel) | 1 hydrocarbon → 2 | 10 | Ship chemical propellant |
 | methalox | 1 hydrocarbon → 2 | 10 | Ship chemical propellant |
 | hydrolox | 1 hydrocarbon → 2 | 10 | Ship chemical propellant |
 | ntp (nuclear propellant) | 100 hydrocarbons + 1 fissionable → 100 | 100 | Nuclear thermal engine propellant |
 | fissile-fuels | 100 fissionables + 10 hydrocarbons → 1 | 10 | Nuclear reactor fuel; high wealth cost 1,000 |
 
-**The critical gap:** Electronics — the most complex recipe requiring copper, plastic, aluminium, and silicon — is not required to build any component in the game. Weapons, sensors, fire control: none of them need electronics as an input.
+**Survey-era gap (since closed):** At survey time electronics — the most complex recipe requiring copper, plastic, aluminium, and silicon — was not required to build any component. **That has changed:** `weapons.json:25` now lists `electronics` as a build cost (and `weapons.json:26` lists `ree-magnetics`), so the copper → electronics → weapon supply chain exists. Coverage across sensors/fire control is not exhaustive, but the "referenced nowhere" claim no longer holds.
 
 ---
 
@@ -90,9 +105,9 @@ Finished goods are produced by Factories (installations, weapons, components) an
 **What finished goods currently require:**
 - Primarily raw minerals (iron, aluminium, copper, tungsten, titanium, graphite)
 - Some reference stainless-steel and space-crete
-- **None require electronics, plastic (as a recipe output), or propellants as inputs**
+- **Weapons now also reference `electronics` and `ree-magnetics`** (`weapons.json:25-26`), added since the survey. Propellants and plastic-as-input are still not consumed by finished goods.
 
-The build cost for a laser weapon lists iron, stainless-steel, aluminium, titanium, tungsten, and copper. It does not require the electronics component at all — a laser weapon built from raw wire and metal, no chip fabrication needed.
+The survey noted a laser weapon's build cost as iron, stainless-steel, aluminium, titanium, tungsten, and copper with no electronics. **Since then `weapons.json` gained `electronics` and `ree-magnetics` costs**, so a weapon now does pull on the refined-materials chain (copper → electronics; rare-earths → ree-magnetics).
 
 ---
 
@@ -116,13 +131,13 @@ Minerals land in the colony's cargo hold ("general-storage" container). If the h
 
 A Refinery installation adds a "refining" production line to the colony. The daily IndustryProcessor checks for queued refining jobs, deducts minerals from cargo, and adds the output material to cargo. Same efficiency throttle applies.
 
-**NPC note:** An NPC refinery works if jobs are queued. Nothing queues jobs for NPCs today.
+**NPC note:** An NPC refinery works if jobs are queued. `GrowEconomyResolver` now can queue refining jobs for NPCs — but order-emission is gated off by default, so on a stock game nothing queues them yet.
 
 ### Construction
 
 Factories add "component-construction" lines; shipyards add "ship-assembly" lines. Jobs consume minerals and materials from cargo and produce finished goods. Ships are launched into the star system; components go to a staging stockpile on the colony; installations are attached directly to the colony's component list.
 
-**NPC note:** Same situation — the build system is faction-neutral, but nothing tells NPCs to build.
+**NPC note:** The build system is faction-neutral; `NPCDecisionProcessor` / `GrowEconomyResolver` can now tell NPCs to build (mines, factories), but that order-emission is gated off by default until `EnableOrderEmission` is flipped.
 
 ### Commerce and Trade
 
@@ -133,7 +148,10 @@ The logistics system (`LogisticsProcessor.cs`) has a **fully functional automate
 - The winning ship flies the route and transfers cargo automatically.
 - The market is profit-maximizing and finds economically efficient routes without player micromanagement.
 
-**The serious gap:** The faction money ledger (`Ledger.cs`) is **completely disconnected** from this market. Cargo moves between colonies for free. No money changes hands. There is no trade income for either the seller or the buyer's faction. There are also **no faction access controls** — an enemy faction's freight ship can freely dock at your logistics base and haul your cargo away.
+**Survey-era gap — partly closed since:** the survey said the faction ledger (`Ledger.cs`) was completely disconnected, freight moved for free, and there were no access controls. Two of those three have been addressed:
+- **Faction access controls EXIST.** `LogisticsProcessor.cs:166` `LogisticsAccessAllowed(baseFactionId, shipFactionId, game)` gates which bases a freighter may service — same-faction open, foreign only if the base owner granted `RelationshipState.LogisticsAccess` via `DiplomacyDB`. An enemy ship can no longer freely haul your cargo. (The grant flag defaults false, so with no treaty it's identical to the old same-faction-only behavior.)
+- **The Ledger is no longer fully disconnected from the economy.** Colony tax now books into it (`ColonyEconomyProcessor.cs:74`, `TransactionCategory.ColonyTax`), and station upkeep books `StationUpkeep`.
+- **STILL true:** freight *trade income specifically* earns nothing by default — `TradeIncomeProcessor.cs:25` `EnablePayout = false`. The cross-faction market-price path is built but gated off, so moving freight still transfers cargo without moving money on a stock game.
 
 ### Research
 
@@ -146,7 +164,7 @@ University installations create research lab entities. The daily ResearchProcess
 
 **What's unlocked:** 10 tech categories — propulsion, sensors, energy weapons, missiles, construction, biology, power, bureaucracy, ground combat, and "designs" (custom component slots). The ground combat category exists but has **zero techs defined** and no code path that uses it.
 
-**NPC note:** Research system is fully functional for NPCs. The ResearchProcessor is faction-agnostic. NPCs just need to have a research queue — nobody populates it for them today.
+**NPC note:** The ResearchProcessor is faction-agnostic and works for NPCs. `AdvanceTechResolver` now can populate an NPC research queue — gated off by default like the other NPC order-emission, so on a stock game the queue is still empty until the flag is flipped.
 
 ### Military and Combat
 
@@ -171,19 +189,21 @@ Infrastructure installations provide support capacity. Required capacity is the 
 
 ## Full Gap Analysis
 
-| Gap | Severity | What It Breaks |
-|-----|----------|----------------|
-| Processed materials unused in component costs | HIGH | The refinery chain is decorative; nothing downstream requires its output |
-| Trade doesn't generate faction wealth | HIGH | The Ledger is dead weight; no economic incentive for commerce |
-| No faction access control in logistics | HIGH | Enemy ships can access your freight bases |
-| No NPC economic decision loop | CRITICAL | Everything works for NPCs if ordered; nothing orders them |
-| No ongoing resource consumption | MEDIUM | Economy is static; mining pressure disappears once buildings are built |
-| Nickel, lithium, rare-earths have no recipes | MEDIUM | 3 of 15 minerals serve no purpose; their deposits are ignored |
-| Research costs no minerals | LOW | Simpler than Aurora; no material supply chain for tech advancement |
-| Ground combat tech category is empty | LOW | Category defined, no techs, no code path |
-| Ledger disconnected from trade income | HIGH | No wealth generation from commerce |
-| Installations tab never renders | HIGH (UI) | Player cannot see installed colony components |
-| No victory conditions or scoring | MEDIUM | NPCs have nothing to optimize toward |
+**⚠️ Several rows below are stale — the "since-survey status" column records what actually shipped (verified 2026-07-13).**
+
+| Gap | Severity | What It Breaks | Since-survey status |
+|-----|----------|----------------|---------------------|
+| Processed materials unused in component costs | HIGH | The refinery chain is decorative; nothing downstream requires its output | **PARTLY CLOSED** — weapons now cost `electronics` + `ree-magnetics` (`weapons.json:25-26`) |
+| Trade doesn't generate faction wealth | HIGH | The Ledger is dead weight; no economic incentive for commerce | **STILL TRUE for freight** (`TradeIncomeProcessor.EnablePayout=false`); colony tax now DOES feed the Ledger |
+| No faction access control in logistics | HIGH | Enemy ships can access your freight bases | **CLOSED** — `LogisticsProcessor.LogisticsAccessAllowed` (diplomacy-gated) |
+| No NPC economic decision loop | CRITICAL | Everything works for NPCs if ordered; nothing orders them | **BUILT** — `NPCDecisionProcessor.cs` + resolvers; order-emission gated OFF by default |
+| No ongoing resource consumption | MEDIUM | Economy is static; mining pressure disappears once buildings are built | still open (unverified) |
+| Nickel, lithium, rare-earths have no recipes | MEDIUM | 3 of 15 minerals serve no purpose; their deposits are ignored | **CLOSED** — all three recipes added to `materials.json` |
+| Research costs no minerals | LOW | Simpler than Aurora; no material supply chain for tech advancement | still open (by design) |
+| Ground combat tech category is empty | LOW | Category defined, no techs, no code path | not re-checked this pass |
+| Ledger disconnected from trade income | HIGH | No wealth generation from commerce | **STILL TRUE for freight** (payout gated off); colony tax income now flows |
+| Installations tab never renders | HIGH (UI) | Player cannot see installed colony components | **CLOSED** — `PlanetaryWindow.cs:102,218` gates on `ComponentInstancesDB` (runtime unverified) |
+| No victory conditions or scoring | MEDIUM | NPCs have nothing to optimize toward | still open (unverified) |
 
 ---
 
@@ -224,7 +244,9 @@ These make colonies survivable and efficient.
 
 ---
 
-## Three New Recipes to Add
+## Three New Recipes to Add — ✅ ALL THREE HAVE SINCE SHIPPED
+
+> **Status 2026-07-13:** `nickel-steel`, `lithium-battery`, and `ree-magnetics` all now exist as recipes in `materials.json`. The exact input/point numbers below were the *proposal*; check the JSON for the values actually shipped. This section is kept as design rationale, not a to-do.
 
 These close the "useless minerals" gap without adding new complexity:
 
@@ -245,11 +267,13 @@ These close the "useless minerals" gap without adding new complexity:
 
 ---
 
-## NPC AI — What Needs to Be Built
+## NPC AI — ✅ BUILT SINCE THIS SURVEY (kept as design rationale)
 
-### Current State: Zero Economic AI
+> **Status 2026-07-13:** This entire section describes building `NPCDecisionProcessor` from scratch. **It has been built.** `GameEngine/Factions/NPCDecisionProcessor.cs` is a fully-implemented, auto-discovered `IHotloopProcessor` with a needs-ladder → objective → resolver planner. The economy planner lives in `GrowEconomyResolver.cs` (queues mines/factories/refining) and `AdvanceTechResolver.cs` (queues tech). **Caveat — it ships gated OFF:** `EnableOrderEmission` (and its siblings `EnableDiplomaticProposals`, `EnableIntelLedger`, `EnableEspionageMirror`) all default `false` (`NPCDecisionProcessor.cs:42-77`), so on a stock game the brain runs but emits no orders — byte-identical to before until a flag is flipped. The pseudocode/order-table below is preserved as the design intent, not a to-do. The AI-suite docs (`docs/AI-*.md`) and `SYSTEMS-STATUS-AND-TEST-PLAN.md` now own the live status.
 
-The research was thorough and the answer is definitive: **there is no NPC economic decision loop.** Every production system (mining, refining, construction, research) is faction-agnostic — they run identically for any faction that has the right components installed and orders queued. The NPC just needs something to generate those orders.
+### Survey-era State: Zero Economic AI (now superseded — see status box)
+
+The research was thorough and the survey-time answer was definitive: **there was no NPC economic decision loop.** Every production system (mining, refining, construction, research) is faction-agnostic — they run identically for any faction that has the right components installed and orders queued. The NPC just needed something to generate those orders — **which `NPCDecisionProcessor` now does (gated off by default).**
 
 What *does* exist for NPCs:
 - They are initialized with starting colonies, ships, and components (from the faction JSON files)
@@ -259,11 +283,9 @@ What *does* exist for NPCs:
 
 **The contract:** Player presses a button, an order is created, a processor executes it. For NPCs, we need a processor that presses those buttons.
 
-### What to Build: NPCDecisionProcessor
+### What Was to Build: NPCDecisionProcessor — now BUILT (`GameEngine/Factions/NPCDecisionProcessor.cs`)
 
-A new file: `GameEngine/Factions/NPCDecisionProcessor.cs`
-
-This is an `IHotloopProcessor` — a watch-standing processor that auto-registers by just existing (no manual registration needed). It runs monthly for all NPC factions. It works through the order system, so every action it takes uses the exact same code path the player uses.
+The file exists. As designed here, it is an `IHotloopProcessor` — a watch-standing processor that auto-registers by just existing (no manual registration needed) and works through the order system, so every action it takes uses the exact same code path the player uses. The implemented version replaced the flat pseudocode below with a needs-ladder → objective → resolver planner (see `GrowEconomyResolver.cs` / `AdvanceTechResolver.cs`). Order-emission is gated off by default (see the status box above).
 
 **Pseudocode for the monthly check-in:**
 
@@ -323,32 +345,28 @@ For each NPC faction:
 
 ## Implementation Priority Order
 
-Listed from highest leverage to lowest. Each item's value is proportional to how much it unlocks downstream.
+Listed from highest leverage to lowest. Each item's value is proportional to how much it unlocks downstream. **⚠️ Priorities 1, 3, and 5 have since shipped — see the per-item status flags.**
 
-### Priority 1 — Fix the Installations UI Tab
-**Files:** `Pulsar4X/Pulsar4X.Client/Interface/Windows/PlanetaryWindow.cs`, lines 107 and 221  
-**Change:** `HasDataBlob<InstallationsDB>()` → `HasDataBlob<ComponentInstancesDB>()`  
-**Why first:** The player can't see what's installed on their colonies. This is the single most visible broken thing in the game. It's also a 2-line fix. See `SESSION_STATE.md` Phase 2a for the full details.
+### Priority 1 — Fix the Installations UI Tab — ✅ DONE
+**Files:** `Pulsar4X/Pulsar4X.Client/Interface/Windows/PlanetaryWindow.cs`  
+**Change (landed):** the tab now gates on `ComponentInstancesDB` (`PlanetaryWindow.cs:102,218`), not the dead `InstallationsDB`; the full colony economy UI lives in `ColonyManagementWindow`. The old `InstallationsDB`-gated code survives only in the dead `PlanetaryWindow.old.cs`. **Runtime not re-verified — CI cannot run the client;** the code fix is in place.
 
 ### Priority 2 — Wire Processed Materials into Component Costs
 **Files:** `GameData/basemod/TemplateFiles/weapons.json`, installation templates  
 **Change:** Add electronics, plastic, stainless-steel to `ResourceCost` formulae for weapons and advanced components  
 **Why second:** Without this, the entire refinery chain has no purpose. Weapons should cost electronics. Shipyards should cost stainless-steel. Without this dependency, players mine and refine in separate silos that never connect.
 
-### Priority 3 — Add Three Missing Mineral Recipes
+### Priority 3 — Add Three Missing Mineral Recipes — ✅ DONE
 **File:** `GameData/basemod/TemplateFiles/materials.json`  
-**Change:** Add nickel-steel, lithium-battery, ree-magnetics recipes  
-**Wire them in:** Nickel-steel as an armor type; lithium-battery for capacitors; ree-magnetics for sensors  
-**Why third:** 3 of 15 minerals are useless. Any colony that happens to mine them is wasting cargo space. Adding recipes transforms them into strategic resources.
+**Change (landed):** `nickel-steel`, `lithium-battery`, and `ree-magnetics` recipes were all added. `ree-magnetics` is now a weapon build cost (`weapons.json:26`). Full wire-in coverage (nickel-steel as armor / lithium-battery for capacitors / ree-magnetics for sensors specifically) may still be partial — check the JSON — but the recipes exist and the three previously-dead minerals now have a purpose.
 
-### Priority 4 — Connect Trade to the Wealth Ledger
-**Files:** `GameEngine/Logistics/LogisticsProcessor.cs`, `GameEngine/Factions/Ledger.cs`  
-**Change:** On successful cargo transfer between factions (or even same-faction inter-colony for colonist incentives), add/subtract from `Ledger.Money`  
-**Why fourth:** Commerce generates no income. Trade is economically meaningless. Once trade earns money, factions with good commercial positions get richer, which creates actual strategic differentiation.
+### Priority 4 — Connect Trade to the Wealth Ledger — ⚠️ PARTIAL
+**Files:** `GameEngine/Logistics/LogisticsProcessor.cs`, `GameEngine/Factions/Ledger.cs`, `GameEngine/Factions/TradeIncomeProcessor.cs`  
+**Status:** the Ledger is now fed by colony tax (`ColonyEconomyProcessor.cs:74`) and station upkeep, and a `TradeIncomeProcessor` exists — but **freight trade income itself is gated OFF** (`TradeIncomeProcessor.cs:25` `EnablePayout = false`), so cargo still moves without money by default. The remaining work is flipping/finishing that payout path.
 
-### Priority 5 — Build the NPC Decision Loop
-**New file:** `GameEngine/Factions/NPCDecisionProcessor.cs`  
-**Why fifth:** This is the highest-leverage capability addition — it makes every other system the NPCs can use. But it depends on priorities 1–4 being in place first, so the NPCs are doing meaningful things (building useful components, refining actually-needed materials, etc.).
+### Priority 5 — Build the NPC Decision Loop — ✅ BUILT (gated off by default)
+**File:** `GameEngine/Factions/NPCDecisionProcessor.cs` (exists) + resolvers (`GrowEconomyResolver.cs`, `AdvanceTechResolver.cs`)  
+**Status:** built and auto-discovered as an `IHotloopProcessor`; runs on a needs-ladder → objective → resolver planner. Order-emission is gated off by default (`EnableOrderEmission = false`), so it makes no changes on a stock game until flipped. Live status is now tracked in the AI-suite docs + `SYSTEMS-STATUS-AND-TEST-PLAN.md`.
 
 ### Priority 6 — Population Resource Consumption
 **File:** `GameEngine/Colonies/PopulationProcessor.cs`  
@@ -368,7 +386,7 @@ Listed from highest leverage to lowest. Each item's value is proportional to how
 | Research / Tech | `GameEngine/Tech/CLAUDE.md` |
 | Colony population | `GameEngine/Colonies/CLAUDE.md` |
 | Material damage connection | `GameEngine/Damage/CLAUDE.md`, `GameEngine/Weapons/CLAUDE.md` |
-| NPC AI (new) | This document — no subsystem CLAUDE.md exists yet |
+| NPC AI | `GameEngine/Factions/CLAUDE.md` (now exists) + the `docs/AI-*.md` suite; `NPCDecisionProcessor.cs` is built (gated off by default) |
 
 ---
 

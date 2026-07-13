@@ -1,5 +1,21 @@
 # Espionage & Intelligence — the Hidden-Information Engine (design)
 
+> ### ✅ AS-BUILT (2026-07) — this design is substantially BUILT and WIRED, but ships GATED OFF by default
+>
+> This document reads as forward design with a build order still ahead of it. That framing is now **stale**: most of the spine below exists in code and is wired end-to-end. It does **not run in a default game** — the two runtime gates default to `false` — so treat this as **built, default-OFF (runtime unverified by CI — CI can't run the client)**, NOT as "working." The build order and "open" sections below are the *history and the remaining calibration*, not a to-do list for the core.
+>
+> | Designed element | Code home (verified 2026-07-13) | State |
+> |---|---|---|
+> | **Information Ledger** (per-rival, per-facet Inferred→Confirmed→Stale) | `GameEngine/Factions/InformationLedger.cs` (`IntelFacet`, `IntelLevel`, `InformationLedgerDB`) | Built; kept live by `NPCDecisionProcessor.UpdateInformationLedger` **behind `EnableIntelLedger` (default false)** |
+> | **Covert-action catalog** (gather / steal-tech / steal-funds / sabotage / sow-unrest / turn-or-assassinate / disinfo / counter-intel) | `GameEngine/Factions/CovertActionCatalog.cs` (`CovertAction` enum + data) | Built |
+> | **Risk model** (clean / traced / caught detection roll) | `GameEngine/Factions/CovertRisk.cs` | Built |
+> | **Op resolver + tasking** (grave-rung agent loss on caught) | `GameEngine/Factions/Espionage.cs` (`TaskAgent`), `EspionageProcessor.cs` (`IInstanceProcessor`), `CovertOpDB.cs` | Built and wired: resolves via CovertRisk/CovertActionCatalog, writes the Ledger, applies caught consequences (relation hit + suspicion + agent destroyed) |
+> | **Intelligence HQ component** (the capacity seat) + **agent recruitment** | `GameEngine/Factions/IntelDirectorateAtb.cs`, `IntelDirectorateDB.cs`, `IntelDirectorateProcessor.cs` | Built: the `Atb` seats a directorate on install; the processor recruits `Intelligence`-type commanders up to op capacity; stops when the HQ is destroyed |
+> | **The NPC mirror** (they spy on you) | `NPCDecisionProcessor.RunEspionageMirror` | Built but **behind `EnableEspionageMirror` (default false)** — so the "always-on mirror" is aspirational at runtime today |
+> | **Player-facing window** | `Pulsar4X.Client/Interface/Windows/IntelligenceWindow.cs` | Built (client compiles; runtime unverified — CI can't run the client) |
+>
+> **The two runtime gates:** `NPCDecisionProcessor.EnableIntelLedger = false` and `EnableEspionageMirror = false` (`GameEngine/Factions/NPCDecisionProcessor.cs:62,77`). Default-off keeps the start byte-identical; a default game runs the NPC brain (which IS built — `Tick` is a full body, not a stub) but no ledger updates and no spy mirror until a client/test opts in. The player can still task an agent by hand through the window — that path (`Espionage.TaskAgent` → `EspionageProcessor`) is not gated. Guard tests: `Pulsar4X.Tests/InformationLedgerLiveTests.cs`, `NPCEspionageMirrorTests.cs`.
+
 **What it does, in one line:** turns "what do they actually intend?" into a thing you can *spend to learn* and *risk getting caught doing* — so diplomacy stops being a spreadsheet of known numbers and becomes a **reading game** where you act on incomplete information, pay to reduce uncertainty, and gamble on exposure.
 
 **Why it matters (and why it's NOT optional):** the developer locked the **FULL hidden-information version** of external politics (`docs/DIPLOMACY-DESIGN.md` → "Making politics FUN"): you do not see a rival's true stance or plans; you infer them from behavior, and **intelligence is the currency that buys the truth.** Espionage is the system that *mints that currency*. Without it, the locked "you infer, you can be deceived, you can deceive" loop is just a label. With it, the whole external layer becomes poker — which is exactly the fun 4X has always missed. This is also the Babylon-5 "covert agents" pillar the developer named.
@@ -62,7 +78,7 @@ Mirror of the diplomacy **exchange catalog**, but **unilateral and risky**. Buil
 | **Plant disinformation** | feed them FALSE intel — make them misread your intent/strength | their Information Ledger (about you) | they realise they were played |
 | **Counter-intelligence** (defensive) | protect your secrets, catch/мole-hunt their agents in you | your own ledger security | — (it's the shield) |
 
-The **EXTERNAL-into-INTERNAL reach** is the spicy one: *sow unrest* lets your spies reach into a rival's **internal politics** — pour fuel on a bloc, push a wavering frontier system toward secession (the per-system legitimacy model from `GOVERNMENT-AND-POLITICS-DESIGN.md`). And the **mirror** is always on: NPC factions run the same playbook against *you*, so **counter-intelligence is a standing decision, not optional** — neglect it and your secrets leak and your provinces get destabilised.
+The **EXTERNAL-into-INTERNAL reach** is the spicy one: *sow unrest* lets your spies reach into a rival's **internal politics** — pour fuel on a bloc, push a wavering frontier system toward secession (the per-system legitimacy model from `GOVERNMENT-AND-POLITICS-DESIGN.md`). And the **mirror** is designed to be always on: NPC factions run the same playbook against *you*, so **counter-intelligence is a standing decision, not optional** — neglect it and your secrets leak and your provinces get destabilised. *(As built: the mirror code — `NPCDecisionProcessor.RunEspionageMirror` — exists and is wired, but ships behind `EnableEspionageMirror` (default false), so it does not run in a default game yet.)*
 
 ---
 
@@ -121,7 +137,7 @@ Because the value is the stack, the NPC's ability to detect and react is built *
 - **Deniability makes reaction meaningful:** *traced* = "they know *someone* spied" (suspicion climbs); *caught* = "they know it's *you*" (full reaction). The NPC must hold and act on a suspicion state — the poker, from the other side.
 - **It's bidirectional by construction** — the NPC gathers on you; your counter-intel catches *their* agent; you choose to kill/turn them. Both directions, same code.
 
-**Why this is the right kind of expensive — it ties back to the whole design.** The NPC's spy-and-counter-spy behavior is the **delegate = NPC AI** principle: the NPC's Director delegate + the reactive-diplomacy engine, both built anyway. **So espionage value is downstream of the NPC-delegate loop actually firing and deciding** (today: the stubbed `NPCDecisionProcessor` + unbuilt delegate auto-runners + partial `ReactiveDiplomacy`). Espionage isn't a side-quest from the AI work — it's the AI work's **showcase**.
+**Why this is the right kind of expensive — it ties back to the whole design.** The NPC's spy-and-counter-spy behavior is the **delegate = NPC AI** principle: the NPC's Director delegate + the reactive-diplomacy engine, both built anyway. **So espionage value is downstream of the NPC-delegate loop actually firing and deciding.** *(As built 2026-07: `NPCDecisionProcessor.Tick` is now a full decision body — reactive-diplomacy drift, strategic-objective selection, the espionage mirror — NOT the empty stub this line once described; `ReactiveDiplomacy` is live. What's still gated off is the runtime firing: the mirror + ledger sit behind their default-false flags, so the loop is built but idle in a default game.)* Espionage isn't a side-quest from the AI work — it's the AI work's **showcase**.
 
 **Visibility Gate — both ways.** The reaction must be *legible* or the tension evaporates: the player must SEE they were traced/caught, relations drop, an agent hunted — and equally see "we caught an enemy spy" when defending. Feedback is part of the build, not polish.
 

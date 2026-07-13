@@ -1,8 +1,10 @@
 # Morale & Population — Design (locked decisions + build plan)
 
+> **BUILD STATUS (updated 2026-07-13): M1–M5a are BUILT and wired in the engine.** The core blobs and processors all exist in source: `ColonyMoraleDB` (M1 valve), `ColonyManpowerDB` (M3 people-as-resource), `ColonyEconomyDB` + `ColonyEconomyProcessor` (M4 tax→money), the M2 `EmploymentAtbDB`/`HousingAtbDB` machinery, and the M5a `MoraleInputs` power/food refactor — all in `GameEngine/Colonies/`. Live shortage gauge is `ColonySustenanceDB` (`SustenanceProcessor`). **This is code-exists-and-is-wired, NOT runtime-verified** — CI cannot run the client, so the actual in-game *feel* and the M2-data/M3-2/M5b live-wiring slices still need the developer's local build (see the per-slice notes below and `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` for live build-state tracking). **This doc is now the LOCKED design-rationale of record; the per-slice build stamps below are historical.**
+
 **Status: LOCKED design, recorded 2026-06-29.** This is the build spec for the colony/station **morale + people-as-a-resource** loop — the keystone the developer wants finished as part of "the space economy, before going planetside." It closes five circuits the engine currently leaves open. Companion to `docs/BEYOND-PROTOCOL-REFERENCE.md` §1 (the model), `docs/SPACE-STATIONS-DESIGN.md` (morale is the shared "manning" concept both hosts carry), and `GameEngine/Colonies/CLAUDE.md`.
 
-Built from a 3-survey Prime-Directive pass (population loop, people→officers, ground-units/designer). The honest starting state: **population is a one-way number**, there is **no morale anywhere** (only three unused event-name enums), **nothing draws people out** of the population, and the colony is **disconnected from money and from the power grid**.
+Built from a 3-survey Prime-Directive pass (population loop, people→officers, ground-units/designer). The honest starting state **at the time of that survey (since largely closed — see the build-status banner above)**: **population is a one-way number**, there is **no morale anywhere** (only three unused event-name enums), **nothing draws people out** of the population, and the colony is **disconnected from money and from the power grid**.
 
 ---
 
@@ -35,25 +37,25 @@ Each colony/station holds a **population tank** (people per species). It has:
 **The principle (locked decision #6):** the player must be able to *ignore* a colony and have it run competently, exactly the way they can let the combat engine auto-resolve a battle. Too much *mandatory* agency makes the game a job. So every management lever we build (employment balance, housing, tax, production queue) ships with a **governor-automatable default**.
 
 **The model:**
-- A **governor is a person** — a commander (`CommanderTypes.Civilian`/etc., `People/`). The engine already has a half-built `AdminSpaceDB` "admin seat" that *holds* a commander ID but applies nothing downstream (survey finding) — **wire that dead hook**: the seated governor maintains the host.
+- A **governor is a person** — a commander (`CommanderTypes.Civilian`/etc., `People/`). The `AdminSpaceDB` "admin seat" is **now wired** (was a dead hook at survey time): `AdminSpaceProcessor` runs a durable `ReconcileSeats`/`VacateSeat` pass and commander competence rides on `BonusesDB` (`CommanderBonuses.CombatMultiplier`), with a decapitation grave rung via `CommanderFactory.DestroyCommander`. What remains for *this* pillar is the morale-nudge consumer — a processor that reads the seated governor's competence and applies it to the host's morale.
 - **Competence sets the auto-standard.** Great governor → morale held up, tax at the happy-medium, housing built before crowding bites (hands-off and it thrives). Mediocre → keeps it running, leaves potential on the table. None → coasts at the low base.
 - **Three involvement levels, per world:** *delegate* (pick a policy — keep-morale-stable / max-production / grow-population — and walk away), *fine-tune* (override a few decisions for better-than-auto), or *micro* (hands-on a key world).
 - **Governors are doubly scarce:** *people* (finite, drawn from population in M3) and *talent* (good ones rare/trained). "Where do I put my best governor" is a real decision; you physically can't hand-run 50 worlds — which is what makes delegation the default, not a crutch.
 - **Reconciles the progression ladder** (`docs/COLONY-PROGRESSION-DESIGN.md` "Outpost = the only automatable tier"): automation is **always** available via a governor; what scales with size is *how much potential a poor/no governor wastes*. Outpost barely needs one; a Capitol with a bad governor underperforms badly. Same system, scaling stakes.
 
-**Connects to:** People/commanders (the governor), `AdminSpaceDB` (the seat to wire), morale (what a governor maintains), tax/M4 (governor sets the happy-medium), the audit's anti-"job" rule. **Build order:** the governance *layer* is its own slice (after M2 gives it levers to drive), but **M2/M4 must be built delegation-ready** — each decision exposed as a policy a governor can set, not a click the player must make.
+**Connects to:** People/commanders (the governor), `AdminSpaceDB` (the seat — now wired by `AdminSpaceProcessor`; the morale-nudge consumer is what's left), morale (what a governor maintains), tax/M4 (governor sets the happy-medium), the audit's anti-"job" rule. **Build order:** the governance *layer* is its own slice (after M2 gives it levers to drive), but **M2/M4 must be built delegation-ready** — each decision exposed as a policy a governor can set, not a click the player must make.
 
 ## The connection map (Prime Directive — what morale touches)
 
 | System | Relationship | Status today |
 |---|---|---|
-| **PopulationProcessor** (`Colonies/`) | morale recalced here; migration applied at the `@todo: external factors` hooks (lines 67, 83) | growth ✅, morale ❌ |
-| **Carrying capacity** (`PopulationSupportAtbDB`, `ColonyLifeSupportDB`) | a single lump today; M2 splits it into Housing / Employment / Food | exists, lumped |
+| **PopulationProcessor** (`Colonies/`) | morale recalced here (`ColonyMoraleDB`); migration applied at the external-factors hooks | growth + morale wired (M1) |
+| **Carrying capacity** (`PopulationSupportAtbDB` — live via `GetPopulationSupportValue`; live shortage gauge `ColonySustenanceDB`) | M2 `HousingAtbDB` raises the ceiling. NOTE: `ColonyLifeSupportDB` is **DEAD** — never attached by `ColonyFactory`, its `ReCalcMaxPopulation` registration in `RecalcProcessor.cs` is commented out; do not use it. | split machinery built (M2) |
 | **Species environment cost** (`SpeciesDBExtensions.ColonyCost`) | the "conditions" morale input | exists ✅ |
-| **People** (`CommanderFactory`, `NavalAcademy`, `ResearcherDB`) | officers/captains/scientists — today spawned from thin air, no population link; M3 makes them DRAW from the tank | ❌ unlinked |
-| **Ships** (`ShipDesign.CrewReq`) | crew number exists but is never subtracted; M3 wires it | ❌ unlinked |
-| **Energy** (`Energy/`) | fully built, **zero** colony connection; M5 wires power shortage → morale + deaths | ❌ unplugged |
-| **Money** (`FactionInfoDB.Money` / `Ledger`) | only research drains it; M4 wires colony output → income, scaled by morale, with the tax lever | ❌ unplugged |
+| **People** (`CommanderFactory`, `NavalAcademy`, `ResearcherDB`) | officers/captains/scientists — M3 `ColonyManpowerDB` gives the talent-pool draw | draw machinery built (M3-1); enforcement wiring needs local build |
+| **Ships** (`ShipDesign.CrewReq`) | crew number — M3 bulk-pool draw; the enforcement gate (block-on-shortage) is the M3-2 slice | machinery built; enforcement needs local build |
+| **Energy** (`Energy/`) | fully built, entity-agnostic; M5a added power-shortage as a morale input (neutral when absent), M5b attaches the blob to colonies | M5a built; M5b wiring needs local build |
+| **Money** (`FactionInfoDB.Money` / `Ledger`) | M4 wires colony output → income via `ColonyEconomyProcessor`, scaled by morale, with the tax lever (`ColonyEconomyDB.TaxRate` → `TransactionCategory.ColonyTax`) | built (M4); CI/local pending |
 | **Ground units / unit designer** | the army consumer of the people resource; mirrors the ship designer (own track) | ❌ absent |
 | **Government** (future `GovernmentDB`) | modulates all morale coefficients + draw/migration rules | ❌ parked |
 
@@ -69,7 +71,7 @@ One system serves the **economy** pillar, the **BSG-nomad** pillar (a planet-les
 
 ## The build slices (each small + CI-provable)
 
-### M1 — MoraleDB + the valve  *(building now)*
+### M1 — MoraleDB + the valve  *(BUILT — `ColonyMoraleDB` in `GameEngine/Colonies/`, recalced by `PopulationProcessor`)*
 - New `ColonyMoraleDB` (host-agnostic blob; attach to colony now, station later — the shared "manning" concept).
 - Morale (0–100, 50 = neutral) recalced each population tick from inputs that **already exist**: **conditions** (`ColonyCost`) and **overcrowding** (pop vs capacity). All weights are **named coefficients** (government-ready).
 - Output: a **migration rate** added to growth — morale < 50 → emigration, > 50 → immigration. Wires into the two `@todo: external factors` hooks.
@@ -114,10 +116,10 @@ The decisions (A–E):
 
 A four-survey verification pass over every remaining slice (file:line confirmed). **Seven cross-cutting findings** that change how we build:
 
-1. **GlobalManager is never iterated (M4 + governance).** `MasterTimePulse` only steps *star systems*, not the GlobalManager where faction entities live — so a faction-level money/tax/governor processor would **never fire** (same trap that left `NPCDecisionProcessor` dormant). **→ M4 economy + tax MUST be a per-colony processor** (`IHotloopProcessor` on `ColonyInfoDB`, like `PopulationProcessor`), reading `colony.FactionOwnerID` to write the `Ledger`.
+1. **~~GlobalManager is never iterated~~ — NOW STALE (fixed).** At survey time `MasterTimePulse` only stepped *star systems*, not the GlobalManager where faction entities live, so a faction-level processor would never fire. **That trap is closed:** `MasterTimePulse` now calls `_game.GlobalManager?.ManagerSubpulses?.ProcessSystem(...)` (`MasterTimePulse.cs:348`, keystone #34), so faction-level loops (politics, NPC AI) now fire. The doc's *derived conclusion still holds* — **M4 economy + tax was built as a per-colony processor** (`ColonyEconomyProcessor`, `IHotloopProcessor` on `ColonyEconomyDB`, reading the colony's faction owner to write the `Ledger`) — but the original reason ("GlobalManager never fires") no longer applies.
 2. **The start fleet bypasses construction (M3-2 regression killer).** New-game ships spawn via direct `ShipFactory.CreateShip` (not the `IndustryProcessor` queue) and officers are created directly (not via the academy). So crew/officer **gates can't break the start** — the #1 fear is gone. Start pop is also huge (billions), so workforce is ample.
 3. **Energy is entity-agnostic and ship-only (M5).** The energy processors run on *any* entity with `EnergyGenAbilityDB`; colonies simply don't have the blob. Wiring colonies is **purely additive — no ship regression**. But there is **no consumer-side attribute** (`PowerConsumptionAtb` missing); consumers call `AddDemand` at runtime, so colony power demand needs a new attribute or a per-capita demand term.
-4. **The admin seat is "dead code with a pulse" (governance).** `AssignAdministratorOrder` fills the seat (`AdminSpaceAbilityState.CommanderID`), but **nothing ever reads it**, and `CommanderDB` has **no skill fields** (only `Scientist.Bonuses` works). Governor competence = derive from `Rank` (cheap) or add a bonus dict (mirrors Scientist). v1 governance ≈ 200–300 LOC: a processor that reads the seat and nudges morale by competence.
+4. **~~The admin seat is "dead code with a pulse"~~ — NOW STALE (fixed).** At survey time nothing read `AdminSpaceAbilityState.CommanderID` and commanders had no skill fields. **Both halves are now wired:** `AdminSpaceProcessor` runs a durable `ReconcileSeats`/`VacateSeat` seat pass (with a decapitation grave rung via `CommanderFactory.DestroyCommander`), and commander competence rides on the new `BonusesDB` (`CommanderBonuses.CombatMultiplier`, mirroring the Scientist bonus dict). The one piece still to build for *this* pillar is the morale-nudge consumer — a processor that reads the seated governor's competence and applies it to the host's morale (still ≈ 200–300 LOC).
 5. **No money integration tests exist.** `LedgerTests` only checks the math in isolation — a new income stream is invisible to CI regression. **Build the gauge:** M4 needs a `FactionEconomyTests` (colony produces → funds rise) or it's flying blind.
 6. **Tax ↔ morale is a two-way coupling.** Tax lowers morale; morale raises tax tolerance. Processor ordering matters — the economy processor reads morale and writes a "tax" factor that `PopulationProcessor`'s morale recalc consumes next tick. Keep it a one-tick-lagged loop so it can't oscillate within a tick.
 7. **The morale/manpower foundations are host-agnostic — stations get them nearly free (#17).** `ColonyMoraleDB`/`ColonyManpowerDB`/`EmploymentAtbDB`/`HousingAtbDB` don't depend on `ColonyInfoDB`. To give a **station** morale+population, attach the same blobs and teach `PopulationProcessor` to also process `StationInfoDB` (or a thin parallel processor). M1–M3 thus serve the station-economy slice too.
@@ -134,7 +136,7 @@ A four-survey verification pass over every remaining slice (file:line confirmed)
 | M5 energy state | the power blob (ship-only today) | `Energy/EnergyGenAbilityDB.cs:9`; attach in `Colonies/ColonyFactory.cs` |
 | M5 shortage→morale/deaths | extend the recalc | `Colonies/PopulationProcessor.cs:~68-70` |
 | M5 food | cargo good + monthly draw | `Storage/CargoStorageDB.cs` (colonies already have it) — new consumption processor |
-| Governance | read the seat, apply effect | `People/AdminSpaceDB.cs` + `AdminSpaceAbilityState.TryGetCommander()` (currently never called) |
+| Governance | read the seat, apply morale effect | `People/AdminSpaceProcessor.cs` (`ReconcileSeats`/`VacateSeat` now wired); seat-read + competence-via-`BonusesDB` exists — the morale-nudge consumer is the remaining build |
 
 **Design cleanup flagged:** `ComputeMorale`'s parameter list is growing (M5 adds power+food → 7 args). Before M5, refactor to a `MoraleInputs` struct to stop the overload explosion.
 
@@ -153,4 +155,4 @@ A four-survey verification pass over every remaining slice (file:line confirmed)
 - M4: tax curve + the morale↔tax equilibrium shape; upkeep units.
 - M5: food model (stock + per-capita consumption); power-shortage severity bands.
 
-*Next action: build M1 (this is no longer a capture — the decisions above are locked). Lock each later slice's open questions as we reach it.*
+*M1–M5a are built and wired (see the build-status banner at the top). The remaining live work is the M2-data calibration, the M3-2 enforcement wiring, M5b (energy+food attach), and Governance v1 (the morale-nudge consumer) — each needs the developer's local build to confirm runtime feel, since CI can't run the client. Live build-state is tracked in `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md`. Lock each remaining slice's open questions as we reach it.*
