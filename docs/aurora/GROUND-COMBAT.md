@@ -387,7 +387,7 @@ Mirror Pulsar's ship pipeline. A ground unit is **an entity with `ComponentInsta
 | Orbital bombardment ↔ ground | the colony-damage branch in `DamageProcessor` (currently commented out, ~lines 101–181) | `Damage/` Phase 3 |
 | Ground UI | `GroundForcesWindow` + a `PlanetaryWindow` tab; reuse `ComponentInstancesDBDisplay` for unit loadouts | `Pulsar4X.Client/` |
 
-**Dependency note:** ground-combat damage must sit on the **complex `DamageProcessor`**, which is currently stubbed/placeholder (`SimpleDamage` is active instead). That is why PLAN.md Phase 1 (fix complex damage) is a hard prerequisite for ground combat — see root `CLAUDE.md` gotcha #1 and `Damage/CLAUDE.md`.
+**Dependency note:** ground-combat damage must sit on the **complex `DamageProcessor`**, which is currently stubbed/placeholder (`SimpleDamage` is active instead). That is why docs/archive/PLAN.md Phase 1 (fix complex damage) is a hard prerequisite for ground combat — see root `CLAUDE.md` gotcha #1 and `Damage/CLAUDE.md`.
 
 ---
 

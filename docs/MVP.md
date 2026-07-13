@@ -32,7 +32,7 @@ to the surface, paid for by real planetary infrastructure — and v1 ships.
 > **Why (developer, 2026-06-26):** planetary combat is hollow without real planetary infrastructure to fight over — better to deepen what we already have in space until it earns its keep, then go planetary. **Discipline for M1:** one ranked lever at a time, each a gauged slice — *not* "fix everything at once" (that phrasing is the half-built-forever trap this doc exists to stop). M2's spec below (§§2–5) is unchanged and waiting.
 
 > **⚠️ FINISH-LINE MOVED — ratified 2026-06-29 (a deliberate decision, per §7, not a drift).** A new milestone is inserted ahead of M2, and it is the **active build path now**:
-> - **M-ECON — Space Economy & Society: make a colony/station a living place worth fighting over.** The population/morale loop (a TANK with morale as the level-control valve), **people as a finite hard-drawn resource** (crew/officers/scientists/army all drawn from population), the **Ledger/tax** economic lever, energy+food, **governance/delegation** (governors so management is opt-in, the "auto-resolve for the economy"), and the **government-type modulator** (regime as coefficients + rule-overrides; the 4-dial/3-notch panel; regime change; popular demands). Built one gauged, CI-green slice at a time. Design is fully locked in `docs/MORALE-AND-POPULATION-DESIGN.md` + `docs/GOVERNMENT-AND-POLITICS-DESIGN.md`; foundations M1(morale)/M2A(jobs-housing)/M3-1(manpower)/M3-2a(crew-policy) are built + green.
+> - **M-ECON — Space Economy & Society: make a colony/station a living place worth fighting over.** The population/morale loop (a TANK with morale as the level-control valve), **people as a finite hard-drawn resource** (crew/officers/scientists/army all drawn from population), the **Ledger/tax** economic lever, energy+food, **governance/delegation** (governors so management is opt-in, the "auto-resolve for the economy"), and the **government-type modulator** (regime as coefficients + rule-overrides; the 4-dial/3-notch panel; regime change; popular demands). Built one gauged, CI-green slice at a time. Design is fully locked in `docs/society/MORALE-AND-POPULATION-DESIGN.md` + `docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md`; foundations M1(morale)/M2A(jobs-housing)/M3-1(manpower)/M3-2a(crew-policy) are built + green.
 > - **Why (developer, 2026-06-29):** the north-star widened the objective (`docs/NORTH-STAR-VISION.md`) — the fork now aims to let a player stage *aspects* of the great sci-fi universes, several of which (BSG nomad survival, B5 politics, the economic *pressure* that makes conquest mean something) live in exactly this layer. And it serves the conquest spine directly: **the grave rung of morale = colony collapse = the ground-invasion objective** (you take a world by breaking its morale, not just its buildings). So a deep colony is the thing that makes "take a planet" worth doing.
 > - **Resulting order:** M-ECON (active) → then the ranked space-depth levers (§6: materials→costs, energy→weapons, detection) → then **M2 take-a-planet** (§§2–5, the v1 conquest finish, unchanged). The §6 levers and M2 are NOT abandoned — they follow M-ECON.
 > - **Honest caveat:** M-ECON was prioritized ahead of the audit's two highest-leverage levers (refined-materials→component-costs #1, energy→weapons #2). Those remain ranked and waiting; revisit whether to interleave them once M-ECON's core lands.
@@ -62,9 +62,9 @@ target so we prove the spine before building the discovery and subterfuge around
 3. **Build a warship and a ground unit** at the colony, through the existing industry queue. *(ships exist; ground unit is new)*
 4. **Send the fleet** to a target planet. *(movement exists)*
 5. **Win the space battle** against the planet's orbital defenders. *(systems exist but are DARK/untested — gauge them)*
-6. **Land the ground force** on the now-uncontested planet. *(transport/drop — new)*
-7. **Win the ground battle** against its garrison. *(new — minimal)*
-8. **Capture** the planet: defenders gone → the colony changes owner. **Win.** *(new — minimal)*
+6. **Land the ground force** on the now-uncontested planet. *(transport/drop engine BUILT — `GroundTransport`/`GroundTransportDB`/`GroundBayAtb` embark→move→land chain + `GroundTransportTests`; **UI-unreachable** — no invade-from-orbit control panel in the client yet)*
+7. **Win the ground battle** against its garrison. *(engine BUILT — `GroundForcesProcessor.ResolveRegionCombat`; code exists and is wired, runtime unverified by CI)*
+8. **Capture** the planet: defenders gone → the colony changes owner. **Win.** *(engine BUILT — `TryCapturePlanet` flips the colony's `FactionOwnerID`; code exists and is wired, runtime unverified by CI)*
 
 If any step in that chain doesn't work, v1 isn't done. If a feature isn't *on* that chain, it isn't v1.
 
@@ -75,11 +75,11 @@ If any step in that chain doesn't work, v1 isn't done. If a feature isn't *on* t
 | # | Must-have | Minimum that counts | Status today (`SYSTEMS-STATUS-AND-TEST-PLAN.md`) |
 |---|-----------|---------------------|--------------------------------------------------|
 | A | **Economy produces military goods** | Mine → refine → build installations, ships, *and* ground units, from the colony's own output | Engine ✅ (mining/refining/production gauged). Build-installations link + ground-unit build = **to do.** |
-| B | **Space combat actually resolves** | Two fleets fight; one side wins. No new weapon tech. | 🟢 **DONE (2026-06-25)** — the `GameEngine/Combat/` auto-resolve engine: hostile fleets in range auto-engage and a battle plays out over game-time until one side is wiped or breaks off. Decides by **strength math** (each ship rated for firepower/toughness), not the per-pixel beam/missile sim (which deposits ~0 damage — parked v2). Player's lever is **doctrine** (per-fleet *and* per-component), plus **retreat** and an **engagement lock**. 8 CI-green test fixtures. **This is the template we mirror for ground combat.** See `docs/COMBAT-DESIGN.md`. |
-| C | **A ground unit exists as a buildable thing** | ONE unit ("Ground Force", components like ships) with attack / defense / health | 🔴 absent — new `GroundUnitDesign : IConstructableDesign` + `GroundForcesDB` |
-| D | **Transport & drop** | Load a unit onto a ship, move it, unload onto a target planet — *after* orbit is clear | 🟡 movement/cargo exist; load/drop = **to do** |
-| E | **Ground combat resolution** | Attacker vs defender on one planet; attrition each tick until one side is gone (mirror B) | 🔴 absent — new `GroundCombatProcessor` + tests |
-| F | **Win condition** | Defenders (space *and* ground) gone → colony `FactionOwnerID` flips to the attacker | 🔴 absent — minimal capture step + test |
+| B | **Space combat actually resolves** | Two fleets fight; one side wins. No new weapon tech. | 🟢 **DONE (2026-06-25)** — the `GameEngine/Combat/` auto-resolve engine: hostile fleets in range auto-engage and a battle plays out over game-time until one side is wiped or breaks off. Decides by **strength math** (each ship rated for firepower/toughness), not the per-pixel beam/missile sim (which deposits ~0 damage — parked v2). Player's lever is **doctrine** (per-fleet *and* per-component), plus **retreat** and an **engagement lock**. 8 CI-green test fixtures. **This is the template we mirror for ground combat.** See `docs/combat/COMBAT-DESIGN.md`. |
+| C | **A ground unit exists as a buildable thing** | ONE unit ("Ground Force", components like ships) with attack / defense / health | 🟢 **BUILT** — `GroundUnitDesign : IConstructableDesign` (rides the existing industry rails) + `GroundForcesDB` (64 `[JsonProperty]` fields); base-mod infantry/armor/artillery six-point registered. Code exists and is wired; runtime unverified by CI. |
+| D | **Transport & drop** | Load a unit onto a ship, move it, unload onto a target planet — *after* orbit is clear | 🟡 **engine BUILT, UI-unreachable** — `GroundTransport`/`GroundTransportDB`/`GroundBayAtb` embark→move→land chain + `LoadTroopsOrder`/`LandTroopsOrder`, `GroundTransportTests` green. No invade-from-orbit control panel in the client yet — **the one true remaining v1 gap (Stage 4).** |
+| E | **Ground combat resolution** | Attacker vs defender on one planet; attrition each tick until one side is gone (mirror B) | 🟢 **BUILT** — `GroundForcesProcessor` (hourly `IHotloopProcessor`) attrites attacker vs defender via `ResolveRegionCombat`. Code exists and is wired; runtime unverified by CI. |
+| F | **Win condition** | Defenders (space *and* ground) gone → colony `FactionOwnerID` flips to the attacker | 🟢 **BUILT** — region+planet capture wired: `TryCapturePlanet` flips the colony's `FactionOwnerID` to the captor. Code exists and is wired; runtime unverified by CI. |
 | G | **A defender to fight** | A static enemy garrison + a couple of orbital defenders on one planet — *not* a full NPC admiral | 🔴 minimal seed is enough |
 | H | **A UI you can drive it from** | See/queue the economy; build ships+units; send the fleet; issue the invade order; see outcomes | 🔴 weak point — reuse existing panels, don't gold-plate |
 | I | **Every new/uncovered engine system has a gauge** | A test per system touched (the no-untested-combat rule — space combat especially) | enforced by CI + the harness |
@@ -128,19 +128,20 @@ Note the order follows your own strategy: **do space combat first, then mirror i
   engine is ready to build ships and units.
 - **Stage 1 — Space combat resolves, and is gauged. 🟢 DONE (2026-06-25).** The `GameEngine/Combat/`
   auto-resolve engine (strength-math, doctrine as the player's lever, retreat, engagement lock), 8 CI-green
-  fixtures. **This is the reference pattern for Stage 2** (`docs/COMBAT-DESIGN.md`). *Open live-test threads
+  fixtures. **This is the reference pattern for Stage 2** (`docs/combat/COMBAT-DESIGN.md`). *Open live-test threads
   riding on top, not new stages: the combat **interrupt** (auto-pause at first contact, runs at the player's
   set speed — built, CI-green, awaiting the developer's live test) and the **teleport-to-Sun** movement defect
   (auto-detected by the SessionLog heartbeat; needs one live repro + root fix — a Stage-4 live-drive blocker,
   see `SESSION_STATE.md`).*
-- **Stage 2 — Ground combat, mirroring Stage 1 — build the DECISION SPINE, not the realism.** `GroundUnitDesign`
-  (an `IConstructableDesign`, so the *existing* industry queue builds it) + `GroundForcesDB`; a
-  `GroundCombatProcessor` that attrites attacker vs defender. **Mirror what *earns its weight* in Stage 1 — the
-  doctrine/composition decision — not the parked per-pixel realism** (see `docs/REALISM-VS-GAMEPLAY-AUDIT.md`).
-  Gauge: build a unit, resolve a battle to a winner.
-- **Stage 3 — Stitch the loop.** Target planet gets orbital defenders + a garrison. Fleet clears orbit
-  (Stage 1) → transport/drop the ground force → ground battle (Stage 2) → defenders gone → flip the colony's
-  owner. Gauge each link; gauge the whole loop once.
+- **Stage 2 — Ground combat, mirroring Stage 1 — BUILT (engine).** `GroundUnitDesign` (an `IConstructableDesign`,
+  so the *existing* industry queue builds it) + `GroundForcesDB`; the attrition resolver is `GroundForcesProcessor`
+  (hourly `IHotloopProcessor`) via `ResolveRegionCombat` — **not** a separate `GroundCombatProcessor`. The
+  doctrine/composition decision (the part that *earns its weight* in Stage 1) is modeled. Gauge tests exist
+  (`GroundTransportTests`/`TroopOrderTests`). Code exists and is wired; runtime unverified by CI.
+- **Stage 3 — Stitch the loop — engine links BUILT.** Target planet gets orbital defenders + a garrison. Fleet
+  clears orbit (Stage 1) → transport/drop the ground force (engine BUILT) → ground battle (Stage 2, BUILT) →
+  defenders gone → flip the colony's owner (`TryCapturePlanet`, BUILT). The engine links exist and are wired;
+  what's still missing is the **UI hook** to drive the embark/land from orbit (Stage 4). Runtime unverified by CI.
 - **Stage 4 — Drive it from the UI — the keystone, not polish.** Build ships+units, send the fleet, issue the
   invade order, watch the result. The realism-vs-gameplay audit's headline applies here: the engines are
   built, **the UI is the missing control panel.** Stage 4 is where must-have **H** turns the existing,
@@ -204,7 +205,7 @@ order when the §1 loop is done; do **not** pull them onto the v1 path (that's t
 
 1. **New idea?** → §6 Parking Lot. Not the build.
 2. **Starting a stage?** → open `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md`, read the systems it connects to, work
-   those too (the Prime Directive). Combat design lives in `docs/COMBAT-DESIGN.md`; ground/infrastructure
+   those too (the Prime Directive). Combat design lives in `docs/combat/COMBAT-DESIGN.md`; ground/infrastructure
    design in `docs/aurora/`. Build the *slice*, not the whole spec.
 3. **Stage done?** → it has a gauge (test) and the systems-map row is updated.
 4. **Tempted to move the finish line?** → edit §1 on purpose and say why. Otherwise, hold the line.

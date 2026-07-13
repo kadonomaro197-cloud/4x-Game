@@ -8,7 +8,7 @@
 
 ## 1. DataBlobs — the copy-constructor + `Clone()` pattern
 
-Every DataBlob follows this exact shape. Reference: `Colonies/ColonyInfoDB.cs`, `Industry/InstallationsDB.cs`.
+Every DataBlob follows this exact shape. Reference: `Colonies/ColonyInfoDB.cs`, `Stations/StationInfoDB.cs`. *(Do NOT copy `Industry/InstallationsDB.cs` — it's the dead cautionary example, see below.)*
 
 ```csharp
 public class ExampleDB : BaseDataBlob
@@ -211,7 +211,7 @@ References: root `CLAUDE.md` gotcha #7; `Engine/SaveLoad/`.
 
 ## 13. Externalise tunable numbers into mod data, don't hard-code
 
-The game loads designs, minerals, tech, and component blueprints from JSON under `GameEngine/Data/basemod/` via `ModLoader` into `Game.StartingGameData`. References: root `GameEngine/CLAUDE.md`.
+The game loads designs, minerals, tech, and component blueprints from JSON under `Pulsar4X/GameData/basemod/` via `ModLoader` into `Game.StartingGameData`. References: root `GameEngine/CLAUDE.md`.
 
 - New tunable constants (combat coefficients, installation rates, ground-unit stats) belong in **blueprint JSON**, not as C# literals — matching how components/minerals/tech already work.
 - This also resolves the Aurora-constant-uncertainty problem (`docs/aurora/INDEX.md`): put the approximate value in data, tune later without recompiling.
@@ -254,5 +254,5 @@ The developer's rule, applicable to **every designer in the game** (components, 
 - [ ] No throwing logic inside `async void` manager mutations?
 - [ ] Cross-entity links stored as IDs, resolved via `TryGetEntityById`?
 - [ ] No direct cross-manager mutation; future datetimes based on `StarSysDateTime`?
-- [ ] Tunable numbers in `Data/basemod/` JSON, not hard-coded?
+- [ ] Tunable numbers in `Pulsar4X/GameData/basemod/` JSON, not hard-coded?
 - [ ] Touched subsystem's `CLAUDE.md` updated in the same commit?

@@ -2,7 +2,7 @@
 
 Source: aurora-manual `12-combat/` (12.3–12.5) (v2.7.1). Constants approximate — verify before hard-coding (see `INDEX.md`).
 
-> **In plain terms:** Missiles are tiny ships you design yourself — you split a size budget between **engine** (speed), **warhead** (damage), **fuel** (range), and **sensors/guidance** (hitting a moving target). Fast missiles both catch the target *and* are likelier to hit. The defender shoots them down with **point defense** — short-range guns (CIWS/gauss) and anti-missile missiles — so attackers fire **big salvos** to overwhelm the defense and let a few "leakers" through. **Electronic warfare** is the jamming layer: jammers cut the enemy's accuracy and detection range, and the enemy's "ECCM" cancels jamming level-for-level. This is mostly here as the **depth benchmark** — Pulsar already has missiles, though its guidance code is half-finished (a known gotcha).
+> **In plain terms:** Missiles are tiny ships you design yourself — you split a size budget between **engine** (speed), **warhead** (damage), **fuel** (range), and **sensors/guidance** (hitting a moving target). Fast missiles both catch the target *and* are likelier to hit. The defender shoots them down with **point defense** — short-range guns (CIWS/gauss) and anti-missile missiles — so attackers fire **big salvos** to overwhelm the defense and let a few "leakers" through. **Electronic warfare** is the jamming layer: jammers cut the enemy's accuracy and detection range, and the enemy's "ECCM" cancels jamming level-for-level. This is mostly here as the **depth benchmark** — Pulsar already has missiles, and its guidance code is functional (`directAttack = true`, direct pursuit via `ThrustToTargetCmd`, fixed 2026-06-21).
 
 ---
 
@@ -59,13 +59,13 @@ ECCM is now baked into fire controls/sensors (10% of their cost per level), not 
 
 ## 4. Pulsar status & mapping
 
-Pulsar **already has** space combat: `GameEngine/Weapons/` (beams, missiles, generic fire control) and `OrdnanceDesignWindow` for missile design. See `Weapons/CLAUDE.md` and `SPACE-COMBAT-BENCHMARK.md`. **Known gotcha:** Pulsar's missile **guidance is half-finished** — `MissleProcessor` hardcodes `directAttack = false` and uses orbital phasing instead of direct pursuit (root `CLAUDE.md` gotcha #3, `Movement/CLAUDE.md`).
+Pulsar **already has** space combat: `GameEngine/Weapons/` (beams, missiles, generic fire control) and `OrdnanceDesignWindow` for missile design. See `Weapons/CLAUDE.md` and `SPACE-COMBAT-BENCHMARK.md`. **Guidance status:** Pulsar's missile **guidance is functional** — `MissleProcessor.cs:85` sets `directAttack = true` and uses direct pursuit via `ThrustToTargetCmd` (fixed 2026-06-21; root `CLAUDE.md` gotcha #3). On impact, `MissileImpactProcessor` (1-sec hotloop, proximity ≤ 1000 m) calls `DamageProcessor.OnTakingDamage()` to deliver the hit. Runtime behavior is unverified in CI (CI can't run the client) — the code exists and is wired.
 
 | Aurora idea | Pulsar | Relevance to objective |
 |-------------|--------|------------------------|
 | Missile design from a size budget | `Weapons/WeaponMissile/`, `OrdnanceDesignWindow` (exist) | benchmark; same "design from parts" idea as ground units |
 | Point defense layers | partial | benchmark — not core to ground combat |
-| Electronic warfare | verify presence | benchmark |
-| Missiles vs ground (bombardment) | `Damage/` colony block (commented out) | **relevant:** orbital missile bombardment of colonies is PLAN Phase 3 — see `GROUND-COMBAT.md` §6 |
+| Electronic warfare | `JammerAtb` (barrage jammer) exists and is wired, but flag-gated off (`JammerAtb.EnableJamming = false` by default) — see `Sensors/CLAUDE.md` | benchmark |
+| Missiles vs ground (bombardment) | `DamageProcessor.OnColonyDamage()` — wired (population casualties, atmospheric contamination, installation damage, garrison-softening), missile-delivered via `MissileImpactProcessor` → `OnTakingDamage()` | **relevant:** orbital missile bombardment of colonies is PLAN Phase 3 — see `GROUND-COMBAT.md` §6 |
 
-**Takeaway:** missiles/PD/EW are benchmark depth, mostly built. The one ground-combat touchpoint is **missile bombardment of ground forces/colonies** (Phase 3), which rides the complex `DamageProcessor`. Fixing missile guidance is separate optional cleanup (gotcha #3), not on the ground-combat critical path.
+**Takeaway:** missiles/PD/EW are benchmark depth, mostly built. The one ground-combat touchpoint is **missile bombardment of ground forces/colonies** (Phase 3), which rides the complex `DamageProcessor.OnColonyDamage()` — already wired, missile-delivered via `MissileImpactProcessor`. Missile guidance was fixed 2026-06-21, so the bombardment delivery path exists end-to-end (runtime unverified in CI).

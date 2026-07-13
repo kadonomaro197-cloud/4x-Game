@@ -1,6 +1,6 @@
 # Damage — Subsystem Reference
 
-Three implementations exist: `Simple/` (dead code), `DamageComplex/` (active — ships and now colonies), and `DamageVeryComplex/` (active for asteroids). Lives in `GameEngine/Damage/`.
+Three implementations exist: `Simple/` (dead code), `DamageComplex/` (active — ships, colonies, AND asteroids), and `DamageVeryComplex/` (a physics sim with **no gameplay caller** — see below). Lives in `GameEngine/Damage/`.
 
 ---
 
@@ -20,7 +20,7 @@ Three implementations exist: `Simple/` (dead code), `DamageComplex/` (active —
 | `DamageVeryComplex/PressureMath.cs` | Pressure wave propagation (for explosions/detonations). |
 | `DamageVeryComplex/TempratureMath.cs` | Thermal effects on particles (heating from beams, ablation). |
 | `DamageVeryComplex/Particle.cs` | `PhysicalParticle` struct: position, velocity, material properties. The atom of the physics sim. |
-| `DamageVeryComplex/AsteroidDamage.cs` | **Active path for asteroid kinetic impacts.** Wires an asteroid strike into the particle physics sim. |
+| `DamageVeryComplex/AsteroidDamage.cs` | Wires an asteroid strike into the particle physics sim — but has **no gameplay caller**. The real asteroid path is DamageComplex (`EntityDamageProfileDB.AsteroidDamageProfile`, built in `AsteroidFactory.cs`). |
 | `DamageSignature.cs` | **The KEYSTONE (2026-06-28).** The coarse, shared "damage flavour" enum — `DamageSignature` (HardRadiation / Thermal / Kinetic / EMStorm / Gravimetric / Corrosive) — that lets a space HAZARD and a WEAPON speak one language, so armour (and later shields) that resist a flavour resist it from both. Sits ABOVE the narrower `Hazards.HazardEffectType` (hazard-only + non-damage kinds) and `Combat.WeaponClass` (weapon platform). `DamageSignatures.UsesWavelengthArmorPath(sig)` is the load-bearing split: Thermal/HardRadiation/Kinetic already deposit through the wavelength-armour sim below; EMStorm/Gravimetric/Corrosive have **no wavelength** and need their own application site built. See "The DamageSignature keystone" below. |
 
 ---
@@ -110,6 +110,7 @@ JSON must use `"UniqueID"` field for the byte IDCode (mapped via `[JsonProperty(
 - Created from `ShipInfoDB.Design` when a ship first takes damage (lazy creation).
 - `ComponentLookupTable: List<ComponentInstance>` — G-channel is 1-indexed but table is 0-indexed (off-by-one gotcha).
 - Should ideally be pre-created at ship construction, not lazily.
+- **Does NOT survive save/load** — the class has zero `[JsonProperty]` fields (confirmed 2026-07-13), consistent with runtime-only lazy creation. After a load, the profile is rebuilt on the next hit. Fine as-is, but don't assume accumulated damage-profile state persists across a save.
 
 ### OnColonyDamage() — orbital bombardment (wired, in DamageProcessor.cs)
 
@@ -130,15 +131,15 @@ JSON must use `"UniqueID"` field for the byte IDCode (mapped via `[JsonProperty(
 `OnTakingDamage()` routes to `OnStationDamage()` when the target has `StationInfoDB` but is neither a ship nor a colony. It is the parallel to `OnColonyDamage()` and **shares** its two heavy passes (`ApplyPopulationCasualties`, `ApplyInstallationDamage`), so a station and a colony can never drift apart in how a strike kills people / wrecks installations. Two deliberate differences make a station the cheap, fragile alternative to a planet:
 
 - **No atmospheric contamination** — a sealed habitat has no atmosphere to poison.
-- **A structural-integrity KILL trigger** — the hit drains `StationInfoDB.StructuralIntegrity` (a flat placeholder pool, base 500) and, at ≤ 0, calls `StationFactory.DestroyStation()` and returns `Destroyed = true`. A colony has NO such trigger (a planet is effectively infinite on this scale) — that ratio IS the design's durability asymmetry. **Placeholder — tune when the station durability/invasion numbers lock (`docs/SPACE-STATIONS-DESIGN.md`).**
+- **A structural-integrity KILL trigger** — the hit drains `StationInfoDB.StructuralIntegrity` (a flat placeholder pool, base 500) and, at ≤ 0, calls `StationFactory.DestroyStation()` and returns `Destroyed = true`. A colony has NO such trigger (a planet is effectively infinite on this scale) — that ratio IS the design's durability asymmetry. **Placeholder — tune when the station durability/invasion numbers lock (`docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md`).**
 
 Before this, a station had no branch here and `OnTakingDamage` returned `Damage = 0` — a "ghost target" that could be fired on but never damaged. Only the DIRECT weapon-hit path (beam/missile) reaches it; the fleet auto-resolve engine (`Combat/CombatEngagement`, `FleetDB`-keyed) does not yet see stations — a follow-on.
 
 ---
 
-## DamageVeryComplex — The New Physics Sim
+## DamageVeryComplex — The Physics Sim (built, but NOT wired into gameplay)
 
-This is the active direction on DevBranch. It's a full 2D particle physics simulation:
+This is a full 2D particle physics simulation. **It exists and compiles, but nothing in the running game calls it** (verified 2026-07-13): the only callers of `DamagePhysicsSim.PhysicsLoop()` are the client's `DamageViewerWindow` (a debug/visualiser window) and the loop's own recursion. No processor, factory, or weapon routes real damage through it. Treat it as an in-progress research direction, not a live path.
 
 - A `DamageMap` is a grid of `PhysicalParticle` objects representing a cross-section of the target.
 - When a weapon fires, particles (kinetic slugs) or photon beams enter the map at a given velocity.
@@ -147,8 +148,8 @@ This is the active direction on DevBranch. It's a full 2D particle physics simul
   - Detects and resolves elastic/inelastic collisions between particles.
   - Processes photon beams via `PhotonMath`.
   - Recursively spawns sub-maps for very fast particles (multi-scale simulation).
-- `AsteroidDamage.cs` is the only fully-wired caller today — asteroid kinetic strikes use this path.
-- Beam weapon damage (lasers) is partially wired: `PhotonMath.BeamProcessing()` exists but the integration with `BeamWeaponProcessor` is not complete.
+- `AsteroidDamage.cs` wires an asteroid into a `DamageMap` — but it has **no gameplay caller**. Real in-game asteroid damage goes through the DamageComplex path instead (`EntityDamageProfileDB.AsteroidDamageProfile`, created in `AsteroidFactory.cs:46/102`). The `AsteroidDamageDB` health-drain branch in `DamageProcessor.cs` (~line 117) is currently **commented out**.
+- Beam weapon damage (lasers) is not wired here either: `PhotonMath.BeamProcessing()` exists but the integration with `BeamWeaponProcessor` is not complete. Beams run through DamageComplex.
 
 **This system is more ambitious than Aurora's armor-grid model.** It's also incomplete. Before building ground combat damage on this, confirm with the developer whether to:
 - Use this system for ground combat (scientifically accurate, high complexity)
@@ -161,8 +162,8 @@ This is the active direction on DevBranch. It's a full 2D particle physics simul
 | Path | Status | Role |
 |------|--------|------|
 | `SimpleDamage` | No longer called | Dead code — preserved in case needed for testing |
-| `DamageComplex` | **Active for beam hits** | Forward path for ship and future ground combat damage |
-| `DamageVeryComplex` | Active for asteroid impacts | Complex particle physics sim — not used for beam hits |
+| `DamageComplex` | **Active for beam hits, colonies, stations, AND asteroids** | Forward path for ship and future ground combat damage |
+| `DamageVeryComplex` | Built but **no gameplay caller** | Complex particle physics sim — only the client debug viewer invokes it; not on any live damage path |
 
 **DamageComplex is the forward direction.** Ground combat damage (AP rounds, artillery, orbital strikes) extends from this path.
 

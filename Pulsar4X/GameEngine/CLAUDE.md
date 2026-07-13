@@ -11,7 +11,7 @@ The `GameEngine` project is the core domain library. It has no dependency on any
 | `Engine/` | ECS infrastructure: Entity, EntityManager, DataBlobs, Processors, MasterTimePulse, ManagerSubPulse, Orders, Modding, SaveLoad |
 | `Weapons/` | Space combat: beams, missiles, generic fire control |
 | `Combat/` | Auto-resolve combat engine: ship combat value, fleet battle resolution, doctrine (v1 spine) |
-| `Damage/` | Damage application — Simple (active) and Complex (stubbed) |
+| `Damage/` | Damage application — **Complex is the live path** (`DamageComplex/`: beam hits route `BeamWeaponProcessor.OnHit` → `DamageProcessor.OnTakingDamage` → `DamageTools.DealDamageEnergyBeamSim`). `Simple/SimpleDamage.cs` is **dead** — no gameplay caller. |
 | `Colonies/` | Colony state, population, life support |
 | `Industry/` | Production, mining, materials |
 | `Movement/` | Newton thrust, warp, inter-system jump, pathfinding |
@@ -30,7 +30,7 @@ The `GameEngine` project is the core domain library. It has no dependency on any
 | `Names/` | Name theme loading and generation |
 | `JumpPoints/` | Jump point entities and inter-system travel |
 | `GeoSurveys/` | Geological survey ability and processor |
-| `Data/` | JSON mod data files (not C# code) |
+| *(mod data)* | JSON mod data files (not C# code) live outside this project at `Pulsar4X/GameData/basemod/`, not in a `GameEngine/Data/` folder |
 
 ---
 
@@ -79,7 +79,7 @@ The `GameEngine` project is the core domain library. It has no dependency on any
 
 ### ManagerSubPulse (`Engine/ManagerSubPulse.cs`)
 - `HotLoopProcessorsNextRun: SafeDictionary<Type, DateTime?>` — when each HotLoop processor next fires.
-- `InstanceProcessorsQueue: SortedDictionary<DateTime, Dictionary<string, List<Entity>>>` — scheduled instance processors.
+- `InstanceProcessorsQueue: TimeQueue<(string, Entity)>` — scheduled instance processors (a time-indexed queue of processor-name + entity pairs; the getter returns a defensive copy).
 - `ProcessSystem(targetDateTime)` — runs all processors for this system up to the target time.
 - `AddEntityInterupt(datetime, processorTypeName, entity)` — schedules a specific entity for instance processing.
 - `AddSystemInterupt(DateTime, dbType)` — schedules next HotLoop run for a DataBlob type.
@@ -102,9 +102,10 @@ Type GetParameterType { get; }  // the DataBlob type this processor handles
 ```
 
 ### IInstanceProcessor (`Engine/Processors/IInstanceProcessor.cs`)
+Despite the `I` prefix, this is an **abstract class**, not an interface. Its members are `internal`:
 ```csharp
-void ProcessEntity(Entity entity, DateTime datetime);
-string TypeName { get; }  // key used in InstanceProcessorsQueue
+internal abstract void ProcessEntity(Entity entity, DateTime atDateTime);
+internal string TypeName { get { return GetType().Name; } }  // derived, read-only; key used in InstanceProcessorsQueue
 ```
 
 ### Orders System (`Engine/Orders/`)
@@ -120,7 +121,7 @@ string TypeName { get; }  // key used in InstanceProcessorsQueue
 ## Modding System (`Engine/Modding/`)
 
 - `ModDataStore` — runtime store of all loaded blueprint data.
-- `ModLoader` — loads JSON files from `Data/` directories.
+- `ModLoader` — loads JSON files from the mod data directories. The repo's source-of-truth data lives at `Pulsar4X/GameData/basemod/` (copied to `%AppData%\...\Pulsar4X\Mods\` at client build); there is no `GameEngine/Data/` directory.
 - `ModManifest` — mod metadata (name, version, dependencies).
 - Blueprints in `Engine/Blueprints/` are the data classes loaded from JSON.
 - Active mod data is in `Game.StartingGameData` (a `ModDataStore`).
@@ -140,7 +141,7 @@ string TypeName { get; }  // key used in InstanceProcessorsQueue
 ## Key Data Files
 
 ```
-GameEngine/Data/basemod/
+Pulsar4X/GameData/basemod/   (copied to AppData/…/Pulsar4X/Mods at build)
 ├── blueprints/
 │   ├── components/    ← component design templates (JSON)
 │   ├── minerals/      ← mineral definitions

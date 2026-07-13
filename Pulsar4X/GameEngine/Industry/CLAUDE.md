@@ -11,17 +11,22 @@ Production, mining, and material processing. Lives in `GameEngine/Industry/`.
 | `IndustryAbilityDB.cs` | DataBlob: production lines with job queues. Attached to colonies and possibly ships with fabrication bays. |
 | `IndustryAtb.cs` | Component design attribute that grants a production line with a given build-point rate. |
 | `IndustryJob.cs` | One production job: what to build, how many, priority, repeat flag. |
-| `IndustryOrder.cs` | Player order to add/remove/reprioritize production jobs. |
+| `IndustryOrder.cs` | Player order to add/remove/reprioritize production jobs. **The class is named `IndustryOrder2`** (not `IndustryOrder`) — the file name and the C# type name differ. |
 | `IndustryProcessor.cs` | `IHotloopProcessor` (daily). Calls `IndustryTools.ConstructStuff()`. |
 | `IndustryTools.cs` | Static helpers: `ConstructStuff()`, `AddJob()`, `EditExsistingJob()`, `CancelExsistingJob()`, `ChangeJobPriority()`. |
+| `LocalConstructionDB.cs` | **DataBlob — a SECOND, fully-wired construction path.** Attached to an entity that can build things locally. Holds `PointsPerDay` and a `BuildQueue` of `LocalConstructionJob`. Distinct from the `IndustryAbilityDB` production-line path above. |
+| `LocalConstructionAtb.cs` | Component design attribute that grants local-construction ability (points per day). |
+| `LocalConstructionJob.cs` | One local-construction job: the `Design` to build plus `PointsAccumulated` so far. |
+| `LocalConstructionProcessor.cs` | `IHotloopProcessor` (daily, `FirstRunOffset` 6 h). Auto-discovered. Applies `PointsPerDay` to the head of `BuildQueue`; on completion installs the component via `Entity.AddComponent()` and publishes `ProductionCompleted`. Code exists and is wired; runtime unverified here (CI can't run the client). |
+| `Orders/` | Player orders for the local-construction queue: `AddToConstructionQueueOrder`, `RemoveFromConstructionQueueOrder`, `MoveUpInConstructionQueueOrder`, `MoveDownInConstructionQueueOrder`. |
 | `InstallationsDB.cs` | **DEAD/vestigial DataBlob** — never attached to any colony, no `[JsonProperty]`. Installations are really components in `ComponentInstancesDB`. Do not build on this. |
 | `InfrastructureDB.cs` | **NEW (DevBranch)** DataBlob on a colony. Tracks `CapacityProvided` (from infra installations) and `CapacityRequired` (from all other installations). `Efficiency` = Provided/Required, capped at 1.0. |
 | `InfrastructureCapacityAtb.cs` | **NEW (DevBranch)** Component design attribute. Marks a component as "infrastructure." `Capacity` = units of support provided per installed unit. Filtered by gravity/pressure tolerance. |
 | `InfrastructureProcessor.cs` | **NEW (DevBranch)** Static class. `RecalcCapacity(colony)` — sums provided vs required capacity and writes to `InfrastructureDB`. Called on `ComponentInstancesDB` recalc (whenever an installation changes). `GetEfficiency(colony)` — returns the output multiplier. |
 | `JobBase.cs` | Abstract base for job types. |
 | `MineResourcesAtbDB.cs` | Component attribute DataBlob: grants mining ability (which minerals, at what rate). |
-| `MineResourcesProcessor.cs` | `IHotloopProcessor` (daily). Runs `MiningHelper.CalculateActualMiningRates()` and transfers minerals. |
-| `HexMinerals.cs` | **NEW (located deposits, 2026-07-06)** Seeds a body's mineral deposits onto specific surface **hexes** (`GroundHex.DepositMineralId`/`DepositAmount`) so "there are resources HERE" is a PLACE you scan/see/build a mine on — the LOCKED PRINCIPLE (`docs/GROUND-COMBAT-MAP-DESIGN.md`) applied to minerals. `SeedDeposits(body, grid)` picks hexes **terrain-flavored** (mountains/volcanic/highlands rich; never ocean/ice), one mineral per deposit hex, partitioning a share (`LocatableFraction` 0.6) of the body's real `MineralsDB` amount; deterministic (system RNG), idempotent, defensive. Hooked in `PlanetGridFactory.EnsureGridForBody` (runs when a body's surface grid is generated — post-survey), so **every planet, whole game**. **v1 is the LOCATED VIEW only — the colony still mines the body-wide pool (`MineResourcesProcessor` unchanged); per-hex mining (a mine works the deposit it SITS on, and that hex depletes) is the follow-up that promotes these to the source of truth.** Next slices: planet-view flags deposit hexes post-scan → build-a-mine-on-a-deposit → per-hex mining. Gauge: `HexMineralsTests`. |
+| `MineResourcesProcessor.cs` | `IHotloopProcessor` (daily) **and** `IRecalcProcessor`. Two clocks: `CalculateActualMiningRates()` runs at **recalc time** (`CalcMaxRate`/`RecalcEntity`) and caches the result in `MiningDB.ActualMiningRate`; the **daily tick** (`MineResources`) reads that cached rate, scales it by infrastructure efficiency (`InfrastructureProcessor.GetEfficiency`), and transfers the minerals into cargo (see `MineResourcesProcessor.cs:64,71`). |
+| `HexMinerals.cs` | **NEW (located deposits, 2026-07-06)** Seeds a body's mineral deposits onto specific surface **hexes** (`GroundHex.DepositMineralId`/`DepositAmount`) so "there are resources HERE" is a PLACE you scan/see/build a mine on — the LOCKED PRINCIPLE (`docs/ground/GROUND-SURFACE-MAP-DESIGN.md`) applied to minerals. `SeedDeposits(body, grid)` picks hexes **terrain-flavored** (mountains/volcanic/highlands rich; never ocean/ice), one mineral per deposit hex, partitioning a share (`LocatableFraction` 0.6) of the body's real `MineralsDB` amount; deterministic (system RNG), idempotent, defensive. Hooked in `PlanetGridFactory.EnsureGridForBody` (runs when a body's surface grid is generated — post-survey), so **every planet, whole game**. **v1 is the LOCATED VIEW only — the colony still mines the body-wide pool (`MineResourcesProcessor` unchanged); per-hex mining (a mine works the deposit it SITS on, and that hex depletes) is the follow-up that promotes these to the source of truth.** Next slices: planet-view flags deposit hexes post-scan → build-a-mine-on-a-deposit → per-hex mining. Gauge: `HexMineralsTests`. |
 | `MineralsDB.cs` | DataBlob on a planet: mineral deposits (type → `MineralDeposit { Amount, Accessibility }`). |
 | `MiningDB.cs` | DataBlob on a colony: active mining configuration. |
 | `MiningHelper.cs` | `CalculateActualMiningRates()` — determines effective mining rate per mineral per host. `TryGetMiningBody(entity, out body)` — the host-agnostic resource-body resolver (colony→`PlanetEntity`, station→`StationInfoDB.HostingBodyEntity`); used by `MineResourcesProcessor` so a **station mines its hosting body exactly like a colony** (no host-type branch). |
@@ -35,8 +40,10 @@ Production, mining, and material processing. Lives in `GameEngine/Industry/`.
 
 ### Data Model
 
-`IndustryAbilityDB` holds a dictionary of named `ProductionLine` objects, each with:
-- `BuildPoints` — build points per day contributed by this line.
+`IndustryAbilityDB` holds a dictionary (`ProductionLines`) of named `ProductionLine` objects (`IndustryAbilityDB.cs:12-18`), each with:
+- `Name` — the line's name.
+- `MaxVolume` — the line's volume capacity.
+- `IndustryTypeRates: Dictionary<string, int>` — output rate **per industry type** (not a single build-point number). There is **no** `BuildPoints` field; a line's throughput is this per-type rate table.
 - `Jobs: List<IndustryJob>` — ordered job queue.
 
 `IndustryAtb` (component design attribute) contributes a production line when installed on an entity.
@@ -48,12 +55,11 @@ IndustryProcessor (daily)
     → IndustryTools.ConstructStuff(entity)
         → for each ProductionLine in IndustryAbilityDB:
             → process top job in Jobs queue
-            → apply build points toward job completion
-            → on completion: deliver output to appropriate stockpile
-                - Ships → Entity launched into StarSystem
-                - Components → ColonyInfoDB.ComponentStockpile
-                - Ordnance → ColonyInfoDB.OrdinanceStockpile
-                - Installations → added as components via Entity.AddComponent() (ComponentInstancesDB)
+            → apply the line's rate toward job completion
+            → on completion: ONE polymorphic call, designInfo.OnConstructionComplete(...) (IndustryTools.cs:219)
+                — the design delivers ITSELF; the processor does NOT switch on type.
+                  (A ProcessedMaterial adds to cargo, a ComponentDesign installs/stockpiles,
+                   a GroundUnitDesign raises a unit — each design decides. See gotcha #7.)
 ```
 
 ### Adding a Job (player action)
@@ -152,4 +158,4 @@ i.e., 1 unit per tonne of installation mass + 1 unit per crew member.
 
 6. **A production job REJECTS a zero-cost design (`resources can't cost 0`, 2026-07-06).** `IndustryTools.ConstructStuff` throws if a queued design's `ResourceCosts` is empty/zero. If a *test* wants to isolate the queue→complete mechanic from mineral availability, don't zero the cost — use a **minimal non-zero** cost of a bulk-stocked material (e.g. `{ "stainless-steel": 1 }`; the start colony stocks the common refined materials at 50M — see the mining section).
 
-7. **On job completion the processor dispatches to the design's OWN `OnConstructionComplete` — single point, nothing stockpiles alongside** (`IndustryTools.cs:214`). Each `IConstructableDesign` decides its own delivery: a `ProcessedMaterial` adds to cargo, a `ComponentDesign` installs/stockpiles, a `GroundUnitDesign` **raises a unit on the colony's planet** (no `InstallOn` needed — it ignores it). **Gauging a ground-unit build→raise: drive `OnConstructionComplete` directly** rather than the full queue — the `installation-construction` queue-to-completion path is NOT reliably driven by `TestScenario.CreateWithColony` + `AdvanceTime` (no green test exercises it), so a queued-build assertion is flaky; the completion hook is the exact call the processor makes and is deterministic (the generic queue itself is proven by `ProductionBuildTests`). Gauge: `GroundUnitFieldingTests`.
+7. **On job completion the processor dispatches to the design's OWN `OnConstructionComplete` — single point, nothing stockpiles alongside** (`IndustryTools.cs:219`). Each `IConstructableDesign` decides its own delivery: a `ProcessedMaterial` adds to cargo, a `ComponentDesign` installs/stockpiles, a `GroundUnitDesign` **raises a unit on the colony's planet** (no `InstallOn` needed — it ignores it). **Gauging a ground-unit build→raise: drive `OnConstructionComplete` directly** rather than the full queue — the `installation-construction` queue-to-completion path is NOT reliably driven by `TestScenario.CreateWithColony` + `AdvanceTime` (no green test exercises it), so a queued-build assertion is flaky; the completion hook is the exact call the processor makes and is deterministic (the generic queue itself is proven by `ProductionBuildTests`). Gauge: `GroundUnitFieldingTests`.

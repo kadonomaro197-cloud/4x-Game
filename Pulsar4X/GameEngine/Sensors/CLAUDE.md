@@ -10,19 +10,21 @@
 
 | File | Role |
 |------|------|
-| `SensorProfileDB.cs` | DataBlob on every detectable entity. Holds `EmittedEMSpectra` (what it broadcasts) and `ReflectedEMSpectra` (what it bounces back from active sensors). Keyed by `EMWaveForm`. Also holds `ActivityMultiplier` (default 1.0): the **EMCON dial** that scales the entity's EMITTED signature at runtime ("how hot you run"); the future EMCON processor sets it from reactor load + thrust + firing. Read in `SensorTools.AttenuatedForDistance`; REFLECTED is **not** scaled (going dark doesn't shrink your hull). |
-| `SensorAbilityDB.cs` | DataBlob on entities that can sense. Holds `CurrentContacts` and `OldContacts` (dict of entity ID → `SensorReturnValues`). |
-| `SensorReceiverAtb.cs` | Component attribute defining a sensor. Peak wavelength, bandwidth, best/worst sensitivity in kW, resolution, scan time. Added to ship/station via `AddComponent()`. |
-| `SensorSignatureAtb.cs` | Component attribute defining an entity's signature (what it emits). |
-| `SensorReflectionProcessor.cs` | `IHotloopProcessor` running every **1 hour**. Updates the `ReflectedEMSpectra` on all entities with `SensorProfileDB`. |
-| `SensorScan.cs` | `IInstanceProcessor`. Fires on a per-entity schedule (set by `sensorAtb.ScanTime`). Does the actual detection — calls `SensorTools.GetDetectedEntites()`, updates contacts. |
-| `SensorTools.cs` | Static helper with all the math: `AttenuatedForDistance()`, `DetectonQuality()`, `GetDetectedEntites()`. This is where signal strength drops off with distance. |
-| `SensorReturnValues.cs` | Struct returned from detection: `SignalStrength_kW` and `SignalQuality` (0–1, how much detail you can infer). |
-| `SystemSensorContacts.cs` | Per-system contact list. `GetSensorContacts(factionId)` returns the faction's current known entities. |
-| `SensorEntityFactory.cs` | Creates/updates the contact entity a faction sees (the "blip" on the map). |
-| `EMWaveForm.cs` | Defines a band of EM spectrum: min wavelength, peak, max. |
-| `SensorInfoDB.cs` | Per-contact info blob: last detection time, latest/highest detection quality. |
-| `SensorPositionDB.cs` | Stores the last-known position of a detected entity (may lag reality if not recently scanned). |
+| `SensorEmitter/SensorProfileDB.cs` | DataBlob on every detectable entity. Holds `EmittedEMSpectra` (what it broadcasts) and `ReflectedEMSpectra` (what it bounces back from active sensors). Keyed by `EMWaveForm`. Also holds `ActivityMultiplier` (default 1.0): the **EMCON dial** that scales the entity's EMITTED signature at runtime ("how hot you run"); the future EMCON processor sets it from reactor load + thrust + firing. Read in `SensorTools.AttenuatedForDistance`; REFLECTED is **not** scaled (going dark doesn't shrink your hull). |
+| `SensorRecever/SensorAbilityDB.cs` | DataBlob on entities that can sense. Holds `CurrentContacts` as a **`List<(Entity, SensorReturnValues)>`** (not a dict), plus the receiver caches `InstanceAtributes`/`InstanceStates`. The per-receiver `CurrentContacts`/`OldContacts` **dictionaries** (entity ID → `SensorReturnValues`) live on `SensorReceiverAbility` (the InstanceStates), **not** here. |
+| `SensorRecever/SensorReceiverAtb.cs` | Component attribute defining a sensor. Peak wavelength, bandwidth, best/worst sensitivity in kW, resolution, scan time. Added to ship/station via `AddComponent()`. |
+| `SensorEmitter/SensorSignatureAtb.cs` | Component attribute defining an entity's signature (what it emits). |
+| `SensorEmitter/SensorReflectionProcessor.cs` | `IHotloopProcessor` running every **1 hour**. Updates the `ReflectedEMSpectra` on all entities with `SensorProfileDB` (calls `SensorProfileTools.UpdateReflectionProfile`). |
+| `SensorEmitter/SensorProfileTools.cs` | Static reflection-profile worker: `SetProfileDB(entity)` builds an entity's `SensorProfileDB`, and `UpdateReflectionProfile(profile, atDateTime)` (called each pass by `SensorReflectionProcessor.ProcessEntity`) recomputes the reflected spectra. |
+| `SensorRecever/SensorScan.cs` | `IInstanceProcessor`. Fires on a per-entity schedule (set by `sensorAtb.ScanTime`). Does the actual detection — calls `SensorTools.GetDetectedEntites()`, updates contacts. |
+| `SensorRecever/SensorTools.cs` | Static helper with all the math: `AttenuatedForDistance()`, `DetectonQuality()`, `GetDetectedEntites()`, plus the reverse-solve range readouts (`RangeForSignal`, `DetectionRange_m`, `DetectionRangeAgainst`). This is where signal strength drops off with distance. |
+| `SensorRecever/SensorReceiverAbility.cs` | The per-receiver InstanceState. Holds the `CurrentContacts`/`OldContacts` **dictionaries** (entity ID → `SensorReturnValues`) that `SensorScan` reads/writes. |
+| `SensorReturnValues.cs` | *(flat, at `Sensors/` root)* Struct returned from detection: `SignalStrength_kW` and `SignalQuality` (0–1, how much detail you can infer). |
+| `SystemSensorContacts.cs` | *(flat, at `Sensors/` root)* Per-system contact list. `GetSensorContacts(factionId)` returns the faction's current known entities. |
+| `SensorContacts/SensorEntityFactory.cs` | Creates/updates the contact entity a faction sees (the "blip" on the map). |
+| `EMWaveForm.cs` | *(flat, at `Sensors/` root)* Defines a band of EM spectrum: min wavelength, peak, max. |
+| `SensorContacts/SensorInfoDB.cs` | Per-contact info blob: last detection time, latest/highest detection quality. |
+| `SensorContacts/SensorPositionDB.cs` | Stores the last-known position of a detected entity (may lag reality if not recently scanned). |
 | `Emcon/FleetEmconDB.cs` | DataBlob on a **fleet**: its active **EMCON posture** (`EmconPosture` enum — Full / Cruise / Silent), the run-hot/cruise/go-dark lever. Mirrors `Combat.FleetDoctrineDB` (a thin per-fleet "active choice" blob). The *choice* lives here (persistent, save/loaded, UI-visible); the per-ship effect is derived from it. |
 | `Emcon/FleetEmcon.cs` | Helpers + setter for the posture lever. `MultiplierFor(posture)` (posture → emitted-signature scale: Full 1.0 / Cruise 0.5 / Silent 0.15), `PostureOf`/`MultiplierOf(fleet)` reads, and `SetPosture(fleet, posture)` — a **direct call** (like doctrine, so usable mid-combat) that pushes the posture's scale onto every member ship's `SensorProfileDB.SignatureBaseMultiplier` + `ActivityMultiplier` (recursing sub-fleet components). |
 | `Emcon/EmconActivityProcessor.cs` | `IHotloopProcessor` (5 s, keyed to **ShipInfoDB**) that makes the signature respond to ACTIVITY: sets `ActivityMultiplier = SignatureBaseMultiplier × (HeatFactor(burning, firing) + ReactorHeat×ReactorLoad) × CloakAtb.CloakFactor × JammerAtb.SelfSignatureFactor` (a cloak damps it down; an active jammer's beacon pushes it up; a **loaded reactor** raises it — S5, ⚙4 Power). **Thrust** read from `NewtonMoveDB.ManuverDeltaVLen` (no new field), **firing** from `GenericFiringWeaponsDB.ShotsFiredThisTick`, **reactor load** from `EnergyGenAbilityDB.Load` via `ReactorLoad(ship)`. Pure statics `HeatFactor`/`ComputeActivityMultiplier`/`IsBurning`/`IsFiring`/`ReactorLoad` + tunables `ThrustHeat 4.0`/`WeaponHeat 1.0`/`ReactorHeat 1.0`. The reactor term is gated behind `EnableReactorHeat` (default off → byte-identical; client-on); gauge `ReactorHeatTests`. |
@@ -104,7 +106,7 @@ Detection quality: triangular overlap between sensor's waveform band and signal'
 
 ## EMCON build status (detection slice 3 — the dark/loud lever)
 
-EMCON is being built as gameplay (a posture lever), **not** the EM-spectrum physics — the waveform math stays under the hood as the gauge needle. Full design + connected-systems ledger: `docs/DETECTION-DESIGN.md` §3/§3a/§6. Built in small gauged wires (each its own CI-green slice):
+EMCON is being built as gameplay (a posture lever), **not** the EM-spectrum physics — the waveform math stays under the hood as the gauge needle. Full design + connected-systems ledger: `docs/combat/DETECTION-DESIGN.md` §3/§3a/§6. Built in small gauged wires (each its own CI-green slice):
 
 | Wire | What | Status | Gauge |
 |------|------|--------|-------|
@@ -154,8 +156,10 @@ At Full activity reach == detectability (both at 1.0); they diverge the moment y
 Feeds the client (Fleet Combat tab "Can See"/"Seen At" columns + green/amber map rings + the activity readout).
 Gauged by `Pulsar4X.Tests/RangeReadoutTests.cs` (round-trip; loudest-band/activity; self-ring shrinks on Silent;
 **+ `SensorReach_vs_Detectability_UnderEmcon`** — reach unchanged on Silent, detectability shrinks). Survey +
-framing: `docs/INFORMATION-DELTA-DESIGN.md`. **Next honest step:** a ring *against the selected enemy contact*
-(`DetectionRange_m` already supports it — the UI just needs to pass that target's profile).
+framing: `docs/combat/INFORMATION-DELTA-DESIGN.md`. The against-a-specific-target range is now built in the engine as
+`SensorTools.DetectionRangeAgainst(detector, target)` (`SensorTools.cs`) — "how far can THIS ship pick up THAT
+target," using the detector's best receiver and the target's actual (loud-vs-dark) signature. Whether the client
+draws a ring from it against the selected enemy contact is the local-build UI step (CI can't see the SDL client).
 
 ## Detection-quality bug — FIXED (2026-06-28, `SensorTools.cs` `DetectonQuality`)
 
@@ -200,7 +204,7 @@ branch). That is where two factions first "meet": it records a mutual Neutral re
 pair (the first foreign entity a faction ever detects is always a NEW contact, so the new-contact branch is the
 correct, sufficient hook). It is defensive (never throws) and a no-op for neutral (planet/asteroid) or own-faction
 targets — so the sensor hot loop is unaffected in the common case. Direction is Sensors → Factions (writes
-`DiplomacyDB`), same as the scan already reaching `Game.Factions`. Full design: `docs/DIPLOMACY-DESIGN.md`; gauge
+`DiplomacyDB`), same as the scan already reaching `Game.Factions`. Full design: `docs/society/DIPLOMACY-DESIGN.md`; gauge
 `DiplomacyFirstContactTests`. **v1 limit (flagged):** the hook is in the new-contact branch, so a save that already
 holds a foreign contact from before this code (no diplomacy row) won't retro-register — harmless (IFF defaults to
 hostile), and a contact-aging/backfill pass is the follow-up.

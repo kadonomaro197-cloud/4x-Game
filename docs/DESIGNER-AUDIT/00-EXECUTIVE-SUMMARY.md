@@ -116,7 +116,7 @@ For each pair: keep ONE attribute, make both host processors read it, retire the
 8. **Armour** and **hazard-resistance** — must first **promote the weaker side to a real component** (ship armour and ground `EnvResistance` aren't components today) before they can be unified.
 
 ### Tier 4 — Structural convergence *(largest, do last)*
-9. A shared **assembly base / one universal assembler** so ship/station/ground-unit/missile stop being four copies (see `docs/UNIVERSAL-ASSEMBLY-DESIGN.md`).
+9. A shared **assembly base / one universal assembler** so ship/station/ground-unit/missile stop being four copies (see `docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md`).
 10. Give **stations a design class**; resolve the **dangling `PDC`/`Fighter`** flags (wire or remove).
 
 ---
@@ -133,4 +133,4 @@ For each pair: keep ONE attribute, make both host processors read it, retire the
 | `06-INDUSTRY-AND-MATERIALS.md` | industry is ALREADY host-uniform — the pattern to copy | designing the fix (the target shape) |
 | `07-RESEARCH-AND-UNLOCKS.md` | unlock/tech is ALREADY host-uniform; not the source of the bug | ruling the tech layer in/out |
 
-**Related existing design docs** (already circling this problem): `docs/UNIVERSAL-ASSEMBLY-DESIGN.md`, `docs/WEAPON-UNIFICATION-DESIGN.md`, `docs/GROUND-UNITS-AS-ENTITIES-DESIGN.md`.
+**Related existing design docs** (already circling this problem): `docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md`, `docs/WEAPON-UNIFICATION-DESIGN.md`, `docs/GROUND-UNITS-AS-ENTITIES-DESIGN.md`.

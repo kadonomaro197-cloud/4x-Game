@@ -43,7 +43,7 @@ BP: *"develop your own armor, engines, radar, shields, and weapons, then create 
 
 BP: a **galactic senate votes on legislation**, and **legislation can only be drafted by players who control an ENTIRE star system.** (Stellaris' Galactic Community is the modern cousin — diplomatic weight from fleet/economy/tech/pops.)
 
-**This is the developer's "reasons to declare war beyond 'they have a planet I want'"** — war as a *political act* (breaking a law, a senate vote, a bloc) rather than pure appetite. Maps onto `docs/DIPLOMACY-DESIGN.md` (designed, not built) as the layer **above** raw IFF/relations: a binding inter-faction rule-set with a control gate (own a whole system to legislate). **Build order:** later than the morale loop — but this is the concrete shape the B5 pillar takes.
+**This is the developer's "reasons to declare war beyond 'they have a planet I want'"** — war as a *political act* (breaking a law, a senate vote, a bloc) rather than pure appetite. Maps onto `docs/society/DIPLOMACY-DESIGN.md` (designed, not built) as the layer **above** raw IFF/relations: a binding inter-faction rule-set with a control gate (own a whole system to legislate). **Build order:** later than the morale loop — but this is the concrete shape the B5 pillar takes.
 
 ---
 
@@ -51,7 +51,7 @@ BP: a **galactic senate votes on legislation**, and **legislation can only be dr
 
 BP: hire **undercover agents** to run missions — **destroy a facility, assassinate a governor, steal an ally list.** Concrete, targeted, asymmetric actions that aren't fleet combat.
 
-Maps to `People/` (commanders/agents already are entities) + the intel side of `docs/DIPLOMACY-DESIGN.md`. The "steal ally list" / "assassinate governor" verbs are a clean later system — **agents are people (components/entities), missions are orders, the grave rung is a caught/killed agent.** Cradle-to-grave fits the existing People + Orders spine.
+Maps to `People/` (commanders/agents already are entities) + the intel side of `docs/society/DIPLOMACY-DESIGN.md`. The "steal ally list" / "assassinate governor" verbs are a clean later system — **agents are people (components/entities), missions are orders, the grave rung is a caught/killed agent.** Cradle-to-grave fits the existing People + Orders spine.
 
 ---
 

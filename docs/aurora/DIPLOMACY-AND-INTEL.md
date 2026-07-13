@@ -2,7 +2,7 @@
 
 Source: aurora-manual `15-diplomacy/` (v2.7.1). Constants approximate — verify before hard-coding (see `INDEX.md`).
 
-> **In plain terms:** When you meet another alien empire, you start as strangers who can't even talk. First you crack their **language** (a 0–100% bar); the more you understand each other, the more you can do — from "we come in peace" at 20% up to alliance talks at 80%+. A running **points score** sets your relationship (Hostile → Unfriendly → Neutral → Friendly → Allied). Treaties and trade slowly raise it; shooting at them craters it. **Intelligence** is separate: you park ships with "ELINT" listening gear near their worlds and slowly learn what they've got — population, factories, ship designs — without them minding, because passive listening isn't considered spying. **None of this exists in Pulsar yet**, and it's the *least* relevant to our ground-combat objective, so this doc is here for completeness, not as a near-term build target.
+> **In plain terms:** When you meet another alien empire, you start as strangers who can't even talk. First you crack their **language** (a 0–100% bar); the more you understand each other, the more you can do — from "we come in peace" at 20% up to alliance talks at 80%+. A running **points score** sets your relationship (Hostile → Unfriendly → Neutral → Friendly → Allied). Treaties and trade slowly raise it; shooting at them craters it. **Intelligence** is separate: you park ships with "ELINT" listening gear near their worlds and slowly learn what they've got — population, factories, ship designs — without them minding, because passive listening isn't considered spying. **Pulsar now has a built diplomacy substrate and a built espionage chain of its own** (see §6) — this doc is the *Aurora* reference for those systems, not a claim they're unbuilt. The live Pulsar-side designs are `docs/society/DIPLOMACY-DESIGN.md` (external politics) and `docs/society/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md` (intel).
 
 ---
 
@@ -87,12 +87,12 @@ Key: **ELINT has no diplomatic penalty** — passive listening isn't espionage. 
 
 ## 6. Pulsar status & mapping
 
-**None of this exists in Pulsar.** `GameEngine/Factions/` holds faction state and relationships at a basic level, but there is no diplomacy/communication/intel system.
+**Both a diplomacy substrate and an espionage chain are now built and wired in `GameEngine/Factions/`.** This section maps the Aurora ideas above to the Pulsar code that exists today. The live Pulsar-side design docs are `docs/society/DIPLOMACY-DESIGN.md` (external politics) and `docs/society/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md` (intel). Note the three states below — some pieces are wired all the way to a live trigger, others are built but the player-facing trigger isn't hooked up yet, and the NPC-autonomous behavior ships flag-gated OFF by default. **None of it is runtime-verified through the client** (CI can't run the client), so treat "wired" as "code exists and is connected," not "confirmed working in play."
 
-| Aurora idea | Pulsar | Priority |
-|-------------|--------|----------|
-| Relationship points / tiers | `Factions/` (minimal) | **Low** — out of scope for the ground/infrastructure objective |
-| Communication %, treaties, trade | none | Low / future |
-| ELINT intelligence | none | Low / future |
+| Aurora idea | Pulsar code | State |
+|-------------|-------------|-------|
+| Relationship points / tiers | `DiplomacyDB` + `RelationshipState` (attached to every faction by `FactionFactory`, lines ~383/444); `Diplomacy.DeclareWar/MakePeace/BreakTreaty` | Built. First contact is live — `FirstContact.OnDetection` is called from `SensorScan.cs:120` on a real detection, records a mutual Neutral relationship, fires a first-contact event. |
+| Communication %, treaties, trade | `Treaties.Propose/WouldAccept`; `CasusBelli` (militarism gate); `ReactiveDiplomacy` (relationship drift); `TradeIncome`/`TradeIncomeProcessor` | Built but the player trigger isn't wired — `Treaties.cs:30` notes "Nothing calls Propose yet." NPC-autonomous proposals are gated OFF (`NPCDecisionProcessor.EnableDiplomaticProposals = false`). No literal comm-% language barrier; the gate is relationship score. |
+| ELINT / racial intelligence | Full espionage chain: `IntelDirectorateDB`/`IntelDirectorateAtb` (registered in JSON, cradle-to-grave component), `IntelDirectorateProcessor` (recruits agents), `Espionage.TaskAgent` + `EspionageProcessor` (resolve ops via `CovertActionCatalog`/`CovertRisk`/`InformationLedger`, with grave-rung agent loss). Client `IntelligenceWindow` reads it. | Built. This is active covert action, not Aurora's passive-only ELINT. NPC-autonomous mirror/ledger are gated OFF (`EnableEspionageMirror`, `EnableIntelLedger` = false). |
 
-**Honest scoping note:** diplomacy and intel are the **furthest** from the developer objective (ground combat + infrastructure + UI). Captured here for completeness so the picture is whole, but do not invest build effort here until the core objective is well underway. If/when built, relationship state belongs on faction entities (`Factions/`), and ELINT would ride the existing `Sensors/` framework (see `CONVENTIONS.md` §6 — reuse, don't duplicate).
+**Scoping note (updated for the North-Star pivot):** the old "diplomacy and intel are out of scope / low priority" stamp is retired. Per `docs/NORTH-STAR-VISION.md`, diplomacy-as-politics and intelligence are funded systems, and the substrate above is the result. The Aurora spec in §1–§5 remains the *design reference* for deepening them; the Pulsar-side owners are the two design docs named above.
