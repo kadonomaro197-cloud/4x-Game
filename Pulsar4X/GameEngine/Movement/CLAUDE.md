@@ -15,7 +15,7 @@ Newton physics, warp drive, inter-system jumps, pathfinding. Lives in `GameEngin
 | `NewtonMove/NewtonSimpleCommand.cs` | Simplified thrust command. |
 | `NewtonMove/NewtonionThrustAtb.cs` | Component design attribute that grants `NewtonThrustAbilityDB`. |
 | `NewtonMove/ReactionlessThrustAtb.cs` | **NEW (Propulsion ⚙2 · P2, 2026-07-10)** The Exotic REACTIONLESS drive component — sets `NewtonThrustAbilityDB.ThrustInNewtons` DIRECTLY (not Ve×burnRate) + marks `NewtonThrustAbilityDB.Reactionless` true, giving **no-propellant, unlimited-Δv** thrust. `Reactionless` (default false → byte-identical) pins `DeltaV = ReactionlessDeltaV` (1e12) and is honoured at the single fuel recompute funnel `NewtonThrustAbilityDB.SetFuel` (which `CargoTransferProcessor.UpdateMassFuelAndDeltaV` routes through — also early-returns for a reactionless drive to skip the fuel lookup). Combat payoff: `FleetCombat.DeltaVFloor` → `ManeuverBudget` never depletes (kite forever). Base-mod `reactionless-drive` (`engines.json`) on the **Nomad** cruiser. **v1 = the combat/closing payoff + strategic Δv readout; the in-space burn model (`NewtonianMovementProcessor` burning without consuming fuel) is a flagged follow-up.** Gauge `ShipReactionlessDriveTests`. |
-| `NewtonMove/NewtonianMovementProcessor.cs` | `IHotloopProcessor` (1 sec). Integrates velocity over delta-time, calls `MoveStateProcessor`. |
+| `NewtonMove/NewtonianMovementProcessor.cs` | `IHotloopProcessor` (1 sec). Integrates velocity over delta-time, calls `MoveStateProcessor`. **Note: the class inside this file is spelled `NewtonionMovementProcessor` (misspelled in source) — match that name in code, not the file name.** |
 | `NewtonMove/NewtonSimpleProcessor.cs` | Simpler movement processor for non-thrust entities. |
 | `WarpMove/WarpAbilityDB.cs` | DataBlob: warp drive capability (speed, fuel). |
 | `WarpMove/WarpMovingDB.cs` | DataBlob: entity currently in warp transit (has destination, ETA). |
@@ -23,12 +23,12 @@ Newton physics, warp drive, inter-system jumps, pathfinding. Lives in `GameEngin
 | `WarpMove/WarpMoveCommand.cs` | Order: begin warp to a target orbit. |
 | `WarpMove/WarpDriveAtb.cs` | Component attribute granting warp drive ability. |
 | `WarpMove/WarpMath.cs` | `CalcMaxWarpSpeed()`, transit time calculations. |
-| `NavSequence/NavSequenceDB.cs` | DataBlob: ordered list of waypoints/orders for an entity to execute. |
+| `NavSequence/NavSequenceDB.cs` | DataBlob: `List<Manuver> ManuverNodes` — an ordered list of Newtonian delta-v maneuver nodes (the orbital maneuver planner's output), NOT generic waypoints/orders. The list is a plain public field, not `[JsonProperty]`-persisted. |
 | `NavSequence/NavSequenceProcessor.cs` | `IInstanceProcessor`. Executes the next item in the nav sequence queue. |
 | `NavSequence/NavSequenceCommand.cs` | Order: append or replace the nav sequence. |
 | `Pathfinding/PathfindingManager.cs` | Graph-based pathfinder over the jump point network. |
 | `Pathfinding/Graph.cs`, `Node.cs`, etc. | Standard A* graph data structures. |
-| `InterSystemJumpProcessor.cs` | Handles entity movement through jump points between star systems. |
+| `InterSystemJumpProcessor.cs` | **Static class** (not an `IHotloopProcessor`/`IInstanceProcessor`). Would move an entity through a jump point between star systems via `JumpOut` (`game.GlobalManager.Transfer`) / `JumpIn` (`JumpSystem.Transfer`), scheduled by `SetJump`. **Currently unwired: `SetJump` has no live caller (its only reference is a commented-out test line), so this path does not run in-game today.** |
 | `InterceptCalcs.cs` | `OrbitPhasingManuvers()`, intercept calculations used by missile guidance. |
 | `MoveMath.cs` | `GetRelativeFutureVelocity()`, vector helpers. |
 | `MoveState.cs`, `MoveStateProcessor.cs` | State machine for entity movement modes (orbiting / thrusting / warping). |
@@ -129,17 +129,18 @@ caps SPEED only (so they arrive together); true formation-keeping / follow-the-l
 
 ## Nav Sequence
 
-`NavSequenceDB` holds an ordered queue of `INavAction` items (move-to-body, warp, refuel, resupply, survey anomaly, etc.). `NavSequenceProcessor` (instance processor) pulls the next action off the queue and schedules it. This is the primary way to give an entity a multi-step mission.
+`NavSequenceDB` holds `List<Manuver> ManuverNodes` — an ordered list of Newtonian delta-v maneuver nodes (each `Manuver` is a struct: a `ManuverType`, start/end datetimes, start/end Kepler elements, and start/end SOI-parent entities). It is the output of the orbital maneuver planner, NOT a generic queue of mission actions. **There is no `INavAction` type anywhere in the repo** — the earlier "move-to-body / warp / refuel / resupply / survey anomaly" list was wrong. (Refuel/resupply/survey-anomaly do exist, but as `EntityCommand` subclasses — see `Fleets/CLAUDE.md` — and they are stubs, not nav-sequence items.) `NavSequenceProcessor` (instance processor) works the maneuver nodes.
 
 ---
 
 ## Inter-System Jumps
 
-`InterSystemJumpProcessor` handles the cross-system transit:
-1. Entity reaches jump point.
-2. `MasterTimePulse.AddSystemInteractionInterupt()` is called — forces all systems to sync at this datetime.
-3. Entity is removed from source `StarSystem` manager, added to destination manager.
-4. Its nav sequence is transferred via `ManagerSubPulse.TransferEntity()`.
+`InterSystemJumpProcessor` is a **static class** that would handle the cross-system transit. Entry point `SetJump(game, exitTime, entrySystem, entryTime, jumpingEntity)`:
+1. Schedules two `game.TimePulse.AddSystemInteractionInterupt(...)` events — a `JumpOutProcessor` at `exitTime` and a `JumpInProcessor` at `entryTime`.
+2. `JumpOut` moves the entity to the global manager via `game.GlobalManager.Transfer(entity)`.
+3. `JumpIn` moves it into the destination via `jumpPair.JumpSystem.Transfer(entity)`.
+
+**There is no `ManagerSubPulse.TransferEntity()` method — transfer is `GlobalManager.Transfer` / `StarSystem.Transfer`.** And this whole path is **currently unwired: `SetJump` has no live caller** (its only reference is a commented-out line in a test), so inter-system jumps via this processor do not run in-game today.
 
 ---
 
@@ -153,19 +154,19 @@ caps SPEED only (so they arrive together); true formation-keeping / follow-the-l
 
 Ground combat requires landing troops, which requires:
 1. Transport ship in orbit (using `WarpAbilityDB` / `OrbitDB` to arrive).
-2. Descent from orbit to surface — currently no "landing" action exists. This will be a new `INavAction` appended to `NavSequenceDB`.
+2. Descent from orbit to surface — currently no "landing" action exists. This will be a new `EntityCommand` (e.g. `LandTroopsAction`), NOT a nav-sequence item — there is no `INavAction` type in the repo, and `NavSequenceDB` holds Newtonian maneuver nodes, not mission actions.
 3. Ground unit entities, once landed, do **not** need `NewtonMoveDB` — they move at tactical scale on the planet, not the star system scale.
 
 ---
 
 ## Gotchas
 
-1. **`directAttack = false` in `MissileProcessor`.** The Newtonian thrust-to-intercept path (`ThrustToTargetCmd`) exists but is never used because `directAttack` is hardcoded `false`. Phasing maneuvers are used instead, which can fail when the target isn't in a stable orbit. Fix in `Weapons/WeaponMissile/MissleProcessor.cs`.
+1. **Missile guidance uses direct attack (fixed 2026-06-21).** `MissleProcessor.cs` now sets `directAttack = true`, so missiles use the Newtonian thrust-to-intercept path (`ThrustToTargetCmd`) — direct pursuit, not the old phasing maneuvers. (This gotcha previously claimed `directAttack = false`; that is stale — see root CLAUDE.md gotcha #3.)
 
 2. **`NewtonSimpleProcessor` vs `NewtonianMovementProcessor`.** Both exist. Simple is for projectiles / beams that don't thrust; full is for ships and missiles. Don't attach `NewtonMoveDB` to a non-thrusting entity expecting the simple behavior — use `NewtonSimpleMoveDB`.
 
 3. **`Temporal Anomaly Exception` when scheduling movement.** If a movement command is scheduled for a datetime already past in the manager's timeline, `ManagerSubPulse.AddEntityInterupt()` throws. Always use `entity.StarSysDateTime` as the base when constructing future datetimes for commands.
 
-4. **`MoveToNearestAction.cs` family** — these are fleet automation helpers, not player orders. They are used by fleet order sequences (e.g., "patrol nearest colony"). Do not confuse with `NavSequenceCommand` (which is the player-facing order).
+4. **`MoveToNearestAction.cs` family** — these ARE player orders: each is an `EntityCommand` subclass (`MoveToNearestAction : EntityCommand`, and the colony/anomaly/geo-survey variants), commanding a fleet to move to the nearest colony/anomaly/geo-survey target. (Earlier text called them "automation helpers, not player orders" — that's wrong; they're issuable orders.)
 
 5. **A 0-speed warp intercept overflows `TimeSpan` → a background-thread `[FATAL]` (fixed 2026-07-04).** `WarpMath.GetInterceptPosition_m` computes `tt = distance / speed`; a `speed` of 0 (or negative/NaN) makes `tt = ∞`, and the loops feed that into `atDateTime + TimeSpan.FromSeconds(∞)` → `OverflowException`. Because the fleet-move order executes on the **background sim thread** (`SimulateTimeAsync`), that throw is *unobserved* → `[FATAL]` (and the synchronous copy shows as `[OrderError]`) — it can kill the clock. **Trigger (found in a committed `game_logs/` crash):** ordering a **FLEET** to a body when a member ship has a `WarpAbilityDB` with `MaxSpeed == 0` (a hull with a warp blob but no effective speed) — `MoveToSystemBodyOrder`'s only guard was `HasDataBlob<WarpAbilityDB>()`, so the 0-speed ship reached the intercept math. **Fix (two layers):** `GetInterceptPosition_m` now bails to a no-op `(moverAbsolutePos, atDateTime)` when `speed <= 0` / non-finite (and likewise for a non-finite orbital period), so **no** caller can overflow it; and `MoveToSystemBodyOrder` skips ships whose `MaxSpeed <= 0`. Gauge: `WarpFleetMoveTests.GetInterceptPosition_ZeroSpeed_DoesNotOverflow`. **Lesson: any `distance/speed → TimeSpan.FromSeconds` path must guard a non-positive speed — and an order that runs on the sim thread turns an unguarded throw into a clock-killing `[FATAL]`, not a caught error.**

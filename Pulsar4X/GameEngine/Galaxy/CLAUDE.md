@@ -15,7 +15,7 @@
 | `StarFactory.cs` | Creates star entities with `StarInfoDB`, `MassVolumeDB`, `SensorProfileDB`, etc. |
 | `SystemBodyFactory.cs` | Creates planet/moon/asteroid entities. Assigns body type, mass, orbit, atmosphere. |
 | `AtmosphereDB.cs` | DataBlob on any body with an atmosphere. Holds `Pressure`, `SurfaceTemperature`, `GreenhouseFactor`, `GreenhousePressure`, `Hydrosphere`, `HydrosphereExtent`, `Composition` (gas name → atm pressure), `CompositionByPercent`. |
-| `AtmosphereProcessor.cs` | Static processor. Computes surface temperature from gas composition using the **Aurora greenhouse formula** (explicitly cited in comments). Called during system generation and whenever atmosphere changes. |
+| `AtmosphereProcessor.cs` | Static processor. The temperature/pressure compute logic lives in `UpdateAtmosphere()` (uses the **Aurora greenhouse formula**, explicitly cited in comments). **Its `Process(game, systems, deltaSeconds)` hotloop method is an empty `@todo` stub** (`AtmosphereProcessor.cs:19-22`) — it does nothing per tick. The only live caller of `UpdateAtmosphere` is **system generation** (`SystemBodyFactory.cs`); there is no "whenever atmosphere changes" caller yet (terraforming is absent — see below). |
 | `AtmosphereDBExtensions.cs` | Helper methods on `AtmosphereDB`. |
 | `MassVolumeDB.cs` | Mass, volume, density, radius, surface gravity, escape velocity. `Volume_km3` is **referenced in the commented-out colony damage block** in `DamageProcessor.cs` — this field exists. |
 | `MassVolumeProcessor.cs` | Processes mass/volume-related changes. |
@@ -66,13 +66,13 @@ This is the most complete Aurora-derived implementation in the codebase. From th
 
 The actual implementation uses a slightly adjusted constant (0.035 instead of 0.1) for calibration — this is intentional for Pulsar's scale. The structure is correct.
 
-Surface temperature calculation:
+Surface temperature calculation (as actually coded in `AtmosphereProcessor.cs:62-63`):
 ```
-SurfaceTemp(K) = BaseTemp(K) × (1 - Albedo)^0.25 + BaseTemp(K) × GreenhouseFactor × (1 - Albedo)^0.25
+SurfaceTemp(K) = BaseTemp(K) + BaseTemp(K) × GreenhouseFactor × (1 - Albedo)^0.25
 ```
-(Applies Stefan-Boltzmann law — more physically accurate than Aurora's simpler version.)
+Note: the first term is the **plain** base temperature in Kelvin — **no albedo factor** is applied to it. The `(1 - Albedo)^0.25` Stefan-Boltzmann factor is applied **only to the greenhouse term** (the second term). (The airless-body branch, `AtmosphereProcessor.cs:71-72`, does apply `(1 - Albedo)^0.25` to the base temperature directly.)
 
-**For terraforming (Phase 2d):** A `TerraformingProcessor` modifies `AtmosphereDB.Composition` over time (adds or removes gas entries), then calls `AtmosphereProcessor.UpdateAtmosphere()` to recompute temperature and pressure. The hook is already designed — no structural changes needed.
+**For terraforming (Phase 2d) — NOT built:** the *plan* is for a `TerraformingProcessor` to modify `AtmosphereDB.Composition` over time (add or remove gas entries), then call `AtmosphereProcessor.UpdateAtmosphere()` to recompute temperature and pressure. **No `TerraformingProcessor` and no `TerraformingAtbDB` exist in the code today** — this is a design sketch, not a wired hook. `UpdateAtmosphere()` is the recompute entry point it *would* call, and that method does exist and work — so the recompute half is ready, but the driving processor still has to be written.
 
 ---
 
@@ -82,7 +82,7 @@ This component attribute is on installations that make hostile worlds habitable.
 
 The aurora formula is: `MaxPop(millions) = Infrastructure / (CC × 100)`
 
-Where `Infrastructure = sum of PopulationCapacity across all installed units`. This is what `PopulationProcessor` should read to replace the stub.
+Where `Infrastructure = sum of PopulationCapacity across all installed units`. **This is already wired — it is no longer a stub.** `PopulationProcessor` (`Colonies/PopulationProcessor.cs:26,165`) and `StationPopulationProcessor` (`Stations/StationPopulationProcessor.cs:60`) both read the live carrying capacity via `ComponentInstancesDB.GetPopulationSupportValue()` (`Engine/Components/ComponentInstancesDBExtensions.cs:47-78`), which sums `PopulationCapacity` across the installed infrastructure — **tolerance-gated** by each design's `GravityToleranceAtb`/`PressureToleranceAtb` (a component that can't handle the body's gravity/pressure contributes nothing) and scaled by each component's health. (Runtime behaviour is unverified in CI, which can't run the client — but the read path exists and is wired.)
 
 ---
 
@@ -96,8 +96,8 @@ Where `Infrastructure = sum of PopulationCapacity across all installed units`. T
 | Hydrosphere percentage | `AtmosphereDB.HydrosphereExtent` | ✅ stored |
 | Ruins generation | `RuinsDB` | ✅ generates (X.1 tautology fix, 2026-07-12) — but nothing reads it yet (X.2) |
 | Colony cost calculation | `SpeciesDB.ColonyCost()` (see `People/CLAUDE.md`) | ✅ exists, verify formula |
-| Infrastructure → population capacity | `PopulationSupportAtbDB.PopulationCapacity` | ✅ stored, stub in PopulationProcessor |
-| Terraforming (modify atmosphere over time) | `AtmosphereDB` supports it; no `TerraformingProcessor` | ❌ hook exists, processor missing |
+| Infrastructure → population capacity | `PopulationSupportAtbDB.PopulationCapacity` | ✅ wired — read live by `PopulationProcessor` + `StationPopulationProcessor` via `GetPopulationSupportValue()` (tolerance-gated) |
+| Terraforming (modify atmosphere over time) | no `TerraformingProcessor`, no `TerraformingAtbDB` | ❌ not built — only `UpdateAtmosphere()` recompute exists |
 | Asteroid kinetic impact | `AsteroidDamageDB` | ✅ partial |
 
 ---
@@ -106,6 +106,6 @@ Where `Infrastructure = sum of PopulationCapacity across all installed units`. T
 
 | Phase 2 task | Hook point |
 |-------------|------------|
-| Population formula (Phase 2c) | `PopulationProcessor` reads `sum(PopulationSupportAtbDB.PopulationCapacity)` from `ComponentInstancesDB` on the colony, divides by `(ColonyCost × 100)` for max pop |
-| Terraforming (Phase 2d) | New `TerraformingAtbDB` component attribute on terraformer installation; new `TerraformingProcessor` modifies `AtmosphereDB.Composition` then calls `AtmosphereProcessor.UpdateAtmosphere()` |
+| Population formula (Phase 2c) — **DONE/wired** | `PopulationProcessor` already reads `sum(PopulationSupportAtbDB.PopulationCapacity)` from `ComponentInstancesDB` on the colony (via `GetPopulationSupportValue()`) as its carrying-capacity cap. Runtime behaviour unverified (CI can't run the client). |
+| Terraforming (Phase 2d) — **still to build** | No `TerraformingAtbDB` and no `TerraformingProcessor` exist yet. Plan: a new `TerraformingAtbDB` component attribute on a terraformer installation + a new `TerraformingProcessor` that modifies `AtmosphereDB.Composition` then calls `AtmosphereProcessor.UpdateAtmosphere()` (the recompute method that already exists). |
 | Colony bombardment dust (Phase 3) | Orbital strikes add a "dust" gas to `AtmosphereDB.Composition` with anti-greenhouse effect; `AtmosphereProcessor` recalculates cooling naturally |

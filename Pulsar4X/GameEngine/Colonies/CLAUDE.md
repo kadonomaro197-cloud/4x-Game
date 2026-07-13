@@ -11,7 +11,7 @@ Population, colony lifecycle, life support. Lives in `GameEngine/Colonies/`.
 | File | Purpose |
 |------|---------|
 | `ColonyInfoDB.cs` | Core colony DataBlob: population per species, stockpiles, parent planet reference, component dictionary for bombardment. |
-| `ColonyLifeSupportDB.cs` | Tracks `MaxPopulation` — the carrying capacity ceiling calculated from infrastructure. |
+| `ColonyLifeSupportDB.cs` | **DEAD CODE — do not build on it.** Has a single `MaxPopulation` field (no `[JsonProperty]`, so it wouldn't even survive save/load) and is **never attached to any colony** (not in either `ColonyFactory` path). `PopulationProcessor.ReCalcMaxPopulation()` would write to it, but that method is **never called** — its only registration (`RecalcProcessor.cs:32`) is commented out. Live carrying capacity is `ComponentInstancesDB.GetPopulationSupportValue()` (read directly by `GrowPopulation`); the live shortage gauge is `ColonySustenanceDB`. |
 | `ColonyMoraleDB.cs` | **NEW (M1, 2026-06-29)** Morale (0–100, 50 = neutral) — the level-control valve on the population "tank". Recalced each population tick from conditions + overcrowding (M1) + employment + housing comfort (M2); drives migration. All weights are named coefficients (government-ready). Host-agnostic (station-attachable later). See `docs/MORALE-AND-POPULATION-DESIGN.md`. |
 | `LegitimacyDB.cs` | **NEW (#31, 2026-07-01)** The regime's health bar for ONE province (0–100) — the INTERNAL-politics counterpart to morale, and the locked "LOCAL not empire-wide" decision (so the whole empire can't rebel at once). DERIVED each cycle (like morale, not a parallel resource): v1 baseline = the province's hosts' average morale, adjusted by demand track-record + war outcomes + governor competence + connectivity (each neutral when unwired). `LegitimacyDB.IsCollapsing(v)` (< `CollapseThreshold` 20) is the REBELLION trigger (#38 hook). Pure math (`ComputeLegitimacy` + `LegitimacyInputs`), named coefficients (government-ready). **LIVE as of 2026-07-01:** attached to every colony (`ColonyFactory`, both paths) + station (`StationFactory`), recomputed monthly by `LegitimacyProcessor`. Tests: `LegitimacyTests` (math) + `LegitimacyProcessorTests` (wiring). See `docs/GOVERNMENT-AND-POLITICS-DESIGN.md`. |
 | `LegitimacyProcessor.cs` | **NEW (#31 wiring, 2026-07-01)** `IHotloopProcessor` keyed on **`LegitimacyDB`** (its own blob — NOT ColonyInfoDB/ColonyMoraleDB, the one-hotloop-per-blob rule L9), monthly. Recomputes each province's `LegitimacyDB.Legitimacy` from the sibling `ColonyMoraleDB.Morale` (v1 morale-only driver). Host-agnostic (colonies + stations). Defensive (never throws — L4). Mirrors `ColonyEconomyProcessor`'s "keyed on its own blob, reads a sibling, runs colony-side" shape. **Now reads the WAR term too (2026-07-01):** `WarTermFor(province)` looks up the owning faction's `DiplomacyDB.IsAtWarWithAnyone()` and, if at war, feeds the government's `WarMoraleFactor()` as legitimacy's `WarOutcome` — a pacifist regime's provinces bleed loyalty during war, a militarist's take pride (the casus-belli militarism gate, live on the province; no `GovernmentDB` → neutral Mid default). **v1: morale + war-standing driver; the demand/governor/connectivity inputs + government re-weighting wire in later.** Gauge: `LegitimacyProcessorTests` (incl. `War_TaxesLegitimacy_ByMilitarism`). |
@@ -25,13 +25,13 @@ Population, colony lifecycle, life support. Lives in `GameEngine/Colonies/`.
 | `ManpowerTools.cs` | **NEW (M3 sub-slice 2b, #27)** The crew ENFORCEMENT bridge — turns the pool math into a real gate on **ship** construction. `ResolveBuild(host, crewReq)` (reads the host's `ColonyManpowerDB` + owning government's `CrewPolicy()`), `CommitCrew(host, n)`, `ReleaseCrew(sourceColony, n)`. **INERT WHEN ABSENT** (a host with no pool — a station — always builds). Wired at the ship lifecycle: the gate in `IndustryTools.ConstructStuff` (blocks a ship you can't crew, before resources are spent); the commit at `ShipDesign.OnConstructionComplete` (both the direct-launch and the launch-complex-queue paths, since a colony with a `LaunchComplexDB` — e.g. Earth — queues the ship instead of spawning it); the `ShipInfoDB.CrewSourceColonyId` provenance stamp at each real creation point (`OnConstructionComplete` for direct, `LaunchComplexProcessor.TryLaunchShip` for the launch queue); and the release in `ShipFactory.DestroyShip` (frees the source colony's crew). **Start-safe:** the start fleet spawns via `ShipFactory.CreateShip` directly (bypasses the queue → provenance stays -1 → destroy is a no-op), and start pop is billions. Feel + the parked casualties-shrink-population sting are local PC-tests. **TALENT HALF WIRED (2026-07-11) — the scarce-pool draw for Enhancers ⚙6.2 Unit Caliber:** `HasTalentToBuild`/`CommitTalent`/`ReleaseTalent` mirror the crew half against the scarce `TalentPool` (officers). A ship's `ShipDesign.TalentReq` (summed crew of its caliber modules) is drawn from talent instead of bulk at the same three sites, so an elite hull ties up scarce veterans and can't be spammed. HARD wall (no conscript-understaffed — you can't fake a veteran crew). Inert/byte-identical for any non-caliber ship (TalentReq 0). Gauge: `ManpowerTests` (talent commit/release + gate) + `ShipCaliberTests`. |
 | `ColonyBonusesDB.cs` | Modifier DataBlob for production/research/mining bonuses on a colony. |
 | `ColonizeableDB.cs` | Marker DataBlob on planets that can be colonized. |
-| `ColonyFactory.cs` | `CreateColony()` — creates a colony entity and attaches all required DataBlobs. |
+| `ColonyFactory.cs` | Two creation paths, both attach the same blob set: **`CreateFromBlueprint()`** (`ColonyFactory.cs:26`) is the **real New-Game path** (builds the start colony from JSON); `CreateColony()` (`ColonyFactory.cs:188`) is the in-game "found a colony" order path. |
 | `CreateColonyOrder.cs` | Player order to found a colony on a planet. |
 | `PopulationProcessor.cs` | `IHotloopProcessor` (monthly). Runs `GrowPopulation()` for each colony. |
-| `ColonyHexMapDB.cs` | **NEW (DevBranch)** DataBlob: hex-grid layout for a colony. `MaxRadius` scales with admin building office space. `HexTiles` — dict of coordinate → tile. |
-| `ColonyHexMapProcessor.cs` | **NEW (DevBranch)** Processor that updates the hex map when colony state changes. |
-| `HexTile.cs` | **NEW (DevBranch)** One hex cell on the colony map. Holds terrain type, what's built there. |
-| `HexCoordinate.cs` | **NEW (DevBranch)** Cube-coordinate system for the hex grid. |
+| `ColonyHexMapDB.cs` | **Built and wired.** DataBlob: hex-grid layout for a colony. `MaxRadius` scales with admin building office space. `HexTiles` — dict of coordinate → tile. |
+| `ColonyHexMapProcessor.cs` | **Built and wired.** An `IInstanceProcessor`, but it is **not driven by the instance-processor queue** — it's invoked by **direct static call** to `ColonyHexMapProcessor.ForceUpdateColonyHexMap(colony)` from `AdminSpaceProcessor.cs:21` (when admin space recalcs) and from the client `ColonyHexMapWindow.cs:68`. Rebuilds the hex map size from the colony's admin-building office space. (Runtime behavior unverified — CI can't run the client.) |
+| `HexTile.cs` | One hex cell on the colony map. Holds terrain type, what's built there. |
+| `HexCoordinate.cs` | Cube-coordinate system for the hex grid. |
 
 ---
 
@@ -39,12 +39,17 @@ Population, colony lifecycle, life support. Lives in `GameEngine/Colonies/`.
 
 A fully-formed colony entity typically holds:
 
-`ColonyFactory.CreateColony()` attaches these blobs **directly** (verified in `ColonyFactory.cs`):
+**Both `ColonyFactory` paths — `CreateFromBlueprint()` (the New-Game/JSON path) and `CreateColony()` (the found-a-colony order) — attach the SAME blob set directly** (verified in `ColonyFactory.cs:84-99` and `:205-220`):
 
 | DataBlob | Purpose |
 |----------|---------|
-| `NameDB` | Colony name |
 | `ColonyInfoDB` | Core: population, stockpiles, parent planet |
+| `ColonyMoraleDB` | Morale valve (M1) — see file map |
+| `LegitimacyDB` | Province regime health (internal politics) — see file map |
+| `RebellionDB` | Rebellion state (legitimacy-collapse process) — see file map |
+| `ColonySustenanceDB` | Power/food shortage gauges — see file map |
+| `ColonyManpowerDB` | People-as-a-resource pools (crew/talent) — see file map |
+| `ColonyEconomyDB` | Tax lever — see file map |
 | `ColonyBonusesDB` | Modifier tracking |
 | `MiningDB` | Mining setup |
 | `OrderableDB` | Marks the colony able to receive orders |
@@ -53,11 +58,12 @@ A fully-formed colony entity typically holds:
 | `PositionDB` | Location (on the planet surface) |
 | `TeamsHousedDB` | Scientists / commanders housed here |
 | `ComponentInstancesDB` | **Installations live here** (added via `AddComponent()`) |
+| `InfrastructureDB` | Capacity summed from installations as they're added |
 
 > **NOT attached by `ColonyFactory`** (corrects the earlier recon):
 > - **`InstallationsDB` is never attached to a colony** — it is vestigial/abandoned (no `[JsonProperty]` fields; only dead-code references). Installations are **components** in `ComponentInstancesDB` (see `DefaultStartFactory.cs:212-225`: `AddComponent(mineDesign)`, `AddComponent(facEntity)`, …).
 > - Capability blobs such as `IndustryAbilityDB` are **granted by installed components** carrying the matching `*Atb` attribute, not added by the factory.
-> - `ColonyLifeSupportDB.MaxPopulation` is (re)computed by `PopulationProcessor`, not added at creation.
+> - **`ColonyLifeSupportDB` is never attached** (dead code — see file map). Carrying capacity is read live from `ComponentInstancesDB.GetPopulationSupportValue()`, not stored on a colony blob.
 >
 > Verify the exact grant path in code before assuming a specific blob is present. See `CONVENTIONS.md` §6 (components = abilities).
 
@@ -94,20 +100,24 @@ Dictionary<Entity, double> ColonyComponentDictionary // for bombardment targetin
 
 **Morale (M1, 2026-06-29):** if the colony has a `ColonyMoraleDB`, `GrowPopulation` now recomputes morale from the worst resident-species `ColonyCost` (conditions) and `totalPop / capacity` (overcrowding, only on support-capped hostile worlds), then adds `ColonyMoraleDB.MigrationRate(morale)` to the growth rate at the two former `@todo: external factors` hooks. Morale < 50 → emigration; > 50 → immigration; 50 → no change. The math is pure/static on `ColonyMoraleDB` (`ComputeMorale`, `MigrationRate`) and unit-tested in `MoraleTests`. Guarded by `TryGetDataBlob` so a colony without the blob grows as before. Roadmap (jobs/unemployment, hard people-draw, money+tax, energy+food): `docs/MORALE-AND-POPULATION-DESIGN.md`.
 
-**Current gaps (remaining after M1):**
-- No jobs/unemployment input yet (M2); carrying capacity still a single lump (housing/jobs/food not split)
-- Population is not yet a *drawable* resource — crew/officers/scientists/army still spawn free (M3)
-- No money/tax wiring (M4) or energy/food (M5)
+**Roadmap status (M2–M5 are now BUILT; verify each blob in the file map above):**
+- Jobs/unemployment + housing comfort — **built** (M2): `EmploymentAtbDB`, `HousingAtbDB`, summed and read into morale.
+- Population as a *drawable* resource — **built** (M3): `ColonyManpowerDB` + `ManpowerTools` gate ship construction on crew (and elite hulls on talent). Some pieces are calibration-inert; see the file map.
+- Money/tax — **built and wired** (M4): `ColonyEconomyDB` + `ColonyEconomyProcessor` bill tax into the faction ledger.
+- Energy/food — **built but inert by default** (M5): `ColonySustenanceDB` + `SustenanceProcessor` compute shortages, but the per-capita demand coefficients default to 0, so every shortage reads 0 until calibrated on the local build (a food-supply cargo good doesn't exist yet either). CI-green + inert by design.
+
+**Still open:**
 - No radiation effect on growth
 - The `−50.0` over-hard-cap die-off rate is still a placeholder, not a formula
+- Runtime feel of the M2–M5 wiring is unverified (CI can't run the client)
 
 ---
 
 ## Life Support and Carrying Capacity
 
-`ColonyLifeSupportDB.MaxPopulation` = total population support value from all installed infrastructure components that have a `PopulationSupportAtbDB` component attribute.
+Carrying capacity is the total population support value from all installed infrastructure components that have a `PopulationSupportAtbDB` component attribute. It is read **live, on demand** by `GrowPopulation` via `ComponentInstancesDB.GetPopulationSupportValue()` — it is **not stored** on a colony blob.
 
-`ReCalcMaxPopulation()` in `PopulationProcessor` recomputes this from `ComponentInstancesDB.GetPopulationSupportValue()`.
+> **Do NOT use `ColonyLifeSupportDB` for this.** That blob (and `PopulationProcessor.ReCalcMaxPopulation()`, which would write its `MaxPopulation`) is **dead code**: the blob is never attached to a colony and `ReCalcMaxPopulation()` is never called (its `RecalcProcessor.cs:32` registration is commented out). See the file map.
 
 `Species.ColonyCost(planet)` — returns a floating-point cost multiplier based on atmosphere compatibility, temperature, gravity, etc. Higher cost = more life support infrastructure needed per capita. Zero = native planet, no support needed.
 
@@ -119,11 +129,11 @@ Dictionary<Entity, double> ColonyComponentDictionary // for bombardment targetin
 
 `InstallationsDB` (in `Industry/InstallationsDB.cs`) *looks* like the installation store — `Dictionary<string,float> Installations`, `WorkingInstallations`, `EmploymentList` — but it is **dead code**: never attached to any colony, no `[JsonProperty]` fields, its `ConstructJob` lists commented out. Treat it as abandoned. Do not build on it; do not "fill in" the UI against it.
 
-**The installations UI is doubly broken.** `PlanetaryWindow.RenderInstallations()` not only has an empty body — its tab is gated on `HasDataBlob<InstallationsDB>()` (`PlanetaryWindow.cs:107`), which is always false, so the tab never appears. The correct fix renders from `ComponentInstancesDB` (reuse the existing `ComponentInstancesDBDisplay`). See `docs/aurora/PLANETARY-INFRASTRUCTURE.md` §6.
+**The installations UI is FIXED (was doubly broken).** The old broken version — empty body, tab gated on the always-false `HasDataBlob<InstallationsDB>()` — now survives only in the dead `PlanetaryWindow.old.cs` (not compiled into the live path). The live `PlanetaryWindow.cs` gates the Installations tab on `HasDataBlob<ComponentInstancesDB>()` (`:102`) and renders from `componentsDB` in `RenderInstallations()` (`:215`). (Compiles under CI's `build-client`; runtime appearance unverified — CI can't run the client.) See root gotcha #4 and `docs/aurora/PLANETARY-INFRASTRUCTURE.md` §6.
 
 ---
 
-## Colony Hex Map (DevBranch — New)
+## Colony Hex Map (built and wired)
 
 `ColonyHexMapDB` gives each colony a hex-tile grid — the same spatial layout pattern used in games like Civilization. This is significant for ground combat: it establishes that the colony ALREADY has a spatial model. Ground units, fortifications, and terrain could all live on hex tiles.
 
@@ -146,11 +156,11 @@ The colony system is the target for all ground combat. Key integration points:
 
 | What | Where | Status |
 |------|-------|--------|
-| Orbital bombardment damage to population | `DamageProcessor.cs` lines ~101–181 | Commented out |
-| Orbital bombardment damage to installations | Same block | Commented out |
+| Orbital bombardment damage to population | `DamageComplex/DamageProcessor.cs` `OnColonyDamage()` (routed from `OnTakingDamage()` at `:54`) | **Wired** (beam hits reach it; missiles deliver via `MissileImpactProcessor`). Energy divisor is a placeholder. See `Damage/CLAUDE.md`. |
+| Orbital bombardment damage to installations | Same `OnColonyDamage()` (`ApplyInstallationDamage`) | **Wired** (shared with the station damage path) |
+| Space→ground garrison softening | `OnColonyDamage()` → `ApplyGroundBombardment(...)` | **Wired** (2026-07-06) — softens the defending garrison; damage coefficient is a flagged placeholder |
 | `ColonyComponentDictionary` for randomized targeting | `ColonyInfoDB.cs` | Exists but never populated |
-| Ground unit garrison attachment | *(not yet)* | New `GroundUnitDB` needed |
-| Active combat state | *(not yet)* | New `GroundCombatDB` needed |
+| Ground unit garrison / active combat state | `GameEngine/GroundCombat/` | **Built** — ground combat is its own subsystem now (`GroundForcesDB` etc.); see `GroundCombat/CLAUDE.md`. Most of it ships gated/uncalibrated — runtime unverified. |
 
 ---
 

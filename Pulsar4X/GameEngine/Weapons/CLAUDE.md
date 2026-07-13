@@ -107,7 +107,7 @@ BeamWeaponProcessor.UpdateBeam(BeamInfoDB)
         → if hit: state = AtTarget, beam positioned at target
         → if miss: state = MissedTarget, energy dissipates 10%/sec
   State: AtTarget
-    → OnHit() → **SimpleDamage.OnTakingDamage(target, 100, 500)**  ← PLACEHOLDER
+    → OnHit() → **DamageProcessor.OnTakingDamage(target, damageFragment)**  ← full two-zone/wavelength model (BeamWeaponProcessor.cs:144)
     → OwningEntity.Destroy() (remove beam from game)
   State: MissedTarget
     → UpdatePhysics() → move beam forward
@@ -236,7 +236,7 @@ Pattern (copy beam weapon approach):
 2. In `FireWeapon()`, either create a new entity (like BeamInfoDB) or call a processor static method (like MissileProcessor).
 3. If the weapon has in-flight physics, create `XxxInfoDB.cs` (DataBlob) and `XxxProcessor.cs` (IHotloopProcessor).
 4. The processor auto-registers — no manual setup needed.
-5. Register the weapon's component template in `Data/basemod/blueprints/components/`.
+5. Register the weapon's component template in `Pulsar4X/GameData/basemod/TemplateFiles/` (e.g. `weapons.json`; copied to AppData/Mods at build).
 
 ---
 

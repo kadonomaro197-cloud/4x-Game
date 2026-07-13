@@ -11,13 +11,13 @@
 | File | Role |
 |------|------|
 | `FleetDB.cs` | The DataBlob. Holds flagship ID, parent fleet ID (tree hierarchy via `TreeHierarchyDB`), `StandingOrders` list, and `InheritOrders` flag. |
-| `FleetFactory.cs` | Creates fleet entities. `FleetFactory.Create(manager, factionID, name)` — creates the entity with `FleetDB`, `OrderableDB`, `NameDB`, `OwnedDB`. |
-| `FleetOrder.cs` | All player-issued fleet commands — `Create`, `Disband`, `ChangeParent`, `AssignShip`, `UnassignShip`, `SetFlagShip`, `ToggleInheritOrders`. Each is an `EntityCommand` with `ActionLaneTypes.InstantOrder`. |
-| `FleetOrderProcessor.cs` | The `IInstanceProcessor` that executes `FleetOrder` commands. |
+| `FleetFactory.cs` | Creates fleet entities. `FleetFactory.Create(manager, factionID, name)` — creates the entity with `NameDB`, `FleetDB`, `OrderableDB`, and sets `entity.FactionOwnerID` directly (no `OwnedDB` blob). |
+| `FleetOrder.cs` | All player-issued fleet commands — `Create`, `Disband`, `ChangeParent`, `AssignShip`, `UnassignShip`, `SetFlagShip`, `ToggleInheritOrders`. Each is an `EntityCommand` with `ActionLaneTypes.InstantOrder`. These are executed by the generic `OrderableProcessor` (the order-execution path), which calls each command's `Execute()` — that's where ship membership actually changes (`AssignShip`/`UnassignShip`). |
+| `FleetOrderProcessor.cs` | An `IHotloopProcessor` (`RunFrequency` = 1 hr) keyed to `FleetDB`. It does NOT execute `FleetOrder` commands — it evaluates a fleet's `StandingOrders` (conditional orders): when a standing order's condition is true and the fleet has no pending actions, it clones that order's actions onto the fleet's `OrderableDB` action list. |
 | `FleetTools.cs` | Read-only UI helpers so the MAP can draw a fleet as ONE icon (matching how the engine already treats it as one unit). `CollapsedFleetMemberShipIds(manager, factionId)` = the ship ids to hide (every ship in a 2+ ship fleet except its flagship/first representative); `FleetShipCountFor(...)` backs a "Fleet (N)" label. Pure queries, defensive (render-thread safe). Gauge: `FleetCollapseTests`. Client wiring: `Pulsar4X.Client/CLAUDE.md` → "Fleet-as-one-icon". |
-| `RefuelAction.cs` | INavAction — fleet-level refueling action. |
-| `ResupplyAction.cs` | INavAction — fleet-level resupply action. |
-| `ServeyAnomalyAction.cs` | INavAction — survey action (anomaly investigation). |
+| `RefuelAction.cs` | `EntityCommand` subclass — fleet-level refueling action. **Stub:** `Execute()` is empty (does nothing yet). |
+| `ResupplyAction.cs` | `EntityCommand` subclass — fleet-level resupply action. **Stub:** `Execute()` is empty (does nothing yet). |
+| `ServeyAnomalyAction.cs` | `EntityCommand` subclass — survey action (anomaly investigation). **Stub:** `Execute()`/`IsValidCommand()`/`Clone()` all throw `NotImplementedException`. |
 
 ---
 
@@ -30,9 +30,9 @@ FleetDB extends TreeHierarchyDB
   StandingOrders     SafeList<ConditionalOrder>
 ```
 
-A fleet entity has these DataBlobs: `FleetDB`, `OrderableDB`, `NameDB`, `OwnedDB`.
+A fleet entity has these DataBlobs: `FleetDB`, `OrderableDB`, `NameDB`. (No `OwnedDB` — ownership is carried by `entity.FactionOwnerID`, set directly in `FleetFactory.Create`.)
 
-Ships are assigned to fleets through `FleetOrder.AssignShip()`. The ship's entity ID is added to the fleet's member list (managed inside `FleetOrderProcessor`). The fleet doesn't store members directly in `FleetDB` — membership is on the ship's side (the ship has a parent fleet ID via the tree hierarchy).
+Ships are assigned to fleets through `FleetOrder.AssignShip()`. The membership change happens inside `FleetOrder.Execute()` (the `AssignShip`/`UnassignShip` cases call `navyDB.AddChild`/`RemoveChild` on the fleet's `FleetDB`) — NOT in `FleetOrderProcessor`, which only handles standing orders. The tree hierarchy (`TreeHierarchyDB`) tracks parent/child, so membership is expressed as the fleet's children rather than a separate member list.
 
 ---
 
@@ -45,7 +45,7 @@ var order = FleetOrder.AssignShip(factionId, fleetEntity, shipEntity);
 StaticRefLib.OrderHandler.HandleOrder(order);
 ```
 
-`FleetOrderProcessor` is an `IInstanceProcessor` — it executes orders at the scheduled datetime, not on a hotloop. Orders are instant (`ActionLaneTypes.InstantOrder`), so they fire immediately.
+`FleetOrder` commands are executed by the generic `OrderableProcessor` (the order-execution path) — each command's `Execute()` runs when the order is processed. Orders are instant (`ActionLaneTypes.InstantOrder`), so they fire immediately. `FleetOrderProcessor` is a separate thing: an `IHotloopProcessor` (fires every game-hour) that evaluates a fleet's *standing/conditional* orders, not the one-shot `FleetOrder` commands above.
 
 ---
 
@@ -57,11 +57,11 @@ This is the mechanism ground combat needs: the assault echelon (transports + tro
 
 ---
 
-## INavActions (Movement Actions Fleets Can Take)
+## Fleet Actions (Refuel / Resupply / Survey)
 
-`RefuelAction`, `ResupplyAction`, and `ServeyAnomalyAction` implement `INavAction` — they are movement-phase actions tied to specific waypoints or targets. The landing action for ground combat will be a **new INavAction** — `LandTroopsAction` or similar — that triggers when the fleet is in orbit over a target colony and the player issues the invasion order.
+`RefuelAction`, `ResupplyAction`, and `ServeyAnomalyAction` are `EntityCommand` subclasses (NOT `INavAction`), and all three are **stubs** — `RefuelAction`/`ResupplyAction` have empty `Execute()` bodies, `ServeyAnomalyAction` throws `NotImplementedException` in `Execute`/`IsValidCommand`/`Clone`. So the classes exist as placeholders but do nothing yet. The landing action for ground combat will be a **new command** — `LandTroopsAction` or similar — that triggers when the fleet is in orbit over a target colony and the player issues the invasion order.
 
-See `Movement/CLAUDE.md` for the full INavAction pattern.
+See `Movement/CLAUDE.md` for the movement/action pattern.
 
 ---
 
@@ -83,7 +83,7 @@ Fleet management is **fully functional**. Ships can be created, assigned to flee
 | Load ground units into transport | `FleetOrder` + cargo system | Ground unit entities go into the transport ship's `CargoStorageDB` |
 | Move to target system | Fleet movement (already works) | No new code — fleet moves like any other fleet |
 | Establish orbital dominance | New check in invasion order | Query enemy ships in same orbit zone over target colony |
-| Issue landing order | New `LandTroopsAction : INavAction` | Fires when fleet in orbit, checks dominance, creates `GroundCombatDB` on colony |
+| Issue landing order | New `LandTroopsAction : EntityCommand` (same shape as `RefuelAction`) | Fires when fleet in orbit, checks dominance, creates `GroundCombatDB` on colony |
 | Detach escort sub-fleet | `FleetOrder.ChangeParent()` (already works) | Transports detach, escorts remain in orbit |
 
 ---
