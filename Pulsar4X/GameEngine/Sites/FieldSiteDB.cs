@@ -70,6 +70,10 @@ namespace Pulsar4X.Sites
         /// <summary>Guard so a one-shot yield is delivered exactly once (SE-1c reads/sets it at resolve).</summary>
         [JsonProperty] public bool YieldDelivered { get; set; }
 
+        /// <summary>Which faction's on-site worker is banking this site's progress (SE-1b: the last worker seen
+        /// present). The yield routes to this faction (SE-1c). -1 = nobody has worked it yet.</summary>
+        [JsonProperty] public int WorkedByFactionId { get; set; } = -1;
+
         public FieldSiteDB() { }
 
         public FieldSiteDB(FieldSiteDB other)
@@ -83,6 +87,7 @@ namespace Pulsar4X.Sites
             Understanding = other.Understanding;
             UnderstandingToResolve = other.UnderstandingToResolve;
             YieldDelivered = other.YieldDelivered;
+            WorkedByFactionId = other.WorkedByFactionId;
         }
 
         public override object Clone() => new FieldSiteDB(this);
