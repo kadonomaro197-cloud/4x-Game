@@ -6,6 +6,14 @@
 
 ---
 
+> ### ⚠ Update — 2026-07-13, after the Site-Engine merge (PR #81)
+> This audit was run against the pre-merge tree. Right after it, `origin/main` merged branch `claude/sol-playtest-earth-map-8r59j6`, which **shipped the Site Engine** (SE-1→SE-6): a whole new `Pulsar4X/GameEngine/Sites/` subsystem (15 source files — `CommandBerthDB`/`CommandBerthAtb`, `FieldSiteDB`, `SiteMachine`, `BerthOps`, plus two auto-discovered processors `SiteWorkProcessor`/`SiteIncidentProcessor`), ~20 test files, and a client `SiteWindow`. It ships **flag-gated** (`AutoSpawnSites` default-off), the same "built but off by default" pattern as the AI/espionage systems. The audit branch has been **rebased onto this merge.** Three consequences for the findings below:
+> 1. **`docs/SITE-ENGINE-DESIGN.md` moves KEEP → STALE-FIX.** The audit (and `DOCS-INDEX.md` line 127) called it "architecture locked, **no code yet**." That is now false — the engine is built. This is one more instance of the exact drift this audit is about, so it just *reinforces* the headline: even a doc the audit called healthy went stale within a day because status lives inside the design doc.
+> 2. **A new subsystem to place in the reorg:** `GameEngine/Sites/` arrived with its own `Sites/CLAUDE.md` (fresh, appears code-accurate — written by the same commits; **not** independently re-audited here). The proposed `docs/explore/` family (`SITE-ENGINE-DESIGN` + `EXPLORATION-CONTENT-DESIGN`) now maps to *shipped* code, and `DOCS-INDEX` should gain a `Sites/CLAUDE.md` row.
+> 3. **`DOCS-INDEX.md` is now demonstrably stale on the Site Engine** — extra weight behind §3d's "one status owner" fix.
+>
+> Nothing else in the audit is invalidated: the merge added a new subsystem and its tests; it did not touch the damage path, colonies, factions/AI, weapons, or the other subsystems the ground-truth pass verified. The counts in §1 shift by one (KEEP 19→18, STALE-FIX 26→27); left as-run below with this note as the correction.
+
 ## 1. The numbers
 
 | Verdict | Count | Meaning |
@@ -200,7 +208,7 @@ Verdicts: **KEEP** (healthy) · **KEEP-TRIM** (small fix/trim) · **STALE-FIX** 
 | AI | `docs/AI-SELF-PLAY-DESIGN.md` | CONSOLIDATE | BLOATED | Reconcile the 'no code written / fill the stub / seat-durability prerequisite' framing aga |
 | AI | `docs/AI-SUPERCLUSTER-AND-AUTHORING-DESIGN.md` | KEEP-TRIM | VERBOSE | Keep as the AI suite's capstone but cut it to ~half: strip the multiverse/brane rhetoric a |
 | EXPLORE | `docs/EXPLORATION-CONTENT-DESIGN.md` | KEEP-TRIM | OK | Keep as the catalog chapter of SITE-ENGINE-DESIGN.md but (1) delete the duplicate DOCS-IND |
-| EXPLORE | `docs/SITE-ENGINE-DESIGN.md` | KEEP | OK | Keep as the parent/hub for the EXPLORE theme. Two hygiene items: (1) fix the one stale led |
+| EXPLORE | `docs/SITE-ENGINE-DESIGN.md` | STALE-FIX | OK | **Reclassified after the 2026-07-13 Site-Engine merge — see Update note at top.** Its "no engine code yet" line is now false: SE-1→SE-6 shipped in `GameEngine/Sites/`. Flip its status to built-but-flag-gated; drop the stale ledger line. |
 | DETECT | `docs/DETECTION-DESIGN.md` | KEEP-TRIM | VERBOSE | Keep the doc but do a staleness pass: rewrite the header from 'Draft/before we build' to a |
 | DETECT | `docs/INFORMATION-DELTA-DESIGN.md` | KEEP-TRIM | LEAN | Keep as the canonical A-vs-B readout principle doc. Trim or update the 'base laser two-zon |
 | ENV | `docs/ENVIRONMENTS-DESIGN.md` | KEEP-TRIM | VERBOSE | Keep as the environments design+status doc. Immediate fix: replace the top banner with an  |
