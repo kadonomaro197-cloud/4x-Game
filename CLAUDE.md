@@ -152,6 +152,25 @@ See `ARCHITECTURE.md` for the full data-flow diagram.
 
 ---
 
+## Docs layout & upkeep (READ before adding or moving a doc — reorganized 2026-07-13)
+
+`docs/` is organized **by subject**, not as a flat pile. A new design doc goes in the matching subfolder — **do not drop it in flat `docs/`**:
+
+| Folder | Holds |
+|--------|-------|
+| `docs/` (top level) | vision + the status dashboards only (NORTH-STAR, MVP, REALISM-AUDIT, LIVING-GALAXY, BEYOND-PROTOCOL; DOCS-INDEX, TESTING-TRACKER, SYSTEM-CONNECTION-MAP, CLIENT-TEST-CHECKLIST, PLAY-TO-MARS; the DOCS-AUDIT docs) |
+| `docs/combat/` · `ground/` · `economy/` · `society/` · `ai/` · `environment/` · `explore/` | subject design docs |
+| `docs/aurora/` | Aurora 4X external spec (reference) |
+| `docs/DESIGNER-AUDIT/` | the point-in-time designer survey |
+| `docs/archive/` | superseded docs, each with a banner (do not follow as live) |
+
+**Three upkeep rules (each has ONE owner — don't recreate a combined doc):**
+1. New/changed doc → **add or flip its row in `docs/DOCS-INDEX.md` in the same commit** (doc currency owner). Put the doc in its subject subfolder.
+2. Test/gauge state → `docs/TESTING-TRACKER.md`. System-to-system connections → `docs/SYSTEM-CONNECTION-MAP.md`.
+3. When a rename/move changes a doc's path, **grep the old path across all `.md` and repoint it in the same commit** (the `CLAUDE.md` reference table below and DOCS-INDEX both hardcode `docs/…` paths).
+
+When the docs and code have drifted broadly, or on a periodic inspection, **run `docs/DOCS-AUDIT-PROCESS.md`** — the repeatable playbook that produced this layout.
+
 ## Design & Convention References
 
 | Doc | Read it when |
@@ -337,7 +356,7 @@ This is the operational core of everything below, made scannable. If you do noth
 2. **GREP before you trust.** Search for the type/method you're about to touch and read it in the source — do not build on a doc's *description*. Half the landmines here are **dead code that looks live** (`InstallationsDB`, `SimpleDamage`, `ViewModelLib`, dead UI). The docs have been wrong (gotcha #4); the source is the truth. See the **Landmine Index** below before wiring anything unfamiliar.
 3. **WRITE the EXISTS / MISSING / NEEDS-CHANGE ledger** (file:line, not assertions) for each connected system — *before* designing the change. This is the step most likely to be skipped and the one that most often overturns a wrong assumption. If you can't cite the file:line, you haven't looked yet.
 4. **NAME the cradle-to-grave chain** (mineral → material → component → research → unit → decision → loss) and the **gauge** (the test that proves it) *before* you build. A capability with no gauge is not done.
-5. **EDIT, matching the conventions** you just read (`CONVENTIONS.md` + the subsystem idioms). Update the subsystem `CLAUDE.md` **in the same change** — and flip the affected rows in `docs/DOCS-INDEX.md` (and `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` / `docs/TESTING-TRACKER.md` as relevant) in that same commit, so the status dashboards never lag the code.
+5. **EDIT, matching the conventions** you just read (`CONVENTIONS.md` + the subsystem idioms). Update the subsystem `CLAUDE.md` **in the same change** — and flip the affected rows in the status dashboards **in that same commit**, so they never lag the code. **Each status job has ONE owner — update the right one, don't recreate a combined doc:** doc build-state/currency → `docs/DOCS-INDEX.md`; test/gauge state → `docs/TESTING-TRACKER.md`; system-to-system connections → `docs/SYSTEM-CONNECTION-MAP.md`. *(`docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` is being retired — don't add to it.)*
 6. **ONE SLICE AT A TIME — push, then WAIT for CI green before building the next slice on top.** CI is the only correctness gauge (the SDK can't build locally) and it takes ~30 min. Do **not** stack commit N+1 on N until N is green — if N broke compilation, everything above it is built on sand. A verified base is worth the wait. Confirm both jobs green (`test` + `build-client`) before proceeding.
 
 The numbered agreement below is the full-detail version of these six.
