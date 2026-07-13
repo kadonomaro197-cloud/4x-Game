@@ -63,6 +63,33 @@ namespace Pulsar4X.Sites
             double days = deltaSeconds / 86400.0;
             site.WorkedByFactionId = worker.FactionOwnerID;
             SiteMachine.Accrue(site, WorkPerDay * days, UnderstandingPerDay * days);
+
+            // SE-1c: once understanding fills, the single-branch anomaly RESOLVES and pays its yield out ONCE into
+            // the consumer system its Yield names (SE-5 turns this into a player-committed choice among branches).
+            if (!site.YieldDelivered && SiteMachine.BranchUnlocked(site) && SiteMachine.Resolve(site))
+            {
+                DeliverYield(entity, site);
+                site.YieldDelivered = true;
+            }
+        }
+
+        /// <summary>Route a resolved site's banked Progress into the consumer system its Yield dial names
+        /// (SE-1c wires Research; the other yields are later slices — a named no-op until then).</summary>
+        private static void DeliverYield(Entity siteEntity, FieldSiteDB site)
+        {
+            var game = siteEntity.Manager?.Game;
+            if (game == null) return;
+
+            switch (site.Yield)
+            {
+                case SiteYield.Research:
+                    SiteYields.DeliverResearch(game, site.WorkedByFactionId, (int)site.Progress);
+                    break;
+                // SiteYield.Blueprint / Resource / Population / Leader / StrategicAsset / NetworkRoute / Nothing
+                // route into their own consumer systems in later slices.
+                default:
+                    break;
+            }
         }
 
         /// <summary>
