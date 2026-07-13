@@ -110,8 +110,26 @@ Build the loop once; then each domain is a small module: *"here's what I perceiv
 ### Can live without for the first playable (polish tier)
 Research-picking, station-growth (Kithrin starts developed), logistics routes, field-sites/berths, espionage beyond gather, government tuning, EMCON/attack/retreat maneuver finesse, queue reprioritization, jump-point crossing (irrelevant in one system). All real gaps; none block a first end-to-end run. The test itself tells us which actually hurt.
 
-### The development loop
-DevTest **is** the AI's test harness. Turn the AI on, watch the two factions try to take Sol via an **observability readout** (extend the existing `PlanReadout` into a live "what each faction decided and why" log), spot the dumbest behavior, fix that one domain's decision logic, repeat. Observable, isolated, grounded.
+### The development loop — observability is the SPINE, not a feature
+The single most important thing in this whole program is **seeing what the AI did, why, and what it was thinking** — the more the brain narrates itself, the faster every tune lands. So the **AI flight recorder** is built early (Stage 1) and **every later AI slice writes into it** (the rule: no AI slice ships without its "explain" output).
+
+**The AI Decision Record** (per faction, per tick), grounded in existing code — `StrategicObjectiveDB` (already stores a decision-reason), `PlanReadout.cs` (a "dump plan" formatter), `FactionEventLog`, `SessionLog`→`game_logs/` (the flush-to-readable-pages rail), DevTools "View as faction" / "Dump Plan":
+- **Sensed** — the fog-limited perception it acted on (contacts, enemy-strength estimate, own economy/military/morale, surveyed bodies).
+- **Decided** — objective tier + goal + needs-ladder reason (which gauge fired), the options considered **with their scores**, the personality/doctrine weights applied.
+- **Acted** — the order emitted. **Outcome** — did it work (filled next tick, for tuning).
+
+**Two surfaces on the SAME data:** (1) the record flushes to the rolling **`game_logs/` pages as `[AI]` lines** — so a whole game's brain-tape is readable as text, remotely, with the client closed (like SessionLog); (2) an **AI Inspector window** is the live view of that same record (pick a faction → objective+reasoning, scrolling decisions w/ scores, its perceived world, its plan). The log tape is primary (always works, reviewable anywhere); the window is the convenience view. Pair with **view-as-faction** to see the map through its fog *and* its mind.
+
+Then the loop: turn the AI on → watch via the tape/Inspector → spot the dumbest behavior → fix that one domain → repeat. Observable, isolated, grounded.
+
+### Full roadmap to "intelligent" (Phase A→D) — the ladder past batch 7
+Batches 1–7 (§6) close the *conquest loop* and make it observable — that's the **first playable + the instrument**. Everything past it is *intelligence*, cheap because you can see what to fix. Each is the same small CI-gated (engine) / 🖥️ PC-verified (runtime) slice, pointed at judgment instead of capability:
+- **Phase A — play sensibly:** the unified cross-domain **utility scorer** (guns-vs-butter under one budget, per `docs/economy/CAPABILITY-BUILD-PLAN.md`); **fog-limited threat assessment** (fight/flee/concentrate); then a run of **weight-tuning** slices driven purely by watched games + the `[AI]` tape. *(most ROI)*
+- **Phase B — play strategically:** finish the **means-ends planner** act-half (multi-step staged campaigns w/ prerequisites); **force coordination** (screen/strike/reserve); **reactive tempo** (event-driven tactical reactions between the monthly strategy tick — the cadence pyramid).
+- **Phase C — play like a character:** **personality/doctrine as weights** on every scored choice (`PersonalityDB` + scorer, the Inspector shows each trait's contribution); **adaptation** (strategy shifts with game state); **mission-command org** (`docs/ai/AI-COMMAND-AND-COMMUNICATION-DESIGN.md` — HoS sets destination, delegates decide how, mandate-down/report-up shown in the Inspector); **emergent multi-faction politics** (`docs/ai/AI-EMERGENT-POLITICS-AND-CRISIS-DESIGN.md`).
+- **Phase D — polish verbs as intelligent tools:** EMCON (hide the invasion fleet), espionage ops, logistics networks, diplomacy-as-strategy, research beelining — each a lever the intelligence deploys, each logging its reasoning.
+
+Observability compounds up the ladder: each stage adds a lens (scores → plans → mandates → political reasoning), so by Phase D the tape/Inspector explains the AI at every altitude. "Intelligent" is asymptotic; the practical target (a fair, satisfying opponent) is mostly reached by Phase A + the front of Phase B + steady tuning.
 
 ---
 
