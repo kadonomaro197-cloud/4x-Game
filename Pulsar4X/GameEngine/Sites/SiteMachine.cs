@@ -49,5 +49,20 @@ namespace Pulsar4X.Sites
             site.Status = site.Shape == SiteShape.Persistent ? SiteStatus.Persistent : SiteStatus.Depleted;
             return true;
         }
+
+        // ---- SE-4a: the INCIDENT reads (a Shape.Incident site bleeds you until contained) ----
+
+        /// <summary>True while a <see cref="SiteShape.Incident"/> site is LIVE — it exists and is not yet contained, so
+        /// it bleeds pressure and can grow its menace (§4: the pressure IS the clock). A non-Incident site, or one that
+        /// has resolved (contained → Depleted), is not live. Pure read.</summary>
+        public static bool IsIncidentLive(FieldSiteDB site)
+            => site != null
+               && site.Shape == SiteShape.Incident
+               && (site.Status == SiteStatus.Discovered || site.Status == SiteStatus.Worked);
+
+        /// <summary>The steady pressure (per day) a LIVE incident bleeds into its region — its
+        /// <see cref="FieldSiteDB.PressurePerDay"/> while live, else 0. The read SE-4c's pressure application uses. Pure.</summary>
+        public static double CurrentPressure(FieldSiteDB site)
+            => IsIncidentLive(site) ? Math.Max(0.0, site.PressurePerDay) : 0.0;
     }
 }

@@ -95,6 +95,20 @@ namespace Pulsar4X.Sites
         /// <summary>True when this record carries a surface location (a planet-ground site), false for a space anomaly.</summary>
         [JsonIgnore] public bool IsSurfaceSite => SurfaceBodyEntityId >= 0;
 
+        // ---- SE-4a: the INCIDENT dials (a Shape.Incident site that bleeds you until contained) ----
+        // A Shape.Incident site applies steady PRESSURE while it is live and can grow a hostile MENACE force at its
+        // region. Neutral defaults (menace -1 / rates 0) mean "not an incident", so every OneShot/Persistent site is
+        // byte-identical. Only meaningful when Shape == Incident.
+
+        /// <summary>The hostile "menace" faction that spawns/holds at this incident's region (-1 = none). SE-4b/4d.</summary>
+        [JsonProperty] public int MenaceFactionId { get; set; } = -1;
+
+        /// <summary>How much damage the live incident bleeds into its region per day (0 = no pressure). SE-4c.</summary>
+        [JsonProperty] public double PressurePerDay { get; set; } = 0.0;
+
+        /// <summary>How often (days) the menace spawns/reinforces while the incident is live (0 = never spreads). SE-4d.</summary>
+        [JsonProperty] public double SpawnIntervalDays { get; set; } = 0.0;
+
         public FieldSiteDB() { }
 
         public FieldSiteDB(FieldSiteDB other)
@@ -113,6 +127,9 @@ namespace Pulsar4X.Sites
             SurfaceRegionIndex = other.SurfaceRegionIndex;
             SurfaceGlobalQ = other.SurfaceGlobalQ;
             SurfaceGlobalR = other.SurfaceGlobalR;
+            MenaceFactionId = other.MenaceFactionId;
+            PressurePerDay = other.PressurePerDay;
+            SpawnIntervalDays = other.SpawnIntervalDays;
         }
 
         public override object Clone() => new FieldSiteDB(this);
