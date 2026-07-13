@@ -39,11 +39,17 @@ namespace Pulsar4X.Sites
             if (game == null || body == null || !body.IsValid) return Entity.InvalidEntity;
 
             var faction = FactionFactory.CreateBasicFaction(game, name, "MEN", 0);
-            var design = MakeMenaceDesign();
             for (int i = 0; i < unitCount; i++)
-                GroundForces.RaiseUnit(body, design, faction.Id, regionIndex, $"{name} {i + 1}");
+                RaiseMenaceUnit(body, faction.Id, regionIndex, $"{name} {i + 1}");
 
             return faction;
+        }
+
+        /// <summary>Raise ONE menace unit of an already-existing menace faction on the region — the reinforcement the
+        /// incident's spread processor (SE-4d) uses to grow the menace each interval. Returns the raised unit.</summary>
+        public static GroundUnit RaiseMenaceUnit(Entity body, int menaceFactionId, int regionIndex, string name = "Menace")
+        {
+            return GroundForces.RaiseUnit(body, MakeMenaceDesign(), menaceFactionId, regionIndex, name);
         }
     }
 }
