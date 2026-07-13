@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using Pulsar4X.Datablobs;   // OrderableDB lives here (namespace ≠ folder — it's under Engine/Orders/)
 using Pulsar4X.Engine;
 using Pulsar4X.Engine.Orders;
 using Pulsar4X.Factions;
