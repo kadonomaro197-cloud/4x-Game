@@ -61,13 +61,19 @@ namespace Pulsar4X.Sites
             // SE-2b: a MANNED Command Berth on the worker whose Role matches the site works it FASTER — scaled by the
             // berth's Grade and the seated leader's competence (+ the berth's Support). No matching manned berth (or no
             // berth at all) → the multiplier is 1.0, i.e. the SE-1b flat rate — additive / byte-identical.
-            double multiplier = BerthWorkMultiplier(worker, site.Role);
+            var berth = GetWorkingBerth(worker, site.Role);
+            double multiplier = MultiplierOf(berth, worker.Manager);
 
             // Scale the (multiplied) daily rate by however long this step actually covered (the scheduler catches up
             // sub-daily processors within a coarse step), so accrual is independent of Ticklength.
             double days = deltaSeconds / 86400.0;
             site.WorkedByFactionId = worker.FactionOwnerID;
             SiteMachine.Accrue(site, WorkPerDay * multiplier * days, UnderstandingPerDay * multiplier * days);
+
+            // SE-2c: a leader posted to a DANGEROUS site can be lost. The seated leader worked this step (above), then
+            // rolls against the site's Hook danger, bought down by the berth's Survivability. A Benign site (the base
+            // anomaly) has zero danger → no roll, no RNG touched → byte-identical.
+            if (berth != null) RollPostingIncident(entity, worker, berth, site, days);
 
             // SE-1c: once understanding fills, the single-branch anomaly RESOLVES and pays its yield out ONCE into
             // the consumer system its Yield names (SE-5 turns this into a player-committed choice among branches).
@@ -78,22 +84,50 @@ namespace Pulsar4X.Sites
             }
         }
 
-        /// <summary>
-        /// SE-2b — the work-rate multiplier a worker's best MANNED, Role-matching Command Berth grants:
-        /// <c>Grade × (1 + leaderSkill + Support/100)</c>. A worker with no roster, no matching berth, or an empty one
-        /// returns 1.0 (the SE-1b flat rate), so the change is additive. Grade floors at 1 so a manned berth is never
-        /// a penalty.
-        /// </summary>
-        public static double BerthWorkMultiplier(Entity worker, SiteRole role)
+        /// <summary>The worker's best MANNED, Role-matching Command Berth (or null) — the berth whose seated leader
+        /// actually works the site. SE-2b/2c read it for the work rate and the posting-danger roll.</summary>
+        public static CommandBerth GetWorkingBerth(Entity worker, SiteRole role)
         {
-            if (worker == null || !worker.TryGetDataBlob<CommandBerthDB>(out var roster)) return 1.0;
+            if (worker == null || !worker.TryGetDataBlob<CommandBerthDB>(out var roster)) return null;
+            return roster.BestOccupiedBerthFor(role);
+        }
 
-            var berth = roster.BestOccupiedBerthFor(role);
+        /// <summary>The work-rate multiplier a manned berth grants: <c>Grade × (1 + leaderSkill + Support/100)</c>.
+        /// A null berth (none manned/matching) → 1.0 (the SE-1b flat rate). Grade floors at 1 so a manned berth is
+        /// never a penalty.</summary>
+        public static double MultiplierOf(CommandBerth berth, EntityManager manager)
+        {
             if (berth == null) return 1.0;
-
             double grade = Math.Max(1, berth.Grade);
-            double skill = BerthOps.LeaderSkill01(worker.Manager, berth.CommanderID) + berth.Support / 100.0;
+            double skill = BerthOps.LeaderSkill01(manager, berth.CommanderID) + berth.Support / 100.0;
             return grade * (1.0 + skill);
+        }
+
+        /// <summary>SE-2b convenience (used by gauges): the multiplier from the worker's best manned matching berth.</summary>
+        public static double BerthWorkMultiplier(Entity worker, SiteRole role)
+            => MultiplierOf(GetWorkingBerth(worker, role), worker?.Manager);
+
+        /// <summary>
+        /// SE-2c — roll the posting-danger incident on the berth's seated leader for a work step of
+        /// <paramref name="days"/>. On a hit the leader is LOST: the berth is vacated (freeing the seat + clearing the
+        /// leader's back-reference) and the commander is destroyed (the grave rung, which also fires the standard crew-
+        /// loss event). Uses the SEEDED system RNG (deterministic replay). A zero-danger site (Benign) never rolls, so
+        /// the RNG is untouched and the base anomaly stays byte-identical.
+        /// </summary>
+        private static void RollPostingIncident(Entity siteEntity, Entity worker, CommandBerth berth, FieldSiteDB site, double days)
+        {
+            double chance = SiteHazard.IncidentChance(site.Hook, berth.Survivability, days);
+            if (chance <= 0.0) return;
+
+            var rng = siteEntity.Manager?.RNG;
+            if (rng == null) return;
+            if (rng.NextDouble() >= chance) return; // survived this step
+
+            int leaderId = berth.CommanderID;
+            BerthOps.VacateBerth(worker, leaderId); // frees the seat + clears AssignedTo (the leader is alive here)
+
+            if (worker.Manager != null && worker.Manager.TryGetGlobalEntityById(leaderId, out var leader))
+                Pulsar4X.People.CommanderFactory.DestroyCommander(leader);
         }
 
         /// <summary>Route a resolved site's banked Progress into the consumer system its Yield dial names
