@@ -102,10 +102,36 @@ namespace Pulsar4X.Sites
         {
             if (!TryFindGroundWorker(entity.Manager, site, out int workerFactionId)) return;
 
+            // SE-3d — the GUARDIAN gate: a foreign unit (a neutral/menace guardian, or a rival) standing in the site's
+            // region blocks work until it is cleared. You beat the defender FIRST (the region combat + capture the
+            // ground layer already runs), THEN work the site. A region with only your own units is clear → work
+            // proceeds. A Benign surface site with no guardian is never gated → byte-identical.
+            if (!RegionIsClearFor(entity.Manager, site, workerFactionId)) return;
+
             site.WorkedByFactionId = workerFactionId;
             SiteMachine.Accrue(site, WorkPerDay * SurfaceWorkMultiplier * days, UnderstandingPerDay * SurfaceWorkMultiplier * days);
 
             TryResolveAndDeliver(entity, site);
+        }
+
+        /// <summary>
+        /// SE-3d — is the site's region CLEAR for the worker faction? True unless a live unit of another faction (a
+        /// neutral/menace guardian or a rival) stands in the region. Pure read; the actual clearing is the ground
+        /// layer's region combat + capture (`GroundForcesProcessor`).
+        /// </summary>
+        public static bool RegionIsClearFor(EntityManager manager, FieldSiteDB site, int workerFactionId)
+        {
+            if (manager == null || site == null || site.SurfaceBodyEntityId < 0) return false;
+            if (!manager.TryGetEntityById(site.SurfaceBodyEntityId, out var body)) return false;
+            if (!body.TryGetDataBlob<Pulsar4X.GroundCombat.GroundForcesDB>(out var forces)) return true;
+
+            foreach (var unit in forces.Units)
+            {
+                if (unit.Health <= 0) continue;
+                if (unit.RegionIndex != site.SurfaceRegionIndex) continue;
+                if (unit.FactionOwnerID != workerFactionId) return false; // a foreign unit holds the region
+            }
+            return true;
         }
 
         /// <summary>SE-1c — once understanding fills, the single-branch site RESOLVES and pays its yield out ONCE into
