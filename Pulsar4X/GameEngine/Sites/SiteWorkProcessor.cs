@@ -167,10 +167,14 @@ namespace Pulsar4X.Sites
         }
 
         /// <summary>SE-1c — once understanding fills, the single-branch site RESOLVES and pays its yield out ONCE into
-        /// the consumer system its Yield names (SE-5 turns this into a player-committed choice among branches). Shared
-        /// by both work paths; only called after a real accrue.</summary>
+        /// the consumer system its Yield names. Shared by both work paths; only called after a real accrue.
+        /// SE-5c: a BRANCHED site (one offering a choice) does NOT auto-resolve here — it keeps accruing understanding
+        /// (so more branches unlock) and WAITS for the player to commit a branch via <see cref="CommitSiteBranchOrder"/>.
+        /// A branchless site (every existing site — nothing authors branches yet) is unchanged → byte-identical.</summary>
         private static void TryResolveAndDeliver(Entity entity, FieldSiteDB site)
         {
+            if (site.HasBranches) return; // a branched site waits for a committed choice (SE-5c), no auto-resolve
+
             if (!site.YieldDelivered && SiteMachine.BranchUnlocked(site) && SiteMachine.Resolve(site))
             {
                 DeliverYield(entity, site);
@@ -248,17 +252,27 @@ namespace Pulsar4X.Sites
                 Pulsar4X.People.CommanderFactory.DestroyCommander(leader);
         }
 
-        /// <summary>Route a resolved site's banked Progress into the consumer system its Yield dial names
-        /// (SE-1c wires Research; the other yields are later slices — a named no-op until then).</summary>
+        /// <summary>Route a resolved single-path site's banked Progress into the consumer system its Yield dial names.</summary>
         private static void DeliverYield(Entity siteEntity, FieldSiteDB site)
-        {
-            var game = siteEntity.Manager?.Game;
-            if (game == null) return;
+            => DeliverSiteYield(siteEntity, site, site.Yield, site.Progress);
 
-            switch (site.Yield)
+        /// <summary>
+        /// SE-5c — route a CHOSEN yield of a given magnitude into its consumer system. The one yield router, shared by
+        /// the single-path resolve (<see cref="DeliverYield"/> passes the site's own Yield × Progress) and the branch
+        /// commit (<see cref="CommitSiteBranchOrder"/> passes the committed branch's Yield × Progress×YieldScale). Pays
+        /// the site's <see cref="FieldSiteDB.WorkedByFactionId"/>. Public + static so the order can pay a branch.
+        /// SE-1c wires Research; the other yields route into their own systems in later slices (SE-5e diplomacy/intel).
+        /// Defensive (no game / no manager → no-op) so a resolve never throws.
+        /// </summary>
+        public static void DeliverSiteYield(Entity siteEntity, FieldSiteDB site, SiteYield yield, double magnitude)
+        {
+            var game = siteEntity?.Manager?.Game;
+            if (game == null || site == null) return;
+
+            switch (yield)
             {
                 case SiteYield.Research:
-                    SiteYields.DeliverResearch(game, site.WorkedByFactionId, (int)site.Progress);
+                    SiteYields.DeliverResearch(game, site.WorkedByFactionId, (int)magnitude);
                     break;
                 // SiteYield.Blueprint / Resource / Population / Leader / StrategicAsset / NetworkRoute / Nothing
                 // route into their own consumer systems in later slices.

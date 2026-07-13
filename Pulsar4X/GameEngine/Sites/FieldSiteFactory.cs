@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Pulsar4X.Datablobs;
 using Pulsar4X.Engine;
+using Pulsar4X.Engine.Orders;
 using Pulsar4X.Movement;
 using Pulsar4X.Names;
 using Pulsar4X.Orbital;
@@ -51,7 +52,9 @@ namespace Pulsar4X.Sites
                 UnderstandingToResolve = understandingToResolve
             };
 
-            var dataBlobs = new List<BaseDataBlob> { nameDB, positionDB, siteDB };
+            // SE-5c: an OrderableDB so the site can receive the CommitSiteBranchOrder (the player's branch choice). Inert
+            // with no pending order → byte-identical (a site with no branches never issues one).
+            var dataBlobs = new List<BaseDataBlob> { nameDB, positionDB, siteDB, new OrderableDB() };
 
             Entity site = Entity.Create();
             site.FactionOwnerID = Game.NeutralFactionId;
@@ -96,7 +99,9 @@ namespace Pulsar4X.Sites
                 SurfaceGlobalR = globalR
             };
 
-            var dataBlobs = new List<BaseDataBlob> { nameDB, siteDB };
+            // SE-5c: an OrderableDB so the surface site can receive the CommitSiteBranchOrder. Inert without a pending
+            // order → byte-identical.
+            var dataBlobs = new List<BaseDataBlob> { nameDB, siteDB, new OrderableDB() };
 
             Entity site = Entity.Create();
             site.FactionOwnerID = Game.NeutralFactionId;
