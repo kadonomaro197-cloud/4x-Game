@@ -778,6 +778,88 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "command-berth",
+      "Name": "Command Berth",
+      "Formulas": {
+        "Description": "A command seat from which a posted leader works a field-site (an anomaly, a ruin). Its Role sets which kind of site it can work; a higher Grade works the site faster; Survivability protects the leader at a dangerous posting.",
+        "Mass": "PropertyValue('Grade') * 200",
+        "Volume": "[Mass] * 0.1",
+        "HTK": "0.5",
+        "CrewReq": "PropertyValue('Grade') * 2",
+        "ResearchCost": "PropertyValue('Grade') * 10",
+        "CreditCost": "150",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "iron": "[Mass] * 0.5",
+        "aluminium": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.1",
+        "plastic": "[Mass] * 0.1",
+        "stainless-steel": "[Mass] * 0.1"
+      },
+      "ComponentType": "Admin",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "Role",
+          "DescriptionFormula": "'Which kind of field-site this berth can work: a Science berth works a science anomaly, a Tactical berth a combat site, and so on.'",
+          "GuiHint": "GuiEnumSelectionList",
+          "EnumTypeName": "Pulsar4X.Sites.SiteRole",
+          "MaxFormula": "4",
+          "MinFormula": "0",
+          "StepFormula": "1",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "Grade",
+          "DescriptionFormula": "'The berth quality tier. A higher grade works a field-site faster.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "10",
+          "MinFormula": "1",
+          "StepFormula": "1",
+          "PropertyFormula": "2"
+        },
+        {
+          "Name": "Support",
+          "DescriptionFormula": "'A flat competence boost to the leader posted in this berth.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "50",
+          "MinFormula": "0",
+          "StepFormula": "5",
+          "PropertyFormula": "10"
+        },
+        {
+          "Name": "Survivability",
+          "DescriptionFormula": "'How well the berth protects its posted leader at a dangerous site — reduces the chance of an incident that injures or kills them.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "100",
+          "MinFormula": "0",
+          "StepFormula": "5",
+          "PropertyFormula": "20"
+        },
+        {
+          "Name": "Span",
+          "DescriptionFormula": "'The force size this berth can command at the site (matters once sites are fought over).'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "10",
+          "MinFormula": "1",
+          "StepFormula": "1",
+          "PropertyFormula": "1"
+        },
+        {
+          "Name": "DBargs",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Role'), PropertyValue('Grade'), PropertyValue('Support'), PropertyValue('Survivability'), PropertyValue('Span'))",
+          "AttributeType": "Pulsar4X.Sites.CommandBerthAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "spaceport",
       "Name": "Planetary Spaceport Complex",
       "Formulas": {
