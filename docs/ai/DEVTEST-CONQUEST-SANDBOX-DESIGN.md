@@ -1,7 +1,9 @@
 # DevTest Conquest Sandbox — Design + Build Plan
 
-**Status:** 🔒 DESIGN-LOCKED · Build ⚫ not-started (this doc is the plan) · branch `claude/devtest-faction-design-xpfnhe`
+**Status:** 🔒 DESIGN-LOCKED · Build 🟡 B2a+B2b landing (engine chain CI-green; full 3-faction sandbox + DevTest button pushed for validation) · branch `claude/devtest-faction-design-xpfnhe`
 **As of:** 2026-07-13
+
+> **Build log.** **B2a (engine, CI-green):** the scenario-authoring additions — `FactionFactory.LoadFromJson` modernized to resolve designs/species BY ID from the mod store, a faction-level `startingItems` unlock ("everything enabled"), inline `stations` + `strain` parsers; `DevTestStartFactory.CreateDevTest` (loads Sol via the live blueprint path, loops the faction files, second-pass applies opening war + strain). **B2b (data + test + client, pushed for validation):** the three scenario files — `uef-devtest.json` (player UEF: full 123-id startingItems, 9 infra designs, one Earth colony, NOTHING pre-built), `umf.json` (United Martian Federation — NPC, Mars/Luna/Venus/Ceres colonies, scattered gunship fleets, war-tax + sustenance strain, at war with UEF), `kithrin.json` (Kithrin Collective — NPC, species-xenos, a developed Titan station); `DevTestScenarioTests` (player-faction load + full 3-faction war/strain/station gauge); and the client `NewGameMenu.DevTestGame()` behind the relabeled **"DevTest"** main-menu button (Quickstart replaced). **AI action gates stay OFF for this first bootable slice** — the sandbox WORLD loads and is playable; turning the AI loose is paired with the flight-recorder (B4) so the AI is observable when it acts. **Next: PC-1 boot test** (does the 3-faction Sol sandbox boot + is it playable), then B3 (UMF/Kithrin dialed designs) / B4 (AI recorder + loop) / B5+ (conquest loop + Phase A→D).
 
 ---
 

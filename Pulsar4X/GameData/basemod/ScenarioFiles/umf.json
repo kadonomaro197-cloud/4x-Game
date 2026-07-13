@@ -1,0 +1,466 @@
+{
+  "name": "United Martian Federation",
+  "isNPC": true,
+  "doctrine": {
+    "economic": 0.35,
+    "military": 0.35,
+    "tech": 0.1,
+    "expansion": 0.2
+  },
+  "personality": {
+    "aggression": 0.7,
+    "ambition": 0.8,
+    "authoritarianism": 0.7,
+    "ruthlessness": 0.6,
+    "risk": 0.55,
+    "honor": 0.4,
+    "xenophobia": 0.4,
+    "collectivism": 0.6,
+    "zealotry": 0.5,
+    "guile": 0.5,
+    "altruism": 0.3,
+    "curiosity": 0.4
+  },
+  "startingItems": [
+    "tech-modern-technology",
+    "tech-conventional-engine",
+    "tech-geo-surveyor",
+    "tech-gravitational-surveyor",
+    "stainless-steel-armor",
+    "plastic-armor",
+    "aluminium-armor",
+    "titanium-armor",
+    "general-storage",
+    "warehouse-facility",
+    "spaceport",
+    "cargo-Shuttlebay",
+    "fuel-storage",
+    "battery-storage",
+    "passive-sensor",
+    "beam-fire-control",
+    "cloak-device",
+    "pd-director",
+    "jammer",
+    "warp-stabilizer",
+    "drive-reinforcement",
+    "unit-caliber",
+    "crew-automation",
+    "reactor",
+    "battery-bank",
+    "rtg",
+    "steam-turbine-reactor",
+    "conventional-engine",
+    "scntr-engine",
+    "alcubierre-warp-drive",
+    "refining",
+    "component-construction",
+    "installation-construction",
+    "ship-assembly",
+    "mine",
+    "automine",
+    "research-lab",
+    "research-academy",
+    "intelligence-directorate",
+    "command-berth",
+    "refinery",
+    "factory",
+    "shipyard",
+    "general-cargo-hold",
+    "fuel-cargo-hold",
+    "stainless-steel-fuel-tank",
+    "infrastructure",
+    "space-habitat",
+    "stainless-steel",
+    "rp-1",
+    "methalox",
+    "hydrolox",
+    "ntp",
+    "plastic",
+    "fissile-fuels",
+    "electricity",
+    "hydrocarbons",
+    "iron",
+    "aluminium",
+    "copper",
+    "titanium",
+    "lithium",
+    "chromium",
+    "fissionables",
+    "silicon",
+    "graphite",
+    "tungsten",
+    "nickel",
+    "water",
+    "rare-earth-elements",
+    "regolith",
+    "space-crete",
+    "electronics",
+    "ree-magnetics",
+    "laser-weapon",
+    "railgun-weapon",
+    "flak-weapon",
+    "sensor-hardening-module",
+    "admin-complex",
+    "ship-command",
+    "tech-panel-efficiency",
+    "tech-panel-bandwidth",
+    "tech-panel-density",
+    "solarArray",
+    "local-construction",
+    "launch-complex",
+    "ship-hull",
+    "bunker",
+    "infantry-unit",
+    "armor-unit",
+    "artillery-unit",
+    "troop-bay",
+    "human-frame",
+    "ground-rifle",
+    "ground-magazine",
+    "ground-locomotion",
+    "ground-radar",
+    "ground-plating",
+    "ablative-plating",
+    "reactive-plating",
+    "power-armor",
+    "ground-autocannon",
+    "vehicle-frame",
+    "ground-cannon",
+    "walker-frame",
+    "energy-weapon",
+    "shield-generator",
+    "ward-projector",
+    "reflex-booster",
+    "swarm-frame",
+    "claw-weapon",
+    "deflector-array",
+    "armour-hardening",
+    "ship-magazine",
+    "heat-radiator",
+    "pulse-laser",
+    "siege-railgun",
+    "disruptor-weapon",
+    "plasma-repeater",
+    "point-defense-mount",
+    "missile-launcher",
+    "inertialess-drive",
+    "reactionless-drive"
+  ],
+  "componentDesigns": [
+    "default-design-mine",
+    "default-design-refinery",
+    "default-design-factory",
+    "default-design-local-construction",
+    "default-design-passive-sensor",
+    "default-design-city-hall",
+    "default-design-infrastructure",
+    "default-design-research-lab",
+    "default-design-warehouse",
+    "default-design-ship-hull-heavy",
+    "default-design-passive-sensor-s50",
+    "default-design-laser-weapon",
+    "default-design-beam-fire-control",
+    "default-design-cargo-hold-1t",
+    "default-design-fuel-tank-1000",
+    "default-design-alcubierre-500",
+    "default-design_solarpanel",
+    "default-design-battery-2t",
+    "default-design-reactor-2t",
+    "default-design-NTR1.8"
+  ],
+  "ordnanceDesigns": [],
+  "shipDesigns": [
+    "default-ship-design-gunship"
+  ],
+  "species": [
+    "species-human"
+  ],
+  "colonies": [
+    {
+      "systemId": "sol",
+      "location": "Mars",
+      "species": {
+        "name": "Human",
+        "population": 120000000
+      },
+      "installations": [
+        {
+          "id": "default-design-mine",
+          "amount": 2
+        },
+        {
+          "id": "default-design-refinery",
+          "amount": 2
+        },
+        {
+          "id": "default-design-factory",
+          "amount": 2
+        },
+        {
+          "id": "default-design-local-construction",
+          "amount": 1
+        },
+        {
+          "id": "default-design-passive-sensor",
+          "amount": 1
+        },
+        {
+          "id": "default-design-city-hall",
+          "amount": 1
+        },
+        {
+          "id": "default-design-infrastructure",
+          "amount": 15
+        },
+        {
+          "id": "default-design-research-lab",
+          "amount": 1
+        },
+        {
+          "id": "default-design-warehouse",
+          "amount": 2
+        }
+      ],
+      "cargo": [
+        {
+          "id": "iron",
+          "amount": 20000
+        },
+        {
+          "id": "stainless-steel",
+          "amount": 8000
+        },
+        {
+          "id": "aluminium",
+          "amount": 6000
+        },
+        {
+          "id": "hydrocarbons",
+          "amount": 12000
+        }
+      ]
+    },
+    {
+      "systemId": "sol",
+      "location": "Luna",
+      "species": {
+        "name": "Human",
+        "population": 25000000
+      },
+      "installations": [
+        {
+          "id": "default-design-mine",
+          "amount": 1
+        },
+        {
+          "id": "default-design-refinery",
+          "amount": 1
+        },
+        {
+          "id": "default-design-factory",
+          "amount": 1
+        },
+        {
+          "id": "default-design-local-construction",
+          "amount": 1
+        },
+        {
+          "id": "default-design-passive-sensor",
+          "amount": 1
+        },
+        {
+          "id": "default-design-city-hall",
+          "amount": 1
+        },
+        {
+          "id": "default-design-infrastructure",
+          "amount": 6
+        },
+        {
+          "id": "default-design-research-lab",
+          "amount": 0
+        },
+        {
+          "id": "default-design-warehouse",
+          "amount": 1
+        }
+      ],
+      "cargo": [
+        {
+          "id": "iron",
+          "amount": 6000
+        },
+        {
+          "id": "stainless-steel",
+          "amount": 2000
+        }
+      ]
+    },
+    {
+      "systemId": "sol",
+      "location": "Venus",
+      "species": {
+        "name": "Human",
+        "population": 15000000
+      },
+      "installations": [
+        {
+          "id": "default-design-mine",
+          "amount": 1
+        },
+        {
+          "id": "default-design-refinery",
+          "amount": 1
+        },
+        {
+          "id": "default-design-factory",
+          "amount": 1
+        },
+        {
+          "id": "default-design-local-construction",
+          "amount": 1
+        },
+        {
+          "id": "default-design-passive-sensor",
+          "amount": 1
+        },
+        {
+          "id": "default-design-city-hall",
+          "amount": 1
+        },
+        {
+          "id": "default-design-infrastructure",
+          "amount": 5
+        },
+        {
+          "id": "default-design-research-lab",
+          "amount": 0
+        },
+        {
+          "id": "default-design-warehouse",
+          "amount": 1
+        }
+      ],
+      "cargo": [
+        {
+          "id": "iron",
+          "amount": 4000
+        },
+        {
+          "id": "hydrocarbons",
+          "amount": 3000
+        }
+      ]
+    },
+    {
+      "systemId": "sol",
+      "location": "Ceres",
+      "species": {
+        "name": "Human",
+        "population": 8000000
+      },
+      "installations": [
+        {
+          "id": "default-design-mine",
+          "amount": 2
+        },
+        {
+          "id": "default-design-refinery",
+          "amount": 1
+        },
+        {
+          "id": "default-design-factory",
+          "amount": 0
+        },
+        {
+          "id": "default-design-local-construction",
+          "amount": 1
+        },
+        {
+          "id": "default-design-passive-sensor",
+          "amount": 1
+        },
+        {
+          "id": "default-design-city-hall",
+          "amount": 1
+        },
+        {
+          "id": "default-design-infrastructure",
+          "amount": 3
+        },
+        {
+          "id": "default-design-research-lab",
+          "amount": 0
+        },
+        {
+          "id": "default-design-warehouse",
+          "amount": 1
+        }
+      ],
+      "cargo": [
+        {
+          "id": "iron",
+          "amount": 5000
+        }
+      ]
+    }
+  ],
+  "strain": {
+    "taxRate": 0.55,
+    "powerDemandPerCapita": 0.0009,
+    "foodDemandPerCapita": 0.0011,
+    "committedBulk": 40000
+  },
+  "fleets": [
+    {
+      "name": "Mars Home Guard",
+      "location": {
+        "systemId": "sol",
+        "body": "Mars"
+      },
+      "ships": [
+        {
+          "designId": "default-ship-design-gunship",
+          "name": "MFS Ares"
+        },
+        {
+          "designId": "default-ship-design-gunship",
+          "name": "MFS Olympus"
+        }
+      ]
+    },
+    {
+      "name": "Luna Picket",
+      "location": {
+        "systemId": "sol",
+        "body": "Luna"
+      },
+      "ships": [
+        {
+          "designId": "default-ship-design-gunship",
+          "name": "MFS Deimos"
+        }
+      ]
+    },
+    {
+      "name": "Belt Squadron",
+      "location": {
+        "systemId": "sol",
+        "body": "Ceres"
+      },
+      "ships": [
+        {
+          "designId": "default-ship-design-gunship",
+          "name": "MFS Phobos"
+        }
+      ]
+    }
+  ],
+  "openingRelations": [
+    {
+      "target": "UEF",
+      "atWar": true,
+      "score": -80
+    }
+  ]
+}

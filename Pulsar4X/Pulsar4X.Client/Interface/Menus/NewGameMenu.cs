@@ -846,4 +846,106 @@ public class NewGameMenu : PulsarGuiWindow
             Console.WriteLine(ex.StackTrace);
         }
     }
+
+    /// <summary>
+    /// The DevTest game-start — the "DevTest" button that replaces Quickstart. Instead of the wizard's single
+    /// pre-provisioned player faction, it stands up the whole data-driven CONQUEST SANDBOX from JSON: the player
+    /// (UEF) with "everything enabled" to design/build but NOTHING pre-built, plus two developed NPC factions —
+    /// the United Martian Federation (inner-system war economy, at war with Earth) and the Kithrin Collective
+    /// (an outer-system developed outpost station). Only Sol, and only Earth surveyed for the player.
+    ///
+    /// It reuses the SAME engine orchestrator the CI test drives (<see cref="DevTestStartFactory.CreateDevTest"/>),
+    /// so what CI proves green is exactly what boots here. Wrapped end-to-end so a data hiccup logs and returns to
+    /// the menu rather than killing the client (the Quickstart discipline).
+    ///
+    /// NOTE on the AI: the NPC brain's ACTION gates (order emission, diplomatic proposals, espionage) stay at their
+    /// engine defaults (OFF) for this first bootable slice — the sandbox WORLD (three factions, the war, the strain,
+    /// the station) loads and is playable, but the AI doesn't emit player-visible orders yet. Turning the AI loose
+    /// is deliberately paired with the AI flight-recorder (the observability spine) in the next build slice, so when
+    /// the AI acts we can SEE what it did and why — the developer's first requirement.
+    /// </summary>
+    public static void DevTestGame()
+    {
+        try
+        {
+            // Load ONLY the DefaultEnabled mods (the base mod) — same sane-defaults rule as Quickstart.
+            ModLoader modLoader = new ModLoader();
+            ModDataStore modDataStore = new ModDataStore();
+            string? baseModDir = null;
+            foreach (var modMetadata in ModsState.AvailableMods)
+            {
+                if (modMetadata.Mod.DefaultEnabled)
+                {
+                    modLoader.LoadModManifest(modMetadata.Path, modDataStore);
+                    baseModDir ??= System.IO.Path.GetDirectoryName(modMetadata.Path);
+                }
+            }
+
+            if (baseModDir == null)
+            {
+                Console.WriteLine("DevTest Error: no DefaultEnabled mod found to load the scenario from.");
+                return;
+            }
+
+            // The scenario faction files live beside the base mod manifest (GameData/basemod/ScenarioFiles),
+            // copied to the runtime Mods folder with the rest of the mod.
+            string scenarioDir = System.IO.Path.Combine(baseModDir, "ScenarioFiles");
+
+            // Build the game with NO auto-created player faction — DevTest authors all three factions from JSON.
+            var gameSettings = new NewGameSettings
+            {
+                MaxSystems = 1,
+                CreatePlayerFaction = false,
+                DefaultSolStart = true,
+                MasterSeed = RandomNumberGenerator.GetInt32(999999999),
+                EleStart = true,
+                SMPassword = "",
+                DefaultPlayerPassword = ""
+            };
+            Game game = GameFactory.CreateGame(modDataStore, gameSettings);
+            game.CreatedOnGitHash = AssemblyInfo.GetGitHash();
+            game.LastSaveGitHash = AssemblyInfo.GetGitHash();
+
+            var (playerFaction, startingSystemId) = DevTestStartFactory.CreateDevTest(
+                game, scenarioDir,
+                new List<string> { "uef-devtest.json", "umf.json", "kithrin.json" });
+
+            if (playerFaction == null)
+            {
+                Console.WriteLine("DevTest Error: CreateDevTest returned no player faction.");
+                return;
+            }
+
+            var startingSystem = game.Systems.Find(s => s.ID.Equals(startingSystemId));
+            if (startingSystem == null)
+            {
+                Console.WriteLine("DevTest Error: the starting system did not load.");
+                return;
+            }
+
+            // The player's homeworld is Earth (the only surveyed body) — centre the camera there.
+            Entity? startingBody = null;
+            foreach (var bodyInfo in startingSystem.GetAllDataBlobsOfType<SystemBodyInfoDB>())
+            {
+                if (bodyInfo.OwningEntity?.GetDefaultName()?.Equals("Earth") == true)
+                {
+                    startingBody = bodyInfo.OwningEntity;
+                    break;
+                }
+            }
+            if (startingBody == null)
+            {
+                Console.WriteLine("DevTest Error: Earth (the starting body) was not found in Sol.");
+                return;
+            }
+
+            game.PostNewGameInitialization();
+            ActivateGameUI(game, playerFaction, startingSystem, startingBody);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"DevTest Error: {ex.Message}");
+            Console.WriteLine(ex.StackTrace);
+        }
+    }
 }
