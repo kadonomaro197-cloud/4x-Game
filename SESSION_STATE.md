@@ -412,6 +412,8 @@ Quickstart → Esc → **SM Mode** → toolbar **Dev Tools** → spawn precondit
 
 ---
 
+> **🗄 The status tables below are a DATED SNAPSHOT — do not read as current.** "Build Status", "Test Baseline", "Known Broken Things", and "What's In the Game Data Already" were true at the time of writing but have drifted (e.g. the missile-guidance bug listed as broken is fixed). **Live status:** `docs/DOCS-INDEX.md` (docs/build), `docs/TESTING-TRACKER.md` (tests), `docs/SYSTEM-CONNECTION-MAP.md` (connections). Kept here as session-history narrative. *(Docs audit 2026-07-13.)*
+
 ## Build Status
 
 **CI added 2026-06-22:** `.github/workflows/ci.yml` now runs `dotnet build` + the full NUnit suite on every push/PR via GitHub Actions (Linux runners have the .NET SDK this container lacks). The **first CI run establishes the real build/test baseline** that has been "UNKNOWN" — read the Actions tab. It builds the engine + test project (not the SDL client). New broad sensor: `GameLoopSmokeTests.GameLoop_AdvancesClockWithoutThrowing` (advances the sim clock 3 game-days on a generated universe, asserts no processor throws). **CI run #1 already earned its keep:** build compiled clean, 370/371 tests passed, and the one failure exposed that `DefaultStartFactory.DefaultHumans` is broken (see Known Broken Things) — a path no recent change touched.
