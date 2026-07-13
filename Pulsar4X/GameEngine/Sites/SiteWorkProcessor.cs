@@ -55,11 +55,21 @@ namespace Pulsar4X.Sites
         {
             if (!entity.TryGetDataBlob<FieldSiteDB>(out var site)) return;
 
-            // A resolved site (Depleted/Persistent/Ruptured) takes no more work — SiteMachine also guards this,
-            // but skip the presence scan when there's nothing to accrue.
-            if (site.Status != SiteStatus.Discovered && site.Status != SiteStatus.Worked) return;
-
             double days = deltaSeconds / 86400.0;
+
+            // SE-5d: a resolved PERSISTENT site (a standing faucet) can RUPTURE into a crisis if it carries a rupture
+            // chance — the reward carried the risk (docs/SITE-ENGINE-DESIGN.md §4). Handled BEFORE the no-work early
+            // return below. Default RuptureChancePerDay 0 → never rolls → byte-identical (a persistent site otherwise
+            // just sits here, taking no work).
+            if (site.Status == SiteStatus.Persistent)
+            {
+                if (site.RuptureChancePerDay > 0) TryRupture(entity, site, days);
+                return; // a persistent site takes no work either way
+            }
+
+            // A resolved site (Depleted/Ruptured) takes no more work — SiteMachine also guards this, but skip the
+            // presence scan when there's nothing to accrue.
+            if (site.Status != SiteStatus.Discovered && site.Status != SiteStatus.Worked) return;
 
             // SE-4c: a LIVE incident bleeds steady pressure into its region every tick — worker present or not. This is
             // the "stop-the-bleed" clock: it harms your holding force until you contain the site. Only fires for a
@@ -100,6 +110,52 @@ namespace Pulsar4X.Sites
                 unit.Health -= drain;
                 if (unit.Health < 0) unit.Health = 0;
             }
+        }
+
+        /// <summary>
+        /// SE-5d — roll the RUPTURE of a live persistent site for a step of <paramref name="days"/>. On a hit the faucet
+        /// turns into a crisis: the site's Status flips to <see cref="SiteStatus.Ruptured"/> (it stops producing) and a
+        /// NEW crisis site is spawned via <see cref="SpawnCrisis"/>. Uses the SEEDED system RNG (deterministic replay).
+        /// Wrapped so a hotloop never throws (L4). A zero-chance site never reaches here (guarded in ProcessEntity), so
+        /// an ordinary persistent stream is byte-identical.
+        /// </summary>
+        private static void TryRupture(Entity entity, FieldSiteDB site, double days)
+        {
+            try
+            {
+                double chance = Math.Min(1.0, site.RuptureChancePerDay * days);
+                if (chance <= 0.0) return;
+
+                var rng = entity.Manager?.RNG;
+                if (rng == null) return;
+                if (rng.NextDouble() >= chance) return; // survived this step
+
+                site.Status = SiteStatus.Ruptured; // the faucet ruptured — it stops being a safe stream
+                SpawnCrisis(entity, site);
+            }
+            catch
+            {
+                // A rupture must never crash the sim (L4). If the crisis spawn fails, the site is left Ruptured
+                // (inert) rather than propagating the throw out of the daily hotloop.
+            }
+        }
+
+        /// <summary>
+        /// SE-5d — birth the crisis a ruptured site spawns. v1: a ruptured SURFACE site spawns a fresh Shape.Incident
+        /// crisis at its own body+region (reusing the SE-4 menace machinery via <see cref="IncidentScenario.SpawnIncidentAt"/>) —
+        /// a hostile force + steady pressure + spread. A space anomaly just goes Ruptured (a space-site crisis is a
+        /// later refinement — flagged). The child is Incident-shaped, so it can't itself rupture → no cascade. Defensive:
+        /// any missing game/system/body → no spawn.
+        /// </summary>
+        private static void SpawnCrisis(Entity entity, FieldSiteDB site)
+        {
+            if (!site.IsSurfaceSite) return; // space-site crisis is a follow-up
+            var game = entity.Manager?.Game;
+            if (game == null) return;
+            if (entity.Manager is not StarSystem sys) return;
+            if (!entity.Manager.TryGetEntityById(site.SurfaceBodyEntityId, out var body)) return;
+
+            IncidentScenario.SpawnIncidentAt(game, sys, body, site.SurfaceRegionIndex, name: "Rupture Crisis");
         }
 
         /// <summary>SE-1b/2b/2c — the SPACE-anomaly work path: a ship parked within <see cref="PresenceRadius_m"/>

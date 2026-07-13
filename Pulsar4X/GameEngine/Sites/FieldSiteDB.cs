@@ -128,6 +128,15 @@ namespace Pulsar4X.Sites
         /// <summary>True when this site presents a branch CHOICE rather than a single hard-wired outcome (SE-5).</summary>
         [JsonIgnore] public bool HasBranches => Branches != null && Branches.Count > 0;
 
+        // ---- SE-5d: the RUPTURE dial (a persistent faucet can blow into a crisis) ----
+        // A resolved PERSISTENT site can transition into a NEW crisis site — "the reward carried the risk"
+        // (docs/SITE-ENGINE-DESIGN.md §4, the RUPTURED edge). The chance is a per-day roll while the faucet runs.
+        // Default 0 → a persistent site never ruptures → byte-identical.
+
+        /// <summary>Per-day probability that this PERSISTENT site RUPTURES into a crisis (0 = never — the default, so an
+        /// ordinary persistent stream is safe). Only read while Status == Persistent (SE-5d). Authored on a "cursed" faucet.</summary>
+        [JsonProperty] public double RuptureChancePerDay { get; set; } = 0.0;
+
         public FieldSiteDB() { }
 
         public FieldSiteDB(FieldSiteDB other)
@@ -152,6 +161,7 @@ namespace Pulsar4X.Sites
             // Deep-copy the branch list so a cloned site doesn't share branch records with the original.
             Branches = other.Branches?.Select(b => b.Clone()).ToList() ?? new List<SiteBranch>();
             CommittedBranchIndex = other.CommittedBranchIndex;
+            RuptureChancePerDay = other.RuptureChancePerDay;
         }
 
         public override object Clone() => new FieldSiteDB(this);
