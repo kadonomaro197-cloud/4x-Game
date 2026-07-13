@@ -676,6 +676,21 @@ public class NewGameMenu : PulsarGuiWindow
             }
         }
 
+        // Site Engine (SE-4e): flag-gated auto-seed of a live surface INCIDENT on the player's home world — the
+        // switch that makes the whole SE-4 incident build (a menace holds a region, bleeds your units, spreads if
+        // ignored) reachable in a real game. Default OFF, so New Game stays byte-identical; MaybeSpawnForNewGame is
+        // a no-op unless the flag is on. Engine call (CI-tested); wrapped so a hiccup never breaks New Game.
+        try
+        {
+            int incidents = Pulsar4X.Sites.IncidentScenario.MaybeSpawnForNewGame(game);
+            if (incidents > 0)
+                Console.WriteLine($"[NewGame] Auto-spawned {incidents} home-world incident(s).");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[NewGame] Incident auto-spawn FAILED (New Game continues without it): {ex}");
+        }
+
         game.PostNewGameInitialization();
 
         return (game, playerFaction, startingSystem, startingBody);
