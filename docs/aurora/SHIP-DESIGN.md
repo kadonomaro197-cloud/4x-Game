@@ -81,12 +81,12 @@ Speed is a **ratio** — add engine power to go faster, add any weight (armor/we
 
 ## 5. Pulsar status & mapping
 
-Pulsar **already has** ship design (`GameEngine/Ships/`, `ComponentDesignWindow`, `ShipDesignWindow`) and a layered-damage model in the (currently stubbed) complex `DamageProcessor` + `EntityDamageProfileDB`. This is a **benchmark**, not new work. Why it's in scope:
+Pulsar **already has** ship design (`GameEngine/Ships/`, `ComponentDesignWindow`, `ShipDesignWindow`) and a layered-damage model in the complex `DamageProcessor` + `EntityDamageProfileDB` — that damage core is **built and wired** (beam hits run `DamageProcessor.OnTakingDamage` → `DamageTools.DealDamageEnergyBeamSim`, `Damage/DamageComplex/`). It is the *very*-complex physics sim (`Damage/DamageVeryComplex/`) that is still WIP. This is a **benchmark**, not new work. Why it's in scope:
 
 | Aurora idea | Pulsar | Relevance to objective |
 |-------------|--------|------------------------|
 | Design from a tonnage/slot budget | `ShipDesign`, `ComponentDesign` | **Ground unit design copies this** — `GroundUnitDesign : IConstructableDesign`, slots filled with component designs. |
-| Layered armor + penetration | `Damage/DamageComplex/` (stubbed) | Ground AP-vs-armor uses the **same damage core**. Fix it once (PLAN Phase 1), use it for both. |
+| Layered armor + penetration | `Damage/DamageComplex/` (built + wired) | Ground AP-vs-armor uses the **same damage core** — already live for space, reuse it for both. |
 | Engines/speed ratio | `Movement/NewtonMove/` | ground units don't need this (they move at tactical scale — `Movement/CLAUDE.md`). |
 
 **Takeaway:** ship design is the working template the objective points at. Mirror its *structure* (design → components → factory → damage), in Pulsar's idiom, for ground forces. See `CONVENTIONS.md` and `GROUND-COMBAT.md` §8.

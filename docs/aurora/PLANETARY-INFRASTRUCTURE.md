@@ -115,17 +115,17 @@ CI is ~10× less efficient than TN equivalents (1 CI ≈ 1 BP/yr vs 10 BP/yr fac
 | Population growth vs carrying capacity | ⚠️ partial (placeholder die-off, no governors/radiation) | `Colonies/PopulationProcessor` |
 | Colony Cost driving infrastructure need | ⚠️ partial (`Species.ColonyCost`, life support) | `Colonies/` |
 | Workforce: 50k workers/installation | ❓ verify whether enforced | `Industry/` |
-| Fuel refinery / maintenance / financial centre / mass driver / military academy / terraforming | ❓ verify which exist as component designs in `Data/basemod/` | `Data/basemod/blueprints/components/` |
+| Fuel refinery / maintenance / financial centre / mass driver / military academy / terraforming | ❓ verify which exist as component designs in the base mod | `GameData/basemod/TemplateFiles/` (e.g. `installations.json`) |
 | Installation on/off employment | ⚠️ `InstallationsDB.EmploymentList` exists but blob is **dead**; real toggle (if any) is per-component | needs design decision |
 | Forced labour / unrest / subject populations | ❌ none | new |
-| **PlanetaryWindow installations UI** | ❌ broken — see below | `Pulsar4X.Client/Interface/Windows/PlanetaryWindow.cs` |
+| **PlanetaryWindow installations UI** | ✅ code exists and is wired — gates on `ComponentInstancesDB` (runtime unverified — CI can't run the client) | `Pulsar4X.Client/Interface/Windows/PlanetaryWindow.cs` |
 
-### The installations-UI gap (corrected understanding)
-The prior recon said "`RenderInstallations()` is empty, fill it from `InstallationsDB`." That is wrong twice over:
-1. `InstallationsDB` is never attached, so the **tab button itself never appears** — `RenderTabOptions()` gates it on `HasDataBlob<InstallationsDB>()` (`PlanetaryWindow.cs:107`) and `RenderInstallations()` gates again at line 221.
-2. The real installation data is in `ComponentInstancesDB`, and a `ComponentInstancesDBDisplay` panel **already exists**.
+### The installations-UI gap (now fixed — see root gotcha #4)
+The prior recon said "`RenderInstallations()` is empty, fill it from `InstallationsDB`." That was wrong twice over, and the code has since been corrected:
+1. `InstallationsDB` is never attached, so gating the tab on it would mean the **tab button never appears**. That dead gating code now lives only in the abandoned `PlanetaryWindow.old.cs` — the live `PlanetaryWindow.cs` has **zero `InstallationsDB` references**.
+2. The real installation data is in `ComponentInstancesDB`, which every colony has.
 
-**Correct fix:** change the gate to `ComponentInstancesDB` (which every colony has) and render via the existing `ComponentInstancesDBDisplay`, OR add a purpose-built installations panel that reads `ComponentInstancesDB.DesignsAndComponentCount`. Do not resurrect `InstallationsDB`. This is Phase 2a in `PLAN.md`.
+**What the live code does now:** `PlanetaryWindow.cs` gates the Installations tab on `HasDataBlob<ComponentInstancesDB>()` (`PlanetaryWindow.cs:102`) and renders via the components display when it can pull the blob (`PlanetaryWindow.cs:218`). Do not resurrect `InstallationsDB`. (Runtime behavior is unverified here — CI compiles the client but cannot run it; only a local Windows build confirms it draws correctly.)
 
 ---
 
@@ -133,11 +133,11 @@ The prior recon said "`RenderInstallations()` is empty, fill it from `Installati
 
 | Aurora concept | Pulsar implementation | Reuses |
 |----------------|----------------------|--------|
-| New installation type | new `ComponentDesign` + `*Atb` attribute + JSON blueprint in `Data/basemod/blueprints/components/` | component framework, mod loader |
+| New installation type | new `ComponentDesign` + `*Atb` attribute + JSON template in `GameData/basemod/TemplateFiles/` (e.g. `installations.json`) | component framework, mod loader |
 | Installation output (refine/research/etc.) | a `*Processor : IHotloopProcessor` reading components via `TryGetComponentsByAttribute<T>()` | auto-discovery |
 | Workforce requirement | a `WorkerRequirementAtb` + check in the processor / `PopulationProcessor` | `Colonies/` |
-| Infrastructure for colony cost | extend `ColonyLifeSupportDB` / `Species.ColonyCost` interaction | `Colonies/` |
+| Infrastructure for colony cost | add a `PopulationSupportAtbDB` component (the live carrying-capacity path); gravity/pressure tolerance already filters it against the body via `ComponentInstancesDBExtensions.GetPopulationSupportValue()`, consumed by `PopulationProcessor` (`PopulationProcessor.cs:26`). Do **not** extend `ColonyLifeSupportDB` — it is dead (never attached by `ColonyFactory`; `ReCalcMaxPopulation` never called). Live shortage gauge is `ColonySustenanceDB`. | `Galaxy/PopulationSupportAtbDB.cs`, `Colonies/` |
 | Mass driver transfer | reuse `Logistics/` + `Movement/` | logistics |
-| Installations UI | fix `PlanetaryWindow` gate → `ComponentInstancesDB`; reuse `ComponentInstancesDBDisplay` | client |
+| Installations UI | already wired — `PlanetaryWindow` gates on `ComponentInstancesDB` and renders via the components display (runtime unverified) | client |
 
 **Rule:** every new installation is a component design with an attribute and (if it does something each tick) a hot-loop processor. This is identical to how ship abilities work — see `CONVENTIONS.md`.

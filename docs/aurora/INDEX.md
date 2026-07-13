@@ -1,6 +1,6 @@
 # Aurora 4X Design Reference — Index
 
-Pulsar4X is a fan recreation of **Aurora 4X** (Steve Walmsley's C# space sim). For the subsystems Aurora already has and Pulsar does not (ground combat, deep planetary infrastructure), **Aurora is the design spec.** These documents capture Aurora's mechanics so we can diff them against Pulsar's current code and implement the gaps in Pulsar's own idiom.
+Pulsar4X is a fan recreation of **Aurora 4X** (Steve Walmsley's C# space sim). For the subsystems where Aurora sets the depth bar and Pulsar is still catching up (deep planetary infrastructure, terraforming/occupation; and to gauge remaining depth on the now-built ground combat layer), **Aurora is the design spec.** These documents capture Aurora's mechanics so we can diff them against Pulsar's current code and implement the gaps in Pulsar's own idiom.
 
 > **These are a design reference, not an implementation spec.** Numbers here were extracted from secondary sources (community wiki + a community manual) and summarised by a model. Treat all specific values as *approximately correct, to be verified against the actual game before they are hard-coded.* Where sources disagreed, both values are shown and flagged ⚠️. The *shape* of each mechanic is reliable; the *exact constants* are not.
 
@@ -10,30 +10,30 @@ Pulsar4X is a fan recreation of **Aurora 4X** (Steve Walmsley's C# space sim). F
 
 | Doc | Covers | Maps to Pulsar |
 |-----|--------|----------------|
-| `GROUND-COMBAT.md` | Ground unit design, formations, combat resolution, transport, orbital drop, boarding, invasion/occupation | **All new** — no ground combat exists in Pulsar |
+| `GROUND-COMBAT.md` | Ground unit design, formations, combat resolution, transport, orbital drop, boarding, invasion/occupation | `GroundCombat/` — **built** (GroundForcesDB, hourly GroundForcesProcessor, buildable units, formations, hex pathfinding); see `GroundCombat/CLAUDE.md`. Runtime unverified. |
 | `PLANETARY-INFRASTRUCTURE.md` | Installations, construction, mining, the economic loop | `Colonies/`, `Industry/`, `Energy/` — partially built |
-| `COLONY-ENVIRONMENT-AND-POPULATION.md` | Colony cost/habitability, population & carrying capacity, workforce, terraforming, **unrest/occupation** | `Colonies/` — partial; supplies real formulas for the stubbed PopulationProcessor |
+| `COLONY-ENVIRONMENT-AND-POPULATION.md` | Colony cost/habitability, population & carrying capacity, workforce, terraforming, **unrest/occupation** | `Colonies/` — partial; PopulationProcessor is **built** (`GrowPopulation`, the 20/pop^(1/3) growth formula, hostile-world cap, morale-migration + starvation). This doc supplies the terraforming/unrest/occupation formulas still to build. |
 | `SPACE-COMBAT-BENCHMARK.md` | Aurora naval combat depth (the bar we are matching) + pointers to Pulsar's existing implementation | `Weapons/`, `Damage/`, `Sensors/` — built, see those CLAUDE.md |
 | `SHIP-DESIGN.md` | Hull/tonnage, layered armor, engines, shields — the template ground-unit design copies | `Ships/`, `Damage/` — built |
 | `SENSORS-AND-DETECTION.md` | Thermal/EM signatures, passive vs active sensors, EMCON/stealth | `Sensors/` — built |
 | `RESEARCH-AND-TECH.md` | Research labs, scientists, the 9-category tech tree (incl. Ground Combat), prototypes | `Tech/` — built |
-| `DIPLOMACY-AND-INTEL.md` | Relationship tiers, communication, treaties, ELINT intelligence | `Factions/` — minimal; **furthest from objective** |
+| `DIPLOMACY-AND-INTEL.md` | Relationship tiers, communication, treaties, ELINT intelligence | `Factions/` — substrate **built** (DiplomacyDB on all factions, treaties, first-contact, an NPCDecisionProcessor brain + espionage chain), but the behaviour-changing NPC actions ship **gated OFF by default** (`EnableOrderEmission`/`EnableDiplomaticProposals`/`EnableIntelLedger` all `false`). |
 | `LOGISTICS.md` | Fuel, maintenance (MSP/clocks), supply ships, transfer facilities | `Logistics/`, `Storage/`, `Industry/` — partial |
-| `COMMANDERS-AND-OFFICERS.md` | Officer generation, ranks, **ground + naval skill bonuses** | `People/` — exists; bonuses maybe not applied |
+| `COMMANDERS-AND-OFFICERS.md` | Officer generation, ranks, **ground + naval skill bonuses** | `People/` — **built**; commander bonuses **are wired** to real consumers (e.g. flagship `CombatMultiplier` at `CombatEngagement.cs`). |
 | `EXPLORATION-AND-SURVEY.md` | Geological survey (minerals), gravitational survey (jump points) | `GeoSurveys/`, `JumpPoints/`, `Industry/MineralsDB` — built |
 | `MISSILES-AND-FIRE-CONTROL.md` | Missile design, point defense, electronic warfare | `Weapons/` — built; missile guidance half-finished |
 | `FLEETS-AND-SHIPYARDS.md` | Shipyards (build), task groups (move), fleet orders | `Fleets/`, `Ships/`, `Movement/` — built |
 
 **Three groups — read by what you're doing:**
 
-1. **Core — build new** (Pulsar doesn't have these; this is the objective):
-   `GROUND-COMBAT.md`, `PLANETARY-INFRASTRUCTURE.md`, `COLONY-ENVIRONMENT-AND-POPULATION.md`.
+1. **Core — deepen the objective** (the invade-a-planet loop):
+   `GROUND-COMBAT.md` (the tactical ground layer is **built** in `GroundCombat/` — read this to gauge remaining depth, not from scratch), `PLANETARY-INFRASTRUCTURE.md`, `COLONY-ENVIRONMENT-AND-POPULATION.md` (population growth is built; terraforming/unrest/occupation are the gaps).
 
 2. **Direct support — Pulsar has the framework, ground combat plugs into it** (read when wiring the relevant hook):
    `COMMANDERS-AND-OFFICERS.md` (ground bonuses feed combat), `LOGISTICS.md` (supply/GSP), `EXPLORATION-AND-SURVEY.md` (minerals feed economy), `RESEARCH-AND-TECH.md` (unlock ground tech), `SHIP-DESIGN.md` (the unit-design template), `FLEETS-AND-SHIPYARDS.md` (build + deliver forces).
 
 3. **Benchmark / calibration — already built in Pulsar, read to gauge "the same depth," little new work**:
-   `SPACE-COMBAT-BENCHMARK.md`, `SENSORS-AND-DETECTION.md`, `MISSILES-AND-FIRE-CONTROL.md`, `DIPLOMACY-AND-INTEL.md`.
+   `SPACE-COMBAT-BENCHMARK.md`, `SENSORS-AND-DETECTION.md`, `MISSILES-AND-FIRE-CONTROL.md`, `DIPLOMACY-AND-INTEL.md` (substrate built, NPC actions gated off by default — read to gauge depth, not from scratch).
 
 > Every doc ends with a **"Pulsar status & mapping"** section translating Aurora mechanics to the concrete Pulsar DataBlob/Processor/subsystem. The recurring rule across all of them: **reuse the existing framework, don't build a parallel one** (`CONVENTIONS.md` §6).
 
@@ -85,4 +85,4 @@ Secondary (reference, blocks direct fetch — used via search snippets):
 When implementation needs a specific constant, do **not** trust this doc alone:
 1. Check the aurora-manual raw markdown for the exact chapter.
 2. Cross-check the AuroraWiki page (via web search if direct fetch 403s).
-3. If still ambiguous, make it a **named constant in a config/blueprint JSON** (Pulsar loads game data from `GameEngine/Data/basemod/` — see root `CLAUDE.md`), so it can be tuned without a recompile. This matches how Pulsar already externalises component/mineral/tech data.
+3. If still ambiguous, make it a **named constant in a config/blueprint JSON** (Pulsar loads game data from `Pulsar4X/GameData/basemod/`, copied to AppData/Mods at build — see root `CLAUDE.md`), so it can be tuned without a recompile. This matches how Pulsar already externalises component/mineral/tech data.
