@@ -58,5 +58,50 @@ namespace Pulsar4X.Sites
             system.AddEntity(site, dataBlobs);
             return site;
         }
+
+        /// <summary>
+        /// Site Engine SE-3a — create a SURFACE site located on a planet body's region/hex (docs/SITE-ENGINE-DESIGN.md
+        /// §6: a ruin on the ground that ground troops must land on and work), rather than a point in space. It carries
+        /// NO <see cref="PositionDB"/> — its location is the body + region + hex on the site record, and its worker is a
+        /// ground unit standing on it (SE-3b), not a parked ship. Neutral-owned until a faction works it.
+        ///
+        /// Nothing in the live New-Game path calls this yet, and the existing space work path skips a site with no
+        /// PositionDB, so a surface site is inert until SE-3b adds the ground-worker branch → byte-identical.
+        /// </summary>
+        public static Entity CreateSurfaceSite(
+            StarSystem system,
+            Entity body,
+            int regionIndex,
+            int globalQ,
+            int globalR,
+            string name = "Surface Ruin",
+            SiteRole role = SiteRole.Science,
+            SiteShape shape = SiteShape.OneShot,
+            SiteHook hook = SiteHook.Benign,
+            SiteYield yield = SiteYield.Research,
+            double understandingToResolve = 100.0)
+        {
+            var nameDB = new NameDB(name);
+
+            var siteDB = new FieldSiteDB
+            {
+                Role = role,
+                Shape = shape,
+                Hook = hook,
+                Yield = yield,
+                UnderstandingToResolve = understandingToResolve,
+                SurfaceBodyEntityId = body.Id,
+                SurfaceRegionIndex = regionIndex,
+                SurfaceGlobalQ = globalQ,
+                SurfaceGlobalR = globalR
+            };
+
+            var dataBlobs = new List<BaseDataBlob> { nameDB, siteDB };
+
+            Entity site = Entity.Create();
+            site.FactionOwnerID = Game.NeutralFactionId;
+            system.AddEntity(site, dataBlobs);
+            return site;
+        }
     }
 }

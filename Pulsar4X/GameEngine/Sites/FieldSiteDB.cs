@@ -74,6 +74,27 @@ namespace Pulsar4X.Sites
         /// present). The yield routes to this faction (SE-1c). -1 = nobody has worked it yet.</summary>
         [JsonProperty] public int WorkedByFactionId { get; set; } = -1;
 
+        // ---- SE-3a: the SURFACE location (a site on a planet's ground, not a point in space) ----
+        // A space anomaly locates itself by a co-blob PositionDB; a surface site instead lives on a specific body's
+        // region/hex — the same way a GroundUnit locates itself (RegionIndex + GlobalQ/GlobalR). Location-neutral
+        // defaults (-1) mean "not a surface site", so the space-anomaly path is byte-identical.
+
+        /// <summary>The planet body entity this surface site sits on, or -1 for a space anomaly. Set → this is a
+        /// surface site (see <see cref="IsSurfaceSite"/>) worked by a ground unit standing on it (SE-3b), not a ship.</summary>
+        [JsonProperty] public int SurfaceBodyEntityId { get; set; } = -1;
+
+        /// <summary>The body region the site sits in (-1 = none). Ground combat's `Region.OwnerFactionID` on this
+        /// region is the guardian gate (SE-3d).</summary>
+        [JsonProperty] public int SurfaceRegionIndex { get; set; } = -1;
+
+        /// <summary>The site's exact hex on the body's continuous cylinder grid (global axial Q/R; -1 = unplaced) —
+        /// where a worker unit must stand and where the ruin is located.</summary>
+        [JsonProperty] public int SurfaceGlobalQ { get; set; } = -1;
+        [JsonProperty] public int SurfaceGlobalR { get; set; } = -1;
+
+        /// <summary>True when this record carries a surface location (a planet-ground site), false for a space anomaly.</summary>
+        [JsonIgnore] public bool IsSurfaceSite => SurfaceBodyEntityId >= 0;
+
         public FieldSiteDB() { }
 
         public FieldSiteDB(FieldSiteDB other)
@@ -88,6 +109,10 @@ namespace Pulsar4X.Sites
             UnderstandingToResolve = other.UnderstandingToResolve;
             YieldDelivered = other.YieldDelivered;
             WorkedByFactionId = other.WorkedByFactionId;
+            SurfaceBodyEntityId = other.SurfaceBodyEntityId;
+            SurfaceRegionIndex = other.SurfaceRegionIndex;
+            SurfaceGlobalQ = other.SurfaceGlobalQ;
+            SurfaceGlobalR = other.SurfaceGlobalR;
         }
 
         public override object Clone() => new FieldSiteDB(this);
