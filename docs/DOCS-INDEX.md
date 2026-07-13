@@ -140,5 +140,10 @@ Build column (for design docs): ✅ built · 🏗 building · ⚫ design-only (n
 
 ## Known doc-debt (the honest to-do, so it isn't lost)
 
-1. **`SYSTEMS-STATUS-AND-TEST-PLAN.md` (🟡)** — refresh the rows for morale/population, government, diplomacy, crew/manpower, stations to their built state (they landed after 2026-06-29). A stale-banner is in place pointing to the tracker meanwhile; the per-row refresh is the remaining work.
+1. **`SYSTEMS-STATUS-AND-TEST-PLAN.md` (🟡)** — refresh the rows for morale/population, government, diplomacy, crew/manpower, stations to their built state (they landed after 2026-06-29). Its connection graph was extracted to `SYSTEM-CONNECTION-MAP.md` (2026-07-13); the doc is slated for retirement once its build-status content is absorbed here + into TESTING-TRACKER.
 2. When **delegation** or **espionage** starts, flip their Build column here 🏗 and add their systems to the systems map.
+3. **Docs-audit follow-ups (2026-07-13):** (a) physically folder `docs/` into subject subfolders (`combat/ ground/ economy/ society/ ai/ environment/ explore/`) per `DOCS-AUDIT-2026-07-13.md` §3a — deferred (cosmetic, high cross-ref churn; needs a link-sweep of CLAUDE.md's tables); (b) trim the mega-cells in this file (COMPONENT-DESIGNER-DIALS, the AI-suite prose) to one-line blurbs; (c) relocate the 3 bannered superseded docs (`PLAN`, `AURORA-GAP-ANALYSIS`, `HAZARD-DISCOVERY`) into `docs/archive/` when (a) runs.
+
+---
+
+**As of 2026-07-13 (docs-vs-code audit executed — branch `claude/docs-codebase-audit-xnzwqn`):** ran the full audit in `DOCS-AUDIT-PROCESS.md`. W1 flipped ~60 stale "not built" claims to truth across 39 design + subsystem docs (three-state vocabulary; nothing claimed to "work" at runtime). W2 bannered the superseded snapshots. W3 extracted `SYSTEM-CONNECTION-MAP.md` and set the one-status-owner split. W4 consolidated 12→6 AI docs, 5→3 ground, 6→4 combat, + economy/designer folds (fold-verified, zero broken links) — `docs/` went 55→47. Remaining: the doc-debt items above (foldering + mega-cell trim).
