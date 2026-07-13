@@ -33,6 +33,10 @@ namespace Pulsar4X.Sites
         /// <summary>Understanding banked per day a worker is on-site — the gate that unlocks the resolve branch.</summary>
         public static double UnderstandingPerDay = 5.0;
 
+        /// <summary>SE-3b — the flat work-rate multiplier for a GROUND-unit worker on a surface site (no berth to scale
+        /// it). v1 = 1.0 (the design's "unit rate ≤ facility rate" — a berthed ship facility exceeds this via Grade).</summary>
+        public static double SurfaceWorkMultiplier = 1.0;
+
         public TimeSpan RunFrequency => TimeSpan.FromDays(1);
         public TimeSpan FirstRunOffset => TimeSpan.FromSeconds(1);
         public Type GetParameterType => typeof(FieldSiteDB);
@@ -50,12 +54,27 @@ namespace Pulsar4X.Sites
         public void ProcessEntity(Entity entity, int deltaSeconds)
         {
             if (!entity.TryGetDataBlob<FieldSiteDB>(out var site)) return;
-            if (!entity.TryGetDataBlob<PositionDB>(out var sitePos)) return;
 
             // A resolved site (Depleted/Persistent/Ruptured) takes no more work — SiteMachine also guards this,
-            // but skip the neighbour scan when there's nothing to accrue.
+            // but skip the presence scan when there's nothing to accrue.
             if (site.Status != SiteStatus.Discovered && site.Status != SiteStatus.Worked) return;
 
+            double days = deltaSeconds / 86400.0;
+
+            // SE-3b: a surface site (on a planet's ground) is worked by a ground unit standing on it; a space anomaly
+            // is worked by a ship parked at it. The two presence models are different, so branch here. Each path only
+            // reaches its resolve/deliver after a real accrue, so the space path stays byte-identical.
+            if (site.IsSurfaceSite)
+                ProcessSurfaceWork(entity, site, days);
+            else
+                ProcessSpaceWork(entity, site, days);
+        }
+
+        /// <summary>SE-1b/2b/2c — the SPACE-anomaly work path: a ship parked within <see cref="PresenceRadius_m"/>
+        /// works it, its manned Command Berth scales the rate, and a dangerous site rolls the posting incident.</summary>
+        private void ProcessSpaceWork(Entity entity, FieldSiteDB site, double days)
+        {
+            if (!entity.TryGetDataBlob<PositionDB>(out var sitePos)) return;
             if (!TryFindWorker(entity.Manager, sitePos.AbsolutePosition, out var worker)) return;
 
             // SE-2b: a MANNED Command Berth on the worker whose Role matches the site works it FASTER — scaled by the
@@ -64,24 +83,65 @@ namespace Pulsar4X.Sites
             var berth = GetWorkingBerth(worker, site.Role);
             double multiplier = MultiplierOf(berth, worker.Manager);
 
-            // Scale the (multiplied) daily rate by however long this step actually covered (the scheduler catches up
-            // sub-daily processors within a coarse step), so accrual is independent of Ticklength.
-            double days = deltaSeconds / 86400.0;
             site.WorkedByFactionId = worker.FactionOwnerID;
             SiteMachine.Accrue(site, WorkPerDay * multiplier * days, UnderstandingPerDay * multiplier * days);
 
-            // SE-2c: a leader posted to a DANGEROUS site can be lost. The seated leader worked this step (above), then
-            // rolls against the site's Hook danger, bought down by the berth's Survivability. A Benign site (the base
-            // anomaly) has zero danger → no roll, no RNG touched → byte-identical.
+            // SE-2c: a leader posted to a DANGEROUS site can be lost. A Benign site has zero danger → no roll.
             if (berth != null) RollPostingIncident(entity, worker, berth, site, days);
 
-            // SE-1c: once understanding fills, the single-branch anomaly RESOLVES and pays its yield out ONCE into
-            // the consumer system its Yield names (SE-5 turns this into a player-committed choice among branches).
+            TryResolveAndDeliver(entity, site);
+        }
+
+        /// <summary>
+        /// SE-3b — the SURFACE-site work path: a friendly ground unit standing in the site's region works it. No berth
+        /// yet (a ground unit carries none), so the rate is the flat <see cref="SurfaceWorkMultiplier"/> (v1 = 1.0, the
+        /// "unit rate ≤ facility rate" of the design). The guardian gate (refuse work until the region is cleared) is
+        /// SE-3d.
+        /// </summary>
+        private static void ProcessSurfaceWork(Entity entity, FieldSiteDB site, double days)
+        {
+            if (!TryFindGroundWorker(entity.Manager, site, out int workerFactionId)) return;
+
+            site.WorkedByFactionId = workerFactionId;
+            SiteMachine.Accrue(site, WorkPerDay * SurfaceWorkMultiplier * days, UnderstandingPerDay * SurfaceWorkMultiplier * days);
+
+            TryResolveAndDeliver(entity, site);
+        }
+
+        /// <summary>SE-1c — once understanding fills, the single-branch site RESOLVES and pays its yield out ONCE into
+        /// the consumer system its Yield names (SE-5 turns this into a player-committed choice among branches). Shared
+        /// by both work paths; only called after a real accrue.</summary>
+        private static void TryResolveAndDeliver(Entity entity, FieldSiteDB site)
+        {
             if (!site.YieldDelivered && SiteMachine.BranchUnlocked(site) && SiteMachine.Resolve(site))
             {
                 DeliverYield(entity, site);
                 site.YieldDelivered = true;
             }
+        }
+
+        /// <summary>
+        /// SE-3b — find a ground unit working a surface site: the first ALIVE, non-neutral unit on the site's body that
+        /// stands in the site's region. Returns its faction (the site's yield routes there). v1 matches by region (the
+        /// guardian gate + hex-exact standing are later refinements). Public + static so the presence rule is testable.
+        /// </summary>
+        public static bool TryFindGroundWorker(EntityManager manager, FieldSiteDB site, out int workerFactionId)
+        {
+            workerFactionId = Game.NeutralFactionId;
+            if (manager == null || site == null || site.SurfaceBodyEntityId < 0) return false;
+            if (!manager.TryGetEntityById(site.SurfaceBodyEntityId, out var body)) return false;
+            if (!body.TryGetDataBlob<Pulsar4X.GroundCombat.GroundForcesDB>(out var forces)) return false;
+
+            foreach (var unit in forces.Units)
+            {
+                if (unit.FactionOwnerID == Game.NeutralFactionId) continue;
+                if (unit.Health <= 0) continue;
+                if (unit.RegionIndex != site.SurfaceRegionIndex) continue;
+
+                workerFactionId = unit.FactionOwnerID;
+                return true;
+            }
+            return false;
         }
 
         /// <summary>The worker's best MANNED, Role-matching Command Berth (or null) — the berth whose seated leader
