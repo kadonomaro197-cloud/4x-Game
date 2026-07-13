@@ -691,6 +691,21 @@ public class NewGameMenu : PulsarGuiWindow
             Console.WriteLine($"[NewGame] Incident auto-spawn FAILED (New Game continues without it): {ex}");
         }
 
+        // Site Engine (SE-6a): flag-gated auto-seed of a couple of workable DEMO sites (a space anomaly + a surface
+        // ruin) at the player's home world — the switch that makes the whole Site Engine (SE-1..SE-5) reachable in a
+        // real game. Default OFF, so New Game stays byte-identical. Engine call (CI-tested); wrapped so a hiccup never
+        // breaks New Game.
+        try
+        {
+            int sites = Pulsar4X.Sites.SiteScenario.MaybeSpawnForNewGame(game);
+            if (sites > 0)
+                Console.WriteLine($"[NewGame] Auto-spawned {sites} demo site(s) at the home world.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[NewGame] Demo-site auto-spawn FAILED (New Game continues without it): {ex}");
+        }
+
         game.PostNewGameInitialization();
 
         return (game, playerFaction, startingSystem, startingBody);
