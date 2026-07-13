@@ -89,19 +89,29 @@ namespace Pulsar4X.Factions
             if (personalityNode != null)
                 faction.SetDataBlob(PersonalityFromJson(personalityNode));
 
+            // DevTest (2026-07-13) — a faction can reference designs by ID from the consolidated mod store
+            // (game.StartingGameData), the SAME store the live colony-blueprint path (ColonyFactory.CreateFromBlueprint)
+            // resolves from. The old per-design files under componentDesigns/ were consolidated into designs/*.json, so
+            // ID-by-store is the current, un-rotted way to author a faction (and the whole point of the "author factions
+            // from data" base). Falls back to the legacy file/dir path when the entry isn't a known ID (backward
+            // compatible). StartResearched is already true for the whole scenario load (set by DefaultStartFactory).
             var componentDesignsToLoad = (JArray?)rootJson["componentDesigns"];
+            if(componentDesignsToLoad != null)
             foreach(var componentDesignToLoad in componentDesignsToLoad)
             {
-                string path = componentDesignToLoad.ToString();
-                string fullPath = Path.Combine(rootDirectory, path);
+                string entry = componentDesignToLoad.ToString();
+                if(game.StartingGameData.ComponentDesigns.ContainsKey(entry))
+                {
+                    ComponentDesignFromJson.Create(faction, factionDataStore, game.StartingGameData.ComponentDesigns[entry]);
+                    continue;
+                }
 
+                string fullPath = Path.Combine(rootDirectory, entry);
                 if(Directory.Exists(fullPath))
                 {
                     var files = Directory.GetFiles(fullPath, "*.json", SearchOption.AllDirectories);
                     foreach(var file in files)
-                    {
                         ComponentDesignFromJson.Create(faction, factionDataStore, file);
-                    }
                 }
                 else
                 {
@@ -110,6 +120,7 @@ namespace Pulsar4X.Factions
             }
 
             var ordnanceDesignsToLoad = (JArray?)rootJson["ordnanceDesigns"];
+            if(ordnanceDesignsToLoad != null)
             foreach(var ordnanceDesignToLoad in ordnanceDesignsToLoad)
             {
                 string path = ordnanceDesignToLoad.ToString();
@@ -129,19 +140,25 @@ namespace Pulsar4X.Factions
                 }
             }
 
+            // Ship designs: same ID-from-store-first, file-fallback pattern (a ship design references component designs
+            // by id, so it MUST be authored after the componentDesigns above — which it is).
             var shipDesignsToLoad = (JArray?)rootJson["shipDesigns"];
+            if(shipDesignsToLoad != null)
             foreach(var shipDesignToLoad in shipDesignsToLoad)
             {
-                string path = shipDesignToLoad.ToString();
-                string fullPath = Path.Combine(rootDirectory, path);
+                string entry = shipDesignToLoad.ToString();
+                if(game.StartingGameData.ShipDesigns.ContainsKey(entry))
+                {
+                    ShipDesignFromJson.Create(faction, factionDataStore, game.StartingGameData.ShipDesigns[entry]);
+                    continue;
+                }
 
+                string fullPath = Path.Combine(rootDirectory, entry);
                 if(Directory.Exists(fullPath))
                 {
                     var files = Directory.GetFiles(fullPath, "*.json", SearchOption.AllDirectories);
                     foreach(var file in files)
-                    {
                         ShipDesignFromJson.Create(faction, factionDataStore, file);
-                    }
                 }
                 else
                 {
@@ -149,19 +166,32 @@ namespace Pulsar4X.Factions
                 }
             }
 
+            // Species: reference a species by ID from the mod store (the base mod ships species-human + species-xenos),
+            // creating it via the blueprint path and linking it to the faction (FactionOwnerID + FactionInfoDB.Species),
+            // exactly as CreateGameCore does. Falls back to the flat per-faction species FILE for the legacy form.
             var speciesToLoad = (JArray?)rootJson["species"];
+            if(speciesToLoad != null)
             foreach(var toLoad in speciesToLoad)
             {
-                string path = toLoad.ToString();
-                string fullPath = Path.Combine(rootDirectory, path);
+                string entry = toLoad.ToString();
+                if(game.StartingGameData.Species.ContainsKey(entry))
+                {
+                    // CreateFromBlueprint hosts the species entity in a StarSystem (as CreateGameCore does); the
+                    // scenario loads systems before factions, so the starting system exists. A species entity isn't
+                    // location-bound (a colony in any system references it), matching the legacy GlobalManager form.
+                    var hostSystem = game.Systems[0];
+                    var speciesEntity = SpeciesFactory.CreateFromBlueprint(hostSystem, game.StartingGameData.Species[entry]);
+                    speciesEntity.FactionOwnerID = faction.Id;
+                    faction.GetDataBlob<FactionInfoDB>().Species.Add(speciesEntity);
+                    continue;
+                }
 
+                string fullPath = Path.Combine(rootDirectory, entry);
                 if(Directory.Exists(fullPath))
                 {
                     var files = Directory.GetFiles(fullPath, "*.json", SearchOption.AllDirectories);
                     foreach(var file in files)
-                    {
                         SpeciesFactory.CreateFromJson(faction, game.GlobalManager, file);
-                    }
                 }
                 else
                 {
