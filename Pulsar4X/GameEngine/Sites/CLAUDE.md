@@ -18,7 +18,7 @@ The space anomaly is the engine minus the surface bits, so it's the cheapest fir
 |-------|----------------|--------|
 | **SE-1** | the engine on a space anomaly — `FieldSiteDB` + state machine + presence detection + accrue + resolve + a research yield | ✅ done (SE-1a + SE-1b + SE-1c) |
 | SE-2 | the Command Berth as a real component (Role/Grade/Support/Survivability/Span) + the posting-danger incident roll | ✅ done (SE-2a gear + SE-2b seat/work-rate + SE-2c incident roll) |
-| SE-3 | surface sites — locate ruins on a hex, the unit-worker path, Load/Land orders + hex landing, the guardian hook | 🔨 building (SE-3a location + SE-3b ground-worker done; SE-3c Load/Land orders next) |
+| SE-3 | surface sites — locate ruins on a hex, the unit-worker path, Load/Land orders + hex landing, the guardian hook | 🔨 building (SE-3a location + SE-3b ground-worker + SE-3c Load/Land orders done; SE-3d guardian gate next). SE-3c orders live in `GroundCombat/` (`LoadTroopsOrder`/`LandTroopsOrder`, wrap `GroundTransport`; gauge `TroopOrderTests`). |
 | SE-4 | the incident shape (Europa) — bleeds-you pressure + hold-while-you-work + a menace faction + the spawn event | planned |
 | SE-5 | branches + the ruptured edge (the crisis) — composable multi-path resolve, Diplomat/Intelligence roles, persistent→crisis | planned |
 | SE-6+ | content — author catalog rows across the dials as data | planned |
