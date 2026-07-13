@@ -1,6 +1,6 @@
 # AI Command & Communication Design — how the levels of a faction's mind work together
 
-> **Status: v0.3 DISCUSSION DRAFT (2026-07-10).** This is a live design conversation, not a locked plan. **Settled:** identity drifts (state-vs-trait, §3e); officers are full characters that drift with their careers, faction outweighs officer by default but tenure/experience can override (§3d); subordinate-autonomy is a Head-of-State/player dial and NPCs run their delegates free (so v1 needs no approval loop). **Expanded this pass:** the trait vocabulary grew from 6 to a **12-trait model** via a four-agent cross-franchise survey (§3a) — added Zealotry, Guile, Collectivism, Authoritarianism, Altruism, each tied to a named gameplay lever + a live-when-wired rule; deferred Patience/Adaptability/Venality/Isolationism; cut grudge-holding to the relationship track; added the faction-fingerprint gauge (§3a-bis). **Still open:** final ratify of the 12 (esp. the deferred four), tier count for v1, the player-facing report UI. It answers three questions the developer posed: at each level of a faction's AI, **what can it SEE, what can it REACT to, and what can it DECIDE?** — **how do the levels TALK to each other?** — and **how does all of it stay true to the faction's own identity, character, and design?** Sits on top of `AI-SELF-PLAY-DESIGN.md` (the 19-role roster + the cradle-to-grave leader pipeline) and `GOVERNANCE-AND-DELEGATION-DESIGN.md` (the delegate mechanism). Where those describe *who the seats are*, this describes *how information and intent flow between them*.
+> **Status: v0.3 DISCUSSION DRAFT (2026-07-10).** This is a live design conversation, not a locked plan. **Settled:** identity drifts (state-vs-trait, §3e); officers are full characters that drift with their careers, faction outweighs officer by default but tenure/experience can override (§3d); subordinate-autonomy is a Head-of-State/player dial and NPCs run their delegates free (so v1 needs no approval loop). **Expanded this pass:** the trait vocabulary grew from 6 to a **12-trait model** via a four-agent cross-franchise survey (§3a) — added Zealotry, Guile, Collectivism, Authoritarianism, Altruism, each tied to a named gameplay lever + a live-when-wired rule; deferred Patience/Adaptability/Venality/Isolationism; cut grudge-holding to the relationship track; added the faction-fingerprint gauge (§3a-bis). **Still open:** final ratify of the 12 (esp. the deferred four), tier count for v1, the player-facing report UI. It answers three questions the developer posed: at each level of a faction's AI, **what can it SEE, what can it REACT to, and what can it DECIDE?** — **how do the levels TALK to each other?** — and **how does all of it stay true to the faction's own identity, character, and design?** Sits on top of `GOVERNANCE-AND-DELEGATION-DESIGN.md` (the 19-role roster + the cradle-to-grave leader pipeline) and `GOVERNANCE-AND-DELEGATION-DESIGN.md` (the delegate mechanism). Where those describe *who the seats are*, this describes *how information and intent flow between them*.
 
 ---
 
@@ -13,13 +13,13 @@ That single principle answers most of the design:
 - **Up the chain flows STATUS + EXCEPTIONS** (call it a *report*). Mostly "on track"; sometimes "I can't do this — advise."
 - **Each level sees its own scope and thinks on its own clock.** The Captain re-plans slowly; the throttleman reacts every second. Nobody re-plans the war every tick.
 
-This is also *why* delegation and NPC AI are the same system (the locked idea from `AI-SELF-PLAY-DESIGN.md`): the mandate/report protocol is identical whether a human or the top-level AI sits in the Captain's chair. The player, when they delegate, **becomes** the level that issues mandates and reads reports. There is no second AI to write.
+This is also *why* delegation and NPC AI are the same system (the locked idea from `GOVERNANCE-AND-DELEGATION-DESIGN.md`): the mandate/report protocol is identical whether a human or the top-level AI sits in the Captain's chair. The player, when they delegate, **becomes** the level that issues mandates and reads reports. There is no second AI to write.
 
 ---
 
 ## 1. The levels — what each one SEES, REACTS to, and DECIDES
 
-Four tiers. The top three are decision-makers; the bottom one is mechanical (and already built). The names below are functional roles, not final titles — the full roster is in `AI-SELF-PLAY-DESIGN.md`.
+Four tiers. The top three are decision-makers; the bottom one is mechanical (and already built). The names below are functional roles, not final titles — the full roster is in `GOVERNANCE-AND-DELEGATION-DESIGN.md`.
 
 ### Tier 1 — Head of State (the faction's strategic mind)
 *The Captain. One per faction. Thinks slowly (≈ monthly).*
@@ -69,7 +69,7 @@ When a higher level directs a lower one, it hands down a small, uniform bundle �
 
 The subordinate takes that mandate and **owns everything below it.** The Grand Admiral turns "break Mars, offensive, 60%" into "build 8 cruisers at Earth, mass at L4, System Admiral Sol takes Mars orbit." The Head of State never sees those details — it only set the destination and the rules.
 
-> **The stance is the heart of it.** A *stance* is a named bundle of standing orders — a thermostat setting, not a joystick. "Offensive Push," "Dig In," "Defensive Line." It's the single thing that carries *principles* down the chain, and (per `AI-SELF-PLAY-DESIGN.md`) it's a **data-driven, moddable preset**, biased for NPCs by the faction's personality. Same code, different stance → different behavior.
+> **The stance is the heart of it.** A *stance* is a named bundle of standing orders — a thermostat setting, not a joystick. "Offensive Push," "Dig In," "Defensive Line." It's the single thing that carries *principles* down the chain, and (per `GOVERNANCE-AND-DELEGATION-DESIGN.md`) it's a **data-driven, moddable preset**, biased for NPCs by the faction's personality. Same code, different stance → different behavior.
 
 ### 2b. UP = the REPORT (status + exceptions/escalation)
 On its own clock, each subordinate reports up — again a uniform small shape:
@@ -236,4 +236,4 @@ The goal slot and the orders it emits carry forward unchanged when we later form
 
 ---
 
-*Companion docs: `AI-SELF-PLAY-DESIGN.md` (the roster + the leader pipeline), `GOVERNANCE-AND-DELEGATION-DESIGN.md` (the delegate mechanism), `GOVERNMENT-AND-POLITICS-DESIGN.md` (government-as-modulator), `DIPLOMACY-DESIGN.md` (Foreign-Minister external politics). This doc is the information/communication layer that ties the levels together.*
+*Companion docs: `GOVERNANCE-AND-DELEGATION-DESIGN.md` (the roster + the leader pipeline), `GOVERNANCE-AND-DELEGATION-DESIGN.md` (the delegate mechanism), `GOVERNMENT-AND-POLITICS-DESIGN.md` (government-as-modulator), `DIPLOMACY-DESIGN.md` (Foreign-Minister external politics). This doc is the information/communication layer that ties the levels together.*

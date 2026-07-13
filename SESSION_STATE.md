@@ -90,7 +90,7 @@ Full vision wired end to end and gauged: **survive a hazard → discover its dam
 - **Stale-test baseline restore** — `FleetAggregationTests` (railguns now carry `RailgunRange_m`). Branch was pre-existing red; fixed.
 - **Fleet window UX (client)** — left-click selects a fleet IMMEDIATELY (was gated inside `if(isTreeOpen)`); context menu explicit right-click only.
 - **Per-category render gauge (client)** — `SystemMapRendering.MaybeLogMapPerf` logs `⏱ map breakdown ms — orbits u../d.. (N) | …` so ONE play-test names the heavy icon list. **Hypothesis: ORBITS** (`OrbitEllipseIcon` re-transforms 181 pts + ~180 `SDL.RenderLine` calls per orbit per frame; Aurora draws one cheap ellipse + caches). **OPEN: developer runs the combat scenario, reads the ⏱ map breakdown line; then the fix (batch ghost ring into `SDL.RenderLines` — needs `_fullOrbitDrawPoints` `SDL.Point[]`→`SDL.FPoint[]`; LOD segments; cache transform).**
-- **Colony progression captured** — `docs/COLONY-PROGRESSION-DESIGN.md` (vision): Outpost→Colony(flavors)→World→Minor→Hub→Major→Capitol, cost↑/yield↑, outpost-only-automation, scaling.
+- **Colony progression captured** — `docs/OFF-WORLD-INFRASTRUCTURE-DESIGN.md` (vision): Outpost→Colony(flavors)→World→Minor→Hub→Major→Capitol, cost↑/yield↑, outpost-only-automation, scaling.
 
 ### Open threads for the developer (live-only / decisions)
 - **Render perf**: run the scenario, send the `⏱ map breakdown` line → targeted fix.
@@ -151,7 +151,7 @@ work is CI-green, client (UI) work is CI-blind (the developer's local build is t
   stays put (now guarded against thrash, but it doesn't physically run). The v2 movement layer reads
   `FleetRetreatDB.RetreatVector`.
 - **Per-ship battle damage (a "condition tier")** — auto-resolve is whole-ship-kills; sub-lethal damage isn't
-  tracked per ship yet (`docs/WEAPONS-AND-DODGE-DESIGN.md` "aggregate force condition").
+  tracked per ship yet (`docs/WEAPONS-DESIGN.md` "aggregate force condition").
 - (Carried) detection-quality units bug (`SensorTools.cs:173`); warp→Sun teleport edge case.
 
 ### Where to resume
@@ -228,15 +228,15 @@ Everything the older entries below call "paused" or "remaining" is now **DONE an
 - **Multi-party engagements.** Any number of fleets, either side, joining a fight in progress by coming into range. `StepEngagementGroup` is the resolver; the 2-fleet path is its n=2 special case (`MultiPartyEngagementTests`).
 - **HOT-DAMAGE REBALANCE (the headline of this entry).** Raw numbers made fights end in 2–4 salvos (10–20 game-seconds) — over before the default 1-hour master tick. **`CombatEngagement.SalvoDamageScale` (0.1)** makes a salvo deposit a tenth of its raw energy toward kills, so the SAME fight lasts ~10× more salvos (a 50v50 mirror now runs 38 salvos ≈ 190 game-seconds — watchable, steerable). The scale is **uniform**, so it changed DURATION, not who wins. It lives only on the stepped (live) resolve; `AutoResolve` (instant off-screen) stays unscaled. The one knob to tune combat pace.
   - **One emergent shift a future session MUST know:** the slower pace let the **50%-loss retreat actually trigger**. At hot damage a loser was often alpha-wiped before it could break off; now it hits 50% losses and *retreats with survivors*. So a few "X wipes Y" matchups are now break-offs — e.g. a 150-fighter swarm now retreats from a super-capital it used to wipe (takes ~400 to overwhelm it). This is the retreat mechanic finally working, not a bug.
-- **20-sim behaviour lab** (numbers in the test messages + `docs/WEAPONS-AND-DODGE-DESIGN.md`): `CombatStressLab` (10 extreme weapon/scale stress sims) + `CombatBattleSims` (10 whole-battle sims: duration, toughness sweep, saturation/evasion frontiers, combined-arms, quality-vs-quantity, 3-way FFA, reinforcements, mid-fight doctrine, 1-vs-1000). All directions held under the rebalance (it's balance-preserving); only durations grew and a few wipes became break-offs.
+- **20-sim behaviour lab** (numbers in the test messages + `docs/WEAPONS-DESIGN.md`): `CombatStressLab` (10 extreme weapon/scale stress sims) + `CombatBattleSims` (10 whole-battle sims: duration, toughness sweep, saturation/evasion frontiers, combined-arms, quality-vs-quantity, 3-way FFA, reinforcements, mid-fight doctrine, 1-vs-1000). All directions held under the rebalance (it's balance-preserving); only durations grew and a few wipes became break-offs.
 
-Source of truth for combat detail: **`GameEngine/Combat/CLAUDE.md`** (constants table incl. `SalvoDamageScale`, the six-point weapon-registration checklist, multi-party section) and **`docs/WEAPONS-AND-DODGE-DESIGN.md`** (rebalance note + findings).
+Source of truth for combat detail: **`GameEngine/Combat/CLAUDE.md`** (constants table incl. `SalvoDamageScale`, the six-point weapon-registration checklist, multi-party section) and **`docs/WEAPONS-DESIGN.md`** (rebalance note + findings).
 
 ---
 
 ## Session 2026-06-25 (cont.) — Combat-DEPTH pass: weapon flavor + dodge (READ THIS SECOND)
 
-After the spine, the developer chose to add space-combat depth (knowingly crossing his own `docs/MVP.md` firewall — "cross it, it'll just deepen the tests"). Design captured in **`docs/WEAPONS-AND-DODGE-DESIGN.md`** (the four weapon-flavor stats, computed saturation, the **Fire-Emblem weapon triangle** Beam▸Fighter▸Capital▸Beam + a Missile⟷Flak axis, and the aggregate O(ships) math). Built gauge-first, all CI-green:
+After the spine, the developer chose to add space-combat depth (knowingly crossing his own `docs/MVP.md` firewall — "cross it, it'll just deepen the tests"). Design captured in **`docs/WEAPONS-DESIGN.md`** (the four weapon-flavor stats, computed saturation, the **Fire-Emblem weapon triangle** Beam▸Fighter▸Capital▸Beam + a Missile⟷Flak axis, and the aggregate O(ships) math). Built gauge-first, all CI-green:
 
 | Piece | What | Test |
 |-------|------|------|
@@ -250,7 +250,7 @@ After the spine, the developer chose to add space-combat depth (knowingly crossi
 - **Performance hinges on `BuildFireMix` aggregating by weapon class.** If that ever stops, the resolve goes O(ships²); `CombatPerformanceTests` is the tripwire.
 - **The dodge model is exercised by STAMPING `WeaponProfile`s in tests** (Railgun/Beam/Flak) — it does NOT yet need a real railgun/flak component. That's deliberate: the real components are the remaining piece.
 - **Why the railgun/flak COMPONENTS are paused:** making them player-buildable needs the NCalc component-designer **template** system (`GameData/.../TemplateFiles/weapons.json` — ~30 formula properties per weapon). The runtime template→attribute construction isn't covered by CI (gotcha 10 — JSON data drift crashes New Game, not `dotnet test`), so it's the riskiest CI-blind work. Do it as a careful dedicated pass WITH a local New Game check, or get the developer's input on the template approach first. The weapon-attribute classes themselves (code) ARE CI-verifiable; it's the JSON template + designer formulas that aren't.
-- Full per-detail source of truth: **`GameEngine/Combat/CLAUDE.md`** ("Dodge in the resolve", "Example combat-test ships", constants table) and `docs/WEAPONS-AND-DODGE-DESIGN.md`.
+- Full per-detail source of truth: **`GameEngine/Combat/CLAUDE.md`** ("Dodge in the resolve", "Example combat-test ships", constants table) and `docs/WEAPONS-DESIGN.md`.
 
 ---
 

@@ -2,11 +2,11 @@
 
 > **What this is.** The top three rungs of the AI design ladder, told as one continuous story: what happens when several fully-designed factions share a galaxy and must react to *each other* (**Ecosystem** — emergent inter-faction politics), the **temporal shape** of a whole game plus the **late-game crisis** (**Galaxy**), and the **authoring layer** that instantiates a whole "universe" from the engine below plus the **acceptance test** that proves the stack delivers the north star (**Supercluster**). The through-line: **there is no galaxy-AI at any scale** — every inter-faction behavior emerges from individual factions each running their own needs-ladder + transition engine, with the *other factions* as inputs. Galaxy and Supercluster mostly **compose** the Ecosystem rather than adding new machinery (the one deliberate exception is the crisis).
 >
-> **Consolidated 2026-07-13 from:** `docs/AI-ECOSYSTEM-DESIGN.md`, `docs/AI-GALAXY-AND-CRISIS-DESIGN.md`, `docs/AI-SUPERCLUSTER-AND-AUTHORING-DESIGN.md`.
+> **Consolidated 2026-07-13 from:** `docs/AI-EMERGENT-POLITICS-AND-CRISIS-DESIGN.md`, `docs/AI-EMERGENT-POLITICS-AND-CRISIS-DESIGN.md`, `docs/AI-EMERGENT-POLITICS-AND-CRISIS-DESIGN.md`.
 >
 > **Status: v0.2 DISCUSSION DRAFT / RATIFIED (2026-07-10).** Ecosystem core questions RESOLVED (Part 1 §2); Galaxy/Crisis core RESOLVED (Part 2 §3); Supercluster authoring layer **RATIFIED** (Part 3 §5) — which **ratifies the whole LADDER quark→brane**. This is a *design*, not a build — see the honest build-state notes inline (the crisis in particular is the biggest MUST-BUILD, riding two unbuilt sockets).
 >
-> **Cross-links:** `AI-OBJECTIVE-ENGINE-DESIGN.md` (the actors — the fractal needs-ladder + transition engine that *is* a faction's arc), `AI-COMMAND-AND-COMMUNICATION-DESIGN.md` (traits / mood / the scored-choice engine), `DIPLOMACY-DESIGN.md` (the relationship substrate + treaties + casus belli, already built — the substrate the tools sit on), `docs/EXPLORATION-CONTENT-DESIGN.md` (the field-site loop the crisis activation rides on), `docs/NORTH-STAR-VISION.md` (the north star the acceptance test checks).
+> **Cross-links:** `AI-DECISION-ENGINE-DESIGN.md` (the actors — the fractal needs-ladder + transition engine that *is* a faction's arc), `AI-COMMAND-AND-COMMUNICATION-DESIGN.md` (traits / mood / the scored-choice engine), `DIPLOMACY-DESIGN.md` (the relationship substrate + treaties + casus belli, already built — the substrate the tools sit on), `docs/EXPLORATION-CONTENT-DESIGN.md` (the field-site loop the crisis activation rides on), `docs/NORTH-STAR-VISION.md` (the north star the acceptance test checks).
 
 ---
 
@@ -143,7 +143,7 @@ The Ecosystem locked **no rubber-band** ("space is unforgiving"). The crisis nee
 
 # PART 3 — THE SUPERCLUSTER & SCENARIO AUTHORING: the "multiverse" layer (staging a franchise)
 
-*The **final rung** — and **not new machinery.** It's the **AUTHORING layer that instantiates a "universe" (a scenario) from the engine below**, plus the **ACCEPTANCE TEST** (does the whole stack deliver the north star — can you stage an aspect of a franchise and have it play believably?). Everything below this rung is the engine; this rung spins up universes from it. Cross-links: `docs/NORTH-STAR-VISION.md` (the north star this tests), the engine (Parts 1 & 2 + `AI-OBJECTIVE-ENGINE-DESIGN.md`), the base-mod JSON + the in-game mod editor (the authoring surface).*
+*The **final rung** — and **not new machinery.** It's the **AUTHORING layer that instantiates a "universe" (a scenario) from the engine below**, plus the **ACCEPTANCE TEST** (does the whole stack deliver the north star — can you stage an aspect of a franchise and have it play believably?). Everything below this rung is the engine; this rung spins up universes from it. Cross-links: `docs/NORTH-STAR-VISION.md` (the north star this tests), the engine (Parts 1 & 2 + `AI-DECISION-ENGINE-DESIGN.md`), the base-mod JSON + the in-game mod editor (the authoring surface).*
 
 ## 0. The frame — the authoring layer IS the "multiverse"
 

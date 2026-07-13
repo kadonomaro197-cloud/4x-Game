@@ -2,7 +2,7 @@
 
 **As of:** 2026-07-09 · branch `claude/sol-playtest-earth-map-8r59j6` · **status: DESIGN-LOCKED — all 11 categories / 37 doors locked, stress-tested, holes catalogued + dispositioned, and WIRING-READY.**
 
-> **Consolidated 2026-07-13 from:** `docs/COMPONENT-DESIGNER-CATEGORIES.md` + `docs/COMPONENT-DESIGNER-STRESS-TEST.md`. The full unit-by-unit stress-test build, the shared-effect-bus insight, and the tier-by-cost hole-plugging catalogue that used to live in the companion `COMPONENT-DESIGNER-STRESS-TEST.md` are now folded in below as **"Appendix: Franchise Stress-Test & Hole Resolutions."** §4/§5 remain the executive summary; the appendix is the full detail.
+> **Consolidated 2026-07-13 from:** `docs/COMPONENT-DESIGNER-CATEGORIES.md` + `docs/COMPONENT-DESIGNER-CATEGORIES.md`. The full unit-by-unit stress-test build, the shared-effect-bus insight, and the tier-by-cost hole-plugging catalogue that used to live in the companion `COMPONENT-DESIGNER-CATEGORIES.md` are now folded in below as **"Appendix: Franchise Stress-Test & Hole Resolutions."** §4/§5 remain the executive summary; the appendix is the full detail.
 
 > **⚙ WIRING-READY (2026-07-09).** This doc is the **map** (the 11 categories, the boundary, the stress test, the holes). The **wiring reference for each category is its self-contained ⚙ Wiring Dossier** in `COMPONENT-DESIGNER-DIALS.md` (`⚙ 1`…`⚙ 11`) — dials → engine-wire (file:line) → resolver insertion → dead stubs → §0g stamp, all verified against the live engine. **To wire a category, read its dossier; read this doc for the boundary rules and the hole it owns.** Together, these two docs are the only reference needed to wire — every external source (the resolver anatomy, the five merged strategic docs) has been transferred, translated, and folded into the dossiers.
 
@@ -58,7 +58,7 @@ The designer makes **gear**. It does **not** make the *being* that uses it. Inna
 
 ## 4. Stress test — 12 iconic units across three franchises
 
-Each unit was "built" through the designer to find where it strains. ✅ = maps cleanly. ⚠ = exposes a hole (catalogued in §5). **Full door-by-door build of every unit + the detailed hole-plugging analysis is in the companion `docs/COMPONENT-DESIGNER-STRESS-TEST.md`.**
+Each unit was "built" through the designer to find where it strains. ✅ = maps cleanly. ⚠ = exposes a hole (catalogued in §5). **Full door-by-door build of every unit + the detailed hole-plugging analysis is in the companion `docs/COMPONENT-DESIGNER-CATEGORIES.md`.**
 
 ### Star Trek
 1. **Galaxy-class *Enterprise*** — Chassis ▸ Hull (large) · Propulsion ▸ Warp + Reaction (impulse) · Weapons ▸ Energy (phasers) + Guided (photon torpedoes) · Defense ▸ Shields · Sensors ▸ Detection + Survey (science ship) · Civic ▸ Habitation + Development (families + labs aboard). ✅ mostly — but **saucer separation** ⚠H5 (one chassis → two operational ships) and the **transporter** ⚠H1 (beam matter/people point-to-point) have no home.
@@ -129,7 +129,7 @@ Cloaking → **EW** door (new, earns it). The Goa'uld symbiote → **Enhancers �
 
 This doc locks the **categories**; the design is complete and **wiring-ready** (each category's ⚙ Wiring Dossier is the reference). The path to code:
 1. ~~**Resolve the top holes**~~ — DONE: every hole is dispositioned above and homed in a dossier.
-2. **Land the shared prerequisites first** (they recur across dossiers, cheap, and unblock many doors): the **resolver merge** (`RESOLVER-MERGE-DESIGN.md` — so each dial's term is built once, bucketed, for ships AND soldiers); the **§0b mass-budget cap ported to ships+stations** (⚙ 11 — makes "the numbers force the build" real at all scales); the **durable-seat + `LeaderLost` + `OnComponentUninstallation`** fixes (⚙ 10 — unblocks all of Command); the **broken refining feed** (⚙ 7 — unblocks the materials economy); and the **`BonusCategory` combat entry + the copyable rung-4 wire** (⚙ 6 — lights commander competence AND unit-caliber elites at once).
+2. **Land the shared prerequisites first** (they recur across dossiers, cheap, and unblock many doors): the **resolver merge** (`RESOLVER-DESIGN.md` — so each dial's term is built once, bucketed, for ships AND soldiers); the **§0b mass-budget cap ported to ships+stations** (⚙ 11 — makes "the numbers force the build" real at all scales); the **durable-seat + `LeaderLost` + `OnComponentUninstallation`** fixes (⚙ 10 — unblocks all of Command); the **broken refining feed** (⚙ 7 — unblocks the materials economy); and the **`BonusCategory` combat entry + the copyable rung-4 wire** (⚙ 6 — lights commander competence AND unit-caliber elites at once).
 3. Weapons is the pilot category (most-designed): build the 5-door Weapons designer first, prove the parametric + universal-mount + supply-gate loop end-to-end against dossier ⚙ 1, then replicate the pattern across the other ten — each already carries its own wiring dossier.
 
 **The bar:** a franchise fan should be able to sit down at **Weapons ▸ Energy** and build a phaser, a lazpistol, and a Death-Star beam from the same sliders — and have each mount on any chassis that can supply it.
@@ -138,7 +138,7 @@ This doc locks the **categories**; the design is complete and **wiring-ready** (
 
 # Appendix: Franchise Stress-Test & Hole Resolutions
 
-**Folded in 2026-07-13 from `COMPONENT-DESIGNER-STRESS-TEST.md` (as of 2026-07-08).** This is the full unit-by-unit build behind the §4 summary, plus the effect-bus insight and the tier-by-cost plug catalogue behind the §5 hole table.
+**Folded in 2026-07-13 from `COMPONENT-DESIGNER-CATEGORIES.md` (as of 2026-07-08).** This is the full unit-by-unit build behind the §4 summary, plus the effect-bus insight and the tier-by-cost plug catalogue behind the §5 hole table.
 
 **Headline:** ~80% of every franchise falls straight out of the doors+dials. Of the 12 holes, **11 plug with a dial/mode on an existing door or by reusing an engine system Pulsar already has** (jump points, capture, doctrine-switch, shield-regen, the crew-supply gate, units-as-entities). Only a few need a genuinely new mechanic — and the deepest one (H4) is a *boundary decision*, not a new parallel system. The categorization holds.
 

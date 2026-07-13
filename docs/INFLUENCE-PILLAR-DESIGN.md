@@ -99,7 +99,7 @@ How does influence *reach* a target world?
 
 - **Legitimacy / rebellion** (built) — the battlefield and the kill; add the external belief-pressure input (parallel to `GovernorCompetence`).
 - **Espionage** (`sow-unrest`) — the covert twin; both feed the same legitimacy input; influence is the overt/sustained end.
-- **Leader pipeline** (`docs/AI-SELF-PLAY-DESIGN.md`) — Influence Minister + missionaries are leaders; same six rungs, stances, contracts, race/gov modulators.
+- **Leader pipeline** (`docs/GOVERNANCE-AND-DELEGATION-DESIGN.md`) — Influence Minister + missionaries are leaders; same six rungs, stances, contracts, race/gov modulators.
 - **Exploration field-sites** (`docs/EXPLORATION-CONTENT-DESIGN.md`) — holy/contested worlds are a site type; planetary value.
 - **Diplomacy** — shared faith = alliance; conversion/holy-war = casus belli.
 - **Government / internal politics** — the dial (capacity/style) + the domestic Faithful bloc + schism.

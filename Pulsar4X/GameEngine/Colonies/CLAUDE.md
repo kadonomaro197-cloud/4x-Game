@@ -2,7 +2,7 @@
 
 Population, colony lifecycle, life support. Lives in `GameEngine/Colonies/`.
 
-> **Before building colony progression, read `docs/COLONY-PROGRESSION-DESIGN.md`** — the developer's captured vision for the growth ladder every infrastructure site (player + NPC) climbs: **Outpost** (the only automatable tier) → **Colony** (has flavors) → **World** → **Minor → Hub → Major → Capitol**, each step cost↑/yield↑ *if done right*, all scaling. Captured 2026-06-28; a vision, not a build spec (open questions listed there).
+> **Before building colony progression, read `docs/OFF-WORLD-INFRASTRUCTURE-DESIGN.md`** — the developer's captured vision for the growth ladder every infrastructure site (player + NPC) climbs: **Outpost** (the only automatable tier) → **Colony** (has flavors) → **World** → **Minor → Hub → Major → Capitol**, each step cost↑/yield↑ *if done right*, all scaling. Captured 2026-06-28; a vision, not a build spec (open questions listed there).
 
 ---
 

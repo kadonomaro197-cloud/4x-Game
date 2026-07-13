@@ -2,7 +2,7 @@
 
 > **What this is.** The two halves of the faction AI's decision-making, folded into one doc. **PART A — the DESTINATION:** how a faction figures out *what it wants* (the needs-ladder objective engine — instinct tiers that emerge from the faction's state, filtered by identity and mood). **PART B — the MIDDLE (the means-ends planner):** how a *settled* objective becomes a *reachable* chain of orders — walking a goal backward through its prerequisites until it hits something the faction can actually do this cycle. Part A picks the destination; Part B plots the course to it. Together with `AI-COMMAND-AND-COMMUNICATION-DESIGN.md` (the "how" — delegates, mandates, traits, mood) they are the whole brain: identity → destination → plan → orders.
 >
-> **Consolidated 2026-07-13 from:** `docs/AI-OBJECTIVE-ENGINE-DESIGN.md` (the destination half, v0.2 discussion draft, 2026-07-10) + `docs/AI-MEANS-ENDS-PLANNER-DESIGN.md` (the means-ends planner scope/build map, 2026-07-11 four-agent survey).
+> **Consolidated 2026-07-13 from:** `docs/AI-DECISION-ENGINE-DESIGN.md` (the destination half, v0.2 discussion draft, 2026-07-10) + `docs/AI-DECISION-ENGINE-DESIGN.md` (the means-ends planner scope/build map, 2026-07-11 four-agent survey).
 >
 > **Build state, honest (read this first):**
 > - **PART A (objective/destination engine)** is a **DISCUSSION DRAFT — not built as designed.** The pieces it *names* as existing are noted inline. Its refinements are the developer's locked calls from the 2026-07-10 conversation, but the transition-engine catalog, fractal per-level ladder, and action-plan machinery are **design on paper, not yet code.**
@@ -374,4 +374,4 @@ Decision-side **2.5/2.6/2.7 run in full parallel** — they modulate `ObjectiveS
 
 ---
 
-*Companions: `AI-COMMAND-AND-COMMUNICATION-DESIGN.md` (the "how" — mandate/report, identity, mood, the three-mode dial), `AI-SELF-PLAY-DESIGN.md` (the roster + parity), `AI-PERSONALITY-IMPLEMENTATION-SPEC.md` (the trait code), `AI-IMPLEMENTATION-AND-WIRING-MAP.md` (design→code bridge + socket verification), `AI-BRAIN-BUILD-TRACKER.md` (row 2.8 is the Part-B planner build authority). This doc is the "what/where + how-to-reach-it" — the destination the objective engine picks, and the plan the means-ends layer computes to reach it.*
+*Companions: `AI-COMMAND-AND-COMMUNICATION-DESIGN.md` (the "how" — mandate/report, identity, mood, the three-mode dial), `GOVERNANCE-AND-DELEGATION-DESIGN.md` (the roster + parity), `AI-PERSONALITY-IMPLEMENTATION-SPEC.md` (the trait code), `AI-BRAIN-BUILD-TRACKER.md` (design→code bridge + socket verification), `AI-BRAIN-BUILD-TRACKER.md` (row 2.8 is the Part-B planner build authority). This doc is the "what/where + how-to-reach-it" — the destination the objective engine picks, and the plan the means-ends layer computes to reach it.*

@@ -7,7 +7,7 @@
 > ground-unit design UI. It is the single source of truth for how a player creates a ground unit. The
 > **per-slice build-state is tracked in `GameEngine/GroundCombat/CLAUDE.md`** (kept more current than the
 > roadmap table below); this doc holds the durable locked model + the essence-axes coverage gate. The
-> surrounding war layer is `docs/GROUND-COMBAT-MAP-DESIGN.md`.
+> surrounding war layer is `docs/GROUND-SURFACE-MAP-DESIGN.md`.
 
 ---
 
@@ -193,7 +193,7 @@ these exist. **This is the gameplay roadmap; the parts bin is just the vocabular
 
 | # | System — the decision | Consolidates (axes/gaps) | Reuse / status | Makes real |
 |---|------------------------|--------------------------|----------------|-----------|
-| **①** | **Damage ↔ Defense Matchup** — *"build the counter."* A rock-paper-scissors of damage-profiles × defense-profiles (kinetic▸armor, energy▸shield, saturation▸dodge, alpha▸HP…). | firepower · range · delivery (rate/alpha/AoE) · damage-type · survivability (armor/shield/dodge) | **Port the SPACE weapon triangle + dodge/saturation** (`WEAPONS-AND-DODGE-DESIGN.md`) to ground — mostly porting, not inventing. **Highest priority.** | rate/alpha, damage-type, shield, dodge all start to matter |
+| **①** | **Damage ↔ Defense Matchup** — *"build the counter."* A rock-paper-scissors of damage-profiles × defense-profiles (kinetic▸armor, energy▸shield, saturation▸dodge, alpha▸HP…). | firepower · range · delivery (rate/alpha/AoE) · damage-type · survivability (armor/shield/dodge) | **Port the SPACE weapon triangle + dodge/saturation** (`WEAPONS-DESIGN.md`) to ground — mostly porting, not inventing. **Highest priority.** | rate/alpha, damage-type, shield, dodge all start to matter |
 | **②** | **Mobility & Reach** — *"control the range."* Kite-or-brawl, terrain access, where/how you deploy. | mobility (speed/locomotion) · air/teleport/burrow · deployment | partly there (hex range + ROE + terrain); add per-unit speed, locomotion×terrain, air layer, deploy methods | speed, terrain, deployment matter |
 | **③** | **Combined Arms & Roles** — *"compose the force."* Interdependent roles instead of one spammed super-unit. | role · support/heal auras · anti-air · EW · engineer/action utilities · command/leader | new-ish; utilities become roles that need each other | army composition becomes a decision |
 | **④** | **Economy & Attrition** — *"quantity or quality."* Cheap hordes vs elite few, consumables, replaceability. | scale · economy · swarm-vs-elite · consumables · build-quantity **Count "bunch"** | cost already sums from parts; the Count bunch is designed not built | swarm-vs-elite becomes an economic decision |

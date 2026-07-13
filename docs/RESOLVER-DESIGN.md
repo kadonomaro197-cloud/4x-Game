@@ -2,7 +2,7 @@
 
 **What this is:** the one place that explains how Pulsar's auto-resolve combat engine is actually built — how the numbers flow when two forces fight, every place a designer's "dial" can plug in, and the plan (mostly landed) to make **one** engine run both space battles and planetary battles instead of two duplicate ones.
 
-**Consolidated 2026-07-13 from:** `docs/AUTO-RESOLVER-ANATOMY.md` (the resolver taken apart bit by bit + the dial-insertion map + the extension backlog) and `docs/RESOLVER-MERGE-DESIGN.md` (the one-kernel-for-ships-and-ground plan + the landed slices).
+**Consolidated 2026-07-13 from:** `docs/RESOLVER-DESIGN.md` (the resolver taken apart bit by bit + the dial-insertion map + the extension backlog) and `docs/RESOLVER-DESIGN.md` (the one-kernel-for-ships-and-ground plan + the landed slices).
 
 **Read this in two halves.** Part A (the ANATOMY) is the map — the data flow, the small fixed set of inputs the engine reads, and where every weapon and propulsion dial lands on that surface. Part B (the MERGE) is the plan that took the ship engine's math and made a soldier run through the *same* math, so a capability built once works in both space and on a planet.
 

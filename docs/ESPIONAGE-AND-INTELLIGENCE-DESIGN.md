@@ -211,7 +211,7 @@ Every rung is reachable and losable — it is NOT a parachuted-in "spy points" a
 - **The MIRROR is always on** — NPCs spy on you; **counter-intelligence is a standing decision**, not opt-in.
 - **Spy capability is a COMPONENT** (research → build → install → lose) — an intelligence HQ is the capacity seat; not a bespoke "spy points" flag.
 
-**Locked (developer, 2026-07-07) — seating espionage in the leader pipeline (`docs/AI-SELF-PLAY-DESIGN.md`):**
+**Locked (developer, 2026-07-07) — seating espionage in the leader pipeline (`docs/GOVERNANCE-AND-DELEGATION-DESIGN.md`):**
 - **Agents are full leader-entities** — they ride the whole born→skilled→seated→acts→improves→lost pipeline (a new `CommanderType`, academy-trained, scarce). Losing one *hurts* — that's the point.
 - **Espionage org mirrors the Foreign Minister:** an empire-wide **Director of Intelligence** (cabinet, sets doctrine, owns empire-wide counter-intel) → a **per-faction Spymaster / station chief** (offense against that rival) → **agents** under them.
 - **Counter-intel = the same agent, target = your own faction** (not a separate mechanic). Assign an agent against a rival = offense; assign it to your own house = it hunts enemy agents/moles. The "focus" cost is the opportunity cost — a guard isn't out stealing. Empire-wide defense sits under the Director.

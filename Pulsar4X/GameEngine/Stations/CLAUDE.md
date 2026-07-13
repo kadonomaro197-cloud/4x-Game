@@ -2,7 +2,7 @@
 
 Space stations — the **cheap, fast, flexible, FRAGILE alternative to a planetary colony**. Lives in `GameEngine/Stations/`. New as of 2026-06-29.
 
-> **Read `docs/SPACE-STATIONS-DESIGN.md` before touching this.** It holds the locked architecture decision (PARALLEL host, NOT a generalized colony) and the open tuning questions (cost-gradient curve, durability/invasion numbers, manning). This subsystem is the foundation slice of that design.
+> **Read `docs/OFF-WORLD-INFRASTRUCTURE-DESIGN.md` before touching this.** It holds the locked architecture decision (PARALLEL host, NOT a generalized colony) and the open tuning questions (cost-gradient curve, durability/invasion numbers, manning). This subsystem is the foundation slice of that design.
 
 ---
 
@@ -96,7 +96,7 @@ The last "free" rung: before Slice F the deploy conjured a station from nothing.
 
 **Research station flavor — FREE (host-agnostic, gauged 2026-06-30, task #18).** A "research station" is just a station carrying a research-lab module — no station-specific code at all. `ResearchPointsAtbDB.OnComponentInstallation` spawns a `ResearcherDB` on a new entity tagged with `LocationId = the host` (colony OR station), and `ResearchProcessor` keys on `ResearcherDB`, so the lab researches wherever it's installed (no scientist needed — the lab sets `PointsPerDay` directly; cost is billed to faction funds). Install `default-design-research-lab` on a station, queue a tech (`ResearchProcessor.AssignTech`), and it accrues points. Gauge: `StationFactoryTests.ResearchStation_AccruesResearchTowardAQueuedTech`. (The lab is already unlocked at start — in the Earth blueprint's `StartingItems` + `ComponentDesigns`.)
 
-**Build model — deploy bare, build IN-SITU (LOCKED 2026-06-30, see `docs/SPACE-STATIONS-DESIGN.md`).** A station is a generic chassis; "mining/research station" is emergent from the modules you bolt on. You deploy a bare platform (frame + power + control + minimal infra + a small constructor) and build modules ON it on location. The whole in-situ loop (`IndustryProcessor` → `ConstructStuff` → `ComponentDesign.OnConstructionComplete` → `InstallOn.AddComponent`) is **already host-agnostic** — a station with a constructor module builds + installs its own modules for free. Remaining to build is the PLAYER front: a deploy order/UI + queue-module-on-a-station UI + materials shipping. Gauge: `Station_WithConstructorModule_IsAnInSituBuilder`.
+**Build model — deploy bare, build IN-SITU (LOCKED 2026-06-30, see `docs/OFF-WORLD-INFRASTRUCTURE-DESIGN.md`).** A station is a generic chassis; "mining/research station" is emergent from the modules you bolt on. You deploy a bare platform (frame + power + control + minimal infra + a small constructor) and build modules ON it on location. The whole in-situ loop (`IndustryProcessor` → `ConstructStuff` → `ComponentDesign.OnConstructionComplete` → `InstallOn.AddComponent`) is **already host-agnostic** — a station with a constructor module builds + installs its own modules for free. Remaining to build is the PLAYER front: a deploy order/UI + queue-module-on-a-station UI + materials shipping. Gauge: `Station_WithConstructorModule_IsAnInSituBuilder`.
 
 `Pulsar4X.Tests/StationFactoryTests.cs` (rides `TestScenario.CreateWithColony`):
 - `CreateStation_WiresSharedChassis_AndRegistersOnFaction` — the station carries the shared blob set, hosting body is set, it's in `Stations` (not `Colonies`), owned by the faction, in the body's manager.

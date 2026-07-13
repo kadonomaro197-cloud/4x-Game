@@ -2,7 +2,7 @@
 
 **What this is:** the single design frame for *every place a player or NPC stands up infrastructure off the homeworld* — a space station, an orbital research post, a mining depot in a belt, or a full-blown planetary colony. The one idea underneath all of it: **a "place" is just a container with component-infrastructure bolted on**, and every such place **climbs a growth ladder** where each rung costs more and yields more *if you play it right*. Stations are the universal host; the tier-ladder is how any host grows.
 
-**Consolidated 2026-07-13 from:** `docs/SPACE-STATIONS-DESIGN.md` (the universal off-world host + its full cradle-to-grave build state), `docs/COLONY-PROGRESSION-DESIGN.md` (the growth ladder — the shared progression axis).
+**Consolidated 2026-07-13 from:** `docs/OFF-WORLD-INFRASTRUCTURE-DESIGN.md` (the universal off-world host + its full cradle-to-grave build state), `docs/OFF-WORLD-INFRASTRUCTURE-DESIGN.md` (the growth ladder — the shared progression axis).
 
 **Status: mixed.** The **station host, deploy path, and several flavors are BUILT and CI-gauged** (engine-side — runtime unverified, CI can't run the client). The **progression ladder (Outpost→…→Capitol) is vision-capture only, NOT a build spec yet** — do not build the ladder until colony work is on the slate and the MVP firewall (`docs/MVP.md`) allows it. Read this before scheduling any space-economy / infrastructure work, then turn the open questions into locked decisions.
 

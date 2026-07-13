@@ -2,7 +2,7 @@
 
 **What this is:** the plan to grow the game's order vocabulary from the handful of commands you can give a fleet or formation today toward the ~60 orders Aurora 4X has. Today you can only give a fleet or formation a small handful of commands; the goal is the full Aurora-style menu — move, waypoint, patrol, follow, escort, hold, picket, load/unload cargo and troops, refuel, join/detach, survey variants, and the ground equivalents. This is the order-catalog half of the old combined hex+orders initiative — the only live forward plan for orders. It is built the usual way: engine-first, one CI-verified slice at a time.
 
-**Consolidated 2026-07-13 from:** `docs/HEX-GROUND-AND-ORDERS-DESIGN.md` (the Order catalog track — the hex-map half of that doc lives in `GROUND-SURFACE-MAP-DESIGN.md`).
+**Consolidated 2026-07-13 from:** `docs/GROUND-SURFACE-MAP-DESIGN.md` (the Order catalog track — the hex-map half of that doc lives in `GROUND-SURFACE-MAP-DESIGN.md`).
 
 ---
 

@@ -80,7 +80,7 @@ reactor, …): pick the type, spec it, and it's usable anywhere its mount and sc
 
 ## 2b. The AXIS pattern — every component designer, not just weapons (developer's call, 2026-07-06)
 
-The weapon taxonomy (`WEAPON-TAXONOMY-DESIGN.md`) found the *shape* of a component designer, and **it is the shape
+The weapon taxonomy (`WEAPONS-DESIGN.md`) found the *shape* of a component designer, and **it is the shape
 of ALL of them:** you pick a component's **1–2 defining AXES** (a "what/nature" axis, usually × a "how/mode" axis),
 dial the **SPECS**, and the component's **role/identity EMERGES from the numbers** — never a picked label. Weapons
 proved it (Nature × Delivery → the triangle position emerges from velocity/saturation/tracking). The pattern
@@ -113,7 +113,7 @@ engine, N kinds. This is the through-line for the whole build.
 | **Ship** | ✅ `ShipDesign` (hull + components + armor) | ❌ any size; mass just needs thrust | the existing precedent |
 | **Ground unit** | ✅ `GroundUnitAssembly` (frame + parts) | ✅ **the carry gate (new)** | the prototype + first full realization |
 | **Installation** (bunker/factory) | ➖ a *single* component; the **colony** is the assembly of installed components | ❌ | leaf part, not itself an assembly |
-| **Station** | ➖ a *host* that accumulates installed components (colony-like) | ❌ | `Stations/` — being generalized off `PlanetEntity` (see `SPACE-STATIONS-DESIGN.md`) |
+| **Station** | ➖ a *host* that accumulates installed components (colony-like) | ❌ | `Stations/` — being generalized off `PlanetEntity` (see `OFF-WORLD-INFRASTRUCTURE-DESIGN.md`) |
 | **Super-weapon** | ⚫ doesn't exist | — | would be a huge designed assembly (ship-like) or a colossal installation |
 | **World-ship / megastructure** | ⚫ doesn't exist | — | a *mobile host* — a colony/station that flies (bridges the two patterns) |
 
@@ -156,7 +156,7 @@ flagged JSON default in the slice report — never silently hardcoded.
   mounted mass?), a *station's* (foundation/core capacity?), a *super-weapon's*? Or is the gate optional per
   domain?
 - **Mobility as a flag.** Is "colony vs. station vs. world-ship" really just a mobility flag + scale on one host
-  model? (The stations work already points here — `SPACE-STATIONS-DESIGN.md`.)
+  model? (The stations work already points here — `OFF-WORLD-INFRASTRUCTURE-DESIGN.md`.)
 - **Scale caps.** Where do the "within reason" ceilings live (tech tree? a hard engine cap?) so the AU-black-hole
   gun is reachable only if the developer wants it and is bounded.
 - **UX convergence.** One designer window or a shared component with per-scale skins?

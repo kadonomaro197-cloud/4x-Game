@@ -5,7 +5,7 @@ what it does to a target (nature vs defence), how it lands or gets dodged (deliv
 combat identity (its triangle position) falls out of the numbers. Master combat design stays
 `docs/COMBAT-DESIGN.md`; this is the weapon-flavor / dodge / taxonomy layer on top of the v1 auto-resolve spine.*
 
-**Consolidated 2026-07-13 from:** `docs/WEAPONS-AND-DODGE-DESIGN.md`, `docs/WEAPON-TAXONOMY-DESIGN.md`.
+**Consolidated 2026-07-13 from:** `docs/WEAPONS-DESIGN.md`, `docs/WEAPONS-DESIGN.md`.
 
 **Reconciliation note (read first):** two frames grew here. The older one (from the dodge depth-pass, started
 2026-06-25) described weapons by **four "flavor" stats** and a **four-class enum** `WeaponClass = { Beam,
@@ -22,7 +22,7 @@ weapon actually fights.
 
 ## Part 1 — The Weapon Taxonomy (the governing frame)
 
-*Source: `WEAPON-TAXONOMY-DESIGN.md`. Status: DECIDED 2026-07-06, foundation + several phases BUILT (see build
+*Source: `WEAPONS-DESIGN.md`. Status: DECIDED 2026-07-06, foundation + several phases BUILT (see build
 ledger at the end of this Part). This is the current code truth.*
 
 ### 1.0 What it's for, in one breath
@@ -306,7 +306,7 @@ interaction, a later slice).
 
 ## Part 2 — The Dodge Depth-Pass: flavor stats, dodge, triangle, performance
 
-*Source: `WEAPONS-AND-DODGE-DESIGN.md`. Status: design + build started 2026-06-25; the dodge MODEL + the
+*Source: `WEAPONS-DESIGN.md`. Status: design + build started 2026-06-25; the dodge MODEL + the
 buildable weapon components are built-and-CI-green (ledger below). This is the RESOLVE MECHANICS the taxonomy
 above feeds into — how a built weapon actually lands or misses. The four "flavor" stats here are NOT superseded
 by the taxonomy; they ARE the specs the taxonomy dials, and `WeaponClass` (Beam/Railgun/Missile/Flak) is the

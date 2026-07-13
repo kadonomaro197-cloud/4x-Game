@@ -1,8 +1,8 @@
 # The Planet Surface — One Continuous Map (Design Lock)
 
-**As of 2026-07-13. Consolidated 2026-07-13 from:** `docs/GROUND-COMBAT-MAP-DESIGN.md`, `docs/GROUND-CITY-AND-WARMAP-DESIGN.md`, `docs/GLOBAL-HEX-GRID-DESIGN.md`, and the hex-**map** half of `docs/HEX-GROUND-AND-ORDERS-DESIGN.md`. (That last doc's other half — the ~60-command *order catalog* / O-track — lives in its own doc, NOT here.)
+**As of 2026-07-13. Consolidated 2026-07-13 from:** `docs/GROUND-SURFACE-MAP-DESIGN.md`, `docs/GROUND-SURFACE-MAP-DESIGN.md`, `docs/GROUND-SURFACE-MAP-DESIGN.md`, and the hex-**map** half of `docs/GROUND-SURFACE-MAP-DESIGN.md`. (That last doc's other half — the ~60-command *order catalog* / O-track — lives in its own doc, NOT here.)
 
-**What this is:** the single design for turning a planet from a *dimensionless point* into a **place** — a surface with locations you build at, distances you march across, geography you discover, and ground you fight over region-by-region and hex-by-hex. Companions: `docs/aurora/GROUND-COMBAT.md` (the combat spec), `docs/SPACE-STATIONS-DESIGN.md` (the host-pattern this reuses), `GameEngine/GroundCombat/CLAUDE.md`, and `docs/MVP.md` (the scope firewall).
+**What this is:** the single design for turning a planet from a *dimensionless point* into a **place** — a surface with locations you build at, distances you march across, geography you discover, and ground you fight over region-by-region and hex-by-hex. Companions: `docs/aurora/GROUND-COMBAT.md` (the combat spec), `docs/OFF-WORLD-INFRASTRUCTURE-DESIGN.md` (the host-pattern this reuses), `GameEngine/GroundCombat/CLAUDE.md`, and `docs/MVP.md` (the scope firewall).
 
 **Why one doc:** the surface is ONE design that *evolved* through four map models — region-graph → per-region hex disks → **one global cylinder grid** → a two-zoom war-map/city sub-grid. Each later model **supersedes** the earlier one's map. This doc presents them as one design with the **global cylinder as the current target**, and keeps the earlier models as recorded history (they explain why the current one is shaped the way it is, and some of their build-state still stands underneath).
 
@@ -325,7 +325,7 @@ So *which* environments a world has is a read-out of *what it is*. **Same proble
 
 - **Galaxy / `StarSystemFactory`** — region generation hook (done, 4 paths). `PlanetGridFactory` + `SurfaceGrid` replace `PlanetHexFactory` disks (G-track). **`SystemBodyInfoDB` / `AtmosphereDB`** — the feature/environment-gen inputs (body type, tectonics, hydrosphere). Hex gen reads `MassVolumeDB.RadiusInM` (Earth ref `6.371e6`).
 - **Colonies / `ComponentInstancesDB`** — a colony sits on a planet that now has regions/hexes; slice 1 left the colony undisturbed (new axis). Per the LOCKED principle, the reconciliation is to give each colony installation a `RegionIndex`/hex and draw it. Migration of the colony *itself* onto a region is a later pass.
-- **Stations** (`docs/SPACE-STATIONS-DESIGN.md`) — the host pattern this copies; a gas-giant "platform" region reuses the station host later.
+- **Stations** (`docs/OFF-WORLD-INFRASTRUCTURE-DESIGN.md`) — the host pattern this copies; a gas-giant "platform" region reuses the station host later.
 - **Industry / `IConstructableDesign`** — installations and ground units build on the existing production rails; "build at a region/hex" adds only a *where*. The footprint is a `*Atb` component attribute → research/build/install/lose for free (`CONVENTIONS.md` §6).
 - **Orders / `OrderHandler`** — build-at-a-region rides the verified player-path. (The ground formation *order queue* — `GroundFormation.Orders` / `GroundOrder` — is the ground side of the O-track order-catalog work, documented in the separate order-catalog doc; movement consumers of it are noted in G6b.)
 - **GeoSurveys / Sensors** — the survey-reveal loop (slice 4).

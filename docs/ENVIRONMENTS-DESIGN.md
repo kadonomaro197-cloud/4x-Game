@@ -1,7 +1,7 @@
 # Environments — Space Hazards + Planetary Terrain as ONE Physics-Driven System (Design)
 
 **As of 2026-07-04. Status: DESIGN (no code yet) — the "design it in depth first" pass the developer asked for.**
-Companion to `docs/GROUND-COMBAT-MAP-DESIGN.md` (the ground map) and `GameEngine/Hazards/CLAUDE.md` (the built space-hazard engine this extends). Read those first.
+Companion to `docs/GROUND-SURFACE-MAP-DESIGN.md` (the ground map) and `GameEngine/Hazards/CLAUDE.md` (the built space-hazard engine this extends). Read those first.
 
 ---
 
@@ -85,7 +85,7 @@ Authored worlds (Sol) can still be hand-tuned, but the *default* is physics-deri
 
 ### Gas giants aren't inert — they have AERIAL environments (deferred, developer note 2026-07-04)
 
-*"A gas giant may have different environments than a rocky world — on Neptune/Uranus the winds are high as hell with shards of diamond; that's an environment of itself."* Correct — and it sharpens the gate: **the surface gate skips only SURFACE hazards; a gas/ice giant has its OWN environment class**, hosted not by ground troops but by **floating platforms / aerostats** (the gas-giant station host, `docs/SPACE-STATIONS-DESIGN.md`). Real examples the developer named + more:
+*"A gas giant may have different environments than a rocky world — on Neptune/Uranus the winds are high as hell with shards of diamond; that's an environment of itself."* Correct — and it sharpens the gate: **the surface gate skips only SURFACE hazards; a gas/ice giant has its OWN environment class**, hosted not by ground troops but by **floating platforms / aerostats** (the gas-giant station host, `docs/OFF-WORLD-INFRASTRUCTURE-DESIGN.md`). Real examples the developer named + more:
 
 - **Diamond-hail supersonic winds** (Neptune/Uranus — carbon compressed in a cold H/He atmosphere literally rains diamond) ⟶ `KineticDamage` + `MovementDrag` on anything in the band.
 - **Crushing pressure zones** (deeper bands) ⟶ structural `GravimetricDamage`-flavoured stress.

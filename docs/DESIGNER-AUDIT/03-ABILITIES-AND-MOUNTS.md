@@ -4,7 +4,7 @@
 
 > **Dated snapshot — this is the state of the code as of 2026-07-08.** File:line references drift as HEAD moves; re-grep before trusting an exact line number.
 >
-> Companion to `01-DESIGNER-UIS.md` (mount legality) and `02-DESIGNABLE-TYPES.md` (design classes). Related design docs already circling this problem: `docs/UNIVERSAL-ASSEMBLY-DESIGN.md`, `docs/WEAPON-TAXONOMY-DESIGN.md` (was cited as the since-deleted `WEAPON-UNIFICATION-DESIGN.md`), `docs/GROUND-UNIT-DESIGNER-DESIGN.md` (was cited as the since-deleted `GROUND-UNITS-AS-ENTITIES-DESIGN.md`).
+> Companion to `01-DESIGNER-UIS.md` (mount legality) and `02-DESIGNABLE-TYPES.md` (design classes). Related design docs already circling this problem: `docs/UNIVERSAL-ASSEMBLY-DESIGN.md`, `docs/WEAPONS-DESIGN.md` (was cited as the since-deleted `WEAPON-UNIFICATION-DESIGN.md`), `docs/GROUND-UNIT-DESIGNER-DESIGN.md` (was cited as the since-deleted `GROUND-UNITS-AS-ENTITIES-DESIGN.md`).
 
 ---
 
@@ -102,7 +102,7 @@ Each pair is **the same real capability, modelled twice**, because the space rea
 ### 2. WEAPONS — space weapon atbs ↔ `GroundWeaponAtb` (mid-merge)
 - **Space:** `GenericBeamWeaponAtb`, `RailgunWeaponAtb`, `FlakWeaponAtb`, `DisruptorWeaponAtb`, `PlasmaBoltWeaponAtb`, `MissileLauncherAtb` — read by `Combat/ShipCombatValueDB.cs:175-263` and `GenericFiringWeaponsDB`.
 - **Ground:** `GroundCombat/GroundWeaponAtb.cs:30` (Mass/Attack/Range/Mode) — read by `GroundUnitAssembly.cs:89`.
-- **Status — partially unified already:** `GroundCombat/WeaponSupply.cs:41-95` classifies the **space** weapon atbs (laser→Energy, railgun→Both, flak→Ammo, etc.) for the ground power/ammo gate, so a ground unit can *carry* a space weapon and be supply-gated. So today a ground unit can mount **either** the old `GroundWeaponAtb` **or** a real space weapon — the classic duplicate-mid-refactor. `docs/WEAPON-TAXONOMY-DESIGN.md` tracks the planned P4 merge that retires `GroundWeaponAtb`.
+- **Status — partially unified already:** `GroundCombat/WeaponSupply.cs:41-95` classifies the **space** weapon atbs (laser→Energy, railgun→Both, flak→Ammo, etc.) for the ground power/ammo gate, so a ground unit can *carry* a space weapon and be supply-gated. So today a ground unit can mount **either** the old `GroundWeaponAtb` **or** a real space weapon — the classic duplicate-mid-refactor. `docs/WEAPONS-DESIGN.md` tracks the planned P4 merge that retires `GroundWeaponAtb`.
 - **To unify:** finish P4 — make the ground resolver read damage off the space weapon atbs (via a shared classifier) and delete `GroundWeaponAtb`.
 
 ### 3. SHIELDS — `ShieldAtb` (space) ↔ `GroundAugmentAtb.Shield` (ground)
@@ -111,7 +111,7 @@ Each pair is **the same real capability, modelled twice**, because the space rea
 - **To unify:** hoist shield (and evasion — see below) into one attribute both resolvers read.
 
 ### 4. EVASION / DODGE — ship dodge model ↔ `GroundAugmentAtb.EvasionBonus`
-- Ship dodge lives in the weapons/dodge resolver (`docs/WEAPONS-AND-DODGE-DESIGN.md`); ground evasion is `GroundAugmentAtb.EvasionBonus` (`GroundAugmentAtb.cs:32`), read by `GroundDamageMatrix`. Same currency by design, two code paths.
+- Ship dodge lives in the weapons/dodge resolver (`docs/WEAPONS-DESIGN.md`); ground evasion is `GroundAugmentAtb.EvasionBonus` (`GroundAugmentAtb.cs:32`), read by `GroundDamageMatrix`. Same currency by design, two code paths.
 
 ### 5. PROPULSION / MOBILITY — `NewtonionThrustAtb` + `WarpDriveAtb` (space) ↔ `GroundLocomotionAtb` + `GroundChassisAtb` (ground)
 - **Space:** `Movement/NewtonMove/NewtonionThrustAtb.cs:8` (read `EntityExtensions.cs:93`) and `Movement/WarpMove/WarpDriveAtb.cs:8` (read `ComponentInstancesDBExtensions.cs:116`) turn power+fuel into velocity.

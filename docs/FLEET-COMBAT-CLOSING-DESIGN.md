@@ -3,7 +3,7 @@
 *Design + phased build plan, drafted 2026-06-27 from the closing-distance design conversation. This is the
 blueprint for turning the auto-resolve engine from an instant strength-compare into a **closing fight where range,
 speed, detection, and doctrine decide who can hit whom** — without ever becoming an RTS. Read `docs/COMBAT-DESIGN.md`
-(the eleven-system master) and `docs/WEAPONS-AND-DODGE-DESIGN.md` (the weapon triangle + dodge) first; this is the
+(the eleven-system master) and `docs/WEAPONS-DESIGN.md` (the weapon triangle + dodge) first; this is the
 detailed spec for the "weapon range → engagement" rungs of that spine.*
 
 ---
