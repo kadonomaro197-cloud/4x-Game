@@ -106,7 +106,7 @@ Detection quality: triangular overlap between sensor's waveform band and signal'
 
 ## EMCON build status (detection slice 3 — the dark/loud lever)
 
-EMCON is being built as gameplay (a posture lever), **not** the EM-spectrum physics — the waveform math stays under the hood as the gauge needle. Full design + connected-systems ledger: `docs/DETECTION-DESIGN.md` §3/§3a/§6. Built in small gauged wires (each its own CI-green slice):
+EMCON is being built as gameplay (a posture lever), **not** the EM-spectrum physics — the waveform math stays under the hood as the gauge needle. Full design + connected-systems ledger: `docs/combat/DETECTION-DESIGN.md` §3/§3a/§6. Built in small gauged wires (each its own CI-green slice):
 
 | Wire | What | Status | Gauge |
 |------|------|--------|-------|
@@ -156,7 +156,7 @@ At Full activity reach == detectability (both at 1.0); they diverge the moment y
 Feeds the client (Fleet Combat tab "Can See"/"Seen At" columns + green/amber map rings + the activity readout).
 Gauged by `Pulsar4X.Tests/RangeReadoutTests.cs` (round-trip; loudest-band/activity; self-ring shrinks on Silent;
 **+ `SensorReach_vs_Detectability_UnderEmcon`** — reach unchanged on Silent, detectability shrinks). Survey +
-framing: `docs/INFORMATION-DELTA-DESIGN.md`. The against-a-specific-target range is now built in the engine as
+framing: `docs/combat/INFORMATION-DELTA-DESIGN.md`. The against-a-specific-target range is now built in the engine as
 `SensorTools.DetectionRangeAgainst(detector, target)` (`SensorTools.cs`) — "how far can THIS ship pick up THAT
 target," using the detector's best receiver and the target's actual (loud-vs-dark) signature. Whether the client
 draws a ring from it against the selected enemy contact is the local-build UI step (CI can't see the SDL client).
@@ -204,7 +204,7 @@ branch). That is where two factions first "meet": it records a mutual Neutral re
 pair (the first foreign entity a faction ever detects is always a NEW contact, so the new-contact branch is the
 correct, sufficient hook). It is defensive (never throws) and a no-op for neutral (planet/asteroid) or own-faction
 targets — so the sensor hot loop is unaffected in the common case. Direction is Sensors → Factions (writes
-`DiplomacyDB`), same as the scan already reaching `Game.Factions`. Full design: `docs/DIPLOMACY-DESIGN.md`; gauge
+`DiplomacyDB`), same as the scan already reaching `Game.Factions`. Full design: `docs/society/DIPLOMACY-DESIGN.md`; gauge
 `DiplomacyFirstContactTests`. **v1 limit (flagged):** the hook is in the new-contact branch, so a save that already
 holds a foreign contact from before this code (no diplomacy row) won't retro-register — harmless (IFF defaults to
 hostile), and a contact-aging/backfill pass is the follow-up.

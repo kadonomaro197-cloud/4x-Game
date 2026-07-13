@@ -41,7 +41,7 @@ Not the stories — the **one thing each universe does best.** "A lot of sci-fi 
 ### What this means: the distinctive pillars are the SOUL (build order will favour these)
 Most map onto systems Pulsar already has or is building — and several **connect**, which is how a few deep systems serve many universes at once:
 - **Nomadic civ** ← a *colony that lives on ships* (Colonies × Logistics × Fleets) — lose your homeworld, play on.
-- **Politics with teeth** ← diplomacy-as-politics + espionage + casus belli (the missing decision layer, `docs/DIPLOMACY-DESIGN.md`).
+- **Politics with teeth** ← diplomacy-as-politics + espionage + casus belli (the missing decision layer, `docs/society/DIPLOMACY-DESIGN.md`).
 - **Terrifying exploration** ← **the hazard system (just built!) × sensors/fog × procedural system-entry events.** *This pillar's first brick is already laid* — a system you jump into can already hide a corona, an ion storm, a gravimetric anomaly you must discover and survive.
 - **Titanic + visceral ground combat** ← ground combat (the MVP target) with a squad→Titan unit-scale range and tick-by-tick resolution (Halo's payoff is the *feel* of the same system).
 - **Wormhole networks** ← jump points exist; *player-creatable* gate networks are the reach.

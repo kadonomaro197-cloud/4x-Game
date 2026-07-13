@@ -102,7 +102,7 @@ Required occupation strength = ((Determination + Militancy + Xenophobia)/300)
 
 ## 6. Pulsar status & mapping
 
-This is **directly core to the objective.** Pulsar has a partial version; this doc supplies the real formulas to finish it. Read alongside `docs/MORALE-AND-POPULATION-DESIGN.md` (the locked population/morale design) — the two aren't meant to be read in isolation.
+This is **directly core to the objective.** Pulsar has a partial version; this doc supplies the real formulas to finish it. Read alongside `docs/society/MORALE-AND-POPULATION-DESIGN.md` (the locked population/morale design) — the two aren't meant to be read in isolation.
 
 | Aurora mechanic | Pulsar now | What it tells us |
 |-----------------|-----------|------------------|
@@ -111,7 +111,7 @@ This is **directly core to the objective.** Pulsar has a partial version; this d
 | Growth normal→0 from 33%→100% capacity | placeholder −50% die-off | **replace the −50% placeholder** with the linear-decline curve (root `CLAUDE.md`, `Colonies/CLAUDE.md` note the stub) |
 | Workforce = pop, per-installation worker demand | verify if enforced | infrastructure depth (PLAN Phase 2) |
 | Terraforming | not implemented | new installation-component + a `TerraformingProcessor` (`CONVENTIONS.md` §6); ties to `AtmosphereDB` |
-| **Occupation/garrison/unrest** | **partial** — a generic conquest-aftermath loop exists: `LegitimacyDB`+`LegitimacyProcessor` (per-province health bar) and `RebellionDB` (begin/quell rebellion on legitimacy thresholds) are built and wired, and `GroundCombat/` does region+planet capture | this exact Aurora occupation-strength formula (Determination+Militancy+Xenophobia)/300 × Pop × PoliticalStatusModifier is still to add; wire it into the existing legitimacy/rebellion state rather than a new system. See `docs/GOVERNMENT-AND-POLITICS-DESIGN.md` |
+| **Occupation/garrison/unrest** | **partial** — a generic conquest-aftermath loop exists: `LegitimacyDB`+`LegitimacyProcessor` (per-province health bar) and `RebellionDB` (begin/quell rebellion on legitimacy thresholds) are built and wired, and `GroundCombat/` does region+planet capture | this exact Aurora occupation-strength formula (Determination+Militancy+Xenophobia)/300 × Pop × PoliticalStatusModifier is still to add; wire it into the existing legitimacy/rebellion state rather than a new system. See `docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md` |
 | Bombardment dust → cooling | `Damage/` colony block (commented out) | links orbital bombardment to atmosphere (Phase 3) |
 
 **Takeaway:** two concrete wins here. (1) The population support path is **wired** (`PopulationProcessor` computes carrying capacity from installed infrastructure via `GetPopulationSupportValue`); the remaining refinement is the 33%→100% growth curve (the `−50%` die-off is still a placeholder, not a formula). (2) Occupation/unrest now has a **generic aftermath loop built** (`LegitimacyDB`/`RebellionDB` + ground-combat capture); what's still missing is *this exact Aurora occupation-strength formula* to drive the required-garrison number. Both fit existing subsystems — see `CONVENTIONS.md` §6.

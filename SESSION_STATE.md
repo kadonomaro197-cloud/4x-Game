@@ -90,7 +90,7 @@ Full vision wired end to end and gauged: **survive a hazard → discover its dam
 - **Stale-test baseline restore** — `FleetAggregationTests` (railguns now carry `RailgunRange_m`). Branch was pre-existing red; fixed.
 - **Fleet window UX (client)** — left-click selects a fleet IMMEDIATELY (was gated inside `if(isTreeOpen)`); context menu explicit right-click only.
 - **Per-category render gauge (client)** — `SystemMapRendering.MaybeLogMapPerf` logs `⏱ map breakdown ms — orbits u../d.. (N) | …` so ONE play-test names the heavy icon list. **Hypothesis: ORBITS** (`OrbitEllipseIcon` re-transforms 181 pts + ~180 `SDL.RenderLine` calls per orbit per frame; Aurora draws one cheap ellipse + caches). **OPEN: developer runs the combat scenario, reads the ⏱ map breakdown line; then the fix (batch ghost ring into `SDL.RenderLines` — needs `_fullOrbitDrawPoints` `SDL.Point[]`→`SDL.FPoint[]`; LOD segments; cache transform).**
-- **Colony progression captured** — `docs/OFF-WORLD-INFRASTRUCTURE-DESIGN.md` (vision): Outpost→Colony(flavors)→World→Minor→Hub→Major→Capitol, cost↑/yield↑, outpost-only-automation, scaling.
+- **Colony progression captured** — `docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md` (vision): Outpost→Colony(flavors)→World→Minor→Hub→Major→Capitol, cost↑/yield↑, outpost-only-automation, scaling.
 
 ### Open threads for the developer (live-only / decisions)
 - **Render perf**: run the scenario, send the `⏱ map breakdown` line → targeted fix.
@@ -98,7 +98,7 @@ Full vision wired end to end and gauged: **survive a hazard → discover its dam
 - **Hazard loop live**: fly into the corona, check the discovery notification + that researched nickel-steel armour resists thermal.
 - **All 6 hazard flavours are now wired** (Thermal/HardRadiation/Kinetic/Corrosive/EMStorm/Gravimetric), each with an in-game source + counter-armour, verified by the `SpatialEnvironmentsDioramaTests` whole-system gauge.
 - **★ NEXT CLIENT-TEST PASS — make environment placement LOGICAL by system type (developer ask 2026-06-28).** Today hazards are placed by FLAT RNG % in `StarSystemFactory.CreateSystem` (gas cloud ~40% / debris ~25% / ion ~15% / gravimetric ~8%), the SAME for every system regardless of its character. They need to be placed so a system *feels* like what it is — e.g. **a protostar / young system should be thick with solar flares (violent young star), gas & dust clouds (nebular remnants), and asteroid/debris fields (un-cleared planetesimals)**; a calm main-sequence system has few; a neutron star / magnetar / black hole has gravimetric anomalies + hard-radiation belts + EM storms. **The hook:** placement should read `StarInfoDB` (spectral class / luminosity / age) to pick an environment PROFILE (which hazards + how dense) instead of the flat per-hazard roll. This is what makes "entering a new system is unique and terrifying" (the Star Trek pillar, `docs/NORTH-STAR-VISION.md`) real, and the contextual density the developer wants when filling systems. **Finish this during the next client-test pass** — you can eyeball whether systems feel right live. Also flagged in `GameEngine/Hazards/CLAUDE.md`.
-- The big foundation map (what to build for shields / armour-material-in-combat / NPC-AI-driving-the-loop) is in `docs/HAZARD-DISCOVERY-RESISTANCE-RESEARCH-DESIGN.md` — the SIXTH item (un-cache `ShipCombatValueDB` toughness) is the shared prerequisite under shields + armour-material-in-fleet-combat.
+- The big foundation map (what to build for shields / armour-material-in-combat / NPC-AI-driving-the-loop) is in `docs/archive/HAZARD-DISCOVERY-RESISTANCE-RESEARCH-DESIGN.md` — the SIXTH item (un-cache `ShipCombatValueDB` toughness) is the shared prerequisite under shields + armour-material-in-fleet-combat.
 
 ---
 
@@ -151,7 +151,7 @@ work is CI-green, client (UI) work is CI-blind (the developer's local build is t
   stays put (now guarded against thrash, but it doesn't physically run). The v2 movement layer reads
   `FleetRetreatDB.RetreatVector`.
 - **Per-ship battle damage (a "condition tier")** — auto-resolve is whole-ship-kills; sub-lethal damage isn't
-  tracked per ship yet (`docs/WEAPONS-DESIGN.md` "aggregate force condition").
+  tracked per ship yet (`docs/combat/WEAPONS-DESIGN.md` "aggregate force condition").
 - (Carried) detection-quality units bug (`SensorTools.cs:173`); warp→Sun teleport edge case.
 
 ### Where to resume
@@ -204,13 +204,13 @@ Build the on-map combat **marker** (finishes the 3-window visibility set), then 
 
 ### WHERE TO RESUME — the UNIFIED plan (2026-06-26, after the realism-vs-gameplay audit)
 
-**There is ONE plan — and it was RE-SEQUENCED 2026-06-26 (developer's call): make SPACE earn its weight before going planetary.** `docs/MVP.md` now has two milestones: **M1 — the space + infrastructure layer becomes a real decision engine** (build the `docs/REALISM-VS-GAMEPLAY-AUDIT.md` ranked levers, one gauged slice at a time, **detection FIRST**), then **M2 — the "take a planet" conquest loop** (Stage 2 ground combat → Stage 3 stitch → Stage 4 UI), deferred until M1 lands. The audit's ranked lever list thus **moved from "after v1" onto the active build path.** Rationale: the conquest loop would be a thin shell on hollow systems (colonize-and-forget planets, fog-less/supply-less battles). The stale `PLAN.md` is marked **SUPERSEDED** so nobody backtracks onto its per-pixel-combat approach.
+**There is ONE plan — and it was RE-SEQUENCED 2026-06-26 (developer's call): make SPACE earn its weight before going planetary.** `docs/MVP.md` now has two milestones: **M1 — the space + infrastructure layer becomes a real decision engine** (build the `docs/REALISM-VS-GAMEPLAY-AUDIT.md` ranked levers, one gauged slice at a time, **detection FIRST**), then **M2 — the "take a planet" conquest loop** (Stage 2 ground combat → Stage 3 stitch → Stage 4 UI), deferred until M1 lands. The audit's ranked lever list thus **moved from "after v1" onto the active build path.** Rationale: the conquest loop would be a thin shell on hollow systems (colonize-and-forget planets, fog-less/supply-less battles). The stale `docs/archive/PLAN.md` is marked **SUPERSEDED** so nobody backtracks onto its per-pixel-combat approach.
 
 **Nothing-dropped ledger (every in-flight thread + where it now lives):**
 1. **Combat interrupt** (run-at-set-speed) — DONE, CI-green. → awaiting the developer's **live test**.
 2. **Teleport-to-Sun** defect — open; auto-detected by the heartbeat. → **Stage-4 live-drive blocker**; needs one live repro + root fix (don't blind-fix; no warp-position test exists).
 3. **Detection — NOW THE ACTIVE BUILD (M1, lever #1 by the developer's call).** Build it as the *decision*, not the physics: ride the **existing** contact engine (`GetSensorContacts(faction)` — built, rigorous, but 🔴 DARK/untested) and keep the model legible. Slices: **(1) gauge** it (prove a fleet detects a hostile fleet — turns Sensors from DARK→verified), **(2) fog of war** (combat trigger asks "what hostile fleets do I *detect*", not "all present" — an unseen enemy can't trigger), **(3) EMCON lever** (dark = passive/short-range/low-signature/ambush vs. active = long-range but seen far off — the tradeoff IS the gameplay), **(4) ambush/first-strike** falls out + stacks with the interrupt. **Do NOT resurrect the EM-spectrum waveform math as gameplay** — it stays the under-the-hood number. (Harness note: `SensorScan` is an `IInstanceProcessor` that only fires via `Game.PostNewGameInitialization()`, which `TestScenario.CreateWithColony` does NOT call — so a gauge must fire the scan itself; `InternalsVisibleTo("Pulsar4X.Tests")` lets a test reach `ProcessorManager.GetInstanceProcessor`.)
-4. **Stage 2 ground combat — DEFERRED to M2** (until the M1 space-depth levers land). PLAN.md Phase 4 stays the *design* reference (Formation/Element/`GroundForces/` shape); when it resumes, mirror the **doctrine decision-spine**, not the realism.
+4. **Stage 2 ground combat — DEFERRED to M2** (until the M1 space-depth levers land). docs/archive/PLAN.md Phase 4 stays the *design* reference (Formation/Element/`GroundForces/` shape); when it resumes, mirror the **doctrine decision-spine**, not the realism.
 5. **Combat depth built earlier this session** (doctrine/dodge/triangle/interrupt) — done; the audit grades it mostly **EARNS WEIGHT** (doctrine is the real decision; interrupt is its enabler). Template for M2 ground combat.
 6. **Economy UI verify** (Stage 0 remainder) — pending the developer's live check; an M1/M2 input.
 
@@ -228,15 +228,15 @@ Everything the older entries below call "paused" or "remaining" is now **DONE an
 - **Multi-party engagements.** Any number of fleets, either side, joining a fight in progress by coming into range. `StepEngagementGroup` is the resolver; the 2-fleet path is its n=2 special case (`MultiPartyEngagementTests`).
 - **HOT-DAMAGE REBALANCE (the headline of this entry).** Raw numbers made fights end in 2–4 salvos (10–20 game-seconds) — over before the default 1-hour master tick. **`CombatEngagement.SalvoDamageScale` (0.1)** makes a salvo deposit a tenth of its raw energy toward kills, so the SAME fight lasts ~10× more salvos (a 50v50 mirror now runs 38 salvos ≈ 190 game-seconds — watchable, steerable). The scale is **uniform**, so it changed DURATION, not who wins. It lives only on the stepped (live) resolve; `AutoResolve` (instant off-screen) stays unscaled. The one knob to tune combat pace.
   - **One emergent shift a future session MUST know:** the slower pace let the **50%-loss retreat actually trigger**. At hot damage a loser was often alpha-wiped before it could break off; now it hits 50% losses and *retreats with survivors*. So a few "X wipes Y" matchups are now break-offs — e.g. a 150-fighter swarm now retreats from a super-capital it used to wipe (takes ~400 to overwhelm it). This is the retreat mechanic finally working, not a bug.
-- **20-sim behaviour lab** (numbers in the test messages + `docs/WEAPONS-DESIGN.md`): `CombatStressLab` (10 extreme weapon/scale stress sims) + `CombatBattleSims` (10 whole-battle sims: duration, toughness sweep, saturation/evasion frontiers, combined-arms, quality-vs-quantity, 3-way FFA, reinforcements, mid-fight doctrine, 1-vs-1000). All directions held under the rebalance (it's balance-preserving); only durations grew and a few wipes became break-offs.
+- **20-sim behaviour lab** (numbers in the test messages + `docs/combat/WEAPONS-DESIGN.md`): `CombatStressLab` (10 extreme weapon/scale stress sims) + `CombatBattleSims` (10 whole-battle sims: duration, toughness sweep, saturation/evasion frontiers, combined-arms, quality-vs-quantity, 3-way FFA, reinforcements, mid-fight doctrine, 1-vs-1000). All directions held under the rebalance (it's balance-preserving); only durations grew and a few wipes became break-offs.
 
-Source of truth for combat detail: **`GameEngine/Combat/CLAUDE.md`** (constants table incl. `SalvoDamageScale`, the six-point weapon-registration checklist, multi-party section) and **`docs/WEAPONS-DESIGN.md`** (rebalance note + findings).
+Source of truth for combat detail: **`GameEngine/Combat/CLAUDE.md`** (constants table incl. `SalvoDamageScale`, the six-point weapon-registration checklist, multi-party section) and **`docs/combat/WEAPONS-DESIGN.md`** (rebalance note + findings).
 
 ---
 
 ## Session 2026-06-25 (cont.) — Combat-DEPTH pass: weapon flavor + dodge (READ THIS SECOND)
 
-After the spine, the developer chose to add space-combat depth (knowingly crossing his own `docs/MVP.md` firewall — "cross it, it'll just deepen the tests"). Design captured in **`docs/WEAPONS-DESIGN.md`** (the four weapon-flavor stats, computed saturation, the **Fire-Emblem weapon triangle** Beam▸Fighter▸Capital▸Beam + a Missile⟷Flak axis, and the aggregate O(ships) math). Built gauge-first, all CI-green:
+After the spine, the developer chose to add space-combat depth (knowingly crossing his own `docs/MVP.md` firewall — "cross it, it'll just deepen the tests"). Design captured in **`docs/combat/WEAPONS-DESIGN.md`** (the four weapon-flavor stats, computed saturation, the **Fire-Emblem weapon triangle** Beam▸Fighter▸Capital▸Beam + a Missile⟷Flak axis, and the aggregate O(ships) math). Built gauge-first, all CI-green:
 
 | Piece | What | Test |
 |-------|------|------|
@@ -250,7 +250,7 @@ After the spine, the developer chose to add space-combat depth (knowingly crossi
 - **Performance hinges on `BuildFireMix` aggregating by weapon class.** If that ever stops, the resolve goes O(ships²); `CombatPerformanceTests` is the tripwire.
 - **The dodge model is exercised by STAMPING `WeaponProfile`s in tests** (Railgun/Beam/Flak) — it does NOT yet need a real railgun/flak component. That's deliberate: the real components are the remaining piece.
 - **Why the railgun/flak COMPONENTS are paused:** making them player-buildable needs the NCalc component-designer **template** system (`GameData/.../TemplateFiles/weapons.json` — ~30 formula properties per weapon). The runtime template→attribute construction isn't covered by CI (gotcha 10 — JSON data drift crashes New Game, not `dotnet test`), so it's the riskiest CI-blind work. Do it as a careful dedicated pass WITH a local New Game check, or get the developer's input on the template approach first. The weapon-attribute classes themselves (code) ARE CI-verifiable; it's the JSON template + designer formulas that aren't.
-- Full per-detail source of truth: **`GameEngine/Combat/CLAUDE.md`** ("Dodge in the resolve", "Example combat-test ships", constants table) and `docs/WEAPONS-DESIGN.md`.
+- Full per-detail source of truth: **`GameEngine/Combat/CLAUDE.md`** ("Dodge in the resolve", "Example combat-test ships", constants table) and `docs/combat/WEAPONS-DESIGN.md`.
 
 ---
 
@@ -264,7 +264,7 @@ Stage 1 space combat **resolves** now. The next move is the developer's **live t
 ### What was built (each its own commit + CI-green test)
 | Piece | Engine | Test |
 |-------|--------|------|
-| Combat-design rework (one engine + doctrine, v1 boundary) | `docs/COMBAT-DESIGN.md` | — |
+| Combat-design rework (one engine + doctrine, v1 boundary) | `docs/combat/COMBAT-DESIGN.md` | — |
 | **Ship combat value** (firepower from beams + missile stub; toughness from components + armour; role weight) — computed at build | `Combat/ShipCombatValueDB.cs`, hook in `ShipFactory` | `ShipCombatValueTests` |
 | **Auto-resolve salvo loop** (strength → damage pools → whole-ship casualties, combatants first; pure, reports casualties) | `Combat/AutoResolve.cs` | `AutoResolveTests` |
 | **In-game battle trigger** (hostile fleets in range auto-engage, fight over game-time) | `Combat/CombatEngagement.cs`, `BattleTriggerProcessor.cs`, `FleetCombatStateDB.cs` | `BattleTriggerTests` |
@@ -289,7 +289,7 @@ Stage 1 space combat **resolves** now. The next move is the developer's **live t
 Started Stage 1 (space combat) the gauge-first way; the gauge exposed that space combat's damage is **broken AND the wrong layer**. The developer reframed and chose to **rework the combat design**. Then a long live-test marathon shook out the ship/fleet/spawner/UI — a cascade that all traced back to **two roots** (stale live mod data + SM mode views the Game Master faction). Everything is resolved and live-verified. Combat is now a **deliberately separate effort.**
 
 ### WHERE TO RESUME (the one thing that matters)
-**Stage 0 (economy) and the whole ship/fleet/economy/UI foundation are DONE and live-verified.** The next effort is **COMBAT, as its own thing** (the developer's explicit call — all combat *and* move-order work goes there). First combat task: **write the reworked `docs/COMBAT-DESIGN.md`** (the agreed direction is captured below and in a banner at the top of that file), then build **Stage 1 = the Tier 0 auto-resolve spine + ship combat value + doctrine, under harness tests.** Park the per-pixel damage sim (it's v2).
+**Stage 0 (economy) and the whole ship/fleet/economy/UI foundation are DONE and live-verified.** The next effort is **COMBAT, as its own thing** (the developer's explicit call — all combat *and* move-order work goes there). First combat task: **write the reworked `docs/combat/COMBAT-DESIGN.md`** (the agreed direction is captured below and in a banner at the top of that file), then build **Stage 1 = the Tier 0 auto-resolve spine + ship combat value + doctrine, under harness tests.** Park the per-pixel damage sim (it's v2).
 
 ### Current state (live-verified by the developer)
 - **Stage 0 economy:** DONE + live ("everything works but the spawner" — spawner since resolved).
@@ -302,11 +302,11 @@ Started Stage 1 (space combat) the gauge-first way; the gauge exposed that space
 - **`StartFleetTests`** — the start-fleet gauge; CI-proves the engine builds the colony blueprint's fleets.
 - **DevTools:** new **"Dump State"** button (live ship/fleet counts on-screen + flushed log); spawned ships **auto-join a player fleet** via `FleetOrder.AssignShip` → `OrderHandler`; dropdown-reset removed; **`DevLog` flushes** (`Console.Out.Flush()`).
 - **Fixes:** `ShipDesignWindow` plastic-armor crash (graceful default, not a hard index). Reverted a client build-break I caused (see lesson 3).
-- **Docs:** systems map §6 + Fleets row; `Pulsar4X.Client/CLAUDE.md` gotchas 6–10; test CLAUDE.md inventory; this file; COMBAT-DESIGN.md rework banner.
+- **Docs:** systems map §6 + Fleets row; `Pulsar4X.Client/CLAUDE.md` gotchas 6–10; test CLAUDE.md inventory; this file; docs/combat/COMBAT-DESIGN.md rework banner.
 
 ### BIG FINDING #1 — space combat damage is broken *and* the wrong layer
 - `CombatReadoutTests`: **100 beam hits @ 1e10 J on a real ship → 0 damage, 0 components lost, ship not destroyed.** The per-pixel spatial sim (`DamageTools.DealDamageEnergyBeamSim`) deposits nothing. Space combat does not actually damage ships.
-- Deeper: the as-built combat is **only** the Tier 2 per-pixel sim (the most detailed/expensive layer). The plan (`COMBAT-DESIGN.md`) wants **Tier 0 auto-resolution (fleet-math) as the spine — which does not exist.** They built the flashiest 10% and skipped the structural 90%. **Fixing the per-pixel sim = repairing the wrong layer.**
+- Deeper: the as-built combat is **only** the Tier 2 per-pixel sim (the most detailed/expensive layer). The plan (`docs/combat/COMBAT-DESIGN.md`) wants **Tier 0 auto-resolution (fleet-math) as the spine — which does not exist.** They built the flashiest 10% and skipped the structural 90%. **Fixing the per-pixel sim = repairing the wrong layer.**
 
 ### THE COMBAT-DESIGN REWORK (agreed verbally — this is the spec to write up)
 - **Developer's key insight:** *"it's always auto-resolve unless someone changes the fleet doctrine."* → There aren't 3 separate combat engines (the LOD tiers); there is **ONE engine — the auto-resolve loop — always running**, and player/AI **doctrine changes** (which take game-time to execute) are just inputs to it. "Watching a battle" = a **camera + the doctrine controls** on the same running loop. The per-pixel sim becomes an optional visual skin (v2), not a separate model.
@@ -331,7 +331,7 @@ Started Stage 1 (space combat) the gauge-first way; the gauge exposed that space
 5. **The buffered console channel is unreliable; prefer on-screen + flushed.** Don't rely on `console_output.txt` for runtime readings (X-close doesn't flush). Build gauges that show **on-screen** and **flush** their log line.
 
 ### Open / deferred (the pickup list)
-- **COMBAT — its own effort (developer's call).** (a) Write reworked `docs/COMBAT-DESIGN.md` (one engine + doctrine; v1 line above). (b) Build Stage 1: `ShipCombatValueDB` + the auto-resolve loop + the doctrine/fleet-components model + retreat, **each under a harness test** (no untested combat). Park the per-pixel sim.
+- **COMBAT — its own effort (developer's call).** (a) Write reworked `docs/combat/COMBAT-DESIGN.md` (one engine + doctrine; v1 line above). (b) Build Stage 1: `ShipCombatValueDB` + the auto-resolve loop + the doctrine/fleet-components model + retreat, **each under a harness test** (no untested combat). Park the per-pixel sim.
 - **Move-order crash** — selecting a fleet + a *Move* order crashes *before* issuing it (on the latest branch). Parked with combat. Not the spawn fix (that's a fleet-*assign* order, which works). A missing feature should fail gracefully, not crash the game — fix when building the order/movement layer.
 - **Space-combat damage = 0** (per-pixel sim) — parked with the per-pixel sim. Tier 0 auto-resolve is the v1 damage model instead.
 - **`gallicite`** — `ordnance.json` references an undefined mineral; will bite missiles. Still open (carried from the prior session).
@@ -368,7 +368,7 @@ Went to "build the colony economy UI" and found it already wired in `ColonyManag
 ### Open follow-ups (developer live-test — CI can't see the client)
 - **§5B step 7:** open **Manage Colonies**, walk Summary/Mining/Production, queue a job, confirm the loop works live (and that the window even opens — `GetInstance` looks slightly suspect). Report + `console_output.txt`.
 - **§5B step 6:** confirm the DevTools ship-spawn refresh fix (designed ship appears without "Refresh Lists").
-- **Next stage (deliberate):** Stage 1 — put space combat under a gauge (read `COMBAT-DESIGN.md`/`Weapons/`/`Damage/`, stand up a two-fleet harness fight). Fix `gallicite` before relying on missiles.
+- **Next stage (deliberate):** Stage 1 — put space combat under a gauge (read `docs/combat/COMBAT-DESIGN.md`/`Weapons/`/`Damage/`, stand up a two-fleet harness fight). Fix `gallicite` before relying on missiles.
 
 ---
 
@@ -519,7 +519,7 @@ All 5 decisions wired: two-zone range/energy falloff, wavelength-to-material map
 
 ### Resource/Economy Survey — COMPLETE (session 2026-06-21)
 
-5-agent parallel survey of the entire mineral/material/resource system. Findings committed to `docs/RESOURCES-AND-MATERIALS-DESIGN.md`.
+5-agent parallel survey of the entire mineral/material/resource system. Findings committed to `docs/economy/RESOURCES-AND-MATERIALS-DESIGN.md`.
 
 **Key findings:**
 - 3-tier production pipeline exists and works (mine → refine → build)

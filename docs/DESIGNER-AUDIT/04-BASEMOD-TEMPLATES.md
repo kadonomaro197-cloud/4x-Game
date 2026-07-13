@@ -2,7 +2,7 @@
 
 **Scope:** Every `ComponentTemplate` in `Pulsar4X/GameData/basemod/TemplateFiles/*.json` — the JSON data that defines what a player can design in an in-game designer — categorized by function, with its host-legality (`MountType`) flags tabulated to expose non-universality. (These JSON files are copied to `AppData/Mods` at build.)
 
-**Inventory as of 2026-07-13** (re-enumerated against current `TemplateFiles/*.json`; the prior snapshot was 2026-07-08 and is now stale — ~20 combat-depth, detection, and advanced-drive templates were added between the two). **This doc's inconsistency findings (I-1..I-7) feed `docs/DESIGNER-AUDIT/UNIVERSAL-ASSEMBLY-DESIGN.md`, which is the design that consumes them.**
+**Inventory as of 2026-07-13** (re-enumerated against current `TemplateFiles/*.json`; the prior snapshot was 2026-07-08 and is now stale — ~20 combat-depth, detection, and advanced-drive templates were added between the two). **This doc's inconsistency findings (I-1..I-7) feed `docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md`, which is the design that consumes them.**
 
 ---
 
@@ -229,6 +229,6 @@ A `GroundUnit`-mount part carries a `Ground*Atb` attribute (`GroundWeaponAtb`, `
 2. **Does the `GroundUnit` flag on ship weapons actually work?** Those weapons carry ship-side `Generic*Atb`/`RailgunWeaponAtb`, not `GroundWeaponAtb`. Confirm in the engine whether a ground unit can mount and *fire* a `laser-weapon`, or whether the flag is inert (I-3). This decides whether the fix is "add the flag everywhere" or "unify the attribute families."
 3. **Is `solarArray`'s `1` a bug or a deliberate ship-only choice?** Recommend normalizing to the string form and deciding its true host set (I-2).
 4. **Resolve the `spaceport` UniqueID collision** — pick one owner file, rename or merge (I-1).
-5. **Universality target:** the deepest barrier is not the mount flag but the **split attribute vocabulary** (`Ground*Atb` vs ship attributes) and the **split `IndustryTypeID`**. A truly universal designer needs either one attribute family both worlds read, or an explicit adapter — flags alone won't merge the two designers. (This is the problem `docs/DESIGNER-AUDIT/UNIVERSAL-ASSEMBLY-DESIGN.md` picks up.)
+5. **Universality target:** the deepest barrier is not the mount flag but the **split attribute vocabulary** (`Ground*Atb` vs ship attributes) and the **split `IndustryTypeID`**. A truly universal designer needs either one attribute family both worlds read, or an explicit adapter — flags alone won't merge the two designers. (This is the problem `docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md` picks up.)
 6. **`troop-bay` is `ShipComponent`-only** — intentional (troops ride ships), but note it can't be a `PlanetInstallation` staging bay; confirm that's desired.
 7. Several `ComponentType` free-strings are near-synonyms (`Energy Generator` vs `Energy Generation` vs `Facility` for power; `Cargo Hold` vs `Fuel Storage` vs `Facility` for storage). The category string is not a reliable grouping key — mount + attribute is.

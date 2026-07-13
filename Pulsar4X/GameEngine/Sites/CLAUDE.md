@@ -1,6 +1,6 @@
 # Sites — the Site Engine (subsystem reference)
 
-**What it is, in one line:** the **one** data-driven engine every mid-game *episode* is a row in — a ruin, an anomaly, an outbreak, a derelict, a resource node, a first-contact, a late-game crisis. Design: `docs/SITE-ENGINE-DESIGN.md` (parent doc; `docs/EXPLORATION-CONTENT-DESIGN.md` is its catalog chapter).
+**What it is, in one line:** the **one** data-driven engine every mid-game *episode* is a row in — a ruin, an anomaly, an outbreak, a derelict, a resource node, a first-contact, a late-game crisis. Design: `docs/explore/SITE-ENGINE-DESIGN.md` (parent doc; `docs/explore/EXPLORATION-CONTENT-DESIGN.md` is its catalog chapter).
 
 The whole mid-game reduces to one shape:
 
@@ -56,7 +56,7 @@ Each slice is CI-gated and byte-identical-first (new code neutral/unattached unt
 - **Branches compose** — accrued knowledge UNLOCKS branches, never closes them; understand → *then* choose (seal vs. ally), never railroaded; different rewards *or none*.
 - **The persistent site can RUPTURE** into a crisis (the reward carries the risk) — the small-scale seed of the late-game crisis (SE-5).
 - **Where a leader is posted sets their incident/death risk**, mitigated by the Command Berth's Survivability dial — one incident roll across all pillars (SE-2).
-- **The Command Berth IS the delegate seat** (`docs/GOVERNANCE-AND-DELEGATION-DESIGN.md`) — built on the one `AdminSpaceAtb` seat mechanism; a ship fits several (Enterprise-D).
+- **The Command Berth IS the delegate seat** (`docs/society/GOVERNANCE-AND-DELEGATION-DESIGN.md`) — built on the one `AdminSpaceAtb` seat mechanism; a ship fits several (Enterprise-D).
 
 ---
 
