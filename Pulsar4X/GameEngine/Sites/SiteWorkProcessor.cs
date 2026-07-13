@@ -330,6 +330,14 @@ namespace Pulsar4X.Sites
                 case SiteYield.Research:
                     SiteYields.DeliverResearch(game, site.WorkedByFactionId, (int)magnitude);
                     break;
+                // SE-5e: the Diplomat/Intelligence routes — a resolved diplomatic site warms the working faction's
+                // relations; an intelligence site raises its intel on met rivals.
+                case SiteYield.Diplomacy:
+                    SiteYields.DeliverDiplomacy(game, site.WorkedByFactionId, magnitude);
+                    break;
+                case SiteYield.Intel:
+                    SiteYields.DeliverIntel(game, site.WorkedByFactionId, siteEntity.StarSysDateTime, magnitude);
+                    break;
                 // SiteYield.Blueprint / Resource / Population / Leader / StrategicAsset / NetworkRoute / Nothing
                 // route into their own consumer systems in later slices.
                 default:

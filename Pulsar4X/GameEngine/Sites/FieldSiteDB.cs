@@ -35,8 +35,10 @@ namespace Pulsar4X.Sites
     /// (a benign anomaly that CAN later rupture — that edge is SE-5).</summary>
     public enum SiteHook { Benign, Guardian, Cursed, Contested, Gated, Reactive, MoralFork }
 
-    /// <summary>Which consumer system the payoff routes into (§3 Yield dial). SE-1 uses Research.</summary>
-    public enum SiteYield { Nothing, Research, Blueprint, Resource, Population, Leader, StrategicAsset, NetworkRoute }
+    /// <summary>Which consumer system the payoff routes into (§3 Yield dial). SE-1 uses Research; SE-5e adds Diplomacy
+    /// (warm the working faction's relations) and Intel (raise its intel on rivals). Append new yields at the END —
+    /// the value order is embedded in saves.</summary>
+    public enum SiteYield { Nothing, Research, Blueprint, Resource, Population, Leader, StrategicAsset, NetworkRoute, Diplomacy, Intel }
 
     /// <summary>
     /// Site Engine SE-1a — the SITE RECORD, the heart of the one engine every mid-game episode is a row in
