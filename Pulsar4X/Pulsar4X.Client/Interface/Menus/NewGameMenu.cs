@@ -676,6 +676,36 @@ public class NewGameMenu : PulsarGuiWindow
             }
         }
 
+        // Site Engine (SE-4e): flag-gated auto-seed of a live surface INCIDENT on the player's home world — the
+        // switch that makes the whole SE-4 incident build (a menace holds a region, bleeds your units, spreads if
+        // ignored) reachable in a real game. Default OFF, so New Game stays byte-identical; MaybeSpawnForNewGame is
+        // a no-op unless the flag is on. Engine call (CI-tested); wrapped so a hiccup never breaks New Game.
+        try
+        {
+            int incidents = Pulsar4X.Sites.IncidentScenario.MaybeSpawnForNewGame(game);
+            if (incidents > 0)
+                Console.WriteLine($"[NewGame] Auto-spawned {incidents} home-world incident(s).");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[NewGame] Incident auto-spawn FAILED (New Game continues without it): {ex}");
+        }
+
+        // Site Engine (SE-6a): flag-gated auto-seed of a couple of workable DEMO sites (a space anomaly + a surface
+        // ruin) at the player's home world — the switch that makes the whole Site Engine (SE-1..SE-5) reachable in a
+        // real game. Default OFF, so New Game stays byte-identical. Engine call (CI-tested); wrapped so a hiccup never
+        // breaks New Game.
+        try
+        {
+            int sites = Pulsar4X.Sites.SiteScenario.MaybeSpawnForNewGame(game);
+            if (sites > 0)
+                Console.WriteLine($"[NewGame] Auto-spawned {sites} demo site(s) at the home world.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[NewGame] Demo-site auto-spawn FAILED (New Game continues without it): {ex}");
+        }
+
         game.PostNewGameInitialization();
 
         return (game, playerFaction, startingSystem, startingBody);
@@ -730,9 +760,14 @@ public class NewGameMenu : PulsarGuiWindow
             ModLoader modLoader = new ModLoader();
             ModDataStore modDataStore = new ModDataStore();
 
+            // Quickstart is the "just start with the sane defaults" path, so load ONLY the mods whose manifest marks
+            // them DefaultEnabled (the base mod) — never a test-only stub, and independent of whatever the New-Game
+            // mod page happened to toggle in this session. The Pulsar4x-Testing mod ships incomplete data (a few
+            // themes + one armor, no components) and breaks colony build / leaves nothing buildable if it loads, so a
+            // Quickstart must never pick it up. The full New Game wizard still honours the player's explicit mod choices.
             foreach (var modMetadata in ModsState.AvailableMods)
             {
-                if (ModsState.IsModEnabled[modMetadata.Mod.ModName])
+                if (modMetadata.Mod.DefaultEnabled)
                 {
                     modLoader.LoadModManifest(modMetadata.Path, modDataStore);
                 }

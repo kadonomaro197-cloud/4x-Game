@@ -873,6 +873,17 @@ namespace Pulsar4X.Client
                 if (ImGui.Checkbox("Build start fleets on New Game##devautofleets", ref NewGameMenu.AutoBuildStartFleets))
                     DevLog($"Build start fleets on New Game = {NewGameMenu.AutoBuildStartFleets} (applies to the next New Game)");
 
+                // Site Engine (SE-4e) barebones toggle (default OFF): seed a live surface INCIDENT on the player's
+                // home world on New Game — a menace holds a region, bleeds units standing on it, and spreads if
+                // ignored. Applies to the NEXT new game.
+                if (ImGui.Checkbox("Auto-spawn home-world incident on New Game##devautoincident", ref Pulsar4X.Sites.IncidentScenario.AutoSpawnIncident))
+                    DevLog($"Auto-spawn home-world incident on New Game = {Pulsar4X.Sites.IncidentScenario.AutoSpawnIncident} (applies to the next New Game)");
+
+                // Site Engine (SE-6a): seed a couple of workable DEMO sites (a space anomaly + a surface ruin, both
+                // research one-shots) at the home world so the Site Engine is playable. Applies to the NEXT new game.
+                if (ImGui.Checkbox("Auto-spawn home-world demo sites on New Game##devautosites", ref Pulsar4X.Sites.SiteScenario.AutoSpawnSites))
+                    DevLog($"Auto-spawn home-world demo sites on New Game = {Pulsar4X.Sites.SiteScenario.AutoSpawnSites} (applies to the next New Game)");
+
                 // Premade combat scenario: 2 well-rounded player task forces at Earth + hostile squadrons at
                 // Luna/Venus/Mercury/Mars — for generating rich live combat/closing data in one click.
                 if (ImGui.Button("Spawn Combat Scenario##devscenario"))

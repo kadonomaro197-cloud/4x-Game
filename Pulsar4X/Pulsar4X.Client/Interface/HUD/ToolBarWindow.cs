@@ -131,6 +131,16 @@ namespace Pulsar4X.Client
 
             btn = new ToolBarOption()
             {
+                Picture = _uiState.Img_Select(),   // placeholder icon (no dedicated site art yet)
+                TooltipText = "Field Sites: anomalies, ruins & outbreaks - progress and how they resolve",
+                OnClick = new Action(SiteWindow.GetInstance().ToggleActive),
+                GetActive = new Func<bool>(SiteWindow.GetInstance().GetActive)
+                //Opens the Site Engine panel (progress readout + commit a resolution branch)
+            };
+            ToolButtons.Add(btn);
+
+            btn = new ToolBarOption()
+            {
                 Picture = _uiState.Img_Ruler(),
                 TooltipText = "Measure distance",
                 OnClick = new Action(DistanceRuler.GetInstance().ToggleActive),
