@@ -55,7 +55,7 @@ Solution file: `Pulsar4X/Pulsar4X.sln`
 | Math expressions | CoreCLR-NCalc 2.2.113 (used in component design formulas) |
 | Tests | NUnit 3.13.3 + NUnit3TestAdapter |
 | Benchmarks | BenchmarkDotNet 0.14.0 |
-| Mod data | JSON files under `GameEngine/Data/basemod/` |
+| Mod data | JSON files under `Pulsar4X/GameData/basemod/` (copied to AppData/Mods at build) |
 
 ---
 

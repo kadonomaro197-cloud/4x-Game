@@ -131,14 +131,15 @@ GenericFiringWeaponsProcessor (HotLoop, 1 sec)
 
 BeamWeaponProcessor (HotLoop, 1 sec) per BeamInfoDB entity:
     Fired → calc timeToTarget → if hit: AtTarget else MissedTarget
-    AtTarget → SimpleDamage.OnTakingDamage(target, 100, 500)
-                    → picks random component, deals damage
-                    → if all components gone: ShipFactory.DestroyShip()
+    AtTarget → DamageProcessor.OnTakingDamage(target, damageFragment)   ← LIVE PATH
+                    → EntityDamageProfileDB
+                    → DamageTools.DealDamageEnergyBeamSim()
+                    → component-level HTK tracking; ShipFactory.DestroyShip() when gutted
     MissedTarget → dissipate energy, eventually destroy beam entity
 
-[COMMENTED OUT – not active]:
-    DamageProcessor.OnTakingDamage() → EntityDamageProfileDB →
-    DamageTools.DealDamageEnergyBeamSim() → component-level HTK tracking
+[DEAD – not called by any weapon]:
+    Damage/Simple/SimpleDamage.OnTakingDamage(target, 100, 500) — the old
+    placeholder; superseded by the DamageComplex path above (BeamWeaponProcessor.cs:144)
 ```
 
 ---
@@ -167,14 +168,20 @@ MineResourcesProcessor (HotLoop, daily)
     → removes minerals from MineralsDB (planet)
     → pushes to CargoStorageDB (colony)
 
-PopulationProcessor (HotLoop, yearly)
+PopulationProcessor (HotLoop, monthly)
     → reads ColonyInfoDB.Population
-    → applies growth/decay (partial implementation)
+    → GrowPopulation: growth formula + morale-migration + starvation terms
+      (also drives ColonyMoraleDB / LegitimacyDB / RebellionDB each tick)
 
-[NO GROUND COMBAT EXISTS]
-    ColonyInfoDB has ColonyComponentDictionary for installation damage
-    DamageProcessor.cs lines ~101-181 have a commented-out stub for
-    colony damage from bombardment — design intent is there, code is not
+[COLONY BOMBARDMENT IS LIVE]
+    DamageProcessor.OnColonyDamage() applies population casualties,
+    atmospheric contamination, and installation damage when a colony is hit;
+    MissileImpactProcessor routes missile hits here on impact.
+
+[GROUND COMBAT IS LIVE — see GameEngine/GroundCombat/]
+    A full ground layer exists: PlanetRegionsDB + a hex/region map,
+    ground units as component-bearing entities, GroundForcesProcessor
+    (raise / move / fight / CAPTURE-a-planet), formations, fortification.
 ```
 
 ---
@@ -222,16 +229,17 @@ Program.cs
 
 ---
 
-## Where Ground Combat Would Hook In
+## Where Ground Combat Lives (BUILT)
 
-| Hook Point | File | Notes |
-|------------|------|-------|
-| Ground unit entity creation | `Colonies/ColonyFactory.cs` | Mirror ShipFactory pattern |
-| Ground unit DataBlob | *(new)* `Colonies/GroundUnitDB.cs` | Population, equipment, organization |
-| Ground combat processor | *(new)* `Colonies/GroundCombatProcessor.cs` | IHotloopProcessor, daily tick |
-| Colony damage from bombardment | `Damage/DamageComplex/DamageProcessor.cs` | Uncomment + complete lines ~101-181 |
-| Planetary window UI | `Pulsar4X.Client/Interface/Windows/PlanetaryWindow.cs` | `RenderInstallations()` empty + tab gated on dead `InstallationsDB`; re-gate on `ComponentInstancesDB` |
-| New ground combat UI window | *(new)* `Pulsar4X.Client/Interface/Windows/GroundCombatWindow.cs` | |
-| Orders for ground invasion | *(new)* `Colonies/InvasionOrder.cs` | Follow `SetFireControlOrder` pattern |
+Ground combat is **built and wired** in `GameEngine/GroundCombat/` (it was not, when this section was first written). It follows the same ECS shape as space combat — units are component-bearing entities, resolved by a hotloop processor.
 
-> **Full design reference:** `docs/aurora/GROUND-COMBAT.md` has the Aurora mechanics and a complete Aurora→Pulsar mapping table (unit design, formations, combat resolution, transport/drop/boarding, occupation). Build ground units as **component-bearing entities** (`ComponentInstancesDB` + new `*Atb` attributes), not a bespoke parallel system — see `CONVENTIONS.md` §6. Prefer a dedicated `GameEngine/GroundForces/` dir over `Colonies/`.
+| Piece | File | Notes |
+|-------|------|-------|
+| Planet surface map | `GameEngine/GroundCombat/PlanetRegionsDB.cs` (+ hex layer) | Region-graph over a sphere; units live on regions/hexes |
+| Ground units | component-bearing entities (`ComponentInstancesDB` + ground `*Atb`) | Assembled in the unit designer, not a bespoke parallel system |
+| Ground combat processor | `GameEngine/GroundCombat/GroundForcesProcessor.cs` | Raise / move / fight / **CAPTURE a planet**; formations + fortification |
+| Shared damage kernel | `GameEngine/Combat/CombatKernel.cs` via `GroundCombatant` | Ground routes through the same salvo math as ships (resolver merge) |
+| Colony bombardment | `Damage/DamageComplex/DamageProcessor.cs` → `OnColonyDamage()` | Live: population casualties + atmospheric + installation damage |
+| Tactical map UI | `Pulsar4X.Client/Interface/Windows/PlanetViewWindow.cs` | Units draw, click-to-move, terrain/hazards |
+
+> **The one real open blocker (see `docs/MVP.md`):** the *invade-from-orbit* player action — load troops onto a transport and land them — is engine-complete and tested (`GroundTransport`/`GroundBayAtb`) but not yet reachable through a normal-UI order. Design reference for depth: `docs/aurora/GROUND-COMBAT.md`.
