@@ -15,6 +15,7 @@ using Pulsar4X.Interfaces;
 using Pulsar4X.Names;
 using Pulsar4X.People;
 using Pulsar4X.Ships;
+using Pulsar4X.Stations;
 using Pulsar4X.Storage;
 using Pulsar4X.Technology;
 using Pulsar4X.Weapons;
@@ -217,6 +218,52 @@ namespace Pulsar4X.Factions
                 }
             }
 
+            // DevTest (2026-07-13): a faction can be authored with SPACE STATIONS the same declarative way as
+            // colonies (the Kithrin's outer-system developed outpost). Mirrors the colonies block above but hosts on
+            // a body via StationFactory.CreateStation + AddComponent (the station is a generic chassis; its modules
+            // ARE its "developed" capability). A station is manned only when a species + population are given, else it
+            // is an automated platform. Additive/byte-identical: no existing scenario file has a "stations" node.
+            var stationsToLoad = (JArray?)rootJson["stations"];
+            if(stationsToLoad != null)
+            {
+                foreach(var stationToLoad in stationsToLoad)
+                {
+                    var systemId = stationToLoad["systemId"].ToString();
+                    var system = game.Systems.Find(s => s.ID.Equals(systemId));
+                    if(system == null) throw new NullReferenceException("invalid systemId in json");
+                    var location = NameLookup.GetFirstEntityWithName(system, stationToLoad["location"].ToString());
+
+                    Entity species = null;
+                    long population = 0;
+                    var speciesNode = stationToLoad["species"];
+                    if(speciesNode != null)
+                    {
+                        var speciesName = speciesNode["name"].ToString();
+                        species = faction.GetDataBlob<FactionInfoDB>().Species.Find(s => s.GetOwnersName().Equals(speciesName));
+                        if(species == null) throw new NullReferenceException("invalid species name in json");
+                        population = (long?)speciesNode["population"] ?? 0;
+                    }
+
+                    var station = (species != null && population > 0)
+                        ? StationFactory.CreateStation(faction, location, population, species)
+                        : StationFactory.CreateStation(faction, location);
+
+                    var modulesToAdd = (JArray?)stationToLoad["installations"];
+                    if(modulesToAdd != null)
+                    {
+                        foreach(var install in modulesToAdd)
+                        {
+                            var installId = install["id"].ToString();
+                            var amount = (int?)install["amount"] ?? 1;
+                            station.AddComponent(factionInfoDB.InternalComponentDesigns[installId], amount);
+                        }
+                    }
+
+                    LoadCargo(station, factionDataStore, (JArray?)stationToLoad["cargo"]);
+                    ReCalcProcessor.ReCalcAbilities(station);
+                }
+            }
+
             var fleetsToLoad = (JArray?)rootJson["fleets"];
             if(fleetsToLoad != null)
             {
@@ -308,6 +355,40 @@ namespace Pulsar4X.Factions
 
                 if (entry["atWar"]?.Value<bool>() ?? false)
                     Diplomacy.DeclareWar(faction, target, CasusBelli.ConfrontRival, when);
+            }
+        }
+
+        /// <summary>
+        /// DevTest (2026-07-13) — apply a faction's authored OPENING STRAIN to every colony it owns. The war-strain
+        /// gauges (morale/legitimacy/sustenance) are DERIVED monthly from inputs, so you cannot seed the output number;
+        /// this sets the INPUTS the processors read, so the strain STICKS: a high war-<c>taxRate</c> (morale drag +
+        /// capped income), a sustenance <c>powerDemandPerCapita</c>/<c>foodDemandPerCapita</c> squeeze (shortage →
+        /// morale hit + starvation), and <c>committedBulk</c> workforce tied up in the war effort (fewer hands to build
+        /// with). Reads a faction-level <c>"strain"</c> object; called as a SECOND PASS beside <see cref="ApplyOpeningRelations"/>.
+        /// Defensive/no-throw. Byte-identical for any faction with no <c>"strain"</c> node.
+        /// </summary>
+        public static void ApplyOpeningStrain(Entity faction, JToken strainNode)
+        {
+            if (faction == null || strainNode is not JObject) return;
+            if (!faction.TryGetDataBlob<FactionInfoDB>(out var factionInfo)) return;
+
+            double taxRate       = strainNode["taxRate"]?.Value<double>() ?? -1;
+            double powerDemand   = strainNode["powerDemandPerCapita"]?.Value<double>() ?? 0;
+            double foodDemand    = strainNode["foodDemandPerCapita"]?.Value<double>() ?? 0;
+            long   committedBulk = strainNode["committedBulk"]?.Value<long>() ?? 0;
+
+            foreach (var colony in factionInfo.Colonies)
+            {
+                if (colony == null || !colony.IsValid) continue;
+
+                if (taxRate >= 0 && colony.TryGetDataBlob<ColonyEconomyDB>(out var econ))
+                    econ.TaxRate = taxRate;
+
+                if ((powerDemand > 0 || foodDemand > 0) && colony.TryGetDataBlob<ColonySustenanceDB>(out var sust))
+                    sust.SetDemand(powerDemand, foodDemand);
+
+                if (committedBulk > 0 && colony.TryGetDataBlob<ColonyManpowerDB>(out var manpower))
+                    manpower.CommitBulk(committedBulk);
             }
         }
 

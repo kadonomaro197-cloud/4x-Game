@@ -125,9 +125,17 @@ namespace Pulsar4X.Engine
             var openingWhen = game.TimePulse.GameGlobalDateTime;
             foreach(var (faction, factionPath) in loadedFactions)
             {
-                var openingNode = JObject.Parse(File.ReadAllText(factionPath))["openingRelations"];
+                var factionRoot = JObject.Parse(File.ReadAllText(factionPath));
+
+                var openingNode = factionRoot["openingRelations"];
                 if(openingNode != null)
                     FactionFactory.ApplyOpeningRelations(game, faction, openingNode, openingWhen);
+
+                // DevTest (2026-07-13) — a faction can author OPENING STRAIN (war-tax / sustenance squeeze / committed
+                // manpower) on its colonies. Runs in the second pass so it applies after the colonies exist.
+                var strainNode = factionRoot["strain"];
+                if(strainNode != null)
+                    FactionFactory.ApplyOpeningStrain(faction, strainNode);
             }
 
             var pow = startingSystem.GetAllEntitiesWithDataBlob<EnergyGenAbilityDB>();
