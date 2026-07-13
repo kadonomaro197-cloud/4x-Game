@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using Pulsar4X.Datablobs;
 
@@ -109,6 +111,23 @@ namespace Pulsar4X.Sites
         /// <summary>How often (days) the menace spawns/reinforces while the incident is live (0 = never spreads). SE-4d.</summary>
         [JsonProperty] public double SpawnIntervalDays { get; set; } = 0.0;
 
+        // ---- SE-5a: the composable RESOLVE BRANCHES (docs/SITE-ENGINE-DESIGN.md §3/§4) ----
+        // A site with an EMPTY branch list resolves the SE-1 single-path way (Shape → one terminal state, the site's
+        // one Yield delivered on unlock). A site with branches instead offers a SET of choices, each unlocked by its
+        // own understanding cost, and waits for the player to COMMIT one (SE-5b reads these; SE-5c adds the order).
+        // Empty by default → every existing site is byte-identical.
+
+        /// <summary>The honest resolution choices this site offers (fight / seal / negotiate / study …), each with its
+        /// own unlock cost + yield + outcome. Empty = a single-path SE-1 site (resolves the old way). See SE-5b/5c.</summary>
+        [JsonProperty] public List<SiteBranch> Branches { get; set; } = new List<SiteBranch>();
+
+        /// <summary>The index into <see cref="Branches"/> the player has COMMITTED to (-1 = none committed yet). SE-5c's
+        /// commit-branch order sets it; the resolve then pays THAT branch. Ignored when <see cref="Branches"/> is empty.</summary>
+        [JsonProperty] public int CommittedBranchIndex { get; set; } = -1;
+
+        /// <summary>True when this site presents a branch CHOICE rather than a single hard-wired outcome (SE-5).</summary>
+        [JsonIgnore] public bool HasBranches => Branches != null && Branches.Count > 0;
+
         public FieldSiteDB() { }
 
         public FieldSiteDB(FieldSiteDB other)
@@ -130,6 +149,9 @@ namespace Pulsar4X.Sites
             MenaceFactionId = other.MenaceFactionId;
             PressurePerDay = other.PressurePerDay;
             SpawnIntervalDays = other.SpawnIntervalDays;
+            // Deep-copy the branch list so a cloned site doesn't share branch records with the original.
+            Branches = other.Branches?.Select(b => b.Clone()).ToList() ?? new List<SiteBranch>();
+            CommittedBranchIndex = other.CommittedBranchIndex;
         }
 
         public override object Clone() => new FieldSiteDB(this);
