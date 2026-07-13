@@ -1,6 +1,8 @@
 # Hazard Discovery → Resistance → Research — Foundation Design
 
-**Status:** foundation analysis (no code yet — settle the load-bearing decisions FIRST so we don't backpedal).
+> **🗄 SUPERSEDED — the foundations this doc designed are BUILT (do not treat as a to-do).** The discover → resistance-research → rated-armour loop is implemented and tested in `GameEngine/Hazards/` (runtime unverified — CI can't run the client). This doc is kept for its locked design decisions and rationale; the **live** status lives in `GameEngine/Hazards/CLAUDE.md`. *(Docs audit 2026-07-13.)*
+
+**Status (as written):** foundation analysis — settle the load-bearing decisions FIRST so we don't backpedal. *(Now built; see banner above.)*
 **Read with:** `GameEngine/Hazards/CLAUDE.md` (the spine that's built), `docs/DETECTION-DESIGN.md`, `docs/INFORMATION-DELTA-DESIGN.md`, the Prime Directive + Cradle-to-Grave in the root `CLAUDE.md`.
 
 ---

@@ -1,5 +1,7 @@
 # Pulsar4X vs Aurora 4X — Gap Analysis
 
+> **🗄 HISTORICAL SNAPSHOT (2026-06-21) — do not follow as current.** A point-in-time gap analysis whose headline "critical gaps" (above all the ground-combat "100% gap") are contradicted by shipped code — ground combat, diplomacy, damage, and more are built and wired since. Kept as a baseline record of where the fork stood. The **live** system map is `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md`. *(Docs audit 2026-07-13.)*
+
 **Written:** 2026-06-21 (based on `Master` branch)  
 **Updated:** 2026-06-21 — migrated to `DevBranch` (638 commits ahead of Master). Several gaps closed or materially advanced. See "What Changed in DevBranch" at the end.  
 **Purpose:** Honest accounting of where Pulsar stands relative to Aurora's full simulation depth. Does not cover the UI layer — see `Pulsar4X.Client/CLAUDE.md`.
