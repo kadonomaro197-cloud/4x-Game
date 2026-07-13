@@ -58,11 +58,16 @@ namespace Pulsar4X.Sites
 
             if (!TryFindWorker(entity.Manager, sitePos.AbsolutePosition, out var worker)) return;
 
-            // Scale the flat daily rate by however long this step actually covered (the scheduler catches up
+            // SE-2b: a MANNED Command Berth on the worker whose Role matches the site works it FASTER — scaled by the
+            // berth's Grade and the seated leader's competence (+ the berth's Support). No matching manned berth (or no
+            // berth at all) → the multiplier is 1.0, i.e. the SE-1b flat rate — additive / byte-identical.
+            double multiplier = BerthWorkMultiplier(worker, site.Role);
+
+            // Scale the (multiplied) daily rate by however long this step actually covered (the scheduler catches up
             // sub-daily processors within a coarse step), so accrual is independent of Ticklength.
             double days = deltaSeconds / 86400.0;
             site.WorkedByFactionId = worker.FactionOwnerID;
-            SiteMachine.Accrue(site, WorkPerDay * days, UnderstandingPerDay * days);
+            SiteMachine.Accrue(site, WorkPerDay * multiplier * days, UnderstandingPerDay * multiplier * days);
 
             // SE-1c: once understanding fills, the single-branch anomaly RESOLVES and pays its yield out ONCE into
             // the consumer system its Yield names (SE-5 turns this into a player-committed choice among branches).
@@ -71,6 +76,24 @@ namespace Pulsar4X.Sites
                 DeliverYield(entity, site);
                 site.YieldDelivered = true;
             }
+        }
+
+        /// <summary>
+        /// SE-2b — the work-rate multiplier a worker's best MANNED, Role-matching Command Berth grants:
+        /// <c>Grade × (1 + leaderSkill + Support/100)</c>. A worker with no roster, no matching berth, or an empty one
+        /// returns 1.0 (the SE-1b flat rate), so the change is additive. Grade floors at 1 so a manned berth is never
+        /// a penalty.
+        /// </summary>
+        public static double BerthWorkMultiplier(Entity worker, SiteRole role)
+        {
+            if (worker == null || !worker.TryGetDataBlob<CommandBerthDB>(out var roster)) return 1.0;
+
+            var berth = roster.BestOccupiedBerthFor(role);
+            if (berth == null) return 1.0;
+
+            double grade = Math.Max(1, berth.Grade);
+            double skill = BerthOps.LeaderSkill01(worker.Manager, berth.CommanderID) + berth.Support / 100.0;
+            return grade * (1.0 + skill);
         }
 
         /// <summary>Route a resolved site's banked Progress into the consumer system its Yield dial names
