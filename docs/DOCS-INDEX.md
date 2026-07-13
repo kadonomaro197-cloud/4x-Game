@@ -50,6 +50,8 @@ Build column (for design docs): ✅ built · 🏗 building · ⚫ design-only (n
 | `Pulsar4X/GameEngine/People/CLAUDE.md` | Commanders, scientists | 🟢 | Officer/scientist talent-draw still a future slice |
 | `Pulsar4X/Pulsar4X.Client/CLAUDE.md` | UI reference + the RUNTIME-CI-blind discipline + DevTools inventory | 🟢 | Updated this session (DevTools government lever + diplomacy readout) |
 | `Pulsar4X/Pulsar4X.Tests/CLAUDE.md` | Test harness + full test inventory | 🟢 | Updated this session (Manpower/Morale/Diplomacy-drift/SocietyReadout tests) |
+| `docs/DOCS-AUDIT-PROCESS.md` | **Repeatable playbook (SOP)** for auditing all docs vs. code, deciding utility, and reorganizing — re-runnable cold by a future session. Root `CLAUDE.md` points at it | 🟢 ♻️ 📚 | The permanent *how-to*; each run's findings go in a dated `DOCS-AUDIT-YYYY-MM-DD.md`. NEW 2026-07-13 |
+| `docs/DOCS-AUDIT-2026-07-13.md` | Findings of the 2026-07-13 audit run (per-doc verdicts + reorg plan): staleness+duplication, 0 delete / 3 archive / ~60 stale "not built" claims | 🟢 | Point-in-time record; superseded by the next dated run. Produced via `DOCS-AUDIT-PROCESS.md` |
 | `.claude/commands/build-check.md` · `damage-audit.md` · `phase-status.md` | Slash-command / skill definitions | 🟢 📚 | Tooling; touch only when the workflow changes |
 
 ## 2. Vision & the two firewalls (why + what-not-to-do)
