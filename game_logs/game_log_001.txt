@@ -1,0 +1,221 @@
+[ENGINE] sensor scans 156260 (+2122), battle-trigger passes 7405643 (+77481) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[AI] 2050-07-30 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-07-30 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4900.9, morale 50, legit 50, bal -8508, colonies 0, contacts 2
+[STATE] heartbeat t=2050-08-06 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 157970 (+1710), battle-trigger passes 7540589 (+134946) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[STATE] heartbeat t=2050-08-06 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 160250 (+2280), battle-trigger passes 7595522 (+54933) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[STATE] heartbeat t=2050-08-13 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 161810 (+1560), battle-trigger passes 7754041 (+158519) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[AI] 2050-08-06 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-08-06 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-08-06 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-08-06 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-08-06 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-08-06 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-08-06 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-08-06 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4867.1, morale 50, legit 50, bal -8508, colonies 0, contacts 2
+[AI] 2050-08-06 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4867.1, morale 50, legit 50, bal -8508, colonies 0, contacts 2
+[AI] 2050-08-06 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4867.1, morale 50, legit 50, bal -8508, colonies 0, contacts 2
+[AI] 2050-08-06 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4867.1, morale 50, legit 50, bal -8508, colonies 0, contacts 2
+[AI] 2050-08-06 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4867.1, morale 50, legit 50, bal -8508, colonies 0, contacts 2
+[AI] 2050-08-06 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4867.1, morale 50, legit 50, bal -8508, colonies 0, contacts 2
+[AI] 2050-08-06 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4867.1, morale 50, legit 50, bal -8508, colonies 0, contacts 2
+[STATE] heartbeat t=2050-08-13 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 164150 (+2340), battle-trigger passes 7810236 (+56195) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[STATE] heartbeat t=2050-08-13 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 166340 (+2190), battle-trigger passes 7889361 (+79125) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[AI] 2050-08-13 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-08-13 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4855.6, morale 50, legit 50, bal -8508, colonies 0, contacts 2
+[STATE] heartbeat t=2050-08-20 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 168050 (+1710), battle-trigger passes 8024419 (+135058) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[STATE] heartbeat t=2050-08-20 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 170330 (+2280), battle-trigger passes 8079241 (+54822) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[STATE] heartbeat t=2050-08-27 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 171877 (+1547), battle-trigger passes 8237522 (+158281) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[AI] 2050-08-20 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-08-20 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-08-20 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-08-20 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-08-20 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-08-20 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-08-20 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-08-20 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4830.4, morale 50, legit 50, bal -8508, colonies 0, contacts 2
+[AI] 2050-08-20 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4830.4, morale 50, legit 50, bal -8508, colonies 0, contacts 2
+[AI] 2050-08-20 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4830.4, morale 50, legit 50, bal -8508, colonies 0, contacts 2
+[AI] 2050-08-20 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4830.4, morale 50, legit 50, bal -8508, colonies 0, contacts 2
+[AI] 2050-08-20 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4830.4, morale 50, legit 50, bal -8508, colonies 0, contacts 2
+[AI] 2050-08-20 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4830.4, morale 50, legit 50, bal -8508, colonies 0, contacts 2
+[AI] 2050-08-20 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4830.4, morale 50, legit 50, bal -8508, colonies 0, contacts 2
+[STATE] heartbeat t=2050-08-27 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 174200 (+2323), battle-trigger passes 8293398 (+55876) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[STATE] heartbeat t=2050-08-27 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 176420 (+2220), battle-trigger passes 8364972 (+71574) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[AI] 2050-08-27 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-08-27 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4812.7, morale 50, legit 50, bal -8897, colonies 0, contacts 2
+[STATE] heartbeat t=2050-09-03 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 178070 (+1650), battle-trigger passes 8506921 (+141949) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[STATE] heartbeat t=2050-09-03 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 180350 (+2280), battle-trigger passes 8561891 (+54970) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[STATE] heartbeat t=2050-09-10 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 181910 (+1560), battle-trigger passes 8720161 (+158270) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[AI] 2050-09-03 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-03 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-03 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-03 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-03 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-03 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-03 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-03 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4799.1, morale 50, legit 50, bal -8897, colonies 0, contacts 2
+[AI] 2050-09-03 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4799.1, morale 50, legit 50, bal -8897, colonies 0, contacts 2
+[AI] 2050-09-03 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4799.1, morale 50, legit 50, bal -8897, colonies 0, contacts 2
+[AI] 2050-09-03 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4799.1, morale 50, legit 50, bal -8897, colonies 0, contacts 2
+[AI] 2050-09-03 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4799.1, morale 50, legit 50, bal -8897, colonies 0, contacts 2
+[AI] 2050-09-03 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4799.1, morale 50, legit 50, bal -8897, colonies 0, contacts 2
+[AI] 2050-09-03 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4799.1, morale 50, legit 50, bal -8897, colonies 0, contacts 2
+[STATE] heartbeat t=2050-09-10 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 184220 (+2310), battle-trigger passes 8776081 (+55920) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[STATE] heartbeat t=2050-09-10 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 186500 (+2280), battle-trigger passes 8846349 (+70268) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[STATE] heartbeat t=2050-09-17 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 188150 (+1650), battle-trigger passes 8990680 (+144331) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[AI] 2050-09-10 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-10 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-10 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-10 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-10 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-10 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-10 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-10 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4774.9, morale 50, legit 50, bal -8897, colonies 0, contacts 2
+[AI] 2050-09-10 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4774.9, morale 50, legit 50, bal -8897, colonies 0, contacts 2
+[AI] 2050-09-10 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4774.9, morale 50, legit 50, bal -8897, colonies 0, contacts 2
+[AI] 2050-09-10 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4774.9, morale 50, legit 50, bal -8897, colonies 0, contacts 2
+[AI] 2050-09-10 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4774.9, morale 50, legit 50, bal -8897, colonies 0, contacts 2
+[AI] 2050-09-10 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4774.9, morale 50, legit 50, bal -8897, colonies 0, contacts 2
+[AI] 2050-09-10 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4774.9, morale 50, legit 50, bal -8897, colonies 0, contacts 2
+[STATE] heartbeat t=2050-09-17 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 190460 (+2310), battle-trigger passes 9046276 (+55596) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[STATE] heartbeat t=2050-09-24 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 192020 (+1560), battle-trigger passes 9204733 (+158457) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[AI] 2050-09-17 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-17 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-17 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-17 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-17 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-17 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-17 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-17 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4770.3, morale 50, legit 50, bal -8897, colonies 0, contacts 2
+[AI] 2050-09-17 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4770.3, morale 50, legit 50, bal -8897, colonies 0, contacts 2
+[AI] 2050-09-17 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4770.3, morale 50, legit 50, bal -8897, colonies 0, contacts 2
+[AI] 2050-09-17 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4770.3, morale 50, legit 50, bal -8897, colonies 0, contacts 2
+[AI] 2050-09-17 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4770.3, morale 50, legit 50, bal -8897, colonies 0, contacts 2
+[AI] 2050-09-17 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4770.3, morale 50, legit 50, bal -8897, colonies 0, contacts 2
+[AI] 2050-09-17 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4770.3, morale 50, legit 50, bal -8897, colonies 0, contacts 2
+[STATE] heartbeat t=2050-09-24 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 194330 (+2310), battle-trigger passes 9260521 (+55788) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[STATE] heartbeat t=2050-09-24 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 196580 (+2250), battle-trigger passes 9324357 (+63836) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[STATE] heartbeat t=2050-10-01 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 198200 (+1620), battle-trigger passes 9473941 (+149584) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[AI] 2050-09-24 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-24 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-24 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-24 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-24 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-24 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-24 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-09-24 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4744, morale 50, legit 50, bal -9273, colonies 0, contacts 2
+[AI] 2050-09-24 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4744, morale 50, legit 50, bal -9273, colonies 0, contacts 2
+[AI] 2050-09-24 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4744, morale 50, legit 50, bal -9273, colonies 0, contacts 2
+[AI] 2050-09-24 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4744, morale 50, legit 50, bal -9273, colonies 0, contacts 2
+[AI] 2050-09-24 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4744, morale 50, legit 50, bal -9273, colonies 0, contacts 2
+[AI] 2050-09-24 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4744, morale 50, legit 50, bal -9273, colonies 0, contacts 2
+[AI] 2050-09-24 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4744, morale 50, legit 50, bal -9273, colonies 0, contacts 2
+[STATE] heartbeat t=2050-10-01 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 200480 (+2280), battle-trigger passes 9529093 (+55152) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[STATE] heartbeat t=2050-10-08 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 202040 (+1560), battle-trigger passes 9687121 (+158028) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[AI] 2050-10-01 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-10-01 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-10-01 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-10-01 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-10-01 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-10-01 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-10-01 United Martian Federation: Defend/Survive — why: Survive tier (existential — losing a war / starving / rebellion) → Defend | act: None: goal met or no legal step | saw: str 10375226.8 vs no threat, morale 0, legit 0, bal 588000, colonies 4, contacts 1
+[AI] 2050-10-01 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4742, morale 50, legit 50, bal -9273, colonies 0, contacts 2
+[AI] 2050-10-01 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4742, morale 50, legit 50, bal -9273, colonies 0, contacts 2
+[AI] 2050-10-01 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4742, morale 50, legit 50, bal -9273, colonies 0, contacts 2
+[AI] 2050-10-01 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4742, morale 50, legit 50, bal -9273, colonies 0, contacts 2
+[AI] 2050-10-01 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4742, morale 50, legit 50, bal -9273, colonies 0, contacts 2
+[AI] 2050-10-01 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4742, morale 50, legit 50, bal -9273, colonies 0, contacts 2
+[AI] 2050-10-01 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 0 vs threat #281 4742, morale 50, legit 50, bal -9273, colonies 0, contacts 2
+[STATE] heartbeat t=2050-10-08 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 204290 (+2250), battle-trigger passes 9741421 (+54300) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[RenderError] AIInspectorWindow threw and was skipped this frame (logged once per unique error). Fix the cause:
+System.InvalidOperationException: Begin("AI Inspector") called while already inside window "Ship Design". Must call End() before starting a new window.
+   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
+   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, Boolean& isActive, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 36
+   at Pulsar4X.Client.AIInspectorWindow.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Windows\AIInspectorWindow.cs:line 44
+   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 498
+[RenderError] Selector threw and was skipped this frame (logged once per unique error). Fix the cause:
+System.InvalidOperationException: Begin("###selector") called while already inside window "Ship Design". Must call End() before starting a new window.
+   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
+   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 52
+   at Pulsar4X.Client.Selector.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\HUD\Selector.cs:line 84
+   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 498
+[RenderError] EntityFilterBar threw and was skipped this frame (logged once per unique error). Fix the cause:
+System.InvalidOperationException: Begin("###entity-filter-bar") called while already inside window "Ship Design". Must call End() before starting a new window.
+   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
+   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 52
+   at Pulsar4X.Client.EntityFilterBar.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\HUD\EntityFilterBar.cs:line 48
+   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 498
+[RenderError] TimeControl threw and was skipped this frame (logged once per unique error). Fix the cause:
+System.InvalidOperationException: Begin("TimeControl") called while already inside window "Ship Design". Must call End() before starting a new window.
+   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
+   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, Boolean& isActive, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 44
+   at Pulsar4X.Client.TimeControl.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\HUD\TimeControl.cs:line 63
+   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 498
+[RenderError] ToolBarWindow threw and was skipped this frame (logged once per unique error). Fix the cause:
+System.InvalidOperationException: Begin("##Toolbar") called while already inside window "Ship Design". Must call End() before starting a new window.
+   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
+   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 52
+   at Pulsar4X.Client.ToolBarWindow.DisplayButtons(String name, List`1 DisplayToolButtons) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\HUD\ToolBarWindow.cs:line 238
+   at Pulsar4X.Client.ToolBarWindow.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\HUD\ToolBarWindow.cs:line 229
+   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 498
+[RenderError] ShipDesignWindow threw and was skipped this frame (logged once per unique error). Fix the cause:
+System.InvalidOperationException: Begin("Ship Design") called while already inside window "Ship Design". Must call End() before starting a new window.
+   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
+   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, Boolean& isActive, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 44
+   at Pulsar4X.Client.ShipDesignWindow.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Windows\ShipDesignWindow.cs:line 213
+   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 498
+[STATE] heartbeat t=2050-10-08 00:00 RUNNING step=604800s selected=(none) ships-in-view=4
+[ENGINE] sensor scans 206570 (+2280), battle-trigger passes 9796303 (+54882) since last beat
+[DETECT] UEF holds 3 contact(s); 4 other-faction ship(s) in-system, detects 2 (2 hidden from you)
+[STATE] ⚠ faults this session: 6 unique (render+input — grep [RenderError]/[InputError])
+[STATE] session summary — faults=6, game-time=2050-10-15 00:00
+=== Session ended 2026-07-14 05:38:19 ===
