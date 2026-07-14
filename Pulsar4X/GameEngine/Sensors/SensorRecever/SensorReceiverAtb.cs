@@ -39,11 +39,28 @@ namespace Pulsar4X.Sensors
         /// Solar arrays use the same code as sensor detection.
         /// </summary>
         [JsonProperty] public bool IsEnergyGen { get; internal set; } = false;
-    
+
+        /// <summary>
+        /// A HARD detection horizon in metres — this receiver detects NOTHING beyond it, regardless of how loud the
+        /// target is. 0 = unlimited (the default; every existing sensor). This is the signature-INDEPENDENT reach cap
+        /// the docs call for (`Sensors/CLAUDE.md`): antenna/signal decide detection WITHIN the horizon, but a very
+        /// loud target can't be seen past it. The colony megasensor sets one so the homeworld can't see the belt/Ceres;
+        /// a ship sensor leaves it 0 (its real reach is ~0.3 Gm, far inside any horizon we'd set → no-op / byte-identical).
+        /// </summary>
+        [JsonProperty] public double MaxDetectionRange_m { get; internal set; } = 0;
 
 
         [JsonConstructor]
         public SensorReceiverAtb() { }
+
+        /// <summary>Horizon-capped overload: the 6-arg receiver PLUS a hard <see cref="MaxDetectionRange_m"/>. A separate
+        /// arity so existing 6-arg templates are byte-identical (the exact-arity binder rule, Weapons gotcha #0); only a
+        /// template that passes the 7th arg (the colony passive-sensor) binds here and gets a horizon.</summary>
+        public SensorReceiverAtb(double peakWaveLength, double bandwidth, double bestSensitivity, double worstSensitivity, double resolution, double scanTime, double maxDetectionRange)
+            : this(peakWaveLength, bandwidth, bestSensitivity, worstSensitivity, resolution, scanTime)
+        {
+            MaxDetectionRange_m = maxDetectionRange < 0 ? 0 : maxDetectionRange;
+        }
 
         //ParserConstrutor
         /// <summary>
@@ -111,6 +128,8 @@ namespace Pulsar4X.Sensors
             WorstSensitivity_kW = db.WorstSensitivity_kW;
             Resolution = db.Resolution;
             ScanTime = db.ScanTime;
+            IsEnergyGen = db.IsEnergyGen;                    // was missing — carry the solar-array flag on clone
+            MaxDetectionRange_m = db.MaxDetectionRange_m;    // carry the detection horizon on clone
         }
         
 

@@ -72,20 +72,26 @@ shrinks-on-Silent, the EMCON ladder) is unchanged — only the absolute reach mo
 number stay in exact agreement. Gauges: `DetectionTuningTests` (ship-vs-ship clears the 0.1 Gm combat floor; reach
 stays under the fog ceiling). Tunable like Combat's `SalvoDamageScale` — one number for the whole detection feel.
 
-**Colony sensors see across the inner-system approaches, but NOT the whole system (revised 2026-07-14 for DevTest fog).** Detection
-range is **linear in antenna size** (`threshold ∝ 1/antenna²`, range `∝ 1/√threshold ∝ antenna`), and the colony's
-Passive Scanner antenna is **2500** vs a ship's **5.5** — ~450× — so the colony detects a ship at **~115 Gm**: past
-Venus (~60 Gm) and close-approaching fleets, but **short of the asteroid belt** (Ceres is ~265+ Gm from Earth). It was
-originally **5000 (~230 Gm)** — a full system-wide megasensor — but the DevTest playtest showed that let the homeworld
-see a rival gunship parked at Ceres, i.e. fog of war didn't matter for the inner system. The developer's revised call:
-**the homeworld is strong early warning for the inner approaches, not omniscience over the belt.** A rival massing at
-Ceres or in deep space is now DARK until it closes — a real "they're coming and we can't see how many" tension — while
-Venus/Luna and any fleet approaching Earth are still spotted early. The ship "tactical bubble" fog (~0.3 Gm) is
-unchanged. Because the 1e6 scale is ONE global knob and the two sensors are locked apart by antenna size, this reach is
-tuned on the **colony sensor's own antenna** (a per-design value), not the global scale. Gauge:
-`DetectionTuningTests.ColonyScanner_IsSystemWideEarlyWarning_ByDesign` (asserts the colony reach still dwarfs a
-warship's AND clears the 10 Gm ship-bubble ceiling — the asymmetry that makes it early-warning holds). To widen or
-narrow the homeworld's horizon, change this one antenna value.
+**Colony sensors have a HARD detection HORIZON so they can't see the whole system (2026-07-14 — the real fix).** The
+homeworld megasensor was seeing a rival gunship parked at **Ceres** (~265 Gm from Earth). Two findings from chasing it:
+1. **Antenna is CLAMPED by the template.** The `passive-sensor` template caps `Antenna Size` at `MaxFormula = 2500`, so
+   a design's antenna value is `min(designValue, 2500)` at instantiation (the L7 template-clamp gotcha). The colony
+   design's antenna was **5000 → clamped to 2500 all along** — so an earlier "cut 5000→2500" data change was a **no-op**
+   (both clamp to 2500). Lesson: check a Property's `MaxFormula` before "tuning" its design value.
+2. **Reach is signature-DEPENDENT, so no antenna value reliably bounds it.** Range scales with `√(target signal)`, so a
+   LOUD military target (the gunship) is detected far past a nominal one — you can't pick an antenna that sees Venus but
+   never a loud ship at Ceres.
+
+**The fix is a hard, signature-INDEPENDENT horizon** (the "deliberate per-design sensor-horizon cap" this doc always
+said was the right tool). `SensorReceiverAtb.MaxDetectionRange_m` (0 = unlimited): `SensorTools.GetDetectedEntites`
+detects **nothing** beyond it however loud the target, and `DetectionRange_m` (the readout/range ring) clamps to it so
+the ring matches the scan. Wired via a 7-arg `SensorReceiverAtb` ctor overload (the 6-arg kept → every other sensor
+byte-identical, Weapons gotcha #0) + the `passive-sensor` template passing **200 Gm** (`2e11`) as the 7th
+`AtbConstrArgs`. So the homeworld sees the inner-system approaches (Venus/Luna/Mars-when-near, closing fleets) but the
+**belt/Ceres (265+ Gm) is DARK** — fog that matters. A ship's passive sensor uses the same template but its real reach
+is ~0.3 Gm, far inside 200 Gm → the horizon never bites → combat detection is byte-identical. To change the homeworld's
+horizon, edit that one `2e11` literal. Gauge: `DetectionTuningTests.ColonyScanner_IsSystemWideEarlyWarning_ByDesign`
+still holds (200 Gm clears the 10 Gm ship-bubble ceiling and dwarfs a warship's ~0.3 Gm).
 
 Detection quality: triangular overlap between sensor's waveform band and signal's waveform band. Signal must overlap the sensor's peak sensitivity region to score high quality.
 

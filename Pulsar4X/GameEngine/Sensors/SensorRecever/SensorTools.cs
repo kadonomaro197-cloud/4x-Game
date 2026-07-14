@@ -47,6 +47,14 @@ namespace Pulsar4X.Sensors
 
                     var detectableProfile = detectableEntity.GetDataBlob<SensorProfileDB>();
                     var distance = detectablePosDB.GetDistanceTo_m(position);
+
+                    // HARD detection horizon: beyond this receiver's MaxDetectionRange_m it detects NOTHING, however
+                    // loud the target — the signature-independent reach cap. Leaves detectionValues[i] at its zero
+                    // default (no contact). 0 = unlimited → skipped (byte-identical for every sensor without a horizon,
+                    // i.e. all ship sensors). This is what keeps the homeworld megasensor from seeing the belt/Ceres.
+                    if (sensorAtb.MaxDetectionRange_m > 0 && distance > sensorAtb.MaxDetectionRange_m)
+                        continue;
+
                     var attentuatedSignal = AttenuatedForDistance(detectableProfile, distance);
                     // Barrage jamming divides the usable signal down (the noise floor is up). > 1 only when a hostile
                     // jammer is in range; otherwise this branch is skipped and the signal is untouched (byte-identical).
@@ -463,6 +471,10 @@ namespace Pulsar4X.Sensors
                 double r = RangeForSignal(emdat.Magnitude, threshold);
                 if (r > bestRange) bestRange = r;
             }
+            // Clamp to the hard horizon so the READOUT (range rings) matches what the scan (GetDetectedEntites) actually
+            // detects — the ring can't promise reach the sensor is hard-capped short of. 0 = unlimited → no clamp.
+            if (receiver.MaxDetectionRange_m > 0 && bestRange > receiver.MaxDetectionRange_m)
+                bestRange = receiver.MaxDetectionRange_m;
             return bestRange;
         }
 

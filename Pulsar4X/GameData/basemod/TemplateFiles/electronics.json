@@ -169,7 +169,7 @@
           "Name": "DatablobArguments",
           "DescriptionFormula": "'(double peakWaveLength, double bandwidth, double bestSensitivity, double worstSensitivity, double resolution, double scanTime)'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('Ideal Detection Wavelength'), PropertyValue('Detection Bandwidth'), PropertyValue('Sensitivity at Ideal Wavelength'), PropertyValue('Sensitivity at Worst Wavelength'), PropertyValue('Resolution'), PropertyValue('Scan Time'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Ideal Detection Wavelength'), PropertyValue('Detection Bandwidth'), PropertyValue('Sensitivity at Ideal Wavelength'), PropertyValue('Sensitivity at Worst Wavelength'), PropertyValue('Resolution'), PropertyValue('Scan Time'), 200000000000)",
           "AttributeType": "Pulsar4X.Sensors.SensorReceiverAtb"
         }
       ]
