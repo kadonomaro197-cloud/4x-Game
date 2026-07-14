@@ -15,6 +15,7 @@ using Pulsar4X.Interfaces;
 using Pulsar4X.Names;
 using Pulsar4X.People;
 using Pulsar4X.Ships;
+using Pulsar4X.Stations;
 using Pulsar4X.Storage;
 using Pulsar4X.Technology;
 using Pulsar4X.Weapons;
@@ -88,19 +89,50 @@ namespace Pulsar4X.Factions
             if (personalityNode != null)
                 faction.SetDataBlob(PersonalityFromJson(personalityNode));
 
+            // DevTest (2026-07-13) — "everything ENABLED": a faction can author a STARTING-ITEMS unlock list (the same
+            // kind of list earth.json uses) so the player can DESIGN and BUILD anything from turn one. LoadFromJson used
+            // to unlock nothing (its colony path is the bare ColonyFactory.CreateColony, with no StartingItems pass like
+            // CreateFromBlueprint has), so a faction had only the tech behind its pre-built designs. This mirrors that
+            // unlock loop: unlock each id into CargoGoods, research any listed tech, and sync unlocked materials into
+            // IndustryDesigns. Runs BEFORE componentDesigns so a design's ResourceCost materials are already unlocked
+            // when ComponentDesigner reads them (gotcha #4). Byte-identical for a faction with no "startingItems" node.
+            var startingItemsToLoad = (JArray?)rootJson["startingItems"];
+            if(startingItemsToLoad != null)
+            {
+                foreach(var item in startingItemsToLoad)
+                {
+                    string id = item.ToString();
+                    factionDataStore.Unlock(id);
+                    if(factionDataStore.Techs.ContainsKey(id))
+                        factionDataStore.IncrementTechLevel(id);
+                    if(factionDataStore.CargoGoods.IsMaterial(id))
+                        factionInfoDB.IndustryDesigns[id] = (IConstructableDesign)factionDataStore.CargoGoods[id];
+                }
+            }
+
+            // DevTest (2026-07-13) — a faction can reference designs by ID from the consolidated mod store
+            // (game.StartingGameData), the SAME store the live colony-blueprint path (ColonyFactory.CreateFromBlueprint)
+            // resolves from. The old per-design files under componentDesigns/ were consolidated into designs/*.json, so
+            // ID-by-store is the current, un-rotted way to author a faction (and the whole point of the "author factions
+            // from data" base). Falls back to the legacy file/dir path when the entry isn't a known ID (backward
+            // compatible). StartResearched is already true for the whole scenario load (set by DefaultStartFactory).
             var componentDesignsToLoad = (JArray?)rootJson["componentDesigns"];
+            if(componentDesignsToLoad != null)
             foreach(var componentDesignToLoad in componentDesignsToLoad)
             {
-                string path = componentDesignToLoad.ToString();
-                string fullPath = Path.Combine(rootDirectory, path);
+                string entry = componentDesignToLoad.ToString();
+                if(game.StartingGameData.ComponentDesigns.ContainsKey(entry))
+                {
+                    ComponentDesignFromJson.Create(faction, factionDataStore, game.StartingGameData.ComponentDesigns[entry]);
+                    continue;
+                }
 
+                string fullPath = Path.Combine(rootDirectory, entry);
                 if(Directory.Exists(fullPath))
                 {
                     var files = Directory.GetFiles(fullPath, "*.json", SearchOption.AllDirectories);
                     foreach(var file in files)
-                    {
                         ComponentDesignFromJson.Create(faction, factionDataStore, file);
-                    }
                 }
                 else
                 {
@@ -109,6 +141,7 @@ namespace Pulsar4X.Factions
             }
 
             var ordnanceDesignsToLoad = (JArray?)rootJson["ordnanceDesigns"];
+            if(ordnanceDesignsToLoad != null)
             foreach(var ordnanceDesignToLoad in ordnanceDesignsToLoad)
             {
                 string path = ordnanceDesignToLoad.ToString();
@@ -128,19 +161,25 @@ namespace Pulsar4X.Factions
                 }
             }
 
+            // Ship designs: same ID-from-store-first, file-fallback pattern (a ship design references component designs
+            // by id, so it MUST be authored after the componentDesigns above — which it is).
             var shipDesignsToLoad = (JArray?)rootJson["shipDesigns"];
+            if(shipDesignsToLoad != null)
             foreach(var shipDesignToLoad in shipDesignsToLoad)
             {
-                string path = shipDesignToLoad.ToString();
-                string fullPath = Path.Combine(rootDirectory, path);
+                string entry = shipDesignToLoad.ToString();
+                if(game.StartingGameData.ShipDesigns.ContainsKey(entry))
+                {
+                    ShipDesignFromJson.Create(faction, factionDataStore, game.StartingGameData.ShipDesigns[entry]);
+                    continue;
+                }
 
+                string fullPath = Path.Combine(rootDirectory, entry);
                 if(Directory.Exists(fullPath))
                 {
                     var files = Directory.GetFiles(fullPath, "*.json", SearchOption.AllDirectories);
                     foreach(var file in files)
-                    {
                         ShipDesignFromJson.Create(faction, factionDataStore, file);
-                    }
                 }
                 else
                 {
@@ -148,19 +187,32 @@ namespace Pulsar4X.Factions
                 }
             }
 
+            // Species: reference a species by ID from the mod store (the base mod ships species-human + species-xenos),
+            // creating it via the blueprint path and linking it to the faction (FactionOwnerID + FactionInfoDB.Species),
+            // exactly as CreateGameCore does. Falls back to the flat per-faction species FILE for the legacy form.
             var speciesToLoad = (JArray?)rootJson["species"];
+            if(speciesToLoad != null)
             foreach(var toLoad in speciesToLoad)
             {
-                string path = toLoad.ToString();
-                string fullPath = Path.Combine(rootDirectory, path);
+                string entry = toLoad.ToString();
+                if(game.StartingGameData.Species.ContainsKey(entry))
+                {
+                    // CreateFromBlueprint hosts the species entity in a StarSystem (as CreateGameCore does); the
+                    // scenario loads systems before factions, so the starting system exists. A species entity isn't
+                    // location-bound (a colony in any system references it), matching the legacy GlobalManager form.
+                    var hostSystem = game.Systems[0];
+                    var speciesEntity = SpeciesFactory.CreateFromBlueprint(hostSystem, game.StartingGameData.Species[entry]);
+                    speciesEntity.FactionOwnerID = faction.Id;
+                    faction.GetDataBlob<FactionInfoDB>().Species.Add(speciesEntity);
+                    continue;
+                }
 
+                string fullPath = Path.Combine(rootDirectory, entry);
                 if(Directory.Exists(fullPath))
                 {
                     var files = Directory.GetFiles(fullPath, "*.json", SearchOption.AllDirectories);
                     foreach(var file in files)
-                    {
                         SpeciesFactory.CreateFromJson(faction, game.GlobalManager, file);
-                    }
                 }
                 else
                 {
@@ -214,6 +266,52 @@ namespace Pulsar4X.Factions
                     colony.GetDataBlob<TeamsHousedDB>().AddTeam(scientistEntity);
 
                     ReCalcProcessor.ReCalcAbilities(colony);
+                }
+            }
+
+            // DevTest (2026-07-13): a faction can be authored with SPACE STATIONS the same declarative way as
+            // colonies (the Kithrin's outer-system developed outpost). Mirrors the colonies block above but hosts on
+            // a body via StationFactory.CreateStation + AddComponent (the station is a generic chassis; its modules
+            // ARE its "developed" capability). A station is manned only when a species + population are given, else it
+            // is an automated platform. Additive/byte-identical: no existing scenario file has a "stations" node.
+            var stationsToLoad = (JArray?)rootJson["stations"];
+            if(stationsToLoad != null)
+            {
+                foreach(var stationToLoad in stationsToLoad)
+                {
+                    var systemId = stationToLoad["systemId"].ToString();
+                    var system = game.Systems.Find(s => s.ID.Equals(systemId));
+                    if(system == null) throw new NullReferenceException("invalid systemId in json");
+                    var location = NameLookup.GetFirstEntityWithName(system, stationToLoad["location"].ToString());
+
+                    Entity species = null;
+                    long population = 0;
+                    var speciesNode = stationToLoad["species"];
+                    if(speciesNode != null)
+                    {
+                        var speciesName = speciesNode["name"].ToString();
+                        species = faction.GetDataBlob<FactionInfoDB>().Species.Find(s => s.GetOwnersName().Equals(speciesName));
+                        if(species == null) throw new NullReferenceException("invalid species name in json");
+                        population = (long?)speciesNode["population"] ?? 0;
+                    }
+
+                    var station = (species != null && population > 0)
+                        ? StationFactory.CreateStation(faction, location, population, species)
+                        : StationFactory.CreateStation(faction, location);
+
+                    var modulesToAdd = (JArray?)stationToLoad["installations"];
+                    if(modulesToAdd != null)
+                    {
+                        foreach(var install in modulesToAdd)
+                        {
+                            var installId = install["id"].ToString();
+                            var amount = (int?)install["amount"] ?? 1;
+                            station.AddComponent(factionInfoDB.InternalComponentDesigns[installId], amount);
+                        }
+                    }
+
+                    LoadCargo(station, factionDataStore, (JArray?)stationToLoad["cargo"]);
+                    ReCalcProcessor.ReCalcAbilities(station);
                 }
             }
 
@@ -308,6 +406,40 @@ namespace Pulsar4X.Factions
 
                 if (entry["atWar"]?.Value<bool>() ?? false)
                     Diplomacy.DeclareWar(faction, target, CasusBelli.ConfrontRival, when);
+            }
+        }
+
+        /// <summary>
+        /// DevTest (2026-07-13) — apply a faction's authored OPENING STRAIN to every colony it owns. The war-strain
+        /// gauges (morale/legitimacy/sustenance) are DERIVED monthly from inputs, so you cannot seed the output number;
+        /// this sets the INPUTS the processors read, so the strain STICKS: a high war-<c>taxRate</c> (morale drag +
+        /// capped income), a sustenance <c>powerDemandPerCapita</c>/<c>foodDemandPerCapita</c> squeeze (shortage →
+        /// morale hit + starvation), and <c>committedBulk</c> workforce tied up in the war effort (fewer hands to build
+        /// with). Reads a faction-level <c>"strain"</c> object; called as a SECOND PASS beside <see cref="ApplyOpeningRelations"/>.
+        /// Defensive/no-throw. Byte-identical for any faction with no <c>"strain"</c> node.
+        /// </summary>
+        public static void ApplyOpeningStrain(Entity faction, JToken strainNode)
+        {
+            if (faction == null || strainNode is not JObject) return;
+            if (!faction.TryGetDataBlob<FactionInfoDB>(out var factionInfo)) return;
+
+            double taxRate       = strainNode["taxRate"]?.Value<double>() ?? -1;
+            double powerDemand   = strainNode["powerDemandPerCapita"]?.Value<double>() ?? 0;
+            double foodDemand    = strainNode["foodDemandPerCapita"]?.Value<double>() ?? 0;
+            long   committedBulk = strainNode["committedBulk"]?.Value<long>() ?? 0;
+
+            foreach (var colony in factionInfo.Colonies)
+            {
+                if (colony == null || !colony.IsValid) continue;
+
+                if (taxRate >= 0 && colony.TryGetDataBlob<ColonyEconomyDB>(out var econ))
+                    econ.TaxRate = taxRate;
+
+                if ((powerDemand > 0 || foodDemand > 0) && colony.TryGetDataBlob<ColonySustenanceDB>(out var sust))
+                    sust.SetDemand(powerDemand, foodDemand);
+
+                if (committedBulk > 0 && colony.TryGetDataBlob<ColonyManpowerDB>(out var manpower))
+                    manpower.CommitBulk(committedBulk);
             }
         }
 

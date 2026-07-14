@@ -48,9 +48,9 @@ namespace Pulsar4X.Client
                     newgameoptions.SetActive(true);
                     this.IsActive = false;
                 }
-                if (ImGui.Button("Quickstart", _buttonSize))
+                if (ImGui.Button("DevTest", _buttonSize))
                 {
-                    NewGameMenu.QuickstartGame();
+                    NewGameMenu.DevTestGame();
                     this.IsActive = false;
                 }
                 if (_uiState.IsGameLoaded)

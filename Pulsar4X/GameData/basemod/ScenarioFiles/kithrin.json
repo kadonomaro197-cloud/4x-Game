@@ -1,0 +1,228 @@
+{
+  "name": "Kithrin Collective",
+  "isNPC": true,
+  "doctrine": {
+    "economic": 0.2,
+    "military": 0.15,
+    "tech": 0.2,
+    "expansion": 0.45
+  },
+  "personality": {
+    "xenophobia": 0.75,
+    "ambition": 0.85,
+    "curiosity": 0.7,
+    "guile": 0.65,
+    "collectivism": 0.9,
+    "aggression": 0.45,
+    "risk": 0.6,
+    "honor": 0.55,
+    "authoritarianism": 0.6,
+    "ruthlessness": 0.55,
+    "zealotry": 0.6,
+    "altruism": 0.35
+  },
+  "startingItems": [
+    "tech-modern-technology",
+    "tech-conventional-engine",
+    "tech-geo-surveyor",
+    "tech-gravitational-surveyor",
+    "stainless-steel-armor",
+    "plastic-armor",
+    "aluminium-armor",
+    "titanium-armor",
+    "general-storage",
+    "warehouse-facility",
+    "spaceport",
+    "cargo-Shuttlebay",
+    "fuel-storage",
+    "battery-storage",
+    "passive-sensor",
+    "beam-fire-control",
+    "cloak-device",
+    "pd-director",
+    "jammer",
+    "warp-stabilizer",
+    "drive-reinforcement",
+    "unit-caliber",
+    "crew-automation",
+    "reactor",
+    "battery-bank",
+    "rtg",
+    "steam-turbine-reactor",
+    "conventional-engine",
+    "scntr-engine",
+    "alcubierre-warp-drive",
+    "refining",
+    "component-construction",
+    "installation-construction",
+    "ship-assembly",
+    "mine",
+    "automine",
+    "research-lab",
+    "research-academy",
+    "intelligence-directorate",
+    "command-berth",
+    "refinery",
+    "factory",
+    "shipyard",
+    "general-cargo-hold",
+    "fuel-cargo-hold",
+    "stainless-steel-fuel-tank",
+    "infrastructure",
+    "space-habitat",
+    "stainless-steel",
+    "rp-1",
+    "methalox",
+    "hydrolox",
+    "ntp",
+    "plastic",
+    "fissile-fuels",
+    "electricity",
+    "hydrocarbons",
+    "iron",
+    "aluminium",
+    "copper",
+    "titanium",
+    "lithium",
+    "chromium",
+    "fissionables",
+    "silicon",
+    "graphite",
+    "tungsten",
+    "nickel",
+    "water",
+    "rare-earth-elements",
+    "regolith",
+    "space-crete",
+    "electronics",
+    "ree-magnetics",
+    "laser-weapon",
+    "railgun-weapon",
+    "flak-weapon",
+    "sensor-hardening-module",
+    "admin-complex",
+    "ship-command",
+    "tech-panel-efficiency",
+    "tech-panel-bandwidth",
+    "tech-panel-density",
+    "solarArray",
+    "local-construction",
+    "launch-complex",
+    "ship-hull",
+    "bunker",
+    "infantry-unit",
+    "armor-unit",
+    "artillery-unit",
+    "troop-bay",
+    "human-frame",
+    "ground-rifle",
+    "ground-magazine",
+    "ground-locomotion",
+    "ground-radar",
+    "ground-plating",
+    "ablative-plating",
+    "reactive-plating",
+    "power-armor",
+    "ground-autocannon",
+    "vehicle-frame",
+    "ground-cannon",
+    "walker-frame",
+    "energy-weapon",
+    "shield-generator",
+    "ward-projector",
+    "reflex-booster",
+    "swarm-frame",
+    "claw-weapon",
+    "deflector-array",
+    "armour-hardening",
+    "ship-magazine",
+    "heat-radiator",
+    "pulse-laser",
+    "siege-railgun",
+    "disruptor-weapon",
+    "plasma-repeater",
+    "point-defense-mount",
+    "missile-launcher",
+    "inertialess-drive",
+    "reactionless-drive"
+  ],
+  "componentDesigns": [
+    "default-design-mine",
+    "default-design-refinery",
+    "default-design-factory",
+    "default-design-local-construction",
+    "default-design-passive-sensor",
+    "default-design-city-hall",
+    "default-design-infrastructure",
+    "default-design-research-lab",
+    "default-design-warehouse"
+  ],
+  "ordnanceDesigns": [],
+  "shipDesigns": [],
+  "species": [
+    "species-xenos"
+  ],
+  "colonies": [],
+  "stations": [
+    {
+      "systemId": "system-sol",
+      "location": "Titan",
+      "species": {
+        "name": "Xenos",
+        "population": 6000000
+      },
+      "installations": [
+        {
+          "id": "default-design-infrastructure",
+          "amount": 12
+        },
+        {
+          "id": "default-design-research-lab",
+          "amount": 2
+        },
+        {
+          "id": "default-design-factory",
+          "amount": 2
+        },
+        {
+          "id": "default-design-refinery",
+          "amount": 2
+        },
+        {
+          "id": "default-design-mine",
+          "amount": 2
+        },
+        {
+          "id": "default-design-warehouse",
+          "amount": 3
+        },
+        {
+          "id": "default-design-passive-sensor",
+          "amount": 1
+        },
+        {
+          "id": "default-design-local-construction",
+          "amount": 1
+        },
+        {
+          "id": "default-design-city-hall",
+          "amount": 1
+        }
+      ],
+      "cargo": [
+        {
+          "id": "iron",
+          "amount": 30000
+        },
+        {
+          "id": "stainless-steel",
+          "amount": 12000
+        },
+        {
+          "id": "aluminium",
+          "amount": 8000
+        }
+      ]
+    }
+  ]
+}
