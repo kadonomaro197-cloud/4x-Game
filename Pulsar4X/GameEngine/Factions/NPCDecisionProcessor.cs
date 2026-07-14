@@ -165,6 +165,11 @@ namespace Pulsar4X.Factions
             // byte-identical until a client/test opts in.
             if (EnableOrderEmission)
                 EmitOrders(factionEntity, factionInfoDB);
+
+            // The AI FLIGHT RECORDER (B4, the observability SPINE): tape this cycle's decision — what it SENSED, what it
+            // DECIDED and why, what it ACTED on — AFTER the decision + (gated) action, so the record is complete. Pure
+            // observability, ALWAYS-ON (you watch the brain decide before you flip the order gates), bounded ring buffer.
+            AIDecisionRecorder.Record(factionEntity, factionInfoDB);
         }
 
         /// <summary>

@@ -35,6 +35,44 @@ namespace Pulsar4X.Factions
             return $"{name}: obj {obj.Objective}/{obj.Tier} | why: {why} | last: {last}";
         }
 
+        /// <summary>
+        /// The AI flight recorder TAPE (docs/ai/DEVTEST-CONQUEST-SANDBOX-DESIGN.md §4) — the last <paramref name="maxLines"/>
+        /// decisions a faction made, newest last, one <c>[AI]</c> line each. Reads the per-faction
+        /// <see cref="AIDecisionRecordDB"/>. Empty string for a faction with no tape (a player, or an NPC that hasn't
+        /// ticked yet). The client flushes these to the rolling <c>game_logs/</c> pages and shows them in the Inspector —
+        /// the SAME data on both surfaces. Pure, missing-blob-tolerant.
+        /// </summary>
+        public static string DecisionTape(Entity faction, int maxLines = 12)
+        {
+            if (faction == null || !faction.TryGetDataBlob<AIDecisionRecordDB>(out var tape) || tape.Records.Count == 0)
+                return "";
+
+            string name = SafeName(faction);
+            var sb = new System.Text.StringBuilder();
+            int start = System.Math.Max(0, tape.Records.Count - System.Math.Max(1, maxLines));
+            for (int i = start; i < tape.Records.Count; i++)
+                sb.AppendLine(DecisionLine(tape.Records[i], name));
+            return sb.ToString().TrimEnd();
+        }
+
+        /// <summary>
+        /// Format one <see cref="AIDecisionRecord"/> as a single readable <c>[AI]</c> line: WHEN, WHO, the objective
+        /// it DECIDED and why, what it ACTED on, and the fog-limited picture it SENSED — so a decision is reviewable
+        /// standalone ("it chose Defend because it saw a threat 2× its strength").
+        /// </summary>
+        public static string DecisionLine(AIDecisionRecord r, string factionName)
+        {
+            if (r == null) return "";
+            string why = string.IsNullOrEmpty(r.Reason) ? "—" : r.Reason;
+            string act = string.IsNullOrEmpty(r.ActionDetail) ? r.ActionKind : $"{r.ActionKind}: {r.ActionDetail}";
+            string threat = r.ThreatFactionId >= 0
+                ? $"threat #{r.ThreatFactionId} {r.ThreatStrength:0.#}"
+                : "no threat";
+            return $"[AI] {r.When:yyyy-MM-dd} {factionName}: {r.Objective}/{r.Tier} — why: {why} | act: {act} "
+                 + $"| saw: str {r.OwnStrength:0.#} vs {threat}, morale {r.Morale:0}, legit {r.Legitimacy:0}, "
+                 + $"bal {r.Balance:0}, colonies {r.ColonyCount}, contacts {r.Contacts}";
+        }
+
         private static string SafeName(Entity faction)
         {
             try { return faction.GetName(faction.Id); } catch { return "a faction"; }
