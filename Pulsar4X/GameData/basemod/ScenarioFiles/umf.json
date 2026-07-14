@@ -170,7 +170,11 @@
     "default-design_solarpanel",
     "default-design-battery-2t",
     "default-design-reactor-2t",
-    "default-design-NTR1.8"
+    "default-design-NTR1.8",
+    "default-design-infantry",
+    "default-design-armor",
+    "default-design-artillery",
+    "default-design-troop-bay"
   ],
   "ordnanceDesigns": [],
   "shipDesigns": [
@@ -446,6 +450,10 @@
         {
           "designId": "default-ship-design-gunship",
           "name": "MFS Olympus"
+        },
+        {
+          "designId": "default-ship-design-gunship",
+          "name": "MFS Tharsis"
         }
       ]
     },
