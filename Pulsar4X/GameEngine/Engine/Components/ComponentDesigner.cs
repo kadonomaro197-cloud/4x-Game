@@ -253,14 +253,42 @@ namespace Pulsar4X.Components
 
         internal ChainedExpression DescriptionFormula { get; set; }
 
+        // Cached plain-text fallback, filled once if the component-level DescriptionFormula
+        // can't be evaluated as an NCalc expression (twin of ComponentDesignProperty.Description).
+        private string _descriptionFallback;
+
         public string Description
         {
             get
             {
                 if (DescriptionFormula == null)
                     return "";
-                else
+                if (_descriptionFallback != null)
+                    return _descriptionFallback;
+                try
+                {
                     return DescriptionFormula.StrResult;
+                }
+                catch
+                {
+                    // COSMETIC text must never throw mid-render. An apostrophe in a plain-English
+                    // description (NCalc reads ' as a string delimiter) crashes the whole client by
+                    // corrupting the ImGui window stack. Fall back to the unwrapped raw string and
+                    // cache it. See ComponentDesignProperty.Description for the full rationale.
+                    var raw = DescriptionFormula.RawExpressionString;
+                    if (string.IsNullOrEmpty(raw))
+                    {
+                        _descriptionFallback = "";
+                    }
+                    else
+                    {
+                        var s = raw.Trim();
+                        if (s.Length >= 2 && s[0] == '\'' && s[s.Length - 1] == '\'')
+                            s = s.Substring(1, s.Length - 2);
+                        _descriptionFallback = s.Replace("''", "'");
+                    }
+                    return _descriptionFallback;
+                }
             }
         }
 

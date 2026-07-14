@@ -21,8 +21,13 @@ namespace Pulsar4X.Factions
     /// </summary>
     public class NPCDecisionProcessor : IHotloopProcessor
     {
-        public TimeSpan RunFrequency => TimeSpan.FromDays(30);
-        public TimeSpan FirstRunOffset => TimeSpan.FromDays(5);
+        // The brain ticks DAILY so its decision-making is responsive and observable (the flight recorder tapes a
+        // record every cycle → you watch the AI think day-by-day, the DevTest's whole point). The SLOW political
+        // passes (diplomatic drift, intel-ledger decay, treaty policy, espionage mirror) stay on a ~monthly
+        // sub-cadence inside Tick (gated on Day == 1) so their per-cycle magnitudes — e.g. the ±5 relation drift on a
+        // −100..+100 track — remain calibrated for a monthly step rather than saturating in three weeks. See Tick.
+        public TimeSpan RunFrequency => TimeSpan.FromDays(1);
+        public TimeSpan FirstRunOffset => TimeSpan.FromDays(1);
         public Type GetParameterType => typeof(FactionInfoDB);
 
         /// <summary>
@@ -126,30 +131,44 @@ namespace Pulsar4X.Factions
         /// </summary>
         private static void Tick(Entity factionEntity, FactionInfoDB factionInfoDB)
         {
-            // Reactive diplomacy (docs/DIPLOMACY-DESIGN.md "Are we good?"): a faction's feelings DRIFT each cycle
-            // based on what it can read of its neighbours, turning the previously-dead ReactiveDiplomacy table into
-            // a live loop. Runs before the doctrine step so it happens every cycle regardless of doctrine weights.
-            RunDiplomaticDrift(factionEntity);
+            // The brain ticks DAILY (RunFrequency = 1 day) so the objective decision + orders + flight recorder are
+            // responsive and observable. The SLOW political layer, however, is TUNED for a monthly step (the ±5
+            // relation drift, the ledger's year-long decay, one-treaty-per-cycle détente). Running those daily would
+            // saturate a −100..+100 relation track in three weeks, so they run only on the first of each month —
+            // ~monthly cadence preserved regardless of tick rate (mirrors ResearchProcessor's Day == 1 pattern).
+            bool isMonthlyCycle = true;
+            var nowDate = factionEntity.Manager?.Game?.TimePulse.GameGlobalDateTime;
+            if (nowDate.HasValue)
+                isMonthlyCycle = nowDate.Value.Day == 1;
+
+            // Reactive diplomacy (docs/DIPLOMACY-DESIGN.md "Are we good?"): a faction's feelings DRIFT based on what it
+            // can read of its neighbours, turning the previously-dead ReactiveDiplomacy table into a live loop. MONTHLY
+            // — the ±5-per-cycle delta is calibrated for a 30-day step (see cadence note above).
+            if (isMonthlyCycle)
+                RunDiplomaticDrift(factionEntity);
 
             // Phase-3.1: keep the persistent Information Ledger LIVE — Confirm+sample the rivals we currently detect,
             // decay the rest. A real state write, so it's behind its own default-off gate (byte-identical until opted
-            // in). Runs alongside drift (every cycle, independent of doctrine) so the trend record is continuous.
-            if (EnableIntelLedger)
+            // in). MONTHLY (the ledger's Stale-after decay is a year-scale clock, not a daily one).
+            if (EnableIntelLedger && isMonthlyCycle)
                 UpdateInformationLedger(factionEntity);
 
             // The Organism decision (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II Phase 2): read the needs-ladder, pick
             // an objective from tier × doctrine × personality, and commit it through the hysteresis engine. 2.4b
-            // settles + STORES the objective (the DECISION).
+            // settles + STORES the objective (the DECISION). DAILY — the hysteresis engine already stops thrashing.
             UpdateStrategicObjective(factionEntity, factionInfoDB);
 
             // Reactive POLITICS (Phase 3.3): seek a pact with a qualifying neighbour. A real behaviour change (a
             // signed treaty), so it's behind its own default-off gate — byte-identical until a client/test opts in.
-            if (EnableDiplomaticProposals)
+            // MONTHLY — one détente move per month, not per day (its guards prevent re-warm churn but the CADENCE is
+            // meant to be political-slow).
+            if (EnableDiplomaticProposals && isMonthlyCycle)
                 RunTreatyPolicy(factionEntity);
 
             // The espionage MIRROR (E5): NPCs spy on their rivals — including the player — so counter-intel is a
-            // standing decision, not optional. Gated (default off) → byte-identical until opted in.
-            if (EnableEspionageMirror)
+            // standing decision, not optional. Gated (default off) → byte-identical until opted in. MONTHLY — an op
+            // takes 90 days, so a monthly re-task cadence is plenty.
+            if (EnableEspionageMirror && isMonthlyCycle)
                 RunEspionageMirror(factionEntity, factionInfoDB);
 
             // Phase-4.2b: the galaxy crisis — if a faction has ASCENDED, the NPCs unite against it (declare war).
