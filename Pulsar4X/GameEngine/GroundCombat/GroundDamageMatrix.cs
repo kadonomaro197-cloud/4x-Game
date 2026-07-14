@@ -21,7 +21,7 @@ namespace Pulsar4X.GroundCombat
     /// The dodge×shield part is a pure multiplier (≤ 1) via <see cref="Matchup"/>; the flat armour part needs the
     /// ABSOLUTE per-source damage so it lives in <see cref="ArmourSoak"/> (the resolver calls it once per attacker→target
     /// contribution, AFTER the matchup multiplier). ALL constants are flagged for the developer. Applied by
-    /// <c>GroundForcesProcessor.ResolveRegionCombat</c>. Design: docs/GROUND-UNIT-DESIGNER-DESIGN.md §6b system ①.
+    /// <c>GroundForcesProcessor.ResolveRegionCombat</c>. Design: docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md §6b system ①.
     /// </summary>
     public static class GroundDamageMatrix
     {

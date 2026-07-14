@@ -8,7 +8,7 @@ namespace Pulsar4X.Tests
     /// depend on the ATTACKER's flavour: dodge beats aimed fire but not area/melee; a shield soaks physical but energy
     /// bleeds through. This is what turns the Clone (shield/soak) and the Zergling (dodge) — identical on paper as
     /// "survivor" archetypes — into opposite units with opposite counters. Pure math → runs in CI.
-    /// Design: docs/GROUND-UNIT-DESIGNER-DESIGN.md §6b system ①.
+    /// Design: docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md §6b system ①.
     /// </summary>
     [TestFixture]
     public class GroundDamageMatrixTests

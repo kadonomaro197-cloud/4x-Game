@@ -10,7 +10,7 @@ namespace Pulsar4X.Tests
     /// sub-formations — a "Battle Group" holding a "Front Line" and an "Artillery" sub-group, each with its OWN stance,
     /// all commanded as one block. This is the ground echo of `FleetDB` nesting via `TreeHierarchyDB` with per-sub-fleet
     /// doctrine, and the structural half of Combined Arms. Engine-only → runs in CI.
-    /// Design: docs/GROUND-UNIT-DESIGNER-DESIGN.md §6d.
+    /// Design: docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md §6d.
     /// </summary>
     [TestFixture]
     public class GroundSubFormationTests

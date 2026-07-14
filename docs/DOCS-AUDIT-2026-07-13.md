@@ -172,7 +172,7 @@ Verdicts: **KEEP** (healthy) · **KEEP-TRIM** (small fix/trim) · **STALE-FIX** 
 | GROUND | `docs/GLOBAL-HEX-GRID-DESIGN.md` | KEEP-TRIM | OK | Keep as the active G6b-3 tracker now. On G6b-3 completion: (1) delete or archive docs/HEX- |
 | GROUND | `docs/GROUND-CITY-AND-WARMAP-DESIGN.md` | KEEP-TRIM | VERBOSE | Refresh the As-of stamp and flip the status line to 'W-track built; C-track C1 substrate b |
 | GROUND | `docs/GROUND-COMBAT-MAP-DESIGN.md` | KEEP-TRIM | VERBOSE | Split concerns: keep this as a pure DESIGN-LOCK (the model, schema, the two LOCKED princip |
-| GROUND | `docs/ground/GROUND-UNIT-DESIGNER-DESIGN.md` | STALE-FIX | VERBOSE | Keep in place as the ground-unit-designer SoT, but refresh the As-of stamp and flip the bu |
+| GROUND | `docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md` | STALE-FIX | VERBOSE | Keep in place as the ground-unit-designer SoT, but refresh the As-of stamp and flip the bu |
 | GROUND | `docs/HEX-GROUND-AND-ORDERS-DESIGN.md` | KEEP-TRIM | OK | Split by track. Fold the H (hex-ground) sections into docs/GLOBAL-HEX-GRID-DESIGN.md as th |
 | DESIGNER | `docs/economy/CAPABILITY-BUILD-PLAN.md` | STALE-FIX | OK | Keep as the build spine but do a reconciliation pass against reality: mark slice 4.6 (espi |
 | DESIGNER | `docs/economy/COMPONENT-DESIGNER-CATEGORIES.md` | KEEP-TRIM | OK | Keep as the map half of the two-doc designer reference, but add a short 'Build state as of |
