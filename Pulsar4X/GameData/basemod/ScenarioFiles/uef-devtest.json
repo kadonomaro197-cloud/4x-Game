@@ -133,7 +133,8 @@
     "logistics-office",
     "space-port",
     "naval-academy",
-    "intelligence-directorate"
+    "intelligence-directorate",
+    "food-production"
   ],
   "componentDesigns": [
     "default-design-mine",
@@ -144,7 +145,9 @@
     "default-design-city-hall",
     "default-design-infrastructure",
     "default-design-research-lab",
-    "default-design-warehouse"
+    "default-design-warehouse",
+    "default-design-agri-complex",
+    "default-design-hydroponics-arcology"
   ],
   "ordnanceDesigns": [],
   "shipDesigns": [],
@@ -195,6 +198,10 @@
         {
           "id": "default-design-warehouse",
           "amount": 2
+        },
+        {
+          "id": "default-design-agri-complex",
+          "amount": 2
         }
       ],
       "cargo": [
@@ -220,5 +227,10 @@
         }
       ]
     }
-  ]
+  ],
+  "strain": {
+    "foodDemandPerCapita": 0.00001,
+    "powerDemandPerCapita": 0,
+    "committedBulk": 0
+  }
 }

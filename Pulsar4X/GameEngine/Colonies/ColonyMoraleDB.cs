@@ -47,6 +47,12 @@ namespace Pulsar4X.Colonies
         public const double MaxPowerShortagePenalty = 30.0;
         /// <summary>Morale penalty at total food shortage — starvation bites harder than a brownout. M5.</summary>
         public const double MaxFoodShortagePenalty = 40.0;
+        /// <summary>Food quality at/below which food is plain sustenance — no morale bonus, just no starvation. M5c.</summary>
+        public const double FoodQualityBaseline = 1.0;
+        /// <summary>Morale BONUS per 1.0 of food quality above the baseline — better food, happier people. M5c.</summary>
+        public const double FoodQualityWeight = 20.0;
+        /// <summary>Cap on the food-quality morale bonus — a gourmet food operation can offset a harsh world, no more. M5c.</summary>
+        public const double MaxFoodQualityBonus = 40.0;
         /// <summary>Max fraction of population that migrates per month at morale 0 (out) or 100 (in).</summary>
         public const double MaxMigrationRate = 0.05;
 
@@ -155,6 +161,19 @@ namespace Pulsar4X.Colonies
             morale += food;
             factorsOut?.Add("food", food);
 
+            // Food QUALITY (M5c) — a BONUS above merely "not starving": good food actively lifts morale, scaled by how
+            // much of the demand is actually met (a starving colony gets no quality bonus, however fancy the recipe). At
+            // the 1.0 baseline — or no food produced (quality 0) — this is 0. Dialling food quality up on the colony's
+            // farms is the lever that offsets a harsh-world conditions penalty.
+            double foodQuality = 0.0;
+            if (inp.FoodQuality > FoodQualityBaseline)
+            {
+                double raw = Math.Min(MaxFoodQualityBonus, (inp.FoodQuality - FoodQualityBaseline) * FoodQualityWeight);
+                foodQuality = raw * (1.0 - Clamp01(inp.FoodShortage));
+            }
+            morale += foodQuality;
+            factorsOut?.Add("food quality", foodQuality);
+
             if (morale < 0.0) morale = 0.0;
             if (morale > 100.0) morale = 100.0;
             return morale;
@@ -194,5 +213,7 @@ namespace Pulsar4X.Colonies
         public double PowerShortage;
         /// <summary>Food shortage fraction 0 (none)..1 (total). M5.</summary>
         public double FoodShortage;
+        /// <summary>Colony average food QUALITY (0 = no food; 1.0 = adequate baseline; &gt;1 = a morale bonus). M5c.</summary>
+        public double FoodQuality;
     }
 }

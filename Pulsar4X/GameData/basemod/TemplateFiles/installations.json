@@ -2,6 +2,69 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "food-production",
+      "Name": "Food Production",
+      "Formulas": {
+        "Description": "'Agricultural and hydroponic facilities that feed a colony. Output ends starvation; dial the food QUALITY up (exponentially pricier) for an active morale bonus - the offset a harsh-world colony needs. Automation trades credits for a smaller workforce.'",
+        "Mass": "PropertyValue('Food Output') * 0.1 + PropertyValue('Food Quality') * PropertyValue('Food Quality') * PropertyValue('Food Quality') * 200 + PropertyValue('Automation') * 500",
+        "Volume": "[Mass]",
+        "HTK": "0.5",
+        "CrewReq": "Max(1, PropertyValue('Food Output') * 0.02 * (1 - PropertyValue('Automation')))",
+        "ResearchCost": "[Mass] * 2",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.4",
+        "plastic": "[Mass] * 0.2",
+        "water": "[Mass] * 0.2",
+        "aluminium": "[Mass] * 0.2"
+      },
+      "ComponentType": "Facility",
+      "MountType": "ShipCargo, PlanetInstallation",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "Food Output",
+          "Units": "units/day",
+          "DescriptionFormula": "'How much food this facility produces per day. The colony sums all its food output against its population food demand; cover the demand and starvation (a heavy morale penalty) ends.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "20000",
+          "MinFormula": "100",
+          "StepFormula": "100",
+          "PropertyFormula": "3000"
+        },
+        {
+          "Name": "Food Quality",
+          "DescriptionFormula": "'How GOOD the food is. 1.0 = adequate (no starvation, no bonus). Above 1.0 it is an active MORALE BONUS - people are happier when they eat well. EXPONENTIALLY expensive (cost grows with the cube of quality), so a gourmet arcology is a serious commitment.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "3.0",
+          "MinFormula": "0.5",
+          "StepFormula": "0.1",
+          "PropertyFormula": "1.0"
+        },
+        {
+          "Name": "Automation",
+          "DescriptionFormula": "'Fraction of the workforce replaced by automation (0 = all hands, 0.9 = mostly automated). Higher automation needs fewer colonists to run but costs more to build.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "0.9",
+          "MinFormula": "0",
+          "StepFormula": "0.1",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "food-atb",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Food Output'), PropertyValue('Food Quality'))",
+          "AttributeType": "Pulsar4X.Colonies.FoodProductionAtbDB"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "ship-hull",
       "Name": "Ship Hull",
       "Formulas": {

@@ -2,6 +2,32 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-agri-complex",
+      "Name": "Agricultural Complex",
+      "TemplateId": "food-production",
+      "Properties": [
+        { "Key": "Food Output", "Value": 5000 },
+        { "Key": "Food Quality", "Value": 1.0 },
+        { "Key": "Automation", "Value": 0 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-hydroponics-arcology",
+      "Name": "Hydroponics Arcology",
+      "TemplateId": "food-production",
+      "Properties": [
+        { "Key": "Food Output", "Value": 5000 },
+        { "Key": "Food Quality", "Value": 2.5 },
+        { "Key": "Automation", "Value": 0.3 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-alcubierre-2k",
       "Name": "Alcuberi-White 2k",
       "TemplateId": "alcubierre-warp-drive",

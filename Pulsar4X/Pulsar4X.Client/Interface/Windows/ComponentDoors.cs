@@ -134,6 +134,7 @@ namespace Pulsar4X.Client
             ["research-lab"] = ("Civic", "Development"),
             ["research-academy"] = ("Civic", "Development"),
             ["naval-academy"] = ("Civic", "Development"),
+            ["food-production"] = ("Civic", "Development"),
 
             // 10. Command
             ["admin-complex"] = ("Command", "Command"),

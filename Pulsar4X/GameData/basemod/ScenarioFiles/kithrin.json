@@ -145,7 +145,8 @@
     "point-defense-mount",
     "missile-launcher",
     "inertialess-drive",
-    "reactionless-drive"
+    "reactionless-drive",
+    "food-production"
   ],
   "componentDesigns": [
     "default-design-mine",
@@ -156,7 +157,8 @@
     "default-design-city-hall",
     "default-design-infrastructure",
     "default-design-research-lab",
-    "default-design-warehouse"
+    "default-design-warehouse",
+    "default-design-hydroponics-arcology"
   ],
   "ordnanceDesigns": [],
   "shipDesigns": [],
@@ -207,6 +209,10 @@
         },
         {
           "id": "default-design-city-hall",
+          "amount": 1
+        },
+        {
+          "id": "default-design-hydroponics-arcology",
           "amount": 1
         }
       ],

@@ -44,6 +44,44 @@ namespace Pulsar4X.Extensions
             return comfort;
         }
 
+        /// <summary>
+        /// Total food produced per day by installed components carrying <see cref="Pulsar4X.Colonies.FoodProductionAtbDB"/>,
+        /// scaled by component health (a bomb-damaged farm makes less). This is the food SUPPLY the SustenanceProcessor
+        /// weighs against demand. Zero when no installation makes food (M5c).
+        /// </summary>
+        public static double GetTotalFoodOutput(this ComponentInstancesDB componentInstances)
+        {
+            double food = 0.0;
+            foreach (var design in componentInstances.GetDesignsByType(typeof(Pulsar4X.Colonies.FoodProductionAtbDB)))
+            {
+                double perComponent = design.GetAttribute<Pulsar4X.Colonies.FoodProductionAtbDB>().FoodOutput;
+                foreach (var component in componentInstances.GetComponentsBySpecificDesign(design.UniqueID).Where(c => c.IsEnabled))
+                    food += perComponent * component.HealthPercent;
+            }
+            return food;
+        }
+
+        /// <summary>
+        /// The colony's average food QUALITY — the OUTPUT-WEIGHTED mean quality across installed food components (so a
+        /// tiny gourmet dome doesn't outweigh the bulk farms that actually feed everyone). Health-scaled like the output.
+        /// Returns 0 when there is no food production (the caller reads that as "no quality bonus"). M5c.
+        /// </summary>
+        public static double GetAverageFoodQuality(this ComponentInstancesDB componentInstances)
+        {
+            double weightedQuality = 0.0, totalOutput = 0.0;
+            foreach (var design in componentInstances.GetDesignsByType(typeof(Pulsar4X.Colonies.FoodProductionAtbDB)))
+            {
+                var atb = design.GetAttribute<Pulsar4X.Colonies.FoodProductionAtbDB>();
+                foreach (var component in componentInstances.GetComponentsBySpecificDesign(design.UniqueID).Where(c => c.IsEnabled))
+                {
+                    double output = atb.FoodOutput * component.HealthPercent;
+                    weightedQuality += atb.FoodQuality * output;
+                    totalOutput += output;
+                }
+            }
+            return totalOutput > 0.0 ? weightedQuality / totalOutput : 0.0;
+        }
+
         public static long GetPopulationSupportValue(this ComponentInstancesDB componentInstances, Entity bodyEntity)
         {
             var infrustructureDesigns = componentInstances.GetDesignsByType(typeof(PopulationSupportAtbDB));

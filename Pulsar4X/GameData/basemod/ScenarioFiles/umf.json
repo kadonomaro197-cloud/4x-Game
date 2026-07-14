@@ -145,7 +145,8 @@
     "point-defense-mount",
     "missile-launcher",
     "inertialess-drive",
-    "reactionless-drive"
+    "reactionless-drive",
+    "food-production"
   ],
   "componentDesigns": [
     "default-design-mine",
@@ -157,6 +158,8 @@
     "default-design-infrastructure",
     "default-design-research-lab",
     "default-design-warehouse",
+    "default-design-agri-complex",
+    "default-design-hydroponics-arcology",
     "default-design-ship-hull-heavy",
     "default-design-passive-sensor-s50",
     "default-design-laser-weapon",
@@ -220,6 +223,10 @@
         {
           "id": "default-design-warehouse",
           "amount": 2
+        },
+        {
+          "id": "default-design-hydroponics-arcology",
+          "amount": 1
         }
       ],
       "cargo": [
@@ -284,6 +291,10 @@
         {
           "id": "default-design-warehouse",
           "amount": 1
+        },
+        {
+          "id": "default-design-hydroponics-arcology",
+          "amount": 1
         }
       ],
       "cargo": [
@@ -339,6 +350,10 @@
         },
         {
           "id": "default-design-warehouse",
+          "amount": 1
+        },
+        {
+          "id": "default-design-hydroponics-arcology",
           "amount": 1
         }
       ],
@@ -396,6 +411,10 @@
         {
           "id": "default-design-warehouse",
           "amount": 1
+        },
+        {
+          "id": "default-design-hydroponics-arcology",
+          "amount": 1
         }
       ],
       "cargo": [
@@ -409,7 +428,7 @@
   "strain": {
     "taxRate": 0.3,
     "powerDemandPerCapita": 0,
-    "foodDemandPerCapita": 0,
+    "foodDemandPerCapita": 0.00001,
     "committedBulk": 20000
   },
   "fleets": [

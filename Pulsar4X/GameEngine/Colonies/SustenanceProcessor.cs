@@ -4,6 +4,7 @@ using Pulsar4X.Engine;
 using Pulsar4X.Interfaces;
 using Pulsar4X.Energy;
 using Pulsar4X.Stations;
+using Pulsar4X.Extensions;   // GetTotalFoodOutput (food supply) extension on ComponentInstancesDB
 
 namespace Pulsar4X.Colonies
 {
@@ -50,10 +51,12 @@ namespace Pulsar4X.Colonies
             double powerSupply = province.TryGetDataBlob<EnergyGenAbilityDB>(out var egen) ? egen.TotalOutputMax : 0.0;
             sust.PowerShortage = ColonySustenanceDB.Shortage(powerDemand, powerSupply);
 
-            // Food: demand = pop × per-capita; supply = the food cargo good (not yet defined → 0). Harmless while
-            // food demand is 0; the food good + supply read is the local follow-up.
+            // Food (M5c): demand = pop × per-capita; supply = the host's installed FOOD PRODUCTION components
+            // (agri-domes / hydroponics carrying FoodProductionAtbDB), health-scaled. Was hardcoded 0 — which made ANY
+            // food demand an unwinnable 100% shortage. Now a colony that builds enough food output ends the shortage.
             double foodDemand = pop * sust.PerCapitaFoodDemand;
-            double foodSupply = 0.0;
+            double foodSupply = province.TryGetDataBlob<Pulsar4X.Datablobs.ComponentInstancesDB>(out var comps)
+                ? comps.GetTotalFoodOutput() : 0.0;
             sust.FoodShortage = ColonySustenanceDB.Shortage(foodDemand, foodSupply);
         }
 
