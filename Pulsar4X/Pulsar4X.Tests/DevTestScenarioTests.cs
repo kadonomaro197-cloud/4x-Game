@@ -5,6 +5,7 @@ using Pulsar4X.Colonies;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
 using Pulsar4X.GroundCombat;
+using Pulsar4X.Industry;
 using Pulsar4X.Modding;
 
 namespace Pulsar4X.Tests
@@ -253,6 +254,98 @@ namespace Pulsar4X.Tests
             // Input 3: UMF owns no transport SHIP yet → the rung's "build one" condition holds.
             Assert.That(ConquerResolver.FactionOwnsTransport(FactionState.Snapshot(umfEntity)), Is.False,
                 "UMF owns no transport ship yet, so the BuildTransport rung's precondition holds.");
+        }
+
+        [Test]
+        [Description("MARS-AS-CAPITAL + the ship-build fix (the developer's 'develop up Mars … give it gas', and the "
+                     + "resolution of the flagged 'UMF may not be able to build ships' finding). The UMF capital Mars is "
+                     + "now sized as a real war homeworld — many shipyards/foundries/mines/refineries, research labs + "
+                     + "universities, an intelligence directorate, a governance ministry — with ENOUGH infrastructure to "
+                     + "run it near full efficiency. This is the live test of the colony-infrastructure system: it asserts "
+                     + "(1) Mars runs at high infra efficiency (provided ≥ required), (2) its shipyards provide a real "
+                     + "ship-assembly production line, and (3) FeasibilityOracle.CanQueue now PASSES for both a warship and "
+                     + "the troop transport — so the AI can actually build the navy and the invasion carrier a conquest "
+                     + "needs. Prints the gauge readings so a red run names the exact gate (efficiency / line / CanQueue).")]
+        public void DevTest_UMF_CapitalMars_RunsAtHighEfficiency_AndCanBuildShips()
+        {
+            var game = NewGame();
+            DevTestStartFactory.CreateDevTest(
+                game, ScenarioDir, new List<string> { "uef-devtest.json", "umf.json", "kithrin.json" });
+
+            var umfEntity = game.Factions.Values.First(f =>
+                f != null && f.IsValid && f.HasDataBlob<FactionInfoDB>()
+                && f.GetDataBlob<FactionInfoDB>().IsNPC
+                && f.GetDataBlob<FactionInfoDB>().Colonies.Count >= 4);
+            var umf = umfEntity.GetDataBlob<FactionInfoDB>();
+
+            // Mars is the capital: the UMF colony with the largest population (120 M — far above Luna/Venus/Ceres).
+            var mars = umf.Colonies.Where(c => c != null && c.IsValid)
+                .OrderByDescending(c => c.GetDataBlob<ColonyInfoDB>().Population.Values.Sum())
+                .First();
+
+            // Gauge 1 — the infrastructure system: the capital is sized to run near full (provided ≥ required → 1.0).
+            Assert.That(mars.TryGetDataBlob<InfrastructureDB>(out var infra), Is.True,
+                "Mars has no InfrastructureDB — the recalc didn't run on load.");
+            TestContext.WriteLine($"[mars-infra] provided={infra.CapacityProvided:N0} required={infra.CapacityRequired:N0} "
+                + $"efficiency={infra.Efficiency:F3}");
+            Assert.That(infra.Efficiency, Is.GreaterThan(0.9),
+                $"Mars capital efficiency {infra.Efficiency:F3} is low — its infrastructure is undersized for the "
+                + "industry placed on it (raise default-design-infrastructure amount in umf.json).");
+
+            // Gauge 2 — the shipyards yield a ship-assembly line (the industry the conquest loop mass-produces on).
+            Assert.That(mars.TryGetDataBlob<IndustryAbilityDB>(out var industry), Is.True,
+                "Mars has no IndustryAbilityDB — no installation created a production line.");
+            int shipAssemblyLines = 0, totalAssemblyRate = 0;
+            foreach (var line in industry.ProductionLines.Values)
+                if (line.IndustryTypeRates.TryGetValue("ship-assembly", out var r)) { shipAssemblyLines++; totalAssemblyRate += r; }
+            TestContext.WriteLine($"[mars-industry] lines={industry.ProductionLines.Count} "
+                + $"ship-assembly-lines={shipAssemblyLines} total-assembly-rate={totalAssemblyRate}");
+            Assert.That(shipAssemblyLines, Is.GreaterThan(0),
+                "no shipyard ship-assembly line on Mars — the capital can't assemble ships.");
+
+            // Gauge 3 — the fix: FeasibilityOracle.CanQueue passes for a warship AND the troop transport on Mars.
+            Assert.That(umf.IndustryDesigns.ContainsKey("default-ship-design-gunship"), Is.True,
+                "the gunship isn't a buildable IndustryDesign on UMF.");
+            Assert.That(umf.IndustryDesigns.ContainsKey("default-ship-design-trooper"), Is.True,
+                "the trooper isn't a buildable IndustryDesign on UMF.");
+            var marsState = ColonyState.Of(mars);
+            bool canGunship = FeasibilityOracle.CanQueue(marsState, umf.IndustryDesigns["default-ship-design-gunship"], umf);
+            bool canTrooper = FeasibilityOracle.CanQueue(marsState, umf.IndustryDesigns["default-ship-design-trooper"], umf);
+            TestContext.WriteLine($"[mars-canqueue] gunship={canGunship} trooper={canTrooper}");
+            Assert.That(canGunship, Is.True,
+                "UMF Mars cannot queue a WARSHIP — the ship-build gate (crew/capacity after infra scaling) still blocks it.");
+            Assert.That(canTrooper, Is.True,
+                "UMF Mars cannot queue the TROOP TRANSPORT — the invasion carrier is unbuildable, so the conquest loop stalls.");
+        }
+
+        [Test]
+        [Description("PROPORTIONAL KITHRIN (the developer's 'the same logic should PROPORTIONALLY apply to the Kithrin'). "
+                     + "The Kithrin Collective's Titan outpost is a developed alien capital-in-miniature: its own foundries, "
+                     + "deep bores, research labs + a Collective Nexus university, an intelligence directorate, and a naval "
+                     + "yard. Asserts the station loaded with a real industrial base — an IndustryAbilityDB with a "
+                     + "ship-assembly line from its shipyard — proving the proportional buildout's modules resolved and "
+                     + "wired (the gotcha-#10 sensor for the Kithrin capital designs).")]
+        public void DevTest_Kithrin_Titan_IsAProportionalDevelopedCapital()
+        {
+            var game = NewGame();
+            DevTestStartFactory.CreateDevTest(
+                game, ScenarioDir, new List<string> { "uef-devtest.json", "umf.json", "kithrin.json" });
+
+            var kithrin = game.Factions.Values
+                .Where(f => f != null && f.IsValid && f.HasDataBlob<FactionInfoDB>())
+                .Select(f => f.GetDataBlob<FactionInfoDB>())
+                .First(i => i.IsNPC && i.Stations.Count > 0);
+
+            var titan = kithrin.Stations.First(s => s != null && s.IsValid);
+            Assert.That(titan.TryGetDataBlob<IndustryAbilityDB>(out var industry), Is.True,
+                "the Kithrin Titan station has no IndustryAbilityDB — its industry modules didn't wire.");
+            int shipAssemblyLines = industry.ProductionLines.Values
+                .Count(l => l.IndustryTypeRates.ContainsKey("ship-assembly"));
+            TestContext.WriteLine($"[kithrin-industry] lines={industry.ProductionLines.Count} ship-assembly-lines={shipAssemblyLines}");
+            Assert.That(industry.ProductionLines.Count, Is.GreaterThan(3),
+                "the Kithrin outpost has too few production lines — the proportional industrial buildout didn't land.");
+            Assert.That(shipAssemblyLines, Is.GreaterThan(0),
+                "the Kithrin outpost has no ship-assembly line — its naval yard module didn't resolve.");
         }
     }
 }

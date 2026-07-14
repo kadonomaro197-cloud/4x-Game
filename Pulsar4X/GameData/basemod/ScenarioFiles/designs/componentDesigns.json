@@ -1017,5 +1017,106 @@
       "Name": "Ground Radar",
       "TemplateId": "ground-radar"
     }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-valles-mine",
+      "Name": "Valles Marineris Deep Mine",
+      "TemplateId": "mine",
+      "Properties": [
+        { "Key": "Area", "Value": 5000000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-meridiani-refinery",
+      "Name": "Meridiani Refinery Complex",
+      "TemplateId": "refinery",
+      "Properties": [
+        { "Key": "Size", "Value": 10000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-olympus-shipyard",
+      "Name": "Olympus Naval Yards",
+      "TemplateId": "shipyard",
+      "Properties": [
+        { "Key": "Slip Size", "Value": 25000 },
+        { "Key": "Crew Size", "Value": 40000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-olympus-university",
+      "Name": "Olympus University",
+      "TemplateId": "research-academy",
+      "Properties": [
+        { "Key": "Class Size", "Value": 100 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-ares-directorate",
+      "Name": "Ares Intelligence Directorate",
+      "TemplateId": "intelligence-directorate",
+      "Properties": [
+        { "Key": "Op Capacity", "Value": 10 },
+        { "Key": "Counter Intel Rating", "Value": 60 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-mars-high-command",
+      "Name": "Martian High Command",
+      "TemplateId": "command-berth",
+      "Properties": [
+        { "Key": "Grade", "Value": 10 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-federation-ministry",
+      "Name": "Ministry of the Federation",
+      "TemplateId": "admin-complex",
+      "Properties": [
+        { "Key": "Office Space", "Value": 2000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-kithrin-nexus",
+      "Name": "Kithrin Collective Nexus",
+      "TemplateId": "research-academy",
+      "Properties": [
+        { "Key": "Class Size", "Value": 50 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-kithrin-deep-mine",
+      "Name": "Kithrin Reclamation Bore",
+      "TemplateId": "mine",
+      "Properties": [
+        { "Key": "Area", "Value": 2000000 }
+      ]
+    }
   }
 ]
