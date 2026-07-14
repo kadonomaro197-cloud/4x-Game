@@ -3,7 +3,8 @@ using NUnit.Framework;
 using Pulsar4X.Engine;
 using Pulsar4X.Engine.Factories;   // ComponentDesignFromJson
 using Pulsar4X.Factions;
-using Pulsar4X.Components;          // ComponentDesign, ComponentInstance, ComponentMountType
+using Pulsar4X.Components;          // ComponentDesign, ComponentInstance
+using Pulsar4X.DataStructures;      // ComponentMountType (enum)
 using Pulsar4X.Datablobs;          // ComponentInstancesDB (namespace ≠ folder)
 using Pulsar4X.Colonies;
 using Pulsar4X.Modding;
