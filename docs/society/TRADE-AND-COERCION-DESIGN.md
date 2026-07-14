@@ -30,6 +30,40 @@ Trade is the **conspicuous empty column.** You're not inventing a foreign concep
 
 ---
 
+## 0b. Reality check — how deep is the trade system TODAY (and why rung zero comes first)
+
+*Added 2026-07-14 after a code read of the economy, because you can't design the bite before you know what's there to bite. Grounded in `docs/economy/RESOURCES-AND-MATERIALS-DESIGN.md` + the three-agent survey.*
+
+**There are two economies, and only one is deep.**
+
+- **The "make things" economy — deep and working.** Mine → refine → build runs every game-day (`Industry/IndustryProcessor.cs`): 15 differentiated minerals, 9 refined-material recipes, finished goods that pull on the chain, infrastructure efficiency throttling all three stages, even material-specific armor absorption physics. This half is well-built.
+- **The "trade things" economy — shallow, and mostly intra-faction.** This is the half we want to weaponize, and today:
+  - **Prices are essentially fixed.** An item's worth is a constant `CreditValue` in JSON. The freight market optimizes *delivery routes* against player-set *desired stock levels* (`LogisticsProcessor.cs:128-152`) — it does **not** discover a price that floats with scarcity. There is no "their fuel price spikes when I embargo it" — that spike has nowhere to come from yet.
+  - **Commerce is intra-faction.** The freight market hauls between *your own* colonies. Across faction lines there's only an access on/off flag (`LogisticsAccess`) + a flat, gated-off "1000/agreement" trickle (`TradeIncome.cs:19`, `EnablePayout=false`). **No goods trade for money across factions** — the only cross-faction money move in the whole game is espionage theft (`StealFunds`).
+  - **Nothing has a standing need.** A colony consumes nothing to keep running once built — no fuel, no food, no upkeep materials (`RESOURCES-AND-MATERIALS-DESIGN.md:186` "no ongoing resource consumption"). **You cannot strangle someone who doesn't need to breathe.**
+
+**So rung zero — before ANY trade-war lever can bite at all — is three foundations:**
+1. **A standing need** (something a colony must keep importing to function). Without it, cutting supply is a punch at air.
+2. **Real cross-faction commerce** (goods one way, money the other). The thing tariffs tax and embargoes cut.
+3. **A scarcity-responsive price** (the gauge that moves when supply tightens).
+
+These three ARE "establishing the trade system." The build order (below) is revised to put them first.
+
+### The bite model — LOCKED 2026-07-14: exponential PAIN on a linear ratio the AI reads
+
+The developer's two constraints — *bite should feel exponential* AND *the AI must use it intelligently* — pull against each other, and the resolution is the load-bearing design idea of this whole pillar:
+
+> **Don't make the *damage* an exponential knob. Make it an exponential *pain curve* riding on a simple, linear number both sides read: the coverage ratio.**
+
+The **coverage ratio** = *(what a colony is getting) ÷ (what it needs)* of a good it depends on. Bounded 0…1. Fully supplied = 1.0; half-supplied = 0.5; cut off ≈ 0. It does **four jobs at once**, which is why it's the keystone quantity:
+
+- **It's the dependency map** (§A.1) — the battlefield, per pair, per good.
+- **It's the embargo's target** — an embargo/blockade drives the victim's ratio down.
+- **It's the axis the exponential PAIN rides on** — pain (price spike → production loss → morale/unrest) is ~nothing at 0.9 coverage, stings at 0.6, and falls off a cliff below ~0.3. The steep curve is where "exponential" lives — in the *consequence*, not a raw damage number.
+- **It's the AI's decision input** — and this is the payoff. A coverage ratio is *legible and monotonic*, so the NPC brain can reason about it exactly as `GrowEconomyResolver` already reasons about desired-vs-actual stockpiles today: "fuel coverage fell to 0.4 and is still dropping → seek an alt-supplier / build domestic capacity / sue for peace / retaliate." An AI **cannot** reason about "you took 4,000 abstract economic damage"; it **can** reason about "I'm 40% covered on a thing I need." The player suffers the curve; the AI plays the flat, readable variable underneath it. That is what makes the bite both brutal and intelligently-counterable.
+
+---
+
 ## PART A — TRADE AS ECONOMIC WARFARE
 
 ### A.1 The battlefield is the dependency map (this is "range and position")
@@ -215,10 +249,12 @@ What made Fallout's conversations sing, mapped to Pulsar:
 
 Trade and presence share the same three enablers (cross-faction plumbing, a derived territory read, the reactive feed loop), so build those once and both pillars light up.
 
+**Rung 0 (the true foundation — added 2026-07-14, see §0b): give the economy something to strangle.** Before any lever bites, a colony must *need* an ongoing import. Smallest slice: pick ONE standing need (ship fuel is the natural first — it's already produced and consumed by movement) and make a colony/fleet draw it down over time so a supply gap is a real thing. *Gauge:* cut the fuel supply and a fleet's readiness (or a colony's industry) measurably degrades. Without this rung, everything below is a punch at air.
+
 1. **Cross-faction money + priced cross-faction cargo** — add `Ledger.Transfer(from,to,amount)`; make a cross-faction cargo order book payment. *Gauge:* a test that moves goods A→B and asserts money moved B→A. Smallest thing that makes "trade" real.
-2. **The dependency accumulator** — a per-pair, per-good running ledger of who-bought-what. *Gauge:* after N cycles, the reading matches the goods that flowed. This is the battlefield map (§A.1).
+2. **The dependency accumulator + coverage ratio** — a per-pair, per-good running ledger of who-bought-what, expressed as the **coverage ratio** (got ÷ needed, the §0b keystone). *Gauge:* after N cycles the reading matches the goods that flowed, and a colony denied a needed good shows a coverage ratio falling toward 0. This is the battlefield map (§A.1) AND the number the AI reads.
 3. **The tariff/embargo scalar** — a rate + embargo latch on `RelationshipState`; the cross-faction cargo path reads it (tariff → revenue + higher price; embargo → route denied). *Gauge:* an embargo zeroes the flow and a shortage term appears on the buyer's colony morale.
-4. **The morale/legitimacy wire** — add the supply-shortage term to `ColonyMoraleDB`. *Gauge:* a sustained embargo drives a dependent colony toward the rebellion threshold. **This is the "trade damage is real damage" proof.**
+4. **The morale/legitimacy wire + the pain curve** — add the supply-shortage term to `ColonyMoraleDB`, driven by the coverage ratio through the **exponential pain curve** (§0b: flat above ~0.9, steep below ~0.3). *Gauge:* a sustained embargo drives a dependent colony toward the rebellion threshold, and the pain is negligible at high coverage but catastrophic once coverage collapses. **This is the "trade damage is real damage" proof AND the exponential-bite proof.**
 5. **The derived territory read + the presence feed loop** — "claim = my colonies' systems"; each cycle scan the contact table for hostile presence and feed `ReactiveDiplomacy` (wire `RelationDelta(FleetNearBorder)` off 0; call `Overture`). *Gauge:* a loud fleet parked over a rival colony fires an `AreWeGoodProbe`; the same fleet dark fires nothing.
 6. **The "station / show-the-flag / blockade" posture order + intimidation term** — a deliberate presence order; a superior hostile presence applies a morale/legitimacy pressure (and *backfires* under a militarist government). *Gauge:* pressure appears loud, vanishes dark, inverts sign under militarism.
 7. **The negotiation scene (C2)** — the observation/overture → **player-response scored-choice model** (options gated by trade-leverage §A + presence-leverage §B + diplomat skill + intel) → a `ResultModal`-based conversation UI. *Gauge:* the same encounter reaches ≥3 distinct outcomes on different leverage/paths.
@@ -237,13 +273,16 @@ Follow the repo rule: **one slice, push, wait for CI green, then the next.** Eve
 - **Presence = pressure, gated by visibility** — the EMCON loud/dark choice IS the message; pressure is a bluff/credibility gamble with a real grave-rung; it backfires under a militarist regime.
 - **The negotiation scene is the convergence interface** — trade + presence + espionage + diplomat skill all spend into one Fallout-style branching scene with many outcomes; hidden information (bought with intel) makes it a reading game.
 - **The NPC mirror is a co-requisite for all three**, not a later polish.
+- **The bite = exponential PAIN on a linear coverage ratio** (§0b, LOCKED 2026-07-14) — the ratio (got ÷ needed) is what the AI reads; the exponential lives in the pain curve on top of it. Damage is never a raw exponential knob.
+- **Rung 0 first: the economy must have a standing need** (§0b) before any lever can bite. Nothing to strangle = no trade war.
+- **No solo economic-victory** (developer, 2026-07-14) — a dominant player does NOT win by dependency; instead the rivals **UNITE against him**, reusing the existing `GalaxyCrisis` coalition-vs-ascendant trigger fired on economic dominance. (Far-down-the-line; the point is entanglement creates *pressure and coalitions*, not a solo win button.)
 
 **Open (decide when we build):**
-- Tariff/embargo math — how fast dependency accrues, how hard a shortage bites, calibration so a trade war *bleeds* over months rather than flipping overnight.
+- Tariff/embargo math — the exact coverage-ratio→pain curve shape (§0b) and how fast dependency accrues, calibrated so a trade war *bleeds* over months rather than flipping overnight.
 - Whether "territory" stays derived-from-colonies (cheap v1) or eventually earns a real sovereignty/border model (needed for cleaner presence + colonization-rights deals).
 - Presence-pressure formula — the exact weighting of perceived-strength × proximity × loudness, and the backfire coefficient vs. the militarism dial.
 - Negotiation scene scope — how many response verbs (Persuade/Intimidate/Bribe/Appeal/Deceive) ship in v1, and how deep the leader-agenda reveal goes before espionage is built.
-- Victory condition — does "everyone depends on you and no rival can afford to fight" register as an economic-dominance win, mirroring the influence pillar's conversion win?
+- The coalition trigger — what threshold of economic dominance wakes the `GalaxyCrisis` "rivals unite" response, and how it reads a player's dependency web (far-down-the-line).
 
 ---
 
