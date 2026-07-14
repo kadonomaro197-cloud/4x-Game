@@ -82,9 +82,15 @@ namespace Pulsar4X.Tests
             Assert.That(ObjectiveSelector.SelectWithReason(NeedTier.Stabilize, peaceful, null, atWarAndWinning: true).objective,
                 Is.EqualTo(StrategicObjective.Consolidate), "a peaceful faction doesn't press even a winnable war");
 
-            // SURVIVE tier stays Defend even when winning — the war footing is Stabilize-only (recover out of crisis first).
-            Assert.That(ObjectiveSelector.SelectWithReason(NeedTier.Survive, warlike, null, atWarAndWinning: true).objective,
-                Is.EqualTo(StrategicObjective.Defend), "existential crisis is attended before any offensive");
+            // SURVIVE tier + winning + warlike + homeland NOT in rebellion → presses the offensive. A hostile-world
+            // faction (Mars/Venus) is pinned at Survive by its conditions morale penalty; gating Conquer above Survive
+            // would mean it could never invade (the DevTest UMF). A dominant, warlike, WINNING power presses its war.
+            Assert.That(ObjectiveSelector.SelectWithReason(NeedTier.Survive, warlike, null, atWarAndWinning: true, homelandInRebellion: false).objective,
+                Is.EqualTo(StrategicObjective.Conquer), "a winning warlike power presses its war even from Survive when its homeland isn't in revolt");
+
+            // ...but SURVIVE + open REBELLION at home → Defend (recover first; don't invade while the capital revolts).
+            Assert.That(ObjectiveSelector.SelectWithReason(NeedTier.Survive, warlike, null, atWarAndWinning: true, homelandInRebellion: true).objective,
+                Is.EqualTo(StrategicObjective.Defend), "a rebellion at home is attended before any offensive");
         }
 
         [Test]

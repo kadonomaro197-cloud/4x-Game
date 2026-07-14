@@ -298,9 +298,12 @@ namespace Pulsar4X.Factions
             // faction not at war (or losing, or peaceful) is byte-identical.
             var (atWar, enemyStrength) = NeedsLadder.WarStanding(factionEntity);
             bool atWarAndWinning = atWar && FactionRollup.MilitaryStrength(factionEntity) >= enemyStrength;
+            // A hostile-world faction (Mars/Venus) is pinned at Survive by the conditions morale penalty, so the war
+            // footing must reach Survive too — but NOT while the homeland is in open rebellion (recover first then).
+            bool homelandInRebellion = NeedsLadder.InRebellion(factionEntity);
 
             // Phase-5.2 decision-log: take the choice AND the reason tracing it to the driving input.
-            var (chosen, reason) = ObjectiveSelector.SelectWithReason(tier, factionInfoDB.Doctrine, personality, atWarAndWinning);
+            var (chosen, reason) = ObjectiveSelector.SelectWithReason(tier, factionInfoDB.Doctrine, personality, atWarAndWinning, homelandInRebellion);
 
             // Target selection (which rival to Conquer) is the 2.4c refinement; keep -1 (none) for now.
             // Phase-2.5: the commit DWELL scales with Ambition — a high-Ambition faction renews an expansion push

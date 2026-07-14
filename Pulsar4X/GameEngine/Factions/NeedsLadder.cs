@@ -116,7 +116,7 @@ namespace Pulsar4X.Factions
         }
 
         /// <summary>True if any of the faction's colonies is currently in open rebellion.</summary>
-        private static bool InRebellion(Entity factionEntity)
+        public static bool InRebellion(Entity factionEntity)
         {
             if (factionEntity == null || !factionEntity.TryGetDataBlob<FactionInfoDB>(out var info))
                 return false;

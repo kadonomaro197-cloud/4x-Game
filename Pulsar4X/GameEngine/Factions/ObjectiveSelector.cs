@@ -29,19 +29,27 @@ namespace Pulsar4X.Factions
         /// <summary>
         /// The WAR-FOOTING overload: same as <see cref="SelectWithReason(NeedTier,DoctrineVector,PersonalityDB)"/>, but
         /// a faction that is AT WAR AND WINNING (<paramref name="atWarAndWinning"/>) doesn't wait for prosperity to
-        /// attack. At the <see cref="NeedTier.Stabilize"/> tier — recovered out of existential crisis but not yet the
-        /// dominant, content, rich faction that <see cref="NeedTier.Ambition"/> requires — a military-led or aggressive
-        /// belligerent presses the offensive (<see cref="StrategicObjective.Conquer"/>) instead of only consolidating.
-        /// This is the link that turns a declared, winnable war into an actual invasion for a recovering power (without
-        /// it, Conquer is reachable ONLY from Ambition, so a battered-but-strong aggressor never attacks). Everything
-        /// else — Survive still recovers first, a losing/peaceful war still consolidates — is unchanged, so a faction
-        /// not (at war and winning) is byte-identical to the 3-arg call.
+        /// attack. A military-led or aggressive belligerent presses the offensive (<see cref="StrategicObjective.Conquer"/>)
+        /// from the <see cref="NeedTier.Stabilize"/> tier — AND from <see cref="NeedTier.Survive"/> too, as long as its
+        /// homeland is NOT in open rebellion (<paramref name="homelandInRebellion"/> false). This is deliberate: a
+        /// faction based on HOSTILE worlds (Mars/Venus) carries a permanent conditions morale penalty that can pin it at
+        /// the Survive tier forever, so gating Conquer behind "morale recovered" means it could never invade at all —
+        /// the DevTest UMF, exactly. A dominant, warlike power that is WINNING presses its war despite domestic strain;
+        /// only a LOSING war (excluded by <paramref name="atWarAndWinning"/>) or an actual REBELLION at home keeps it on
+        /// defense (recover first — you don't invade while your capital is in open revolt). Without the war footing,
+        /// Conquer is reachable ONLY from Ambition (thriving + rich + dominant), so a battered-but-strong aggressor never
+        /// attacks. A faction not (at war and winning) is byte-identical to the 3-arg call.
         /// </summary>
         public static (StrategicObjective objective, string reason) SelectWithReason(
-            NeedTier tier, DoctrineVector doctrine, PersonalityDB personality, bool atWarAndWinning)
+            NeedTier tier, DoctrineVector doctrine, PersonalityDB personality, bool atWarAndWinning, bool homelandInRebellion = false)
         {
-            if (tier == NeedTier.Stabilize && atWarAndWinning && WantsWar(doctrine, personality, out var why))
-                return (StrategicObjective.Conquer, $"Stabilize tier + at war and winning: {why} → press the offensive (Conquer)");
+            bool warFootingTier = tier == NeedTier.Stabilize
+                || (tier == NeedTier.Survive && !homelandInRebellion);
+            if (warFootingTier && atWarAndWinning && WantsWar(doctrine, personality, out var why))
+            {
+                string tierNote = tier == NeedTier.Survive ? "Survive tier (strained but winning + no revolt)" : "Stabilize tier";
+                return (StrategicObjective.Conquer, $"{tierNote} + at war and winning: {why} → press the offensive (Conquer)");
+            }
             return SelectWithReason(tier, doctrine, personality);
         }
 
