@@ -1511,23 +1511,39 @@ namespace Pulsar4X.Combat
         }
 
         /// <summary>All live ships in a fleet, recursing into sub-fleets (fleet components).</summary>
+        /// <summary>Hard cap on fleet-tree recursion depth. Real fleets nest a component or two deep; a walk that
+        /// ever reaches this is a MALFORMED tree (a sub-fleet that is its own ancestor — a cycle). Without this cap
+        /// such a cycle recurses forever and WEDGES the combat hotloop (game-time freezes, no throw) — the exact
+        /// hang-class the FleetWindow parent-walk already had to guard (Client CLAUDE.md). Cheap (an int counter, no
+        /// allocation, so CombatPerformanceTests is unaffected); it bails + logs ONCE instead of hanging. 64 is far
+        /// above any legitimate fleet nesting.</summary>
+        private const int MaxFleetTreeDepth = 64;
+        private static bool _fleetCycleLogged;
+
         public static List<Entity> GetFleetShips(Entity fleet)
         {
             var result = new List<Entity>();
-            CollectShips(fleet, result);
+            CollectShips(fleet, result, 0);
             return result;
         }
 
-        private static void CollectShips(Entity fleet, List<Entity> into)
+        private static void CollectShips(Entity fleet, List<Entity> into, int depth)
         {
             if (fleet == null || !fleet.IsValid || !fleet.TryGetDataBlob<FleetDB>(out var fleetDB)) return;
+            if (depth >= MaxFleetTreeDepth)
+            {
+                if (!_fleetCycleLogged) { _fleetCycleLogged = true;
+                    CombatLog($"WARNING: fleet tree exceeded depth {MaxFleetTreeDepth} at {FleetLabel(fleet)} — a CYCLIC/self-nested fleet was skipped (would otherwise hang combat). Fix the fleet hierarchy."); }
+                return;
+            }
             foreach (var child in fleetDB.Children)
             {
                 if (child == null || !child.IsValid) continue;
+                if (child.Id == fleet.Id) continue;            // a fleet that lists itself as a child — skip the cycle
                 if (child.HasDataBlob<ShipInfoDB>())
                     into.Add(child);
                 else if (child.HasDataBlob<FleetDB>())
-                    CollectShips(child, into); // sub-fleet (fleet component)
+                    CollectShips(child, into, depth + 1); // sub-fleet (fleet component)
             }
         }
 
@@ -1544,13 +1560,19 @@ namespace Pulsar4X.Combat
             // actually carries a Firepower/Toughness bonus (every existing combat fixture is the tripwire).
             double cmdrFire = FleetCommanderMult(fleet, BonusCategory.Firepower);
             double cmdrTough = FleetCommanderMult(fleet, BonusCategory.Toughness);
-            CollectCombatShips(fleet, result, cmdrFire, cmdrTough);
+            CollectCombatShips(fleet, result, cmdrFire, cmdrTough, 0);
             return result;
         }
 
-        private static void CollectCombatShips(Entity fleet, List<CombatShip> into, double cmdrFire, double cmdrTough)
+        private static void CollectCombatShips(Entity fleet, List<CombatShip> into, double cmdrFire, double cmdrTough, int depth)
         {
             if (fleet == null || !fleet.IsValid || !fleet.TryGetDataBlob<FleetDB>(out var fleetDB)) return;
+            if (depth >= MaxFleetTreeDepth)   // cyclic/self-nested fleet — bail before it hangs combat (see CollectShips)
+            {
+                if (!_fleetCycleLogged) { _fleetCycleLogged = true;
+                    CombatLog($"WARNING: fleet tree exceeded depth {MaxFleetTreeDepth} at {FleetLabel(fleet)} — a CYCLIC/self-nested fleet was skipped (would otherwise hang combat). Fix the fleet hierarchy."); }
+                return;
+            }
             // This node's posture applies to ships DIRECTLY in it; a sub-fleet (component) applies its OWN. The
             // flagship-commander multiplier rides on top of the doctrine posture for every ship in the fleet.
             double fpMult = FleetDoctrine.FirepowerMult(fleet) * cmdrFire;
@@ -1558,10 +1580,11 @@ namespace Pulsar4X.Combat
             foreach (var child in fleetDB.Children)
             {
                 if (child == null || !child.IsValid) continue;
+                if (child.Id == fleet.Id) continue;            // a fleet that lists itself as a child — skip the cycle
                 if (child.HasDataBlob<ShipInfoDB>())
                     into.Add(new CombatShip(child, fpMult, toughMult));
                 else if (child.HasDataBlob<FleetDB>())
-                    CollectCombatShips(child, into, cmdrFire, cmdrTough); // sub-component → own doctrine, same commander
+                    CollectCombatShips(child, into, cmdrFire, cmdrTough, depth + 1); // sub-component → own doctrine, same commander
             }
         }
 

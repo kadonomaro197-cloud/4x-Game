@@ -119,6 +119,9 @@ namespace Pulsar4X.Client
         static DateTime _lastRunningGameTime = DateTime.MinValue;
         static int _simStallBeats;
         static bool _simStallReported;
+        // Dedicated previous-beat liveness counters for the stall check (independent of DetectionSnapshot's copies,
+        // whose update ordering vs the heartbeat is not guaranteed), so "still climbing?" compares to the LAST beat.
+        static long _stallPrevScan, _stallPrevTick;
 
         public static void Heartbeat(Game game, StarSystem system, string selectedName)
         {
@@ -142,10 +145,34 @@ namespace Pulsar4X.Client
                         _simStallBeats++;
                         if (_simStallBeats >= 2 && !_simStallReported)   // ~2 quiet heartbeats of a frozen clock
                         {
+                            // The DECISIVE discriminator: are the engine liveness counters STILL MOVING? If the
+                            // battle-trigger / sensor-scan counts changed since the last beat, the sim is GRINDING
+                            // through a heavy tick (slow-at-scale — a perf problem); if they're frozen too, it's a
+                            // TRUE WEDGE (deadlock / infinite loop) in the named processor. Plus the SCALE (fleets /
+                            // in-combat / ships) so a recurrence tells us how big the fight was when it stalled.
+                            long scans = SensorScan.ScanCount, ticks = CombatEngagement.TickCount;
+                            bool climbing = scans != _stallPrevScan || ticks != _stallPrevTick;
+                            int fleets = 0, inCombat = 0, ships = 0;
+                            try
+                            {
+                                if (system != null)
+                                {
+                                    var fl = system.GetAllEntitiesWithDataBlob<Pulsar4X.Fleets.FleetDB>();
+                                    fleets = fl.Count;
+                                    foreach (var f in fl)
+                                        if (f.IsValid && f.HasDataBlob<FleetCombatStateDB>()) inCombat++;
+                                    ships = system.GetAllEntitiesWithDataBlob<ShipInfoDB>().Count;
+                                }
+                            }
+                            catch { /* a diagnostic must never throw */ }
+
                             Line("SIM-STALL", "game-time FROZEN at " + tp.GameGlobalDateTime.ToString("yyyy-MM-dd HH:mm")
                                 + " while RUNNING — the sim thread is WEDGED (a freeze the frame watchdog can't see). "
-                                + "Last processor the sim entered: '" + Pulsar4X.Engine.ManagerSubPulse.GlobalCurrentProcess
-                                + "' — the hang is in that processor.");
+                                + "Last processor the sim entered: '" + Pulsar4X.Engine.ManagerSubPulse.GlobalCurrentProcess + "'. "
+                                + "scans=" + scans + " ticks=" + ticks + " ("
+                                + (climbing ? "STILL CLIMBING → SLOW-AT-SCALE heavy tick, not a true wedge — a PERF problem"
+                                            : "FROZEN too → a TRUE WEDGE, deadlock/infinite loop in that processor") + "). "
+                                + "scale: fleets=" + fleets + " in-combat=" + inCombat + " ships=" + ships + " in view.");
                             _simStallReported = true;
                         }
                     }
@@ -155,6 +182,9 @@ namespace Pulsar4X.Client
                         _simStallBeats = 0;
                         if (_simStallReported) { Line("SIM-STALL", "sim recovered — clock advancing again."); _simStallReported = false; }
                     }
+                    // Snapshot the liveness counters each beat so the NEXT stall check compares to THIS beat's values.
+                    _stallPrevScan = SensorScan.ScanCount;
+                    _stallPrevTick = CombatEngagement.TickCount;
                 }
 
                 CheckForTeleports(system);
