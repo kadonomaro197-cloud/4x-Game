@@ -28,7 +28,10 @@
         {
           "Name": "Resisted Effect",
           "DescriptionFormula": "'Which hazard effect this resists, as the HazardEffectType enum value (SensorJam = 3).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "5",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "3"
         },
         {
@@ -583,7 +586,10 @@
         {
           "Name": "Resisted Effect",
           "DescriptionFormula": "'Which hazard effect this resists, as the HazardEffectType enum value (WarpInhibit = 5).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "5",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "5"
         },
         {
@@ -641,7 +647,10 @@
         {
           "Name": "Resisted Effect",
           "DescriptionFormula": "'Which hazard effect this resists, as the HazardEffectType enum value (MovementDrag = 4).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "5",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "4"
         },
         {

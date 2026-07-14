@@ -125,7 +125,7 @@
           "Name": "Emissitivity",
           "Units": "%",
           "DescriptionFormula": "'How emissive radiators are (tech)'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "1",
           "MinFormula": "0",
           "StepFormula": "0.1",
@@ -402,7 +402,10 @@
           "Name": "Tracking",
           "Units": "",
           "DescriptionFormula": "'How well it follows an evasive target (0..1). A railgun is ballistic, so near zero.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1",
+          "MinFormula": "0",
+          "StepFormula": "0.05",
           "PropertyFormula": "0.05"
         },
         {
@@ -477,14 +480,20 @@
           "Name": "Tracking",
           "Units": "",
           "DescriptionFormula": "'How well it follows an evasive target (0..1). Ballistic, so near zero — and recoil cuts it further on a light hull.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1",
+          "MinFormula": "0",
+          "StepFormula": "0.05",
           "PropertyFormula": "0.05"
         },
         {
           "Name": "Recoil",
           "Units": "kg",
           "DescriptionFormula": "'How hard the gun kicks its own ship each shot. On a light hull this throws the aim off (lower effective tracking = chassisMass/(chassisMass+Recoil)); a heavy warship barely notices.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "500000",
+          "MinFormula": "0",
+          "StepFormula": "1000",
           "PropertyFormula": "50000"
         },
         {
@@ -569,7 +578,10 @@
           "Name": "Tracking",
           "Units": "",
           "DescriptionFormula": "'How well the cloud follows an evasive target (0..1). Medium — the spread helps.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1",
+          "MinFormula": "0",
+          "StepFormula": "0.05",
           "PropertyFormula": "0.1"
         },
         {
@@ -873,7 +885,10 @@
           "Name": "Range",
           "Units": "m",
           "DescriptionFormula": "'How far the beam reaches (a knife-fight laser, space-realistic).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "50000",
+          "MinFormula": "1000",
+          "StepFormula": "10",
           "PropertyFormula": "5000"
         },
         {
@@ -890,7 +905,10 @@
           "Name": "Charge Period",
           "Units": "s",
           "DescriptionFormula": "'Seconds between pulses. Drives damage/sec.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "100",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "1"
         },
         {
@@ -1036,7 +1054,10 @@
           "Name": "Tracking",
           "Units": "",
           "DescriptionFormula": "'How well it follows an evasive target (0..1). A dumb bolt is low.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1",
+          "MinFormula": "0",
+          "StepFormula": "0.05",
           "PropertyFormula": "0.1"
         },
         {

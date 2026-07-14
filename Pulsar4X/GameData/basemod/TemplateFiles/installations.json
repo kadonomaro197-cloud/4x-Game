@@ -281,7 +281,7 @@
         "copper": "[Mass] * 0.05",
         "electronics": "[Mass] * 0.05"
       },
-      "ComponentType":"Facility",
+      "ComponentType": "Facility",
       "MountType": "ShipCargo, PlanetInstallation",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "installation-construction",
@@ -289,13 +289,19 @@
         {
           "Name": "Research Points",
           "DescriptionFormula": "'Research points produced per day'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "100",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "10"
         },
         {
           "Name": "Cost Per Day",
           "DescriptionFormula": "'Base cost to operate the research lab per day'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "100000",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "10000"
         },
         {
@@ -407,7 +413,8 @@
           "DescriptionFormula": "'Daily production towards components'",
           "GuiHint": "GuiTextDisplay",
           "PropertyFormula": "PropertyValue('Size') * 0.1"
-        },            {
+        },
+        {
           "Name": "Installation Construction Points",
           "DescriptionFormula": "'Daily production towards installations'",
           "GuiHint": "GuiTextDisplay",
@@ -415,7 +422,10 @@
         },
         {
           "Name": "Fighter Construction Points",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "1000",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "0"
         },
         {
@@ -461,7 +471,7 @@
         "stainless-steel": "[Mass] * 0.1",
         "electronics": "[Mass] * 0.05"
       },
-      "ComponentType":"Facility",
+      "ComponentType": "Facility",
       "MountType": "ShipCargo, PlanetInstallation",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "installation-construction",
@@ -530,7 +540,7 @@
         "stainless-steel": "[Mass] * 0.1",
         "electronics": "[Mass] * 0.05"
       },
-      "ComponentType":"Facility",
+      "ComponentType": "Facility",
       "MountType": "ShipCargo, PlanetInstallation",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "installation-construction",
@@ -554,7 +564,6 @@
       ]
     }
   },
-
   {
     "Type": "ComponentTemplate",
     "Payload": {
@@ -574,7 +583,7 @@
         "stainless-steel": "[Mass] * 0.75",
         "aluminium": "[Mass] * 0.25"
       },
-      "ComponentType":"Fuel Storage",
+      "ComponentType": "Fuel Storage",
       "MountType": "ShipComponent, ShipCargo, PlanetInstallation, Fighter",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "installation-construction",
@@ -629,7 +638,7 @@
       "ResourceCost": {
         "stainless-steel": "[Mass]"
       },
-      "ComponentType":"Fuel Storage",
+      "ComponentType": "Fuel Storage",
       "MountType": "ShipComponent, ShipCargo, PlanetInstallation, Fighter",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "installation-construction",
@@ -942,7 +951,7 @@
         "plastic": "[Mass] * 0.1",
         "stainless-steel": "[Mass] * 0.1"
       },
-      "ComponentType":"Facility",
+      "ComponentType": "Facility",
       "MountType": "PlanetInstallation",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "installation-construction",
@@ -1028,7 +1037,7 @@
         "plastic": "[Mass] * 0.1",
         "stainless-steel": "[Mass] * 0.1"
       },
-      "ComponentType":"Infrastructure",
+      "ComponentType": "Infrastructure",
       "MountType": "ShipCargo, PlanetInstallation",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "installation-construction",
@@ -1036,25 +1045,37 @@
         {
           "Name": "Support Colonists",
           "DescriptionFormula": "'Population supported when the body's gravity and atmosphere fall within tolerance. Out-of-tolerance bodies receive no support from this design.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "5000",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "500"
         },
         {
           "Name": "Storage Amount",
           "DescriptionFormula": "'The amount of space that is dedicated to storage space. '",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "5000",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "500"
         },
         {
           "Name": "Support Capacity",
           "DescriptionFormula": "'Support capacity each unit of this infrastructure provides to the colony. Other installations consume this capacity; if demand exceeds supply all colony output is reduced. Only counts on bodies within the gravity and pressure tolerances below.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "10000",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "1000"
         },
         {
           "Name": "Housing Comfort",
           "DescriptionFormula": "'Quality-of-life comfort this infrastructure provides — a capped morale bonus on top of bare life-support. Basic utilities and housing keep colonists content, not just alive.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "50",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "5"
         },
         {
@@ -1158,7 +1179,7 @@
         "plastic": "[Mass] * 0.1",
         "stainless-steel": "[Mass] * 0.1"
       },
-      "ComponentType":"Infrastructure",
+      "ComponentType": "Infrastructure",
       "MountType": "ShipCargo, PlanetInstallation",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "installation-construction",
@@ -1166,25 +1187,37 @@
         {
           "Name": "Support Colonists",
           "DescriptionFormula": "'Population this sealed habitat supports — anywhere, since it provides its own environment (no gravity or atmosphere tolerance applies).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "5000",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "500"
         },
         {
           "Name": "Storage Amount",
           "DescriptionFormula": "'The amount of space that is dedicated to storage space. '",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "5000",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "500"
         },
         {
           "Name": "Support Capacity",
           "DescriptionFormula": "'Support capacity each unit of this habitat provides. Other installations on the station consume this capacity.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "10000",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "1000"
         },
         {
           "Name": "Housing Comfort",
           "DescriptionFormula": "'Quality-of-life comfort this sealed habitat provides — a capped morale bonus for the station crew.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "50",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "5"
         },
         {
@@ -1236,7 +1269,7 @@
         "plastic": "[Mass] * 0.1",
         "stainless-steel": "[Mass] * 0.1"
       },
-      "ComponentType":"Facility",
+      "ComponentType": "Facility",
       "MountType": "ShipComponent, ShipCargo, PlanetInstallation",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "installation-construction",
@@ -1301,7 +1334,7 @@
           "Name": "Admin Level",
           "DescriptionFormula": "'Area of influence this  office covers'",
           "GuiHint": "GuiEnumSelectionList",
-          "EnumTypeName" : "GameEngine.People.AdminLevel",
+          "EnumTypeName": "GameEngine.People.AdminLevel",
           "MaxFormula": "TechData('tech-administration-level') + 5",
           "MinFormula": "5",
           "StepFormula": "1",
@@ -1445,14 +1478,20 @@
           "Name": "LocalFortify",
           "Units": "fraction",
           "DescriptionFormula": "'How much this bunker fortifies its own region (0..1 = +% defence).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1",
+          "MinFormula": "0",
+          "StepFormula": "0.05",
           "PropertyFormula": "0.25"
         },
         {
           "Name": "AdjacentProjection",
           "Units": "fraction",
           "DescriptionFormula": "'How much it projects to each adjacent friendly region.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1",
+          "MinFormula": "0",
+          "StepFormula": "0.01",
           "PropertyFormula": "0.12"
         },
         {
@@ -1466,7 +1505,10 @@
           "Name": "TileFootprint",
           "Units": "tiles",
           "DescriptionFormula": "'How many fine city-tiles this base occupies once the city sub-grid is built.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "40",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "4"
         },
         {
@@ -1508,49 +1550,70 @@
           "Name": "UnitType",
           "Units": "enum",
           "DescriptionFormula": "'0 = Infantry, 1 = Armor, 2 = Artillery.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "2",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "0"
         },
         {
           "Name": "Attack",
           "Units": "str",
           "DescriptionFormula": "'Damage this unit deals per salvo to enemies in range.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "100"
         },
         {
           "Name": "Defense",
           "Units": "str",
           "DescriptionFormula": "'Reduces damage this unit takes (soaks incoming fire).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "10"
         },
         {
           "Name": "HitPoints",
           "Units": "hp",
           "DescriptionFormula": "'How much damage this unit can absorb before it is destroyed.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "500"
         },
         {
           "Name": "Range",
           "Units": "hex",
           "DescriptionFormula": "'Strike range in hexes (how far it can hit; artillery reaches farther).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "10",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "1"
         },
         {
           "Name": "Penetration",
           "Units": "str",
           "DescriptionFormula": "'Armour penetration - how much of an enemy''s armour this unit ignores. Infantry small arms bounce off heavy plate (0).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "0"
         },
         {
           "Name": "PerShotEnergy",
           "Units": "str",
           "DescriptionFormula": "'Per-shot size - how much of this unit''s attack lands in ONE shot. Small arms put many little rounds downrange (10), so they chip and mostly bounce off armour.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "10"
         },
         {
@@ -1592,49 +1655,70 @@
           "Name": "UnitType",
           "Units": "enum",
           "DescriptionFormula": "'0 = Infantry, 1 = Armor, 2 = Artillery.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "2",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "1"
         },
         {
           "Name": "Attack",
           "Units": "str",
           "DescriptionFormula": "'Damage this unit deals per salvo to enemies in range.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1400",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "140"
         },
         {
           "Name": "Defense",
           "Units": "str",
           "DescriptionFormula": "'Reduces damage this unit takes (soaks incoming fire).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "150",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "15"
         },
         {
           "Name": "HitPoints",
           "Units": "hp",
           "DescriptionFormula": "'How much damage this unit can absorb before it is destroyed.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "7000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "700"
         },
         {
           "Name": "Range",
           "Units": "hex",
           "DescriptionFormula": "'Strike range in hexes (how far it can hit; artillery reaches farther).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "10",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "1"
         },
         {
           "Name": "Penetration",
           "Units": "str",
           "DescriptionFormula": "'Armour penetration - a tank''s AP main gun cracks plate that bounces small arms (ignores this much of an enemy''s Defense).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "200",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "20"
         },
         {
           "Name": "PerShotEnergy",
           "Units": "str",
           "DescriptionFormula": "'Per-shot size - a tank''s main gun lands its whole attack in ONE big shell (140), an alpha that punches flat armour instead of chipping at it.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1400",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "140"
         },
         {
@@ -1676,49 +1760,70 @@
           "Name": "UnitType",
           "Units": "enum",
           "DescriptionFormula": "'0 = Infantry, 1 = Armor, 2 = Artillery.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "2",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "2"
         },
         {
           "Name": "Attack",
           "Units": "str",
           "DescriptionFormula": "'Damage this unit deals per salvo to enemies in range.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1600",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "160"
         },
         {
           "Name": "Defense",
           "Units": "str",
           "DescriptionFormula": "'Reduces damage this unit takes (soaks incoming fire).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "50",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "5"
         },
         {
           "Name": "HitPoints",
           "Units": "hp",
           "DescriptionFormula": "'How much damage this unit can absorb before it is destroyed.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "4000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "400"
         },
         {
           "Name": "Range",
           "Units": "hex",
           "DescriptionFormula": "'Strike range in hexes (how far it can hit; artillery reaches farther).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "10",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "3"
         },
         {
           "Name": "Penetration",
           "Units": "str",
           "DescriptionFormula": "'Armour penetration - shaped-charge / HE shells shrug off some plating (ignores this much of an enemy''s Defense), between infantry and a tank''s AP gun.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "80",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "8"
         },
         {
           "Name": "PerShotEnergy",
           "Units": "str",
           "DescriptionFormula": "'Per-shot size - artillery fires a few big HE shells (80 each), between a tank''s single alpha and an infantry spray - each shell is a real hit against armour.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "800",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "80"
         },
         {
@@ -1758,31 +1863,46 @@
         {
           "Name": "BaseStrength",
           "DescriptionFormula": "'Carry-capacity budget; augments add to it.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "100"
         },
         {
           "Name": "BaseHP",
           "DescriptionFormula": "'Frame toughness before armour.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "200"
         },
         {
           "Name": "Size",
           "DescriptionFormula": "'Bulk (feeds transport carry-size).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "10",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "1"
         },
         {
           "Name": "Locomotion",
           "DescriptionFormula": "'0=Foot 1=Tracked 2=Walker 3=Hover.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "3",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "0"
         },
         {
           "Name": "CarryClass",
           "DescriptionFormula": "'0=Personnel 1=Vehicle.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "1",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "0"
         },
         {
@@ -1892,19 +2012,28 @@
         {
           "Name": "CarryMass",
           "DescriptionFormula": "'What the frame must bear.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "25"
         },
         {
           "Name": "HP",
           "DescriptionFormula": "'Health added to the unit's pool.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1500",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "150"
         },
         {
           "Name": "Defense",
           "DescriptionFormula": "'Damage mitigation added.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "50",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "5"
         },
         {
@@ -1944,43 +2073,64 @@
         {
           "Name": "CarryMass",
           "DescriptionFormula": "'What the frame must bear.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "25"
         },
         {
           "Name": "HP",
           "DescriptionFormula": "'Health added to the unit's pool.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1500",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "150"
         },
         {
           "Name": "Defense",
           "DescriptionFormula": "'Damage mitigation added.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "50",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "5"
         },
         {
           "Name": "VsKinetic",
           "DescriptionFormula": "'Soak effectiveness vs KINETIC (1.0 = plain plate). FLAGGED balance value.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5",
+          "MinFormula": "0",
+          "StepFormula": "0.1",
           "PropertyFormula": "0.6"
         },
         {
           "Name": "VsEnergy",
           "DescriptionFormula": "'Soak effectiveness vs ENERGY (1.0 = plain plate). FLAGGED balance value.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5",
+          "MinFormula": "0",
+          "StepFormula": "0.1",
           "PropertyFormula": "2.0"
         },
         {
           "Name": "VsExplosive",
           "DescriptionFormula": "'Soak effectiveness vs EXPLOSIVE (1.0 = plain plate). FLAGGED balance value.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5",
+          "MinFormula": "0",
+          "StepFormula": "0.1",
           "PropertyFormula": "1.0"
         },
         {
           "Name": "VsExotic",
           "DescriptionFormula": "'Soak effectiveness vs EXOTIC (1.0 = plain plate). FLAGGED balance value.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5",
+          "MinFormula": "0",
+          "StepFormula": "0.1",
           "PropertyFormula": "1.0"
         },
         {
@@ -2020,43 +2170,64 @@
         {
           "Name": "CarryMass",
           "DescriptionFormula": "'What the frame must bear.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "25"
         },
         {
           "Name": "HP",
           "DescriptionFormula": "'Health added to the unit's pool.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1500",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "150"
         },
         {
           "Name": "Defense",
           "DescriptionFormula": "'Damage mitigation added.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "50",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "5"
         },
         {
           "Name": "VsKinetic",
           "DescriptionFormula": "'Soak effectiveness vs KINETIC (1.0 = plain plate). FLAGGED balance value.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5",
+          "MinFormula": "0",
+          "StepFormula": "0.1",
           "PropertyFormula": "1.6"
         },
         {
           "Name": "VsEnergy",
           "DescriptionFormula": "'Soak effectiveness vs ENERGY (1.0 = plain plate). FLAGGED balance value.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5",
+          "MinFormula": "0",
+          "StepFormula": "0.1",
           "PropertyFormula": "0.6"
         },
         {
           "Name": "VsExplosive",
           "DescriptionFormula": "'Soak effectiveness vs EXPLOSIVE (1.0 = plain plate). FLAGGED balance value.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5",
+          "MinFormula": "0",
+          "StepFormula": "0.1",
           "PropertyFormula": "2.0"
         },
         {
           "Name": "VsExotic",
           "DescriptionFormula": "'Soak effectiveness vs EXOTIC (1.0 = plain plate). FLAGGED balance value.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5",
+          "MinFormula": "0",
+          "StepFormula": "0.1",
           "PropertyFormula": "1.0"
         },
         {
@@ -2096,31 +2267,46 @@
         {
           "Name": "CarryMass",
           "DescriptionFormula": "'What the frame must bear.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "30"
         },
         {
           "Name": "StrengthBonus",
           "DescriptionFormula": "'ADDED to the frame's carry budget.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "3000",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "300"
         },
         {
           "Name": "EvasionBonus",
           "DescriptionFormula": "'Dodge bonus.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1",
+          "MinFormula": "0",
+          "StepFormula": "0.1",
           "PropertyFormula": "0"
         },
         {
           "Name": "ToughnessBonus",
           "DescriptionFormula": "'Survivability multiplier.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2",
+          "MinFormula": "0",
+          "StepFormula": "0.1",
           "PropertyFormula": "0.2"
         },
         {
           "Name": "Shield",
           "DescriptionFormula": "'Flat incoming-damage soak.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1000",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "0"
         },
         {
@@ -2230,31 +2416,46 @@
         {
           "Name": "BaseStrength",
           "DescriptionFormula": "'Carry-capacity budget.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "8000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "800"
         },
         {
           "Name": "BaseHP",
           "DescriptionFormula": "'Frame toughness before armour.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "15000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "1500"
         },
         {
           "Name": "Size",
           "DescriptionFormula": "'Bulk (feeds transport carry-size).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "60",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "6"
         },
         {
           "Name": "Locomotion",
           "DescriptionFormula": "'0=Foot 1=Tracked 2=Walker 3=Hover.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "3",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "1"
         },
         {
           "Name": "CarryClass",
           "DescriptionFormula": "'0=Personnel 1=Vehicle.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "1",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "1"
         },
         {
@@ -2364,31 +2565,46 @@
         {
           "Name": "BaseStrength",
           "DescriptionFormula": "'Carry-capacity budget.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "4000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "400"
         },
         {
           "Name": "BaseHP",
           "DescriptionFormula": "'Frame toughness before armour.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "10000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "1000"
         },
         {
           "Name": "Size",
           "DescriptionFormula": "'Bulk.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "40",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "4"
         },
         {
           "Name": "Locomotion",
           "DescriptionFormula": "'0=Foot 1=Tracked 2=Walker 3=Hover.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "3",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "2"
         },
         {
           "Name": "CarryClass",
           "DescriptionFormula": "'0=Personnel 1=Vehicle.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "1",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "1"
         },
         {
@@ -2498,31 +2714,46 @@
         {
           "Name": "CarryMass",
           "DescriptionFormula": "'What the frame must bear.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "20"
         },
         {
           "Name": "StrengthBonus",
           "DescriptionFormula": "'ADDED to the frame's carry budget.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1000",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "0"
         },
         {
           "Name": "EvasionBonus",
           "DescriptionFormula": "'Dodge bonus (System 1 survivability).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1",
+          "MinFormula": "0",
+          "StepFormula": "0.1",
           "PropertyFormula": "0"
         },
         {
           "Name": "ToughnessBonus",
           "DescriptionFormula": "'Survivability multiplier.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2",
+          "MinFormula": "0",
+          "StepFormula": "0.1",
           "PropertyFormula": "0"
         },
         {
           "Name": "Shield",
           "DescriptionFormula": "'Flat incoming-damage soak (System 1 survivability).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1500",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "150"
         },
         {
@@ -2562,37 +2793,55 @@
         {
           "Name": "CarryMass",
           "DescriptionFormula": "'What the frame must bear.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "20"
         },
         {
           "Name": "StrengthBonus",
           "DescriptionFormula": "'ADDED to the frame's carry budget.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1000",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "0"
         },
         {
           "Name": "EvasionBonus",
           "DescriptionFormula": "'Dodge bonus (System 1 survivability).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1",
+          "MinFormula": "0",
+          "StepFormula": "0.1",
           "PropertyFormula": "0"
         },
         {
           "Name": "ToughnessBonus",
           "DescriptionFormula": "'Survivability multiplier.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2",
+          "MinFormula": "0",
+          "StepFormula": "0.1",
           "PropertyFormula": "0"
         },
         {
           "Name": "Shield",
           "DescriptionFormula": "'Flat incoming-damage soak pool (smaller than a big generator). FLAGGED balance value.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "600",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "60"
         },
         {
           "Name": "ShieldRegenFraction",
           "DescriptionFormula": "'Fraction of the pool restored per hour between salvos (0.34 = the standard generator). FLAGGED balance value.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5",
+          "MinFormula": "0",
+          "StepFormula": "0.1",
           "PropertyFormula": "1.0"
         },
         {
@@ -2632,31 +2881,46 @@
         {
           "Name": "CarryMass",
           "DescriptionFormula": "'What the frame must bear.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "15"
         },
         {
           "Name": "StrengthBonus",
           "DescriptionFormula": "'ADDED to the frame's carry budget.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1000",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "0"
         },
         {
           "Name": "EvasionBonus",
           "DescriptionFormula": "'Dodge bonus (System 1 survivability).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1",
+          "MinFormula": "0",
+          "StepFormula": "0.1",
           "PropertyFormula": "0.4"
         },
         {
           "Name": "ToughnessBonus",
           "DescriptionFormula": "'Survivability multiplier.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2",
+          "MinFormula": "0",
+          "StepFormula": "0.1",
           "PropertyFormula": "0"
         },
         {
           "Name": "Shield",
           "DescriptionFormula": "'Flat incoming-damage soak (System 1 survivability).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1000",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "0"
         },
         {
@@ -2696,31 +2960,46 @@
         {
           "Name": "BaseStrength",
           "DescriptionFormula": "'Carry-capacity budget.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "300",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "30"
         },
         {
           "Name": "BaseHP",
           "DescriptionFormula": "'Frame toughness before armour.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "400",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "40"
         },
         {
           "Name": "Size",
           "DescriptionFormula": "'Bulk (feeds transport carry-size) — tiny, so a bay holds a horde.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "10",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "1"
         },
         {
           "Name": "Locomotion",
           "DescriptionFormula": "'0=Foot 1=Tracked 2=Walker 3=Hover.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "3",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "0"
         },
         {
           "Name": "CarryClass",
           "DescriptionFormula": "'0=Personnel 1=Vehicle.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "1",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "0"
         },
         {

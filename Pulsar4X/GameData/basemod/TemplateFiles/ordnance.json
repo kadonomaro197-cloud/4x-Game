@@ -255,7 +255,10 @@
           "Name": "Exhaust Velocity",
           "Units": "m/s",
           "DescriptionFormula": "'Specific Impulse in m/s, can be increased by research (todo)'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "40000",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "4000"
         },
         {

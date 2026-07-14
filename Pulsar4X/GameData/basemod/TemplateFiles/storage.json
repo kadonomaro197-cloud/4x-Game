@@ -323,14 +323,20 @@
           "Name": "Capacity",
           "Units": "troops",
           "DescriptionFormula": "'How many infantry (by carry-size) this bay holds.'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "60",
+          "MinFormula": "1",
+          "StepFormula": "1",
           "PropertyFormula": "6"
         },
         {
           "Name": "CarryClass",
           "Units": "class",
           "DescriptionFormula": "'0 = Personnel (troops), 1 = Vehicle (armour/artillery).'",
-          "GuiHint": "GuiTextDisplay",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "1",
+          "MinFormula": "0",
+          "StepFormula": "1",
           "PropertyFormula": "0"
         },
         {
