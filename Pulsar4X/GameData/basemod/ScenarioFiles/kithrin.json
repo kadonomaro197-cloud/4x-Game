@@ -167,10 +167,27 @@
     "default-design-reactor-2t",
     "default-design_solarpanel",
     "default-design-kithrin-nexus",
-    "default-design-kithrin-deep-mine"
+    "default-design-kithrin-deep-mine",
+    "default-design-space-habitat",
+    "default-design-ship-hull-heavy",
+    "default-design-passive-sensor-s50",
+    "default-design-disruptor-weapon",
+    "default-design-deflector-array",
+    "default-design-beam-fire-control",
+    "default-design-fuel-tank-1000",
+    "default-design-alcubierre-500",
+    "default-design-battery-2t",
+    "default-design-NTR1.8",
+    "default-design-troop-bay",
+    "default-design-infantry",
+    "default-design-armor",
+    "default-design-artillery"
   ],
   "ordnanceDesigns": [],
-  "shipDesigns": [],
+  "shipDesigns": [
+    "default-ship-design-hive-cruiser",
+    "default-ship-design-spore-lander"
+  ],
   "species": [
     "species-xenos"
   ],
@@ -185,7 +202,7 @@
       },
       "installations": [
         {
-          "id": "default-design-infrastructure",
+          "id": "default-design-space-habitat",
           "amount": 40
         },
         {
@@ -281,6 +298,25 @@
         {
           "id": "electronics",
           "amount": 30000
+        }
+      ]
+    }
+  ],
+  "fleets": [
+    {
+      "name": "Titan Hive Guard",
+      "location": {
+        "systemId": "system-sol",
+        "body": "Titan"
+      },
+      "ships": [
+        {
+          "designId": "default-ship-design-hive-cruiser",
+          "name": "KCS Devourer"
+        },
+        {
+          "designId": "default-ship-design-hive-cruiser",
+          "name": "KCS Rime Chorus"
         }
       ]
     }

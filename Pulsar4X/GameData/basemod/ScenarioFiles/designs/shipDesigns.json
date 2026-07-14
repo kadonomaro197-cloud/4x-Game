@@ -822,5 +822,43 @@
         { "Id": "default-design-alcubierre-2k", "Amount": 1 }
       ]
     }
+  },
+  {
+    "Type": "ShipDesign",
+    "Payload": {
+      "UniqueID": "default-ship-design-hive-cruiser",
+      "Name": "Kithrin Hive Cruiser",
+      "Armor": { "Id": "titanium-armor", "Thickness": 3 },
+      "Components": [
+        { "Id": "default-design-ship-hull-heavy", "Amount": 1 },
+        { "Id": "default-design-passive-sensor-s50", "Amount": 1 },
+        { "Id": "default-design-disruptor-weapon", "Amount": 3 },
+        { "Id": "default-design-deflector-array", "Amount": 2 },
+        { "Id": "default-design-beam-fire-control", "Amount": 1 },
+        { "Id": "default-design-fuel-tank-1000", "Amount": 2 },
+        { "Id": "default-design-alcubierre-500", "Amount": 4 },
+        { "Id": "default-design-battery-2t", "Amount": 3 },
+        { "Id": "default-design-reactor-2t", "Amount": 2 },
+        { "Id": "default-design-NTR1.8", "Amount": 4 }
+      ]
+    }
+  },
+  {
+    "Type": "ShipDesign",
+    "Payload": {
+      "UniqueID": "default-ship-design-spore-lander",
+      "Name": "Kithrin Spore Lander",
+      "Armor": { "Id": "titanium-armor", "Thickness": 2 },
+      "Components": [
+        { "Id": "default-design-ship-hull-heavy", "Amount": 1 },
+        { "Id": "default-design-passive-sensor-s50", "Amount": 1 },
+        { "Id": "default-design-troop-bay", "Amount": 2 },
+        { "Id": "default-design-fuel-tank-1000", "Amount": 2 },
+        { "Id": "default-design-alcubierre-500", "Amount": 4 },
+        { "Id": "default-design-battery-2t", "Amount": 3 },
+        { "Id": "default-design-reactor-2t", "Amount": 1 },
+        { "Id": "default-design-NTR1.8", "Amount": 4 }
+      ]
+    }
   }
 ]

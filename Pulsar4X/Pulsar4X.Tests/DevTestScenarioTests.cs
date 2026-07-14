@@ -347,5 +347,53 @@ namespace Pulsar4X.Tests
             Assert.That(shipAssemblyLines, Is.GreaterThan(0),
                 "the Kithrin outpost has no ship-assembly line — its naval yard module didn't resolve.");
         }
+
+        [Test]
+        [Description("KITHRIN AT THE SAME LEVEL (proportionally) — the alien Collective is now a full MILITARY faction, "
+                     + "not just a developed economy. It fields its own ALIEN warship (Hive Cruiser — disruptors + "
+                     + "deflector shields) and troop carrier (Spore Lander), a Titan home fleet, and buildable ground "
+                     + "forces. The load-bearing engine change: the AI can now ACT FROM A STATION — FactionState.Snapshot "
+                     + "includes a station carrying an industry line as a build host, so a station-only faction's "
+                     + "economy/conquest AI is no longer inert (it used to snapshot an empty colony list and no-op). "
+                     + "Asserts the alien ships loaded (gotcha-#10 sensor), the Spore Lander lifts troops, the snapshot "
+                     + "includes the station, and FeasibilityOracle.CanQueue PASSES for the Hive Cruiser on the station — "
+                     + "Kithrin builds its navy exactly as UMF builds from Mars.")]
+        public void DevTest_Kithrin_IsAFullMilitaryFaction_ThatCanBuildFromItsStation()
+        {
+            var game = NewGame();
+            DevTestStartFactory.CreateDevTest(
+                game, ScenarioDir, new List<string> { "uef-devtest.json", "umf.json", "kithrin.json" });
+
+            var kithrinEntity = game.Factions.Values.First(f =>
+                f != null && f.IsValid && f.HasDataBlob<FactionInfoDB>()
+                && f.GetDataBlob<FactionInfoDB>().IsNPC
+                && f.GetDataBlob<FactionInfoDB>().Stations.Count > 0);
+            var kithrin = kithrinEntity.GetDataBlob<FactionInfoDB>();
+
+            // The alien ships loaded (every alien component id resolved) and the lander can lift troops.
+            Assert.That(kithrin.ShipDesigns.ContainsKey("default-ship-design-hive-cruiser"), Is.True,
+                "the Kithrin Hive Cruiser didn't load — an alien component id didn't resolve.");
+            Assert.That(kithrin.ShipDesigns.ContainsKey("default-ship-design-spore-lander"), Is.True,
+                "the Kithrin Spore Lander (troop carrier) didn't load.");
+            Assert.That(kithrin.ShipDesigns["default-ship-design-spore-lander"]
+                    .TryGetComponentsByAttribute<GroundBayAtb>(out var bays) && bays.Count > 0, Is.True,
+                "the Spore Lander carries no troop bay — Kithrin can't lift an invasion.");
+
+            // The AI snapshot now includes the STATION as a build host (was empty for a station-only faction).
+            var state = FactionState.Snapshot(kithrinEntity);
+            Assert.That(state, Is.Not.Null, "Kithrin snapshot is null.");
+            Assert.That(state.Colonies.Count, Is.GreaterThan(0),
+                "FactionState.Snapshot excluded the Kithrin station — its economy/conquest AI would be inert.");
+
+            // Kithrin can BUILD its warship from the station (parity with UMF building from Mars).
+            Assert.That(kithrin.IndustryDesigns.ContainsKey("default-ship-design-hive-cruiser"), Is.True,
+                "the Hive Cruiser isn't a buildable IndustryDesign on Kithrin.");
+            var station = state.Colonies.First();
+            bool canBuildCruiser = FeasibilityOracle.CanQueue(
+                station, kithrin.IndustryDesigns["default-ship-design-hive-cruiser"], kithrin);
+            TestContext.WriteLine($"[kithrin-canqueue] hive-cruiser={canBuildCruiser} snapshot-hosts={state.Colonies.Count}");
+            Assert.That(canBuildCruiser, Is.True,
+                "Kithrin cannot queue its warship from the station — the station-aware snapshot or the ship-assembly line regressed.");
+        }
     }
 }
