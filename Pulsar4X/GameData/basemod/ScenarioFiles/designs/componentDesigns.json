@@ -416,7 +416,7 @@
       "Name": "Passive Scanner",
       "TemplateId": "passive-sensor",
       "Properties": [
-        { "Key": "Antenna Size", "Value": 5000 },
+        { "Key": "Antenna Size", "Value": 2500 },
         { "Key": "Ideal Detection Wavelength", "Value": 470 },
         { "Key": "Detection Bandwidth", "Value": 250 },
         { "Key": "Resolution", "Value": 100 },

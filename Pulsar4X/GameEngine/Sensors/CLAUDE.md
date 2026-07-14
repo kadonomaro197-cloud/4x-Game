@@ -72,17 +72,20 @@ shrinks-on-Silent, the EMCON ladder) is unchanged — only the absolute reach mo
 number stay in exact agreement. Gauges: `DetectionTuningTests` (ship-vs-ship clears the 0.1 Gm combat floor; reach
 stays under the fog ceiling). Tunable like Combat's `SalvoDamageScale` — one number for the whole detection feel.
 
-**Colony sensors see ACROSS the system — by design (decision 2026-06-28).** A follow-up to the scale tuning: detection
+**Colony sensors see across the inner-system approaches, but NOT the whole system (revised 2026-07-14 for DevTest fog).** Detection
 range is **linear in antenna size** (`threshold ∝ 1/antenna²`, range `∝ 1/√threshold ∝ antenna`), and the colony's
-Passive Scanner has a **5000** antenna vs a ship's **5.5** — ~900× — so the colony detects a ship at **~230 Gm**, well
-past Venus (~60 Gm): it sees the whole inner system. Because the 1e6 scale is ONE global knob and the two sensors are
-locked ~800× apart by antenna size, you **cannot** rein the colony in without dropping the ship sensor back under the
-combat-useful floor. The developer's call: **keep it.** A fixed ground megasensor is realistic system-wide early
-warning — the homeworld always spots fleets entering the system, but the fog that matters for tactics (ship-vs-ship in
-deep space) is still the tight ~0.3 Gm bubble. So a colony is intentionally NOT a "tactical bubble" sensor; ships are.
-Gauge: `DetectionTuningTests.ColonyScanner_IsSystemWideEarlyWarning_ByDesign` (asserts the colony reach dwarfs a
-warship's — that asymmetry IS the design). If a future build wants surprise approaches on the homeworld, that needs a
-deliberate per-design sensor-horizon cap, not a scale change.
+Passive Scanner antenna is **2500** vs a ship's **5.5** — ~450× — so the colony detects a ship at **~115 Gm**: past
+Venus (~60 Gm) and close-approaching fleets, but **short of the asteroid belt** (Ceres is ~265+ Gm from Earth). It was
+originally **5000 (~230 Gm)** — a full system-wide megasensor — but the DevTest playtest showed that let the homeworld
+see a rival gunship parked at Ceres, i.e. fog of war didn't matter for the inner system. The developer's revised call:
+**the homeworld is strong early warning for the inner approaches, not omniscience over the belt.** A rival massing at
+Ceres or in deep space is now DARK until it closes — a real "they're coming and we can't see how many" tension — while
+Venus/Luna and any fleet approaching Earth are still spotted early. The ship "tactical bubble" fog (~0.3 Gm) is
+unchanged. Because the 1e6 scale is ONE global knob and the two sensors are locked apart by antenna size, this reach is
+tuned on the **colony sensor's own antenna** (a per-design value), not the global scale. Gauge:
+`DetectionTuningTests.ColonyScanner_IsSystemWideEarlyWarning_ByDesign` (asserts the colony reach still dwarfs a
+warship's AND clears the 10 Gm ship-bubble ceiling — the asymmetry that makes it early-warning holds). To widen or
+narrow the homeworld's horizon, change this one antenna value.
 
 Detection quality: triangular overlap between sensor's waveform band and signal's waveform band. Signal must overlap the sensor's peak sensitivity region to score high quality.
 

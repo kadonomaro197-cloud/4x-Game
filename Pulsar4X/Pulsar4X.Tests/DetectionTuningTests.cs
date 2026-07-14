@@ -68,14 +68,14 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("Colony = system-wide EARLY WARNING, by design (decision 2026-06-28). The audit measured the " +
-                     "colony's full Passive Scanner (antenna 5000, ~900× the ship sensor) at ~230 Gm — past Venus, " +
-                     "across the whole inner system. Detection range is LINEAR in antenna size and the 1e6 scale is " +
-                     "ONE global knob, so you can't rein in the colony without dropping the ship sensor back below the " +
-                     "combat-useful floor. The DECISION (developer): keep it — a fixed ground megasensor is realistic " +
-                     "early warning; the fog that matters (ship-vs-ship in deep space) stays a tight ~0.3 Gm bubble " +
-                     "(the OTHER two tests guard that). So this asserts the colony sees FAR and decisively farther " +
-                     "than a ship — documenting the intent, NOT gating a cap.")]
+        [Description("Colony = inner-system EARLY WARNING, but NOT the whole system (revised 2026-07-14 for DevTest fog). " +
+                     "The Passive Scanner antenna was dialed 5000→2500, so the colony now detects a ship at ~115 Gm — " +
+                     "past Venus (~60 Gm) and close-approaching fleets, but SHORT of the belt (Ceres ~265+ Gm), which was " +
+                     "letting the homeworld see a rival gunship at Ceres. Detection range is LINEAR in antenna size, so " +
+                     "this reach is tuned on the colony sensor's OWN antenna (a per-design value), not the global scale. " +
+                     "The fog that matters (ship-vs-ship in deep space) stays a tight ~0.3 Gm bubble (the OTHER two tests " +
+                     "guard that). This asserts the colony STILL sees decisively farther than a ship AND clears the 10 Gm " +
+                     "ship-bubble ceiling — the early-warning asymmetry holds; it just no longer covers the belt.")]
         public void ColonyScanner_IsSystemWideEarlyWarning_ByDesign()
         {
             var s = TestScenario.CreateWithColony();

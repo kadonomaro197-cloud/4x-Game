@@ -15,9 +15,9 @@ namespace Pulsar4X.Client
     public class ComponentDesignWindow : PulsarGuiWindow
     {
         private static List<ComponentTemplateBlueprint> templates = new();
-        private static List<ComponentTemplateBlueprint> filteredTemplates = new ();
-        private static string[]? sortedGroupNames;
-        private static int selectedFilterIndex = 0;
+        // Templates grouped by ComponentType (the "Doors" of component design) — each group becomes one collapsible
+        // category header in the Make New panel. Sorted by category name; templates sorted within each.
+        private static List<KeyValuePair<string, List<ComponentTemplateBlueprint>>> templatesByCategory = new();
         private static ComponentTemplateBlueprint? selectedTemplate;
 
 
@@ -39,14 +39,15 @@ namespace Pulsar4X.Client
                 templates = _uiState.Faction.GetDataBlob<FactionInfoDB>().Data.ComponentTemplates.Select(kvp => kvp.Value).ToList();
                 templates.Sort((a, b) => a.Name.CompareTo(b.Name));
 
-                var templatesByGroup = templates.GroupBy(t => t.ComponentType);
-                var groupNames = templatesByGroup.Select(g => g.Key).ToList();
-                var sortedTempGroupNames = groupNames.OrderBy(name => name).ToArray();
-                sortedGroupNames = new string[sortedTempGroupNames.Length + 1];
-                sortedGroupNames[0] = "All";
-                Array.Copy(sortedTempGroupNames, 0, sortedGroupNames, 1, sortedTempGroupNames.Length);
+                // Group the templates by their ComponentType — the "Doors" the Make New panel organises by — so
+                // every category (Weapons, Sensors, Power, …) is its own collapsible section of blank templates.
+                templatesByCategory = templates
+                    .GroupBy(t => string.IsNullOrWhiteSpace(t.ComponentType) ? "Other" : t.ComponentType)
+                    .OrderBy(g => g.Key)
+                    .Select(g => new KeyValuePair<string, List<ComponentTemplateBlueprint>>(
+                        g.Key, g.OrderBy(t => t.Name).ToList()))
+                    .ToList();
 
-                filteredTemplates = new List<ComponentTemplateBlueprint>(templates);
                 componentDesigns = _uiState.Faction.GetDataBlob<FactionInfoDB>().ComponentDesigns.ToDictionary();
             }
             thisitem = (ComponentDesignWindow)_uiState.LoadedWindows[typeof(ComponentDesignWindow)];
@@ -97,52 +98,63 @@ namespace Pulsar4X.Client
 
         void DisplayTemplateSelection()
         {
-            DisplayHelpers.Header("Select a Template",
-                                  "Component Templates act as a framework for designing components.\n\n" +
-                                  "Select a template and then design the attributes of the component to your specification.\n" +
-                                  "Once the design is created it will be available to produce on the colonies with the appropriate\n" +
-                                  "installations.");
+            DisplayHelpers.Header("Make New Component",
+                                  "Start a BRAND-NEW component design from scratch. Pick a category below (a \"door\"),\n" +
+                                  "then a template — the blank framework for that kind of component. You set every\n" +
+                                  "attribute yourself and press Save to create the design; nothing here is a copy of\n" +
+                                  "an existing design.\n\n" +
+                                  "To edit or re-open a design you already made, pick its category, then use the\n" +
+                                  "\"Current Component Designs\" list to the right.");
 
-            var availableSize = ImGui.GetContentRegionAvail();
-            ImGui.SetNextItemWidth(availableSize.X);
-            if(ImGui.Combo("###template-filter", ref selectedFilterIndex, sortedGroupNames, sortedGroupNames?.Length ?? 0))
+            // One collapsible header per ComponentType — the "Doors" of component design. Open by default so the
+            // panel reads as an organised menu of what can be built, not a wall of closed sections.
+            foreach (var category in templatesByCategory)
             {
-                if(selectedFilterIndex == 0)
+                if (!ImGui.CollapsingHeader(category.Key + "###door-" + category.Key, ImGuiTreeNodeFlags.DefaultOpen))
+                    continue;
+
+                ImGui.Indent();
+                foreach (var template in category.Value)
                 {
-                    filteredTemplates = new List<ComponentTemplateBlueprint>(templates);
+                    bool isSelected = selectedTemplate == template;
+                    if (ImGui.Selectable("＋ New " + template.Name + "###component-" + template.UniqueID, isSelected))
+                    {
+                        SelectTemplate(template);
+                    }
+
+                    // Guard the Description lookup: a template missing the "Description" formula must not throw in the
+                    // designer (we just fixed a whole-client crash rooted in this window).
+                    string desc = template.Formulas != null && template.Formulas.TryGetValue("Description", out var d) ? d : "";
+                    DisplayHelpers.DescriptiveTooltip(template.Name, template.ComponentType, desc);
                 }
-                else
-                {
-                    filteredTemplates = templates.Where(t => t.ComponentType.Equals(sortedGroupNames?[selectedFilterIndex])).ToList();
-                }
+                ImGui.Unindent();
+            }
+        }
+
+        // Start a FRESH design from a template (not a copy of an existing design) and refresh the "existing designs
+        // of this type" list shown beside it.
+        void SelectTemplate(ComponentTemplateBlueprint template)
+        {
+            selectedTemplate = template;
+            ComponentDesignDisplay.GetInstance().SetTemplate(selectedTemplate, _uiState);
+
+            componentsOfType = new List<ComponentDesign>();
+            foreach (var cd in componentDesigns)
+            {
+                if (cd.Value.TemplateName == template.Name)
+                    componentsOfType.Add(cd.Value);
             }
 
-            foreach(var template in filteredTemplates)
+            if (componentsOfType.Count > 0)
             {
-                bool isSelected = selectedTemplate == template;
-                if (ImGui.Selectable(template.Name + "###component-" + template.UniqueID, isSelected))
-                {
-                    selectedTemplate = template;
-                    ComponentDesignDisplay.GetInstance().SetTemplate(selectedTemplate, _uiState);
-                    componentsOfType = new List<ComponentDesign>();
-                    foreach (var cd in componentDesigns)
-                    {
-                        if(cd.Value.TemplateName == template.Name)
-                        {
-                            componentsOfType.Add(cd.Value);
-                        }
-                    }
-                    if(componentsOfType.Count > 0)
-                    {
-                        componentNames = new string[componentsOfType.Count];
-                        for (int c = 0; c < componentsOfType.Count; c++)
-                        {
-                            componentNames[c] = componentsOfType[c].Name;
-                        }
-                    }
-
-                }
-                DisplayHelpers.DescriptiveTooltip(template.Name, template.ComponentType, template.Formulas["Description"]);
+                componentNames = new string[componentsOfType.Count];
+                for (int c = 0; c < componentsOfType.Count; c++)
+                    componentNames[c] = componentsOfType[c].Name;
+            }
+            else
+            {
+                // Reset — otherwise the middle panel keeps showing the previous category's designs (a latent bug).
+                componentNames = new string[0];
             }
         }
 

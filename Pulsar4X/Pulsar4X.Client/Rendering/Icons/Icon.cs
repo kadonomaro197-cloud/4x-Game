@@ -227,8 +227,18 @@ namespace Pulsar4X.Client
         // time climbs until the game stutters/freezes. If the on-screen radius exceeds this, skip the draw for that
         // frame. Recomputed every frame, so zooming back out brings the ring straight back — it's a per-frame
         // "worth drawing right now?" decision, not a permanent removal.
+        //
+        // This is now a BACKSTOP for genuinely absurd sizes only. It used to be 50000px, but a star-centred ring
+        // (the CORONA) whose on-screen radius sat right at that line would flip drawn/culled every frame as the
+        // camera nudged it across the threshold — the "sun flashing / circle pops in and out of the sun" bug.
+        // The per-segment cull in Draw() (plus the coordinate-magnitude guard there) already keeps SDL safe for a
+        // large ring by drawing only its on-screen arc, so the whole-circle skip only needs to fire for a radius so
+        // huge nobody views at that zoom — far above the corona's normal on-screen size, so it no longer toggles.
         bool _offScreenSkip;
-        const double MaxScreenRadiusPx = 50000;
+        const double MaxScreenRadiusPx = 5_000_000;
+        // Any segment endpoint beyond this many pixels from the origin is skipped in Draw() so SDL never rasterises
+        // a multi-million-pixel line (the real choke). Comfortably above any on-screen arc, well below overflow.
+        const double MaxSafeCoordPx = 1_000_000;
 
         public Vector3 WorldPosition
         {
@@ -270,6 +280,13 @@ namespace Pulsar4X.Client
                 if (!double.IsFinite(ax) || !double.IsFinite(ay) || !double.IsFinite(bx) || !double.IsFinite(by)) continue;
                 if ((ax < -M && bx < -M) || (ax > vw + M && bx > vw + M)
                     || (ay < -M && by < -M) || (ay > vh + M && by > vh + M)) continue;
+                // Coordinate-magnitude guard: a ring far larger than the screen can have a segment that STRADDLES the
+                // viewport with one endpoint astronomically far off-screen (the per-edge cull above keeps it because
+                // it isn't fully off one side). Handing SDL a multi-million-pixel coordinate is the real rasteriser
+                // choke, so skip any segment with an extreme endpoint — the on-screen arc loses at most a sliver at
+                // the very edge, invisibly. This is what lets MaxScreenRadiusPx be a high backstop (no flicker).
+                if (Math.Abs(ax) > MaxSafeCoordPx || Math.Abs(ay) > MaxSafeCoordPx
+                    || Math.Abs(bx) > MaxSafeCoordPx || Math.Abs(by) > MaxSafeCoordPx) continue;
                 SDL.RenderLine(rendererPtr, (int)ax, (int)ay, (int)bx, (int)by);
             }
         }
