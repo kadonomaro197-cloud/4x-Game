@@ -166,5 +166,31 @@ namespace Pulsar4X.Tests
                 && earthForces.Units.Any(u => u.FactionOwnerID == player.Id), Is.True,
                 "the player's Earth should start with a home garrison in the DevTest.");
         }
+
+        [Test]
+        [Description("B5-1: the UMF can build a TROOP TRANSPORT — the ship that lifts ground units to an invasion. The "
+                     + "base mod had no ship mounting a troop-bay, so the AI (or player) could never carry troops off-world. "
+                     + "Asserts UMF's ShipDesigns holds 'default-ship-design-trooper' (so every component id resolved — the "
+                     + "gotcha-#10 sensor for a scenario ship design) AND that it mounts a GroundBayAtb (Personnel carry room) "
+                     + "so it can actually lift infantry. The prerequisite for the B5 conquest loop's load/land step.")]
+        public void DevTest_UMF_CanBuildATroopTransport_ThatCarriesABay()
+        {
+            var game = NewGame();
+            DevTestStartFactory.CreateDevTest(
+                game, ScenarioDir, new List<string> { "uef-devtest.json", "umf.json", "kithrin.json" });
+
+            var umf = game.Factions.Values
+                .Where(f => f != null && f.IsValid && f.HasDataBlob<FactionInfoDB>())
+                .Select(f => f.GetDataBlob<FactionInfoDB>())
+                .First(i => i.IsNPC && i.Colonies.Count >= 4);
+
+            Assert.That(umf.ShipDesigns.ContainsKey("default-ship-design-trooper"), Is.True,
+                "UMF can't build the troop transport — the ship design didn't load (a component id didn't resolve, "
+                + "or it's missing from UMF's shipDesigns list).");
+
+            var trooper = umf.ShipDesigns["default-ship-design-trooper"];
+            Assert.That(trooper.TryGetComponentsByAttribute<GroundBayAtb>(out var bays) && bays.Count > 0, Is.True,
+                "the troop transport mounts no GroundBayAtb — it can't actually carry ground units.");
+        }
     }
 }

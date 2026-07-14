@@ -47,6 +47,16 @@
 
 ## Progress log (newest first)
 
+### 2026-07-14 — B5-1: the troop-transport ship design (the conquest-loop prerequisite)
+
+**Built:** `default-ship-design-trooper` ("Lander Troop Transport") in `shipDesigns.json` — heavy hull + NTR engine + alcubierre warp + reactor/3×battery/2×fuel + passive sensor + **2× troop-bay** (Capacity 6 each = 12 carry-size ≈ 12 infantry or 4 armor). Added to UMF's `shipDesigns`. All 9 part designs pre-exist and are in UMF's `componentDesigns` (verified). Gauge: `DevTestScenarioTests.DevTest_UMF_CanBuildATroopTransport_ThatCarriesABay` (UMF's `ShipDesigns` holds it — the gotcha-#10 sensor that every component id resolved — AND it mounts a `GroundBayAtb`). This is the missing piece #5a from the B5 ledger: the engine load/land chain was complete but **no base-mod ship mounted a troop-bay**, so troops could never leave the ground.
+
+**Wide-implication check:** the new design is only instantiated by a faction that LISTS it → UMF only. Other factions (player DevTest, Kithrin, default New Game `uef.json`) don't reference it → byte-identical for them. Not covered by `BaseModIntegrityTests` (that checks colony ComponentDesigns, not ship designs) → the new `DevTestScenarioTests` case IS the gauge. The transport is UNARMED, so `ConquerResolver.IsWarship`/`MilitaryComposition.ReadyStrikeFleet` won't count it as a strike hull — **intended**; the coming B5 rungs must track the transport SEPARATELY from the strike fleet (bay-capacity, not warship-count). No processor, no new blob, no combat-balance change.
+
+**Design decision (stated, proceeding):** the player DevTest faction does NOT get a pre-made transport — its `componentDesigns` is intentionally short (installations + food only); the player has every TEMPLATE unlocked and designs their own ship in-game (the DevTest philosophy). B5's invader is the NPC (UMF), so UMF is where the transport lives. Player-invasion tooling is a 🖥️ PC/client concern.
+
+**Next (B5-2):** AI `ConquerResolver` rungs to RAISE troops + BUILD the transport when it holds a reachable war target (mirrors the existing Rung-2 build-warship pattern; `PlannerAction` Kind auto-logs to the AI record). Then B5-3: load → land → capture + an AI-driven `TakeAPlanet` integration test (flips `EnableOrderEmission`).
+
 ### 2026-07-14 — Session: food supply + B3 UMF strike fleet + defended worlds
 
 **Built (all pushed to `claude/devtest-faction-design-xpfnhe`):**

@@ -178,7 +178,8 @@
   ],
   "ordnanceDesigns": [],
   "shipDesigns": [
-    "default-ship-design-gunship"
+    "default-ship-design-gunship",
+    "default-ship-design-trooper"
   ],
   "species": [
     "species-human"
