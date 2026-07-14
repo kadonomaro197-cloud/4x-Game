@@ -1,6 +1,12 @@
 # Carrier Design — force projection from standoff range
 
-**Status:** design proposal (NOT locked). First pass, 2026-07-14. Prime-Directive investigation done against the live combat/weapons/ship/bay code; the EXISTS ledger below is file-cited. Read `docs/combat/COMBAT-DESIGN.md` (the one auto-resolve loop + doctrine) and `docs/combat/WEAPONS-DESIGN.md` (the weapon triangle) first — carriers plug into both, they don't replace either.
+**Status:** design **DECISIONS LOCKED** 2026-07-14 (the four §9 forks are decided — see §9). Prime-Directive investigation done against the live combat/weapons/ship/bay code; the EXISTS ledger below is file-cited. Read `docs/combat/COMBAT-DESIGN.md` (the one auto-resolve loop + doctrine) and `docs/combat/WEAPONS-DESIGN.md` (the weapon triangle) first — carriers plug into both, they don't replace either.
+
+> **The four locked decisions (developer, 2026-07-14), driving everything below:**
+> 1. **Strike craft are real built entities** (built like troops, through industry), held in the carrier as a **wing pool** (the hangar inventory), and **launched as a SUB-FLEET** that fights via the normal fleet auto-resolve.
+> 2. **Doctrine:** the **carrier's own doctrine AND its launched sub-fleet's doctrine SUPERSEDE the parent fleet's** (the existing sub-fleet-overrides-parent model). Add a **Carrier/Standoff** doctrine role.
+> 3. **One** flight-deck component (not separate catapult/arrestor/crew parts).
+> 4. **GENERALIZE the bay:** the flight deck is the SAME component as a **troop bay** and a **personal (passenger) carrier** — one generalized bay component with a *class* dial (troops / vehicles / strike craft / passengers), per `CONVENTIONS.md` §6 (don't build parallel systems). This *replaces* the design's earlier "aggregate pool" idea (decision 1 above) and the ground-only `GroundBayAtb`.
 
 ---
 
@@ -45,11 +51,11 @@ So a carrier is a **standoff sub-fleet role** (the Rear-Guard / Artillery family
 | **Mass budget / hull tiers** | `ShipDesign.MassBudget`, `ship-hull` light/medium/heavy | a flight deck is heavy → forces a big hull (the design trade) |
 
 **MISSING — the new build:**
-- `HangarBayAtb` — the flight-deck component attribute (the dials, §5).
-- `CarrierDB` — the "what's aboard / what's aloft" state on the carrier ship (mirrors `GroundTransportDB`).
-- `CarrierOps` static — launch / recover / sortie-tempo / capacity (mirrors `GroundTransport`).
-- The **resolver hook** — launched wing strength joins the aggregate salvo (the one real combat-engine touch).
-- Base-mod data — a `flight-deck` template + a `strike-craft` (fighter) + `strike-bomber` design + a carrier hull.
+- **Generalize `GroundBayAtb → BayAtb`** (add `BayClass.StrikeCraft`/`Passenger` + a `Cycle Rate` dial) — the flight deck is this component at `BayClass.StrikeCraft` (§5). *Not a new component — a promotion of the existing one.*
+- `CarrierDB` — the "what's aboard (wing pool) / what's aloft (sub-fleet)" state on the carrier ship (the `StrikeCraft`-class twin of `GroundTransportDB`).
+- `CarrierOps` static — launch-as-sub-fleet / recover / capacity (the `StrikeCraft` twin of `GroundTransport`).
+- The **resolver hook** — per-pulse launch/recover; the launched sub-fleet fights on the normal resolve (the one real combat-engine touch).
+- Base-mod data — a `flight-deck` template (`BayAtb{StrikeCraft}`) + a `strike-craft` (fighter) + `strike-bomber` design + a carrier hull.
 
 **NEEDS-CHANGE:**
 - The auto-resolve `StepEngagement` gains a pre-salvo step: each carrier launches up to its sortie rate into the side's fire pool, and attrited craft come off the carrier's wing pool. Small, aggregate, O(carriers) — keeps the bucketed-resolve performance guarantee.
@@ -70,18 +76,41 @@ Carriers are really **two** cradle-to-grave capabilities that meet at the hangar
 
 ## 5. The components and their dials (the ask)
 
-### The Flight Deck / Hangar Bay — `HangarBayAtb` (mirror of `GroundBayAtb`)
-The one new load-bearing component. Its dials are the carrier's whole character (all subject to the mass/research trade so they're *earned*, per the free-dial audit — dialing a bigger deck costs mass/research/materials):
+### The GENERALIZED BAY — one component, four cargoes (decision 4)
 
-| Dial | What it controls | Analogy |
+**The load-bearing design move: there is ONE bay component, not a separate troop bay and flight deck.** The developer's call — a flight deck, a troop bay, and a passenger liner's berths are *the same thing*: a hosted space that carries units and cycles them in/out. So we **promote the existing ground-only `GroundBayAtb` into a general `BayAtb`** and dial its *class*. This is `CONVENTIONS.md` §6 (abilities are components; don't invent parallel systems) applied to carrying-capacity — and it's why a carrier is cheap: the troop-transport machinery **already exists** and the carrier is the same component pointed at a different cargo.
+
+**`BayAtb`** (generalizes `GroundBayAtb` — same shape, one new dial + a wider class enum). All dials ride the mass/research trade so a bigger/faster bay is *earned* (per the free-dial audit):
+
+| Dial | What it controls | Deck analogy / troop-bay analogy |
 |---|---|---|
-| **Bay Capacity** (craft-tonnage) | how big an air wing the carrier holds | the size of the hangar deck |
-| **Sortie Rate** (craft-tons launched per combat pulse) | launch *tempo* — how fast you put strike into the fight | catapult throughput / deck-crew cycle time |
-| **Recovery / Rearm Rate** (craft-tons recovered+readied per pulse) | how fast attrited/returning craft refuel, rearm, relaunch | arrestor gear + turnaround crew |
-| **Craft Class supported** (a `CarryClass`: Light / Heavy) | can this deck cycle only light fighters, or heavy bombers too | deck strength / elevator size |
-| *(fold-in)* **Deck Vulnerability** | a deck hit's chance to suppress ops (the grave rung) | armored vs. open flight deck |
+| **Capacity** (carry-size units) | how much the bay holds — an air wing, a battalion, a passenger complement | hangar size / hold size |
+| **Bay Class** (the cargo it's fitted for) | **Personnel** (troops) · **Vehicle** (armour/artillery) · **StrikeCraft** (fighters/bombers) · **Passenger** (colonists/VIPs) | deck-strength / berth-type — *a bay carries only its own class* (you can't cram a tank in a troop bay, or a fighter in a passenger berth) |
+| **Cycle Rate** (carry-size moved in/out per operational pulse) | the tempo: **Sortie Rate** for a flight deck, **assault-deploy rate** for a troop bay, **boarding rate** for passengers | catapult+arrestor throughput / ramp-and-crew speed |
 
-> **Scope call (don't over-model):** fold launch catapult, arrestor gear, and deck crew into **Sortie Rate / Recovery Rate** rather than separate components. One flight-deck component with four dials beats five fiddly parts nobody tunes. (Matches the "trim the pretty" rule.)
+> The old design's four separate deck dials collapse into these three: **Sortie Rate + Recovery Rate → one Cycle Rate** (launch and recover are the same "move craft across the deck" throughput), **Craft Class → the Bay Class enum** (now spanning all four cargoes), **Deck Vulnerability → the existing grave rung** (a bay shot off a ship already takes its contents with it — `GroundBayAtb`'s documented behaviour, inherited).
+
+**Same component, three products (all just `BayAtb` at a different class):**
+- **Troop transport** = `BayAtb{ Personnel|Vehicle }` — *exists today* (the trooper/dropship). Migrates onto the general component byte-identically.
+- **Carrier** = `BayAtb{ StrikeCraft }` + a fast Cycle Rate — the flight deck.
+- **Personal carrier / liner** = `BayAtb{ Passenger }` — colonist/VIP lift (a future consumer; the component is ready for it).
+
+**What differs per class is the CARGO + the deploy handler, not the bay:**
+| Bay Class | Carried-state | Deploy logic | Status |
+|---|---|---|---|
+| Personnel / Vehicle | `GroundTransportDB.LoadedUnits` (ground-unit records) | `GroundTransport` (load at colony / land on target) | **EXISTS** |
+| StrikeCraft | `CarrierDB` (aboard **wing pool** + aloft **sub-fleet**) | `CarrierOps` (launch a sub-fleet / recover) | **NEW** |
+| Passenger | a passenger manifest | boarding/disembark transfer | future |
+
+So the **component generalizes; the cargo handler is per-class.** One physical bay, class-specific contents — exactly "reuse the logic, generalize the component."
+
+> **Migration note (Prime Directive / landmine L3):** `GroundBayAtb` is bound from the troop-bay JSON template and stored on existing ship designs; `TypeNameHandling` embeds its class name, so promoting `GroundBayAtb → BayAtb` (and `GroundCarryClass → BayClass`) is a save/design-format change. The DevTest is pre-release (throwaway saves), so this is acceptable **if done as a clean rename with the base-mod `troop-bay` template + the trooper/dropship designs updated in the same slice** (and a `[JsonConverter]`/id-alias if any save must survive). `GroundTransport` and the invasion chain (B5-3) read the generalized component. Do the promotion FIRST (C1), so nothing builds a second bay type.
+
+### The Strike Craft — the shared ship designer (exists)
+A strike craft is a small ship design (decision 1 — real built entities): **Fighter** (tiny hull + light guns + high thrust → high evasion, anti-ship — the dodge corner) or **Bomber** (bigger small-hull + an anti-capital payload + less thrust → less evasion, wants a fighter screen). Built through industry like any ship, **embarked into the carrier's `StrikeCraft` bay** as a wing-pool member.
+
+### The Escort (the counter — also exists)
+A **flak / point-defense escort** (`PointDefenseAtb`, flak profiles) — the flak corner of the triangle. Not new; fielding carriers just makes the enemy *want* it.
 
 ### The Strike Craft — the shared ship designer (exists)
 No new component system — a strike craft is a small ship design:
@@ -97,14 +126,14 @@ A **flak / point-defense escort** (`PointDefenseAtb`, flak profiles) is the answ
 ## 6. How it operates in a battle (the pulse loop)
 
 Inside the one auto-resolve loop, per combat pulse:
-1. **Stand off.** The carrier's doctrine holds it at range (Rear-Guard/Standoff role). It contributes little/no direct-fire itself.
-2. **Launch.** It moves up to **Sortie Rate** craft-tons from its **Bay Capacity** pool into the side's *aloft wing*.
-3. **The wing fights** as aggregate evasive firepower in the normal salvo math — it deals fighter-firepower and takes enemy fire at fighter-evasion. **Flak/PD on the enemy side floors that evasion** (saturation) and attrites the wing fast; light guns barely scratch it.
-4. **Attrition** comes off the aloft wing pool (craft-tons lost).
-5. **Recover & rearm.** Surviving craft cycle back at **Recovery Rate** into the bay, ready to relaunch — the carrier's sustain.
-6. **Grave rungs:** if the **carrier dies**, its aloft wing is stranded (no deck to recover to) and bleeds out; if the **deck is suppressed** (a deck hit), launch/recovery stop even though the hull lives.
+1. **Stand off.** The carrier's **own doctrine** (Carrier/Standoff role) holds it at range; it contributes little/no direct fire itself. Its doctrine supersedes the parent fleet's (decision 2).
+2. **Launch a sub-fleet.** It moves up to **Cycle Rate** of craft out of the hangar **wing pool** and puts them into the battle **as a sub-fleet of real strike-craft entities** (decision 1). That sub-fleet carries **its own doctrine** (e.g. aggressive strike), which — like the carrier's — **supersedes the parent fleet's** (decision 2, the existing sub-fleet-overrides-parent model). *Only launched craft can be lost, and the carrier holds range — that's the whole "project force you don't expose" bet.*
+3. **The wing fights via the normal fleet auto-resolve.** Because launched craft are just ships, they resolve on the exact same salvo math as any sub-fleet — high evasion (the dodge corner), light anti-ship guns. **Flak/PD on the enemy floors that evasion** (saturation) and kills craft fast; a gun-line barely scratches them. This is *cheap* despite being real entities because the auto-resolve **already buckets fire by weapon class** (`CombatKernel`) — 40 fighters cost about what 40 of anything cost, and the "1000-ship battle is cheap" guarantee holds.
+4. **Attrition** = real craft die and leave the sub-fleet (entity deaths, the normal way).
+5. **Recover & rearm.** Surviving craft return to the hangar at **Cycle Rate**, back into the wing pool, rearm, relaunch — the carrier's sustain (a fresh wave next pulse).
+6. **Grave rungs:** if the **carrier dies**, its aloft sub-fleet is **stranded** (no deck to recover to) and bleeds out; if the **deck (bay) is suppressed** (a bay hit — the inherited `GroundBayAtb` grave rung), launch/recovery stop even though the hull lives.
 
-The whole thing is a handful of pool arithmetic per carrier per pulse — **O(carriers)**, no per-fighter entities — so it respects the "1000-ship battle is cheap" guarantee. The *feel* (a wing melting under flak, a carrier caught and gutted) falls out of the existing triangle + evasion + PD math.
+The wing being a real sub-fleet (not a scalar) is what the developer chose over a pure aggregate — and it costs nothing extra because the fleet resolve was *already* aggregate under the hood. The *feel* (a wave melting under flak, a carrier caught and gutted, doctrine set per-wing) falls out of systems that already exist: the sub-fleet doctrine, evasion, and the flak/PD counter.
 
 ---
 
@@ -127,32 +156,27 @@ The **Connect win:** the counter is already in the box. Carriers don't need a be
 
 ---
 
-## 9. Open decisions for the developer (weigh in before C-build)
+## 9. Decisions — LOCKED (developer, 2026-07-14)
 
-1. **Strike craft = recoverable SHIPS-in-a-bay, or expendable ORDNANCE (big reusable missiles)?**
-   **Recommend SHIPS-in-a-bay.** It's the real carrier fantasy (embark, sortie, recover, rearm, attrit), it reuses the *most* existing systems (the bay pattern + ship combat value + the weapon triangle + the designer), and recover/rearm is the carrier's whole identity. The ordnance route (model a "strike" as a launched `OrdnanceDesign`) is simpler but throws away the recover/sustain loop and makes a carrier just a missile boat. *(Alt kept on the shelf, not chosen.)*
-
-2. **Do launched craft persist as entities, or resolve as an aggregate pool?**
-   **Recommend AGGREGATE (a wing-strength pool the carrier spends/attrits).** Per-fighter entities would blow the bucketed-resolve performance budget (the thing that makes 1000-ship battles cheap). The bay holds N craft-tons; combat spends/attrits that pool; recovery refills it. Individual craft can be a *visual skin* later, never the source of truth — exactly the Tier-0/Tier-2 split the combat doc already draws.
-
-3. **The carrier's doctrine role** — add a **Carrier/Standoff** posture to the sub-fleet doctrine catalog (Rear-Guard/Artillery family): hold range, launch, don't close. Data-only (a `CombatDoctrineBlueprint` row).
-
-4. **Scope of the deck component** — one `flight-deck` template with the four dials (§5), NOT separate catapult/arrestor/deck-crew parts. Confirm the trim.
+1. **Strike craft = SHIPS, and REAL BUILT ENTITIES.** Not expendable ordnance. Built through industry like a ship (and like a ground unit is built), embarked into the carrier as a wing pool. *(The ordnance/missile-boat alt is rejected.)*
+2. **Launched craft persist as ENTITIES and fight as a SUB-FLEET** — *not* an aggregate scalar. The wing pool is the hangar inventory; launching puts real craft into the battle as a sub-fleet. Performance is fine because the fleet resolve already buckets fire by class (§6). **The carrier's doctrine AND the launched sub-fleet's doctrine each SUPERSEDE the parent fleet's** (the existing sub-fleet-overrides-parent model).
+3. **Add the Carrier/Standoff doctrine role** — a `CombatDoctrineBlueprint` posture (Rear-Guard/Artillery family): hold range, launch, don't close. Data-only.
+4. **ONE generalized bay component** — the flight deck IS the troop bay IS the passenger berth, dialed by Bay Class (§5). Promote `GroundBayAtb → BayAtb`; do not build a separate hangar component.
 
 ---
 
 ## 10. Proposed build sequence (each a gauged slice, CI-verified, one at a time)
 
-- **C1 — the component (data + atb).** `HangarBayAtb` (mirror `GroundBayAtb`) + a base-mod `flight-deck` template (JSON→atb, the gotcha-#10 sensor) + a `default-design-flight-deck` + a carrier hull design. Gauge: the deck binds its dials from JSON and mounts on a ship (like `GroundUnitBaseModTests`). *Byte-identical to combat — nothing launches yet.*
-- **C2 — the carry state + ops (engine, mirror `GroundTransport`).** `CarrierDB` (aboard/aloft pools) + `CarrierOps` (Embark / Launch / Recover / Capacity). Gauge: embark craft, launch up to sortie rate, recover — pool arithmetic pinned in a test. *Still byte-identical to the live battle (unwired).*
-- **C3 — the resolver hook.** `StepEngagement` gains the pre-salvo launch + wing-attrition + recovery step. Gauge: a carrier + fighter wing out-damages nothing on its own but, vs. a soft gun-line at range, wins; vs. a **flak escort**, the wing melts and the carrier loses — the triangle payoff, through the real resolve. *This is the one real combat change; gate it if needed for byte-identity.*
-- **C4 — doctrine + AI.** The Carrier/Standoff posture (data) + the NPC brain fields a carrier group when its doctrine tilts that way. Gauge: doctrine applies; AI builds deck+craft.
-- **C5 — bombers + anti-capital craft.** A bomber strike-craft (heavy payload, needs a fighter screen) — the combined-arms layer. Gauge: bomber melts to flak alone, survives with a fighter screen.
+- **C1 — GENERALIZE the bay (the keystone; do FIRST).** Promote `GroundBayAtb → BayAtb` + `GroundCarryClass → BayClass` (add **StrikeCraft**, **Passenger**), add the **Cycle Rate** dial, and repoint the base-mod `troop-bay` template + the trooper/dropship designs + `GroundTransport` + the B5-3 invasion chain onto it. Gauge: the existing troop-transport tests (`GroundBayAtb`/`GroundTransport` gauges, `DevTest_UMF_CanBuildATroopTransport…`) stay green through the rename — **the troop bay is byte-identical, now a `BayAtb{Personnel}`.** *No carrier yet; this is the "don't build parallel systems" foundation.*
+- **C2 — the flight-deck data + a carrier.** A base-mod `flight-deck` template = `BayAtb{ StrikeCraft }` with a fast Cycle Rate (JSON→atb, the gotcha-#10 sensor) + a fighter strike-craft ship design + a carrier hull that mounts the deck. Gauge: the deck binds its dials + `BayClass.StrikeCraft` from JSON and mounts on a ship (like `GroundUnitBaseModTests`). *Byte-identical to combat — nothing launches yet.*
+- **C3 — the carry state + ops (engine, mirror `GroundTransport`).** `CarrierDB` (aboard **wing pool** + aloft **sub-fleet** handle) + `CarrierOps` (Embark / Launch-as-sub-fleet / Recover / Capacity). Launch spawns/activates the strike craft as a sub-fleet under the carrier (`TreeHierarchyDB`), tagged with the carrier/wing doctrine. Gauge: embark craft, launch up to Cycle Rate as a sub-fleet, recover survivors — pinned in a test. *Still byte-identical to the live battle (unwired).*
+- **C4 — the resolver hook + doctrine.** `StepEngagement` gains the per-pulse launch/recover; the launched sub-fleet fights on the normal resolve; add the **Carrier/Standoff** doctrine posture (data) with sub-fleet-supersedes-parent. Gauge: a carrier + fighter wing loses to nothing on its own but, vs. a soft gun-line at range, **wins**; vs. a **flak escort**, the wing melts and the carrier loses — the triangle payoff through the real resolve. *The one real combat change; gate it for byte-identity if needed.*
+- **C5 — bombers + AI.** A bomber strike-craft (heavy anti-capital payload, less evasive, wants a fighter screen) — the combined-arms layer; and the NPC brain fields a carrier group when its doctrine tilts that way. Gauge: bomber melts to flak alone, survives with a fighter screen; AI builds deck+craft.
 
-Each slice: design the decision → build → **gauge in CI** → wait green → next. The counters (flak/PD) already exist, so the very first playable slice (C1–C3) is a *complete* rock-paper-scissors, not a half-system.
+Each slice: design the decision → build → **gauge in CI** → wait green → next. **C1 is pure refactor-to-general (byte-identical troop transport); the carrier rides in on C2–C4.** The counters (flak/PD) already exist, so the first *playable* carrier slice is a complete rock-paper-scissors, not a half-system.
 
 ---
 
 ## 11. One-paragraph summary (the point, restated)
 
-A carrier is a **standoff force-projector**: it throws a swarm of evasive strike craft from beyond gun range, trading a soft, expensive hull and hard-countered-by-flak fragility for reach and dodge. It needs **no new combat engine** — launched craft are evasive firepower in the one auto-resolve loop, the **hangar is the troop-bay pattern reused** (`HangarBayAtb`/`CarrierDB`/`CarrierOps` mirror the ground versions), the **strike craft are just small ship designs** (the whole craft cradle-to-grave already exists), and the **counter is already in the box** (flak/point-defense shred saturation-heavy evasive swarms). The new build is one component with four dials (Bay Capacity · Sortie Rate · Recovery Rate · Craft Class), a carry-state blob, and one pre-salvo resolver hook. The decision it adds — *project from range vs. close and brawl, and how much flak the enemy must buy to answer you* — stacks cleanly on detection, the weapon triangle, doctrine, and the mass budget.
+A carrier is a **standoff force-projector**: it throws a swarm of evasive strike craft from beyond gun range, trading a soft, expensive hull and hard-countered-by-flak fragility for reach and dodge. It needs **no new combat engine** — launched craft are **real strike-craft entities fighting as a sub-fleet** in the one auto-resolve loop (cheap because that loop already buckets fire by class), and **their doctrine + the carrier's supersede the parent fleet's**. The **hangar is the troop bay, generalized**: one `BayAtb` component (Capacity · **Bay Class** [troops/vehicles/strike-craft/passengers] · **Cycle Rate**) that serves the trooper, the carrier, AND a passenger liner — `CONVENTIONS.md` §6, don't build parallel systems. The **strike craft are just small ship designs** (their cradle-to-grave already exists), and the **counter is already in the box** (flak/point-defense shred saturation-heavy evasive swarms). The genuinely new build is small: generalize the bay, add a `StrikeCraft` deploy handler (`CarrierDB`/`CarrierOps`, mirroring `GroundTransport`), and one resolver hook. The decision it adds — *project from range vs. close and brawl, and how much flak the enemy must buy to answer you* — stacks cleanly on detection, the weapon triangle, sub-fleet doctrine, and the mass budget.
