@@ -15,9 +15,12 @@ namespace Pulsar4X.Client
     public class ComponentDesignWindow : PulsarGuiWindow
     {
         private static List<ComponentTemplateBlueprint> templates = new();
-        // Templates grouped by ComponentType (the "Doors" of component design) — each group becomes one collapsible
-        // category header in the Make New panel. Sorted by category name; templates sorted within each.
-        private static List<KeyValuePair<string, List<ComponentTemplateBlueprint>>> templatesByCategory = new();
+
+        // The design's Category ▸ Door taxonomy (docs/economy/COMPONENT-DESIGNER-CATEGORIES.md, via ComponentDoors):
+        // ordered categories, each holding its ordered doors, each holding the "Make New" templates behind that door.
+        private sealed class DoorGroup { public string Door; public List<ComponentTemplateBlueprint> Templates = new(); }
+        private sealed class CategoryGroup { public string Category; public List<DoorGroup> Doors = new(); }
+        private static List<CategoryGroup> templatesByCategory = new();
         private static ComponentTemplateBlueprint? selectedTemplate;
 
 
@@ -39,14 +42,32 @@ namespace Pulsar4X.Client
                 templates = _uiState.Faction.GetDataBlob<FactionInfoDB>().Data.ComponentTemplates.Select(kvp => kvp.Value).ToList();
                 templates.Sort((a, b) => a.Name.CompareTo(b.Name));
 
-                // Group the templates by their ComponentType — the "Doors" the Make New panel organises by — so
-                // every category (Weapons, Sensors, Power, …) is its own collapsible section of blank templates.
-                templatesByCategory = templates
-                    .GroupBy(t => string.IsNullOrWhiteSpace(t.ComponentType) ? "Other" : t.ComponentType)
-                    .OrderBy(g => g.Key)
-                    .Select(g => new KeyValuePair<string, List<ComponentTemplateBlueprint>>(
-                        g.Key, g.OrderBy(t => t.Name).ToList()))
-                    .ToList();
+                // Classify every unlocked template into its designed Category ▸ Door (ComponentDoors), then lay them out
+                // in the design's category/door order so the panel reads as the taxonomy (Weapons → Energy/Ballistic/…,
+                // Logistical → Storage where cargo AND fuel live, Chassis → Hull, …). Unmapped templates fall into
+                // "Other" keyed by their raw ComponentType, so nothing ever vanishes.
+                var byCatDoor = new Dictionary<string, Dictionary<string, List<ComponentTemplateBlueprint>>>();
+                foreach (var t in templates)
+                {
+                    var (cat, door) = ComponentDoors.Classify(t.UniqueID, t.ComponentType);
+                    if (!byCatDoor.TryGetValue(cat, out var doors)) { doors = new(); byCatDoor[cat] = doors; }
+                    if (!doors.TryGetValue(door, out var list)) { list = new(); doors[door] = list; }
+                    list.Add(t);
+                }
+
+                templatesByCategory = new List<CategoryGroup>();
+                // Categories in the design's order first; any stray category (shouldn't happen — "Other" is the sink) after.
+                var orderedCats = ComponentDoors.CategoryOrder
+                    .Where(byCatDoor.ContainsKey)
+                    .Concat(byCatDoor.Keys.Where(c => System.Array.IndexOf(ComponentDoors.CategoryOrder, c) < 0));
+                foreach (var cat in orderedCats)
+                {
+                    var doors = byCatDoor[cat];
+                    var cg = new CategoryGroup { Category = cat };
+                    foreach (var door in doors.Keys.OrderBy(d => ComponentDoors.DoorRank(cat, d)).ThenBy(d => d))
+                        cg.Doors.Add(new DoorGroup { Door = door, Templates = doors[door].OrderBy(t => t.Name).ToList() });
+                    templatesByCategory.Add(cg);
+                }
 
                 componentDesigns = _uiState.Faction.GetDataBlob<FactionInfoDB>().ComponentDesigns.ToDictionary();
             }
@@ -62,9 +83,10 @@ namespace Pulsar4X.Client
             if(Window.Begin("Component Designer", ref IsActive, _flags))
             {
                 Vector2 windowContentSize = ImGui.GetContentRegionAvail();
-                var firstChildSize = new Vector2(windowContentSize.X * 0.15f, windowContentSize.Y);
+                // Left panel is a two-level Category ▸ Door tree now, so give it a little more room.
+                var firstChildSize = new Vector2(windowContentSize.X * 0.22f, windowContentSize.Y);
                 var secondChildSize = new Vector2(windowContentSize.X * 0.15f, windowContentSize.Y);
-                var thirdChildSize = new Vector2(windowContentSize.X * 0.7f - (windowContentSize.X * 0.01f), windowContentSize.Y);
+                var thirdChildSize = new Vector2(windowContentSize.X * 0.63f - (windowContentSize.X * 0.01f), windowContentSize.Y);
 
                 if(ImGui.BeginChild("ComponentDesignSelection", firstChildSize, ImGuiChildFlags.Borders))
                 {
@@ -106,26 +128,33 @@ namespace Pulsar4X.Client
                                   "To edit or re-open a design you already made, pick its category, then use the\n" +
                                   "\"Current Component Designs\" list to the right.");
 
-            // One collapsible header per ComponentType — the "Doors" of component design. Open by default so the
-            // panel reads as an organised menu of what can be built, not a wall of closed sections.
+            // One collapsible header per CATEGORY (the 11 designed categories), and inside it a labelled section per
+            // DOOR (Weapons ▸ Energy / Ballistic / …). Categories open by default so the panel reads as the taxonomy.
             foreach (var category in templatesByCategory)
             {
-                if (!ImGui.CollapsingHeader(category.Key + "###door-" + category.Key, ImGuiTreeNodeFlags.DefaultOpen))
+                if (!ImGui.CollapsingHeader(category.Category + "###cat-" + category.Category, ImGuiTreeNodeFlags.DefaultOpen))
                     continue;
 
                 ImGui.Indent();
-                foreach (var template in category.Value)
+                foreach (var door in category.Doors)
                 {
-                    bool isSelected = selectedTemplate == template;
-                    if (ImGui.Selectable("＋ New " + template.Name + "###component-" + template.UniqueID, isSelected))
+                    // The door label (dim, not a button) — the second level of the taxonomy.
+                    ImGui.TextDisabled(door.Door);
+                    ImGui.Indent();
+                    foreach (var template in door.Templates)
                     {
-                        SelectTemplate(template);
-                    }
+                        bool isSelected = selectedTemplate == template;
+                        if (ImGui.Selectable("＋ New " + template.Name + "###component-" + template.UniqueID, isSelected))
+                        {
+                            SelectTemplate(template);
+                        }
 
-                    // Guard the Description lookup: a template missing the "Description" formula must not throw in the
-                    // designer (we just fixed a whole-client crash rooted in this window).
-                    string desc = template.Formulas != null && template.Formulas.TryGetValue("Description", out var d) ? d : "";
-                    DisplayHelpers.DescriptiveTooltip(template.Name, template.ComponentType, desc);
+                        // Guard the Description lookup: a template missing the "Description" formula must not throw in
+                        // the designer (we just fixed a whole-client crash rooted in this window).
+                        string desc = template.Formulas != null && template.Formulas.TryGetValue("Description", out var d) ? d : "";
+                        DisplayHelpers.DescriptiveTooltip(template.Name, template.ComponentType, desc);
+                    }
+                    ImGui.Unindent();
                 }
                 ImGui.Unindent();
             }
