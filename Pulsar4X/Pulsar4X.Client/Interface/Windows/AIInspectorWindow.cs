@@ -84,11 +84,23 @@ namespace Pulsar4X.Client
 
                     // The decision tape — the scrolling history, newest at the bottom (matches the log order).
                     // EndChild is unconditional (the codebase convention, e.g. AdminWindow) — it must always run.
-                    if (faction.TryGetDataBlob<AIDecisionRecordDB>(out var tape) && tape.Records.Count > 0)
+                    // SNAPSHOT the tape before iterating: the sim thread appends to AIDecisionRecordDB.Records on the
+                    // parallel decision tick while we draw, so a live `foreach` over it throws "Collection was modified".
+                    // Worse, that throw lands INSIDE the BeginChild block below, skipping EndChild → the ImGui child
+                    // stack goes unbalanced and corrupts EVERY window drawn after this one (the cascade seen in the
+                    // playtest logs). ToArray() once = a stable copy that can't throw, so EndChild always runs.
+                    AIDecisionRecord[] records = null;
+                    if (faction.TryGetDataBlob<AIDecisionRecordDB>(out var tape))
+                    {
+                        try { records = tape.Records.ToArray(); }
+                        catch { records = null; }   // ring buffer mutated mid-copy on a bad frame — skip it, never throw
+                    }
+
+                    if (records != null && records.Length > 0)
                     {
                         if (ImGui.BeginChild("###aitape" + faction.Id, new Vector2(0, 150), ImGuiChildFlags.Borders))
                         {
-                            foreach (var rec in tape.Records)
+                            foreach (var rec in records)
                                 ImGui.TextUnformatted(PlanReadout.DecisionLine(rec, name));
                             // Keep the view pinned to the newest line as the tape grows.
                             if (ImGui.GetScrollY() >= ImGui.GetScrollMaxY() - 1f)
