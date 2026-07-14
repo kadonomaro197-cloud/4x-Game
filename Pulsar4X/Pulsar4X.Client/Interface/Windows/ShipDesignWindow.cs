@@ -210,7 +210,12 @@ namespace Pulsar4X.Client
         {
             if(!IsActive) return;
 
-            if (Window.Begin("Ship Design", ref IsActive, _flags))
+            // The ENTITY ASSEMBLER (not a "ship designer"): the Component Designer makes the pieces; this window
+            // ASSEMBLES those pieces into any buildable ENTITY — a ship, a station, an installation/building, a
+            // ground unit — a chassis + a list of components (docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md §0, the one
+            // designer + one assembler). v1 assembles ship-class designs; generalising to every entity kind is the
+            // in-progress work (same window, no new window — see UNIVERSAL-ASSEMBLY §0).
+            if (Window.Begin("Entity Assembler", ref IsActive, _flags))
             {
                 if(_existingShipDesignNames.Count != _uiState.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns.Values.Count)
                 {
@@ -226,8 +231,8 @@ namespace Pulsar4X.Client
                 ImGui.SetCursorPosY(27f);
 
                 // NOTE: no early `return` here. A bare `return` inside the Window.Begin(...) block skips Window.End()
-                // below, leaving "Ship Design" open — which corrupts the ImGui window stack and cascades a
-                // 'Begin(...) called while already inside "Ship Design"' error onto EVERY other window that frame (the
+                // below, leaving "Entity Assembler" open — which corrupts the ImGui window stack and cascades a
+                // 'Begin(...) called while already inside "Entity Assembler"' error onto EVERY other window that frame (the
                 // whole-UI break seen in the playtest). The DevTest starts with NO ship designs, so ShowNoDesigns is
                 // ALWAYS true here — this path is the common case, not an edge. Use if/else so End() always runs.
                 if(ShowNoDesigns)

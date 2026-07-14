@@ -23,8 +23,18 @@ components. This is the whole point of the universal principle: same object, sam
   essence-axes coverage gate, the carry-capacity gate, the five general part types generalized by function — is
   folded here and implemented by `GroundUnitAssembly`). Its "G-D4 client design window / assembly window" plan is
   **retired**: that assembly UX lands **inside the one designer**, not a new window.
+**The two tools (the correct names — the developer's call 2026-07-14):**
+- **Component Designer** (`ComponentDesignWindow`) — makes the PIECES. Pick a category ▸ door, set the dials, name,
+  save. Produces a `ComponentDesign` (a weapon, an engine, a chassis, a fortification, a reactor…).
+- **Entity Assembler** (`ShipDesignWindow`, retitled 2026-07-14 — it was mislabelled "Ship Design") — ASSEMBLES
+  those pieces into any buildable ENTITY: a building/factory/installation, a station, an individual ground unit, a
+  ship — the whole deal. An entity = a chassis + a list of components; stats emerge from the sum. It is NOT a ship
+  designer; ships are just one entity kind it assembles. v1 assembles ship-class designs; generalising it to every
+  entity kind (station / installation / ground unit) is the in-progress work — **the same one window, never a new
+  per-domain one.**
+
 - `GroundUnitAssembly` is the **shared assembler core** (not a ground-only thing) — the general "chassis + parts →
-  a buildable's emergent stats" engine the one designer drives for every assembled kind.
+  a buildable's emergent stats" engine the Entity Assembler drives for every assembled kind.
 - The unit-scale coverage gate (prove you can build ANY sci-fi unit's essence from the parts bin — Scale /
   Firepower / Range / Delivery / Damage-type / Survivability / Mobility / Role axes) is the **completeness test for
   the one designer's parts bin**, not a separate system.

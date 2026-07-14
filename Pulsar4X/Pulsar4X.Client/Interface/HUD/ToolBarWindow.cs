@@ -53,10 +53,10 @@ namespace Pulsar4X.Client
             btn =  new ToolBarOption()
             {
                 Picture = _uiState.Img_DesignShip(),
-                TooltipText = "Design a new Ship",
+                TooltipText = "Entity Assembler — assemble components into anything buildable (ship / station / building / unit)",
                 OnClick = new Action(ShipDesignWindow.GetInstance().ToggleActive),
                 GetActive = new Func<bool>(ShipDesignWindow.GetInstance().GetActive)
-                //Opens up the ship design menu
+                //Opens up the Entity Assembler
             };
             ToolButtons.Add(btn);
 
