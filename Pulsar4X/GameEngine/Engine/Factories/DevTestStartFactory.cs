@@ -52,7 +52,10 @@ namespace Pulsar4X.Engine
             ComponentDesigner.StartResearched = true;
 
             // Sol via the live blueprint path (the sol/ folder has no systemInfo.json for the legacy JSON loader).
-            var startingSystem = StarSystemFactory.LoadFromBlueprint(game, game.StartingGameData.Systems["sol"]);
+            // The System blueprint's UniqueID is "system-sol" (the bare "sol" is the STAR's id) — and that same id
+            // becomes the runtime StarSystem.ID/ManagerID, so a scenario colony/station references it as
+            // "systemId": "system-sol".
+            var startingSystem = StarSystemFactory.LoadFromBlueprint(game, game.StartingGameData.Systems["system-sol"]);
 
             Entity? playerFaction = null;
             var loadedFactions = new List<(Entity faction, string path)>();

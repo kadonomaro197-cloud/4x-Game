@@ -177,7 +177,7 @@
   ],
   "colonies": [
     {
-      "systemId": "sol",
+      "systemId": "system-sol",
       "location": "Mars",
       "species": {
         "name": "Human",
@@ -241,7 +241,7 @@
       ]
     },
     {
-      "systemId": "sol",
+      "systemId": "system-sol",
       "location": "Luna",
       "species": {
         "name": "Human",
@@ -297,7 +297,7 @@
       ]
     },
     {
-      "systemId": "sol",
+      "systemId": "system-sol",
       "location": "Venus",
       "species": {
         "name": "Human",
@@ -353,7 +353,7 @@
       ]
     },
     {
-      "systemId": "sol",
+      "systemId": "system-sol",
       "location": "Ceres",
       "species": {
         "name": "Human",
@@ -415,7 +415,7 @@
     {
       "name": "Mars Home Guard",
       "location": {
-        "systemId": "sol",
+        "systemId": "system-sol",
         "body": "Mars"
       },
       "ships": [
@@ -432,7 +432,7 @@
     {
       "name": "Luna Picket",
       "location": {
-        "systemId": "sol",
+        "systemId": "system-sol",
         "body": "Luna"
       },
       "ships": [
@@ -445,7 +445,7 @@
     {
       "name": "Belt Squadron",
       "location": {
-        "systemId": "sol",
+        "systemId": "system-sol",
         "body": "Ceres"
       },
       "ships": [

@@ -165,7 +165,7 @@
   "colonies": [],
   "stations": [
     {
-      "systemId": "sol",
+      "systemId": "system-sol",
       "location": "Titan",
       "species": {
         "name": "Xenos",
