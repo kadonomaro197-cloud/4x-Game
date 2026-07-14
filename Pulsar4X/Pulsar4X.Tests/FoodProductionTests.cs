@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using NUnit.Framework;
 using Pulsar4X.Engine;
@@ -139,6 +140,75 @@ namespace Pulsar4X.Tests
             Assert.That(sust.FoodShortage, Is.EqualTo(0.0),
                 "the installed arcology covers the demand — the shortage (and its −40 morale floor) is gone");
             Log($"pop {pop:N0}, demand ≈1000/day, supply {comps.GetTotalFoodOutput():0}/day → shortage {sust.FoodShortage:0.00}");
+        }
+
+        [Test]
+        [Description("INTEGRATION through the REAL monthly processors (not the pieces in isolation): a colony with a food demand and no farm develops a food-shortage morale penalty after the clock advances (SustenanceProcessor → PopulationProcessor → ColonyMoraleDB, the way the game runs it); installing an arcology and advancing again CLEARS the penalty and ADDS the quality bonus, so morale measurably rises. Exercises the whole supply→sustenance→morale pipeline end to end.")]
+        public void FoodPipeline_EndToEnd_MoraleTracksFoodOverTime()
+        {
+            var s = TestScenario.CreateWithColony();
+            var faction = s.Faction;
+            var fData = faction.GetDataBlob<FactionInfoDB>().Data;
+            fData.Unlock("food-production");
+            var baseMod = new ModDataStore();
+            new ModLoader().LoadModManifest("Data/basemod/modInfo.json", baseMod);
+            var arcology = ComponentDesignFromJson.Create(faction, fData, baseMod.ComponentDesigns["default-design-hydroponics-arcology"]);
+
+            var sust = s.Colony.GetDataBlob<ColonySustenanceDB>();
+            var morale = s.Colony.GetDataBlob<ColonyMoraleDB>();
+            long pop = s.Colony.GetDataBlob<ColonyInfoDB>().Population.Values.Sum();
+
+            // A food demand comfortably under one arcology's 5000/day output, so SUPPLY (not luck) decides the shortage.
+            sust.SetDemand(0, 2000.0 / pop);   // demand ≈ 2000/day
+
+            // Starving: advance the real clock so the monthly SustenanceProcessor + PopulationProcessor actually run.
+            s.AdvanceTime(TimeSpan.FromDays(65));
+            double starvingMorale = morale.Morale;
+            Assert.That(morale.Factors.TryGetValue("food", out var foodPenalty) && foodPenalty < 0.0, Is.True,
+                "with demand and no farm, the live monthly pipeline puts a negative food (starvation) factor on morale");
+            Log($"starving: morale {starvingMorale:0}, food factor {foodPenalty:0}");
+
+            // Feed them: install the arcology, advance again — the pipeline should clear the shortage AND add a quality bonus.
+            s.Colony.AddComponent(new ComponentInstance(arcology));
+            s.AdvanceTime(TimeSpan.FromDays(65));
+            double fedMorale = morale.Morale;
+            Assert.That(sust.FoodShortage, Is.EqualTo(0.0), "the arcology's output cleared the shortage in the live pipeline");
+            Assert.That(morale.Factors["food"], Is.EqualTo(0.0), "no starvation penalty once fed");
+            Assert.That(morale.Factors.TryGetValue("food quality", out var qb) && qb > 0.0, Is.True,
+                "and the arcology's quality 2.5 adds a positive morale bonus");
+            Assert.That(fedMorale, Is.GreaterThan(starvingMorale),
+                "net: feeding the colony measurably raised morale through the REAL processors");
+            Log($"fed: morale {fedMorale:0}, quality bonus {qb:0} (Δmorale +{fedMorale - starvingMorale:0})");
+        }
+
+        [Test]
+        [Description("The GRAVE rung: once an installed arcology is feeding the colony, DESTROYING it (what an orbital bombardment does — removes the component instance) drops food supply to 0 and the shortage returns. Proves food is a real, LOSABLE capability — starve an enemy by bombing their farms — not a permanent grant.")]
+        public void FoodProduction_GraveRung_DestroyingTheFarmReturnsStarvation()
+        {
+            var s = TestScenario.CreateWithColony();
+            var faction = s.Faction;
+            var fData = faction.GetDataBlob<FactionInfoDB>().Data;
+            fData.Unlock("food-production");
+            var baseMod = new ModDataStore();
+            new ModLoader().LoadModManifest("Data/basemod/modInfo.json", baseMod);
+            var arcology = ComponentDesignFromJson.Create(faction, fData, baseMod.ComponentDesigns["default-design-hydroponics-arcology"]);
+
+            var comps = s.Colony.GetDataBlob<ComponentInstancesDB>();
+            var sust = s.Colony.GetDataBlob<ColonySustenanceDB>();
+            long pop = s.Colony.GetDataBlob<ColonyInfoDB>().Population.Values.Sum();
+            sust.SetDemand(0, 2000.0 / pop);
+
+            var instance = new ComponentInstance(arcology);
+            s.Colony.AddComponent(instance);
+            SustenanceProcessor.Recalc(s.Colony);
+            Assert.That(sust.FoodShortage, Is.EqualTo(0.0), "fed while the farm stands");
+
+            // Destroy the farm — the exact removal an orbital-bombardment installation-kill performs.
+            comps.RemoveComponentInstance(instance);
+            Assert.That(comps.GetTotalFoodOutput(), Is.EqualTo(0.0), "no food output once the farm is gone");
+            SustenanceProcessor.Recalc(s.Colony);
+            Assert.That(sust.FoodShortage, Is.EqualTo(1.0),
+                "destroying the farm returns the colony to total food shortage — food is a losable capability");
         }
     }
 }
