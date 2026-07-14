@@ -65,6 +65,15 @@ namespace Pulsar4X.Industry
 
             foreach (var kvp in actualMiningRates)
             {
+                // The rate table can carry a mineral the planet has NO deposit of: CalculateActualMiningRates keeps
+                // the key (with rate 0) when accessibility is 0 (it guards planetMinerals with ContainsKey, we didn't).
+                // This happens whenever a mine's mineable set is broader than the body's actual deposits — e.g. a
+                // DevTest game booting on a random seed whose Earth lacks one of the default mine's minerals. Skip it
+                // (there's nothing here to mine) instead of hard-indexing planetMinerals[key] and throwing — that
+                // throw faults the whole sim tick on the parallel thread, so the clock stops advancing (unobserved).
+                if (!planetMinerals.ContainsKey(kvp.Key) || !_minerals.ContainsKey(kvp.Key))
+                    continue;
+
                 ICargoable mineral = _minerals[kvp.Key];
                 string cargoTypeID = mineral.CargoTypeID;
 
