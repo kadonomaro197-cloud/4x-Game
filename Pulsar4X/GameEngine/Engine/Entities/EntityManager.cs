@@ -639,7 +639,13 @@ namespace Pulsar4X.Engine
         {
             if (!_factionSensorContacts.ContainsKey(factionId))
             {
-                _factionSensorContacts.Add(factionId, new SystemSensorContacts(Game.Factions[factionId]));
+                // Defensive: this is the ONE hard index reachable from the fog-gated combat/sensor tick (which runs on
+                // the parallel sim thread, where a throw silently FREEZES the clock — landmine L4). Game.Factions is a
+                // plain Dictionary whose indexer throws on a missing key; a stray/deregistered faction id would wedge
+                // the sim. TryGetValue → a faction with no registered entity gets an empty contact store (sees nothing)
+                // instead of freezing the game.
+                Entity factionEntity = Game.Factions.TryGetValue(factionId, out var f) ? f : Entity.InvalidEntity;
+                _factionSensorContacts.Add(factionId, new SystemSensorContacts(factionEntity));
             }
 
             return _factionSensorContacts[factionId];

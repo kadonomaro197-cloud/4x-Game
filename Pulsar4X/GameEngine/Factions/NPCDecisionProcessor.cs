@@ -103,6 +103,12 @@ namespace Pulsar4X.Factions
             _game = game;
         }
 
+        /// <summary>Visibility for the Tick guard below: the most recent Tick exception (faction + type + message) and a
+        /// running count. Not serialized. The client surfaces these as an <c>[AI] ⚠</c> line in game_logs so a swallowed
+        /// throw is observable, not invisible (the Visibility Gate — a caught exception with no readout is a hidden bug).</summary>
+        public static string LastTickError = "";
+        public static int TickErrorCount;
+
         public void ProcessEntity(Entity entity, int deltaSeconds)
         {
             if (!entity.TryGetDataBlob<FactionInfoDB>(out var factionInfoDB))
@@ -110,7 +116,21 @@ namespace Pulsar4X.Factions
             if (!factionInfoDB.IsNPC)
                 return;
 
-            Tick(entity, factionInfoDB);
+            // A faction-level hotloop MUST NEVER throw: it runs on the parallel sim thread where an unobserved
+            // exception silently FREEZES the game clock (EntityManager mutations are async void — the throw vanishes;
+            // landmine L4). The Tick now emits REAL orders every day (the war footing routes through EmitOrders →
+            // Conquer move/build orders), so a bad order path can't be allowed to wedge the whole sim during a long
+            // unattended playtest. Swallow to keep the clock running, but stamp the error (static fields above) so the
+            // client can surface it — a survivable, logged hiccup instead of a dead universe.
+            try
+            {
+                Tick(entity, factionInfoDB);
+            }
+            catch (System.Exception ex)
+            {
+                LastTickError = $"{factionInfoDB.Abbreviation}: {ex.GetType().Name}: {ex.Message}";
+                TickErrorCount++;
+            }
         }
 
         public int ProcessManager(EntityManager manager, int deltaSeconds)

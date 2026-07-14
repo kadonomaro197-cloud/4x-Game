@@ -31,6 +31,8 @@ namespace Pulsar4X.Client
         // Per-faction newest-flushed decision timestamp, so the heartbeat writes each [AI] record ONCE (the tape is a
         // ring buffer, so an index count would break once it caps — timestamps are monotonic per monthly tick).
         private static readonly Dictionary<int, DateTime> _lastAiWhen = new();
+        // Newest AI-Tick error count we've already surfaced, so a swallowed Tick throw is logged ONCE per occurrence.
+        private static int _lastAiErrorCount;
 
         public static void Line(string category, string message)
         {
@@ -355,6 +357,16 @@ namespace Pulsar4X.Client
                     }
                     _lastAiWhen[faction.Id] = newest;
                 }
+
+                // Surface any AI Tick exception. The engine-side freeze-guard swallows it so the sim clock never wedges;
+                // here we make it VISIBLE (the Visibility Gate) — one [AI] ⚠ line per occurrence, so a bad decision/order
+                // path shows up in game_logs instead of a faction silently going quiet.
+                if (NPCDecisionProcessor.TickErrorCount > _lastAiErrorCount)
+                {
+                    Line("AI", $"⚠ tick error #{NPCDecisionProcessor.TickErrorCount}: {NPCDecisionProcessor.LastTickError}");
+                    _lastAiErrorCount = NPCDecisionProcessor.TickErrorCount;
+                }
+
                 Console.Out.Flush();
             }
             catch (Exception e)
