@@ -22,6 +22,9 @@ namespace Pulsar4X.Client
         private sealed class CategoryGroup { public string Category; public List<DoorGroup> Doors = new(); }
         private static List<CategoryGroup> templatesByCategory = new();
         private static ComponentTemplateBlueprint? selectedTemplate;
+        // The DOOR the player has opened (Energy / Ballistic / …). The tree now selects a DOOR, not a named
+        // template — the specific type within a door is a "Type" dropdown in the design panel.
+        private static DoorGroup? _selectedDoor;
 
 
         private static Dictionary<string, ComponentDesign> componentDesigns = new();
@@ -121,11 +124,12 @@ namespace Pulsar4X.Client
         void DisplayTemplateSelection()
         {
             DisplayHelpers.Header("Make New Component",
-                                  "Start a BRAND-NEW component design from scratch. Pick a category below (a \"door\"),\n" +
-                                  "then a template — the blank framework for that kind of component. You set every\n" +
-                                  "attribute yourself and press Save to create the design; nothing here is a copy of\n" +
-                                  "an existing design.\n\n" +
-                                  "To edit or re-open a design you already made, pick its category, then use the\n" +
+                                  "Start a BRAND-NEW component design from scratch. Open a category, then click a\n" +
+                                  "\"door\" (e.g. Weapons → Energy / Ballistic / Guided). The design panel opens with a\n" +
+                                  "\"Type\" dropdown for the specific kind within that door, and its dials — you set every\n" +
+                                  "attribute yourself and press Save to create the design; nothing here is a copy of an\n" +
+                                  "existing design.\n\n" +
+                                  "To edit or re-open a design you already made, open its door, then use the\n" +
                                   "\"Current Component Designs\" list to the right.");
 
             // One collapsible header per CATEGORY (the 11 designed categories), and inside it a labelled section per
@@ -138,39 +142,43 @@ namespace Pulsar4X.Client
                 ImGui.Indent();
                 foreach (var door in category.Doors)
                 {
-                    // The door label (dim, not a button) — the second level of the taxonomy.
-                    ImGui.TextDisabled(door.Door);
-                    ImGui.Indent();
-                    foreach (var template in door.Templates)
+                    // The DOOR is the clickable leaf now (Energy / Ballistic / Guided / …) — NOT a list of named
+                    // example templates ("＋ New Rending Claws"). Click a door to start a blank design; the specific
+                    // kind within the door (Ballistic → Railgun / Flak / …) is a "Type" dropdown in the panel —
+                    // "roles are dials, not doors" (docs/economy/COMPONENT-DESIGNER-CATEGORIES.md).
+                    bool doorSelected = _selectedDoor == door;
+                    if (ImGui.Selectable(door.Door + "###door-" + category.Category + "-" + door.Door, doorSelected))
                     {
-                        bool isSelected = selectedTemplate == template;
-                        if (ImGui.Selectable("＋ New " + template.Name + "###component-" + template.UniqueID, isSelected))
-                        {
-                            SelectTemplate(template);
-                        }
-
-                        // Guard the Description lookup: a template missing the "Description" formula must not throw in
-                        // the designer (we just fixed a whole-client crash rooted in this window).
-                        string desc = template.Formulas != null && template.Formulas.TryGetValue("Description", out var d) ? d : "";
-                        DisplayHelpers.DescriptiveTooltip(template.Name, template.ComponentType, desc);
+                        SelectDoor(door);
                     }
-                    ImGui.Unindent();
+                    // Tooltip names the types behind the door, so nothing is hidden — just not a tree leaf each.
+                    if (door.Templates.Count > 0)
+                    {
+                        string types = string.Join(", ", door.Templates.Select(t => t.Name));
+                        DisplayHelpers.DescriptiveTooltip(door.Door, category.Category, "Types: " + types);
+                    }
                 }
                 ImGui.Unindent();
             }
         }
 
-        // Start a FRESH design from a template (not a copy of an existing design) and refresh the "existing designs
-        // of this type" list shown beside it.
-        void SelectTemplate(ComponentTemplateBlueprint template)
+        // Open a DOOR: start a FRESH design on the door's first template (the "Type" dropdown in the panel switches
+        // among the door's templates), and refresh the "existing designs behind this door" list shown beside it.
+        void SelectDoor(DoorGroup door)
         {
-            selectedTemplate = template;
-            ComponentDesignDisplay.GetInstance().SetTemplate(selectedTemplate, _uiState);
+            _selectedDoor = door;
+            if (door.Templates.Count == 0) return;
 
+            selectedTemplate = door.Templates[0];                 // keeps the panel rendering (Display gate) + a default
+            ComponentDesignDisplay.GetInstance().SetDoor(door.Templates, _uiState);
+
+            // The middle list shows every existing design behind this door (across all its types), not just one
+            // template — "your existing Ballistic designs", matching the door-level navigation.
+            var doorTemplateNames = new HashSet<string>(door.Templates.Select(t => t.Name));
             componentsOfType = new List<ComponentDesign>();
             foreach (var cd in componentDesigns)
             {
-                if (cd.Value.TemplateName == template.Name)
+                if (doorTemplateNames.Contains(cd.Value.TemplateName))
                     componentsOfType.Add(cd.Value);
             }
 
@@ -182,7 +190,7 @@ namespace Pulsar4X.Client
             }
             else
             {
-                // Reset — otherwise the middle panel keeps showing the previous category's designs (a latent bug).
+                // Reset — otherwise the middle panel keeps showing the previous door's designs (a latent bug).
                 componentNames = new string[0];
             }
         }
