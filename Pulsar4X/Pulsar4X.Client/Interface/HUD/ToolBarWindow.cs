@@ -141,6 +141,16 @@ namespace Pulsar4X.Client
 
             btn = new ToolBarOption()
             {
+                Picture = _uiState.Img_Select(),   // placeholder icon (no dedicated AI art yet)
+                TooltipText = "AI Inspector: what each AI faction sees, decides, and does (its brain-tape)",
+                OnClick = new Action(AIInspectorWindow.GetInstance().ToggleActive),
+                GetActive = new Func<bool>(AIInspectorWindow.GetInstance().GetActive)
+                //Opens the AI Inspector (the live view of the AI flight recorder)
+            };
+            ToolButtons.Add(btn);
+
+            btn = new ToolBarOption()
+            {
                 Picture = _uiState.Img_Ruler(),
                 TooltipText = "Measure distance",
                 OnClick = new Action(DistanceRuler.GetInstance().ToggleActive),

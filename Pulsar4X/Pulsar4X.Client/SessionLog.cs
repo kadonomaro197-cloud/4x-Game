@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using Pulsar4X.Engine;
+using Pulsar4X.Factions;
 using Pulsar4X.Movement;
 using Pulsar4X.Names;
 using Pulsar4X.Ships;
@@ -25,6 +27,10 @@ namespace Pulsar4X.Client
         // Previous values of the engine liveness counters, so the heartbeat can report the per-beat DELTA (is the
         // processor still climbing = alive, or stuck = dead).
         private static long _lastScanCount, _lastTickCount;
+
+        // Per-faction newest-flushed decision timestamp, so the heartbeat writes each [AI] record ONCE (the tape is a
+        // ring buffer, so an index count would break once it caps — timestamps are monotonic per monthly tick).
+        private static readonly Dictionary<int, DateTime> _lastAiWhen = new();
 
         public static void Line(string category, string message)
         {
@@ -316,6 +322,44 @@ namespace Pulsar4X.Client
             catch (Exception e)
             {
                 Line("DETECT", "detection snapshot failed: " + e.Message);
+            }
+        }
+
+        /// <summary>
+        /// B4b — flush the AI FLIGHT RECORDER to the log. For every NPC faction, writes each NEW decision on its
+        /// <see cref="AIDecisionRecordDB"/> tape as an <c>[AI]</c> line (via the CI-tested <see cref="PlanReadout.DecisionLine"/>),
+        /// so the whole game's AI reasoning reads back in the rolling <c>game_logs/</c> pages — the SAME data the AI
+        /// Inspector window shows live. Called from the ~3 s heartbeat; a per-faction newest-timestamp gate writes each
+        /// record ONCE. Defensive/no-throw (an observability flush must never break the frame).
+        /// </summary>
+        public static void AiDecisionSnapshot(Game game)
+        {
+            if (!Enabled || game == null) return;
+            try
+            {
+                foreach (var kvp in game.Factions)
+                {
+                    var faction = kvp.Value;
+                    if (faction == null || !faction.IsValid) continue;
+                    if (!faction.TryGetDataBlob<AIDecisionRecordDB>(out var tape) || tape.Records.Count == 0) continue;
+
+                    string name = faction.TryGetDataBlob<NameDB>(out var fn) ? fn.OwnersName : ("faction#" + faction.Id);
+                    DateTime lastWhen = _lastAiWhen.TryGetValue(faction.Id, out var w) ? w : DateTime.MinValue;
+                    DateTime newest = lastWhen;
+
+                    foreach (var rec in tape.Records)
+                    {
+                        if (rec.When <= lastWhen) continue;                   // already flushed
+                        Console.WriteLine(PlanReadout.DecisionLine(rec, name));
+                        if (rec.When > newest) newest = rec.When;
+                    }
+                    _lastAiWhen[faction.Id] = newest;
+                }
+                Console.Out.Flush();
+            }
+            catch (Exception e)
+            {
+                Line("AI", "decision snapshot failed: " + e.Message);
             }
         }
     }

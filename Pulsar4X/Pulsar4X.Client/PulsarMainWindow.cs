@@ -422,6 +422,9 @@ namespace Pulsar4X.Client
                     SessionLog.Heartbeat(_state.Game, _state.SelectedSystem, _state.LastClickedEntity?.Name);
                     // Detection + EMCON snapshot: what the player detects, the fog gap, and how loud their ships run.
                     SessionLog.DetectionSnapshot(_state.SelectedSystem, _state.PlayerFaction);
+                    // AI flight recorder (B4b): flush every NPC's new decisions to the log as [AI] lines — the whole
+                    // game's AI reasoning reads back in game_logs/, the same data the AI Inspector window shows live.
+                    SessionLog.AiDecisionSnapshot(_state.Game);
                     // Fault tally: if anything has thrown (render or input), keep the running count visible each beat
                     // so a session that's quietly accumulating faults says so at a glance. Silent when clean (0).
                     if (_loggedRenderErrors.Count > 0)
