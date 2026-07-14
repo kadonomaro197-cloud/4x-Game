@@ -1,12 +1,12 @@
 # Carrier Design — force projection from standoff range
 
-**Status:** design **DECISIONS LOCKED** 2026-07-14 (the four §9 forks are decided — see §9). Prime-Directive investigation done against the live combat/weapons/ship/bay code; the EXISTS ledger below is file-cited. Read `docs/combat/COMBAT-DESIGN.md` (the one auto-resolve loop + doctrine) and `docs/combat/WEAPONS-DESIGN.md` (the weapon triangle) first — carriers plug into both, they don't replace either.
+**Status:** **OFFICIAL / design-locked, ready to build** (2026-07-14). The four §9 decisions are made, the bay class includes Shuttle, and the full C1 blast radius is mapped and verified tractable (§12). Prime-Directive investigation done against the live combat/weapons/ship/bay code; the EXISTS ledger + the §12 touch-list are file-cited. Read `docs/combat/COMBAT-DESIGN.md` (the one auto-resolve loop + doctrine) and `docs/combat/WEAPONS-DESIGN.md` (the weapon triangle) first — carriers plug into both, they don't replace either.
 
 > **The four locked decisions (developer, 2026-07-14), driving everything below:**
 > 1. **Strike craft are real built entities** (built like troops, through industry), held in the carrier as a **wing pool** (the hangar inventory), and **launched as a SUB-FLEET** that fights via the normal fleet auto-resolve.
 > 2. **Doctrine:** the **carrier's own doctrine AND its launched sub-fleet's doctrine SUPERSEDE the parent fleet's** (the existing sub-fleet-overrides-parent model). Add a **Carrier/Standoff** doctrine role.
 > 3. **One** flight-deck component (not separate catapult/arrestor/crew parts).
-> 4. **GENERALIZE the bay:** the flight deck is the SAME component as a **troop bay** and a **personal (passenger) carrier** — one generalized bay component with a *class* dial (troops / vehicles / strike craft / passengers), per `CONVENTIONS.md` §6 (don't build parallel systems). This *replaces* the design's earlier "aggregate pool" idea (decision 1 above) and the ground-only `GroundBayAtb`.
+> 4. **GENERALIZE the bay:** the flight deck is the SAME component as a **troop bay**, a **personal (passenger) carrier**, and a **shuttle bay** — one generalized bay component with a *class* dial (troops / vehicles / strike craft / passengers / **shuttles**), per `CONVENTIONS.md` §6 (don't build parallel systems). This *replaces* the design's earlier "aggregate pool" idea (decision 1 above) and the ground-only `GroundBayAtb`.
 
 ---
 
@@ -85,21 +85,25 @@ Carriers are really **two** cradle-to-grave capabilities that meet at the hangar
 | Dial | What it controls | Deck analogy / troop-bay analogy |
 |---|---|---|
 | **Capacity** (carry-size units) | how much the bay holds — an air wing, a battalion, a passenger complement | hangar size / hold size |
-| **Bay Class** (the cargo it's fitted for) | **Personnel** (troops) · **Vehicle** (armour/artillery) · **StrikeCraft** (fighters/bombers) · **Passenger** (colonists/VIPs) | deck-strength / berth-type — *a bay carries only its own class* (you can't cram a tank in a troop bay, or a fighter in a passenger berth) |
-| **Cycle Rate** (carry-size moved in/out per operational pulse) | the tempo: **Sortie Rate** for a flight deck, **assault-deploy rate** for a troop bay, **boarding rate** for passengers | catapult+arrestor throughput / ramp-and-crew speed |
+| **Bay Class** (the cargo it's fitted for) | **Personnel** (troops) · **Vehicle** (armour/artillery) · **StrikeCraft** (fighters/bombers) · **Passenger** (colonists/VIPs) · **Shuttle** (utility transport craft — surface↔orbit / ship↔ship ferrying) | deck-strength / berth-type — *a bay carries only its own class* (you can't cram a tank in a troop bay, or a fighter in a passenger berth) |
+| **Cycle Rate** (carry-size moved in/out per operational pulse) | the tempo: **Sortie Rate** for a flight deck, **assault-deploy rate** for a troop bay, **boarding rate** for passengers, **turnaround rate** for shuttles | catapult+arrestor throughput / ramp-and-crew speed |
+
+> **Enum ordinal stability (build note):** `BayClass` keeps `Personnel = 0`, `Vehicle = 1` (the existing `GroundCarryClass` values the frame JSON already encodes), then appends `StrikeCraft = 2`, `Passenger = 3`, `Shuttle = 4` — so every existing base-mod frame + troop-bay stays byte-identical through the generalization.
 
 > The old design's four separate deck dials collapse into these three: **Sortie Rate + Recovery Rate → one Cycle Rate** (launch and recover are the same "move craft across the deck" throughput), **Craft Class → the Bay Class enum** (now spanning all four cargoes), **Deck Vulnerability → the existing grave rung** (a bay shot off a ship already takes its contents with it — `GroundBayAtb`'s documented behaviour, inherited).
 
-**Same component, three products (all just `BayAtb` at a different class):**
+**Same component, four products (all just `BayAtb` at a different class):**
 - **Troop transport** = `BayAtb{ Personnel|Vehicle }` — *exists today* (the trooper/dropship). Migrates onto the general component byte-identically.
 - **Carrier** = `BayAtb{ StrikeCraft }` + a fast Cycle Rate — the flight deck.
 - **Personal carrier / liner** = `BayAtb{ Passenger }` — colonist/VIP lift (a future consumer; the component is ready for it).
+- **Shuttle carrier** = `BayAtb{ Shuttle }` — holds utility transport craft that ferry units/cargo/personnel surface↔orbit and ship↔ship (a dropship's landers, a station's shuttle complement). *(Distinct from the existing `cargo-Shuttlebay`, which is a `CargoTransferAtb` cargo/fuel-transfer ability, not a unit bay — a candidate to FOLD INTO this class later, see §12.)*
 
 **What differs per class is the CARGO + the deploy handler, not the bay:**
 | Bay Class | Carried-state | Deploy logic | Status |
 |---|---|---|---|
 | Personnel / Vehicle | `GroundTransportDB.LoadedUnits` (ground-unit records) | `GroundTransport` (load at colony / land on target) | **EXISTS** |
 | StrikeCraft | `CarrierDB` (aboard **wing pool** + aloft **sub-fleet**) | `CarrierOps` (launch a sub-fleet / recover) | **NEW** |
+| Shuttle | a shuttle-craft manifest (like `CarrierDB` but non-combat) | launch/recover ferry runs (reuses `CarrierOps`) | future |
 | Passenger | a passenger manifest | boarding/disembark transfer | future |
 
 So the **component generalizes; the cargo handler is per-class.** One physical bay, class-specific contents — exactly "reuse the logic, generalize the component."
@@ -180,3 +184,36 @@ Each slice: design the decision → build → **gauge in CI** → wait green →
 ## 11. One-paragraph summary (the point, restated)
 
 A carrier is a **standoff force-projector**: it throws a swarm of evasive strike craft from beyond gun range, trading a soft, expensive hull and hard-countered-by-flak fragility for reach and dodge. It needs **no new combat engine** — launched craft are **real strike-craft entities fighting as a sub-fleet** in the one auto-resolve loop (cheap because that loop already buckets fire by class), and **their doctrine + the carrier's supersede the parent fleet's**. The **hangar is the troop bay, generalized**: one `BayAtb` component (Capacity · **Bay Class** [troops/vehicles/strike-craft/passengers] · **Cycle Rate**) that serves the trooper, the carrier, AND a passenger liner — `CONVENTIONS.md` §6, don't build parallel systems. The **strike craft are just small ship designs** (their cradle-to-grave already exists), and the **counter is already in the box** (flak/point-defense shred saturation-heavy evasive swarms). The genuinely new build is small: generalize the bay, add a `StrikeCraft` deploy handler (`CarrierDB`/`CarrierOps`, mirroring `GroundTransport`), and one resolver hook. The decision it adds — *project from range vs. close and brawl, and how much flak the enemy must buy to answer you* — stacks cleanly on detection, the weapon triangle, sub-fleet doctrine, and the mass budget.
+
+---
+
+## 12. What gets touched — the full blast radius of C1 (the bay generalization)
+
+**Verified by a whole-repo sweep (2026-07-14).** C1 is `GroundBayAtb → BayAtb` + `GroundCarryClass → BayClass` (append `StrikeCraft`/`Passenger`/`Shuttle`, keeping `Personnel = 0`/`Vehicle = 1`). The carried-state blobs (`GroundTransportDB`) and the load/land statics (`GroundTransport`) **keep their names** — they're the Personnel/Vehicle handler; only their *reference* to the renamed atb/enum updates. Scope is bounded and tractable.
+
+**The non-obvious find:** `GroundCarryClass` is **shared between the bay and the CHASSIS** — `GroundChassisAtb.CarryClass` declares what class a unit *is* (so the transport knows which bay hauls it). The base-mod frames encode it: `human-frame`/`swarm-frame` = `0` (Personnel), `vehicle-frame`/`walker-frame` = `1` (Vehicle). Keeping the two ordinals stable means the frames are byte-identical — but the rename **must** update `GroundChassisAtb` too, or the unit↔bay match breaks.
+
+**Engine (8 files):**
+| File | What changes |
+|---|---|
+| `GroundCombat/GroundBayAtb.cs` | **rename → `BayAtb`**; `enum GroundCarryClass → BayClass` (+ 3 appended values + `CycleRate` dial); `AtbName()` generalizes ("Troop Bay"/"Vehicle Bay"/"Flight Deck"/…) |
+| `GroundCombat/GroundChassisAtb.cs` | `CarryClass` field type `GroundCarryClass → BayClass` (the coupling) |
+| `GroundCombat/GroundTransport.cs` | reads `GroundBayAtb`/`CarryClass` for capacity + class-match → `BayAtb`/`BayClass` |
+| `GroundCombat/GroundTransportDB.cs` | doc/ref to the atb name (kept as the Personnel/Vehicle carried-state) |
+| `GroundCombat/GroundUnitAssembly.cs` | uses `GroundCarryClass` (chassis class in assembly) |
+| `GroundCombat/LoadTroopsOrder.cs` · `LandTroopsOrder.cs` | read `GroundTransportDB` (unchanged) — only compile against the renamed enum if referenced |
+| `Factions/ConquerResolver.cs` | `GroundBayAtb`/`BayCapacity` in `IsTroopTransport`/`FactionOwnsTransport` (the B5-3 invasion chain) → `BayAtb` |
+
+**Data (JSON):** the `troop-bay` template's atb `AttributeType` FQN (`Pulsar4X.GroundCombat.GroundBayAtb` → the renamed class) in `installations.json`; the four `*-frame` templates keep their `CarryClass` `0`/`1` values (ordinal-stable — no change). No change to `componentDesigns.json`, the ship designs, or the faction files (they reference design ids, not the atb).
+
+**Tests (7 files):** `GroundTransportTests`, `TroopOrderTests`, `GroundMobilityTests`, `GroundUnitPartsTests`, `GroundUnitPartsBaseModTests`, `GroundUnitAssemblyTests`, `DevTestScenarioTests` — update the symbol refs. **These are the byte-identity tripwire:** the troop-bay/transport gauges must stay green through the rename, proving the troop transport is unchanged (now a `BayAtb{Personnel}`).
+
+**Client:** **CLEAN — zero references.** The component designer renders an atb via reflection off `AtbName()`/`AtbDescription()`, so no client code changes and the `build-client` CI job won't break.
+
+**Save/load (landmine L3):** `GroundBayAtb`/`GroundCarryClass`/`GroundTransportDB` class names are embedded in saves via `TypeNameHandling`. The rename is a save-format change — **acceptable pre-release** (DevTest saves are throwaway); add a `[JsonConverter]`/type-alias only if a specific save must survive.
+
+**Adjacent / future (NOT in C1):**
+- **`cargo-Shuttlebay`** (`Storage/CargoTransferAtb`, "comes with shuttle!") is a *cargo/fuel-transfer* ability, a different atb — **a candidate to re-express as `BayAtb{Shuttle}` + a cargo-carrying shuttle craft** once the Shuttle class is built, but explicitly out of the C1 rename.
+- **Namespace:** `BayAtb` stays in `Pulsar4X.GroundCombat` for C1 (minimal churn); moving it to a neutral home (e.g. `Pulsar4X.Ships`/`Pulsar4X.Storage`) is optional later polish (another save-format touch, so bundle it with L3 if ever done).
+
+**Verdict:** bounded (8 engine files, 7 test files, 1 JSON FQN, no client), well-understood, and byte-identical for the troop transport. **The design is OFFICIAL — ready to build.**
