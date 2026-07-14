@@ -1,5 +1,6 @@
 {
   "name": "Kithrin Collective",
+  "abbreviation": "KTH",
   "isNPC": true,
   "doctrine": {
     "economic": 0.2,

@@ -1,5 +1,6 @@
 {
   "name": "United Martian Federation",
+  "abbreviation": "UMF",
   "isNPC": true,
   "doctrine": {
     "economic": 0.35,

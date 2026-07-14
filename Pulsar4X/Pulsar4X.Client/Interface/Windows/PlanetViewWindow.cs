@@ -181,7 +181,11 @@ namespace Pulsar4X.Client
             // G5/G6 — the ONE cylinder grid is the surface view. Lazy + idempotent (same pattern as the old disks);
             // null only on a body with no region layer (then there's nothing to draw yet).
             var grid = PlanetGridFactory.EnsureGridForBody(body);
-            bool canGlobal = grid != null && grid.Hexes != null && grid.Hexes.Count > 0;
+            // Only reveal a world's surface once it's been SURVEYED (home starts surveyed; a fogged world stays
+            // hidden until you scan it). The globe draw itself doesn't consult Region.Surveyed, so gate the whole
+            // view here — otherwise every major body shows its full surface the moment you open the window.
+            bool anySurveyed = regions.Any(r => r.Surveyed);
+            bool canGlobal = anySurveyed && grid != null && grid.Hexes != null && grid.Hexes.Count > 0;
 
             // ── Controls ────────────────────────────────────────────────────────────────
             if (ImGui.Button("◀ West")) { _centerRegion = left; SyncCenterCol(grid, count); }
