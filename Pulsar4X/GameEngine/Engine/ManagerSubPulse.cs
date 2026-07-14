@@ -51,6 +51,13 @@ namespace Pulsar4X.Engine
         public bool IsProcessing = false;
         public string CurrentProcess = "Waiting";
 
+        /// <summary>GLOBAL "what processor is the sim thread inside right now" gauge — written by every ManagerSubPulse
+        /// right before it runs a processor. A FREEZE here is the sim thread wedged in a processor while the UI keeps
+        /// heartbeating (so the main-thread hang watchdog can't see it); the client's stall watchdog reads this to NAME
+        /// the wedged processor instead of guessing. Volatile: written on the sim thread, read on the UI/heartbeat thread.
+        /// (Best-effort under parallel systems — the last write before the wedge is the culprit; DevTest runs ~1 system.)</summary>
+        public static volatile string GlobalCurrentProcess = "(idle)";
+
         private ProcessorManager _processManager;
 
         private EntityManager _entityManager;
@@ -349,6 +356,7 @@ namespace Pulsar4X.Engine
 
                     Performance.Start(_entityManager.ManagerID + "-" + type.Name);
                     CurrentProcess = type.ToString();
+                    GlobalCurrentProcess = _entityManager.ManagerID + "/" + type.Name + " (hotloop)";
                     var proc = _game.ProcessorManager.HotloopProcessors[type];
                     int count = proc.ProcessManager(_entityManager, deltaSeconds);
                     Performance.Stop(_entityManager.ManagerID + "-" + type.Name);
@@ -391,6 +399,7 @@ namespace Pulsar4X.Engine
 
                     Performance.Start(pn);
                     CurrentProcess = s;
+                    GlobalCurrentProcess = _entityManager.ManagerID + "/" + pn + " (instance:" + s + ")";
                     processor.ProcessEntity(e, qi.Time);
                     Performance.Stop(pn);
                 }

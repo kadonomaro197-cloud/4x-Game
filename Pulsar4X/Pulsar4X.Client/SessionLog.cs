@@ -112,6 +112,14 @@ namespace Pulsar4X.Client
         /// system. So if a freeze or oddity happens between clicks, the log still shows the state right up to it.
         /// Caller passes the pieces it already has in hand; null/empty are tolerated.
         /// </summary>
+        // Sim-stall gauge — the FREEZE case the MAIN-thread hang watchdog can't see: the sim/background thread wedges
+        // inside a processor while the UI keeps rendering + heartbeating, so game-time stops advancing but the log keeps
+        // printing "RUNNING" (exactly the 2026-07-14 freeze — clock stuck at 18:00, heartbeats fine). We watch the game
+        // clock across heartbeats: unchanged while RUNNING = the sim is wedged → NAME the processor from the engine gauge.
+        static DateTime _lastRunningGameTime = DateTime.MinValue;
+        static int _simStallBeats;
+        static bool _simStallReported;
+
         public static void Heartbeat(Game game, StarSystem system, string selectedName)
         {
             if (!Enabled || game == null) return;
@@ -124,6 +132,31 @@ namespace Pulsar4X.Client
                     + " step=" + tp.Ticklength.TotalSeconds.ToString("0") + "s"
                     + " selected=" + (string.IsNullOrEmpty(selectedName) ? "(none)" : selectedName)
                     + " ships-in-view=" + shipCount);
+
+                // Sim-stall detection: RUNNING but the clock isn't moving = a wedged processor (a freeze the frame
+                // watchdog misses, because the UI thread is alive). Name the culprit from ManagerSubPulse's global gauge.
+                if (tp.IsRunning)
+                {
+                    if (tp.GameGlobalDateTime == _lastRunningGameTime)
+                    {
+                        _simStallBeats++;
+                        if (_simStallBeats >= 2 && !_simStallReported)   // ~2 quiet heartbeats of a frozen clock
+                        {
+                            Line("SIM-STALL", "game-time FROZEN at " + tp.GameGlobalDateTime.ToString("yyyy-MM-dd HH:mm")
+                                + " while RUNNING — the sim thread is WEDGED (a freeze the frame watchdog can't see). "
+                                + "Last processor the sim entered: '" + Pulsar4X.Engine.ManagerSubPulse.GlobalCurrentProcess
+                                + "' — the hang is in that processor.");
+                            _simStallReported = true;
+                        }
+                    }
+                    else
+                    {
+                        _lastRunningGameTime = tp.GameGlobalDateTime;
+                        _simStallBeats = 0;
+                        if (_simStallReported) { Line("SIM-STALL", "sim recovered — clock advancing again."); _simStallReported = false; }
+                    }
+                }
+
                 CheckForTeleports(system);
             }
             catch (Exception e)

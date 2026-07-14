@@ -58,3 +58,8 @@ Pulsar4X/TestResults/Pulsar4X.TE.Tests.mdf
 Pulsar4X/TestResults/Pulsar4X.TE.Tests_log.ldf
 #Jetbrains Rider files
 .idea/
+
+# runtime artifacts from local PC runs (diagnostics, not source)
+console_output.txt
+game_logs/
+imgui.ini
