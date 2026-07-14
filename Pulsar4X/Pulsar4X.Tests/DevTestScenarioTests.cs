@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Pulsar4X.Colonies;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
+using Pulsar4X.GroundCombat;
 using Pulsar4X.Modding;
 
 namespace Pulsar4X.Tests
@@ -118,6 +119,52 @@ namespace Pulsar4X.Tests
                 && c.GetDataBlob<ColonyEconomyDB>().TaxRate > 0.0);
             Assert.That(strainedColony, Is.Not.Null,
                 "no UMF colony carries the authored war-tax strain — ApplyOpeningStrain didn't run or found no economy blob.");
+        }
+
+        [Test]
+        [Description("DevTest colony worlds start DEFENDED: after the full sandbox loads, the UMF's colony worlds (and the "
+                     + "player's Earth) carry a GroundForcesDB with their owner's home garrison — so an invasion is a real "
+                     + "fight, not an unopposed capture, and the AI's own worlds aren't free for the taking. The garrison "
+                     + "is the ground echo of the authored fleets, raised for every DevTest faction (unlike the barebones "
+                     + "New Game). Also the gauge that the DevTest Sol generates the region maps the garrison needs.")]
+        public void DevTest_ColonyWorlds_StartWithAHomeGarrison()
+        {
+            var game = NewGame();
+            var (player, _) = DevTestStartFactory.CreateDevTest(
+                game, ScenarioDir, new List<string> { "uef-devtest.json", "umf.json", "kithrin.json" });
+
+            var infos = game.Factions.Values
+                .Where(f => f != null && f.IsValid && f.HasDataBlob<FactionInfoDB>())
+                .Select(f => f.GetDataBlob<FactionInfoDB>()).ToList();
+            var umf = infos.First(i => i.IsNPC && i.Colonies.Count >= 4);
+            int umfId = umf.OwningEntity.Id;
+
+            // Every UMF colony body should carry a GroundForcesDB with UMF-owned units (its home garrison).
+            int garrisonedBodies = 0, umfUnits = 0;
+            foreach (var colony in umf.Colonies)
+            {
+                if (colony == null || !colony.IsValid) continue;
+                var body = colony.GetDataBlob<ColonyInfoDB>().PlanetEntity;
+                if (body != null && body.IsValid && body.TryGetDataBlob<GroundForcesDB>(out var forces))
+                {
+                    int mine = forces.Units.Count(u => u.FactionOwnerID == umfId);
+                    if (mine > 0) { garrisonedBodies++; umfUnits += mine; }
+                }
+            }
+            Assert.That(garrisonedBodies, Is.GreaterThan(0),
+                "no UMF colony world carries a home garrison — RaiseForFactionColonies didn't run or the bodies have no region map.");
+            Assert.That(umfUnits, Is.GreaterThanOrEqualTo(6),
+                "expected at least one UMF world's combined-arms garrison (3 inf + 2 armor + 1 arty = 6).");
+
+            // The player's Earth is defended too, so a UMF invasion (once the AI can land troops) meets resistance.
+            var earthBody = player.GetDataBlob<FactionInfoDB>().Colonies
+                .Where(c => c != null && c.IsValid)
+                .Select(c => c.GetDataBlob<ColonyInfoDB>().PlanetEntity)
+                .FirstOrDefault(b => b != null && b.IsValid);
+            Assert.That(earthBody, Is.Not.Null, "player has no colony body.");
+            Assert.That(earthBody.TryGetDataBlob<GroundForcesDB>(out var earthForces)
+                && earthForces.Units.Any(u => u.FactionOwnerID == player.Id), Is.True,
+                "the player's Earth should start with a home garrison in the DevTest.");
         }
     }
 }
