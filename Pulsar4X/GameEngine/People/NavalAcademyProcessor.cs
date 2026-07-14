@@ -12,7 +12,11 @@ namespace Pulsar4X.People
         {
             if(!entity.TryGetDataBlob<NavalAcademyDB>(out var academyDB)) return;
 
-            var academy = academyDB.Academies.Where(a => a.GraduationDate.Date == atDateTime.Date).First();
+            // Defensive (unobserved-throw-on-sim-thread class): an empty filter (stale interrupt / shared date) would
+            // make .First() throw and freeze the clock. Guard with .Any() (NavalAcademy is a struct, so no null test).
+            var matchingClasses = academyDB.Academies.Where(a => a.GraduationDate.Date == atDateTime.Date);
+            if (!matchingClasses.Any()) return;
+            var academy = matchingClasses.First();
             var generator = new GaussianRandom();
 
             // Graduate the class

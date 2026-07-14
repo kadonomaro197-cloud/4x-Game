@@ -25,11 +25,23 @@
 
 **The pattern.** A processor iterates one collection and hard-indexes *another* dictionary by the same key, assuming the two are always in sync. When some state path leaves them out of sync (a random seed, an unusual colony build, a foreign-owned entity), the index throws — and because hotloop processors run on the **parallel sim thread**, the throw is *unobserved* and **freezes the clock** instead of surfacing. This is the engine-side twin of the client's crash family (root `CLAUDE.md` gotchas #10/#11/#14 — "never hard-index a runtime dictionary from a UI path"); the same rule applies to processors, where the cost is a silent sim freeze rather than a client crash.
 
-**Sweep (2026-07-14, first pass).**
-- Mining path — **fixed + contained.** Every `planetMinerals[key]` / `_minerals[key]` in `MineResourcesProcessor` is now behind the `ContainsKey` guard; `MiningHelper.CalculateActualMiningRates:59` was already correct (the model to mirror). No other mining-rate hard-indexes exist.
-- **Not yet swept:** the other daily/hotloop processors (colony economy, population, research, energy, logistics, industry-build). A processor that indexes a faction/cargo/material dict by a key it got from iterating a *different* collection is the risk shape.
+**Sweep (2026-07-14 — DONE, all ~30 tick-processors, 4 parallel audit agents).** The full processor-wide sweep ran. **10 same-class sites found and guarded** across 8 files (all now `TryGetValue`/`ContainsKey`/`.Any()`-guarded; the failure mode was a silent full-sim freeze):
 
-**Standing item.** Run a processor-wide sweep for the shape `for (x in A) { … B[x.Key] … }` where `B` can diverge from `A`, and convert each to `TryGetValue`/`ContainsKey`-guarded. Highest value because the failure mode is a silent full-sim freeze. *(Candidate for a focused workflow: fan out over the hotloop processors, flag every cross-collection hard-index, verify each can/can't diverge.)*
+| Site | Divergence that would freeze the clock | Severity |
+|------|----------------------------------------|----------|
+| `IndustryTools.cs:125` `IndustryDesigns[job.ItemGuid]` | **Capture hazard** — a colony changes owner, keeps old jobs, new owner's design store lacks the id | 🔴 high (conquest) |
+| `ColonyEconomyProcessor.cs:69` `Factions[colony.FactionOwnerID]` | **Capture hazard** — `FactionOwnerID` mutated by capture; parity gap (siblings already guarded) | 🔴 high (conquest) |
+| `EnergyGenProcessor.cs:18` `EnergyStored[energyType]` | A **solar-only** entity has `EnergyType` set but empty store dicts — **reachable at New Game** (runs on every gen entity) | 🔴 high |
+| `IndustryTools.cs:126` `industryPointsRemaining[type]` | A job routed to a line that can't produce its industry type | 🟡 |
+| `ResearchAcademyProcessor.cs:25` / `NavalAcademyProcessor.cs:15` `.Where(...).First()` | Empty filter (stale/duplicate interrupt, shared grad date) → `InvalidOperationException` | 🟡 (research reachable) |
+| `ResearchProcessor.cs:80 / :221 / :329` `Techs[id]` / `TechCategories[cat]` | Queue/category holds an id the store lacks (data drift) | 🟡 |
+| `EnergySolarGenProcessor.cs:45,53` `GetDataBlob<PositionDB>()` | A gen/emitter entity without a `PositionDB`; parity with the guarded sibling sensor processors | 🟡 |
+| `CargoTransferProcessor.cs:88` `TypeStores[cargoTypeID]` | A storage bay destroyed mid-transfer | 🟡 low |
+| `BeamWeaponProcessor.cs:58` `TargetEntity.GetDataBlob<PositionDB>()` | A valid target lacking a `PositionDB`; parity with `MissileImpactProcessor` | 🟡 low |
+
+**Verdict on spread:** the class was **moderately widespread** — 10 sites, but only ~3 with a realistic near-term trigger (the two **capture** hazards — which the AI conquest test will exercise directly — and the **solar-only-at-New-Game** one). The rest are parity gaps / data-drift edges, cheap to close. Most processors were already clean (many use `TryGetValue`; `GroundForcesProcessor` and the Site processors wrap their body in try/catch — the L4 pattern). `GeoSurveyProcessor` **lazily seeds** its faction-keyed dict before every read — the model pattern.
+
+**Remaining follow-up (out of this sweep's scope):** `Combat/BattleTriggerProcessor` just delegates to **`CombatEngagement.Tick`** (in `GameEngine/Combat/`), where the real per-tick indexing lives (faction/fleet/contact-table lookups keyed by faction id + foreign entities). That file wasn't in the audited set — flag a `CombatEngagement.cs` pass as the next sweep, especially before heavy AI-vs-AI fighting.
 
 ---
 

@@ -66,7 +66,10 @@ namespace Pulsar4X.Colonies
             int factionId = colony.FactionOwnerID;
             if (factionId < 0) return; // neutral / unowned colonies pay no tax to anyone
 
-            var faction = game.Factions[factionId];
+            // Defensive (the mining time-stall class + parity with StationUpkeepProcessor/LegitimacyProcessor, which
+            // already TryGetValue here): FactionOwnerID is MUTATED by colony capture, so it can name a faction that
+            // isn't in the dictionary. A hard index would throw on the sim thread and freeze the clock.
+            if (!game.Factions.TryGetValue(factionId, out var faction)) return;
             if (!faction.TryGetDataBlob<FactionInfoDB>(out var factionInfo)) return;
 
             factionInfo.Money.AddIncome(

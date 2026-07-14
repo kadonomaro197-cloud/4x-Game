@@ -55,7 +55,15 @@ public class BeamWeaponProcessor : IHotloopProcessor
         {
             case BeamInfoDB.BeamStates.Fired:
 
-                var tgtPos = beamInfo.TargetEntity.GetDataBlob<PositionDB>().AbsolutePosition;
+                // Defensive (parity with MissileImpactProcessor's target guard): the target is valid but might not
+                // carry a PositionDB (unusual state / blob removed). A hard get would throw on the sim thread and
+                // freeze the clock — treat a position-less target as lost.
+                if (!beamInfo.TargetEntity.TryGetDataBlob<PositionDB>(out var tgtPosDB))
+                {
+                    beamInfo.OwningEntity.Destroy();
+                    return;
+                }
+                var tgtPos = tgtPosDB.AbsolutePosition;
                 var vectorToTarget = state.AbsolutePosition - tgtPos;
                 var timeToTarget = WeaponUtils.TimeToTarget(vectorToTarget, beamInfo.VelocityVector.Length());
 

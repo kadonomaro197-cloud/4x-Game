@@ -85,9 +85,13 @@ namespace Pulsar4X.Storage
                 //update mass and volume of primary entity store.
                 double volumeStoring = countToXfer * cargoItem.VolumePerUnit;
                 double massStoring = countToXfer * cargoItem.MassPerUnit;
-                TypeStore store = moveFrom.TypeStores[cargoItem.CargoTypeID];
-                store.FreeVolume += volumeStoring;
-                moveFrom.TotalStoredMass += massStoring;
+                // Defensive: the source's cargo-type store can be gone (a storage bay destroyed mid-transfer). Guard the
+                // hard index so it doesn't throw on the sim thread and freeze the clock.
+                if (moveFrom.TypeStores.TryGetValue(cargoItem.CargoTypeID, out var store))
+                {
+                    store.FreeVolume += volumeStoring;
+                    moveFrom.TotalStoredMass += massStoring;
+                }
 
                 massTransferable -= massToXfer;
                 totalMassXfered += massToXfer;
