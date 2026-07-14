@@ -407,10 +407,10 @@
     }
   ],
   "strain": {
-    "taxRate": 0.55,
-    "powerDemandPerCapita": 0.0009,
-    "foodDemandPerCapita": 0.0011,
-    "committedBulk": 40000
+    "taxRate": 0.35,
+    "powerDemandPerCapita": 0.0004,
+    "foodDemandPerCapita": 0.0005,
+    "committedBulk": 30000
   },
   "fleets": [
     {

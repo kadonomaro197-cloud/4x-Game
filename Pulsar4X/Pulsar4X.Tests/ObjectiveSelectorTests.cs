@@ -54,5 +54,49 @@ namespace Pulsar4X.Tests
             Assert.That(ObjectiveSelector.SelectObjective(NeedTier.Ambition, Doctrine(0, 0, 0, 1), null), Is.EqualTo(StrategicObjective.Expand),
                 "a peaceful, unaggressive ambition expands rather than conquers");
         }
+
+        [Test]
+        [Description("WAR FOOTING: a Stabilize-tier faction AT WAR and WINNING presses the offensive (Conquer) if it's " +
+                     "military-led or aggressive — the link that turns a declared, winnable war into an invasion for a " +
+                     "recovering-but-dominant power (the DevTest UMF). Without it Conquer is Ambition-only.")]
+        public void WarFooting_StabilizeAtWarAndWinning_PressesTheOffensive()
+        {
+            var warlike = Doctrine(0, 1, 0, 0);      // military-led
+            var peaceful = Doctrine(1, 0, 0, 0);     // economy-led, no aggression
+
+            // Military-led + at war + winning → Conquer from Stabilize (not just Consolidate).
+            Assert.That(ObjectiveSelector.SelectWithReason(NeedTier.Stabilize, warlike, null, atWarAndWinning: true).objective,
+                Is.EqualTo(StrategicObjective.Conquer), "a strong military belligerent presses its winnable war");
+
+            // Aggressive personality behind a peaceful doctrine also presses.
+            var aggressive = new PersonalityDB();
+            aggressive.SetTrait(PersonalityTrait.Aggression, 1.0);
+            Assert.That(ObjectiveSelector.SelectWithReason(NeedTier.Stabilize, peaceful, aggressive, atWarAndWinning: true).objective,
+                Is.EqualTo(StrategicObjective.Conquer), "aggression drives the offensive even behind a peaceful doctrine");
+
+            // NOT winning → no offensive; consolidate/recover instead.
+            Assert.That(ObjectiveSelector.SelectWithReason(NeedTier.Stabilize, warlike, null, atWarAndWinning: false).objective,
+                Is.EqualTo(StrategicObjective.Consolidate), "a belligerent that can't win doesn't attack — it consolidates");
+
+            // Winning but PEACEFUL (no military weight, no aggression) → still consolidate; war footing needs a warlike bent.
+            Assert.That(ObjectiveSelector.SelectWithReason(NeedTier.Stabilize, peaceful, null, atWarAndWinning: true).objective,
+                Is.EqualTo(StrategicObjective.Consolidate), "a peaceful faction doesn't press even a winnable war");
+
+            // SURVIVE tier stays Defend even when winning — the war footing is Stabilize-only (recover out of crisis first).
+            Assert.That(ObjectiveSelector.SelectWithReason(NeedTier.Survive, warlike, null, atWarAndWinning: true).objective,
+                Is.EqualTo(StrategicObjective.Defend), "existential crisis is attended before any offensive");
+        }
+
+        [Test]
+        [Description("Byte-identity: the war-footing overload with atWarAndWinning=false equals the 3-arg call across all tiers.")]
+        public void WarFootingOverload_NotAtWarOrWinning_IsByteIdentical()
+        {
+            var doctrines = new[] { Doctrine(1, 0, 0, 0), Doctrine(0, 1, 0, 0), Doctrine(0, 0, 1, 0), Doctrine(0, 0, 0, 1), Doctrine(0, 0, 0, 0) };
+            foreach (NeedTier tier in System.Enum.GetValues(typeof(NeedTier)))
+                foreach (var d in doctrines)
+                    Assert.That(ObjectiveSelector.SelectWithReason(tier, d, null, atWarAndWinning: false).objective,
+                        Is.EqualTo(ObjectiveSelector.SelectWithReason(tier, d, null).objective),
+                        $"tier {tier} must be unchanged when not (at war and winning)");
+        }
     }
 }

@@ -77,6 +77,25 @@ namespace Pulsar4X.Factions
         /// </summary>
         public static NeedTier AssessTier(Entity factionEntity)
         {
+            var (atWar, enemyStrength) = WarStanding(factionEntity);
+            return AssessTier(
+                atWar,
+                FactionRollup.MilitaryStrength(factionEntity),
+                enemyStrength,
+                FactionRollup.MeanMorale(factionEntity),
+                FactionRollup.MeanLegitimacy(factionEntity),
+                FactionRollup.Balance(factionEntity),
+                InRebellion(factionEntity));
+        }
+
+        /// <summary>
+        /// The faction's war standing off its <see cref="DiplomacyDB"/> (the KNOWN latch, not fog-limited): is it at
+        /// war with anyone, and the TRUE military strength of the strongest at-war rival. Shared by
+        /// <see cref="AssessTier(Entity)"/> (to settle the tier) and the objective step (to decide a war footing — a
+        /// belligerent that can WIN presses the offensive). Defensive: a faction with no ledger is "not at war".
+        /// </summary>
+        public static (bool atWar, double enemyStrength) WarStanding(Entity factionEntity)
+        {
             bool atWar = false;
             double enemyStrength = 0;
             var game = factionEntity?.Manager?.Game;
@@ -93,15 +112,7 @@ namespace Pulsar4X.Factions
                     }
                 }
             }
-
-            return AssessTier(
-                atWar,
-                FactionRollup.MilitaryStrength(factionEntity),
-                enemyStrength,
-                FactionRollup.MeanMorale(factionEntity),
-                FactionRollup.MeanLegitimacy(factionEntity),
-                FactionRollup.Balance(factionEntity),
-                InRebellion(factionEntity));
+            return (atWar, enemyStrength);
         }
 
         /// <summary>True if any of the faction's colonies is currently in open rebellion.</summary>

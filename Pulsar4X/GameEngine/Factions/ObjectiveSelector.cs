@@ -27,6 +27,25 @@ namespace Pulsar4X.Factions
             => SelectWithReason(tier, doctrine, personality).objective;
 
         /// <summary>
+        /// The WAR-FOOTING overload: same as <see cref="SelectWithReason(NeedTier,DoctrineVector,PersonalityDB)"/>, but
+        /// a faction that is AT WAR AND WINNING (<paramref name="atWarAndWinning"/>) doesn't wait for prosperity to
+        /// attack. At the <see cref="NeedTier.Stabilize"/> tier — recovered out of existential crisis but not yet the
+        /// dominant, content, rich faction that <see cref="NeedTier.Ambition"/> requires — a military-led or aggressive
+        /// belligerent presses the offensive (<see cref="StrategicObjective.Conquer"/>) instead of only consolidating.
+        /// This is the link that turns a declared, winnable war into an actual invasion for a recovering power (without
+        /// it, Conquer is reachable ONLY from Ambition, so a battered-but-strong aggressor never attacks). Everything
+        /// else — Survive still recovers first, a losing/peaceful war still consolidates — is unchanged, so a faction
+        /// not (at war and winning) is byte-identical to the 3-arg call.
+        /// </summary>
+        public static (StrategicObjective objective, string reason) SelectWithReason(
+            NeedTier tier, DoctrineVector doctrine, PersonalityDB personality, bool atWarAndWinning)
+        {
+            if (tier == NeedTier.Stabilize && atWarAndWinning && WantsWar(doctrine, personality, out var why))
+                return (StrategicObjective.Conquer, $"Stabilize tier + at war and winning: {why} → press the offensive (Conquer)");
+            return SelectWithReason(tier, doctrine, personality);
+        }
+
+        /// <summary>
         /// Phase-5.2 decision-log: the objective AND a one-line reason tracing it to the driving input — e.g.
         /// <c>"Ambition tier: Aggression 0.85 &gt; neutral → Conquer"</c> or <c>"Thrive tier: Expansion 0.60 leads growth →
         /// Expand"</c>. Pure. The reason names the tier plus the doctrine axis or trait that decided the family/aim, so
@@ -70,17 +89,27 @@ namespace Pulsar4X.Factions
         /// identical to the original combined check — Conquer if military-led OR aggressive.</summary>
         private static (StrategicObjective objective, string reason) AmbitionAim(DoctrineVector d, PersonalityDB personality)
         {
-            float aggression = personality == null ? (float)PersonalityDB.Neutral
-                : (float)personality.TraitOf(PersonalityTrait.Aggression);
-            bool militaryLed = d.Military >= d.Economic && d.Military >= d.Tech && d.Military >= d.Expansion && d.Military > 0f;
-
-            if (militaryLed)
-                return (StrategicObjective.Conquer, $"Ambition tier: Military-led doctrine ({d.Military:0.00}) → Conquer");
-            if (aggression > (float)PersonalityDB.Neutral)
-                return (StrategicObjective.Conquer, $"Ambition tier: Aggression {aggression:0.00} > neutral → Conquer");
+            if (WantsWar(d, personality, out var why))
+                return (StrategicObjective.Conquer, $"Ambition tier: {why} → Conquer");
 
             var (obj, axis) = DominantGrowth(d);   // a peaceful ambition still grows — just from a position of dominance
             return (obj, $"Ambition tier (peaceful): {axis} → {obj}");
+        }
+
+        /// <summary>Does this faction WANT war — is it military-led by doctrine, or aggressive by personality? Shared by
+        /// the Ambition aim and the Stabilize war-footing so both read "warlike" the same way. <paramref name="why"/>
+        /// names what tipped it (the Military weight or the Aggression trait), null when it doesn't want war.</summary>
+        private static bool WantsWar(DoctrineVector d, PersonalityDB personality, out string why)
+        {
+            bool militaryLed = d.Military >= d.Economic && d.Military >= d.Tech && d.Military >= d.Expansion && d.Military > 0f;
+            if (militaryLed) { why = $"Military-led doctrine ({d.Military:0.00})"; return true; }
+
+            float aggression = personality == null ? (float)PersonalityDB.Neutral
+                : (float)personality.TraitOf(PersonalityTrait.Aggression);
+            if (aggression > (float)PersonalityDB.Neutral) { why = $"Aggression {aggression:0.00} > neutral"; return true; }
+
+            why = null;
+            return false;
         }
     }
 }

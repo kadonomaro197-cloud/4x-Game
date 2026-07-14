@@ -269,8 +269,18 @@ namespace Pulsar4X.Factions
 
             NeedTier tier = NeedsLadder.AssessTier(factionEntity);
             factionEntity.TryGetDataBlob<PersonalityDB>(out var personality);   // null → neutral in the selector
+
+            // War footing: a faction AT WAR that is militarily AHEAD of its strongest enemy doesn't wait for prosperity
+            // to attack — at the Stabilize tier a warlike belligerent presses the offensive (Conquer) rather than only
+            // consolidating. Without this, Conquer is reachable ONLY from the Ambition tier (thriving + rich + dominant),
+            // so a battered-but-strong aggressor like the DevTest UMF would sit on defense forever and its declared war
+            // never becomes an invasion. Read off the KNOWN war latch + true strengths (NeedsLadder.WarStanding), so a
+            // faction not at war (or losing, or peaceful) is byte-identical.
+            var (atWar, enemyStrength) = NeedsLadder.WarStanding(factionEntity);
+            bool atWarAndWinning = atWar && FactionRollup.MilitaryStrength(factionEntity) >= enemyStrength;
+
             // Phase-5.2 decision-log: take the choice AND the reason tracing it to the driving input.
-            var (chosen, reason) = ObjectiveSelector.SelectWithReason(tier, factionInfoDB.Doctrine, personality);
+            var (chosen, reason) = ObjectiveSelector.SelectWithReason(tier, factionInfoDB.Doctrine, personality, atWarAndWinning);
 
             // Target selection (which rival to Conquer) is the 2.4c refinement; keep -1 (none) for now.
             // Phase-2.5: the commit DWELL scales with Ambition — a high-Ambition faction renews an expansion push
