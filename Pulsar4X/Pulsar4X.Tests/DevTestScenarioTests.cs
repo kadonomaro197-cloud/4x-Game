@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Pulsar4X.Colonies;
+using Pulsar4X.Combat;      // FleetCombat.Ships
+using Pulsar4X.Energy;      // EnergyGenAbilityDB (ground the fleet for the BuildTransport gauge)
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
 using Pulsar4X.GroundCombat;
@@ -191,6 +193,66 @@ namespace Pulsar4X.Tests
             var trooper = umf.ShipDesigns["default-ship-design-trooper"];
             Assert.That(trooper.TryGetComponentsByAttribute<GroundBayAtb>(out var bays) && bays.Count > 0, Is.True,
                 "the troop transport mounts no GroundBayAtb — it can't actually carry ground units.");
+        }
+
+        [Test]
+        [Description("B5-2 helpers: ConquerResolver.IsTroopTransport recognises the trooper (mounts a bay) and rejects the "
+                     + "gunship (no bay); and FactionOwnsTransport is FALSE for UMF right after load — it has the trooper "
+                     + "DESIGN but no transport SHIP yet (its start fleet is gunships). These are the two reads the "
+                     + "BuildTransport rung turns on.")]
+        public void DevTest_ConquerResolver_TransportDetection_Helpers()
+        {
+            var game = NewGame();
+            DevTestStartFactory.CreateDevTest(
+                game, ScenarioDir, new List<string> { "uef-devtest.json", "umf.json", "kithrin.json" });
+
+            var umfEntity = game.Factions.Values.First(f =>
+                f != null && f.IsValid && f.HasDataBlob<FactionInfoDB>()
+                && f.GetDataBlob<FactionInfoDB>().IsNPC
+                && f.GetDataBlob<FactionInfoDB>().Colonies.Count >= 4);
+            var umf = umfEntity.GetDataBlob<FactionInfoDB>();
+
+            Assert.That(ConquerResolver.IsTroopTransport(umf.ShipDesigns["default-ship-design-trooper"]), Is.True,
+                "the trooper mounts a troop bay → IsTroopTransport true");
+            Assert.That(ConquerResolver.IsTroopTransport(umf.ShipDesigns["default-ship-design-gunship"]), Is.False,
+                "the gunship has no troop bay → IsTroopTransport false");
+
+            var state = FactionState.Snapshot(umfEntity);
+            Assert.That(ConquerResolver.FactionOwnsTransport(state), Is.False,
+                "UMF owns the trooper DESIGN but no transport SHIP yet (its start fleet is gunships) → false");
+        }
+
+        [Test]
+        [Description("B5-2: an at-war UMF that owns NO troop transport (only the design) and can't sail its fleet yet "
+                     + "decides to BUILD one. We ground UMF's strike fleet (clear its stored warp energy) so the sail rung "
+                     + "can't fire, then resolve Conquer — with a war target, a shipyard line, the trooper design, and no "
+                     + "transport ship, ConquerResolver's new Rung 2 returns 'BuildTransport'. The prerequisite for the "
+                     + "load/land keystone (B5-3).")]
+        public void DevTest_UMF_AtWar_GroundedFleet_BuildsATransport()
+        {
+            var game = NewGame();
+            DevTestStartFactory.CreateDevTest(
+                game, ScenarioDir, new List<string> { "uef-devtest.json", "umf.json", "kithrin.json" });
+
+            var umfEntity = game.Factions.Values.First(f =>
+                f != null && f.IsValid && f.HasDataBlob<FactionInfoDB>()
+                && f.GetDataBlob<FactionInfoDB>().IsNPC
+                && f.GetDataBlob<FactionInfoDB>().Colonies.Count >= 4);
+
+            // Ground the strike fleet: clear each ship's stored warp energy so MilitaryReach.HasRange is false and the
+            // sail rung (Rung 1) can't fire — forcing the resolver to the BuildTransport rung.
+            foreach (var fleet in FactionState.Snapshot(umfEntity).OwnedFleets())
+                foreach (var ship in FleetCombat.Ships(fleet))
+                    if (ship != null && ship.IsValid && ship.TryGetDataBlob<EnergyGenAbilityDB>(out var egen))
+                        egen.EnergyStored.Clear();
+
+            var state = FactionState.Snapshot(umfEntity);
+            var action = new ConquerResolver().Resolve(state,
+                new StrategicObjectiveDB { Objective = StrategicObjective.Conquer });
+
+            Assert.That(action.Kind, Is.EqualTo("BuildTransport"),
+                "a belligerent UMF that can't sail yet and owns no transport should BUILD one (Rung 2). "
+                + $"Got '{action.Kind}': {action.Detail}");
         }
     }
 }

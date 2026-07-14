@@ -158,6 +158,7 @@
     "default-design-infrastructure",
     "default-design-research-lab",
     "default-design-warehouse",
+    "default-design-shipyard",
     "default-design-agri-complex",
     "default-design-hydroponics-arcology",
     "default-design-ship-hull-heavy",
@@ -223,6 +224,10 @@
         },
         {
           "id": "default-design-research-lab",
+          "amount": 1
+        },
+        {
+          "id": "default-design-shipyard",
           "amount": 1
         },
         {

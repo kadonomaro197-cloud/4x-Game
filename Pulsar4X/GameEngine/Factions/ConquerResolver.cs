@@ -66,7 +66,45 @@ namespace Pulsar4X.Factions
                 }
             }
 
-            // Rung 2 (v1) — MASS the strike fleet: queue an armed hull on a free ship-construction line. (Reached
+            // Rung 2 (B5-2 — the invasion CARRIER): we hold a war target but own no ship that can LIFT troops → build a
+            // troop transport. Placed AFTER the sail rung (a ready/charged/reachable fleet still sails FIRST, so
+            // MilitaryCompositionTests stays byte-identical) and BEFORE massing more warships. It only runs when Rung 1
+            // did NOT (no ready fleet, or the fleet is already en route). One transport (repeat: false — not a standing
+            // mass); the load/land steps are B5-3. Byte-identical while EnableOrderEmission is off, and for any faction
+            // not at war (no target → this whole block is skipped, so a default game still hits QueueWarship below).
+            if (target.IsValid && !FactionOwnsTransport(state))
+            {
+                foreach (var colony in state.ColoniesWithFreeLine())
+                {
+                    if (colony.Cargo == null) continue;   // AutoAddSubJobs needs a CargoStorageDB
+
+                    foreach (var designKvp in state.Info.IndustryDesigns)
+                    {
+                        if (!(designKvp.Value is ShipDesign transport) || !IsTroopTransport(transport)) continue;
+                        if (!FeasibilityOracle.CanQueue(colony, transport, state.Info)) continue;
+
+                        string tLineId = FreeLineFor(colony.Industry, transport.IndustryTypeID);
+                        if (tLineId == null) continue;
+
+                        var colonyEntity = colony.Colony;
+                        var info = state.Info;
+                        var designId = designKvp.Key;
+                        var designName = transport.Name;
+                        return new PlannerAction(
+                            "BuildTransport",
+                            $"build troop transport '{designName}' on colony {colonyEntity.Id} to carry the invasion",
+                            () =>
+                            {
+                                var job = new IndustryJob(info, designId);
+                                job.InitialiseJob(1, false);                     // ONE transport, not a standing mass
+                                IndustryTools.AddJob(colonyEntity, tLineId, job);
+                                IndustryTools.AutoAddSubJobs(colonyEntity, job); // material-aware (resolve the sub-tree)
+                            });
+                    }
+                }
+            }
+
+            // Rung 3 (v1) — MASS the strike fleet: queue an armed hull on a free ship-construction line. (Reached
             // while we have no target yet, or the strike group isn't massed / is already en route.)
             foreach (var colony in state.ColoniesWithFreeLine())
             {
@@ -109,6 +147,28 @@ namespace Pulsar4X.Factions
             || ship.TryGetComponentsByAttribute<PlasmaBoltWeaponAtb>(out _)
             || ship.TryGetComponentsByAttribute<DisruptorWeaponAtb>(out _)
             || ship.TryGetComponentsByAttribute<MissileLauncherAtb>(out _);
+
+        /// <summary>A ship design that can LIFT ground troops — it mounts a troop bay (<see cref="Pulsar4X.GroundCombat.GroundBayAtb"/>).
+        /// The transport twin of <see cref="IsWarship"/>. The build rung finds ANY buildable transport design this way,
+        /// not a hardcoded id (the base-mod trooper is faction-specific). Internal for the gauge.</summary>
+        internal static bool IsTroopTransport(ShipDesign ship)
+            => ship.TryGetComponentsByAttribute<Pulsar4X.GroundCombat.GroundBayAtb>(out _);
+
+        /// <summary>True if the faction already OWNS a ship that can carry troops (a Personnel troop bay). Scans ALL owned
+        /// ships across every system — NOT just fleet members, because a freshly-built ship isn't auto-added to a fleet,
+        /// so a fleet-only scan would miss it and re-build a transport every cycle. Internal for the gauge.</summary>
+        internal static bool FactionOwnsTransport(FactionState state)
+        {
+            foreach (var system in state.Game.Systems)
+            {
+                if (system == null) continue;
+                foreach (var ship in system.GetAllEntitiesWithDataBlob<ShipInfoDB>())
+                    if (ship != null && ship.IsValid && ship.FactionOwnerID == state.FactionId
+                        && Pulsar4X.GroundCombat.GroundTransport.BayCapacity(ship, Pulsar4X.GroundCombat.GroundCarryClass.Personnel) > 0)
+                        return true;
+            }
+            return false;
+        }
 
         /// <summary>True if any ship in the fleet is already in warp transit — so the strike rung doesn't re-issue the
         /// sail order every monthly cycle (which would thrash the fleet's warp). A cheap en-route guard; a fuller
