@@ -1,4 +1,4 @@
-=== Pulsar4X session started 2026-07-13 20:55:26 ===
+=== Pulsar4X session started 2026-07-13 22:09:06 ===
 Log: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\game_logs (rolling pages game_log_000.txt, _001, …)
 File not found: Resources\CancelIco.bmp
 File not found: Resources\CargoIco.bmp
@@ -29,61 +29,61 @@ Found mod 'Pulsar4x-Testing' from C:\Users\DeeDiebS\AppData\Roaming\Pulsar4X\Pul
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\pulsar4x-menu.png
 Successfully loaded: pulsar4x-menu
 Format: .png
-Texture pointer: 1E76DA53AD0
+Texture pointer: 236801A20B0
 Dimensions: 400x200
 --------------------------------------------------
-[VIEW] now viewing faction id=277 () [player]
+[VIEW] now viewing faction id=277 (UEF) [player]
 Ship icon texture loaded: 28x14
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\DesignComponentIco.bmp
 Successfully loaded: DesComp
 Format: .bmp
-Texture pointer: 1E76E0C4E60
+Texture pointer: 2368054E860
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\DesignShipIco.bmp
 Successfully loaded: DesShip
 Format: .bmp
-Texture pointer: 1E76E0C6260
+Texture pointer: 2368054CE20
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\IndustryIco.bmp
 Successfully loaded: Industry
 Format: .bmp
-Texture pointer: 1E76E0C4AA0
+Texture pointer: 2368054DD20
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\ResearchIco.bmp
 Successfully loaded: Research
 Format: .bmp
-Texture pointer: 1E76E0C5AE0
+Texture pointer: 2368054DBE0
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\SelectIco.bmp
 Successfully loaded: Select
 Format: .bmp
-Texture pointer: 1E76E0C4FA0
+Texture pointer: 2368054DE60
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\GalaxyMapIco.bmp
 Successfully loaded: GalMap
 Format: .bmp
-Texture pointer: 1E76E0C5FE0
+Texture pointer: 2368054DFA0
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\RulerIco.bmp
 Successfully loaded: Ruler
 Format: .bmp
-Texture pointer: 1E76E0C6120
+Texture pointer: 2368054D460
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\TreeIco.bmp
 Successfully loaded: Tree
 Format: .bmp
-Texture pointer: 1E76E0C5C20
+Texture pointer: 2368054E9A0
 Dimensions: 256x256
 --------------------------------------------------
 [DevTools] Refresh: 0 ship design(s), 284 body(ies), 10 cargo target(s), 15 mineral(s)
-[STATE] ⏱ slow frame 855ms — stage breakdown: update(state+transforms) 0 / map-draw(SDL lines) 0 / ui(windows) 853 ms — the biggest number is the culprit
+[STATE] ⏱ slow frame 1132ms — stage breakdown: update(state+transforms) 0 / map-draw(SDL lines) 0 / ui(windows) 1130 ms — the biggest number is the culprit
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=4
 [ENGINE] sensor scans 20 (+20), battle-trigger passes 0 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
@@ -91,124 +91,35 @@ Dimensions: 256x256
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\Play.bmp
 Successfully loaded: PlayImg
 Format: .bmp
-Texture pointer: 1E76E0C63A0
+Texture pointer: 2368054EAE0
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\OneStep.bmp
 Successfully loaded: OneStepImg
 Format: .bmp
-Texture pointer: 1E76E0C6620
+Texture pointer: 2368054D820
 Dimensions: 256x256
 --------------------------------------------------
-[SELECT] Primary click on 'Earth' (entity #4, faction -99)
-Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\PinIco.bmp
-Successfully loaded: Pin
-Format: .bmp
-Texture pointer: 1E76E0C4BE0
-Dimensions: 256x256
---------------------------------------------------
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=4
 [ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=4
 [ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=4
 [ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[SELECT] Alt click on 'Earth' (entity #4, faction -99)
-[SELECT] Alt click on 'Earth' (entity #4, faction -99)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[SELECT] Primary click on 'Luna' (entity #5, faction -99)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Luna ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Luna ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[SELECT] Alt click on 'Luna' (entity #5, faction -99)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Luna ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Luna ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Luna ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Luna ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Luna ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Luna ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] ⏱ slow frame 4456ms — stage breakdown: update(state+transforms) 2 / map-draw(SDL lines) 3 / ui(windows) 0 ms — the biggest number is the culprit
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Luna ships-in-view=4
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=4
 [ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
 [SELECT] Primary click on 'Venus' (entity #3, faction -99)
+Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\PinIco.bmp
+Successfully loaded: Pin
+Format: .bmp
+Texture pointer: 236853D3840
+Dimensions: 256x256
+--------------------------------------------------
+[SELECT] Alt click on 'Venus' (entity #3, faction -99)
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
 [ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
@@ -225,79 +136,326 @@ Dimensions: 256x256
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
 [ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
+[SELECT] Alt click on 'Lysithea' (entity #15, faction -99)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Lysithea ships-in-view=4
 [ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Lysithea ships-in-view=4
 [ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Lysithea ships-in-view=4
 [ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Lysithea ships-in-view=4
 [ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
+[TIME] play (step 3600s)
+Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\Pause.bmp
+Successfully loaded: PauseImg
+Format: .bmp
+Texture pointer: 236853D2A80
+Dimensions: 256x256
+--------------------------------------------------
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Lysithea ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+720) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
+[TIME] play (step 3600s)
+[TIME] play (step 3600s)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Lysithea ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
+[TIME] one step (3600s)
+[TIME] one step (3600s)
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (The given key '22' was not present in the dictionary.)
+ ---> System.Collections.Generic.KeyNotFoundException: The given key '22' was not present in the dictionary.
+   at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
+   at Pulsar4X.Industry.MineResourcesProcessor.MineResources(Entity miningEntity, MineralsDB mineralsDB, MiningDB miningDB, CargoStorageDB stockpile) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Industry\MineResourcesProcessor.cs:line 71
+   at Pulsar4X.Industry.MineResourcesProcessor.ProcessEntity(Entity entity, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Industry\MineResourcesProcessor.cs:line 45
+   at Pulsar4X.Industry.MineResourcesProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Industry\MineResourcesProcessor.cs:line 53
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.<>c__DisplayClass47_0.<TimeStep>b__0() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 227
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+   --- End of inner exception stack trace ---
+[TIME] one step (3600s)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Lysithea ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (The given key '22' was not present in the dictionary.)
+ ---> System.Collections.Generic.KeyNotFoundException: The given key '22' was not present in the dictionary.
+   at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
+   at Pulsar4X.Industry.MineResourcesProcessor.MineResources(Entity miningEntity, MineralsDB mineralsDB, MiningDB miningDB, CargoStorageDB stockpile) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Industry\MineResourcesProcessor.cs:line 71
+   at Pulsar4X.Industry.MineResourcesProcessor.ProcessEntity(Entity entity, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Industry\MineResourcesProcessor.cs:line 45
+   at Pulsar4X.Industry.MineResourcesProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Industry\MineResourcesProcessor.cs:line 53
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.<>c__DisplayClass47_0.<TimeStep>b__0() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 227
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+   --- End of inner exception stack trace ---
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (The given key '22' was not present in the dictionary.)
+ ---> System.Collections.Generic.KeyNotFoundException: The given key '22' was not present in the dictionary.
+   at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
+   at Pulsar4X.Industry.MineResourcesProcessor.MineResources(Entity miningEntity, MineralsDB mineralsDB, MiningDB miningDB, CargoStorageDB stockpile) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Industry\MineResourcesProcessor.cs:line 71
+   at Pulsar4X.Industry.MineResourcesProcessor.ProcessEntity(Entity entity, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Industry\MineResourcesProcessor.cs:line 45
+   at Pulsar4X.Industry.MineResourcesProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Industry\MineResourcesProcessor.cs:line 53
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeAsync(CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 287
+   --- End of inner exception stack trace ---
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (The given key '22' was not present in the dictionary.)
+ ---> System.Collections.Generic.KeyNotFoundException: The given key '22' was not present in the dictionary.
+   at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
+   at Pulsar4X.Industry.MineResourcesProcessor.MineResources(Entity miningEntity, MineralsDB mineralsDB, MiningDB miningDB, CargoStorageDB stockpile) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Industry\MineResourcesProcessor.cs:line 71
+   at Pulsar4X.Industry.MineResourcesProcessor.ProcessEntity(Entity entity, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Industry\MineResourcesProcessor.cs:line 45
+   at Pulsar4X.Industry.MineResourcesProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Industry\MineResourcesProcessor.cs:line 53
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeAsync(CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 287
+   --- End of inner exception stack trace ---
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (The given key '22' was not present in the dictionary.)
+ ---> System.Collections.Generic.KeyNotFoundException: The given key '22' was not present in the dictionary.
+   at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
+   at Pulsar4X.Industry.MineResourcesProcessor.MineResources(Entity miningEntity, MineralsDB mineralsDB, MiningDB miningDB, CargoStorageDB stockpile) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Industry\MineResourcesProcessor.cs:line 71
+   at Pulsar4X.Industry.MineResourcesProcessor.ProcessEntity(Entity entity, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Industry\MineResourcesProcessor.cs:line 45
+   at Pulsar4X.Industry.MineResourcesProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Industry\MineResourcesProcessor.cs:line 53
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 353
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 298
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 339
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeAsync(CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 287
+   --- End of inner exception stack trace ---
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Lysithea ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Lysithea ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
+[SELECT] Primary click on 'Mars' (entity #6, faction -99)
+[SELECT] Primary click on 'Mars' (entity #6, faction -99)
+[SELECT] Primary click on 'Mars' (entity #6, faction -99)
+[SELECT] Alt click on 'Mars' (entity #6, faction -99)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Mars ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Mars ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Mars ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Mars ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Mars ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Mars ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Mars ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Mars ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Mars ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
+[SELECT] Alt click on 'Earth' (entity #4, faction -99)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[SELECT] Primary click on 'Mercury' (entity #2, faction -99)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Mercury ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Mercury ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[SELECT] Primary click on 'Venus' (entity #3, faction -99)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Venus ships-in-view=4
-[ENGINE] sensor scans 20 (+0), battle-trigger passes 0 (+0) since last beat
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=4
+[ENGINE] sensor scans 20 (+0), battle-trigger passes 720 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 4 other-faction ship(s) in-system, detects 1 (3 hidden from you)
 [STATE] session summary — faults=0, game-time=2050-01-01 00:00
-=== Session ended 2026-07-13 20:58:51 ===
+=== Session ended 2026-07-13 22:17:32 ===
