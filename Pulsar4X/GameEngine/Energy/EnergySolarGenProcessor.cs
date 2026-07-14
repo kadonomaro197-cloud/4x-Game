@@ -44,7 +44,7 @@ public class EnergyGenHotloopProcessor : IHotloopProcessor
 
         // Defensive (parity with SensorReflectionProcessor / SensorTools, which TryGet PositionDB): a generator or
         // an emitter entity might not carry a PositionDB — a hard get would throw on the sim thread and freeze the clock.
-        if (!entity.TryGetDataBlob<PositionDB>(out var position)) return;
+        if (!entity.TryGetDataBlob<PositionDB>(out var position)) return 0;   // no position -> no solar this tick
         var emitters = entity.Manager.GetAllEntitiesWithDataBlob<SensorProfileDB>();
 
         foreach (var panelAtb in genDB.SolarPanels)
