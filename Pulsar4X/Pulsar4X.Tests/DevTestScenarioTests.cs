@@ -443,9 +443,10 @@ namespace Pulsar4X.Tests
             Assert.That(GroundTransport.FreeCapacity(trooper, GroundCarryClass.Personnel), Is.GreaterThan(0),
                 "the transport should have free troop-bay room.");
 
-            // Input 3: Mars has a loadable UMF garrison unit — the LOAD rung's third read.
-            Assert.That(ConquerResolver.AvailableGroundUnitAt(marsBody, umfEntity.Id), Is.Not.Null,
-                "Mars should hold a loadable UMF garrison unit.");
+            // Input 3: Mars has a garrison unit the TROOPER can actually load (CanLoad-filtered — a Personnel unit its
+            // troop bay has room for, NOT the Vehicle armour/artillery it can't carry). This is the LOAD rung's third read.
+            Assert.That(ConquerResolver.AvailableLoadableUnit(trooper, marsBody, umfEntity.Id), Is.Not.Null,
+                "Mars should hold a garrison unit the troop transport can load (an infantry unit).");
         }
     }
 }

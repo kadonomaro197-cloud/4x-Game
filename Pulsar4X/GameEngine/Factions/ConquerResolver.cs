@@ -77,12 +77,13 @@ namespace Pulsar4X.Factions
             if (target.IsValid && state.Game != null)
             {
                 var transport = FindOwnedTransport(state);
-                if (transport != null && transport.IsValid
-                    && Pulsar4X.GroundCombat.GroundTransport.FreeCapacity(transport, Pulsar4X.GroundCombat.GroundCarryClass.Personnel) > 0)
+                if (transport != null && transport.IsValid)
                 {
                     var shipBody = ShipBody(transport);
-                    var unit = AvailableGroundUnitAt(shipBody, state.FactionId);
-                    if (shipBody != null && unit != null)
+                    // CanLoad-filtered: only a unit a bay of its own class has room for (skips the Vehicle armour/artillery
+                    // a Personnel-only trooper can't carry — the anti-no-op-loop guard the blast-radius check surfaced).
+                    var unit = shipBody != null ? AvailableLoadableUnit(transport, shipBody, state.FactionId) : null;
+                    if (unit != null)
                     {
                         var game = state.Game;
                         var t = transport;
@@ -214,14 +215,19 @@ namespace Pulsar4X.Factions
         private static Entity ShipBody(Entity ship)
             => ship != null && ship.TryGetDataBlob<Pulsar4X.Movement.PositionDB>(out var pos) ? pos.Parent : null;
 
-        /// <summary>A standing ground unit of <paramref name="factionId"/> on <paramref name="body"/> that can be loaded
-        /// (any of our units on the roster; <c>TryLoadUnit</c> clears its march state), or null. Internal for the gauge.</summary>
-        internal static Pulsar4X.GroundCombat.GroundUnit AvailableGroundUnitAt(Entity body, int factionId)
+        /// <summary>A standing ground unit of <paramref name="factionId"/> on <paramref name="body"/> that the
+        /// <paramref name="transport"/> can ACTUALLY load — i.e. a bay of the unit's class has room (<c>CanLoad</c>).
+        /// Filtering by <c>CanLoad</c> is load-bearing: a Personnel-only troop transport must SKIP the Vehicle-class
+        /// armour/artillery in the garrison (otherwise the rung would pick a unit it can't carry, the load would no-op,
+        /// and it would pick that same unit forever — an infinite no-op). Returns null when nothing loadable remains,
+        /// so the rung falls through (and slice 2's SAIL takes over). Internal for the gauge.</summary>
+        internal static Pulsar4X.GroundCombat.GroundUnit AvailableLoadableUnit(Entity transport, Entity body, int factionId)
         {
             if (body == null || !body.IsValid || !body.TryGetDataBlob<Pulsar4X.GroundCombat.GroundForcesDB>(out var forces))
                 return null;
             foreach (var u in forces.Units)
-                if (u != null && u.FactionOwnerID == factionId)
+                if (u != null && u.FactionOwnerID == factionId
+                    && Pulsar4X.GroundCombat.GroundTransport.CanLoad(transport, u))
                     return u;
             return null;
         }
