@@ -66,6 +66,41 @@ namespace Pulsar4X.Factions
                 }
             }
 
+            // Rung 1.5 (B5-3 — LOAD the invasion): we hold a war target and own a transport that is sitting AT one of our
+            // own bodies which has a standing ground unit, with free troop-bay room → order that unit loaded (the front
+            // door to LoadTroopsOrder → GroundTransport.TryLoadUnit). Placed AFTER the strike-fleet sail (so the warfleet
+            // launches to win the orbit first) and BEFORE BuildTransport (which only fires when we own NO transport, so
+            // the two are mutually exclusive). Loading a garrison unit strips it off the home world to carry the invasion
+            // — the aggressive "throw the army at them" v1 (a reserve-vs-expedition split is a later refinement). Sailing
+            // the loaded transport to the target + landing it are the next B5-3 rungs. Byte-identical while emission is off
+            // (runs only inside the gated EmitOrders), AND for any faction not at war (no target → skipped).
+            if (target.IsValid && state.Game != null)
+            {
+                var transport = FindOwnedTransport(state);
+                if (transport != null && transport.IsValid
+                    && Pulsar4X.GroundCombat.GroundTransport.FreeCapacity(transport, Pulsar4X.GroundCombat.GroundCarryClass.Personnel) > 0)
+                {
+                    var shipBody = ShipBody(transport);
+                    var unit = AvailableGroundUnitAt(shipBody, state.FactionId);
+                    if (shipBody != null && unit != null)
+                    {
+                        var game = state.Game;
+                        var t = transport;
+                        var b = shipBody;
+                        int uid = unit.UnitId;
+                        string uname = unit.Name;
+                        return new PlannerAction(
+                            "LoadInvasion",
+                            $"load '{uname}' aboard transport {t.Id} at body {b.Id} to carry the invasion",
+                            () =>
+                            {
+                                var cmd = Pulsar4X.GroundCombat.LoadTroopsOrder.CreateCommand(t, b, uid);
+                                game.OrderHandler.HandleOrder(cmd);   // the ONE step
+                            });
+                    }
+                }
+            }
+
             // Rung 2 (B5-2 — the invasion CARRIER): we hold a war target but own no ship that can LIFT troops → build a
             // troop transport. Placed AFTER the sail rung (a ready/charged/reachable fleet still sails FIRST, so
             // MilitaryCompositionTests stays byte-identical) and BEFORE massing more warships. It only runs when Rung 1
@@ -154,10 +189,14 @@ namespace Pulsar4X.Factions
         internal static bool IsTroopTransport(ShipDesign ship)
             => ship.TryGetComponentsByAttribute<Pulsar4X.GroundCombat.GroundBayAtb>(out _);
 
-        /// <summary>True if the faction already OWNS a ship that can carry troops (a Personnel troop bay). Scans ALL owned
-        /// ships across every system — NOT just fleet members, because a freshly-built ship isn't auto-added to a fleet,
-        /// so a fleet-only scan would miss it and re-build a transport every cycle. Internal for the gauge.</summary>
-        internal static bool FactionOwnsTransport(FactionState state)
+        /// <summary>True if the faction already OWNS a ship that can carry troops (a Personnel troop bay). Internal for the gauge.</summary>
+        internal static bool FactionOwnsTransport(FactionState state) => FindOwnedTransport(state) != null;
+
+        /// <summary>The faction's owned transport SHIP (mounts a Personnel troop bay), or null. Scans ALL owned ships across
+        /// every system — NOT just fleet members, because a freshly-built ship isn't auto-added to a fleet, so a fleet-only
+        /// scan would miss it and re-build a transport every cycle. The entity twin of <see cref="FactionOwnsTransport"/>
+        /// that the LOAD rung acts on. Internal for the gauge.</summary>
+        internal static Entity FindOwnedTransport(FactionState state)
         {
             foreach (var system in state.Game.Systems)
             {
@@ -165,9 +204,26 @@ namespace Pulsar4X.Factions
                 foreach (var ship in system.GetAllEntitiesWithDataBlob<ShipInfoDB>())
                     if (ship != null && ship.IsValid && ship.FactionOwnerID == state.FactionId
                         && Pulsar4X.GroundCombat.GroundTransport.BayCapacity(ship, Pulsar4X.GroundCombat.GroundCarryClass.Personnel) > 0)
-                        return true;
+                        return ship;
             }
-            return false;
+            return null;
+        }
+
+        /// <summary>The body a ship is currently at (its <see cref="Pulsar4X.Movement.PositionDB"/> parent), or null — the
+        /// staging body the LOAD rung loads from (and the same read <c>GroundTransport.ShipIsAtBody</c> uses).</summary>
+        private static Entity ShipBody(Entity ship)
+            => ship != null && ship.TryGetDataBlob<Pulsar4X.Movement.PositionDB>(out var pos) ? pos.Parent : null;
+
+        /// <summary>A standing ground unit of <paramref name="factionId"/> on <paramref name="body"/> that can be loaded
+        /// (any of our units on the roster; <c>TryLoadUnit</c> clears its march state), or null. Internal for the gauge.</summary>
+        internal static Pulsar4X.GroundCombat.GroundUnit AvailableGroundUnitAt(Entity body, int factionId)
+        {
+            if (body == null || !body.IsValid || !body.TryGetDataBlob<Pulsar4X.GroundCombat.GroundForcesDB>(out var forces))
+                return null;
+            foreach (var u in forces.Units)
+                if (u != null && u.FactionOwnerID == factionId)
+                    return u;
+            return null;
         }
 
         /// <summary>True if any ship in the fleet is already in warp transit — so the strike rung doesn't re-issue the

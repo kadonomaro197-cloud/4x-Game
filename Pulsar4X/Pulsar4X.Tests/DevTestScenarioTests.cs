@@ -7,6 +7,7 @@ using Pulsar4X.Factions;
 using Pulsar4X.GroundCombat;
 using Pulsar4X.Industry;
 using Pulsar4X.Modding;
+using Pulsar4X.Ships;
 
 namespace Pulsar4X.Tests
 {
@@ -394,6 +395,57 @@ namespace Pulsar4X.Tests
             TestContext.WriteLine($"[kithrin-canqueue] hive-cruiser={canBuildCruiser} snapshot-hosts={state.Colonies.Count}");
             Assert.That(canBuildCruiser, Is.True,
                 "Kithrin cannot queue its warship from the station — the station-aware snapshot or the ship-assembly line regressed.");
+        }
+
+        [Test]
+        [Description("B5-3 (the conquest keystone, LOAD rung): with a UMF troop transport sitting at Mars — which holds a "
+                     + "UMF home garrison — the three reads the ConquerResolver LOAD rung turns on are all satisfied: "
+                     + "FindOwnedTransport returns the transport, it's AT Mars with free troop-bay room, and "
+                     + "AvailableGroundUnitAt finds a loadable garrison unit. So the rung selects LoadInvasion whenever the "
+                     + "resolve reaches it. Decoupled from the strike-fleet priority (the B5-2 lesson — assert the rung's "
+                     + "INPUTS, not a priority-gated outcome). This is the first rung of load→sail→land→capture; sailing the "
+                     + "loaded transport and landing it are the next slices.")]
+        public void DevTest_UMF_Invasion_HasTheInputsToLoadTroops()
+        {
+            var game = NewGame();
+            DevTestStartFactory.CreateDevTest(
+                game, ScenarioDir, new List<string> { "uef-devtest.json", "umf.json", "kithrin.json" });
+
+            var umfEntity = game.Factions.Values.First(f =>
+                f != null && f.IsValid && f.HasDataBlob<FactionInfoDB>()
+                && f.GetDataBlob<FactionInfoDB>().IsNPC
+                && f.GetDataBlob<FactionInfoDB>().Colonies.Count >= 4);
+            var umf = umfEntity.GetDataBlob<FactionInfoDB>();
+
+            // UMF owns no transport at the start (its fleet is gunships) — the rung's precondition to FILL.
+            Assert.That(ConquerResolver.FindOwnedTransport(FactionState.Snapshot(umfEntity)), Is.Null,
+                "UMF should own no transport ship at start.");
+
+            // Mars = the largest-pop UMF colony; it carries a home garrison (raised by the DevTest start).
+            var mars = umf.Colonies.Where(c => c != null && c.IsValid)
+                .OrderByDescending(c => c.GetDataBlob<ColonyInfoDB>().Population.Values.Sum())
+                .First();
+            var marsBody = mars.GetDataBlob<ColonyInfoDB>().PlanetEntity;
+            Assert.That(marsBody != null && marsBody.IsValid, Is.True, "Mars has no planet body.");
+
+            // Spawn a UMF troop transport at Mars — the ship the AI would have built (BuildTransport rung).
+            var trooperDesign = (ShipDesign)umf.ShipDesigns["default-ship-design-trooper"];
+            var trooper = ShipFactory.CreateShip(trooperDesign, umfEntity, marsBody, "MFS Test Lander");
+            Assert.That(trooper != null && trooper.IsValid, Is.True, "failed to spawn the test transport.");
+
+            // Input 1: FindOwnedTransport now returns the transport (the rung's precondition is met).
+            var state = FactionState.Snapshot(umfEntity);
+            Assert.That(ConquerResolver.FindOwnedTransport(state), Is.Not.Null,
+                "FindOwnedTransport should return the spawned troop transport.");
+
+            // Input 2: the transport is AT Mars with free Personnel bay room.
+            Assert.That(GroundTransport.ShipIsAtBody(trooper, marsBody), Is.True, "the transport should be at Mars.");
+            Assert.That(GroundTransport.FreeCapacity(trooper, GroundCarryClass.Personnel), Is.GreaterThan(0),
+                "the transport should have free troop-bay room.");
+
+            // Input 3: Mars has a loadable UMF garrison unit — the LOAD rung's third read.
+            Assert.That(ConquerResolver.AvailableGroundUnitAt(marsBody, umfEntity.Id), Is.Not.Null,
+                "Mars should hold a loadable UMF garrison unit.");
         }
     }
 }

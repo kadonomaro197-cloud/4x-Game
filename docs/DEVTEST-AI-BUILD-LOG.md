@@ -47,6 +47,20 @@
 
 ## Progress log (newest first)
 
+### 2026-07-14 — B5-3 slice 1: the AI LOADS the invasion (troops aboard)
+
+**The keystone, broken into rungs.** B5-3 (load→sail→land→capture) is stateful and fleet-orchestrating, so per the B5-2 lesson it ships as individually-verifiable rungs, not one blind mega-change. This is **rung 1 — LOAD**.
+
+**Investigation finds (Prime Directive, before writing):** `MoveToSystemBodyOrder` requires a **`FleetDB`** (`MoveToSystemBodyOrder.cs:44`) — a lone built transport can't sail itself; it must ride a fleet (the SAIL rung's problem, deferred to slice 2). `LoadTroopsOrder`/`LandTroopsOrder` are **ship-issued and proven** (`TroopOrderTests` green). `TryLoadUnit` moves a unit OFF the body roster INTO `GroundTransportDB.LoadedUnits` — so loading a garrison unit strips it off home defence (the aggressive "throw the army at them" v1; a reserve-vs-expedition split is a later refinement — the design fork I surfaced + decided).
+
+**Built (engine, `ConquerResolver`):** a new **Rung 1.5 — LOAD**, between the strike-fleet sail (Rung 1) and BuildTransport (Rung 2). When at war with a scored target AND we own a transport sitting AT one of our bodies that holds a standing ground unit, with free Personnel bay room → emit `LoadTroopsOrder` for that unit. Three new/refactored helpers: `FindOwnedTransport(state)` (the entity twin of `FactionOwnsTransport`, which now delegates to it), `ShipBody(ship)` (the transport's current body via `PositionDB.Parent`), `AvailableGroundUnitAt(body, factionId)` (a loadable garrison unit). Byte-identical off the gate; and mutually exclusive with BuildTransport (fires only when we DO own a transport) so a default resolve is unchanged.
+
+**Placement byte-identity (verified by reasoning):** `ConquerResolverTests` (no war → target invalid → LOAD skipped → QueueWarship). `MilitaryCompositionTests` (war + massed fleet → Rung 1 StrikeFleet returns FIRST, before LOAD). UMF owns no transport at start → LOAD never fires until one is built, so every existing resolve is byte-identical.
+
+**Gauge:** `DevTest_UMF_Invasion_HasTheInputsToLoadTroops` — spawns a UMF trooper at Mars (via `ShipFactory.CreateShip`, orbiting Mars → `ShipIsAtBody` true), then asserts the three reads the rung turns on: `FindOwnedTransport` returns it (null before), it's at Mars with free Personnel room, and `AvailableGroundUnitAt(Mars, umfId)` finds a garrison unit. Decoupled from the strike-fleet priority (B5-2 lesson — assert the rung's INPUTS, not a priority-gated outcome).
+
+**Next (B5-3 slice 2+):** SAIL — the transport must join a fleet to move (the `FleetDB` requirement); the elegant path is folding it into the strike fleet that already sails (Rung 1), so it arrives with the warships. Then LAND (transport at target + orbital control → `LandTroopsOrder` into regions) → capture rides the existing `GroundForcesProcessor.TryCapturePlanet`. Then the AI-driven `TakeAPlanet` capstone (flip `EnableOrderEmission`, drive the whole chain).
+
 ### 2026-07-14 — KITHRIN AT THE SAME LEVEL (a full military faction) + the AI can build from a STATION
 
 **The ask (developer):** *"before you do that get the Kithrin at the same level as well. proportionally speaking. but also continue after that."* — the Mars pass gave Kithrin a proportional *economy*; this gives it the same *capability shape* as UMF: its own ships, a fleet, buildable ground forces, and — the load-bearing engine change — the ability to actually ACT through the AI.
