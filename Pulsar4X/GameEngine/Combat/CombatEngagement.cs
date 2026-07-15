@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Pulsar4X.Engine;
+using Pulsar4X.Factions;   // FactionInfoDB — the sub-fleet-vs-top-level discriminator
 using Pulsar4X.Fleets;
 using Pulsar4X.Movement;
 using Pulsar4X.Orbital;
@@ -150,12 +151,35 @@ namespace Pulsar4X.Combat
         /// question (the colony test harness doesn't reliably auto-fire it). Interlocked: systems tick in parallel.</summary>
         public static long TickCount;
 
+        /// <summary>
+        /// A SUB-FLEET (fleet component) — its parent is another FLEET, not the faction. Combat enrols only TOP-LEVEL
+        /// fleets: a sub-fleet fights AS PART OF its parent, because the parent's recursive <see cref="GetCombatShips"/>
+        /// already collects the sub-fleet's ships and applies the sub-fleet's OWN doctrine. Enrolling a sub-fleet
+        /// separately would double-count its ships. A normal fleet's parent is the faction entity (carries a
+        /// <see cref="FactionInfoDB"/>); a sub-fleet's parent is a plain fleet — that's the discriminator. A default
+        /// game has no sub-fleets, so this reads false everywhere and combat is byte-identical.
+        /// </summary>
+        internal static bool IsSubFleet(Entity fleet)
+        {
+            if (fleet == null || !fleet.TryGetDataBlob<FleetDB>(out var db)) return false;
+            var parent = db.Parent;
+            return parent != null && parent.IsValid
+                && parent.HasDataBlob<FleetDB>()          // parented to a FLEET...
+                && !parent.HasDataBlob<FactionInfoDB>();  // ...not the faction root → it's a sub-fleet
+        }
+
         /// <summary>One trigger pass over a system: engage/join hostile fleets, then step the engagement. Returns
         /// the number of fleets seen. Defensive — built not to throw on normal game state.</summary>
         public static int Tick(EntityManager manager, int deltaSeconds)
         {
             System.Threading.Interlocked.Increment(ref TickCount);
-            var fleets = manager.GetAllEntitiesWithDataBlob<FleetDB>();
+            var allFleets = manager.GetAllEntitiesWithDataBlob<FleetDB>();
+            if (allFleets.Count == 0) return 0;
+            // Only TOP-LEVEL fleets are independent combat units — drop sub-fleets once, here, so the whole Tick
+            // (engage pass, members, retreat sweep) ignores them (they fight via their parent's recursion). No-op
+            // for a default game (no sub-fleets exist).
+            var fleets = new List<Entity>(allFleets.Count);
+            foreach (var f in allFleets) if (!IsSubFleet(f)) fleets.Add(f);
             if (fleets.Count == 0) return 0;
 
             double dt = deltaSeconds > 0 ? deltaSeconds : 1;
@@ -274,7 +298,12 @@ namespace Pulsar4X.Combat
         /// </summary>
         public static bool NewEngagementImminent(EntityManager manager)
         {
-            var fleets = manager.GetAllEntitiesWithDataBlob<FleetDB>();
+            var allFleets = manager.GetAllEntitiesWithDataBlob<FleetDB>();
+            if (allFleets.Count == 0) return false;
+            // Mirror Tick: only top-level fleets can form a new engagement (a sub-fleet fights via its parent), so a
+            // sub-fleet pairing must NOT force the combat-interrupt fine-step. No-op for a default game.
+            var fleets = new List<Entity>(allFleets.Count);
+            foreach (var f in allFleets) if (!IsSubFleet(f)) fleets.Add(f);
             if (fleets.Count == 0) return false;
 
             for (int i = 0; i < fleets.Count; i++)
@@ -525,6 +554,7 @@ namespace Pulsar4X.Combat
             foreach (var other in fleet.Manager.GetAllEntitiesWithDataBlob<FleetDB>())
             {
                 if (other == fleet || other == null || !other.IsValid) continue;
+                if (IsSubFleet(other)) continue;   // target the parent fleet, never a sub-fleet component
                 if (!AreHostile(fleet, other)) continue;
                 if (GetFleetShips(other).Count == 0) continue;
                 if (!CanEngageTarget(fleet, other)) continue;   // fog: only target hostiles we actually DETECT

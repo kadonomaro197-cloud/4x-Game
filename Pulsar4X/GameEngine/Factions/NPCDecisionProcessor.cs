@@ -700,6 +700,10 @@ namespace Pulsar4X.Factions
                 foreach (var fleet in system.GetAllEntitiesWithDataBlob<Pulsar4X.Fleets.FleetDB>())
                 {
                     if (fleet == null || !fleet.IsValid || fleet.FactionOwnerID != factionEntity.Id) continue;
+                    // Set the fleet-level doctrine on TOP-LEVEL fleets only — a role sub-fleet carries its OWN doctrine
+                    // (a later slice assigns it), and this whole-faction policy must not stomp it. No-op for a default
+                    // game (no sub-fleets exist).
+                    if (Pulsar4X.Combat.CombatEngagement.IsSubFleet(fleet)) continue;
                     Pulsar4X.Combat.FleetDoctrine.TrySetDoctrine(fleet, chosen, now);   // honours the switch cooldown
                     Pulsar4X.Combat.FleetDoctrine.SetEngagementPosture(fleet, posture); // direct (works mid-battle)
                 }

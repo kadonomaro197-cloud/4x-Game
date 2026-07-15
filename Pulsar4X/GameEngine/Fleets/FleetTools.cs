@@ -85,5 +85,34 @@ namespace Pulsar4X.Fleets
             }
             return 1;
         }
+
+        private const int MaxFleetTreeDepth = 8;
+
+        /// <summary>
+        /// Every ship under a fleet, walking DOWN through any sub-fleets (fleet components) — the RECURSIVE membership,
+        /// not just the direct children. This is what a fleet-wide action (a move order) must iterate so a fleet whose
+        /// ships have been organised into role sub-fleets still moves as ONE: the ships nested a level down come along
+        /// instead of being left behind by a direct-children-only walk. For a FLAT fleet (no sub-fleets) it returns
+        /// exactly the direct ships in the same order, so it's a drop-in for the old <c>Children.Where(is-ship)</c>
+        /// with no change in behaviour. Defensive; caps recursion depth so a cyclic/self-nested tree can't hang.
+        /// </summary>
+        public static List<Entity> AllShipsRecursive(Entity fleet)
+        {
+            var result = new List<Entity>();
+            CollectShipsRecursive(fleet, result, 0);
+            return result;
+        }
+
+        private static void CollectShipsRecursive(Entity fleet, List<Entity> into, int depth)
+        {
+            if (fleet == null || !fleet.IsValid || depth >= MaxFleetTreeDepth) return;
+            if (!fleet.TryGetDataBlob<FleetDB>(out var fleetDB)) return;
+            foreach (var child in fleetDB.Children)
+            {
+                if (child == null || !child.IsValid || child.Id == fleet.Id) continue;
+                if (child.HasDataBlob<ShipInfoDB>()) into.Add(child);
+                else if (child.HasDataBlob<FleetDB>()) CollectShipsRecursive(child, into, depth + 1);
+            }
+        }
     }
 }
