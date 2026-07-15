@@ -43,8 +43,9 @@ namespace Pulsar4X.Client
         // read from the mounted chassis component's IChassisAtb (ShipHullAtb -> Ship, GroundChassisAtb -> Ground). Before
         // a chassis is mounted (an empty design) this combo bootstraps which parts to show. Index 0 = Ship is the
         // DEFAULT, so with NO ground chassis present the whole window is byte-identical to the ship-only original.
-        private static readonly string[] _assemblyKindNames = { "Ship", "Ground Unit" };
+        private static readonly string[] _assemblyKindNames = { "Ship", "Ground Unit", "Station" };
         private const int GroundKindIndex = 1;
+        private const int StationKindIndex = 2;
         private int _assemblyKindIndex = 0;
 
         private IntPtr _shipImgPtr;
@@ -250,6 +251,17 @@ namespace Pulsar4X.Client
             return _assemblyKindIndex == GroundKindIndex;
         }
 
+        /// <summary>True when the current design is a STATION (its mounted chassis budgets in STRUCTURE — the off-world
+        /// frame). Falls back to the kind combo when no chassis is mounted. Same shape as <see cref="IsGroundAssembly"/>,
+        /// so the ship path stays byte-identical (a station chassis is the only Structure-budget frame).</summary>
+        private bool IsStationAssembly()
+        {
+            var c = SelectedChassis();
+            if (c.HasValue)
+                return c.Value.chassis.BudgetKind == Pulsar4X.Interfaces.ChassisBudgetKind.Structure;
+            return _assemblyKindIndex == StationKindIndex;
+        }
+
         /// <summary>Which ComponentMountType the available-parts list is filtered to: the mounted chassis's PartMount if
         /// one is present (ship hull -> ShipComponent, ground frame -> GroundUnit), else the kind combo's mount. Ship
         /// resolves to ShipComponent, so the ship parts list is byte-identical to the original hardcoded filter.</summary>
@@ -258,7 +270,9 @@ namespace Pulsar4X.Client
             var c = SelectedChassis();
             if (c.HasValue)
                 return c.Value.chassis.PartMount;
-            return _assemblyKindIndex == GroundKindIndex ? ComponentMountType.GroundUnit : ComponentMountType.ShipComponent;
+            if (_assemblyKindIndex == GroundKindIndex) return ComponentMountType.GroundUnit;
+            if (_assemblyKindIndex == StationKindIndex) return ComponentMountType.Station;
+            return ComponentMountType.ShipComponent;
         }
 
         internal override void Display()
@@ -514,6 +528,134 @@ namespace Pulsar4X.Client
                 + "' parts=" + parts.Count + " atk=" + design.Attack.ToString("0") + " hp=" + design.HitPoints.ToString("0"));
         }
 
+        /// <summary>The right-panel readout for a STATION — its totals + structure-budget validity come from the engine
+        /// assembler (StationAssembly.Compute), NOT the ship math. Draws the budget readout (structure used / provided,
+        /// over-budget in red — the "chassis gives the budget, modules consume it" rule), the totals, the validity
+        /// Problems, and the name + Save. Never routes through _workingDesign / _armor (ship-only state).</summary>
+        internal void DisplayStationStats()
+        {
+            DisplayHelpers.Header("Station", "A station's totals emerge from the chassis (frame) plus the modules you mount on it. The chassis provides the structure budget; each module consumes it.");
+
+            var chassisSel = SelectedChassis();
+            if (chassisSel == null)
+            {
+                ImGui.PushStyleColor(ImGuiCol.Text, Styles.TerribleColor);
+                ImGui.TextUnformatted("Add a station chassis (frame) from the parts list to begin.");
+                ImGui.PopStyleColor();
+            }
+            else
+            {
+                var chassis = chassisSel.Value.design;
+
+                // Everything that isn't the chassis is a "module" fed to the assembler.
+                var modules = new List<(ComponentDesign design, int count)>();
+                foreach (var (d, c) in SelectedComponents)
+                {
+                    if (d == null || c <= 0 || ReferenceEquals(d, chassis)) continue;
+                    modules.Add((d, c));
+                }
+
+                var r = Pulsar4X.Stations.StationAssembly.Compute(chassis, modules);
+
+                if (ImGui.BeginTable("StationStatsTable", 2, Styles.TableFlags | ImGuiTableFlags.SizingStretchSame))
+                {
+                    ImGui.TableSetupColumn("Attribute", ImGuiTableColumnFlags.None);
+                    ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.None);
+                    ImGui.TableHeadersRow();
+
+                    void Row(string k, string v)
+                    {
+                        ImGui.TableNextColumn(); ImGui.TextUnformatted(k);
+                        ImGui.TableNextColumn(); ImGui.TextUnformatted(v);
+                    }
+
+                    // BUDGET readout — structure consumed vs the chassis-provided budget, over-budget in red.
+                    bool over = r.UsedStructure > r.StructuralBudget;
+                    ImGui.TableNextColumn(); ImGui.TextUnformatted("Structure Budget");
+                    ImGui.TableNextColumn();
+                    if (over) ImGui.PushStyleColor(ImGuiCol.Text, Styles.BadColor);
+                    ImGui.TextUnformatted(r.UsedStructure.ToString("0") + " / " + r.StructuralBudget.ToString("0") + (over ? "  OVER" : ""));
+                    if (over) ImGui.PopStyleColor();
+
+                    Row("Modules", r.ModuleCount.ToString());
+                    Row("Build Mass", Stringify.Mass(r.BuildMass));
+                    Row("Crew Required", r.CrewRequired.ToString());
+
+                    ImGui.EndTable();
+                }
+
+                if (!r.Valid)
+                {
+                    ImGui.NewLine();
+                    ImGui.PushStyleColor(ImGuiCol.Text, Styles.BadColor);
+                    ImGui.TextUnformatted("Current design is invalid:");
+                    ImGui.PopStyleColor();
+                    foreach (var p in r.Problems)
+                    {
+                        ImGui.PushStyleColor(ImGuiCol.Text, Styles.MediocreColor);
+                        ImGui.TextWrapped(p.Replace("%", "%%")); // escape % — TextWrapped is printf (client CLAUDE.md printf trap)
+                        ImGui.PopStyleColor();
+                    }
+                }
+            }
+
+            ImGui.NewLine();
+            ImGui.PushStyleColor(ImGuiCol.Text, Styles.DescriptiveColor);
+            ImGui.TextUnformatted("Details");
+            ImGui.PopStyleColor();
+            ImGui.Separator();
+
+            ImGui.TextUnformatted("Design Name:");
+            ImGui.InputText("###Design Name", SelectedDesignName, (uint)SelectedDesignName.Length);
+            ImGui.NewLine();
+            SaveStationDesign();
+        }
+
+        /// <summary>Register the assembled station as a buildable faction design via the engine assembler
+        /// (StationDesign.RegisterStationDesign) — it rides the normal industry rails, and on build-completion DEPLOYS a
+        /// station at the building colony's body with these modules installed. No armor block (never hits the ship-save
+        /// armor-null throw). Re-saving under the same name UPDATES the existing station design in place (id reused via a
+        /// guarded lookup — never hard-indexes the faction store).</summary>
+        internal void SaveStationDesign()
+        {
+            if (!ImGui.Button("Save Station"))
+                return;
+
+            var name = Utils.StringFromBytes(SelectedDesignName);
+            if (name.IsNullOrEmpty())
+                return;
+
+            var chassisSel = SelectedChassis();
+            if (chassisSel == null)
+                return; // no frame — the panel already prompts for one
+
+            var chassis = chassisSel.Value.design;
+            var modules = new List<(ComponentDesign design, int count)>();
+            foreach (var (d, c) in SelectedComponents)
+            {
+                if (d == null || c <= 0 || ReferenceEquals(d, chassis)) continue;
+                modules.Add((d, c));
+            }
+
+            // Reuse an existing station design's id if we've already saved one under this name (update in place), else mint
+            // a new one. Guarded iteration — no hard-index of the faction store.
+            string id = null;
+            foreach (var kvp in _factionInfoDB.IndustryDesigns)
+            {
+                if (kvp.Value is Pulsar4X.Stations.StationDesign st && st.Name == name)
+                {
+                    id = kvp.Key;
+                    break;
+                }
+            }
+            if (string.IsNullOrEmpty(id))
+                id = "stationdesign-" + Guid.NewGuid().ToString();
+
+            var design = Pulsar4X.Stations.StationDesign.RegisterStationDesign(_factionInfoDB, id, name, chassis, modules);
+            SessionLog.Action("station design saved: '" + name + "' (id " + id + ") chassis='" + chassis.Name
+                + "' modules=" + modules.Count + " costItems=" + design.ResourceCosts.Count);
+        }
+
         internal void DisplayExistingDesigns()
         {
             Vector2 windowContentSize = ImGui.GetContentRegionAvail();
@@ -612,7 +754,7 @@ namespace Pulsar4X.Client
             // and it has no _armor selection / _armorNames. Skipping this block also dodges the armor-null throws below on
             // the ground path. (Safe return — DisplayComponents runs inside a BeginChild/EndChild in Display(), so EndChild
             // still runs after this returns.) Ship path is untouched.
-            if (IsGroundAssembly())
+            if (IsGroundAssembly() || IsStationAssembly())
                 return;
 
             ImGui.NewLine();
@@ -760,7 +902,14 @@ namespace Pulsar4X.Client
             // show. Index 0 = Ship, so the ship path is byte-identical (same filter, same list).
             var mountedChassis = SelectedChassis();
             if (mountedChassis.HasValue)
-                _assemblyKindIndex = mountedChassis.Value.chassis.BudgetKind == Pulsar4X.Interfaces.ChassisBudgetKind.Carry ? GroundKindIndex : 0;
+            {
+                switch (mountedChassis.Value.chassis.BudgetKind)
+                {
+                    case Pulsar4X.Interfaces.ChassisBudgetKind.Carry:     _assemblyKindIndex = GroundKindIndex; break;
+                    case Pulsar4X.Interfaces.ChassisBudgetKind.Structure: _assemblyKindIndex = StationKindIndex; break;
+                    default:                                              _assemblyKindIndex = 0; break;
+                }
+            }
             ImGui.SetNextItemWidth(availableSize.X);
             ImGui.Combo("###assembly-kind", ref _assemblyKindIndex, _assemblyKindNames, _assemblyKindNames.Length);
 
@@ -846,6 +995,16 @@ namespace Pulsar4X.Client
             {
                 try { DisplayGroundStats(); }
                 catch (Exception ex) { Console.WriteLine("[RenderError] ShipDesignWindow.DisplayGroundStats threw: " + ex); }
+                return;
+            }
+
+            // STATION branch: a station's totals + structure-budget validity come from StationAssembly.Compute, NOT the
+            // ship thrust/warp/energy math (nor _workingDesign/_armor, which a station has no use for). Same wrapped-return
+            // shape as the ground branch. Ship path below is untouched.
+            if (IsStationAssembly())
+            {
+                try { DisplayStationStats(); }
+                catch (Exception ex) { Console.WriteLine("[RenderError] ShipDesignWindow.DisplayStationStats threw: " + ex); }
                 return;
             }
 
