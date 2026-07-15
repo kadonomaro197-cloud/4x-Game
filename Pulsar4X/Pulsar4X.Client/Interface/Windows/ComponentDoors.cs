@@ -114,6 +114,7 @@ namespace Pulsar4X.Client
             ["shipyard"] = ("Industrial", "Fabrication"),
             ["local-construction"] = ("Industrial", "Fabrication"),
             ["launch-complex"] = ("Industrial", "Fabrication"),
+            ["constructor"] = ("Industrial", "Fabrication"),
 
             // 8. Logistical
             ["general-cargo-hold"] = ("Logistical", "Storage"),
@@ -148,6 +149,7 @@ namespace Pulsar4X.Client
             ["vehicle-frame"] = ("Chassis", "Vehicle"),
             ["walker-frame"] = ("Chassis", "Vehicle"),
             ["ship-hull"] = ("Chassis", "Hull"),
+            ["station-chassis"] = ("Chassis", "Structure"),
             // The whole-unit shortcuts the design doc marks for eventual removal — grouped so they're visible but set apart.
             ["infantry-unit"] = ("Chassis", "Prebuilt Units"),
             ["armor-unit"] = ("Chassis", "Prebuilt Units"),

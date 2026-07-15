@@ -245,38 +245,10 @@ namespace Pulsar4X.Stations
 
         /// <summary>
         /// The cargo holds the deploy can draw from: the construction ship's own hold, plus every fleet-mate's hold
-        /// if the ship is in a fleet. There is NO ship→fleet back-reference, so we find the fleet by searching the
-        /// system's fleets for the one whose children include this ship (direct children only — sub-fleet recursion is
-        /// a documented refinement). A ship in no fleet just draws on its own hold. Never throws.
+        /// if the ship is in a fleet. Delegates to the shared <see cref="Pulsar4X.Construction.ConstructionCargo.GatherPooledHolds"/>
+        /// so the bare-frame deploy and the recipe-driven on-site build pool holds the SAME way (no drift).
         /// </summary>
         private static List<CargoStorageDB> GatherPooledHolds(Entity ship)
-        {
-            var holds = new List<CargoStorageDB>();
-            if (ship.TryGetDataBlob<CargoStorageDB>(out var ownHold))
-                holds.Add(ownHold);
-
-            var manager = ship?.Manager;
-            if (manager == null) return holds;
-
-            try
-            {
-                foreach (var fleetEntity in manager.GetAllEntitiesWithDataBlob<FleetDB>())
-                {
-                    if (!fleetEntity.TryGetDataBlob<FleetDB>(out var fleetDB)) continue;
-                    if (!fleetDB.Children.Contains(ship)) continue;
-
-                    foreach (var member in fleetDB.Children)
-                    {
-                        if (member.Id == ship.Id) continue; // the construction ship's own hold is already in the pool
-                        if (member.HasDataBlob<ShipInfoDB>() && member.TryGetDataBlob<CargoStorageDB>(out var siblingHold))
-                            holds.Add(siblingHold);
-                    }
-                    break; // a ship belongs to at most one fleet
-                }
-            }
-            catch { /* a bad fleet entry never blocks the deploy — fall back to the pool gathered so far */ }
-
-            return holds;
-        }
+            => Pulsar4X.Construction.ConstructionCargo.GatherPooledHolds(ship);
     }
 }

@@ -1542,8 +1542,8 @@
         "iron": "[Mass] * 0.3"
       },
       "ComponentType": "Facility",
-      "MountType": "Station",
-      "CargoTypeID": "None",
+      "MountType": "Station, ShipCargo",
+      "CargoTypeID": "general-storage",
       "IndustryTypeID": "installation-construction",
       "Properties": [
         {
@@ -1562,6 +1562,51 @@
           "GuiHint": "None",
           "PropertyFormula": "AtbConstrArgs(PropertyValue('Structural Budget'))",
           "AttributeType": "Pulsar4X.Stations.StationChassisAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "constructor",
+      "Name": "Field Constructor",
+      "Formulas": {
+        "Description": "A field constructor — mount it on a ship and it can ASSEMBLE a designed station on site out of components carried in its own hold or its fleet's holds. Build the pieces at a factory, pack them, fly out, and put them together where you want them. Capacity caps how big a station it can raise.",
+        "Mass": "PropertyValue('Construction Capacity') * 1",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "1.0",
+        "CrewReq": "PropertyValue('Construction Capacity') * 0.0002",
+        "ResearchCost": "0",
+        "CreditCost": "PropertyValue('Construction Capacity') * 0.01",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.5",
+        "aluminium": "[Mass] * 0.3",
+        "iron": "[Mass] * 0.2"
+      },
+      "ComponentType": "Construction",
+      "MountType": "ShipComponent, Station",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Construction Capacity",
+          "Units": "m3",
+          "DescriptionFormula": "'The largest station (total module volume, m3) this constructor can assemble on site.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "500000",
+          "MinFormula": "5000",
+          "StepFormula": "5000",
+          "PropertyFormula": "50000"
+        },
+        {
+          "Name": "constructorAtbArgs",
+          "DescriptionFormula": "'double constructionCapacity'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Construction Capacity'))",
+          "AttributeType": "Pulsar4X.Construction.ConstructorAtb"
         }
       ]
     }
