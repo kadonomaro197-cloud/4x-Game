@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using Pulsar4X.Engine;
+using Pulsar4X.Interfaces;
 using Pulsar4X.Components;
 
 namespace Pulsar4X.Construction
