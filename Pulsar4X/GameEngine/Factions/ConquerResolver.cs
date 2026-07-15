@@ -28,6 +28,42 @@ namespace Pulsar4X.Factions
         {
             if (state == null) return PlannerAction.None;
 
+            // The scored enemy target (a colony of a faction we're at war with), computed ONCE and reused by every war
+            // rung below. Invalid for any faction not at war → all the war rungs skip and we fall to the mass-fleet
+            // build, so a default (peacetime) game is byte-identical.
+            var target = MilitaryTarget.BestEnemyTarget(state.Faction);
+
+            // Rung 0 (B5-b — LAND the invasion, the CULMINATION): if we own a transport that is AT the target world,
+            // still CARRYING troops, and HOLDS the orbit there (no foreign ship over it — the space fight is won),
+            // land a unit into region 0 (the enemy capital). This is the highest-priority rung on purpose: once boots
+            // can hit the ground, nothing the resolver could do matters more — a landed unit drops straight into the
+            // region's fight, and GroundForcesProcessor flips the region owner (then the whole planet) when the garrison
+            // is cleared, which IS "take a planet". Placed FIRST so a loaded transport that has ridden the warfleet's
+            // won orbit lands at once, before the resolver considers sailing/loading/building anything else. The front
+            // door is LandTroopsOrder → GroundTransport.TryLandUnit, which re-checks at-body + orbital control inside the
+            // helper (defensive). Byte-identical while emission is off (runs only inside the gated EmitOrders) AND for
+            // any faction not at war (no target → skipped).
+            if (target.IsValid && state.Game != null)
+            {
+                var (landShip, landUnit) = FindLandableTransport(state, target.ColonyBody);
+                if (landShip != null && landUnit != null)
+                {
+                    var game = state.Game;
+                    var s = landShip;
+                    var body = target.ColonyBody;
+                    int uid = landUnit.UnitId;
+                    string uname = landUnit.Name;
+                    return new PlannerAction(
+                        "LandInvasion",
+                        $"land '{uname}' from transport {s.Id} onto enemy world {body.Id} region 0",
+                        () =>
+                        {
+                            var cmd = Pulsar4X.GroundCombat.LandTroopsOrder.CreateCommand(s, body, uid, 0);
+                            game.OrderHandler.HandleOrder(cmd);   // the ONE step (lands the unit into the region fight)
+                        });
+                }
+            }
+
             // Rung 1 (P-3 REACH — the STRIKE, 2026-07-12): if we hold a scored enemy target (a colony of a faction
             // we're at war with, MilitaryTarget) AND a MASSED strike fleet (MilitaryComposition) that isn't already
             // sailing AND that fleet can actually GET THERE (MilitaryReach), order that fleet to sail at the enemy
@@ -36,7 +72,6 @@ namespace Pulsar4X.Factions
             // here we SAIL it. Reuses the player MoveToSystemBodyOrder, which guards the warp landmines (skips
             // 0-speed ships; the order handler try/catches). Byte-identical while order emission is off (this whole
             // resolver runs only inside the gated EmitOrders), AND for any faction not at war (no target → skip).
-            var target = MilitaryTarget.BestEnemyTarget(state.Faction);
             if (target.IsValid && state.Game != null)
             {
                 var strikeFleet = MilitaryComposition.ReadyStrikeFleet(state);
@@ -208,6 +243,30 @@ namespace Pulsar4X.Factions
                         return ship;
             }
             return null;
+        }
+
+        /// <summary>The faction's own transport that is AT <paramref name="targetBody"/>, still CARRYING a loaded unit,
+        /// and HOLDS the orbit there (no foreign ship present), paired with the first such unit to land — what the LAND
+        /// rung acts on. Returns (null, null) when no transport is in position to land, so the rung falls through to the
+        /// sail/load/build rungs. Scans ALL owned ships across every system (like <see cref="FindOwnedTransport"/>), not
+        /// just fleet members, because a transport that just arrived may not be in a fleet. Internal for the gauge.</summary>
+        internal static (Entity ship, Pulsar4X.GroundCombat.GroundUnit unit) FindLandableTransport(FactionState state, Entity targetBody)
+        {
+            if (targetBody == null || !targetBody.IsValid) return (null, null);
+            foreach (var system in state.Game.Systems)
+            {
+                if (system == null) continue;
+                foreach (var ship in system.GetAllEntitiesWithDataBlob<ShipInfoDB>())
+                {
+                    if (ship == null || !ship.IsValid || ship.FactionOwnerID != state.FactionId) continue;
+                    if (!ship.TryGetDataBlob<Pulsar4X.GroundCombat.GroundTransportDB>(out var transport)) continue;
+                    if (transport.LoadedUnits.Count == 0) continue;
+                    if (!Pulsar4X.GroundCombat.GroundTransport.ShipIsAtBody(ship, targetBody)) continue;
+                    if (!Pulsar4X.GroundCombat.GroundTransport.HasOrbitalControl(ship, targetBody)) continue;
+                    return (ship, transport.LoadedUnits[0]);
+                }
+            }
+            return (null, null);
         }
 
         /// <summary>The body a ship is currently at (its <see cref="Pulsar4X.Movement.PositionDB"/> parent), or null — the
