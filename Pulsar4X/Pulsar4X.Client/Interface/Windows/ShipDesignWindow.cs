@@ -38,6 +38,15 @@ namespace Pulsar4X.Client
 
         List<(ComponentDesign design, int count)> SelectedComponents = new List<(ComponentDesign design, int count)>();
 
+        // --- Entity-kind (Ship vs Ground Unit) assembly seam (2026-07-15) -------------------------------------------
+        // The Entity Assembler builds BOTH ships and ground units in ONE window, branching on the CHASSIS. The KIND is
+        // read from the mounted chassis component's IChassisAtb (ShipHullAtb -> Ship, GroundChassisAtb -> Ground). Before
+        // a chassis is mounted (an empty design) this combo bootstraps which parts to show. Index 0 = Ship is the
+        // DEFAULT, so with NO ground chassis present the whole window is byte-identical to the ship-only original.
+        private static readonly string[] _assemblyKindNames = { "Ship", "Ground Unit" };
+        private const int GroundKindIndex = 1;
+        private int _assemblyKindIndex = 0;
+
         private IntPtr _shipImgPtr;
 
         //TODO: armor, temporary, maybe density should be an "equvelent" and have a different mass? (damage calcs use density for penetration)
@@ -161,8 +170,9 @@ namespace Pulsar4X.Client
                 ShowNoDesigns = true;
                 return;
             }
-            if(SelectedExistingDesignID.IsNullOrEmpty() && _existingShipDesignNames.Count > 0)
-                Select(_factionInfoDB.ShipDesigns[_existingShipDesignIDs[0]]);
+            if(SelectedExistingDesignID.IsNullOrEmpty() && _existingShipDesignNames.Count > 0
+               && _factionInfoDB.ShipDesigns.TryGetValue(_existingShipDesignIDs[0], out var firstDesign))
+                Select(firstDesign);
 
             ShowNoDesigns = false;
         }
@@ -202,8 +212,53 @@ namespace Pulsar4X.Client
             _armor = _workingDesign.Armor.type;
             _armorIndex = _armorSelection.IndexOf(_armor);
             _armorThickness = _workingDesign.Armor.thickness;
+            // A loaded design is always a ShipDesign (ground designs live in IndustryDesigns, never selected here), so
+            // reset the kind combo to Ship — the mounted-hull reflection in DisplayComponentSelection confirms it, and
+            // this guards the hull-less edge case so a loaded ship can never render on the ground path.
+            _assemblyKindIndex = 0;
             DesignChanged = true;
             UpdateShipStats();
+        }
+
+        // --- Chassis-kind detection (the ship / ground branch, 2026-07-15) --------------------------------------------
+
+        /// <summary>The chassis component mounted in the current design (the one part carrying an IChassisAtb — a ship
+        /// hull or a ground frame), or null if none is mounted yet. The chassis is identified by the additive IChassisAtb
+        /// seam, not a per-kind flag, so this generalises to stations/buildings later.</summary>
+        private (ComponentDesign design, Pulsar4X.Interfaces.IChassisAtb chassis)? SelectedChassis()
+        {
+            foreach (var (design, count) in SelectedComponents)
+            {
+                if (design == null || count <= 0) continue;
+                foreach (var atb in design.AttributesByType.Values)
+                {
+                    if (atb is Pulsar4X.Interfaces.IChassisAtb ch)
+                        return (design, ch);
+                }
+            }
+            return null;
+        }
+
+        /// <summary>True when the current design is a GROUND unit (its mounted chassis budgets in carry-strength); else it
+        /// is a SHIP (the existing, byte-identical path). With no chassis mounted yet, falls back to the kind combo (which
+        /// defaults to Ship), so an empty/hull-only ship design is unchanged.</summary>
+        private bool IsGroundAssembly()
+        {
+            var c = SelectedChassis();
+            if (c.HasValue)
+                return c.Value.chassis.BudgetKind == Pulsar4X.Interfaces.ChassisBudgetKind.Carry;
+            return _assemblyKindIndex == GroundKindIndex;
+        }
+
+        /// <summary>Which ComponentMountType the available-parts list is filtered to: the mounted chassis's PartMount if
+        /// one is present (ship hull -> ShipComponent, ground frame -> GroundUnit), else the kind combo's mount. Ship
+        /// resolves to ShipComponent, so the ship parts list is byte-identical to the original hardcoded filter.</summary>
+        private ComponentMountType ActivePartMount()
+        {
+            var c = SelectedChassis();
+            if (c.HasValue)
+                return c.Value.chassis.PartMount;
+            return _assemblyKindIndex == GroundKindIndex ? ComponentMountType.GroundUnit : ComponentMountType.ShipComponent;
         }
 
         internal override void Display()
@@ -326,6 +381,139 @@ namespace Pulsar4X.Client
             }
         }
 
+        // --- GROUND unit assembly (2026-07-15) -----------------------------------------------------------------------
+
+        /// <summary>The right-panel readout for a GROUND unit — its emergent stats + carry-budget validity come from the
+        /// engine assembler (GroundUnitAssembly.Compute), NOT the ship thrust/warp/energy math. Draws a budget readout
+        /// (carry used / capacity, over-budget in red), the emergent combat stats, the assembler's validity Problems, and
+        /// the name + Save. Never routes through _workingDesign / _armor (ship-only state).</summary>
+        internal void DisplayGroundStats()
+        {
+            DisplayHelpers.Header("Ground Unit", "A ground unit's stats emerge from the chassis (frame) plus the parts you mount on it.");
+
+            var frame = SelectedChassis()?.design;
+            if (frame == null)
+            {
+                ImGui.PushStyleColor(ImGuiCol.Text, Styles.TerribleColor);
+                ImGui.TextUnformatted("Add a chassis (frame) from the parts list to begin.");
+                ImGui.PopStyleColor();
+            }
+            else
+            {
+                // Everything that isn't the frame is a "part" fed to the assembler.
+                var parts = new List<(ComponentDesign design, int count)>();
+                foreach (var (d, c) in SelectedComponents)
+                {
+                    if (d == null || c <= 0 || ReferenceEquals(d, frame)) continue;
+                    parts.Add((d, c));
+                }
+
+                var r = Pulsar4X.GroundCombat.GroundUnitAssembly.Compute(frame, parts);
+
+                if (ImGui.BeginTable("GroundStatsTable", 2, Styles.TableFlags | ImGuiTableFlags.SizingStretchSame))
+                {
+                    ImGui.TableSetupColumn("Attribute", ImGuiTableColumnFlags.None);
+                    ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.None);
+                    ImGui.TableHeadersRow();
+
+                    void Row(string k, string v)
+                    {
+                        ImGui.TableNextColumn(); ImGui.TextUnformatted(k);
+                        ImGui.TableNextColumn(); ImGui.TextUnformatted(v);
+                    }
+
+                    // BUDGET readout — carry-strength consumed vs the frame+augment capacity, over-budget in red.
+                    bool over = r.UsedCapacity > r.CarryCapacity;
+                    ImGui.TableNextColumn(); ImGui.TextUnformatted("Carry Budget");
+                    ImGui.TableNextColumn();
+                    if (over) ImGui.PushStyleColor(ImGuiCol.Text, Styles.BadColor);
+                    ImGui.TextUnformatted(r.UsedCapacity.ToString("0") + " / " + r.CarryCapacity.ToString("0") + (over ? "  OVER" : ""));
+                    if (over) ImGui.PopStyleColor();
+
+                    Row("Attack", r.Attack.ToString("0"));
+                    Row("Defense", r.Defense.ToString("0"));
+                    Row("Hit Points", r.HitPoints.ToString("0"));
+                    Row("Range (hex)", r.Range.ToString());
+                    Row("Evasion", r.Evasion.ToString("0.00"));
+                    Row("Shield", r.Shield.ToString("0"));
+                    Row("Build Mass", Stringify.Mass(r.Mass));
+                    Row("Damage Type", r.DamageType.ToString());
+
+                    ImGui.EndTable();
+                }
+
+                // Validity — the carry / power / ammo gates the assembler computes. Any problem = not buildable.
+                if (!r.Valid)
+                {
+                    ImGui.NewLine();
+                    ImGui.PushStyleColor(ImGuiCol.Text, Styles.BadColor);
+                    ImGui.TextUnformatted("Current design is invalid:");
+                    ImGui.PopStyleColor();
+                    foreach (var p in r.Problems)
+                    {
+                        ImGui.PushStyleColor(ImGuiCol.Text, Styles.MediocreColor);
+                        ImGui.TextWrapped(p.Replace("%", "%%")); // escape % — TextWrapped is printf (client CLAUDE.md printf trap)
+                        ImGui.PopStyleColor();
+                    }
+                }
+            }
+
+            ImGui.NewLine();
+            ImGui.PushStyleColor(ImGuiCol.Text, Styles.DescriptiveColor);
+            ImGui.TextUnformatted("Details");
+            ImGui.PopStyleColor();
+            ImGui.Separator();
+
+            ImGui.TextUnformatted("Design Name:");
+            ImGui.InputText("###Design Name", SelectedDesignName, (uint)SelectedDesignName.Length);
+            ImGui.NewLine();
+            SaveGroundDesign();
+        }
+
+        /// <summary>Register the assembled ground unit as a buildable faction design via the engine assembler
+        /// (GroundUnitAssembly.RegisterAssembledDesign) — it rides the normal industry rails, NOT the ShipDesign path.
+        /// No armor block required, so it never hits the ship-save armor-null throw. Re-saving under the same name
+        /// UPDATES the existing design in place (id reused via a guarded lookup — never hard-indexes the faction store).</summary>
+        internal void SaveGroundDesign()
+        {
+            if (!ImGui.Button("Save Ground Unit"))
+                return;
+
+            var name = Utils.StringFromBytes(SelectedDesignName);
+            if (name.IsNullOrEmpty())
+                return;
+
+            var chassis = SelectedChassis();
+            if (chassis == null)
+                return; // no frame — the panel already prompts for one
+
+            var frame = chassis.Value.design;
+            var parts = new List<(ComponentDesign design, int count)>();
+            foreach (var (d, c) in SelectedComponents)
+            {
+                if (d == null || c <= 0 || ReferenceEquals(d, frame)) continue;
+                parts.Add((d, c));
+            }
+
+            // Reuse an existing ground design's id if we've already saved one under this name (update in place),
+            // else mint a new one. Guarded iteration — no hard-index of the faction store.
+            string id = null;
+            foreach (var kvp in _factionInfoDB.IndustryDesigns)
+            {
+                if (kvp.Value is Pulsar4X.GroundCombat.GroundUnitDesign g && g.Name == name)
+                {
+                    id = kvp.Key;
+                    break;
+                }
+            }
+            if (string.IsNullOrEmpty(id))
+                id = "grounddesign-" + Guid.NewGuid().ToString();
+
+            var design = Pulsar4X.GroundCombat.GroundUnitAssembly.RegisterAssembledDesign(_factionInfoDB, id, name, frame, parts);
+            SessionLog.Action("ground-unit design saved: '" + name + "' (id " + id + ") frame='" + frame.Name
+                + "' parts=" + parts.Count + " atk=" + design.Attack.ToString("0") + " hp=" + design.HitPoints.ToString("0"));
+        }
+
         internal void DisplayExistingDesigns()
         {
             Vector2 windowContentSize = ImGui.GetContentRegionAvail();
@@ -339,9 +527,13 @@ namespace Pulsar4X.Client
                 {
                     string? designID = _existingShipDesignIDs[index];
                     string designName = _existingShipDesignNames[index];
+                    // Never hard-index ShipDesigns[designID] — the list is rebuilt from ShipDesigns, but UI state can lag
+                    // engine state (a design removed between refreshes), and this window may show a foreign/mismatched
+                    // store (SM mode / faction switch). TryGetValue + skip. (Root CLAUDE.md L14 — guard EVERY level.)
                     if (ImGui.Selectable(designName + "###existing-design-" + designID, designID.Equals(SelectedExistingDesignID)))
                     {
-                        Select(_factionInfoDB.ShipDesigns[designID]);
+                        if (_factionInfoDB.ShipDesigns.TryGetValue(designID, out var picked))
+                            Select(picked);
                     }
 
                     if (ImGui.BeginPopupContextItem())
@@ -354,7 +546,8 @@ namespace Pulsar4X.Client
                         }
                         if (ImGui.MenuItem("Obsolete###obsolete-" + designID))
                         {
-                            _factionInfoDB.ShipDesigns[designID].IsObsolete = true;
+                            if (_factionInfoDB.ShipDesigns.TryGetValue(designID, out var toObsolete))
+                                toObsolete.IsObsolete = true;
                             SelectedExistingDesignID = String.Empty;
                             RefreshExistingClasses();
                         }
@@ -363,8 +556,8 @@ namespace Pulsar4X.Client
                     }
                     ImGui.NextColumn();
                     string versionText = "P";
-                    if(_factionInfoDB.ShipDesigns[designID].DesignVersion > 0)
-                        versionText = _factionInfoDB.ShipDesigns[designID].DesignVersion.ToString();
+                    if(_factionInfoDB.ShipDesigns.TryGetValue(designID, out var verDesign) && verDesign.DesignVersion > 0)
+                        versionText = verDesign.DesignVersion.ToString();
                     ImGui.Text(versionText);
                     ImGui.NextColumn();
                 }
@@ -383,6 +576,7 @@ namespace Pulsar4X.Client
                 }
                 SelectedDesignName = Utils.BytesFromString(name);
                 SelectedComponents = new List<(ComponentDesign design, int count)>();
+                _assemblyKindIndex = 0; // a new design starts in Ship mode (the default); switch to Ground Unit to assemble one
                 GenImage();
                 RefreshArmor();
                 DesignChanged = true;
@@ -413,6 +607,13 @@ namespace Pulsar4X.Client
             {
                 DisplayComponentsTable();
             }
+
+            // A ground unit has NO ship armor block — its armour is a mounted GroundArmorAtb part (summed in the assembler),
+            // and it has no _armor selection / _armorNames. Skipping this block also dodges the armor-null throws below on
+            // the ground path. (Safe return — DisplayComponents runs inside a BeginChild/EndChild in Display(), so EndChild
+            // still runs after this returns.) Ship path is untouched.
+            if (IsGroundAssembly())
+                return;
 
             ImGui.NewLine();
             DisplayHelpers.Header("Armor");
@@ -553,6 +754,16 @@ namespace Pulsar4X.Client
             DisplayHelpers.Header("Available Components");
 
             var availableSize = ImGui.GetContentRegionAvail();
+
+            // Entity-kind selector (Ship / Ground Unit) — the branch point. A mounted chassis LOCKS the kind (we reflect
+            // it here so the combo can't fight the design); an empty design uses this combo to bootstrap which parts to
+            // show. Index 0 = Ship, so the ship path is byte-identical (same filter, same list).
+            var mountedChassis = SelectedChassis();
+            if (mountedChassis.HasValue)
+                _assemblyKindIndex = mountedChassis.Value.chassis.BudgetKind == Pulsar4X.Interfaces.ChassisBudgetKind.Carry ? GroundKindIndex : 0;
+            ImGui.SetNextItemWidth(availableSize.X);
+            ImGui.Combo("###assembly-kind", ref _assemblyKindIndex, _assemblyKindNames, _assemblyKindNames.Length);
+
             ImGui.SetNextItemWidth(availableSize.X);
             if(ImGui.Combo("###component-filter", ref _componentFilterIndex, _sortedComponentNames, _sortedComponentNames.Length))
             {
@@ -574,9 +785,12 @@ namespace Pulsar4X.Client
                 ImGui.TableSetupColumn("", ImGuiTableColumnFlags.None, 0.2f);
                 ImGui.TableHeadersRow();
 
+                // Filter the parts list by the ACTIVE chassis's PartMount (was hardcoded ShipComponent). Ship -> ShipComponent
+                // (byte-identical); Ground -> GroundUnit, so a ground chassis shows ground frames + parts.
+                var activeMount = ActivePartMount();
                 for (int i = 0; i < AvailableShipComponents.Count; i++)
                 {
-                    if(!AvailableShipComponents[i].ComponentMountType.HasFlag(ComponentMountType.ShipComponent))
+                    if(!AvailableShipComponents[i].ComponentMountType.HasFlag(activeMount))
                         continue;
 
                     var design = AvailableShipComponents[i];
@@ -624,6 +838,17 @@ namespace Pulsar4X.Client
 
         internal void DisplayStats()
         {
+            // GROUND branch: a ground unit's stats + validity come from GroundUnitAssembly.Compute, NOT the ship
+            // thrust/warp/energy math. Route it to its own panel and skip the whole ship stats path (which also reads
+            // _workingDesign/_armor — ship-only state a ground design doesn't have). Wrapped so a throw can't skip the
+            // window's End (mirrors SafeRender). Safe return — DisplayStats runs inside a BeginChild/EndChild in Display().
+            if (IsGroundAssembly())
+            {
+                try { DisplayGroundStats(); }
+                catch (Exception ex) { Console.WriteLine("[RenderError] ShipDesignWindow.DisplayGroundStats threw: " + ex); }
+                return;
+            }
+
             DisplayHelpers.Header("Statisitcs", "The attributes of the ship are calculated based on the components you have added to the design.");
 
             UpdateShipStats();
