@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Pulsar4X.Engine;
 using Pulsar4X.Industry;
 using Pulsar4X.Ships;
@@ -213,49 +214,112 @@ namespace Pulsar4X.Factions
                 }
             }
 
-            // Rung 3 (v1) — MASS the strike fleet: queue an armed hull on a free ship-construction line. (Reached
-            // while we have no target yet, or the strike group isn't massed / is already en route.)
+            // Rung 3 (v1 + Phase A-2b — MASS the strike fleet, BEST not first): queue an armed hull on a free
+            // ship-construction line. (Reached while we have no target yet, or the strike group isn't massed / is
+            // already en route.) Instead of taking the FIRST buildable warship in dictionary order, it now SCORES the
+            // buildable warships with the shared DecisionScorer and masses the highest — so the AI builds its strongest
+            // hull, not whatever happens to be listed first (the developer's "best not first"). v1 features a warship
+            // only on MilitarySolve = its weapon-mount count (a coarse firepower proxy) → the pick is "most-armed", the
+            // same for every faction; the PERSONALITY-differentiated ship choice (a bold faction's evasive glass-cannon
+            // vs a cautious faction's armoured brawler) needs per-design combat values (firepower/evasion/toughness),
+            // which only exist on a BUILT ship — that richer featurization is the flagged tuning refinement. Byte-
+            // identical while EnableOrderEmission is off (this whole resolver is gated).
             foreach (var colony in state.ColoniesWithFreeLine())
             {
                 if (colony.Cargo == null) continue;   // AutoAddSubJobs needs a CargoStorageDB
 
+                // Gather the warships THIS colony can actually build right now (each with its free line).
+                var buildable = new List<(ShipDesign design, string key, string line)>();
                 foreach (var designKvp in state.Info.IndustryDesigns)
                 {
                     if (!(designKvp.Value is ShipDesign ship) || !IsWarship(ship)) continue;
                     if (!FeasibilityOracle.CanQueue(colony, ship, state.Info)) continue;
-
                     string lineId = FreeLineFor(colony.Industry, ship.IndustryTypeID);
                     if (lineId == null) continue;
-
-                    var colonyEntity = colony.Colony;
-                    var info = state.Info;
-                    var designId = designKvp.Key;
-                    var designName = ship.Name;
-                    return new PlannerAction(
-                        "QueueWarship",
-                        $"build '{designName}' on colony {colonyEntity.Id} to mass a strike fleet",
-                        () =>
-                        {
-                            var job = new IndustryJob(info, designId);
-                            job.InitialiseJob(1, true);                    // repeat: keep massing the fleet
-                            IndustryTools.AddJob(colonyEntity, lineId, job);
-                            IndustryTools.AutoAddSubJobs(colonyEntity, job); // material-aware (resolve the sub-tree)
-                        });
+                    buildable.Add((ship, designKvp.Key, lineId));
                 }
+                if (buildable.Count == 0) continue;
+
+                // BEST not first: score the buildable warships by this faction's personality and mass the winner.
+                var candidates = new List<ShipDesign>(buildable.Count);
+                foreach (var b in buildable) candidates.Add(b.design);
+                var personality = state.Faction != null && state.Faction.TryGetDataBlob<PersonalityDB>(out var p) ? p : null;
+                var chosen = PickWarship(candidates, personality);
+                if (chosen == null) continue;
+
+                string chosenKey = null, chosenLine = null, chosenName = null;
+                foreach (var b in buildable)
+                    if (ReferenceEquals(b.design, chosen)) { chosenKey = b.key; chosenLine = b.line; chosenName = b.design.Name; }
+                if (chosenKey == null) continue;   // defensive (should never miss — chosen came from buildable)
+
+                var colonyEntity = colony.Colony;
+                var info = state.Info;
+                return new PlannerAction(
+                    "QueueWarship",
+                    $"build '{chosenName}' (best of {buildable.Count}) on colony {colonyEntity.Id} to mass a strike fleet",
+                    () =>
+                    {
+                        var job = new IndustryJob(info, chosenKey);
+                        job.InitialiseJob(1, true);                    // repeat: keep massing the fleet
+                        IndustryTools.AddJob(colonyEntity, chosenLine, job);
+                        IndustryTools.AutoAddSubJobs(colonyEntity, job); // material-aware (resolve the sub-tree)
+                    });
             }
 
             return PlannerAction.None;
         }
 
         /// <summary>A ship design is a WARSHIP if any component design it mounts carries a weapon attribute. (Mirrors
-        /// <see cref="DefendResolver"/>'s helper — a later MilitaryComposition slice can extract the shared build.)</summary>
-        private static bool IsWarship(ShipDesign ship)
+        /// <see cref="DefendResolver"/>'s helper — a later MilitaryComposition slice can extract the shared build.)
+        /// Internal for the Phase A-2b gauge.</summary>
+        internal static bool IsWarship(ShipDesign ship)
             => ship.TryGetComponentsByAttribute<GenericBeamWeaponAtb>(out _)
             || ship.TryGetComponentsByAttribute<RailgunWeaponAtb>(out _)
             || ship.TryGetComponentsByAttribute<FlakWeaponAtb>(out _)
             || ship.TryGetComponentsByAttribute<PlasmaBoltWeaponAtb>(out _)
             || ship.TryGetComponentsByAttribute<DisruptorWeaponAtb>(out _)
             || ship.TryGetComponentsByAttribute<MissileLauncherAtb>(out _);
+
+        /// <summary>The number of WEAPON MOUNTS a design carries (summed across every weapon type) — the coarse
+        /// firepower proxy the Phase A-2b <see cref="PickWarship"/> scores a warship on (MilitarySolve). A per-design
+        /// proxy because true firepower (the built <c>ShipCombatValueDB</c>) needs a built ship; richer featurization is
+        /// the flagged tuning refinement. Internal for the gauge.</summary>
+        internal static int WeaponMountCount(ShipDesign ship)
+        {
+            int n = 0;
+            if (ship.TryGetComponentsByAttribute<GenericBeamWeaponAtb>(out var a)) foreach (var c in a) n += c.count;
+            if (ship.TryGetComponentsByAttribute<RailgunWeaponAtb>(out var b)) foreach (var c in b) n += c.count;
+            if (ship.TryGetComponentsByAttribute<FlakWeaponAtb>(out var d)) foreach (var c in d) n += c.count;
+            if (ship.TryGetComponentsByAttribute<PlasmaBoltWeaponAtb>(out var e)) foreach (var c in e) n += c.count;
+            if (ship.TryGetComponentsByAttribute<DisruptorWeaponAtb>(out var f)) foreach (var c in f) n += c.count;
+            if (ship.TryGetComponentsByAttribute<MissileLauncherAtb>(out var g)) foreach (var c in g) n += c.count;
+            return n;
+        }
+
+        /// <summary>An armed hull presented to the shared <see cref="DecisionScorer"/>: v1 scores it on
+        /// <see cref="DecisionFeature.MilitarySolve"/> = its <see cref="WeaponMountCount"/> (firepower proxy).</summary>
+        private sealed class WarshipOption : IScoredOption
+        {
+            public ShipDesign Design { get; }
+            private readonly Dictionary<DecisionFeature, double> _f;
+            public WarshipOption(ShipDesign d)
+            {
+                Design = d;
+                _f = new Dictionary<DecisionFeature, double> { { DecisionFeature.MilitarySolve, WeaponMountCount(d) } };
+            }
+            public IReadOnlyDictionary<DecisionFeature, double> Features => _f;
+        }
+
+        /// <summary>Phase A-2b — the "best not first" warship pick: SCORE the candidate warships with the shared
+        /// <see cref="DecisionScorer"/> (weighted by the faction's personality) and return the winner, or null for an
+        /// empty set. v1's single MilitarySolve feature makes this "mass the most-armed hull"; the personality split
+        /// (brawler vs standoff vs evasive) rides the richer per-design featurization refinement. Internal for the gauge.</summary>
+        internal static ShipDesign PickWarship(IEnumerable<ShipDesign> candidates, PersonalityDB personality)
+        {
+            var options = new List<WarshipOption>();
+            foreach (var c in candidates) if (c != null) options.Add(new WarshipOption(c));
+            return DecisionScorer.PickBest(options, personality)?.Design;
+        }
 
         /// <summary>A ship design that can LIFT ground troops — it mounts a troop bay (<see cref="Pulsar4X.GroundCombat.GroundBayAtb"/>).
         /// The transport twin of <see cref="IsWarship"/>. The build rung finds ANY buildable transport design this way,

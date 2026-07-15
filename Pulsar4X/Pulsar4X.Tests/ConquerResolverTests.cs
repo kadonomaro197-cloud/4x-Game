@@ -192,5 +192,26 @@ namespace Pulsar4X.Tests
             Assert.That(action.Kind, Is.EqualTo("SailTransport"),
                 "a loaded transport away from the target → the resolver sails it there (not LandInvasion, not a build rung)");
         }
+
+        // ── Phase A-2b — the "best not first" warship pick (DecisionScorer wired live) ───────────────────────────────
+
+        [Test]
+        [Description("Phase A-2b: the warship-mass rung SCORES the buildable warships with the shared DecisionScorer and "
+                   + "masses the MOST-ARMED one (best not first), instead of taking whatever is first in dictionary order.")]
+        public void PickWarship_MassesTheMostArmedWarship()
+        {
+            var s = TestScenario.CreateWithColony();
+            var warships = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns.Values
+                .Where(d => ConquerResolver.IsWarship(d)).ToList();
+            Assert.That(warships.Count, Is.GreaterThan(0), "the start faction has armed designs to mass");
+
+            var chosen = ConquerResolver.PickWarship(warships, null);   // null personality → neutral
+            Assert.That(chosen, Is.Not.Null, "a non-empty candidate set yields a pick");
+
+            int chosenMounts = ConquerResolver.WeaponMountCount(chosen);
+            foreach (var w in warships)
+                Assert.That(ConquerResolver.WeaponMountCount(w), Is.LessThanOrEqualTo(chosenMounts),
+                    $"the scorer massed the most-armed warship ('{chosen.Name}', {chosenMounts} mounts) — best not first");
+        }
     }
 }
