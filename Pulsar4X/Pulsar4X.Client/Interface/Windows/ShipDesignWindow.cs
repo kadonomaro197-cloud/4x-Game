@@ -43,9 +43,10 @@ namespace Pulsar4X.Client
         // read from the mounted chassis component's IChassisAtb (ShipHullAtb -> Ship, GroundChassisAtb -> Ground). Before
         // a chassis is mounted (an empty design) this combo bootstraps which parts to show. Index 0 = Ship is the
         // DEFAULT, so with NO ground chassis present the whole window is byte-identical to the ship-only original.
-        private static readonly string[] _assemblyKindNames = { "Ship", "Ground Unit", "Station" };
+        private static readonly string[] _assemblyKindNames = { "Ship", "Ground Unit", "Station", "Building" };
         private const int GroundKindIndex = 1;
         private const int StationKindIndex = 2;
+        private const int BuildingKindIndex = 3;
         private int _assemblyKindIndex = 0;
 
         private IntPtr _shipImgPtr;
@@ -262,6 +263,17 @@ namespace Pulsar4X.Client
             return _assemblyKindIndex == StationKindIndex;
         }
 
+        /// <summary>True when the current design is a BUILDING (its mounted foundation budgets in FOOTPRINT — the
+        /// planet-side base). Falls back to the kind combo when no foundation is mounted. Same shape as the ship/ground/
+        /// station branches, so those paths stay byte-identical (a building foundation is the only Footprint-budget frame).</summary>
+        private bool IsBuildingAssembly()
+        {
+            var c = SelectedChassis();
+            if (c.HasValue)
+                return c.Value.chassis.BudgetKind == Pulsar4X.Interfaces.ChassisBudgetKind.Footprint;
+            return _assemblyKindIndex == BuildingKindIndex;
+        }
+
         /// <summary>Which ComponentMountType the available-parts list is filtered to: the mounted chassis's PartMount if
         /// one is present (ship hull -> ShipComponent, ground frame -> GroundUnit), else the kind combo's mount. Ship
         /// resolves to ShipComponent, so the ship parts list is byte-identical to the original hardcoded filter.</summary>
@@ -272,6 +284,7 @@ namespace Pulsar4X.Client
                 return c.Value.chassis.PartMount;
             if (_assemblyKindIndex == GroundKindIndex) return ComponentMountType.GroundUnit;
             if (_assemblyKindIndex == StationKindIndex) return ComponentMountType.Station;
+            if (_assemblyKindIndex == BuildingKindIndex) return ComponentMountType.PlanetInstallation;
             return ComponentMountType.ShipComponent;
         }
 
@@ -656,6 +669,129 @@ namespace Pulsar4X.Client
                 + "' modules=" + modules.Count + " costItems=" + design.ResourceCosts.Count);
         }
 
+        /// <summary>The right-panel readout for a BUILDING — its totals + footprint-budget validity come from the engine
+        /// assembler (BuildingAssembly.Compute). Draws the budget readout (footprint used / provided, over in red — the
+        /// "foundation gives the budget, modules consume it" rule), the totals, the validity Problems, and the name +
+        /// Save. Never routes through _workingDesign / _armor (ship-only state).</summary>
+        internal void DisplayBuildingStats()
+        {
+            DisplayHelpers.Header("Building", "A building's totals emerge from the foundation plus the modules you mount on it. The foundation provides the footprint budget; each module consumes it.");
+
+            var chassisSel = SelectedChassis();
+            if (chassisSel == null)
+            {
+                ImGui.PushStyleColor(ImGuiCol.Text, Styles.TerribleColor);
+                ImGui.TextUnformatted("Add a building foundation from the parts list to begin.");
+                ImGui.PopStyleColor();
+            }
+            else
+            {
+                var foundation = chassisSel.Value.design;
+
+                var modules = new List<(ComponentDesign design, int count)>();
+                foreach (var (d, c) in SelectedComponents)
+                {
+                    if (d == null || c <= 0 || ReferenceEquals(d, foundation)) continue;
+                    modules.Add((d, c));
+                }
+
+                var r = Pulsar4X.Colonies.BuildingAssembly.Compute(foundation, modules);
+
+                if (ImGui.BeginTable("BuildingStatsTable", 2, Styles.TableFlags | ImGuiTableFlags.SizingStretchSame))
+                {
+                    ImGui.TableSetupColumn("Attribute", ImGuiTableColumnFlags.None);
+                    ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.None);
+                    ImGui.TableHeadersRow();
+
+                    void Row(string k, string v)
+                    {
+                        ImGui.TableNextColumn(); ImGui.TextUnformatted(k);
+                        ImGui.TableNextColumn(); ImGui.TextUnformatted(v);
+                    }
+
+                    bool over = r.UsedFootprint > r.FootprintBudget;
+                    ImGui.TableNextColumn(); ImGui.TextUnformatted("Footprint Budget");
+                    ImGui.TableNextColumn();
+                    if (over) ImGui.PushStyleColor(ImGuiCol.Text, Styles.BadColor);
+                    ImGui.TextUnformatted(r.UsedFootprint.ToString("0") + " / " + r.FootprintBudget.ToString("0") + (over ? "  OVER" : ""));
+                    if (over) ImGui.PopStyleColor();
+
+                    Row("Modules", r.ModuleCount.ToString());
+                    Row("Build Mass", Stringify.Mass(r.BuildMass));
+                    Row("Crew Required", r.CrewRequired.ToString());
+
+                    ImGui.EndTable();
+                }
+
+                if (!r.Valid)
+                {
+                    ImGui.NewLine();
+                    ImGui.PushStyleColor(ImGuiCol.Text, Styles.BadColor);
+                    ImGui.TextUnformatted("Current design is invalid:");
+                    ImGui.PopStyleColor();
+                    foreach (var p in r.Problems)
+                    {
+                        ImGui.PushStyleColor(ImGuiCol.Text, Styles.MediocreColor);
+                        ImGui.TextWrapped(p.Replace("%", "%%")); // escape % — TextWrapped is printf (client CLAUDE.md printf trap)
+                        ImGui.PopStyleColor();
+                    }
+                }
+            }
+
+            ImGui.NewLine();
+            ImGui.PushStyleColor(ImGuiCol.Text, Styles.DescriptiveColor);
+            ImGui.TextUnformatted("Details");
+            ImGui.PopStyleColor();
+            ImGui.Separator();
+
+            ImGui.TextUnformatted("Design Name:");
+            ImGui.InputText("###Design Name", SelectedDesignName, (uint)SelectedDesignName.Length);
+            ImGui.NewLine();
+            SaveBuildingDesign();
+        }
+
+        /// <summary>Register the assembled building as a buildable faction design via the engine assembler
+        /// (BuildingDesign.RegisterBuildingDesign) — it rides the normal industry rails, and on build-completion installs
+        /// its foundation + modules on the building colony. No armor block. Re-saving under the same name UPDATES the
+        /// existing building design in place (id reused via a guarded lookup — never hard-indexes the faction store).</summary>
+        internal void SaveBuildingDesign()
+        {
+            if (!ImGui.Button("Save Building"))
+                return;
+
+            var name = Utils.StringFromBytes(SelectedDesignName);
+            if (name.IsNullOrEmpty())
+                return;
+
+            var chassisSel = SelectedChassis();
+            if (chassisSel == null)
+                return; // no foundation — the panel already prompts for one
+
+            var foundation = chassisSel.Value.design;
+            var modules = new List<(ComponentDesign design, int count)>();
+            foreach (var (d, c) in SelectedComponents)
+            {
+                if (d == null || c <= 0 || ReferenceEquals(d, foundation)) continue;
+                modules.Add((d, c));
+            }
+
+            string id = null;
+            foreach (var kvp in _factionInfoDB.IndustryDesigns)
+            {
+                if (kvp.Value is Pulsar4X.Colonies.BuildingDesign b && b.Name == name)
+                {
+                    id = kvp.Key;
+                    break;
+                }
+            }
+            if (string.IsNullOrEmpty(id))
+                id = "buildingdesign-" + Guid.NewGuid().ToString();
+
+            var design = Pulsar4X.Colonies.BuildingDesign.RegisterBuildingDesign(_factionInfoDB, id, name, foundation, modules);
+            SessionLog.Action("building design saved: '" + name + "' (id " + id + ") foundation='" + foundation.Name
+                + "' modules=" + modules.Count + " costItems=" + design.ResourceCosts.Count);
+        }
+
         internal void DisplayExistingDesigns()
         {
             Vector2 windowContentSize = ImGui.GetContentRegionAvail();
@@ -754,7 +890,7 @@ namespace Pulsar4X.Client
             // and it has no _armor selection / _armorNames. Skipping this block also dodges the armor-null throws below on
             // the ground path. (Safe return — DisplayComponents runs inside a BeginChild/EndChild in Display(), so EndChild
             // still runs after this returns.) Ship path is untouched.
-            if (IsGroundAssembly() || IsStationAssembly())
+            if (IsGroundAssembly() || IsStationAssembly() || IsBuildingAssembly())
                 return;
 
             ImGui.NewLine();
@@ -907,6 +1043,7 @@ namespace Pulsar4X.Client
                 {
                     case Pulsar4X.Interfaces.ChassisBudgetKind.Carry:     _assemblyKindIndex = GroundKindIndex; break;
                     case Pulsar4X.Interfaces.ChassisBudgetKind.Structure: _assemblyKindIndex = StationKindIndex; break;
+                    case Pulsar4X.Interfaces.ChassisBudgetKind.Footprint: _assemblyKindIndex = BuildingKindIndex; break;
                     default:                                              _assemblyKindIndex = 0; break;
                 }
             }
@@ -1005,6 +1142,15 @@ namespace Pulsar4X.Client
             {
                 try { DisplayStationStats(); }
                 catch (Exception ex) { Console.WriteLine("[RenderError] ShipDesignWindow.DisplayStationStats threw: " + ex); }
+                return;
+            }
+
+            // BUILDING branch: a planet-side building's totals + footprint-budget validity come from
+            // BuildingAssembly.Compute. Same wrapped-return shape; ship path below is untouched.
+            if (IsBuildingAssembly())
+            {
+                try { DisplayBuildingStats(); }
+                catch (Exception ex) { Console.WriteLine("[RenderError] ShipDesignWindow.DisplayBuildingStats threw: " + ex); }
                 return;
             }
 

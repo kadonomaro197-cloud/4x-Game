@@ -1614,6 +1614,68 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "building-foundation",
+      "Name": "Building Foundation",
+      "Formulas": {
+        "Description": "The structural base a planet-side building is assembled on — the first part you pick when designing a building. Modules (factory machines, research wings, refinery lines) bolt onto it. Provides the building's footprint budget, and makes the finished building a located presence on the planet's surface (a capture/bombard target).",
+        "Mass": "50000",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "1.0",
+        "CrewReq": "20",
+        "ResearchCost": "0",
+        "CreditCost": "200",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.3",
+        "aluminium": "[Mass] * 0.2",
+        "iron": "[Mass] * 0.5"
+      },
+      "ComponentType": "Facility",
+      "MountType": "PlanetInstallation, ShipCargo",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "Footprint Budget",
+          "Units": "footprint",
+          "DescriptionFormula": "'How much mounted module this foundation can host (its footprint budget).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "10000",
+          "MinFormula": "500",
+          "StepFormula": "100",
+          "PropertyFormula": "2000"
+        },
+        {
+          "Name": "TileFootprint",
+          "Units": "tiles",
+          "DescriptionFormula": "'How many fine city-tiles this building occupies once the city sub-grid is built.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "40",
+          "MinFormula": "1",
+          "StepFormula": "1",
+          "PropertyFormula": "4"
+        },
+        {
+          "Name": "buildingChassisAtbArgs",
+          "DescriptionFormula": "'double footprintAllowance'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Footprint Budget'))",
+          "AttributeType": "Pulsar4X.Colonies.BuildingChassisAtb"
+        },
+        {
+          "Name": "groundFootprintAtbArgs",
+          "DescriptionFormula": "'double tileFootprint — makes the building a located presence on the operational war map (a capture/bombard target).'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('TileFootprint'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundFootprintAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "infantry-unit",
       "Name": "Infantry",
       "Formulas": {

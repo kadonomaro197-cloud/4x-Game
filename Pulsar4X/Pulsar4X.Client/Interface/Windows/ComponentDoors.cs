@@ -150,6 +150,7 @@ namespace Pulsar4X.Client
             ["walker-frame"] = ("Chassis", "Vehicle"),
             ["ship-hull"] = ("Chassis", "Hull"),
             ["station-chassis"] = ("Chassis", "Structure"),
+            ["building-foundation"] = ("Chassis", "Structure"),
             // The whole-unit shortcuts the design doc marks for eventual removal — grouped so they're visible but set apart.
             ["infantry-unit"] = ("Chassis", "Prebuilt Units"),
             ["armor-unit"] = ("Chassis", "Prebuilt Units"),
