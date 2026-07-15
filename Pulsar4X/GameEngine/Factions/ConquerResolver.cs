@@ -83,7 +83,17 @@ namespace Pulsar4X.Factions
                 var reach = strikeFleet != null && strikeFleet.IsValid
                     ? MilitaryReach.Assess(strikeFleet, target.ColonyBody)
                     : MilitaryReach.ReachResult.None;
-                if (strikeFleet != null && strikeFleet.IsValid && !FleetIsMoving(strikeFleet)
+                // FIGHT-or-FLEE (Phase A-1): commit the fleet ONLY if the odds meet this faction's RISK appetite.
+                // CombatRisk reads own strength vs a fog-limited estimate of the enemy and its Risk trait (a bold
+                // faction engages at parity, a cautious one demands 2× the enemy). An UNDETECTED enemy (no sensor
+                // contacts → estimate 0) always clears, so a faction that can't yet SEE the defender still strikes —
+                // graceful, and it keeps the existing MilitaryCompositionTests byte-identical (their rival is
+                // undetected). If the odds are bad, the strike falls through to the build rungs (keep massing).
+                // NOTE (Phase A-3): the two strength reads are not yet in the SAME units (own = combat-value,
+                // enemy = detected signal-kW) — this wires the fight/flee LEVER; the calibration is the A-3 tuning pass.
+                int enemyFactionId = target.Colony != null && target.Colony.IsValid ? target.Colony.FactionOwnerID : Game.NeutralFactionId;
+                bool oddsFavorAttack = CombatRisk.WouldEngage(state.Faction, enemyFactionId);
+                if (oddsFavorAttack && strikeFleet != null && strikeFleet.IsValid && !FleetIsMoving(strikeFleet)
                     && reach.Tier == MilitaryReach.ReachTier.SameSystem && reach.HasRange)
                 {
                     var game = state.Game;
