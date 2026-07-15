@@ -537,6 +537,18 @@ public class NewGameMenu : PulsarGuiWindow
         game.CreatedOnGitHash = AssemblyInfo.GetGitHash();
         game.LastSaveGitHash = AssemblyInfo.GetGitHash();
 
+        // AI ON by default for a real game (developer's call, 2026-07-15). The NPC brain's action-arms — emit orders
+        // (build / mass / move / invade), seek treaties, populate the intel ledger, spy back — ship gated OFF by default
+        // so the ENGINE test suite stays byte-identical (a game built via a factory, not this menu, is unchanged). But a
+        // GAME the player actually starts should have living opponents, so every menu-started game turns them on here,
+        // exactly as the DevTest sandbox does. The flight recorder (B4) is always-on, so every AI action is taped
+        // ([AI] lines in game_logs/ + the AI Inspector). Runtime behaviour is the PC gauge (CI can't run the client);
+        // the acting-AI CI sensor (NPCActingSensorTests) proves the loop ACTS with these flags on, without the client.
+        Pulsar4X.Factions.NPCDecisionProcessor.EnableOrderEmission = true;
+        Pulsar4X.Factions.NPCDecisionProcessor.EnableDiplomaticProposals = true;
+        Pulsar4X.Factions.NPCDecisionProcessor.EnableEspionageMirror = true;
+        Pulsar4X.Factions.NPCDecisionProcessor.EnableIntelLedger = true;
+
         // Generate random systems up to the number of "Galaxy Size" minus the
         // number of included pre-made systems
         int numberToGenerate = p.MaxSystems - p.EnabledSystems.Count;
