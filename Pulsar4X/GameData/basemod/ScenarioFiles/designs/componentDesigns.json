@@ -1142,5 +1142,104 @@
         { "Key": "Area", "Value": 2000000 }
       ]
     }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "umf-mass-driver",
+      "Name": "Mass Driver",
+      "TemplateId": "railgun-weapon",
+      "Properties": [
+        { "Key": "Kinetic Energy Per Shot", "Value": 350000 },
+        { "Key": "Muzzle Velocity", "Value": 50000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "umf-siege-driver",
+      "Name": "Siege Driver",
+      "TemplateId": "siege-railgun",
+      "Properties": [
+        { "Key": "Kinetic Energy Per Shot", "Value": 1500000 },
+        { "Key": "Muzzle Velocity", "Value": 50000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "umf-chain-flak",
+      "Name": "Chain-Flak Battery",
+      "TemplateId": "flak-weapon",
+      "Properties": [
+        { "Key": "Rounds Per Second", "Value": 20 },
+        { "Key": "Pellets Per Shot", "Value": 60 },
+        { "Key": "Damage Per Pellet", "Value": 500 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "kithrin-energy-lance",
+      "Name": "Energy Lance",
+      "TemplateId": "laser-weapon",
+      "Properties": [
+        { "Key": "Range", "Value": 10000 },
+        { "Key": "Focal Length", "Value": 5000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "kithrin-phase-disruptor",
+      "Name": "Phase Disruptor",
+      "TemplateId": "disruptor-weapon",
+      "Properties": [
+        { "Key": "Energy Per Shot", "Value": 300000 },
+        { "Key": "Rounds Per Second", "Value": 2 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "kithrin-plasma-caster",
+      "Name": "Plasma Caster",
+      "TemplateId": "plasma-repeater",
+      "Properties": [
+        { "Key": "Energy Per Shot", "Value": 100000 },
+        { "Key": "Rounds Per Second", "Value": 4 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "kithrin-resonance-shield",
+      "Name": "Resonance Shield",
+      "TemplateId": "deflector-array",
+      "Properties": [
+        { "Key": "Shield Capacity", "Value": 15000000 },
+        { "Key": "Recharge Rate", "Value": 300000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "kithrin-ward-lattice",
+      "Name": "Ward Lattice",
+      "TemplateId": "armour-hardening",
+      "Properties": [
+        { "Key": "Soak vs Kinetic", "Value": 0.1 },
+        { "Key": "Soak vs Energy", "Value": 0.8 },
+        { "Key": "Soak vs Explosive", "Value": 0.0 },
+        { "Key": "Soak vs Exotic", "Value": 0.0 }
+      ]
+    }
   }
 ]

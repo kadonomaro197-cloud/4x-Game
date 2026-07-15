@@ -214,8 +214,8 @@ namespace Pulsar4X.Tests
 
             Assert.That(ConquerResolver.IsTroopTransport(umf.ShipDesigns["default-ship-design-trooper"]), Is.True,
                 "the trooper mounts a troop bay → IsTroopTransport true");
-            Assert.That(ConquerResolver.IsTroopTransport(umf.ShipDesigns["default-ship-design-gunship"]), Is.False,
-                "the gunship has no troop bay → IsTroopTransport false");
+            Assert.That(ConquerResolver.IsTroopTransport(umf.ShipDesigns["umf-ship-ironhold"]), Is.False,
+                "the Ironhold kinetic line cruiser has no troop bay → IsTroopTransport false");
 
             var state = FactionState.Snapshot(umfEntity);
             Assert.That(ConquerResolver.FactionOwnsTransport(state), Is.False,
@@ -305,15 +305,15 @@ namespace Pulsar4X.Tests
                 "no shipyard ship-assembly line on Mars — the capital can't assemble ships.");
 
             // Gauge 3 — the fix: FeasibilityOracle.CanQueue passes for a warship AND the troop transport on Mars.
-            Assert.That(umf.IndustryDesigns.ContainsKey("default-ship-design-gunship"), Is.True,
-                "the gunship isn't a buildable IndustryDesign on UMF.");
+            Assert.That(umf.IndustryDesigns.ContainsKey("umf-ship-ironhold"), Is.True,
+                "the Ironhold kinetic cruiser isn't a buildable IndustryDesign on UMF.");
             Assert.That(umf.IndustryDesigns.ContainsKey("default-ship-design-trooper"), Is.True,
                 "the trooper isn't a buildable IndustryDesign on UMF.");
             var marsState = ColonyState.Of(mars);
-            bool canGunship = FeasibilityOracle.CanQueue(marsState, umf.IndustryDesigns["default-ship-design-gunship"], umf);
+            bool canWarship = FeasibilityOracle.CanQueue(marsState, umf.IndustryDesigns["umf-ship-ironhold"], umf);
             bool canTrooper = FeasibilityOracle.CanQueue(marsState, umf.IndustryDesigns["default-ship-design-trooper"], umf);
-            TestContext.WriteLine($"[mars-canqueue] gunship={canGunship} trooper={canTrooper}");
-            Assert.That(canGunship, Is.True,
+            TestContext.WriteLine($"[mars-canqueue] ironhold={canWarship} trooper={canTrooper}");
+            Assert.That(canWarship, Is.True,
                 "UMF Mars cannot queue a WARSHIP — the ship-build gate (crew/capacity after infra scaling) still blocks it.");
             Assert.That(canTrooper, Is.True,
                 "UMF Mars cannot queue the TROOP TRANSPORT — the invasion carrier is unbuildable, so the conquest loop stalls.");
@@ -395,6 +395,51 @@ namespace Pulsar4X.Tests
             TestContext.WriteLine($"[kithrin-canqueue] hive-cruiser={canBuildCruiser} snapshot-hosts={state.Colonies.Count}");
             Assert.That(canBuildCruiser, Is.True,
                 "Kithrin cannot queue its warship from the station — the station-aware snapshot or the ship-assembly line regressed.");
+        }
+
+        [Test]
+        [Description("B3 MATERIEL gauge — the two NPC factions load their LOCKED design identities (kinetic UMF / energy-shield "
+                     + "Kithrin) end-to-end. A ship design only lands in ShipDesigns if LoadFromJson instantiated it, which "
+                     + "resolves EVERY component id it mounts — so ContainsKey is the gotcha-#10 sensor that all the new dialed "
+                     + "weapon/hull/armor/shield component ids resolved. Asserts UMF fields its kinetic line (Ironhold/Bulwark/"
+                     + "Rampart, mass-driver/chain-flak/siege-driver on rugged hulls) and no longer the generic laser gunship, "
+                     + "and Kithrin its energy-shield line (Radiance/Umbra + the unarmed Sable scout / Seedship). The mass-built "
+                     + "warships read as non-transports; the transports (trooper/spore-lander) read as troop carriers.")]
+        public void DevTest_Factions_LoadTheirLockedMaterielIdentities()
+        {
+            var game = NewGame();
+            DevTestStartFactory.CreateDevTest(
+                game, ScenarioDir, new List<string> { "uef-devtest.json", "umf.json", "kithrin.json" });
+
+            var infos = game.Factions.Values
+                .Where(f => f != null && f.IsValid && f.HasDataBlob<FactionInfoDB>())
+                .Select(f => f.GetDataBlob<FactionInfoDB>()).ToList();
+            var umf = infos.First(i => i.IsNPC && i.Colonies.Count >= 4);
+            var kithrin = infos.First(i => i.IsNPC && i.Stations.Count > 0);
+
+            // UMF kinetic line loaded (every dialed kinetic component id resolved), and it dropped the generic laser gunship.
+            foreach (var id in new[] { "umf-ship-ironhold", "umf-ship-bulwark", "umf-ship-rampart" })
+                Assert.That(umf.ShipDesigns.ContainsKey(id), Is.True,
+                    $"UMF's kinetic warship '{id}' didn't load — a dialed component id (mass-driver/chain-flak/siege-driver/"
+                    + "nickel-steel or ablative-composite armor) failed to resolve.");
+            Assert.That(umf.ShipDesigns.ContainsKey("default-ship-design-gunship"), Is.False,
+                "UMF should no longer field the generic laser gunship — its navy is kinetic now.");
+
+            // Kithrin energy/shield/exotic line loaded (every dialed energy-lance/disruptor/plasma/shield/ward id resolved).
+            foreach (var id in new[] { "kithrin-ship-radiance", "kithrin-ship-umbra", "kithrin-ship-sable", "kithrin-ship-seedship" })
+                Assert.That(kithrin.ShipDesigns.ContainsKey(id), Is.True,
+                    $"Kithrin's '{id}' didn't load — an energy-lance/phase-disruptor/plasma-caster/resonance-shield/ward-lattice "
+                    + "or surveyor/hull component id failed to resolve.");
+
+            // The mass-built warships are warships (no troop bay); the transports carry troops.
+            Assert.That(ConquerResolver.IsTroopTransport(umf.ShipDesigns["umf-ship-ironhold"]), Is.False,
+                "the Ironhold line cruiser is a warship, not a transport.");
+            Assert.That(ConquerResolver.IsTroopTransport(kithrin.ShipDesigns["kithrin-ship-radiance"]), Is.False,
+                "the Radiance energy cruiser is a warship, not a transport.");
+            Assert.That(ConquerResolver.IsTroopTransport(kithrin.ShipDesigns["kithrin-ship-sable"]), Is.False,
+                "the Sable scout is unarmed utility, not a troop transport.");
+            Assert.That(ConquerResolver.IsTroopTransport(umf.ShipDesigns["default-ship-design-trooper"]), Is.True,
+                "the Anvil dropship (trooper) still carries troops for the invasion role.");
         }
 
         [Test]

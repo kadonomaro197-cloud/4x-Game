@@ -31,6 +31,10 @@
     "plastic-armor",
     "aluminium-armor",
     "titanium-armor",
+    "nickel-steel-armor",
+    "nickel-steel",
+    "ablative-composite-armor",
+    "ablative-composite",
     "general-storage",
     "warehouse-facility",
     "spaceport",
@@ -164,6 +168,10 @@
     "default-design-ship-hull-heavy",
     "default-design-passive-sensor-s50",
     "default-design-laser-weapon",
+    "umf-mass-driver",
+    "umf-siege-driver",
+    "umf-chain-flak",
+    "default-design-pd-director",
     "default-design-beam-fire-control",
     "default-design-cargo-hold-1t",
     "default-design-fuel-tank-1000",
@@ -192,7 +200,9 @@
   ],
   "ordnanceDesigns": [],
   "shipDesigns": [
-    "default-ship-design-gunship",
+    "umf-ship-ironhold",
+    "umf-ship-bulwark",
+    "umf-ship-rampart",
     "default-ship-design-trooper"
   ],
   "species": [
@@ -539,15 +549,15 @@
       },
       "ships": [
         {
-          "designId": "default-ship-design-gunship",
+          "designId": "umf-ship-ironhold",
           "name": "MFS Ares"
         },
         {
-          "designId": "default-ship-design-gunship",
+          "designId": "umf-ship-ironhold",
           "name": "MFS Olympus"
         },
         {
-          "designId": "default-ship-design-gunship",
+          "designId": "umf-ship-rampart",
           "name": "MFS Tharsis"
         }
       ]
@@ -560,7 +570,7 @@
       },
       "ships": [
         {
-          "designId": "default-ship-design-gunship",
+          "designId": "umf-ship-bulwark",
           "name": "MFS Deimos"
         }
       ]
@@ -573,7 +583,7 @@
       },
       "ships": [
         {
-          "designId": "default-ship-design-gunship",
+          "designId": "umf-ship-ironhold",
           "name": "MFS Phobos"
         }
       ]

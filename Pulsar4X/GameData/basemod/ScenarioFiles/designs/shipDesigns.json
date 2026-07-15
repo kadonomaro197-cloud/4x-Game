@@ -860,5 +860,143 @@
         { "Id": "default-design-NTR1.8", "Amount": 4 }
       ]
     }
+  },
+  {
+    "Type": "ShipDesign",
+    "Payload": {
+      "UniqueID": "umf-ship-ironhold",
+      "Name": "UMFS Ironhold",
+      "Armor": { "Id": "ablative-composite-armor", "Thickness": 6 },
+      "Components": [
+        { "Id": "default-design-ship-hull-heavy", "Amount": 1 },
+        { "Id": "default-design-passive-sensor-s50", "Amount": 1 },
+        { "Id": "umf-mass-driver", "Amount": 4 },
+        { "Id": "default-design-beam-fire-control", "Amount": 1 },
+        { "Id": "default-design-fuel-tank-1000", "Amount": 2 },
+        { "Id": "default-design-alcubierre-500", "Amount": 4 },
+        { "Id": "default-design_solarpanel", "Amount": 1 },
+        { "Id": "default-design-battery-2t", "Amount": 3 },
+        { "Id": "default-design-reactor-2t", "Amount": 2 },
+        { "Id": "default-design-NTR1.8", "Amount": 4 }
+      ]
+    }
+  },
+  {
+    "Type": "ShipDesign",
+    "Payload": {
+      "UniqueID": "umf-ship-bulwark",
+      "Name": "UMFS Bulwark",
+      "Armor": { "Id": "ablative-composite-armor", "Thickness": 3 },
+      "Components": [
+        { "Id": "default-design-ship-hull-heavy", "Amount": 1 },
+        { "Id": "default-design-passive-sensor-s50", "Amount": 1 },
+        { "Id": "umf-chain-flak", "Amount": 4 },
+        { "Id": "default-design-pd-director", "Amount": 1 },
+        { "Id": "default-design-fuel-tank-1000", "Amount": 2 },
+        { "Id": "default-design-alcubierre-500", "Amount": 4 },
+        { "Id": "default-design-battery-2t", "Amount": 3 },
+        { "Id": "default-design-reactor-2t", "Amount": 1 },
+        { "Id": "default-design-NTR1.8", "Amount": 4 }
+      ]
+    }
+  },
+  {
+    "Type": "ShipDesign",
+    "Payload": {
+      "UniqueID": "umf-ship-rampart",
+      "Name": "UMFS Rampart",
+      "Armor": { "Id": "nickel-steel-armor", "Thickness": 5 },
+      "Components": [
+        { "Id": "default-design-ship-hull-heavy", "Amount": 1 },
+        { "Id": "default-design-passive-sensor-s50", "Amount": 1 },
+        { "Id": "umf-siege-driver", "Amount": 3 },
+        { "Id": "default-design-fuel-tank-1000", "Amount": 2 },
+        { "Id": "default-design-alcubierre-500", "Amount": 4 },
+        { "Id": "default-design-battery-2t", "Amount": 4 },
+        { "Id": "default-design-reactor-2t", "Amount": 3 },
+        { "Id": "default-design-NTR1.8", "Amount": 4 }
+      ]
+    }
+  },
+  {
+    "Type": "ShipDesign",
+    "Payload": {
+      "UniqueID": "kithrin-ship-radiance",
+      "Name": "Radiance",
+      "Armor": { "Id": "titanium-armor", "Thickness": 4 },
+      "Components": [
+        { "Id": "default-design-ship-hull-heavy", "Amount": 1 },
+        { "Id": "default-design-passive-sensor-s50", "Amount": 1 },
+        { "Id": "kithrin-energy-lance", "Amount": 3 },
+        { "Id": "kithrin-resonance-shield", "Amount": 2 },
+        { "Id": "kithrin-ward-lattice", "Amount": 1 },
+        { "Id": "default-design-beam-fire-control", "Amount": 1 },
+        { "Id": "default-design-fuel-tank-1000", "Amount": 2 },
+        { "Id": "default-design-alcubierre-500", "Amount": 4 },
+        { "Id": "default-design-battery-2t", "Amount": 3 },
+        { "Id": "default-design-reactor-2t", "Amount": 2 },
+        { "Id": "default-design-NTR1.8", "Amount": 4 }
+      ]
+    }
+  },
+  {
+    "Type": "ShipDesign",
+    "Payload": {
+      "UniqueID": "kithrin-ship-umbra",
+      "Name": "Umbra",
+      "Armor": { "Id": "titanium-armor", "Thickness": 2 },
+      "Components": [
+        { "Id": "default-design-ship-hull", "Amount": 1 },
+        { "Id": "default-design-passive-sensor-s50", "Amount": 1 },
+        { "Id": "kithrin-phase-disruptor", "Amount": 2 },
+        { "Id": "kithrin-plasma-caster", "Amount": 1 },
+        { "Id": "kithrin-resonance-shield", "Amount": 1 },
+        { "Id": "default-design-inertialess-drive", "Amount": 1 },
+        { "Id": "default-design-fuel-tank-1000", "Amount": 2 },
+        { "Id": "default-design-alcubierre-500", "Amount": 4 },
+        { "Id": "default-design-battery-2t", "Amount": 3 },
+        { "Id": "default-design-reactor-2t", "Amount": 2 },
+        { "Id": "default-design-NTR1.8", "Amount": 2 }
+      ]
+    }
+  },
+  {
+    "Type": "ShipDesign",
+    "Payload": {
+      "UniqueID": "kithrin-ship-sable",
+      "Name": "Sable",
+      "Armor": { "Id": "titanium-armor", "Thickness": 2 },
+      "Components": [
+        { "Id": "default-design-ship-hull", "Amount": 1 },
+        { "Id": "default-design-outpost-sensor", "Amount": 1 },
+        { "Id": "default-design-geo-surveyor", "Amount": 1 },
+        { "Id": "default-design-gravitational-surveyor", "Amount": 1 },
+        { "Id": "default-design-fuel-tank-1000", "Amount": 2 },
+        { "Id": "default-design-alcubierre-500", "Amount": 4 },
+        { "Id": "default-design_solarpanel", "Amount": 1 },
+        { "Id": "default-design-battery-2t", "Amount": 3 },
+        { "Id": "default-design-reactor-2t", "Amount": 1 },
+        { "Id": "default-design-NTR1.8", "Amount": 3 }
+      ]
+    }
+  },
+  {
+    "Type": "ShipDesign",
+    "Payload": {
+      "UniqueID": "kithrin-ship-seedship",
+      "Name": "Seedship",
+      "Armor": { "Id": "titanium-armor", "Thickness": 2 },
+      "Components": [
+        { "Id": "default-design-ship-hull", "Amount": 1 },
+        { "Id": "default-design-passive-sensor-s50", "Amount": 1 },
+        { "Id": "default-design-cargo-hold-1t", "Amount": 2 },
+        { "Id": "default-design-geo-surveyor", "Amount": 1 },
+        { "Id": "default-design-fuel-tank-1000", "Amount": 2 },
+        { "Id": "default-design-alcubierre-500", "Amount": 4 },
+        { "Id": "default-design-battery-2t", "Amount": 3 },
+        { "Id": "default-design-reactor-2t", "Amount": 1 },
+        { "Id": "default-design-NTR1.8", "Amount": 3 }
+      ]
+    }
   }
 ]

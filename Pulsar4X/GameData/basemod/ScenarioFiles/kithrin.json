@@ -27,6 +27,8 @@
     "tech-conventional-engine",
     "tech-geo-surveyor",
     "tech-gravitational-surveyor",
+    "geo-surveyor",
+    "gravitational-surveyor",
     "stainless-steel-armor",
     "plastic-armor",
     "aluminium-armor",
@@ -173,6 +175,17 @@
     "default-design-passive-sensor-s50",
     "default-design-disruptor-weapon",
     "default-design-deflector-array",
+    "kithrin-energy-lance",
+    "kithrin-phase-disruptor",
+    "kithrin-plasma-caster",
+    "kithrin-resonance-shield",
+    "kithrin-ward-lattice",
+    "default-design-ship-hull",
+    "default-design-inertialess-drive",
+    "default-design-outpost-sensor",
+    "default-design-geo-surveyor",
+    "default-design-gravitational-surveyor",
+    "default-design-cargo-hold-1t",
     "default-design-beam-fire-control",
     "default-design-fuel-tank-1000",
     "default-design-alcubierre-500",
@@ -186,7 +199,11 @@
   "ordnanceDesigns": [],
   "shipDesigns": [
     "default-ship-design-hive-cruiser",
-    "default-ship-design-spore-lander"
+    "default-ship-design-spore-lander",
+    "kithrin-ship-radiance",
+    "kithrin-ship-umbra",
+    "kithrin-ship-sable",
+    "kithrin-ship-seedship"
   ],
   "species": [
     "species-xenos"
@@ -311,11 +328,11 @@
       },
       "ships": [
         {
-          "designId": "default-ship-design-hive-cruiser",
+          "designId": "kithrin-ship-radiance",
           "name": "KCS Devourer"
         },
         {
-          "designId": "default-ship-design-hive-cruiser",
+          "designId": "kithrin-ship-radiance",
           "name": "KCS Rime Chorus"
         }
       ]
