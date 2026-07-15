@@ -2,6 +2,7 @@ using Newtonsoft.Json;
 using Pulsar4X.Engine;
 using Pulsar4X.Interfaces;
 using Pulsar4X.Components;
+using Pulsar4X.DataStructures;
 
 namespace Pulsar4X.Ships
 {
@@ -18,10 +19,19 @@ namespace Pulsar4X.Ships
     /// and shield atbs). Double-arg ctor for the JSON/NCalc binder (landmine L7); order = the template's
     /// <c>AtbConstrArgs(...)</c> order.
     /// </summary>
-    public class ShipHullAtb : IComponentDesignAttribute
+    public class ShipHullAtb : IComponentDesignAttribute, IChassisAtb
     {
         /// <summary>The mass ceiling (kg) a ship's mounted components must fit within.</summary>
         [JsonProperty] public double MassBudget { get; internal set; }
+
+        // --- IChassisAtb (additive, 2026-07-14): the uniform "chassis provides the budget" view. ---
+        // COMPUTED getters over MassBudget — NO backing field, NO [JsonProperty]. [JsonIgnore] is CRITICAL:
+        // this class serializes OptOut (every public getter is written unless ignored), so without it
+        // Newtonsoft would emit these as new JSON fields and change the save shape. They map the existing
+        // MassBudget onto the shared shape; nothing is stored or gated through them.
+        [JsonIgnore] public double StructuralBudget => MassBudget;
+        [JsonIgnore] public ChassisBudgetKind BudgetKind => ChassisBudgetKind.Mass;
+        [JsonIgnore] public ComponentMountType PartMount => ComponentMountType.ShipComponent;
 
         public ShipHullAtb() { }
 
