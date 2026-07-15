@@ -127,5 +127,153 @@ namespace Pulsar4X.Tests
             Assert.That(placed.Distinct().Count(), Is.EqualTo(placed.Count), "no ship is in two buckets");
             CollectionAssert.AreEquivalent(ships, placed, "the buckets partition the fleet's ships");
         }
+
+        // --- B-2b: FormRoleSubFleets actually forms the tree ------------------------------------------------
+
+        // The real start fleet (first owned fleet that has ships).
+        private static Entity StartFleet(TestScenario s)
+            => s.StartingSystem.GetAllEntitiesWithDataBlob<FleetDB>()
+                .First(f => f.FactionOwnerID == s.Faction.Id && FleetCombat.Ships(f).Count > 0);
+
+        // The parent fleet's DIRECT ship children (the ones FormRoleSubFleets sorts), same filter the method uses.
+        private static System.Collections.Generic.List<Entity> DirectShips(Entity fleet)
+            => fleet.GetDataBlob<FleetDB>().GetChildren()
+                .Where(c => c.IsValid && !c.HasDataBlob<FleetDB>() && c.HasDataBlob<Pulsar4X.Ships.ShipInfoDB>()).ToList();
+
+        [Test]
+        [Description("Forming the real start fleet: one sub-fleet per role its ships fill, each tagged + flagshipped + parented, and NO ship lost or duplicated.")]
+        public void FormRoleSubFleets_MakesOneSubFleetPerRole_AndConservesShips()
+        {
+            var s = TestScenario.CreateWithColony();
+            var fleet = StartFleet(s);
+            var before = FleetCombat.Ships(fleet);
+            Assert.That(before, Is.Not.Empty);
+
+            var expectedRoles = DirectShips(fleet).Select(FleetRoleComposer.ClassifyRole).Distinct().ToHashSet();
+
+            var formed = FleetRoleComposer.FormRoleSubFleets(fleet);
+
+            Assert.That(formed.Keys.ToHashSet(), Is.EquivalentTo(expectedRoles), "one sub-fleet per non-empty role");
+
+            foreach (var kv in formed)
+            {
+                var sub = kv.Value;
+                Assert.That(sub.HasDataBlob<FleetDB>(), Is.True, "the sub-fleet is a real fleet");
+                Assert.That(sub.HasDataBlob<FleetRoleDB>(), Is.True, "the sub-fleet is tagged with its role");
+                Assert.That(sub.GetDataBlob<FleetRoleDB>().Role, Is.EqualTo(kv.Key), "the tag matches the map key");
+                Assert.That(sub.FactionOwnerID, Is.EqualTo(s.Faction.Id), "the sub-fleet is owned by the same faction");
+
+                var subDB = sub.GetDataBlob<FleetDB>();
+                Assert.That(subDB.Parent, Is.Not.Null, "the sub-fleet has a parent");
+                Assert.That(subDB.Parent.Id, Is.EqualTo(fleet.Id), "parented to the original fleet");
+                Assert.That(subDB.FlagShipID, Is.Not.EqualTo(-1), "the sub-fleet has a flagship");
+
+                var subShips = subDB.GetChildren().ToList();
+                Assert.That(subShips.Select(x => x.Id), Contains.Item(subDB.FlagShipID), "the flagship is one of its ships");
+                foreach (var ship in subShips)
+                    Assert.That(FleetRoleComposer.ClassifyRole(ship), Is.EqualTo(kv.Key), "every ship matches the sub-fleet's role");
+            }
+
+            // Ship conservation — the load-bearing tripwire: no ship lost, none duplicated across the move.
+            CollectionAssert.AreEquivalent(before, FleetCombat.Ships(fleet), "the fleet's ships are unchanged in total");
+            var placed = formed.Values.SelectMany(sub => sub.GetDataBlob<FleetDB>().GetChildren()).ToList();
+            Assert.That(placed.Distinct().Count(), Is.EqualTo(before.Count), "every ship sits in exactly one sub-fleet");
+
+            // The flat start fleet is fully decomposed — the parent holds sub-fleets now, no loose ships.
+            Assert.That(DirectShips(fleet), Is.Empty, "the parent has no direct ships left");
+        }
+
+        [Test]
+        [Description("A formed sub-fleet is discoverable by its FleetRoleDB tag; the player root fleet never carries it — the B-2c find-and-classify handle.")]
+        public void FormedSubFleets_AreDiscoverableAndDistinctFromPlayerFleet()
+        {
+            var s = TestScenario.CreateWithColony();
+            var fleet = StartFleet(s);
+
+            var formed = FleetRoleComposer.FormRoleSubFleets(fleet);
+
+            Assert.That(fleet.HasDataBlob<FleetRoleDB>(), Is.False, "the root is a player fleet, not a role sub-fleet");
+            foreach (var sub in formed.Values)
+                Assert.That(sub.HasDataBlob<FleetRoleDB>(), Is.True, "each formed sub-fleet is found by its marker");
+        }
+
+        [Test]
+        [Description("Re-running on an already-formed fleet is a no-op (no direct ships left), and null / ship-less inputs return empty — no duplication or loss.")]
+        public void FormRoleSubFleets_IsSafeToReRun_AndOnEmptyInput()
+        {
+            var s = TestScenario.CreateWithColony();
+            var fleet = StartFleet(s);
+            var before = FleetCombat.Ships(fleet);
+
+            var first = FleetRoleComposer.FormRoleSubFleets(fleet);
+            Assert.That(first, Is.Not.Empty);
+
+            var second = FleetRoleComposer.FormRoleSubFleets(fleet);
+            Assert.That(second, Is.Empty, "no direct ships remain, so nothing new to form");
+
+            CollectionAssert.AreEquivalent(before, FleetCombat.Ships(fleet), "re-run neither loses nor duplicates a ship");
+            var subCount = fleet.GetDataBlob<FleetDB>().GetChildren().Count(c => c.HasDataBlob<FleetRoleDB>());
+            Assert.That(subCount, Is.EqualTo(first.Count), "re-run created no extra sub-fleets");
+
+            Assert.That(FleetRoleComposer.FormRoleSubFleets(null), Is.Empty, "null fleet → empty");
+            var emptyFleet = FleetFactory.Create(s.StartingSystem, s.Faction.Id, "Empty");
+            Assert.That(FleetRoleComposer.FormRoleSubFleets(emptyFleet), Is.Empty, "ship-less fleet → empty");
+        }
+
+        [Test]
+        [Description("After forming, the recursive combat read still collects each ship exactly once, at 1.0 firepower (no doctrine leaked) — pins the combat seam.")]
+        public void GetCombatShips_StillCountsEachShipOnce_AfterForming()
+        {
+            var s = TestScenario.CreateWithColony();
+            var fleet = StartFleet(s);
+            var before = FleetCombat.Ships(fleet);
+
+            FleetRoleComposer.FormRoleSubFleets(fleet);
+
+            var combatShips = CombatEngagement.GetCombatShips(fleet);
+            Assert.That(combatShips.Count, Is.EqualTo(before.Count), "each ship counted exactly once through the nesting");
+            foreach (var cs in combatShips)
+                Assert.That(cs.FirepowerMult, Is.EqualTo(1.0), "no doctrine leaked — B-2b sub-fleets carry no doctrine");
+        }
+
+        [Test]
+        [Description("The formed sub-fleet tree (parent link, flagship, role tags, ships) survives Game.Save -> Game.Load — the nested-FleetDB round-trip gauge.")]
+        public void FormedSubFleetTree_SurvivesSaveLoad()
+        {
+            var s = TestScenario.CreateWithColony();
+            var fleet = StartFleet(s);
+
+            var formed = FleetRoleComposer.FormRoleSubFleets(fleet);
+            Assert.That(formed, Is.Not.Empty);
+            int parentId = fleet.Id;
+            int expectedSubCount = formed.Count;
+            var expectedRoles = formed.Keys.ToHashSet();
+
+            string json = null;
+            Assert.DoesNotThrow(() => json = Game.Save(s.Game), "Save threw on a fleet with sub-fleets");
+            Assert.That(json, Is.Not.Null.And.Not.Empty);
+
+            Game reloaded = null;
+            Assert.DoesNotThrow(() => reloaded = Game.Load(json), "Load threw on the sub-fleet-tree JSON");
+            Assert.That(reloaded, Is.Not.Null);
+
+            var reFleet = reloaded.Systems.SelectMany(sys => sys.GetAllEntitiesWithDataBlob<FleetDB>())
+                .FirstOrDefault(f => f.Id == parentId);
+            Assert.That(reFleet, Is.Not.Null, "the parent fleet survived reload");
+
+            var reSubs = reFleet.GetDataBlob<FleetDB>().GetChildren().Where(c => c.HasDataBlob<FleetRoleDB>()).ToList();
+            Assert.That(reSubs.Count, Is.EqualTo(expectedSubCount), "all sub-fleets survived reload");
+            Assert.That(reSubs.Select(x => x.GetDataBlob<FleetRoleDB>().Role).ToHashSet(),
+                Is.EquivalentTo(expectedRoles), "each sub-fleet's role tag survived reload");
+
+            foreach (var sub in reSubs)
+            {
+                var sdb = sub.GetDataBlob<FleetDB>();
+                Assert.That(sdb.Parent, Is.Not.Null, "sub-fleet keeps a parent after reload");
+                Assert.That(sdb.Parent.Id, Is.EqualTo(parentId), "still parented to the fleet after reload");
+                Assert.That(sdb.FlagShipID, Is.Not.EqualTo(-1), "flagship id survived reload");
+                Assert.That(sdb.GetChildren().Any(), Is.True, "sub-fleet kept its ships after reload");
+            }
+        }
     }
 }
