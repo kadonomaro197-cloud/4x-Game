@@ -21,7 +21,7 @@
         "fissile-fuels": "PropertyValue('Fuel Consumption') * 3600 * PropertyValue('Lifetime')"
       },
       "ComponentType": "Facility",
-      "MountType": "ShipComponent, ShipCargo, Fighter, GroundUnit",
+      "MountType": "ShipComponent, ShipCargo, Fighter, GroundUnit, Station",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "component-construction",
       "Properties": [

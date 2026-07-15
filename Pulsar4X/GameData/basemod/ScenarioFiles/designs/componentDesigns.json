@@ -703,6 +703,14 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-station-chassis",
+      "Name": "Station Chassis",
+      "TemplateId": "station-chassis"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-ship-hull",
       "Name": "Ship Hull (Medium)",
       "TemplateId": "ship-hull"

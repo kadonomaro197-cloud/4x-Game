@@ -143,7 +143,7 @@
         "space-crete": "[Mass] * 0.05"
       },
       "ComponentType": "Facility",
-      "MountType": "PlanetInstallation",
+      "MountType": "PlanetInstallation, Station",
       "CargoTypeID": "None",
       "IndustryTypeID": "installation-construction",
       "Properties": [
@@ -282,7 +282,7 @@
         "electronics": "[Mass] * 0.05"
       },
       "ComponentType": "Facility",
-      "MountType": "ShipCargo, PlanetInstallation",
+      "MountType": "ShipCargo, PlanetInstallation, Station",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "installation-construction",
       "Properties": [
@@ -342,7 +342,7 @@
         "copper": "[Mass] * 0.05"
       },
       "ComponentType": "Facility",
-      "MountType": "ShipCargo, PlanetInstallation",
+      "MountType": "ShipCargo, PlanetInstallation, Station",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "installation-construction",
       "Properties": [
@@ -395,7 +395,7 @@
         "copper": "[Mass] * 0.05"
       },
       "ComponentType": "Facility",
-      "MountType": "ShipCargo, PlanetInstallation",
+      "MountType": "ShipCargo, PlanetInstallation, Station",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "installation-construction",
       "Properties": [
@@ -1517,6 +1517,51 @@
           "GuiHint": "None",
           "PropertyFormula": "AtbConstrArgs(PropertyValue('TileFootprint'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundFootprintAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "station-chassis",
+      "Name": "Station Chassis",
+      "Formulas": {
+        "Description": "The structural frame a space station is assembled on — the first part you pick when designing a station. Modules (reactor, cargo, research, factory, refinery) bolt onto it. Provides the station's structure budget.",
+        "Mass": "100000",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "1.0",
+        "CrewReq": "40",
+        "ResearchCost": "0",
+        "CreditCost": "300",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.4",
+        "aluminium": "[Mass] * 0.3",
+        "iron": "[Mass] * 0.3"
+      },
+      "ComponentType": "Facility",
+      "MountType": "Station",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "Structural Budget",
+          "Units": "structure",
+          "DescriptionFormula": "'How much mounted module this chassis can bear (its structure budget).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "10000",
+          "MinFormula": "500",
+          "StepFormula": "100",
+          "PropertyFormula": "2000"
+        },
+        {
+          "Name": "stationChassisAtbArgs",
+          "DescriptionFormula": "'double structuralAllowance'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Structural Budget'))",
+          "AttributeType": "Pulsar4X.Stations.StationChassisAtb"
         }
       ]
     }
