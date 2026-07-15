@@ -5,10 +5,11 @@ using Pulsar4X.Colonies;
 using Pulsar4X.Datablobs;   // OrderableDB
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
+using Pulsar4X.Fleets;      // FleetDB (clear start fleets)
 using Pulsar4X.Galaxy;
 using Pulsar4X.GroundCombat;
 using Pulsar4X.Industry;
-using Pulsar4X.Movement;
+using Pulsar4X.Movement;    // PositionDB, WarpAbilityDB
 using Pulsar4X.Ships;
 
 namespace Pulsar4X.Tests
@@ -97,8 +98,9 @@ namespace Pulsar4X.Tests
             s.StartingSystem.AddEntity(ship);
             ship.FactionOwnerID = s.Faction.Id;
             ship.SetDataBlob(new ShipInfoDB(design));
-            ship.SetDataBlob(new PositionDB(atBody));   // parent = the target body → GroundTransport.ShipIsAtBody true
+            ship.SetDataBlob(new PositionDB(atBody));   // parent = the given body → GroundTransport.ShipIsAtBody true
             ship.SetDataBlob(new OrderableDB());          // the land order runs through the OrderableProcessor lane
+            ship.SetDataBlob(new WarpAbilityDB { MaxSpeed = 10000 });   // a real drive → the SAIL rung's warp-capable guard passes
 
             var unit = new GroundUnit
             {
@@ -158,6 +160,37 @@ namespace Pulsar4X.Tests
 
             Assert.That(regionsDB.Regions[0].OwnerFactionID, Is.EqualTo(s.Faction.Id),
                 "with the invader holding the undefended region, it flips to the attacker — the AI took the ground");
+        }
+
+        [Test]
+        [Description("B5-a: with a loaded transport sitting at home (NOT yet at the war target), the CONQUER resolver "
+                   + "SAILS it toward the enemy world (a SailTransport decision) — the slice between LOAD and LAND. "
+                   + "Decision-only (warp transit has no deterministic harness), mirroring how the STRIKE rung is gauged.")]
+        public void Conquer_SailsTheLoadedTransport_TowardTheTarget()
+        {
+            var s = TestScenario.CreateWithColony();
+            // Drop the colony's own start fleets so no massed strike fleet can preempt the SAIL rung (Rung 1) — this
+            // isolates the transport-sail decision (StrikeGroupMinWarships needs a real fleet, which we've removed).
+            foreach (var fleet in s.StartingSystem.GetAllEntitiesWithDataBlob<FleetDB>().ToList())
+                fleet.Destroy();
+
+            var reds = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+            Diplomacy.DeclareWar(s.Faction, reds, CasusBelli.ConfrontRival, s.Game.TimePulse.GameGlobalDateTime);
+
+            var enemyBody = GiveRivalAColonyWorld(s, reds);
+            // The loaded transport sits at HOME (Earth), NOT at the enemy world — so it can't land yet; it must sail.
+            var (transport, _) = PlaceLoadedTransportAt(s, s.StartingBody);
+            Assert.That(enemyBody.Id, Is.Not.EqualTo(s.StartingBody.Id), "the enemy world must differ from home for a sail");
+
+            var state = FactionState.Snapshot(s.Faction);
+
+            // The finder (the new decision logic) picks the loaded, not-at-target, warp-capable transport.
+            Assert.That(ConquerResolver.FindSailableTransport(state, enemyBody), Is.EqualTo(transport),
+                "the SAIL finder picks the loaded transport that isn't at the target yet");
+
+            var action = new ConquerResolver().Resolve(state, new StrategicObjectiveDB { Objective = StrategicObjective.Conquer });
+            Assert.That(action.Kind, Is.EqualTo("SailTransport"),
+                "a loaded transport away from the target → the resolver sails it there (not LandInvasion, not a build rung)");
         }
     }
 }

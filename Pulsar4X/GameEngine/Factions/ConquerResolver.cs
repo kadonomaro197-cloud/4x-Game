@@ -101,6 +101,34 @@ namespace Pulsar4X.Factions
                 }
             }
 
+            // Rung 1.3 (B5-a — SAIL the invasion): we hold a war target and own a transport that is CARRYING troops but
+            // is NOT yet at the target world → sail it there. Placed AFTER the strike-fleet sail (the warfleet launches
+            // first to win the orbit) and BEFORE the LOAD rung (a loaded transport should move out before we load the
+            // next one). Uses the per-ship WarpMoveCommand directly (the exact per-ship warp MoveToSystemBodyOrder
+            // issues internally) — NOT MoveToSystemBodyOrder, which bails on anything that isn't a FLEET, and a lone
+            // freshly-loaded transport isn't in one. The transport arrives in orbit and waits; the LAND rung (Rung 0)
+            // fires once it's at the target AND holds the orbit (the warfleet having cleared it). Gated on a real warp
+            // drive (MaxSpeed>0) and not-already-warping so it can't spam a no-op sail. Byte-identical while emission is
+            // off (gated EmitOrders) AND for any faction not at war (no target → skipped).
+            if (target.IsValid && state.Game != null)
+            {
+                var sailShip = FindSailableTransport(state, target.ColonyBody);
+                if (sailShip != null)
+                {
+                    var game = state.Game;
+                    var ship = sailShip;
+                    var body = target.ColonyBody;
+                    return new PlannerAction(
+                        "SailTransport",
+                        $"sail loaded transport {ship.Id} toward enemy world {body.Id}",
+                        () =>
+                        {
+                            var cmd = Pulsar4X.Movement.WarpMoveCommand.CreateCommandEZ(ship, body, ship.StarSysDateTime);
+                            game.OrderHandler.HandleOrder(cmd);   // the ONE step (launch the transport at the target)
+                        });
+                }
+            }
+
             // Rung 1.5 (B5-3 — LOAD the invasion): we hold a war target and own a transport that is sitting AT one of our
             // own bodies which has a standing ground unit, with free troop-bay room → order that unit loaded (the front
             // door to LoadTroopsOrder → GroundTransport.TryLoadUnit). Placed AFTER the strike-fleet sail (so the warfleet
@@ -267,6 +295,31 @@ namespace Pulsar4X.Factions
                 }
             }
             return (null, null);
+        }
+
+        /// <summary>The faction's own transport that is CARRYING troops but is NOT yet at <paramref name="targetBody"/>,
+        /// is NOT already in warp transit, and CAN actually warp (a drive with a real speed) — what the SAIL rung sends
+        /// at the target. Returns null when no such transport exists (so the rung falls through to LOAD/BUILD/MASS). The
+        /// warp-drive + not-warping guards stop a driveless or in-transit transport from being re-issued a no-op sail
+        /// every cycle. Scans ALL owned ships across every system, like <see cref="FindLandableTransport"/>.</summary>
+        internal static Entity FindSailableTransport(FactionState state, Entity targetBody)
+        {
+            if (targetBody == null || !targetBody.IsValid) return null;
+            foreach (var system in state.Game.Systems)
+            {
+                if (system == null) continue;
+                foreach (var ship in system.GetAllEntitiesWithDataBlob<ShipInfoDB>())
+                {
+                    if (ship == null || !ship.IsValid || ship.FactionOwnerID != state.FactionId) continue;
+                    if (!ship.TryGetDataBlob<Pulsar4X.GroundCombat.GroundTransportDB>(out var transport)) continue;
+                    if (transport.LoadedUnits.Count == 0) continue;                                     // carrying troops
+                    if (Pulsar4X.GroundCombat.GroundTransport.ShipIsAtBody(ship, targetBody)) continue; // NOT already there (that's the LAND rung)
+                    if (ship.HasDataBlob<Pulsar4X.Movement.WarpMovingDB>()) continue;                   // not already en route
+                    if (!ship.TryGetDataBlob<Pulsar4X.Movement.WarpAbilityDB>(out var warp) || !(warp.MaxSpeed > 0)) continue; // can actually warp
+                    return ship;
+                }
+            }
+            return null;
         }
 
         /// <summary>The body a ship is currently at (its <see cref="Pulsar4X.Movement.PositionDB"/> parent), or null — the
