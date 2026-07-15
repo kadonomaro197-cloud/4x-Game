@@ -63,15 +63,20 @@ namespace Pulsar4X.Tests
 
         // ── B5-b — THE LAND RUNG (the invasion keystone) ────────────────────────────────────────────────────────────
 
-        /// <summary>Give <paramref name="rival"/> a colony on a fresh body in the attacker's own system (reach 1.0, so
-        /// MilitaryTarget picks it) with a one-region surface owned by the rival — the world to take. Returns the body.</summary>
+        /// <summary>Give <paramref name="rival"/> a colony on a REAL regioned body in the attacker's own system (reach
+        /// 1.0, so MilitaryTarget picks it), region 0 owned by the rival — the world to take. Uses a real body (not a
+        /// synthetic one) so it carries a PositionDB (a ship can orbit it), a MassVolumeDB, and a full region surface
+        /// with adjacency + hex grid — everything GroundForcesProcessor needs to run cleanly to the capture step (the
+        /// same setup as TakeAPlanetIntegrationTests). Returns the body.</summary>
         private static Entity GiveRivalAColonyWorld(TestScenario s, Entity rival)
         {
-            var body = Entity.Create();
-            s.StartingSystem.AddEntity(body);
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingSystem.GetAllEntitiesWithDataBlob<PlanetRegionsDB>()
+                .FirstOrDefault(b => b.Id != s.StartingBody.Id && b.GetDataBlob<PlanetRegionsDB>().Regions.Count > 0);
+            Assert.That(body, Is.Not.Null, "the start system needs a second regioned body to stand in for the enemy world");
 
-            // A minimal one-region surface, initially the rival's — so capture has an owner to flip.
-            body.SetDataBlob(new PlanetRegionsDB(new List<Region> { new Region { OwnerFactionID = rival.Id } }));
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            regionsDB.Regions[0].OwnerFactionID = rival.Id;   // the rival holds the world (region 0 = the capital)
 
             var colony = Entity.Create();
             colony.FactionOwnerID = rival.Id;
@@ -82,9 +87,9 @@ namespace Pulsar4X.Tests
         }
 
         /// <summary>A transport owned by the attacker, sitting AT <paramref name="atBody"/>, carrying one ground unit —
-        /// the "won the orbit, troops aboard" state the LAND rung acts on. Hand-built (no MassVolumeDB on the synthetic
-        /// target body, so ShipFactory can't orbit it): ShipInfoDB (so it's found), PositionDB parented to the body (at
-        /// body), OrderableDB (so the instant land order executes), GroundTransportDB with the loaded unit.</summary>
+        /// the "won the orbit, troops aboard" state the LAND rung acts on. Hand-built (rather than via ShipFactory) for
+        /// direct control of the loaded state: ShipInfoDB (so it's found), PositionDB parented to the body (at body),
+        /// OrderableDB (so the instant land order executes through the lane), GroundTransportDB with the loaded unit.</summary>
         private static (Entity ship, GroundUnit unit) PlaceLoadedTransportAt(TestScenario s, Entity atBody)
         {
             var design = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns.Values.First();
