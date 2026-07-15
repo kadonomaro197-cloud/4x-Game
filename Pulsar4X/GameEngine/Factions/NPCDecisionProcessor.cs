@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Pulsar4X.DataStructures;
 using Pulsar4X.Engine;
 using Pulsar4X.Industry;
@@ -207,6 +208,14 @@ namespace Pulsar4X.Factions
             // byte-identical until a client/test opts in.
             if (EnableOrderEmission)
                 EmitOrders(factionEntity, factionInfoDB);
+
+            // Phase B-1: set each owned fleet's combat DOCTRINE + engagement POSTURE by PERSONALITY (scored through the
+            // shared DecisionScorer) — the AI now USES the fleet-doctrine levers it never touched (an aggressive faction
+            // runs all-out-attack + weapons-free, a cautious one a defensive line + return-fire). Gated by
+            // EnableOrderEmission (a military command) + MONTHLY (the doctrine switch has its own cooldown — no need to
+            // re-decide daily). Byte-identical while the gate is off.
+            if (EnableOrderEmission && isMonthlyCycle)
+                RunFleetDoctrinePolicy(factionEntity);
 
             // The AI FLIGHT RECORDER (B4, the observability SPINE): tape this cycle's decision — what it SENSED, what it
             // DECIDED and why, what it ACTED on — AFTER the decision + (gated) action, so the record is complete. Pure
@@ -630,6 +639,71 @@ namespace Pulsar4X.Factions
 
             if (bestTarget != null)
                 Diplomacy.DeclareWar(factionEntity, bestTarget, CasusBelli.ConfrontRival, game.TimePulse.GameGlobalDateTime);
+        }
+
+        // ── Phase B-1 — the AI SETS fleet doctrine + posture by personality (2nd live DecisionScorer caller) ─────────
+        /// <summary>A moddable combat doctrine presented to the shared <see cref="DecisionScorer"/>: an Offensive family
+        /// scores as MILITARY + RISKY (a bold, warlike faction wants it), a Defensive family as ANTI-RISK (a cautious
+        /// faction wants it), Utilitarian as a middling default. So the SAME scorer that picks a warship also picks a
+        /// fleet's fighting stance from the personality dials.</summary>
+        private sealed class DoctrineOption : IScoredOption
+        {
+            public Pulsar4X.Blueprints.CombatDoctrineBlueprint Blueprint { get; }
+            private readonly Dictionary<DecisionFeature, double> _f;
+            public DoctrineOption(Pulsar4X.Blueprints.CombatDoctrineBlueprint bp)
+            {
+                Blueprint = bp;
+                _f = new Dictionary<DecisionFeature, double>();
+                if (bp.Family == "Offensive") { _f[DecisionFeature.MilitarySolve] = 1.0; _f[DecisionFeature.RiskLevel] = 1.0; }
+                else if (bp.Family == "Defensive") { _f[DecisionFeature.MilitarySolve] = 0.3; _f[DecisionFeature.RiskLevel] = -1.0; }
+                else { _f[DecisionFeature.MilitarySolve] = 0.5; }   // Utilitarian / balanced middle
+            }
+            public IReadOnlyDictionary<DecisionFeature, double> Features => _f;
+        }
+
+        /// <summary>
+        /// Phase B-1 — the AI puts its hands on the fleet-doctrine levers it never touched. It scores the moddable
+        /// combat-doctrine catalog through the shared <see cref="DecisionScorer"/> (the 2nd live caller after the
+        /// warship pick) and applies the winner — plus a matching engagement posture — to every fleet it owns: a bold,
+        /// warlike faction runs an Offensive doctrine + Weapons-Free, a cautious one a Defensive line + Return-Fire.
+        /// Uses the existing direct levers (<see cref="Pulsar4X.Combat.FleetDoctrine.TrySetDoctrine"/>, which honours the
+        /// switch cooldown, + <c>SetEngagementPosture</c>). RETREAT doctrines are excluded — a withdrawal is a combat
+        /// REACTION, not a standing stance. Gated at the call site by <see cref="EnableOrderEmission"/> (default off →
+        /// byte-identical). Defensive/no-throw (monthly hotloop). Internal for the CI gauge.
+        /// </summary>
+        internal static void RunFleetDoctrinePolicy(Entity factionEntity)
+        {
+            if (factionEntity == null || !factionEntity.TryGetDataBlob<FactionInfoDB>(out _)) return;
+            var game = factionEntity.Manager?.Game;
+            if (game?.StartingGameData?.CombatDoctrines == null) return;
+
+            factionEntity.TryGetDataBlob<PersonalityDB>(out var personality);
+
+            // Score the STANDING doctrines (never stand on a withdrawal) and pick the personality's favourite.
+            var options = new List<DoctrineOption>();
+            foreach (var bp in game.StartingGameData.CombatDoctrines.Values)
+                if (bp != null && !bp.IsRetreat)
+                    options.Add(new DoctrineOption(bp));
+            var chosen = DecisionScorer.PickBest(options, personality)?.Blueprint;
+            if (chosen == null) return;
+
+            // Posture follows the stance: an offensive fleet STARTS fights (Weapons-Free); a defensive one fires only
+            // if fired upon (Return-Fire); a balanced fleet still fights on contact.
+            var posture = chosen.Family == "Defensive"
+                ? Pulsar4X.Combat.EngagementPosture.ReturnFire
+                : Pulsar4X.Combat.EngagementPosture.WeaponsFree;
+
+            var now = game.TimePulse.GameGlobalDateTime;
+            foreach (var system in game.Systems)
+            {
+                if (system == null) continue;
+                foreach (var fleet in system.GetAllEntitiesWithDataBlob<Pulsar4X.Fleets.FleetDB>())
+                {
+                    if (fleet == null || !fleet.IsValid || fleet.FactionOwnerID != factionEntity.Id) continue;
+                    Pulsar4X.Combat.FleetDoctrine.TrySetDoctrine(fleet, chosen, now);   // honours the switch cooldown
+                    Pulsar4X.Combat.FleetDoctrine.SetEngagementPosture(fleet, posture); // direct (works mid-battle)
+                }
+            }
         }
     }
 }
