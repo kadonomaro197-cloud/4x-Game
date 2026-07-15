@@ -183,7 +183,10 @@ namespace Pulsar4X.Factions
             // MONTHLY — one détente move per month, not per day (its guards prevent re-warm churn but the CADENCE is
             // meant to be political-slow).
             if (EnableDiplomaticProposals && isMonthlyCycle)
+            {
                 RunTreatyPolicy(factionEntity);
+                RunWarPolicy(factionEntity);   // B6-a: the opportunistic war-of-CHOICE trigger (after the treaty passes)
+            }
 
             // The espionage MIRROR (E5): NPCs spy on their rivals — including the player — so counter-intel is a
             // standing decision, not optional. Gated (default off) → byte-identical until opted in. MONTHLY — an op
@@ -562,6 +565,71 @@ namespace Pulsar4X.Factions
                 if (Treaties.Propose(factionEntity, target, TreatyType.NonAggression, game.TimePulse.GameGlobalDateTime))
                     return;   // one treaty move per cycle
             }
+        }
+
+        // ── B6-a — the OPPORTUNISTIC declare-war trigger (FLAGGED tuning constants) ──────────────────────────────────
+        /// <summary>Appetite floor: a faction whose (Aggression+Ambition) blend is at or below this never opens a war of
+        /// CHOICE. 0.55 sits just above the 0.5 neutral, so a neutral/absent personality is a no-op. FLAGGED (Phase-A).</summary>
+        private const double WarAppetiteFloor = 0.55;
+        /// <summary>How decisively we must out-muscle a rival before it's worth attacking (own strength ≥ theirs × this).
+        /// 1.25 = a clear ~25%+ edge, not a coin-flip. FLAGGED (Phase-A tuning).</summary>
+        private const double WarOutMuscleRatio = 1.25;
+
+        /// <summary>
+        /// B6-a — the OPPORTUNISTIC declare-war trigger (the developer's Q2: "Aggression/Ambition × detected enemy
+        /// weakness × low relation"). The AllyDefense war-join (<see cref="RunTreatyPolicy"/> Pass 0) is a war of
+        /// OBLIGATION; this is a war of CHOICE — a warlike, ambitious faction that OUT-MUSCLES a rival it already
+        /// dislikes seizes the moment and declares. All three factors are GATES (appetite from personality, out-muscle
+        /// from strength, hostility from the relation score) AND a rank: among the rivals that pass every gate, it picks
+        /// the highest opportunity SCORE (appetite × weakness × how-much-they're-hated). One war per cycle.
+        ///
+        /// Gated at the call site by <see cref="EnableDiplomaticProposals"/> (default off → CI byte-identical; the
+        /// client/DevTest turn it on = Q8). Defensive/no-throw (monthly hotloop). Internal for the CI gauge.
+        ///
+        /// v1 STRENGTH uses the true <see cref="FactionRollup.MilitaryStrength"/> for BOTH sides (consistent
+        /// combat-value units), gated on <see cref="DiplomacyDB.HasMet"/> as the "we've made contact" proxy. The
+        /// fog-limited <see cref="ThreatAssessment.DetectedStrengthOf"/> is signal-kW — a DIFFERENT unit that can't be
+        /// ratio'd against combat-value until the Phase-A calibration pass; swapping to it (so a hidden buildup is a
+        /// real surprise) is the flagged detection refinement.
+        /// </summary>
+        internal static void RunWarPolicy(Entity factionEntity)
+        {
+            if (factionEntity == null || !factionEntity.TryGetDataBlob<FactionInfoDB>(out _)) return;
+            if (!factionEntity.TryGetDataBlob<DiplomacyDB>(out var dipDB)) return;
+            var game = factionEntity.Manager?.Game;
+            if (game == null) return;
+
+            // APPETITE — only a warlike/ambitious faction opens a war of CHOICE. Neutral (0.5) or no personality →
+            // appetite 0.5, at/below the floor → this whole pass no-ops (a peaceable AI never starts one).
+            factionEntity.TryGetDataBlob<PersonalityDB>(out var personality);
+            double aggr = personality?.TraitOf(PersonalityTrait.Aggression) ?? PersonalityDB.Neutral;
+            double amb = personality?.TraitOf(PersonalityTrait.Ambition) ?? PersonalityDB.Neutral;
+            double appetite = 0.5 * aggr + 0.5 * amb;                 // 0..1, neutral 0.5
+            if (appetite <= WarAppetiteFloor) return;
+
+            double own = FactionRollup.MilitaryStrength(factionEntity);
+
+            Entity bestTarget = null;
+            double bestScore = 0;
+            foreach (var rel in dipDB.Relationships.Values)
+            {
+                if (rel.AtWar || rel.NonAggressionPact || rel.DefensivePact) continue;    // already committed one way
+                if (rel.OtherFactionId == factionEntity.Id || rel.OtherFactionId == Game.NeutralFactionId) continue;
+                if (rel.RelationScore > RelationshipState.HostileThreshold) continue;      // only prey on the HOSTILE (low relation)
+                if (!game.Factions.TryGetValue(rel.OtherFactionId, out var rival)) continue;
+                if (!rival.TryGetDataBlob<FactionInfoDB>(out _)) continue;
+
+                double theirs = FactionRollup.MilitaryStrength(rival);
+                if (own <= theirs * WarOutMuscleRatio) continue;                          // must CLEARLY out-muscle them
+
+                double weakness = own / System.Math.Max(theirs, 1.0);                     // >1; bigger = weaker prey
+                double hated = RelationshipState.HostileThreshold - rel.RelationScore + 1; // deeper hostility → higher (≥1)
+                double score = appetite * weakness * hated;
+                if (score > bestScore) { bestScore = score; bestTarget = rival; }
+            }
+
+            if (bestTarget != null)
+                Diplomacy.DeclareWar(factionEntity, bestTarget, CasusBelli.ConfrontRival, game.TimePulse.GameGlobalDateTime);
         }
     }
 }
