@@ -192,19 +192,27 @@ namespace Pulsar4X.Datablobs
         }
 
         public TreeHierarchyDB? TryGetChild<T>(Entity entity) where T : TreeHierarchyDB
+            => TryGetChild<T>(entity, new HashSet<int>(), 0);
+
+        /// <summary>Recursive child search, guarded against a MALFORMED tree. A cyclic/self-nested hierarchy (e.g. a
+        /// fleet reparented under its own descendant before the FleetOrder.ChangeParent cycle-guard) would otherwise
+        /// recurse forever, and a diamond would re-walk shared subtrees combinatorially. The seen-set visits each node
+        /// once (O(nodes)); the depth cap is a cheap backstop. Same class of guard as the combat fleet-tree walks.</summary>
+        private TreeHierarchyDB? TryGetChild<T>(Entity entity, HashSet<int> seen, int depth) where T : TreeHierarchyDB
         {
-            if(Children.Contains(entity))
+            if (depth >= MaxParentWalk) return null;
+            if (OwningEntity != null && OwningEntity.IsValid && !seen.Add(OwningEntity.Id)) return null;
+
+            if (Children.Contains(entity))
                 return this;
 
-            else
+            foreach (var child in Children)
             {
-                foreach(var child in Children)
+                if (child == null || !child.IsValid) continue;
+                if (child.TryGetDataBlob<T>(out var fleetDB))
                 {
-                    if(child.TryGetDataBlob<T>(out var fleetDB))
-                    {
-                        var childDB = fleetDB.TryGetChild<T>(entity);
-                        if(childDB != null) return childDB;
-                    }
+                    var childDB = fleetDB.TryGetChild<T>(entity, seen, depth + 1);
+                    if (childDB != null) return childDB;
                 }
             }
 

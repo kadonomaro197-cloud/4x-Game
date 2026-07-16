@@ -197,8 +197,9 @@ namespace Pulsar4X.Fleets
         }
 
         /// <summary>Count the armed ships (a real <see cref="ShipCombatValueDB"/> with Firepower &gt; 0) under a fleet,
-        /// recursing any sub-fleets — the same measure <c>MilitaryComposition.WarshipCount</c> uses.</summary>
-        private static int ArmedShipCount(Entity fleet)
+        /// recursing any sub-fleets — the same measure <c>MilitaryComposition.WarshipCount</c> uses. Internal so the
+        /// fleet-tree-safety gauge can prove it terminates on a malformed tree (it rides the guarded FleetCombat.Ships).</summary>
+        internal static int ArmedShipCount(Entity fleet)
         {
             int n = 0;
             foreach (var ship in FleetCombat.Ships(fleet))

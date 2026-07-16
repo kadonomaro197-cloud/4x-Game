@@ -20,18 +20,32 @@ namespace Pulsar4X.Combat
         public static List<Entity> Ships(Entity fleet)
         {
             var ships = new List<Entity>();
-            Collect(fleet, ships);
+            Collect(fleet, ships, new HashSet<int>(), 0);
             return ships;
         }
 
-        private static void Collect(Entity node, List<Entity> into)
+        /// <summary>Bound on the fleet-tree recursion — a cheap backstop beside the seen-set (see <see cref="Collect"/>).</summary>
+        private const int MaxFleetTreeDepth = 64;
+
+        // Visit each fleet node AT MOST ONCE. This walk feeds the WHOLE closing model (WarpSpeedFloor / DeltaVFloor /
+        // FirepowerAtRange / SensorReach / ShieldCapacity / ShieldRegen) AND FleetAssembly.ArmedShipCount, and it runs
+        // INSIDE CombatEngagement.Tick (the StarInfoDB hotloop). A malformed fleet tree — a sub-fleet that is its own
+        // ancestor (a CYCLE, producible by a player drag-drop before the FleetOrder.ChangeParent guard) or a sub-fleet
+        // reachable by two parents (a DIAMOND) — would otherwise re-walk the same subtree combinatorially and WEDGE the
+        // combat hotloop (the frozen-clock "StarInfoDB TRUE WEDGE" the SIM-STALL watchdog caught). The seen-set makes
+        // the walk O(nodes), immune to any cycle/diamond; the depth cap is a cheap secondary backstop. This is the same
+        // guard CombatEngagement.CollectShips already carries — it was simply missing on THIS walk (2026-07-16 fix).
+        private static void Collect(Entity node, List<Entity> into, HashSet<int> seen, int depth)
         {
-            if (node == null || !node.TryGetDataBlob<FleetDB>(out var fleet)) return;
+            if (node == null || !node.IsValid || depth >= MaxFleetTreeDepth) return;
+            if (!node.TryGetDataBlob<FleetDB>(out var fleet)) return;
+            if (!seen.Add(node.Id)) return;                                 // already walked this fleet node — cycle/diamond-proof
             foreach (var child in fleet.GetChildren())
             {
-                if (!child.IsValid) continue;
-                if (child.HasDataBlob<FleetDB>()) Collect(child, into);   // a sub-fleet component → recurse
-                else into.Add(child);                                     // a ship
+                if (child == null || !child.IsValid) continue;
+                if (child.Id == node.Id) continue;                          // a fleet that lists itself — skip the cycle
+                if (child.HasDataBlob<FleetDB>()) Collect(child, into, seen, depth + 1);   // a sub-fleet component → recurse
+                else into.Add(child);                                       // a ship (each fleet node is visited once → its ships added once)
             }
         }
 
