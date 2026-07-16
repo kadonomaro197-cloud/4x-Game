@@ -166,6 +166,7 @@
     "default-design-agri-complex",
     "default-design-hydroponics-arcology",
     "default-design-ship-hull-heavy",
+    "default-design-ship-hull-light",
     "default-design-passive-sensor-s50",
     "default-design-laser-weapon",
     "umf-mass-driver",
@@ -203,6 +204,8 @@
     "umf-ship-ironhold",
     "umf-ship-bulwark",
     "umf-ship-rampart",
+    "umf-ship-legionnaire",
+    "umf-ship-skirmisher",
     "default-ship-design-trooper"
   ],
   "species": [
