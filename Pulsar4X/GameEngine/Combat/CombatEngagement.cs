@@ -1553,13 +1553,19 @@ namespace Pulsar4X.Combat
         public static List<Entity> GetFleetShips(Entity fleet)
         {
             var result = new List<Entity>();
-            CollectShips(fleet, result, 0);
+            CollectShips(fleet, result, 0, new HashSet<int>());
             return result;
         }
 
-        private static void CollectShips(Entity fleet, List<Entity> into, int depth)
+        private static void CollectShips(Entity fleet, List<Entity> into, int depth, HashSet<int> seen)
         {
             if (fleet == null || !fleet.IsValid || !fleet.TryGetDataBlob<FleetDB>(out var fleetDB)) return;
+            // Visit each fleet node AT MOST ONCE. A malformed tree (a sub-fleet that is its own ancestor, or two
+            // parents sharing a sub-fleet) would otherwise re-walk the same subtree combinatorially — the depth cap
+            // bounds DEPTH but not the number of PATHS, so a few diamonds explode into millions of calls and WEDGE
+            // the combat hotloop (the frozen-clock live bug the SIM-STALL watchdog caught). Deduping fleet ids makes
+            // the walk O(nodes), immune to any cycle/diamond. (Depth cap kept as a cheap backstop.)
+            if (!seen.Add(fleet.Id)) return;
             if (depth >= MaxFleetTreeDepth)
             {
                 if (!_fleetCycleLogged) { _fleetCycleLogged = true;
@@ -1573,7 +1579,7 @@ namespace Pulsar4X.Combat
                 if (child.HasDataBlob<ShipInfoDB>())
                     into.Add(child);
                 else if (child.HasDataBlob<FleetDB>())
-                    CollectShips(child, into, depth + 1); // sub-fleet (fleet component)
+                    CollectShips(child, into, depth + 1, seen); // sub-fleet (fleet component)
             }
         }
 
@@ -1590,13 +1596,14 @@ namespace Pulsar4X.Combat
             // actually carries a Firepower/Toughness bonus (every existing combat fixture is the tripwire).
             double cmdrFire = FleetCommanderMult(fleet, BonusCategory.Firepower);
             double cmdrTough = FleetCommanderMult(fleet, BonusCategory.Toughness);
-            CollectCombatShips(fleet, result, cmdrFire, cmdrTough, 0);
+            CollectCombatShips(fleet, result, cmdrFire, cmdrTough, 0, new HashSet<int>());
             return result;
         }
 
-        private static void CollectCombatShips(Entity fleet, List<CombatShip> into, double cmdrFire, double cmdrTough, int depth)
+        private static void CollectCombatShips(Entity fleet, List<CombatShip> into, double cmdrFire, double cmdrTough, int depth, HashSet<int> seen)
         {
             if (fleet == null || !fleet.IsValid || !fleet.TryGetDataBlob<FleetDB>(out var fleetDB)) return;
+            if (!seen.Add(fleet.Id)) return;   // visit each fleet node once — cycle/diamond-proof (see CollectShips)
             if (depth >= MaxFleetTreeDepth)   // cyclic/self-nested fleet — bail before it hangs combat (see CollectShips)
             {
                 if (!_fleetCycleLogged) { _fleetCycleLogged = true;
@@ -1614,7 +1621,7 @@ namespace Pulsar4X.Combat
                 if (child.HasDataBlob<ShipInfoDB>())
                     into.Add(new CombatShip(child, fpMult, toughMult));
                 else if (child.HasDataBlob<FleetDB>())
-                    CollectCombatShips(child, into, cmdrFire, cmdrTough, depth + 1); // sub-component → own doctrine, same commander
+                    CollectCombatShips(child, into, cmdrFire, cmdrTough, depth + 1, seen); // sub-component → own doctrine, same commander
             }
         }
 

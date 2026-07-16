@@ -99,19 +99,20 @@ namespace Pulsar4X.Fleets
         public static List<Entity> AllShipsRecursive(Entity fleet)
         {
             var result = new List<Entity>();
-            CollectShipsRecursive(fleet, result, 0);
+            CollectShipsRecursive(fleet, result, 0, new HashSet<int>());
             return result;
         }
 
-        private static void CollectShipsRecursive(Entity fleet, List<Entity> into, int depth)
+        private static void CollectShipsRecursive(Entity fleet, List<Entity> into, int depth, HashSet<int> seen)
         {
             if (fleet == null || !fleet.IsValid || depth >= MaxFleetTreeDepth) return;
             if (!fleet.TryGetDataBlob<FleetDB>(out var fleetDB)) return;
+            if (!seen.Add(fleet.Id)) return;   // visit each fleet node once — a cycle/diamond can't blow this up
             foreach (var child in fleetDB.Children)
             {
                 if (child == null || !child.IsValid || child.Id == fleet.Id) continue;
                 if (child.HasDataBlob<ShipInfoDB>()) into.Add(child);
-                else if (child.HasDataBlob<FleetDB>()) CollectShipsRecursive(child, into, depth + 1);
+                else if (child.HasDataBlob<FleetDB>()) CollectShipsRecursive(child, into, depth + 1, seen);
             }
         }
     }
