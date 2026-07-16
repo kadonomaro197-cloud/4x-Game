@@ -78,5 +78,20 @@ namespace Pulsar4X.Tests
             Assert.That(FleetTools.AllShipsRecursive(a).Distinct().Count(),
                 Is.EqualTo(FleetTools.AllShipsRecursive(a).Count), "recursive walk also terminates + dedups");
         }
+
+        [Test, Timeout(30000)]
+        [Description("TreeHierarchyDB.Root walks UP the parent chain; a CYCLIC chain must terminate (best-effort) instead of StackOverflow-crashing — the parent-direction twin of the fleet-walk fix.")]
+        public void CyclicParentChain_RootTerminates_NoCrash()
+        {
+            var s = TestScenario.CreateWithColony();
+            var a = Fleet(s, "A");
+            var b = Fleet(s, "B");
+            a.GetDataBlob<FleetDB>().SetParent(b);
+            b.GetDataBlob<FleetDB>().SetParent(a);   // cycle: A.parent=B, B.parent=A
+
+            Entity root = null;
+            Assert.DoesNotThrow(() => root = a.GetDataBlob<FleetDB>().Root, "Root must not recurse forever on a cyclic parent chain");
+            Assert.That(root, Is.Not.Null, "Root returns a best-effort node, not a crash");
+        }
     }
 }
