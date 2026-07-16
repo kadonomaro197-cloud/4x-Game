@@ -95,7 +95,7 @@ namespace Pulsar4X.Tests
             var s = TestScenario.CreateWithColony();
 
             int before = NPCDecisionProcessor.TickCount;
-            s.AdvanceTime(TimeSpan.FromDays(60)); // NPCDecisionProcessor: FirstRunOffset 5d, RunFrequency 30d → fires ~twice
+            s.AdvanceTime(TimeSpan.FromDays(60)); // NPCDecisionProcessor: FirstRunOffset 1d, RunFrequency 1d → fires daily (~60×)
 
             int after = NPCDecisionProcessor.TickCount;
             Assert.That(after, Is.GreaterThan(before),

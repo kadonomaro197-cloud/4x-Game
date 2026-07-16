@@ -12,7 +12,7 @@ namespace Pulsar4X.Tests
     /// ship), and the one rule ships lack — the carry gate — is enforced: a bare human frame can't shoulder the heavy
     /// autocannon, but bolt on power armour (+strength) and it can (the developer's core "Space Marine" story, now a
     /// live, CI-tested rule). Uses the real base-mod parts through the faction's designs. Engine-only → runs in CI.
-    /// Design: docs/GROUND-UNIT-DESIGNER-DESIGN.md → §2 (emergence) + §4 (the gate).
+    /// Design: docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md → §2 (emergence) + §4 (the gate).
     /// </summary>
     [TestFixture]
     public class GroundUnitAssemblyTests

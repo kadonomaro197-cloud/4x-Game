@@ -32,7 +32,13 @@ namespace Pulsar4X.Sensors
             if(entity.Manager == null) throw new NullReferenceException("entity.Manager cannot be null");
 
             EntityManager manager = entity.Manager;
-            Entity faction = entity.Manager.Game.Factions[entity.FactionOwnerID];
+            // Defensive (twin of EntityManager.GetSensorContacts): Game.Factions is a plain Dictionary whose indexer
+            // throws on a missing key. This scan runs on the parallel sim thread (an unobserved throw silently FREEZES
+            // the clock — landmine L4), thousands of times a session. A scanning entity whose owning faction isn't
+            // registered (orphaned, or a neutral -99 that isn't in the faction table) can't populate a faction contact
+            // store — skip it rather than wedge the whole sim.
+            if (!entity.Manager.Game.Factions.TryGetValue(entity.FactionOwnerID, out var faction))
+                return;
 
             var position = entity.GetDataBlob<PositionDB>();//recever is a componentDB. not a shipDB
             if (position == null) //then it's probilby a colony

@@ -76,8 +76,14 @@ namespace Pulsar4X.Technology
             if(!researcherDB.TechQueue.TryPeek(out var techId))
                 return;
 
-            // Get the tech that is being researched
-            var tech = factionDataStore.Techs[techId];
+            // Get the tech that is being researched. Defensive: the queue can hold an id this faction's tech store
+            // lacks (data drift / a cross-faction id) — a hard index would throw on the sim thread and freeze the
+            // clock. Drop the bad entry and return instead.
+            if(!factionDataStore.Techs.TryGetValue(techId, out var tech))
+            {
+                researcherDB.TechQueue.TryDequeue(out _);
+                return;
+            }
 
             // Make sure that the tech is researchable
             if(!factionDataStore.IsResearchable(tech.UniqueID))
@@ -216,9 +222,11 @@ namespace Pulsar4X.Technology
             Tech? tech = null;
             if(researcherDB.TechQueue.TryPeek(out var techId))
             {
-                if(_game.Factions[(int)e.FactionId].TryGetDataBlob<FactionInfoDB>(out var factionInfoDB))
+                if(_game.Factions.TryGetValue((int)e.FactionId, out var eFaction)
+                    && eFaction.TryGetDataBlob<FactionInfoDB>(out var factionInfoDB)
+                    && factionInfoDB.Data.Techs.TryGetValue(techId, out var peekedTech))
                 {
-                    tech = factionInfoDB.Data.Techs[techId];
+                    tech = peekedTech;
                 }
             }
 
@@ -322,11 +330,17 @@ namespace Pulsar4X.Technology
                     if(!currentTech.Category.Equals(category))
                         continue;
 
+                    // Defensive: a BonusCategory string with no matching TechCategories entry (data drift) would throw
+                    // on the hard index below (sim thread -> clock freeze). Skip the modifier if the category is unknown.
+                    var techCategories = researcherDB.OwningEntity.Manager.Game.StartingGameData.TechCategories;
+                    if(!techCategories.TryGetValue(category, out var categoryBlueprint))
+                        continue;
+
                     // Add in the modifier as a percentage increase
                     researcherDB.PointsPerDay.AddModifier(
                         new Modifier<int>(
                             category,
-                            $"{bonus * 100}% {researcherDB.OwningEntity.Manager.Game.StartingGameData.TechCategories[category].Name} Category Bonus",
+                            $"{bonus * 100}% {categoryBlueprint.Name} Category Bonus",
                             (int)(bonus * 100),
                             (current, multiplier) => current + (current * multiplier / 100),
                             2.0f

@@ -1,5 +1,6 @@
 {
   "name": "United Martian Federation",
+  "abbreviation": "UMF",
   "isNPC": true,
   "doctrine": {
     "economic": 0.35,
@@ -30,6 +31,10 @@
     "plastic-armor",
     "aluminium-armor",
     "titanium-armor",
+    "nickel-steel-armor",
+    "nickel-steel",
+    "ablative-composite-armor",
+    "ablative-composite",
     "general-storage",
     "warehouse-facility",
     "spaceport",
@@ -144,7 +149,8 @@
     "point-defense-mount",
     "missile-launcher",
     "inertialess-drive",
-    "reactionless-drive"
+    "reactionless-drive",
+    "food-production"
   ],
   "componentDesigns": [
     "default-design-mine",
@@ -156,9 +162,16 @@
     "default-design-infrastructure",
     "default-design-research-lab",
     "default-design-warehouse",
+    "default-design-shipyard",
+    "default-design-agri-complex",
+    "default-design-hydroponics-arcology",
     "default-design-ship-hull-heavy",
     "default-design-passive-sensor-s50",
     "default-design-laser-weapon",
+    "umf-mass-driver",
+    "umf-siege-driver",
+    "umf-chain-flak",
+    "default-design-pd-director",
     "default-design-beam-fire-control",
     "default-design-cargo-hold-1t",
     "default-design-fuel-tank-1000",
@@ -166,11 +179,31 @@
     "default-design_solarpanel",
     "default-design-battery-2t",
     "default-design-reactor-2t",
-    "default-design-NTR1.8"
+    "default-design-NTR1.8",
+    "default-design-infantry",
+    "default-design-armor",
+    "default-design-artillery",
+    "default-design-troop-bay",
+    "default-design-research-academy",
+    "default-design-intelligence-directorate",
+    "default-design-command-berth",
+    "default-design-bunker",
+    "default-design-launch-complex",
+    "default-design-valles-mine",
+    "default-design-meridiani-refinery",
+    "default-design-olympus-shipyard",
+    "default-design-olympus-university",
+    "default-design-ares-directorate",
+    "default-design-mars-high-command",
+    "default-design-federation-ministry",
+    "default-design-space-habitat"
   ],
   "ordnanceDesigns": [],
   "shipDesigns": [
-    "default-ship-design-gunship"
+    "umf-ship-ironhold",
+    "umf-ship-bulwark",
+    "umf-ship-rampart",
+    "default-ship-design-trooper"
   ],
   "species": [
     "species-human"
@@ -185,23 +218,55 @@
       },
       "installations": [
         {
-          "id": "default-design-mine",
+          "id": "default-design-olympus-shipyard",
           "amount": 2
         },
         {
-          "id": "default-design-refinery",
+          "id": "default-design-shipyard",
           "amount": 2
         },
         {
           "id": "default-design-factory",
+          "amount": 6
+        },
+        {
+          "id": "default-design-valles-mine",
           "amount": 2
         },
         {
-          "id": "default-design-local-construction",
+          "id": "default-design-mine",
+          "amount": 4
+        },
+        {
+          "id": "default-design-meridiani-refinery",
+          "amount": 2
+        },
+        {
+          "id": "default-design-refinery",
+          "amount": 4
+        },
+        {
+          "id": "default-design-research-lab",
+          "amount": 5
+        },
+        {
+          "id": "default-design-olympus-university",
+          "amount": 3
+        },
+        {
+          "id": "default-design-research-academy",
+          "amount": 3
+        },
+        {
+          "id": "default-design-ares-directorate",
           "amount": 1
         },
         {
-          "id": "default-design-passive-sensor",
+          "id": "default-design-intelligence-directorate",
+          "amount": 1
+        },
+        {
+          "id": "default-design-federation-ministry",
           "amount": 1
         },
         {
@@ -209,34 +274,86 @@
           "amount": 1
         },
         {
-          "id": "default-design-infrastructure",
-          "amount": 15
-        },
-        {
-          "id": "default-design-research-lab",
+          "id": "default-design-mars-high-command",
           "amount": 1
         },
         {
-          "id": "default-design-warehouse",
+          "id": "default-design-bunker",
+          "amount": 5
+        },
+        {
+          "id": "default-design-launch-complex",
+          "amount": 1
+        },
+        {
+          "id": "default-design-local-construction",
+          "amount": 3
+        },
+        {
+          "id": "default-design-passive-sensor",
           "amount": 2
+        },
+        {
+          "id": "default-design-warehouse",
+          "amount": 10
+        },
+        {
+          "id": "default-design-hydroponics-arcology",
+          "amount": 5
+        },
+        {
+          "id": "default-design_solarpanel",
+          "amount": 10
+        },
+        {
+          "id": "default-design-reactor-2t",
+          "amount": 5
+        },
+        {
+          "id": "default-design-space-habitat",
+          "amount": 500
         }
       ],
       "cargo": [
         {
           "id": "iron",
-          "amount": 20000
+          "amount": 500000
         },
         {
           "id": "stainless-steel",
-          "amount": 8000
+          "amount": 500000
         },
         {
           "id": "aluminium",
-          "amount": 6000
+          "amount": 400000
+        },
+        {
+          "id": "copper",
+          "amount": 300000
+        },
+        {
+          "id": "plastic",
+          "amount": 300000
+        },
+        {
+          "id": "electronics",
+          "amount": 200000
+        },
+        {
+          "id": "titanium",
+          "amount": 150000
+        },
+        {
+          "id": "ree-magnetics",
+          "amount": 100000
+        },
+        {
+          "id": "space-crete",
+          "amount": 100000
         },
         {
           "id": "hydrocarbons",
-          "amount": 12000
+          "amount": 200000
         }
       ]
     },
@@ -273,7 +390,7 @@
           "amount": 1
         },
         {
-          "id": "default-design-infrastructure",
+          "id": "default-design-space-habitat",
           "amount": 6
         },
         {
@@ -282,6 +399,10 @@
         },
         {
           "id": "default-design-warehouse",
+          "amount": 1
+        },
+        {
+          "id": "default-design-hydroponics-arcology",
           "amount": 1
         }
       ],
@@ -329,7 +450,7 @@
           "amount": 1
         },
         {
-          "id": "default-design-infrastructure",
+          "id": "default-design-space-habitat",
           "amount": 5
         },
         {
@@ -338,6 +459,10 @@
         },
         {
           "id": "default-design-warehouse",
+          "amount": 1
+        },
+        {
+          "id": "default-design-hydroponics-arcology",
           "amount": 1
         }
       ],
@@ -385,7 +510,7 @@
           "amount": 1
         },
         {
-          "id": "default-design-infrastructure",
+          "id": "default-design-space-habitat",
           "amount": 3
         },
         {
@@ -394,6 +519,10 @@
         },
         {
           "id": "default-design-warehouse",
+          "amount": 1
+        },
+        {
+          "id": "default-design-hydroponics-arcology",
           "amount": 1
         }
       ],
@@ -406,10 +535,10 @@
     }
   ],
   "strain": {
-    "taxRate": 0.55,
-    "powerDemandPerCapita": 0.0009,
-    "foodDemandPerCapita": 0.0011,
-    "committedBulk": 40000
+    "taxRate": 0.3,
+    "powerDemandPerCapita": 0,
+    "foodDemandPerCapita": 0.00001,
+    "committedBulk": 20000
   },
   "fleets": [
     {
@@ -420,12 +549,16 @@
       },
       "ships": [
         {
-          "designId": "default-ship-design-gunship",
+          "designId": "umf-ship-ironhold",
           "name": "MFS Ares"
         },
         {
-          "designId": "default-ship-design-gunship",
+          "designId": "umf-ship-ironhold",
           "name": "MFS Olympus"
+        },
+        {
+          "designId": "umf-ship-rampart",
+          "name": "MFS Tharsis"
         }
       ]
     },
@@ -437,7 +570,7 @@
       },
       "ships": [
         {
-          "designId": "default-ship-design-gunship",
+          "designId": "umf-ship-bulwark",
           "name": "MFS Deimos"
         }
       ]
@@ -450,7 +583,7 @@
       },
       "ships": [
         {
-          "designId": "default-ship-design-gunship",
+          "designId": "umf-ship-ironhold",
           "name": "MFS Phobos"
         }
       ]

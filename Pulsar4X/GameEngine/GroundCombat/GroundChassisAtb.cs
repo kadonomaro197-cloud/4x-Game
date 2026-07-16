@@ -3,6 +3,7 @@ using Pulsar4X.Interfaces;
 using Pulsar4X.Components;
 using Pulsar4X.Engine;
 using Pulsar4X.Datablobs;
+using Pulsar4X.DataStructures;
 
 namespace Pulsar4X.GroundCombat
 {
@@ -33,10 +34,18 @@ namespace Pulsar4X.GroundCombat
     /// any part (CONVENTIONS §6). Inert on install (the assembler reads these values when it computes the unit — G-D3);
     /// install/uninstall are no-ops. Design: docs/GROUND-COMBAT-MAP-DESIGN.md → unit designer.
     /// </summary>
-    public class GroundChassisAtb : BaseDataBlob, IComponentDesignAttribute
+    public class GroundChassisAtb : BaseDataBlob, IComponentDesignAttribute, IChassisAtb
     {
         /// <summary>Carry-capacity currency (mounted-mass budget) + basis for the heaviest single item the frame can bear.</summary>
         [JsonProperty] public double BaseStrength { get; internal set; }
+
+        // --- IChassisAtb (additive, 2026-07-14): the uniform "chassis provides the budget" view. ---
+        // COMPUTED getters over BaseStrength — NO backing field, NO [JsonProperty]. [JsonIgnore] is CRITICAL:
+        // these public getters would otherwise be serialized as new JSON fields and change the save shape.
+        // They map the existing carry-strength onto the shared shape; nothing is stored or gated through them.
+        [JsonIgnore] public double StructuralBudget => BaseStrength;
+        [JsonIgnore] public ChassisBudgetKind BudgetKind => ChassisBudgetKind.Carry;
+        [JsonIgnore] public ComponentMountType PartMount => ComponentMountType.GroundUnit;
         /// <summary>The frame's own toughness, before armour parts add more.</summary>
         [JsonProperty] public double BaseHP { get; internal set; }
         /// <summary>The frame's bulk — feeds transport carry-size (bigger frame → more bay room).</summary>

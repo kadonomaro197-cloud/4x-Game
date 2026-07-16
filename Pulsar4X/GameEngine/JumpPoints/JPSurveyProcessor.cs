@@ -102,7 +102,7 @@ public class JPSurveyProcessor : IHotloopProcessor
         var chance = (double)jpRemaining.Count / (double)surveyLocationsRemaining.Count;
         var roll = discoveredEntity.Manager.RNGNextDouble();
 
-        if(chance >= roll)
+        if(jpRemaining.Count > 0 && chance >= roll)   // Count guard: an exact-0 roll with 0 remaining would .First() an empty list -> throw on the sim thread
         {
             var jp = jpRemaining.First(); // TODO: pick randomly from remaining
             jp.IsDiscovered.Add(discoveringEntity.FactionOwnerID);

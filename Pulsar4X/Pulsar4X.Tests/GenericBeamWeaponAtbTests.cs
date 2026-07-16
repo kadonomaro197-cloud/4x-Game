@@ -9,7 +9,7 @@ namespace Pulsar4X.Tests
     /// power-draw check) already uses a double; only <see cref="GenericBeamWeaponAtb.Energy"/> was an int, which
     /// silently overflowed (wrapped negative) past ~2.1 GJ — the top of the beam scale. This gauges that a
     /// superlaser-scale design keeps its full energy. Pure unit test (no JSON caps in the way) → runs in CI.
-    /// Design: docs/GROUND-UNIT-DESIGNER-DESIGN.md §6a-ii (weapon-designer scale span, task #2).
+    /// Design: docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md §6a-ii (weapon-designer scale span, task #2).
     /// </summary>
     [TestFixture]
     public class GenericBeamWeaponAtbTests

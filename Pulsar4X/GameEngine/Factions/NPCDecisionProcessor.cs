@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Pulsar4X.DataStructures;
 using Pulsar4X.Engine;
 using Pulsar4X.Industry;
@@ -21,8 +22,13 @@ namespace Pulsar4X.Factions
     /// </summary>
     public class NPCDecisionProcessor : IHotloopProcessor
     {
-        public TimeSpan RunFrequency => TimeSpan.FromDays(30);
-        public TimeSpan FirstRunOffset => TimeSpan.FromDays(5);
+        // The brain ticks DAILY so its decision-making is responsive and observable (the flight recorder tapes a
+        // record every cycle → you watch the AI think day-by-day, the DevTest's whole point). The SLOW political
+        // passes (diplomatic drift, intel-ledger decay, treaty policy, espionage mirror) stay on a ~monthly
+        // sub-cadence inside Tick (gated on Day == 1) so their per-cycle magnitudes — e.g. the ±5 relation drift on a
+        // −100..+100 track — remain calibrated for a monthly step rather than saturating in three weeks. See Tick.
+        public TimeSpan RunFrequency => TimeSpan.FromDays(1);
+        public TimeSpan FirstRunOffset => TimeSpan.FromDays(1);
         public Type GetParameterType => typeof(FactionInfoDB);
 
         /// <summary>
@@ -98,6 +104,12 @@ namespace Pulsar4X.Factions
             _game = game;
         }
 
+        /// <summary>Visibility for the Tick guard below: the most recent Tick exception (faction + type + message) and a
+        /// running count. Not serialized. The client surfaces these as an <c>[AI] ⚠</c> line in game_logs so a swallowed
+        /// throw is observable, not invisible (the Visibility Gate — a caught exception with no readout is a hidden bug).</summary>
+        public static string LastTickError = "";
+        public static int TickErrorCount;
+
         public void ProcessEntity(Entity entity, int deltaSeconds)
         {
             if (!entity.TryGetDataBlob<FactionInfoDB>(out var factionInfoDB))
@@ -105,7 +117,21 @@ namespace Pulsar4X.Factions
             if (!factionInfoDB.IsNPC)
                 return;
 
-            Tick(entity, factionInfoDB);
+            // A faction-level hotloop MUST NEVER throw: it runs on the parallel sim thread where an unobserved
+            // exception silently FREEZES the game clock (EntityManager mutations are async void — the throw vanishes;
+            // landmine L4). The Tick now emits REAL orders every day (the war footing routes through EmitOrders →
+            // Conquer move/build orders), so a bad order path can't be allowed to wedge the whole sim during a long
+            // unattended playtest. Swallow to keep the clock running, but stamp the error (static fields above) so the
+            // client can surface it — a survivable, logged hiccup instead of a dead universe.
+            try
+            {
+                Tick(entity, factionInfoDB);
+            }
+            catch (System.Exception ex)
+            {
+                LastTickError = $"{factionInfoDB.Abbreviation}: {ex.GetType().Name}: {ex.Message}";
+                TickErrorCount++;
+            }
         }
 
         public int ProcessManager(EntityManager manager, int deltaSeconds)
@@ -126,30 +152,47 @@ namespace Pulsar4X.Factions
         /// </summary>
         private static void Tick(Entity factionEntity, FactionInfoDB factionInfoDB)
         {
-            // Reactive diplomacy (docs/DIPLOMACY-DESIGN.md "Are we good?"): a faction's feelings DRIFT each cycle
-            // based on what it can read of its neighbours, turning the previously-dead ReactiveDiplomacy table into
-            // a live loop. Runs before the doctrine step so it happens every cycle regardless of doctrine weights.
-            RunDiplomaticDrift(factionEntity);
+            // The brain ticks DAILY (RunFrequency = 1 day) so the objective decision + orders + flight recorder are
+            // responsive and observable. The SLOW political layer, however, is TUNED for a monthly step (the ±5
+            // relation drift, the ledger's year-long decay, one-treaty-per-cycle détente). Running those daily would
+            // saturate a −100..+100 relation track in three weeks, so they run only on the first of each month —
+            // ~monthly cadence preserved regardless of tick rate (mirrors ResearchProcessor's Day == 1 pattern).
+            bool isMonthlyCycle = true;
+            var nowDate = factionEntity.Manager?.Game?.TimePulse.GameGlobalDateTime;
+            if (nowDate.HasValue)
+                isMonthlyCycle = nowDate.Value.Day == 1;
+
+            // Reactive diplomacy (docs/DIPLOMACY-DESIGN.md "Are we good?"): a faction's feelings DRIFT based on what it
+            // can read of its neighbours, turning the previously-dead ReactiveDiplomacy table into a live loop. MONTHLY
+            // — the ±5-per-cycle delta is calibrated for a 30-day step (see cadence note above).
+            if (isMonthlyCycle)
+                RunDiplomaticDrift(factionEntity);
 
             // Phase-3.1: keep the persistent Information Ledger LIVE — Confirm+sample the rivals we currently detect,
             // decay the rest. A real state write, so it's behind its own default-off gate (byte-identical until opted
-            // in). Runs alongside drift (every cycle, independent of doctrine) so the trend record is continuous.
-            if (EnableIntelLedger)
+            // in). MONTHLY (the ledger's Stale-after decay is a year-scale clock, not a daily one).
+            if (EnableIntelLedger && isMonthlyCycle)
                 UpdateInformationLedger(factionEntity);
 
             // The Organism decision (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II Phase 2): read the needs-ladder, pick
             // an objective from tier × doctrine × personality, and commit it through the hysteresis engine. 2.4b
-            // settles + STORES the objective (the DECISION).
+            // settles + STORES the objective (the DECISION). DAILY — the hysteresis engine already stops thrashing.
             UpdateStrategicObjective(factionEntity, factionInfoDB);
 
             // Reactive POLITICS (Phase 3.3): seek a pact with a qualifying neighbour. A real behaviour change (a
             // signed treaty), so it's behind its own default-off gate — byte-identical until a client/test opts in.
-            if (EnableDiplomaticProposals)
+            // MONTHLY — one détente move per month, not per day (its guards prevent re-warm churn but the CADENCE is
+            // meant to be political-slow).
+            if (EnableDiplomaticProposals && isMonthlyCycle)
+            {
                 RunTreatyPolicy(factionEntity);
+                RunWarPolicy(factionEntity);   // B6-a: the opportunistic war-of-CHOICE trigger (after the treaty passes)
+            }
 
             // The espionage MIRROR (E5): NPCs spy on their rivals — including the player — so counter-intel is a
-            // standing decision, not optional. Gated (default off) → byte-identical until opted in.
-            if (EnableEspionageMirror)
+            // standing decision, not optional. Gated (default off) → byte-identical until opted in. MONTHLY — an op
+            // takes 90 days, so a monthly re-task cadence is plenty.
+            if (EnableEspionageMirror && isMonthlyCycle)
                 RunEspionageMirror(factionEntity, factionInfoDB);
 
             // Phase-4.2b: the galaxy crisis — if a faction has ASCENDED, the NPCs unite against it (declare war).
@@ -165,6 +208,26 @@ namespace Pulsar4X.Factions
             // byte-identical until a client/test opts in.
             if (EnableOrderEmission)
                 EmitOrders(factionEntity, factionInfoDB);
+
+            // Phase B-1: set each owned fleet's combat DOCTRINE + engagement POSTURE by PERSONALITY (scored through the
+            // shared DecisionScorer) — the AI now USES the fleet-doctrine levers it never touched (an aggressive faction
+            // runs all-out-attack + weapons-free, a cautious one a defensive line + return-fire). Gated by
+            // EnableOrderEmission (a military command) + MONTHLY (the doctrine switch has its own cooldown — no need to
+            // re-decide daily). Byte-identical while the gate is off.
+            if (EnableOrderEmission && isMonthlyCycle)
+                RunFleetDoctrinePolicy(factionEntity);
+
+            // Phase D: set each owned fleet's EMCON posture (run-LOUD vs go-DARK) by PERSONALITY, scored through the
+            // same DecisionScorer — the AI now deploys the EMCON lever as a tool. A guileful/cautious faction hides
+            // (Silent) and strikes from the dark; a bold/aggressive one runs Full and doesn't care who sees it coming.
+            // Stacks with the detection/fog + first-strike systems. Gated by EnableOrderEmission → byte-identical off.
+            if (EnableOrderEmission && isMonthlyCycle)
+                RunEmconPolicy(factionEntity);
+
+            // The AI FLIGHT RECORDER (B4, the observability SPINE): tape this cycle's decision — what it SENSED, what it
+            // DECIDED and why, what it ACTED on — AFTER the decision + (gated) action, so the record is complete. Pure
+            // observability, ALWAYS-ON (you watch the brain decide before you flip the order gates), bounded ring buffer.
+            AIDecisionRecorder.Record(factionEntity, factionInfoDB);
         }
 
         /// <summary>
@@ -245,8 +308,21 @@ namespace Pulsar4X.Factions
 
             NeedTier tier = NeedsLadder.AssessTier(factionEntity);
             factionEntity.TryGetDataBlob<PersonalityDB>(out var personality);   // null → neutral in the selector
+
+            // War footing: a faction AT WAR that is militarily AHEAD of its strongest enemy doesn't wait for prosperity
+            // to attack — at the Stabilize tier a warlike belligerent presses the offensive (Conquer) rather than only
+            // consolidating. Without this, Conquer is reachable ONLY from the Ambition tier (thriving + rich + dominant),
+            // so a battered-but-strong aggressor like the DevTest UMF would sit on defense forever and its declared war
+            // never becomes an invasion. Read off the KNOWN war latch + true strengths (NeedsLadder.WarStanding), so a
+            // faction not at war (or losing, or peaceful) is byte-identical.
+            var (atWar, enemyStrength) = NeedsLadder.WarStanding(factionEntity);
+            bool atWarAndWinning = atWar && FactionRollup.MilitaryStrength(factionEntity) >= enemyStrength;
+            // A hostile-world faction (Mars/Venus) is pinned at Survive by the conditions morale penalty, so the war
+            // footing must reach Survive too — but NOT while the homeland is in open rebellion (recover first then).
+            bool homelandInRebellion = NeedsLadder.InRebellion(factionEntity);
+
             // Phase-5.2 decision-log: take the choice AND the reason tracing it to the driving input.
-            var (chosen, reason) = ObjectiveSelector.SelectWithReason(tier, factionInfoDB.Doctrine, personality);
+            var (chosen, reason) = ObjectiveSelector.SelectWithReason(tier, factionInfoDB.Doctrine, personality, atWarAndWinning, homelandInRebellion);
 
             // Target selection (which rival to Conquer) is the 2.4c refinement; keep -1 (none) for now.
             // Phase-2.5: the commit DWELL scales with Ambition — a high-Ambition faction renews an expansion push
@@ -505,6 +581,248 @@ namespace Pulsar4X.Factions
                 if (Treaties.Propose(factionEntity, target, TreatyType.NonAggression, game.TimePulse.GameGlobalDateTime))
                     return;   // one treaty move per cycle
             }
+        }
+
+        // ── B6-a — the OPPORTUNISTIC declare-war trigger (FLAGGED tuning constants) ──────────────────────────────────
+        /// <summary>Appetite floor: a faction whose (Aggression+Ambition) blend is at or below this never opens a war of
+        /// CHOICE. 0.55 sits just above the 0.5 neutral, so a neutral/absent personality is a no-op. FLAGGED (Phase-A).</summary>
+        private const double WarAppetiteFloor = 0.55;
+        /// <summary>How decisively we must out-muscle a rival before it's worth attacking (own strength ≥ theirs × this).
+        /// 1.25 = a clear ~25%+ edge, not a coin-flip. FLAGGED (Phase-A tuning).</summary>
+        private const double WarOutMuscleRatio = 1.25;
+
+        /// <summary>
+        /// B6-a — the OPPORTUNISTIC declare-war trigger (the developer's Q2: "Aggression/Ambition × detected enemy
+        /// weakness × low relation"). The AllyDefense war-join (<see cref="RunTreatyPolicy"/> Pass 0) is a war of
+        /// OBLIGATION; this is a war of CHOICE — a warlike, ambitious faction that OUT-MUSCLES a rival it already
+        /// dislikes seizes the moment and declares. All three factors are GATES (appetite from personality, out-muscle
+        /// from strength, hostility from the relation score) AND a rank: among the rivals that pass every gate, it picks
+        /// the highest opportunity SCORE (appetite × weakness × how-much-they're-hated). One war per cycle.
+        ///
+        /// Gated at the call site by <see cref="EnableDiplomaticProposals"/> (default off → CI byte-identical; the
+        /// client/DevTest turn it on = Q8). Defensive/no-throw (monthly hotloop). Internal for the CI gauge.
+        ///
+        /// v1 STRENGTH uses the true <see cref="FactionRollup.MilitaryStrength"/> for BOTH sides (consistent
+        /// combat-value units), gated on <see cref="DiplomacyDB.HasMet"/> as the "we've made contact" proxy. The
+        /// fog-limited <see cref="ThreatAssessment.DetectedStrengthOf"/> is signal-kW — a DIFFERENT unit that can't be
+        /// ratio'd against combat-value until the Phase-A calibration pass; swapping to it (so a hidden buildup is a
+        /// real surprise) is the flagged detection refinement.
+        /// </summary>
+        internal static void RunWarPolicy(Entity factionEntity)
+        {
+            if (factionEntity == null || !factionEntity.TryGetDataBlob<FactionInfoDB>(out _)) return;
+            if (!factionEntity.TryGetDataBlob<DiplomacyDB>(out var dipDB)) return;
+            var game = factionEntity.Manager?.Game;
+            if (game == null) return;
+
+            // APPETITE — only a warlike/ambitious faction opens a war of CHOICE. Neutral (0.5) or no personality →
+            // appetite 0.5, at/below the floor → this whole pass no-ops (a peaceable AI never starts one).
+            factionEntity.TryGetDataBlob<PersonalityDB>(out var personality);
+            double aggr = personality?.TraitOf(PersonalityTrait.Aggression) ?? PersonalityDB.Neutral;
+            double amb = personality?.TraitOf(PersonalityTrait.Ambition) ?? PersonalityDB.Neutral;
+            double appetite = 0.5 * aggr + 0.5 * amb;                 // 0..1, neutral 0.5
+            if (appetite <= WarAppetiteFloor) return;
+
+            double own = FactionRollup.MilitaryStrength(factionEntity);
+
+            Entity bestTarget = null;
+            double bestScore = 0;
+            foreach (var rel in dipDB.Relationships.Values)
+            {
+                if (rel.AtWar || rel.NonAggressionPact || rel.DefensivePact) continue;    // already committed one way
+                if (rel.OtherFactionId == factionEntity.Id || rel.OtherFactionId == Game.NeutralFactionId) continue;
+                if (rel.RelationScore > RelationshipState.HostileThreshold) continue;      // only prey on the HOSTILE (low relation)
+                if (!game.Factions.TryGetValue(rel.OtherFactionId, out var rival)) continue;
+                if (!rival.TryGetDataBlob<FactionInfoDB>(out _)) continue;
+
+                double theirs = FactionRollup.MilitaryStrength(rival);
+                if (own <= theirs * WarOutMuscleRatio) continue;                          // must CLEARLY out-muscle them
+
+                double weakness = own / System.Math.Max(theirs, 1.0);                     // >1; bigger = weaker prey
+                double hated = RelationshipState.HostileThreshold - rel.RelationScore + 1; // deeper hostility → higher (≥1)
+                double score = appetite * weakness * hated;
+                if (score > bestScore) { bestScore = score; bestTarget = rival; }
+            }
+
+            if (bestTarget != null)
+                Diplomacy.DeclareWar(factionEntity, bestTarget, CasusBelli.ConfrontRival, game.TimePulse.GameGlobalDateTime);
+        }
+
+        // ── Phase B-1 — the AI SETS fleet doctrine + posture by personality (2nd live DecisionScorer caller) ─────────
+        /// <summary>A moddable combat doctrine presented to the shared <see cref="DecisionScorer"/>: an Offensive family
+        /// scores as MILITARY + RISKY (a bold, warlike faction wants it), a Defensive family as ANTI-RISK (a cautious
+        /// faction wants it), Utilitarian as a middling default. So the SAME scorer that picks a warship also picks a
+        /// fleet's fighting stance from the personality dials.</summary>
+        private sealed class DoctrineOption : IScoredOption
+        {
+            public Pulsar4X.Blueprints.CombatDoctrineBlueprint Blueprint { get; }
+            private readonly Dictionary<DecisionFeature, double> _f;
+            public DoctrineOption(Pulsar4X.Blueprints.CombatDoctrineBlueprint bp)
+            {
+                Blueprint = bp;
+                _f = new Dictionary<DecisionFeature, double>();
+                if (bp.Family == "Offensive") { _f[DecisionFeature.MilitarySolve] = 1.0; _f[DecisionFeature.RiskLevel] = 1.0; }
+                else if (bp.Family == "Defensive") { _f[DecisionFeature.MilitarySolve] = 0.3; _f[DecisionFeature.RiskLevel] = -1.0; }
+                else { _f[DecisionFeature.MilitarySolve] = 0.5; }   // Utilitarian / balanced middle
+            }
+            public IReadOnlyDictionary<DecisionFeature, double> Features => _f;
+        }
+
+        /// <summary>
+        /// Phase B-1 — the AI puts its hands on the fleet-doctrine levers it never touched. It scores the moddable
+        /// combat-doctrine catalog through the shared <see cref="DecisionScorer"/> (the 2nd live caller after the
+        /// warship pick) and applies the winner — plus a matching engagement posture — to every fleet it owns: a bold,
+        /// warlike faction runs an Offensive doctrine + Weapons-Free, a cautious one a Defensive line + Return-Fire.
+        /// Uses the existing direct levers (<see cref="Pulsar4X.Combat.FleetDoctrine.TrySetDoctrine"/>, which honours the
+        /// switch cooldown, + <c>SetEngagementPosture</c>). RETREAT doctrines are excluded — a withdrawal is a combat
+        /// REACTION, not a standing stance. Gated at the call site by <see cref="EnableOrderEmission"/> (default off →
+        /// byte-identical). Defensive/no-throw (monthly hotloop). Internal for the CI gauge.
+        /// </summary>
+        internal static void RunFleetDoctrinePolicy(Entity factionEntity)
+        {
+            if (factionEntity == null || !factionEntity.TryGetDataBlob<FactionInfoDB>(out _)) return;
+            var game = factionEntity.Manager?.Game;
+            if (game?.StartingGameData?.CombatDoctrines == null) return;
+
+            factionEntity.TryGetDataBlob<PersonalityDB>(out var personality);
+
+            // Score the STANDING doctrines (never stand on a withdrawal) and pick the personality's favourite.
+            var options = new List<DoctrineOption>();
+            foreach (var bp in game.StartingGameData.CombatDoctrines.Values)
+                if (bp != null && !bp.IsRetreat)
+                    options.Add(new DoctrineOption(bp));
+            var chosen = DecisionScorer.PickBest(options, personality)?.Blueprint;
+            if (chosen == null) return;
+
+            // Posture follows the stance: an offensive fleet STARTS fights (Weapons-Free); a defensive one fires only
+            // if fired upon (Return-Fire); a balanced fleet still fights on contact.
+            var posture = chosen.Family == "Defensive"
+                ? Pulsar4X.Combat.EngagementPosture.ReturnFire
+                : Pulsar4X.Combat.EngagementPosture.WeaponsFree;
+
+            var now = game.TimePulse.GameGlobalDateTime;
+            foreach (var system in game.Systems)
+            {
+                if (system == null) continue;
+                foreach (var fleet in system.GetAllEntitiesWithDataBlob<Pulsar4X.Fleets.FleetDB>())
+                {
+                    if (fleet == null || !fleet.IsValid || fleet.FactionOwnerID != factionEntity.Id) continue;
+                    // Set the fleet-level doctrine on TOP-LEVEL fleets only — a role sub-fleet carries its OWN doctrine
+                    // (assigned below), and this whole-faction policy must not stomp it. No-op for a default game.
+                    if (Pulsar4X.Combat.CombatEngagement.IsSubFleet(fleet)) continue;
+                    Pulsar4X.Combat.FleetDoctrine.TrySetDoctrine(fleet, chosen, now);   // honours the switch cooldown
+                    Pulsar4X.Combat.FleetDoctrine.SetEngagementPosture(fleet, posture); // direct (works mid-battle)
+
+                    // Organise the fleet into role sub-fleets and give each its role doctrine — but NOT mid-battle
+                    // (restructuring the tree during an engagement would disrupt the resolver; a fighting fleet keeps
+                    // its shape). Gated overall by EnableOrderEmission at the call site, so a default game never runs it.
+                    if (!fleet.HasDataBlob<Pulsar4X.Combat.FleetCombatStateDB>())
+                        ApplyRoleDoctrines(fleet, game, now);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Organises one top-level fleet into role sub-fleets (Q7) and gives EACH sub-fleet the fighting stance its job
+        /// wants: the fast SCREEN goes all-out-attack + weapons-free (it leads and pins), the LINE holds a balanced
+        /// stance, long-reach ARTILLERY takes a defensive (survive-at-range) stance but still opens fire, and the
+        /// SUPPORT tenders run a defensive stance and HOLD FIRE (they stay out of the shooting). Forming is idempotent
+        /// (<see cref="Pulsar4X.Fleets.FleetRoleComposer.FormRoleSubFleets"/> no-ops once a fleet is already decomposed), so this both
+        /// creates the sub-fleets the first month and re-applies their doctrine every month after. Only decomposes a
+        /// fleet with 2+ ships — a lone ship needs no internal organisation.
+        /// </summary>
+        private static void ApplyRoleDoctrines(Entity topFleet, Game game, DateTime now)
+        {
+            if (topFleet == null || !topFleet.TryGetDataBlob<Pulsar4X.Fleets.FleetDB>(out var db)) return;
+            if (game?.StartingGameData?.CombatDoctrines == null) return;
+
+            int directShips = 0;
+            foreach (var c in db.GetChildren())
+                if (c != null && c.IsValid && c.HasDataBlob<Pulsar4X.Ships.ShipInfoDB>()) directShips++;
+            if (directShips >= 2)
+                Pulsar4X.Fleets.FleetRoleComposer.FormRoleSubFleets(topFleet);   // idempotent — forms once, no-op thereafter
+
+            // Doctrine every EXISTING role sub-fleet (whether just formed or formed a prior month).
+            foreach (var child in db.GetChildren())
+            {
+                if (child == null || !child.IsValid) continue;
+                if (!child.TryGetDataBlob<Pulsar4X.Fleets.FleetRoleDB>(out var roleDB)) continue;
+                var (doctrineId, posture) = RoleDoctrine(roleDB.Role);
+                if (game.StartingGameData.CombatDoctrines.TryGetValue(doctrineId, out var bp) && bp != null)
+                    Pulsar4X.Combat.FleetDoctrine.TrySetDoctrine(child, bp, now);   // honours the switch cooldown
+                Pulsar4X.Combat.FleetDoctrine.SetEngagementPosture(child, posture); // set the role posture after
+            }
+        }
+
+        /// <summary>The catalog doctrine id + engagement posture each fleet role fights with (reconciled to the base-mod
+        /// combatDoctrines.json: all-out-attack=Offensive, balanced=Utilitarian, defensive-line=Defensive).</summary>
+        private static (string doctrineId, Pulsar4X.Combat.EngagementPosture posture) RoleDoctrine(Pulsar4X.Fleets.FleetRole role)
+            => role switch
+            {
+                Pulsar4X.Fleets.FleetRole.Screen    => ("all-out-attack", Pulsar4X.Combat.EngagementPosture.WeaponsFree),
+                Pulsar4X.Fleets.FleetRole.Line      => ("balanced",       Pulsar4X.Combat.EngagementPosture.WeaponsFree),
+                Pulsar4X.Fleets.FleetRole.Artillery => ("defensive-line", Pulsar4X.Combat.EngagementPosture.WeaponsFree),
+                Pulsar4X.Fleets.FleetRole.Support   => ("defensive-line", Pulsar4X.Combat.EngagementPosture.WeaponsHold),
+                _                                   => ("balanced",       Pulsar4X.Combat.EngagementPosture.WeaponsFree),
+            };
+
+        /// <summary>
+        /// Phase D — the AI sets each owned fleet's EMCON posture (run-LOUD vs go-DARK) by PERSONALITY, scored through
+        /// the shared <see cref="DecisionScorer"/> (the EMCON twin of <see cref="RunFleetDoctrinePolicy"/>). A GUILEFUL
+        /// / cautious faction goes Silent — hide, strike from the dark; a BOLD / aggressive one runs Full — it doesn't
+        /// care who sees it coming; a middling one Cruises. The same personality fingerprint that picks the fighting
+        /// doctrine now also picks whether the fleet sneaks or announces itself, and that feeds straight into the
+        /// detection/fog math (a Silent fleet is seen from far closer → first-strike / avoid-battle). TOP-LEVEL fleets
+        /// only — <see cref="Pulsar4X.Sensors.FleetEmcon.SetPosture"/> recurses sub-fleets so the whole fleet goes dark
+        /// together. Gated at the call site by <see cref="EnableOrderEmission"/> → byte-identical off.
+        /// </summary>
+        internal static void RunEmconPolicy(Entity factionEntity)
+        {
+            if (factionEntity == null || !factionEntity.TryGetDataBlob<FactionInfoDB>(out _)) return;
+            var game = factionEntity.Manager?.Game;
+            if (game?.Systems == null) return;
+
+            factionEntity.TryGetDataBlob<PersonalityDB>(out var personality);
+
+            var options = new List<EmconOption>
+            {
+                new EmconOption(Pulsar4X.Sensors.EmconPosture.Full),
+                new EmconOption(Pulsar4X.Sensors.EmconPosture.Cruise),
+                new EmconOption(Pulsar4X.Sensors.EmconPosture.Silent),
+            };
+            var chosen = DecisionScorer.PickBest(options, personality);
+            if (chosen == null) return;
+
+            foreach (var system in game.Systems)
+            {
+                if (system == null) continue;
+                foreach (var fleet in system.GetAllEntitiesWithDataBlob<Pulsar4X.Fleets.FleetDB>())
+                {
+                    if (fleet == null || !fleet.IsValid || fleet.FactionOwnerID != factionEntity.Id) continue;
+                    if (Pulsar4X.Combat.CombatEngagement.IsSubFleet(fleet)) continue;   // top-level only (SetPosture recurses)
+                    Pulsar4X.Sensors.FleetEmcon.SetPosture(fleet, chosen.Posture);
+                }
+            }
+        }
+
+        /// <summary>An EMCON posture as a scored option: Full (loud) reads as aggressive+bold, Silent (dark) as
+        /// covert (Guile)+cautious, Cruise as the neutral middle. The scorer picks the one the personality prefers.</summary>
+        private sealed class EmconOption : IScoredOption
+        {
+            public Pulsar4X.Sensors.EmconPosture Posture { get; }
+            private readonly Dictionary<DecisionFeature, double> _f;
+            public EmconOption(Pulsar4X.Sensors.EmconPosture posture)
+            {
+                Posture = posture;
+                _f = new Dictionary<DecisionFeature, double>();
+                if (posture == Pulsar4X.Sensors.EmconPosture.Full)
+                    { _f[DecisionFeature.MilitarySolve] = 1.0; _f[DecisionFeature.RiskLevel] = 1.0; }   // run hot
+                else if (posture == Pulsar4X.Sensors.EmconPosture.Silent)
+                    { _f[DecisionFeature.Covert] = 1.0; _f[DecisionFeature.RiskLevel] = -0.5; }         // go dark
+                else
+                    { _f[DecisionFeature.MilitarySolve] = 0.3; }                                        // Cruise — the middle
+            }
+            public IReadOnlyDictionary<DecisionFeature, double> Features => _f;
         }
     }
 }

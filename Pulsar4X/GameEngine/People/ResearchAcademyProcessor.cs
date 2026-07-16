@@ -22,7 +22,13 @@ namespace Pulsar4X.People
         {
             if (!entity.TryGetDataBlob<ResearchAcademyDB>(out var academyDB)) return;
 
-            var academy = academyDB.Academies.Where(a => a.GraduationDate.Date == atDateTime.Date).First();
+            // Defensive (unobserved-throw-on-sim-thread class): a stale/duplicate interrupt, or two classes sharing a
+            // graduation date, can leave this filter empty. .First() would throw InvalidOperationException and freeze
+            // the clock; guard with .Any() and graduate nothing this fire instead. (ResearchAcademy is a struct, so
+            // FirstOrDefault can't be null-tested.)
+            var matchingClasses = academyDB.Academies.Where(a => a.GraduationDate.Date == atDateTime.Date);
+            if (!matchingClasses.Any()) return;
+            var academy = matchingClasses.First();
 
             // Graduate the class.
             for (int i = 0; i < academy.ClassSize; i++)

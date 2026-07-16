@@ -360,8 +360,10 @@ namespace Pulsar4X.Movement
         {
             if(IsRunning) return;
             if(!_entityCommanding.TryGetDataBlob<FleetDB>(out var fleetDB)) return;
-            // Get all the ships we need to add the movement command to
-            var ships = fleetDB.Children.Where(c => c.HasDataBlob<ShipInfoDB>());
+            // Get all the ships we need to add the movement command to — RECURSIVE, so a fleet organised into role
+            // sub-fleets still moves as ONE (its nested ships come along, not just the direct children). Identical to
+            // the old direct-children walk for a flat fleet.
+            var ships = FleetTools.AllShipsRecursive(_entityCommanding);
 
             // Fleet moves as ONE: cap every ship to the SLOWEST unit's warp speed so they arrive together (same
             // as MoveToSystemBodyOrder). 0 = no warp-capable ship → per-ship speed (cap ignored when <= 0).

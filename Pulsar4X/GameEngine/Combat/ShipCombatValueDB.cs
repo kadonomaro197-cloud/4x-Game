@@ -178,6 +178,23 @@ namespace Pulsar4X.Combat
         /// these profiles' damage. Empty for an unarmed hull. See docs/WEAPONS-AND-DODGE-DESIGN.md.</summary>
         [JsonProperty] public List<WeaponProfile> Weapons { get; internal set; } = new();
 
+        /// <summary>The farthest a weapon on this ship can reach, in metres — the max <see cref="WeaponProfile.Range_m"/>
+        /// over all mounted weapons (0-range/unset profiles ignored, so a short beam doesn't masquerade as long reach).
+        /// 0 for an unarmed hull. Computed on read (not serialized) — this is the number the fleet-role sorter uses to
+        /// tell a long-reach Artillery ship from a knife-fighter, the same reach the combat trigger already gates on.</summary>
+        [JsonIgnore]
+        public double MaxWeaponRange
+        {
+            get
+            {
+                double max = 0;
+                if (Weapons != null)
+                    foreach (var w in Weapons)
+                        if (w.Range_m > max) max = w.Range_m;
+                return max;
+            }
+        }
+
         /// <summary>The SHIELD pool in joules (sum of installed shield generators, health-scaled) — a depleting/regen
         /// buffer the resolve drains BEFORE toughness (docs/WEAPON-TAXONOMY-DESIGN.md §6). 0 = no shield generator, so
         /// combat is byte-identical for an unshielded ship until the resolve wiring lands.</summary>

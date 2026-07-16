@@ -3,9 +3,41 @@
 **Status:** principle-locked (2026-07-05, the developer's call). Cross-cutting — governs the WHOLE build system.
 **Read this before designing or building ANY "buildable thing" at any scale.**
 
-> This is the top-level principle. `docs/ground/GROUND-UNIT-DESIGNER-DESIGN.md` is its first full realization (at unit
-> scale); the ship designer is its existing precedent (at ship scale). Everything else buildable is meant to
-> converge onto it.
+> This is the top-level principle. The ship designer is its existing precedent (at ship scale); the ground-unit
+> assembler (`GroundUnitAssembly`) is its unit-scale realization. Everything else buildable converges onto it.
+
+---
+
+## 0. ONE DESIGNER — no per-domain designers (LOCKED 2026-07-14, the developer's call)
+
+**There is exactly ONE designer for EVERY buildable thing — a component, a ship, a ground unit, a station, an
+installation, a super-weapon. The only things NOT designed are the natural bodies (planets, stars, asteroids,
+comets).** You do not open a "ground-unit designer" or a "station designer" or a "weapon designer": you open the
+**one Component Designer**, pick a category ▸ door (Weapons ▸ Melee, Defense ▸ Armor, Chassis ▸ Personnel, …), set
+the dials, name it, save it. An assembled thing (a ship, a ground unit) is a **chassis + a list of components** in
+that same one designer — a ground unit is a Chassis + Weapon(s) + Armor exactly the way a ship is a hull +
+components. This is the whole point of the universal principle: same object, same designer, at every scale.
+
+- **DO NOT build, propose, or document a separate per-domain designer window.** The standalone
+  `GROUND-UNIT-DESIGNER-DESIGN.md` doc was **deleted 2026-07-14** for exactly this reason (its durable model — the
+  essence-axes coverage gate, the carry-capacity gate, the five general part types generalized by function — is
+  folded here and implemented by `GroundUnitAssembly`). Its "G-D4 client design window / assembly window" plan is
+  **retired**: that assembly UX lands **inside the one designer**, not a new window.
+**The two tools (the correct names — the developer's call 2026-07-14):**
+- **Component Designer** (`ComponentDesignWindow`) — makes the PIECES. Pick a category ▸ door, set the dials, name,
+  save. Produces a `ComponentDesign` (a weapon, an engine, a chassis, a fortification, a reactor…).
+- **Entity Assembler** (`ShipDesignWindow`, retitled 2026-07-14 — it was mislabelled "Ship Design") — ASSEMBLES
+  those pieces into any buildable ENTITY: a building/factory/installation, a station, an individual ground unit, a
+  ship — the whole deal. An entity = a chassis + a list of components; stats emerge from the sum. It is NOT a ship
+  designer; ships are just one entity kind it assembles. v1 assembles ship-class designs; generalising it to every
+  entity kind (station / installation / ground unit) is the in-progress work — **the same one window, never a new
+  per-domain one.**
+
+- `GroundUnitAssembly` is the **shared assembler core** (not a ground-only thing) — the general "chassis + parts →
+  a buildable's emergent stats" engine the Entity Assembler drives for every assembled kind.
+- The unit-scale coverage gate (prove you can build ANY sci-fi unit's essence from the parts bin — Scale /
+  Firepower / Range / Delivery / Damage-type / Survivability / Mobility / Role axes) is the **completeness test for
+  the one designer's parts bin**, not a separate system.
 
 ---
 
@@ -142,8 +174,8 @@ Do **not** big-bang refactor the working ship/station systems. Converge delibera
 4. **Extend the scale ladder** — add chassis at new scales as we build them: super-weapon platforms (huge designed
    assemblies), world-ships (mobile hosts). Tech + scale caps are the "within reason" bound.
 5. **Converge the designer UX last** — one "pick a chassis, add parts, see the budget bar + emergent stats + cost"
-   window, scale-agnostic (unit → ship → station → super-weapon → world-ship). This resolves the
-   `docs/ground/GROUND-UNIT-DESIGNER-DESIGN.md` §11 convergence question: **yes, converge.**
+   window, scale-agnostic (unit → ship → station → super-weapon → world-ship). This is the §0 ONE-DESIGNER
+   decision (2026-07-14): **yes, converge — one designer, no per-domain designers.**
 
 **Rule (unchanged):** every new gameplay number (chassis budgets, gate fractions, part stats, scale caps) is a
 flagged JSON default in the slice report — never silently hardcoded.

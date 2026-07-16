@@ -537,6 +537,18 @@ public class NewGameMenu : PulsarGuiWindow
         game.CreatedOnGitHash = AssemblyInfo.GetGitHash();
         game.LastSaveGitHash = AssemblyInfo.GetGitHash();
 
+        // AI ON by default for a real game (developer's call, 2026-07-15). The NPC brain's action-arms — emit orders
+        // (build / mass / move / invade), seek treaties, populate the intel ledger, spy back — ship gated OFF by default
+        // so the ENGINE test suite stays byte-identical (a game built via a factory, not this menu, is unchanged). But a
+        // GAME the player actually starts should have living opponents, so every menu-started game turns them on here,
+        // exactly as the DevTest sandbox does. The flight recorder (B4) is always-on, so every AI action is taped
+        // ([AI] lines in game_logs/ + the AI Inspector). Runtime behaviour is the PC gauge (CI can't run the client);
+        // the acting-AI CI sensor (NPCActingSensorTests) proves the loop ACTS with these flags on, without the client.
+        Pulsar4X.Factions.NPCDecisionProcessor.EnableOrderEmission = true;
+        Pulsar4X.Factions.NPCDecisionProcessor.EnableDiplomaticProposals = true;
+        Pulsar4X.Factions.NPCDecisionProcessor.EnableEspionageMirror = true;
+        Pulsar4X.Factions.NPCDecisionProcessor.EnableIntelLedger = true;
+
         // Generate random systems up to the number of "Galaxy Size" minus the
         // number of included pre-made systems
         int numberToGenerate = p.MaxSystems - p.EnabledSystems.Count;
@@ -858,11 +870,11 @@ public class NewGameMenu : PulsarGuiWindow
     /// so what CI proves green is exactly what boots here. Wrapped end-to-end so a data hiccup logs and returns to
     /// the menu rather than killing the client (the Quickstart discipline).
     ///
-    /// NOTE on the AI: the NPC brain's ACTION gates (order emission, diplomatic proposals, espionage) stay at their
-    /// engine defaults (OFF) for this first bootable slice — the sandbox WORLD (three factions, the war, the strain,
-    /// the station) loads and is playable, but the AI doesn't emit player-visible orders yet. Turning the AI loose
-    /// is deliberately paired with the AI flight-recorder (the observability spine) in the next build slice, so when
-    /// the AI acts we can SEE what it did and why — the developer's first requirement.
+    /// The AI plays for REAL here (B5): after the world loads, the NPC brain's ACTION gates (order emission /
+    /// diplomatic proposals / espionage / intel ledger) are flipped ON — so the factions build, mass, move, invade,
+    /// and spy. That's paired with the always-on AI flight recorder (B4): every decision is taped as <c>[AI]</c> lines
+    /// in <c>game_logs/</c> and shown live in the AI Inspector window, so when the AI acts you SEE what it did and why
+    /// (the developer's first requirement). The engine gates default OFF everywhere else, so only DevTest turns them on.
     /// </summary>
     public static void DevTestGame()
     {
@@ -915,6 +927,17 @@ public class NewGameMenu : PulsarGuiWindow
                 Console.WriteLine("DevTest Error: CreateDevTest returned no player faction.");
                 return;
             }
+
+            // B5 — turn the AI LOOSE. "Everything enabled" means the NPC brain actually ACTS: emit orders (build /
+            // mass / move / invade), seek treaties, and spy back. These engine gates default OFF (byte-identical) for
+            // a normal game; DevTest is the sandbox where we watch the AI play for real. The flight recorder (B4) is
+            // always-on, so every one of these actions is taped ([AI] lines in game_logs/ + the AI Inspector window)
+            // — the whole point: turn it on, then watch WHAT it did and WHY. Runtime behaviour is what this PC test
+            // verifies (CI can't run the client), which is exactly why the recorder ships first.
+            Pulsar4X.Factions.NPCDecisionProcessor.EnableOrderEmission = true;
+            Pulsar4X.Factions.NPCDecisionProcessor.EnableDiplomaticProposals = true;
+            Pulsar4X.Factions.NPCDecisionProcessor.EnableEspionageMirror = true;
+            Pulsar4X.Factions.NPCDecisionProcessor.EnableIntelLedger = true;
 
             var startingSystem = game.Systems.Find(s => s.ID.Equals(startingSystemId));
             if (startingSystem == null)

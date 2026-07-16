@@ -87,7 +87,30 @@ namespace Pulsar4X.Datablobs
         /// </example>
         [NotNull]
         [PublicAPI]
-        public Entity Root => ParentDB?.Root ?? ((OwningEntity == null) ? Entity.InvalidEntity : OwningEntity);
+        public Entity Root
+        {
+            get
+            {
+                // Walk UP to the topmost parent, ITERATIVELY + bounded. The old recursive form
+                // (ParentDB?.Root ?? ...) StackOverflow-CRASHES on a MALFORMED (cyclic) parent chain — the
+                // parent-direction twin of the fleet-tree walk that wedged combat (2026-07-16). Orbit chains
+                // (Sun→planet→moon) are acyclic so the cap is never approached; on a cyclic FLEET reparent it
+                // returns best-effort instead of crashing. Allocation-free, so per-frame orbit `.Root` stays cheap.
+                var node = this;
+                for (int guard = 0; guard < MaxParentWalk; guard++)
+                {
+                    var parent = node.ParentDB;
+                    if (parent == null)
+                        return node.OwningEntity ?? Entity.InvalidEntity;
+                    node = parent;
+                }
+                return node.OwningEntity ?? Entity.InvalidEntity;   // cap hit → cyclic chain; best-effort, no crash
+            }
+        }
+
+        /// <summary>Bound on the parent walk-up in <see cref="Root"/> — far above any legitimate orbit/fleet nesting
+        /// (a handful deep); reaching it means a CYCLIC parent chain, and we return best-effort instead of crashing.</summary>
+        private const int MaxParentWalk = 4096;
 
         /// <summary>
         /// Same type DataBlob of my root node.

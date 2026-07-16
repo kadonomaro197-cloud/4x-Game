@@ -9,7 +9,7 @@ namespace Pulsar4X.Tests
     /// given. Mirrors the ground-weapon gate (`GroundUnitPartsBaseModTests.GroundWeapon_AttackCeiling_RisesWithResearch`):
     /// a cap that was a flat number now reads `TechData('...')`, so incrementing the tech RAISES the ceiling. Each gauge
     /// also proves the tech is UNLOCKED at start (TechData resolves without the KeyNotFound crash). Engine-only → CI.
-    /// Design: docs/GROUND-UNIT-DESIGNER-DESIGN.md §6a-ii (weapon-designer scale span, task #2).
+    /// Design: docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md §6a-ii (weapon-designer scale span, task #2).
     /// </summary>
     [TestFixture]
     public class WeaponScaleGateTests

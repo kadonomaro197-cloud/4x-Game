@@ -53,10 +53,10 @@ namespace Pulsar4X.Client
             btn =  new ToolBarOption()
             {
                 Picture = _uiState.Img_DesignShip(),
-                TooltipText = "Design a new Ship",
+                TooltipText = "Entity Assembler — assemble components into anything buildable (ship / station / building / unit)",
                 OnClick = new Action(ShipDesignWindow.GetInstance().ToggleActive),
                 GetActive = new Func<bool>(ShipDesignWindow.GetInstance().GetActive)
-                //Opens up the ship design menu
+                //Opens up the Entity Assembler
             };
             ToolButtons.Add(btn);
 
@@ -136,6 +136,16 @@ namespace Pulsar4X.Client
                 OnClick = new Action(SiteWindow.GetInstance().ToggleActive),
                 GetActive = new Func<bool>(SiteWindow.GetInstance().GetActive)
                 //Opens the Site Engine panel (progress readout + commit a resolution branch)
+            };
+            ToolButtons.Add(btn);
+
+            btn = new ToolBarOption()
+            {
+                Picture = _uiState.Img_Select(),   // placeholder icon (no dedicated AI art yet)
+                TooltipText = "AI Inspector: what each AI faction sees, decides, and does (its brain-tape)",
+                OnClick = new Action(AIInspectorWindow.GetInstance().ToggleActive),
+                GetActive = new Func<bool>(AIInspectorWindow.GetInstance().GetActive)
+                //Opens the AI Inspector (the live view of the AI flight recorder)
             };
             ToolButtons.Add(btn);
 

@@ -93,7 +93,9 @@ namespace Pulsar4X.Colonies
                     Comfort = comfort,
                     TaxRate = taxRate,
                     PowerShortage = powerShortage,
-                    FoodShortage = foodShortage
+                    FoodShortage = foodShortage,
+                    // M5c: the colony's output-weighted average food quality → a morale bonus above "not starving".
+                    FoodQuality = instancesDB.GetAverageFoodQuality()
                 }, moraleDB.Factors);
                 // Government MODULATOR (#30): the regime's MoraleWeight scales how hard public opinion pulls
                 // migration (People-end amplifies it, One-Ruler-end damps it). Neutral (×1.0) at the default Mid

@@ -58,6 +58,29 @@ namespace Pulsar4X.Client
             return instance;
         }
 
+        // The "Type" dial: the sibling templates behind the same DOOR (e.g. Ballistic = Railgun / Flak / Autocannon).
+        // The designer tree now opens a DOOR (not a named template), so the specific weapon/type is chosen HERE as a
+        // dropdown — "roles are dials, not doors." A door with a single template shows no dropdown.
+        private ComponentTemplateBlueprint[]? _doorChoices;
+        private string[]? _doorChoiceNames;
+        private int _doorChoiceIndex;
+
+        /// <summary>Open a DOOR (Energy / Ballistic / …): store the door's templates as the "Type" dropdown choices
+        /// and start a blank design on the first one. The tree selects a door; the specific type is a dial here.</summary>
+        public void SetDoor(System.Collections.Generic.IList<ComponentTemplateBlueprint> doorTemplates, GlobalUIState state)
+        {
+            if (doorTemplates == null || doorTemplates.Count == 0) return;
+            _doorChoices = new ComponentTemplateBlueprint[doorTemplates.Count];
+            _doorChoiceNames = new string[doorTemplates.Count];
+            for (int i = 0; i < doorTemplates.Count; i++)
+            {
+                _doorChoices[i] = doorTemplates[i];
+                _doorChoiceNames[i] = doorTemplates[i].Name;
+            }
+            _doorChoiceIndex = 0;
+            SetTemplate(_doorChoices[0], state);
+        }
+
         public void SetTemplate(ComponentTemplateBlueprint template, GlobalUIState state)
         {
             Template = template;
@@ -71,7 +94,9 @@ namespace Pulsar4X.Client
 
         public void SetFromComponent(ComponentDesign component, GlobalUIState state)
         {
-
+            // Editing an EXISTING design opens that specific template — no "Type" dropdown (it's already a chosen type).
+            _doorChoices = null;
+            _doorChoiceNames = null;
 
             var factionData = state.Faction.GetDataBlob<FactionInfoDB>().Data;
             var factionTech = state.Faction.GetDataBlob<FactionTechDB>();
@@ -128,6 +153,20 @@ namespace Pulsar4X.Client
                     "Configure the specifications for the component below.\n\n" +
                     "Different settings will determine the statistics and capabilities\n" +
                     "of the component.");
+
+                // The "Type" dial — pick the specific kind within this door (e.g. Ballistic → Railgun / Flak / …).
+                // Only shown when the door holds more than one type; switching resets the dials to that type's.
+                if (_doorChoices != null && _doorChoices.Length > 1 && _doorChoiceNames != null)
+                {
+                    ImGui.Text("Type");
+                    ImGui.SetNextItemWidth(-1);
+                    if (ImGui.Combo("###doortype", ref _doorChoiceIndex, _doorChoiceNames, _doorChoiceNames.Length))
+                    {
+                        if (_doorChoiceIndex >= 0 && _doorChoiceIndex < _doorChoices.Length)
+                            SetTemplate(_doorChoices[_doorChoiceIndex], uiState);
+                    }
+                    ImGui.Separator();
+                }
 
                 GuiDesignUI(uiState); //Part design
             }

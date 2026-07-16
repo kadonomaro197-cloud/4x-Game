@@ -38,7 +38,9 @@ namespace Pulsar4X.Engine
     ///     <c>startingItems</c> list ("everything enabled"), and parses <c>stations</c>/<c>colonies</c>/<c>fleets</c>.
     ///  3. Second pass: apply each faction's <c>openingRelations</c> (opening war) + <c>strain</c> once every faction
     ///     exists (a faction's opening relations name OTHER factions by name/abbr).
-    ///  4. Kick the energy + sensor processors so power + first-contacts/surveys are live at t=0.
+    ///  4. Third pass: raise each faction's HOME GARRISON so colony worlds start DEFENDED (a war scenario needs a
+    ///     defended planet to take — the ground echo of the authored fleets; NOT done in the barebones New Game).
+    ///  5. Kick the energy + sensor processors so power + first-contacts/surveys are live at t=0.
     ///
     /// The player faction is the FIRST file listed. Returns (player, startingSystemId) for the client to activate.
     /// Flipping the NPC AI action gates ("everything enabled" for the brain) is the CALLER's job (client-only static
@@ -86,6 +88,14 @@ namespace Pulsar4X.Engine
                 if (strainNode != null)
                     FactionFactory.ApplyOpeningStrain(faction, strainNode);
             }
+
+            // Third pass — raise each faction's HOME GARRISON so colony worlds start DEFENDED. The DevTest is a WAR
+            // scenario; an undefended planet makes "take a planet" an unopposed walk-in and leaves the AI's own worlds
+            // free for the taking. This is the ground echo of the space fleets the scenario already authors ("everything
+            // enabled") — deliberately NOT done in the barebones default New Game. Idempotent + defensive: a faction with
+            // no region-mapped colony body (e.g. the Kithrin's station-only holdings) simply raises nothing.
+            foreach (var (faction, _) in loadedFactions)
+                Pulsar4X.GroundCombat.GroundStartGarrison.RaiseForFactionColonies(game, faction);
 
             // Generate power and run the first sensor sweep so t=0 state is live (colonies power up, contacts/surveys
             // populate) — mirrors DefaultStartFactory.LoadFromJson's post-load processor kick.

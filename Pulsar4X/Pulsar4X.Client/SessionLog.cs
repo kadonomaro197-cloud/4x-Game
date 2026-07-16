@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using Pulsar4X.Engine;
+using Pulsar4X.Factions;
 using Pulsar4X.Movement;
 using Pulsar4X.Names;
 using Pulsar4X.Ships;
@@ -25,6 +27,12 @@ namespace Pulsar4X.Client
         // Previous values of the engine liveness counters, so the heartbeat can report the per-beat DELTA (is the
         // processor still climbing = alive, or stuck = dead).
         private static long _lastScanCount, _lastTickCount;
+
+        // Per-faction newest-flushed decision timestamp, so the heartbeat writes each [AI] record ONCE (the tape is a
+        // ring buffer, so an index count would break once it caps — timestamps are monotonic per monthly tick).
+        private static readonly Dictionary<int, DateTime> _lastAiWhen = new();
+        // Newest AI-Tick error count we've already surfaced, so a swallowed Tick throw is logged ONCE per occurrence.
+        private static int _lastAiErrorCount;
 
         public static void Line(string category, string message)
         {
@@ -104,6 +112,17 @@ namespace Pulsar4X.Client
         /// system. So if a freeze or oddity happens between clicks, the log still shows the state right up to it.
         /// Caller passes the pieces it already has in hand; null/empty are tolerated.
         /// </summary>
+        // Sim-stall gauge — the FREEZE case the MAIN-thread hang watchdog can't see: the sim/background thread wedges
+        // inside a processor while the UI keeps rendering + heartbeating, so game-time stops advancing but the log keeps
+        // printing "RUNNING" (exactly the 2026-07-14 freeze — clock stuck at 18:00, heartbeats fine). We watch the game
+        // clock across heartbeats: unchanged while RUNNING = the sim is wedged → NAME the processor from the engine gauge.
+        static DateTime _lastRunningGameTime = DateTime.MinValue;
+        static int _simStallBeats;
+        static bool _simStallReported;
+        // Dedicated previous-beat liveness counters for the stall check (independent of DetectionSnapshot's copies,
+        // whose update ordering vs the heartbeat is not guaranteed), so "still climbing?" compares to the LAST beat.
+        static long _stallPrevScan, _stallPrevTick;
+
         public static void Heartbeat(Game game, StarSystem system, string selectedName)
         {
             if (!Enabled || game == null) return;
@@ -116,6 +135,58 @@ namespace Pulsar4X.Client
                     + " step=" + tp.Ticklength.TotalSeconds.ToString("0") + "s"
                     + " selected=" + (string.IsNullOrEmpty(selectedName) ? "(none)" : selectedName)
                     + " ships-in-view=" + shipCount);
+
+                // Sim-stall detection: RUNNING but the clock isn't moving = a wedged processor (a freeze the frame
+                // watchdog misses, because the UI thread is alive). Name the culprit from ManagerSubPulse's global gauge.
+                if (tp.IsRunning)
+                {
+                    if (tp.GameGlobalDateTime == _lastRunningGameTime)
+                    {
+                        _simStallBeats++;
+                        if (_simStallBeats >= 2 && !_simStallReported)   // ~2 quiet heartbeats of a frozen clock
+                        {
+                            // The DECISIVE discriminator: are the engine liveness counters STILL MOVING? If the
+                            // battle-trigger / sensor-scan counts changed since the last beat, the sim is GRINDING
+                            // through a heavy tick (slow-at-scale — a perf problem); if they're frozen too, it's a
+                            // TRUE WEDGE (deadlock / infinite loop) in the named processor. Plus the SCALE (fleets /
+                            // in-combat / ships) so a recurrence tells us how big the fight was when it stalled.
+                            long scans = SensorScan.ScanCount, ticks = CombatEngagement.TickCount;
+                            bool climbing = scans != _stallPrevScan || ticks != _stallPrevTick;
+                            int fleets = 0, inCombat = 0, ships = 0;
+                            try
+                            {
+                                if (system != null)
+                                {
+                                    var fl = system.GetAllEntitiesWithDataBlob<Pulsar4X.Fleets.FleetDB>();
+                                    fleets = fl.Count;
+                                    foreach (var f in fl)
+                                        if (f.IsValid && f.HasDataBlob<FleetCombatStateDB>()) inCombat++;
+                                    ships = system.GetAllEntitiesWithDataBlob<ShipInfoDB>().Count;
+                                }
+                            }
+                            catch { /* a diagnostic must never throw */ }
+
+                            Line("SIM-STALL", "game-time FROZEN at " + tp.GameGlobalDateTime.ToString("yyyy-MM-dd HH:mm")
+                                + " while RUNNING — the sim thread is WEDGED (a freeze the frame watchdog can't see). "
+                                + "Last processor the sim entered: '" + Pulsar4X.Engine.ManagerSubPulse.GlobalCurrentProcess + "'. "
+                                + "scans=" + scans + " ticks=" + ticks + " ("
+                                + (climbing ? "STILL CLIMBING → SLOW-AT-SCALE heavy tick, not a true wedge — a PERF problem"
+                                            : "FROZEN too → a TRUE WEDGE, deadlock/infinite loop in that processor") + "). "
+                                + "scale: fleets=" + fleets + " in-combat=" + inCombat + " ships=" + ships + " in view.");
+                            _simStallReported = true;
+                        }
+                    }
+                    else
+                    {
+                        _lastRunningGameTime = tp.GameGlobalDateTime;
+                        _simStallBeats = 0;
+                        if (_simStallReported) { Line("SIM-STALL", "sim recovered — clock advancing again."); _simStallReported = false; }
+                    }
+                    // Snapshot the liveness counters each beat so the NEXT stall check compares to THIS beat's values.
+                    _stallPrevScan = SensorScan.ScanCount;
+                    _stallPrevTick = CombatEngagement.TickCount;
+                }
+
                 CheckForTeleports(system);
             }
             catch (Exception e)
@@ -316,6 +387,54 @@ namespace Pulsar4X.Client
             catch (Exception e)
             {
                 Line("DETECT", "detection snapshot failed: " + e.Message);
+            }
+        }
+
+        /// <summary>
+        /// B4b — flush the AI FLIGHT RECORDER to the log. For every NPC faction, writes each NEW decision on its
+        /// <see cref="AIDecisionRecordDB"/> tape as an <c>[AI]</c> line (via the CI-tested <see cref="PlanReadout.DecisionLine"/>),
+        /// so the whole game's AI reasoning reads back in the rolling <c>game_logs/</c> pages — the SAME data the AI
+        /// Inspector window shows live. Called from the ~3 s heartbeat; a per-faction newest-timestamp gate writes each
+        /// record ONCE. Defensive/no-throw (an observability flush must never break the frame).
+        /// </summary>
+        public static void AiDecisionSnapshot(Game game)
+        {
+            if (!Enabled || game == null) return;
+            try
+            {
+                foreach (var kvp in game.Factions)
+                {
+                    var faction = kvp.Value;
+                    if (faction == null || !faction.IsValid) continue;
+                    if (!faction.TryGetDataBlob<AIDecisionRecordDB>(out var tape) || tape.Records.Count == 0) continue;
+
+                    string name = faction.TryGetDataBlob<NameDB>(out var fn) ? fn.OwnersName : ("faction#" + faction.Id);
+                    DateTime lastWhen = _lastAiWhen.TryGetValue(faction.Id, out var w) ? w : DateTime.MinValue;
+                    DateTime newest = lastWhen;
+
+                    foreach (var rec in tape.Records)
+                    {
+                        if (rec.When <= lastWhen) continue;                   // already flushed
+                        Console.WriteLine(PlanReadout.DecisionLine(rec, name));
+                        if (rec.When > newest) newest = rec.When;
+                    }
+                    _lastAiWhen[faction.Id] = newest;
+                }
+
+                // Surface any AI Tick exception. The engine-side freeze-guard swallows it so the sim clock never wedges;
+                // here we make it VISIBLE (the Visibility Gate) — one [AI] ⚠ line per occurrence, so a bad decision/order
+                // path shows up in game_logs instead of a faction silently going quiet.
+                if (NPCDecisionProcessor.TickErrorCount > _lastAiErrorCount)
+                {
+                    Line("AI", $"⚠ tick error #{NPCDecisionProcessor.TickErrorCount}: {NPCDecisionProcessor.LastTickError}");
+                    _lastAiErrorCount = NPCDecisionProcessor.TickErrorCount;
+                }
+
+                Console.Out.Flush();
+            }
+            catch (Exception e)
+            {
+                Line("AI", "decision snapshot failed: " + e.Message);
             }
         }
     }

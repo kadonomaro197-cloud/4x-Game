@@ -5,6 +5,7 @@ using System.Numerics;
 using ImGuiNET;
 using Pulsar4X.Engine;
 using Pulsar4X.Galaxy;
+using Pulsar4X.GeoSurveys;
 using Pulsar4X.GroundCombat;
 using Pulsar4X.Colonies;
 using Pulsar4X.Components;
@@ -181,7 +182,13 @@ namespace Pulsar4X.Client
             // G5/G6 — the ONE cylinder grid is the surface view. Lazy + idempotent (same pattern as the old disks);
             // null only on a body with no region layer (then there's nothing to draw yet).
             var grid = PlanetGridFactory.EnsureGridForBody(body);
-            bool canGlobal = grid != null && grid.Hexes != null && grid.Hexes.Count > 0;
+            // Only reveal a world's surface once THE VIEWING FACTION has geo-surveyed it (home starts surveyed; a
+            // fogged world stays hidden until you scan it). Gate on the PER-FACTION GeoSurveyStatus, NOT the shared
+            // Region.Surveyed flag: that flag is faction-agnostic (v1), so a RIVAL colonizing a body — e.g. the UMF on
+            // Luna/Venus — flips it for EVERYONE and would leak the surface to you. GeoSurveyStatus is keyed by faction,
+            // so it correctly reads "surveyed" only for the world you actually scanned/settled.
+            bool playerSurveyed = body.TryGetDataBlob<GeoSurveyableDB>(out var geoDB) && geoDB.IsSurveyComplete(myFaction);
+            bool canGlobal = playerSurveyed && grid != null && grid.Hexes != null && grid.Hexes.Count > 0;
 
             // ── Controls ────────────────────────────────────────────────────────────────
             if (ImGui.Button("◀ West")) { _centerRegion = left; SyncCenterCol(grid, count); }

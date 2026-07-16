@@ -122,8 +122,19 @@ namespace Pulsar4X.Industry
 
                 foreach(var batchJob in prodLine.Jobs.ToArray())
                 {
-                    IConstructableDesign designInfo = factionInfo.IndustryDesigns[batchJob.ItemGuid];
-                    float industryPointsToUse = industryPointsRemaining[designInfo.IndustryTypeID];// * productionPercentage;
+                    // Defensive (L4 / the mining time-stall class): a job can reference a design the CURRENT owner's
+                    // store lacks — most notably after a COLONY CAPTURE flips FactionOwnerID while the old owner's
+                    // queued jobs remain. A hard index here throws on the parallel sim thread (unobserved -> the clock
+                    // freezes). Skip such a job rather than crash. Same for a job whose industry type this line can't
+                    // produce (a mismatched AddJob).
+                    if (!factionInfo.IndustryDesigns.TryGetValue(batchJob.ItemGuid, out var designInfo))
+                    {
+                        batchJob.Status = IndustryJobStatus.MissingResources;
+                        continue;
+                    }
+                    if (!industryPointsRemaining.TryGetValue(designInfo.IndustryTypeID, out var industryPointsAvailable))
+                        continue;// this line can't produce this job's industry type
+                    float industryPointsToUse = industryPointsAvailable;
 
                     if(batchJob.Status != IndustryJobStatus.Completed)
                     {

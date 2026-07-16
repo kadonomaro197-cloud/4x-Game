@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Pulsar4X.Engine;
+using Pulsar4X.Factions;   // FactionInfoDB — the sub-fleet-vs-top-level discriminator
 using Pulsar4X.Fleets;
 using Pulsar4X.Movement;
 using Pulsar4X.Orbital;
@@ -150,12 +151,35 @@ namespace Pulsar4X.Combat
         /// question (the colony test harness doesn't reliably auto-fire it). Interlocked: systems tick in parallel.</summary>
         public static long TickCount;
 
+        /// <summary>
+        /// A SUB-FLEET (fleet component) — its parent is another FLEET, not the faction. Combat enrols only TOP-LEVEL
+        /// fleets: a sub-fleet fights AS PART OF its parent, because the parent's recursive <see cref="GetCombatShips"/>
+        /// already collects the sub-fleet's ships and applies the sub-fleet's OWN doctrine. Enrolling a sub-fleet
+        /// separately would double-count its ships. A normal fleet's parent is the faction entity (carries a
+        /// <see cref="FactionInfoDB"/>); a sub-fleet's parent is a plain fleet — that's the discriminator. A default
+        /// game has no sub-fleets, so this reads false everywhere and combat is byte-identical.
+        /// </summary>
+        internal static bool IsSubFleet(Entity fleet)
+        {
+            if (fleet == null || !fleet.TryGetDataBlob<FleetDB>(out var db)) return false;
+            var parent = db.Parent;
+            return parent != null && parent.IsValid
+                && parent.HasDataBlob<FleetDB>()          // parented to a FLEET...
+                && !parent.HasDataBlob<FactionInfoDB>();  // ...not the faction root → it's a sub-fleet
+        }
+
         /// <summary>One trigger pass over a system: engage/join hostile fleets, then step the engagement. Returns
         /// the number of fleets seen. Defensive — built not to throw on normal game state.</summary>
         public static int Tick(EntityManager manager, int deltaSeconds)
         {
             System.Threading.Interlocked.Increment(ref TickCount);
-            var fleets = manager.GetAllEntitiesWithDataBlob<FleetDB>();
+            var allFleets = manager.GetAllEntitiesWithDataBlob<FleetDB>();
+            if (allFleets.Count == 0) return 0;
+            // Only TOP-LEVEL fleets are independent combat units — drop sub-fleets once, here, so the whole Tick
+            // (engage pass, members, retreat sweep) ignores them (they fight via their parent's recursion). No-op
+            // for a default game (no sub-fleets exist).
+            var fleets = new List<Entity>(allFleets.Count);
+            foreach (var f in allFleets) if (!IsSubFleet(f)) fleets.Add(f);
             if (fleets.Count == 0) return 0;
 
             double dt = deltaSeconds > 0 ? deltaSeconds : 1;
@@ -274,7 +298,12 @@ namespace Pulsar4X.Combat
         /// </summary>
         public static bool NewEngagementImminent(EntityManager manager)
         {
-            var fleets = manager.GetAllEntitiesWithDataBlob<FleetDB>();
+            var allFleets = manager.GetAllEntitiesWithDataBlob<FleetDB>();
+            if (allFleets.Count == 0) return false;
+            // Mirror Tick: only top-level fleets can form a new engagement (a sub-fleet fights via its parent), so a
+            // sub-fleet pairing must NOT force the combat-interrupt fine-step. No-op for a default game.
+            var fleets = new List<Entity>(allFleets.Count);
+            foreach (var f in allFleets) if (!IsSubFleet(f)) fleets.Add(f);
             if (fleets.Count == 0) return false;
 
             for (int i = 0; i < fleets.Count; i++)
@@ -525,6 +554,7 @@ namespace Pulsar4X.Combat
             foreach (var other in fleet.Manager.GetAllEntitiesWithDataBlob<FleetDB>())
             {
                 if (other == fleet || other == null || !other.IsValid) continue;
+                if (IsSubFleet(other)) continue;   // target the parent fleet, never a sub-fleet component
                 if (!AreHostile(fleet, other)) continue;
                 if (GetFleetShips(other).Count == 0) continue;
                 if (!CanEngageTarget(fleet, other)) continue;   // fog: only target hostiles we actually DETECT
@@ -1511,23 +1541,45 @@ namespace Pulsar4X.Combat
         }
 
         /// <summary>All live ships in a fleet, recursing into sub-fleets (fleet components).</summary>
+        /// <summary>Hard cap on fleet-tree recursion depth. Real fleets nest a component or two deep; a walk that
+        /// ever reaches this is a MALFORMED tree (a sub-fleet that is its own ancestor — a cycle). Without this cap
+        /// such a cycle recurses forever and WEDGES the combat hotloop (game-time freezes, no throw) — the exact
+        /// hang-class the FleetWindow parent-walk already had to guard (Client CLAUDE.md). Cheap (an int counter, no
+        /// allocation, so CombatPerformanceTests is unaffected); it bails + logs ONCE instead of hanging. 64 is far
+        /// above any legitimate fleet nesting.</summary>
+        private const int MaxFleetTreeDepth = 64;
+        private static bool _fleetCycleLogged;
+
         public static List<Entity> GetFleetShips(Entity fleet)
         {
             var result = new List<Entity>();
-            CollectShips(fleet, result);
+            CollectShips(fleet, result, 0, new HashSet<int>());
             return result;
         }
 
-        private static void CollectShips(Entity fleet, List<Entity> into)
+        private static void CollectShips(Entity fleet, List<Entity> into, int depth, HashSet<int> seen)
         {
             if (fleet == null || !fleet.IsValid || !fleet.TryGetDataBlob<FleetDB>(out var fleetDB)) return;
+            // Visit each fleet node AT MOST ONCE. A malformed tree (a sub-fleet that is its own ancestor, or two
+            // parents sharing a sub-fleet) would otherwise re-walk the same subtree combinatorially — the depth cap
+            // bounds DEPTH but not the number of PATHS, so a few diamonds explode into millions of calls and WEDGE
+            // the combat hotloop (the frozen-clock live bug the SIM-STALL watchdog caught). Deduping fleet ids makes
+            // the walk O(nodes), immune to any cycle/diamond. (Depth cap kept as a cheap backstop.)
+            if (!seen.Add(fleet.Id)) return;
+            if (depth >= MaxFleetTreeDepth)
+            {
+                if (!_fleetCycleLogged) { _fleetCycleLogged = true;
+                    CombatLog($"WARNING: fleet tree exceeded depth {MaxFleetTreeDepth} at {FleetLabel(fleet)} — a CYCLIC/self-nested fleet was skipped (would otherwise hang combat). Fix the fleet hierarchy."); }
+                return;
+            }
             foreach (var child in fleetDB.Children)
             {
                 if (child == null || !child.IsValid) continue;
+                if (child.Id == fleet.Id) continue;            // a fleet that lists itself as a child — skip the cycle
                 if (child.HasDataBlob<ShipInfoDB>())
                     into.Add(child);
                 else if (child.HasDataBlob<FleetDB>())
-                    CollectShips(child, into); // sub-fleet (fleet component)
+                    CollectShips(child, into, depth + 1, seen); // sub-fleet (fleet component)
             }
         }
 
@@ -1544,13 +1596,20 @@ namespace Pulsar4X.Combat
             // actually carries a Firepower/Toughness bonus (every existing combat fixture is the tripwire).
             double cmdrFire = FleetCommanderMult(fleet, BonusCategory.Firepower);
             double cmdrTough = FleetCommanderMult(fleet, BonusCategory.Toughness);
-            CollectCombatShips(fleet, result, cmdrFire, cmdrTough);
+            CollectCombatShips(fleet, result, cmdrFire, cmdrTough, 0, new HashSet<int>());
             return result;
         }
 
-        private static void CollectCombatShips(Entity fleet, List<CombatShip> into, double cmdrFire, double cmdrTough)
+        private static void CollectCombatShips(Entity fleet, List<CombatShip> into, double cmdrFire, double cmdrTough, int depth, HashSet<int> seen)
         {
             if (fleet == null || !fleet.IsValid || !fleet.TryGetDataBlob<FleetDB>(out var fleetDB)) return;
+            if (!seen.Add(fleet.Id)) return;   // visit each fleet node once — cycle/diamond-proof (see CollectShips)
+            if (depth >= MaxFleetTreeDepth)   // cyclic/self-nested fleet — bail before it hangs combat (see CollectShips)
+            {
+                if (!_fleetCycleLogged) { _fleetCycleLogged = true;
+                    CombatLog($"WARNING: fleet tree exceeded depth {MaxFleetTreeDepth} at {FleetLabel(fleet)} — a CYCLIC/self-nested fleet was skipped (would otherwise hang combat). Fix the fleet hierarchy."); }
+                return;
+            }
             // This node's posture applies to ships DIRECTLY in it; a sub-fleet (component) applies its OWN. The
             // flagship-commander multiplier rides on top of the doctrine posture for every ship in the fleet.
             double fpMult = FleetDoctrine.FirepowerMult(fleet) * cmdrFire;
@@ -1558,10 +1617,11 @@ namespace Pulsar4X.Combat
             foreach (var child in fleetDB.Children)
             {
                 if (child == null || !child.IsValid) continue;
+                if (child.Id == fleet.Id) continue;            // a fleet that lists itself as a child — skip the cycle
                 if (child.HasDataBlob<ShipInfoDB>())
                     into.Add(new CombatShip(child, fpMult, toughMult));
                 else if (child.HasDataBlob<FleetDB>())
-                    CollectCombatShips(child, into, cmdrFire, cmdrTough); // sub-component → own doctrine, same commander
+                    CollectCombatShips(child, into, cmdrFire, cmdrTough, depth + 1, seen); // sub-component → own doctrine, same commander
             }
         }
 

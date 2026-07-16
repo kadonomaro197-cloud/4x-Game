@@ -49,8 +49,10 @@ namespace Pulsar4X.GroundCombat
     ///     <see cref="GroundAugmentAtb.StrengthBonus"/>. **Augments raise the budget** — that's the whole unlock.
     ///   • per-item: each part's carry-mass ≤ <see cref="MaxItemFraction"/> of the capacity — so a single absurdly
     ///     heavy item is refused even when the total would fit.
-    /// Pure + defensive (a bad/empty assembly just comes back Invalid with reasons, never throws). This is what the
-    /// design UI (G-D4) shows live and what a built unit's raised stats come from. Design: docs/GROUND-UNIT-DESIGNER-DESIGN.md.
+    /// Pure + defensive (a bad/empty assembly just comes back Invalid with reasons, never throws). This is the shared
+    /// assembler the ONE Component Designer drives for an assembled buildable (there is NO separate ground-unit
+    /// designer — see UNIVERSAL-ASSEMBLY §0); it computes what the designer shows live and what a built unit's raised
+    /// stats come from. Design: docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md.
     /// </summary>
     public static class GroundUnitAssembly
     {

@@ -66,6 +66,13 @@ namespace Pulsar4X.Factions
             var factionInfoDB = faction.GetDataBlob<FactionInfoDB>();
             var factionDataStore = factionInfoDB.Data;
 
+            // CreateFaction (unlike CreateBasicFaction) leaves Abbreviation empty — but the UI/readouts key off the
+            // abbreviation (the [VIEW] log, the diplomacy ledger, faction labels), so a scenario faction printed as
+            // "()". Read an optional "abbreviation" so a data-driven faction shows its short code like every other.
+            var abbreviation = rootJson["abbreviation"]?.ToString();
+            if (!string.IsNullOrEmpty(abbreviation))
+                factionInfoDB.Abbreviation = abbreviation;
+
             if (rootJson["isNPC"] != null)
                 factionInfoDB.IsNPC = rootJson["isNPC"].Value<bool>();
 

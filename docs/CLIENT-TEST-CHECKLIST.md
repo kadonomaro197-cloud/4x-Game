@@ -9,6 +9,20 @@
 ## ⚠ FIRST — confirm the build config change didn't break your local build
 - [ ] **The game still builds AND launches locally.** I changed `Pulsar4X.Client.csproj` (fixed two `HintPath`s: `Libs\ImGui.NET.dll` and `Libs\SDL3-CS.dll` — they were pointing at non-existent subfolders, so a clean checkout couldn't build). CI proved it *compiles* on Linux; you confirm it *runs* on Windows. If the build or launch breaks, that's the first thing to fix.
 
+## ⭐ THE UNIVERSAL DESIGNER — `claude/devtest-faction-design-xpfnhe` (added 2026-07-14)
+
+The Component Designer makes the PIECES; the **Entity Assembler** (renamed from "Ship Design") assembles them into anything buildable. These are the runtime checks for that work (engine + client-compile are CI-green).
+
+### Component Designer — doors-only (slice 1)
+- [ ] **The left tree shows DOORS, not named example designs.** Open the Component Designer (toolbar). Expand a category (e.g. **Weapons**) — the clickable leaves should be the **doors** (Energy / Ballistic / Guided / Melee / Exotic) — **NOT** a pile of "＋ New Rending Claws / ＋ New Point Defense Laser" entries. Every category reads the same way (Defense → Armor / Shields / Hardening / Fortification, Chassis → Personnel / Vehicle / Hull / …).
+- [ ] **Click a door → the dials appear.** Click a door (e.g. **Defense ▸ Armor**) → the design panel opens with its **dials** (sliders), a name field, and Save. Tweak, name, Save → the design appears in the middle "Current Component Designs" list.
+- [ ] **Multi-type door shows a "Type" dropdown; single-type door shows none.** Click **Weapons ▸ Ballistic** → the panel's top shows a **Type** dropdown (Railgun / Flak / Autocannon / …); pick one → the dials rebuild for that type. A door with only one type (e.g. Chassis ▸ Hull) shows **no** Type dropdown.
+- [ ] **Every door has working dials** (the "ALL the Doors" pass) — spot-check a door in each category (Power ▸ Generation, Industrial ▸ Extraction, Civic ▸ Development, Chassis ▸ Personnel): clicking it should show adjustable sliders, not read-only text.
+
+### Entity Assembler (was "Ship Design")
+- [ ] **The window + toolbar read "Entity Assembler."** The toolbar button tooltip and the window title should say **Entity Assembler**, not "Ship Design". Assembling a ship still works exactly as before (pick hull + parts + armor → Save).
+- [ ] *(later slices)* pick a **ground chassis** → the parts list shows ground parts, the budget bar tracks carry-weight, Save registers a buildable unit. (Stations / buildings follow.)
+
 ## ⭐ THIS BRANCH — `claude/4x-space-stations-design-t0a4b0` (space stations + the ground map) — added 2026-07-03
 
 Everything below is engine-CI-green; these are the *runtime/render* checks only your local build can do. Full seven-field detail is in `docs/TESTING-TRACKER.md` (rows **G3**, **G4**). Work top to bottom — the ground-map items are the headline.

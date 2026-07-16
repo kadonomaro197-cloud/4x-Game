@@ -15,8 +15,13 @@ namespace Pulsar4X.Energy
             TimeSpan t = atDateTime - _energyGenDB.dateTimeLastProcess;
 
             string energyType = _energyGenDB.EnergyType.UniqueID;
-            var stored = _energyGenDB.EnergyStored[energyType];
-            var storeMax = _energyGenDB.EnergyStoreMax[energyType];
+            // Defensive (the mining time-stall class): a SOLAR-ONLY entity has EnergyType set but NO EnergyStored/
+            // EnergyStoreMax entry — only reactors/batteries seed those dicts. A hard index would throw on the sim
+            // thread and freeze the clock (this runs on EVERY EnergyGenAbilityDB entity at PostNewGameInitialization).
+            // Read with a 0 default; the write below uses the set-indexer (which creates the key), so a store-less
+            // generator is a harmless no-op instead of a crash.
+            var stored = _energyGenDB.EnergyStored.TryGetValue(energyType, out var storedVal) ? storedVal : 0;
+            var storeMax = _energyGenDB.EnergyStoreMax.TryGetValue(energyType, out var maxVal) ? maxVal : 0;
             double freestore = Math.Max(0, storeMax - stored);
 
             double totaldemand = _energyGenDB.Demand + freestore;
@@ -24,7 +29,7 @@ namespace Pulsar4X.Energy
             var output = _energyGenDB.TotalOutputMax - _energyGenDB.Demand;
 
             output = GeneralMath.Clamp(output, -stored, freestore);
-            _energyGenDB.EnergyStored[energyType] += output;
+            _energyGenDB.EnergyStored[energyType] = stored + output;   // set-indexer: seeds the key for a store-less generator
 
             if (output > 0)
             {

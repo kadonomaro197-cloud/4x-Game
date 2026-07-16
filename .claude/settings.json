@@ -40,5 +40,7 @@
       "Read(**/*.pdb)",
       "Read(**/*.exe)"
     ]
-  }
+  },
+  "enableWorkflows": true,
+  "ultracode": true
 }

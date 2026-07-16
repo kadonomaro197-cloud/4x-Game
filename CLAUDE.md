@@ -134,6 +134,7 @@ See `ARCHITECTURE.md` for the full data-flow diagram.
 | Damage | `GameEngine/Damage/` | `GameEngine/Damage/CLAUDE.md` |
 | Colonies / Population | `GameEngine/Colonies/` | `GameEngine/Colonies/CLAUDE.md` |
 | Stations (parallel off-world host) | `GameEngine/Stations/` | `GameEngine/Stations/CLAUDE.md` |
+| Construction (build parts → haul → assemble on site) | `GameEngine/Construction/` | `GameEngine/Construction/CLAUDE.md` |
 | Ground Combat (planet surface + units) | `GameEngine/GroundCombat/` | `GameEngine/GroundCombat/CLAUDE.md` |
 | Site Engine (located mid-game episodes) | `GameEngine/Sites/` | `GameEngine/Sites/CLAUDE.md` |
 | Industry / Production | `GameEngine/Industry/` | `GameEngine/Industry/CLAUDE.md` |

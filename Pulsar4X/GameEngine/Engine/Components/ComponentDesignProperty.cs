@@ -138,15 +138,52 @@ namespace Pulsar4X.Components
         }
 
         internal ChainedExpression DescriptionFormula { get; set; }
+
+        // Cached plain-text fallback, filled once if the DescriptionFormula can't be evaluated
+        // as an NCalc expression. See the getter below for why this matters.
+        private string _descriptionFallback;
+
         public string Description
         {
             get
             {
                 if (DescriptionFormula == null)
                     return "";
-                else
+                if (_descriptionFallback != null)
+                    return _descriptionFallback;
+                try
+                {
                     return DescriptionFormula.StrResult;
+                }
+                catch
+                {
+                    // A description is COSMETIC. A DescriptionFormula that NCalc can't parse —
+                    // most commonly a plain-English description with an apostrophe (NCalc reads
+                    // the ' as a string delimiter, so "the ship's heat" or the SQL-style ''
+                    // escape both blow up) — must NEVER throw here. This getter runs mid-render
+                    // in the component designer; an exception unwinds through ImGui with the
+                    // Component Designer window still open (no matching End()/EndChild()), which
+                    // corrupts the ImGui window stack and takes the WHOLE client down on the next
+                    // Begin(). All base-mod descriptions are plain text (no computed values), so
+                    // fall back to the raw template string, unwrapped from NCalc's quoting, and
+                    // cache it so we don't re-parse (or re-throw) every frame.
+                    _descriptionFallback = UnwrapDescriptionLiteral(DescriptionFormula.RawExpressionString);
+                    return _descriptionFallback;
+                }
             }
+        }
+
+        // Turns a raw NCalc string-literal (e.g. 'The frame''s own weight.') back into the
+        // human text it was meant to be: strip the wrapping single quotes and un-double any
+        // '' the author used as a (wrong-for-this-NCalc) apostrophe escape.
+        private static string UnwrapDescriptionLiteral(string raw)
+        {
+            if (string.IsNullOrEmpty(raw))
+                return "";
+            var s = raw.Trim();
+            if (s.Length >= 2 && s[0] == '\'' && s[s.Length - 1] == '\'')
+                s = s.Substring(1, s.Length - 2);
+            return s.Replace("''", "'");
         }
 
         internal ChainedExpression IsEnabledFormula { get; set; }

@@ -42,7 +42,9 @@ public class EnergyGenHotloopProcessor : IHotloopProcessor
         double totalSolar = 0;
         var genDB = entity.GetDataBlob<EnergyGenAbilityDB>();
 
-        var position = entity.GetDataBlob<PositionDB>();
+        // Defensive (parity with SensorReflectionProcessor / SensorTools, which TryGet PositionDB): a generator or
+        // an emitter entity might not carry a PositionDB — a hard get would throw on the sim thread and freeze the clock.
+        if (!entity.TryGetDataBlob<PositionDB>(out var position)) return 0;   // no position -> no solar this tick
         var emitters = entity.Manager.GetAllEntitiesWithDataBlob<SensorProfileDB>();
 
         foreach (var panelAtb in genDB.SolarPanels)
@@ -51,7 +53,7 @@ public class EnergyGenHotloopProcessor : IHotloopProcessor
             foreach (var star in emitters)
             {
                 var starProfile = star.GetDataBlob<SensorProfileDB>();
-                var starPos = star.GetDataBlob<PositionDB>();
+                if (!star.TryGetDataBlob<PositionDB>(out var starPos)) continue;
                 double distance = Vector3.Distance(position.AbsolutePosition, starPos.AbsolutePosition);
                 if (distance <= 0) continue;
 

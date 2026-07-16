@@ -4,7 +4,10 @@ using NUnit.Framework;
 using Pulsar4X.Colonies;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
+using Pulsar4X.GroundCombat;
+using Pulsar4X.Industry;
 using Pulsar4X.Modding;
+using Pulsar4X.Ships;
 
 namespace Pulsar4X.Tests
 {
@@ -118,6 +121,377 @@ namespace Pulsar4X.Tests
                 && c.GetDataBlob<ColonyEconomyDB>().TaxRate > 0.0);
             Assert.That(strainedColony, Is.Not.Null,
                 "no UMF colony carries the authored war-tax strain — ApplyOpeningStrain didn't run or found no economy blob.");
+        }
+
+        [Test]
+        [Description("DevTest colony worlds start DEFENDED: after the full sandbox loads, the UMF's colony worlds (and the "
+                     + "player's Earth) carry a GroundForcesDB with their owner's home garrison — so an invasion is a real "
+                     + "fight, not an unopposed capture, and the AI's own worlds aren't free for the taking. The garrison "
+                     + "is the ground echo of the authored fleets, raised for every DevTest faction (unlike the barebones "
+                     + "New Game). Also the gauge that the DevTest Sol generates the region maps the garrison needs.")]
+        public void DevTest_ColonyWorlds_StartWithAHomeGarrison()
+        {
+            var game = NewGame();
+            var (player, _) = DevTestStartFactory.CreateDevTest(
+                game, ScenarioDir, new List<string> { "uef-devtest.json", "umf.json", "kithrin.json" });
+
+            var infos = game.Factions.Values
+                .Where(f => f != null && f.IsValid && f.HasDataBlob<FactionInfoDB>())
+                .Select(f => f.GetDataBlob<FactionInfoDB>()).ToList();
+            var umf = infos.First(i => i.IsNPC && i.Colonies.Count >= 4);
+            int umfId = umf.OwningEntity.Id;
+
+            // Every UMF colony body should carry a GroundForcesDB with UMF-owned units (its home garrison).
+            int garrisonedBodies = 0, umfUnits = 0;
+            foreach (var colony in umf.Colonies)
+            {
+                if (colony == null || !colony.IsValid) continue;
+                var body = colony.GetDataBlob<ColonyInfoDB>().PlanetEntity;
+                if (body != null && body.IsValid && body.TryGetDataBlob<GroundForcesDB>(out var forces))
+                {
+                    int mine = forces.Units.Count(u => u.FactionOwnerID == umfId);
+                    if (mine > 0) { garrisonedBodies++; umfUnits += mine; }
+                }
+            }
+            Assert.That(garrisonedBodies, Is.GreaterThan(0),
+                "no UMF colony world carries a home garrison — RaiseForFactionColonies didn't run or the bodies have no region map.");
+            Assert.That(umfUnits, Is.GreaterThanOrEqualTo(6),
+                "expected at least one UMF world's combined-arms garrison (3 inf + 2 armor + 1 arty = 6).");
+
+            // The player's Earth is defended too, so a UMF invasion (once the AI can land troops) meets resistance.
+            var earthBody = player.GetDataBlob<FactionInfoDB>().Colonies
+                .Where(c => c != null && c.IsValid)
+                .Select(c => c.GetDataBlob<ColonyInfoDB>().PlanetEntity)
+                .FirstOrDefault(b => b != null && b.IsValid);
+            Assert.That(earthBody, Is.Not.Null, "player has no colony body.");
+            Assert.That(earthBody.TryGetDataBlob<GroundForcesDB>(out var earthForces)
+                && earthForces.Units.Any(u => u.FactionOwnerID == player.Id), Is.True,
+                "the player's Earth should start with a home garrison in the DevTest.");
+        }
+
+        [Test]
+        [Description("B5-1: the UMF can build a TROOP TRANSPORT — the ship that lifts ground units to an invasion. The "
+                     + "base mod had no ship mounting a troop-bay, so the AI (or player) could never carry troops off-world. "
+                     + "Asserts UMF's ShipDesigns holds 'default-ship-design-trooper' (so every component id resolved — the "
+                     + "gotcha-#10 sensor for a scenario ship design) AND that it mounts a GroundBayAtb (Personnel carry room) "
+                     + "so it can actually lift infantry. The prerequisite for the B5 conquest loop's load/land step.")]
+        public void DevTest_UMF_CanBuildATroopTransport_ThatCarriesABay()
+        {
+            var game = NewGame();
+            DevTestStartFactory.CreateDevTest(
+                game, ScenarioDir, new List<string> { "uef-devtest.json", "umf.json", "kithrin.json" });
+
+            var umf = game.Factions.Values
+                .Where(f => f != null && f.IsValid && f.HasDataBlob<FactionInfoDB>())
+                .Select(f => f.GetDataBlob<FactionInfoDB>())
+                .First(i => i.IsNPC && i.Colonies.Count >= 4);
+
+            Assert.That(umf.ShipDesigns.ContainsKey("default-ship-design-trooper"), Is.True,
+                "UMF can't build the troop transport — the ship design didn't load (a component id didn't resolve, "
+                + "or it's missing from UMF's shipDesigns list).");
+
+            var trooper = umf.ShipDesigns["default-ship-design-trooper"];
+            Assert.That(trooper.TryGetComponentsByAttribute<GroundBayAtb>(out var bays) && bays.Count > 0, Is.True,
+                "the troop transport mounts no GroundBayAtb — it can't actually carry ground units.");
+        }
+
+        [Test]
+        [Description("B5-2 helpers: ConquerResolver.IsTroopTransport recognises the trooper (mounts a bay) and rejects the "
+                     + "gunship (no bay); and FactionOwnsTransport is FALSE for UMF right after load — it has the trooper "
+                     + "DESIGN but no transport SHIP yet (its start fleet is gunships). These are the two reads the "
+                     + "BuildTransport rung turns on.")]
+        public void DevTest_ConquerResolver_TransportDetection_Helpers()
+        {
+            var game = NewGame();
+            DevTestStartFactory.CreateDevTest(
+                game, ScenarioDir, new List<string> { "uef-devtest.json", "umf.json", "kithrin.json" });
+
+            var umfEntity = game.Factions.Values.First(f =>
+                f != null && f.IsValid && f.HasDataBlob<FactionInfoDB>()
+                && f.GetDataBlob<FactionInfoDB>().IsNPC
+                && f.GetDataBlob<FactionInfoDB>().Colonies.Count >= 4);
+            var umf = umfEntity.GetDataBlob<FactionInfoDB>();
+
+            Assert.That(ConquerResolver.IsTroopTransport(umf.ShipDesigns["default-ship-design-trooper"]), Is.True,
+                "the trooper mounts a troop bay → IsTroopTransport true");
+            Assert.That(ConquerResolver.IsTroopTransport(umf.ShipDesigns["umf-ship-ironhold"]), Is.False,
+                "the Ironhold kinetic line cruiser has no troop bay → IsTroopTransport false");
+
+            var state = FactionState.Snapshot(umfEntity);
+            Assert.That(ConquerResolver.FactionOwnsTransport(state), Is.False,
+                "UMF owns the trooper DESIGN but no transport SHIP yet (its start fleet is gunships) → false");
+        }
+
+        [Test]
+        [Description("B5-2: the DECISION INPUTS of the BuildTransport rung are all satisfied for an at-war UMF — it holds "
+                     + "a scored enemy target, the trooper is a buildable design in IndustryDesigns, and it owns no "
+                     + "transport ship yet. So the rung's LOGIC selects BuildTransport whenever the economy permits the "
+                     + "queue. (The actual queue also passes FeasibilityOracle.CanQueue — see the flagged UMF ship-build "
+                     + "economy note in DEVTEST-AI-BUILD-LOG.md: a crowded hostile Mars may compute infra-efficiency below "
+                     + "the 1/tick capacity floor, which would gate ALL ship builds. That economy check is decoupled here "
+                     + "so this gauge stays a robust test of the rung's wiring, not of Mars's infrastructure.)")]
+        public void DevTest_UMF_AtWar_HasTheInputsToBuildATransport()
+        {
+            var game = NewGame();
+            DevTestStartFactory.CreateDevTest(
+                game, ScenarioDir, new List<string> { "uef-devtest.json", "umf.json", "kithrin.json" });
+
+            var umfEntity = game.Factions.Values.First(f =>
+                f != null && f.IsValid && f.HasDataBlob<FactionInfoDB>()
+                && f.GetDataBlob<FactionInfoDB>().IsNPC
+                && f.GetDataBlob<FactionInfoDB>().Colonies.Count >= 4);
+            var umf = umfEntity.GetDataBlob<FactionInfoDB>();
+
+            // Input 1: a scored enemy target (UMF opened at war with the player, who holds Earth).
+            Assert.That(MilitaryTarget.BestEnemyTarget(umfEntity).IsValid, Is.True,
+                "UMF (at war with the player) should score a valid enemy target world.");
+
+            // Input 2: the transport is a BUILDABLE design (in IndustryDesigns), and it reads as a troop carrier.
+            Assert.That(umf.IndustryDesigns.ContainsKey("default-ship-design-trooper"), Is.True,
+                "the trooper transport should be a buildable IndustryDesign on UMF.");
+            Assert.That(ConquerResolver.IsTroopTransport((Pulsar4X.Ships.ShipDesign)umf.IndustryDesigns["default-ship-design-trooper"]),
+                Is.True, "the buildable trooper reads as a troop transport (mounts a bay).");
+
+            // Input 3: UMF owns no transport SHIP yet → the rung's "build one" condition holds.
+            Assert.That(ConquerResolver.FactionOwnsTransport(FactionState.Snapshot(umfEntity)), Is.False,
+                "UMF owns no transport ship yet, so the BuildTransport rung's precondition holds.");
+        }
+
+        [Test]
+        [Description("MARS-AS-CAPITAL + the ship-build fix (the developer's 'develop up Mars … give it gas', and the "
+                     + "resolution of the flagged 'UMF may not be able to build ships' finding). The UMF capital Mars is "
+                     + "now sized as a real war homeworld — many shipyards/foundries/mines/refineries, research labs + "
+                     + "universities, an intelligence directorate, a governance ministry — with ENOUGH infrastructure to "
+                     + "run it near full efficiency. This is the live test of the colony-infrastructure system: it asserts "
+                     + "(1) Mars runs at high infra efficiency (provided ≥ required), (2) its shipyards provide a real "
+                     + "ship-assembly production line, and (3) FeasibilityOracle.CanQueue now PASSES for both a warship and "
+                     + "the troop transport — so the AI can actually build the navy and the invasion carrier a conquest "
+                     + "needs. Prints the gauge readings so a red run names the exact gate (efficiency / line / CanQueue).")]
+        public void DevTest_UMF_CapitalMars_RunsAtHighEfficiency_AndCanBuildShips()
+        {
+            var game = NewGame();
+            DevTestStartFactory.CreateDevTest(
+                game, ScenarioDir, new List<string> { "uef-devtest.json", "umf.json", "kithrin.json" });
+
+            var umfEntity = game.Factions.Values.First(f =>
+                f != null && f.IsValid && f.HasDataBlob<FactionInfoDB>()
+                && f.GetDataBlob<FactionInfoDB>().IsNPC
+                && f.GetDataBlob<FactionInfoDB>().Colonies.Count >= 4);
+            var umf = umfEntity.GetDataBlob<FactionInfoDB>();
+
+            // Mars is the capital: the UMF colony with the largest population (120 M — far above Luna/Venus/Ceres).
+            var mars = umf.Colonies.Where(c => c != null && c.IsValid)
+                .OrderByDescending(c => c.GetDataBlob<ColonyInfoDB>().Population.Values.Sum())
+                .First();
+
+            // Gauge 1 — the infrastructure system: the capital is sized to run near full (provided ≥ required → 1.0).
+            Assert.That(mars.TryGetDataBlob<InfrastructureDB>(out var infra), Is.True,
+                "Mars has no InfrastructureDB — the recalc didn't run on load.");
+            TestContext.WriteLine($"[mars-infra] provided={infra.CapacityProvided:N0} required={infra.CapacityRequired:N0} "
+                + $"efficiency={infra.Efficiency:F3}");
+            Assert.That(infra.Efficiency, Is.GreaterThan(0.9),
+                $"Mars capital efficiency {infra.Efficiency:F3} is low — its infrastructure is undersized for the "
+                + "industry placed on it (raise default-design-infrastructure amount in umf.json).");
+
+            // Gauge 2 — the shipyards yield a ship-assembly line (the industry the conquest loop mass-produces on).
+            Assert.That(mars.TryGetDataBlob<IndustryAbilityDB>(out var industry), Is.True,
+                "Mars has no IndustryAbilityDB — no installation created a production line.");
+            int shipAssemblyLines = 0, totalAssemblyRate = 0;
+            foreach (var line in industry.ProductionLines.Values)
+                if (line.IndustryTypeRates.TryGetValue("ship-assembly", out var r)) { shipAssemblyLines++; totalAssemblyRate += r; }
+            TestContext.WriteLine($"[mars-industry] lines={industry.ProductionLines.Count} "
+                + $"ship-assembly-lines={shipAssemblyLines} total-assembly-rate={totalAssemblyRate}");
+            Assert.That(shipAssemblyLines, Is.GreaterThan(0),
+                "no shipyard ship-assembly line on Mars — the capital can't assemble ships.");
+
+            // Gauge 3 — the fix: FeasibilityOracle.CanQueue passes for a warship AND the troop transport on Mars.
+            Assert.That(umf.IndustryDesigns.ContainsKey("umf-ship-ironhold"), Is.True,
+                "the Ironhold kinetic cruiser isn't a buildable IndustryDesign on UMF.");
+            Assert.That(umf.IndustryDesigns.ContainsKey("default-ship-design-trooper"), Is.True,
+                "the trooper isn't a buildable IndustryDesign on UMF.");
+            var marsState = ColonyState.Of(mars);
+            bool canWarship = FeasibilityOracle.CanQueue(marsState, umf.IndustryDesigns["umf-ship-ironhold"], umf);
+            bool canTrooper = FeasibilityOracle.CanQueue(marsState, umf.IndustryDesigns["default-ship-design-trooper"], umf);
+            TestContext.WriteLine($"[mars-canqueue] ironhold={canWarship} trooper={canTrooper}");
+            Assert.That(canWarship, Is.True,
+                "UMF Mars cannot queue a WARSHIP — the ship-build gate (crew/capacity after infra scaling) still blocks it.");
+            Assert.That(canTrooper, Is.True,
+                "UMF Mars cannot queue the TROOP TRANSPORT — the invasion carrier is unbuildable, so the conquest loop stalls.");
+        }
+
+        [Test]
+        [Description("PROPORTIONAL KITHRIN (the developer's 'the same logic should PROPORTIONALLY apply to the Kithrin'). "
+                     + "The Kithrin Collective's Titan outpost is a developed alien capital-in-miniature: its own foundries, "
+                     + "deep bores, research labs + a Collective Nexus university, an intelligence directorate, and a naval "
+                     + "yard. Asserts the station loaded with a real industrial base — an IndustryAbilityDB with a "
+                     + "ship-assembly line from its shipyard — proving the proportional buildout's modules resolved and "
+                     + "wired (the gotcha-#10 sensor for the Kithrin capital designs).")]
+        public void DevTest_Kithrin_Titan_IsAProportionalDevelopedCapital()
+        {
+            var game = NewGame();
+            DevTestStartFactory.CreateDevTest(
+                game, ScenarioDir, new List<string> { "uef-devtest.json", "umf.json", "kithrin.json" });
+
+            var kithrin = game.Factions.Values
+                .Where(f => f != null && f.IsValid && f.HasDataBlob<FactionInfoDB>())
+                .Select(f => f.GetDataBlob<FactionInfoDB>())
+                .First(i => i.IsNPC && i.Stations.Count > 0);
+
+            var titan = kithrin.Stations.First(s => s != null && s.IsValid);
+            Assert.That(titan.TryGetDataBlob<IndustryAbilityDB>(out var industry), Is.True,
+                "the Kithrin Titan station has no IndustryAbilityDB — its industry modules didn't wire.");
+            int shipAssemblyLines = industry.ProductionLines.Values
+                .Count(l => l.IndustryTypeRates.ContainsKey("ship-assembly"));
+            TestContext.WriteLine($"[kithrin-industry] lines={industry.ProductionLines.Count} ship-assembly-lines={shipAssemblyLines}");
+            Assert.That(industry.ProductionLines.Count, Is.GreaterThan(3),
+                "the Kithrin outpost has too few production lines — the proportional industrial buildout didn't land.");
+            Assert.That(shipAssemblyLines, Is.GreaterThan(0),
+                "the Kithrin outpost has no ship-assembly line — its naval yard module didn't resolve.");
+        }
+
+        [Test]
+        [Description("KITHRIN AT THE SAME LEVEL (proportionally) — the alien Collective is now a full MILITARY faction, "
+                     + "not just a developed economy. It fields its own ALIEN warship (Hive Cruiser — disruptors + "
+                     + "deflector shields) and troop carrier (Spore Lander), a Titan home fleet, and buildable ground "
+                     + "forces. The load-bearing engine change: the AI can now ACT FROM A STATION — FactionState.Snapshot "
+                     + "includes a station carrying an industry line as a build host, so a station-only faction's "
+                     + "economy/conquest AI is no longer inert (it used to snapshot an empty colony list and no-op). "
+                     + "Asserts the alien ships loaded (gotcha-#10 sensor), the Spore Lander lifts troops, the snapshot "
+                     + "includes the station, and FeasibilityOracle.CanQueue PASSES for the Hive Cruiser on the station — "
+                     + "Kithrin builds its navy exactly as UMF builds from Mars.")]
+        public void DevTest_Kithrin_IsAFullMilitaryFaction_ThatCanBuildFromItsStation()
+        {
+            var game = NewGame();
+            DevTestStartFactory.CreateDevTest(
+                game, ScenarioDir, new List<string> { "uef-devtest.json", "umf.json", "kithrin.json" });
+
+            var kithrinEntity = game.Factions.Values.First(f =>
+                f != null && f.IsValid && f.HasDataBlob<FactionInfoDB>()
+                && f.GetDataBlob<FactionInfoDB>().IsNPC
+                && f.GetDataBlob<FactionInfoDB>().Stations.Count > 0);
+            var kithrin = kithrinEntity.GetDataBlob<FactionInfoDB>();
+
+            // The alien ships loaded (every alien component id resolved) and the lander can lift troops.
+            Assert.That(kithrin.ShipDesigns.ContainsKey("default-ship-design-hive-cruiser"), Is.True,
+                "the Kithrin Hive Cruiser didn't load — an alien component id didn't resolve.");
+            Assert.That(kithrin.ShipDesigns.ContainsKey("default-ship-design-spore-lander"), Is.True,
+                "the Kithrin Spore Lander (troop carrier) didn't load.");
+            Assert.That(kithrin.ShipDesigns["default-ship-design-spore-lander"]
+                    .TryGetComponentsByAttribute<GroundBayAtb>(out var bays) && bays.Count > 0, Is.True,
+                "the Spore Lander carries no troop bay — Kithrin can't lift an invasion.");
+
+            // The AI snapshot now includes the STATION as a build host (was empty for a station-only faction).
+            var state = FactionState.Snapshot(kithrinEntity);
+            Assert.That(state, Is.Not.Null, "Kithrin snapshot is null.");
+            Assert.That(state.Colonies.Count, Is.GreaterThan(0),
+                "FactionState.Snapshot excluded the Kithrin station — its economy/conquest AI would be inert.");
+
+            // Kithrin can BUILD its warship from the station (parity with UMF building from Mars).
+            Assert.That(kithrin.IndustryDesigns.ContainsKey("default-ship-design-hive-cruiser"), Is.True,
+                "the Hive Cruiser isn't a buildable IndustryDesign on Kithrin.");
+            var station = state.Colonies.First();
+            bool canBuildCruiser = FeasibilityOracle.CanQueue(
+                station, kithrin.IndustryDesigns["default-ship-design-hive-cruiser"], kithrin);
+            TestContext.WriteLine($"[kithrin-canqueue] hive-cruiser={canBuildCruiser} snapshot-hosts={state.Colonies.Count}");
+            Assert.That(canBuildCruiser, Is.True,
+                "Kithrin cannot queue its warship from the station — the station-aware snapshot or the ship-assembly line regressed.");
+        }
+
+        [Test]
+        [Description("B3 MATERIEL gauge — the two NPC factions load their LOCKED design identities (kinetic UMF / energy-shield "
+                     + "Kithrin) end-to-end. A ship design only lands in ShipDesigns if LoadFromJson instantiated it, which "
+                     + "resolves EVERY component id it mounts — so ContainsKey is the gotcha-#10 sensor that all the new dialed "
+                     + "weapon/hull/armor/shield component ids resolved. Asserts UMF fields its kinetic line (Ironhold/Bulwark/"
+                     + "Rampart, mass-driver/chain-flak/siege-driver on rugged hulls) and no longer the generic laser gunship, "
+                     + "and Kithrin its energy-shield line (Radiance/Umbra + the unarmed Sable scout / Seedship). The mass-built "
+                     + "warships read as non-transports; the transports (trooper/spore-lander) read as troop carriers.")]
+        public void DevTest_Factions_LoadTheirLockedMaterielIdentities()
+        {
+            var game = NewGame();
+            DevTestStartFactory.CreateDevTest(
+                game, ScenarioDir, new List<string> { "uef-devtest.json", "umf.json", "kithrin.json" });
+
+            var infos = game.Factions.Values
+                .Where(f => f != null && f.IsValid && f.HasDataBlob<FactionInfoDB>())
+                .Select(f => f.GetDataBlob<FactionInfoDB>()).ToList();
+            var umf = infos.First(i => i.IsNPC && i.Colonies.Count >= 4);
+            var kithrin = infos.First(i => i.IsNPC && i.Stations.Count > 0);
+
+            // UMF kinetic line loaded (every dialed kinetic component id resolved), and it dropped the generic laser gunship.
+            foreach (var id in new[] { "umf-ship-ironhold", "umf-ship-bulwark", "umf-ship-rampart" })
+                Assert.That(umf.ShipDesigns.ContainsKey(id), Is.True,
+                    $"UMF's kinetic warship '{id}' didn't load — a dialed component id (mass-driver/chain-flak/siege-driver/"
+                    + "nickel-steel or ablative-composite armor) failed to resolve.");
+            Assert.That(umf.ShipDesigns.ContainsKey("default-ship-design-gunship"), Is.False,
+                "UMF should no longer field the generic laser gunship — its navy is kinetic now.");
+
+            // Kithrin energy/shield/exotic line loaded (every dialed energy-lance/disruptor/plasma/shield/ward id resolved).
+            foreach (var id in new[] { "kithrin-ship-radiance", "kithrin-ship-umbra", "kithrin-ship-sable", "kithrin-ship-seedship" })
+                Assert.That(kithrin.ShipDesigns.ContainsKey(id), Is.True,
+                    $"Kithrin's '{id}' didn't load — an energy-lance/phase-disruptor/plasma-caster/resonance-shield/ward-lattice "
+                    + "or surveyor/hull component id failed to resolve.");
+
+            // The mass-built warships are warships (no troop bay); the transports carry troops.
+            Assert.That(ConquerResolver.IsTroopTransport(umf.ShipDesigns["umf-ship-ironhold"]), Is.False,
+                "the Ironhold line cruiser is a warship, not a transport.");
+            Assert.That(ConquerResolver.IsTroopTransport(kithrin.ShipDesigns["kithrin-ship-radiance"]), Is.False,
+                "the Radiance energy cruiser is a warship, not a transport.");
+            Assert.That(ConquerResolver.IsTroopTransport(kithrin.ShipDesigns["kithrin-ship-sable"]), Is.False,
+                "the Sable scout is unarmed utility, not a troop transport.");
+            Assert.That(ConquerResolver.IsTroopTransport(umf.ShipDesigns["default-ship-design-trooper"]), Is.True,
+                "the Anvil dropship (trooper) still carries troops for the invasion role.");
+        }
+
+        [Test]
+        [Description("B5-3 (the conquest keystone, LOAD rung): with a UMF troop transport sitting at Mars — which holds a "
+                     + "UMF home garrison — the three reads the ConquerResolver LOAD rung turns on are all satisfied: "
+                     + "FindOwnedTransport returns the transport, it's AT Mars with free troop-bay room, and "
+                     + "AvailableGroundUnitAt finds a loadable garrison unit. So the rung selects LoadInvasion whenever the "
+                     + "resolve reaches it. Decoupled from the strike-fleet priority (the B5-2 lesson — assert the rung's "
+                     + "INPUTS, not a priority-gated outcome). This is the first rung of load→sail→land→capture; sailing the "
+                     + "loaded transport and landing it are the next slices.")]
+        public void DevTest_UMF_Invasion_HasTheInputsToLoadTroops()
+        {
+            var game = NewGame();
+            DevTestStartFactory.CreateDevTest(
+                game, ScenarioDir, new List<string> { "uef-devtest.json", "umf.json", "kithrin.json" });
+
+            var umfEntity = game.Factions.Values.First(f =>
+                f != null && f.IsValid && f.HasDataBlob<FactionInfoDB>()
+                && f.GetDataBlob<FactionInfoDB>().IsNPC
+                && f.GetDataBlob<FactionInfoDB>().Colonies.Count >= 4);
+            var umf = umfEntity.GetDataBlob<FactionInfoDB>();
+
+            // UMF owns no transport at the start (its fleet is gunships) — the rung's precondition to FILL.
+            Assert.That(ConquerResolver.FindOwnedTransport(FactionState.Snapshot(umfEntity)), Is.Null,
+                "UMF should own no transport ship at start.");
+
+            // Mars = the largest-pop UMF colony; it carries a home garrison (raised by the DevTest start).
+            var mars = umf.Colonies.Where(c => c != null && c.IsValid)
+                .OrderByDescending(c => c.GetDataBlob<ColonyInfoDB>().Population.Values.Sum())
+                .First();
+            var marsBody = mars.GetDataBlob<ColonyInfoDB>().PlanetEntity;
+            Assert.That(marsBody != null && marsBody.IsValid, Is.True, "Mars has no planet body.");
+
+            // Spawn a UMF troop transport at Mars — the ship the AI would have built (BuildTransport rung).
+            var trooperDesign = (ShipDesign)umf.ShipDesigns["default-ship-design-trooper"];
+            var trooper = ShipFactory.CreateShip(trooperDesign, umfEntity, marsBody, "MFS Test Lander");
+            Assert.That(trooper != null && trooper.IsValid, Is.True, "failed to spawn the test transport.");
+
+            // Input 1: FindOwnedTransport now returns the transport (the rung's precondition is met).
+            var state = FactionState.Snapshot(umfEntity);
+            Assert.That(ConquerResolver.FindOwnedTransport(state), Is.Not.Null,
+                "FindOwnedTransport should return the spawned troop transport.");
+
+            // Input 2: the transport is AT Mars with free Personnel bay room.
+            Assert.That(GroundTransport.ShipIsAtBody(trooper, marsBody), Is.True, "the transport should be at Mars.");
+            Assert.That(GroundTransport.FreeCapacity(trooper, GroundCarryClass.Personnel), Is.GreaterThan(0),
+                "the transport should have free troop-bay room.");
+
+            // Input 3: Mars has a garrison unit the TROOPER can actually load (CanLoad-filtered — a Personnel unit its
+            // troop bay has room for, NOT the Vehicle armour/artillery it can't carry). This is the LOAD rung's third read.
+            Assert.That(ConquerResolver.AvailableLoadableUnit(trooper, marsBody, umfEntity.Id), Is.Not.Null,
+                "Mars should hold a garrison unit the troop transport can load (an infantry unit).");
         }
     }
 }

@@ -53,6 +53,21 @@ namespace Pulsar4X.Factions
                 colonies.Add(ColonyState.Of(colony));
             }
 
+            // A station is an off-world production host too: a station-based faction (e.g. the Kithrin outpost)
+            // builds ships/units from its modules exactly as a colony builds from its installations. Include any
+            // station carrying an industry line so the BUILD rungs (Conquer/Defend/GrowEconomy/AdvanceTech) can act
+            // on it — otherwise a station-only faction snapshots an empty colony list and its whole economy AI no-ops.
+            // Safe + additive: the morale/mining rungs already skip a host with no ColonyMoraleDB/ColonyEconomyDB/
+            // MineralsDB (a station carries none), and ColonyState.Of reads every field via TryGetDataBlob. Byte-
+            // identical for a faction with no stations (the player + the UMF), and the whole snapshot only builds
+            // inside the EnableOrderEmission-gated planner, so a default game is unchanged.
+            foreach (var station in info.Stations)
+            {
+                if (station == null || !station.IsValid) continue;
+                if (!station.HasDataBlob<IndustryAbilityDB>()) continue;   // a bare platform has nothing to build on
+                colonies.Add(ColonyState.Of(station));
+            }
+
             return new FactionState
             {
                 Faction = faction,

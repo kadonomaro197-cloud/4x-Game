@@ -1,7 +1,16 @@
+using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
+using Pulsar4X.Colonies;
+using Pulsar4X.Datablobs;   // OrderableDB
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
+using Pulsar4X.Fleets;      // FleetDB (clear start fleets)
+using Pulsar4X.Galaxy;
+using Pulsar4X.GroundCombat;
 using Pulsar4X.Industry;
+using Pulsar4X.Movement;    // PositionDB, WarpAbilityDB
+using Pulsar4X.Ships;
 
 namespace Pulsar4X.Tests
 {
@@ -11,6 +20,10 @@ namespace Pulsar4X.Tests
     /// on a free ship line — when pursuing Conquer, and that Conquer is now registered (so every objective resolves).
     /// The actual attack (target-selection / reach / fuel / strike) is the deferred P-3 military sub-subsystem.
     /// Resolve is a pure decision (no side effect until Execute).
+    ///
+    /// B5-b (the LAND rung, 2026-07-15) adds the invasion KEYSTONE gauge: with a loaded transport sitting over a won
+    /// enemy world, the CONQUER resolver's top rung LANDS the troops and the ground processor CAPTURES the region —
+    /// the "take a planet" payoff, driven through the real resolver + order + ground paths, no sim advance.
     /// </summary>
     [TestFixture]
     public class ConquerResolverTests
@@ -47,6 +60,158 @@ namespace Pulsar4X.Tests
         {
             Assert.That(ObjectiveResolvers.TryGet(StrategicObjective.Conquer, out var r), Is.True);
             Assert.That(r.Handles, Is.EqualTo(StrategicObjective.Conquer));
+        }
+
+        // ── B5-b — THE LAND RUNG (the invasion keystone) ────────────────────────────────────────────────────────────
+
+        /// <summary>Give <paramref name="rival"/> a colony on a REAL regioned body in the attacker's own system (reach
+        /// 1.0, so MilitaryTarget picks it), region 0 owned by the rival — the world to take. Uses a real body (not a
+        /// synthetic one) so it carries a PositionDB (a ship can orbit it), a MassVolumeDB, and a full region surface
+        /// with adjacency + hex grid — everything GroundForcesProcessor needs to run cleanly to the capture step (the
+        /// same setup as TakeAPlanetIntegrationTests). Returns the body.</summary>
+        private static Entity GiveRivalAColonyWorld(TestScenario s, Entity rival)
+        {
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingSystem.GetAllEntitiesWithDataBlob<PlanetRegionsDB>()
+                .FirstOrDefault(b => b.Id != s.StartingBody.Id && b.GetDataBlob<PlanetRegionsDB>().Regions.Count > 0);
+            Assert.That(body, Is.Not.Null, "the start system needs a second regioned body to stand in for the enemy world");
+
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            regionsDB.Regions[0].OwnerFactionID = rival.Id;   // the rival holds the world (region 0 = the capital)
+
+            var colony = Entity.Create();
+            colony.FactionOwnerID = rival.Id;
+            s.StartingSystem.AddEntity(colony);
+            colony.SetDataBlob(new ColonyInfoDB(new Dictionary<int, long> { { 1, 500_000 } }, body));
+            rival.GetDataBlob<FactionInfoDB>().Colonies.Add(colony);
+            return body;
+        }
+
+        /// <summary>A transport owned by the attacker, sitting AT <paramref name="atBody"/>, carrying one ground unit —
+        /// the "won the orbit, troops aboard" state the LAND rung acts on. Hand-built (rather than via ShipFactory) for
+        /// direct control of the loaded state: ShipInfoDB (so it's found), PositionDB parented to the body (at body),
+        /// OrderableDB (so the instant land order executes through the lane), GroundTransportDB with the loaded unit.</summary>
+        private static (Entity ship, GroundUnit unit) PlaceLoadedTransportAt(TestScenario s, Entity atBody)
+        {
+            var design = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns.Values.First();
+            var ship = Entity.Create();
+            s.StartingSystem.AddEntity(ship);
+            ship.FactionOwnerID = s.Faction.Id;
+            ship.SetDataBlob(new ShipInfoDB(design));
+            ship.SetDataBlob(new PositionDB(atBody));   // parent = the given body → GroundTransport.ShipIsAtBody true
+            ship.SetDataBlob(new OrderableDB());          // the land order runs through the OrderableProcessor lane
+            ship.SetDataBlob(new WarpAbilityDB { MaxSpeed = 10000 });   // a real drive → the SAIL rung's warp-capable guard passes
+
+            var unit = new GroundUnit
+            {
+                UnitId = 7,
+                Name = "Invasion Rifles",
+                FactionOwnerID = s.Faction.Id,
+                UnitType = GroundUnitType.Infantry,
+                Attack = 100, Defense = 10, MaxHealth = 500, Health = 500,
+            };
+            var transport = new GroundTransportDB();
+            transport.LoadedUnits.Add(unit);
+            ship.SetDataBlob(transport);
+            return (ship, unit);
+        }
+
+        [Test]
+        [Description("B5-b keystone: with a loaded transport holding the orbit over a war target, the CONQUER resolver's "
+                   + "top rung LANDS the troops (a pure LandInvasion decision until Execute), and the ground processor "
+                   + "then CAPTURES the region — take-a-planet driven end-to-end through resolver + order + ground paths.")]
+        public void Conquer_LandsTheInvasion_AndCapturesTheRegion()
+        {
+            var s = TestScenario.CreateWithColony();
+            var reds = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+            Diplomacy.DeclareWar(s.Faction, reds, CasusBelli.ConfrontRival, s.Game.TimePulse.GameGlobalDateTime);
+
+            var enemyBody = GiveRivalAColonyWorld(s, reds);
+            var (transport, unit) = PlaceLoadedTransportAt(s, enemyBody);
+            var regionsDB = enemyBody.GetDataBlob<PlanetRegionsDB>();
+            Assert.That(regionsDB.Regions[0].OwnerFactionID, Is.EqualTo(reds.Id), "precondition: the rival holds region 0");
+
+            var state = FactionState.Snapshot(s.Faction);
+            var objective = new StrategicObjectiveDB { Objective = StrategicObjective.Conquer };
+            var action = new ConquerResolver().Resolve(state, objective);
+
+            // The top rung fires because a loaded transport holds the orbit over the target world.
+            Assert.That(action.Kind, Is.EqualTo("LandInvasion"),
+                "with troops aboard a transport over a won enemy world, CONQUER lands them (the highest-priority rung)");
+
+            // Resolve is a pure decision — nothing has landed yet.
+            Assert.That(transport.GetDataBlob<GroundTransportDB>().LoadedUnits, Has.Count.EqualTo(1),
+                "Resolve is pure — the unit is still aboard the transport until Execute");
+            Assert.That(enemyBody.HasDataBlob<GroundForcesDB>() &&
+                        enemyBody.GetDataBlob<GroundForcesDB>().Units.Any(u => u.FactionOwnerID == s.Faction.Id), Is.False,
+                "no invader unit is on the surface before Execute");
+
+            // Execute the one step: the land order fires synchronously through the order handler.
+            action.Execute();
+
+            Assert.That(transport.GetDataBlob<GroundTransportDB>().LoadedUnits, Has.Count.EqualTo(0),
+                "after Execute the unit has left the transport (it landed)");
+            var forces = enemyBody.GetDataBlob<GroundForcesDB>();
+            Assert.That(forces.Units.Any(u => u.FactionOwnerID == s.Faction.Id && u.RegionIndex == 0), Is.True,
+                "the invader unit is now standing in the target world's region 0");
+
+            // The ground processor runs (no sim advance): the sole live unit in region 0 is the invader → CAPTURE.
+            new GroundForcesProcessor().ProcessEntity(enemyBody, 3600);
+
+            Assert.That(regionsDB.Regions[0].OwnerFactionID, Is.EqualTo(s.Faction.Id),
+                "with the invader holding the undefended region, it flips to the attacker — the AI took the ground");
+        }
+
+        [Test]
+        [Description("B5-a: with a loaded transport sitting at home (NOT yet at the war target), the CONQUER resolver "
+                   + "SAILS it toward the enemy world (a SailTransport decision) — the slice between LOAD and LAND. "
+                   + "Decision-only (warp transit has no deterministic harness), mirroring how the STRIKE rung is gauged.")]
+        public void Conquer_SailsTheLoadedTransport_TowardTheTarget()
+        {
+            var s = TestScenario.CreateWithColony();
+            // Drop the colony's own start fleets so no massed strike fleet can preempt the SAIL rung (Rung 1) — this
+            // isolates the transport-sail decision (StrikeGroupMinWarships needs a real fleet, which we've removed).
+            foreach (var fleet in s.StartingSystem.GetAllEntitiesWithDataBlob<FleetDB>().ToList())
+                fleet.Destroy();
+
+            var reds = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+            Diplomacy.DeclareWar(s.Faction, reds, CasusBelli.ConfrontRival, s.Game.TimePulse.GameGlobalDateTime);
+
+            var enemyBody = GiveRivalAColonyWorld(s, reds);
+            // The loaded transport sits at HOME (Earth), NOT at the enemy world — so it can't land yet; it must sail.
+            var (transport, _) = PlaceLoadedTransportAt(s, s.StartingBody);
+            Assert.That(enemyBody.Id, Is.Not.EqualTo(s.StartingBody.Id), "the enemy world must differ from home for a sail");
+
+            var state = FactionState.Snapshot(s.Faction);
+
+            // The finder (the new decision logic) picks the loaded, not-at-target, warp-capable transport.
+            Assert.That(ConquerResolver.FindSailableTransport(state, enemyBody), Is.EqualTo(transport),
+                "the SAIL finder picks the loaded transport that isn't at the target yet");
+
+            var action = new ConquerResolver().Resolve(state, new StrategicObjectiveDB { Objective = StrategicObjective.Conquer });
+            Assert.That(action.Kind, Is.EqualTo("SailTransport"),
+                "a loaded transport away from the target → the resolver sails it there (not LandInvasion, not a build rung)");
+        }
+
+        // ── Phase A-2b — the "best not first" warship pick (DecisionScorer wired live) ───────────────────────────────
+
+        [Test]
+        [Description("Phase A-2b: the warship-mass rung SCORES the buildable warships with the shared DecisionScorer and "
+                   + "masses the MOST-ARMED one (best not first), instead of taking whatever is first in dictionary order.")]
+        public void PickWarship_MassesTheMostArmedWarship()
+        {
+            var s = TestScenario.CreateWithColony();
+            var warships = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns.Values
+                .Where(d => ConquerResolver.IsWarship(d)).ToList();
+            Assert.That(warships.Count, Is.GreaterThan(0), "the start faction has armed designs to mass");
+
+            var chosen = ConquerResolver.PickWarship(warships, null);   // null personality → neutral
+            Assert.That(chosen, Is.Not.Null, "a non-empty candidate set yields a pick");
+
+            int chosenMounts = ConquerResolver.WeaponMountCount(chosen);
+            foreach (var w in warships)
+                Assert.That(ConquerResolver.WeaponMountCount(w), Is.LessThanOrEqualTo(chosenMounts),
+                    $"the scorer massed the most-armed warship ('{chosen.Name}', {chosenMounts} mounts) — best not first");
         }
     }
 }

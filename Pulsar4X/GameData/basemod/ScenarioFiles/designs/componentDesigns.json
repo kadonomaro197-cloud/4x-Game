@@ -2,6 +2,32 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-agri-complex",
+      "Name": "Agricultural Complex",
+      "TemplateId": "food-production",
+      "Properties": [
+        { "Key": "Food Output", "Value": 5000 },
+        { "Key": "Food Quality", "Value": 1.0 },
+        { "Key": "Automation", "Value": 0 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-hydroponics-arcology",
+      "Name": "Hydroponics Arcology",
+      "TemplateId": "food-production",
+      "Properties": [
+        { "Key": "Food Output", "Value": 5000 },
+        { "Key": "Food Quality", "Value": 2.5 },
+        { "Key": "Automation", "Value": 0.3 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-alcubierre-2k",
       "Name": "Alcuberi-White 2k",
       "TemplateId": "alcubierre-warp-drive",
@@ -416,7 +442,7 @@
       "Name": "Passive Scanner",
       "TemplateId": "passive-sensor",
       "Properties": [
-        { "Key": "Antenna Size", "Value": 5000 },
+        { "Key": "Antenna Size", "Value": 2500 },
         { "Key": "Ideal Detection Wavelength", "Value": 470 },
         { "Key": "Detection Bandwidth", "Value": 250 },
         { "Key": "Resolution", "Value": 100 },
@@ -672,6 +698,30 @@
       "UniqueId": "default-design-bunker",
       "Name": "Bunker",
       "TemplateId": "bunker"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-station-chassis",
+      "Name": "Station Chassis",
+      "TemplateId": "station-chassis"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-constructor",
+      "Name": "Field Constructor",
+      "TemplateId": "constructor"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-building-foundation",
+      "Name": "Building Foundation",
+      "TemplateId": "building-foundation"
     }
   },
   {
@@ -990,6 +1040,206 @@
       "UniqueId": "default-design-ground-radar",
       "Name": "Ground Radar",
       "TemplateId": "ground-radar"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-valles-mine",
+      "Name": "Valles Marineris Deep Mine",
+      "TemplateId": "mine",
+      "Properties": [
+        { "Key": "Area", "Value": 5000000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-meridiani-refinery",
+      "Name": "Meridiani Refinery Complex",
+      "TemplateId": "refinery",
+      "Properties": [
+        { "Key": "Size", "Value": 10000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-olympus-shipyard",
+      "Name": "Olympus Naval Yards",
+      "TemplateId": "shipyard",
+      "Properties": [
+        { "Key": "Slip Size", "Value": 25000 },
+        { "Key": "Crew Size", "Value": 40000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-olympus-university",
+      "Name": "Olympus University",
+      "TemplateId": "research-academy",
+      "Properties": [
+        { "Key": "Class Size", "Value": 100 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-ares-directorate",
+      "Name": "Ares Intelligence Directorate",
+      "TemplateId": "intelligence-directorate",
+      "Properties": [
+        { "Key": "Op Capacity", "Value": 10 },
+        { "Key": "Counter Intel Rating", "Value": 60 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-mars-high-command",
+      "Name": "Martian High Command",
+      "TemplateId": "command-berth",
+      "Properties": [
+        { "Key": "Grade", "Value": 10 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-federation-ministry",
+      "Name": "Ministry of the Federation",
+      "TemplateId": "admin-complex",
+      "Properties": [
+        { "Key": "Office Space", "Value": 2000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-kithrin-nexus",
+      "Name": "Kithrin Collective Nexus",
+      "TemplateId": "research-academy",
+      "Properties": [
+        { "Key": "Class Size", "Value": 50 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-kithrin-deep-mine",
+      "Name": "Kithrin Reclamation Bore",
+      "TemplateId": "mine",
+      "Properties": [
+        { "Key": "Area", "Value": 2000000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "umf-mass-driver",
+      "Name": "Mass Driver",
+      "TemplateId": "railgun-weapon",
+      "Properties": [
+        { "Key": "Kinetic Energy Per Shot", "Value": 350000 },
+        { "Key": "Muzzle Velocity", "Value": 50000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "umf-siege-driver",
+      "Name": "Siege Driver",
+      "TemplateId": "siege-railgun",
+      "Properties": [
+        { "Key": "Kinetic Energy Per Shot", "Value": 1500000 },
+        { "Key": "Muzzle Velocity", "Value": 50000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "umf-chain-flak",
+      "Name": "Chain-Flak Battery",
+      "TemplateId": "flak-weapon",
+      "Properties": [
+        { "Key": "Rounds Per Second", "Value": 20 },
+        { "Key": "Pellets Per Shot", "Value": 60 },
+        { "Key": "Damage Per Pellet", "Value": 500 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "kithrin-energy-lance",
+      "Name": "Energy Lance",
+      "TemplateId": "laser-weapon",
+      "Properties": [
+        { "Key": "Range", "Value": 10000 },
+        { "Key": "Focal Length", "Value": 5000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "kithrin-phase-disruptor",
+      "Name": "Phase Disruptor",
+      "TemplateId": "disruptor-weapon",
+      "Properties": [
+        { "Key": "Energy Per Shot", "Value": 300000 },
+        { "Key": "Rounds Per Second", "Value": 2 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "kithrin-plasma-caster",
+      "Name": "Plasma Caster",
+      "TemplateId": "plasma-repeater",
+      "Properties": [
+        { "Key": "Energy Per Shot", "Value": 100000 },
+        { "Key": "Rounds Per Second", "Value": 4 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "kithrin-resonance-shield",
+      "Name": "Resonance Shield",
+      "TemplateId": "deflector-array",
+      "Properties": [
+        { "Key": "Shield Capacity", "Value": 15000000 },
+        { "Key": "Recharge Rate", "Value": 300000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "kithrin-ward-lattice",
+      "Name": "Ward Lattice",
+      "TemplateId": "armour-hardening",
+      "Properties": [
+        { "Key": "Soak vs Kinetic", "Value": 0.1 },
+        { "Key": "Soak vs Energy", "Value": 0.8 },
+        { "Key": "Soak vs Explosive", "Value": 0.0 },
+        { "Key": "Soak vs Exotic", "Value": 0.0 }
+      ]
     }
   }
 ]

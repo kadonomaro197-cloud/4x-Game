@@ -72,17 +72,26 @@ shrinks-on-Silent, the EMCON ladder) is unchanged — only the absolute reach mo
 number stay in exact agreement. Gauges: `DetectionTuningTests` (ship-vs-ship clears the 0.1 Gm combat floor; reach
 stays under the fog ceiling). Tunable like Combat's `SalvoDamageScale` — one number for the whole detection feel.
 
-**Colony sensors see ACROSS the system — by design (decision 2026-06-28).** A follow-up to the scale tuning: detection
-range is **linear in antenna size** (`threshold ∝ 1/antenna²`, range `∝ 1/√threshold ∝ antenna`), and the colony's
-Passive Scanner has a **5000** antenna vs a ship's **5.5** — ~900× — so the colony detects a ship at **~230 Gm**, well
-past Venus (~60 Gm): it sees the whole inner system. Because the 1e6 scale is ONE global knob and the two sensors are
-locked ~800× apart by antenna size, you **cannot** rein the colony in without dropping the ship sensor back under the
-combat-useful floor. The developer's call: **keep it.** A fixed ground megasensor is realistic system-wide early
-warning — the homeworld always spots fleets entering the system, but the fog that matters for tactics (ship-vs-ship in
-deep space) is still the tight ~0.3 Gm bubble. So a colony is intentionally NOT a "tactical bubble" sensor; ships are.
-Gauge: `DetectionTuningTests.ColonyScanner_IsSystemWideEarlyWarning_ByDesign` (asserts the colony reach dwarfs a
-warship's — that asymmetry IS the design). If a future build wants surprise approaches on the homeworld, that needs a
-deliberate per-design sensor-horizon cap, not a scale change.
+**Colony sensors have a HARD detection HORIZON so they can't see the whole system (2026-07-14 — the real fix).** The
+homeworld megasensor was seeing a rival gunship parked at **Ceres** (~265 Gm from Earth). Two findings from chasing it:
+1. **Antenna is CLAMPED by the template.** The `passive-sensor` template caps `Antenna Size` at `MaxFormula = 2500`, so
+   a design's antenna value is `min(designValue, 2500)` at instantiation (the L7 template-clamp gotcha). The colony
+   design's antenna was **5000 → clamped to 2500 all along** — so an earlier "cut 5000→2500" data change was a **no-op**
+   (both clamp to 2500). Lesson: check a Property's `MaxFormula` before "tuning" its design value.
+2. **Reach is signature-DEPENDENT, so no antenna value reliably bounds it.** Range scales with `√(target signal)`, so a
+   LOUD military target (the gunship) is detected far past a nominal one — you can't pick an antenna that sees Venus but
+   never a loud ship at Ceres.
+
+**The fix is a hard, signature-INDEPENDENT horizon** (the "deliberate per-design sensor-horizon cap" this doc always
+said was the right tool). `SensorReceiverAtb.MaxDetectionRange_m` (0 = unlimited): `SensorTools.GetDetectedEntites`
+detects **nothing** beyond it however loud the target, and `DetectionRange_m` (the readout/range ring) clamps to it so
+the ring matches the scan. Wired via a 7-arg `SensorReceiverAtb` ctor overload (the 6-arg kept → every other sensor
+byte-identical, Weapons gotcha #0) + the `passive-sensor` template passing **200 Gm** (`2e11`) as the 7th
+`AtbConstrArgs`. So the homeworld sees the inner-system approaches (Venus/Luna/Mars-when-near, closing fleets) but the
+**belt/Ceres (265+ Gm) is DARK** — fog that matters. A ship's passive sensor uses the same template but its real reach
+is ~0.3 Gm, far inside 200 Gm → the horizon never bites → combat detection is byte-identical. To change the homeworld's
+horizon, edit that one `2e11` literal. Gauge: `DetectionTuningTests.ColonyScanner_IsSystemWideEarlyWarning_ByDesign`
+still holds (200 Gm clears the 10 Gm ship-bubble ceiling and dwarfs a warship's ~0.3 Gm).
 
 Detection quality: triangular overlap between sensor's waveform band and signal's waveform band. Signal must overlap the sensor's peak sensitivity region to score high quality.
 
