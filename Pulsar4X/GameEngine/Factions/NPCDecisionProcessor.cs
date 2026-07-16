@@ -688,6 +688,14 @@ namespace Pulsar4X.Factions
         {
             if (factionEntity == null) return;
             Pulsar4X.Fleets.FleetAssembly.AssembleBuiltWarships(factionEntity);
+
+            // Slice 3 — resource-gated ESCALATION: read the faction's treasury + war footing and stamp the aspiration
+            // (how big to grow the fleet) onto every forming fleet, so the warship-massing rung caps at a RESOURCED
+            // target (poor → the Deployable core; money → Ideal; plentiful-or-at-war → Perfect). The reads are the AI's
+            // (treasury off the Ledger, war off DiplomacyDB); the pure decision is FleetAssembly.AspirationFor.
+            var aspiration = Pulsar4X.Fleets.FleetAssembly.AspirationFor(
+                FactionRollup.Balance(factionEntity), NeedsLadder.WarStanding(factionEntity).atWar);
+            Pulsar4X.Fleets.FleetAssembly.SetAspiration(factionEntity, aspiration);
         }
 
         /// <summary>

@@ -112,11 +112,15 @@ namespace Pulsar4X.Tests
             Assert.That(FormingFleetCount(s), Is.EqualTo(1), "the first sweep formed ONE fleet");
             int firstFleetId = TheFormingFleet(s).Id;
 
+            // Aim the fleet at its IDEAL size (target 8) so the next hulls GROW it rather than overflowing into a reserve
+            // (a fleet fills to its aspiration target, then overflows into a second fleet — the reserve seam).
+            FleetAssembly.SetAspiration(s.Faction, FleetCompositionTier.Ideal);
+
             // two more warships roll off the line next cycle
             for (int i = 0; i < 2; i++) BuildLooseWarship(s, design);
             FleetAssembly.AssembleBuiltWarships(s.Faction);
 
-            Assert.That(FormingFleetCount(s), Is.EqualTo(1), "the second sweep GREW the existing fleet, not started a new one");
+            Assert.That(FormingFleetCount(s), Is.EqualTo(1), "the second sweep GREW the existing fleet (still below the Ideal target), not started a new one");
             var fleet = TheFormingFleet(s);
             Assert.That(fleet.Id, Is.EqualTo(firstFleetId), "it is the SAME forming fleet");
             Assert.That(MilitaryComposition.WarshipCount(fleet), Is.EqualTo(5), "the grown fleet now holds all 5 warships");

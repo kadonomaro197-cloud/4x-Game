@@ -36,6 +36,12 @@ namespace Pulsar4X.Fleets
         /// (and, slice 3, the standing patrol order) fires ONCE, not every monthly cycle.</summary>
         [JsonProperty] public bool Deployed { get; internal set; }
 
+        /// <summary>Slice 3 — how big the AI is currently AIMING to grow this fleet, chosen from the faction's treasury +
+        /// war footing each cycle (poor → Deployable / has resources → Ideal / plentiful-or-at-war → Perfect). The
+        /// warship-massing rung reads it back as the CAP (via <see cref="FleetCompositionTemplate.TargetCountFor"/>) so a
+        /// poor faction stops at the deploy core instead of trickling hulls forever. Defaults to Deployable (the min aim).</summary>
+        [JsonProperty] public FleetCompositionTier Aspiration { get; internal set; } = FleetCompositionTier.Deployable;
+
         public FleetCompositionDB() { }
 
         public FleetCompositionDB(FleetCompositionTemplate template)
@@ -59,6 +65,7 @@ namespace Pulsar4X.Fleets
             IdealSize    = IdealSize,
             PerfectSize  = PerfectSize,
             Deployed     = Deployed,
+            Aspiration   = Aspiration,
         };
     }
 }
