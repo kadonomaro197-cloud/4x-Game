@@ -86,6 +86,11 @@ All engine-green; these are the *runtime/feel* checks. Full detail + what-right-
 ## Performance — the number I need
 - [ ] **The `⏱ map breakdown` perf number.** Run a busy scenario (a combat with a few dozen ships, or a dense system), and when a frame is slow watch `console_output.txt` / `game_logs/` for a line like `⏱ map breakdown ms — orbits u../d.. (N) | …`. **Send me that line** — it tells me which icon list eats the frame so I can make the targeted render fix and give you the real "how many entities can the lemon PC handle" budget.
 
+## Event Logger (2026-07-16, slice 2 — client)
+- [ ] **The top-centre event strip appears.** New Game (or Load) → a compact **Events** strip sits at the top-centre of the screen, showing `(0)` / `(no events)` at first. Click **"> Events"** to expand it downward (up to 20 rows), click **"v Events"** to collapse back to 5.
+- [ ] **Enemy detection pauses + drops to 1-hour steps.** Set the time step to **months or years** and fast-forward toward a known enemy fleet (DevTest UMF/Kithrin). When your sensors first pick it up: the clock should **auto-pause**, a row **"Enemy Fleet detected at [nearest planet]"** appears in the strip, and the **step size should read 1 hour** (not the months you set). Un-pause → you advance carefully at 1-hour steps. *(This is the whole point — verify the step actually reset.)*
+- [ ] **Tune (send me feedback):** position/width of the strip, whether "large body" picks the right landmark, whether the alert should fire on *unknown* foreign ships or only *at-war* ones, and whether a multi-ship fleet firing several rows is annoying (I can dedupe to one alert per incursion).
+
 ---
 
 *Maintenance: when a client feature ships that CI can't runtime-verify, add a line here. Remove a line once you've confirmed it live. This is the standing "runtime gauge is the developer" list — the companion to CI's compile gate.*
