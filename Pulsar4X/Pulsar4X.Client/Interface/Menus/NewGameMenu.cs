@@ -737,6 +737,7 @@ public class NewGameMenu : PulsarGuiWindow
         ToolBarWindow.GetInstance().SetActive();
         Selector.GetInstance().SetActive();
         EntityFilterBar.GetInstance().SetActive();
+        EventTickerWindow.GetInstance().SetActive();   // the Event Logger strip (top-centre)
     }
 
     private void ResetSelectedBodyId()

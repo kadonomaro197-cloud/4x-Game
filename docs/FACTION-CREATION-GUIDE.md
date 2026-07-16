@@ -79,7 +79,10 @@ Skeleton (all nodes; delete the ones you don't need — most are optional):
   "fleets":    [ /* see §3f — starting fleets (optional) */ ],
 
   "openingRelations": [ /* see §3g — who you start at war with */ ],
-  "strain": { /* see §3h — opening war-strain */ }
+  "strain": { /* see §3h — opening war-strain */ },
+
+  "fleetComposition": { /* see §3i — how big a fleet the AI masses (optional) */ },
+  "garrison": { /* see §3j — this faction's home-garrison mix (optional) */ }
 }
 ```
 
@@ -204,6 +207,25 @@ Applied in the second pass (after all factions load). `atWar: true` latches war 
 }
 ```
 Sets the INPUTS the economy processors read, so the strain STICKS and compounds over time. Byte-identical if omitted.
+
+### 3i. `fleetComposition` — how big a fleet the AI masses (optional)
+
+```jsonc
+"fleetComposition": {
+  "name": "Martian Battle Line",   // display/template name (cosmetic)
+  "minToDeploy": 4,                // Deployable tier — the smallest fleet the AI will send
+  "idealSize": 10,                 // Ideal tier — the size it aims for when solvent
+  "perfectSize": 20               // Perfect tier — the size it aims for when rich (or at war)
+}
+```
+The per-faction override of the fleet **aspiration ladder** the AI masses toward (`FactionInfoDB.Fleet*` → `FleetAssembly.TemplateFor`). As a faction's built warships are swept into fleets (`FleetAssembly.AssembleBuiltWarships`), a forming fleet grows to its tier target and **overflow spills into a home-defence RESERVE** — the AI never ships its whole navy (the reserve is the military-commander's job). Treasury balance picks the tier (broke→Deployable, 50k→Ideal, 150k→Perfect); being at war bumps one tier. **Omit → the engine default (`Strike Fleet` 3/8/18) → byte-identical.** A militarist faction fields a heavier line (UMF 4/10/20); a raider a lighter swarm (Kithrin 3/6/12). *(Note the interplay with §3f: a **starting** fleet needs ≥3 warships for `ReadyStrikeFleet` to sail; `fleetComposition` governs what the AI grows toward as it BUILDS more.)*
+
+### 3j. `garrison` — this faction's home-garrison mix (optional)
+
+```jsonc
+"garrison": { "Infantry": 4, "Armor": 3, "Artillery": 2 }   // type name (case-insensitive) → count
+```
+The ground echo of `fleetComposition`: the combined-arms garrison `GroundStartGarrison.RaiseForFactionColonies` raises on **each of this faction's colony worlds** (the third pass, §2 step 4 — colony worlds only; a station-only faction raises nothing). Type names are the `GroundUnitType` enum (Infantry / Armor / Artillery); unknown names / non-positive counts are skipped. **Omit → the engine default light watch (3 Infantry / 2 Armor / 1 Artillery = 6) → byte-identical.** So the militarist UMF garrisons a heavier 4/3/2 legion while the player keeps the default. *(Same reserve principle is meant to extend to battalions later — a garrison shouldn't ship its whole defense off on an invasion.)*
 
 ---
 

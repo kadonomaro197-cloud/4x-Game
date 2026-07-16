@@ -8,6 +8,17 @@
     "tech": 0.1,
     "expansion": 0.2
   },
+  "fleetComposition": {
+    "name": "Martian Battle Line",
+    "minToDeploy": 4,
+    "idealSize": 10,
+    "perfectSize": 20
+  },
+  "garrison": {
+    "Infantry": 4,
+    "Armor": 3,
+    "Artillery": 2
+  },
   "personality": {
     "aggression": 0.7,
     "ambition": 0.8,
@@ -166,6 +177,7 @@
     "default-design-agri-complex",
     "default-design-hydroponics-arcology",
     "default-design-ship-hull-heavy",
+    "default-design-ship-hull-light",
     "default-design-passive-sensor-s50",
     "default-design-laser-weapon",
     "umf-mass-driver",
@@ -203,6 +215,8 @@
     "umf-ship-ironhold",
     "umf-ship-bulwark",
     "umf-ship-rampart",
+    "umf-ship-legionnaire",
+    "umf-ship-skirmisher",
     "default-ship-design-trooper"
   ],
   "species": [

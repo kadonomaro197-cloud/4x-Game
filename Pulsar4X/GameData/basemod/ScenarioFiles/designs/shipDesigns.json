@@ -998,5 +998,65 @@
         { "Id": "default-design-NTR1.8", "Amount": 3 }
       ]
     }
+  },
+  {
+    "Type": "ShipDesign",
+    "Payload": {
+      "UniqueID": "umf-ship-legionnaire",
+      "Name": "UMFS Legionnaire",
+      "Armor": { "Id": "nickel-steel-armor", "Thickness": 6 },
+      "Components": [
+        { "Id": "default-design-ship-hull-heavy", "Amount": 1 },
+        { "Id": "default-design-passive-sensor-s50", "Amount": 1 },
+        { "Id": "umf-chain-flak", "Amount": 6 },
+        { "Id": "default-design-pd-director", "Amount": 1 },
+        { "Id": "default-design-fuel-tank-1000", "Amount": 2 },
+        { "Id": "default-design-alcubierre-500", "Amount": 4 },
+        { "Id": "default-design-battery-2t", "Amount": 3 },
+        { "Id": "default-design-reactor-2t", "Amount": 2 },
+        { "Id": "default-design-NTR1.8", "Amount": 4 }
+      ]
+    }
+  },
+  {
+    "Type": "ShipDesign",
+    "Payload": {
+      "UniqueID": "umf-ship-skirmisher",
+      "Name": "UMFS Skirmisher",
+      "Armor": { "Id": "aluminium-armor", "Thickness": 1 },
+      "Components": [
+        { "Id": "default-design-ship-hull-light", "Amount": 1 },
+        { "Id": "default-design-passive-sensor-s50", "Amount": 1 },
+        { "Id": "umf-chain-flak", "Amount": 1 },
+        { "Id": "default-design-pd-director", "Amount": 1 },
+        { "Id": "default-design-fuel-tank-1000", "Amount": 1 },
+        { "Id": "default-design-alcubierre-500", "Amount": 2 },
+        { "Id": "default-design-battery-2t", "Amount": 1 },
+        { "Id": "default-design-reactor-2t", "Amount": 1 },
+        { "Id": "default-design-NTR1.8", "Amount": 4 }
+      ]
+    }
+  },
+  {
+    "Type": "ShipDesign",
+    "Payload": {
+      "UniqueID": "kithrin-ship-harbinger",
+      "Name": "Harbinger",
+      "Armor": { "Id": "titanium-armor", "Thickness": 4 },
+      "Components": [
+        { "Id": "default-design-ship-hull-heavy", "Amount": 1 },
+        { "Id": "default-design-passive-sensor-s50", "Amount": 1 },
+        { "Id": "kithrin-phase-disruptor", "Amount": 3 },
+        { "Id": "kithrin-plasma-caster", "Amount": 2 },
+        { "Id": "kithrin-resonance-shield", "Amount": 2 },
+        { "Id": "kithrin-ward-lattice", "Amount": 1 },
+        { "Id": "default-design-beam-fire-control", "Amount": 1 },
+        { "Id": "default-design-fuel-tank-1000", "Amount": 2 },
+        { "Id": "default-design-alcubierre-500", "Amount": 4 },
+        { "Id": "default-design-battery-2t", "Amount": 4 },
+        { "Id": "default-design-reactor-2t", "Amount": 3 },
+        { "Id": "default-design-NTR1.8", "Amount": 4 }
+      ]
+    }
   }
 ]
