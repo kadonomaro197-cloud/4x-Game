@@ -209,6 +209,15 @@ namespace Pulsar4X.Factions
             if (EnableOrderEmission)
                 EmitOrders(factionEntity, factionInfoDB);
 
+            // Fleet-composition slice 2: fold the faction's built-but-unfleeted warships (parked flat under the root
+            // fleet by ShipDesign.OnConstructionComplete) into ONE holistic in-system FORMING fleet — growing an
+            // under-strength one before starting a new one. This is the missing link that lets the strike fleet MASS:
+            // MilitaryComposition.ReadyStrikeFleet only sees in-system fleets, so a loose warship was invisible. Runs
+            // BEFORE the doctrine/role pass below, so the just-assembled fleet gets its doctrine + role sub-fleets the
+            // same cycle. Gated by EnableOrderEmission + MONTHLY → byte-identical off.
+            if (EnableOrderEmission && isMonthlyCycle)
+                RunFleetAssemblyPolicy(factionEntity);
+
             // Phase B-1: set each owned fleet's combat DOCTRINE + engagement POSTURE by PERSONALITY (scored through the
             // shared DecisionScorer) — the AI now USES the fleet-doctrine levers it never touched (an aggressive faction
             // runs all-out-attack + weapons-free, a cautious one a defensive line + return-fire). Gated by
@@ -666,6 +675,27 @@ namespace Pulsar4X.Factions
                 else { _f[DecisionFeature.MilitarySolve] = 0.5; }   // Utilitarian / balanced middle
             }
             public IReadOnlyDictionary<DecisionFeature, double> Features => _f;
+        }
+
+        /// <summary>
+        /// Fleet-composition slice 2 — assemble the faction's built warships into a real in-system FORMING fleet so the
+        /// offensive logic can find + mass them. A thin, defensive wrapper over the engine-side
+        /// <see cref="Pulsar4X.Fleets.FleetAssembly.AssembleBuiltWarships"/> (which does the tree mutation — grow an
+        /// under-strength forming fleet before starting a new one, flip Deployable at the min core). Gated at the call
+        /// site by <see cref="EnableOrderEmission"/> (default off → byte-identical) + MONTHLY. Internal for the CI gauge.
+        /// </summary>
+        internal static void RunFleetAssemblyPolicy(Entity factionEntity)
+        {
+            if (factionEntity == null) return;
+            Pulsar4X.Fleets.FleetAssembly.AssembleBuiltWarships(factionEntity);
+
+            // Slice 3 — resource-gated ESCALATION: read the faction's treasury + war footing and stamp the aspiration
+            // (how big to grow the fleet) onto every forming fleet, so the warship-massing rung caps at a RESOURCED
+            // target (poor → the Deployable core; money → Ideal; plentiful-or-at-war → Perfect). The reads are the AI's
+            // (treasury off the Ledger, war off DiplomacyDB); the pure decision is FleetAssembly.AspirationFor.
+            var aspiration = Pulsar4X.Fleets.FleetAssembly.AspirationFor(
+                FactionRollup.Balance(factionEntity), NeedsLadder.WarStanding(factionEntity).atWar);
+            Pulsar4X.Fleets.FleetAssembly.SetAspiration(factionEntity, aspiration);
         }
 
         /// <summary>

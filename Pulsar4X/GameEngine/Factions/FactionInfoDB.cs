@@ -124,6 +124,23 @@ namespace Pulsar4X.Factions
         [JsonProperty]
         public DoctrineVector Doctrine { get; set; } = new DoctrineVector();
 
+        // Per-faction FLEET-COMPOSITION ladder (the min-to-deploy / ideal / perfect sizes the AI grows its fleets to) —
+        // a militarist battle-line runs bigger fleets than an expansionist raider swarm. Defaults to the shared 3/8/18
+        // strike-fleet ladder; a scenario authors its own via the "fleetComposition" JSON node (FactionFactory). Stored
+        // as the three numbers here (the Fleets.FleetCompositionTemplate is a plain unserialised class); FleetAssembly
+        // reads them back into a template. Kept as plain ints so FactionInfoDB doesn't depend on the Fleets namespace.
+        [JsonProperty] public int FleetMinToDeploy { get; set; } = 3;
+        [JsonProperty] public int FleetIdealSize   { get; set; } = 8;
+        [JsonProperty] public int FleetPerfectSize { get; set; } = 18;
+        [JsonProperty] public string FleetTemplateName { get; set; } = "Strike Fleet";
+
+        // Per-faction GROUND GARRISON composition (unit-type name → count) the AI fields on its home worlds — the ground
+        // echo of the fleet ladder: a militarist planet-empire garrisons a heavier combined-arms legion than a light
+        // frontier watch. EMPTY → GroundStartGarrison uses its engine default (3 Inf / 2 Armor / 1 Arty), so every
+        // existing scenario is byte-identical. Authored via the "garrison" JSON node (FactionFactory). Plain strings so
+        // FactionInfoDB doesn't depend on the GroundCombat namespace (GroundStartGarrison parses them to GroundUnitType).
+        [JsonProperty] public Dictionary<string, int> GarrisonComposition { get; set; } = new();
+
         public FactionInfoDB()
         {
             var componentDesigns = new Dictionary<string, ComponentDesign>();

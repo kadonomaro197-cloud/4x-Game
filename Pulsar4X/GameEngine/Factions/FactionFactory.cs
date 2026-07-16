@@ -88,6 +88,34 @@ namespace Pulsar4X.Factions
                 };
             }
 
+            // Per-faction FLEET COMPOSITION: a scenario can author the ladder its AI grows fleets to (a Martian battle-
+            // line vs a Kithrin raid-swarm) via a "fleetComposition" node { name, minToDeploy, idealSize, perfectSize }.
+            // Absent → the FactionInfoDB defaults (3/8/18) stand, so every existing scenario is byte-identical. FleetAssembly
+            // reads these back via TemplateFor(faction) when it forms a fleet.
+            var fleetCompNode = rootJson["fleetComposition"];
+            if (fleetCompNode != null)
+            {
+                factionInfoDB.FleetTemplateName = fleetCompNode["name"]?.Value<string>()      ?? factionInfoDB.FleetTemplateName;
+                factionInfoDB.FleetMinToDeploy  = fleetCompNode["minToDeploy"]?.Value<int>()  ?? factionInfoDB.FleetMinToDeploy;
+                factionInfoDB.FleetIdealSize    = fleetCompNode["idealSize"]?.Value<int>()    ?? factionInfoDB.FleetIdealSize;
+                factionInfoDB.FleetPerfectSize  = fleetCompNode["perfectSize"]?.Value<int>()  ?? factionInfoDB.FleetPerfectSize;
+            }
+
+            // Per-faction GROUND GARRISON: a scenario can author the home-defence mix its worlds start with (a heavier
+            // Martian legion vs the default light watch) via a "garrison" node { Infantry, Armor, Artillery }. Absent →
+            // GroundStartGarrison's engine default (3/2/1) stands → byte-identical.
+            var garrisonNode = rootJson["garrison"];
+            if (garrisonNode != null)
+            {
+                var comp = new Dictionary<string, int>();
+                foreach (var t in new[] { "Infantry", "Armor", "Artillery" })
+                {
+                    int c = garrisonNode[t]?.Value<int>() ?? 0;
+                    if (c > 0) comp[t] = c;
+                }
+                if (comp.Count > 0) factionInfoDB.GarrisonComposition = comp;
+            }
+
             // Phase 5.1a — AUTHORED PERSONALITY: a scenario can hand a faction its 12-trait identity (the model the whole
             // brain reads — retreat nerve, treaty tolerance, aggression, honour…). Only attach a PersonalityDB when the
             // scenario names one; with no "personality" node the faction carries none and every trait read falls back to

@@ -124,6 +124,11 @@ namespace Pulsar4X.Sensors
                                 // is where two factions first "meet". The HasMet guard inside makes it fire once
                                 // per pair; a neutral (planet/asteroid) or own-faction target is a no-op.
                                 Pulsar4X.Factions.FirstContact.OnDetection(faction, detectableEntity, atDateTime);
+
+                                // Event Logger (2026-07-16): a newly-detected ENEMY foreign SHIP raises an
+                                // "Enemy Fleet detected at [nearest body]" event. The player's FactionEventLog halts
+                                // on it → pause + reset to 1-hour steps. No-op for own/neutral/non-hostile targets.
+                                SensorEvents.OnNewShipContact(faction, detectableEntity, manager, atDateTime);
                             }
 
                         }

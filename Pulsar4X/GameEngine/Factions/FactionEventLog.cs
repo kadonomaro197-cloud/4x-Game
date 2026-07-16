@@ -47,9 +47,13 @@ public class FactionEventLog : IEventLog
             return;
         }
 
-        if (_haltsOn.Contains(e.EventType))
+        if (_haltsOn.Contains(e.EventType) && _masterTimePulse != null)
         {
             _masterTimePulse.PauseTime();
+            // Drop the fast-forward step size back to careful 1-hour stepping. Without this, un-pausing after an
+            // "enemy fleet detected" alert while fast-forwarding in MONTHS or YEARS would blast straight past the
+            // danger on the next step — the developer's key requirement for the Event Logger mechanic (2026-07-16).
+            _masterTimePulse.Ticklength = System.TimeSpan.FromSeconds(3600);
         }
 
         _events.Add(e);

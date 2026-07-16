@@ -94,8 +94,12 @@ namespace Pulsar4X.Factions
                 // enemy = detected signal-kW) — this wires the fight/flee LEVER; the calibration is the A-3 tuning pass.
                 int enemyFactionId = target.Colony != null && target.Colony.IsValid ? target.Colony.FactionOwnerID : Game.NeutralFactionId;
                 bool oddsFavorAttack = CombatRisk.WouldEngage(state.Faction, enemyFactionId);
+                // RESERVE GUARD (slice 3): the AI never sends its LAST organized combat fleet on an offensive — a
+                // home-defense reserve must remain (HasHomeReserve). The developer's "don't pull all fleets at once";
+                // a placeholder for the system military-commander delegate that will own the commit-vs-reserve call.
                 if (oddsFavorAttack && strikeFleet != null && strikeFleet.IsValid && !FleetIsMoving(strikeFleet)
-                    && reach.Tier == MilitaryReach.ReachTier.SameSystem && reach.HasRange)
+                    && reach.Tier == MilitaryReach.ReachTier.SameSystem && reach.HasRange
+                    && HasHomeReserve(state, strikeFleet))
                 {
                     var game = state.Game;
                     int factionId = state.FactionId;
@@ -224,6 +228,15 @@ namespace Pulsar4X.Factions
             // vs a cautious faction's armoured brawler) needs per-design combat values (firepower/evasion/toughness),
             // which only exist on a BUILT ship — that richer featurization is the flagged tuning refinement. Byte-
             // identical while EnableOrderEmission is off (this whole resolver is gated).
+            //
+            // Slice 3 — the RESOURCE-GATED, RESERVE-AWARE CAP: stop massing once the faction has a COMPLETE strike fleet
+            // (grown to the size its treasury + war footing warrant) AND a second deployable fleet held back as a home
+            // RESERVE. So a poor faction sizes at the Deployable core + a reserve; a wealthy/at-war one grows to Ideal/
+            // Perfect + a reserve; and it never stops at a single all-in fleet ("don't commit everything"). No forming
+            // fleet yet (nothing assembled) → no cap → mass the first fleet as before, so the ConquerResolver byte-
+            // identity tests (which drive the resolver with no FleetCompositionDB present) stay green.
+            if (ShouldStopMassing(state)) return PlannerAction.None;
+
             foreach (var colony in state.ColoniesWithFreeLine())
             {
                 if (colony.Cargo == null) continue;   // AutoAddSubJobs needs a CargoStorageDB
@@ -294,6 +307,50 @@ namespace Pulsar4X.Factions
             if (ship.TryGetComponentsByAttribute<DisruptorWeaponAtb>(out var f)) foreach (var c in f) n += c.count;
             if (ship.TryGetComponentsByAttribute<MissileLauncherAtb>(out var g)) foreach (var c in g) n += c.count;
             return n;
+        }
+
+        /// <summary>Slice 3 (reserve-aware) — TRUE when the faction has built ENOUGH: a COMPLETE strike fleet (a forming
+        /// fleet at/above its aspiration target) AND a second DEPLOYABLE fleet to keep home as a RESERVE. Only then does
+        /// the massing rung stop building hulls — so the AI keeps building PAST one fleet (the developer's "don't commit
+        /// everything; keep a reserve" — the home-defense fleet the system military commander holds back). No forming
+        /// fleet (no <see cref="Pulsar4X.Fleets.FleetCompositionDB"/>) → false (mass to create the first, byte-identical
+        /// for the ConquerResolver tests which drive the resolver with no such blob). Reads the same
+        /// <see cref="FactionState.OwnedFleets"/> the strike rung uses.</summary>
+        private static bool ShouldStopMassing(FactionState state)
+        {
+            int completeStrikeFleets = 0;   // forming fleets at/above their aspiration target (a finished strike group)
+            int deployableFleets = 0;       // forming fleets at/above the deploy core (a candidate strike OR reserve)
+            foreach (var fleet in state.OwnedFleets())
+            {
+                if (!fleet.TryGetDataBlob<Pulsar4X.Fleets.FleetCompositionDB>(out var comp)) continue;
+                int armed = MilitaryComposition.WarshipCount(fleet);
+                int target = comp.Template.TargetCountFor(comp.Aspiration);
+                if (target > 0 && armed >= target) completeStrikeFleets++;
+                if (armed >= comp.MinToDeploy)      deployableFleets++;
+            }
+            return completeStrikeFleets >= 1 && deployableFleets >= 2;   // a finished strike fleet + a reserve → sized, stop
+        }
+
+        /// <summary>Slice 3 — the RESERVE GUARD (a placeholder for the system military-commander delegate that will own
+        /// the commit-vs-reserve call). TRUE = the strike fleet may sail because a home-defense RESERVE remains. An
+        /// ORGANIZED fleet (one the AI assembled — carries a <see cref="Pulsar4X.Fleets.FleetCompositionDB"/>) may sail
+        /// ONLY if the faction keeps ANOTHER organized combat fleet (≥ its deploy core, not this fleet, not already
+        /// committed/moving) at home — so the AI never sends its LAST organized fleet on an offensive. A fleet with NO
+        /// FleetCompositionDB (a hand-made / sandbox / test fleet) isn't subject to the doctrine and sails as before.
+        /// Internal for the CI gauge.</summary>
+        internal static bool HasHomeReserve(FactionState state, Entity strikeFleet)
+        {
+            if (strikeFleet == null || !strikeFleet.HasDataBlob<Pulsar4X.Fleets.FleetCompositionDB>())
+                return true;   // not an AI-organized fleet → the reserve doctrine doesn't gate it
+            foreach (var fleet in state.OwnedFleets())
+            {
+                if (fleet.Id == strikeFleet.Id) continue;
+                if (!fleet.TryGetDataBlob<Pulsar4X.Fleets.FleetCompositionDB>(out var comp)) continue;
+                if (FleetIsMoving(fleet)) continue;   // already committed elsewhere — not a home reserve
+                if (MilitaryComposition.WarshipCount(fleet) >= comp.MinToDeploy)
+                    return true;   // a home reserve remains → the strike may sail
+            }
+            return false;   // no reserve → hold this fleet home (the AI keeps massing a reserve first)
         }
 
         /// <summary>An armed hull presented to the shared <see cref="DecisionScorer"/>: v1 scores it on

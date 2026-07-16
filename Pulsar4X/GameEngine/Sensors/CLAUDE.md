@@ -218,6 +218,20 @@ targets — so the sensor hot loop is unaffected in the common case. Direction i
 holds a foreign contact from before this code (no diplomacy row) won't retro-register — harmless (IFF defaults to
 hostile), and a contact-aging/backfill pass is the follow-up.
 
+## Event Logger — detection → event → auto-pause (2026-07-16)
+
+`SensorEvents.cs` (new) rides the **same new-contact branch** of `SensorScan` as first-contact. When a faction newly
+detects an ENEMY foreign **ship**, `SensorEvents.OnNewShipContact` publishes an `Events.EventType.NewHostileContact`
+event — *"Enemy Fleet detected at [nearest large body]"* (`NearestLargeBodyName` = the closest planet/moon, not an
+asteroid). v1 hostility = **at-war OR unknown-foreign** (`DiplomacyDB.HasMet`/`AtWar`); no-op for own/neutral/non-ship
+and known-but-peaceful. Published for every faction's detections, but each `Factions.FactionEventLog` only stores/halts
+on its OWN faction's events, so only the player (who opts in) is affected. **The halt now ALSO resets the step size:**
+`FactionEventLog.OnEvent`, on a halt-event, calls `PauseTime()` **and** sets `MasterTimePulse.Ticklength = 1 hour` — so
+un-pausing after an enemy-fleet alert while fast-forwarding in MONTHS/YEARS drops back to careful 1-hour stepping (the
+developer's key requirement). Client half (the top-of-screen event ticker + opting the player log into the halt) is a
+local-only slice. Gauge: `EventLoggerTests` (halt+step-reset driven directly; nearest-body). The publish hook itself is
+live-verified (SensorScan is display-coupled scale).
+
 ## Phase 4 Relevance
 
 Ground forces have a sensor component (`SensorSignatureAtb`) that gives them an EM profile when in space transport. On the ground, sensor ranges become terrain-line-of-sight problems — a different mechanic from the space EM system. Do not reuse `SensorScan` for ground unit spotting; it's the wrong tool.
