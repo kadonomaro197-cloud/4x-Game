@@ -8,6 +8,12 @@
     "tech": 0.1,
     "expansion": 0.2
   },
+  "fleetComposition": {
+    "name": "Martian Battle Line",
+    "minToDeploy": 4,
+    "idealSize": 10,
+    "perfectSize": 20
+  },
   "personality": {
     "aggression": 0.7,
     "ambition": 0.8,

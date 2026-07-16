@@ -124,6 +124,16 @@ namespace Pulsar4X.Factions
         [JsonProperty]
         public DoctrineVector Doctrine { get; set; } = new DoctrineVector();
 
+        // Per-faction FLEET-COMPOSITION ladder (the min-to-deploy / ideal / perfect sizes the AI grows its fleets to) —
+        // a militarist battle-line runs bigger fleets than an expansionist raider swarm. Defaults to the shared 3/8/18
+        // strike-fleet ladder; a scenario authors its own via the "fleetComposition" JSON node (FactionFactory). Stored
+        // as the three numbers here (the Fleets.FleetCompositionTemplate is a plain unserialised class); FleetAssembly
+        // reads them back into a template. Kept as plain ints so FactionInfoDB doesn't depend on the Fleets namespace.
+        [JsonProperty] public int FleetMinToDeploy { get; set; } = 3;
+        [JsonProperty] public int FleetIdealSize   { get; set; } = 8;
+        [JsonProperty] public int FleetPerfectSize { get; set; } = 18;
+        [JsonProperty] public string FleetTemplateName { get; set; } = "Strike Fleet";
+
         public FactionInfoDB()
         {
             var componentDesigns = new Dictionary<string, ComponentDesign>();

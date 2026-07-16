@@ -31,6 +31,19 @@ namespace Pulsar4X.Fleets
         /// (min-to-deploy / ideal / perfect). Slice 3 gives a faction its own template; v1 shares this one.</summary>
         public static readonly FleetCompositionTemplate DefaultTemplate = FleetCompositionTemplate.DefaultStrikeFleet;
 
+        /// <summary>This faction's own fleet-composition ladder — the per-faction numbers authored on its
+        /// <see cref="Pulsar4X.Factions.FactionInfoDB"/> (a militarist BATTLE-LINE runs bigger fleets than an
+        /// expansionist RAID-SWARM), falling back to the shared <see cref="DefaultTemplate"/> (3/8/18) for a faction
+        /// with no FactionInfoDB (byte-identical for the engine tests, which build factions with the default numbers).
+        /// The whole composition + reserve logic reads the ladder back off each fleet's <see cref="FleetCompositionDB"/>,
+        /// so stamping it here at fleet creation is the SINGLE choke point that gives each faction its own strike size.</summary>
+        public static FleetCompositionTemplate TemplateFor(Entity faction)
+        {
+            if (faction != null && faction.TryGetDataBlob<Pulsar4X.Factions.FactionInfoDB>(out var info))
+                return new FleetCompositionTemplate(info.FleetTemplateName, info.FleetMinToDeploy, info.FleetIdealSize, info.FleetPerfectSize);
+            return DefaultTemplate;
+        }
+
         /// <summary>Treasury at/above which the AI aims to grow a fleet to its IDEAL size (slice 3). Anchored below
         /// <c>NeedsLadder.AmbitionWealth</c> (100k) — "some money in the bank" buys the ideal configuration. FLAGGED tunable.</summary>
         public const decimal IdealWealth = 50000m;
@@ -124,10 +137,11 @@ namespace Pulsar4X.Fleets
                 FleetCompositionDB comp;
                 if (fleet == null)
                 {
-                    fleet = FleetFactory.Create(manager, factionId, DefaultTemplate.Name);
+                    var template = TemplateFor(faction);          // this faction's own ladder (battle-line vs raid-swarm), else the default
+                    fleet = FleetFactory.Create(manager, factionId, template.Name);
                     fleetDB = fleet.GetDataBlob<FleetDB>();
                     fleetDB.SetParent(faction);                   // a TOP-LEVEL fleet (child of the faction root → shows in OwnedFleets + the Fleet window)
-                    comp = new FleetCompositionDB(DefaultTemplate);
+                    comp = new FleetCompositionDB(template);
                     fleet.SetDataBlob(comp);                      // the memo that finds this fleet next sweep + tracks the deploy latch
                 }
                 else

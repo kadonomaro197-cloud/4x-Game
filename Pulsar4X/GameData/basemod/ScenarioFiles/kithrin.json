@@ -8,6 +8,12 @@
     "tech": 0.2,
     "expansion": 0.45
   },
+  "fleetComposition": {
+    "name": "Kithrin Raid Swarm",
+    "minToDeploy": 3,
+    "idealSize": 6,
+    "perfectSize": 12
+  },
   "personality": {
     "xenophobia": 0.75,
     "ambition": 0.85,
