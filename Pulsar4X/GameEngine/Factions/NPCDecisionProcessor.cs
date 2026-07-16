@@ -701,13 +701,62 @@ namespace Pulsar4X.Factions
                 {
                     if (fleet == null || !fleet.IsValid || fleet.FactionOwnerID != factionEntity.Id) continue;
                     // Set the fleet-level doctrine on TOP-LEVEL fleets only — a role sub-fleet carries its OWN doctrine
-                    // (a later slice assigns it), and this whole-faction policy must not stomp it. No-op for a default
-                    // game (no sub-fleets exist).
+                    // (assigned below), and this whole-faction policy must not stomp it. No-op for a default game.
                     if (Pulsar4X.Combat.CombatEngagement.IsSubFleet(fleet)) continue;
                     Pulsar4X.Combat.FleetDoctrine.TrySetDoctrine(fleet, chosen, now);   // honours the switch cooldown
                     Pulsar4X.Combat.FleetDoctrine.SetEngagementPosture(fleet, posture); // direct (works mid-battle)
+
+                    // Organise the fleet into role sub-fleets and give each its role doctrine — but NOT mid-battle
+                    // (restructuring the tree during an engagement would disrupt the resolver; a fighting fleet keeps
+                    // its shape). Gated overall by EnableOrderEmission at the call site, so a default game never runs it.
+                    if (!fleet.HasDataBlob<Pulsar4X.Combat.FleetCombatStateDB>())
+                        ApplyRoleDoctrines(fleet, game, now);
                 }
             }
         }
+
+        /// <summary>
+        /// Organises one top-level fleet into role sub-fleets (Q7) and gives EACH sub-fleet the fighting stance its job
+        /// wants: the fast SCREEN goes all-out-attack + weapons-free (it leads and pins), the LINE holds a balanced
+        /// stance, long-reach ARTILLERY takes a defensive (survive-at-range) stance but still opens fire, and the
+        /// SUPPORT tenders run a defensive stance and HOLD FIRE (they stay out of the shooting). Forming is idempotent
+        /// (<see cref="Pulsar4X.Fleets.FleetRoleComposer.FormRoleSubFleets"/> no-ops once a fleet is already decomposed), so this both
+        /// creates the sub-fleets the first month and re-applies their doctrine every month after. Only decomposes a
+        /// fleet with 2+ ships — a lone ship needs no internal organisation.
+        /// </summary>
+        private static void ApplyRoleDoctrines(Entity topFleet, Game game, DateTime now)
+        {
+            if (topFleet == null || !topFleet.TryGetDataBlob<Pulsar4X.Fleets.FleetDB>(out var db)) return;
+            if (game?.StartingGameData?.CombatDoctrines == null) return;
+
+            int directShips = 0;
+            foreach (var c in db.GetChildren())
+                if (c != null && c.IsValid && c.HasDataBlob<Pulsar4X.Ships.ShipInfoDB>()) directShips++;
+            if (directShips >= 2)
+                Pulsar4X.Fleets.FleetRoleComposer.FormRoleSubFleets(topFleet);   // idempotent — forms once, no-op thereafter
+
+            // Doctrine every EXISTING role sub-fleet (whether just formed or formed a prior month).
+            foreach (var child in db.GetChildren())
+            {
+                if (child == null || !child.IsValid) continue;
+                if (!child.TryGetDataBlob<Pulsar4X.Fleets.FleetRoleDB>(out var roleDB)) continue;
+                var (doctrineId, posture) = RoleDoctrine(roleDB.Role);
+                if (game.StartingGameData.CombatDoctrines.TryGetValue(doctrineId, out var bp) && bp != null)
+                    Pulsar4X.Combat.FleetDoctrine.TrySetDoctrine(child, bp, now);   // honours the switch cooldown
+                Pulsar4X.Combat.FleetDoctrine.SetEngagementPosture(child, posture); // set the role posture after
+            }
+        }
+
+        /// <summary>The catalog doctrine id + engagement posture each fleet role fights with (reconciled to the base-mod
+        /// combatDoctrines.json: all-out-attack=Offensive, balanced=Utilitarian, defensive-line=Defensive).</summary>
+        private static (string doctrineId, Pulsar4X.Combat.EngagementPosture posture) RoleDoctrine(Pulsar4X.Fleets.FleetRole role)
+            => role switch
+            {
+                Pulsar4X.Fleets.FleetRole.Screen    => ("all-out-attack", Pulsar4X.Combat.EngagementPosture.WeaponsFree),
+                Pulsar4X.Fleets.FleetRole.Line      => ("balanced",       Pulsar4X.Combat.EngagementPosture.WeaponsFree),
+                Pulsar4X.Fleets.FleetRole.Artillery => ("defensive-line", Pulsar4X.Combat.EngagementPosture.WeaponsFree),
+                Pulsar4X.Fleets.FleetRole.Support   => ("defensive-line", Pulsar4X.Combat.EngagementPosture.WeaponsHold),
+                _                                   => ("balanced",       Pulsar4X.Combat.EngagementPosture.WeaponsFree),
+            };
     }
 }
