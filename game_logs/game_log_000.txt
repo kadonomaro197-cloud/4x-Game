@@ -1,5 +1,9 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 === Pulsar4X session started 2026-07-16 05:08:26 ===
+=======
+=== Pulsar4X session started 2026-07-16 18:15:48 ===
+>>>>>>> Stashed changes
 =======
 === Pulsar4X session started 2026-07-16 18:15:48 ===
 >>>>>>> Stashed changes
@@ -34,7 +38,11 @@ Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Cli
 Successfully loaded: pulsar4x-menu
 Format: .png
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 Texture pointer: 2295460A800
+=======
+Texture pointer: 25ADB569B00
+>>>>>>> Stashed changes
 =======
 Texture pointer: 25ADB569B00
 >>>>>>> Stashed changes
@@ -46,7 +54,11 @@ Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Cli
 Successfully loaded: DesComp
 Format: .bmp
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 Texture pointer: 22958C4D2C0
+=======
+Texture pointer: 25ADB522E50
+>>>>>>> Stashed changes
 =======
 Texture pointer: 25ADB522E50
 >>>>>>> Stashed changes
@@ -56,7 +68,11 @@ Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Cli
 Successfully loaded: DesShip
 Format: .bmp
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 Texture pointer: 22958C4CF00
+=======
+Texture pointer: 25ADB523C10
+>>>>>>> Stashed changes
 =======
 Texture pointer: 25ADB523C10
 >>>>>>> Stashed changes
@@ -66,7 +82,11 @@ Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Cli
 Successfully loaded: Industry
 Format: .bmp
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 Texture pointer: 22958C4D680
+=======
+Texture pointer: 25ADB523350
+>>>>>>> Stashed changes
 =======
 Texture pointer: 25ADB523350
 >>>>>>> Stashed changes
@@ -76,7 +96,11 @@ Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Cli
 Successfully loaded: Research
 Format: .bmp
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 Texture pointer: 22958C4C640
+=======
+Texture pointer: 25ADB522BD0
+>>>>>>> Stashed changes
 =======
 Texture pointer: 25ADB522BD0
 >>>>>>> Stashed changes
@@ -86,7 +110,11 @@ Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Cli
 Successfully loaded: Select
 Format: .bmp
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 Texture pointer: 22958C4D900
+=======
+Texture pointer: 25ADB522590
+>>>>>>> Stashed changes
 =======
 Texture pointer: 25ADB522590
 >>>>>>> Stashed changes
@@ -96,7 +124,11 @@ Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Cli
 Successfully loaded: GalMap
 Format: .bmp
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 Texture pointer: 22958C4D180
+=======
+Texture pointer: 25ADB522810
+>>>>>>> Stashed changes
 =======
 Texture pointer: 25ADB522810
 >>>>>>> Stashed changes
@@ -106,7 +138,11 @@ Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Cli
 Successfully loaded: Ruler
 Format: .bmp
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 Texture pointer: 22958C4CC80
+=======
+Texture pointer: 25ADB522450
+>>>>>>> Stashed changes
 =======
 Texture pointer: 25ADB522450
 >>>>>>> Stashed changes
@@ -116,11 +152,19 @@ Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Cli
 Successfully loaded: Tree
 Format: .bmp
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 Texture pointer: 22958C4DA40
 Dimensions: 256x256
 --------------------------------------------------
 [DevTools] Refresh: 0 ship design(s), 287 body(ies), 13 cargo target(s), 15 mineral(s)
 [STATE] ⏱ slow frame 1870ms — stage breakdown: update(state+transforms) 0 / map-draw(SDL lines) 0 / ui(windows) 1868 ms — the biggest number is the culprit
+=======
+Texture pointer: 25ADB523490
+Dimensions: 256x256
+--------------------------------------------------
+[DevTools] Refresh: 0 ship design(s), 287 body(ies), 13 cargo target(s), 15 mineral(s)
+[STATE] ⏱ slow frame 1943ms — stage breakdown: update(state+transforms) 0 / map-draw(SDL lines) 0 / ui(windows) 1942 ms — the biggest number is the culprit
+>>>>>>> Stashed changes
 =======
 Texture pointer: 25ADB523490
 Dimensions: 256x256
@@ -136,7 +180,11 @@ Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Cli
 Successfully loaded: PlayImg
 Format: .bmp
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 Texture pointer: 22958C4DE00
+=======
+Texture pointer: 25ADB522A90
+>>>>>>> Stashed changes
 =======
 Texture pointer: 25ADB522A90
 >>>>>>> Stashed changes
@@ -145,6 +193,7 @@ Dimensions: 256x256
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\OneStep.bmp
 Successfully loaded: OneStepImg
 Format: .bmp
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 Texture pointer: 22958C4C3C0
 Dimensions: 256x256
@@ -169,10 +218,16 @@ Texture pointer: 25ADB5235D0
 Dimensions: 256x256
 --------------------------------------------------
 >>>>>>> Stashed changes
+=======
+Texture pointer: 25ADB5235D0
+Dimensions: 256x256
+--------------------------------------------------
+>>>>>>> Stashed changes
 [TIME] play (step 3600s)
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\Pause.bmp
 Successfully loaded: PauseImg
 Format: .bmp
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 Texture pointer: 2295D7CBE50
 Dimensions: 256x256
@@ -202,6 +257,11 @@ Dimensions: 256x256
 Texture pointer: 25ADB522D10
 Dimensions: 256x256
 --------------------------------------------------
+=======
+Texture pointer: 25ADB522D10
+Dimensions: 256x256
+--------------------------------------------------
+>>>>>>> Stashed changes
 [STATE] heartbeat t=2050-01-01 00:00 RUNNING step=3600s selected=(none) ships-in-view=7
 [ENGINE] sensor scans 26 (+0), battle-trigger passes 383 (+383) since last beat
 [DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
@@ -297,6 +357,7 @@ Dimensions: 256x256
 [SIM-STALL] sim recovered — clock advancing again.
 [ENGINE] sensor scans 787064 (+14408), battle-trigger passes 25202 (+1440) since last beat
 [DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
+<<<<<<< Updated upstream
 [STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
 [ENGINE] sensor scans 787064 (+0), battle-trigger passes 25202 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
@@ -312,4 +373,6 @@ Dimensions: 256x256
 [DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
 [STATE] session summary — faults=0, game-time=2050-01-01 17:00
 === Session ended 2026-07-16 18:19:13 ===
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
