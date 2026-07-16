@@ -1,5 +1,5 @@
 using System;
-using Pulsar4X.Datablobs;      // PositionDB
+using Pulsar4X.Movement;       // PositionDB (active class lives in Pulsar4X.Movement, not Datablobs)
 using Pulsar4X.DataStructures; // BodyType
 using Pulsar4X.Engine;
 using Pulsar4X.Events;         // Event, EventType, EventManager
