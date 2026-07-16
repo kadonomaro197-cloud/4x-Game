@@ -26,9 +26,26 @@ namespace Pulsar4X.Sensors
         /// Interlocked because systems process in parallel; exactness doesn't matter, only that it climbs.</summary>
         public static long ScanCount;
 
+        /// <summary>Floor for the scan-reschedule interval. A sensor whose <c>ScanTime</c> is &lt;= 0 (a data/clamp slip,
+        /// or a fractional value truncated to 0 by the int cast) would otherwise reschedule at the SAME game-instant —
+        /// turning the instance queue into a busy-loop that spins on that one entity forever, freezing game-time while
+        /// <see cref="ScanCount"/> explodes (a SIM-STALL "SensorScan STILL CLIMBING" freeze). Mirrors the guard the
+        /// install-kick already applies (<c>SensorReceiverAtb.OnComponentInstallation</c>).</summary>
+        internal const int DefaultScanSeconds = 3600;
+        private static bool _zeroScanTimeWarned;
+
+        /// <summary>Diagnostic scan ATTRIBUTION — OFF by default → zero overhead, byte-identical. When a test sets
+        /// <see cref="AttributeScans"/> true, every <see cref="ProcessEntity"/> invocation bumps the per-entity count in
+        /// <see cref="ScansByEntity"/>, so a scan STORM can be pinned on the offending entity/design instead of only the
+        /// global <see cref="ScanCount"/>. Cleared by the test before it measures.</summary>
+        public static bool AttributeScans = false;
+        public static readonly System.Collections.Concurrent.ConcurrentDictionary<int, long> ScansByEntity
+            = new System.Collections.Concurrent.ConcurrentDictionary<int, long>();
+
         internal override void ProcessEntity(Entity entity, DateTime atDateTime)
         {
             System.Threading.Interlocked.Increment(ref ScanCount);
+            if (AttributeScans) ScansByEntity.AddOrUpdate(entity.Id, 1, (_, n) => n + 1);   // diagnostic: which entity storms
             if(entity.Manager == null) throw new NullReferenceException("entity.Manager cannot be null");
 
             EntityManager manager = entity.Manager;
@@ -140,7 +157,17 @@ namespace Pulsar4X.Sensors
                         }
                     }
 
-                    manager.ManagerSubpulses.AddEntityInterupt(atDateTime + TimeSpan.FromSeconds(sensorAtb.ScanTime), this.TypeName, entity);
+                    // Reschedule the next scan, FLOORING the interval so a non-positive ScanTime can never reschedule at
+                    // the same game-instant and busy-loop the instance queue (the SensorScan freeze) — the same guard the
+                    // install-kick applies. A one-time warning names the offending design so it can be fixed at the data.
+                    int scanSecs = sensorAtb.ScanTime > 0 ? sensorAtb.ScanTime : DefaultScanSeconds;
+                    if (sensorAtb.ScanTime <= 0 && !_zeroScanTimeWarned)
+                    {
+                        _zeroScanTimeWarned = true;
+                        Console.WriteLine($"[SensorScan] WARNING: a sensor on entity {entity.Id} (faction {entity.FactionOwnerID}) "
+                            + $"has ScanTime={sensorAtb.ScanTime} <= 0 — floored to {DefaultScanSeconds}s to avoid a same-instant reschedule busy-loop. Fix the sensor design's Scan Time.");
+                    }
+                    manager.ManagerSubpulses.AddEntityInterupt(atDateTime + TimeSpan.FromSeconds(scanSecs), this.TypeName, entity);
                 }
             }
         }
