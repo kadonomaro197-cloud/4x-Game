@@ -26,9 +26,14 @@ namespace Pulsar4X.Tests
             faction.SetDataBlob(p);
         }
 
+        // TOP-LEVEL owned fleets with doctrine — EXCLUDING role sub-fleets (which carry a FleetRoleDB and their own
+        // ROLE doctrine, assigned by B-2c2's ApplyRoleDoctrines). This policy sets the faction-wide doctrine on the
+        // top-level fleets; the sub-fleets' role doctrines are a separate concern (see NPCRoleDoctrineTests).
         private static System.Collections.Generic.List<Entity> DoctrinedFleets(TestScenario s)
             => s.StartingSystem.GetAllEntitiesWithDataBlob<FleetDB>()
-                .Where(f => f.FactionOwnerID == s.Faction.Id && f.HasDataBlob<FleetDoctrineDB>()).ToList();
+                .Where(f => f.FactionOwnerID == s.Faction.Id
+                            && f.HasDataBlob<FleetDoctrineDB>()
+                            && !f.HasDataBlob<FleetRoleDB>()).ToList();
 
         [Test]
         [Description("A bold, warlike faction (Aggr .9, Risk .9) sets every fleet to an OFFENSIVE doctrine + Weapons-Free — the AI using the doctrine levers by personality.")]

@@ -74,24 +74,39 @@ namespace Pulsar4X.Tests
         // --- Guard 3: the whole-faction doctrine policy skips sub-fleets ------------------------------------
 
         [Test]
-        [Description("RunFleetDoctrinePolicy sets the faction doctrine on the TOP fleet but leaves each sub-fleet untouched — so it can't stomp a role doctrine.")]
-        public void RunFleetDoctrinePolicy_SkipsSubFleets()
+        [Description("The faction-wide doctrine loop skips sub-fleets: after the policy, the TOP fleet carries the faction doctrine (Offensive for an aggressive faction) while each sub-fleet keeps its own ROLE doctrine — NOT stomped to the faction pick.")]
+        public void RunFleetDoctrinePolicy_LeavesSubFleetsTheirRoleDoctrine_NotTheFactionPick()
         {
             var s = TestScenario.CreateWithColony();
             var p = new PersonalityDB();
-            p.SetTrait(PersonalityTrait.Aggression, 0.9);
+            p.SetTrait(PersonalityTrait.Aggression, 0.9);   // → the faction picks the Offensive doctrine
             p.SetTrait(PersonalityTrait.Risk, 0.9);
             s.Faction.SetDataBlob(p);
 
             var fleet = StartFleet(s);
-            var formed = FleetRoleComposer.FormRoleSubFleets(fleet);
-            Assert.That(formed, Is.Not.Empty);
+            Assert.That(FleetCombat.Ships(fleet).Count, Is.GreaterThanOrEqualTo(2), "need a multi-ship fleet to decompose");
 
             NPCDecisionProcessor.RunFleetDoctrinePolicy(s.Faction);
 
             Assert.That(fleet.HasDataBlob<FleetDoctrineDB>(), Is.True, "the top-level fleet got the faction doctrine");
-            foreach (var sub in formed.Values)
-                Assert.That(sub.HasDataBlob<FleetDoctrineDB>(), Is.False, "the policy skipped the sub-fleet — no role doctrine stomped");
+            Assert.That(fleet.GetDataBlob<FleetDoctrineDB>().Family, Is.EqualTo("Offensive"), "aggressive faction → Offensive on the top fleet");
+
+            // The role sub-fleets each carry the family their JOB wants — the guard kept the whole-faction loop from
+            // overwriting them with the faction's Offensive pick (Line→Utilitarian, Artillery/Support→Defensive).
+            var expected = new System.Collections.Generic.Dictionary<FleetRole, string>
+            {
+                { FleetRole.Screen, "Offensive" }, { FleetRole.Line, "Utilitarian" },
+                { FleetRole.Artillery, "Defensive" }, { FleetRole.Support, "Defensive" },
+            };
+            var subs = fleet.GetDataBlob<FleetDB>().GetChildren().Where(c => c.HasDataBlob<FleetRoleDB>()).ToList();
+            Assert.That(subs, Is.Not.Empty, "the multi-ship fleet decomposed into role sub-fleets");
+            foreach (var sub in subs)
+            {
+                var role = sub.GetDataBlob<FleetRoleDB>().Role;
+                Assert.That(sub.HasDataBlob<FleetDoctrineDB>(), Is.True, $"the {role} sub-fleet has its role doctrine");
+                Assert.That(sub.GetDataBlob<FleetDoctrineDB>().Family, Is.EqualTo(expected[role]),
+                    $"the {role} sub-fleet kept its role family, not the faction's Offensive pick");
+            }
         }
     }
 }
