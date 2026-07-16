@@ -294,9 +294,23 @@ namespace Pulsar4X.Engine
         /// </summary>
         /// <param name="targetDateTime"></param>
         /// <param name="ct">Cancellation token to signal asynchronous stop request.</param>
+        /// <summary>How many CombatReactionStep sub-steps in a row we'll fine-step before deciding the "new engagement
+        /// imminent" read is a FALSE POSITIVE. A real new engagement forms within a step or two — `EnsureInCombat`
+        /// fires `RequestCombatHalt`, which cancels this loop — so reaching this many consecutive fine-steps means the
+        /// battle is NOT forming (a marginal/flickering detection, or a hostile pair that reads imminent but can't
+        /// actually engage). Past it we stop capping and run at full Ticklength, so game-time can't crawl to a
+        /// standstill (the SensorScan-heavy "PERF freeze" the SIM-STALL watchdog reports). 24 × 5 s = 2 game-minutes —
+        /// far more than any real first-contact needs, far less than a playable-clock crawl.</summary>
+        private const int MaxConsecutiveFineSteps = 24;
+
         private void SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct = default)
         {
             _stopwatch.Start(); //start the processor loop stopwatch (performance counter)
+
+            // Combat fine-step FALSE-POSITIVE guard (see MaxConsecutiveFineSteps). Reset per call, so a GENUINE new
+            // engagement still lands its auto-pause on the next advance.
+            int consecutiveFineSteps = 0;
+            bool fineStepGivenUp = false;
 
             // If a cancellation is signalled, stop the time advance the next time an interrupt happens.
             while (GameGlobalDateTime < targetDateTime && !ct.IsCancellationRequested)
@@ -313,11 +327,21 @@ namespace Pulsar4X.Engine
                 // returns at once and a full Ticklength step is taken as before.
                 DateTime iterTarget = targetDateTime;
                 DateTime cappedTarget = GameGlobalDateTime + CombatReactionStep;
-                if (cappedTarget < iterTarget
+                if (!fineStepGivenUp
+                    && cappedTarget < iterTarget
                     && Pulsar4X.Combat.CombatEngagement.InterruptTimeOnNewEngagement
                     && AnyNewEngagementImminent())
                 {
                     iterTarget = cappedTarget;
+                    // A real engagement cancels this loop within a step or two; if we keep fine-stepping without that,
+                    // the imminent read is a false positive — give up capping for the rest of this advance so the
+                    // clock can't crawl (the fix for the SensorScan "PERF freeze").
+                    if (++consecutiveFineSteps >= MaxConsecutiveFineSteps)
+                        fineStepGivenUp = true;
+                }
+                else
+                {
+                    consecutiveFineSteps = 0;   // took a full step (or nothing imminent) — the streak is broken
                 }
 
                 DateTime nextInterupt = ProcessNextInterupt(iterTarget);
