@@ -83,7 +83,11 @@ namespace Pulsar4X.Tests
             p.SetTrait(PersonalityTrait.Risk, 0.9);
             s.Faction.SetDataBlob(p);
 
-            var fleet = StartFleet(s);
+            // Pick the BIGGEST owned fleet (the start has 5 ships across 3 fleets → the largest has ≥2), so it
+            // actually decomposes — ApplyRoleDoctrines only forms sub-fleets for a 2+-ship fleet.
+            var fleet = s.StartingSystem.GetAllEntitiesWithDataBlob<FleetDB>()
+                .Where(f => f.FactionOwnerID == s.Faction.Id)
+                .OrderByDescending(f => FleetCombat.Ships(f).Count).First();
             Assert.That(FleetCombat.Ships(fleet).Count, Is.GreaterThanOrEqualTo(2), "need a multi-ship fleet to decompose");
 
             NPCDecisionProcessor.RunFleetDoctrinePolicy(s.Faction);
