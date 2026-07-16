@@ -101,6 +101,21 @@ namespace Pulsar4X.Factions
                 factionInfoDB.FleetPerfectSize  = fleetCompNode["perfectSize"]?.Value<int>()  ?? factionInfoDB.FleetPerfectSize;
             }
 
+            // Per-faction GROUND GARRISON: a scenario can author the home-defence mix its worlds start with (a heavier
+            // Martian legion vs the default light watch) via a "garrison" node { Infantry, Armor, Artillery }. Absent →
+            // GroundStartGarrison's engine default (3/2/1) stands → byte-identical.
+            var garrisonNode = rootJson["garrison"];
+            if (garrisonNode != null)
+            {
+                var comp = new Dictionary<string, int>();
+                foreach (var t in new[] { "Infantry", "Armor", "Artillery" })
+                {
+                    int c = garrisonNode[t]?.Value<int>() ?? 0;
+                    if (c > 0) comp[t] = c;
+                }
+                if (comp.Count > 0) factionInfoDB.GarrisonComposition = comp;
+            }
+
             // Phase 5.1a — AUTHORED PERSONALITY: a scenario can hand a faction its 12-trait identity (the model the whole
             // brain reads — retreat nerve, treaty tolerance, aggression, honour…). Only attach a PersonalityDB when the
             // scenario names one; with no "personality" node the faction carries none and every trait read falls back to

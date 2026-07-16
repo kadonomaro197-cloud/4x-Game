@@ -134,6 +134,13 @@ namespace Pulsar4X.Factions
         [JsonProperty] public int FleetPerfectSize { get; set; } = 18;
         [JsonProperty] public string FleetTemplateName { get; set; } = "Strike Fleet";
 
+        // Per-faction GROUND GARRISON composition (unit-type name → count) the AI fields on its home worlds — the ground
+        // echo of the fleet ladder: a militarist planet-empire garrisons a heavier combined-arms legion than a light
+        // frontier watch. EMPTY → GroundStartGarrison uses its engine default (3 Inf / 2 Armor / 1 Arty), so every
+        // existing scenario is byte-identical. Authored via the "garrison" JSON node (FactionFactory). Plain strings so
+        // FactionInfoDB doesn't depend on the GroundCombat namespace (GroundStartGarrison parses them to GroundUnitType).
+        [JsonProperty] public Dictionary<string, int> GarrisonComposition { get; set; } = new();
+
         public FactionInfoDB()
         {
             var componentDesigns = new Dictionary<string, ComponentDesign>();

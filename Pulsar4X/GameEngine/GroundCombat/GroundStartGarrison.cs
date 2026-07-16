@@ -13,9 +13,12 @@ namespace Pulsar4X.GroundCombat
     /// (<c>NewGameMenu.CreateGameCore</c>), NOT from <see cref="ColonyFactory"/>, so the CI test harness
     /// (<c>TestScenario.CreateWithColony</c>) stays a clean slate — the same split the combat scenario uses.
     ///
-    /// v1 composition is a modest combined-arms garrison (tunable — see <see cref="Composition"/>); units are C#
-    /// designs (like the DevTools raise button) since the base-mod JSON ground-unit template is deferred. Idempotent:
-    /// a body that already holds this faction's ground units is skipped, so it never double-garrisons.
+    /// Default composition is a modest combined-arms garrison (<see cref="Composition"/>); units are C# designs (like the
+    /// DevTools raise button). Idempotent: a body that already holds this faction's ground units is skipped, so it never
+    /// double-garrisons. **PER-FACTION (2026-07-16):** a faction can author its OWN garrison mix via a "garrison" JSON
+    /// node (→ <see cref="FactionInfoDB.GarrisonComposition"/>) — the ground echo of the per-faction fleet ladder — so the
+    /// militarist UMF garrisons a heavier Martian legion (4/3/2) than the default light watch (3/2/1). Absent → the
+    /// default stands → byte-identical.
     /// </summary>
     public static class GroundStartGarrison
     {
@@ -36,12 +39,13 @@ namespace Pulsar4X.GroundCombat
             try
             {
                 if (!faction.TryGetDataBlob<FactionInfoDB>(out var fi)) return 0;
+                var composition = CompositionFor(fi);   // this faction's authored garrison, else the engine default
                 foreach (var colony in fi.Colonies)
                 {
                     if (colony == null || !colony.TryGetDataBlob<ColonyInfoDB>(out var ci)) continue;
                     var body = ci.PlanetEntity;
                     if (body == null || !body.IsValid || !body.HasDataBlob<PlanetRegionsDB>()) continue;
-                    raised += RaiseHomeGarrison(body, faction.Id);
+                    raised += RaiseHomeGarrison(body, faction.Id, composition);
                 }
             }
             catch { /* a bad colony is skipped — a New Game must never break over the garrison */ }
@@ -49,15 +53,16 @@ namespace Pulsar4X.GroundCombat
         }
 
         /// <summary>Raise the garrison on one body in its capital region (0), owned by <paramref name="factionId"/>.
-        /// Idempotent: skips if this faction already has ground units on the body.</summary>
-        public static int RaiseHomeGarrison(Entity body, int factionId)
+        /// Idempotent: skips if this faction already has ground units on the body. <paramref name="composition"/> is the
+        /// faction's authored mix; null → the engine default (so existing callers are byte-identical).</summary>
+        public static int RaiseHomeGarrison(Entity body, int factionId, (GroundUnitType type, int count)[] composition = null)
         {
             if (body == null || !body.HasDataBlob<PlanetRegionsDB>()) return 0;
             if (body.TryGetDataBlob<GroundForcesDB>(out var existing) && existing.Units.Any(u => u.FactionOwnerID == factionId))
                 return 0;   // already garrisoned — don't double up
 
             int raised = 0;
-            foreach (var (type, count) in Composition)
+            foreach (var (type, count) in (composition ?? Composition))
             {
                 var design = MakeGarrisonDesign(type);
                 for (int i = 0; i < count; i++)
@@ -81,5 +86,19 @@ namespace Pulsar4X.GroundCombat
             Defense = type == GroundUnitType.Armor ? 15 : (type == GroundUnitType.Artillery ? 5 : 10),
             HitPoints = type == GroundUnitType.Armor ? 700 : (type == GroundUnitType.Artillery ? 400 : 500),
         };
+
+        /// <summary>This faction's authored garrison mix (from its <see cref="FactionInfoDB.GarrisonComposition"/> — a
+        /// scenario's "garrison" JSON node), parsed to the (type, count) shape; falls back to the engine
+        /// <see cref="Composition"/> for a faction that authored none (→ byte-identical). Unknown type names / non-positive
+        /// counts are skipped; an all-invalid map also falls back.</summary>
+        internal static (GroundUnitType type, int count)[] CompositionFor(FactionInfoDB fi)
+        {
+            if (fi?.GarrisonComposition == null || fi.GarrisonComposition.Count == 0) return Composition;
+            var list = new System.Collections.Generic.List<(GroundUnitType, int)>();
+            foreach (var kv in fi.GarrisonComposition)
+                if (Enum.TryParse<GroundUnitType>(kv.Key, ignoreCase: true, out var t) && kv.Value > 0)
+                    list.Add((t, kv.Value));
+            return list.Count > 0 ? list.ToArray() : Composition;
+        }
     }
 }
