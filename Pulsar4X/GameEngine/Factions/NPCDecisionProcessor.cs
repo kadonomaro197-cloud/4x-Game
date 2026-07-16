@@ -217,6 +217,13 @@ namespace Pulsar4X.Factions
             if (EnableOrderEmission && isMonthlyCycle)
                 RunFleetDoctrinePolicy(factionEntity);
 
+            // Phase D: set each owned fleet's EMCON posture (run-LOUD vs go-DARK) by PERSONALITY, scored through the
+            // same DecisionScorer — the AI now deploys the EMCON lever as a tool. A guileful/cautious faction hides
+            // (Silent) and strikes from the dark; a bold/aggressive one runs Full and doesn't care who sees it coming.
+            // Stacks with the detection/fog + first-strike systems. Gated by EnableOrderEmission → byte-identical off.
+            if (EnableOrderEmission && isMonthlyCycle)
+                RunEmconPolicy(factionEntity);
+
             // The AI FLIGHT RECORDER (B4, the observability SPINE): tape this cycle's decision — what it SENSED, what it
             // DECIDED and why, what it ACTED on — AFTER the decision + (gated) action, so the record is complete. Pure
             // observability, ALWAYS-ON (you watch the brain decide before you flip the order gates), bounded ring buffer.
@@ -758,5 +765,64 @@ namespace Pulsar4X.Factions
                 Pulsar4X.Fleets.FleetRole.Support   => ("defensive-line", Pulsar4X.Combat.EngagementPosture.WeaponsHold),
                 _                                   => ("balanced",       Pulsar4X.Combat.EngagementPosture.WeaponsFree),
             };
+
+        /// <summary>
+        /// Phase D — the AI sets each owned fleet's EMCON posture (run-LOUD vs go-DARK) by PERSONALITY, scored through
+        /// the shared <see cref="DecisionScorer"/> (the EMCON twin of <see cref="RunFleetDoctrinePolicy"/>). A GUILEFUL
+        /// / cautious faction goes Silent — hide, strike from the dark; a BOLD / aggressive one runs Full — it doesn't
+        /// care who sees it coming; a middling one Cruises. The same personality fingerprint that picks the fighting
+        /// doctrine now also picks whether the fleet sneaks or announces itself, and that feeds straight into the
+        /// detection/fog math (a Silent fleet is seen from far closer → first-strike / avoid-battle). TOP-LEVEL fleets
+        /// only — <see cref="Pulsar4X.Sensors.FleetEmcon.SetPosture"/> recurses sub-fleets so the whole fleet goes dark
+        /// together. Gated at the call site by <see cref="EnableOrderEmission"/> → byte-identical off.
+        /// </summary>
+        internal static void RunEmconPolicy(Entity factionEntity)
+        {
+            if (factionEntity == null || !factionEntity.TryGetDataBlob<FactionInfoDB>(out _)) return;
+            var game = factionEntity.Manager?.Game;
+            if (game?.Systems == null) return;
+
+            factionEntity.TryGetDataBlob<PersonalityDB>(out var personality);
+
+            var options = new List<EmconOption>
+            {
+                new EmconOption(Pulsar4X.Sensors.EmconPosture.Full),
+                new EmconOption(Pulsar4X.Sensors.EmconPosture.Cruise),
+                new EmconOption(Pulsar4X.Sensors.EmconPosture.Silent),
+            };
+            var chosen = DecisionScorer.PickBest(options, personality);
+            if (chosen == null) return;
+
+            foreach (var system in game.Systems)
+            {
+                if (system == null) continue;
+                foreach (var fleet in system.GetAllEntitiesWithDataBlob<Pulsar4X.Fleets.FleetDB>())
+                {
+                    if (fleet == null || !fleet.IsValid || fleet.FactionOwnerID != factionEntity.Id) continue;
+                    if (Pulsar4X.Combat.CombatEngagement.IsSubFleet(fleet)) continue;   // top-level only (SetPosture recurses)
+                    Pulsar4X.Sensors.FleetEmcon.SetPosture(fleet, chosen.Posture);
+                }
+            }
+        }
+
+        /// <summary>An EMCON posture as a scored option: Full (loud) reads as aggressive+bold, Silent (dark) as
+        /// covert (Guile)+cautious, Cruise as the neutral middle. The scorer picks the one the personality prefers.</summary>
+        private sealed class EmconOption : IScoredOption
+        {
+            public Pulsar4X.Sensors.EmconPosture Posture { get; }
+            private readonly Dictionary<DecisionFeature, double> _f;
+            public EmconOption(Pulsar4X.Sensors.EmconPosture posture)
+            {
+                Posture = posture;
+                _f = new Dictionary<DecisionFeature, double>();
+                if (posture == Pulsar4X.Sensors.EmconPosture.Full)
+                    { _f[DecisionFeature.MilitarySolve] = 1.0; _f[DecisionFeature.RiskLevel] = 1.0; }   // run hot
+                else if (posture == Pulsar4X.Sensors.EmconPosture.Silent)
+                    { _f[DecisionFeature.Covert] = 1.0; _f[DecisionFeature.RiskLevel] = -0.5; }         // go dark
+                else
+                    { _f[DecisionFeature.MilitarySolve] = 0.3; }                                        // Cruise — the middle
+            }
+            public IReadOnlyDictionary<DecisionFeature, double> Features => _f;
+        }
     }
 }
