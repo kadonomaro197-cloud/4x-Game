@@ -1,4 +1,4 @@
-=== Pulsar4X session started 2026-07-15 17:31:55 ===
+=== Pulsar4X session started 2026-07-16 05:08:26 ===
 Log: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\game_logs (rolling pages game_log_000.txt, _001, …)
 File not found: Resources\CancelIco.bmp
 File not found: Resources\CargoIco.bmp
@@ -29,7 +29,7 @@ Found mod 'Pulsar4x-Testing' from C:\Users\DeeDiebS\AppData\Roaming\Pulsar4X\Pul
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\pulsar4x-menu.png
 Successfully loaded: pulsar4x-menu
 Format: .png
-Texture pointer: 25CC4107C80
+Texture pointer: 2295460A800
 Dimensions: 400x200
 --------------------------------------------------
 [VIEW] now viewing faction id=277 (UEF) [player]
@@ -37,53 +37,53 @@ Ship icon texture loaded: 28x14
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\DesignComponentIco.bmp
 Successfully loaded: DesComp
 Format: .bmp
-Texture pointer: 25CC4671610
+Texture pointer: 22958C4D2C0
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\DesignShipIco.bmp
 Successfully loaded: DesShip
 Format: .bmp
-Texture pointer: 25CC4671750
+Texture pointer: 22958C4CF00
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\IndustryIco.bmp
 Successfully loaded: Industry
 Format: .bmp
-Texture pointer: 25CC46714D0
+Texture pointer: 22958C4D680
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\ResearchIco.bmp
 Successfully loaded: Research
 Format: .bmp
-Texture pointer: 25CC4671C50
+Texture pointer: 22958C4C640
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\SelectIco.bmp
 Successfully loaded: Select
 Format: .bmp
-Texture pointer: 25CC4671D90
+Texture pointer: 22958C4D900
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\GalaxyMapIco.bmp
 Successfully loaded: GalMap
 Format: .bmp
-Texture pointer: 25CC4672B50
+Texture pointer: 22958C4D180
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\RulerIco.bmp
 Successfully loaded: Ruler
 Format: .bmp
-Texture pointer: 25CC4671390
+Texture pointer: 22958C4CC80
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\TreeIco.bmp
 Successfully loaded: Tree
 Format: .bmp
-Texture pointer: 25CC4671890
+Texture pointer: 22958C4DA40
 Dimensions: 256x256
 --------------------------------------------------
 [DevTools] Refresh: 0 ship design(s), 287 body(ies), 13 cargo target(s), 15 mineral(s)
-[STATE] ⏱ slow frame 1881ms — stage breakdown: update(state+transforms) 0 / map-draw(SDL lines) 0 / ui(windows) 1880 ms — the biggest number is the culprit
+[STATE] ⏱ slow frame 1870ms — stage breakdown: update(state+transforms) 0 / map-draw(SDL lines) 0 / ui(windows) 1868 ms — the biggest number is the culprit
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=7
 [ENGINE] sensor scans 26 (+26), battle-trigger passes 0 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
@@ -91,910 +91,55 @@ Dimensions: 256x256
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\Play.bmp
 Successfully loaded: PlayImg
 Format: .bmp
-Texture pointer: 25CC4672DD0
+Texture pointer: 22958C4DE00
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\OneStep.bmp
 Successfully loaded: OneStepImg
 Format: .bmp
-Texture pointer: 25CC4672C90
+Texture pointer: 22958C4C3C0
 Dimensions: 256x256
 --------------------------------------------------
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=7
 [ENGINE] sensor scans 26 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[TIME] play (step 3600s)
-[STATE] heartbeat t=2050-01-01 00:00 RUNNING step=3600s selected=(none) ships-in-view=7
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=7
 [ENGINE] sensor scans 26 (+0), battle-trigger passes 0 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=7
+[ENGINE] sensor scans 26 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=7
+[ENGINE] sensor scans 26 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=7
+[ENGINE] sensor scans 26 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
+[TIME] play (step 3600s)
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\Pause.bmp
 Successfully loaded: PauseImg
 Format: .bmp
-Texture pointer: 25CC4672290
+Texture pointer: 2295D7CBE50
 Dimensions: 256x256
 --------------------------------------------------
-[STATE] heartbeat t=2050-01-01 13:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 59662 (+59636), battle-trigger passes 19442 (+19442) since last beat
+[STATE] heartbeat t=2050-01-01 12:00 RUNNING step=3600s selected=(none) ships-in-view=7
+[ENGINE] sensor scans 25028 (+25002), battle-trigger passes 18002 (+18002) since last beat
 [DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
 [STATE] heartbeat t=2050-01-01 14:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 117109 (+57447), battle-trigger passes 20882 (+1440) since last beat
+[ENGINE] sensor scans 98828 (+73800), battle-trigger passes 20882 (+2880) since last beat
 [DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
 [STATE] heartbeat t=2050-01-01 14:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 181458 (+64349), battle-trigger passes 20882 (+0) since last beat
+[ENGINE] sensor scans 157845 (+59017), battle-trigger passes 20882 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
 [STATE] heartbeat t=2050-01-01 15:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 197168 (+15710), battle-trigger passes 22322 (+1440) since last beat
+[ENGINE] sensor scans 197168 (+39323), battle-trigger passes 22322 (+1440) since last beat
 [DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
 [STATE] heartbeat t=2050-01-01 15:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 236586 (+39418), battle-trigger passes 22322 (+0) since last beat
+[ENGINE] sensor scans 197168 (+0), battle-trigger passes 22322 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
 [STATE] heartbeat t=2050-01-01 15:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[SIM-STALL] game-time FROZEN at 2050-01-01 15:00 while RUNNING — the sim thread is WEDGED (a freeze the frame watchdog can't see). Last processor the sim entered: 'system-sol/SensorScan (instance:SensorScan)'. scans=293297 ticks=22322 (STILL CLIMBING → SLOW-AT-SCALE heavy tick, not a true wedge — a PERF problem). scale: fleets=4 in-combat=0 ships=7 in view.
-[ENGINE] sensor scans 293298 (+56712), battle-trigger passes 22322 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 15:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 335406 (+42108), battle-trigger passes 22322 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 15:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 370919 (+35513), battle-trigger passes 22322 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 16:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[SIM-STALL] sim recovered — clock advancing again.
-[ENGINE] sensor scans 393812 (+22893), battle-trigger passes 23762 (+1440) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 16:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 393812 (+0), battle-trigger passes 23762 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 16:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[SIM-STALL] game-time FROZEN at 2050-01-01 16:00 while RUNNING — the sim thread is WEDGED (a freeze the frame watchdog can't see). Last processor the sim entered: 'system-sol/StarInfoDB (hotloop)'. scans=393812 ticks=23762 (FROZEN too → a TRUE WEDGE, deadlock/infinite loop in that processor). scale: fleets=4 in-combat=0 ships=7 in view.
-[ENGINE] sensor scans 393812 (+0), battle-trigger passes 23762 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 16:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 393812 (+0), battle-trigger passes 23762 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 16:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 393812 (+0), battle-trigger passes 23762 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 16:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 430008 (+36196), battle-trigger passes 23762 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 16:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 488249 (+58241), battle-trigger passes 23762 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 16:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 530786 (+42537), battle-trigger passes 23762 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 16:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 566158 (+35372), battle-trigger passes 23762 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 16:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 597153 (+30995), battle-trigger passes 23762 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 16:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 625139 (+27986), battle-trigger passes 23762 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 16:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 650890 (+25751), battle-trigger passes 23762 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 16:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 674818 (+23928), battle-trigger passes 23762 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 16:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 697290 (+22472), battle-trigger passes 23762 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 16:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 718496 (+21206), battle-trigger passes 23762 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 16:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 738685 (+20189), battle-trigger passes 23762 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 16:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 757928 (+19243), battle-trigger passes 23762 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 16:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 776330 (+18402), battle-trigger passes 23762 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[SIM-STALL] sim recovered — clock advancing again.
-[ENGINE] sensor scans 787064 (+10734), battle-trigger passes 25202 (+1440) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 787064 (+0), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[SIM-STALL] game-time FROZEN at 2050-01-01 17:00 while RUNNING — the sim thread is WEDGED (a freeze the frame watchdog can't see). Last processor the sim entered: 'system-sol/StarInfoDB (hotloop)'. scans=787064 ticks=25202 (FROZEN too → a TRUE WEDGE, deadlock/infinite loop in that processor). scale: fleets=4 in-combat=0 ships=7 in view.
-[ENGINE] sensor scans 787064 (+0), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 787064 (+0), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 787064 (+0), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 787064 (+0), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 787064 (+0), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 787064 (+0), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 787064 (+0), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 787064 (+0), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 787064 (+0), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 787064 (+0), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 787064 (+0), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[SELECT] Alt click on 'Earth' (entity #4, faction -99)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 787064 (+0), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 787064 (+0), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 787064 (+0), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 787064 (+0), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 787064 (+0), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 787064 (+0), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 793536 (+6472), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 865210 (+71674), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 911022 (+45812), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 948301 (+37279), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 980650 (+32349), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1009499 (+28849), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1035809 (+26310), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1060120 (+24311), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1082788 (+22668), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1104231 (+21443), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1124554 (+20323), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1143974 (+19420), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1162523 (+18549), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1180380 (+17857), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1197559 (+17179), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1214190 (+16631), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1230248 (+16058), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1245803 (+15555), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1260954 (+15151), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1275719 (+14765), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1290237 (+14518), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1304380 (+14143), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1318121 (+13741), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1331561 (+13440), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1344742 (+13181), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1357633 (+12891), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1370293 (+12660), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1382656 (+12363), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1394784 (+12128), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1406726 (+11942), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1418451 (+11725), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1429984 (+11533), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1441326 (+11342), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1452536 (+11210), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1463572 (+11036), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1474405 (+10833), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1485061 (+10656), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1495592 (+10531), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1505957 (+10365), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1516194 (+10237), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1526326 (+10132), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1536329 (+10003), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1546207 (+9878), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1555970 (+9763), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 17:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1565606 (+9636), battle-trigger passes 25202 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[SIM-STALL] sim recovered — clock advancing again.
-[ENGINE] sensor scans 1573532 (+7926), battle-trigger passes 26642 (+1440) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[SIM-STALL] game-time FROZEN at 2050-01-01 18:00 while RUNNING — the sim thread is WEDGED (a freeze the frame watchdog can't see). Last processor the sim entered: 'system-sol/StarInfoDB (hotloop)'. scans=1573532 ticks=26642 (FROZEN too → a TRUE WEDGE, deadlock/infinite loop in that processor). scale: fleets=4 in-combat=0 ships=7 in view.
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1573532 (+0), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1610992 (+37460), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1668433 (+57441), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1710622 (+42189), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1745866 (+35244), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1776747 (+30881), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1804672 (+27925), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1830281 (+25609), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1853945 (+23664), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1876189 (+22244), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1897230 (+21041), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1917221 (+19991), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1936343 (+19122), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1954644 (+18301), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1972238 (+17594), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 1989148 (+16910), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2005560 (+16412), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2021471 (+15911), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2036953 (+15482), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2052005 (+15052), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2066654 (+14649), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2080946 (+14292), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2094894 (+13948), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2108500 (+13606), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2121810 (+13310), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2134882 (+13072), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2147695 (+12813), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2160283 (+12588), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2172565 (+12282), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2184631 (+12066), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2196483 (+11852), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2208171 (+11688), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2219681 (+11510), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2230998 (+11317), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2242119 (+11121), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2253080 (+10961), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2263878 (+10798), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2274500 (+10622), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2285025 (+10525), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2295355 (+10330), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2305616 (+10261), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2315733 (+10117), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2325666 (+9933), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2335548 (+9882), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2345258 (+9710), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2354872 (+9614), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2364370 (+9498), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2373776 (+9406), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2383087 (+9311), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2392274 (+9187), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2401376 (+9102), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2410384 (+9008), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2419329 (+8945), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2428182 (+8853), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2436948 (+8766), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2445650 (+8702), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2454256 (+8606), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2462786 (+8530), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2471243 (+8457), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2479659 (+8416), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2488011 (+8352), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2496287 (+8276), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2504456 (+8169), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2512555 (+8099), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2520593 (+8038), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2528604 (+8011), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2536584 (+7980), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2544490 (+7906), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2552328 (+7838), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2560063 (+7735), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2567739 (+7676), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2575356 (+7617), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2582948 (+7592), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2590490 (+7542), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2598003 (+7513), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2605440 (+7437), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2612799 (+7359), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2620114 (+7315), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2627355 (+7241), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2634617 (+7262), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2641832 (+7215), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2649005 (+7173), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2656107 (+7102), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2663151 (+7044), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2670155 (+7004), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2677113 (+6958), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2684051 (+6938), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2690949 (+6898), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2697805 (+6856), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2704620 (+6815), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2711395 (+6775), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2718135 (+6740), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2724849 (+6714), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2731528 (+6679), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2738181 (+6653), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2744766 (+6585), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2751320 (+6554), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2757837 (+6517), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2764309 (+6472), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2770794 (+6485), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2777256 (+6462), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2783672 (+6416), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2790044 (+6372), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2796391 (+6347), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2802705 (+6314), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2808985 (+6280), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2815230 (+6245), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2821453 (+6223), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2827640 (+6187), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2833794 (+6154), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2839914 (+6120), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2845990 (+6076), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2852050 (+6060), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2858096 (+6046), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2864129 (+6033), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2870133 (+6004), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2876098 (+5965), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2882033 (+5935), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2887932 (+5899), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2893817 (+5885), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2899682 (+5865), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2905527 (+5845), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2911374 (+5847), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2917170 (+5796), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
-[ENGINE] sensor scans 2922944 (+5774), battle-trigger passes 26642 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=7
+[SIM-STALL] game-time FROZEN at 2050-01-01 15:00 while RUNNING — the sim thread is WEDGED (a freeze the frame watchdog can't see). Last processor the sim entered: 'system-sol/SensorScan (instance:SensorScan)'. scans=270817 ticks=22322 (STILL CLIMBING → SLOW-AT-SCALE heavy tick, not a true wedge — a PERF problem). scale: fleets=4 in-combat=0 ships=7 in view.
+[ENGINE] sensor scans 270819 (+73651), battle-trigger passes 22322 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
+[STATE] session summary — faults=0, game-time=2050-01-01 15:00
+=== Session ended 2026-07-16 05:09:10 ===
