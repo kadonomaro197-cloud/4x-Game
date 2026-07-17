@@ -76,11 +76,11 @@ namespace Pulsar4X.Factions
             if (target.IsValid && state.Game != null)
             {
                 var strikeFleet = MilitaryComposition.ReadyStrikeFleet(state);
-                // REACH GATE: only sail when the target is a DIRECT (same-system) warp the fleet has the fuel/range
-                // for. MoveToSystemBodyOrder warps within one system — it can't cross a jump — so a one-jump or
-                // unreachable target (or a drained/drive-less fleet) falls through to the build rung and keeps massing
-                // until a route/range exists. The multi-jump auto-router that would sail a OneJump target is the
-                // deferred reach polish (MilitaryReach documents the bound).
+                // REACH GATE: this SAME-SYSTEM rung sails only when the target is a DIRECT (same-system) warp the fleet
+                // has the fuel/range for. MoveToSystemBodyOrder warps within one system — it can't cross a jump — so a
+                // cross-system target is handled by the MULTI-JUMP STRIKE ROUTING rung below (Rung 1b), which sails the
+                // fleet one gate at a time along a discovered route. A drained/drive-less fleet or an UNREACHABLE target
+                // (no discovered route) falls through to the build rung and keeps massing until a route/range exists.
                 var reach = strikeFleet != null && strikeFleet.IsValid
                     ? MilitaryReach.Assess(strikeFleet, target.ColonyBody)
                     : MilitaryReach.ReachResult.None;
@@ -113,6 +113,47 @@ namespace Pulsar4X.Factions
                             var cmd = Pulsar4X.Movement.MoveToSystemBodyOrder.CreateCommand(factionId, fleet, body);
                             game.OrderHandler.HandleOrder(cmd);   // the ONE step (the only side effect)
                         });
+                }
+
+                // Rung 1b (MULTI-JUMP STRIKE ROUTING, 2026-07-17): the scored target is in ANOTHER star system, but the
+                // faction has a DISCOVERED jump route to it (OneJump or MultiJump — JumpRouter walked the discovered
+                // jump graph). Sail the NEXT LEG toward it: order the massed fleet through the FIRST gate on that route,
+                // one gate per monthly cycle (least-commitment, matching the resolver's one-step-per-cycle style).
+                // JumpOrder is the player's own fleet-jump lever — it warps each ship to the gate (if not already there)
+                // then transits it through — so a single order advances one leg; next cycle the fleet re-routes from the
+                // new system until the target is same-system (then the StrikeFleet rung above sails at the body). Same
+                // commit gates as the same-system strike (odds favour it, fleet massed + charged + not already moving,
+                // a home reserve remains). No discovered route (Unreachable) or no resolvable gate → falls through to
+                // the build rungs (keep massing), exactly as before. Byte-identical while order emission is off (this
+                // resolver runs only inside the gated EmitOrders), for any faction not at war (no target → skip), AND
+                // for a same-system target (this block requires Tier != SameSystem, so it never fires there).
+                if (oddsFavorAttack && strikeFleet != null && strikeFleet.IsValid && !FleetIsMoving(strikeFleet)
+                    && reach.IsReachable && reach.Tier != MilitaryReach.ReachTier.SameSystem
+                    && reach.HasRange && HasHomeReserve(state, strikeFleet))
+                {
+                    var fromSystem = strikeFleet.Manager;
+                    Entity nextGate = Entity.InvalidEntity;
+                    if (fromSystem != null)
+                        nextGate = JumpRouter.NextGateToward(fromSystem, target.ColonyBody.Manager, state.FactionId);
+                    // A resolvable gate in the fleet's current system to head for (InvalidEntity → no leg to emit this
+                    // cycle; fall through to the build rungs).
+                    if (nextGate != null && nextGate.IsValid
+                        && nextGate.TryGetDataBlob<Pulsar4X.JumpPoints.JumpPointDB>(out var gateDB))
+                    {
+                        var game = state.Game;
+                        var factionEntity = state.Faction;
+                        var fleet = strikeFleet;
+                        var db = gateDB;
+                        return new PlannerAction(
+                            "StrikeJump",
+                            $"jump strike fleet {fleet.Id} through gate {nextGate.Id} toward enemy world "
+                                + $"{target.ColonyBody.Id} ({reach.Hops} hops, target score {target.Score:F0})",
+                            () =>
+                            {
+                                // The ONE step (the only side effect): warp-to-gate + transit through, as a fleet.
+                                Pulsar4X.JumpPoints.JumpOrder.CreateAndExecute(game, factionEntity, fleet, db);
+                            });
+                    }
                 }
             }
 
