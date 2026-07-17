@@ -64,6 +64,16 @@ public class GeoSurveyProcessor : IInstanceProcessor
                     // on the deposit. Lazy/idempotent/defensive: a world with no minerals seeds nothing, a re-survey
                     // is a no-op, a body without a region layer is skipped inside.
                     Pulsar4X.Galaxy.PlanetGridFactory.EnsureGridForBody(Target);
+
+                    // PER-FACTION surface fog (ground-fog slice 2): reveal the world's geography + each deposit's
+                    // LOCATION/TYPE to the SURVEYING faction ONLY (the assay AMOUNT stays masked until a ground scout
+                    // walks the hex — slice 3). The world-level RevealAll() above stays for the old world-level
+                    // consumers (additive/byte-identical) until the client migrates to the per-faction read (slice 2b).
+                    // Runs after EnsureGridForBody so the deposit hexes exist to grant. Defensive: a fleet always has a
+                    // faction owner, but guard the mask read so the reveal never throws in the hotloop.
+                    int surveyFactionMask = Fleet.GetFactionOwner.TryGetDataBlob<FactionInfoDB>(out var surveyFactionInfo)
+                        ? surveyFactionInfo.FactionMask : 0;
+                    SurveyReveal.RevealWorldTo(regionsDB, Fleet.FactionOwnerID, surveyFactionMask);
                 }
 
                 EventManager.Instance.Publish(

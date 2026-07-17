@@ -173,6 +173,35 @@ namespace Pulsar4X.Client
                                 + (climbing ? "STILL CLIMBING → SLOW-AT-SCALE heavy tick, not a true wedge — a PERF problem"
                                             : "FROZEN too → a TRUE WEDGE, deadlock/infinite loop in that processor") + "). "
                                 + "scale: fleets=" + fleets + " in-combat=" + inCombat + " ships=" + ships + " in view.");
+
+                            // If SensorScan is the wedged/hot processor, NAME the storming entities (per-entity
+                            // attribution the engine records when SensorScan.AttributeScans is on). Turns "SensorScan is
+                            // slow" into "THIS ship/colony scanned N times" — the culprit for the scan-storm freeze.
+                            try
+                            {
+                                string proc = Pulsar4X.Engine.ManagerSubPulse.GlobalCurrentProcess ?? "";
+                                if (SensorScan.AttributeScans && proc.Contains("SensorScan"))
+                                {
+                                    var top = SensorScan.ScansByEntity.ToArray();
+                                    System.Array.Sort(top, (a, b) => b.Value.CompareTo(a.Value));
+                                    var sb = new System.Text.StringBuilder("SensorScan top scanners (cumulative id/owner/kind/ScanTime/count): ");
+                                    for (int i = 0; i < top.Length && i < 6; i++)
+                                    {
+                                        var kv = top[i];
+                                        Entity e = null;
+                                        foreach (var s in game.Systems) if (s.TryGetEntityById(kv.Key, out e)) break;
+                                        string kind = e == null ? "?" : e.HasDataBlob<Pulsar4X.Colonies.ColonyInfoDB>() ? "colony"
+                                            : e.HasDataBlob<ShipInfoDB>() ? "ship" : "other";
+                                        int stime = -1;
+                                        if (e != null && e.TryGetDataBlob<Pulsar4X.Sensors.SensorAbilityDB>(out var sab)
+                                            && sab.InstanceAtributes.Count > 0) stime = sab.InstanceAtributes[0].ScanTime;
+                                        int owner = e?.FactionOwnerID ?? -999;
+                                        sb.Append("#" + kv.Key + "(owner=" + owner + "," + kind + ",ScanTime=" + stime + "s)=" + kv.Value + "  ");
+                                    }
+                                    Line("SIM-STALL", sb.ToString());
+                                }
+                            }
+                            catch { /* a diagnostic must never throw */ }
                             _simStallReported = true;
                         }
                     }
@@ -324,6 +353,38 @@ namespace Pulsar4X.Client
                 }
                 Line("DETECT", fname + " holds " + held + " contact(s); " + others + " other-faction ship(s) in-system, detects "
                     + detected + " (" + (others - detected) + " hidden from you)");
+
+                // PER-CONTACT FOG GAUGE (2026-07-17, the detection-render diagnosis): for each held contact, where does
+                // its DRAWN position come from — LIVE (glued to the real ship's real-time position, no scan lag, never
+                // freezes on track loss — the unfinished fog-of-war state), LAGGED (a scan snapshot), or FROZEN
+                // (last-known)? And "fogLag" = how far the drawn blip sits from the real ship (0 = tracking live).
+                // This is the signal that settles the developer's "I watched a ship cross empty space" report: if every
+                // contact reads src=LIVE with fogLag~0, the blip is glued to the real ship (the contact model tracks
+                // live and never ages out); if contacts are FROZEN/aged, it was continuous detection + a misleading ring.
+                // Capped at 6 lines; a healthy (fixed) game would show LAGGED/FROZEN sources here.
+                if (contacts != null && held > 0)
+                {
+                    int shownC = 0;
+                    foreach (var c in contacts.GetAllContacts())
+                    {
+                        if (c == null || c.Position == null || shownC >= 6) continue;
+                        shownC++;
+                        double blipGm = 0, lagKm = -1;
+                        try
+                        {
+                            var blip = c.Position.AbsolutePosition;
+                            blipGm = blip.Length() / 1e9;
+                            if (c.ActualEntity != null && c.ActualEntity.IsValid
+                                && c.ActualEntity.TryGetDataBlob<PositionDB>(out var realPos))
+                                lagKm = (blip - realPos.AbsolutePosition).Length() / 1e3;
+                        }
+                        catch { }
+                        Line("DETECT-CONTACT", "'" + c.Name + "' src=" + c.PositionSourceLabel
+                            + " blipDistFromStar=" + blipGm.ToString("0.#") + "Gm"
+                            + (lagKm >= 0 ? " fogLag=" + lagKm.ToString("0") + "km" : " fogLag=?")
+                            + " sig=" + c.SignalStrength_kW.ToString("0.##") + "kW");
+                    }
+                }
 
                 // REACH gauge (detection-tuning diagnostic): our BEST sensor reach (how far we'd see a ship like us)
                 // vs the distance to the NEAREST enemy ship — and whether that enemy is actually detected. If the

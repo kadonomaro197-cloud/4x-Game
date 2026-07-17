@@ -575,7 +575,24 @@ namespace Pulsar4X.Combat
             var st = new FleetCombatStateDB(representativeOpponentId, GetFleetShips(fleet).Count);
             if (EnableClosingRange)
             {
-                st.Separation_m = InitialSeparationDefault_m;          // Phase 1 v1: join path seeds the default gap
+                // Seed the closing gap from the REAL distance to the representative opponent, so the resolver evaluates
+                // the fight at the SAME range the engage gate (WithinWeaponRange) already approved. Seeding the 1000 km
+                // default here — after the engage gate had confirmed the pair is within ACTUAL weapon range — made every
+                // finite-range weapon (beam knife-range, flak 50 km, railgun 500 km; the scenario ships carry no 1000 km
+                // missile) read OUT of range → an EMPTY fire mix → totalFire 0 → the engagement was released as "frozen"
+                // the SAME tick it formed → next tick the (still-real-in-range) pair read imminent again → engage → freeze
+                // → release: a per-tick THRASH that kept NewEngagementImminent true forever (re-arming the combat fine-
+                // stepper every game-hour → the SensorScan "PERF freeze") and re-fired the auto-pause endlessly. Seeding
+                // the real gap lets the fight actually resolve, so it PERSISTS and the pair stops reading imminent.
+                // FleetSeparation self-guards (falls back to the default when a fleet has no usable position), and the
+                // whole block is inert in CI (EnableClosingRange is off in every headless fixture → byte-identical).
+                // (2026-07-16 freeze fix — the engage gate judged real distance while the resolver judged the default.)
+                double gap = InitialSeparationDefault_m;
+                var mgr = fleet.Manager;
+                if (mgr != null && mgr.TryGetEntityById(representativeOpponentId, out var opponent)
+                    && opponent != null && opponent.IsValid)
+                    gap = FleetSeparation(fleet, opponent);
+                st.Separation_m = gap;                                 // Phase 1: the real gap, not the default seed
                 st.ManeuverBudget = FleetCombat.DeltaVFloor(fleet);    // Phase 2: the kiting clock
             }
             fleet.SetDataBlob(st);

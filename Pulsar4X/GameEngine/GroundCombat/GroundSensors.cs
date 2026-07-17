@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Pulsar4X.Engine;
+using Pulsar4X.Factions;
 using Pulsar4X.Galaxy;
 
 namespace Pulsar4X.GroundCombat
@@ -16,6 +17,15 @@ namespace Pulsar4X.GroundCombat
     /// covers (a region is a column band of width ~<c>cols/regionCount</c>). Revealing = flipping <c>Region.Surveyed</c>,
     /// which surfaces that region's terrain + mineral deposits. Run every tick by <see cref="GroundForcesProcessor"/>;
     /// idempotent (an already-known region is a no-op), defensive (never throws in the hotloop — L4).
+    ///
+    /// GROUND-FOG SLICE 3 (`docs/ground/SURFACE-FOG-AND-RECON-DESIGN.md`): this radar IS the "recon component" the design
+    /// called for — a designed/buildable/losable component (the base-mod <c>ground-radar</c>), so nothing new is built;
+    /// the reveal is WIRED into the per-faction fog. Alongside the world-level <c>RevealRegion</c> (kept, additive) it now
+    /// (a) reveals each reached region to the SCOUTING FACTION only (<see cref="PlanetRegionsDB.RevealRegionFor"/>), and
+    /// (b) unmasks the deposit ASSAY (<see cref="GroundHex.RevealDepositAssay"/> → the Full tier — exact amount) of the
+    /// deposit hexes in the region a scout physically STANDS in (boots-on-the-deposit: the ground-scout tier that the
+    /// orbital survey's Partial "located, un-assayed" grant does not give). So an enemy without a scout on the ground
+    /// reads neither the region nor the assay — real per-faction ground fog.
     /// </summary>
     public static class GroundSensors
     {
@@ -61,6 +71,11 @@ namespace Pulsar4X.GroundCombat
                 int revealed = 0;
                 bool any = false;
 
+                // Slice 3: the regions each faction's scouts REACH (per-faction geography) and the regions a faction
+                // physically STANDS a scout in (where it earns the deposit ASSAY — boots on the deposit).
+                var reachedByFaction = new Dictionary<int, HashSet<int>>();
+                var standingByFaction = new Dictionary<int, HashSet<int>>();
+
                 foreach (var unit in forces.Units)
                 {
                     if (unit == null || unit.MovingToRegion >= 0) continue;                 // reveals where it has arrived
@@ -78,13 +93,46 @@ namespace Pulsar4X.GroundCombat
                     var region = regions.Regions[unit.RegionIndex];
 
                     foreach (var ri in RegionsInReach(region, unit.RegionIndex, unit.GlobalQ, rangeKm, cols, regionCount))
-                        if (regions.RevealRegion(ri)) { revealed++; any = true; }
+                    {
+                        if (regions.RevealRegion(ri)) { revealed++; any = true; }   // world-level (kept, additive)
+                        regions.RevealRegionFor(unit.FactionOwnerID, ri);           // per-faction geography (slice 3)
+                        AddTo(reachedByFaction, unit.FactionOwnerID, ri);
+                    }
+                    AddTo(standingByFaction, unit.FactionOwnerID, unit.RegionIndex); // the region it earns the assay in
                 }
 
                 if (any) PlanetGridFactory.EnsureGridForBody(body);   // surface deposits in the newly-known regions
+
+                // Slice 3: unmask the deposit ASSAY (Full tier) of deposit hexes in the region a scout STANDS in, for
+                // that scout's faction only. One grid pass, gated by the faction→standing-region map (cheap: usually
+                // 1–2 factions with ground radar on a body). Needs the faction BIT mask, resolved once per faction.
+                var g = body.Manager?.Game;
+                if (g != null && grid?.Hexes != null && standingByFaction.Count > 0 && cols > 0 && regionCount > 0)
+                {
+                    var maskByFaction = new Dictionary<int, int>();
+                    foreach (var fid in standingByFaction.Keys)
+                        maskByFaction[fid] = g.Factions.TryGetValue(fid, out var facEnt)
+                            && facEnt.TryGetDataBlob<FactionInfoDB>(out var fi) ? fi.FactionMask : 0;
+
+                    foreach (var hex in grid.Hexes)
+                    {
+                        if (hex == null || hex.DepositMineralId < 0) continue;
+                        int hexRegion = PlanetGridFactory.RegionOfColumn(hex.Q, cols, regionCount);
+                        foreach (var kv in standingByFaction)
+                            if (kv.Value.Contains(hexRegion) && maskByFaction.TryGetValue(kv.Key, out var mask) && mask != 0)
+                                hex.RevealDepositAssay(mask);   // boots-on-the-deposit → exact tonnage, this faction only
+                    }
+                }
                 return revealed;
             }
             catch { return 0; }   // radar reveal is a nicety — never break the ground hotloop over it
+        }
+
+        /// <summary>Accumulate <paramref name="value"/> into the set for <paramref name="key"/> (create-on-demand).</summary>
+        private static void AddTo(Dictionary<int, HashSet<int>> map, int key, int value)
+        {
+            if (!map.TryGetValue(key, out var set)) map[key] = set = new HashSet<int>();
+            set.Add(value);
         }
     }
 }

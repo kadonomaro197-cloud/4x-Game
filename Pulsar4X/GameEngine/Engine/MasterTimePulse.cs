@@ -301,16 +301,28 @@ namespace Pulsar4X.Engine
         /// actually engage). Past it we stop capping and run at full Ticklength, so game-time can't crawl to a
         /// standstill (the SensorScan-heavy "PERF freeze" the SIM-STALL watchdog reports). 24 × 5 s = 2 game-minutes —
         /// far more than any real first-contact needs, far less than a playable-clock crawl.</summary>
-        private const int MaxConsecutiveFineSteps = 24;
+        internal const int MaxConsecutiveFineSteps = 24;
+
+        /// <summary>Combat fine-step FALSE-POSITIVE guard state, PERSISTED across <see cref="SimulateTimeUntil"/> calls
+        /// (2026-07-16 freeze fix). These were locals reset per call — but in continuous RUNNING mode the outer loop
+        /// (<see cref="SimulateTimeAsync"/>) calls SimulateTimeUntil once per Ticklength, so a per-call reset re-paid the
+        /// full 24-fine-step tax (24 × a full multi-system SensorScan) EVERY game-hour while a STANDING imminent read
+        /// stayed true — the chronic "game-time crawls, scans climb" PERF freeze. As fields, the give-up survives across
+        /// hours for one imminent EPISODE and is cleared only when nothing is imminent (see the loop), so a genuine new
+        /// engagement — which resolves and stops reading imminent — still re-arms and lands its auto-pause.</summary>
+        private int _consecutiveFineSteps = 0;
+        private bool _fineStepGivenUp = false;
+
+        /// <summary>Total combat fine-steps taken (a CombatReactionStep sub-step in place of a full Ticklength). A
+        /// deterministic gauge for the chronic-fine-step regression (there is no other in-process observable — the
+        /// sub-steps reach the same GameGlobalDateTime). Sibling of <see cref="Pulsar4X.Sensors.SensorScan.ScanCount"/> /
+        /// <see cref="Pulsar4X.Combat.CombatEngagement.TickCount"/>. Read as a before/after delta; 0 whenever the combat
+        /// interrupt is off (every headless fixture) → byte-identical.</summary>
+        public static long FineStepCount = 0;
 
         private void SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct = default)
         {
             _stopwatch.Start(); //start the processor loop stopwatch (performance counter)
-
-            // Combat fine-step FALSE-POSITIVE guard (see MaxConsecutiveFineSteps). Reset per call, so a GENUINE new
-            // engagement still lands its auto-pause on the next advance.
-            int consecutiveFineSteps = 0;
-            bool fineStepGivenUp = false;
 
             // If a cancellation is signalled, stop the time advance the next time an interrupt happens.
             while (GameGlobalDateTime < targetDateTime && !ct.IsCancellationRequested)
@@ -327,22 +339,36 @@ namespace Pulsar4X.Engine
                 // returns at once and a full Ticklength step is taken as before.
                 DateTime iterTarget = targetDateTime;
                 DateTime cappedTarget = GameGlobalDateTime + CombatReactionStep;
-                if (!fineStepGivenUp
-                    && cappedTarget < iterTarget
+                // Evaluate `imminent` even when we've GIVEN UP fine-stepping, so we can detect when the imminent
+                // EPISODE ends and re-arm for the next genuine first contact. Cheap away from combat: the scan only
+                // runs when a cap could apply (more than one CombatReactionStep left) and the interrupt is armed.
+                bool imminent = cappedTarget < iterTarget
                     && Pulsar4X.Combat.CombatEngagement.InterruptTimeOnNewEngagement
-                    && AnyNewEngagementImminent())
+                    && AnyNewEngagementImminent();
+                if (!imminent)
+                {
+                    // Nothing (more) is imminent — the episode is over. Clear the give-up so the NEXT new engagement
+                    // fine-steps again and lands its auto-pause. This is the ONLY reset: while a STANDING imminent read
+                    // persists (a hostile pair that reads imminent but never actually engages — a flickering boundary
+                    // detection, or the old resolver-gap thrash), we STAY given up ACROSS calls instead of re-paying the
+                    // 24-fine-step tax every game-hour. A genuine engagement resolves and stops reading imminent, so its
+                    // episode ends and re-arms cleanly.
+                    _consecutiveFineSteps = 0;
+                    _fineStepGivenUp = false;
+                }
+                else if (!_fineStepGivenUp)
                 {
                     iterTarget = cappedTarget;
-                    // A real engagement cancels this loop within a step or two; if we keep fine-stepping without that,
-                    // the imminent read is a false positive — give up capping for the rest of this advance so the
-                    // clock can't crawl (the fix for the SensorScan "PERF freeze").
-                    if (++consecutiveFineSteps >= MaxConsecutiveFineSteps)
-                        fineStepGivenUp = true;
+                    FineStepCount++;
+                    // A real engagement cancels this loop within a step or two (EnsureInCombat → RequestCombatHalt); if
+                    // we keep fine-stepping without that, the imminent read is a STANDING false positive — give up
+                    // capping so the clock can't crawl (the fix for the SensorScan "PERF freeze"). The give-up now
+                    // persists across SimulateTimeUntil calls (see the fields) until the episode clears above.
+                    if (++_consecutiveFineSteps >= MaxConsecutiveFineSteps)
+                        _fineStepGivenUp = true;
                 }
-                else
-                {
-                    consecutiveFineSteps = 0;   // took a full step (or nothing imminent) — the streak is broken
-                }
+                // else: imminent AND already given up → take a FULL step (don't cap) but keep the give-up latched
+                //       (the episode is still active), so a persistent false positive costs nothing extra.
 
                 DateTime nextInterupt = ProcessNextInterupt(iterTarget);
                 //do system processors

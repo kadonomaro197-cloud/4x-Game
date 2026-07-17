@@ -1,7 +1,8 @@
 using System.Collections.Generic;
-using Pulsar4X.Combat;   // ShipCombatValueDB, FleetCombatStateDB, FleetCombat
+using Pulsar4X.Combat;      // ShipCombatValueDB, FleetCombatStateDB, FleetCombat
+using Pulsar4X.Datablobs;   // ComponentInstancesDB (support-hull ability lookup)
 using Pulsar4X.Engine;
-using Pulsar4X.Ships;    // ShipInfoDB
+using Pulsar4X.Ships;       // ShipInfoDB
 
 namespace Pulsar4X.Fleets
 {
@@ -99,9 +100,10 @@ namespace Pulsar4X.Fleets
         /// in-system fleet per star system — growing an existing FORMING fleet before starting a new one. Returns the
         /// number of ships moved into fleets this call (0 = nothing loose to assemble).
         ///
-        /// Only ARMED hulls (a <see cref="ShipCombatValueDB"/> with Firepower &gt; 0) are swept up — transports,
-        /// freighters and surveyors are left loose for their own logic (the invasion transport the ConquerResolver
-        /// builds must NOT get vacuumed into the strike fleet). Defensive/no-throw (runs inside a hotloop).
+        /// Only ARMED hulls (a <see cref="ShipCombatValueDB"/> with Firepower &gt; 0) are swept up — the invasion
+        /// transport the ConquerResolver builds, plain cargo haulers and surveyors are left loose for their own logic.
+        /// Combat TENDERS (unarmed fleet oilers/colliers) are folded SEPARATELY by <see cref="AssembleSupportHulls"/>,
+        /// which runs after this so a forming fleet exists to escort. Defensive/no-throw (runs inside a hotloop).
         /// </summary>
         public static int AssembleBuiltWarships(Entity faction)
         {
@@ -172,6 +174,101 @@ namespace Pulsar4X.Fleets
             return moved;
         }
 
+        /// <summary>
+        /// Fold a faction's built-but-unfleeted SUPPORT hulls (unarmed fleet TENDERS/oilers/colliers — the ships the AI
+        /// used to build and never USE) into a fighting fleet so they're FIELDED and travel with it. Returns the number
+        /// of tenders folded this call (0 = nothing loose, or no fleet yet to escort → byte-identical).
+        ///
+        /// A tender ESCORTS a combat fleet; it never forms one of its own (a fleet of only tenders is useless). So this
+        /// runs AFTER <see cref="AssembleBuiltWarships"/> and attaches each loose tender to the faction's strongest
+        /// FORMING fleet in the same system — where the monthly doctrine/role pass then sorts it into the SUPPORT
+        /// sub-fleet (an unarmed hull classifies as <see cref="FleetRole.Support"/>) and gives it a hold-fire posture.
+        /// If no forming fleet exists in a tender's system yet, it's left loose (a tender with nothing to support waits).
+        /// Only true TENDERS are swept (<see cref="IsSupportHull"/>: unarmed + a field cargo-transfer ability + NOT a
+        /// troop transport), so the invasion transport the ConquerResolver builds and plain freighters/surveyors stay
+        /// loose for their own logic. Never sets a tender as flagship (the fleet already has an armed flagship, and a
+        /// tender isn't counted a warship — <see cref="Pulsar4X.Factions.MilitaryComposition.WarshipCount"/>/<see cref="ArmedShipCount"/>
+        /// only see Firepower&gt;0 — so the strike threshold, Deployed latch and reserve logic are unchanged).
+        /// Defensive/no-throw (runs inside a hotloop). Uses the same GetChildren-snapshot → RemoveChild/AddChild recipe.
+        /// </summary>
+        public static int AssembleSupportHulls(Entity faction)
+        {
+            if (faction == null || !faction.TryGetDataBlob<FleetDB>(out var rootDB)) return 0;
+            int factionId = faction.Id;
+
+            // Bucket the loose SUPPORT hulls (flat children of the root fleet) by their star-system manager, so each
+            // folds into a fleet co-located with it (GetChildren() is a snapshot, so RemoveChild below is safe).
+            var looseByManager = new Dictionary<EntityManager, List<Entity>>();
+            foreach (var child in rootDB.GetChildren())
+            {
+                if (child == null || !child.IsValid) continue;
+                if (child.HasDataBlob<FleetDB>()) continue;   // a named sub-fleet node, not a loose ship
+                if (!IsSupportHull(child)) continue;          // tenders only (unarmed + transfer + not a troop transport)
+                var mgr = child.Manager;
+                if (mgr == null) continue;
+                if (!looseByManager.TryGetValue(mgr, out var list)) looseByManager[mgr] = list = new List<Entity>();
+                list.Add(child);
+            }
+
+            int moved = 0;
+            foreach (var kv in looseByManager)
+            {
+                var manager = kv.Key;
+                var tenders = kv.Value;
+                if (tenders.Count == 0) continue;
+
+                // The strongest FORMING fleet of this faction in this system is the strike group the tenders escort.
+                // None yet (no warships assembled) → leave the tenders loose (no-op this cycle).
+                var fleet = FindEscortableFleet(manager, factionId);
+                if (fleet == null || !fleet.TryGetDataBlob<FleetDB>(out var fleetDB)) continue;
+
+                foreach (var tender in tenders)
+                {
+                    rootDB.RemoveChild(tender);   // detach from the flat root fleet
+                    fleetDB.AddChild(tender);     // a Support member (never the flagship — the fleet already has one)
+                    moved++;
+                }
+            }
+            return moved;
+        }
+
+        /// <summary>
+        /// TRUE if <paramref name="ship"/> is a combat-support TENDER: an UNARMED hull (no <see cref="ShipCombatValueDB"/>
+        /// firepower) that carries a field cargo-transfer ability (<see cref="Pulsar4X.Storage.CargoTransferAtb"/> — a
+        /// fleet oiler/collier that can resupply warships in the field, e.g. the base-mod Freighter's shuttlebay) and is
+        /// NOT a troop transport (no <see cref="Pulsar4X.GroundCombat.GroundBayAtb"/> — those are the invasion carriers
+        /// the ConquerResolver claims while loose). The transfer ability is what distinguishes a real fleet tender from a
+        /// plain cargo hauler (storage-only, no transfer) and a survey ship. Defensive: a ship with no
+        /// <see cref="ComponentInstancesDB"/> is not a tender. Internal for the CI gauge.
+        /// </summary>
+        internal static bool IsSupportHull(Entity ship)
+        {
+            if (ship == null || !ship.IsValid || !ship.HasDataBlob<ShipInfoDB>()) return false;
+            if (ship.TryGetDataBlob<ShipCombatValueDB>(out var cv) && cv.Firepower > 0) return false;   // armed → a warship, not a tender
+            if (!ship.TryGetDataBlob<ComponentInstancesDB>(out var comps)) return false;
+            if (comps.TryGetComponentsByAttribute<Pulsar4X.GroundCombat.GroundBayAtb>(out _)) return false; // troop transport — leave loose
+            return comps.TryGetComponentsByAttribute<Pulsar4X.Storage.CargoTransferAtb>(out _);             // a field tender
+        }
+
+        /// <summary>The faction-owned FORMING fleet (tagged <see cref="FleetCompositionDB"/>) in this system with the
+        /// MOST armed ships — the strike group a tender should escort — skipping any fleet locked in a battle. Null if
+        /// none (no strike fleet has formed yet → the tenders wait loose). Unlike <see cref="FindGrowableFormingFleet"/>
+        /// it does NOT cap on aspiration (a tender doesn't count toward the armed size) — it just picks the real fighting
+        /// fleet to attach the support hulls to.</summary>
+        private static Entity FindEscortableFleet(EntityManager manager, int factionId)
+        {
+            Entity best = null;
+            int bestArmed = -1;
+            foreach (var fleet in manager.GetAllEntitiesWithDataBlob<FleetCompositionDB>())
+            {
+                if (fleet.FactionOwnerID != factionId) continue;
+                if (fleet.HasDataBlob<FleetCombatStateDB>()) continue;   // don't reorganise a fleet mid-battle
+                int armed = ArmedShipCount(fleet);
+                if (armed > bestArmed) { bestArmed = armed; best = fleet; }
+            }
+            return best;
+        }
+
         /// <summary>The faction-owned FORMING fleet in this system with the MOST ships but still below its ASPIRATION
         /// target (concentrate force — fill one fleet to its resourced size before starting another), skipping any fleet
         /// locked in a battle. Null if none qualifies → the caller starts a fresh forming fleet. **Slice 3 — the reserve
@@ -197,8 +294,9 @@ namespace Pulsar4X.Fleets
         }
 
         /// <summary>Count the armed ships (a real <see cref="ShipCombatValueDB"/> with Firepower &gt; 0) under a fleet,
-        /// recursing any sub-fleets — the same measure <c>MilitaryComposition.WarshipCount</c> uses.</summary>
-        private static int ArmedShipCount(Entity fleet)
+        /// recursing any sub-fleets — the same measure <c>MilitaryComposition.WarshipCount</c> uses. Internal so the
+        /// fleet-tree-safety gauge can prove it terminates on a malformed tree (it rides the guarded FleetCombat.Ships).</summary>
+        internal static int ArmedShipCount(Entity fleet)
         {
             int n = 0;
             foreach (var ship in FleetCombat.Ships(fleet))

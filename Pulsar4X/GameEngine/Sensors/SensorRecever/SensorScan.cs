@@ -26,9 +26,42 @@ namespace Pulsar4X.Sensors
         /// Interlocked because systems process in parallel; exactness doesn't matter, only that it climbs.</summary>
         public static long ScanCount;
 
+        /// <summary>Floor for the scan-reschedule interval. A sensor whose <c>ScanTime</c> is &lt;= 0 (a data/clamp slip,
+        /// or a fractional value truncated to 0 by the int cast) would otherwise reschedule at the SAME game-instant —
+        /// turning the instance queue into a busy-loop that spins on that one entity forever, freezing game-time while
+        /// <see cref="ScanCount"/> explodes (a SIM-STALL "SensorScan STILL CLIMBING" freeze). Mirrors the guard the
+        /// install-kick already applies (<c>SensorReceiverAtb.OnComponentInstallation</c>).</summary>
+        internal const int DefaultScanSeconds = 3600;
+        private static bool _zeroScanTimeWarned;
+
+        /// <summary>Diagnostic scan ATTRIBUTION — OFF by default → zero overhead, byte-identical. When a test sets
+        /// <see cref="AttributeScans"/> true, every <see cref="ProcessEntity"/> invocation bumps the per-entity count in
+        /// <see cref="ScansByEntity"/>, so a scan STORM can be pinned on the offending entity/design instead of only the
+        /// global <see cref="ScanCount"/>. Cleared by the test before it measures.</summary>
+        public static bool AttributeScans = false;
+        public static readonly System.Collections.Concurrent.ConcurrentDictionary<int, long> ScansByEntity
+            = new System.Collections.Concurrent.ConcurrentDictionary<int, long>();
+
+        /// <summary>Fog-of-war contact aging: a contact NOT re-detected by ANY of the faction's sensors within this many
+        /// seconds is dropped (its map blip disappears), so a track that leaves reach is FORGOTTEN instead of shown
+        /// forever. ~4 scan intervals at the default 3600 s scan time — the "ship tracked across empty space forever" half.</summary>
+        internal const double ContactStaleSeconds = 4 * 3600;
+
+        /// <summary>Freeze a detected contact's DRAWN position at THIS scan's snapshot (where the target is right now), so
+        /// the map blip shows the last-SCANNED position — advancing each successful scan, frozen between scans — instead of
+        /// the target's live real-time position (which glued the blip to the real ship and let it glide across the map).
+        /// Defensive: never throws in the sensor hot loop (a missing contact/position/target-position is a no-op).</summary>
+        private static void SnapshotContactPosition(SensorContact contact, Entity target)
+        {
+            if (contact == null || contact.Position == null || target == null) return;
+            if (target.TryGetDataBlob<PositionDB>(out var tpos))
+                contact.Position.SetSnapshot(tpos.AbsolutePosition);
+        }
+
         internal override void ProcessEntity(Entity entity, DateTime atDateTime)
         {
             System.Threading.Interlocked.Increment(ref ScanCount);
+            if (AttributeScans) ScansByEntity.AddOrUpdate(entity.Id, 1, (_, n) => n + 1);   // diagnostic: which entity storms
             if(entity.Manager == null) throw new NullReferenceException("entity.Manager cannot be null");
 
             EntityManager manager = entity.Manager;
@@ -53,6 +86,10 @@ namespace Pulsar4X.Sensors
             {
                 var detectableEntitys = manager.GetAllEntitiesWithDataBlob<SensorProfileDB>();
                 sensorAbility.CurrentContacts = new List<(Entity, SensorReturnValues)>();
+
+                // The entity reschedules its next scan ONCE per invocation (below, OUTSIDE this loop) at the SHORTEST
+                // scan interval across its receivers — tracked here as the loop runs.
+                int minScanSecs = int.MaxValue;
                 for(int i = 0; i < sensorAbility.InstanceStates.Count; i++)
                 {
                     var sensorAbl = sensorAbility.InstanceStates[i];
@@ -112,12 +149,16 @@ namespace Pulsar4X.Sensors
                                 if (sensorInfo.HighestDetectionQuality.SignalStrength_kW < detectionValues.SignalStrength_kW)
                                     sensorInfo.HighestDetectionQuality.SignalStrength_kW = detectionValues.SignalStrength_kW;
                                 SensorEntityFactory.UpdateSensorContact(faction, sensorInfo);
+                                // Fog of war: freeze the blip at THIS scan's position (a snapshot) so it shows where the
+                                // target was last seen, not its live position (the "watched it glide across the map" bug).
+                                SnapshotContactPosition(sensorMgr.GetSensorContact(detectableEntity.Id), detectableEntity);
                             }
                             else
                             {
                                 var contact = new SensorContact(faction, detectableEntity, atDateTime);
                                 sensorMgr.AddContact(contact);
                                 sensorAbl.CurrentContacts[detectableEntity.Id] = detectionValues;
+                                SnapshotContactPosition(contact, detectableEntity);   // fog: blip at the scanned position, not live
 
                                 // First contact between factions — the front door to external politics. The first
                                 // foreign entity this faction ever detects is a NEW sensor contact, so this branch
@@ -132,16 +173,54 @@ namespace Pulsar4X.Sensors
                             }
 
                         }
-                        else if (sensorMgr.SensorContactExists(detectableEntity.Id) && sensorAbl.CurrentContacts.ContainsKey(detectableEntity.Id))
+                        else if (sensorMgr.SensorContactExists(detectableEntity.Id))
                         {
-                            sensorAbl.CurrentContacts.Remove(detectableEntity.Id);
-                            sensorAbl.OldContacts[detectableEntity.Id] = detectionValues;
-                            sensorMgr.RemoveContact(detectableEntity.Id);
+                            // Track lost this scan (signal <= 0). The blip is already a frozen snapshot from the last
+                            // detection; flip it to Memory so the client fades it to "(last known)", and AGE IT OUT once
+                            // NO sensor has re-detected it for ContactStaleSeconds — fog forgets a track that left reach
+                            // instead of showing it forever. Reads the faction-level LastDetection (any observer's detect
+                            // refreshes it), so a contact another sensor still sees is NOT dropped. (Previously gated on the
+                            // per-receiver CurrentContacts dict, which SetInstances rebuilds empty → this removal never
+                            // fired and contacts lived forever — the persistence half of "ship tracked across empty space".)
+                            var lost = sensorMgr.GetSensorContact(detectableEntity.Id);
+                            if (lost != null)
+                            {
+                                if (lost.Position != null && lost.Position.GetDataFrom == DataFrom.Sensors)
+                                    lost.Position.GetDataFrom = DataFrom.Memory;
+                                if (lost.SensorInfo != null
+                                    && (atDateTime - lost.SensorInfo.LastDetection).TotalSeconds >= ContactStaleSeconds)
+                                {
+                                    sensorAbl.CurrentContacts.Remove(detectableEntity.Id);
+                                    sensorAbl.OldContacts[detectableEntity.Id] = detectionValues;
+                                    sensorMgr.RemoveContact(detectableEntity.Id);
+                                }
+                            }
                         }
                     }
 
-                    manager.ManagerSubpulses.AddEntityInterupt(atDateTime + TimeSpan.FromSeconds(sensorAtb.ScanTime), this.TypeName, entity);
+                    // FLOOR the interval so a non-positive ScanTime can never reschedule at the same game-instant and
+                    // busy-loop the instance queue (the SensorScan freeze) — the same guard the install-kick applies.
+                    // A one-time warning names the offending design so it can be fixed at the data. We only TRACK the
+                    // shortest interval here; the actual reschedule happens ONCE, after the loop (see below).
+                    int scanSecs = sensorAtb.ScanTime > 0 ? sensorAtb.ScanTime : DefaultScanSeconds;
+                    if (sensorAtb.ScanTime <= 0 && !_zeroScanTimeWarned)
+                    {
+                        _zeroScanTimeWarned = true;
+                        Console.WriteLine($"[SensorScan] WARNING: a sensor on entity {entity.Id} (faction {entity.FactionOwnerID}) "
+                            + $"has ScanTime={sensorAtb.ScanTime} <= 0 — floored to {DefaultScanSeconds}s to avoid a same-instant reschedule busy-loop. Fix the sensor design's Scan Time.");
+                    }
+                    if (scanSecs < minScanSecs) minScanSecs = scanSecs;
                 }
+
+                // Reschedule the next scan EXACTLY ONCE per invocation — OUTSIDE the per-receiver loop above. THIS IS THE
+                // FIX for the SensorScan freeze: rescheduling INSIDE the loop made an entity with K sensor receivers queue
+                // K fresh scan events every time it scanned, so its pending scan-events multiplied by K each cycle — an
+                // EXPONENTIAL storm (a 2-receiver colony reached ~2^18 = 305,426 scans and froze the clock while every
+                // other entity sat at ~50). Now each entity re-queues EXACTLY ONE scan, at the shortest interval its
+                // sensors ask for. Guarded on Count > 0 so an entity whose receivers were all stripped/destroyed stops
+                // rescheduling (the grave rung — a blinded ship goes quiet instead of spinning a dead scan forever).
+                if (sensorAbility.InstanceStates.Count > 0)
+                    manager.ManagerSubpulses.AddEntityInterupt(atDateTime + TimeSpan.FromSeconds(minScanSecs), this.TypeName, entity);
             }
         }
     }

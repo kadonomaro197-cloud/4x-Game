@@ -158,6 +158,7 @@ namespace Pulsar4X.Fleets
                             // Ship
                             else
                             {
+                                navyDB.RemoveChild(child);   // detach from the disbanding fleet FIRST — never leave the ship in two parents' lists (a transient diamond)
                                 factionRoot.AddChild(child);
                             }
                         }
@@ -178,6 +179,19 @@ namespace Pulsar4X.Fleets
                 case FleetOrderType.ChangeParent:
                     // Remove the entity from the parent tree
                     var sourceFleetInfo = _entityCommanding.GetDataBlob<FleetDB>();
+
+                    // CYCLE GUARD: never reparent a fleet under itself or one of its own descendants. Without this,
+                    // the client fleet drag-drop (FleetWindow.DisplayDropTarget) let a player drop a parent fleet onto
+                    // its own sub-fleet, forming a 2-node parent cycle (P.parent=S, S.parent=P). The combat fleet-tree
+                    // walk (FleetCombat.Collect, run inside CombatEngagement.Tick) then recursed forever — the
+                    // frozen-clock "StarInfoDB TRUE WEDGE" the SIM-STALL watchdog caught. Refuse the illegal reparent
+                    // (leave the tree untouched) rather than build the cycle. (2026-07-16 freeze fix — the source; the
+                    // walk-side seen-set is the backstop.)
+                    if(WouldFormCycle(_entityCommanding, _targetEntity))
+                    {
+                        _isFinished = true;
+                        return;
+                    }
 
                     // Check if nested
                     if(sourceFleetInfo.Root != _entityCommanding)
@@ -232,6 +246,24 @@ namespace Pulsar4X.Fleets
             }
 
             _isFinished = true;
+        }
+
+        /// <summary>True if reparenting <paramref name="movingFleet"/> under <paramref name="newParent"/> would form a
+        /// CYCLE — i.e. <paramref name="newParent"/> is <paramref name="movingFleet"/> itself or already sits BELOW it
+        /// in the fleet tree. Walks the new parent's ancestry UP toward the root, bounded, so an already-malformed
+        /// chain can't hang the check (it bails and refuses). A ship target (no FleetDB) can't be an ancestor → false.</summary>
+        private static bool WouldFormCycle(Entity movingFleet, Entity newParent)
+        {
+            if (movingFleet == null || newParent == null) return false;
+            if (movingFleet.Id == newParent.Id) return true;                       // a fleet under itself
+            var cur = newParent;
+            for (int guard = 0; guard < 4096 && cur != null && cur.IsValid; guard++)
+            {
+                if (cur.Id == movingFleet.Id) return true;                         // movingFleet is an ancestor of newParent → cycle
+                if (!cur.TryGetDataBlob<FleetDB>(out var db) || db.Parent == null || !db.Parent.IsValid) return false;
+                cur = db.Parent;
+            }
+            return false;                                                          // bounded out (already-malformed chain) → don't add to it
         }
 
         internal override bool IsValidCommand(Game game)

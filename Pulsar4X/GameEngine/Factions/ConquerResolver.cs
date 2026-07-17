@@ -76,11 +76,11 @@ namespace Pulsar4X.Factions
             if (target.IsValid && state.Game != null)
             {
                 var strikeFleet = MilitaryComposition.ReadyStrikeFleet(state);
-                // REACH GATE: only sail when the target is a DIRECT (same-system) warp the fleet has the fuel/range
-                // for. MoveToSystemBodyOrder warps within one system — it can't cross a jump — so a one-jump or
-                // unreachable target (or a drained/drive-less fleet) falls through to the build rung and keeps massing
-                // until a route/range exists. The multi-jump auto-router that would sail a OneJump target is the
-                // deferred reach polish (MilitaryReach documents the bound).
+                // REACH GATE: this SAME-SYSTEM rung sails only when the target is a DIRECT (same-system) warp the fleet
+                // has the fuel/range for. MoveToSystemBodyOrder warps within one system — it can't cross a jump — so a
+                // cross-system target is handled by the MULTI-JUMP STRIKE ROUTING rung below (Rung 1b), which sails the
+                // fleet one gate at a time along a discovered route. A drained/drive-less fleet or an UNREACHABLE target
+                // (no discovered route) falls through to the build rung and keeps massing until a route/range exists.
                 var reach = strikeFleet != null && strikeFleet.IsValid
                     ? MilitaryReach.Assess(strikeFleet, target.ColonyBody)
                     : MilitaryReach.ReachResult.None;
@@ -113,6 +113,47 @@ namespace Pulsar4X.Factions
                             var cmd = Pulsar4X.Movement.MoveToSystemBodyOrder.CreateCommand(factionId, fleet, body);
                             game.OrderHandler.HandleOrder(cmd);   // the ONE step (the only side effect)
                         });
+                }
+
+                // Rung 1b (MULTI-JUMP STRIKE ROUTING, 2026-07-17): the scored target is in ANOTHER star system, but the
+                // faction has a DISCOVERED jump route to it (OneJump or MultiJump — JumpRouter walked the discovered
+                // jump graph). Sail the NEXT LEG toward it: order the massed fleet through the FIRST gate on that route,
+                // one gate per monthly cycle (least-commitment, matching the resolver's one-step-per-cycle style).
+                // JumpOrder is the player's own fleet-jump lever — it warps each ship to the gate (if not already there)
+                // then transits it through — so a single order advances one leg; next cycle the fleet re-routes from the
+                // new system until the target is same-system (then the StrikeFleet rung above sails at the body). Same
+                // commit gates as the same-system strike (odds favour it, fleet massed + charged + not already moving,
+                // a home reserve remains). No discovered route (Unreachable) or no resolvable gate → falls through to
+                // the build rungs (keep massing), exactly as before. Byte-identical while order emission is off (this
+                // resolver runs only inside the gated EmitOrders), for any faction not at war (no target → skip), AND
+                // for a same-system target (this block requires Tier != SameSystem, so it never fires there).
+                if (oddsFavorAttack && strikeFleet != null && strikeFleet.IsValid && !FleetIsMoving(strikeFleet)
+                    && reach.IsReachable && reach.Tier != MilitaryReach.ReachTier.SameSystem
+                    && reach.HasRange && HasHomeReserve(state, strikeFleet))
+                {
+                    var fromSystem = strikeFleet.Manager;
+                    Entity nextGate = Entity.InvalidEntity;
+                    if (fromSystem != null)
+                        nextGate = JumpRouter.NextGateToward(fromSystem, target.ColonyBody.Manager, state.FactionId);
+                    // A resolvable gate in the fleet's current system to head for (InvalidEntity → no leg to emit this
+                    // cycle; fall through to the build rungs).
+                    if (nextGate != null && nextGate.IsValid
+                        && nextGate.TryGetDataBlob<Pulsar4X.JumpPoints.JumpPointDB>(out var gateDB))
+                    {
+                        var game = state.Game;
+                        var factionEntity = state.Faction;
+                        var fleet = strikeFleet;
+                        var db = gateDB;
+                        return new PlannerAction(
+                            "StrikeJump",
+                            $"jump strike fleet {fleet.Id} through gate {nextGate.Id} toward enemy world "
+                                + $"{target.ColonyBody.Id} ({reach.Hops} hops, target score {target.Score:F0})",
+                            () =>
+                            {
+                                // The ONE step (the only side effect): warp-to-gate + transit through, as a fleet.
+                                Pulsar4X.JumpPoints.JumpOrder.CreateAndExecute(game, factionEntity, fleet, db);
+                            });
+                    }
                 }
             }
 
@@ -161,7 +202,18 @@ namespace Pulsar4X.Factions
                     // CanLoad-filtered: only a unit a bay of its own class has room for (skips the Vehicle armour/artillery
                     // a Personnel-only trooper can't carry — the anti-no-op-loop guard the blast-radius check surfaced).
                     var unit = shipBody != null ? AvailableLoadableUnit(transport, shipBody, state.FactionId) : null;
-                    if (unit != null)
+                    // GROUND RESERVE GUARD (slice 3, the ground echo of HasHomeReserve): don't ship a garrison unit off
+                    // if loading it would drop this world's garrison below its home-defense RESERVE floor — the developer's
+                    // "a planetary garrison shouldn't ship its WHOLE defense off on an invasion." A world with a SURPLUS
+                    // above the reserve still loads; one already at/under the reserve holds its defenders (the rung falls
+                    // through to BuildTransport / the garrison-rebuild rung / mass). Byte-identical where there's no
+                    // garrison: WouldStripReserve is consulted only when a loadable unit exists, and a garrison-less world
+                    // never reaches here (unit == null → the whole condition short-circuits false, exactly as before).
+                    // POSTURE: pass state.Faction so the garrison RESERVE is sized by this faction's commit-vs-reserve
+                    // posture (MilitaryCommand) — an aggressive faction ships a garrison unit off with a thinner home
+                    // reserve, a cautious one holds more back. Neutral/absent personality → unscaled reserve (byte-identical).
+                    if (unit != null
+                        && !Pulsar4X.GroundCombat.GroundReinforcement.WouldStripReserve(shipBody, state.Info, state.FactionId, state.Faction))
                     {
                         var game = state.Game;
                         var t = transport;
@@ -215,6 +267,52 @@ namespace Pulsar4X.Factions
                                 IndustryTools.AutoAddSubJobs(colonyEntity, job); // material-aware (resolve the sub-tree)
                             });
                     }
+                }
+            }
+
+            // Rung 2.5 (GROUND REINFORCEMENT — the garrison echo of the warship-mass rung, Rung 3): a home world whose
+            // garrison has been ground BELOW its authored composition target (combat losses, or units shipped off on an
+            // invasion) → REBUILD it. Queues ONE buildable ground-unit design on a free line — the SAME industry lever
+            // the transport/warship rungs pull (a base-mod infantry/armor/artillery component that mounts PlanetInstallation
+            // → build auto-installs → raises a fielded unit, or an assembler-registered GroundUnitDesign). The developer's
+            // rule: "a depleted garrison should be REBUILT" (and, with the LOAD-rung reserve guard above, "don't ship your
+            // whole defense off"). Placed BELOW the invasion EXECUTION rungs (LAND/STRIKE/SAIL/LOAD/BuildTransport) but
+            // ABOVE massing MORE offensive warships — restore the home defense before expanding the offense. Fires ONLY
+            // for a world we ACTUALLY garrison (NeedsReinforcement requires ≥1 standing friendly unit), so a garrison-less
+            // faction/world (the default player, a station-only faction, a bare test colony with no GroundForcesDB) is a
+            // NO-OP → byte-identical, incl. the ConquerResolver/MilitaryComposition byte-identity tests (whose factions
+            // carry no home garrison). Byte-identical off (this whole resolver runs inside the gated EmitOrders). The
+            // reserve/target derive from the faction's GarrisonComposition, so this needs NO new data.
+            foreach (var colony in state.ColoniesWithFreeLine())
+            {
+                if (colony.Cargo == null) continue;   // AutoAddSubJobs needs a CargoStorageDB
+                var garrisonBody = Pulsar4X.GroundCombat.GroundReinforcement.GarrisonBodyOf(colony.Colony);
+                if (garrisonBody == null
+                    || !Pulsar4X.GroundCombat.GroundReinforcement.NeedsReinforcement(garrisonBody, state.Info, state.FactionId))
+                    continue;   // no garrison here, or it's already at strength → nothing to rebuild on this world
+
+                foreach (var designKvp in state.Info.IndustryDesigns)
+                {
+                    if (!Pulsar4X.GroundCombat.GroundReinforcement.IsBuildableGroundUnit(designKvp.Value)) continue;
+                    if (!FeasibilityOracle.CanQueue(colony, designKvp.Value, state.Info)) continue;
+
+                    string gLineId = FreeLineFor(colony.Industry, designKvp.Value.IndustryTypeID);
+                    if (gLineId == null) continue;
+
+                    var colonyEntity = colony.Colony;
+                    var info = state.Info;
+                    var designId = designKvp.Key;
+                    var designName = designKvp.Value.Name;
+                    return new PlannerAction(
+                        "RebuildGarrison",
+                        $"build ground unit '{designName}' on colony {colonyEntity.Id} to rebuild its depleted home garrison",
+                        () =>
+                        {
+                            var job = new IndustryJob(info, designId);
+                            job.InitialiseJob(1, false);                     // ONE unit toward the target (not a standing line)
+                            IndustryTools.AddJob(colonyEntity, gLineId, job);
+                            IndustryTools.AutoAddSubJobs(colonyEntity, job); // material-aware (resolve the sub-tree)
+                        });
                 }
             }
 
@@ -318,6 +416,13 @@ namespace Pulsar4X.Factions
         /// <see cref="FactionState.OwnedFleets"/> the strike rung uses.</summary>
         private static bool ShouldStopMassing(FactionState state)
         {
+            // POSTURE (military-command layer, MilitaryCommand): scale the "counts as a deployable RESERVE fleet" bar by
+            // this faction's commit-vs-reserve posture — an aggressive/high-risk faction is content with a SMALLER
+            // reserve (stops massing sooner), a cautious one wants a bigger one (keeps massing). A neutral/absent
+            // personality → ×1.0 → the bar is comp.MinToDeploy exactly, so the ConquerResolver/FleetComposition byte-
+            // identity tests (whose factions carry no personality) stay green. The completeStrikeFleets bar (the
+            // Aspiration target) is UNSCALED — posture governs the reserve, not how big a finished strike fleet is.
+            double factor = MilitaryCommand.FleetReserveFactor(state.Faction);
             int completeStrikeFleets = 0;   // forming fleets at/above their aspiration target (a finished strike group)
             int deployableFleets = 0;       // forming fleets at/above the deploy core (a candidate strike OR reserve)
             foreach (var fleet in state.OwnedFleets())
@@ -326,7 +431,7 @@ namespace Pulsar4X.Factions
                 int armed = MilitaryComposition.WarshipCount(fleet);
                 int target = comp.Template.TargetCountFor(comp.Aspiration);
                 if (target > 0 && armed >= target) completeStrikeFleets++;
-                if (armed >= comp.MinToDeploy)      deployableFleets++;
+                if (armed >= MilitaryCommand.ScaleReserve(comp.MinToDeploy, factor)) deployableFleets++;
             }
             return completeStrikeFleets >= 1 && deployableFleets >= 2;   // a finished strike fleet + a reserve → sized, stop
         }
@@ -342,12 +447,17 @@ namespace Pulsar4X.Factions
         {
             if (strikeFleet == null || !strikeFleet.HasDataBlob<Pulsar4X.Fleets.FleetCompositionDB>())
                 return true;   // not an AI-organized fleet → the reserve doctrine doesn't gate it
+            // POSTURE (military-command layer, MilitaryCommand): scale the "how big must the home reserve fleet be" bar
+            // by this faction's commit-vs-reserve posture — an aggressive/high-risk faction is satisfied with a SMALLER
+            // reserve (so it commits its strike fleet more readily), a cautious one demands a bigger one (so it holds
+            // back more). Neutral/absent personality → ×1.0 → the bar is comp.MinToDeploy exactly (byte-identical).
+            double factor = MilitaryCommand.FleetReserveFactor(state.Faction);
             foreach (var fleet in state.OwnedFleets())
             {
                 if (fleet.Id == strikeFleet.Id) continue;
                 if (!fleet.TryGetDataBlob<Pulsar4X.Fleets.FleetCompositionDB>(out var comp)) continue;
                 if (FleetIsMoving(fleet)) continue;   // already committed elsewhere — not a home reserve
-                if (MilitaryComposition.WarshipCount(fleet) >= comp.MinToDeploy)
+                if (MilitaryComposition.WarshipCount(fleet) >= MilitaryCommand.ScaleReserve(comp.MinToDeploy, factor))
                     return true;   // a home reserve remains → the strike may sail
             }
             return false;   // no reserve → hold this fleet home (the AI keeps massing a reserve first)

@@ -101,6 +101,15 @@ namespace Pulsar4X.Galaxy
         /// are retired once consumers ride the grid (docs/GLOBAL-HEX-GRID-DESIGN.md, G6).</summary>
         [JsonProperty] public SurfaceGrid SurfaceGrid { get; internal set; }
 
+        /// <summary>PER-FACTION region fog — the foundation from `docs/ground/SURFACE-FOG-AND-RECON-DESIGN.md` (path A,
+        /// slice 1). Which region indices each faction has revealed (scouted / space-surveyed). The world-level
+        /// <see cref="Region.Surveyed"/> flag above STAYS for backward-compat; this is the ADDITIVE per-faction layer
+        /// consumers switch to (so an NPC's survey doesn't reveal a world to YOU, and the honest landing score reads only
+        /// what the attacker has scouted). Mirrors <c>GeoSurveyableDB.GeoSurveyStatus</c> (body-level, per-faction) at
+        /// region granularity. factionId → the set of revealed region indices; an absent faction has revealed nothing
+        /// (full fog by default). Nothing consumes this yet — later slices wire the survey + the landing intel.</summary>
+        [JsonProperty] public Dictionary<int, HashSet<int>> PerFactionRevealed { get; internal set; } = new Dictionary<int, HashSet<int>>();
+
         public PlanetRegionsDB() { }
         public PlanetRegionsDB(List<Region> regions) { Regions = regions; }
         public PlanetRegionsDB(PlanetRegionsDB other)
@@ -108,6 +117,10 @@ namespace Pulsar4X.Galaxy
             Regions = new List<Region>();
             foreach (var r in other.Regions) Regions.Add(new Region(r));
             SurfaceGrid = other.SurfaceGrid != null ? new SurfaceGrid(other.SurfaceGrid) : null;
+            PerFactionRevealed = new Dictionary<int, HashSet<int>>();
+            if (other.PerFactionRevealed != null)
+                foreach (var kv in other.PerFactionRevealed)
+                    PerFactionRevealed[kv.Key] = new HashSet<int>(kv.Value);   // deep copy — an independent per-faction set
         }
 
         public override object Clone() => new PlanetRegionsDB(this);
@@ -145,6 +158,45 @@ namespace Pulsar4X.Galaxy
             if (Regions[index].Surveyed) return false;
             Regions[index].Surveyed = true;
             return true;
+        }
+
+        // ── PER-FACTION reveal (ground fog, slice 1) — additive; the world-level Surveyed flag above is untouched ──
+
+        /// <summary>Reveal region <paramref name="index"/> to <paramref name="factionId"/> only (a scout enters it, or a
+        /// space survey reveals the world's geography to the SURVEYING faction). Returns true if newly revealed
+        /// (idempotent + bounds-safe — out-of-range is a no-op). Does NOT flip <see cref="Region.Surveyed"/>.</summary>
+        public bool RevealRegionFor(int factionId, int index)
+        {
+            if (index < 0 || index >= Regions.Count) return false;
+            if (!PerFactionRevealed.TryGetValue(factionId, out var set))
+            {
+                set = new HashSet<int>();
+                PerFactionRevealed[factionId] = set;
+            }
+            return set.Add(index);
+        }
+
+        /// <summary>Has <paramref name="factionId"/> revealed region <paramref name="index"/>? False for an unknown
+        /// faction or an un-scouted region (full fog by default). Bounds-agnostic (a bad index just reads false).</summary>
+        public bool IsRegionRevealedFor(int factionId, int index)
+        {
+            return PerFactionRevealed.TryGetValue(factionId, out var set) && set.Contains(index);
+        }
+
+        /// <summary>PER-FACTION counterpart to <see cref="RevealAll"/>: reveal EVERY region to one faction (a completed
+        /// space survey reveals the whole world's geography — to the surveying faction ONLY). Returns true if anything
+        /// was newly revealed.</summary>
+        public bool RevealAllRegionsFor(int factionId)
+        {
+            if (!PerFactionRevealed.TryGetValue(factionId, out var set))
+            {
+                set = new HashSet<int>();
+                PerFactionRevealed[factionId] = set;
+            }
+            bool changed = false;
+            for (int i = 0; i < Regions.Count; i++)
+                changed |= set.Add(i);
+            return changed;
         }
 
         public new static List<Type> GetDependencies() => new List<Type>() { typeof(NameDB) };

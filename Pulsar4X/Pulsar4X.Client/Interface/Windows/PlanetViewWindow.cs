@@ -187,7 +187,17 @@ namespace Pulsar4X.Client
             // Region.Surveyed flag: that flag is faction-agnostic (v1), so a RIVAL colonizing a body — e.g. the UMF on
             // Luna/Venus — flips it for EVERYONE and would leak the surface to you. GeoSurveyStatus is keyed by faction,
             // so it correctly reads "surveyed" only for the world you actually scanned/settled.
-            bool playerSurveyed = body.TryGetDataBlob<GeoSurveyableDB>(out var geoDB) && geoDB.IsSurveyComplete(myFaction);
+            //
+            // BUT: a body authored with NO survey requirement carries NO GeoSurveyableDB at all — the HOMEWORLD (Earth)
+            // is the one such body (its blueprint omits GeoSurveyPointsRequired, because your own capital was never meant
+            // to need surveying; every other Sol body has the gauge). With no gauge, IsSurveyComplete can never read true,
+            // so the old `&&` form silently fogged Earth forever — "This world isn't surveyed yet" with no hexes (the
+            // regression when the surface view moved from the band view, which checked the always-set Region.Surveyed).
+            // Fix: treat "no survey gauge fitted" as "no survey gate applies / already known" — Earth (and any gauge-less
+            // body) renders immediately, while a body that HAS the gauge still requires the viewing faction to complete it
+            // (the anti-leak rule above holds — rival bodies all carry the gauge). The `||` short-circuits, so geoDB is
+            // only read when TryGet actually succeeded — cannot NRE.
+            bool playerSurveyed = !body.TryGetDataBlob<GeoSurveyableDB>(out var geoDB) || geoDB.IsSurveyComplete(myFaction);
             bool canGlobal = playerSurveyed && grid != null && grid.Hexes != null && grid.Hexes.Count > 0;
 
             // ── Controls ────────────────────────────────────────────────────────────────
