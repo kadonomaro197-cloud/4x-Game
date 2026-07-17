@@ -26,6 +26,9 @@ namespace Pulsar4X.GroundCombat
         // 0.34 (the old global constant; no shield → stays 0.34, moot) → byte-identical.
         public double ShieldRegenFraction = 0.34;
         public GroundWeaponMode DamageType = GroundWeaponMode.Ballistic;   // the heaviest weapon's flavour (System ①)
+        // Enhancers ⚙6.2 — the BEST mounted Training Cadre's veterancy multiplier (baked into Attack + toughness at
+        // raise). 1.0 = green/untrained (no cadre) → byte-identical, the ground echo of a ship's UnitCaliberAtb.
+        public double TrainingMultiplier = 1.0;
         public double Mass;            // total build mass (frame + parts) — feeds cost + transport carry-size
         public double CarryCapacity;   // frame strength + augment strength bonuses
         public double UsedCapacity;    // sum of mounted-part carry mass
@@ -104,6 +107,9 @@ namespace Pulsar4X.GroundCombat
             double armWeight = 0, armVsK = 0, armVsE = 0, armVsX = 0, armVsO = 0;
             // ⚙3 shield recharge: Shield-weighted sum of each augment's recharge dial, averaged after the loop.
             double shieldWeight = 0, shieldRegenSum = 0;
+            // Enhancers ⚙6.2 — the best mounted Training Cadre wins (like the ship combat value reads the best caliber
+            // module); no cadre → stays 1.0 → byte-identical.
+            double bestTraining = 1.0;
             foreach (var (d, c) in list)
             {
                 double itemMass = 0;
@@ -145,6 +151,13 @@ namespace Pulsar4X.GroundCombat
                     shieldWeight += sw;
                     shieldRegenSum += g.ShieldRegenFraction * sw;
                 }
+                if (d.HasAttribute<GroundTrainingAtb>())
+                {
+                    // Enhancers ⚙6.2 — the best cadre's multiplier wins (they don't stack). Its own MassPerUnit still
+                    // counts against the carry budget below (a cadre is gear/people the frame must bear).
+                    var t = d.GetAttribute<GroundTrainingAtb>();
+                    if (t.TrainingMultiplier > bestTraining) bestTraining = t.TrainingMultiplier;
+                }
                 // A part that isn't one of the ground-specific kinds (a universal weapon or a reactor, P1/P2a) has no
                 // ground carry-mass field — count its real component mass so it still consumes the carry budget. This is
                 // what makes the two gates COMPOSE: infantry can't power the big laser because it can't CARRY the reactor.
@@ -175,6 +188,7 @@ namespace Pulsar4X.GroundCombat
             // ⚙3 shield recharge: finish the Shield-weighted average (no shield → the 0.34 default stays → byte-identical).
             if (shieldWeight > 0)
                 r.ShieldRegenFraction = shieldRegenSum / shieldWeight;
+            r.TrainingMultiplier = bestTraining;   // Enhancers ⚙6.2 — baked into the raised unit's Attack + toughness
             r.UsedCapacity = used;
             r.EnergyDemand_W = energyDemand;
             r.ReactorSupply_W = reactorSupply;
@@ -220,6 +234,7 @@ namespace Pulsar4X.GroundCombat
                 ShieldRegenFraction = r.ShieldRegenFraction,
                 AmmoCapacity_kg = r.AmmoCapacity_kg,
                 DamageType = r.DamageType,
+                TrainingMultiplier = r.TrainingMultiplier,   // Enhancers ⚙6.2 — veterancy from the mounted cadre
                 IndustryTypeID = string.IsNullOrEmpty(frame?.IndustryTypeID) ? "installation-construction" : frame.IndustryTypeID,
             };
             // costs = frame + every part (× count) — the same sum the ship designer does

@@ -3088,6 +3088,49 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "ground-training-cadre",
+      "Name": "Training Cadre",
+      "Formulas": {
+        "Description": "A veteran instructor cadre + doctrine + live-fire regimen that raises a unit above its chassis — the ground echo of a ship's veteran crew (Enhancers). Mount it in the unit designer and the whole unit's attack AND toughness are multiplied when it's fielded (a Space-Marine chapter cadre vs a militia levy on the same frame). Training is EARNED: the higher you dial the multiplier, the steeper the mass/credits/research/build-time to field the unit. Multiplier range + cost curve are FLAGGED balance values.",
+        "Mass": "50 * (1 + (PropertyValue('TrainingMultiplier') - 1) * 4)",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "1.0",
+        "CrewReq": "0",
+        "ResearchCost": "[Mass] * 2",
+        "CreditCost": "[Mass] * 0.5",
+        "BuildPointCost": "[Mass] * 4"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.3",
+        "aluminium": "[Mass] * 0.3"
+      },
+      "ComponentType": "Augment",
+      "MountType": "GroundUnit",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "TrainingMultiplier",
+          "DescriptionFormula": "'Veterancy: the attack + toughness multiplier baked into the unit when it is raised (1.0 = green, 1.5 = a hardened outfit). Higher = far dearer to field.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2",
+          "MinFormula": "1",
+          "StepFormula": "0.05",
+          "PropertyFormula": "1.2"
+        },
+        {
+          "Name": "trainingCadreArgs",
+          "DescriptionFormula": "'atb args'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('TrainingMultiplier'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundTrainingAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "swarm-frame",
       "Name": "Swarmling Frame",
       "Formulas": {

@@ -1045,6 +1045,14 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-ground-training-cadre",
+      "Name": "Training Cadre",
+      "TemplateId": "ground-training-cadre"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-valles-mine",
       "Name": "Valles Marineris Deep Mine",
       "TemplateId": "mine",
