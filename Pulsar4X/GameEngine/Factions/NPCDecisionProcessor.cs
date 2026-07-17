@@ -683,11 +683,21 @@ namespace Pulsar4X.Factions
         /// <see cref="Pulsar4X.Fleets.FleetAssembly.AssembleBuiltWarships"/> (which does the tree mutation — grow an
         /// under-strength forming fleet before starting a new one, flip Deployable at the min core). Gated at the call
         /// site by <see cref="EnableOrderEmission"/> (default off → byte-identical) + MONTHLY. Internal for the CI gauge.
+        ///
+        /// Support/utility hulls: after the warships form the fleet, <see cref="Pulsar4X.Fleets.FleetAssembly.AssembleSupportHulls"/>
+        /// folds the faction's built TENDERS (unarmed fleet oilers/colliers) into that same fleet so they're FIELDED and
+        /// travel with it — the AI used to build support hulls and never use them. They become a SUPPORT sub-fleet in the
+        /// role/doctrine pass below. No-op when the faction has built no tender (byte-identical).
         /// </summary>
         internal static void RunFleetAssemblyPolicy(Entity factionEntity)
         {
             if (factionEntity == null) return;
             Pulsar4X.Fleets.FleetAssembly.AssembleBuiltWarships(factionEntity);
+
+            // Support/utility hulls — fold the faction's built TENDERS into the strike fleet as Support members (fielded,
+            // not left loose). Runs AFTER AssembleBuiltWarships so a forming fleet exists to escort; the role/doctrine
+            // pass below then sorts each tender into the SUPPORT sub-fleet (unarmed → FleetRole.Support, hold-fire).
+            Pulsar4X.Fleets.FleetAssembly.AssembleSupportHulls(factionEntity);
 
             // Slice 3 — resource-gated ESCALATION: read the faction's treasury + war footing and stamp the aspiration
             // (how big to grow the fleet) onto every forming fleet, so the warship-massing rung caps at a RESOURCED
