@@ -202,7 +202,15 @@ namespace Pulsar4X.Factions
                     // CanLoad-filtered: only a unit a bay of its own class has room for (skips the Vehicle armour/artillery
                     // a Personnel-only trooper can't carry — the anti-no-op-loop guard the blast-radius check surfaced).
                     var unit = shipBody != null ? AvailableLoadableUnit(transport, shipBody, state.FactionId) : null;
-                    if (unit != null)
+                    // GROUND RESERVE GUARD (slice 3, the ground echo of HasHomeReserve): don't ship a garrison unit off
+                    // if loading it would drop this world's garrison below its home-defense RESERVE floor — the developer's
+                    // "a planetary garrison shouldn't ship its WHOLE defense off on an invasion." A world with a SURPLUS
+                    // above the reserve still loads; one already at/under the reserve holds its defenders (the rung falls
+                    // through to BuildTransport / the garrison-rebuild rung / mass). Byte-identical where there's no
+                    // garrison: WouldStripReserve is consulted only when a loadable unit exists, and a garrison-less world
+                    // never reaches here (unit == null → the whole condition short-circuits false, exactly as before).
+                    if (unit != null
+                        && !Pulsar4X.GroundCombat.GroundReinforcement.WouldStripReserve(shipBody, state.Info, state.FactionId))
                     {
                         var game = state.Game;
                         var t = transport;
@@ -256,6 +264,52 @@ namespace Pulsar4X.Factions
                                 IndustryTools.AutoAddSubJobs(colonyEntity, job); // material-aware (resolve the sub-tree)
                             });
                     }
+                }
+            }
+
+            // Rung 2.5 (GROUND REINFORCEMENT — the garrison echo of the warship-mass rung, Rung 3): a home world whose
+            // garrison has been ground BELOW its authored composition target (combat losses, or units shipped off on an
+            // invasion) → REBUILD it. Queues ONE buildable ground-unit design on a free line — the SAME industry lever
+            // the transport/warship rungs pull (a base-mod infantry/armor/artillery component that mounts PlanetInstallation
+            // → build auto-installs → raises a fielded unit, or an assembler-registered GroundUnitDesign). The developer's
+            // rule: "a depleted garrison should be REBUILT" (and, with the LOAD-rung reserve guard above, "don't ship your
+            // whole defense off"). Placed BELOW the invasion EXECUTION rungs (LAND/STRIKE/SAIL/LOAD/BuildTransport) but
+            // ABOVE massing MORE offensive warships — restore the home defense before expanding the offense. Fires ONLY
+            // for a world we ACTUALLY garrison (NeedsReinforcement requires ≥1 standing friendly unit), so a garrison-less
+            // faction/world (the default player, a station-only faction, a bare test colony with no GroundForcesDB) is a
+            // NO-OP → byte-identical, incl. the ConquerResolver/MilitaryComposition byte-identity tests (whose factions
+            // carry no home garrison). Byte-identical off (this whole resolver runs inside the gated EmitOrders). The
+            // reserve/target derive from the faction's GarrisonComposition, so this needs NO new data.
+            foreach (var colony in state.ColoniesWithFreeLine())
+            {
+                if (colony.Cargo == null) continue;   // AutoAddSubJobs needs a CargoStorageDB
+                var garrisonBody = Pulsar4X.GroundCombat.GroundReinforcement.GarrisonBodyOf(colony.Colony);
+                if (garrisonBody == null
+                    || !Pulsar4X.GroundCombat.GroundReinforcement.NeedsReinforcement(garrisonBody, state.Info, state.FactionId))
+                    continue;   // no garrison here, or it's already at strength → nothing to rebuild on this world
+
+                foreach (var designKvp in state.Info.IndustryDesigns)
+                {
+                    if (!Pulsar4X.GroundCombat.GroundReinforcement.IsBuildableGroundUnit(designKvp.Value)) continue;
+                    if (!FeasibilityOracle.CanQueue(colony, designKvp.Value, state.Info)) continue;
+
+                    string gLineId = FreeLineFor(colony.Industry, designKvp.Value.IndustryTypeID);
+                    if (gLineId == null) continue;
+
+                    var colonyEntity = colony.Colony;
+                    var info = state.Info;
+                    var designId = designKvp.Key;
+                    var designName = designKvp.Value.Name;
+                    return new PlannerAction(
+                        "RebuildGarrison",
+                        $"build ground unit '{designName}' on colony {colonyEntity.Id} to rebuild its depleted home garrison",
+                        () =>
+                        {
+                            var job = new IndustryJob(info, designId);
+                            job.InitialiseJob(1, false);                     // ONE unit toward the target (not a standing line)
+                            IndustryTools.AddJob(colonyEntity, gLineId, job);
+                            IndustryTools.AutoAddSubJobs(colonyEntity, job); // material-aware (resolve the sub-tree)
+                        });
                 }
             }
 
