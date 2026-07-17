@@ -201,13 +201,24 @@ held contact (capped at 6). `fogLag` = distance between the drawn blip and the r
 play-test *proves* the defect: if every contact reads `src=LIVE fogLag≈0`, the contact model tracks live (the bug); a
 healthy (fixed) game would show `LAGGED`/`FROZEN`.
 
-**The real FIX (planned, not yet built — it's a fog-of-war behaviour change to the sensor hot loop, wants an engine test
-+ verification):** in `SensorScan`'s successful-detection branch, WRITE the scanned position into the contact's
-`SensorPositionDB` and set `GetDataFrom = Sensors` (a scan snapshot, lagged by the scan interval); on a missed redetect,
-flip to `Memory` so the blip FREEZES at last-known, and re-gate contact removal off the fragile per-receiver dict onto the
-faction-level `sensorMgr` so a ship that leaves reach ages out. Gauge for the fix: an engine test asserting a contact's
-`PositionSourceLabel` is not `LIVE` after a scan, and `FROZEN` after the target leaves reach. Do NOT chase the
-`AddIconable` fog-render hole — refuted above.
+**The real FIX (BUILT 2026-07-17):** the contact position is now a SCAN SNAPSHOT, not a live feed, and it ages out.
+- `SensorPositionDB.SetSnapshot(absolutePos)` stores the scanned position as an ABSOLUTE (ParentPositionDB nulled) and
+  sets `GetDataFrom = Sensors` — a FRESH snapshot the client renders normally. The `Sensors` and `Memory` getters both
+  now read that stored snapshot (only `Parent` is live), and the `Memory` getter is null-guarded (a latent NRE fixed).
+- `SensorScan` calls `SnapshotContactPosition(contact, target)` on EVERY successful detection (both the new-contact and
+  refresh-existing branches), so the blip shows where the target was at the LAST SCAN — advancing scan-by-scan (~hourly),
+  frozen between — instead of gliding with the live ship (the developer's report).
+- On a MISSED redetect (`SensorScan` else branch), the contact flips to `Memory` (the client fades it to "last known")
+  and, once no sensor has re-detected it for `SensorScan.ContactStaleSeconds` (~4 scan intervals), the contact is
+  REMOVED — a track that leaves reach is forgotten instead of shown forever. The removal is re-gated off the fragile
+  per-receiver `CurrentContacts` dict (which `SetInstances` rebuilt empty) onto the faction-level `LastDetection`, so it
+  actually fires (and a contact another sensor still sees is NOT dropped, since any observer's detection refreshes
+  `LastDetection`).
+- **Gameplay is unaffected:** combat targeting / detection / EMCON read the REAL entity positions, not the contact blip;
+  only the MAP blip (a rendering/intel concept) becomes a lagged snapshot. Save/load unchanged (no fields added — reuses
+  `MemoryrelativePosition_m`). Gauge: `SensorDetectionTests.DetectedContact_BlipIsAScanSnapshot_NotLive` (asserts a
+  fresh contact reads `LAGGED`, never `LIVE`, and the snapshot equals the target's scan-time position). Do NOT chase the
+  `AddIconable` fog-render hole — refuted above. **Live render/feel is the developer's build (CI can't run the client).**
 
 ## Detection RANGE accessors (2026-06-27) — the reverse-solve, so "how far can I see" is a number
 

@@ -42,6 +42,22 @@ namespace Pulsar4X.Sensors
         public static readonly System.Collections.Concurrent.ConcurrentDictionary<int, long> ScansByEntity
             = new System.Collections.Concurrent.ConcurrentDictionary<int, long>();
 
+        /// <summary>Fog-of-war contact aging: a contact NOT re-detected by ANY of the faction's sensors within this many
+        /// seconds is dropped (its map blip disappears), so a track that leaves reach is FORGOTTEN instead of shown
+        /// forever. ~4 scan intervals at the default 3600 s scan time — the "ship tracked across empty space forever" half.</summary>
+        internal const double ContactStaleSeconds = 4 * 3600;
+
+        /// <summary>Freeze a detected contact's DRAWN position at THIS scan's snapshot (where the target is right now), so
+        /// the map blip shows the last-SCANNED position — advancing each successful scan, frozen between scans — instead of
+        /// the target's live real-time position (which glued the blip to the real ship and let it glide across the map).
+        /// Defensive: never throws in the sensor hot loop (a missing contact/position/target-position is a no-op).</summary>
+        private static void SnapshotContactPosition(SensorContact contact, Entity target)
+        {
+            if (contact == null || contact.Position == null || target == null) return;
+            if (target.TryGetDataBlob<PositionDB>(out var tpos))
+                contact.Position.SetSnapshot(tpos.AbsolutePosition);
+        }
+
         internal override void ProcessEntity(Entity entity, DateTime atDateTime)
         {
             System.Threading.Interlocked.Increment(ref ScanCount);
@@ -133,12 +149,16 @@ namespace Pulsar4X.Sensors
                                 if (sensorInfo.HighestDetectionQuality.SignalStrength_kW < detectionValues.SignalStrength_kW)
                                     sensorInfo.HighestDetectionQuality.SignalStrength_kW = detectionValues.SignalStrength_kW;
                                 SensorEntityFactory.UpdateSensorContact(faction, sensorInfo);
+                                // Fog of war: freeze the blip at THIS scan's position (a snapshot) so it shows where the
+                                // target was last seen, not its live position (the "watched it glide across the map" bug).
+                                SnapshotContactPosition(sensorMgr.GetSensorContact(detectableEntity.Id), detectableEntity);
                             }
                             else
                             {
                                 var contact = new SensorContact(faction, detectableEntity, atDateTime);
                                 sensorMgr.AddContact(contact);
                                 sensorAbl.CurrentContacts[detectableEntity.Id] = detectionValues;
+                                SnapshotContactPosition(contact, detectableEntity);   // fog: blip at the scanned position, not live
 
                                 // First contact between factions — the front door to external politics. The first
                                 // foreign entity this faction ever detects is a NEW sensor contact, so this branch
@@ -153,11 +173,28 @@ namespace Pulsar4X.Sensors
                             }
 
                         }
-                        else if (sensorMgr.SensorContactExists(detectableEntity.Id) && sensorAbl.CurrentContacts.ContainsKey(detectableEntity.Id))
+                        else if (sensorMgr.SensorContactExists(detectableEntity.Id))
                         {
-                            sensorAbl.CurrentContacts.Remove(detectableEntity.Id);
-                            sensorAbl.OldContacts[detectableEntity.Id] = detectionValues;
-                            sensorMgr.RemoveContact(detectableEntity.Id);
+                            // Track lost this scan (signal <= 0). The blip is already a frozen snapshot from the last
+                            // detection; flip it to Memory so the client fades it to "(last known)", and AGE IT OUT once
+                            // NO sensor has re-detected it for ContactStaleSeconds — fog forgets a track that left reach
+                            // instead of showing it forever. Reads the faction-level LastDetection (any observer's detect
+                            // refreshes it), so a contact another sensor still sees is NOT dropped. (Previously gated on the
+                            // per-receiver CurrentContacts dict, which SetInstances rebuilds empty → this removal never
+                            // fired and contacts lived forever — the persistence half of "ship tracked across empty space".)
+                            var lost = sensorMgr.GetSensorContact(detectableEntity.Id);
+                            if (lost != null)
+                            {
+                                if (lost.Position != null && lost.Position.GetDataFrom == DataFrom.Sensors)
+                                    lost.Position.GetDataFrom = DataFrom.Memory;
+                                if (lost.SensorInfo != null
+                                    && (atDateTime - lost.SensorInfo.LastDetection).TotalSeconds >= ContactStaleSeconds)
+                                {
+                                    sensorAbl.CurrentContacts.Remove(detectableEntity.Id);
+                                    sensorAbl.OldContacts[detectableEntity.Id] = detectionValues;
+                                    sensorMgr.RemoveContact(detectableEntity.Id);
+                                }
+                            }
                         }
                     }
 

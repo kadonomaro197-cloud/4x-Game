@@ -4,6 +4,7 @@ using Pulsar4X.Components;
 using Pulsar4X.Datablobs;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
+using Pulsar4X.Movement;
 using Pulsar4X.Sensors;
 using Pulsar4X.Ships;
 
@@ -115,6 +116,40 @@ namespace Pulsar4X.Tests
             RunSensorScan(s);
             Assert.That(ability.CurrentContacts.Count, Is.EqualTo(0),
                 "a blinded ship detects nothing on its next scan");
+        }
+
+        [Test]
+        [Description("Fog of war: a detected contact's DRAWN position is a SCAN SNAPSHOT (DataFrom.Sensors), not the " +
+                     "target's live position — so the map blip shows where the target was last scanned and does NOT glide " +
+                     "with the live ship. Regression for the developer's 'watched a ship cross empty space' report: a " +
+                     "contact must never read src=LIVE (Parent), which tracked the real-time position frame by frame.")]
+        public void DetectedContact_BlipIsAScanSnapshot_NotLive()
+        {
+            var s = TestScenario.CreateWithColony();
+            var enemyFaction = FactionFactory.CreateBasicFaction(s.Game, "Reds", "RED", 0);
+
+            var watcher = BuildShip(s, s.Faction, "Watcher");   // carries the sensor receiver
+            var bogey = BuildShip(s, enemyFaction, "Bogey");     // emits a signature to be seen
+
+            RunSensorScan(s);
+
+            var contacts = s.StartingSystem.GetSensorContacts(s.Faction.Id);
+            Assert.That(contacts.SensorContactExists(bogey.Id), Is.True, "the watcher should detect the bogey at point-blank");
+            var contact = contacts.GetSensorContact(bogey.Id);
+
+            // THE FIX: the blip is a SNAPSHOT (Sensors mode = "LAGGED"), never LIVE (Parent). A LIVE blip reads the
+            // target's real-time position every frame and glides across the map even out of reach — the reported bug.
+            Log($"contact blip source = {contact.PositionSourceLabel}");
+            Assert.That(contact.PositionSourceLabel, Is.Not.EqualTo("LIVE"),
+                "a detected contact's blip must be a scan snapshot, not the target's live position (the glide bug)");
+            Assert.That(contact.PositionSourceLabel, Is.EqualTo("LAGGED"),
+                "a freshly-detected contact should be a FRESH snapshot (DataFrom.Sensors)");
+
+            // The snapshot captured WHERE THE TARGET WAS at scan time (proves it stored a real position, not a stub).
+            var snapAtScan = contact.Position.AbsolutePosition;
+            var bogeyPos = bogey.GetDataBlob<PositionDB>().AbsolutePosition;
+            Assert.That((snapAtScan - bogeyPos).Length(), Is.LessThan(1.0),
+                "the snapshot should equal the target's position at the moment of the scan");
         }
     }
 }
