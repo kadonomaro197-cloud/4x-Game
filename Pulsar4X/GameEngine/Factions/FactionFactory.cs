@@ -385,6 +385,18 @@ namespace Pulsar4X.Factions
                                 fleetDB.FlagShipID = ship.Id;
 
                             LoadCargo(ship, factionDataStore, (JArray?)shipToLoad["cargo"]);
+
+                            // Mirror the start-fleet setup (DefaultStartFactory hand-sets EnergyStored; CombatSandbox
+                            // uses this same pair): a scenario-loaded fleet must spawn READY TO FLY. CreateShip leaves
+                            // stored reactor energy at ZERO and the fuel tanks EMPTY on purpose (a production-built ship
+                            // earns its charge/fuel at a colony). But the warp bubble is paid out of STORED electricity,
+                            // so an un-charged fleet can never warp — and MilitaryReach.HasRange (the exact WarpMoveCommand
+                            // gate: EnergyStored >= BubbleCreationCost) reads false, which is precisely why the NPC conquest
+                            // chain's massed strike fleet never launched (task #36: "UMF invasion never lands"). Charge the
+                            // reactors + fill the fuel so the fleet can warp AND fight from turn one, exactly like the
+                            // player's start fleet.
+                            ShipFactory.ChargeReactors(ship);
+                            ShipFactory.FillFuelTanks(ship, factionInfoDB);
                         }
                     }
                 }

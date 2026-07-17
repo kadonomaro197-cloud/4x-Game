@@ -423,10 +423,13 @@ a charged ship can always warp — and can FIRE (weapons draw stored energy too)
 `CombatTestShipsTests.ChargeReactors_FillsStoredEnergy_SoASpawnedShipCanWarp`; full warp chain in `Movement/CLAUDE.md`.
 
 > **Spawn-parity rule:** "ready to fly" is the hull PLUS what `DefaultStartFactory` does after the build. There are
-> **two** convenience-spawn paths — `CombatSandbox.SpawnHostileFleet` and `DevToolsWindow` "Spawn Ship" — and both
-> must mirror the start setup. `FillFuelTanks` + `ChargeReactors` are the pair that does it today; **when you add any
-> new "ship is ready" state to the start factory (crew, ammo, ECM charge…), extend BOTH spawn helpers beside them** —
-> or a spawned unit silently behaves differently from a native one.
+> **three** fleet-spawn paths that must mirror the start setup — `CombatSandbox.SpawnHostileFleet`, `DevToolsWindow`
+> "Spawn Ship", and (added 2026-07-17, task #36) **`FactionFactory.LoadFromJson`'s scenario fleet loader** — and all
+> must charge+fuel. `FillFuelTanks` + `ChargeReactors` are the pair that does it today; **when you add any new "ship is
+> ready" state to the start factory (crew, ammo, ECM charge…), extend ALL THREE spawn helpers beside them** — or a
+> spawned unit silently behaves differently from a native one. **The JSON loader was the miss that stalled the AI
+> invasion:** a scenario-loaded NPC strike fleet booted with a dead battery, so `MilitaryReach.HasRange` read false and
+> `ConquerResolver` Rung 1 never sailed it (Factions/CLAUDE.md `FactionFactory` row; gauge `NpcFleetReadyToSailTests`).
 
 **Test:** `Pulsar4X.Tests/CombatSandboxTests.cs` proves three things separately: **(1) persistence** — spawn 3
 hostiles, advance the real clock, assert they're still there (3/3); **(2) engageable** — drive

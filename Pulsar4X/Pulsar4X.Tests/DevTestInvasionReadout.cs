@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Pulsar4X.Engine;
+using Pulsar4X.Extensions;   // GetDefaultName() (FactionInfoDB has no Name property — it lives on the entity's NameDB)
 using Pulsar4X.Factions;
 using Pulsar4X.Modding;
 
@@ -61,7 +62,7 @@ namespace Pulsar4X.Tests
                     && f.GetDataBlob<FactionInfoDB>().IsNPC && f.GetDataBlob<FactionInfoDB>().Colonies.Count >= 4);
                 Assert.That(umf, Is.Not.Null, "no multi-world NPC (UMF) in the DevTest.");
                 var umfInfo = umf.GetDataBlob<FactionInfoDB>();
-                Log($"UMF = '{umfInfo.Name}' ({umfInfo.Colonies.Count} colonies), player = '{player.GetDataBlob<FactionInfoDB>().Name}'");
+                Log($"UMF = '{umf.GetDefaultName()}' ({umfInfo.Colonies.Count} colonies), player = '{player.GetDefaultName()}'");
 
                 var processor = new NPCDecisionProcessor();
                 processor.Init(game);
