@@ -57,6 +57,11 @@ namespace Pulsar4X.GroundCombat
         /// design's <see cref="GroundUnitDesign.UpkeepCredits"/>). 0 = free (byte-identical). Billed monthly by
         /// <see cref="GroundUpkeep"/> from the ground tick — the ground echo of a station's operating cost.</summary>
         [JsonProperty] public double UpkeepCredits { get; internal set; }
+        /// <summary>VETERANCY READOUT (0..): the training multiplier this unit was raised at (snapshot of the design's
+        /// <see cref="GroundUnitDesign.TrainingMultiplier"/>). <b>READOUT ONLY</b> — the multiplier is ALREADY baked into
+        /// <see cref="Attack"/> and <see cref="MaxHealth"/> at raise; do NOT re-apply it in the resolver. 1.0 = green/
+        /// untrained (byte-identical). Lets the UI show "Veteran ×1.3" without recomputing.</summary>
+        [JsonProperty] public double TrainingMultiplier { get; internal set; } = 1.0;
         /// <summary>AMMO pool (kg) — the mass of ammunition this unit carries, snapshot of the design's Σ magazine
         /// capacity (weapon-unification B). 0 = no ammo weapons / no magazine. The ground echo of a magazine on a ship.</summary>
         [JsonProperty] public double MaxAmmo_kg { get; internal set; }
@@ -187,7 +192,7 @@ namespace Pulsar4X.GroundCombat
             UnitId = o.UnitId; FormationId = o.FormationId;
             DesignId = o.DesignId; BackingEntityId = o.BackingEntityId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
             UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health; Range = o.Range;
-            UpkeepCredits = o.UpkeepCredits;
+            UpkeepCredits = o.UpkeepCredits; TrainingMultiplier = o.TrainingMultiplier;
             MaxAmmo_kg = o.MaxAmmo_kg; CurrentAmmo_kg = o.CurrentAmmo_kg;
             Evasion = o.Evasion; Shield = o.Shield; CurrentShield = o.CurrentShield; ShieldRegenFraction = o.ShieldRegenFraction; DamageType = o.DamageType; Penetration = o.Penetration; PerShotEnergy = o.PerShotEnergy;
             ArmourVsKinetic = o.ArmourVsKinetic; ArmourVsEnergy = o.ArmourVsEnergy; ArmourVsExplosive = o.ArmourVsExplosive; ArmourVsExotic = o.ArmourVsExotic;
@@ -417,10 +422,14 @@ namespace Pulsar4X.GroundCombat
                 FactionOwnerID = factionId,
                 RegionIndex = regionIndex,
                 UnitType = design.UnitType,
-                Attack = design.Attack,
+                // VETERANCY (training): an elite unit's Attack + toughness are multiplied HERE, at raise — the ground echo
+                // of a ship's UnitCaliberAtb Firepower×Toughness stamp. Baked into the snapshot, NOT read by the resolver
+                // (the developer's constraint). 1.0 = green/untrained → design.Attack/HitPoints unchanged → byte-identical.
+                Attack = design.Attack * design.TrainingMultiplier,
                 Defense = design.Defense,
-                MaxHealth = design.HitPoints,
-                Health = design.HitPoints,
+                MaxHealth = design.HitPoints * design.TrainingMultiplier,
+                Health = design.HitPoints * design.TrainingMultiplier,
+                TrainingMultiplier = design.TrainingMultiplier,   // READOUT of the stamp above (already baked in — never re-applied)
                 // Ammo pool (B): a fresh unit musters full, from the design's Σ magazine capacity (0 = no ammo weapons).
                 MaxAmmo_kg = design.AmmoCapacity_kg,
                 CurrentAmmo_kg = design.AmmoCapacity_kg,

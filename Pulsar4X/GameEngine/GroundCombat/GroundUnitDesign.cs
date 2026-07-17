@@ -91,6 +91,16 @@ namespace Pulsar4X.GroundCombat
         /// designs, and/or a base-mod <c>GroundUnitAtb</c> ctor arg (note: adding a ctor arg is NOT template-free — the
         /// JSON binder is exact-arity, so all base-mod ground-unit templates must be updated in lockstep, gotcha #10).</para></summary>
         [JsonProperty] public double UpkeepCredits { get; set; }
+        /// <summary>VETERANCY / TRAINING multiplier — how much better-than-green this unit is, the ground echo of a ship's
+        /// <see cref="Pulsar4X.Combat.UnitCaliberAtb"/> elite stamp (Firepower×Toughness). At raise it multiplies the
+        /// unit's <c>Attack</c> AND toughness (<c>MaxHealth</c>) — an elite unit hits harder and takes more — the
+        /// developer's "training reflected in game." <b>1.0 = green/untrained → byte-identical</b> (every existing design
+        /// keeps 1.0). The <c>= 1.0</c> initializer is LOAD-BEARING: it is the fallback for an old save whose JSON lacks
+        /// this property (Newtonsoft keeps the ctor value for an absent field), so a pre-veterancy design never loads at
+        /// 0× and zeroes its units. The multiplier is BAKED into the stats at raise, never re-read by the resolver (the
+        /// developer's constraint). Its COST (elite units are dearer to build/train) rides the costed training-component
+        /// slice (B); this slice (A) is the multiplier mechanism + gauge.</summary>
+        [JsonProperty] public double TrainingMultiplier { get; set; } = 1.0;
         /// <summary>ENVIRONMENTAL GEAR (E4) — per-hazard protection this design's units carry, keyed by the shared
         /// <see cref="Pulsar4X.Hazards.HazardEffectType"/>. Value 0..1 = fraction of that hazard's attrition negated
         /// (a "heat-shielded" design has <c>{HeatDamage: 0.8}</c>). Snapshotted onto each raised <see cref="GroundUnit"/>.
