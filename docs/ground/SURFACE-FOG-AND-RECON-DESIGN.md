@@ -109,6 +109,12 @@ no new buildables — the new part is the AI logic (pick the easy region, plant 
    location/type** to the surveying faction, but leave the **assay (amount/rate) masked**. (Split the current "reveal
    everything" into partial.) Gauge: after a space survey, the faction sees the deposit's type but the amount reads
    masked.
+   **✅ BUILT (2026-07-17):** `GeoSurveys/SurveyReveal.RevealWorldTo(regionsDB, factionId, factionMask)` — a pure,
+   testable helper: `RevealAllRegionsFor(factionId)` (geography, per-faction) + `RevealDepositLocation(factionMask)` on
+   every deposit hex (Partial = located, assay masked). `GeoSurveyProcessor` calls it at survey completion, right after
+   `EnsureGridForBody`, KEEPING the world-level `RevealAll()` alongside (additive/byte-identical for the old consumers
+   until the client migrates to the per-faction read — **slice 2b**, client, CI-blind). Gauge: `SurveyRevealTests`
+   (surveyor sees geography + Partial deposits; non-surveyor stays fully fogged; world-level `Surveyed` untouched).
 3. **The recon component + reveal-on-move:** a ground-side recon `*Atb` (Sensors) the assembler mounts; as a unit
    carrying it enters a hex, `Reveal(faction, hex)` fires + **unmasks that hex's deposit assay**. Gauge: a scout walking
    a hex flips it from masked→assayed for that faction only.
