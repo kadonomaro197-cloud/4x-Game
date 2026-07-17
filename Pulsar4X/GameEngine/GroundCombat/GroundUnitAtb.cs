@@ -41,10 +41,6 @@ namespace Pulsar4X.GroundCombat
         /// bounce. 0 = a single lump (byte-identical). Flows to <see cref="GroundUnit.PerShotEnergy"/> at raise and drives
         /// the shared burst armour soak (`CombatKernel.BurstShotCount`/`ArmourSoakBurst`).</summary>
         [JsonProperty] public double PerShotEnergy { get; internal set; }
-        /// <summary>Standing UPKEEP in credits/month this unit costs its owner just by existing — flows to
-        /// <see cref="GroundUnit.UpkeepCredits"/> at raise and is billed monthly by <see cref="GroundUpkeep"/>. 0 =
-        /// free (byte-identical: a template that omits it passes nothing → 0). A trailing additive ctor arg.</summary>
-        [JsonProperty] public double UpkeepCredits { get; internal set; }
 
         public GroundUnitAtb() { }
 
@@ -54,7 +50,7 @@ namespace Pulsar4X.GroundCombat
         // Penetration + PerShotEnergy are the trailing additive args — a template that omits them (older mod data) simply
         // doesn't pass them, but the base-mod templates supply both.
         public GroundUnitAtb(double unitType, double attack, double defense, double hitPoints, double range, double penetration = 0,
-            double perShotEnergy = 0, double upkeepCredits = 0)
+            double perShotEnergy = 0)
         {
             UnitType = (GroundUnitType)(int)unitType;
             Attack = attack;
@@ -63,11 +59,10 @@ namespace Pulsar4X.GroundCombat
             Range = range < 0 ? 0 : (int)range;
             Penetration = penetration < 0 ? 0 : penetration;
             PerShotEnergy = perShotEnergy < 0 ? 0 : perShotEnergy;
-            UpkeepCredits = upkeepCredits < 0 ? 0 : upkeepCredits;
         }
 
         public override object Clone()
-            => new GroundUnitAtb((double)(int)UnitType, Attack, Defense, HitPoints, Range, Penetration, PerShotEnergy, UpkeepCredits);
+            => new GroundUnitAtb((double)(int)UnitType, Attack, Defense, HitPoints, Range, Penetration, PerShotEnergy);
 
         public void OnComponentInstallation(Entity parentEntity, ComponentInstance componentInstance)
         {
@@ -94,7 +89,6 @@ namespace Pulsar4X.GroundCombat
                     Range = Range,
                     Penetration = Penetration,
                     PerShotEnergy = PerShotEnergy,
-                    UpkeepCredits = UpkeepCredits,
                 };
                 GroundForces.RaiseUnit(body, design, parentEntity.FactionOwnerID, region, design.Name);
 

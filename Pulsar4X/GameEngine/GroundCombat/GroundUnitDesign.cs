@@ -83,8 +83,13 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public double PerShotEnergy { get; set; }
         /// <summary>STANDING UPKEEP in credits/month this unit costs its owning faction simply by EXISTING — the ground
         /// echo of a station's operating cost, billed monthly by <see cref="GroundUpkeep"/>. 0 = free (byte-identical: no
-        /// existing design sets it). Snapshotted onto <see cref="GroundUnit.UpkeepCredits"/> at raise. Author it to scale
-        /// off the unit's pay + build cost so an elite unit is expensive to keep standing and a militia is cheap.</summary>
+        /// existing design sets it). Snapshotted onto <see cref="GroundUnit.UpkeepCredits"/> at raise.
+        /// <para>This slice ships the MECHANISM + gauge only; the value's SOURCE is a deliberate follow-up (a balance
+        /// decision — the developer's call to scale it off the unit's pay + build cost). To make a real garrison cost
+        /// money, set this at one of the three design-builder sites: <c>GroundUnitAssembly.ToGroundUnitDesign</c> (the
+        /// player-assembled 6-man-squad path — it does NOT set this today), <c>GroundStartGarrison</c>'s code-built
+        /// designs, and/or a base-mod <c>GroundUnitAtb</c> ctor arg (note: adding a ctor arg is NOT template-free — the
+        /// JSON binder is exact-arity, so all base-mod ground-unit templates must be updated in lockstep, gotcha #10).</para></summary>
         [JsonProperty] public double UpkeepCredits { get; set; }
         /// <summary>ENVIRONMENTAL GEAR (E4) — per-hazard protection this design's units carry, keyed by the shared
         /// <see cref="Pulsar4X.Hazards.HazardEffectType"/>. Value 0..1 = fraction of that hazard's attrition negated
