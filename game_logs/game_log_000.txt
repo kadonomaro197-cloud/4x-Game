@@ -1,4 +1,4 @@
-=== Pulsar4X session started 2026-07-16 19:34:54 ===
+=== Pulsar4X session started 2026-07-16 20:44:29 ===
 Log: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\game_logs (rolling pages game_log_000.txt, _001, …)
 File not found: Resources\CancelIco.bmp
 File not found: Resources\CargoIco.bmp
@@ -29,7 +29,7 @@ Found mod 'Pulsar4x-Testing' from C:\Users\DeeDiebS\AppData\Roaming\Pulsar4X\Pul
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\pulsar4x-menu.png
 Successfully loaded: pulsar4x-menu
 Format: .png
-Texture pointer: 253FC06B620
+Texture pointer: 2388DCF7880
 Dimensions: 400x200
 --------------------------------------------------
 [VIEW] now viewing faction id=277 (UEF) [player]
@@ -37,53 +37,53 @@ Ship icon texture loaded: 28x14
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\DesignComponentIco.bmp
 Successfully loaded: DesComp
 Format: .bmp
-Texture pointer: 25403F61480
+Texture pointer: 23895D60260
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\DesignShipIco.bmp
 Successfully loaded: DesShip
 Format: .bmp
-Texture pointer: 25403F61340
+Texture pointer: 23895D608A0
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\IndustryIco.bmp
 Successfully loaded: Industry
 Format: .bmp
-Texture pointer: 25403F60D00
+Texture pointer: 23895D61B60
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\ResearchIco.bmp
 Successfully loaded: Research
 Format: .bmp
-Texture pointer: 25403F60300
+Texture pointer: 23895D60EE0
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\SelectIco.bmp
 Successfully loaded: Select
 Format: .bmp
-Texture pointer: 25403F5FCC0
+Texture pointer: 23895D613E0
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\GalaxyMapIco.bmp
 Successfully loaded: GalMap
 Format: .bmp
-Texture pointer: 25403F60940
+Texture pointer: 23895D5FEA0
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\RulerIco.bmp
 Successfully loaded: Ruler
 Format: .bmp
-Texture pointer: 25403F5FE00
+Texture pointer: 23895D60120
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\TreeIco.bmp
 Successfully loaded: Tree
 Format: .bmp
-Texture pointer: 25403F60E40
+Texture pointer: 23895D61660
 Dimensions: 256x256
 --------------------------------------------------
 [DevTools] Refresh: 0 ship design(s), 287 body(ies), 13 cargo target(s), 15 mineral(s)
-[STATE] ⏱ slow frame 1815ms — stage breakdown: update(state+transforms) 0 / map-draw(SDL lines) 0 / ui(windows) 1814 ms — the biggest number is the culprit
+[STATE] ⏱ slow frame 1801ms — stage breakdown: update(state+transforms) 0 / map-draw(SDL lines) 0 / ui(windows) 1799 ms — the biggest number is the culprit
 [STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=7
 [ENGINE] sensor scans 26 (+26), battle-trigger passes 0 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
@@ -91,52 +91,47 @@ Dimensions: 256x256
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\Play.bmp
 Successfully loaded: PlayImg
 Format: .bmp
-Texture pointer: 25403F60080
+Texture pointer: 23895D617A0
 Dimensions: 256x256
 --------------------------------------------------
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\OneStep.bmp
 Successfully loaded: OneStepImg
 Format: .bmp
-Texture pointer: 25403F60F80
+Texture pointer: 23895D61020
 Dimensions: 256x256
 --------------------------------------------------
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 26 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
-[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 26 (+0), battle-trigger passes 0 (+0) since last beat
-[DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
 [TIME] play (step 3600s)
 Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\Pause.bmp
 Successfully loaded: PauseImg
 Format: .bmp
-Texture pointer: 253FC06B9E0
+Texture pointer: 23895D60B20
 Dimensions: 256x256
 --------------------------------------------------
-[STATE] heartbeat t=2050-01-01 00:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 26 (+0), battle-trigger passes 404 (+404) since last beat
+[STATE] heartbeat t=2050-01-01 08:00 RUNNING step=3600s selected=(none) ships-in-view=7
+[ENGINE] sensor scans 1844 (+1818), battle-trigger passes 11821 (+11821) since last beat
 [DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
 [STATE] heartbeat t=2050-01-01 13:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 56596 (+56570), battle-trigger passes 19442 (+19038) since last beat
+[ENGINE] sensor scans 82188 (+80344), battle-trigger passes 19442 (+7621) since last beat
 [DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
 [STATE] heartbeat t=2050-01-01 14:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 115635 (+59039), battle-trigger passes 20882 (+1440) since last beat
+[ENGINE] sensor scans 139009 (+56821), battle-trigger passes 20882 (+1440) since last beat
 [DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
 [STATE] heartbeat t=2050-01-01 14:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 180934 (+65299), battle-trigger passes 20882 (+0) since last beat
+[ENGINE] sensor scans 194853 (+55844), battle-trigger passes 20882 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
 [STATE] heartbeat t=2050-01-01 15:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 197168 (+16234), battle-trigger passes 22322 (+1440) since last beat
+[ENGINE] sensor scans 197168 (+2315), battle-trigger passes 22322 (+1440) since last beat
 [DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
 [STATE] heartbeat t=2050-01-01 15:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 237173 (+40005), battle-trigger passes 22322 (+0) since last beat
+[ENGINE] sensor scans 255881 (+58713), battle-trigger passes 22322 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
 [STATE] heartbeat t=2050-01-01 15:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[SIM-STALL] game-time FROZEN at 2050-01-01 15:00 while RUNNING — the sim thread is WEDGED (a freeze the frame watchdog can't see). Last processor the sim entered: 'system-sol/SensorScan (instance:SensorScan)'. scans=293999 ticks=22322 (STILL CLIMBING → SLOW-AT-SCALE heavy tick, not a true wedge — a PERF problem). scale: fleets=4 in-combat=0 ships=7 in view.
-[ENGINE] sensor scans 294000 (+56827), battle-trigger passes 22322 (+0) since last beat
+[SIM-STALL] game-time FROZEN at 2050-01-01 15:00 while RUNNING — the sim thread is WEDGED (a freeze the frame watchdog can't see). Last processor the sim entered: 'system-sol/SensorScan (instance:SensorScan)'. scans=306007 ticks=22322 (STILL CLIMBING → SLOW-AT-SCALE heavy tick, not a true wedge — a PERF problem). scale: fleets=4 in-combat=0 ships=7 in view.
+[SIM-STALL] SensorScan top scanners (cumulative id/owner/kind/ScanTime/count): #283(owner=281,colony,ScanTime=3600s)=305426  #289(owner=281,colony,ScanTime=3600s)=50  #303(owner=281,ship,ScanTime=3600s)=50  #279(owner=277,colony,ScanTime=3600s)=49  #290(owner=281,colony,ScanTime=3600s)=49  #307(owner=305,other,ScanTime=3600s)=49  
+[ENGINE] sensor scans 306023 (+50142), battle-trigger passes 22322 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
 [STATE] heartbeat t=2050-01-01 15:00 RUNNING step=3600s selected=(none) ships-in-view=7
-[ENGINE] sensor scans 335874 (+41874), battle-trigger passes 22322 (+0) since last beat
+[ENGINE] sensor scans 345197 (+39174), battle-trigger passes 22322 (+0) since last beat
 [DETECT] UEF holds 2 contact(s); 7 other-faction ship(s) in-system, detects 1 (6 hidden from you)
 [STATE] session summary — faults=0, game-time=2050-01-01 15:00
-=== Session ended 2026-07-16 19:35:30 ===
+=== Session ended 2026-07-16 20:44:58 ===
