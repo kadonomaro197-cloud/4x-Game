@@ -127,6 +127,12 @@ no new buildables — the new part is the AI logic (pick the easy region, plant 
    (flagged): unmask is region-granular where the scout stands, not strictly per-walked-hex; per-hex-walked is a follow-up.
 4. **Hidden special sites:** sites exist on hexes but are invisible until a scout reveals them (the exploration payoff).
    Gauge: a site is unlisted for an un-scouted faction, listed after a scout reaches it.
+   **✅ BUILT (engine, 2026-07-17) — again mostly a CONNECT:** the Site Engine (`GameEngine/Sites/`) already exists
+   (SE-1..SE-5) and a surface `FieldSiteDB` already carries `SurfaceRegionIndex`. Slice 4 adds `SiteVisibility.IsDiscoveredBy`
+   — a pure DERIVED read: a surface site is discovered by a faction once that faction has revealed the site's region (the
+   per-faction fog the scout populates in slice 3). No stored per-site set (can't drift), byte-identical (nothing consumes
+   it until the client `SiteWindow` filters by it — slice 4b). Gauge: `SiteVisibilityTests`. Refinement flagged:
+   region-granular, not hex-exact.
 5. **Fog-limited enemy garrison read:** the landing-intel helper returns only what the faction has scouted (an
    un-scouted region reads "unknown", not "empty"). Gauge: faction A can't see faction B's garrison in an un-scouted
    region.
