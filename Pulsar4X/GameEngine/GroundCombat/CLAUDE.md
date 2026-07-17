@@ -10,6 +10,31 @@ The planet-surface war layer: units you build, station in regions, move, and fig
 
 The developer's rule: *"everything I build on a planet that's selectable in space is represented by an actual building on the planet itself."* The colony economy (`ComponentInstancesDB` installations) and this ground map are **two views of the SAME physical things** — nothing is abstract-only. So any new planet buildable must be a component (`CONVENTIONS.md` §6) AND carry a **region location** so it draws on the planet view. The reconciliation is **done (#5, 2026-07-04):** `GroundInstallations.LocateColonyInstallations` (hooked in `ColonyFactory.CreateFromBlueprint`) drops a colony's installations into its capital region's `Region.InstallationIds`, so the planet view draws them and fortification counts them. (Follow-up: locate DYNAMICALLY-built installations — those added post-creation via the colony economy — at their install site; v1 covers the start colony's buildings.) Full rationale + slice mapping: `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` → "LOCKED PRINCIPLE." This is *why* the infrastructure system exists: a located building can be bombarded, invaded, defended, and lost region-by-region; an abstract one can't be fought over.
 
+## LOCKED PRINCIPLE — a new UNIT CAPABILITY is a COMPONENT + the Entity Assembler, NEVER a bespoke unit type (2026-07-17)
+
+The developer's rule, in their words: *"there is no such thing in the design or component system that will just get
+labeled 'scout unit' — BUT using the Component Designer and Entity Assembler I can make it."* So when a new ground-unit
+ROLE is needed — a **scout/recon** unit, a mine-clearer, a combat-engineer, an artillery-spotter, anything — you do
+**NOT** add a `GroundUnitType.Scout` enum value or a hardcoded unit class. You add a **COMPONENT** (an `*Atb` with the new
+ability), make it buildable (template → design → unlocked, gotcha #10), and the player/AI **assembles** it onto a ground
+chassis in the **Entity Assembler** (`ShipDesignWindow`, ground branch → `GroundUnitAssembly.RegisterAssembledDesign`).
+The unit's role EMERGES from the components it carries — exactly like a ship's role emerges from its weapons/sensors, and
+exactly `CONVENTIONS.md` §6 ("abilities are components — do NOT invent parallel systems"). A "scout" is just *a ground
+chassis carrying a recon component.*
+
+Why this is load-bearing (not pedantry): modeling the capability as a component is what buys — **for free** —
+research-gating (tech unlocks the component), construction-from-materials (the recipe), save/load, the design UI, and the
+grave rung (shoot the recon component off and the unit stops scouting). A bespoke `Scout` unit type would have to
+re-earn every one of those by hand and would be un-researchable, un-buildable, and un-losable — the "pretty" disease,
+vertical (root `CLAUDE.md` → "Cradle to Grave").
+
+**The recon component itself** (the surface-survey ability — reveal a deposit's masked AMOUNT/RATE and any hidden site as
+the unit walks hexes): it lives naturally in **Sensors** (it IS a sensor — a ground-side one), so either a new
+`GroundSurveyAtb`/`ReconAtb` **or additional dials on an existing sensor attribute**. Decide that when the surface-fog
+survey slice is built; either way it's a component the assembler mounts. Design refs: the two-tier survey in
+`docs/explore/` (space survey → parameters + deposit location/type; ground scout → masked amount/rate + hidden sites) and
+`docs/ground/GROUND-SURFACE-MAP-DESIGN.md`.
+
 ## The model in one line
 
 A planet body carries a **`GroundForcesDB`** (a roster of `GroundUnit`s). Each `GroundUnit` knows its **region**, its **owner faction**, and its **combat stats** — so one roster holds both sides of a contested world. Units are **built** at a colony through the normal industry rails (`GroundUnitDesign : IConstructableDesign`), **moved** region→region on the region graph's crossing-time edges (5b), **fought** by a strength-math resolver mirroring the space `AutoResolve` (5c), and **captured** by flipping `FactionOwnerID` (5d) — the same primitive as a ship/fleet.
