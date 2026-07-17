@@ -32,6 +32,14 @@ namespace Pulsar4X.Hazards
         CorrosiveDamage,   // chemical / dense medium (a corrosive nebula) → Corrosive
         EMDamage,          // electromagnetic interference (an ion storm, a magnetar) → EMStorm
         GravimetricDamage, // tidal / spacetime stress (a black hole, a neutron star) → Gravimetric
+
+        // GROUND-ONLY surface hazards (APPENDED 2026-07-17 — never reorder, JSON refs by int, gotcha #10). A ship in
+        // space isn't harmed by planetary vacuum, so these are NOT space-ship damage kinds (left out of IsDamage /
+        // SignatureFor → the space hazard system is byte-identical). They feed the GROUND E4 attrition
+        // (GroundForcesProcessor.IsDamageEffect): an UNSEALED unit standing on an airless/toxic world bleeds; a unit
+        // with the matching EnvResistance (a sealed suit / life-support) survives. The "sealed power armour matters" lever.
+        Vacuum,            // no atmosphere (airless world: the Moon, Mercury, thin-air Mars) — need a sealed suit
+        ToxicAtmosphere,   // a poisonous / corrosive atmosphere (Venus-like) — unbreathable without life-support
     }
 
     /// <summary>

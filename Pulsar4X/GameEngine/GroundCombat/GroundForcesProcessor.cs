@@ -586,7 +586,10 @@ namespace Pulsar4X.GroundCombat
         private static bool IsDamageEffect(HazardEffectType t)
             => t == HazardEffectType.HeatDamage || t == HazardEffectType.RadiationDamage
             || t == HazardEffectType.KineticDamage || t == HazardEffectType.CorrosiveDamage
-            || t == HazardEffectType.EMDamage || t == HazardEffectType.GravimetricDamage;
+            || t == HazardEffectType.EMDamage || t == HazardEffectType.GravimetricDamage
+            // Ground-only surface hazards (2026-07-17): an unsealed unit bleeds in vacuum / a toxic atmosphere. The
+            // unit's EnvResistance (a sealed suit) negates it via the same E4 path — so sealing is a real decision.
+            || t == HazardEffectType.Vacuum || t == HazardEffectType.ToxicAtmosphere;
 
         private static void TryCapturePlanet(Entity body, PlanetRegionsDB regionsDB)
         {

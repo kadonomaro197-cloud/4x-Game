@@ -625,6 +625,65 @@ namespace Pulsar4X.Tests
             Log($"E4 gear: plain -{plain0 - plain.Health:0}, shielded(0.8) -{geared0 - geared.Health:0}, immune(1.0) -{immune0 - immune.Health:0} hp/hr in fire");
         }
 
+        [Test]
+        [Description("Surface-support hazards (2026-07-17): an AIRLESS world (no atmosphere) generates a Vacuum environment — the physics gate that makes 'you can't just walk infantry onto the Moon' real.")]
+        public void EnvironmentGeneration_AirlessWorld_GetsVacuum()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+
+            Assert.That(body.TryGetDataBlob<AtmosphereDB>(out var atmo), Is.True, "the start world has an atmosphere");
+            atmo.Pressure = 0f;                                                    // strip the air → airless (internal set, via InternalsVisibleTo)
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();
+            PlanetEnvironmentFactory.GenerateForSystem(s.StartingSystem);          // regenerate this now-airless world
+
+            Assert.That(body.HasDataBlob<PlanetEnvironmentsDB>(), Is.True);
+            var envs = body.GetDataBlob<PlanetEnvironmentsDB>().Environments;
+            Assert.That(envs.Any(e => e.Effect == HazardEffectType.Vacuum), Is.True, "an airless world gets Vacuum exposure");
+            Log($"airless world → {envs.Count} hazard(s), incl. {envs.First(e => e.Effect == HazardEffectType.Vacuum).Name}");
+        }
+
+        [Test]
+        [Description("Sealed suit / life-support (2026-07-17): an UNSEALED unit bleeds in Vacuum + a Toxic atmosphere, while a unit whose design seals against them (EnvResistance 1.0) takes ZERO — and a partially-sealed unit (vacuum only) still bleeds from the toxic air. The 'sealed power armour matters' lever, on the existing E4 counter.")]
+        public void SealedGear_SurvivesVacuumAndToxicAtmosphere()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+
+            if (!body.TryGetDataBlob<PlanetEnvironmentsDB>(out var envDB))
+            {
+                envDB = new PlanetEnvironmentsDB();
+                body.SetDataBlob(envDB);
+            }
+            // Both surface hazards in region 0, 3/hr each → an unsealed unit takes 6/hr.
+            envDB.Environments.Add(new RegionEnvironment(0, "Vacuum Exposure", HazardEffectType.Vacuum, 3.0));
+            envDB.Environments.Add(new RegionEnvironment(0, "Toxic Atmosphere", HazardEffectType.ToxicAtmosphere, 3.0));
+
+            var unsealed = GroundForces.RaiseUnit(body, MakeInfantryDesign(), s.Faction.Id, 0);
+
+            var sealedDesign = MakeInfantryDesign();
+            sealedDesign.UniqueID = "test-ground-infantry-sealed";
+            sealedDesign.EnvironmentalResistance = new Dictionary<HazardEffectType, double>
+                { { HazardEffectType.Vacuum, 1.0 }, { HazardEffectType.ToxicAtmosphere, 1.0 } };
+            var sealed_ = GroundForces.RaiseUnit(body, sealedDesign, s.Faction.Id, 0);
+
+            var vacOnlyDesign = MakeInfantryDesign();
+            vacOnlyDesign.UniqueID = "test-ground-infantry-vac-only";
+            vacOnlyDesign.EnvironmentalResistance = new Dictionary<HazardEffectType, double> { { HazardEffectType.Vacuum, 1.0 } };
+            var vacOnly = GroundForces.RaiseUnit(body, vacOnlyDesign, s.Faction.Id, 0);
+
+            double unsealed0 = unsealed.Health, sealed0 = sealed_.Health, vac0 = vacOnly.Health;
+            new GroundForcesProcessor().ProcessEntity(body, 3600);   // one hour
+
+            Assert.That(unsealed0 - unsealed.Health, Is.EqualTo(6.0).Within(1.0), "unsealed: full 3+3 = 6/hr from both hazards");
+            Assert.That(sealed0 - sealed_.Health, Is.EqualTo(0.0).Within(1e-6), "fully sealed (both 1.0) = zero attrition");
+            Assert.That(vac0 - vacOnly.Health, Is.EqualTo(3.0).Within(1.0), "vacuum-only seal still bleeds 3/hr from the toxic air");
+            Assert.That(sealed_.Health, Is.GreaterThan(unsealed.Health), "the sealed unit outlasts the unsealed one");
+            Log($"seal: unsealed -{unsealed0 - unsealed.Health:0}, sealed -{sealed0 - sealed_.Health:0}, vacuum-only -{vac0 - vacOnly.Health:0} hp/hr");
+        }
+
         // ───────────────────────── 5h — FORMATIONS (the ground echo of fleet grouping) ─────────────────────────
 
         [Test]
