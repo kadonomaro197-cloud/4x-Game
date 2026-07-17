@@ -101,6 +101,10 @@ no new buildables — the new part is the AI logic (pick the easy region, plant 
 1. **Ground-fog data model + reveal API** (additive, byte-identical): a per-faction ground-reveal record on the planet
    body — `Reveal(faction, region/hex)` / `IsRevealed(faction, region/hex)` — and per-faction masked hex deposits.
    Nothing consumes it yet. Gauge: reveal→isRevealed round-trip + a save/load of the mask.
+   **✅ BUILT (2026-07-17):** slice **1** — `PlanetRegionsDB.PerFactionRevealed` + `RevealRegionFor`/`IsRegionRevealedFor`/
+   `RevealAllRegionsFor` (per-faction REGION reveal). Slice **1b** — `GroundHex.DepositAssay` (`Masked<long>`, faction
+   bit-mask) + `RevealDepositLocation` (Partial)/`RevealDepositAssay` (Full)/`AssayFor` (per-faction masked deposit
+   ASSAY; closes the leak). Both additive/byte-identical, nothing consumes them yet. Gauge: `GroundFogTests`.
 2. **Wire the space survey to the fog:** on `GeoSurveyProcessor` completion, reveal each region's **geography + deposit
    location/type** to the surveying faction, but leave the **assay (amount/rate) masked**. (Split the current "reveal
    everything" into partial.) Gauge: after a space survey, the faction sees the deposit's type but the amount reads

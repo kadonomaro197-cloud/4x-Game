@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Pulsar4X.DataStructures;
 using Pulsar4X.Engine;
 using Pulsar4X.Galaxy;
 
@@ -98,6 +99,10 @@ namespace Pulsar4X.Industry
                     {
                         h.DepositMineralId = kv.Key;
                         h.DepositAmount = share;
+                        // Per-faction masked view of the same tonnage — HIDDEN by default (AccessLevel.None), so the
+                        // amount no longer leaks to every faction (ground-fog slice 1b). Space survey grants Partial,
+                        // a ground scout grants Full. DepositAmount above stays as the omniscient server-truth.
+                        h.DepositAssay = new Masked<long>(share, AccessLevel.None);
                     }
                 }
             }

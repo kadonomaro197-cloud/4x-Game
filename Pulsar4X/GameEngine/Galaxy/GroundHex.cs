@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Pulsar4X.DataStructures;
 
 namespace Pulsar4X.Galaxy
 {
@@ -31,8 +32,22 @@ namespace Pulsar4X.Galaxy
         /// the accessible tonnes located here — a share of the body's real deposit (mining stays colony-wide in v1;
         /// per-hex mining that draws THIS deposit is the follow-up). Save-safe (copied below).</summary>
         [JsonProperty] public int DepositMineralId { get; internal set; } = -1;
-        /// <summary>Accessible amount of <see cref="DepositMineralId"/> located on this hex (0 if none).</summary>
+        /// <summary>Accessible amount of <see cref="DepositMineralId"/> located on this hex (0 if none). This is the
+        /// SERVER-TRUTH value (the un-drawn located tonnage) — the seeder writes it, the map/mining engine reads it
+        /// omnisciently. The PER-FACTION, fog-aware view of the same tonnage is <see cref="DepositAssay"/> below.</summary>
         [JsonProperty] public long DepositAmount { get; internal set; }
+
+        /// <summary>The PER-FACTION masked ASSAY of this hex's deposit — the two-tier survey model from
+        /// `docs/ground/SURFACE-FOG-AND-RECON-DESIGN.md` (slice 1b). Mirrors the body-wide <c>MineralsDB.Amount</c>
+        /// (`Masked&lt;long&gt;`, faction BIT-mask): default <see cref="AccessLevel.None"/> = the deposit's amount is
+        /// HIDDEN (the leak the design flagged — un-masked ints let anyone read every deposit on a planet they never
+        /// set foot on). A completed SPACE survey grants <see cref="AccessLevel.Partial"/> (you know the deposit is
+        /// HERE + its type via the revealed region, but the amount stays un-assayed); a GROUND scout walking this hex
+        /// grants <see cref="AccessLevel.Full"/> (the exact located tonnes). Carries the SAME tonnage as
+        /// <see cref="DepositAmount"/> but access-controlled. Nothing consumes it yet — slice 2 (space survey) grants
+        /// Partial, slice 3 (recon component reveal-on-move) grants Full. A value struct: the copy ctor's plain
+        /// assignment is a full, independent deep copy (all fields are value types).</summary>
+        [JsonProperty] public Masked<long> DepositAssay { get; internal set; }
 
         /// <summary>Instance ids of the FOOTPRINT buildings that occupy THIS operational hex (War-map layer, W1) — the
         /// finer-than-region location of a strategic base (a fort / spaceport / HQ). This is the "ship icon" the war
@@ -53,8 +68,41 @@ namespace Pulsar4X.Galaxy
         {
             Q = o.Q; R = o.R; Terrain = o.Terrain; OwnerFactionID = o.OwnerFactionID;
             DepositMineralId = o.DepositMineralId; DepositAmount = o.DepositAmount;
+            DepositAssay = o.DepositAssay;   // Masked<long> is an all-value-type struct → this copy is a deep, independent copy
             InstallationIds = o.InstallationIds != null ? new List<int>(o.InstallationIds) : new List<int>();
             CityGrid = o.CityGrid != null ? new CityGrid(o.CityGrid) : null;
         }
+
+        // ── Per-faction deposit reveal (ground fog, slice 1b) — the two survey tiers grant access on DepositAssay ──
+
+        /// <summary>SPACE-survey tier: grant <paramref name="factionMask"/> knowledge that a deposit is HERE (its type
+        /// is read off <see cref="DepositMineralId"/> once the region is revealed) while the ASSAY amount stays hidden
+        /// (<see cref="AccessLevel.Partial"/> — <see cref="AssayFor"/> returns the obscured value, not the real tonnes).
+        /// No-op on a hex with no deposit. <paramref name="factionMask"/> is a faction BIT mask
+        /// (<c>FactionInfoDB.FactionMask</c>), matching <c>MineralsDB.Amount</c> — NOT a raw faction id.</summary>
+        public void RevealDepositLocation(int factionMask)
+        {
+            if (DepositMineralId < 0) return;
+            var m = DepositAssay;            // struct copy — mutate then write back (a property getter returns a copy)
+            m.GrantPartial(factionMask);
+            DepositAssay = m;
+        }
+
+        /// <summary>GROUND-scout tier: grant <paramref name="factionMask"/> the FULL assay — the exact located tonnes
+        /// (<see cref="AccessLevel.Full"/>). No-op on a hex with no deposit. <paramref name="factionMask"/> is a faction
+        /// BIT mask (<c>FactionInfoDB.FactionMask</c>).</summary>
+        public void RevealDepositAssay(int factionMask)
+        {
+            if (DepositMineralId < 0) return;
+            var m = DepositAssay;
+            m.GrantFull(factionMask);
+            DepositAssay = m;
+        }
+
+        /// <summary>The located deposit amount as THIS faction knows it: null = unknown (un-surveyed), the obscured
+        /// value = located-but-un-assayed (space-surveyed), the exact tonnes = assayed (ground-scouted). The fog-aware
+        /// read consumers use instead of the omniscient <see cref="DepositAmount"/>. <paramref name="factionMask"/> is
+        /// a faction BIT mask. (For the located/assayed distinction, read <see cref="DepositAssay"/>.Resolve directly.)</summary>
+        public long? AssayFor(int factionMask) => DepositMineralId < 0 ? (long?)null : DepositAssay.For(factionMask);
     }
 }

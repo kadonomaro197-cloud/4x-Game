@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
+using Pulsar4X.DataStructures;
 using Pulsar4X.Galaxy;
 
 namespace Pulsar4X.Tests
@@ -64,6 +65,59 @@ namespace Pulsar4X.Tests
             clone.RevealRegionFor(A, 0);
             Assert.That(db.IsRegionRevealedFor(A, 0), Is.False,
                 "the clone is INDEPENDENT — mutating it must not touch the original (else save/load would alias)");
+        }
+
+        [Test]
+        [Description("Slice 1b: a hex deposit's ASSAY is per-faction masked (two survey tiers), no longer leaking to everyone, and survives a clone independently.")]
+        public void HexDepositAssay_IsFoggedPerFaction_TwoTierAndCloneSafe()
+        {
+            // Faction BIT masks (FactionInfoDB.FactionMask = 1 << index) — deliberately not 1/2 so a bit-vs-index slip shows.
+            const int A = 1 << 3;   // 8
+            const int B = 1 << 5;   // 32
+            const long tonnes = 5_000;
+
+            // A deposit hex, seeded exactly as HexMinerals does: server-truth amount + a HIDDEN per-faction assay.
+            var hex = new GroundHex(0, 0, RegionFeatureType.Mountains)
+            {
+                DepositMineralId = 7,
+                DepositAmount = tonnes,
+                DepositAssay = new Masked<long>(tonnes, AccessLevel.None),
+            };
+
+            // Default = FULL FOG. Nobody knows the amount — this is the leak the slice closes (the un-masked int let
+            // any faction read every deposit on a planet it never visited).
+            Assert.That(hex.AssayFor(A), Is.Null, "an un-surveyed deposit's amount must read hidden");
+            Assert.That(hex.DepositAssay.Resolve(A).IsKnown, Is.False);
+            // The server-truth is still there for the omniscient map/mining engine (byte-identical for old readers).
+            Assert.That(hex.DepositAmount, Is.EqualTo(tonnes));
+
+            // SPACE-survey tier for A only: the deposit is now KNOWN to be here, but the amount stays un-assayed (Partial).
+            hex.RevealDepositLocation(A);
+            var partial = hex.DepositAssay.Resolve(A);
+            Assert.That(partial.Access, Is.EqualTo(AccessLevel.Partial), "space survey = located, not assayed");
+            Assert.That(partial.IsKnown, Is.True);
+            Assert.That(partial.IsExact, Is.False, "the exact tonnage is NOT learned from orbit");
+            Assert.That(hex.AssayFor(A), Is.EqualTo(0L), "the obscured amount reads 0 at the space-survey tier");
+            Assert.That(hex.AssayFor(B), Is.Null, "fog is PER-FACTION — B surveyed nothing, still blind");
+
+            // GROUND-scout tier for A: the exact located tonnes are now known to A only.
+            hex.RevealDepositAssay(A);
+            Assert.That(hex.DepositAssay.Resolve(A).IsExact, Is.True, "a ground scout gives the exact assay");
+            Assert.That(hex.AssayFor(A), Is.EqualTo(tonnes), "A now reads the real located amount");
+            Assert.That(hex.AssayFor(B), Is.Null, "B still sees nothing — the whole point of the fog");
+
+            // A hex with NO deposit is a no-op — reveal calls never conjure an assay.
+            var empty = new GroundHex(1, 1, RegionFeatureType.Plains); // DepositMineralId = -1 by default
+            empty.RevealDepositAssay(A);
+            Assert.That(empty.AssayFor(A), Is.Null, "no deposit → nothing to assay, even after a reveal");
+
+            // Survives a clone (the save/load proxy) as a DEEP, INDEPENDENT copy — Masked<long> is an all-value-type struct.
+            var clone = new GroundHex(hex);
+            Assert.That(clone.AssayFor(A), Is.EqualTo(tonnes), "the clone preserves A's full assay");
+            Assert.That(clone.AssayFor(B), Is.Null, "the clone preserves B's fog");
+            clone.RevealDepositAssay(B);
+            Assert.That(hex.AssayFor(B), Is.Null,
+                "the clone is INDEPENDENT — assaying it for B must not touch the original (else save/load would alias)");
         }
     }
 }
