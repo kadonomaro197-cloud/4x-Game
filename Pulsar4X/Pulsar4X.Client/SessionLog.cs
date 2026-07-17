@@ -173,6 +173,35 @@ namespace Pulsar4X.Client
                                 + (climbing ? "STILL CLIMBING → SLOW-AT-SCALE heavy tick, not a true wedge — a PERF problem"
                                             : "FROZEN too → a TRUE WEDGE, deadlock/infinite loop in that processor") + "). "
                                 + "scale: fleets=" + fleets + " in-combat=" + inCombat + " ships=" + ships + " in view.");
+
+                            // If SensorScan is the wedged/hot processor, NAME the storming entities (per-entity
+                            // attribution the engine records when SensorScan.AttributeScans is on). Turns "SensorScan is
+                            // slow" into "THIS ship/colony scanned N times" — the culprit for the scan-storm freeze.
+                            try
+                            {
+                                string proc = Pulsar4X.Engine.ManagerSubPulse.GlobalCurrentProcess ?? "";
+                                if (SensorScan.AttributeScans && proc.Contains("SensorScan"))
+                                {
+                                    var top = SensorScan.ScansByEntity.ToArray();
+                                    System.Array.Sort(top, (a, b) => b.Value.CompareTo(a.Value));
+                                    var sb = new System.Text.StringBuilder("SensorScan top scanners (cumulative id/owner/kind/ScanTime/count): ");
+                                    for (int i = 0; i < top.Length && i < 6; i++)
+                                    {
+                                        var kv = top[i];
+                                        Entity e = null;
+                                        foreach (var s in game.Systems) if (s.TryGetEntityById(kv.Key, out e)) break;
+                                        string kind = e == null ? "?" : e.HasDataBlob<Pulsar4X.Colonies.ColonyInfoDB>() ? "colony"
+                                            : e.HasDataBlob<ShipInfoDB>() ? "ship" : "other";
+                                        int stime = -1;
+                                        if (e != null && e.TryGetDataBlob<Pulsar4X.Sensors.SensorAbilityDB>(out var sab)
+                                            && sab.InstanceAtributes.Count > 0) stime = sab.InstanceAtributes[0].ScanTime;
+                                        int owner = e?.FactionOwnerID ?? -999;
+                                        sb.Append("#" + kv.Key + "(owner=" + owner + "," + kind + ",ScanTime=" + stime + "s)=" + kv.Value + "  ");
+                                    }
+                                    Line("SIM-STALL", sb.ToString());
+                                }
+                            }
+                            catch { /* a diagnostic must never throw */ }
                             _simStallReported = true;
                         }
                     }

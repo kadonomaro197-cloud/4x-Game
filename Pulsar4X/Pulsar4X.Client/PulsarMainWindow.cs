@@ -113,6 +113,11 @@ namespace Pulsar4X.Client
             Pulsar4X.Combat.CombatEngagement.RequireWeaponRangeToEngage = true;
             Pulsar4X.Combat.CombatEngagement.RequireWeaponsReleaseToEngage = true;
 
+            // DIAGNOSTIC (2026-07-16, the SensorScan freeze hunt): record per-entity scan counts so that if the sim
+            // stalls in SensorScan, the SIM-STALL watchdog can NAME the storming ship/colony (see SessionLog). A cheap
+            // ConcurrentDictionary increment per scan — remove once the scan-storm cause is found + fixed.
+            Pulsar4X.Sensors.SensorScan.AttributeScans = true;
+
             // Fire control → tracking (Sensors ⚙3): a ship's beam-fire-control director now actually improves how well
             // its beams track an evasive target (the dead BeamFireControlAtbDB.TrackingSpeed knob, wired). Off by
             // default in the engine (the fire-control component already lives on the test ships with a non-neutral
