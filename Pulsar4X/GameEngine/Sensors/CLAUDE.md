@@ -169,6 +169,46 @@ The map's fog-of-war blips (`SensorContactIcon`, client side) need a contact's s
 
 Pure pass-throughs (CI compiles them; no behavioural test needed). When new UI needs more of a contact's *known* info, expose it here — don't widen the internal fields' visibility.
 
+## 🕵 Contact position is LIVE, not last-known — the fog-of-war contact model is a STUB (diagnosed 2026-07-17)
+
+**Symptom (developer, live map):** "a ship left Mercury and B-lined for Earth. For most of its journey it was NOT in
+Earth's detection range, but I actively watched it travel from empty space to Earth." A foreign ship stayed on the plot,
+gliding smoothly, when fog of war should have hidden or frozen it.
+
+**What it is NOT (refuted with evidence):** the map does *not* invent a ship it shouldn't know about. `EntityManager.
+GetFilteredEntities` gates every hostile on `SensorContactExists` (`EntityManager.cs:763`), and `SystemMapRendering`'s
+fog guard (`:328`) never gives a foreign mobile unit a full ship-icon when fog is on — a foreign ship draws ONLY as a
+contact blip, and only if it's in the faction track table. So the "map drew an undetected ship" theory is wrong.
+
+**The real root cause — a half-built feature.** A `SensorContact`'s drawn position (`SensorPositionDB`) is created with
+`GetDataFrom = DataFrom.Parent` (`SensorPositionDB.cs:12,67`), whose `AbsolutePosition` getter returns the **target's
+LIVE `ActualEntityPositionDB.AbsolutePosition`** (`:30-31`) — the blip is glued to the real ship's real-time position,
+frame by frame, with no scan lag. `SensorEntityFactory.UpdateSensorContact` — the routine meant to refresh a contact
+each scan with a *snapshot* — is a **no-op stub**: it builds a position clone and discards it (`SensorEntityFactory.cs:26`),
+never storing a last-known fix, never advancing `GetDataFrom` to `Sensors` (lagged) or `Memory` (frozen). `GetDataFrom`
+flips to `Memory` (freeze at last-known) **only when the target is DESTROYED** (`SensorContact.cs:63`), never on losing
+the track. Compounding it, the scan's contact-REMOVAL branch (`SensorScan.cs`, the `else` after the detection block) is
+gated on the per-receiver `sensorAbl.CurrentContacts` dict, which `SensorTools.SetInstances` rebuilds EMPTY on any
+`ReCalcAbilities` — so a rebuilt receiver can never satisfy the removal condition and the contact never ages out.
+Net: while a contact exists, its blip renders the foreign ship's exact live position with no fog lag and no freeze.
+(Secondary, client-side: the homeworld's green detection RING is sized off one arbitrary reference ship
+`SystemMapRendering.cs:874`, so a ship can be genuinely detected while drawn outside the ring — a misleading readout.)
+
+**The GAUGE shipped first (Visibility Gate — the theories couldn't be told apart without it).** `SensorContact.
+PositionSourceLabel` (public, computed, never-serialized) reports `LIVE`/`LAGGED`/`FROZEN`; the client heartbeat's
+`SessionLog.DetectionSnapshot` logs a `[DETECT-CONTACT] 'name' src=… blipDistFromStar=…Gm fogLag=…km sig=…` line per
+held contact (capped at 6). `fogLag` = distance between the drawn blip and the real ship (0 = tracking live). So the next
+play-test *proves* the defect: if every contact reads `src=LIVE fogLag≈0`, the contact model tracks live (the bug); a
+healthy (fixed) game would show `LAGGED`/`FROZEN`.
+
+**The real FIX (planned, not yet built — it's a fog-of-war behaviour change to the sensor hot loop, wants an engine test
++ verification):** in `SensorScan`'s successful-detection branch, WRITE the scanned position into the contact's
+`SensorPositionDB` and set `GetDataFrom = Sensors` (a scan snapshot, lagged by the scan interval); on a missed redetect,
+flip to `Memory` so the blip FREEZES at last-known, and re-gate contact removal off the fragile per-receiver dict onto the
+faction-level `sensorMgr` so a ship that leaves reach ages out. Gauge for the fix: an engine test asserting a contact's
+`PositionSourceLabel` is not `LIVE` after a scan, and `FROZEN` after the target leaves reach. Do NOT chase the
+`AddIconable` fog-render hole — refuted above.
+
 ## Detection RANGE accessors (2026-06-27) — the reverse-solve, so "how far can I see" is a number
 
 The scan only ever asks "is this target's faded signal above threshold at its *current* distance?" (a yes/no, fresh every scan) — so no "how far can I see" number existed for the UI to draw. There's no `DetectionRange` field, and that's *correct*: range depends on how loud the **other** ship is (dark vs. hot), so it's a relationship, not a property. `SensorTools` now runs that same attenuation **backwards**:
