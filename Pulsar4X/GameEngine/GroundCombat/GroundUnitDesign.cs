@@ -81,6 +81,11 @@ namespace Pulsar4X.GroundCombat
         /// that punches flat armour, small arms chip and bounce. Snapshotted onto each raised unit's
         /// <see cref="GroundUnit.PerShotEnergy"/>. Moddable per design (the base-mod Armor unit's main gun is a big alpha).</summary>
         [JsonProperty] public double PerShotEnergy { get; set; }
+        /// <summary>STANDING UPKEEP in credits/month this unit costs its owning faction simply by EXISTING — the ground
+        /// echo of a station's operating cost, billed monthly by <see cref="GroundUpkeep"/>. 0 = free (byte-identical: no
+        /// existing design sets it). Snapshotted onto <see cref="GroundUnit.UpkeepCredits"/> at raise. Author it to scale
+        /// off the unit's pay + build cost so an elite unit is expensive to keep standing and a militia is cheap.</summary>
+        [JsonProperty] public double UpkeepCredits { get; set; }
         /// <summary>ENVIRONMENTAL GEAR (E4) — per-hazard protection this design's units carry, keyed by the shared
         /// <see cref="Pulsar4X.Hazards.HazardEffectType"/>. Value 0..1 = fraction of that hazard's attrition negated
         /// (a "heat-shielded" design has <c>{HeatDamage: 0.8}</c>). Snapshotted onto each raised <see cref="GroundUnit"/>.

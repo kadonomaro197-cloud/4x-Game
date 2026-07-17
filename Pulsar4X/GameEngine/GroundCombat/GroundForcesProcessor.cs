@@ -77,6 +77,11 @@ namespace Pulsar4X.GroundCombat
             //    unit's component store — units-as-entities). Real range → hexes → region bands. Idempotent + defensive.
             GroundSensors.RevealFromUnits(body);
 
+            // 0b) UPKEEP: bill each owning faction the standing cost of its ground units, once a month (the ground echo
+            //     of a station's operating cost). Folded here — NOT a second processor (L9). No-op for free (0-upkeep)
+            //     units, so byte-identical until a design sets UpkeepCredits. Never throws (guarded inside).
+            GroundUpkeep.BillIfDue(body, body.StarSysDateTime);
+
             // 1) MOVEMENT: advance in-transit units.
             //    (a) COARSE region march (5b): a whole-region hop, arrives when the region's crossing time has elapsed.
             //    (b) FINE hex march (H2): walk the stored A* path one hex at a time — each step costs the region's

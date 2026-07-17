@@ -53,6 +53,10 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public double MaxHealth { get; internal set; }
         /// <summary>Current health; a fresh unit starts full, combat whittles it, 0 = destroyed (slice 5c/5d).</summary>
         [JsonProperty] public double Health { get; internal set; }
+        /// <summary>Standing UPKEEP in credits/month this unit bills its owning faction just by EXISTING (snapshot of the
+        /// design's <see cref="GroundUnitDesign.UpkeepCredits"/>). 0 = free (byte-identical). Billed monthly by
+        /// <see cref="GroundUpkeep"/> from the ground tick — the ground echo of a station's operating cost.</summary>
+        [JsonProperty] public double UpkeepCredits { get; internal set; }
         /// <summary>AMMO pool (kg) — the mass of ammunition this unit carries, snapshot of the design's Σ magazine
         /// capacity (weapon-unification B). 0 = no ammo weapons / no magazine. The ground echo of a magazine on a ship.</summary>
         [JsonProperty] public double MaxAmmo_kg { get; internal set; }
@@ -183,6 +187,7 @@ namespace Pulsar4X.GroundCombat
             UnitId = o.UnitId; FormationId = o.FormationId;
             DesignId = o.DesignId; BackingEntityId = o.BackingEntityId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
             UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health; Range = o.Range;
+            UpkeepCredits = o.UpkeepCredits;
             MaxAmmo_kg = o.MaxAmmo_kg; CurrentAmmo_kg = o.CurrentAmmo_kg;
             Evasion = o.Evasion; Shield = o.Shield; CurrentShield = o.CurrentShield; ShieldRegenFraction = o.ShieldRegenFraction; DamageType = o.DamageType; Penetration = o.Penetration; PerShotEnergy = o.PerShotEnergy;
             ArmourVsKinetic = o.ArmourVsKinetic; ArmourVsEnergy = o.ArmourVsEnergy; ArmourVsExplosive = o.ArmourVsExplosive; ArmourVsExotic = o.ArmourVsExotic;
@@ -363,6 +368,11 @@ namespace Pulsar4X.GroundCombat
         /// <summary>Next stable <see cref="GroundFormation.FormationId"/> to hand out.</summary>
         [JsonProperty] public int NextFormationId { get; internal set; } = 1;
 
+        /// <summary>When ground-force UPKEEP was last billed on this body (save-safe). <see cref="GroundUpkeep.BillIfDue"/>
+        /// bills monthly from the ground tick and stamps this; the default (unset) initialises on first sight so a body
+        /// is never back-billed from year 1. MUST be copied in the clone ctor below or it resets on every save/load.</summary>
+        [JsonProperty] public DateTime LastUpkeepBilled { get; internal set; }
+
         /// <summary>RUNTIME-ONLY latch (not serialized, not cloned): was any region on this body in an active fight on
         /// the previous processor tick? The ground combat-interrupt (4b) uses it so the clock halts ONCE when a NEW
         /// planetary battle forms (the not-fighting → fighting transition), not every tick of an ongoing fight — the
@@ -378,6 +388,7 @@ namespace Pulsar4X.GroundCombat
             foreach (var f in other.Formations) Formations.Add(new GroundFormation(f));
             NextUnitId = other.NextUnitId;
             NextFormationId = other.NextFormationId;
+            LastUpkeepBilled = other.LastUpkeepBilled;
         }
 
         public override object Clone() => new GroundForcesDB(this);
@@ -422,6 +433,7 @@ namespace Pulsar4X.GroundCombat
                 DamageType = design.DamageType,
                 Penetration = design.Penetration,   // armour-crack (W1c) — 0 for a normal unit, high for an AP design
                 PerShotEnergy = design.PerShotEnergy,   // alpha-vs-chip (W2c) — 0 = single lump, big = one alpha shot
+                UpkeepCredits = design.UpkeepCredits,   // standing monthly upkeep — 0 = free (byte-identical)
                 // Armour NATURE tuning (⚙3): how well this unit's plating soaks each incoming nature. 1.0 = plain plate
                 // (every unit until a nature-tuned plating is fitted → resolver passes natureFactor 1.0 → byte-identical).
                 ArmourVsKinetic = design.ArmourVsKinetic,
