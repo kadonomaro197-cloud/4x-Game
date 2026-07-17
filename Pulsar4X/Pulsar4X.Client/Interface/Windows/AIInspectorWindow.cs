@@ -98,7 +98,11 @@ namespace Pulsar4X.Client
 
                     if (records != null && records.Length > 0)
                     {
-                        if (ImGui.BeginChild("###aitape" + faction.Id, new Vector2(0, 150), ImGuiChildFlags.Borders))
+                        // HorizontalScrollbar: each decision line is long (~300 chars — sensed | decided | acted, the
+                        // full [AI] line) and drawn UNWRAPPED via TextUnformatted, so without a horizontal scrollbar the
+                        // right half runs off the edge and is clipped/unreadable. The scrollbar lets you scroll right to
+                        // read the whole line — "see what the AIs are doing in their entirety" (the developer's ask).
+                        if (ImGui.BeginChild("###aitape" + faction.Id, new Vector2(0, 150), ImGuiChildFlags.Borders, ImGuiWindowFlags.HorizontalScrollbar))
                         {
                             foreach (var rec in records)
                                 ImGui.TextUnformatted(PlanReadout.DecisionLine(rec, name));
