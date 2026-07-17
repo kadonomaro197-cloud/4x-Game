@@ -209,8 +209,11 @@ namespace Pulsar4X.Factions
                     // through to BuildTransport / the garrison-rebuild rung / mass). Byte-identical where there's no
                     // garrison: WouldStripReserve is consulted only when a loadable unit exists, and a garrison-less world
                     // never reaches here (unit == null → the whole condition short-circuits false, exactly as before).
+                    // POSTURE: pass state.Faction so the garrison RESERVE is sized by this faction's commit-vs-reserve
+                    // posture (MilitaryCommand) — an aggressive faction ships a garrison unit off with a thinner home
+                    // reserve, a cautious one holds more back. Neutral/absent personality → unscaled reserve (byte-identical).
                     if (unit != null
-                        && !Pulsar4X.GroundCombat.GroundReinforcement.WouldStripReserve(shipBody, state.Info, state.FactionId))
+                        && !Pulsar4X.GroundCombat.GroundReinforcement.WouldStripReserve(shipBody, state.Info, state.FactionId, state.Faction))
                     {
                         var game = state.Game;
                         var t = transport;
@@ -413,6 +416,13 @@ namespace Pulsar4X.Factions
         /// <see cref="FactionState.OwnedFleets"/> the strike rung uses.</summary>
         private static bool ShouldStopMassing(FactionState state)
         {
+            // POSTURE (military-command layer, MilitaryCommand): scale the "counts as a deployable RESERVE fleet" bar by
+            // this faction's commit-vs-reserve posture — an aggressive/high-risk faction is content with a SMALLER
+            // reserve (stops massing sooner), a cautious one wants a bigger one (keeps massing). A neutral/absent
+            // personality → ×1.0 → the bar is comp.MinToDeploy exactly, so the ConquerResolver/FleetComposition byte-
+            // identity tests (whose factions carry no personality) stay green. The completeStrikeFleets bar (the
+            // Aspiration target) is UNSCALED — posture governs the reserve, not how big a finished strike fleet is.
+            double factor = MilitaryCommand.FleetReserveFactor(state.Faction);
             int completeStrikeFleets = 0;   // forming fleets at/above their aspiration target (a finished strike group)
             int deployableFleets = 0;       // forming fleets at/above the deploy core (a candidate strike OR reserve)
             foreach (var fleet in state.OwnedFleets())
@@ -421,7 +431,7 @@ namespace Pulsar4X.Factions
                 int armed = MilitaryComposition.WarshipCount(fleet);
                 int target = comp.Template.TargetCountFor(comp.Aspiration);
                 if (target > 0 && armed >= target) completeStrikeFleets++;
-                if (armed >= comp.MinToDeploy)      deployableFleets++;
+                if (armed >= MilitaryCommand.ScaleReserve(comp.MinToDeploy, factor)) deployableFleets++;
             }
             return completeStrikeFleets >= 1 && deployableFleets >= 2;   // a finished strike fleet + a reserve → sized, stop
         }
@@ -437,12 +447,17 @@ namespace Pulsar4X.Factions
         {
             if (strikeFleet == null || !strikeFleet.HasDataBlob<Pulsar4X.Fleets.FleetCompositionDB>())
                 return true;   // not an AI-organized fleet → the reserve doctrine doesn't gate it
+            // POSTURE (military-command layer, MilitaryCommand): scale the "how big must the home reserve fleet be" bar
+            // by this faction's commit-vs-reserve posture — an aggressive/high-risk faction is satisfied with a SMALLER
+            // reserve (so it commits its strike fleet more readily), a cautious one demands a bigger one (so it holds
+            // back more). Neutral/absent personality → ×1.0 → the bar is comp.MinToDeploy exactly (byte-identical).
+            double factor = MilitaryCommand.FleetReserveFactor(state.Faction);
             foreach (var fleet in state.OwnedFleets())
             {
                 if (fleet.Id == strikeFleet.Id) continue;
                 if (!fleet.TryGetDataBlob<Pulsar4X.Fleets.FleetCompositionDB>(out var comp)) continue;
                 if (FleetIsMoving(fleet)) continue;   // already committed elsewhere — not a home reserve
-                if (MilitaryComposition.WarshipCount(fleet) >= comp.MinToDeploy)
+                if (MilitaryComposition.WarshipCount(fleet) >= MilitaryCommand.ScaleReserve(comp.MinToDeploy, factor))
                     return true;   // a home reserve remains → the strike may sail
             }
             return false;   // no reserve → hold this fleet home (the AI keeps massing a reserve first)

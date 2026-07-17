@@ -50,13 +50,20 @@ namespace Pulsar4X.GroundCombat
         }
 
         /// <summary>The minimum home garrison a world keeps back as a RESERVE — a fraction of the target, floored at 1
-        /// whenever there is any target (a garrisoned world always keeps at least one defender). 0 for a null faction.</summary>
-        public static int GarrisonReserveFor(FactionInfoDB faction)
+        /// whenever there is any target (a garrisoned world always keeps at least one defender). 0 for a null faction.
+        /// <para>POSTURE (military-command layer): when a <paramref name="factionEntity"/> is supplied, the reserve is
+        /// scaled by that faction's commit-vs-reserve posture (<see cref="Factions.MilitaryCommand.GroundReserveFactor(Entity)"/>)
+        /// — an aggressive/high-risk faction keeps a SMALLER garrison reserve (ships more off on an invasion), a cautious
+        /// one keeps a BIGGER one. A null entity or a faction with no <c>PersonalityDB</c> → ×1.0 → the reserve is the
+        /// unscaled fraction exactly (byte-identical), so an unposture-aware caller behaves exactly as before.</para></summary>
+        public static int GarrisonReserveFor(FactionInfoDB faction, Entity factionEntity = null)
         {
             int target = GarrisonTargetFor(faction);
             if (target <= 0) return 0;
             int reserve = (int)Math.Ceiling(target * ReserveFraction);
-            return reserve < 1 ? 1 : reserve;
+            if (reserve < 1) reserve = 1;
+            return Pulsar4X.Factions.MilitaryCommand.ScaleReserve(
+                reserve, Pulsar4X.Factions.MilitaryCommand.GroundReserveFactor(factionEntity));
         }
 
         /// <summary>Count of <paramref name="factionId"/>'s ground units on a roster (0 for a null roster).</summary>
@@ -90,14 +97,17 @@ namespace Pulsar4X.GroundCombat
 
         /// <summary>TRUE when shipping ONE more unit off this roster (loading it for an invasion) would drop the
         /// garrison below the RESERVE floor — i.e. the world is already AT or UNDER its reserve. FALSE while a SURPLUS
-        /// above the reserve remains. The developer's "don't ship your whole defense off."</summary>
-        public static bool WouldStripReserve(GroundForcesDB forces, FactionInfoDB faction, int factionId)
-            => CurrentGarrison(forces, factionId) <= GarrisonReserveFor(faction);
+        /// above the reserve remains. The developer's "don't ship your whole defense off." The optional
+        /// <paramref name="factionEntity"/> lets the faction's posture size the reserve (see
+        /// <see cref="GarrisonReserveFor"/>); null → the unscaled reserve (byte-identical).</summary>
+        public static bool WouldStripReserve(GroundForcesDB forces, FactionInfoDB faction, int factionId, Entity factionEntity = null)
+            => CurrentGarrison(forces, factionId) <= GarrisonReserveFor(faction, factionEntity);
 
         /// <summary>TRUE when loading a unit off <paramref name="body"/> would breach the home reserve (a body with no
-        /// roster has nothing to ship → treated as "at reserve" = TRUE; the LOAD rung already finds no unit there).</summary>
-        public static bool WouldStripReserve(Entity body, FactionInfoDB faction, int factionId)
-            => CurrentGarrison(body, factionId) <= GarrisonReserveFor(faction);
+        /// roster has nothing to ship → treated as "at reserve" = TRUE; the LOAD rung already finds no unit there). The
+        /// optional <paramref name="factionEntity"/> lets the faction's posture size the reserve; null → byte-identical.</summary>
+        public static bool WouldStripReserve(Entity body, FactionInfoDB faction, int factionId, Entity factionEntity = null)
+            => CurrentGarrison(body, factionId) <= GarrisonReserveFor(faction, factionEntity);
 
         /// <summary>The planet BODY a colony sits on (its <see cref="ColonyInfoDB.PlanetEntity"/> — the
         /// <see cref="GroundForcesDB"/> host), or null.</summary>
