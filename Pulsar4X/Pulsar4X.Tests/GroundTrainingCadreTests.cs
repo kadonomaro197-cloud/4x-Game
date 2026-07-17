@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using Pulsar4X.Factions;
 using Pulsar4X.Components;
+using Pulsar4X.DataStructures;   // ComponentMountType lives here (Engine/DataStructures/Enums.cs)
 using Pulsar4X.GroundCombat;
 
 namespace Pulsar4X.Tests
