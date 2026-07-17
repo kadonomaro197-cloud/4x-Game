@@ -47,7 +47,36 @@
 
 **Detection resolution:** Quality 0 = "something is there", Quality 1 = "full identification." Intermediate quality = partial information.
 
-**Scan scheduling:** `SensorScan` reschedules itself: when it fires, it processes and then calls `ManagerSubpulses.AddEntityInterupt(now + scanTime, ...)`. So scan rate is determined by the sensor's `ScanTime` attribute.
+**Scan scheduling:** `SensorScan` reschedules itself: when it fires, it processes and then calls `ManagerSubpulses.AddEntityInterupt(now + scanTime, ...)` **exactly ONCE per invocation** (at the shortest `ScanTime` across the entity's receivers). So scan rate is determined by the sensor's `ScanTime` attribute. **⚠ The reschedule MUST stay OUTSIDE the per-receiver loop — see "The reschedule-in-loop freeze" below.**
+
+---
+
+## 🧨 The reschedule-in-loop freeze (FIXED 2026-07-17) — the worst kind of bug: it MULTIPLIES
+
+**What it looked like:** the developer's DevTest game froze — game-time crawled to a standstill while the SIM-STALL
+watchdog named `SensorScan` as the wedged processor and `SensorScan.ScanCount` exploded. No crash, no throw — the clock
+just stopped moving. The culprit-naming instrumentation (`AttributeScans` → per-entity `ScansByEntity`) pinned it exactly:
+one colony had been scanned **305,426 times** (≈ 2¹⁸) while every other entity in the game sat at ~50.
+
+**The mechanism — think of it like a photocopier copying its own output.** `SensorScan.ProcessEntity` loops over the
+entity's sensor **receivers** (`SensorAbilityDB.InstanceStates` — one entry per sensor *component* installed). The
+reschedule that queues the *next* scan was sitting **INSIDE that per-receiver loop**. So an entity with **K** receivers
+queued **K** fresh scan events every time it scanned. Next cycle, each of those K scans queues K more → K² → K³ …
+That's not a leak, it's **exponential growth with base K**. A colony with **2** sensor receivers doubled its pending
+scan count every cycle: 2, 4, 8, 16 … 2¹⁸ in eighteen cycles, and the instance queue drowned. (A 1-receiver entity has
+K=1, so 1×1×1… stays flat — which is why *most* entities looked fine and only the multi-sensor colony detonated. It also
+takes ~15+ game-hours of continuous play to blow up, which is why a short discrete-advance test never caught it.)
+
+**The fix (`SensorScan.cs`):** reschedule **exactly once per invocation**, *after* the receiver loop, at the shortest
+`ScanTime` across the entity's receivers, guarded on `InstanceStates.Count > 0`. The loop now only TRACKS the minimum
+interval; it no longer queues anything. K receivers → **1** reschedule, not K. Flat, not exponential. The grave-rung
+behavior is preserved: an entity whose receivers were all shot off (empty cache) reschedules nothing and goes dark.
+
+**Rule — a self-rescheduling instance processor must queue its own next run EXACTLY ONCE per invocation.** If the
+reschedule ever sits inside a per-component/per-anything loop, the pending-event count multiplies by the loop count
+every cycle. This is far nastier than an ordinary busy-loop (which grows *linearly*) — it grows *geometrically*, so it
+hides on small/short tests and only detonates in a long real game. Gauge: `SensorScanStormTests` (advances the DevTest
+scenario far enough that the old exponential would blow past a healthy per-entity bound).
 
 ---
 
@@ -189,7 +218,7 @@ draws a ring from it against the selected enemy contact is the local-build UI st
 The cradle-to-grave loss rung: shoot a ship's sensor receivers off and it stops detecting. **How it's wired:**
 - `SensorTools.SetInstances(entity)` rebuilds the ship's receiver cache (`SensorAbilityDB.InstanceStates`/`InstanceAtributes`) from its CURRENT components — and now **clears the cache when no receivers remain** (previously it only rebuilt when receivers were present, so a fully-disarmed ship kept a phantom sensor).
 - It's hooked to **`ReCalcProcessor.TypeProcessorMap[typeof(SensorAbilityDB)]`** (`Engine/Processors/RecalcProcessor.cs`), so every ability recalc rebuilds it. The **damage system calls `ReCalcProcessor.ReCalcAbilities(entity)` after destroying a component** (`DamageProcessor`), so losing your sensors empties the cache.
-- The scan loop in `SensorScan` iterates `InstanceStates`, and its **reschedule is inside that loop** — so an empty cache means the ship neither scans nor re-schedules: it goes dark.
+- The scan loop in `SensorScan` iterates `InstanceStates`, and its **reschedule is guarded on `InstanceStates.Count > 0`** (the reschedule sits just AFTER the loop, not inside it — see "The reschedule-in-loop freeze" below) — so an empty cache means the ship neither scans nor re-schedules: it goes dark.
 - **v1 limit (flagged):** the ship stops detecting NEW/refreshed contacts, but contacts it already put in the faction track table **persist until they age out** (no contact-expiry pass yet) — so a faction doesn't instantly forget. Contact aging is a separate follow-up.
 
 Gauge: `SensorDetectionTests.DestroyingSensor_BlindsTheShip_GraveRung` — a watcher detects (receivers > 0, contacts > 0); remove its `SensorReceiverAtb` components + `ReCalcAbilities` (the damage-path tail); assert the receiver cache is empty and the next scan detects nothing.

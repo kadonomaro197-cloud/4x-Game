@@ -70,6 +70,10 @@ namespace Pulsar4X.Sensors
             {
                 var detectableEntitys = manager.GetAllEntitiesWithDataBlob<SensorProfileDB>();
                 sensorAbility.CurrentContacts = new List<(Entity, SensorReturnValues)>();
+
+                // The entity reschedules its next scan ONCE per invocation (below, OUTSIDE this loop) at the SHORTEST
+                // scan interval across its receivers — tracked here as the loop runs.
+                int minScanSecs = int.MaxValue;
                 for(int i = 0; i < sensorAbility.InstanceStates.Count; i++)
                 {
                     var sensorAbl = sensorAbility.InstanceStates[i];
@@ -157,9 +161,10 @@ namespace Pulsar4X.Sensors
                         }
                     }
 
-                    // Reschedule the next scan, FLOORING the interval so a non-positive ScanTime can never reschedule at
-                    // the same game-instant and busy-loop the instance queue (the SensorScan freeze) — the same guard the
-                    // install-kick applies. A one-time warning names the offending design so it can be fixed at the data.
+                    // FLOOR the interval so a non-positive ScanTime can never reschedule at the same game-instant and
+                    // busy-loop the instance queue (the SensorScan freeze) — the same guard the install-kick applies.
+                    // A one-time warning names the offending design so it can be fixed at the data. We only TRACK the
+                    // shortest interval here; the actual reschedule happens ONCE, after the loop (see below).
                     int scanSecs = sensorAtb.ScanTime > 0 ? sensorAtb.ScanTime : DefaultScanSeconds;
                     if (sensorAtb.ScanTime <= 0 && !_zeroScanTimeWarned)
                     {
@@ -167,8 +172,18 @@ namespace Pulsar4X.Sensors
                         Console.WriteLine($"[SensorScan] WARNING: a sensor on entity {entity.Id} (faction {entity.FactionOwnerID}) "
                             + $"has ScanTime={sensorAtb.ScanTime} <= 0 — floored to {DefaultScanSeconds}s to avoid a same-instant reschedule busy-loop. Fix the sensor design's Scan Time.");
                     }
-                    manager.ManagerSubpulses.AddEntityInterupt(atDateTime + TimeSpan.FromSeconds(scanSecs), this.TypeName, entity);
+                    if (scanSecs < minScanSecs) minScanSecs = scanSecs;
                 }
+
+                // Reschedule the next scan EXACTLY ONCE per invocation — OUTSIDE the per-receiver loop above. THIS IS THE
+                // FIX for the SensorScan freeze: rescheduling INSIDE the loop made an entity with K sensor receivers queue
+                // K fresh scan events every time it scanned, so its pending scan-events multiplied by K each cycle — an
+                // EXPONENTIAL storm (a 2-receiver colony reached ~2^18 = 305,426 scans and froze the clock while every
+                // other entity sat at ~50). Now each entity re-queues EXACTLY ONE scan, at the shortest interval its
+                // sensors ask for. Guarded on Count > 0 so an entity whose receivers were all stripped/destroyed stops
+                // rescheduling (the grave rung — a blinded ship goes quiet instead of spinning a dead scan forever).
+                if (sensorAbility.InstanceStates.Count > 0)
+                    manager.ManagerSubpulses.AddEntityInterupt(atDateTime + TimeSpan.FromSeconds(minScanSecs), this.TypeName, entity);
             }
         }
     }
