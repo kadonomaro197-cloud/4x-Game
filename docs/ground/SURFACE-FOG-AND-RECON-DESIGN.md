@@ -118,6 +118,13 @@ no new buildables — the new part is the AI logic (pick the easy region, plant 
 3. **The recon component + reveal-on-move:** a ground-side recon `*Atb` (Sensors) the assembler mounts; as a unit
    carrying it enters a hex, `Reveal(faction, hex)` fires + **unmasks that hex's deposit assay**. Gauge: a scout walking
    a hex flips it from masked→assayed for that faction only.
+   **✅ BUILT (2026-07-17) — and it was mostly a CONNECT, not a build (Prime-Directive win):** the recon component +
+   reveal-on-move ALREADY EXISTED — `GroundSensorAtb` + the base-mod `ground-radar` component (designed/buildable/losable),
+   revealed every tick by `GroundSensors.RevealFromUnits` (hooked in `GroundForcesProcessor`; grave rung built-in). Slice 3
+   WIRED it into the per-faction fog: alongside the kept world-level reveal it now `RevealRegionFor(faction, region)` and
+   unmasks the deposit ASSAY (`RevealDepositAssay(mask)` → Full/exact) of deposit hexes in the region a scout STANDS in
+   (boots-on-the-deposit). Gauge: `GroundSensorsTests.RadarScout_RevealsPerFaction_AndUnmasksDepositAssay`. Refinement
+   (flagged): unmask is region-granular where the scout stands, not strictly per-walked-hex; per-hex-walked is a follow-up.
 4. **Hidden special sites:** sites exist on hexes but are invisible until a scout reveals them (the exploration payoff).
    Gauge: a site is unlisted for an un-scouted faction, listed after a scout reaches it.
 5. **Fog-limited enemy garrison read:** the landing-intel helper returns only what the faction has scouted (an
