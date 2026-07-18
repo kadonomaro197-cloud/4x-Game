@@ -354,6 +354,56 @@ namespace Pulsar4X.GroundCombat
     }
 
     /// <summary>
+    /// A CRATED PARTS drop on the surface — a save-safe <c>(designId, count)</c> record of built component parts landed
+    /// onto a body's region, waiting for a combat engineer (a chassis carrying a <see cref="GroundConstructorAtb"/>) to
+    /// assemble them into a footprint building ON SITE with no colony present (surface parts haulage, G1 — the beachhead
+    /// enabler). Stored EXACTLY the way a cargo hold stores a component — an <c>ICargoable</c> keyed by its design plus a
+    /// count — so the save carries no heavy <see cref="Pulsar4X.Components.ComponentInstance"/> parent-entity backref;
+    /// the design id resolves to a real <see cref="Pulsar4X.Components.ComponentDesign"/> only when the parts are
+    /// consumed. Lives in <see cref="GroundForcesDB.SurfaceParts"/>; managed by <see cref="GroundParts"/>.
+    /// </summary>
+    public class SurfacePart
+    {
+        /// <summary>The body region this crate landed in.</summary>
+        [JsonProperty] public int RegionIndex { get; internal set; }
+        /// <summary>The component DESIGN id of the crated part.</summary>
+        [JsonProperty] public string DesignId { get; internal set; }
+        /// <summary>How many units of that part are in the crate.</summary>
+        [JsonProperty] public int Count { get; internal set; }
+
+        public SurfacePart() { }
+        public SurfacePart(int regionIndex, string designId, int count)
+        { RegionIndex = regionIndex; DesignId = designId; Count = count; }
+        public SurfacePart(SurfacePart o)
+        { RegionIndex = o.RegionIndex; DesignId = o.DesignId; Count = o.Count; }
+    }
+
+    /// <summary>
+    /// An IN-PROGRESS colony-free ON-SITE BUILD — a combat engineer (a chassis carrying a <see cref="GroundConstructorAtb"/>)
+    /// assembling a footprint building on a held region out of landed <see cref="SurfacePart"/> crates (the beachhead, G1.2).
+    /// Save-safe (mirrors <see cref="SurfacePart"/>): the site accrues build-points across ground ticks and, when
+    /// <see cref="ProgressPoints"/> reaches <see cref="RequiredPoints"/>, one crate is consumed and the building is placed
+    /// (into the invader's beachhead outpost store + the region/hex war map). One site per (<see cref="RegionIndex"/>,
+    /// <see cref="DesignId"/>); managed entirely by <see cref="GroundBeachhead"/>. Empty until an engineer builds, so a body
+    /// with no active site is byte-identical.
+    /// </summary>
+    public class GroundBuildSite
+    {
+        /// <summary>The body region the building is rising in (must stay friendly-held + enemy-free to progress).</summary>
+        [JsonProperty] public int RegionIndex { get; internal set; }
+        /// <summary>The footprint building's component design id (drawn from the region's surface-parts crate).</summary>
+        [JsonProperty] public string DesignId { get; internal set; }
+        /// <summary>Build-points needed to erect the building (the design's <c>IndustryPointCosts</c>, floored).</summary>
+        [JsonProperty] public double RequiredPoints { get; internal set; }
+        /// <summary>Build-points laid down so far (Σ engineer BuildRate × elapsed days, accrued each tick).</summary>
+        [JsonProperty] public double ProgressPoints { get; internal set; }
+
+        public GroundBuildSite() { }
+        public GroundBuildSite(GroundBuildSite o)
+        { RegionIndex = o.RegionIndex; DesignId = o.DesignId; RequiredPoints = o.RequiredPoints; ProgressPoints = o.ProgressPoints; }
+    }
+
+    /// <summary>
     /// A planet's ground forces — the roster of <see cref="GroundUnit"/>s standing on its surface. Attached to the
     /// PLANET body entity (the parallel to <see cref="Pulsar4X.Galaxy.PlanetRegionsDB"/>: forces are OF the planet,
     /// so an unowned world can hold a defending garrison to fight over). Each unit knows its own region + owner, so
@@ -378,6 +428,25 @@ namespace Pulsar4X.GroundCombat
         /// is never back-billed from year 1. MUST be copied in the clone ctor below or it resets on every save/load.</summary>
         [JsonProperty] public DateTime LastUpkeepBilled { get; internal set; }
 
+        /// <summary>CRATED PARTS landed on this body's surface, per region — the raw material a combat engineer
+        /// (<see cref="GroundConstructorAtb"/>) assembles into a footprint building on site (surface parts haulage, G1).
+        /// Empty until parts are landed via <see cref="GroundParts"/>; NOTHING else in the engine reads or writes it, so a
+        /// body with no landed parts is byte-identical. MUST be deep-copied in the clone ctor below or a save/manager-move
+        /// drops the crates.</summary>
+        [JsonProperty] public List<SurfacePart> SurfaceParts { get; internal set; } = new List<SurfacePart>();
+
+        /// <summary>Ids of the per-faction BEACHHEAD OUTPOST host entities on this body (G1.2) — each a faction-owned
+        /// entity carrying a bare <see cref="Pulsar4X.Datablobs.ComponentInstancesDB"/> (the SAME proven-inert store a
+        /// ground unit's backing entity uses — <see cref="GroundUnitEntity"/>), so a combat engineer can HOST a footprint
+        /// building it builds with NO colony present. Managed by <see cref="GroundBeachhead"/>; empty until a beachhead is
+        /// built → byte-identical, and read/written only there. MUST be copied in the clone ctor below.</summary>
+        [JsonProperty] public List<int> OutpostEntityIds { get; internal set; } = new List<int>();
+
+        /// <summary>IN-PROGRESS on-site builds a combat engineer is assembling from landed <see cref="SurfaceParts"/>
+        /// (G1.2). Accrued + completed by <see cref="GroundBeachhead"/> inside the ground tick; empty by default and read/
+        /// written ONLY there, so a body with no active build is byte-identical. MUST be deep-copied in the clone ctor below.</summary>
+        [JsonProperty] public List<GroundBuildSite> BuildSites { get; internal set; } = new List<GroundBuildSite>();
+
         /// <summary>RUNTIME-ONLY latch (not serialized, not cloned): was any region on this body in an active fight on
         /// the previous processor tick? The ground combat-interrupt (4b) uses it so the clock halts ONCE when a NEW
         /// planetary battle forms (the not-fighting → fighting transition), not every tick of an ongoing fight — the
@@ -394,6 +463,11 @@ namespace Pulsar4X.GroundCombat
             NextUnitId = other.NextUnitId;
             NextFormationId = other.NextFormationId;
             LastUpkeepBilled = other.LastUpkeepBilled;
+            SurfaceParts = new List<SurfacePart>();
+            if (other.SurfaceParts != null) foreach (var p in other.SurfaceParts) SurfaceParts.Add(new SurfacePart(p));
+            OutpostEntityIds = other.OutpostEntityIds != null ? new List<int>(other.OutpostEntityIds) : new List<int>();
+            BuildSites = new List<GroundBuildSite>();
+            if (other.BuildSites != null) foreach (var b in other.BuildSites) BuildSites.Add(new GroundBuildSite(b));
         }
 
         public override object Clone() => new GroundForcesDB(this);

@@ -1053,6 +1053,14 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-ground-constructor",
+      "Name": "Combat Engineer Kit",
+      "TemplateId": "ground-constructor"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-valles-mine",
       "Name": "Valles Marineris Deep Mine",
       "TemplateId": "mine",

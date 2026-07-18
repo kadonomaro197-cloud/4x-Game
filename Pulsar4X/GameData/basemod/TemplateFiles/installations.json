@@ -3425,5 +3425,49 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "ground-constructor",
+      "Name": "Combat Engineer Kit",
+      "Formulas": {
+        "Description": "A combat-engineer construction kit you mount on a ground unit - earthmovers, cranes, prefab tooling. A unit carrying it can ASSEMBLE a footprint building (a bunker, a radar mast, a forward HQ) ON SITE from parts hauled down to the surface, on ground it holds, with NO colony present - the way you plant a beachhead on an enemy world. A faster build rate raises the structure quicker but costs more mass to carry. Build rate + cost curve are FLAGGED balance values.",
+        "Mass": "PropertyValue('BuildRate') * 2",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "0.5",
+        "CrewReq": "10",
+        "ResearchCost": "0",
+        "CreditCost": "[Mass] * 0.3",
+        "BuildPointCost": "[Mass] * 2"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.5",
+        "aluminium": "[Mass] * 0.3"
+      },
+      "ComponentType": "Construction",
+      "MountType": "GroundUnit",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "BuildRate",
+          "Units": "bp/day",
+          "DescriptionFormula": "'Build-points the combat engineer lays down per day when assembling a footprint building on site. Higher = faster (and heavier to carry). FLAGGED balance value.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "500",
+          "MinFormula": "10",
+          "StepFormula": "10",
+          "PropertyFormula": "100"
+        },
+        {
+          "Name": "groundConstructorArgs",
+          "DescriptionFormula": "'double buildRate'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('BuildRate'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundConstructorAtb"
+        }
+      ]
+    }
   }
 ]
