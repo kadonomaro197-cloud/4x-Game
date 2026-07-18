@@ -315,9 +315,16 @@ Sweep ALL docs/earthfall/LANE-*-NOTES.md pending rows into the real dashboards i
 // DISPATCH
 // ============================================================================
 
-const phaseKey = (args && args.phase) ? String(args.phase).toUpperCase() : null
+// args may arrive as an object {phase:"P0"}, a JSON string '{"phase":"P0"}', or a bare
+// string "P0" — depending on how the invoker passes it. Normalize all three.
+let _a = args
+if (typeof _a === 'string') {
+  const s = _a.trim()
+  try { _a = JSON.parse(s) } catch (e) { _a = { phase: s } }
+}
+const phaseKey = (_a && _a.phase) ? String(_a.phase).toUpperCase().trim() : null
 if (!phaseKey || !PHASES[phaseKey]) {
-  return { error: `Pass args.phase — one of: ${Object.keys(PHASES).join(', ')}. See docs/earthfall/CAMPAIGN-PLAN.md §3 for which lane/branch owns each phase.` }
+  return { error: `Pass args.phase — one of: ${Object.keys(PHASES).join(', ')}. See docs/earthfall/CAMPAIGN-PLAN.md §3 for which lane/branch owns each phase. (received args of type ${typeof args})` }
 }
 const ph = PHASES[phaseKey]
 
