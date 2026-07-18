@@ -125,5 +125,34 @@ namespace Pulsar4X.Factions
                     return true;
             return false;
         }
+
+        /// <summary>
+        /// P3.4 (Operation Earthfall, findings/A3 seam 5): is any of the faction's own colony worlds PHYSICALLY
+        /// invaded — its surface carrying a ground unit owned by ANOTHER (non-neutral) faction? This is the signal
+        /// that distinguishes a GENUINE external crisis (an enemy on home soil → recall the fleets and Defend) from a
+        /// transient INTERNAL wobble (a phantom rebellion / hostile-world morale trough, which leaves the surface free
+        /// of foreign boots). Consumed by <see cref="ObjectiveTransition.ShouldProtectInFlightConquest"/>. Read-only
+        /// scan of each colony's body <see cref="Pulsar4X.GroundCombat.GroundForcesDB"/>; defensive (a colony with no
+        /// body / no ground forces is skipped, so a garrison-less faction is always "not invaded"). A single foreign
+        /// unit anywhere on a home world → true.
+        /// </summary>
+        public static bool HomelandInvaded(Entity factionEntity)
+        {
+            if (factionEntity == null || !factionEntity.TryGetDataBlob<FactionInfoDB>(out var info))
+                return false;
+            foreach (var colony in info.Colonies)
+            {
+                if (colony == null || !colony.IsValid) continue;
+                if (!colony.TryGetDataBlob<ColonyInfoDB>(out var ci)) continue;
+                var body = ci.PlanetEntity;
+                if (body == null || !body.IsValid) continue;
+                if (!body.TryGetDataBlob<Pulsar4X.GroundCombat.GroundForcesDB>(out var forces)) continue;
+                foreach (var unit in forces.Units)
+                    if (unit != null && unit.FactionOwnerID != factionEntity.Id
+                        && unit.FactionOwnerID != Game.NeutralFactionId)
+                        return true;   // a foreign garrison stands on a home world
+            }
+            return false;
+        }
     }
 }

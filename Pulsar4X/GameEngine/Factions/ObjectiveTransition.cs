@@ -170,6 +170,47 @@ namespace Pulsar4X.Factions
             return t;
         }
 
+        /// <summary>
+        /// P3.4 (Operation Earthfall, findings/A3 §D commitment gap + seam 5 — "never orphan an invasion"): should a
+        /// committed <see cref="StrategicObjective.Conquer"/> SURVIVE a transient internal wobble instead of being
+        /// preempted to Defend? TRUE only for a WINNING invasion already in flight whose Survive read is purely
+        /// INTERNAL — every one of: (1) the faction is currently committed to Conquer, (2) it has a strike fleet EN
+        /// ROUTE (<paramref name="hasInFlightStrikeFleet"/>), (3) it is at war and militarily AHEAD
+        /// (<paramref name="atWarAndWinning"/>), (4) the ladder's downgrade is to the Survive floor
+        /// (<paramref name="proposedTier"/> == <see cref="NeedTier.Survive"/>), (5) that Survive is caused by an
+        /// INTERNAL shock (rebellion / morale / legitimacy collapse in <paramref name="currentTriggers"/>) and NOT by a
+        /// lost war (<see cref="CrisisTrigger.LosingWar"/> clear), and (6) the homeland is NOT physically invaded
+        /// (<paramref name="homelandInvaded"/> false). When true, <see cref="ShouldReplan"/> / <see cref="Advance"/>
+        /// suppress the "a more-urgent tier preempts the commitment" path, so the in-flight Conquer HOLDS through the
+        /// exact phantom-rebellion / hostile-world morale-trough shock A3 documented — instead of dropping the invasion
+        /// to Defend and leaving the strike fleet coasting at the enemy with no one driving it.
+        ///
+        /// A GENUINE, EXTERNAL crisis is deliberately NOT protected: a lost war (LosingWar set) or an invaded homeland
+        /// preempts as before, and the <see cref="DefendResolver"/> then RECALLS the in-flight fleets home. This is the
+        /// mirror of P3.3's break-glass — P3.3 lets a PASSED crisis RELEASE a Defend commit; this keeps a TRANSIENT
+        /// crisis from ever HIJACKING a winning Conquer commit. Pure predicate; the two entity reads (a fleet in transit
+        /// / an enemy on home soil) are gathered by the caller (<see cref="NPCDecisionProcessor.UpdateStrategicObjective"/>).
+        /// </summary>
+        public static bool ShouldProtectInFlightConquest(StrategicObjective committedObjective, NeedTier proposedTier,
+            bool atWarAndWinning, CrisisTrigger currentTriggers, bool homelandInvaded, bool hasInFlightStrikeFleet)
+        {
+            if (committedObjective != StrategicObjective.Conquer) return false;   // only an in-flight CONQUER is protected
+            if (!hasInFlightStrikeFleet) return false;                            // no invasion in flight → nothing to orphan
+            if (!atWarAndWinning) return false;                                   // only press a war we are WINNING
+            if (proposedTier != NeedTier.Survive) return false;                   // protect only against a Survive downgrade
+            if (homelandInvaded) return false;                                    // an enemy on home soil = genuine Defend
+            if ((currentTriggers & CrisisTrigger.LosingWar) != CrisisTrigger.None) return false;   // a lost war is not transient
+
+            // The Survive must be a purely INTERNAL shock (rebellion / morale / legitimacy collapse) — the phantom
+            // rebellion / hostile-world morale trough A3 root-caused. (Given atWarAndWinning, AssessTier can only reach
+            // Survive via one of these, so this is already implied by the guards above; kept explicit as the legible
+            // intent and a tripwire if the ladder's Survive predicates ever change.)
+            const CrisisTrigger internalShock = CrisisTrigger.Rebellion | CrisisTrigger.MoraleCollapse | CrisisTrigger.LegitimacyCollapse;
+            if ((currentTriggers & internalShock) == CrisisTrigger.None) return false;
+
+            return true;
+        }
+
         /// <summary>The subset of <see cref="CrisisTrigger"/> flags relevant to a crisis objective's own tier — a Defend
         /// commit is defined by the Survive-rung conditions, a Consolidate commit by the Stabilize-rung ones. Recording
         /// only the tier-relevant flags means a Defend commit releases (path b) once the faction climbs OUT of the
@@ -195,13 +236,18 @@ namespace Pulsar4X.Factions
         /// <paramref name="committedUntil"/> and the ladder now proposes <paramref name="proposedTier"/> at
         /// <paramref name="now"/>? Yes if the proposal is MORE urgent (a lower tier — an emergency preempts any
         /// commitment), OR a P3.3 crisis break-glass fires (<paramref name="triggerCleared"/> b / <paramref name="contradictionReleased"/> c),
-        /// OR the commitment has expired. No otherwise (hold the plan — the anti-thrash guard). Pure. The two crisis
-        /// signals default false, so every pre-P3.3 4-arg caller is byte-identical.
+        /// OR the commitment has expired. No otherwise (hold the plan — the anti-thrash guard). Pure. The crisis
+        /// signals + <paramref name="protectCommit"/> default false, so every pre-P3.3/P3.4 4-arg caller is byte-identical.
+        ///
+        /// P3.4: when <paramref name="protectCommit"/> is set (a WINNING in-flight Conquer facing a transient internal
+        /// Survive wobble — see <see cref="ShouldProtectInFlightConquest"/>), the "more-urgent tier preempts" path is
+        /// SUPPRESSED, so the invasion isn't orphaned. Expiry and the crisis break-glasses still apply, so a protected
+        /// commit still re-plans when its clock genuinely runs out — the protection only stops the transient hijack.
         /// </summary>
         public static bool ShouldReplan(NeedTier currentTier, DateTime committedUntil, NeedTier proposedTier, DateTime now,
-            bool triggerCleared = false, bool contradictionReleased = false)
+            bool triggerCleared = false, bool contradictionReleased = false, bool protectCommit = false)
         {
-            if (proposedTier < currentTier) return true;   // more urgent (Survive=0 < Thrive=2) → preempt now
+            if (proposedTier < currentTier && !protectCommit) return true;   // more urgent → preempt (unless the commit is protected)
             if (triggerCleared) return true;               // (b) the crisis condition that FORCED this commit has cleared
             if (contradictionReleased) return true;        // (c) N consecutive cycles proposed a HIGHER tier than committed
             return now >= committedUntil;                   // else only when the commitment has run out
@@ -217,10 +263,13 @@ namespace Pulsar4X.Factions
         /// record the crisis trigger for a fresh crisis commit, reset the contradiction counter, and return true
         /// (re-planned). Otherwise leave the objective otherwise untouched (the contradiction counter still ticks for a
         /// held crisis commit) and return false (held). A null blob is a safe no-op (false). <paramref name="currentTriggers"/>
-        /// defaults to <see cref="CrisisTrigger.None"/>, so a pre-P3.3 6-arg caller behaves exactly as before.
+        /// defaults to <see cref="CrisisTrigger.None"/> and <paramref name="protectCommit"/> to false, so a pre-P3.3/P3.4
+        /// 6-arg caller behaves exactly as before. <paramref name="protectCommit"/> (P3.4) forwards into
+        /// <see cref="ShouldReplan"/> to hold a winning in-flight Conquer through a transient internal wobble.
         /// </summary>
         public static bool Advance(StrategicObjectiveDB objective, NeedTier proposedTier, StrategicObjective proposedObjective,
-            int proposedTargetFactionId, DateTime now, TimeSpan commitFor, CrisisTrigger currentTriggers = CrisisTrigger.None)
+            int proposedTargetFactionId, DateTime now, TimeSpan commitFor, CrisisTrigger currentTriggers = CrisisTrigger.None,
+            bool protectCommit = false)
         {
             if (objective == null) return false;
 
@@ -247,7 +296,7 @@ namespace Pulsar4X.Factions
             bool triggerCleared = committedIsCrisis && objective.CommitTrigger != CrisisTrigger.None
                 && (objective.CommitTrigger & currentTriggers) == CrisisTrigger.None;
 
-            if (!ShouldReplan(objective.Tier, objective.CommittedUntil, proposedTier, now, triggerCleared, contradictionReleased))
+            if (!ShouldReplan(objective.Tier, objective.CommittedUntil, proposedTier, now, triggerCleared, contradictionReleased, protectCommit))
                 return false;
 
             objective.Tier = proposedTier;

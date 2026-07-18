@@ -565,3 +565,132 @@ state this slice cannot live without, and no sibling lane touches Factions sourc
 
 ### Cross-lane requests: NONE — every production edit was inside the CORE fence except `StrategicObjectiveDB.cs`
 (CORE-domain, owned by no other lane; see the parallel-safety note above).
+
+---
+
+## P3.4 — Operation continuity: never orphan an invasion (Operation Earthfall, findings A3 §D + seam 5)
+
+**The two guards (findings/A3-objective-flip.md §Commitment gap + Ranked fix seam 5):**
+(a) A WINNING in-flight Conquer must SURVIVE a transient internal wobble (the A3 phantom-rebellion / hostile-world
+morale trough) instead of being hijacked to Defend and leaving the strike fleet coasting at the enemy with no one
+driving it. (b) A GENUINE flip to Defend must actively RECALL in-flight offensive fleets home, not just re-posture.
+
+**Files changed (all inside the CORE fence):**
+- `Pulsar4X/GameEngine/Factions/ObjectiveTransition.cs` — NEW pure predicate `ShouldProtectInFlightConquest(committedObjective,
+  proposedTier, atWarAndWinning, currentTriggers, homelandInvaded, hasInFlightStrikeFleet)` (six gates: committed==Conquer ·
+  fleet in transit · at war & winning · proposal==Survive floor · NOT homeland-invaded · NOT LosingWar · the Survive is an
+  INTERNAL shock = Rebellion|MoraleCollapse|LegitimacyCollapse). `ShouldReplan` gained an optional `bool protectCommit = false`
+  (7th arg) that SUPPRESSES the `proposedTier < currentTier` preempt (`&& !protectCommit`) — expiry + the P3.3 break-glasses
+  still apply, so a protected commit still re-plans on genuine expiry. `Advance` gained an optional `bool protectCommit = false`
+  (8th arg) forwarded into `ShouldReplan`. Both new params default false → every pre-P3.4 4-arg `ShouldReplan` / 6-arg `Advance`
+  caller (incl. `ObjectiveTransitionTests`, `EfHysteresisBreakGlassTests`) is byte-identical.
+- `Pulsar4X/GameEngine/Factions/NeedsLadder.cs` — NEW `public static bool HomelandInvaded(Entity)` (the entity read for gate 5):
+  scans each colony's body `GroundCombat.GroundForcesDB` for a ground unit owned by another (non-neutral) faction → an enemy on
+  home soil. Read-only, defensive; co-located with the sibling `InRebellion` scan.
+- `Pulsar4X/GameEngine/Factions/ConquerResolver.cs` — NEW `internal static bool HasFleetInTransit(Entity)` (the entity read for
+  gate 2): any owned `Fleets.FleetDB` with a ship in warp transit (reuses the private `FleetIsMoving`, `WarpMovingDB`). Under a
+  committed Conquer that moving fleet is the invasion en route.
+- `Pulsar4X/GameEngine/Factions/NPCDecisionProcessor.cs` — `UpdateStrategicObjective` now computes `protectInFlightConquest`
+  (cheap tier/war gates short-circuit the two entity scans → they run ONLY in the narrow war-crisis case) and passes it to
+  `Advance`; the `DecisionReason` gains a "protecting in-flight conquest (winning war, transient internal crisis)" line for the
+  flight-recorder (observability, no behaviour change).
+- `Pulsar4X/GameEngine/Factions/DefendResolver.cs` — NEW **Rung 0 (RECALL)**, placed before Rung A (build) / Rung B (posture):
+  when a home colony exists, the first owned fleet that `IsOutbound` (a ship in warp transit toward a body NOT in the faction's
+  own-colony-body set) is recalled with `Movement.MoveToSystemBodyOrder.CreateCommand(factionId, fleet, homeBody)` (`Kind="RecallFleet"`).
+  Helpers `HomeBody` / `OwnColonyBodyIds` / `IsOutbound`. v1 same-system (MoveToSystemBodyOrder warps within a system); a fleet
+  already warping home / between our own worlds / on a target-less warp is skipped (no re-issue churn). Added `using System.Collections.Generic;`
+  + `using Pulsar4X.Engine;`.
+- NEW `Pulsar4X/Pulsar4X.Tests/EfOperationContinuityTests.cs` — the P3.4 gauge (unique fixture name; lands in the `rest` shard).
+
+**Verified against source (no SDK in container):** `MoveToSystemBodyOrder.CreateCommand(int factionId, Entity commandingEntity,
+Entity targetEntity)` signature + `.Target` getter; `WarpMovingDB.TargetEntity` (internal `Entity?` field, same-assembly / test-visible);
+`FleetCombat.Ships(Entity)` (public, recursive, cycle-safe); `GroundForcesDB.Units` (public getter) + `GroundUnit.FactionOwnerID`;
+`ColonyInfoDB.PlanetEntity`; `Game.NeutralFactionId` (-99); `FleetFactory.Create` attaches an `OrderableDB`; `TreeHierarchyDB.AddChild`
+(internal, test-visible); `NeedTier` (Survive=0 … Ambition=3); `PlannerAction` (public Kind/Detail/Execute); `OrderableProcessor`
+keeps a non-finished order in `ActionList` (a FlagShipID==-1 fleet's `MoveToSystemBodyOrder` early-returns → not finished → retained).
+
+**Tests added + what they assert (`EfOperationContinuityTests`, 8 tests, drive the pure decision + resolvers directly — no sim advance):**
+- `ShouldProtectInFlightConquest_EachGateBites` — all six gates met → protected; each gate individually flipped → NOT protected.
+- `ProtectedCommit_HoldsThroughTransientWobble_ButNotExpiry` — `ShouldReplan`: a Survive proposal preempts a higher-tier Conquer
+  WITHOUT protection, is HELD WITH it, and still re-plans on genuine expiry even protected.
+- `Advance_ProtectedConquerHolds_UnprotectedPreemptsToDefend` — a protected transient wobble HOLDS Conquer; the same wobble
+  unprotected preempts to Defend (the genuine-crisis / recall path).
+- `HomelandInvaded_TrueOnlyWithAForeignUnitOnAHomeWorld` — false with no foreign unit / own start garrison; true once a reds
+  `GroundUnit` is placed on the home world's `GroundForcesDB`.
+- `HasFleetInTransit_TrueOnlyWithAMovingOwnedFleet` — false for the parked start fleets; true once a fleet has a ship carrying `WarpMovingDB`.
+- `Defend_RecallsAnInFlightOffensiveFleet_ToHome` — a fleet warping at a non-home body → `DefendResolver` decides `RecallFleet`
+  (Detail names the home body), and `Execute` emits a `MoveToSystemBodyOrder` (`.Target == home`) onto the fleet's `OrderableDB.ActionList`.
+- `Defend_NoOutboundFleet_FallsToBuildOrPosture` — no in-flight fleet → `QueueWarship`/`SetDefensivePosture`, NOT `RecallFleet` (byte-identity tripwire).
+- `Defend_DoesNotRecall_AFleetAlreadyHeadingHome` — a fleet warping toward the HOME body is not recalled (the re-issue guard).
+
+**BYTE-IDENTITY CLAIM: (b) provably inert absent the specific in-flight-conquest configuration.**
+- Part (b) — DefendResolver recall — is **doubly inert**: it runs only inside the `EnableOrderEmission`-gated `EmitOrders` (a
+  **default-off flag**, so a default game never reaches it), AND it no-ops unless the faction has an OUTBOUND owned fleet + a home
+  colony. Existing `DefendResolverTests` (parked start fleets, no transit) → Rung 0 skipped → still `QueueWarship`/`SetDefensivePosture`.
+- Part (a) — the protection — rides the ALWAYS-ON objective settle (not flag-gated), so this is the honest **(b) inert-absent-data**
+  case (like P3.3's break-glass a): it only changes the settled objective when a faction is committed to Conquer AND at war and
+  winning AND reading a Survive-internal tier AND has a fleet in transit AND its homeland isn't invaded — a configuration no existing
+  test creates. `NPCObjectiveTickTests` (a healthy Thrive/GrowEconomy NPC) short-circuits at `objective.Objective == Conquer` → the
+  two entity scans never run. `NorthStarAcceptanceTests` pins GrowEconomy/AdvanceTech/Expand (no Conquer faction). `NPCActingSensorTests`
+  asserts "an order was emitted" — protection HOLDS Conquer (which emits conquest orders), so it can only help, never break, that gauge.
+  The new `ShouldReplan`/`Advance` params default false → every pre-P3.4 caller is byte-identical.
+
+**FLAGGED balance numbers:** NONE. P3.4 adds no new gameplay/tuning number — the protection is a pure gating decision over existing
+gauges + flags; the recall reuses the existing `MoveToSystemBodyOrder`. (The test-only `T0`/`InternalShock` are fixture constants.)
+
+**Developer decisions raised (reviewable defaults, per CAMPAIGN-PLAN §6 "recall-vs-press doctrine details"):**
+- **Protect scope:** protection fires only for a Conquer committed ABOVE the Survive floor (Ambition/Stabilize war-footing) — a
+  Conquer already committed AT Survive is held by plain hysteresis (equal tiers, no preempt) with no change needed. Reviewable.
+- **"Homeland invaded" definition:** ANY foreign (non-owned, non-neutral) ground unit on ANY of the faction's colony worlds counts
+  as invaded (a conservative "an enemy on home soil = genuine Defend"). Could be narrowed to at-war owners / a threshold of units.
+- **Recall target:** the faction's FIRST colony body is "home"; a fleet warping to ANY owned colony body is treated as friendly
+  (not recalled). v1 is same-system only (MoveToSystemBodyOrder warps within a system); a cross-system leg-by-leg recall is deferred
+  to the same multi-jump routing the Conquer strike defers.
+- **Recall breadth:** Rung 0 recalls ANY outbound owned fleet (not only the "strike" fleet); under a genuine Defend crisis pulling
+  every sortie home is the intended default. Reviewable if the developer wants only armed fleets recalled.
+
+**Parallel-safety note (subsystem CLAUDE.md + Tests/CLAUDE.md rows ROUTED here, NOT edited in the shared files):**
+`GameEngine/Factions/CLAUDE.md` and `Pulsar4X.Tests/CLAUDE.md` are high-collision targets (the P3 CORE siblings P3.1/P3.2/P3.3
+above all routed their Factions/CLAUDE.md rows here rather than editing mid-flight). Per CAMPAIGN-PLAN §2.4 the pending rows below
+land at P8.2. **`StrategicObjectiveDB.cs` is NOT touched by P3.4** (P3.3 added its fields; P3.4 only reads `.Objective`/`.Tier`).
+
+### Pending rows — `GameEngine/Factions/CLAUDE.md` (append to the existing file-map rows)
+- **`ObjectiveTransition.cs`** row — append: **"+ P3.4 (Operation Earthfall, findings A3 seam 5): `ShouldProtectInFlightConquest`
+  (pure) + an optional `protectCommit` on `ShouldReplan`/`Advance` that SUPPRESSES the `proposedTier<currentTier` preempt — so a
+  WINNING in-flight Conquer HOLDS through a transient internal Survive wobble (phantom rebellion / morale trough) instead of being
+  hijacked to Defend; expiry + the P3.3 break-glasses still apply. Defaults false → byte-identical. Gauge: `EfOperationContinuityTests`."**
+- **`NeedsLadder.cs`** (the `NeedsLadder.cs` row in the brain-layer table) — append: **"+ P3.4: `HomelandInvaded(Entity)` — a home
+  colony world carrying a foreign (non-owned, non-neutral) ground unit (the genuine-external-crisis signal the in-flight-conquest
+  protection reads)."**
+- **`ConquerResolver.cs`** (the `*Resolver.cs` row) — append: **"+ P3.4: `HasFleetInTransit(Entity)` — any owned fleet with a ship
+  in warp transit (the 'invasion en route' signal for the in-flight-conquest protection)."**
+- **`DefendResolver.cs`** (the `*Resolver.cs` row) — append: **"+ P3.4: NEW Rung 0 RECALL — a genuine flip to Defend recalls an
+  in-flight OFFENSIVE fleet home via `MoveToSystemBodyOrder` (`Kind=RecallFleet`) before building/posturing; skips a fleet already
+  heading home / between our own worlds. Byte-identical off (gated `EmitOrders`) and with no outbound fleet."**
+- **`NPCDecisionProcessor.cs`** row — append: **"+ P3.4: `UpdateStrategicObjective` protects a winning in-flight Conquer from a
+  transient internal Survive wobble via `ObjectiveTransition.ShouldProtectInFlightConquest` (cheap gates short-circuit the two
+  entity scans), passed as `protectCommit` to `Advance`; a genuine external crisis (lost war / invaded homeland) still preempts."**
+
+### Pending row — `Pulsar4X.Tests/CLAUDE.md` test inventory table
+| `EfOperationContinuityTests` | **P3.4 — operation continuity: never orphan an invasion (Operation Earthfall, findings A3 §D + seam 5).** Drives the pure decision + resolvers directly (no sim advance): (a) `ObjectiveTransition.ShouldProtectInFlightConquest` protects ONLY a winning in-flight Conquer facing a transient INTERNAL Survive wobble (each of six gates bites), and `protectCommit` suppresses `ShouldReplan`/`Advance`'s tier-preempt so the Conquer HOLDS (but still re-plans on genuine expiry); the two entity reads (`NeedsLadder.HomelandInvaded` — a foreign unit on a home world; `ConquerResolver.HasFleetInTransit` — an owned fleet in warp) each read true only in their real state; (b) `DefendResolver` recalls an in-flight offensive fleet home (`Kind=RecallFleet`, emits a `MoveToSystemBodyOrder` to the home body), no-ops with no outbound fleet, and skips a fleet already heading home. |
+
+### Pending row — `docs/TESTING-TRACKER.md` (Layer-1 engine CI)
+- **T-P3.4 `EfOperationContinuityTests`** · *what:* proves a winning in-flight Conquer survives a transient internal wobble (through
+  the transition engine's release logic) and a genuine Defend recalls in-flight offensive fleets home · *why:* A3 found the AI
+  abandoned its own invasion when a phantom rebellion flipped it to Defend, and NOTHING recalled the coasting strike fleet — the
+  invasion was orphaned · *method:* drive `ObjectiveTransition.ShouldProtectInFlightConquest`/`ShouldReplan`/`Advance` + the two
+  entity readers + `DefendResolver.Resolve`/`Execute` directly · *right-looks-like:* protected Conquer holds under a Survive wobble
+  but re-plans on expiry / a genuine crisis; DefendResolver emits `RecallFleet` → `MoveToSystemBodyOrder` to home · *likely-failure:*
+  a future edit re-couples the protection to the dead tier compare, or the recall guard stops distinguishing outbound from homebound
+  fleets · *mitigation:* this gauge + the byte-identity tripwires (`Defend_NoOutboundFleet_FallsToBuildOrPosture`, the default-false
+  params) · *unblocks:* the A3 objective-flip fix end-to-end — the AI presses a winning war through a domestic shock, and a real
+  crisis pulls its fleets home instead of stranding them.
+
+### Pending row — `docs/SYSTEM-CONNECTION-MAP.md`
+- `NPCDecisionProcessor.UpdateStrategicObjective` → `ObjectiveTransition.ShouldProtectInFlightConquest` (reads `NeedsLadder.HomelandInvaded`
+  + `ConquerResolver.HasFleetInTransit` + the P3.3 `CrisisTrigger`s) → `ObjectiveTransition.Advance`/`ShouldReplan` (`protectCommit`):
+  a winning in-flight Conquer no longer flips to Defend on a transient internal wobble.
+- `DefendResolver` (Rung 0) → `Movement.MoveToSystemBodyOrder` → the fleet's `OrderableDB`: a genuine Defend switch recalls in-flight
+  offensive fleets to the home colony body (reads `FactionState.OwnedFleets` + each fleet's `Movement.WarpMovingDB.TargetEntity`).
+
+### Cross-lane requests: NONE — every production edit was inside the CORE fence.

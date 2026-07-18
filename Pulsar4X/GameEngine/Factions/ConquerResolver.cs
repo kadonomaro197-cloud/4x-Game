@@ -585,6 +585,28 @@ namespace Pulsar4X.Factions
             return null;
         }
 
+        /// <summary>
+        /// P3.4 (Operation Earthfall, findings/A3 seam 5 — never orphan an invasion): does this faction have a fleet
+        /// EN ROUTE — any owned <see cref="Pulsar4X.Fleets.FleetDB"/> with a ship in warp transit (<see cref="FleetIsMoving"/>)?
+        /// Under a committed <see cref="StrategicObjective.Conquer"/> that moving fleet is the strike/invasion in flight,
+        /// so this is the "an invasion is under way" signal <see cref="ObjectiveTransition.ShouldProtectInFlightConquest"/>
+        /// reads to hold a winning Conquer through a transient internal wobble. Read-only scan of every system;
+        /// defensive/no-throw. Internal for the CI gauge.
+        /// </summary>
+        internal static bool HasFleetInTransit(Entity factionEntity)
+        {
+            var game = factionEntity?.Manager?.Game;
+            if (game == null) return false;
+            foreach (var system in game.Systems)
+            {
+                if (system == null) continue;
+                foreach (var fleet in system.GetAllEntitiesWithDataBlob<Pulsar4X.Fleets.FleetDB>())
+                    if (fleet != null && fleet.IsValid && fleet.FactionOwnerID == factionEntity.Id && FleetIsMoving(fleet))
+                        return true;
+            }
+            return false;
+        }
+
         /// <summary>True if any ship in the fleet is already in warp transit — so the strike rung doesn't re-issue the
         /// sail order every monthly cycle (which would thrash the fleet's warp). A cheap en-route guard; a fuller
         /// "already ordered to this target" check rides the later reach polish.</summary>

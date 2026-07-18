@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using Pulsar4X.Combat;
+using Pulsar4X.Engine;
 using Pulsar4X.Industry;
 using Pulsar4X.Ships;
 using Pulsar4X.Weapons;
@@ -14,7 +16,10 @@ namespace Pulsar4X.Factions
     /// exists), a multi-jump auto-router, fuel/charge-readiness (production ships spawn empty), fleet composition,
     /// and target selection — is the deferred P-3 military sub-subsystem (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md
     /// §Conquer/Defend). So v1 Defend BUILDS and POSTURES; it does not yet sail to the border — a deliberate
-    /// deferral, not a gap. Two rungs, nearest-unmet first:
+    /// deferral, not a gap. Three rungs, nearest-unmet first:
+    ///   Rung 0 — RECALL an in-flight OFFENSIVE fleet home (P3.4 — never orphan an invasion). When the faction flips
+    ///            to Defend (a genuine crisis), a fleet still sailing into foreign/enemy space is called back to the
+    ///            home colony body, so a committed invasion that Defend interrupted doesn't coast on unmanaged.
     ///   Rung A — BUILD a warship at a colony with a free ship-construction line (an armed <see cref="ShipDesign"/>,
     ///            the same queue lever GrowEconomy pulls, filtered to hulls that mount a weapon; the oracle's
     ///            ShipDesign crew/talent gate already applies).
@@ -33,6 +38,41 @@ namespace Pulsar4X.Factions
         public PlannerAction Resolve(FactionState state, StrategicObjectiveDB objective)
         {
             if (state == null) return PlannerAction.None;
+
+            // Rung 0 (P3.4, Operation Earthfall findings/A3 seam 5 — RECALL: never orphan a sortie on a genuine Defend
+            // switch). When the faction flips to Defend (a real crisis, not the transient wobble ObjectiveTransition
+            // already protects), any in-flight OFFENSIVE fleet still warping into foreign/enemy space is called HOME to
+            // defend. Issues the player's own MoveToSystemBodyOrder to the home colony body (the SAME fleet-move lever
+            // the Conquer strike uses outbound), so the recalled fleet warps back — instead of coasting toward an enemy
+            // world with no one driving the invasion. Placed FIRST (getting the guns home outranks building or
+            // re-posturing); one recall per cycle. Skips a fleet already heading home / between our own worlds
+            // (IsOutbound), so it isn't re-issued endlessly. v1 is same-system (MoveToSystemBodyOrder warps within a
+            // system — a cross-system fleet's leg-by-leg recall rides the same multi-jump routing the Conquer strike
+            // defers). No home colony (a station-only / colony-less faction) → nothing to recall to → skip. Byte-identical
+            // while emission is off (this whole resolver runs inside the gated EmitOrders) AND when no fleet is outbound.
+            var homeBody = HomeBody(state);
+            if (homeBody != null)
+            {
+                var ownBodyIds = OwnColonyBodyIds(state);
+                foreach (var fleet in state.OwnedFleets())
+                {
+                    if (fleet == null || !fleet.IsValid) continue;
+                    if (!IsOutbound(fleet, ownBodyIds)) continue;
+
+                    var game = state.Game;
+                    int factionId = state.FactionId;
+                    var f = fleet;
+                    var home = homeBody;
+                    return new PlannerAction(
+                        "RecallFleet",
+                        $"recall in-flight fleet {f.Id} home to body {home.Id} (Defend — don't orphan the sortie)",
+                        () =>
+                        {
+                            var cmd = Pulsar4X.Movement.MoveToSystemBodyOrder.CreateCommand(factionId, f, home);
+                            game.OrderHandler.HandleOrder(cmd);   // the ONE step (warp the fleet back home)
+                        });
+                }
+            }
 
             // Rung A — build defensive strength: queue an armed hull on a free ship-construction line.
             foreach (var colony in state.ColoniesWithFreeLine())
@@ -106,6 +146,54 @@ namespace Pulsar4X.Factions
                 if (lineKvp.Value.IndustryTypeRates.ContainsKey(industryTypeId) && lineKvp.Value.Jobs.Count == 0)
                     return lineKvp.Key;
             return null;
+        }
+
+        /// <summary>P3.4 — the faction's HOME colony body: the planet of its first valid colony (the recall destination).
+        /// Null for a colony-less / station-only faction (there's nowhere to recall to → the recall rung is skipped).</summary>
+        private static Entity HomeBody(FactionState state)
+        {
+            foreach (var colony in state.Info.Colonies)
+            {
+                if (colony == null || !colony.IsValid) continue;
+                if (colony.TryGetDataBlob<Pulsar4X.Colonies.ColonyInfoDB>(out var ci)
+                    && ci.PlanetEntity != null && ci.PlanetEntity.IsValid)
+                    return ci.PlanetEntity;
+            }
+            return null;
+        }
+
+        /// <summary>P3.4 — the entity ids of every body this faction holds a colony on. A fleet warping toward one of
+        /// these is heading into friendly space (not an outbound sortie), so the recall skips it — the guard that keeps
+        /// a fleet moving between our own worlds from being needlessly recalled.</summary>
+        private static HashSet<int> OwnColonyBodyIds(FactionState state)
+        {
+            var ids = new HashSet<int>();
+            foreach (var colony in state.Info.Colonies)
+            {
+                if (colony == null || !colony.IsValid) continue;
+                if (colony.TryGetDataBlob<Pulsar4X.Colonies.ColonyInfoDB>(out var ci)
+                    && ci.PlanetEntity != null && ci.PlanetEntity.IsValid)
+                    ids.Add(ci.PlanetEntity.Id);
+            }
+            return ids;
+        }
+
+        /// <summary>P3.4 — is <paramref name="fleet"/> an OUTBOUND sortie worth recalling: does any ship in it hold a
+        /// <see cref="Pulsar4X.Movement.WarpMovingDB"/> whose warp target is a body NOT in <paramref name="ownBodyIds"/>
+        /// (i.e. warping into foreign/enemy space)? A fleet that isn't moving, is warping home / between our own worlds,
+        /// or is on a target-less direct-position warp is NOT outbound (returns false) — so the recall isn't re-issued
+        /// once the fleet's warp target has flipped to a home body. Read-only; uses the recursive fleet-ship walk.</summary>
+        private static bool IsOutbound(Entity fleet, HashSet<int> ownBodyIds)
+        {
+            foreach (var ship in FleetCombat.Ships(fleet))
+            {
+                if (ship == null || !ship.IsValid) continue;
+                if (!ship.TryGetDataBlob<Pulsar4X.Movement.WarpMovingDB>(out var warp)) continue;
+                var target = warp.TargetEntity;
+                if (target != null && target.IsValid && !ownBodyIds.Contains(target.Id))
+                    return true;   // a ship warping toward foreign/enemy space → recall the fleet
+            }
+            return false;
         }
     }
 }
