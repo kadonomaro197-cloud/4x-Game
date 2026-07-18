@@ -8,7 +8,7 @@ namespace Pulsar4X.Factions
     /// <summary>
     /// ONE entry in an NPC's decision tape — the fog-limited picture it acted on (SENSED), the objective it settled
     /// and why (DECIDED), and the step its planner named (ACTED), stamped with the game time it happened. A plain
-    /// serialisable value the recorder appends each monthly Tick; the readout renders it as an <c>[AI]</c> line.
+    /// serialisable value the recorder appends each daily Tick; the readout renders it as an <c>[AI]</c> line.
     /// </summary>
     public class AIDecisionRecord
     {
@@ -34,6 +34,10 @@ namespace Pulsar4X.Factions
         [JsonProperty] public double Legitimacy { get; set; }
         [JsonProperty] public double Balance { get; set; }
         [JsonProperty] public int ColonyCount { get; set; }
+        // Station hosts owned alongside colonies. Recorded separately so a station-only faction (the Kithrin outpost)
+        // no longer tapes "colonies 0" while owning Titan — ColonyCount counts FactionInfoDB.Colonies only. Save-safe:
+        // an appended [JsonProperty], so an older save with no value deserialises it to 0 (Newtonsoft matches by name).
+        [JsonProperty] public int StationCount { get; set; }
         [JsonProperty] public int Contacts { get; set; }
 
         public AIDecisionRecord() { }
@@ -44,7 +48,7 @@ namespace Pulsar4X.Factions
             ActionKind = o.ActionKind; ActionDetail = o.ActionDetail;
             OwnStrength = o.OwnStrength; ThreatFactionId = o.ThreatFactionId; ThreatStrength = o.ThreatStrength;
             Morale = o.Morale; Legitimacy = o.Legitimacy; Balance = o.Balance;
-            ColonyCount = o.ColonyCount; Contacts = o.Contacts;
+            ColonyCount = o.ColonyCount; StationCount = o.StationCount; Contacts = o.Contacts;
         }
     }
 
@@ -61,7 +65,7 @@ namespace Pulsar4X.Factions
     /// </summary>
     public class AIDecisionRecordDB : BaseDataBlob
     {
-        /// <summary>Max entries kept — ~5 game-years of monthly decisions, plenty for review; oldest trims off.</summary>
+        /// <summary>Max entries kept — ~2 game-months of daily decisions, plenty for recent review; oldest trims off.</summary>
         public const int Capacity = 60;
 
         [JsonProperty] public List<AIDecisionRecord> Records { get; internal set; } = new();
