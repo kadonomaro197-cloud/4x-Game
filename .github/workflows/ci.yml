@@ -25,6 +25,11 @@ name: CI
 #   • economy         — ScenarioHarnessTests + ProductionBuildTests + MoraleTests
 #   • economy-readout — EconomyReadoutTests alone (a single ~7.5-min game-year sim; its own shard
 #                       so it can't push the "rest" shard past the stations bottleneck)
+#   • campaign-clock  — CampaignClockReadoutTests alone (a ~10-min multithreaded transit sim; own
+#                       shard for the same reason — added 2026-07-18, Operation Earthfall P0)
+#   • selfsufficiency — FactionSelfSufficiencyReadoutTests alone (a ~12-min 120-day 3-faction sim;
+#                       own shard — added 2026-07-18, Operation Earthfall P0. These two DevTest sims
+#                       fell into "rest" and doubled it to ~28 min; isolating restores ~12-min turnaround)
 #   • rest            — EVERYTHING ELSE (the complement filter, so a NEW fixture lands here by default)
 # A red on ANY shard reds the run. Each shard publishes its own per-test report + artifact.
 # NOTE: the deeper win (cache the parsed mod data so CreateWithColony stops re-parsing every
@@ -56,8 +61,12 @@ jobs:
             filter: "FullyQualifiedName~ScenarioHarnessTests|FullyQualifiedName~ProductionBuildTests|FullyQualifiedName~MoraleTests"
           - name: economy-readout
             filter: "FullyQualifiedName~EconomyReadoutTests"
+          - name: campaign-clock
+            filter: "FullyQualifiedName~CampaignClockReadoutTests"
+          - name: selfsufficiency
+            filter: "FullyQualifiedName~FactionSelfSufficiencyReadoutTests"
           - name: rest
-            filter: "FullyQualifiedName!~StationFactoryTests&FullyQualifiedName!~ScenarioHarnessTests&FullyQualifiedName!~ProductionBuildTests&FullyQualifiedName!~MoraleTests&FullyQualifiedName!~EconomyReadoutTests"
+            filter: "FullyQualifiedName!~StationFactoryTests&FullyQualifiedName!~ScenarioHarnessTests&FullyQualifiedName!~ProductionBuildTests&FullyQualifiedName!~MoraleTests&FullyQualifiedName!~EconomyReadoutTests&FullyQualifiedName!~CampaignClockReadoutTests&FullyQualifiedName!~FactionSelfSufficiencyReadoutTests"
     permissions:
       contents: read
       checks: write          # lets the test-reporter publish the per-test results table
