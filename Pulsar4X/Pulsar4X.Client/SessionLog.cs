@@ -57,7 +57,11 @@ namespace Pulsar4X.Client
         // every frame; if that stamp goes stale by more than HangThresholdMs, the main loop is hung and we write a
         // [HANG] line ONCE (it re-arms if the loop recovers). The lines just ABOVE the [HANG] are where it wedged.
         static volatile int _lastFrameTick;
-        public static int HangThresholdMs = 5000;   // a single "frame" this long = frozen, not just a slow tick
+        // A single "frame" this long = frozen, not just a slow tick. Lowered 5000 → 3500 (Earthfall C1.1): the only
+        // slow frame ever observed in a real session was ~2100 ms (startup UI, findings/A1-freeze.md), so 3500 keeps a
+        // comfortable margin above a legitimately heavy frame while naming a freeze ~1.5 s sooner. NOT a gameplay
+        // number — a diagnostic threshold; the ~3 s heartbeat writes its own STATE lines independently of this.
+        public static int HangThresholdMs = 3500;
 
         /// <summary>The render/update stage currently executing — set by PulsarMainWindow.SafeRender (and around the
         /// state update) so the hang watchdog can NAME the wedged stage instead of leaving us to guess from the lines

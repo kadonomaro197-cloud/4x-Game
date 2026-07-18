@@ -688,19 +688,29 @@ namespace Pulsar4X.Client.Rendering
             }
         }
 
+        // Per-LIST render-stage breadcrumb inside the map draw (findings/A1-freeze.md fix seam #1). The outer
+        // SafeRender names only the coarse "GalacticMap.Draw" stage, but the A1 freeze lives INSIDE it — a native
+        // SDL.RenderLine hang on ONE icon list (the contact blips) leaves no stack trace, so "GalacticMap.Draw" alone
+        // can't say WHICH list wedged. Stamping the sub-stage before each list means the next [HANG] reads
+        // "wedged in stage: 'GalacticMap.Draw/contacts'" — the finer gauge that localises the freeze (the same move
+        // as the FleetWindow sub-breadcrumbs, Client/CLAUDE.md 2026-07-03). Cheap: a handful of volatile string writes
+        // per frame, one alongside each per-list perf timer.
+        static void MapStage(string name) => SessionLog.CurrentStage = "GalacticMap.Draw/" + name;
+
         internal void Draw()
         {
-            SafeDraw("Starfield", DrawStarfield);   // faint background stars, behind everything
+            MapStage("starfield"); SafeDraw("Starfield", DrawStarfield);   // faint background stars, behind everything
 
             // [PERF] time each list's SDL draw (orbits draw ~180 lines/ring/frame — the prime suspect).
-            _perfSw.Restart(); DrawIcons(UIWidgets.Values); _perfDWidgets = _perfSw.Elapsed.TotalMilliseconds;
-            _perfSw.Restart(); DrawIconsExceptCollapsed(_orbitRings); _perfDOrbits = _perfSw.Elapsed.TotalMilliseconds;   // a collapsed member's orbit ring is hidden too...
-            _perfSw.Restart(); DrawIconsExceptCollapsed(_moveIcons); _perfDMove = _perfSw.Elapsed.TotalMilliseconds;      // ...and its move/warp trail...
-            _perfSw.Restart(); DrawIconsExceptCollapsed(_entityIcons); _perfDEntity = _perfSw.Elapsed.TotalMilliseconds;  // ...and its ship icon — so the fleet is ONE marker.
-            _perfSw.Restart(); DrawIcons(_contactIcons.Values); _perfDContacts = _perfSw.Elapsed.TotalMilliseconds;
-            _perfSw.Restart(); DrawIcons(_bodyIcons.Values); _perfDBody = _perfSw.Elapsed.TotalMilliseconds;
-            _perfSw.Restart(); DrawIcons(SelectedEntityExtras); _perfDExtras = _perfSw.Elapsed.TotalMilliseconds;
+            MapStage("widgets");  _perfSw.Restart(); DrawIcons(UIWidgets.Values); _perfDWidgets = _perfSw.Elapsed.TotalMilliseconds;
+            MapStage("orbits");   _perfSw.Restart(); DrawIconsExceptCollapsed(_orbitRings); _perfDOrbits = _perfSw.Elapsed.TotalMilliseconds;   // a collapsed member's orbit ring is hidden too...
+            MapStage("moves");    _perfSw.Restart(); DrawIconsExceptCollapsed(_moveIcons); _perfDMove = _perfSw.Elapsed.TotalMilliseconds;      // ...and its move/warp trail...
+            MapStage("ships");    _perfSw.Restart(); DrawIconsExceptCollapsed(_entityIcons); _perfDEntity = _perfSw.Elapsed.TotalMilliseconds;  // ...and its ship icon — so the fleet is ONE marker.
+            MapStage("contacts"); _perfSw.Restart(); DrawIcons(_contactIcons.Values); _perfDContacts = _perfSw.Elapsed.TotalMilliseconds;      // fog blips — the A1 freeze suspect (H1)
+            MapStage("bodies");   _perfSw.Restart(); DrawIcons(_bodyIcons.Values); _perfDBody = _perfSw.Elapsed.TotalMilliseconds;
+            MapStage("extras");   _perfSw.Restart(); DrawIcons(SelectedEntityExtras); _perfDExtras = _perfSw.Elapsed.TotalMilliseconds;
 
+            MapStage("labels");
             _perfSw.Restart();
             foreach (var i in _visibleLabels)
             {
@@ -709,6 +719,7 @@ namespace Pulsar4X.Client.Rendering
             }
             _perfDLabels = _perfSw.Elapsed.TotalMilliseconds;
 
+            MapStage("done");   // leave a benign stage so a hang right after the map (before the next SafeRender) isn't mis-named as 'labels'
             MaybeLogMapPerf();
         }
 

@@ -28,6 +28,23 @@ namespace Pulsar4X.Client
         SDL.Color _color;
         string _drawnText;   // the string currently baked into _nameTexture (recreate only when it changes)
 
+        // On-screen / finite-coordinate CULL — mirrors OrbitEllipseIcon + SimpleCircle (root CLAUDE.md gotcha #15,
+        // findings/A1-freeze.md H1, the freeze the developer hit). A contact's last-known position can go DEGENERATE:
+        // a NaN/infinite AbsolutePosition when a track's anchor is lost, or a fogLag drift (the A1 on-ramp — the log
+        // showed fogLag jump to ~25,000 km right before the stop) that parks the blip astronomically off-screen. The
+        // base Icon.Draw CLAMPS such a coordinate to int.Min/MaxValue instead of THROWING, so SystemMapRendering's
+        // SafeDraw try/catch never fires — and SDL.RenderLine then chokes rasterising a line whose endpoint is
+        // astronomically off-screen, frame time climbs, and the client FREEZES (a native hang, no exception, and
+        // CI-invisible by construction). So the fix is to stop the bad coordinate BEFORE it reaches SDL: if the blip's
+        // world or on-screen position is non-finite, or its screen coordinate is far past a sane pixel bound, set
+        // _offScreenSkip and skip both the transform and the draw. Recomputed every frame, so a contact whose position
+        // becomes valid again (or scrolls back on-screen) redraws next frame — a per-frame "worth drawing right now?"
+        // decision, not a permanent removal. A NORMAL, on-screen, finite blip takes the unchanged base path.
+        bool _offScreenSkip;
+        // A blip's diamond is ~9 px; any screen coordinate more than this far off-screen is pure clutter AND the SDL
+        // rasteriser choke. Comfortably past any real viewport, well within int range (matches SimpleCircle.MaxSafeCoordPx).
+        const double _maxBlipScreenCoordPx = 1_000_000.0;
+
         public SensorContactIcon(SensorContact contact, bool hostile) : base(contact.Position)
         {
             _contact = contact;
@@ -62,15 +79,28 @@ namespace Pulsar4X.Client
 
         public override void OnFrameUpdate(Matrix matrix, Camera camera)
         {
-            // A stale contact can lose its position parent, so AbsolutePosition (read by the base) can throw NaN/
-            // null. The Draw side is SafeDraw-wrapped, but this update loop is NOT — guard it so one bad contact
-            // can't abort the whole frame's icon updates.
+            _offScreenSkip = false;
+            // A stale contact can lose its position parent, so AbsolutePosition (read below and by the base) can throw
+            // OR return NaN/infinite. The Draw side is SafeDraw-wrapped (catches THROWS), but a THROW isn't the freeze
+            // — the freeze is SDL choking on a clamped-but-extreme coordinate that never throws (see the field comment).
+            // So cull the degenerate/off-screen case HERE, before the base transform hands it to the draw. Wrap the
+            // whole read: a bad contact just skips this frame's draw instead of aborting every icon's update.
             try
             {
+                var world = WorldPosition_m;
+                var screen = camera.ViewCoordinateV2_m(world);
+                if (!double.IsFinite(world.X) || !double.IsFinite(world.Y) || !double.IsFinite(world.Z)
+                    || !double.IsFinite(screen.X) || !double.IsFinite(screen.Y)
+                    || Math.Abs(screen.X) > _maxBlipScreenCoordPx || Math.Abs(screen.Y) > _maxBlipScreenCoordPx)
+                {
+                    _offScreenSkip = true;
+                    return;
+                }
                 base.OnFrameUpdate(matrix, camera);   // builds the glyph shapes + sets ViewScreenPos
             }
             catch
             {
+                _offScreenSkip = true;
                 return;
             }
             // Park the name just lower-right of the blip (a unit-style label, minus the leader line).
@@ -80,6 +110,8 @@ namespace Pulsar4X.Client
 
         public override void Draw(IntPtr rendererPtr, Camera camera)
         {
+            if (_offScreenSkip) return;   // degenerate/off-screen this frame — culled in OnFrameUpdate so no extreme
+                                          // coordinate reaches SDL.RenderLine (the native-hang guard, gotcha #15).
             base.Draw(rendererPtr, camera);           // the diamond
 
             // The name is the "what you know": shown plainly when tracked, "(last known)" when it's a memory
