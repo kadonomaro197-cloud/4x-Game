@@ -389,8 +389,10 @@ namespace Pulsar4X.Engine
             // Check if there are datablobs of the specified type
             if (_datablobStores.TryGetValue(blobType, out var blobStore))
             {
-                // Convert the SafeDictionary values to a list of the desired type
-                return blobStore.Values.Cast<T>().ToList();
+                // Convert the SafeDictionary values to a list of the desired type.
+                // ValuesSnapshot (a copy taken under the lock) — enumerating the live .Values view races the parallel
+                // sim threads mutating the store and throws "collection was modified".
+                return blobStore.ValuesSnapshot.Cast<T>().ToList();
             }
 
             return new List<T>();  // Return an empty list if no datablobs of the specified type exist
@@ -513,7 +515,9 @@ namespace Pulsar4X.Engine
         /// <returns></returns>
         public List<Entity> GetAllEntites()
         {
-            return new List<Entity>(_entities.Values);
+            // ValuesSnapshot is already a fresh list copied under the lock — safe to hand out, and safe against a
+            // concurrent mutation that would make enumerating the live .Values view throw.
+            return _entities.ValuesSnapshot;
         }
 
         /// <summary>
@@ -554,7 +558,9 @@ namespace Pulsar4X.Engine
             var type = typeof(T);
             if(_datablobStores.TryGetValue(type, out var blobStore))
             {
-                return _entities.Values.Where(e => blobStore.ContainsKey(e.Id)).ToList();
+                // ValuesSnapshot (copy under the lock) — this query runs on the parallel sim threads ~720x/game-hour
+                // per system; enumerating the live .Values view races a concurrent Add/Remove and throws.
+                return _entities.ValuesSnapshot.Where(e => blobStore.ContainsKey(e.Id)).ToList();
             }
 
             return new List<Entity>();
@@ -590,7 +596,8 @@ namespace Pulsar4X.Engine
         {
             var matchingEntities = new List<Entity>();
 
-            foreach (var entity in _entities.Values)
+            // ValuesSnapshot (copy under the lock) — enumerating the live .Values view races the parallel sim threads.
+            foreach (var entity in _entities.ValuesSnapshot)
             {
                 bool hasAllBlobs = true;
 
@@ -632,7 +639,9 @@ namespace Pulsar4X.Engine
         public Entity GetFirstEntityWithDataBlob<T>() where T : BaseDataBlob
         {
             var type = typeof(T);
-            return _entities[_datablobStores[type].Keys.First()];
+            // KeysSnapshot (copy under the lock) — .First() on the live .Keys view advances an enumerator that a
+            // concurrent mutation can invalidate mid-call.
+            return _entities[_datablobStores[type].KeysSnapshot.First()];
         }
 
         public SystemSensorContacts GetSensorContacts(int factionId)
@@ -755,9 +764,10 @@ namespace Pulsar4X.Engine
 
         public List<Entity> GetFilteredEntities(EntityFilter entityFilter, int factionId, List<Type>? datablobFilter = null, FilterLogic filterLogic = FilterLogic.And, FilterEntities? filter = null)
         {
-            if(factionId == Game.GameMasterFaction.Id) return _entities.Values.ToList();
+            // ValuesSnapshot (copy under the lock) — enumerating the live .Values view races the parallel sim threads.
+            if(factionId == Game.GameMasterFaction.Id) return _entities.ValuesSnapshot;
 
-            return _entities.Values.Where(entity =>
+            return _entities.ValuesSnapshot.Where(entity =>
                 ((entityFilter.HasFlag(EntityFilter.Friendly) && entity.FactionOwnerID == factionId) ||
                 (entityFilter.HasFlag(EntityFilter.Neutral) && entity.FactionOwnerID == Game.NeutralFactionId && EvaluateNeutralEntity(entity, factionId)) ||
                 (entityFilter.HasFlag(EntityFilter.Hostile) && entity.FactionOwnerID != factionId && entity.FactionOwnerID != Game.NeutralFactionId && EvaluateSensorContact(entity, factionId))) &&
