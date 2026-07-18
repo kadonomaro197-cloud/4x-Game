@@ -72,6 +72,79 @@ invokes `GroupPlane`; no flag, no data path, no existing type touched. It cannot
 every current green test is byte-for-byte unaffected. (No FLAGGED balance numbers: the only literals are float
 epsilons — `Epsilon = 1e-9` and a `1e-6` relative tie tolerance — numerical, not gameplay.)
 
+### Pending DOCS-INDEX.md status flip (P8.2 lands it — do NOT edit DOCS-INDEX mid-flight)
+- `docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md` build-state: was "not started (S0 is the first slice)"; now
+  **S0 built (pure `GroupPlane.cs` + `GroupPlaneTests`, no caller); S1+ pending**. (Header line 3 of that doc also
+  reads "Build state: not started (S0 is the first slice)" — a future in-fence slice or P8.2 can refresh it; that doc
+  is design source, not in this lane's edit fence, so leaving the flip as a pending note here.)
+
+---
+
+## T2.1 — S1 anchors in space (`FleetCombatStateDB` + 2D closing) behind `EnableGroupPlane` — DONE in working tree
+
+**Changed:** `GameEngine/Combat/FleetCombatStateDB.cs` (new plane fields + Clone), `GameEngine/Combat/CombatEngagement.cs`
+(new `EnableGroupPlane` flag + seeding + 2D anchor movement, all flag-gated). **Created:**
+`Pulsar4X.Tests/EfGroupPlaneAnchorTests.cs` (lane-distinct fixture; lands in the `rest` shard, no ci.yml change).
+
+Slice S1 of RESOLVER-2D-GROUP-PLANE-DESIGN.md §13 — WIRE the S0 `GroupPlane` math into the space engagement:
+- `FleetCombatStateDB` gains `HasFrame`/`FrameOrigin`/`FrameXAxis`/`FrameYAxis` (the frozen `BattleFrame`, stored as three
+  loose `Vector3`s — the `FleetRetreatDB.RetreatVector` save pattern), `Anchor` (this fleet's 2D point) and
+  `GroupPositions` (`List<Vector2>`; S1 = one entry, the whole-fleet group at the anchor; S3 fills per-role). All
+  `[JsonProperty]` + deep-copied in the copy ctor (Vector2/Vector3 copy by value; the list is rebuilt).
+- `CombatEngagement.StartEngagement` seeds the plane from BOTH fleets' real positions (`GroupPlane.SeedFrame`/`Project`);
+  `EnsureInCombat` COPIES the frozen frame from the lowest-id already-engaged sibling (the "copy the frame to joiners"
+  rule), or seeds a fresh two-fleet board from itself + its representative opponent for the FIRST fleet in via the
+  auto-trigger `Tick` path (order-independent `SeedFrame` → the sibling that copies later lands on the identical board).
+- `AdvanceClosing` is generalized: after the unchanged scalar update it slides the CONTROLLER's anchor along
+  `GroupPlane.EnemyDirection` by the exact scalar-gap delta ("the faster side closes the distance"); the anchor
+  pair-distance tracks the scalar gap when seeded consistent. New private helpers `AdvanceAnchorPlane` /
+  `FrameOf` / `StoreFrame` / `SeedPlaneForPair` / `SeedPlaneForJoiner`.
+- Master switch **`CombatEngagement.EnableGroupPlane` (public static, default FALSE)**. Seeding gated on this flag alone
+  (independently testable); anchor MOVEMENT additionally needs `EnableClosingRange` (AdvanceClosing only runs under it).
+
+**Byte-identity claim: (a) default-off flag.** All behaviour is behind `EnableGroupPlane = false`. Flag off → no plane
+data is EVER seeded (both StartEngagement/EnsureInCombat blocks skip), `AdvanceClosing` captures nothing and never calls
+`AdvanceAnchorPlane` (its scalar loop is byte-for-byte unchanged), and the new `FleetCombatStateDB` fields stay at their
+defaults (`HasFrame=false`, zero vectors, empty list). Verified by reading every flag-off path. The existing
+`ClosingTests` (which never touch `EnableGroupPlane`) + all ship-combat fixtures are the tripwire; `EfGroupPlaneAnchorTests`
+adds an explicit flag-OFF-leaves-state-at-default gauge. The new `[JsonProperty]` fields are additive & save-safe
+(default-valued, round-trip cleanly). **No new FLAGGED balance numbers** — `EnableGroupPlane` is a boolean and the anchor
+slide reuses the existing `ClosingSpeedScale_mps` + scalar gap; no gameplay constant introduced.
+
+### Pending Combat/CLAUDE.md rows (put here to avoid a parallel-sibling collision on that shared file — same as T0.1/T1.1)
+Update the `FleetCombatStateDB.cs` row in the Combat File Map to note it now also carries the S1 group-plane fields:
+> `FleetCombatStateDB.cs` … **+ 2D group-plane (Operation Earthfall T2.1 / slice S1):** `HasFrame` + frozen frame
+> (`FrameOrigin`/`FrameXAxis`/`FrameYAxis`, three loose Vector3s) + `Anchor` (2D point) + `GroupPositions`
+> (`List<Vector2>`, S1 = one whole-fleet group). Seeded at engagement start / copied to joiners; slid by `AdvanceClosing`.
+> Inert unless `CombatEngagement.EnableGroupPlane` (default off) → byte-identical scalar path when off.
+
+Add to the `CombatEngagement.cs` row (or the "Closing distance" section): a note that **`EnableGroupPlane` (default off,
+S1)** seeds the frozen 2D `GroupPlane` frame + per-fleet anchor at engagement start (`SeedPlaneForPair` /
+`SeedPlaneForJoiner` — joiners COPY the frozen board) and generalizes `AdvanceClosing` to slide the controller's anchor
+along `GroupPlane.EnemyDirection` by the scalar-gap delta ("the faster side closes"). Anchor movement needs BOTH
+`EnableGroupPlane` and `EnableClosingRange`; seeding needs only the former. Nothing READS the 2D pair-distance yet — the
+scalar `Separation_m` is still authoritative until slice **S2** rewires `SeparationOf`/`WithinWeaponRange` to the 2D gap.
+Gauge `EfGroupPlaneAnchorTests`.
+
+### Pending TESTING-TRACKER.md row (P8.2 lands it)
+- **EfGroupPlaneAnchorTests** (engine/CI, `rest` shard) — the S1 group-plane wiring gauge. Asserts: **flag-on seeding**
+  (StartEngagement's stored frame + anchor == the pure `GroupPlane.SeedFrame`/`Project` from the same read-back
+  positions; both fleets share one frozen board; S1 one-group == anchor); **flag-off byte-identity** (across a full step,
+  `HasFrame` stays false, anchor Zero, group list empty — the scalar path is untouched); **joiner copies the FROZEN
+  board** (a joining fleet's frame origin is bit-identical to the existing A+B board and differs from a self-reseed —
+  proves "copy, don't redraw"); **anchor movement** (controller's anchor slides toward the enemy by the exact scalar-gap
+  delta, the anchor pair-distance tracks the scalar gap, the stationary side holds). What-it-unblocks: S2 (the 2D range
+  gate reads the pair-distance).
+
+### Pending DOCS-INDEX.md status flip (P8.2 lands it)
+- `docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md` build-state: now **S0 + S1 built (pure `GroupPlane.cs` + `GroupPlaneTests`;
+  `FleetCombatStateDB` anchors + 2D `AdvanceClosing` behind `EnableGroupPlane` + `EfGroupPlaneAnchorTests`); S2+ pending**.
+
+### Cross-lane requests / developer decisions
+- None. No fence breach (only `FleetCombatStateDB.cs` + `CombatEngagement.cs` flag-gated blocks + a new lane-distinct test,
+  all inside the TWOD fence). No new balance number to decide. `EnableGroupPlane` defaults off (client turns on when the
+  2D model is live, a later slice).
+
 ### Pending Combat/CLAUDE.md row (put here to avoid a parallel-sibling collision on that shared file — same as T0.1)
 Add to the Combat File Map:
 | `GroupPlane.cs` | **NEW (2D group-plane resolver, slice S0, Operation Earthfall T1.1)** Pure-static "invisible battle graph-paper" math (`docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md` §13). `SeedFrame` lays a battle-local 2D `BattleFrame` (Origin + orthonormal XAxis/YAxis) down ONCE from the fighters' real 3D positions — deterministic basis (seeds sorted by id; XAxis = lowest-id→centre; YAxis = widest ⟂ spread, id tie-break; degenerate fallbacks, never throws). `Project` flattens a 3D position onto the FROZEN frame (a joiner uses the stored axes, so gaps don't jump as ships die). `EnemyDirection` gives the nearest-enemy facing with a lowest-id tie-break (no oscillation). `RoleOffset(enemyDir, bearingDeg, alongStandoff, perpSpread)` is the doctrine nudge as pure trig (0°=at enemy / ±90°=flank / 180°=rear; −standoff kites; perpSpread fans). `PairDistance` = the single scalar the plane will hand the unchanged 1-D `CombatKernel`. **NOTHING calls it (S0)** — byte-identical by construction; S1 seeds anchors in `FleetCombatStateDB`, S2 the 2D range gate. Gauge `GroupPlaneTests`. | ✅ S0 (pure math, no caller) |
