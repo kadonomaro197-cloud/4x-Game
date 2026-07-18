@@ -349,6 +349,18 @@ default true; toggle off in DevTools › Detection / Fog of War if cluttered):
   max (the Combat tab's per-fleet builder does fleet-max; the fleet-max refinement here is a follow-up); enemy
   ranges are never drawn (fog — you don't know them).
 
+> **Honest colony detection BAND (Earthfall C2.1, 2026-07-18).** The colony's green detection ring
+> (`SystemMapRendering.UpdateAllRangeRings`) used to be sized against ONE arbitrary reference ship, so a LOUDER
+> genuinely-detected contact rendered OUTSIDE it (the "saw them before sensor range" report, findings/A2-ghost-contacts).
+> It now draws a min/max BAND sized against the ACTUAL foreign ships present: OUTER ring = max
+> `DetectionRangeAgainst(colony, fs)` over foreign ships (nothing detected can fall outside it), INNER = min (drawn
+> only when meaningfully tighter). The ring-rebuild fingerprint now includes the foreign set + loudness so it rebuilds
+> on enemy appear/leave/EMCON. No foreign ship → the byte-identical pre-C2.1 single ring sized vs a ship-like reference
+> (`DetectionRangeAgainst(colony, firstForeign ?? firstOwnShip)`, falling to `SensorReachRange_m(colony)` only when
+> there are zero ships at all). Companion: `SessionLog.SplitHeldVsFresh` (default off) splits the `[DETECT]` log into
+> fresh (LAGGED) vs held-stale (FROZEN) contacts — readout only, the hostile-engage gate is unchanged. No engine value
+> changed; the 200 Gm horizon design call lives in `docs/combat/HOMEWORLD-SENSOR-HORIZON-MEMO.md`.
+
 ### "Attack" button — order a fleet to engage (FleetWindow Combat tab, 2026-06-27)
 
 `FleetWindow.DisplayEngageButton` ("Attack nearest hostile fleet") gives the player the explicit **engage** order

@@ -74,3 +74,116 @@ worst legit frame and wants it nudged back up.
 detection→contact-blip edge already exists).
 
 **`docs/DOCS-INDEX.md`** — no new doc; `CLIENT-TEST-CHECKLIST.md` gained a section (status unchanged: current/live-backlog).
+
+---
+
+## C2.1 — Honest colony detection ring + held-vs-fresh [DETECT] split + age-out engine gauges + horizon memo (2026-07-18)
+
+**Files changed/created:**
+- `Pulsar4X/Pulsar4X.Client/Rendering/SystemMapRendering.cs` — **(a) the honest colony detection ring** (findings/A2
+  ranked fix #2). `UpdateAllRangeRings` colony loop: the green "detection range" ring around a colony was sized against
+  ONE arbitrary reference ship (`refTarget`), so a LOUDER genuinely-detected contact rendered OUTSIDE it ("saw them
+  before sensor range"). Now it draws an **honest min/max BAND** sized against the ACTUAL foreign ships present:
+  **outer** ring = `max` over foreign ships of `SensorTools.DetectionRangeAgainst(colony, fs)` (the loudest contact →
+  the max reach → **no detected contact can fall outside it**); **inner** ring = `min` (the quietest), drawn only when
+  meaningfully tighter than outer (a single loudness class collapses the band to one honest ring). Both are already
+  clamped to the colony's hard 200 Gm horizon inside `DetectionRange_m`, so the band never over-promises. New
+  `foreignShips` list captured in the same try; the ring-rebuild **fingerprint** now includes the foreign-ship set +
+  their loudness so the band rebuilds when an enemy appears/leaves or flips EMCON. No-foreign-ship fallback = the old
+  self-referential single ring (unchanged). Ring keys `_sensor_max`/`_sensor_min` (band) / `_sensor` (fallback) — all
+  swept by the generic `_allRangeKeys` cleanup.
+- `Pulsar4X/Pulsar4X.Client/SessionLog.cs` — **(b) the held-vs-fresh `[DETECT]` split** behind a default-off static
+  `SessionLog.SplitHeldVsFresh`. When ON, the `[DETECT]` line splits "holds N contact(s)" into "(F fresh / S
+  held-stale)" — fresh = a track re-snapshotted at the last scan (`SensorContact.PositionSourceLabel == "LAGGED"`),
+  stale = coasting on a FROZEN last-known fix. Surfaces the held-vs-seen conflation findings/A2 named (the hostile
+  engage gate counts a stale contact as detected) as a READOUT only — **the gate's gameplay is untouched**. Default OFF
+  → the `[DETECT]` line is the exact original text.
+- `Pulsar4X/Pulsar4X.Tests/EfClientSensorAgeOutTests.cs` — **(c) the two engine gauges the A2 dossier named as
+  missing.** `TrackLost_FlipsToMemory_NotAgedOutYet`: detect a bogey at point-blank, MOVE it 500 Gm out of every
+  friendly sensor's reach (past the 200 Gm horizon), scan again just after → the contact flips from LAGGED to FROZEN
+  (`PositionIsMemory == true`) but is NOT yet removed. `StaleContact_AgesOut_AfterContactStaleSeconds`: the same
+  setup, then a scan UNDER `SensorScan.ContactStaleSeconds` (still held) and a scan OVER it (removed) — proving the
+  age-out threshold governs. Drives `SensorScan.ProcessEntity(entity, atDateTime)` at chosen game-times via
+  `InternalsVisibleTo`. **New unique fixture filename (lane-distinct `EfClient…` prefix) → lands in the CI `rest`
+  shard, no collision.**
+- `docs/combat/HOMEWORLD-SENSOR-HORIZON-MEMO.md` — **(d) the 200 Gm design call** (NEW doc, in CLIENT fence). Three
+  options — KEEP+honest-readouts [default, shipped] / signature-curve / EMCON-gate — each with its file:line dial
+  (`electronics.json:175` the horizon literal; `SensorTools.cs GetDetectedEntites`/`DetectionRange_m` the cap) and
+  gameplay consequence. **No engine value changed.**
+- `docs/CLIENT-TEST-CHECKLIST.md` — new "🛰 OPERATION EARTHFALL — C2.1" section (honest ring band never lets a
+  detected enemy render outside it; band tracks EMCON; never over-promises past 200 Gm; the optional held-vs-fresh
+  split).
+
+**Byte-identity claim: (a) provably inert absent new data; (b) default-off flag.**
+- **(a) the ring** is a client-only render change with NO CI test observing it (CI compiles the client, can't run it),
+  so every existing green test is unaffected by construction. **The band only appears when a FOREIGN ship is present**
+  (the "new data"); absent any foreign ship the fallback is the **byte-identical pre-C2.1 (2026-06-28) single ring** —
+  `DetectionRangeAgainst(colony, refTarget)` where `refTarget = firstForeign ?? firstOwnShip`, dropping to
+  `SensorReachRange_m(colony)` ONLY when there are zero ships at all (exactly the prior fallback ladder). With the
+  common single-enemy case the band collapses to one ring sized against that actual contact. Reads only CI-covered
+  engine accessors (`SensorTools.DetectionRangeAgainst`/`SensorReachRange_m`/`CurrentActivityMultiplier`).
+  **(REPAIR 2026-07-18: the first cut of the fallback used `SensorReachRange_m(colony)` unconditionally, which
+  REGRESSED the peacetime ring — no foreign but own ships present is the normal state, and that collapsed Earth's
+  ship-sized bubble to the self-referential tiny ring the 2026-06-28 fix had eliminated, refuting claim (a). Fixed to
+  the ladder above, matching the comment at the `foreignShips` capture and the prior behaviour.)**
+- **(b) the `[DETECT]` split** is behind `SessionLog.SplitHeldVsFresh`, default false; the `else` branch is the exact
+  original `[DETECT]` line, so the log is byte-identical when off. Client-only; no CI test observes it.
+- **(c)** adds only NEW test files (new fixture name) — no existing test/behaviour touched.
+- **(d)** is a new doc — inert.
+
+**FLAGGED gameplay numbers: NONE.** No new gameplay/balance number. The two ring alphas (30/55) and the `0.98`
+band-collapse threshold are cosmetic render constants, not balance values (consistent with the existing ring alphas
+45/70 etc.). The 200 Gm horizon literal is NOT changed by this slice (it's the developer's decision — see the memo).
+
+**Developer decisions raised:**
+1. **`SessionLog.SplitHeldVsFresh` default-off + the recency proxy.** The finding asked for "fresh = LastDetection
+   within ~2 scan intervals," but the client is a SEPARATE assembly and cannot read `SensorInfoDB.LastDetection`
+   (internal; no `InternalsVisibleTo("Pulsar4X.Client")`). The shipped proxy reads the client-reachable
+   `SensorContact.PositionSourceLabel` (LAGGED = re-snapshotted at the last scan = fresh within one scan interval;
+   FROZEN = coasting on last-known = held-stale) — which is actually what the fixed contact model already encodes.
+   Kept behind a default-off static so the developer opts into the extra column, and gameplay is untouched.
+2. **The 200 Gm homeworld horizon itself** — the standing campaign decision (`CAMPAIGN-PLAN.md §6`). The memo
+   (`docs/combat/HOMEWORLD-SENSOR-HORIZON-MEMO.md`) lays out KEEP [default] / signature-curve / EMCON-gate with dials;
+   C2.1 changed NO value and recommends KEEP now that the readouts are honest.
+
+**Cross-lane request (no lane owns `GameEngine/Sensors/**`):** for a TRUER time-based held-vs-fresh recency ("within N
+scan intervals"), a future engine slice should expose a public, computed, never-serialized accessor on
+`SensorContact` (engine) reporting seconds-since-last-detection (e.g. `SecondsSinceDetection(DateTime now)` reading the
+internal `SensorInfoDB.LastDetection`), mirroring the existing `SignalStrength_kW`/`PositionIsMemory`/
+`PositionSourceLabel` pass-throughs. Then `SessionLog` can compute the true recency instead of the LAGGED/FROZEN proxy.
+Not blocking — the proxy is faithful for the readout. Routed here because Sensors is outside every lane fence; PW or a
+Sensors-touching slice can pick it up.
+
+**Subsystem-CLAUDE.md row — APPLIED INLINE this commit (this CLIENT lane runs its C-slices SEQUENTIALLY, so there is
+no parallel sibling to collide with on `Pulsar4X.Client/CLAUDE.md`; C1.1 already edited that file inline too).** The
+row below was inserted into `Pulsar4X.Client/CLAUDE.md` under the "All-ranges always-on" section in this same commit,
+per the standing "keep the subsystem CLAUDE.md current in the same commit" rule. Recorded here only for the P8.2 audit
+trail (already landed — do NOT re-apply):**
+
+> **Honest colony detection BAND (Earthfall C2.1, 2026-07-18).** The colony's green detection ring
+> (`SystemMapRendering.UpdateAllRangeRings`) used to be sized against ONE arbitrary reference ship, so a LOUDER
+> genuinely-detected contact rendered OUTSIDE it (the "saw them before sensor range" report, findings/A2). It now
+> draws a min/max BAND sized against the ACTUAL foreign ships present: OUTER ring = max `DetectionRangeAgainst(colony,
+> fs)` over foreign ships (nothing detected can fall outside it), INNER = min (drawn only when tighter). The
+> ring-rebuild fingerprint now includes the foreign set + loudness so it rebuilds on enemy appear/leave/EMCON. No
+> foreign ship → the byte-identical pre-C2.1 single ring sized vs a ship-like reference (`DetectionRangeAgainst(colony,
+> firstForeign ?? firstOwnShip)`, falling to `SensorReachRange_m(colony)` only when there are zero ships at all).
+> Companion: `SessionLog.SplitHeldVsFresh` (default off) splits the
+> `[DETECT]` log into fresh (LAGGED) vs held-stale (FROZEN) contacts — readout only, the hostile gate is unchanged. No
+> engine value changed; the 200 Gm horizon design call lives in `docs/combat/HOMEWORLD-SENSOR-HORIZON-MEMO.md`.
+
+### Pending dashboard rows (for P8.2 to land)
+
+**`docs/TESTING-TRACKER.md`** — append two engine-CI (Layer-1) rows:
+
+| Row | What | Why | Method | What-right | Likely-failure | Mitigation | Unblocks |
+|-----|------|-----|--------|-----------|----------------|------------|----------|
+| EARTHFALL-C2.1-flip | Sensors→Memory lost-track flip fires | A2 named it untested; the fog-of-war contact must fade to last-known when its track is lost | `EfClientSensorAgeOutTests.TrackLost_FlipsToMemory_NotAgedOutYet` (drive SensorScan with a target moved 500 Gm out of range) | A lost track flips LAGGED→FROZEN (`PositionIsMemory`) but stays held (not yet stale) | The else-branch flip never fires (contact stays LAGGED / stays LIVE) | CI gauge is this test | The honest fog-of-war contact model (blips fade, don't glide) |
+| EARTHFALL-C2.1-ageout | ContactStaleSeconds age-out actually removes a stale track | A2 named it untested; a track that left reach must be FORGOTTEN, not shown forever | `EfClientSensorAgeOutTests.StaleContact_AgesOut_AfterContactStaleSeconds` (scan under vs over `SensorScan.ContactStaleSeconds`) | Held just under the threshold; removed just over it | The removal never fires (contact persists forever) — the original "tracked across empty space" bug | CI gauge is this test | Fog-of-war truth; the honest colony ring's premise (detection is bounded + ages) |
+
+**`docs/SYSTEM-CONNECTION-MAP.md`** — no new system-to-system edge (the detection→contact-blip→ring edge already
+exists; C2.1 makes an existing edge's READOUT honest and adds age-out coverage).
+
+**`docs/DOCS-INDEX.md`** — **NEW doc row:** `docs/combat/HOMEWORLD-SENSOR-HORIZON-MEMO.md` — *purpose:* the developer
+design call on the 200 Gm homeworld sensor horizon (keep / signature-curve / EMCON-gate, with dials); *status:*
+current / decision-memo (no value changed). Also: `CLIENT-TEST-CHECKLIST.md` gained a C2.1 section (status unchanged).

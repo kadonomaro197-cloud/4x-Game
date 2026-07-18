@@ -820,7 +820,7 @@ namespace Pulsar4X.Client.Rendering
             }
 
             int facId = _faction.Id;
-            List<Entity> ownShips, ownColonies; Entity refTarget = null;
+            List<Entity> ownShips, ownColonies, foreignShips; Entity refTarget = null;
             try
             {
                 var allShips = _sysState.StarSystem.GetAllEntitiesWithDataBlob<ShipInfoDB>();
@@ -831,12 +831,17 @@ namespace Pulsar4X.Client.Rendering
                 ownColonies = _sysState.StarSystem.GetAllEntitiesWithDataBlob<Pulsar4X.Colonies.ColonyInfoDB>()
                     .Where(e => e.FactionOwnerID == facId && e.IsValid && e.HasDataBlob<PositionDB>())
                     .ToList();
-                // Reference target for a PLACE's detection ring: "how far does this colony detect a ship like THIS?"
-                // Prefer a real foreign ship (the thing you actually want to spot — gives the honest bubble that
-                // reaches the inner planets), else one of your own ships (a ship-like target). Sized by the detector
-                // vs the target's signature, NOT the colony's own signature — which is why the old SensorReachRange
-                // ring came out tiny (it measured "detect a thing as loud as a colony", not "as loud as a ship").
-                refTarget = allShips.FirstOrDefault(e => e.FactionOwnerID != facId && e.IsValid && e.HasDataBlob<SensorProfileDB>())
+                // Every foreign ship present that emits a signature — the ACTUAL contacts the colony detection ring
+                // must cover. A PLACE detects a ship out to DetectionRangeAgainst(colony, thatShip), which grows with
+                // how LOUD the ship is — so a ring sized against ONE arbitrary reference under-draws for a louder
+                // contact, and that genuinely-detected fleet renders OUTSIDE the ring ("saw them before sensor range",
+                // findings/A2). We size the colony band against these below; refTarget stays only for the no-foreign
+                // fallback (a ship-like target — the detector vs the target's signature, NOT the colony's own, which
+                // measured "detect a thing as loud as a colony" and came out tiny).
+                foreignShips = allShips
+                    .Where(e => e.FactionOwnerID != facId && e.IsValid && e.HasDataBlob<SensorProfileDB>())
+                    .ToList();
+                refTarget = foreignShips.FirstOrDefault()
                             ?? ownShips.FirstOrDefault(e => e.HasDataBlob<SensorProfileDB>());
             }
             catch { return; }   // a bad engine read must never blank the map
@@ -846,9 +851,15 @@ namespace Pulsar4X.Client.Rendering
             // EMCON flips a ship's detectability — exactly when the rings need rebuilding.
             double loud = 0;
             foreach (var s in ownShips) loud += SensorTools.CurrentActivityMultiplier(s);
+            // Foreign ships + their loudness are now IN the fingerprint: the colony detection band is sized against
+            // them (below), so it must rebuild when an enemy appears/leaves OR changes EMCON (a louder contact pushes
+            // the outer ring out). Positions stay OUT (the rings track live off each entity's PositionDB).
+            double foreignLoud = 0;
+            foreach (var f in foreignShips) foreignLoud += SensorTools.CurrentActivityMultiplier(f);
             string fp = string.Join(",", ownShips.Select(s => s.Id).OrderBy(i => i))
                       + "|" + string.Join(",", ownColonies.Select(c => c.Id).OrderBy(i => i))
-                      + "|" + (refTarget?.Id ?? -1) + "|" + Math.Round(loud, 2);
+                      + "|" + (refTarget?.Id ?? -1) + "|" + Math.Round(loud, 2)
+                      + "|F" + string.Join(",", foreignShips.Select(f => f.Id).OrderBy(i => i)) + "|" + Math.Round(foreignLoud, 2);
             if (fp == _allRangeFingerprint) return;
             _allRangeFingerprint = fp;
 
@@ -879,14 +890,44 @@ namespace Pulsar4X.Client.Rendering
 
             foreach (var colony in ownColonies)
             {
-                // A "place" shows how far it detects an actual SHIP (Earth's megasensor = the inner-system early-
-                // warning bubble that spots fleets at Mercury/Mars). Falls back to the self-referential reach only if
-                // there's no ship anywhere to measure against.
-                double placeReach = refTarget != null
-                    ? SensorTools.DetectionRangeAgainst(colony, refTarget)
-                    : SensorTools.SensorReachRange_m(colony);
-                Ring("allrange_colony_" + colony.Id + "_sensor", colony.GetDataBlob<PositionDB>(), placeReach, 80, 210, 110, 45,
-                    NameOf(colony) + " (station/colony) — Detection range (how far it SEES)");
+                var colonyPos = colony.GetDataBlob<PositionDB>();
+                // HONEST detection band (findings/A2 fix). A "place" detects a ship out to
+                // DetectionRangeAgainst(colony, thatShip), which grows with how LOUD the ship is — so a single ring
+                // sized against ONE reference under-draws for a louder contact, and that genuinely-detected fleet
+                // renders OUTSIDE the ring (the "saw them before sensor range" report). We instead size the OUTER
+                // ring against the LOUDEST foreign ship present (its reach is the max, so NO detected contact can
+                // fall outside it) and the INNER ring against the QUIETEST — the reach VARIES with target loudness
+                // and the band shows it. Both are clamped to the colony's hard 200 Gm horizon inside
+                // DetectionRange_m, so the band never over-promises past what the scan can actually see. With no
+                // foreign ship to measure against, fall back to the SINGLE ring sized vs a ship-like reference
+                // (an own ship if present, else the colony's self-reach) — the byte-identical 2026-06-28 behaviour.
+                double outerReach = 0, innerReach = double.MaxValue;
+                foreach (var fs in foreignShips)
+                {
+                    double r = SensorTools.DetectionRangeAgainst(colony, fs);
+                    if (r > outerReach) outerReach = r;
+                    if (r > 0 && r < innerReach) innerReach = r;
+                }
+                if (outerReach <= 0)   // no FOREIGN ship to measure against → the old single ring (2026-06-28):
+                {                      // size it vs a ship-like reference (an own ship if any), NOT the colony's
+                                       // own signature (which measured "detect a thing as loud as a colony" and
+                                       // came out tiny — didn't reach the inner planets). refTarget matches the
+                                       // comment at the foreignShips capture + the pre-C2.1 fallback exactly.
+                    double soloReach = refTarget != null
+                        ? SensorTools.DetectionRangeAgainst(colony, refTarget)   // "how far it detects a ship LIKE THIS"
+                        : SensorTools.SensorReachRange_m(colony);                // truly no ships anywhere → self-reach
+                    Ring("allrange_colony_" + colony.Id + "_sensor", colonyPos, soloReach,
+                        80, 210, 110, 45, NameOf(colony) + " (station/colony) — Detection range (how far it SEES)");
+                    continue;
+                }
+                // OUTER = the honest "nothing detected renders outside this" bound (vs the loudest contact); faint.
+                Ring("allrange_colony_" + colony.Id + "_sensor_max", colonyPos, outerReach, 80, 210, 110, 30,
+                    NameOf(colony) + " (station/colony) — Max detection reach (vs the LOUDEST contact present; a detected ship never renders outside this)");
+                // INNER = the conservative reach vs the quietest contact — only when meaningfully tighter than outer
+                // (a single loudness class makes inner == outer, so the band collapses to one honest ring).
+                if (innerReach < outerReach * 0.98)
+                    Ring("allrange_colony_" + colony.Id + "_sensor_min", colonyPos, innerReach, 80, 210, 110, 55,
+                        NameOf(colony) + " (station/colony) — Min detection reach (vs the QUIETEST contact present)");
             }
 
             SessionLog.Action($"[range-ring] all-ranges rebuilt: {ownShips.Count} unit(s) + {ownColonies.Count} place(s) = {_allRangeKeys.Count} ring(s)");

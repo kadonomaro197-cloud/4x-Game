@@ -24,6 +24,19 @@ namespace Pulsar4X.Client
     {
         public static bool Enabled = true;
 
+        /// <summary>DIAGNOSTIC readout policy (default OFF → the [DETECT] line is byte-identical to before). When ON,
+        /// the [DETECT] line SPLITS the held-contact count into FRESH (a track re-snapshotted at the last scan that
+        /// evaluated it — <see cref="Pulsar4X.Sensors.SensorContact.PositionSourceLabel"/> "LAGGED") vs HELD-STALE (a
+        /// track coasting on a last-known "FROZEN" fix — not re-detected this scan). This surfaces the held-vs-seen
+        /// CONFLATION findings/A2 named: the hostile engagement gate (EntityManager.SensorContactExists) counts a
+        /// STALE/FROZEN contact as "detected", so the raw "holds N" over-reports what's actually being TRACKED right
+        /// now. Readout-only — it does NOT touch the gate's gameplay. Recency is read off the client-reachable
+        /// PositionSourceLabel (LAGGED = re-snapshotted at the last scan = fresh within one scan interval); a truer
+        /// LastDetection-vs-scan-interval recency needs an engine accessor (SensorInfoDB.LastDetection is internal —
+        /// see the C2.1 cross-lane request). Default OFF so the developer opts into the extra column (developer
+        /// decision — C2.1).</summary>
+        public static bool SplitHeldVsFresh = false;
+
         // Previous values of the engine liveness counters, so the heartbeat can report the per-beat DELTA (is the
         // processor still climbing = alive, or stuck = dead).
         private static long _lastScanCount, _lastTickCount;
@@ -355,8 +368,24 @@ namespace Pulsar4X.Client
                     others++;
                     if (contacts != null && contacts.SensorContactExists(sh.Id)) detected++;
                 }
-                Line("DETECT", fname + " holds " + held + " contact(s); " + others + " other-faction ship(s) in-system, detects "
-                    + detected + " (" + (others - detected) + " hidden from you)");
+                if (SplitHeldVsFresh)
+                {
+                    // FRESH = re-snapshotted at the last scan (PositionSourceLabel "LAGGED"); HELD-STALE = coasting on a
+                    // FROZEN last-known fix (a track NOT re-detected this scan). The hostile gate still counts the stale
+                    // ones as "detected" — this line makes that visible WITHOUT changing the gate (see SplitHeldVsFresh).
+                    int fresh = 0;
+                    if (contacts != null)
+                        foreach (var c in contacts.GetAllContacts())
+                            if (c != null && c.PositionSourceLabel == "LAGGED") fresh++;
+                    Line("DETECT", fname + " holds " + held + " contact(s) (" + fresh + " fresh / " + (held - fresh)
+                        + " held-stale); " + others + " other-faction ship(s) in-system, detects "
+                        + detected + " (" + (others - detected) + " hidden from you)");
+                }
+                else
+                {
+                    Line("DETECT", fname + " holds " + held + " contact(s); " + others + " other-faction ship(s) in-system, detects "
+                        + detected + " (" + (others - detected) + " hidden from you)");
+                }
 
                 // PER-CONTACT FOG GAUGE (2026-07-17, the detection-render diagnosis): for each held contact, where does
                 // its DRAWN position come from — LIVE (glued to the real ship's real-time position, no scan lag, never
