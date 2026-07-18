@@ -81,6 +81,26 @@ jobs:
           --logger "trx;LogFileName=test-results-${{ matrix.name }}.trx"
           --results-directory TestResults
 
+      # Any readout test (campaign gauges: self-sufficiency tape, station-aware tape, etc.)
+      # writes a plain-text summary to TestResults/*-readout.txt. Dump each one into the job log
+      # so the campaign gauge is visible on the run without downloading the artifact. if: always()
+      # so it prints even when a test failed; guarded so a shard that produced none never errors.
+      - name: Print readouts to job log
+        if: always()
+        shell: bash
+        run: |
+          shopt -s nullglob
+          files=(TestResults/*-readout.txt)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No readout files (TestResults/*-readout.txt) in this shard."
+          else
+            for f in "${files[@]}"; do
+              echo "===== $f ====="
+              cat "$f"
+              echo
+            done
+          fi
+
       - name: Publish per-test report
         uses: dorny/test-reporter@v1
         if: always()           # run even when tests failed, so the failing test is shown
