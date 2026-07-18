@@ -242,3 +242,326 @@ delivered regardless.
   healthy) and lands in the `rest` shard by default. Combined with P0.2's heavier 120-day multi-faction fixture in the
   same shard, watch the `rest` TRX duration column; if `rest` overruns `stations`, a `ci.yml` shard rebalance is the
   CORE-owned P0.3 call.
+
+---
+
+## P3.1 — UMF government node + Ceres factory (data) (2026-07-18)
+
+**Files changed/created (this slice):**
+- `Pulsar4X/GameEngine/Factions/FactionFactory.cs` — `LoadFromJson` now parses an optional top-level **`"government"`**
+  node (after the existing `"personality"` node) via a new public static `GovernmentFromJson(JToken)` helper (mirrors
+  `PersonalityFromJson`) + a private `TryReadNotch` helper. The four dials (`authority`/`economy`/`openness`/
+  `militarism`) are case-insensitive `GovNotch` (`Low`/`Mid`/`High`); an omitted/invalid dial keeps the `GovernmentDB`
+  default (`Mid`). `CreateFaction` already attaches a neutral all-Mid `GovernmentDB` to every faction, so the parser
+  `SetDataBlob`-**replaces** it only when the node is present (`SetDataBlob` overwrites the same-type blob,
+  `EntityManager.cs:469`). VERIFIED there was no prior `"government"` parser (grep). This is A3 fix seam 1.
+- `Pulsar4X/GameData/basemod/ScenarioFiles/umf.json` — (a) authored a `"government"` node: **Militarism High** (the
+  load-bearing dial — flips `GovernmentDB.WarMoraleFactor()` from −0.25 to +0.5, so the legitimacy war term becomes
+  +10 instead of the all-Mid default's −5) + **Authority High** (the fitting authoritarian dial, matching the UMF's
+  `authoritarianism 0.7` personality); Economy/Openness left `Mid` (defaults) — deliberately minimal, only the two
+  dials the slice named. (b) Ceres colony `default-design-factory` amount **0 → 1** (the DEV lane's data request folded
+  into P3.1 per CAMPAIGN-PLAN §4) — Ceres can now manufacture (component/installation construction), not just mine+refine.
+- NEW `Pulsar4X/Pulsar4X.Tests/EfUmfGovernmentAndCeresFactoryTests.cs` — the load-only gauge (3 tests), lands in the
+  `rest` shard.
+
+**Tests added + what they assert (`EfUmfGovernmentAndCeresFactoryTests`, 3 tests, shared `[OneTimeSetUp]` sandbox load):**
+- `Umf_LoadsWith_MilitarismHigh_AndAuthorityHigh` — the UMF's `GovernmentDB` reads `Militarism == High` AND
+  `Authority == High` from the authored node; `WarMoraleFactor() > 0` (a militarist takes pride) while a fresh all-Mid
+  default `WarMoraleFactor() < 0` (the sign the node flips — the A3 collapse driver).
+- `Umf_MilitaristAtWar_LegitimacyWarTerm_IsPositive` — precondition `DiplomacyDB.IsAtWarWithAnyone()` (opening war), then
+  drives the real `LegitimacyProcessor.RecalcLegitimacy` on a UMF province and asserts `Factors["war"] > 0` AND
+  `== WarMoraleFactor() × LegitimacyDB.MaxWarSwing` (= +10). The end-to-end proof that a militarist-at-war reads a
+  POSITIVE war term, not the −5 that triggered the phantom rebellion.
+- `Ceres_HostsAManufacturingCapableLine` — finds the Ceres colony (planet `GetDefaultName().Contains("Ceres")`) and
+  asserts its `IndustryAbilityDB` has a production line offering `component-construction` or `installation-construction`
+  (the factory's industry types) with rate > 0 — distinct from the refinery's `refining`-only line, so it truly proves
+  the added factory. BaseModIntegrity-style: the line falls out of the real `AddComponent → IndustryAtb` install at load.
+
+**Byte-identity claim: (b) provably inert absent new data.**
+- The CODE change (the `"government"` parser) is inert for every scenario file with no `"government"` node: the parser
+  is skipped and the default all-Mid `GovernmentDB` from `CreateFaction` stands (identical to today). Every existing
+  scenario file (earth.json / uef-devtest.json / kithrin.json) has no such node → byte-identical. (Even an authored
+  all-Mid node reproduces the default `GovernmentDB` exactly.) No flag, no scheduling, no serialization change; a new
+  save embeds the same `GovernmentDB` type it already did.
+- The DATA change (umf.json) is the INTENDED behaviour change (the point of the slice — the A3/A6 UMF fixes). It only
+  affects the UMF *scenario* faction, loaded via the scenario/menu path — NOT the CI economy/ground harness
+  (`TestScenario.CreateWithColony` uses `CreateBasicFaction`, not `LoadFromJson`), so those suites are byte-identical.
+  The scenario-loading sibling tests were audited: none hard-assert a UMF morale/economy number that Authority/
+  Militarism High would flip (`FactionSelfSufficiencyReadoutTests`/`CampaignClockReadoutTests`/`NpcFleetReadyToSailTests`
+  assert structural truths; `NPCActingSensorTests` only benefits — the UMF is no longer locked into Defend), and
+  `DevTestScenarioTests` keys the UMF off `Colonies.Count >= 4` (still 4 — Ceres stays a colony, just gains a factory).
+
+**FLAGGED balance numbers (developer sets balance — 3 data choices, JSON so no `//` comment carrier):**
+- umf.json `government.militarism = "High"` — the load-bearing A3 dial (war term +10). Chosen because the slice named it.
+- umf.json `government.authority = "High"` — the "fitting Authority" (matches the UMF's `authoritarianism 0.7`
+  personality). Economy/Openness left Mid — the developer may dial these (e.g. Economy High → the "Military Junta"
+  iconic government) later.
+- umf.json Ceres `default-design-factory` amount `1` — one manufacturing line on Ceres (the A6 data gap fix).
+
+**Developer decisions raised:** the two `government` dial choices above (Militarism High is required by the fix;
+Authority High + leaving Economy/Openness Mid is the reviewable "fitting" choice), and the Ceres factory count (1).
+All reviewable — the developer can retune the regime or the factory count without any code change.
+
+**Cross-lane note (DEV → CORE request satisfied):** the Ceres factory (`default-design-factory` 0→1) was the DEV lane's
+data request, folded into P3.1 because `umf.json` is CORE-owned (CAMPAIGN-PLAN §4). No further DEV action needed.
+P0.2's cross-slice note (this file, "Cross-slice note → DEV lane (D2) and P3.1") anticipated this — the
+`FactionSelfSufficiencyReadoutTests` readout is the standing before/after gauge for the new Ceres industry line.
+
+**Parallel-safety note (CLAUDE.md rows placed here, NOT edited in the shared files):** `GameEngine/Factions/CLAUDE.md`
+and `Pulsar4X.Tests/CLAUDE.md` are high-collision targets (concurrent P3 CORE siblings P3.2/3.3/3.4 touch the
+Legitimacy/ObjectiveTransition/ConquerResolver/DefendResolver/NPCDecisionProcessor rows; the DEV lane touches the
+ExpandResolver row; every lane adds to the Tests inventory). Per CAMPAIGN-PLAN §2.4 the two pending rows below land at
+P8.2 instead of being edited mid-flight.
+
+### Pending row — `GameEngine/Factions/CLAUDE.md` (the `FactionFactory.cs` file-map row)
+Append to the `FactionFactory.cs` row: **"+ P3.1 AUTHORED GOVERNMENT (Operation Earthfall, 2026-07-18):** `LoadFromJson`
+reads an optional `"government"` node (`authority`/`economy`/`openness`/`militarism` → `GovNotch` Low/Mid/High) via the
+public `GovernmentFromJson(JToken)` helper and `SetDataBlob`-replaces the default all-Mid `GovernmentDB` `CreateFaction`
+attaches. Byte-identical with no node (the all-Mid default stands). A3 fix seam 1: the UMF now authors Militarism High
+so its legitimacy war term is +10 (pride) not −5 (collapse). Gauge: `EfUmfGovernmentAndCeresFactoryTests`.**" Also add
+`"government"` to the list of keys `LoadFromJson` reads.
+
+### Pending row — `Pulsar4X.Tests/CLAUDE.md` test inventory table
+| `EfUmfGovernmentAndCeresFactoryTests` | **P3.1 — the UMF government + Ceres factory data gauge (Operation Earthfall, findings A3+A6).** Loads the DevTest sandbox and asserts (1) the UMF's authored `"government"` node lands Militarism High + Authority High on its `GovernmentDB` (and a militarist yields a POSITIVE `WarMoraleFactor` where all-Mid is negative); (2) a militarist-at-war UMF province computes a POSITIVE legitimacy war term via the real `LegitimacyProcessor.RecalcLegitimacy` (`Factors["war"]` = +10 = `WarMoraleFactor 0.5 × MaxWarSwing 20`, not the all-Mid −5 that triggered the A3 phantom rebellion → 180-day Defend lock); (3) Ceres now hosts a manufacturing-capable industry line (component/installation construction from the authored `default-design-factory` 0→1), where before it could only mine+refine (A6 data gap). Load-only (no clock advance) → `rest` shard. |
+
+### Pending row — `docs/TESTING-TRACKER.md` (Layer-1 engine CI)
+- **T-P3.1 `EfUmfGovernmentAndCeresFactoryTests`** · *what:* proves the UMF's authored government (Militarism/Authority
+  High) + a positive militarist-at-war legitimacy war term + the Ceres manufacturing line, all via the real
+  scenario-load path · *why:* A3 found the UMF ran the all-Mid default (war term −5) → a hostile-world morale trough
+  collapsed a province into a phantom rebellion → 180-day Defend lock; A6 found Ceres had factory ×0 (couldn't
+  manufacture) · *method:* load the DevTest sandbox, read the UMF `GovernmentDB` + drive `RecalcLegitimacy` on a UMF
+  province + inspect Ceres' `IndustryAbilityDB` production lines · *right-looks-like:* Militarism/Authority High,
+  `Factors["war"] > 0` (== +10), a Ceres line with component/installation-construction rate > 0 · *likely-failure:* the
+  `"government"` parser regresses (dials read Mid → war term goes negative), or the Ceres factory reverts to 0 (no
+  manufacturing line) · *mitigation:* this gauge + the byte-identity audit of the sibling scenario tests · *unblocks:*
+  the A3 objective-flip fix (a militarist stays on the offensive instead of collapsing) and the A6 Ceres self-
+  sufficiency gap; the standing `FactionSelfSufficiencyReadoutTests` readout shows the new Ceres line over 120 days.
+
+### Pending row — `docs/SYSTEM-CONNECTION-MAP.md`
+- `FactionFactory.LoadFromJson` (`"government"` node) → `GovernmentDB` (regime dials) → `LegitimacyProcessor.WarTermFor`
+  (`WarMoraleFactor × MaxWarSwing`) → `LegitimacyDB` war term → `RebellionDB`/`NeedsLadder`/`ObjectiveSelector` (the A3
+  chain): authoring Militarism High makes a militarist-at-war province's war term positive, breaking the
+  morale-trough → phantom-rebellion → Defend-lock cascade at its root.
+
+---
+
+## P3.2 — Rebellion debounce + fresh-morale legitimacy (Operation Earthfall, findings A3 seams 2-3)
+
+**Files changed (all in-fence — CORE owns `GameEngine/Colonies/Legitimacy*` + `PopulationProcessor.cs`):**
+- `GameEngine/Colonies/LegitimacyDB.cs` — added `[JsonProperty] int ConsecutiveCollapsingReads` (the debounce counter)
+  + its copy-ctor line (save-safe: persisted + deep-copied per the slice mandate).
+- `GameEngine/Colonies/LegitimacyProcessor.cs` — two default-off static flags (`ReadCurrentMorale`,
+  `EnableRebellionDebounce`) + `const RebellionDebounceReads = 2`; `RecalcLegitimacy` now reads current-cycle morale
+  via `PopulationProcessor.ComputeCurrentMorale` when `ReadCurrentMorale` is on (else the old field read);
+  `UpdateRebellion` gained a debounce-aware 4-arg overload (the 3-arg one delegates to it with `legitDb = null`, so
+  existing RebellionTests are byte-identical).
+- `GameEngine/Colonies/PopulationProcessor.cs` — added `internal static double ComputeCurrentMorale(Entity)`: a pure,
+  no-mutation reader that gathers the SAME morale inputs `GrowPopulation` uses and feeds the identical
+  `ColonyMoraleDB.ComputeMorale`. `GrowPopulation` itself is UNTOUCHED (the population sim stays byte-identical); the
+  two input-gatherings are kept in sync by a loud comment on both.
+- `Pulsar4X.Tests/LegitimacyStaleEchoDebounceTests.cs` — NEW fixture (lands in the `rest` shard).
+
+**Verification of the ordering question (the "verify FIRST" mandate, why option 2 was chosen over 1 and 3):**
+The two monthly hotloops are keyed to DIFFERENT DataBlobs (`LegitimacyProcessor`→`LegitimacyDB`,
+`PopulationProcessor`→`ColonyInfoDB`) at the same 30-day frequency/offset, so both fire in the SAME sub-step on the
+shared boundary (`ManagerSubPulse.ProcessToNextInterupt:349` foreach over `HotLoopProcessorsNextRun`). Their RELATIVE
+order is the insertion order of `HotLoopProcessorsNextRun`, seeded from `ProcessorManager.HotloopProcessors`, populated
+by iterating `Assembly.GetTypes()` (`ProcessManager.CreateProcessors:110-118`) — an order the CLR leaves UNSPECIFIED.
+So **option 1 (order legitimacy after population) is not reliably achievable** and would require editing `ManagerSubPulse`
+/`ProcessManager`, both OUTSIDE this slice's fence. **Option 3 (smooth legit rate-of-change)** is a band-aid that makes
+legit permanently LAG morale (the opposite of "read current") and still needs a flag for byte-identity. **Option 2
+(RecalcLegitimacy reads the same current-cycle morale)** is order-INDEPENDENT, structurally kills the lag, and stays
+entirely in-fence — chosen.
+
+**BYTE-IDENTITY CLAIM: (a) default-off flags.** Both behaviour changes are gated by `ReadCurrentMorale = false` and
+`EnableRebellionDebounce = false` (defaults). With both off, `RecalcLegitimacy` reads `ColonyMoraleDB.Morale` and
+`UpdateRebellion` triggers on a single sample — the exact shipped behaviour; every existing LegitimacyProcessorTests /
+RebellionTests / MoraleTests / economy assertion is unchanged. The new persisted `ConsecutiveCollapsingReads` field is
+additive + defaulted 0 and is never read or written while the debounce flag is off (inert; no save asserts a
+LegitimacyDB's exact JSON — `SaveLoadDesignRoundTripTests` checks ComponentDesigns, not colony blobs). `GrowPopulation`
+is untouched, so `ComputeCurrentMorale` (only invoked by legitimacy under the flag) cannot perturb the population sim.
+
+**FLAGGED balance number:** `LegitimacyProcessor.RebellionDebounceReads = 2` (`// FLAGGED balance value` in source) —
+the number of consecutive monthly collapsing reads a rebellion needs under the debounce. The developer sets the depth.
+
+**Developer decision raised (flag flip):** both flags ship OFF for byte-identity; the A3 game fix only takes effect once
+they are flipped ON. Per CAMPAIGN-PLAN, a later CORE integration slice (PW/P8) or a client/DevTools toggle turns them
+on — flagging here so the flip isn't forgotten. (No value change; the fix is proven under the flags-on tests below.)
+
+**Parallel-safety note (CLAUDE.md rows placed here, NOT edited in the shared files):** `GameEngine/Colonies/CLAUDE.md`
+and `Pulsar4X.Tests/CLAUDE.md` are collision targets (concurrent P3 CORE siblings + every lane adds to the Tests
+inventory). Per CAMPAIGN-PLAN §2.4 the pending rows below land at P8.2.
+
+### Pending row — `GameEngine/Colonies/CLAUDE.md` (file-map rows)
+- Append to the `LegitimacyDB.cs` row: **"+ P3.2 (Operation Earthfall A3): added the save-safe debounce counter
+  `ConsecutiveCollapsingReads` (consecutive monthly collapsing reads; inert unless `LegitimacyProcessor.EnableRebellionDebounce`)."**
+- Append to the `LegitimacyProcessor.cs` row: **"+ P3.2 (Operation Earthfall A3, default-off): `ReadCurrentMorale`
+  recomputes THIS cycle's morale via `PopulationProcessor.ComputeCurrentMorale` instead of the one-cycle-stale
+  `ColonyMoraleDB.Morale` field (kills the A3 stale echo, order-independent — the two same-frequency hotloops run in
+  `Assembly.GetTypes()` order); `EnableRebellionDebounce` requires `RebellionDebounceReads` (2) consecutive collapsing
+  reads before beginning a rebellion (no more one-sample revolts). Both default OFF → byte-identical. Gauge:
+  `LegitimacyStaleEchoDebounceTests`."**
+- Append to the `RebellionDB.cs` row: **"+ P3.2: `UpdateRebellion` gained a debounce-aware overload driven by the new
+  `LegitimacyDB.ConsecutiveCollapsingReads` (flag-gated, byte-identical off)."**
+- Append to the `PopulationProcessor.cs` row: **"+ P3.2: `ComputeCurrentMorale(Entity)` — a pure no-mutation reader of
+  the current-cycle morale (same inputs as `GrowPopulation`, same `ColonyMoraleDB.ComputeMorale`); consumed by
+  `LegitimacyProcessor` to read fresh morale. `GrowPopulation` untouched → population sim byte-identical."**
+
+### Pending row — `Pulsar4X.Tests/CLAUDE.md` test inventory table
+| `LegitimacyStaleEchoDebounceTests` | **P3.2 — the A3 rebellion-debounce + fresh-morale-legitimacy gauge (Operation Earthfall, findings A3 seams 2-3).** Pure: under `EnableRebellionDebounce`, a transient dip (one collapsing read then recovery, counter reset) never rebels while a SUSTAINED collapse rebels on the `RebellionDebounceReads`-th consecutive read; flag-off, a single sample still rebels (byte-identical). Harness (`CreateWithColony`): with `ReadCurrentMorale` on, a stale low `ColonyMoraleDB.Morale` field no longer collapses legitimacy (reads the hospitable colony's healthy current morale — no legit cliff), and a GENUINE sustained collapse (famine + blackout + max tax drive current morale to the floor) still crashes legitimacy AND begins a rebellion on the 2nd consecutive read. All flags restored in `finally` (no static-flag leak). |
+
+### Pending row — `docs/TESTING-TRACKER.md` (Layer-1 engine CI)
+- **T-P3.2 `LegitimacyStaleEchoDebounceTests`** · *what:* proves (a) a rebellion needs 2 consecutive collapsing reads
+  under `EnableRebellionDebounce` (a one-month dip is ignored, a sustained collapse still rebels) and (b) legitimacy
+  reads THIS cycle's morale under `ReadCurrentMorale` (a stale morale field no longer prints a legit cliff) · *why:* A3
+  found a transient hostile-world morale trough → a one-cycle-stale legit echo (legit 15 a month after morale
+  recovered) → a rebellion begun on a SINGLE sample → the UMF locked into a 180-day Defend at the Survive floor ·
+  *method:* drive `UpdateRebellion` with injected collapse/recovery sequences (pure) + drive `RecalcLegitimacy` on a
+  real colony with a stale field vs. a real famine (harness) · *right-looks-like:* transient → no rebellion + no
+  collapse under fresh-morale; sustained → collapse + rebellion on the 2nd read · *likely-failure:* a flag defaults
+  on (breaks byte-identity), or `ComputeCurrentMorale` drifts from `GrowPopulation`'s morale inputs · *mitigation:*
+  the flags-off byte-identity assertions + the loud keep-in-sync comment on both morale gatherings · *unblocks:* the A3
+  objective-flip fix (no phantom rebellion → the AI stays on its committed Conquer instead of collapsing to Defend).
+
+### Pending row — `docs/SYSTEM-CONNECTION-MAP.md`
+- `PopulationProcessor.ComputeCurrentMorale` → `LegitimacyProcessor.RecalcLegitimacy` (under `ReadCurrentMorale`) →
+  `LegitimacyDB.Legitimacy`: legitimacy now reads the SAME current-cycle morale the population sim computes, instead of
+  the one-cycle-stale `ColonyMoraleDB.Morale` field the two same-frequency (`Assembly.GetTypes()`-ordered) hotloops
+  otherwise race on.
+- `LegitimacyProcessor.UpdateRebellion` (debounce) → `LegitimacyDB.ConsecutiveCollapsingReads` → `RebellionDB.IsRebelling`
+  → `NeedsLadder`/`ObjectiveSelector` (the A3 chain): a rebellion now requires `RebellionDebounceReads` consecutive
+  collapsing reads, so a transient legitimacy trough no longer trips the Survive-floor Defend lock.
+
+---
+
+## P3.3 — Hysteresis break-glass (Operation Earthfall, findings A3 seam 4 + the critical Survive-floor bug)
+
+**The problem (findings/A3-objective-flip.md §Root-cause step 7):** a crisis commit was stamped at `Tier=Survive`
+(enum 0, the floor) via `NPCDecisionProcessor.cs:341`, so `ShouldReplan`'s only break-glass — `proposedTier < currentTier`
+— was **mathematically unreachable** (nothing is more urgent than the floor). Result: a one-month phantom rebellion
+locked the UMF into Defend for the full 180-day `DefaultCommitFor`, ignoring ~50 daily Conquer reads. This slice adds
+three crisis break-glasses, none of which reuse the dead tier compare.
+
+**Files changed (all inside the CORE fence except StrategicObjectiveDB.cs — see the note below):**
+- `Pulsar4X/GameEngine/Factions/ObjectiveTransition.cs` (CORE fence, primary) —
+  - NEW `[Flags] enum CrisisTrigger` (Rebellion / MoraleCollapse / LegitimacyCollapse / LosingWar — the Survive-rung
+    conditions; AtWar / Insolvent / MoraleUnhealthy / LegitimacyUnhealthy — the Stabilize-rung ones). Explicit bit
+    values, only-appended → save-safe.
+  - NEW `CrisisCommitFor` (60d, FLAGGED) + `ContradictionReleaseCycles` (14, FLAGGED).
+  - `CommitFor` gained a **crisis branch** (a): Defend/Consolidate → `CrisisCommitFor` (shorter dwell). Expansion aims
+    (Expand/Conquer) keep the Ambition-scaled dwell UNCHANGED; every other objective keeps `DefaultCommitFor`.
+  - `ShouldReplan` gained two optional `bool` params (`triggerCleared` b / `contradictionReleased` c, default false →
+    every pre-P3.3 4-arg caller byte-identical).
+  - `Advance` gained an optional `CrisisTrigger currentTriggers` param (default None → pre-P3.3 6-arg callers
+    byte-identical): for a crisis commit already in place it counts the **upward** contradiction streak
+    (`proposedTier > committedTier` — the reachable mirror of the dead compare), computes trigger-cleared
+    (`(CommitTrigger & currentTriggers) == None`), and records the tier-masked trigger on a fresh crisis commit.
+  - NEW helpers `IsCrisisObjective`, `CrisisTriggersFrom` (public; reuses NeedsLadder's own thresholds so the two never
+    drift), `CrisisMaskFor` (private).
+- `Pulsar4X/GameEngine/Factions/StrategicObjectiveDB.cs` (**NOT explicitly in the fence list, but CORE-domain and owned
+  by no other lane** — see parallel-safety note) — two save-safe appended `[JsonProperty]` fields: `CommitTrigger`
+  (`CrisisTrigger`, default None) + `ContradictionCycles` (int, default 0), both added to the deep-copy ctor.
+- `Pulsar4X/GameEngine/Factions/NPCDecisionProcessor.cs` (CORE fence) — `UpdateStrategicObjective` now computes
+  `currentTriggers` via `ObjectiveTransition.CrisisTriggersFrom(...)` off the same gauges it already reads
+  (`FactionRollup.MeanMorale/MeanLegitimacy/Balance` + the WarStanding/InRebellion it already had) and passes it to
+  `Advance`. (Refactor: `FactionRollup.MilitaryStrength` hoisted into a local `ownStrength` — same value.)
+- `Pulsar4X/Pulsar4X.Tests/AmbitionCadenceTests.cs` (**existing test edited** — the intentional behaviour change
+  invalidated one assertion) — the line pinning `CommitFor(Defend, extreme) == DefaultCommitFor` now asserts
+  `== CrisisCommitFor` (+ an ambition-invariance line at neutral). No sibling slice touches this file.
+- NEW `Pulsar4X/Pulsar4X.Tests/EfHysteresisBreakGlassTests.cs` — the P3.3 gauge (lands in the `rest` shard).
+
+**Tests added + what they assert (`EfHysteresisBreakGlassTests`, 9 tests, pure — drives `ObjectiveTransition` directly):**
+- `CrisisObjective_HoldsShorterDwell_ExpansionAndPeacefulUnchanged` — (a): Defend/Consolidate → `CrisisCommitFor` (<
+  Default); Conquer/Expand → the Ambition default; GrowEconomy/AdvanceTech/None → Default (byte-identity tripwire).
+- `SurviveFloorCommit_DownwardBreakGlassIsUnreachable_ButTheP33ReleasesAreNot` — the CRITICAL BUG pinned: for a
+  Survive-floor commit, `ShouldReplan` returns FALSE for every proposed tier before expiry (the dead compare), but
+  TRUE with `triggerCleared`/`contradictionReleased` (the reachable P3.3 paths).
+- `TriggerCleared_ReleasesTheDefendCommit_Early` — (b): a Defend commit records its Survive-rung triggers; once the
+  rebellion quells + morale/legit recover (only a non-mask AtWar flag remains) it releases to Conquer; a persisting
+  trigger holds.
+- `PersistentContradiction_ReleasesAfterN_Cycles` — (c), isolated (commit with no recorded trigger → (b) off): held
+  for N-1 higher-tier cycles (counter climbing), released on the N-th.
+- `Contradiction_ResetsOnANonConsecutiveRead` — a flickering read restarts the streak (no spurious release).
+- `LogScenario_OneMonthRebellionThenQuell_ReturnsToConquerWithinDays` — **the A3 log's exact scenario**: Conquer →
+  1-month rebellion → Defend → quell → daily Conquer reads → returns to Conquer within ≤2 days (was a 180-day lock).
+- `SustainedCrisis_HoldsDefend_ThroughoutTheCrisis` — the complement: a persistent Survive crisis holds Defend across
+  120 days (past a 60-day re-commit), never abandoning it; the contradiction counter stays 0.
+- `NonCrisisCommit_IgnoresTheCrisisBreakGlass` — a GrowEconomy commit records no trigger, never advances the counter,
+  never releases early (crisis break-glass is crisis-only — the non-crisis byte-identity guard).
+- `CrisisTriggersFrom_MirrorsTheNeedsLadderPredicates` — the flag builder reuses NeedsLadder's thresholds (survive /
+  healthy / stabilize cases).
+
+**BYTE-IDENTITY CLAIM: (b) provably inert absent new data — with ONE honest, confined, intentional exception.**
+- The two new `StrategicObjectiveDB` fields are additive save-safe `[JsonProperty]` defaulting to inert values
+  (None / 0); old saves load unchanged; the deep-copy ctor copies them.
+- The `ShouldReplan`/`Advance` new params default to None/false, so every pre-P3.3 caller (the 4-arg + 6-arg test
+  callers) is byte-identical. The two release paths (b)/(c) fire ONLY for a crisis-response commit with a recorded
+  trigger / a sustained upward contradiction — absent a crisis they never run; the contradiction counter only ticks
+  for a crisis commit. `ObjectiveTransitionTests` + `NPCObjectiveTickTests` were traced call-by-call and stay green.
+- The AI's player-visible actions remain default-off (`EnableOrderEmission` etc.), so no scenario/economy/ground test
+  changes; the objective-SETTLING that calls `Advance` is always-on but only writes the (unread-by-orders) DB.
+- **THE EXCEPTION (not a flag, and not strictly "absent new data"):** break-glass (a) shortens the crisis-response
+  dwell (Defend/Consolidate) from 180d to 60d in EVERY game — this is the point of the slice. Its entire test-suite
+  blast radius is ONE assertion in `AmbitionCadenceTests` (which directly pinned the old Defend=180d), updated in the
+  same change. No other existing test asserts a crisis-commit dwell (grep-verified: the only `CommitFor(Defend/…)`
+  assertions live in `AmbitionCadenceTests`; `NPCObjectiveTickTests` uses a healthy Thrive faction). So the change is
+  inert to every existing green test except the one that encoded the behaviour being changed.
+
+**FLAGGED balance numbers (2, both carry `// FLAGGED balance value`):**
+- `ObjectiveTransition.CrisisCommitFor = 60 days` — the shorter crisis-commit dwell (slice suggested 60d).
+- `ObjectiveTransition.ContradictionReleaseCycles = 14` — the N consecutive daily higher-tier reads that release a
+  crisis commit (slice suggested 14 daily reads).
+
+**Developer decisions raised:**
+- Both FLAGGED numbers above are the developer's to tune (crisis dwell length; contradiction debounce depth).
+- **Scope choice (reviewable):** "crisis objective" = **Defend AND Consolidate** (findings A3 seam 4 names both), not
+  just Defend/Survive. A war-footing **Conquer picked from the Survive tier is deliberately NOT a crisis objective** —
+  it keeps the Ambition-scaled dwell (the slice's "Non-crisis (Conquer/Expand) behavior unchanged"), so an aggressive
+  faction pressing its war from a strained-but-winning position is untouched. If the developer wants Consolidate
+  excluded (Defend-only), it's a one-line change to `IsCrisisObjective`.
+
+**Parallel-safety note (subsystem CLAUDE.md routed here, NOT edited in the shared file):** `GameEngine/Factions/CLAUDE.md`
+and `Pulsar4X.Tests/CLAUDE.md` are high-collision targets (sibling P3 CORE slices P3.1/3.2/3.4 + P4.x touch the
+ObjectiveTransition / NPCDecisionProcessor / Conquer/Defend-Resolver rows and the Tests inventory). Per CAMPAIGN-PLAN
+§2.4 the pending rows below land at P8.2. **`StrategicObjectiveDB.cs` was edited directly** (not routed) because it is
+not in ANY lane's fence list and is squarely CORE objective-machinery — the two new fields are load-bearing save-safe
+state this slice cannot live without, and no sibling lane touches Factions source files. Flagging it here for transparency.
+
+### Pending row — `GameEngine/Factions/CLAUDE.md` (file-map rows)
+- Replace the `ObjectiveTransition.cs` row body with: **"Built (Phase 2.3). The hysteresis engine that stops the brain
+  thrashing. + P3.3 (Operation Earthfall, findings A3): three CRISIS break-glasses so a crisis-response commit
+  (Defend/Consolidate) can't lock the brain the way a one-month phantom rebellion pinned the UMF on Defend for 180 days
+  at the Survive floor — (a) crisis objectives hold the shorter `CrisisCommitFor` (60d), (b) `Advance` releases the
+  commit the instant the `CrisisTrigger` that FORCED it clears (a condition read, not the `proposedTier<currentTier`
+  compare that's DEAD at the Survive floor), (c) release after `ContradictionReleaseCycles` (14) consecutive
+  higher-tier proposals (the reachable upward mirror). Non-crisis expansion aims unchanged. Gauge:
+  `EfHysteresisBreakGlassTests`."**
+- Append to the `StrategicObjectiveDB.cs` row: **"+ P3.3: two save-safe appended fields — `CommitTrigger`
+  (`CrisisTrigger` flags of what forced a crisis commit, masked to its tier) + `ContradictionCycles` (the upward
+  contradiction debounce counter). Both default inert (None/0), copied in the deep-copy ctor."**
+
+### Pending row — `Pulsar4X.Tests/CLAUDE.md` test inventory table
+| `EfHysteresisBreakGlassTests` | **P3.3 — the crisis hysteresis break-glass gauge (Operation Earthfall, findings A3).** Pure (drives `ObjectiveTransition` directly): (a) a crisis objective (Defend/Consolidate) holds the shorter `CrisisCommitFor` while expansion/peaceful aims keep their dwell; the CRITICAL BUG pinned — a Survive-floor commit is unreachable by the `proposedTier<currentTier` break-glass but IS released by the two P3.3 paths; (b) a Defend commit releases the instant its recorded `CrisisTrigger` clears (rebellion quelled) and holds while it persists; (c) N consecutive higher-tier proposals release it (isolated from b), a non-consecutive read resets the streak; **the log's exact scenario** — 1-month rebellion → quell → daily Conquer reads returns to Conquer within ≤2 days (was a 180-day lock) — and its complement, a sustained crisis holds Defend across 120 days; a non-crisis commit is untouched (byte-identity guard); and `CrisisTriggersFrom` mirrors the NeedsLadder predicates. |
+
+### Pending row — `docs/TESTING-TRACKER.md` (Layer-1 engine CI)
+- **T-P3.3 `EfHysteresisBreakGlassTests`** · *what:* proves the three crisis break-glasses release a crisis commit
+  (shorter dwell / trigger-cleared / contradiction-debounce) while a genuine sustained crisis still holds Defend, and
+  pins the Survive-floor unreachability bug · *why:* A3 found a one-month phantom rebellion locked the UMF into Defend
+  for 180 days because the commit stamped Tier=Survive made the only break-glass (`proposedTier<currentTier`)
+  unreachable · *method:* drive `ObjectiveTransition.Advance`/`ShouldReplan`/`CommitFor` directly with the log's
+  commit→rebellion→quell→daily-Conquer sequence and the sustained-crisis complement · *right-looks-like:* returns to
+  Conquer within ≤2 days of the quell; holds Defend across 120 sustained-crisis days; non-crisis commit untouched ·
+  *likely-failure:* a future edit re-couples (b)/(c) to the dead tier compare (Survive-floor lock returns), or the
+  crisis dwell/contradiction constant is mistuned · *mitigation:* this gauge + the non-crisis byte-identity test ·
+  *unblocks:* the A3 objective-flip fix (the AI abandons a passed crisis and resumes its committed war), and P3.4
+  operation-continuity (which assumes the objective can flip back off Defend once the crisis clears).
+
+### Pending row — `docs/SYSTEM-CONNECTION-MAP.md`
+- `NeedsLadder` (crisis predicates) → `ObjectiveTransition.CrisisTriggersFrom` → `StrategicObjectiveDB.CommitTrigger`
+  (recorded at commit) → `ObjectiveTransition.Advance` (trigger-cleared + contradiction releases) → the settled
+  `StrategicObjective`: a crisis-response commit (Defend/Consolidate) now unwinds when the condition that forced it
+  clears (or the ladder contradicts it for 14 cycles, or the shorter 60d dwell expires), instead of locking at the
+  Survive floor for 180 days — the A3 objective-flip fix, feeding the P3.4 fleet-recall / operation-continuity work.
+
+### Cross-lane requests: NONE — every production edit was inside the CORE fence except `StrategicObjectiveDB.cs`
+(CORE-domain, owned by no other lane; see the parallel-safety note above).

@@ -325,7 +325,8 @@ namespace Pulsar4X.Factions
             // never becomes an invasion. Read off the KNOWN war latch + true strengths (NeedsLadder.WarStanding), so a
             // faction not at war (or losing, or peaceful) is byte-identical.
             var (atWar, enemyStrength) = NeedsLadder.WarStanding(factionEntity);
-            bool atWarAndWinning = atWar && FactionRollup.MilitaryStrength(factionEntity) >= enemyStrength;
+            double ownStrength = FactionRollup.MilitaryStrength(factionEntity);
+            bool atWarAndWinning = atWar && ownStrength >= enemyStrength;
             // A hostile-world faction (Mars/Venus) is pinned at Survive by the conditions morale penalty, so the war
             // footing must reach Survive too — but NOT while the homeland is in open rebellion (recover first then).
             bool homelandInRebellion = NeedsLadder.InRebellion(factionEntity);
@@ -333,12 +334,24 @@ namespace Pulsar4X.Factions
             // Phase-5.2 decision-log: take the choice AND the reason tracing it to the driving input.
             var (chosen, reason) = ObjectiveSelector.SelectWithReason(tier, factionInfoDB.Doctrine, personality, atWarAndWinning, homelandInRebellion);
 
+            // P3.3 (Operation Earthfall, findings/A3): capture the crisis conditions active THIS cycle (the same
+            // predicates the needs-ladder reads). A crisis commit records the ones that forced it, so the transition
+            // engine can release the commit early once they clear (break-glass b) instead of holding Defend for the
+            // full dwell after a shock passes — the fix for the one-month rebellion that locked the UMF on Defend.
+            CrisisTrigger currentTriggers = ObjectiveTransition.CrisisTriggersFrom(
+                atWar, ownStrength, enemyStrength,
+                FactionRollup.MeanMorale(factionEntity),
+                FactionRollup.MeanLegitimacy(factionEntity),
+                FactionRollup.Balance(factionEntity),
+                homelandInRebellion);
+
             // Target selection (which rival to Conquer) is the 2.4c refinement; keep -1 (none) for now.
             // Phase-2.5: the commit DWELL scales with Ambition — a high-Ambition faction renews an expansion push
             // (Expand/Conquer) on a SHORTER cadence, a low-Ambition one dwells longer. Neutral/absent personality and
-            // every non-expansion objective return the fixed DefaultCommitFor, so this stays byte-identical today.
+            // every non-expansion objective return the fixed DefaultCommitFor, so this stays byte-identical today. A
+            // CRISIS objective (Defend/Consolidate) gets the shorter CrisisCommitFor (P3.3 break-glass a).
             TimeSpan commitFor = ObjectiveTransition.CommitFor(chosen, personality);
-            ObjectiveTransition.Advance(objective, tier, chosen, -1, now, commitFor);
+            ObjectiveTransition.Advance(objective, tier, chosen, -1, now, commitFor, currentTriggers);
 
             // Record WHY: if the transition committed the fresh choice, that's the reason; if hysteresis HELD a prior
             // objective (the brain didn't thrash), say so and note what this cycle actually read (still traceable).

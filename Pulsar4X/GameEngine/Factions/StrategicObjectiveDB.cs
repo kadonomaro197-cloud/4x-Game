@@ -81,6 +81,20 @@ namespace Pulsar4X.Factions
         /// Notes hysteresis when the brain HELD a prior objective instead of switching. Empty until the brain decides.</summary>
         [JsonProperty] public string DecisionReason { get; internal set; } = "";
 
+        /// <summary>P3.3 (Operation Earthfall, findings/A3-objective-flip.md): for a CRISIS-response commit
+        /// (Defend/Consolidate), the flags of the conditions that FORCED it (rebellion / morale- or legitimacy-collapse /
+        /// losing-war …), masked to its tier. <see cref="ObjectiveTransition.Advance"/> releases the commit the moment
+        /// none of these still holds (the trigger-cleared break-glass, which — unlike the tier compare — is reachable
+        /// from the Survive floor). <see cref="CrisisTrigger.None"/> for a non-crisis commit → inert. Save-safe:
+        /// appended [JsonProperty], enums serialize by int, an older save with no value loads to None.</summary>
+        [JsonProperty] public CrisisTrigger CommitTrigger { get; internal set; } = CrisisTrigger.None;
+
+        /// <summary>P3.3 (findings/A3): consecutive cycles the needs-ladder has proposed a STRICTLY HIGHER tier than
+        /// this crisis commit is held at (the contradiction debounce). At <see cref="ObjectiveTransition.ContradictionReleaseCycles"/>
+        /// the commit is released for a re-plan; a non-consecutive read resets it to 0; a fresh commit resets it.
+        /// Only ticked for a crisis commit. Save-safe (appended [JsonProperty], an older save loads to 0).</summary>
+        [JsonProperty] public int ContradictionCycles { get; internal set; } = 0;
+
         public StrategicObjectiveDB() { }
 
         public StrategicObjectiveDB(StrategicObjectiveDB other)
@@ -92,6 +106,8 @@ namespace Pulsar4X.Factions
             LastActionKind = other.LastActionKind;
             LastActionDetail = other.LastActionDetail;
             DecisionReason = other.DecisionReason;
+            CommitTrigger = other.CommitTrigger;
+            ContradictionCycles = other.ContradictionCycles;
         }
 
         public override object Clone() => new StrategicObjectiveDB(this);
