@@ -877,6 +877,16 @@ namespace Pulsar4X.GroundCombat
             return true;
         }
 
+        /// <summary>Rename a formation (the ground echo of a fleet rename). A <see cref="GroundFormation"/> is a DATA
+        /// object, so the client can't use the entity-only <c>RenameWindow</c> — this is the setter it calls instead
+        /// (R1 gap 2). No-op returning false on a null formation or a null/blank name (the old name is kept).</summary>
+        public static bool RenameFormation(GroundFormation formation, string name)
+        {
+            if (formation == null || string.IsNullOrWhiteSpace(name)) return false;
+            formation.Name = name.Trim();
+            return true;
+        }
+
         /// <summary>Disband a formation (the ground echo of <c>FleetOrder.Disband</c>): its members become unformed,
         /// and the record is removed. The units themselves are untouched.</summary>
         public static void DisbandFormation(GroundForcesDB forces, GroundFormation formation)
@@ -1001,6 +1011,28 @@ namespace Pulsar4X.GroundCombat
             foreach (var f in forces.Formations)
                 if (f.FactionOwnerID == factionId) list.Add(f);
             return list;
+        }
+
+        /// <summary>A faction's formations across EVERY body in the whole game — each paired with the body it sits on
+        /// (formations are per-body, like a ship's parent fleet). The cross-body registry the Force Management window
+        /// needs to list all of a faction's battalions in one place (R1 gap 1), CI-testable engine-side. Walks
+        /// <c>game.Systems</c> → each system's bodies carrying a <see cref="GroundForcesDB"/> → its faction-owned
+        /// formations. Read-only, defensive (null game / null system → empty).</summary>
+        public static List<(Entity body, GroundFormation formation)> AllFormationsFor(Game game, int factionId)
+        {
+            var result = new List<(Entity, GroundFormation)>();
+            if (game?.Systems == null) return result;
+            foreach (var system in game.Systems)
+            {
+                if (system == null) continue;
+                foreach (var body in system.GetAllEntitiesWithDataBlob<GroundForcesDB>())
+                {
+                    if (body == null || !body.TryGetDataBlob<GroundForcesDB>(out var forces) || forces.Formations == null) continue;
+                    foreach (var f in forces.Formations)
+                        if (f != null && f.FactionOwnerID == factionId) result.Add((body, f));
+                }
+            }
+            return result;
         }
 
         // ── AGGREGATION (the battalion↔fleet-parity reads, slice 5a — the developer's "a joined force moves at the

@@ -243,3 +243,67 @@ Add a `GroundForcesDB` note: `GroundForcesDB.OutpostEntityIds` (per-faction beac
   stores, via `GroundBuildings.BuildingNamesOnBody` which now includes outpost buildings) + a build-progress readout
   (`GroundForcesDB.BuildSites`: region → design → ProgressPoints/RequiredPoints) are the client surface for beachhead
   construction — optional, post-merge, no dependency beyond the public reads.
+
+---
+
+## G2.1 — FormUpLoose (AI formation parity) + manager micro-helpers
+
+**Slice summary.** Fixes R2 gap 3 ("the AI NEVER forms — CreateFormation's only non-test caller is the player UI").
+New pure engine helper `GroundAssembly.FormUpLoose(body, factionId, name=null)` sweeps a faction's formation-less units
+on a body into one or more BATTALIONS (`CreateFormation` + `AssignUnit`), split at a size cap = the faction's authored
+garrison size (`GroundReinforcement.GarrisonTargetFor` off `FactionInfoDB.GarrisonComposition`), deterministic (ascending
+`UnitId`), never throws. Wired at the two GROUND-owned sites — `GroundStartGarrison.RaiseHomeGarrison` (garrison raise,
+names the battalion "Home Guard") and `GroundTransport.TryLandUnit` (invasion landing) — both gated behind the default-OFF
+static flag `GroundAssembly.AutoFormUp` (the `AutoRaiseHomeGarrison`/`InterruptTimeOnNewBattle` pattern). Plus the three
+manager micro-helpers the CLIENT lane needs (R1): `GroundForces.RenameFormation(formation, name)` (data-object rename —
+R1 gap 2), `GroundFormationTools.AllFormationsFor(game, factionId)` → `(body, formation)` pairs across every body (the
+cross-body registry — R1 gap 1), `GroundSensors.RadarReachHexes(body, unit)` (best-radar km → hexes on this body — R1 (B)).
+
+**Byte-identity claim: (a) default-off flag.** The ONLY behaviour change (auto forming-up raised garrisons + landed
+invaders) is gated by `GroundAssembly.AutoFormUp = false`; with it off, `RaiseHomeGarrison`/`TryLandUnit` are byte-identical
+(so `GroundForcesTests.StartGarrison_*`, `GroundTransportTests`, `TroopOrderTests`, `DevTestScenarioTests`,
+`GroundGarrisonPerFactionTests` are untouched). The four helpers (`FormUpLoose`, `RenameFormation`, `AllFormationsFor`,
+`RadarReachHexes`) are new API with no existing callers → also (b) provably inert. New fixture `EfGroundFormUpTests`
+(→ `rest` shard).
+
+**FLAGGED balance values (developer sets):**
+- `GroundAssembly.DefaultBattalionCap = 6` — battalion size cap fallback when a faction authors no `GarrisonComposition`
+  (a battalion = one authored-garrison's worth of units; default = the engine garrison sum 3/2/1). `// FLAGGED balance value`.
+  (When a faction DOES author a garrison mix, the cap is that mix's sum — no separate number.)
+
+**Developer decision queued:** battalion size cap semantics — currently "one battalion holds one authored-garrison's
+worth of units" (so a fresh garrison = one battalion; a doubled force = two). Reviewable if the developer wants a fixed
+battalion size independent of garrison composition.
+
+**Pending subsystem-CLAUDE.md rows (parked here — `GameEngine/GroundCombat/CLAUDE.md` is high-collision with parallel G2
+siblings; land at integration):**
+- **New file row — `GroundAssembly.cs`:** "**NEW (Earthfall G2.1 — AI formation parity, 2026-07-18)** The ground echo of
+  `Fleets.FleetAssembly`: `FormUpLoose(body, factionId, name=null)` sweeps a faction's formation-less units on a body into
+  battalions (`CreateFormation`+`AssignUnit`), split at a size cap = the authored garrison size
+  (`GroundReinforcement.GarrisonTargetFor`, `DefaultBattalionCap` 6 fallback — FLAGGED), deterministic (ascending
+  `UnitId`), never throws. Fixes R2 gap 3 (only the player UI formed units; the AI never did). Callable directly (player
+  UI / `ConquerResolver` / tests); AUTO-invoked at `GroundStartGarrison.RaiseHomeGarrison` + `GroundTransport.TryLandUnit`
+  behind the default-OFF `AutoFormUp` flag (byte-identical off). Gauge: `EfGroundFormUpTests`. | ✅ G2.1"
+- **`GroundForcesDB.cs` row addendum:** `GroundForces.RenameFormation(formation, name)` (data-object rename — the client
+  can't use the entity-only RenameWindow, R1 gap 2) + `GroundFormationTools.AllFormationsFor(game, factionId)` → cross-body
+  `(body, formation)` list (R1 gap 1 cross-body registry).
+- **`GroundStartGarrison.cs` / `GroundTransport.cs` row addenda:** each now auto-forms freshly-raised/landed units into a
+  battalion via `GroundAssembly.FormUpLoose`, gated by `GroundAssembly.AutoFormUp` (default off → byte-identical).
+- **`GroundSensors.cs` row addendum:** `RadarReachHexes(body, unit)` — best mounted `GroundSensorAtb` range (km) → hexes
+  on this body (`Range_km / HexPitchKm(region)`), the reach the client highlights green (R1 (B)); 0 without a radar.
+
+**CROSS-LANE REQUESTS:**
+- **→ CORE (PW):** the invasion-arm resolver should CALL `GroundAssembly.FormUpLoose(body, factionId)` after it raises a
+  garrison / after an invader lands (the campaign's "FormUpLoose calls at garrison-raise/landing" wiring). Two ways to
+  drive it: (1) flip `GroundAssembly.AutoFormUp = true` on the New-Game path so the two GROUND sites auto-form (matches
+  the `AutoRaiseHomeGarrison` on-switch — CLIENT/CORE owns that flip), OR (2) call `FormUpLoose` directly from the resolver
+  after a `LoadTroopsOrder`/`LandTroopsOrder` resolves (the flag stays off, the resolver forms explicitly). Recommend (1)
+  for the AI's own garrisons + landings, (2) if the resolver wants named/task-specific battalions. `FormUpLoose` is pure,
+  deterministic, never throws, and a no-op on a garrison-less/already-formed body — safe to call from the monthly Tick.
+- **→ CLIENT (C-lane / C3):** the three micro-helpers R1 flagged are BUILT and public: `GroundForces.RenameFormation`
+  (C3 battalion rename button), `GroundFormationTools.AllFormationsFor(game, factionId)` (the Force-window cross-body
+  battalion list — one call gives `(body, formation)` for every world), `GroundSensors.RadarReachHexes(body, unit)`
+  (C4 green radar-reach highlight, km→hex on this body). No further engine work needed for those C-lane items.
+- **→ WHOEVER OWNS THE ON-SWITCH:** `GroundAssembly.AutoFormUp` must be flipped true somewhere (New-Game path or the
+  ground-tactical-AI enable) for the AI to actually field battalions in a default game — otherwise garrisons/landings stay
+  loose (byte-identical). Left OFF here for byte-identity; the flip is an integration/PW decision.

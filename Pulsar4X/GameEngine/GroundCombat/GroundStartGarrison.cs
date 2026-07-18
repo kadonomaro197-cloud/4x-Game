@@ -71,6 +71,11 @@ namespace Pulsar4X.GroundCombat
                     raised++;
                 }
             }
+            // AI formation parity (R2 gap 3): a raised garrison fields as a BATTALION, not scattered loose units, so the
+            // ground tactical brain has a formation to command. Gated OFF by default → byte-identical (the AutoRaise/
+            // InterruptTimeOnNewBattle pattern); the New-Game path / tactical-AI wiring flips GroundAssembly.AutoFormUp on.
+            if (raised > 0 && GroundAssembly.AutoFormUp)
+                GroundAssembly.FormUpLoose(body, factionId, "Home Guard");
             return raised;
         }
 
