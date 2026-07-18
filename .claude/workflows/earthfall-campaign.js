@@ -35,6 +35,11 @@ HARD RULES (repeated because they are the ones that get broken):
   your pending rows to your lane notes file instead (campaign amendment, PLAN §2.4).
 - Update the subsystem CLAUDE.md rows for code you changed (inside your fence), match
   CONVENTIONS.md idioms, NUnit-3 tests with UNIQUE new fixture filenames.
+- PARALLEL SAFETY: your slice may run CONCURRENTLY with file-disjoint sibling slices in
+  the same working tree (the phase's batches). Touch ONLY files your slice names or
+  creates; never run repo-wide reformatting. If your subsystem-CLAUDE.md target could
+  collide with a parallel sibling's, put the row text in your lane notes instead and say
+  so in your report.
 - Every new gameplay number gets a "// FLAGGED balance value" comment.
 - State explicitly in your report which byte-identity claim your change makes:
   (a) default-off flag, or (b) provably inert absent new data — and why.
@@ -87,7 +92,9 @@ Default to approve=false when uncertain; every blocker concrete (file:line).`,
 const PHASES = {
 
   // ------------------------------------------------------------------ CORE --
-  P0: { lane: 'CORE', title: 'VISIBILITY & REPRO (pre-fork)', slices: [
+  // P0 batches: all five slices are file-disjoint (two NEW test files / ci.yml / the
+  // Factions recorder files / the Engine concurrency files — different CLAUDE.mds too).
+  P0: { lane: 'CORE', title: 'VISIBILITY & REPRO (pre-fork)', batches: [[0, 1, 2, 3, 4]], slices: [
     { key: 'P0.1', title: 'Campaign-clock CI repro fixture', prompt: `
 Read ${F}/A1-freeze.md (MISSING section) + Pulsar4X/Pulsar4X.Tests/NPCActingSensorTests.cs + CombatFleetTreeSafetyTests (StandingHostilePair test).
 Build Pulsar4X/Pulsar4X.Tests/CampaignClockReadoutTests.cs: DevTestStartFactory.CreateDevTest (uef-devtest+umf+kithrin), open the four NPCDecisionProcessor gates AND CombatEngagement.InterruptTimeOnNewEngagement/RequireDetectionToEngage/RequireWeaponRangeToEngage in try/finally restores, then drive the REAL master clock (game.TimePulse, 3600s steps) for a bounded window (default 40 game-days as a const). Per game-day record wall-ms, MasterTimePulse.FineStepCount delta, CombatEngagement.TickCount delta, SensorScan.ScanCount delta, NPCDecisionProcessor.TickErrorCount/LastTickError, ManagerSubPulse.GlobalCurrentProcess. Assert: FineStepCount FLAT while no fleets are within CombatEngagement.EngagementRange_m; wall-ms/day under a generous bound; zero tick errors. [Timeout] mandatory. Write the whole readout to TestResults/campaign-clock-readout.txt (create dir). Do NOT use TestScenario.AdvanceTime (forces single-thread); drive TimePulse directly.` },
@@ -105,7 +112,10 @@ Read ${F}/A1-freeze.md (H2/H3 + fix seams). Two real latent bugs, fix both:
 Also fix the stale ReaderWriterLockSlim claims in GameEngine/CLAUDE.md. Add a focused re-entrancy unit test for (a).` },
   ]},
 
-  P3: { lane: 'CORE', title: 'STRATEGIC COHERENCE', slices: [
+  // P3 batches: P3.1 (FactionFactory + umf.json) and P3.2 (Colonies/Legitimacy*) are
+  // disjoint — parallel. P3.3 (ObjectiveTransition + Factions/CLAUDE.md, which P3.1 also
+  // rows) runs alone; P3.4 builds ON P3.3's release logic — last.
+  P3: { lane: 'CORE', title: 'STRATEGIC COHERENCE', batches: [[0, 1], [2], [3]], slices: [
     { key: 'P3.1', title: 'UMF government node + Ceres factory (data)', prompt: `
 Read ${F}/A3-objective-flip.md (fix seam 1) + ${F}/A6-faction-development.md (Ceres factory x0, umf.json:511-513).
 (a) FIRST verify whether FactionFactory.LoadFromJson parses a "government" node (grep). If not, add a parser mirroring the "personality" node pattern (byte-identical when absent). Then author the node in GameData/basemod/ScenarioFiles/umf.json: Militarism High + fitting Authority — per GovernmentDB.cs:86 WarMoraleFactor High=+0.5 so the war legitimacy term becomes +10 instead of the all-Mid default's -5 (a war-winning militarist takes pride).
@@ -130,7 +140,10 @@ Read ${F}/A3-objective-flip.md (§D commitment gap + seam 5). Minimal continuity
 Tests drive resolvers directly (no sim advance): transient-wobble keeps Conquer; genuine-Defend emits the recall order for the moving fleet.` },
   ]},
 
-  P4: { lane: 'CORE', title: 'SEALIFT', slices: [
+  // P4 batches: P4.1 (ConquerResolver) / P4.2 (Ships + Industry) / P4.3 (umf.json data +
+  // its own test) are file-disjoint — parallel. P4.4 (the e2e gauge exercising all three)
+  // runs after.
+  P4: { lane: 'CORE', title: 'SEALIFT', batches: [[0, 1, 2], [3]], slices: [
     { key: 'P4.1', title: 'Rung-2 already-queued guard', prompt: `
 Read ${F}/A4-sealift.md (cause 1). ConquerResolver Rung 2 (ConquerResolver.cs:241-271) queues a transport on EVERY free line (gate is only !FactionOwnsTransport) — the log shows 4 redundant heavy transports strangling Mars. Add "and none already queued": scan the faction's production lines for an existing job of the transport design (find the real job-read API in Industry/ by source). Test: resolver twice on a free-line colony — first queues, second falls through to the next rung.` },
     { key: 'P4.2', title: 'Charge + fuel BUILT hulls', prompt: `
@@ -156,8 +169,12 @@ A landed unit whose design mounts GroundConstructorAtb + available surface parts
     { key: 'G2.1', title: 'FormUpLoose — AI formation parity', prompt: `
 Read ${F}/R2-player-unit-chain.md (gap 3: the AI NEVER forms — CreateFormation's only non-test caller is the player UI) + GameEngine/GroundCombat/GroundForcesDB.cs formation API.
 Build GroundAssembly.FormUpLoose(body, factionId, name=null): sweep the faction's formation-less units on a body into a battalion (CreateFormation + AssignUnit; sensible size cap from FactionInfoDB.GarrisonComposition — FLAGGED; multiple battalions if over cap; deterministic order). Pure engine helper — callable by garrison-raise, the landing path, and the CORE lane's resolver (they wire it in PW; write that request to lane notes). Call it yourself at the two GROUND-owned sites: GroundStartGarrison raise and GroundTransport.TryLandUnit landings (verify both by source). Also: RenameFormation(formation, name) + GroundFormationTools.AllFormationsFor(game, factionId) + GroundSensors.RadarReachHexes(body, unit) — the manager micro-helpers CLIENT needs (R1 findings). Tests: raise -> battalions formed per composition; landing -> invader formed; rename works; AllFormationsFor enumerates across bodies.` },
-    { key: 'G2.2', title: 'Auto-campaign advance step (flag-gated)', prompt: `
-Read ${F}/A5-ground-campaign.md (Step 5 — landed invaders never move). Inside GroundForcesProcessor's existing tick (L9), behind a NEW static flag EnableAutoCampaign (default OFF — the CORE lane / menu games flip it in PW): each invader formation on a contested planet with an EMPTY order queue gets a queued advance (QueueFormationOrder MoveRegion) toward the nearest adjacent enemy-held region (verify the region adjacency read in PlanetRegionsDB by source; deterministic id tiebreaks); stop when all regions held. Respect existing ROE/stance. Tests: flag on — a landed 3-unit formation advances region-to-region across ticks and captures a small multi-region world end-to-end (the test the whole campaign was missing); flag off — byte-identical.` },
+    { key: 'G2.2', title: 'THE GROUND TACTICAL BRAIN — GroundThreat + GroundTactics + the wire (per the locked design)', prompt: `
+Read docs/earthfall/GROUND-TACTICAL-AI-DESIGN.md IN FULL — it IS this slice's design (the decision model §2, the dependency web §3, the build spec §4) and it answers the developer's question "is the AI smart enough to know when to be defensive vs offensive." Implement its build spec exactly, in order:
+(a) G2.2a — GroundThreat (NEW file): the FOG-HONEST enemy-strength read, own battalion strength (GroundFormationTools.FormationStrength) vs DETECTED enemy strength in the battalion's region + adjacent regions via the per-faction ground fog reveal API (verify by source; an UNDETECTED enemy counts ZERO — the space undetected-clears rule). This is the open fog "slice 5" promoted to a requirement; PW also consumes it for the landing score.
+(b) G2.2b — GroundTactics.DecidePosture(ctx) (NEW file): pure + deterministic -> { Stance, Roe, Intent(Advance/Hold/PullBack/Retreat), Reason }. Inputs + rules exactly per the design doc §2 table (odds via the CombatRisk.RequiredStrengthRatio curve — READ-ONLY cross-fence reference, never edit Factions/; attacker-vs-homeland-defender role; orbital support; fortification + terrain; reserve; ammo fraction; fallback destination = nearest friendly region / G1 beachhead anchor; blind => cautious; dry ammo => never Offensive; cornered => dig in, no suicide moves). Posture hysteresis WITH a built-in break-glass (§2 last para — never a time-lock without a release). All thresholds FLAGGED.
+(c) G2.2c — the wire in GroundForcesProcessor's existing tick (L9 — a step, NO new hotloop) behind NEW static flag EnableGroundTacticalAI (default OFF; CORE flips it in PW): per AI-owned battalion apply Stance (TrySetStance, respect its cooldown), ROE (SetEngagementStance), Intent via the order queue (Advance = QueueFormationOrder MoveRegion toward the nearest adjacent enemy-held region, verify the PlanetRegionsDB adjacency read by source, deterministic id tiebreaks, stop when all held; PullBack/Retreat = MoveRegion toward the chosen friendly region/beachhead). ORDER OWNERSHIP (design §3.5): GroundOrder gains a save-safe issuer marker ([JsonProperty] + deep-copy) so the brain replaces only ITS OWN orders — a PLAYER order queue ALWAYS overrides. Record each decision's Reason (no decision without its explain; CLIENT shows own battalions' Reason — note the request).
+Tests — the design doc §4 acceptance gauges verbatim: outnumbered fortified defender => Defensive+Hold, does NOT advance; attacker at 2:1 => Offensive+Close+Advance and takes a small multi-region world end-to-end; losing 1:4 with friendly ground behind => Retreat toward it, cornered => digs in; parity => Balanced+StandOff; bold faction commits at odds a cautious one refuses (the curve bites); blind => cautious; player order suppresses the brain; flag-off byte-identical.` },
     { key: 'G2.3', title: 'Ammo drain + resupply + upkeep values', prompt: `
 Read ${F}/A5-ground-campaign.md (Steps 4/6). Three wires:
 (a) ResolveRegionCombat calls GroundAmmo.Consume per firing unit with an ammo-mode weapon (read GroundAmmo.cs deferred-drain notes first; per-salvo kg FLAGGED); dry => that weapon silent via existing IsDry semantics.
@@ -181,7 +198,8 @@ Read ${F}/R2-player-unit-chain.md (gap 1) + GameEngine/GroundCombat/CLAUDE.md (P
 (a) New GroundSealAtb (or extend GroundAugmentAtb ONLY if verified cleaner — justify): dials for sealing fraction vs Vacuum + ToxicAtmosphere (0..1 each, or one Sealing dial covering both — pick + justify; mass scales with sealing, FLAGGED). Six-point base-mod registration ("sealed-systems" template).
 (b) Wire EnvironmentalResistance at GroundUnitAssembly.ToGroundUnitDesign: best mounted seal writes {Vacuum: x, ToxicAtmosphere: x} into the design's EnvironmentalResistance so RaiseUnit snapshots it (the existing E4 counter path).
 (c) Expose assembler readout data engine-side (training multiplier + power/ammo supply-vs-demand numbers already computed in GroundUnitAssemblyResult — verify what CLIENT needs per ${F}/R2 flags; add public getters if missing).
-Tests: JSON->atb binding (gotcha-10 sensor); an assembled sealed unit survives the vacuum world an unsealed twin bleeds on (extend the existing GroundForcesTests vacuum gauges).` },
+(d) TALENT SCARCITY PARITY ("you can't mass-produce Space Marines"): the ship-side elite stamp (UnitCaliberAtb) draws from the scarce talent pool via ManpowerTools (verify HasTalentToBuild/CommitTalent by source), but the ground Training Cadre draws nothing — building a cadre-equipped ground unit should COMMIT talent the same way (draw size FLAGGED; a colony out of talent cannot field another veteran battalion; release on unit death mirrors the ship path if one exists — verify). Byte-conscious: units without a cadre draw nothing.
+Tests: JSON->atb binding (gotcha-10 sensor); an assembled sealed unit survives the vacuum world an unsealed twin bleeds on (extend the existing GroundForcesTests vacuum gauges); cadre build commits talent and an exhausted pool blocks the next veteran.` },
   ]},
 
   // ---------------------------------------------------------------- CLIENT --
@@ -270,11 +288,13 @@ Per §13 S2: flag-on, WithinWeaponRange/SeparationOf compute the 2D group-pair d
   ]},
 
   // ------------------------------------------------------- POST-MERGE CORE --
-  PW: { lane: 'CORE', title: 'WIRING — resolver rungs onto merged capabilities', slices: [
+  // PW batches: PW.1 (Factions resolver files) and PW.2 (client windows + notes sweep)
+  // are file-disjoint — parallel.
+  PW: { lane: 'CORE', title: 'WIRING — resolver rungs onto merged capabilities', batches: [[0, 1]], slices: [
     { key: 'PW.1', title: 'Conquer rungs: bombard, landing score, beachhead, campaign kickoff', prompt: `
-Prerequisite: GROUND lane merged. Read ${F}/A5-ground-campaign.md (minimal-build list) + ${F}/R3-docs-directives.md (easiest-landing score spec) + the merged GroundCombat surface (grep the new helpers: FormUpLoose, EnableAutoCampaign, the beachhead build step, the infra order types).
-In ConquerResolver (CORE-owned): (a) BOMBARD rung between STRIKE and LAND — orbiting fleet + defending garrison outguns the landing force => emit the bombardment through the real order/fire path (verify what exists; if the fleet resolve cannot target colonies, fire the bounded OnTakingDamage entry through an ORDER, the GroundBombardmentTests shape); (b) LANDING-REGION choice replacing the hardcoded 0 (ConquerResolver.cs:62) using the easiest-landing score (fog-honest reads; deterministic tiebreak); (c) BEACHHEAD rung — after a region is held, land engineer + parts, invoke the G1 build; (d) CAMPAIGN kickoff — flip EnableAutoCampaign for menu/DevTest games + ensure FormUpLoose runs on landings the resolver drives; (e) INFRA rung — queue DestroyInfrastructure against fortifying enemy buildings in reach (FLAGGED aggression policy).
-Resolver-driven tests for each rung (the ConquerResolverTests idiom).` },
+Prerequisite: GROUND lane merged. Read ${F}/A5-ground-campaign.md (minimal-build list) + ${F}/R3-docs-directives.md (easiest-landing score spec) + docs/earthfall/GROUND-TACTICAL-AI-DESIGN.md §3.8 (the strategy->tactics seam) + the merged GroundCombat surface (grep the new helpers: FormUpLoose, GroundThreat, GroundTactics, EnableGroundTacticalAI, the beachhead build step, the infra order types).
+In ConquerResolver (CORE-owned): (a) BOMBARD rung between STRIKE and LAND — orbiting fleet + defending garrison outguns the landing force (read via GroundThreat, fog-honest) => emit the bombardment through the real order/fire path (verify what exists; if the fleet resolve cannot target colonies, fire the bounded OnTakingDamage entry through an ORDER, the GroundBombardmentTests shape). ONGOING FIRE SUPPORT: the rung may RE-FIRE on later cycles while the defending garrison still outguns the landed force — ApplyGroundBombardment is defender-only (verified friendly-fire guard), so own landed troops are safe; cadence + cap FLAGGED; (b) LANDING-REGION choice replacing the hardcoded 0 (ConquerResolver.cs:62) using the easiest-landing score with GroundThreat as its garrison-strength input (fog-honest; deterministic tiebreak); (c) BEACHHEAD rung — after a region is held, land engineer + parts, invoke the G1 build; (d) BRAIN kickoff — flip EnableGroundTacticalAI for menu/DevTest games (beside the other AI gates) + ensure FormUpLoose runs on landings the resolver drives; (e) INFRA tasking rung — queue DestroyInfrastructure against fortifying enemy buildings in reach, gated on the battalion's brain posture being Offensive (the design's stance-as-gate rule; FLAGGED aggression policy).
+Resolver-driven tests for each rung (the ConquerResolverTests idiom), including re-fire (strong garrison persists => second bombardment emitted; softened => the rung stops).` },
     { key: 'PW.2', title: 'Client cross-lane buttons + request resolution', prompt: `
 Prerequisites: GROUND + CLIENT merged. (a) Force Management: battalion RENAME button via GroundForces.RenameFormation; infra "Destroy/Capture infrastructure" order buttons (the G3 order types) in the battalion order surface + PlanetViewWindow city-tile inspect spot (R4 hooks :640/:1074). (b) Sweep every lane-notes REQUEST (docs/earthfall/LANE-*-NOTES.md) and resolve or escalate each to the developer list. CLIENT-TEST-CHECKLIST entries.` },
   ]},
@@ -282,11 +302,12 @@ Prerequisites: GROUND + CLIENT merged. (a) Force Management: battalion RENAME bu
   P8: { lane: 'CORE', title: 'EARTHFALL ACCEPTANCE', slices: [
     { key: 'P8.1', title: 'The campaign gauge + the Space-Marine gauge', prompt: `
 Two capstone fixtures (bounded, [Timeout], readout files, milestone-named assertions, [Ignore] unpassable milestones with reasons — never red):
-(a) OperationEarthfallTests: the WHOLE AI campaign through real paths on DevTest — Conquer held (P3) -> mass+sail -> ONE transport builds, launches fueled+charged (P4) -> bombard rung vs the strong garrison -> land at the scored region -> FormUpLoose battalion -> beachhead built by the engineer (G1) -> auto-campaign advances region-to-region (G2) -> infra destroyed/captured where gated (G3) -> planet capture flips the colony; meanwhile Kithrin survey+found (D1-D3) and no faction balance decays structurally (D2).
-(b) SpaceMarineDefenseTests: the PLAYER chain — assemble a marine design in-engine exactly as the UI does (RegisterAssembledDesign: human-frame + power-armor + sealed-systems (G4) + training cadre + rifle + plating + ward), build+field via the real industry path, FormUp into a battalion, then a landed UMF invasion force attacks Earth: the marine battalion (stance/ROE set) defeats it; then embark the marines (LoadTroopsOrder) and land them on Mars (LandTroopsOrder) — the developer's declared scenario, both directions.
+(a) OperationEarthfallTests: the WHOLE AI campaign through real paths on DevTest — Conquer held under transient wobble (P3) -> mass+sail -> ONE transport builds, launches fueled+charged (P4) -> bombard rung vs the strong garrison (incl. a between-waves RE-FIRE while it stays strong) -> land at the SCORED region -> FormUpLoose battalion -> THE TACTICAL BRAIN picks Offensive and advances region-to-region (G2) -> beachhead built by the engineer (G1) -> infra destroyed/captured where the brain's posture gates it (G3/PW) -> a SECOND WAVE loads+lands -> planet capture flips the colony; meanwhile Kithrin survey+found (D1-D3) and no faction balance decays structurally (D2). POSTURE ASSERTIONS (the brain visibly alive): when the defenders outnumber the landed force past the Risk bar, the invader battalion reads it and goes Defensive / withdraws toward its beachhead — assert the Stance/Roe/Intent + Reason, not just survival.
+(b) SpaceMarineDefenseTests: the PLAYER chain — assemble a marine design in-engine exactly as the UI does (RegisterAssembledDesign: human-frame + power-armor + sealed-systems (G4) + training cadre + rifle + plating + ward), build+field via the real industry path, FormUp into a battalion, then a landed UMF invasion force attacks Earth: the marine battalion (stance/ROE set) defeats it — AND assert the UMF brain REACTS to the counterattack (outmatched => Defensive/withdraw, the exact moment that answers the developer's question); then embark the marines (LoadTroopsOrder) and land them on Mars (LandTroopsOrder) — the developer's declared scenario, both directions.
+(c) MID-CAMPAIGN SAVE/LOAD: at a mid-invasion point (troops landed, battalion formed, brain posture set, beachhead placed, an infra hex captured, a brain-issued order queued), Game.Save -> Game.Load (the SaveLoadDesignRoundTripTests pattern) and assert the campaign state survives intact: formations + membership, the order queue INCLUDING the issuer marker, hex OwnerFactionID flips, beachhead building + surface parts, the rebellion-debounce counter + commit-reason state (P3), and (if TWOD merged) the battle-frame anchors — then advance a tick and assert the campaign CONTINUES (the brain re-decides without error).
 Write TestResults/earthfall-readout.txt with the full campaign tape.` },
     { key: 'P8.2', title: 'Dashboard sync + final report', prompt: `
-Sweep ALL docs/earthfall/LANE-*-NOTES.md pending rows into the real dashboards in ONE slice: DOCS-INDEX rows (new docs incl. the memos + this campaign folder), TESTING-TRACKER rows (every new gauge), SYSTEM-CONNECTION-MAP (new wires: bombard rung, beachhead, campaign arm, infra combat, station income, survey chain, embark UI), subsystem CLAUDE.md rows any implementer missed (audit git log of all lanes), stale-claim retirements. Then write docs/earthfall/CAMPAIGN-REPORT.md: what shipped per lane, every developer decision awaiting an answer, deferred items, and the CLIENT-TEST-CHECKLIST items awaiting the developer's local runtime pass.` },
+Sweep ALL docs/earthfall/LANE-*-NOTES.md pending rows into the real dashboards in ONE slice: DOCS-INDEX rows (new docs incl. the memos + this campaign folder + GROUND-TACTICAL-AI-DESIGN), TESTING-TRACKER rows (every new gauge), SYSTEM-CONNECTION-MAP (new wires: bombard rung, beachhead, TACTICAL BRAIN, infra combat, station income, survey chain, embark UI), subsystem CLAUDE.md rows any implementer missed (audit git log of all lanes), stale-claim retirements. THEN write TWO docs: (1) docs/ground/EARTHFALL-CAMPAIGN-OPS.md — the developer's "EACH INDIVIDUAL STEP AND CLICK" deliverable: the complete invasion flow as BUILT, from BOTH seats — the AI's rung sequence (mass -> sail -> bombard+re-fire -> scored landing -> form up -> brain posture -> advance -> beachhead -> infra -> second wave -> capture, with file anchors) and the PLAYER's actual windows/buttons for the same acts (design marine -> assemble -> build -> form battalion -> stance/ROE -> move/queue -> embark -> land -> destroy/capture infra), plus the support loop (ammo, resupply, upkeep, fire support) and the honest LIMITS list — plain English, shipboard analogies, per the root CLAUDE.md communication rules; (2) docs/earthfall/CAMPAIGN-REPORT.md: what shipped per lane, every developer decision awaiting an answer, deferred items (incl. orbital-strike-at-a-specific-hex, explicitly deferred by the developer), and the CLIENT-TEST-CHECKLIST items awaiting the developer's local runtime pass.` },
   ]},
 }
 
@@ -305,9 +326,17 @@ log(`EARTHFALL ${phaseKey} [lane ${ph.lane}] — ${ph.title} (${ph.slices.length
 log('Operator: verify you are on the lane branch that owns this phase (CAMPAIGN-PLAN.md §3); commit slice-by-slice; gate CI green between phases.')
 
 phase('Implement')
+// PARALLEL BATCHES: a phase may declare `batches` — arrays of slice INDICES whose complete
+// file sets (code + tests + the CLAUDE.md each updates) are DISJOINT by construction; those
+// slices run CONCURRENTLY in the same working tree. Batches run sequentially. A phase
+// without `batches` runs fully sequentially (the safe default).
 const results = []
-for (const slice of ph.slices) {
-  results.push(await runSlice(slice))
+const groups = ph.batches ? ph.batches.map(ix => ix.map(i => ph.slices[i])) : ph.slices.map(s => [s])
+for (const group of groups) {
+  if (group.length === 1) { results.push(await runSlice(group[0])); continue }
+  log('parallel batch: ' + group.map(s => s.key).join(' + '))
+  const batchResults = await parallel(group.map(s => () => runSlice(s)))
+  results.push(...batchResults.filter(Boolean))
 }
 
 phase('Synthesize')
