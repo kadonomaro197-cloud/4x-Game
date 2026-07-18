@@ -77,6 +77,45 @@ integration:
 > Consolidate is never a guaranteed no-op. Gated on "no colony tax lever anywhere", so a colony faction whose colonies
 > are all content still returns None (byte-identical). `HasColonyTaxLever` is `private static`.
 
+### D3.1 — AI expand arc end-to-end gauge (2026-07-18)
+
+**TESTING-TRACKER.md** (one new engine gauge, `rest` shard — TEST-ONLY slice, no engine/data change):
+- `EfKithrinExpandArcTests` — the D3 capstone: drives the WHOLE Kithrin expand arc through the REAL engine paths on the
+  REAL DevTest sandbox (UEF+UMF+Kithrin), milestone by milestone, so "a station-only NPC can settle a new world" is
+  green-or-red in CI without the SDL client. **Milestones (test 1, live):** M1 survey order emitted (`ExpandResolver`
+  decides `Survey`, issues a real `GeoSurveyOrder` on the Kithrin's D1 Sable through the order handler), M2 survey
+  completes (real `GeoSurveyProcessor` to completion, gauge-only speed swamp), M3 colony founded (`ExpandResolver`
+  decides `Found` → `CreateColonyOrder` → `ColonyFactory.CreateColony`), M4 appears in `FactionInfoDB.Colonies` +
+  carries a `ColonyEconomyDB` (tax-enrolled). **Test 2 (autonomous path):** opens the four NPC gates, drives the whole
+  brain 3 ticks directly (the `NPCActingSensorTests` idiom — NOT the master clock, so the war-sandbox combat fine-step
+  can't hang), asserts the brain runs clean (0 tick errors) + an NPC settles an objective, and RECORDS what the Kithrin
+  actually chose (observational). **M5 (test 3, `[Ignore]`d):** "pays a non-zero tax next cycle" — cannot pass yet (an
+  AI-founded colony starts 0-pop AND 0-rate → 0 tax; see the developer finding below). Drives resolver/processors
+  DIRECTLY (no master-clock advance) → bounded + `[Timeout]`-guarded, milliseconds, can't hang. Status: WRITTEN
+  (CI-unverified in-container — no local SDK).
+
+**Tests/CLAUDE.md inventory row** (NOT edited in-lane — that file is shared with the concurrent CLIENT/GROUND/TWOD lanes
+that also add fixtures, so per PLAN parallel-safety I leave it for integration; D1/D2 did the same — their fixtures
+aren't in the inventory table either). Row text to fold in at integration:
+> `EfKithrinExpandArcTests` — **Operation Earthfall D3.1**, the AI expand arc end-to-end on the DevTest sandbox. Drives
+> the Kithrin survey→complete→found→in-Colonies arc through the real paths (resolver + `GeoSurveyProcessor` +
+> `CreateColonyOrder`→`ColonyFactory`), milestone-named asserts; a companion brain-driven test runs the whole NPC loop
+> clean with the gates open and records the Kithrin's autonomous choice; the "pays tax" milestone is `[Ignore]`d (an
+> AI-founded colony starts 0-pop/0-rate → 0 tax). The green-or-red gauge that D1 (survey chain) + D2 (station income)
+> stack up to. `rest` shard.
+
+**SYSTEM-CONNECTION-MAP.md** (arc wires this gauge PINS end-to-end — all pre-existing, now proven connected):
+- `ExpandResolver` (Survey/Found decisions) → `GeoSurveyOrder`/`GeoSurveyProcessor` → `GeoSurveyableDB.IsSurveyComplete`
+  → back to `ExpandResolver` (Found rung) → `CreateColonyOrder` → `ColonyFactory.CreateColony` → `FactionInfoDB.Colonies`
+  (+ the founded colony's `ColonyEconomyDB` enrolls it in `ColonyEconomyProcessor`'s monthly tax cycle). D3.1 is the
+  first gauge that drives this whole chain on a real scenario faction (D1's `EfKithrinSurveyChainTests` proved the
+  survey→found DECISION on base-mod `TestScenario`; D3.1 proves the FULL colony-creation + Colonies-enrolment on the
+  DevTest Kithrin).
+
+**Factions/CLAUDE.md** — no in-lane edit: this is a TEST-ONLY slice (no `ExpandResolver.cs`/engine change), so there is
+nothing to record on the (CORE-shared) resolver row. The D1 row text already folded in at integration covers the
+`ExpandResolver` survey leg this gauge exercises.
+
 ## Cross-lane REQUESTs
 
 ### D2.1 (2026-07-18) — REQUEST to CORE: add a dedicated `TransactionCategory.StationIncome`
@@ -112,6 +151,31 @@ Assessed low-risk and no fence edit needed:
   fire at all until D2. Flagging so CORE knows the source if that shard moves.
 
 ## Developer decisions raised
+
+### D3.1 (2026-07-18) — AI expand arc end-to-end gauge
+
+**No new FLAGGED balance numbers.** The only tunables in the fixture are TEST SCAFFOLDING, not shipped balance:
+`SurveySwampSpeed = 1_000_000` (a gauge-only survey-speed swamp so a full geo-survey completes inside the bounded CI
+window — the survey MATH is the real `GeoSurveyProcessor`; only the ship's speed dial is turned up, exactly as the D1
+gauge does) and `SurveyDriveCap = 200` (a loop safety bound). Both are marked as scaffolding, not `// FLAGGED balance`.
+
+**FINDING (raised for the developer) — an AI-founded colony is born EMPTY and UNTAXED, so it earns nothing until it
+grows.** This is why milestone 5 ("the new colony pays tax next cycle") is `[Ignore]`d rather than asserted — it is a
+real design gap, not a broken test:
+- `ColonyFactory.CreateColony` (the `CreateColonyOrder` path the `ExpandResolver` Found rung runs) defaults
+  `initialPopulation = 0`, and `ColonyEconomyDB.TaxRate` defaults to `0.0` ("a new colony is UNTAXED until a governor
+  sets a rate"). So `ColonyEconomyProcessor.CollectTax` returns early (population ≤ 0) AND `MonthlyTaxIncome` = 0 — a
+  freshly AI-founded colony contributes **zero** income, for two independent reasons.
+- The tax WIRING is correct and proven (the founded colony carries a `ColonyEconomyDB` and is in `FactionInfoDB.Colonies`
+  — asserted LIVE in the arc test; the colony→faction tax flow itself is `FactionEconomyTests`). What's missing is the
+  INPUT: population and a tax rate.
+- **Decision the developer owns (a named follow-on, not built here — it's outside the DEV D3 fence and is a design call):**
+  (a) should a founded colony seed a small starting population, or rely on migration/growth to fill it (and does
+  `PopulationProcessor.GrowPopulation` even grow a 0-pop colony — the `20/pop^(1/3)` formula divides by zero at pop 0,
+  worth checking)? and (b) should the AI (or a governor delegate) SET a tax rate on a new colony, or does it stay untaxed
+  by default like a player colony? Until (a)+(b) land, the expand arc founds a colony that is real and enrolled but
+  economically inert — the gauge's `[Ignore]`d milestone 5 is the standing marker, and it flips to a live assertion the
+  moment the follow-on gives a founded colony population + a rate.
 
 ### D2.1 (2026-07-18) — station income + Consolidate station-legal step
 
