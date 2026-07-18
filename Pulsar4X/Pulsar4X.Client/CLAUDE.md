@@ -90,7 +90,7 @@ internal override void Display()
 | Window | File | Status | Notes |
 |--------|------|--------|-------|
 | `SystemWindow` | `SystemWindow.cs` | ✅ Functional | Star system selector and planet list |
-| `FleetWindow` | `FleetWindow.cs` | ✅ Functional | Fleet listing, selection, basic orders. **+ Combat tab (2026-06-25)** — see "Fleet Combat tab" below. |
+| `FleetWindow` | `FleetWindow.cs` | ✅ Functional | Fleet listing, selection, basic orders. **+ Combat tab (2026-06-25)** — see "Fleet Combat tab" below. **+ Force Management retitle + Battalions tab (Earthfall C3.1, 2026-07-18)** — the window title is now **"Force Management"** (the class stays `FleetWindow` — renaming it orphans `LoadedWindows`/save refs, R1 ledger), and its content splits across a top-level tab bar: **Fleets** (the entire existing fleet manager, verbatim, inside its own tab — byte-identical) and **Battalions** (the new cross-body ground-formation manager). See "Battalions tab" below. |
 | `ColonyManagementWindow` | `ColonyManagementWindow.cs` | ✅ **Full economy UI** (verified in code 2026-06-24) | Colony picker + tabs: **Summary** (planet/pop/infra-efficiency/installed components/stockpile of raw+refined), **Society** (2026-07-02 — morale+factors / legitimacy+rebellion / manpower / sustenance / tax→income / government, colour-banded; see below), **Production** (`IndustryDisplay` — queue refine/build jobs via `IndustryOrder2`: batch/repeat/auto-install/priority/cancel), **Construction**, **Mining** (per-mineral rate/annual production/years-to-depletion). The minerals→refined→components loop is fully see-and-do here. **Live-behaviour unverified** (CI can't build the client). |
 | `PlanetaryWindow` | `PlanetaryWindow.cs` | ✅ (installations fixed 2026-06-24) | General info ✅ / Mineral deposits ✅ / **Installations ✅ — tab now gates on `ComponentInstancesDB` and renders via `componentsDB.Display(...)` (`:102,220`), NOT the dead `InstallationsDB`.** |
 | `PlanetViewWindow` | `PlanetViewWindow.cs` | ✅ Tactical map 2026-07-04 (ground-map slice 5e — compile-checked, runtime-unverified) | The **planet surface as a NAVIGABLE tactical map** — the flat 3-region view of the 4-slice ring (`PlanetRegionsDB`) upgraded from readout to "put your hands on the ground war." Per-body window (context menu "Planet view (regions)", gated on `PlanetRegionsDB`); centre region + its two ring neighbours, rotate with ◀/▶ or by clicking a region. On top of the terrain bands it draws **units** (`GroundForcesDB` grouped per faction+type into tokens: type initial + count + health bar, cyan=yours / red=hostile, `»`=marching), **hazards** (`PlanetEnvironmentsDB` chips), **terrain class** (Open/Cover/Rough), and **buildings** (⚙ per `Region.InstallationIds`). Interactions: click a token → select group; click an adjacent region or a March button → `GroundForces.OrderMove`; Build panel places a `PlanetInstallation` design at the centre region via `PlaceInstallationInRegionOrder` → `Game.OrderHandler.HandleOrder`. Thin defensive draw — reads off CI-tested blobs, orders through CI-tested engine paths, body wrapped so a throw logs `[RenderError]` once and still runs `Window.End`, no hard-indexing. **Runtime render/feel unverified (CI can't run the client).** Design: `docs/ground/GROUND-SURFACE-MAP-DESIGN.md`. |
@@ -245,6 +245,41 @@ through a clock advance and *is engageable*, but the lightweight test harness di
 on a clock advance — so whether **pressing play** auto-starts the battle in the full game is unconfirmed. If it
 doesn't, the **Tick Combat** button drives the fight manually (and tells us the trigger scheduling, not the combat
 math, is what needs a look). See `GameEngine/Combat/CLAUDE.md` → "Combat sandbox".
+
+### Battalions tab (FleetWindow) — BUILT Earthfall C3.1 (2026-07-18) — battalions beside fleets
+
+The ground echo of the fleet manager, and the reason the window is now **"Force Management"**: a **"Battalions" tab**
+on `FleetWindow` (beside "Fleets") that makes ground formations first-class citizens the player can command from ONE
+place, across ALL their worlds — the same way the Fleets tab commands ships. `DisplayBattalions()`:
+
+1. **Cross-body registry** — enumerates every world the player knows that carries a `GroundForcesDB`
+   (`_uiState.StarSystemStates` → each `StarSystem.GetAllEntitiesWithDataBlob<GroundForcesDB>()` →
+   `GroundFormationTools.FormationsFor(forces, factionId)`), the exact pure-client enumeration precedent `SiteWindow`
+   uses. **There is no engine cross-body helper yet** (`GroundFormationTools.AllFormationsFor` is a GROUND follow-up);
+   the client sums per-body `FormationsFor` itself. The engine contract is CI-pinned by
+   `EfC3BattalionRegistryTests` (two formations on two bodies both collected + aggregated, enemy excluded).
+2. **Table** — Battalion (name + member count) / World / Region (`GroundForces.LeaderRegion`) / Strength
+   (`FormationStrength`) / Health (`FormationHealth`) / Reach (`FormationReachHexes` in hexes) / Stance / ROE, with
+   **filters** (system combo / world combo / "with orders only" checkbox). A `Selectable` row selects the battalion
+   (keyed by body-id + formation-id across bodies).
+3. **Order surface (copies `PlanetViewWindow.DrawFormationPanel` idioms verbatim)** — for the selected battalion:
+   **march** to an adjacent region (`GroundForces.OrderFormationMove`), a **queue** panel (`QueueFormationOrder` for
+   MoveRegion/Hold/ROE waypoints + `ClearFormationOrders`), a **stance** selector (moddable `GroundStances` catalog →
+   `GroundFormationDoctrine.TrySetStance`, game-time cooldown-gated), and an **ROE** selector
+   (`GroundFormationDoctrine.SetEngagementStance` — Hold/Close/Stand-off). All **direct CI-tested engine calls** on an
+   explicit player click, exactly what the planet view already does.
+4. **Jump to the world** — an **"Open planet view"** button resolves the body's `EntityState` via its `SystemState`
+   (`sysState.GetEntityById(body.Id)`) and opens the per-body `PlanetViewWindow` (`GetInstance` + `SetActive(true)` —
+   the open-window-for-entity mechanic), so the manager and the surface tactical map are one click apart.
+
+**Connections (Prime Directive):** reads `GroundForcesDB` / `GroundFormation` / `GroundFormationTools` (per-body
+formations + aggregation), `PlanetRegionsDB` (region graph for march/queue), the `GroundStances` catalog; writes
+nothing except through the CI-tested `GroundForces` / `GroundFormationDoctrine` order APIs — the same ones
+`PlanetViewWindow` uses. **Thin + defensive:** the whole tab body is wrapped in a try/catch so a throw logs
+`[RenderError]` once and still runs `EndTabItem` (the colony-window cascade lesson), and nothing is hard-indexed.
+The **Fleets tab is byte-identical** — the existing fleet layout was moved verbatim into its own tab item; the class
+stays `FleetWindow` (renaming orphans `LoadedWindows`/save refs). **Deferred to PW (needs GROUND's `RenameFormation`
+helper):** a rename button. **CI compiles the client but can't run it — live render/feel is the developer's build.**
 
 ### EMCON posture + fog-of-war UI (FleetWindow + DevTools) — BUILT 2026-06-26 (detection stack, slices A)
 

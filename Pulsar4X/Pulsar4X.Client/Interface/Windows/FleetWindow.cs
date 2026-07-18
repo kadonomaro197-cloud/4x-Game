@@ -22,6 +22,7 @@ using Pulsar4X.Combat;
 using Pulsar4X.Blueprints;
 using Pulsar4X.Sensors;
 using Pulsar4X.Weapons;
+using Pulsar4X.GroundCombat;
 
 namespace Pulsar4X.Client
 {
@@ -174,31 +175,63 @@ namespace Pulsar4X.Client
             var sw = System.Diagnostics.Stopwatch.StartNew();
             long tList = 0, tShips = 0, tOrders = 0, tTabs = 0, t0;
 
-            if(Window.Begin("Fleet Management", ref IsActive, _flags))
+            // Retitled "Fleet Management" → "Force Management" (Earthfall C3.1): this window now commands BOTH fleets
+            // (ships) and battalions (ground formations) — the two are first-class siblings, split across a top-level
+            // tab bar. The class stays FleetWindow (renaming it would orphan LoadedWindows/save refs — R1 ledger).
+            if(Window.Begin("Force Management", ref IsActive, _flags))
             {
-                // Finer hang breadcrumbs (2026-07-03): the [HANG] watchdog reads SessionLog.CurrentStage, which
-                // SafeRender set to just 'FleetWindow' — too coarse to tell WHICH section wedged. Stamping the
-                // sub-section here means the next freeze names List/Ships/Orders/Tabs (and DisplayTabs stamps the
-                // tab) instead of the whole window. Cheap volatile write; no behaviour change.
-                SessionLog.CurrentStage = "FleetWindow/List";
-                t0 = sw.ElapsedTicks; DisplayFleetList(); tList = sw.ElapsedTicks - t0;
-
-                if(SelectedFleet != null)
+                if(ImGui.BeginTabBar("ForceMgmtTopTabs"))
                 {
-                    ImGui.SameLine();
-                    ImGui.SetCursorPosY(27f);
-                    var ysize = ImGui.GetContentRegionAvail().Y;
-                    SessionLog.CurrentStage = "FleetWindow/Ships";
-                    t0 = sw.ElapsedTicks; DisplayShips(); tShips = sw.ElapsedTicks - t0;
-                    ImGui.SetCursorPosY(ysize * 0.5f);
-                    SessionLog.CurrentStage = "FleetWindow/Orders";
-                    t0 = sw.ElapsedTicks; DisplayOrders(); tOrders = sw.ElapsedTicks - t0;
+                    // ── Fleets tab: the EXISTING fleet manager, unchanged (byte-identical inside its own tab) ──
+                    if(ImGui.BeginTabItem("Fleets"))
+                    {
+                        // Finer hang breadcrumbs (2026-07-03): the [HANG] watchdog reads SessionLog.CurrentStage, which
+                        // SafeRender set to just 'FleetWindow' — too coarse to tell WHICH section wedged. Stamping the
+                        // sub-section here means the next freeze names List/Ships/Orders/Tabs (and DisplayTabs stamps the
+                        // tab) instead of the whole window. Cheap volatile write; no behaviour change.
+                        SessionLog.CurrentStage = "FleetWindow/List";
+                        t0 = sw.ElapsedTicks; DisplayFleetList(); tList = sw.ElapsedTicks - t0;
 
-                    ImGui.SameLine();
-                    ImGui.SetCursorPosY(27f);
+                        if(SelectedFleet != null)
+                        {
+                            ImGui.SameLine();
+                            ImGui.SetCursorPosY(27f);
+                            var ysize = ImGui.GetContentRegionAvail().Y;
+                            SessionLog.CurrentStage = "FleetWindow/Ships";
+                            t0 = sw.ElapsedTicks; DisplayShips(); tShips = sw.ElapsedTicks - t0;
+                            ImGui.SetCursorPosY(ysize * 0.5f);
+                            SessionLog.CurrentStage = "FleetWindow/Orders";
+                            t0 = sw.ElapsedTicks; DisplayOrders(); tOrders = sw.ElapsedTicks - t0;
 
-                    SessionLog.CurrentStage = "FleetWindow/Tabs";
-                    t0 = sw.ElapsedTicks; DisplayTabs(); tTabs = sw.ElapsedTicks - t0;
+                            ImGui.SameLine();
+                            ImGui.SetCursorPosY(27f);
+
+                            SessionLog.CurrentStage = "FleetWindow/Tabs";
+                            t0 = sw.ElapsedTicks; DisplayTabs(); tTabs = sw.ElapsedTicks - t0;
+                        }
+                        ImGui.EndTabItem();
+                    }
+
+                    // ── Battalions tab: cross-body ground-formation manager (C3) ──
+                    // Body wrapped so a throw between BeginTabItem/EndTabItem can't unbalance the ImGui stack (the
+                    // colony-window cascade lesson): the fault is caught + logged once and EndTabItem still runs.
+                    if(ImGui.BeginTabItem("Battalions"))
+                    {
+                        SessionLog.CurrentStage = "FleetWindow/Battalions";
+                        try { DisplayBattalions(); }
+                        catch(Exception ex)
+                        {
+                            ImGui.TextUnformatted("Battalion view hit an error (logged).");
+                            if(!_battErrorLogged)
+                            {
+                                Console.WriteLine("[RenderError] FleetWindow Battalions threw (logged once): " + ex);
+                                Console.Out.Flush();
+                                _battErrorLogged = true;
+                            }
+                        }
+                        ImGui.EndTabItem();
+                    }
+                    ImGui.EndTabBar();
                 }
                 SessionLog.CurrentStage = "FleetWindow";
             }
@@ -1064,6 +1097,340 @@ namespace Pulsar4X.Client
             _doctrineBlueprints = catalog.Values.ToArray();
             _doctrineNames = _doctrineBlueprints.Select(d => $"{d.DisplayName} [{d.Family}]").ToArray();
             if (_selectedDoctrine >= _doctrineNames.Length) _selectedDoctrine = 0;
+        }
+
+        // ═══════════════════════════════ BATTALIONS (Earthfall C3.1) ═══════════════════════════════
+        // Ground formations as first-class citizens BESIDE fleets. This tab is a CROSS-BODY registry: it enumerates
+        // ALL the player's ground formations across every known world (the engine has no cross-body helper yet, so
+        // this mirrors the ship-enumeration precedent — walk _uiState.StarSystemStates → each system's bodies with a
+        // GroundForcesDB → GroundFormationTools.FormationsFor). It shows a location/strength/health/reach/stance/ROE
+        // table with filters, and — on selection — the SAME order surface PlanetViewWindow.DrawFormationPanel gives a
+        // single world (march to region / queue waypoints / stance / ROE), plus a jump to that world's tactical map.
+        //
+        // THIN + DEFENSIVE by the client discipline: every value is read off CI-tested engine blobs, and every
+        // mutation goes through a CI-tested engine API on an explicit player click (GroundForces.OrderFormationMove /
+        // QueueFormationOrder / ClearFormationOrders, GroundFormationDoctrine.TrySetStance / SetEngagementStance) — the
+        // exact calls PlanetViewWindow already makes. No new client logic, nothing hard-indexed.
+
+        // Filters (rebuilt each frame from what's present).
+        private int _battSystemFilter = 0;   // 0 = all systems; else 1-based index into the frame's systems list
+        private int _battBodyFilter = 0;     // 0 = all worlds;  else 1-based index into the frame's bodies list
+        private bool _battHasOrdersOnly = false;
+
+        // Selection — a formation is identified across bodies by (body id, formation id).
+        private int _selBattalionBodyId = -1;
+        private int _selBattalionFormationId = -1;
+        private int _battStanceChoice = 0;
+        private string _battStatus = "";
+        private bool _battErrorLogged;
+
+        private void DisplayBattalions()
+        {
+            if(_uiState.Faction == null) { ImGui.TextDisabled("No faction loaded."); return; }
+            int myFaction = _uiState.Faction.Id;
+
+            DisplayHelpers.Header("Battalions",
+                "Your ground formations across every world — the ground echo of the fleet list. Select one to command it.");
+
+            // Gather every player formation across all known systems/bodies (pure client; mirrors the ship-enumeration
+            // precedent in SystemMapRendering — the engine's AllFormationsFor helper is a GROUND follow-up).
+            var all = new List<(Entity body, StarSystem system, GroundForcesDB forces, GroundFormation formation)>();
+            foreach(var (_, sysState) in _uiState.StarSystemStates)
+            {
+                var system = sysState?.StarSystem;
+                if(system == null) continue;
+                foreach(var body in system.GetAllEntitiesWithDataBlob<GroundForcesDB>())
+                {
+                    if(!body.TryGetDataBlob<GroundForcesDB>(out var forces)) continue;
+                    foreach(var f in GroundFormationTools.FormationsFor(forces, myFaction))
+                        all.Add((body, system, forces, f));
+                }
+            }
+
+            if(all.Count == 0)
+            {
+                ImGui.TextDisabled("No battalions yet. Raise ground units and form them up on a world (Planet View)");
+                ImGui.TextDisabled("to command them here.");
+                return;
+            }
+
+            // ── Filters: system / body / has-orders ──
+            var systems = all.Select(r => r.system).Distinct().ToList();
+            string[] systemNames = new string[systems.Count + 1];
+            systemNames[0] = "All systems";
+            for(int i = 0; i < systems.Count; i++)
+                systemNames[i + 1] = systems[i].NameDB?.OwnersName ?? "Unknown";
+            if(_battSystemFilter >= systemNames.Length) _battSystemFilter = 0;
+            ImGui.SetNextItemWidth(180f);
+            ImGui.Combo("System##battsys", ref _battSystemFilter, systemNames, systemNames.Length);
+            StarSystem systemFilter = _battSystemFilter > 0 ? systems[_battSystemFilter - 1] : null;
+
+            var bodies = all.Where(r => systemFilter == null || r.system == systemFilter)
+                            .Select(r => r.body).Distinct().ToList();
+            string[] bodyNames = new string[bodies.Count + 1];
+            bodyNames[0] = "All worlds";
+            for(int i = 0; i < bodies.Count; i++)
+                bodyNames[i + 1] = bodies[i].GetName(myFaction);
+            if(_battBodyFilter >= bodyNames.Length) _battBodyFilter = 0;
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(160f);
+            ImGui.Combo("World##battbody", ref _battBodyFilter, bodyNames, bodyNames.Length);
+            Entity bodyFilter = _battBodyFilter > 0 ? bodies[_battBodyFilter - 1] : null;
+
+            ImGui.SameLine();
+            ImGui.Checkbox("With orders only##battorders", ref _battHasOrdersOnly);
+
+            if(!string.IsNullOrEmpty(_battStatus))
+                ImGui.TextColored(new Vector4(0.4f, 1f, 0.4f, 1f), _battStatus);
+
+            var rows = all.Where(r =>
+                (systemFilter == null || r.system == systemFilter) &&
+                (bodyFilter == null || r.body == bodyFilter) &&
+                (!_battHasOrdersOnly || (r.formation.Orders != null && r.formation.Orders.Count > 0)))
+                .ToList();
+
+            ImGui.Separator();
+
+            // ── The table (name / world / region / strength / health / reach / stance / ROE) ──
+            (Entity body, StarSystem system, GroundForcesDB forces, GroundFormation formation) selected = default;
+            bool haveSelected = false;
+
+            if(ImGui.BeginTable("BattalionTable", 8, Styles.TableFlags | ImGuiTableFlags.SizingStretchProp))
+            {
+                ImGui.TableSetupColumn("Battalion", ImGuiTableColumnFlags.None, 0.20f);
+                ImGui.TableSetupColumn("World", ImGuiTableColumnFlags.None, 0.15f);
+                ImGui.TableSetupColumn("Region", ImGuiTableColumnFlags.None, 0.09f);
+                ImGui.TableSetupColumn("Strength", ImGuiTableColumnFlags.None, 0.11f);
+                ImGui.TableSetupColumn("Health", ImGuiTableColumnFlags.None, 0.13f);
+                ImGui.TableSetupColumn("Reach", ImGuiTableColumnFlags.None, 0.08f);
+                ImGui.TableSetupColumn("Stance", ImGuiTableColumnFlags.None, 0.12f);
+                ImGui.TableSetupColumn("ROE", ImGuiTableColumnFlags.None, 0.12f);
+                ImGui.TableHeadersRow();
+
+                foreach(var r in rows)
+                {
+                    var f = r.formation;
+                    int members = GroundFormationTools.MemberCount(r.forces, f);
+                    int rally = GroundForces.LeaderRegion(r.forces, f);
+                    double strength = GroundFormationTools.FormationStrength(r.forces, f);
+                    var (curHp, maxHp) = GroundFormationTools.FormationHealth(r.forces, f);
+                    int reach = GroundFormationTools.FormationReachHexes(r.forces, f);
+                    bool isSel = r.body.Id == _selBattalionBodyId && f.FormationId == _selBattalionFormationId;
+
+                    ImGui.TableNextColumn();
+                    string label = $"{f.Name} ({members})##batt{r.body.Id}_{f.FormationId}";
+                    if(ImGui.Selectable(label, isSel, ImGuiSelectableFlags.SpanAllColumns))
+                    {
+                        _selBattalionBodyId = r.body.Id;
+                        _selBattalionFormationId = f.FormationId;
+                        isSel = true;
+                    }
+
+                    ImGui.TableNextColumn(); ImGui.Text(r.body.GetName(myFaction));
+                    ImGui.TableNextColumn(); ImGui.Text(rally >= 0 ? "R" + (rally + 1) : "—");
+                    ImGui.TableNextColumn(); ImGui.Text($"{strength:N0}");
+                    ImGui.TableNextColumn(); ImGui.Text($"{curHp:N0} / {maxHp:N0}");
+                    ImGui.TableNextColumn(); ImGui.Text(reach > 0 ? reach + " hex" : "—");
+                    ImGui.TableNextColumn(); ImGui.Text(string.IsNullOrEmpty(f.StanceId) ? "Balanced" : f.StanceId);
+                    ImGui.TableNextColumn(); ImGui.Text(f.Engagement.ToString());
+
+                    if(isSel) { selected = r; haveSelected = true; }
+                }
+                ImGui.EndTable();
+            }
+
+            ImGui.Separator();
+            if(haveSelected)
+                DrawBattalionOrders(selected.body, selected.forces, selected.formation);
+            else
+                ImGui.TextDisabled("Select a battalion above to command it (march / queue / stance / ROE), or jump to its world.");
+        }
+
+        // The order surface for the selected battalion — the same verbs PlanetViewWindow.DrawFormationPanel gives a
+        // single world, but reachable from the cross-body manager. All direct CI-tested engine calls.
+        private void DrawBattalionOrders(Entity body, GroundForcesDB forces, GroundFormation f)
+        {
+            int myFaction = _uiState.Faction?.Id ?? -1;
+            int members = GroundFormationTools.MemberCount(forces, f);
+            int rally = GroundForces.LeaderRegion(forces, f);
+            double strength = GroundFormationTools.FormationStrength(forces, f);
+            var (curHp, maxHp) = GroundFormationTools.FormationHealth(forces, f);
+
+            DisplayHelpers.Header(f.Name, "Command this battalion — the same orders the planet view gives.");
+            ImGui.Text($"On {body.GetName(myFaction)}"
+                + (rally >= 0 ? $", Region {rally + 1}" : "")
+                + $" — {members} unit(s), strength {strength:N0}, health {curHp:N0}/{maxHp:N0}");
+
+            // (d) Jump to this world's tactical map (the "take me there").
+            if(ImGui.Button("Open planet view##battjump"))
+                JumpToPlanetView(body);
+            ImGui.SameLine();
+            ImGui.TextDisabled("(opens the surface tactical map for this world)");
+
+            // March + queue need the region graph.
+            if(!body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB) || regionsDB.Regions == null)
+            {
+                ImGui.TextDisabled("This world has no region map — can't march here.");
+                return;
+            }
+            var regions = regionsDB.Regions;
+            var rallyRegion = (rally >= 0 && rally < regions.Count) ? regions[rally] : null;
+
+            // ── March the whole formation to an adjacent region (direct OrderFormationMove) ──
+            ImGui.Separator();
+            ImGui.TextDisabled("March the battalion (one ring-hop to an adjacent region):");
+            if(rallyRegion != null && members > 0 && rallyRegion.Neighbors != null)
+            {
+                bool any = false;
+                foreach(int n in rallyRegion.Neighbors)
+                {
+                    if(n < 0 || n >= regions.Count) continue;
+                    if(ImGui.Button($"March to Region {n + 1}##bm{body.Id}_{f.FormationId}_{n}"))
+                        MarchBattalion(body, f, n);
+                    ImGui.SameLine();
+                    any = true;
+                }
+                if(any) ImGui.NewLine();
+            }
+            else
+            {
+                ImGui.TextDisabled("(No adjacent region to march to.)");
+            }
+
+            // ── Queue waypoints (QueueFormationOrder) + stance + ROE ──
+            DrawBattalionOrderQueue(body, forces, f, regions, rallyRegion);
+            ImGui.Separator();
+            DrawBattalionStance(body, f);
+            DrawBattalionRoe(f);
+        }
+
+        private void MarchBattalion(Entity body, GroundFormation f, int target)
+        {
+            try
+            {
+                int moved = GroundForces.OrderFormationMove(body, f, target);
+                _battStatus = moved > 0 ? $"'{f.Name}' marches {moved} unit(s) to Region {target + 1}"
+                                        : "battalion couldn't march (adjacency/transit)";
+            }
+            catch(Exception ex) { _battStatus = "march failed (logged)"; Console.WriteLine($"[RenderError] FleetWindow battalion march threw: {ex}"); }
+        }
+
+        // The order-queue panel — copies PlanetViewWindow.DrawOrderQueue's idioms (build a "then" plan of moves/hold/ROE).
+        private void DrawBattalionOrderQueue(Entity body, GroundForcesDB forces, GroundFormation f, List<Region> regions, Region rallyRegion)
+        {
+            ImGui.Separator();
+            if(f.Orders != null && f.Orders.Count > 0)
+            {
+                ImGui.TextColored(new Vector4(0.8f, 0.9f, 1f, 1f), $"Plan ({f.Orders.Count} order{(f.Orders.Count == 1 ? "" : "s")}):");
+                for(int i = 0; i < f.Orders.Count; i++)
+                    ImGui.TextDisabled($"   {i + 1}. {f.Orders[i].Describe()}");
+                if(ImGui.Button($"Clear plan##bq{f.FormationId}")) { GroundForces.ClearFormationOrders(f); _battStatus = "plan cleared"; }
+            }
+            else
+            {
+                ImGui.TextDisabled("No queued plan. Add move/hold/ROE waypoints below (they run in sequence).");
+            }
+
+            if(rallyRegion != null && rallyRegion.Neighbors != null)
+            {
+                foreach(int n in rallyRegion.Neighbors)
+                {
+                    if(n < 0 || n >= regions.Count) continue;
+                    if(ImGui.Button($"+ March → R{n + 1}##bq{body.Id}_{f.FormationId}_{n}"))
+                    { GroundForces.QueueFormationOrder(f, GroundOrder.MoveRegion(n)); _battStatus = $"queued → region {n + 1}"; }
+                    ImGui.SameLine();
+                }
+            }
+            if(ImGui.Button($"+ Hold 6h##bq{f.FormationId}")) { GroundForces.QueueFormationOrder(f, GroundOrder.Hold(6 * 3600)); _battStatus = "queued hold 6h"; }
+            ImGui.SameLine();
+            if(ImGui.Button($"+ ROE Stand-off##bq{f.FormationId}")) { GroundForces.QueueFormationOrder(f, GroundOrder.Roe(GroundEngagementStance.StandOff)); _battStatus = "queued ROE stand-off"; }
+            ImGui.SameLine();
+            if(ImGui.Button($"+ ROE Close##bq{f.FormationId}")) { GroundForces.QueueFormationOrder(f, GroundOrder.Roe(GroundEngagementStance.CloseToEngage)); _battStatus = "queued ROE close"; }
+        }
+
+        // The stance selector — the ground echo of the Fleet-window doctrine selector (copies PlanetViewWindow.DrawStanceSelector).
+        private void DrawBattalionStance(Entity body, GroundFormation f)
+        {
+            if(_uiState.Game == null) return;
+            var catalog = _uiState.Game.StartingGameData.GroundStances;
+            if(catalog == null || catalog.Count == 0) return;
+
+            var stances = catalog.Values.ToArray();
+            var names = stances.Select(st => $"{st.DisplayName} [{st.Family}]").ToArray();
+            _battStanceChoice = Math.Clamp(_battStanceChoice, 0, stances.Length - 1);
+
+            string current = string.IsNullOrEmpty(f.StanceId) ? "Balanced (none)" : $"{f.StanceId} [{f.StanceFamily}]";
+            ImGui.TextDisabled($"Stance: {current}  (atk x{f.AttackMult:0.00}, dmg-taken x{f.DamageTakenMult:0.00})");
+
+            ImGui.SetNextItemWidth(200f);
+            ImGui.Combo($"##battstance{f.FormationId}", ref _battStanceChoice, names, names.Length);
+
+            bool haveTime = body.Manager != null;
+            DateTime now = haveTime ? body.StarSysDateTime : DateTime.MinValue;
+            bool onCooldown = haveTime && now < f.SwitchableAfter;
+
+            ImGui.SameLine();
+            if(!haveTime || onCooldown) ImGui.BeginDisabled();
+            if(ImGui.Button($"Set stance##bst{f.FormationId}"))
+            {
+                try
+                {
+                    var bp = stances[_battStanceChoice];
+                    bool ok = GroundFormationDoctrine.TrySetStance(f, bp, now);
+                    _battStatus = ok ? $"stance: {bp.DisplayName}" : "on cooldown — can't switch yet";
+                }
+                catch(Exception ex) { _battStatus = "set stance failed (logged)"; Console.WriteLine($"[RenderError] FleetWindow battalion stance threw: {ex}"); }
+            }
+            if(!haveTime || onCooldown) ImGui.EndDisabled();
+            if(onCooldown)
+            {
+                ImGui.SameLine();
+                ImGui.TextDisabled($"switch in {(f.SwitchableAfter - now).TotalSeconds:0}s");
+            }
+        }
+
+        // The ROE selector — the commander's maneuver intent (copies PlanetViewWindow.DrawRoeSelector).
+        private void DrawBattalionRoe(GroundFormation f)
+        {
+            var stances = new[] { GroundEngagementStance.HoldGround, GroundEngagementStance.CloseToEngage, GroundEngagementStance.StandOff };
+            var names = new[] { "Hold Ground", "Close to Engage", "Stand Off (auto-kite)" };
+            int cur = Array.IndexOf(stances, f.Engagement);
+            if(cur < 0) cur = 0;
+
+            ImGui.TextDisabled("ROE:");
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(190f);
+            int choice = cur;
+            if(ImGui.Combo($"##battroe{f.FormationId}", ref choice, names, names.Length) && choice != cur && choice >= 0 && choice < stances.Length)
+            {
+                try
+                {
+                    GroundFormationDoctrine.SetEngagementStance(f, stances[choice]);
+                    _battStatus = $"ROE: {names[choice]}";
+                }
+                catch(Exception ex) { _battStatus = "set ROE failed (logged)"; Console.WriteLine($"[RenderError] FleetWindow battalion ROE threw: {ex}"); }
+            }
+        }
+
+        // (d) Jump the PlanetViewWindow to a battalion's world — resolve the body's EntityState via its SystemState
+        // (the open-window-for-entity mechanic: GetInstance registers/points the per-body window, SetActive shows it).
+        private void JumpToPlanetView(Entity body)
+        {
+            try
+            {
+                foreach(var (_, sysState) in _uiState.StarSystemStates)
+                {
+                    if(sysState?.StarSystem == null) continue;
+                    var es = sysState.GetEntityById(body.Id);
+                    if(es == null) continue;
+                    var window = PlanetViewWindow.GetInstance(es, _uiState);
+                    window.SetActive(true);
+                    _battStatus = $"opened planet view for {body.GetName(_uiState.Faction?.Id ?? -1)}";
+                    return;
+                }
+                _battStatus = "couldn't open planet view (body not in a known system)";
+            }
+            catch(Exception ex) { _battStatus = "open planet view failed (logged)"; Console.WriteLine($"[RenderError] FleetWindow jump-to-planet threw: {ex}"); }
         }
 
         private void IssueOrdersDisplay(Vector2 size)

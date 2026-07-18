@@ -187,3 +187,68 @@ exists; C2.1 makes an existing edge's READOUT honest and adds age-out coverage).
 **`docs/DOCS-INDEX.md`** — **NEW doc row:** `docs/combat/HOMEWORLD-SENSOR-HORIZON-MEMO.md` — *purpose:* the developer
 design call on the 200 Gm homeworld sensor horizon (keep / signature-curve / EMCON-gate, with dials); *status:*
 current / decision-memo (no value changed). Also: `CLIENT-TEST-CHECKLIST.md` gained a C2.1 section (status unchanged).
+
+---
+
+## C3.1 — the Battalions tab (Force Management window), 2026-07-18
+
+**What shipped (CLIENT fence only — `Pulsar4X.Client/**` + `Pulsar4X.Tests/` new fixture):**
+- `FleetWindow.cs` retitled to **"Force Management"** (class name KEPT — R1 ledger: renaming orphans
+  `LoadedWindows`/save refs). Content split across a top-level **Fleets / Battalions** tab bar. The Fleets tab holds
+  the ENTIRE existing fleet manager verbatim (byte-identical); the new **Battalions** tab is the cross-body ground
+  formation manager (`DisplayBattalions` + `DrawBattalionOrders`/`DrawBattalionOrderQueue`/`DrawBattalionStance`/
+  `DrawBattalionRoe`/`MarchBattalion`/`JumpToPlanetView`). All engine mutation goes through the CI-tested
+  `GroundForces` / `GroundFormationDoctrine` order APIs — the same ones `PlanetViewWindow.DrawFormationPanel` uses.
+- `ToolBarWindow.cs` — the toolbar button's tooltip retitled `"Fleet Management"` → `"Force Management (fleets + battalions)"` to match the window (trivial, in-fence).
+- `Pulsar4X.Client/CLAUDE.md` + `docs/CLIENT-TEST-CHECKLIST.md` — the FleetWindow inventory row / new "Battalions tab" section, and the C3.1 runtime-check section (both in-fence).
+- New CI fixture `Pulsar4X.Tests/EfC3BattalionRegistryTests.cs` (lands in the `rest` shard) pins the cross-body
+  registry contract the tab draws: two formations on two bodies both collected + aggregated (strength/health/reach),
+  enemy formation excluded.
+
+**Byte-identity claim: (a) client-only, provably inert absent player action.** No engine code or data changed. The
+Fleets tab is the pre-existing layout moved verbatim into a tab item. The Battalions tab is read-only until a player
+clicks a button, and every mutation is an existing CI-tested engine call (march/queue/stance/ROE) behind an explicit
+click — identical to what the planet view already does. No CI test observes the client; the new fixture only asserts
+existing engine helpers. So every green test is unaffected.
+
+**FLAGGED gameplay numbers: NONE.** The tab introduces no new gameplay/balance value. UI literals (column widths,
+combo widths, the "+ Hold 6h" duration = the same `6*3600` the planet view queue uses) are cosmetic/echoed, not new
+balance numbers.
+
+**Developer decisions raised:**
+1. **Window name (CAMPAIGN-PLAN §6 / R1 candidate list).** Shipped default is **"Force Management"** (the campaign's
+   suggested default). The R1 candidates if you want a different one: *Forces · Force Command · Order of Battle ·
+   Command · Fleets & Formations · Military Command · Task Forces.* Change only the `Window.Begin("Force Management",
+   …)` title string in `FleetWindow.Display()` — keep the class name `FleetWindow`.
+2. **Possible minor fleet-layout offset inside the tab.** The Fleets tab reuses the fleet layout's absolute
+   `SetCursorPosY(27f)` offsets, which were tuned for the no-tab window. The 27px ≈ the tab-bar height, so it should
+   look right, but if the ships/orders columns look shifted vs the fleet list, the fix is a one-line nudge of that
+   constant. (Cosmetic only; no functional effect. Flagged on the CLIENT-TEST-CHECKLIST too.)
+
+**Cross-lane requests (for PW, post-merge — CORE owns the resolver wiring / GROUND owns the engine helper):**
+1. **Battalion RENAME button** — deferred to PW as planned (CAMPAIGN-PLAN §4 C3 line). It needs GROUND G2's
+   `GroundForces.RenameFormation(formation, name)` helper (a `GroundFormation.Name` setter — the data object can't use
+   the entity-only `RenameWindow`, R1 gap 2). Once that helper is merged, add a rename control to the selected
+   battalion's order surface in `FleetWindow.DrawBattalionOrders` (mirror the stance/ROE inline-edit idiom), OR to the
+   planet view's formation panel. Until then the tab intentionally has no rename.
+2. **Optional engine `AllFormationsFor(game, factionId)` helper (GROUND follow-up, non-blocking).** The client sums
+   per-body `FormationsFor` itself today (works, CI-pinned by `EfC3BattalionRegistryTests`). If GROUND later adds a
+   CI-testable `GroundFormationTools.AllFormationsFor` cross-body helper, `DisplayBattalions` can swap its enumeration
+   loop for it. Not required.
+
+### Pending dashboard rows (for P8.2 to land)
+
+**`docs/TESTING-TRACKER.md`** — append one engine-CI (Layer-1) row:
+
+| Row | What | Why | Method | What-right | Likely-failure | Mitigation | Unblocks |
+|-----|------|-----|--------|-----------|----------------|------------|----------|
+| EARTHFALL-C3.1-registry | The cross-body battalion registry the Force Management Battalions tab draws | The client sums per-body `FormationsFor` across worlds (no engine cross-body helper); this pins the composition + aggregation + player-only filter the tab relies on | `EfC3BattalionRegistryTests.BattalionRegistry_CollectsPlayerFormationsAcrossBodies_AndAggregates` (2 formations on 2 bodies + 1 enemy formation) | Both player formations collected across 2 bodies; strength/health/reach aggregates exact; enemy excluded | An engine helper (`FormationsFor`/`FormationStrength`/…) drifts, or a body's roster isn't enumerated | CI gauge is this test | The Battalions tab (runtime gauge = the developer, CLIENT-TEST-CHECKLIST C3.1) |
+
+**`docs/SYSTEM-CONNECTION-MAP.md`** — one new READOUT edge (no new engine coupling): **FleetWindow (client) →
+GroundForcesDB / GroundFormationTools / GroundFormationDoctrine (engine)** — the Force Management Battalions tab reads
+per-body ground formations across all worlds and issues formation orders (march/queue/stance/ROE), plus **FleetWindow
+→ PlanetViewWindow** (jump-to-world via `SystemState.GetEntityById` + `GetInstance`). These reuse existing engine
+order paths; the edge is a UI consumer of already-connected systems, not a new system-to-system dependency.
+
+**`docs/DOCS-INDEX.md`** — no NEW doc. `Pulsar4X.Client/CLAUDE.md` gained a "Battalions tab" section + an updated
+FleetWindow inventory row; `docs/CLIENT-TEST-CHECKLIST.md` gained a C3.1 section (both status: current).
