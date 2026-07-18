@@ -157,6 +157,88 @@ namespace Pulsar4X.Colonies
             }
         }
 
+        /// <summary>
+        /// Compute a host's CURRENT-cycle morale from its live inputs — the SAME morale that <see cref="GrowPopulation"/>
+        /// writes to <see cref="ColonyMoraleDB.Morale"/> each population tick, but as a pure READ that never mutates the
+        /// blob. <see cref="LegitimacyProcessor"/> calls this (under its <c>ReadCurrentMorale</c> flag) so legitimacy
+        /// reads THIS cycle's morale instead of the possibly one-cycle-stale <see cref="ColonyMoraleDB.Morale"/> field —
+        /// killing the stale echo regardless of which monthly hotloop fires first (findings/A3-objective-flip.md).
+        ///
+        /// It feeds the identical canonical math (<see cref="ColonyMoraleDB.ComputeMorale(MoraleInputs, Dictionary{string, double})"/>)
+        /// with the identical inputs GrowPopulation gathers — so the value matches. It is left as a SEPARATE reader
+        /// (GrowPopulation is untouched) to keep the population sim byte-identical; the two input-gatherings must be
+        /// kept in sync (any new morale input added to GrowPopulation's block above must be added here too).
+        ///
+        /// Defensive (runs from a monthly hotloop — gotcha L4): a host missing the population inputs (e.g. a station
+        /// with no ColonyInfoDB) falls back to its stored <see cref="ColonyMoraleDB.Morale"/>, then to the neutral
+        /// midpoint; any unexpected read failure returns that same fallback rather than throwing.
+        /// </summary>
+        internal static double ComputeCurrentMorale(Entity colony)
+        {
+            // Fallback for a host we can't recompute from population inputs.
+            double fallback = colony.TryGetDataBlob<ColonyMoraleDB>(out var moraleBlob) ? moraleBlob.Morale : ColonyMoraleDB.Neutral;
+
+            if (!colony.TryGetDataBlob<ColonyInfoDB>(out var colonyInfoDB)) return fallback;
+            if (!colony.TryGetDataBlob<ComponentInstancesDB>(out var instancesDB)) return fallback;
+
+            try
+            {
+                long popSupportValue = instancesDB.GetPopulationSupportValue(colonyInfoDB.PlanetEntity);
+
+                long needsSupport = 0;
+                long totalPop = 0;
+                double worstColonyCost = 0.0;
+                foreach (var (id, value) in colonyInfoDB.Population)
+                {
+                    var species = colony.Manager.GetGlobalEntityById(id).GetDataBlob<SpeciesDB>();
+                    double cc = species.ColonyCost(colonyInfoDB.PlanetEntity);
+                    if (cc > 0.0) needsSupport++;
+                    if (cc > worstColonyCost) worstColonyCost = cc;
+                    totalPop += value;
+                }
+
+                double powerShortage = 0.0, foodShortage = 0.0;
+                if (colony.TryGetDataBlob<ColonySustenanceDB>(out var sustenanceDB))
+                {
+                    powerShortage = sustenanceDB.PowerShortage;
+                    foodShortage = sustenanceDB.FoodShortage;
+                }
+
+                double crowdingRatio = 0.0;
+                if (worstColonyCost > 0.0) // only support-capped (hostile) worlds can overcrowd
+                {
+                    long needs = needsSupport < 1 ? 1 : needsSupport;
+                    double capacity = ((double)popSupportValue / needs) / worstColonyCost;
+                    crowdingRatio = capacity > 0.0 ? totalPop / capacity : 2.0;
+                }
+
+                long jobs = instancesDB.GetTotalJobs();
+                long workforce = ColonyManpowerDB.Workforce(totalPop);
+                double employmentRatio = (jobs > 0 && workforce > 0) ? (double)jobs / workforce : -1.0;
+                double comfort = instancesDB.GetHousingComfort();
+
+                double taxRate = colony.TryGetDataBlob<ColonyEconomyDB>(out var econDB) ? econDB.TaxRate : 0.0;
+                double taxCeiling = Pulsar4X.Factions.GovernmentTools.OwnerOf(colony).TaxCeiling();
+                if (taxRate > taxCeiling) taxRate = taxCeiling;
+
+                return ColonyMoraleDB.ComputeMorale(new MoraleInputs
+                {
+                    WorstColonyCost = worstColonyCost,
+                    CrowdingRatio = crowdingRatio,
+                    EmploymentRatio = employmentRatio,
+                    Comfort = comfort,
+                    TaxRate = taxRate,
+                    PowerShortage = powerShortage,
+                    FoodShortage = foodShortage,
+                    FoodQuality = instancesDB.GetAverageFoodQuality()
+                }, null);
+            }
+            catch
+            {
+                return fallback; // never throw from the monthly hotloop path (L4)
+            }
+        }
+
         internal void ReCalcMaxPopulation(Entity colonyEntity)
         {
             var infrastructure = new List<Entity>();

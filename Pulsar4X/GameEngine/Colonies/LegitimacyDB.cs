@@ -47,12 +47,23 @@ namespace Pulsar4X.Colonies
         /// <summary>The per-factor breakdown of what set legitimacy this cycle — the GAUGE (why, not just the number).</summary>
         [JsonProperty] public Dictionary<string, double> Factors { get; internal set; } = new();
 
+        /// <summary>
+        /// Consecutive monthly reads legitimacy has been in the collapse band — the REBELLION DEBOUNCE counter
+        /// (<see cref="LegitimacyProcessor.EnableRebellionDebounce"/>). A one-month TRANSIENT dip clears it (one
+        /// collapsing read, then a recovery read resets it to 0), so it never trips a rebellion off a single sample;
+        /// a SUSTAINED collapse accumulates it to <see cref="LegitimacyProcessor.RebellionDebounceReads"/> and only
+        /// THEN rebels. Persisted (save-safe) so a debounce in progress survives save/load. Inert — never read or
+        /// written — unless the debounce flag is on, so it's byte-identical to before while that flag is off.
+        /// </summary>
+        [JsonProperty] public int ConsecutiveCollapsingReads { get; internal set; } = 0;
+
         public LegitimacyDB() { }
 
         public LegitimacyDB(LegitimacyDB other)
         {
             Legitimacy = other.Legitimacy;
             Factors = new Dictionary<string, double>(other.Factors);
+            ConsecutiveCollapsingReads = other.ConsecutiveCollapsingReads;
         }
 
         public override object Clone() => new LegitimacyDB(this);
