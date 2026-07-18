@@ -124,6 +124,18 @@ namespace Pulsar4X.Factions
             if (personalityNode != null)
                 faction.SetDataBlob(PersonalityFromJson(personalityNode));
 
+            // Operation Earthfall P3.1 — AUTHORED GOVERNMENT: a scenario can hand a faction its empire-wide REGIME
+            // dials (Authority/Economy/Openness/Militarism — the modulator every legitimacy/morale/tax processor reads).
+            // CreateFaction already attaches a neutral all-Mid GovernmentDB, so this only REPLACES it when the scenario
+            // names a "government" node; with no node the all-Mid default stands and every regime coefficient (the
+            // legitimacy war term, the tax ceiling, the morale weight) reads EXACTLY as today — byte-identical for every
+            // existing scenario file (none carries the node). Mirrors the "personality" node above. This is A3 fix seam 1:
+            // authoring Militarism High flips the UMF's war term from a chronic −5 to +10 so a militarist-at-war takes
+            // pride in the fight instead of collapsing into a phantom rebellion.
+            var governmentNode = rootJson["government"];
+            if (governmentNode != null)
+                faction.SetDataBlob(GovernmentFromJson(governmentNode));
+
             // DevTest (2026-07-13) — "everything ENABLED": a faction can author a STARTING-ITEMS unlock list (the same
             // kind of list earth.json uses) so the player can DESIGN and BUILD anything from turn one. LoadFromJson used
             // to unlock nothing (its colony path is the bare ColonyFactory.CreateColony, with no StartingItems pass like
@@ -424,6 +436,36 @@ namespace Pulsar4X.Factions
                 }
             }
             return personality;
+        }
+
+        /// <summary>
+        /// Operation Earthfall P3.1 — build a <see cref="GovernmentDB"/> from a JSON object of
+        /// <c>dial → "Low"/"Mid"/"High"</c> (e.g. <c>{ "authority": "High", "militarism": "High" }</c>). The four dials
+        /// are <c>authority</c>/<c>economy</c>/<c>openness</c>/<c>militarism</c>, each a case-insensitive
+        /// <see cref="GovNotch"/>; a dial the scenario omits (or names invalidly) keeps the <see cref="GovernmentDB"/>
+        /// default of <see cref="GovNotch.Mid"/> (the neutral regime). Public + static so a scenario loader OR a test can
+        /// author a regime without a file. Mirrors <see cref="PersonalityFromJson"/>.
+        /// </summary>
+        public static GovernmentDB GovernmentFromJson(JToken node)
+        {
+            var government = new GovernmentDB();   // defaults: all-Mid = the neutral regime (identical to CreateFaction's)
+            if (node is JObject obj)
+            {
+                if (TryReadNotch(obj["authority"],  out var authority))  government.Authority  = authority;
+                if (TryReadNotch(obj["economy"],    out var economy))    government.Economy    = economy;
+                if (TryReadNotch(obj["openness"],   out var openness))   government.Openness   = openness;
+                if (TryReadNotch(obj["militarism"], out var militarism)) government.Militarism = militarism;
+            }
+            return government;
+        }
+
+        /// <summary>Parse one government dial as a case-insensitive <see cref="GovNotch"/>; returns false (leave the
+        /// default) for a null/missing/unparseable value so an omitted dial stays neutral (Mid).</summary>
+        private static bool TryReadNotch(JToken token, out GovNotch notch)
+        {
+            notch = GovNotch.Mid;
+            if (token == null || token.Type == JTokenType.Null) return false;
+            return Enum.TryParse<GovNotch>(token.Value<string>(), ignoreCase: true, out notch);
         }
 
         /// <summary>

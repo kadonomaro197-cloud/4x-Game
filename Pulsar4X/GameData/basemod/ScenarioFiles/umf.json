@@ -33,6 +33,12 @@
     "altruism": 0.3,
     "curiosity": 0.4
   },
+  "government": {
+    "authority": "High",
+    "economy": "Mid",
+    "openness": "Mid",
+    "militarism": "High"
+  },
   "startingItems": [
     "tech-modern-technology",
     "tech-conventional-engine",
@@ -509,7 +515,7 @@
         },
         {
           "id": "default-design-factory",
-          "amount": 0
+          "amount": 1
         },
         {
           "id": "default-design-local-construction",
