@@ -82,6 +82,14 @@ namespace Pulsar4X.GroundCombat
             //     units, so byte-identical until a design sets UpkeepCredits. Never throws (guarded inside).
             GroundUpkeep.BillIfDue(body, body.StarSysDateTime);
 
+            // 0c) BEACHHEAD ON-SITE BUILD (G1.2): a landed COMBAT ENGINEER (a unit whose design mounts a
+            //     GroundConstructorAtb) standing on FRIENDLY-HELD, enemy-free ground with landed footprint parts erects a
+            //     footprint building ON SITE — with NO colony present, hosted in the invader's beachhead outpost. The
+            //     placed bunker fortifies (the GroundDefenseAtb path) + is a bombard/capture target on the war map, and
+            //     the region becomes a resupply point (consumed in G2). Folded here — NOT a second processor (L9). A
+            //     no-op until an engineer unit exists and lands, so a stock game is byte-identical. Never throws.
+            GroundBeachhead.TickBuilds(body, deltaSeconds);
+
             // 1) MOVEMENT: advance in-transit units.
             //    (a) COARSE region march (5b): a whole-region hop, arrives when the region's crossing time has elapsed.
             //    (b) FINE hex march (H2): walk the stored A* path one hex at a time — each step costs the region's

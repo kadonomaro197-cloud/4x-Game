@@ -73,28 +73,26 @@ namespace Pulsar4X.GroundCombat
             return s;
         }
 
-        /// <summary>Build the real installation-id → <see cref="GroundDefenseAtb"/> resolver for a planet body: walks the
-        /// colonies on the body and indexes every installed component that carries the attribute by its instance ID
-        /// (the id <c>PlaceInstallationInRegionOrder</c> records in <c>Region.InstallationIds</c>). Defensive — never
-        /// throws; returns a resolver that yields null for anything not a ground-defence building.</summary>
+        /// <summary>Build the real installation-id → <see cref="GroundDefenseAtb"/> resolver for a planet body: walks
+        /// every component store on the body (<see cref="GroundBuildings.BodyComponentStores"/> — the colonies AND the
+        /// colony-free BEACHHEAD OUTPOSTS, G1.2) and indexes every installed component that carries the attribute by its
+        /// instance ID (the id recorded in <c>Region.InstallationIds</c> by <c>PlaceInstallationInRegionOrder</c> or by
+        /// the on-site beachhead build). So a Bunker an invader raised on a held region with NO colony present fortifies
+        /// exactly like a colony's. ADDITIVE — with no outposts the store set is identical to the old colony-only walk →
+        /// byte-identical. Defensive — never throws; returns a resolver that yields null for anything not a ground-defence
+        /// building.</summary>
         public static Func<int, GroundDefenseAtb> BuildResolver(Entity body)
         {
             var map = new Dictionary<int, GroundDefenseAtb>();
             try
             {
-                if (body?.Manager != null)
+                foreach (var comps in GroundBuildings.BodyComponentStores(body))
                 {
-                    foreach (var colony in body.Manager.GetAllEntitiesWithDataBlob<ColonyInfoDB>())
+                    if (!comps.TryGetComponentsByAttribute<GroundDefenseAtb>(out var list)) continue;
+                    foreach (var inst in list)
                     {
-                        if (!colony.TryGetDataBlob<ColonyInfoDB>(out var ci) || ci.PlanetEntity == null || ci.PlanetEntity.Id != body.Id)
-                            continue;
-                        if (!colony.TryGetDataBlob<ComponentInstancesDB>(out var comps)) continue;
-                        if (!comps.TryGetComponentsByAttribute<GroundDefenseAtb>(out var list)) continue;
-                        foreach (var inst in list)
-                        {
-                            var atb = inst.Design.GetAttribute<GroundDefenseAtb>();
-                            if (atb != null) map[inst.ID] = atb;
-                        }
+                        var atb = inst.Design.GetAttribute<GroundDefenseAtb>();
+                        if (atb != null) map[inst.ID] = atb;
                     }
                 }
             }
