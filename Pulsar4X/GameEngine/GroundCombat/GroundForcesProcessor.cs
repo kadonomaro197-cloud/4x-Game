@@ -42,6 +42,14 @@ namespace Pulsar4X.GroundCombat
         /// turns it on at startup next to the space combat flags.</summary>
         public static bool InterruptTimeOnNewBattle = false;
 
+        /// <summary>GROUND TACTICAL BRAIN gate (Operation Earthfall G2.2c) — when true, a STEP in this hotloop
+        /// (<see cref="GroundTacticalBrain.Run"/>, NOT a second processor — L9) drives every AI-owned battalion's
+        /// posture (Stance / ROE / Intent) from the fog-honest odds each tick: it decides WHEN the AI is offensive vs
+        /// defensive, digs in, or retreats (the answer to "is the AI smart enough…"). Default FALSE so the engine test
+        /// suite + a factory game are byte-identical (no AI touches a stance/order); CORE flips it ON alongside the other
+        /// AI gates on the New-Game / menu path (PW). A PLAYER order on a battalion always overrides the brain.</summary>
+        public static bool EnableGroundTacticalAI = false;
+
         // Shield pool regeneration is now a PER-UNIT designed rate (GroundUnit.ShieldRegenFraction, ⚙3), defaulting to
         // 0.34/game-hour (≈ full recharge in ~3 hours) for every unit until a ward dials it — see the recharge step in
         // ProcessBody. The old global ShieldRegenPerHourFraction constant was removed (2026-07-11): it was dead (the
@@ -171,6 +179,14 @@ namespace Pulsar4X.GroundCombat
             }
 
             body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB);
+
+            // 1b1) GROUND TACTICAL BRAIN (G2.2c) — the officer of the deck. Behind EnableGroundTacticalAI (default off →
+            //      byte-identical), read the fog-honest odds for every AI-owned battalion and set its Stance / ROE /
+            //      Intent (dig in when outnumbered, press an edge, retreat when losing — the "when defensive vs
+            //      offensive" decision). A STEP here, not a second processor (L9). It queues AI-issued MoveRegion orders
+            //      that the queue step below then executes; a PLAYER order on a battalion always overrides it. Defensive.
+            if (EnableGroundTacticalAI && regionsDB != null)
+                GroundTacticalBrain.Run(body, forces, regionsDB, body.StarSysDateTime);
 
             // 1b2) FORMATION ORDER QUEUE (O1) — run each formation's queued plan one order at a time, in sequence
             //      ("move to London, THEN Paris, THEN dig in"). A move order is kicked off once and popped when the

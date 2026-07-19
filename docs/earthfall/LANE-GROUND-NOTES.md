@@ -307,3 +307,88 @@ siblings; land at integration):**
 - **→ WHOEVER OWNS THE ON-SWITCH:** `GroundAssembly.AutoFormUp` must be flipped true somewhere (New-Game path or the
   ground-tactical-AI enable) for the AI to actually field battalions in a default game — otherwise garrisons/landings stay
   loose (byte-identical). Left OFF here for byte-identity; the flip is an integration/PW decision.
+
+---
+
+## G2.2 — THE GROUND TACTICAL BRAIN (GroundThreat + GroundTactics + the wire)
+
+**Slice summary.** Implements `docs/earthfall/GROUND-TACTICAL-AI-DESIGN.md` §2/§4 — the answer to "is the AI smart
+enough to know when to be defensive vs offensive." *(Implemented by the campaign workflow, which died on the account
+usage limit before writing the tests + these notes; the session hand-verified every referenced member against source and
+hand-wrote the §4 acceptance tests.)*
+
+**Files created (all inside the GROUND fence):**
+- NEW `GroundThreat.cs` — the FOG-HONEST enemy-strength read (fog "slice 5"). `DetectedEnemyStrength(body/forces, viewer,
+  region)` sums Σ living-enemy `Attack` in the battalion's OWN region (always in contact) + every ADJACENT region the
+  viewer has DETECTED (owns / stands in / `PlanetRegionsDB.IsRegionRevealedFor`); an UNDETECTED enemy counts ZERO (the
+  space undetected-clears rule). `IsRegionDetected` is the one place the fog rule lives (both the brain and PW's landing
+  score read it). `IsBlind` (an un-scouted neighbour → bias cautious). `DetectedDefenderStrength(body, viewer)` = the
+  PW landing-score read (Σ enemy over every region the attacker has scouted). Pure/defensive.
+- NEW `GroundTactics.cs` — `enum GroundIntent {Hold,Advance,PullBack,Retreat}`, `struct GroundPosture`
+  {StanceFamily/Roe/Intent/MoveTargetRegion/BreakGlass/Reason}, `struct GroundTacticsContext` (every input a named read),
+  and `DecidePosture(ctx)` — the pure/deterministic model: LOSING HARD (retreat to fallback, else cornered dig-in;
+  BreakGlass) → HOMELAND DEFENDER (fortified/outnumbered → dig in; strong+aggressive+reserved → sally; else hold prepared
+  positions) → ATTACKER (outnumbered → dig in; odds ≥ the personality's `CombatRisk.RequiredStrengthRatio` bar → Offensive+
+  Close+Advance; else Balanced+StandOff probe). Orbital support lowers the bar; blindness raises it; dry ammo never
+  Offensive. Every branch returns a plain-English Reason.
+- NEW `GroundTacticalBrain.cs` — the WIRE. `Run(body, forces, regionsDB, now)`: forms up loose NPC units (reuses G2.1
+  `FormUpLoose`), then per AI-owned (`FactionInfoDB.IsNPC`) battalion builds the fog-honest context, calls DecidePosture,
+  and applies Stance (`TrySetStance`, cooldown = hysteresis; BREAK-GLASS bypasses it on a survival shift), ROE
+  (`SetEngagementStance`), Intent (an `GroundOrderIssuer.Ai`-marked `MoveRegion` order, or clears its own orders for
+  Hold). ORDER OWNERSHIP: a battalion holding ANY `GroundOrderIssuer.Player` order is left entirely alone. Records the
+  Reason + Intent on the formation (the AI-tape; the client shows it). Defensive/no-throw.
+- NEW `EfGroundTacticalBrainTests.cs` (9 tests) — the §4 acceptance gauges as direct DecidePosture calls (outnumbered
+  fortified defender → Defensive+Hold, no advance; 2:1 attacker → Offensive+Close+Advance; 1:4 → Retreat-to-fallback /
+  cornered dig-in; parity → Balanced+StandOff; personality bites — bold commits where cautious probes; blind → cautious;
+  dry-ammo → never Offensive), a fog gauge (undetected enemy = 0; reveal changes the read), and the wire gauge
+  (order-free AI battalion gets a posture Reason; a PLAYER-order battalion is sacrosanct; the master flag defaults off).
+
+**Files changed (all inside the GROUND fence):**
+- `GroundForcesDB.cs` — APPENDED `enum GroundOrderIssuer {Player=0, Ai}` (order-ownership marker, §3.5; byte enum, Player
+  default); `GroundOrder.Issuer` ([JsonProperty], default Player, deep-copied); `GroundFormation.TacticalReason` +
+  `TacticalIntent` ([JsonProperty], null/Hold default, deep-copied) — the brain's readout for the client.
+- `GroundForcesProcessor.cs` — new static flag `EnableGroundTacticalAI` (default FALSE); step **1b1** in `ProcessBody`
+  (before the order-queue step) calls `GroundTacticalBrain.Run` behind the flag — L9 (a step, NOT a second processor).
+
+**PENDING subsystem-CLAUDE.md rows — `GameEngine/GroundCombat/CLAUDE.md` (NOT edited to avoid a sibling collision; land at
+integration):** add File-Map rows for `GroundThreat.cs` (fog-honest threat read — brain + PW landing score), `GroundTactics.cs`
+(the pure posture decision), `GroundTacticalBrain.cs` (the wire behind `EnableGroundTacticalAI`); note `GroundForcesProcessor`
+gained step 1b1 + the flag, and `GroundForcesDB` gained `GroundOrderIssuer`/`GroundOrder.Issuer`/`GroundFormation.TacticalReason`/
+`TacticalIntent` (all save-safe, deep-copied).
+
+**PENDING dashboard rows (integration P8.2):**
+- `docs/DOCS-INDEX.md`: `GROUND-TACTICAL-AI-DESIGN.md` is now BUILT (design → engine); flip its row to reflect that.
+- `docs/TESTING-TRACKER.md` (Layer-1): **`EfGroundTacticalBrainTests`** · *what:* the ground tactical brain's §4 posture
+  gauges + fog-honesty + order-ownership · *why:* answers "is the AI smart enough to be defensive vs offensive" · *method:*
+  direct `DecidePosture` calls + a hand-built fog scenario + a `Run` wire test on the DevTest colony · *right-looks-like:*
+  the six posture gauges pass, fog counts only detected enemy, a player order suppresses the brain · *likely-failure:* a
+  threshold retune shifts a boundary case (retune the test's numbers with the FLAGGED constants) · *unblocks:* PW's
+  brain-kickoff + the P8 posture assertions (the UMF reacts to a Space-Marine counterattack).
+- `docs/SYSTEM-CONNECTION-MAP.md`: **GroundTactics ← GroundThreat (fog) ← PlanetRegionsDB per-faction reveal**; **GroundTactics
+  ← Factions.CombatRisk/PersonalityDB (read-only, the SAME odds curve as fleets)**; **GroundTacticalBrain → GroundFormationDoctrine
+  (stance/ROE) + the order queue (AI MoveRegion) + GroundAssembly.FormUpLoose (G2.1)**; **GroundThreat → PW landing score
+  (DetectedDefenderStrength, one read two consumers)**.
+
+**Byte-identity claim: (a) default-off flag.** `EnableGroundTacticalAI` defaults FALSE, so `GroundTacticalBrain.Run` is
+never invoked from the processor in any existing scenario/test → no AI touches a stance/ROE/order → byte-identical. The new
+`GroundOrder.Issuer` defaults `Player` and is read only by the brain (flag off → unread); `TacticalReason`/`TacticalIntent`
+default null/Hold and are written only by the brain. All new `[JsonProperty]` fields are deep-copied (save-safe); the two
+new enums (`GroundOrderIssuer`, `GroundIntent`) are appended/new (int-serialised, no reorder).
+
+**FLAGGED balance values (all in `GroundTactics.cs`, developer sets per §5):** `DryAmmoThreshold` 0.05 · `RetreatLossRatio`
+4.0 · `ParityFloor` 0.8 · `OrbitalRequiredFactor` 0.85 · `BlindCautionFactor` 1.5 · `CounterattackAggression` 0.7. (The
+odds bar itself reuses `CombatRisk.RequiredStrengthRatio` — its endpoints are the fleet AI's flagged numbers, unchanged.)
+
+**DEVELOPER DECISIONS raised:** the six thresholds above (§5 of the design doc) · whether an enemy battalion's stance is
+ever directly readable at high recon (v2 intel question — today you only infer it from behaviour).
+
+**CROSS-LANE REQUESTS:**
+- **→ CORE (PW):** flip `GroundForcesProcessor.EnableGroundTacticalAI = true` on the New-Game / menu path (beside the other
+  AI gates) so the brain runs; the brain also calls `FormUpLoose` itself, so no separate form-up wiring is needed on the
+  landing path (but see G2.1's `AutoFormUp` note if you want garrisons formed even with the brain off). PW's landing-region
+  score should consume `GroundThreat.DetectedDefenderStrength(body, attackerFaction)` (fog-honest) as its garrison-strength
+  input. The P8 acceptance gauge should assert the UMF invader reads the odds and goes Defensive/withdraws when the player's
+  Space Marines counterattack (the moment the brain is visibly alive).
+- **→ CLIENT (C-lane):** the Force Management window can show a battalion's `GroundFormation.TacticalReason` +
+  `TacticalIntent` (the AI-tape explain). Fog rule: show an ENEMY battalion's posture only through observed behaviour,
+  never its reasoning — no intel leak.

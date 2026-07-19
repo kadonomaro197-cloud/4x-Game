@@ -244,6 +244,18 @@ namespace Pulsar4X.GroundCombat
         SetEngagement,  // switch the formation's ROE (Hold / Close / Stand-off)
     }
 
+    /// <summary>WHO issued a <see cref="GroundOrder"/> — the order-ownership marker (Earthfall G2.2 §3.5). The ground
+    /// tactical brain (<c>GroundTacticalBrain</c>) only ever REPLACES its OWN (<see cref="Ai"/>) orders; a
+    /// <see cref="Player"/> order queue ALWAYS overrides the brain (the human is sovereign). <see cref="Player"/> is the
+    /// value 0 = the DEFAULT, so every existing/client-issued order is treated as the player's (byte-identical: nothing
+    /// reads this marker until the brain flag is flipped, and an un-flagged order reads Player = "hands off"). Enums
+    /// serialize by int — APPEND new members, never reorder.</summary>
+    public enum GroundOrderIssuer : byte
+    {
+        Player,   // the human (or the client UI) — sacred, the brain never touches a queue holding one of these
+        Ai,       // the ground tactical brain — the only orders the brain is allowed to replace
+    }
+
     /// <summary>
     /// One queued order for a <see cref="GroundFormation"/> (O1) — the ground echo of an <c>EntityCommand</c>, kept as a
     /// save-safe DATA object (formations aren't entities, so their orders aren't <c>EntityCommand</c>s either — the same
@@ -255,6 +267,10 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public GroundOrderType Type { get; internal set; }
         /// <summary>Set once the processor has kicked this order off (so a march isn't re-issued every tick).</summary>
         [JsonProperty] public bool Issued { get; internal set; }
+        /// <summary>WHO issued this order (G2.2 §3.5 order-ownership). Default <see cref="GroundOrderIssuer.Player"/> so
+        /// every client/existing order is the human's — the brain only replaces its OWN <see cref="GroundOrderIssuer.Ai"/>
+        /// orders and NEVER a queue that holds a Player order. Save-safe ([JsonProperty] + deep-copied below).</summary>
+        [JsonProperty] public GroundOrderIssuer Issuer { get; internal set; } = GroundOrderIssuer.Player;
         [JsonProperty] public int TargetQ { get; internal set; }        // MoveToHex
         [JsonProperty] public int TargetR { get; internal set; }        // MoveToHex
         [JsonProperty] public int TargetRegion { get; internal set; }   // MoveToRegion
@@ -265,7 +281,7 @@ namespace Pulsar4X.GroundCombat
         public GroundOrder() { }
         public GroundOrder(GroundOrder o)
         {
-            Type = o.Type; Issued = o.Issued; TargetQ = o.TargetQ; TargetR = o.TargetR;
+            Type = o.Type; Issued = o.Issued; Issuer = o.Issuer; TargetQ = o.TargetQ; TargetR = o.TargetR;
             TargetRegion = o.TargetRegion; SecondsRemaining = o.SecondsRemaining; StanceId = o.StanceId; Engagement = o.Engagement;
         }
 
@@ -341,6 +357,17 @@ namespace Pulsar4X.GroundCombat
         /// takes over). The processor pops the front order when it completes. Deep-copied for save-safety.</summary>
         [JsonProperty] public List<GroundOrder> Orders { get; internal set; } = new List<GroundOrder>();
 
+        // ── GROUND TACTICAL BRAIN readout (Earthfall G2.2, Visibility Gate) — the plain-English EXPLAIN of the last
+        //    posture decision the brain took for this battalion, plus its abstract INTENT. Save-safe so the client can
+        //    show "1st Legion — Offensive/Close/Advance: odds favour the assault" and it survives a reload. Written ONLY
+        //    by GroundTacticalBrain (behind EnableGroundTacticalAI, default OFF) → null/Hold by default = byte-identical.
+        /// <summary>The brain's last plain-English reason for this battalion's posture (null = the brain hasn't decided
+        /// for it — a player-driven or flag-off battalion). The AI-tape rule: no decision without its explain.</summary>
+        [JsonProperty] public string TacticalReason { get; internal set; }
+        /// <summary>The brain's last abstract INTENT for this battalion (Advance/Hold/PullBack/Retreat) — the client
+        /// readout half. Default <see cref="GroundIntent.Hold"/> (the byte-identical resting value).</summary>
+        [JsonProperty] public GroundIntent TacticalIntent { get; internal set; } = GroundIntent.Hold;
+
         public GroundFormation() { }
         public GroundFormation(GroundFormation o)
         {
@@ -348,6 +375,7 @@ namespace Pulsar4X.GroundCombat
             ParentFormationId = o.ParentFormationId;
             StanceId = o.StanceId; StanceFamily = o.StanceFamily; AttackMult = o.AttackMult; DamageTakenMult = o.DamageTakenMult;
             SwitchableAfter = o.SwitchableAfter; Engagement = o.Engagement;
+            TacticalReason = o.TacticalReason; TacticalIntent = o.TacticalIntent;
             Orders = new List<GroundOrder>();
             if (o.Orders != null) foreach (var ord in o.Orders) Orders.Add(new GroundOrder(ord));
         }
