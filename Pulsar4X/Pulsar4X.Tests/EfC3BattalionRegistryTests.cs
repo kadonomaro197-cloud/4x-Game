@@ -86,7 +86,11 @@ namespace Pulsar4X.Tests
             Assert.That(registry.Any(r => r.formation.Name == "Invaders"), Is.False, "the enemy formation is NOT in the player's registry");
 
             // Aggregate reads the table column shows are correct (the ground echo of the fleet-combat-sheet totals).
-            var earthRow = registry.First(r => r.formation.FormationId == earthForm.FormationId);
+            // NOTE: FormationId is a PER-BODY counter (GroundForces.CreateFormation → forces.NextFormationId++), so
+            // earthForm and sibForm both get id 0 on their respective bodies — a row must be keyed by (body, formation),
+            // NOT FormationId alone (which is exactly how the client's Battalions tab disambiguates selection:
+            // _selBattalionBodyId + _selBattalionFormationId). Each body here has one player formation, so body.Id keys it.
+            var earthRow = registry.First(r => r.body.Id == earth.Id);
             Assert.That(GroundFormationTools.MemberCount(earthRow.forces, earthRow.formation), Is.EqualTo(2));
             Assert.That(GroundFormationTools.FormationStrength(earthRow.forces, earthRow.formation), Is.EqualTo(200).Within(0.01), "2x infantry Attack 100 = 200");
             var (ec, em) = GroundFormationTools.FormationHealth(earthRow.forces, earthRow.formation);
@@ -95,7 +99,7 @@ namespace Pulsar4X.Tests
             Assert.That(GroundFormationTools.FormationReachHexes(earthRow.forces, earthRow.formation), Is.EqualTo(1), "infantry reach 1 hex");
             Assert.That(GroundForces.LeaderRegion(earthRow.forces, earthRow.formation), Is.EqualTo(0), "the battalion rallies in region 0");
 
-            var sibRow = registry.First(r => r.formation.FormationId == sibForm.FormationId);
+            var sibRow = registry.First(r => r.body.Id == sibling.Id);
             Assert.That(GroundFormationTools.FormationStrength(sibRow.forces, sibRow.formation), Is.EqualTo(300).Within(0.01), "armour 140 + artillery 160 = 300");
             Assert.That(GroundFormationTools.FormationReachHexes(sibRow.forces, sibRow.formation), Is.EqualTo(3), "the artillery's 3-hex reach is the formation's (max)");
 
