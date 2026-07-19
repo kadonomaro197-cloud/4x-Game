@@ -317,3 +317,82 @@ unit's weapon reach + radar reach to tint hexes; a UI consumer of already-connec
 
 **`docs/DOCS-INDEX.md`** — no NEW doc. `Pulsar4X.Client/CLAUDE.md` gained a "RANGE OVERLAY on the globe (C4.1)" section +
 a C4.1 note on the `ShipDesignWindow` row; `docs/CLIENT-TEST-CHECKLIST.md` gained a C4.1 section (both status: current).
+
+## C5.1 — Embark / Land Troops order (the invasion control panel) (2026-07-19)
+
+**What shipped.** The player half of the invasion **lift** step (MVP Stage 4). `LoadTroopsOrder`/`LandTroopsOrder` had
+ZERO client surface (R2 ledger §6 — "the missing control panel"; the engine, the AI's `ConquerResolver`, and the tests
+all issued them, but a player had no button). Added a new **`IssueOrderType.Troops`** ("Embark / land troops ...") to the
+FleetWindow **Fleets ▸ Issue Orders** tab — the exact `MoveToSystemBodyOrder` Issue-Orders idiom (R1 §A1:
+`GetFilteredEntities`/button → `CreateCommand` → `Game.OrderHandler.HandleOrder`), one verb over.
+
+**Files changed:**
+- `Pulsar4X/Pulsar4X.Client/Interface/Windows/FleetWindow.cs` — (1) `IssueOrderType.Troops` enum member (appended,
+  runtime-only enum, not serialized); (2) a `HasAnyTroopBay(fleet)`-gated `Selectable("Embark / land troops ...")` in the
+  Available-Orders list (mirrors the Geo/Grav-survey ability gating); (3) `case IssueOrderType.Troops → DisplayTroopOrders()`
+  in the Issue-Orders switch; (4) the new draw block — `HasAnyTroopBay`, `DisplayTroopOrders` (per bay-ship collapsing
+  header), `DrawShipBayCapacity` (used/free per class), `DrawEmbarkSection` (player units on the orbited body → Load
+  button → `LoadTroopsOrder.CreateCommand(ship, body, unit.UnitId)`), `DrawLandSection` (loaded units + region-picker
+  combo over `PlanetRegionsDB.Regions` + orbital-control gate → Land button → `LandTroopsOrder.CreateCommand(ship,
+  targetBody, unit.UnitId, regionIndex)`). New fields `_landRegionChoice` (ship id → picked region) + `_troopStatus`.
+- `Pulsar4X/Pulsar4X.Tests/EfC5TroopLiftOrderTests.cs` — NEW fixture (unique name), pins the button contract.
+- `Pulsar4X/Pulsar4X.Client/CLAUDE.md` — `FleetWindow` inventory-row C5.1 note + a new "Embark / Land Troops" section.
+- `docs/CLIENT-TEST-CHECKLIST.md` — new "OPERATION EARTHFALL — C5.1" section (the full embark-Earth-marines → land-on-Mars
+  click-path).
+
+**Order signatures verified in source (no compile available):** `LoadTroopsOrder.CreateCommand(Entity ship, Entity body,
+int unitId)` (LoadTroopsOrder.cs:35) and `LandTroopsOrder.CreateCommand(Entity ship, Entity targetBody, int unitId, int
+regionIndex)` (LandTroopsOrder.cs:37 — `RegionIndex` is carried on the order and lands into that region). Capacity helpers
+(`GroundTransport.BayCapacity`/`UsedCapacity`/`FreeCapacity`/`CanLoad`/`CarryClassOf`/`CarrySizeOf`/`HasOrbitalControl`) all
+public static, verified in `GroundTransport.cs`. `GroundForcesDB.Units` + `GroundTransportDB.LoadedUnits` public getters;
+`GroundUnit.{UnitId,Name,UnitType,FactionOwnerID}` public; `PositionDB.Parent` = `Entity?` (the orbited body).
+`ImGui.PushID(int)` overload confirmed in use (EntityWindow.cs:283, ResearchWindow.cs:164).
+
+**Tests added — `EfC5TroopLiftOrderTests` (3 tests, `rest` shard):**
+- `EmbarkButton_ReadoutAndOrder_LoadTheUnit` — asserts the bay-capacity-vs-unit-size readout the panel draws
+  (`BayCapacity(Personnel) > 0`, `CarryClassOf(Infantry)=Personnel`, `CanLoad`/`FreeCapacity`), then the 3-arg
+  `LoadTroopsOrder.CreateCommand` carries the body+unit ids and on `Execute` lifts the unit off the roster onto the ship.
+- `LandButton_RegionPicker_CarriesTheChosenRegion` — asserts the 4-arg `LandTroopsOrder.CreateCommand` carries the PICKED
+  region (a non-default index 2, pinning the region-picker wire), the `HasOrbitalControl` gate matches the button's
+  disabled-state, and on `Execute` the unit lands in exactly the picked region.
+- `VehicleUnit_OnATroopBayOnlyShip_LoadButtonIsDisabled` — asserts the per-class gating the readout draws: a
+  troop-bay-only ship reports `BayCapacity(Vehicle)=0`, so `CanLoad(tank)=false` (greyed Load button) while
+  `CanLoad(infantry)=true` (bay-only-carries-its-own-class).
+
+**Byte-identity claim: (a/b) client-only + provably inert absent new data — no engine value changed.** No engine file or
+data was touched. The new order type is a runtime-only enum member (appended, never serialized). The order surface is
+gated on `HasAnyTroopBay` — a fleet with no troop-bay ship (every existing/default fleet) never even shows the option, and
+the buttons only issue the two orders (already CI-tested + AI-issued) on an explicit player click. Both orders re-check
+every precondition and are safe no-ops when stale. CI only compiles the client (never runs it), so no green test observes
+the draw; every existing test is unaffected. `EfC5TroopLiftOrderTests` exercises only engine paths that already existed.
+
+**FLAGGED gameplay numbers: NONE.** No new gameplay/balance value. The carry-size/carry-class/bay-capacity numbers the UI
+displays are existing engine data (`GroundTransport.CarrySizeOf`/`CarryClassOf`, `GroundBayAtb.Capacity`). The status-text
+colours (green 0.4/1/0.4, amber 1/0.6/0.3, header blue 0.8/0.9/1) are cosmetic UI literals, matching the file's existing
+selector/status colour idioms — no `// FLAGGED balance value` warranted.
+
+**Developer decisions raised: NONE new.** (The C5 slice had no queued §6 decision; C5b's infra Destroy/Capture decisions
+live in findings/R4 and are PW's, not this slice's.)
+
+**Cross-lane requests: NONE.** C5.1 (embark UI) has no cross-lane dependency and ships in-lane (CAMPAIGN-PLAN §3). C5b
+(infra Destroy/Capture buttons) is deferred to PW — it needs GROUND G3's `DestroyInfrastructure`/`CaptureInfrastructure`
+enum; NOT built here (per the slice brief). No new engine helper was required — the region picker reads the existing
+`PlanetRegionsDB.Regions`; no `GroundTransport` change was needed.
+
+### Pending dashboard rows (for P8.2 to land)
+
+**`docs/TESTING-TRACKER.md`** — one new engine-CI row + one Layer-3 (local-runtime) row:
+
+| Row | What | Why | Method | What-right | Likely-failure | Mitigation | Unblocks |
+|-----|------|-----|--------|-----------|----------------|------------|----------|
+| EARTHFALL-C5.1-order | `EfC5TroopLiftOrderTests` — pins the FleetWindow embark/land button contract (CreateCommand arities, per-class bay-capacity readout, region-picker RegionIndex wire) | CI can't run the client; this pins the exact engine surface the buttons draw against so a breaking engine change reds CI (the C3 registry-test role for the Battalions tab) | `dotnet test` (`rest` shard) — the 3 tests | 3 green: embark readout+order loads; land 4-arg carries picked region; troop-bay-only ship greys a tank's Load | An engine change to a CreateCommand overload or a capacity helper signature/behaviour | The fixture is the tripwire; overlap with GroundTransportTests/TroopOrderTests is intentional (different framing) | The player invasion lift step (embark → land) |
+| EARTHFALL-C5.1-clickpath | The FleetWindow "Embark / land troops" order (embark garrison → fly → land region-picked) | The invasion lift step had no player button (R2 §6); runtime-only (CI can't run the client) | CLIENT-TEST-CHECKLIST "OPERATION EARTHFALL — C5.1" (order only shows with a bay ship; embark; fly; land gated on orbit; land into picked region; full Earth→Mars run) | The order appears with a bay ship; Load lifts a garrison unit; Land is orbit-gated and drops into the picked region | The order's ship enumeration / position-parent read wrong, or the region combo doesn't map, or a button no-ops silently | The draw is inside the Issue-Orders child; orders are defensive no-ops; `[troops]` SessionLog line gauges each click | MVP Stage 4 (you can invade a planet from orbit) |
+
+**`docs/SYSTEM-CONNECTION-MAP.md`** — one new ORDER edge: **FleetWindow (client) → LoadTroopsOrder / LandTroopsOrder /
+GroundTransport (engine)** — the embark/land buttons issue the two troop orders and read `GroundTransport` capacity +
+`GroundForcesDB.Units` / `GroundTransportDB.LoadedUnits` / `PlanetRegionsDB.Regions`; the client consumer that closes the
+"build army → LOAD → win orbit → LAND" chain's player-facing gap. Not a new engine coupling (the orders already existed
+and were AI-issued); a UI front door onto them.
+
+**`docs/DOCS-INDEX.md`** — no NEW doc. `Pulsar4X.Client/CLAUDE.md` gained an "Embark / Land Troops (C5.1)" section + a
+C5.1 note on the `FleetWindow` inventory row; `docs/CLIENT-TEST-CHECKLIST.md` gained a C5.1 section (both status: current).

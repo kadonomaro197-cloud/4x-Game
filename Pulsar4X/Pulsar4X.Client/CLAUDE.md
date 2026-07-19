@@ -90,7 +90,7 @@ internal override void Display()
 | Window | File | Status | Notes |
 |--------|------|--------|-------|
 | `SystemWindow` | `SystemWindow.cs` | ✅ Functional | Star system selector and planet list |
-| `FleetWindow` | `FleetWindow.cs` | ✅ Functional | Fleet listing, selection, basic orders. **+ Combat tab (2026-06-25)** — see "Fleet Combat tab" below. **+ Force Management retitle + Battalions tab (Earthfall C3.1, 2026-07-18)** — the window title is now **"Force Management"** (the class stays `FleetWindow` — renaming it orphans `LoadedWindows`/save refs, R1 ledger), and its content splits across a top-level tab bar: **Fleets** (the entire existing fleet manager, verbatim, inside its own tab — byte-identical) and **Battalions** (the new cross-body ground-formation manager). See "Battalions tab" below. |
+| `FleetWindow` | `FleetWindow.cs` | ✅ Functional | Fleet listing, selection, basic orders. **+ Combat tab (2026-06-25)** — see "Fleet Combat tab" below. **+ Force Management retitle + Battalions tab (Earthfall C3.1, 2026-07-18)** — the window title is now **"Force Management"** (the class stays `FleetWindow` — renaming it orphans `LoadedWindows`/save refs, R1 ledger), and its content splits across a top-level tab bar: **Fleets** (the entire existing fleet manager, verbatim, inside its own tab — byte-identical) and **Battalions** (the new cross-body ground-formation manager). See "Battalions tab" below. **+ Embark / Land Troops order (Earthfall C5.1, 2026-07-19)** — a new `IssueOrderType.Troops` in the Fleets ▸ Issue Orders tab (gated on the fleet having a troop-bay ship): per bay ship, embark the player's ground units standing on the body it orbits (`LoadTroopsOrder`) and land loaded units onto a region-picked target once it holds the orbit (`LandTroopsOrder`). See "Embark / Land Troops" below. |
 | `ColonyManagementWindow` | `ColonyManagementWindow.cs` | ✅ **Full economy UI** (verified in code 2026-06-24) | Colony picker + tabs: **Summary** (planet/pop/infra-efficiency/installed components/stockpile of raw+refined), **Society** (2026-07-02 — morale+factors / legitimacy+rebellion / manpower / sustenance / tax→income / government, colour-banded; see below), **Production** (`IndustryDisplay` — queue refine/build jobs via `IndustryOrder2`: batch/repeat/auto-install/priority/cancel), **Construction**, **Mining** (per-mineral rate/annual production/years-to-depletion). The minerals→refined→components loop is fully see-and-do here. **Live-behaviour unverified** (CI can't build the client). |
 | `PlanetaryWindow` | `PlanetaryWindow.cs` | ✅ (installations fixed 2026-06-24) | General info ✅ / Mineral deposits ✅ / **Installations ✅ — tab now gates on `ComponentInstancesDB` and renders via `componentsDB.Display(...)` (`:102,220`), NOT the dead `InstallationsDB`.** |
 | `PlanetViewWindow` | `PlanetViewWindow.cs` | ✅ Tactical map 2026-07-04 (ground-map slice 5e — compile-checked, runtime-unverified) | The **planet surface as a NAVIGABLE tactical map** — the flat 3-region view of the 4-slice ring (`PlanetRegionsDB`) upgraded from readout to "put your hands on the ground war." Per-body window (context menu "Planet view (regions)", gated on `PlanetRegionsDB`); centre region + its two ring neighbours, rotate with ◀/▶ or by clicking a region. On top of the terrain bands it draws **units** (`GroundForcesDB` grouped per faction+type into tokens: type initial + count + health bar, cyan=yours / red=hostile, `»`=marching), **hazards** (`PlanetEnvironmentsDB` chips), **terrain class** (Open/Cover/Rough), and **buildings** (⚙ per `Region.InstallationIds`). Interactions: click a token → select group; click an adjacent region or a March button → `GroundForces.OrderMove`; Build panel places a `PlanetInstallation` design at the centre region via `PlaceInstallationInRegionOrder` → `Game.OrderHandler.HandleOrder`. Thin defensive draw — reads off CI-tested blobs, orders through CI-tested engine paths, body wrapped so a throw logs `[RenderError]` once and still runs `Window.End`, no hard-indexing. **Runtime render/feel unverified (CI can't run the client).** Design: `docs/ground/GROUND-SURFACE-MAP-DESIGN.md`. |
@@ -280,6 +280,40 @@ nothing except through the CI-tested `GroundForces` / `GroundFormationDoctrine` 
 The **Fleets tab is byte-identical** — the existing fleet layout was moved verbatim into its own tab item; the class
 stays `FleetWindow` (renaming orphans `LoadedWindows`/save refs). **Deferred to PW (needs GROUND's `RenameFormation`
 helper):** a rename button. **CI compiles the client but can't run it — live render/feel is the developer's build.**
+
+### Embark / Land Troops (FleetWindow ▸ Issue Orders) — BUILT Earthfall C5.1 (2026-07-19) — the invasion control panel
+
+The player half of the invasion **lift** step (MVP Stage 4). `LoadTroopsOrder`/`LandTroopsOrder` had **zero** client
+surface — the engine, the AI (`ConquerResolver`), and the tests all issued them, but a *player* had no button (R2
+ledger §6, "the missing control panel"). This adds the FleetWindow Issue-Orders path for it — the exact
+`MoveToSystemBodyOrder` idiom (`GetFilteredEntities`/button → `CreateCommand` → `Game.OrderHandler.HandleOrder`), one
+verb over.
+
+A new **`IssueOrderType.Troops`** ("Embark / land troops ...") appears in the Fleets ▸ **Issue Orders** left list,
+**gated on `HasAnyTroopBay(fleet)`** (a ship carrying a `GroundBayAtb` → non-zero `GroundTransport.BayCapacity`) — the
+same show-only-if-capable gating the Geo/Grav-survey orders use. `DisplayTroopOrders()` lists each troop-bay ship in
+the selected fleet as a collapsing header with:
+- **Bay-capacity readout** (`DrawShipBayCapacity`) — used/free per class (Troop bay = Personnel, Vehicle bay =
+  armour/artillery), summed on demand from the ship's installed bays (`GroundTransport.BayCapacity`/`UsedCapacity`).
+- **Embark** (`DrawEmbarkSection`) — the player's own `GroundUnit`s standing on the **body the ship orbits** (its
+  `PositionDB.Parent`), each with its carry-class + carry-size, and a **Load** button (greyed via
+  `GroundTransport.CanLoad` when there's no room of that class, with a "needs N room, M free" note) issuing
+  `LoadTroopsOrder.CreateCommand(ship, body, unit.UnitId)`.
+- **Land** (`DrawLandSection`) — the units aboard (`GroundTransportDB.LoadedUnits`), a **region picker** combo over the
+  target body's `PlanetRegionsDB.Regions` (default Region 1 when the body has no region layer; the choice rides on the
+  order's `RegionIndex`, verified), an **orbital-control status** line (`GroundTransport.HasOrbitalControl` — a foreign
+  ship over the body **disables** the Land buttons, "win the space first"), and a **Land** button per loaded unit issuing
+  `LandTroopsOrder.CreateCommand(ship, targetBody, unit.UnitId, regionIndex)`.
+
+**Connections (Prime Directive):** reads `GroundTransport` capacity helpers, `GroundForcesDB.Units`,
+`GroundTransportDB.LoadedUnits`, `PlanetRegionsDB.Regions`; writes nothing except through the two CI-tested orders on
+an explicit click. **Thin + defensive** by the client discipline — the orders themselves re-check every precondition
+(at-body / bay room / orbital control), so a stale click is a safe no-op; nothing is hard-indexed. `[troops]`
+SessionLog lines gauge each load/land. **Engine byte-identical** (a new order type + draw methods only; no engine file
+touched). CI pins the exact contract the buttons draw against in `EfC5TroopLiftOrderTests` (overload arities, the
+per-class capacity readout, the region-picker `RegionIndex` wire). **CI compiles the client but can't run it — the
+full click-path (embark Earth marines → land on Mars) is on `docs/CLIENT-TEST-CHECKLIST.md`.** `C5b` (infra
+Destroy/Capture buttons) is deferred to PW (needs GROUND's enum).
 
 ### EMCON posture + fog-of-war UI (FleetWindow + DevTools) — BUILT 2026-06-26 (detection stack, slices A)
 

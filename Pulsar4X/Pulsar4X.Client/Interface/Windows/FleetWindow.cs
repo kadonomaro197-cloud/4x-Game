@@ -35,6 +35,7 @@ namespace Pulsar4X.Client
             JPSurvey,
             Jump,
             RefuelAt,
+            Troops,   // Earthfall C5.1 — embark ground units onto a troop-bay ship / land them on a target world
         }
 
         private IssueOrderType selectedIssueOrderType = IssueOrderType.MoveTo;
@@ -378,6 +379,13 @@ namespace Pulsar4X.Client
                         if(ImGui.Selectable("Jump...", selectedIssueOrderType == IssueOrderType.Jump))
                         {
                             selectedIssueOrderType = IssueOrderType.Jump;
+                        }
+                        // Earthfall C5.1 — only offered when a ship in the fleet actually carries a troop/vehicle bay
+                        // (mirrors the HasGeoSurveyAbility/HasJPSurveyAbililty gating above), so the order doesn't
+                        // clutter the list for a fleet that can't lift ground units.
+                        if(HasAnyTroopBay(SelectedFleet) && ImGui.Selectable("Embark / land troops ...", selectedIssueOrderType == IssueOrderType.Troops))
+                        {
+                            selectedIssueOrderType = IssueOrderType.Troops;
                         }
                     }
                     ImGui.EndChild();
@@ -1560,9 +1568,193 @@ namespace Pulsar4X.Client
                             }
                         }
                         break;
+                    case IssueOrderType.Troops:
+                        DisplayTroopOrders();
+                        break;
                 }
             }
             ImGui.EndChild();
+        }
+
+        // ═══════════════════════════ EMBARK / LAND TROOPS (Earthfall C5.1) ═══════════════════════════
+        // The player half of the invasion lift step (MVP Stage 4 — LoadTroopsOrder/LandTroopsOrder had ZERO client
+        // surface, the "missing control panel"). For each troop-bay ship in the selected fleet:
+        //   EMBARK — list the player's ground units standing on the body the ship orbits, with bay-capacity-vs-unit-size,
+        //            and load each via LoadTroopsOrder.CreateCommand(ship, body, unitId) → Game.OrderHandler.HandleOrder.
+        //   LAND   — once units are aboard and the ship holds the orbit over a target body, pick a REGION and drop each
+        //            via LandTroopsOrder.CreateCommand(ship, targetBody, unitId, regionIndex) → HandleOrder.
+        // THIN + DEFENSIVE (the client discipline): every value is read off GroundTransport's own CI-tested capacity
+        // helpers, every mutation goes through the CI-tested order path on an explicit click, and the orders themselves
+        // re-check every precondition (at-body / bay room / orbital control) — so a stale click is a safe no-op.
+
+        private readonly Dictionary<int, int> _landRegionChoice = new();   // ship id -> chosen land region index
+        private string _troopStatus = "";
+
+        // True if any ship in the fleet carries a troop OR vehicle bay (a GroundBayAtb → non-zero BayCapacity) — the
+        // gate for offering the order in the list.
+        private bool HasAnyTroopBay(Entity? fleet)
+        {
+            if(fleet == null || !fleet.TryGetDataBlob<FleetDB>(out var fdb)) return false;
+            foreach(var ship in fdb.GetChildren().Where(c => c.IsValid && !c.HasDataBlob<FleetDB>()))
+                if(GroundTransport.BayCapacity(ship, GroundCarryClass.Personnel) > 0
+                    || GroundTransport.BayCapacity(ship, GroundCarryClass.Vehicle) > 0)
+                    return true;
+            return false;
+        }
+
+        private void DisplayTroopOrders()
+        {
+            if(selectedFleetDB == null || _uiState.Faction == null || _uiState.Game == null) return;
+            int myFaction = _uiState.Faction.Id;
+
+            DisplayHelpers.Header("Embark / Land Troops",
+                "Load ground units onto a troop-bay ship at a garrisoned world, fly them to the target, win the orbit, and land them on a region — the lift step of an invasion.");
+
+            if(!string.IsNullOrEmpty(_troopStatus))
+                ImGui.TextColored(new Vector4(0.4f, 1f, 0.4f, 1f), _troopStatus);
+
+            var bayShips = selectedFleetDB.GetChildren()
+                .Where(c => c.IsValid && !c.HasDataBlob<FleetDB>()
+                    && (GroundTransport.BayCapacity(c, GroundCarryClass.Personnel) > 0
+                        || GroundTransport.BayCapacity(c, GroundCarryClass.Vehicle) > 0))
+                .ToList();
+
+            if(bayShips.Count == 0)
+            {
+                ImGui.TextDisabled("No ship in this fleet has a troop or vehicle bay.");
+                ImGui.TextDisabled("Design a ship with a Troop Bay / Vehicle Bay component to lift ground units.");
+                return;
+            }
+
+            foreach(var ship in bayShips)
+            {
+                ImGui.PushID(ship.Id);
+                if(ImGui.CollapsingHeader(ship.GetName(myFaction) + "###troopship" + ship.Id, ImGuiTreeNodeFlags.DefaultOpen))
+                {
+                    DrawShipBayCapacity(ship);
+
+                    // The body the ship is currently at (its position parent) — the embark SOURCE and the land TARGET.
+                    Entity? body = null;
+                    if(ship.TryGetDataBlob<PositionDB>(out var pos)) body = pos.Parent;
+
+                    DrawEmbarkSection(ship, body, myFaction);
+                    ImGui.Separator();
+                    DrawLandSection(ship, body, myFaction);
+                }
+                ImGui.PopID();
+            }
+        }
+
+        // The bay-capacity readout (the "show bay capacity vs unit size" requirement, ship half) — used/free per class,
+        // summed on demand from the ship's installed bays.
+        private void DrawShipBayCapacity(Entity ship)
+        {
+            double pCap = GroundTransport.BayCapacity(ship, GroundCarryClass.Personnel);
+            double vCap = GroundTransport.BayCapacity(ship, GroundCarryClass.Vehicle);
+            if(pCap > 0)
+            {
+                double used = GroundTransport.UsedCapacity(ship, GroundCarryClass.Personnel);
+                ImGui.TextDisabled($"Troop bay (infantry): {used:0}/{pCap:0} used, {pCap - used:0} free");
+            }
+            if(vCap > 0)
+            {
+                double used = GroundTransport.UsedCapacity(ship, GroundCarryClass.Vehicle);
+                ImGui.TextDisabled($"Vehicle bay (armour/artillery): {used:0}/{vCap:0} used, {vCap - used:0} free");
+            }
+        }
+
+        // EMBARK — the player's own units standing on the body the ship orbits, each with its carry-class + size and a
+        // Load button (greyed when the ship has no room of that class). LoadTroopsOrder.CreateCommand(ship, body, unitId).
+        private void DrawEmbarkSection(Entity ship, Entity? body, int myFaction)
+        {
+            ImGui.TextColored(new Vector4(0.8f, 0.9f, 1f, 1f), "Embark — load units standing here");
+            if(body == null || !body.TryGetDataBlob<GroundForcesDB>(out var forces))
+            {
+                ImGui.TextDisabled("   Ship isn't over a garrisoned world (park it in orbit of a body with your ground units).");
+                return;
+            }
+
+            var loadable = forces.Units.Where(u => u.FactionOwnerID == myFaction).ToList();
+            if(loadable.Count == 0)
+            {
+                ImGui.TextDisabled($"   No units of yours on {body.GetName(myFaction)} to load.");
+                return;
+            }
+
+            foreach(var unit in loadable)
+            {
+                var cls = GroundTransport.CarryClassOf(unit.UnitType);
+                double size = GroundTransport.CarrySizeOf(unit);
+                bool canLoad = GroundTransport.CanLoad(ship, unit);
+
+                if(!canLoad) ImGui.BeginDisabled();
+                if(ImGui.Button($"Load {unit.Name} ({unit.UnitType}, size {size:0}, {cls} bay)##load{ship.Id}_{unit.UnitId}"))
+                {
+                    var order = LoadTroopsOrder.CreateCommand(ship, body, unit.UnitId);
+                    _uiState.Game.OrderHandler.HandleOrder(order);
+                    _troopStatus = $"Loading {unit.Name} onto {ship.GetName(myFaction)}";
+                    SessionLog.Action($"[troops] load order: unit #{unit.UnitId} '{unit.Name}' -> ship #{ship.Id} at '{body.GetName(myFaction)}'");
+                }
+                if(!canLoad)
+                {
+                    ImGui.EndDisabled();
+                    ImGui.SameLine();
+                    ImGui.TextDisabled($"(needs {size:0} {cls} room, {GroundTransport.FreeCapacity(ship, cls):0} free)");
+                }
+            }
+        }
+
+        // LAND — the units aboard the ship, dropped onto a chosen region of the body it's over. Gated on orbital control
+        // (win the space before boots on the ground). LandTroopsOrder.CreateCommand(ship, targetBody, unitId, regionIndex).
+        private void DrawLandSection(Entity ship, Entity? body, int myFaction)
+        {
+            ImGui.TextColored(new Vector4(0.8f, 0.9f, 1f, 1f), "Land — drop loaded units onto this world");
+            if(!ship.TryGetDataBlob<GroundTransportDB>(out var transport) || transport.LoadedUnits.Count == 0)
+            {
+                ImGui.TextDisabled("   No units loaded aboard this ship.");
+                return;
+            }
+            if(body == null)
+            {
+                ImGui.TextDisabled("   Ship isn't over a body — move it to the target world first.");
+                return;
+            }
+
+            // Orbital-control gate: a foreign ship over the body blocks the drop (the order re-checks this too).
+            bool holdsOrbit = GroundTransport.HasOrbitalControl(ship, body);
+            if(holdsOrbit)
+                ImGui.TextDisabled($"   Holding the orbit over {body.GetName(myFaction)} — clear to land.");
+            else
+                ImGui.TextColored(new Vector4(1f, 0.6f, 0.3f, 1f), $"   A foreign ship holds the orbit over {body.GetName(myFaction)} — clear it before you can land.");
+
+            // Region picker — RegionIndex rides on LandTroopsOrder (verified). Default region 0 when the body has no
+            // region layer.
+            int regionCount = 1;
+            string[] regionNames = { "Region 1" };
+            if(body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB) && regionsDB.Regions != null && regionsDB.Regions.Count > 0)
+            {
+                regionCount = regionsDB.Regions.Count;
+                regionNames = new string[regionCount];
+                for(int i = 0; i < regionCount; i++) regionNames[i] = "Region " + (i + 1);
+            }
+            if(!_landRegionChoice.TryGetValue(ship.Id, out int region)) region = 0;
+            region = Math.Clamp(region, 0, regionCount - 1);
+            ImGui.SetNextItemWidth(160f);
+            ImGui.Combo($"Land in##landreg{ship.Id}", ref region, regionNames, regionNames.Length);
+            _landRegionChoice[ship.Id] = region;
+
+            foreach(var unit in transport.LoadedUnits)
+            {
+                if(!holdsOrbit) ImGui.BeginDisabled();
+                if(ImGui.Button($"Land {unit.Name} ({unit.UnitType}) in Region {region + 1}##land{ship.Id}_{unit.UnitId}"))
+                {
+                    var order = LandTroopsOrder.CreateCommand(ship, body, unit.UnitId, region);
+                    _uiState.Game.OrderHandler.HandleOrder(order);
+                    _troopStatus = $"Landing {unit.Name} on {body.GetName(myFaction)} region {region + 1}";
+                    SessionLog.Action($"[troops] land order: unit #{unit.UnitId} '{unit.Name}' from ship #{ship.Id} -> '{body.GetName(myFaction)}' region {region + 1}");
+                }
+                if(!holdsOrbit) ImGui.EndDisabled();
+            }
         }
 
         private void DisplayOrders()
