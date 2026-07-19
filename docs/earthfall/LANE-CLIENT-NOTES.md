@@ -252,3 +252,68 @@ order paths; the edge is a UI consumer of already-connected systems, not a new s
 
 **`docs/DOCS-INDEX.md`** — no NEW doc. `Pulsar4X.Client/CLAUDE.md` gained a "Battalions tab" section + an updated
 FleetWindow inventory row; `docs/CLIENT-TEST-CHECKLIST.md` gained a C3.1 section (both status: current).
+
+---
+
+## C4.1 — Hex-highlight range overlay + Entity Assembler rows (2026-07-19)
+
+**What shipped (CLIENT fence only — `Pulsar4X.Client/**` + `docs/CLIENT-TEST-CHECKLIST.md`):**
+- `PlanetViewWindow.cs` — **range overlay** on the globe surface view. `DrawGlobalHexWindow` gained a highlight pass
+  (inserted right after the terrain loop `~:344`, before the seam lines / unit tokens): for the player's SELECTED unit
+  group it tints reachable hexes — **red** = weapon reach (`GroundUnit.Range` hexes), **green** = radar reach (the
+  unit's best `GroundSensorAtb.Range_km` ÷ `GroundRangeTools.HexPitchKm(region)`, read through
+  `GroundUnitEntity.TryGetBacking` → `ComponentInstancesDB.TryGetComponentsByAttribute<GroundSensorAtb>`, exactly the
+  path `GroundSensors.RevealFromUnits` uses). Three new private helpers: `RadarReachHexesFor` (the km→hex radar read,
+  its own try/catch, returns 0 for a unit with no backing/radar), `OddRToAxial` + `GlobalHexDistance` (convert the drawn
+  odd-r offset cylinder coords to axial before `Colonies.HexCoordinate.DistanceTo` and pick the short way across the
+  seam via the existing `WrapDelta` — so the tinted disk is a proper hex shape, not a sheared rhombus). Toggle reuses
+  `GlobalUIState.ShowAllRangeRings` (the same switch as the space map's rings). Fog-honest: own-faction selection only.
+  A one-line legend added to the selected-unit caption.
+- `ShipDesignWindow.cs` — **Entity Assembler readout rows.** `DisplayGroundStats` added a **Training** row
+  (`TrainingMultiplier`, the cadre veterancy — computed since ⚙6.2 but never shown) and ALWAYS-ON **Power (draw /
+  supply)** (`EnergyDemand_W`/`ReactorSupply_W`, red UNDER on shortfall) + **Ammo Capacity** (`AmmoCapacity_kg`) rows;
+  the power/ammo gates were red "Problems" text only on violation before, so the margin is now a standing gauge.
+- `Pulsar4X.Client/CLAUDE.md` — a "RANGE OVERLAY on the globe (C4.1)" subsection + a C4.1 note appended to the
+  `ShipDesignWindow` inventory row (both in-fence).
+- `docs/CLIENT-TEST-CHECKLIST.md` — a new "OPERATION EARTHFALL — C4.1" section (7 runtime checks) (in-fence).
+
+**No new test fixture.** The test project references only `GameEngine` (not the client), so client-private rendering
+helpers have no NUnit harness — the gauge is the CLIENT-TEST-CHECKLIST (the developer's local run). The engine reads the
+overlay consumes (`GroundSensorAtb.Range_km`, `GroundRangeTools.HexPitchKm`, `GroundUnitEntity.TryGetBacking`,
+`GroundUnitAssembly.Compute`) are already CI-covered by `GroundSensorsTests` / `GroundRangeTools` / `GroundUnitAssemblyTests`.
+
+**Byte-identity claim: (a/b) client-only, provably inert absent player action + no engine value changed.** No engine code
+or data was touched. The overlay is a read-only draw that mutates NO game state (`RadarReachHexesFor` only READS the
+component store) and only appears when the player has a selection AND `ShowAllRangeRings` is on (its existing default) AND
+the units are the player's own. The three assembler rows only DISPLAY values `GroundUnitAssembly.Compute` already
+produced — the buildable/not `Problems` verdict is unchanged. CI only compiles the client (never runs it), so no green
+test observes this change; every existing test is unaffected.
+
+**FLAGGED gameplay numbers: NONE.** No new gameplay/balance value. The overlay colours + alphas
+(red 0.90/0.22/0.22/0.20, green 0.20/0.80/0.35/0.13) are cosmetic UI literals, not balance numbers — no
+`// FLAGGED balance value` comment warranted (matching the deposit-gem / selection-ring colour literals already in the
+file). Weapon reach (`GroundUnit.Range`) and radar range (`GroundSensorAtb.Range_km`) are existing engine data.
+
+**Developer decisions raised: NONE new.** (The C4 slice had no queued §6 decision.) Note for the developer: the overlay
+shares the ONE "show all ranges" toggle with the space map (`GlobalUIState.ShowAllRangeRings`, DevTools › Detection /
+Fog of War) — if a separate planet-only toggle is ever wanted, it's a one-field add.
+
+**Cross-lane requests: NONE.** R1 flagged an optional `GroundSensors.RadarReachHexes(body, unit)` CI-testable helper as a
+GROUND follow-up; it is **not merged** and **not blocking** — the client computes `Range_km ÷ HexPitchKm` inline (the same
+formula). If GROUND later adds it, `RadarReachHexesFor` can swap its body for the one call. Part (b) confirmed the engine
+getters already exist (all four fields public on `GroundUnitAssemblyResult`), so **no request to GROUND G4c** was needed.
+
+### Pending dashboard rows (for P8.2 to land)
+
+**`docs/TESTING-TRACKER.md`** — no new engine-CI row (client-only; no new fixture). Add one Layer-3 (local-runtime) row:
+
+| Row | What | Why | Method | What-right | Likely-failure | Mitigation | Unblocks |
+|-----|------|-----|--------|-----------|----------------|------------|----------|
+| EARTHFALL-C4.1-overlay | The planet range overlay (weapon red / radar green) + the Training/Power/Ammo assembler rows | The ground echo of the space range rings + surfacing computed-but-invisible assembler numbers — runtime-only (CI can't run the client) | CLIENT-TEST-CHECKLIST "OPERATION EARTHFALL — C4.1" (select a unit → red/green disk; radar-only-with-radar; artillery bigger; toggle+fog; assembler rows) | Reach disk tints correctly + wraps the seam; green only for radar units; rows visible + red UNDER on power shortfall | Wrong hex-distance shape (offset-vs-axial), or the radar read throws, or the toggle doesn't gate | The overlay draws inside the window's `[RenderError]` try/catch + the radar read has its own guard; disk uses the odd-r→axial conversion | Reading a ground unit's tactical reach on the map |
+
+**`docs/SYSTEM-CONNECTION-MAP.md`** — one new READOUT edge (no new engine coupling): **PlanetViewWindow (client) →
+GroundSensorAtb / GroundRangeTools / GroundUnitEntity backing store (engine)** — the globe range overlay reads a selected
+unit's weapon reach + radar reach to tint hexes; a UI consumer of already-connected systems, not a new dependency.
+
+**`docs/DOCS-INDEX.md`** — no NEW doc. `Pulsar4X.Client/CLAUDE.md` gained a "RANGE OVERLAY on the globe (C4.1)" section +
+a C4.1 note on the `ShipDesignWindow` row; `docs/CLIENT-TEST-CHECKLIST.md` gained a C4.1 section (both status: current).

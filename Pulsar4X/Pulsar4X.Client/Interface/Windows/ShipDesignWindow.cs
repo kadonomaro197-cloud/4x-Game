@@ -463,6 +463,20 @@ namespace Pulsar4X.Client
                     Row("Range (hex)", r.Range.ToString());
                     Row("Evasion", r.Evasion.ToString("0.00"));
                     Row("Shield", r.Shield.ToString("0"));
+                    // TRAINING — the best mounted cadre's veterancy multiplier (baked into Attack + toughness at raise;
+                    // 1.00× = green/untrained). Previously computed but invisible in this readout.
+                    Row("Training", r.TrainingMultiplier.ToString("0.00") + "×");
+                    // POWER supply-vs-demand — ALWAYS-ON now (was a red "Problems" line only on violation): energy weapons
+                    // draw vs reactors supply, over-budget in red so the margin is visible before it becomes a violation.
+                    bool underPowered = r.EnergyDemand_W > r.ReactorSupply_W;
+                    ImGui.TableNextColumn(); ImGui.TextUnformatted("Power (draw / supply)");
+                    ImGui.TableNextColumn();
+                    if (underPowered) ImGui.PushStyleColor(ImGuiCol.Text, Styles.BadColor);
+                    ImGui.TextUnformatted(r.EnergyDemand_W.ToString("0") + " / " + r.ReactorSupply_W.ToString("0") + " W" + (underPowered ? "  UNDER" : ""));
+                    if (underPowered) ImGui.PopStyleColor();
+                    // AMMO capacity — ALWAYS-ON: the Σ magazine store an ammo-fed weapon (flak / railgun) draws from
+                    // (0 kg = no magazine → an ammo weapon can't be fed, surfaced in Problems below).
+                    Row("Ammo Capacity", r.AmmoCapacity_kg.ToString("0") + " kg");
                     Row("Build Mass", Stringify.Mass(r.Mass));
                     Row("Damage Type", r.DamageType.ToString());
 
