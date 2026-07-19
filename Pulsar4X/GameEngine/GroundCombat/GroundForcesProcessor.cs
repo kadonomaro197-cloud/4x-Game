@@ -34,6 +34,11 @@ namespace Pulsar4X.GroundCombat
         /// space <c>SalvoDamageScale</c>). 1.0 = full; lower stretches a battle over more ticks. Tune live.</summary>
         public const double SalvoScale = 1.0;
 
+        /// <summary>Ammo a magazine-fed unit burns each salvo it FIRES (G2.3a). A unit with no magazine
+        /// (<c>GroundAmmo.CarriesAmmo</c> false — every default/garrison unit today) never drains, so live combat is
+        /// byte-identical until an ammo-fed unit is fielded. FLAGGED balance value.</summary>
+        public const double AmmoPerSalvo_kg = 1.0;   // FLAGGED balance value
+
         /// <summary>Ground COMBAT INTERRUPT flag (4b) — the ground mirror of
         /// <c>Combat.CombatEngagement.InterruptTimeOnNewEngagement</c>. When true, the first tick a NEW planetary
         /// battle forms on a body, the processor calls <c>MasterTimePulse.RequestCombatHalt()</c> so the clock stops
@@ -97,6 +102,18 @@ namespace Pulsar4X.GroundCombat
             //     the region becomes a resupply point (consumed in G2). Folded here — NOT a second processor (L9). A
             //     no-op until an engineer unit exists and lands, so a stock game is byte-identical. Never throws.
             GroundBeachhead.TickBuilds(body, deltaSeconds);
+
+            // 0d) RESUPPLY (G2.3b): a magazine-fed unit standing at a DEPOT — a friendly-HELD region that holds a base
+            //     (a G1 beachhead bunker or the region's colony installations — Region.InstallationIds non-empty) —
+            //     auto-rearms to full (GroundForces.ResupplyUnit, previously caller-less). No depot / enemy ground / no
+            //     magazine → no-op, so a default game (no ammo-fed unit) is byte-identical. Never throws (guarded).
+            if (forces.Units != null && body.TryGetDataBlob<PlanetRegionsDB>(out var supplyRegions))
+                foreach (var su in forces.Units)
+                {
+                    if (su == null || su.Health <= 0 || su.MaxAmmo_kg <= 0 || su.CurrentAmmo_kg >= su.MaxAmmo_kg) continue;
+                    if (IsResupplyDepot(supplyRegions, su.FactionOwnerID, su.RegionIndex))
+                        GroundForces.ResupplyUnit(body, su);
+                }
 
             // 1) MOVEMENT: advance in-transit units.
             //    (a) COARSE region march (5b): a whole-region hop, arrives when the region's crossing time has elapsed.
@@ -285,6 +302,18 @@ namespace Pulsar4X.GroundCombat
         /// fight is identical to the pre-hex region resolver</b> — the migration adds range without changing a
         /// same-hex battle. (Terrain here is still the region's dominant feature; reading terrain from the DEFENDER's
         /// own hex is the H3b follow-on.) Reads <see cref="GroundTerrain"/> — the ground twin of SpaceHazardTools.</summary>
+        /// <summary>Is region <paramref name="regionIndex"/> a RESUPPLY DEPOT for <paramref name="factionId"/> — a region
+        /// it HOLDS that contains a base (colony installations or a G1 beachhead bunker → <c>Region.InstallationIds</c>
+        /// non-empty)? A unit standing here rearms; empty ground or enemy ground offers nothing to draw from. Bounds/
+        /// null-safe (G2.3b).</summary>
+        private static bool IsResupplyDepot(PlanetRegionsDB regionsDB, int factionId, int regionIndex)
+        {
+            if (regionsDB == null || regionIndex < 0 || regionIndex >= regionsDB.Regions.Count) return false;
+            var reg = regionsDB.Regions[regionIndex];
+            if (reg.OwnerFactionID != factionId) return false;                       // must hold the ground
+            return reg.InstallationIds != null && reg.InstallationIds.Count > 0;     // a base/depot (colony or beachhead) is here
+        }
+
         /// <summary>Returns TRUE if a real exchange happened (any damage was dealt to a target this salvo) — the signal
         /// the ground combat-interrupt (4b) reads to detect a battle.</summary>
         private static bool ResolveRegionCombat(GroundForcesDB forces, List<GroundUnit> units, Region region,
@@ -337,6 +366,15 @@ namespace Pulsar4X.GroundCombat
                             (reachable ??= new List<GroundUnit>()).Add(t);
                         }
                         if (reachable == null) continue;             // nothing in range → this unit fires nothing this salvo
+
+                        // AMMO (G2.3a): a unit whose firepower is magazine-fed goes SILENT once it runs dry (a silent gun
+                        // line doesn't charge); a unit still holding ammo burns a salvo's worth as it fires. A unit with
+                        // NO magazine (CarriesAmmo false — every default/garrison unit) never drains → byte-identical.
+                        if (GroundAmmo.CarriesAmmo(u))
+                        {
+                            if (GroundAmmo.IsDry(u)) continue;                       // dry → this attacker's ammo weapons are silent
+                            if (deltaSeconds > 0) GroundAmmo.Consume(u, AmmoPerSalvo_kg);   // burn a salvo as it fires
+                        }
 
                         // Output = attack × terrain affinity × stance. The Armor▸Infantry▸Artillery TRIANGLE has
                         // DISSOLVED (resolver merge, slice 3b-ii — docs/RESOLVER-MERGE-DESIGN.md §7, developer's call

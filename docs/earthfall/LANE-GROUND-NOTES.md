@@ -392,3 +392,59 @@ ever directly readable at high recon (v2 intel question — today you only infer
 - **→ CLIENT (C-lane):** the Force Management window can show a battalion's `GroundFormation.TacticalReason` +
   `TacticalIntent` (the AI-tape explain). Fog rule: show an ENEMY battalion's posture only through observed behaviour,
   never its reasoning — no intel leak.
+
+---
+
+## G2.3 — Ammo drain + resupply + upkeep values (the sustainment loop)
+
+**Slice summary (A5 Steps 4/6).** Three wires that make the ammo pool, the depot resupply, and the standing-upkeep bill
+FELT in the live ground tick. *(Hand-implemented by the session after the campaign workflow died on the account usage
+limit; every referenced member verified against source.)*
+
+**Files changed (all inside the GROUND fence):**
+- `GroundForcesProcessor.cs` — (a) AMMO DRAIN + SILENCE in `ResolveRegionCombat`: a firing unit with a magazine
+  (`GroundAmmo.CarriesAmmo`) burns `AmmoPerSalvo_kg` per salvo; a DRY one (`GroundAmmo.IsDry`) is silenced (`continue` —
+  fires nothing). (b) RESUPPLY step **0d** in `ProcessBody`: a magazine-fed unit standing at a DEPOT
+  (`IsResupplyDepot` — a friendly-HELD region whose `Region.InstallationIds` is non-empty, i.e. a colony's installations
+  or a G1 beachhead bunker) auto-rearms via `GroundForces.ResupplyUnit` (previously caller-less). New const
+  `AmmoPerSalvo_kg` + private helper `IsResupplyDepot`. L9 (steps in the existing hotloop, no new processor).
+- `GroundUnitAssembly.cs` — (c) `ToGroundUnitDesign` sets `design.UpkeepCredits = r.Mass * UpkeepCreditsPerMass` (new
+  const) — a player-assembled unit's standing bill scales with build mass.
+- `GroundStartGarrison.cs` — (c) `MakeGarrisonDesign` (now a block body) sets `UpkeepCredits = HitPoints *
+  GarrisonUpkeepPerHitPoint` (new const) — the code-built start garrison finally costs money. `RaiseUnit` already
+  snapshots `design.UpkeepCredits` onto the unit, so `GroundUpkeep.BillIfDue` now bills it.
+- NEW `EfGroundSustainmentTests.cs` (3 tests): ammo drains-when-firing + silences-when-dry (drives real combat via
+  `ProcessEntity`); resupply refills at a depot but not in the open field; upkeep is set on garrison (HP-scaled) +
+  assembled (mass-scaled) units.
+
+**PENDING subsystem-CLAUDE.md rows** (land at integration): `GroundForcesProcessor` gained the combat ammo drain/silence
++ step 0d resupply + `IsResupplyDepot` + `AmmoPerSalvo_kg`; the `GroundUpkeep` "value SOURCE is a follow-up" note is now
+RESOLVED (the two design-builder sites set it); the `GroundAmmo` "drain call site rides the resolver" note is RESOLVED.
+
+**PENDING dashboard rows (P8.2):**
+- `docs/TESTING-TRACKER.md`: **`EfGroundSustainmentTests`** · *what:* ammo drain/silence in combat + depot resupply +
+  upkeep-value wiring · *why:* A5 flagged ammo/resupply unwired + upkeep value-less · *method:* drive `ProcessEntity`
+  on a colony body · *likely-failure:* a combat-pace/upkeep retune shifts a number (retune with the FLAGGED consts).
+- `docs/SYSTEM-CONNECTION-MAP.md`: **GroundForcesProcessor combat → GroundAmmo (drain/silence)**; **GroundForcesProcessor
+  tick → GroundForces.ResupplyUnit (depot gate)**; **GroundUnitAssembly/GroundStartGarrison → GroundUnit.UpkeepCredits →
+  GroundUpkeep bill → faction Money ledger**.
+
+**Byte-identity claim: (b) provably inert for (a)+(b), DELIBERATE change for (c).**
+- (a) ammo drain + (b) resupply: NO default/garrison/existing unit carries a magazine (`MaxAmmo_kg` 0 → `CarriesAmmo`
+  false), so the drain/silence/resupply are no-ops in every existing scenario/test → live combat byte-identical.
+- (c) upkeep VALUES: **NON-byte-identical by design** — the standing garrison + assembled units now cost money (the
+  developer's "an army costs money as it stands"; the `GroundUpkeep` design deferred the value SOURCE as a balance
+  decision, which this slice supplies). No existing test asserts a garrison-inclusive BALANCE number (the DevTest
+  readouts assert structural truths — ledgers non-empty, cargo finite; `GroundUpkeepTests` builds its own designs;
+  `GroundGarrisonPerFactionTests` checks counts), so all stay green; only the economy's ground-upkeep line is new.
+
+**FLAGGED balance values:** `GroundForcesProcessor.AmmoPerSalvo_kg` 1.0 · `GroundUnitAssembly.UpkeepCreditsPerMass` 0.1 ·
+`GroundStartGarrison.GarrisonUpkeepPerHitPoint` 0.02 (→ Infantry 10 / Armor 14 / Artillery 8 credits/mo).
+
+**DEVELOPER DECISIONS raised:** the three FLAGGED numbers above (combat ammo-per-salvo, and the two upkeep rates — the
+whole standing-army economy pressure) · v1 aggregate-model limitation: a DRY unit is silenced ENTIRELY (a mixed
+energy+ammo unit loses its energy fire too when dry — the aggregate resolver has no per-weapon breakdown; acceptable
+for v1, revisit if mixed-weapon ground units become common) · v1 resupply is INSTANT-to-full at any friendly-held
+region with a base (no supply-line distance/throughput model).
+
+**CROSS-LANE REQUESTS:** none — every file was inside the GROUND fence.

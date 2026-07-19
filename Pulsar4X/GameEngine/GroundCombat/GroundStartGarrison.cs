@@ -82,15 +82,25 @@ namespace Pulsar4X.GroundCombat
         /// <summary>A throwaway C# design per unit type (the base-mod JSON ground-unit template is deferred, gotcha #10).
         /// Modest per-type differentiation on top of the triangle: armour hits hard + tough, artillery hits hardest but
         /// fragile, infantry the baseline.</summary>
-        private static GroundUnitDesign MakeGarrisonDesign(GroundUnitType type) => new GroundUnitDesign
+        /// <summary>Monthly UPKEEP a start-garrison unit costs, per hit-point (a size proxy — the code-built garrison
+        /// designs carry no assembler mass) (G2.3c). So the standing home garrison finally costs its owner money ("an
+        /// army costs money as it stands"), the <c>GroundUpkeep</c> biller has a non-zero value to bill. FLAGGED.</summary>
+        public const double GarrisonUpkeepPerHitPoint = 0.02;   // FLAGGED balance value
+
+        private static GroundUnitDesign MakeGarrisonDesign(GroundUnitType type)
         {
-            UniqueID = "start-garrison-" + type,
-            Name = type + " Garrison",
-            UnitType = type,
-            Attack = type == GroundUnitType.Artillery ? 160 : (type == GroundUnitType.Armor ? 140 : 100),
-            Defense = type == GroundUnitType.Armor ? 15 : (type == GroundUnitType.Artillery ? 5 : 10),
-            HitPoints = type == GroundUnitType.Armor ? 700 : (type == GroundUnitType.Artillery ? 400 : 500),
-        };
+            double hp = type == GroundUnitType.Armor ? 700 : (type == GroundUnitType.Artillery ? 400 : 500);
+            return new GroundUnitDesign
+            {
+                UniqueID = "start-garrison-" + type,
+                Name = type + " Garrison",
+                UnitType = type,
+                Attack = type == GroundUnitType.Artillery ? 160 : (type == GroundUnitType.Armor ? 140 : 100),
+                Defense = type == GroundUnitType.Armor ? 15 : (type == GroundUnitType.Artillery ? 5 : 10),
+                HitPoints = hp,
+                UpkeepCredits = hp * GarrisonUpkeepPerHitPoint,   // G2.3c — the standing garrison finally costs money (FLAGGED)
+            };
+        }
 
         /// <summary>This faction's authored garrison mix (from its <see cref="FactionInfoDB.GarrisonComposition"/> — a
         /// scenario's "garrison" JSON node), parsed to the (type, count) shape; falls back to the engine

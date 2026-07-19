@@ -68,6 +68,11 @@ namespace Pulsar4X.GroundCombat
         /// heavier-hitting-than-stock design is floored up. NUMBER TO REVIEW (flagged): 0.1.</summary>
         public const double AttackCarryFactor = 0.1;
 
+        /// <summary>Monthly standing UPKEEP an assembled unit costs, per kg of build mass (G2.3c) — so a heavier/dearer
+        /// unit costs more to keep in the field, and the <c>GroundUpkeep</c> biller finally bills for a player-designed
+        /// army. FLAGGED balance value.</summary>
+        public const double UpkeepCreditsPerMass = 0.1;   // FLAGGED balance value
+
         /// <summary>Compute a unit's emergent stats + carry-gate validity from a <paramref name="frame"/> (must carry a
         /// <see cref="GroundChassisAtb"/>) and its mounted <paramref name="parts"/> (weapons / armour / augments, with a
         /// count each — NOT the frame). Never throws.</summary>
@@ -235,6 +240,7 @@ namespace Pulsar4X.GroundCombat
                 AmmoCapacity_kg = r.AmmoCapacity_kg,
                 DamageType = r.DamageType,
                 TrainingMultiplier = r.TrainingMultiplier,   // Enhancers ⚙6.2 — veterancy from the mounted cadre
+                UpkeepCredits = r.Mass * UpkeepCreditsPerMass,   // G2.3c — the standing-army bill scales with build mass (FLAGGED)
                 IndustryTypeID = string.IsNullOrEmpty(frame?.IndustryTypeID) ? "installation-construction" : frame.IndustryTypeID,
             };
             // costs = frame + every part (× count) — the same sum the ship designer does
