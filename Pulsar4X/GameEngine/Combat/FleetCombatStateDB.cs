@@ -107,8 +107,9 @@ namespace Pulsar4X.Combat
 
         /// <summary>This fleet's current 2D point (metres) on the frozen plane: <c>Project(frame, fleetPosition)</c> at
         /// seed, then slid along the enemy-facing direction by <c>AdvanceClosing</c> as the fight closes/opens. Only
-        /// meaningful when <see cref="HasFrame"/>. The S2 range gate will read the 2D pair-distance between two anchors
-        /// in place of the scalar <see cref="Separation_m"/>.</summary>
+        /// meaningful when <see cref="HasFrame"/>. Slice S2 (built): <c>CombatEngagement.SeparationOf</c>/
+        /// <c>WithinWeaponRange</c> now read the 2D pair-distance between two anchors in place of the scalar
+        /// <see cref="Separation_m"/> when <see cref="Combat.CombatEngagement.EnableGroupPlane"/> is on.</summary>
         [JsonProperty] public Vector2 Anchor { get; internal set; } = Vector2.Zero;
 
         /// <summary>The 2D points of this fleet's fighting GROUPS on the plane. v1/S1: exactly ONE entry — the whole

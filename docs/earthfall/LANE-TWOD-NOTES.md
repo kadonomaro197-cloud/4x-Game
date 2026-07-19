@@ -165,3 +165,79 @@ Add to the Combat File Map:
   is design source, not in this lane's edit fence, so leaving the flip as a pending note here.)
 
 ---
+
+## T3.1 — S2 the 2D range gate (`SeparationOf`/`WithinWeaponRange` read the plane) behind `EnableGroupPlane` — DONE in working tree
+
+**Changed:** `GameEngine/Combat/CombatEngagement.cs` (plane-aware `SeparationOf` + new private `TryPlanePairDistance`;
+plane-aware `WithinWeaponRange(Entity,Entity)` via new private `RangeBetween`), `GameEngine/Combat/FleetCombatStateDB.cs`
+(the S1 `Anchor` forward-reference doc comment flipped from "the S2 range gate WILL read…" to "S2 (built): SeparationOf/
+WithinWeaponRange now read…"). **Created:** `Pulsar4X.Tests/EfGroupPlaneRangeGateTests.cs` (lane-distinct fixture;
+lands in the `rest` shard, no ci.yml change).
+
+Slice S2 of RESOLVER-2D-GROUP-PLANE-DESIGN.md §13 — WIRE the range gate to the 2D plane:
+- `SeparationOf(fleet)`: still gated on `EnableClosingRange` FIRST (returns 0 when closing off → the range gate is a
+  no-op → byte-identical). When `EnableGroupPlane` is ALSO on and the plane is live (`HasFrame`) for BOTH this fleet
+  and its representative opponent (`OpponentFleetId`), it returns the straight-line 2D `GroupPlane.PairDistance` between
+  the two fleets' group anchors — the REAL per-fleet-pair gap ("per-sub-fleet gaps become real", the substrate's
+  deferred "Phase 4") — else it falls back to the scalar `Separation_m`. The damage KERNEL is untouched and still 1-D:
+  the plane only supplies the single scalar `d` that `BuildFireMix`'s per-weapon range gate + `ApplyCasualties`' dodge
+  falloff already read. So the DIRECTED gate falls out of the existing per-weapon gate: at pair-distance `d`, fleet A's
+  long guns (Range_m ≥ d) fire while fleet B's short guns (Range_m < d) are gated to an empty mix — "farthest range
+  shoots first," now measured on the plane.
+- `WithinWeaponRange(Entity,Entity)` (the engage-trigger gate): its distance source is the new `RangeBetween(a,b)` —
+  the 2D anchor pair-distance when the plane is on AND both fleets are framed, else the real 3D `FleetSeparation`. The
+  live engage-trigger runs BEFORE the plane is seeded (neither fleet framed), so it falls straight through to
+  `FleetSeparation` — the live trigger behaviour is unchanged; the plane path is exercised by the gauge (and any future
+  in-combat re-check). The pure `WithinWeaponRange(double,double,double)` overload is untouched.
+- New private helpers only: `TryPlanePairDistance` (fleet↔opponent anchor distance, both-framed guard, never mutates,
+  never throws) and `RangeBetween`. No new public/static API, no flag added (rides the S1 `EnableGroupPlane`).
+
+**Byte-identity claim: (a) default-off flag.** All new behaviour is behind `EnableGroupPlane = false` (default). Flag
+off → `SeparationOf` skips the plane branch and returns exactly the old scalar-or-0, and `RangeBetween`/`WithinWeaponRange`
+return the old `FleetSeparation` — verified line-by-line. The only fixtures that set `EnableGroupPlane = true` are the
+lane's own `EfGroupPlaneAnchorTests` (T2.1) + this new `EfGroupPlaneRangeGateTests`; every other CI fixture has it off,
+so it is literally byte-identical for them. The one plane-ON fixture that also drives a combat step
+(`EfGroupPlaneAnchorTests.AdvanceClosing_FlagOn_…`) is unaffected because at engagement seed the 2D anchor pair-distance
+EQUALS the scalar gap (both seeded from the same real positions), so its single step reads the same `d` within float
+epsilon — far from any weapon-range boundary, so no gate flip and its geometry/pool assertions are unchanged.
+**No new FLAGGED balance numbers** — no gameplay constant introduced (the only literals are test-scenario ranges/positions).
+
+### Pending Combat/CLAUDE.md rows (put here to avoid a parallel-sibling collision on that shared file — same as T0.1/T1.1/T2.1)
+Update the `CombatEngagement.cs` row (the "Closing distance" section) to note S2:
+> **`EnableGroupPlane` slice S2 (the 2D range gate, Operation Earthfall T3.1):** `SeparationOf` and the entity-level
+> `WithinWeaponRange` now measure the 2D pair-distance between two fleets' group anchors (`GroupPlane.PairDistance` of
+> the frozen-plane `Anchor`s) instead of the shared scalar, when `EnableGroupPlane` is on and BOTH fleets are framed —
+> per-fleet-pair gaps become real (the substrate's deferred "Phase 4"). The damage kernel stays 1-D (it receives the
+> scalar `d`); the directed "long-range fires, short-range can't answer" gate falls out of the existing per-weapon
+> range gate in `BuildFireMix` now that each fleet's gap is its own pair-distance. `SeparationOf` is STILL gated on
+> `EnableClosingRange` first (0 when closing off → no gating), and `WithinWeaponRange`'s new `RangeBetween` helper
+> falls back to the real 3D `FleetSeparation` when a fleet isn't framed — so the live engage-trigger (pre-seed) is
+> unchanged and every flag-off fixture is byte-identical. Gauge `EfGroupPlaneRangeGateTests`.
+
+And in the `FleetCombatStateDB.cs` row, extend the T2.1 note: the `Anchor` field is now READ by the range gate at S2
+(`SeparationOf`/`WithinWeaponRange` → `GroupPlane.PairDistance` of two anchors), not just written by `AdvanceClosing`.
+
+### Pending TESTING-TRACKER.md row (P8.2 lands it)
+- **EfGroupPlaneRangeGateTests** (engine/CI, `rest` shard) — the S2 2D-range-gate gauge. Asserts: **directed gate on
+  the plane** (a 100 km fleet fires a 1 km fleet 50 km away; the short side deals ZERO even with the SCALAR gap forced
+  to 500 m — proving the resolver read the 2D ANCHOR distance, not the scalar); **flag-off byte-identity** (same
+  geometry, plane off → the scalar drives the gate → the short gun fires, the opposite outcome); **WithinWeaponRange
+  reads the anchors** (moving a framed fleet's anchor flips the gate while the real 3D `FleetSeparation` is unchanged;
+  plane-off reverts to the 3D read); **plane-on / closing-off guard** (`SeparationOf` stays 0 so the range gate is a
+  no-op even with the plane seeded — the closing flag is the master switch). What-it-unblocks: S3 (role geometry — the
+  per-role sub-fleet groups the pair-distance will then span).
+
+### Pending DOCS-INDEX.md status flip — S2 (P8.2 lands it)
+- `docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md` build-state: now **S0 + S1 + S2 built** (pure `GroupPlane.cs` +
+  `GroupPlaneTests`; `FleetCombatStateDB` anchors + 2D `AdvanceClosing` behind `EnableGroupPlane` + `EfGroupPlaneAnchorTests`;
+  the 2D range gate `SeparationOf`/`WithinWeaponRange` + `EfGroupPlaneRangeGateTests`); **S3+ pending** (S3–S6 are a
+  later campaign — NOT this lane). Header line 3 of that doc still reads "not started" — a P8.2 refresh, that doc is
+  design source, not in this lane's edit fence.
+
+### Cross-lane requests / developer decisions
+- None. No fence breach (only `CombatEngagement.cs` + `FleetCombatStateDB.cs` inside the TWOD fence + a new lane-distinct
+  test). No new balance number to decide. `EnableGroupPlane` stays default-off; nothing reads the 2D role geometry yet
+  (S3). Note: S3+ (role geometry, ground onto the plane, combined theater, multi-party) are explicitly a LATER campaign
+  per CAMPAIGN-PLAN.md §4 — this lane (T0–T3) ends at S2.
+
+---

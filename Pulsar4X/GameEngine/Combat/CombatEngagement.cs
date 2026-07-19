@@ -989,9 +989,38 @@ namespace Pulsar4X.Combat
         // ─── Phase 1 — closing distance ────────────────────────────────────────────────────────────────────────
 
         /// <summary>This fleet's current gap to the opposing side — 0 when closing is off or it has no state (which
-        /// makes the range-gate a no-op).</summary>
+        /// makes the range-gate a no-op). Slice S2 (2D group plane, docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md §13):
+        /// when <see cref="EnableGroupPlane"/> is on and the plane is live for BOTH this fleet and its representative
+        /// opponent, the gap is the straight-line 2D pair-distance between their group anchors — the REAL per-fleet-pair
+        /// gap (per-sub-fleet gaps become real, the substrate's deferred "Phase 4"), no longer one shared scalar. It
+        /// falls back to the scalar <see cref="FleetCombatStateDB.Separation_m"/> otherwise (un-framed / opponent gone).
+        /// The kernel stays 1-D: the plane only supplies the single scalar <c>d</c> the unchanged firing code reads.
+        /// Still gated on <see cref="EnableClosingRange"/> FIRST, so every closing-off fixture — and a plane seeded with
+        /// closing off — reads 0 and the range gate is a no-op → byte-identical.</summary>
         private static double SeparationOf(Entity fleet)
-            => EnableClosingRange && fleet.TryGetDataBlob<FleetCombatStateDB>(out var st) ? st.Separation_m : 0;
+        {
+            if (!EnableClosingRange || !fleet.TryGetDataBlob<FleetCombatStateDB>(out var st)) return 0;
+            if (EnableGroupPlane && TryPlanePairDistance(fleet, st, out double d)) return d;
+            return st.Separation_m;
+        }
+
+        /// <summary>Slice S2: the 2D pair-distance between a fleet's group anchor and its representative opponent's, on
+        /// the frozen battle plane. Succeeds (setting <paramref name="distance"/>) only when the plane is live
+        /// (<see cref="FleetCombatStateDB.HasFrame"/>) for BOTH fleets, so an un-framed fleet or a departed opponent
+        /// falls back to the scalar gap. Reads only the two stored anchors — order-independent, never mutates state,
+        /// never throws — and hands the caller a single scalar (the design's "the plane produces one distance; the 1-D
+        /// kernel is unchanged"). S1/S2: one group per fleet, so the group-pair is the fleet-pair; S3 fills per-role.</summary>
+        private static bool TryPlanePairDistance(Entity fleet, FleetCombatStateDB st, out double distance)
+        {
+            distance = 0;
+            if (!st.HasFrame) return false;
+            var mgr = fleet.Manager;
+            if (mgr == null || !mgr.TryGetEntityById(st.OpponentFleetId, out var opp)
+                || opp == null || !opp.IsValid) return false;
+            if (!opp.TryGetDataBlob<FleetCombatStateDB>(out var os) || !os.HasFrame) return false;
+            distance = GroupPlane.PairDistance(st.Anchor, os.Anchor);
+            return true;
+        }
 
         /// <summary>Advance the engagement gap one step. The FASTER (more maneuverable) side dictates the range: the
         /// gap moves toward the controller's preferred standoff (its longest weapon range; 0 = close in). v1 keeps ONE
@@ -1226,7 +1255,22 @@ namespace Pulsar4X.Combat
         /// <see cref="InitialSeparationDefault_m"/> when a fleet has no usable position, so a positionless test pair is
         /// treated as ~missile range apart rather than co-located.)</summary>
         internal static bool WithinWeaponRange(Entity a, Entity b)
-            => WithinWeaponRange(FleetSeparation(a, b), MaxReach(GetCombatShips(a)), MaxReach(GetCombatShips(b)));
+            => WithinWeaponRange(RangeBetween(a, b), MaxReach(GetCombatShips(a)), MaxReach(GetCombatShips(b)));
+
+        /// <summary>Slice S2: the distance the weapon-range gate measures between two fleets. On the 2D group plane
+        /// (<see cref="EnableGroupPlane"/> on) with BOTH fleets already framed, it is the anchor pair-distance — the real
+        /// gap the fight has closed to on the plane; otherwise the real 3D <see cref="FleetSeparation"/>. Flag-off, or
+        /// either fleet not yet framed (the engage-trigger runs BEFORE the plane is seeded, so a not-yet-in-combat pair
+        /// falls straight through here), returns FleetSeparation unchanged → byte-identical. At engagement START the
+        /// anchors are the projections of the same 3D positions, so the two distances agree until closing slides them.</summary>
+        private static double RangeBetween(Entity a, Entity b)
+        {
+            if (EnableGroupPlane
+                && a.TryGetDataBlob<FleetCombatStateDB>(out var sa) && sa.HasFrame
+                && b.TryGetDataBlob<FleetCombatStateDB>(out var sb) && sb.HasFrame)
+                return GroupPlane.PairDistance(sa.Anchor, sb.Anchor);
+            return FleetSeparation(a, b);
+        }
 
         /// <summary>One live line per fleet per closing step: its gap, whether its guns REACH it, its longest reach,
         /// and its maneuver reserve — so a play-test log shows the standoff/closing play out (the gauge CI can't run).</summary>
