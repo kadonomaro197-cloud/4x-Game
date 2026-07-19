@@ -12,6 +12,25 @@ This file collects (campaign rule §2.4, conflict-free, lane-owned):
 
 ---
 
+## LANE STATUS — ✅ COMPLETE (all 3 phases CI-green on `claude/earthfall-dev`, 2026-07-18)
+
+The DEV lane is finished and ready for the CORE merge (order: GROUND → **DEV** → CLIENT → TWOD).
+Every slice landed as its own commit and gated on **all 7 CI jobs green** before the next.
+
+| Phase | Commit | CI run | What shipped |
+|---|---|---|---|
+| **D1.1** | `6440778` | #1222 ✅ | Kithrin survey chain — `ExpandResolver` drives the survey→found leg (was `Execute=null`): emits a real `GeoSurveyOrder` for an idle owned surveyor, else a build-surveyor fallback behind an already-in-production guard; `kithrin.json` fields a `kithrin-ship-sable` in the Titan Hive Guard fleet. Gauge `EfKithrinSurveyChainTests`. |
+| **D2.1** | `a975832` | #1231 ✅ | Station income (ends the A6 structural bankruptcy) — `StationUpkeepProcessor` is now a NET-operating pass: a populated station collects population tax via the shared `ColonyEconomyDB.MonthlyTaxIncome`, capped by `GovernmentDB.TaxCeiling`; new per-station `TaxRate` (default FLAGGED `0.15`). `ConsolidateResolver` falls through to `GrowEconomyResolver` for a station-only faction (no longer frozen in a crisis). Gauges `EfStationIncomeTests`, `EfConsolidateStationTests`. |
+| **D3.1** | `e82fd93` | #1235 ✅ | AI expand-arc end-to-end gauge `EfKithrinExpandArcTests` (TEST-ONLY): drives the whole Kithrin arc (survey emit → complete → found → in `Colonies`) on the DevTest sandbox via direct-drive; a brain-driven companion; M5 (pays-tax) `[Ignore]`d for the empty/untaxed-new-colony finding. |
+
+**Byte-identity:** D1.1 default-off (`EnableOrderEmission`); D2.1 provably inert absent data (income only for a populated owned station); D3.1 test-only.
+
+**⚠ The ONE outstanding DEV→CORE request** (details under "Cross-lane REQUESTs" below): append `TransactionCategory.StationIncome` to `Ledger.cs` (CORE-owned) and repoint the one marked line in `StationUpkeepProcessor.CollectIncome` off the temporary `ColonyTax`. Mechanical, low-risk.
+
+**Also for integration (P8.2):** the `Factions/CLAUDE.md` resolver-row text for `ExpandResolver` + `ConsolidateResolver` is parked below (that row is shared with CORE), plus the TESTING-TRACKER / SYSTEM-CONNECTION-MAP / Tests-CLAUDE rows.
+
+---
+
 ## Pending dashboard rows
 
 ### D1.1 — Kithrin survey chain (2026-07-18)
