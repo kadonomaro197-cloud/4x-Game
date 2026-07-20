@@ -967,3 +967,92 @@ componentDesigns += fuel-farm). **Created:** `Pulsar4X.Tests/EfLaunchFuelStockTe
    required for the current base-mod trooper (it is under 100 k in every interpretation — see part (b)); it is a safety
    margin + future-proofing. This design is shared by Earth (courier launch, far lighter) so a bump is harmless there.
    Defer to the developer decision above.
+
+---
+
+## P4.4 — End-to-end sealift gauge (findings/A4-sealift.md seam 5 — the MISSING CI test)
+
+**What shipped:** ONE new test file — `Pulsar4X/Pulsar4X.Tests/EfSealiftEndToEndTests.cs` — that drives the WHOLE sealift
+chain BUILD → LAUNCH → LOAD → SAIL through the REAL paths on the DevTest UMF's Mars, closing the CI gap A4 named: the
+existing `ConquerResolverTests` HAND-PLACES a fully-staged, pre-loaded, pre-charged transport (`PlaceLoadedTransportAt`),
+so it never exercised industry, the launch complex, the fuel gate, the reactor charge, or the LOAD rung — every link that
+died in the developer's real game. **No production/engine code touched — a pure test addition.**
+
+**How the fixture works (the real-path chain, no hand-built entity):**
+1. Loads the DevTest sandbox (uef-devtest/umf/kithrin); finds UMF (the ≥4-colony NPC) + its ONLY launch-complex colony
+   (Mars) + the Sol system.
+2. Confirms UMF's opening war with UEF gives `MilitaryTarget.BestEnemyTarget` a valid target (Earth), then CLEARS UMF's
+   in-system fleets so the resolver's Rung 1 STRIKE doesn't preempt Rung 2 BUILD (`fleet.Destroy()` only TAGS for removal,
+   so it flushes with `sol.RemoveTaggedEntitys()` — because processors are driven directly, no subpulse runs to flush it;
+   `TreeHierarchyDB.OnRemovedFromEntity` sets orphaned warship children to null-parent, NOT to a root fleet, so
+   `MilitaryComposition.ReadyStrikeFleet` reads invalid after the clear — verified against the tree code).
+3. STEP 1 — QUEUE via the resolver: `new ConquerResolver().Resolve(Snapshot, Conquer)` returns `Kind=="BuildTransport"`;
+   `Execute()` queues a real `IndustryJob` (+ `AutoAddSubJobs`) on a Mars shipyard line (asserted via
+   `ConquerResolver.FactionHasTransportQueued`).
+4. STEP 2 — BUILD → LAUNCH: drives the REAL `IndustryProcessor.ProcessEntity(mars, 86400)` + `LaunchComplexProcessor.ProcessEntity(mars, 86400)`
+   day-by-day (bounded, `[Timeout(300000)]`) until the transport is an OWNED IN-SYSTEM ENTITY — exercising the whole death
+   zone (build-complete → LaunchQueue handoff → pad MaxTonnage gate → `TryDeductFuel` [P4.3 fuel] → `CreateShip` in orbit →
+   `ProvisionBuiltShip` [P4.2 charge+fuel]). Processors driven directly (not the master clock) so no combat fine-stepping
+   can hang it. On failure it DUMPS Mars's job statuses / launch queue / pads / fuel (Visibility Gate → a diagnosable red,
+   not a bare timeout).
+5. Asserts the launched hull is at the Mars body, warp-capable (`WarpAbilityDB.MaxSpeed > 0`), CHARGED per P4.2
+   (`StoredEnergy >= BubbleCreationCost`) and FUELLED (`CargoStorageDB.TotalStoredMass > 0`).
+6. STEP 3 — LOAD: `ConquerResolver.FindOwnedTransport` returns the built transport (the LOAD rung's finder sees it), and
+   `Resolve` returns `Kind=="LoadInvasion"`; `Execute()` loads a Mars garrison unit through the real order path (an
+   `InstantOrder` that runs SYNCHRONOUSLY via `Game.OrderHandler.HandleOrder` → `OrderableProcessor` → `TryLoadUnit`, the
+   same mechanism the LAND order uses in `ConquerResolverTests`). Asserts `GroundTransportDB.LoadedUnits.Count > 0`.
+7. STEP 4 — SAIL: with a loaded, charged, warp-capable transport not yet at the target, `Resolve` returns
+   `Kind=="SailTransport"` — the SAIL rung can emit.
+
+**Byte-identity claim: (b) provably inert — no simulation/engine path is touched.** This slice adds ONE test file + this
+notes section. It flips NO engine flag; it only PINS `ShipDesign.ChargeBuiltNpcShips` to its **DEFAULT (true)** in a
+try/finally (so a sibling `rest`-shard test — `NpcFleetReadyToSailTests` — that flips it can't perturb the charge
+assertion), restoring the captured prior value. The fixture drives only public/`InternalsVisibleTo` entry points
+(`ConquerResolver.Resolve`, `IndustryProcessor`/`LaunchComplexProcessor.ProcessEntity`, `EntityManager.RemoveTaggedEntitys`)
+on a throwaway DevTest game. No existing test is affected; nothing about a default/menu game changes.
+
+**FLAGGED number (1, a TEST BOUND — not a gameplay value; carries `// FLAGGED balance value` per the standing rule,
+following the P0.1/P0.5 precedent for test constants):**
+- `MaxBuildDays = 3650` — the very generous cap on game-days of Mars industry driven before giving up on the build. The
+  trooper completes on Mars's 4 shipyards + 6 factories in well under this (Mars has full infra efficiency from 500 space
+  habitats, ample materials, and a 120 M-pop workforce, so no rate/material/crew stall); the `[Timeout(300000)]` is the
+  hard backstop. Not a sim value.
+
+**Developer decisions raised:** NONE new. (The P4.3 OPTIONAL pad-tonnage headroom bump and the P4.2 player-charge policy
+flag remain the reviewable knobs; this gauge would immediately red if either the trooper mass exceeded the pad ceiling or
+the built hull booted un-charged, so it is the standing regression sensor for both.)
+
+**Cross-lane requests:** NONE — the only file created (`Pulsar4X.Tests/EfSealiftEndToEndTests.cs`) is a lane-distinct new
+test fixture (never conflicts at file level, per the campaign's shared-but-safe test rule).
+
+### Pending row — `Pulsar4X.Tests/CLAUDE.md` (test inventory — append a new row)
+- **`EfSealiftEndToEndTests`** | **Operation Earthfall P4.4 — the end-to-end sealift gauge (findings/A4 seam 5).** Drives
+  BUILD → LAUNCH → LOAD → SAIL through the REAL paths on the DevTest UMF's Mars: the `ConquerResolver` Rung-2 queues a
+  troop transport, the real `IndustryProcessor` + `LaunchComplexProcessor` build+launch it into orbit (fuelled + charged
+  per P4.3/P4.2 — never hand-placed), the resolver's Rung-1.5 LOAD finds it and loads a Mars garrison unit through the
+  real order path, and the Rung-1.3 SAIL can emit. Clears UMF's strike fleet + flushes so Rung 2 (not Rung 1) fires;
+  drives processors directly (no master clock → no combat fine-step hang), `[Timeout(300000)]`. The CI test the sealift
+  chain never had — `ConquerResolverTests` hand-places a staged transport and bypasses every link that died. Lands in the
+  `rest` shard.
+
+### Pending row — `docs/TESTING-TRACKER.md` (Layer-1 engine CI)
+- **T-P4.4 `EfSealiftEndToEndTests`** · *what:* drives the full BUILD→LAUNCH→LOAD→SAIL sealift chain through the real
+  resolver + industry + launch + order paths on DevTest Mars, asserting the transport becomes a charged, fuelled, loaded,
+  sail-ready owned in-system entity · *why:* A4 found the chain died at the BUILD→launch handoff (no transport ever became
+  an owned in-orbit ship in 112 days) and CI never caught it because `ConquerResolverTests` hand-places a staged transport,
+  bypassing industry/launch/fuel/charge/LOAD · *method:* load the DevTest sandbox, clear UMF's strike fleet, resolver-queue
+  the transport, drive `IndustryProcessor`/`LaunchComplexProcessor.ProcessEntity(mars)` until it launches, then resolver
+  LOAD + SAIL · *right-looks-like:* Rung 2 BuildTransport → transport launches (charged ≥ bubble, fuelled, at Mars) → Rung
+  1.5 LoadInvasion loads a unit → Rung 1.3 SailTransport emits · *likely-failure:* a regression in any P4.1–P4.3 fix (queue
+  strangle / fuel gate / charge) or a new blocker (trooper mass > pad tonnage, a material/crew stall) → the transport never
+  launches and the fixture dumps Mars's job/pad/fuel state · *mitigation:* the generous `MaxBuildDays` cap + `[Timeout]` +
+  the on-failure diagnostics dump · *unblocks:* the NPC invasion end-to-end (a real sealift the AI can build and sail),
+  and it is the standing regression sensor guarding P4.1 (Rung-2 guard) + P4.2 (built-hull charge) + P4.3 (launch fuel +
+  pad tonnage) together.
+
+### Pending row — `docs/SYSTEM-CONNECTION-MAP.md`
+- `ConquerResolver` (Rung 2 BuildTransport → Rung 1.5 LoadInvasion → Rung 1.3 SailTransport) ⟷ `IndustryProcessor`
+  (build) ⟷ `LaunchComplexProcessor.TryLaunchShip` (launch + fuel gate) ⟷ `ShipDesign.ProvisionBuiltShip` (charge/fuel) ⟷
+  `GroundTransport.TryLoadUnit` (LOAD via the InstantOrder path): the end-to-end sealift, now CI-verified as ONE connected
+  chain on DevTest Mars — a built transport is charged, fuelled, launched into orbit, loaded with a garrison unit, and
+  sail-ready, all through the real paths (no hand-placed entity).
