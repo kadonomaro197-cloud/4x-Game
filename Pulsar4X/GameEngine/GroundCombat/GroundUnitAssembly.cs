@@ -29,6 +29,10 @@ namespace Pulsar4X.GroundCombat
         // Enhancers ⚙6.2 — the BEST mounted Training Cadre's veterancy multiplier (baked into Attack + toughness at
         // raise). 1.0 = green/untrained (no cadre) → byte-identical, the ground echo of a ship's UnitCaliberAtb.
         public double TrainingMultiplier = 1.0;
+        // G4 SEALED SYSTEMS — the BEST mounted seal's Sealing (0..1), folded into the design's EnvironmentalResistance
+        // {Vacuum, ToxicAtmosphere} at build time. 0 = unsealed (no seal component) → byte-identical (an unsealed unit
+        // bleeds on airless/toxic worlds exactly as before). The ground echo of a ship's HazardResistanceAtb.
+        public double Sealing = 0.0;
         public double Mass;            // total build mass (frame + parts) — feeds cost + transport carry-size
         public double CarryCapacity;   // frame strength + augment strength bonuses
         public double UsedCapacity;    // sum of mounted-part carry mass
@@ -115,6 +119,9 @@ namespace Pulsar4X.GroundCombat
             // Enhancers ⚙6.2 — the best mounted Training Cadre wins (like the ship combat value reads the best caliber
             // module); no cadre → stays 1.0 → byte-identical.
             double bestTraining = 1.0;
+            // G4 — the best mounted seal wins (they don't stack; a unit is sealed or it isn't). No seal → stays 0 →
+            // byte-identical (no EnvironmentalResistance written, so the unit bleeds on airless/toxic worlds as before).
+            double bestSealing = 0.0;
             foreach (var (d, c) in list)
             {
                 double itemMass = 0;
@@ -163,6 +170,13 @@ namespace Pulsar4X.GroundCombat
                     var t = d.GetAttribute<GroundTrainingAtb>();
                     if (t.TrainingMultiplier > bestTraining) bestTraining = t.TrainingMultiplier;
                 }
+                if (d.HasAttribute<GroundSealAtb>())
+                {
+                    // G4 — the best seal wins (they don't stack). Its MassPerUnit still counts against the carry budget
+                    // below (a sealed envelope is gear the frame must bear).
+                    var seal = d.GetAttribute<GroundSealAtb>();
+                    if (seal.Sealing > bestSealing) bestSealing = seal.Sealing;
+                }
                 // A part that isn't one of the ground-specific kinds (a universal weapon or a reactor, P1/P2a) has no
                 // ground carry-mass field — count its real component mass so it still consumes the carry budget. This is
                 // what makes the two gates COMPOSE: infantry can't power the big laser because it can't CARRY the reactor.
@@ -194,6 +208,7 @@ namespace Pulsar4X.GroundCombat
             if (shieldWeight > 0)
                 r.ShieldRegenFraction = shieldRegenSum / shieldWeight;
             r.TrainingMultiplier = bestTraining;   // Enhancers ⚙6.2 — baked into the raised unit's Attack + toughness
+            r.Sealing = bestSealing;               // G4 — folded into the design's EnvironmentalResistance at build time
             r.UsedCapacity = used;
             r.EnergyDemand_W = energyDemand;
             r.ReactorSupply_W = reactorSupply;
@@ -243,6 +258,16 @@ namespace Pulsar4X.GroundCombat
                 UpkeepCredits = r.Mass * UpkeepCreditsPerMass,   // G2.3c — the standing-army bill scales with build mass (FLAGGED)
                 IndustryTypeID = string.IsNullOrEmpty(frame?.IndustryTypeID) ? "installation-construction" : frame.IndustryTypeID,
             };
+            // G4 SEALED SYSTEMS — fold the best mounted seal's Sealing into the design's EnvironmentalResistance, keyed
+            // by the two surface-support hazards (Vacuum + ToxicAtmosphere). ONLY when a seal is mounted (Sealing > 0) —
+            // an unsealed design leaves the map empty (default), so a raised unit gets no EnvResistance and bleeds on
+            // airless/toxic worlds exactly as before → byte-identical absent a seal. RaiseUnit snapshots this onto
+            // GroundUnit.EnvResistance, which the E4 attrition step reads (GroundForcesProcessor.IsDamageEffect).
+            if (r.Sealing > 0.0)
+            {
+                design.EnvironmentalResistance[Pulsar4X.Hazards.HazardEffectType.Vacuum] = r.Sealing;
+                design.EnvironmentalResistance[Pulsar4X.Hazards.HazardEffectType.ToxicAtmosphere] = r.Sealing;
+            }
             // costs = frame + every part (× count) — the same sum the ship designer does
             if (frame != null) { AddCosts(design.ResourceCosts, frame.ResourceCosts); design.IndustryPointCosts += frame.IndustryPointCosts; }
             if (parts != null)

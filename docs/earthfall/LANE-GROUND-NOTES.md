@@ -515,3 +515,86 @@ for every existing scenario/test. Enums appended (int-serialised, ordinal-stable
   built here; PW just emits `GroundOrder.DestroyInfra`/`CaptureInfra` onto an Offensive battalion.
 - **→ CLIENT (C-lane, deferred to PW per the plan):** "Destroy/Capture infrastructure" order buttons in the battalion
   order surface + the PlanetViewWindow city-tile inspect spot (R4 hooks), issuing the two new `GroundOrder` factories.
+
+---
+
+## G4 — Sealed systems (the buildable environmental component — the last Space-Marine blocker) (2026-07-20)
+
+**Slice summary.** Turns "sealed power armour matters" from a design-authored constant into a real, player-designable
+COMPONENT. The E4 attrition counter + the Vacuum/ToxicAtmosphere surface-support hazards already existed (CORE, 2026-07-17)
+— but the ONLY way to seal a unit was to hand-author its `EnvironmentalResistance` map in C#. G4 adds the buildable
+`sealed-systems` component and wires it through the assembler, so a player mounts a seal in the unit designer and the
+unit stops bleeding on airless/toxic worlds an unsealed twin dies on. Closes the seal cradle-to-grave (mineral→material→
+component→research→assembled unit→the world-survival decision→shot off = the grave rung). *(Hand-implemented; every API
+verified against source — mirrors the `ground-training-cadre` six-point registration + the assembler's best-cadre read.)*
+
+**Files changed (all inside the GROUND fence):**
+- NEW `GroundSealAtb.cs` — the component attribute (`IComponentDesignAttribute`), ONE `Sealing` dial (0..1, clamped),
+  single double-arg ctor for the EXACT-ARITY JSON binder (gotcha 6). Inert on install (the assembler reads the number;
+  install/uninstall are no-ops). Mirrors `GroundConstructorAtb`/`GroundTrainingAtb`. Never throws (L4).
+- `GroundUnitAssembly.cs` — `GroundUnitAssemblyResult.Sealing` (default 0.0); `Compute` reads the BEST mounted seal
+  (they don't stack; its `MassPerUnit` still counts against the carry budget); `ToGroundUnitDesign` folds `r.Sealing`
+  into `design.EnvironmentalResistance = {Vacuum:s, ToxicAtmosphere:s}` — but ONLY when `r.Sealing > 0` (unsealed → the
+  map stays empty → byte-identical). `RaiseUnit` already snapshots that map onto `GroundUnit.EnvResistance`, which the
+  E4 attrition step already reads — no processor change needed.
+- **Six-point registration (gotcha #10) — the 3 base-mod JSON files (in fence):** `installations.json` `sealed-systems`
+  ComponentTemplate (binds `Pulsar4X.GroundCombat.GroundSealAtb` via `AtbConstrArgs(PropertyValue('Sealing'))`,
+  `MountType: GroundUnit`, `GuiSelectionMaxMin` Sealing dial); `componentDesigns.json` `default-design-sealed-systems`
+  → TemplateId `sealed-systems`; `earth.json` `StartingItems` (`sealed-systems`) + `ComponentDesigns`
+  (`default-design-sealed-systems`). Materials reuse already-unlocked stainless-steel/aluminium → `StartingItems`
+  materials untouched. `BaseModIntegrityTests` is the CI sensor.
+- NEW `EfGroundSealedComponentTests.cs` (2): the gotcha-10 JSON→atb sensor (the design loads, binds `GroundSealAtb`
+  with the template's 0.9 default, mounts on a GroundUnit); the assembler wire + attrition (an assembled unit carrying
+  the base-mod seal gets `EnvironmentalResistance {Vacuum:0.9, ToxicAtmosphere:0.9}`, an unsealed twin gets an empty
+  map, and on a vacuum+toxic world the sealed unit bleeds ~0.6/hr vs the unsealed twin's 6/hr).
+
+**PENDING subsystem-CLAUDE.md rows** (land at integration): `GroundSealAtb` (new file-map row — the buildable sealed
+component); `GroundUnitAssembly.Compute`/`ToGroundUnitDesign` now read a mounted seal → `EnvironmentalResistance`;
+the `PlanetEnvironmentFactory` file-map note "The buildable SEALED COMPONENT … is the next slice; today sealing is
+design-authored only" flips to BUILT (G4). New base-mod scout-parts-style row for `sealed-systems`.
+
+**PENDING dashboard rows (P8.2):**
+- `docs/TESTING-TRACKER.md`: **`EfGroundSealedComponentTests`** · *what:* the buildable sealed component + the
+  assembler→`EnvironmentalResistance` wire · *why:* sealing was C#-authored-only; a player couldn't DESIGN it ·
+  *method:* assemble a unit with/without the base-mod seal, field on a vacuum+toxic world, drive `ProcessEntity` ·
+  *likely-failure:* a re-tune of the seal Mass curve or the 0.9 template default shifts the bound value the test asserts.
+- `docs/SYSTEM-CONNECTION-MAP.md`: **`sealed-systems` component → `GroundUnitAssembly` (best-seal read) →
+  `GroundUnitDesign.EnvironmentalResistance` → `GroundUnit.EnvResistance` → `GroundForcesProcessor` E4 attrition** —
+  the buildable half of the surface-support-hazard survival lever; **grave rung:** shoot the seal component off (a
+  units-as-entities v2 promotion) ends the protection.
+
+**Byte-identity claim: (b) provably inert absent new data.** Nothing mounts a seal until a player assembles a unit with
+the `sealed-systems` component — no default garrison, base-mod monolithic unit, or DevTest unit carries one, so
+`ToGroundUnitDesign` writes NO `EnvironmentalResistance` (Sealing stays 0) and every existing unit's attrition is
+unchanged. The six-point registration only ADDS a new buildable design to the faction data store (standard for a new
+player-buildable; `BaseModIntegrityTests` proves the base mod still loads + all starting designs build) — it alters no
+existing unit. The E4 attrition machinery + the Vacuum/ToxicAtmosphere hazards it rides pre-date this lane (CORE).
+
+**FLAGGED balance values:** `installations.json` `sealed-systems` — Mass `40 * (1 + Sealing * 1.5)` (a 0.9-seal suit
+≈ 94 build-mass; costs scale off `[Mass]`), Sealing default `0.9` / range 0..1 / step 0.05. One dial covers BOTH Vacuum
+and ToxicAtmosphere (the developer's "sealing is sealing" — the same suit that holds air in holds poison out).
+
+**DEVELOPER DECISIONS raised (memo for the developer):**
+1. **Seal granularity** — ONE dial covering both Vacuum + ToxicAtmosphere (chosen v1) vs separate per-hazard dials (a
+   vacuum-only suit that still bleeds in toxic air — the existing `SealedGear_*` gauge already proves the engine supports
+   a partial seal; only the base-mod *component* collapses them into one dial).
+2. **Seal cost curve** — `40 × (1 + Sealing×1.5)` mass (flagged) is a first cut; a steeper curve makes full sealing a
+   real trade vs armour/weapons on the carry budget.
+3. **Seal as design-folded (v1, E4) vs a true installable/strippable GEAR component (v2 grave rung)** — same v1/v2 split
+   as the existing `EnvironmentalGear` note: today the seal's protection is baked into the design at build; making it a
+   swappable/shoot-off-able component (the real grave rung) rides the units-as-entities v2 promotion.
+4. **Talent-scarcity parity for elite/sealed units (G4 part d) — DEFERRED, not built.** The ground Training Cadre
+   committing finite `ManpowerTools` talent at raise (so a veteran/sealed outfit draws down the talent pool like a ship's
+   veteran crew) is marked a HIGH-risk balance decision in `GroundCombat/CLAUDE.md`; this lane implemented the sealed
+   component (a+b) + surfaced the assembler readouts (c, already public on `GroundUnitAssemblyResult`) and deliberately
+   did NOT wire the talent draw. It's a developer balance call + touches `Factions/ManpowerTools` (a CORE-owned file).
+
+**CROSS-LANE REQUESTS:**
+- **→ CLIENT (C-lane):** the `sealed-systems` component surfaces in the existing `ComponentDesignWindow` + the unit
+  designer FOR FREE (it's a `GroundUnit`-mount component with a `GuiSelectionMaxMin` Sealing dial) — no new designer
+  work. A "sealed?" token on the PlanetViewWindow unit readouts (so the player can see which garrisons can hold an
+  airless/toxic world) would be a nice-to-have, not a blocker.
+- **→ CORE:** talent-scarcity for elite/sealed units (decision #4) is a documented deferred balance decision that
+  touches `Factions/ManpowerTools` — flagged here, left for CORE + the developer.
+- **→ CORE:** the assembler readouts G4(c) asked to surface (`TrainingMultiplier` + power/ammo/`Sealing`) are ALREADY
+  public fields on `GroundUnitAssemblyResult` — no work needed; noting it so the client designer can read them directly.
