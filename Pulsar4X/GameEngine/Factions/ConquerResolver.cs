@@ -232,13 +232,22 @@ namespace Pulsar4X.Factions
                 }
             }
 
-            // Rung 2 (B5-2 — the invasion CARRIER): we hold a war target but own no ship that can LIFT troops → build a
-            // troop transport. Placed AFTER the sail rung (a ready/charged/reachable fleet still sails FIRST, so
-            // MilitaryCompositionTests stays byte-identical) and BEFORE massing more warships. It only runs when Rung 1
-            // did NOT (no ready fleet, or the fleet is already en route). One transport (repeat: false — not a standing
-            // mass); the load/land steps are B5-3. Byte-identical while EnableOrderEmission is off, and for any faction
-            // not at war (no target → this whole block is skipped, so a default game still hits QueueWarship below).
-            if (target.IsValid && !FactionOwnsTransport(state))
+            // Rung 2 (B5-2 — the invasion CARRIER): we hold a war target, own no ship that can LIFT troops, AND have
+            // none already QUEUED in production → build a troop transport. Placed AFTER the sail rung (a ready/charged/
+            // reachable fleet still sails FIRST, so MilitaryCompositionTests stays byte-identical) and BEFORE massing
+            // more warships. It only runs when Rung 1 did NOT (no ready fleet, or the fleet is already en route). One
+            // transport (repeat: false — not a standing mass); the load/land steps are B5-3.
+            //
+            // ALREADY-QUEUED GUARD (Operation Earthfall P4.1, findings/A4 cause 1): the `!FactionHasTransportQueued`
+            // clause is load-bearing. Without it Rung 2 gated ONLY on !FactionOwnsTransport + a free line, so on a
+            // multi-line shipyard colony (Mars fielded 4 ship-assembly lines) it queued a heavy transport on EVERY free
+            // line in successive cycles — 4 redundant troopers strangling Mars industry (16 warp drives + 16 NTRs in
+            // sub-jobs from 6 factories) before a SINGLE one finished. One-in-production is enough; the resolver re-
+            // checks each cycle, and a finished-and-launched transport flips FactionOwnsTransport, so it never over-builds.
+            //
+            // Byte-identical while EnableOrderEmission is off, and for any faction not at war (no target → this whole
+            // block is skipped, so a default game still hits QueueWarship below).
+            if (target.IsValid && !FactionOwnsTransport(state) && !FactionHasTransportQueued(state))
             {
                 foreach (var colony in state.ColoniesWithFreeLine())
                 {
@@ -496,6 +505,33 @@ namespace Pulsar4X.Factions
 
         /// <summary>True if the faction already OWNS a ship that can carry troops (a Personnel troop bay). Internal for the gauge.</summary>
         internal static bool FactionOwnsTransport(FactionState state) => FindOwnedTransport(state) != null;
+
+        /// <summary>
+        /// True if this faction already has a troop-transport design QUEUED in production — a job on ANY colony/station
+        /// production line whose design is an <see cref="IsTroopTransport"/> ship. The Rung-2 ALREADY-QUEUED guard
+        /// (Operation Earthfall P4.1, findings/A4 cause 1): Rung 2 otherwise gates only on <see cref="FactionOwnsTransport"/>
+        /// + a free line, so on a MULTI-LINE shipyard colony (Mars fielded 4 ship-assembly lines) it queued a heavy
+        /// transport on EVERY free line in successive cycles — 4 redundant troopers strangling industry before ONE
+        /// finished. This lets the resolver stop after the FIRST is queued; it re-checks each cycle, and a finished-and-
+        /// launched transport flips <see cref="FactionOwnsTransport"/> instead. Reads the SAME <c>ProductionLines.Jobs</c>
+        /// the free-line check reads (across every snapshot colony/station); a job's <see cref="JobBase.ItemGuid"/> is
+        /// its design key in <see cref="FactionInfoDB.IndustryDesigns"/>. Defensive/no-throw. Internal for the gauge.
+        /// </summary>
+        internal static bool FactionHasTransportQueued(FactionState state)
+        {
+            if (state?.Colonies == null || state.Info == null) return false;
+            foreach (var colony in state.Colonies)
+            {
+                if (colony?.Industry == null) continue;
+                foreach (var line in colony.Industry.ProductionLines.Values)
+                    foreach (var job in line.Jobs)
+                        if (job != null
+                            && state.Info.IndustryDesigns.TryGetValue(job.ItemGuid, out var design)
+                            && design is ShipDesign ship && IsTroopTransport(ship))
+                            return true;
+            }
+            return false;
+        }
 
         /// <summary>The faction's owned transport SHIP (mounts a Personnel troop bay), or null. Scans ALL owned ships across
         /// every system — NOT just fleet members, because a freshly-built ship isn't auto-added to a fleet, so a fleet-only
