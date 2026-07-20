@@ -1056,3 +1056,67 @@ test fixture (never conflicts at file level, per the campaign's shared-but-safe 
   `GroundTransport.TryLoadUnit` (LOAD via the InstantOrder path): the end-to-end sealift, now CI-verified as ONE connected
   chain on DevTest Mars — a built transport is charged, fuelled, launched into orbit, loaded with a garrison unit, and
   sail-ready, all through the real paths (no hand-placed entity).
+
+---
+
+## P4.4 fix — STEP 2 supply-chain diagnosis (2026-07-20 CI red → green)
+
+**The red:** the committed `EfSealiftEndToEndTests` (481122b) FAILED CI on 2026-07-20. STEP 1 (resolver Rung 2 queues
+the transport) PASSED and is correct. STEP 2 STALLED: it drove `IndustryProcessor.ProcessEntity(mars, 86400)` +
+`LaunchComplexProcessor.ProcessEntity(mars, 86400)` day-by-day expecting the trooper to finish, but the transport never
+became an owned in-system entity — the job sat at `status=MissingResources` for the full `MaxBuildDays`, so the
+launch/charge/load/sail death-zone was never reached.
+
+**Root cause (the diagnosis):** driving ONLY the two Mars processors per game-day spends the shipyards' BUILD points but
+never drives the material SUPPLY chain. The trooper's sub-components (battery-2t / reactor-2t / NTR1.8, added by the
+resolver's `AutoAddSubJobs`) need refined-material inputs, which come from **mining → refining** on Mars's OTHER lines —
+processors we did NOT drive, and which themselves depend on the mining processor feeding cargo. So the sub-jobs never
+received their inputs, never completed, the ship-assembly job stayed `MissingResources`, and the hull never finished.
+A4 confirms materials DO flow under the real full clock (all processors running) — the material grind is **not** the
+sealift bug; the DEATH-ZONE is the launch handoff. Gauging the BUILD through the industry queue is exactly the flaky
+path Tests/CLAUDE.md gotcha #7 warns against ("drive `OnConstructionComplete` directly").
+
+**The fix (STEP 2 only — STEPs 1/3/4 unchanged):** complete the queued trooper through its REAL production completion
+entry point — the exact call `IndustryTools.cs:230` makes at job completion: `designInfo.OnConstructionComplete(mars,
+storage, lineId, job, design)`. For Mars (a launch-complex colony) `ShipDesign.OnConstructionComplete` takes the
+**LaunchComplexDB branch** (`ShipDesign.cs:137-145`): it adds the finished hull to the colony's `LaunchQueue` (NOT
+straight to orbit) and removes the job from its line. The fixture now (2a) finds the actual queued transport SHIP job +
+its line via `FindQueuedTransportJob` (same predicate as `ConquerResolver.FactionHasTransportQueued` → `IsTroopTransport`),
+completes it directly, and asserts the hull landed on `LaunchQueue`; then (2b) drives only
+`LaunchComplexProcessor.ProcessEntity(mars, 86400)` in a bounded loop until the transport is an owned in-system entity —
+exercising the REAL launch (pad `MaxTonnage` gate → `TryDeductFuel` [P4.3 fuel] → `CreateShip` in orbit →
+`ProvisionBuiltShip` [P4.2 charge+fuel]). This is NOT hand-building a staged entity — `OnConstructionComplete` is a
+genuine production entry point; the transport is still born by the real completion + launch chain. The existing
+at-Mars-body / warp-capable / charged / fuelled assertions + STEP 3 LOAD (`FindOwnedTransport` → `LoadInvasion`) + STEP 4
+SAIL are kept verbatim. `[Timeout(300000)]` kept.
+
+**Verified against source before editing (no SDK in-container):** `ShipDesign.OnConstructionComplete` signature
+`(Entity, CargoStorageDB, string, IndustryJob, IConstructableDesign)` + the launch-complex `LaunchQueue.Add` branch
+(`ShipDesign.cs:128-145`); `storage` is unused in that branch (safe to pass Mars's real `CargoStorageDB`); the
+`NumberCompleted==NumberOrdered` block removes the job from `ProductionLines[lineId]` (the REAL line, so no KeyNotFound);
+`ManpowerTools.CommitCrew/CommitTalent` only increment counters (never throw / never block — `ColonyManpowerDB.cs:59,61`);
+`ConquerResolver.IsTroopTransport` is `internal` (reachable via InternalsVisibleTo); umf.json shows ONLY Mars has
+`ship-assembly` lines (olympus-shipyard/shipyard) + the launch complex, so the resolver's Rung 2 queues the transport on
+Mars (Luna/Venus/Ceres carry only factories) — matching the observed CI failure (a `MissingResources` job ON Mars).
+
+**Files changed:** `Pulsar4X/Pulsar4X.Tests/EfSealiftEndToEndTests.cs` (rewritten in place — STEP 2 replaced;
+`MaxBuildDays` → `MaxLaunchDays` test bound; `DumpBuildState` → `DumpLaunchState`; new `FindQueuedTransportJob` helper;
+`IndustryProcessor` no longer instantiated, only named in comments explaining the stall). No production/engine code
+touched.
+
+**Byte-identity claim: (b) provably inert — no simulation/engine path is touched.** Same as the P4.4 note above: adds one
+test file + this notes section, flips no engine flag (pins `ShipDesign.ChargeBuiltNpcShips` to its default ON in a
+try/finally so a sibling `rest`-shard test can't perturb the charge assertion), and drives only public/InternalsVisibleTo
+entry points (`ConquerResolver.Resolve`, `ShipDesign.OnConstructionComplete`, `LaunchComplexProcessor.ProcessEntity`,
+`EntityManager.RemoveTaggedEntitys`) on a throwaway DevTest game.
+
+**FLAGGED number (1, a TEST BOUND — carries `// FLAGGED balance value`):** `MaxLaunchDays = 30` — the generous cap on
+LaunchComplexProcessor passes before giving up (a single pass both assigns the hull to a pad AND launches it, so the
+transport is in orbit on pass 1; the loop just re-tries defensively). Replaces the old `MaxBuildDays = 3650`, which is no
+longer meaningful now the build is completed directly rather than ground out through the queue.
+
+**Developer decisions raised:** NONE new. The pending-row text for `Pulsar4X.Tests/CLAUDE.md`, `docs/TESTING-TRACKER.md`,
+and `docs/SYSTEM-CONNECTION-MAP.md` above (the P4.4 section) still describes the SAME end-to-end gauge (BUILD → LAUNCH →
+LOAD → SAIL through the real paths); only STEP 2's build-completion mechanism changed (queue-grind → direct
+`OnConstructionComplete`), which those rows already accommodate ("build+launch it into orbit … never hand-placed"). No
+row edit required.

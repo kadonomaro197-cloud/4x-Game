@@ -9,7 +9,7 @@ using Pulsar4X.Engine;        // Game, GameFactory, NewGameSettings, DevTestStar
 using Pulsar4X.Factions;      // FactionInfoDB, FactionState, ConquerResolver, StrategicObjective(DB), MilitaryTarget
 using Pulsar4X.Fleets;        // FleetDB (clear UMF's strike fleet so Rung 2 fires)
 using Pulsar4X.GroundCombat;  // GroundTransport, GroundCarryClass, GroundTransportDB
-using Pulsar4X.Industry;      // IndustryProcessor, IndustryAbilityDB, IndustryJobStatus
+using Pulsar4X.Industry;      // IndustryAbilityDB, IndustryJob (find + complete the queued trooper)
 using Pulsar4X.Modding;       // ModDataStore, ModLoader
 using Pulsar4X.Movement;      // WarpAbilityDB, PositionDB
 using Pulsar4X.Ships;         // ShipDesign, ShipInfoDB, LaunchComplexDB, LaunchComplexProcessor
@@ -31,32 +31,43 @@ namespace Pulsar4X.Tests
     /// This fixture drives the chain through the REAL paths on the DevTest UMF's Mars (its only launch-complex colony):
     ///   1. QUEUE via the resolver — <see cref="ConquerResolver"/> Rung 2 emits "BuildTransport"; Execute queues a real
     ///      <c>IndustryJob</c> (+ sub-jobs) on a Mars shipyard line (no hand-placed job).
-    ///   2. BUILD -> LAUNCH — drive the REAL <see cref="IndustryProcessor"/> + <see cref="LaunchComplexProcessor"/> on
-    ///      Mars (their <c>ProcessEntity</c> entry points, day by day, bounded) until the transport becomes an OWNED
-    ///      IN-SYSTEM ENTITY. This exercises the whole death zone: industry build-complete -> LaunchQueue handoff -> the
-    ///      pad MaxTonnage gate -> TryDeductFuel (the P4.3 fuel) -> CreateShip in orbit -> ProvisionBuiltShip (the P4.2
-    ///      charge+fuel). Processors are driven directly (not the master clock) so no combat fine-stepping can hang it and
-    ///      the build isn't gated on the slow, war-scene sim; <c>[Timeout]</c> turns a genuine stall into a fast FAILURE.
+    ///   2. COMPLETE the queued trooper -> LAUNCH — the build is finished through its REAL production completion entry
+    ///      point, <see cref="ShipDesign.OnConstructionComplete"/> (the exact call <c>IndustryTools</c> makes at job
+    ///      completion, <c>IndustryTools.cs:230</c>). For a LAUNCH-COMPLEX colony (Mars) that routes the finished hull into
+    ///      the colony's <see cref="LaunchComplexDB.LaunchQueue"/> — NOT straight to orbit. We DELIBERATELY do not drive
+    ///      the material SUPPLY grind (mining -> refining): the per-day <c>IndustryProcessor</c> loop the first cut used
+    ///      never fed the sub-components' inputs (battery/reactor/NTR), so the trooper parked at <c>MissingResources</c>
+    ///      forever and the launch death-zone was never reached (the 2026-07-20 CI red). A4 confirms materials DO flow
+    ///      under the real full clock — that is not the sealift bug — so this gauge completes the build directly
+    ///      (Tests/CLAUDE.md gotcha #7: "gauging a BUILD through the industry queue is flaky — drive OnConstructionComplete
+    ///      directly") and drives the REAL LAUNCH: <see cref="LaunchComplexProcessor"/> assigns the queued hull to a free
+    ///      pad (the MaxTonnage gate), then <c>TryLaunchShip</c> deducts lift fuel (the P4.3 fuel), <c>CreateShip</c>s it in
+    ///      Mars orbit, and <c>ProvisionBuiltShip</c> charges the reactor + fills the tanks (the P4.2 charge+fuel) — until
+    ///      the transport is an OWNED IN-SYSTEM ENTITY. Processors driven directly (not the master clock) so no combat
+    ///      fine-stepping can hang it; <c>[Timeout]</c> turns a genuine stall into a fast FAILURE.
     ///   3. LOAD — the resolver's Rung 1.5 finds the built transport (<see cref="ConquerResolver.FindOwnedTransport"/>) and
     ///      emits "LoadInvasion"; Execute loads a Mars garrison unit aboard through the real order path (an InstantOrder
     ///      that runs synchronously via <c>Game.OrderHandler.HandleOrder</c>, like the LAND order in ConquerResolverTests).
     ///   4. SAIL — with the transport now loaded, charged and warp-capable, the resolver's Rung 1.3 emits "SailTransport".
     ///
-    /// The transport is NEVER hand-built — it is born by the industry+launch chain that A4 found dead. Byte-identity: this
-    /// slice adds ONE test file + this notes-file section; it flips no engine flag (it pins the P4.2 NPC-charge policy to
-    /// its DEFAULT only so a sibling test's flag leak can't perturb the charge assertion), touches no production code, and
-    /// only READS + advances the DevTest via public/InternalsVisibleTo entry points.
+    /// The transport is NEVER hand-built — it is born by the REAL production completion + launch chain that A4 found dead.
+    /// <see cref="ShipDesign.OnConstructionComplete"/> is a genuine production entry point (the one the industry processor
+    /// calls), NOT hand-building a staged <c>ShipInfoDB</c>+<c>PositionDB</c>+<c>GroundTransportDB</c>. Byte-identity: this
+    /// slice adds ONE test file + a notes-file section; it flips no engine flag (it pins the P4.2 NPC-charge policy to its
+    /// DEFAULT only so a sibling test's flag leak can't perturb the charge assertion), touches no production code, and only
+    /// READS + advances the DevTest via public/InternalsVisibleTo entry points.
     /// </summary>
     [TestFixture]
     public class EfSealiftEndToEndTests
     {
         private const string ScenarioDir = "Data/basemod/ScenarioFiles";
 
-        // FLAGGED balance value: a very generous cap on the number of game-days of Mars industry driven before giving up
-        // on the build. This is a TEST BOUND, not a sim value — the trooper builds on Mars's four shipyards + six
-        // factories in well under this, and the [Timeout] is the real backstop. If the transport isn't an owned in-system
-        // entity by here, the sealift chain is genuinely broken (a true finding) and the diagnostics dump below says where.
-        private const int MaxBuildDays = 3650;   // FLAGGED balance value (test bound)
+        // FLAGGED balance value: a generous cap on the number of LAUNCH passes driven before giving up. This is a TEST
+        // BOUND, not a sim value — a single LaunchComplexProcessor pass both assigns the queued hull to a free pad AND
+        // launches it, so the transport is in orbit on pass 1; the loop just re-tries defensively. If it isn't an owned
+        // in-system entity by here, the LaunchQueue -> pad -> fuel -> CreateShip chain is genuinely broken (a true finding)
+        // and the diagnostics dump below says where. The [Timeout] is the real backstop.
+        private const int MaxLaunchDays = 30;   // FLAGGED balance value (test bound)
 
         private static Game NewDevTestGame()
         {
@@ -73,9 +84,10 @@ namespace Pulsar4X.Tests
         }
 
         [Test, Timeout(300000)]
-        [Description("Drives BUILD -> LAUNCH -> LOAD -> SAIL through the REAL industry + launch + resolver paths on the "
-                   + "DevTest UMF's Mars: the resolver queues a troop transport, the real IndustryProcessor + "
-                   + "LaunchComplexProcessor build+launch it into orbit (fuelled + charged per P4.3/P4.2 — never "
+        [Description("Drives BUILD -> LAUNCH -> LOAD -> SAIL through the REAL production completion + launch + resolver "
+                   + "paths on the DevTest UMF's Mars: the resolver queues a troop transport, the queued trooper is "
+                   + "completed through ShipDesign.OnConstructionComplete (routing the hull onto Mars's LaunchQueue), the "
+                   + "real LaunchComplexProcessor launches it into orbit (fuelled + charged per P4.3/P4.2 — never "
                    + "hand-placed), the resolver's LOAD rung finds it and loads a garrison unit, and the SAIL rung can "
                    + "emit. The end-to-end sealift gauge the CI never had (findings/A4-sealift.md seam 5).")]
         public void Sealift_BuildLaunchLoadSail_ThroughTheRealPaths_OnDevTestMars()
@@ -143,34 +155,53 @@ namespace Pulsar4X.Tests
                     "after Execute a troop-transport job should be in production on Mars.");
                 sb.AppendLine("STEP 1 ok: resolver Rung 2 queued a troop transport on Mars.");
 
-                // ── STEP 2: BUILD -> LAUNCH through the REAL processors until the transport is an OWNED IN-SYSTEM ENTITY ─
-                // Drive Mars's IndustryProcessor + LaunchComplexProcessor one game-day at a time via their real
-                // ProcessEntity entry points (bounded). Each iteration: one day of Mars industry (sub-components then the
-                // ship assembly), then a launch pass (assign the finished hull to a pad -> TryDeductFuel -> CreateShip in
-                // orbit -> ProvisionBuiltShip). Bypasses the master clock entirely, so no combat fine-stepping and no
-                // war-scene sim slows or hangs it.
-                var industry = new IndustryProcessor(); industry.Init(game);
+                // ── STEP 2a: COMPLETE the queued trooper through its REAL completion entry point ──────────────────────
+                // Find the actual queued transport SHIP job + its production line (the one buildAction.Execute added),
+                // then complete it the way IndustryTools does at build-complete: designInfo.OnConstructionComplete(...)
+                // (IndustryTools.cs:230). For a launch-complex colony this ADDS the finished hull to Mars's LaunchQueue
+                // (ShipDesign.cs:137-145) and removes the job from its line — the exact production handoff, NOT a
+                // hand-built entity. We complete it directly (rather than grinding the industry queue) because the SUPPLY
+                // chain (mining -> refining -> the trooper's battery/reactor/NTR sub-components) is not driven by a bare
+                // per-day IndustryProcessor loop, so the job would sit at MissingResources forever (the CI stall A4 says
+                // is NOT the sealift bug — materials flow under the real full clock; the death-zone is the launch handoff).
+                var (transportLineId, transportJob) = FindQueuedTransportJob(mars, umfInfo);
+                Assert.That(transportJob, Is.Not.Null,
+                    "STEP 1 queued a transport but no troop-transport SHIP job was found on a Mars production line to "
+                    + "complete (only sub-component jobs?).");
+                var transportDesign = (ShipDesign)umfInfo.IndustryDesigns[transportJob.ItemGuid];
+                mars.TryGetDataBlob<CargoStorageDB>(out var marsStockpile);   // unused by the launch-complex branch, passed for fidelity
+                transportDesign.OnConstructionComplete(mars, marsStockpile, transportLineId, transportJob, transportDesign);
+                Assert.That(mars.TryGetDataBlob<LaunchComplexDB>(out var marsLaunch) && marsLaunch.LaunchQueue.Count > 0,
+                    Is.True, "after OnConstructionComplete the finished trooper should be on Mars's LaunchQueue (the "
+                    + "launch-complex production handoff, ShipDesign.cs:137-145).");
+                sb.AppendLine("STEP 2a ok: queued trooper completed via ShipDesign.OnConstructionComplete -> on Mars's LaunchQueue.");
+
+                // ── STEP 2b: drive the REAL LAUNCH until the transport is an OWNED IN-SYSTEM ENTITY ───────────────────
+                // Drive Mars's LaunchComplexProcessor via its real ProcessEntity entry point (bounded). Each pass:
+                // AssignQueueToPads assigns the queued hull to a free pad (the MaxTonnage gate), then ProcessPadLaunches
+                // -> TryLaunchShip deducts the lift fuel (the P4.3 fuel), CreateShips the hull in Mars orbit, and
+                // ProvisionBuiltShip charges the reactor + fills the tanks (the P4.2 charge+fuel). Bypasses the master
+                // clock entirely, so no combat fine-stepping and no war-scene sim slows or hangs it.
                 var launch = new LaunchComplexProcessor(); launch.Init(game);
                 Entity transport = null;
-                int builtDay = -1;
-                for (int day = 1; day <= MaxBuildDays && transport == null; day++)
+                int launchDay = -1;
+                for (int day = 1; day <= MaxLaunchDays && transport == null; day++)
                 {
-                    industry.ProcessEntity(mars, 86400);   // one day of Mars industry
                     launch.ProcessEntity(mars, 86400);     // pad assign (MaxTonnage) + launch (fuel gate + charge)
                     transport = FindUmfTroopTransport(sol, umf.Id);
-                    if (transport != null) builtDay = day;
+                    if (transport != null) launchDay = day;
                 }
 
                 if (transport == null)
                 {
-                    DumpBuildState(sb, mars);
+                    DumpLaunchState(sb, mars);
                     TestContext.Progress.WriteLine(sb.ToString());
-                    Assert.Fail("the transport never became an owned in-system entity within " + MaxBuildDays
-                        + " game-days of real Mars industry + launch. The BUILD->LAUNCH chain is still broken — see the "
-                        + "diagnostics above (job statuses / launch queue / pads / fuel).");
+                    Assert.Fail("the completed trooper never LAUNCHED into orbit within " + MaxLaunchDays
+                        + " launch passes. The LaunchQueue -> pad -> fuel -> CreateShip chain is still broken — see the "
+                        + "diagnostics above (launch queue / pads / fuel).");
                 }
-                sb.AppendLine("STEP 2 ok: transport built + LAUNCHED into orbit on game-day " + builtDay
-                    + " (born by the real industry + launch chain, NOT hand-placed).");
+                sb.AppendLine("STEP 2b ok: transport LAUNCHED into orbit on launch pass " + launchDay
+                    + " (born by the real completion + launch chain, NOT hand-placed).");
 
                 // The launched hull sits in Mars orbit (positioned at the Mars body by TryLaunchShip), warp-capable.
                 Assert.That(GroundTransport.ShipIsAtBody(transport, marsBody), Is.True,
@@ -220,6 +251,23 @@ namespace Pulsar4X.Tests
             }
         }
 
+        /// <summary>The QUEUED troop-transport SHIP job on Mars + the production line it sits on — the exact job
+        /// <c>buildAction.Execute()</c> added (matched by the same predicate <see cref="ConquerResolver.FactionHasTransportQueued"/>
+        /// uses: a job whose design resolves to an <see cref="ConquerResolver.IsTroopTransport"/> ship). Returns the SHIP
+        /// job, not its component sub-jobs (batteries/reactors/NTR), so <see cref="ShipDesign.OnConstructionComplete"/> can
+        /// complete it against its real line. (null, null) if none is queued.</summary>
+        private static (string lineId, IndustryJob job) FindQueuedTransportJob(Entity mars, FactionInfoDB info)
+        {
+            if (!mars.TryGetDataBlob<IndustryAbilityDB>(out var industry)) return (null, null);
+            foreach (var (lineId, line) in industry.ProductionLines)
+                foreach (var job in line.Jobs)
+                    if (job != null
+                        && info.IndustryDesigns.TryGetValue(job.ItemGuid, out var design)
+                        && design is ShipDesign ship && ConquerResolver.IsTroopTransport(ship))
+                        return (lineId, job);
+            return (null, null);
+        }
+
         /// <summary>The faction's owned troop transport in <paramref name="system"/> — a ship with a Personnel troop bay
         /// (the exact predicate <see cref="ConquerResolver.FindOwnedTransport"/> uses). A cheap per-iteration scan of one
         /// system (Sol) — no full FactionState snapshot in the hot loop.</summary>
@@ -248,10 +296,10 @@ namespace Pulsar4X.Tests
             => ship.TryGetDataBlob<CargoStorageDB>(out var cargo) ? cargo.TotalStoredMass : 0;
 
         /// <summary>Visibility Gate: dump Mars's production-line job statuses + the launch complex queue/pads + fuel, so a
-        /// build that never launches reds with a diagnosable readout instead of a bare timeout.</summary>
-        private static void DumpBuildState(StringBuilder sb, Entity mars)
+        /// completed trooper that never launches reds with a diagnosable readout instead of a bare timeout.</summary>
+        private static void DumpLaunchState(StringBuilder sb, Entity mars)
         {
-            sb.AppendLine("---- BUILD DID NOT COMPLETE — Mars industry + launch state ----");
+            sb.AppendLine("---- LAUNCH DID NOT COMPLETE — Mars industry + launch state ----");
             if (mars.TryGetDataBlob<IndustryAbilityDB>(out var ind))
             {
                 foreach (var (lineId, line) in ind.ProductionLines)
