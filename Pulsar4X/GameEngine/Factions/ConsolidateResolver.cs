@@ -19,6 +19,15 @@ namespace Pulsar4X.Factions
     ///
     /// One step per monthly cycle (least-commitment, riding the 2.3 hysteresis loop). Pure decision — it builds the
     /// <see cref="PlannerAction"/> closure; <c>EmitOrders</c> runs it. Byte-identical while order emission is off.
+    ///
+    /// STATION-LEGAL FALL-THROUGH (Operation Earthfall D2.1): the tax-ease lever needs a <see cref="ColonyEconomyDB"/>,
+    /// which a STATION doesn't carry (it has a <see cref="Pulsar4X.Stations.StationEconomyDB"/> instead). So a
+    /// station-only faction (the Kithrin outpost) found NO legal Consolidate step here and FROZE in a crisis anyway
+    /// (A6 finding). When no host carries a colony tax lever at all, this now falls through to the host-agnostic
+    /// GrowEconomy build rungs — growing infrastructure is a legitimate stabilization move when tax relief is off the
+    /// table, and it keeps Consolidate from being a guaranteed no-op for a station faction. Gated on "no colony tax
+    /// lever anywhere", so a normal colony faction's Consolidate is byte-identical (a content colony faction still
+    /// returns None).
     /// </summary>
     public sealed class ConsolidateResolver : IObjectiveResolver
     {
@@ -61,19 +70,45 @@ namespace Pulsar4X.Factions
                 }
             }
 
-            if (worst == null) return PlannerAction.None;   // nobody restless enough, or all already relieved
+            if (worst != null)
+            {
+                // Capture for the closure (the processor runs it; the resolver stays a pure decision).
+                var econ = worst.Economy;
+                double newRate = worstTarget;
+                double oldRate = econ.TaxRate;
+                int colonyId = worst.Colony.Id;
+                double moraleShown = worstMorale;
 
-            // Capture for the closure (the processor runs it; the resolver stays a pure decision).
-            var econ = worst.Economy;
-            double newRate = worstTarget;
-            double oldRate = econ.TaxRate;
-            int colonyId = worst.Colony.Id;
-            double moraleShown = worstMorale;
+                return new PlannerAction(
+                    "EaseTax",
+                    $"ease tax on colony {colonyId} from {oldRate:P0} to {newRate:P0} to quell unrest (morale {moraleShown:N0})",
+                    () => econ.TaxRate = newRate);
+            }
 
-            return new PlannerAction(
-                "EaseTax",
-                $"ease tax on colony {colonyId} from {oldRate:P0} to {newRate:P0} to quell unrest (morale {moraleShown:N0})",
-                () => econ.TaxRate = newRate);
+            // No colony tax lever to ease. For a STATION-ONLY faction (no host carries a ColonyEconomyDB — the lever
+            // above needs one), Consolidate would otherwise be a guaranteed no-op (A6). Fall through to the
+            // host-agnostic GrowEconomy build rungs so a station faction is never frozen in a crisis. Gated on "no
+            // colony tax lever anywhere", so a colony faction whose colonies are all content still returns None here
+            // (byte-identical — the ContentColony gauge).
+            if (!HasColonyTaxLever(state))
+            {
+                var buildStep = new GrowEconomyResolver().Resolve(state, objective);
+                if (buildStep != null && buildStep.Kind != PlannerAction.None.Kind)
+                    return buildStep;
+            }
+
+            return PlannerAction.None;   // nobody restless enough / all relieved, and no station build available
+        }
+
+        /// <summary>True if ANY host in the snapshot carries a colony tax lever (<see cref="ColonyEconomyDB"/>) — i.e.
+        /// the faction has a colony the tax-ease step above could act on. False for a purely station-based faction
+        /// (a station carries <see cref="Pulsar4X.Stations.StationEconomyDB"/>, not this), which is exactly when the
+        /// station-legal fall-through fires.</summary>
+        private static bool HasColonyTaxLever(FactionState state)
+        {
+            foreach (var host in state.Colonies)
+                if (host.Economy != null) return true;
+            return false;
         }
     }
 }
