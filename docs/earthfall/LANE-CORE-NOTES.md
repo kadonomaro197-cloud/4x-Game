@@ -694,3 +694,276 @@ land at P8.2. **`StrategicObjectiveDB.cs` is NOT touched by P3.4** (P3.3 added i
   offensive fleets to the home colony body (reads `FactionState.OwnedFleets` + each fleet's `Movement.WarpMovingDB.TargetEntity`).
 
 ### Cross-lane requests: NONE — every production edit was inside the CORE fence.
+
+---
+
+## P4.1 — Rung-2 already-queued guard (stop the 4× redundant transport)
+
+**What shipped (findings/A4-sealift.md cause 1):** `ConquerResolver` Rung 2 (BUILD TRANSPORT) gated ONLY on
+`target.IsValid && !FactionOwnsTransport(state)` + a free line, so on a MULTI-LINE shipyard colony (Mars fielded 4
+ship-assembly lines) it queued a heavy troop transport on EVERY free line in successive monthly cycles — 4 redundant
+troopers (16 warp drives + 16 NTRs in sub-jobs from 6 factories) strangling Mars industry before a single one finished.
+Added the "and none already queued" clause:
+
+- New internal helper `ConquerResolver.FactionHasTransportQueued(FactionState state)` — scans every snapshot colony's/
+  station's `IndustryAbilityDB.ProductionLines[*].Jobs` and returns true if any job's `ItemGuid` resolves (in
+  `FactionInfoDB.IndustryDesigns`) to an `IsTroopTransport` `ShipDesign`. Reads the SAME `ProductionLines.Jobs` the
+  free-line check reads; `ItemGuid` (from `JobBase`) is the design key. Defensive/no-throw.
+- Rung 2 guard is now `target.IsValid && !FactionOwnsTransport(state) && !FactionHasTransportQueued(state)`. One
+  transport in production is enough; the resolver re-checks each cycle, and a finished+launched transport flips
+  `FactionOwnsTransport` (so it never over-builds). A second cycle falls through to the next rung (RebuildGarrison / MASS).
+
+**Byte-identity:** (a) default-off flag — the whole resolver runs only inside the `EnableOrderEmission`-gated
+`EmitOrders` (default false), so a default game is byte-identical; AND (b) provably inert absent the new data — the
+added clause fires only when a troop-transport design is already QUEUED, a state no existing gauge constructs. The
+existing ConquerResolver/MilitaryComposition gauges never reach Rung 2 with a transport queued (no war target → Rung 2
+skipped; LAND/SAIL rungs fire first in the invasion gauges), so all stay green.
+
+**Files changed:** `GameEngine/Factions/ConquerResolver.cs` (helper + guard + Rung-2 comment),
+`GameEngine/Factions/CLAUDE.md` (ConquerResolver row). **Created:** `Pulsar4X.Tests/EfSealiftQueueGuardTests.cs`.
+
+### Pending row — `docs/TESTING-TRACKER.md` (Layer-1 engine CI)
+- **T-P4.1 `EfSealiftQueueGuardTests`** · *what:* proves Rung 2 builds exactly ONE troop transport then the
+  already-queued guard makes the next cycle fall through (no redundant second transport), + the `FactionHasTransportQueued`
+  helper reads a queued trooper across the faction's production lines · *why:* A4 cause 1 — the 4× redundant queue that
+  strangled Mars industry so the sealift never produced a launchable transport · *method:* register the base-mod trooper
+  design on the start faction, clear start fleets, give the player a war target, Resolve twice through the real
+  `ConquerResolver` (no sim advance): first = `BuildTransport` + Execute; second ≠ `BuildTransport` · *right-looks-like:*
+  `FactionHasTransportQueued` false→true across the queue; action2.Kind ≠ `BuildTransport` · *likely-failure:* a future
+  edit drops the guard clause, or Rung 2 feasibility changes so the first build never fires · *mitigation:* this gauge ·
+  *unblocks:* the NPC sealift end-to-end (Mars industry no longer strangled), P4.4's end-to-end sealift gauge.
+
+### Pending row — `docs/SYSTEM-CONNECTION-MAP.md`
+- `ConquerResolver` Rung 2 → `FactionHasTransportQueued` → `FactionState.Colonies[*].Industry.ProductionLines.Jobs`
+  (+ `FactionInfoDB.IndustryDesigns` for the design lookup): the BUILD-TRANSPORT rung now reads the production queue
+  before queuing, so it stops at one in-flight transport instead of one-per-free-line — the industry-queue read that
+  keeps the invasion carrier from crowding out the rest of the colony's build.
+
+### Pending row — `Pulsar4X.Tests/CLAUDE.md` (test inventory — append a new row)
+- **`EfSealiftQueueGuardTests`** | **Operation Earthfall P4.1 — Rung-2 already-queued guard (findings/A4 cause 1).**
+  Drives `ConquerResolver` twice on a free-line colony with a war target (no sim advance): the first cycle queues ONE
+  troop transport (`BuildTransport`), the second falls through (≠ `BuildTransport`) because `FactionHasTransportQueued`
+  now sees it in production — the fix for the 4× redundant transport queue that strangled Mars. Registers the base-mod
+  `default-ship-design-trooper` onto the start faction via `ShipDesignFromJson.Create` (the colony stocks the parts but
+  no trooper ship design by default).
+
+### Developer decisions raised (P4.1): NONE. No new gameplay/balance numbers (the guard is a pure de-duplication).
+
+### Cross-lane requests (P4.1): NONE — the only production edit (`GameEngine/Factions/ConquerResolver.cs`) + its
+subsystem `CLAUDE.md` + the new test file are all inside the CORE fence.
+
+---
+
+## P4.2 — charge + fuel BUILT hulls (both build paths; owner-split policy flag)
+
+**What shipped (findings/A4-sealift.md cause 3):** `ShipFactory.ChargeReactors` + `FillFuelTanks` were only ever called
+by the scenario loader (`FactionFactory` — the task-#36 fix) and `CombatSandbox`, never on the INDUSTRY build path. So a
+production-built transport/warship booted with a dead reactor + empty tanks and could not spin a warp bubble (paid from
+STORED electricity) the instant it existed — the massed sealift never sailed. This slice provisions a built hull at BOTH
+industry build paths, gated by an owner-split policy:
+- `ShipDesign.ProvisionBuiltShip(ship, ownerFaction)` (new, `Ships/ShipDesign.cs`) — the ONE policy gate both paths call.
+- Wired at `ShipDesign.OnConstructionComplete` (direct-build `CreateShip` branch) and
+  `LaunchComplexProcessor.TryLaunchShip` (after positioning) — both inside the CORE fence.
+
+**Developer decision honored + RAISED for review** — *"a production ship earns its charge over game-time"* was the
+deliberate PLAYER rule. Implemented as two independent static policy flags (both FLAGGED):
+- `ShipDesign.ChargeBuiltNpcShips = true` (default ON) — the AI's home-built sealift boots ready to fly (fixes A4).
+- `ShipDesign.ChargeBuiltPlayerShips = false` (default OFF) — the human still charges/fuels at a colony over game-time.
+The developer may flip `ChargeBuiltPlayerShips` on if the "earn the charge" friction isn't wanted; the split is the
+reviewable knob. (This is the P4.2 half of the CAMPAIGN-PLAN §6 "built-ships-boot-charged policy for PLAYER ships" item.)
+
+**FLAGGED balance/policy numbers (2, both carry `// FLAGGED balance value`):**
+- `ShipDesign.ChargeBuiltNpcShips = true` — NPC-built hull provisioning policy.
+- `ShipDesign.ChargeBuiltPlayerShips = false` — player-built hull provisioning policy.
+
+**Byte-identity claim — (a) default-off flag for the player half + provably inert for the NPC half in the existing suite.**
+For a player-owned built hull, `ChargeBuiltPlayerShips = false` makes `ProvisionBuiltShip` an early-return no-op → literally
+byte-identical. EVERY CI fixture that builds a ship does so on a `FactionFactory.CreateBasicFaction` faction, whose
+`FactionInfoDB.IsNPC` is the default `false` (verified: `CreateBasicFaction` never sets it) → the whole existing green
+suite is unchanged. The NPC half (flag ON) is the intended NEW sealift behavior, but it is inert in the existing suite
+because an NPC only reaches the industry build path when `EnableOrderEmission` is ON (default OFF in the engine harness),
+and no existing fixture completes an NPC ship build to assert on its charge/fuel state.
+
+**Parallel-safety note (subsystem CLAUDE.md routed here, NOT edited in the shared file):** the natural home for this change
+is the `GameEngine/Combat/CLAUDE.md` **spawn-parity** directive (*"when you add any new 'ship is battle-ready' path … must
+charge+fuel"*) — `Ships/` has no own CLAUDE.md. `Combat/CLAUDE.md` is a high-collision target (sibling P4.3/P4.4 CORE
+slices + other lanes touch it), so per CAMPAIGN-PLAN §2.4 the row text is routed here to land at P8.2.
+
+### Pending row — `GameEngine/Combat/CLAUDE.md` (spawn-parity "ship is battle-ready" section)
+- Append after the existing charge+fuel directive: **"+ P4.2 (Operation Earthfall, findings A4): the INDUSTRY build path
+  now charges+fuels too. `ShipFactory.ChargeReactors`/`FillFuelTanks` were called only by the scenario loader
+  (`FactionFactory`) + `CombatSandbox` — never on production-built ships — so a home-built transport booted with a dead
+  reactor and empty tanks and couldn't warp, stranding the NPC sealift. `ShipDesign.ProvisionBuiltShip(ship, ownerFaction)`
+  is the ONE policy gate both build paths (`ShipDesign.OnConstructionComplete` direct-build branch +
+  `LaunchComplexProcessor.TryLaunchShip`) now call. Owner-split policy (both FLAGGED): `ChargeBuiltNpcShips` (default ON —
+  the AI sealift boots ready to fly) / `ChargeBuiltPlayerShips` (default OFF — the player earns its charge over game-time,
+  the developer's deliberate rule). Byte-identical: player half is a default-off no-op; NPC half is inert in the engine
+  suite (no fixture completes an NPC ship build). Gauge: `NpcFleetReadyToSailTests.BuiltShips_ChargedForNpc_NotForPlayer_PerProvisioningPolicy`."**
+
+### Pending row — `Pulsar4X.Tests/CLAUDE.md` (the `NpcFleetReadyToSailTests` inventory line — append to its existing row)
+- Append: **"+ P4.2 `BuiltShips_ChargedForNpc_NotForPlayer_PerProvisioningPolicy` — the BUILT-hull sibling: a fresh hull
+  stood up via `ShipFactory.CreateShip` (un-charged, exactly as `OnConstructionComplete` hands it) run through
+  `ShipDesign.ProvisionBuiltShip` boots CHARGED (≥ its warp-bubble cost) + fuelled when NPC-owned, but stays un-charged +
+  empty when player-owned (same hull, only the owner differs → isolates the owner-split provisioning policy). The industry-path
+  echo of the scenario-loader gauge above."**
+
+### Pending row — `docs/TESTING-TRACKER.md` (Layer-1 engine CI)
+- **T-P4.2 `NpcFleetReadyToSailTests.BuiltShips_ChargedForNpc_NotForPlayer_PerProvisioningPolicy`** · *what:* proves a
+  production-built NPC hull boots charged+fuelled while an identical player-built hull does not · *why:* A4 cause 3 — built
+  hulls were never charged, so the NPC's home-built sealift couldn't warp (invasion never landed) · *method:* build the same
+  design fresh for an NPC and the player faction from the DevTest sandbox, call `ShipDesign.ProvisionBuiltShip`, compare
+  stored-energy-vs-bubble-cost + cargo mass · *right-looks-like:* NPC hull stored ≥ bubble + cargo>0; player hull stored <
+  bubble + cargo 0 · *likely-failure:* a future edit drops the `ProvisionBuiltShip` call from a build path, or flips a policy
+  default · *mitigation:* this gauge + the try/finally flag pin · *unblocks:* the NPC sealift end-to-end (a built transport can
+  warp), P4.4's end-to-end sealift gauge.
+
+### Pending row — `docs/SYSTEM-CONNECTION-MAP.md`
+- `ShipDesign.OnConstructionComplete` (direct build) + `LaunchComplexProcessor.TryLaunchShip` (launch complex) →
+  `ShipDesign.ProvisionBuiltShip` → `ShipFactory.ChargeReactors` + `FillFuelTanks`: a production-built hull is charged+fuelled
+  at build-complete (NPC on / player off), so `MilitaryReach.FleetHasWarpRange` (`EnergyStored ≥ BubbleCreationCost`) reads
+  true for the AI's home-built strike fleet — the ConquerResolver Rung-1 STRIKE can sail a hull the faction BUILT, not just
+  one the scenario placed.
+
+### Developer decisions raised (P4.2):
+- **The owner-split provisioning policy** (`ChargeBuiltNpcShips=ON` / `ChargeBuiltPlayerShips=OFF`) honors the developer's
+  "a production ship earns its charge over game-time" for the human while unblocking the AI sealift. Both flags are FLAGGED
+  and reviewable — flip `ChargeBuiltPlayerShips` on to remove the player-side charge/fuel friction entirely.
+
+### Cross-lane requests (P4.2): NONE — both edited files (`Ships/ShipDesign.cs`, `Ships/LaunchComplexProcessor.cs`) are inside the CORE fence.
+
+---
+
+## P4.3 — launch fuel DATA + pad-tonnage audit (findings/A4-sealift.md cause 2)
+
+**Part (a) — the fuel id + the Mars fix (SHIPPED).** `LaunchComplexProcessor.TryLaunchShip` → `TryDeductFuel` does NOT
+deduct a single named fuel id — it (1) requires the colony have a `CargoStorageDB` "fuel-storage" TypeStore at all
+(`storage.TypeStores.ContainsKey("fuel-storage")`, `Ships/LaunchComplexProcessor.cs:152`) then (2) deducts the
+lift-to-orbit fuel MASS from whatever fuel cargoables sit in that store (`:162-175`). The store only exists if a
+`CargoStorageAtb` component with `StoreTypeID == "fuel-storage"` is installed (`StorageSpaceProcessor.CalculatedMaxStorage`
++ `CargoStorageAtb.OnComponentInstallation`). The base-mod materials whose `CargoTypeID == "fuel-storage"`
+(`TemplateFiles/materials.json`) are **rp-1 / methalox / hydrolox / ntp / fissile-fuels**.
+
+Mars owned a `default-design-launch-complex` but had NEITHER a fuel-storage component NOR any fuel cargo (only raw
+`hydrocarbons`, which is `general-storage`), so `TryDeductFuel` failed the ContainsKey check every day → a finished
+transport sat on the pad forever. The working reference is **Earth** (`systems/sol/earth.json`): it stocks a
+`default-design-fuel-farm-5000k` installation (provides the fuel-storage store via the `stainless-steel-fuel-tank`
+template's `CargoStorageAtb('fuel-storage', …)`) PLUS fuel cargo (rp-1/methalox/hydrolox). Mars is now made to match:
+- `umf.json` componentDesigns: added `default-design-fuel-farm-5000k` (template `stainless-steel-fuel-tank`, already
+  unlocked in UMF `startingItems`; the design is defined globally in `componentDesigns.json` — GROUND's fence, NOT edited).
+- Mars installations: added `default-design-fuel-farm-5000k` ×1 (creates the "fuel-storage" store at colony build,
+  BEFORE `LoadCargo` runs — `Entity.AddComponent` → `CargoStorageAtb.OnComponentInstallation` adds the TypeStore
+  synchronously; `ColonyFactory.CreateFromBlueprint` installs at :114-120 then loads cargo at :131).
+- Mars cargo: added `methalox` 20,000,000 + `ntp` 20,000,000 (`type: byCount` — LOWERCASE key; the umf.json cargo parser
+  `FactionFactory.LoadCargo` reads `toAdd["type"]`, and Newtonsoft's JToken indexer is case-SENSITIVE, so a capital `Type`
+  silently falls through to the default `byMass` branch — matches the sibling `uef.json` convention). Both fuel-storage
+  materials already in UMF `startingItems`. ntp matches the trooper's NTR drive; methalox is a cheap conventional reserve.
+  ~72,267 m³ total, well within the fuel farm's cap.
+
+**Audit — every UMF colony (data gauge run):** only **Mars** owns a launch complex; Luna/Venus/Ceres do not (they build,
+if at all, via the direct-`CreateShip` PARK path, no fuel gate). So Mars was the only UMF host with the trap; it is fixed.
+
+**Part (b) — trooper mass vs pad MaxTonnage 100,000 kg (AUDIT: UNDER the limit, no change required).**
+The pad gate is `AssignQueueToPads`: `if (shipDesign.MassPerUnit > pad.MaxTonnage) continue;`
+(`LaunchComplexProcessor.cs:58`); `pad.MaxTonnage` = the launch-complex design's `Max Tonnage` property = **100,000 kg**
+for `default-design-launch-complex` (template default `PropertyFormula 100000`, `installations.json:1440`;
+`LaunchComplexAtb.OnComponentInstallation` → `(long)MaxTonnage`). `ShipDesign.MassPerUnit` = Σ(component.MassPerUnit ×
+count) + armor (`Ships/ShipDesign.cs:226-259`). Component masses of `default-ship-design-trooper` (from GameData
+templates/designs):
+
+| component | mass each (kg) | ×count | subtotal (kg) |
+|---|---|---|---|
+| default-design-ship-hull-heavy (`Hull Mass` 25000) | 25,000 | 1 | 25,000 |
+| default-design-passive-sensor-s50 (`90 + 0.01·5.5²`) | ~90 | 1 | ~90 |
+| default-design-troop-bay (`Mass` 5000) | 5,000 | 2 | 10,000 |
+| default-design-fuel-tank-1000 (`Dry Weight`, see note) | 400 – 15,470 | 2 | 800 – 30,940 |
+| default-design-alcubierre-500 (`Mass` 500) | 500 | 4 | 2,000 |
+| default-design_solarpanel (`Area 100 · tech-panel-density`) | ~100 | 1 | ~100 |
+| default-design-battery-2t (`Mass` 2000) | 2,000 | 3 | 6,000 |
+| default-design-reactor-2t (`Mass` 2000) | 2,000 | 1 | 2,000 |
+| default-design-NTR1.8 (`Mass` 1800) | 1,800 | 4 | 7,200 |
+| armor (plastic, thickness 3; density = 1/0.0010638298 ≈ 940 kg/m³) | — | — | ~1,500 (≤ ~5,300 upper bound) |
+
+The one swing factor is the `stainless-steel-fuel-tank` `Dry Weight`, which uses `Pow(3·(TankVol/(4π)), 1/3)`. NCalc's
+default `int/int` for the `1/3` exponent (→ 0 → radius 1 → ~400 kg/tank) vs a double `0.333…` (→ radius ~6.2 → ~15,470
+kg/tank) bracket the tank contribution. **Both brackets land the trooper UNDER 100,000 kg:** ≈ **54,700 kg**
+(integer-exponent) … ≈ **84,800 kg** (double-exponent); even the absolute worst case (max armor) ≈ **89,000 kg**. So the
+pad accepts the trooper → **no tonnage change is required for the launch to proceed.** (This resolves the finding's
+"heavy trooper mass unverified" flag — it's heavy but under the pad ceiling.)
+
+Note the *worst-case* margin is thin (~85–89 k vs 100 k) and the armor figure carries geometric uncertainty, so a
+headroom bump is offered as an OPTIONAL developer decision + cross-lane note below (NOT a required fix, and out of the
+CORE data fence — the launch-complex design lives in `componentDesigns.json`).
+
+**FLAGGED numbers (data — JSON carries no `//` comments, so flagged here per CAMPAIGN-PLAN §2.6):**
+- Mars `methalox` **20,000,000** (byCount) — FLAGGED balance value (starting launch-fuel reserve; ≈ payload×2.1 per
+  launch off Mars via `OrbitMath.FuelCostToOrbit`, so ~a few hundred trooper launches — a generous, tunable reserve,
+  same order as Earth's ~50 M).
+- Mars `ntp` **20,000,000** (byCount) — FLAGGED balance value (NTR-drive launch/maneuver fuel reserve; same rationale).
+
+**Byte-identity claim: (b) provably inert absent new data.** The whole change is DATA confined to `umf.json` (the UMF
+scenario faction file) — no engine code, no shared template, no `earth.json`, no base-mod New-Game path. A default UEF
+New Game never loads `umf.json`, so it is byte-identical. Only a scenario that fields the UMF faction (the DevTest
+sandbox; a UMF-vs-UEF campaign) sees the change, which IS the intended fix (Mars can fuel its launches). No existing
+green fixture asserts Mars's exact installation count or cargo totals (checked: `DevTestScenarioTests`,
+`DevTestFleetRoleReadoutTests`, `FactionSelfSufficiencyReadoutTests`, `GroundGarrisonPerFactionTests`,
+`FleetCompositionPerFactionTests`, `EfUmfGovernmentAndCeresFactoryTests` assert structural truths, not Mars data), so
+adding a fuel-farm + fuel breaks none of them. The new fixture only READS state and steps no clock.
+
+**Files changed:** `GameData/basemod/ScenarioFiles/umf.json` (Mars fuel-farm install + methalox/ntp cargo; UMF
+componentDesigns += fuel-farm). **Created:** `Pulsar4X.Tests/EfLaunchFuelStockTests.cs`.
+
+### Pending row — `docs/TESTING-TRACKER.md` (Layer-1 engine CI)
+- **T-P4.3 `EfLaunchFuelStockTests.EveryLaunchComplexHost_StocksItsLaunchFuel`** · *what:* proves every host owning a
+  `LaunchComplexDB` in the DevTest sandbox also stocks its launch fuel (a non-empty "fuel-storage" TypeStore) — the two
+  preconditions `TryDeductFuel` needs · *why:* A4 cause 2 — Mars had a launch complex but no fuel-storage store and no
+  fuel, so a built transport never left the pad · *method:* load the DevTest sandbox (uef-devtest/umf/kithrin, no clock
+  advance), enumerate every colony+station, and for each with a `LaunchComplexDB` assert `TypeStores.ContainsKey("fuel-storage")`
+  + summed `CurrentStoreInUnits` > 0; assert ≥1 launch-complex host was checked (non-vacuous — UMF Mars is the one) ·
+  *right-looks-like:* Mars passes both preconditions, launchHostsChecked ≥ 1 · *likely-failure:* a scenario edit gives a
+  host a launch complex without a fuel-storage component + fuel · *mitigation:* this gauge · *unblocks:* the NPC sealift
+  BUILD→launch handoff (a fuelled pad), P4.4's end-to-end sealift gauge.
+
+### Pending row — `docs/SYSTEM-CONNECTION-MAP.md`
+- `LaunchComplexProcessor.TryLaunchShip` → `TryDeductFuel` → `CargoStorageDB.TypeStores["fuel-storage"]` (fed by an
+  installed `CargoStorageAtb('fuel-storage', …)` component + fuel-storage cargo): a launch-complex colony consumes its
+  own stored fuel to lift a hull to orbit, so a colony that fields a launch complex MUST also field a fuel-storage
+  installation + stock fuel-storage cargo (rp-1/methalox/hydrolox/ntp/fissile-fuels) — the data invariant `umf.json` Mars
+  now satisfies (mirroring `earth.json`).
+
+### Pending row — `Pulsar4X.Tests/CLAUDE.md` (test inventory — append a new row)
+- **`EfLaunchFuelStockTests`** | **Operation Earthfall P4.3 — launch-fuel data gauge (findings/A4 cause 2).** Loads the
+  DevTest sandbox and asserts every host that owns a `LaunchComplexDB` also stocks its launch fuel — a "fuel-storage"
+  `CargoStorageDB` TypeStore with a positive amount — the two preconditions `LaunchComplexProcessor.TryLaunchShip`'s
+  `TryDeductFuel` needs. Guards the trap where UMF Mars had a launch complex but no fuel-storage store and no fuel (a
+  built transport sat on the pad forever). No clock advance — fuel is stocked at colony build.
+
+### Pending note — data rule (home: root `CLAUDE.md` gotcha #10 area / no `Ships/CLAUDE.md` exists — routed here per §2.4)
+- **Launch-complex ⇒ fuel data rule:** any colony/station JSON that installs a `launch-complex` design MUST also install
+  a fuel-storage component (a `CargoStorageAtb('fuel-storage', …)` carrier — e.g. `default-design-fuel-farm-5000k` /
+  `default-design-fuel-tank-*`) AND stock a fuel-storage material (rp-1/methalox/hydrolox/ntp/fissile-fuels), or launches
+  silently fail at `TryDeductFuel`. This is the launch-side twin of gotcha #10's "check the other end." Gauge:
+  `EfLaunchFuelStockTests`.
+
+### Developer decisions raised (P4.3):
+1. **Mars launch-fuel reserve size** — `methalox`/`ntp` at 20 M each (byCount) are FLAGGED starting reserves (~hundreds of
+   launches). Tune to taste; they only need to exceed the per-launch cost (≈ trooper-mass × ~2.1 ≈ 115–180 k kg/launch off
+   Mars).
+2. **OPTIONAL pad-tonnage headroom (not required — trooper is under the limit).** The trooper computes to ~85–89 k kg in
+   the heaviest interpretation vs the 100 k pad ceiling — a thin worst-case margin. If the developer wants comfortable
+   headroom (and to future-proof heavier authored transports), raise `default-design-launch-complex`'s `Max Tonnage`
+   (e.g. 100,000 → **250,000** kg, FLAGGED). This is OUT of the CORE data fence (the design lives in
+   `componentDesigns.json`, GROUND's fence) — see the cross-lane request below. Alternative: author a lighter trooper in
+   `shipDesigns.json`.
+
+### Cross-lane requests (P4.3):
+1. **→ DEV (kithrin.json):** AUDIT DONE — Kithrin currently has **no** launch-complex host (its Titan station builds via a
+   `default-design-shipyard`, the direct-`CreateShip` PARK path; `colonies: []`), so there is **no launch-fuel trap in
+   kithrin.json today**. STANDING GUARD for DEV: **if** you ever add a `launch-complex` installation to a Kithrin
+   colony/station, you MUST also add a fuel-storage component (e.g. `default-design-fuel-tank-1000`, already in Kithrin's
+   componentDesigns) AND stock a fuel-storage material (methalox/ntp — already in Kithrin `startingItems`), or the launch
+   fails at `TryDeductFuel`. `EfLaunchFuelStockTests` will catch a regression (it iterates all three sandbox factions).
+2. **→ GROUND (componentDesigns.json), OPTIONAL / developer-gated:** consider raising `default-design-launch-complex`'s
+   `Max Tonnage` from 100,000 to ~250,000 kg (FLAGGED) for headroom over the trooper's ~85–89 k worst-case mass. NOT
+   required for the current base-mod trooper (it is under 100 k in every interpretation — see part (b)); it is a safety
+   margin + future-proofing. This design is shared by Earth (courier launch, far lighter) so a bump is harmless there.
+   Defer to the developer decision above.
