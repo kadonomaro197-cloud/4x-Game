@@ -90,6 +90,41 @@ namespace Pulsar4X.Ships
         public string IndustryTypeID { get; } = "ship-assembly"; //new Guid("91823C5B-A71A-4364-A62C-489F0183EFB5");
         public ushort OutputAmount { get; } = 1;
 
+        // ── P4.2 (Operation Earthfall) — built-ship charge/fuel provisioning policy ──────────────────────
+        // A production-built hull boots with a DEAD reactor and EMPTY tanks by design: ShipFactory.CreateShip
+        // leaves EnergyStored = 0 and tanks empty on purpose, so a ship earns its charge/fuel at a colony over
+        // game-time (the fuel economy depends on it). That deliberate rule STRANDS the NPC invasion chain — a
+        // freshly-built transport/warship can't spin a warp bubble (paid out of STORED electricity) the instant
+        // it exists, so the massed sealift never sails (findings/A4-sealift.md cause 3). The fix charges + fuels
+        // a built hull at build-complete — but split by owner so the developer's "a production ship earns its
+        // charge over game-time" stays TRUE for the human player. Two independent policy flags (both FLAGGED —
+        // the developer owns balance/policy):
+        //   ChargeBuiltNpcShips    default ON  — the AI's production sealift boots ready to fly.
+        //   ChargeBuiltPlayerShips default OFF — the player still charges/fuels at a colony over time.
+        public static bool ChargeBuiltNpcShips = true;      // FLAGGED balance value (built-ship provisioning policy)
+        public static bool ChargeBuiltPlayerShips = false;  // FLAGGED balance value (built-ship provisioning policy)
+
+        /// <summary>
+        /// Apply the built-ship charge/fuel provisioning policy to a freshly production-built ship. Called at
+        /// BOTH engine build paths — the direct <see cref="OnConstructionComplete"/> CreateShip branch and
+        /// <see cref="LaunchComplexProcessor.TryLaunchShip"/> — so a built hull is provisioned identically
+        /// however it's produced. Charges the reactor + fills the fuel tanks (via
+        /// <see cref="ShipFactory.ChargeReactors"/> / <see cref="ShipFactory.FillFuelTanks"/>) when the owning
+        /// faction's policy flag is set: <see cref="ChargeBuiltNpcShips"/> for an NPC owner (default ON — so the
+        /// AI sealift can warp the instant a hull exists), <see cref="ChargeBuiltPlayerShips"/> for a player
+        /// owner (default OFF — a player's production ships still earn their charge over game-time). Defensive /
+        /// no-throw; a no-op when the flag is off, so a default player game is BYTE-IDENTICAL.
+        /// </summary>
+        public static void ProvisionBuiltShip(Entity ship, Entity ownerFaction)
+        {
+            if (ship == null || ownerFaction == null) return;
+            if (!ownerFaction.TryGetDataBlob<FactionInfoDB>(out var factionInfo)) return;
+            bool provision = factionInfo.IsNPC ? ChargeBuiltNpcShips : ChargeBuiltPlayerShips;
+            if (!provision) return;
+            ShipFactory.ChargeReactors(ship);
+            ShipFactory.FillFuelTanks(ship, factionInfo);
+        }
+
         public void OnConstructionComplete(Entity industryEntity, CargoStorageDB storage, string productionLine, IndustryJob batchJob, IConstructableDesign designInfo)
         {
             var industryDB = industryEntity.GetDataBlob<IndustryAbilityDB>();
@@ -124,6 +159,13 @@ namespace Pulsar4X.Ships
                 // the ship isn't born here but queued; LaunchComplexProcessor.TryLaunchShip stamps it then.)
                 if (CrewReq > 0 && ship.TryGetDataBlob<ShipInfoDB>(out var builtInfo))
                     builtInfo.CrewSourceColonyId = industryEntity.Id;
+
+                // P4.2 (Operation Earthfall) — provision the freshly-built hull per the built-ship charge/fuel
+                // policy: an NPC-owned ship boots charged + fuelled so the AI's production sealift can warp the
+                // instant it exists (findings/A4-sealift.md cause 3); a player-owned ship is left to earn its
+                // charge/fuel at a colony over game-time (the developer's deliberate rule). No-op →
+                // byte-identical for the default player fleet (ChargeBuiltPlayerShips is OFF).
+                ProvisionBuiltShip(ship, faction);
             }
 
             // M3-2b: commit the crew from the building colony's manpower pool at build-complete — for BOTH the
