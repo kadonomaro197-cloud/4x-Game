@@ -242,6 +242,20 @@ namespace Pulsar4X.GroundCombat
         HoldFor,        // hold position for a set number of game-seconds (a timed wait / dig-in pause)
         SetStance,      // switch the formation's combat stance (from the GroundStance catalog)
         SetEngagement,  // switch the formation's ROE (Hold / Close / Stand-off)
+        DestroyInfrastructure,   // G3: raze the footprint building(s) on a held/contested hex (Attack-scaled, staged drain)
+        CaptureInfrastructure,   // G3: seize a hex — flips GroundHex.OwnerFactionID so its buildings stop fortifying the defender (instant v1)
+    }
+
+    /// <summary>WHO issued a <see cref="GroundOrder"/> — the order-ownership marker (Earthfall G2.2 §3.5). The ground
+    /// tactical brain (<c>GroundTacticalBrain</c>) only ever REPLACES its OWN (<see cref="Ai"/>) orders; a
+    /// <see cref="Player"/> order queue ALWAYS overrides the brain (the human is sovereign). <see cref="Player"/> is the
+    /// value 0 = the DEFAULT, so every existing/client-issued order is treated as the player's (byte-identical: nothing
+    /// reads this marker until the brain flag is flipped, and an un-flagged order reads Player = "hands off"). Enums
+    /// serialize by int — APPEND new members, never reorder.</summary>
+    public enum GroundOrderIssuer : byte
+    {
+        Player,   // the human (or the client UI) — sacred, the brain never touches a queue holding one of these
+        Ai,       // the ground tactical brain — the only orders the brain is allowed to replace
     }
 
     /// <summary>
@@ -255,6 +269,10 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public GroundOrderType Type { get; internal set; }
         /// <summary>Set once the processor has kicked this order off (so a march isn't re-issued every tick).</summary>
         [JsonProperty] public bool Issued { get; internal set; }
+        /// <summary>WHO issued this order (G2.2 §3.5 order-ownership). Default <see cref="GroundOrderIssuer.Player"/> so
+        /// every client/existing order is the human's — the brain only replaces its OWN <see cref="GroundOrderIssuer.Ai"/>
+        /// orders and NEVER a queue that holds a Player order. Save-safe ([JsonProperty] + deep-copied below).</summary>
+        [JsonProperty] public GroundOrderIssuer Issuer { get; internal set; } = GroundOrderIssuer.Player;
         [JsonProperty] public int TargetQ { get; internal set; }        // MoveToHex
         [JsonProperty] public int TargetR { get; internal set; }        // MoveToHex
         [JsonProperty] public int TargetRegion { get; internal set; }   // MoveToRegion
@@ -265,7 +283,7 @@ namespace Pulsar4X.GroundCombat
         public GroundOrder() { }
         public GroundOrder(GroundOrder o)
         {
-            Type = o.Type; Issued = o.Issued; TargetQ = o.TargetQ; TargetR = o.TargetR;
+            Type = o.Type; Issued = o.Issued; Issuer = o.Issuer; TargetQ = o.TargetQ; TargetR = o.TargetR;
             TargetRegion = o.TargetRegion; SecondsRemaining = o.SecondsRemaining; StanceId = o.StanceId; Engagement = o.Engagement;
         }
 
@@ -274,6 +292,8 @@ namespace Pulsar4X.GroundCombat
         public static GroundOrder Hold(double seconds) => new GroundOrder { Type = GroundOrderType.HoldFor, SecondsRemaining = seconds };
         public static GroundOrder Stance(string stanceId) => new GroundOrder { Type = GroundOrderType.SetStance, StanceId = stanceId };
         public static GroundOrder Roe(GroundEngagementStance e) => new GroundOrder { Type = GroundOrderType.SetEngagement, Engagement = e };
+        public static GroundOrder DestroyInfra(int region, int q, int r) => new GroundOrder { Type = GroundOrderType.DestroyInfrastructure, TargetRegion = region, TargetQ = q, TargetR = r };
+        public static GroundOrder CaptureInfra(int region, int q, int r) => new GroundOrder { Type = GroundOrderType.CaptureInfrastructure, TargetRegion = region, TargetQ = q, TargetR = r };
 
         /// <summary>Short human label for a readout ("→ hex (3,-1)", "dig in 2h", "ROE: StandOff").</summary>
         public string Describe()
@@ -285,6 +305,8 @@ namespace Pulsar4X.GroundCombat
                 case GroundOrderType.HoldFor: return $"hold {SecondsRemaining / 3600.0:0.#}h";
                 case GroundOrderType.SetStance: return $"stance: {StanceId}";
                 case GroundOrderType.SetEngagement: return $"ROE: {Engagement}";
+                case GroundOrderType.DestroyInfrastructure: return $"raze @ region {TargetRegion + 1} hex ({TargetQ},{TargetR})";
+                case GroundOrderType.CaptureInfrastructure: return $"seize @ region {TargetRegion + 1} hex ({TargetQ},{TargetR})";
                 default: return Type.ToString();
             }
         }
@@ -341,6 +363,17 @@ namespace Pulsar4X.GroundCombat
         /// takes over). The processor pops the front order when it completes. Deep-copied for save-safety.</summary>
         [JsonProperty] public List<GroundOrder> Orders { get; internal set; } = new List<GroundOrder>();
 
+        // ── GROUND TACTICAL BRAIN readout (Earthfall G2.2, Visibility Gate) — the plain-English EXPLAIN of the last
+        //    posture decision the brain took for this battalion, plus its abstract INTENT. Save-safe so the client can
+        //    show "1st Legion — Offensive/Close/Advance: odds favour the assault" and it survives a reload. Written ONLY
+        //    by GroundTacticalBrain (behind EnableGroundTacticalAI, default OFF) → null/Hold by default = byte-identical.
+        /// <summary>The brain's last plain-English reason for this battalion's posture (null = the brain hasn't decided
+        /// for it — a player-driven or flag-off battalion). The AI-tape rule: no decision without its explain.</summary>
+        [JsonProperty] public string TacticalReason { get; internal set; }
+        /// <summary>The brain's last abstract INTENT for this battalion (Advance/Hold/PullBack/Retreat) — the client
+        /// readout half. Default <see cref="GroundIntent.Hold"/> (the byte-identical resting value).</summary>
+        [JsonProperty] public GroundIntent TacticalIntent { get; internal set; } = GroundIntent.Hold;
+
         public GroundFormation() { }
         public GroundFormation(GroundFormation o)
         {
@@ -348,9 +381,60 @@ namespace Pulsar4X.GroundCombat
             ParentFormationId = o.ParentFormationId;
             StanceId = o.StanceId; StanceFamily = o.StanceFamily; AttackMult = o.AttackMult; DamageTakenMult = o.DamageTakenMult;
             SwitchableAfter = o.SwitchableAfter; Engagement = o.Engagement;
+            TacticalReason = o.TacticalReason; TacticalIntent = o.TacticalIntent;
             Orders = new List<GroundOrder>();
             if (o.Orders != null) foreach (var ord in o.Orders) Orders.Add(new GroundOrder(ord));
         }
+    }
+
+    /// <summary>
+    /// A CRATED PARTS drop on the surface — a save-safe <c>(designId, count)</c> record of built component parts landed
+    /// onto a body's region, waiting for a combat engineer (a chassis carrying a <see cref="GroundConstructorAtb"/>) to
+    /// assemble them into a footprint building ON SITE with no colony present (surface parts haulage, G1 — the beachhead
+    /// enabler). Stored EXACTLY the way a cargo hold stores a component — an <c>ICargoable</c> keyed by its design plus a
+    /// count — so the save carries no heavy <see cref="Pulsar4X.Components.ComponentInstance"/> parent-entity backref;
+    /// the design id resolves to a real <see cref="Pulsar4X.Components.ComponentDesign"/> only when the parts are
+    /// consumed. Lives in <see cref="GroundForcesDB.SurfaceParts"/>; managed by <see cref="GroundParts"/>.
+    /// </summary>
+    public class SurfacePart
+    {
+        /// <summary>The body region this crate landed in.</summary>
+        [JsonProperty] public int RegionIndex { get; internal set; }
+        /// <summary>The component DESIGN id of the crated part.</summary>
+        [JsonProperty] public string DesignId { get; internal set; }
+        /// <summary>How many units of that part are in the crate.</summary>
+        [JsonProperty] public int Count { get; internal set; }
+
+        public SurfacePart() { }
+        public SurfacePart(int regionIndex, string designId, int count)
+        { RegionIndex = regionIndex; DesignId = designId; Count = count; }
+        public SurfacePart(SurfacePart o)
+        { RegionIndex = o.RegionIndex; DesignId = o.DesignId; Count = o.Count; }
+    }
+
+    /// <summary>
+    /// An IN-PROGRESS colony-free ON-SITE BUILD — a combat engineer (a chassis carrying a <see cref="GroundConstructorAtb"/>)
+    /// assembling a footprint building on a held region out of landed <see cref="SurfacePart"/> crates (the beachhead, G1.2).
+    /// Save-safe (mirrors <see cref="SurfacePart"/>): the site accrues build-points across ground ticks and, when
+    /// <see cref="ProgressPoints"/> reaches <see cref="RequiredPoints"/>, one crate is consumed and the building is placed
+    /// (into the invader's beachhead outpost store + the region/hex war map). One site per (<see cref="RegionIndex"/>,
+    /// <see cref="DesignId"/>); managed entirely by <see cref="GroundBeachhead"/>. Empty until an engineer builds, so a body
+    /// with no active site is byte-identical.
+    /// </summary>
+    public class GroundBuildSite
+    {
+        /// <summary>The body region the building is rising in (must stay friendly-held + enemy-free to progress).</summary>
+        [JsonProperty] public int RegionIndex { get; internal set; }
+        /// <summary>The footprint building's component design id (drawn from the region's surface-parts crate).</summary>
+        [JsonProperty] public string DesignId { get; internal set; }
+        /// <summary>Build-points needed to erect the building (the design's <c>IndustryPointCosts</c>, floored).</summary>
+        [JsonProperty] public double RequiredPoints { get; internal set; }
+        /// <summary>Build-points laid down so far (Σ engineer BuildRate × elapsed days, accrued each tick).</summary>
+        [JsonProperty] public double ProgressPoints { get; internal set; }
+
+        public GroundBuildSite() { }
+        public GroundBuildSite(GroundBuildSite o)
+        { RegionIndex = o.RegionIndex; DesignId = o.DesignId; RequiredPoints = o.RequiredPoints; ProgressPoints = o.ProgressPoints; }
     }
 
     /// <summary>
@@ -378,6 +462,25 @@ namespace Pulsar4X.GroundCombat
         /// is never back-billed from year 1. MUST be copied in the clone ctor below or it resets on every save/load.</summary>
         [JsonProperty] public DateTime LastUpkeepBilled { get; internal set; }
 
+        /// <summary>CRATED PARTS landed on this body's surface, per region — the raw material a combat engineer
+        /// (<see cref="GroundConstructorAtb"/>) assembles into a footprint building on site (surface parts haulage, G1).
+        /// Empty until parts are landed via <see cref="GroundParts"/>; NOTHING else in the engine reads or writes it, so a
+        /// body with no landed parts is byte-identical. MUST be deep-copied in the clone ctor below or a save/manager-move
+        /// drops the crates.</summary>
+        [JsonProperty] public List<SurfacePart> SurfaceParts { get; internal set; } = new List<SurfacePart>();
+
+        /// <summary>Ids of the per-faction BEACHHEAD OUTPOST host entities on this body (G1.2) — each a faction-owned
+        /// entity carrying a bare <see cref="Pulsar4X.Datablobs.ComponentInstancesDB"/> (the SAME proven-inert store a
+        /// ground unit's backing entity uses — <see cref="GroundUnitEntity"/>), so a combat engineer can HOST a footprint
+        /// building it builds with NO colony present. Managed by <see cref="GroundBeachhead"/>; empty until a beachhead is
+        /// built → byte-identical, and read/written only there. MUST be copied in the clone ctor below.</summary>
+        [JsonProperty] public List<int> OutpostEntityIds { get; internal set; } = new List<int>();
+
+        /// <summary>IN-PROGRESS on-site builds a combat engineer is assembling from landed <see cref="SurfaceParts"/>
+        /// (G1.2). Accrued + completed by <see cref="GroundBeachhead"/> inside the ground tick; empty by default and read/
+        /// written ONLY there, so a body with no active build is byte-identical. MUST be deep-copied in the clone ctor below.</summary>
+        [JsonProperty] public List<GroundBuildSite> BuildSites { get; internal set; } = new List<GroundBuildSite>();
+
         /// <summary>RUNTIME-ONLY latch (not serialized, not cloned): was any region on this body in an active fight on
         /// the previous processor tick? The ground combat-interrupt (4b) uses it so the clock halts ONCE when a NEW
         /// planetary battle forms (the not-fighting → fighting transition), not every tick of an ongoing fight — the
@@ -394,6 +497,11 @@ namespace Pulsar4X.GroundCombat
             NextUnitId = other.NextUnitId;
             NextFormationId = other.NextFormationId;
             LastUpkeepBilled = other.LastUpkeepBilled;
+            SurfaceParts = new List<SurfacePart>();
+            if (other.SurfaceParts != null) foreach (var p in other.SurfaceParts) SurfaceParts.Add(new SurfacePart(p));
+            OutpostEntityIds = other.OutpostEntityIds != null ? new List<int>(other.OutpostEntityIds) : new List<int>();
+            BuildSites = new List<GroundBuildSite>();
+            if (other.BuildSites != null) foreach (var b in other.BuildSites) BuildSites.Add(new GroundBuildSite(b));
         }
 
         public override object Clone() => new GroundForcesDB(this);
@@ -803,6 +911,16 @@ namespace Pulsar4X.GroundCombat
             return true;
         }
 
+        /// <summary>Rename a formation (the ground echo of a fleet rename). A <see cref="GroundFormation"/> is a DATA
+        /// object, so the client can't use the entity-only <c>RenameWindow</c> — this is the setter it calls instead
+        /// (R1 gap 2). No-op returning false on a null formation or a null/blank name (the old name is kept).</summary>
+        public static bool RenameFormation(GroundFormation formation, string name)
+        {
+            if (formation == null || string.IsNullOrWhiteSpace(name)) return false;
+            formation.Name = name.Trim();
+            return true;
+        }
+
         /// <summary>Disband a formation (the ground echo of <c>FleetOrder.Disband</c>): its members become unformed,
         /// and the record is removed. The units themselves are untouched.</summary>
         public static void DisbandFormation(GroundForcesDB forces, GroundFormation formation)
@@ -927,6 +1045,28 @@ namespace Pulsar4X.GroundCombat
             foreach (var f in forces.Formations)
                 if (f.FactionOwnerID == factionId) list.Add(f);
             return list;
+        }
+
+        /// <summary>A faction's formations across EVERY body in the whole game — each paired with the body it sits on
+        /// (formations are per-body, like a ship's parent fleet). The cross-body registry the Force Management window
+        /// needs to list all of a faction's battalions in one place (R1 gap 1), CI-testable engine-side. Walks
+        /// <c>game.Systems</c> → each system's bodies carrying a <see cref="GroundForcesDB"/> → its faction-owned
+        /// formations. Read-only, defensive (null game / null system → empty).</summary>
+        public static List<(Entity body, GroundFormation formation)> AllFormationsFor(Game game, int factionId)
+        {
+            var result = new List<(Entity, GroundFormation)>();
+            if (game?.Systems == null) return result;
+            foreach (var system in game.Systems)
+            {
+                if (system == null) continue;
+                foreach (var body in system.GetAllEntitiesWithDataBlob<GroundForcesDB>())
+                {
+                    if (body == null || !body.TryGetDataBlob<GroundForcesDB>(out var forces) || forces.Formations == null) continue;
+                    foreach (var f in forces.Formations)
+                        if (f != null && f.FactionOwnerID == factionId) result.Add((body, f));
+                }
+            }
+            return result;
         }
 
         // ── AGGREGATION (the battalion↔fleet-parity reads, slice 5a — the developer's "a joined force moves at the

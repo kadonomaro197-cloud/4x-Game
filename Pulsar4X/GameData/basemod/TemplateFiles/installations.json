@@ -3131,6 +3131,49 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "sealed-systems",
+      "Name": "Sealed Systems",
+      "Formulas": {
+        "Description": "A sealed life-support envelope — pressure suit, scrubbers, and a closed atmosphere — that lets a ground unit fight where an unsealed one dies: an airless world (vacuum) or a poison/corrosive sky. Mount it in the unit designer and the whole unit stops bleeding on those worlds (the sealed power armour a Space-Marine chapter holds a vacuum world with; a militia levy has none). One dial covers both vacuum and toxic air — the same suit that holds air in holds poison out. Sealing fraction + cost curve are FLAGGED balance values.",
+        "Mass": "40 * (1 + PropertyValue('Sealing') * 1.5)",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "1.0",
+        "CrewReq": "0",
+        "ResearchCost": "[Mass] * 2",
+        "CreditCost": "[Mass] * 0.5",
+        "BuildPointCost": "[Mass] * 4"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.3",
+        "aluminium": "[Mass] * 0.3"
+      },
+      "ComponentType": "Augment",
+      "MountType": "GroundUnit",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "Sealing",
+          "DescriptionFormula": "'Sealing: the fraction of vacuum + toxic-atmosphere attrition this envelope negates (1.0 = a fully sealed suit immune to both, 0.5 = a leaky half-seal). Higher = dearer to field.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1",
+          "MinFormula": "0",
+          "StepFormula": "0.05",
+          "PropertyFormula": "0.9"
+        },
+        {
+          "Name": "sealedSystemsArgs",
+          "DescriptionFormula": "'atb args'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Sealing'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundSealAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "swarm-frame",
       "Name": "Swarmling Frame",
       "Formulas": {
@@ -3422,6 +3465,50 @@
           "GuiHint": "None",
           "PropertyFormula": "AtbConstrArgs(PropertyValue('Range'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundSensorAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "ground-constructor",
+      "Name": "Combat Engineer Kit",
+      "Formulas": {
+        "Description": "A combat-engineer construction kit you mount on a ground unit - earthmovers, cranes, prefab tooling. A unit carrying it can ASSEMBLE a footprint building (a bunker, a radar mast, a forward HQ) ON SITE from parts hauled down to the surface, on ground it holds, with NO colony present - the way you plant a beachhead on an enemy world. A faster build rate raises the structure quicker but costs more mass to carry. Build rate + cost curve are FLAGGED balance values.",
+        "Mass": "PropertyValue('BuildRate') * 2",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "0.5",
+        "CrewReq": "10",
+        "ResearchCost": "0",
+        "CreditCost": "[Mass] * 0.3",
+        "BuildPointCost": "[Mass] * 2"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.5",
+        "aluminium": "[Mass] * 0.3"
+      },
+      "ComponentType": "Construction",
+      "MountType": "GroundUnit",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "BuildRate",
+          "Units": "bp/day",
+          "DescriptionFormula": "'Build-points the combat engineer lays down per day when assembling a footprint building on site. Higher = faster (and heavier to carry). FLAGGED balance value.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "500",
+          "MinFormula": "10",
+          "StepFormula": "10",
+          "PropertyFormula": "100"
+        },
+        {
+          "Name": "groundConstructorArgs",
+          "DescriptionFormula": "'double buildRate'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('BuildRate'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundConstructorAtb"
         }
       ]
     }

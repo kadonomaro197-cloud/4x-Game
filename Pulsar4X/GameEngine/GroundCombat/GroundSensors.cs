@@ -54,6 +54,38 @@ namespace Pulsar4X.GroundCombat
             return result;
         }
 
+        /// <summary>The radar reach of <paramref name="unit"/> in HEXES on <paramref name="body"/> — its best mounted
+        /// <see cref="GroundSensorAtb"/> range (km) translated to hexes on THIS body (<c>Range_km / HexPitchKm</c> of the
+        /// unit's region, since a hex's real size differs body to body — the same km→hex conversion the per-tick reveal
+        /// uses). The reach the Force/planet-map window highlights green (R1 gap; CI-testable). 0 when the unit carries
+        /// no radar, has no backing store, stands off-grid, or the region has no hex geometry yet. Read-only, never
+        /// throws. NOTE: the unit's own hex is always within reach even at 0 — this is the OUTWARD reach, not "can I see
+        /// my own hex."</summary>
+        public static double RadarReachHexes(Entity body, GroundUnit unit)
+        {
+            try
+            {
+                if (body == null || unit == null) return 0;
+                if (!GroundUnitEntity.TryGetBacking(body, unit, out var backing)) return 0;
+                if (!backing.TryGetDataBlob<Pulsar4X.Datablobs.ComponentInstancesDB>(out var cidb)) return 0;
+                if (!cidb.TryGetComponentsByAttribute<GroundSensorAtb>(out var radars) || radars.Count == 0) return 0;
+
+                double rangeKm = 0;
+                foreach (var r in radars)
+                {
+                    var atb = r.Design?.GetAttribute<GroundSensorAtb>();
+                    if (atb != null && atb.Range_km > rangeKm) rangeKm = atb.Range_km;   // best radar mounted
+                }
+                if (rangeKm <= 0) return 0;
+
+                if (!body.TryGetDataBlob<PlanetRegionsDB>(out var regions)
+                    || unit.RegionIndex < 0 || unit.RegionIndex >= regions.Regions.Count) return 0;
+                double pitch = GroundRangeTools.HexPitchKm(regions.Regions[unit.RegionIndex]);
+                return pitch > 0 ? rangeKm / pitch : 0;
+            }
+            catch { return 0; }
+        }
+
         /// <summary>Reveal every region within radar reach of a radar-carrying unit. Returns the number of regions newly
         /// revealed this pass. No-op on a body with no region layer / no forces. Never throws.</summary>
         public static int RevealFromUnits(Entity body)

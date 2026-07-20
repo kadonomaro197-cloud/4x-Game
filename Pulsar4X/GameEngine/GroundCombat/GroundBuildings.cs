@@ -158,6 +158,27 @@ namespace Pulsar4X.GroundCombat
         public static IReadOnlyList<int> BuildingsOnHex(GroundHex hex)
             => hex?.InstallationIds ?? (IReadOnlyList<int>)System.Array.Empty<int>();
 
+        /// <summary>Record a single building instance on a region's WAR-MAP hexes — the beachhead twin of
+        /// <see cref="LocateFootprintsOnHexes"/> / <see cref="LocateFootprintsOnGlobalHexes"/> for ONE freshly-built
+        /// footprint (colony-free on-site build, G1.2). Drops the id on the region's centre/muster hex (0,0) AND the
+        /// global band muster hex — the same two hexes a colony's footprints land on — so the beachhead building is a
+        /// capture/bombard target and shares its garrison's tile. Idempotent (an id already on a hex is skipped).
+        /// Defensive: no region layer / no hexes → the building still lives in <c>Region.InstallationIds</c> (economy +
+        /// fortification), only the war-map hex presence is skipped. Never throws.</summary>
+        public static void LocateInstanceOnHexes(Entity body, PlanetRegionsDB regionsDB, int regionIndex, int instanceId)
+        {
+            if (body == null || regionsDB == null || regionIndex < 0 || regionIndex >= regionsDB.Regions.Count) return;
+            var region = regionsDB.Regions[regionIndex];
+            var centre = CentreHex(region);   // the per-region disk muster hex (mirrors LocateFootprintsOnHexes)
+            if (centre != null && !centre.InstallationIds.Contains(instanceId)) centre.InstallationIds.Add(instanceId);
+
+            var grid = PlanetGridFactory.EnsureGridForBody(body);   // the cylinder band muster hex (mirrors LocateFootprintsOnGlobalHexes)
+            if (grid == null || grid.Cols <= 0) return;
+            int rc = regionsDB.Regions.Count;
+            var hex = grid.HexAt(PlanetGridFactory.BandCentreColumn(regionIndex, grid.Cols, rc), grid.Rows / 2);
+            if (hex != null && hex.InstallationIds != null && !hex.InstallationIds.Contains(instanceId)) hex.InstallationIds.Add(instanceId);
+        }
+
         /// <summary>Capture the CONTENTS of a just-captured region's hexes: every hex that holds a footprint building
         /// flips its <see cref="GroundHex.OwnerFactionID"/> to <paramref name="newOwner"/> — "capturing the hex captures
         /// what's on it." (The buildings are still the colony's components; the hex-ownership flip is the war-map record
@@ -266,18 +287,37 @@ namespace Pulsar4X.GroundCombat
             return null;
         }
 
-        /// <summary>instance id → (its colony's ComponentInstancesDB, the instance). Walks the body's colonies once.</summary>
-        private static Dictionary<int, (ComponentInstancesDB comps, ComponentInstance inst)> IndexBodyComponents(Entity body)
+        /// <summary>Every component store on a body that can HOST a footprint building — the body's colonies' stores AND
+        /// the colony-free BEACHHEAD OUTPOST stores registered on its <see cref="GroundForcesDB.OutpostEntityIds"/>
+        /// (G1.2). The SINGLE source of truth the fortification resolver, the bombard/destroy index, and the client
+        /// readouts all walk, so a beachhead building an invader raised with NO colony present still fortifies, bombs, and
+        /// reads out exactly like a colony building. ADDITIVE: with no outposts (every stock game) it yields exactly the
+        /// colony stores → byte-identical. Defensive; never throws.</summary>
+        public static List<ComponentInstancesDB> BodyComponentStores(Entity body)
         {
-            var map = new Dictionary<int, (ComponentInstancesDB, ComponentInstance)>();
-            if (body?.Manager == null) return map;
+            var stores = new List<ComponentInstancesDB>();
+            if (body?.Manager == null) return stores;
             foreach (var colony in body.Manager.GetAllEntitiesWithDataBlob<ColonyInfoDB>())
             {
                 if (!colony.TryGetDataBlob<ColonyInfoDB>(out var ci) || ci.PlanetEntity == null || ci.PlanetEntity.Id != body.Id) continue;
-                if (!colony.TryGetDataBlob<ComponentInstancesDB>(out var comps)) continue;
+                if (colony.TryGetDataBlob<ComponentInstancesDB>(out var comps)) stores.Add(comps);
+            }
+            // colony-free beachhead outposts (the invader's on-site build host — a bare ComponentInstancesDB entity).
+            if (body.TryGetDataBlob<GroundForcesDB>(out var forces) && forces.OutpostEntityIds != null)
+                foreach (var oid in forces.OutpostEntityIds)
+                    if (body.Manager.TryGetEntityById(oid, out var outpost) && outpost.TryGetDataBlob<ComponentInstancesDB>(out var ocomps))
+                        stores.Add(ocomps);
+            return stores;
+        }
+
+        /// <summary>instance id → (its host ComponentInstancesDB, the instance). Walks every store on the body
+        /// (<see cref="BodyComponentStores"/> — colonies + beachhead outposts) once.</summary>
+        private static Dictionary<int, (ComponentInstancesDB comps, ComponentInstance inst)> IndexBodyComponents(Entity body)
+        {
+            var map = new Dictionary<int, (ComponentInstancesDB, ComponentInstance)>();
+            foreach (var comps in BodyComponentStores(body))
                 foreach (var inst in comps.AllComponents.Values)
                     map[inst.ID] = (comps, inst);
-            }
             return map;
         }
 
@@ -287,15 +327,10 @@ namespace Pulsar4X.GroundCombat
         /// Defensive; never throws.</summary>
         public static int FootprintTilesFor(Entity body, int buildingInstanceId)
         {
-            if (body?.Manager == null) return 1;
-            foreach (var colony in body.Manager.GetAllEntitiesWithDataBlob<ColonyInfoDB>())
-            {
-                if (!colony.TryGetDataBlob<ColonyInfoDB>(out var ci) || ci.PlanetEntity == null || ci.PlanetEntity.Id != body.Id) continue;
-                if (!colony.TryGetDataBlob<ComponentInstancesDB>(out var comps)) continue;
+            foreach (var comps in BodyComponentStores(body))   // colonies + beachhead outposts
                 foreach (var inst in comps.AllComponents.Values)
                     if (inst.ID == buildingInstanceId && inst.Design != null && inst.Design.TryGetAttribute<GroundFootprintAtb>(out var atb))
                         return atb.TileFootprint < 1 ? 1 : atb.TileFootprint;
-            }
             return 1;
         }
 
@@ -305,14 +340,9 @@ namespace Pulsar4X.GroundCombat
         public static Dictionary<int, string> BuildingNamesOnBody(Entity body)
         {
             var map = new Dictionary<int, string>();
-            if (body?.Manager == null) return map;
-            foreach (var colony in body.Manager.GetAllEntitiesWithDataBlob<ColonyInfoDB>())
-            {
-                if (!colony.TryGetDataBlob<ColonyInfoDB>(out var ci) || ci.PlanetEntity == null || ci.PlanetEntity.Id != body.Id) continue;
-                if (!colony.TryGetDataBlob<ComponentInstancesDB>(out var comps)) continue;
+            foreach (var comps in BodyComponentStores(body))   // colonies + beachhead outposts
                 foreach (var inst in comps.AllComponents.Values)
                     map[inst.ID] = inst.Design?.Name ?? ("building #" + inst.ID);
-            }
             return map;
         }
 
