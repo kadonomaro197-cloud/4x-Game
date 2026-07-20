@@ -448,3 +448,70 @@ for v1, revisit if mixed-weapon ground units become common) · v1 resupply is IN
 region with a base (no supply-line distance/throughput model).
 
 **CROSS-LANE REQUESTS:** none — every file was inside the GROUND fence.
+
+---
+
+## G3 — Infrastructure combat (destroy / capture orders)
+
+**Slice summary (R4 ledger).** A formation can now RAZE a footprint building on a hex it can reach and SEIZE a hex,
+making per-hex ownership matter for the first time. *(Hand-implemented by the session; every member verified against
+source, mirroring the `WarMap_FootprintBuilding_*` test setup.)*
+
+**Files changed (all inside the GROUND fence):**
+- `GroundForcesDB.cs` — APPENDED `GroundOrderType.DestroyInfrastructure` (=5) + `CaptureInfrastructure` (=6)
+  (ordinal-stable, never reorder); reuse `TargetRegion/TargetQ/TargetR`; factory statics `DestroyInfra(region,q,r)` /
+  `CaptureInfra(region,q,r)` + `Describe` cases.
+- `GroundForcesProcessor.cs` — `ProcessFormationOrders` cases for both, via a new `ResolveInfraOrder` helper
+  (kick-off/pop pattern, never wedges): RANGE-GATED (Σ Attack of the formation's living units standing in the target
+  region within `HexDist ≤ Range` of the hex — the resolver's own rule; footprints sit on the region centre hex 0,0).
+  DESTROY = staged `GroundBuildings.BombardHex` with `Σreach.Attack × InfraDestroyStrengthPerAttack` (new const),
+  done when the hex is razed. CAPTURE = flip `GroundHex.OwnerFactionID` (instant v1). L9 (a case in the existing
+  order-queue step, no new processor).
+- `GroundFortification.cs` — the FIRST hex-owner CONSUMER: `SumLocal` now excludes buildings sitting on hexes an enemy
+  has captured (`CapturedBuildingIds` — a hex whose `OwnerFactionID` is a faction OTHER than the defender and not -1),
+  so a captured bunker stops fortifying the defender. Hex ownership is no longer inert.
+- NEW `EfGroundInfraCombatTests.cs` (3): destroy razes the building through the real removal path (gone from hex +
+  region list + colony store) and the order pops; out-of-range destroy doesn't fire and pops cleanly (no wedge);
+  capture flips the hex owner AND drops the defender's `DefenseMult` (the captured bunker stops fortifying).
+
+**PENDING subsystem-CLAUDE.md rows** (land at integration): `GroundOrderType` gained DestroyInfrastructure/
+CaptureInfrastructure; `GroundForcesProcessor.ProcessFormationOrders` gained the two cases + `ResolveInfraOrder` +
+`InfraDestroyStrengthPerAttack`; `GroundFortification.SumLocal` now excludes enemy-captured-hex buildings (hex ownership
+is a live fortification input).
+
+**PENDING dashboard rows (P8.2):**
+- `docs/TESTING-TRACKER.md`: **`EfGroundInfraCombatTests`** · *what:* destroy/capture-infrastructure orders + the
+  fortification consumer · *why:* R4 found the destroy primitive unwired + hex ownership inert · *method:* queue the
+  orders on a formation, drive `ProcessEntity` · *likely-failure:* a destroy-strength retune (staged→instant) shifts
+  the tick count.
+- `docs/SYSTEM-CONNECTION-MAP.md`: **GroundForcesProcessor order queue → GroundBuildings.BombardHex (destroy) /
+  GroundHex.OwnerFactionID (capture)**; **GroundHex.OwnerFactionID → GroundFortification.SumLocal (captured hex stops
+  fortifying)** — closing the "hex owner is inert" gap R4 flagged.
+
+**Byte-identity claim: (b) provably inert absent new data.** Nothing reads the two appended enum members until a
+DestroyInfrastructure/CaptureInfrastructure order is issued (no default/AI path emits one yet — the AI tasking rung is
+CORE's PW work). The fortification consumer excludes a building ONLY when a hex carries an enemy `OwnerFactionID`, which
+never happens until a CaptureInfrastructure order fires (region-capture flips a hex to the region's NEW owner, never an
+enemy of the region owner; default hexes are -1) → `CapturedBuildingIds` returns null and `SumLocal` is byte-identical
+for every existing scenario/test. Enums appended (int-serialised, ordinal-stable).
+
+**FLAGGED balance values:** `GroundForcesProcessor.InfraDestroyStrengthPerAttack` 0.1 (staged drain — Attack 100 →
+10 HealthPercent/tick → ~10 ticks to raze a full-health building).
+
+**DEVELOPER DECISIONS raised (R4's 6 open questions — memo for the developer):**
+1. **Capture timing** — instant-on-hold (chosen v1) vs a contested re-fortify timer (Aurora re-forts over ~30 days).
+2. **Destroyed state** — gone (chosen: real `RemoveComponentInstance`) vs a rubble/half-state (none exists).
+3. **Destroy scaling** — staged drain (chosen, `InfraDestroyStrengthPerAttack`) vs one-shot.
+4. **Produce-for-captor** — does a captured building PRODUCE for the conqueror before the whole colony flips? (Aurora
+   YES; needs a ComponentInstance transfer / producing-owner override — NOT built; the building stays the original
+   colony's, just stops fortifying the defender). The biggest deferred piece.
+5. **What hex ownership DRIVES** — v1 wires FORTIFICATION (a captured hex stops fortifying the defender); production /
+   victory consumers are follow-ons.
+6. **Addressing** — region-local hex (chosen: TargetRegion + centre hex) vs global-grid; both primitives exist.
+
+**CROSS-LANE REQUESTS:**
+- **→ CORE (PW):** the AI infra-tasking rung (queue DestroyInfrastructure against a fortifying enemy building in reach,
+  gated on the battalion's brain posture being Offensive) is PW's work — the order types + processor + range gate are
+  built here; PW just emits `GroundOrder.DestroyInfra`/`CaptureInfra` onto an Offensive battalion.
+- **→ CLIENT (C-lane, deferred to PW per the plan):** "Destroy/Capture infrastructure" order buttons in the battalion
+  order surface + the PlanetViewWindow city-tile inspect spot (R4 hooks), issuing the two new `GroundOrder` factories.

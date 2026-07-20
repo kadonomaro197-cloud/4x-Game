@@ -242,6 +242,8 @@ namespace Pulsar4X.GroundCombat
         HoldFor,        // hold position for a set number of game-seconds (a timed wait / dig-in pause)
         SetStance,      // switch the formation's combat stance (from the GroundStance catalog)
         SetEngagement,  // switch the formation's ROE (Hold / Close / Stand-off)
+        DestroyInfrastructure,   // G3: raze the footprint building(s) on a held/contested hex (Attack-scaled, staged drain)
+        CaptureInfrastructure,   // G3: seize a hex — flips GroundHex.OwnerFactionID so its buildings stop fortifying the defender (instant v1)
     }
 
     /// <summary>WHO issued a <see cref="GroundOrder"/> — the order-ownership marker (Earthfall G2.2 §3.5). The ground
@@ -290,6 +292,8 @@ namespace Pulsar4X.GroundCombat
         public static GroundOrder Hold(double seconds) => new GroundOrder { Type = GroundOrderType.HoldFor, SecondsRemaining = seconds };
         public static GroundOrder Stance(string stanceId) => new GroundOrder { Type = GroundOrderType.SetStance, StanceId = stanceId };
         public static GroundOrder Roe(GroundEngagementStance e) => new GroundOrder { Type = GroundOrderType.SetEngagement, Engagement = e };
+        public static GroundOrder DestroyInfra(int region, int q, int r) => new GroundOrder { Type = GroundOrderType.DestroyInfrastructure, TargetRegion = region, TargetQ = q, TargetR = r };
+        public static GroundOrder CaptureInfra(int region, int q, int r) => new GroundOrder { Type = GroundOrderType.CaptureInfrastructure, TargetRegion = region, TargetQ = q, TargetR = r };
 
         /// <summary>Short human label for a readout ("→ hex (3,-1)", "dig in 2h", "ROE: StandOff").</summary>
         public string Describe()
@@ -301,6 +305,8 @@ namespace Pulsar4X.GroundCombat
                 case GroundOrderType.HoldFor: return $"hold {SecondsRemaining / 3600.0:0.#}h";
                 case GroundOrderType.SetStance: return $"stance: {StanceId}";
                 case GroundOrderType.SetEngagement: return $"ROE: {Engagement}";
+                case GroundOrderType.DestroyInfrastructure: return $"raze @ region {TargetRegion + 1} hex ({TargetQ},{TargetR})";
+                case GroundOrderType.CaptureInfrastructure: return $"seize @ region {TargetRegion + 1} hex ({TargetQ},{TargetR})";
                 default: return Type.ToString();
             }
         }

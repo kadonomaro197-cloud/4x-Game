@@ -39,6 +39,12 @@ namespace Pulsar4X.GroundCombat
         /// byte-identical until an ammo-fed unit is fielded. FLAGGED balance value.</summary>
         public const double AmmoPerSalvo_kg = 1.0;   // FLAGGED balance value
 
+        /// <summary>Bombard strength (in `ComponentInstance.HealthPercent` units) a DestroyInfrastructure order lays on a
+        /// hex per tick, per point of the attacking units' summed Attack (G3) — the "staged drain default" (a building is
+        /// razed over several ticks, not one-shot). Attack 100 × 0.1 = 10 HealthPercent/tick → ~10 ticks to raze a
+        /// full-health building. FLAGGED balance value.</summary>
+        public const double InfraDestroyStrengthPerAttack = 0.1;   // FLAGGED balance value
+
         /// <summary>Ground COMBAT INTERRUPT flag (4b) — the ground mirror of
         /// <c>Combat.CombatEngagement.InterruptTimeOnNewEngagement</c>. When true, the first tick a NEW planetary
         /// battle forms on a body, the processor calls <c>MasterTimePulse.RequestCombatHalt()</c> so the clock stops
@@ -587,12 +593,61 @@ namespace Pulsar4X.GroundCombat
                         done = true;
                         break;
 
+                    case GroundOrderType.DestroyInfrastructure:
+                        // G3: raze the footprint building(s) on the target hex — gated on a formation unit standing in
+                        // the region within Range of the hex; staged drain (razes over several ticks). Done when the hex
+                        // is empty (razed) or nothing is in reach (pop, never wedge).
+                        done = ResolveInfraOrder(body, forces, regionsDB, f, order, destroy: true);
+                        break;
+
+                    case GroundOrderType.CaptureInfrastructure:
+                        // G3: seize the hex — flip GroundHex.OwnerFactionID so its buildings stop fortifying the defender
+                        // (the first consumer that makes hex ownership matter). Range-gated; instant (v1).
+                        done = ResolveInfraOrder(body, forces, regionsDB, f, order, destroy: false);
+                        break;
+
                     default:
                         done = true;   // unknown order → drop it (never wedge the queue)
                         break;
                 }
                 if (done) f.Orders.RemoveAt(0);   // pop → the next order starts next tick
             }
+        }
+
+        /// <summary>G3 — resolve a DestroyInfrastructure / CaptureInfrastructure order for a formation against a target
+        /// hex. RANGE-GATED: the formation must have a living unit standing IN the target region within its Range of the
+        /// hex (the resolver's own HexDist ≤ Range rule; footprints sit on the region centre hex 0,0). DESTROY: Σ in-range
+        /// Attack × <see cref="InfraDestroyStrengthPerAttack"/> bombards the hex (staged — done when the hex is razed).
+        /// CAPTURE: flip the hex owner (instant). Returns true when the order is DONE (razed / seized / nothing to do /
+        /// out of reach) so the queue pops it — never wedges. Defensive/no-throw (runs in the ground hotloop, L4).</summary>
+        private static bool ResolveInfraOrder(Entity body, GroundForcesDB forces, PlanetRegionsDB regionsDB,
+            GroundFormation f, GroundOrder order, bool destroy)
+        {
+            if (regionsDB?.Regions == null || order.TargetRegion < 0 || order.TargetRegion >= regionsDB.Regions.Count) return true;
+            var region = regionsDB.Regions[order.TargetRegion];
+            GroundHex hex = null;
+            if (region.Hexes != null)
+                foreach (var h in region.Hexes) if (h.Q == order.TargetQ && h.R == order.TargetR) { hex = h; break; }
+            if (hex == null || hex.InstallationIds == null || hex.InstallationIds.Count == 0) return true;   // nothing to raze/seize
+
+            // RANGE GATE: Σ Attack of the formation's living units standing in the target region that reach the hex.
+            double reachAttack = 0.0;
+            var targetHex = new HexCoordinate(order.TargetQ, order.TargetR);
+            foreach (var u in GroundFormationTools.MembersOf(forces, f))
+            {
+                if (u.Health <= 0 || u.RegionIndex != order.TargetRegion) continue;
+                if (new HexCoordinate(u.HexQ, u.HexR).DistanceTo(targetHex) > u.Range) continue;
+                reachAttack += u.Attack;
+            }
+            if (reachAttack <= 0.0) return true;   // no unit in reach → can't fire; pop cleanly (never wedge)
+
+            if (destroy)
+            {
+                GroundBuildings.BombardHex(body, order.TargetRegion, order.TargetQ, order.TargetR, reachAttack * InfraDestroyStrengthPerAttack);
+                return hex.InstallationIds.Count == 0;   // done once the hex is razed; else keep draining next tick (staged)
+            }
+            hex.OwnerFactionID = f.FactionOwnerID;   // seize — its buildings stop counting for the defender's fortification
+            return true;
         }
 
         /// <summary>A move is resolved when the formation's LEADER has stopped moving — it either arrived at the target

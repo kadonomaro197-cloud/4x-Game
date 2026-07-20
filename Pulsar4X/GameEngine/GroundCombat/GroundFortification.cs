@@ -32,7 +32,7 @@ namespace Pulsar4X.GroundCombat
         {
             if (region == null || resolve == null) return 1.0;
 
-            double bonus = SumLocal(region, resolve);
+            double bonus = SumLocal(region, resolve, ownerFaction);
 
             if (ownerFaction >= 0 && regions != null && region.Neighbors != null)
             {
@@ -49,16 +49,37 @@ namespace Pulsar4X.GroundCombat
             return 1.0 + Math.Min(Cap, bonus);
         }
 
-        private static double SumLocal(Region r, Func<int, GroundDefenseAtb> resolve)
+        private static double SumLocal(Region r, Func<int, GroundDefenseAtb> resolve, int ownerFaction)
         {
+            var captured = CapturedBuildingIds(r, ownerFaction);   // ids on hexes an enemy has seized (G3)
             double s = 0;
             if (r.InstallationIds != null)
                 foreach (var id in r.InstallationIds)
                 {
+                    if (captured != null && captured.Contains(id)) continue;   // a captured building stops fortifying the defender
                     var a = resolve(id);
                     if (a != null) s += a.LocalFortify;
                 }
             return s;
+        }
+
+        /// <summary>G3 — the ids of footprint buildings sitting on hexes CAPTURED by another faction (a hex whose
+        /// <c>GroundHex.OwnerFactionID</c> is set to someone OTHER than <paramref name="ownerFaction"/> and is not
+        /// neutral -1). Those buildings stop counting toward <paramref name="ownerFaction"/>'s local fortification — the
+        /// first consumer that makes per-hex capture MATTER. Null when NO hex is enemy-held (every stock body → the
+        /// fortification math is byte-identical: no hex carries an enemy owner until a CaptureInfrastructure order fires).
+        /// (v1: local region only; a captured hex inside an adjacent projecting region is a documented follow-on.) Never throws.</summary>
+        private static HashSet<int> CapturedBuildingIds(Region r, int ownerFaction)
+        {
+            if (r?.Hexes == null) return null;
+            HashSet<int> set = null;
+            foreach (var h in r.Hexes)
+            {
+                if (h == null || h.OwnerFactionID < 0 || h.OwnerFactionID == ownerFaction) continue;   // neutral or the defender's own → not captured
+                if (h.InstallationIds == null) continue;
+                foreach (var id in h.InstallationIds) (set ??= new HashSet<int>()).Add(id);
+            }
+            return set;
         }
 
         private static double SumAdjacent(Region r, Func<int, GroundDefenseAtb> resolve)
