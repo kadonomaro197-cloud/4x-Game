@@ -92,8 +92,43 @@ Namespace drift between branches is the #1 compile trap here (it bit `PositionDB
 
 ## Test inventory
 
+**Operation Earthfall (landed 2026-07-21)** added the fixtures below (all in the `rest` CI shard unless noted). Two existing fixtures also gained Earthfall cases: `AIDecisionRecorderTests` (P0.4 — the AI tape now records a station count) and `NpcFleetReadyToSailTests` (P4.2 — `BuiltShips_ChargedForNpc_NotForPlayer_PerProvisioningPolicy`, the industry-path built-hull charge).
+
 | Test | What it guards |
 |------|----------------|
+| `SafeDictionaryEventLockTests` | **Earthfall P0.5** — `SafeDictionary` raises its change events AFTER releasing its lock (copy-then-notify); a concurrent reader from inside a notification completes within a bounded Join |
+| `CampaignClockReadoutTests` | **Earthfall P0.1** — the campaign-clock freeze repro: drives the DevTest master clock 40 game-days with the AI gates + combat interrupt armed; FineStepCount flat during transit, wall bounded, zero tick errors (the freeze is NOT a sim crawl) |
+| `FactionSelfSufficiencyReadoutTests` | **Earthfall P0.2** — the per-faction/per-host economy self-sufficiency board over 120 DevTest days (structural truths; would have caught the Kithrin station-upkeep drain) |
+| `EfUmfGovernmentAndCeresFactoryTests` | **Earthfall P3.1** — the UMF authored `"government"` node lands Militarism/Authority High (war term +10 not −5) + Ceres now hosts a manufacturing line |
+| `LegitimacyStaleEchoDebounceTests` | **Earthfall P3.2** — a rebellion needs 2 consecutive collapsing reads (no one-sample revolt); legitimacy reads THIS cycle's morale (no stale echo); flags-off byte-identical |
+| `EfHysteresisBreakGlassTests` | **Earthfall P3.3** — the three crisis break-glasses release a passed crisis commit (shorter dwell / trigger-cleared / contradiction-debounce) while a genuine sustained crisis holds Defend; pins the Survive-floor unreachability bug |
+| `EfOperationContinuityTests` | **Earthfall P3.4** — a winning in-flight Conquer survives a transient internal wobble; a genuine Defend recalls in-flight offensive fleets home |
+| `EfSealiftQueueGuardTests` | **Earthfall P4.1** — Rung 2 builds ONE troop transport then the already-queued guard makes the next cycle fall through (kills the 4× redundant queue that strangled Mars) |
+| `EfLaunchFuelStockTests` | **Earthfall P4.3** — every host owning a `LaunchComplexDB` also stocks its launch fuel (the two `TryDeductFuel` preconditions — Mars had a pad but no fuel) |
+| `EfSealiftEndToEndTests` | **Earthfall P4.4** — the full BUILD→LAUNCH→LOAD→SAIL sealift chain through the real resolver/industry/launch/order paths on DevTest Mars (charged, fuelled, loaded, sail-ready) |
+| `EfConquerGroundRungsTests` | **Earthfall PW.1** — the ConquerResolver ground rungs: beachhead parts-haul · landed-unit form-up · infra-destroy stance-gate (an Offensive battalion is tasked, a Defensive one is not) |
+| `EfPwInfraButtonContractTests` | **Earthfall PW.2** — the engine surface the client battalion-rename + infra Destroy/Capture buttons draw against (rename setter, order factories incl. hex (0,0), the QUEUE-path resolve) |
+| `OperationEarthfallTests` | **Earthfall P8.1a** — the whole AI conquest arc as 8 ordered milestone tests through the real engine paths, composed into one narrative tape (`TestResults/earthfall-readout.txt`); each milestone mirrors a proven-green sibling |
+| `PlayerGroundChainRailsTests` | **Earthfall P8.1b** — the GENERIC player unit-creation→battalion→defend/invade RAILS (no hard-coded marine, dev decision #2): assemble→build→FormUp→stance/ROE→defeat a landed force + the UMF brain reacts→embark→land offensively |
+| `MidCampaignSaveLoadTests` | **Earthfall P8.1c** — a mid-invasion snapshot (landed battalion, brain posture, a brain-issued order + issuer, beachhead building + surface parts, a captured hex, the P3 crisis state) round-trips Save/Load and the campaign continues on the next brain-on tick |
+| `EfGroundConstructorTests` | **Earthfall G1.1** — the combat-engineer atb (`GroundConstructorAtb`) JSON-binds (six-point) + surface parts haulage lands/reads/deep-copies + `LandPartsFromShip` check-then-consumes from ship cargo |
+| `EfBeachheadBuildTests` | **Earthfall G1.2** — an engineer erects + fortifies a colony-free beachhead building over ticks (grave rung: it can be bombed); the three build gates (held ground / enemy-free / has parts) |
+| `EfGroundFormUpTests` | **Earthfall G2.1** — `FormUpLoose` sweeps loose units into battalions (AI formation parity) + the manager micro-helpers (rename / cross-body registry / radar reach) |
+| `EfGroundTacticalBrainTests` | **Earthfall G2.2** — the ground tactical brain's six §4 posture gauges + fog-honesty (undetected enemy = 0) + order-ownership (a player order suppresses the brain); flag off ⇒ byte-identical |
+| `EfGroundSustainmentTests` | **Earthfall G2.3** — ammo drain/silence in combat + depot resupply + upkeep-value wiring (garrison HP-scaled, assembled mass-scaled) |
+| `EfGroundInfraCombatTests` | **Earthfall G3** — per-hex destroy/capture-infrastructure orders (range-gated) + the fortification consumer (a captured bunker stops fortifying the defender) |
+| `EfGroundSealedComponentTests` | **Earthfall G4** — the buildable `sealed-systems` component JSON-binds + the assembler→`EnvironmentalResistance` wire (a sealed unit survives an airless+toxic world an unsealed twin dies on) |
+| `EfClientSensorAgeOutTests` | **Earthfall C2.1** — sensor track lost→memory flip (LAGGED→FROZEN, still held) + `ContactStaleSeconds` age-out actually removes a stale track (the engine gauges A2 named as missing) |
+| `EfC3BattalionRegistryTests` | **Earthfall C3.1** — the cross-body battalion registry the Force-Management Battalions tab draws (two formations on two bodies collected + aggregated; enemy excluded) |
+| `EfC5TroopLiftOrderTests` | **Earthfall C5.1** — the FleetWindow embark/land button contract (CreateCommand arities, per-class bay-capacity readout, the region-picker RegionIndex wire) |
+| `EfKithrinSurveyChainTests` | **Earthfall D1.1** — `ExpandResolver` emits a real `GeoSurveyOrder` for an idle surveyor, else queues ONE surveyor build behind an in-production guard (the Kithrin survey→found chain) |
+| `EfStationIncomeTests` | **Earthfall D2.1** — a populated station's monthly income exceeds its operating cost (ends the A6 structural bankruptcy); an unmanned station yields zero (byte-identical); booked to the `StationIncome` ledger category |
+| `EfConsolidateStationTests` | **Earthfall D2.1** — a station-only faction's `ConsolidateResolver` emits a real executable action (GrowEconomy fall-through) instead of a guaranteed None; a content colony faction still returns None |
+| `EfKithrinExpandArcTests` | **Earthfall D3.1** — the whole Kithrin expand arc through the real paths (survey emit→complete→found→in `Colonies`); a brain-driven companion; M5 "pays tax" `[Ignore]`d (an AI-founded colony is born empty+untaxed) |
+| `Resolver2DJointsSpecTests` | **Earthfall T0.1** — the executable spec for the two 2D-resolver joints: conserved target-weighted fire-allocation (kills the double-count trap) + combined-theater cadence (fixed-5s ground step, fast-forward==watch) |
+| `GroupPlaneTests` | **Earthfall T1.1 / S0** — the pure `GroupPlane` battle-plane math (frame determinism, orthonormal axes, `RoleOffset` trig, joiner-uses-frozen-frame, `EnemyDirection` tie-breaks, `PairDistance`); no live caller |
+| `EfGroupPlaneAnchorTests` | **Earthfall T2.1 / S1** — the group-plane wiring behind `EnableGroupPlane`: flag-on seeding matches the pure math, joiner copies the frozen board, the anchor slides by the scalar-gap delta; flag-off byte-identical |
+| `EfGroupPlaneRangeGateTests` | **Earthfall T3.1 / S2** — the 2D range gate reads the anchor pair-distance (a long fleet fires a short one at range even with the scalar gap forced small); flag-off reverts to the scalar/3D read; the closing flag is the master switch |
 | `ScenarioHarnessTests` | the harness itself — builds a colony start; advances a real colony a game-year without throwing (**the colony/economy loop coverage the suite never had**) |
 | `NewGameStartSmokeTests` | the real New Game colony path (rides the harness) |
 | `EconomyReadoutTests` | the economy board — mining (asserts deposits deplete), refining (asserts Space-Crete produced via the job lever), infra/fuel readouts |
