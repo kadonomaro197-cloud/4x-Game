@@ -1313,3 +1313,137 @@ GroundForces.QueueFormationOrder / GroundOrder.DestroyInfra · GroundTactics.Off
 (read)** — the strategic AI now (d) forms landed units into battalions, (c) lands crated footprint parts onto held ground to
 feed the combat-engineer FOB build, and (e) tasks an Offensive battalion to raze an enemy building on a reachable hex. The
 strategy→tactics seam: the resolver reads the ground tactical brain's posture (`formation.StanceFamily`) as the gate.
+
+---
+
+## P8.1 — The campaign gauge + the generic player-chain RAILS gauge (Operation Earthfall acceptance)
+
+**Files created (all NEW test fixtures in `Pulsar4X/Pulsar4X.Tests/`, lane-distinct names → the `rest` shard; no engine/production code touched):**
+- NEW `OperationEarthfallTests.cs` — the CAMPAIGN ACCEPTANCE GAUGE (P8.1a): the whole AI conquest arc as 8 ordered
+  milestone `[Test]`s, each driven through the REAL engine paths and composed into one narrative tape written to
+  `TestResults/earthfall-readout.txt` (the `.github`-walk `WriteReadout` helper, same pattern as EfKithrinExpandArcTests /
+  CampaignClockReadoutTests). Milestones: **M1** P3 operation-continuity (a winning in-flight Conquer HOLDS through a
+  transient internal Survive wobble, a genuine crisis still preempts — pure `ObjectiveTransition.Advance`, EfOperationContinuity
+  idiom); **M2** `[Timeout(300000)]` the DevTest brain drive (UEF+UMF+Kithrin, gates open, direct — no clock advance): HARD
+  asserts the UMF invasion ADVANCES past massing (a real StrikeFleet/StrikeJump/SailTransport/LoadInvasion/LandInvasion —
+  the P4 sealift chain, DevTestInvasionReadout's green invariant) + the Kithrin ExpandResolver decides SURVEY on the fresh
+  state (D1-D3, EfKithrinExpandArc's green invariant); RECORDS the tick-error tally + per-faction balances observationally
+  (D2 "no structural decay" — not hard-asserted over a 24-tick run, per the never-red mandate); **M3** the EXISTING one-shot
+  orbital bombardment softens the defending garrison sparing a landed invader (dev decision #4 — NO re-fire built/asserted;
+  GroundBombardmentTests idiom); **M4** a landed wave is swept into a battalion by FormUpLoose and — reading its own real
+  `FormationStrength` against a weaker defender — the tactical brain picks Offensive+Close+Advance (G2.1+G2.2); **M5** a
+  combat engineer erects a beachhead fort colony-free on held ground (G1, EfBeachheadBuild idiom); **M6** an Offensive
+  battalion razes an enemy building per-HEX via DestroyInfrastructure (dev decision #5, EfGroundInfraCombat idiom); **M7**
+  a bombarded-clear garrison + a landed invader → the region owner FLIPS (TakeAPlanetIntegration idiom); **M8** THE BRAIN
+  VISIBLY ALIVE — an outmatched invader reads the odds and goes Defensive/withdraws-to-beachhead (with fallback → Retreat +
+  "withdrawal" reason; cornered → dig-in Hold; outnumbered → Defensive Hold), asserting Stance/ROE/Intent + Reason (the
+  developer's declared scenario), pure `GroundTactics.DecidePosture`.
+- NEW `PlayerGroundChainRailsTests.cs` — the GENERIC player-chain RAILS gauge (P8.1b, dev decision #2 — NOT a hard-coded
+  marine): assemble a GENERIC stock-parts ground unit in-engine exactly as the Entity Assembler UI does
+  (`GroundUnitAssembly.RegisterAssembledDesign`: frame + rifle + plating), build+field a squad via the REAL industry
+  completion hook (`GroundUnitDesign.OnConstructionComplete`), FormUp into a battalion, set stance/ROE via the real levers,
+  then the two developer-scenario directions: **DEFEND** — a landed UMF force attacks Earth, the player battalion defeats it
+  (bounded salvo loop, SalvoScale 1.0), AND at the counterattack moment the UMF brain reads the odds against the player's
+  battalion IN FORCE and goes Defensive/withdraws (the exact moment answering "is the AI smart enough"); **INVADE** — the
+  fielded generic unit EMBARKS (`LoadTroopsOrder`) and lands offensively on ANOTHER body (`LandTroopsOrder`, region-index
+  addressed per dev decision #5) — both directions proven green so the developer's own live-designed Space Marine rides
+  working rails.
+- NEW `MidCampaignSaveLoadTests.cs` — MID-CAMPAIGN SAVE/LOAD (P8.1c): builds a mid-invasion snapshot (landed battalion +
+  membership, a brain-set posture, a brain-ISSUED queued order, a colony-free beachhead building + a landed surface-parts
+  crate, a captured hex, the P3 crisis state = `StrategicObjectiveDB.CommitTrigger`/`ContradictionCycles` +
+  `LegitimacyDB.ConsecutiveCollapsingReads`), round-trips it `Game.Save → Game.Load` (SaveLoadWithJob/SaveLoadDesignRoundTrip
+  pattern — both proven to round-trip a CreateWithColony game green), and asserts every piece survives intact — then advances
+  a tick with `GroundForcesProcessor.EnableGroundTacticalAI` ON and asserts the campaign CONTINUES (the brain re-decides
+  without error). Plus a documented `[Ignore]`d placeholder for the TWOD battle-frame-anchor round-trip (see the deferral
+  below).
+
+**Byte-identity claim: (b) provably inert — no engine/production code touched, no static flag left flipped.** All three
+files are test-only additions. Every static the fixtures flip (the four `NPCDecisionProcessor` gates in M2;
+`GroundForcesProcessor.EnableGroundTacticalAI` in the mid-campaign continue-tick) is captured and RESTORED in a
+try/finally, so no flag leaks into a sibling test in the shard. Nothing in the default game path or any existing green
+test is altered — the fixtures only construct scenarios, drive resolver/processor/damage/order/save-load paths that are
+each already proven green in their owning slice test, and assert the composed connections. No serialization/scheduling/
+gameplay logic is changed.
+
+**FLAGGED balance numbers: NONE.** No new gameplay number is introduced. All numeric literals are either test bounds
+(loop caps, `[Timeout]` windows) or scenario inputs re-used verbatim from the proven-green sibling tests (garrison sizes,
+unit stats, bombardment energies), not shipped balance dials.
+
+**Developer decisions applied (obeyed exactly, EARTHFALL-DECISIONS.md):**
+- **#2** — NO hard-coded Space Marine. P8.1b proves the GENERIC unit-creation → battalion → defend/invade RAILS are green
+  and generic (a stock frame+rifle+plating unit); the sealed+cadre+power-armor marine is the developer's own live in-game
+  test riding those rails.
+- **#4** — orbital bombardment re-fire is TABLED. M3 asserts ONLY the EXISTING one-shot garrison softening; no between-waves
+  re-fire cadence is built or asserted.
+- **#5** — the hex is the unit. M6 razes/M-c captures per-HEX (`GroundHex.OwnerFactionID` flip); landing targets a region
+  INDEX (`LandTroopsOrder` regionIndex, the engine's real addressing); no region-transfer logic.
+
+**Milestones deferred / softened (never a red, per the mandate):**
+- **M2 clean-tick** — the "no NPC brain threw" invariant is RECORDED (tape) not HARD-asserted, because no existing green
+  gauge guarantees zero tick-errors over a 24-tick DevTest drive (EfKithrinExpandArc asserts it over 3 ticks;
+  DevTestInvasionReadout asserts only the advance over 24). The advance + Kithrin-Survey (both proven green over the same
+  drives) are the hard assertions.
+- **TWOD battle-frame anchors in save/load** — `MidCampaignSaveLoadTests.MidBattle_GroupPlaneAnchors_SurviveSaveLoad` is
+  `[Ignore]`d with a reason: the 2D group-plane anchors (`FleetCombatStateDB`/`GroupPlane`) are written only behind
+  `EnableGroupPlane` (default OFF) during a formed SPACE engagement, which a ground-focused mid-invasion snapshot does not
+  stand up; that anchor save-safety is owned by the TWOD lane's own S1/S2 gauges (`EfGroupPlaneAnchorTests`). Enable once a
+  combined space+ground mid-campaign harness exists.
+
+### Pending row — `Pulsar4X.Tests/CLAUDE.md` test inventory table
+*(Not edited directly — that table is a high-collision target shared with every lane's test additions. Land these rows at P8.2.)*
+
+| `OperationEarthfallTests` | **P8.1a — the OPERATION EARTHFALL campaign acceptance gauge.** The whole AI conquest arc as 8 ordered milestone tests through the REAL engine paths, composed into one narrative tape (`TestResults/earthfall-readout.txt`): P3 operation-continuity (winning Conquer held through a transient wobble) · the DevTest brain drive (UMF invasion ADVANCES past massing + Kithrin decides SURVEY; balances/tick-errors recorded observationally = D2) · the existing one-shot bombardment softens the garrison (dev #4, no re-fire) · FormUpLoose→battalion→brain picks Offensive+Advance · a colony-free beachhead fort · an Offensive battalion razes an enemy building per-HEX (dev #5) · a bombarded-clear garrison flips the region (take a planet) · THE BRAIN VISIBLY ALIVE (an outmatched invader reads the odds → Defensive/withdraws, Stance/ROE/Intent+Reason). Each milestone mirrors a proven-green sibling Ef* gauge; unpassable ones would be `[Ignore]`d (none needed). Bounded (`[Timeout]` on the DevTest drive). |
+| `PlayerGroundChainRailsTests` | **P8.1b — the GENERIC player ground-chain RAILS gauge (dev decision #2, no hard-coded marine).** Assemble a GENERIC stock-parts unit in-engine (`RegisterAssembledDesign`: frame+rifle+plating), build+field a squad via the real industry completion hook, FormUp into a battalion, set stance/ROE, then: DEFEND — a landed UMF force attacks Earth, the player battalion defeats it AND the UMF brain reads the heavy counterattack and goes Defensive/withdraws (the developer's counterattack moment); INVADE — the unit embarks (`LoadTroopsOrder`) and lands offensively on another body (`LandTroopsOrder`, region-index per dev #5). Both directions green so the developer's own live-designed marine rides working rails. |
+| `MidCampaignSaveLoadTests` | **P8.1c — the mid-invasion save/load gauge.** A mid-invasion snapshot (landed battalion+membership, brain posture, a brain-ISSUED queued order incl. its issuer marker, a colony-free beachhead building + landed surface parts, a captured hex owner-flip, the P3 crisis state = `StrategicObjectiveDB.CommitTrigger`/`ContradictionCycles` + `LegitimacyDB.ConsecutiveCollapsingReads`) round-trips `Game.Save→Game.Load` intact, then a tick with the tactical brain ON runs without error (the campaign continues). The CI sensor that a rename/drop of any of those appended `[JsonProperty]` fields doesn't silently corrupt a mid-invasion save. `[Timeout]`. (+ an `[Ignore]`d placeholder for the TWOD group-plane-anchor round-trip, owned by the TWOD anchor gauges.) |
+
+### Pending row — `docs/TESTING-TRACKER.md` (Layer-1 engine CI)
+- **T-P8.1a `OperationEarthfallTests`** · *what:* the whole AI conquest arc, milestone-by-milestone through the real engine paths, as one taped acceptance gauge · *why:* the campaign's individual rungs are each green in isolation (P3/P4/G1-G4/D1-D3/PW) but nothing asserted they CONNECT as one narrative · *method:* 8 ordered milestone tests (pure decision · DevTest brain drive · controlled-scenario resolver/processor/damage drives) writing `TestResults/earthfall-readout.txt` · *right-looks-like:* every milestone green + the tape written · *likely-failure:* a cross-slice regression in any rung (bombardment, form-up, brain posture, beachhead, infra, capture, sealift advance, Kithrin expand) · *mitigation:* each milestone mirrors a proven-green sibling; DevTest-clean softened to observational (never red) · *unblocks:* a standing CI answer to "does the campaign run end to end" that survives any future engine change.
+- **T-P8.1b `PlayerGroundChainRailsTests`** · *what:* the generic player unit-creation→battalion→defend/invade rails, both directions · *why:* the developer intends to design their Space Marine IN-GAME; the rails must be proven green + generic so the live build rides them (dev decision #2) · *method:* RegisterAssembledDesign→OnConstructionComplete→FormUpLoose→stance/ROE→defend-and-win + brain-reacts, then LoadTroopsOrder→reposition→LandTroopsOrder on another body · *right-looks-like:* the squad fields+forms, defeats a landed force, the UMF brain goes Defensive/withdraws, and the unit embarks+lands offensively · *likely-failure:* a regression in the assembler/industry-completion/formation/transport-order path · *mitigation:* every step mirrors a proven-green sibling gauge · *unblocks:* the developer's live Space-Marine end-to-end test.
+- **T-P8.1c `MidCampaignSaveLoadTests`** · *what:* a mid-invasion snapshot survives Save/Load and the campaign continues on the next tick · *why:* an invasion in progress must be save-safe across formations, orders+issuer, hex flips, beachhead+parts, and the P3 crisis state · *method:* build the snapshot, `Game.Save→Game.Load`, assert every piece, advance a brain-on tick · *right-looks-like:* all state intact post-reload, the ground tick runs clean · *likely-failure:* a rename/drop of an appended `[JsonProperty]` (order issuer / hex owner / commit-trigger / debounce counter) breaks the round-trip · *mitigation:* this gauge reds on the drop · *unblocks:* confidence that the developer can save+resume a live invasion. (TWOD anchor round-trip deferred to the TWOD anchor gauges.)
+
+### Pending row — `docs/SYSTEM-CONNECTION-MAP.md`
+- **Operation Earthfall acceptance (P8.1)** — the CAPSTONE that verifies the campaign's cross-slice STACK: P3 continuity (ObjectiveTransition) × P4 sealift (ConquerResolver→MilitaryReach) × the bombardment→land→FormUp→GroundTactics→beachhead→infra→capture ground chain × D1-D3 Kithrin expand, plus the player's own RegisterAssembledDesign→industry→FormUp→transport-order rails, plus save/load of the whole mid-invasion state. The gauge that keeps every one of those connections green as the engine changes.
+
+---
+
+## P8.2 — Dashboard sync + final report (Operation Earthfall integration close-out)
+
+**What this slice does (its declared §4 scope):** lands every lane's pending dashboard rows into the three real
+dashboards (`docs/DOCS-INDEX.md`, `docs/TESTING-TRACKER.md`, `docs/SYSTEM-CONNECTION-MAP.md`) + the routed subsystem
+`CLAUDE.md` rows, and writes the two final docs (`docs/earthfall/CAMPAIGN-REPORT.md`, `docs/ground/EARTHFALL-CAMPAIGN-OPS.md`).
+Markdown-only; no engine code, data, or flags touched. **Byte-identity: (b) provably inert** (docs only — every existing
+green test is unaffected by construction). **FLAGGED numbers: none introduced** (the report *catalogues* the campaign's
+existing flagged defaults; it sets none).
+
+### FENCE-BREACH REPAIR (this repair pass) — the invasion ON-SWITCH runtime check, routed not self-edited
+The first P8.2 pass added a `## ⚔ OPERATION EARTHFALL — the invasion ON-SWITCH` section to **`docs/CLIENT-TEST-CHECKLIST.md`**.
+That file is in the **CLIENT lane's fence** (CAMPAIGN-PLAN §3), NOT CORE's — and adding a client-runtime click-path is
+neither of P8.2's §4 deliverables (dashboard sync + final report). Per CAMPAIGN-PLAN §5 an out-of-fence need is a
+REQUEST to the owning lane, and a cross-lane request is resolved in PW, not self-authorized by the implementer.
+**Remediation applied:** the section was **reverted** (`git checkout -- docs/CLIENT-TEST-CHECKLIST.md`, restoring it to
+its committed state), and the need is routed as the REQUEST below. Nothing was lost — the same runtime check is already
+tracked in the CORE-integration-owned dashboards this slice legitimately lands: `docs/TESTING-TRACKER.md`'s **`EF-ONSWITCH`
+(invasion live)** Layer-3 row, and `docs/earthfall/CAMPAIGN-REPORT.md` §3 (the gate flip + revert) and §5 item 7 (the
+"invasion, alive" runtime pass). The on-switch flag flip itself (`EnableGroundTacticalAI` + `AutoFormUp` in
+`NewGameMenu.cs`, commit `ff35533`) already shipped during integration; only the CLIENT-owned *checklist click-path* is
+outstanding.
+
+### Cross-lane REQUEST → CLIENT lane (owner of `docs/CLIENT-TEST-CHECKLIST.md`) / post-merge integrator
+**Add an "invasion ON-SWITCH" client-runtime section to `docs/CLIENT-TEST-CHECKLIST.md`** (append after the PW.2
+infrastructure-buttons section, before the trailing `---`/Maintenance footer). It gives the developer the click-path to
+confirm — on the Windows build CI can't run — that a menu-started game actually runs the ground tactical brain. Verbatim
+text to drop in (preserved here so it lands unchanged when the owning lane/integrator applies it):
+
+```markdown
+## ⚔ OPERATION EARTHFALL — the invasion ON-SWITCH (the tactical brain runs in a menu game)
+The two ground-AI flags default OFF so the engine CI suite stays byte-identical, but a **menu-started / DevTest game turns both ON** (`NewGameMenu.cs` CreateGameCore + DevTest, beside the NPC AI gates): `GroundForcesProcessor.EnableGroundTacticalAI` + `GroundAssembly.AutoFormUp`. CI can't verify a client flag flip, so this is the live test — the moment the whole campaign is visibly alive. (One-line revert each in `NewGameMenu.cs` if you want the ground war dormant again.) See `docs/earthfall/CAMPAIGN-REPORT.md` §3.
+- [ ] **Battalions form themselves.** Start a DevTest/menu game with defended AI worlds. Confirm the AI's garrisons + any landed units appear as **battalions** (not loose units) in Force Management ▸ Battalions — `AutoFormUp` is doing its job.
+- [ ] **The brain reads a posture.** Select an AI battalion (or watch its Reason in the tape/log): it should carry a **Stance / ROE / Intent** with a plain-English reason — not sit inert. An outnumbered defender on a fortified region should read Defensive/Hold; a 2:1 attacker Offensive/Advance.
+- [ ] **The "is the AI smart enough" moment.** Land the UMF on your world (or let it invade), then counterattack **in force** with your own battalions (your Space Marines). The UMF invaders should read the odds against them and go **Defensive / withdraw toward their beachhead** — the visible proof the ground brain is alive. (If they suicide-march instead, that's the flagged thresholds needing a tune, not a broken brain — `docs/earthfall/GROUND-TACTICAL-AI-DESIGN.md §5`.)
+- [ ] **Off = dormant (the revert works).** Remove the two lines and start a game → garrisons stay loose, no stance is set — byte-identical to pre-campaign ground behaviour.
+```
+
+*(Note for the landing session: this is the ONE genuinely CLIENT-fenced item P8.2 cannot land itself. Everything else
+P8.2 touched — the three dashboards, the CORE/GROUND/Colonies/Combat/Factions/Tests subsystem `CLAUDE.md` rows, and the
+two new Earthfall docs — is inside the CORE-integration fence. If you (integrator/human) choose to accept sole-integrator
+authority and drop the block in directly, that's a session/human call; the implementer's default is to route it here.)*
