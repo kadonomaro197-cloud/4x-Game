@@ -1120,3 +1120,196 @@ and `docs/SYSTEM-CONNECTION-MAP.md` above (the P4.4 section) still describes the
 LOAD → SAIL through the real paths); only STEP 2's build-completion mechanism changed (queue-grind → direct
 `OnConstructionComplete`), which those rows already accommodate ("build+launch it into orbit … never hand-placed"). No
 row edit required.
+
+---
+
+## PW.2 — Client cross-lane buttons + request resolution (2026-07-21)
+
+**What shipped (CLIENT-file fence — the PW wiring phase's client half — plus one new lane-distinct test):**
+- `Pulsar4X.Client/Interface/Windows/FleetWindow.cs` — Force-Management ▸ Battalions order surface gained (a) a
+  **Rename** control (`DrawBattalionOrders`: inline `ImGui.InputText` + button → `GroundForces.RenameFormation`; buffer
+  reseeds from the selection via `_battRenameForId`/`_battRenameBuf`), and (b) **Infrastructure combat** buttons
+  (`DrawBattalionInfraOrders`: "Raze / Capture infrastructure" → QUEUE `GroundOrder.DestroyInfra`/`CaptureInfra(rally,
+  0, 0)` on the battalion's OWN leader region; gated on the region-centre hex (0,0) holding footprints).
+- `Pulsar4X.Client/Interface/Windows/PlanetViewWindow.cs` — the formation panel got the twins (`DrawFormationPanel`
+  rename row + `DrawFormationInfraOrders`), and the **city-zoom** got the R4 city-tile-inspect hook
+  (`DrawCityInfraOrders`, appended to `DrawCityZoom`): razes/seizes the operational hex's region BAND
+  (`PlanetGridFactory.RegionOfColumn`) carried by a player battalion standing in that region.
+- `Pulsar4X.Tests/EfPwInfraButtonContractTests.cs` — NEW, `rest` shard. Pins the exact engine surface the buttons draw
+  against (rename setter; `DestroyInfra`/`CaptureInfra` factory field wire incl. the hard-coded (0,0); the QUEUE-path
+  resolve for both raze + capture). The `EfC5TroopLiftOrderTests` role for these buttons.
+- `Pulsar4X.Client/CLAUDE.md` (in-fence) — flipped the two "deferred to PW" notes (Battalions-tab rename,
+  C5b infra buttons) to LANDED + added the PW.2 notes on both the FleetWindow and PlanetViewWindow sections.
+- `docs/CLIENT-TEST-CHECKLIST.md` (CLIENT-owned) — new "OPERATION EARTHFALL — PW.2" runtime section (7 checks) +
+  flipped the C3.1 "(Deferred) rename button" line to "LANDED."
+
+**Byte-identity claim: (b) provably inert absent player action + no engine value changed.** No engine file or data was
+touched. The buttons are draw-only additions that mutate NO game state except on an explicit player click, through
+already-CI-tested engine order paths (`GroundForces.RenameFormation`/`QueueFormationOrder`, `GroundOrder.DestroyInfra`/
+`CaptureInfra`). The infra order types are the appended-ordinal enum members GROUND (G3) already shipped; nothing new is
+serialized. Every existing green test is unaffected (the test project doesn't compile the client); `EfPwInfraButtonContractTests`
+exercises only engine paths that already existed. A raze/capture order re-checks its range gate and pops cleanly, so a
+stale/mis-aimed click is a safe no-op.
+
+**FLAGGED gameplay numbers: NONE.** No new gameplay/balance value — the buttons issue existing orders on existing data.
+The hard-coded hex (0,0) is the engine's own footprint-placement coordinate (`GroundBuildings.CentreHex`), not a balance dial.
+
+### Request-resolution SWEEP (part b) — every REQUEST across docs/earthfall/LANE-*-NOTES.md, triaged
+
+**RESOLVED by PW.2 (built the buttons):**
+- CLIENT C3.1 "Battalion RENAME button" (LANE-CLIENT-NOTES §C3, deferred to PW) → BUILT in both windows via
+  `GroundForces.RenameFormation`.
+- CLIENT C5.1 / GROUND G3 "infra Destroy/Capture buttons" (LANE-CLIENT-NOTES §C5, LANE-GROUND-NOTES §G3 → CLIENT) →
+  BUILT in the battalion order surface (both windows) + the city-zoom.
+
+**ROUTED TO PW.1 (the resolver-wiring sibling slice — NOT PW.2's client half):** these are all "→ CORE (PW)" engine/AI
+resolver requests that PW.1 owns (`ConquerResolver.cs` etc.), not client buttons:
+- GROUND G1.1 / G1.2 → CORE: beachhead-build rung (land parts + drive on-site build; `GroundBeachhead.TickBuilds` runs
+  on the tick, PW just lands parts + ensures an idle engineer; landing-region scorer should prefer a held region).
+- GROUND G2.1 → CORE: call `GroundAssembly.FormUpLoose` after garrison-raise/landing (or flip `AutoFormUp`).
+- GROUND G2.2 → CORE: flip `GroundForcesProcessor.EnableGroundTacticalAI = true` on New-Game; landing score consumes
+  `GroundThreat.DetectedDefenderStrength`.
+- GROUND G3 → CORE: AI infra-tasking rung (queue `DestroyInfra` on an Offensive battalion).
+  *(These are flagged here so PW.1 has the consolidated list; PW.2 does not touch the resolver.)*
+
+**ESCALATED — DEVELOPER DECISIONS (surface to the campaign §6 / EARTHFALL-DECISIONS list):**
+1. **`GroundAssembly.AutoFormUp` / `EnableGroundTacticalAI` default-off flags** (GROUND G2.1/G2.2 → "whoever owns the
+   on-switch"). For the AI to field battalions + run the ground tactical brain in a default game these must be flipped
+   true on the New-Game path. Left OFF by GROUND for byte-identity. **This is a PW.1 integration + developer call** (a
+   default-off→on flip, exactly the `ChargeBuiltPlayerShips` pattern the developer already decided in EARTHFALL-DECISIONS #3).
+2. **Ground cadre talent-scarcity for elite/sealed units** (GROUND G4 → CORE, touches `Factions/ManpowerTools`). A
+   HIGH-risk balance decision, deliberately NOT wired. Already in campaign §6 ("ground cadre talent-draw size") — defaults stand.
+3. **AI-founded colony is born empty + untaxed** (DEV D3.1 finding). Milestone-5 `[Ignore]`d because a founded colony
+   contributes zero income (pop 0 + TaxRate 0). Developer owns: (a) seed a starting population vs rely on migration (and
+   check `PopulationProcessor.GrowPopulation`'s `20/pop^(1/3)` divide-by-zero at pop 0), (b) should the AI/governor set
+   a tax rate on a new colony. Until then the expand arc founds a real-but-inert colony.
+4. **`StationEconomyDB.DefaultStationTaxRate = 0.15` applies to PLAYER stations too** (DEV D2.1). Developer call whether
+   player stations should be untaxed-by-default (like colonies) vs the modest 0.15. In EARTHFALL-DECISIONS "station tax 0.15" default stands.
+5. **`default-design-launch-complex` Max Tonnage 100k → ~250k kg** (CORE P4.3 → GROUND, OPTIONAL/developer-gated). Not
+   required for the current trooper (<100k in every interpretation); a future-proofing margin. EARTHFALL-DECISIONS "launch-pad tonnage 100,000 kg" default stands.
+
+**ESCALATED — MECHANICAL ENGINEERING FOLLOW-UPS (ready to apply; out of PW.2's client fence, so escalated not edited):**
+6. **`TransactionCategory.StationIncome`** (DEV D2.1 → CORE). APPEND a `StationIncome` member at the END of the
+   `TransactionCategory` enum in `GameEngine/Factions/Ledger.cs` (enums serialize by int — append, never reorder), then
+   repoint the ONE marked line in `StationUpkeepProcessor.CollectIncome` (`// REQUEST: dedicated StationIncome category`)
+   off `ColonyTax`, and update `EfStationIncomeTests`' `GetTransactionsByCategory` reads. Mechanical, low-risk (no test
+   reads a station's `ColonyTax` today except that fixture). Left UNEDITED by PW.2: `Ledger.cs`/`StationUpkeepProcessor.cs`
+   are outside the PW.2 client-button fence and could collide with a parallel resolver-wiring slice — a clean CORE
+   follow-up commit.
+7. **`ManagerSubPulse.cs` `.Keys`/`.Values` → `KeysSnapshot`/`ValuesSnapshot`** (CORE P0.5, advisory/low-priority). Not
+   the freeze; removes the last live-view enumerations on a mutated SafeDictionary. Adopt when that file is next touched.
+
+**OPTIONAL CLIENT NICE-TO-HAVES (post-PW; not in PW.2's brief — flagged for a future CLIENT slice, none blocking):**
+- GROUND G1.1/G1.2 → CLIENT: a per-region "landed parts" readout + "unload parts" button; a "beachhead outpost" +
+  build-progress readout (`GroundBeachhead.HasBeachhead` / `GroundForcesDB.BuildSites`).
+- GROUND G2.2 → CLIENT: show a battalion's `TacticalReason`/`TacticalIntent` (own units only — fog: enemy posture only
+  via observed behaviour).
+- GROUND G4 → CLIENT: a "sealed?" token on PlanetViewWindow unit readouts (which garrisons can hold an airless/toxic world).
+- CLIENT C2.1 → Sensors: a public `SensorContact.SecondsSinceDetection(now)` accessor for a TRUER held-vs-fresh split
+  (the LAGGED/FROZEN proxy is faithful today). Sensors is outside every lane fence.
+- CLIENT C3.1/C4.1 → the engine helpers `GroundFormationTools.AllFormationsFor` + `GroundSensors.RadarReachHexes` are
+  BUILT (GROUND G2.1) — the client still computes those inline (works); swapping to the helpers is an optional cleanup.
+
+**INFORMATIONAL / NO ACTION:** DEV D1.1 (Kithrin survey emission low-risk on the campaign-clock shard); GROUND G1.2 →
+G2 (FOB resupply — internal GROUND, merged); GROUND G4 → CORE (assembler readouts already public); CORE P4.3 → DEV
+(kithrin.json launch-fuel — AUDIT DONE, standing guard only); TWOD (no cross-lane requests); CORE P0.5 → economy/data
+lanes (adopt snapshots only if made mutable — safe today).
+
+### Pending dashboard rows (for P8.2 to land)
+
+**`docs/TESTING-TRACKER.md`** — append one engine-CI (Layer-1) row:
+
+| Row | What | Why | Method | What-right | Likely-failure | Mitigation | Unblocks |
+|-----|------|-----|--------|-----------|----------------|------------|----------|
+| EARTHFALL-PW.2-buttons | `EfPwInfraButtonContractTests` — pins the engine surface the battalion RENAME + infra Destroy/Capture buttons draw against | CI can't run the client; this pins the rename setter + the `DestroyInfra`/`CaptureInfra` factory field wire (incl. the hard-coded region-centre hex 0,0) + the QUEUE-path resolve, so a breaking engine change reds CI instead of silently no-op'ing a button | `dotnet test` (`rest` shard) — the 4 tests | rename sets/trims + rejects blank; factories wire Type/region/(0,0); a queued DestroyInfra razes the footprint + pops; a queued CaptureInfra flips the hex owner | An engine change to `RenameFormation`/the order factories/`QueueFormationOrder`, or footprints move off hex (0,0) | The fixture is the tripwire (overlap with `EfGroundInfraCombatTests` is intentional — that tests SetFormationOrder resolve, this tests the QUEUE-path button contract) | The client rename + infra-combat buttons (runtime gauge = the developer, CLIENT-TEST-CHECKLIST PW.2) |
+
+**`docs/SYSTEM-CONNECTION-MAP.md`** — one new READOUT/ORDER edge (no new engine coupling): **FleetWindow + PlanetViewWindow
+(client) → GroundForces.RenameFormation / GroundOrder.DestroyInfra·CaptureInfra / GroundForces.QueueFormationOrder
+(engine)** — the battalion rename + infrastructure destroy/capture buttons issue the two G3 infra order types (razing/
+seizing footprints on the battalion's region) and rename a formation. Reuses existing engine order paths; a UI front door
+onto already-connected systems, not a new system-to-system dependency.
+
+**`docs/DOCS-INDEX.md`** — no NEW doc. `Pulsar4X.Client/CLAUDE.md` gained the PW.2 notes (Battalions tab + PlanetViewWindow
+sections; both status: current); `docs/CLIENT-TEST-CHECKLIST.md` gained a PW.2 section (status: current).
+
+---
+
+## PW.1 — CONQUER resolver GROUND rungs: beachhead · brain kickoff · hex-infra (2026-07-21)
+
+**Slice:** the resolver half of the invasion end-game — the three CORE-owned rungs on `ConquerResolver`. Per
+`EARTHFALL-DECISIONS.md`: **#4 bombard TABLED** (no bombard rung built — the existing one-shot `GroundBombardmentTests`
+softening stays), **#5 regions cosmetic / the hex is the unit** (no landing-region scorer — landing stays at the default
+zone; all conquer work resolves per-HEX via GROUND's `GroundHex`). So this slice is ONLY (c)+(d)+(e).
+
+**Files changed (inside CORE fence):**
+- `Pulsar4X/GameEngine/Factions/ConquerResolver.cs`:
+  - **(d)** Rung 0 LAND's `Execute` now calls `GroundAssembly.FormUpLoose(body, factionId)` after the land order — the
+    resolver-driven landing always yields a commandable BATTALION (idempotent; runs regardless of `GroundAssembly.AutoFormUp`,
+    a no-op with no loose units).
+  - **(c)** NEW Rung 0a `LandBeachheadParts` — when the invaders HOLD a region on the target world AND own a ship over it
+    (holding the orbit) whose pooled cargo carries a crated FOOTPRINT part, `Execute` runs `GroundParts.LandPartsFromShip`
+    (one crate/cycle — FLAGGED); the ground tick's `GroundBeachhead.TickBuilds` then has a combat engineer erect the FOB.
+    Finder: `FindBeachheadHaul` (internal, for the gauge).
+  - **(e)** NEW Rung 0b `TaskInfraDestroy` — an attacker battalion whose tactical-brain posture is **Offensive**
+    (`GroundTactics.Offensive`, the STANCE-AS-GATE / FLAGGED aggression policy) standing on an ENEMY building hex within a
+    member's Range is queued a G3 `GroundOrder.DestroyInfra(region,q,r)` (default **Player** issuer, so the per-tick brain
+    won't stomp the strategic order). Finder: `FindInfraTasking` (+ `AnyMemberReaches`/`FormationHasInfraOrder`, internal).
+  - Both new rungs placed just below LAND, above STRIKE; both gated on `target.IsValid`.
+- NEW `Pulsar4X/Pulsar4X.Tests/EfConquerGroundRungsTests.cs` (unique fixture; `rest` shard) — 4 resolver-driven gauges:
+  `Conquer_LandsInvasion_FormsTheLandedUnitIntoABattalion` (d), `Conquer_LandsBeachheadParts_WhenHoldingGroundWithFootprintPartsInOrbit`
+  (c, incl. the landed parts feeding a real on-site build site), `Conquer_TasksInfraDestroy_ForAnOffensiveBattalion_OnAnEnemyBuildingHex`
+  (e positive), `Infra_StanceGate_ADefensiveBattalionIsNotTasked` (e stance-gate negative).
+
+**BYTE-IDENTITY:** claim = **(b) provably inert absent new state** AND **(a) default-off flag**. Every new rung is gated on
+`target.IsValid` (a war) plus a landed/held/offensive state no existing gauge builds (a held region on the enemy world with
+footprint parts in orbit; an "Offensive"-family battalion — a family only the ground tactical brain sets, gated behind
+`EnableGroundTacticalAI` default OFF). All side effects run only inside the gated `EmitOrders` (`EnableOrderEmission` default
+OFF). The FormUpLoose addition to LAND runs only in the LAND Execute (reached solely by `ConquerResolverTests.Conquer_LandsTheInvasion_AndCapturesTheRegion`, which still captures — a formation doesn't change per-region capture). Existing byte-identity
+tripwires (`Conquer_MassesAStrikeFleet` no-war → QueueWarship; `Conquer_SailsTheLoadedTransport` → SailTransport) unaffected.
+
+**FLAGGED values (developer sets):** beachhead crate count **1 per cycle** (`ConquerResolver.cs` Rung 0a); the INFRA
+STANCE-AS-GATE **aggression policy** (only an Offensive battalion razes — the developer can widen which postures trigger it).
+No new numeric balance constant was introduced (the raze strength `InfraDestroyStrengthPerAttack` is GROUND-owned).
+
+### → CROSS-LANE REQUEST — CLIENT (menu/DevTest gate flips, part of PW.1 (d))
+
+`GroundForcesProcessor.EnableGroundTacticalAI` (default OFF) is the flag that runs the ground tactical brain — without it
+the resolver's Offensive battalions never exist, so Rung 0b never fires and landed units are never form-up'd by the brain.
+It must be flipped ON for menu/DevTest games **beside the other AI gates** (which live OUTSIDE CORE's fence, in
+`Pulsar4X.Client/Interface/Menus/NewGameMenu.cs`). Requested edit (both existing gate sites):
+- **CreateGameCore** (`NewGameMenu.cs` ~L547-550, beside `EnableOrderEmission = true` etc.): add
+  `Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundTacticalAI = true;` and
+  `Pulsar4X.GroundCombat.GroundAssembly.AutoFormUp = true;`
+- **DevTest** (`NewGameMenu.cs` ~L938-941, same block): add the same two lines.
+`AutoFormUp = true` makes the raise/land AUTO sites form battalions too (the resolver LAND rung forms up regardless, but the
+DevTest garrison-raise + non-resolver landings want it). Both flags default OFF → the engine CI suite stays byte-identical;
+these flips are client-only, so CI can't verify them (developer PC gauge, add a CLIENT-TEST-CHECKLIST entry: "ground tactical
+brain runs in a menu game — battalions read a Stance/ROE/Intent"). CLIENT is already merged by PW, so P8.2 or a CLIENT-focused
+PW slice should land these two lines.
+
+### Pending subsystem CLAUDE.md row (put here to avoid a parallel-PW collision on `GameEngine/Factions/CLAUDE.md`)
+
+**`GameEngine/Factions/CLAUDE.md`** — extend the `ConquerResolver` prose (the `IObjectiveResolver + *Resolver.cs` row) with:
+> **+ PW.1 GROUND CONQUER rungs (2026-07-21):** the LAND rung (Rung 0) now `GroundAssembly.FormUpLoose`s the just-landed unit
+> into a BATTALION (the brain's hands); NEW **Rung 0a `LandBeachheadParts`** (hold a region on the enemy world + a ship over
+> it carrying crated FOOTPRINT parts → `GroundParts.LandPartsFromShip` one crate/cycle → the ground tick's
+> `GroundBeachhead.TickBuilds` erects a colony-free FOB); NEW **Rung 0b `TaskInfraDestroy`** (an "Offensive"-posture battalion
+> — the STANCE-AS-GATE, FLAGGED aggression policy — on an enemy building hex → a G3 `GroundOrder.DestroyInfra`, default Player
+> issuer so the tactical brain won't stomp it). Both gated on `target.IsValid`; byte-identical off + absent the landed/held/
+> offensive state. Bombard rung TABLED (dev decision #4); no landing-region scorer (dev decision #5 — the hex is the unit).
+> Gauge: `EfConquerGroundRungsTests`.
+
+### Pending dashboard rows (for P8.2 to land)
+
+**`docs/TESTING-TRACKER.md`** — append one engine-CI (Layer-1) row:
+
+| Row | What | Why | Method | What-right | Likely-failure | Mitigation | Unblocks |
+|-----|------|-----|--------|-----------|----------------|------------|----------|
+| EARTHFALL-PW.1-conquer-rungs | `EfConquerGroundRungsTests` — the CONQUER resolver's ground rungs (beachhead parts-haul · landed-unit form-up · infra-destroy stance-gate) driven directly through `ConquerResolver.Resolve` | CI can't run the client; this pins the resolver's DECISION (which rung fires, and its one Execute side effect) so a break reds CI instead of a dead AI on the developer's PC | `dotnet test` (`rest` shard) — the 4 tests | LAND forms a battalion (AutoFormUp off); holding ground + footprint parts in orbit → LandBeachheadParts lands a crate + feeds an on-site build site; an Offensive battalion on an enemy building → TaskInfraDestroy queues a DestroyInfra order (Player issuer); a Defensive battalion is NOT tasked | A change to `FindBeachheadHaul`/`FindInfraTasking` gating, the GROUND helper surface (`FormUpLoose`/`LandPartsFromShip`/`GroundOrder.DestroyInfra`/`QueueFormationOrder`), or the stance-family string | Byte-identity held by `target.IsValid` + landed/held/offensive gating (no existing gauge builds it); ConquerResolverTests are the no-war tripwire | The AI invasion end-game (beachhead FOB + infrastructure destruction) once `EnableGroundTacticalAI` is flipped on the client path |
+
+**`docs/SYSTEM-CONNECTION-MAP.md`** — new edges (resolver → GROUND surface; no new engine coupling beyond calling existing helpers):
+**ConquerResolver (Factions) → GroundAssembly.FormUpLoose · GroundParts.LandPartsFromShip · GroundBeachhead.TickBuilds ·
+GroundForces.QueueFormationOrder / GroundOrder.DestroyInfra · GroundTactics.Offensive (read) · GroundFormationTools.FormationsFor
+(read)** — the strategic AI now (d) forms landed units into battalions, (c) lands crated footprint parts onto held ground to
+feed the combat-engineer FOB build, and (e) tasks an Offensive battalion to raze an enemy building on a reachable hex. The
+strategy→tactics seam: the resolver reads the ground tactical brain's posture (`formation.StanceFamily`) as the gate.

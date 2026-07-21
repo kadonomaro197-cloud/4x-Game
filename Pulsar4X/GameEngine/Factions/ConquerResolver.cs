@@ -54,6 +54,7 @@ namespace Pulsar4X.Factions
                     var body = target.ColonyBody;
                     int uid = landUnit.UnitId;
                     string uname = landUnit.Name;
+                    int factionId = state.FactionId;   // PW.1 (d): who the landed unit belongs to (for the form-up below)
                     return new PlannerAction(
                         "LandInvasion",
                         $"land '{uname}' from transport {s.Id} onto enemy world {body.Id} region 0",
@@ -61,6 +62,77 @@ namespace Pulsar4X.Factions
                         {
                             var cmd = Pulsar4X.GroundCombat.LandTroopsOrder.CreateCommand(s, body, uid, 0);
                             game.OrderHandler.HandleOrder(cmd);   // the ONE step (lands the unit into the region fight)
+                            // PW.1 (d) — BRAIN kickoff: form the just-landed unit into a BATTALION so the ground tactical
+                            // brain (EnableGroundTacticalAI) has hands to command. FormUpLoose sweeps this faction's loose
+                            // units on the world into battalions; it is idempotent, a no-op with no loose units, and runs
+                            // regardless of GroundAssembly.AutoFormUp (that gate only covers the raise/land AUTO sites, not
+                            // the resolver's own landing) — so a resolver-driven landing always yields a commandable formation.
+                            Pulsar4X.GroundCombat.GroundAssembly.FormUpLoose(body, factionId);
+                        });
+                }
+            }
+
+            // Rung 0a (Operation Earthfall PW.1 (c) — THE BEACHHEAD): once the invaders HOLD ground on the target world
+            // (a region whose owner is now us — the CONQUER rung above landed boots and the ground processor flipped the
+            // region) AND we own a ship AT that world, holding the orbit, whose cargo carries crated FOOTPRINT building
+            // parts, land ONE crate of those parts onto the held region. That is the resolver half of the G1
+            // combat-engineer beachhead chain: GroundParts.LandPartsFromShip sets the crate on the surface, and the
+            // ground tick's GroundBeachhead.TickBuilds step then has a landed combat engineer assemble the footprint
+            // building on site — a forward operating base on an enemy world with NO colony present (the "colony-free
+            // building — MISSING" rung the A5 ledger flagged). Placed just BELOW LAND (land boots first) and ABOVE the
+            // strike/sail rungs. Byte-identical while emission is off (gated EmitOrders), for any faction not at war (no
+            // target → skipped), AND until we actually HOLD a region on the enemy world with footprint parts in orbit —
+            // a landed/held state no existing gauge builds.
+            if (target.IsValid && state.Game != null)
+            {
+                var (partShip, heldRegion, footprintDesignId) = FindBeachheadHaul(state, target.ColonyBody);
+                if (partShip != null && heldRegion >= 0 && footprintDesignId != null)
+                {
+                    var ship = partShip;
+                    var body = target.ColonyBody;
+                    int region = heldRegion;
+                    string designId = footprintDesignId;
+                    return new PlannerAction(
+                        "LandBeachheadParts",
+                        $"land beachhead parts '{designId}' from ship {ship.Id} onto held region {region + 1} of world {body.Id}",
+                        () =>
+                        {
+                            // Land ONE crate this cycle; the on-site build (GroundBeachhead.TickBuilds, run in the ground
+                            // hotloop) consumes it as a combat engineer erects the footprint building on the held ground.
+                            Pulsar4X.GroundCombat.GroundParts.LandPartsFromShip(ship, body, region, designId, 1);   // FLAGGED balance value (one crate landed per cycle)
+                        });
+                }
+            }
+
+            // Rung 0b (Operation Earthfall PW.1 (e) — RAZE ENEMY INFRASTRUCTURE): a landed battalion of ours on the
+            // target world that the ground tactical brain has put in an OFFENSIVE posture, standing in a region that
+            // holds an ENEMY building on a hex within its Range, is tasked to DESTROY that infrastructure — a G3
+            // DestroyInfrastructure order on the formation's queue, which the ground processor's own range-gated, staged
+            // drain razes hex-by-hex. STANCE-AS-GATE (GROUND-TACTICAL-AI-DESIGN §3.8 — the strategy→tactics seam): the
+            // resolver only tasks a battalion the brain already decided to PRESS with; a defensive/holding battalion is
+            // left alone (the FLAGGED aggression policy — the developer can widen which postures trigger razing). The
+            // queued order carries the DEFAULT Player (hands-off) issuer, so the per-tick tactical brain treats it as a
+            // strategic directive and does NOT overwrite it with a maneuver before the razing completes. Byte-identical
+            // while emission is off (gated EmitOrders), for any faction not at war (no target → skipped), and while no
+            // battalion is in the "Offensive" family — which requires the ground tactical brain (EnableGroundTacticalAI,
+            // default OFF) to have run, so a default engine game never reaches this rung.
+            if (target.IsValid && state.Game != null)
+            {
+                var (infraBody, infraFormation, infraRegion, infraQ, infraR) = FindInfraTasking(state, target.ColonyBody);
+                if (infraFormation != null && infraRegion >= 0)
+                {
+                    var formation = infraFormation;
+                    string fname = formation.Name;
+                    int region = infraRegion, q = infraQ, r = infraR;
+                    return new PlannerAction(
+                        "TaskInfraDestroy",
+                        $"task '{fname}' (Offensive) to raze enemy infrastructure @ region {region + 1} hex ({q},{r})",
+                        () =>
+                        {
+                            // DestroyInfra defaults to the Player (hands-off) issuer, so the tactical brain won't stomp
+                            // this strategic order; the ground processor's ResolveInfraOrder razes it over ground ticks.
+                            Pulsar4X.GroundCombat.GroundForces.QueueFormationOrder(
+                                formation, Pulsar4X.GroundCombat.GroundOrder.DestroyInfra(region, q, r));
                         });
                 }
             }
@@ -650,6 +722,113 @@ namespace Pulsar4X.Factions
         {
             foreach (var ship in Pulsar4X.Combat.FleetCombat.Ships(fleet))
                 if (ship != null && ship.IsValid && ship.HasDataBlob<Pulsar4X.Movement.WarpMovingDB>())
+                    return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Operation Earthfall PW.1 (c) — the BEACHHEAD haul finder: a region on <paramref name="targetBody"/> the
+        /// attacker HOLDS (invaders have taken ground — <see cref="Pulsar4X.Galaxy.Region.OwnerFactionID"/> == us), plus
+        /// one of the attacker's own ships AT the body, holding the orbit, whose pooled cargo carries ≥1 crated FOOTPRINT
+        /// building part (a <see cref="Pulsar4X.Components.ComponentDesign"/> the <see cref="Pulsar4X.GroundCombat.GroundBuildings.IsFootprint"/>
+        /// filter accepts). Returns (ship, heldRegion, designId) or (null, -1, null) when there is nothing to land — so
+        /// the beachhead rung falls through. Scans all systems like <see cref="FindOwnedTransport"/>; reads only (never
+        /// mutates); defensive/no-throw. Internal for the CI gauge.
+        /// </summary>
+        internal static (Entity ship, int region, string footprintDesignId) FindBeachheadHaul(FactionState state, Entity targetBody)
+        {
+            if (targetBody == null || !targetBody.IsValid || state?.Info == null || state.Game == null) return (null, -1, null);
+            if (!targetBody.TryGetDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>(out var regionsDB) || regionsDB.Regions == null) return (null, -1, null);
+
+            // A region on the enemy world the attacker OWNS — a beachhead is built on ground you hold.
+            int heldRegion = -1;
+            for (int i = 0; i < regionsDB.Regions.Count; i++)
+                if (regionsDB.Regions[i].OwnerFactionID == state.FactionId) { heldRegion = i; break; }
+            if (heldRegion < 0) return (null, -1, null);
+
+            foreach (var system in state.Game.Systems)
+            {
+                if (system == null) continue;
+                foreach (var ship in system.GetAllEntitiesWithDataBlob<ShipInfoDB>())
+                {
+                    if (ship == null || !ship.IsValid || ship.FactionOwnerID != state.FactionId) continue;
+                    if (!Pulsar4X.GroundCombat.GroundTransport.ShipIsAtBody(ship, targetBody)) continue;
+                    if (!Pulsar4X.GroundCombat.GroundTransport.HasOrbitalControl(ship, targetBody)) continue;
+                    var holds = Pulsar4X.Construction.ConstructionCargo.GatherPooledHolds(ship);
+                    if (holds.Count == 0) continue;
+                    foreach (var designKvp in state.Info.IndustryDesigns)
+                    {
+                        if (!(designKvp.Value is Pulsar4X.Components.ComponentDesign cd)
+                            || !Pulsar4X.GroundCombat.GroundBuildings.IsFootprint(cd)) continue;
+                        if (Pulsar4X.Construction.ConstructionCargo.CountPooled(holds, cd) >= 1)
+                            return (ship, heldRegion, designKvp.Key);
+                    }
+                }
+            }
+            return (null, -1, null);
+        }
+
+        /// <summary>
+        /// Operation Earthfall PW.1 (e) — the INFRA-tasking finder: an attacker battalion on <paramref name="targetBody"/>
+        /// whose tactical-brain posture is OFFENSIVE (<see cref="Pulsar4X.GroundCombat.GroundTactics.Offensive"/>),
+        /// standing in a region that holds an ENEMY building on a hex within a member's Range, and which is NOT already
+        /// carrying an infrastructure order. Returns (body, formation, region, q, r) or (null, null, -1, 0, 0). The
+        /// stance gate is the FLAGGED aggression policy (only a pressing battalion razes); a defensive/holding one is
+        /// left alone. Reads only; defensive/no-throw. Internal for the CI gauge.
+        /// </summary>
+        internal static (Entity body, Pulsar4X.GroundCombat.GroundFormation formation, int region, int q, int r) FindInfraTasking(FactionState state, Entity targetBody)
+        {
+            if (targetBody == null || !targetBody.IsValid || state == null) return (null, null, -1, 0, 0);
+            if (!targetBody.TryGetDataBlob<Pulsar4X.GroundCombat.GroundForcesDB>(out var forces)) return (null, null, -1, 0, 0);
+            if (!targetBody.TryGetDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>(out var regionsDB) || regionsDB.Regions == null) return (null, null, -1, 0, 0);
+
+            foreach (var formation in Pulsar4X.GroundCombat.GroundFormationTools.FormationsFor(forces, state.FactionId))
+            {
+                // STANCE-AS-GATE (FLAGGED aggression policy): only an OFFENSIVE battalion razes enemy infrastructure.
+                if (!string.Equals(formation.StanceFamily, Pulsar4X.GroundCombat.GroundTactics.Offensive, System.StringComparison.OrdinalIgnoreCase))
+                    continue;
+                if (FormationHasInfraOrder(formation)) continue;   // already tasked → don't thrash the queue
+
+                int region = Pulsar4X.GroundCombat.GroundForces.LeaderRegion(forces, formation);
+                if (region < 0 || region >= regionsDB.Regions.Count) continue;
+                var reg = regionsDB.Regions[region];
+                if (reg.Hexes == null) continue;
+
+                foreach (var hex in reg.Hexes)
+                {
+                    if (hex == null || hex.InstallationIds == null || hex.InstallationIds.Count == 0) continue;
+                    if (hex.OwnerFactionID == state.FactionId) continue;   // spare our OWN beachhead — target the enemy's base
+                    if (!AnyMemberReaches(forces, formation, region, hex)) continue;
+                    return (targetBody, formation, region, hex.Q, hex.R);
+                }
+            }
+            return (null, null, -1, 0, 0);
+        }
+
+        /// <summary>True if any living member of <paramref name="formation"/> stands in <paramref name="region"/> within
+        /// its hex Range of <paramref name="hex"/> — the SAME range gate the processor's ResolveInfraOrder enforces, so
+        /// the resolver never tasks a raze the ground layer would immediately drop as out-of-reach.</summary>
+        private static bool AnyMemberReaches(Pulsar4X.GroundCombat.GroundForcesDB forces, Pulsar4X.GroundCombat.GroundFormation formation,
+            int region, Pulsar4X.Galaxy.GroundHex hex)
+        {
+            var target = new Pulsar4X.Colonies.HexCoordinate(hex.Q, hex.R);
+            foreach (var u in Pulsar4X.GroundCombat.GroundFormationTools.MembersOf(forces, formation))
+            {
+                if (u.Health <= 0 || u.RegionIndex != region) continue;
+                if (new Pulsar4X.Colonies.HexCoordinate(u.HexQ, u.HexR).DistanceTo(target) > u.Range) continue;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>True if <paramref name="formation"/> already carries a Destroy/Capture-Infrastructure order — the
+        /// anti-thrash guard so the resolver doesn't re-queue a raze it already issued each monthly cycle.</summary>
+        private static bool FormationHasInfraOrder(Pulsar4X.GroundCombat.GroundFormation formation)
+        {
+            if (formation?.Orders == null) return false;
+            foreach (var o in formation.Orders)
+                if (o != null && (o.Type == Pulsar4X.GroundCombat.GroundOrderType.DestroyInfrastructure
+                               || o.Type == Pulsar4X.GroundCombat.GroundOrderType.CaptureInfrastructure))
                     return true;
             return false;
         }
