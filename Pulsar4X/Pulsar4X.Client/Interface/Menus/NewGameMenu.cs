@@ -548,6 +548,13 @@ public class NewGameMenu : PulsarGuiWindow
         Pulsar4X.Factions.NPCDecisionProcessor.EnableDiplomaticProposals = true;
         Pulsar4X.Factions.NPCDecisionProcessor.EnableEspionageMirror = true;
         Pulsar4X.Factions.NPCDecisionProcessor.EnableIntelLedger = true;
+        // Operation Earthfall — the GROUND invasion on-switch (PW). The ground tactical brain (puts battalions in
+        // postures the ConquerResolver's infra-raze rung reads) and auto-form-up (loose landed/raised units become
+        // commandable battalions) default OFF so the engine suite stays byte-identical; a real menu-started game turns
+        // them on so an invasion actually plays out — exactly as EnableGroundTacticalAI's own doc says CORE does on the
+        // menu path. One-line revert each if the mechanic should stay dormant. Runtime feel is the PC live-test.
+        Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundTacticalAI = true;
+        Pulsar4X.GroundCombat.GroundAssembly.AutoFormUp = true;
 
         // Generate random systems up to the number of "Galaxy Size" minus the
         // number of included pre-made systems
@@ -939,6 +946,10 @@ public class NewGameMenu : PulsarGuiWindow
             Pulsar4X.Factions.NPCDecisionProcessor.EnableDiplomaticProposals = true;
             Pulsar4X.Factions.NPCDecisionProcessor.EnableEspionageMirror = true;
             Pulsar4X.Factions.NPCDecisionProcessor.EnableIntelLedger = true;
+            // Operation Earthfall — the GROUND invasion on-switch (same as CreateGameCore): the ground tactical brain +
+            // auto-form-up, default OFF (engine byte-identical), ON for a DevTest sandbox so the invasion plays out.
+            Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundTacticalAI = true;
+            Pulsar4X.GroundCombat.GroundAssembly.AutoFormUp = true;
 
             var startingSystem = game.Systems.Find(s => s.ID.Equals(startingSystemId));
             if (startingSystem == null)
