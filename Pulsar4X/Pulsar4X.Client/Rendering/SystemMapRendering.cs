@@ -688,19 +688,29 @@ namespace Pulsar4X.Client.Rendering
             }
         }
 
+        // Per-LIST render-stage breadcrumb inside the map draw (findings/A1-freeze.md fix seam #1). The outer
+        // SafeRender names only the coarse "GalacticMap.Draw" stage, but the A1 freeze lives INSIDE it — a native
+        // SDL.RenderLine hang on ONE icon list (the contact blips) leaves no stack trace, so "GalacticMap.Draw" alone
+        // can't say WHICH list wedged. Stamping the sub-stage before each list means the next [HANG] reads
+        // "wedged in stage: 'GalacticMap.Draw/contacts'" — the finer gauge that localises the freeze (the same move
+        // as the FleetWindow sub-breadcrumbs, Client/CLAUDE.md 2026-07-03). Cheap: a handful of volatile string writes
+        // per frame, one alongside each per-list perf timer.
+        static void MapStage(string name) => SessionLog.CurrentStage = "GalacticMap.Draw/" + name;
+
         internal void Draw()
         {
-            SafeDraw("Starfield", DrawStarfield);   // faint background stars, behind everything
+            MapStage("starfield"); SafeDraw("Starfield", DrawStarfield);   // faint background stars, behind everything
 
             // [PERF] time each list's SDL draw (orbits draw ~180 lines/ring/frame — the prime suspect).
-            _perfSw.Restart(); DrawIcons(UIWidgets.Values); _perfDWidgets = _perfSw.Elapsed.TotalMilliseconds;
-            _perfSw.Restart(); DrawIconsExceptCollapsed(_orbitRings); _perfDOrbits = _perfSw.Elapsed.TotalMilliseconds;   // a collapsed member's orbit ring is hidden too...
-            _perfSw.Restart(); DrawIconsExceptCollapsed(_moveIcons); _perfDMove = _perfSw.Elapsed.TotalMilliseconds;      // ...and its move/warp trail...
-            _perfSw.Restart(); DrawIconsExceptCollapsed(_entityIcons); _perfDEntity = _perfSw.Elapsed.TotalMilliseconds;  // ...and its ship icon — so the fleet is ONE marker.
-            _perfSw.Restart(); DrawIcons(_contactIcons.Values); _perfDContacts = _perfSw.Elapsed.TotalMilliseconds;
-            _perfSw.Restart(); DrawIcons(_bodyIcons.Values); _perfDBody = _perfSw.Elapsed.TotalMilliseconds;
-            _perfSw.Restart(); DrawIcons(SelectedEntityExtras); _perfDExtras = _perfSw.Elapsed.TotalMilliseconds;
+            MapStage("widgets");  _perfSw.Restart(); DrawIcons(UIWidgets.Values); _perfDWidgets = _perfSw.Elapsed.TotalMilliseconds;
+            MapStage("orbits");   _perfSw.Restart(); DrawIconsExceptCollapsed(_orbitRings); _perfDOrbits = _perfSw.Elapsed.TotalMilliseconds;   // a collapsed member's orbit ring is hidden too...
+            MapStage("moves");    _perfSw.Restart(); DrawIconsExceptCollapsed(_moveIcons); _perfDMove = _perfSw.Elapsed.TotalMilliseconds;      // ...and its move/warp trail...
+            MapStage("ships");    _perfSw.Restart(); DrawIconsExceptCollapsed(_entityIcons); _perfDEntity = _perfSw.Elapsed.TotalMilliseconds;  // ...and its ship icon — so the fleet is ONE marker.
+            MapStage("contacts"); _perfSw.Restart(); DrawIcons(_contactIcons.Values); _perfDContacts = _perfSw.Elapsed.TotalMilliseconds;      // fog blips — the A1 freeze suspect (H1)
+            MapStage("bodies");   _perfSw.Restart(); DrawIcons(_bodyIcons.Values); _perfDBody = _perfSw.Elapsed.TotalMilliseconds;
+            MapStage("extras");   _perfSw.Restart(); DrawIcons(SelectedEntityExtras); _perfDExtras = _perfSw.Elapsed.TotalMilliseconds;
 
+            MapStage("labels");
             _perfSw.Restart();
             foreach (var i in _visibleLabels)
             {
@@ -709,6 +719,7 @@ namespace Pulsar4X.Client.Rendering
             }
             _perfDLabels = _perfSw.Elapsed.TotalMilliseconds;
 
+            MapStage("done");   // leave a benign stage so a hang right after the map (before the next SafeRender) isn't mis-named as 'labels'
             MaybeLogMapPerf();
         }
 
@@ -809,7 +820,7 @@ namespace Pulsar4X.Client.Rendering
             }
 
             int facId = _faction.Id;
-            List<Entity> ownShips, ownColonies; Entity refTarget = null;
+            List<Entity> ownShips, ownColonies, foreignShips; Entity refTarget = null;
             try
             {
                 var allShips = _sysState.StarSystem.GetAllEntitiesWithDataBlob<ShipInfoDB>();
@@ -820,12 +831,17 @@ namespace Pulsar4X.Client.Rendering
                 ownColonies = _sysState.StarSystem.GetAllEntitiesWithDataBlob<Pulsar4X.Colonies.ColonyInfoDB>()
                     .Where(e => e.FactionOwnerID == facId && e.IsValid && e.HasDataBlob<PositionDB>())
                     .ToList();
-                // Reference target for a PLACE's detection ring: "how far does this colony detect a ship like THIS?"
-                // Prefer a real foreign ship (the thing you actually want to spot — gives the honest bubble that
-                // reaches the inner planets), else one of your own ships (a ship-like target). Sized by the detector
-                // vs the target's signature, NOT the colony's own signature — which is why the old SensorReachRange
-                // ring came out tiny (it measured "detect a thing as loud as a colony", not "as loud as a ship").
-                refTarget = allShips.FirstOrDefault(e => e.FactionOwnerID != facId && e.IsValid && e.HasDataBlob<SensorProfileDB>())
+                // Every foreign ship present that emits a signature — the ACTUAL contacts the colony detection ring
+                // must cover. A PLACE detects a ship out to DetectionRangeAgainst(colony, thatShip), which grows with
+                // how LOUD the ship is — so a ring sized against ONE arbitrary reference under-draws for a louder
+                // contact, and that genuinely-detected fleet renders OUTSIDE the ring ("saw them before sensor range",
+                // findings/A2). We size the colony band against these below; refTarget stays only for the no-foreign
+                // fallback (a ship-like target — the detector vs the target's signature, NOT the colony's own, which
+                // measured "detect a thing as loud as a colony" and came out tiny).
+                foreignShips = allShips
+                    .Where(e => e.FactionOwnerID != facId && e.IsValid && e.HasDataBlob<SensorProfileDB>())
+                    .ToList();
+                refTarget = foreignShips.FirstOrDefault()
                             ?? ownShips.FirstOrDefault(e => e.HasDataBlob<SensorProfileDB>());
             }
             catch { return; }   // a bad engine read must never blank the map
@@ -835,9 +851,15 @@ namespace Pulsar4X.Client.Rendering
             // EMCON flips a ship's detectability — exactly when the rings need rebuilding.
             double loud = 0;
             foreach (var s in ownShips) loud += SensorTools.CurrentActivityMultiplier(s);
+            // Foreign ships + their loudness are now IN the fingerprint: the colony detection band is sized against
+            // them (below), so it must rebuild when an enemy appears/leaves OR changes EMCON (a louder contact pushes
+            // the outer ring out). Positions stay OUT (the rings track live off each entity's PositionDB).
+            double foreignLoud = 0;
+            foreach (var f in foreignShips) foreignLoud += SensorTools.CurrentActivityMultiplier(f);
             string fp = string.Join(",", ownShips.Select(s => s.Id).OrderBy(i => i))
                       + "|" + string.Join(",", ownColonies.Select(c => c.Id).OrderBy(i => i))
-                      + "|" + (refTarget?.Id ?? -1) + "|" + Math.Round(loud, 2);
+                      + "|" + (refTarget?.Id ?? -1) + "|" + Math.Round(loud, 2)
+                      + "|F" + string.Join(",", foreignShips.Select(f => f.Id).OrderBy(i => i)) + "|" + Math.Round(foreignLoud, 2);
             if (fp == _allRangeFingerprint) return;
             _allRangeFingerprint = fp;
 
@@ -868,14 +890,44 @@ namespace Pulsar4X.Client.Rendering
 
             foreach (var colony in ownColonies)
             {
-                // A "place" shows how far it detects an actual SHIP (Earth's megasensor = the inner-system early-
-                // warning bubble that spots fleets at Mercury/Mars). Falls back to the self-referential reach only if
-                // there's no ship anywhere to measure against.
-                double placeReach = refTarget != null
-                    ? SensorTools.DetectionRangeAgainst(colony, refTarget)
-                    : SensorTools.SensorReachRange_m(colony);
-                Ring("allrange_colony_" + colony.Id + "_sensor", colony.GetDataBlob<PositionDB>(), placeReach, 80, 210, 110, 45,
-                    NameOf(colony) + " (station/colony) — Detection range (how far it SEES)");
+                var colonyPos = colony.GetDataBlob<PositionDB>();
+                // HONEST detection band (findings/A2 fix). A "place" detects a ship out to
+                // DetectionRangeAgainst(colony, thatShip), which grows with how LOUD the ship is — so a single ring
+                // sized against ONE reference under-draws for a louder contact, and that genuinely-detected fleet
+                // renders OUTSIDE the ring (the "saw them before sensor range" report). We instead size the OUTER
+                // ring against the LOUDEST foreign ship present (its reach is the max, so NO detected contact can
+                // fall outside it) and the INNER ring against the QUIETEST — the reach VARIES with target loudness
+                // and the band shows it. Both are clamped to the colony's hard 200 Gm horizon inside
+                // DetectionRange_m, so the band never over-promises past what the scan can actually see. With no
+                // foreign ship to measure against, fall back to the SINGLE ring sized vs a ship-like reference
+                // (an own ship if present, else the colony's self-reach) — the byte-identical 2026-06-28 behaviour.
+                double outerReach = 0, innerReach = double.MaxValue;
+                foreach (var fs in foreignShips)
+                {
+                    double r = SensorTools.DetectionRangeAgainst(colony, fs);
+                    if (r > outerReach) outerReach = r;
+                    if (r > 0 && r < innerReach) innerReach = r;
+                }
+                if (outerReach <= 0)   // no FOREIGN ship to measure against → the old single ring (2026-06-28):
+                {                      // size it vs a ship-like reference (an own ship if any), NOT the colony's
+                                       // own signature (which measured "detect a thing as loud as a colony" and
+                                       // came out tiny — didn't reach the inner planets). refTarget matches the
+                                       // comment at the foreignShips capture + the pre-C2.1 fallback exactly.
+                    double soloReach = refTarget != null
+                        ? SensorTools.DetectionRangeAgainst(colony, refTarget)   // "how far it detects a ship LIKE THIS"
+                        : SensorTools.SensorReachRange_m(colony);                // truly no ships anywhere → self-reach
+                    Ring("allrange_colony_" + colony.Id + "_sensor", colonyPos, soloReach,
+                        80, 210, 110, 45, NameOf(colony) + " (station/colony) — Detection range (how far it SEES)");
+                    continue;
+                }
+                // OUTER = the honest "nothing detected renders outside this" bound (vs the loudest contact); faint.
+                Ring("allrange_colony_" + colony.Id + "_sensor_max", colonyPos, outerReach, 80, 210, 110, 30,
+                    NameOf(colony) + " (station/colony) — Max detection reach (vs the LOUDEST contact present; a detected ship never renders outside this)");
+                // INNER = the conservative reach vs the quietest contact — only when meaningfully tighter than outer
+                // (a single loudness class makes inner == outer, so the band collapses to one honest ring).
+                if (innerReach < outerReach * 0.98)
+                    Ring("allrange_colony_" + colony.Id + "_sensor_min", colonyPos, innerReach, 80, 210, 110, 55,
+                        NameOf(colony) + " (station/colony) — Min detection reach (vs the QUIETEST contact present)");
             }
 
             SessionLog.Action($"[range-ring] all-ranges rebuilt: {ownShips.Count} unit(s) + {ownColonies.Count} place(s) = {_allRangeKeys.Count} ring(s)");

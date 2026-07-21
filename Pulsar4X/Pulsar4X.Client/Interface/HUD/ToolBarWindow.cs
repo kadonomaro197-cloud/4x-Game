@@ -83,10 +83,10 @@ namespace Pulsar4X.Client
             btn =  new ToolBarOption()
             {
                 Picture = _uiState.Img_Select(),
-                TooltipText = "Fleet Management",
+                TooltipText = "Force Management (fleets + battalions)",   // Earthfall C3.1 — the window now commands both
                 OnClick = new Action(FleetWindow.GetInstance().ToggleActive),
                 GetActive = new Func<bool>(FleetWindow.GetInstance().GetActive)
-                //Opens up the fleet menu
+                //Opens up the force-management menu (fleets + battalions)
             };
             ToolButtons.Add(btn);
 

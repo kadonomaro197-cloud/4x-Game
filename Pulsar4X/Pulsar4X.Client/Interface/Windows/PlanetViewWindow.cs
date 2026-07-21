@@ -343,6 +343,54 @@ namespace Pulsar4X.Client
                 }
             }
 
+            // 1b) RANGE OVERLAY (C4.1) — for the SELECTED group of YOUR units, tint the hexes they can reach: WEAPON reach
+            //     (red, GroundUnit.Range in hexes) and RADAR reach (green, the unit's best GroundSensorAtb.Range_km ÷ the
+            //     region's real hex pitch — the GroundSensors.cs:42 km→hex conversion). FOG-HONEST: drawn ONLY for your OWN
+            //     units (_selFaction == myFaction — you never see an enemy's ranges, the same rule the space rings use),
+            //     and only the visible window's hexes. Toggle MIRRORS the space map's global range-ring switch
+            //     (GlobalUIState.ShowAllRangeRings — DevTools › Detection / Fog of War). The disk is the odd-r OFFSET hex
+            //     distance the map is DRAWN in (GlobalHexDistance), wrapped the short way across the seam.
+            if (_uiState.ShowAllRangeRings && HasSelection && _selFaction == myFaction && forcesDB != null)
+            {
+                // Gather the selected group's units (region + owner + type — the same group the caption reports), each with
+                // its global position, weapon reach (hexes) and radar reach (hexes). Cheap: a handful of units.
+                var reach = new List<(int gq, int gr, int weapon, int radar)>();
+                foreach (var u in forcesDB.Units)
+                {
+                    if (u.RegionIndex != _selRegion || u.FactionOwnerID != myFaction || u.UnitType != _selType) continue;
+                    if (u.GlobalQ < 0 || u.GlobalR < 0) continue;
+                    int weaponHexes = Math.Max(0, u.Range);
+                    int radarHexes = RadarReachHexesFor(body, u, regions);
+                    if (weaponHexes <= 0 && radarHexes <= 0) continue;
+                    reach.Add((u.GlobalQ, u.GlobalR, weaponHexes, radarHexes));
+                }
+                if (reach.Count > 0)
+                {
+                    uint radarCol = ImGui.ColorConvertFloat4ToU32(new Vector4(0.20f, 0.80f, 0.35f, 0.13f));  // green = can SEE
+                    uint weaponCol = ImGui.ColorConvertFloat4ToU32(new Vector4(0.90f, 0.22f, 0.22f, 0.20f)); // red   = can SHOOT
+                    for (int sc = 0; sc < winCols; sc++)
+                    {
+                        int gq = grid.WrapCol(_centerCol - halfW + sc);
+                        for (int r = 0; r < rows; r++)
+                        {
+                            if (grid.HexAt(gq, r) == null) continue;
+                            bool inRadar = false, inWeapon = false;
+                            foreach (var u in reach)
+                            {
+                                int d = GlobalHexDistance(u.gq, u.gr, gq, r, cols);
+                                if (!inRadar && u.radar > 0 && d <= u.radar) inRadar = true;
+                                if (!inWeapon && u.weapon > 0 && d <= u.weapon) inWeapon = true;
+                                if (inRadar && inWeapon) break;
+                            }
+                            if (!inRadar && !inWeapon) continue;
+                            var pc = HexCenterOffset(origin, size, sc, r);
+                            if (inRadar) drawList.AddNgonFilled(pc, size, radarCol, 6);   // draw SEE first…
+                            if (inWeapon) drawList.AddNgonFilled(pc, size, weaponCol, 6); // …SHOOT on top (red wins the overlap)
+                        }
+                    }
+                }
+            }
+
             // 2) region-band seam lines + centre label (a band boundary is where RegionOfColumn changes).
             uint seamCol = ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 0.95f, 0.6f, 0.4f));
             for (int sc = 0; sc <= winCols; sc++)
@@ -420,6 +468,8 @@ namespace Pulsar4X.Client
                 int range = rep?.Range ?? 0;
                 double km = GroundRangeTools.RealReachKm(range, regions[_selRegion]);
                 ImGui.TextDisabled($"Selected {_selType} (Region {_selRegion + 1}): click a destination hex to march — strike range {range} hex ≈ {km:N0} km. Ocean impassable.");
+                if (_uiState.ShowAllRangeRings)
+                    ImGui.TextDisabled("Range overlay: red = weapon reach, green = radar reach (toggle in DevTools › Detection / Fog of War).");
             }
         }
 
@@ -480,6 +530,54 @@ namespace Pulsar4X.Client
         /// as a proper map — matching the odd-r neighbour model the global pathfinder (G2) uses.</summary>
         private static Vector2 HexCenterOffset(Vector2 origin, float size, int sc, int r)
             => new Vector2(origin.X + size * 1.7320508f * (sc + 0.5f * (r & 1)), origin.Y + size * 1.5f * r);
+
+        // ── C4.1 range overlay helpers ──────────────────────────────────────────────────────────────────────────────
+
+        /// <summary>The RADAR reach of a unit in HEXES on this body — its best mounted <see cref="GroundSensorAtb"/>
+        /// Range_km divided by the region's real hex pitch (the <c>GroundSensors.cs:42</c> km→hex conversion). Returns 0
+        /// for a unit with no radar component — a monolithic/garrison/dev unit has no backing component store, so it shows
+        /// NO green overlay (honest: only a designed-with-a-radar unit reveals). Reads through the same backing-store path
+        /// <see cref="GroundSensors.RevealFromUnits"/> uses; never throws.</summary>
+        private static int RadarReachHexesFor(Entity body, GroundUnit unit, List<Region> regions)
+        {
+            try
+            {
+                if (unit == null || regions == null) return 0;
+                if (!GroundUnitEntity.TryGetBacking(body, unit, out var backing)) return 0;
+                if (!backing.TryGetDataBlob<Pulsar4X.Datablobs.ComponentInstancesDB>(out var cidb)) return 0;
+                if (!cidb.TryGetComponentsByAttribute<GroundSensorAtb>(out var radars) || radars.Count == 0) return 0;
+                double rangeKm = 0;
+                foreach (var rc in radars)
+                {
+                    var atb = rc.Design?.GetAttribute<GroundSensorAtb>();
+                    if (atb != null && atb.Range_km > rangeKm) rangeKm = atb.Range_km;   // best radar mounted
+                }
+                if (rangeKm <= 0) return 0;
+                int ri = unit.RegionIndex;
+                var region = (ri >= 0 && ri < regions.Count) ? regions[ri] : null;
+                double pitch = region != null ? GroundRangeTools.HexPitchKm(region) : 0;
+                if (pitch <= 0) return 0;
+                double hexes = rangeKm / pitch;
+                return hexes >= int.MaxValue ? int.MaxValue : (int)hexes;
+            }
+            catch { return 0; }
+        }
+
+        /// <summary>Odd-r OFFSET → axial for a global cylinder hex (col, row) — the conversion that makes
+        /// <see cref="Pulsar4X.Colonies.HexCoordinate"/>'s axial DistanceTo match the odd-r layout the map is DRAWN in
+        /// (<see cref="HexCenterOffset"/>: pointy-top, odd rows shoved +½). Row is always ≥ 0 here, so the halved offset
+        /// divides exactly.</summary>
+        private static Pulsar4X.Colonies.HexCoordinate OddRToAxial(int col, int row)
+            => new Pulsar4X.Colonies.HexCoordinate(col - (row - (row & 1)) / 2, row);
+
+        /// <summary>Hex distance between two GLOBAL cylinder hexes in the DRAWN odd-r offset space, choosing the SHORT way
+        /// across the longitude seam (<see cref="WrapDelta"/> picks the nearest column image). Converts both to axial first
+        /// so the reach "disk" is the correct hexagonal shape on screen, not a sheared rhombus.</summary>
+        private static int GlobalHexDistance(int aQ, int aR, int bQ, int bR, int cols)
+        {
+            int bCol = aQ + WrapDelta(bQ - aQ, cols);   // the target's nearest column image on the ring
+            return OddRToAxial(aQ, aR).DistanceTo(OddRToAxial(bCol, bR));
+        }
 
         // ── C-track: the CITY zoom — the mini-hex grid UNDER one operational hex (Planet → Region → Hex → CityTile) ──
         // Double-clicking a hex on the globe zooms here. Buildings occupy mini-hex tiles 1:1 (the roll-up invariant);
