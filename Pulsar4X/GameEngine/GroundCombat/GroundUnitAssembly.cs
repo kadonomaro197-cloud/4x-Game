@@ -26,6 +26,14 @@ namespace Pulsar4X.GroundCombat
         // 0.34 (the old global constant; no shield → stays 0.34, moot) → byte-identical.
         public double ShieldRegenFraction = 0.34;
         public GroundWeaponMode DamageType = GroundWeaponMode.Ballistic;   // the heaviest weapon's flavour (System ①)
+        public List<GroundWeaponMount> WeaponLoadout = new List<GroundWeaponMount>();   // W1 — one mount per weapon component (fed to per-weapon range banding, W2)
+        // Enhancers ⚙6.2 — the BEST mounted Training Cadre's veterancy multiplier (baked into Attack + toughness at
+        // raise). 1.0 = green/untrained (no cadre) → byte-identical, the ground echo of a ship's UnitCaliberAtb.
+        public double TrainingMultiplier = 1.0;
+        // G4 SEALED SYSTEMS — the BEST mounted seal's Sealing (0..1), folded into the design's EnvironmentalResistance
+        // {Vacuum, ToxicAtmosphere} at build time. 0 = unsealed (no seal component) → byte-identical (an unsealed unit
+        // bleeds on airless/toxic worlds exactly as before). The ground echo of a ship's HazardResistanceAtb.
+        public double Sealing = 0.0;
         public double Mass;            // total build mass (frame + parts) — feeds cost + transport carry-size
         public double CarryCapacity;   // frame strength + augment strength bonuses
         public double UsedCapacity;    // sum of mounted-part carry mass
@@ -64,6 +72,11 @@ namespace Pulsar4X.GroundCombat
         /// 2/20 = 0.1) so every base-mod weapon sits at or below its dialed CarryMass → byte-identical; only a
         /// heavier-hitting-than-stock design is floored up. NUMBER TO REVIEW (flagged): 0.1.</summary>
         public const double AttackCarryFactor = 0.1;
+
+        /// <summary>Monthly standing UPKEEP an assembled unit costs, per kg of build mass (G2.3c) — so a heavier/dearer
+        /// unit costs more to keep in the field, and the <c>GroundUpkeep</c> biller finally bills for a player-designed
+        /// army. FLAGGED balance value.</summary>
+        public const double UpkeepCreditsPerMass = 0.1;   // FLAGGED balance value
 
         /// <summary>Compute a unit's emergent stats + carry-gate validity from a <paramref name="frame"/> (must carry a
         /// <see cref="GroundChassisAtb"/>) and its mounted <paramref name="parts"/> (weapons / armour / augments, with a
@@ -104,6 +117,12 @@ namespace Pulsar4X.GroundCombat
             double armWeight = 0, armVsK = 0, armVsE = 0, armVsX = 0, armVsO = 0;
             // ⚙3 shield recharge: Shield-weighted sum of each augment's recharge dial, averaged after the loop.
             double shieldWeight = 0, shieldRegenSum = 0;
+            // Enhancers ⚙6.2 — the best mounted Training Cadre wins (like the ship combat value reads the best caliber
+            // module); no cadre → stays 1.0 → byte-identical.
+            double bestTraining = 1.0;
+            // G4 — the best mounted seal wins (they don't stack; a unit is sealed or it isn't). No seal → stays 0 →
+            // byte-identical (no EnvironmentalResistance written, so the unit bleeds on airless/toxic worlds as before).
+            double bestSealing = 0.0;
             foreach (var (d, c) in list)
             {
                 double itemMass = 0;
@@ -119,6 +138,28 @@ namespace Pulsar4X.GroundCombat
                     r.Attack += w.Attack * c;
                     if (w.Range > r.Range) r.Range = w.Range;   // reach = the longest weapon
                     if (w.Attack > topWeaponAttack) { topWeaponAttack = w.Attack; r.DamageType = w.Mode; }
+                    // W1 — keep this weapon DISTINCT in the loadout (its own range/mode) instead of only summing into
+                    // r.Attack above, so W2 can fire it in its own range band as the unit closes. Attack ×count so
+                    // Σ mount.Attack == r.Attack (the byte-identity invariant); Max(mount.RangeHexes) == r.Range.
+                    r.WeaponLoadout.Add(new GroundWeaponMount { Attack = w.Attack * c, RangeHexes = w.Range, Mode = w.Mode });
+                }
+                else if (SpaceWeaponGround.IsSpaceWeapon(d))
+                {
+                    // W1b — a UNIFIED SPACE WEAPON (laser/railgun/flak/plasma/disruptor) mounted on a ground chassis
+                    // contributes GROUND firepower (the developer's "if you can power/feed/carry it, you get to use it").
+                    // Its ground Attack is its ship firepower scaled to the ground band (SpaceWeaponGround.AttackPerDps);
+                    // range/mode by type. Feeds the SAME Attack sum / reach / flavour / loadout as a native ground weapon,
+                    // so it bands (W2) and role-classifies (W3) identically. Carry-mass = its real component mass (counted
+                    // by the !hasGroundAtb path below); power/ammo eligibility is the P2 gates (accumulated below). No
+                    // existing ground unit mounts a space weapon → byte-identical.
+                    var sm = SpaceWeaponGround.MountFor(d);
+                    if (sm != null)
+                    {
+                        r.Attack += sm.Attack * c;
+                        if (sm.RangeHexes > r.Range) r.Range = sm.RangeHexes;
+                        if (sm.Attack > topWeaponAttack) { topWeaponAttack = sm.Attack; r.DamageType = sm.Mode; }
+                        r.WeaponLoadout.Add(new GroundWeaponMount { Attack = sm.Attack * c, RangeHexes = sm.RangeHexes, Mode = sm.Mode });
+                    }
                 }
                 if (d.HasAttribute<GroundArmorAtb>())
                 {
@@ -144,6 +185,20 @@ namespace Pulsar4X.GroundCombat
                     double sw = g.Shield * c;
                     shieldWeight += sw;
                     shieldRegenSum += g.ShieldRegenFraction * sw;
+                }
+                if (d.HasAttribute<GroundTrainingAtb>())
+                {
+                    // Enhancers ⚙6.2 — the best cadre's multiplier wins (they don't stack). Its own MassPerUnit still
+                    // counts against the carry budget below (a cadre is gear/people the frame must bear).
+                    var t = d.GetAttribute<GroundTrainingAtb>();
+                    if (t.TrainingMultiplier > bestTraining) bestTraining = t.TrainingMultiplier;
+                }
+                if (d.HasAttribute<GroundSealAtb>())
+                {
+                    // G4 — the best seal wins (they don't stack). Its MassPerUnit still counts against the carry budget
+                    // below (a sealed envelope is gear the frame must bear).
+                    var seal = d.GetAttribute<GroundSealAtb>();
+                    if (seal.Sealing > bestSealing) bestSealing = seal.Sealing;
                 }
                 // A part that isn't one of the ground-specific kinds (a universal weapon or a reactor, P1/P2a) has no
                 // ground carry-mass field — count its real component mass so it still consumes the carry budget. This is
@@ -175,6 +230,8 @@ namespace Pulsar4X.GroundCombat
             // ⚙3 shield recharge: finish the Shield-weighted average (no shield → the 0.34 default stays → byte-identical).
             if (shieldWeight > 0)
                 r.ShieldRegenFraction = shieldRegenSum / shieldWeight;
+            r.TrainingMultiplier = bestTraining;   // Enhancers ⚙6.2 — baked into the raised unit's Attack + toughness
+            r.Sealing = bestSealing;               // G4 — folded into the design's EnvironmentalResistance at build time
             r.UsedCapacity = used;
             r.EnergyDemand_W = energyDemand;
             r.ReactorSupply_W = reactorSupply;
@@ -199,11 +256,12 @@ namespace Pulsar4X.GroundCombat
         /// should check <see cref="Compute"/>'s <c>Valid</c> first (the carry gate); this builds the design regardless
         /// (the gate is a UI/order concern). Never throws.</summary>
         public static GroundUnitDesign ToGroundUnitDesign(string uniqueId, string name, ComponentDesign frame,
-            IEnumerable<(ComponentDesign design, int count)> parts)
+            IEnumerable<(ComponentDesign design, int count)> parts, int unitsPerBuild = 1)
         {
             var r = Compute(frame, parts);
             var design = new GroundUnitDesign
             {
+                UnitsPerBuild = Math.Max(1, unitsPerBuild),   // SQUAD SIZE — one build raises this many units (assembler dial)
                 UniqueID = uniqueId,
                 Name = name,
                 UnitType = DeriveType(frame, parts),
@@ -220,8 +278,24 @@ namespace Pulsar4X.GroundCombat
                 ShieldRegenFraction = r.ShieldRegenFraction,
                 AmmoCapacity_kg = r.AmmoCapacity_kg,
                 DamageType = r.DamageType,
+                TrainingMultiplier = r.TrainingMultiplier,   // Enhancers ⚙6.2 — veterancy from the mounted cadre
+                UpkeepCredits = r.Mass * UpkeepCreditsPerMass,   // G2.3c — the standing-army bill scales with build mass (FLAGGED)
                 IndustryTypeID = string.IsNullOrEmpty(frame?.IndustryTypeID) ? "installation-construction" : frame.IndustryTypeID,
             };
+            // W1 — carry the per-weapon loadout onto the design (deep copy; RaiseUnit snapshots it onto the raised
+            // unit, and W2's resolver fires each mount in its own range band). Empty for a code-built design → the
+            // resolver falls back to the single collapsed weapon (byte-identical).
+            foreach (var m in r.WeaponLoadout) design.WeaponLoadout.Add(new GroundWeaponMount(m));
+            // G4 SEALED SYSTEMS — fold the best mounted seal's Sealing into the design's EnvironmentalResistance, keyed
+            // by the two surface-support hazards (Vacuum + ToxicAtmosphere). ONLY when a seal is mounted (Sealing > 0) —
+            // an unsealed design leaves the map empty (default), so a raised unit gets no EnvResistance and bleeds on
+            // airless/toxic worlds exactly as before → byte-identical absent a seal. RaiseUnit snapshots this onto
+            // GroundUnit.EnvResistance, which the E4 attrition step reads (GroundForcesProcessor.IsDamageEffect).
+            if (r.Sealing > 0.0)
+            {
+                design.EnvironmentalResistance[Pulsar4X.Hazards.HazardEffectType.Vacuum] = r.Sealing;
+                design.EnvironmentalResistance[Pulsar4X.Hazards.HazardEffectType.ToxicAtmosphere] = r.Sealing;
+            }
             // costs = frame + every part (× count) — the same sum the ship designer does
             if (frame != null) { AddCosts(design.ResourceCosts, frame.ResourceCosts); design.IndustryPointCosts += frame.IndustryPointCosts; }
             if (parts != null)
@@ -230,6 +304,15 @@ namespace Pulsar4X.GroundCombat
                     if (d == null || c <= 0) continue;
                     for (int i = 0; i < c; i++) { AddCosts(design.ResourceCosts, d.ResourceCosts); design.IndustryPointCosts += d.IndustryPointCosts; }
                 }
+            // SQUAD SIZE — a batch build costs (and takes) proportionally more, so firepower-per-credit is unchanged and
+            // there's no free multiplication (CONVENTIONS §16). UnitsPerBuild 1 → ×1, byte-identical. (Per-unit UpkeepCredits
+            // is NOT scaled here — each of the N raised units bills its own upkeep, so the standing cost is N× naturally.)
+            if (design.UnitsPerBuild > 1)
+            {
+                foreach (var key in new List<string>(design.ResourceCosts.Keys))
+                    design.ResourceCosts[key] *= design.UnitsPerBuild;
+                design.IndustryPointCosts *= design.UnitsPerBuild;
+            }
 
             // KEEP the component list (units-as-entities slice 1) — the mounted component-design ids → count, so a
             // raised unit can later be built as an entity carrying these as real ComponentInstances and every ability
@@ -252,9 +335,9 @@ namespace Pulsar4X.GroundCombat
         /// the registered design. Never throws on the assembly itself; the caller may check <see cref="Compute"/>'s
         /// <c>Valid</c> first (the gates) — registration is a UI/order concern, so this registers regardless.</summary>
         public static GroundUnitDesign RegisterAssembledDesign(FactionInfoDB faction, string uniqueId, string name,
-            ComponentDesign frame, IEnumerable<(ComponentDesign design, int count)> parts)
+            ComponentDesign frame, IEnumerable<(ComponentDesign design, int count)> parts, int unitsPerBuild = 1)
         {
-            var design = ToGroundUnitDesign(uniqueId, name, frame, parts);
+            var design = ToGroundUnitDesign(uniqueId, name, frame, parts, unitsPerBuild);
             if (faction != null)
                 faction.IndustryDesigns[design.UniqueID] = (IConstructableDesign)design;
             return design;

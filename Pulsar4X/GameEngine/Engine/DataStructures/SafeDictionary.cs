@@ -69,6 +69,33 @@ namespace Pulsar4X.DataStructures
             }
         }
 
+        /// <summary>
+        /// A point-in-time COPY of the values, taken under the lock. Unlike <see cref="Values"/> — which returns the
+        /// live <see cref="Dictionary{TKey,TValue}.ValueCollection"/> and releases the lock BEFORE the caller
+        /// enumerates it — this list is safe to enumerate while another thread mutates the dictionary (no
+        /// "collection was modified" throw). Prefer this anywhere the result is enumerated off the writer's thread
+        /// (e.g. the parallel sim loop reading entity/blob stores). The copy is a cheap List ctor over the backing
+        /// collection.
+        /// </summary>
+        public List<TValue> ValuesSnapshot
+        {
+            get
+            {
+                lock(_lock) return new List<TValue>(_innerDictionary.Values);
+            }
+        }
+
+        /// <summary>
+        /// A point-in-time COPY of the keys, taken under the lock. Same rationale as <see cref="ValuesSnapshot"/>.
+        /// </summary>
+        public List<TKey> KeysSnapshot
+        {
+            get
+            {
+                lock(_lock) return new List<TKey>(_innerDictionary.Keys);
+            }
+        }
+
         public SafeDictionary() { }
         public SafeDictionary(IDictionary<TKey, TValue> dictionary)
         {
@@ -94,37 +121,53 @@ namespace Pulsar4X.DataStructures
             }
             set
             {
+                // Copy-then-notify: mutate under the lock, capture the handler under the lock, but INVOKE the handler
+                // after releasing it. Raising events while holding _lock let arbitrary subscriber code run under the
+                // lock — a re-entrant/cross-thread deadlock and contention hazard on the parallel sim threads.
+                DictionaryChangedHandler? onChange;
                 lock(_lock)
                 {
                     _innerDictionary[key] = value;
-                    OnChange?.Invoke(key, value);
+                    onChange = OnChange;
                 }
+                onChange?.Invoke(key, value);
             }
         }
 
         public void Add(TKey key, TValue value)
         {
+            // Copy-then-notify (see the indexer setter): raise events AFTER the lock is released.
+            DictionaryChangedHandler? itemAdded;
+            DictionaryChangedHandler? onChange;
             lock(_lock)
             {
                 _innerDictionary.Add(key, value);
-                ItemAdded?.Invoke(key , value);
-                OnChange?.Invoke(key, value);
+                itemAdded = ItemAdded;
+                onChange = OnChange;
             }
+            itemAdded?.Invoke(key, value);
+            onChange?.Invoke(key, value);
         }
 
         public bool Remove(TKey key)
         {
+            // Copy-then-notify (see the indexer setter): raise events AFTER the lock is released.
+            DictionaryChangedHandler? itemRemoved;
+            DictionaryChangedHandler? onChange;
+            TValue? value;
             lock(_lock)
             {
-                if(_innerDictionary.TryGetValue(key, out TValue? value))
+                if(!_innerDictionary.TryGetValue(key, out value))
                 {
-                    _innerDictionary.Remove(key);
-                    ItemRemoved?.Invoke(key, value);
-                    OnChange?.Invoke(key, value);
-                    return true;
+                    return false;
                 }
+                _innerDictionary.Remove(key);
+                itemRemoved = ItemRemoved;
+                onChange = OnChange;
             }
-            return false;
+            itemRemoved?.Invoke(key, value);
+            onChange?.Invoke(key, value);
+            return true;
         }
 
         public bool ContainsKey(TKey key)

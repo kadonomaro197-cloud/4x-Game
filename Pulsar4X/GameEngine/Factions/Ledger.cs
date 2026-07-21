@@ -17,7 +17,15 @@ public enum TransactionCategory
     Trade,
     // Espionage E6: funds siphoned to/from a faction by a covert steal-funds op (both the victim's loss and the
     // spy's gain book under this). Added last so existing integer values are stable (save-compat).
-    Espionage
+    Espionage,
+    // Ground-force standing UPKEEP (the ground echo of StationUpkeep) — billed monthly by GroundUpkeep for a faction's
+    // standing ground units. Added at the END so existing integer values stay save-stable.
+    GroundForceUpkeep,
+    // Station operating INCOME (the station echo of ColonyTax) — booked monthly by StationUpkeepProcessor for a
+    // faction's populated stations. Previously borrowed the ColonyTax bucket (which conflated station income with
+    // real colony tax); its own category lets a station-owning faction's ledger read honestly. Added at the END so
+    // existing integer values stay save-stable.
+    StationIncome
 }
 
 public class Transaction

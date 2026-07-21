@@ -122,6 +122,14 @@ namespace Pulsar4X.Ships
             if (shipDesign.CrewReq > 0 && ship.TryGetDataBlob<ShipInfoDB>(out var launchedInfo))
                 launchedInfo.CrewSourceColonyId = colonyEntity.Id;
 
+            // P4.2 (Operation Earthfall) — a launch-complex-built hull is provisioned by the SAME built-ship
+            // charge/fuel policy as the direct-build path (ShipDesign.OnConstructionComplete): NPC-owned boots
+            // ready to fly so the AI sealift can warp the instant the hull leaves the pad; player-owned earns
+            // its charge at a colony over time (no-op → byte-identical for the default player). The colony
+            // already paid the lift-to-orbit fuel above (TryDeductFuel); this tops the ship's own tanks +
+            // reactor so it can maneuver/fight, not just reach orbit. findings/A4-sealift.md cause 3.
+            ShipDesign.ProvisionBuiltShip(ship, faction);
+
             if (faction.TryGetDataBlob<FleetDB>(out var fleetDB))
             {
                 fleetDB.AddChild(ship);

@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using Pulsar4X.Datablobs;
+using Pulsar4X.Orbital;
 
 namespace Pulsar4X.Combat
 {
@@ -78,6 +80,44 @@ namespace Pulsar4X.Combat
         /// aggregate pool per fleet, like the shield and ammo.</summary>
         [JsonProperty] public double HeatPool_kJ { get; internal set; }
 
+        // ─── 2D group plane (Operation Earthfall T2.1 / slice S1, docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md) ───
+        // ALL of these are inert unless CombatEngagement.EnableGroupPlane is on — a flag-off fight never seeds them,
+        // leaves them at their defaults, and closing runs the unchanged scalar Separation_m path (byte-identical).
+
+        /// <summary>True once this fleet's 2D battle-plane data (frame + anchor) has been SEEDED — at engagement start,
+        /// or copied verbatim from an already-engaged sibling when this fleet JOINS. Its presence is the "the plane is
+        /// live for this fleet" flag: the plane-aware paths (AdvanceClosing anchor slide; the future S2 range gate) only
+        /// read the anchor when this is set. Default false; set only when <see cref="Combat.CombatEngagement.EnableGroupPlane"/>
+        /// is on, so every flag-off fight leaves it false and the plane fields untouched.</summary>
+        [JsonProperty] public bool HasFrame { get; internal set; }
+
+        /// <summary>The FROZEN battle-plane ORIGIN (real 3D metres) — laid down ONCE at engagement start (centroid of the
+        /// fighters' real positions) and copied verbatim to joiners, so gaps don't jump as ships die. One component of a
+        /// <see cref="GroupPlane.BattleFrame"/>; only meaningful when <see cref="HasFrame"/>. Stored as three loose
+        /// Vector3s (the <see cref="FleetRetreatDB.RetreatVector"/> save pattern) rather than the readonly struct, so it
+        /// serializes and deep-copies without a custom converter.</summary>
+        [JsonProperty] public Vector3 FrameOrigin { get; internal set; } = Vector3.Zero;
+
+        /// <summary>The frozen plane's first in-plane axis (3D unit). See <see cref="GroupPlane.BattleFrame.XAxis"/>.</summary>
+        [JsonProperty] public Vector3 FrameXAxis { get; internal set; } = Vector3.Zero;
+
+        /// <summary>The frozen plane's second in-plane axis (3D unit), orthogonal to <see cref="FrameXAxis"/>.
+        /// See <see cref="GroupPlane.BattleFrame.YAxis"/>.</summary>
+        [JsonProperty] public Vector3 FrameYAxis { get; internal set; } = Vector3.Zero;
+
+        /// <summary>This fleet's current 2D point (metres) on the frozen plane: <c>Project(frame, fleetPosition)</c> at
+        /// seed, then slid along the enemy-facing direction by <c>AdvanceClosing</c> as the fight closes/opens. Only
+        /// meaningful when <see cref="HasFrame"/>. Slice S2 (built): <c>CombatEngagement.SeparationOf</c>/
+        /// <c>WithinWeaponRange</c> now read the 2D pair-distance between two anchors in place of the scalar
+        /// <see cref="Separation_m"/> when <see cref="Combat.CombatEngagement.EnableGroupPlane"/> is on.</summary>
+        [JsonProperty] public Vector2 Anchor { get; internal set; } = Vector2.Zero;
+
+        /// <summary>The 2D points of this fleet's fighting GROUPS on the plane. v1/S1: exactly ONE entry — the whole
+        /// fleet is a single group sitting at <see cref="Anchor"/>. Slice S3 replaces this with one point per role
+        /// sub-fleet (anchor + doctrine <c>RoleOffset</c>). Only populated when <see cref="HasFrame"/>; an empty list
+        /// otherwise. Never null (deep-copied in the copy ctor).</summary>
+        [JsonProperty] public List<Vector2> GroupPositions { get; internal set; } = new List<Vector2>();
+
         public FleetCombatStateDB() { }
 
         public FleetCombatStateDB(int opponentFleetId)
@@ -102,6 +142,14 @@ namespace Pulsar4X.Combat
             ShieldPool_J = db.ShieldPool_J;
             AmmoPool_kg = db.AmmoPool_kg;
             HeatPool_kJ = db.HeatPool_kJ;
+            HasFrame = db.HasFrame;
+            FrameOrigin = db.FrameOrigin;   // Vector3 is a value type — a straight assignment is a full copy
+            FrameXAxis = db.FrameXAxis;
+            FrameYAxis = db.FrameYAxis;
+            Anchor = db.Anchor;             // Vector2 is a value type too
+            GroupPositions = db.GroupPositions != null
+                ? new List<Vector2>(db.GroupPositions)   // deep-copy the list (Vector2 elements copy by value)
+                : new List<Vector2>();
         }
 
         public override object Clone()

@@ -48,6 +48,9 @@ namespace Pulsar4X.Client
         private const int StationKindIndex = 2;
         private const int BuildingKindIndex = 3;
         private int _assemblyKindIndex = 0;
+        // SQUAD SIZE — how many ground units ONE build of the assembled design produces (the assembler dial; cost/time
+        // scale with it in the engine so there's no free multiplication). Ground-assembly only; 1 = one unit per build.
+        private int _groundUnitsPerBuild = 1;
 
         private IntPtr _shipImgPtr;
 
@@ -463,6 +466,20 @@ namespace Pulsar4X.Client
                     Row("Range (hex)", r.Range.ToString());
                     Row("Evasion", r.Evasion.ToString("0.00"));
                     Row("Shield", r.Shield.ToString("0"));
+                    // TRAINING — the best mounted cadre's veterancy multiplier (baked into Attack + toughness at raise;
+                    // 1.00× = green/untrained). Previously computed but invisible in this readout.
+                    Row("Training", r.TrainingMultiplier.ToString("0.00") + "×");
+                    // POWER supply-vs-demand — ALWAYS-ON now (was a red "Problems" line only on violation): energy weapons
+                    // draw vs reactors supply, over-budget in red so the margin is visible before it becomes a violation.
+                    bool underPowered = r.EnergyDemand_W > r.ReactorSupply_W;
+                    ImGui.TableNextColumn(); ImGui.TextUnformatted("Power (draw / supply)");
+                    ImGui.TableNextColumn();
+                    if (underPowered) ImGui.PushStyleColor(ImGuiCol.Text, Styles.BadColor);
+                    ImGui.TextUnformatted(r.EnergyDemand_W.ToString("0") + " / " + r.ReactorSupply_W.ToString("0") + " W" + (underPowered ? "  UNDER" : ""));
+                    if (underPowered) ImGui.PopStyleColor();
+                    // AMMO capacity — ALWAYS-ON: the Σ magazine store an ammo-fed weapon (flak / railgun) draws from
+                    // (0 kg = no magazine → an ammo weapon can't be fed, surfaced in Problems below).
+                    Row("Ammo Capacity", r.AmmoCapacity_kg.ToString("0") + " kg");
                     Row("Build Mass", Stringify.Mass(r.Mass));
                     Row("Damage Type", r.DamageType.ToString());
 
@@ -493,6 +510,12 @@ namespace Pulsar4X.Client
 
             ImGui.TextUnformatted("Design Name:");
             ImGui.InputText("###Design Name", SelectedDesignName, (uint)SelectedDesignName.Length);
+
+            // SQUAD SIZE — how many units ONE build of this design produces (the developer's assembler dial). The engine
+            // scales the build cost + time by this, so a squad of 10 costs 10× a single unit (no free multiplication).
+            ImGui.TextUnformatted("Units per build (squad size):");
+            if (ImGui.InputInt("###GroundUnitsPerBuild", ref _groundUnitsPerBuild))
+                _groundUnitsPerBuild = Math.Max(1, _groundUnitsPerBuild);
             ImGui.NewLine();
             SaveGroundDesign();
         }
@@ -536,9 +559,9 @@ namespace Pulsar4X.Client
             if (string.IsNullOrEmpty(id))
                 id = "grounddesign-" + Guid.NewGuid().ToString();
 
-            var design = Pulsar4X.GroundCombat.GroundUnitAssembly.RegisterAssembledDesign(_factionInfoDB, id, name, frame, parts);
+            var design = Pulsar4X.GroundCombat.GroundUnitAssembly.RegisterAssembledDesign(_factionInfoDB, id, name, frame, parts, Math.Max(1, _groundUnitsPerBuild));
             SessionLog.Action("ground-unit design saved: '" + name + "' (id " + id + ") frame='" + frame.Name
-                + "' parts=" + parts.Count + " atk=" + design.Attack.ToString("0") + " hp=" + design.HitPoints.ToString("0"));
+                + "' parts=" + parts.Count + " squad=" + design.UnitsPerBuild + " atk=" + design.Attack.ToString("0") + " hp=" + design.HitPoints.ToString("0"));
         }
 
         /// <summary>The right-panel readout for a STATION — its totals + structure-budget validity come from the engine

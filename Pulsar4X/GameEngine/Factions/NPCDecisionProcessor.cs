@@ -325,7 +325,8 @@ namespace Pulsar4X.Factions
             // never becomes an invasion. Read off the KNOWN war latch + true strengths (NeedsLadder.WarStanding), so a
             // faction not at war (or losing, or peaceful) is byte-identical.
             var (atWar, enemyStrength) = NeedsLadder.WarStanding(factionEntity);
-            bool atWarAndWinning = atWar && FactionRollup.MilitaryStrength(factionEntity) >= enemyStrength;
+            double ownStrength = FactionRollup.MilitaryStrength(factionEntity);
+            bool atWarAndWinning = atWar && ownStrength >= enemyStrength;
             // A hostile-world faction (Mars/Venus) is pinned at Survive by the conditions morale penalty, so the war
             // footing must reach Survive too — but NOT while the homeland is in open rebellion (recover first then).
             bool homelandInRebellion = NeedsLadder.InRebellion(factionEntity);
@@ -333,18 +334,53 @@ namespace Pulsar4X.Factions
             // Phase-5.2 decision-log: take the choice AND the reason tracing it to the driving input.
             var (chosen, reason) = ObjectiveSelector.SelectWithReason(tier, factionInfoDB.Doctrine, personality, atWarAndWinning, homelandInRebellion);
 
+            // P3.3 (Operation Earthfall, findings/A3): capture the crisis conditions active THIS cycle (the same
+            // predicates the needs-ladder reads). A crisis commit records the ones that forced it, so the transition
+            // engine can release the commit early once they clear (break-glass b) instead of holding Defend for the
+            // full dwell after a shock passes — the fix for the one-month rebellion that locked the UMF on Defend.
+            CrisisTrigger currentTriggers = ObjectiveTransition.CrisisTriggersFrom(
+                atWar, ownStrength, enemyStrength,
+                FactionRollup.MeanMorale(factionEntity),
+                FactionRollup.MeanLegitimacy(factionEntity),
+                FactionRollup.Balance(factionEntity),
+                homelandInRebellion);
+
+            // P3.4 (Operation Earthfall, findings/A3 §D commitment gap + seam 5 — never orphan an invasion): if the
+            // faction is already committed to a WINNING Conquer with a strike fleet EN ROUTE, a purely INTERNAL Survive
+            // wobble (a phantom rebellion / hostile-world morale trough — NOT a lost war, NOT an invaded homeland) must
+            // not hijack the commit to Defend and leave the in-flight invasion coasting with no one driving it. This
+            // flows THROUGH the transition engine's release logic (it suppresses ShouldReplan's "more-urgent tier
+            // preempts" path — P3.3's machinery), NOT around it. The cheap tier/war gates short-circuit the two entity
+            // reads (a fleet in transit / an enemy on home soil) so they only run in this narrow war-crisis case; the
+            // full decision is the pure ObjectiveTransition predicate. A GENUINE external crisis (losing the war /
+            // homeland invaded) is deliberately NOT protected → it preempts, and DefendResolver recalls the fleets.
+            // Byte-identical for any faction not committed to Conquer, not at war and winning, or not reading Survive.
+            bool protectInFlightConquest =
+                objective.Objective == StrategicObjective.Conquer
+                && atWarAndWinning
+                && tier == NeedTier.Survive
+                && (currentTriggers & CrisisTrigger.LosingWar) == CrisisTrigger.None
+                && ObjectiveTransition.ShouldProtectInFlightConquest(
+                       objective.Objective, tier, atWarAndWinning, currentTriggers,
+                       NeedsLadder.HomelandInvaded(factionEntity),
+                       ConquerResolver.HasFleetInTransit(factionEntity));
+
             // Target selection (which rival to Conquer) is the 2.4c refinement; keep -1 (none) for now.
             // Phase-2.5: the commit DWELL scales with Ambition — a high-Ambition faction renews an expansion push
             // (Expand/Conquer) on a SHORTER cadence, a low-Ambition one dwells longer. Neutral/absent personality and
-            // every non-expansion objective return the fixed DefaultCommitFor, so this stays byte-identical today.
+            // every non-expansion objective return the fixed DefaultCommitFor, so this stays byte-identical today. A
+            // CRISIS objective (Defend/Consolidate) gets the shorter CrisisCommitFor (P3.3 break-glass a).
             TimeSpan commitFor = ObjectiveTransition.CommitFor(chosen, personality);
-            ObjectiveTransition.Advance(objective, tier, chosen, -1, now, commitFor);
+            ObjectiveTransition.Advance(objective, tier, chosen, -1, now, commitFor, currentTriggers, protectInFlightConquest);
 
             // Record WHY: if the transition committed the fresh choice, that's the reason; if hysteresis HELD a prior
-            // objective (the brain didn't thrash), say so and note what this cycle actually read (still traceable).
+            // objective (the brain didn't thrash — including a P3.4-protected in-flight conquest), say so and note what
+            // this cycle actually read (still traceable).
             objective.DecisionReason = objective.Objective == chosen
                 ? reason
-                : $"holding {objective.Objective} (hysteresis until {objective.CommittedUntil:u}); this cycle read: {reason}";
+                : protectInFlightConquest
+                    ? $"protecting in-flight conquest (winning war, transient internal crisis); this cycle read: {reason}"
+                    : $"holding {objective.Objective} (hysteresis until {objective.CommittedUntil:u}); this cycle read: {reason}";
         }
 
         /// <summary>

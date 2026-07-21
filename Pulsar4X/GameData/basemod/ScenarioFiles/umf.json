@@ -33,6 +33,12 @@
     "altruism": 0.3,
     "curiosity": 0.4
   },
+  "government": {
+    "authority": "High",
+    "economy": "Mid",
+    "openness": "Mid",
+    "militarism": "High"
+  },
   "startingItems": [
     "tech-modern-technology",
     "tech-conventional-engine",
@@ -173,6 +179,7 @@
     "default-design-infrastructure",
     "default-design-research-lab",
     "default-design-warehouse",
+    "default-design-fuel-farm-5000k",
     "default-design-shipyard",
     "default-design-agri-complex",
     "default-design-hydroponics-arcology",
@@ -312,6 +319,10 @@
           "amount": 10
         },
         {
+          "id": "default-design-fuel-farm-5000k",
+          "amount": 1
+        },
+        {
           "id": "default-design-hydroponics-arcology",
           "amount": 5
         },
@@ -368,6 +379,16 @@
         {
           "id": "hydrocarbons",
           "amount": 200000
+        },
+        {
+          "id": "methalox",
+          "amount": 20000000,
+          "type": "byCount"
+        },
+        {
+          "id": "ntp",
+          "amount": 20000000,
+          "type": "byCount"
         }
       ]
     },
@@ -509,7 +530,7 @@
         },
         {
           "id": "default-design-factory",
-          "amount": 0
+          "amount": 1
         },
         {
           "id": "default-design-local-construction",

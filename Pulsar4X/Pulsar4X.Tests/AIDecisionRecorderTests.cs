@@ -27,6 +27,10 @@ namespace Pulsar4X.Tests
             info.IsNPC = true;
             info.Doctrine = new DoctrineVector { Economic = 1f };
 
+            // P0.4 — the Kithrin scenario: a station-only faction (no colonies, one station). The recorder must tape
+            // BOTH counts so the tape reads the faction's real footprint instead of "colonies 0" while it owns a station.
+            info.Stations.Add(Entity.Create());
+
             var proc = new NPCDecisionProcessor();
             proc.Init(s.Game);
 
@@ -44,11 +48,17 @@ namespace Pulsar4X.Tests
             // Economic-led faction is at peace and holds no sensor contacts, so it senses no greater threat.
             Assert.That(rec.Morale, Is.GreaterThanOrEqualTo(0.0), "morale sensed");
             Assert.That(rec.ThreatFactionId, Is.EqualTo(-1), "a faction at peace with no contacts senses no greater threat");
+            // The station-aware tape: this faction owns no colonies but one station, and the record captures both —
+            // the Kithrin "colonies 0 while owning Titan" honesty fix (P0.4).
+            Assert.That(rec.ColonyCount, Is.EqualTo(0), "a station-only faction taped its true colony count (0)");
+            Assert.That(rec.StationCount, Is.EqualTo(1), "the station it owns is taped, not silently dropped");
 
-            // The readout renders the tape as an [AI] line naming the faction.
+            // The readout renders the tape as an [AI] line naming the faction, including the station count.
             string line = PlanReadout.DecisionTape(npc);
             Assert.That(line, Does.Contain("[AI]"), "the tape renders as an [AI] line");
             Assert.That(line, Does.Contain("Martian Federation"), "the line names the faction");
+            Assert.That(line, Does.Contain("colonies 0"), "the readout shows the true colony count");
+            Assert.That(line, Does.Contain("stations 1"), "the readout shows the station count alongside colonies");
 
             // A PLAYER faction rides the IsNPC guard — no tape.
             proc.ProcessEntity(s.Faction, 0);

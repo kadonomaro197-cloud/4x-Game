@@ -83,6 +83,12 @@ namespace Pulsar4X.GroundCombat
             if (tectonic)                            menaces.Add(("Ash Storm",            HazardEffectType.SensorJam,       0.5));
             if (hasAir && hydro < DryHydro)          menaces.Add(("Dust Storm",           HazardEffectType.SensorJam,       0.4));
             if (pressure > ThickAtm)                 menaces.Add(("Lightning Superstorm", HazardEffectType.SensorJam,       0.6));
+            // Ground-only SURFACE-SUPPORT hazards (2026-07-17): an unsealed unit can't survive the surface itself — a
+            // vacuum world (no atmosphere) or a poison atmosphere suffocates it. Countered by a unit's sealed suit /
+            // life-support (E4 EnvResistance). Applies to EVERY region (surface-wide, unlike a localised storm). GENTLE
+            // magnitude = a slow bleed that makes sealing matter over a campaign, not an instant wipe — FLAGGED balance value.
+            if (!hasAir)             menaces.Add(("Vacuum Exposure",  HazardEffectType.Vacuum,          3.0));
+            else if (corrosiveAir)   menaces.Add(("Toxic Atmosphere", HazardEffectType.ToxicAtmosphere, 3.0));
 
             var envs = new List<RegionEnvironment>();
             int regionCount = regionsDB.Regions.Count;

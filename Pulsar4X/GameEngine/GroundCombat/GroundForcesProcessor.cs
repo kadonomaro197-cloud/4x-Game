@@ -34,6 +34,17 @@ namespace Pulsar4X.GroundCombat
         /// space <c>SalvoDamageScale</c>). 1.0 = full; lower stretches a battle over more ticks. Tune live.</summary>
         public const double SalvoScale = 1.0;
 
+        /// <summary>Ammo a magazine-fed unit burns each salvo it FIRES (G2.3a). A unit with no magazine
+        /// (<c>GroundAmmo.CarriesAmmo</c> false — every default/garrison unit today) never drains, so live combat is
+        /// byte-identical until an ammo-fed unit is fielded. FLAGGED balance value.</summary>
+        public const double AmmoPerSalvo_kg = 1.0;   // FLAGGED balance value
+
+        /// <summary>Bombard strength (in `ComponentInstance.HealthPercent` units) a DestroyInfrastructure order lays on a
+        /// hex per tick, per point of the attacking units' summed Attack (G3) — the "staged drain default" (a building is
+        /// razed over several ticks, not one-shot). Attack 100 × 0.1 = 10 HealthPercent/tick → ~10 ticks to raze a
+        /// full-health building. FLAGGED balance value.</summary>
+        public const double InfraDestroyStrengthPerAttack = 0.1;   // FLAGGED balance value
+
         /// <summary>Ground COMBAT INTERRUPT flag (4b) — the ground mirror of
         /// <c>Combat.CombatEngagement.InterruptTimeOnNewEngagement</c>. When true, the first tick a NEW planetary
         /// battle forms on a body, the processor calls <c>MasterTimePulse.RequestCombatHalt()</c> so the clock stops
@@ -41,6 +52,24 @@ namespace Pulsar4X.GroundCombat
         /// banner — space and ground share it). Default FALSE so headless tests advance deterministically; the client
         /// turns it on at startup next to the space combat flags.</summary>
         public static bool InterruptTimeOnNewBattle = false;
+
+        /// <summary>GROUND TACTICAL BRAIN gate (Operation Earthfall G2.2c) — when true, a STEP in this hotloop
+        /// (<see cref="GroundTacticalBrain.Run"/>, NOT a second processor — L9) drives every AI-owned battalion's
+        /// posture (Stance / ROE / Intent) from the fog-honest odds each tick: it decides WHEN the AI is offensive vs
+        /// defensive, digs in, or retreats (the answer to "is the AI smart enough…"). Default FALSE so the engine test
+        /// suite + a factory game are byte-identical (no AI touches a stance/order); CORE flips it ON alongside the other
+        /// AI gates on the New-Game / menu path (PW). A PLAYER order on a battalion always overrides the brain.</summary>
+        public static bool EnableGroundTacticalAI = false;
+
+        /// <summary>W-TRACK W3 — SUB-FORMATION ROLE MANEUVER gate. When true, a unit auto-maneuvering under its
+        /// formation's ROE moves to ITS OWN ROLE's ideal range band instead of all units marching uniformly:
+        /// a SCREEN (fast/light) unit leads to contact, a LINE unit closes to its firing range and holds, an ARTILLERY
+        /// (long-reach) unit kites to keep its standoff, a SUPPORT (no-attack) unit stays back — the ground echo of
+        /// space sub-fleet roles ("fighters move differently than a line ship"). Roles come from
+        /// <see cref="GroundRoleComposer.ClassifyRole"/>. Default FALSE → the maneuver step is byte-identical (the
+        /// uniform ROE close/stand-off path runs unchanged); CORE flips it ON alongside the other AI gates on the
+        /// New-Game / menu path. A HoldGround formation still never auto-maneuvers, and a player queued order still wins.</summary>
+        public static bool EnableGroundRoleManeuver = false;
 
         // Shield pool regeneration is now a PER-UNIT designed rate (GroundUnit.ShieldRegenFraction, ⚙3), defaulting to
         // 0.34/game-hour (≈ full recharge in ~3 hours) for every unit until a ward dials it — see the recharge step in
@@ -76,6 +105,31 @@ namespace Pulsar4X.GroundCombat
             // 0) RADAR: a unit carrying a GroundSensorAtb reveals the map within its reach (the ability falls out of the
             //    unit's component store — units-as-entities). Real range → hexes → region bands. Idempotent + defensive.
             GroundSensors.RevealFromUnits(body);
+
+            // 0b) UPKEEP: bill each owning faction the standing cost of its ground units, once a month (the ground echo
+            //     of a station's operating cost). Folded here — NOT a second processor (L9). No-op for free (0-upkeep)
+            //     units, so byte-identical until a design sets UpkeepCredits. Never throws (guarded inside).
+            GroundUpkeep.BillIfDue(body, body.StarSysDateTime);
+
+            // 0c) BEACHHEAD ON-SITE BUILD (G1.2): a landed COMBAT ENGINEER (a unit whose design mounts a
+            //     GroundConstructorAtb) standing on FRIENDLY-HELD, enemy-free ground with landed footprint parts erects a
+            //     footprint building ON SITE — with NO colony present, hosted in the invader's beachhead outpost. The
+            //     placed bunker fortifies (the GroundDefenseAtb path) + is a bombard/capture target on the war map, and
+            //     the region becomes a resupply point (consumed in G2). Folded here — NOT a second processor (L9). A
+            //     no-op until an engineer unit exists and lands, so a stock game is byte-identical. Never throws.
+            GroundBeachhead.TickBuilds(body, deltaSeconds);
+
+            // 0d) RESUPPLY (G2.3b): a magazine-fed unit standing at a DEPOT — a friendly-HELD region that holds a base
+            //     (a G1 beachhead bunker or the region's colony installations — Region.InstallationIds non-empty) —
+            //     auto-rearms to full (GroundForces.ResupplyUnit, previously caller-less). No depot / enemy ground / no
+            //     magazine → no-op, so a default game (no ammo-fed unit) is byte-identical. Never throws (guarded).
+            if (forces.Units != null && body.TryGetDataBlob<PlanetRegionsDB>(out var supplyRegions))
+                foreach (var su in forces.Units)
+                {
+                    if (su == null || su.Health <= 0 || su.MaxAmmo_kg <= 0 || su.CurrentAmmo_kg >= su.MaxAmmo_kg) continue;
+                    if (IsResupplyDepot(supplyRegions, su.FactionOwnerID, su.RegionIndex))
+                        GroundForces.ResupplyUnit(body, su);
+                }
 
             // 1) MOVEMENT: advance in-transit units.
             //    (a) COARSE region march (5b): a whole-region hop, arrives when the region's crossing time has elapsed.
@@ -158,6 +212,14 @@ namespace Pulsar4X.GroundCombat
             }
 
             body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB);
+
+            // 1b1) GROUND TACTICAL BRAIN (G2.2c) — the officer of the deck. Behind EnableGroundTacticalAI (default off →
+            //      byte-identical), read the fog-honest odds for every AI-owned battalion and set its Stance / ROE /
+            //      Intent (dig in when outnumbered, press an edge, retreat when losing — the "when defensive vs
+            //      offensive" decision). A STEP here, not a second processor (L9). It queues AI-issued MoveRegion orders
+            //      that the queue step below then executes; a PLAYER order on a battalion always overrides it. Defensive.
+            if (EnableGroundTacticalAI && regionsDB != null)
+                GroundTacticalBrain.Run(body, forces, regionsDB, body.StarSysDateTime);
 
             // 1b2) FORMATION ORDER QUEUE (O1) — run each formation's queued plan one order at a time, in sequence
             //      ("move to London, THEN Paris, THEN dig in"). A move order is kicked off once and popped when the
@@ -256,6 +318,18 @@ namespace Pulsar4X.GroundCombat
         /// fight is identical to the pre-hex region resolver</b> — the migration adds range without changing a
         /// same-hex battle. (Terrain here is still the region's dominant feature; reading terrain from the DEFENDER's
         /// own hex is the H3b follow-on.) Reads <see cref="GroundTerrain"/> — the ground twin of SpaceHazardTools.</summary>
+        /// <summary>Is region <paramref name="regionIndex"/> a RESUPPLY DEPOT for <paramref name="factionId"/> — a region
+        /// it HOLDS that contains a base (colony installations or a G1 beachhead bunker → <c>Region.InstallationIds</c>
+        /// non-empty)? A unit standing here rearms; empty ground or enemy ground offers nothing to draw from. Bounds/
+        /// null-safe (G2.3b).</summary>
+        private static bool IsResupplyDepot(PlanetRegionsDB regionsDB, int factionId, int regionIndex)
+        {
+            if (regionsDB == null || regionIndex < 0 || regionIndex >= regionsDB.Regions.Count) return false;
+            var reg = regionsDB.Regions[regionIndex];
+            if (reg.OwnerFactionID != factionId) return false;                       // must hold the ground
+            return reg.InstallationIds != null && reg.InstallationIds.Count > 0;     // a base/depot (colony or beachhead) is here
+        }
+
         /// <summary>Returns TRUE if a real exchange happened (any damage was dealt to a target this salvo) — the signal
         /// the ground combat-interrupt (4b) reads to detect a battle.</summary>
         private static bool ResolveRegionCombat(GroundForcesDB forces, List<GroundUnit> units, Region region,
@@ -289,6 +363,41 @@ namespace Pulsar4X.GroundCombat
             // reach. Computed entirely from the PRE-salvo state (Health read here, applied below) → simultaneous.
             var incoming = new Dictionary<GroundUnit, double>();
 
+            // SHARED SALVO MATH (one definition for both the collapsed single-weapon path and the W2 per-weapon-band
+            // path): fire ALREADY-SCALED <paramref name="pool"/> from weapon <paramref name="profile"/> at the targets it
+            // can reach, health-weighted, through the shared kernel — dodge (HitFraction) → depleting shield pool →
+            // flat-per-source armour (penetration + shot-count + nature). Accumulates into `incoming` (pre-salvo state →
+            // simultaneous). Arithmetic per target is byte-identical to the pre-W2 resolver.
+            void FireWeaponAtReachable(List<GroundUnit> reachable, double pool, Pulsar4X.Combat.WeaponProfile profile)
+            {
+                double totalH = 0.0;
+                foreach (var t in reachable) totalH += t.Health;
+                if (totalH <= 0) return;
+                double shieldSoakFrac = Pulsar4X.Combat.CombatKernel.ShieldSoakFraction(profile.Nature);
+                foreach (var t in reachable)
+                {
+                    // DODGE (kernel HitFraction): an aimed slug is dodged ~(1−evasion); an area/beam shot lands ~fully.
+                    double contribution = pool * (t.Health / totalH)
+                        * Pulsar4X.Combat.CombatKernel.HitFraction(profile, t.Evasion);
+                    // SHIELD POOL (3c): the target's depleting shield soaks the soakable fraction (by weapon nature —
+                    // kinetic fully, energy half-bleeds, exotic bypasses) up to its CURRENT charge, BEFORE armour.
+                    if (t.CurrentShield > 0 && shieldSoakFrac > 0 && contribution > 0)
+                    {
+                        double absorbed = System.Math.Min(contribution * shieldSoakFrac, t.CurrentShield);
+                        t.CurrentShield -= absorbed;
+                        contribution -= absorbed;
+                    }
+                    // ARMOUR: flat-per-source plating bounces what's left (the swarm-vs-alpha identity) — the shared
+                    // CombatKernel armour soak, reduced by the weapon's PENETRATION (W1b), split into its SHOT COUNT
+                    // (W2b), scaled by the target's armour-NATURE tuning (⚙3). Defaults → byte-identical.
+                    int shotCount = Pulsar4X.Combat.CombatKernel.BurstShotCount(profile);
+                    double natureFactor = t.ArmourResistFor(profile.Nature);
+                    contribution = GroundDamageMatrix.ArmourSoak(t.Defense, contribution, shotCount, profile.Penetration, natureFactor);
+                    incoming.TryGetValue(t, out var acc);
+                    incoming[t] = acc + contribution;
+                }
+            }
+
             foreach (var f in byFaction.Keys)
             {
                 foreach (var g in byFaction.Keys)
@@ -299,76 +408,83 @@ namespace Pulsar4X.GroundCombat
                     {
                         if (u.Health <= 0) continue;
 
-                        // The g-units THIS attacker can actually reach (within its hex Range). Co-located → all of g.
-                        List<GroundUnit> reachable = null;
+                        // Terrain affinity = the unit TYPE's innate edge (TerrainAttackMult) × its DESIGNED locomotion's
+                        // edge (LocomotionTerrainMult, Propulsion ⚙2). RoughHandlingForUnit reads the unit's designed
+                        // locomotion (0.5 neutral → ×1.0). The Armor▸Inf▸Arty TRIANGLE has DISSOLVED (resolver merge 3b-ii):
+                        // the type edge emerges from raw stats × weapon-nature vs the target's evasion/shield/armour.
+                        double roughHandling = GroundMobility.RoughHandlingForUnit(forces.OwningEntity, u);
+
+                        // ── W-TRACK W2 — PER-WEAPON RANGE BANDING ──────────────────────────────────────────────────────
+                        // An assembled unit carries a per-weapon LOADOUT (W1). Each mounted weapon fires in ITS OWN hex
+                        // range band with ITS OWN nature — so a long-range cannon (undodgeable Artillery) reaches a
+                        // CLOSING enemy while a short-range rifle (dodgeable Ballistic) is still silent (the ground echo of
+                        // a ship's per-weapon range bands). Ammo is a unit-level pool (v1): a dry magazine silences the
+                        // whole unit; a fed one burns ONE salvo if it fires at least one weapon. A unit with exactly ONE
+                        // weapon yields a mount whose Attack/Mode/Range equal the collapsed values (same operands, same
+                        // multiply order below) → this reproduces the collapsed path bit-for-bit. A monolithic / garrison /
+                        // DevTools unit (empty loadout) takes the collapsed path → byte-identical.
+                        if (u.WeaponLoadout != null && u.WeaponLoadout.Count > 0)
+                        {
+                            if (GroundAmmo.CarriesAmmo(u) && GroundAmmo.IsDry(u)) continue;   // dry → this unit's fire is silent (v1: whole unit)
+                            bool firedAny = false;
+                            foreach (var m in u.WeaponLoadout)
+                            {
+                                // The g-units THIS WEAPON can reach (its own hex range). Co-located (dist 0) → all of g.
+                                List<GroundUnit> reachable = null;
+                                foreach (var t in byFaction[g])
+                                {
+                                    if (t.Health <= 0) continue;
+                                    if (HexDist(u, t) > m.RangeHexes) continue;   // out of THIS weapon's band this salvo
+                                    (reachable ??= new List<GroundUnit>()).Add(t);
+                                }
+                                if (reachable == null) continue;                   // this weapon reaches nothing this salvo
+                                firedAny = true;
+
+                                // Same multiply ORDER as the collapsed path (byte-identity for a single-weapon unit,
+                                // where m.Attack == u.Attack): m.Attack × terrain × locomotion × stance × SalvoScale.
+                                double atk = m.Attack
+                                    * GroundTerrain.TerrainAttackMult(u.UnitType, terrain)
+                                    * GroundTerrain.LocomotionTerrainMult(roughHandling, terrain)
+                                    * GroundFormationDoctrine.AttackMult(forces, u);
+                                double pool = atk * SalvoScale;
+                                if (gIsDefender && coverFort > 0) pool /= coverFort;
+                                FireWeaponAtReachable(reachable, pool, GroundCombatant.ToWeaponProfile(u, m));
+                            }
+                            // Burn one salvo of ammo iff the unit fired at least one weapon (a magazine-fed unit only).
+                            if (firedAny && deltaSeconds > 0 && GroundAmmo.CarriesAmmo(u)) GroundAmmo.Consume(u, AmmoPerSalvo_kg);
+                            continue;
+                        }
+
+                        // ── COLLAPSED single-weapon path (empty loadout) — byte-identical to the pre-W2 resolver ──────
+                        // The g-units THIS attacker can reach (within its collapsed hex Range). Co-located → all of g.
+                        List<GroundUnit> reachableC = null;
                         foreach (var t in byFaction[g])
                         {
                             if (t.Health <= 0) continue;
                             if (HexDist(u, t) > u.Range) continue;   // out of this attacker's reach → it can't hit t
-                            (reachable ??= new List<GroundUnit>()).Add(t);
+                            (reachableC ??= new List<GroundUnit>()).Add(t);
                         }
-                        if (reachable == null) continue;             // nothing in range → this unit fires nothing this salvo
+                        if (reachableC == null) continue;            // nothing in range → this unit fires nothing this salvo
 
-                        // Output = attack × terrain affinity × stance. The Armor▸Infantry▸Artillery TRIANGLE has
-                        // DISSOLVED (resolver merge, slice 3b-ii — docs/RESOLVER-MERGE-DESIGN.md §7, developer's call
-                        // 2026-07-08): the type edge is no longer a flat ×1.5/×0.67 multiplier — it now emerges from a
-                        // unit's raw stats (attack / armour / HP) × weapon-nature vs the target's evasion/shield/armour,
-                        // the same way a ship's does. (`GroundTerrain.TriangleMult` is retained as a readout/helper but
-                        // no longer scales the fight.)
-                        // Terrain affinity = the unit TYPE's innate edge (TerrainAttackMult) × its DESIGNED
-                        // locomotion's edge (LocomotionTerrainMult, Propulsion ⚙2 — an all-terrain drive fights better
-                        // on constrained ground). RoughHandlingForUnit reads the unit's designed locomotion (0.5 neutral
-                        // for a unit with none → ×1.0 → byte-identical). Body = the planet the roster sits on.
-                        double roughHandling = GroundMobility.RoughHandlingForUnit(forces.OwningEntity, u);
-                        double atk = u.Attack
+                        // AMMO (G2.3a): a magazine-fed unit goes SILENT once dry; else it burns a salvo as it fires. A unit
+                        // with no magazine (every default/garrison unit) never drains → byte-identical.
+                        if (GroundAmmo.CarriesAmmo(u))
+                        {
+                            if (GroundAmmo.IsDry(u)) continue;                       // dry → this attacker's ammo weapons are silent
+                            if (deltaSeconds > 0) GroundAmmo.Consume(u, AmmoPerSalvo_kg);   // burn a salvo as it fires
+                        }
+
+                        // Output = attack × terrain affinity × stance × SalvoScale (same operand order as the W2 path).
+                        double atkC = u.Attack
                             * GroundTerrain.TerrainAttackMult(u.UnitType, terrain)
                             * GroundTerrain.LocomotionTerrainMult(roughHandling, terrain)
                             * GroundFormationDoctrine.AttackMult(forces, u);
-                        double pool = atk * SalvoScale;
-                        if (gIsDefender && coverFort > 0) pool /= coverFort;
+                        double poolC = atkC * SalvoScale;
+                        if (gIsDefender && coverFort > 0) poolC /= coverFort;
 
-                        // Spread this attacker's pool across its reachable targets, health-weighted (matches the old
-                        // resolver's focus-fire: triangle is already in the total via the avg, distribution is by health).
-                        double totalH = 0.0;
-                        foreach (var t in reachable) totalH += t.Health;
-                        if (totalH <= 0) continue;
-
-                        // Route this attacker's fire through the SHARED KERNEL (resolver merge 3c): its ground weapon
-                        // becomes a WeaponProfile, and dodge + shield + armour resolve the same way a ship's do — the
-                        // ground triangle/dodge/shield now EMERGE from the weapon spec (no bolted-on GroundDamageMatrix
-                        // multiplier). The profile is built once per attacker.
-                        var profile = GroundCombatant.ToWeaponProfile(u);
-                        double shieldSoakFrac = Pulsar4X.Combat.CombatKernel.ShieldSoakFraction(profile.Nature);
-                        foreach (var t in reachable)
-                        {
-                            // DODGE (kernel HitFraction): an aimed slug is dodged ~(1−evasion); an area/beam shot lands
-                            // ~fully — the same curve a ship uses.
-                            double contribution = pool * (t.Health / totalH)
-                                * Pulsar4X.Combat.CombatKernel.HitFraction(profile, t.Evasion);
-                            // SHIELD POOL (3c): the target's depleting shield soaks the soakable fraction (by weapon
-                            // nature — kinetic fully, energy half-bleeds, exotic bypasses) up to its CURRENT charge,
-                            // BEFORE armour. Draining per-source is deterministic (stable iteration → fast-forward==watch).
-                            if (t.CurrentShield > 0 && shieldSoakFrac > 0 && contribution > 0)
-                            {
-                                double absorbed = System.Math.Min(contribution * shieldSoakFrac, t.CurrentShield);
-                                t.CurrentShield -= absorbed;
-                                contribution -= absorbed;
-                            }
-                            // ARMOUR: flat-per-source plating bounces what's left (the swarm-vs-alpha identity) — the
-                            // shared CombatKernel armour soak (via GroundDamageMatrix's delegator, slice 3a), reduced by
-                            // the weapon's PENETRATION (W1b) and split into the weapon's SHOT COUNT (W2b): an AP round
-                            // cracks plate a normal one bounces off, and a big-alpha weapon punches while a chip-swarm of
-                            // equal total is mostly bounced. PerShotEnergy 0 → shotCount 1 (every unit until the W2c dial)
-                            // → the flat single-lump soak, byte-identical to before.
-                            int shotCount = Pulsar4X.Combat.CombatKernel.BurstShotCount(profile);
-                            // ARMOUR NATURE (⚙3): the target's plating soaks the incoming weapon's NATURE by its tuning —
-                            // ablative shrugs off energy, thins vs a slug. natureFactor 1.0 for a plain-plated unit (every
-                            // unit until a nature-tuned plating is fitted) → byte-identical to the pre-nature soak.
-                            double natureFactor = t.ArmourResistFor(profile.Nature);
-                            contribution = GroundDamageMatrix.ArmourSoak(t.Defense, contribution, shotCount, profile.Penetration, natureFactor);
-                            incoming.TryGetValue(t, out var acc);
-                            incoming[t] = acc + contribution;
-                        }
+                        // Route the collapsed weapon through the SHARED KERNEL (resolver merge 3c) — dodge + shield +
+                        // armour, exactly as before.
+                        FireWeaponAtReachable(reachableC, poolC, GroundCombatant.ToWeaponProfile(u));
                     }
                 }
             }
@@ -430,7 +546,19 @@ namespace Pulsar4X.GroundCombat
                 if (enemy == null) continue;
 
                 bool moveAway;
-                if (stance == GroundEngagementStance.CloseToEngage)
+                if (EnableGroundRoleManeuver)
+                {
+                    // W3 — each unit maneuvers to ITS ROLE's ideal range band (screen leads to contact, line closes to
+                    // its firing range and holds, artillery kites to keep its standoff, support stays back): the ground
+                    // echo of space sub-fleet roles — "fighters move differently than a line ship." The formation ROE
+                    // still gates WHETHER it auto-maneuvers (a HoldGround formation was already skipped above); the ROLE
+                    // decides the target band. Byte-identical when the flag is off.
+                    var role = GroundRoleComposer.ClassifyRole(unit);
+                    bool? mv = GroundRoleComposer.RoleMoveAway(role, best, unit.Range, enemy.Range);
+                    if (mv == null) continue;                    // already at its ideal band → hold and fire
+                    moveAway = mv.Value;
+                }
+                else if (stance == GroundEngagementStance.CloseToEngage)
                 {
                     if (best <= unit.Range) continue;            // already in my range → hold and fire
                     moveAway = false;                            // close the gap
@@ -520,12 +648,61 @@ namespace Pulsar4X.GroundCombat
                         done = true;
                         break;
 
+                    case GroundOrderType.DestroyInfrastructure:
+                        // G3: raze the footprint building(s) on the target hex — gated on a formation unit standing in
+                        // the region within Range of the hex; staged drain (razes over several ticks). Done when the hex
+                        // is empty (razed) or nothing is in reach (pop, never wedge).
+                        done = ResolveInfraOrder(body, forces, regionsDB, f, order, destroy: true);
+                        break;
+
+                    case GroundOrderType.CaptureInfrastructure:
+                        // G3: seize the hex — flip GroundHex.OwnerFactionID so its buildings stop fortifying the defender
+                        // (the first consumer that makes hex ownership matter). Range-gated; instant (v1).
+                        done = ResolveInfraOrder(body, forces, regionsDB, f, order, destroy: false);
+                        break;
+
                     default:
                         done = true;   // unknown order → drop it (never wedge the queue)
                         break;
                 }
                 if (done) f.Orders.RemoveAt(0);   // pop → the next order starts next tick
             }
+        }
+
+        /// <summary>G3 — resolve a DestroyInfrastructure / CaptureInfrastructure order for a formation against a target
+        /// hex. RANGE-GATED: the formation must have a living unit standing IN the target region within its Range of the
+        /// hex (the resolver's own HexDist ≤ Range rule; footprints sit on the region centre hex 0,0). DESTROY: Σ in-range
+        /// Attack × <see cref="InfraDestroyStrengthPerAttack"/> bombards the hex (staged — done when the hex is razed).
+        /// CAPTURE: flip the hex owner (instant). Returns true when the order is DONE (razed / seized / nothing to do /
+        /// out of reach) so the queue pops it — never wedges. Defensive/no-throw (runs in the ground hotloop, L4).</summary>
+        private static bool ResolveInfraOrder(Entity body, GroundForcesDB forces, PlanetRegionsDB regionsDB,
+            GroundFormation f, GroundOrder order, bool destroy)
+        {
+            if (regionsDB?.Regions == null || order.TargetRegion < 0 || order.TargetRegion >= regionsDB.Regions.Count) return true;
+            var region = regionsDB.Regions[order.TargetRegion];
+            GroundHex hex = null;
+            if (region.Hexes != null)
+                foreach (var h in region.Hexes) if (h.Q == order.TargetQ && h.R == order.TargetR) { hex = h; break; }
+            if (hex == null || hex.InstallationIds == null || hex.InstallationIds.Count == 0) return true;   // nothing to raze/seize
+
+            // RANGE GATE: Σ Attack of the formation's living units standing in the target region that reach the hex.
+            double reachAttack = 0.0;
+            var targetHex = new HexCoordinate(order.TargetQ, order.TargetR);
+            foreach (var u in GroundFormationTools.MembersOf(forces, f))
+            {
+                if (u.Health <= 0 || u.RegionIndex != order.TargetRegion) continue;
+                if (new HexCoordinate(u.HexQ, u.HexR).DistanceTo(targetHex) > u.Range) continue;
+                reachAttack += u.Attack;
+            }
+            if (reachAttack <= 0.0) return true;   // no unit in reach → can't fire; pop cleanly (never wedge)
+
+            if (destroy)
+            {
+                GroundBuildings.BombardHex(body, order.TargetRegion, order.TargetQ, order.TargetR, reachAttack * InfraDestroyStrengthPerAttack);
+                return hex.InstallationIds.Count == 0;   // done once the hex is razed; else keep draining next tick (staged)
+            }
+            hex.OwnerFactionID = f.FactionOwnerID;   // seize — its buildings stop counting for the defender's fortification
+            return true;
         }
 
         /// <summary>A move is resolved when the formation's LEADER has stopped moving — it either arrived at the target
@@ -581,7 +758,10 @@ namespace Pulsar4X.GroundCombat
         private static bool IsDamageEffect(HazardEffectType t)
             => t == HazardEffectType.HeatDamage || t == HazardEffectType.RadiationDamage
             || t == HazardEffectType.KineticDamage || t == HazardEffectType.CorrosiveDamage
-            || t == HazardEffectType.EMDamage || t == HazardEffectType.GravimetricDamage;
+            || t == HazardEffectType.EMDamage || t == HazardEffectType.GravimetricDamage
+            // Ground-only surface hazards (2026-07-17): an unsealed unit bleeds in vacuum / a toxic atmosphere. The
+            // unit's EnvResistance (a sealed suit) negates it via the same E4 path — so sealing is a real decision.
+            || t == HazardEffectType.Vacuum || t == HazardEffectType.ToxicAtmosphere;
 
         private static void TryCapturePlanet(Entity body, PlanetRegionsDB regionsDB)
         {

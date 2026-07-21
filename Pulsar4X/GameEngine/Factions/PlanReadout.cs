@@ -70,7 +70,7 @@ namespace Pulsar4X.Factions
                 : "no threat";
             return $"[AI] {r.When:yyyy-MM-dd} {factionName}: {r.Objective}/{r.Tier} — why: {why} | act: {act} "
                  + $"| saw: str {r.OwnStrength:0.#} vs {threat}, morale {r.Morale:0}, legit {r.Legitimacy:0}, "
-                 + $"bal {r.Balance:0}, colonies {r.ColonyCount}, contacts {r.Contacts}";
+                 + $"bal {r.Balance:0}, colonies {r.ColonyCount}, stations {r.StationCount}, contacts {r.Contacts}";
         }
 
         private static string SafeName(Entity faction)

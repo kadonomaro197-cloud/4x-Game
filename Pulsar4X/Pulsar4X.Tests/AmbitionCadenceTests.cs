@@ -37,12 +37,19 @@ namespace Pulsar4X.Tests
             Assert.That(ObjectiveTransition.CommitFor(StrategicObjective.Conquer, neutral),
                 Is.EqualTo(ObjectiveTransition.DefaultCommitFor), "neutral Ambition holds the default for Conquer too");
 
-            // A non-expansion objective is never scaled, even at an extreme Ambition — only the expansion push moves.
+            // A non-expansion objective is never SCALED BY AMBITION, even at an extreme trait — only the expansion push
+            // moves with Ambition. (A peaceful growth aim keeps the fixed default; P3.3 gives a CRISIS aim its own
+            // shorter fixed dwell, still ambition-invariant.)
             var extreme = WithAmbition(1.0);
             Assert.That(ObjectiveTransition.CommitFor(StrategicObjective.GrowEconomy, extreme),
                 Is.EqualTo(ObjectiveTransition.DefaultCommitFor), "a peaceful growth aim keeps the fixed dwell");
+            // P3.3 (Operation Earthfall, findings/A3): Defend is a CRISIS objective → the shorter CrisisCommitFor, and
+            // Ambition STILL doesn't scale it (the property this test guards) — the value is ambition-invariant, just no
+            // longer the default. Verified invariant across neutral vs extreme Ambition.
             Assert.That(ObjectiveTransition.CommitFor(StrategicObjective.Defend, extreme),
-                Is.EqualTo(ObjectiveTransition.DefaultCommitFor), "Defend keeps the fixed dwell");
+                Is.EqualTo(ObjectiveTransition.CrisisCommitFor), "Defend holds the crisis dwell (Ambition doesn't scale it)");
+            Assert.That(ObjectiveTransition.CommitFor(StrategicObjective.Defend, neutral),
+                Is.EqualTo(ObjectiveTransition.CrisisCommitFor), "Defend's crisis dwell is invariant to Ambition");
             Assert.That(ObjectiveTransition.CommitFor(StrategicObjective.None, extreme),
                 Is.EqualTo(ObjectiveTransition.DefaultCommitFor), "None keeps the fixed dwell");
         }

@@ -40,6 +40,37 @@ namespace Pulsar4X.Colonies
         /// </summary>
         public static bool EnablePopularDemands = false;
 
+        /// <summary>
+        /// Kill the ONE-CYCLE STALE-MORALE ECHO (Operation Earthfall A3, findings/A3-objective-flip.md seam 3). By
+        /// default <see cref="RecalcLegitimacy"/> reads the sibling <see cref="ColonyMoraleDB.Morale"/> field that
+        /// <see cref="PopulationProcessor"/> writes — but that field is ONE CYCLE STALE whenever this monthly hotloop
+        /// happens to fire BEFORE PopulationProcessor's on the shared 30-day boundary. VERIFIED: the two are keyed to
+        /// different DataBlobs (LegitimacyDB vs ColonyInfoDB) at the same frequency, and their run-order on that shared
+        /// boundary derives from <c>Assembly.GetTypes()</c> (ProcessorManager.CreateProcessors → the
+        /// HotLoopProcessorsNextRun iteration in ManagerSubPulse.ProcessToNextInterupt) — an order the CLR leaves
+        /// UNSPECIFIED, so it cannot be relied on to put legitimacy after population (and those files are outside this
+        /// slice's fence anyway). When TRUE, legitimacy instead recomputes THIS cycle's morale from the same live
+        /// inputs via <see cref="PopulationProcessor.ComputeCurrentMorale"/>, so it is ORDER-INDEPENDENT and never
+        /// echoes a stale trough — a transient morale dip can no longer produce a legit cliff a month late. Defaults
+        /// <b>false</b> so every existing test stays byte-identical (a sibling of <see cref="EnablePopularDemands"/>,
+        /// flippable alone); a later integration/client slice turns it on.
+        /// </summary>
+        public static bool ReadCurrentMorale = false;
+
+        /// <summary>
+        /// Debounce the rebellion trigger (Operation Earthfall A3 seam 2): by default <see cref="UpdateRebellion"/>
+        /// begins a rebellion on a SINGLE collapsing read, so one transient legitimacy trough starts a revolt. When
+        /// TRUE, a rebellion needs <see cref="RebellionDebounceReads"/> CONSECUTIVE monthly collapsing reads
+        /// (persisted on <see cref="LegitimacyDB.ConsecutiveCollapsingReads"/>, reset by any non-collapsing read), so
+        /// a one-month dip is ignored while a sustained collapse still rebels. Defaults <b>false</b> → byte-identical
+        /// (existing RebellionTests keep their single-sample trigger); a later slice turns it on.
+        /// </summary>
+        public static bool EnableRebellionDebounce = false;
+
+        /// <summary>Consecutive monthly collapsing reads a rebellion needs to fire under
+        /// <see cref="EnableRebellionDebounce"/>. // FLAGGED balance value — the developer sets the debounce depth.</summary>
+        public const int RebellionDebounceReads = 2;
+
         public void Init(Game game) { }
 
         public void ProcessEntity(Entity entity, int deltaSeconds)
@@ -61,9 +92,23 @@ namespace Pulsar4X.Colonies
         {
             if (!province.TryGetDataBlob<LegitimacyDB>(out var legitimacy)) return;
 
-            double morale = ColonyMoraleDB.Neutral;
-            if (province.TryGetDataBlob<ColonyMoraleDB>(out var moraleDB))
-                morale = moraleDB.Morale;
+            // The v1 driver: the province's morale. By DEFAULT read the sibling ColonyMoraleDB.Morale field that
+            // PopulationProcessor writes — but that field is ONE CYCLE STALE when this hotloop fires before
+            // PopulationProcessor's on the shared 30-day boundary (their order is Assembly.GetTypes()-derived, i.e.
+            // unspecified — see the ReadCurrentMorale doc). ReadCurrentMorale recomputes THIS cycle's morale from the
+            // same live inputs, so legitimacy is order-independent and the stale echo can't occur. Default off →
+            // byte-identical to the field read (and to every existing test).
+            double morale;
+            if (ReadCurrentMorale)
+            {
+                morale = PopulationProcessor.ComputeCurrentMorale(province);
+            }
+            else
+            {
+                morale = ColonyMoraleDB.Neutral;
+                if (province.TryGetDataBlob<ColonyMoraleDB>(out var moraleDB))
+                    morale = moraleDB.Morale;
+            }
 
             var inputs = LegitimacyInputs.FromMorale(morale);
             inputs.WarOutcome = WarTermFor(province);   // 0 in peace; while at war, gated by militarism
@@ -84,7 +129,7 @@ namespace Pulsar4X.Colonies
             // when it falls into the collapse band, quell it when legitimacy is restored. The window-expiry
             // resolution (secession/defection) is a later slice — this lights up the collapse hook.
             if (province.TryGetDataBlob<RebellionDB>(out var rebellion))
-                UpdateRebellion(rebellion, legitimacy.Legitimacy, province.StarSysDateTime);
+                UpdateRebellion(rebellion, legitimacy, legitimacy.Legitimacy, province.StarSysDateTime);
         }
 
         /// <summary>
@@ -95,10 +140,32 @@ namespace Pulsar4X.Colonies
         /// reads <see cref="RebellionDB.WindowExpired"/>).
         /// </summary>
         internal static void UpdateRebellion(RebellionDB rebellion, double legitimacy, DateTime now)
+            => UpdateRebellion(rebellion, null, legitimacy, now);
+
+        /// <summary>
+        /// The debounce-aware form: <paramref name="legitDb"/> carries the persisted consecutive-collapsing counter.
+        /// With <see cref="EnableRebellionDebounce"/> OFF (or a null <paramref name="legitDb"/>) this is byte-identical
+        /// to the single-sample trigger above. With it ON, a rebellion only BEGINS once legitimacy has read collapsing
+        /// for <see cref="RebellionDebounceReads"/> consecutive monthly cycles — any non-collapsing read resets the
+        /// counter, so a one-month transient dip is ignored while a sustained collapse still rebels.
+        /// </summary>
+        internal static void UpdateRebellion(RebellionDB rebellion, LegitimacyDB legitDb, double legitimacy, DateTime now)
         {
+            bool collapsing = LegitimacyDB.IsCollapsing(legitimacy);
+
+            // Accumulate/reset the debounce counter (only when armed AND there's a blob to persist it on).
+            if (EnableRebellionDebounce && legitDb != null)
+            {
+                if (collapsing) legitDb.ConsecutiveCollapsingReads++;
+                else legitDb.ConsecutiveCollapsingReads = 0;
+            }
+
             if (!rebellion.IsRebelling)
             {
-                if (LegitimacyDB.IsCollapsing(legitimacy))
+                bool trigger = collapsing;
+                if (EnableRebellionDebounce && legitDb != null)
+                    trigger = legitDb.ConsecutiveCollapsingReads >= RebellionDebounceReads;
+                if (trigger)
                 {
                     rebellion.IsRebelling = true;
                     rebellion.StartDate = now;
@@ -108,6 +175,8 @@ namespace Pulsar4X.Colonies
             else if (legitimacy >= RebellionDB.RecoveryThreshold)
             {
                 rebellion.IsRebelling = false;   // quelled — legitimacy restored within the window
+                if (EnableRebellionDebounce && legitDb != null)
+                    legitDb.ConsecutiveCollapsingReads = 0;
             }
         }
 

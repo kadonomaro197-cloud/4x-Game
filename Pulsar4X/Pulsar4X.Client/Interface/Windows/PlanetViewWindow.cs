@@ -75,6 +75,10 @@ namespace Pulsar4X.Client
         private int _selFormationId = -1;
         // The stance-combo index for the selected formation's stance selector.
         private int _stanceChoice = 0;
+        // Rename buffer (PW.2) — a formation is a DATA object, so GroundForces.RenameFormation is the setter (R1 gap 2).
+        // Reseeded from the selected formation's current name when the selection changes (tracked by _formRenameForId).
+        private byte[] _formRenameBuf = new byte[64];
+        private int _formRenameForId = -1;
 
         // A transient status line ("marched 3 units east", "built Barracks in region 2") shown under the controls.
         private string _status = "";
@@ -343,6 +347,54 @@ namespace Pulsar4X.Client
                 }
             }
 
+            // 1b) RANGE OVERLAY (C4.1) — for the SELECTED group of YOUR units, tint the hexes they can reach: WEAPON reach
+            //     (red, GroundUnit.Range in hexes) and RADAR reach (green, the unit's best GroundSensorAtb.Range_km ÷ the
+            //     region's real hex pitch — the GroundSensors.cs:42 km→hex conversion). FOG-HONEST: drawn ONLY for your OWN
+            //     units (_selFaction == myFaction — you never see an enemy's ranges, the same rule the space rings use),
+            //     and only the visible window's hexes. Toggle MIRRORS the space map's global range-ring switch
+            //     (GlobalUIState.ShowAllRangeRings — DevTools › Detection / Fog of War). The disk is the odd-r OFFSET hex
+            //     distance the map is DRAWN in (GlobalHexDistance), wrapped the short way across the seam.
+            if (_uiState.ShowAllRangeRings && HasSelection && _selFaction == myFaction && forcesDB != null)
+            {
+                // Gather the selected group's units (region + owner + type — the same group the caption reports), each with
+                // its global position, weapon reach (hexes) and radar reach (hexes). Cheap: a handful of units.
+                var reach = new List<(int gq, int gr, int weapon, int radar)>();
+                foreach (var u in forcesDB.Units)
+                {
+                    if (u.RegionIndex != _selRegion || u.FactionOwnerID != myFaction || u.UnitType != _selType) continue;
+                    if (u.GlobalQ < 0 || u.GlobalR < 0) continue;
+                    int weaponHexes = Math.Max(0, u.Range);
+                    int radarHexes = RadarReachHexesFor(body, u, regions);
+                    if (weaponHexes <= 0 && radarHexes <= 0) continue;
+                    reach.Add((u.GlobalQ, u.GlobalR, weaponHexes, radarHexes));
+                }
+                if (reach.Count > 0)
+                {
+                    uint radarCol = ImGui.ColorConvertFloat4ToU32(new Vector4(0.20f, 0.80f, 0.35f, 0.13f));  // green = can SEE
+                    uint weaponCol = ImGui.ColorConvertFloat4ToU32(new Vector4(0.90f, 0.22f, 0.22f, 0.20f)); // red   = can SHOOT
+                    for (int sc = 0; sc < winCols; sc++)
+                    {
+                        int gq = grid.WrapCol(_centerCol - halfW + sc);
+                        for (int r = 0; r < rows; r++)
+                        {
+                            if (grid.HexAt(gq, r) == null) continue;
+                            bool inRadar = false, inWeapon = false;
+                            foreach (var u in reach)
+                            {
+                                int d = GlobalHexDistance(u.gq, u.gr, gq, r, cols);
+                                if (!inRadar && u.radar > 0 && d <= u.radar) inRadar = true;
+                                if (!inWeapon && u.weapon > 0 && d <= u.weapon) inWeapon = true;
+                                if (inRadar && inWeapon) break;
+                            }
+                            if (!inRadar && !inWeapon) continue;
+                            var pc = HexCenterOffset(origin, size, sc, r);
+                            if (inRadar) drawList.AddNgonFilled(pc, size, radarCol, 6);   // draw SEE first…
+                            if (inWeapon) drawList.AddNgonFilled(pc, size, weaponCol, 6); // …SHOOT on top (red wins the overlap)
+                        }
+                    }
+                }
+            }
+
             // 2) region-band seam lines + centre label (a band boundary is where RegionOfColumn changes).
             uint seamCol = ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 0.95f, 0.6f, 0.4f));
             for (int sc = 0; sc <= winCols; sc++)
@@ -420,6 +472,8 @@ namespace Pulsar4X.Client
                 int range = rep?.Range ?? 0;
                 double km = GroundRangeTools.RealReachKm(range, regions[_selRegion]);
                 ImGui.TextDisabled($"Selected {_selType} (Region {_selRegion + 1}): click a destination hex to march — strike range {range} hex ≈ {km:N0} km. Ocean impassable.");
+                if (_uiState.ShowAllRangeRings)
+                    ImGui.TextDisabled("Range overlay: red = weapon reach, green = radar reach (toggle in DevTools › Detection / Fog of War).");
             }
         }
 
@@ -480,6 +534,54 @@ namespace Pulsar4X.Client
         /// as a proper map — matching the odd-r neighbour model the global pathfinder (G2) uses.</summary>
         private static Vector2 HexCenterOffset(Vector2 origin, float size, int sc, int r)
             => new Vector2(origin.X + size * 1.7320508f * (sc + 0.5f * (r & 1)), origin.Y + size * 1.5f * r);
+
+        // ── C4.1 range overlay helpers ──────────────────────────────────────────────────────────────────────────────
+
+        /// <summary>The RADAR reach of a unit in HEXES on this body — its best mounted <see cref="GroundSensorAtb"/>
+        /// Range_km divided by the region's real hex pitch (the <c>GroundSensors.cs:42</c> km→hex conversion). Returns 0
+        /// for a unit with no radar component — a monolithic/garrison/dev unit has no backing component store, so it shows
+        /// NO green overlay (honest: only a designed-with-a-radar unit reveals). Reads through the same backing-store path
+        /// <see cref="GroundSensors.RevealFromUnits"/> uses; never throws.</summary>
+        private static int RadarReachHexesFor(Entity body, GroundUnit unit, List<Region> regions)
+        {
+            try
+            {
+                if (unit == null || regions == null) return 0;
+                if (!GroundUnitEntity.TryGetBacking(body, unit, out var backing)) return 0;
+                if (!backing.TryGetDataBlob<Pulsar4X.Datablobs.ComponentInstancesDB>(out var cidb)) return 0;
+                if (!cidb.TryGetComponentsByAttribute<GroundSensorAtb>(out var radars) || radars.Count == 0) return 0;
+                double rangeKm = 0;
+                foreach (var rc in radars)
+                {
+                    var atb = rc.Design?.GetAttribute<GroundSensorAtb>();
+                    if (atb != null && atb.Range_km > rangeKm) rangeKm = atb.Range_km;   // best radar mounted
+                }
+                if (rangeKm <= 0) return 0;
+                int ri = unit.RegionIndex;
+                var region = (ri >= 0 && ri < regions.Count) ? regions[ri] : null;
+                double pitch = region != null ? GroundRangeTools.HexPitchKm(region) : 0;
+                if (pitch <= 0) return 0;
+                double hexes = rangeKm / pitch;
+                return hexes >= int.MaxValue ? int.MaxValue : (int)hexes;
+            }
+            catch { return 0; }
+        }
+
+        /// <summary>Odd-r OFFSET → axial for a global cylinder hex (col, row) — the conversion that makes
+        /// <see cref="Pulsar4X.Colonies.HexCoordinate"/>'s axial DistanceTo match the odd-r layout the map is DRAWN in
+        /// (<see cref="HexCenterOffset"/>: pointy-top, odd rows shoved +½). Row is always ≥ 0 here, so the halved offset
+        /// divides exactly.</summary>
+        private static Pulsar4X.Colonies.HexCoordinate OddRToAxial(int col, int row)
+            => new Pulsar4X.Colonies.HexCoordinate(col - (row - (row & 1)) / 2, row);
+
+        /// <summary>Hex distance between two GLOBAL cylinder hexes in the DRAWN odd-r offset space, choosing the SHORT way
+        /// across the longitude seam (<see cref="WrapDelta"/> picks the nearest column image). Converts both to axial first
+        /// so the reach "disk" is the correct hexagonal shape on screen, not a sheared rhombus.</summary>
+        private static int GlobalHexDistance(int aQ, int aR, int bQ, int bR, int cols)
+        {
+            int bCol = aQ + WrapDelta(bQ - aQ, cols);   // the target's nearest column image on the ring
+            return OddRToAxial(aQ, aR).DistanceTo(OddRToAxial(bCol, bR));
+        }
 
         // ── C-track: the CITY zoom — the mini-hex grid UNDER one operational hex (Planet → Region → Hex → CityTile) ──
         // Double-clicking a hex on the globe zooms here. Buildings occupy mini-hex tiles 1:1 (the roll-up invariant);
@@ -645,6 +747,51 @@ namespace Pulsar4X.Client
             }
 
             ImGui.Text($"{city.Tiles.Count} mini-hex tiles — buildings occupy their footprint (▧). \"Build a new installation\" → click an empty tile to queue it through production (⬡ orange = under construction); \"Bring buildings here\" places already-built ones; \"Develop hex\" auto-lays. Click a tile to inspect.");
+
+            // PW.2 (C5b) — INFRASTRUCTURE COMBAT from the city zoom (the R4 city-tile-inspect hook): raze / seize this
+            // operational hex's region band via one of your battalions standing in it.
+            DrawCityInfraOrders(body, band, myFaction);
+        }
+
+        // PW.2 (C5b) — the city-zoom infrastructure-combat section. The G3 DestroyInfra / CaptureInfra order works at the
+        // REGION level (it targets the region-centre hex 0,0 where footprints sit, and its range gate needs a unit in the
+        // region), so this razes/seizes the whole region BAND this operational hex belongs to, carried by a player
+        // battalion standing in that region. If no battalion of yours is here yet, it tells you to move one in.
+        private void DrawCityInfraOrders(Entity body, int band, int myFaction)
+        {
+            if (!body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB) || regionsDB.Regions == null
+                || band < 0 || band >= regionsDB.Regions.Count) return;
+            if (!body.TryGetDataBlob<GroundForcesDB>(out var forces)) return;
+            var region = regionsDB.Regions[band];
+            GroundHex centre = null;                       // footprints live on the region-centre hex (0,0)
+            if (region.Hexes != null)
+                foreach (var h in region.Hexes) if (h.Q == 0 && h.R == 0) { centre = h; break; }
+            int infra = centre?.InstallationIds?.Count ?? 0;
+
+            ImGui.Separator();
+            ImGui.TextDisabled($"Infrastructure combat — Region {region.Index + 1} (raze / seize the footprint buildings here):");
+            if (infra <= 0)
+            {
+                ImGui.TextDisabled("   (no footprint buildings on this region's centre hex.)");
+                return;
+            }
+
+            // The range gate needs a unit IN the region — find one of YOUR battalions standing here to carry the order.
+            GroundFormation carrier = null;
+            foreach (var f in GroundFormationTools.FormationsFor(forces, myFaction))
+                if (GroundForces.LeaderRegion(forces, f) == band) { carrier = f; break; }
+
+            ImGui.Text($"   {infra} footprint building(s)" + (centre != null && centre.OwnerFactionID == myFaction ? " — you hold this hex" : ""));
+            if (carrier == null)
+            {
+                ImGui.TextDisabled("   Move one of your battalions into this region to raze or capture it.");
+                return;
+            }
+            if (ImGui.Button($"Raze with '{carrier.Name}'##cinfd"))
+            { GroundForces.QueueFormationOrder(carrier, GroundOrder.DestroyInfra(band, 0, 0)); _status = $"queued: '{carrier.Name}' razes Region {region.Index + 1} infra"; }
+            ImGui.SameLine();
+            if (ImGui.Button($"Capture with '{carrier.Name}'##cinfc"))
+            { GroundForces.QueueFormationOrder(carrier, GroundOrder.CaptureInfra(band, 0, 0)); _status = $"queued: '{carrier.Name}' seizes Region {region.Index + 1} hex"; }
         }
 
         /// <summary>Axial hex (q,r) → screen position (pointy-top), centred on <paramref name="origin"/> — for the city
@@ -1020,6 +1167,22 @@ namespace Pulsar4X.Client
 
                 if (sel)
                 {
+                    // ── Rename (PW.2 — GroundForces.RenameFormation; a data object can't use the entity-only RenameWindow) ──
+                    if (_formRenameForId != f.FormationId)   // reseed the buffer when the selection changes
+                    {
+                        _formRenameBuf = Utils.BytesFromString(f.Name ?? "", 64);
+                        _formRenameForId = f.FormationId;
+                    }
+                    ImGui.SetNextItemWidth(180f);
+                    ImGui.InputText($"##formrename{f.FormationId}", _formRenameBuf, 64);
+                    ImGui.SameLine();
+                    if (ImGui.Button($"Rename##frn{f.FormationId}"))
+                    {
+                        if (GroundForces.RenameFormation(f, Utils.StringFromBytes(_formRenameBuf)))
+                        { _status = $"renamed to '{f.Name}'"; _formRenameForId = -1; }   // reload from the new name next frame
+                        else _status = "rename ignored (blank name)";
+                    }
+
                     // March the whole formation to a visible adjacent region (of its rally region), or disband.
                     var rallyRegion = (rally >= 0 && rally < regions.Count) ? regions[rally] : null;
                     if (rallyRegion != null && count > 0)
@@ -1045,8 +1208,40 @@ namespace Pulsar4X.Client
                     DrawStanceSelector(f);
                     DrawRoeSelector(f);
                     DrawOrderQueue(body, forcesDB, f, regions, left, right);
+                    DrawFormationInfraOrders(forcesDB, f, regions);
                 }
             }
+        }
+
+        // PW.2 (C5b) — INFRASTRUCTURE COMBAT buttons on the formation panel: raze / seize the footprint building(s) on
+        // the region this formation stands in (the G3 GroundOrder.DestroyInfra / CaptureInfra order types). The engine
+        // order targets the region-CENTRE hex (0,0) — where footprints are placed — and its range gate needs a unit
+        // standing IN that region, so the target is the formation's leader region. Defensive: the order pops cleanly if
+        // there's nothing to hit (a stale click is a safe no-op).
+        private void DrawFormationInfraOrders(GroundForcesDB forcesDB, GroundFormation f, List<Region> regions)
+        {
+            int rally = GroundForces.LeaderRegion(forcesDB, f);
+            if (rally < 0 || rally >= regions.Count) return;
+            var region = regions[rally];
+            GroundHex centre = null;                       // footprints live on the region-centre hex (0,0)
+            if (region.Hexes != null)
+                foreach (var h in region.Hexes) if (h.Q == 0 && h.R == 0) { centre = h; break; }
+            int infra = centre?.InstallationIds?.Count ?? 0;
+
+            ImGui.Separator();
+            ImGui.TextDisabled($"Infrastructure — Region {rally + 1} (where this formation stands):");
+            if (infra <= 0)
+            {
+                ImGui.TextDisabled("   (no footprint buildings here to raze or seize.)");
+                return;
+            }
+            bool weHold = centre != null && centre.OwnerFactionID == f.FactionOwnerID;
+            ImGui.Text($"   {infra} footprint building(s)" + (weHold ? " — hex seized" : ""));
+            if (ImGui.Button($"Raze infrastructure##finf{f.FormationId}"))
+            { GroundForces.QueueFormationOrder(f, GroundOrder.DestroyInfra(rally, 0, 0)); _status = $"queued: raze infra in Region {rally + 1}"; }
+            ImGui.SameLine();
+            if (ImGui.Button($"Capture infrastructure##finf{f.FormationId}"))
+            { GroundForces.QueueFormationOrder(f, GroundOrder.CaptureInfra(rally, 0, 0)); _status = $"queued: seize Region {rally + 1} hex"; }
         }
 
         // ── The ORDER QUEUE (O1) — build a sequential plan for the formation ("move → move → dig in") ──

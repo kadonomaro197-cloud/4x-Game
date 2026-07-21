@@ -341,6 +341,10 @@
         {
           "designId": "kithrin-ship-radiance",
           "name": "KCS Rime Chorus"
+        },
+        {
+          "designId": "kithrin-ship-sable",
+          "name": "KCS Pathfinder"
         }
       ]
     }

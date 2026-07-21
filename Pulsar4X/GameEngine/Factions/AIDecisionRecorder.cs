@@ -4,7 +4,7 @@ using Pulsar4X.Engine;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// Writes one <see cref="AIDecisionRecord"/> to a faction's <see cref="AIDecisionRecordDB"/> tape each monthly
+    /// Writes one <see cref="AIDecisionRecord"/> to a faction's <see cref="AIDecisionRecordDB"/> tape each daily
     /// Tick — the capture half of the AI flight recorder (docs/ai/DEVTEST-CONQUEST-SANDBOX-DESIGN.md §4). Called from
     /// <see cref="NPCDecisionProcessor.Tick"/> right after the objective settles (and the gated planner runs), so the
     /// record reflects the decision AND (when the order gate is on) the step taken.
@@ -44,6 +44,10 @@ namespace Pulsar4X.Factions
                 rec.Legitimacy = FactionRollup.MeanLegitimacy(factionEntity);
                 rec.Balance    = (double)FactionRollup.Balance(factionEntity);
                 rec.ColonyCount = FactionRollup.ColonyCount(factionEntity);
+                // Stations are held in a registry parallel to Colonies (FactionInfoDB.Stations), and ColonyCount counts
+                // Colonies only — so a station-only faction taped "colonies 0" while owning Titan. Record stations too so
+                // the tape reads the faction's real footprint. Reads factionInfoDB directly (mirrors the Contacts line).
+                rec.StationCount = factionInfoDB.Stations?.Count ?? 0;
                 rec.Contacts    = factionInfoDB.SensorContacts?.Count ?? 0;
 
                 if (!factionEntity.TryGetDataBlob<AIDecisionRecordDB>(out var tape))

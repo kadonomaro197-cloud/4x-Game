@@ -81,6 +81,31 @@ namespace Pulsar4X.GroundCombat
         /// that punches flat armour, small arms chip and bounce. Snapshotted onto each raised unit's
         /// <see cref="GroundUnit.PerShotEnergy"/>. Moddable per design (the base-mod Armor unit's main gun is a big alpha).</summary>
         [JsonProperty] public double PerShotEnergy { get; set; }
+        /// <summary>W1 — the per-weapon LOADOUT (one <see cref="GroundWeaponMount"/> per mounted weapon component). Built
+        /// by <c>GroundUnitAssembly.Compute</c> from the design's weapon parts and snapshotted onto each raised
+        /// <see cref="GroundUnit.WeaponLoadout"/>. Empty for a code-built / garrison design → the resolver falls back to
+        /// the single collapsed weapon (byte-identical). ADDITIVE — carried now; the resolver reads it in W2.</summary>
+        [JsonProperty] public List<GroundWeaponMount> WeaponLoadout { get; set; } = new List<GroundWeaponMount>();
+        /// <summary>STANDING UPKEEP in credits/month this unit costs its owning faction simply by EXISTING — the ground
+        /// echo of a station's operating cost, billed monthly by <see cref="GroundUpkeep"/>. 0 = free (byte-identical: no
+        /// existing design sets it). Snapshotted onto <see cref="GroundUnit.UpkeepCredits"/> at raise.
+        /// <para>This slice ships the MECHANISM + gauge only; the value's SOURCE is a deliberate follow-up (a balance
+        /// decision — the developer's call to scale it off the unit's pay + build cost). To make a real garrison cost
+        /// money, set this at one of the three design-builder sites: <c>GroundUnitAssembly.ToGroundUnitDesign</c> (the
+        /// player-assembled 6-man-squad path — it does NOT set this today), <c>GroundStartGarrison</c>'s code-built
+        /// designs, and/or a base-mod <c>GroundUnitAtb</c> ctor arg (note: adding a ctor arg is NOT template-free — the
+        /// JSON binder is exact-arity, so all base-mod ground-unit templates must be updated in lockstep, gotcha #10).</para></summary>
+        [JsonProperty] public double UpkeepCredits { get; set; }
+        /// <summary>VETERANCY / TRAINING multiplier — how much better-than-green this unit is, the ground echo of a ship's
+        /// <see cref="Pulsar4X.Combat.UnitCaliberAtb"/> elite stamp (Firepower×Toughness). At raise it multiplies the
+        /// unit's <c>Attack</c> AND toughness (<c>MaxHealth</c>) — an elite unit hits harder and takes more — the
+        /// developer's "training reflected in game." <b>1.0 = green/untrained → byte-identical</b> (every existing design
+        /// keeps 1.0). The <c>= 1.0</c> initializer is LOAD-BEARING: it is the fallback for an old save whose JSON lacks
+        /// this property (Newtonsoft keeps the ctor value for an absent field), so a pre-veterancy design never loads at
+        /// 0× and zeroes its units. The multiplier is BAKED into the stats at raise, never re-read by the resolver (the
+        /// developer's constraint). Its COST (elite units are dearer to build/train) rides the costed training-component
+        /// slice (B); this slice (A) is the multiplier mechanism + gauge.</summary>
+        [JsonProperty] public double TrainingMultiplier { get; set; } = 1.0;
         /// <summary>ENVIRONMENTAL GEAR (E4) — per-hazard protection this design's units carry, keyed by the shared
         /// <see cref="Pulsar4X.Hazards.HazardEffectType"/>. Value 0..1 = fraction of that hazard's attrition negated
         /// (a "heat-shielded" design has <c>{HeatDamage: 0.8}</c>). Snapshotted onto each raised <see cref="GroundUnit"/>.
@@ -92,6 +117,15 @@ namespace Pulsar4X.GroundCombat
         /// <summary>Which region a completed build musters into (v1: the capital region 0; a chosen muster point is a
         /// refinement). Clamped to the world's real region count at placement.</summary>
         [JsonProperty] public int DefaultRegionIndex { get; set; } = 0;
+
+        /// <summary>SQUAD SIZE — how many <see cref="GroundUnit"/>s ONE build of this design raises (the assembler dial:
+        /// "how many units are made when this is built"). A build job that completes raises this many units into the
+        /// muster region, so a designer stamps out a squad/platoon in one order instead of queueing them one at a time.
+        /// The design's build COST + build-TIME scale with it (set in <c>GroundUnitAssembly.ToGroundUnitDesign</c>), so
+        /// a squad of 10 costs 10× a single unit — no free multiplication (CONVENTIONS §16). Composes with the industry
+        /// batch (order N jobs → N × UnitsPerBuild units). <b>1 = byte-identical</b> (every code-built / garrison design,
+        /// and an old save whose JSON lacks the field — the <c>= 1</c> initializer is the load-bearing fallback).</summary>
+        [JsonProperty] public int UnitsPerBuild { get; set; } = 1;
 
         /// <summary>The COMPONENTS this unit is built from — the mounted component-design ids → count (frame + parts).
         /// KEEPING these (instead of only the flattened combat stats above) is the foundation of units-as-entities
@@ -122,7 +156,11 @@ namespace Pulsar4X.GroundCombat
                 int region = DefaultRegionIndex;
                 if (body.TryGetDataBlob<PlanetRegionsDB>(out var regions) && regions.Regions.Count > 0)
                     region = Math.Max(0, Math.Min(DefaultRegionIndex, regions.Regions.Count - 1));
-                GroundForces.RaiseUnit(body, this, industryEntity.FactionOwnerID, region);
+                // SQUAD SIZE — one build raises UnitsPerBuild units into the muster region (the assembler dial). 1 →
+                // exactly one raise, byte-identical. The cost/time already scaled by UnitsPerBuild at design time.
+                int squad = Math.Max(1, UnitsPerBuild);
+                for (int i = 0; i < squad; i++)
+                    GroundForces.RaiseUnit(body, this, industryEntity.FactionOwnerID, region);
             }
 
             // Job lifecycle (same as ComponentDesign) — guarded so a test/host without a real production line is safe.

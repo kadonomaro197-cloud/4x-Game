@@ -110,6 +110,11 @@ namespace Pulsar4X.GroundCombat
 
             transport.LoadedUnits.Remove(unit);
             GroundForces.PlaceExistingUnit(targetBody, unit, regionIndex);
+            // AI formation parity (R2 gap 3): a landed invader is swept into a BATTALION with the faction's other loose
+            // units on this world, so the ground tactical brain commands a formation rather than a lone loose unit.
+            // Gated OFF by default → landing is byte-identical (the AutoRaiseHomeGarrison pattern) until the flag is flipped.
+            if (GroundAssembly.AutoFormUp)
+                GroundAssembly.FormUpLoose(targetBody, unit.FactionOwnerID);
             return true;
         }
 
