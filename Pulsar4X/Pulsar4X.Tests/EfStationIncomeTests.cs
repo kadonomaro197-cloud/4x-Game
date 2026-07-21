@@ -97,11 +97,11 @@ namespace Pulsar4X.Tests
 
             s.AdvanceTime(TimeSpan.FromDays(35)); // past the first monthly net-operating pass (billed at 30d)
 
-            // The colony is UNTAXED by default (strain nodes are DevTest-only), so every ColonyTax entry here is the
-            // STATION income the net-operating pass collected — "the ledger shows the income category". (Booked under
-            // ColonyTax pending the requested dedicated StationIncome category — see LANE-DEV-NOTES.)
+            // Station income now books under its own dedicated TransactionCategory.StationIncome (was borrowing
+            // ColonyTax — the LANE-DEV-NOTES request, now applied), so the net-operating pass's station tax reads
+            // honestly, distinct from real colony tax.
             decimal stationIncome = factionInfo.Money
-                .GetTransactionsByCategory(TransactionCategory.ColonyTax).Sum(t => t.Amount);
+                .GetTransactionsByCategory(TransactionCategory.StationIncome).Sum(t => t.Amount);
             decimal upkeep = factionInfo.Money
                 .GetTransactionsByCategory(TransactionCategory.StationUpkeep).Sum(t => t.Amount);
 

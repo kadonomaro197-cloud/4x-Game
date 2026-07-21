@@ -81,10 +81,9 @@ namespace Pulsar4X.Stations
         /// population × the station's <see cref="StationEconomyDB.TaxRate"/> × a morale multiplier, with the regime's
         /// <c>GovernmentDB.TaxCeiling</c> capping the effective rate (exact parity with the colony processor).
         /// Defensive/no-throw (L4); an UNMANNED station (pop 0) yields 0 → this is inert for every unmanned station, so
-        /// the only station that earns is a populated one (new data). Booked under
-        /// <see cref="TransactionCategory.ColonyTax"/> — the per-capita population-tax category — because a dedicated
-        /// StationIncome category lives in Ledger.cs (outside this lane's fence); a cross-lane REQUEST asks CORE to add
-        /// one, at which point this single reference switches (see docs/earthfall/LANE-DEV-NOTES.md).
+        /// the only station that earns is a populated one (new data). Booked under its own
+        /// <see cref="TransactionCategory.StationIncome"/> category (the cross-lane REQUEST that asked CORE to add one is
+        /// now applied — it previously borrowed <c>ColonyTax</c>, which conflated station income with real colony tax).
         /// </summary>
         internal static void CollectIncome(Entity station)
         {
@@ -121,7 +120,7 @@ namespace Pulsar4X.Stations
 
             factionInfo.Money.AddIncome(
                 station.Manager.StarSysDateTime,
-                TransactionCategory.ColonyTax, // REQUEST: dedicated StationIncome category (LANE-DEV-NOTES)
+                TransactionCategory.StationIncome, // dedicated category (was borrowing ColonyTax) — LANE-DEV-NOTES request
                 $"Station tax from {station.GetName(factionId)} ({effectiveTaxRate:P0})",
                 income);
         }

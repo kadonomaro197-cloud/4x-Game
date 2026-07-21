@@ -20,7 +20,12 @@ public enum TransactionCategory
     Espionage,
     // Ground-force standing UPKEEP (the ground echo of StationUpkeep) — billed monthly by GroundUpkeep for a faction's
     // standing ground units. Added at the END so existing integer values stay save-stable.
-    GroundForceUpkeep
+    GroundForceUpkeep,
+    // Station operating INCOME (the station echo of ColonyTax) — booked monthly by StationUpkeepProcessor for a
+    // faction's populated stations. Previously borrowed the ColonyTax bucket (which conflated station income with
+    // real colony tax); its own category lets a station-owning faction's ledger read honestly. Added at the END so
+    // existing integer values stay save-stable.
+    StationIncome
 }
 
 public class Transaction
