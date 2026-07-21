@@ -61,6 +61,16 @@ namespace Pulsar4X.GroundCombat
         /// AI gates on the New-Game / menu path (PW). A PLAYER order on a battalion always overrides the brain.</summary>
         public static bool EnableGroundTacticalAI = false;
 
+        /// <summary>W-TRACK W3 — SUB-FORMATION ROLE MANEUVER gate. When true, a unit auto-maneuvering under its
+        /// formation's ROE moves to ITS OWN ROLE's ideal range band instead of all units marching uniformly:
+        /// a SCREEN (fast/light) unit leads to contact, a LINE unit closes to its firing range and holds, an ARTILLERY
+        /// (long-reach) unit kites to keep its standoff, a SUPPORT (no-attack) unit stays back — the ground echo of
+        /// space sub-fleet roles ("fighters move differently than a line ship"). Roles come from
+        /// <see cref="GroundRoleComposer.ClassifyRole"/>. Default FALSE → the maneuver step is byte-identical (the
+        /// uniform ROE close/stand-off path runs unchanged); CORE flips it ON alongside the other AI gates on the
+        /// New-Game / menu path. A HoldGround formation still never auto-maneuvers, and a player queued order still wins.</summary>
+        public static bool EnableGroundRoleManeuver = false;
+
         // Shield pool regeneration is now a PER-UNIT designed rate (GroundUnit.ShieldRegenFraction, ⚙3), defaulting to
         // 0.34/game-hour (≈ full recharge in ~3 hours) for every unit until a ward dials it — see the recharge step in
         // ProcessBody. The old global ShieldRegenPerHourFraction constant was removed (2026-07-11): it was dead (the
@@ -536,7 +546,19 @@ namespace Pulsar4X.GroundCombat
                 if (enemy == null) continue;
 
                 bool moveAway;
-                if (stance == GroundEngagementStance.CloseToEngage)
+                if (EnableGroundRoleManeuver)
+                {
+                    // W3 — each unit maneuvers to ITS ROLE's ideal range band (screen leads to contact, line closes to
+                    // its firing range and holds, artillery kites to keep its standoff, support stays back): the ground
+                    // echo of space sub-fleet roles — "fighters move differently than a line ship." The formation ROE
+                    // still gates WHETHER it auto-maneuvers (a HoldGround formation was already skipped above); the ROLE
+                    // decides the target band. Byte-identical when the flag is off.
+                    var role = GroundRoleComposer.ClassifyRole(unit);
+                    bool? mv = GroundRoleComposer.RoleMoveAway(role, best, unit.Range, enemy.Range);
+                    if (mv == null) continue;                    // already at its ideal band → hold and fire
+                    moveAway = mv.Value;
+                }
+                else if (stance == GroundEngagementStance.CloseToEngage)
                 {
                     if (best <= unit.Range) continue;            // already in my range → hold and fire
                     moveAway = false;                            // close the gap

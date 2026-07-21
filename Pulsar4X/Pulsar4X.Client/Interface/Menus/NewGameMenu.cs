@@ -555,6 +555,10 @@ public class NewGameMenu : PulsarGuiWindow
         // menu path. One-line revert each if the mechanic should stay dormant. Runtime feel is the PC live-test.
         Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundTacticalAI = true;
         Pulsar4X.GroundCombat.GroundAssembly.AutoFormUp = true;
+        // W-track W3 — sub-formation role maneuver: a screen unit leads, a line unit holds at range, an artillery unit
+        // kites to standoff, support stays back (the ground echo of space sub-fleet roles). OFF in the engine suite
+        // (byte-identical), ON here so a menu game's closing ground fights show the role differentiation.
+        Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundRoleManeuver = true;
 
         // Generate random systems up to the number of "Galaxy Size" minus the
         // number of included pre-made systems
@@ -950,6 +954,7 @@ public class NewGameMenu : PulsarGuiWindow
             // auto-form-up, default OFF (engine byte-identical), ON for a DevTest sandbox so the invasion plays out.
             Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundTacticalAI = true;
             Pulsar4X.GroundCombat.GroundAssembly.AutoFormUp = true;
+            Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundRoleManeuver = true;   // W3 role-based maneuver
 
             var startingSystem = game.Systems.Find(s => s.ID.Equals(startingSystemId));
             if (startingSystem == null)

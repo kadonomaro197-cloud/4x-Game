@@ -1,6 +1,6 @@
 # The W-Track — per-weapon range banding + formation-role parity for ground combat
 
-**As of:** 2026-07-21 · branch `claude/devtest-faction-design-xpfnhe` · **status: W1 + W2 BUILT (CI-green); W3–W4 pending**
+**As of:** 2026-07-21 · branch `claude/devtest-faction-design-xpfnhe` · **status: W1 + W2 + W3 BUILT (CI-green); W4 + W1b pending**
 
 > **Why this exists.** The franchise litmus test (`docs/showcase/FRANCHISE-LITMUS-TEST.md`) and the developer's
 > combat-fidelity call exposed the same gap from two directions: **a ground unit collapses all its weapons into ONE
@@ -76,7 +76,15 @@ Wire the loadout into the closing fight.
   end-to-end — the ground twin of the space closing-fire test). A single-weapon unit reproduces
   `ClosingFight_LongRangeWhittlesTheRusherDuringTheApproach` exactly (byte-identity).
 
-### W3 — sub-formation ROLE parity (the `Fleets.FleetRoleComposer` ground twin).
+### W3 — sub-formation ROLE parity (the `Fleets.FleetRoleComposer` ground twin). ✅ BUILT 2026-07-21 (`GroundRoleManeuverTests`).
+
+> **As built:** roles are classified PER UNIT (not per sub-formation), matching how the space `FleetRoleComposer`
+> classifies per ship — new `GroundRoleComposer.cs` (`enum GroundRole {Screen, Line, Artillery, Support}` + pure
+> `ClassifyRole` [Attack→Support / Evasion→Screen / Range→Artillery / else Line] + `RoleMoveAway` [screen leads · line
+> closes-then-holds · artillery kites-to-standoff · support keeps-away]). `ApplyEngagementManeuvers` reads them behind
+> the default-OFF `GroundForcesProcessor.EnableGroundRoleManeuver` flag (ON for menu games); the formation ROE still
+> gates WHETHER a unit auto-maneuvers, the ROLE decides the target band. Byte-identical when off. A per-sub-formation
+> role-DOCTRINE (a whole formation tagged Artillery kiting as a block) is a later refinement on top of the per-unit base.
 
 Give a battalion the sub-fleet-grade role depth: sort its formations into **Screen / Line / Artillery / Support** by
 their loadout (long-range → Artillery, fast+evasive → Screen, heavy+armoured → Line), each with a role-doctrine that
