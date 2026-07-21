@@ -100,9 +100,11 @@ namespace Pulsar4X.Ships
         // charge over game-time" stays TRUE for the human player. Two independent policy flags (both FLAGGED —
         // the developer owns balance/policy):
         //   ChargeBuiltNpcShips    default ON  — the AI's production sealift boots ready to fly.
-        //   ChargeBuiltPlayerShips default OFF — the player still charges/fuels at a colony over time.
+        //   ChargeBuiltPlayerShips default ON  — developer decision (2026-07-21): the player's production ships
+        //     also boot charged + fuelled (frictionless — no waiting on a reactor to charge). Flip to false to
+        //     restore "a production ship earns its charge over game-time."
         public static bool ChargeBuiltNpcShips = true;      // FLAGGED balance value (built-ship provisioning policy)
-        public static bool ChargeBuiltPlayerShips = false;  // FLAGGED balance value (built-ship provisioning policy)
+        public static bool ChargeBuiltPlayerShips = true;   // FLAGGED — dev decision 2026-07-21 (was false)
 
         /// <summary>
         /// Apply the built-ship charge/fuel provisioning policy to a freshly production-built ship. Called at
@@ -112,8 +114,10 @@ namespace Pulsar4X.Ships
         /// <see cref="ShipFactory.ChargeReactors"/> / <see cref="ShipFactory.FillFuelTanks"/>) when the owning
         /// faction's policy flag is set: <see cref="ChargeBuiltNpcShips"/> for an NPC owner (default ON — so the
         /// AI sealift can warp the instant a hull exists), <see cref="ChargeBuiltPlayerShips"/> for a player
-        /// owner (default OFF — a player's production ships still earn their charge over game-time). Defensive /
-        /// no-throw; a no-op when the flag is off, so a default player game is BYTE-IDENTICAL.
+        /// owner (default ON as of the 2026-07-21 developer decision — the player's production ships also boot
+        /// ready to fly). Defensive / no-throw. The engine test suite is unaffected: CI builds player ships via
+        /// <see cref="ShipFactory.CreateShip"/> directly (which never calls this), and the one test that asserts
+        /// the OFF branch (NpcFleetReadyToSailTests) forces the flag false in its own try/finally.
         /// </summary>
         public static void ProvisionBuiltShip(Entity ship, Entity ownerFaction)
         {
