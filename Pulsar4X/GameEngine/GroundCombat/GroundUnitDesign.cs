@@ -118,6 +118,15 @@ namespace Pulsar4X.GroundCombat
         /// refinement). Clamped to the world's real region count at placement.</summary>
         [JsonProperty] public int DefaultRegionIndex { get; set; } = 0;
 
+        /// <summary>SQUAD SIZE — how many <see cref="GroundUnit"/>s ONE build of this design raises (the assembler dial:
+        /// "how many units are made when this is built"). A build job that completes raises this many units into the
+        /// muster region, so a designer stamps out a squad/platoon in one order instead of queueing them one at a time.
+        /// The design's build COST + build-TIME scale with it (set in <c>GroundUnitAssembly.ToGroundUnitDesign</c>), so
+        /// a squad of 10 costs 10× a single unit — no free multiplication (CONVENTIONS §16). Composes with the industry
+        /// batch (order N jobs → N × UnitsPerBuild units). <b>1 = byte-identical</b> (every code-built / garrison design,
+        /// and an old save whose JSON lacks the field — the <c>= 1</c> initializer is the load-bearing fallback).</summary>
+        [JsonProperty] public int UnitsPerBuild { get; set; } = 1;
+
         /// <summary>The COMPONENTS this unit is built from — the mounted component-design ids → count (frame + parts).
         /// KEEPING these (instead of only the flattened combat stats above) is the foundation of units-as-entities
         /// (Option A, docs/GROUND-UNITS-AS-ENTITIES-DESIGN.md): once a raised unit carries these as real
@@ -147,7 +156,11 @@ namespace Pulsar4X.GroundCombat
                 int region = DefaultRegionIndex;
                 if (body.TryGetDataBlob<PlanetRegionsDB>(out var regions) && regions.Regions.Count > 0)
                     region = Math.Max(0, Math.Min(DefaultRegionIndex, regions.Regions.Count - 1));
-                GroundForces.RaiseUnit(body, this, industryEntity.FactionOwnerID, region);
+                // SQUAD SIZE — one build raises UnitsPerBuild units into the muster region (the assembler dial). 1 →
+                // exactly one raise, byte-identical. The cost/time already scaled by UnitsPerBuild at design time.
+                int squad = Math.Max(1, UnitsPerBuild);
+                for (int i = 0; i < squad; i++)
+                    GroundForces.RaiseUnit(body, this, industryEntity.FactionOwnerID, region);
             }
 
             // Job lifecycle (same as ComponentDesign) — guarded so a test/host without a real production line is safe.

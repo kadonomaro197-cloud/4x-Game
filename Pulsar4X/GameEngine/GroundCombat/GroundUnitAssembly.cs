@@ -256,11 +256,12 @@ namespace Pulsar4X.GroundCombat
         /// should check <see cref="Compute"/>'s <c>Valid</c> first (the carry gate); this builds the design regardless
         /// (the gate is a UI/order concern). Never throws.</summary>
         public static GroundUnitDesign ToGroundUnitDesign(string uniqueId, string name, ComponentDesign frame,
-            IEnumerable<(ComponentDesign design, int count)> parts)
+            IEnumerable<(ComponentDesign design, int count)> parts, int unitsPerBuild = 1)
         {
             var r = Compute(frame, parts);
             var design = new GroundUnitDesign
             {
+                UnitsPerBuild = Math.Max(1, unitsPerBuild),   // SQUAD SIZE — one build raises this many units (assembler dial)
                 UniqueID = uniqueId,
                 Name = name,
                 UnitType = DeriveType(frame, parts),
@@ -303,6 +304,15 @@ namespace Pulsar4X.GroundCombat
                     if (d == null || c <= 0) continue;
                     for (int i = 0; i < c; i++) { AddCosts(design.ResourceCosts, d.ResourceCosts); design.IndustryPointCosts += d.IndustryPointCosts; }
                 }
+            // SQUAD SIZE — a batch build costs (and takes) proportionally more, so firepower-per-credit is unchanged and
+            // there's no free multiplication (CONVENTIONS §16). UnitsPerBuild 1 → ×1, byte-identical. (Per-unit UpkeepCredits
+            // is NOT scaled here — each of the N raised units bills its own upkeep, so the standing cost is N× naturally.)
+            if (design.UnitsPerBuild > 1)
+            {
+                foreach (var key in new List<string>(design.ResourceCosts.Keys))
+                    design.ResourceCosts[key] *= design.UnitsPerBuild;
+                design.IndustryPointCosts *= design.UnitsPerBuild;
+            }
 
             // KEEP the component list (units-as-entities slice 1) — the mounted component-design ids → count, so a
             // raised unit can later be built as an entity carrying these as real ComponentInstances and every ability
@@ -325,9 +335,9 @@ namespace Pulsar4X.GroundCombat
         /// the registered design. Never throws on the assembly itself; the caller may check <see cref="Compute"/>'s
         /// <c>Valid</c> first (the gates) — registration is a UI/order concern, so this registers regardless.</summary>
         public static GroundUnitDesign RegisterAssembledDesign(FactionInfoDB faction, string uniqueId, string name,
-            ComponentDesign frame, IEnumerable<(ComponentDesign design, int count)> parts)
+            ComponentDesign frame, IEnumerable<(ComponentDesign design, int count)> parts, int unitsPerBuild = 1)
         {
-            var design = ToGroundUnitDesign(uniqueId, name, frame, parts);
+            var design = ToGroundUnitDesign(uniqueId, name, frame, parts, unitsPerBuild);
             if (faction != null)
                 faction.IndustryDesigns[design.UniqueID] = (IConstructableDesign)design;
             return design;
