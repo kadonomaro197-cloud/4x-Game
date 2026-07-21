@@ -26,6 +26,7 @@ namespace Pulsar4X.GroundCombat
         // 0.34 (the old global constant; no shield → stays 0.34, moot) → byte-identical.
         public double ShieldRegenFraction = 0.34;
         public GroundWeaponMode DamageType = GroundWeaponMode.Ballistic;   // the heaviest weapon's flavour (System ①)
+        public List<GroundWeaponMount> WeaponLoadout = new List<GroundWeaponMount>();   // W1 — one mount per weapon component (fed to per-weapon range banding, W2)
         // Enhancers ⚙6.2 — the BEST mounted Training Cadre's veterancy multiplier (baked into Attack + toughness at
         // raise). 1.0 = green/untrained (no cadre) → byte-identical, the ground echo of a ship's UnitCaliberAtb.
         public double TrainingMultiplier = 1.0;
@@ -137,6 +138,10 @@ namespace Pulsar4X.GroundCombat
                     r.Attack += w.Attack * c;
                     if (w.Range > r.Range) r.Range = w.Range;   // reach = the longest weapon
                     if (w.Attack > topWeaponAttack) { topWeaponAttack = w.Attack; r.DamageType = w.Mode; }
+                    // W1 — keep this weapon DISTINCT in the loadout (its own range/mode) instead of only summing into
+                    // r.Attack above, so W2 can fire it in its own range band as the unit closes. Attack ×count so
+                    // Σ mount.Attack == r.Attack (the byte-identity invariant); Max(mount.RangeHexes) == r.Range.
+                    r.WeaponLoadout.Add(new GroundWeaponMount { Attack = w.Attack * c, RangeHexes = w.Range, Mode = w.Mode });
                 }
                 if (d.HasAttribute<GroundArmorAtb>())
                 {
@@ -258,6 +263,10 @@ namespace Pulsar4X.GroundCombat
                 UpkeepCredits = r.Mass * UpkeepCreditsPerMass,   // G2.3c — the standing-army bill scales with build mass (FLAGGED)
                 IndustryTypeID = string.IsNullOrEmpty(frame?.IndustryTypeID) ? "installation-construction" : frame.IndustryTypeID,
             };
+            // W1 — carry the per-weapon loadout onto the design (deep copy; RaiseUnit snapshots it onto the raised
+            // unit, and W2's resolver fires each mount in its own range band). Empty for a code-built design → the
+            // resolver falls back to the single collapsed weapon (byte-identical).
+            foreach (var m in r.WeaponLoadout) design.WeaponLoadout.Add(new GroundWeaponMount(m));
             // G4 SEALED SYSTEMS — fold the best mounted seal's Sealing into the design's EnvironmentalResistance, keyed
             // by the two surface-support hazards (Vacuum + ToxicAtmosphere). ONLY when a seal is mounted (Sealing > 0) —
             // an unsealed design leaves the map empty (default), so a raised unit gets no EnvResistance and bleeds on

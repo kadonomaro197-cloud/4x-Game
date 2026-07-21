@@ -81,6 +81,11 @@ namespace Pulsar4X.GroundCombat
         /// that punches flat armour, small arms chip and bounce. Snapshotted onto each raised unit's
         /// <see cref="GroundUnit.PerShotEnergy"/>. Moddable per design (the base-mod Armor unit's main gun is a big alpha).</summary>
         [JsonProperty] public double PerShotEnergy { get; set; }
+        /// <summary>W1 — the per-weapon LOADOUT (one <see cref="GroundWeaponMount"/> per mounted weapon component). Built
+        /// by <c>GroundUnitAssembly.Compute</c> from the design's weapon parts and snapshotted onto each raised
+        /// <see cref="GroundUnit.WeaponLoadout"/>. Empty for a code-built / garrison design → the resolver falls back to
+        /// the single collapsed weapon (byte-identical). ADDITIVE — carried now; the resolver reads it in W2.</summary>
+        [JsonProperty] public List<GroundWeaponMount> WeaponLoadout { get; set; } = new List<GroundWeaponMount>();
         /// <summary>STANDING UPKEEP in credits/month this unit costs its owning faction simply by EXISTING — the ground
         /// echo of a station's operating cost, billed monthly by <see cref="GroundUpkeep"/>. 0 = free (byte-identical: no
         /// existing design sets it). Snapshotted onto <see cref="GroundUnit.UpkeepCredits"/> at raise.

@@ -107,6 +107,14 @@ namespace Pulsar4X.GroundCombat
         /// synthesized <see cref="Pulsar4X.Combat.WeaponProfile"/> and drives the resolver's
         /// <c>GroundDamageMatrix.ArmourSoakBurst</c> shot split.</summary>
         [JsonProperty] public double PerShotEnergy { get; internal set; }
+        /// <summary>W1 — the per-weapon LOADOUT: one <see cref="GroundWeaponMount"/> per mounted weapon component, each
+        /// carrying its OWN Attack / hex Range / <see cref="GroundWeaponMode"/>. So a squad's lascannon + bolter +
+        /// chainsword stay DISTINCT (different ranges) instead of collapsing into the single <see cref="Attack"/> /
+        /// <see cref="Range"/> above. Populated by <c>GroundUnitAssembly</c>, snapshot at raise. INVARIANT (the byte-
+        /// identity gauge): Σ mount.Attack == <see cref="Attack"/> and Max(mount.RangeHexes) == <see cref="Range"/>.
+        /// Empty for a monolithic / garrison / DevTools unit → the resolver falls back to the single collapsed weapon
+        /// (byte-identical). ADDITIVE + UNREAD until W2 wires per-weapon range banding into the resolver.</summary>
+        [JsonProperty] public List<GroundWeaponMount> WeaponLoadout { get; internal set; } = new List<GroundWeaponMount>();
         // ⚙3 Defense — armour NATURE tuning: how well THIS unit's plating soaks each incoming damage nature. 1.0 = a
         // plain plate (snapshot of the design's ArmourVs*; every unit until a nature-tuned plating is fitted → the
         // resolver passes natureFactor 1.0 → byte-identical). The resolver reads the incoming weapon's Nature and scales
@@ -195,6 +203,7 @@ namespace Pulsar4X.GroundCombat
             UpkeepCredits = o.UpkeepCredits; TrainingMultiplier = o.TrainingMultiplier;
             MaxAmmo_kg = o.MaxAmmo_kg; CurrentAmmo_kg = o.CurrentAmmo_kg;
             Evasion = o.Evasion; Shield = o.Shield; CurrentShield = o.CurrentShield; ShieldRegenFraction = o.ShieldRegenFraction; DamageType = o.DamageType; Penetration = o.Penetration; PerShotEnergy = o.PerShotEnergy;
+            if (o.WeaponLoadout != null) { WeaponLoadout = new List<GroundWeaponMount>(); foreach (var m in o.WeaponLoadout) WeaponLoadout.Add(new GroundWeaponMount(m)); }
             ArmourVsKinetic = o.ArmourVsKinetic; ArmourVsEnergy = o.ArmourVsEnergy; ArmourVsExplosive = o.ArmourVsExplosive; ArmourVsExotic = o.ArmourVsExotic;
             MovingToRegion = o.MovingToRegion; TransitSecondsRemaining = o.TransitSecondsRemaining;
             HexQ = o.HexQ; HexR = o.HexR; HexTransitSecondsRemaining = o.HexTransitSecondsRemaining; HexStepBaseSeconds = o.HexStepBaseSeconds;
@@ -563,6 +572,10 @@ namespace Pulsar4X.GroundCombat
                     ? new Dictionary<HazardEffectType, double>(design.EnvironmentalResistance)
                     : null,
             };
+            // W1 — snapshot the design's per-weapon loadout onto the unit (deep copy). Empty for a code-built /
+            // garrison / DevTools design → the resolver falls back to the single collapsed weapon (byte-identical).
+            if (design.WeaponLoadout != null)
+                foreach (var m in design.WeaponLoadout) unit.WeaponLoadout.Add(new GroundWeaponMount(m));
             unit.UnitId = forces.NextUnitId++;   // stable id (the ground echo of a ship's entity id)
             // Units-as-entities (Option A): give the unit a BACKING ENTITY carrying its design's components, so every
             // ability falls out of the shared component store (radar/speed/crew). -1 for a design with no component
