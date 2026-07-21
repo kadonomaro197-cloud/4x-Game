@@ -75,6 +75,10 @@ namespace Pulsar4X.Client
         private int _selFormationId = -1;
         // The stance-combo index for the selected formation's stance selector.
         private int _stanceChoice = 0;
+        // Rename buffer (PW.2) — a formation is a DATA object, so GroundForces.RenameFormation is the setter (R1 gap 2).
+        // Reseeded from the selected formation's current name when the selection changes (tracked by _formRenameForId).
+        private byte[] _formRenameBuf = new byte[64];
+        private int _formRenameForId = -1;
 
         // A transient status line ("marched 3 units east", "built Barracks in region 2") shown under the controls.
         private string _status = "";
@@ -743,6 +747,51 @@ namespace Pulsar4X.Client
             }
 
             ImGui.Text($"{city.Tiles.Count} mini-hex tiles — buildings occupy their footprint (▧). \"Build a new installation\" → click an empty tile to queue it through production (⬡ orange = under construction); \"Bring buildings here\" places already-built ones; \"Develop hex\" auto-lays. Click a tile to inspect.");
+
+            // PW.2 (C5b) — INFRASTRUCTURE COMBAT from the city zoom (the R4 city-tile-inspect hook): raze / seize this
+            // operational hex's region band via one of your battalions standing in it.
+            DrawCityInfraOrders(body, band, myFaction);
+        }
+
+        // PW.2 (C5b) — the city-zoom infrastructure-combat section. The G3 DestroyInfra / CaptureInfra order works at the
+        // REGION level (it targets the region-centre hex 0,0 where footprints sit, and its range gate needs a unit in the
+        // region), so this razes/seizes the whole region BAND this operational hex belongs to, carried by a player
+        // battalion standing in that region. If no battalion of yours is here yet, it tells you to move one in.
+        private void DrawCityInfraOrders(Entity body, int band, int myFaction)
+        {
+            if (!body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB) || regionsDB.Regions == null
+                || band < 0 || band >= regionsDB.Regions.Count) return;
+            if (!body.TryGetDataBlob<GroundForcesDB>(out var forces)) return;
+            var region = regionsDB.Regions[band];
+            GroundHex centre = null;                       // footprints live on the region-centre hex (0,0)
+            if (region.Hexes != null)
+                foreach (var h in region.Hexes) if (h.Q == 0 && h.R == 0) { centre = h; break; }
+            int infra = centre?.InstallationIds?.Count ?? 0;
+
+            ImGui.Separator();
+            ImGui.TextDisabled($"Infrastructure combat — Region {region.Index + 1} (raze / seize the footprint buildings here):");
+            if (infra <= 0)
+            {
+                ImGui.TextDisabled("   (no footprint buildings on this region's centre hex.)");
+                return;
+            }
+
+            // The range gate needs a unit IN the region — find one of YOUR battalions standing here to carry the order.
+            GroundFormation carrier = null;
+            foreach (var f in GroundFormationTools.FormationsFor(forces, myFaction))
+                if (GroundForces.LeaderRegion(forces, f) == band) { carrier = f; break; }
+
+            ImGui.Text($"   {infra} footprint building(s)" + (centre != null && centre.OwnerFactionID == myFaction ? " — you hold this hex" : ""));
+            if (carrier == null)
+            {
+                ImGui.TextDisabled("   Move one of your battalions into this region to raze or capture it.");
+                return;
+            }
+            if (ImGui.Button($"Raze with '{carrier.Name}'##cinfd"))
+            { GroundForces.QueueFormationOrder(carrier, GroundOrder.DestroyInfra(band, 0, 0)); _status = $"queued: '{carrier.Name}' razes Region {region.Index + 1} infra"; }
+            ImGui.SameLine();
+            if (ImGui.Button($"Capture with '{carrier.Name}'##cinfc"))
+            { GroundForces.QueueFormationOrder(carrier, GroundOrder.CaptureInfra(band, 0, 0)); _status = $"queued: '{carrier.Name}' seizes Region {region.Index + 1} hex"; }
         }
 
         /// <summary>Axial hex (q,r) → screen position (pointy-top), centred on <paramref name="origin"/> — for the city
@@ -1118,6 +1167,22 @@ namespace Pulsar4X.Client
 
                 if (sel)
                 {
+                    // ── Rename (PW.2 — GroundForces.RenameFormation; a data object can't use the entity-only RenameWindow) ──
+                    if (_formRenameForId != f.FormationId)   // reseed the buffer when the selection changes
+                    {
+                        _formRenameBuf = Utils.BytesFromString(f.Name ?? "", 64);
+                        _formRenameForId = f.FormationId;
+                    }
+                    ImGui.SetNextItemWidth(180f);
+                    ImGui.InputText($"##formrename{f.FormationId}", _formRenameBuf, 64);
+                    ImGui.SameLine();
+                    if (ImGui.Button($"Rename##frn{f.FormationId}"))
+                    {
+                        if (GroundForces.RenameFormation(f, Utils.StringFromBytes(_formRenameBuf)))
+                        { _status = $"renamed to '{f.Name}'"; _formRenameForId = -1; }   // reload from the new name next frame
+                        else _status = "rename ignored (blank name)";
+                    }
+
                     // March the whole formation to a visible adjacent region (of its rally region), or disband.
                     var rallyRegion = (rally >= 0 && rally < regions.Count) ? regions[rally] : null;
                     if (rallyRegion != null && count > 0)
@@ -1143,8 +1208,40 @@ namespace Pulsar4X.Client
                     DrawStanceSelector(f);
                     DrawRoeSelector(f);
                     DrawOrderQueue(body, forcesDB, f, regions, left, right);
+                    DrawFormationInfraOrders(forcesDB, f, regions);
                 }
             }
+        }
+
+        // PW.2 (C5b) — INFRASTRUCTURE COMBAT buttons on the formation panel: raze / seize the footprint building(s) on
+        // the region this formation stands in (the G3 GroundOrder.DestroyInfra / CaptureInfra order types). The engine
+        // order targets the region-CENTRE hex (0,0) — where footprints are placed — and its range gate needs a unit
+        // standing IN that region, so the target is the formation's leader region. Defensive: the order pops cleanly if
+        // there's nothing to hit (a stale click is a safe no-op).
+        private void DrawFormationInfraOrders(GroundForcesDB forcesDB, GroundFormation f, List<Region> regions)
+        {
+            int rally = GroundForces.LeaderRegion(forcesDB, f);
+            if (rally < 0 || rally >= regions.Count) return;
+            var region = regions[rally];
+            GroundHex centre = null;                       // footprints live on the region-centre hex (0,0)
+            if (region.Hexes != null)
+                foreach (var h in region.Hexes) if (h.Q == 0 && h.R == 0) { centre = h; break; }
+            int infra = centre?.InstallationIds?.Count ?? 0;
+
+            ImGui.Separator();
+            ImGui.TextDisabled($"Infrastructure — Region {rally + 1} (where this formation stands):");
+            if (infra <= 0)
+            {
+                ImGui.TextDisabled("   (no footprint buildings here to raze or seize.)");
+                return;
+            }
+            bool weHold = centre != null && centre.OwnerFactionID == f.FactionOwnerID;
+            ImGui.Text($"   {infra} footprint building(s)" + (weHold ? " — hex seized" : ""));
+            if (ImGui.Button($"Raze infrastructure##finf{f.FormationId}"))
+            { GroundForces.QueueFormationOrder(f, GroundOrder.DestroyInfra(rally, 0, 0)); _status = $"queued: raze infra in Region {rally + 1}"; }
+            ImGui.SameLine();
+            if (ImGui.Button($"Capture infrastructure##finf{f.FormationId}"))
+            { GroundForces.QueueFormationOrder(f, GroundOrder.CaptureInfra(rally, 0, 0)); _status = $"queued: seize Region {rally + 1} hex"; }
         }
 
         // ── The ORDER QUEUE (O1) — build a sequential plan for the formation ("move → move → dig in") ──

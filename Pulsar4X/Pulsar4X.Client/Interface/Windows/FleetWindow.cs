@@ -1131,6 +1131,11 @@ namespace Pulsar4X.Client
         private int _battStanceChoice = 0;
         private string _battStatus = "";
         private bool _battErrorLogged;
+        // Rename (PW.2): a formation is a DATA object, so it can't use the entity-only RenameWindow — GroundForces.
+        // RenameFormation is the setter (R1 gap 2). The buffer is (re)seeded from the selected formation's current name
+        // whenever the selection changes (tracked by _battRenameForId).
+        private byte[] _battRenameBuf = new byte[64];
+        private int _battRenameForId = -1;
 
         private void DisplayBattalions()
         {
@@ -1269,6 +1274,22 @@ namespace Pulsar4X.Client
                 + (rally >= 0 ? $", Region {rally + 1}" : "")
                 + $" — {members} unit(s), strength {strength:N0}, health {curHp:N0}/{maxHp:N0}");
 
+            // ── Rename (PW.2 — GroundForces.RenameFormation, a data object can't use the entity-only RenameWindow) ──
+            if(_battRenameForId != f.FormationId)   // reseed the buffer when the selection changes
+            {
+                _battRenameBuf = Utils.BytesFromString(f.Name ?? "", 64);
+                _battRenameForId = f.FormationId;
+            }
+            ImGui.SetNextItemWidth(200f);
+            ImGui.InputText($"##battrename{f.FormationId}", _battRenameBuf, 64);
+            ImGui.SameLine();
+            if(ImGui.Button($"Rename##battrn{f.FormationId}"))
+            {
+                if(GroundForces.RenameFormation(f, Utils.StringFromBytes(_battRenameBuf)))
+                { _battStatus = $"renamed to '{f.Name}'"; _battRenameForId = -1; }   // reload from the new name next frame
+                else _battStatus = "rename ignored (blank name)";
+            }
+
             // (d) Jump to this world's tactical map (the "take me there").
             if(ImGui.Button("Open planet view##battjump"))
                 JumpToPlanetView(body);
@@ -1305,11 +1326,44 @@ namespace Pulsar4X.Client
                 ImGui.TextDisabled("(No adjacent region to march to.)");
             }
 
-            // ── Queue waypoints (QueueFormationOrder) + stance + ROE ──
+            // ── Queue waypoints (QueueFormationOrder) + infra combat + stance + ROE ──
             DrawBattalionOrderQueue(body, forces, f, regions, rallyRegion);
+            DrawBattalionInfraOrders(forces, f, regions, rally);
             ImGui.Separator();
             DrawBattalionStance(body, f);
             DrawBattalionRoe(f);
+        }
+
+        // PW.2 (C5b) — INFRASTRUCTURE COMBAT buttons: raze / seize the footprint building(s) on the region this battalion
+        // stands in (the G3 GroundOrder.DestroyInfra / CaptureInfra order types). The engine order targets the region's
+        // CENTRE hex (0,0) — where LocateFootprintsOnHexes places footprints — and its range gate needs a unit standing
+        // IN that region, so the only valid target is the formation's own leader region. Defensive: the order pops
+        // cleanly if there's nothing to hit, so a stale click is a safe no-op.
+        private void DrawBattalionInfraOrders(GroundForcesDB forces, GroundFormation f, List<Region> regions, int rally)
+        {
+            if(rally < 0 || rally >= regions.Count) return;
+            var region = regions[rally];
+            GroundHex centre = null;                       // footprints live on the region-centre hex (0,0)
+            if(region.Hexes != null)
+                foreach(var h in region.Hexes) if(h.Q == 0 && h.R == 0) { centre = h; break; }
+            int infra = centre?.InstallationIds?.Count ?? 0;
+
+            ImGui.Separator();
+            ImGui.TextDisabled($"Infrastructure — Region {rally + 1} (where this battalion stands):");
+            if(infra <= 0)
+            {
+                ImGui.TextDisabled("   (no footprint buildings here to raze or seize.)");
+                return;
+            }
+            bool weHold = centre != null && centre.OwnerFactionID == f.FactionOwnerID;
+            ImGui.Text($"   {infra} footprint building(s)" + (weHold ? " — hex seized" : ""));
+            if(ImGui.Button($"Raze infrastructure##binf{f.FormationId}"))
+            { GroundForces.QueueFormationOrder(f, GroundOrder.DestroyInfra(rally, 0, 0)); _battStatus = $"queued: raze infra in Region {rally + 1}"; }
+            ImGui.SameLine();
+            if(ImGui.Button($"Capture infrastructure##binf{f.FormationId}"))
+            { GroundForces.QueueFormationOrder(f, GroundOrder.CaptureInfra(rally, 0, 0)); _battStatus = $"queued: seize Region {rally + 1} hex"; }
+            ImGui.SameLine();
+            ImGui.TextDisabled("(the battalion razes/seizes what it can reach)");
         }
 
         private void MarchBattalion(Entity body, GroundFormation f, int target)

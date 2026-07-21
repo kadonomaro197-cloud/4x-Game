@@ -278,8 +278,20 @@ nothing except through the CI-tested `GroundForces` / `GroundFormationDoctrine` 
 `PlanetViewWindow` uses. **Thin + defensive:** the whole tab body is wrapped in a try/catch so a throw logs
 `[RenderError]` once and still runs `EndTabItem` (the colony-window cascade lesson), and nothing is hard-indexed.
 The **Fleets tab is byte-identical** — the existing fleet layout was moved verbatim into its own tab item; the class
-stays `FleetWindow` (renaming orphans `LoadedWindows`/save refs). **Deferred to PW (needs GROUND's `RenameFormation`
-helper):** a rename button. **CI compiles the client but can't run it — live render/feel is the developer's build.**
+stays `FleetWindow` (renaming orphans `LoadedWindows`/save refs). **CI compiles the client but can't run it — live
+render/feel is the developer's build.**
+
+> **PW.2 (2026-07-21) — the deferred cross-lane buttons LANDED (both windows).** The battalion order surface
+> (`DrawBattalionOrders`) now has: (a) a **Rename** control (inline `ImGui.InputText` + button → `GroundForces.
+> RenameFormation` — a formation is a DATA object so it can't use the entity-only `RenameWindow`, R1 gap 2; the buffer
+> reseeds from the selection's name via `_battRenameForId`), and (b) **Infrastructure combat** buttons
+> (`DrawBattalionInfraOrders`) — "Raze / Capture infrastructure" that QUEUE `GroundOrder.DestroyInfra` /
+> `CaptureInfra(rally, 0, 0)` on the battalion's own leader region (footprints sit on the region-centre hex 0,0; the G3
+> order's range gate needs a unit standing IN that region, so the leader region is the only valid target). Both gated on
+> the region actually holding footprint buildings (read off `Region.Hexes` → the (0,0) hex's `InstallationIds`). The
+> `PlanetViewWindow` formation panel + city-zoom got the twins (see the PlanetViewWindow section). Engine surface pinned
+> by `EfPwInfraButtonContractTests` (rename + factory field wire + the QUEUE-path resolve). Runtime is the developer's
+> local build (CLIENT-TEST-CHECKLIST "OPERATION EARTHFALL — PW.2").
 
 ### Embark / Land Troops (FleetWindow ▸ Issue Orders) — BUILT Earthfall C5.1 (2026-07-19) — the invasion control panel
 
@@ -313,7 +325,9 @@ SessionLog lines gauge each load/land. **Engine byte-identical** (a new order ty
 touched). CI pins the exact contract the buttons draw against in `EfC5TroopLiftOrderTests` (overload arities, the
 per-class capacity readout, the region-picker `RegionIndex` wire). **CI compiles the client but can't run it — the
 full click-path (embark Earth marines → land on Mars) is on `docs/CLIENT-TEST-CHECKLIST.md`.** `C5b` (infra
-Destroy/Capture buttons) is deferred to PW (needs GROUND's enum).
+Destroy/Capture buttons) **LANDED in PW.2** (needed GROUND's `DestroyInfrastructure`/`CaptureInfrastructure` enum) —
+now in the battalion order surface (Force Management + PlanetViewWindow formation panel) AND the PlanetViewWindow
+city-zoom infra section. See the "PW.2" notes on the Battalions-tab section above + the PlanetViewWindow section below.
 
 ### EMCON posture + fog-of-war UI (FleetWindow + DevTools) — BUILT 2026-06-26 (detection stack, slices A)
 
@@ -619,6 +633,21 @@ invisible), and ALWAYS-ON **Power (draw / supply)** (`EnergyDemand_W` / `Reactor
 out-draw the reactors) + **Ammo Capacity** (`AmmoCapacity_kg`) — the last two used to appear only as red "Problems" text on
 violation; now the margin is a standing gauge. No new numbers (display of already-computed values); the Problems verdict is
 unchanged. All four result fields are public on `GroundUnitAssemblyResult` — no engine getter request needed for G4c.
+
+**FORMATION RENAME + INFRASTRUCTURE COMBAT (Operation Earthfall PW.2, 2026-07-21) — the deferred cross-lane buttons.**
+The formation panel (`DrawFormationPanel`) now has: a **Rename** control on the selected formation (inline
+`ImGui.InputText` + button → `GroundForces.RenameFormation`; the buffer reseeds from the selection via
+`_formRenameForId`), and **Infrastructure combat** buttons (`DrawFormationInfraOrders`) — "Raze / Capture
+infrastructure" that QUEUE `GroundOrder.DestroyInfra` / `CaptureInfra(rally, 0, 0)` on the formation's leader region
+(footprints sit on the region-centre hex 0,0; the G3 order's range gate needs a unit standing IN that region). The
+**city-zoom** (`DrawCityInfraOrders`, appended to `DrawCityZoom`) got the R4 city-tile-inspect hook: it razes/seizes
+the operational hex's region BAND (`PlanetGridFactory.RegionOfColumn`) carried by a player battalion standing in that
+region (a fog/coordinate note: the G3 order works at the region level — targets the region-centre hex 0,0 — so the
+city zoom razes the whole band's footprints via a battalion present there, not a single global tile; if none of your
+battalions is in the region it tells you to move one in). All gated on the region actually holding footprint buildings
+(read off `Region.Hexes` → the (0,0) hex `InstallationIds`), all thin defensive draws through the CI-tested
+`GroundForces` / `GroundOrder` APIs. Engine surface pinned by `EfPwInfraButtonContractTests`. Runtime is the
+developer's local build (CLIENT-TEST-CHECKLIST "OPERATION EARTHFALL — PW.2").
 
 ### GroundCombatWindow — MISSING ENTIRELY
 
