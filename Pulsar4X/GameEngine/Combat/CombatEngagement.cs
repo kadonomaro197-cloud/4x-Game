@@ -398,6 +398,20 @@ namespace Pulsar4X.Combat
         /// weapon always fires). v1: ONE shared range per engagement group (per-sub-fleet ranges are Phase 4).</summary>
         public static bool EnableClosingRange = false;
 
+        /// <summary>When true, the closing fight runs on the 2D GROUP PLANE (docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md,
+        /// slice S1): at engagement start a battle-local plane is seeded from the fleets' real 3D positions
+        /// (<see cref="GroupPlane.SeedFrame"/>) and FROZEN, each fleet's ANCHOR is its projected 2D point (a joiner is
+        /// placed with the SAME stored frame, so gaps don't jump as ships die), and <see cref="AdvanceClosing"/> slides
+        /// the anchor along the enemy-facing direction instead of only sliding the scalar gap. The scalar
+        /// <see cref="FleetCombatStateDB.Separation_m"/> is STILL maintained alongside the plane at S1 (nothing reads the
+        /// 2D pair-distance yet — the S2 range gate is where <c>SeparationOf</c>/<c>WithinWeaponRange</c> start reading it),
+        /// so this slice is a pure additive layer. Default FALSE so every existing fixture is byte-identical: with it off
+        /// no plane data is seeded, <see cref="FleetCombatStateDB.HasFrame"/> stays false, and AdvanceClosing takes the
+        /// unchanged scalar path. This EXTENDS <see cref="EnableClosingRange"/> (the plane is the 2D generalization of
+        /// closing) — anchor MOVEMENT only runs when BOTH are on, because AdvanceClosing is only called under
+        /// <see cref="EnableClosingRange"/>; seeding is gated on this flag alone so it can be tested in isolation.</summary>
+        public static bool EnableGroupPlane = false;
+
         /// <summary>Closing-rate dial (m/s): the gap-change speed of a maximally-maneuverable fleet (evasion 1.0); a
         /// fleet changes the gap proportional to its maneuverability (min evasion over its ships — it moves as one).
         /// Tunable like <see cref="SalvoDamageScale"/>; set 0 to FREEZE the gap (gauge use). RAISED 10× 2026-06-27: at
@@ -503,6 +517,8 @@ namespace Pulsar4X.Combat
                 sa.ManeuverBudget = FleetCombat.DeltaVFloor(fleetA);   // Phase 2: the kiting clock = the fleet's Δv floor
                 sb.ManeuverBudget = FleetCombat.DeltaVFloor(fleetB);
             }
+            if (EnableGroupPlane)   // Slice S1: lay the 2D battle plane down from BOTH fleets' real positions and freeze it
+                SeedPlaneForPair(fleetA, sa, fleetB, sb);
             fleetA.SetDataBlob(sa);
             fleetB.SetDataBlob(sb);
             CombatLog($"{FleetLabel(fleetA)} vs {FleetLabel(fleetB)} — engaged");
@@ -595,6 +611,8 @@ namespace Pulsar4X.Combat
                 st.Separation_m = gap;                                 // Phase 1: the real gap, not the default seed
                 st.ManeuverBudget = FleetCombat.DeltaVFloor(fleet);    // Phase 2: the kiting clock
             }
+            if (EnableGroupPlane)   // Slice S1: copy the frozen plane from an engaged sibling, or seed a fresh one (join path)
+                SeedPlaneForJoiner(fleet, st, representativeOpponentId);
             fleet.SetDataBlob(st);
             CombatLog($"{FleetLabel(fleet)} enters combat ({GetFleetShips(fleet).Count} ship(s))");
             RecordBattleEvent(fleet, BattleEventType.Engaged, 0, GetFleetShips(fleet).Count, 0, "enters combat");
@@ -971,9 +989,38 @@ namespace Pulsar4X.Combat
         // ─── Phase 1 — closing distance ────────────────────────────────────────────────────────────────────────
 
         /// <summary>This fleet's current gap to the opposing side — 0 when closing is off or it has no state (which
-        /// makes the range-gate a no-op).</summary>
+        /// makes the range-gate a no-op). Slice S2 (2D group plane, docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md §13):
+        /// when <see cref="EnableGroupPlane"/> is on and the plane is live for BOTH this fleet and its representative
+        /// opponent, the gap is the straight-line 2D pair-distance between their group anchors — the REAL per-fleet-pair
+        /// gap (per-sub-fleet gaps become real, the substrate's deferred "Phase 4"), no longer one shared scalar. It
+        /// falls back to the scalar <see cref="FleetCombatStateDB.Separation_m"/> otherwise (un-framed / opponent gone).
+        /// The kernel stays 1-D: the plane only supplies the single scalar <c>d</c> the unchanged firing code reads.
+        /// Still gated on <see cref="EnableClosingRange"/> FIRST, so every closing-off fixture — and a plane seeded with
+        /// closing off — reads 0 and the range gate is a no-op → byte-identical.</summary>
         private static double SeparationOf(Entity fleet)
-            => EnableClosingRange && fleet.TryGetDataBlob<FleetCombatStateDB>(out var st) ? st.Separation_m : 0;
+        {
+            if (!EnableClosingRange || !fleet.TryGetDataBlob<FleetCombatStateDB>(out var st)) return 0;
+            if (EnableGroupPlane && TryPlanePairDistance(fleet, st, out double d)) return d;
+            return st.Separation_m;
+        }
+
+        /// <summary>Slice S2: the 2D pair-distance between a fleet's group anchor and its representative opponent's, on
+        /// the frozen battle plane. Succeeds (setting <paramref name="distance"/>) only when the plane is live
+        /// (<see cref="FleetCombatStateDB.HasFrame"/>) for BOTH fleets, so an un-framed fleet or a departed opponent
+        /// falls back to the scalar gap. Reads only the two stored anchors — order-independent, never mutates state,
+        /// never throws — and hands the caller a single scalar (the design's "the plane produces one distance; the 1-D
+        /// kernel is unchanged"). S1/S2: one group per fleet, so the group-pair is the fleet-pair; S3 fills per-role.</summary>
+        private static bool TryPlanePairDistance(Entity fleet, FleetCombatStateDB st, out double distance)
+        {
+            distance = 0;
+            if (!st.HasFrame) return false;
+            var mgr = fleet.Manager;
+            if (mgr == null || !mgr.TryGetEntityById(st.OpponentFleetId, out var opp)
+                || opp == null || !opp.IsValid) return false;
+            if (!opp.TryGetDataBlob<FleetCombatStateDB>(out var os) || !os.HasFrame) return false;
+            distance = GroupPlane.PairDistance(st.Anchor, os.Anchor);
+            return true;
+        }
 
         /// <summary>Advance the engagement gap one step. The FASTER (more maneuverable) side dictates the range: the
         /// gap moves toward the controller's preferred standoff (its longest weapon range; 0 = close in). v1 keeps ONE
@@ -1008,6 +1055,13 @@ namespace Pulsar4X.Combat
 
             double desired = FleetDesiredRange(ships[controller]);      // the controller's preferred standoff
             double step = best * ClosingSpeedScale_mps * dt;            // metres it can change the gap this step
+
+            // Slice S1: capture the controller's PRE-move scalar gap so the plane knows how far its anchor slid this step
+            // (the whole plane branch is inert unless EnableGroupPlane; otherwise this is the unchanged scalar closing).
+            double ctrlGapBefore = 0;
+            if (EnableGroupPlane && live[controller].TryGetDataBlob<FleetCombatStateDB>(out var ctrlPre))
+                ctrlGapBefore = ctrlPre.Separation_m;
+
             for (int i = 0; i < live.Count; i++)
             {
                 if (!live[i].IsValid || !live[i].TryGetDataBlob<FleetCombatStateDB>(out var st)) continue;
@@ -1016,6 +1070,115 @@ namespace Pulsar4X.Combat
                 else if (r < desired) r = System.Math.Min(desired, r + step);
                 st.Separation_m = r;
             }
+
+            // Slice S1: slide the controller's ANCHOR along its enemy-facing direction to track the scalar gap change
+            // ("the faster side closes the distance"). Additive — the scalar Separation_m above is still the number every
+            // downstream reader uses at S1; the anchor geometry runs beside it until the S2 range gate reads the 2D gap.
+            if (EnableGroupPlane)
+                AdvanceAnchorPlane(live, controller, ctrlGapBefore);
+        }
+
+        /// <summary>Slice S1 (2D group plane): move the CONTROLLER fleet's anchor along the direction toward its nearest
+        /// enemy anchor by however far its scalar gap just changed — closing toward the enemy (positive) or opening away
+        /// (negative). Only the faster (controller) fleet moves, matching the design's "the faster side closes the
+        /// distance," so for the 2-fleet case the controller↔enemy pair-distance tracks the scalar gap exactly. Reads all
+        /// enemy anchors and mutates ONLY the controller's, so it is order-independent and deterministic (the direction
+        /// itself has a lowest-id tie-break inside <see cref="GroupPlane.EnemyDirection"/>). Defensive — never throws.</summary>
+        private static void AdvanceAnchorPlane(List<Entity> live, int controller, double ctrlGapBefore)
+        {
+            if (controller < 0 || controller >= live.Count) return;
+            var ctrl = live[controller];
+            if (ctrl == null || !ctrl.IsValid || !ctrl.TryGetDataBlob<FleetCombatStateDB>(out var cst) || !cst.HasFrame)
+                return;
+
+            // The enemy anchors on the frozen plane = the in-combat, hostile, already-seeded fleets.
+            var enemies = new List<(int Id, Vector2 Anchor)>();
+            for (int i = 0; i < live.Count; i++)
+            {
+                if (i == controller) continue;
+                var e = live[i];
+                if (e == null || !e.IsValid || !AreHostile(ctrl, e)) continue;
+                if (e.TryGetDataBlob<FleetCombatStateDB>(out var est) && est.HasFrame)
+                    enemies.Add((e.Id, est.Anchor));
+            }
+
+            Vector2 dir = GroupPlane.EnemyDirection(cst.Anchor, enemies);   // unit toward the nearest enemy (Zero if none)
+            double moved = ctrlGapBefore - cst.Separation_m;               // +ve when the gap SHRANK (closing) → step toward enemy
+            Vector2 newAnchor = GroupPlane.Place(cst.Anchor, dir * moved);  // −ve moved carries it AWAY from the enemy (kiting)
+            cst.Anchor = newAnchor;
+            if (cst.GroupPositions.Count > 0) cst.GroupPositions[0] = newAnchor;   // S1: the one whole-fleet group tracks the anchor
+            else cst.GroupPositions = new List<Vector2> { newAnchor };
+        }
+
+        /// <summary>Slice S1 helper: reconstruct a <see cref="GroupPlane.BattleFrame"/> from a fleet-state's stored axes.</summary>
+        private static GroupPlane.BattleFrame FrameOf(FleetCombatStateDB st)
+            => new GroupPlane.BattleFrame(st.FrameOrigin, st.FrameXAxis, st.FrameYAxis);
+
+        /// <summary>Slice S1 helper: store a frozen frame + this fleet's projected anchor onto its combat state, marking
+        /// the plane live. The single whole-fleet group (S1) sits at the anchor.</summary>
+        private static void StoreFrame(FleetCombatStateDB st, GroupPlane.BattleFrame frame, Vector2 anchor)
+        {
+            st.FrameOrigin = frame.Origin;
+            st.FrameXAxis = frame.XAxis;
+            st.FrameYAxis = frame.YAxis;
+            st.Anchor = anchor;
+            if (st.GroupPositions.Count > 0) st.GroupPositions[0] = anchor;
+            else st.GroupPositions = new List<Vector2> { anchor };
+            st.HasFrame = true;
+        }
+
+        /// <summary>Slice S1: seed the frozen 2D plane for a fresh two-fleet engagement — lay it down ONCE from BOTH
+        /// fleets' real positions (order-independent, so it's the same board whichever fleet is A) and project each
+        /// fleet's anchor onto it. Defensive — a positionless fleet gets a Zero anchor rather than throwing.</summary>
+        private static void SeedPlaneForPair(Entity a, FleetCombatStateDB sa, Entity b, FleetCombatStateDB sb)
+        {
+            bool hasA = TryGetFleetPosition(a, out var pa);
+            bool hasB = TryGetFleetPosition(b, out var pb);
+            var seeds = new List<(int Id, Vector3 Position)>();
+            if (hasA) seeds.Add((a.Id, pa));
+            if (hasB) seeds.Add((b.Id, pb));
+            var frame = GroupPlane.SeedFrame(seeds);
+            StoreFrame(sa, frame, hasA ? GroupPlane.Project(frame, pa) : Vector2.Zero);
+            StoreFrame(sb, frame, hasB ? GroupPlane.Project(frame, pb) : Vector2.Zero);
+        }
+
+        /// <summary>Slice S1: seed the plane for a fleet ENTERING an engagement via the join primitive. Prefers to COPY
+        /// the FROZEN frame from an already-engaged sibling (one system = one battle → one shared board — the lowest-id
+        /// engaged fleet wins, deterministically), projecting this fleet's own anchor onto it. If none is framed yet (this
+        /// is the FIRST fleet into the fight through the auto-trigger's <see cref="Tick"/> path, which enrols BOTH sides
+        /// via EnsureInCombat rather than StartEngagement), seed a fresh frame from THIS fleet + its representative
+        /// opponent — because <see cref="GroupPlane.SeedFrame"/> is order-independent, the sibling that copies it later
+        /// lands on the identical board. Defensive — never throws.</summary>
+        private static void SeedPlaneForJoiner(Entity fleet, FleetCombatStateDB st, int representativeOpponentId)
+        {
+            var mgr = fleet.Manager;
+            if (mgr != null)
+            {
+                Entity framed = null;
+                FleetCombatStateDB framedState = null;
+                foreach (var other in mgr.GetAllEntitiesWithDataBlob<FleetCombatStateDB>())
+                {
+                    if (other == null || other == fleet || !other.IsValid) continue;
+                    if (!other.TryGetDataBlob<FleetCombatStateDB>(out var os) || !os.HasFrame) continue;
+                    if (framed == null || other.Id < framed.Id) { framed = other; framedState = os; }   // lowest-id → deterministic
+                }
+                if (framedState != null)
+                {
+                    var frame = FrameOf(framedState);
+                    StoreFrame(st, frame, TryGetFleetPosition(fleet, out var pf) ? GroupPlane.Project(frame, pf) : Vector2.Zero);
+                    return;
+                }
+            }
+
+            // First fleet into the fight: build the two-fleet board from THIS fleet + its representative opponent.
+            bool hasSelf = TryGetFleetPosition(fleet, out var self);
+            var seeds = new List<(int Id, Vector3 Position)>();
+            if (hasSelf) seeds.Add((fleet.Id, self));
+            if (mgr != null && mgr.TryGetEntityById(representativeOpponentId, out var opp)
+                && opp != null && opp.IsValid && TryGetFleetPosition(opp, out var oppPos))
+                seeds.Add((opp.Id, oppPos));
+            var seeded = GroupPlane.SeedFrame(seeds);
+            StoreFrame(st, seeded, hasSelf ? GroupPlane.Project(seeded, self) : Vector2.Zero);
         }
 
         /// <summary>A fleet's maneuver speed proxy = the MIN evasion over its ships (it moves as one, bound by its
@@ -1092,7 +1255,22 @@ namespace Pulsar4X.Combat
         /// <see cref="InitialSeparationDefault_m"/> when a fleet has no usable position, so a positionless test pair is
         /// treated as ~missile range apart rather than co-located.)</summary>
         internal static bool WithinWeaponRange(Entity a, Entity b)
-            => WithinWeaponRange(FleetSeparation(a, b), MaxReach(GetCombatShips(a)), MaxReach(GetCombatShips(b)));
+            => WithinWeaponRange(RangeBetween(a, b), MaxReach(GetCombatShips(a)), MaxReach(GetCombatShips(b)));
+
+        /// <summary>Slice S2: the distance the weapon-range gate measures between two fleets. On the 2D group plane
+        /// (<see cref="EnableGroupPlane"/> on) with BOTH fleets already framed, it is the anchor pair-distance — the real
+        /// gap the fight has closed to on the plane; otherwise the real 3D <see cref="FleetSeparation"/>. Flag-off, or
+        /// either fleet not yet framed (the engage-trigger runs BEFORE the plane is seeded, so a not-yet-in-combat pair
+        /// falls straight through here), returns FleetSeparation unchanged → byte-identical. At engagement START the
+        /// anchors are the projections of the same 3D positions, so the two distances agree until closing slides them.</summary>
+        private static double RangeBetween(Entity a, Entity b)
+        {
+            if (EnableGroupPlane
+                && a.TryGetDataBlob<FleetCombatStateDB>(out var sa) && sa.HasFrame
+                && b.TryGetDataBlob<FleetCombatStateDB>(out var sb) && sb.HasFrame)
+                return GroupPlane.PairDistance(sa.Anchor, sb.Anchor);
+            return FleetSeparation(a, b);
+        }
 
         /// <summary>One live line per fleet per closing step: its gap, whether its guns REACH it, its longest reach,
         /// and its maneuver reserve — so a play-test log shows the standoff/closing play out (the gauge CI can't run).</summary>
