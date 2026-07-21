@@ -1,6 +1,6 @@
 # The W-Track — per-weapon range banding + formation-role parity for ground combat
 
-**As of:** 2026-07-21 · branch `claude/devtest-faction-design-xpfnhe` · **status: W1 + W2 + W3 BUILT (CI-green); W4 + W1b pending**
+**As of:** 2026-07-21 · branch `claude/devtest-faction-design-xpfnhe` · **status: W1 + W2 + W3 + W1b BUILT (CI-green); W4 pending**
 
 > **Why this exists.** The franchise litmus test (`docs/showcase/FRANCHISE-LITMUS-TEST.md`) and the developer's
 > combat-fidelity call exposed the same gap from two directions: **a ground unit collapses all its weapons into ONE
@@ -100,7 +100,18 @@ The `O(units²)→O(buckets)` rewrite so a 5,000-gaunt swarm resolves in millise
 — RESOLVER-DESIGN §B7.2 (bucket key adds hex position; equivalence-proof against the per-unit resolve). Lands after
 W1–W3; the loadout becomes part of the bucket key.
 
-### W1b (follow-on) — space weapons compose on a ground unit (the buildability #1 fix + a calibration decision).
+### W1b — space weapons compose on a ground unit (the buildability #1 fix). ✅ BUILT 2026-07-21 (`GroundSpaceWeaponTests`).
+
+> **As built (the developer's rule locked the calibration):** *"as long as a unit can provide power / ammo / hold the
+> actual weapon, it gets to use it."* The GATES decide eligibility (carry + P2 power/ammo, already built); if you pass,
+> the weapon fires at its real characteristics. New `SpaceWeaponGround.cs`: `IsSpaceWeapon` / `Firepower_Jps` (the same
+> ship dps = energy/shot × rate) / `ModeFor` (laser/plasma/disruptor → ground Energy; railgun/flak → Ballistic) /
+> `RangeHexesFor` (beam 4 / bolt 3 / flak 2 hexes, flagged) / `MountFor` → a `GroundWeaponMount`. **The joules→points
+> calibration is one FLAGGED constant** `AttackPerDps = 1/2500`: it lands the base-mod weapons in the ground band
+> (laser ≈ 39 ~ rifle 40; flak/plasma/disruptor ≈ 120; railgun ≈ 400) — balanced by construction against the ship
+> weapon-triangle (the dps spread is only ~10×), no one-shots; the developer tunes the one number. `Compute` gained an
+> `else if (SpaceWeaponGround.IsSpaceWeapon(d))` branch feeding the SAME Attack/reach/flavour/loadout as a native ground
+> weapon, so a space weapon rides W1→W2→W3 identically. Byte-identical (no existing ground unit mounts a space weapon).
 
 Today a ship-grade weapon (a `GenericBeamWeaponAtb` — an SPHA-T beam) mounted on a walker **draws reactor power but
 contributes ZERO ground Attack** (`GroundUnitAssembly.Compute` reads only `GroundWeaponAtb`; `WeaponSupply.PowerDraw_W`

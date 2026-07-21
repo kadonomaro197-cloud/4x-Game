@@ -143,6 +143,24 @@ namespace Pulsar4X.GroundCombat
                     // Σ mount.Attack == r.Attack (the byte-identity invariant); Max(mount.RangeHexes) == r.Range.
                     r.WeaponLoadout.Add(new GroundWeaponMount { Attack = w.Attack * c, RangeHexes = w.Range, Mode = w.Mode });
                 }
+                else if (SpaceWeaponGround.IsSpaceWeapon(d))
+                {
+                    // W1b — a UNIFIED SPACE WEAPON (laser/railgun/flak/plasma/disruptor) mounted on a ground chassis
+                    // contributes GROUND firepower (the developer's "if you can power/feed/carry it, you get to use it").
+                    // Its ground Attack is its ship firepower scaled to the ground band (SpaceWeaponGround.AttackPerDps);
+                    // range/mode by type. Feeds the SAME Attack sum / reach / flavour / loadout as a native ground weapon,
+                    // so it bands (W2) and role-classifies (W3) identically. Carry-mass = its real component mass (counted
+                    // by the !hasGroundAtb path below); power/ammo eligibility is the P2 gates (accumulated below). No
+                    // existing ground unit mounts a space weapon → byte-identical.
+                    var sm = SpaceWeaponGround.MountFor(d);
+                    if (sm != null)
+                    {
+                        r.Attack += sm.Attack * c;
+                        if (sm.RangeHexes > r.Range) r.Range = sm.RangeHexes;
+                        if (sm.Attack > topWeaponAttack) { topWeaponAttack = sm.Attack; r.DamageType = sm.Mode; }
+                        r.WeaponLoadout.Add(new GroundWeaponMount { Attack = sm.Attack * c, RangeHexes = sm.RangeHexes, Mode = sm.Mode });
+                    }
+                }
                 if (d.HasAttribute<GroundArmorAtb>())
                 {
                     var a = d.GetAttribute<GroundArmorAtb>();
