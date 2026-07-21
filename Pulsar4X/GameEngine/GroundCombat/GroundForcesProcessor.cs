@@ -353,6 +353,41 @@ namespace Pulsar4X.GroundCombat
             // reach. Computed entirely from the PRE-salvo state (Health read here, applied below) → simultaneous.
             var incoming = new Dictionary<GroundUnit, double>();
 
+            // SHARED SALVO MATH (one definition for both the collapsed single-weapon path and the W2 per-weapon-band
+            // path): fire ALREADY-SCALED <paramref name="pool"/> from weapon <paramref name="profile"/> at the targets it
+            // can reach, health-weighted, through the shared kernel — dodge (HitFraction) → depleting shield pool →
+            // flat-per-source armour (penetration + shot-count + nature). Accumulates into `incoming` (pre-salvo state →
+            // simultaneous). Arithmetic per target is byte-identical to the pre-W2 resolver.
+            void FireWeaponAtReachable(List<GroundUnit> reachable, double pool, Pulsar4X.Combat.WeaponProfile profile)
+            {
+                double totalH = 0.0;
+                foreach (var t in reachable) totalH += t.Health;
+                if (totalH <= 0) return;
+                double shieldSoakFrac = Pulsar4X.Combat.CombatKernel.ShieldSoakFraction(profile.Nature);
+                foreach (var t in reachable)
+                {
+                    // DODGE (kernel HitFraction): an aimed slug is dodged ~(1−evasion); an area/beam shot lands ~fully.
+                    double contribution = pool * (t.Health / totalH)
+                        * Pulsar4X.Combat.CombatKernel.HitFraction(profile, t.Evasion);
+                    // SHIELD POOL (3c): the target's depleting shield soaks the soakable fraction (by weapon nature —
+                    // kinetic fully, energy half-bleeds, exotic bypasses) up to its CURRENT charge, BEFORE armour.
+                    if (t.CurrentShield > 0 && shieldSoakFrac > 0 && contribution > 0)
+                    {
+                        double absorbed = System.Math.Min(contribution * shieldSoakFrac, t.CurrentShield);
+                        t.CurrentShield -= absorbed;
+                        contribution -= absorbed;
+                    }
+                    // ARMOUR: flat-per-source plating bounces what's left (the swarm-vs-alpha identity) — the shared
+                    // CombatKernel armour soak, reduced by the weapon's PENETRATION (W1b), split into its SHOT COUNT
+                    // (W2b), scaled by the target's armour-NATURE tuning (⚙3). Defaults → byte-identical.
+                    int shotCount = Pulsar4X.Combat.CombatKernel.BurstShotCount(profile);
+                    double natureFactor = t.ArmourResistFor(profile.Nature);
+                    contribution = GroundDamageMatrix.ArmourSoak(t.Defense, contribution, shotCount, profile.Penetration, natureFactor);
+                    incoming.TryGetValue(t, out var acc);
+                    incoming[t] = acc + contribution;
+                }
+            }
+
             foreach (var f in byFaction.Keys)
             {
                 foreach (var g in byFaction.Keys)
@@ -363,85 +398,83 @@ namespace Pulsar4X.GroundCombat
                     {
                         if (u.Health <= 0) continue;
 
-                        // The g-units THIS attacker can actually reach (within its hex Range). Co-located → all of g.
-                        List<GroundUnit> reachable = null;
+                        // Terrain affinity = the unit TYPE's innate edge (TerrainAttackMult) × its DESIGNED locomotion's
+                        // edge (LocomotionTerrainMult, Propulsion ⚙2). RoughHandlingForUnit reads the unit's designed
+                        // locomotion (0.5 neutral → ×1.0). The Armor▸Inf▸Arty TRIANGLE has DISSOLVED (resolver merge 3b-ii):
+                        // the type edge emerges from raw stats × weapon-nature vs the target's evasion/shield/armour.
+                        double roughHandling = GroundMobility.RoughHandlingForUnit(forces.OwningEntity, u);
+
+                        // ── W-TRACK W2 — PER-WEAPON RANGE BANDING ──────────────────────────────────────────────────────
+                        // An assembled unit carries a per-weapon LOADOUT (W1). Each mounted weapon fires in ITS OWN hex
+                        // range band with ITS OWN nature — so a long-range cannon (undodgeable Artillery) reaches a
+                        // CLOSING enemy while a short-range rifle (dodgeable Ballistic) is still silent (the ground echo of
+                        // a ship's per-weapon range bands). Ammo is a unit-level pool (v1): a dry magazine silences the
+                        // whole unit; a fed one burns ONE salvo if it fires at least one weapon. A unit with exactly ONE
+                        // weapon yields a mount whose Attack/Mode/Range equal the collapsed values (same operands, same
+                        // multiply order below) → this reproduces the collapsed path bit-for-bit. A monolithic / garrison /
+                        // DevTools unit (empty loadout) takes the collapsed path → byte-identical.
+                        if (u.WeaponLoadout != null && u.WeaponLoadout.Count > 0)
+                        {
+                            if (GroundAmmo.CarriesAmmo(u) && GroundAmmo.IsDry(u)) continue;   // dry → this unit's fire is silent (v1: whole unit)
+                            bool firedAny = false;
+                            foreach (var m in u.WeaponLoadout)
+                            {
+                                // The g-units THIS WEAPON can reach (its own hex range). Co-located (dist 0) → all of g.
+                                List<GroundUnit> reachable = null;
+                                foreach (var t in byFaction[g])
+                                {
+                                    if (t.Health <= 0) continue;
+                                    if (HexDist(u, t) > m.RangeHexes) continue;   // out of THIS weapon's band this salvo
+                                    (reachable ??= new List<GroundUnit>()).Add(t);
+                                }
+                                if (reachable == null) continue;                   // this weapon reaches nothing this salvo
+                                firedAny = true;
+
+                                // Same multiply ORDER as the collapsed path (byte-identity for a single-weapon unit,
+                                // where m.Attack == u.Attack): m.Attack × terrain × locomotion × stance × SalvoScale.
+                                double atk = m.Attack
+                                    * GroundTerrain.TerrainAttackMult(u.UnitType, terrain)
+                                    * GroundTerrain.LocomotionTerrainMult(roughHandling, terrain)
+                                    * GroundFormationDoctrine.AttackMult(forces, u);
+                                double pool = atk * SalvoScale;
+                                if (gIsDefender && coverFort > 0) pool /= coverFort;
+                                FireWeaponAtReachable(reachable, pool, GroundCombatant.ToWeaponProfile(u, m));
+                            }
+                            // Burn one salvo of ammo iff the unit fired at least one weapon (a magazine-fed unit only).
+                            if (firedAny && deltaSeconds > 0 && GroundAmmo.CarriesAmmo(u)) GroundAmmo.Consume(u, AmmoPerSalvo_kg);
+                            continue;
+                        }
+
+                        // ── COLLAPSED single-weapon path (empty loadout) — byte-identical to the pre-W2 resolver ──────
+                        // The g-units THIS attacker can reach (within its collapsed hex Range). Co-located → all of g.
+                        List<GroundUnit> reachableC = null;
                         foreach (var t in byFaction[g])
                         {
                             if (t.Health <= 0) continue;
                             if (HexDist(u, t) > u.Range) continue;   // out of this attacker's reach → it can't hit t
-                            (reachable ??= new List<GroundUnit>()).Add(t);
+                            (reachableC ??= new List<GroundUnit>()).Add(t);
                         }
-                        if (reachable == null) continue;             // nothing in range → this unit fires nothing this salvo
+                        if (reachableC == null) continue;            // nothing in range → this unit fires nothing this salvo
 
-                        // AMMO (G2.3a): a unit whose firepower is magazine-fed goes SILENT once it runs dry (a silent gun
-                        // line doesn't charge); a unit still holding ammo burns a salvo's worth as it fires. A unit with
-                        // NO magazine (CarriesAmmo false — every default/garrison unit) never drains → byte-identical.
+                        // AMMO (G2.3a): a magazine-fed unit goes SILENT once dry; else it burns a salvo as it fires. A unit
+                        // with no magazine (every default/garrison unit) never drains → byte-identical.
                         if (GroundAmmo.CarriesAmmo(u))
                         {
                             if (GroundAmmo.IsDry(u)) continue;                       // dry → this attacker's ammo weapons are silent
                             if (deltaSeconds > 0) GroundAmmo.Consume(u, AmmoPerSalvo_kg);   // burn a salvo as it fires
                         }
 
-                        // Output = attack × terrain affinity × stance. The Armor▸Infantry▸Artillery TRIANGLE has
-                        // DISSOLVED (resolver merge, slice 3b-ii — docs/RESOLVER-MERGE-DESIGN.md §7, developer's call
-                        // 2026-07-08): the type edge is no longer a flat ×1.5/×0.67 multiplier — it now emerges from a
-                        // unit's raw stats (attack / armour / HP) × weapon-nature vs the target's evasion/shield/armour,
-                        // the same way a ship's does. (`GroundTerrain.TriangleMult` is retained as a readout/helper but
-                        // no longer scales the fight.)
-                        // Terrain affinity = the unit TYPE's innate edge (TerrainAttackMult) × its DESIGNED
-                        // locomotion's edge (LocomotionTerrainMult, Propulsion ⚙2 — an all-terrain drive fights better
-                        // on constrained ground). RoughHandlingForUnit reads the unit's designed locomotion (0.5 neutral
-                        // for a unit with none → ×1.0 → byte-identical). Body = the planet the roster sits on.
-                        double roughHandling = GroundMobility.RoughHandlingForUnit(forces.OwningEntity, u);
-                        double atk = u.Attack
+                        // Output = attack × terrain affinity × stance × SalvoScale (same operand order as the W2 path).
+                        double atkC = u.Attack
                             * GroundTerrain.TerrainAttackMult(u.UnitType, terrain)
                             * GroundTerrain.LocomotionTerrainMult(roughHandling, terrain)
                             * GroundFormationDoctrine.AttackMult(forces, u);
-                        double pool = atk * SalvoScale;
-                        if (gIsDefender && coverFort > 0) pool /= coverFort;
+                        double poolC = atkC * SalvoScale;
+                        if (gIsDefender && coverFort > 0) poolC /= coverFort;
 
-                        // Spread this attacker's pool across its reachable targets, health-weighted (matches the old
-                        // resolver's focus-fire: triangle is already in the total via the avg, distribution is by health).
-                        double totalH = 0.0;
-                        foreach (var t in reachable) totalH += t.Health;
-                        if (totalH <= 0) continue;
-
-                        // Route this attacker's fire through the SHARED KERNEL (resolver merge 3c): its ground weapon
-                        // becomes a WeaponProfile, and dodge + shield + armour resolve the same way a ship's do — the
-                        // ground triangle/dodge/shield now EMERGE from the weapon spec (no bolted-on GroundDamageMatrix
-                        // multiplier). The profile is built once per attacker.
-                        var profile = GroundCombatant.ToWeaponProfile(u);
-                        double shieldSoakFrac = Pulsar4X.Combat.CombatKernel.ShieldSoakFraction(profile.Nature);
-                        foreach (var t in reachable)
-                        {
-                            // DODGE (kernel HitFraction): an aimed slug is dodged ~(1−evasion); an area/beam shot lands
-                            // ~fully — the same curve a ship uses.
-                            double contribution = pool * (t.Health / totalH)
-                                * Pulsar4X.Combat.CombatKernel.HitFraction(profile, t.Evasion);
-                            // SHIELD POOL (3c): the target's depleting shield soaks the soakable fraction (by weapon
-                            // nature — kinetic fully, energy half-bleeds, exotic bypasses) up to its CURRENT charge,
-                            // BEFORE armour. Draining per-source is deterministic (stable iteration → fast-forward==watch).
-                            if (t.CurrentShield > 0 && shieldSoakFrac > 0 && contribution > 0)
-                            {
-                                double absorbed = System.Math.Min(contribution * shieldSoakFrac, t.CurrentShield);
-                                t.CurrentShield -= absorbed;
-                                contribution -= absorbed;
-                            }
-                            // ARMOUR: flat-per-source plating bounces what's left (the swarm-vs-alpha identity) — the
-                            // shared CombatKernel armour soak (via GroundDamageMatrix's delegator, slice 3a), reduced by
-                            // the weapon's PENETRATION (W1b) and split into the weapon's SHOT COUNT (W2b): an AP round
-                            // cracks plate a normal one bounces off, and a big-alpha weapon punches while a chip-swarm of
-                            // equal total is mostly bounced. PerShotEnergy 0 → shotCount 1 (every unit until the W2c dial)
-                            // → the flat single-lump soak, byte-identical to before.
-                            int shotCount = Pulsar4X.Combat.CombatKernel.BurstShotCount(profile);
-                            // ARMOUR NATURE (⚙3): the target's plating soaks the incoming weapon's NATURE by its tuning —
-                            // ablative shrugs off energy, thins vs a slug. natureFactor 1.0 for a plain-plated unit (every
-                            // unit until a nature-tuned plating is fitted) → byte-identical to the pre-nature soak.
-                            double natureFactor = t.ArmourResistFor(profile.Nature);
-                            contribution = GroundDamageMatrix.ArmourSoak(t.Defense, contribution, shotCount, profile.Penetration, natureFactor);
-                            incoming.TryGetValue(t, out var acc);
-                            incoming[t] = acc + contribution;
-                        }
+                        // Route the collapsed weapon through the SHARED KERNEL (resolver merge 3c) — dodge + shield +
+                        // armour, exactly as before.
+                        FireWeaponAtReachable(reachableC, poolC, GroundCombatant.ToWeaponProfile(u));
                     }
                 }
             }

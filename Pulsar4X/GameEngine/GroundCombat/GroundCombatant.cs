@@ -84,6 +84,36 @@ namespace Pulsar4X.GroundCombat
             return new WeaponProfile(unit.Attack, velocity, tracking, saturation, range_m, nature, delivery, unit.Penetration, unit.PerShotEnergy);
         }
 
+        /// <summary>W-TRACK W2 — build the <see cref="WeaponProfile"/> for ONE weapon in a unit's per-weapon
+        /// <see cref="GroundUnit.WeaponLoadout"/> (its own Attack / <see cref="GroundWeaponMode"/> / hex range), so the
+        /// resolver can fire each mounted weapon in its OWN range band with its OWN nature — a long-range cannon
+        /// (undodgeable Artillery) reaches a closing enemy while a short-range rifle (dodgeable Ballistic) is still
+        /// silent. Identical construction to <see cref="ToWeaponProfile(GroundUnit,double)"/> but reads the
+        /// <paramref name="mount"/>'s Attack/Mode/Range instead of the unit's collapsed values; the unit still supplies
+        /// Penetration / PerShotEnergy (unit-level snapshots — a per-mount split is a later refinement). A unit carrying
+        /// exactly ONE weapon yields a mount whose Attack/Mode/Range equal the collapsed values, so this reproduces
+        /// <see cref="ToWeaponProfile(GroundUnit,double)"/> bit-for-bit (the W2 byte-identity for single-weapon units).</summary>
+        public static WeaponProfile ToWeaponProfile(GroundUnit unit, GroundWeaponMount mount, double hexPitch_m = NominalHexPitch_m)
+        {
+            var (nature, delivery) = NatureDeliveryFor(mount.Mode);
+            double range_m = mount.RangeHexes > 0 ? mount.RangeHexes * hexPitch_m : 0;
+
+            double velocity, tracking, saturation;
+            switch (mount.Mode)
+            {
+                case GroundWeaponMode.Melee:
+                    velocity = 1.0; tracking = 1.0; saturation = PointSaturation;
+                    break;
+                case GroundWeaponMode.Artillery:
+                    velocity = 300.0; tracking = 0.0; saturation = AreaSaturation;
+                    break;
+                default: // Ballistic / Energy — aimed, dodgeable
+                    velocity = AimedVelocity_mps; tracking = 0.0; saturation = PointSaturation;
+                    break;
+            }
+            return new WeaponProfile(mount.Attack, velocity, tracking, saturation, range_m, nature, delivery, unit.Penetration, unit.PerShotEnergy);
+        }
+
         /// <summary>Present a <see cref="GroundUnit"/> as the neutral <see cref="CombatKernel.Combatant"/> the shared
         /// kernel reads. The unit's flat <see cref="GroundUnit.Shield"/> seeds a depleting shield POOL (the ship model —
         /// slice 3b unifies ground onto the pool, a deliberate change from the old innate-% shield). <see cref="GroundUnit.Defense"/>

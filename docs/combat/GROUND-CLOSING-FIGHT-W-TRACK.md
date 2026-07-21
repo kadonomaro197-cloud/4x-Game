@@ -1,6 +1,6 @@
 # The W-Track — per-weapon range banding + formation-role parity for ground combat
 
-**As of:** 2026-07-21 · branch `claude/devtest-faction-design-xpfnhe` · **status: PLAN (build W1 first, CI-gated)**
+**As of:** 2026-07-21 · branch `claude/devtest-faction-design-xpfnhe` · **status: W1 + W2 BUILT (CI-green); W3–W4 pending**
 
 > **Why this exists.** The franchise litmus test (`docs/showcase/FRANCHISE-LITMUS-TEST.md`) and the developer's
 > combat-fidelity call exposed the same gap from two directions: **a ground unit collapses all its weapons into ONE
@@ -34,7 +34,9 @@ engine does the banding for free.** That is this track.
 
 ## 2. The slices (each additive, CI-green before the next — RESOLVER-DESIGN §B6 discipline)
 
-### W1 — the multi-weapon ground loadout (data + assembler). ADDITIVE, byte-identical.
+### W1 — the multi-weapon ground loadout (data + assembler). ADDITIVE, byte-identical. ✅ BUILT 2026-07-21 (`GroundWeaponLoadoutTests`).
+
+> **As built:** `GroundWeaponMount` is `{ double Attack; int RangeHexes; GroundWeaponMode Mode; }` — Penetration/PerShotEnergy stayed UNIT-level (not per-mount) since the resolver reads them off the unit; a per-mount split is a later refinement. Everything else below shipped as written.
 
 Give a `GroundUnit` a real per-weapon loadout instead of one collapsed number.
 
@@ -55,7 +57,9 @@ Give a `GroundUnit` a real per-weapon loadout instead of one collapsed number.
   with the right per-weapon ranges/attacks, and the summed `Attack` still equals the old collapse (byte-identity
   tripwire). A single-weapon unit has one entry. A garrison/DevTools/old-save unit (no loadout) is unaffected.
 
-### W2 — the resolver fires per-weapon by range. BEHAVIOUR CHANGE (byte-identical for single-weapon units).
+### W2 — the resolver fires per-weapon by range. BEHAVIOUR CHANGE (byte-identical for single-weapon units). ✅ BUILT 2026-07-21 (`GroundWeaponBandingTests`).
+
+> **As built:** added a `GroundCombatant.ToWeaponProfile(unit, mount)` overload (profile from the mount's Attack/Mode/Range; unit supplies Penetration/PerShotEnergy). `ResolveRegionCombat`'s per-target dodge→shield→armour math was extracted to a shared local `FireWeaponAtReachable(reachable, pool, profile)`; a loadout-carrying attacker loops its mounts, gating each by `mount.RangeHexes` and firing `mount.Attack` through `ToWeaponProfile(u, mount)`. Ammo is a WHOLE-UNIT gate in v1 (a dry magazine silences the unit; a fed one burns one salvo if any weapon fired) — the per-ammo-weapon silence in the plan below is deferred with the per-mount Penetration/PerShotEnergy split. Byte-identity confirmed: every existing ground-combat test uses raw/garrison/single-weapon units (no multi-weapon assembled unit fights), and a one-mount loadout reproduces the collapsed fire operand-for-operand.
 
 Wire the loadout into the closing fight.
 
