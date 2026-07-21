@@ -61,5 +61,70 @@ namespace Pulsar4X.Tests
             Assert.That(soloRaised, Is.EqualTo(1), "a default design raises exactly one unit per build (byte-identical)");
             Log($"squad of 5 → {raised} units in one build (time {squad.IndustryPointCosts} = 5× {solo.IndustryPointCosts}); solo → {soloRaised}");
         }
+
+        /// <summary>
+        /// THE COMBAT INVARIANT the developer locked: "100 individual-order zerglings is the same as 100 bulk
+        /// single-instance-built zerglings — this becomes important during combat." Bulk-built and individually-built
+        /// units must be INDISTINGUISHABLE to the engine. The dial scales only build COST + build-TIME (proved above);
+        /// it must never touch a per-unit combat stat. This gauge builds the SAME parts two ways — one solo unit and a
+        /// squad of five in one build — and asserts every bulk unit's combat stats (Attack, HP, Defense, Range, damage
+        /// type, evasion, shield, penetration, per-shot energy, ammo pool, armour-by-nature, weapon loadout) EXACTLY
+        /// equal the solo unit's, and equal each other's. If a future change to the squad dial ever scaled a stat
+        /// instead of just the cost, this reds. Engine-only → CI.
+        /// </summary>
+        [Test]
+        [Description("A bulk-built squad unit is stat-identical to an individually-built unit from the same parts — "
+                   + "the dial scales cost/time only, never a combat stat (the developer's '100 bulk == 100 individual').")]
+        public void BulkBuilt_IsStatIdenticalTo_IndividuallyBuilt()
+        {
+            var s = TestScenario.CreateWithColony();
+            var faction = s.Faction.GetDataBlob<FactionInfoDB>();
+            ComponentDesign Part(string p) => (ComponentDesign)faction.IndustryDesigns[p];
+            var frame = Part("default-design-human-frame");
+            var parts = new List<(ComponentDesign, int)> { (Part("default-design-ground-rifle"), 1) };
+
+            // the SAME parts, assembled two ways: one unit per build, and a squad of five per build.
+            var solo = GroundUnitAssembly.RegisterAssembledDesign(faction, "id-solo", "Lone Trooper", frame, parts);      // individual order
+            var squad = GroundUnitAssembly.RegisterAssembledDesign(faction, "id-five", "Rifle Squad", frame, parts, 5);   // bulk build of five
+
+            var body = s.StartingBody;
+            var storage = s.Colony.GetDataBlob<CargoStorageDB>();
+
+            squad.OnConstructionComplete(s.Colony, storage, "line", new IndustryJob(faction, squad.UniqueID), squad);   // one build → five bulk units
+            solo.OnConstructionComplete(s.Colony, storage, "line", new IndustryJob(faction, solo.UniqueID), solo);      // one build → one individual unit
+            var forces = body.GetDataBlob<GroundForcesDB>();
+
+            var individual = forces.Units.Single(u => u.FactionOwnerID == s.Faction.Id && u.DesignId == solo.UniqueID);
+            var bulk = forces.Units.Where(u => u.FactionOwnerID == s.Faction.Id && u.DesignId == squad.UniqueID).ToList();
+            Assert.That(bulk.Count, Is.EqualTo(5), "precondition: the bulk build fielded five units to compare");
+
+            // asserts every combat stat the resolver reads is byte-for-byte equal between the two build paths.
+            void AssertCombatIdentical(GroundUnit bulkUnit, string why)
+            {
+                Assert.That(bulkUnit.Attack,           Is.EqualTo(individual.Attack),           why + " — Attack");
+                Assert.That(bulkUnit.Defense,          Is.EqualTo(individual.Defense),          why + " — Defense");
+                Assert.That(bulkUnit.MaxHealth,        Is.EqualTo(individual.MaxHealth),        why + " — MaxHealth");
+                Assert.That(bulkUnit.Health,           Is.EqualTo(individual.Health),           why + " — Health");
+                Assert.That(bulkUnit.Range,            Is.EqualTo(individual.Range),            why + " — Range");
+                Assert.That(bulkUnit.DamageType,       Is.EqualTo(individual.DamageType),       why + " — DamageType");
+                Assert.That(bulkUnit.Evasion,          Is.EqualTo(individual.Evasion),          why + " — Evasion");
+                Assert.That(bulkUnit.Shield,           Is.EqualTo(individual.Shield),           why + " — Shield");
+                Assert.That(bulkUnit.Penetration,      Is.EqualTo(individual.Penetration),      why + " — Penetration");
+                Assert.That(bulkUnit.PerShotEnergy,    Is.EqualTo(individual.PerShotEnergy),    why + " — PerShotEnergy");
+                Assert.That(bulkUnit.MaxAmmo_kg,       Is.EqualTo(individual.MaxAmmo_kg),       why + " — MaxAmmo_kg");
+                Assert.That(bulkUnit.ArmourVsKinetic,  Is.EqualTo(individual.ArmourVsKinetic),  why + " — ArmourVsKinetic");
+                Assert.That(bulkUnit.ArmourVsEnergy,   Is.EqualTo(individual.ArmourVsEnergy),   why + " — ArmourVsEnergy");
+                Assert.That(bulkUnit.ArmourVsExplosive,Is.EqualTo(individual.ArmourVsExplosive),why + " — ArmourVsExplosive");
+                Assert.That(bulkUnit.ArmourVsExotic,   Is.EqualTo(individual.ArmourVsExotic),   why + " — ArmourVsExotic");
+                Assert.That(bulkUnit.WeaponLoadout.Count, Is.EqualTo(individual.WeaponLoadout.Count), why + " — WeaponLoadout count");
+            }
+
+            // every one of the five bulk units matches the individually-built unit exactly — indistinguishable to combat.
+            for (int i = 0; i < bulk.Count; i++)
+                AssertCombatIdentical(bulk[i], $"bulk unit #{i + 1} vs individually-built");
+
+            Log($"all {bulk.Count} bulk-built units are combat-stat-identical to the individually-built unit "
+              + $"(Attack {individual.Attack}, HP {individual.MaxHealth}, Range {individual.Range}, {individual.DamageType})");
+        }
     }
 }
