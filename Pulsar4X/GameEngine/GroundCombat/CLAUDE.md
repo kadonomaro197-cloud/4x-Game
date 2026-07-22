@@ -198,10 +198,28 @@ nominal 1000 m — the placeholder), and (2) **closing MOVEMENT** — units spre
 `GroupPlane` S4 "ground-onto-plane" campaign) so the artillery gets its free shots during the approach. Those two are
 the remaining slices for the full "artillery thins 50% before they close."
 
-**Still to come.** **M3b/S4** = real km weapon ranges (real-life + sci-fi) + units spread + closing over time on the 2D
-`GroupPlane` (the developer's "auto-resolver on a 2D plane"); **M4** = per-`CityTile` geology/environment variation (the
-field already exists — `CityGridFactory.BuildGrid` v1 sets all tiles to the coarse terrain); **M5** = client draws units
-on mini-hexes. Gauges: `Pulsar4X.Tests/GroundMiniHexTests.cs` (position math) + `MiniHexCombat_*` (M2 gate).
+**M3 — the INITIAL ENGAGEMENT SPREAD ✅ (2026-07-22, behind `EnableInitialEngagementSpread`, menu-on).** The keystone
+finding: units **never start apart** — a raised garrison and a landed invader both muster at the region-centre hex (0,0)
+(`GroundForcesDB.StampGlobalMuster`/`PlaceExistingUnit`), so a fight opens point-blank with no approach — AND `MiniQ/MiniR`
+sit at (0,0), which is *why* M2/M3a were inert in a live game. M3 builds the missing piece: the first tick a region becomes
+contested, `GroundForcesProcessor.SpreadNewlyContestedRegions` deterministically pushes the sides apart on the per-region
+HEX grid — the HOLDER (region owner, or the longest-ranged faction on neutral ground) stays at its muster hex, the other
+side is placed the holder's longest weapon-range (`unit.Range` hexes) away, snapped to the nearest in-patch passable hex
+(`SnapSpreadHex`) — so the fight OPENS at range and the existing `ApplyEngagementManeuvers` closing machinery plays it out
+(the longer-ranged unit thins the closer during the approach). Built on `HexQ/HexR` — the ONE grid where the range gate,
+the closing maneuver, AND differentiated ranges (1 vs 3 hexes) already work together (proven by `ClosingFight_*`); so the
+**menu now runs the HEX gate** (`EnableInitialEngagementSpread` on, `EnableMiniHexCombat` **left off** — the mini metre gate
+can't host the closing fight yet: ~1-3 km reaches vs ~37 km mini-hexes, and its maneuver/gate are on different grids). A
+save-safe per-region `GroundForcesDB.SpreadRegions` guard spreads once per contest (a fight that ends re-spreads); pure /
+deterministic (no RNG → fast-forward == watch). **Byte-identical off.** Gauge: `GroundForcesTests.
+InitialEngagementSpread_OpensAGap_ThenLongRangeWhittlesTheRusher` + `…_FlagOff_UnitsStayPointBlank`.
+
+**Still to come.** **M3b/S4** = the mini-hex METRE-grid version of the M3 spread — real km weapon ranges (real-life +
+sci-fi; today `Range_m` = hex × nominal 1000 m) + units spread + closing over time on the mini-hex/2D `GroupPlane` (with
+`ApplyEngagementManeuvers` stepping the mini grid the metre gate measures), the developer's "auto-resolver on a 2D plane";
+**M4** = per-`CityTile` geology/environment variation (the field already exists — `CityGridFactory.BuildGrid` v1 sets all
+tiles to the coarse terrain); **M5** = client draws units on mini-hexes. Gauges: `Pulsar4X.Tests/GroundMiniHexTests.cs`
+(position math) + `MiniHexCombat_*` (M2 gate) + `InitialEngagementSpread_*` (M3).
 
 ## Units as entities — "abilities just fall out" (Option A, 2026-07-07/08)
 

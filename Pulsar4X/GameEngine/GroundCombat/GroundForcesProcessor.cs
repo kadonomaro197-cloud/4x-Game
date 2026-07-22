@@ -84,6 +84,21 @@ namespace Pulsar4X.GroundCombat
         /// calibrated CI gauges valid, not to hide the feature from players).</summary>
         public static bool EnableMiniHexCombat = false;
 
+        /// <summary>INITIAL ENGAGEMENT SPREAD (docs/combat/MINI-HEX-TACTICAL-GRID-DESIGN.md, M3 — the ground twin of space's
+        /// <see cref="Pulsar4X.Combat.CombatEngagement"/> seeding <c>Separation_m</c> at battle start). When true, the FIRST
+        /// tick a region becomes newly contested the processor pushes the two sides APART on the region's hex patch — the
+        /// holder (the region's owner, or the longest-ranged faction on neutral ground) stays at its muster hex, every other
+        /// faction's units are placed the holder's longest weapon-range away — so a fight OPENS at range and CLOSES over
+        /// ticks (the existing <see cref="ApplyEngagementManeuvers"/> machinery does the closing), letting a longer-ranged
+        /// unit thin the closing force during the approach (the "mobile artillery eliminates 50% before they close" fight).
+        /// Without it, both sides muster at the same region-centre hex → gap 0 → point-blank, no approach.
+        /// Operates on the per-region HEX grid (<c>HexQ/HexR</c>) — the ONE space where the range gate, the closing
+        /// maneuver, AND differentiated weapon ranges (1 vs 3 hexes) already work together; the mini-hex metre grid needs
+        /// real-km weapon ranges + mini-hex movement (M3b/S4) before it can host the same fight. Default FALSE so every CI
+        /// gauge (which musters co-located and asserts point-blank fire) stays byte-identical; the menu turns it on. Pure /
+        /// deterministic (no RNG) so fast-forward == watch.</summary>
+        public static bool EnableInitialEngagementSpread = false;
+
         // Shield pool regeneration is now a PER-UNIT designed rate (GroundUnit.ShieldRegenFraction, ⚙3), defaulting to
         // 0.34/game-hour (≈ full recharge in ~3 hours) for every unit until a ward dials it — see the recharge step in
         // ProcessBody. The old global ShieldRegenPerHourFraction constant was removed (2026-07-11): it was dead (the
@@ -266,6 +281,13 @@ namespace Pulsar4X.GroundCombat
             // colonies) — so a Bunker in a region hardens its defender (and shields adjacent friendly regions).
             var allRegions = regionsDB?.Regions;
             var fortResolve = GroundFortification.BuildResolver(body);
+
+            // 1e) INITIAL ENGAGEMENT SPREAD (M3): the FIRST tick a region becomes contested, open a real gap between the
+            // sides so the closing fight has an approach (the ground twin of space seeding Separation_m at StartEngagement).
+            // Detected HERE — before the combat loop below — so the OPENING salvo already respects the gap (the :307
+            // WasInBattle edge fires AFTER this loop, too late for the first salvo). Flag-gated → byte-identical when off.
+            if (EnableInitialEngagementSpread)
+                SpreadNewlyContestedRegions(forces, regionsDB, byRegion);
 
             // 2) COMBAT (5c) + 3) REGION CAPTURE (5d), per region.
             bool anyFightThisTick = false;
@@ -545,6 +567,99 @@ namespace Pulsar4X.GroundCombat
             if (EnableMiniHexCombat)
                 return Pulsar4X.Combat.CombatKernel.WithinReach(range_m, GroundMiniHex.RealGapMetres(u, t, forces?.OwningEntity));
             return Pulsar4X.Combat.CombatKernel.WithinReach(rangeHexes, HexDist(u, t));
+        }
+
+        /// <summary>INITIAL ENGAGEMENT SPREAD (M3): the first tick a region becomes contested, place the sides a real hex
+        /// gap apart so the closing fight has an approach — the ground twin of space seeding <c>Separation_m</c> at
+        /// StartEngagement. The HOLDER (the region's owner, or the longest-ranged faction on neutral ground) stays at its
+        /// muster hex; every other faction's units are pushed the holder's longest weapon-range (<c>unit.Range</c> hexes)
+        /// away along +Q, snapped to the nearest in-patch passable hex. So the holder's longest gun opens fire immediately
+        /// and the shorter-ranged sides must CLOSE (<see cref="ApplyEngagementManeuvers"/> does the closing from the next
+        /// tick — a longer-ranged unit thins the closer during the approach). Pure/deterministic — holder + gap are integer
+        /// functions of unit ranges + faction ids, the snap is a fixed inward search, NO RNG (fast-forward == watch). A
+        /// region is spread ONCE per contest (the save-safe <see cref="GroundForcesDB.SpreadRegions"/> guard); a fight that
+        /// ends clears the guard so a fresh one re-spreads. Never throws (L4).</summary>
+        private static void SpreadNewlyContestedRegions(GroundForcesDB forces, PlanetRegionsDB regionsDB,
+            Dictionary<int, List<GroundUnit>> byRegion)
+        {
+            if (regionsDB == null || forces?.SpreadRegions == null) return;
+            var spread = forces.SpreadRegions;   // save-safe per-region "already opened this contest" guard
+
+            // Prune the guard: a region no longer contested (fight ended / one side wiped) clears, so a fresh battle
+            // there re-spreads next time it forms.
+            if (spread.Count > 0)
+            {
+                var stillContested = new HashSet<int>();
+                foreach (var kv in byRegion)
+                {
+                    var fset = new HashSet<int>();
+                    foreach (var u in kv.Value) if (u.Health > 0) fset.Add(u.FactionOwnerID);
+                    if (fset.Count >= 2) stillContested.Add(kv.Key);
+                }
+                spread.RemoveWhere(ri => !stillContested.Contains(ri));
+            }
+
+            foreach (var kv in byRegion)
+            {
+                int ri = kv.Key;
+                if (spread.Contains(ri)) continue;                       // already opened this contest
+                if (ri < 0 || ri >= regionsDB.Regions.Count) continue;
+
+                // Each present faction's max hex range (unit.Range == Max(mount.RangeHexes) by the W1 invariant).
+                var factionMaxRange = new Dictionary<int, int>();
+                foreach (var u in kv.Value)
+                {
+                    if (u.Health <= 0) continue;
+                    int r = u.Range > 0 ? u.Range : 1;
+                    if (!factionMaxRange.TryGetValue(u.FactionOwnerID, out var cur) || r > cur)
+                        factionMaxRange[u.FactionOwnerID] = r;
+                }
+                if (factionMaxRange.Count < 2) continue;                 // not a two-sided fight
+
+                // The HOLDER: the region owner if it's present, else the longest-ranged faction. Iterate a SORTED id
+                // list (not dict order) so the tie-break — lowest faction id on equal range — is deterministic.
+                var region = regionsDB.Regions[ri];
+                int holder;
+                if (factionMaxRange.ContainsKey(region.OwnerFactionID)) holder = region.OwnerFactionID;
+                else
+                {
+                    var fids = new List<int>(factionMaxRange.Keys);
+                    fids.Sort();
+                    holder = fids[0];
+                    int bestR = factionMaxRange[holder];
+                    foreach (var fid in fids)
+                        if (factionMaxRange[fid] > bestR) { bestR = factionMaxRange[fid]; holder = fid; }
+                }
+
+                int gap = factionMaxRange[holder];                       // the holder's longest gun sets the opening range
+
+                // Holder units stay at their muster hex; push every non-holder unit `gap` hexes along +Q, snapped in-patch.
+                foreach (var u in kv.Value)
+                {
+                    if (u.Health <= 0 || u.FactionOwnerID == holder) continue;
+                    var placed = SnapSpreadHex(region, u.HexQ + gap, u.HexR);
+                    if (placed != null) { u.HexQ = placed.Value.q; u.HexR = placed.Value.r; }
+                }
+                spread.Add(ri);
+            }
+        }
+
+        /// <summary>Deterministically snap a spread target (<paramref name="q"/>,<paramref name="r"/>) to the nearest
+        /// in-patch PASSABLE hex, stepping the column inward toward the muster origin until one is found — so an
+        /// off-patch or ocean target never strands a unit. Null if no passable hex exists on that row (defensive → the
+        /// caller leaves the unit co-located). Same passability predicate as <see cref="PickStepHex"/>/SnapToPassable.</summary>
+        private static (int q, int r)? SnapSpreadHex(Region region, int q, int r)
+        {
+            if (region?.Hexes == null || region.Hexes.Count == 0) return null;
+            var byCoord = new Dictionary<(int, int), GroundHex>();
+            foreach (var h in region.Hexes) byCoord[(h.Q, h.R)] = h;
+            int step = q >= 0 ? 1 : -1;                                  // walk the offset back toward the muster column (0)
+            for (int x = q; step > 0 ? x >= 0 : x <= 0; x -= step)
+            {
+                if (byCoord.TryGetValue((x, r), out var hx) && !HexPathfinder.IsImpassable(hx.Terrain))
+                    return (x, r);
+            }
+            return null;
         }
 
         /// <summary>

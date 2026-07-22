@@ -565,11 +565,15 @@ public class NewGameMenu : PulsarGuiWindow
         // kites to standoff, support stays back (the ground echo of space sub-fleet roles). OFF in the engine suite
         // (byte-identical), ON here so a menu game's closing ground fights show the role differentiation.
         Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundRoleManeuver = true;
-        // Mini-hex real-distance combat (docs/combat/MINI-HEX-TACTICAL-GRID-DESIGN.md, M2): the ground range gate reads
-        // the REAL metre gap on the continuous coarse-hex + mini-hex field (the km on the gun is the truth, the hex is
-        // only the ruler) instead of a hex-count. OFF in the engine suite so the hex-calibrated combat gauges stay
-        // byte-identical; ON here so a real game gets real distances on-by-default (the developer's "keep the real gate on").
-        Pulsar4X.GroundCombat.GroundForcesProcessor.EnableMiniHexCombat = true;
+        // INITIAL ENGAGEMENT SPREAD (docs/combat/MINI-HEX-TACTICAL-GRID-DESIGN.md, M3): a ground fight OPENS at a real
+        // hex gap and CLOSES over ticks, so a longer-ranged unit thins the closing force during the approach (the "mobile
+        // artillery eliminates 50% before they close" fight). Runs on the per-region HEX grid — the ONE space where the
+        // range gate, the closing maneuver, AND differentiated weapon ranges (1 vs 3 hexes) already work together end-to-end.
+        // We therefore run the HEX gate here (EnableMiniHexCombat left OFF): the mini-hex METRE gate (M2) can't host the
+        // closing fight yet — its weapon reaches are ~1-3 km against ~37 km mini-hexes, and its closing maneuver moves on a
+        // different grid than it measures — so it needs real-km weapon ranges + mini-hex movement (M3b/S4) first. The
+        // mini-hex code stays in the tree, flagged off, for that follow-on; today's visible closing fight is the hex gate.
+        Pulsar4X.GroundCombat.GroundForcesProcessor.EnableInitialEngagementSpread = true;
 
         // Generate random systems up to the number of "Galaxy Size" minus the
         // number of included pre-made systems
@@ -969,8 +973,8 @@ public class NewGameMenu : PulsarGuiWindow
             // auto-form-up, default OFF (engine byte-identical), ON for a DevTest sandbox so the invasion plays out.
             Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundTacticalAI = true;
             Pulsar4X.GroundCombat.GroundAssembly.AutoFormUp = true;
-            Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundRoleManeuver = true;   // W3 role-based maneuver
-            Pulsar4X.GroundCombat.GroundForcesProcessor.EnableMiniHexCombat = true;        // M2 real-distance range gate
+            Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundRoleManeuver = true;         // W3 role-based maneuver
+            Pulsar4X.GroundCombat.GroundForcesProcessor.EnableInitialEngagementSpread = true;     // M3 spread → hex closing fight
 
             var startingSystem = game.Systems.Find(s => s.ID.Equals(startingSystemId));
             if (startingSystem == null)

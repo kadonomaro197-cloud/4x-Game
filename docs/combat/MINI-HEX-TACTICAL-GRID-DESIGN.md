@@ -119,9 +119,29 @@ and byte-identical until a deliberate flip.
   gate on"; the flag exists only to keep the hex-calibrated CI gauges valid, not to hide the feature from players. On
   today's coarse grid this reads as "same coarse global hex → fight, a real distance away → hold fire until you close."
   Gauge: `GroundForcesTests.MiniHexCombat_SameCoarseHexFights_DifferentCoarseHexHoldsFire`.
-- **M3 — mini-hex movement + the real closing fight.** Units march mini-hex to mini-hex on the continuous
-  field at real `Speed_kmh`; the closing loop (mirror of space `AdvanceClosing`) plays out over real
-  metres and seconds; per-mini-tile terrain/hazard attrits the crosser.
+- **M3 — the INITIAL ENGAGEMENT SPREAD (the ground twin of `StartEngagement` seeding a gap). ✅ BUILT 2026-07-22
+  (behind `EnableInitialEngagementSpread`, menu-on).** The keystone finding that made this the right M3: units
+  **never start apart** — a raised garrison and a landed invader both muster at the region-centre hex (0,0)
+  (`GroundForcesDB.StampGlobalMuster` / `PlaceExistingUnit`), so a fight opens point-blank with no approach to
+  thin during, AND the mini-hex fields (`MiniQ/MiniR`) sit at (0,0), which is *why* M2/M3a are inert in a live
+  game. So M3 builds the missing piece: the first tick a region becomes contested, `GroundForcesProcessor.
+  SpreadNewlyContestedRegions` deterministically pushes the sides apart — the holder (region owner, or the
+  longest-ranged faction on neutral ground) stays at its muster hex, the other side is placed the holder's
+  longest weapon-range away — so the fight OPENS at range and the existing `ApplyEngagementManeuvers` closing
+  machinery plays it out (a longer-ranged unit thins the closer during the approach). **Built on the per-region
+  HEX grid (`HexQ/HexR`)** — the ONE space where the range gate, the closing maneuver, AND differentiated weapon
+  ranges (1 vs 3 hexes) already work together end-to-end (proven by `ClosingFight_LongRangeWhittles…`); so the
+  menu now runs the HEX gate (`EnableMiniHexCombat` left off) and this delivers the visible closing fight. A
+  save-safe per-region `GroundForcesDB.SpreadRegions` guard spreads once per contest; pure/deterministic (no
+  RNG). Byte-identical off. Gauge: `GroundForcesTests.InitialEngagementSpread_OpensAGap_ThenLongRangeWhittles…`
+  (+ the flag-off byte-identity gauge).
+- **M3b — the mini-hex closing fight (the METRE-grid version of M3, deferred).** To host the SAME closing fight
+  on the mini-hex metre grid the client asked to keep, two prerequisites: (1) **real-km weapon ranges** — today
+  `Range_m` = hex × a nominal 1000 m, so a weapon reaches ~1-3 km against a ~37 km mini-hex; a 1-mini-hex spread
+  puts everyone out of range. (2) **mini-hex movement** — `ApplyEngagementManeuvers` steps `HexQ/HexR`, but the
+  metre gate measures `Global+Mini`, so it must also step the mini grid, or the closing never registers. Until
+  both land, the mini-hex code stays flagged off and the hex grid carries the fight (M3). Units also march
+  mini-hex to mini-hex at real `Speed_kmh`; per-mini-tile terrain/hazard attrits the crosser.
 - **M4 — per-mini-hex geology/environment.** Fill each `CityTile.Terrain` (and later a hazard field) with
   real variation instead of copying the coarse hex's single terrain (`CityGridFactory.BuildGrid` v1 sets
   them all equal — the field is already there to fill). This is the developer's "opportunity for more

@@ -1424,6 +1424,74 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("INITIAL ENGAGEMENT SPREAD (M3) — the north-star closing fight from an AUTO spread, the way a real game deploys. Same as ClosingFight_LongRangeWhittles, EXCEPT the two sides are NOT hand-placed apart: both muster at region 0's centre hex (0,0) like the real game (RaiseUnit → StampGlobalMuster co-locates everyone), and EnableInitialEngagementSpread does the opening. With the flag on, the first tick pushes the shorter-ranged rusher the holder's range (3 hexes) away — so the range-3 kiter opens fire immediately and the range-1 rusher must close, ending more damaged. This proves the processor produces the separation the old test hard-coded, so the artillery-during-approach fight happens in a game, not just in a hand-set fixture.")]
+        public void InitialEngagementSpread_OpensAGap_ThenLongRangeWhittlesTheRusher()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();  // no attrition skew
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            PaveRegionHexes(body, regionsDB, 0);
+            regionsDB.Regions[0].OwnerFactionID = -1;   // neutral → the range-based holder rule makes the range-3 kiter hold
+
+            var proc = new GroundForcesProcessor();
+            GroundForcesProcessor.EnableInitialEngagementSpread = true;   // the client runs the HEX gate (EnableMiniHexCombat off = CI default)
+            try
+            {
+                // Equal stats EXCEPT reach — and BOTH mustered at (0,0), co-located, like a real deployment (NOT hand-placed apart).
+                var kiter = GroundForces.RaiseUnit(body, MakeDesign("spk", "LongGun", GroundUnitType.Infantry, range: 3), s.Faction.Id, 0);
+                var rusher = GroundForces.RaiseUnit(body, MakeDesign("spr", "Zergling", GroundUnitType.Infantry, range: 1), InvaderFaction, 0);
+                Assert.That(HexDistBetween(kiter, rusher), Is.EqualTo(0), "both muster co-located at (0,0) — the real game's start, gap 0");
+
+                // The rusher's formation CLOSES; the kiter has none → holds ground and fires (mirrors ClosingFight).
+                var f = GroundForces.CreateFormation(body, InvaderFaction, "Swarm");
+                GroundForces.AssignUnit(f, rusher);
+                GroundFormationDoctrine.SetEngagementStance(f, GroundEngagementStance.CloseToEngage);
+
+                var forces = body.GetDataBlob<GroundForcesDB>();
+                // (a) ONE tick applies the spread BEFORE the opening salvo → the sides now stand the holder's range apart.
+                proc.ProcessEntity(body, 3600);
+                int gapAfterSpread = HexDistBetween(kiter, rusher);
+                Log($"initial spread opened the fight: kiter(reach 3) at ({kiter.HexQ},{kiter.HexR}), rusher(reach 1) at ({rusher.HexQ},{rusher.HexR}) → gap {gapAfterSpread}");
+                Assert.That(gapAfterSpread, Is.GreaterThan(0), "the spread opened a real gap from a co-located muster (there's an approach to fight across)");
+                Assert.That(gapAfterSpread, Is.EqualTo(3), "opened to the HOLDER's longest reach (3), so its gun opens fire and the rusher must close");
+
+                // (b) play the fight out — the range advantage, from the auto spread, decides it exactly as the hand-placed test.
+                for (int i = 0; i < 60 && forces.Units.Count > 1; i++)
+                    proc.ProcessEntity(body, 3600);
+                Log($"closing fight from auto-spread: kiter ends {kiter.Health:0} hp, rusher ends {rusher.Health:0} hp");
+                Assert.That(rusher.Health, Is.LessThan(kiter.Health),
+                    "the long-range unit's free shots during the approach decide it — the rusher ends more damaged");
+                Assert.That(kiter.Health, Is.GreaterThan(0), "the long-range unit survives — it whittled the rusher before it closed");
+            }
+            finally { GroundForcesProcessor.EnableInitialEngagementSpread = false; }
+        }
+
+        [Test]
+        [Description("INITIAL ENGAGEMENT SPREAD — BYTE-IDENTITY: with the flag OFF (the CI default), two co-located hostile units stay point-blank (gap 0) and trade fire on tick 1, exactly as every pre-M3 fight. Proves the spread only runs inside the flag (the whole existing combat suite is unchanged).")]
+        public void InitialEngagementSpread_FlagOff_UnitsStayPointBlank()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            PaveRegionHexes(body, regionsDB, 0);
+            regionsDB.Regions[0].OwnerFactionID = -1;
+
+            Assert.That(GroundForcesProcessor.EnableInitialEngagementSpread, Is.False, "the spread flag defaults OFF (the CI suite is byte-identical)");
+            var kiter = GroundForces.RaiseUnit(body, MakeDesign("nsk", "LongGun", GroundUnitType.Infantry, range: 3), s.Faction.Id, 0);
+            var rusher = GroundForces.RaiseUnit(body, MakeDesign("nsr", "Zergling", GroundUnitType.Infantry, range: 1), InvaderFaction, 0);
+
+            new GroundForcesProcessor().ProcessEntity(body, 3600);
+            Assert.That(HexDistBetween(kiter, rusher), Is.EqualTo(0), "flag off → no spread → the sides stay co-located (point-blank)");
+            Assert.That(kiter.Health, Is.LessThan(kiter.MaxHealth), "co-located → they fight at gap 0 (kiter takes fire)");
+            Assert.That(rusher.Health, Is.LessThan(rusher.MaxHealth), "co-located → they fight at gap 0 (rusher takes fire)");
+            Log($"flag off: gap {HexDistBetween(kiter, rusher)} — point-blank fight, byte-identical to every pre-M3 gauge");
+        }
+
+        [Test]
         [Description("4b GROUND COMBAT INTERRUPT — the ground mirror of the space combat-pause: the first tick a NEW planetary battle forms, the processor calls RequestCombatHalt so the clock stops and the player is notified (the client's CombatInterruptPending banner, shared with space). Gated by a flag (default off, so headless advances deterministically); the WasInBattle latch means an ONGOING fight doesn't re-halt every tick.")]
         public void GroundCombatInterrupt_HaltsTheClockOnANewBattle_NotEveryTick()
         {

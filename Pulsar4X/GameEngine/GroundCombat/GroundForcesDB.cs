@@ -532,6 +532,15 @@ namespace Pulsar4X.GroundCombat
         /// ground echo of the space per-fleet "in combat" flag.</summary>
         [JsonIgnore] internal bool WasInBattle;
 
+        /// <summary>Region indices whose CURRENT contest has already had its INITIAL ENGAGEMENT SPREAD applied
+        /// (<see cref="GroundForcesProcessor.SpreadNewlyContestedRegions"/>, M3) — so the sides are opened apart ONCE per
+        /// battle, not re-teleported every tick (which would prevent them closing). A region clears from the set when its
+        /// fight ends, so a fresh battle there re-spreads. **Save-safe on PURPOSE** (`[JsonProperty]`, deep-copied below) —
+        /// unlike the runtime <see cref="WasInBattle"/> latch: a mid-battle save must NOT forget which regions were already
+        /// spread, or on load the units would teleport apart again mid-fight. Empty (and untouched) unless
+        /// <see cref="GroundForcesProcessor.EnableInitialEngagementSpread"/> is on → byte-identical, additive like MiniQ/MiniR.</summary>
+        [JsonProperty] public HashSet<int> SpreadRegions { get; internal set; } = new HashSet<int>();
+
         public GroundForcesDB() { }
         public GroundForcesDB(GroundForcesDB other)
         {
@@ -547,6 +556,7 @@ namespace Pulsar4X.GroundCombat
             OutpostEntityIds = other.OutpostEntityIds != null ? new List<int>(other.OutpostEntityIds) : new List<int>();
             BuildSites = new List<GroundBuildSite>();
             if (other.BuildSites != null) foreach (var b in other.BuildSites) BuildSites.Add(new GroundBuildSite(b));
+            SpreadRegions = other.SpreadRegions != null ? new HashSet<int>(other.SpreadRegions) : new HashSet<int>();
         }
 
         public override object Clone() => new GroundForcesDB(this);
