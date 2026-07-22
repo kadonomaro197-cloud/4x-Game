@@ -548,6 +548,12 @@ public class NewGameMenu : PulsarGuiWindow
         Pulsar4X.Factions.NPCDecisionProcessor.EnableDiplomaticProposals = true;
         Pulsar4X.Factions.NPCDecisionProcessor.EnableEspionageMirror = true;
         Pulsar4X.Factions.NPCDecisionProcessor.EnableIntelLedger = true;
+        // Audit M1 (2026-07-22): activate the P3 legitimacy fixes in a live menu game. They ship gated OFF so the
+        // ENGINE test suite stays byte-identical (a factory-built game never runs this menu); a game the player
+        // actually starts should run the FRESH-morale legitimacy read (kills the stale-morale echo) and the rebellion
+        // debounce (one bad sample can't trigger a revolt) — the A3 objective-flip fix, live. One line each to revert.
+        Pulsar4X.Colonies.LegitimacyProcessor.ReadCurrentMorale = true;
+        Pulsar4X.Colonies.LegitimacyProcessor.EnableRebellionDebounce = true;
         // Operation Earthfall — the GROUND invasion on-switch (PW). The ground tactical brain (puts battalions in
         // postures the ConquerResolver's infra-raze rung reads) and auto-form-up (loose landed/raised units become
         // commandable battalions) default OFF so the engine suite stays byte-identical; a real menu-started game turns
@@ -950,6 +956,10 @@ public class NewGameMenu : PulsarGuiWindow
             Pulsar4X.Factions.NPCDecisionProcessor.EnableDiplomaticProposals = true;
             Pulsar4X.Factions.NPCDecisionProcessor.EnableEspionageMirror = true;
             Pulsar4X.Factions.NPCDecisionProcessor.EnableIntelLedger = true;
+            // Audit M1 (2026-07-22): activate the P3 legitimacy fixes (fresh-morale read + rebellion debounce) in a
+            // menu game, same as CreateGameCore. Default OFF (engine byte-identical); one line each to revert.
+            Pulsar4X.Colonies.LegitimacyProcessor.ReadCurrentMorale = true;
+            Pulsar4X.Colonies.LegitimacyProcessor.EnableRebellionDebounce = true;
             // Operation Earthfall — the GROUND invasion on-switch (same as CreateGameCore): the ground tactical brain +
             // auto-form-up, default OFF (engine byte-identical), ON for a DevTest sandbox so the invasion plays out.
             Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundTacticalAI = true;

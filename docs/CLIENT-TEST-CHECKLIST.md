@@ -159,6 +159,11 @@ The post-merge cross-lane buttons: (a) **rename a battalion** (both Force Manage
 - [ ] **City-zoom infra section.** On the Planet view, double-click an operational hex to enter the **city view**. If that hex's region band holds footprint buildings, an **"Infrastructure combat — Region N"** section appears at the bottom. If one of YOUR battalions is standing in that region it offers **Raze with '\<battalion\>'** / **Capture with '\<battalion\>'**; if none is, it tells you to "move one of your battalions into this region." Confirm the raze/capture works via the named battalion.
 - [ ] **Out-of-reach is a safe no-op.** Queue a raze, then march the battalion OUT of the region before it fires → the order should pop harmlessly (nothing razed, no wedge, no crash). Razing your OWN infrastructure is allowed (scorched earth) — the buttons don't block it, so double-check you're on the enemy's region.
 
+## 🩺 AUDIT M1 — P3 legitimacy fixes now active in menu games (2026-07-22)
+The audit found the P3 stale-morale/rebellion fixes shipped dormant (flags default-off, never flipped in the menu path). Slice 1 flips `ReadCurrentMorale` + `EnableRebellionDebounce` ON in both `NewGameMenu` start blocks. CI can't run the client; this is the live check.
+- [ ] **Colonies don't revolt on a single bad morale sample.** Start a menu game, let it run through a transient morale dip (or use DevTools to poke a colony's morale down for one cycle). The colony should NOT immediately flip to rebellion — a one-month transient dip clears without a revolt (the debounce). A sustained low reading still escalates.
+- [ ] **The AI doesn't abandon its own invasion.** Play/observe a UMF-vs-target invasion long enough to see the objective hold — the AI should not drop a winning in-flight conquest to a phantom "Defend" from a one-sample legitimacy crash (the A3 failure). If it still does, capture the AI Inspector tape and tell me.
+
 ---
 
 *Maintenance: when a client feature ships that CI can't runtime-verify, add a line here. Remove a line once you've confirmed it live. This is the standing "runtime gauge is the developer" list — the companion to CI's compile gate.*
