@@ -214,12 +214,53 @@ save-safe per-region `GroundForcesDB.SpreadRegions` guard spreads once per conte
 deterministic (no RNG → fast-forward == watch). **Byte-identical off.** Gauge: `GroundForcesTests.
 InitialEngagementSpread_OpensAGap_ThenLongRangeWhittlesTheRusher` + `…_FlagOff_UnitsStayPointBlank`.
 
-**Still to come.** **M3b/S4** = the mini-hex METRE-grid version of the M3 spread — real km weapon ranges (real-life +
-sci-fi; today `Range_m` = hex × nominal 1000 m) + units spread + closing over time on the mini-hex/2D `GroupPlane` (with
-`ApplyEngagementManeuvers` stepping the mini grid the metre gate measures), the developer's "auto-resolver on a 2D plane";
-**M4** = per-`CityTile` geology/environment variation (the field already exists — `CityGridFactory.BuildGrid` v1 sets all
-tiles to the coarse terrain); **M5** = client draws units on mini-hexes. Gauges: `Pulsar4X.Tests/GroundMiniHexTests.cs`
+**Still to come.** **M4** = per-`CityTile` geology/environment variation (the field already exists —
+`CityGridFactory.BuildGrid` v1 sets all tiles to the coarse terrain). Gauges: `Pulsar4X.Tests/GroundMiniHexTests.cs`
 (position math) + `MiniHexCombat_*` (M2 gate) + `InitialEngagementSpread_*` (M3).
+
+## K-track — REAL weapon ranges + a continuous field + the metre-gate closing fight (2026-07-22)
+
+The K-track finishes the real-distance ground model M3b/S4 flagged as "still to come": a ground weapon carries a REAL
+range in metres (the truth), a unit carries a CONTINUOUS real position, and the resolver's range gate + the closing
+fight run on real distance vs real range — with hexes as a pure display ruler. **All flagged OFF in the engine suite →
+byte-identical; the menu (`NewGameMenu`) turns `EnableMiniHexCombat` + `EnableInitialEngagementSpread` BOTH on**, so a
+real game gets real distances on-by-default. Design: `docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md`.
+
+- **K1 — real `Range_m` on ground weapons.** `GroundWeaponAtb` gains `Range_m` (a real metre reach) as a **5th ctor
+  arg** (the JSON binder is EXACT-ARITY — gotcha 6 — so every base-mod ground-weapon template
+  (`ground-rifle`/`ground-autocannon`/`ground-cannon`/`energy-weapon`/`claw-weapon`) was updated in lockstep with a
+  `Range_m` Property + a 5th `AtbConstrArgs` value). The LOCKED real ranges: melee/claw **0**, rifle **500 m**,
+  autocannon **2000 m**, tank cannon **4000 m**, tube artillery **30000 m**, sci-fi ground laser **20000 m**. The
+  assembler (`GroundUnitAssembly.Compute`) reads the weapon's authored `Range_m` (else derives from hex × nominal) onto
+  each `GroundWeaponMount.Range_m`; `result.Range_m`/the design's `Range_m` = **Max(mount.Range_m)** (a real metre max,
+  no longer hex×nominal). A mounted SPACE weapon carries the SAME real range the ship fires at
+  (`SpaceWeaponGround.RealRange_m` reads the `ShipCombatValueDB` range constants — beam `MaxRange`, railgun/plasma 500
+  km, flak 50 km, disruptor 400 km). **Live combat is byte-identical this slice** (the resolver still gated on hexes;
+  `Range_m` is only populated).
+- **K2 — continuous sub-mini-hex position.** `GroundUnit` gains `MiniOffX_km`/`MiniOffY_km` (a real km offset WITHIN a
+  mini-hex, beside `MiniQ`/`MiniR`; `[JsonProperty]` + deep-copied). `GroundMiniHex` gains offset-aware
+  `ContinuousPosKm`/`RealGapMetres` overloads that ADD the offset — so two units in the SAME mini-hex read a real
+  sub-tile gap (real conventional ranges < a ~37 km mini-tile → edge-continuity NEEDS a sub-mini offset). Default (0,0)
+  → byte-identical. Gauge `GroundMiniHexTests.SubMiniOffset_*`.
+- **K3 — the resolver gate = real distance vs real range (THE behaviour change, flag-gated).** `WeaponReaches` already
+  routed `EnableMiniHexCombat` → `RealGapMetres ≤ range_m`, and `range_m` is now the unit's REAL `Range_m` (K1). Both
+  `SpreadNewlyContestedRegions` and `ApplyEngagementManeuvers`/`StepMiniToward` **branch on `EnableMiniHexCombat`**:
+  flag OFF → the legacy per-region HEX spread/step (byte-identical, every existing ClosingFight/RangeCombat/ROE gauge
+  green); flag ON → the CONTINUOUS field: the spread opens the non-holder units the HOLDER's real `Range_m` metres east
+  on the shared coarse hex (whole mini-hexes `MiniQ` + a sub-tile `MiniOffX_km` remainder, so `RealGapMetres` ==
+  holder's range EXACTLY — a 1-D closing line, the ground echo of space's `Separation_m`), and the closing maneuver
+  steps the unit's along-X mini scalar by its real march speed (`Speed_kmh × dt`, never overshooting), so a longer real
+  gun thins the closing force during the approach. `MiniMoveAway` mirrors the stance/role decision on real metres
+  (`GroundRoleComposer.RoleMoveAway` gained a `double` overload). Deterministic (no RNG). Gauge:
+  `GroundForcesTests.MiniHexClosingFight_RealDistanceSpread_LongRangeWhittlesTheRusher`.
+- **K4 — round-down hex readout (#11 display).** `GroundRangeTools.HexesFloorForMetres` + `DescribeReach(range_m,
+  region)` → e.g. "4 km ≈ 0 hexes on this world" (an Earth-scale patch hex ≈ 560 km → every conventional gun floors to
+  0 hexes = single-hex combat) vs several hexes on a small moon. Uses the region-patch pitch (`HexPitchKm`), consistent
+  with `RealReachKm`. Gauge: `GroundForcesTests.RoundDownHexReadout_*`.
+- **The fog read for the client (C2):** `GroundThreat.DetectedEnemyUnits(body, viewer)` — every LIVING enemy unit the
+  viewer can SEE (owned / scouted / **in-contact** — a region the viewer has a unit standing in), the fog-honest set the
+  client rings + tokens (an un-scouted enemy is invisible, matching the space contact blips). Gauge:
+  `GroundForcesTests.DetectedEnemyUnits_FogHonest_*`.
 
 ## Units as entities — "abilities just fall out" (Option A, 2026-07-07/08)
 

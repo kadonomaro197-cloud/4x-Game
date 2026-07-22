@@ -52,6 +52,19 @@ namespace Pulsar4X.GroundCombat
             return (cx + mx, cy + my);
         }
 
+        /// <summary>K2 — the CONTINUOUS position including the unit's real sub-mini-hex OFFSET (<c>MiniOffX_km</c>,
+        /// <c>MiniOffY_km</c>): the coarse-hex centre PLUS the mini-hex centre PLUS the real km offset within that mini-hex.
+        /// This is what makes the field genuinely continuous below the ~37 km mini-tile — two units in the SAME mini-hex
+        /// read a real gap equal to the difference of their offsets, so a real conventional weapon range (&lt; a mini-tile)
+        /// can decide the fight. Offsets (0,0) → this equals the offset-free <see cref="ContinuousPosKm(int,int,int,int,double,int)"/>
+        /// (byte-identical). Pure/no entity reads; never throws.</summary>
+        public static (double x, double y) ContinuousPosKm(
+            int globalQ, int globalR, int miniQ, int miniR, double miniOffX_km, double miniOffY_km, double coarsePitchKm, int cityRadius)
+        {
+            var (x, y) = ContinuousPosKm(globalQ, globalR, miniQ, miniR, coarsePitchKm, cityRadius);
+            return (x + miniOffX_km, y + miniOffY_km);
+        }
+
         /// <summary>The real gap in METRES between two units given their coarse (Global) + mini positions and the body's
         /// coarse hex pitch. This is exactly what M2's range gate compares to a weapon's real <c>Range_m</c>: a unit
         /// FIRES when this ≤ its weapon reach. Because it's built from continuous positions, two units at a shared
@@ -63,6 +76,22 @@ namespace Pulsar4X.GroundCombat
         {
             var (ax, ay) = ContinuousPosKm(aGlobalQ, aGlobalR, aMiniQ, aMiniR, coarsePitchKm, cityRadius);
             var (bx, by) = ContinuousPosKm(bGlobalQ, bGlobalR, bMiniQ, bMiniR, coarsePitchKm, cityRadius);
+            double dx = ax - bx, dy = ay - by;
+            return Math.Sqrt(dx * dx + dy * dy) * 1000.0;
+        }
+
+        /// <summary>K2 — the real gap in METRES between two units INCLUDING their sub-mini-hex offsets
+        /// (<c>MiniOffX_km</c>/<c>MiniOffY_km</c>), so two units in the same mini-hex read the difference of their offsets
+        /// (not 0). This is the form the K3 real-distance resolver gate + closing model measure. Offsets (0,0) on both →
+        /// this equals the offset-free <see cref="RealGapMetres(int,int,int,int,int,int,int,int,double,int)"/> above
+        /// (byte-identical). Pure/no entity reads; never throws.</summary>
+        public static double RealGapMetres(
+            int aGlobalQ, int aGlobalR, int aMiniQ, int aMiniR, double aOffX_km, double aOffY_km,
+            int bGlobalQ, int bGlobalR, int bMiniQ, int bMiniR, double bOffX_km, double bOffY_km,
+            double coarsePitchKm, int cityRadius)
+        {
+            var (ax, ay) = ContinuousPosKm(aGlobalQ, aGlobalR, aMiniQ, aMiniR, aOffX_km, aOffY_km, coarsePitchKm, cityRadius);
+            var (bx, by) = ContinuousPosKm(bGlobalQ, bGlobalR, bMiniQ, bMiniR, bOffX_km, bOffY_km, coarsePitchKm, cityRadius);
             double dx = ax - bx, dy = ay - by;
             return Math.Sqrt(dx * dx + dy * dy) * 1000.0;
         }
@@ -103,8 +132,11 @@ namespace Pulsar4X.GroundCombat
             if (a == null || b == null) return double.MaxValue;
             double coarsePitchKm = CoarseHexPitchKmForBody(body);
             if (coarsePitchKm <= 0) coarsePitchKm = 477.0;   // ~Earth fallback — never 0-divide, never wall combat
-            return RealGapMetres(a.GlobalQ, a.GlobalR, a.MiniQ, a.MiniR,
-                                 b.GlobalQ, b.GlobalR, b.MiniQ, b.MiniR,
+            // K2 — include each unit's sub-mini-hex real offset, so two units in the same mini-hex read the difference of
+            // their offsets (a real conventional weapon range < a mini-tile can decide the fight). Offsets default (0,0)
+            // → this is byte-identical to the offset-free gap (the M2/M3a co-located case reads 0 as before).
+            return RealGapMetres(a.GlobalQ, a.GlobalR, a.MiniQ, a.MiniR, a.MiniOffX_km, a.MiniOffY_km,
+                                 b.GlobalQ, b.GlobalR, b.MiniQ, b.MiniR, b.MiniOffX_km, b.MiniOffY_km,
                                  coarsePitchKm, CityGridFactory.CityPatchRadius);
         }
     }

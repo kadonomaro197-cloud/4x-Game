@@ -129,5 +129,41 @@ namespace Pulsar4X.GroundCombat
                     sum += EnemyStrengthInRegion(forces, i, viewerFactionId);
             return sum;
         }
+
+        /// <summary>THE CLIENT FOG READ (C2 consumer): every LIVING enemy <see cref="GroundUnit"/> on the body that
+        /// <paramref name="viewerFactionId"/> can actually SEE — i.e. standing in a region the viewer has DETECTED
+        /// (owned / scouted / surveyed-to-them; pass no contact region → -1), by the SAME
+        /// <see cref="IsRegionDetected"/> rule <see cref="DetectedDefenderStrength"/> uses. An enemy in un-scouted
+        /// territory is NOT returned (fog-honest — the client rings/tokens only the SEEN, matching the space contact
+        /// blips). Neutral-owned units are excluded (not enemies). Returns an empty list on a body with no roster / no
+        /// region layer. Pure/defensive; never throws.</summary>
+        public static List<GroundUnit> DetectedEnemyUnits(Entity body, int viewerFactionId)
+        {
+            var result = new List<GroundUnit>();
+            if (body == null
+                || !body.TryGetDataBlob<GroundForcesDB>(out var forces)
+                || forces.Units == null
+                || !body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB))
+                return result;
+            // CONTACT regions — where the viewer has a living unit standing (you SEE the enemies you're fighting), so a
+            // contested neutral region you're in isn't fogged even before you own/scout it. This is the client's "boots
+            // on the ground = eyes on the ground," on top of the owned/scouted rule (the space contact-blip equivalent).
+            var contactRegions = new HashSet<int>();
+            foreach (var u in forces.Units)
+                if (u != null && u.Health > 0 && u.FactionOwnerID == viewerFactionId && u.RegionIndex >= 0)
+                    contactRegions.Add(u.RegionIndex);
+            foreach (var u in forces.Units)
+            {
+                if (u == null || u.Health <= 0) continue;
+                if (u.FactionOwnerID == viewerFactionId) continue;             // mine
+                if (u.FactionOwnerID == Game.NeutralFactionId) continue;       // neutral isn't an enemy
+                if (u.RegionIndex < 0 || u.RegionIndex >= regionsDB.Regions.Count) continue;
+                bool detected = contactRegions.Contains(u.RegionIndex)                        // I'm standing there — contact
+                             || IsRegionDetected(regionsDB, viewerFactionId, u.RegionIndex, -1); // owned / scouted / surveyed to me
+                if (!detected) continue;   // fog: an un-scouted, un-contacted enemy is invisible
+                result.Add(u);
+            }
+            return result;
+        }
     }
 }

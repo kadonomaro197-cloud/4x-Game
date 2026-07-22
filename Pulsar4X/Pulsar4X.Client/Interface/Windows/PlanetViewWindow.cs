@@ -311,6 +311,13 @@ namespace Pulsar4X.Client
             // Mineral deposit names (id → name), resolved once, defensively (tolerant of foreign/locked faction data).
             var mineralNames = BuildMineralNames();
 
+            // C2 fog — the enemy units the player has actually SCOUTED (GroundThreat.DetectedEnemyUnits, the same
+            // owned/scouted/surveyed rule the AI's landing score uses). Their reach is ringed below, and the enemy TOKENS
+            // are gated to these — an un-scouted enemy garrison never draws (fog-honest, matching the space contact blips).
+            var detectedEnemies = Pulsar4X.GroundCombat.GroundThreat.DetectedEnemyUnits(body, myFaction);
+            var detectedEnemyIds = new HashSet<int>();
+            foreach (var de in detectedEnemies) detectedEnemyIds.Add(de.UnitId);
+
             // 1) terrain + located mineral DEPOSITS — every visible column (wraps), every row.
             for (int sc = 0; sc < winCols; sc++)
             {
@@ -347,49 +354,67 @@ namespace Pulsar4X.Client
                 }
             }
 
-            // 1b) RANGE OVERLAY (C4.1) — for the SELECTED group of YOUR units, tint the hexes they can reach: WEAPON reach
-            //     (red, GroundUnit.Range in hexes) and RADAR reach (green, the unit's best GroundSensorAtb.Range_km ÷ the
-            //     region's real hex pitch — the GroundSensors.cs:42 km→hex conversion). FOG-HONEST: drawn ONLY for your OWN
-            //     units (_selFaction == myFaction — you never see an enemy's ranges, the same rule the space rings use),
-            //     and only the visible window's hexes. Toggle MIRRORS the space map's global range-ring switch
-            //     (GlobalUIState.ShowAllRangeRings — DevTools › Detection / Fog of War). The disk is the odd-r OFFSET hex
-            //     distance the map is DRAWN in (GlobalHexDistance), wrapped the short way across the seam.
-            if (_uiState.ShowAllRangeRings && HasSelection && _selFaction == myFaction && forcesDB != null)
+            // 1b) RANGE OVERLAY (C4.1 + C2) — tint the hexes within a unit's WEAPON reach (red) and RADAR reach (green),
+            //     for the SELECTED group of YOUR units AND for every enemy unit you have SCOUTED (fog-honest). Reach in
+            //     HEXES comes from the REAL metre range (K1) via GroundRangeTools.HexesForMetres ÷ the region pitch (the
+            //     GroundSensors.cs:42 shape) — so a gun covers a different hex count per body. Own reach draws in bright
+            //     red/green; a SEEN enemy's reach draws in orange (you're in their guns) / teal (you're in their sensors),
+            //     so "my reach" and "their reach" read apart. Bounded to the VISIBLE window's hexes (perf-safe). Toggle
+            //     MIRRORS the space map's global range-ring switch (GlobalUIState.ShowAllRangeRings). The disk is the odd-r
+            //     OFFSET hex distance the map is DRAWN in (GlobalHexDistance), wrapped the short way across the seam.
+            if (_uiState.ShowAllRangeRings && forcesDB != null)
             {
-                // Gather the selected group's units (region + owner + type — the same group the caption reports), each with
-                // its global position, weapon reach (hexes) and radar reach (hexes). Cheap: a handful of units.
-                var reach = new List<(int gq, int gr, int weapon, int radar)>();
-                foreach (var u in forcesDB.Units)
+                // Own selected group's reach (only when a group of yours is selected — you act on your own units).
+                var ownReach = new List<(int gq, int gr, int weapon, int radar)>();
+                if (HasSelection && _selFaction == myFaction)
+                    foreach (var u in forcesDB.Units)
+                    {
+                        if (u.RegionIndex != _selRegion || u.FactionOwnerID != myFaction || u.UnitType != _selType) continue;
+                        if (u.GlobalQ < 0 || u.GlobalR < 0) continue;
+                        int w = WeaponReachHexesFor(u, regions), rad = RadarReachHexesFor(body, u, regions);
+                        if (w > 0 || rad > 0) ownReach.Add((u.GlobalQ, u.GlobalR, w, rad));
+                    }
+                // Every SCOUTED enemy unit's reach (fog-honest — DetectedEnemyUnits, not omniscient).
+                var enemyReach = new List<(int gq, int gr, int weapon, int radar)>();
+                foreach (var e in detectedEnemies)
                 {
-                    if (u.RegionIndex != _selRegion || u.FactionOwnerID != myFaction || u.UnitType != _selType) continue;
-                    if (u.GlobalQ < 0 || u.GlobalR < 0) continue;
-                    int weaponHexes = WeaponReachHexesFor(u, regions);
-                    int radarHexes = RadarReachHexesFor(body, u, regions);
-                    if (weaponHexes <= 0 && radarHexes <= 0) continue;
-                    reach.Add((u.GlobalQ, u.GlobalR, weaponHexes, radarHexes));
+                    if (e.GlobalQ < 0 || e.GlobalR < 0) continue;
+                    int w = WeaponReachHexesFor(e, regions), rad = RadarReachHexesFor(body, e, regions);
+                    if (w > 0 || rad > 0) enemyReach.Add((e.GlobalQ, e.GlobalR, w, rad));
                 }
-                if (reach.Count > 0)
+                if (ownReach.Count > 0 || enemyReach.Count > 0)
                 {
-                    uint radarCol = ImGui.ColorConvertFloat4ToU32(new Vector4(0.20f, 0.80f, 0.35f, 0.13f));  // green = can SEE
-                    uint weaponCol = ImGui.ColorConvertFloat4ToU32(new Vector4(0.90f, 0.22f, 0.22f, 0.20f)); // red   = can SHOOT
+                    uint ownRadar = ImGui.ColorConvertFloat4ToU32(new Vector4(0.20f, 0.80f, 0.35f, 0.13f));   // green = I can SEE
+                    uint ownWeapon = ImGui.ColorConvertFloat4ToU32(new Vector4(0.90f, 0.22f, 0.22f, 0.20f));  // red   = I can SHOOT
+                    uint enRadar = ImGui.ColorConvertFloat4ToU32(new Vector4(0.20f, 0.65f, 0.75f, 0.11f));    // teal  = I'm in THEIR sensors
+                    uint enWeapon = ImGui.ColorConvertFloat4ToU32(new Vector4(0.95f, 0.55f, 0.12f, 0.16f));   // orange= I'm in THEIR guns
                     for (int sc = 0; sc < winCols; sc++)
                     {
                         int gq = grid.WrapCol(_centerCol - halfW + sc);
                         for (int r = 0; r < rows; r++)
                         {
                             if (grid.HexAt(gq, r) == null) continue;
-                            bool inRadar = false, inWeapon = false;
-                            foreach (var u in reach)
+                            bool inER = false, inEW = false, inOR = false, inOW = false;
+                            foreach (var e in enemyReach)
+                            {
+                                int d = GlobalHexDistance(e.gq, e.gr, gq, r, cols);
+                                if (!inER && e.radar > 0 && d <= e.radar) inER = true;
+                                if (!inEW && e.weapon > 0 && d <= e.weapon) inEW = true;
+                                if (inER && inEW) break;
+                            }
+                            foreach (var u in ownReach)
                             {
                                 int d = GlobalHexDistance(u.gq, u.gr, gq, r, cols);
-                                if (!inRadar && u.radar > 0 && d <= u.radar) inRadar = true;
-                                if (!inWeapon && u.weapon > 0 && d <= u.weapon) inWeapon = true;
-                                if (inRadar && inWeapon) break;
+                                if (!inOR && u.radar > 0 && d <= u.radar) inOR = true;
+                                if (!inOW && u.weapon > 0 && d <= u.weapon) inOW = true;
+                                if (inOR && inOW) break;
                             }
-                            if (!inRadar && !inWeapon) continue;
+                            if (!inER && !inEW && !inOR && !inOW) continue;
                             var pc = HexCenterOffset(origin, size, sc, r);
-                            if (inRadar) drawList.AddNgonFilled(pc, size, radarCol, 6);   // draw SEE first…
-                            if (inWeapon) drawList.AddNgonFilled(pc, size, weaponCol, 6); // …SHOOT on top (red wins the overlap)
+                            if (inER) drawList.AddNgonFilled(pc, size, enRadar, 6);   // enemy sensor envelope (under)…
+                            if (inEW) drawList.AddNgonFilled(pc, size, enWeapon, 6);  // …enemy gun envelope…
+                            if (inOR) drawList.AddNgonFilled(pc, size, ownRadar, 6);  // …my sensor reach…
+                            if (inOW) drawList.AddNgonFilled(pc, size, ownWeapon, 6); // …my gun reach on top
                         }
                     }
                 }
@@ -418,6 +443,11 @@ namespace Pulsar4X.Client
                     if (u.GlobalQ < 0 || u.GlobalR < 0) continue;
                     int dc = WrapDelta(u.GlobalQ - _centerCol, cols);
                     if (dc < -halfW || dc > halfW) continue;    // outside the window
+                    // C2 fog gate: a non-own, non-neutral enemy unit draws ONLY if the player has SCOUTED it — an
+                    // un-detected enemy garrison is invisible (fog-honest, matching the space contact blips). Your own
+                    // units + neutral presence always draw.
+                    if (u.FactionOwnerID != myFaction && u.FactionOwnerID != Pulsar4X.Engine.Game.NeutralFactionId
+                        && !detectedEnemyIds.Contains(u.UnitId)) continue;
                     var key = (u.GlobalQ, u.GlobalR, u.FactionOwnerID);
                     occ.TryGetValue(key, out var g); g.n++; g.type = (int)u.UnitType;
                     if (u.GlobalPath != null && u.GlobalPath.Count > 0) g.moving++;
@@ -441,6 +471,48 @@ namespace Pulsar4X.Client
                 if (HasSelection && _selFaction == kv.Key.fac && _selType == (GroundUnitType)kv.Value.type
                     && _selRegion == PlanetGridFactory.RegionOfColumn(kv.Key.gq, cols, rc))
                     drawList.AddNgon(pc, size, ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 0.3f, 1f)), 6, 2.5f);
+            }
+
+            // 3b) C3 — the SELECTED FORMATION's queued PLAN as PATH LINES: leader's global position → its in-flight
+            //     GlobalPath → each queued MoveToHex waypoint (TargetQ/TargetR are GLOBAL cylinder coords, G6b-2). So a
+            //     "move → move → dig in" plan is visible on the map. Own formation only; thin defensive (each screen
+            //     conversion clips off-window and returns null). (Per-unit fire-control target lines are deferred — no
+            //     engine state exists for them.)
+            if (forcesDB != null && _selFormationId >= 0)
+            {
+                GroundFormation selForm = null;
+                foreach (var f in forcesDB.Formations)
+                    if (f.FormationId == _selFormationId && f.FactionOwnerID == myFaction) { selForm = f; break; }
+                if (selForm != null)
+                {
+                    var leader = GroundFormationTools.Leader(forcesDB, selForm);
+                    if (leader != null && leader.GlobalQ >= 0 && leader.GlobalR >= 0)
+                    {
+                        uint pathCol = ImGui.ColorConvertFloat4ToU32(new Vector4(0.40f, 0.85f, 1f, 0.85f));
+                        Vector2? prev = GlobalHexToScreen(leader.GlobalQ, leader.GlobalR, origin, size, cols, halfW);
+                        // the leader's in-flight global A* path
+                        if (leader.GlobalPath != null)
+                            foreach (var h in leader.GlobalPath)
+                            {
+                                var pc = GlobalHexToScreen(h.Q, h.R, origin, size, cols, halfW);
+                                if (prev.HasValue && pc.HasValue) drawList.AddLine(prev.Value, pc.Value, pathCol, 2f);
+                                if (pc.HasValue) prev = pc;
+                            }
+                        // the queued MoveToHex waypoints (each a dot; chained from the last drawn position)
+                        if (selForm.Orders != null)
+                            foreach (var ord in selForm.Orders)
+                            {
+                                if (ord.Type != GroundOrderType.MoveToHex) continue;
+                                var pc = GlobalHexToScreen(ord.TargetQ, ord.TargetR, origin, size, cols, halfW);
+                                if (pc.HasValue)
+                                {
+                                    if (prev.HasValue) drawList.AddLine(prev.Value, pc.Value, pathCol, 2f);
+                                    drawList.AddCircleFilled(pc.Value, Math.Max(2.5f, size * 0.25f), pathCol, 10);
+                                    prev = pc;
+                                }
+                            }
+                    }
+                }
             }
 
             // 4) click → nearest visible hex. DOUBLE-click zooms into that hex's city (C-track); single-click
@@ -534,6 +606,17 @@ namespace Pulsar4X.Client
         /// as a proper map — matching the odd-r neighbour model the global pathfinder (G2) uses.</summary>
         private static Vector2 HexCenterOffset(Vector2 origin, float size, int sc, int r)
             => new Vector2(origin.X + size * 1.7320508f * (sc + 0.5f * (r & 1)), origin.Y + size * 1.5f * r);
+
+        /// <summary>C3 — a GLOBAL cylinder hex (gq,gr) → its screen position in the current globe window, or null when it
+        /// falls outside the visible column band (a path segment to an off-window waypoint is simply not drawn). Uses the
+        /// same odd-r offset transform + seam-wrap (<see cref="WrapDelta"/>) the window is drawn with. Instance (reads
+        /// <c>_centerCol</c>).</summary>
+        private Vector2? GlobalHexToScreen(int gq, int gr, Vector2 origin, float size, int cols, int halfW)
+        {
+            int dc = WrapDelta(gq - _centerCol, cols);
+            if (dc < -halfW || dc > halfW) return null;
+            return HexCenterOffset(origin, size, dc + halfW, gr);
+        }
 
         // ── C4.1 range overlay helpers ──────────────────────────────────────────────────────────────────────────────
 
@@ -733,6 +816,50 @@ namespace Pulsar4X.Client
                 else if ((armedId >= 0 || armedBuildDesign != null) && size > 4f)   // empty tile + something armed → drop-target hint
                     drawList.AddNgon(pc, size * 0.5f, ImGui.ColorConvertFloat4ToU32(new Vector4(0.9f, 0.9f, 0.4f, 0.5f)), 6, 1f);
             }
+
+            // C1 (#4) — draw the UNITS standing in THIS operational hex on the mini-hex tiles. A unit sits at its
+            // MiniQ/MiniR tile (the SAME axial space the tiles use) plus its K2 sub-tile real offset (MiniOffX/Y_km → px),
+            // coloured by owner. Own units always draw; a SCOUTED enemy draws too (fog-honest); an un-detected enemy is
+            // hidden. Units sharing a tile FAN OUT in a small deterministic ring so they don't pile on the centre. Thin
+            // defensive draw — a bad token can't break the city view.
+            try
+            {
+                if (body.TryGetDataBlob<GroundForcesDB>(out var cforces) && cforces.Units != null)
+                {
+                    var seenEnemyIds = new HashSet<int>();
+                    foreach (var de in Pulsar4X.GroundCombat.GroundThreat.DetectedEnemyUnits(body, myFaction)) seenEnemyIds.Add(de.UnitId);
+                    double coarseKm = GroundMiniHex.CoarseHexPitchKmForBody(body);
+                    if (coarseKm <= 0) coarseKm = 477.0;
+                    double miniKm = GroundMiniHex.MiniPitchKm(coarseKm, CityGridFactory.CityPatchRadius);
+                    double pxPerKm = miniKm > 0 ? (size * 1.7320508 / miniKm) : 0;   // one mini-hex ≈ 1.732×size px, spans miniKm
+                    var fanCount = new Dictionary<(int q, int r), int>();
+                    foreach (var u in cforces.Units)
+                    {
+                        if (u == null || u.Health <= 0) continue;
+                        if (u.GlobalQ != _zoomQ || u.GlobalR != _zoomR) continue;   // only units in THIS operational hex
+                        if (u.FactionOwnerID != myFaction && u.FactionOwnerID != Pulsar4X.Engine.Game.NeutralFactionId
+                            && !seenEnemyIds.Contains(u.UnitId)) continue;          // fog: hide an un-scouted enemy
+                        var basePc = AxialHexCenter(center, size, u.MiniQ, u.MiniR);
+                        float ox = (float)(u.MiniOffX_km * pxPerKm);
+                        float oy = (float)(-u.MiniOffY_km * pxPerKm);   // screen Y is down; +north is up
+                        fanCount.TryGetValue((u.MiniQ, u.MiniR), out int idx); fanCount[(u.MiniQ, u.MiniR)] = idx + 1;
+                        float fanR = size * 0.35f;
+                        var pc = new Vector2(basePc.X + ox + (idx > 0 ? fanR * (float)Math.Cos(idx * 1.1f) : 0f),
+                                             basePc.Y + oy + (idx > 0 ? fanR * (float)Math.Sin(idx * 1.1f) : 0f));
+                        float ur = Math.Max(2f, size * 0.30f);
+                        drawList.AddCircleFilled(pc, ur, ImGui.ColorConvertFloat4ToU32(OwnerColor(u.FactionOwnerID, myFaction)), 12);
+                        drawList.AddCircle(pc, ur, ImGui.ColorConvertFloat4ToU32(new Vector4(0f, 0f, 0f, 0.8f)), 12, 1f);
+                        if (size > 7f)
+                        {
+                            string ini = TypeInitial(u.UnitType).ToString();
+                            var tsz = ImGui.CalcTextSize(ini);
+                            drawList.AddText(new Vector2(pc.X - tsz.X * 0.5f, pc.Y - tsz.Y * 0.5f),
+                                ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 1f, 1f)), ini);
+                        }
+                    }
+                }
+            }
+            catch { /* thin defensive draw — a bad unit token can't break the city view */ }
 
             if (clicked)
             {

@@ -182,6 +182,18 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public int MiniQ { get; internal set; }
         /// <summary>Mini-hex row within the coarse global hex's <c>CityGrid</c> (0 = centre = muster).</summary>
         [JsonProperty] public int MiniR { get; internal set; }
+        // ── CONTINUOUS sub-mini-hex real offset (K2) — the unit's real position WITHIN its mini-hex, in kilometres,
+        //    so two units in the SAME mini-hex can still stand a real sub-tile gap apart. This is what makes the
+        //    ground field truly CONTINUOUS (not just mini-hex-quantised): real conventional weapon ranges (<40 km) are
+        //    SMALLER than a ~37 km mini-tile, so edge-continuity needs a real offset finer than the mini-hex. Added by
+        //    GroundMiniHex.ContinuousPosKm/RealGapMetres on TOP of the (MiniQ,MiniR) mini-hex centre; NOT derived from
+        //    MiniQ/MiniR. Default (0,0) = at the mini-hex centre → byte-identical (M2/M3a read gap 0 as before) until
+        //    the K3 spread/closing sets it. Save-safe ([JsonProperty] + deep-copied below). Design: the K-track real-
+        //    distance ground combat (docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md + MINI-HEX-TACTICAL-GRID-DESIGN.md).
+        /// <summary>Real sub-mini-hex offset EAST (km) added to this unit's mini-hex centre (0 = centred).</summary>
+        [JsonProperty] public double MiniOffX_km { get; internal set; }
+        /// <summary>Real sub-mini-hex offset NORTH (km) added to this unit's mini-hex centre (0 = centred).</summary>
+        [JsonProperty] public double MiniOffY_km { get; internal set; }
 
         /// <summary>Remaining GLOBAL hex steps (current→destination) of a cylinder march; null/empty = not global-marching.</summary>
         [JsonProperty] public List<Pulsar4X.Galaxy.GroundHex> GlobalPath { get; internal set; }
@@ -240,6 +252,7 @@ namespace Pulsar4X.GroundCombat
             }
             GlobalQ = o.GlobalQ; GlobalR = o.GlobalR;
             MiniQ = o.MiniQ; MiniR = o.MiniR;   // mini-hex tactical position (M1) — deep-copied, save-safe
+            MiniOffX_km = o.MiniOffX_km; MiniOffY_km = o.MiniOffY_km;   // continuous sub-mini-hex offset (K2) — deep-copied, save-safe
             GlobalTransitSecondsRemaining = o.GlobalTransitSecondsRemaining; GlobalStepBaseSeconds = o.GlobalStepBaseSeconds;
             if (o.GlobalPath != null)
             {

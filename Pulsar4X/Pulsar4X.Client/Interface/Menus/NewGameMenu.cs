@@ -565,14 +565,19 @@ public class NewGameMenu : PulsarGuiWindow
         // kites to standoff, support stays back (the ground echo of space sub-fleet roles). OFF in the engine suite
         // (byte-identical), ON here so a menu game's closing ground fights show the role differentiation.
         Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundRoleManeuver = true;
-        // INITIAL ENGAGEMENT SPREAD (docs/combat/MINI-HEX-TACTICAL-GRID-DESIGN.md, M3): a ground fight OPENS at a real
-        // hex gap and CLOSES over ticks, so a longer-ranged unit thins the closing force during the approach (the "mobile
-        // artillery eliminates 50% before they close" fight). Runs on the per-region HEX grid — the ONE space where the
-        // range gate, the closing maneuver, AND differentiated weapon ranges (1 vs 3 hexes) already work together end-to-end.
-        // We therefore run the HEX gate here (EnableMiniHexCombat left OFF): the mini-hex METRE gate (M2) can't host the
-        // closing fight yet — its weapon reaches are ~1-3 km against ~37 km mini-hexes, and its closing maneuver moves on a
-        // different grid than it measures — so it needs real-km weapon ranges + mini-hex movement (M3b/S4) first. The
-        // mini-hex code stays in the tree, flagged off, for that follow-on; today's visible closing fight is the hex gate.
+        // REAL-DISTANCE GROUND COMBAT (docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md, K-track): a ground weapon carries a REAL
+        // range in metres (rifle 500 m, tank cannon 4 km, tube artillery 30 km, sci-fi laser 20 km — K1) and a unit carries
+        // a CONTINUOUS real position; combat resolves on real distance vs real range. We run BOTH gates on the menu path:
+        //   • EnableMiniHexCombat — the resolver's range gate reads the REAL metre gap on the continuous mini-hex field
+        //     (GroundMiniHex.RealGapMetres ≤ the weapon's real Range_m), the developer's "the km on the gun is the truth,
+        //     the hex is only the ruler."
+        //   • EnableInitialEngagementSpread — the spread now OPENS on that continuous field: the first tick a region is
+        //     contested it pushes the sides the HOLDER's real range apart (Global/Mini/offset), and the closing maneuver
+        //     steps the mini/continuous grid at the unit's real march speed, so a longer-ranged unit thins the closing
+        //     force during the approach on REAL distances (the "mobile artillery eliminates 50% before they close" fight).
+        // Both default OFF so the CI suite stays byte-identical (the hex-calibrated gauges run flag-off); the menu turns
+        // both ON so a real game gets real distances on-by-default. One-line revert each. Runtime feel is the PC live-test.
+        Pulsar4X.GroundCombat.GroundForcesProcessor.EnableMiniHexCombat = true;
         Pulsar4X.GroundCombat.GroundForcesProcessor.EnableInitialEngagementSpread = true;
 
         // Generate random systems up to the number of "Galaxy Size" minus the
@@ -974,7 +979,11 @@ public class NewGameMenu : PulsarGuiWindow
             Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundTacticalAI = true;
             Pulsar4X.GroundCombat.GroundAssembly.AutoFormUp = true;
             Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundRoleManeuver = true;         // W3 role-based maneuver
-            Pulsar4X.GroundCombat.GroundForcesProcessor.EnableInitialEngagementSpread = true;     // M3 spread → hex closing fight
+            // K-track real-distance ground combat: the resolver gates on the REAL metre gap vs the weapon's real Range_m,
+            // and the spread + closing maneuver play out on the continuous mini-hex field (see CreateGameCore). Both OFF
+            // in the engine suite (byte-identical); ON here so the DevTest sandbox fights on real distances.
+            Pulsar4X.GroundCombat.GroundForcesProcessor.EnableMiniHexCombat = true;               // real-metre range gate (K3)
+            Pulsar4X.GroundCombat.GroundForcesProcessor.EnableInitialEngagementSpread = true;     // spread + close on the continuous field
 
             var startingSystem = game.Systems.Find(s => s.ID.Equals(startingSystemId));
             if (startingSystem == null)

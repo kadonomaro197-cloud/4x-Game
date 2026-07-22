@@ -2128,10 +2128,20 @@
           "PropertyFormula": "1"
         },
         {
+          "Name": "Range_m",
+          "Units": "m",
+          "DescriptionFormula": "'Real reach in metres — the TRUTH; the hex range is only the display ruler.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100000",
+          "MinFormula": "0",
+          "StepFormula": "100",
+          "PropertyFormula": "500"
+        },
+        {
           "Name": "groundrifleArgs",
           "DescriptionFormula": "'atb ctor args'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'), PropertyValue('Range_m'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundWeaponAtb"
         }
       ]
@@ -2532,10 +2542,20 @@
           "PropertyFormula": "1"
         },
         {
+          "Name": "Range_m",
+          "Units": "m",
+          "DescriptionFormula": "'Real reach in metres — the TRUTH; the hex range is only the display ruler.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100000",
+          "MinFormula": "0",
+          "StepFormula": "100",
+          "PropertyFormula": "2000"
+        },
+        {
           "Name": "autocannonArgs",
           "DescriptionFormula": "'atb args'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'), PropertyValue('Range_m'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundWeaponAtb"
         }
       ]
@@ -2681,10 +2701,20 @@
           "PropertyFormula": "3"
         },
         {
+          "Name": "Range_m",
+          "Units": "m",
+          "DescriptionFormula": "'Real reach in metres — the TRUTH; the hex range is only the display ruler.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100000",
+          "MinFormula": "0",
+          "StepFormula": "100",
+          "PropertyFormula": "4000"
+        },
+        {
           "Name": "groundcannonArgs",
           "DescriptionFormula": "'atb args'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'), PropertyValue('Range_m'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundWeaponAtb"
         }
       ]
@@ -2830,10 +2860,20 @@
           "PropertyFormula": "2"
         },
         {
+          "Name": "Range_m",
+          "Units": "m",
+          "DescriptionFormula": "'Real reach in metres — the TRUTH; the hex range is only the display ruler.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100000",
+          "MinFormula": "0",
+          "StepFormula": "100",
+          "PropertyFormula": "20000"
+        },
+        {
           "Name": "energyweaponArgs",
           "DescriptionFormula": "'atb args'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'), PropertyValue('Range_m'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundWeaponAtb"
         }
       ]
@@ -3311,10 +3351,20 @@
           "PropertyFormula": "0"
         },
         {
+          "Name": "Range_m",
+          "Units": "m",
+          "DescriptionFormula": "'Real reach in metres — 0 = melee/contact (the claw reaches only the same hex).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100000",
+          "MinFormula": "0",
+          "StepFormula": "100",
+          "PropertyFormula": "0"
+        },
+        {
           "Name": "clawweaponArgs",
           "DescriptionFormula": "'atb args'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'), PropertyValue('Range_m'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundWeaponAtb"
         }
       ]

@@ -92,5 +92,36 @@ namespace Pulsar4X.GroundCombat
         /// body's hex pitch), which is the whole behaviour change: the gun's reach stops scaling with the size of a hex.
         /// Keeping it in ONE method means that flip touches one place, not every call site. Never throws.</summary>
         public static double RealRangeKmFor(int rangeHexes, Region region) => RealReachKm(rangeHexes, region);
+
+        // ── Round-down hex READOUT (K4, INFORMATION-DELTA #11) — the display fact ────────────────────────────────────
+        // The real km on the gun is the truth (K1); a hex is a display ruler that means a DIFFERENT real distance on
+        // every body. "Round down to hexes" is therefore a per-body DISPLAY statement — how many WHOLE hexes a real
+        // range spans HERE. On Earth (a ~560 km region-patch hex) every conventional gun floors to 0 hexes (single-hex
+        // combat); on a small moon a long gun spans several. This formatter states that plainly.
+
+        /// <summary>How many WHOLE hexes a real range of <paramref name="range_m"/> metres spans on this body (the floor
+        /// of <see cref="HexesForMetres"/>) — the "round down to hexes" display integer. Uses the REGION-PATCH hex pitch
+        /// (<see cref="HexPitchKm"/>), the same ruler <see cref="RealReachKm"/> reports against. 0 for a non-positive
+        /// range or a region with no hex geometry. Never throws, never divides by zero.</summary>
+        public static int HexesFloorForMetres(double range_m, Region region)
+        {
+            double hexes = HexesForMetres(range_m, region);
+            return hexes <= 0 ? 0 : (int)Math.Floor(hexes);
+        }
+
+        /// <summary>A plain-English reach readout — e.g. "20 km ≈ 0 hexes on this world" (a 20 km laser on Earth) or
+        /// "30 km ≈ 8 hexes on this world" (the same-scale tube artillery on a small moon). States the REAL range (the
+        /// truth) and, ROUNDED DOWN, the whole hexes it covers HERE — measured against the REGION-PATCH hex pitch
+        /// (<see cref="HexPitchKm"/>), consistent with <see cref="RealReachKm"/>. Defensive: a null/geometry-less region
+        /// still prints the km with "— hexes" (unknown ruler). Pure; never throws.</summary>
+        public static string DescribeReach(double range_m, Region region)
+        {
+            double km = (range_m > 0 ? range_m : 0) / 1000.0;
+            double pitchKm = HexPitchKm(region);
+            if (pitchKm <= 0)
+                return $"{km:0.###} km ≈ — hexes (this world has no hex ruler yet)";
+            int hexes = HexesFloorForMetres(range_m, region);
+            return $"{km:0.###} km ≈ {hexes} hex{(hexes == 1 ? "" : "es")} on this world";
+        }
     }
 }
