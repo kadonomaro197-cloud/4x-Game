@@ -140,5 +140,63 @@ namespace Pulsar4X.Tests
             Assert.AreEqual("answer", seenValue);
             Assert.IsTrue(presentAtNotify, "Item was not yet present when ItemAdded fired.");
         }
+
+        /// <summary>
+        /// Audit low-fix (2026-07-22): the P0.5 commit message claimed a ValuesSnapshot/KeysSnapshot stability gauge but
+        /// none existed. This is it. A SafeDictionary is enumerated via ValuesSnapshot/KeysSnapshot on one thread while
+        /// a second thread interleaves Add/Remove. Because each snapshot is a List COPY taken under the lock, enumerating
+        /// it must NEVER throw "collection was modified" — the exact race the engine's snapshot getters exist to prevent
+        /// (Datablobs/entity queries read them off the parallel sim loop). Under the old live-.Values read this throws;
+        /// under the snapshot read it does not. Bounded iteration + [Timeout] backstop → never hangs.
+        /// </summary>
+        [Test]
+        [Timeout(15000)]
+        public void Snapshots_AreStable_UnderConcurrentMutation()
+        {
+            var dict = new SafeDictionary<int, string>();
+            const int seedCount = 2000;
+            for (int i = 0; i < seedCount; i++) dict.Add(i, "v" + i);
+
+            Exception mutatorError = null;
+            var stop = new ManualResetEventSlim(false);
+            // The mutator churns keys ABOVE the seed range so it never collides with the seed, toggling Add/Remove.
+            var mutator = new Thread(() =>
+            {
+                try
+                {
+                    int k = seedCount;
+                    while (!stop.IsSet)
+                    {
+                        int key = seedCount + (k % 500);
+                        if (dict.ContainsKey(key)) dict.Remove(key);
+                        else dict.Add(key, "m" + key);
+                        k++;
+                    }
+                }
+                catch (Exception ex) { mutatorError = ex; }
+            }) { IsBackground = true };
+
+            mutator.Start();
+            try
+            {
+                // Read the snapshots many times while the mutator churns — a live-collection read would throw here.
+                for (int iter = 0; iter < 500; iter++)
+                {
+                    int vCount = 0, kCount = 0;
+                    foreach (var v in dict.ValuesSnapshot) { if (v != null) vCount++; }
+                    foreach (var key in dict.KeysSnapshot) { kCount++; }
+                    Assert.That(vCount, Is.GreaterThanOrEqualTo(0));   // enumerating the copy completed without throwing
+                    Assert.That(kCount, Is.GreaterThanOrEqualTo(seedCount - 1),
+                        "the snapshot always contains at least the un-churned seed keys");
+                }
+            }
+            finally
+            {
+                stop.Set();
+                mutator.Join(3000);
+            }
+
+            Assert.That(mutatorError, Is.Null, "the concurrent mutator must not have thrown");
+        }
     }
 }

@@ -171,11 +171,12 @@ namespace Pulsar4X.Tests
 
         [Test]
         [Ignore("TWOD battle-frame anchors round-trip is not exercised here: the 2D group-plane anchors "
-              + "(FleetCombatStateDB / GroupPlane) are written only behind GroundForcesProcessor-independent "
-              + "EnableGroupPlane (default OFF) during a formed SPACE engagement, which this ground-focused mid-campaign "
-              + "snapshot does not stand up. The anchor save-safety is owned by the TWOD lane's own S1/S2 gauges "
-              + "(EfGroupPlaneAnchorTests). Enable once a combined space+ground mid-campaign harness exists. "
-              + "See docs/earthfall/LANE-CORE-NOTES.md P8.1c.")]
+              + "(FleetCombatStateDB / GroupPlane) are written only behind EnableGroupPlane (default OFF) during a "
+              + "formed SPACE engagement, which this ground-focused mid-campaign snapshot does not stand up. The anchor "
+              + "FIELDS' save-safety is structurally covered: FleetCombatStateDB's group-plane fields carry [JsonProperty] "
+              + "and are deep-copied in its copy-ctor/Clone (verified by the audit's cross-cutting-invariants pass; the "
+              + "engine-wide Save/Load round-trip rides SaveLoadDesignRoundTripTests). A dedicated mid-battle anchor "
+              + "round-trip awaits a combined space+ground harness. See docs/earthfall/LANE-CORE-NOTES.md P8.1c.")]
         [Description("(TWOD, deferred) the 2D battle-frame anchors survive a mid-battle save/load — owned by the TWOD lane's anchor gauges.")]
         public void MidBattle_GroupPlaneAnchors_SurviveSaveLoad() { }
     }
