@@ -1,0 +1,136 @@
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1404763.58kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[STATE] heartbeat t=2050-03-28 07:00 paused step=3600s selected=(none) ships-in-view=8
+[ENGINE] sensor scans 89081 (+0), battle-trigger passes 2982242 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1404763.58kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[STATE] heartbeat t=2050-03-28 07:00 paused step=3600s selected=(none) ships-in-view=8
+[ENGINE] sensor scans 89081 (+0), battle-trigger passes 2982242 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1404763.58kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[STATE] heartbeat t=2050-03-28 07:00 paused step=3600s selected=(none) ships-in-view=8
+[ENGINE] sensor scans 89081 (+0), battle-trigger passes 2982242 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1404763.58kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[STATE] heartbeat t=2050-03-28 07:00 paused step=3600s selected=(none) ships-in-view=8
+[ENGINE] sensor scans 89081 (+0), battle-trigger passes 2982242 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1404763.58kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[STATE] heartbeat t=2050-03-28 07:00 paused step=3600s selected=(none) ships-in-view=8
+[ENGINE] sensor scans 89081 (+0), battle-trigger passes 2982242 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1404763.58kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[RenderError] ShipDesignWindow threw and was skipped this frame (logged once per unique error). Fix the cause:
+System.NullReferenceException: Object reference not set to an instance of an object.
+   at Pulsar4X.Client.ShipDesignWindow.GenImage() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Windows\ShipDesignWindow.cs:line 1140
+   at Pulsar4X.Client.ShipDesignWindow.DisplayExistingDesigns() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Windows\ShipDesignWindow.cs:line 881
+   at Pulsar4X.Client.ShipDesignWindow.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Windows\ShipDesignWindow.cs:line 314
+   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 503
+[RenderError] Selector threw and was skipped this frame (logged once per unique error). Fix the cause:
+System.InvalidOperationException: Begin("###selector") called while already inside window "Entity Assembler". Must call End() before starting a new window.
+   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
+   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 52
+   at Pulsar4X.Client.Selector.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\HUD\Selector.cs:line 84
+   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 503
+[RenderError] EntityFilterBar threw and was skipped this frame (logged once per unique error). Fix the cause:
+System.InvalidOperationException: Begin("###entity-filter-bar") called while already inside window "Entity Assembler". Must call End() before starting a new window.
+   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
+   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 52
+   at Pulsar4X.Client.EntityFilterBar.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\HUD\EntityFilterBar.cs:line 48
+   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 503
+[RenderError] EventTickerWindow threw and was skipped this frame (logged once per unique error). Fix the cause:
+System.InvalidOperationException: Begin("###event-ticker") called while already inside window "Entity Assembler". Must call End() before starting a new window.
+   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
+   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 52
+   at Pulsar4X.Client.EventTickerWindow.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\HUD\EventTickerWindow.cs:line 71
+   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 503
+[RenderError] TimeControl threw and was skipped this frame (logged once per unique error). Fix the cause:
+System.InvalidOperationException: Begin("TimeControl") called while already inside window "Entity Assembler". Must call End() before starting a new window.
+   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
+   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, Boolean& isActive, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 44
+   at Pulsar4X.Client.TimeControl.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\HUD\TimeControl.cs:line 63
+   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 503
+[RenderError] ToolBarWindow threw and was skipped this frame (logged once per unique error). Fix the cause:
+System.InvalidOperationException: Begin("##Toolbar") called while already inside window "Entity Assembler". Must call End() before starting a new window.
+   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
+   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 52
+   at Pulsar4X.Client.ToolBarWindow.DisplayButtons(String name, List`1 DisplayToolButtons) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\HUD\ToolBarWindow.cs:line 238
+   at Pulsar4X.Client.ToolBarWindow.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\HUD\ToolBarWindow.cs:line 229
+   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 503
+[RenderError] ShipDesignWindow threw and was skipped this frame (logged once per unique error). Fix the cause:
+System.InvalidOperationException: Begin("Entity Assembler") called while already inside window "Entity Assembler". Must call End() before starting a new window.
+   at Pulsar4X.Client.Interface.Widgets.Window.ValidateBeginCall(String title) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 78
+   at Pulsar4X.Client.Interface.Widgets.Window.Begin(String title, Boolean& isActive, ImGuiWindowFlags flags, String callerFilePath) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Widgets\Window.cs:line 44
+   at Pulsar4X.Client.ShipDesignWindow.Display() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\Interface\Windows\ShipDesignWindow.cs:line 303
+   at Pulsar4X.Client.PulsarMainWindow.SafeRender(String context, Action render) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\PulsarMainWindow.cs:line 503
+[STATE] heartbeat t=2050-03-28 07:00 paused step=3600s selected=(none) ships-in-view=8
+[ENGINE] sensor scans 89081 (+0), battle-trigger passes 2982242 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1404763.58kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[STATE] ⚠ faults this session: 7 unique (render+input — grep [RenderError]/[InputError])
+[STATE] heartbeat t=2050-03-28 07:00 paused step=3600s selected=(none) ships-in-view=8
+[ENGINE] sensor scans 89081 (+0), battle-trigger passes 2982242 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1404763.58kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[STATE] ⚠ faults this session: 7 unique (render+input — grep [RenderError]/[InputError])
+[STATE] heartbeat t=2050-03-28 07:00 paused step=3600s selected=(none) ships-in-view=8
+[ENGINE] sensor scans 89081 (+0), battle-trigger passes 2982242 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1404763.58kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[STATE] ⚠ faults this session: 7 unique (render+input — grep [RenderError]/[InputError])
+[STATE] heartbeat t=2050-03-28 07:00 paused step=3600s selected=(none) ships-in-view=8
+[ENGINE] sensor scans 89081 (+0), battle-trigger passes 2982242 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1404763.58kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[STATE] ⚠ faults this session: 7 unique (render+input — grep [RenderError]/[InputError])
+[STATE] heartbeat t=2050-03-28 07:00 paused step=3600s selected=(none) ships-in-view=8
+[ENGINE] sensor scans 89081 (+0), battle-trigger passes 2982242 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1404763.58kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[STATE] ⚠ faults this session: 7 unique (render+input — grep [RenderError]/[InputError])
+[STATE] session summary — faults=7, game-time=2050-03-28 07:00
+=== Session ended 2026-07-22 19:14:03 ===
