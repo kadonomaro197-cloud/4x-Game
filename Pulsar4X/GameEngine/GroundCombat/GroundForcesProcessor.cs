@@ -538,9 +538,13 @@ namespace Pulsar4X.GroundCombat
         /// hexes are a real distance apart (no fight until they close, M3). Never throws.</summary>
         private static bool WeaponReaches(GroundUnit u, GroundUnit t, int rangeHexes, double range_m, GroundForcesDB forces)
         {
+            // Both branches route the reach decision through the SHARED CombatKernel.WithinReach (the resolver-merge
+            // range gate — "can this weapon hit that target" now lives in ONE place for space AND ground). WithinReach is
+            // the plain `gap <= reach` compare, so a reach-0 melee weapon stays CONTACT-ONLY (not unbounded — the ground
+            // convention, unlike space's beam). Byte-identical to the old `RealGapMetres <= range_m` / `HexDist <= rangeHexes`.
             if (EnableMiniHexCombat)
-                return GroundMiniHex.RealGapMetres(u, t, forces?.OwningEntity) <= range_m;
-            return HexDist(u, t) <= rangeHexes;
+                return Pulsar4X.Combat.CombatKernel.WithinReach(range_m, GroundMiniHex.RealGapMetres(u, t, forces?.OwningEntity));
+            return Pulsar4X.Combat.CombatKernel.WithinReach(rangeHexes, HexDist(u, t));
         }
 
         /// <summary>

@@ -125,6 +125,30 @@ namespace Pulsar4X.Combat
             public double Position_m;
         }
 
+        // ── The RANGE gate — the ONE reach test both resolvers route through ─────────────────────────────────────────
+
+        /// <summary>
+        /// THE shared range predicate: does a weapon of reach <paramref name="reach"/> reach across a gap of
+        /// <paramref name="gap"/>? Both must be in the SAME units — metres on the space fleet axis (`Separation_m`), or
+        /// hexes on the planetary board (`HexDist`). It is deliberately the plain bounded comparison "the gap is within
+        /// reach," with NO unbounded convention baked in — because the two domains DISAGREE on what reach 0 means: a
+        /// ground melee weapon (reach 0) hits only at contact (gap 0), while a space beam (Range_m 0) is UNBOUNDED. Each
+        /// caller layers its own reach-0 rule on top (space via <see cref="WeaponReaches(WeaponProfile,double)"/>), so
+        /// this core stays the single, convention-free arithmetic the ship resolver's <c>BuildFireMix</c> gate and the
+        /// ground resolver's <c>WeaponReaches</c> both compute. Pure; never throws. (docs/combat/UNIFIED-RESOLVER-AND-BATTLE-STATS.md Slice 1.)
+        /// </summary>
+        public static bool WithinReach(double reach, double gap) => gap <= reach;
+
+        /// <summary>Does weapon <paramref name="w"/> reach the current fleet engagement separation (metres)? The space
+        /// per-weapon range gate as a shared predicate: a weapon with <see cref="WeaponProfile.Range_m"/> ≤ 0 is
+        /// UNBOUNDED (the beam `IsInRange` convention — always reaches), else it reaches when the gap is within its range
+        /// (<see cref="WithinReach"/>). Byte-for-byte the old inline gate
+        /// <c>!(separation_m &gt; 0 &amp;&amp; w.Range_m &gt; 0 &amp;&amp; w.Range_m &lt; separation_m)</c>: a 0-range
+        /// weapon or a non-positive gap always fires, a finite-range weapon fires only once the gap is inside its reach.
+        /// Pure; never throws.</summary>
+        public static bool WeaponReaches(WeaponProfile w, double separation_m)
+            => w.Range_m <= 0.0 || WithinReach(w.Range_m, separation_m);
+
         // ── Pure salvo math ───────────────────────────────────────────────────────────────────────────────────────
 
         /// <summary>How much of a nature's damage a shield is ABLE to stop (the rest bleeds through no matter the

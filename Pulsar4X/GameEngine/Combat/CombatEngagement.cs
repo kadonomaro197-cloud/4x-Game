@@ -1342,9 +1342,11 @@ namespace Pulsar4X.Combat
                     foreach (var w in cv.Weapons)
                     {
                         // RANGE GATE (Phase 1): a FINITE-range weapon only fires if it reaches the current gap.
-                        // separation 0 (flag off / point blank) or a 0/unbounded weapon range => always fires, so
-                        // this is a no-op in the pre-closing path (every existing fixture is unchanged).
-                        if (separation_m > 0 && w.Range_m > 0 && w.Range_m < separation_m) continue;
+                        // Routed through the SHARED CombatKernel.WeaponReaches so the ship and ground resolvers decide
+                        // "can this weapon reach" in ONE place (the resolver-merge range gate). Byte-identical to the old
+                        // inline `separation_m > 0 && w.Range_m > 0 && w.Range_m < separation_m`: separation 0 (flag off /
+                        // point blank) or a 0/unbounded weapon range => reaches => always fires (every fixture unchanged).
+                        if (!CombatKernel.WeaponReaches(w, separation_m)) continue;
                         Add(w.Class, w.Nature, w.Delivery, w.DamagePerSecond * cs.FirepowerMult, w.Velocity, w.Tracking, w.Saturation, w.HeatPerSecond);
                     }
                 }

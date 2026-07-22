@@ -185,6 +185,39 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("The SHARED range gate (resolver-merge, UNIFIED Slice 1): WithinReach is the plain `gap <= reach` both domains route through; WeaponReaches layers space's `Range_m <= 0 => unbounded` beam convention on top. Pins the two reach-0 conventions (space beam = unbounded, ground melee = contact-only) and proves WeaponReaches is byte-for-byte the old inline BuildFireMix gate across a sweep.")]
+        public void RangeGate_SharedReachPredicate_PinsBothConventions()
+        {
+            // WithinReach — the convention-free core: a weapon reaches iff the gap is within its reach (same units).
+            Assert.That(CombatKernel.WithinReach(reach: 3, gap: 2), Is.True, "gap inside reach → hits");
+            Assert.That(CombatKernel.WithinReach(reach: 3, gap: 3), Is.True, "gap exactly at reach → hits (inclusive)");
+            Assert.That(CombatKernel.WithinReach(reach: 3, gap: 4), Is.False, "gap beyond reach → holds fire");
+            // reach 0 in WithinReach is CONTACT-ONLY (the ground melee convention) — only a 0 gap qualifies.
+            Assert.That(CombatKernel.WithinReach(reach: 0, gap: 0), Is.True, "melee (reach 0) reaches only at contact (gap 0)");
+            Assert.That(CombatKernel.WithinReach(reach: 0, gap: 1), Is.False, "melee (reach 0) can't hit a target one step away");
+
+            // WeaponReaches — the SPACE per-weapon gate: Range_m <= 0 is UNBOUNDED (the beam convention).
+            var unbounded = new WeaponProfile(100, 3e8, 1, double.PositiveInfinity, 0, WeaponNature.Energy, WeaponDelivery.Beam); // Range_m 0
+            var railgun   = new WeaponProfile(100, 1e6, 0, 1, 500_000, WeaponNature.Kinetic, WeaponDelivery.Slug);
+            Assert.That(CombatKernel.WeaponReaches(unbounded, separation_m: 5_000_000), Is.True, "a 0-range beam is unbounded — reaches any gap");
+            Assert.That(CombatKernel.WeaponReaches(railgun, separation_m: 400_000), Is.True, "a 500 km railgun reaches a 400 km gap");
+            Assert.That(CombatKernel.WeaponReaches(railgun, separation_m: 600_000), Is.False, "the same railgun can't reach a 600 km gap");
+
+            // BYTE-IDENTITY vs the old inline gate `separation_m > 0 && w.Range_m > 0 && w.Range_m < separation_m` (skip),
+            // i.e. reaches == !that. Sweep both finite and unbounded weapons across separations incl. 0 / point-blank.
+            var weapons = new[] { unbounded, railgun, Beam(100), Slug(100) };
+            double[] seps = { 0.0, 100_000.0, 500_000.0, 500_001.0, 5_000_000.0 };
+            foreach (var w in weapons)
+                foreach (var sep in seps)
+                {
+                    bool oldSkip = sep > 0 && w.Range_m > 0 && w.Range_m < sep;
+                    Assert.That(CombatKernel.WeaponReaches(w, sep), Is.EqualTo(!oldSkip),
+                        $"WeaponReaches must match the old inline gate @ range={w.Range_m} sep={sep}");
+                }
+            Log("shared range gate: WithinReach (gap<=reach) + WeaponReaches (Range_m<=0 unbounded) match both conventions + the old ship gate");
+        }
+
+        [Test]
         [Description("BYTE-IDENTITY tripwire: the kernel's pure math must match the live ship resolver (CombatEngagement) and ground matchup (GroundDamageMatrix) it was extracted from, across a sweep of inputs. If either copy is edited to diverge, this fails — the guard that keeps slice-1 duplication honest until slice 2 removes it.")]
         public void Kernel_MatchesLiveShipAndGroundMath()
         {
