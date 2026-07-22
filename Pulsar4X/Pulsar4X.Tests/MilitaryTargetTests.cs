@@ -90,5 +90,19 @@ namespace Pulsar4X.Tests
             Diplomacy.MakePeace(s.Faction, reds, s.Game.TimePulse.GameGlobalDateTime);
             Assert.That(MilitaryTarget.BestEnemyTarget(s.Faction).IsValid, Is.False, "at peace there is no strike target");
         }
+
+        [Test]
+        [Description("Audit M3 — the fog-honest easiest-landing discount: an un-scouted/undefended world is undiscounted; a scouted garrison is discounted monotonically but never to zero.")]
+        public void LandingEase_DiscountsAScoutedGarrison_ButNeverZeroes()
+        {
+            Assert.That(MilitaryTarget.LandingEaseFactor(0.0), Is.EqualTo(1.0),
+                "an un-scouted (0 detected) world is undiscounted — byte-identical to the pre-M3 score");
+            Assert.That(MilitaryTarget.LandingEaseFactor(500.0), Is.LessThan(1.0),
+                "a scouted garrison makes the world a less attractive landing");
+            Assert.That(MilitaryTarget.LandingEaseFactor(500.0), Is.GreaterThan(0.0),
+                "the discount never zeroes a target's score (it stays valid)");
+            Assert.That(MilitaryTarget.LandingEaseFactor(1000.0), Is.LessThan(MilitaryTarget.LandingEaseFactor(500.0)),
+                "more detected defence => a stronger discount (the AI prefers the softer landing)");
+        }
     }
 }

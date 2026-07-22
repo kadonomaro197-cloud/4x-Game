@@ -36,6 +36,11 @@ namespace Pulsar4X.Factions
         /// <summary>Reach factor for a world we'd have to JUMP to reach (discounted — true jump-route cost is the
         /// MilitaryReach slice; this is a coarse "near vs far" v1 proxy).</summary>
         public const double ReachDistant = 0.35;
+        /// <summary>Audit M3 — weight on the fog-honest EASIEST-LANDING discount (the "weakness/garrison" term this
+        /// scoring was designed to grow into). A target's score is divided by (1 + this × detected-defender-strength),
+        /// so a scouted, heavily-garrisoned world is a less attractive landing than a softer one. An un-scouted world
+        /// reads 0 detected defence → factor 1.0 → score unchanged (byte-identical). FLAGGED balance value.</summary>
+        public const double EasyLandingWeight = 0.002;  // FLAGGED balance value
 
         /// <summary>A scored strike candidate — the enemy colony, the BODY to sail at, and its utility score.</summary>
         public readonly struct ScoredTarget
@@ -59,13 +64,25 @@ namespace Pulsar4X.Factions
         /// The "calculation given the circumstances": a reachable prize outweighs a distant one of equal size, so the
         /// AI doesn't blindly march at the nearest — it weighs the payoff.
         /// </summary>
+        /// <summary>Audit M3 — the pure EASIEST-LANDING discount: a score multiplier in (0,1] from the fog-honest
+        /// detected defender strength. 0 detected → 1.0 (unchanged, byte-identical); more detected defence → a smaller
+        /// factor, never 0 (a scored target stays valid). Extracted pure so the discount is CI-testable without a sim.</summary>
+        public static double LandingEaseFactor(double detectedDefence)
+            => 1.0 / (1.0 + EasyLandingWeight * System.Math.Max(0.0, detectedDefence));
+
         public static ScoredTarget BestEnemyTarget(Entity faction)
         {
             var best = ScoredTarget.None;
             foreach (var (colony, body, info) in EnemyColonies(faction))
             {
                 double reach = InSameSystemAsFactionAsset(faction, body) ? ReachInSystem : ReachDistant;
-                double score = ColonyValue(info) * ValueWeight * reach;
+                // Audit M3 — fog-honest EASIEST-LANDING factor. GroundThreat.DetectedDefenderStrength counts ONLY the
+                // enemy ground strength this faction has actually DETECTED on the target world (an un-scouted world
+                // reads 0 → landingEase 1.0 → score unchanged, byte-identical); a scouted, heavily-garrisoned world is
+                // discounted so the AI prefers the softer landing. Bounded (0,1], never zeroes the score. This is the
+                // second consumer of the "one read, two consumers" GroundThreat design (the brain is the first).
+                double detectedDefence = Pulsar4X.GroundCombat.GroundThreat.DetectedDefenderStrength(body, faction.Id);
+                double score = ColonyValue(info) * ValueWeight * reach * LandingEaseFactor(detectedDefence);
                 if (score > best.Score)
                     best = new ScoredTarget { Colony = colony, ColonyBody = body, Score = score };
             }
