@@ -181,10 +181,27 @@ on mini-hexes. The mini-grid is LAZY (only where units/bases are) so a uniform p
 so M2's flag-on behaviour is cleanly "same coarse hex vs not." The range-differentiation game (a longer gun out-reaches
 a closer one on the mini-hex grid) needs REAL km weapon ranges + mini-hex movement, which ride M3.)*
 
-**Still to come.** **M3** = mini-hex movement (units spread onto `MiniQ/MiniR` + close over real time) + the real closing
-fight + real km weapon ranges; **M4** = per-`CityTile` geology/environment variation (the field already exists —
-`CityGridFactory.BuildGrid` v1 sets all tiles to the coarse terrain); **M5** = client draws units on mini-hexes.
-Gauges: `Pulsar4X.Tests/GroundMiniHexTests.cs` (the pure position math) + the M2 resolver gauge above.
+**M3a — the ground fire path now reads the REAL separation ✅ (2026-07-22).** `FireWeaponAtReachable` passes the real
+metre gap (`GroundMiniHex.RealGapMetres(attacker, target, body)`, flag-gated) into the SAME `CombatKernel.HitFraction`
+the space closing fight uses — so a ground shot loses accuracy over a real distance exactly as a space shot does (a
+long-range round harasses inaccurately from afar; a beam/guided shot barely cares). This is the ground half of the
+space "mobile artillery thins the enemy before they close." **Byte-identical off / at gap 0** (the co-located common
+case → separation 0 → the range term is inert, so the M2 gauge is unaffected). Its full payoff awaits closing MOVEMENT.
+
+**The verification (2026-07-22): the 2D closing fight EXISTS for space, ground doesn't fully use it yet.** Space has the
+whole closing model — `GroupPlane` (the 2D battle plane, S0-S2), `CombatEngagement.AdvanceClosing` (shrinks
+`Separation_m` at the faster side's speed), range-layered `WeaponProfile.Range_m` (missile 1000 km → railgun 500 km →
+flak 50 km → beam knife), and the range-aware `HitFraction` — all behind `EnableClosingRange`/`EnableGroupPlane`. Ground
+now has: the range GATE (M2 — a weapon fires only if its `Range_m` reaches the target), and range-aware accuracy (M3a).
+Ground still LACKS: (1) **real km weapon ranges** so artillery genuinely out-ranges infantry (today `Range_m` = hex ×
+nominal 1000 m — the placeholder), and (2) **closing MOVEMENT** — units spread on the 2D plane and close over time (the
+`GroupPlane` S4 "ground-onto-plane" campaign) so the artillery gets its free shots during the approach. Those two are
+the remaining slices for the full "artillery thins 50% before they close."
+
+**Still to come.** **M3b/S4** = real km weapon ranges (real-life + sci-fi) + units spread + closing over time on the 2D
+`GroupPlane` (the developer's "auto-resolver on a 2D plane"); **M4** = per-`CityTile` geology/environment variation (the
+field already exists — `CityGridFactory.BuildGrid` v1 sets all tiles to the coarse terrain); **M5** = client draws units
+on mini-hexes. Gauges: `Pulsar4X.Tests/GroundMiniHexTests.cs` (position math) + `MiniHexCombat_*` (M2 gate).
 
 ## Units as entities — "abilities just fall out" (Option A, 2026-07-07/08)
 

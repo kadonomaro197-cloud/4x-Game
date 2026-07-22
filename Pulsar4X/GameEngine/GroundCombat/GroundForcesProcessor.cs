@@ -381,7 +381,7 @@ namespace Pulsar4X.GroundCombat
             // can reach, health-weighted, through the shared kernel — dodge (HitFraction) → depleting shield pool →
             // flat-per-source armour (penetration + shot-count + nature). Accumulates into `incoming` (pre-salvo state →
             // simultaneous). Arithmetic per target is byte-identical to the pre-W2 resolver.
-            void FireWeaponAtReachable(List<GroundUnit> reachable, double pool, Pulsar4X.Combat.WeaponProfile profile)
+            void FireWeaponAtReachable(GroundUnit attacker, List<GroundUnit> reachable, double pool, Pulsar4X.Combat.WeaponProfile profile)
             {
                 double totalH = 0.0;
                 foreach (var t in reachable) totalH += t.Health;
@@ -390,8 +390,15 @@ namespace Pulsar4X.GroundCombat
                 foreach (var t in reachable)
                 {
                     // DODGE (kernel HitFraction): an aimed slug is dodged ~(1−evasion); an area/beam shot lands ~fully.
+                    // RANGE-AWARE (mini-hex M3a): pass the REAL metre gap to the SAME kernel the space closing fight uses,
+                    // so a shot that must cross a real distance loses accuracy exactly as it does in space (a long-range
+                    // artillery round harasses inaccurately from afar; a beam/guided shot barely cares) — the ground half
+                    // of "the mobile artillery thins the enemy before they close." Off (or at gap 0, the co-located common
+                    // case) → separation 0 → the range term is inert → byte-identical to the pre-M3a resolver. Its full
+                    // payoff awaits closing MOVEMENT (units spread on the 2D plane + close over time — the S4 slice).
+                    double sep_m = EnableMiniHexCombat ? GroundMiniHex.RealGapMetres(attacker, t, forces?.OwningEntity) : 0.0;
                     double contribution = pool * (t.Health / totalH)
-                        * Pulsar4X.Combat.CombatKernel.HitFraction(profile, t.Evasion);
+                        * Pulsar4X.Combat.CombatKernel.HitFraction(profile, t.Evasion, sep_m);
                     // SHIELD POOL (3c): the target's depleting shield soaks the soakable fraction (by weapon nature —
                     // kinetic fully, energy half-bleeds, exotic bypasses) up to its CURRENT charge, BEFORE armour.
                     if (t.CurrentShield > 0 && shieldSoakFrac > 0 && contribution > 0)
@@ -461,7 +468,7 @@ namespace Pulsar4X.GroundCombat
                                     * GroundFormationDoctrine.AttackMult(forces, u);
                                 double pool = atk * SalvoScale;
                                 if (gIsDefender && coverFort > 0) pool /= coverFort;
-                                FireWeaponAtReachable(reachable, pool, GroundCombatant.ToWeaponProfile(u, m));
+                                FireWeaponAtReachable(u, reachable, pool, GroundCombatant.ToWeaponProfile(u, m));
                             }
                             // Burn one salvo of ammo iff the unit fired at least one weapon (a magazine-fed unit only).
                             if (firedAny && deltaSeconds > 0 && GroundAmmo.CarriesAmmo(u)) GroundAmmo.Consume(u, AmmoPerSalvo_kg);
@@ -497,7 +504,7 @@ namespace Pulsar4X.GroundCombat
 
                         // Route the collapsed weapon through the SHARED KERNEL (resolver merge 3c) — dodge + shield +
                         // armour, exactly as before.
-                        FireWeaponAtReachable(reachableC, poolC, GroundCombatant.ToWeaponProfile(u));
+                        FireWeaponAtReachable(u, reachableC, poolC, GroundCombatant.ToWeaponProfile(u));
                     }
                 }
             }
