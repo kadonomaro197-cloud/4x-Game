@@ -105,6 +105,28 @@ namespace Pulsar4X.GroundCombat
         /// <summary>Minimum Aggression trait for a strong homeland defender to SALLY (counterattack) instead of holding
         /// its prepared line. FLAGGED balance value.</summary>
         public const double CounterattackAggression = 0.7;  // FLAGGED balance value
+        /// <summary>Posture hysteresis BAND (Audit M2): a non-survival stance HOLDS until the fresh own/enemy odds ratio
+        /// moves at least this fraction (relative to the larger of the reference odds and 1.0) from the odds that set it
+        /// — small jitter near a threshold doesn't flip the line, a real swing still does. FLAGGED balance value.</summary>
+        public const double HysteresisBand = 0.15;   // FLAGGED balance value
+        /// <summary>Posture MINIMUM HOLD in HOURS (Audit M2): a non-survival stance change is suppressed until this many
+        /// hours since the last change. The ground tick is hourly and the stance cooldown (60-300s) always expires, so
+        /// THIS is what actually binds the hysteresis. A break-glass survival shift ignores it. FLAGGED balance value.</summary>
+        public const double MinHoldHours = 6.0;       // FLAGGED balance value
+
+        /// <summary>Audit M2 — the pure posture-hysteresis predicate: should a NON-survival stance change be SUPPRESSED
+        /// (i.e. hold the current stance)? Returns TRUE = hold. A change is allowed (returns false) once
+        /// <see cref="MinHoldHours"/> have elapsed since the last change OR the fresh odds moved past the
+        /// <see cref="HysteresisBand"/>; the very first set (<paramref name="hasCurrentStance"/> false) is never held.
+        /// Break-glass survival shifts bypass this entirely (the caller handles them). Pure/deterministic → CI-testable
+        /// without a sim, and the single definition the wire (<c>GroundTacticalBrain.ApplyStance</c>) calls.</summary>
+        public static bool ShouldHoldStance(bool hasCurrentStance, DateTime lastChange, double lastOdds, double freshOdds, DateTime now)
+        {
+            if (!hasCurrentStance) return false;                       // no reference yet → allow the first set
+            bool minHoldElapsed = (now - lastChange) >= TimeSpan.FromHours(MinHoldHours);
+            bool oddsCrossedBand = Math.Abs(freshOdds - lastOdds) > HysteresisBand * Math.Max(lastOdds, 1.0);
+            return !minHoldElapsed && !oddsCrossedBand;               // hold only when neither release condition is met
+        }
 
         // Stance family labels — must match the base-mod groundStances.json "Family" values.
         public const string Offensive = "Offensive";

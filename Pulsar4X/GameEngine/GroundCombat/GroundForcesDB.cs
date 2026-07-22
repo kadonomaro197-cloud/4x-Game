@@ -382,6 +382,14 @@ namespace Pulsar4X.GroundCombat
         /// <summary>The brain's last abstract INTENT for this battalion (Advance/Hold/PullBack/Retreat) — the client
         /// readout half. Default <see cref="GroundIntent.Hold"/> (the byte-identical resting value).</summary>
         [JsonProperty] public GroundIntent TacticalIntent { get; internal set; } = GroundIntent.Hold;
+        /// <summary>Audit M2 — posture hysteresis: the game time the brain last CHANGED this battalion's stance (a
+        /// break-glass survival shift also stamps it). A non-survival change is held until <see cref="GroundTactics.MinHoldHours"/>
+        /// elapse OR the odds cross the band, so a battalion doesn't flip stance every hourly tick near a threshold.
+        /// DateTime.MinValue = never changed (byte-identical resting value; the first change always passes the hold).</summary>
+        [JsonProperty] public DateTime LastStanceChange { get; internal set; } = DateTime.MinValue;
+        /// <summary>Audit M2 — the own/enemy odds ratio that set the current stance: the reference the hysteresis band is
+        /// measured from. 0 = unset. Save-safe.</summary>
+        [JsonProperty] public double LastStanceOdds { get; internal set; }
 
         public GroundFormation() { }
         public GroundFormation(GroundFormation o)
@@ -391,6 +399,7 @@ namespace Pulsar4X.GroundCombat
             StanceId = o.StanceId; StanceFamily = o.StanceFamily; AttackMult = o.AttackMult; DamageTakenMult = o.DamageTakenMult;
             SwitchableAfter = o.SwitchableAfter; Engagement = o.Engagement;
             TacticalReason = o.TacticalReason; TacticalIntent = o.TacticalIntent;
+            LastStanceChange = o.LastStanceChange; LastStanceOdds = o.LastStanceOdds;
             Orders = new List<GroundOrder>();
             if (o.Orders != null) foreach (var ord in o.Orders) Orders.Add(new GroundOrder(ord));
         }

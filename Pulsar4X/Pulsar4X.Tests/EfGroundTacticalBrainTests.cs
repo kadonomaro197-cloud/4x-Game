@@ -231,5 +231,27 @@ namespace Pulsar4X.Tests
             Assert.That(bravo.Orders[0].Issuer, Is.EqualTo(GroundOrderIssuer.Player));
             Log($"wire: Alpha decided \"{alpha.TacticalReason}\"; Bravo (player order) left alone");
         }
+
+        [Test]
+        [Description("Audit M2 — posture hysteresis: a set stance HOLDS against tick-to-tick jitter, but a big odds swing or the min-hold elapsing releases it; the first set is never held.")]
+        public void PostureHysteresis_HoldsAgainstJitter_ReleasesOnSwingOrTimeout()
+        {
+            var t0 = new System.DateTime(2050, 1, 1, 0, 0, 0);
+            // First set: no current stance → never held (the battalion must be able to pick an initial posture).
+            Assert.That(GroundTactics.ShouldHoldStance(false, System.DateTime.MinValue, 0.0, 1.0, t0), Is.False,
+                "the first stance set is never suppressed");
+            // A stance was just set at odds 1.0. One hour later the odds jitter to 1.05 (a hair) — HOLD (no flip).
+            var oneHour = t0 + System.TimeSpan.FromHours(1);
+            Assert.That(GroundTactics.ShouldHoldStance(true, t0, 1.0, 1.05, oneHour), Is.True,
+                "small jitter within the band and inside the min-hold window holds the stance");
+            // Same hour, but the odds SWING past the band (1.0 → 1.4) — RELEASE (a real change turns the line).
+            Assert.That(GroundTactics.ShouldHoldStance(true, t0, 1.0, 1.4, oneHour), Is.False,
+                "an odds swing past the band releases the hold even inside the min-hold window");
+            // Small jitter again, but now the minimum hold has elapsed — RELEASE (the time gate opened).
+            var afterHold = t0 + System.TimeSpan.FromHours(GroundTactics.MinHoldHours + 1);
+            Assert.That(GroundTactics.ShouldHoldStance(true, t0, 1.0, 1.05, afterHold), Is.False,
+                "once the minimum hold elapses even small jitter may change the stance");
+            Log($"hysteresis: jitter@1h held, swing@1h released, jitter@{GroundTactics.MinHoldHours + 1}h released");
+        }
     }
 }
