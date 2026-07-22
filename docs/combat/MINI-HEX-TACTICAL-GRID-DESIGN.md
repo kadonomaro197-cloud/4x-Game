@@ -103,14 +103,13 @@ is continuous.
 The rule holds: combat is the only green combat code, CI is the only gauge, one slice at a time, additive
 and byte-identical until a deliberate flip.
 
-- **M1 — the mini-hex POSITION field (additive, byte-identical).** Give `GroundUnit` a mini-hex position
-  (its coarse global hex + a `CityTile` (q,r) offset), save-safe + deep-copied, populated at muster
-  (center mini-tile of its coarse hex). Add a pure helper that turns (coarse hex + mini-hex) into a
-  **continuous real position in metres** on the body, and a `RealGapMetres(unitA, unitB)` that measures
-  across coarse-hex boundaries. Unread by the resolver → live combat unchanged. Gauge: two units in
-  *adjacent* coarse hexes near the shared edge read a small real gap; two in the same coarse hex read
-  their mini-hex gap; round-trips. (This mirrors exactly how Slice 1b added `Range_m` — a field + a helper
-  + a gauge, nothing live touched.)
+- **M1 — the mini-hex POSITION field (additive, byte-identical). ✅ BUILT 2026-07-22.** `GroundUnit.MiniQ`/`MiniR`
+  (beside `GlobalQ/GlobalR`, `[JsonProperty]` + deep-copied, default (0,0) = centre = muster) + the pure
+  **`GroundMiniHex`** helper (`MiniPitchKm` = coarse/(2r+1); `ContinuousPosKm` folds the coarse global hex + the
+  mini-hex offset into ONE flat real position; `RealGapMetres` measures across coarse-hex boundaries). Unread by the
+  resolver → live combat unchanged. Gauge `Pulsar4X.Tests/GroundMiniHexTests.cs`: two units in *adjacent* coarse hexes
+  near the shared edge read a ~1-mini-hex gap (the transitional continuity), two in the same coarse hex read their
+  mini-hex gap, mini-pitch ≈ 37 km on Earth. (Mirrors exactly how Slice 1b landed — a field + a helper + a gauge.)
 - **M2 — the resolver gates on the real gap (behaviour; keep the gate ON, no flag).** Flip
   `ResolveRegionCombat` to fire when `RealGapMetres(u,t) ≤ u.Range_m` (per weapon). On today's coarse
   grid, co-located stays byte-identical; the change is that engagement now honors the continuous real

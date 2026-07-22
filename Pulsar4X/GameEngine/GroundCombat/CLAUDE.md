@@ -148,6 +148,30 @@ to the real metre gap is **Slice 2** (a behaviour change that re-baselines the h
 `GroundForcesTests.RealDistance_Slice1Fields_PopulateAndRoundTrip` (the new fields populate + deep-copy + draw a different
 hex count per body) + the unchanged `RealDistance_HexTranslation_BothWays_AndByBody` (the helper round-trip tripwire).
 
+## Mini-hex tactical grid — M1 (the "where exactly" position foundation, 2026-07-22)
+
+**The locked model** (`docs/combat/MINI-HEX-TACTICAL-GRID-DESIGN.md`): two zooms of the same map. The coarse global hex
+(`GroundHex` on `SurfaceGrid`, ~477 km on Earth) shows WHAT is in an area; the **mini-hex** — the SAME `CityGrid`/`CityTile`
+grid the infrastructure/city view already uses (~37 km/tile, tunable via `CityPatchRadius`) — shows WHERE exactly. Units plot
+on mini-hexes. The mini-grid is LAZY (only where units/bases are) so a uniform planet-wide fine grid (infeasible — Earth at
+1 km ≈ 590 M hexes) is sidestepped.
+
+**What landed in M1 (ADDITIVE + UNREAD by the resolver → byte-identical):**
+- **`GroundMiniHex.cs`** — the pure tactical-position math: `MiniPitchKm(coarsePitch, cityRadius)` (= coarse/(2r+1)),
+  `ContinuousPosKm(globalQ,globalR, miniQ,miniR, coarsePitch, cityRadius)` (the two tiers → ONE flat real position), and
+  `RealGapMetres(...)` — the real gap **measured across coarse-hex boundaries**, so two units at a shared coarse-hex EDGE read
+  a small gap (the developer's "transitional" continuity), not a wall. The ground echo of space's `Separation_m`. Pure/no
+  entity reads → unit-testable; never throws.
+- **`GroundUnit.MiniQ` / `MiniR`** (`GroundForcesDB.cs`, beside `GlobalQ/GlobalR`) — the unit's mini-hex offset within its
+  coarse global hex, `[JsonProperty]` + deep-copied, default (0,0) = centre = muster. Additive/save-safe.
+
+**Unread by the resolver in M1** (it still gates on hex `Range`/`RangeHexes`). **M2** flips `ResolveRegionCombat` to fire
+when `GroundMiniHex.RealGapMetres(u,t) ≤ u.Range_m` (keeps the gate ON, no default-off flag; co-located byte-identical,
+re-baseline the range/closing/ROE gauges once). **M3** = mini-hex movement + the real closing fight; **M4** = per-`CityTile`
+geology/environment variation (the field already exists — `CityGridFactory.BuildGrid` v1 sets all tiles to the coarse
+terrain). Gauge: `Pulsar4X.Tests/GroundMiniHexTests.cs` (mini-pitch = coarse/13 ≈ 37 km; same-hex gap = N × mini-pitch;
+adjacent-coarse-hex EDGES read ~1 mini-hex apart, not a coarse hex — the transitional continuity).
+
 ## Units as entities — "abilities just fall out" (Option A, 2026-07-07/08)
 
 The migration that promotes a raised `GroundUnit` to also carry a **real component store** (a backing `Entity` + `ComponentInstancesDB`), so every ability — radar reveal, march speed, crew — FALLS OUT of the same infrastructure a ship uses (`TryGetComponentsByAttribute<TAtb>`), with no per-ability special-casing. Full plan + status board: **`docs/GROUND-UNITS-AS-ENTITIES-DESIGN.md`**. Only assembler-designed units (with a component list) get a backing; monolithic/dev/garrison units get `BackingEntityId = -1` and are byte-unchanged. The backing is inert (populated low-level, no install hook / ReCalc; ground atbs are inert on install; no processor iterates `ComponentInstancesDB`).

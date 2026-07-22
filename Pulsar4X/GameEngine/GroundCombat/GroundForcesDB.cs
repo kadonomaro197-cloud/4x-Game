@@ -171,6 +171,18 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public int GlobalQ { get; internal set; } = -1;
         /// <summary>Global latitude row on the body's <c>SurfaceGrid</c>.</summary>
         [JsonProperty] public int GlobalR { get; internal set; } = -1;
+
+        // ── MINI-HEX tactical position (docs/combat/MINI-HEX-TACTICAL-GRID-DESIGN.md, M1) — WHERE within the coarse
+        //    global hex the unit stands, on that hex's CityGrid mini-tiles (the SAME mini-hexes the infrastructure/city
+        //    view uses; origin (0,0) = centre = muster). Combined with GlobalQ/GlobalR by GroundMiniHex into ONE
+        //    continuous real position, so a unit near a coarse-hex EDGE is really-close to a neighbour across the border
+        //    (the developer's "transitional" continuity). ADDITIVE + UNREAD by the resolver (it still gates on hexes) →
+        //    byte-identical; M2 flips the range gate to GroundMiniHex.RealGapMetres.
+        /// <summary>Mini-hex column within the coarse global hex's <c>CityGrid</c> (0 = centre = muster).</summary>
+        [JsonProperty] public int MiniQ { get; internal set; }
+        /// <summary>Mini-hex row within the coarse global hex's <c>CityGrid</c> (0 = centre = muster).</summary>
+        [JsonProperty] public int MiniR { get; internal set; }
+
         /// <summary>Remaining GLOBAL hex steps (current→destination) of a cylinder march; null/empty = not global-marching.</summary>
         [JsonProperty] public List<Pulsar4X.Galaxy.GroundHex> GlobalPath { get; internal set; }
         /// <summary>Game-seconds left to reach the FRONT hex of <see cref="GlobalPath"/>.</summary>
@@ -227,6 +239,7 @@ namespace Pulsar4X.GroundCombat
                 foreach (var h in o.HexPath) HexPath.Add(new Pulsar4X.Galaxy.GroundHex(h));
             }
             GlobalQ = o.GlobalQ; GlobalR = o.GlobalR;
+            MiniQ = o.MiniQ; MiniR = o.MiniR;   // mini-hex tactical position (M1) — deep-copied, save-safe
             GlobalTransitSecondsRemaining = o.GlobalTransitSecondsRemaining; GlobalStepBaseSeconds = o.GlobalStepBaseSeconds;
             if (o.GlobalPath != null)
             {
