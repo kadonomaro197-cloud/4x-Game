@@ -1,6 +1,6 @@
 # The 2D Group-Plane Resolver — LOCKED Design
 
-**Status: 🔒 design-locked (2026-07-17). Build state: not started (S0 is the first slice).**
+**Status: 🔒 design-locked (2026-07-17). Build state: S0+S1+S2 built (Operation Earthfall T1–T3, behind `EnableGroupPlane`, default-off → byte-identical); S3–S6 are a later campaign.**
 **Scope: the pure-math auto-resolver — the code that decides who shoots whom and who dies, with nothing drawn on screen.**
 
 > **The one-line version:** give every *group* in a battle a single position on an invisible 2D map, let doctrine decide where each group sits (front / flank / hang-back), and measure the distance between groups to decide who can shoot whom. The player never sees the map — they set doctrine and read the result. One math module runs this for both space fleets and ground formations, and a battle that spans both (a fleet in orbit *and* troops on the moon below, like the Battle of Endor) is two of these maps stepped together, wired to each other by data, never by shared geometry.
