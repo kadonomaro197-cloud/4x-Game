@@ -71,6 +71,19 @@ namespace Pulsar4X.GroundCombat
         /// New-Game / menu path. A HoldGround formation still never auto-maneuvers, and a player queued order still wins.</summary>
         public static bool EnableGroundRoleManeuver = false;
 
+        /// <summary>MINI-HEX real-distance combat gate (docs/combat/MINI-HEX-TACTICAL-GRID-DESIGN.md, M2). When true, the
+        /// resolver's range gate fires a weapon when the REAL metre gap between two units
+        /// (<see cref="GroundMiniHex.RealGapMetres(GroundUnit,GroundUnit,Pulsar4X.Engine.Entity)"/>, measured on the
+        /// continuous coarse-global-hex + mini-hex field) is within the weapon's real <c>Range_m</c> — the developer's
+        /// "the km on the gun is the truth, the hex is only the ruler." Two units in the SAME coarse global hex read gap 0
+        /// → they fight ("same hex = combat"); different coarse hexes are a real (large) distance apart → no fight until
+        /// they close (mini-hex movement is M3). Default FALSE so the engine test suite is byte-identical (the resolver
+        /// keeps the legacy local-patch HEX gate <c>HexDist ≤ Range</c>, on which every existing ClosingFight/RangeCombat/
+        /// ROE gauge is calibrated); CORE flips it ON on the New-Game / menu path so a real game gets real distances
+        /// on-by-default (the developer's "keep the real gate on, no flag" — the flag exists only to keep the hex-
+        /// calibrated CI gauges valid, not to hide the feature from players).</summary>
+        public static bool EnableMiniHexCombat = false;
+
         // Shield pool regeneration is now a PER-UNIT designed rate (GroundUnit.ShieldRegenFraction, ⚙3), defaulting to
         // 0.34/game-hour (≈ full recharge in ~3 hours) for every unit until a ward dials it — see the recharge step in
         // ProcessBody. The old global ShieldRegenPerHourFraction constant was removed (2026-07-11): it was dead (the
@@ -434,7 +447,7 @@ namespace Pulsar4X.GroundCombat
                                 foreach (var t in byFaction[g])
                                 {
                                     if (t.Health <= 0) continue;
-                                    if (HexDist(u, t) > m.RangeHexes) continue;   // out of THIS weapon's band this salvo
+                                    if (!WeaponReaches(u, t, m.RangeHexes, m.Range_m, forces)) continue;   // out of THIS weapon's band this salvo
                                     (reachable ??= new List<GroundUnit>()).Add(t);
                                 }
                                 if (reachable == null) continue;                   // this weapon reaches nothing this salvo
@@ -461,7 +474,7 @@ namespace Pulsar4X.GroundCombat
                         foreach (var t in byFaction[g])
                         {
                             if (t.Health <= 0) continue;
-                            if (HexDist(u, t) > u.Range) continue;   // out of this attacker's reach → it can't hit t
+                            if (!WeaponReaches(u, t, u.Range, u.Range_m, forces)) continue;   // out of this attacker's reach → it can't hit t
                             (reachableC ??= new List<GroundUnit>()).Add(t);
                         }
                         if (reachableC == null) continue;            // nothing in range → this unit fires nothing this salvo
@@ -507,6 +520,21 @@ namespace Pulsar4X.GroundCombat
         /// <summary>Hex distance between two units on their region's patch (0 = same hex). Reused for the range gate.</summary>
         private static int HexDist(GroundUnit a, GroundUnit b)
             => new HexCoordinate(a.HexQ, a.HexR).DistanceTo(new HexCoordinate(b.HexQ, b.HexR));
+
+        /// <summary>Whether attacker <paramref name="u"/>'s weapon (hex reach <paramref name="rangeHexes"/> / real reach
+        /// <paramref name="range_m"/> metres) can hit target <paramref name="t"/> this salvo — THE range gate, in one
+        /// place so the two fire paths (collapsed + per-weapon-band) can't diverge. Default
+        /// (<see cref="EnableMiniHexCombat"/> off): the legacy local-patch HEX gate <c>HexDist ≤ rangeHexes</c>, on which
+        /// every existing combat gauge is calibrated → byte-identical. On (M2): the REAL metre gap on the continuous
+        /// mini-hex field (<see cref="GroundMiniHex.RealGapMetres(GroundUnit,GroundUnit,Pulsar4X.Engine.Entity)"/>) ≤ the
+        /// weapon's real <c>Range_m</c> — two units in the same coarse global hex read gap 0 (fight), different coarse
+        /// hexes are a real distance apart (no fight until they close, M3). Never throws.</summary>
+        private static bool WeaponReaches(GroundUnit u, GroundUnit t, int rangeHexes, double range_m, GroundForcesDB forces)
+        {
+            if (EnableMiniHexCombat)
+                return GroundMiniHex.RealGapMetres(u, t, forces?.OwningEntity) <= range_m;
+            return HexDist(u, t) <= rangeHexes;
+        }
 
         /// <summary>
         /// RULES OF ENGAGEMENT maneuver (the ground echo of the space closing model): for each formation whose

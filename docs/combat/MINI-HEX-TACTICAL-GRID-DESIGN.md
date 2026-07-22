@@ -110,10 +110,15 @@ and byte-identical until a deliberate flip.
   resolver → live combat unchanged. Gauge `Pulsar4X.Tests/GroundMiniHexTests.cs`: two units in *adjacent* coarse hexes
   near the shared edge read a ~1-mini-hex gap (the transitional continuity), two in the same coarse hex read their
   mini-hex gap, mini-pitch ≈ 37 km on Earth. (Mirrors exactly how Slice 1b landed — a field + a helper + a gauge.)
-- **M2 — the resolver gates on the real gap (behaviour; keep the gate ON, no flag).** Flip
-  `ResolveRegionCombat` to fire when `RealGapMetres(u,t) ≤ u.Range_m` (per weapon). On today's coarse
-  grid, co-located stays byte-identical; the change is that engagement now honors the continuous real
-  distance. Re-baseline the range/closing/ROE gauges once, to real numbers.
+- **M2 — the resolver gates on the real gap. ✅ BUILT 2026-07-22 (behind `EnableMiniHexCombat`).** Both range gates in
+  `ResolveRegionCombat` now route through one `WeaponReaches(u, t, rangeHexes, range_m, forces)` predicate: flag OFF
+  (the CI test harness default) = the legacy local-patch hex gate `HexDist ≤ rangeHexes` → **byte-identical** (every
+  existing ClosingFight/RangeCombat/ROE gauge is calibrated on it, so they stay green untouched); flag ON = the real
+  metre gap `GroundMiniHex.RealGapMetres(u,t,body) ≤ u.Range_m`. The flag is **flipped ON for menu games** in
+  `NewGameMenu` (both start paths), so a real game gets real distances on-by-default — the developer's "keep the real
+  gate on"; the flag exists only to keep the hex-calibrated CI gauges valid, not to hide the feature from players. On
+  today's coarse grid this reads as "same coarse global hex → fight, a real distance away → hold fire until you close."
+  Gauge: `GroundForcesTests.MiniHexCombat_SameCoarseHexFights_DifferentCoarseHexHoldsFire`.
 - **M3 — mini-hex movement + the real closing fight.** Units march mini-hex to mini-hex on the continuous
   field at real `Speed_kmh`; the closing loop (mirror of space `AdvanceClosing`) plays out over real
   metres and seconds; per-mini-tile terrain/hazard attrits the crosser.

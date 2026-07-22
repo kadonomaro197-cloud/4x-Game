@@ -565,6 +565,11 @@ public class NewGameMenu : PulsarGuiWindow
         // kites to standoff, support stays back (the ground echo of space sub-fleet roles). OFF in the engine suite
         // (byte-identical), ON here so a menu game's closing ground fights show the role differentiation.
         Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundRoleManeuver = true;
+        // Mini-hex real-distance combat (docs/combat/MINI-HEX-TACTICAL-GRID-DESIGN.md, M2): the ground range gate reads
+        // the REAL metre gap on the continuous coarse-hex + mini-hex field (the km on the gun is the truth, the hex is
+        // only the ruler) instead of a hex-count. OFF in the engine suite so the hex-calibrated combat gauges stay
+        // byte-identical; ON here so a real game gets real distances on-by-default (the developer's "keep the real gate on").
+        Pulsar4X.GroundCombat.GroundForcesProcessor.EnableMiniHexCombat = true;
 
         // Generate random systems up to the number of "Galaxy Size" minus the
         // number of included pre-made systems
@@ -965,6 +970,7 @@ public class NewGameMenu : PulsarGuiWindow
             Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundTacticalAI = true;
             Pulsar4X.GroundCombat.GroundAssembly.AutoFormUp = true;
             Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundRoleManeuver = true;   // W3 role-based maneuver
+            Pulsar4X.GroundCombat.GroundForcesProcessor.EnableMiniHexCombat = true;        // M2 real-distance range gate
 
             var startingSystem = game.Systems.Find(s => s.ID.Equals(startingSystemId));
             if (startingSystem == null)

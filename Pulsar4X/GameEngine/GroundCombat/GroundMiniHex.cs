@@ -1,4 +1,6 @@
 using System;
+using Pulsar4X.Engine;
+using Pulsar4X.Galaxy;
 
 namespace Pulsar4X.GroundCombat
 {
@@ -63,6 +65,47 @@ namespace Pulsar4X.GroundCombat
             var (bx, by) = ContinuousPosKm(bGlobalQ, bGlobalR, bMiniQ, bMiniR, coarsePitchKm, cityRadius);
             double dx = ax - bx, dy = ay - by;
             return Math.Sqrt(dx * dx + dy * dy) * 1000.0;
+        }
+
+        // ── Entity-facing overloads (the resolver's M2 consumers) — defensive, never throw ──────────────────────────
+
+        /// <summary>The real km size of ONE coarse global hex on this body — the body's true surface area spread over the
+        /// global grid's hex count (the SAME flat-hex area→pitch relation as <c>GroundRangeTools.HexPitchKm</c>, just on
+        /// the global cylinder grid instead of a region patch). ~477 km on Earth. Falls back to 0 if the body has no grid;
+        /// callers substitute a sane default. Never throws.</summary>
+        public static double CoarseHexPitchKmForBody(Entity body)
+        {
+            try
+            {
+                if (body == null) return 0.0;
+                double radiusKm = (body.TryGetDataBlob<MassVolumeDB>(out var mv) ? mv.RadiusInM : 6.371e6) / 1000.0;
+                double surface_km2 = 4.0 * Math.PI * radiusKm * radiusKm;
+                int count = 0;
+                if (body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB) && regionsDB.SurfaceGrid != null)
+                    count = regionsDB.SurfaceGrid.Cols * regionsDB.SurfaceGrid.Rows;
+                if (count <= 0 || surface_km2 <= 0) return 0.0;
+                double areaPerHex = surface_km2 / count;
+                return Math.Sqrt(2.0 * areaPerHex / Math.Sqrt(3.0));
+            }
+            catch { return 0.0; }
+        }
+
+        /// <summary>The real gap in METRES between two ground units on a body — reads their coarse (Global) + mini
+        /// positions and the body's real coarse-hex pitch. This is the entity-facing form the resolver's M2 range gate
+        /// calls: a unit FIRES when this ≤ its weapon's real <c>Range_m</c>. Two units in the SAME coarse global hex read
+        /// gap 0 (the developer's "same hex = combat"); mini-hex spread (M3) opens a real sub-hex gap and lets edge units
+        /// in ADJACENT coarse hexes engage across the border. Defensive: a null unit → <see cref="double.MaxValue"/> (out
+        /// of everyone's range); a body with no grid → a ~Earth fallback pitch so it never divides by zero. Never throws.
+        /// (M2 note: the global coords are used as axial — exact enough for the same-hex / different-hex fight decision;
+        /// an odd-r→axial refinement for precise cross-hex distance rides M3, mirroring <c>PlanetViewWindow.OddRToAxial</c>.)</summary>
+        public static double RealGapMetres(GroundUnit a, GroundUnit b, Entity body)
+        {
+            if (a == null || b == null) return double.MaxValue;
+            double coarsePitchKm = CoarseHexPitchKmForBody(body);
+            if (coarsePitchKm <= 0) coarsePitchKm = 477.0;   // ~Earth fallback — never 0-divide, never wall combat
+            return RealGapMetres(a.GlobalQ, a.GlobalR, a.MiniQ, a.MiniR,
+                                 b.GlobalQ, b.GlobalR, b.MiniQ, b.MiniR,
+                                 coarsePitchKm, CityGridFactory.CityPatchRadius);
         }
     }
 }

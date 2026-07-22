@@ -165,12 +165,26 @@ on mini-hexes. The mini-grid is LAZY (only where units/bases are) so a uniform p
 - **`GroundUnit.MiniQ` / `MiniR`** (`GroundForcesDB.cs`, beside `GlobalQ/GlobalR`) — the unit's mini-hex offset within its
   coarse global hex, `[JsonProperty]` + deep-copied, default (0,0) = centre = muster. Additive/save-safe.
 
-**Unread by the resolver in M1** (it still gates on hex `Range`/`RangeHexes`). **M2** flips `ResolveRegionCombat` to fire
-when `GroundMiniHex.RealGapMetres(u,t) ≤ u.Range_m` (keeps the gate ON, no default-off flag; co-located byte-identical,
-re-baseline the range/closing/ROE gauges once). **M3** = mini-hex movement + the real closing fight; **M4** = per-`CityTile`
-geology/environment variation (the field already exists — `CityGridFactory.BuildGrid` v1 sets all tiles to the coarse
-terrain). Gauge: `Pulsar4X.Tests/GroundMiniHexTests.cs` (mini-pitch = coarse/13 ≈ 37 km; same-hex gap = N × mini-pitch;
-adjacent-coarse-hex EDGES read ~1 mini-hex apart, not a coarse hex — the transitional continuity).
+**M2 — the resolver gates on the real gap ✅ (2026-07-22, behind `EnableMiniHexCombat`).** Both range gates in
+`ResolveRegionCombat` route through one `WeaponReaches(u, t, rangeHexes, range_m, forces)` predicate:
+- **flag OFF** (`EnableMiniHexCombat = false`, the CI-suite default) → the legacy local-patch hex gate
+  `HexDist ≤ rangeHexes` → **byte-identical** (`!(HexDist ≤ r)` == the old `HexDist > r` skip); every existing
+  ClosingFight/RangeCombat/ROE/WeaponBanding gauge stays green untouched.
+- **flag ON** → `GroundMiniHex.RealGapMetres(u, t, forces.OwningEntity) ≤ range_m` — the real metre gap on the
+  continuous mini-hex field. Two units in the SAME coarse global hex read gap 0 → they fight ("same hex = combat");
+  a real distance away → hold fire until they close (mini-hex spread is M3). **Flipped ON for menu games** in
+  `NewGameMenu` (both start paths) — a real game gets real distances on-by-default (the developer's "keep the real gate
+  on"; the flag only keeps the hex-calibrated CI gauges valid). Gauge:
+  `GroundForcesTests.MiniHexCombat_SameCoarseHexFights_DifferentCoarseHexHoldsFire`.
+
+*(Calibration note: the nominal `Range_m` = hexRange × 1000 m makes a weapon's reach 1–3 km, tiny vs a ~37 km mini-hex —
+so M2's flag-on behaviour is cleanly "same coarse hex vs not." The range-differentiation game (a longer gun out-reaches
+a closer one on the mini-hex grid) needs REAL km weapon ranges + mini-hex movement, which ride M3.)*
+
+**Still to come.** **M3** = mini-hex movement (units spread onto `MiniQ/MiniR` + close over real time) + the real closing
+fight + real km weapon ranges; **M4** = per-`CityTile` geology/environment variation (the field already exists —
+`CityGridFactory.BuildGrid` v1 sets all tiles to the coarse terrain); **M5** = client draws units on mini-hexes.
+Gauges: `Pulsar4X.Tests/GroundMiniHexTests.cs` (the pure position math) + the M2 resolver gauge above.
 
 ## Units as entities — "abilities just fall out" (Option A, 2026-07-07/08)
 

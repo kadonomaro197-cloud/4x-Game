@@ -1075,6 +1075,46 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("Mini-hex M2 (flag ON): the resolver gates on the REAL metre gap on the continuous coarse-hex + mini-hex field, not hex-count. Two enemies in the SAME coarse global hex read gap 0 and fight ('same hex = combat'); an enemy many coarse hexes away is a real thousands-of-km apart and holds fire until it closes. Flag OFF (the default the whole CI suite runs on) keeps the legacy local-patch hex gate → every existing combat gauge is byte-identical. docs/combat/MINI-HEX-TACTICAL-GRID-DESIGN.md.")]
+        public void MiniHexCombat_SameCoarseHexFights_DifferentCoarseHexHoldsFire()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();   // isolate combat from attrition
+            var regions = body.GetDataBlob<PlanetRegionsDB>().Regions;
+            regions[0].OwnerFactionID = -1;   // neutral ground → no cover bias, so we measure ONLY the range gate
+
+            var proc = new GroundForcesProcessor();
+            GroundForcesProcessor.EnableMiniHexCombat = true;
+            try
+            {
+                // (1) SAME coarse global hex — both muster at region 0's band centre, mini (0,0) → real gap 0 → they fight.
+                var a = GroundForces.RaiseUnit(body, MakeDesign("mh-a", "A", GroundUnitType.Infantry, range: 1), s.Faction.Id, 0);
+                var b = GroundForces.RaiseUnit(body, MakeDesign("mh-b", "B", GroundUnitType.Infantry, range: 1), InvaderFaction, 0);
+                Assert.That(a.Range_m, Is.GreaterThan(0), "Slice 1b populated the unit's real reach");
+                Assert.That(GroundMiniHex.RealGapMetres(a, b, body), Is.EqualTo(0.0).Within(1e-6),
+                    "same coarse global hex + mini (0,0) → gap 0 (the 'same hex = combat' case)");
+
+                proc.ProcessEntity(body, 3600);
+                Assert.That(a.Health, Is.LessThan(a.MaxHealth), "same coarse hex → they fight (A takes fire)");
+                Assert.That(b.Health, Is.LessThan(b.MaxHealth), "same coarse hex → they fight (B takes fire)");
+                Log($"same coarse hex: A {a.Health:0}/{a.MaxHealth:0}, B {b.Health:0}/{b.MaxHealth:0} — both trading fire");
+
+                // (2) push B ~20 coarse hexes away → a real gap of thousands of km, far beyond any real weapon reach → hold fire.
+                b.GlobalQ = a.GlobalQ + 20;
+                double gap_m = GroundMiniHex.RealGapMetres(a, b, body);
+                Assert.That(gap_m, Is.GreaterThan(1_000_000.0), "~20 coarse hexes is a real distance of thousands of km, not a hex-count");
+                double aBefore = a.Health, bBefore = b.Health;
+                proc.ProcessEntity(body, 3600);
+                Assert.That(a.Health, Is.EqualTo(aBefore), "B is a real distance away (different coarse hex) — A takes no new fire");
+                Assert.That(b.Health, Is.EqualTo(bBefore), "A can't reach across coarse hexes — B takes no new fire until it closes");
+                Log($"far apart ({gap_m / 1000:N0} km): A {a.Health:0} + B {b.Health:0} both unchanged — real distance holds fire");
+            }
+            finally { GroundForcesProcessor.EnableMiniHexCombat = false; }
+        }
+
+        [Test]
         [Description("System ① — flat ARMOUR in a REAL fight (proves the resolver reads a unit's Defense): two identical infantry defenders each face an identical swarm of small-attack attackers; the ARMOURED one (high Defense) ends with far more health, because flat armour bounces most of each little volley. The wiring half of the pure-math armour gauge (GroundDamageMatrixTests).")]
         public void Armour_InAFight_ArmouredDefenderOutlastsUnarmoured_VsASwarm()
         {
