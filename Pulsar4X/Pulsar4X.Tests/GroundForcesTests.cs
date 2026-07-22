@@ -1137,6 +1137,50 @@ namespace Pulsar4X.Tests
             Log($"readout: a 3-hex gun ≈ {GroundRangeTools.RealReachKm(3, big):N0} km on the big region vs {GroundRangeTools.RealReachKm(3, small):N0} km on the small one");
         }
 
+        [Test]
+        [Description("Real-distance foundation (Slice 1): the km↔hex translation both ways. A REAL weapon range (km) maps onto the hex ruler DIFFERENTLY per body — a 1 km gun needs the same hex on a continent-scale world but reaches an adjacent hex on a tiny moon — and round-trips back. Additive/byte-identical: nothing in the resolver reads these yet. docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md.")]
+        public void RealDistance_HexTranslation_BothWays_AndByBody()
+        {
+            // An Earth-scale region: ~550 km per hex (a continent). A 1 km gun is a sliver of one hex → same-hex only.
+            var earthly = new Region { Area_km2 = 5_000_000, Hexes = OpenDisk(2) };   // 19 hexes → pitch ≈ 551 km
+            double pitchEarth = GroundRangeTools.HexPitchKm(earthly);
+            Assert.That(pitchEarth, Is.GreaterThan(100), "a continent-scale region has a big hex pitch");
+            Assert.That(GroundRangeTools.HexesForKm(1.0, earthly), Is.LessThan(1.0),
+                "a 1 km weapon spans well under one Earth-scale hex → contact needs the SAME hex");
+
+            // A tiny-moon region: sub-km per hex. Now a 1 km gun reaches beyond one hex (adjacent-hex fire falls out).
+            var moon = new Region { Area_km2 = 4, Hexes = OpenDisk(2) };              // 19 hexes → pitch ≈ 0.49 km
+            double pitchMoon = GroundRangeTools.HexPitchKm(moon);
+            Assert.That(pitchMoon, Is.LessThan(1.0), "a tiny moon has a sub-km hex pitch");
+            Assert.That(GroundRangeTools.HexesForKm(1.0, moon), Is.GreaterThan(1.0),
+                "the SAME 1 km weapon reaches more than one hex on a tiny moon — the hex is just the ruler, the km is the truth");
+
+            // metres form agrees with the km form (1000 m == 1 km), on both bodies.
+            Assert.That(GroundRangeTools.HexesForMetres(1000.0, earthly), Is.EqualTo(GroundRangeTools.HexesForKm(1.0, earthly)).Within(1e-9));
+            Assert.That(GroundRangeTools.HexesForMetres(1000.0, moon), Is.EqualTo(GroundRangeTools.HexesForKm(1.0, moon)).Within(1e-9));
+
+            // Round-trip: hexes → real metres → hexes returns the original (the two directions are exact inverses).
+            foreach (double h in new[] { 0.5, 1.0, 3.5 })
+            {
+                double back = GroundRangeTools.HexesForMetres(GroundRangeTools.MetresForHexes(h, earthly), earthly);
+                Assert.That(back, Is.EqualTo(h).Within(1e-9), $"round-trip of {h} hexes on the Earth-scale body");
+            }
+
+            // Degenerate / defensive: no hex geometry, or non-positive inputs → 0, never a throw or divide-by-zero.
+            Assert.That(GroundRangeTools.HexesForKm(1.0, new Region()), Is.EqualTo(0.0), "no hex patch → 0 (no divide-by-zero)");
+            Assert.That(GroundRangeTools.HexesForMetres(1000.0, null), Is.EqualTo(0.0), "null region → 0");
+            Assert.That(GroundRangeTools.MetresForHexes(5.0, new Region()), Is.EqualTo(0.0), "no hex patch → 0 metres");
+            Assert.That(GroundRangeTools.HexesForKm(0.0, earthly), Is.EqualTo(0.0), "zero distance → 0 hexes");
+            Assert.That(GroundRangeTools.HexesForKm(-5.0, earthly), Is.EqualTo(0.0), "negative distance → 0 hexes");
+            Assert.That(GroundRangeTools.MetresForHexes(-1.0, earthly), Is.EqualTo(0.0), "negative hexes → 0 metres");
+
+            // The Slice-1 seam holds byte-identical to today's readout (Slice 2 substitutes a real per-weapon stat here).
+            Assert.That(GroundRangeTools.RealRangeKmFor(3, earthly), Is.EqualTo(GroundRangeTools.RealReachKm(3, earthly)).Within(1e-9),
+                "the real-range seam equals the existing readout in Slice 1 (byte-identical)");
+
+            Log($"translation: 1 km weapon → {GroundRangeTools.HexesForKm(1.0, earthly):F3} hex on a {pitchEarth:N0} km/hex world (same-hex) vs {GroundRangeTools.HexesForKm(1.0, moon):F2} hex on a {pitchMoon:F2} km/hex moon (reaches out)");
+        }
+
         // ───────────────────────── ROE — commander engagement rules (the space closing-model echo) ─────────────────────────
 
         private static void PaveRegionHexes(Entity body, PlanetRegionsDB regionsDB, int regionIndex)
