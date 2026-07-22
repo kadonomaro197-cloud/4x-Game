@@ -12,6 +12,9 @@ namespace Pulsar4X.GroundCombat
     {
         public double Attack;
         public int Range;
+        // REAL-DISTANCE FOUNDATION (Slice 1b) — the metric TRUTH twin of Range (hexes): the longest weapon's reach in
+        // real metres (hex range × the nominal reference pitch). Snapshotted onto GroundUnitDesign.Range_m. 0 = no weapon.
+        public double Range_m;
         public double Defense;
         // ⚙3 Defense — armour NATURE tuning: the Defense-weighted combination of the mounted plating's per-nature soak
         // effectiveness. 1.0 = plain plate (no armour, or all plain plate) → byte-identical.
@@ -141,7 +144,9 @@ namespace Pulsar4X.GroundCombat
                     // W1 — keep this weapon DISTINCT in the loadout (its own range/mode) instead of only summing into
                     // r.Attack above, so W2 can fire it in its own range band as the unit closes. Attack ×count so
                     // Σ mount.Attack == r.Attack (the byte-identity invariant); Max(mount.RangeHexes) == r.Range.
-                    r.WeaponLoadout.Add(new GroundWeaponMount { Attack = w.Attack * c, RangeHexes = w.Range, Mode = w.Mode });
+                    // Range_m (Slice 1b): the metric TRUTH twin of the hex range — the hex range × the nominal reference
+                    // pitch (a real per-body pitch is a later slice). ADDITIVE + UNREAD by the resolver → byte-identical.
+                    r.WeaponLoadout.Add(new GroundWeaponMount { Attack = w.Attack * c, RangeHexes = w.Range, Range_m = w.Range * GroundCombatant.NominalHexPitch_m, Mode = w.Mode });
                 }
                 else if (SpaceWeaponGround.IsSpaceWeapon(d))
                 {
@@ -158,7 +163,7 @@ namespace Pulsar4X.GroundCombat
                         r.Attack += sm.Attack * c;
                         if (sm.RangeHexes > r.Range) r.Range = sm.RangeHexes;
                         if (sm.Attack > topWeaponAttack) { topWeaponAttack = sm.Attack; r.DamageType = sm.Mode; }
-                        r.WeaponLoadout.Add(new GroundWeaponMount { Attack = sm.Attack * c, RangeHexes = sm.RangeHexes, Mode = sm.Mode });
+                        r.WeaponLoadout.Add(new GroundWeaponMount { Attack = sm.Attack * c, RangeHexes = sm.RangeHexes, Range_m = sm.RangeHexes * GroundCombatant.NominalHexPitch_m, Mode = sm.Mode });
                     }
                 }
                 if (d.HasAttribute<GroundArmorAtb>())
@@ -230,6 +235,9 @@ namespace Pulsar4X.GroundCombat
             // ⚙3 shield recharge: finish the Shield-weighted average (no shield → the 0.34 default stays → byte-identical).
             if (shieldWeight > 0)
                 r.ShieldRegenFraction = shieldRegenSum / shieldWeight;
+            // REAL-DISTANCE FOUNDATION (Slice 1b): the design's metric reach = the longest weapon's hex range × the
+            // nominal reference pitch (matches Max(mount.Range_m)). 0 = no weapon. ADDITIVE + UNREAD → byte-identical.
+            r.Range_m = r.Range > 0 ? r.Range * GroundCombatant.NominalHexPitch_m : 0;
             r.TrainingMultiplier = bestTraining;   // Enhancers ⚙6.2 — baked into the raised unit's Attack + toughness
             r.Sealing = bestSealing;               // G4 — folded into the design's EnvironmentalResistance at build time
             r.UsedCapacity = used;
@@ -273,6 +281,7 @@ namespace Pulsar4X.GroundCombat
                 ArmourVsExotic = r.ArmourVsExotic,
                 HitPoints = r.HitPoints,
                 Range = r.Range,
+                Range_m = r.Range_m,   // Slice 1b — the metric TRUTH twin of the hex range (RaiseUnit snapshots it)
                 Evasion = r.Evasion,
                 Shield = r.Shield,
                 ShieldRegenFraction = r.ShieldRegenFraction,

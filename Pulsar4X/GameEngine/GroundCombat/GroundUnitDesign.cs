@@ -57,6 +57,13 @@ namespace Pulsar4X.GroundCombat
         /// readout. 0/unset → a per-type default (<see cref="GroundRangeTools.DefaultRangeFor"/>: Infantry 1, Armor 1,
         /// Artillery 3). Moddable per design.</summary>
         [JsonProperty] public int Range { get; set; }
+        /// <summary>REAL-DISTANCE FOUNDATION (Slice 1b) — this design's weapon reach in real METRES, the metric TRUTH
+        /// alongside the display <see cref="Range"/> (hexes). Built by <c>GroundUnitAssembly.Compute</c> from the weapons'
+        /// hex ranges × a fixed nominal reference pitch (a real per-body pitch is a later slice) and snapshotted onto
+        /// <see cref="GroundUnit.Range_m"/>. 0 = unset (a code-built / garrison design leaves it 0 → <c>RaiseUnit</c>
+        /// derives it from the hex range). <b>ADDITIVE + UNREAD by the resolver</b> → byte-identical.
+        /// Design: docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md.</summary>
+        [JsonProperty] public double Range_m { get; set; }
         /// <summary>SYSTEM ① survivability-by-dodge (0..1) — Σ augment evasion; snapshotted onto each raised unit.</summary>
         [JsonProperty] public double Evasion { get; set; }
         /// <summary>SYSTEM ① survivability-by-shield — flat incoming-damage soak pool; Σ augment shield.</summary>

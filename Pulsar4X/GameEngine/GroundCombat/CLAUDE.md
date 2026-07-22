@@ -118,6 +118,36 @@ The developer's requirement: a ground unit's **different weapons come into range
 
 - **W4** (still pending) = bucket the ground resolver for the horde (perf, correctness-neutral).
 
+## Real-distance combat — Slice 1 (the additive real-metre FOUNDATION, 2026-07-22)
+
+**The locked principle** (`docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md`): the real numbers on the gun (km) and the drive
+(km/h) are the TRUTH; a hex is only the display ruler and covers a different real distance on every body. Space already
+runs this way (`WeaponProfile.Range_m` / `FleetCombatStateDB.Separation_m`); ground still gates on hexes. Slice 1 lays the
+real-metre truth ALONGSIDE the hex fields **without touching one number of live combat** — the resolver keeps gating on
+hexes, so every existing ground/space combat fixture stays byte-identical.
+
+**What landed (all ADDITIVE + UNREAD by the resolver → byte-identical):**
+- **New real-metre fields** (beside the hex ones, never replacing them): `GroundWeaponMount.Range_m`,
+  `GroundUnit.Range_m` + `GroundUnit.Speed_kmh`, `GroundUnitDesign.Range_m`, `GroundUnitAssemblyResult.Range_m`. All
+  `[JsonProperty]` + deep-copied in the copy-ctors (mount + unit) — save-safe.
+- **Populated at the design-builder + raise sites:** `GroundUnitAssembly.Compute` sets each mount's `Range_m` +
+  `result.Range_m` from `hexRange × GroundCombatant.NominalHexPitch_m` (the fixed nominal pitch = 1000 m; a real per-body
+  pitch is Slice 2); `ToGroundUnitDesign` carries it onto the design; `GroundForces.RaiseUnit` snapshots `design.Range_m`
+  (or derives it from the hex range when a code-built/garrison design leaves it 0) and stamps `Speed_kmh` =
+  `GroundMobility.BaseMarchSpeed_kmh` (417.6 km/h, FLAGGED = `PlanetRegionsFactory.BaseMarch_KmPerSec × 3600`) ×
+  `SpeedMultForUnit`.
+- **The metres↔hex helper** (`GroundRangeTools.HexesForMetres` / `MetresForHexes` / `HexesForKm`) was already built
+  (Slice 1a); Slice 1 just consumes it — nothing new in `GroundRangeTools`.
+- **Client (display-only, engine untouched):** `PlanetViewWindow`'s weapon range RING now draws from the unit's real
+  `Range_m` via `GroundRangeTools.HexesForMetres(u.Range_m, region)` (new helper `WeaponReachHexesFor`) — the same km→hex
+  shape the radar ring uses — so a given gun covers a different hex count per body (falls back to the raw hex `Range` when
+  `Range_m` is unpopulated). CI compiles the client but can't run it; the look is the developer's local build.
+
+**The resolver still gates on hexes** (`ResolveRegionCombat` `HexDist > Range` / `mount.RangeHexes`) — flipping that gate
+to the real metre gap is **Slice 2** (a behaviour change that re-baselines the hex-authored closing/range gauges). Gauge:
+`GroundForcesTests.RealDistance_Slice1Fields_PopulateAndRoundTrip` (the new fields populate + deep-copy + draw a different
+hex count per body) + the unchanged `RealDistance_HexTranslation_BothWays_AndByBody` (the helper round-trip tripwire).
+
 ## Units as entities — "abilities just fall out" (Option A, 2026-07-07/08)
 
 The migration that promotes a raised `GroundUnit` to also carry a **real component store** (a backing `Entity` + `ComponentInstancesDB`), so every ability — radar reveal, march speed, crew — FALLS OUT of the same infrastructure a ship uses (`TryGetComponentsByAttribute<TAtb>`), with no per-ability special-casing. Full plan + status board: **`docs/GROUND-UNITS-AS-ENTITIES-DESIGN.md`**. Only assembler-designed units (with a component list) get a backing; monolithic/dev/garrison units get `BackingEntityId = -1` and are byte-unchanged. The backing is inert (populated low-level, no install hook / ReCalc; ground atbs are inert on install; no processor iterates `ComponentInstancesDB`).

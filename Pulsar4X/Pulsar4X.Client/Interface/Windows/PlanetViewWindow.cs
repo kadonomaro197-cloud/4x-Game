@@ -363,7 +363,7 @@ namespace Pulsar4X.Client
                 {
                     if (u.RegionIndex != _selRegion || u.FactionOwnerID != myFaction || u.UnitType != _selType) continue;
                     if (u.GlobalQ < 0 || u.GlobalR < 0) continue;
-                    int weaponHexes = Math.Max(0, u.Range);
+                    int weaponHexes = WeaponReachHexesFor(u, regions);
                     int radarHexes = RadarReachHexesFor(body, u, regions);
                     if (weaponHexes <= 0 && radarHexes <= 0) continue;
                     reach.Add((u.GlobalQ, u.GlobalR, weaponHexes, radarHexes));
@@ -565,6 +565,29 @@ namespace Pulsar4X.Client
                 return hexes >= int.MaxValue ? int.MaxValue : (int)hexes;
             }
             catch { return 0; }
+        }
+
+        /// <summary>The WEAPON reach of a unit in HEXES on this body — the real-distance foundation (Slice 1c). Draws from
+        /// the unit's REAL metre reach (<see cref="GroundUnit.Range_m"/>) converted to this body's hex pitch
+        /// (<c>GroundRangeTools.HexesForMetres</c>) — the SAME km→hex shape the radar ring uses — so a given gun covers a
+        /// DIFFERENT hex count per body (the km on the gun is the truth, the hex is only the display ruler). Falls back to
+        /// the raw hex <see cref="GroundUnit.Range"/> for a unit whose <c>Range_m</c> isn't populated (an old save / a
+        /// pre-Slice-1 unit) so nothing vanishes. Additive/defensive; never throws.</summary>
+        private static int WeaponReachHexesFor(GroundUnit u, List<Region> regions)
+        {
+            try
+            {
+                if (u == null) return 0;
+                int ri = u.RegionIndex;
+                var region = (regions != null && ri >= 0 && ri < regions.Count) ? regions[ri] : null;
+                if (u.Range_m > 0 && region != null)
+                {
+                    double hexes = GroundRangeTools.HexesForMetres(u.Range_m, region);   // real metres → this body's hexes
+                    if (hexes > 0) return hexes >= int.MaxValue ? int.MaxValue : (int)hexes;
+                }
+                return Math.Max(0, u.Range);   // fallback: raw hex range (unpopulated Range_m)
+            }
+            catch { return u != null ? Math.Max(0, u.Range) : 0; }
         }
 
         /// <summary>Odd-r OFFSET → axial for a global cylinder hex (col, row) — the conversion that makes

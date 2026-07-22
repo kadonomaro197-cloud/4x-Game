@@ -73,6 +73,19 @@ namespace Pulsar4X.GroundCombat
         /// <c>Range</c>). Directed fire: a unit only damages enemies within this reach, so a longer-ranged unit hits a
         /// closing shorter-ranged one without being hit back. 0 = same hex only.</summary>
         [JsonProperty] public int Range { get; internal set; }
+        /// <summary>REAL-DISTANCE FOUNDATION (Slice 1b) — this unit's weapon reach in real METRES, the metric TRUTH
+        /// alongside the display <see cref="Range"/> (hexes). Snapshot at raise from the design's <c>Range_m</c>, or —
+        /// absent that (a code-built / garrison / DevTools design) — derived from the hex <see cref="Range"/> × the
+        /// nominal reference pitch (<see cref="GroundCombatant.NominalHexPitch_m"/>). <b>ADDITIVE + UNREAD by the
+        /// resolver</b> (it still gates on hex <see cref="Range"/>) → byte-identical; the gate flips to this in Slice 2.
+        /// 0 = unset. Design: docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md.</summary>
+        [JsonProperty] public double Range_m { get; internal set; }
+        /// <summary>REAL-DISTANCE FOUNDATION (Slice 1b) — this unit's drive SPEED in real km/h, a READOUT of its march
+        /// pace (the abstract chassis/locomotion multiplier × the Foot baseline <see cref="GroundMobility.BaseMarchSpeed_kmh"/>).
+        /// The march TIMER still runs on the multiplier × the region crossing time (<see cref="GroundMobility"/>); this is
+        /// the real-number twin the closing model (Slice 3) crosses the gap at. 0 = unset. Snapshot at raise.
+        /// <b>Byte-identical</b> — nothing reads it yet.</summary>
+        [JsonProperty] public double Speed_kmh { get; internal set; }
         /// <summary>SYSTEM ① survivability-by-dodge — chance to avoid a hit (0..1), snapshot of the design's Σ augment
         /// evasion. Carried now (slice B plumbing); the resolver consumes it in the damage×defence matrix (slice A).
         /// A dodger (Jedi / Zergling) is high here; a walking bunker is ~0.</summary>
@@ -200,6 +213,7 @@ namespace Pulsar4X.GroundCombat
             UnitId = o.UnitId; FormationId = o.FormationId;
             DesignId = o.DesignId; BackingEntityId = o.BackingEntityId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
             UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health; Range = o.Range;
+            Range_m = o.Range_m; Speed_kmh = o.Speed_kmh;
             UpkeepCredits = o.UpkeepCredits; TrainingMultiplier = o.TrainingMultiplier;
             MaxAmmo_kg = o.MaxAmmo_kg; CurrentAmmo_kg = o.CurrentAmmo_kg;
             Evasion = o.Evasion; Shield = o.Shield; CurrentShield = o.CurrentShield; ShieldRegenFraction = o.ShieldRegenFraction; DamageType = o.DamageType; Penetration = o.Penetration; PerShotEnergy = o.PerShotEnergy;
@@ -561,6 +575,13 @@ namespace Pulsar4X.GroundCombat
                 CurrentAmmo_kg = design.AmmoCapacity_kg,
                 // Strike range in hexes (H3): the design's, or a per-type default if the design left it unset.
                 Range = design.Range > 0 ? design.Range : GroundRangeTools.DefaultRangeFor(design.UnitType),
+                // REAL-DISTANCE FOUNDATION (Slice 1b): the metric TRUTH twin of the hex Range. Prefer the design's own
+                // real-metre reach; absent that (a code-built/garrison design), derive it from the hex range × the
+                // nominal reference pitch so the number is always populated. ADDITIVE + UNREAD → byte-identical.
+                Range_m = design.Range_m > 0
+                    ? design.Range_m
+                    : (design.Range > 0 ? design.Range * GroundCombatant.NominalHexPitch_m
+                                        : GroundRangeTools.DefaultRangeFor(design.UnitType) * GroundCombatant.NominalHexPitch_m),
                 Evasion = design.Evasion,
                 Shield = design.Shield,
                 CurrentShield = design.Shield,   // the shield pool musters full (resolver merge 3c)
@@ -590,6 +611,10 @@ namespace Pulsar4X.GroundCombat
             // ability falls out of the shared component store (radar/speed/crew). -1 for a design with no component
             // list (monolithic units, backed in a later slice). Defensive — never throws in the raise path.
             unit.BackingEntityId = GroundUnitEntity.BuildBacking(body, design, factionId);
+            // REAL-DISTANCE FOUNDATION (Slice 1b): stamp the unit's real drive SPEED (km/h) — the Foot baseline ×
+            // the chassis/locomotion multiplier that falls out of the backing store (Foot ×1.0 for a monolithic
+            // unit with no backing). READOUT ONLY; the march timer still runs on the multiplier → byte-identical.
+            unit.Speed_kmh = GroundMobility.BaseMarchSpeed_kmh * GroundMobility.SpeedMultForUnit(body, unit);
             // G3: also place the unit on the ONE continuous grid — at its region BAND's centre column (the global twin
             // of the disk's (0,0) muster). Additive; the per-region HexQ/HexR (0,0) is unchanged.
             StampGlobalMuster(body, unit, regionIndex);

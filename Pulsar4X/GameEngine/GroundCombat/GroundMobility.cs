@@ -22,6 +22,13 @@ namespace Pulsar4X.GroundCombat
         public const double WalkerSpeed  = 1.5;   // FLAGGED
         public const double HoverSpeed   = 3.0;   // FLAGGED
 
+        /// <summary>REAL-DISTANCE FOUNDATION (Slice 1b) — the Foot-baseline march SPEED in real km/h, the metric twin of
+        /// the abstract <see cref="SpeedMultForUnit"/> multiplier, used to stamp a raised unit's
+        /// <see cref="GroundUnit.Speed_kmh"/> readout. ⚠ FLAGGED: = <c>PlanetRegionsFactory.BaseMarch_KmPerSec</c>
+        /// (0.116 km/s) × 3600 s/h; keep it in step with that canonical march datum if it changes. READOUT ONLY — the
+        /// march TIMER still runs on the multiplier × the region crossing time, so this number affects nothing yet.</summary>
+        public const double BaseMarchSpeed_kmh = 417.6;   // FLAGGED — 0.116 km/s × 3600 (mirror of PlanetRegionsFactory.BaseMarch_KmPerSec)
+
         /// <summary>Speed multiplier for a locomotion kind (Foot = 1.0 baseline; higher = faster). Pure.</summary>
         public static double SpeedMultFor(GroundLocomotion loco)
         {

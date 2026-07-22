@@ -1181,6 +1181,55 @@ namespace Pulsar4X.Tests
             Log($"translation: 1 km weapon → {GroundRangeTools.HexesForKm(1.0, earthly):F3} hex on a {pitchEarth:N0} km/hex world (same-hex) vs {GroundRangeTools.HexesForKm(1.0, moon):F2} hex on a {pitchMoon:F2} km/hex moon (reaches out)");
         }
 
+        [Test]
+        [Description("Real-distance foundation (Slice 1b/1c): the new real-metre FIELDS populate and round-trip through the km↔hex helper WITHOUT perturbing the hex combat stats. A raised unit carries a real Range_m (from its design, else derived from the hex range × the nominal pitch) and a real Speed_kmh; the mount + unit copy-ctors deep-copy them; and Range_m → hexes reproduces the 'same gun, different hex count per body' behaviour. ADDITIVE/UNREAD by the resolver → byte-identical. docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md.")]
+        public void RealDistance_Slice1Fields_PopulateAndRoundTrip()
+        {
+            double pitch_m = GroundCombatant.NominalHexPitch_m;   // the nominal reference pitch (a real per-body pitch is Slice 2)
+
+            // (1) A DESIGN carrying a real Range_m snapshots it verbatim onto the raised unit; the hex stats are unchanged.
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            var design = MakeInfantryDesign();
+            design.Range = 3;
+            design.Range_m = 3 * pitch_m;   // author a real reach
+            var unit = GroundForces.RaiseUnit(body, design, s.Faction.Id, regionIndex: 0);
+
+            Assert.That(unit.Range, Is.EqualTo(3), "the hex Range read-model is unchanged (byte-identical)");
+            Assert.That(unit.Attack, Is.EqualTo(100), "combat Attack is unchanged");
+            Assert.That(unit.MaxHealth, Is.EqualTo(500), "combat HP is unchanged");
+            Assert.That(unit.Range_m, Is.EqualTo(3 * pitch_m).Within(1e-6), "the unit snapshots the design's real Range_m");
+            Assert.That(unit.Speed_kmh, Is.EqualTo(GroundMobility.BaseMarchSpeed_kmh).Within(1e-6),
+                "a foot unit (no backing → ×1.0) reads the Foot-baseline real speed");
+
+            // (2) A design with NO real Range_m (a code-built / garrison design) has it DERIVED from the hex range at raise.
+            var garrison = MakeInfantryDesign();
+            garrison.Range = 2;   // hexes only; Range_m left 0
+            var g = GroundForces.RaiseUnit(body, garrison, s.Faction.Id, regionIndex: 0);
+            Assert.That(g.Range_m, Is.EqualTo(2 * pitch_m).Within(1e-6), "an un-authored design derives Range_m from its hex range");
+
+            // (3) The mount value object deep-copies Range_m (save-safety).
+            var mount = new GroundWeaponMount { Attack = 40, RangeHexes = 3, Range_m = 3 * pitch_m, Mode = GroundWeaponMode.Ballistic };
+            Assert.That(new GroundWeaponMount(mount).Range_m, Is.EqualTo(mount.Range_m), "the mount copy-ctor carries Range_m");
+
+            // (4) The GroundUnit deep-copies both new fields.
+            var uClone = new GroundUnit(unit);
+            Assert.That(uClone.Range_m, Is.EqualTo(unit.Range_m), "the unit copy-ctor carries Range_m");
+            Assert.That(uClone.Speed_kmh, Is.EqualTo(unit.Speed_kmh), "the unit copy-ctor carries Speed_kmh");
+
+            // (5) The SAME real reach draws a DIFFERENT hex count per body (the locked principle): sub-hex on a
+            //     continent-scale world (same-hex only), reaching out on a tiny moon — the km is the truth, the hex the ruler.
+            var earthly = new Region { Area_km2 = 5_000_000, Hexes = OpenDisk(2) };   // pitch ≈ 551 km/hex
+            var moon = new Region { Area_km2 = 4, Hexes = OpenDisk(2) };              // pitch ≈ 0.49 km/hex
+            Assert.That(GroundRangeTools.HexesForMetres(unit.Range_m, earthly), Is.LessThan(1.0),
+                "a nominal 3-km reach is sub-hex on a continent-scale world (same-hex only)");
+            Assert.That(GroundRangeTools.HexesForMetres(unit.Range_m, moon), Is.GreaterThan(1.0),
+                "the SAME reach spans multiple hexes on a tiny moon");
+
+            Log($"slice-1 fields: unit Range_m={unit.Range_m:N0} m, Speed_kmh={unit.Speed_kmh:N0} km/h; draws " +
+                $"{GroundRangeTools.HexesForMetres(unit.Range_m, earthly):F3} hex on Earth vs {GroundRangeTools.HexesForMetres(unit.Range_m, moon):F2} hex on a moon");
+        }
+
         // ───────────────────────── ROE — commander engagement rules (the space closing-model echo) ─────────────────────────
 
         private static void PaveRegionHexes(Entity body, PlanetRegionsDB regionsDB, int regionIndex)
