@@ -3,6 +3,8 @@
 **As of 2026-07-22. Companion to `docs/earthfall/IMPLEMENTATION-AUDIT-2026-07-22.md`.**
 The audit found **0 critical, 0 high, 4 medium, 15 low**. This plan turns those into ordered, one-commit-at-a-time slices an implementing session (Opus 4.8) can execute without further discovery. Every slice cites the exact file + the acceptance gauge.
 
+> **STATUS (2026-07-22): IMPLEMENTED — awaiting CI.** All five slices are committed on `claude/faction-design-audit-bb3tqz` (M1 flags on the developer's confirmed "yes"). M4 remains a tracked follow-on (not built, by design). Two lows deliberately not done: the C5a orbit-view embark button (client UI — CI can't runtime-verify it; the manager-side buttons already exist) and copying the T-P4.x seven-field rows into TESTING-TRACKER (the data lives in LANE-CORE-NOTES). Slice→commit: M1 `c3eae06` · M2 `1d2339a` · M3 `caeb3ab` · low-code `2b54604` · doc/hygiene `417bd21`. CI (both jobs) is the compile gauge — the container has no .NET SDK, so every API was source-verified.
+
 ## Reading order for the implementer
 1. This plan.
 2. The audit report (§3 mediums, §4 lows) for the evidence behind each item.
