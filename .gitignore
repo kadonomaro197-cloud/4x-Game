@@ -59,14 +59,9 @@ Pulsar4X/TestResults/Pulsar4X.TE.Tests_log.ldf
 #Jetbrains Rider files
 .idea/
 
-# runtime artifacts from local PC runs (diagnostics, not source)
-<<<<<<< HEAD
-
-=======
-console_output.txt
->>>>>>> 07faf1967b260264783154d16e472df67a671e3c
+# Per-machine UI layout state — genuinely a throwaway, stays ignored.
 imgui.ini
-# NOTE: game_logs/ is intentionally NOT ignored — it is DELIBERATELY tracked (see the
+# NOTE: neither game_logs/ NOR console_output.txt is ignored — both are DELIBERATELY tracked (see the
 # "Session logs" note at the top of this file). A 2026-07-14 commit (ab6d42d) accidentally
 # added it here alongside the real diagnostics, which silently stopped the developer's play-session
 # logs from ever showing up as changed files. Do not re-add it.
