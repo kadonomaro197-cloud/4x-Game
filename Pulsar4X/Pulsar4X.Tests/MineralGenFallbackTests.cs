@@ -15,12 +15,19 @@ namespace Pulsar4X.Tests
     /// the whole OUTER Solar System (the Jovian/Saturnian moons + the dwarf planets carry a TYPO'd
     /// "MineralGeneration" key the loader ignores, so they were mineral-dead).
     ///
-    /// Two fixes, verified here:
+    /// The belt was ALSO barren by a SECOND route: the scattered rocks that fill Sol's main + Kuiper belts are
+    /// made by StarSystemFactory.GenerateAsteroidBelt (NOT the authored-body path), and it never attached a
+    /// MineralsDB — so the very bodies a player sends a mining ship to (140 main-belt + 90 Kuiper rocks) held no ore.
+    ///
+    /// Three fixes, verified here:
     ///   (1) Titan now authors an explicit hydrocarbon-rich deposit (fuel + metals for the Kithrin), routed through
     ///       the RNG-FREE MineralDepositFactory.Generate (no galaxy-gen stream perturbation).
-    ///   (2) A SYSTEMIC FALLBACK: any authored MINEABLE body with no mineral spec still gets a deterministic
-    ///       body-type-abundance deposit (also RNG-free), so no authored world is ever accidentally barren — while
-    ///       gas/ice giants are excluded (no surface). RNG-free is what keeps the (commented-out) golden master safe.
+    ///   (2) A SYSTEMIC FALLBACK on the authored-body path: any authored MINEABLE body with no mineral spec still
+    ///       gets a deterministic body-type-abundance deposit (also RNG-free), so no authored world is ever
+    ///       accidentally barren — while gas/ice giants are excluded (no surface).
+    ///   (3) The SAME RNG-free fallback now runs for every scattered belt rock (GenerateAsteroidBelt), so the main
+    ///       and Kuiper belts are mineable. RNG-free is what keeps the (commented-out) golden master safe AND leaves
+    ///       the belt's own positions/masses byte-identical (it never draws the shared stream the scatter uses).
     /// </summary>
     [TestFixture]
     internal class MineralGenFallbackTests
@@ -51,7 +58,17 @@ namespace Pulsar4X.Tests
                         $"mineable body '{body.GetDefaultName()}' ({t}) should have minerals (explicit or via the fallback)");
             }
 
-            // (3) THE GUARD — gas giants have no surface, so the fallback must EXCLUDE them (they stay barren).
+            // (3) THE BELT — the scattered belt rocks (main + Kuiper) are made by a SEPARATE path
+            // (GenerateAsteroidBelt), so assert their coverage as a first-class invariant: at least one belt
+            // Asteroid must now be mineable (they were ALL barren before the belt-path fix).
+            var beltAsteroids = bodies
+                .Where(b => b.GetDataBlob<SystemBodyInfoDB>().BodyType == BodyType.Asteroid)
+                .ToList();
+            Assert.That(beltAsteroids, Is.Not.Empty, "Sol should have scattered belt asteroids");
+            Assert.That(beltAsteroids.Any(b => b.HasDataBlob<MineralsDB>()), Is.True,
+                "belt asteroids (GenerateAsteroidBelt scatter) should now carry mineral deposits");
+
+            // (4) THE GUARD — gas giants have no surface, so the fallback must EXCLUDE them (they stay barren).
             foreach (var body in bodies)
             {
                 if (body.GetDataBlob<SystemBodyInfoDB>().BodyType == BodyType.GasGiant)
