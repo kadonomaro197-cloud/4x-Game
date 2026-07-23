@@ -237,6 +237,17 @@ real game gets real distances on-by-default. Design: `docs/combat/REAL-DISTANCE-
   (`SpaceWeaponGround.RealRange_m` reads the `ShipCombatValueDB` range constants — beam `MaxRange`, railgun/plasma 500
   km, flak 50 km, disruptor 400 km). **Live combat is byte-identical this slice** (the resolver still gated on hexes;
   `Range_m` is only populated).
+  - **K1b — the designer now shows ONE range knob: metres (2026-07-23).** The developer's ruling *"range is in METERS...
+    That is IT"*: each of the 5 base-mod ground-weapon templates carried BOTH an editable hex `Range` dial AND the
+    `Range_m` dial, so the Entity Assembler / `ComponentDesignWindow` presented two confusing range sliders. The hex
+    `Range` Property's `GuiHint` is now **`"None"`** (renders nothing — `ComponentDesignDisplay.cs:250` `case
+    GuiHint.None: break;`), so only the real-metre `Range_m` slider shows; a designer sets the truth in metres and the
+    engine translates to hexes wherever a coarse ruler is needed (`GroundRangeTools.HexesForMetres`). **Byte-identical**
+    — the hex `Range` Property still computes its fixed `PropertyFormula` (the coarse gameplay ruler, deliberately
+    decoupled from metres: e.g. energy = hex 2 but 20,000 m real) and still feeds the same `AtbConstrArgs`, so the atb
+    gets an unchanged `Range`+`Range_m`; only the designer's editable-dial LIST drops the redundant hex slider. No C#,
+    no test change. The 3 legacy pre-assembled unit templates (`"Units": "hex"`, no `Range_m` companion) keep their
+    editable hex dial (untouched).
 - **K2 — continuous sub-mini-hex position.** `GroundUnit` gains `MiniOffX_km`/`MiniOffY_km` (a real km offset WITHIN a
   mini-hex, beside `MiniQ`/`MiniR`; `[JsonProperty]` + deep-copied). `GroundMiniHex` gains offset-aware
   `ContinuousPosKm`/`RealGapMetres` overloads that ADD the offset — so two units in the SAME mini-hex read a real
