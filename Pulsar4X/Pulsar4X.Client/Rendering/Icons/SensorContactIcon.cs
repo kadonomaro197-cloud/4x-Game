@@ -41,6 +41,13 @@ namespace Pulsar4X.Client
         // becomes valid again (or scrolls back on-screen) redraws next frame — a per-frame "worth drawing right now?"
         // decision, not a permanent removal. A NORMAL, on-screen, finite blip takes the unchanged base path.
         bool _offScreenSkip;
+
+        // When this blip REPRESENTS a grouped foreign fleet (2+ detected rival ships collapsed to one marker, the way
+        // the map already collapses the viewer's OWN fleets), this is how many of that fleet's ships the viewer
+        // detects — stamped by SystemMapRendering.UpdateContactBlips. It drives a generic "Fleet — N contacts" label
+        // instead of the flagship's real name: the count is all the fog exposes (never the true size or a ship's name).
+        // 1 (the default) = a lone contact, drawn with its own name as before.
+        public int GroupedCount = 1;
         // A blip's diamond is ~9 px; any screen coordinate more than this far off-screen is pure clutter AND the SDL
         // rasteriser choke. Comfortably past any real viewport, well within int range (matches SimpleCircle.MaxSafeCoordPx).
         const double _maxBlipScreenCoordPx = 1_000_000.0;
@@ -116,7 +123,11 @@ namespace Pulsar4X.Client
 
             // The name is the "what you know": shown plainly when tracked, "(last known)" when it's a memory
             // ghost. Rebuild the texture only when that displayed string actually changes.
-            string text = _contact.PositionIsMemory ? _contact.Name + " (last known)" : _contact.Name;
+            // A grouped foreign-fleet marker (GroupedCount > 1) reads a generic "Fleet — N contacts" — never the
+            // flagship's real name (the fog only exposes the count). A lone contact shows its name, as before.
+            string text = GroupedCount > 1
+                ? "Fleet — " + GroupedCount + " contacts" + (_contact.PositionIsMemory ? " (last known)" : "")
+                : (_contact.PositionIsMemory ? _contact.Name + " (last known)" : _contact.Name);
             if (string.IsNullOrEmpty(text)) return;
 
             if (!string.Equals(text, _drawnText, StringComparison.Ordinal))

@@ -1029,18 +1029,43 @@ namespace Pulsar4X.Client.Rendering
             }
 
             int viewedFaction = _faction?.Id ?? Game.NeutralFactionId;
-            var live = new HashSet<int>();
+
+            // Pass 1: gather every DETECTED foreign contact (own ships + neutrals aren't fogged, so they're excluded).
+            var detected = new List<Pulsar4X.Sensors.SensorContact>();
+            var detectedIds = new HashSet<int>();
             foreach (var contact in _sensorMgr.GetAllContacts())
             {
                 if (contact?.Position == null) continue;
                 int ownerId = contact.ActualEntity != null ? contact.ActualEntity.FactionOwnerID : Game.NeutralFactionId;
                 if (ownerId == viewedFaction || ownerId == Game.NeutralFactionId) continue; // own ships / neutrals aren't fogged
-                live.Add(contact.ActualEntityId);
-                if (!_contactIcons.TryGetValue(contact.ActualEntityId, out var icon))
+                detected.Add(contact);
+                detectedIds.Add(contact.ActualEntityId);
+            }
+
+            // GROUP ALL FLEETS (the foreign half): collapse a DETECTED rival fleet into ONE marker — its representative
+            // ship — and hide the rest, exactly the way the map already collapses the viewer's OWN fleets. Only the
+            // detected-member count is exposed (never the fleet name/true size); a fleet you've only partly spotted
+            // isn't collapsed. The engine primitive is CI-tested (FleetForeignCollapseTests).
+            HashSet<int> hidden;
+            Dictionary<int, int> foreignCounts;
+            if (_sysState?.StarSystem != null)
+                hidden = Pulsar4X.Fleets.FleetTools.CollapsedForeignFleetContacts(
+                    _sysState.StarSystem, viewedFaction, detectedIds, out foreignCounts);
+            else { hidden = new HashSet<int>(); foreignCounts = new Dictionary<int, int>(); }
+
+            // Pass 2: build/refresh a blip per VISIBLE contact (a hidden member collapses into its fleet's marker).
+            var live = new HashSet<int>();
+            foreach (var contact in detected)
+            {
+                int id = contact.ActualEntityId;
+                if (hidden.Contains(id)) continue; // collapsed into its fleet's representative marker
+                live.Add(id);
+                if (!_contactIcons.TryGetValue(id, out var icon))
                 {
                     icon = new SensorContactIcon(contact, hostile: true); // v1: any rival contact reads hostile/unknown (IFF is later)
-                    _contactIcons[contact.ActualEntityId] = icon;
+                    _contactIcons[id] = icon;
                 }
+                icon.GroupedCount = foreignCounts.TryGetValue(id, out var n) ? n : 1; // "Fleet — N contacts" when grouped
                 icon.OnFrameUpdate(matrix, _camera);
             }
 
