@@ -117,12 +117,14 @@ universality; per-design range on railgun/siege/flak (currently a hardcoded clas
 ## Prioritized slice backlog (byte-identical quick wins first, crashes even sooner)
 
 ### Tier 0 — LANDMINES (do first; player-facing crash/data risk)
-| Slice | Scope | Byte-identical? | Gauge |
-|---|---|---|---|
-| L0a | `ordnance-cargo-hold` binds a non-existent class → throws. Fix the class ref or cut the template. Check `StartingItems`. | no (bug fix) | `BaseModIntegrityTests` (base mod loads, zero skipped) |
-| L0b | Delete the shadowed `installations.json` "Planetary Spaceport Complex" (UniqueID collision on `spaceport`). | yes (removes dead) | `BaseModIntegrityTests` |
-| L0c | Guard `TechData` (`ChainedExpression.cs:487`) with `ContainsKey`. | no (bug fix) | a unit test on an unlocked-tech formula |
-| L0d | Wire `EnergyStoreAtb.OnComponentUninstallation` to subtract capacity (grave rung). | no (behavior) | an energy uninstall test |
+| Slice | Scope | Status |
+|---|---|---|
+| **L0a — missing-class design crashes (3 found via a full `AttributeType` sweep)** | `ComponentDesignProperty.cs:105` THROWS when an `AttributeType` can't be resolved (fires when a design is instantiated from the template). Three templates bound stale/renamed classes → designing them crashed: `ordnance-cargo-hold` **DBArgsXfer** `Datablobs.StorageTransferRateAtbDB` → `Storage.CargoTransferAtb`; `ordnance-cargo-hold` **DBargsStor** `Storage.VolumeStorageAtb` → `Storage.CargoStorageAtb`; `installations.json` spaceport **CargoTransferAtbDB** `Datablobs.CargoTransferAtbDB` → `Storage.CargoTransferAtb`. Each verified: the real class exists, ctor arity/types match the `AtbConstrArgs`, and (`ordnance-storage`) the cargo type is defined. Not in a starting colony (green CI), but unlocked in DevTest → a player designing one crashed. **✅ FIXED 2026-07-23.** | ✅ done |
+| **L0c — `TechData` hard-index crash** | `ChainedExpression.cs:487` did `Techs[techID]` with no guard (its sibling `TechLevel` guards). A component formula referencing a start-locked tech (the `rtg` Efficiency = `TechData('tech-conductors')+10`, and `tech-conductors` is unlocked by no faction) threw `KeyNotFoundException` → designing an RTG from game start crashed. Now guarded like `TechLevel` (degrade to 0 = base until researched — correct tech-progression). **✅ FIXED 2026-07-23.** | ✅ done |
+| L0b — `spaceport` UniqueID collision | Two base-mod templates claim UniqueID `spaceport` (`storage.json` cargo hold vs `installations.json` facility). **Reclassified: NOT a crash** — the loader silently last-wins (green CI + `BaseMod_LoadsWithNoSkippedEntries` green prove it neither throws nor records a skip), so one is silently shadowed-dead + load-order-fragile. Its broken transfer class was fixed under L0a; the collision itself is a dead-code/canonical-template CLEANUP decision (which spaceport is canonical) → for the "we'll talk" discussion. | ⏸ flagged (not a crash) |
+| L0d — `EnergyStoreAtb.OnComponentUninstallation` empty stub | Removing a battery bank doesn't subtract its capacity from the pool. **Reclassified: a grave-rung behavior GAP, not a crash** — wiring it changes behavior + needs a test → for the discussion. | ⏸ flagged (not a crash) |
+
+**Standing gauge to ADD (the sensor that would have caught all three L0a crashes):** a test that instantiates a `ComponentDesigner` (or `CreateDesign`) from EVERY unlocked base-mod template and asserts no throw — `BaseModIntegrityTests` only checks the *data* (materials/templates unlocked), never actually *builds* a design, which is exactly the blind spot. Deferred to author carefully against the live `ComponentDesigner`/`ComponentDesignFromJson` API (CI-iterate) after the session cap resets.
 
 ### Tier 1 — BYTE-IDENTICAL QUICK WINS (the range-hide + Attack-cost move; no behavior change)
 | Slice | Scope | Gauge |

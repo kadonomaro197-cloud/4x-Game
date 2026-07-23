@@ -507,13 +507,13 @@
           "Name": "DBargsStor",
           "GuiHint": "None",
           "PropertyFormula": "AtbConstrArgs('ordnance-storage', PropertyValue('Total Cargo Stored'))",
-          "AttributeType": "Pulsar4X.Storage.VolumeStorageAtb"
+          "AttributeType": "Pulsar4X.Storage.CargoStorageAtb"
         },
         {
           "Name": "DBArgsXfer",
           "GuiHint": "None",
           "PropertyFormula": "AtbConstrArgs(PropertyValue('Cargo Transfer Rate'), PropertyValue('Transfer Range'))",
-          "AttributeType": "Pulsar4X.Datablobs.StorageTransferRateAtbDB"
+          "AttributeType": "Pulsar4X.Storage.CargoTransferAtb"
         }
       ]
     }

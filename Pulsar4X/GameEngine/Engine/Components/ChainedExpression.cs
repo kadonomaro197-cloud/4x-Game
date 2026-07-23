@@ -484,8 +484,16 @@ namespace Pulsar4X.Components
 
                 case "TechData":
                     techID = (string)args.EvaluateParameters()[0];
-                    var tech = _factionDataStore.Techs[techID];
-                    args.Result = tech.TechDataFormula();
+                    // Guard the tech lookup the SAME way the sibling TechLevel case (below) does. A component
+                    // formula can reference a tech the DESIGNING faction has not researched yet (e.g. the rtg's
+                    // Efficiency = TechData('tech-conductors')+10, and tech-conductors is start-locked for every
+                    // faction) — a raw Techs[techID] index then throws KeyNotFoundException and crashes the designer.
+                    // Degrade an un-researched tech's data contribution to 0 (its base) instead of crashing, so the
+                    // stat simply improves once the tech is researched (correct tech-progression behaviour).
+                    if (_factionDataStore.Techs.ContainsKey(techID))
+                        args.Result = _factionDataStore.Techs[techID].TechDataFormula();
+                    else
+                        args.Result = 0;
                     break;
 
                 //Returns the tech level for the given guid

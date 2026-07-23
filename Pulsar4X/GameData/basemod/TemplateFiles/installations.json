@@ -1004,7 +1004,7 @@
           "Name": "DBargsTransfer",
           "GuiHint": "None",
           "PropertyFormula": "AtbConstrArgs(PropertyValue('Cargo Transfer Rate'), PropertyValue('Transfer Range'))",
-          "AttributeType": "Pulsar4X.Datablobs.CargoTransferAtbDB"
+          "AttributeType": "Pulsar4X.Storage.CargoTransferAtb"
         },
         {
           "Name": "DBargsStorage",
