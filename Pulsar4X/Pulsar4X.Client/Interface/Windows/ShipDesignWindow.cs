@@ -401,7 +401,9 @@ namespace Pulsar4X.Client
                     // is opened above in this handler, so a bare return is safe. The click is a no-op; the console says why.
                     if(_armor == null)
                     {
-                        Console.WriteLine("[ShipDesignWindow] Save Design skipped: no armour selected/unlocked for this ship design.");
+                        // GAUGE: flushed to game_logs/ so a "Save did nothing" is diagnosable (was a silent
+                        // Console line). Fires when the viewed faction has no unlocked armour (e.g. SM mode).
+                        SessionLog.Action("Entity Assembler: Save Design SKIPPED — no armour selected/unlocked for this ship design (SM mode?).");
                         return;
                     }
                     _workingDesign.Armor = (_armor, _armorThickness);
@@ -427,6 +429,10 @@ namespace Pulsar4X.Client
                     }
 
                     RefreshExistingClasses();
+                    // GAUGE: confirm the ship design saved (flushed to game_logs/). valid=false means it saved but
+                    // is not buildable yet — check the "Current design is invalid" list (ship needs engine + reactor
+                    // + battery + hull). A saved design appears in the left "Existing Designs" panel.
+                    SessionLog.Action($"Entity Assembler: saved ship design '{name}' (valid={_workingDesign.IsValid}).");
                     // var shipDesign = new ShipDesign(_uiState.Faction.GetDataBlob<FactionInfoDB>(), name, SelectedComponents, (_armor, _armorThickness))
                     // {
                     //     DesignVersion = version
@@ -912,7 +918,12 @@ namespace Pulsar4X.Client
                 // a broken UI). The list is left unchanged and the console records why.
                 if(_armor == null)
                 {
-                    Console.WriteLine("[ShipDesignWindow] Create New Design skipped: the viewed faction has no unlocked armour to seed a ship design.");
+                    // GAUGE (2026-07-23): the developer reported "clicked Create and nothing happened", and the
+                    // session log had NO assembler line at all — this button was UNINSTRUMENTED, so the outcome was
+                    // invisible (the Visibility Gate: you can't diagnose what you can't see). Log the skip, flushed
+                    // to game_logs/, so the next click self-diagnoses. This path fires when the VIEWED faction has
+                    // no unlocked armour — notably SM mode (the viewed faction becomes the armour-less GameMaster).
+                    SessionLog.Action("Entity Assembler: Create New Design SKIPPED — the viewed faction has no unlocked armour to seed a ship design (are you in SM mode? switch back to your own faction).");
                 }
                 else
                 {
@@ -922,6 +933,11 @@ namespace Pulsar4X.Client
                     };
                     RefreshExistingClasses();
                     SelectedExistingDesignID = design.UniqueID;
+                    // GAUGE: confirm the blank design was created + selected. "Create New Design" makes an EMPTY
+                    // canvas (and clears the current component selection); you then ADD a chassis + components and
+                    // click "Save Design" (or switch the 'Assembling' combo to Ground Unit for a ground unit). This
+                    // line makes the click visible in game_logs/ so a "nothing happened" report is diagnosable.
+                    SessionLog.Action($"Entity Assembler: created new blank ship design '{name}' (id {design.UniqueID}) — now add a chassis + components, then Save Design.");
                 }
             }
         }
