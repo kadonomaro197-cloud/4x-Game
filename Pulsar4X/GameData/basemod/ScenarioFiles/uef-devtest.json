@@ -134,7 +134,13 @@
     "space-port",
     "naval-academy",
     "intelligence-directorate",
-    "food-production"
+    "food-production",
+    "ground-training-cadre",
+    "sealed-systems",
+    "ground-constructor",
+    "constructor",
+    "building-foundation",
+    "station-chassis"
   ],
   "componentDesigns": [
     "default-design-mine",
@@ -147,7 +153,9 @@
     "default-design-research-lab",
     "default-design-warehouse",
     "default-design-agri-complex",
-    "default-design-hydroponics-arcology"
+    "default-design-hydroponics-arcology",
+    "default-design-shipyard",
+    "default-design-launch-complex"
   ],
   "ordnanceDesigns": [],
   "shipDesigns": [],
@@ -202,6 +210,14 @@
         {
           "id": "default-design-agri-complex",
           "amount": 2
+        },
+        {
+          "id": "default-design-shipyard",
+          "amount": 1
+        },
+        {
+          "id": "default-design-launch-complex",
+          "amount": 1
         }
       ],
       "cargo": [

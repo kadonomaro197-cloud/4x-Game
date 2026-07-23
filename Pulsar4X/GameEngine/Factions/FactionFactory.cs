@@ -306,6 +306,22 @@ namespace Pulsar4X.Factions
                         }
                     }
 
+                    // LOCATE the colony onto its planet surface — the step CreateColony (the bare DevTest path) skips
+                    // that the New-Game path (ColonyFactory.CreateFromBlueprint:65-73,124,128) does. Without it the
+                    // installations live in ComponentInstancesDB but have NO home hex, so the planet/city view draws
+                    // terrain but no CITY. DevTest is the integration surface (everything we build must be reachable
+                    // there), so it must render the city and be a real defensible/capturable surface just like New Game.
+                    // Fully-qualified names mirror ColonyFactory's style; all four calls are idempotent/defensive
+                    // (a body with no region layer simply skips). CreateColony already RevealAll()'d the regions.
+                    if (location.TryGetDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>(out var homeRegions))
+                    {
+                        // You HOLD the ground you settle — regions start owned by this faction (defender + capture-flip).
+                        foreach (var r in homeRegions.Regions) r.OwnerFactionID = faction.Id;
+                        Pulsar4X.Galaxy.PlanetHexFactory.EnsureHexesForBody(location); // lazy Planet→Region→Hex
+                    }
+                    Pulsar4X.GroundCombat.GroundInstallations.LocateColonyInstallations(colony); // installs → capital region (city draws)
+                    Pulsar4X.GroundCombat.GroundBuildings.LocateFootprintsOnHexes(colony);       // forts → bombard/capture targets
+
                     LoadCargo(colony, factionDataStore, (JArray?)colonyToLoad["cargo"]);
 
                     //TODO: optionally set this from json
