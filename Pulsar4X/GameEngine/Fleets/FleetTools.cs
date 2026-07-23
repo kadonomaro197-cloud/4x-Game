@@ -86,6 +86,71 @@ namespace Pulsar4X.Fleets
             return 1;
         }
 
+        /// <summary>
+        /// Group DETECTED FOREIGN fleets into one marker each — the inverse of <see cref="CollapsedFleetMemberShipIds"/>
+        /// (which collapses only the VIEWER's own fleets). The developer's "group ALL fleets": a rival's fleet you've
+        /// detected should draw as ONE contact, not a scatter of named ship blips. Walks every fleet NOT owned by the
+        /// viewer (and not neutral); for each, considers only its DIRECT ship children the viewer has actually DETECTED
+        /// (their id is in <paramref name="detectedShipIds"/>); if 2+ are detected it keeps ONE representative (the
+        /// flagship if it's detected, else the LOWEST detected id — deterministic across frames so the surviving blip
+        /// doesn't flicker between members) and marks the rest to HIDE. <paramref name="repToDetectedCount"/> maps each
+        /// kept representative to how many of its fleet's ships the viewer detects — the ONLY thing the marker exposes
+        /// (never the fleet's true size, its name, or a ship's real name), so the fog leak is bounded to "these blips
+        /// travel together".
+        ///
+        /// Fog-honest: a fleet you've only PARTLY spotted (0 or 1 of N detected) is NOT collapsed — you can't group ships
+        /// you can't see. Reads live FleetDB membership, so a foreign fleet that breaks up ungroups next frame. Cheap,
+        /// STATELESS (recompute each frame), defensive (render-thread safe). NEVER touches the viewer's own fleets —
+        /// those stay on <see cref="CollapsedFleetMemberShipIds"/>, byte-identical.
+        /// </summary>
+        public static HashSet<int> CollapsedForeignFleetContacts(
+            EntityManager manager, int viewerFactionId, ISet<int> detectedShipIds,
+            out Dictionary<int, int> repToDetectedCount)
+        {
+            var hidden = new HashSet<int>();
+            repToDetectedCount = new Dictionary<int, int>();
+            if (manager == null || detectedShipIds == null || detectedShipIds.Count == 0)
+                return hidden;
+
+            foreach (var fleetEntity in manager.GetAllEntitiesWithDataBlob<FleetDB>())
+            {
+                if (fleetEntity == null || !fleetEntity.IsValid)
+                    continue;
+                // FOREIGN only: the viewer's own fleets are handled by CollapsedFleetMemberShipIds; neutral fleets skip.
+                if (fleetEntity.FactionOwnerID == viewerFactionId || fleetEntity.FactionOwnerID == Game.NeutralFactionId)
+                    continue;
+                if (!fleetEntity.TryGetDataBlob<FleetDB>(out var fleetDB))
+                    continue;
+
+                // Direct ship children the viewer actually DETECTS (a sub-fleet child is handled on its own pass).
+                List<int> detected = null;
+                foreach (var child in fleetDB.Children)
+                {
+                    if (child != null && child.IsValid && child.HasDataBlob<ShipInfoDB>() && detectedShipIds.Contains(child.Id))
+                        (detected ??= new List<int>()).Add(child.Id);
+                }
+                if (detected == null || detected.Count < 2)
+                    continue; // 0 or 1 detected → nothing to group (fog-honest)
+
+                // Representative = the flagship if it's among the detected ships, else the LOWEST detected id (stable
+                // frame-to-frame so the surviving blip doesn't jump as the detected set flickers).
+                int representative = fleetDB.FlagShipID;
+                if (representative == -1 || !detected.Contains(representative))
+                {
+                    representative = detected[0];
+                    for (int i = 1; i < detected.Count; i++)
+                        if (detected[i] < representative) representative = detected[i];
+                }
+
+                repToDetectedCount[representative] = detected.Count;
+                foreach (var id in detected)
+                    if (id != representative)
+                        hidden.Add(id);
+            }
+
+            return hidden;
+        }
+
         private const int MaxFleetTreeDepth = 8;
 
         /// <summary>
