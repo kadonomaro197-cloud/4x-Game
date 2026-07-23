@@ -356,6 +356,28 @@ namespace Pulsar4X.Movement
 
             var currentOrbit = OrbitMath.KeplerFromPositionAndVelocity(sgp, moveDB.ExitPointrelative, moveDB.SavedNewtonionVector, atDateTime);
 
+            // A warp exit CO-LOCATED with the target (offsetPosition == Vector3.Zero for a fleet "move to body")
+            // makes the relative exit position a literal (0,0,0). KeplerFromPositionAndVelocity then collapses the
+            // orbit's SemiMajorAxis to +0, and vis-viva downstream hits |2/0 - 1/0| = NaN and throws
+            // "Speed Result is NaN" on the BACKGROUND sim thread — an unobserved [FATAL] that kills the clock
+            // (same failure shape as the 0-speed-warp [FATAL], Movement/CLAUDE.md gotcha #5). Detect that exact
+            // geometry SOI-INDEPENDENTLY — a literal-zero exit OR a degenerate derived orbit (SMA collapsed to
+            // +0 / non-finite). Do NOT gate on GetSOI_m(): it returns +Infinity for a root / OrbitUpdateOftenDB
+            // target, so a soi-relative threshold would divert EVERY arrival, not just the degenerate one. On a
+            // hit, settle into a clean circular orbit from the ship's REAL absolute position, exactly like the
+            // !StrictNewtonion twin SetOrbitHereNoNewt. Every arrival with a non-zero offset yields a finite
+            // non-zero SMA, so this branch is skipped and the normal Newtonian settle below runs unchanged.
+            bool coLocated = moveDB.ExitPointrelative.Length() == 0;
+            bool degenerateOrbit = currentOrbit.SemiMajorAxis == 0
+                                || !double.IsFinite(currentOrbit.SemiMajorAxis)
+                                || !double.IsFinite(currentOrbit.Eccentricity);
+            if (coLocated || degenerateOrbit)
+            {
+                System.Console.WriteLine($"[WARP] ship #{entity.Id} degenerate/co-located warp exit at target — settling circular (NoNewt fallback)");
+                SetOrbitHereNoNewt(entity, moveDB, atDateTime);
+                return;
+            }
+
             var target = moveDB.TargetEntity;
             NewtonSimpleMoveDB newtMove = new NewtonSimpleMoveDB(target, currentOrbit, newOrbit, atDateTime);
             entity.SetDataBlob(newtMove);

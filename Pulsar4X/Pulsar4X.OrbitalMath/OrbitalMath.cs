@@ -871,8 +871,15 @@ namespace Pulsar4X.Orbital
                 Y = sinLoAN * vx_orbit + cosLoAN * vy_orbit
             };
 
-            if (double.IsNaN(v.X) || double.IsNaN(v.Y))
-                throw new Exception("Result is NaN");
+            if (!double.IsFinite(v.X) || !double.IsFinite(v.Y))
+            {
+                // A degenerate / zero-radius orbit yields a NaN heading -> NaN velocity here. This used to throw,
+                // which on the sim thread is an unobserved clock-killing [FATAL] (guarding the speed alone is not
+                // enough — ObjectLocalHeading still returns NaN for a zero-radius position). Bail to zero velocity
+                // with a breadcrumb. Byte-identical on every physical input (v is finite for a real orbit).
+                System.Console.WriteLine("[ORBIT] GetStateVectors velocity non-finite -> zero velocity");
+                return (position, new Vector2());
+            }
 
             return (position, v);
 
@@ -940,8 +947,16 @@ namespace Pulsar4X.Orbital
         {
             var foo = Math.Abs(2 / distance - 1 / semiMajAxis);
             var spd = Math.Sqrt(standardGravParameter * foo);
-            if (double.IsNaN(spd))
-                throw new Exception("Speed Result is NaN");
+            if (!double.IsFinite(spd))
+            {
+                // A degenerate orbit (distance AND semiMajAxis both 0 -> |Inf - Inf| = NaN) used to THROW here.
+                // On the background sim thread that becomes an unobserved clock-killing [FATAL] (the warp-arrival
+                // co-located exit, Movement/CLAUDE.md gotcha #5). Bail to a finite 0 with a captured breadcrumb
+                // instead of throwing. Byte-identical on every physical input (r>0, finite non-zero SMA -> spd
+                // finite); only the previously-throwing NaN/Inf branch changes.
+                System.Console.WriteLine($"[ORBIT] InstantaneousOrbitalSpeed non-finite (sgp={standardGravParameter}, r={distance}, sma={semiMajAxis}) -> 0");
+                return 0;
+            }
             return spd;
         }
 
