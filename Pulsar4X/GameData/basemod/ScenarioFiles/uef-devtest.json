@@ -155,7 +155,8 @@
     "default-design-agri-complex",
     "default-design-hydroponics-arcology",
     "default-design-shipyard",
-    "default-design-launch-complex"
+    "default-design-launch-complex",
+    "default-design-fuel-farm-5000k"
   ],
   "ordnanceDesigns": [],
   "shipDesigns": [],
@@ -218,6 +219,10 @@
         {
           "id": "default-design-launch-complex",
           "amount": 1
+        },
+        {
+          "id": "default-design-fuel-farm-5000k",
+          "amount": 1
         }
       ],
       "cargo": [
@@ -240,6 +245,10 @@
         {
           "id": "copper",
           "amount": 20000
+        },
+        {
+          "id": "methalox",
+          "amount": 2000000
         }
       ]
     }
