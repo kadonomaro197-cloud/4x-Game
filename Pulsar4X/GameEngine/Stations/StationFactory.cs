@@ -65,6 +65,13 @@ namespace Pulsar4X.Stations
             blobs.Add(new ColonySustenanceDB());    // power/food shortage gauges (M5b) — inert until demand is calibrated locally
             blobs.Add(new StationEconomyDB());       // operating-cost side (Slice C) — StationUpkeepProcessor bills the faction monthly
 
+            // A MANNED station draws crew from its OWN residents (crew works off-world) — attach the manpower pool
+            // so its builds are crew-gated exactly like a colony's (ManpowerTools reads StationInfoDB.Population).
+            // An UNMANNED automated platform gets NO pool → the crew gate stays inert (byte-identical; a crewless
+            // platform has no population to man a warship anyway). Condition mirrors the manned StationInfoDB above.
+            if (speciesEntity != null && initialPopulation > 0)
+                blobs.Add(new ColonyManpowerDB());   // people-as-a-resource pool (crew/talent) — the crew ENFORCEMENT source
+
             Entity stationEntity = Entity.Create();
             stationEntity.FactionOwnerID = factionEntity.Id;
             hostingBody.Manager.AddEntity(stationEntity, blobs);
