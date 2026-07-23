@@ -1,0 +1,882 @@
+=== Pulsar4X session started 2026-07-23 16:26:20 ===
+Log: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\game_logs (rolling pages game_log_000.txt, _001, …)
+File not found: Resources\CancelIco.bmp
+File not found: Resources\CargoIco.bmp
+File not found: Resources\DesignComponentIco.bmp
+File not found: Resources\DesignOrdnanceIco.bmp
+File not found: Resources\DesignShipIco.bmp
+File not found: Resources\discord-mark-white.png
+File not found: Resources\DnArrow.bmp
+File not found: Resources\FireconIco.bmp
+File not found: Resources\GalaxyMapIco.bmp
+File not found: Resources\IndustryIco.bmp
+File not found: Resources\PulsarLogo.bmp
+File not found: Resources\pulsar4x-menu.png
+File not found: Resources\OneStep.bmp
+File not found: Resources\Pause.bmp
+File not found: Resources\PinIco.bmp
+File not found: Resources\Play.bmp
+File not found: Resources\PowerIco.bmp
+File not found: Resources\RenameIco.bmp
+File not found: Resources\RepeatIco.bmp
+File not found: Resources\ResearchIco.bmp
+File not found: Resources\RulerIco.bmp
+File not found: Resources\SelectIco.bmp
+File not found: Resources\TreeIco.bmp
+File not found: Resources\UpArrow.bmp
+Found mod 'Pulsar4x' from C:\Users\DeeDiebS\AppData\Roaming\Pulsar4X\Pulsar4X\Mods\basemod\modInfo.json
+Found mod 'Pulsar4x-Testing' from C:\Users\DeeDiebS\AppData\Roaming\Pulsar4X\Pulsar4X\Mods\testingmod\modInfo.json
+Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\pulsar4x-menu.png
+Successfully loaded: pulsar4x-menu
+Format: .png
+Texture pointer: 2A7222C34C0
+Dimensions: 400x200
+--------------------------------------------------
+[VIEW] now viewing faction id=277 (UEF) [player]
+Ship icon texture loaded: 28x14
+Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\DesignComponentIco.bmp
+Successfully loaded: DesComp
+Format: .bmp
+Texture pointer: 2A722860F50
+Dimensions: 256x256
+--------------------------------------------------
+Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\DesignShipIco.bmp
+Successfully loaded: DesShip
+Format: .bmp
+Texture pointer: 2A72285FB50
+Dimensions: 256x256
+--------------------------------------------------
+Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\IndustryIco.bmp
+Successfully loaded: Industry
+Format: .bmp
+Texture pointer: 2A722860690
+Dimensions: 256x256
+--------------------------------------------------
+Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\ResearchIco.bmp
+Successfully loaded: Research
+Format: .bmp
+Texture pointer: 2A722860CD0
+Dimensions: 256x256
+--------------------------------------------------
+Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\SelectIco.bmp
+Successfully loaded: Select
+Format: .bmp
+Texture pointer: 2A722860410
+Dimensions: 256x256
+--------------------------------------------------
+Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\GalaxyMapIco.bmp
+Successfully loaded: GalMap
+Format: .bmp
+Texture pointer: 2A722860E10
+Dimensions: 256x256
+--------------------------------------------------
+Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\RulerIco.bmp
+Successfully loaded: Ruler
+Format: .bmp
+Texture pointer: 2A722860B90
+Dimensions: 256x256
+--------------------------------------------------
+Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\TreeIco.bmp
+Successfully loaded: Tree
+Format: .bmp
+Texture pointer: 2A722861590
+Dimensions: 256x256
+--------------------------------------------------
+[DevTools] Refresh: 0 ship design(s), 288 body(ies), 14 cargo target(s), 15 mineral(s)
+[STATE] ⏱ slow frame 2117ms — stage breakdown: update(state+transforms) 0 / map-draw(SDL lines) 0 / ui(windows) 2116 ms — the biggest number is the culprit
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=8
+[ENGINE] sensor scans 28 (+28), battle-trigger passes 0 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1349049.08kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=150.6Gm fogLag=0km sig=0kW
+[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 1 place(s) = 1 ring(s)
+Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\Play.bmp
+Successfully loaded: PlayImg
+Format: .bmp
+Texture pointer: 2A722860550
+Dimensions: 256x256
+--------------------------------------------------
+Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\OneStep.bmp
+Successfully loaded: OneStepImg
+Format: .bmp
+Texture pointer: 2A722861310
+Dimensions: 256x256
+--------------------------------------------------
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=(none) ships-in-view=8
+[ENGINE] sensor scans 28 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1349049.08kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=150.6Gm fogLag=0km sig=0kW
+[SELECT] Primary click on 'Earth' (entity #4, faction -99)
+Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\PinIco.bmp
+Successfully loaded: Pin
+Format: .bmp
+Texture pointer: 2A7228602D0
+Dimensions: 256x256
+--------------------------------------------------
+[STATE] heartbeat t=2050-01-01 00:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 28 (+0), battle-trigger passes 0 (+0) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1349049.08kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=150.6Gm fogLag=0km sig=0kW
+[TIME] play (step 3600s)
+Loading image: C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.Client\bin\Debug\net8.0\Resources\Pause.bmp
+Successfully loaded: PauseImg
+Format: .bmp
+Texture pointer: 2A72285FA10
+Dimensions: 256x256
+--------------------------------------------------
+[STATE] heartbeat t=2050-01-01 18:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 802 (+774), battle-trigger passes 25922 (+25922) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1349607.4kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=150.6Gm fogLag=0km sig=0kW
+[WARP] ship #293 'MFS Ares' departing → Earth (250.6 Gm, ETA 2050-05-18 17:17)
+[WARP] ship #295 'MFS Olympus' departing → Earth (250.6 Gm, ETA 2050-05-18 17:17)
+[WARP] ship #297 'MFS Tharsis' departing → Earth (250.6 Gm, ETA 2050-05-18 17:17)
+[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 1 place(s) = 2 ring(s)
+[STATE] heartbeat t=2050-01-03 00:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 2092 (+1290), battle-trigger passes 69122 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1350543kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=150.5Gm fogLag=0km sig=0kW
+[AI] 2050-01-01 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: StrikeFleet: sail strike fleet 292 at enemy world 4 (target score 500000000) | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-02 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: BuildTransport: build troop transport 'Lander Troop Transport' on colony 283 to carry the invasion | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-01 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: Survey: survey colonizeable world 2 with surveyor 316 | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[AI] 2050-01-02 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-04 06:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 3382 (+1290), battle-trigger passes 112322 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1351484.58kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=150.5Gm fogLag=0km sig=0kW
+[AI] 2050-01-03 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: QueueWarship: build 'UMFS Legionnaire' (best of 5) on colony 283 to mass a strike fleet | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-03 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-05 12:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 4672 (+1290), battle-trigger passes 155522 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1352431.75kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=150.4Gm fogLag=0km sig=0kW
+[AI] 2050-01-04 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: QueueWarship: build 'UMFS Legionnaire' (best of 5) on colony 283 to mass a strike fleet | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-04 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-06 18:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 5962 (+1290), battle-trigger passes 198722 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1353384.08kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=150.3Gm fogLag=0km sig=0kW
+[AI] 2050-01-05 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: QueueWarship: build 'UMFS Legionnaire' (best of 5) on colony 283 to mass a strike fleet | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-05 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-08 00:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 7252 (+1290), battle-trigger passes 241922 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1354341.17kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=150.2Gm fogLag=0km sig=0kW
+[AI] 2050-01-06 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-07 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-06 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[AI] 2050-01-07 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-09 06:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 8542 (+1290), battle-trigger passes 285122 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1355302.57kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=150Gm fogLag=0km sig=0kW
+[AI] 2050-01-08 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-08 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-10 12:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 9832 (+1290), battle-trigger passes 328322 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1356267.88kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=149.8Gm fogLag=0km sig=0kW
+[AI] 2050-01-09 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-09 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-11 18:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 11122 (+1290), battle-trigger passes 371522 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1357236.65kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=149.7Gm fogLag=0km sig=0kW
+[AI] 2050-01-10 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-10 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-13 00:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 12412 (+1290), battle-trigger passes 414722 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1358208.46kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=149.5Gm fogLag=0km sig=0kW
+[AI] 2050-01-11 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-12 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-11 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[AI] 2050-01-12 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-14 06:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 13702 (+1290), battle-trigger passes 457922 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1359182.86kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=149.4Gm fogLag=0km sig=0kW
+[AI] 2050-01-13 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-13 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-15 12:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 14992 (+1290), battle-trigger passes 501122 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1360159.4kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=149.3Gm fogLag=0km sig=0kW
+[AI] 2050-01-14 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-14 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-16 18:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 16282 (+1290), battle-trigger passes 544322 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1361137.66kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=149.2Gm fogLag=0km sig=0kW
+[AI] 2050-01-15 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-15 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-18 00:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 17572 (+1290), battle-trigger passes 587522 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1362117.17kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=149.1Gm fogLag=0km sig=0kW
+[AI] 2050-01-16 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-17 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-16 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[AI] 2050-01-17 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-19 06:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 18862 (+1290), battle-trigger passes 630722 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1363097.49kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=149.1Gm fogLag=0km sig=0kW
+[AI] 2050-01-18 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-18 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-20 12:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 20152 (+1290), battle-trigger passes 673922 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1364078.15kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=149.1Gm fogLag=0km sig=0kW
+[AI] 2050-01-19 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-19 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-21 18:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 21442 (+1290), battle-trigger passes 717122 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1365058.71kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=149.1Gm fogLag=0km sig=0kW
+[AI] 2050-01-20 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-20 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-23 00:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 22732 (+1290), battle-trigger passes 760322 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1366038.71kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=149.1Gm fogLag=0km sig=0kW
+[AI] 2050-01-21 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-22 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-21 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[AI] 2050-01-22 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-24 06:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 24022 (+1290), battle-trigger passes 803522 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1367017.67kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=149.1Gm fogLag=0km sig=0kW
+[AI] 2050-01-23 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-23 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-25 12:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 25312 (+1290), battle-trigger passes 846722 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1367995.14kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=149.2Gm fogLag=0km sig=0kW
+[AI] 2050-01-24 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-24 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-26 18:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 26602 (+1290), battle-trigger passes 889922 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1368970.65kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=149.2Gm fogLag=0km sig=0kW
+[AI] 2050-01-25 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-25 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-28 00:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 27892 (+1290), battle-trigger passes 933122 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1369943.73kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=149.3Gm fogLag=0km sig=0kW
+[AI] 2050-01-26 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-27 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-26 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[AI] 2050-01-27 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-29 06:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 29182 (+1290), battle-trigger passes 976322 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1370913.92kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=149.3Gm fogLag=0km sig=0kW
+[AI] 2050-01-28 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-28 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-30 12:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 30472 (+1290), battle-trigger passes 1019522 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1371880.75kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=149.3Gm fogLag=0km sig=0kW
+[AI] 2050-01-29 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 50, legit 50, bal 0, colonies 4, stations 0, contacts 1
+[AI] 2050-01-29 Kithrin Collective: Expand/Thrive — why: Thrive tier: Expansion 0.45 leads growth → Expand | act: None: 23 colonizeable world(s) await a geo-survey — surveyor working / building / unavailable | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal 0, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-01-31 18:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 31762 (+1290), battle-trigger passes 1062722 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1372843.74kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=149.3Gm fogLag=0km sig=0kW
+[AI] 2050-01-30 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 504000, colonies 4, stations 0, contacts 1
+[AI] 2050-01-30 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: QueueBuild: queue 'Stainless Steel' on colony 307 (+auto sub-jobs) | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-02-02 00:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 33052 (+1290), battle-trigger passes 1105922 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1373802.43kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=149.3Gm fogLag=0km sig=0kW
+[AI] 2050-01-31 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-01 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-01-31 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: QueueBuild: queue 'Stainless Steel' on colony 307 (+auto sub-jobs) | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[AI] 2050-02-01 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: QueueBuild: queue 'Stainless Steel' on colony 307 (+auto sub-jobs) | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 1 place(s) = 2 ring(s)
+[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 1 place(s) = 2 ring(s)
+[STATE] heartbeat t=2050-02-03 06:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 34342 (+1290), battle-trigger passes 1149122 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1374756.34kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=149.2Gm fogLag=0km sig=0kW
+[AI] 2050-02-02 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-02 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: QueueBuild: queue 'Mine' on colony 307 (+auto sub-jobs) | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-02-04 12:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 35632 (+1290), battle-trigger passes 1192322 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1375705kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=149.1Gm fogLag=0km sig=0kW
+[AI] 2050-02-03 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-03 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: QueueBuild: queue 'Mine' on colony 307 (+auto sub-jobs) | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-02-05 18:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 36922 (+1290), battle-trigger passes 1235522 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1376647.95kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=149Gm fogLag=0km sig=0kW
+[AI] 2050-02-04 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-04 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: QueueBuild: queue 'Mine' on colony 307 (+auto sub-jobs) | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-02-07 00:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 38212 (+1290), battle-trigger passes 1278722 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1377584.7kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=148.8Gm fogLag=0km sig=0kW
+[AI] 2050-02-05 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-06 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-05 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: QueueBuild: queue 'Passive Scanner' on colony 307 (+auto sub-jobs) | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[AI] 2050-02-06 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-02-08 06:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 39502 (+1290), battle-trigger passes 1321922 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1378514.8kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=148.7Gm fogLag=0km sig=0kW
+[AI] 2050-02-07 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-07 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-02-09 12:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 40792 (+1290), battle-trigger passes 1365122 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1379437.77kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=148.5Gm fogLag=0km sig=0kW
+[AI] 2050-02-08 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-08 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-02-10 18:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 42082 (+1290), battle-trigger passes 1408322 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1380353.14kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=148.4Gm fogLag=0km sig=0kW
+[AI] 2050-02-09 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-09 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-02-12 00:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 43372 (+1290), battle-trigger passes 1451522 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1381260.45kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=148.2Gm fogLag=0km sig=0kW
+[AI] 2050-02-10 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-11 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-10 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[AI] 2050-02-11 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-02-13 06:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 44662 (+1290), battle-trigger passes 1494722 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1382159.24kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=148.1Gm fogLag=0km sig=0kW
+[AI] 2050-02-12 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-12 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-02-14 12:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 45952 (+1290), battle-trigger passes 1537922 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1383049.04kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=148Gm fogLag=0km sig=0kW
+[AI] 2050-02-13 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-13 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-02-15 18:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 47242 (+1290), battle-trigger passes 1581122 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1383929.39kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.9Gm fogLag=0km sig=0kW
+[AI] 2050-02-14 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-14 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-02-17 00:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 48532 (+1290), battle-trigger passes 1624322 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1384799.85kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.9Gm fogLag=0km sig=0kW
+[AI] 2050-02-15 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-16 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-15 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[AI] 2050-02-16 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-02-18 06:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 49822 (+1290), battle-trigger passes 1667522 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1385659.94kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.9Gm fogLag=0km sig=0kW
+[AI] 2050-02-17 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-17 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-02-19 12:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 51112 (+1290), battle-trigger passes 1710722 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1386509.24kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.9Gm fogLag=0km sig=0kW
+[AI] 2050-02-18 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-18 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-02-20 18:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 52402 (+1290), battle-trigger passes 1753922 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1387347.28kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.9Gm fogLag=0km sig=0kW
+[AI] 2050-02-19 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-19 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-02-22 00:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 53692 (+1290), battle-trigger passes 1797122 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1388173.63kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.9Gm fogLag=0km sig=0kW
+[AI] 2050-02-20 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-21 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-20 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[AI] 2050-02-21 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-02-23 06:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 54982 (+1290), battle-trigger passes 1840322 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1388987.84kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=148Gm fogLag=0km sig=0kW
+[AI] 2050-02-22 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-22 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-02-24 12:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 56272 (+1290), battle-trigger passes 1883522 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1389789.5kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=148Gm fogLag=0km sig=0kW
+[AI] 2050-02-23 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-23 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-02-25 18:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 57562 (+1290), battle-trigger passes 1926722 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1390578.16kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=148.1Gm fogLag=0km sig=0kW
+[AI] 2050-02-24 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-24 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-02-27 00:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 58852 (+1290), battle-trigger passes 1969922 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1391353.4kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=148.1Gm fogLag=0km sig=0kW
+[AI] 2050-02-25 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-26 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-25 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[AI] 2050-02-26 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-02-28 06:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 60142 (+1290), battle-trigger passes 2013122 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1392114.82kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=148.2Gm fogLag=0km sig=0kW
+[AI] 2050-02-27 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-27 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-01 12:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 61432 (+1290), battle-trigger passes 2056322 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1392861.98kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=148.2Gm fogLag=0km sig=0kW
+[AI] 2050-02-28 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 20, legit 30, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-02-28 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -730, colonies 0, stations 1, contacts 0
+[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 1 place(s) = 2 ring(s)
+[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 1 place(s) = 2 ring(s)
+[STATE] heartbeat t=2050-03-02 18:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 62722 (+1290), battle-trigger passes 2099522 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1393594.5kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=148.2Gm fogLag=0km sig=0kW
+[AI] 2050-03-01 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503608, colonies 4, stations 0, contacts 1
+[AI] 2050-03-01 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-04 00:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 64012 (+1290), battle-trigger passes 2142722 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1394311.97kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=148.1Gm fogLag=0km sig=0kW
+[AI] 2050-03-02 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-03 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-02 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[AI] 2050-03-03 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-05 06:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 65302 (+1290), battle-trigger passes 2185922 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1395014kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=148.1Gm fogLag=0km sig=0kW
+[AI] 2050-03-04 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-04 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-06 12:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 66592 (+1290), battle-trigger passes 2229122 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1395700.21kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=148Gm fogLag=0km sig=0kW
+[AI] 2050-03-05 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-05 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-07 18:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 67882 (+1290), battle-trigger passes 2272322 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1396370.2kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.9Gm fogLag=0km sig=0kW
+[AI] 2050-03-06 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-06 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-09 00:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 69172 (+1290), battle-trigger passes 2315522 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397023.63kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.7Gm fogLag=0km sig=0kW
+[AI] 2050-03-07 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-08 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-07 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[AI] 2050-03-08 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-10 06:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 70462 (+1290), battle-trigger passes 2358722 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397660.12kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.6Gm fogLag=0km sig=0kW
+[AI] 2050-03-09 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-09 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-11 12:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 71752 (+1290), battle-trigger passes 2401922 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1398279.32kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0kW
+[AI] 2050-03-10 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-10 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-12 18:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 73042 (+1290), battle-trigger passes 2445122 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1398880.89kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.3Gm fogLag=0km sig=0kW
+[AI] 2050-03-11 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-11 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-14 00:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 74332 (+1290), battle-trigger passes 2488322 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1399464.48kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.2Gm fogLag=0km sig=0kW
+[AI] 2050-03-12 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-13 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-12 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[AI] 2050-03-13 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-15 06:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 75622 (+1290), battle-trigger passes 2531522 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1400029.78kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.1Gm fogLag=0km sig=0kW
+[AI] 2050-03-14 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-14 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-16 12:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 76912 (+1290), battle-trigger passes 2574722 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1400576.46kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.1Gm fogLag=0km sig=0kW
+[AI] 2050-03-15 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-15 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-17 18:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 78202 (+1290), battle-trigger passes 2617922 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1401104.21kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147Gm fogLag=0km sig=0kW
+[AI] 2050-03-16 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-16 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-19 00:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 79492 (+1290), battle-trigger passes 2661122 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1401612.75kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147Gm fogLag=0km sig=0kW
+[AI] 2050-03-17 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-18 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-17 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[AI] 2050-03-18 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-20 06:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 80782 (+1290), battle-trigger passes 2704322 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1402101.77kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147Gm fogLag=0km sig=0kW
+[AI] 2050-03-19 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-19 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-21 12:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 82072 (+1290), battle-trigger passes 2747522 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1402571kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147Gm fogLag=0km sig=0kW
+[AI] 2050-03-20 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-20 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-22 18:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 83362 (+1290), battle-trigger passes 2790722 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1403020.17kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.1Gm fogLag=0km sig=0kW
+[AI] 2050-03-21 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-21 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-24 00:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 84652 (+1290), battle-trigger passes 2833922 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1403449.03kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.1Gm fogLag=0km sig=0kW
+[AI] 2050-03-22 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-23 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-22 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[AI] 2050-03-23 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-25 06:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 85942 (+1290), battle-trigger passes 2877122 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1403857.34kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.2Gm fogLag=0km sig=0kW
+[AI] 2050-03-24 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-24 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-26 12:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 87232 (+1290), battle-trigger passes 2920322 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1404244.85kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.3Gm fogLag=0km sig=0kW
+[AI] 2050-03-25 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-25 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-27 18:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 88522 (+1290), battle-trigger passes 2963522 (+43200) since last beat
+[DETECT] UEF holds 2 contact(s); 8 other-faction ship(s) in-system, detects 1 (7 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1404611.35kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=0km sig=0kW
+[AI] 2050-03-26 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-26 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-28 07:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 89081 (+559), battle-trigger passes 2982242 (+18720) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1404763.58kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[AI] 2050-03-27 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-27 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-28 07:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 89081 (+0), battle-trigger passes 2982242 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1404763.58kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[STATE] heartbeat t=2050-03-28 07:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 89081 (+0), battle-trigger passes 2982242 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1404763.58kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[STATE] heartbeat t=2050-03-28 07:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 89081 (+0), battle-trigger passes 2982242 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1404763.58kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=129Gm fogLag=0km sig=0kW
+[TIME] play (step 3600s)
+[STATE] heartbeat t=2050-03-28 11:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 89253 (+172), battle-trigger passes 2988002 (+5760) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1404809.62kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=128.9Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=128.9Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=128.9Gm fogLag=0km sig=0kW
+[STATE] heartbeat t=2050-03-29 17:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 90543 (+1290), battle-trigger passes 3031202 (+43200) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1405142.77kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=128.6Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=128.6Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=128.6Gm fogLag=0km sig=0kW
+[AI] 2050-03-28 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-28 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-03-30 23:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 91833 (+1290), battle-trigger passes 3074402 (+43200) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1405454.39kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=128.3Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=128.3Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=128.3Gm fogLag=0km sig=0kW
+[AI] 2050-03-29 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-29 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-01 05:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 93123 (+1290), battle-trigger passes 3117602 (+43200) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1405744.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=128.1Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=128.1Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=128.1Gm fogLag=0km sig=0kW
+[AI] 2050-03-30 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-31 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 503216, colonies 4, stations 0, contacts 1
+[AI] 2050-03-30 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -1535, colonies 0, stations 1, contacts 0
+[AI] 2050-03-31 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 1 place(s) = 2 ring(s)
+[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 1 place(s) = 2 ring(s)
+[STATE] heartbeat t=2050-04-02 11:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 94413 (+1290), battle-trigger passes 3160802 (+43200) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1406012.33kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=127.9Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=127.9Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=127.9Gm fogLag=0km sig=0kW
+[AI] 2050-04-01 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-01 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-03 17:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 95703 (+1290), battle-trigger passes 3204061 (+43259) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1406258.32kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.5Gm fogLag=9379km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=127.7Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=127.7Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=127.7Gm fogLag=0km sig=0kW
+[AI] 2050-04-02 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-02 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-04 23:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 96993 (+1290), battle-trigger passes 3247261 (+43200) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1406482.14kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=9332km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=127.6Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=127.6Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=127.6Gm fogLag=0km sig=0kW
+[AI] 2050-04-03 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-03 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-06 05:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 98283 (+1290), battle-trigger passes 3290461 (+43200) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1406683.64kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.3Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=127.5Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=127.5Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=127.5Gm fogLag=0km sig=0kW
+[AI] 2050-04-04 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-05 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-04 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[AI] 2050-04-05 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-07 11:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 99573 (+1290), battle-trigger passes 3333721 (+43260) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1406862.73kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.2Gm fogLag=18453km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=127.4Gm fogLag=6364km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=127.4Gm fogLag=6364km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=127.4Gm fogLag=6364km sig=0kW
+[AI] 2050-04-06 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-06 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-08 17:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 100863 (+1290), battle-trigger passes 3377120 (+43399) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1407019.28kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.1Gm fogLag=46814km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=127.4Gm fogLag=31818km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=127.4Gm fogLag=31818km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=127.4Gm fogLag=31818km sig=0kW
+[AI] 2050-04-07 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-07 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-09 23:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 102153 (+1290), battle-trigger passes 3420612 (+43492) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1407153.21kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147Gm fogLag=93638km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=127.5Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=127.5Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=127.5Gm fogLag=63636km sig=0kW
+[AI] 2050-04-08 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-08 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-11 05:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 103443 (+1290), battle-trigger passes 3463821 (+43209) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1407264.44kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=146.9Gm fogLag=92552km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=127.5Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=127.5Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=127.5Gm fogLag=63636km sig=0kW
+[AI] 2050-04-09 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-10 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-09 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[AI] 2050-04-10 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-12 11:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 104733 (+1290), battle-trigger passes 3507020 (+43199) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1407352.91kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=146.8Gm fogLag=89854km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=127.7Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=127.7Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=127.7Gm fogLag=63636km sig=0kW
+[AI] 2050-04-11 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-11 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-13 17:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 106023 (+1290), battle-trigger passes 3550214 (+43194) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1407418.56kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=146.8Gm fogLag=86752km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=127.8Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=127.8Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=127.8Gm fogLag=63636km sig=0kW
+[AI] 2050-04-12 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-12 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-14 23:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 107313 (+1290), battle-trigger passes 3593426 (+43212) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1407461.36kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=146.7Gm fogLag=84831km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=128Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=128Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=128Gm fogLag=63636km sig=0kW
+[AI] 2050-04-13 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-13 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-16 05:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 108603 (+1290), battle-trigger passes 3636562 (+43136) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1407481.29kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=146.7Gm fogLag=76660km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=128.3Gm fogLag=57272km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=128.3Gm fogLag=57272km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=128.3Gm fogLag=57272km sig=0kW
+[AI] 2050-04-14 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-15 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-14 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[AI] 2050-04-15 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-17 11:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 109893 (+1290), battle-trigger passes 3679810 (+43248) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1407478.32kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=146.7Gm fogLag=87281km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=128.6Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=128.6Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=128.6Gm fogLag=63636km sig=0kW
+[AI] 2050-04-16 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-16 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-18 17:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 111183 (+1290), battle-trigger passes 3723014 (+43204) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1407452.46kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=146.7Gm fogLag=90021km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=128.9Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=128.9Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=128.9Gm fogLag=63636km sig=0kW
+[AI] 2050-04-17 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-17 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-19 23:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 112473 (+1290), battle-trigger passes 3766222 (+43208) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1407403.73kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=146.8Gm fogLag=91834km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=129.2Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=129.2Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=129.2Gm fogLag=63636km sig=0kW
