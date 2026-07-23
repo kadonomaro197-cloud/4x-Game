@@ -89,6 +89,32 @@ namespace Pulsar4X.Engine
                     FactionFactory.ApplyOpeningStrain(faction, strainNode);
             }
 
+            // LOCATE the PLAYER's colony onto its planet surface so the city RENDERS: the DevTest colony path
+            // (ColonyFactory.CreateColony) reveals the regions but never drops the installations into a home hex — the
+            // step the New-Game path (ColonyFactory.CreateFromBlueprint:65-73,124,128) does. Without it the buildings
+            // exist in ComponentInstancesDB but have no home, so the planet/city view draws terrain but no CITY (the
+            // developer's "no city, just units in the ocean"). Done PLAYER-ONLY and HERE (not in FactionFactory for
+            // every colony): the developer wants THEIR city to render, and generating the fine hex/terrain patches for
+            // every NPC world (Mars/Luna/Venus/Ceres) on every DevTest load is a large, needless cost (it doubled the
+            // CI test-shard time). NPC worlds keep the region map their garrison needs; their fine hexes stay lazy.
+            // All calls are idempotent/defensive (a body with no region layer simply skips).
+            if (playerFaction != null)
+            {
+                foreach (var colony in playerFaction.GetDataBlob<FactionInfoDB>().Colonies)
+                {
+                    if (colony == null || !colony.IsValid) continue;
+                    var body = colony.GetDataBlob<Pulsar4X.Colonies.ColonyInfoDB>().PlanetEntity;
+                    if (body == null || !body.IsValid) continue;
+                    if (body.TryGetDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>(out var homeRegions))
+                    {
+                        foreach (var r in homeRegions.Regions) r.OwnerFactionID = playerFaction.Id; // hold what you settle
+                        Pulsar4X.Galaxy.PlanetHexFactory.EnsureHexesForBody(body);                  // lazy Planet→Region→Hex
+                    }
+                    Pulsar4X.GroundCombat.GroundInstallations.LocateColonyInstallations(colony); // installs → capital region (city draws)
+                    Pulsar4X.GroundCombat.GroundBuildings.LocateFootprintsOnHexes(colony);       // forts → bombard/capture targets
+                }
+            }
+
             // Third pass — raise each NPC faction's HOME GARRISON so its colony worlds start DEFENDED. The DevTest is a
             // WAR scenario; an undefended NPC planet makes "take a planet" an unopposed walk-in. This is the ground echo
             // of the space fleets the scenario already authors ("everything enabled") — deliberately NOT done in the
