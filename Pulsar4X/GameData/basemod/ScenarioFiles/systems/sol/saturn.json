@@ -167,6 +167,13 @@
       "Parent": "Saturn",
       "Colonizable": true,
       "GeoSurveyPointsRequired": 500,
+      "Minerals": [
+        { "Id": "hydrocarbons", "Abundance": 0.9, "Accessibility": 0.9 },
+        { "Id": "iron",         "Abundance": 0.4, "Accessibility": 0.8 },
+        { "Id": "titanium",     "Abundance": 0.3, "Accessibility": 0.7 },
+        { "Id": "aluminium",    "Abundance": 0.3, "Accessibility": 0.7 },
+        { "Id": "water",        "Abundance": 0.5, "Accessibility": 0.8 }
+      ],
       "Info": {
         "Type": "moon",
         "Albedo": 0.22,
