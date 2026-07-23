@@ -89,13 +89,18 @@ namespace Pulsar4X.Engine
                     FactionFactory.ApplyOpeningStrain(faction, strainNode);
             }
 
-            // Third pass — raise each faction's HOME GARRISON so colony worlds start DEFENDED. The DevTest is a WAR
-            // scenario; an undefended planet makes "take a planet" an unopposed walk-in and leaves the AI's own worlds
-            // free for the taking. This is the ground echo of the space fleets the scenario already authors ("everything
-            // enabled") — deliberately NOT done in the barebones default New Game. Idempotent + defensive: a faction with
-            // no region-mapped colony body (e.g. the Kithrin's station-only holdings) simply raises nothing.
+            // Third pass — raise each NPC faction's HOME GARRISON so its colony worlds start DEFENDED. The DevTest is a
+            // WAR scenario; an undefended NPC planet makes "take a planet" an unopposed walk-in. This is the ground echo
+            // of the space fleets the scenario already authors ("everything enabled") — deliberately NOT done in the
+            // barebones default New Game. The PLAYER is SKIPPED: they build their own ground forces through the
+            // designer/assembler (the developer's "nothing pre-made through non-designer paths" — the "units in the
+            // ocean" were exactly this code-built garrison). Idempotent + defensive: a faction with no region-mapped
+            // colony body (e.g. the Kithrin's station-only holdings) simply raises nothing.
             foreach (var (faction, _) in loadedFactions)
+            {
+                if (faction == playerFaction) continue; // player designs + builds their own; no pre-made garrison
                 Pulsar4X.GroundCombat.GroundStartGarrison.RaiseForFactionColonies(game, faction);
+            }
 
             // Generate power and run the first sensor sweep so t=0 state is live (colonies power up, contacts/surveys
             // populate) — mirrors DefaultStartFactory.LoadFromJson's post-load processor kick.

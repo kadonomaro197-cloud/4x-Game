@@ -124,11 +124,12 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("DevTest colony worlds start DEFENDED: after the full sandbox loads, the UMF's colony worlds (and the "
-                     + "player's Earth) carry a GroundForcesDB with their owner's home garrison — so an invasion is a real "
-                     + "fight, not an unopposed capture, and the AI's own worlds aren't free for the taking. The garrison "
-                     + "is the ground echo of the authored fleets, raised for every DevTest faction (unlike the barebones "
-                     + "New Game). Also the gauge that the DevTest Sol generates the region maps the garrison needs.")]
+        [Description("DevTest NPC colony worlds start DEFENDED: after the full sandbox loads, the UMF's colony worlds "
+                     + "carry a GroundForcesDB with their owner's home garrison — so an invasion is a real fight, not an "
+                     + "unopposed capture, and the AI's own worlds aren't free for the taking. The garrison is the ground "
+                     + "echo of the authored fleets, raised for every NPC DevTest faction (unlike the barebones New Game). "
+                     + "The PLAYER's Earth starts UNGARRISONED (they design + build their own). Also the gauge that the "
+                     + "DevTest Sol generates the region maps the garrison needs.")]
         public void DevTest_ColonyWorlds_StartWithAHomeGarrison()
         {
             var game = NewGame();
@@ -158,15 +159,50 @@ namespace Pulsar4X.Tests
             Assert.That(umfUnits, Is.GreaterThanOrEqualTo(6),
                 "expected at least one UMF world's combined-arms garrison (3 inf + 2 armor + 1 arty = 6).");
 
-            // The player's Earth is defended too, so a UMF invasion (once the AI can land troops) meets resistance.
+            // The player's Earth starts UNGARRISONED — the DevTest no longer raises a code-built garrison for the
+            // player (they design + build their own; "nothing pre-made through non-designer paths"). The colony body
+            // still exists and is located (the city renders), it just carries no player-owned ground units yet.
             var earthBody = player.GetDataBlob<FactionInfoDB>().Colonies
                 .Where(c => c != null && c.IsValid)
                 .Select(c => c.GetDataBlob<ColonyInfoDB>().PlanetEntity)
                 .FirstOrDefault(b => b != null && b.IsValid);
             Assert.That(earthBody, Is.Not.Null, "player has no colony body.");
-            Assert.That(earthBody.TryGetDataBlob<GroundForcesDB>(out var earthForces)
-                && earthForces.Units.Any(u => u.FactionOwnerID == player.Id), Is.True,
-                "the player's Earth should start with a home garrison in the DevTest.");
+            bool playerHasUnits = earthBody.TryGetDataBlob<GroundForcesDB>(out var earthForces)
+                && earthForces.Units.Any(u => u.FactionOwnerID == player.Id);
+            Assert.That(playerHasUnits, Is.False,
+                "the player's Earth should start with NO pre-made garrison in the DevTest (designer-built only).");
+        }
+
+        [Test]
+        [Description("DevTest player start is a RENDERABLE, ship-building city: the player's Earth colony has its "
+                     + "installations LOCATED into the capital region (so the planet/city view can draw them — the "
+                     + "'no city renders' fix) and owns a shipyard + launch-complex (so ships are buildable in DevTest — "
+                     + "'everything we build must be reachable in DevTest').")]
+        public void DevTest_PlayerColony_RendersACityAndCanBuildShips()
+        {
+            var game = NewGame();
+            var (player, _) = DevTestStartFactory.CreateDevTest(
+                game, ScenarioDir, new List<string> { "uef-devtest.json", "umf.json", "kithrin.json" });
+
+            var colony = player.GetDataBlob<FactionInfoDB>().Colonies.First(c => c != null && c.IsValid);
+            var body = colony.GetDataBlob<ColonyInfoDB>().PlanetEntity;
+
+            // (1) City renders: the installations are located into the capital region (region 0). Before the locate fix
+            // the buildings existed in ComponentInstancesDB but had no home hex, so the planet view drew terrain but no
+            // city (the developer's "no city just a random assortment of units in the ocean").
+            Assert.That(body.TryGetDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>(out var regions) && regions.Regions.Count > 0,
+                Is.True, "the player's Earth has no region map — EnsureHexesForBody/RevealAll didn't run.");
+            Assert.That(regions.Regions[0].InstallationIds, Is.Not.Empty,
+                "the player's capital region has no located installations — the city won't render (LocateColonyInstallations didn't run).");
+
+            // (2) Ships buildable: the colony owns a shipyard (the ship-assembly building) + a launch-complex (the pad
+            // that queues/launches a built ship). Without these you can design a ship but can't build one in DevTest.
+            var installed = colony.GetDataBlob<Pulsar4X.Datablobs.ComponentInstancesDB>()
+                .DesignsAndComponentCount.Keys.Select(d => d.UniqueID).ToList();
+            Assert.That(installed, Does.Contain("default-design-shipyard"),
+                "the player's Earth has no shipyard — a ship can't be assembled in DevTest.");
+            Assert.That(installed, Does.Contain("default-design-launch-complex"),
+                "the player's Earth has no launch-complex — a built ship can't be launched in DevTest.");
         }
 
         [Test]

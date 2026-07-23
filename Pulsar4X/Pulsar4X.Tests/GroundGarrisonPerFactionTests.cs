@@ -50,8 +50,8 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("The DevTest UMF raises its authored heavier garrison (4/3/2) on its worlds; the player's Earth keeps the default (3/2/1).")]
-        public void DevTestUMF_RaisesItsAuthoredHeavierGarrison_PlayerKeepsDefault()
+        [Description("The DevTest UMF raises its authored heavier garrison (4/3/2) on its worlds; the player's Earth starts UNGARRISONED (they design + build their own).")]
+        public void DevTestUMF_RaisesItsAuthoredHeavierGarrison_PlayerStartsUngarrisoned()
         {
             var game = NewGame();
             var (player, _) = DevTestStartFactory.CreateDevTest(
@@ -73,13 +73,17 @@ namespace Pulsar4X.Tests
             Assert.That(umfUnits.Count(u => u.UnitType == GroundUnitType.Armor), Is.EqualTo(3), "UMF authored 3 armor");
             Assert.That(umfUnits.Count(u => u.UnitType == GroundUnitType.Artillery), Is.EqualTo(2), "UMF authored 2 artillery");
 
-            // The player (UEF) authored no garrison node → the default light watch (3/2/1 = 6).
-            var earth = player.GetDataBlob<FactionInfoDB>().Colonies
+            // The player (UEF) starts UNGARRISONED — the DevTest no longer raises a code-built home garrison for the
+            // player (the developer's "nothing pre-made through non-designer paths"; you design + build your own). So NO
+            // player colony body carries a player-owned ground unit. (A body may still carry an ENEMY unit later, hence
+            // the FactionOwnerID == player.Id filter.)
+            var playerBodies = player.GetDataBlob<FactionInfoDB>().Colonies
                 .Where(c => c != null && c.IsValid)
                 .Select(c => c.GetDataBlob<ColonyInfoDB>().PlanetEntity)
-                .First(b => b != null && b.IsValid && b.HasDataBlob<GroundForcesDB>());
-            var playerUnits = earth.GetDataBlob<GroundForcesDB>().Units.Where(u => u.FactionOwnerID == player.Id).ToList();
-            Assert.That(playerUnits.Count, Is.EqualTo(6), "the player authored no garrison node → the default 3/2/1 = 6");
+                .Where(b => b != null && b.IsValid);
+            int playerUnitCount = playerBodies.Sum(b =>
+                b.TryGetDataBlob<GroundForcesDB>(out var f) ? f.Units.Count(u => u.FactionOwnerID == player.Id) : 0);
+            Assert.That(playerUnitCount, Is.EqualTo(0), "the player starts with NO pre-made garrison — designer-built only");
         }
     }
 }
