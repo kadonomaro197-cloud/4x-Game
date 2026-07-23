@@ -66,6 +66,42 @@ public class MineralDepositFactory
         return mineralInfo.Minerals.Count > 0 ? mineralInfo : null;
     }
 
+    /// <summary>
+    /// The RNG-FREE "no body is accidentally barren" safety net. For a MINEABLE body that carries no explicit
+    /// mineral spec, builds a deterministic deposit from each mineral's own body-type abundance (accessibility
+    /// 1.0), so anything a player would send a mining ship to actually HAS ore in it. Returns null for a body
+    /// type with no surface to mine (gas/ice giants) or with no positive abundances — the caller then adds no
+    /// MineralsDB and the body stays barren.
+    ///
+    /// It NEVER draws the shared system RNG (it routes through <see cref="Generate"/>, the same RNG-free path
+    /// Luna's explicit array uses), so it cannot perturb galaxy-gen determinism — the RuinsDB lesson: don't
+    /// advance the stream when you bolt generated content onto a body other draws depend on.
+    ///
+    /// Two callers share this one rule: SystemBodyFactory (authored named bodies — rescues the outer Solar
+    /// System's moons/dwarfs, which carry a TYPO'd "MineralGeneration" key the loader ignores) and
+    /// StarSystemFactory.GenerateAsteroidBelt (the scattered belt rocks that fill Sol's main + Kuiper belts).
+    /// </summary>
+    public static MineralsDB? GenerateBodyTypeFallback(Game game, BodyType bodyType)
+    {
+        // No surface to mine → leave it barren (gas/ice giants, gas dwarfs, anything not on this list).
+        if(!(bodyType is BodyType.Terrestrial or BodyType.Moon or BodyType.DwarfPlanet
+             or BodyType.Asteroid or BodyType.Comet))
+            return null;
+
+        var fallbackMinerals = new List<(int, double, double)>();
+        foreach(var mineral in game.StartingGameData.Minerals.Values)
+        {
+            if(mineral.Abundance != null
+               && mineral.Abundance.TryGetValue(bodyType, out var abundance)
+               && abundance > 0)
+            {
+                fallbackMinerals.Add((mineral.ID, abundance, 1.0));
+            }
+        }
+
+        return fallbackMinerals.Count > 0 ? Generate(game, fallbackMinerals, bodyType) : null;
+    }
+
     public static MineralsDB Generate(Game game, List<(int, double, double)> mineralsToGenerate, BodyType bodyType)
     {
         var mineralsDb = new MineralsDB();

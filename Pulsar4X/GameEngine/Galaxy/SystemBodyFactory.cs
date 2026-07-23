@@ -213,29 +213,17 @@ namespace Pulsar4X.Galaxy
                 }
                 blobsToAdd.Add(MineralDepositFactory.Generate(game, mineralList, systemBodyInfoDB.BodyType));
             }
-            else if(systemBodyInfoDB.BodyType is BodyType.Terrestrial or BodyType.Moon
-                    or BodyType.DwarfPlanet or BodyType.Asteroid or BodyType.Comet)
+            else
             {
                 // SAFETY NET: an AUTHORED mineable body that specified no minerals (no GenerateMinerals preset,
                 // no explicit Minerals array) still gets a deterministic body-type-abundance deposit, so no
                 // authored world is ever accidentally barren. This rescues the whole outer Solar System — the
                 // Jovian/Saturnian moons + the dwarf planets carry a TYPO'd "MineralGeneration" key the loader
-                // silently ignores, so they were mineral-dead. Uses the RNG-FREE MineralDepositFactory.Generate
-                // (the SAME path Luna's explicit array uses), so it NEVER draws the shared system RNG and cannot
-                // perturb galaxy-gen determinism (the RuinsDB lesson — don't advance the stream when adding gen).
-                // Gas/ice giants are deliberately EXCLUDED — no surface to mine.
-                var fallbackMinerals = new List<(int, double, double)>();
-                foreach(var mineral in game.StartingGameData.Minerals.Values)
-                {
-                    if(mineral.Abundance != null
-                       && mineral.Abundance.TryGetValue(systemBodyInfoDB.BodyType, out var abundance)
-                       && abundance > 0)
-                    {
-                        fallbackMinerals.Add((mineral.ID, abundance, 1.0));
-                    }
-                }
-                if(fallbackMinerals.Count > 0)
-                    blobsToAdd.Add(MineralDepositFactory.Generate(game, fallbackMinerals, systemBodyInfoDB.BodyType));
+                // silently ignores, so they were mineral-dead. GenerateBodyTypeFallback is RNG-FREE (it routes
+                // through the same path Luna's explicit array uses) so it can't perturb galaxy-gen determinism,
+                // and returns null for a body with no surface to mine (gas/ice giants) → they stay barren.
+                var fallbackDB = MineralDepositFactory.GenerateBodyTypeFallback(game, systemBodyInfoDB.BodyType);
+                if(fallbackDB != null) blobsToAdd.Add(fallbackDB);
             }
 
             if(systemBodyBlueprint.GeoSurveyPointsRequired != null)
