@@ -275,7 +275,7 @@
       "Name": "Geo Surveyor Mk1",
       "TemplateId": "geo-surveyor",
       "Properties": [
-        { "Key": "Survey Speed", "Value": 1 }
+        { "Key": "Survey Speed", "Value": 10 }
       ]
     }
   },
