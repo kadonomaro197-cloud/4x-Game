@@ -467,55 +467,22 @@ field at all**. The spec:
 
 ---
 
-## REQUIREMENT CAPTURED (2026-07-24) — terrain diversity is a GENERATOR job, and a generated system is written to file
+## Where the terrain diversity COMES FROM → `docs/environment/SYSTEM-GENERATION-AND-PERSISTENCE-DESIGN.md`
 
-**Status: requirement recorded, design pass PENDING.** This is the developer's answer to "where does terrain diversity
-come from," and it is much bigger than the surface map — it reaches all the way up to **full star-system generation**. It
-is recorded here because it is the *source* of everything Layer 6 displays; it will earn its own design doc when the
-design pass runs. **A rich terrain display over a uniform generator is a lie** — so the display work below is gated on
-this.
+Layer 6 is the **window**; the generator is the **world behind it**. The developer's requirement — that a system
+generated for the first time produces everything from *a grassland with a resource node in it* out to *the asteroids in
+the star's Oort cloud*, and then **writes a spec file** — reaches all the way up to full star-system generation, so it
+lives in its own doc (🔒 locked 2026-07-24, five decisions: hybrid recipe+frozen-detail file · written the first time ·
+per-save-vs-shared-library chosen at game setup · hand-editable · surfaces materialize on demand).
 
-**The developer's requirement (essence):** when the generator creates a system — say Barnard's Star — for the **FIRST**
-time, it generates **everything**: from the *grassland with a resource node in it* on an inner planet, out to the
-*asteroids in the star's Oort cloud*. **After that first generation, a file is written saving the specifications of that
-system**, and thereafter the system comes from the file.
-
-### EXISTS / MISSING ledger (verified in source, 2026-07-24)
-
-| Piece | State | Where |
-|---|---|---|
-| Procedural system generator, **deterministic by seed** | ✅ exists | `StarSystemFactory.CreateSystem(game, name, seed)` :41 — stars, bodies, star coronas/flares, minerals. `SystemGenTests` proves same seed → twin systems |
-| **Authored** system format + the LIVE read path | ✅ exists + proven | `SystemBlueprint` (clean data class: bodies, `AsteroidBeltValue`, `SurveyRingValue`, `HazardValue`…) → `StarSystemFactory.LoadFromBlueprint` :544. **This is what a real New Game runs** (`NewGameMenu.cs:599`); Sol is authored JSON under `GameData/basemod/ScenarioFiles/systems/sol/` |
-| A second folder-of-JSON reader | ✅ exists | `LoadSystemFromJson` :402 (reads `systemInfo.json` + per-star/per-body files) — used by `DefaultStartFactory` |
-| Per-body surface terrain from physics | ✅ exists, **lazy** | `WorldTerrain`/`PlanetHexFactory`/`PlanetGridFactory` — coherent noise field + real maps for Earth/Mars/Luna. Deliberately generated **only for worlds you settle or survey** (anti-bloat rule, see Landmines) |
-| Located mineral deposits on hexes | ✅ exists | `MineralDepositFactory` + the body-type fallback |
-| **A WRITER — serialize a generated system out to a spec file** | ❌ **MISSING ENTIRELY** | no `File.WriteAllText`/`SerializeObject` anywhere in `GameEngine/Galaxy/` |
-| **Asteroid belts / comets / Oort cloud in PROCEDURAL systems** | ❌ **MISSING** | `GenerateAsteroidBelt` :481 is called from **exactly one place** — inside `LoadFromBlueprint` :573 (the authored path). A procedurally generated system gets **no belts at all** |
-| Terrain diversity driven by orbit / stellar activity | ❌ missing | terrain reads the body's own scalars (hydrosphere, tectonics, temperature); the *star's* activity and orbital position don't yet shape topology |
-
-### The key engineering insight (reconciles "generate everything" with "don't bloat the galaxy")
-
-The file does **not** need to contain every hex. Earth alone would be ~590 million at 1 km, and the whole map design
-rests on hexes being **materialized lazily**. But terrain is **deterministic** — it falls out of a seed plus the body's
-physical parameters. So a spec file that records **the seed + the physical truth** regenerates *the identical grassland
-hex with the identical resource node in it*, every time, for free. **You store the recipe, not the cake.**
-
-The tension that creates — and the fork the design pass must settle — is: **if terrain is derived, then changing the
-terrain generator silently rewrites the terrain of every system ever generated.** Freezing detail in the file prevents
-that but costs size and hand-editability. That trade is the central open question below.
-
-### Open questions for the design pass
-
-1. **What goes in the file — the recipe (seed + parameters) or the frozen detail?** Or a hybrid: seed for everything
-   untouched, frozen detail for anything the player has observed or changed.
-2. **When is it written** — at galaxy creation, or on first *discovery* by someone?
-3. **Where does it live** — beside the save (this campaign's Barnard) or in a shared library (Barnard is the same star
-   across all your games)?
-4. **Is it hand-editable/moddable** — i.e. is the written format the *same* one Sol already uses, so a player can open
-   it and tweak? (The format exists and is proven, which makes this nearly free.)
-5. **How deep does "everything" go** on first generation — every body's surface, or surfaces on demand from the seed?
+**Why it's gated to here:** *a rich terrain display over a uniform generator is a lie.* This layer's terrain-type
+readout and **Layer 5's M4** (per-mini-tile terrain) are the display half of that doc's **G6** (terrain shaped by
+stellar activity + orbital position). Two concrete gaps it records: **no system writer exists anywhere** in
+`GameEngine/Galaxy/`, and **procedurally generated systems get no asteroid belts** (`GenerateAsteroidBelt` is reachable
+only from the authored path).
 
 ---
+
 
 ## LOCKED (2026-07-04): TERRAIN is the ground twin of a SPACE HAZARD — dynamic, sci-fi, contextually generated
 
