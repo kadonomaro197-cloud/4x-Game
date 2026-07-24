@@ -4,7 +4,7 @@ using Pulsar4X.GroundCombat;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Mini-hex tactical grid — M1 (docs/combat/MINI-HEX-TACTICAL-GRID-DESIGN.md). Gauges the pure continuous-position
+    /// Mini-hex tactical grid — M1 (docs/ground/GROUND-SURFACE-MAP-DESIGN.md Layer 5). Gauges the pure continuous-position
     /// math that makes a unit's coarse global hex + its mini-hex offset into ONE real position, so distance is measured
     /// across coarse-hex boundaries (the developer's "transitional" continuity) — the ground echo of space's
     /// Separation_m. ADDITIVE + UNREAD by the resolver → live combat byte-identical; M2 flips the range gate to read

@@ -135,9 +135,12 @@ Observability compounds up the ladder: each stage adds a lens (scores → plans 
 
 ---
 
-## 5. Small feature — name tiles on the planet map
+## 5. Small feature — name tiles on the planet map *(moved out 2026-07-24)*
 
-Surface tiles (`GroundHex` on the globe, `CityTile` in the city zoom) carry terrain/deposit/building data but **no name**. Add a `Name` string to the hex/tile data + a small "rename" action in `PlanetViewWindow` (globe + city-zoom), mirroring the entity `RenameCommand` pattern, and render the label. Self-contained client+data slice; pairs naturally with the ground war (name the hill you defend).
+**Moved to its subject home: `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` → Layer 6 ("What the map SHOWS and what you can
+NAME").** It was orphaned here — tile naming is a surface-map feature, not a DevTest-sandbox one — and the developer has
+since given it full requirements (click any hex at either zoom, floating text label, pure bookmark, saves/loads). Design
+and build state live there now; this line is a pointer so nothing looks lost.
 
 ---
 

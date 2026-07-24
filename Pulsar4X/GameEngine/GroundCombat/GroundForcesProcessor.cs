@@ -71,7 +71,7 @@ namespace Pulsar4X.GroundCombat
         /// New-Game / menu path. A HoldGround formation still never auto-maneuvers, and a player queued order still wins.</summary>
         public static bool EnableGroundRoleManeuver = false;
 
-        /// <summary>MINI-HEX real-distance combat gate (docs/combat/MINI-HEX-TACTICAL-GRID-DESIGN.md, M2). When true, the
+        /// <summary>MINI-HEX real-distance combat gate (docs/ground/GROUND-SURFACE-MAP-DESIGN.md Layer 5, M2). When true, the
         /// resolver's range gate fires a weapon when the REAL metre gap between two units
         /// (<see cref="GroundMiniHex.RealGapMetres(GroundUnit,GroundUnit,Pulsar4X.Engine.Entity)"/>, measured on the
         /// continuous coarse-global-hex + mini-hex field) is within the weapon's real <c>Range_m</c> — the developer's
@@ -84,7 +84,7 @@ namespace Pulsar4X.GroundCombat
         /// calibrated CI gauges valid, not to hide the feature from players).</summary>
         public static bool EnableMiniHexCombat = false;
 
-        /// <summary>INITIAL ENGAGEMENT SPREAD (docs/combat/MINI-HEX-TACTICAL-GRID-DESIGN.md, M3 — the ground twin of space's
+        /// <summary>INITIAL ENGAGEMENT SPREAD (docs/ground/GROUND-SURFACE-MAP-DESIGN.md Layer 5, M3 — the ground twin of space's
         /// <see cref="Pulsar4X.Combat.CombatEngagement"/> seeding <c>Separation_m</c> at battle start). When true, the FIRST
         /// tick a region becomes newly contested the processor pushes the two sides APART on the region's hex patch — the
         /// holder (the region's owner, or the longest-ranged faction on neutral ground) stays at its muster hex, every other

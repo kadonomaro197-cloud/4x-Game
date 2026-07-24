@@ -172,7 +172,7 @@ namespace Pulsar4X.GroundCombat
         /// <summary>Global latitude row on the body's <c>SurfaceGrid</c>.</summary>
         [JsonProperty] public int GlobalR { get; internal set; } = -1;
 
-        // ── MINI-HEX tactical position (docs/combat/MINI-HEX-TACTICAL-GRID-DESIGN.md, M1) — WHERE within the coarse
+        // ── MINI-HEX tactical position (docs/ground/GROUND-SURFACE-MAP-DESIGN.md Layer 5, M1) — WHERE within the coarse
         //    global hex the unit stands, on that hex's CityGrid mini-tiles (the SAME mini-hexes the infrastructure/city
         //    view uses; origin (0,0) = centre = muster). Combined with GlobalQ/GlobalR by GroundMiniHex into ONE
         //    continuous real position, so a unit near a coarse-hex EDGE is really-close to a neighbour across the border
@@ -189,7 +189,7 @@ namespace Pulsar4X.GroundCombat
         //    GroundMiniHex.ContinuousPosKm/RealGapMetres on TOP of the (MiniQ,MiniR) mini-hex centre; NOT derived from
         //    MiniQ/MiniR. Default (0,0) = at the mini-hex centre → byte-identical (M2/M3a read gap 0 as before) until
         //    the K3 spread/closing sets it. Save-safe ([JsonProperty] + deep-copied below). Design: the K-track real-
-        //    distance ground combat (docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md + MINI-HEX-TACTICAL-GRID-DESIGN.md).
+        //    distance ground combat (docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md + docs/ground/GROUND-SURFACE-MAP-DESIGN.md Layer 5).
         /// <summary>Real sub-mini-hex offset EAST (km) added to this unit's mini-hex centre (0 = centred).</summary>
         [JsonProperty] public double MiniOffX_km { get; internal set; }
         /// <summary>Real sub-mini-hex offset NORTH (km) added to this unit's mini-hex centre (0 = centred).</summary>

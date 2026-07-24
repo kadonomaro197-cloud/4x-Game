@@ -5,7 +5,7 @@ using Pulsar4X.Galaxy;
 namespace Pulsar4X.GroundCombat
 {
     /// <summary>
-    /// The MINI-HEX tactical position math (docs/combat/MINI-HEX-TACTICAL-GRID-DESIGN.md, M1). A unit's exact place on a
+    /// The MINI-HEX tactical position math (docs/ground/GROUND-SURFACE-MAP-DESIGN.md Layer 5, M1). A unit's exact place on a
     /// planet is TWO tiers: its coarse global hex (<c>GroundUnit.GlobalQ/GlobalR</c> on the body's <c>SurfaceGrid</c> —
     /// "which ~477 km neighbourhood") PLUS its mini-hex offset within that hex's <c>CityGrid</c>
     /// (<c>GroundUnit.MiniQ/MiniR</c> — "where in the ~37 km battlefield", the SAME mini-hexes the infrastructure/city

@@ -123,42 +123,32 @@ mines/factories are invisible on the war map); (e) the whole ground-tactical dep
 
 ---
 
-## Regional-view design intent (2026-07-24, from the developer)
+## Surface-map display intent + the mini-hex state (2026-07-24, from the developer)
 
-The developer's north star for the **operational (regional) hex view** — Earth zoomed to the continent/hex level, *not*
-the city mini-hex zoom: **convey as much GENERAL information as possible at a glance, with detail on mouse-hover.**
-Captured verbatim-in-essence from a requirements pass; this section is the design contract the regional-view work
-must satisfy. (Mini-hex intent is a separate pass, still to be gathered.)
+**The design now lives in ONE place — `docs/ground/GROUND-SURFACE-MAP-DESIGN.md`:**
+- **Layer 6** — what the map SHOWS and what you can NAME (the developer's requirements pass: hover-reveal model, keep
+  terrain colour, player-stamped glyphs, population-based city marker with a distinct outline, battalion stacks colored
+  by faction behind a detection gate, click-to-name floating labels that save/load, weather/hazards).
+- **Layer 5** — what a mini hex IS and does (units plot and fight there on continuous real-metre distances).
 
-**The interaction model (the spine of all of it):** *always-on glyphs/markers carry the general signal; hover reveals
-the words/detail.* The map is never cluttered with text — at rest a hex shows only its color (terrain), any glyph
-stamped on it, and — if the player named it — its floating name. Everything else (full terrain name, deposit, unit
-roster, city stats, hazard detail) appears **only when the mouse is over that hex.** "Convey as much general info as
-possible" is achieved by *layered reveal*, not by drawing everything at once.
+*(This section was deliberately trimmed to a pointer on 2026-07-24 rather than duplicated — two copies of a design drift.
+The audit's job is status; the design doc's job is the contract.)*
 
-| Regional element | What the developer wants | Build shape |
-|------------------|--------------------------|-------------|
-| **Terrain type** | Keep the **color** (already there); no per-hex text label at rest. Full type name shows **on hover**. Want **as many terrain types as possible** — this is where planetary diversity shines. | Display: **existing color stays**, ADD a hover tooltip with the type name. Types: expand the `RegionFeatureType` set. |
-| **Terrain ↔ planet generator** (the load-bearing connection) | Terrain diversity is only worth showing if the **generator actually produces it** from real physical variables — a planet's position around its star (e.g. Siris), the star's activity, and other variables **MUST change the topology**, so every world is authentically different. | **Two jobs, connected:** (1) display half = regional view; (2) generation half = planet gen must assign diverse `RegionFeatureType` from stellar/orbital/physical inputs. The display is a *window* onto generation diversity; a rich display over a uniform generator is a lie. |
-| **Player-placed glyphs** | Player can **stamp a glyph on a hex** to mark information — "I put a city here," a landmark, a note. Hover reveals what it means. This is an **authoring** feature, not just a renderer. | NEW: a small player-authored marker layer on the hex (glyph id + optional note), drawn always-on, detail on hover. |
-| **City marker** | A **population-based** marker: any hex with population reads as a city, and it must have **a line/outline no random research outpost or mine has** so a city is instantly distinct from a lone installation. **City name shown right on the map.** "Is there a city here" is enough — no size tiers needed at this level. | NEW-ish: distinct city glyph (outlined) gated on **population present**, with the name drawn at the regional zoom. Distinct from the generic ⚙ installation draw. |
-| **Battalions (ground units)** | Draw as a **stack of names**. Marker conveys **whose it is** (friendly vs enemy = distinct colors) — that's enough; no need to show type/strength here. **Enemy units only show when detected/scouted** (fog of war for ground). On a shared hex, city + unit **stack**. | Mostly exists (units already draw on hexes); ADD: stacked-name presentation, per-faction color, and the **detection gate** for enemy units. |
-| **Player-named hexes** | Player **clicks a hex** → naming is an **option**. The name **floats as a text label** at the regional level (the one thing besides color/glyph shown at rest). Pure **label/bookmark** (no gameplay effect). **Names save/load.** | Genuinely NEW: `GroundHex` has **no `Name` field today** — add persisted name storage + the click-to-name UI + the floating-label render. |
-| **Weather / hazards** | Wants **weather/hazards** surfaced as additional general info (revealed on hover, per the model). | NEW display: surface a weather/hazard signal per hex; tie to the existing hazards system where possible. |
+**The status this audit owes, as of the doc consolidation:**
 
-**The declutter rule (explicit):** at rest the regional hex shows **color + any stamped glyph + a floating name if
-named**. *Everything else is mouse-over.* When the developer says "convey as much general info as possible," the answer
-is **hover-reveal depth**, not a busy map. Priority of the always-on layer, highest-first: **named-hex label → player
-glyph → city marker → terrain color**; unit stacks and enemy (fogged) markers ride on top where present.
+| Piece | State |
+|---|---|
+| Mini-hex position + real-gap math (M1), resolver real-distance gate (M2), engagement spread (M3) | ✅ built + CI-gauged |
+| Real metre weapon ranges + continuous sub-tile position + real-distance closing fight (K1–K4) | ✅ built + CI-gauged |
+| **Per-mini-tile terrain/geology (M4)** — every mini tile currently COPIES its coarse hex's single terrain; the field exists and is filled with a copy | ❌ **not built — the main mini-hex gap**, and the mini-hex twin of the developer's regional "as many terrain types as possible" ask |
+| **Terrain diversity from planet PHYSICS** — the generator must vary topology by orbit/star activity, or a rich terrain display is a lie | ❌ not built (the connected half of the same ask) |
+| **Tile/hex NAMING** (`GroundHex`/`CityTile` have no `Name` field at all) | ❌ not built; fully specced (Layer 6) |
+| Regional display upgrades: terrain-type hover, player glyphs, city marker, battalion stacks | ❌ not built (colour + units + deposits already draw) |
+| Client mini-hex draws (units at exact tile + sub-tile offset, fog-honest enemies, reach tints) | ⚠️ built but **compile-only — never run** |
 
-**Cradle-to-grave note for this section:** terrain-type display is a *surface/display* job, but the terrain itself is
-generated — so "more terrain types" is not a UI ticket, it's a **generator** ticket (galaxy/system-body gen assigns the
-feature) *plus* a display ticket. The named-hex and glyph features are pure client + a persisted field (save/load is the
-grave-adjacent rung: a name/glyph that doesn't survive a save is not real). None of this is wired yet; the EXISTS/MISSING
-ledger (file:line, across surface-render / `GroundHex` engine / planet-gen / hazards / save-load) is the next step before
-a path forward is chosen.
-
----
+**Two open design questions** (carried into the next pass): what fine terrain should *do* mechanically (cover / movement
+penalty / unbuildable, vs. looks + affinity only), and whether weather/hazards live per-mini-tile or only per
+operational hex.
 
 ## The roadmap — how to get where we need to be
 

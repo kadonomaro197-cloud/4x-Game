@@ -1075,7 +1075,7 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("Mini-hex M2 (flag ON): the resolver gates on the REAL metre gap on the continuous coarse-hex + mini-hex field, not hex-count. Two enemies in the SAME coarse global hex read gap 0 and fight ('same hex = combat'); an enemy many coarse hexes away is a real thousands-of-km apart and holds fire until it closes. Flag OFF (the default the whole CI suite runs on) keeps the legacy local-patch hex gate → every existing combat gauge is byte-identical. docs/combat/MINI-HEX-TACTICAL-GRID-DESIGN.md.")]
+        [Description("Mini-hex M2 (flag ON): the resolver gates on the REAL metre gap on the continuous coarse-hex + mini-hex field, not hex-count. Two enemies in the SAME coarse global hex read gap 0 and fight ('same hex = combat'); an enemy many coarse hexes away is a real thousands-of-km apart and holds fire until it closes. Flag OFF (the default the whole CI suite runs on) keeps the legacy local-patch hex gate → every existing combat gauge is byte-identical. docs/ground/GROUND-SURFACE-MAP-DESIGN.md Layer 5.")]
         public void MiniHexCombat_SameCoarseHexFights_DifferentCoarseHexHoldsFire()
         {
             var s = TestScenario.CreateWithColony();
