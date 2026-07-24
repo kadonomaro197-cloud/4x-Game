@@ -138,6 +138,11 @@ namespace Pulsar4X.Tests
             bool allCargoFinite = true;
             long totalLedgerTransactions = 0;
             int playerColonyCount = 0;
+            // The biggest station (the Kithrin's 6M Titan hive) — its life-support CAPACITY vs its POPULATION.
+            // Before the hive-habitat fix, Titan's 40 space-habitats supported only 20,000, so the 6M hive was
+            // ~300x overcrowded → morale cratered → income ~0 → the monotonic bankruptcy. The fix dials the
+            // Kithrin habitat's Support Colonists up (reusing the space-habitat component), so capacity >= pop.
+            long biggestStationPop = 0, biggestStationCap = 0;
 
             foreach (var faction in factions)
             {
@@ -160,6 +165,18 @@ namespace Pulsar4X.Tests
                         string kind = host.HasDataBlob<StationInfoDB>() ? "STATION" : "COLONY";
                         long pop = PopulationOf(host);
                         Log($"  ---- {kind} '{name}' (id {host.Id})  pop {pop:N0} ----");
+
+                        // Track the biggest station's life-support capacity (the same value StationPopulationProcessor
+                        // reads for crowding) so we can assert it isn't over-crowded — the Kithrin hive-habitat gauge.
+                        if (host.HasDataBlob<StationInfoDB>() && pop >= biggestStationPop
+                            && host.TryGetDataBlob<ComponentInstancesDB>(out var stComps)
+                            && host.TryGetDataBlob<StationInfoDB>(out var stInfo))
+                        {
+                            biggestStationPop = pop;
+                            biggestStationCap = stComps.GetPopulationSupportValue(stInfo.HostingBodyEntity);
+                            Log($"    life-support capacity: {biggestStationCap:N0}  (population {pop:N0}, " +
+                                $"{(biggestStationCap >= pop ? "OK — not overcrowded" : "OVERCROWDED")})");
+                        }
 
                         ReportFood(Log, host, pop);
                         ReportPower(Log, host, pop);
@@ -212,6 +229,16 @@ namespace Pulsar4X.Tests
             Assert.That(totalLedgerTransactions, Is.GreaterThan(0),
                 "No faction ledger recorded a single transaction over 120 days — the economy processors never billed " +
                 "(check the starting system is out of Stasis, and that ColonyEconomy/StationUpkeep processors ran).");
+
+            // THE KITHRIN HIVE-HABITAT GAUGE: the biggest station (Titan, ~6M pop) must have life-support capacity
+            // >= its population — otherwise it's overcrowded, morale craters, income dies, and the faction goes
+            // structurally bankrupt (the A6 drain the developer reported). Red before the fix (cap 20,000 << 6M),
+            // green after (the dialed-up hive habitat supports 8M). Guarded so a run with no big station is a no-op.
+            if (biggestStationPop > 100_000)
+                Assert.That(biggestStationCap, Is.GreaterThanOrEqualTo(biggestStationPop),
+                    $"The biggest station (pop {biggestStationPop:N0}) is OVERCROWDED — life-support capacity is only " +
+                    $"{biggestStationCap:N0}. Its housing (space/hive habitats) doesn't cover its population, so morale " +
+                    "collapses and it bankrupts. Dial up the Kithrin hive-habitat Support Colonists (kithrin.json).");
         }
 
         // ---- host enumeration ----

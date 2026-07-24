@@ -177,6 +177,7 @@
     "default-design-kithrin-nexus",
     "default-design-kithrin-deep-mine",
     "default-design-space-habitat",
+    "default-design-kithrin-hive-habitat",
     "default-design-ship-hull-heavy",
     "default-design-passive-sensor-s50",
     "default-design-disruptor-weapon",
@@ -226,7 +227,7 @@
       },
       "installations": [
         {
-          "id": "default-design-space-habitat",
+          "id": "default-design-kithrin-hive-habitat",
           "amount": 40
         },
         {

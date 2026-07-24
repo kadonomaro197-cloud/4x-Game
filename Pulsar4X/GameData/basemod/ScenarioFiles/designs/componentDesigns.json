@@ -652,6 +652,17 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-kithrin-hive-habitat",
+      "Name": "Kithrin Hive Habitat",
+      "TemplateId": "space-habitat",
+      "Properties": [
+        { "Key": "Support Colonists", "Value": 200000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-city-hall",
       "Name": "City Hall",
       "TemplateId": "admin-complex",

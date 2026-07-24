@@ -1188,7 +1188,7 @@
           "Name": "Support Colonists",
           "DescriptionFormula": "'Population this sealed habitat supports — anywhere, since it provides its own environment (no gravity or atmosphere tolerance applies).'",
           "GuiHint": "GuiSelectionMaxMinInt",
-          "MaxFormula": "5000",
+          "MaxFormula": "1000000",
           "MinFormula": "0",
           "StepFormula": "1",
           "PropertyFormula": "500"
