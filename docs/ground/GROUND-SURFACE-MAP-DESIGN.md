@@ -421,6 +421,37 @@ Same hover-reveal model. Already drawn: terrain tiles, buildings (▧), units at
 fog-honest enemies, the mineral deposit gem, and orange "under construction" rings. **The open design questions are what
 fine terrain should *do* mechanically, and whether weather/hazards are per-mini-tile** — both land on Layer 5's M4.
 
+### LOCKED (2026-07-24): what fine terrain DOES — and the "nothing is impossible, just costs" law
+
+The developer's ruling on the mini-hex terrain question. **Fine terrain is load-bearing, not decoration**, and it does
+three jobs:
+
+1. **Building affinity** — a farm wants plains, a mine wants highlands/a deposit. *Where* you place matters.
+2. **It bends the fight** — rough ground gives cover, a river slows a crossing, a ridge shapes who can shoot whom. The
+   Layer-5 resolver already reads per-tile terrain, so this is the cheap half of a real tactical layer.
+3. **Hard terrain COSTS more — it does not forbid.**
+
+> **⚖ THE LAW (developer, 2026-07-24, verbatim):** *"nothing is impossible its just costs."*
+>
+> There is **no unbuildable tile**. A mountain, a swamp, open water — each is a **cost multiplier**, not a wall. And the
+> multiplier is **not universal**: a faction that is *good at building in uncanny ways* pays less for the terrain
+> everyone else calls impossible. That makes "bad ground" a **faction-differentiating advantage** instead of a dead
+> tile, and it keeps scarcity real (good tiles are still cheaper) without ever telling the player "no."
+>
+> This generalises past terrain — treat it as the default answer whenever a system wants to hard-forbid something:
+> **price it, don't ban it.**
+
+**The governing requirement, verbatim:** *"the main point is that the mini hexes must add diversity and variation THAT
+MAKE SENSE."* Variation is not noise — a coastal city's tiles must read as a coast, a mountain base's as a mountain.
+This is why M4 (per-tile terrain) and the generator requirement below are the *same* job seen at two zooms.
+
+### LOCKED (2026-07-24): weather + hazards live at BOTH zooms
+
+**Regional level tells you it EXISTS; the mini hexes show you WHERE it is.** Same split the whole map already runs on
+(*"the regional hexes show all of what's in that hex and the mini hexes show where the things are"*) — now applied to
+weather and hazards. So a storm reads as one signal on the operational hex, and resolves into the specific tiles it
+covers when you zoom in — which is what makes a hazard something you **maneuver around** rather than just suffer.
+
 ### Naming — hexes AND tiles (merged from the DevTest doc, still NOT built)
 
 Surface tiles (`GroundHex` on the globe, `CityTile` in the city zoom) carry terrain/deposit/building data but **no name
@@ -433,6 +464,56 @@ field at all**. The spec:
 - **Build shape:** add a `Name` string to the hex/tile data + a small "rename" action in `PlanetViewWindow` (globe +
   city zoom), mirroring the entity `RenameCommand` pattern, and render the label. Self-contained client+data slice;
   pairs naturally with the ground war (**name the hill you defend**).
+
+---
+
+## REQUIREMENT CAPTURED (2026-07-24) — terrain diversity is a GENERATOR job, and a generated system is written to file
+
+**Status: requirement recorded, design pass PENDING.** This is the developer's answer to "where does terrain diversity
+come from," and it is much bigger than the surface map — it reaches all the way up to **full star-system generation**. It
+is recorded here because it is the *source* of everything Layer 6 displays; it will earn its own design doc when the
+design pass runs. **A rich terrain display over a uniform generator is a lie** — so the display work below is gated on
+this.
+
+**The developer's requirement (essence):** when the generator creates a system — say Barnard's Star — for the **FIRST**
+time, it generates **everything**: from the *grassland with a resource node in it* on an inner planet, out to the
+*asteroids in the star's Oort cloud*. **After that first generation, a file is written saving the specifications of that
+system**, and thereafter the system comes from the file.
+
+### EXISTS / MISSING ledger (verified in source, 2026-07-24)
+
+| Piece | State | Where |
+|---|---|---|
+| Procedural system generator, **deterministic by seed** | ✅ exists | `StarSystemFactory.CreateSystem(game, name, seed)` :41 — stars, bodies, star coronas/flares, minerals. `SystemGenTests` proves same seed → twin systems |
+| **Authored** system format + the LIVE read path | ✅ exists + proven | `SystemBlueprint` (clean data class: bodies, `AsteroidBeltValue`, `SurveyRingValue`, `HazardValue`…) → `StarSystemFactory.LoadFromBlueprint` :544. **This is what a real New Game runs** (`NewGameMenu.cs:599`); Sol is authored JSON under `GameData/basemod/ScenarioFiles/systems/sol/` |
+| A second folder-of-JSON reader | ✅ exists | `LoadSystemFromJson` :402 (reads `systemInfo.json` + per-star/per-body files) — used by `DefaultStartFactory` |
+| Per-body surface terrain from physics | ✅ exists, **lazy** | `WorldTerrain`/`PlanetHexFactory`/`PlanetGridFactory` — coherent noise field + real maps for Earth/Mars/Luna. Deliberately generated **only for worlds you settle or survey** (anti-bloat rule, see Landmines) |
+| Located mineral deposits on hexes | ✅ exists | `MineralDepositFactory` + the body-type fallback |
+| **A WRITER — serialize a generated system out to a spec file** | ❌ **MISSING ENTIRELY** | no `File.WriteAllText`/`SerializeObject` anywhere in `GameEngine/Galaxy/` |
+| **Asteroid belts / comets / Oort cloud in PROCEDURAL systems** | ❌ **MISSING** | `GenerateAsteroidBelt` :481 is called from **exactly one place** — inside `LoadFromBlueprint` :573 (the authored path). A procedurally generated system gets **no belts at all** |
+| Terrain diversity driven by orbit / stellar activity | ❌ missing | terrain reads the body's own scalars (hydrosphere, tectonics, temperature); the *star's* activity and orbital position don't yet shape topology |
+
+### The key engineering insight (reconciles "generate everything" with "don't bloat the galaxy")
+
+The file does **not** need to contain every hex. Earth alone would be ~590 million at 1 km, and the whole map design
+rests on hexes being **materialized lazily**. But terrain is **deterministic** — it falls out of a seed plus the body's
+physical parameters. So a spec file that records **the seed + the physical truth** regenerates *the identical grassland
+hex with the identical resource node in it*, every time, for free. **You store the recipe, not the cake.**
+
+The tension that creates — and the fork the design pass must settle — is: **if terrain is derived, then changing the
+terrain generator silently rewrites the terrain of every system ever generated.** Freezing detail in the file prevents
+that but costs size and hand-editability. That trade is the central open question below.
+
+### Open questions for the design pass
+
+1. **What goes in the file — the recipe (seed + parameters) or the frozen detail?** Or a hybrid: seed for everything
+   untouched, frozen detail for anything the player has observed or changed.
+2. **When is it written** — at galaxy creation, or on first *discovery* by someone?
+3. **Where does it live** — beside the save (this campaign's Barnard) or in a shared library (Barnard is the same star
+   across all your games)?
+4. **Is it hand-editable/moddable** — i.e. is the written format the *same* one Sol already uses, so a player can open
+   it and tweak? (The format exists and is proven, which makes this nearly free.)
+5. **How deep does "everything" go** on first generation — every body's surface, or surfaces on demand from the seed?
 
 ---
 
