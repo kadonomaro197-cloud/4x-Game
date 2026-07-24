@@ -817,6 +817,29 @@ namespace Pulsar4X.Client
                     drawList.AddNgon(pc, size * 0.5f, ImGui.ColorConvertFloat4ToU32(new Vector4(0.9f, 0.9f, 0.4f, 0.5f)), 6, 1f);
             }
 
+            // A LOCATED mineral deposit belongs to the WHOLE operational hex — Industry.HexMinerals seeds it at the
+            // GroundHex level (not per mini-tile), so the globe view paints a gold gem on the operational hex. The
+            // city zoom never did, so a deposit you could SEE at the globe level vanished the moment you drilled into
+            // its mini-hex grid (the developer's "I can see deposits at the regional level but not the mini level").
+            // Paint the same gold gem + mineral name here, as a top-centre "this hex holds <mineral>" badge, so the
+            // deposit is visible at BOTH zooms. It marks the HEX (the deposit isn't placed on one specific mini-tile
+            // yet — per-mini-tile located ore + per-tile depletion is the flagged per-hex-mining follow-up). Thin
+            // defensive draw, reusing the same data + gem style the globe view uses; a bad read can't break the view.
+            if (hex.DepositMineralId >= 0)
+            {
+                var depNames = BuildMineralNames();
+                string depName = depNames.TryGetValue(hex.DepositMineralId, out var dm) && !string.IsNullOrEmpty(dm)
+                    ? dm : $"mineral #{hex.DepositMineralId}";
+                var gemC = new Vector2(center.X, canvasPos.Y + 16f);
+                float gr = 9f;
+                drawList.AddNgonFilled(gemC, gr, ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 0.85f, 0.25f, 1f)), 4);
+                drawList.AddNgon(gemC, gr, ImGui.ColorConvertFloat4ToU32(new Vector4(0.25f, 0.18f, 0f, 1f)), 4, 1.5f);
+                string depLbl = $"{depName} deposit — this hex";
+                var dtsz = ImGui.CalcTextSize(depLbl);
+                drawList.AddText(new Vector2(gemC.X + gr + 4f, gemC.Y - dtsz.Y * 0.5f),
+                    ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 0.95f, 0.7f, 1f)), depLbl);
+            }
+
             // C1 (#4) — draw the UNITS standing in THIS operational hex on the mini-hex tiles. A unit sits at its
             // MiniQ/MiniR tile (the SAME axial space the tiles use) plus its K2 sub-tile real offset (MiniOffX/Y_km → px),
             // coloured by owner. Own units always draw; a SCOUTED enemy draws too (fog-honest); an un-detected enemy is
