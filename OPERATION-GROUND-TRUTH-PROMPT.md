@@ -318,6 +318,33 @@ methods + `BombardGlobalHex`; `OrderFormationTreeMoveToHex` zero callers; assemb
 
 ### A4 — Rulings-compliance matrix
 
+> #### ✅ A4: VERIFIED DONE (2026-07-27) — all three agents ran; the gap was that **nothing in the repo held the matrix**
+>
+> **What ran:** `A4a` (rulings 1–9), `A4b` (10–18), `A4c` (19–27) all completed before the usage-limit wall — the only
+> Phase A batch where every assigned agent finished. Each produced done/partial/missing verdicts **with file:line
+> evidence**, and each delivered **dependency edges** (verified by grep, not assumed: 20 / 10 / 10 edge mentions across
+> `A4a-rulings-1-9.md`, `A4b-rulings-10-18.md`, `A4c-rulings-19-27.md`).
+>
+> **The gap this walk closed:** the verdicts existed only in **ephemeral scratchpad files**. Nothing committed to the
+> repo carried a ruling-by-ruling table — THE PLAN cites rulings in prose and marks delta rows `[A24]`, but a reader
+> could not ask "what is the state of ruling #14?" and get an answer. **Now consolidated as
+> `docs/DOCS-AUDIT-2026-07-27.md` §12** (commit `214c8b6`): 27 rows (ruling / verdict / load-bearing fact / size),
+> a doctrine+tick table, and the dependency edges.
+>
+> **Doctrine + the tick (the frame this section names separately):** `D1` is **data-gauged but its reader is INERT** —
+> 9 of its 10 functions have **zero non-test callers**; `D1b`'s filter is **space-only**; `D2` / `D3a` / `D3b` are
+> **MISSING**; leader modulation is **space-built / ground-missing**; the shorter tick is **MISSING with a 5 s spec
+> already committed and waiting** (which is why Q3 is a confirm, not an open design question).
+>
+> **Dependency edges — the orders' three CONFIRMED, two of them sharpened, plus two added:**
+> - *#1 needs #2 and #4* — confirmed as stated.
+> - *#9 and #10 must land together or ground defence silently breaks* — confirmed, **and sharpened: CI would not catch
+>   the breakage.** There is no gauge on the pair, so the silent failure would ship green.
+> - *#23 needs the tick slice* — confirmed, **and sharpened: they must be the SAME slice**, not sequenced ones. The
+>   overkill rule is defined in tick units; landing it against the 1-hour tick encodes the wrong number.
+> - **ADDED:** #18 should precede #23 (the overkill rule reads the value #18 establishes).
+> - **ADDED:** D0 precedes D2 / D3a / D3b (the three doctrine slices all consume D0's frame).
+
 All 27 rulings + the doctrine frame + the tick-shortening decision × the code at HEAD → **done / partial / missing**,
 each with evidence and its dependency edges (e.g. #23 needs the tick slice; #1 needs #2 and #4; #9 and #10 must land
 together or ground defence silently breaks).
