@@ -172,6 +172,26 @@ never let "code exists" pass for "a player can reach it" or "anyone has seen it 
 
 ### A1 — Game-log forensics (be inquisitive; this is detective work, not a skim)
 
+> #### ✅ A1: ALL SIX REQUIREMENTS DONE (3 agents, ~912k tokens) — findings in `docs/DOCS-AUDIT-2026-07-27.md` §9
+>
+> | A1 requirement | Done? |
+> |---|---|
+> | Check `game_logs/` on **BOTH** branches for newer logs | ✅ `origin/main` newest = `fe72043` (2026-07-17); audit branch newest = `436f73e` (**2026-07-23**). **No newer logs exist on either** — so the logs do pre-date the five fixes, exactly as the handoff warned. |
+> | **Timeline** | ✅ 9 min wall-clock · 144 game-days · **two mouse clicks** · 11 time-button presses · zero ships · one colony · **no ground content reached at all**. |
+> | **Failures**, each root-caused against HEAD | ✅ 7 × `[FATAL]` "Speed Result is NaN" in two distinct stack shapes — **both throw sites now bail to a finite value at HEAD** (`496a5d1`), but **the CAUSE is untouched** (see G5). Also `[PERF]` ×1 (2117 ms startup frame, correctly below the hang threshold), 24 missing boot textures, and `console_output.txt` holding **1667/1667 build warnings and zero runtime lines**. |
+> | **Combat** | ✅ both engines provably scheduled (sensor scans 148,894 · battle-trigger 4,985,827) yet **ZERO battles formed** — the player had 0 ships and `Tick` enrols only `FleetDB` entities. **And the counters turned out to be placebos** (they increment before the early-return, so they climb on an empty galaxy) — G3. |
+> | **The AI** | ✅ 288 decision records tabulated; UMF returned "no legal step" on **135 of 144** cycles while at war; Kithrin did 108 consecutive no-ops. Reconciled against `AI-BRAIN-BUILD-TRACKER`. |
+> | **THE SILENT SYSTEMS (most important)** | ✅ delivered as the three-bucket ledger — *exercised-and-worked / exercised-and-broke / never-exercised* — with per-system verdicts (e.g. the battle trigger = **exercised-and-broke**; invasion rungs 0/0a/0b/1.3/1.5/2.5 and the ground fight = **never-exercised**). |
+>
+> **⚠ One A1 finding was missed in the first write-up and is now recorded as G10 — it may be the widest-blast-radius
+> item of the whole run.** All 288 tape lines read `vs no threat` because **every ship contact reports `sig=0kW`
+> while the star reports 1.4 M kW**: `LatestDetectionQuality` is zeroed even though the contact had to pass
+> `> 0` at scan time. Consequence — `CombatRisk.WouldEngage` deliberately returns **true** on a non-positive
+> enemy estimate, so with the input always zero **the AI's entire risk appetite never evaluates anything**, and
+> two treaty behaviours can never fire. This is the *"degenerate detection-quality"* keystone
+> `DIPLOMACY-DESIGN` already names. **Scheduled as plan slice S1e.** *(Lesson: reading an agent's headline is
+> not the same as reading its findings — G10 was in the detail file all along.)*
+
 The repo tracks the developer's real play-session output: **`game_logs/game_log_NNN.txt`** (read in numeric order)
 and **`console_output.txt`**. As of handoff the newest logs were committed at `436f73e` — from the **2026-07-23 play
 session**, which means they PRE-DATE the fixes that session produced (warp-NaN `496a5d1`, Kithrin survey speed

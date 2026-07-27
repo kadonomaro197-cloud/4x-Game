@@ -341,6 +341,50 @@ The tag has **exactly three emitters, all client button handlers** (set doctrine
 It can **never** confirm a battle happened. The battle channel is `[Combat]`. Several docs list it among
 combat-observation channels — corrected in `Pulsar4X.Client/CLAUDE.md`.
 
+### ⛔ G10 — THE AI IS BLIND, AND ITS RISK APPETITE NEVER EVALUATED ANYTHING (added 2026-07-27)
+
+**Missed in the first write-up of this section; it may be the widest-blast-radius finding of the whole run.**
+
+**All 288 AI decision-tape lines read `vs no threat`.** That string is `ThreatAssessment.GreatestThreatTo`
+returning nothing, and the log shows why in one glance:
+
+```
+[DETECT-CONTACT] 'MFS Deimos'  src=LAGGED fogLag=84297km  sig=0kW
+[DETECT-CONTACT] 'MFS Ares'    src=LAGGED fogLag=50909km  sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED fogLag=50909km  sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED fogLag=50909km  sig=0kW
+[DETECT-CONTACT] 'Sol A G0V'   src=LAGGED fogLag=0km      sig=1397071.3kW   ← the STAR
+```
+
+**The star reads 1.4 million kW; every ship reads 0 kW.** `GreatestThreatTo` sums
+`contact.SignalStrength_kW` (`Factions/ThreatAssessment.cs:39`), which resolves to
+`SensorInfo.LatestDetectionQuality.SignalStrength_kW` (`Sensors/SensorContacts/SensorContact.cs:54`). A contact
+only exists if it passed `SignalStrength_kW > 0.0` at scan time (`SensorScan.cs:132`) — so
+`HighestDetectionQuality` *was* non-zero while **`LatestDetectionQuality` — the one every consumer reads — is
+zeroed.** This is the concrete, observed form of the **"degenerate detection-quality"** landmine that
+`docs/society/DIPLOMACY-DESIGN.md` already names as a **keystone prerequisite**.
+
+**The precise reading, because the distinction decides the fix.** `CombatRisk.WouldEngage` opens with
+`if (enemyStrength <= 0.0) return true;` and its own comment says *"A non-positive enemy estimate (nothing
+detected / no threat) always engages"* (`Factions/CombatRisk.cs:41`). **That fallback is deliberate and
+sensible.** The defect is that its **input is always zero**, so the escape hatch is the **only branch ever
+taken** — which means the AI's entire risk appetite is inert in practice:
+
+| Consumer | What it should do | What it does |
+|---|---|---|
+| `ThreatAssessment.GreatestThreatTo` (`:70-85`) | name the biggest rival threat | **never names one** |
+| **`CombatRisk.WouldEngage`** (`:41`) | commit only if own ≥ enemy × the Risk-scaled ratio | **always returns true.** The Risk trait and the whole `CautiousRatio`↔`ParityRatio` band **never evaluate anything** — including at the commit gate `ConquerResolver.cs:168` |
+| `RunTreatyPolicy` Pass 1 | propose a defensive pact against a shared threat | **can never fire** |
+| `ThreatAssessment.IsRising` (`:95-98`) | trigger an alliance against a riser | **can never fire** |
+
+**So "the AI sailed into an undefended homeworld" understates it: the AI would have sailed into a meat grinder
+exactly the same way**, because it has no working notion of how strong anyone else is. Any future work on AI
+caution, personality-driven aggression, or defensive pacts is decorating a value that is always zero.
+
+**Consequence: CONFIRMED (log + code). Root cause: UNVERIFIED** — why `LatestDetectionQuality` is zeroed while
+the contact persists was not traced. `SESSION_STATE.md` records a related suspicion (a 0–100 quality value
+crammed into a 0–1 slot). **Scheduled as plan slice S1e.** Size: medium.
+
 ### Also confirmed working (worth knowing)
 
 - **Detection + fog are genuinely healthy at runtime:** 179 `[DETECT]` + 679 `[DETECT-CONTACT]` lines,

@@ -336,6 +336,23 @@ identical orders produced **six warp departures at 0 Gm**, and those co-located 
 - **Note:** this does not fix G6 (the AI idling 135/144 cycles while at war and never landing) — that is a
   separate, larger investigation, recorded but not scheduled here.
 
+### S1e — ⭐ FIX THE BLIND AI: the degenerate detection-quality read (audit §9/G10) · medium
+**All 288 AI decisions in the real play log read `vs no threat`** — because every ship contact reports
+`sig=0kW` while the star reports 1.4 M kW. `GreatestThreatTo` sums `SignalStrength_kW`
+(`ThreatAssessment.cs:39`) → `LatestDetectionQuality.SignalStrength_kW` (`SensorContact.cs:54`), and that value
+is zeroed even though the contact must have passed `> 0` at scan time (`SensorScan.cs:132`).
+- **Why it outranks most depth work:** `CombatRisk.WouldEngage` deliberately returns **true** when the enemy
+  estimate is non-positive (`CombatRisk.cs:41`) — a sensible fallback whose input is *always* zero, so **the
+  AI's entire risk appetite never evaluates anything**, at the commit gate or anywhere else. Two treaty
+  behaviours can never fire either. This is also the **keystone prerequisite** `DIPLOMACY-DESIGN` already names.
+- **Build:** trace why `LatestDetectionQuality` is zeroed while `HighestDetectionQuality` was not (root cause
+  **unverified** — start there, do not guess), then fix the read so a detected ship reports real loudness.
+- **Gate:** a fixture with two detected hostile fleets asserts `GreatestThreatTo` names the rival with a
+  **non-zero** strength, and that `WouldEngage` **returns false** for a hopeless attacker — i.e. the risk band is
+  actually exercised, which no test does today.
+- **See:** the `[AI]` tape stops saying `vs no threat` and starts naming a rival with a number.
+- **Deps:** none. **Caution:** the same quality value drives planet/star survey reveal, so changing it touches
+  detection *and* survey — map that blast radius before editing (Prime Directive).
 ### S2 — The five behaviour flags into the save (#27a) · medium
 Corrected premise **[V]**: they're set on the **normal** New Game path too (`NewGameMenu.cs:562-581`), not
 just DevTest. The defect is that **loading a save never sets them**, so a save plays differently depending
