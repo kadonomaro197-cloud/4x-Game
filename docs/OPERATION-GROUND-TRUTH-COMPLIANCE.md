@@ -5,9 +5,24 @@
 doc: the orders distilled into checkable items, with honest current status, plus the divergences that already
 happened so they are not repeated or quietly forgotten.
 
-**THE RULE FOR THE SESSION (and any session that inherits this):** before starting any new phase, commit, or
-fan-out, re-read §1 (the order of operations) and §2 (the hard rules). Before claiming the job done, walk §4
-line by line. **Do not mark an item ✅ unless the artifact exists and you can name it.**
+> ### ⚠ THIS FILE IS NOT THE AUTHORITY. `OPERATION-GROUND-TRUTH-PROMPT.md` IS.
+>
+> **Corrected 2026-07-27 after the developer asked why the session was working this doc instead of the orders —
+> a fair challenge that found a real gap.** This file is a **derived status tracker**, subordinate to the
+> prompt. A checklist that stands in for its source will quietly drop whatever it failed to copy, which is the
+> exact failure mode this whole operation exists to fix.
+>
+> **What the drift actually cost (found by that challenge):** the orders' mission verb list is *"consolidate,
+> correct, and **DELETE** what is no longer valid,"* and Phase C says *"superseded-but-historical → `docs/archive/`
+> with a banner; invalid-and-worthless → delete."* **This tracker had NO ROW for deletion or archiving at all**,
+> so nothing was deleted, nothing was archived, and the omission was invisible. Likewise *"prune
+> `CLIENT-TEST-CHECKLIST.md` of retired items"* had been declared unnecessary **without the file ever being
+> examined.** Both are now done (§8) and tracked below.
+>
+> **THE RULE, corrected:** **re-read the PROMPT's phase you are in — not this summary — before starting any
+> phase, commit, or fan-out.** Use this file only to record *status*. Before claiming the job done, walk the
+> prompt's §8 Definition of Done against §4 here, and treat any disagreement as **this file being wrong**.
+> Do not mark an item ✅ unless the artifact exists and you can name it.
 
 ---
 
@@ -96,6 +111,7 @@ line by line. **Do not mark an item ✅ unless the artifact exists and you can n
 | 7 | **A short handoff message**: what changed, what's red/green, what to rule on first | ✅ **§7 below** |
 | — | **Phase B refute pass + killed-findings appendix** (orders §3) | ✅ **run — see §6.** 10 claims, 0 refuted, 3 precision-corrected, 2 honestly marked un-rechecked. Method deviated from 3-agents-per-claim for a budget reason that is documented, not hidden |
 | — | `SYSTEMS-STATUS-AND-TEST-PLAN.md` retirement finished + root `CLAUDE.md` repointed | ✅ **DONE.** Bannered 🗄; the 4 mandating references in root `CLAUDE.md` repointed to the three single owners (contradiction with its own line 360 resolved); DOCS-INDEX row flipped. Verified nothing live was lost — §6's last apparently-live row is REFUTED at HEAD (`PlanetaryWindow.cs:102/218` gate on `ComponentInstancesDB`) |
+| — | **Phase C deletion / archive pass** (orders §4: superseded-but-historical → `docs/archive/` + banner; invalid-and-worthless → delete) | ✅ **DONE 2026-07-27 — was MISSING from this tracker entirely.** `SYSTEMS-STATUS-AND-TEST-PLAN.md` **moved to `docs/archive/`** with its banner, and all **23 reference sites across 17 files** repointed (`.md` **and** `.cs`, per the Phase C link-sweep rule), residual grep = 0. **Deletions: none, and that is a verdict, not a skip** — see §8. |
 | — | `CLIENT-TEST-CHECKLIST.md` · `TESTING-TRACKER.md` current | ✅ **DONE** — 7 new runtime rows in the checklist and a new **GAUGE-HONESTY BACKLOG** (GH1–GH7) in TESTING-TRACKER, both straight from the log forensics. *(Pruning retired items: not done — no row was found stale enough to cut, and cutting on a guess is worse than leaving it.)*
 
 ---
@@ -196,3 +212,50 @@ Inherited `b218acf` / `255bc52` were both already green. **Nothing is red.**
 gauges)**. Both cheap-wire. The argument is not preference: a ground battle **already halts your clock** and
 says nothing, and a dead simulation currently reads as "paused" on every instrument. Fix the windows before
 building more room.
+
+---
+
+## 8. THE DELETION / ARCHIVE PASS (orders §4) — done 2026-07-27, and the verdict on deleting
+
+**Why this section exists:** it was missing. The mission says *consolidate, correct, and DELETE*, and this
+tracker never carried a row for it, so the session did neither for most of the run.
+
+### Archived (superseded-but-historical → `docs/archive/` with a banner)
+
+| Doc | Action | Sweep |
+|---|---|---|
+| `SYSTEMS-STATUS-AND-TEST-PLAN.md` | **MOVED to `docs/archive/`**, banner intact | **23 sites / 17 files** repointed, `.md` **and** `.cs`; residual grep **0**. The orders file itself is left pointing at the old path on purpose — it is a historical record of the task as issued, not a live pointer. |
+
+Earlier in the run this doc was bannered **in place**, with "so old line references stay resolvable" as the
+reason. That was the rule being softened: the orders say *archive it*, and moving the file keeps every line
+resolvable at its new path anyway. Fixed.
+
+### Already satisfied (a stale debt note, now flippable)
+
+`DOCS-INDEX.md` known-debt **3(c)** says to relocate the three bannered superseded docs (`PLAN`,
+`AURORA-GAP-ANALYSIS`, `HAZARD-DISCOVERY`) into `docs/archive/` "when (a) runs". **All three are already
+there** — the debt is closed.
+
+### Deletions: **NONE — and that is a considered verdict, not an omission**
+
+The orders allow deleting the *invalid-and-worthless*. Nothing in the tree qualifies:
+
+- Every remaining `docs/` file is **live design**, **reference** (the `aurora/` spec), a **dated point-in-time
+  record** (the audits — valuable precisely because they are snapshots), or **historical-with-a-banner** in
+  `docs/archive/`.
+- The candidates a careless pass might have deleted, and why they stay: `SYSTEMS-STATUS-AND-TEST-PLAN.md`
+  (archived instead — its §3/§4 narrative is the only record of that era's system map);
+  `ColonyHexMapDB`-adjacent notes (the blob is a **live landmine**, so the warning must stay loud, not vanish);
+  and `OPERATION-GROUND-TRUTH-PROMPT.md` (the orders — mark superseded when the plan it produced is accepted,
+  but never delete).
+- **The `.md` provenance mentions stay untouched** (~22 path-shaped names of merged-away docs). Deleting or
+  rewriting exactly those is what destroyed history in the 2026-07-13 sweep; the surface design's header
+  records the repair. Converting them to plain text is a careful by-hand job, not a sweep.
+
+### `CLIENT-TEST-CHECKLIST.md` pruned (orders §4)
+
+103 items, **7 already confirmed live** and interleaved among the 96 open ones. The confirmed block is now
+**folded** under a RETIRED summary rather than deleted — a passed runtime check is *evidence*, and deleting it
+would lose the only record that the fleet-menu freeze fix was ever verified. Everything still visible is open.
+A header now points the reader at the newest block first, because four of those rows are about **instruments
+that lied**, which outrank any feature check.

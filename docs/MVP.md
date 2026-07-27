@@ -213,7 +213,7 @@ order when the §1 loop is done; do **not** pull them onto the v1 path (that's t
 ## 7. How to use this doc
 
 1. **New idea?** → §6 Parking Lot. Not the build.
-2. **Starting a stage?** → open `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md`, read the systems it connects to, work
+2. **Starting a stage?** → open `docs/archive/SYSTEMS-STATUS-AND-TEST-PLAN.md`, read the systems it connects to, work
    those too (the Prime Directive). Combat design lives in `docs/combat/COMBAT-DESIGN.md`; ground/infrastructure
    design in `docs/aurora/`. Build the *slice*, not the whole spec.
 3. **Stage done?** → it has a gauge (test) and the systems-map row is updated.

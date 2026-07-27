@@ -1,4 +1,16 @@
 # Client-Side Test Checklist — what only YOUR local build can verify
+> **⚠ PRUNED 2026-07-27 (OPERATION GROUND TRUTH Phase C).** This file had grown to **103 items**, 7 of them
+> already confirmed live and 96 still open, with the passed ones interleaved among the live ones. The confirmed
+> block is now **folded** under a "RETIRED" summary rather than deleted — a passed runtime check is evidence, and
+> deleting it would lose the only record that the fleet-menu freeze fix was ever verified. **Everything still
+> visible is OPEN and needs a run on the developer's Windows build.**
+>
+> **Read the newest block first** (⛔ NEW 2026-07-27, at the bottom): it is the one added from the real
+> 2026-07-23 play logs, and four of its rows are about **instruments that lied** rather than features — a dead
+> simulation that reads as "paused", a `faults=0` summary that counted the wrong things, unexplained clock
+> stops, and a ground UI that leaves no trace at all. Those cost the developer 2.7 minutes of pressing play at
+> a dead engine, so they rank above any feature check.
+
 
 **Why this exists:** CI now *compiles* the client (the `build-client` job, added 2026-06-28), so compile breaks are caught automatically. But CI still **cannot run** the client — it's display-coupled, headless CI can't open a window. So **runtime behavior, rendering, and clicks are verified only by your local build** + the `game_logs/` pages. This is the running list of client things awaiting that local check. Tick them off; tell me what's broken (send the relevant `game_logs/` page) and I'll fix.
 
@@ -57,6 +69,9 @@ All engine-green; these are the *runtime/feel* checks. Full detail + what-right-
 - [ ] **Crew gate (C1).** Build a large fleet (or drain the pool) → a ship build **blocks** under the default regime; flip to Totalitarian → it **conscripts** (builds understaffed).
 - [ ] **Reactive diplomacy drift (D3).** Spawn a hostile fleet (first contact) → set that faction militarist → advance several months → Dump Society: your view of them cools toward Hostile on its own.
 
+<details>
+<summary><strong>🗄 RETIRED — 7 items confirmed live 2026-07-03 (Fleet UX + the testing-strategy branch). Kept for history; nothing here needs re-running.</strong></summary>
+
 ## Fleet UX — ✅ PASSED 2026-07-03 (after the fleet-menu freeze fix)
 - [x] **Left-click a fleet selects it immediately** — no menu, no dead-click, no "click elsewhere first." **PASSED.**
 - [x] **Right-click shows the context menu** (right-click only). **PASSED.**
@@ -69,6 +84,9 @@ All engine-green; these are the *runtime/feel* checks. Full detail + what-right-
 - [x] **Visual pass** — planets deeper shades, space darker.
 - [ ] **Save/load a PLAYED game** (D1) — the one remaining "survives a session" risk. Play a bit → Save → Load → confirm no exception + state persists. (Engine `SaveLoadWithJobTests` covers the queued-job NRE that was fixed; the full played-game round-trip is the live check.)
 - [ ] **Range-ring hover tooltips render** — hover a weapons/sensor/EMCON ring line → a label names the unit + which ring. CI-green; live render unconfirmed.
+
+
+</details>
 
 ## Hazards — the headline (the whole cradle-to-grave loop)
 - [ ] **Hazards render on the system map.** Corona = faint red-orange ring at the star; solar flare = bright orange (transient). *Note:* gas cloud, debris field, ion storm, and gravimetric anomaly currently **all render the same green** — distinct colors per type is a flagged follow-on, not built yet. So you'll see green blobs; that's expected for now.

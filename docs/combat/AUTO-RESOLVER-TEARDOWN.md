@@ -259,7 +259,7 @@ Read and modify the files in this sequence. It goes shared-math → readers → 
 11. **Fix C: ground multi-weapon list**, then **Fix B: model count.** These are real slices — do them one at a time, push, and **wait for CI green before stacking the next** (root `CLAUDE.md` pre-flight step 6; the SDK can't build in your cloud container, so CI is your only correctness gauge and it takes ~30 min).
 
 **Two standing cautions the whole read depends on:**
-- **The map is bigger than combat.** Before you touch the ground resolver, open `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` and read the ground-combat row's "Connected to" column — capture flips region ownership which flips colony ownership; changing casualty handling touches `MaintainFormations` and orbital bombardment softening.
+- **The map is bigger than combat.** Before you touch the ground resolver, open `docs/archive/SYSTEMS-STATUS-AND-TEST-PLAN.md` and read the ground-combat row's "Connected to" column — capture flips region ownership which flips colony ownership; changing casualty handling touches `MaintainFormations` and orbital bombardment softening.
 - **CI can't run the client.** These are engine changes, so CI's `test` job will catch logic breaks — but any *runtime* feel (does the squad fight look right on screen?) only shows on your local Windows build. Add each squad change to `docs/CLIENT-TEST-CHECKLIST.md` for a local run.
 
 ---

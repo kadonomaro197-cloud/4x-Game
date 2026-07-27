@@ -275,7 +275,7 @@ a unit → load → sail → win orbit → land → capture.
   Embark/Land UI exists). Re-point "the one true remaining v1 gap" to: a normal-game target + a live runtime pass.
 - **`docs/ground/GROUND-UNIT-VARIABLES.md`** — STALE resolver line refs + a "weapons flatten" finding superseded by
   the built per-weapon loadout.
-- **`docs/SYSTEMS-STATUS-AND-TEST-PLAN.md`** — being retired; migrate live rows into DOCS-INDEX / TESTING-TRACKER /
+- **`docs/archive/SYSTEMS-STATUS-AND-TEST-PLAN.md`** — being retired; migrate live rows into DOCS-INDEX / TESTING-TRACKER /
   SYSTEM-CONNECTION-MAP and mark it superseded.
 - **`Pulsar4X/Pulsar4X.Client/CLAUDE.md`** — document the two client Entity-Assembler ground breaks so the next
   session doesn't assume the ground designer is reachable.

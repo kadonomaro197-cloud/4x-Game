@@ -161,7 +161,7 @@ Verdicts: **KEEP** (healthy) · **KEEP-TRIM** (small fix/trim) · **STALE-FIX** 
 | STATUS | `SESSION_STATE.md` | KEEP-TRIM | BLOATED | Trim to the latest 1-2 session blocks plus a permanent 'Durable Lessons' section; move all |
 | STATUS | `docs/CLIENT-TEST-CHECKLIST.md` | KEEP-TRIM | VERBOSE | Keep as the single live runtime punch-list but restructure: (1) delete or move all ✅ PASSE |
 | STATUS | `docs/DOCS-INDEX.md` | KEEP-TRIM | BLOATED | Keep as the canonical index but enforce a hard cap on the Notes column (~1 line / ~25 word |
-| STATUS | `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` | STALE-FIX | VERBOSE | Keep the doc for its unique value — the system×system 'Connected to' wiring map — but (1)  |
+| STATUS | `docs/archive/SYSTEMS-STATUS-AND-TEST-PLAN.md` | STALE-FIX | VERBOSE | Keep the doc for its unique value — the system×system 'Connected to' wiring map — but (1)  |
 | STATUS | `docs/TESTING-TRACKER.md` | KEEP-TRIM | VERBOSE | Keep as the canonical test ledger but split concerns: (1) move the dated per-session live- |
 | COMBAT | `docs/AUTO-RESOLVER-ANATOMY.md` | STALE-FIX | VERBOSE | Do a status pass: flip §4 #1/#2/#3/#5/#6 and §7d #1/#2 from ➕/backlog to ✅ built (cite Wea |
 | COMBAT | `docs/combat/COMBAT-DESIGN.md` | STALE-FIX | VERBOSE | Keep as the combat design hub, but: (1) replace the stale 'What Already Exists' table with |

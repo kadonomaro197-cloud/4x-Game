@@ -114,7 +114,7 @@ The next branch extracts the shared weapon-triangle / dodge / shield / armour **
 
 On branch **`claude/space-economy-morale`** (67 commits ahead of main). **All engine work CI-green** (HEAD `b2d2e60` verified: engine suite + client compile both pass); client work is CI-compile-checked but runtime-blind (developer's local build only). This branch built the **empire layer** on top of the existing physics/combat: morale/population, government, diplomacy, stations, internal politics.
 
-**Status now = "to the PC line":** everything cloud-doable is wired + green; what remains is (a) local runtime testing and (b) a few design decisions. The **authoritative live status is now three dashboards** — read them, not this paragraph, for detail: `docs/DOCS-INDEX.md` (every doc's status), `docs/TESTING-TRACKER.md` (the PC-test queue + design/PC-gated list), `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` (systems map — ⚠ itself stale, refresh pending).
+**Status now = "to the PC line":** everything cloud-doable is wired + green; what remains is (a) local runtime testing and (b) a few design decisions. The **authoritative live status is now three dashboards** — read them, not this paragraph, for detail: `docs/DOCS-INDEX.md` (every doc's status), `docs/TESTING-TRACKER.md` (the PC-test queue + design/PC-gated list), `docs/archive/SYSTEMS-STATUS-AND-TEST-PLAN.md` (systems map — ⚠ itself stale, refresh pending).
 
 **Built + green this branch (headlines):** stations (parallel host, v1); morale/population M1–M5 (morale valve → migration, jobs/housing, manpower + **crew gate** "can't build a ship you can't crew", tax→Ledger, power/food shortage); **government-as-modulator** (dials read live by processors); **diplomacy** (relationship track + IFF + first-contact + commerce + treaties + casus-belli + war→legitimacy + **live reactive drift**); **legitimacy + rebellion first rung**; the GlobalManager keystone (faction processors now fire); enriched **SocietyReadout** + DevTools **government test-lever** + **Dump Society/Diplomacy** for observability.
 
@@ -209,7 +209,7 @@ work is CI-green, client (UI) work is CI-blind (the developer's local build is t
 
 ### Where to resume
 Build the on-map combat **marker** (finishes the 3-window visibility set), then back to the M1 lever plan
-(`docs/SYSTEMS-STATUS-AND-TEST-PLAN.md`) for the next system.
+(`docs/archive/SYSTEMS-STATUS-AND-TEST-PLAN.md`) for the next system.
 
 ---
 
@@ -399,7 +399,7 @@ Chased "the mine does literally nothing," proved the whole economy substrate, bu
 ### What was built
 - **Scenario harness `TestScenario`** (`Pulsar4X.Tests/TestScenario.cs`): stands up a REAL faction+colony via the live `CreateFromBlueprint` path, advances the sim clock, and exposes `QueueProductionJob(designId, count, repeat, installOnColony)` — the engine-level "player queues a build" lever. **The mid-game fixture the 2026-06-22 session flagged as the next step.**
 - **Economy gauges (CI-green, asserting):** `EconomyReadoutTests` (mining depletes deposits; refining makes Space-Crete; infra/fuel readouts), `ProductionBuildTests` (factory consumes minerals → installs a Refinery, 1→2 — the build-to-product link), `ShipSpawnTests` (engine ship-spawn lands a ship in the system + survives a tick — first coverage for the DARK Ships system).
-- **`docs/SYSTEMS-STATUS-AND-TEST-PLAN.md`** — the living systems map: every system's status (done/works/partial/dark/absent), its gauge/test, and what it's wired to; plus §5 play-by-play live-test and §6 client backlog. Made a MANDATORY consult in root `CLAUDE.md` (Prime Directive + working agreement).
+- **`docs/archive/SYSTEMS-STATUS-AND-TEST-PLAN.md`** — the living systems map: every system's status (done/works/partial/dark/absent), its gauge/test, and what it's wired to; plus §5 play-by-play live-test and §6 client backlog. Made a MANDATORY consult in root `CLAUDE.md` (Prime Directive + working agreement).
 - **`docs/MVP.md`** — the scope firewall. MVP = **"One Planet, Taken"**: build a fleet + ground force, win the SPACE battle over a planet, drop troops, win the GROUND battle, capture it. 4X scorecard: Exploit(economy=substrate)/Expand/Exterminate IN; **eXplore and eXploit=espionage are the two deferred v2 strategic pillars**. Build path Stage 0 (economy, DONE) → 1 (space combat, gauge it) → 2 (ground combat, mirror it) → 3 (stitch loop) → 4 (UI).
 
 ### The headline fix — the mine "did nothing" was a frozen SYSTEM, not broken mining
@@ -598,7 +598,7 @@ All 5 decisions wired: two-zone range/energy falloff, wavelength-to-material map
 `PlanetaryWindow` already gates the Installations tab on `ComponentInstancesDB` and renders via
 `componentsDB.Display(...)`. The broader colony economy UI also already exists in `ColonyManagementWindow`
 (Summary/Production/Construction/Mining + job-queuing). The only remaining work is a **live verification**
-that it all works in the running client (CI is client-blind) — `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` §5B step 7.
+that it all works in the running client (CI is client-blind) — `docs/archive/SYSTEMS-STATUS-AND-TEST-PLAN.md` §5B step 7.
 
 ---
 

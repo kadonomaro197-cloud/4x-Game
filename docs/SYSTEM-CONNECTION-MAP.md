@@ -15,7 +15,7 @@ graph — this file is where it lives.
 
 Keep those two columns out of this file. Here we track connections and nothing else.
 
-*Extracted from `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` on 2026-07-13 — this file lifts out only that doc's
+*Extracted from `docs/archive/SYSTEMS-STATUS-AND-TEST-PLAN.md` on 2026-07-13 — this file lifts out only that doc's
 "Connected to" column. If you find a connection this map doesn't list, add it in the same commit as the
 change that revealed it.*
 
