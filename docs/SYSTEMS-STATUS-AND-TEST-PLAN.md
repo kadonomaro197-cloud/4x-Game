@@ -1,4 +1,33 @@
-# Pulsar4X — Systems Status & Test Plan (Living Map)
+# Pulsar4X — Systems Status & Test Plan  🗄 **SUPERSEDED / RETIRED 2026-07-27**
+
+> ### ⛔ DO NOT USE THIS AS A LIVE STATUS MAP. DO NOT ADD TO IT.
+>
+> **Retirement completed 2026-07-27** (OPERATION GROUND TRUTH Phase C — `docs/DOCS-AUDIT-2026-07-27.md`).
+> Its three jobs were split to three single-owner dashboards, and root `CLAUDE.md` no longer sends you here:
+>
+> | If you want… | Go to |
+> |---|---|
+> | **system-to-system connections** (the Prime-Directive "map the blast radius" tool) | **`docs/SYSTEM-CONNECTION-MAP.md`** |
+> | **test / gauge state** (what is tested, what is owed, live-run results) | **`docs/TESTING-TRACKER.md`** |
+> | **doc currency + build state** per doc | **`docs/DOCS-INDEX.md`** |
+> | **planetary/ground build state + what to do next** | **`docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md`** |
+>
+> **Why the retirement is clean — nothing live was lost (verified, not assumed):**
+> - **§5 "Play-by-play: how to test"** duplicates the build/run/test commands already in root `CLAUDE.md`
+>   (*Build / Run / Test Commands*), which is the maintained copy.
+> - **§6 "Known open issues"** is entirely **resolved or stale**: the spawned-ships and starting-fleet rows
+>   already read ✅ CI-proven; the colony-economy row reads ✅ verified live 2026-06-24; and the last
+>   apparently-live row — *"Planetary Installations tab never appears (gated on dead `InstallationsDB`)"* — is
+>   **REFUTED at HEAD**: `Pulsar4X.Client/.../PlanetaryWindow.cs:102` and `:218` gate on
+>   **`ComponentInstancesDB`**, so that fix landed (root `CLAUDE.md` gotcha #4 records it).
+> - The **status columns** in §3 were the stale part that motivated the retirement in the first place.
+>
+> Kept in place (not moved to `docs/archive/`) only so the historical §3/§4 narrative and the old line
+> references stay resolvable. **Everything below is history.**
+
+---
+
+# (historical) Pulsar4X — Systems Status & Test Plan (Living Map)
 
 > ⚠ **STALE since 2026-06-29 (flagged 2026-07-02).** This map doesn't yet reflect the `claude/space-economy-morale` landings — morale/population (M1–M5), government-as-modulator, diplomacy substrate+teeth+drift, crew/manpower enforcement, legitimacy/rebellion, and stations are all built + CI-green but their rows here show earlier states. **For current status use `docs/TESTING-TRACKER.md` (tests) + `docs/DOCS-INDEX.md` (overview) until these rows are refreshed** (doc-debt #1 in DOCS-INDEX).
 
