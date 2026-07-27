@@ -353,6 +353,20 @@ is zeroed even though the contact must have passed `> 0` at scan time (`SensorSc
 - **See:** the `[AI]` tape stops saying `vs no threat` and starts naming a rival with a number.
 - **Deps:** none. **Caution:** the same quality value drives planet/star survey reveal, so changing it touches
   detection *and* survey — map that blast radius before editing (Prime Directive).
+### S1f — ⭐ The AI's garrison rebuild builds CARGO, not soldiers (live bug, audit §11/W14) · cheap-wire
+`ConquerResolver.cs:388-396` queues a ground-unit job and **never sets `job.InstallOn`**. `InstallOn` is read at
+`ComponentDesign.cs:70,73` and only installs the finished component when non-null; a ground unit is raised by
+that *installation* firing `GroundUnitAtb`. There is no generic default either — the fallback in
+`IndustryTools.cs:66-75` is **commented out**. Every player path sets it (`IndustryOrder.cs:165`,
+`IndustryDisplay.cs:417,424`, `IndustryPanel.cs:302,377`) and so does the costed tile queue
+(`GroundBuild.cs:63`).
+- **Effect:** the AI notices a depleted garrison, spends the materials, and produces **a crate in cargo** — no
+  soldier, forever. It then still reads as depleted, so it can do it again.
+- **Build:** set `job.InstallOn = colonyEntity` at that call site. **One line.** *(Consider also un-commenting
+  the generic default — but that is a wider blast radius, so treat it as a separate decision, not a freebie.)*
+- **Gate:** drive the rung to completion and assert a **unit appears on the roster**, not an item in cargo.
+- **See:** the `[AI]` tape's RebuildGarrison action followed by an actual garrison count increase.
+- **Deps:** none. Pairs naturally with S1b/S1d/S1e — all four are small, concrete AI defects.
 ### S2 — The five behaviour flags into the save (#27a) · medium
 Corrected premise **[V]**: they're set on the **normal** New Game path too (`NewGameMenu.cs:562-581`), not
 just DevTest. The defect is that **loading a save never sets them**, so a save plays differently depending

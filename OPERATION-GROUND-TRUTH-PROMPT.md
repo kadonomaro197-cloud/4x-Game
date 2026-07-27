@@ -266,6 +266,41 @@ found by the prior surveys (verify each is still true, then FIX in Phase C):
 
 ### A3 — Reachability walls audit (the player-path ledger)
 
+> #### ⚠ A3: 21 of the 23 named walls VERIFIED — but by OTHER MEANS; agents `A3a–e` never ran (2026-07-27)
+>
+> **Honest accounting:** the five assigned wall agents never ran. The coverage came from the **A4 rulings
+> matrix** (which hit most walls from the ruling side), from **direct session verification**, and from **this
+> slow walk**, which closed the last five that nobody had checked. The orders also ask for a **click path + size
+> per wall** — that lives in THE PLAN's slices (each carries a literal click-path reachability criterion and a
+> cheap-wire/medium/large size).
+>
+> **Verified ✅ (21):** stock New Game raises nothing (`NewGameMenu.cs:52,55,60`) · assembler ground panel gated
+> on a ship design · saved ground design unreopenable (`ShipDesignWindow.cs:166,223,592`) · no penetration/energy
+> on the assembled path · region-0 muster hardcode (zero non-zero writers) · the free build path **and a SECOND
+> free one** vs the fortification list · **a Production-tab building is located nowhere** (`BuildingDesign.cs:52-57`
+> installs but never places on a hex) · no retreat verb · auto-engage on the region band · zero battle
+> log/events/records · the five flags as process statics · ground fog unread by the client · research data-inert
+> (17/22 templates cost 0) · **`CrewReq` — worse than stated: there is no crew field on a ground design at all** ·
+> `EmploymentAtbDB` on zero templates · colony power double-dark · `BombardGlobalHex` **test-only (one caller, a
+> test)** · `OrderFormationTreeMoveToHex` **zero callers** · the validity gates **resolved: they compute + display
+> but do NOT block the save** · orbital bombardment orphaned · **`Amphibious` read by nothing.**
+>
+> **⛔ TWO LIVE BUGS fell out of walls nobody had checked** — both cheap, both now plan slices:
+> - **W14 → S1f: the AI's garrison rebuild produces CARGO, not soldiers.** `ConquerResolver.cs:388-396` never
+>   sets `job.InstallOn`; `ComponentDesign.cs:70,73` only installs a finished component when it is non-null, and
+>   the generic default in `IndustryTools.cs:66-75` is **commented out**. Every player path sets it, and so does
+>   the costed tile queue (`GroundBuild.cs:63`). So the AI spots a depleted garrison, spends the materials, and
+>   gets an item in cargo — forever, and it still reads as depleted afterwards. **One line.**
+> - **W17: `Amphibious` is a cradle-to-grave violation, not just dead data.** The dial is declared, JSON-settable,
+>   copy-ctor'd, **and described to the player in the designer blurb** (`GroundLocomotionAtb.cs:32,40,43,51`) —
+>   while the only other engine mention is a `HexPathfinder.cs:39` comment saying the gating is *not* implemented.
+>   A player can design, cost and build an amphibious unit and it does nothing; water is impassable for everyone.
+>
+> **⚠ Still UNVERIFIED (2):** the *"every March-to-Region path sets the region index **without restamping the
+> global position**"* claim (A4b confirmed it is the only fully-wired move verb, but the restamp half was never
+> proven — flagged in the canon doc rather than asserted), and the **city-builder half** of "test-only
+> city-builder methods" (only `BombardGlobalHex` was checked). Full detail: audit §11.
+
 Re-verify each known wall at HEAD (some may have moved). For each: the exact click path a player would take, where it
 breaks, file:line, and whether the fix is cheap-wire / medium / large. The known list: stock New Game has no troops,
 no enemy, no fleet (`NewGameMenu` auto-flags false — ruling 27b keeps this; the scenario-start question is open);

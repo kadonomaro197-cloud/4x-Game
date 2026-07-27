@@ -396,6 +396,44 @@ crammed into a 0–1 slot). **Scheduled as plan slice S1e.** Size: medium.
 
 ---
 
+## 11. THE A3 WALLS THAT NOBODY HAD CHECKED (closed 2026-07-27 during the slow walk of the orders)
+
+Of A3's 23 named walls, most were verified by the A4 rulings matrix or directly. **Five had been checked by
+nobody.** All five are now verified — and one is a **live AI bug**.
+
+### ⛔ W14 — THE AI'S GARRISON REBUILD PRODUCES CARGO, NOT SOLDIERS (live bug, cheap-wire)
+
+`IndustryJob.InstallOn` **is** read: `ComponentDesign.cs:70,73` installs the finished component **only when it
+is non-null**. Every other path sets it — `IndustryPanel.cs:302,377`, `IndustryDisplay.cs:417,424` (the
+auto-install checkbox), `IndustryOrder.cs:165`, and even the costed ground tile queue (`GroundBuild.cs:63`,
+`job.InstallOn = colony`).
+
+**The AI's garrison rebuild does not.** `ConquerResolver.cs:388-396`:
+
+```csharp
+var job = new IndustryJob(info, designId);
+job.InitialiseJob(1, false);
+IndustryTools.AddJob(colonyEntity, gLineId, job);
+IndustryTools.AutoAddSubJobs(colonyEntity, job);   // ← no job.InstallOn = colonyEntity
+```
+
+And there is **no generic default to fall back on** — the defaulting in `IndustryTools.cs:66-75` is
+**commented out**. A ground unit is only raised when its component is *installed* (that is what fires
+`GroundUnitAtb`), so with `InstallOn` null the finished infantry is **added to storage as an item and never
+raised.** The AI detects a depleted garrison, spends the materials, and gets a crate. Every time.
+**Fix: one line.** Gauge: run the rung to completion and assert a *unit* appears on the roster, not cargo.
+
+### The other four, all CONFIRMED
+
+| Wall | Verdict | Evidence |
+|---|---|---|
+| **W17 — `Amphibious` read by nothing** | **CONFIRMED — and it is a cradle-to-grave violation.** The dial is declared (`GroundLocomotionAtb.cs:32`), settable from JSON (`:40`), copy-ctor'd (`:43`) and **described to the player in the designer blurb** (`:51`, *"…, amphibious"*). The only other mention in the engine is a **comment** in `HexPathfinder.cs:39` noting amphibious/transport gating as *not* implemented — water is impassable for everyone. So a player can design, cost, and build an amphibious unit and it does nothing. | `GroundLocomotionAtb.cs:32,40,43,51`; `HexPathfinder.cs:39` |
+| **W21 — `OrderFormationTreeMoveToHex` zero callers** | **CONFIRMED** — only the definition exists, no caller anywhere. | `GroundForcesDB.cs:960` |
+| **W20 — `BombardGlobalHex` test-only** | **CONFIRMED** — definition plus **exactly one caller, a test.** Per-hex building bombardment is real and unreachable in play. | `GroundBuildings.cs:227`; sole caller `CityGridTests.cs:194` |
+| **W7 — a Production-tab building is located NOWHERE on the map** | **CONFIRMED by mechanism** — `BuildingDesign.OnConstructionComplete` *installs* the building on the colony (`BuildingDesign.cs:52-57`) but nothing **places it on a hex**; only the tile side-car carries a destination. So a colony that grows after game start gains buildings the war map cannot see. | `BuildingDesign.cs:52-57`; `GroundBuild.cs:63` (the one path that does locate) |
+
+---
+
 ## 10. THE COMPLETE A2 SEED-SWEEP LEDGER (orders §8: *"the dated audit doc records the sweep"*)
 
 All 13 named seed items, plus what the sweep turned up beyond them. **Three seed claims were themselves wrong**
