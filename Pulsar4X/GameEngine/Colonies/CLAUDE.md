@@ -29,7 +29,7 @@ Population, colony lifecycle, life support. Lives in `GameEngine/Colonies/`.
 | `ColonyFactory.cs` | Two creation paths, both attach the same blob set: **`CreateFromBlueprint()`** (`ColonyFactory.cs:26`) is the **real New-Game path** (builds the start colony from JSON); `CreateColony()` (`ColonyFactory.cs:188`) is the in-game "found a colony" order path. |
 | `CreateColonyOrder.cs` | Player order to found a colony on a planet. |
 | `PopulationProcessor.cs` | `IHotloopProcessor` (monthly). Runs `GrowPopulation()` for each colony. **+ P3.2 (Operation Earthfall A3): `ComputeCurrentMorale(Entity)`** — a pure no-mutation reader of the current-cycle morale (same inputs as `GrowPopulation`, same `ColonyMoraleDB.ComputeMorale`); consumed by `LegitimacyProcessor` to read fresh morale under `ReadCurrentMorale`. `GrowPopulation` untouched → population sim byte-identical (a loud keep-in-sync comment guards both morale-input gatherings). |
-| `ColonyHexMapDB.cs` | **Built and wired.** DataBlob: hex-grid layout for a colony. `MaxRadius` scales with admin building office space. `HexTiles` — dict of coordinate → tile. |
+| `ColonyHexMapDB.cs` | **⛔ SUPERSEDED LANDMINE — DO NOT REVIVE, DO NOT BUILD ON IT (corrected 2026-07-27; this row used to read "Built and wired").** A colony hex-grid blob whose `MaxRadius` scales with admin office space. Three verified problems: **(1) it is SAVE-UNSAFE** — the file contains **zero** `[JsonProperty]` attributes, so none of its state (`MaxRadius`, `HexTiles`) survives a save/load; the surviving blob comes back empty. **(2) It is still LIVE and still ATTACHES itself**: `Pulsar4X.Client/.../ColonyHexMapWindow.cs:62-68` and `Colonies/ColonyHexMapProcessor.cs:32-36` both do get-or-create and then **`colony.SetDataBlob(...)`** — so simply opening that window permanently bolts a vestigial, unsaveable blob onto a colony entity. **(3) It has been superseded** by the save-safe `GroundHex` + `CityGrid` model, whose own comments name this as the flaw they exist to fix (`Galaxy/CityGrid.cs:11`, `Galaxy/GroundHex.cs:12`: *"the persistence the old `ColonyHexMapDB` lacked"*; `PlanetRegionsTests.cs:305`: *"the old `ColonyHexMapDB`'s fatal flaw"*). The live surface model is `docs/ground/GROUND-SURFACE-MAP-DESIGN.md`. |
 | `ColonyHexMapProcessor.cs` | **Built and wired.** An `IInstanceProcessor`, but it is **not driven by the instance-processor queue** — it's invoked by **direct static call** to `ColonyHexMapProcessor.ForceUpdateColonyHexMap(colony)` from `AdminSpaceProcessor.cs:21` (when admin space recalcs) and from the client `ColonyHexMapWindow.cs:68`. Rebuilds the hex map size from the colony's admin-building office space. (Runtime behavior unverified — CI can't run the client.) |
 | `HexTile.cs` | One hex cell on the colony map. Holds terrain type, what's built there. |
 | `HexCoordinate.cs` | Cube-coordinate system for the hex grid. |
@@ -136,7 +136,7 @@ Carrying capacity is the total population support value from all installed infra
 
 ## Colony Hex Map (built and wired)
 
-`ColonyHexMapDB` gives each colony a hex-tile grid — the same spatial layout pattern used in games like Civilization. This is significant for ground combat: it establishes that the colony ALREADY has a spatial model. Ground units, fortifications, and terrain could all live on hex tiles.
+~~`ColonyHexMapDB` gives each colony a hex-tile grid… ground units, fortifications and terrain could all live on hex tiles.~~ **⛔ CORRECTED 2026-07-27 — do not follow this.** That advice predates the ground layer and points at a **save-unsafe, superseded** blob (see its row above). Ground combat does **not** live on `ColonyHexMapDB` and never did: units carry `HexQ/HexR` (per-region), `GlobalQ/GlobalR` (the global cylinder grid) and `MiniQ/MiniR` + sub-tile offsets on `GroundForcesDB`, and buildings live on `GroundHex`/`CityTile`. **The real spatial model is `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` (all three zooms).**
 
 Key fields:
 ```csharp
@@ -147,7 +147,7 @@ HexTiles      Dictionary<HexCoordinate, HexTile>  — the actual map
 
 `UpdateMaxRadius(officeSpace)` — formula: `sqrt(officeSpace / 100)` rings. So a larger administration center expands the colony's spatial footprint.
 
-**Phase 4 note:** Before designing a ground combat spatial model from scratch, study `ColonyHexMapDB` carefully. It may already be the right substrate for placing ground units and resolving combat by tile.
+**⛔ Phase 4 note — OBSOLETE, corrected 2026-07-27.** It used to say *"before designing a ground combat spatial model from scratch, study `ColonyHexMapDB`… it may already be the right substrate."* **It is not, and the spatial model is already built.** Read `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` (region ring → operational hex → mini hex) and `GameEngine/GroundCombat/CLAUDE.md` instead. Following the old note would revive a save-unsafe blob the surface design explicitly lists as a do-not-revive landmine.
 
 ---
 
