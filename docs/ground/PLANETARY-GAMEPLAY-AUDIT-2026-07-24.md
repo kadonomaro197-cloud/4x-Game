@@ -8,6 +8,14 @@ parallel audit + synthesis + verification; one grade — population — was knoc
 
 **Read this before doing more planetary work.** It exists so we stop patching symptoms and start closing the loop.
 
+> **⚠ PART-STALE as of 2026-07-27 — read with `docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md`, which
+> supersedes its roadmap.** This audit's *findings* largely hold and its status board is still the best
+> subsystem-level summary. Three things in it are now corrected in place: its **"two open design questions"**
+> were LOCKED the same day it was written; its **P1** recommendation (default the home garrison on) is
+> **forbidden by ruling #27b** and its "DevTools-only" premise is **refuted** (there is an ungated main-menu
+> button); and where it says a link is built, remember **built ≠ ever run** — the whole chain is still
+> runtime-unverified. Full evidence: `docs/DOCS-AUDIT-2026-07-27.md`.
+
 ---
 
 ## The one-paragraph truth
@@ -146,19 +154,46 @@ The audit's job is status; the design doc's job is the contract.)*
 | Regional display upgrades: terrain-type hover, player glyphs, city marker, battalion stacks | ❌ not built (colour + units + deposits already draw) |
 | Client mini-hex draws (units at exact tile + sub-tile offset, fog-honest enemies, reach tints) | ⚠️ built but **compile-only — never run** |
 
-**Two open design questions** (carried into the next pass): what fine terrain should *do* mechanically (cover / movement
-penalty / unbuildable, vs. looks + affinity only), and whether weather/hazards live per-mini-tile or only per
-operational hex.
+~~**Two open design questions** (carried into the next pass): what fine terrain should *do* mechanically, and
+whether weather/hazards live per-mini-tile or only per operational hex.~~
+
+> **✅ BOTH WERE LOCKED THE SAME DAY — this paragraph was stale within hours (reconciled 2026-07-27).** See
+> `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` Layer 6:
+> - **What fine terrain DOES:** all three — **building affinity**, **it bends the fight** (cover, river
+>   crossings, ridgelines), and **hard terrain COSTS more but never forbids**. That last is the developer's
+>   general law, verbatim: *"nothing is impossible its just costs"* — and the multiplier is **not universal**, so
+>   a faction good at building in uncanny ways pays less for the ground everyone else calls impossible. Price
+>   it, don't ban it.
+> - **Weather/hazards:** **BOTH zooms.** The operational hex tells you a hazard **exists**; the mini hexes show
+>   you **where** it is — which is what makes a hazard something you maneuver around rather than just suffer.
+>
+> Both land on Layer 5's **M4** (per-mini-tile terrain), still unbuilt: every mini tile currently copies its
+> coarse hex's single terrain.
 
 ## The roadmap — how to get where we need to be
 
 Ordered by "nothing downstream matters until this is done." The theme: **stop building depth, start closing
 reachability + runtime.**
 
-### P1 — Open the front door *(medium)*
-**Goal:** a default menu New Game presents a takeable target, so the built loop is reachable without DevTools.
-- Give the menu path a takeable enemy: default `AutoRaiseHomeGarrison` on for at least one rival body, **or** wire a
-  minimal NPC colony+garrison into `CreateGameCore` (not only `DevTestStartFactory`).
+### P1 — Open the front door *(medium)* — ⚠ **RE-POINTED 2026-07-27, twice over**
+**Goal:** a takeable target reachable without DevTools.
+
+> **This section's original recommendation is now FORBIDDEN, and its premise was wrong.**
+> 1. **Forbidden:** it proposed defaulting `AutoRaiseHomeGarrison` **on**. The developer's **ruling #27b**
+>    (`docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md`) is **NO default garrison or enemy in a stock New
+>    Game**. That ruling wins; a stock New Game stays clean. *(#27b is, in fact, the one ruling already
+>    satisfied in code — all three auto-spawns default `false`, `NewGameMenu.cs:52,55,60`.)*
+> 2. **Premise wrong:** the loop is **not** DevTools-only. `MainMenuItems.cs:51-53` renders an **ungated
+>    "DevTest" main-menu button** → `NewGameMenu.DevTestGame()`, which stands up the player plus **two developed
+>    NPC factions** (UMF at war with Earth, and Kithrin) from JSON and flips ON all five ground behaviour flags
+>    (`NewGameMenu.cs:979-986`). A takeable target is already **one click from the main menu**.
+>
+> **So the real gap is naming and support, not machinery:** promote that button into a first-class
+> **Scenario / Skirmish** start, which satisfies #27b *and* the goal of this section with a rename rather than a
+> build. That is an **open question for the developer** (Q2 in
+> `docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md`), scheduled there as slice **S3**.
+
+- ~~Give the menu path a takeable enemy: default `AutoRaiseHomeGarrison` on…~~ **(superseded — see above)**
 - Ensure the player starts with (or can quickly build) a fleet + transport so the bridge has something to sail.
 - Guard the new default with a `BaseModIntegrityTest`-style gauge so the menu path stays populated.
 - **Unblocks:** turns the most-built system in the fork from DevTools-only into something a player meets on New Game
