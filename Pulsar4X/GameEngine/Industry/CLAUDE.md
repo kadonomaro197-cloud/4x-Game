@@ -108,7 +108,7 @@ Mineral `Accessibility` ranges 0.0–1.0. Low accessibility deposits are harder 
 
 `InstallationsDB` (this directory) looks like an installation registry — `Dictionary<string,float> Installations`, `WorkingInstallations`, `EmploymentList`, plus commented-out `ConstructJob` lists — but it is **abandoned**: never attached to a colony, no `[JsonProperty]` fields. It is an earlier design superseded by the component approach. **Do not** use it, extend it, or render it.
 
-**The installations UI gap:** `PlanetaryWindow.RenderInstallations()` is empty *and* its tab is gated on `HasDataBlob<InstallationsDB>()` (always false), so the tab never even shows. Phase 2a fix = render from `ComponentInstancesDB` (reuse `ComponentInstancesDBDisplay`). See `docs/aurora/PLANETARY-INFRASTRUCTURE.md` §6 and `CONVENTIONS.md` §6.
+**~~The installations UI gap~~ — ⛔ RETIRED CLAIM, corrected 2026-07-27.** This said `PlanetaryWindow.RenderInstallations()` was empty and its tab gated on the dead `HasDataBlob<InstallationsDB>()` so it never showed. **Fixed in the code and stale here:** `PlanetaryWindow.cs:102` gates the tab on **`ComponentInstancesDB`** (which every colony has) and `:218` renders through it. Root `CLAUDE.md` gotcha #4 already retired this exact claim — it simply never got swept out of this file. *(The `InstallationsDB` blob itself does remain dead/vestigial — don't use it — but the UI gap it implied is closed.)* Phase 2a fix = render from `ComponentInstancesDB` (reuse `ComponentInstancesDBDisplay`). See `docs/aurora/PLANETARY-INFRASTRUCTURE.md` §6 and `CONVENTIONS.md` §6.
 
 ---
 
