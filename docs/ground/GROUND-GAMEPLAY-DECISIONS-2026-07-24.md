@@ -111,6 +111,61 @@ per-weapon properties landing on the same object.
 
 ---
 
+## THE DOCTRINE BUILD PLAN (D1 → D3b) — what a doctrine actually IS
+
+**The developer's framing, confirmed 2026-07-27:** *"these doctrines are what control the movements of the particular
+units ONCE the auto resolver has started and the combat is initiated"* — and *"everything goes through the doctrines."*
+
+So a doctrine is **not** a slider the player tunes and **not** a strategic map setting. It is a **named posture assigned
+to a formation or sub-fleet in formation management**; the numbers behind the name are authoring data. Once the resolver
+takes over, that posture is the steering wheel — it decides how those units move and fight for the rest of the
+engagement. The player's only other input is the retreat call. (A doctrine CAN be switched mid-fight: doctrine changes
+are a direct call that deliberately bypasses the engagement lock.)
+
+| Slice | What it does | State |
+|---|---|---|
+| **D1** | The unified blueprint shape + the pure reader + the reciprocal guard | ✅ built, CI-green (`97ecd5b`) |
+| **D1b** | The ROLE catalog (25 doctrines) + the client domain filter | ✅ built (`b218acf`), CI pending |
+| **D2** | Ground reads the unified catalog; retire `groundStances.json` | pending |
+| **D3a** | **MOVEMENT steering** — doctrine decides where units go inside the fight | pending |
+| **D3b** | **FIRE behaviour** — targeting, retreat threshold, break-away, pursuit | pending |
+
+### D3a — the movement half (the developer's actual point)
+
+**Verified state (2026-07-27), and it makes this cheaper than expected:**
+
+- The in-engagement movement machinery **already exists and runs inside the resolver** on both sides:
+  ground `GroundForcesProcessor.ApplyEngagementManeuvers` (`:263`) → `GroundRoleComposer.RoleMoveAway` → `StepMiniToward`;
+  space `CombatEngagement.AdvanceClosing` (`:785`).
+- `RoleMoveAway` already returns exactly the tri-state a closing intent needs: **`false` = close · `true` = kite ·
+  `null` = hold**.
+- Ground **already has the intent concept** — `GroundEngagementStance` (Hold / Close / Stand-off) on the formation gates
+  *whether* a unit auto-maneuvers, while the ROLE decides *which way*. It is simply a **separate setting, not part of
+  doctrine.**
+- **Doctrine has ZERO movement authority today.** Of the movement dials the catalog carries only `SpeedMult`, and
+  **nothing reads it** (verified: the only `SpeedMult` hits in the engine are unrelated — hazard drag and locomotion).
+  The blueprint's own comment, *"v1: stored, applied in v2,"* is still literally true.
+
+**So D3a is mostly FOLD + REDIRECT, not new machinery:**
+1. Add **`ClosingIntent`** (Close / Hold / Standoff / Kite) to the blueprint + a `CombatDoctrine.ParseClosingIntent`,
+   authored across the catalog. This is the dial that says *where the unit wants to be* relative to the enemy.
+2. Make `RoleMoveAway` / `AdvanceClosing` consult **the formation's doctrine FIRST**, falling back to role when the
+   doctrine doesn't specify. *This is the line that transfers steering from "what I am" to "what I was ordered."*
+3. Fold ground's existing `GroundEngagementStance` into the doctrine's `ClosingIntent` so there is one intent, not two.
+4. Make `SpeedMult` finally bite on those maneuvers.
+
+**Why it must land before Standoff Barrage is added to the catalog:** without step 2, assigning an artillery doctrine
+maneuvers identically to unassigned artillery — the name would be pure decoration. That doctrine was deliberately held
+back from D1b for this reason.
+
+### D3b — the fire half
+
+Targeting priority (replacing the spread-by-current-health allocation that shoots the healthiest and never finishes a
+cripple), the per-doctrine retreat threshold (replacing the flat 0.5 constant), the break-away timer under fire, and
+pursuit. Each behind its own flag, byte-identical off.
+
+---
+
 ## THE NEXT DESIGN ITEM the developer named: the DOCTRINE CATALOG (planetary + space, leader-modulated)
 
 Rulings #15, #18, #19 and #20 all resolve *into doctrine* rather than into hardcoded rules — the developer's words:
