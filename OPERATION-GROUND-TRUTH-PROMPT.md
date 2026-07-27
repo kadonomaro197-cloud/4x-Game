@@ -11,7 +11,7 @@ need is either summarized inline or named by exact path on the branch below.
 The last full survey put planetary/ground gameplay at **~85% built engine-side, ~30% reachable by a player, and 0%
 observable** — a deep, CI-tested engine behind a nailed-shut front door with no window to watch through. Your job, in
 order: (1) **verify and reconcile every planetary/ground/combat document against the code and against the developer's
-recorded rulings** — consolidate, correct, and DELETE what is no longer valid; (2) **do forensics on the developer's
+recorded rulings** — consolidate, correct, and DELETE what is no longer valid (deletion-vs-archive rules and the link-sweep precedent live in Phase C — no doc is touched before Phase C); (2) **do forensics on the developer's
 actual play-session logs** to find what really ran, what failed, and what stayed silent; (3) produce **THE PLAN** — an
 ordered, gauged, slice-by-slice plan that makes everything planned for planetary gameplay **FUNCTIONAL** (works and is
 CI-gauged), **ACCESSIBLE** (a player reaches it from the normal game, not DevTools), and **OBSERVABLE** (you can watch
@@ -26,19 +26,18 @@ developer gives the go before it runs. Use as many subagents as the work needs; 
 1. **Get the branch.** Everything below lives on `claude/faction-design-audit-bb3tqz`, NOT the default branch:
    `git fetch origin claude/faction-design-audit-bb3tqz` and start your session's designated branch FROM it
    (`git checkout -B <your-branch> origin/claude/faction-design-audit-bb3tqz`). If you skip this, half the documents
-   and code this prompt references will not exist.
+   and code this prompt references will not exist. Then run `git rev-list --left-right --count origin/claude/faction-design-audit-bb3tqz...origin/main` — if main has commits the audit branch lacks, MERGE origin/main into your branch before Phase A ("code at HEAD" must mean the real latest). If your first push is rejected non-fast-forward because the harness pre-created your branch from a newer main, use `git push --force-with-lease` after confirming your branch contains the audit tip.
 2. **Read root `CLAUDE.md` in full.** The six-step pre-flight, the Landmine Index (L1–L11), the Prime Directive
    (map connections first), the Visibility Gate ("can we see enough?"), and the doc-upkeep rules are all binding.
 3. **Check CI on the two commits that were pending at handoff:** `b218acf` (doctrine D1b — the 25-doctrine catalog +
-   the client domain filter) and `255bc52` (docs). `97ecd5b` (D1) is confirmed green. If either pending commit is red,
-   diagnose and fix it FIRST — nothing stacks on a red base.
+   the client domain filter) and `255bc52` (docs). `97ecd5b` (D1) is confirmed green. As of prompt-writing (2026-07-27) BOTH had gone green on all checks — expect this to resolve instantly; if it doesn't, that's real news. If anything at your tip is red, diagnose and fix it FIRST — nothing stacks on a red base. (`gh` is NOT installed in this container — check CI via the GitHub MCP actions tools, e.g. `actions_list` on `ci.yml` filtered to the branch.)
 4. **Know your constraints.** No .NET SDK in the container — **CI is the only compile/test gauge** (~13 min, sharded
    6 ways; a new heavy test fixture lands in the `rest` shard). CI compiles the client (`build-client` job) but can
    NEVER run it — runtime behaviour is verified only on the developer's Windows machine via `launch.bat` +
-   `game_logs/`. One slice per push; wait for BOTH jobs green before stacking. Commits end with the two trailers your
+   `game_logs/`. One slice per push; wait for ALL checks green — the SIX test shards AND `build-client`; one red shard reds the push. Commits end with the two trailers your
    session's rules specify. **Communication:** the developer is a US Navy nuclear-trained machinist's mate — plain
-   English, mechanical/shipboard analogies, define jargon on first use, lead with the point. Do not use the
-   multiple-choice question tool by default — ask in prose, pick sensible defaults, state them, and proceed.
+   English, mechanical/shipboard analogies, define jargon on first use, lead with the point. NEVER use the
+   multiple-choice question tool — it is broken in this environment (root `CLAUDE.md`, confirmed by the developer; calling it wastes a turn). Ask in prose, pick sensible defaults, state them, and proceed.
 
 ---
 
@@ -60,7 +59,7 @@ Read these first. Where any other doc disagrees with them, the other doc is wron
 **The 27 rulings, compact** (full text + context in the DECISIONS doc — trust that doc where this table is terse):
 
 1. **ONE designer for everything; the three prebuilt unit templates are DELETED.** Forced order: #2 → #4 → #1
-   (the prebuilts are today the only carrier of penetration/per-shot-energy — dials first, then delete).
+   (the prebuilts are today the only carrier of penetration/per-shot-energy — dials first, then delete), plus a garrison-composition replacement: the prebuilts are what `GroundStartGarrison` raises and are referenced from the base mod and several tests.
 2. Penetration + Per-Shot-Energy are **WEAPON** properties, not unit properties.
 3. An invalid design (over carry budget / unpowered / no magazine) is **blocked from SAVING**.
 4. Ground parts **cost research, scaling with complexity** (today 17/22 templates cost 0 and all are start-unlocked).
@@ -92,11 +91,13 @@ Read these first. Where any other doc disagrees with them, the other doc is wron
 21. **What a planet capture transfers: STILL OPEN. Do NOT decide it. Ask the developer in prose.**
 22. Wound/casualty model: **already designed** (CasualtyTier + damage ledger + Training dial). Build, don't redesign.
 23. **Fire rate is CALCULATED**: a weapon carries a rate (damage/second); the resolver integrates it over the tick
-    against available targets and resolves who died — sequential down the doctrine's priority list. Applies to ALL
-    weapons. **Prerequisite (developer's chosen fix): SHORTEN the combat tick** (ground runs hourly; 10 dps × 3600 s
-    = 36,000 damage/tick otherwise; space's 5 s `CombatReactionStep` is the precedent).
-24. Ground battle readout: **a LOG, first.** (The entire GroundCombat folder currently emits zero log lines, zero
-    events, zero battle records — the single worst observability hole in the game.)
+    against available targets and resolves who died. Applies to ALL weapons. **Prerequisite ruled 2026-07-27:
+    SHORTEN the combat tick** (ground runs hourly; 10 dps × 3600 s = 36,000 damage/tick otherwise; space's 5 s
+    `CombatReactionStep` is the precedent). The ruling came AFTER the DECISIONS doc's calibration section was
+    written; that section is updated as of this prompt's commit — only the tick VALUE is still open. The mid-tick
+    overkill semantics ("sequential down the doctrine's priority list") is an INTERPRETATION of the developer's
+    phrasing, not a ruling — confirm it in the open-questions prose (it ties to ruling #18).
+24. Ground battle readout: **a LOG, first.** (The ground COMBAT path — `GroundForcesProcessor`/`ResolveRegionCombat` — emits zero log lines, zero events, zero battle records; only the C5.1 troop load/land orders publish anything. The single worst observability hole in the game. The DECISIONS doc carries the older absolute wording — qualify it there during Phase C.)
 25. Ownership drawing: later. Unit inspection: **hover tooltip on the map + the same detail in Force Management.**
 26. A lost contact leaves a **fading last-known** marker (like space).
 27. (a) The five ground behaviour flags move **into the SAVE** (today they're process statics set only by New Game —
@@ -106,8 +107,13 @@ Read these first. Where any other doc disagrees with them, the other doc is wron
 
 **Doctrine — the frame that governs D2/D3 (developer, 2026-07-27):** a doctrine is a **named posture assigned to a
 formation or sub-fleet in formation management** — not sliders, not a strategic setting. **Once the auto-resolver
-starts, the doctrine controls how those units move and fight. Everything goes through the doctrines.** State: D1
-(unified 25-entry catalog + reader + reciprocal guard) green; D1b (role catalog + client domain filter) pushed;
+starts, the doctrine controls how those units move and fight. Everything goes through the doctrines.** A doctrine CAN be switched mid-fight — doctrine changes are a
+direct call that deliberately bypasses the engagement lock; the player's only other in-fight input is the retreat
+call (#15). The catalog is **LEADER-MODULATED** (developer: doctrines "are also affected by leaders") — a commander's
+character bends engage/targeting/retreat/pursuit. The substrate exists (`CommanderDB` carries a `PersonalityDB`;
+`OfficerCharacter.Blend`/`TenureWeight` are already wired into the space retreat decision; ground has no equivalent
+read) — D3b must include it or record its deferral explicitly. State: D1 (unified catalog SHAPE, 12 entries, + reader
++ reciprocal guard) CI-green; D1b (role catalog growing it 12→25 + client domain filter) green as of prompt-writing;
 D3a = movement steering (ClosingIntent; make `RoleMoveAway`/`AdvanceClosing` consult doctrine FIRST, fall back to
 role; fold `GroundEngagementStance` in; make `SpeedMult` bite — verified: nothing reads it today); D3b = fire
 behaviour (target priority, per-doctrine retreat threshold, break-away, pursuit); D2 = ground reads the unified
@@ -126,12 +132,11 @@ never let "code exists" pass for "a player can reach it" or "anyone has seen it 
 The repo tracks the developer's real play-session output: **`game_logs/game_log_NNN.txt`** (read in numeric order)
 and **`console_output.txt`**. As of handoff the newest logs were committed at `436f73e` — from the **2026-07-23 play
 session**, which means they PRE-DATE the fixes that session produced (warp-NaN `496a5d1`, Kithrin survey speed
-`fd37692`, hive habitat `181130a`, assembler instrumentation `63684f9`, city-zoom deposit `104eaa2`). Check `git log
--- game_logs/` first — if the developer has pushed newer logs since, those are gold: they show whether the fixes held.
+`fd37692`, hive habitat `181130a`, assembler instrumentation `63684f9`, city-zoom deposit `104eaa2`). Check BOTH `git log origin/main -- game_logs/` AND `git log origin/claude/faction-design-audit-bb3tqz -- game_logs/` (fetch both first) — the developer has pushed logs to each in the past; if newer logs exist on either, those are gold: they show whether the fixes held.
 
 Reconstruct the session like an incident review:
 - **Timeline:** `[ACTION]`/`[TIME]`/`[SELECT]`/`[VIEW]`/`[STATE]` lines — what did the developer actually DO, in order?
-- **Failures:** `[FATAL]`, `[HANG]`, `[RenderError]`, `[InputError]`, `[PERF]`, `⚠ TELEPORT`, `[imgui-error]` — every
+- **Failures:** `[FATAL]`, `[HANG]`, `[RenderError]`, `[InputError]`, `[PERF]`, `⚠ TELEPORT` — every
   one gets a root-cause hypothesis checked against the code at HEAD (is it already fixed? partially? untouched?).
 - **Combat:** `[Combat]`, `[FleetCombat]`, `[DETECT]`, `[EMCON]`, `[ENGINE]` heartbeats — did battles form, resolve,
   interrupt correctly? Did the trigger fire on play?
@@ -148,17 +153,17 @@ Every planetary/ground/combat doc in `docs/` PLUS the subsystem `CLAUDE.md`s (`G
 **CONFIRMED / STALE / REFUTED / OVERSTATED** against code at HEAD, with file:line evidence. Seed list of drift already
 found by the prior surveys (verify each is still true, then FIX in Phase C):
 
-- `docs/aurora/GROUND-COMBAT.md:6` claims Pulsar has *no ground combat at all* — false against 54 files, and root
+- `docs/aurora/GROUND-COMBAT.md:6` claims Pulsar has *no ground combat at all* — false against a ~55-file subsystem, and root
   `CLAUDE.md` sends every ground designer straight to it.
 - `docs/MVP.md` + `docs/PLAY-TO-MARS-WALKTHROUGH.md` still name the invade-from-orbit panel as the #1 blocker; it was
   built (Earthfall C5.1, 2026-07-19).
 - `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` is "being retired" yet root `CLAUDE.md` both mandates opening it on every
   dive AND says don't add to it — complete the retirement and fix the contradiction.
-- `GameEngine/Colonies/CLAUDE.md` calls `ColonyHexMapDB` "built and wired"; the surface design lists it as a
+- `Pulsar4X/GameEngine/Colonies/CLAUDE.md` calls `ColonyHexMapDB` "built and wired"; the surface design lists it as a
   do-not-revive landmine; in code it's save-UNSAFE and still live on a toolbar window that ATTACHES it to a colony.
-- `Pulsar4X.Client/CLAUDE.md` (~line 689) says ground units live on the `ColonyHexMapDB` tile grid — false; they live
+- `Pulsar4X/Pulsar4X.Client/CLAUDE.md` (~line 689) says ground units live on the `ColonyHexMapDB` tile grid — false; they live
   on `GlobalQ/GlobalR` + `MiniQ/MiniR`.
-- `GameEngine/GroundCombat/CLAUDE.md`: the upkeep-source claim is BACKWARDS (assembler/garrison DO set it; the
+- `Pulsar4X/GameEngine/GroundCombat/CLAUDE.md`: the upkeep-source claim is BACKWARDS (assembler/garrison DO set it; the
   base-mod monolithic path doesn't), and the "C3 FULL path" test it cites does not exist.
 - **Scale contradiction our own consolidation introduced:** `GROUND-SURFACE-MAP-DESIGN.md` Layer 4 says ~560 km
   op-hex / ~47 km mini-tile; Layer 5 says ~477 km / ~37 km; `REAL-DISTANCE-COMBAT-DESIGN.md` uses 560. **Derive the
@@ -171,6 +176,9 @@ found by the prior surveys (verify each is still true, then FIX in Phase C):
   groups by region; capture flips the region).
 - `docs/ground/SURFACE-FOG-AND-RECON-DESIGN.md` under-reports itself — slices 5–6 are built elsewhere.
 - Client dead code documented as live: token health bars, hazard chips, the "Held:" line, Shift-click waypointing.
+- `docs/ground/PLANETARY-GAMEPLAY-AUDIT-2026-07-24.md` is itself part-stale: its "two open design questions" were
+  LOCKED by Layer 6 the same day (fine terrain = affinity + bends-the-fight + the costs law; weather at BOTH
+  zooms), and its P1 "default garrison on" recommendation is overridden by ruling #27b — reconcile in Phase C.
 
 ### A3 — Reachability walls audit (the player-path ledger)
 
@@ -179,8 +187,7 @@ breaks, file:line, and whether the fix is cheap-wire / medium / large. The known
 no enemy, no fleet (`NewGameMenu` auto-flags false — ruling 27b keeps this; the scenario-start question is open);
 the Entity Assembler's ground panel gated on a pre-existing SHIP design (`ShipDesignWindow.cs` ~166/178/332); a saved
 ground design can never be reopened (registered into `IndustryDesigns`, list reads `ShipDesigns`); no
-penetration/energy dials on the assembled path; region-0 muster hardcode (`GroundUnitAtb`, dead
-`DefaultRegionIndex`); the free "Build here" button (unlimited instant free buildings AND infantry) vs the costed
+penetration/energy dials on the assembled path; region-0 muster hardcode (`GroundUnitDesign.DefaultRegionIndex` — declared at GroundUnitDesign.cs:126 and READ at muster, :163-165, but never set non-zero by any path including the `GroundUnitAtb` install hook, so every build musters into region 0); the free "Build here" button (unlimited instant free buildings AND infantry) vs the costed
 tile queue that charges full price yet never writes the region list fortification reads; a Production-tab building
 located NOWHERE on the map; every "March to Region N" path sets the region index without restamping the global
 position (token never moves); no retreat/withdraw verb; auto-engage on region-band share; zero battle
@@ -188,8 +195,7 @@ log/events/records; the five behaviour flags as process statics; per-faction gro
 unread by the client (a rival's survey reveals your deposits); the AI garrison-rebuild queue missing `InstallOn`
 (replacement infantry becomes a crate forever); research data-inert; `CrewReq` computed and never read;
 `Amphibious` read by nothing; `EmploymentAtbDB` on zero templates; colony power double-dark; test-only city-builder
-methods + `BombardGlobalHex`; `OrderFormationTreeMoveToHex` zero callers; assembler validity gates
-(carry/power/ammo) computed, displayed, enforced nowhere.
+methods + `BombardGlobalHex`; `OrderFormationTreeMoveToHex` zero callers; assembler validity gates (carry/power/ammo): the audit's status board says they bite in the ENGINE assembly path while the surveys found them unenforced at the SAVE step ruling #3 targets — verify with file:line which of compute / display / save-block each gate actually does before sizing the wall; ORBITAL BOMBARDMENT ORPHANED (the audit's BREAK 2 / P3): the live fleet engine never fires on colonies — no `BombardColonyOrder`, no client button, no `ConquerResolver` bombard rung, so "soften before you land" is dark for the AI and a fire-control workaround for the player.
 
 ### A4 — Rulings-compliance matrix
 
@@ -221,6 +227,9 @@ Rules (all from root `CLAUDE.md` + established precedent):
 - Every specific item in the A2 seed list gets fixed or explicitly ruled still-true-as-written.
 - Finish the `SYSTEMS-STATUS-AND-TEST-PLAN.md` retirement (migrate live rows, banner it, repoint root `CLAUDE.md`).
 - Prune `docs/CLIENT-TEST-CHECKLIST.md` of retired items; bring `TESTING-TRACKER.md` current.
+- Comment-only `.cs` corrections (fixing FALSE doc-comments, e.g. the stale "nothing calls this yet" lines) ARE
+  doc work — do them in Phase C, through the same one-slice-one-push CI gate. Anything that alters BEHAVIOUR is a
+  build slice: it goes in THE PLAN and the workflow, never executed this session.
 - Record your findings as a dated audit doc (the `DOCS-AUDIT-YYYY-MM-DD.md` pattern) so the process is re-runnable.
 
 ## 5. PHASE D — THE PLAN (one document, the developer's map to done)
@@ -236,12 +245,25 @@ Write `docs/ground/PLANETARY-FUNCTIONAL-PLAN-<date>.md` (indexed same commit). R
    (the ground battle LOG #24 + flags-into-save #27a — you cannot tune or trust-test what you cannot watch), then
    **reachability** (assembler entry + design reopen; the ONE build queue #10 with destinations #6; movement rework
    #14/#16/#17; delete the free path #9 together with unified building location), then **doctrine steering**
-   (D2, D3a, D3b — everything goes through doctrines), then the **tick + rate-fire pair** (#23), then **depth**
-   (people cost #7, ammo #8, research #4, hazard counters #5, CasualtyTier #22, employment/power #12, per-tile
-   terrain M4 gated on generation G1–G6, naming + Layer-6 display, fog client wiring, semantic tile bonuses #13).
+   (D2, D3a, D3b — everything goes through doctrines), then the **tick + rate-fire pair** (#23), then the
+   **bombardment joint** (audit P3: a region-targeted `BombardColonyOrder` + the client button + the
+   `ConquerResolver` rung — "soften before you land" becomes real for both seats), then the **designer chain in its
+   forced order #2 → #4 → #1** (weapon dials → research costs → delete the prebuilts, with the garrison-composition
+   replacement) **plus #3** (block invalid designs from saving), then **depth**
+   (people cost #7, ammo #8, hazard counters #5, CasualtyTier #22, employment/power #12, per-tile terrain M4 —
+   gated on the SYSTEM-GENERATION doc's G1–G6 build order (writer+round-trip → belts/Oort → write-on-first-gen →
+   hybrid freeze → setup choice → physics terrain; NONE built — distinct from the surface-map doc's same-lettered,
+   mostly-built cylinder G-track; decide in THE PLAN whether these are slices or a written deferral) — naming +
+   Layer-6 display, fog client wiring, semantic tile bonuses #13, and the audit's P6/P7 tail: the grave rung
+   (pop→0 / Rebellion-expiry colony collapse; deepening `TryCapturePlanet` waits on open #21), the G6b-3 disk
+   deletion (one hex model), and hex-deposit-as-mined-truth — each scheduled or explicitly deferred, never silently
+   dropped). **Schedule the audit's P2 milestone explicitly** after the observability + reachability slices: one
+   recorded live cradle-to-grave sitting on the developer's machine (survey → colonize → mine → build a unit → load →
+   sail → win orbit → land → capture), capturing `console_output.txt` + gauge readings, with rows added to
+   CLIENT-TEST-CHECKLIST / TESTING-TRACKER — everything downstream is deepening an unproven system until it fires.
 4. **Every balance number flagged**, never silently chosen.
 5. **The open developer questions**, asked in prose at the top: #21 (capture transfer), the scenario/skirmish start,
-   the tick length value, per-weapon fire-rate numbers, and anything new your evidence surfaces.
+   the tick length VALUE (shortening itself is ruled; the value is not) and the mid-tick overkill semantics (sequential-down-priority vs lost — confirm the interpretation), per-weapon fire-rate numbers, and anything new your evidence surfaces.
 6. A plain-English executive summary the developer can read in two minutes.
 
 ## 6. PHASE E — THE WORKFLOW (the culmination)
@@ -255,8 +277,11 @@ Author a **saved, re-runnable Workflow script** that executes the plan — the d
   a docs agent that flips DOCS-INDEX/TESTING-TRACKER rows in the same slice.
 - Include a **completeness-critic** terminal stage ("what's missing — a wall not covered, a ruling not landed, a
   gauge not written?") whose findings feed the next slice list.
-- Validate the script (syntax, meta shape, a dry `phases` review). **Do not execute build slices yet** — present the
-  plan + the workflow to the developer, ask for the go and for rulings on the open questions, and stop there.
+- Validate STATICALLY ONLY: `node --check` the script file, diff its `meta` shape against the precedent
+  `.claude/workflows/earthfall-campaign.js`, and READ the phases array to confirm it matches THE PLAN's slices.
+  **NEVER invoke the workflow (or its skill wrapper) this session** — files in `.claude/workflows/` surface as
+  invocable skills, and "validating" by running it would start the build without the developer's go. Present the
+  plan + the workflow, ask for the go and for rulings on the open questions, and stop there.
 
 ## 7. LANDMINES YOU WILL HIT (learned the hard way — do not relearn)
 
@@ -272,6 +297,10 @@ Author a **saved, re-runnable Workflow script** that executes the plan — the d
 - **`TypeNameHandling.Objects`**: renaming/moving any `*DB` breaks saves — migration or don't.
 - **Doctrine reciprocal trap:** space `ToughnessMult` and ground `DamageTakenMult` are reciprocals; author exactly
   ONE per entry; `CombatDoctrine`/`UnifiedDoctrineTests` guard it — keep them green.
+- **System-gen (if G1–G6 land in the plan):** new generation must draw from a dedicated RNG stream, never the
+  shared `StarSystem.RNG` (the `RuinsDB` lesson — one extra draw silently shifts every downstream body); the spec
+  file holds the recipe + frozen OBSERVED detail, never raw hex grids; write the `SystemBlueprint` shape — two
+  readers exist and only the blueprint is the live New-Game path.
 - If subagents die with a usage-limit error, checkpoint your ledger to a dated doc and resume after reset — the
   prior session lost three verify agents to exactly this.
 

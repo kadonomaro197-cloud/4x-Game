@@ -203,7 +203,14 @@ mostly authoring + the resolver reads, not new architecture.
 
 ---
 
-## ⚠ The calibration problem ruling #23 creates (must be settled before it is built)
+## ⚠ The calibration problem ruling #23 creates — PARTIALLY RULED 2026-07-27
+
+> **RULED (developer, 2026-07-27): dial 1 — SHORTEN THE COMBAT TICK** ("shorten the combat tick and yes lets build
+> the doctrine catalog"). Space's 5 s `CombatReactionStep` fine-step is the precedent: ground should run a fine step
+> while a battle is live and stay hourly otherwise. **Still OPEN:** the tick VALUE itself, and the mid-tick overkill
+> semantics — "sequential down the priority list" below is an INTERPRETATION of the developer's phrasing, not a
+> ruling; confirm it before building (it ties to ruling #18). The three-dial analysis below is kept as the record of
+> the options considered.
 
 A **rate** model makes the **tick length balance-critical**, in a way the current lump model hides.
 
