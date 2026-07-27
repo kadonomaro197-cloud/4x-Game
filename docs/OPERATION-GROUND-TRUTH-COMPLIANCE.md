@@ -98,23 +98,25 @@ happened so they are not repeated or quietly forgotten.
 
 ---
 
-## 4. DEFINITION OF DONE — walk this before claiming completion
+## 4. DEFINITION OF DONE — **transcribed verbatim from the orders §8**, then answered
 
-| # | Requirement (orders §8) | Status |
-|---|---|---|
-| 1 | **CI green at the tip**, including inherited `b218acf` / `255bc52` | ✅ inherited both green; ✅ **`eee5664` (the 249-file sweep — the only commit with real risk) is GREEN on all 7 jobs**; the docs-only commits behind it still running |
-| 2 | **Every A2 seed item** fixed or ruled still-true; the dated audit doc records the sweep | ✅ **ALL 13 DONE.** Fixed: aurora "no ground combat"; client ground-unit coordinates + the dead `GroundCombatWindow`; the LoadTroops/LandTroops + `Speed_kmh` comments; EARTHFALL-OPS "hex is everything"; MVP + PLAY-TO-MARS invade-blocker; DOCS-INDEX self-disagreement; SYSTEMS-STATUS retirement; GroundCombat upkeep (backwards) + the non-existent C3 "FULL path" test; `ColonyHexMapDB` "built and wired"; the planetary audit's closed questions + forbidden P1; the surface-scale contradiction (settled to a formula, Earth constant sent to a gauge); Shift-click waypointing (and **3 of 4 client "dead code" seed claims REFUTED — they are built**); SURFACE-FOG under-reporting (slices 5–6 are built). |
-| 3 | The doc tree contains **no claim a grep of the code refutes**; deletions swept, index rows current | ✅ **for everything swept** — 327 code pointers repointed; all 13 A2 seed items; the **subsystem** `CLAUDE.md`s (A2c) and the **combat** design docs (A2b) both swept and their stale claims corrected. **Honest residue, not closed:** the `.md` provenance pass (~22 historical path-shaped mentions, deliberately left — rewriting them is what destroyed history in 2026-07-13), and three un-run batches — **A2a** (`docs/ground/*` beyond the seeds), **A2e** (dashboards), **A3a–e** (walls), **A5** (gauge ledger). Briefs on disk. |
-| 4 | **The delta ledger + THE PLAN** exist, indexed, with a plain-English summary | ✅ `docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md` |
-| 5 | **`close-planetary-delta` workflow** committed, validated, parameterized by slice | ✅ `.claude/workflows/close-planetary-delta.js` — static-validated, **never invoked** |
-| 6 | **Open questions put to the developer in prose** (#21, scenario start, tick value, fire rates) | ✅ plan §0 Q1–Q5 (+ Q3 corrected by finding C3) |
-| 7 | **A short handoff message**: what changed, what's red/green, what to rule on first | ✅ **§7 below** |
-| — | **Phase B refute pass + killed-findings appendix** (orders §3) | ✅ **run — see §6.** 10 claims, 0 refuted, 3 precision-corrected, 2 honestly marked un-rechecked. Method deviated from 3-agents-per-claim for a budget reason that is documented, not hidden |
-| — | `SYSTEMS-STATUS-AND-TEST-PLAN.md` retirement finished + root `CLAUDE.md` repointed | ✅ **DONE.** Bannered 🗄; the 4 mandating references in root `CLAUDE.md` repointed to the three single owners (contradiction with its own line 360 resolved); DOCS-INDEX row flipped. Verified nothing live was lost — §6's last apparently-live row is REFUTED at HEAD (`PlanetaryWindow.cs:102/218` gate on `ComponentInstancesDB`) |
-| — | **Phase C deletion / archive pass** (orders §4: superseded-but-historical → `docs/archive/` + banner; invalid-and-worthless → delete) | ✅ **DONE 2026-07-27 — was MISSING from this tracker entirely.** `SYSTEMS-STATUS-AND-TEST-PLAN.md` **moved to `docs/archive/`** with its banner, and all **23 reference sites across 17 files** repointed (`.md` **and** `.cs`, per the Phase C link-sweep rule), residual grep = 0. **Deletions: none, and that is a verdict, not a skip** — see §8. |
-| — | `CLIENT-TEST-CHECKLIST.md` · `TESTING-TRACKER.md` current | ✅ **DONE** — 7 new runtime rows in the checklist and a new **GAUGE-HONESTY BACKLOG** (GH1–GH7) in TESTING-TRACKER, both straight from the log forensics. *(Pruning retired items: not done — no row was found stale enough to cut, and cutting on a guess is worse than leaving it.)*
+The seven checkboxes below are **copied word-for-word** from `OPERATION-GROUND-TRUTH-PROMPT.md` §8. Nothing is
+paraphrased, reordered, or added, because paraphrasing is how this tracker dropped the deletion step. Verify
+against the source, not against this.
 
----
+| Orders §8, verbatim | Status |
+|---|---|
+| *"CI green at your tip, including the inherited `b218acf`/`255bc52` if they were red."* | ✅ **VERIFIED, not assumed.** Inherited both already green. **Six consecutive commits of mine returned `conclusion: success`** (`7d77f4b`, `4e6cc6c`, `6931c42`, `69af683`, `3405c61`, `d2d8031`). All C# work is in `eee5664` (green, 7/7 jobs); every commit after it is markdown-only. |
+| *"Every A2 seed item fixed or ruled still-true; the dated audit doc records the sweep."* | ✅ **both clauses.** 13/13 fixed-or-ruled, **and the sweep is now recorded** in `docs/DOCS-AUDIT-2026-07-27.md` **§10** (the full ledger, incl. the 3 seed claims that were themselves wrong + everything found beyond the list). The second clause was open until 2026-07-27. |
+| *"The doc tree contains no claim a grep of the code refutes; deletions swept, index rows current."* | ⚠ **TRUE for everything swept; NOT provable tree-wide.** Swept: 327 code pointers, all 13 seeds, the subsystem `CLAUDE.md`s (A2c), the combat design docs (A2b). Deletions/archive swept ✅ (§8). Index rows current ✅. **Un-run and therefore unverified: `A2a` (`docs/ground/*` beyond the seeds), `A2e` (dashboards), `A3a–e` (walls), `A5` (gauge ledger).** Stated as a limit, not a pass. |
+| *"The delta ledger + THE PLAN exist, indexed, with a plain-English summary."* | ✅ `docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md` — ledger §2, two-minute summary §1, indexed. |
+| *"`close-planetary-delta` workflow committed, validated, parameterized by slice."* | ✅ `.claude/workflows/close-planetary-delta.js` — `node --check` clean, meta shape diffed against the precedent, slice-keyed. **Never invoked.** |
+| *"The open questions (#21, scenario start, tick value, fire rates) put to the developer in prose."* | ✅ plan §0 Q1–Q5 (Q3 later corrected by finding C3 — a committed spec already pins 5 s). |
+| *"A short handoff message: what changed, what's red/green, what you recommend the developer rule on first."* | ✅ §7 below. |
+
+**The one honest gap is row 3**, and it has exactly two resolutions: run the four remaining batches
+(~12 agents × ~370k ≈ **4.4 M tokens**), or carry them as an **explicit written deferral** with briefs on disk
+(`docs/DOCS-AUDIT-2026-07-27.md` §5). It is currently the deferral — chosen, not drifted into.
 
 ## 5. THINGS ALREADY LANDED (so a resumed session doesn't redo them)
 

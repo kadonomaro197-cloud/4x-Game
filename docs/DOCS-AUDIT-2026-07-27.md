@@ -352,6 +352,59 @@ combat-observation channels — corrected in `Pulsar4X.Client/CLAUDE.md`.
 
 ---
 
+## 10. THE COMPLETE A2 SEED-SWEEP LEDGER (orders §8: *"the dated audit doc records the sweep"*)
+
+All 13 named seed items, plus what the sweep turned up beyond them. **Three seed claims were themselves wrong**
+— recorded here so a future pass doesn't re-hunt them.
+
+| # | Seed item | Verdict | Where the fix landed |
+|---|---|---|---|
+| 1 | `docs/aurora/GROUND-COMBAT.md:6` — "Pulsar has no ground combat at all" | **REFUTED** (all five sub-claims false vs a ~56-file subsystem) | correction banner + pointer to the as-built subsystem |
+| 2 | `MVP.md` + `PLAY-TO-MARS` — the invade-from-orbit panel is the #1 blocker | **REFUTED** — built 2026-07-19 (`FleetWindow.cs:1756,1814`; AI at `ConquerResolver.cs:63`) | §L rewritten ✅; MVP row D + Stage 4 **re-pointed** at the 3 real gaps |
+| 3 | `SYSTEMS-STATUS-AND-TEST-PLAN.md` retirement vs root `CLAUDE.md` mandating it | **CONFIRMED** (4 mandates vs 1 retirement note, same file) | retirement finished; 4 refs repointed; **then archived** (§8-equivalent, see the compliance doc §8) |
+| 4 | `Colonies/CLAUDE.md` — `ColonyHexMapDB` "built and wired" | **CONFIRMED landmine** — save-unsafe, still `SetDataBlob`-attached by a window **and** a processor | row rewritten; 2 "build ground combat on it" notes killed; **my own first correction later found OVERSTATED and re-fixed** |
+| 5 | `Pulsar4X.Client/CLAUDE.md` — ground units live on the `ColonyHexMapDB` tile grid | **REFUTED** — they live on `HexQ/HexR` + `GlobalQ/GlobalR` + `MiniQ/MiniR` | corrected; also killed a reference to `GroundCombatWindow`, **which does not exist** |
+| 6 | `GroundCombat/CLAUDE.md` — the upkeep source | **BACKWARDS** — assembler (`:299`) and garrison (`:101`) DO bill; the base-mod path (never mentioned) does not | replaced with a 3-row table so it cannot invert again |
+| 7 | `GroundCombat/CLAUDE.md` — the "C3 FULL path" test | **CONFIRMED ABSENT** — the fixture has exactly 2 tests, covering the halves separately | corrected; logged as **GH8**; flagged that plan slice S5 builds on the untested joint |
+| 8 | The surface-scale contradiction (560/47 vs 477/37) | **BOTH self-consistent, measuring different things** — it is a formula, not a constant | one canonical "SCALE — THE ONE TRUE ANSWER" box; Earth's coarse pitch sent to a **gauge** (slice S0), not guessed |
+| 9 | `DOCS-INDEX.md` disagrees with itself (stamp vs rows) | **CONFIRMED** ×3 (MVP, PLAY-TO-MARS, GROUND-UNIT-VARIABLES) | all three rows reconciled with the stamp |
+| 10 | Stale "nothing calls this yet" `.cs` comments | **CONFIRMED** — `LoadTroopsOrder`/`LandTroopsOrder` are issued by player *and* AI; `Speed_kmh` is read at `GroundForcesProcessor.cs:855` | comments corrected (in `eee5664`) |
+| 11 | `EARTHFALL-CAMPAIGN-OPS.md` — "the hex is the unit of everything" | **OVERSTATED** — combat groups by *region*, capture flips the *region* | qualified: hex for infrastructure, region for the fight |
+| 12 | `SURFACE-FOG-AND-RECON-DESIGN.md` under-reports itself | **CONFIRMED** — slices 5 **and** 6 are built (in `GroundThreat` / `ExpandResolver`) | both annotated ✅; the real remaining gap named: **client** deposit fog is still omniscient |
+| 13 | `PLANETARY-GAMEPLAY-AUDIT` part-stale (2 open questions + P1) | **CONFIRMED** — both questions were LOCKED the same day; **P1 is now forbidden by ruling #27b** | both struck through with the correction beside them; header banner added |
+
+### The three seed claims that were WRONG (client "dead code")
+
+The seed list named *token health bars · hazard chips · the "Held:" line · Shift-click waypointing* as dead.
+**Only the last is dead.** Health bars draw at `PlanetViewWindow.cs:1115`; hazard chips are real (`:184` reads
+`PlanetEnvironmentsDB`, passed to `:987`/`:1538`); `Held:` draws unconditionally at `:1057-1059`. All three are
+**built-but-runtime-unverified**, which is a different thing from dead — calling them dead would have sent
+someone to rebuild working code. *(Method note: my own first grep "confirmed" hazard chips missing because I
+searched `hazard chip` while the code says `chips`. **A negative grep is not evidence until you have tried the
+words the code would actually use.**)*
+
+**Shift-click IS dead, and worse than stated:** there is **no `HandleHexClick` method anywhere in the client**,
+and `KeyShift` appears only in `WarpOrderWindow.cs` (space-side). The client doc described that method twice in
+detail. And `PlanetViewWindow.cs:1433` **advertises the control to the player** — a hint with no handler. Fixing
+the hint is a behaviour change, so it is scheduled (plan slice **S6**), not done here.
+
+### Beyond the seed list — found while sweeping
+
+| Finding | Verdict | Landed |
+|---|---|---|
+| **327 dead doc pointers** across 249 `.cs` files (25 of 48 distinct paths) | the largest doc defect in the repo | all repointed, residual grep 0; the grep recorded as a standing gauge (§7) |
+| `BaseDataBlob.Clone()` is **virtual with a garbage default, not abstract** | a general trap — a `*DB` without `Clone()` silently becomes `System.Object` | **root `CLAUDE.md` landmine L12** |
+| `Combat/CLAUDE.md:107` — "no diplomacy/relations system in the engine yet" | **REFUTED inside the function it describes** (`AreHostile` reads `DiplomacyDB` both ways) | corrected |
+| `Industry/CLAUDE.md:111` — the "installations UI gap" | **REFUTED** — root gotcha #4 retired it; never swept from that file | corrected |
+| `GroundCombat/CLAUDE.md:52` — garrison "so a fresh New Game has ground units" | **OVERSTATED + now against canon** (#27b) | reconciled |
+| **Ruling #22 has ZERO code** — 7 named types, 0 files each; 1 of 9 slices exists | quantifies "designed, not built" | recorded at the top of the design's own build order |
+| **Ground damage is flat per-tick, space is per-second** (`* dt` present in space, absent on ground) | the C2 tick trap, **independently re-confirmed** | recorded in the combat doc, not just the audit |
+| `WEAPONS-DESIGN` — "saturation is derived from rate-of-fire, never hand-set" | **ship-only**; ground uses two hardcoded constants and has **no rate dial at all** | scoped to ships |
+| `REAL-DISTANCE-COMBAT-DESIGN` header — "slices 2–5 planned" | **STALE** — slice 2 shipped as K1+K3 under a different flag; two more claims refuted | header corrected |
+| `GROUND-UNIT-VARIABLES` — 5 stale `GroundForcesProcessor.cs` line refs + "multi-weapon plurality missing" | **REFUTED** — the W-track built it (`:472` loops the loadout, range-gating each weapon) | drift table + row flipped |
+
+---
+
 ## 5. Resume — everything the next pass needs is already on disk
 
 The 19 assignment briefs and the shared briefing survive at
@@ -360,10 +413,10 @@ The 19 assignment briefs and the shared briefing survive at
 
 | Batch | Assignments | State |
 |---|---|---|
-| A1 log forensics | `A1a-timeline`, `A1b-failures`, `A1c-combat`, `A1d-ai-silent` | ❌ died on usage limit |
-| A2 doc verification | `A2a-docs-ground`, `A2b-docs-combat`, `A2c-docs-subsystems`, `A2d-docs-client-tests`, `A2e-docs-dashboards`, `A2f-scale-comments` | ❌ died — **partially covered solo in §4** |
+| A1 log forensics | `A1a-timeline` ✅ · `A1b-failures` ✅ · `A1c-combat` ✅ · `A1d-ai-silent` ✅ | ✅ **all four returned** — the incident review is §9 |
+| A2 doc verification | `A2b-docs-combat` ✅ · `A2c-docs-subsystems` ✅ · `A2f-scale-comments` (covered solo) · `A2d` (covered solo) — **`A2a-docs-ground` + `A2e-docs-dashboards` STILL UN-RUN** | ⚠ partly done; see §10 for everything that WAS swept |
 | A3 reachability walls | `A3a-start-state`, `A3b-designer-wall`, `A3c-build-queue-wall`, `A3d-movement-verbs-wall`, `A3e-observability-wall` | ❌ died — **partially covered solo in §3** |
-| A4 rulings matrix | `A4a-rulings-1-9`, `A4b-rulings-10-18`, `A4c-rulings-19-27` | ❌ died — not started |
+| A4 rulings matrix | `A4a-rulings-1-9` ✅ · `A4b-rulings-10-18` ✅ · `A4c-rulings-19-27` ✅ | ✅ **all three returned** — findings C1–C4 + the ledger re-verdicts |
 | A5 gauge coverage | `A5-gauges` | ❌ died — **CI shard reality covered solo in §1** |
 
 **Operational lesson for the next run (worth keeping):** the agent concurrency cap is
