@@ -62,7 +62,7 @@ target so we prove the spine before building the discovery and subterfuge around
 3. **Build a warship and a ground unit** at the colony, through the existing industry queue. *(ships exist; ground unit is new)*
 4. **Send the fleet** to a target planet. *(movement exists)*
 5. **Win the space battle** against the planet's orbital defenders. *(systems exist but are DARK/untested — gauge them)*
-6. **Land the ground force** on the now-uncontested planet. *(transport/drop engine BUILT — `GroundTransport`/`GroundTransportDB`/`GroundBayAtb` embark→move→land chain + `GroundTransportTests`; **UI-unreachable** — no invade-from-orbit control panel in the client yet)*
+6. **Land the ground force** on the now-uncontested planet. *(BUILT **and reachable** — `GroundTransport`/`GroundTransportDB`/`GroundBayAtb` embark→move→land chain + `GroundTransportTests`, driven by `LoadTroopsOrder`/`LandTroopsOrder` from the **FleetWindow** Load/Land buttons (`FleetWindow.cs:1756,1814`) and by the AI's `ConquerResolver` LAND rung (`:63`). **Corrected 2026-07-27** — this used to say "UI-unreachable, no invade-from-orbit panel"; that panel was built by Earthfall C5.1 on 2026-07-19. Still **runtime-unverified** — CI cannot run the client.)*
 7. **Win the ground battle** against its garrison. *(engine BUILT — `GroundForcesProcessor.ResolveRegionCombat`; code exists and is wired, runtime unverified by CI)*
 8. **Capture** the planet: defenders gone → the colony changes owner. **Win.** *(engine BUILT — `TryCapturePlanet` flips the colony's `FactionOwnerID`; code exists and is wired, runtime unverified by CI)*
 
@@ -77,7 +77,7 @@ If any step in that chain doesn't work, v1 isn't done. If a feature isn't *on* t
 | A | **Economy produces military goods** | Mine → refine → build installations, ships, *and* ground units, from the colony's own output | Engine ✅ (mining/refining/production gauged). Build-installations link + ground-unit build = **to do.** |
 | B | **Space combat actually resolves** | Two fleets fight; one side wins. No new weapon tech. | 🟢 **DONE (2026-06-25)** — the `GameEngine/Combat/` auto-resolve engine: hostile fleets in range auto-engage and a battle plays out over game-time until one side is wiped or breaks off. Decides by **strength math** (each ship rated for firepower/toughness), not the per-pixel beam/missile sim (which deposits ~0 damage — parked v2). Player's lever is **doctrine** (per-fleet *and* per-component), plus **retreat** and an **engagement lock**. 8 CI-green test fixtures. **This is the template we mirror for ground combat.** See `docs/combat/COMBAT-DESIGN.md`. |
 | C | **A ground unit exists as a buildable thing** | ONE unit ("Ground Force", components like ships) with attack / defense / health | 🟢 **BUILT** — `GroundUnitDesign : IConstructableDesign` (rides the existing industry rails) + `GroundForcesDB` (64 `[JsonProperty]` fields); base-mod infantry/armor/artillery six-point registered. Code exists and is wired; runtime unverified by CI. |
-| D | **Transport & drop** | Load a unit onto a ship, move it, unload onto a target planet — *after* orbit is clear | 🟡 **engine BUILT, UI-unreachable** — `GroundTransport`/`GroundTransportDB`/`GroundBayAtb` embark→move→land chain + `LoadTroopsOrder`/`LandTroopsOrder`, `GroundTransportTests` green. No invade-from-orbit control panel in the client yet — **the one true remaining v1 gap (Stage 4).** |
+| D | **Transport & drop** | Load a unit onto a ship, move it, unload onto a target planet — *after* orbit is clear | 🟢 **BUILT + REACHABLE (corrected 2026-07-27)** — the embark→move→land chain plus `LoadTroopsOrder`/`LandTroopsOrder`, wired to the **FleetWindow** Load/Land buttons (`FleetWindow.cs:1756,1814`) and the AI's LAND rung (`ConquerResolver.cs:63`); `GroundTransportTests` green. **This row used to claim "no invade-from-orbit control panel — the one true remaining v1 gap"; that panel was built 2026-07-19 (Earthfall C5.1).** Remaining: 🖥 **runtime-unverified** (CI can't run the client). |
 | E | **Ground combat resolution** | Attacker vs defender on one planet; attrition each tick until one side is gone (mirror B) | 🟢 **BUILT** — `GroundForcesProcessor` (hourly `IHotloopProcessor`) attrites attacker vs defender via `ResolveRegionCombat`. Code exists and is wired; runtime unverified by CI. |
 | F | **Win condition** | Defenders (space *and* ground) gone → colony `FactionOwnerID` flips to the attacker | 🟢 **BUILT** — region+planet capture wired: `TryCapturePlanet` flips the colony's `FactionOwnerID` to the captor. Code exists and is wired; runtime unverified by CI. |
 | G | **A defender to fight** | A static enemy garrison + a couple of orbital defenders on one planet — *not* a full NPC admiral | 🔴 minimal seed is enough |
@@ -141,8 +141,17 @@ Note the order follows your own strategy: **do space combat first, then mirror i
 - **Stage 3 — Stitch the loop — engine links BUILT.** Target planet gets orbital defenders + a garrison. Fleet
   clears orbit (Stage 1) → transport/drop the ground force (engine BUILT) → ground battle (Stage 2, BUILT) →
   defenders gone → flip the colony's owner (`TryCapturePlanet`, BUILT). The engine links exist and are wired;
-  what's still missing is the **UI hook** to drive the embark/land from orbit (Stage 4). Runtime unverified by CI.
-- **Stage 4 — Drive it from the UI — the keystone, not polish.** Build ships+units, send the fleet, issue the
+  ~~what's still missing is the **UI hook** to drive the embark/land from orbit (Stage 4)~~ — **that UI hook is
+  BUILT (corrected 2026-07-27, `FleetWindow.cs:1756,1814`)**. Runtime unverified by CI.
+- **Stage 4 — Drive it from the UI — ⚠ RE-POINTED 2026-07-27.** The invade-from-orbit panel this stage was
+  named for **is built** (FleetWindow Load/Land, `:1756,:1814`). **The one true remaining v1 gap is now
+  three narrower things:** **(a)** a *supported* front-door way to meet an enemy — ruling #27b keeps a stock
+  New Game empty, and the start that isn't empty (the ungated **"DevTest"** main-menu button,
+  `MainMenuItems.cs:51`) is only *named* like a debug toy; **(b)** **one live cradle-to-grave sitting** — none
+  of this has ever been watched run, and CI structurally cannot; **(c)** two client walls — a saved ground
+  design can never be reopened and the ground panels need a pre-existing ship design
+  (`ShipDesignWindow.cs:166,223,592`). Ordered plan: `docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md`.
+  Historic framing of this stage follows. Build ships+units, send the fleet, issue the
   invade order, watch the result. The realism-vs-gameplay audit's headline applies here: the engines are
   built, **the UI is the missing control panel.** Stage 4 is where must-have **H** turns the existing,
   already-working engines into reachable *decisions* — wire levers onto what exists, don't gold-plate or
