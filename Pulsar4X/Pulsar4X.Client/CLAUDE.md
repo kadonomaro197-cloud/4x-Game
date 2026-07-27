@@ -536,6 +536,16 @@ navigate units on, plot where I'll make military bases, use topography to my adv
   and a "Build here" button that issues `PlaceInstallationInRegionOrder.CreateCommand(colony, centreRegion, designId)`
   through `Game.OrderHandler.HandleOrder` — the real order path. This is the LOCKED PRINCIPLE's first cut: a building
   placed at a *region*, drawn on the map.
+> **✅ VERIFIED BUILT 2026-07-27 (three claims the audit seed list wrongly flagged as dead code).** An audit
+> seed list named "token health bars, hazard chips, the *Held:* line, Shift-click waypointing" as *documented
+> as live but dead*. **Three of the four are genuinely built** — only Shift-click is dead (above):
+> **health bar** drawn at `PlanetViewWindow.cs:1115` off the per-group `hp`/`max` aggregation at `:1087`;
+> **hazard chips** real — `:184` reads `PlanetEnvironmentsDB` and passes it into the region draw at `:987` and
+> `:1538` (the earlier "dead" reading came from grepping for *"hazard chip"* when the code says *"chips"*);
+> **`Held:`** drawn unconditionally in the region path at `:1057-1059`. All three remain
+> **built-but-runtime-unverified** — CI compiles the client but cannot run it — which is the honest status, not
+> "dead".
+
 - **Terrain + hazards visible** — a terrain-class chip (Open/Cover/Rough via `GroundTerrain.Classify`), the region's
   `PlanetEnvironmentsDB` environments as coloured hazard chips (fire=red / corrosive=green / storm-jam=amber), ownership,
   and the ⚙ building count per `Region.InstallationIds`.
@@ -554,9 +564,15 @@ navigate units on, plot where I'll make military bases, use topography to my adv
   cooldown). This is what makes the H3 range advantage automatic: set Stand Off on a long-range formation and it auto-kites.
   **+ an ORDER-QUEUE panel (O1b, 2026-07-04):** `DrawOrderQueue` lists the formation's queued plan (`GroundOrder.Describe()`
   each) with a Clear button, and buttons to queue non-spatial orders (Hold 6h, ROE Stand-off/Close) + a MoveToRegion
-  waypoint to each visible ring neighbour. **Move waypoints are added by SHIFT-clicking a hex** in Hex view (RTS-style
-  queueing — `HandleHexClick` checks `ImGui.GetIO().KeyShift` + the selected formation and calls
-  `GroundForces.QueueFormationOrder(MoveHex)`); a plain click still moves-now. So you build "move → move → dig in" plans
+  waypoint to each visible ring neighbour. **⛔ CORRECTED 2026-07-27 — SHIFT-CLICK WAYPOINTING DOES NOT EXIST.** This
+  used to claim *"move waypoints are added by SHIFT-clicking a hex… `HandleHexClick` checks
+  `ImGui.GetIO().KeyShift`"*. Verified: **there is no `HandleHexClick` method anywhere in the client** (grep:
+  zero definitions), and `KeyShift` appears only in `WarpOrderWindow.cs:639,658` (a space-side feature) and the
+  ImGui plumbing. **Worse, the UI advertises it to the player anyway:** `PlanetViewWindow.cs:1433` prints
+  *"or Shift-click a hex (Hex view) to add a move waypoint"* — a hint for a control with no handler behind it.
+  What DOES work: the ring-neighbour `MoveToRegion` waypoint buttons, and a plain click moves-now. **Fixing the
+  false hint (either implement the handler or delete the sentence) is a behaviour change, so it belongs in
+  `docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md` slice S6 (movement rework), not in a doc pass.** So you build "move → move → dig in" plans
   visually. All thin callers over the CI-tested `GroundForces.QueueFormationOrder`/`SetFormationOrder`/`ClearFormationOrders`.
 
 Built to the CI-blind discipline: a thin draw over CI-tested engine blobs, all orders through CI-tested engine paths
@@ -593,8 +609,9 @@ seams** (continents span borders — it's one continuous field), and a **subtle 
 margin labels** (`R{n} (centre)`, `◂ R{n}`, `R{n} ▸`) mark where the centre ends without breaking the seamless look. Solves
 the developer's complaints — "can't tell regions apart" (seam lines + labels) and "terrain doesn't flow / 3 separate maps"
 (one continuous culled field, centre full + neighbours bleeding in). Units draw on their `(HexQ,HexR)`
-per region; **click a hex in the CENTRE region** = full hex ops (select / march via `GroundForces.OrderMoveToHex` /
-Shift-queue a waypoint — `HandleHexClick`); **click a SIDE region** = coarse-march a selection there (if adjacent) or
+per region; **click a hex in the CENTRE region** = full hex ops (select / march via `GroundForces.OrderMoveToHex`;
+~~Shift-queue a waypoint — `HandleHexClick`~~ — **that method does not exist, corrected 2026-07-27, see the
+order-queue note above**); **click a SIDE region** = coarse-march a selection there (if adjacent) or
 recentre. Reuses `HexCenter`/`_featureColors`/`OwnerColor`/`TypeInitial`. The zoomed city/fortification grid (C-track) is
 the separate deeper view. **Runtime render/feel is the developer's local build (CI compiles, can't run).** The old
 single-region drill-in (below) is superseded.
