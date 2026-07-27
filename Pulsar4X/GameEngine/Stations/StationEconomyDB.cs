@@ -11,7 +11,7 @@ namespace Pulsar4X.Stations
     /// <see cref="Pulsar4X.Colonies.ColonyEconomyDB"/> (which is the income/tax side). A station bills a monthly
     /// upkeep to its owning faction that RISES with the station's size AND its function-diversity — the mechanical
     /// half of the design's cost gradient: "cheap while focused, expensive as a planet-replacement"
-    /// (docs/SPACE-STATIONS-DESIGN.md). A one-job mining post costs little; a station that mines AND refines AND
+    /// (docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md). A one-job mining post costs little; a station that mines AND refines AND
     /// researches AND houses people pays the escalating per-function cost. That drain is the DECISION — spread cheap
     /// focused stations vs. pile everything onto one expensive platform.
     ///

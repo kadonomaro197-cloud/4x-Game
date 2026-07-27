@@ -35,7 +35,7 @@ namespace Pulsar4X.Client
     /// THIN + DEFENSIVE by the client discipline: every value is read off CI-tested engine blobs, orders go through
     /// the CI-tested <see cref="GroundForces.OrderMove"/> / <c>Game.OrderHandler.HandleOrder</c> paths (no new client
     /// logic), the whole body is wrapped so a throw logs <c>[RenderError]</c> once and still runs <see cref="Window.End"/>,
-    /// and nothing is hard-indexed. Per-entity (keyed by the planet body id). Design: docs/GROUND-COMBAT-MAP-DESIGN.md
+    /// and nothing is hard-indexed. Per-entity (keyed by the planet body id). Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md
     /// (slice 5e). **CI compiles the client but cannot RUN it — the live render/feel is the developer's local build.**
     /// </summary>
     class PlanetViewWindow : NonUniquePulsarGuiWindow

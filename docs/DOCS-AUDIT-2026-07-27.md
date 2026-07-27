@@ -167,6 +167,55 @@ measurement. Recorded as a plan slice. *(Visibility Gate: build the gauge, then 
 
 ---
 
+## 7. THE BIG ONE — 327 dead doc pointers in the code (found, swept, closed)
+
+**This was not on the handoff's seed list. It is the largest doc-truth defect in the repo, and it was
+hiding in plain sight.** The 2026-07-13 audit moved `docs/` into subject subfolders and repointed the
+`.md` files, but **never repointed the `.cs` files** — `DOCS-INDEX.md` known-debt item 3(a) even admitted
+the sweep was deferred. Nobody re-checked.
+
+The residual-grep gauge (now recorded in `DOCS-INDEX.md` item 3(a) so it can be re-run cold):
+
+```
+grep -rhoE "docs/[A-Za-z0-9_/-]+\.md" Pulsar4X/ --include=*.cs | sort -u \
+  | while read p; do [ -f "$p" ] || echo "DEAD: $p"; done
+```
+
+**Reading:** 48 distinct doc paths cited from code → **25 dead (over half)**, totalling **327 pointer
+sites across 249 files**. Every one was a `Design: docs/X.md` comment sending a reader — the developer, or
+a future session doing exactly the pre-flight the root `CLAUDE.md` demands — to a 404.
+
+| Class | Count | Examples → where they went |
+|---|---|---|
+| **Moved** by the subfolder reorg | 13 paths | `docs/AI-BRAIN-BUILD-TRACKER.md` (61 sites!) → `docs/ai/…`; `docs/SITE-ENGINE-DESIGN.md` (35) → `docs/explore/…`; `docs/DIPLOMACY-DESIGN.md` (17) → `docs/society/…` |
+| **Consolidated** into a survivor | 10 paths | `docs/GROUND-COMBAT-MAP-DESIGN.md` (27), `GROUND-CITY-AND-WARMAP-DESIGN.md` (13), `HEX-GROUND-AND-ORDERS-DESIGN.md` (9), `GLOBAL-HEX-GRID-DESIGN.md` (9) → `docs/ground/GROUND-SURFACE-MAP-DESIGN.md`; `WEAPON-TAXONOMY` + `WEAPONS-AND-DODGE` (23) → `docs/combat/WEAPONS-DESIGN.md`; `AI-MEANS-ENDS-PLANNER` + `AI-OBJECTIVE-ENGINE` (23) → `docs/ai/AI-DECISION-ENGINE-DESIGN.md`; `RESOLVER-MERGE` (6) → `docs/combat/RESOLVER-DESIGN.md`; `SPACE-STATIONS` (8) → `docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md` |
+| **Superseded outright** | 2 paths | `WEAPON-UNIFICATION-DESIGN.md` (8), `GROUND-UNITS-AS-ENTITIES-DESIGN.md` (9) → `docs/economy/COMPONENT-DESIGNER-CATEGORIES.md` |
+
+**Swept 2026-07-27.** Re-grep returns **zero** dead paths. Provably **comment-only**: 327 insertions /
+327 deletions, and a diff filter for changed lines that are *not* comments returns 0 — so the engine is
+byte-identical by construction, not by claim. One judgement call recorded: `GroundForcesDB.cs:314`
+(the order-queue comment) was pointed at `docs/ground/GROUND-ORDERS-CATALOG-DESIGN.md` rather than the map
+doc, because the consolidation split that source doc's *order* half into the catalog.
+
+**Left alone deliberately:** the ~22 dead `docs/…md` mentions inside `.md` files. Most are **provenance**
+— historical names of merged-away docs, which `GROUND-SURFACE-MAP-DESIGN.md`'s header explicitly says must
+stay **plain text**, because the 2026-07-13 sweep once rewrote them into the surviving doc's own path and
+destroyed the history. Repointing those would repeat that damage. A future pass should convert them from
+path-shaped strings to plain names, one at a time, by hand.
+
+### Also fixed in this slice (each verified in §4)
+
+| Fix | File |
+|---|---|
+| The "Pulsar has no ground combat at all" opener, replaced with a correction banner + a pointer to the as-built subsystem | `docs/aurora/GROUND-COMBAT.md` |
+| "Ground units live on the `ColonyHexMapDB` tile grid" → the real `HexQ/HexR` + `GlobalQ/GlobalR` + `MiniQ/MiniR` fields; plus **`GroundCombatWindow` does not exist anywhere in the client** (a second dead reference in the same passage) | `Pulsar4X/Pulsar4X.Client/CLAUDE.md` |
+| "nothing issues this yet" → names the real issuers (`FleetWindow` buttons; `ConquerResolver` for landing) | `GroundCombat/LoadTroopsOrder.cs`, `LandTroopsOrder.cs` |
+| `Speed_kmh` "nothing reads it yet" → names the resolver closing-step read | `GroundCombat/GroundForcesDB.cs` |
+| "ADDITIVE/UNREAD by the resolver" in a test description → corrected, noting the fixture's own assertions remain true | `Pulsar4X.Tests/GroundForcesTests.cs:1251` |
+| "the hex is the unit of everything" → qualified to hex-for-infrastructure / region-for-the-fight-and-capture | `docs/ground/EARTHFALL-CAMPAIGN-OPS.md:15` |
+
+---
+
 ## 5. Resume — everything the next pass needs is already on disk
 
 The 19 assignment briefs and the shared briefing survive at

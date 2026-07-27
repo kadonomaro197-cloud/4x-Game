@@ -20,7 +20,7 @@ namespace Pulsar4X.GroundCombat
     ///
     /// v1 is a plain C# design (like the combat-test ship designs were, before their JSON registration) — a follow-up
     /// wires a base-mod JSON template so it's player-buildable in a New Game without the six-point registration
-    /// crashing the start (gotcha #10). Design: docs/GROUND-COMBAT-MAP-DESIGN.md (slice 5a).
+    /// crashing the start (gotcha #10). Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md (slice 5a).
     /// </summary>
     public class GroundUnitDesign : IConstructableDesign
     {
@@ -136,7 +136,7 @@ namespace Pulsar4X.GroundCombat
 
         /// <summary>The COMPONENTS this unit is built from — the mounted component-design ids → count (frame + parts).
         /// KEEPING these (instead of only the flattened combat stats above) is the foundation of units-as-entities
-        /// (Option A, docs/GROUND-UNITS-AS-ENTITIES-DESIGN.md): once a raised unit carries these as real
+        /// (Option A, docs/economy/COMPONENT-DESIGNER-CATEGORIES.md): once a raised unit carries these as real
         /// <c>ComponentInstance</c>s, every ability (radar-reveal / speed / crew / weapons) falls out of the SAME
         /// component infrastructure a ship uses, with no per-ability special-casing. Populated by the assembler; the
         /// chassis is identified by its <see cref="GroundChassisAtb"/>, not a separate flag. Additive — the flat stats

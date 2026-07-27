@@ -9,7 +9,7 @@ using Pulsar4X.People;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// Monthly decision loop for AI-controlled factions (the Organism brain, docs/AI-BRAIN-BUILD-TRACKER.md).
+    /// Monthly decision loop for AI-controlled factions (the Organism brain, docs/ai/AI-BRAIN-BUILD-TRACKER.md).
     /// Each cycle it runs reactive-diplomacy drift and settles a strategic objective: read the needs-ladder
     /// (<see cref="NeedsLadder"/>) → pick an objective from tier × doctrine × <see cref="PersonalityDB"/>
     /// (<see cref="ObjectiveSelector"/>) → commit it through the hysteresis engine (<see cref="ObjectiveTransition"/>)
@@ -48,7 +48,7 @@ namespace Pulsar4X.Factions
         public static bool EnableOrderEmission = false;
 
         /// <summary>
-        /// Phase-3.3 gate (docs/AI-BRAIN-BUILD-TRACKER.md — the Ecosystem): when true, the Tick lets an NPC PROPOSE
+        /// Phase-3.3 gate (docs/ai/AI-BRAIN-BUILD-TRACKER.md — the Ecosystem): when true, the Tick lets an NPC PROPOSE
         /// treaties to its neighbours (a real behaviour change — a signed pact), turning the built-but-uncalled
         /// <see cref="Treaties.Propose"/> into live diplomacy. Defaults <b>false</b> so every existing test is
         /// byte-identical. A SIBLING of <see cref="EnableOrderEmission"/> (not the same flag) so combat/economy order
@@ -57,7 +57,7 @@ namespace Pulsar4X.Factions
         public static bool EnableDiplomaticProposals = false;
 
         /// <summary>
-        /// Phase-3.1 gate (docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md — the Information Ledger): when true, the monthly
+        /// Phase-3.1 gate (docs/society/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md — the Information Ledger): when true, the monthly
         /// Tick POPULATES each NPC's persistent <see cref="InformationLedgerDB"/> — Confirming the Military facet (and
         /// recording the current <see cref="ThreatAssessment.DetectedStrengthOf"/> sample) for every rival it currently
         /// detects, and decaying the rest to Stale. That's what turns the inert ledger shell into a populated, decaying,
@@ -72,7 +72,7 @@ namespace Pulsar4X.Factions
         public static TimeSpan IntelStaleAfter = TimeSpan.FromDays(365);
 
         /// <summary>
-        /// Espionage E5 gate (docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md §G — the ALWAYS-ON MIRROR): when true, an NPC
+        /// Espionage E5 gate (docs/society/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md §G — the ALWAYS-ON MIRROR): when true, an NPC
         /// with spy capacity (a built <see cref="IntelDirectorateDB"/>) and an idle operative runs covert ops against
         /// its rivals — INCLUDING the player. This is what makes counter-intelligence a standing decision rather than a
         /// one-way toy: neglect your counter-intel rating and enemy agents raise their picture of you (and, in E6, steal
@@ -162,7 +162,7 @@ namespace Pulsar4X.Factions
             if (nowDate.HasValue)
                 isMonthlyCycle = nowDate.Value.Day == 1;
 
-            // Reactive diplomacy (docs/DIPLOMACY-DESIGN.md "Are we good?"): a faction's feelings DRIFT based on what it
+            // Reactive diplomacy (docs/society/DIPLOMACY-DESIGN.md "Are we good?"): a faction's feelings DRIFT based on what it
             // can read of its neighbours, turning the previously-dead ReactiveDiplomacy table into a live loop. MONTHLY
             // — the ±5-per-cycle delta is calibrated for a 30-day step (see cadence note above).
             if (isMonthlyCycle)
@@ -174,7 +174,7 @@ namespace Pulsar4X.Factions
             if (EnableIntelLedger && isMonthlyCycle)
                 UpdateInformationLedger(factionEntity);
 
-            // The Organism decision (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II Phase 2): read the needs-ladder, pick
+            // The Organism decision (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II Phase 2): read the needs-ladder, pick
             // an objective from tier × doctrine × personality, and commit it through the hysteresis engine. 2.4b
             // settles + STORES the objective (the DECISION). DAILY — the hysteresis engine already stops thrashing.
             UpdateStrategicObjective(factionEntity, factionInfoDB);
@@ -424,7 +424,7 @@ namespace Pulsar4X.Factions
         }
 
         /// <summary>
-        /// Phase-3.1 (docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md — the Information Ledger): drive this faction's
+        /// Phase-3.1 (docs/society/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md — the Information Ledger): drive this faction's
         /// persistent <see cref="InformationLedgerDB"/> for the cycle. For every OTHER faction (skip self + the neutral
         /// catch-all) it reads the fog-limited <see cref="ThreatAssessment.DetectedStrengthOf"/>: a rival it currently
         /// SEES gets its Military facet Confirmed with that strength recorded as a fresh sample (so the last-vs-prior
@@ -456,7 +456,7 @@ namespace Pulsar4X.Factions
         }
 
         /// <summary>
-        /// Espionage E5 (docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md §G — the always-on mirror): an NPC runs a covert op
+        /// Espionage E5 (docs/society/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md §G — the always-on mirror): an NPC runs a covert op
         /// against the rival it likes LEAST. The move that makes the spy game two-sided — an NPC with a built
         /// <see cref="IntelDirectorateDB"/> (capacity) and an idle <see cref="CommanderTypes.Intelligence"/> operative
         /// tasks a low-risk <see cref="CovertAction.GatherIntel"/> op on its most-hostile met rival (score at or below
@@ -515,7 +515,7 @@ namespace Pulsar4X.Factions
         }
 
         /// <summary>
-        /// Phase-3.3 (docs/AI-BRAIN-BUILD-TRACKER.md — the Ecosystem): the NPC treaty POLICY — the first step of the
+        /// Phase-3.3 (docs/ai/AI-BRAIN-BUILD-TRACKER.md — the Ecosystem): the NPC treaty POLICY — the first step of the
         /// living galaxy. Each monthly cycle, for the first met, not-at-war rival whose standing already clears a
         /// non-aggression pact's trust bar, the faction PROPOSES one — turning the built-but-uncalled
         /// <see cref="Treaties.Propose"/> into live behaviour (an NPC that actively seeks détente, not just drifts).

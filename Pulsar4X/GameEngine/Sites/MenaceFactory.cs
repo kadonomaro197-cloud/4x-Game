@@ -5,7 +5,7 @@ using Pulsar4X.GroundCombat;
 namespace Pulsar4X.Sites
 {
     /// <summary>
-    /// Site Engine SE-4b — the MENACE factory (docs/SITE-ENGINE-DESIGN.md §4, the incident's hostile force). An
+    /// Site Engine SE-4b — the MENACE factory (docs/explore/SITE-ENGINE-DESIGN.md §4, the incident's hostile force). An
     /// incident site (an Europa-style outbreak) is held by a "menace" — a hostile force that ISN'T a normal empire:
     /// its own faction, raised as ground units standing on the site's region. Standing there, it already trips the
     /// SE-3d guardian gate (`SiteWorkProcessor.RegionIsClearFor`), so you must CLEAR it before you can contain the

@@ -12,7 +12,7 @@ using Pulsar4X.Sites;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Site Engine SE-2c — the posting-danger incident (docs/SITE-ENGINE-DESIGN.md §5). A leader seated in a berth at a
+    /// Site Engine SE-2c — the posting-danger incident (docs/explore/SITE-ENGINE-DESIGN.md §5). A leader seated in a berth at a
     /// DANGEROUS site can be lost; the site's Hook sets the risk, the berth's Survivability buys it down. Proves the
     /// danger math (SiteHazard), that the base Benign anomaly never rolls (byte-identical), and the grave rung — a
     /// certain incident vacates the berth and destroys the commander. Uses the seeded system RNG.

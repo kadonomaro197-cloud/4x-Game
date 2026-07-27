@@ -3,7 +3,7 @@ using Pulsar4X.Engine;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// F-C1a (docs/AI-BRAIN-BUILD-TRACKER.md, Movement I — the trade-money pillar): the value of a faction's standing
+    /// F-C1a (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement I — the trade-money pillar): the value of a faction's standing
     /// TRADE AGREEMENTS, expressed as monthly income. Until now trade earned nothing — a signed `TradeAgreement`
     /// warmed relations but moved no money, so the Trade Minister role (and commerce diplomacy) had nothing real to
     /// manage. This is the missing money side, as a pure read.

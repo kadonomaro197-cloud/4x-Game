@@ -5,7 +5,7 @@ using Pulsar4X.Datablobs;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// The 12-trait personality model (docs/AI-COMMAND-AND-COMMUNICATION-DESIGN.md §3a). Each trait is 0..1 with 0.5
+    /// The 12-trait personality model (docs/ai/AI-COMMAND-AND-COMMUNICATION-DESIGN.md §3a). Each trait is 0..1 with 0.5
     /// neutral; a faction's traits filter every scored decision its brain makes (retreat nerve, treaty tolerance,
     /// first-contact stance, expansion drive, willingness to bombard civilians, and so on).
     /// </summary>
@@ -38,7 +38,7 @@ namespace Pulsar4X.Factions
     }
 
     /// <summary>
-    /// M2-0a (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism brain): the faction PERSONALITY blob — the
+    /// M2-0a (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism brain): the faction PERSONALITY blob — the
     /// authored identity (the 12 <see cref="PersonalityTrait"/>s) that every scored decision reads. This slice is the
     /// DATA MODEL + reader only: a new blob NOT yet attached to factions or read by anything → byte-identical. Each
     /// trait wire (M2-1a onward) reads a trait through a formula that is a NO-OP at the 0.5 <see cref="Neutral"/>, so

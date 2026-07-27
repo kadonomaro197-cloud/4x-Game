@@ -16,7 +16,7 @@ namespace Pulsar4X.Tests
     /// (`GroundHex.CityGrid`, lazy + save-safe), buildings sit on tiles 1:1, and the set of placed buildings is kept
     /// == the operational hex's `InstallationIds` (the roll-up invariant that ties the two zooms together). These
     /// gauges prove: lazy gen + scaling + clone-safety; place/remove keeps the roll-up in sync; develop lays a colony's
-    /// buildings onto tiles; and a BOMBED operational hex clears the fine tile too. Design: docs/GROUND-CITY-AND-WARMAP-DESIGN.md.
+    /// buildings onto tiles; and a BOMBED operational hex clears the fine tile too. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
     /// </summary>
     [TestFixture]
     public class CityGridTests

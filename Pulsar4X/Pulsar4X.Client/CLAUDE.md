@@ -686,8 +686,13 @@ Ground combat units should have **target lines**: persistent lines drawn from at
 - This mirrors how the system map shows orbit ellipses only for the selected body when zoomed in.
 
 **Coordinate space note:**
-- Ground units live on the `ColonyHexMapDB` tile grid, not in 3D system-map space.
-- Target lines for ground combat render inside the `GroundCombatWindow` 2D hex view, not on the system map.
+- Ground units live on the ground hex coordinates carried by `GroundForcesDB`/`GroundUnit` — per-region
+  `HexQ/HexR`, the global cylinder-grid `GlobalQ/GlobalR`, and the tactical `MiniQ/MiniR` (+ the sub-tile
+  `MiniOffX_km`/`MiniOffY_km`) — **not** in 3D system-map space. **CORRECTED 2026-07-27: this line used to say
+  units live on the `ColonyHexMapDB` tile grid. That is FALSE — `ColonyHexMapDB` is a do-not-revive landmine
+  (see `docs/ground/GROUND-SURFACE-MAP-DESIGN.md`) and no ground unit position has ever been stored on it.**
+- Ground/planetary drawing happens in `PlanetViewWindow` (globe + city zoom). **There is no
+  `GroundCombatWindow` — that type does not exist anywhere in the client** (corrected 2026-07-27).
 - The OpenGL line-drawing call is the same; the coordinate transform is hex-tile-to-screen, not world-to-screen.
 
 ---

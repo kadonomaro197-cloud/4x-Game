@@ -14,7 +14,7 @@ using Pulsar4X.Sites;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Site Engine SE-5c — the commit-branch order + "a branched site waits for the player" (docs/SITE-ENGINE-DESIGN.md
+    /// Site Engine SE-5c — the commit-branch order + "a branched site waits for the player" (docs/explore/SITE-ENGINE-DESIGN.md
     /// §4). Proves the whole "study → THEN choose" decision end to end: a branched site keeps accruing understanding but
     /// does NOT auto-resolve (it waits), the <see cref="CommitSiteBranchOrder"/> resolves it down the CHOSEN branch and
     /// delivers that branch's yield, and a plain branchless site still auto-resolves exactly as SE-1 (byte-identical).

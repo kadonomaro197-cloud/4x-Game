@@ -5,7 +5,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase-2.8 gauge (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md — the means-ends planner): the CONSOLIDATE resolver,
+    /// Phase-2.8 gauge (docs/ai/AI-DECISION-ENGINE-DESIGN.md — the means-ends planner): the CONSOLIDATE resolver,
     /// the crisis brain for the Stabilize tier (parking-lot gap G1 — the NPC used to FREEZE in a crisis because
     /// Consolidate had no resolver). Proves the resolver eases tax on a restless, over-taxed colony (Execute lowers
     /// the rate), leaves a content colony alone, and is now registered. Resolve is a pure decision (no side effect

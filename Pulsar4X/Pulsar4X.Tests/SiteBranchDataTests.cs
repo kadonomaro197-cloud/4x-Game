@@ -5,7 +5,7 @@ using Pulsar4X.Sites;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Site Engine SE-5a — the composable BRANCH data structure (docs/SITE-ENGINE-DESIGN.md §3/§4). The first slice of
+    /// Site Engine SE-5a — the composable BRANCH data structure (docs/explore/SITE-ENGINE-DESIGN.md §3/§4). The first slice of
     /// SE-5 (branches + the ruptured edge): it only ADDS the <see cref="SiteBranch"/> record + the
     /// <see cref="FieldSiteDB.Branches"/> list — no site machine or processor reads them yet (SE-5b/5c do). Proves the
     /// record carries its dials, a fresh/existing site is byte-identical (empty branch list, no branch committed), and

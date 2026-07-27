@@ -5,7 +5,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase 4 FINISH gauge (docs/AI-BRAIN-BUILD-TRACKER.md — 🌌 The Galaxy + Crisis). The earlier `GalaxyCrisisTests`
+    /// Phase 4 FINISH gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md — 🌌 The Galaxy + Crisis). The earlier `GalaxyCrisisTests`
     /// proved the DETECTOR + COALITION but FORCED the capability with a direct `Data.Unlock(capability-ascension)` — so
     /// it never proved the crisis was REACHABLE in a real game. This gauge closes the cradle-to-grave first rung: a
     /// faction that RESEARCHES the real base-mod `tech-ascension` ("Transcendence") tech is granted the

@@ -13,7 +13,7 @@ using Pulsar4X.Ships;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// P-3 military-reach gauge, slice 3 (docs/AI-BRAIN-BUILD-TRACKER.md — the last deferred "can my fleet GET THERE?"
+    /// P-3 military-reach gauge, slice 3 (docs/ai/AI-BRAIN-BUILD-TRACKER.md — the last deferred "can my fleet GET THERE?"
     /// muscle). Proves <see cref="MilitaryReach"/> — the perception that replaces MilitaryTarget's coarse near/far
     /// PROXY with a real read off the jump graph + the fleet's fuel/range. Four reads:
     ///   (a) a target in the fleet's OWN system reads reachable + cheap + (charged fleet) READY;

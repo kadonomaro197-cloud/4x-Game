@@ -4,7 +4,7 @@ namespace Pulsar4X.Combat
 {
     /// <summary>
     /// The broad flavor of a weapon — the corners (and off-corners) of the weapon triangle. Drives the dodge
-    /// model and the triangle bonus in the auto-resolver. See docs/WEAPONS-AND-DODGE-DESIGN.md.
+    /// model and the triangle bonus in the auto-resolver. See docs/combat/WEAPONS-DESIGN.md.
     /// </summary>
     public enum WeaponClass
     {
@@ -19,7 +19,7 @@ namespace Pulsar4X.Combat
     }
 
     /// <summary>
-    /// SYSTEM — the weapon designer's TWO independent axes (docs/WEAPON-TAXONOMY-DESIGN.md, developer's call 2026-07-06).
+    /// SYSTEM — the weapon designer's TWO independent axes (docs/combat/WEAPONS-DESIGN.md, developer's call 2026-07-06).
     /// The old single <see cref="WeaponClass"/> fused these; a blaster pistol (energy nature, dodgeable delivery) proved
     /// they must split. The player picks Nature × Delivery, dials specs, and the triangle position EMERGES from
     /// Velocity/Saturation/Tracking (so <see cref="WeaponClass"/> becomes a computed READOUT, not an authored choice).
@@ -57,7 +57,7 @@ namespace Pulsar4X.Combat
 
     /// <summary>
     /// One weapon's contribution to a ship's combat value, carrying the "flavor" stats the dodge model and the
-    /// weapon triangle read (docs/WEAPONS-AND-DODGE-DESIGN.md). Computed once at build from the weapon component's
+    /// weapon triangle read (docs/combat/WEAPONS-DESIGN.md). Computed once at build from the weapon component's
     /// design. <see cref="DamagePerSecond"/> is summed into <c>ShipCombatValueDB.Firepower</c>; the rest decide
     /// WHO gets hit (a beam ignores evasion; a ballistic slug is dodged; saturation floors the hit fraction).
     /// </summary>
@@ -68,7 +68,7 @@ namespace Pulsar4X.Combat
         /// authored choice (the developer's "the axes are the filing-cabinet path; the type emerges from the drawer you
         /// opened + the dials inside, not a hand-picked label"). Not serialized — recomputed from the serialized axes on
         /// load. There is NO type argument to the ctor: you set the axes + dials and the corner falls out.
-        /// See docs/WEAPON-TAXONOMY-DESIGN.md.</summary>
+        /// See docs/combat/WEAPONS-DESIGN.md.</summary>
         [JsonIgnore] public WeaponClass Class => WeaponClassifier.Classify(Delivery, Velocity, Tracking, Saturation);
 
         /// <summary>Damage nature (Kinetic/Energy/Explosive/Exotic) — what it does to the defence. Axis 1 of 2.</summary>
@@ -92,7 +92,7 @@ namespace Pulsar4X.Combat
 
         /// <summary>The farthest this weapon can land a hit (metres) — the ROOT of the closing-fight model: as two
         /// fleets close, a weapon only contributes once the gap is ≤ its range (see
-        /// docs/FLEET-COMBAT-CLOSING-DESIGN.md, Root A). Uses the engine's existing range convention: **0 = unbounded
+        /// docs/combat/FLEET-COMBAT-CLOSING-DESIGN.md, Root A). Uses the engine's existing range convention: **0 = unbounded
         /// / always in range** (same as <see cref="Weapons.GenericBeamWeaponAtb.IsInRange"/> treating MaxRange ≤ 0 as
         /// unlimited), which is also serialization-safe (no Infinity in JSON). Beams carry their design MaxRange;
         /// railgun/flak/missile default to 0 (rangeless) until their own range fields are added — a flagged follow-up.</summary>
@@ -104,10 +104,10 @@ namespace Pulsar4X.Combat
         /// heavy plating as if it were light. It only bites where flat armour is applied per-source: the ground /
         /// garrison resolver today (the ship path folds armour into Toughness, so penetration reaches ships only once
         /// that per-source armour reconcile lands — a flagged follow-up). This is the "armour half of the matchup"
-        /// dial — docs/COMPONENT-DESIGNER-DIALS.md ⚙1 resolver backlog #1.</summary>
+        /// dial — docs/economy/COMPONENT-DESIGNER-DIALS.md ⚙1 resolver backlog #1.</summary>
         [JsonProperty] public double Penetration { get; internal set; }
 
-        /// <summary>PER-SHOT ENERGY (joules in ONE shot) — the alpha-vs-chip dial (docs/COMPONENT-DESIGNER-DIALS.md ⚙1
+        /// <summary>PER-SHOT ENERGY (joules in ONE shot) — the alpha-vs-chip dial (docs/economy/COMPONENT-DESIGNER-DIALS.md ⚙1
         /// backlog #2). Its purpose is to split a weapon's damage into few-big vs many-small hits against flat armour:
         /// because armour is soaked FLAT per hit (<see cref="Combat.CombatKernel.ArmourSoak"/>), one big alpha punches
         /// through while a swarm of chips is mostly bounced — even at equal damage-per-second. 0 = unspecified: the

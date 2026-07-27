@@ -12,7 +12,7 @@ namespace Pulsar4X.Tests
     /// scaled dimensions and clean region bands, that its terrain is COHERENT and WRAPS seamlessly at the longitude
     /// seam (the whole point — a continuous world, no discontinuity where region 4 meets region 1), that column
     /// lookups wrap, and that it's save-safe. The per-region disks are untouched by this slice (additive).
-    /// Design: docs/GLOBAL-HEX-GRID-DESIGN.md.
+    /// Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
     /// </summary>
     [TestFixture]
     public class SurfaceGridTests

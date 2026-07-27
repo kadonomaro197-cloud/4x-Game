@@ -11,7 +11,7 @@ using Pulsar4X.Ships;       // ShipInfoDB / ShipDesign (the surveyor scan + the 
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// Phase-2.8 P-2 (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md): the EXPAND resolver — the Ambition-tier "settle new
+    /// Phase-2.8 P-2 (docs/ai/AI-DECISION-ENGINE-DESIGN.md): the EXPAND resolver — the Ambition-tier "settle new
     /// worlds" brain. Before this, an NPC that settled the Expand objective had NO resolver and no-oped. This drives
     /// the FOUND leg of the survey→move→found chain, one step per monthly cycle (least-commitment).
     ///

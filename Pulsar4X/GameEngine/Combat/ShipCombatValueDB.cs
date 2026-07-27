@@ -25,7 +25,7 @@ namespace Pulsar4X.Combat
     ///
     /// It deliberately does NOT use the per-pixel damage sim (which deposits ~0 damage today and is parked
     /// for v2) — it reads static design data, so it is fast and can't be broken by that sim.
-    /// See docs/COMBAT-DESIGN.md -> "What we're building (v1)".
+    /// See docs/combat/COMBAT-DESIGN.md -> "What we're building (v1)".
     ///
     /// v1 stubs (flagged): missile launchers add a flat <see cref="MissileLauncherFirepowerStub"/> each (real
     /// value = warhead energy x salvo rate, wired in v2); toughness weights every component equally (a simple
@@ -175,7 +175,7 @@ namespace Pulsar4X.Combat
 
         /// <summary>The ship's weapons as flavor profiles (damage/velocity/tracking/saturation per weapon) — the
         /// per-weapon-type breakdown the dodge model + weapon triangle read. <see cref="Firepower"/> is the sum of
-        /// these profiles' damage. Empty for an unarmed hull. See docs/WEAPONS-AND-DODGE-DESIGN.md.</summary>
+        /// these profiles' damage. Empty for an unarmed hull. See docs/combat/WEAPONS-DESIGN.md.</summary>
         [JsonProperty] public List<WeaponProfile> Weapons { get; internal set; } = new();
 
         /// <summary>The farthest a weapon on this ship can reach, in metres — the max <see cref="WeaponProfile.Range_m"/>
@@ -196,7 +196,7 @@ namespace Pulsar4X.Combat
         }
 
         /// <summary>The SHIELD pool in joules (sum of installed shield generators, health-scaled) — a depleting/regen
-        /// buffer the resolve drains BEFORE toughness (docs/WEAPON-TAXONOMY-DESIGN.md §6). 0 = no shield generator, so
+        /// buffer the resolve drains BEFORE toughness (docs/combat/WEAPONS-DESIGN.md §6). 0 = no shield generator, so
         /// combat is byte-identical for an unshielded ship until the resolve wiring lands.</summary>
         [JsonProperty] public double ShieldCapacity_J { get; internal set; }
 
@@ -402,7 +402,7 @@ namespace Pulsar4X.Combat
                     }
                 }
 
-                // Ion disruptors: the ANTI-SHIELD exotic (docs/WEAPON-TAXONOMY-DESIGN.md §5, Phase D). Light-speed
+                // Ion disruptors: the ANTI-SHIELD exotic (docs/combat/WEAPONS-DESIGN.md §5, Phase D). Light-speed
                 // (undodgeable, tracks perfectly like a beam) but EXOTIC nature — the shield's exotic-soak is 0, so it
                 // bypasses the pool and strikes the hull. damage/sec = energy/shot × rounds/sec.
                 if (instances.TryGetComponentsByAttribute<DisruptorWeaponAtb>(out var disruptors))
@@ -449,7 +449,7 @@ namespace Pulsar4X.Combat
                     }
                 }
 
-                // SHIELD generators — the space shield pool (docs/WEAPON-TAXONOMY-DESIGN.md §6). A depleting/regen
+                // SHIELD generators — the space shield pool (docs/combat/WEAPONS-DESIGN.md §6). A depleting/regen
                 // energy pool the resolve will drain before the hull's toughness (a later slice). Scaled by the
                 // generator's own health (a damaged/shot-off generator projects a weaker/no shield — the grave rung).
                 if (instances.TryGetComponentsByAttribute<ShieldAtb>(out var shieldGens))

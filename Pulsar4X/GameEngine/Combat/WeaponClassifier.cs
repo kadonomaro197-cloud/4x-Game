@@ -2,7 +2,7 @@ namespace Pulsar4X.Combat
 {
     /// <summary>
     /// Computes a weapon's TRIANGLE CORNER (<see cref="WeaponClass"/>) from its DELIVERY axis + its dialled specs —
-    /// the first concrete step of the weapon-designer UNIFICATION (docs/WEAPON-TAXONOMY-DESIGN.md, the developer's
+    /// the first concrete step of the weapon-designer UNIFICATION (docs/combat/WEAPONS-DESIGN.md, the developer's
     /// "one weapon designer, pick Nature × Delivery, the triangle EMERGES"). <see cref="WeaponProfile.Class"/> is now a
     /// pure computed read-out backed by this classifier — there is NO authored type field and no type argument to the
     /// <see cref="WeaponProfile"/> ctor; you set the axes + dials and the corner falls out (gauged by

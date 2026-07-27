@@ -19,7 +19,7 @@ namespace Pulsar4X.GroundCombat
     /// like any other: designed / researched / built / mounted / lost; inert on install (read by movement).
     ///
     /// ⚠ The defaults here are FLAGGED tunable numbers; real values are authored per-design in the component template
-    /// (sliders, like the mine's Area). Design: docs/GROUND-UNITS-AS-ENTITIES-DESIGN.md.
+    /// (sliders, like the mine's Area). Design: docs/economy/COMPONENT-DESIGNER-CATEGORIES.md.
     /// </summary>
     public class GroundLocomotionAtb : BaseDataBlob, IComponentDesignAttribute
     {

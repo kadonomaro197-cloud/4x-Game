@@ -1,7 +1,7 @@
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// F-C2 (docs/GOVERNMENT-AND-POLITICS-DESIGN.md — the popular-demands pillar): the FIXED set of interest blocs
+    /// F-C2 (docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md — the popular-demands pillar): the FIXED set of interest blocs
     /// (the "Stellaris-parties"). A small, closed vocabulary; their SUPPORT is emergent (derived from the sim each
     /// cycle, like legitimacy — never a parallel stored system), and each is the source of the demands the demand
     /// engine (F-C2b) surfaces.
@@ -21,7 +21,7 @@ namespace Pulsar4X.Factions
     }
 
     /// <summary>
-    /// F-C2a (docs/AI-BRAIN-BUILD-TRACKER.md): the bloc substrate — which blocs a regime makes LOUD. Pure/derived,
+    /// F-C2a (docs/ai/AI-BRAIN-BUILD-TRACKER.md): the bloc substrate — which blocs a regime makes LOUD. Pure/derived,
     /// no stored state (support is computed, not a parallel system). The government dials bias which blocs organise
     /// (design §Blocs): the Militarism dial amplifies Militarists, Openness amplifies Liberty, Authority amplifies
     /// Order. This is the substrate the demand engine (F-C2b) weights its emergent demands by; nothing consumes it

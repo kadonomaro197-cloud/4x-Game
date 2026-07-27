@@ -10,7 +10,7 @@ namespace Pulsar4X.Tests
     /// knobs). This gauge pins the double-argument constructors (the NCalc/JSON binding path, gotcha L7) and Clone —
     /// so a base-mod part template (G-D2) that mis-orders or mis-counts ctor args fails HERE, not in a player's New
     /// Game. The assembly + stat-emergence + capacity gate ride on top in G-D3.
-    /// Design: docs/GROUND-COMBAT-MAP-DESIGN.md → unit designer.
+    /// Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md → unit designer.
     /// </summary>
     [TestFixture]
     public class GroundUnitPartsTests

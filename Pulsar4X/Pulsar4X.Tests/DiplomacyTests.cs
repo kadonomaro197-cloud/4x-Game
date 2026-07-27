@@ -5,7 +5,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Gauge for the diplomacy SUBSTRATE (docs/DIPLOMACY-DESIGN.md): the per-pair relationship record
+    /// Gauge for the diplomacy SUBSTRATE (docs/society/DIPLOMACY-DESIGN.md): the per-pair relationship record
     /// (<see cref="RelationshipState"/>) and the per-faction ledger (<see cref="DiplomacyDB"/>). This proves the
     /// relationship-TRACK behavior — a single score nudged by events, with the headline stance derived from it
     /// (War a latched override) — before any processor reads it for IFF/combat. Substrate step: data + the

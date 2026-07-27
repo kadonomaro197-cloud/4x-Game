@@ -32,7 +32,7 @@ namespace Pulsar4X.GroundCombat
     ///
     /// A component attribute (<see cref="IComponentDesignAttribute"/>) so a frame is designed / researched / built like
     /// any part (CONVENTIONS §6). Inert on install (the assembler reads these values when it computes the unit — G-D3);
-    /// install/uninstall are no-ops. Design: docs/GROUND-COMBAT-MAP-DESIGN.md → unit designer.
+    /// install/uninstall are no-ops. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md → unit designer.
     /// </summary>
     public class GroundChassisAtb : BaseDataBlob, IComponentDesignAttribute, IChassisAtb
     {

@@ -9,7 +9,7 @@ namespace Pulsar4X.GroundCombat
 {
     /// <summary>
     /// The WAR-MAP building axis (W1) — the operational-hex half of the two-zoom model
-    /// (docs/GROUND-CITY-AND-WARMAP-DESIGN.md). A strategic building (one whose design carries a
+    /// (docs/ground/GROUND-SURFACE-MAP-DESIGN.md). A strategic building (one whose design carries a
     /// <see cref="GroundFootprintAtb"/>) gets a home on a specific <see cref="GroundHex"/> — the "ship icon" on the war
     /// map — so the ground war has something worth fighting over: <b>capturing the hex captures what's on it, bombing
     /// the hex damages what's on it.</b>

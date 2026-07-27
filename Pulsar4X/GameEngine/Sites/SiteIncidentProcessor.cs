@@ -7,7 +7,7 @@ using Pulsar4X.Interfaces;
 namespace Pulsar4X.Sites
 {
     /// <summary>
-    /// Site Engine SE-4d — the incident's SPAWN/SPREAD engine (docs/SITE-ENGINE-DESIGN.md §4). While a Shape.Incident
+    /// Site Engine SE-4d — the incident's SPAWN/SPREAD engine (docs/explore/SITE-ENGINE-DESIGN.md §4). While a Shape.Incident
     /// site is live, its menace GROWS if you don't contain it: on each interval it raises a fresh menace unit at the
     /// site's region and pushes one into an adjacent region (the outbreak creeps outward), announcing it. An
     /// <see cref="IInstanceProcessor"/> that reschedules itself (the <see cref="Pulsar4X.People.NavalAcademyProcessor"/>

@@ -15,7 +15,7 @@ namespace Pulsar4X.Tests
     /// (GroundSensorAtb) reveals the map within the radar's reach. The ability falls out of the unit's component store
     /// (slice 2) — GroundSensors reads it via TryGetComponentsByAttribute, exactly like a ship's sensors — and the
     /// radar's real km range is translated to hexes → region bands on the map. No "scout type"; a scout is any unit you
-    /// build with a radar. Design: docs/GROUND-UNITS-AS-ENTITIES-DESIGN.md.
+    /// build with a radar. Design: docs/economy/COMPONENT-DESIGNER-CATEGORIES.md.
     /// </summary>
     [TestFixture]
     public class GroundSensorsTests

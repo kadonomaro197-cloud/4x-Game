@@ -8,7 +8,7 @@ namespace Pulsar4X.Galaxy
     /// per-region disks. One wrapping grid: columns are longitude, rows are latitude, terrain sampled from the global
     /// field so it's continuous across every column and seam-wrapping by construction. Dimensions scale with planet
     /// size and stay divisible by the region count so region column-BANDS are clean. Lazy, idempotent, deterministic
-    /// (system RNG via <see cref="WorldTerrain"/>), defensive (never throws). Design: docs/GLOBAL-HEX-GRID-DESIGN.md.
+    /// (system RNG via <see cref="WorldTerrain"/>), defensive (never throws). Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
     /// </summary>
     public static class PlanetGridFactory
     {

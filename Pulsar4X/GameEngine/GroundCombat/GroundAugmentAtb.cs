@@ -21,7 +21,7 @@ namespace Pulsar4X.GroundCombat
     ///   • <see cref="Shield"/> — flat incoming-damage soak / ranged deflection (an energy shield, a Force ward).
     ///
     /// Costs <see cref="Mass"/> like any part. A component attribute (CONVENTIONS §6); inert on install (the assembler
-    /// reads it — G-D3). Design: docs/GROUND-COMBAT-MAP-DESIGN.md → unit designer.
+    /// reads it — G-D3). Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md → unit designer.
     /// </summary>
     public class GroundAugmentAtb : BaseDataBlob, IComponentDesignAttribute
     {

@@ -5,7 +5,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// M2-1c gauge (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II): the third personality→behaviour wire — Honor →
+    /// M2-1c gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II): the third personality→behaviour wire — Honor →
     /// keep-faith / renege. Two halves: the pure DECISION (`Treaties.WouldKeepFaith` — a high-Honor faction honours a
     /// pact even when betrayal would pay, a low-Honor one caves) and the mechanical ACT (`Diplomacy.BreakTreaty` —
     /// clears the pact on both books and craters the injured party's trust). Nothing calls either autonomously yet,

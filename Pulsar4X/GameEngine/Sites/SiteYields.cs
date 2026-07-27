@@ -7,7 +7,7 @@ using Pulsar4X.Technology;
 namespace Pulsar4X.Sites
 {
     /// <summary>
-    /// Site Engine SE-1c — the YIELD ROUTER (docs/SITE-ENGINE-DESIGN.md §3 Yield dial). When a site RESOLVES, its
+    /// Site Engine SE-1c — the YIELD ROUTER (docs/explore/SITE-ENGINE-DESIGN.md §3 Yield dial). When a site RESOLVES, its
     /// banked <see cref="FieldSiteDB.Progress"/> is paid out into the consumer system its Yield names — the "connect"
     /// that turns the located episode into a real reward the player feels in an existing system (research here; the
     /// other routes — blueprint / resource / population / leader / strategic-asset / network-route — are later slices).

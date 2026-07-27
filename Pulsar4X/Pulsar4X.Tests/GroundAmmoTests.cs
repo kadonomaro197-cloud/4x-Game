@@ -10,7 +10,7 @@ namespace Pulsar4X.Tests
     /// snapshots its magazine capacity into an ammo pool; firing drains it; DRY silences its ammo weapons (checked here
     /// via <see cref="GroundAmmo.IsDry"/>); a resupply tops it back up. The in-combat drain call site + silence-when-dry
     /// read ride the resolver merge (next branch); this proves the pool math that both the current and merged resolvers
-    /// use. Engine-only → runs in CI. Design: docs/WEAPON-UNIFICATION-DESIGN.md P2c.
+    /// use. Engine-only → runs in CI. Design: docs/economy/COMPONENT-DESIGNER-CATEGORIES.md P2c.
     /// </summary>
     [TestFixture]
     public class GroundAmmoTests

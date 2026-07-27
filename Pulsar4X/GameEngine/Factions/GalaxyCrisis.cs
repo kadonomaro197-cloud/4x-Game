@@ -6,7 +6,7 @@ using Pulsar4X.Extensions;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// Phase 4 — 🌌 The Galaxy + Crisis (docs/AI-BRAIN-BUILD-TRACKER.md). The late-game endgame: a faction that
+    /// Phase 4 — 🌌 The Galaxy + Crisis (docs/ai/AI-BRAIN-BUILD-TRACKER.md). The late-game endgame: a faction that
     /// reaches a transcendent CAPABILITY — an "ascension," a Stellaris-crisis-style existential leap — becomes a
     /// galaxy-wide threat the others must unite against. The ascension is a real CAPABILITY (F-D2:
     /// <see cref="FactionDataStore.Capabilities"/>), granted by RESEARCHING a transcendent tech (a tech whose

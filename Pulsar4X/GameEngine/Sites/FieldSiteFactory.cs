@@ -10,7 +10,7 @@ namespace Pulsar4X.Sites
 {
     /// <summary>
     /// Site Engine SE-1b — the factory that puts a <see cref="FieldSiteDB"/> into the world as a located,
-    /// point-in-space thing (docs/SITE-ENGINE-DESIGN.md, the anomaly-first build). A space anomaly is the engine
+    /// point-in-space thing (docs/explore/SITE-ENGINE-DESIGN.md, the anomaly-first build). A space anomaly is the engine
     /// minus the surface bits, so it's the cheapest first site: a NAME + a fixed POSITION (no orbit, no movement,
     /// like a jump point) + the site record. Neutral-owned — it belongs to no faction until one WORKS it.
     ///
@@ -63,7 +63,7 @@ namespace Pulsar4X.Sites
         }
 
         /// <summary>
-        /// Site Engine SE-3a — create a SURFACE site located on a planet body's region/hex (docs/SITE-ENGINE-DESIGN.md
+        /// Site Engine SE-3a — create a SURFACE site located on a planet body's region/hex (docs/explore/SITE-ENGINE-DESIGN.md
         /// §6: a ruin on the ground that ground troops must land on and work), rather than a point in space. It carries
         /// NO <see cref="PositionDB"/> — its location is the body + region + hex on the site record, and its worker is a
         /// ground unit standing on it (SE-3b), not a parked ship. Neutral-owned until a faction works it.

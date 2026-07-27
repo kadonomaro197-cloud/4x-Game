@@ -12,7 +12,7 @@ Read the "what it does" line first, then the plumbing. Every step names the real
 
 A **battalion** is the ground twin of a **fleet**. A fleet is a bag of ships that move and fight as one; a battalion (`GroundFormation`) is a bag of ground units that move and fight as one. Before this campaign the AI could *build* ground units but never *group* them — and stance, rules-of-engagement, and orders all live on the group, not the loose unit. So a loose AI unit had no officer and no orders. The fix (`GroundAssembly.FormUpLoose`) sweeps loose units into battalions the moment they're raised or land — for the AI. You always had the button; now the AI has the reflex.
 
-The other idea: **the hex is the unit of everything.** Regions are just a visual aid — a coloured band on the globe. Landing, blowing up buildings, and who-owns-what all resolve at the **hex** level (`GroundHex`). When this doc says "a region," picture the band; the real bookkeeping is per-hex underneath it.
+The other idea: **the hex is the unit of INFRASTRUCTURE; the region is still the unit of the FIGHT.** *(Qualified 2026-07-27 — this used to read "the hex is the unit of everything," which the code refutes.)* Buildings sit on hexes and are razed/captured per hex (`GroundHex`), and landing targets a region **index**. But the resolver **groups combatants by region** and **capture flips the region's owner** — see `GameEngine/GroundCombat/GroundForcesProcessor.cs` (units are bucketed `byRegion`, then whoever holds the only live units there takes the region). So when this doc says "a region," that band is real bookkeeping for the fight, not just a visual aid. Ruling #14's two-layer coordinate `(17,09)(22,47)` is what eventually makes one address cover both layers.
 
 ---
 

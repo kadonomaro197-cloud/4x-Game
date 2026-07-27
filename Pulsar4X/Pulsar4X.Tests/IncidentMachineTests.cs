@@ -4,7 +4,7 @@ using Pulsar4X.Sites;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Site Engine SE-4a — the INCIDENT state + machine reads (docs/SITE-ENGINE-DESIGN.md §4, the "stop-the-bleed"
+    /// Site Engine SE-4a — the INCIDENT state + machine reads (docs/explore/SITE-ENGINE-DESIGN.md §4, the "stop-the-bleed"
     /// shape). A Shape.Incident site bleeds steady PRESSURE and can grow a menace while it is LIVE (exists + not yet
     /// contained); containing it (resolve → Depleted) stops the bleed. Proves the pure reads + the new incident dials on
     /// FieldSiteDB survive Clone. Nothing is attached to an entity, so byte-identical.

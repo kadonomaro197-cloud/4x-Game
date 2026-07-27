@@ -21,7 +21,7 @@ namespace Pulsar4X.GroundCombat
     ///
     /// v1 backs designs that carry a component list (<see cref="GroundUnitDesign.ComponentDesignIds"/>, from the
     /// assembler). The monolithic base-mod units (a single <c>GroundUnitAtb</c> component) get their backing in a later
-    /// slice. Design: docs/GROUND-UNITS-AS-ENTITIES-DESIGN.md.
+    /// slice. Design: docs/economy/COMPONENT-DESIGNER-CATEGORIES.md.
     /// </summary>
     public static class GroundUnitEntity
     {

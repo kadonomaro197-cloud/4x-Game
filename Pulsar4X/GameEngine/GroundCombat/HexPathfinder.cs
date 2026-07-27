@@ -26,7 +26,7 @@ namespace Pulsar4X.GroundCombat
     /// distance datum — not a new magic number). Because the base is a constant within a region, the terrain-cost-optimal
     /// path is also the time-optimal one.
     ///
-    /// Design: docs/HEX-GROUND-AND-ORDERS-DESIGN.md (H2). Reuses <see cref="HexCoordinate"/> for neighbour/distance math.
+    /// Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md (H2). Reuses <see cref="HexCoordinate"/> for neighbour/distance math.
     /// </summary>
     public static class HexPathfinder
     {

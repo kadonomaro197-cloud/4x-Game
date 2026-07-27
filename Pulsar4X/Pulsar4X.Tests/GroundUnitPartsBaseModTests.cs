@@ -14,7 +14,7 @@ namespace Pulsar4X.Tests
     /// mis-ordered/mis-counted AtbConstrArgs or a bad ctor fails HERE, not in a player's New Game — the
     /// <see cref="RailgunWeaponTests"/> equivalent for ground parts. They mount as the new GroundUnit type so they stay
     /// out of the ship/colony build lists and the ground designer (G-D4) can filter to them. Assembly + the carry gate
-    /// ride on top in G-D3. Design: docs/GROUND-COMBAT-MAP-DESIGN.md → unit designer.
+    /// ride on top in G-D3. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md → unit designer.
     /// </summary>
     [TestFixture]
     public class GroundUnitPartsBaseModTests

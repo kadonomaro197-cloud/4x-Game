@@ -5,7 +5,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase-2.8 P1-e gauge (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md): the FeasibilityOracle teeth. Proves the oracle
+    /// Phase-2.8 P1-e gauge (docs/ai/AI-DECISION-ENGINE-DESIGN.md): the FeasibilityOracle teeth. Proves the oracle
     /// still passes the start colony's real build (the teeth don't false-bite the happy path — byte-identical) but
     /// now REFUSES a build that would silently stall — here, a production line whose infra-scaled throughput is below
     /// 1 pt/tick (the same condition `ConstructStuff` skips on). It mirrors execution, never a superset.

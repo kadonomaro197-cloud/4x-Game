@@ -14,7 +14,7 @@ namespace Pulsar4X.Tests
 {
     /// <summary>
     /// Site Engine SE-2b — seating a leader in a Command Berth and having that manned berth work a field-site FASTER
-    /// (docs/SITE-ENGINE-DESIGN.md §5). Proves the leader-in-the-loop: BerthOps.SeatLeader fills a berth + sets the
+    /// (docs/explore/SITE-ENGINE-DESIGN.md §5). Proves the leader-in-the-loop: BerthOps.SeatLeader fills a berth + sets the
     /// leader's back-reference; SiteWorkProcessor scales the work rate by the manned berth's Grade + the leader's
     /// competence (+ Support). Additive / byte-identical — a worker with no manned matching berth still works at the
     /// SE-1b flat rate (multiplier 1.0), so every SE-1b/SE-1c gauge is unchanged.

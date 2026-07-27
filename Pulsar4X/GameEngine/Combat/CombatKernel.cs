@@ -11,7 +11,7 @@ namespace Pulsar4X.Combat
     /// soak it, does armour bounce it, how much health is left — but with two separate copies of the arithmetic. This
     /// class is the shared home for that arithmetic, written to a **neutral view** (<see cref="Combatant"/>) that a
     /// ship OR a ground unit can present, so neither the hex board nor the ship <c>Entity</c> leaks into the math. It
-    /// is the seam the resolver-merge (docs/RESOLVER-MERGE-DESIGN.md) is built on.
+    /// is the seam the resolver-merge (docs/combat/RESOLVER-DESIGN.md) is built on.
     ///
     /// **Purity is the load-bearing property.** Every function here is pure arithmetic — no entity mutation, no RNG,
     /// no clock. That is what keeps combat DETERMINISTIC (the locked rule: fast-forward must equal watch). The caller
@@ -27,7 +27,7 @@ namespace Pulsar4X.Combat
     /// its two armour constants now delegate/forward here, so the kernel is the single source of truth for the flat
     /// armour math on BOTH domains. The rest of the planetary resolver (weapon profiles, the dodge/shield reconcile,
     /// the closing model on the hex board) adopts this kernel in slice 3b+. <see cref="CombatKernelTests"/> pins these
-    /// outputs. See docs/RESOLVER-MERGE-DESIGN.md §5.
+    /// outputs. See docs/combat/RESOLVER-DESIGN.md §5.
     /// </summary>
     public static class CombatKernel
     {
@@ -82,7 +82,7 @@ namespace Pulsar4X.Combat
         /// the kernel sees only these value fields plus <see cref="Weapons"/> (the SAME <see cref="WeaponProfile"/>
         /// type both domains carry) and a 1-D <see cref="Position_m"/> (fleet separation in space; hex-distance ×
         /// metres-per-hex on a planet). The caller keeps its own back-reference (ship id / GroundUnit ref) to apply
-        /// the results the kernel returns. See docs/RESOLVER-MERGE-DESIGN.md §2.
+        /// the results the kernel returns. See docs/combat/RESOLVER-DESIGN.md §2.
         /// </summary>
         public sealed class Combatant
         {
@@ -248,7 +248,7 @@ namespace Pulsar4X.Combat
         public static double ArmourSoak(double armour, double sourceDamage) => ArmourSoak(armour, sourceDamage, 0.0, 1.0);
 
         /// <summary>Flat ARMOUR soak WITH weapon PENETRATION — the armour half of the matchup
-        /// (docs/COMPONENT-DESIGNER-DIALS.md ⚙1 backlog #1). Penetration cancels armour point-for-point BEFORE the flat
+        /// (docs/economy/COMPONENT-DESIGNER-DIALS.md ⚙1 backlog #1). Penetration cancels armour point-for-point BEFORE the flat
         /// soak: an AP/sabot/lance round with <paramref name="penetration"/> ≥ the target's armour meets no effective
         /// plating and lands in full (like an unarmoured target), while a normal round (penetration 0) is byte-for-byte
         /// the flat soak above — so this reduces to the old <see cref="ArmourSoak(double,double)"/> when penetration is

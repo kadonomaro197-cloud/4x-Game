@@ -16,7 +16,7 @@ namespace Pulsar4X.GroundCombat
     /// <see cref="Capacity_kg"/> for the DESIGN-TIME ammo gate (an Ammo/Both weapon with no magazine is an illegal design,
     /// P2c-a) and, later, to size how long the unit fights before it runs dry and must resupply (P2c combat depletion).
     /// Inert on install — like the chassis, the assembler reads the value; install/uninstall are no-ops. Never throws.
-    /// Design: docs/WEAPON-UNIFICATION-DESIGN.md P2.
+    /// Design: docs/economy/COMPONENT-DESIGNER-CATEGORIES.md P2.
     /// </summary>
     public class GroundMagazineAtb : BaseDataBlob, IComponentDesignAttribute
     {

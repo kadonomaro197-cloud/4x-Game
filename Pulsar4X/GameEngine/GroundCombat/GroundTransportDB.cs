@@ -13,7 +13,7 @@ namespace Pulsar4X.GroundCombat
     ///
     /// Capacity isn't stored here — it's summed on demand from the ship's installed <see cref="GroundBayAtb"/> bays
     /// (like fortification), so losing a bay in combat immediately shrinks the room. Save-safe (deep-cloned units).
-    /// Managed by <see cref="GroundTransport"/>. Design: docs/GROUND-COMBAT-MAP-DESIGN.md → transport.
+    /// Managed by <see cref="GroundTransport"/>. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md → transport.
     /// </summary>
     public class GroundTransportDB : BaseDataBlob
     {

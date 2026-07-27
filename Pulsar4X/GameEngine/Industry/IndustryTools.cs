@@ -143,7 +143,7 @@ namespace Pulsar4X.Industry
 
                     if(industryPointsToUse < 1) continue;
 
-                    // M3-2b crew GATE (docs/MORALE-AND-POPULATION-DESIGN.md): you cannot build a ship you can't
+                    // M3-2b crew GATE (docs/society/MORALE-AND-POPULATION-DESIGN.md): you cannot build a ship you can't
                     // crew. Checked BEFORE any resources are consumed below, and only for ship hulls with a real
                     // crew requirement. Inert on a host with no manpower pool (a station) and at the all-Mid
                     // government default the policy is Block; a high-authority regime conscripts instead

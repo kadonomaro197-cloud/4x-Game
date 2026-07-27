@@ -17,7 +17,7 @@ namespace Pulsar4X.GroundCombat
     /// <see cref="ReconcileBody"/> (run hourly by <see cref="GroundBuildQueueProcessor"/>) finds the freshly-built
     /// footprint building and lays it on the reserved tile — closing the cradle-to-grave chain (mineral → material →
     /// production → component → installed → located on the tile → bombed = lost). Defensive throughout.
-    /// Design: docs/GROUND-CITY-AND-WARMAP-DESIGN.md.
+    /// Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
     /// </summary>
     public static class GroundBuild
     {

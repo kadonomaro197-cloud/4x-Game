@@ -12,7 +12,7 @@ using Pulsar4X.Technology;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Site Engine SE-1c — resolve + the research yield, end to end (docs/SITE-ENGINE-DESIGN.md §3 Yield dial).
+    /// Site Engine SE-1c — resolve + the research yield, end to end (docs/explore/SITE-ENGINE-DESIGN.md §3 Yield dial).
     /// Proves the PAYOFF half of the spine: when a worked anomaly's understanding fills, the site RESOLVES and its
     /// banked Progress is paid ONCE into the working faction's research (an existing consumer system — the Prime
     /// Directive "connect"). Gauged target-agnostically: the faction's total research progress climbs by exactly the

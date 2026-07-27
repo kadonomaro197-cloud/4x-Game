@@ -29,7 +29,7 @@ namespace Pulsar4X.Colonies
         public Type GetParameterType { get; } = typeof(LegitimacyDB);
 
         /// <summary>
-        /// Phase gate (docs/GOVERNMENT-AND-POLITICS-DESIGN.md §Demands — the popular-demands pillar): when true, a
+        /// Phase gate (docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md §Demands — the popular-demands pillar): when true, a
         /// province's UNANSWERED political demands actually erode its legitimacy each cycle. This is the LIVE CONSUMER
         /// for the previously-dark <see cref="Pulsar4X.Factions.DemandEngine"/> / <see cref="Pulsar4X.Factions.DemandResolution"/>
         /// logic (built with zero callers): the processor surfaces the province's demands and applies their resolution
@@ -114,7 +114,7 @@ namespace Pulsar4X.Colonies
             inputs.WarOutcome = WarTermFor(province);   // 0 in peace; while at war, gated by militarism
             legitimacy.Legitimacy = LegitimacyDB.ComputeLegitimacy(inputs, legitimacy.Factors);
 
-            // Popular-demands pillar (F-C2, docs/GOVERNMENT-AND-POLITICS-DESIGN.md): the demand engine's UNANSWERED
+            // Popular-demands pillar (F-C2, docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md): the demand engine's UNANSWERED
             // demands drag legitimacy down. This is the LIVE WIRE for DemandEngine + DemandResolution (built with no
             // callers). Gated so it's byte-identical until opted in; when on, the delta is applied on top of the
             // morale/war baseline and re-clamped, with the total recorded in the Factors gauge (why, not just the number).

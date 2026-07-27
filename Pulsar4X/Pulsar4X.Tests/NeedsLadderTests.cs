@@ -4,7 +4,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase-2.2 gauge (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the needs-ladder read.
+    /// Phase-2.2 gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the needs-ladder read.
     /// Proves the pure tier assessment climbs correctly across its boundaries (rebellion/collapse/losing-war →
     /// Survive; internal trouble or any war → Stabilize; dominant-and-secure → Ambition; healthy → Thrive), and that
     /// a fresh, healthy start faction reads Thrive end-to-end.

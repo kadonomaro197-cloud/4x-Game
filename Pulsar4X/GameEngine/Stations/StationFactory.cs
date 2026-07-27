@@ -18,7 +18,7 @@ namespace Pulsar4X.Stations
     /// PARALLEL to <see cref="ColonyFactory"/>. A station carries the SAME equipment chassis a colony does
     /// (so the mining / industry / research processors, which discover work by component ability and not by
     /// host type, process a station for free), but it is registered as its own host on the faction so it can
-    /// later own its own cost curve, durability, and invasion math. See docs/SPACE-STATIONS-DESIGN.md.
+    /// later own its own cost curve, durability, and invasion math. See docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md.
     /// </summary>
     public static class StationFactory
     {

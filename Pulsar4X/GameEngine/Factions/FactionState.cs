@@ -10,7 +10,7 @@ using Pulsar4X.Storage;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// Phase-2.8 P0-a (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md — the means-ends planner): the "WHAT I HAVE" SNAPSHOT.
+    /// Phase-2.8 P0-a (docs/ai/AI-DECISION-ENGINE-DESIGN.md — the means-ends planner): the "WHAT I HAVE" SNAPSHOT.
     /// Gathered ONCE per monthly decision cycle so a resolver reads memory, not the entity graph, as it walks a
     /// goal's prerequisites backward. NOT a DataBlob — per-Tick scratch, never serialized. Pure/read-only →
     /// byte-identical (nothing consumes it yet; the P0-b resolver + the `EmitOrders` rewire do). Defensive

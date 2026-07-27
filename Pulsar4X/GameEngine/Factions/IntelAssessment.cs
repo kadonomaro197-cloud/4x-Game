@@ -3,7 +3,7 @@ using Pulsar4X.Engine;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// F-C3b (docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md): the bridge between the Information Ledger and the eyes —
+    /// F-C3b (docs/society/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md): the bridge between the Information Ledger and the eyes —
     /// what confirming intel actually BUYS you. A rival's estimated military strength is resolved through the ledger:
     /// with the Military facet only <b>Inferred</b> (or Stale, or no ledger) you get the fog-limited
     /// <see cref="ThreatAssessment.DetectedStrengthOf"/> — behaviour + a fuzzy estimate; once an agent raises it to

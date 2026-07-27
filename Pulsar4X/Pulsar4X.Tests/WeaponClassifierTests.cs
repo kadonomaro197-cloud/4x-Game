@@ -11,7 +11,7 @@ namespace Pulsar4X.Tests
 {
     /// <summary>
     /// Weapon-designer UNIFICATION — the triangle corner (<see cref="WeaponClass"/>) EMERGES from the axes + dials
-    /// (docs/WEAPON-TAXONOMY-DESIGN.md, the developer's "the axes are the filing-cabinet path; the type falls out of
+    /// (docs/combat/WEAPONS-DESIGN.md, the developer's "the axes are the filing-cabinet path; the type falls out of
     /// the drawer you opened + the dials, not a hand-picked label"). `WeaponProfile.Class` is now a pure computed
     /// read-out — there is no authored type field. Three gauges:
     ///   • the pure classifier hits each corner (beam / railgun / flak / missile) + the disambiguating edges;

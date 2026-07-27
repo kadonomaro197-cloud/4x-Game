@@ -5,7 +5,7 @@ using Pulsar4X.Datablobs;
 namespace Pulsar4X.Colonies
 {
     /// <summary>
-    /// The colony's economic lever: a TAX RATE the player sets (M4, docs/MORALE-AND-POPULATION-DESIGN.md).
+    /// The colony's economic lever: a TAX RATE the player sets (M4, docs/society/MORALE-AND-POPULATION-DESIGN.md).
     /// Higher tax = more money for the faction, but lower morale — and a happy colony tolerates more tax before
     /// it bites, so there's a moving "happy-medium" equilibrium. The tax also feeds the morale loop: it's read
     /// by PopulationProcessor as a morale input, while ColonyEconomyProcessor reads morale to scale the income
@@ -14,7 +14,7 @@ namespace Pulsar4X.Colonies
     ///
     /// All coefficients are NAMED CONSTANTS (government-ready): a future GovernmentDB sets the tax ceiling and
     /// how hard tax bites morale per regime (democracy = low ceiling, morale-sensitive; dictatorship = extract
-    /// anyway). See docs/GOVERNMENT-AND-POLITICS-DESIGN.md.
+    /// anyway). See docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md.
     /// </summary>
     public class ColonyEconomyDB : BaseDataBlob
     {

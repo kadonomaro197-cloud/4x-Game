@@ -7,7 +7,7 @@ using Pulsar4X.Sites;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Site Engine SE-4b — the MENACE factory (docs/SITE-ENGINE-DESIGN.md §4). Proves an incident's hostile force can
+    /// Site Engine SE-4b — the MENACE factory (docs/explore/SITE-ENGINE-DESIGN.md §4). Proves an incident's hostile force can
     /// be stood up: a dedicated menace faction + its ground units raised on the site's region. Because the menace holds
     /// the region, it trips the SE-3d guardian gate — you must clear it before the site can be contained. Unwired in
     /// the live game → byte-identical.

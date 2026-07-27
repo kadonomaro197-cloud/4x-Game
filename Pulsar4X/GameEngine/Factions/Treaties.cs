@@ -3,7 +3,7 @@ using Pulsar4X.Engine;
 
 namespace Pulsar4X.Factions
 {
-    /// <summary>The five treaty levers (docs/DIPLOMACY-DESIGN.md "Treaties — the levers"). Each is a real,
+    /// <summary>The five treaty levers (docs/society/DIPLOMACY-DESIGN.md "Treaties — the levers"). Each is a real,
     /// costed decision: it sets a flag on the relationship, nudges the score, and (later) ripples into the
     /// signer's INTERNAL politics.</summary>
     public enum TreatyType
@@ -18,7 +18,7 @@ namespace Pulsar4X.Factions
 
     /// <summary>
     /// The treaty engine — the "teeth" that turn a relationship SCORE into player MOVES
-    /// (docs/DIPLOMACY-DESIGN.md, task #33). A treaty is proposed → considered → accepted/refused: the target
+    /// (docs/society/DIPLOMACY-DESIGN.md, task #33). A treaty is proposed → considered → accepted/refused: the target
     /// decides from its own view of the proposer (relation score vs. a per-treaty trust threshold — the deeper the
     /// entanglement, the more trust required). On acceptance the flag is set on BOTH sides (a treaty is mutual) and
     /// both scores tick up (signing warms relations). This is the costed-lever SUBSTRATE the negotiation "scene"
@@ -58,7 +58,7 @@ namespace Pulsar4X.Factions
             _ => 5
         };
 
-        /// <summary>M2-1a personality dials (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II): how much a maximally
+        /// <summary>M2-1a personality dials (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II): how much a maximally
         /// Xenophobic / Zealous decider raises the trust it demands to sign. Both are centered on the trait's neutral,
         /// so a neutral (or absent) personality changes nothing — byte-identical.</summary>
         public const int XenophobiaTrustPenalty = 30;
@@ -69,7 +69,7 @@ namespace Pulsar4X.Factions
         public const int BetrayalScorePenalty = 40;
 
         /// <summary>
-        /// M2-1c (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II — Honor → keep-faith / renege): would a faction with
+        /// M2-1c (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II — Honor → keep-faith / renege): would a faction with
         /// this <paramref name="breaker"/> personality HONOUR a standing pact rather than break it for a payoff of
         /// <paramref name="betrayalPayoff"/> (0..1, how much reneging would gain)? Honour resists temptation: a
         /// high-Honor faction keeps faith even when betrayal would pay well; a low-Honor one caves to a small gain.

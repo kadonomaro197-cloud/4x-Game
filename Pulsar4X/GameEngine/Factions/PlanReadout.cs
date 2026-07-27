@@ -4,7 +4,7 @@ using Pulsar4X.Extensions;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// P1 Visibility Gate (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md): the plan/queue READOUT that makes the NPC brain's
+    /// P1 Visibility Gate (docs/ai/AI-DECISION-ENGINE-DESIGN.md): the plan/queue READOUT that makes the NPC brain's
     /// reasoning OBSERVABLE. Every planner failure is otherwise silent — a stalled NPC with no on-screen cue reads as
     /// broken even when it's correctly stuck on a prerequisite. This surfaces what the brain decided and why. Pure,
     /// side-effect-free, missing-blob-tolerant (the <c>SocietyReadout</c> convention); an engine test AND the client's

@@ -5,7 +5,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase 5.1a gauge (docs/AI-BRAIN-BUILD-TRACKER.md — 🪐 The Brane, authoring). Proves a scenario can AUTHOR a
+    /// Phase 5.1a gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md — 🪐 The Brane, authoring). Proves a scenario can AUTHOR a
     /// faction's personality from data: <see cref="FactionFactory.PersonalityFromJson"/> turns a JSON object of
     /// <c>traitName → 0..1</c> into a <see cref="PersonalityDB"/> the whole brain reads. Trait names are
     /// case-insensitive, unknown names and null values are skipped, and any omitted trait stays Neutral — so a

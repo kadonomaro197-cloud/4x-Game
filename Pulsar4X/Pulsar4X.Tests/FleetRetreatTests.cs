@@ -10,7 +10,7 @@ using Pulsar4X.Ships;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// MVP combat spine, step 7 — retreat (docs/COMBAT-DESIGN.md System 5). v1 is a MATH OUTCOME: a fleet that
+    /// MVP combat spine, step 7 — retreat (docs/combat/COMBAT-DESIGN.md System 5). v1 is a MATH OUTCOME: a fleet that
     /// breaks off gets a <see cref="FleetRetreatDB"/> recording the flag + a withdraw vector, and the engagement
     /// ends — no movement order is issued (that's a v2 layer). Two triggers, both proven here:
     ///   • posture  — the fleet flies a withdraw doctrine (fighting-withdrawal, IsRetreat),

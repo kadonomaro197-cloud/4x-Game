@@ -20,7 +20,7 @@ namespace Pulsar4X.Tests
     /// build finishes — for a DETERMINISTIC proof of the assembler→fielded-unit link (the generic industry queue that
     /// reaches that call is proven by `ProductionBuildTests`). Uses the existing planetary parts so the fielded unit has
     /// real combat stats today; universal-weapon combat fidelity lands with the resolver merge (next branch). Engine-only
-    /// → runs in CI. Design: docs/WEAPON-UNIFICATION-DESIGN.md.
+    /// → runs in CI. Design: docs/economy/COMPONENT-DESIGNER-CATEGORIES.md.
     /// </summary>
     [TestFixture]
     public class GroundUnitFieldingTests

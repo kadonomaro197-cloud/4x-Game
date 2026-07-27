@@ -5,7 +5,7 @@ using Pulsar4X.Datablobs;
 
 namespace Pulsar4X.Sites
 {
-    /// <summary>The site's lifecycle state — the §4 state machine of docs/SITE-ENGINE-DESIGN.md.
+    /// <summary>The site's lifecycle state — the §4 state machine of docs/explore/SITE-ENGINE-DESIGN.md.
     /// DISCOVERED → (work) → WORKED → (enough understanding + a committed branch) → RESOLVE → one of the terminal
     /// states DEPLETED / PERSISTENT / RUPTURED. No timers: an unresolved incident/persistent site applies pressure
     /// and the player chooses WHEN to act.</summary>
@@ -42,7 +42,7 @@ namespace Pulsar4X.Sites
 
     /// <summary>
     /// Site Engine SE-1a — the SITE RECORD, the heart of the one engine every mid-game episode is a row in
-    /// (docs/SITE-ENGINE-DESIGN.md). A located thing → a berth-seated leader works it → it resolves down a branch →
+    /// (docs/explore/SITE-ENGINE-DESIGN.md). A located thing → a berth-seated leader works it → it resolves down a branch →
     /// a yield. This blob carries the §3 dials (Role/Shape/Hook/Yield) plus the live §4 state-machine fields (status +
     /// accrued Progress and Understanding). The pure transitions live in <see cref="SiteMachine"/>.
     ///
@@ -113,7 +113,7 @@ namespace Pulsar4X.Sites
         /// <summary>How often (days) the menace spawns/reinforces while the incident is live (0 = never spreads). SE-4d.</summary>
         [JsonProperty] public double SpawnIntervalDays { get; set; } = 0.0;
 
-        // ---- SE-5a: the composable RESOLVE BRANCHES (docs/SITE-ENGINE-DESIGN.md §3/§4) ----
+        // ---- SE-5a: the composable RESOLVE BRANCHES (docs/explore/SITE-ENGINE-DESIGN.md §3/§4) ----
         // A site with an EMPTY branch list resolves the SE-1 single-path way (Shape → one terminal state, the site's
         // one Yield delivered on unlock). A site with branches instead offers a SET of choices, each unlocked by its
         // own understanding cost, and waits for the player to COMMIT one (SE-5b reads these; SE-5c adds the order).
@@ -132,7 +132,7 @@ namespace Pulsar4X.Sites
 
         // ---- SE-5d: the RUPTURE dial (a persistent faucet can blow into a crisis) ----
         // A resolved PERSISTENT site can transition into a NEW crisis site — "the reward carried the risk"
-        // (docs/SITE-ENGINE-DESIGN.md §4, the RUPTURED edge). The chance is a per-day roll while the faucet runs.
+        // (docs/explore/SITE-ENGINE-DESIGN.md §4, the RUPTURED edge). The chance is a per-day roll while the faucet runs.
         // Default 0 → a persistent site never ruptures → byte-identical.
 
         /// <summary>Per-day probability that this PERSISTENT site RUPTURES into a crisis (0 = never — the default, so an

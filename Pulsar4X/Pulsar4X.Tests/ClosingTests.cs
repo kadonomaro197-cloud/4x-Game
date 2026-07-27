@@ -9,7 +9,7 @@ using Pulsar4X.Ships;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase 1 of the closing-fight model (docs/FLEET-COMBAT-CLOSING-DESIGN.md): combat becomes a CLOSING fight —
+    /// Phase 1 of the closing-fight model (docs/combat/FLEET-COMBAT-CLOSING-DESIGN.md): combat becomes a CLOSING fight —
     /// a weapon only fires if it REACHES the current gap, and the gap closes toward the faster side's preferred
     /// range. The decision this proves real: STANDOFF vs BRAWL — a faster long-range fleet kites a slower short-range
     /// one and takes nothing back; a faster brawler forces the merge. All behind <c>EnableClosingRange</c> (default

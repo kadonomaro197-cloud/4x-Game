@@ -25,8 +25,8 @@ namespace Pulsar4X.Galaxy
     ///
     /// v1 is DIRECT placement (like the region order) and the mine still draws from the body-wide mineral pool — the
     /// PER-HEX mining pass (a mine works the deposit on its OWN hex, and THAT hex depletes) is the flagged follow-up
-    /// that promotes the located deposits to the mined source of truth. Design: docs/GLOBAL-HEX-GRID-DESIGN.md +
-    /// docs/GROUND-COMBAT-MAP-DESIGN.md.
+    /// that promotes the located deposits to the mined source of truth. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md +
+    /// docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
     /// </summary>
     public class PlaceInstallationOnHexOrder : EntityCommand
     {

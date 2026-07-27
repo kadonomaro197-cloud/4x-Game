@@ -6,7 +6,7 @@ using Pulsar4X.Industry;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase-2.8 gauge (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md — the means-ends planner): the DEFEND resolver, the
+    /// Phase-2.8 gauge (docs/ai/AI-DECISION-ENGINE-DESIGN.md — the means-ends planner): the DEFEND resolver, the
     /// Survive-tier crisis brain (the other half of parking-lot gap G1 — the NPC used to FREEZE while being attacked
     /// because Defend had no resolver). Proves that under Defend the NPC takes a real defensive action — builds a
     /// warship at a colony with a free yard (Rung A) or, failing that, postures an owned fleet (Rung B) — never a

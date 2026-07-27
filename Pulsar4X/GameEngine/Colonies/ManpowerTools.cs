@@ -4,7 +4,7 @@ using Pulsar4X.Engine;
 namespace Pulsar4X.Colonies
 {
     /// <summary>
-    /// The M3-2b crew ENFORCEMENT bridge (docs/MORALE-AND-POPULATION-DESIGN.md): the small set of calls that
+    /// The M3-2b crew ENFORCEMENT bridge (docs/society/MORALE-AND-POPULATION-DESIGN.md): the small set of calls that
     /// turn the <see cref="ColonyManpowerDB"/> pool math into a real gate on ship construction — "you cannot
     /// build a ship you can't crew." Kept in one place so the three wiring sites (the build gate in
     /// <c>IndustryTools.ConstructStuff</c>, the commit in <c>ShipDesign.OnConstructionComplete</c>, and the

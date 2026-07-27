@@ -9,7 +9,7 @@ namespace Pulsar4X.Tests
     /// Weapon-unification P2a — the SUPPLY side of the "a Titan can, infantry can't" gate: reactors are now mountable
     /// on a GROUND CHASSIS, the same part a ship uses.
     ///
-    /// The locked call (docs/WEAPON-UNIFICATION-DESIGN.md §0 + the 2026-07-06 P2 design chat): power on a ground unit is
+    /// The locked call (docs/economy/COMPONENT-DESIGNER-CATEGORIES.md §0 + the 2026-07-06 P2 design chat): power on a ground unit is
     /// NOT a magic frame stat — it's a mounted reactor COMPONENT you research / build / lose, exactly like on a ship
     /// (the developer's full cradle-to-grave choice). P1 made the direct-fire weapons ground-mountable (the DEMAND);
     /// this makes the three fuel-burning generators — <c>reactor</c> / <c>rtg</c> / <c>steam-turbine-reactor</c> — carry

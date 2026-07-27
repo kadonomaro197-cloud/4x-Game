@@ -20,7 +20,7 @@ namespace Pulsar4X.Factions
         Secrets,
     }
 
-    /// <summary>How good your picture of a facet is (docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md §D2).</summary>
+    /// <summary>How good your picture of a facet is (docs/society/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md §D2).</summary>
     public enum IntelLevel
     {
         /// <summary>The default: you see only behaviour + a fuzzy estimate (the poker default).</summary>
@@ -78,7 +78,7 @@ namespace Pulsar4X.Factions
     }
 
     /// <summary>
-    /// F-C3a (docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md — the Information Ledger, "the load-bearing new concept"):
+    /// F-C3a (docs/society/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md — the Information Ledger, "the load-bearing new concept"):
     /// per-rival, per-facet intel level — fog-of-war for POLITICS, on the detection substrate. For every rival you've
     /// met you hold an <see cref="IntelLevel"/> on each <see cref="IntelFacet"/>: Inferred (behaviour + fuzzy
     /// estimate) → Confirmed (raised by an ambassador/agent → sharp) → Stale (decays; refresh or lose the picture).

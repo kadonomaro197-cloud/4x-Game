@@ -6,7 +6,7 @@ using Pulsar4X.GroundCombat;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// RESOLVER MERGE, slice 1 (docs/RESOLVER-MERGE-DESIGN.md §5) — the pinning gauge for the new shared
+    /// RESOLVER MERGE, slice 1 (docs/combat/RESOLVER-DESIGN.md §5) — the pinning gauge for the new shared
     /// <see cref="CombatKernel"/>.
     ///
     /// Slice 1 is deliberately ADDITIVE and UNWIRED: the kernel copies the pure salvo math out of the live ship

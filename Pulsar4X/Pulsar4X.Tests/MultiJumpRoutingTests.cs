@@ -10,7 +10,7 @@ using Pulsar4X.JumpPoints;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// P-3 MULTI-JUMP STRIKE ROUTING gauge (docs/AI-BRAIN-BUILD-TRACKER.md — the deferred router MilitaryReach flagged).
+    /// P-3 MULTI-JUMP STRIKE ROUTING gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md — the deferred router MilitaryReach flagged).
     /// Proves <see cref="JumpRouter"/>, the breadth-first search over the DISCOVERED jump-point graph that lets the war
     /// brain sail a fleet ACROSS jump points to reach an enemy world in another star system (before this it could only
     /// strike a same-system target). A tiny synthetic multi-system jump graph is hand-linked (a chain A→B→C, mirroring

@@ -63,7 +63,7 @@ namespace Pulsar4X.Factions
 
         /// <summary>
         /// Space station entities owned by this faction — the parallel registry to <see cref="Colonies"/>.
-        /// A station is the cheap/fast/fragile off-world host (see StationFactory / docs/SPACE-STATIONS-DESIGN.md).
+        /// A station is the cheap/fast/fragile off-world host (see StationFactory / docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md).
         /// </summary>
         [PublicAPI]
         [JsonProperty]

@@ -5,7 +5,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase 4 gauge (docs/AI-BRAIN-BUILD-TRACKER.md — 🌌 The Galaxy + Crisis). Proves the crisis DETECTOR:
+    /// Phase 4 gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md — 🌌 The Galaxy + Crisis). Proves the crisis DETECTOR:
     /// (a) no faction is the Ascendant until one holds the ascension CAPABILITY (Phase-4.1 "a tech grants a
     /// capability" — routed through the F-D2 capability system), and (b) once a faction unlocks it, GalaxyCrisis
     /// names that faction as the galaxy crisis. Pure read → byte-identical. The crisis event + the coalition response

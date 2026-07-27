@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 namespace Pulsar4X.Sites
 {
     /// <summary>
-    /// Site Engine SE-5a — ONE resolution BRANCH of a field site (docs/SITE-ENGINE-DESIGN.md §3 Branch set / §4).
+    /// Site Engine SE-5a — ONE resolution BRANCH of a field site (docs/explore/SITE-ENGINE-DESIGN.md §3 Branch set / §4).
     /// The whole point of SE-5: a site no longer has a single hard-wired outcome — it offers a SET of honest branches
     /// (fight / contain / study / seal / negotiate), each a different reward <em>or none</em>, and the player commits
     /// one once they understand enough. Branches COMPOSE — a branch is UNLOCKED by accrued knowledge

@@ -61,7 +61,7 @@ namespace Pulsar4X.Colonies
             // You KNOW the ground where you settle: reveal this world's surface regions (ground map). Nothing is
             // pre-surveyed at generation any more, so this is what makes the HOME planet's geography known while
             // its siblings (Luna, Mars, …) stay fog until a geo survey scans them. Defensive: a body with no
-            // region layer (asteroid, etc.) simply skips. See docs/GROUND-COMBAT-MAP-DESIGN.md slice 4.
+            // region layer (asteroid, etc.) simply skips. See docs/ground/GROUND-SURFACE-MAP-DESIGN.md slice 4.
             if (systemBody.TryGetDataBlob<Pulsar4X.Galaxy.PlanetRegionsDB>(out var homeRegions))
             {
                 homeRegions.RevealAll();

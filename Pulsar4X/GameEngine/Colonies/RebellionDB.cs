@@ -6,7 +6,7 @@ namespace Pulsar4X.Colonies
 {
     /// <summary>
     /// A province's REBELLION state — the grave rung of internal politics made into a PROCESS you can fight, not an
-    /// instant loss (docs/GOVERNMENT-AND-POLITICS-DESIGN.md "What 'the system rebels' ACTUALLY does", locked #38).
+    /// instant loss (docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md "What 'the system rebels' ACTUALLY does", locked #38).
     /// When a province's <see cref="LegitimacyDB"/> falls into the collapse band it does NOT immediately flip owner
     /// — it enters a REBELLION with a **reaction window**: a span during which you can respond (pour in legitimacy —
     /// enact demands, ship aid, replace the governor — OR militarily suppress it, which IS the ground-combat MVP

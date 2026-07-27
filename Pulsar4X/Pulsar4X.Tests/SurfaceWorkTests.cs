@@ -12,7 +12,7 @@ using Pulsar4X.Sites;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Site Engine SE-3b — the ground-worker presence path (docs/SITE-ENGINE-DESIGN.md §6). A SURFACE site is worked by
+    /// Site Engine SE-3b — the ground-worker presence path (docs/explore/SITE-ENGINE-DESIGN.md §6). A SURFACE site is worked by
     /// a friendly ground unit standing in its region (the surface twin of a ship parked at a space anomaly). Proves the
     /// unit-worker presence detection + accrual, that a neutral (guardian) unit doesn't count, and — the byte-identity
     /// tripwire — that the space-anomaly path still works after the space/surface branch split.

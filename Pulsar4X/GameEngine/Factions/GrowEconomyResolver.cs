@@ -5,7 +5,7 @@ using Pulsar4X.Interfaces;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// Phase-2.8 P0-b (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md): the GrowEconomy resolver — the honest version of the
+    /// Phase-2.8 P0-b (docs/ai/AI-DECISION-ENGINE-DESIGN.md): the GrowEconomy resolver — the honest version of the
     /// blind 2.4c emitter. It walks the objective's prerequisites nearest-unmet-first and returns the ONE order that
     /// advances it, one step per monthly cycle (least-commitment, riding the 2.3 hysteresis loop).
     ///

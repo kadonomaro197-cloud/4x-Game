@@ -5,7 +5,7 @@ namespace Pulsar4X.GroundCombat
     /// <summary>
     /// THE BRIDGE — turns a <see cref="GroundUnit"/> into the neutral <see cref="CombatKernel.Combatant"/> view the
     /// shared salvo kernel reads, so a planetary unit fights on the SAME math a ship does (resolver merge, slice 3b —
-    /// docs/RESOLVER-MERGE-DESIGN.md §7, the north star: "one resolver, both domains").
+    /// docs/combat/RESOLVER-DESIGN.md §7, the north star: "one resolver, both domains").
     ///
     /// The load-bearing idea: a ground unit's Attack + <see cref="GroundWeaponMode"/> + hex Range become a real
     /// <see cref="WeaponProfile"/>, and the old Armor▸Infantry▸Artillery triangle / dodge / shield semantics FALL OUT

@@ -84,7 +84,10 @@ namespace Pulsar4X.GroundCombat
         /// pace (the abstract chassis/locomotion multiplier × the Foot baseline <see cref="GroundMobility.BaseMarchSpeed_kmh"/>).
         /// The march TIMER still runs on the multiplier × the region crossing time (<see cref="GroundMobility"/>); this is
         /// the real-number twin the closing model (Slice 3) crosses the gap at. 0 = unset. Snapshot at raise.
-        /// <b>Byte-identical</b> — nothing reads it yet.</summary>
+        /// READ BY the resolver's closing step (was "nothing reads it yet" — stale since the K2/K3 closing
+        /// slices): <see cref="GroundForcesProcessor"/> advances a closing unit
+        /// <c>(Speed_kmh > 0 ? Speed_kmh : GroundMobility.BaseMarchSpeed_kmh) × (deltaSeconds / 3600)</c> km per
+        /// tick, so this field now decides how fast a unit crosses the real gap.</summary>
         [JsonProperty] public double Speed_kmh { get; internal set; }
         /// <summary>SYSTEM ① survivability-by-dodge — chance to avoid a hit (0..1), snapshot of the design's Σ augment
         /// evasion. Carried now (slice B plumbing); the resolver consumes it in the damage×defence matrix (slice A).
@@ -147,7 +150,7 @@ namespace Pulsar4X.GroundCombat
 
         // ── HEX POSITION + FINE MOVEMENT (H2) — where the unit stands WITHIN its region's hex patch, and its
         //    hex-by-hex march. The coarse region march above (MovingToRegion) hops whole regions; this walks the fine
-        //    grid inside one. A unit is raised at the patch centre (0,0). Design: docs/HEX-GROUND-AND-ORDERS-DESIGN.md.
+        //    grid inside one. A unit is raised at the patch centre (0,0). Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
         /// <summary>Axial Q of the hex this unit stands on within its region's patch (patch centre = 0,0).</summary>
         [JsonProperty] public int HexQ { get; internal set; }
         /// <summary>Axial R of the hex this unit stands on within its region's patch.</summary>
@@ -166,7 +169,7 @@ namespace Pulsar4X.GroundCombat
         // ── GLOBAL GRID POSITION + MOVEMENT (G-track, G3) — the unit's place on the ONE continuous cylinder
         //    (Q = longitude column, R = latitude row; region = a column BAND) and its global hex march via
         //    HexPathfinder.FindGlobalPath (no edge gates — crossing a band border is just the next column). ADDITIVE
-        //    alongside the per-region HexQ/HexR above during the migration. Design: docs/GLOBAL-HEX-GRID-DESIGN.md.
+        //    alongside the per-region HexQ/HexR above during the migration. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
         /// <summary>Global longitude column on the body's <c>SurfaceGrid</c> (-1 until placed on the grid).</summary>
         [JsonProperty] public int GlobalQ { get; internal set; } = -1;
         /// <summary>Global latitude row on the body's <c>SurfaceGrid</c>.</summary>
@@ -265,7 +268,7 @@ namespace Pulsar4X.GroundCombat
 
     /// <summary>
     /// A formation's RULES OF ENGAGEMENT — the movement intent a commander sets, the ground echo of the space
-    /// CLOSING model (docs/FLEET-COMBAT-CLOSING-DESIGN.md: a fast long-range fleet kites, a brawler forces the merge).
+    /// CLOSING model (docs/combat/FLEET-COMBAT-CLOSING-DESIGN.md: a fast long-range fleet kites, a brawler forces the merge).
     /// It tells the surface processor how a formation should MANEUVER relative to the enemy each tick, so the H3 range
     /// advantage is used automatically instead of by micro:
     /// </summary>
@@ -311,7 +314,7 @@ namespace Pulsar4X.GroundCombat
     /// One queued order for a <see cref="GroundFormation"/> (O1) — the ground echo of an <c>EntityCommand</c>, kept as a
     /// save-safe DATA object (formations aren't entities, so their orders aren't <c>EntityCommand</c>s either — the same
     /// data-object choice the formation itself makes). A formation's <see cref="GroundFormation.Orders"/> list runs these
-    /// in sequence; each carries only the fields its <see cref="Type"/> needs. Design: docs/HEX-GROUND-AND-ORDERS-DESIGN.md (O1).
+    /// in sequence; each carries only the fields its <see cref="Type"/> needs. Design: docs/ground/GROUND-ORDERS-CATALOG-DESIGN.md (O1).
     /// </summary>
     public class GroundOrder
     {
@@ -370,7 +373,7 @@ namespace Pulsar4X.GroundCombat
     ///
     /// Deliberately mirrors the fleet's CORE grouping; the layers a fleet adds on top — a DOCTRINE/stance with combat
     /// multipliers (<c>FleetDoctrineDB</c>) and nesting SUB-formations (the fleet tree) — are follow-up formation slices
-    /// (each its own gauged step), not folded in here. Design: docs/GROUND-COMBAT-MAP-DESIGN.md (slice 5h formations).
+    /// (each its own gauged step), not folded in here. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md (slice 5h formations).
     /// </summary>
     public class GroundFormation
     {
@@ -502,7 +505,7 @@ namespace Pulsar4X.GroundCombat
     /// one roster covers a contested world with both sides present. Fully persistent (<see cref="Clone"/> +
     /// [JsonProperty] + deep-copy ctors) from day one — the discipline the old colony hex map lacked.
     ///
-    /// Design: docs/GROUND-COMBAT-MAP-DESIGN.md (slice 5a).
+    /// Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md (slice 5a).
     /// </summary>
     public class GroundForcesDB : BaseDataBlob
     {
@@ -806,7 +809,7 @@ namespace Pulsar4X.GroundCombat
         // ───────────────────────── GLOBAL HEX MOVEMENT (G-track, G3 — one continuous world, no edge gates) ─────────
         // The G-track twin of OrderMoveToHex: march the unit across the ONE continuous SurfaceGrid to a GLOBAL (Q,R),
         // crossing region BAND borders with no stitching (it's just the next column). Additive alongside the per-region
-        // path above; walked by GroundForcesProcessor's global-path step. Design: docs/GLOBAL-HEX-GRID-DESIGN.md.
+        // path above; walked by GroundForcesProcessor's global-path step. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
 
         /// <summary>
         /// Order a unit to march to GLOBAL grid hex (<paramref name="destQ"/>,<paramref name="destR"/>) on the body's

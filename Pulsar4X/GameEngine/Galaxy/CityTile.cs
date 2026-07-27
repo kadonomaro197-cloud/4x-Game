@@ -4,7 +4,7 @@ namespace Pulsar4X.Galaxy
 {
     /// <summary>
     /// One FINE tile of a developed operational hex's <see cref="CityGrid"/> — the "compartment" in the
-    /// damage-control-diagram analogy (docs/GROUND-CITY-AND-WARMAP-DESIGN.md). This is the finest zoom: a single
+    /// damage-control-diagram analogy (docs/ground/GROUND-SURFACE-MAP-DESIGN.md). This is the finest zoom: a single
     /// building sits here 1:1. A save-safe data object like <see cref="GroundHex"/>/<see cref="RegionFeature"/>:
     /// axial coords as plain ints so it serializes cleanly.
     ///

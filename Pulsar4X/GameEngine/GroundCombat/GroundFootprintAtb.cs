@@ -9,7 +9,7 @@ namespace Pulsar4X.GroundCombat
     /// <summary>
     /// FOOTPRINT gear on a buildable installation — the component that gives a building a PRESENCE on the operational
     /// war map (a fort / spaceport / HQ), so it becomes something the ground war can capture and bomb. It's the
-    /// "occupies a tile" flag from the two-zoom model (docs/GROUND-CITY-AND-WARMAP-DESIGN.md): a building carries this
+    /// "occupies a tile" flag from the two-zoom model (docs/ground/GROUND-SURFACE-MAP-DESIGN.md): a building carries this
     /// attribute → it lands on a specific <see cref="Galaxy.GroundHex.InstallationIds">operational hex</see> (the "ship
     /// icon"), not just the region's economy list → capturing that hex captures it, bombing that hex damages it. A
     /// Bunker / Spaceport / HQ carries it; a solar panel doesn't (it's economy, not a strategic target).

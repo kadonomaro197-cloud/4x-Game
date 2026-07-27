@@ -5,7 +5,7 @@ using Pulsar4X.Engine;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// Phase-2.8 P-3 — the deferred military REACH (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md +
+    /// Phase-2.8 P-3 — the deferred military REACH (docs/ai/AI-DECISION-ENGINE-DESIGN.md +
     /// AI-BRAIN-BUILD-TRACKER.md). The SEEING half of turning "an NPC built a war fleet" into "an NPC sails that
     /// fleet at the RIGHT enemy world." <see cref="ConquerResolver"/> named three deferred helpers — MilitaryTarget /
     /// MilitaryComposition / MilitaryReach — and this is MilitaryTarget.

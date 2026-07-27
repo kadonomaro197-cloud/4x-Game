@@ -47,14 +47,14 @@ namespace Pulsar4X.Combat
         /// per-doctrine thresholds are wired.</summary>
         public const double RetreatCasualtyThreshold = 0.5;
 
-        /// <summary>M2-1b (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II): how far the faction's Collectivism trait
+        /// <summary>M2-1b (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II): how far the faction's Collectivism trait
         /// swings the retreat threshold off <see cref="RetreatCasualtyThreshold"/>. A collectivist force
         /// ("fights to the last for the whole") holds on through heavier losses; an individualist one
         /// ("flees to save the unit") breaks off early. Centered on the trait's neutral, so a neutral/absent
         /// personality changes nothing — byte-identical.</summary>
         public const double CollectivismRetreatSwing = 0.4;
 
-        // --- dodge model tuning (docs/WEAPONS-AND-DODGE-DESIGN.md), all v1 stubs ----------------------------
+        // --- dodge model tuning (docs/combat/WEAPONS-DESIGN.md), all v1 stubs ----------------------------
 
         /// <summary>Shot velocity (m/s) at which a weapon half-defeats evasion. A light-speed beam is far above
         /// this (≈always hits); a finite-velocity slug is far below (its shots can be dodged).</summary>
@@ -119,7 +119,7 @@ namespace Pulsar4X.Combat
         /// Flagged BALANCE value.</summary>
         public static double HeatThrottleFloor = 0.1;
 
-        // --- SHIELD layer (option B, docs/WEAPON-TAXONOMY-DESIGN.md §6) ----------------------------------------
+        // --- SHIELD layer (option B, docs/combat/WEAPONS-DESIGN.md §6) ----------------------------------------
         //
         // A depleting/regenerating energy POOL that soaks incoming fire BEFORE the hull's toughness. The
         // weapon-NATURE matchup is mirrored from the ground GroundDamageMatrix (kinetic soaked best, energy
@@ -372,7 +372,7 @@ namespace Pulsar4X.Combat
         public static bool RequireDetectionToEngage = false;
 
         /// <summary>When true, a battle only ERUPTS if someone will release a shot — the first-shot trigger (Phase 3,
-        /// docs/FLEET-COMBAT-CLOSING-DESIGN.md). Two hostile fleets that are BOTH non-WeaponsFree (weapons-hold /
+        /// docs/combat/FLEET-COMBAT-CLOSING-DESIGN.md). Two hostile fleets that are BOTH non-WeaponsFree (weapons-hold /
         /// return-fire) sit in a tense STANDOFF — proximity no longer auto-starts a fight. At least one WeaponsFree
         /// fleet (the default posture) starts it. Default FALSE so existing fixtures (no posture set = WeaponsFree
         /// anyway) are unchanged; the client turns it on when ROE is live.</summary>
@@ -390,7 +390,7 @@ namespace Pulsar4X.Combat
         /// and combat disagree (the same rule fog-of-war learned — see NewEngagementImminent).</summary>
         public static bool RequireWeaponRangeToEngage = false;
 
-        /// <summary>When true, combat is a CLOSING fight (Phase 1, docs/FLEET-COMBAT-CLOSING-DESIGN.md): a weapon only
+        /// <summary>When true, combat is a CLOSING fight (Phase 1, docs/combat/FLEET-COMBAT-CLOSING-DESIGN.md): a weapon only
         /// fires if its <see cref="WeaponProfile.Range_m"/> reaches the current gap, and the gap CLOSES each step toward
         /// the FASTER (more maneuverable) side's preferred range — so a faster long-range fleet kites a slower
         /// short-range one, and a faster brawler forces the merge. Default FALSE so every existing combat fixture is
@@ -635,8 +635,8 @@ namespace Pulsar4X.Combat
         /// <summary>Advance one MULTI-PARTY engagement by dt game-seconds: every in-combat member fleet trades
         /// fire with the fleets hostile to it, casualties land, and fleets that are wiped / break off / have no
         /// enemy left drop out; when fewer than two hostile sides remain (or the fight is frozen / timed out) the
-        /// engagement ends. Reduces exactly to the old two-fleet exchange for n=2. docs/COMBAT-DESIGN.md System 4,
-        /// docs/WEAPONS-AND-DODGE-DESIGN.md.</summary>
+        /// engagement ends. Reduces exactly to the old two-fleet exchange for n=2. docs/combat/COMBAT-DESIGN.md System 4,
+        /// docs/combat/WEAPONS-DESIGN.md.</summary>
         public static void StepEngagementGroup(List<Entity> members, double dt)
         {
             // Only valid, in-combat fleets take part. (A caller may hand us a fleet that just lost its state.)
@@ -872,7 +872,7 @@ namespace Pulsar4X.Combat
         // makes the costly part O(buckets), independent of ship count (500 identical fighters cost the same as
         // 5). The bucket key is everything that decides HOW a ship dies, which is ALSO the seam for future
         // "degraded" condition tiers — a damaged ship gets a different combat value => a different bucket, with
-        // no new code here (docs/WEAPONS-AND-DODGE-DESIGN.md "aggregate force condition"). Behaviour matches the
+        // no new code here (docs/combat/WEAPONS-DESIGN.md "aggregate force condition"). Behaviour matches the
         // old per-ship loop: buckets are killed combatants-first then most-hittable-first, and the pool stops at
         // the first bucket it can't finish.
         private static void ApplyCasualties(List<CombatShip> ships, FleetCombatStateDB state, List<WeaponProfile> incomingFire, double separation_m = 0, double damageThisSalvo = 0, string attackerLabel = null)

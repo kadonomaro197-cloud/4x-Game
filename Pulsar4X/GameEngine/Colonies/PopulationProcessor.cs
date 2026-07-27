@@ -41,7 +41,7 @@ namespace Pulsar4X.Colonies
                 totalPop += value;
             }
 
-            // --- M1 morale (the population "tank" valve, docs/MORALE-AND-POPULATION-DESIGN.md) ---
+            // --- M1 morale (the population "tank" valve, docs/society/MORALE-AND-POPULATION-DESIGN.md) ---
             // Recompute morale from the inputs that already exist (conditions + overcrowding) and turn it into
             // a migration rate added to growth below. Guarded: a colony without a ColonyMoraleDB (e.g. built by
             // an older path) just skips morale and grows as before.

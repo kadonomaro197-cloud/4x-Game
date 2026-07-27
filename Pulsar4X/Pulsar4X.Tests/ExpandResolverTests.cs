@@ -7,7 +7,7 @@ using Pulsar4X.GeoSurveys;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase-2.8 P-2 gauge (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md — the means-ends planner): the EXPAND resolver
+    /// Phase-2.8 P-2 gauge (docs/ai/AI-DECISION-ENGINE-DESIGN.md — the means-ends planner): the EXPAND resolver
     /// (Ambition tier). Proves that when a colonizeable, surveyed, uncolonized world is available near home, the NPC
     /// decides to FOUND a colony there — using the SAME signal the player's colonize UI reads (a `ColonizeableDB`
     /// body whose geo-survey is complete). Resolve is a pure decision (the CreateColonyOrder rides the Execute

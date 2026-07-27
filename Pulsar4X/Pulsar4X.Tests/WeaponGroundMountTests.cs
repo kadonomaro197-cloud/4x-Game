@@ -9,7 +9,7 @@ namespace Pulsar4X.Tests
     /// <summary>
     /// Weapon-unification P1 — the ONE weapon designer's direct-fire weapons are now mountable on a GROUND CHASSIS.
     ///
-    /// The locked call (docs/WEAPON-UNIFICATION-DESIGN.md §0): one weapon designer, full stop — "if a chassis can
+    /// The locked call (docs/economy/COMPONENT-DESIGNER-CATEGORIES.md §0): one weapon designer, full stop — "if a chassis can
     /// SUPPLY a weapon's requirements, it mounts it," ground or space. P1 is the first, purely-additive rung: the
     /// base-mod direct-fire weapon templates gain <see cref="ComponentMountType.GroundUnit"/> alongside their existing
     /// Ship/PDC/installation mounts, so the same design the fleet uses is offered for a ground unit. NO resolver change

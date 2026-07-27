@@ -12,7 +12,7 @@ namespace Pulsar4X.GroundCombat
     /// ship with a <see cref="GroundBayAtb"/> bay → fly it there (the existing fleet move orders) → win the orbit →
     /// <see cref="TryLandUnit"/>. Capacity is size-based (a bay of a given class holds units whose carry-sizes sum to its
     /// capacity), and landing is gated on orbital control (T1b: no enemy ship over the target). All primitives are
-    /// defensive — they return false rather than throw. Design: docs/GROUND-COMBAT-MAP-DESIGN.md → transport.
+    /// defensive — they return false rather than throw. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md → transport.
     ///
     /// v1 carry-class and carry-size are a function of UNIT TYPE (a unit is a battalion-sized chunk, not a soldier);
     /// when the designer gains a unit-strength knob, carry-size scales with that instead (a bigger unit eats more room).

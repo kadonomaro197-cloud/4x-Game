@@ -4,7 +4,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// F-C2a gauge (docs/GOVERNMENT-AND-POLITICS-DESIGN.md — popular-demands): the bloc substrate. Proves a neutral
+    /// F-C2a gauge (docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md — popular-demands): the bloc substrate. Proves a neutral
     /// (all-Mid) regime makes every bloc equally loud, and each government dial amplifies exactly its favoured bloc
     /// (Militarism→Militarists, Openness→Liberty, Authority→Order) while the economically-driven blocs (Labor,
     /// Merchants) stay dial-neutral. Pure/derived → byte-identical.

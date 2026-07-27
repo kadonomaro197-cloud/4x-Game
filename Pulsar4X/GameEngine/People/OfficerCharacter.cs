@@ -1,7 +1,7 @@
 namespace Pulsar4X.People
 {
     /// <summary>
-    /// Phase-2.7 (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): officer character, tenure-blended.
+    /// Phase-2.7 (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): officer character, tenure-blended.
     /// A commander has their own leanings, but a GREEN officer mostly executes the faction's doctrine; only as they
     /// gain tenure does their own character start to override it. This is the pure blend/drift MATH — how much of the
     /// officer vs. the faction shows, and how an officer's leanings drift over a long posting. Nothing reads it yet

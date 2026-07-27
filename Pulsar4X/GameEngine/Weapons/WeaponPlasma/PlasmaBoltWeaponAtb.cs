@@ -7,7 +7,7 @@ namespace Pulsar4X.Weapons
 {
     /// <summary>
     /// A PLASMA REPEATER — a bolt-thrower: it flings discrete blobs of charged plasma at a FINITE velocity. It is the
-    /// weapon the TWO-AXIS model (docs/WEAPON-TAXONOMY-DESIGN.md) was created to express and the old single-axis
+    /// weapon the TWO-AXIS model (docs/combat/WEAPONS-DESIGN.md) was created to express and the old single-axis
     /// <see cref="Pulsar4X.Combat.WeaponClass"/> could NOT — a blaster/plasma bolt is <b>Energy in NATURE</b> (so a
     /// shield only half-soaks it — it bleeds through, like a beam) yet <b>DODGEABLE in DELIVERY</b> (a discrete, finite
     /// velocity shot — unlike a beam, a nimble ship can juke it, like a railgun slug). Energy × dodgeable is a corner the

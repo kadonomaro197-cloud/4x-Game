@@ -10,7 +10,7 @@ using Pulsar4X.Ships;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// MVP combat spine, step 6 — fleet components & per-component doctrine (docs/COMBAT-DESIGN.md System 4,
+    /// MVP combat spine, step 6 — fleet components & per-component doctrine (docs/combat/COMBAT-DESIGN.md System 4,
     /// detailed design). A "component" is just a sub-fleet (<see cref="FleetDB"/> nests via TreeHierarchyDB), and
     /// each component can run its OWN doctrine — so a fleet's Front Line can fight offensively while its Rear
     /// Guard sits defensive, all in one engagement.

@@ -17,7 +17,7 @@ namespace Pulsar4X.Tests
     /// It also proves the whole cradle rung end-to-end: assemble a scout from ONLY base-mod parts (human frame +
     /// locomotion drive + radar), raise it, and watch the abilities FALL OUT of the component store — the drive sets
     /// its march speed, the radar carries its reveal range — exactly the way a ship's parts do. Engine-only → runs in CI.
-    /// Design: docs/GROUND-UNITS-AS-ENTITIES-DESIGN.md.
+    /// Design: docs/economy/COMPONENT-DESIGNER-CATEGORIES.md.
     /// </summary>
     [TestFixture]
     public class GroundScoutPartsBaseModTests

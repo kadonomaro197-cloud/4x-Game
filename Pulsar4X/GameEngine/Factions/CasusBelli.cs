@@ -3,7 +3,7 @@ using System;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// A justification for war (docs/DIPLOMACY-DESIGN.md "Casus belli — war needs a REASON"). Anything other than
+    /// A justification for war (docs/society/DIPLOMACY-DESIGN.md "Casus belli — war needs a REASON"). Anything other than
     /// <see cref="None"/> is a reason your own population will accept; <see cref="None"/> is a naked war of
     /// aggression your people question.
     /// </summary>

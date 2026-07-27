@@ -4,7 +4,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Gauge for the CASUS BELLI militarism gate (docs/DIPLOMACY-DESIGN.md "Casus belli — war needs a REASON",
+    /// Gauge for the CASUS BELLI militarism gate (docs/society/DIPLOMACY-DESIGN.md "Casus belli — war needs a REASON",
     /// task #33): the one-time morale/legitimacy impact of declaring war depends on (a) whether you have a
     /// justification and (b) the regime's MILITARISM dial. Proves the design's four corners — militarist+justified
     /// is a morale BONUS, pacifist+unjustified is a regime-threatening hit — and that a justified war always

@@ -3,7 +3,7 @@ using Pulsar4X.Colonies;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// Phase-2.8 (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md): the CONSOLIDATE resolver — the crisis brain for the
+    /// Phase-2.8 (docs/ai/AI-DECISION-ENGINE-DESIGN.md): the CONSOLIDATE resolver — the crisis brain for the
     /// <see cref="NeedTier.Stabilize"/> tier (unrest, low legitimacy). Before this existed the NPC settled the
     /// Consolidate objective but had NO resolver, so it FROZE in a crisis (parking-lot gap G1: "acts in good
     /// times, does nothing when the house is on fire"). This is the honest first fix — an INTERNAL-lever resolver

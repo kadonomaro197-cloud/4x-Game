@@ -6,7 +6,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// M3 sub-slice 1 gauge: people as a finite, hard-drawn resource (docs/MORALE-AND-POPULATION-DESIGN.md).
+    /// M3 sub-slice 1 gauge: people as a finite, hard-drawn resource (docs/society/MORALE-AND-POPULATION-DESIGN.md).
     /// Proves the pure pool math — workforce/talent derived from population, available = pool − committed, and
     /// the commit/release accounting that the construction/officer gates (sub-slice 2) will enforce.
     /// </summary>

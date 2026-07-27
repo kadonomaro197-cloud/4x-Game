@@ -16,7 +16,7 @@ namespace Pulsar4X.Tests
     /// which is correct until the magazine component ships; no live designer UI can hit this yet).
     ///
     /// Isolates the ammo gate with FLAK (pure Ammo — draws no reactor power, so the only problem is the missing magazine).
-    /// Engine-only → runs in CI. Uses the real faction flak/laser/railgun. Design: docs/WEAPON-UNIFICATION-DESIGN.md P2.
+    /// Engine-only → runs in CI. Uses the real faction flak/laser/railgun. Design: docs/economy/COMPONENT-DESIGNER-CATEGORIES.md P2.
     /// </summary>
     [TestFixture]
     public class GroundAmmoGateTests

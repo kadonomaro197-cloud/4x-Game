@@ -8,7 +8,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Colonies
 {
     /// <summary>
-    /// Collects colony tax into the owning faction's Ledger each month (M4, docs/MORALE-AND-POPULATION-DESIGN.md).
+    /// Collects colony tax into the owning faction's Ledger each month (M4, docs/society/MORALE-AND-POPULATION-DESIGN.md).
     /// Income scales with population, the player-set tax rate (<see cref="ColonyEconomyDB.TaxRate"/>), and morale
     /// (a happy colony pays more willingly). This is the lever that finally plugs the colony economy into faction
     /// money — until now only research moved funds.

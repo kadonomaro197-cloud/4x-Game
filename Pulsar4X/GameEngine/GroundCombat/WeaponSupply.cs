@@ -10,7 +10,7 @@ namespace Pulsar4X.GroundCombat
     public enum WeaponSupplyMode { Energy, Ammo, Both }
 
     /// <summary>
-    /// The SUPPLY side of the "a Titan can, infantry can't" gate (weapon-unification P2, docs/WEAPON-UNIFICATION-DESIGN.md).
+    /// The SUPPLY side of the "a Titan can, infantry can't" gate (weapon-unification P2, docs/economy/COMPONENT-DESIGNER-CATEGORIES.md).
     /// Pure + deterministic (no engine state) — the ground echo of <see cref="WeaponClassifier"/>: it reads what a weapon
     /// DRAWS and what a reactor SUPPLIES so the assembler (<see cref="GroundUnitAssembly"/>) can refuse a design whose guns
     /// out-draw their power plant.

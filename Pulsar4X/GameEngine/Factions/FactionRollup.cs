@@ -8,11 +8,11 @@ using Pulsar4X.Engine;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// F-A3 (docs/AI-BRAIN-BUILD-TRACKER.md, Movement I — Foundations): faction-tier roll-up GAUGES.
+    /// F-A3 (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement I — Foundations): faction-tier roll-up GAUGES.
     ///
     /// Pure, read-only helpers that sum the per-colony gauges (population / morale / legitimacy) and the ledger
     /// up to the whole-faction tier the NPC needs-ladder reads (the "Survive / Stabilize" instruments in
-    /// docs/AI-OBJECTIVE-ENGINE-DESIGN.md). The engine already recomputes morale and legitimacy per colony every
+    /// docs/ai/AI-DECISION-ENGINE-DESIGN.md). The engine already recomputes morale and legitimacy per colony every
     /// month; nothing aggregated them to the empire tier — this is that missing reader, and nothing else.
     ///
     /// It writes NOTHING and touches no existing code path, so it is byte-identical to the sim as it stands: a new
@@ -59,7 +59,7 @@ namespace Pulsar4X.Factions
                 colony => colony.TryGetDataBlob<LegitimacyDB>(out var l) ? l.Legitimacy : (double?)null);
 
         /// <summary>
-        /// F-B1a (docs/AI-BRAIN-BUILD-TRACKER.md, the "eyes" foundation): the faction's OWN total military strength —
+        /// F-B1a (docs/ai/AI-BRAIN-BUILD-TRACKER.md, the "eyes" foundation): the faction's OWN total military strength —
         /// the sum, over every ship it owns in every system, of that ship's combat value (<see cref="ShipCombatValueDB"/>
         /// Firepower + Toughness, the two numbers the auto-resolver already rates a ship on, kept on their intentionally
         /// shared joule-scale). This is the own-strength half of the Risk/threat read; the fog-limited ENEMY estimate is

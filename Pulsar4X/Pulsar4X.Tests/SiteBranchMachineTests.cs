@@ -5,7 +5,7 @@ using Pulsar4X.Sites;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Site Engine SE-5b — the composable MULTI-BRANCH state machine (docs/SITE-ENGINE-DESIGN.md §3/§4). Adds the
+    /// Site Engine SE-5b — the composable MULTI-BRANCH state machine (docs/explore/SITE-ENGINE-DESIGN.md §3/§4). Adds the
     /// branch-aware reads + resolve to <see cref="SiteMachine"/> WITHOUT touching the single-path resolve: a branchless
     /// site still resolves by Shape exactly as SE-1 (byte-identical — <see cref="FieldSiteTests"/> pins that), while a
     /// branched site unlocks each branch independently by its own understanding cost and resolves to the CHOSEN branch's

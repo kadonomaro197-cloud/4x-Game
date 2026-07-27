@@ -9,7 +9,7 @@ using Pulsar4X.Extensions;   // GetTotalFoodOutput (food supply) extension on Co
 namespace Pulsar4X.Colonies
 {
     /// <summary>
-    /// Recomputes each province's POWER &amp; FOOD shortage every month (M5b, docs/MORALE-AND-POPULATION-DESIGN.md).
+    /// Recomputes each province's POWER &amp; FOOD shortage every month (M5b, docs/society/MORALE-AND-POPULATION-DESIGN.md).
     /// The live-wiring of <see cref="ColonySustenanceDB"/>: shortage = demand (population × per-capita coefficient)
     /// vs supply (power from an <see cref="EnergyGenAbilityDB"/> if attached; food from the — not-yet-existing —
     /// food cargo good, so 0 for now). <see cref="PopulationProcessor"/> then reads the shortages into morale and a

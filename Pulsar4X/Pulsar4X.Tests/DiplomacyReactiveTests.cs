@@ -4,7 +4,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Gauge for the reactive "Are we good?" engine (docs/DIPLOMACY-DESIGN.md "Reactive diplomacy", task #35): a
+    /// Gauge for the reactive "Are we good?" engine (docs/society/DIPLOMACY-DESIGN.md "Reactive diplomacy", task #35): a
     /// faction acts on what it OBSERVES, generating an overture gated by its current stance toward you, and some
     /// observations nudge the relationship needle directly. This is the developer's marquee depth example — the
     /// AI sees your fleet near its space and asks "are we good?".

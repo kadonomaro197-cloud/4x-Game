@@ -12,7 +12,7 @@ namespace Pulsar4X.Factions
     public enum DiscontentResponse { Emigration, Unrest }
 
     /// <summary>
-    /// The empire-wide regime as a MODULATOR (docs/GOVERNMENT-AND-POLITICS-DESIGN.md): a panel of four dials,
+    /// The empire-wide regime as a MODULATOR (docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md): a panel of four dials,
     /// three notches each, that re-skin gameplay via coefficient overrides AND rule overrides — NOT just
     /// numbers. The dials set the values the rest of the engine reads (e.g. <see cref="CrewPolicy"/> is the rule
     /// the M3-2 construction gate flips; <see cref="TaxCeiling"/> caps the M4 tax lever).

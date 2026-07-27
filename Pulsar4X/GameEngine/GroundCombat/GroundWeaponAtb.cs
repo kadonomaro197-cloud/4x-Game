@@ -25,7 +25,7 @@ namespace Pulsar4X.GroundCombat
     /// Contributes to the assembled unit: <see cref="Attack"/> sums into the unit's firepower, <see cref="Range"/>
     /// (in hexes) sets how far this weapon reaches (the unit's reach = its longest weapon), <see cref="Mode"/> flavours
     /// the fire. A component attribute (CONVENTIONS §6); inert on install (the assembler reads it — G-D3).
-    /// Design: docs/GROUND-COMBAT-MAP-DESIGN.md → unit designer.
+    /// Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md → unit designer.
     /// </summary>
     public class GroundWeaponAtb : BaseDataBlob, IComponentDesignAttribute
     {

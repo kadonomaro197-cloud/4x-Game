@@ -4,7 +4,7 @@ using Pulsar4X.Datablobs;
 namespace Pulsar4X.Colonies
 {
     /// <summary>
-    /// A province's POWER &amp; FOOD sustenance gauges (M5b, docs/MORALE-AND-POPULATION-DESIGN.md): the computed
+    /// A province's POWER &amp; FOOD sustenance gauges (M5b, docs/society/MORALE-AND-POPULATION-DESIGN.md): the computed
     /// <see cref="PowerShortage"/> / <see cref="FoodShortage"/> (0..1) that feed morale — a brownout sours people,
     /// starvation kills them. <see cref="SustenanceProcessor"/> recomputes them each cycle from demand vs supply;
     /// <see cref="PopulationProcessor"/> reads them into morale and applies a starvation death term.

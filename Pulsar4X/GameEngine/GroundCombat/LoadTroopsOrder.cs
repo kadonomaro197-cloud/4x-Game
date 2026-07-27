@@ -14,8 +14,9 @@ namespace Pulsar4X.GroundCombat
     /// (<c>Game.OrderHandler.HandleOrder</c>) — mirrors <see cref="Pulsar4X.Galaxy.PlaceInstallationOnHexOrder"/>. The
     /// unit is named by its stable <see cref="GroundUnit.UnitId"/> on the body it stands on.
     ///
-    /// Additive: nothing issues this yet (a client button is the UI slice), and it only wraps an existing helper, so the
-    /// engine is byte-identical.
+    /// ISSUED BY (was "nothing issues this yet" — stale since Earthfall C5.1, 2026-07-19): the PLAYER via the
+    /// FleetWindow embark surface (<c>Pulsar4X.Client/Interface/Windows/FleetWindow.cs</c> Load button →
+    /// <see cref="CreateCommand"/>). It wraps an existing helper, so the engine remains byte-identical.
     /// </summary>
     public class LoadTroopsOrder : EntityCommand
     {

@@ -7,7 +7,7 @@ using Pulsar4X.Sites;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Site Engine SE-3a — the surface-site RECORD (docs/SITE-ENGINE-DESIGN.md §6). A surface site lives on a planet
+    /// Site Engine SE-3a — the surface-site RECORD (docs/explore/SITE-ENGINE-DESIGN.md §6). A surface site lives on a planet
     /// body's region/hex (the way a GroundUnit locates itself), NOT at a point in space, so it carries no PositionDB —
     /// its worker is a ground unit standing on it (SE-3b), not a parked ship. Proves the location fields + the
     /// space-vs-surface distinction, and that a surface site is INERT under the current (space-only) work path →

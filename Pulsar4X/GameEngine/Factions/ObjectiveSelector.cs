@@ -1,7 +1,7 @@
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// Phase-2.4a (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the OBJECTIVE SELECTOR. Given
+    /// Phase-2.4a (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the OBJECTIVE SELECTOR. Given
     /// the faction's current needs-tier (2.2), its strategic <see cref="DoctrineVector"/>, and its
     /// <see cref="PersonalityDB"/>, it names the one concrete <see cref="StrategicObjective"/> the brain pursues this
     /// cycle. The tier decides the FAMILY (survive → defend, stabilize → consolidate, thrive → grow, ambition →

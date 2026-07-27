@@ -6,7 +6,7 @@ using Pulsar4X.Events;
 namespace Pulsar4X.Sites
 {
     /// <summary>
-    /// Site Engine SE-5c — the player order that COMMITS a resolution branch on a field site (docs/SITE-ENGINE-DESIGN.md
+    /// Site Engine SE-5c — the player order that COMMITS a resolution branch on a field site (docs/explore/SITE-ENGINE-DESIGN.md
     /// §4). This is what turns "study → then choose" into a real decision: a branched site accrues understanding but no
     /// longer auto-resolves (<see cref="SiteWorkProcessor"/> holds it at Worked); the player commits ONE unlocked branch
     /// with this order, which resolves the site to that branch's outcome and pays its yield.

@@ -1422,7 +1422,7 @@ namespace Pulsar4X.Galaxy
         /// check was <c>bodyType != Terrestrial || bodyType != Moon</c>, which is ALWAYS true — a body can't be both
         /// types at once — so every body bailed and ruins never generated. The correct test is AND: reject only a
         /// body that is NEITHER.) No atmosphere requirement: ancient ruins don't need breathable air — Mars is thin
-        /// and Luna airless, and both are canonical ruin worlds (Exploration content vision, docs/EXPLORATION-CONTENT-DESIGN.md).
+        /// and Luna airless, and both are canonical ruin worlds (Exploration content vision, docs/explore/EXPLORATION-CONTENT-DESIGN.md).
         /// </summary>
         internal static bool CanBodyHaveRuins(BodyType bodyType)
         {

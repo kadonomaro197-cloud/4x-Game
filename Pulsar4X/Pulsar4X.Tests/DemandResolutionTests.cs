@@ -4,7 +4,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// F-C2c gauge (docs/GOVERNMENT-AND-POLITICS-DESIGN.md §enact/refuse): the teeth. Proves enacting a demand is a
+    /// F-C2c gauge (docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md §enact/refuse): the teeth. Proves enacting a demand is a
     /// fixed legitimacy gain; refusing is a legitimacy LOSS that grows with the demand's pressure AND is harsher for
     /// a CONSENT regime (low Authority) than a COMMAND one (high Authority, which can suppress) — the consent-vs-
     /// command refusal split. Pure → byte-identical.

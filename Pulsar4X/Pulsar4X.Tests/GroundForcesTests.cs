@@ -19,7 +19,7 @@ namespace Pulsar4X.Tests
     /// Ground combat, slice 5a — RAISE A UNIT. A ground unit is a buildable design (`GroundUnitDesign :
     /// IConstructableDesign`) that rides the existing industry rails; when a build completes it's placed on the
     /// colony's planet in a region (`GroundForcesDB`), stamped with owner + region + combat stats. These gauges
-    /// prove the place-primitive, the build→place hook, and persistence. Design: docs/GROUND-COMBAT-MAP-DESIGN.md.
+    /// prove the place-primitive, the build→place hook, and persistence. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
     /// </summary>
     [TestFixture]
     public class GroundForcesTests
@@ -792,7 +792,7 @@ namespace Pulsar4X.Tests
             Log($"stance: dig-in defender {dug.Health:0} hp vs no-stance defender {open.Health:0} hp after 3 salvos");
         }
 
-        // ───────────────────────── H2 — hex movement + pathfinding (docs/HEX-GROUND-AND-ORDERS-DESIGN.md) ─────────────────────────
+        // ───────────────────────── H2 — hex movement + pathfinding (docs/ground/GROUND-SURFACE-MAP-DESIGN.md) ─────────────────────────
 
         /// <summary>Build an open hex disk of the given radius (all one terrain) — the shape PlanetHexFactory generates.</summary>
         private static List<GroundHex> OpenDisk(int radius, RegionFeatureType fill = RegionFeatureType.Plains)
@@ -933,7 +933,7 @@ namespace Pulsar4X.Tests
             Log($"hex march: unit walked {steps} hexes to ({dest.Q},{dest.R}) and arrived; path clone-safe");
         }
 
-        // ───────────────────────── G3 — units on the ONE continuous global grid (docs/GLOBAL-HEX-GRID-DESIGN.md) ─────────────────────────
+        // ───────────────────────── G3 — units on the ONE continuous global grid (docs/ground/GROUND-SURFACE-MAP-DESIGN.md) ─────────────────────────
 
         [Test]
         [Description("G3: a raised unit is ALSO placed on the global cylinder grid — at its region BAND's centre column (the global twin of the disk's (0,0) muster).")]
@@ -1010,7 +1010,7 @@ namespace Pulsar4X.Tests
             Assert.That(u2.GlobalPath, Is.Not.Null.And.Count.GreaterThan(0), "the follower has a global march path");
         }
 
-        // ───────────────────────── H3 — range-based directed combat (docs/HEX-GROUND-AND-ORDERS-DESIGN.md) ─────────────────────────
+        // ───────────────────────── H3 — range-based directed combat (docs/ground/GROUND-SURFACE-MAP-DESIGN.md) ─────────────────────────
 
         private static GroundUnitDesign MakeDesign(string id, string name, GroundUnitType type, int range, double hp = 1000) => new GroundUnitDesign
         {
@@ -1248,7 +1248,7 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("Real-distance foundation (Slice 1b/1c): the new real-metre FIELDS populate and round-trip through the km↔hex helper WITHOUT perturbing the hex combat stats. A raised unit carries a real Range_m (from its design, else derived from the hex range × the nominal pitch) and a real Speed_kmh; the mount + unit copy-ctors deep-copy them; and Range_m → hexes reproduces the 'same gun, different hex count per body' behaviour. ADDITIVE/UNREAD by the resolver → byte-identical. docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md.")]
+        [Description("Real-distance foundation (Slice 1b/1c): the new real-metre FIELDS populate and round-trip through the km↔hex helper WITHOUT perturbing the hex combat stats. A raised unit carries a real Range_m (from its design, else derived from the hex range × the nominal pitch) and a real Speed_kmh; the mount + unit copy-ctors deep-copy them; and Range_m → hexes reproduces the 'same gun, different hex count per body' behaviour. ADDITIVE at the time of writing; Speed_kmh is now READ by the resolver's closing step (corrected 2026-07-27) — this fixture still only asserts the fields populate/round-trip, which stays true. docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md.")]
         public void RealDistance_Slice1Fields_PopulateAndRoundTrip()
         {
             double pitch_m = GroundCombatant.NominalHexPitch_m;   // the nominal reference pitch (a real per-body pitch is Slice 2)

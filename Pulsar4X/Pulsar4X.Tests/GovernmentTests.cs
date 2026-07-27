@@ -5,7 +5,7 @@ using Pulsar4X.Colonies;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Gauge for the government substrate (docs/GOVERNMENT-AND-POLITICS-DESIGN.md): the four dials derive the
+    /// Gauge for the government substrate (docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md): the four dials derive the
     /// coefficient/rule overrides the rest of the engine reads, and the live classifier names the regime. This
     /// is the "build the dials, ship the menu" substrate — processors wiring to it comes later.
     /// </summary>

@@ -18,7 +18,7 @@ namespace Pulsar4X.GroundCombat
     /// placed on the hex ruler and back. This is the foundation for making the real km on the gun the truth and the hex
     /// a pure display ruler (docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md, Slice 1 — additive/byte-identical).</item>
     /// </list>
-    /// Design: docs/HEX-GROUND-AND-ORDERS-DESIGN.md (H3) + docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md.
+    /// Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md (H3) + docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md.
     /// </summary>
     public static class GroundRangeTools
     {

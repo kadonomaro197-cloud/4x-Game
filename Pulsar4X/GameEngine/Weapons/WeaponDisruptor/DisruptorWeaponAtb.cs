@@ -6,7 +6,7 @@ using Pulsar4X.Interfaces;
 namespace Pulsar4X.Weapons
 {
     /// <summary>
-    /// An ION DISRUPTOR — the ANTI-SHIELD exotic weapon (docs/WEAPON-TAXONOMY-DESIGN.md §5/§6, Phase D). It fires a
+    /// An ION DISRUPTOR — the ANTI-SHIELD exotic weapon (docs/combat/WEAPONS-DESIGN.md §5/§6, Phase D). It fires a
     /// coherent ion lance at ~light-speed (so, like a beam, it can't be dodged), but its damage NATURE is
     /// <c>WeaponNature.Exotic</c>: it is DESIGNED to pass straight through a shield pool (the shield's exotic-soak
     /// fraction is 0), striking the hull as if the deflector weren't there. It is the weapon a shielded ship

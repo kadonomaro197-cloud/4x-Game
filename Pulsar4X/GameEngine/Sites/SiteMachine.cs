@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Pulsar4X.Sites
 {
     /// <summary>
-    /// Site Engine SE-1a — the PURE state machine (docs/SITE-ENGINE-DESIGN.md §4). The agency-preserving core: work
+    /// Site Engine SE-1a — the PURE state machine (docs/explore/SITE-ENGINE-DESIGN.md §4). The agency-preserving core: work
     /// accrues Progress + Understanding; enough Understanding UNLOCKS the resolve branches (never a timer that closes
     /// them); committing a branch RESOLVES the site down to a terminal state by its Shape. Pure/static and deterministic
     /// (no clock, no RNG, no game state) so it's exactly testable and the SE-1b processor is a thin driver over it.
@@ -51,7 +51,7 @@ namespace Pulsar4X.Sites
             return true;
         }
 
-        // ---- SE-5b: the composable MULTI-BRANCH resolve (docs/SITE-ENGINE-DESIGN.md §3/§4) ----
+        // ---- SE-5b: the composable MULTI-BRANCH resolve (docs/explore/SITE-ENGINE-DESIGN.md §3/§4) ----
         // A branchless site resolves the single-path way above (Resolve, Shape-driven). A site with authored
         // FieldSiteDB.Branches instead offers a SET of choices, each UNLOCKED independently by its own understanding
         // cost — the player commits one via ResolveBranch. All of these are NEW reads/transitions; the single-path

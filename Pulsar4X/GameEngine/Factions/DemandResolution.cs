@@ -10,7 +10,7 @@ namespace Pulsar4X.Factions
     }
 
     /// <summary>
-    /// F-C2c (docs/GOVERNMENT-AND-POLITICS-DESIGN.md §"The decision — enact / refuse"): the teeth. Turns a response
+    /// F-C2c (docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md §"The decision — enact / refuse"): the teeth. Turns a response
     /// to a demand into a LEGITIMACY delta — the regime's health bar (<see cref="Pulsar4X.Colonies.LegitimacyDB"/>)
     /// is what mishandled politics actually costs you.
     ///

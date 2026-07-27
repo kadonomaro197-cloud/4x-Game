@@ -22,7 +22,7 @@ namespace Pulsar4X.People
 
         /// <summary>The RESEARCH bonus a maximum-potential scientist (ExperienceCap 200) contributes to their
         /// specialty tech category — the research-side twin of <see cref="MaxCombatCompetenceBonus"/>. Modest,
-        /// tunable balance dial. (F-A2, docs/AI-BRAIN-BUILD-TRACKER.md — competence is now EARNABLE for scientists,
+        /// tunable balance dial. (F-A2, docs/ai/AI-BRAIN-BUILD-TRACKER.md — competence is now EARNABLE for scientists,
         /// not just for combat officers.)</summary>
         public const double MaxResearchCompetenceBonus = 0.15;
 
@@ -86,7 +86,7 @@ namespace Pulsar4X.People
         }
 
         /// <summary>
-        /// F-A2 (docs/AI-BRAIN-BUILD-TRACKER.md, Movement I): generate a scientist's RESEARCH competence in a tech
+        /// F-A2 (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement I): generate a scientist's RESEARCH competence in a tech
         /// category — the research-side twin of <see cref="RollCombatCompetence"/>, and the missing GENERATOR the
         /// live reader already expects. A scientist entity ships with an EMPTY <see cref="BonusesDB"/>, so
         /// <c>ResearchProcessor.RefreshPointModifiers</c> (the read) has nothing to fold; this rolls the value it

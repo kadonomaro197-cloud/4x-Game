@@ -29,7 +29,7 @@ namespace Pulsar4X.GroundCombat
     /// A component attribute (<see cref="IComponentDesignAttribute"/>) so it rides the normal research/design/build/
     /// install/save rails (CONVENTIONS §6). Capacity is summed ON DEMAND by <c>GroundTransport</c> (like fortification
     /// and population support), so the install/uninstall hooks are no-ops. **Grave rung:** a bay shot off a ship in
-    /// transit takes the units aboard with it (T1b/T4). Design: docs/GROUND-COMBAT-MAP-DESIGN.md → transport.
+    /// transit takes the units aboard with it (T1b/T4). Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md → transport.
     /// </summary>
     public class GroundBayAtb : BaseDataBlob, IComponentDesignAttribute
     {

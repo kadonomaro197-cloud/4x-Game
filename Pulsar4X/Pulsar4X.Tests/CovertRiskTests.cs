@@ -4,7 +4,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// F-C3d gauge (docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md §F): the graduated caught/suspicion model. Proves a low
+    /// F-C3d gauge (docs/society/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md §F): the graduated caught/suspicion model. Proves a low
     /// roll under low risk resolves Clean; a high roll or high risk trends Traced/Caught; agent skill lowers risk and
     /// counter-intel raises it; and suspicion rises most on Caught, some on Traced, none on Clean (clamped 0..100).
     /// Pure/deterministic (the roll is passed in) → byte-identical.

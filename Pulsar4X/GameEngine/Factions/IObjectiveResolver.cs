@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// Phase-2.8 P0-b (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md): a per-objective backward-chaining RESOLVER. Given the
+    /// Phase-2.8 P0-b (docs/ai/AI-DECISION-ENGINE-DESIGN.md): a per-objective backward-chaining RESOLVER. Given the
     /// settled objective and the <see cref="FactionState"/> snapshot, it names the single <see cref="PlannerAction"/>
     /// that advances the NEAREST unmet prerequisite — or <see cref="PlannerAction.None"/> when the goal is met or
     /// blocked. Pure decision (builds the step; the processor runs it), so it's CI-testable without ticking the sim —

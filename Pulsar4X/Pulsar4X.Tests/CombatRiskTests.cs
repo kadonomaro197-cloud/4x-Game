@@ -4,7 +4,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase-2.6 gauge (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the eyes → Risk trait.
+    /// Phase-2.6 gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the eyes → Risk trait.
     /// Proves the strength-ratio bar scales with Risk (bold engages at parity, cautious demands 2×, neutral 1.5×) and
     /// that the engage decision reads it — so an NPC's willingness to fight tracks what it can see of the enemy.
     /// </summary>

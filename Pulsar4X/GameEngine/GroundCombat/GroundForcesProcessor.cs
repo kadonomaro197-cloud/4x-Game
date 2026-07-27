@@ -22,7 +22,7 @@ namespace Pulsar4X.GroundCombat
     /// Combat model (mirrors the space <c>AutoResolve</c> salvo loop, but over <see cref="GroundUnit"/> data
     /// objects, not entities): each tick is ONE salvo — every faction in a contested region takes the COMBINED
     /// attack of all other factions there, focus-fired across its units; units at 0 health are removed. Simple,
-    /// deterministic (no RNG), and cheap. Design: docs/GROUND-COMBAT-MAP-DESIGN.md (slices 5b–5d).
+    /// deterministic (no RNG), and cheap. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md (slices 5b–5d).
     /// </summary>
     public class GroundForcesProcessor : IHotloopProcessor
     {
@@ -315,7 +315,7 @@ namespace Pulsar4X.GroundCombat
                     {
                         reg.OwnerFactionID = captor;
                         // War-map layer (W1): taking the region takes the strategic buildings on its hexes —
-                        // "capturing the hex captures what's on it" (docs/GROUND-CITY-AND-WARMAP-DESIGN.md).
+                        // "capturing the hex captures what's on it" (docs/ground/GROUND-SURFACE-MAP-DESIGN.md).
                         GroundBuildings.CaptureRegionHexContents(regionsDB, kv.Key, captor);
                     }
                 }

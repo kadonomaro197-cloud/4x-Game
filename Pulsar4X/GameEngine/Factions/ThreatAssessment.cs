@@ -5,7 +5,7 @@ using Pulsar4X.Sensors;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// F-B1b (docs/AI-BRAIN-BUILD-TRACKER.md, the "eyes" foundation): a FOG-LIMITED estimate of a RIVAL's military
+    /// F-B1b (docs/ai/AI-BRAIN-BUILD-TRACKER.md, the "eyes" foundation): a FOG-LIMITED estimate of a RIVAL's military
     /// strength — the enemy-side of the eyes (the own-side is <see cref="FactionRollup.MilitaryStrength"/>).
     ///
     /// Built on signal STRENGTH (the SignalQuality path was design-cut): it sums the loudness of the observer's LIVE
@@ -42,7 +42,7 @@ namespace Pulsar4X.Factions
         }
 
         /// <summary>
-        /// Phase-3.2 (docs/AI-BRAIN-BUILD-TRACKER.md — the Ecosystem): from the rival strengths an observer can SEE,
+        /// Phase-3.2 (docs/ai/AI-BRAIN-BUILD-TRACKER.md — the Ecosystem): from the rival strengths an observer can SEE,
         /// the one it should fear most — the strongest DETECTED rival whose strength EXCEEDS the observer's own (a real
         /// threat, not just any neighbour). Pure ranking (no entity graph) so it's testable without a sensor scenario;
         /// <see cref="GreatestThreatTo"/> wires the fog-limited reads in. Returns (-1, 0) if nobody out-muscles the

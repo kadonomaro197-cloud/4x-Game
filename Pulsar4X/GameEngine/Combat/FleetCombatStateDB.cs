@@ -47,7 +47,7 @@ namespace Pulsar4X.Combat
         [JsonProperty] public double ManeuverBudget { get; internal set; }
 
         /// <summary>The current gap (metres) to the opposing side — the CLOSING range (Phase 1,
-        /// docs/FLEET-COMBAT-CLOSING-DESIGN.md). Seeded from the real distance at first contact, then closed each step
+        /// docs/combat/FLEET-COMBAT-CLOSING-DESIGN.md). Seeded from the real distance at first contact, then closed each step
         /// toward the controlling (faster) side's preferred range. A weapon only fires if its <see cref="WeaponProfile.Range_m"/>
         /// reaches this. ONLY meaningful when <see cref="CombatEngagement.EnableClosingRange"/> is on; 0 otherwise (which
         /// makes the range-gate a no-op, so the resolve is byte-identical to the pre-closing behaviour). v1: one shared
@@ -55,7 +55,7 @@ namespace Pulsar4X.Combat
         [JsonProperty] public double Separation_m { get; internal set; }
 
         /// <summary>The fleet's current SHIELD charge (joules) — the depleting/regenerating pool (option B,
-        /// docs/WEAPON-TAXONOMY-DESIGN.md §6). Each salvo the resolver drains this BEFORE the hull's
+        /// docs/combat/WEAPONS-DESIGN.md §6). Each salvo the resolver drains this BEFORE the hull's
         /// <see cref="DamageTakenPool"/>, with the weapon-NATURE matchup (Kinetic fully soaked, Energy half-bleeds,
         /// Explosive partly bypasses, Exotic anti-shield ignores it), then refills it toward the fleet's total generator
         /// capacity. <b>-1 = "not yet seeded"</b> — the resolver lazily fills it to full capacity on the first salvo the

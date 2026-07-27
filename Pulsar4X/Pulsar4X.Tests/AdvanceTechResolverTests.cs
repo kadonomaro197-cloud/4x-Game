@@ -6,7 +6,7 @@ using Pulsar4X.Industry;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase-2.8 gauge (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md — the means-ends planner): the ADVANCE-TECH resolver
+    /// Phase-2.8 gauge (docs/ai/AI-DECISION-ENGINE-DESIGN.md — the means-ends planner): the ADVANCE-TECH resolver
     /// (Thrive tier, tech-led). Proves that when pursuing AdvanceTech the NPC builds research capacity — queues a
     /// research-lab design (one carrying ResearchPointsAtbDB) on a free line — and that AdvanceTech is now registered.
     /// Resolve is a pure decision (no side effect until Execute), the same convention as the other resolvers.

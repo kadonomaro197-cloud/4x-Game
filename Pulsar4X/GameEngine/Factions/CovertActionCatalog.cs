@@ -1,7 +1,7 @@
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// The covert operations an agent can run against a rival (docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md §E-catalog).
+    /// The covert operations an agent can run against a rival (docs/society/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md §E-catalog).
     /// Data-driven like <see cref="ExchangeCatalog"/> — the catalog IS the list of what the spy game can do.
     /// </summary>
     public enum CovertAction
@@ -44,7 +44,7 @@ namespace Pulsar4X.Factions
     }
 
     /// <summary>
-    /// F-C3c (docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md): the COVERT-ACTION CATALOG — the broad, data-driven menu of
+    /// F-C3c (docs/society/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md): the COVERT-ACTION CATALOG — the broad, data-driven menu of
     /// what an agent can do, mirroring <see cref="ExchangeCatalog"/>. One <see cref="CovertActionDef"/> per action,
     /// carrying the facet it bears on and its baseline detection risk (louder ops are riskier: gather is cheap,
     /// turn/assassinate is deadly). Pure data → byte-identical (nothing tasks an agent yet; the agent-as-component +

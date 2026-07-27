@@ -11,7 +11,7 @@ namespace Pulsar4X.Tests
     /// Units-as-entities (Option A) — SLICE 4: unit SPEED falls out of the CHASSIS (the frame's existing
     /// <c>Locomotion</c>), not a new stat. Because a raised unit carries its components, march time reads the chassis
     /// speed off the backing store (like any ability) and divides the crossing time by it. Foot is the ×1.0 baseline;
-    /// a faster frame (Hover/Tracked/Walker) crosses the same ground in less time. Design: docs/GROUND-UNITS-AS-ENTITIES-DESIGN.md.
+    /// a faster frame (Hover/Tracked/Walker) crosses the same ground in less time. Design: docs/economy/COMPONENT-DESIGNER-CATEGORIES.md.
     /// </summary>
     [TestFixture]
     public class GroundMobilityTests

@@ -1,6 +1,6 @@
 namespace Pulsar4X.Factions
 {
-    /// <summary>The graduated result of a covert op — the deniability game (docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md §F).</summary>
+    /// <summary>The graduated result of a covert op — the deniability game (docs/society/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md §F).</summary>
     public enum CovertOutcome
     {
         /// <summary>Undetected — you hurt them and nobody knows it was you.</summary>
@@ -12,7 +12,7 @@ namespace Pulsar4X.Factions
     }
 
     /// <summary>
-    /// F-C3d (docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md §F, risk model F2+F3): the graduated caught/suspicion model.
+    /// F-C3d (docs/society/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md §F, risk model F2+F3): the graduated caught/suspicion model.
     /// A covert op resolves Clean / Traced / Caught from its effective detection risk, and each non-clean outcome
     /// builds a per-rival SUSPICION meter — hurt them quietly, but every "traced" stacks until they're sure. Pure &
     /// DETERMINISTIC: the random roll is passed IN (never Math.Random / a wall clock in engine code), so the same

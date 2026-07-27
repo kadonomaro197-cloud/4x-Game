@@ -5,7 +5,7 @@ namespace Pulsar4X.Factions
 {
     /// <summary>
     /// Phase-2.8 P-3 — the military REACH, second helper (MilitaryComposition). The "do I have a strike group ready
-    /// to sail?" perception (docs/AI-BRAIN-BUILD-TRACKER.md). <see cref="MilitaryTarget"/> names the enemy world; this
+    /// to sail?" perception (docs/ai/AI-BRAIN-BUILD-TRACKER.md). <see cref="MilitaryTarget"/> names the enemy world; this
     /// decides whether the faction has MASSED enough armed hulls to go on the offensive — the developer's "move as a
     /// mass fleet" (don't trickle ships one at a time). Pure read, no warp/order surface.
     ///

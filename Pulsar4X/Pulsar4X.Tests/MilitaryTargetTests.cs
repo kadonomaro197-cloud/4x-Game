@@ -7,7 +7,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// P-3 military-reach gauge, slice 1 (docs/AI-BRAIN-BUILD-TRACKER.md — the deferred "sail the fleet at the enemy"
+    /// P-3 military-reach gauge, slice 1 (docs/ai/AI-BRAIN-BUILD-TRACKER.md — the deferred "sail the fleet at the enemy"
     /// muscle). Proves <see cref="MilitaryTarget.NearestEnemyColonyBody"/> — the "which enemy world do I aim at?"
     /// perception — (a) names the body of a colony owned by a faction we're AT WAR with (the latch a 3.4b coalition
     /// sets), (b) returns InvalidEntity when we're at peace (no war → no target), and (c) returns InvalidEntity when

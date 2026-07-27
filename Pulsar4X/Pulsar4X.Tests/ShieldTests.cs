@@ -10,7 +10,7 @@ using Pulsar4X.Ships;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// SPACE SHIELD layer (docs/WEAPON-TAXONOMY-DESIGN.md §6, developer's call 2026-07-06). The shield is the
+    /// SPACE SHIELD layer (docs/combat/WEAPONS-DESIGN.md §6, developer's call 2026-07-06). The shield is the
     /// "shield" mechanism on the defence axis — a depleting + regenerating energy POOL (option B) that soaks
     /// incoming fire BEFORE the hull's toughness, with the weapon-NATURE matchup (Kinetic fully soaked, Energy
     /// half-bleeds, Exotic anti-shield bypasses).

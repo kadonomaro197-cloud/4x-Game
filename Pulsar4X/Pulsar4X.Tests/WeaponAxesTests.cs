@@ -4,7 +4,7 @@ using Pulsar4X.Combat;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// The weapon designer's TWO independent axes (docs/WEAPON-TAXONOMY-DESIGN.md, developer's call 2026-07-06). A
+    /// The weapon designer's TWO independent axes (docs/combat/WEAPONS-DESIGN.md, developer's call 2026-07-06). A
     /// <see cref="WeaponProfile"/> now carries <b>Nature</b> (what meets the defence: shields/armour) AND <b>Delivery</b>
     /// (what meets the dodge: velocity/pattern), separately from the transitional fused <see cref="WeaponClass"/>. This
     /// is the foundation the taxonomy needs so a blaster (Energy nature + a slow, DODGEABLE Bolt) — which the old fused

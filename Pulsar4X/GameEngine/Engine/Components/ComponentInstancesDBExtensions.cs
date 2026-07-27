@@ -14,7 +14,7 @@ namespace Pulsar4X.Extensions
         /// <summary>
         /// Total jobs (worker slots) provided by installed components carrying <see cref="EmploymentAtbDB"/>,
         /// scaled by component health. Zero when no installation declares jobs (M2 treats that as "no job data"
-        /// → neutral employment, not 100% unemployment). See docs/MORALE-AND-POPULATION-DESIGN.md.
+        /// → neutral employment, not 100% unemployment). See docs/society/MORALE-AND-POPULATION-DESIGN.md.
         /// </summary>
         public static long GetTotalJobs(this ComponentInstancesDB componentInstances)
         {

@@ -8,13 +8,13 @@ using Pulsar4X.Weapons;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// Phase-2.8 (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md): the DEFEND resolver — the crisis brain for the
+    /// Phase-2.8 (docs/ai/AI-DECISION-ENGINE-DESIGN.md): the DEFEND resolver — the crisis brain for the
     /// <see cref="NeedTier.Survive"/> tier (at war / under threat). The other half of parking-lot gap G1: the NPC
     /// settled the Defend objective but had NO resolver, so it FROZE while being attacked. This closes G1.
     ///
     /// v1 acts AT HOME. The "position force WHERE the threat is" half — a reachability read (no <c>CanReach</c>
     /// exists), a multi-jump auto-router, fuel/charge-readiness (production ships spawn empty), fleet composition,
-    /// and target selection — is the deferred P-3 military sub-subsystem (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md
+    /// and target selection — is the deferred P-3 military sub-subsystem (docs/ai/AI-DECISION-ENGINE-DESIGN.md
     /// §Conquer/Defend). So v1 Defend BUILDS and POSTURES; it does not yet sail to the border — a deliberate
     /// deferral, not a gap. Three rungs, nearest-unmet first:
     ///   Rung 0 — RECALL an in-flight OFFENSIVE fleet home (P3.4 — never orphan an invasion). When the faction flips

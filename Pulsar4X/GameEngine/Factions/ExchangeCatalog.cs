@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Pulsar4X.Factions
 {
-    /// <summary>The seven families of things two factions can exchange (docs/DIPLOMACY-DESIGN.md exchange catalog).</summary>
+    /// <summary>The seven families of things two factions can exchange (docs/society/DIPLOMACY-DESIGN.md exchange catalog).</summary>
     public enum ExchangeCategory { Economic, Military, Information, Territorial, Political, People, Coercive }
 
     /// <summary>How an exchange lands: a one-off transfer, a standing commitment that emits orders each cycle, a

@@ -5,7 +5,7 @@ using Pulsar4X.Datablobs;
 namespace Pulsar4X.Colonies
 {
     /// <summary>
-    /// People as a finite, HARD-drawn resource (M3, docs/MORALE-AND-POPULATION-DESIGN.md). Tracks how much of a
+    /// People as a finite, HARD-drawn resource (M3, docs/society/MORALE-AND-POPULATION-DESIGN.md). Tracks how much of a
     /// colony's population is committed to ships/posts so the engine can tell what is still AVAILABLE to draw.
     ///
     /// Two pools, both derived from population (not separately grown):
@@ -66,7 +66,7 @@ namespace Pulsar4X.Colonies
         /// the host's <see cref="CrewShortagePolicy"/>. This is the pure decision the M3-2 construction gate
         /// calls — and the exact rule a government type flips (consent regimes = Block; a dictatorship =
         /// BuildUnderstaffed, conscripting what's available and suffering a debuff until crewed). See
-        /// docs/GOVERNMENT-AND-POLITICS-DESIGN.md.
+        /// docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md.
         /// </summary>
         public static BuildCrewDecision ResolveConstructionCrew(long availableBulk, long crewRequired, CrewShortagePolicy policy)
         {
@@ -86,7 +86,7 @@ namespace Pulsar4X.Colonies
     /// <summary>
     /// How a host responds to a build it lacks the crew for. A government type sets this: consent regimes
     /// (democracy/republic) Block; command regimes (dictatorship) BuildUnderstaffed (conscription + debuff).
-    /// Default is Block. docs/GOVERNMENT-AND-POLITICS-DESIGN.md.
+    /// Default is Block. docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md.
     /// </summary>
     public enum CrewShortagePolicy
     {

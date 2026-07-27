@@ -4,7 +4,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// M2-1d gauge (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II): the fourth (last Phase-1) personality→behaviour
+    /// M2-1d gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II): the fourth (last Phase-1) personality→behaviour
     /// wire — Authoritarianism → tax-under-unrest. Proves that with no unrest every faction taxes at the ceiling
     /// (byte-identical), and under unrest an authoritarian faction holds taxes high (suppress) while a permissive one
     /// cuts them to appease — the personality now shapes the tax response.

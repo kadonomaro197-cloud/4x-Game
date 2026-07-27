@@ -7,7 +7,7 @@ namespace Pulsar4X.Colonies
 {
     /// <summary>
     /// The regime's health bar for ONE province — legitimacy (0–100), the INTERNAL-politics counterpart to a
-    /// colony's morale (docs/GOVERNMENT-AND-POLITICS-DESIGN.md "Legitimacy — the regime's health bar, LOCAL not
+    /// colony's morale (docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md "Legitimacy — the regime's health bar, LOCAL not
     /// empire-wide"). The load-bearing locked decision: legitimacy is tracked **per system/province, NOT as one
     /// empire-wide number** — so the whole empire can never rebel at once. You lose *provinces*, one at a time, and
     /// can fight to hold or retake them; only the capital falling (or enough provinces at once) topples the central

@@ -14,7 +14,7 @@ namespace Pulsar4X.Tests
     /// rails a ship part does. The one thing it does differently: it's a MOBILE FORCE, so installing the finished
     /// component RAISES a <see cref="GroundUnit"/> on the colony's planet and then removes the transient installation
     /// (it became a force on the ground, not a colony building). This gauge exercises that install→raise hook directly,
-    /// with hand-set stats — no base-mod template yet (that's slice A2). Design: docs/GROUND-COMBAT-MAP-DESIGN.md.
+    /// with hand-set stats — no base-mod template yet (that's slice A2). Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
     /// </summary>
     [TestFixture]
     public class GroundUnitDesignerTests
