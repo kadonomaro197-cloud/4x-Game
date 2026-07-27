@@ -352,6 +352,30 @@ The engine layers (slice 1 `PlanetRegionsDB` + generation, slice 2 `PlaceInstall
 
 ---
 
+## ⛔ GAUGE-HONESTY BACKLOG — gauges that exist and LIE (added 2026-07-27, OPERATION GROUND TRUTH)
+
+From reading the developer's real 2026-07-23 play logs (`docs/DOCS-AUDIT-2026-07-27.md` §9). These are not
+missing tests — they are **instruments that read normal while the thing they watch is broken**, which is worse.
+Each row: what · why it matters · the fix · what it unblocks.
+
+| # | The lying gauge | Why it matters | The fix | Unblocks |
+|---|---|---|---|---|
+| **GH1** | **No gauge for "the simulation is DEAD."** SIM-STALL is gated on `tp.IsRunning` (`SessionLog.cs:158`), but `IsRunning` is derived from task completion (`MasterTimePulse.cs:49`) — so a **faulted** sim task reads *paused* and the check can never fire. `[HANG]` watches the UI thread (healthy). `[FATAL]` arrives on GC. | **Observed live:** the clock died at 2050-05-25 06:00; the developer pressed play **7 times** over the final 2.7 min of the session while every instrument read normal. | Detect a faulted/completed sim task directly; shout on the FIRST frozen heartbeat; make the play button say "the sim is dead" instead of silently doing nothing. | every future live play-test's trustworthiness |
+| **GH2** | **The fault tally counts render/input faults only.** `SessionSummary()` returns `_loggedRenderErrors.Count` (`PulsarMainWindow.cs:485`). | It printed **`faults=0`** for a session with **7 `[FATAL]`s** and a clock frozen for 30 % of the run. A clean-exit summary is currently **not a health verdict**. | count every fault class (`[FATAL]`/`[HANG]`/render/input) separately. | honest session sign-off |
+| **GH3** | **The `[ENGINE]` heartbeat counters are PLACEBOS.** `TickCount` increments as the *first statement* of `CombatEngagement.Tick`, before the fleet query and the "no fleets" early return; `ScanCount` likewise precedes the faction-registry and `SensorAbilityDB` gates. | Both climbed to **4,985,827** and **148,894** in a game with **zero player ships and zero battles**. A prior session read that as proof the engines "fire live." **A climb proves only that a hotloop is scheduled.** | count *work done* (pairs considered / contacts evaluated), not invocations — or rename them so nobody over-reads them again. | any claim of the form "the counter climbs, so it works" |
+| **GH4** | **Silent auto-pause.** `FactionEventLog.cs:50` calls `PauseTime()` on `NewHostileContact` (from `SensorEvents.cs:39`, opted in at `EventTickerWindow.cs:47`) and writes **no log line**. | A legitimate, useful pause reads in `game_logs/` as an unexplained clock stop (observed at `game_log_000.txt:652`). | log the reason whenever anything pauses the clock. | readable session logs |
+| **GH5** | **The ground UI leaves no trace.** `PlanetViewWindow.cs` contains **zero `SessionLog` calls**; there is no window-open gauge anywhere in the client. | A play-test **cannot prove the surface map was even opened** — "did the developer reach ground content?" had to be inferred from the absence of every *other* ground gauge. | add open/close + hex-click/march `SessionLog` lines. | any ground runtime verification at all |
+| **GH6** | **`console_output.txt` captured nothing.** 1667 of 1667 lines are `dotnet build` compiler warnings — zero runtime lines, zero `SessionLog` tags. | The client's designated diagnostic channel had **no forensic value** for the session; the documented stdout-buffering trap recurred. | re-check the redirect/flush path before relying on it again. | trusting the diagnostic channel |
+| **GH7** | **`[FleetCombat]` is not a battle channel.** Three emitters, all client button handlers. | It can never confirm a battle. Docs listed it among combat-observation channels. | ✅ **corrected 2026-07-27** in `Pulsar4X.Client/CLAUDE.md` gotcha #13. | not mis-reading a log |
+
+**Two live bugs found in the same pass** (scheduled in the plan, not here): the AI re-issues a sail order to a
+body its fleet already orbits (`ConquerResolver.cs:172/202` guard only on `!FleetIsMoving`) — that is what threw
+the clock-killing NaN; and `FactionInfoDB.Colonies` is never updated on capture, so the AI can target its own
+planet. And one open question with no owner: **the UMF AI returned "no legal step" on 135 of 144 cycles while at
+war**, fleet parked over an undefended homeworld, never landing a soldier in five months.
+
+---
+
 ## The process (how this doc stays true)
 
 1. **Build something testable → add its row here** (CI row if automated; a Layer-3 entry with the seven fields if it needs a run). Designing the test *before/with* the build is the no-untested-system rule.

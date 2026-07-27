@@ -17,7 +17,7 @@ line by line. **Do not mark an item ✅ unless the artifact exists and you can n
 |---|---|---|---|
 | **D1** | **Phase B (adversarial verification) was SKIPPED — now REMEDIED, by a cheaper method (see §6).** Findings went from Phase A straight into Phase C commits and into THE PLAN. | The orders are explicit: *"Nothing from Phase A enters Phase C on one agent's word."* The rulings-matrix findings — including the C1 "live bug" claim and the C2 tick trap — plus a **committed correction to a LOCKED canon doc** rest on **one agent each**. If one is wrong, a wrong correction is now canon. | **Run Phase B on every already-landed finding, retroactively.** Multi-voter refute, default-to-refuted. Anything refuted gets a follow-up commit that walks the correction back. Keep the killed findings in an appendix. |
 | **D2** | **Phases run out of order:** A(partial) → C → D → E → A(resumed) → C. | The usage limit explains the *interruption*, not the *ordering*. Doing C before A finished means the doc tree was corrected against incomplete evidence. | Finish A, then B, then re-sweep C for anything the late evidence changes. |
-| **D3** | **Phase A is ~13 of 19 agents short.** No log forensics (A1a/b/c), no doc-claim sweep (A2a–f), no walls audit (A3a–e), no gauge ledger (A5). | The orders call Phase A *"exhaustive"* and the log forensics *"the most important"* (the silent-systems ledger feeds the reachability plan directly). | Run the remaining batches, paced (see §2 pacing rule). |
+| **D3** | **Phase A was ~13 of 19 short; now 10 of 19 short.** ✅ **All three log-forensics agents ran** (the part the orders call most important — findings in audit §9). Still missing: the doc-claim sweep (A2a–f), the walls audit (A3a–e), the gauge ledger (A5) — **deliberately DEFERRED on budget** (~12 agents × ~370k ≈ 4.4 M tokens), briefs preserved on disk. | The orders call Phase A *"exhaustive"* and the log forensics *"the most important"* (the silent-systems ledger feeds the reachability plan directly). | Run the remaining batches, paced (see §2 pacing rule). |
 | **D4** | **Four DoD items untouched** — now **two down**: ✅ the Phase-B pass exists (§6), ✅ the `SYSTEMS-STATUS-AND-TEST-PLAN.md` retirement is **COMPLETED** (bannered, root `CLAUDE.md`'s 4 mandating references repointed, DOCS-INDEX row flipped). Still owed: pruning `CLIENT-TEST-CHECKLIST.md` and bringing `TESTING-TRACKER.md` current. | These are explicit checkboxes in §8 of the orders. | Schedule each as its own Phase C slice. |
 | **D5** | Interim status was reported to the developer as prose in-chat rather than as the **short handoff message** §8 requires. | The handoff is a deliverable, not a courtesy. | Write it last, once §4 is honest. |
 
@@ -60,9 +60,9 @@ line by line. **Do not mark an item ✅ unless the artifact exists and you can n
 
 | Batch | Assignment | State |
 |---|---|---|
-| A1 | `A1a-timeline` | ❌ not run |
-| A1 | `A1b-failures` | ❌ not run |
-| A1 | `A1c-combat` | ❌ not run |
+| A1 | `A1a-timeline` | ✅ returned |
+| A1 | `A1b-failures` | ✅ returned |
+| A1 | `A1c-combat` | ✅ returned |
 | A1 | `A1d-ai-silent` — **the orders call this the most important** | ✅ returned |
 | A2 | `A2a-docs-ground` | ❌ not run |
 | A2 | `A2b-docs-combat` | ❌ not run |
@@ -96,7 +96,7 @@ line by line. **Do not mark an item ✅ unless the artifact exists and you can n
 | 7 | **A short handoff message**: what changed, what's red/green, what to rule on first | ❌ owed (D5) |
 | — | **Phase B refute pass + killed-findings appendix** (orders §3) | ✅ **run — see §6.** 10 claims, 0 refuted, 3 precision-corrected, 2 honestly marked un-rechecked. Method deviated from 3-agents-per-claim for a budget reason that is documented, not hidden |
 | — | `SYSTEMS-STATUS-AND-TEST-PLAN.md` retirement finished + root `CLAUDE.md` repointed | ✅ **DONE.** Bannered 🗄; the 4 mandating references in root `CLAUDE.md` repointed to the three single owners (contradiction with its own line 360 resolved); DOCS-INDEX row flipped. Verified nothing live was lost — §6's last apparently-live row is REFUTED at HEAD (`PlanetaryWindow.cs:102/218` gate on `ComponentInstancesDB`) |
-| — | `CLIENT-TEST-CHECKLIST.md` pruned · `TESTING-TRACKER.md` current | ❌ owed |
+| — | `CLIENT-TEST-CHECKLIST.md` · `TESTING-TRACKER.md` current | ✅ **DONE** — 7 new runtime rows in the checklist and a new **GAUGE-HONESTY BACKLOG** (GH1–GH7) in TESTING-TRACKER, both straight from the log forensics. *(Pruning retired items: not done — no row was found stale enough to cut, and cutting on a guess is worse than leaving it.)*
 
 ---
 

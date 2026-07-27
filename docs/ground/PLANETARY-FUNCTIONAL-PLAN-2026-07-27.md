@@ -196,6 +196,11 @@ gauge proves it. **Accessible** = a player reaches it from the normal game, no D
 | Leader-modulated doctrine | substrate exists on the SPACE retreat path; **ground has no read** | n/a | MISSING | **[A24]** |
 | Calculated fire rate | **MISSING** — weapons carry a flat `Attack`, applied once per **hour** | n/a | MISSING | **[V]** `GroundForcesProcessor.cs:29` |
 | Wound model (`CasualtyTier`) + battle-stats ledger | **MISSING** (designed, not built) | n/a | MISSING | ruling #22 **[?]** confirm zero |
+| **Sim-health gauges** (is the engine even alive?) | **BUILT_INERT / MISLEADING** — SIM-STALL can't fire for a faulted task, `[HANG]` watches the UI thread, the fault tally counts render/input only and printed `faults=0` against 7 `[FATAL]`s | n/a | **actively misleading** | **[V2]** `MasterTimePulse.cs:49`, `SessionLog.cs:158`, `PulsarMainWindow.cs:485` — audit §9/G1 |
+| **Heartbeat counters** (sensor scans / battle-trigger passes) | **PLACEBO** — both increment *before* the early-return, so they climb to millions on an empty galaxy. A climb proves only "the hotloop is scheduled" | n/a | misleading | **[V2]** audit §9/G3 |
+| **Ground UI telemetry** | **MISSING** — `PlanetViewWindow.cs` has ZERO `SessionLog` calls, so a play-test cannot prove the surface was opened | n/a | MISSING | **[V2]** audit §9/G7 |
+| **`[FleetCombat]` as a battle channel** | **REFUTED** — 3 emitters, all client button handlers; it is a player-input echo and can never confirm a battle | n/a | mis-documented | **[V2]** audit §9/G9 |
+| **AI actually prosecuting a war** | **BUILT_INERT in practice** — UMF returned "no legal step" on **135 of 144** cycles while at war with a transport built and its fleet over an undefended homeworld; never landed a soldier in 5 months | n/a | visible only in `[AI]` | **[V2]** audit §9/G6 — **not scheduled; needs its own investigation** |
 | **Ground battle log / events / records** | **MISSING — zero emission anywhere in the resolver** | n/a | **MISSING, and the clock halts anyway → the interrupt lies** | **[V]** `GroundForcesProcessor.cs:329-330` + whole-file grep |
 | Unit inspection (hover + Force Management) | **MISSING, not "partial" — I overstated this in the first draft of this very table.** There are **zero tooltips** anywhere and **zero per-UNIT stat readout** in any surface | MISSING | MISSING | **[V2]** — corrected against my own row |
 | Lost-contact fading marker | BUILT for space (`SensorContactIcon`) | — | **MISSING on ground** | ruling #26 |
@@ -297,6 +302,39 @@ invasion target.
 - **Deps:** none. **NOT blocked on ruling #21** — this is registry hygiene, not "what capture transfers".
 - **Why this early:** it is cheap, it is a real bug, and every AI decision downstream of a capture is
   currently made on a false world-view.
+
+### S1c — ⭐ SIM-HEALTH GAUGES: make a dead simulation impossible to miss · cheap-wire
+**From the log forensics (audit doc §9/G1) — the developer sat pressing play for 2.7 minutes at a dead sim
+while every instrument read normal, then the game reported `faults=0`.** This is the Visibility Gate applied
+to the thing that matters most: knowing the engine is alive.
+- **Build four small gauges:** (a) a **dead-sim detector** that does not depend on `IsRunning` — that flag is
+  derived from task completion (`MasterTimePulse.cs:49`), so a *faulted* task reads "paused" and the existing
+  SIM-STALL check (`SessionLog.cs:158`) can never fire for this class. Detect a faulted/completed sim task
+  directly, and say so loudly on the *first* frozen heartbeat, not on GC. (b) An **honest fault tally** —
+  `SessionSummary()` counts only `_loggedRenderErrors` (`PulsarMainWindow.cs:485`), so it printed `faults=0`
+  against 7 `[FATAL]`s; count every fault class. (c) **Log the silent auto-pauses** — the event-log
+  `PauseTime()` on `NewHostileContact` (`FactionEventLog.cs:50`, from `SensorEvents.cs:39`) writes nothing, so
+  a legitimate pause reads as an unexplained stop. (d) **Make the play button honest** — if the sim task is
+  dead, say that instead of silently doing nothing.
+- **Also (G7):** `PlanetViewWindow.cs` has **zero `SessionLog` calls** — the whole ground UI leaves no trace,
+  so a play-test cannot prove the surface was even opened. Add open/close + hex-click/march lines.
+- **Gate:** engine-side, a faulted sim is detectable without reading `IsRunning`. The client half is
+  CI-compile-only → `CLIENT-TEST-CHECKLIST` rows.
+- **See:** the next dead sim announces itself in one heartbeat instead of costing 2.7 minutes of confusion.
+- **Deps:** none. **Why so early:** it is the gauge that makes every future live test trustworthy.
+
+### S1d — Stop the AI re-ordering a fleet to where it already is (live bug, audit §9/G5) · cheap-wire
+`ConquerResolver.cs:172` and `:202` guard the strike order with **only** `!FleetIsMoving(strikeFleet)`. A fleet
+that has *arrived* is not moving, so it is re-issued a sail order to its current location every cycle — five
+identical orders produced **six warp departures at 0 Gm**, and those co-located arrivals are what threw the
+`Speed Result is NaN` that killed the clock. The NaN is patched at HEAD; **this cause is not.**
+- **Build:** an at-target check beside the moving check (already-at-body ⇒ don't re-issue; the next rung
+  should take over).
+- **Gate:** a resolver-driven test — a strike fleet parked at its target gets **no** new sail order, and the
+  order count stops growing across repeated ticks.
+- **See:** `[WARP]` stops showing 0 Gm departures.
+- **Note:** this does not fix G6 (the AI idling 135/144 cycles while at war and never landing) — that is a
+  separate, larger investigation, recorded but not scheduled here.
 
 ### S2 — The five behaviour flags into the save (#27a) · medium
 Corrected premise **[V]**: they're set on the **normal** New Game path too (`NewGameMenu.cs:562-581`), not

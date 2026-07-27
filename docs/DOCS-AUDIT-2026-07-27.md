@@ -248,6 +248,110 @@ plan slice **S1b** and is **not** blocked on the ruling.
 
 ---
 
+## 9. GAME-LOG FORENSICS — the 2026-07-23 session, as an incident review
+
+Three agents read `game_logs/game_log_000.txt` + `_001.txt` + `console_output.txt` in full. This is the
+evidence the orders called *"the most important"*, and it is the most valuable finding of the run: **it shows
+the gauges themselves lying.**
+
+### The session in one line
+
+**9 minutes wall-clock** (16:26:20 → 16:35:20), **144 days game-time**, **two mouse clicks**, **zero ships**,
+**one colony**, **no ground content reached at all** — and the final **30 %** of it was the developer pressing
+play **seven times** at a simulation that had already died. Then the game printed **`faults=0`** and quit
+cleanly.
+
+### ⛔ G1 — THE CLOCK DIED AND EVERY GAUGE SAID IT WAS FINE (the worst finding)
+
+A warp-arrival `Speed Result is NaN` faulted the simulation Task at 2050-05-25 06:00. Then:
+
+| Gauge | What it reported | Why it was blind |
+|---|---|---|
+| `[TIME]` / the play button | "paused" | `MasterTimePulse.IsRunning` is **derived from task completion** (`MasterTimePulse.cs:49`), so a **faulted** task reads *paused*. `StartTime()` just re-throws — six more presses, nothing. |
+| **SIM-STALL detector** | silent | gated on `tp.IsRunning` (`SessionLog.cs:158`) — which is false for a dead task, so it can **never** fire for this failure class |
+| **`[HANG]` watchdog** | silent | watches the **UI thread**, which was healthy |
+| `[RenderError]` / `[InputError]` | silent | only catch main-thread throws |
+| **the ~3 s heartbeat** | kept printing | **54 consecutive beats** at the same frozen timestamp with `+0` on both counters |
+| **the clean-exit summary** | **`faults=0`** | `SessionSummary()` returns `_loggedRenderErrors.Count` (`PulsarMainWindow.cs:485`) — render/input only. **Nothing counts a `[FATAL]`.** |
+| `[FATAL]` | fired ×7 — **late** | arrives on GC finalization of the faulted task |
+
+**There is no gauge for "the simulation is dead."** That is a Visibility-Gate failure of the first order: the
+developer sat pressing play for 2.7 minutes while every instrument read normal. **The NaN itself is fixed at
+HEAD** (both throw shapes bail to a finite value — `496a5d1`); **the blindness is not.**
+
+### G2 — a SECOND silent clock stop, from a different cause
+
+At 2050-03-28 07:00 the clock stopped mid-beat, on the exact beat UEF's contacts jumped 2 → 5, with **no
+`[TIME]` paused line**. Cause: `SensorEvents.cs:39` publishes `NewHostileContact` → `FactionEventLog.cs:50`
+calls `PauseTime()`, and the player is opted in at `EventTickerWindow.cs:47`. **It writes zero log lines**, so
+a legitimate, useful auto-pause reads as an unexplained stop.
+
+### ⛔ G3 — THE HEARTBEAT COUNTERS ARE PLACEBO GAUGES
+
+Both counters climbed impressively — sensor scans **148,894**, battle-trigger passes **4,985,827** — and a
+prior session read that as proof both engines "fire live on play." **It proves much less than that:**
+
+- `TickCount` is incremented as the **first statement** of `Tick`, **before** the fleet query and **before**
+  the "no fleets" early return — *so it climbs to millions on a completely empty galaxy.*
+- `ScanCount` likewise increments at the top of `SensorScan.ProcessEntity`, **before** the faction-registry
+  guard and the `SensorAbilityDB` gate.
+
+**A climb proves only that the hotloop is scheduled.** It says nothing about fleets, hostility, range, or
+whether any detection math ran. Treat both as *"the processor is being invoked"*, never as *"the system works."*
+
+### G4 — ZERO battles formed, and the invasion that arrived and did nothing
+
+The Martian AI selected its objective, built a lander, and warped **three warships 250.6 Gm to Earth**
+— against a homeworld with **zero defending ships** — and the combat system produced **nothing**: no battle,
+no bombardment, no interrupt, no alert. Only a rising contact count showed anything had happened.
+Root cause is mundane and total: the player had **0 ships**, and `CombatEngagement.Tick` enrols only
+`FleetDB` entities, so **no hostile pair existed**. A colony is not a combatant.
+
+### ⛔ G5 — A LIVE BUG: the AI re-orders a fleet to a body it is already orbiting
+
+**This is what caused the NaN.** Five identical *"sail strike fleet 292 at enemy world 4"* orders produced
+**six warp departures at 0 Gm / 0.5 Gm**, and the co-located arrivals are what threw.
+**`ConquerResolver.cs:172` and `:202` guard only on `!FleetIsMoving(strikeFleet)` — there is no at-target
+check** (verified 2026-07-27). A fleet that has arrived is "not moving", so it is re-issued a sail order to
+where it already is, every cycle. The NaN symptom is patched; **this cause is still live.**
+
+### G6 — the AI is idle while at war
+
+- **UMF:** **135 of 144** decision cycles returned *"None: goal met or no legal step"* — while at war, with a
+  transport built and its fleet parked over an undefended enemy homeworld. **Never landed a soldier in five
+  months.** None of the five recent fix commits touches this path.
+- **Kithrin:** 1 survey, 28 days awaiting a geo-survey, then **108 cycles of "no legal step."** `fd37692`
+  raised survey speed 1→10 and `181130a` fixed the debt source, but **the 108-cycle no-op is untouched**.
+
+### G7 — the ground UI is invisible to the flight recorder
+
+`PlanetViewWindow.cs` contains **zero `SessionLog` calls**. There is no window-open gauge anywhere in the
+client. **So a play-test cannot even prove the surface map was opened** — which is why "did the developer
+reach ground content?" had to be answered from the *absence* of every other ground gauge.
+
+### G8 — `console_output.txt` held nothing, again
+
+**1667 of 1667 lines are `dotnet build` compiler warnings.** Zero runtime lines, zero `SessionLog` tags. The
+client's designated diagnostic channel had **no forensic value for this session** — the documented
+stdout-buffering trap recurring.
+
+### G9 — `[FleetCombat]` is a player-input echo, not a battle readout
+
+The tag has **exactly three emitters, all client button handlers** (set doctrine / set EMCON / set posture).
+It can **never** confirm a battle happened. The battle channel is `[Combat]`. Several docs list it among
+combat-observation channels — corrected in `Pulsar4X.Client/CLAUDE.md`.
+
+### Also confirmed working (worth knowing)
+
+- **Detection + fog are genuinely healthy at runtime:** 179 `[DETECT]` + 679 `[DETECT-CONTACT]` lines,
+  contacts 2→5, detected 1-of-8 → 4-of-8, and **all 679 contacts read `src=LAGGED` with zero `LIVE`** and real
+  fog lag up to ~90,000 km — the 2026-07-17 scan-snapshot fix is confirmed live.
+- One `[PERF]` 2117 ms frame at startup, correctly below the hang threshold.
+- 24 missing `Resources\*.bmp` at boot: the texture pre-load runs as the first statement of the
+  `PulsarMainWindow` constructor, ~90 lines **before** `ResourcesPath` is combined with the exe directory.
+
+---
+
 ## 5. Resume — everything the next pass needs is already on disk
 
 The 19 assignment briefs and the shared briefing survive at

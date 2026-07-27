@@ -167,3 +167,27 @@ The audit found the P3 stale-morale/rebellion fixes shipped dormant (flags defau
 ---
 
 *Maintenance: when a client feature ships that CI can't runtime-verify, add a line here. Remove a line once you've confirmed it live. This is the standing "runtime gauge is the developer" list — the companion to CI's compile gate.*
+
+---
+
+## ⛔ NEW 2026-07-27 — rows from the 2026-07-23 log forensics (OPERATION GROUND TRUTH)
+
+Evidence: `docs/DOCS-AUDIT-2026-07-27.md` §9. These are the runtime checks CI structurally cannot make, and
+the first four are about **instruments that lied**, not features.
+
+- [ ] **A dead simulation announces itself.** Force a sim-thread fault, and confirm the log says the sim is
+      dead on the first frozen heartbeat — and that the **play button says so** instead of silently doing
+      nothing. *(Observed failing: 7 ignored play presses over 2.7 min.)*
+- [ ] **The clean-exit summary is honest.** Confirm `faults=` reflects `[FATAL]`/`[HANG]` too, not just
+      render/input. *(Observed failing: `faults=0` with 7 `[FATAL]`s.)*
+- [ ] **Every clock pause states its reason** — including the event-log auto-pause on a new hostile contact,
+      which currently writes nothing.
+- [ ] **The ground UI leaves a trace.** Open the planet view, click a hex, order a march — confirm each writes
+      a `SessionLog` line. *(Today `PlanetViewWindow.cs` has zero.)*
+- [ ] **`console_output.txt` captures runtime output**, not just build warnings. *(Observed failing: 1667/1667
+      lines were compiler warnings.)*
+- [ ] **The boot texture pre-load finds its files** — 24 `Resources\*.bmp` misses at startup because the
+      pre-load runs before `ResourcesPath` is combined with the exe directory.
+- [ ] **An arriving hostile fleet produces *something*.** An AI strike fleet warped 250.6 Gm to an undefended
+      Earth and produced no battle, no interrupt, no alert — correct given zero player ships, but the player
+      should still see an arrival.
