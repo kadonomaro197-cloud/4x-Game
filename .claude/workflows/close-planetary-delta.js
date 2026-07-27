@@ -1,7 +1,7 @@
 export const meta = {
   name: 'close-planetary-delta',
   description: 'Close the planetary FUNCTIONAL / ACCESSIBLE / OBSERVABLE delta — the slice-by-slice execution of docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md. Observability first (the ground battle log), then reachability, then doctrine steering, then the tick + rate-fire, then the designer chain, then depth. ONE slice per invocation; the session commits and gates CI (~33 min) between slices.',
-  whenToUse: 'Invoke with args {slice:"S0"|"S1"|"S2"|"S3"|"S4"|"S5"|"S6"|"D2"|"D3a"|"D3b"|"S8"|"S9"|"S10"} (or {slice:["S1","S2"]} for file-disjoint slices) from the branch that owns the work. Requires docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md + docs/DOCS-AUDIT-2026-07-27.md present. S12 (what capture transfers) is BLOCKED on a developer ruling and refuses to run. The developer must have answered the plan\'s Q2/Q3/Q4/Q5 before S3 and S8.',
+  whenToUse: 'Invoke with args {slice:"S0"|"S1"|"S1b"|"S2"|"S3"|"S4"|"S5"|"S6"|"D0"|"D2"|"D3a"|"D3b"|"S8"|"S9"|"S10"} (or {slice:["S1","S2"]} for file-disjoint slices) from the branch that owns the work. Requires docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md + docs/DOCS-AUDIT-2026-07-27.md present. S12 (what capture transfers) is BLOCKED on a developer ruling and refuses to run. The developer must have answered the plan\'s Q2/Q3/Q4/Q5 before S3 and S8.',
   phases: [
     { title: 'Design' },
     { title: 'Implement' },
@@ -100,7 +100,8 @@ const CRITIC = {
 //
 // MAPPING TO THE PLAN (keep these in step if either changes):
 //   plan S0..S6, S8, S9, S10  -> the same keys here.
-//   plan S7 (doctrine)        -> split here into D2 / D3a / D3b, matching the
+//   plan S1b (registry bug)    -> S1b here (a live bug; NOT blocked on ruling #21).
+//   plan S7 (doctrine)        -> split here into D0 / D2 / D3a / D3b, matching the
 //                                doctrine build plan's own names in
 //                                GROUND-GAMEPLAY-DECISIONS-2026-07-24.md, because
 //                                they are three separate pushes with three gauges.
@@ -171,6 +172,50 @@ REACHABILITY criterion to state in your report: Main menu -> DevTest (or a menu 
 advance the clock until a ground fight -> the fight narrates into game_logs/.
 Byte-identity claim: default-OFF narration flag; the structured capture is additive.
 Add a docs/CLIENT-TEST-CHECKLIST.md row for "ground fight narrates + appears in the Battle Report".` },
+
+  S1b: { title: 'FIX THE COLONY REGISTRY — a live bug: the AI can target its own planet', size: 'cheap-wire', prompt: `
+A REAL BUG, not a doc problem. Verify it, then fix it.
+FactionInfoDB.Colonies (FactionInfoDB.cs:62) is the registry the ENTIRE faction/AI layer reads. It is only
+ever ADDED to (Colonies/ColonyFactory.cs:104 and :226) — there is NO removal path anywhere in the solution —
+and colony capture never touches it (GroundCombat/GroundForcesProcessor.cs:1073 flips only
+colony.FactionOwnerID, reached from TryCapturePlanet at :1056).
+THE FAILURE: faction A takes every region of B's world. B STILL LISTS IT, so B's DefendResolver keeps
+defending it and FactionRollup.ColonyCount keeps counting it. A NEVER lists it, so A's FactionState
+world-view never contains it. Then MilitaryTarget.EnemyColonies (MilitaryTarget.cs:106-129, esp. :120) builds
+A's strike-target set by enumerating B's OWN Colonies list — and scores the planet A ALREADY OWNS as a target
+to invade.
+BEFORE CHANGING ANYTHING, read every reader and say what each assumes, because several treat membership as
+ownership: Factions/FactionState.cs:50, NPCDecisionProcessor.cs:478, ConsolidateResolver.cs:55 and :109,
+DefendResolver.cs:155 and :171, FactionRollup.cs:39/:45/:111, Espionage.cs:61, MilitaryTarget.cs:120,
+GroundCombat/GroundStartGarrison.cs:43.
+BUILD: at the capture site, remove the colony from the old owner's registry and add it to the new owner's.
+Mind that FactionInfoDB.Colonies is save-carried — respect [JsonProperty]/deep-copy conventions, and check
+whether any index or count is cached elsewhere.
+GAUGE: capture a world, then assert (a) it LEAVES the loser's Colonies, (b) it JOINS the captor's, (c)
+FactionRollup.ColonyCount moves on BOTH sides, and (d) MilitaryTarget no longer returns the captured world as
+a target for its NEW owner — (d) is the assertion that actually encodes the bug, so do not omit it.
+NOT BLOCKED on ruling #21: this is registry hygiene (the registry must reflect reality regardless of what the
+developer decides transfers), NOT "what capture transfers". Do not add any other transfer behaviour here.
+Byte-identity: this CHANGES behaviour deliberately (it fixes a bug). Say which existing fixtures assumed the
+broken state, if any.` },
+
+  D0: { title: 'THE DOCTRINE KEYSTONE — stop TrySetDoctrine dropping the fields on the floor', size: 'cheap-wire', prompt: `
+DO THIS BEFORE D2/D3a/D3b. Without it every doctrine slice decorates a value that is discarded on assignment.
+Verified: the 25-entry unified catalog is authored data that NOTHING READS. CombatDoctrine's reader
+(GameEngine/Combat/CombatDoctrine.cs — see :28, :58, :82) has ZERO non-test engine callers for 9 of its 10
+functions, and the ONE live path — FleetDoctrine.TrySetDoctrine (GameEngine/Combat/FleetDoctrine.cs:54-64) —
+copies the raw blueprint and SILENTLY DROPS EngagementPosture, TargetPriority, RetreatCasualtyThreshold,
+BreakAwaySeconds and Pursues. That is why rulings #15/#18/#19/#20 all currently resolve into a JSON file with
+no consumer.
+BUILD: route FleetDoctrine.cs:58-64 through CombatDoctrine.Effective*/ParsePosture so an assigned doctrine
+actually carries every field it was authored with. Keep the reciprocal rule intact — space ToughnessMult and
+ground DamageTakenMult are reciprocals and exactly ONE is authored per entry; CombatDoctrine's guard and
+UnifiedDoctrineTests exist for this, keep them green.
+GAUGE: assign a doctrine to a fleet AND to a ground formation, read it back, and assert all five
+previously-dropped fields survive with the authored values — the test that would have caught this in D1.
+Also assert the reciprocal still derives correctly after the change.
+Byte-identity: nothing yet READS the newly-carried fields (D3a/D3b do that), so carrying them is inert by
+construction. State that claim explicitly and prove it by naming the (zero) consumers.` },
 
   S2: { title: 'The five ground behaviour flags into the SAVE (ruling #27a)', size: 'medium', prompt: `
 CORRECTED PREMISE — verify it yourself, then build on it: the five flags are set on the NORMAL menu New
@@ -335,6 +380,17 @@ retreat point (or the deferral is recorded). Every one of these must be legible 
   S8: { title: 'Shorten the combat tick, then CALCULATE fire rate (ruling #23)', size: 'medium',
         needsRuling: 'Q3 (the tick VALUE), Q4 (mid-tick overkill semantics), Q5 (per-weapon rates) in the plan', prompt: `
 DO NOT START until the developer has answered plan Q3, Q4 and Q5.
+TWO FINDINGS RESHAPE THIS SLICE — read them before planning:
+ (C2) THE SALVO POOL IS NOT deltaSeconds-SCALED: pool = m.Attack * SalvoScale, applied once per tick
+      (GroundForcesProcessor.cs:487,491,520,543). So shortening the tick ALONE multiplies ground damage by
+      the shortening factor (1 h -> 5 s = 720x). Ammo drain (AmmoPerSalvo_kg) and infrastructure bombardment
+      scale the same way, while attrition, shield regen and the K3 closing step ARE properly tick-scaled — so
+      the balance INVERTS. THEREFORE the tick change and the rate model MUST land in this ONE slice; do not
+      split them, and AUDIT EVERY per-tick damage term for deltaSeconds scaling as part of the work.
+ (C3) AN ACCEPTANCE SPEC ALREADY EXISTS AND IS UNIMPLEMENTED: Pulsar4X.Tests/Resolver2DJointsSpecTests.cs
+      pins a 5 s ground quantum (:210), the 720-steps-per-hour divisibility invariant (:216), and
+      fast-forward==watch at a fixed quantum (:232, :253) including a proof that a variable 1 h step
+      diverges. Read it FIRST and build to it rather than inventing a cadence.
 The problem, verified: GroundForcesProcessor.RunFrequency = TimeSpan.FromHours(1) (:29), and
 GroundWeaponAtb carries a flat Attack applied in full once per hour (no rate, no reload — five fields:
 Mass, Attack, Range, Mode, Range_m at GroundWeaponAtb.cs:33-45). Under a rate model, 10 damage/second
@@ -347,7 +403,9 @@ RATE (damage/second) that the resolver INTEGRATES over the tick against availabl
 died and who lived, for ALL weapons. (3) The mid-tick overkill rule exactly as the developer confirmed in
 Q4 (the recommendation was sequential down the doctrine's priority list — which ties this to ruling #18 and
 therefore to D3b: build D3b FIRST if the answer is sequential).
-THE CALIBRATION-PROOF GAUGE, and this is the important one: derive each weapon's rate from today's flat
+THE C2 GUARD, which is the assertion that matters most here: the SAME fight run at TWO different tick
+lengths must produce the SAME result. That is what catches an unscaled damage term. Write it first.
+THE CALIBRATION-PROOF GAUGE: derive each weapon's rate from today's flat
 Attack divided by the chosen tick, and assert a reference fight resolves IDENTICALLY to today. That proves
 the refactor before any tuning happens. THEN a second case: raising one weapon's rate changes the outcome
 in the expected direction.

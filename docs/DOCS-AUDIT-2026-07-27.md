@@ -216,6 +216,38 @@ path-shaped strings to plain names, one at a time, by hand.
 
 ---
 
+## 8. Ruling #21 — the capture-transfer inventory (a DECISION AID, nothing decided)
+
+Ruling #21 is OPEN and the developer said "still thinking," so **nothing here is a decision.** This is the
+fact base so the ruling can be made with the code in view. Verified 2026-07-27 **[V2]**.
+
+**Capture is one statement:** `colony.FactionOwnerID = owner` (`GroundForcesProcessor.cs:1073`, reached from
+`TryCapturePlanet` at `:1056`).
+
+| Candidate | What capture does today | Consequence |
+|---|---|---|
+| Colony ownership | **MOVES** | the only thing that changes |
+| Population (`ColonyInfoDB.Population`) | **IGNORED** — rides along intact | captor inherits a full foreign-species population, no casualties, no unrest |
+| Stockpiles, raw + refined (`CargoStorageDB`) | **IGNORED** — rides along | captor inherits everything |
+| Component / ordnance / fighter stockpiles | **IGNORED** — ride along | captor inherits |
+| Installations (`ComponentInstancesDB`) | **IGNORED** — ride along | captor inherits **every building at full health** |
+| Located buildings on the war map | hex **owner MOVES** per region (`GroundBuildings.cs:187-199`); ids untouched | a captured hex stops fortifying the old defender |
+| Production queue | rides along, then **STALLS** — jobs whose design the new owner lacks are marked `MissingResources` (`IndustryTools.cs:131-135`; its comment names colony capture as the reason) | captor holds a queue it cannot build, with no cleanup and no notification |
+| **`FactionInfoDB.Colonies` registry** | **NOT TOUCHED — and there is no removal path anywhere** | **the live bug in §7/C1: the loser keeps defending it, the captor never sees it, and the captor can target its own world** |
+| Designs (component + industry) | **NOT transferred** (faction-level) | captor cannot rebuild what it captured |
+| Research / tech | **NOT transferred** | no tech-loot mechanic |
+| Money / treasury | **NOT transferred** — but future tax income **does** follow the flip (`ColonyEconomyProcessor.cs:66`) | income moves, treasury doesn't |
+| Ground units + formations on the body | **NOT touched** — each keeps its own owner | looks right (units aren't property), but there is no surrender, no POWs, no disband |
+| Morale / legitimacy / rebellion | **IGNORED** — ride along at pre-capture values | a just-conquered world keeps the loser's legitimacy score, and the processors then silently re-target the numbers at the new owner |
+| Manpower pools (`ColonyManpowerDB`) | **IGNORED** — committed/available ride along | workforce stays committed to a ship the captor can't build |
+| Beachhead outposts, surface parts, fog masks, upkeep bookkeeping | **NOT touched** | |
+
+**The one thing here that is NOT a #21 question:** the `FactionInfoDB.Colonies` registry. That is hygiene —
+the registry must reflect reality regardless of what the developer decides transfers — so it is scheduled as
+plan slice **S1b** and is **not** blocked on the ruling.
+
+---
+
 ## 5. Resume — everything the next pass needs is already on disk
 
 The 19 assignment briefs and the shared briefing survive at

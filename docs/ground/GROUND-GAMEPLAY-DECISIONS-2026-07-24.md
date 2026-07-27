@@ -235,10 +235,43 @@ which ties this directly to ruling #18 (doctrine sets that priority order).
 
 ## Consequences worth flagging before build
 
+> **⚠ FACTUAL CORRECTIONS FROM CODE, 2026-07-27 (OPERATION GROUND TRUTH — see `docs/DOCS-AUDIT-2026-07-27.md`).**
+> **The RULINGS below stand unchanged — they are the developer's decisions.** What was wrong was some of this
+> section's *claims about what the code does*, and those claims were steering the build order. Four corrections:
+>
+> 1. **Ruling #1's stated blocker is WRONG.** `GroundStartGarrison` does **not** raise the prebuilt templates —
+>    `MakeGarrisonDesign` (`GroundStartGarrison.cs:90-103`) builds throwaway C# `GroundUnitDesign`s, so deleting
+>    the templates does **not** break the start garrison. **The real blocker is different and bigger:** the
+>    prebuilts are the **AI's only buildable ground unit** (`ConquerResolver.cs:377` →
+>    `GroundReinforcement.cs:125`). So #1 needs a scenario/AI-authorable `GroundUnitDesign` source before the
+>    templates can go. **The forced order #2 → #4 → #1 still holds** — for the *other* reason given here, which
+>    is confirmed: penetration/per-shot-energy have no home on the weapon yet.
+> 2. **Ruling #9 has TWO free paths to kill, not one.** Besides the free "Build here" order there is a **second
+>    reachable, materials-free path**: the `LocalConstructionDB` queue (Colony Management → **Construction**
+>    tab) lists every `PlanetInstallation` design — *including infantry/armor/artillery* — and its processor
+>    spends only `PointsPerDay`, **never `ResourceCosts`** (`LocalConstructionProcessor.cs:33,50`), then calls
+>    `AddComponent`, which fires `GroundUnitAtb` and raises a real unit. **No test covers this queue at all.**
+> 3. **The #9 ⟷ #10 pairing is worse than stated, and the gauge would not catch it.**
+>    `GroundFortification` reads **only** `Region.InstallationIds`, which the **costed tile queue never
+>    writes**. So deleting the free path leaves a colony player with **no buildable fortification whatsoever**
+>    — and CI would stay green through it. The costed path must write that list *in the same slice*.
+> 4. **Ruling #14 removes a WORKING verb, not a broken one.** "March to region" is the **only fully-wired
+>    planetary move verb** — live in the primitive, the order enum, the processor, the **AI tactical brain**,
+>    **both** client windows, the Site engine, and a save/load fixture. Four coordinate systems coexist today.
+>    Deleting it without the two-layer replacement already in place removes the only way anything moves.
+>    *(The "token never moves" observation may still hold for the global-position restamp — treat it as
+>    unverified this pass, not as licence to cut the verb cheaply.)*
+>
+> Also corrected: **`CrewReq` is not on a ground design at all.** `GroundUnitDesign` has **no crew field**, and
+> `GroundUnitAssemblyResult` does not even sum crew (unlike its station and building siblings) — so ruling #7's
+> note below overstates how close it is. The ship/station manpower machinery is genuinely built and gauged; the
+> ground side has nothing to connect yet.
+
 - **Ruling #1 (delete the prebuilt templates) is load-bearing and wide.** The three prebuilt units are today the *only*
-  path to penetration and per-shot energy, they are what `GroundStartGarrison` raises, and they are referenced from the
-  base mod and several tests. Deleting them requires ruling #2 to land first (the dials must exist on the weapon before
-  their only carrier is removed), plus a garrison-composition replacement. **Order: #2 → #4 → #1.**
+  path to penetration and per-shot energy, ~~they are what `GroundStartGarrison` raises~~ *(corrected above — the
+  garrison builds its own designs; the real blocker is that they are the AI's only buildable ground unit)*, and they are
+  referenced from the base mod and several tests. Deleting them requires ruling #2 to land first (the dials must exist on
+  the weapon before their only carrier is removed), plus a garrison-composition replacement. **Order: #2 → #4 → #1.**
 - **The JSON binder is exact-arity** (gotcha #6/#10). Adding penetration + per-shot-energy to `GroundWeaponAtb` means
   updating **all five** ground-weapon templates in lockstep or every one of them fails to bind.
 - **Ruling #7 (units cost people, no return) connects ground to population for the first time.** The templates already

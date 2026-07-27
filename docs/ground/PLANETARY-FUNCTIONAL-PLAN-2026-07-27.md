@@ -9,6 +9,15 @@ other doc), `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` (the board, Layers 5–6)
 `docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md` (the rules), `docs/MVP.md` (scope firewall),
 `docs/REALISM-VS-GAMEPLAY-AUDIT.md` (weight firewall).
 
+> **UPDATE 2026-07-27 (later the same day): the rulings-compliance matrix for #1–#18 LANDED** after the usage
+> limit reset, and it moved real numbers. Rows below now marked **[V2]** were verified by that pass. Six of its
+> findings changed this plan, and two changed the canon doc's *factual notes* (the rulings themselves stand) —
+> see `docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md` § Consequences, corrections 1–4. The headline
+> re-sizings: **#18 and much of #15 are CHEAP-WIRE, not medium** (the dials are already built and authored on
+> all 25 doctrine entries — every caller is just a unit test); **#11 is data-authoring, not a build** (the
+> single attribute already exists); **#9 has TWO free paths to kill**; and **#14 is wider than thought** (it is
+> the only working move verb).
+>
 > **⚠ EVIDENCE HONESTY — read before trusting a row.** A 19-agent verification fan-out for this pass **died
 > on the account usage limit**, so this plan is built from three sources and every row says which:
 > **[V]** = verified first-hand this pass with `file:line`; **[A24]** = inherited from the 2026-07-24
@@ -29,6 +38,16 @@ designs/research, surviving units, and the infrastructure rating. My recommendat
 but unhappy; research no." Each item is a separate small slice, so a partial answer is still useful.
 **Scheduled as S12 and deliberately left unspecified until you rule.**
 
+> **The decision aid you asked for now exists.** A full candidate-by-candidate inventory of what capture
+> moves / destroys / ignores today is in `docs/DOCS-AUDIT-2026-07-27.md` §8 — 20 rows, each with its
+> `file:line`. The short version: capture is **one statement**. Population, stockpiles, component/ordnance
+> stockpiles, every building at full health, morale, legitimacy, rebellion state and the manpower pool all
+> ride along **untouched**; the production queue rides along and then **stalls** (jobs the new owner cannot
+> build are marked `MissingResources` — `IndustryTools.cs:131-135`, whose comment names colony capture as the
+> reason); designs, research and treasury **do not transfer** (so the captor cannot rebuild what it took);
+> and future tax income **does** follow the flip (`ColonyEconomyProcessor.cs:66`). Ground units keep their own
+> owner — no surrender, no POWs, no disband.
+
 **Q2 — the scenario start.** You ruled a stock New Game must raise no garrison and place no enemy (#27b).
 The audit wanted a takeable target from the front door. Those look like they fight, but they don't —
 **because the start you'd need already exists and is already on the main menu.** The button is called
@@ -44,8 +63,10 @@ and have a separate authored scenario, that's a real build, and I'd want to know
 `CombatReactionStep`. My recommendation: mirror space — a fine step *while a battle is live*, hourly
 otherwise — and start the fine step at **60 seconds**, not 5. Reason: 5 s on ground would multiply the
 resolver's per-tick work by 720 across potentially many regions, and a minute is already fine enough that
-a 10-damage-per-second gun does 600 per tick instead of 36,000. **FLAGGED balance value.** Pick the number
-and S8 is unblocked.
+a 10-damage-per-second gun does 600 per tick instead of 36,000. **FLAGGED balance value.**
+> **⚠ SUPERSEDED — see C3 above.** A committed CI spec already pins **5 s** and asserts the
+> 720-steps-per-hour and determinism invariants. **Read C3 and rule on 5 s, not on my 60 s.** And note C2:
+> the tick cannot be shortened without the rate model in the same slice, or damage scales by the same factor.
 
 **Q4 — mid-tick overkill.** When a target dies partway through a tick, does the shooter's leftover damage
 roll onto the next target down the doctrine's priority list, or is it wasted? Your phrasing read as
@@ -56,6 +77,64 @@ a ruling**, and it ties to #18. Confirm it.
 numbers. I don't want to invent five silently. Cheapest honest route: derive each from the existing flat
 `Attack` value divided by the tick you choose in Q3, so the first build is *behaviour-identical* to today,
 then tune from there. Say yes and S8 needs no balance decisions at all up front.
+
+---
+
+## 0b. ⛔ FOUR CRITICAL FINDINGS from the rulings matrix (added later on 2026-07-27)
+
+These came out of the #19–#27 pass and they change the build, not just the paperwork. All **[V2]**.
+
+### C1 — A LIVE BUG: after a capture, the AI can be pointed at invading its own planet · cheap-wire
+
+`FactionInfoDB.Colonies` (`FactionInfoDB.cs:62`) is the registry the **entire** faction/AI layer reads. It is
+only ever *added to* (`ColonyFactory.cs:104,226`) — **there is no removal anywhere**, and capture never
+touches it (`GroundForcesProcessor.cs:1073` flips only `colony.FactionOwnerID`).
+
+**Concrete failure:** A takes every region of B's world. B **still lists it** — so `DefendResolver` keeps
+defending it and `FactionRollup.ColonyCount` keeps counting it. A **never lists it**, so A's `FactionState`
+world-view never sees it. Then `MilitaryTarget.EnemyColonies` builds A's strike set by enumerating **B's own
+`Colonies` list** (`MilitaryTarget.cs:106-129`, esp. `:120`) — and scores the planet **A already owns** as a
+target to invade.
+
+This is independent of ruling #21 (it is registry *hygiene*, not "what transfers"), so it is **not blocked on
+Q1**. It is cheap. **Scheduled as S1b, right after the log.** Eight AI readers depend on that registry
+(`FactionState.cs:50`, `NPCDecisionProcessor.cs:478`, `ConsolidateResolver.cs:55,109`,
+`DefendResolver.cs:155,171`, `FactionRollup.cs:39,45,111`, `Espionage.cs:61`, `MilitaryTarget.cs:120`,
+`GroundStartGarrison.cs:43`) — read them all before touching it.
+
+### C2 — Shortening the tick, on its own, multiplies ground damage by the shortening factor
+
+The salvo pool is **not** `deltaSeconds`-scaled: `pool = m.Attack * SalvoScale`, applied once per tick
+(`GroundForcesProcessor.cs:487,491,520,543`). So RunFrequency 1 h → 5 s is **720× the damage**, not a finer
+resolution of the same damage. Ammo drain (`AmmoPerSalvo_kg`) and infrastructure bombardment scale the same
+way — while attrition, shield regen and the K3 closing step **are** properly tick-scaled. **The balance
+inverts.**
+
+**Consequence for the plan: the tick change and the rate model MUST land in the same slice.** "Shorten the
+tick first as a safe step" is exactly the wrong move. S8 is rewritten accordingly.
+
+### C3 — There is already a CI acceptance spec for the tick, pinning **5 seconds** — and I gave you the wrong number
+
+`Resolver2DJointsSpecTests.cs:210,216,232,253` already pins a **5 s ground quantum**, the
+**720-steps-per-hour divisibility invariant**, and fast-forward == watch at a fixed quantum — including a
+proof that a variable 1 h step diverges. **No engine code implements it.**
+
+**This corrects my own Q3 recommendation below.** I suggested 60 s on cost grounds without knowing a spec
+existed. The honest recommendation is now: **follow the existing spec (5 s)** — it is already written, already
+asserts the invariants, and diverging from it means changing a committed spec. If 5 s proves too expensive
+once C2 is fixed, that is a *measured* decision to make later, not a guess to make now.
+
+### C4 — The doctrine keystone is one function, and it is dropping the fields on the floor
+
+The 25-entry catalog is authored data **nothing reads**. `CombatDoctrine`'s reader has **zero non-test engine
+callers for 9 of its 10 functions**, and the one live path — `FleetDoctrine.TrySetDoctrine`
+(`FleetDoctrine.cs:54-64`) — **copies the raw blueprint and silently drops `EngagementPosture`,
+`TargetPriority`, `RetreatCasualtyThreshold`, `BreakAwaySeconds` and `Pursues`.**
+
+So rulings **#15, #18, #19 and #20 all currently resolve into a JSON file with no consumer.** The fix seam is
+small and specific: route `FleetDoctrine.cs:58-64` through `CombatDoctrine.Effective*`/`ParsePosture`.
+**This becomes D0 and it comes before D2/D3a/D3b** — without it, every doctrine slice is decorating a value
+that gets discarded on assignment.
 
 ---
 
@@ -93,36 +172,37 @@ gauge proves it. **Accessible** = a player reaches it from the normal game, no D
 |---|---|---|---|---|
 | Ground unit as designed components | BUILT_AND_GAUGED | **BUILT_INERT** — can't reopen a saved design; panels gated behind a ship design | BUILT_RUNTIME_UNVERIFIED | **[V]** `ShipDesignWindow.cs:166/223/592` |
 | Penetration / per-shot energy | **BUILT_INERT** — only the 3 prebuilt templates carry them | MISSING on the assembled path | MISSING | **[A24]** + ruling #2 |
-| Ground parts cost research | **BUILT_INERT** — 17/22 templates cost 0, all start-unlocked | n/a | MISSING | **[A24]** ruling #4 **[?]** re-count |
-| Invalid design blocked from saving | **[?]** gates compute + maybe display; the SAVE block is the disputed half | **[?]** | **[?]** | ruling #3 — **must be pinned before sizing** |
+| Ground parts cost research | **PARTIAL** — the gate mechanism is real (cost 0 ⇒ instantly unlocked), but **17 of 22** ground templates author 0, **all 22 are start-unlocked**, the 5 that do cost all use the same `[Mass]*2` (no complexity relation at all), and the assembled **unit** design has no tech gate | n/a | MISSING | **[V2]** `ComponentDesigner.cs:130,206`, `GroundUnitAssembly.cs:354`, `ColonyFactory.cs:48` — count confirmed |
+| Invalid design blocked from saving | **MISSING** — validity IS computed and displayed, but `SaveGroundDesign` never reads `r.Valid` and registration proceeds regardless, so an over-budget / unpowered / magazine-less design lands in `IndustryDesigns` as buildable | n/a | the warning shows | **[V2]** `GroundUnitAssembly.cs:264,352`, `ShipDesignWindow.cs:520,557,592` — **the disputed half is settled: it computes + displays, it does NOT block. cheap-wire** |
 | Muster location (rally point) | **BUILT_INERT** — `DefaultRegionIndex` read at muster, never set non-zero | MISSING | MISSING | **[A24]** ruling #6 |
 | Build a ground unit → field it | BUILT_AND_GAUGED | partial — rides industry, but destination is hardcoded region 0 | MISSING | **[A24]** |
-| One build queue for units + buildings | **MISSING** — four divergent paths | free path reachable, costed path partial | MISSING | ruling #10 **[?]** count the queues |
-| Free "Build here" (unlimited, instant, free) | BUILT — and it is the **only** path that produces a building that fortifies | **reachable** (that's the problem) | n/a | **[A24]** ruling #9 |
-| Buildings occupy ground / are war-map objectives | BUILT for start-colony layout | — | drawn | **[A24]** |
+| One build queue for units + buildings | **MISSING — there are FIVE live build paths**, not four: the `IndustryJob` line, a **second materials-free `LocalConstructionDB` queue**, the `GroundBuildQueueDB` tile side-car, the beachhead `BuildSites` list, and two instant free placement orders. Only the side-car carries a planetary destination; the only real progress bar is on the free queue | mixed | MISSING | **[V2]** `IndustryAbilityDB.cs:17`, `LocalConstructionDB.cs:16`, `GroundBuildQueueDB.cs:36` |
+| Free build paths (**TWO of them**) | BUILT — the free "Build here" order **and** the `LocalConstruction` queue, which spends only `PointsPerDay` and **never** `ResourceCosts`, yet lists infantry/armor/artillery and raises real units. **No test covers that second queue.** The free order is also the **only** producer of a building that fortifies | **both reachable** (Colony Management → Construction) — that's the problem | n/a | **[V2]** `LocalConstructionProcessor.cs:33,50`, `ConstructionDisplay.cs:56,70` |
+| Buildings occupy ground / are war-map objectives | **the "two attributes" premise is REFUTED — `GroundFootprintAtb` is ALREADY the single attribute** (its *presence* is the war-map-objective flag; its `TileFootprint` is tile occupancy; both read live). **The real gap is DATA: only 2 of 26 base-mod `PlanetInstallation` templates carry it** | — | drawn where authored | **[V2]** `GroundFootprintAtb.cs:27,31`, `GroundBuildings.cs:27,332` — **#11 is authoring, not a build** |
 | Buildings built AFTER game start get a location | **MISSING** — no hook at production completion | n/a | invisible on the war map | **[A24]** |
-| Employment (jobs) + colony power | BUILT_INERT — wired, **data zero** | n/a | MISSING | **[A24]** ruling #12 |
-| Semantic tile bonuses | MISSING | MISSING | MISSING | ruling #13 |
-| Regional march | BUILT_INERT — **sets the region index without restamping the global position, so the token never moves** | reachable but broken | MISSING | **[A24]** ruling #14 |
-| Mini-hex movement as an order | **[?]** | **[?]** | **[?]** | ruling #16 |
-| March readout (destination/distance/ETA/speed) | partial — `Speed_kmh` now real and read | **[?]** | MISSING | **[V]** `GroundForcesProcessor.cs:855` |
-| Committed fight + retreat + break-away + pursuit | **MISSING** (no retreat verb; no engagement lock) | MISSING | MISSING | **[A24]** ruling #15 |
+| Employment (jobs) + colony power | **BUILT_INERT, wiring complete end-to-end, both inputs STRUCTURALLY zero**: **zero** base-mod templates declare `EmploymentAtbDB` (so `GetTotalJobs()` is always 0 and the morale term is skipped by a −1 sentinel), and `powerDemandPerCapita` is authored 0 in both strain nodes while `uef.json` has no strain node at all | n/a | MISSING | **[V2]** `EmploymentAtbDB.cs:17`, `PopulationProcessor.cs:74`, `ColonyMoraleDB.cs:134` — **cheap-wire, mostly JSON** |
+| Semantic tile bonuses | **MISSING — no per-tile bonus mechanism of any kind.** The only terrain rules are `GroundTerrain.TerrainAttackMult` (combat, keyed on unit TYPE not on a building) and `HexMinerals.TerrainWeight` (deposit-seeding at generation). **`CityTile.Terrain` is populated and read by nobody but its copy-ctor and two tests** | MISSING | MISSING | **[V2]** `CityTile.cs:22`, `GroundTerrain.cs:82` |
+| Regional march | **BUILT and WIDELY WIRED — it is the ONLY fully-wired planetary move verb**: live in the primitive, the order enum, the processor, the **AI tactical brain**, **both** client windows, the Site engine, and a save/load fixture. **FOUR coordinate systems coexist** (region, per-region hex, global cylinder, mini+sub-tile) and **no formatter prints the combined `(17,09)(22,47)` address** | reachable | MISSING | **[V2]** `GroundForcesDB.cs:293,755`, `GroundForcesProcessor.cs:913`, `GroundTacticalBrain.cs:201` — **deleting it is WIDE; the replacement must land first** |
+| Mini-hex movement as an order | **MISSING** — mini coordinates are written ONLY by the engine's automatic spread + closing steps. No `OrderMoveToMiniHex`, no order-enum member, and the city-zoom click handler has only build/place/inspect branches — **no move branch** | MISSING | — | **[V2]** `GroundForcesDB.cs:185,290`, `GroundForcesProcessor.cs:665,863` |
+| March readout (destination/distance/ETA/speed) | **PARTIAL — all four ingredients exist as engine state** (`Speed_kmh` populated at raise; `GlobalPath` + transit seconds give distance and ETA) but **ZERO are displayed**: the globe shows only a `»` glyph and the Battalions table's eight columns carry none of them. No accessor computes distance-remaining or ETA | n/a | **MISSING** | **[V2]** `GroundForcesDB.cs:91,202,204,656` — **cheap-wire** |
+| Committed fight + retreat + break-away + pursuit | **Ground has NONE of the four — and walking out is FREE today: a region march simply removes the unit from the resolver roster.** Formations are data objects, so the space engagement lock cannot apply to them as-is. Space has the lock + retreat, but prices the exit with a hardcoded `const RetreatCasualtyThreshold = 0.5` while the doctrine's own `BreakAwaySeconds`/`Pursue` sit unread | MISSING | MISSING | **[V2]** `GroundForcesProcessor.cs:271`, `CombatEngagement.cs:48,1646` |
 | Engage decision on real distance | partial — real-metre gate built (K1–K4, M2) | auto-engages on region-band share | MISSING | **[A24]** rulings #19/#23 |
-| Doctrine as the steering wheel | **catalog BUILT_AND_GAUGED (D1/D1b, 25 entries)**, behaviour fields read by **nothing** | assignable in formation management | MISSING | D1 `97ecd5b`, D1b `b218acf` — both CI-green **[V]** |
+| Doctrine as the steering wheel | **catalog BUILT_AND_GAUGED (D1/D1b, 25 entries)**, behaviour fields read by **nothing in the resolvers** — **but the dials for #18 (TargetPriority) and #15 (BreakAwaySeconds/Pursue) are already BUILT, PARSED and AUTHORED on all 25 entries; every caller is a unit test.** Ground fire is still spread across all reachable enemies weighted by *current health*, so a cripple is never finished | assignable in formation management | MISSING | **[V2]** `TargetPriority.cs:14`, `CombatDoctrineBlueprint.cs:66`, `GroundForcesProcessor.cs:408,422` — **large parts of D3b are CHEAP-WIRE** |
 | Leader-modulated doctrine | substrate exists on the SPACE retreat path; **ground has no read** | n/a | MISSING | **[A24]** |
 | Calculated fire rate | **MISSING** — weapons carry a flat `Attack`, applied once per **hour** | n/a | MISSING | **[V]** `GroundForcesProcessor.cs:29` |
 | Wound model (`CasualtyTier`) + battle-stats ledger | **MISSING** (designed, not built) | n/a | MISSING | ruling #22 **[?]** confirm zero |
 | **Ground battle log / events / records** | **MISSING — zero emission anywhere in the resolver** | n/a | **MISSING, and the clock halts anyway → the interrupt lies** | **[V]** `GroundForcesProcessor.cs:329-330` + whole-file grep |
-| Unit inspection (hover + Force Management) | partial | **[?]** | partial | ruling #25 |
+| Unit inspection (hover + Force Management) | **MISSING, not "partial" — I overstated this in the first draft of this very table.** There are **zero tooltips** anywhere and **zero per-UNIT stat readout** in any surface | MISSING | MISSING | **[V2]** — corrected against my own row |
 | Lost-contact fading marker | BUILT for space (`SensorContactIcon`) | — | **MISSING on ground** | ruling #26 |
 | Ground behaviour flags | BUILT — but **process statics**; set on New Game (menu *and* DevTest), **never on load** | — | MISSING | **[V]** `GroundForcesProcessor.cs:62/72/85/100`, `NewGameMenu.cs:562-581/979-986` |
 | A takeable enemy from the menu | BUILT | **ACCESSIBLE — the ungated "DevTest" main-menu button** (premise corrected) | — | **[V]** `MainMenuItems.cs:51` |
+| Ruling #27b — no default garrison/enemy in a stock New Game | **DONE** — all three auto-spawns default `false` | n/a (by design) | — | **[V2]** `NewGameMenu.cs:52,55,60` — the one ruling already satisfied |
 | Orbital bombardment of a colony | **BUILT_INERT** — no `BombardColonyOrder`, no button, no AI rung | Fire-Control workaround only | MISSING | **[A24]** audit P3 |
 | Per-faction ground fog | BUILT engine-side | **client ignores it** — a rival's survey reveals your deposits | wrong | **[A24]** |
 | Located hex deposits feed mining | **MISSING** — mining reads only the body-wide pool | n/a | drawn but not load-bearing | **[A24]** |
-| Units cost people, permanently | MISSING — `CrewReq` computed, never read | n/a | MISSING | **[A24]** ruling #7 |
+| Units cost people, permanently | **MISSING — and further off than the canon doc says: `GroundUnitDesign` has NO crew field at all**, and `GroundUnitAssemblyResult` doesn't even sum crew (its station/building siblings do). The build-time crew gate is ship-only; no death path touches population | n/a | MISSING | **[V2]** `GroundUnitDesign.cs:30` — ship/station manpower machinery is built + gauged, ground has nothing to connect yet |
 | Ammo bites | BUILT_INERT — flat 1 kg/salvo, so a magazine is never a trade | n/a | MISSING | **[A24]** ruling #8 |
-| Hazard counters as specific gear | MISSING | MISSING | MISSING | ruling #5 |
+| Hazard counters as specific gear | **PARTIAL** — 5 hazard types / 8 menaces generated; only Vacuum + ToxicAtmosphere have a designable counter (`GroundSealAtb`). **The developer's own dust-storm example has nothing to counter: ground `SensorJam` is generated and read by NO ground code.** Heat/Corrosive resistance is C#-only, unreachable from the designer. And "one hazard hits several stats" is **not expressible** — `HazardEffect` carries one Type + one Magnitude | MISSING | MISSING | **[V2]** `PlanetEnvironmentFactory.cs:80`, `GroundForcesProcessor.cs:222,1048`, `HazardEffect.cs:54` |
 | Per-mini-tile terrain (M4) | **MISSING** — every mini tile copies its coarse hex's terrain | n/a | drawn (as a copy) | Layer 5 M4 |
 | Hex/tile naming | MISSING (fully specced, Layer 6) | MISSING | MISSING | Layer 6 |
 | Capture transfers substance | **MISSING** — bare owner-ID flip | n/a | MISSING | ruling #21 — **OPEN** |
@@ -198,6 +278,21 @@ the unconditional structured trail in `Combat/BattleLog.cs`.
 - **See:** `[Ground…]` lines in `game_logs/`, and events in the Battle Report.
 - **Deps:** none. **Unblocks:** literally every tuning slice below.
 
+### S1b — ⭐ FIX THE COLONY REGISTRY (finding C1 — a live bug) · cheap-wire
+Capture flips `colony.FactionOwnerID` but **never updates `FactionInfoDB.Colonies`**, which has *no removal
+path at all*. The loser keeps defending and counting a world it lost; the captor never sees it; and
+`MilitaryTarget.EnemyColonies` reads the **loser's** list, so the captor can score its own planet as an
+invasion target.
+- **Build:** remove the colony from the old owner's registry and add it to the new owner's, at the capture
+  site. Read all eight AI readers first (listed in C1) — several assume membership means ownership.
+- **Gate:** capture a world, then assert (a) it leaves the loser's `Colonies`, (b) it joins the captor's,
+  (c) `FactionRollup.ColonyCount` moves on both sides, and (d) **`MilitaryTarget` no longer returns the
+  captured world as a target for its new owner** — that last one is the assertion that encodes the bug.
+- **See:** the AI tape (`[AI]`) stops proposing an invasion of a world the faction owns.
+- **Deps:** none. **NOT blocked on ruling #21** — this is registry hygiene, not "what capture transfers".
+- **Why this early:** it is cheap, it is a real bug, and every AI decision downstream of a capture is
+  currently made on a false world-view.
+
 ### S2 — The five behaviour flags into the save (#27a) · medium
 Corrected premise **[V]**: they're set on the **normal** New Game path too (`NewGameMenu.cs:562-581`), not
 just DevTest. The defect is that **loading a save never sets them**, so a save plays differently depending
@@ -235,6 +330,16 @@ sitting — survey → colonize → mine → design+build a unit → load → sa
 `TESTING-TRACKER.md`. **Everything below is deepening an unproven system until this fires once.**
 
 ### S5 — ONE build queue, with destinations (#10 + #9 + #6 + #11) · large · **#9 and #10 TOGETHER**
+
+> **[V2] RE-SIZED by the rulings matrix.** Three corrections: there are **FIVE** live build paths, not four;
+> there are **TWO free ones to kill** (the "Build here" order **and** the `LocalConstruction` queue, which
+> spends only `PointsPerDay`, never `ResourceCosts`, yet lists infantry/armor/artillery and raises real units
+> — and **no test covers it**); and the fortification trap is sharper than stated: **`GroundFortification`
+> reads only `Region.InstallationIds`, which the costed queue never writes**, so cutting the free path leaves
+> a colony player with *no buildable fortification at all* — **and CI would stay green through it.** Write
+> that list in this slice and gauge it. **#11 is NOT a build:** `GroundFootprintAtb` is already the single
+> attribute (presence = objective, `TileFootprint` = occupancy, both read live). The gap is **data — only
+> 2 of 26 templates carry it.**
 Collapse the divergent build paths into one RTS-style queue where every entry carries its destination and
 shows progress; delete the free "Build here" path; make muster a rally-point setting (#6); make "occupies a
 tile" and "is a war-map objective" one attribute (#11).
@@ -246,7 +351,15 @@ tile" and "is a war-map objective" one attribute (#11).
 - **Reach:** Colony → Production → queue → destination picker → watch progress.
 - **See:** queue progress in the UI + a `[Build]` completion line naming the destination.
 
-### S6 — Movement rework (#14 + #16 + #17) · medium
+### S6 — Movement rework (#14 + #16 + #17) · **large** (re-sized up)
+
+> **[V2] RE-SIZED.** "March to region" is **the only fully-wired planetary move verb** — live in the
+> primitive, the order enum, the processor, the **AI tactical brain**, **both** client windows, the Site
+> engine, and a save/load fixture, with **four** coordinate systems coexisting and no formatter for the
+> combined address. Deleting it before the replacement works removes the only way anything moves, including
+> for the AI: build the two-layer verb, migrate every caller, *then* cut. Cheap consolation: **#17 is
+> cheap-wire** (all four numbers already exist as engine state; none is displayed), and **#16 is genuinely
+> absent** — no order type, and the city-zoom click handler has no move branch at all.
 Delete "march to region" **[A24]** (it never restamped the global position, so the token never moved), move
 to the two-layer address `(17,09)(22,47)`, mini-hex moves with the same verb, and show all four march
 numbers.
@@ -255,7 +368,18 @@ numbers.
 - **Reach:** Force Management → battalion → Move → pick a two-layer address.
 - **See:** the token moves; `[Ground]` march lines from S1.
 
-### S7 — Doctrine becomes the steering wheel (D2 → D3a → D3b; #15/#18/#19/#20) · medium ×3
+### S7 — Doctrine becomes the steering wheel (**D0** → D2 → D3a → D3b; #15/#18/#19/#20) · medium ×4
+
+> **⭐ D0 IS NEW AND COMES FIRST (finding C4) · cheap-wire.** `FleetDoctrine.TrySetDoctrine`
+> (`FleetDoctrine.cs:54-64`) copies the raw blueprint and **silently drops `EngagementPosture`,
+> `TargetPriority`, `RetreatCasualtyThreshold`, `BreakAwaySeconds` and `Pursues`** — and 9 of the 10 reader
+> functions in `CombatDoctrine` have zero non-test engine callers. So the 25-entry catalog is authored data
+> with **no consumer**, and #15/#18/#19/#20 all resolve into a JSON file nothing reads.
+> **Build:** route `FleetDoctrine.cs:58-64` through `CombatDoctrine.Effective*`/`ParsePosture` so an assigned
+> doctrine actually *carries* its fields. **Gate:** assign a doctrine, read it back, and assert all five
+> previously-dropped fields survive — the test that would have caught this. **Without D0, every slice below
+> decorates a value that is discarded on assignment.**
+
 Your frame: *everything goes through the doctrines.* Catalog is built and green (25 entries) but **nothing
 reads the behaviour fields** **[V]**.
 - **D2:** ground reads the unified catalog; retire `groundStances.json`.
@@ -268,12 +392,33 @@ reads the behaviour fields** **[V]**.
   named** behaviour — and each is visible in the S1 log.
 - **See:** the log says which doctrine chose what. *(Without S1 these three slices are unverifiable.)*
 
-### S8 — Shorten the tick, then calculate fire rate (#23) · medium · **GATED ON Q3/Q4/Q5**
-Fine-step while a battle is live, hourly otherwise (space's precedent). Then a weapon carries damage/second
-and the resolver integrates it over the tick against available targets.
+> **[V2] D3b IS MUCH CHEAPER THAN IT LOOKS.** The dials for **#18 (`TargetPriority`)** and **#15
+> (`BreakAwaySeconds` / `Pursue`)** are **already built, parsed and authored on all 25 catalog entries** —
+> every caller today is a unit test, so most of the work is *reading what is already there*. What is
+> genuinely missing: ground fire is spread across all reachable enemies **weighted by current health**, so a
+> cripple is never finished; **walking out of a ground fight is FREE** (a region march simply removes the
+> unit from the resolver roster — there is no lock to bypass yet); and space still prices its exit with a
+> hardcoded `const RetreatCasualtyThreshold = 0.5` while the doctrine's own fields sit unread.
+
+### S8 — The tick and the rate model, **in ONE slice** (#23) · large (re-sized up) · **GATED ON Q3/Q4/Q5**
+
+> **⚠ RE-SIZED AND RE-SHAPED by findings C2 + C3. Read them before planning this.**
+> **C2:** the salvo pool is **not** `deltaSeconds`-scaled (`GroundForcesProcessor.cs:487,491,520,543`), so
+> shortening the tick alone multiplies ground damage by the shortening factor (1 h → 5 s = **720×**), and
+> ammo drain + infra bombardment scale with it while attrition, shield regen and closing do not — the balance
+> **inverts**. **Therefore the tick change and the rate model cannot be separate slices.**
+> **C3:** a committed CI spec already pins a **5 s** ground quantum plus the 720-per-hour divisibility and
+> determinism invariants (`Resolver2DJointsSpecTests.cs:210,216,232,253`) and **nothing implements it** — so
+> this slice has an acceptance spec waiting for it, and my earlier 60 s suggestion is withdrawn.
+
+Fine-step while a battle is live, hourly otherwise. A weapon carries damage/second; the resolver integrates
+it over the elapsed tick against available targets. **Every per-tick damage term must be audited for
+`deltaSeconds` scaling in the same change** — that audit *is* the slice.
 - **Gate:** with rates derived from today's `Attack` ÷ the chosen tick, a reference fight resolves
-  **identically to today** (proves the refactor before any tuning), then a rate change moves the outcome
-  the expected way. Determinism preserved (fast-forward == watch).
+  **identically to today** (proves the refactor before any tuning), then a rate change moves the outcome the
+  expected way. **Plus the C2 guard: the same fight run at two different tick lengths must produce the same
+  result** — that is the assertion that catches an unscaled damage term, and it is the one that matters most
+  here. Determinism preserved (fast-forward == watch), against the existing spec's invariants.
 - **FLAGGED:** the tick value, every per-weapon rate, and the overkill rule.
 
 ### S9 — The bombardment joint (audit P3) · medium
@@ -292,8 +437,14 @@ invalid designs from **saving** (#3).
   binding that atb in the same change, or they all fail to bind. Six-point registration applies.
 - **Gate:** `BaseModIntegrityTests` green with zero skipped entries; a garrison still raises after the
   prebuilts are gone; an invalid design cannot be saved.
-- **Pin first [?]:** for each of the three validity gates, which of {computes, displays, blocks assembly,
-  blocks save} it does today. The audit and the surveys disagree; that disagreement is the whole size of #3.
+- **[V2] the "[?]" is SETTLED and #3 is cheap-wire:** validity **is** computed and **is** displayed, but
+  `SaveGroundDesign` never reads `r.Valid` and registration proceeds regardless, so an invalid design lands in
+  `IndustryDesigns` as buildable (`GroundUnitAssembly.cs:264,352`; `ShipDesignWindow.cs:520,557,592`). One
+  gate at the save step closes it.
+- **[V2] #1's real blocker is NOT the start garrison** — that builds its own throwaway C# designs
+  (`GroundStartGarrison.cs:90-103`). It is that the prebuilts are **the AI's only buildable ground unit**
+  (`ConquerResolver.cs:377` → `GroundReinforcement.cs:125`), so #1 needs a scenario/AI-authorable design
+  source first or the AI can no longer reinforce. The forced order #2 → #4 → #1 still holds.
 
 ### S11 — Depth, cradle-to-grave · large, many small slices
 Each is independently shippable: units cost **people** permanently (#7 — `CrewReq` exists, unread);
