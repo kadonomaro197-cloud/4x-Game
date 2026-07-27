@@ -75,7 +75,6 @@
       "Pursues": false
     }
   },
-
   {
     "Type": "CombatDoctrine",
     "Payload": {
@@ -133,7 +132,6 @@
       "Pursues": false
     }
   },
-
   {
     "Type": "CombatDoctrine",
     "Payload": {
@@ -226,6 +224,253 @@
       "TargetPriority": "BiggestThreat",
       "RetreatCasualtyThreshold": 0.65,
       "BreakAwaySeconds": 5400,
+      "Pursues": false
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "vanguard-probe",
+      "DisplayName": "Vanguard Probe",
+      "Family": "Utilitarian",
+      "Domain": "Both",
+      "FirepowerMult": 0.9,
+      "ToughnessMult": 1.0,
+      "SpeedMult": 1.3,
+      "CooldownSeconds": 120,
+      "IsRetreat": false,
+      "EngagementPosture": "WeaponsHold",
+      "TargetPriority": "Closest",
+      "RetreatCasualtyThreshold": 0.2,
+      "BreakAwaySeconds": 1800,
+      "Pursues": false
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "screening-wall",
+      "DisplayName": "Screening Wall",
+      "Family": "Defensive",
+      "Domain": "Both",
+      "FirepowerMult": 0.8,
+      "ToughnessMult": 1.3,
+      "SpeedMult": 0.95,
+      "CooldownSeconds": 300,
+      "IsRetreat": false,
+      "EngagementPosture": "ReturnFire",
+      "TargetPriority": "Closest",
+      "RetreatCasualtyThreshold": 0.9,
+      "BreakAwaySeconds": 5400,
+      "Pursues": false
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "harassing-skirmish",
+      "DisplayName": "Harassing Skirmish",
+      "Family": "Offensive",
+      "Domain": "Both",
+      "FirepowerMult": 1.05,
+      "ToughnessMult": 0.85,
+      "SpeedMult": 1.35,
+      "CooldownSeconds": 300,
+      "IsRetreat": false,
+      "EngagementPosture": "WeaponsFree",
+      "TargetPriority": "FinishWounded",
+      "RetreatCasualtyThreshold": 0.25,
+      "BreakAwaySeconds": 1800,
+      "Pursues": false
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "hold-the-line",
+      "DisplayName": "Hold the Line",
+      "Family": "Defensive",
+      "Domain": "Both",
+      "FirepowerMult": 0.95,
+      "ToughnessMult": 1.25,
+      "SpeedMult": 0.85,
+      "CooldownSeconds": 300,
+      "IsRetreat": false,
+      "EngagementPosture": "ReturnFire",
+      "TargetPriority": "Closest",
+      "RetreatCasualtyThreshold": 0.95,
+      "BreakAwaySeconds": 7200,
+      "Pursues": false
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "anvil",
+      "DisplayName": "Anvil",
+      "Family": "Defensive",
+      "Domain": "Both",
+      "FirepowerMult": 0.7,
+      "ToughnessMult": 1.5,
+      "SpeedMult": 0.7,
+      "CooldownSeconds": 300,
+      "IsRetreat": false,
+      "EngagementPosture": "ReturnFire",
+      "TargetPriority": "BiggestThreat",
+      "RetreatCasualtyThreshold": 1.0,
+      "BreakAwaySeconds": 10800,
+      "Pursues": false
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "break-and-roll",
+      "DisplayName": "Break and Roll",
+      "Family": "Offensive",
+      "Domain": "Both",
+      "FirepowerMult": 1.3,
+      "ToughnessMult": 0.85,
+      "SpeedMult": 1.15,
+      "CooldownSeconds": 300,
+      "IsRetreat": false,
+      "EngagementPosture": "WeaponsFree",
+      "TargetPriority": "FinishWounded",
+      "RetreatCasualtyThreshold": 0.8,
+      "BreakAwaySeconds": 7200,
+      "Pursues": true
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "walking-barrage",
+      "DisplayName": "Walking Barrage",
+      "Family": "Offensive",
+      "Domain": "Both",
+      "FirepowerMult": 1.15,
+      "ToughnessMult": 0.9,
+      "SpeedMult": 0.85,
+      "CooldownSeconds": 300,
+      "IsRetreat": false,
+      "EngagementPosture": "WeaponsFree",
+      "TargetPriority": "Heaviest",
+      "RetreatCasualtyThreshold": 0.4,
+      "BreakAwaySeconds": 5400,
+      "Pursues": false
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "keep-clear",
+      "DisplayName": "Keep Clear",
+      "Family": "Utilitarian",
+      "Domain": "Both",
+      "FirepowerMult": 1.0,
+      "ToughnessMult": 1.0,
+      "SpeedMult": 1.2,
+      "CooldownSeconds": 60,
+      "IsRetreat": false,
+      "EngagementPosture": "WeaponsHold",
+      "TargetPriority": "Balanced",
+      "RetreatCasualtyThreshold": 0.05,
+      "BreakAwaySeconds": 1800,
+      "Pursues": false
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "forward-sustainment",
+      "DisplayName": "Forward Sustainment",
+      "Family": "Utilitarian",
+      "Domain": "Both",
+      "FirepowerMult": 0.9,
+      "ToughnessMult": 1.2,
+      "SpeedMult": 0.9,
+      "CooldownSeconds": 300,
+      "IsRetreat": false,
+      "EngagementPosture": "ReturnFire",
+      "TargetPriority": "Closest",
+      "RetreatCasualtyThreshold": 0.4,
+      "BreakAwaySeconds": 3600,
+      "Pursues": false
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "fixing-attack",
+      "DisplayName": "Fixing Attack",
+      "Family": "Utilitarian",
+      "Domain": "Both",
+      "FirepowerMult": 0.6,
+      "ToughnessMult": 1.15,
+      "SpeedMult": 1.1,
+      "CooldownSeconds": 300,
+      "IsRetreat": false,
+      "EngagementPosture": "ReturnFire",
+      "TargetPriority": "Closest",
+      "RetreatCasualtyThreshold": 0.5,
+      "BreakAwaySeconds": 5400,
+      "Pursues": false
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "deliberate-assault",
+      "DisplayName": "Deliberate Assault",
+      "Family": "Offensive",
+      "Domain": "Both",
+      "FirepowerMult": 1.05,
+      "ToughnessMult": 1.2,
+      "SpeedMult": 0.8,
+      "CooldownSeconds": 300,
+      "IsRetreat": false,
+      "EngagementPosture": "WeaponsFree",
+      "TargetPriority": "Heaviest",
+      "RetreatCasualtyThreshold": 0.7,
+      "BreakAwaySeconds": 7200,
+      "Pursues": false
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "alpha-strike",
+      "DisplayName": "Alpha Strike",
+      "Family": "Offensive",
+      "Domain": "Both",
+      "FirepowerMult": 1.6,
+      "ToughnessMult": 0.7,
+      "SpeedMult": 1.05,
+      "CooldownSeconds": 600,
+      "IsRetreat": false,
+      "EngagementPosture": "WeaponsFree",
+      "TargetPriority": "FinishWounded",
+      "RetreatCasualtyThreshold": 0.9,
+      "BreakAwaySeconds": 10800,
+      "Pursues": true
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "scorched-withdrawal",
+      "DisplayName": "Scorched Withdrawal",
+      "Family": "Defensive",
+      "Domain": "Both",
+      "FirepowerMult": 0.9,
+      "ToughnessMult": 1.05,
+      "SpeedMult": 1.15,
+      "CooldownSeconds": 120,
+      "IsRetreat": true,
+      "EngagementPosture": "ReturnFire",
+      "TargetPriority": "Closest",
+      "RetreatCasualtyThreshold": 0.0,
+      "BreakAwaySeconds": 7200,
       "Pursues": false
     }
   }

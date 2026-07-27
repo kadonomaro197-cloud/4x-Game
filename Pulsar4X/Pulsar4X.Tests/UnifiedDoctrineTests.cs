@@ -241,5 +241,61 @@ namespace Pulsar4X.Tests
             Assert.That(all.Count(b => CombatDoctrine.IsSelectableBy(b, DoctrineDomain.Ground)), Is.GreaterThan(3),
                 "ground must gain access to the shared doctrines, not just its original three");
         }
+
+        [Test]
+        [Description("D1b — the ROLE catalog: every sub-formation role (Screen/Line/Artillery/Support) has doctrines "
+                   + "written for it, and they are shared by space and ground since both classify into the SAME roles.")]
+        public void Catalog_CoversEverySubFormationRole_InBothDomains()
+        {
+            var all = _store.CombatDoctrines;
+
+            // One representative per role — these are what a player assigns to a sub-fleet / formation.
+            foreach (var id in new[]
+                     {
+                         "vanguard-probe", "screening-wall", "harassing-skirmish",   // Screen
+                         "hold-the-line", "anvil", "break-and-roll",                 // Line
+                         "walking-barrage", "counter-battery",                       // Artillery
+                         "keep-clear", "forward-sustainment",                        // Support
+                         "fixing-attack", "deliberate-assault", "alpha-strike", "scorched-withdrawal",
+                     })
+            {
+                Assert.That(all.ContainsKey(id), Is.True, $"role doctrine '{id}' is missing from the catalog");
+                var bp = all[id];
+                Assert.That(CombatDoctrine.IsSelectableBy(bp, DoctrineDomain.Space), Is.True,
+                    $"{id} must be assignable to a sub-FLEET");
+                Assert.That(CombatDoctrine.IsSelectableBy(bp, DoctrineDomain.Ground), Is.True,
+                    $"{id} must be assignable to a ground FORMATION — the roles are the same on both sides");
+            }
+
+            // The characters that make them distinct decisions, not renamed multiplier sets.
+            Assert.That(CombatDoctrine.ParsePosture(all["vanguard-probe"].EngagementPosture),
+                Is.EqualTo(EngagementPosture.WeaponsHold), "a probe scouts without starting the fight");
+            Assert.That(all["anvil"].RetreatCasualtyThreshold, Is.EqualTo(1.0).Within(1e-9),
+                "the Anvil pins the enemy — it does not break");
+            Assert.That(CombatDoctrine.EffectiveToughnessMult(all["anvil"]),
+                Is.GreaterThan(CombatDoctrine.EffectiveToughnessMult(all["break-and-roll"])),
+                "the Anvil soaks where Break-and-Roll punches");
+            Assert.That(all["keep-clear"].RetreatCasualtyThreshold, Is.LessThan(0.15),
+                "transports leave at the first loss");
+            Assert.That(CombatDoctrine.Pursues(all["break-and-roll"]), Is.True, "Break and Roll chases the rout");
+            Assert.That(all["scorched-withdrawal"].IsRetreat, Is.True, "a withdrawal posture is a standing retreat");
+        }
+
+        [Test]
+        [Description("The DOMAIN FILTER contract the FleetWindow doctrine dropdown depends on: filtering the shared "
+                   + "catalog to Space must drop the ground-only entries but keep every shared one.")]
+        public void DomainFilter_HidesGroundOnlyEntriesFromTheFleetDropdown()
+        {
+            var all = _store.CombatDoctrines.Values.ToList();
+            var spaceList = all.Where(d => CombatDoctrine.IsSelectableBy(d, DoctrineDomain.Space)).ToList();
+
+            Assert.That(spaceList, Is.Not.Empty);
+            Assert.That(spaceList.Count, Is.LessThan(all.Count),
+                "the shared catalog contains ground-only entries, so the space list must be strictly smaller");
+            Assert.That(spaceList.Any(d => d.UniqueID == "ground-defensive"), Is.False,
+                "a fleet commander must never be offered 'Dig In'");
+            Assert.That(spaceList.Any(d => d.UniqueID == "balanced"), Is.True,
+                "the shared doctrines must survive the filter");
+        }
     }
 }
