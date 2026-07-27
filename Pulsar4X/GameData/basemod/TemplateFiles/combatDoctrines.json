@@ -5,11 +5,17 @@
       "UniqueID": "balanced",
       "DisplayName": "Balanced",
       "Family": "Utilitarian",
+      "Domain": "Both",
       "FirepowerMult": 1.0,
       "ToughnessMult": 1.0,
       "SpeedMult": 1.0,
       "CooldownSeconds": 60,
-      "IsRetreat": false
+      "IsRetreat": false,
+      "EngagementPosture": "WeaponsFree",
+      "TargetPriority": "Balanced",
+      "RetreatCasualtyThreshold": -1.0,
+      "BreakAwaySeconds": 3600,
+      "Pursues": false
     }
   },
   {
@@ -18,11 +24,17 @@
       "UniqueID": "all-out-attack",
       "DisplayName": "All-Out Attack",
       "Family": "Offensive",
+      "Domain": "Both",
       "FirepowerMult": 1.4,
       "ToughnessMult": 0.85,
       "SpeedMult": 1.1,
       "CooldownSeconds": 300,
-      "IsRetreat": false
+      "IsRetreat": false,
+      "EngagementPosture": "WeaponsFree",
+      "TargetPriority": "FinishWounded",
+      "RetreatCasualtyThreshold": 0.8,
+      "BreakAwaySeconds": 7200,
+      "Pursues": true
     }
   },
   {
@@ -31,11 +43,17 @@
       "UniqueID": "defensive-line",
       "DisplayName": "Defensive Line",
       "Family": "Defensive",
+      "Domain": "Both",
       "FirepowerMult": 0.85,
       "ToughnessMult": 1.4,
       "SpeedMult": 0.8,
       "CooldownSeconds": 300,
-      "IsRetreat": false
+      "IsRetreat": false,
+      "EngagementPosture": "ReturnFire",
+      "TargetPriority": "Closest",
+      "RetreatCasualtyThreshold": 0.6,
+      "BreakAwaySeconds": 5400,
+      "Pursues": false
     }
   },
   {
@@ -44,11 +62,171 @@
       "UniqueID": "fighting-withdrawal",
       "DisplayName": "Fighting Withdrawal",
       "Family": "Defensive",
+      "Domain": "Both",
       "FirepowerMult": 0.6,
       "ToughnessMult": 1.1,
       "SpeedMult": 1.2,
       "CooldownSeconds": 120,
-      "IsRetreat": true
+      "IsRetreat": true,
+      "EngagementPosture": "ReturnFire",
+      "TargetPriority": "Closest",
+      "RetreatCasualtyThreshold": 0.0,
+      "BreakAwaySeconds": 3600,
+      "Pursues": false
+    }
+  },
+
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "ground-balanced",
+      "DisplayName": "Balanced",
+      "Family": "Balanced",
+      "Domain": "Ground",
+      "FirepowerMult": 1.0,
+      "DamageTakenMult": 1.0,
+      "SpeedMult": 1.0,
+      "CooldownSeconds": 60,
+      "IsRetreat": false,
+      "EngagementPosture": "WeaponsFree",
+      "TargetPriority": "Balanced",
+      "RetreatCasualtyThreshold": -1.0,
+      "BreakAwaySeconds": 3600,
+      "Pursues": false
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "ground-offensive",
+      "DisplayName": "Offensive Push",
+      "Family": "Offensive",
+      "Domain": "Ground",
+      "FirepowerMult": 1.25,
+      "DamageTakenMult": 1.25,
+      "SpeedMult": 1.1,
+      "CooldownSeconds": 300,
+      "IsRetreat": false,
+      "EngagementPosture": "WeaponsFree",
+      "TargetPriority": "FinishWounded",
+      "RetreatCasualtyThreshold": 0.8,
+      "BreakAwaySeconds": 7200,
+      "Pursues": true
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "ground-defensive",
+      "DisplayName": "Dig In",
+      "Family": "Defensive",
+      "Domain": "Ground",
+      "FirepowerMult": 0.75,
+      "DamageTakenMult": 0.75,
+      "SpeedMult": 0.6,
+      "CooldownSeconds": 300,
+      "IsRetreat": false,
+      "EngagementPosture": "ReturnFire",
+      "TargetPriority": "Closest",
+      "RetreatCasualtyThreshold": 0.7,
+      "BreakAwaySeconds": 7200,
+      "Pursues": false
+    }
+  },
+
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "hold-fire",
+      "DisplayName": "Hold Fire",
+      "Family": "Utilitarian",
+      "Domain": "Both",
+      "FirepowerMult": 1.0,
+      "ToughnessMult": 1.0,
+      "SpeedMult": 1.0,
+      "CooldownSeconds": 60,
+      "IsRetreat": false,
+      "EngagementPosture": "WeaponsHold",
+      "TargetPriority": "Balanced",
+      "RetreatCasualtyThreshold": -1.0,
+      "BreakAwaySeconds": 3600,
+      "Pursues": false
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "relentless-pursuit",
+      "DisplayName": "Relentless Pursuit",
+      "Family": "Offensive",
+      "Domain": "Both",
+      "FirepowerMult": 1.1,
+      "ToughnessMult": 0.9,
+      "SpeedMult": 1.3,
+      "CooldownSeconds": 300,
+      "IsRetreat": false,
+      "EngagementPosture": "WeaponsFree",
+      "TargetPriority": "FinishWounded",
+      "RetreatCasualtyThreshold": 0.85,
+      "BreakAwaySeconds": 10800,
+      "Pursues": true
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "counter-battery",
+      "DisplayName": "Counter-Battery",
+      "Family": "Offensive",
+      "Domain": "Both",
+      "FirepowerMult": 1.0,
+      "ToughnessMult": 1.0,
+      "SpeedMult": 0.9,
+      "CooldownSeconds": 300,
+      "IsRetreat": false,
+      "EngagementPosture": "WeaponsFree",
+      "TargetPriority": "Backfield",
+      "RetreatCasualtyThreshold": -1.0,
+      "BreakAwaySeconds": 5400,
+      "Pursues": false
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "break-the-heavies",
+      "DisplayName": "Break the Heavies",
+      "Family": "Offensive",
+      "Domain": "Both",
+      "FirepowerMult": 1.0,
+      "ToughnessMult": 1.0,
+      "SpeedMult": 1.0,
+      "CooldownSeconds": 300,
+      "IsRetreat": false,
+      "EngagementPosture": "WeaponsFree",
+      "TargetPriority": "Heaviest",
+      "RetreatCasualtyThreshold": -1.0,
+      "BreakAwaySeconds": 5400,
+      "Pursues": false
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "screen-the-threat",
+      "DisplayName": "Screen the Threat",
+      "Family": "Defensive",
+      "Domain": "Both",
+      "FirepowerMult": 0.95,
+      "ToughnessMult": 1.2,
+      "SpeedMult": 0.9,
+      "CooldownSeconds": 300,
+      "IsRetreat": false,
+      "EngagementPosture": "ReturnFire",
+      "TargetPriority": "BiggestThreat",
+      "RetreatCasualtyThreshold": 0.65,
+      "BreakAwaySeconds": 5400,
+      "Pursues": false
     }
   }
 ]
