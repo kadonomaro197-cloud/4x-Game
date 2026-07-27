@@ -1,5 +1,33 @@
 # Ground-Unit Variables — answering the litmus follow-ups (make ANY unit, not just marines)
 
+> ### ⚠ READ FIRST — LINE REFERENCES HAVE DRIFTED, AND ONE FINDING IS SUPERSEDED (checked 2026-07-27)
+>
+> This doc is a **2026-07-17 point-in-time** design/gap survey. Its *design* content still governs (the
+> Training dial, the upkeep axes, the variable-set table). Two caveats before you act on it:
+>
+> **1. Every `GroundForcesProcessor.cs:NNN` reference in here is STALE.** That file has grown to 1,078 lines.
+> Current anchors, verified 2026-07-27 — re-grep rather than trusting any number below:
+>
+> | What | Doc says | Actually at HEAD |
+> |---|---|---|
+> | `ResolveRegionCombat` | `:261-389` | **`:370`** (declaration) |
+> | `TryCapturePlanet` (the capture-talent hole) | `:597` | **`:1056`** (called from `:342`) |
+> | the per-weapon firing site | `:340` / `:342` | **`:472`** (`foreach (var m in u.WeaponLoadout)`) |
+> | the per-faction grouping to copy | `:270-275` | **`:379`** (`byFaction`) |
+> | `ProcessBody` (where billing folds in) | `:~75` | **`:128`** |
+>
+> **2. The "multi-weapon plurality is missing" finding is REFUTED — it was BUILT.** The W-track landed it:
+> `ba983a8` (W1, multi-weapon loadout: data + assembler), `f8a2ee5` (W2, the resolver fires **per range band**),
+> `4cb7c0d` (W1b, mounted space weapons give ground firepower). The resolver now loops the loadout —
+> `foreach (var m in u.WeaponLoadout)` at `GroundForcesProcessor.cs:472` — and **range-gates each weapon
+> separately** (*"out of THIS weapon's band this salvo"*), building a profile per mount via
+> `GroundCombatant.ToWeaponProfile(unit, mount, …)` (`GroundCombatant.cs:96`), byte-identical to the old
+> single-profile path for a one-weapon unit. **So a bolter-at-range plus a chainsword-adjacent unit resolves
+> correctly today.** Wherever this doc says the machinery is present but the plurality missing, or talks about
+> "the flattened scalars", read it as history. Track: `docs/combat/GROUND-CLOSING-FIGHT-W-TRACK.md`.
+>
+> Evidence: `docs/DOCS-AUDIT-2026-07-27.md`.
+
 The developer asked six questions about whether the ground-combat engine can build *any* unit — a militia mob, a Guardsman, a jump-pack marine, a walking cathedral — instead of just one hard-coded "marine." The short version: the engine is closer than the first-pass litmus report claimed. Four of the six things it marked "can't do" or "half-done" turn out to be a cheap dial, an enhancer, or a small resolver change on parts that already exist. Only three are real builds. Everything below names the mechanic, the file and line where it hooks in, and how much work it actually is.
 
 One rule runs through all of it: every variable lives on the unit's *design* (`GroundUnitDesign`) or on a component attribute (`*Atb`), gets copied onto the live unit when it's raised, and sits at a neutral value that changes nothing until you dial it up. That's what makes it general — a Guardsman and a Blood Angel are the same variables at different settings, with no `if (unit == Marine)` anywhere.
@@ -134,7 +162,7 @@ Every row is a door/dial on an existing `*Atb` or a resolver read. Added once, i
 
 | Capability | Status | file:line hook | Effort | Generalizes to |
 |---|---|---|---|---|
-| **Multi-weapon-profile resolve** (ranged bolter + melee chainsword as two attacks) | SMALL ADD (machinery present, plurality missing) | snapshot list in `GroundUnitAssembly.Compute` (`:107-122`); new `ToWeaponProfiles` beside `GroundCombatant.cs:66-85`; loop the resolve `GroundForcesProcessor.cs:298-372` (was one profile at `:340`) | S–M | any N-weapon unit — same `List<WeaponProfile>` shape ships use |
+| **Multi-weapon-profile resolve** (ranged bolter + melee chainsword as two attacks) | ✅ **BUILT (W1/W2/W1b — corrected 2026-07-27; this row said "plurality missing")** — the resolver loops `u.WeaponLoadout` at `GroundForcesProcessor.cs:472` and range-gates each weapon separately | snapshot list in `GroundUnitAssembly.Compute` (`:107-122`); new `ToWeaponProfiles` beside `GroundCombatant.cs:66-85`; loop the resolve `GroundForcesProcessor.cs:298-372` (was one profile at `:340`) | S–M | any N-weapon unit — same `List<WeaponProfile>` shape ships use |
 | **Mounting N weapons on one chassis** | EXISTS (carry-bounded) | `GroundUnitAssembly.cs:107` loop; gates `:161-162,182-183` | — | any chassis within its carry budget |
 | **Nature-tuned protective armour** (power armour = ceramite) | EXISTS (complete, cradle-to-grave) | `GroundArmorAtb.cs:18-40,55-64`; applied `GroundForcesProcessor.cs:363-368` | — | any unit — high-Defense, 4-way nature-soak plate |
 | **Sealed / life-support dial** | SMALL ADD (only missing armour bit) | new `SealedFraction` on `GroundArmorAtb`/`GroundAugmentAtb`; fold `GroundUnitAssembly.cs:123-147`; consumer wired `GroundForcesDB.cs:432-435`→`GroundForcesProcessor.cs:153` | S | any unit needing vacuum/hazard survival |
