@@ -1,5 +1,25 @@
 # Pulsar4X.Tests — Testing Reference
 
+> ### ⚠ TWO CORRECTIONS, verified 2026-07-27 (OPERATION GROUND TRUTH A2)
+>
+> **1. THIS IS NOT A FULL TEST INVENTORY, despite being indexed as one.** `docs/DOCS-INDEX.md` describes this
+> file as *"Test harness + **full test inventory**"*. Measured: the project holds **343 `*Tests.cs` fixtures**;
+> this doc names **142**. **201 are undocumented (59%).** Every fixture it *does* name exists (checked all 142 —
+> zero missing), so nothing here is a false claim; the defect is **coverage**, and it bites in a specific way:
+> a session asking *"is there already a gauge for X?"* consults this list, finds nothing, and writes a duplicate.
+> Concrete example — **`BattleLogTests` exists and is not listed here**, and it is directly relevant to the
+> planned ground battle-log slice (`docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md` S1).
+> **Before concluding a gauge does not exist, run the real list:**
+> `ls Pulsar4X/Pulsar4X.Tests/*Tests.cs` (or `grep -rl "class .*Tests" Pulsar4X/Pulsar4X.Tests/`).
+>
+> **2. THE "~13 min" SHARDING FIGURE BELOW IS STALE — the `rest` shard has crept back to ~33 min.** Measured on
+> run `30290497412` (2026-07-27): `campaign-clock` 2 · `selfsufficiency` 4 · `economy-readout` 8 · `economy` 11 ·
+> `stations` 13 · **`rest` 33** · `build-client` 0.5 (minutes). So wall-clock is **~33 min, back to the
+> pre-sharding figure**. The paragraph below already states the remedy and its trigger — *"if a new fixture
+> becomes a heavy outlier, rebalance the shard filters in `ci.yml`"* — **and that trigger is now met.** Plan
+> against ~33 min, and note the complement filter puts every NEW fixture into that slowest shard by default.
+
+
 NUnit 3 test project. Runs in CI (`.github/workflows/ci.yml`) on every push/PR, and locally via `dotnet test`.
 
 > **CI builds the engine + tests only — NOT the SDL client.** Client (UI) bugs are invisible here; they surface only in the developer's local build / the `launch.bat` console loop. See root `CLAUDE.md` → "The Visibility Gate" and the CI note.

@@ -211,6 +211,27 @@ Reconstruct the session like an incident review:
 
 ### A2 — Doc-claim verification sweep
 
+> #### ⚠ A2: THE 13-ITEM SEED LIST IS 13/13 DONE. The WIDER sweep is partial — scored per target below (2026-07-27)
+>
+> **Seed list: ✅ COMPLETE.** All 13 verified-then-fixed, with the full ledger in
+> `docs/DOCS-AUDIT-2026-07-27.md` **§10** — including **three seed claims that were themselves WRONG** (the
+> client "dead code" trio: health bars, hazard chips and the `Held:` line are all **built**; only Shift-click is
+> dead, and that one is *worse* than stated — `HandleHexClick` does not exist anywhere).
+>
+> **The wider sweep ("every planetary/ground/combat doc PLUS 7 subsystem `CLAUDE.md`s"), honestly scored:**
+>
+> | Target | State |
+> |---|---|
+> | Subsystem `CLAUDE.md` — GroundCombat · Colonies · Industry · Combat · Galaxy | ✅ **swept by agent A2c** (found: the backwards upkeep table, the non-existent C3 test, `ColonyHexMapDB`, the "no diplomacy system" claim refuted inside the function that reads it, the retired installations-UI claim, the garrison-vs-#27b overstatement) |
+> | Subsystem `CLAUDE.md` — **Client** | ⚠ **targeted, not swept** — 5 specific claims verified + corrected (ground-unit coordinates; the non-existent `GroundCombatWindow`; Shift-click; `[FleetCombat]` as a battle channel; the `faults=`/heartbeat gauge traps). No exhaustive pass. |
+> | Subsystem `CLAUDE.md` — **Tests** | ✅ **swept this walk-through.** All **142** named fixtures exist (**zero missing**). But it is indexed as a *"full test inventory"* and names **142 of 343** — **201 undocumented (59%)**, incl. `BattleLogTests`, which slice S1 needs. Also caught: its **"~13 min" sharded-CI claim is stale** — `rest` measures **33 min**, so wall-clock is back to the pre-sharding figure and the doc's own rebalance trigger is met. Both corrected. |
+> | `docs/combat/*` (14 docs) | ✅ **swept by agent A2b**, 31 findings (ruling #22 has ZERO code — 7 types, 0 files each; the per-tick vs per-second damage asymmetry; the ship-only saturation rule; the stale REAL-DISTANCE status header) |
+> | `docs/ground/*` (7 docs) | ⚠ **5 of 7 corrected individually** (EARTHFALL-CAMPAIGN-OPS · GROUND-SURFACE-MAP · GROUND-UNIT-VARIABLES · PLANETARY-GAMEPLAY-AUDIT · SURFACE-FOG). **Agent `A2a` never ran**, so `GROUND-ORDERS-CATALOG-DESIGN` and a full claim-sweep of `GROUND-GAMEPLAY-DECISIONS` remain **unverified**. |
+> | Dashboards | ⚠ MVP ✅ · PLAY-TO-MARS ✅ · DOCS-INDEX ✅ · SYSTEMS-STATUS ✅ (retired + archived) · aurora/GROUND-COMBAT ✅. **`REALISM-VS-GAMEPLAY-AUDIT` and `SYSTEM-CONNECTION-MAP` never verified** — agent `A2e` never ran. |
+>
+> **Un-run agents, named so they are not lost: `A2a` (ground docs), `A2d` (client+tests exhaustive), `A2e`
+> (dashboards).** Briefs preserved on disk (audit §5). This is a **stated limit, not a pass**.
+
 Every planetary/ground/combat doc in `docs/` PLUS the subsystem `CLAUDE.md`s (`GroundCombat`, `Galaxy`, `Colonies`,
 `Industry`, `Combat`, `Client`, `Tests`) — extract each doc's load-bearing factual claims and verdict them
 **CONFIRMED / STALE / REFUTED / OVERSTATED** against code at HEAD, with file:line evidence. Seed list of drift already
