@@ -487,6 +487,67 @@ the hint is a behaviour change, so it is scheduled (plan slice **S6**), not done
 
 ---
 
+## 12. THE RULINGS-COMPLIANCE MATRIX — all 27 + doctrine + the tick, in ONE table (orders §2/A4)
+
+**Why this section exists:** A4's three agents all ran and delivered verdicts *with* dependency edges — but in
+three separate **ephemeral scratchpad files**. The repo had **no single place** showing all 27 rulings' status,
+which is what A4 actually asked for. Consolidated here so it survives, 2026-07-27.
+
+Legend: **DONE** · **PARTIAL** · **MISSING** · **INERT** (code exists, nothing reads it) · **OPEN** (undecided).
+
+| # | Ruling (short) | Verdict | The load-bearing fact | Size |
+|---|---|---|---|---|
+| 1 | ONE designer; delete the 3 prebuilts | **MISSING** | Doc's stated blocker was wrong (the garrison builds its own C# designs). **Real blocker: exactly 3 base-mod templates carry `GroundUnitAtb`, so they are the AI's only buildable ground unit.** | large |
+| 2 | Penetration + per-shot energy → the WEAPON | **MISSING** | Both live on the *unit*; `ToGroundUnitDesign` never sets them, so an **assembled unit is always 0/0**. Even per-mount fire reads `unit.Penetration`. | medium |
+| 3 | Invalid design blocked from SAVING | **MISSING** | **Resolved dispute:** validity **computes + displays** but `SaveGroundDesign` never reads `r.Valid` → an invalid design registers as buildable. | **cheap-wire** |
+| 4 | Ground parts cost research, scaling w/ complexity | **PARTIAL** | Gate mechanism real, but **17/22 templates cost 0**, **all 22 start-unlocked**, the 5 that cost all use the same `[Mass]*2` (no complexity relation), and the assembled unit design has no tech gate at all. | medium |
+| 5 | Every hazard gets a specific counter | **PARTIAL** | 5 hazard types / 8 menaces; only Vacuum + ToxicAtmosphere have a designable counter. **The developer's own dust-storm example has nothing to counter — ground `SensorJam` is generated and read by NO ground code.** And "one hazard hits several stats" is **not expressible** (`HazardEffect` = one Type + one Magnitude). | large |
+| 6 | Rally point = a building setting (space + ground) | **MISSING** | **No `Rally*` symbol exists anywhere.** Muster is hardcoded region 0; `DefaultRegionIndex` has zero writers; no building carries a muster field; the space half has no orbit field either. | medium |
+| 7 | Units cost PEOPLE, no return | **MISSING** | Worse than "computed and never read": **`GroundUnitDesign` has no crew field at all**, and the assembly result does not even sum crew (its station/building siblings do). No death path touches population. | large |
+| 8 | Upkeep + magazine; ammo must bite | **PARTIAL/INERT** | Upkeep bills for assembled + garrison units (base-mod path free). Ammo drain helpers exist but are **called only from tests**; the flat 1 kg/salvo makes a magazine never a trade. | medium |
+| 9 | NOTHING IS FREE | **MISSING** | **TWO free paths, not one** — the "Build here" order *and* the `LocalConstruction` queue (spends only `PointsPerDay`, never `ResourceCosts`, yet lists infantry/armor/artillery). **And the trap: fortification value sums only from `Region.InstallationIds`, which the costed queue never writes** — so cutting the free path alone leaves no buildable fortification, CI green. | large |
+| 10 | ONE build queue, destinations, visible progress | **MISSING** | **FIVE live build paths.** Only the tile side-car carries a planetary destination; the only real progress bar is on the *free* queue. | large |
+| 11 | Every building occupies ground = war-map objective | **premise REFUTED** | `GroundFootprintAtb` is **already the single attribute** (presence = objective, `TileFootprint` = occupancy, both read live). **The gap is DATA: only 2 of 26 templates carry it.** | data |
+| 12 | Fund employment + power | **INERT** | Both wires complete end-to-end; both inputs **structurally zero** — zero templates declare `EmploymentAtbDB`, `powerDemandPerCapita` authored 0, and `uef.json` has no strain node. | **cheap-wire** |
+| 13 | Semantic tile bonuses | **MISSING** | No per-tile bonus mechanism of any kind. **`CityTile.Terrain` is populated and read by nobody but its copy-ctor and two tests.** | medium |
+| 14 | DELETE march-to-region → two-layer coordinate | **MISSING** | It is the **only fully-wired planetary move verb** — live in the primitive, order enum, processor, **AI tactical brain**, both client windows, the Site engine and a save/load fixture. **Four** coordinate systems coexist; no formatter prints `(17,09)(22,47)`. | large |
+| 15 | Fight is COMMITTED; retreat + break-away; pursuit | **PARTIAL** | **Ground has none of the four, and walking out is FREE** (a region march just removes the unit from the roster). Space has the lock + retreat but prices the exit with a hardcoded `const RetreatCasualtyThreshold = 0.5` while the doctrine's own `BreakAwaySeconds`/`Pursue` sit unread. | large |
+| 16 | Mini-hex movement as a player order | **MISSING** | Mini coords are written **only** by the engine's auto-spread/closing steps. No order type, and the city-zoom click handler has **no move branch**. | medium |
+| 17 | Show destination · distance · ETA · speed | **PARTIAL** | **All four ingredients exist as engine state; ZERO are displayed.** No accessor computes distance-remaining or ETA. | **cheap-wire** |
+| 18 | Player target selection, gated by doctrine | **INERT** | `TargetPriority` enum + blueprint field + parser + **all 25 JSON values exist — and every caller is a unit test.** Ground fire still spreads by *current health*, so a cripple is never finished. | medium |
+| 19 | Battle scoped to REAL DISTANCE + engage decision | **PARTIAL** | The real-metre **fire gate** is built and menu-ON; the battle **container** is still the region band; the **engage decision is MISSING**. | medium |
+| 20 | Battalion composed like a fleet | **PARTIAL** | Structural parity is high (same four roles, same 0.5 evasion threshold). Missing: the composition **ladder** and **role sub-formation FORMING** — no `FormRoleSubFormations`, no `GroundFormationRoleDB`; role is computed transiently at maneuver time and never stored. | medium |
+| 21 | What capture transfers | **OPEN — NOT DECIDED** | Capture is one statement (`GroundForcesProcessor.cs:1073`). Full 20-row decision aid in §8. | blocked |
+| 22 | `CasualtyTier` + damage ledger + Training dial | **PARTIAL** | Training dial **built + gauged**. But of the design's 9 slices only **1** exists, and **all 7 Part-B types return ZERO files** (`CasualtyTier`, `ModelCount`, `BattleLedger`, `WeaponKey`, `VictimSnapshot`, `WeaponTally`, `SideReport`). | large |
+| 23 | Fire rate CALCULATED + shorten the tick | **MISSING** | No ground weapon carries a rate; tick = 1 h; **and the salvo pool is NOT `dt`-scaled while space's IS** — so shortening the tick *multiplies* ground damage. **A committed CI spec already pins a 5 s ground quantum and nothing implements it.** | large |
+| 24 | Ground battle readout = a LOG | **MISSING** | The whole `GroundCombat/` folder publishes **two** events, both in the troop-lift orders. And the interrupt pops the **space-only** report. | **cheap-wire** |
+| 25 | Hover tooltip + Force-Management detail | **MISSING** | *(Overstated as "partial" in the first plan draft.)* **Zero tooltips; zero per-UNIT stat readout anywhere.** | medium |
+| 26 | Fading last-known contact marker | **MISSING on ground** | Space is built (`SensorContactIcon`); the ground read is live-only. | medium |
+| 27a | Five behaviour flags into the SAVE | **MISSING** | Five process statics, set on **two New-Game paths**; `LoadGame.LoadFile` sets **none**. | medium |
+| 27b | No default garrison/enemy in a stock New Game | ✅ **DONE** | All three auto-spawns default `false` (`NewGameMenu.cs:52,55,60`). **The one ruling already satisfied.** | — |
+
+### Doctrine + the tick (the frame that governs D2/D3)
+
+| Slice | Verdict | The fact |
+|---|---|---|
+| **D1** catalog + reader + reciprocal guard | **data BUILT_AND_GAUGED / reader INERT** | **9 of the reader's 10 functions have zero non-test engine callers**, and the one live path (`FleetDoctrine.TrySetDoctrine`) **drops 4 fields silently** and overrides a 5th deliberately. |
+| **D1b** 25-entry role catalog + client filter | **data green / filter space-only** | The **ground** client still reads `groundStances.json`. |
+| **D2** ground reads the unified catalog | **MISSING** | 5 live readers of `GroundStances` remain. |
+| **D3a** movement steering | **MISSING** | `ClosingIntent` does not exist; `SpeedMult` is read only by a client *label*. |
+| **D3b** fire behaviour | **MISSING** | No ground retreat, no pursuit, no priority list — **but the dials are already authored on all 25 entries**, so much of it is cheap-wire. |
+| **Leader modulation** | **space BUILT / ground MISSING** | Zero `CommanderDB` reads anywhere in `GroundCombat/`. |
+| **The tick** | **MISSING, with a spec waiting** | `Resolver2DJointsSpecTests.cs:210` pins a 5 s ground quantum + the 720-per-hour and determinism invariants; no engine code implements it. |
+
+### Dependency edges (the orders name three; all three CONFIRMED, one sharpened)
+
+1. **#1 needs #2 and #4 first** ✅ — and the *reason* in the canon doc was wrong; the real one is that the prebuilts are the AI's only buildable ground unit.
+2. **#9 and #10 must land together** ✅ — **sharpened: CI would not catch the breakage.** Fortification sums only from `Region.InstallationIds`, which the costed queue never writes.
+3. **#23 needs the tick slice** ✅ — **sharpened: they must be the SAME slice**, because the pool is not `dt`-scaled, so a tick change alone multiplies damage.
+4. *(added)* **#18 should precede #23's overkill rule** — "sequential down the priority list" needs a priority list to exist, which is D3b.
+5. *(added)* **D0 precedes D2/D3a/D3b** — otherwise every doctrine slice decorates fields `TrySetDoctrine` discards.
+
+---
+
 ## 5. Resume — everything the next pass needs is already on disk
 
 The 19 assignment briefs and the shared briefing survive at
