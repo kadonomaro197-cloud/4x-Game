@@ -140,6 +140,28 @@ Fleet retreat is done (`FleetRetreatDB`). Ground retreat does not exist — ther
 
 Each slice names its hook, its size (S/M/L), and is honest about *built vs. additive vs. real new mechanic*. Push one, wait for CI green, then stack the next.
 
+> ### ⚠ BUILD STATE, verified 2026-07-27: **ONE of the nine slices exists. Slices 2–9 are NOT BUILT.**
+>
+> Ruling #22 says this design is DECIDED — *"build it, never redesign it"* — so it is worth being exact about how
+> much is waiting. **None of Part B's types exist anywhere in the solution.** Each of these greps returns **zero
+> files**: `CasualtyTier`, `ModelCount`, `BattleLedger`, `WeaponKey`, `VictimSnapshot`, `WeaponTally`, `SideReport`.
+> Only **Slice 1** (the shared `WeaponReaches`/`WithinReach` reach predicate) landed. So slices 2–9 are **unbuilt,
+> not partly built** — read every slice below as design, not as progress.
+>
+> **⛔ And a trap that must be handled BEFORE the wound model, because it re-baselines every ground gauge:
+> ground damage is flat PER TICK, while space damage is PER SECOND.** Side by side:
+>
+> | Domain | The salvo line | Scaled by `dt`? |
+> |---|---|---|
+> | Space | `TotalDamage(incoming) * dt * SalvoDamageScale` (`Combat/CombatEngagement.cs:759`) | ✅ yes |
+> | Ground | `atk * SalvoScale` (`GroundCombat/GroundForcesProcessor.cs:491`) | ❌ **no** |
+>
+> On the ground `deltaSeconds` reaches only shield regen and ammo — never the damage pool. So **ruling #23's
+> prerequisite ("shorten the combat tick") would MULTIPLY ground damage by the number of extra ticks, not spread
+> it across them.** Converting the pool to `rate × dt` has to come first, in the same slice, and doing so
+> re-baselines every existing ground combat gauge. Plan: `docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md`
+> slice **S8** (and finding **C2** in `docs/DOCS-AUDIT-2026-07-27.md`).
+
 **Slice 1 — `WeaponReaches` shared range gate. [S — additive] ✅ LANDED 2026-07-22.**
 Added TWO predicates to `Combat/CombatKernel.cs`: `WithinReach(reach, gap)` = the convention-free core `gap <= reach` (same units — metres in space, hexes on the ground), and `WeaponReaches(WeaponProfile w, double separation_m)` = the space per-weapon gate that layers the `Range_m <= 0 => unbounded` beam convention on the core. **The one correction this design's earlier draft missed and the build got right:** the two domains DISAGREE on what reach 0 means — a space beam (`Range_m 0`) is *unbounded*, a ground melee weapon (reach 0) is *contact-only* — so a single "≤0 = unbounded" predicate could NOT serve both; the shared piece is the bounded `WithinReach`, and space's unbounded rule sits in its own overload. Space's `BuildFireMix` gate (`CombatEngagement.cs:1347`) now reads `if (!CombatKernel.WeaponReaches(w, separation_m)) continue;` (byte-for-byte the old inline `separation_m > 0 && w.Range_m > 0 && w.Range_m < separation_m`). Ground's `GroundForcesProcessor.WeaponReaches` routes BOTH its branches — the mini-hex metre gap and the legacy hex gap — through `CombatKernel.WithinReach`, byte-identical (ground reaches are always ≥ 1 / ≥ 0-contact, so the melee contact-only semantics are preserved). So "can this weapon reach that target" — the crux of *artillery scores while the rusher closes* — is now decided in ONE place for space AND ground. Gauge: `CombatKernelTests.RangeGate_SharedReachPredicate_PinsBothConventions` (pins both reach-0 conventions + a byte-identity sweep vs the old ship gate). *No per-body "1 hex ≠ 1 hex" bonus claimed — that stays the separate M2 `EnableMiniHexCombat` metre path, already landed.*
 

@@ -65,8 +65,8 @@ line by line. **Do not mark an item ✅ unless the artifact exists and you can n
 | A1 | `A1c-combat` | ✅ returned |
 | A1 | `A1d-ai-silent` — **the orders call this the most important** | ✅ returned |
 | A2 | `A2a-docs-ground` | ❌ not run |
-| A2 | `A2b-docs-combat` | ❌ not run |
-| A2 | `A2c-docs-subsystems` | ❌ not run |
+| A2 | `A2b-docs-combat` | ✅ returned — 31 findings; corrections landed |
+| A2 | `A2c-docs-subsystems` | ✅ returned — incl. catching this session's OWN overstatement |
 | A2 | `A2d-docs-client-tests` | ❌ not run |
 | A2 | `A2e-docs-dashboards` | ❌ not run |
 | A2 | `A2f-scale-comments` | ⚠ **covered solo** (scale derived from code; stale comments swept) |
@@ -89,7 +89,7 @@ line by line. **Do not mark an item ✅ unless the artifact exists and you can n
 |---|---|---|
 | 1 | **CI green at the tip**, including inherited `b218acf` / `255bc52` | ✅ inherited both green; ✅ **`eee5664` (the 249-file sweep — the only commit with real risk) is GREEN on all 7 jobs**; the docs-only commits behind it still running |
 | 2 | **Every A2 seed item** fixed or ruled still-true; the dated audit doc records the sweep | ✅ **ALL 13 DONE.** Fixed: aurora "no ground combat"; client ground-unit coordinates + the dead `GroundCombatWindow`; the LoadTroops/LandTroops + `Speed_kmh` comments; EARTHFALL-OPS "hex is everything"; MVP + PLAY-TO-MARS invade-blocker; DOCS-INDEX self-disagreement; SYSTEMS-STATUS retirement; GroundCombat upkeep (backwards) + the non-existent C3 "FULL path" test; `ColonyHexMapDB` "built and wired"; the planetary audit's closed questions + forbidden P1; the surface-scale contradiction (settled to a formula, Earth constant sent to a gauge); Shift-click waypointing (and **3 of 4 client "dead code" seed claims REFUTED — they are built**); SURFACE-FOG under-reporting (slices 5–6 are built). |
-| 3 | The doc tree contains **no claim a grep of the code refutes**; deletions swept, index rows current | 🏗 327 code pointers swept ✅; the `.md` provenance pass and the un-run A2 docs remain |
+| 3 | The doc tree contains **no claim a grep of the code refutes**; deletions swept, index rows current | ✅ **for everything swept** — 327 code pointers repointed; all 13 A2 seed items; the **subsystem** `CLAUDE.md`s (A2c) and the **combat** design docs (A2b) both swept and their stale claims corrected. **Honest residue, not closed:** the `.md` provenance pass (~22 historical path-shaped mentions, deliberately left — rewriting them is what destroyed history in 2026-07-13), and three un-run batches — **A2a** (`docs/ground/*` beyond the seeds), **A2e** (dashboards), **A3a–e** (walls), **A5** (gauge ledger). Briefs on disk. |
 | 4 | **The delta ledger + THE PLAN** exist, indexed, with a plain-English summary | ✅ `docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md` |
 | 5 | **`close-planetary-delta` workflow** committed, validated, parameterized by slice | ✅ `.claude/workflows/close-planetary-delta.js` — static-validated, **never invoked** |
 | 6 | **Open questions put to the developer in prose** (#21, scenario start, tick value, fire rates) | ✅ plan §0 Q1–Q5 (+ Q3 corrected by finding C3) |

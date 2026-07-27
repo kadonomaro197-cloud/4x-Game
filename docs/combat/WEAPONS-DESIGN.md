@@ -333,7 +333,13 @@ count holds.**
 | Range *(v1 stub)* | in/out per system; real range is v2 | med | long | long | short |
 | Damage type / wavelength | energy vs kinetic (beams carry wavelength → armour absorption already exists) | energy | kinetic | kinetic | kinetic |
 
-**Saturation is derived, never hand-set.** A flak cannon firing once a minute is high-spread but useless; a
+**Saturation is derived, never hand-set — ⚠ TRUE FOR SHIPS, FALSE ON THE GROUND (scoped 2026-07-27).** On the
+ground, saturation is **not** derived from anything: it is one of two hardcoded constants chosen by weapon
+*nature* — `AreaSaturation = 100_000.0` (deliberately large so artillery blast is **undodgeable**, the ground
+rule) or `PointSaturation = 1.0` (`GroundCombat/GroundCombatant.cs:40,44`). **No ground weapon carries a rate of
+fire at all** (`GroundWeaponAtb` holds only `Mass`/`Attack`/`Range`/`Range_m`/`Mode`), so two ballistic ground
+weapons **cannot differ in rate**, and nothing on the ground can be "derived from rate-of-fire". Ruling #23 is
+what closes that gap. For ships the rule below holds as written. A flak cannon firing once a minute is high-spread but useless; a
 1000-round/sec spinal slug saturates the sky. So `Saturation = rateOfFire × projectilesPerShot × spreadFactor`.
 Rate of fire for a beam comes from its `ChargePeriod`; for ammo weapons from `ReloadAmountPerSec / AmountPerShot`.
 

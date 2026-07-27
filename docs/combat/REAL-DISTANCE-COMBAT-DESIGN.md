@@ -3,7 +3,19 @@
 **Status:** 🔒 design-locked. Slice 1 is BUILT — 1a (the metres↔hex translation helper), **1b (real-metre stat
 fields: `GroundWeaponMount.Range_m`, `GroundUnit.Range_m`/`Speed_kmh`, `GroundUnitDesign.Range_m`, populated at the
 assembler + `RaiseUnit`) and 1c (the client weapon ring drawn from the real km stat per-body)** all landed additive/
-byte-identical (the resolver still gates on hexes; nothing live changed). Slices 2–5 are planned below.
+byte-identical (the resolver still gates on hexes; nothing live changed). ~~Slices 2–5 are planned below.~~
+
+> **⚠ STATUS CORRECTED 2026-07-27 — Slice 2's BEHAVIOUR SHIPPED, under a different name.** The resolver **does**
+> gate on a real per-weapon metre range against a real metre gap today: **K1** put `Range_m` on `GroundWeaponAtb`
+> (5-arg ctor, 5 base-mod templates — melee 0 / rifle 500 / autocannon 2000 / cannon 4000 / energy 20000) and
+> **K3** added the metre gate (`GroundForcesProcessor.cs:568`), both behind **`EnableMiniHexCombat`** — which is
+> **OFF in CI but ON for menu games** (`NewGameMenu.cs:580`, `:985`). Two honest caveats: it landed under a
+> *different flag* than the `EnableGroundRealRange` this doc proposes, and it **bypassed this doc's own
+> `RealRangeKmFor` seam**. Also already built, contrary to the text further down: the ground passes a real metre
+> separation into the **3-arg** `HitFraction` (slice M3a, `:421-423`), so §3 step 5's *"the ground calls the 2-arg
+> form, so separation defaults to 0"* is **refuted**; and §4's *"a `GroundUnit` has no continuous position, only
+> integer hex coordinates"* is **refuted** by K2's sub-tile offsets (`MiniOffX_km`/`MiniOffY_km`).
+> **Slices 4–5 remain planned.** Evidence: `docs/DOCS-AUDIT-2026-07-27.md`.
 
 > **DOCS-INDEX:** this doc needs its row added/flipped in `docs/DOCS-INDEX.md` **in the same commit**
 > (per root `CLAUDE.md` → "Docs layout & upkeep", rule 1). It lives in `docs/combat/`.
