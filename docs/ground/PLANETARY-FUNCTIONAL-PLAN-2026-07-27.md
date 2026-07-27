@@ -128,8 +128,13 @@ once C2 is fixed, that is a *measured* decision to make later, not a guess to ma
 
 The 25-entry catalog is authored data **nothing reads**. `CombatDoctrine`'s reader has **zero non-test engine
 callers for 9 of its 10 functions**, and the one live path — `FleetDoctrine.TrySetDoctrine`
-(`FleetDoctrine.cs:54-64`) — **copies the raw blueprint and silently drops `EngagementPosture`,
-`TargetPriority`, `RetreatCasualtyThreshold`, `BreakAwaySeconds` and `Pursues`.**
+(`FleetDoctrine.cs:54-70`) — copies only `DoctrineId`, `Family`, `FirepowerMult`, `ToughnessMult`,
+`SpeedMult`, `IsRetreat` and the cooldown. **Verified precisely 2026-07-27: FOUR fields are dropped with no
+mention at all — `TargetPriority`, `RetreatCasualtyThreshold`, `BreakAwaySeconds`, `Pursues` — and a fifth,
+`EngagementPosture`, is *deliberately* overridden** (the fleet's existing posture is preserved instead, with a
+comment explaining that otherwise a doctrine switch would silently reset a fleet to WeaponsFree). So the
+doctrine's authored posture is ignored too, but by design rather than by omission — worth knowing before
+"fixing" it.
 
 So rulings **#15, #18, #19 and #20 all currently resolve into a JSON file with no consumer.** The fix seam is
 small and specific: route `FleetDoctrine.cs:58-64` through `CombatDoctrine.Effective*`/`ParsePosture`.

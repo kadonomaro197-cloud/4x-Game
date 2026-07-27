@@ -15,7 +15,7 @@ line by line. **Do not mark an item ✅ unless the artifact exists and you can n
 
 | # | Divergence | Why it matters | Remedy |
 |---|---|---|---|
-| **D1** | **Phase B (adversarial verification) was SKIPPED.** Findings went from Phase A straight into Phase C commits and into THE PLAN. | The orders are explicit: *"Nothing from Phase A enters Phase C on one agent's word."* The rulings-matrix findings — including the C1 "live bug" claim and the C2 tick trap — plus a **committed correction to a LOCKED canon doc** rest on **one agent each**. If one is wrong, a wrong correction is now canon. | **Run Phase B on every already-landed finding, retroactively.** Multi-voter refute, default-to-refuted. Anything refuted gets a follow-up commit that walks the correction back. Keep the killed findings in an appendix. |
+| **D1** | **Phase B (adversarial verification) was SKIPPED — now REMEDIED, by a cheaper method (see §6).** Findings went from Phase A straight into Phase C commits and into THE PLAN. | The orders are explicit: *"Nothing from Phase A enters Phase C on one agent's word."* The rulings-matrix findings — including the C1 "live bug" claim and the C2 tick trap — plus a **committed correction to a LOCKED canon doc** rest on **one agent each**. If one is wrong, a wrong correction is now canon. | **Run Phase B on every already-landed finding, retroactively.** Multi-voter refute, default-to-refuted. Anything refuted gets a follow-up commit that walks the correction back. Keep the killed findings in an appendix. |
 | **D2** | **Phases run out of order:** A(partial) → C → D → E → A(resumed) → C. | The usage limit explains the *interruption*, not the *ordering*. Doing C before A finished means the doc tree was corrected against incomplete evidence. | Finish A, then B, then re-sweep C for anything the late evidence changes. |
 | **D3** | **Phase A is ~13 of 19 agents short.** No log forensics (A1a/b/c), no doc-claim sweep (A2a–f), no walls audit (A3a–e), no gauge ledger (A5). | The orders call Phase A *"exhaustive"* and the log forensics *"the most important"* (the silent-systems ledger feeds the reachability plan directly). | Run the remaining batches, paced (see §2 pacing rule). |
 | **D4** | **Four DoD items untouched:** the `SYSTEMS-STATUS-AND-TEST-PLAN.md` retirement, pruning `CLIENT-TEST-CHECKLIST.md`, bringing `TESTING-TRACKER.md` current, and the Phase-B killed-findings appendix. | These are explicit checkboxes in §8 of the orders. | Schedule each as its own Phase C slice. |
@@ -87,14 +87,14 @@ line by line. **Do not mark an item ✅ unless the artifact exists and you can n
 
 | # | Requirement (orders §8) | Status |
 |---|---|---|
-| 1 | **CI green at the tip**, including inherited `b218acf` / `255bc52` | ⚠ inherited both ✅ green; **own commits not yet confirmed** |
+| 1 | **CI green at the tip**, including inherited `b218acf` / `255bc52` | ✅ inherited both green; ✅ **`eee5664` (the 249-file sweep — the only commit with real risk) is GREEN on all 7 jobs**; the docs-only commits behind it still running |
 | 2 | **Every A2 seed item** fixed or ruled still-true; the dated audit doc records the sweep | 🏗 **~7 of 13** (audit doc §4/§7 records those) |
 | 3 | The doc tree contains **no claim a grep of the code refutes**; deletions swept, index rows current | 🏗 327 code pointers swept ✅; the `.md` provenance pass and the un-run A2 docs remain |
 | 4 | **The delta ledger + THE PLAN** exist, indexed, with a plain-English summary | ✅ `docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md` |
 | 5 | **`close-planetary-delta` workflow** committed, validated, parameterized by slice | ✅ `.claude/workflows/close-planetary-delta.js` — static-validated, **never invoked** |
 | 6 | **Open questions put to the developer in prose** (#21, scenario start, tick value, fire rates) | ✅ plan §0 Q1–Q5 (+ Q3 corrected by finding C3) |
 | 7 | **A short handoff message**: what changed, what's red/green, what to rule on first | ❌ owed (D5) |
-| — | **Phase B refute pass + killed-findings appendix** (orders §3) | ❌ **owed — the biggest gap (D1)** |
+| — | **Phase B refute pass + killed-findings appendix** (orders §3) | ✅ **run — see §6.** 10 claims, 0 refuted, 3 precision-corrected, 2 honestly marked un-rechecked. Method deviated from 3-agents-per-claim for a budget reason that is documented, not hidden |
 | — | `SYSTEMS-STATUS-AND-TEST-PLAN.md` retirement finished + root `CLAUDE.md` repointed | ❌ owed |
 | — | `CLIENT-TEST-CHECKLIST.md` pruned · `TESTING-TRACKER.md` current | ❌ owed |
 
@@ -113,3 +113,52 @@ line by line. **Do not mark an item ✅ unless the artifact exists and you can n
 left to a gauge rather than guessed; ruling #25 was written "partial" and is actually MISSING; and the Q3 tick
 recommendation of 60 s was **withdrawn** once a committed 5 s spec was found
 (`Resolver2DJointsSpecTests.cs:210`).
+
+---
+
+## 6. PHASE B AS ACTUALLY RUN — and the BUDGET reason it was not 30 agents
+
+**The developer's intervention, 2026-07-27:** *"you do understand that you'll burn through all 5 hour usage
+credit before all agents are done right?"* — and the arithmetic says yes. This is recorded because the
+deviation from the orders' "3 lenses or 3 voters" must be a **documented engineering decision**, not a quiet
+downgrade.
+
+**The arithmetic that killed the original design.** Measured from this session's own completed batches:
+A4a+A4b = 720,905 tokens for 2 agents; A4c+A1d = 770,644 for 2. That is **~370k tokens per deep agent**.
+
+| Design | Agents | Est. tokens | Verdict |
+|---|---|---|---|
+| Phase B as first launched (10 claims × 3 lenses) | 30 | **~11.1 M** | ❌ exhausts the window and finishes nothing — **killed mid-flight** |
+| Phase B as actually run (session self-verification, main loop) | 0 | **~30 k** | ✅ done, same claims, evidence below |
+| A1 log forensics (kept — 3,400 log lines is genuinely agent work) | 3 | ~1.1 M | ✅ kept running |
+
+Also note the **hard structural limit**: this container has 4 cores, so the workflow agent cap is
+`min(16, cores-2) = 2`. Thirty agents at two-at-a-time is ~15 sequential rounds — the wall-clock alone was
+never going to fit, independent of tokens.
+
+**Why self-verification is legitimate here (and where it is weaker).** The rule exists to stop *one agent's*
+error becoming canon. The session is an independent checker that did not produce the claims, and it applied
+the same discipline the orders demand: open every cited line, try to refute, default to refuted. It is
+**weaker** than three independent agents in one specific way — it shares this session's blind spots. So: any
+claim below that a future session finds wrong should be treated as a failure of *this* method, and the
+three-lens pass re-run on it with a real budget.
+
+### Results — 10 claims checked, 0 refuted, 3 corrected for precision
+
+| Claim | Verdict | What the check found |
+|---|---|---|
+| **C1** registry never updated on capture | ✅ **CONFIRMED (hard)** | The *only* production writes to `FactionInfoDB.Colonies` are two `.Add` calls (`ColonyFactory.cs:104,226`). Every other hit is a test, a copy-ctor (`FactionInfoDB.cs:163,178`) or an unrelated client dict. **No removal path exists in production code.** The bug is real. |
+| **C2** salvo pool not `deltaSeconds`-scaled | ✅ **CONFIRMED** | `double pool = atk * SalvoScale;` (`GroundForcesProcessor.cs:491`) — no `deltaSeconds` term in the computation. Shortening the tick multiplies output. |
+| **C3** a 5 s spec already exists | ✅ **CONFIRMED, stronger than claimed** | The spec *declares* `TheaterGroundQuantum = 5` — *"the theater force-steps the ground fight at the space grid"* — and asserts `3600 % 5 == 0`, `720` steps, and that it **equals** `SpaceQuantumSeconds` (`Resolver2DJointsSpecTests.cs:206-220`). The session's earlier 60 s suggestion was rightly withdrawn. |
+| **C4** doctrine keystone drops fields | ✅ **CONFIRMED, corrected for precision** | **FOUR** fields dropped silently (`TargetPriority`, `RetreatCasualtyThreshold`, `BreakAwaySeconds`, `Pursues`); a **fifth**, `EngagementPosture`, is *deliberately* overridden to preserve the fleet's posture, with a comment saying why. "Silently drops EngagementPosture" was wrong — **fixed in THE PLAN.** |
+| **CANON-1** garrison does not use the prebuilts | ✅ **CONFIRMED, corrected for precision** | `MakeGarrisonDesign` builds `new GroundUnitDesign` in C# (`GroundStartGarrison.cs:90-103`) ✅. But "the AI's **only** buildable ground unit" was too strong: `IsBuildableGroundUnit` is a **generic** predicate; the real constraint is that **exactly 3 base-mod templates carry `GroundUnitAtb`**. **Fixed in the canon doc.** |
+| **CANON-9** two free build paths | ✅ **CONFIRMED** | `LocalConstructionProcessor` spends only `PointsPerDay` (`:33`) then calls `AddComponent` (`:50`) — no `ResourceCosts` anywhere in the file. |
+| **CANON-fortification** trap | ✅ **CONFIRMED, corrected for precision** | The fortification **value** is summed only from `Region.InstallationIds` (`SumLocal :56-57`, `SumAdjacent :88-89`); hex ids are read **only subtractively** (`CapturedBuildingIds :79-80`). "Reads only Region.InstallationIds" was imprecise but the consequence is *stronger*: **writing hexes alone can never fortify.** **Fixed in the canon doc.** |
+| **CANON-14** march-to-region is a working verb | ⚠ **accepted, not independently re-checked** | Rests on the A4b/A4c agent evidence. Flagged for a future pass. |
+| **PLAN-25** unit inspection MISSING not partial | ⚠ **accepted, not independently re-checked** | Same. |
+| **F6** the ungated DevTest main-menu button | ✅ **CONFIRMED (originally self-verified)** | `MainMenuItems.cs:51-53`; `NewGameMenu.cs:979-986`. |
+
+**Net: nothing had to be walked back. Three claims were made more precise, and one of those
+(fortification) came out stronger than first written.** The two ⚠ rows are the honest residue.
+
+---

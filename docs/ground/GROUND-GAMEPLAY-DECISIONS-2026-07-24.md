@@ -241,10 +241,13 @@ which ties this directly to ruling #18 (doctrine sets that priority order).
 >
 > 1. **Ruling #1's stated blocker is WRONG.** `GroundStartGarrison` does **not** raise the prebuilt templates —
 >    `MakeGarrisonDesign` (`GroundStartGarrison.cs:90-103`) builds throwaway C# `GroundUnitDesign`s, so deleting
->    the templates does **not** break the start garrison. **The real blocker is different and bigger:** the
->    prebuilts are the **AI's only buildable ground unit** (`ConquerResolver.cs:377` →
->    `GroundReinforcement.cs:125`). So #1 needs a scenario/AI-authorable `GroundUnitDesign` source before the
->    templates can go. **The forced order #2 → #4 → #1 still holds** — for the *other* reason given here, which
+>    the templates does **not** break the start garrison. **The real blocker is different:** the prebuilts are
+>    the only ground units the AI can actually build **in a stock game**. Stated precisely (verified
+>    2026-07-27): `GroundReinforcement.IsBuildableGroundUnit` is a **generic** predicate — it accepts any
+>    `GroundUnitDesign` *or* any `ComponentDesign` carrying `GroundUnitAtb` — but **exactly 3 base-mod
+>    templates carry that attribute**, and they are the three prebuilts (`TemplateFiles/installations.json`).
+>    So the AI's reinforcement path is fine in principle and empty in practice the moment they are deleted.
+>    #1 therefore needs a scenario/AI-authorable design source before the templates can go. **The forced order #2 → #4 → #1 still holds** — for the *other* reason given here, which
 >    is confirmed: penetration/per-shot-energy have no home on the weapon yet.
 > 2. **Ruling #9 has TWO free paths to kill, not one.** Besides the free "Build here" order there is a **second
 >    reachable, materials-free path**: the `LocalConstructionDB` queue (Colony Management → **Construction**
@@ -252,9 +255,14 @@ which ties this directly to ruling #18 (doctrine sets that priority order).
 >    spends only `PointsPerDay`, **never `ResourceCosts`** (`LocalConstructionProcessor.cs:33,50`), then calls
 >    `AddComponent`, which fires `GroundUnitAtb` and raises a real unit. **No test covers this queue at all.**
 > 3. **The #9 ⟷ #10 pairing is worse than stated, and the gauge would not catch it.**
->    `GroundFortification` reads **only** `Region.InstallationIds`, which the **costed tile queue never
->    writes**. So deleting the free path leaves a colony player with **no buildable fortification whatsoever**
->    — and CI would stay green through it. The costed path must write that list *in the same slice*.
+>    the fortification **value is summed only from `Region.InstallationIds`** — both `SumLocal`
+>    (`GroundFortification.cs:56-57`) and `SumAdjacent` (`:88-89`) iterate that one list, and the doc comment
+>    at `:100` names `PlaceInstallationInRegionOrder` as its writer. Hex-level `InstallationIds` are read
+>    **only subtractively** (`CapturedBuildingIds`, `:79-80`, so a building on an enemy-seized hex stops
+>    fortifying). **So writing hexes alone can never produce fortification.** The costed tile queue does not
+>    write the region list, which means deleting the free path leaves a colony player with **no buildable
+>    fortification whatsoever** — and CI would stay green through it. The costed path must write that list
+>    *in the same slice*.
 > 4. **Ruling #14 removes a WORKING verb, not a broken one.** "March to region" is the **only fully-wired
 >    planetary move verb** — live in the primitive, the order enum, the processor, the **AI tactical brain**,
 >    **both** client windows, the Site engine, and a save/load fixture. Four coordinate systems coexist today.
