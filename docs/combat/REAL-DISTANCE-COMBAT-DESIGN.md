@@ -86,6 +86,14 @@ The conversions in both directions are all in `GroundRangeTools` (Slice 1a — b
 
 ### Worked example — a 1 km gatling and a 12 km radar
 
+> **⚠ SCALE NOTE (2026-07-27):** the 560 km used in the worked examples below is **illustrative, not
+> authoritative**. The real coarse pitch is **derived per region, per body** —
+> `√(2 × (Area_km2 ÷ HexCount) ÷ √3)` (`GroundRangeTools.cs:39-44`) — and the mini pitch is **coarse ÷ 13**
+> (`GroundMiniHex.cs:28-34`). Earth's actual coarse figure is **awaiting a CI measurement** (plan slice S0);
+> the canonical explanation lives in `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` → *"SCALE — THE ONE TRUE
+> ANSWER"*. **The examples' logic is unaffected** — they only need "a hex is hundreds of km, a rifle is
+> hundreds of metres", which holds at either figure.
+
 Suppose Earth's combat hexes come out around **560 km across** (a big continental tile), and a small
 moon's hexes come out around **2 km across**.
 
