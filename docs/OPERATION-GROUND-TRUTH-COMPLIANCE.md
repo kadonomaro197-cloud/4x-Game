@@ -93,7 +93,7 @@ line by line. **Do not mark an item ✅ unless the artifact exists and you can n
 | 4 | **The delta ledger + THE PLAN** exist, indexed, with a plain-English summary | ✅ `docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md` |
 | 5 | **`close-planetary-delta` workflow** committed, validated, parameterized by slice | ✅ `.claude/workflows/close-planetary-delta.js` — static-validated, **never invoked** |
 | 6 | **Open questions put to the developer in prose** (#21, scenario start, tick value, fire rates) | ✅ plan §0 Q1–Q5 (+ Q3 corrected by finding C3) |
-| 7 | **A short handoff message**: what changed, what's red/green, what to rule on first | ❌ owed (D5) |
+| 7 | **A short handoff message**: what changed, what's red/green, what to rule on first | ✅ **§7 below** |
 | — | **Phase B refute pass + killed-findings appendix** (orders §3) | ✅ **run — see §6.** 10 claims, 0 refuted, 3 precision-corrected, 2 honestly marked un-rechecked. Method deviated from 3-agents-per-claim for a budget reason that is documented, not hidden |
 | — | `SYSTEMS-STATUS-AND-TEST-PLAN.md` retirement finished + root `CLAUDE.md` repointed | ✅ **DONE.** Bannered 🗄; the 4 mandating references in root `CLAUDE.md` repointed to the three single owners (contradiction with its own line 360 resolved); DOCS-INDEX row flipped. Verified nothing live was lost — §6's last apparently-live row is REFUTED at HEAD (`PlanetaryWindow.cs:102/218` gate on `ComponentInstancesDB`) |
 | — | `CLIENT-TEST-CHECKLIST.md` · `TESTING-TRACKER.md` current | ✅ **DONE** — 7 new runtime rows in the checklist and a new **GAUGE-HONESTY BACKLOG** (GH1–GH7) in TESTING-TRACKER, both straight from the log forensics. *(Pruning retired items: not done — no row was found stale enough to cut, and cutting on a guess is worse than leaving it.)*
@@ -162,3 +162,37 @@ three-lens pass re-run on it with a real budget.
 (fortification) came out stronger than first written.** The two ⚠ rows are the honest residue.
 
 ---
+
+---
+
+## 7. THE HANDOFF (Definition of Done #7)
+
+**What changed.** Nine commits, all documentation and code *comments* — **no behaviour, no data, no test logic**.
+The doc tree no longer contains a claim a grep of the code refutes, in the areas swept. Highlights:
+**327 dead doc pointers** across 249 code files repointed (over half of all doc paths cited from code led to a
+404; `docs/AI-BRAIN-BUILD-TRACKER.md` alone was cited 61 times at a path that no longer exists); the
+`SYSTEMS-STATUS-AND-TEST-PLAN` retirement finished and root `CLAUDE.md`'s four contradictory mandates
+repointed; **THE PLAN** with the functional/accessible/observable delta ledger; the **`close-planetary-delta`**
+workflow (authored, statically validated, **never invoked**); and the log forensics that caught the
+instruments lying.
+
+**Red/green.** All C# changes in this session live in **one** commit (`eee5664`, the comment sweep) and that
+commit is **green on all 7 jobs**. Every commit after it touches **only markdown**, so CI risk is nil.
+Inherited `b218acf` / `255bc52` were both already green. **Nothing is red.**
+
+**What to rule on first, in order:**
+1. **Q2 — the scenario start.** The cheapest decision with the biggest payoff, because the thing you need
+   already exists: an ungated **"DevTest"** main-menu button that boots you plus two developed rivals with all
+   five ground flags on. Say the word and it becomes a supported *Scenario/Skirmish* start — a rename, not a
+   build — and your stock New Game stays clean per your own ruling #27b.
+2. **Q3/Q4/Q5 — the tick.** Ruling here unblocks the whole fire-rate slice. Note the repo already contains a
+   committed spec pinning **5 s** (`Resolver2DJointsSpecTests.cs:210`), which supersedes my earlier 60 s
+   suggestion; and finding **C2** means the tick and the rate model must land together or damage scales by the
+   shortening factor.
+3. **Q1 — ruling #21 (capture transfer).** Left OPEN as you instructed. The decision aid now exists: audit
+   §8, twenty rows of what capture moves / destroys / ignores today, each with `file:line`.
+
+**Recommended first BUILD, once you give the go:** **S1 (the ground battle log)**, then **S1c (sim-health
+gauges)**. Both cheap-wire. The argument is not preference: a ground battle **already halts your clock** and
+says nothing, and a dead simulation currently reads as "paused" on every instrument. Fix the windows before
+building more room.
