@@ -23,6 +23,16 @@ developer gives the go before it runs. Use as many subagents as the work needs; 
 
 ## 0. SESSION SETUP — do these before anything else
 
+> ### ✅ SECTION 0: ALL FOUR VERIFIED DONE (checked 2026-07-27)
+>
+> | # | Requirement | Verified how |
+> |---|---|---|
+> | 0.1 | Start the branch FROM `claude/faction-design-audit-bb3tqz`; merge `main` if it is ahead | ✅ `git merge-base --is-ancestor` confirms HEAD contains **both** the audit tip **and** `origin/main`. The count came back **55 / 0** — the audit branch was already 55 ahead with `main` fully contained, **so no merge was needed**. No force-push was needed either; the first push created the branch cleanly. |
+> | 0.2 | Read root `CLAUDE.md` in full | ✅ read; also confirmed byte-identical to `main`'s copy, so nothing branch-specific was missed. **Note: the Landmine Index is now L1–L12, not L1–L11** — this session added **L12** (`BaseDataBlob.Clone()` is virtual with a garbage default, so a `*DB` that forgets `Clone()` silently becomes a bare `object`). |
+> | 0.3 | Check CI on `b218acf` + `255bc52` | ✅ **both green.** `b218acf` `conclusion: success`; `255bc52` green on **all 7 jobs** (6 test shards + `build-client`). Nothing was stacked on a red base. |
+> | 0.4 | Know the constraints | ✅ observed. **21 of 21 commits carry both required trailers** (verified by count). The multiple-choice question tool was **never called** — all questions asked in prose (plan §0 Q1–Q5). **⚠ TWO CORRECTIONS TO THIS SECTION'S OWN NUMBERS:** CI is **~33 minutes, not ~13** (the `rest` shard is the critical path; measured 2 / 4 / 8 / 11 / 13 / **33** min + 0.5 for `build-client`), and `ci.yml`'s complement filter means every **new** fixture lands in that slowest shard by default. The 6-way sharding and the client-can't-run rule are both confirmed exactly as written. |
+
+
 1. **Get the branch.** Everything below lives on `claude/faction-design-audit-bb3tqz`, NOT the default branch:
    `git fetch origin claude/faction-design-audit-bb3tqz` and start your session's designated branch FROM it
    (`git checkout -B <your-branch> origin/claude/faction-design-audit-bb3tqz`). If you skip this, half the documents
@@ -42,6 +52,39 @@ developer gives the go before it runs. Use as many subagents as the work needs; 
 ---
 
 ## 1. CANON — the developer's decisions (these override every older document)
+
+> ### ✅ SECTION 1: CANON READ AND OBEYED — with one gap this slow walk caught (2026-07-27)
+>
+> **The rulings were obeyed.** #21 (capture transfer) was **never decided** — only inventoried as a decision aid
+> (audit §8). #27b was actively **defended**: the planetary audit's P1 recommended defaulting the home garrison
+> ON, which the ruling forbids, so P1 was re-pointed rather than followed. Where a canon doc's *factual notes*
+> disagreed with the code, the **notes** were corrected and the **rulings left untouched** (4 corrections, in
+> `GROUND-GAMEPLAY-DECISIONS`'s Consequences section).
+>
+> | Canon doc | Read? |
+> |---|---|
+> | `GROUND-GAMEPLAY-DECISIONS-2026-07-24.md` | ✅ in full (252 lines) — factual notes corrected |
+> | `PLANETARY-GAMEPLAY-AUDIT-2026-07-24.md` | ✅ in full (259 lines) — 2 stale sections reconciled |
+> | `GROUND-SURFACE-MAP-DESIGN.md` | ⚠ **partially** — Layers 4/5/6 + the scale sections read directly; not all 560 lines |
+> | `SYSTEM-GENERATION-AND-PERSISTENCE-DESIGN.md` | ❌ **NOT READ until this walk-through — the real gap. See below.** |
+> | `REAL-DISTANCE-COMBAT-DESIGN.md` | ⚠ partially direct + fully swept by agent A2b |
+> | `UNIFIED-RESOLVER-AND-BATTLE-STATS.md` | ⚠ partially direct + fully swept by agent A2b |
+> | `GROUND-UNIT-VARIABLES.md` | ⚠ partially (targeted) — and corrected |
+> | `DOCS-INDEX.md` + `TESTING-TRACKER.md` | ✅ read and updated throughout |
+>
+> **⚠ THE GAP, AND WHAT IT COST.** `SYSTEM-GENERATION-AND-PERSISTENCE-DESIGN.md` was never read, yet THE PLAN
+> still issued a recommendation about its G1–G6 build order — *"defer the whole track."* Reading it **overturned
+> that**, because its own EXISTS/MISSING ledger shows most of the substrate is already built:
+> - **G1 (the spec-file writer) is CHEAP and should be pulled forward** — the file *format* (`SystemBlueprint`)
+>   already exists and is what a real New Game loads; only the **writer** is missing (verified: no
+>   `File.WriteAllText`/`SerializeObject` anywhere in `GameEngine/Galaxy/`). Additive and gauge-first.
+> - **G2 is a concrete content BUG, not a design want** — `GenerateAsteroidBelt` has **exactly one caller**, on
+>   the *authored* path, so **procedurally generated systems get no belts at all.**
+> - **G3–G6 stay deferred**, with **G6 scheduled alongside M4** (a rich terrain display over a uniform generator
+>   is a lie).
+>
+> **Lesson worth keeping: a recommendation about a doc you have not read is a guess wearing a verdict's clothes.**
+> THE PLAN is corrected.
 
 Read these first. Where any other doc disagrees with them, the other doc is wrong.
 

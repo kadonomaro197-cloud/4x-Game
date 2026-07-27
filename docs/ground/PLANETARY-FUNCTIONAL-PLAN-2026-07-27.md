@@ -496,9 +496,25 @@ build, don't redesign); **employment jobs + power demand** (#12 — mostly JSON)
 (#13); **M4 per-mini-tile terrain**; **hex/tile naming** (Layer 6); **client per-faction fog**; the
 **grave rung** (pop→0 / rebellion expiry → colony collapse); **hex deposits as the mined truth**; and the
 **G6b** single-hex-model cleanup.
-- The `SYSTEM-GENERATION` G1–G6 track (spec-file writer, belts/Oort, physics terrain) is **a separate
-  doc's build order and none of it is built.** **Recommendation: written deferral** — M4's honest terrain
-  variation needs it, so schedule G1–G6 only when planetary diversity becomes the goal.
+- **The `SYSTEM-GENERATION` G1–G6 track — recommendation CORRECTED 2026-07-27 after actually reading
+  `docs/environment/SYSTEM-GENERATION-AND-PERSISTENCE-DESIGN.md`.** My first pass called the whole track a
+  written deferral *without having read it*. Too blunt: the doc's own EXISTS/MISSING ledger shows **most of the
+  substrate is already built** — a seed-deterministic generator, the file **format** (`SystemBlueprint`, which is
+  what a real New Game already loads), per-body terrain from physics (lazy), and located deposits. Three things
+  are missing and they are **not equal**:
+  - **G1 — the WRITER + round-trip gauge: PULL FORWARD, it is cheap.** Serialize a generated system into the
+    **existing** `SystemBlueprint` shape, then generate → write → `LoadFromBlueprint` → assert identical.
+    Verified: **no writer exists anywhere** in `GameEngine/Galaxy/` (no `File.WriteAllText`/`SerializeObject`),
+    and `Engine/Blueprints/SystemBlueprint.cs` is already there to write into. **Additive — nothing reads the
+    file yet** — and gauge-first, which is this plan's own spine. Hand-editability (decision #4) falls out free,
+    because it writes the shape Sol already uses.
+  - **G2 — belts/comets/Oort in procedural systems: a CONCRETE CONTENT BUG, not a design want.** Verified:
+    `GenerateAsteroidBelt` (`StarSystemFactory.cs:481`) has **exactly one caller** — `:573`, inside
+    `LoadFromBlueprint`, the **authored** path. **A procedurally generated system therefore gets no belts at
+    all.** Landmine: draw from a dedicated RNG stream, never the shared `StarSystem.RNG` (the `RuinsDB` lesson).
+  - **G3–G6 — DEFER as written** (write-on-first-generation · the hybrid observation freeze · the galaxy-setup
+    choice · terrain from stellar/orbital physics). **G6 is the one M4 depends on** — *"a rich terrain display
+    over a uniform generator is a lie"* — so schedule G6 **with** M4, never before it.
 
 ### S12 — What capture transfers (#21) · **BLOCKED ON Q1 — do not start**
 
