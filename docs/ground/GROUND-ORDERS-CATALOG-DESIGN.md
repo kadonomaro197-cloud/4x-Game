@@ -10,7 +10,7 @@
 
 Before building, here is what actually exists in the order plumbing today. These are the findings that shape the roadmap:
 
-- **~51 `EntityCommand` classes exist, but only ~5 are reachable** from the fleet "Issue Orders" tab. The tab is a hardcoded `switch` statement, not a registry — so most of the commands that already exist in code can't be reached by the player.
+- **~~~51 `EntityCommand` classes exist, but only ~5 are reachable~~** — ⚠ **RE-COUNTED 2026-07-28: 46 classes exist, and 23 DISTINCT command types are reachable somewhere in the client** (cargo, colony, station, survey, troop lift, fire control, warp/Newtonian movement, on-site construction, logistics…). The *"~5"* was true only of the **fleet "Issue Orders" tab** specifically, which is still a hardcoded `switch`, not a registry. **Half the commands are reachable, not a tenth** — the registry argument stands, but the headline overstated the gap by ~4×.
 - **No true multi-order queue / waypoint chaining.** You can't tell a fleet "go here, THEN there, THEN do this" as a real sequence.
 - **The conditional / standing-order framework has exactly ONE condition** (`FuelCondition`). That's the entire vocabulary for "do X when Y happens."
 - **Ground formations don't go through the order pipeline at all** — they're driven by direct `GroundForces.*` calls, not `EntityCommand`s.
@@ -55,11 +55,25 @@ API: `QueueFormationOrder` / `SetFormationOrder` / `ClearFormationOrders`. **Des
 
 ---
 
-## Open decision for O1 (flagged, not yet locked)
+## ~~Open decision for O1 (flagged, not yet locked)~~ — 🔒 **CLOSED BY CANON, 2026-07-28. The old "lean" is now FORBIDDEN.**
 
-Do the combat / doctrine / EMCON / ground *direct-call* actions join the `EntityCommand` pipeline — giving them uniform queue / UI / replay, but requiring them to handle the engagement-lock bypass — or do they stay direct calls?
+The question was: do the combat / doctrine / EMCON / ground *direct-call* actions join the `EntityCommand` pipeline, or
+stay direct calls? The old lean was **keep direct execution, add descriptors for the UI only** — so a commander could
+bypass the engagement lock mid-battle.
 
-**Lean:** give them **descriptors for the UI / registry** while keeping their **direct execution**. That way the catalog looks uniform to the player without losing the mid-battle bypass (the direct calls exist precisely so a commander can react during a locked engagement).
+**That is exactly the failure the developer's law forbids.** Root `CLAUDE.md` → **One Verb, Both Seats**: *if the AI
+cannot use a mechanic with the same primitive the player uses, the mechanic is too complex.* A direct call with a
+UI-only descriptor is **two parallel paths for one verb** — a rich path for the player and none for the AI, because the
+**AI issues orders through the queue.** It is the same defect as the client's click-to-march
+(`GroundForces.OrderMoveToGlobalHex` called directly: no issuer marker, unsequenceable, AI-invisible), which the
+2026-07-28 movement rulings delete for precisely this reason.
+
+**RULING: they JOIN the pipeline.** One order object, one queue, one issuer marker, both seats. If a mid-battle
+reaction is needed, that is a **priority/pre-emption property of an order** (the queue already has `Issuer` and the
+brain already refuses to touch a Player queue) — **not a second execution path.**
+
+> **And M9 applies:** ground orders are issued from the **Force Management window and nowhere else**. The planet view
+> keeps selection + display (**M13**) but loses its duplicate order buttons.
 
 ---
 
