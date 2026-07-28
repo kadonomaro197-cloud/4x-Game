@@ -228,3 +228,46 @@ and which are a constant compiled into the engine.
 - **`Penetration` / `PerShotEnergy` on ships is a real M19 violation**, not a phasing choice, and it is blocked behind
   the ship-side per-source armour reconcile. Worth writing up as its own slice rather than leaving it as a comment in
   a doc-string.
+
+---
+
+## PASS 5 — The armour reconcile D4-3 is blocked behind, and the value that never updates
+
+Pass 4 ended on two open questions: *why* are `Penetration` / `PerShotEnergy` hardcoded 0 on ships, and what happens
+to a ship's combat value after it is built. Pass 5 answers both.
+
+**Docs read first:** `CombatKernel.cs` in full (the `Combatant` view, all four `ArmourSoak` overloads, `BurstShotCount`,
+`ArmourSoakBurst`), `CombatEngagement.cs` §salvo (`:755-780`) and `FleetArmourSoakFraction` (`:1525-1557`),
+`ShipCombatValueDB.Calculate` (`:281-560`), `docs/combat/RESOLVER-DESIGN.md` §3 pt 4 + §5 (the reconcile the kernel
+doc-comment points at), `docs/combat/RESOLVER-AUDIT-2026-07-28.md` **X14** and **P11-1** (already recorded — extended,
+not re-flagged here), `docs/combat/WEAPONS-DESIGN.md` §6.
+
+### Findings
+
+| # | Sev | Finding |
+|---|---|---|
+| **D5-1** | 🔴 | **"ARMOUR" MEANS TWO DIFFERENT MECHANICS INSIDE THE ONE RESOLVER — and that is what blocks D4-3.** **Ground:** armour is a **flat per-source soak.** `CombatKernel.ArmourSoak(armour, sourceDamage, penetration, natureFactor)` subtracts `(armour − penetration) × 1.5 × natureFactor` off **each incoming source**, and `ArmourSoakBurst` first splits a salvo into `BurstShotCount` chunks so **each chunk is soaked separately**. **Ship:** armour is a **health pool.** `ShipCombatValueDB.cs:518-520` adds `Armor.thickness × ArmorHitPointsPerThickness_J` **straight into Toughness** (joules), and nature-hardening is applied as a **fleet-averaged percentage** off the salvo (`CombatEngagement.cs:770-771`). **Plain English: on the ground, armour stops a fixed amount of each hit; in space, armour is extra hit points.** ⚠ **This is why `Penetration` and `PerShotEnergy` are literal 0 on ships — they are not lazy, they are UNDEFINED against a pool.** There is no flat number for penetration to subtract from, and no per-hit boundary for alpha-vs-chip to matter at. The code says so at `CombatEngagement.cs:1366`: *"penetration/perShotEnergy are ground-side (the ship salvo folds armour into Toughness), so 0 here."* **Under canon M19 — one resolver, "it should not matter" whether the fight is planetary or in space — this is the deepest violation the audit has found: not a missing wire, but two incompatible models of the same word.** Fixing D4-3 means picking one, and the flat-per-source model is the one the shared kernel already implements. |
+| **D5-2** | 🟠 | **A SHIP'S ARMOUR HARDENING PROTECTS THE WHOLE FLEET, NOT THE SHIP THAT PAID FOR IT.** `FleetArmourSoakFraction` (`:1525-1557`) takes a **toughness-weighted average** of every ship's per-nature soak across the entire fleet, then multiplies the **whole incoming salvo** by `(1 − thatAverage)`. So bolt ablative plating onto one cruiser and **every ship present takes proportionally less damage** — including the unarmoured freighters. On the ground the same dial is strictly per-unit (each unit's own `Defense` soaks its own hits). **Same designed part, opposite scope**, and it is root cause **B** (the battlefield as one container) surfacing in the armour model. It also inverts a real decision: *"armour the ships that will be shot at"* becomes *"put one hardened hull anywhere in the fleet."* |
+| **D5-3** | 🟠 | **EVERY "GRAVE RUNG" CLAIM THAT SCALES BY `comp.HealthPercent` IS INERT — the combat value is computed once and never again.** *(Extends the resolver audit's **X14**; the new evidence is the exhaustive call-site proof and the doc-comment fallout.)* `ShipCombatValueDB.Calculate` has **exactly one production call site: `ShipFactory.cs:144`, at construction.** Every other site is `TryGetDataBlob(...) ? cached : Calculate(...)` — a fallback, not a refresh. And **nothing anywhere invalidates it**: zero `RemoveDataBlob<ShipCombatValueDB>` in the solution, one `SetDataBlob`. So every `comp.HealthPercent` multiply inside `Calculate` is permanently frozen at build-time health (always 1.0). **That silently falsifies the cradle-to-grave "grave rung" written into at least six attribute doc-comments** — `RadiatorAtb`, `ShipMagazineAtb`, `PointDefenseAtb`, `UnitCaliberAtb`, `ArmourHardeningAtb`, and `ShieldAtb`'s *"a damaged/shot-off generator projects a weaker/no shield — the grave rung"* (`ShipCombatValueDB.cs:454`). **The grave rung is documented six times over and cannot fire once.** *(Honest scope: the auto-resolver removes ships whole, so this does not bite an auto-resolved kill. It bites wherever component health actually moves — a missile impact the ship survives, and the case below.)* |
+| **D5-4** | 🟠 | **A REFIT IS STALE TOO — installing a component on a built ship does not change what it is worth in a fight.** `Entity.AddComponent(...)` (`Engine/Entities/Entity.cs:125-155`, four public overloads) installs components on an already-built entity and **never** recomputes `ShipCombatValueDB`. So a ship that is refitted with better guns fights with its original numbers, permanently. *(Related: `ShipRefitBegan` / `ShipRefitCompleted` exist as event types in `EventTypes.cs:46-47` and are **published by nothing** — grep returns zero producers. A refit pipeline was scaffolded and never built, which is why nobody hit this yet. Recorded so it is fixed **with** the recompute, not after.)* |
+| **D5-5** | 🟠 | **THE AI'S OWN-STRENGTH AND THREAT ASSESSMENT ARE FROZEN AT BUILD TIME.** `FactionRollup.MilitaryStrength` (`:78-86`) sums `cv.Firepower + cv.Toughness` over every ship carrying the blob — i.e. the frozen value. It feeds **three** consumers: `NPCDecisionProcessor.cs:328` (the brain's own-strength input to objective selection), `ThreatAssessment.cs:74` (who to fear), and `AIDecisionRecorder.cs:39` (the decision log the AI's behaviour is *audited* from). **So a faction that has had half its navy shot up still rates itself — and is still rated by its rivals — at full strength**, and the decision log records that wrong number as the reason for the choice. This is D5-3's operational cost on the *strategic* side, the twin of the resolver audit's **P11-1** on the tactical side. |
+| **D5-6** | 🔵 | **Credit where due — the ship armour NATURE model is real and IS authored.** I nearly wrote this up as "ships have no armour-nature matchup." They do: `ArmourHardeningAtb` → `ShipCombatValueDB.ArmourSoakVs{Kinetic,Energy,Explosive,Exotic}` (`:470-476`, best installed part per nature, health-scaled) → `FleetArmourSoakFraction`. The `armour-hardening` template exists, has a starting design, is in **Earth's** `StartingItems` and `ComponentDesigns` (`sol/earth.json:213, 315`), and a base-mod ship design mounts one (`shipDesigns.json:407`). **The ship/ground gap is the SHAPE of the armour model (D5-1) and its SCOPE (D5-2) — not the presence of the nature matchup.** Recorded so the fix targets the right thing. |
+
+### What Pass 5 changes about the plan
+
+**The D4-3 fix is bigger than a wiring job, and it has a clear right answer.**
+
+Penetration and per-shot alpha cannot be "wired up" on the ship side, because there is nothing on the ship side for
+them to act on. The choice is structural: either ships adopt the kernel's **flat per-source armour** (armour comes back
+out of Toughness and becomes a `Combatant.Armour` the kernel soaks per source — the model `CombatKernel` already
+implements and `RESOLVER-DESIGN.md` §3 pt 4 already names as the reconcile), or the two domains stay permanently
+different and **M19 is not true**. There is no third option that keeps both. The kernel's own doc-comment has been
+pointing at this since slice 2: *"Ship toughness folds armour into Health today; the shared per-source model is what
+slice 2+ reconciles."*
+
+**And the frozen combat value is now a three-consumer problem, not a combat-only one.** X14 recorded it; Pass 5 shows
+its reach: the tactical resolve (P11-1), the **strategic AI** (D5-5), and any **refit** the game ever gains (D5-4).
+The fix is small and obvious — recompute on component change and on damage, or drop the cache and compute on read —
+but it should be done once, deliberately, with a gauge, rather than three times from three directions. **And it should
+be done before the six "grave rung" doc-comments are believed by anyone**, because right now the docs describe a
+cradle-to-grave loss that the engine cannot perform.
