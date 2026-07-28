@@ -295,3 +295,70 @@ un-swept lenses are named below.
 > **The designer models COMPONENTS; the resolver models TOTALS.** Every defect found is a place where a designed
 > detail — a warhead, a fire-control director, a magazine, a wounded ship, a commander, a hazard, a doctrine field —
 > is flattened into a number *before* the fight starts, and can never influence it again.
+
+---
+
+## PASSES 13–17 — the four un-swept lenses, plus research
+
+**Docs read first:** `docs/DOCS-AUDIT-2026-07-27.md` (audit P3, orbital bombardment orphaned) + plan slice **S9**;
+`GameEngine/Damage/CLAUDE.md` (`OnColonyDamage` → population/atmosphere/installation damage);
+`docs/ai/AI-BRAIN-BUILD-TRACKER.md` + `AI-DECISION-ENGINE-DESIGN.md`; `docs/combat/INFORMATION-DELTA-DESIGN.md`
+(what the sim knows vs what it shows); `docs/economy/COMPONENT-DESIGNER-DIALS.md` (tech-gated design formulas).
+
+### PASS 13 — the ground↔space seam
+
+| # | Sev | Finding |
+|---|---|---|
+| **P13-1** | 🟠 | **BOMBARDMENT IS A SIDE EFFECT, NEVER A DECISION — and an auto-resolved battle cannot do it at all.** `ApplyGroundBombardment` has **exactly one caller**: inside `DamageProcessor.OnColonyDamage` (`:319`), i.e. it fires only when a colony *happens to be hit* by the live weapon sim. There is no order, no button and no AI rung that chooses to bombard (audit P3 / slice **S9**). **And because the auto-resolver kills ships from a damage pool and never routes through `DamageProcessor`, a fleet that wins orbit in an auto-resolved battle has no path to the surface whatsoever.** This is the *same divide* as the missiles (**P7-3**): the live sim and the auto-resolver are two worlds, and the ground-support wire exists only in the one that does not run the battle. |
+
+### PASS 14 — the AI's post-battle reaction
+
+| # | Sev | Finding |
+|---|---|---|
+| **P14-1** | 🟠 | **THE AI NEVER READS A BATTLE'S OUTCOME.** `NPCDecisionProcessor` contains **zero** references to battle events, results, wins or losses. It re-derives its world each cycle, so losses *are* felt implicitly (a smaller fleet, an observed enemy strength) — **but it cannot distinguish losing a fleet in battle from losing it to anything else**, and there is no explicit "that attack failed, re-plan" step. *Stated carefully because state-based reasoning is a legitimate design; the gap is the absence of the signal, not the absence of learning.* |
+
+### PASS 15 — the readouts
+
+| # | Sev | Finding |
+|---|---|---|
+| **P15-1** | 🔴 | **⚠ THE BATTLE REPORT IS A FOG-OF-WAR LEAK.** `BattleLog` is a **static class with ONE global event list**, and `BattleReportWindow` contains **zero** occurrences of "faction" — **no filter of any kind**. ⇒ **the player sees every battle between every faction anywhere in the galaxy** — fleet names, ships lost, ships remaining and the narrative note — including fights they never detected, in systems they have never visited, between two AI factions on the far side of the map. **The fix is cheap and the data is already there: `BattleEvent` carries a `FactionId` field (`:33`) that nothing reads.** |
+| **P15-2** | 🟠 | **THE 250-EVENT CAP TRIMS FROM THE FRONT — so long fights lose their OPENING.** `_events.RemoveRange(0, …)` discards the **oldest** events, which are exactly the ones worth reviewing: how the battle started, the first-strike, the initial dispositions. And because the cap is **global rather than per-battle**, a busy period lets **one battle's history evict another's**. *(Already flagged as a sizing caution in plan slice S1; here is the mechanism and the second, worse half — the global scope.)* |
+| **P15-3** | 🟡 | **THE REPORT DOES NOT SURVIVE A SAVE** — explicitly runtime-only. You cannot review yesterday's battle after loading. Fine as a v1 choice; recorded because the after-action report is on the operation's OBSERVABLE leg. |
+
+### PASS 16 — calibration
+
+| # | Sev | Finding |
+|---|---|---|
+| **P16-1** | 🔵 | **49 `FLAGGED` balance constants across the two combat folders.** **Not a defect — this is the flagging discipline working exactly as intended** (root `CLAUDE.md`: balance numbers are flagged, never silently chosen). Recorded because it sizes the tuning debt: **the combat numbers are largely provisional**, and most fixes in this audit — especially the missile stubs (**P7-1/P7-2**), the disengage refill (**P6-5**) and real targeting (**P1-4/R3**) — will invalidate a slice of them and require a re-tune. |
+
+### PASS 17 — research → combat (cradle-to-grave check)
+
+| # | Sev | Finding |
+|---|---|---|
+| **P17-1** | ✅ | **RESEARCH REACHES COMBAT CORRECTLY.** `ShipCombatValueDB` contains no tech references — and that is right: it reads **component attribute values**, which the designer computed from **tech-gated formulas**. So research flows to combat *transitively through the design*, which is the correct architecture. And a built ship keeping its build-time numbers is **correct behaviour** (researching a better gun does not retrofit ships already flying). **Verified-good; recorded so a later pass does not mistake the absence of tech references for a gap.** |
+
+---
+
+## 📉 FINAL RATE CHECK — 17 passes
+
+| Passes | New defects |
+|---|---|
+| 1–3 | 15 |
+| 4–5 | 9 |
+| 6–7 | 10 |
+| 8–10 | 5 *(2 were self-corrections)* |
+| 11–12 | 1 *(a consequence of X14)* — Pass 12: **zero** |
+| **13–17** | **5** *(1 🔴, 3 🟠, plus 2 verified-good and 1 sizing note)* |
+
+**49 findings across 17 passes.** The 13–17 set produced **one new blocker** (the battle-report fog leak) — found only
+by crossing from engine into client, which no earlier pass had done. **That is the honest read on "negligible":** the
+engine-side rate has genuinely collapsed, but **the engine↔client seam was barely swept and immediately yielded a
+🔴.** If further passes are run, that seam is where to point them.
+
+### The pattern, now with its client-side twin
+
+> **The designer models COMPONENTS; the resolver models TOTALS** — every defect is a designed detail flattened into a
+> number before the fight starts.
+>
+> **And at the client seam: the engine records EVERYTHING; the client filters NOTHING.** The battle report shows all
+> factions because the filter was never written, though the field to filter on already exists.
