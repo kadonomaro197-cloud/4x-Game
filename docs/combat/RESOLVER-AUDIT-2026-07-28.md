@@ -182,3 +182,22 @@ also silently deletes four designed systems** (magazines, heat/radiators, the an
 It also directly contradicts **R-g** (*"simulated throughout the entirety of the battle"*) one level up: the battle's
 own accumulated state does not survive the battle ending. And it contradicts **§B7's** *"You keep what survives"* —
 you keep more than survives.
+
+---
+
+## PASS 7 — Missiles, ordnance and point defence
+
+**Docs read first:** `RESOLVER-DESIGN.md` §A3 "Guided (missiles) — extra insertion points"; `WEAPONS-DESIGN.md`
+(the Nature × Delivery taxonomy — Guided delivery, saturation vs point-defense); root `CLAUDE.md` gotcha #3
+(missile guidance fixed 2026-06-21, `MissileImpactProcessor` delivers kinetic damage on impact, with an explicit
+calibration warning); `GameEngine/Weapons/CLAUDE.md`.
+
+**This is the worst disconnection found anywhere in the audit.**
+
+| # | Sev | Finding |
+|---|---|---|
+| **P7-1** | 🔴 | **A MISSILE'S ENTIRE DESIGN IS IGNORED IN AUTO-RESOLVED COMBAT — ALL FIVE VALUES ARE HARDCODED.** `ShipCombatValueDB` builds a missile launcher's weapon profile from `MissileLauncherFirepowerStub = 100_000` J/s · `MissileVelocityStub_mps = 5_000` · `MissileTrackingStub = 0.9` · `MissileSaturationStub = 1.0` · `MissileRange_m = 1_000_000`. The class comment admits it: *"v1 stubs (flagged): missile launchers add a flat `MissileLauncherFirepowerStub` each."* ⇒ **warhead size, seeker quality, engine, fuel and range do not exist.** Every missile launcher on every ship of every faction contributes **exactly the same firepower**. Compared with a ground weapon (2 of 10 values designed) or a railgun (all designed), **a missile is 0 of 5.** |
+| **P7-2** | 🔴🔴 | **⚠ THERE ARE TWO MISSILE MODELS AND THEY DISAGREE BY UP TO FOUR ORDERS OF MAGNITUDE.** The **live sim** (`MissileImpactProcessor`, built and working per gotcha #3) states its own scale: *"orbital closing speed (1–10 km/s) with a 100 kg dry mass carries **50 MJ–5 GJ** of kinetic energy, which destroys many components in one hit."* The **auto-resolver** gives the same launcher **100 kJ/s**. ⇒ **the same missile does ~100 kJ/s or up to 5 GJ depending purely on which code path resolves the fight.** Root `CLAUDE.md` gotcha #3 already warns the live path one-shots ships; nothing warns that the abstract path is ~500×–50,000× weaker. **These two models have never been calibrated against each other.** |
+| **P7-3** | 🟠 | **THE AUTO-RESOLVER NEVER SPAWNS ORDNANCE — the whole built missile system is bypassed.** Zero references to missile spawning/launching anywhere in `GameEngine/Combat/`. So the guidance work, the proximity/impact processor, the ordnance designs and the magazine feed are **all inert inside an auto-resolved battle**. Two systems exist for one weapon; **the stub is the one that fights.** |
+| **P7-4** | 🟡 | **POINT DEFENCE IS REAL BUT CALIBRATED AGAINST THE STUB.** `FleetPointDefense` + a **saturating** intercept curve for incoming missile salvos is genuinely built (and `PointDefenseAtb` is one of the 14 attributes that does reach combat). But it is tuned against 100 kJ/s stub missiles, so **its balance says nothing about the 50 MJ–5 GJ missiles the live sim fires.** Fixing P7-1/P7-2 will invalidate every PD number. |
+| **P7-5** | 🟡 | **A DOC-HONESTY PATTERN WORTH NAMING.** `RESOLVER-DESIGN` §A3 marks the missile warhead/tracking/range row **✅** with the parenthetical *"(missile is a stub today → wire real values)"*. **A ✅ beside the words "is a stub" reads as done at a glance** and is how this survived a status pass. Same class as the ⚠ *decided-not-built* lesson from the Phase C re-sweep: **the mark and the caveat disagree, and only the mark gets skimmed.** |
