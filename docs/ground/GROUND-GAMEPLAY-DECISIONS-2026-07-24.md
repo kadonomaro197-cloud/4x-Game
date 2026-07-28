@@ -549,7 +549,23 @@ port. One medium slice.
 | **X5** | **The FEED throws the design away** (the teardown finding). Of the resolver's 10 weapon variables, a ground weapon gets **2** from the designer; velocity/tracking/saturation are **hardcoded by a 4-value mode enum**, penetration + per-shot energy are **never written by the assembler**, heat is never set. **A railgun bolted to a tank stops being a railgun** — even though `SpaceWeaponGround` exists precisely so *"a weapon that's stronger in space is stronger on the ground."* | `GroundCombatant.cs:67-115`; `GroundUnitAssembly.ToGroundUnitDesign` |
 | **X6** | **Alpha does not exist in EITHER domain.** Ground: the assembler never sets `PerShotEnergy`. Space: `BuildFireMix` **hard-zeroes** `Penetration` and `PerShotEnergy` when it buckets weapons. Since `BurstShotCount = DPS ÷ PerShotEnergy` (clamped ≥1), **every attack lands as exactly ONE shot**, so flat armour never bounces many small hits. | `CombatEngagement.cs:1188`; `CombatKernel.cs:266-273` |
 | **X7** | **The battlefield is a geographic container, not an engagement.** Space: *"a star system IS the battlefield … every in-combat fleet fights in ONE multi-party engagement … (real weapon-range clustering — distinct simultaneous battles in one system — **is a v2 layer**)."* Ground: the same bug via the `byRegion` bucket. | `CombatEngagement.cs:264-267`; `GroundForcesProcessor.cs:268-278` |
+| **⭐ X9** | **🔴 THE RANGE THE BATTLE IS FOUGHT AT IS COMPUTED FROM SHIP STATS — DOCTRINE HAS NO INPUT.** `AdvanceClosing` picks a *controller* as whichever side has the highest `FleetManeuver(ships)`, then closes the gap toward `FleetDesiredRange(ships)`. **Both take a list of SHIPS and no doctrine argument.** So a fleet whose doctrine says *"close and brawl"* is kited anyway if its computed manoeuvre is lower. **This governs the whole shape of a battle and R-c forbids it.** | `CombatEngagement.cs:1028-1055,1186,1199` |
+| **⭐ X10** | **The OPENING POSITIONS are a hardcoded geometric rule, not doctrine.** `SpreadNewlyContestedRegions`: the *holder* stays at its muster hex and every other faction is pushed away by **the holder's longest weapon range**. Deterministic, sensible — and **not something any doctrine can change.** | `GroundForcesProcessor.cs:289,571-580` |
+| **⭐ X11** | **🔴 R-f IS NOT IMPLEMENTED — wings/formations have no position of their own to manoeuvre with.** Space carries **ONE `Separation_m` per FLEET**, and (only under the default-off `EnableGroupPlane`) **ONE `Anchor` per FLEET** — whose own comment says *"fleet is a single group sitting at Anchor. **Slice S3 replaces this with one point per role**."* **Per-wing positions are an unbuilt future slice behind a switched-off flag.** Ground has per-unit positions but manoeuvres them by **ROE/role**, not by a formation's doctrine. | `FleetCombatStateDB.cs:55,113,116` |
 | **X8** | **Two different ARMOUR models.** Ground applies real per-source flat soak + a burst split; ships fold armour into Toughness and apply a proportional fraction. **The same designed armour means different things in different places.** | teardown scenario 6 |
+
+### ✅ NOT violations — do NOT delete these under "utmost prejudice"
+
+**R-c governs BEHAVIOUR (how forces act/manoeuvre). It does not forbid the world affecting outcomes** — indeed **R-g
+requires it.** These are correct as built:
+
+- **Terrain multipliers** (`GroundTerrain.TerrainAttackMult` / `LocomotionTerrainMult`) and **fortification cover** —
+  environment shaping output is exactly *"components function differently at varying parameters."*
+- **Ammo-dry silencing a unit** — physical state, not a behavioural driver.
+- **`GroundFormationDoctrine.AttackMult` / `DamageTakenMult`** — these ARE the doctrine's own multipliers. Correct.
+- **`PersonalityDB` / `CombatRisk`** — these bias the AI's *choice of what to do*, not how forces behave once
+  committed. Doctrine still governs the fighting; personality governs which doctrine gets picked and whether to
+  commit at all. *(Flagged rather than ruled — say if you want personality out of the loop entirely.)*
 
 ### ⭐ The resolution for X1 that keeps what is useful
 
