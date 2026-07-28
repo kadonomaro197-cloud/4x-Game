@@ -512,7 +512,9 @@ tile" and "is a war-map objective" one attribute (#11).
 > | **M8** capture is per-**hex**; region capture + `TryCapturePlanet`'s all-regions test are deleted | **new S6f** — and it is *upstream* of **S12** (#21 what capture transfers, still OPEN). Victory condition = **written deferral** |
 > | **M10** delete `GroundFortification.SumAdjacent` region shielding | **S5** (it already touches the fortification trap) |
 > | **M11** hazards per-hex from hex type + geography | **S11** — replaces the per-region declaration; pairs with the `SYSTEM-GENERATION` **G6** physics-terrain item |
-> | **M12** hybrid AI brain (coarse regional / fine mini) | **S7/D3a** — the maneuver slice already consults doctrine; *scope of "hybrid" to be confirmed* |
+> | **M12/M14** hybrid AI brain — **CONFIRMED: coarse at the regional-hex level for *where to go*, fine at the mini-hex level for *how to fight*** (the same split as the two-part address, which is what keeps it inside One Verb, Both Seats) | **S7/D3a** — the maneuver slice already consults doctrine |
+| **M13** the planet map stays **clickable for SELECTION + DISPLAY** (click a unit → its RED weapons-range and WHITE sensor borders) but **never for orders** | **S6e** — so S6e *moves* the order buttons out, it does **not** make the map read-only |
+| **M15** ONE NAME: **"regional hex"** (big) / **"mini hex"** (small). The same object had **five** competing names and the developer's own term was the only one absent from the code. Docs + UI strings now; the `GlobalQ` field rename is an optional later tidy (it is a `[JsonProperty]`, so it lives in save files) | a **doc/UI sweep**, plus a naming note wherever S6a–S6f touch a string |
 
 <details><summary>Superseded S6 text (kept for provenance — do not build from it)</summary>
 

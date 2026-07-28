@@ -334,6 +334,19 @@ rather than kept as a convenience.
 | **M11** | **HAZARDS ARE PER-HEX, derived from hex type + geography** and any other variable specifiable at that level of the planet. Not per-region declarations. |
 | **M12** | **The AI tactical brain should be HYBRID if it can be managed** — coarse at the regional-hex level, fine at the mini-hex level. *(Scope of "hybrid" to be confirmed.)* |
 
+## M13–M15 — the follow-up rulings (developer, 2026-07-28, same dialogue)
+
+| # | Ruling |
+|---|---|
+| **M13** | **THE PLANET MAP STAYS CLICKABLE — for SELECTION and DISPLAY, never for orders.** You click a unit on the surface map to select it and to see its **RED** weapons-range border and **WHITE** sensor border. The **order** is then issued in **Force Management** (M9). So the map stays a live instrument; it just stops being an order surface. |
+| **M14** | **THE AI BRAIN IS HYBRID ACROSS THE TWO ADDRESSES:** it thinks **coarse at the regional-hex level** to decide *where to go*, and **fine at the mini-hex level** to decide *how to fight*. Same split as the two-part address (M3) — which is what makes it manageable, and what keeps it inside **One Verb, Both Seats** (the AI reasons at the same two scales the player orders at). |
+| **M15** | **ONE NAME FOR THE BIG HEX: "REGIONAL HEX."** The developer did not recognise *"operational hex"* — and a survey found the same object carries **five competing names**: "operational hex" (5 docs / 11 code files), "war-map hex" (2/5), "coarse hex" (5/4), **"regional hex" (4 docs / 0 code)** and "global hex" (2/11), with the code field itself named `GlobalQ`/`GlobalR`. **A term the developer does not recognise is a term that must not be in the docs.** Standardise every doc and every UI string on **regional hex** (and **mini hex** for the small one). ⚠ *The code field rename is OPTIONAL and has a cost — `GlobalQ` is a `[JsonProperty]`, so it is written into save files; renaming needs a compatibility alias. Fix the docs/UI now; treat the field rename as a later tidy.* |
+
+**The vocabulary, fixed (use these two words and no others):**
+- **REGIONAL HEX** — the big hex you march between. ~477 km across on Earth. The scale of march and objectives.
+- **MINI HEX** — the little hexes inside it, **13 across** ⇒ ~37 km each. Where units stand, shoot, and where buildings sit.
+- *(A **region** is neither — it is a **visual grouping** of regional hexes, M2.)*
+
 ## What is ALREADY BUILT for these (verified in source, 2026-07-28 — so this is mostly a DELETE job)
 
 The ruling is far closer to as-built than the older docs suggest. **Do not rebuild these:**
