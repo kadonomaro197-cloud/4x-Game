@@ -454,6 +454,45 @@ findings in an appendix so the next session knows they were checked.
 
 ## 4. PHASE C — CONSOLIDATE, CORRECT, DELETE (execute now, in CI-gated commit slices)
 
+> ### 🟡 PHASE C: five of six rules SATISFIED — and the sixth was the one nobody had touched
+>
+> | Rule | State |
+> |---|---|
+> | Subject subfolders · `DOCS-INDEX` row in the SAME commit · gauge state → `TESTING-TRACKER` | ✅ held every commit |
+> | **Connections → `SYSTEM-CONNECTION-MAP.md`** | ❌ **WAS THE GAP — now closed.** See below. |
+> | Merged-away docs hard-deleted with a full `.md` **and** `.cs` link sweep; provenance names as plain text | ✅ **327 dead pointers** across 249 files repointed, residual grep **0**; the ~22 provenance mentions deliberately left alone (rewriting exactly those is what destroyed history in the 2026-07-13 sweep) |
+> | Superseded-but-historical → `docs/archive/` with a banner; invalid-and-worthless → delete | ✅ `SYSTEMS-STATUS-AND-TEST-PLAN.md` **moved** to `docs/archive/` (23 sites / 17 files repointed, residual 0); **one deletion executed** — the compliance tracker, at the developer's instruction, content migrated to audit §15. **No design doc deleted, and that is a written verdict, not an omission** (audit §15d) |
+> | Every A2 seed item fixed or explicitly ruled still-true | ✅ **13 of 13**, ledger at audit §10 — including the **3 seed claims that were themselves wrong** |
+> | Finish the `SYSTEMS-STATUS-AND-TEST-PLAN.md` retirement | ✅ complete — bannered, archived, and root `CLAUDE.md`'s **four** contradictory mandates repointed |
+>
+> **⚡ THE GAP, AND WHY IT MATTERED.** `SYSTEM-CONNECTION-MAP.md` is the **named owner of system-to-system
+> connections** and the Prime Directive's *one* upkeep rule — *"if you find a connection this map doesn't list, add
+> it in the same commit as the change that revealed it."* This operation's only change to it was a **one-line path
+> repoint**. Every connection the operation found was missing from it.
+>
+> **The structural reason it stayed empty:** the map could only draw wires that **exist**, and nearly everything
+> this operation found is a wire that **should** exist and doesn't. A diagram that shows only working connections
+> reads as *"the rest is fine."* So the map now carries a **⚡ BROKEN AND MISSING EDGES** section — 10 rows, each
+> naming **both ends**, the **exact line** where the wire should be, and its **slice key** — with the rationale
+> stated in the header so it can't become a status column by the back door: **a cut wire is a connection fact, not a
+> build-status mark.** The rows: capture never updating the faction colony registry (no removal path exists at all,
+> and 8 AI readers consume it) · ground combat halting the clock while emitting nothing · the AI threat read summing
+> a field that is always 0 · doctrine assignment dropping 4 of its own fields · the costed queue writing hexes that
+> can never fortify (why #9 and #10 are one slice) · the AI garrison rebuild producing cargo instead of soldiers ·
+> base-mod units structurally unable to bill upkeep · ground damage per-tick vs space per-second · orbital
+> bombardment never firing on a colony · plus **one edge that DOES work** (`GroundFootprintAtb`), recorded so nobody
+> rebuilds it.
+>
+> **Three existing rows were also stale or incomplete, now corrected:** **Diplomacy** read *"design only"* — it is
+> wired into space-combat hostility **both ways**, and *"design only"* was itself a build-status mark this file bans;
+> **Ground combat** was missing its edge **INTO the time loop** (a ground battle stops the player's clock);
+> **Sensors** was missing its two real consumers — the AI threat read and **survey-reveal accuracy** — which
+> **share one struct**, so a change aimed at one lands on the other.
+>
+> **⚠ STILL OWED (carried in audit §15f):** Phase C ran **before** Phase A finished, so some doc corrections were
+> made against **incomplete evidence**. The A4, A5 and Phase-B passes all landed later and changed real facts — a
+> **re-sweep of the docs those passes touched** is owed before Phase C can be called closed.
+
 Rules (all from root `CLAUDE.md` + established precedent):
 - Docs live in subject subfolders; **flip the `DOCS-INDEX.md` row in the SAME commit** as any doc change; test/gauge
   state → `TESTING-TRACKER.md`; connections → `SYSTEM-CONNECTION-MAP.md`.
