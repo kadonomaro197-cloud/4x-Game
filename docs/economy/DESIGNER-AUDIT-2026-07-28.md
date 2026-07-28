@@ -271,3 +271,55 @@ The fix is small and obvious — recompute on component change and on damage, or
 but it should be done once, deliberately, with a gauge, rather than three times from three directions. **And it should
 be done before the six "grave rung" doc-comments are believed by anyone**, because right now the docs describe a
 cradle-to-grave loss that the engine cannot perform.
+
+---
+
+## PASS 6 — How much of "ONE resolver" is actually one thing?
+
+Pass 5 found two incompatible armour models living inside what the docs call a single resolver. That raised an obvious
+question I had been assuming the answer to: **how far did the resolver merge actually get?** Pass 6 measures it —
+every member of `CombatKernel`, counted by production callers — and then checks the shield, the one defence Pass 5
+did not walk.
+
+**Docs read first:** `CombatKernel.cs` class doc-comment in full (the "wiring status" paragraph),
+`docs/combat/RESOLVER-DESIGN.md` §5, `GroundCombatant.cs` in full, `CombatEngagement.ApplyShield` (`:1576-1590`),
+`FleetCombatStateDB.cs`, `GroundForcesProcessor.cs:390-400`, `GroundUnitAssembly.cs:190-300`, and the two gauge
+fixtures (`GroundKernelBridgeTests`, `GroundUnitAssemblyTests` §shield-recharge).
+
+### The measurement — `CombatKernel` members by PRODUCTION callers
+
+| Kernel member | production refs | verdict |
+|---|---|---|
+| `ArmourSoak` | 6 | shared ✅ |
+| `ArmourSoakBurst` | 4 | shared ✅ |
+| `BurstShotCount` | 3 | shared ✅ |
+| `HitFraction` · `ShieldSoakFraction` | 2 each | shared ✅ |
+| `LandedFraction` · `SoakFractionOf` · `ResolveShield` | 1 each | shared ✅ |
+| **`Combatant`** (the neutral view) | **4 — all inside `GroundCombatant.cs` itself** | **ZERO real consumers ❌** |
+| **`ResolveSalvo`** (a shared salvo loop) | **0** | **DOES NOT EXIST ❌** |
+
+### Findings
+
+| # | Sev | Finding |
+|---|---|---|
+| **D6-1** | 🔴 | **THE "ONE SALVO KERNEL" SHARES THE ARITHMETIC, NOT THE STRUCTURE — and that is precisely why D5-1 is possible.** `CombatKernel.Combatant` is the neutral view the class doc calls the load-bearing idea (*"written to a neutral view that a ship OR a ground unit can present, so neither the hex board nor the ship `Entity` leaks into the math"*). **Nothing in production ever builds one.** Its only four references are inside `GroundCombatant.cs` — the doc-comment, the method signature, and the `new` — and the sole *caller* of `ToCombatant` is a single test (`GroundKernelBridgeTests:141`) that asserts the mapping and stops there. **The ship side never builds one at all.** There is also **no `ResolveSalvo`** — the kernel has no salvo-level entry point, so **each domain still runs its own loop over its own types** and simply calls the same helper functions. **Plain English: the two resolvers agree on the formulas and disagree on the shape of the fight.** That is exactly how you get two incompatible armour models (**D5-1**) while both sides honestly call `CombatKernel.ArmourSoak` — sharing a subtraction does not force you to agree on what you are subtracting from. **The merge reached the arithmetic layer and stopped before the structure layer, and the docs read as though it reached both.** |
+| **D6-2** | 🟠 | **THE DEAD BRIDGE WOULD REGRESS A WORKING FEATURE IF SOMEONE WIRED IT UP AS-IS.** `ToCombatant` hardcodes `ShieldRegen = 0` (*"regen 0 in v1"*, `GroundCombatant.cs:130`). But the live ground resolver **already** regenerates shields per unit from a **designed** dial — `GroundForcesProcessor.cs:395`, `u.CurrentShield + u.Shield × u.ShieldRegenFraction × (dt/3600)` — fed part → design → raised unit and gauged by a named test (`GroundUnitAssemblyTests:346-382`: the Ward Projector's 1.0 vs the standard generator's 0.34, *"a real burst-durability-vs-one-hit-buffer choice"*). **So the obvious next merge step — route ground through the neutral view — silently deletes a dial that works today.** This needs flagging **on the bridge**, not discovered afterwards. |
+| **D6-3** | 🟠 | **SHIELDS ARE ONE FLEET-WIDE POOL IN SPACE AND PER-UNIT ON THE GROUND — the same split as armour.** `CombatEngagement.ApplyShield` (`:1576-1590`) drains **`FleetCombatStateDB.ShieldPool_J`**, a *single* pool seeded from the summed capacity of every ship in the fleet. So one battleship's shield generator absorbs damage aimed at the fleet's unshielded freighters, and the pool shrinks only when ships are lost. On the ground every unit owns its own pool and its own regen. ⚠ **That makes THREE things now splitting the same way — the battlefield container (resolver audit root cause B), armour hardening (D5-2), and the shield.** These are not three defects; they are **one unstated design decision — space AGGREGATES, ground INDIVIDUATES — surfacing in three places.** It should be settled once, deliberately, because M19 says the two should not differ at all. |
+| **D6-4** | ✅ | **THE GROUND SHIELD CHAIN IS THE BEST-BUILT THING THE AUDIT HAS FOUND — copy it.** `GroundAugmentAtb.ShieldRegenFraction` (a real JSON dial, 6-arg ctor) → `GroundUnitAssembly.cs:190-241` (a **Shield-weighted** average across mounted augments, not a naive mean) → `GroundUnitDesign.ShieldRegenFraction` → `GroundForcesDB.cs:627` onto the raised unit → `GroundForcesProcessor.cs:395` in the resolve — with a test that asserts the *decision* (fast small ward vs slow big generator), not just the plumbing. **Every rung present, gauged, and traceable in one grep.** *(The ship shield's regen is designed too — `ShieldAtb.RegenRate_Jps` → `ShieldRegen_Jps`; the difference from ground is **scope** (D6-3), not fidelity. Stated precisely so the fix targets scope.)* This is the shape to hold every other chain against. |
+
+### What Pass 6 changes about the plan
+
+**"One resolver" is currently true of the formulas and false of the fight.** Every fix proposed in Passes 4 and 5 — the
+armour reconcile, penetration on ships, per-source alpha — quietly assumes a shared structure that does not exist. So
+the ordering changes:
+
+1. **The structural merge is the prerequisite, not the follow-up.** Give the kernel a real salvo entry point and make
+   **both** sides present `CombatKernel.Combatant`. Until that lands, "fix penetration on ships" has nowhere to land,
+   and every future divergence is free to reappear — nothing in the build stops it.
+2. **Settle the aggregate-vs-individual question ONCE** (D6-3), before wiring anything else. Three systems already
+   split on it; a fourth will follow. M19 says they should not differ, and that is a decision the developer owns, not
+   something to infer from whichever side is cheaper to change.
+3. **Carry D6-2 as a hard note on the bridge itself** so the merge does not cost a working, tested, authored dial on
+   its way past.
+4. **Hold every chain against D6-4.** It is the only end-to-end example in the codebase of a dial that is designed,
+   assembled, delivered, resolved, *and* gauged on the decision it creates. It is what "done" looks like.
