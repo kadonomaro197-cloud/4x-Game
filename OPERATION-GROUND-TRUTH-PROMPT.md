@@ -53,6 +53,82 @@ developer gives the go before it runs. Use as many subagents as the work needs; 
 
 ## 1. CANON — the developer's decisions (these override every older document)
 
+> # 🔒 CANON EXPANDED MID-OPERATION — THE MOVEMENT / GEOGRAPHY / ORDERS RULINGS (M1–M18, 2026-07-28)
+>
+> **READ THIS BEFORE THE 27. It overrides them, and it overrides `docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md`.**
+> Given by the developer in dialogue after a code walk-through of how movement, capture, threat and orders actually
+> work. Full text + evidence: **`docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md` → the 2026-07-28 addendum.**
+>
+> ## ⭐ THE GOVERNING LAW IT PRODUCED — now in root `CLAUDE.md` beside the Prime Directive
+>
+> > **ONE VERB, BOTH SEATS. If the AI cannot use a mechanic with the SAME primitive the player uses, the mechanic is
+> > too complex. Full stop.** *("Movement planetside must be just like movement spaceside, meaning the AI must be able
+> > to do it — and thus it must be simple.")*
+>
+> Complexity only a human can drive is not depth — it is a system with half its players locked out. The shape it
+> forbids is **two parallel paths for one verb**. **It was violated in THREE places, all found this session:** the
+> client's click-to-march calls the engine **directly** (no issuer marker, unsequenceable, **AI-invisible**); the
+> orders-catalog's open decision *leaned toward* keeping combat/doctrine actions as direct calls with UI-only
+> descriptors (**now CLOSED — they join the pipeline**); and **the AI applies doctrine by direct call while the player
+> queues it**. Treat a fourth instance as likely until proven otherwise.
+>
+> ## THE RULINGS
+>
+> | # | Ruling |
+> |---|---|
+> | **M1** | **ONE movement layer, not three** — the coarse region hop, the region-local hex march and the global march collapse into one |
+> | **M2** | **REGIONS ARE A VISUAL AID** — a display grouping. Not a movement layer, not a combat container, not the unit of capture |
+> | **M3/M4** | **Position is a TWO-PART ADDRESS: regional hex + mini hex**, and **the player orders to a specific mini hex inside a specific regional hex** |
+> | **M5** | **TRANSITIONAL HEXES at the regional-hex level** so the planet is one seamlessly-connected graph |
+> | **M6/M7** | **Combat proximity resolves at the MINI-HEX level**, starting when a party enters **weapons range** — drawn **RED**; sensor range drawn **WHITE** |
+> | **M8/M16** | **CAPTURE IS A HYBRID: mini-hex ownership is the STORED truth; a regional hex flips on the MAJORITY OF ITS OCCUPIED mini hexes** (occupied = a living unit *or* a building; tie ⇒ no flip; empty ⇒ taken by arriving). **Victory condition = a written DEFERRAL** (distinct from #21, which stays OPEN) |
+> | **M9/M13** | **Orders ONLY from Force Management.** The planet map stays clickable for **selection + display** (and its RED/WHITE borders) — never for orders |
+> | **M10/M11** | Fortification's **region-adjacency deleted**; **hazards become per-hex** from hex type + geography |
+> | **M12/M14** | **The AI brain is HYBRID across the two addresses** — coarse at the regional hex for *where to go*, fine at the mini hex for *how to fight* |
+> | **M15** | **ONE NAME: "regional hex" (big) / "mini hex" (small).** The same object carried **five** competing names and the developer's own term was the only one **absent from the code** — which is why the jargon failed. *A term the developer does not recognise must not be in the docs.* |
+> | **M17** | **The ground threat read is ONLY what the units can see** — the union of per-unit `GroundSensorAtb` reach against the same distance function the weapon gate uses |
+> | **M18** | **THREE battalion orders — MOVE · RAZE · SET DOCTRINE — plus EMBARK/LAND. HOLD is the DEFAULT (empty queue).** No timed hold |
+>
+> ## THE THREE FINDINGS THAT SHAPED THE BUILD (verify before re-deriving)
+>
+> 1. **MOST OF IT IS ALREADY BUILT — this is largely a DELETE job.** The two-part address **is** the live distance
+>    function: `GroundMiniHex.ContinuousPosKm` sums coarse-hex km + mini-hex km + a real **sub-mini-hex offset**, so the
+>    field is continuous **three levels deep**; the metre proximity gate (`WeaponReaches` → `CombatKernel.WithinReach`)
+>    is built and **ON for menu games**. The code even states the edge case M5 was raised to solve is already solved:
+>    *"two units at a shared coarse-hex edge read a small gap **regardless of which coarse hex each is filed under**"*
+>    (`GroundMiniHex.cs:70-71`). ⇒ **transitional hexes are for the connected movement GRAPH, not for range.**
+> 2. **⛔ THE ONE REAL BLOCKER IS THE REGION BUCKET.** `GroundForcesProcessor` groups units into `byRegion` keyed on
+>    `RegionIndex` (`:268-278`) and resolves **once per bucket** (`:295-304`) — so two units in different regions are
+>    **never compared**, however close in metres. The metre gate only ever runs *inside* a bucket. **Deleting that
+>    bucket is what makes the planet seamlessly connected**, and **no test covers it.**
+> 3. **THE GROUND BRAIN WAS OMNISCIENT, NOT BLIND — the opposite of S1e.** `IsRegionDetected` returns true if you are
+>    *standing in* the region, **own** it (*ownership is not eyesight*), or ever **scouted** it (*a survey is permanent
+>    terrain knowledge, not live detection of moving units*) — plus the own-region base case has **no fog gate at all**.
+>    M17 deletes all four. **Safe:** the `Blind` valve already demands **1.5×** odds and forbids pressing while blind —
+>    but **`Blind` must be re-defined from "an un-scouted neighbour REGION" to "ground no unit of mine can see."**
+>    *(S1e is a different bug at a different layer: the STRATEGIC brain reading a sensor MARGIN as loudness.)*
+>
+> ## EVERY RULING MADE THE BUILD SMALLER — and one problem deleted itself
+>
+> The order enum goes **7 → 3**. `CaptureInfrastructure` dies because **M16 derives it** (standing on a tile makes it
+> yours). The RAZE port **kills the hardcoded `(0,0)` target bug** as a side effect. **And the one serious AI gap
+> found this session — *"the AI never seizes, so it can wreck a planet but never take one"* — CLOSED ITSELF**, because
+> there is no seize order any more: the AI takes ground by **moving onto it**, which it already does. **The gap was an
+> artefact of a mechanic that should not have existed** — the clearest evidence the simplification is right.
+>
+> ## WHERE IT LANDED
+>
+> Canon addendum (M1–M18 + evidence) · the law in root `CLAUDE.md` · `GROUND-SURFACE-MAP-DESIGN` **Layer 1 demoted,
+> Layer 2 superseded outright** · a deletion ledger on `GroundCombat/CLAUDE.md` · canon pointers on three resolver docs
+> · the orders-catalog's open decision **CLOSED** (and its stale *"~51 exist / ~5 reachable"* re-counted to **46 / 23**)
+> · and **THE PLAN's S6 replaced by S6a–S6f** — unbucket combat (**the keystone**) → one movement layer → the two-part
+> order verb → transitional hexes → orders into Force Management → per-hex capture.
+>
+> **⚠ NEXT UP, NOT YET WALKED: the AUTO-RESOLVER** — what happens between the red border touching and one side being
+> dead. It is where the tick questions **Q3/Q4** and the doctrine slices live, so walking it settles the last open
+> developer questions.
+
+
 > ### ✅ SECTION 1: CANON READ AND OBEYED — with one gap this slow walk caught (2026-07-27)
 >
 > **The rulings were obeyed.** #21 (capture transfer) was **never decided** — only inventoried as a decision aid
@@ -559,6 +635,12 @@ Rules (all from root `CLAUDE.md` + established precedent):
 > | **5. Open questions in prose at the top** | ✅ **§0 Q1–Q5.** #21 left **OPEN** as ruled; Q3 corrected by finding C3 (a committed spec already pins 5 s); **Q5 narrowed 2026-07-28** — the rates *are* authored for designer weapons, so only the flat-`Attack` garrison/base-mod residue is open |
 > | **6. Two-minute plain-English summary** | ✅ **§1** |
 >
+> **⚠ THE PLAN CHANGED AGAIN, 2026-07-28 — re-read it before building.** The **M1–M18 canon** (§1) landed *after* this
+> annotation and moved real slices: **S6 was replaced by S6a–S6f** (unbucket combat · one movement layer · the two-part
+> order verb · transitional hexes · orders into Force Management · per-hex capture), the **order set collapsed 7 → 3**,
+> **S8 became a CONNECT** (the rate model already exists), and **M17** rides S6a. Three slices were re-sized **DOWN**
+> by Phase B (#25, S6, S8) and the M-rulings shrank S6c further. **Nothing was re-sized up.**
+>
 > **The embedded requirements were also checked, each scheduled or explicitly deferred — never silently dropped:**
 > the **`SYSTEM-GENERATION` G1–G6 decision** (ruled in S11: **G1 pulled forward** as cheap + gauge-first, **G2**
 > reclassified as a concrete content bug — procedural systems get **no belts at all** — and **G3–G6 deferred in
@@ -628,6 +710,12 @@ Author a **saved, re-runnable Workflow script** that executes the plan — the d
 - **Combat determinism is locked** (fast-forward == watch): no RNG in resolvers without a seeded, order-independent
   stream.
 - **`TypeNameHandling.Objects`**: renaming/moving any `*DB` breaks saves — migration or don't.
+- **⭐ TWO PARALLEL PATHS FOR ONE VERB — the landmine added 2026-07-28, and it recurs.** A player path that calls the
+  engine **directly** while the AI goes through the order queue is **AI-invisible**, unsequenceable and carries no
+  issuer marker. **Found three times in one session** (client click-to-march · the orders-catalog's "keep direct
+  execution, add UI descriptors" lean · **the AI applying doctrine by direct call while the player queues it**).
+  **The test before building any mechanic: name the primitive the AI will call.** If the answer is "the AI gets a
+  simpler version," stop — that is two systems and one of them will rot. Root `CLAUDE.md` → *One Verb, Both Seats*.
 - **Doctrine reciprocal trap:** space `ToughnessMult` and ground `DamageTakenMult` are reciprocals; author exactly
   ONE per entry; `CombatDoctrine`/`UnifiedDoctrineTests` guard it — keep them green.
 - **System-gen (if G1–G6 land in the plan):** new generation must draw from a dedicated RNG stream, never the
