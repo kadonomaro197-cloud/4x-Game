@@ -575,3 +575,93 @@ consolidate/correct/delete → Phase D `docs/ground/PLANETARY-FUNCTIONAL-PLAN-<d
 functional/accessible/observable delta ledger + ordered slices) → Phase E the committed, validated,
 never-invoked `close-planetary-delta` workflow. Open developer questions are collected in the plan doc;
 **ruling #21 (what a planet capture transfers) stays OPEN and must not be decided.**
+
+---
+
+## 13. TEST / GAUGE COVERAGE — the A5 sweep (orders §2/A5)
+
+The one Phase A batch whose agents never ran. Done in the main loop, 2026-07-27. Four questions, in the
+orders' own order.
+
+### 13a. Is `docs/TESTING-TRACKER.md` telling the truth? — **YES. Zero phantom tests.**
+
+The C3 defect (a doc claiming a test that does not exist) **does not recur in the tracker.**
+
+- **97** backticked fixture names appear in the tracker. **94** resolve to a real `class` in
+  `Pulsar4X/Pulsar4X.Tests/`. The three that don't are the tracker's own **family abbreviations** inside
+  `…`-ellipsis lists, and each is legitimate: `RangeReadoutTests.cs` and `SpatialEnvironmentsDioramaTests.cs`
+  both exist, and **`SocietyReadout` is an engine class**, correctly named as the thing under test rather than
+  as a fixture.
+- All **7** `Fixture.Method` claims verified present in the named fixture:
+  `DiplomacyIffTests.SignedPact_StopsTheFight` · `EconomyReadoutTests.Economy_BaselineReadout_OverOneYear` ·
+  `FactionEconomyTests.SocietyReadout_DumpsColonyState` · `LegitimacyProcessorTests.War_TaxesLegitimacy_ByMilitarism` ·
+  `MoraleTests.StartingColony_Infrastructure_ProvidesHousingComfort` · `PlanetRegionsTests.SurveyReveal_` ·
+  `StationFactoryTests.Station_TakesDamage_`.
+
+### 13b. The tracker's real blind spot is the **INVERSE** of C3 — 6 `[Ignore]`d tests, and it indexes **one**
+
+Not phantom tests: **real tests that are not running.** There are **6** `[Ignore]` attributes at HEAD. The
+tracker mentions exactly one — and only to record that it was *resolved* (line 31) — then states *"No
+deliberately-red engine gaps remain."* That is true **about reds**, but an `[Ignore]` is a gauge that is
+switched off, and **three of the six encode live defects:**
+
+| Where | What it parks | Bearing on THE PLAN |
+|---|---|---|
+| `NewGameStartSmokeTests.cs:24` | base + **testingmod** New Game colony build throws `NullReferenceException` (the testing mod ships incomplete Armor/Theme data) | **the ACCESSIBLE leg.** Reachability checked: `testingmod` **ships** (`Pulsar4X/GameData/testingmod/`) and the New Game *"Select Mods to Enable"* page lists **every** discovered mod with a checkbox (`NewGameMenu.cs:157-171`) — so this is **one tick away from a player**. Mitigating: its manifest has **no `DefaultEnabled` field**, so it reads `false` (`ModsState.cs:62`) → **reachable, not default.** It is in **neither** `TESTING-TRACKER.md` nor `CLIENT-TEST-CHECKLIST.md` |
+| `EfKithrinExpandArcTests.cs:322` | an AI-founded colony starts **0-population AND 0-tax-rate**, so it never pays tax. In-code note: *"a real finding, not a broken test"* | **S1b.** The registry fix makes a captured/founded world join a faction's `Colonies` — this says such a world contributes **nothing economically** until pop *and* rate are seeded |
+| `MidCampaignSaveLoadTests.cs:173` | the 2D group-plane battle-frame anchors are **not** exercised through save/load | the TWOD track, not this plan — but it is an unrun save-safety gauge |
+
+The other three: `SystemGenTests.cs:297` and `:341` are legitimate exclusions (long-running / manual
+statistical). **`PathfindingTests.cs:102` — `[Ignore("Incomplete Test")]` — carries no reason, no owner and
+no date.** It is the weakest of the six and the only one with nothing to act on.
+
+**Owed to the tracker:** an *"off-but-real"* section listing all six with a reason and an owner. Six switched-off
+gauges are invisible today.
+
+### 13c. Which planned slices have NO gauge — **three, and only one is a real gap**
+
+**17 of 19** slice headings in `docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md` carry an explicit
+**Gate:** line. S7's four sub-slices are covered (D0 has its own gate; the rest by *"Gate per sub-slice"*).
+The three without:
+
+- **S11 (Depth) — THE REAL GAP.** ~13 named depth items (#7 `CrewReq` · #8 ammo bites · #5 hazard gear ·
+  #22 `CasualtyTier` · #12 employment/power · #13 tile bonuses · M4 terrain · Layer-6 naming · client fog ·
+  the grave rung · hex deposits · G6b) and **only the pulled-forward `SYSTEM-GENERATION` G1 round-trip carries
+  a gauge.** S11 must never be entered as a unit — each item gets its Gate line written when it is scheduled.
+- **S12 (what capture transfers) — gauge-BLOCKED, not gauge-missing.** Blocked on Q1; the assertion cannot be
+  written until the ruling says what transfers. Recorded as blocked.
+- **M1 (the live cradle-to-grave sitting) — ungauged by design** (it *is* the Layer-3 gauge) **but missing from
+  `TESTING-TRACKER.md`**, the one doc that owns Layer 3.
+
+**The wider tracker gap:** the tracker has **zero rows** for any of THE PLAN's 19 slices and does not reference
+the plan at all. Upkeep rule for the build: **add M1 as a Layer-3 row now; add each slice's Layer-1 row in the
+same commit that ships the slice.**
+
+### 13d. Shard pressure — **two slices need their own shard, and there is an undocumented double-run trap**
+
+`rest` is the complement filter, so **every fixture this plan creates lands in the slowest shard by default.**
+Measured load using `TestScenario.CreateWithColony` — the call `ci.yml` itself names as the dominant cost
+(it re-parses **all** the mod JSON on every call):
+
+| Shard | Fixtures | `CreateWithColony` calls |
+|---|---|---|
+| `stations` (isolated **because** it was the ~11-min bottleneck) | 1 | **18** |
+| `rest` (the complement) | **234** | **665** |
+| — of which `GroundForcesTests` alone | 1 | **48** across 61 tests |
+
+`GroundForcesTests` is the **single heaviest fixture in the suite** by this measure — and it is the natural
+host for the S1 and S8 assertions.
+
+- **S1 (ground battle log)** — fights a battle to completion with assertions per phase. **Give it its own
+  fixture name and its own shard, in the same commit.**
+- **S8 (tick + rate model)** — its own gate requires *the same fight run at two tick lengths*, plus a
+  reference fight for byte-identity: **≥3 fights.** **Own shard.**
+- S0 (three bodies' hex readout) · S5 (a build queue to completion) · S1f (drive the rung to completion) ·
+  S9 (bombardment + AI rung) — moderate. **Watch the TRX duration column; do not pre-carve.**
+
+**⚠ THE TRAP, documented nowhere:** `rest` is a **hand-maintained** complement — `ci.yml:69` is `!~` of all
+seven named shards. Adding shard `X` **without** also adding `FullyQualifiedName!~X` to the `rest` filter makes
+`X` run **TWICE** — once in its own shard and once in `rest` — so the "isolation" costs more than it saves and
+`rest` never shrinks. `docs/earthfall/IMPLEMENTATION-AUDIT-2026-07-22.md:83` calls the sharding *"gap-proof by
+construction,"* which is true for **coverage** (nothing can be excluded from every shard) but says nothing
+about this **duplication** direction. **Every new-shard commit edits `ci.yml` in TWO places.**

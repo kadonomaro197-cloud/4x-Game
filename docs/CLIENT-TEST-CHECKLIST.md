@@ -209,3 +209,16 @@ the first four are about **instruments that lied**, not features.
 - [ ] **An arriving hostile fleet produces *something*.** An AI strike fleet warped 250.6 Gm to an undefended
       Earth and produced no battle, no interrupt, no alert — correct given zero player ships, but the player
       should still see an arrival.
+
+### Added 2026-07-27 by the A5 test-coverage sweep (audit §13b) — a crash hiding behind an `[Ignore]`
+
+- [ ] **⚠ New Game with `Pulsar4x-Testing` TICKED.** On the New Game **"Select Mods to Enable"** page, tick
+      **Pulsar4x-Testing** alongside the base mod and start a game. **Expected today: it throws
+      `NullReferenceException` during the colony build** — the testing mod ships incomplete Armor/Theme data.
+      This is *not* the old "no mod enabled" crash (that one is fixed in `DisplayModsPage`). It is
+      **`[Ignore]`d in CI** (`NewGameStartSmokeTests.cs:24`), so no gauge is watching it.
+      **Why it's here:** the mod ships (`Pulsar4X/GameData/testingmod/`) and the page lists *every* discovered
+      mod with a checkbox (`NewGameMenu.cs:157-171`) — it is **one tick away from a player**. It is *not* on
+      by default (its manifest has no `DefaultEnabled` field → `false`, `ModsState.cs:62`), which is the only
+      reason this isn't a boot-blocker. **What right looks like:** either the game starts, or it refuses the
+      mod with a readable message — never an NRE. Report which you get.

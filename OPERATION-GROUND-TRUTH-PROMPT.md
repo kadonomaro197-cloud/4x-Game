@@ -351,6 +351,45 @@ together or ground defence silently breaks).
 
 ### A5 — Test/gauge coverage
 
+> #### ✅ A5: VERIFIED DONE (2026-07-27) — agents never ran; **done in the main loop**. All four questions answered
+>
+> Full findings: **`docs/DOCS-AUDIT-2026-07-27.md` §13**. The gaps it found were **closed in the same commit**, not
+> just reported — `TESTING-TRACKER.md` gained the two missing boards, `CLIENT-TEST-CHECKLIST.md` gained the crash row.
+>
+> **① Tracker truth-check → HONEST. Zero phantom tests.** The C3 defect does **not** recur. All **97** backticked
+> fixture names check out — 94 resolve to a real `class` in `Pulsar4X.Tests/`, and the 3 that don't are the tracker's
+> own family abbreviations inside `…`-ellipsis lists (`RangeReadoutTests.cs` and `SpatialEnvironmentsDioramaTests.cs`
+> both exist; **`SocietyReadout` is an engine class**, correctly named as the thing under test). All **7**
+> `Fixture.Method` claims verified present.
+>
+> **② The tracker's real blind spot is the INVERSE of C3 — not phantom tests, but REAL tests that aren't running.**
+> **Six** `[Ignore]` attributes at HEAD; the tracker indexed **one**, and only to say it was *resolved*, then claimed
+> *"no deliberately-red engine gaps remain"* — true about **reds**, silent about switched-off gauges. **Three park a
+> live defect:** a **player-REACHABLE** New-Game NRE when `Pulsar4x-Testing` is ticked (`NewGameStartSmokeTests.cs:24`
+> — the mod ships, the mods page lists every mod with a checkbox at `NewGameMenu.cs:157-171`, so it is **one tick
+> away**; off by default only because its manifest has no `DefaultEnabled` field, `ModsState.cs:62`); an **AI-founded
+> colony that starts 0-population AND 0-tax-rate** so it never pays (`EfKithrinExpandArcTests.cs:322` — bears directly
+> on slice **S1b**); and the 2D group-plane anchors unproven through save/load (`MidCampaignSaveLoadTests.cs:173`).
+> A fourth, `PathfindingTests.cs:102`, is `[Ignore("Incomplete Test")]` with **no reason, no owner, no date**.
+>
+> **③ Slices with NO gauge → three, and only ONE is a real gap.** 17 of 19 slice headings in THE PLAN carry an
+> explicit **Gate:** (S7's four sub-slices covered by D0's own gate + *"Gate per sub-slice"*). **S11 (Depth) is the
+> real gap** — ~13 named items, and only the pulled-forward `SYSTEM-GENERATION` G1 round-trip has a gauge, so S11 must
+> never be entered as a unit. **S12** is gauge-**BLOCKED** (the assertion can't be written until Q1 lands), not
+> gauge-missing. **M1** is ungauged by design (it *is* the Layer-3 gauge) but had **no home in any doc that owns
+> Layer 3** — now a tracker row.
+>
+> **④ Heavy fixtures → TWO slices need their own shard, and there is a trap documented nowhere.** Measured heavy-path
+> load (`TestScenario.CreateWithColony`, the cost `ci.yml` itself names): **`rest` carries 665 calls across 234
+> fixtures**, against **18** in the `stations` shard that was isolated *because* it was the ~11-min bottleneck —
+> and **`GroundForcesTests` alone is 48 calls / 61 tests**, the single heaviest fixture in the suite and the natural
+> host for S1/S8. **S1** (a battle to completion) and **S8** (the same fight at two tick lengths ⇒ ≥3 fights) each
+> need their own shard, carved in the same commit. **🧨 The trap:** `rest` is a **hand-maintained** complement
+> (`ci.yml:69` = `!~` of all seven named shards), so adding shard `X` without also adding `FullyQualifiedName!~X`
+> to `rest` makes `X` run **TWICE** — the isolation then costs more than it saves.
+> *(`docs/earthfall/IMPLEMENTATION-AUDIT-2026-07-22.md:83` calls the sharding "gap-proof by construction" — true for
+> **coverage**, silent on this **duplication** direction.)*
+
 `docs/TESTING-TRACKER.md` truth-check + which planned slices have NO gauge yet. Flag any doc-claimed test that
 doesn't exist (the C3 case) and any heavy new fixture that would land in the `rest` CI shard and need rebalancing.
 

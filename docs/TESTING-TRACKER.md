@@ -54,9 +54,40 @@ These are self-maintaining (CI gates them red/green every push). Listed so we kn
 
 **What this layer does NOT cover (the reason Layer 3 exists):** the client running at all; any rendering; player-facing reachability (a system with no UI/data wiring); calibration *feel*; performance; save/load of a *played* game; the New-Game path *from the menu* (the harness mirrors it but isn't it).
 
+### ⏸ OFF-BUT-REAL — the six `[Ignore]`d gauges (added 2026-07-27, Operation Ground Truth A5)
+
+**A switched-off test is an invisible gap.** This board used to say *"no deliberately-red engine gaps remain"* — true about **reds**, but six gauges are `[Ignore]`d and three of them park a **live defect**. Every one now has a reason and an owner here. *(Verification note: the same A5 sweep checked every test this doc claims — 97 fixture names and 7 `Fixture.Method` claims — and found **zero phantom tests**. The honesty gap was this direction, not that one.)*
+
+| Where | Parks | Class | Owner / next move |
+|---|---|---|---|
+| `NewGameStartSmokeTests.cs:24` | base + **testingmod** New Game colony build throws `NullReferenceException` (the testing mod ships incomplete Armor/Theme data) | 🔴 **live defect, player-REACHABLE** — `testingmod` ships and the New Game *"Select Mods to Enable"* page lists every discovered mod with a checkbox (`NewGameMenu.cs:157-171`), so it is **one tick away**. Its manifest has no `DefaultEnabled` field → reads `false` (`ModsState.cs:62`), so **reachable, not default** | complete the testing-mod data **or** harden the engine against partial blueprints. Also needs a `CLIENT-TEST-CHECKLIST` row — a developer who ticks that box gets a crash |
+| `EfKithrinExpandArcTests.cs:322` | an AI-founded colony starts **0-population AND 0-tax-rate**, so it never pays tax | 🟠 **live finding** (documented in-code as *"a real finding, not a broken test"*) | seed pop + rate on a founded colony. Bears on the planetary plan's **S1b** — a captured/founded world joins `FactionInfoDB.Colonies` but contributes nothing economically |
+| `MidCampaignSaveLoadTests.cs:173` | the 2D group-plane battle-frame anchors are **not** exercised through save/load | 🟠 **unrun save-safety gauge** | enable with the TWOD track |
+| `SystemGenTests.cs:297` | long-running integration test | ⚪ legitimate exclusion (cost) | leave off; run manually |
+| `SystemGenTests.cs:341` | manual statistical analysis | ⚪ legitimate exclusion (not an assertion) | leave off; run manually |
+| `PathfindingTests.cs:102` | `[Ignore("Incomplete Test")]` | ⚫ **no reason, no owner, no date** — the weakest of the six | decide: finish it or delete it. An ignore with nothing to act on is worse than no test |
+
+### ⚠ Shard pressure — read this before adding any heavy fixture (added 2026-07-27, A5)
+
+`rest` is the **complement filter**, so **every new fixture lands in the slowest shard by default.** Measured heavy-path load (`TestScenario.CreateWithColony`, the call `ci.yml` names as the dominant cost because it re-parses all the mod JSON per call): the `stations` shard — isolated *because* it was the ~11-min bottleneck — carries **18** calls; **`rest` carries 665 across 234 fixtures**, of which **`GroundForcesTests` alone is 48** across 61 tests, making it the single heaviest fixture in the suite.
+
+**🧨 The trap, and it is documented nowhere else:** `rest` is **hand-maintained** — `ci.yml:69` is `!~` of all seven named shards. Adding shard `X` **without also adding `FullyQualifiedName!~X` to the `rest` filter** makes `X` run **TWICE** (its own shard *and* `rest`), so the isolation costs more than it saves and `rest` never shrinks. **Every new-shard commit edits `ci.yml` in TWO places.** *(`docs/earthfall/IMPLEMENTATION-AUDIT-2026-07-22.md:83` calls the sharding "gap-proof by construction" — true for **coverage**, silent on this **duplication** direction.)*
+
 ---
 
 ## Layer 3 — Local runtime / play backlog (the tracked work)
+
+### ⛳ M1 — THE LIVE CRADLE-TO-GRAVE SITTING (the planetary plan's milestone) — 🟡 PENDING
+
+The one slice in `docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md` that is **not** a CI gauge — it *is* the Layer-3 gauge, which is why it lives here and not there. Added 2026-07-27 (A5 found it had no home in any doc that owns Layer 3).
+
+- **What:** on Windows, one unbroken sitting: design a ground unit → build it → field it → move it → fight with it → take a region → lose a unit — reading `game_logs/` the whole way.
+- **Why:** every planetary slice above it is verified by a CI assertion; **nothing yet proves the chain is walkable by a human.** This is the acceptance test the whole plan points at.
+- **Method:** `launch.bat` (captures stdout+stderr, holds the window on crash) → DevTest or a menu game → work the chain → send `console_output.txt`.
+- **What right looks like:** each rung produces a log line naming the thing that happened; no `[FATAL]`; the clock keeps running.
+- **Most likely failure:** a rung is reachable in the engine but has no front door in the client — the exact gap the plan's S4/S9 slices exist to close.
+- **Mitigation in place:** the plan's **S1** (ground battle log) and **S1c** (sim-health gauges) ship *before* M1 precisely so this sitting is readable instead of silent.
+- **Unblocks:** the plan's depth slices (S11) — none of them are worth tuning until the chain is known to be walkable.
 
 ### 🎖 OPERATION EARTHFALL — client-runtime backlog (awaiting the developer's local Windows pass, 2026-07-21)
 
