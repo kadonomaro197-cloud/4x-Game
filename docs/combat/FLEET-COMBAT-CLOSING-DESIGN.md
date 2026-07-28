@@ -113,6 +113,16 @@ the developer's build. Don't start a phase until the one below it is rooted.
 > their own range fields are the immediate follow-up (flagged in `ShipCombatValueDB.Calculate`). Gauged by
 > `FleetAggregationTests.WeaponProfile_CarriesDesignRange_FirepowerUnchanged` (beam range > 0; Firepower identity
 > unchanged; railgun = 0).
+>
+> ⚠ **UPDATED 2026-07-28 — the paragraph above is STALE and is kept only to show what changed.** Railgun / flak /
+> missile / disruptor are **no longer rangeless**: each now gets a **hardcoded class-default** constant in
+> `ShipCombatValueDB` (flak **50 km** `:52`, railgun **500 km** `:62`, missile **1000 km** `:68`, disruptor **400 km**
+> `:73`), and **plasma borrows the railgun's** (`:435`). The gauge moved with the code —
+> `FleetAggregationTests.cs:61` now asserts `Is.EqualTo(ShipCombatValueDB.RailgunRange_m)`, not 0.
+> **The follow-up is still open and is now the load-bearing one:** those are engine constants, not design dials —
+> **only the beam can express a designed range**, and no railgun/flak/missile template even offers a Range dial. So
+> the X9 rule (*the battle commences at the range of the group's longest-ranged weapon*) runs off a fixed ladder no
+> design decision can reorder. See `docs/economy/DESIGNER-AUDIT-2026-07-28.md` **D4-1**.
 
 - **Design:** `WeaponProfile` gains a `Range_m`. Fed from the real weapon designs — beam `MaxRange` (exists),
   railgun/flak ranges, missile range (still a stub — flagged; a rangeless weapon = "always in range" until built).

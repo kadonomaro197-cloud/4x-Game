@@ -172,3 +172,59 @@ Three things, and the first two point in opposite directions — which is why th
    (`HexPathfinder.IsImpassable` already documents where it goes) or drop the dial, but do not keep charging for it.
    `Size` is **free and inert** — either give it a meaning (it is the natural driver of the frame's mass, which would
    also close the prior audit's T2a) or remove the slider.
+
+---
+
+## PASS 4 — The assembler → resolver hop: which designed numbers actually reach the fight
+
+Pass 3 found the designer→assembler hand-off sound and pointed at this boundary. Pass 4 walks it exhaustively: for
+**every weapon class on both seats**, which of `WeaponProfile`'s **ten** fields come from something the player designed,
+and which are a constant compiled into the engine.
+
+**Docs read first:** `Pulsar4X/GameEngine/Combat/WeaponProfile.cs` in full (all ten field doc-comments),
+`docs/combat/WEAPONS-DESIGN.md` (the Nature × Delivery frame), `docs/combat/FLEET-COMBAT-CLOSING-DESIGN.md` §ROOT A
+(the range decision), `docs/combat/RESOLVER-AUDIT-2026-07-28.md` root cause A, `GroundCombat/CLAUDE.md`, and
+`ShipCombatValueDB.Calculate` / `GroundCombatant.ToWeaponProfile` line by line.
+
+### The ledger — ✅ = from the design · ⬛ = a hardcoded constant · ⬜ = always zero
+
+| Weapon | DPS | Velocity | Tracking | Saturation | **Range** | Nature | Delivery | Penetration | PerShotEnergy | Heat | **from design** |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| **Ship — Beam** | ✅ | ✅ | ✅ | ✅ | ✅ `MaxRange` | ⬛ | ⬛ | ⬜ | ⬜ | ✅ | **7 / 10** |
+| **Ship — Railgun** | ✅ | ✅ | ✅ | ✅ | ⬛ 500 km | ⬛ | ⬛ | ⬜ | ⬜ | ⬜ | **4 / 10** |
+| **Ship — Flak** | ✅ | ✅ | ✅ | ✅ | ⬛ 50 km | ⬛ | ⬛ | ⬜ | ⬜ | ⬜ | **4 / 10** |
+| **Ship — Plasma** | ✅ | ✅ | ✅ | ✅ | ⬛ *borrows* `RailgunRange_m` | ⬛ | ⬛ | ⬜ | ⬜ | ⬜ | **4 / 10** |
+| **Ship — Disruptor** | ✅ | ⬛ light-speed | ⬛ 1.0 | ✅ | ⬛ 400 km | ⬛ | ⬛ | ⬜ | ⬜ | ⬜ | **2 / 10** |
+| **Ship — Missile** | ⬛ 100 kJ/s | ⬛ 5 km/s | ⬛ 0.9 | ⬛ 1.0 | ⬛ 1000 km | ⬛ | ⬛ | ⬜ | ⬜ | ⬜ | **0 / 10** |
+| **GROUND — any unit** | ✅ `Attack` | ⬛ per-mode | ⬛ per-mode | ⬛ per-mode | ✅ hexes × pitch | ✅ from `Mode` | ✅ from `Mode` | ✅ | ✅ | ⬜ | **6 / 10** |
+
+### Findings
+
+| # | Sev | Finding |
+|---|---|---|
+| **D4-1** | 🔴 | **YOU CANNOT DESIGN A WEAPON'S RANGE — except on a beam. Five of the six ship classes get a number compiled into the engine.** `ShipCombatValueDB.cs:52, 62, 68, 73`: flak **50 km**, disruptor **400 km**, railgun **500 km**, missile **1000 km**; plasma has no constant of its own and **borrows the railgun's** (`:435`). None of those five templates even offers a Range dial — check `railgun-weapon`: its four dials are Muzzle Velocity, Kinetic Energy Per Shot, Rounds Per Second, Tracking. **There is no way, anywhere in the game, to design a long-ranged railgun.** ⚠ **Why this is a headline and not a tuning note:** the developer's own X9 ruling is that *"the range at which the battle commences is the range of the highest-range weapon on the unit of the group"* — so **the opening range of every battle is set by a fixed ladder (missile > railgun > disruptor > flak) that no design decision can reorder.** The standoff-vs-brawl choice that `docs/combat/FLEET-COMBAT-CLOSING-DESIGN.md` calls the anchor of the whole closing model is therefore made by *which class you mount*, not by anything you designed. The code knows: *"v1 class-default; a per-design field (paid-for in the designer, like beam's MaxRange) is the next step."* |
+| **D4-2** | 🔴 | **A MISSILE CARRIES ZERO DESIGNED NUMBERS INTO COMBAT — 0 of 10.** `ShipCombatValueDB.cs:446-448`: damage, velocity, tracking, saturation and range are **all five** stubs (`MissileLauncherFirepowerStub` 100 kJ/s, `MissileVelocityStub_mps` 5 000, `MissileTrackingStub` 0.9, `MissileSaturationStub` 1.0, `MissileRange_m` 1e6). **Every missile in the game fights identically**, whatever warhead, engine or seeker you put in it. *(Confirms the resolver audit; quantified here.)* **And Pass 2 explains why it was never noticed: the missile-warhead designer does not open at all (D2-1).** The two findings compound — **you cannot design a missile, and it would not matter if you could.** Fixing D2-1 without this leaves the player a designer whose dials go nowhere. |
+| **D4-3** | 🟠 | **`Penetration` and `PerShotEnergy` are hardcoded 0 for EVERY ship weapon — the armour-matchup dials work on the ground only.** Both are passed as literal `0` at all six ship construction sites. On the ground they come straight from the design (`GroundCombatant.cs:84, 114`). `WeaponProfile.cs` admits the cause in its own doc-comment: *"the ship path folds armour into Toughness, so penetration reaches ships only once that per-source armour reconcile lands."* So the alpha-vs-chip and armour-cracking decisions — `COMPONENT-DESIGNER-DIALS.md` ⚙1 backlog #1 and #2 — **exist in half the game.** Under canon **M19** (one resolver, "it should not matter" whether the fight is planetary or in space) that asymmetry is a straight violation, not a phasing choice. |
+| **D4-4** | 🟠 | **A GROUND WEAPON'S VELOCITY, TRACKING AND SATURATION ARE NOT DESIGNABLE — they are three constants picked by the `Mode` dropdown.** `GroundCombatant.cs:66-85`: Melee → (1, 1.0, 1); Artillery → (300, 0.0, **100 000**); everything else → (1000, 0.0, 1). So a ground weapon has **no rate of fire**, no muzzle velocity, no accuracy — the four dials on `ground-rifle` are CarryMass, Attack, Mode, Range_m. Compare `railgun-weapon`, where Muzzle Velocity / Rounds Per Second / Tracking are all real dials the player sets. **This is deliberate and commented** (*"chosen so the kernel reproduces the ground dodge semantics for that mode"*) and it was the right call to get ground onto the shared kernel — but it is precisely the *"same depth space combat has"* gap the fork exists to close, and it is now the ground half of it. |
+| **D4-5** | 🟠 | **GROUND CARRIES MORE DESIGN FIDELITY INTO THE FIGHT THAN MOST SHIP WEAPONS DO — the opposite of what everyone assumed.** Ground: **6 of 10**, including the two fields (`Penetration`, `PerShotEnergy`) that **no ship weapon carries at all**, plus a real designed range. Ship railgun/flak/plasma: **4 of 10**. Ship missile: **0**. Only the beam (7) beats ground. **The resolver audit's root cause A — "the designer's numbers don't arrive" — is therefore a SPACE problem at least as much as a ground one, and the missile is the worst offender in the game.** The plan currently reads as though ground is the lossy side. It isn't. |
+| **D4-6** | 🟡 | **`HeatPerSecond` is fed by exactly one weapon type in the entire game.** Only beams pass `beam.CombatHeat_kJps` (`:359`); all five other ship classes and every ground weapon pass nothing (0). Combined with **D2-7** — the only beam template that dials combat heat is `pulse-laser`, since `laser-weapon` is 7-arg and defaults it to 0 — **the fleet heat pool is fed by ONE part in the base mod.** The burst-vs-sustained decision the W5 heat model was built for is, in data terms, not in the game yet. |
+| **D4-7** | 🟡 | **A doc has gone stale under the code.** `docs/combat/FLEET-COMBAT-CLOSING-DESIGN.md:110-112` still says *"railgun/flak/missile default to 0 (rangeless) — their own range fields are the immediate follow-up"* and describes its gauge as *"railgun = 0"*. **The code moved on and the test moved with it** — `FleetAggregationTests.cs:61` now asserts `Is.EqualTo(ShipCombatValueDB.RailgunRange_m)`. The doc did not. Anyone reading it would plan against a rangeless railgun that hasn't existed for a month. *(Doc-currency job — `docs/DOCS-INDEX.md`.)* |
+
+### What Pass 4 changes about the plan
+
+**One sentence: the lossy side is SPACE, and range is the load-bearing hole.**
+
+- **Re-point root cause A.** Pass 3 cleared designer→assembler; Pass 4 shows the loss is concentrated in
+  `ShipCombatValueDB.Calculate`, not in the ground path. The ground path's gap is different in kind — its numbers
+  arrive faithfully, there are just fewer of them to send (D4-4).
+- **Range is the one to fix first**, because the developer's own X9 ruling routes the *entire* engagement-commencement
+  rule through a number that five of six weapon classes cannot express. Give railgun / flak / disruptor / plasma /
+  missile a real `Range` dial (a `MaxFormula` of a tech, exactly as `laser-weapon` does it — which also starts closing
+  **D3-1**), then feed it instead of the constant. That is one dial per template plus one line per class in
+  `Calculate`, and it turns a fixed ladder into a design decision.
+- **Missiles need D2-1 and D4-2 fixed TOGETHER.** Opening the warhead designer while the launcher still contributes
+  five stubs would ship a designer whose dials demonstrably do nothing — the exact "pretty" failure
+  `docs/REALISM-VS-GAMEPLAY-AUDIT.md` exists to prevent.
+- **`Penetration` / `PerShotEnergy` on ships is a real M19 violation**, not a phasing choice, and it is blocked behind
+  the ship-side per-source armour reconcile. Worth writing up as its own slice rather than leaving it as a comment in
+  a doc-string.
