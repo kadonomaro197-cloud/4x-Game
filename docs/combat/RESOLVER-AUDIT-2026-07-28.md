@@ -117,3 +117,42 @@ Every combat behaviour flag in the engine, its default, and whether the client e
 | **P3-1** | 🔴 | **`EnableFireControlRange` IS A DESIGNER DIAL THAT NOTHING SWITCHES ON.** It gates `BeamFireControlAtbDB` — a real, researchable, buildable, installable **fire-control component** — from contributing to a ship's combat values (`ShipCombatValueDB.cs:320`). Default false, **and no client code sets it true.** ⇒ **a player designs a beam fire-control director to extend weapon reach, and that reach never reaches the resolver.** This is exactly the developer's *"spinning our wheels"* concern, in its purest form: the whole cradle-to-grave chain exists and the last switch is off. |
 | **P3-2** | 🟠 | **`EnableGroupPlane` — the 2D battlefield — IS NEVER SWITCHED ON EITHER.** This is the machinery that would give Wings/Formations their own positions (**X11**'s fix, and R-f's prerequisite). Built through slices S0–S2 with tests, and **inert in every game anyone plays.** |
 | **P3-3** | 🔴 | **⚠ SYSTEMIC: CI TESTS A CONFIGURATION NOBODY PLAYS.** Ten of the twelve flags are **off in CI and on in the client**. So the green light proves the *default-off* engine is correct and says **nothing** about the combination a player actually runs — closing + fog + weapon-range trigger + weapons-release + mini-hex combat + initial spread + role manoeuvre + the tactical AI, all interacting. **There is no CI configuration that mirrors the shipped game.** This is a plausible root cause for "CI is green but the game misbehaves," and it is cheap to fix: one additional test run with the client's flag set. |
+
+---
+
+## PASS 4 — Determinism, the halt, and the interconnected systems (People, Hazards)
+
+**Docs read first:** root `CLAUDE.md` landmines (combat determinism is locked: *fast-forward == watch*, no RNG in
+resolvers without a seeded order-independent stream); `RESOLVER-2D-JOINTS.md` determinism invariants;
+`docs/environment/ENVIRONMENTS-DESIGN.md` §hazards-as-one-physics-driven-system; `GameEngine/People/CLAUDE.md`
+(the "a person's skill modifies an outcome" wire).
+
+| # | Sev | Finding |
+|---|---|---|
+| **P4-1** | ✅ | **NO RNG in any resolver** — `CombatEngagement`, `CombatKernel` and `GroundForcesProcessor` are RNG-free. The locked determinism invariant holds at its most important level. *Recorded as verified-good so nobody re-checks.* |
+| **P4-2** | ✅ | **The combat halt cannot deadlock.** A `WasInBattle` latch means an ongoing fight does not re-halt every tick, and it clears when fighting stops so a later fresh battle pauses again. Flag-gated (client-on). *Verified-good.* |
+| **P4-3** | 🟡 | **Determinism RELIES ON DICTIONARY ITERATION ORDER — a latent risk, not a live bug.** The ground resolve path iterates dictionaries five times (`byRegion` ×3, `byFaction.Keys` ×2 nested), and damage is applied **immediately as the loop runs** (shields drain in place), so the order of attackers affects intermediate state. In practice the order is stable (insertion order follows the unit list, which round-trips through save), so it is **not currently wrong** — but it depends on an unguaranteed implementation detail. §B7.2's own risk list already says the bucketed rewrite must key iteration *"on the sortable key, not dict order"*; **the same rule should be applied to the code that exists now.** |
+| **P4-4** | 🟠 | **AN ADMIRAL IMPROVES A FLEET; A BATTALION'S LEADER DOES NOTHING.** Space folds a flagship commander's skill into combat (`CommanderBonuses.CombatMultiplier`, `CombatEngagement.cs:1844` — the People system's "a person's skill modifies an outcome" wire). Ground's `LeaderUnitId` is used **only** to reassign leadership on death and to report the leader's region — **no combat effect at all**, and `GroundCombat/` contains **zero** references to `OfficerCharacter`, `CommanderDB` or `BonusesDB`. **Under R-a this is a straight asymmetry, and it is also a cradle-to-grave gap:** academies, officers and skills feed ships and stop at the shoreline. |
+| **P4-5** | 🔴 | **SPACE COMBAT HAS NO ENVIRONMENT AT ALL — and the developer's definition names environment explicitly.** R-g: *"simulate any battle in any condition… in any environment."* Ground applies environmental attrition **during a fight** (`GroundForcesProcessor.cs:225-230` — a unit standing in a damaging hazard bleeds each tick). `CombatEngagement.cs` and `CombatKernel.cs` contain **zero references to hazards.** A fleet fighting inside a radiation cloud or a solar flare takes **nothing** from it. |
+| **P4-6** | 🟠 | **AND THE ASYMMETRY IS MIRRORED — each domain built the half the other didn't.** `SpaceHazardTools.cs:61-62` applies **SensorJam → sensor range** and **MovementDrag → move speed** to ships. Ground **generates** both effects and applies **neither** (its own comment: *"the stat effects (SensorJam / MovementDrag) are carried by the data + generator but applied in a later wire"*). ⇒ **hazards affect space movement/sensors but not space combat; hazards affect ground combat but not ground movement/sensors.** A textbook illustration of the two-resolver problem. |
+
+---
+
+## PASS 5 — What decides the SHAPE of a battle (the X9 follow-through)
+
+**Docs read first:** `FLEET-COMBAT-CLOSING-DESIGN.md` (the standoff-vs-brawl decision, the locked "doctrine-only
+control" and "scalar per-group range = no 2D" decisions); `RESOLVER-DESIGN.md` §A7 (the propulsion/closing input
+surface); `WEAPONS-DESIGN.md` (the weapon triangle).
+
+Two functions decide who controls the range and what range the fight settles at. **Neither takes a doctrine argument.**
+
+| Function | What it actually computes |
+|---|---|
+| `FleetManeuver(ships)` | the **MINIMUM evasion** across the fleet — the least-evasive ship sets the floor. *(This half is right: it matches the July ruling that a joined force moves at its slowest unit's pace.)* |
+| `FleetDesiredRange(ships)` | the **longest FINITE weapon range** in the fleet |
+
+| # | Sev | Finding |
+|---|---|---|
+| **P5-1** | 🔴 | **THE COMPUTED PREFERENCE CAN ACTIVELY CONTRADICT THE DOCTRINE.** A fleet ordered to *close and brawl* that happens to carry **one** long-range gun will try to **stand off at that gun's range** — the opposite of its orders. A fleet ordered to *kite* whose ships have low evasion **never gets to dictate the range** and is dragged into a brawl. This is the precise mechanism behind X9's post-commencement half: it is not merely that doctrine has no input, it is that **the computed value can override the player's stated intent.** |
+| **P5-2** | 🟠 | **ONE LONG-RANGE WEAPON HIJACKS THE WHOLE FLEET'S ENGAGEMENT RANGE.** `FleetDesiredRange` takes the **max** over *every* weapon on *every* ship. A fleet whose main armament is short-ranged but which carries a single long-range missile launcher will hold at **missile range** and **never bring its main guns to bear.** The fleet fights at the range of its rarest weapon. |
+| **P5-3** | 🔴 | **AN ALL-BEAM FLEET CLOSES TO POINT-BLANK — a direct consequence of X13.** Because a space beam encodes unbounded reach as `Range_m = 0`, and `FleetDesiredRange` deliberately lets *"unbounded (0) never raise it"*, a fleet armed **only** with beams computes a desired range of **0** and therefore **closes to contact** — despite its guns reaching across the whole engagement. **The 0-means-unbounded convention (X13) inverts the behaviour of the ships it describes.** This is the clearest argument yet for one reach convention. |
