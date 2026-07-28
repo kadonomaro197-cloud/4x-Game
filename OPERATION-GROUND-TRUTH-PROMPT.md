@@ -397,12 +397,12 @@ doesn't exist (the C3 case) and any heavy new fixture that would land in the `re
 
 > ### 🟡 PHASE B: ROUND 1 + ROUND 2 DONE — **1 genuine walk-back, 4 new defects, 5 verdicts still owed**
 >
-> Round 1: compliance doc §6 (10 claims, 0 refuted, 3 sharpened). **Round 2: `docs/DOCS-AUDIT-2026-07-27.md` §14.**
+> Round 1: **audit §15a** (10 claims, 0 refuted, 3 sharpened). **Round 2: audit §14.** Both in `docs/DOCS-AUDIT-2026-07-27.md` — round 1 was migrated there when the compliance tracker was deleted.
 >
 > **Cost note, recorded because the deviation must be explicit:** a 15-agent fan-out (5 claims × 3 diverse lenses,
 > default-to-refuted) was launched and **killed on the developer's third budget intervention** — 2 agents started,
 > **none finished**, ~150–200 k tokens, **zero verdicts**. The arithmetic was already in the compliance doc §6 and
-> was ignored because a session flag asked for fan-out. **The standing instruction outranks the flag.** Round 2 ran
+> was ignored because a session flag asked for fan-out — the measurements now live in **audit §15b**. **The standing instruction outranks the flag.** Round 2 ran
 > in the main loop for a small fraction, applying the same three lenses by hand.
 >
 > **🔴 The first genuine walk-back of the operation — ruling #25.** *"Zero tooltips anywhere in the client"* is

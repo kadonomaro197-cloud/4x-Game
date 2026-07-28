@@ -443,7 +443,7 @@ All 13 named seed items, plus what the sweep turned up beyond them. **Three seed
 |---|---|---|---|
 | 1 | `docs/aurora/GROUND-COMBAT.md:6` — "Pulsar has no ground combat at all" | **REFUTED** (all five sub-claims false vs a ~56-file subsystem) | correction banner + pointer to the as-built subsystem |
 | 2 | `MVP.md` + `PLAY-TO-MARS` — the invade-from-orbit panel is the #1 blocker | **REFUTED** — built 2026-07-19 (`FleetWindow.cs:1756,1814`; AI at `ConquerResolver.cs:63`) | §L rewritten ✅; MVP row D + Stage 4 **re-pointed** at the 3 real gaps |
-| 3 | `SYSTEMS-STATUS-AND-TEST-PLAN.md` retirement vs root `CLAUDE.md` mandating it | **CONFIRMED** (4 mandates vs 1 retirement note, same file) | retirement finished; 4 refs repointed; **then archived** (§8-equivalent, see the compliance doc §8) |
+| 3 | `SYSTEMS-STATUS-AND-TEST-PLAN.md` retirement vs root `CLAUDE.md` mandating it | **CONFIRMED** (4 mandates vs 1 retirement note, same file) | retirement finished; 4 refs repointed; **then archived** (the full archive record is **§15d** below) |
 | 4 | `Colonies/CLAUDE.md` — `ColonyHexMapDB` "built and wired" | **CONFIRMED landmine** — save-unsafe, still `SetDataBlob`-attached by a window **and** a processor | row rewritten; 2 "build ground combat on it" notes killed; **my own first correction later found OVERSTATED and re-fixed** |
 | 5 | `Pulsar4X.Client/CLAUDE.md` — ground units live on the `ColonyHexMapDB` tile grid | **REFUTED** — they live on `HexQ/HexR` + `GlobalQ/GlobalR` + `MiniQ/MiniR` | corrected; also killed a reference to `GroundCombatWindow`, **which does not exist** |
 | 6 | `GroundCombat/CLAUDE.md` — the upkeep source | **BACKWARDS** — assembler (`:299`) and garrison (`:101`) DO bill; the base-mod path (never mentioned) does not | replaced with a 3-row table so it cannot invert again |
@@ -670,7 +670,7 @@ about this **duplication** direction. **Every new-shard commit edits `ci.yml` in
 
 ## 14. PHASE B — ADVERSARIAL VERIFICATION, ROUND 2 (orders §3)
 
-Round 1 (compliance doc §6) checked 10 claims and left **two ⚠ rows accepted on one agent's word**. This round
+Round 1 (**§15a** below) checked 10 claims and left **two ⚠ rows accepted on one agent's word**. This round
 targets the verdicts where **being wrong means a true thing was deleted** — the orders' actual reason for Phase B.
 
 ### 14a. Method, and an honest cost note
@@ -678,7 +678,7 @@ targets the verdicts where **being wrong means a true thing was deleted** — th
 A 15-agent workflow (5 claims × 3 diverse lenses: counter-evidence / scope-auditor / consequence-checker,
 default-to-refuted) was launched and **killed at the developer's third budget intervention**. It had started 2
 agents (the concurrency cap on this 4-core box) and finished **none** — ~150–200 k tokens, **zero verdicts**.
-The arithmetic was already recorded in the compliance doc §6 and was ignored because a session flag asked for
+The arithmetic was already recorded (now **§15b**) and was ignored because a session flag asked for
 fan-out. **The standing instruction outranks the flag.** Round 2 was then done in the main loop for a small
 fraction of that, using the same three lenses applied by hand.
 
@@ -772,3 +772,138 @@ from a score**, and an unmet stranger falls through to "different faction = host
   wrong *findings* — they were **correct findings with incomplete remediation** (a section fixed but not its index
   row, a banner fixed but not its table row). **A half-applied fix is indistinguishable from a wrong verdict.**
   When a verdict lands, grep the doc for every *other* place that states the same thing.
+
+---
+
+## 15. THE OPERATION'S PROCESS RECORD — migrated from the deleted compliance tracker
+
+`docs/OPERATION-GROUND-TRUTH-COMPLIANCE.md` was **deleted 2026-07-27** at the developer's instruction, after its
+job was taken over by verified-done annotations written directly into `OPERATION-GROUND-TRUTH-PROMPT.md`. It had
+been created because the session drifted; the developer then asked the right question — *"why are we doing the
+compliance doc over the orders?"* — and the answer was that a derived checklist standing in for its source will
+quietly drop whatever it failed to copy. **That is exactly what happened:** the tracker had no row for the
+mission's `DELETE` verb, so for most of the run nothing was deleted or archived and the omission was invisible.
+**A summary that outranks its source is the failure mode this whole operation exists to fix.** The load-bearing
+content is preserved below; the rest was duplication of the orders. *(Full text remains in git history.)*
+
+### 15a. PHASE B — ROUND 1 (10 claims, main-loop self-verification)
+
+The original design was 10 claims × 3 voters = **30 agents ≈ 11.1 M tokens** (at the ~370 k/agent measured from
+this session's own completed batches). It was **killed mid-flight** on the developer's budget intervention and
+redone in the main loop for **~30 k**. The deviation is recorded as an engineering decision, not a quiet downgrade.
+
+**Why self-verification is legitimate here, and where it is weaker.** The rule exists to stop *one agent's* error
+becoming canon. The session did not produce those claims and applied the same discipline — open every cited line,
+try to refute, default to refuted. It is weaker in exactly one way: **it shares this session's blind spots.** Any
+claim below that a future session finds wrong should be treated as a failure of *this method*, and re-run with
+three real lenses. *(Round 2, §14, then found a walk-back that round 1 had missed — evidence the caveat is real.)*
+
+| Claim | Verdict | What the check found |
+|---|---|---|
+| **C1** registry never updated on capture | ✅ **CONFIRMED (hard)** | The *only* production writes to `FactionInfoDB.Colonies` are two `.Add` calls (`ColonyFactory.cs:104,226`). Every other hit is a test, a copy-ctor (`FactionInfoDB.cs:163,178`) or an unrelated client dict. **No removal path exists in production code.** |
+| **C2** salvo pool not `deltaSeconds`-scaled | ✅ **CONFIRMED** | `double pool = atk * SalvoScale;` (`GroundForcesProcessor.cs:491`) — no `deltaSeconds` term. Shortening the tick multiplies output. |
+| **C3** a 5 s spec already exists | ✅ **CONFIRMED, stronger than claimed** | The spec *declares* `TheaterGroundQuantum = 5` and asserts `3600 % 5 == 0`, `720` steps, and equality with `SpaceQuantumSeconds` (`Resolver2DJointsSpecTests.cs:206-220`). The earlier 60 s suggestion was rightly withdrawn. |
+| **C4** doctrine keystone drops fields | ✅ **CONFIRMED, corrected** | **FOUR** fields dropped silently (`TargetPriority`, `RetreatCasualtyThreshold`, `BreakAwaySeconds`, `Pursues`); a **fifth**, `EngagementPosture`, is *deliberately* overridden with a comment saying why. "Silently drops `EngagementPosture`" was wrong. |
+| **CANON-1** garrison does not use the prebuilts | ✅ **CONFIRMED, corrected** | `MakeGarrisonDesign` builds `new GroundUnitDesign` in C# (`GroundStartGarrison.cs:90-103`). But "the AI's **only** buildable ground unit" was too strong: `IsBuildableGroundUnit` is a **generic** predicate; the real constraint is that **exactly 3 base-mod templates carry `GroundUnitAtb`**. |
+| **CANON-9** two free build paths | ✅ **CONFIRMED** | `LocalConstructionProcessor` spends only `PointsPerDay` (`:33`) then calls `AddComponent` (`:50`) — no `ResourceCosts` anywhere in the file. |
+| **CANON-fortification** trap | ✅ **CONFIRMED, stronger** | Fortification **value** sums only from `Region.InstallationIds` (`SumLocal :56-57`, `SumAdjacent :88-89`); hex ids are read **only subtractively** (`CapturedBuildingIds :79-80`) ⇒ **writing hexes alone can never fortify.** |
+| **CANON-14** march-to-region is a working verb | ⚠ **accepted, not independently re-checked** | Still owed — see §14d, where it is the highest-value remaining check. |
+| **PLAN-25** unit inspection MISSING not partial | 🔴 **later REFUTED by round 2** | See §14b. This is the row the round-1 caveat above predicted. |
+| **F6** the ungated DevTest main-menu button | ✅ **CONFIRMED** | `MainMenuItems.cs:51-53`; `NewGameMenu.cs:979-986`. |
+
+### 15b. Agent-budget measurements (the numbers, so nobody re-derives them)
+
+| Measurement | Value |
+|---|---|
+| Tokens per deep discovery agent | **~370 k** (A4a+A4b = 720,905 for 2; A4c+A1d = 770,644 for 2) |
+| Concurrency cap on this container | **2** — `min(16, cores-2)` on 4 cores, so N agents = **N/2 sequential rounds** |
+| 8 concurrent agents, one burst | **~2 M tokens in ~5 min**, tripped the account limit |
+| The 19-agent Phase A fan-out | died on the usage limit, **zero findings returned** |
+| The 15-agent Phase B fan-out (§14a) | 2 started, **none finished**, ~150–200 k, **zero verdicts** |
+| The same Phase B work in the main loop | a small fraction of one agent's budget |
+
+**The pacing rule that came out of it:** one batch at a time (≤4 agents), checkpoint to this dated doc after each.
+**And the shape rule (§14a):** fan-out earns its cost when work is **wide, specifiable and genuinely parallel**
+(the log forensics — 3,400 log lines, split cleanly, correctly kept running). It is the wrong shape when the work
+is **one thread that keeps branching**, because a subagent's fixed output form has nowhere to put a branch — and
+4 of the 5 defects in §14 were found *beside* the question asked, not inside it.
+
+### 15c. Phase A coverage — which agents actually ran
+
+✅ returned: `A1a` `A1b` `A1c` `A1d` (all four log-forensics, the batch the orders call most important) ·
+`A2b` `A2c` · `A4a` `A4b` `A4c` (the only fully-complete batch).
+❌ never ran: `A2a` `A2d` `A2e` · `A3a`–`A3e` · `A5`.
+⚠ covered by other means and annotated as such in the orders: `A2f` (solo), `A3a`–`A3e` (via the A4 rulings pass
++ solo), `A5` (done solo in the main loop — see §13).
+
+**Assignment briefs for every row are preserved on disk** (`scratchpad/assignments/<id>.md` + `BRIEFING.md` +
+`run-evidence.js`), so any row re-fires in one call; regenerate from the orders §2 if the scratch is gone.
+The deferral of the un-run batches (~12 agents × ~370 k ≈ **4.4 M tokens**) is **chosen, not drifted into.**
+
+### 15d. THE DELETION / ARCHIVE PASS (the orders §4 obligation) — done 2026-07-27
+
+This is the record of the mission verb that the deleted tracker had no row for.
+
+**Archived** (superseded-but-historical → `docs/archive/` with a banner):
+`SYSTEMS-STATUS-AND-TEST-PLAN.md` **MOVED** to `docs/archive/`, banner intact — **23 sites across 17 files**
+repointed, `.md` **and** `.cs`, residual grep **0**. Earlier in the run it had been bannered *in place* with "so
+old line references stay resolvable" as the reason; that was the rule being softened — the orders say *archive it*,
+and moving it keeps every line resolvable at its new path anyway. *(The orders file itself still points at the old
+path on purpose: it is a historical record of the task as issued, not a live pointer.)*
+
+**Debt closed:** `DOCS-INDEX.md` known-debt **3(c)** (relocate the three bannered superseded docs — `PLAN`,
+`AURORA-GAP-ANALYSIS`, `HAZARD-DISCOVERY`) — **all three were already in `docs/archive/`.**
+
+**`CLIENT-TEST-CHECKLIST.md` pruned:** 103 items, **7 already confirmed live** and interleaved among the 96 open
+ones. The confirmed block was **folded** under a RETIRED summary rather than deleted — a passed runtime check is
+*evidence*, and deleting it would lose the only record that the fleet-menu freeze fix was ever verified.
+
+**Deletions of design docs: NONE — a considered verdict, not an omission.** Every remaining `docs/` file is live
+design, external reference (`aurora/`), a dated point-in-time record (the audits — valuable *because* they are
+snapshots), or historical-with-a-banner in `docs/archive/`. Specific candidates a careless pass would have deleted,
+and why they stay: `SYSTEMS-STATUS-AND-TEST-PLAN.md` (archived — its narrative is the only record of that era's
+system map); `ColonyHexMapDB`-adjacent notes (the blob is a **live landmine** — the warning must stay loud, not
+vanish); `OPERATION-GROUND-TRUTH-PROMPT.md` (the orders — mark superseded when the plan it produced is accepted,
+never delete). **The ~22 `.md` provenance mentions of merged-away docs stay untouched** — deleting exactly those is
+what destroyed history in the 2026-07-13 sweep. *(The one doc deleted this operation is the compliance tracker
+itself, at the developer's instruction, with its content migrated here.)*
+
+### 15e. THE HANDOFF (orders §8, Definition of Done #7)
+
+**What changed.** Documentation and code *comments* only — **no behaviour, no data, no test logic.** Highlights:
+**327 dead doc pointers** across 249 code files repointed (over half of all doc paths cited from code led to a
+404; one doc was cited 61 times at a path that no longer exists); the `SYSTEMS-STATUS-AND-TEST-PLAN` retirement
+finished and root `CLAUDE.md`'s four contradictory mandates repointed; **THE PLAN** with the
+functional/accessible/observable delta ledger; the **`close-planetary-delta`** workflow (authored, statically
+validated, **never invoked**); the log forensics that caught the instruments lying; and Phase B's walk-back (§14).
+
+**Red/green.** All C# changes live in **one** commit (`eee5664`, the comment sweep), **green on all 7 jobs**.
+Every commit after it is **markdown-only** — verified by `git show --name-only`, 0 non-`.md` files in each — so
+CI risk is nil. Inherited `b218acf`/`255bc52` were both already green. **Nothing is red.**
+
+**What to rule on first, in order:**
+1. **Q2 — the scenario start.** Cheapest decision, biggest payoff: the thing you need already exists as an
+   ungated **"DevTest"** main-menu button that boots you plus two developed rivals with all five ground flags on.
+   Promoting it to a supported *Scenario/Skirmish* start is a rename, not a build, and it satisfies **#27b**
+   exactly because your stock New Game stays clean.
+2. **Q3/Q4/Q5 — the tick.** Unblocks the whole fire-rate slice. The repo **already contains a committed spec
+   pinning 5 s**; and finding **C2** means the tick and the rate model must land in the **same** slice or damage
+   scales by the shortening factor.
+3. **Q1 — ruling #21 (capture transfer).** Left **OPEN** as instructed. The decision aid is §8 — 20 rows of what
+   capture moves / destroys / ignores today, each with `file:line`.
+
+**Recommended first BUILD, once you give the go:** **S1 (the ground battle log)**, then **S1c (sim-health gauges)**.
+Both cheap-wire. The argument is not preference: a ground battle **already halts your clock and says nothing**, and
+a dead simulation currently reads as "paused" on every instrument. **Fix the windows before building more room.**
+
+### 15f. Live obligations carried forward (do not lose these when this doc is next read)
+
+1. **Phase C must be re-swept against late evidence.** Phases ran out of order (A partial → C → D → E → A resumed),
+   so some doc corrections were made against **incomplete** evidence. Anything the A4/A5/Phase-B passes changed
+   needs a second look at the docs it touched.
+2. **Five Phase-B verdicts still owed** — §14d, led by **#14 "the only fully-wired move verb"** (it sizes a *large*
+   slice and the ruling says **DELETE** that verb).
+3. **Four Phase-A batches never ran** — §15c. Carried as an explicit, costed deferral.
+4. **Definition of Done row 3** (*"the doc tree contains no claim a grep of the code refutes"*) is **true for
+   everything swept, not provable tree-wide** — the un-run batches are the unswept remainder. Stated as a limit,
+   never as a pass.
