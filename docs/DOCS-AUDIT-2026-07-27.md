@@ -1053,3 +1053,111 @@ Four lower-stakes verdicts still stand on round-1/agent evidence: §10 #1's five
 combat at all"), the `WEAPONS-DESIGN` saturation ship-only scoping, the `REAL-DISTANCE` STALE header, and
 `GroundCombat/CLAUDE.md:52`'s OVERSTATED garrison note. All four are **doc-scoping** verdicts whose failure mode is
 a mis-worded doc, not a mis-sized build — which is why they rank below B1 and are carried, not rushed.
+
+---
+
+## 18. PHASE B COMPLETE — the last four verdicts, and the one that re-shapes S8
+
+The four doc-scoping verdicts §17d carried. **All four hold** — but one is materially overstated, and correcting it
+found that **ruling #23's rate model already exists**. Phase B's residue is now **zero**.
+
+### 18a. V1 — *"Pulsar has no ground combat at all"* (aurora seed #1) → ✅ **CONFIRMED REFUTED**
+
+Each of the five sub-claims of absence checked individually against the tree:
+
+| Sub-claim | Reality |
+|---|---|
+| "no ground unit entity" | `GroundCombat/GroundUnitEntity.cs` exists |
+| "no formation concept" | **2** `class GroundFormation` declarations in `GroundForcesDB.cs` |
+| "no ground combat processor" | `GroundForcesProcessor : IHotloopProcessor`, `RunFrequency` = 1 hour (`:27,29`) |
+| "no invasion order" | both `LoadTroopsOrder.cs` **and** `LandTroopsOrder.cs` exist |
+| "no UI" | `Pulsar4X.Client/.../PlanetViewWindow.cs` exists |
+
+**One number tightened:** the correction banner says *"a ~56-file ground subsystem"*; the actual count is **55**
+`.cs` files. Within the tilde, but this operation is about precision — fixed.
+
+### 18b. V4 — the garrison note *"so a fresh New Game has ground units"* → ✅ **CONFIRMED OVERSTATED**
+
+`NewGameMenu.cs:55` reads exactly `public static bool AutoRaiseHomeGarrison = false;` under the comment
+*"BAREBONES: no default home garrison."* A stock New Game raises **none**, and ruling **#27b** makes that default
+deliberate and permanent. The only thing that flips it is the **DevTest** start (`:979-986`). Correction stands as
+written.
+
+### 18c. V3 — the `REAL-DISTANCE` header's *"slices 2–5 planned"* → ✅ **CONFIRMED STALE**
+
+The header now records it accurately, including three details worth keeping: slice 2's **behaviour shipped under a
+different name** (**K1** put `Range_m` on `GroundWeaponAtb` with 5 base-mod templates — melee 0 / rifle 500 /
+autocannon 2000 / cannon 4000 / energy 20000; **K3** added the metre gate at `GroundForcesProcessor.cs:568`); it
+shipped behind **`EnableMiniHexCombat`**, *not* the `EnableGroundRealRange` this doc proposed; and it **bypassed the
+doc's own `RealRangeKmFor` seam**. Flag state: **OFF in CI, ON for menu games** (`NewGameMenu.cs:580,985`).
+
+### 18d. ⭐ V2 — the saturation scoping → **CONFIRMED for saturation, REFUTED for "no rate dial at all"**
+
+**And I nearly got this wrong the same way twice.** Grepping `RateOfFire` / `FireRate` / `Cadence` /
+`ShotsPerSecond` returned **zero hits on both sides** — which reads as "no rate model anywhere." The code spells it
+**`RoundsPerSecond`**. *Third time the negative-grep rule earned its place in this operation.*
+
+**What holds:** saturation on the **ship** side genuinely is **derived from rate of fire** —
+`Saturation = RoundsPerSecond × PelletsPerShot` (`FlakWeaponAtb.cs:35`, applied at `ShipCombatValueDB.cs:395`),
+against a `SaturationReference = 50.0` floor (`CombatKernel.cs:42,186`). And **ground saturation is two hardcoded
+category constants** — `AreaSaturation = 100_000.0` and `PointSaturation = 1.0` (`GroundCombatant.cs:40,44`),
+selected by weapon category at `:75,78,81,105`. Nothing on the ground side derives saturation from a rate. ✅
+
+**What is REFUTED: "ground has no rate dial at all."** It does — for any weapon that comes from the shared designer:
+
+| Where | What it computes |
+|---|---|
+| `GroundCombat/SpaceWeaponGround.cs:64` | `KineticEnergyPerShot_J * RoundsPerSecond` |
+| `:69` | `DamagePerPellet_J * PelletsPerShot * RoundsPerSecond` |
+| `:74`, `:79` | `EnergyPerShot_J * RoundsPerSecond` |
+| `GroundCombat/WeaponSupply.cs:85,90,95` | the same product, to size the **reactor draw** |
+
+Those are **true damage-per-second figures, computed inside the `GroundCombat/` folder.** And the rates themselves
+are **already authored in the base mod** — `weapons.json` describes the dial in its own words: *"Rate of fire.
+Drives both damage/sec and saturation"* (`:394`, `:1036`), *"Bursts per second… sets saturation"* (`:560`),
+*"Saturation = rounds/sec × pellets/shot"* (`:570`).
+
+### 18e. ⭐⭐ The consequence — ruling #23's rate model ALREADY EXISTS, so S8 is a CONNECT, not an invention
+
+`GroundForcesProcessor` has **zero** references to `SpaceWeaponGround` or any per-second figure. It resolves damage
+as flat **`Attack × SalvoScale` per tick** (`:491`). So:
+
+> **The per-second value the ground resolver needs is already computed, in the same folder, from data already
+> authored in the base mod — and the resolver ignores it.**
+
+**This re-shapes S8** (*"the tick and the rate model, in ONE slice"* — sized **large**):
+- **Not needed:** designing a rate model, choosing per-weapon rates, or adding a rate field. `RoundsPerSecond`
+  exists, is authored on the real templates, and already yields DPS for ground-mounted designer weapons.
+- **Needed:** make the resolver **read** the per-second value instead of flat `Attack`, integrate it over the
+  elapsed tick, and audit every other per-tick term for `deltaSeconds` scaling in the same change (finding **C2** —
+  still the hard part, and still why the tick change and the rate model cannot be separate slices).
+- **The real remaining gap is the units WITHOUT a designer weapon** — garrison and base-mod units built from a flat
+  `Attack` with no `RoundsPerSecond` behind it. Those need a rate *assigned*, and that is a much smaller question
+  than "design the rate model."
+
+**Developer question Q5 is therefore partly ANSWERED, not open:** *"#23 makes every weapon carry damage-per-second.
+Nobody has picked the numbers."* — the numbers **are picked** for designer weapons (authored in `weapons.json`,
+with the JSON's own description saying they drive damage/sec). Q5 narrows to: **what rate do the flat-`Attack`
+garrison/base-mod units get?** The plan's own cheapest-honest-route answer (derive from today's `Attack` ÷ the
+chosen tick, so the first build is behaviour-identical) applies to exactly that residue.
+
+### 18f. Phase B — final tally
+
+**22 distinct claims verdicted across three rounds. Residue: zero.**
+
+| Outcome | Count | Which |
+|---|---|---|
+| 🔴 **REFUTED outright** | **1** | ruling #25 / "zero tooltips anywhere" (§14b) — the walk-back |
+| 🟠 **Refuted in its quantifier** (substance held) | **2** | #14 "the ONLY fully-wired move verb" (§17); V2 "ground has no rate dial at all" (§18d) |
+| ✅ **CONFIRMED** | **19** | of which **11** were sharpened, corrected or found *stronger* than written |
+| ➕ **My own framings withdrawn** | **2** | the keystone-3 "changes a build order" overreach (N2); the `GroundUnitAtb` exact-arity claim |
+
+**Three slices re-sized by Phase B, all downward:** #25 `medium → cheap-wire` · **S6** `large → cheap-wire +
+retirement` · **S8** *"build the rate model"* → *connect the one that exists* (the `deltaSeconds` audit remains the
+large part).
+
+**The method lesson, final form.** Every one of the three quantifier failures — *"zero tooltips anywhere,"* *"the
+ONLY fully-wired verb,"* *"no rate dial at all"* — was an **absolute word** attached to a claim that was
+directionally right. And two of the three were caught only because a **negative grep was re-run under other
+spellings** (`chips` not `hazard chip`; `RoundsPerSecond` not `RateOfFire`). **Absolutes and negative greps are this
+codebase's two most reliable sources of wrong findings.**

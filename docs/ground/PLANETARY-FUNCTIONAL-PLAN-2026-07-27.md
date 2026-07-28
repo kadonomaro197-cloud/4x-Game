@@ -73,8 +73,13 @@ roll onto the next target down the doctrine's priority list, or is it wasted? Yo
 *sequential, no waste*, and that's how I've written S8 — but that's **my interpretation of your words, not
 a ruling**, and it ties to #18. Confirm it.
 
-**Q5 — per-weapon fire rates.** #23 makes every weapon carry damage-per-second. Nobody has picked the
-numbers. I don't want to invent five silently. Cheapest honest route: derive each from the existing flat
+**Q5 — per-weapon fire rates.** ⚠ **NARROWED 2026-07-28 (audit §18e) — this is mostly already answered.** The
+numbers **are** picked for any weapon from the shared designer: `RoundsPerSecond` is authored on the real base-mod
+templates and the JSON's own description says it *"drives damage/sec and saturation"*, and
+`GroundCombat/SpaceWeaponGround.cs:64-79` already turns it into damage-per-second. **The only weapons with no rate
+are the flat-`Attack` garrison/base-mod units.** So the question you actually need to answer is just: *what rate do
+those get?* — and the cheapest honest route below still answers it. #23 makes every weapon carry damage-per-second.
+Nobody has picked the numbers **for that residue**. I don't want to invent five silently. Cheapest honest route: derive each from the existing flat
 `Attack` value divided by the tick you choose in Q3, so the first build is *behaviour-identical* to today,
 then tune from there. Say yes and S8 needs no balance decisions at all up front.
 
@@ -543,6 +548,23 @@ reads the behaviour fields** **[V]**.
 > **C3:** a committed CI spec already pins a **5 s** ground quantum plus the 720-per-hour divisibility and
 > determinism invariants (`Resolver2DJointsSpecTests.cs:210,216,232,253`) and **nothing implements it** — so
 > this slice has an acceptance spec waiting for it, and my earlier 60 s suggestion is withdrawn.
+
+> **⭐ RE-SHAPED 2026-07-28 by Phase B's V2 verdict (audit §18d/§18e): THE RATE MODEL ALREADY EXISTS. This slice
+> is a CONNECT, not an invention.** `RoundsPerSecond` is a real, authored dial — the base mod describes it in its
+> own words (*"Rate of fire. Drives both damage/sec and saturation"*, `weapons.json:394,1036`; *"Saturation =
+> rounds/sec × pellets/shot"*, `:570`) — and **`GroundCombat/SpaceWeaponGround.cs:64-79` already computes true
+> damage-per-second from it** for ground-mounted designer weapons (`WeaponSupply.cs:85-95` uses the same product to
+> size the reactor draw). **`GroundForcesProcessor` has ZERO references to any of it** and resolves flat
+> `Attack × SalvoScale` per tick (`:491`).
+> - **NOT needed:** design a rate model · choose per-weapon rates · add a rate field.
+> - **Needed:** make the resolver **read** the per-second value, integrate it over the elapsed tick, and audit every
+>   other per-tick term for `deltaSeconds` scaling in the same change (**C2** — still the hard part, and still why
+>   the tick and the rate model cannot be separate slices).
+> - **The real residue:** units with **no designer weapon** — garrison/base-mod units built from a flat `Attack`
+>   with no `RoundsPerSecond` behind them. Those need a rate *assigned*. That is Q5's actual remaining question.
+> - *Note the asymmetry this leaves untouched: ground **saturation** is still two hardcoded category constants
+>   (`AreaSaturation`/`PointSaturation`, `GroundCombatant.cs:40,44`) while ships derive saturation from the rate.
+>   Confirmed, and deliberately NOT in this slice.*
 
 Fine-step while a battle is live, hourly otherwise. A weapon carries damage/second; the resolver integrates
 it over the elapsed tick against available targets. **Every per-tick damage term must be audited for

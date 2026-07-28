@@ -447,9 +447,36 @@ doesn't exist (the C3 case) and any heavy new fixture that would land in the `re
 > two-layer formatter → then retire `MoveToRegion`**. **Slice S6 re-sized `large` → cheap-wire + a retirement.**
 > ⚠ Retirement caution recorded: `MoveToRegion` carries the **only save/load gauge of ground movement**.
 >
-> **⚠ RESIDUE — 4 verdicts still owed**, all **doc-scoping** claims whose failure mode is a mis-worded doc rather
-> than a mis-sized build, which is why they rank below B1: §10 #1's five sub-claims, the `WEAPONS-DESIGN`
-> saturation scoping, the `REAL-DISTANCE` STALE header, and `GroundCombat/CLAUDE.md:52`.
+> **✅ PHASE B COMPLETE 2026-07-28 — the last four verdicts are done, RESIDUE ZERO (audit §18).** All four hold,
+> but one was materially overstated and correcting it found a **third slice to shrink**:
+> - **V1** *"Pulsar has no ground combat at all"* → **confirmed refuted**, all five sub-claims checked individually
+>   (unit entity · 2 formation classes · the hourly `IHotloopProcessor` · both troop orders · the client window).
+>   File count tightened **~56 → 55**.
+> - **V4** the garrison note → **confirmed overstated**: `NewGameMenu.cs:55` is literally
+>   `AutoRaiseHomeGarrison = false` under *"BAREBONES: no default home garrison"*; only **DevTest** flips it.
+> - **V3** the `REAL-DISTANCE` header → **confirmed stale**: slice 2's behaviour shipped as **K1+K3** under
+>   `EnableMiniHexCombat` (not the proposed `EnableGroundRealRange`), and it **bypassed the doc's own
+>   `RealRangeKmFor` seam**. CI-off, menu-on.
+> - **⭐ V2** the saturation scoping → **confirmed for saturation, REFUTED for *"no rate dial at all."*** Ship
+>   saturation genuinely derives from rate (`Saturation = RoundsPerSecond × PelletsPerShot`, `FlakWeaponAtb.cs:35`)
+>   and ground saturation genuinely is two hardcoded category constants (`GroundCombatant.cs:40,44`). **But ground
+>   HAS a rate dial:** `GroundCombat/SpaceWeaponGround.cs:64-79` already computes **true damage-per-second** from
+>   `RoundsPerSecond`, which is **authored in `weapons.json`** — whose own text says it *"drives damage/sec and
+>   saturation."* `GroundForcesProcessor` references **none** of it and resolves flat `Attack × SalvoScale` per tick.
+>
+> **⇒ RULING #23's RATE MODEL ALREADY EXISTS. Slice S8 is a CONNECT, not an invention** — make the resolver read the
+> per-second value that is already computed in its own folder. The `deltaSeconds` audit (**C2**) remains the large
+> part. **And developer question Q5 narrows sharply**: the rates *are* picked for designer weapons; the only weapons
+> without one are the flat-`Attack` garrison/base-mod units.
+>
+> **📌 THE METHOD LESSON, FINAL FORM.** All three quantifier failures across Phase B — *"zero tooltips anywhere,"*
+> *"the ONLY fully-wired verb,"* *"no rate dial at all"* — were an **absolute word** on a claim that was
+> directionally right. **Two of the three were caught only because a negative grep was re-run under other
+> spellings** (`chips` not `hazard chip`; **`RoundsPerSecond` not `RateOfFire`**). **Absolutes and negative greps are
+> this codebase's two most reliable sources of wrong findings.**
+>
+> **Final tally — 22 claims, residue zero:** 1 refuted outright · 2 refuted in their quantifier · 19 confirmed (11
+> of them sharpened) · 2 of my own framings withdrawn. **Three slices re-sized, all downward** (#25, S6, S8).
 >
 > **📌 STANDING LESSON, worth more than any single verdict:** three of the four new defects were **not wrong
 > findings — they were correct findings with INCOMPLETE remediation** (a section fixed but not its index row; a
