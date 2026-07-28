@@ -239,3 +239,59 @@ Layer 1–3.
 |---|---|---|
 | **P10-1** | ⚠ **CORRECTION** | **P3-3 WAS OVERSTATED — "CI tests a configuration nobody plays" is too strong.** Re-checked: **every one of the eight client-set behaviour flags has 1–3 fixtures that set it `true`**, and combinations *are* exercised — **`CampaignClockReadoutTests` turns on 7 together**, `ClosingTests` 6, the group-plane fixtures 4–5. **The honest gap is the last few, not the whole set:** the client turns on ~10 and the deepest test combination is 7, so the *full* shipped configuration is never reproduced in one run — but this is a narrow seam, not a blind spot. **Corrected here rather than left standing.** |
 | **P10-2** | 🟠 | **49 COMBAT FIXTURES EXIST — AND NOT ONE OF THIS AUDIT'S FINDINGS HAS A TEST.** Combat is among the most heavily tested areas of the project (kernel, dodge, shields, triangle, stress, performance, closing, reengage, risk, readout, battle-log, trigger, commander bonuses…). Yet **nothing gauges**: that disengaging refills ammo/shields/heat/manoeuvre (**P6-5**), that a missile's design is ignored (**P7-1**), that combat values never refresh after damage (**X14**), that one long-range gun hijacks a fleet's range (**P5-2**), or that an all-beam fleet closes to point-blank (**P5-3**). ⇒ **the suite proves the code does what it does; it does not prove the code does what the DESIGN says.** Every fix in the eventual work list needs its gauge written from the *design* statement, not from current behaviour — otherwise the tests will lock in the bugs. |
+
+---
+
+## PASS 11 — The build→combat seam (does a built ship enter a fight correctly?)
+
+**Docs read first:** `GameEngine/Fleets/CLAUDE.md` (fleet assembly, the home-reserve rule); `Industry/CLAUDE.md`;
+`docs/earthfall/` sealift notes (`ProvisionBuiltShip` → charged reactors + filled tanks).
+
+| # | Sev | Finding |
+|---|---|---|
+| **P11-1** | 🟠 | **"ARMED" IS A PROPERTY OF THE DESIGN, NOT THE SHIP — so a gutted hull is still a warship to the AI.** `ConquerResolver.IsWarship(ShipDesign)` asks whether the **design** carries any of six weapon attributes. It cannot see whether those weapons still exist on the built hull. Combined with **X14** (combat values are frozen at construction and never refreshed by damage), a ship that has lost every gun reads as **both armed *and* at full firepower** — so `FleetAssembly` sweeps it into a fighting fleet and `ConquerResolver` commits it to battle. *The design-vs-built distinction is known — the neighbouring comment says "a per-design proxy because true firepower needs a built ship" — but the consequence when the built value never updates is not recorded anywhere.* **This is X14's concrete operational cost, not a separate defect.** |
+
+---
+
+## PASS 12 — Save/load of a battle in flight, and static state
+
+**Docs read first:** root `CLAUDE.md` gotcha #7 (`TypeNameHandling` + save schema), landmine **L12** (a `*DB` without
+`Clone()` silently becomes a bare `object`); `CONVENTIONS.md` (copy-ctor / `Clone()` discipline);
+`Pulsar4X.Tests/CLAUDE.md` (the shared-static-counter constraint that forces process-level CI sharding).
+
+### ⭐ THIS PASS FOUND NO DEFECTS. All four checks came back clean.
+
+| # | Sev | Finding |
+|---|---|---|
+| **P12-1** | ✅ | **The dangerous latch is saved, deliberately and with its reason written down.** `SpreadRegions` is `[JsonProperty]` **and** deep-copied in the copy-ctor, and the field comment states why: *"a mid-battle save must NOT forget which regions were already [spread]."* Without this, loading mid-battle would **re-spread the sides and teleport units apart**. Handled. |
+| **P12-2** | ✅ | **The harmless latch is deliberately NOT saved.** `WasInBattle` is `[JsonIgnore]`, so loading during an ongoing ground battle **re-halts the clock once**. That is a considered trade-off (and arguably desirable — the load announces the battle), not a bug. |
+| **P12-3** | ✅ | **The resolver's only mutable static is a pure liveness gauge.** `CombatEngagement.TickCount` is `Interlocked.Increment`-ed and read by `MasterTimePulse` as a before/after delta to prove combat ran. **No behaviour depends on it**, so a save/load resetting it is harmless. |
+| **P12-4** | ✅ | **`GroundForcesDB` has a proper `Clone()`** (`=> new GroundForcesDB(this)`) with a full deep-copying copy-ctor — **no L12 exposure** on the combat roster. |
+
+---
+
+## 📉 RATE CHECK — the drop-off the developer asked to watch for
+
+| Passes | New defects found |
+|---|---|
+| 1–3 | 15 |
+| 4–5 | 9 |
+| 6–7 | 10 |
+| 8–10 | 5 (**2 of them corrections to my own earlier findings**) |
+| 11–12 | **1** (and it is a *consequence* of X14, not a new defect) — **Pass 12 found ZERO** |
+
+**The rate has bent sharply.** The last five passes produced one genuinely new defect between them, plus two
+self-corrections and five verified-good results. **This is the "negligible level" signal** — though the remaining
+un-swept lenses are named below.
+
+### Still un-swept (candidates for passes 13+)
+- **The ground↔space seam** — orbital bombardment support during a ground battle (audit P3 / slice S9 territory).
+- **The AI's post-battle reaction** — what a faction does with a won/lost battle (`AIDecisionRecorder`, objective re-plan).
+- **The readouts** — `CombatReadoutTests`, the Battle Report's 250-event cap vs a long fight, `game_logs` volume.
+- **Calibration** — the ~15 `FLAGGED` balance constants and whether any are load-bearing on the findings above.
+
+### The one-sentence pattern behind all 42 findings
+
+> **The designer models COMPONENTS; the resolver models TOTALS.** Every defect found is a place where a designed
+> detail — a warhead, a fire-control director, a magazine, a wounded ship, a commander, a hazard, a doctrine field —
+> is flattened into a number *before* the fight starts, and can never influence it again.
