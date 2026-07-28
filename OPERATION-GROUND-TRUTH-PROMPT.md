@@ -546,6 +546,27 @@ Rules (all from root `CLAUDE.md` + established precedent):
 
 ## 5. PHASE D — THE PLAN (one document, the developer's map to done)
 
+> ### ✅ PHASE D: ALL SIX REQUIREMENTS SATISFIED — one was only 6-of-19 done until this walk (2026-07-28)
+>
+> The document is `docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md`, indexed in `DOCS-INDEX.md`.
+>
+> | Req | State |
+> |---|---|
+> | **1. The delta ledger** — every capability × functional/accessible/observable, three-state, with evidence | ✅ **§2.** Genuinely three-state (`BUILT_AND_GAUGED` / `BUILT_RUNTIME_UNVERIFIED` / `BUILT_INERT` / `PARTIAL` / `MISSING`), every row carrying an evidence tag (`[V]` first-hand · `[V2]` rulings pass · `[A24]` inherited-not-re-verified · `[B]` Phase B · `[?]` needs verification) so no inherited row can later be quoted as if it were verified |
+> | **2. Ordered slices** — each with CI gauge · **literal click-path** · observability criterion · deps · size | ⚠ **WAS THE GAP — now closed.** Gauges: 17/19 (the three exceptions are written, not blank: M1 *is* the Layer-3 gauge, S11 is per-sub-slice, S12 is gauge-**blocked** on Q1). But the **click-path was present on only 6 of 19 slices** — the rest were **blank, which reads as "nobody thought about it."** New **§4a** now carries REACH + SEE for **all 19**, and where a slice has no player path it **says so and names what the player encounters instead** |
+> | **3. Sequencing principle, justified** | ✅ **§3** ("Sequencing — the principle, and why"). **And §4a strengthened the argument for it:** four of the slices (S1b/S1d/S1e/S1f) are AI defect fixes whose *only* observability runs through the `[AI]` tape — so they are **worth nothing until S1 + S1c make that tape readable.** That is a harder case for observability-first than "you can't tune what you can't watch" |
+> | **4. Every balance number FLAGGED** | ✅ 8 flags, incl. the tick value, every per-weapon rate, the overkill rule, and `BattleLog`'s `MaxEvents=250` sizing |
+> | **5. Open questions in prose at the top** | ✅ **§0 Q1–Q5.** #21 left **OPEN** as ruled; Q3 corrected by finding C3 (a committed spec already pins 5 s); **Q5 narrowed 2026-07-28** — the rates *are* authored for designer weapons, so only the flat-`Attack` garrison/base-mod residue is open |
+> | **6. Two-minute plain-English summary** | ✅ **§1** |
+>
+> **The embedded requirements were also checked, each scheduled or explicitly deferred — never silently dropped:**
+> the **`SYSTEM-GENERATION` G1–G6 decision** (ruled in S11: **G1 pulled forward** as cheap + gauge-first, **G2**
+> reclassified as a concrete content bug — procedural systems get **no belts at all** — and **G3–G6 deferred in
+> writing**, with G6 explicitly scheduled *with* M4, never before it); the **P6/P7 tail** (the grave rung ·
+> hex-deposits-as-mined-truth · the **G6b** single-hex-model cleanup) all present in S11; and the **P2 milestone**
+> scheduled explicitly as **⛳ M1**, positioned after the observability and reachability slices, with its own
+> `TESTING-TRACKER` Layer-3 row carrying all seven fields.
+
 Write `docs/ground/PLANETARY-FUNCTIONAL-PLAN-<date>.md` (indexed same commit). Required content:
 
 1. **The delta ledger:** every designed planetary capability × three columns — *functional? / accessible? /

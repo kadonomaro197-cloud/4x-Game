@@ -632,6 +632,47 @@ build, don't redesign); **employment jobs + power demand** (#12 — mostly JSON)
 
 ---
 
+## 4a. REACH + SEE for every slice — the click-path table (completed 2026-07-28)
+
+**Why this table exists.** Phase D requires *every* slice to carry a **reachability criterion written as a literal
+click-path** and an **observability criterion**. An audit of §4 found only 6 of 19 slices had one — the rest were
+blank, and **a blank reads as "nobody thought about it"** rather than "there is no player path." So every slice is
+listed here, and where a slice genuinely has **no player-facing path**, it says so explicitly and names what the
+player encounters instead. *(Slices whose body already carries `Reach:`/`See:` are repeated here for one-glance use.)*
+
+| Slice | REACH — the literal path | SEE — what proves it live |
+|---|---|---|
+| **S0** scale gauge | **No player path — CI-only by design.** It is a readout, not a feature. | The CI job log prints `HexPitchKm` + `MiniPitchKm` for Earth / Mars / Luna, and the two are related by exactly ÷13. |
+| **S1** ground battle log ⭐ | Main menu → **DevTest** → advance the clock until a ground fight starts. *(Or a menu game with a garrison.)* | `[Ground…]` lines in `game_logs/`, and the events appear in the **Battle Report** the combat interrupt already opens. |
+| **S1b** colony registry | Main menu → **DevTest** (it starts a war) → let the AI take a world, or take one yourself. | The `[AI]` tape **stops** proposing an invasion of a world the faction already owns. |
+| **S1c** sim-health gauges ⭐ | Launch via **`launch.bat`** → play → force/observe a sim fault. The reach criterion *is* that a dead sim announces itself. | `console_output.txt` names the dead sim on the **first** frozen heartbeat; the fault tally counts `[FATAL]`/`[HANG]`; every pause states its reason; the play button says it's dead instead of doing nothing silently. |
+| **S1d** at-target guard | Main menu → **DevTest** → let an AI strike fleet reach its target and sit there. | `[WARP]` lines **stop** showing 0 Gm departures; the order count stops growing across ticks. |
+| **S1e** blind AI ⭐ | Main menu → **DevTest** → let two hostile fleets come into sensor range of each other. | The `[AI]` tape stops saying `vs no threat` and names a rival **with a number**. |
+| **S1f** garrison rebuild ⭐ | Main menu → **DevTest** → attrit an AI garrison below its target and let the rebuild rung fire. | The `[AI]` tape's `RebuildGarrison` action is followed by an actual **garrison count increase** — not a cargo item. |
+| **S2** flags into save | **New Game** (set the options) → **Save** → quit to menu → **Load** that save. | The five flags read back identical to what the game was created with — and a save now plays the same regardless of what was started earlier in the process. |
+| **S3** scenario start | **Main menu → the renamed "Scenario / Skirmish" button** (today: "DevTest"). ⚠ **GATED ON Q2.** | You start with two developed rivals at war and every ground switch on, from a supported front door rather than a dev toy. |
+| **S4** designer door | **Main menu → Entity Assembler** → open a **saved ground unit design** → its panels are editable without first selecting a ship design. | The design reopens with its parts intact and can be edited and re-saved. |
+| **⛳ M1** live sitting | **This slice IS the click-path** — the full chain on Windows: design → build → field → move → fight → take a region → lose a unit. | Every rung writes a line naming what happened; no `[FATAL]`; the clock keeps running. **This is the Layer-3 gauge** (row in `docs/TESTING-TRACKER.md`). |
+| **S5** one build queue | **Colony Management → Production** → queue a ground unit **and pick its destination**; watch one progress bar. | One queue holds every ground build with a visible destination and progress; the *free* path no longer offers a competing route. |
+| **S6** movement | **Planet view → select a battalion → click a destination hex** (the path overlay already draws waypoints). | The two-layer coordinate appears in the readout (`(17,09)(22,47)` shape), and the unit walks the drawn path. |
+| **S7 / D0** doctrine carries its fields | **No new player path — D0 is a repair.** The existing path is Fleet/Battalion → assign a doctrine. | Assign a doctrine, read it back: the five previously-dropped fields survive. Without this, every slice below decorates a discarded value. |
+| **S7 / D2·D3a·D3b** doctrine steering | **Fleet Management → Battalions → select → Stance / ROE**, and the same doctrine list the fleets use. | The **S1 log** says *which doctrine chose what* — two identical forces differing only in doctrine produce different, named behaviour. *(Unverifiable without S1 — that is the dependency.)* |
+| **S8** tick + rate model | **No click — you watch.** Start a fight and let it resolve; the reach criterion is that the fight resolves in fine steps while live and hourly otherwise. | **S1 log timestamps** show fine-step resolution during a battle and hourly outside one; the same fight run at two tick lengths produces the **same result** (the C2 guard). |
+| **S9** bombardment joint | **Fleet window → a ship holding orbit → Bombard → pick the target region.** | A bombardment line in the **S1 log**; the colony readout **loses a building**; and the AI softens the beach before it lands. |
+| **S10** designer chain | **Entity Assembler → design a ground unit**: weapon dials carry penetration/per-shot energy; parts cost research; **saving an invalid design is refused**; the 3 prebuilts are gone and the garrison composition replaces them. | The designer's own validity readout **blocks** the save (today it only warns), and a built unit's stats reflect the dials rather than zeros. |
+| **S11** depth | **Per sub-slice — each writes its own Reach when it is scheduled.** S11 is explicitly *not* enterable as one unit (audit §13c: 13 items, one gauge between them). | Per sub-slice. The one pulled forward, `SYSTEM-GENERATION` **G1**, is CI-only: generate → write → reload → assert identical. |
+| **S12** capture transfer | ⚠ **BLOCKED ON Q1 — no path can be written until the ruling says what transfers.** Gauge-blocked, not gauge-missing. | Blocked. |
+
+**Two honest patterns in this table, stated rather than hidden:**
+1. **Five slices (S1b · S1d · S1e · S1f) have no click-path because they are AI defect fixes** — the player's
+   "reach" is that the AI stops doing something visibly stupid. Their observability all runs through the **`[AI]`
+   tape**, which is why those four are worth nothing until **S1** and **S1c** make the tape readable. *That is the
+   real argument for the observability-first spine, and it is stronger than "you can't tune what you can't watch."*
+2. **Three slices are deliberately not player-facing** (S0 a CI readout · S7/D0 a repair · S8 an internal
+   re-timing). Recorded as such so a future reader does not go looking for a missing button.
+
+---
+
 ## 4b. The executable half — `close-planetary-delta`
 
 The slices above are encoded as a committed, re-runnable workflow:
