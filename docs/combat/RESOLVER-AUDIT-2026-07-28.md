@@ -201,3 +201,41 @@ calibration warning); `GameEngine/Weapons/CLAUDE.md`.
 | **P7-3** | 🟠 | **THE AUTO-RESOLVER NEVER SPAWNS ORDNANCE — the whole built missile system is bypassed.** Zero references to missile spawning/launching anywhere in `GameEngine/Combat/`. So the guidance work, the proximity/impact processor, the ordnance designs and the magazine feed are **all inert inside an auto-resolved battle**. Two systems exist for one weapon; **the stub is the one that fights.** |
 | **P7-4** | 🟡 | **POINT DEFENCE IS REAL BUT CALIBRATED AGAINST THE STUB.** `FleetPointDefense` + a **saturating** intercept curve for incoming missile salvos is genuinely built (and `PointDefenseAtb` is one of the 14 attributes that does reach combat). But it is tuned against 100 kJ/s stub missiles, so **its balance says nothing about the 50 MJ–5 GJ missiles the live sim fires.** Fixing P7-1/P7-2 will invalidate every PD number. |
 | **P7-5** | 🟡 | **A DOC-HONESTY PATTERN WORTH NAMING.** `RESOLVER-DESIGN` §A3 marks the missile warhead/tracking/range row **✅** with the parenthetical *"(missile is a stub today → wire real values)"*. **A ✅ beside the words "is a stub" reads as done at a glance** and is how this survived a status pass. Same class as the ⚠ *decided-not-built* lesson from the Phase C re-sweep: **the mark and the caveat disagree, and only the mark gets skimmed.** |
+
+---
+
+## PASS 8 — Death, shields, and what is aboard
+
+**Docs read first:** `GameEngine/Damage/CLAUDE.md` (the damage-path decision; `DamageComplex` forward, `SimpleDamage`
+dead); root `CLAUDE.md` gotcha #1 and #8; `UNIFIED-RESOLVER-AND-BATTLE-STATS.md` (the shield pool model);
+`docs/ground/GROUND-SURFACE-MAP-DESIGN.md` → transport.
+
+| # | Sev | Finding |
+|---|---|---|
+| **P8-1** | 🟠 | **SHIELDS ARE ONE AGGREGATE POOL PER *FLEET* IN SPACE, AND PER *UNIT* ON THE GROUND.** The space field says so: *"v1: one aggregate pool for the whole fleet (per-ship shields are a later slice)."* Ground carries `GroundUnit.CurrentShield` per unit. ⇒ **focus-firing a single ship cannot strip its shield in space** — the whole fleet shares one bar — while on the ground it can. **Same designed `ShieldAtb` component, two different tactical realities.** Acknowledged v1 shortcut, recorded here because R-a forbids it. |
+| **P8-2** | 🔵 | **X15 IS ACKNOWLEDGED IN-CODE, NOT A DISCOVERY.** The resolver's own comment: *"Per-component loss + per-ship hull% are NOT in this model (**ships are whole-or-dead in v1**) — that needs the parked per-component damage sim."* Recorded so X15 is understood as a **known v1 boundary** rather than an accident. |
+| **P8-3** | 🔴 | **EMBARKED TROOPS DIE SILENTLY — THE RESOLVER DOES NOT KNOW THEY EXIST.** Loading a ground unit **removes it from the planet's roster** and stores it in the ship's transport blob. When the resolver kills that ship (`Ships[i].Destroy()`), the troops go with it — **which is the correct outcome** — but `GameEngine/Combat/` contains **zero** references to troop bays, loaded units, or transports. ⇒ **no log line, no battle-report event, no notification.** You can lose an entire invasion army and the report will say only *"Transport Alpha destroyed."* The loss is right; the silence is not — and it lands squarely on the operation's OBSERVABLE leg. |
+
+---
+
+## PASS 9 — Detection inside a battle
+
+**Docs read first:** `docs/combat/DETECTION-DESIGN.md` (incl. its corrected `SignalQuality` banner — the strength-only
+decision); `docs/combat/INFORMATION-DELTA-DESIGN.md` (fog-of-war-in-combat listed as an ADD).
+
+| # | Sev | Finding |
+|---|---|---|
+| **P9-1** | ✅ | **FOG *INSIDE* A BATTLE IS BUILT AND IT IS GOOD.** The trigger is an **OR** — `FleetDetects(a,b) || FleetDetects(b,a)` — so a fight starts if *either* side sees the other, and the resolver narrates the consequence: *"FIRST-STRIKE: {A} detects {B}, which is **BLIND** — it takes fire it can't return."* **A blind fleet is shot at and cannot shoot back.** Verified-good; recorded so it is not mistaken for a gap. |
+| **P9-2** | 🔵 | **DETECTION IN COMBAT IS BINARY, AND THAT IS BY DESIGN.** `FleetDetects` returns a bool — there is no partial-resolution state degrading accuracy. This is consistent with `DETECTION-DESIGN`'s decision to collapse detection to **strength only**, so it is **not** a defect. Recorded so a later pass does not re-flag it. *(Note the asymmetry it creates with survey, which still uses graduated `SignalQuality` thresholds — deliberate, but worth knowing.)* |
+
+---
+
+## PASS 10 — The test surface, and a correction to my own Pass 3
+
+**Docs read first:** `Pulsar4X.Tests/CLAUDE.md` (the fixture inventory + the CI shard map); `docs/TESTING-TRACKER.md`
+Layer 1–3.
+
+| # | Sev | Finding |
+|---|---|---|
+| **P10-1** | ⚠ **CORRECTION** | **P3-3 WAS OVERSTATED — "CI tests a configuration nobody plays" is too strong.** Re-checked: **every one of the eight client-set behaviour flags has 1–3 fixtures that set it `true`**, and combinations *are* exercised — **`CampaignClockReadoutTests` turns on 7 together**, `ClosingTests` 6, the group-plane fixtures 4–5. **The honest gap is the last few, not the whole set:** the client turns on ~10 and the deepest test combination is 7, so the *full* shipped configuration is never reproduced in one run — but this is a narrow seam, not a blind spot. **Corrected here rather than left standing.** |
+| **P10-2** | 🟠 | **49 COMBAT FIXTURES EXIST — AND NOT ONE OF THIS AUDIT'S FINDINGS HAS A TEST.** Combat is among the most heavily tested areas of the project (kernel, dodge, shields, triangle, stress, performance, closing, reengage, risk, readout, battle-log, trigger, commander bonuses…). Yet **nothing gauges**: that disengaging refills ammo/shields/heat/manoeuvre (**P6-5**), that a missile's design is ignored (**P7-1**), that combat values never refresh after damage (**X14**), that one long-range gun hijacks a fleet's range (**P5-2**), or that an all-beam fleet closes to point-blank (**P5-3**). ⇒ **the suite proves the code does what it does; it does not prove the code does what the DESIGN says.** Every fix in the eventual work list needs its gauge written from the *design* statement, not from current behaviour — otherwise the tests will lock in the bugs. |
