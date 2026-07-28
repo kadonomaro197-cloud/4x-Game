@@ -658,6 +658,34 @@ invalid designs from **saving** (#3).
   (`ConquerResolver.cs:377` → `GroundReinforcement.cs:125`), so #1 needs a scenario/AI-authorable design
   source first or the AI can no longer reinforce. The forced order #2 → #4 → #1 still holds.
 
+### 🔬 THE 17-PASS RESOLVER AUDIT — 49 findings, and they are FIVE root causes
+
+**Full record:** `docs/combat/RESOLVER-AUDIT-2026-07-28.md` (the pass log, every finding with file:line and the docs
+read before flagging it). **Canon + the X1–X15 table:** `GROUND-GAMEPLAY-DECISIONS-2026-07-24.md` M19.
+
+**The load-bearing conclusion: there are not 49 problems. There are five, and one outlier.** Every finding is a
+symptom of one of these — which is why the fix order below is a *dependency* order, not a preference.
+
+| # | Root cause | Symptom in one line | Findings it explains |
+|---|---|---|---|
+| **A** | **The design→resolver FEED is lossy** | *The designer's numbers don't arrive.* | X5 (ground weapon: **2 of 10** values designed) · X6 (**alpha zeroed in BOTH domains**) · **P7-1 (a missile: 0 of 5)** · P3-1 (a fire-control dial gated by a flag nothing switches on) · X14 (combat values **frozen at build**, never refreshed by damage) · P11-1 (a gutted hull still reads as an armed warship) |
+| **B** | **The battlefield is a CONTAINER, not an ENGAGEMENT** | *Everything aggregates at the fleet/region level, which is the wrong level.* | X7 (a **star system**/a **region** is the battlefield) · P1-6 (`ResolveRegionCombat` is **O(units²)**) · X11 (**wings have no position** to manoeuvre with) · P5-1/2/3 (fleet-wide range decisions; **one long-range gun hijacks the fleet**; an **all-beam fleet closes to point-blank**) · P8-1 (**one shield pool for a whole fleet**) |
+| **C** | **Combat state is EPHEMERAL** | *Nothing a battle does persists.* | **P6-5 (disengaging refills ammo, shields, heat, manoeuvre — and deletes accumulated damage)** · X15 (ships are **whole-or-dead**, no wounded ship) · X14 again · P15-3 (the report dies on quit) |
+| **D** | **Doctrine cannot carry its own behaviour** | *The wheel is not connected to the wheels.* | P2-1 (**the runtime blob has no fields for 5 of the 14 authored dials**) · P2-2 (**different names per domain, one pair a RECIPROCAL**) · P2-3 (incompatible posture enums) · P2-4 (ground has no `SpeedMult` to land on) · X1 (**role** is a second driver, live in a real game) · P6-2/P6-3 (**personality** is a third driver — it modulates the retreat threshold) · X9/X10 (computed range + a hardcoded opening spread **override** doctrine) |
+| **E** | **TWO WORLDS — the live sim and the auto-resolver** | *The same designed thing behaves differently depending on which code path runs.* | **P7-2 (two missile models, 500×–50,000× apart)** · P7-3 (the auto-resolver never spawns ordnance) · P13-1 (**bombardment exists only in the path that does not run the battle**) · X13 (**reach 0 means opposite things** in the two domains) · X12 (the feed and the closing model are still unshared) · P4-5/P4-6 (**hazards: each domain built the half the other lacks**) |
+| **⭐ OUTLIER** | **The engine records everything; the CLIENT filters nothing** | *A fog-of-war leak.* | **P15-1 — the Battle Report shows EVERY faction's battles galaxy-wide.** The `FactionId` needed to filter is **already on the event struct** and nothing reads it. **Found only by crossing engine→client — a seam barely swept, which yielded a 🔴 on first contact.** |
+
+**⚡ THE FOUR CHEAP ONES — hours, not weeks, and each closes a whole class:**
+**P15-1** the fog filter (the field exists) · **P3-1** the fire-control flag (one line) · **X13** pick ONE reach
+convention (`0` = no reach, unbounded = `PositiveInfinity`, which the range check already handles) · **P2-1** add the
+five missing doctrine fields (a save-schema addition, and it un-blocks **every** doctrine slice).
+
+**THE DEPENDENCY ORDER (not a preference — each unlocks the next):**
+> **S1 (see it)** → **D-fields** (doctrine can hold its dials) → **A** (the designer's numbers arrive) → **B**
+> (cluster the battlefield — *and it makes everything cheaper, not dearer*) → **C** (state persists) → **E** (unify the
+> two worlds). ⚠ **R3 (real targeting) needs A first** — wasting alpha means nothing until alpha exists — **and B
+> before it**, because clustering buys the budget targeting spends.
+
 ### ⚔ R1–R5 — THE RESOLVER RETROFIT (canon **M19**, 2026-07-28) · large, five slices
 
 > **Cause established, not assumed.** The kernel is already shared; the **FEED** into it and the **WRAP** around it are
