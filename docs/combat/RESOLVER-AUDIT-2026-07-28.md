@@ -156,3 +156,29 @@ Two functions decide who controls the range and what range the fight settles at.
 | **P5-1** | 🔴 | **THE COMPUTED PREFERENCE CAN ACTIVELY CONTRADICT THE DOCTRINE.** A fleet ordered to *close and brawl* that happens to carry **one** long-range gun will try to **stand off at that gun's range** — the opposite of its orders. A fleet ordered to *kite* whose ships have low evasion **never gets to dictate the range** and is dragged into a brawl. This is the precise mechanism behind X9's post-commencement half: it is not merely that doctrine has no input, it is that **the computed value can override the player's stated intent.** |
 | **P5-2** | 🟠 | **ONE LONG-RANGE WEAPON HIJACKS THE WHOLE FLEET'S ENGAGEMENT RANGE.** `FleetDesiredRange` takes the **max** over *every* weapon on *every* ship. A fleet whose main armament is short-ranged but which carries a single long-range missile launcher will hold at **missile range** and **never bring its main guns to bear.** The fleet fights at the range of its rarest weapon. |
 | **P5-3** | 🔴 | **AN ALL-BEAM FLEET CLOSES TO POINT-BLANK — a direct consequence of X13.** Because a space beam encodes unbounded reach as `Range_m = 0`, and `FleetDesiredRange` deliberately lets *"unbounded (0) never raise it"*, a fleet armed **only** with beams computes a desired range of **0** and therefore **closes to contact** — despite its guns reaching across the whole engagement. **The 0-means-unbounded convention (X13) inverts the behaviour of the ships it describes.** This is the clearest argument yet for one reach convention. |
+
+---
+
+## PASS 6 — Ammo, retreat, and what a battle leaves behind
+
+**Docs read first:** `WEAPONS-DESIGN.md` (W3 ammo/magazine + the saturation model); `FLEET-COMBAT-CLOSING-DESIGN.md`
+(**the retreat verb + break-away timer + the engagement lock**, and the locked *"first shot makes the battle"* rule);
+`RESOLVER-DESIGN.md` §B7 (*"You keep what survives"*); `GameEngine/Logistics/CLAUDE.md` (resupply).
+
+**Correction to an expectation before flagging:** I expected space to have no ammo consumption. **It does** —
+`FleetCombatStateDB.AmmoPool_kg`, drained by `(ammo J/s × dt) × AmmoBurnKgPerJoule`. Not an asymmetry. What follows
+is what the reading actually found.
+
+| # | Sev | Finding |
+|---|---|---|
+| **P6-1** | 🟠 | **THE TWO AMMO MODELS MEASURE DIFFERENT THINGS.** Space burns ammo **proportional to the energy fired and scaled by elapsed time**. Ground burns a **flat `AmmoPerSalvo_kg = 1.0` per salvo**, regardless of how many weapons fired or how hard. ⇒ **on the ground a rifleman and a ten-cannon tank consume identical ammunition**, and a magazine's size measures **how many ticks you can fight**, not how many shots you can fire. It also re-confirms **C2** at the ammo level: shortening the tick multiplies ammo consumption. |
+| **P6-2** | 🔴 | **THE RETREAT DECISION IS A HARDCODED CONSTANT MODULATED BY PERSONALITY — NOT BY DOCTRINE.** `RetreatCasualtyThreshold` is `public const double = 0.5`, and a **personality** trait swings it. Meanwhile **every one of the 25 doctrine entries authors its own `RetreatCasualtyThreshold`**, which (P2-1) has **no runtime field to live in**. So the most consequential in-combat decision — *when do we break off* — is made by a constant and a personality, while the doctrine's own authored value is unreadable. **Direct R-c violation.** |
+| **P6-3** | 🟠 | **CORRECTION TO MY OWN EARLIER NOTE.** In M19 I recorded personality as *"biases which doctrine the AI picks, not how forces behave once committed"*, and flagged it rather than ruling it. **That was wrong.** P6-2 shows personality **directly modulates an in-combat behavioural threshold**. Under R-c personality is therefore a second behavioural driver, exactly like role (X1). **Recorded so the charitable reading is not re-used.** |
+| **P6-4** | 🟠 | **GROUND HAS THE WISH BUT NOT THE STATE.** Space has a real retreat *state* (`FleetRetreatDB`, `IsRetreat` posture, the casualty threshold). Ground has a `GroundIntent.Retreat` the AI can choose — which issues an ordinary move. **No retreat state, no break-away timer, no engagement lock, no disengagement cost.** "Walking out of a ground fight is free" is confirmed, with the mechanism named. |
+| **P6-5** | 🔴🔴 | **⚠ EVERY SCRAP OF BATTLE ATTRITION IS ERASED ON DISENGAGE — the whole `FleetCombatStateDB` is REMOVED** (`CombatEngagement.cs:848`), and its pools **lazily re-seed to FULL at first contact** (`:692`). So on disengaging, a fleet is handed: **full ammunition · full shields · zero heat · a full manoeuvre reserve · and its accumulated partial damage deleted.** Four consequences, each serious on its own: **(a) FREE REARM** — magazines and the entire ammo-logistics chain are meaningless in space; fight dry, disengage, re-engage full. **(b) FREE SHIELD + HEAT RESET** — instant, not regenerated over time; radiators and heat management stop mattering between fights. **(c) THE KITING CLOCK DEFEATS ITSELF** — `ManeuverBudget` exists expressly as *"the kiting clock that makes 'kite forever' impossible"*, and disengaging refills it, so kite-forever is achieved by disengage-and-re-engage. **(d) A FLEET THAT DISENGAGES BEFORE EACH KILL THRESHOLD NEVER LOSES A SHIP** — `DamageTakenPool` holds the accumulated damage that has not yet converted to a whole kill, and it is discarded, so repeatedly breaking off just below the threshold takes **zero permanent losses**. |
+
+**Why P6-5 is the most serious finding of the audit so far.** It is not a missing feature — it is an **exploit that
+also silently deletes four designed systems** (magazines, heat/radiators, the anti-kiting clock, and partial damage).
+It also directly contradicts **R-g** (*"simulated throughout the entirety of the battle"*) one level up: the battle's
+own accumulated state does not survive the battle ending. And it contradicts **§B7's** *"You keep what survives"* —
+you keep more than survives.
