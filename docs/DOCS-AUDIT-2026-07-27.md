@@ -907,3 +907,86 @@ a dead simulation currently reads as "paused" on every instrument. **Fix the win
 4. **Definition of Done row 3** (*"the doc tree contains no claim a grep of the code refutes"*) is **true for
    everything swept, not provable tree-wide** — the un-run batches are the unswept remainder. Stated as a limit,
    never as a pass.
+
+---
+
+## 16. THE PHASE C RE-SWEEP (the obligation from §15f) — 2026-07-28
+
+Phase C ran **before** Phase A finished, so doc corrections were made against incomplete evidence. This is the
+second pass, applying **Phase B's own standing lesson** (§14d) systematically: *when a verdict lands, grep the doc
+tree for every OTHER place that states the same thing.* Four late findings were traced; **three had propagated
+nowhere and one had propagated a dangerous claim into six documents.**
+
+### 16a. Stale numbers still sitting in THE PLAN — fixed
+
+Ruling #11's footprint denominator was corrected in the audit but **not** in THE PLAN, where it appeared **twice**
+(the delta ledger row and the S-slice body): *"2 of 26"* → **2 of 51** installation templates. Exactly the
+half-applied-fix pattern Phase B named. Residual grep for `2 of 26`: **0**.
+
+### 16b. ⭐ THE BIG ONE — a design DECISION recorded as an accomplished FACT, echoed into six docs
+
+`docs/combat/DETECTION-DESIGN.md:5` is a dated **decision** banner: cut `SignalQuality`, collapse detection to
+**strength only**. It states the field *"is deleted"* and claims the cut *"deletes three bugs by deletion."*
+**The decision was never executed in code.** Verified:
+
+| The banner says | The code says |
+|---|---|
+| the field *"is deleted"* | **live in 9 files** |
+| its *"only consumer was a redundant survey body-ID path"* | that consumer is **load-bearing**: survey reveal gates on it at hard thresholds — body type `> 0.20`, tectonics/star detail `> 0.80` (`SystemBodyInfoDB.cs:154-160`, `StarInfoDB.cs:130`), with `RndSigmoid` noise scaled by it |
+| *"deletes three bugs by deletion (byte-overflow, multi-band overwrite, range-invariance)"* | the **byte-overflow was already FIXED** 2026-06-28 and is CI-gauged (`SensorQualityTests`: a perfectly-tuned signal resolves at 1.0; pre-fix ~0.74, a wrapped byte). So it is no longer an argument for deletion. The **multi-band overwrite is still open**, as a flagged bounded follow-up |
+
+**Why this is dangerous rather than untidy:** read literally, the banner authorises deleting a live field that
+controls how accurate the player's surveys are. Six documents echoed *"CUT"* — `DIPLOMACY-DESIGN` (fixed in Phase B),
+`ESPIONAGE-AND-INTELLIGENCE-DESIGN`, `GOVERNANCE-AND-DELEGATION-DESIGN`, `AI-BRAIN-BUILD-TRACKER`, three
+`DOCS-INDEX` rows, and `COMPONENT-DESIGNER-DIAL-LEDGER`. **Exactly one got it right** —
+`COMPONENT-DESIGNER-DIALS.md:1489`: *"`SignalQuality` is DESIGN-CUT (**the engine field survives**, but detection
+collapses to strength only)."* That is the correct, safe phrasing and it is now the model. The origin banner and the
+two unqualified echoes are corrected; the right one was left alone.
+
+### 16c. ⭐⭐ AND THE CONSEQUENCE NOBODY TRACED — the root cause of the blind AI, proven
+
+The re-sweep's real payoff. **Two facts, both proven in source:**
+
+1. **`SignalStrength_kW` is not loudness — it is a detection MARGIN.** Both assignment sites subtract the
+   receiver's own noise floor: `SensorTools.cs:193` (`intersectPointY - recever.BestSensitivity_kW`) and `:197`
+   (`signalWaveSpectraMagnatude_kW - recever.BestSensitivity_kW`). A ship at realistic range clears the floor by
+   almost nothing ⇒ **~0**; a star clears it by a vast amount ⇒ **1.4 M kW**. **That is the entire observed
+   symptom** — not a wrapped byte, not an uninitialised field.
+2. **`ThreatAssessment.cs:39` sums that margin believing it is size**, in its own words: *"loudness = the
+   fog-limited size proxy."*
+
+**And the doc chain that caused it, which is the part worth keeping:** `DETECTION-DESIGN.md` decided detection
+would *"collapse to strength only"* → `AI-BRAIN-BUILD-TRACKER.md` (F-A1/F-B1) duly built the AI's **eyes** on
+**strength** → `ThreatAssessment` sums strength as a size proxy → strength is a threshold margin. **The design
+deliberately routed all NPC threat perception onto the one field whose semantics cannot carry it.** That is why
+**all 288 AI decisions in the real play log read `vs no threat`**, and why `CombatRisk.WouldEngage` — which
+returns `true` whenever the estimate is non-positive (`CombatRisk.cs:41`) — never evaluates its risk band at all.
+
+**A compounding factor, already documented and still open:** the per-band loop **overwrites** both
+`detectedMagnatude` and `quality` each iteration and returns whatever the **last** detectable band left
+(`SensorTools.cs:218-222`) — the "multi-band overwrite" quirk flagged in `Sensors/CLAUDE.md`. A marginal band can
+clobber a strong one. `HighestDetectionQuality` (a max over time) smooths it; `LatestDetectionQuality` does not —
+**which is exactly why Latest reads 0 while Highest does not**, the asymmetry S1e was written to explain.
+
+**Consequences landed:** slice **S1e** changes shape from *"trace an unverified bug"* to a **design decision** —
+give the contact an explicit loudness field from the **pre-subtraction** `signalWaveSpectraMagnatude_kW` (leaving
+the margin semantics untouched so nothing else shifts), and treat max-across-bands as a separate
+behaviour-changing fix with its own test. `AI-BRAIN-BUILD-TRACKER`'s **F-B1 is now marked blocked on S1e**. The
+connection map's threat-read row carries the mechanism. And a standing warning is on the slice: **do not "fix"
+this by deleting `SignalQuality`.**
+
+### 16d. What the re-sweep did NOT find
+
+- **Ruling #25's walk-back had propagated correctly** — every remaining "no tooltips" mention is a corrected one.
+- **The keystone-3 / hostility correction** needed no further sites beyond the two fixed in Phase B.
+- **The `SYSTEMS-STATUS-AND-TEST-PLAN` archive** holds: residual grep still **0** after all later commits.
+
+### 16e. The lesson, sharpened
+
+Phase B's lesson was *"a half-applied fix is indistinguishable from a wrong verdict."* This pass adds a second,
+worse failure mode: **a design DECISION written in the past tense reads as an accomplished fact, and then
+propagates.** `DETECTION-DESIGN.md` said the field *"is deleted"* when it meant *"we have decided to delete it"* —
+and six documents inherited it, one of which pointed the entire NPC brain at a field that cannot do the job.
+**Write decisions as decisions.** When a doc records intent, say *"decided, not yet built"*; the three-state
+vocabulary this operation already uses (built-and-gauged / built-but-runtime-unverified / built-but-INERT) needs a
+fourth state for exactly this: **DECIDED-NOT-BUILT**.

@@ -183,7 +183,7 @@ Every rung is reachable and losable — it is NOT a parachuted-in "spy points" a
 
 ## Connections (Prime Directive)
 
-- **Detection / sensors / EMCON** (built) — the **inference substrate**: physical detection on a rival feeds their Military facet at **Inferred** (binary). **No longer a prerequisite** — `SignalQuality` is CUT (2026-07-07); the gradient lives in the Ledger, not the sensor. EMCON-dark still hides your buildup from their passive intel (the bluff), via *strength*.
+- **Detection / sensors / EMCON** (built) — the **inference substrate**: physical detection on a rival feeds their Military facet at **Inferred** (binary). **No longer a prerequisite** — `SignalQuality` is CUT (2026-07-07); the gradient lives in the Ledger, not the sensor *(precisely: its ROLE as the detection gradient was cut — the engine FIELD is still live and still gates survey reveal at 0.20/0.80. Corrected 2026-07-28; see `docs/combat/DETECTION-DESIGN.md`'s correction banner.)*. EMCON-dark still hides your buildup from their passive intel (the bluff), via *strength*.
 - **Diplomacy** (designed) — intel is **negotiation leverage** (dirt at the table); caught espionage **craters the relation TRACK** and can hand the other side a casus belli. The ambassador is the *passive* intel feed.
 - **Internal politics** (designed) — *sow unrest* reaches into a rival's **blocs / per-system legitimacy**; their agents do it to **you** → counter-intel defends your provinces. The reactive demand-engine can surface "we are being destabilised by [Rival]."
 - **People** (M3 talent) — Spymaster + agents are the intelligence arm; *turn/assassinate* hits the **people grave rung** (theirs and yours).

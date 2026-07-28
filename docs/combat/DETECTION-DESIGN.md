@@ -3,6 +3,30 @@
 *Draft 2026-06-26 — the design pass BEFORE we build. Detection is M1 lever #1 (`docs/MVP.md`, `docs/REALISM-VS-GAMEPLAY-AUDIT.md`). This doc is for marking up: the Keep/Cut/Add calls in §3 and the open questions in §5 are proposals, not settled.*
 
 > **DECISION 2026-07-07 — `SignalQuality` is CUT (not "keep quietly").** Detection collapses to **strength only**: *do I see it, and how loud is it.* `SignalStrength` is EMCON's entire substrate (activity → signature → detectability at range) and is all combat/EMCON needs. The `SignalQuality` classification/resolution field is deleted — it was pretty-and-complicated, carried no graduated range info (range-invariant), duplicated the graduated-ness that belongs in the espionage **Information Ledger**, and its only consumer was a redundant survey body-ID path. **This retires the "detection-quality fix" as a prerequisite for espionage** — the prerequisite becomes "cut it," which is free. Deletes three bugs by deletion (byte-overflow, multi-band overwrite, range-invariance). Size/"big vs small contact" still falls out of strength × cross-section; fine classification, if ever wanted, is an espionage (agents) question, not a sensor field. The rows below marked "quality" are superseded by this banner.
+>
+> **⚠ CORRECTED 2026-07-28 (OPERATION GROUND TRUTH, Phase C re-sweep) — THIS DECISION WAS NEVER EXECUTED IN CODE,
+> and this banner reads as though it were.** Three corrections, all verified against source:
+> 1. **The field is NOT deleted.** `SignalQuality` is **live in 9 files**.
+> 2. **Its consumer is not redundant — it is load-bearing.** Survey reveal still gates on it at hard thresholds:
+>    body type at `> 0.20`, tectonics/star detail at `> 0.80` (`Galaxy/SystemBodyInfoDB.cs:154-160`,
+>    `Galaxy/StarInfoDB.cs:130`), with `RndSigmoid` noise scaled by it. **Deleting the field without re-homing
+>    survey confidence first would make survey accuracy silently wrong.**
+> 3. **Two of the "three bugs deleted by deletion" were already dealt with by other means, so they are not
+>    arguments for deletion any more:** the **byte-overflow** was *fixed* on 2026-06-28 and is CI-gauged
+>    (`SensorTools.cs` `DetectonQuality`; gauge `SensorQualityTests` asserts a perfectly-tuned signal resolves at
+>    1.0 — pre-fix it read ~0.74, a wrapped byte). The **multi-band overwrite** remains, as a flagged bounded
+>    follow-up (`Sensors/CLAUDE.md`).
+>
+> **AND THE CONSEQUENCE NOBODY TRACED — this is why the AI is blind.** This banner routes detection onto
+> **strength only**, and `docs/ai/AI-BRAIN-BUILD-TRACKER.md` (F-A1/F-B1) duly builds the AI's *eyes* on
+> **`SignalStrength_kW`**. But that field is **not loudness — it is a detection MARGIN**: both assignment sites
+> subtract the receiver's own floor (`SensorTools.cs:193,197` — `… - recever.BestSensitivity_kW`). Meanwhile
+> `ThreatAssessment.cs:39` sums it with the comment *"loudness = the fog-limited size proxy."* A ship at realistic
+> range clears the floor by almost nothing, so it reports **~0**, while a star reports **1.4 M kW** — which is
+> exactly why **all 288 AI decisions in the real play log read `vs no threat`** (audit §9/G10). **So "collapse to
+> strength only" is only safe once strength actually MEANS loudness** (use the pre-subtraction
+> `signalWaveSpectraMagnatude_kW`, or size × range) — otherwise the cut hands the AI a field that cannot carry
+> the load. Scheduled as plan slice **S1e**, and it is a **design** question, not just a bug fix.
 
 ---
 

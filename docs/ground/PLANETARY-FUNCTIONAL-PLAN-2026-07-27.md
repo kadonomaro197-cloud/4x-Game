@@ -183,7 +183,7 @@ gauge proves it. **Accessible** = a player reaches it from the normal game, no D
 | Build a ground unit → field it | BUILT_AND_GAUGED | partial — rides industry, but destination is hardcoded region 0 | MISSING | **[A24]** |
 | One build queue for units + buildings | **MISSING — there are FIVE live build paths**, not four: the `IndustryJob` line, a **second materials-free `LocalConstructionDB` queue**, the `GroundBuildQueueDB` tile side-car, the beachhead `BuildSites` list, and two instant free placement orders. Only the side-car carries a planetary destination; the only real progress bar is on the free queue | mixed | MISSING | **[V2]** `IndustryAbilityDB.cs:17`, `LocalConstructionDB.cs:16`, `GroundBuildQueueDB.cs:36` |
 | Free build paths (**TWO of them**) | BUILT — the free "Build here" order **and** the `LocalConstruction` queue, which spends only `PointsPerDay` and **never** `ResourceCosts`, yet lists infantry/armor/artillery and raises real units. **No test covers that second queue.** The free order is also the **only** producer of a building that fortifies | **both reachable** (Colony Management → Construction) — that's the problem | n/a | **[V2]** `LocalConstructionProcessor.cs:33,50`, `ConstructionDisplay.cs:56,70` |
-| Buildings occupy ground / are war-map objectives | **the "two attributes" premise is REFUTED — `GroundFootprintAtb` is ALREADY the single attribute** (its *presence* is the war-map-objective flag; its `TileFootprint` is tile occupancy; both read live). **The real gap is DATA: only 2 of 26 base-mod `PlanetInstallation` templates carry it** | — | drawn where authored | **[V2]** `GroundFootprintAtb.cs:27,31`, `GroundBuildings.cs:27,332` — **#11 is authoring, not a build** |
+| Buildings occupy ground / are war-map objectives | **the "two attributes" premise is REFUTED — `GroundFootprintAtb` is ALREADY the single attribute** (its *presence* is the war-map-objective flag; its `TileFootprint` is tile occupancy; both read live). **The real gap is DATA: only **2 of 51** installation templates carry it *(denominator corrected 2026-07-28 — the old "26" counted the wrong thing)*** | — | drawn where authored | **[V2]** `GroundFootprintAtb.cs:27,31`, `GroundBuildings.cs:27,332` — **#11 is authoring, not a build** |
 | Buildings built AFTER game start get a location | **MISSING** — no hook at production completion | n/a | invisible on the war map | **[A24]** |
 | Employment (jobs) + colony power | **BUILT_INERT, wiring complete end-to-end, both inputs STRUCTURALLY zero**: **zero** base-mod templates declare `EmploymentAtbDB` (so `GetTotalJobs()` is always 0 and the morale term is skipped by a −1 sentinel), and `powerDemandPerCapita` is authored 0 in both strain nodes while `uef.json` has no strain node at all | n/a | MISSING | **[V2]** `EmploymentAtbDB.cs:17`, `PopulationProcessor.cs:74`, `ColonyMoraleDB.cs:134` — **cheap-wire, mostly JSON** |
 | Semantic tile bonuses | **MISSING — no per-tile bonus mechanism of any kind.** The only terrain rules are `GroundTerrain.TerrainAttackMult` (combat, keyed on unit TYPE not on a building) and `HexMinerals.TerrainWeight` (deposit-seeding at generation). **`CityTile.Terrain` is populated and read by nobody but its copy-ctor and two tests** | MISSING | MISSING | **[V2]** `CityTile.cs:22`, `GroundTerrain.cs:82` |
@@ -356,8 +356,32 @@ is zeroed even though the contact must have passed `> 0` at scan time (`SensorSc
   above the setter that assigns it (`:220 SignalStrength_kW = detectedMagnatude`). **Start at those two lines.**
   *(`SignalQuality` itself is NOT cut from the code — it is live in 9 files and gates survey reveal at 0.20/0.80,
   `SystemBodyInfoDB.cs:154-160`. Do not delete it.)*
-- **Build:** trace why `LatestDetectionQuality` is zeroed while `HighestDetectionQuality` was not (root cause
-  **unverified** — start there, do not guess), then fix the read so a detected ship reports real loudness.
+- **⭐ ROOT CAUSE FOUND 2026-07-28 (Phase C re-sweep) — this is no longer "unverified, do not guess," and the
+  slice changes shape: it is a DESIGN question, not a bug fix.** Two facts, both proven in source:
+  1. **`SignalStrength_kW` is not loudness — it is a detection MARGIN.** Both assignment sites subtract the
+     receiver's own noise floor: `SensorTools.cs:193` (`intersectPointY - recever.BestSensitivity_kW`) and `:197`
+     (`signalWaveSpectraMagnatude_kW - recever.BestSensitivity_kW`). A ship at realistic range clears the floor by
+     almost nothing ⇒ **~0**. A star clears it by a vast amount ⇒ **1.4 M kW**. *That is the whole observed
+     symptom*, and it is not a wrapped byte or an uninitialised field.
+  2. **`ThreatAssessment.cs:39` sums that margin believing it is size** — its own comment reads *"loudness = the
+     fog-limited size proxy."* The AI is reading a threshold-clearance number as an order-of-battle estimate.
+  **The doc chain that produced it** (worth reading before choosing a fix): `docs/combat/DETECTION-DESIGN.md`
+  decided detection would *"collapse to strength only"*, and `docs/ai/AI-BRAIN-BUILD-TRACKER.md` (F-A1/F-B1) duly
+  built the AI's eyes on **strength** — so the design deliberately routed all threat perception onto the one field
+  whose semantics cannot carry it. Both docs now carry the correction.
+  **A compounding factor, already documented and still open:** the per-band loop **overwrites** both
+  `detectedMagnatude` and `quality` each iteration and returns whatever the **last** detectable band left
+  (`SensorTools.cs:218-222`) — the "multi-band overwrite" quirk flagged in `Sensors/CLAUDE.md`. So a marginal band
+  can clobber a strong one. `HighestDetectionQuality` (a max over time) smooths this; `LatestDetectionQuality`
+  does not — **which is exactly why Latest reads 0 and Highest does not.**
+- **Build (re-shaped):** decide what the AI's threat input should *be*, then wire it. Cheapest honest option: give
+  the contact an explicit loudness field from the **pre-subtraction** `signalWaveSpectraMagnatude_kW`, leaving
+  `SignalStrength_kW`'s margin semantics untouched so nothing else shifts. *(Taking the max across bands instead of
+  the last is a separate, behaviour-changing fix that wants its own test — do not ride it on this slice.)*
+- **⚠ Do NOT "fix" this by deleting `SignalQuality`,** which `DETECTION-DESIGN.md` still reads as an executed
+  deletion. That field is **live in 9 files** and gates survey reveal at `> 0.20` / `> 0.80`
+  (`SystemBodyInfoDB.cs:154-160`, `StarInfoDB.cs:130`). Its byte-overflow bug was already fixed (2026-06-28,
+  CI-gauged by `SensorQualityTests`).
 - **Gate:** a fixture with two detected hostile fleets asserts `GreatestThreatTo` names the rival with a
   **non-zero** strength, and that `WouldEngage` **returns false** for a hopeless attacker — i.e. the risk band is
   actually exercised, which no test does today.
@@ -424,7 +448,7 @@ sitting — survey → colonize → mine → design+build a unit → load → sa
 > a colony player with *no buildable fortification at all* — **and CI would stay green through it.** Write
 > that list in this slice and gauge it. **#11 is NOT a build:** `GroundFootprintAtb` is already the single
 > attribute (presence = objective, `TileFootprint` = occupancy, both read live). The gap is **data — only
-> 2 of 26 templates carry it.**
+> **2 of 51** installation templates carry it *(corrected 2026-07-28)*.**
 Collapse the divergent build paths into one RTS-style queue where every entry carries its destination and
 shows progress; delete the free "Build here" path; make muster a rally-point setting (#6); make "occupies a
 tile" and "is a war-map objective" one attribute (#11).
