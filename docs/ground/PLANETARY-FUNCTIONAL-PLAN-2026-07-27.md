@@ -702,6 +702,35 @@ creates**. That is what "done" looks like. Also verified sound: the designer→a
 have a reader), ten of fourteen doctrine dials, the ship armour nature matchup, and the whole formula layer
 (675/675 `PropertyValue`, 58/58 `TechData`, 119/120 arities).
 
+### ⚖ CROSS-AUDIT RECONCILIATION — where the two audits DISAGREE (read this before acting on either)
+
+Two audits, days apart, different lenses: the **resolver audit** read code + design docs; the **designer audit** read
+base-mod data + the code consuming it. The disagreements are worth more than the agreements. Full table:
+`docs/economy/DESIGNER-AUDIT-2026-07-28.md` → **CROSS-AUDIT RECONCILIATION**.
+
+- **C-2 🔴 NEW BLOCKER, found only by crossing them — and it changes a PLANNED DELETION.** X5 said the assembler never
+  writes penetration/alpha; the designer ledger said both arrive. **Both true, of different paths.**
+  `GroundWeaponAtb` has five fields and **none is penetration or per-shot energy**, so a unit designed **from parts can
+  never be armour-piercing**. Only `infantry-unit`/`armor-unit`/`artillery-unit` carry them (via `GroundUnitAtb`) — and
+  those three are **marked for eventual removal**. ⇒ **Add the two dials to `GroundWeaponAtb` BEFORE retiring the
+  prebuilts, or armour penetration leaves the ground game.**
+- **C-3 🟠 the plan's "the ground feed is lossy" framing is BACKWARDS.** True per-field: ground **6 of 10** (prebuilt) /
+  **4 of 10** (parts) · railgun **4 of 10** (not "all designed") · **missile 0 of 10**. A prebuilt ground unit carries
+  more designed fidelity into the fight than any ship weapon except the beam.
+- **C-1 🔴 the doctrine inert-list is FIVE, not four**, and matches resolver **P2-1** exactly: `TargetPriority`,
+  `RetreatCasualtyThreshold`, `BreakAwaySeconds`, `Pursues`, `SpeedMult`. The fix for four of them is a **save-schema
+  change** (`FleetDoctrineDB` has nowhere to put them) — not a copy bug.
+- **C-5 🔵 carry this sentence into the recompute slice:** **freeze on RESEARCH · refresh on DAMAGE and REFIT.** Without
+  it, resolver **P17-1**'s ✅ ("a built ship keeping its build-time numbers is correct") reads as blessing the frozen
+  value that RC-5 exists to fix.
+- **C-4 🟡** the all-beam-closes-to-point-blank case is **unreachable with base-mod data** (both beams have Range
+  `MinFormula: 1000`) — latent trap, not live misbehaviour.
+- **C-7 🔵 coverage map:** the resolver lens could never have found RC-1 (it did not read the JSON); the designer lens
+  could never have found the disengage refill or the battle-report fog leak (it never ran a battle). **Neither swept the
+  engine↔client seam — the one surface that yielded a 🔴 on first contact. Point the next pass there.**
+- **C-8 ✅** both audits independently produced the same sentence — *the designer models COMPONENTS, the resolver models
+  TOTALS.* Two differently-pointed methods converging is the strongest evidence either document contains.
+
 ### 🔬 THE 17-PASS RESOLVER AUDIT — 49 findings, and they are FIVE root causes
 
 **Full record:** `docs/combat/RESOLVER-AUDIT-2026-07-28.md` (the pass log, every finding with file:line and the docs

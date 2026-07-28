@@ -339,6 +339,23 @@ un-swept lenses are named below.
 
 ---
 
+## ⚠ CORRECTIONS FROM THE CROSS-AUDIT (2026-07-28, after the 7-pass designer audit)
+
+The designer audit (`docs/economy/DESIGNER-AUDIT-2026-07-28.md`) read the **base-mod data**; this audit read the
+**code and docs**. Comparing them corrected two claims here and confirmed a third. Full reconciliation: that document's
+**CROSS-AUDIT RECONCILIATION** section.
+
+| Claim here | Correction |
+|---|---|
+| **X5 / P7-1's feed ranking** — *"a ground weapon gets **2** of 10 · a railgun **all designed** · a missile 0 of 5"* | ⚠ **Both ends wrong.** Per-field ledger: **ground 6 of 10** (prebuilt) or **4 of 10** (parts-built) · **railgun 4 of 10** — its range is an engine constant and penetration/alpha/heat are hardcoded 0 · **missile 0 of 10**. **A prebuilt ground unit carries MORE designed fidelity into the fight than any ship weapon except the beam.** The "ground is the lossy side" framing this produced is backwards. *(Designer audit **C-3**.)* |
+| **X5** — *"penetration + per-shot energy are never written by the assembler"* | ✅ **True of the PARTS path, false of the PREBUILT path — and the collision is a new BLOCKER.** `GroundWeaponAtb` has no penetration/alpha field at all, so a unit designed from parts can never be armour-piercing; only `infantry-unit`/`armor-unit`/`artillery-unit` (via `GroundUnitAtb`) carry them. **Those three are marked for eventual removal** — deleting them first would remove armour penetration from the ground game. *(Designer audit **C-2**.)* |
+| **P2-1 / P6-2** — *the doctrine's `RetreatCasualtyThreshold` has no runtime home; retreat is a const swung by personality* | ✅ **CONFIRMED, and it corrected the designer audit** (which had wrongly cleared it by counting a same-named constant). `EffectiveRetreatCasualtyThreshold` has **zero callers, including tests**. *(Designer audit **C-1**.)* |
+| **P5-3** — *an all-beam fleet closes to point-blank* | 🟡 **Real in code, unreachable with base-mod data:** both beam templates carry `"MinFormula": "1000"` on Range, so neither can be authored at the 0 sentinel. A latent trap, not a live misbehaviour. *(Designer audit **C-4**.)* |
+| **P17-1** — *a built ship keeping its build-time numbers is correct behaviour* ✅ | ⚠ **True for RESEARCH, false for DAMAGE and REFIT.** The same frozen value falsifies six documented "grave rung" claims and feeds the AI a stale strength. **Rule to carry: freeze on research · refresh on damage and refit.** *(Designer audit **C-5** / D5-3.)* |
+| **P16-1** — *49 FLAGGED constants = the discipline working* ✅ | ✅ **Still true, with a blind spot named:** `FLAGGED` says a number is *provisional*; it does not say the number *should not be a constant at all*. `RailgunRange_m` is flagged **and** in the wrong layer. *(Designer audit **C-6**.)* |
+
+---
+
 ## 📉 FINAL RATE CHECK — 17 passes
 
 | Passes | New defects |
