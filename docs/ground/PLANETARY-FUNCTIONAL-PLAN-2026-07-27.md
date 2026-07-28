@@ -202,7 +202,7 @@ gauge proves it. **Accessible** = a player reaches it from the normal game, no D
 | **`[FleetCombat]` as a battle channel** | **REFUTED** — 3 emitters, all client button handlers; it is a player-input echo and can never confirm a battle | n/a | mis-documented | **[V2]** audit §9/G9 |
 | **AI actually prosecuting a war** | **BUILT_INERT in practice** — UMF returned "no legal step" on **135 of 144** cycles while at war with a transport built and its fleet over an undefended homeworld; never landed a soldier in 5 months | n/a | visible only in `[AI]` | **[V2]** audit §9/G6 — **not scheduled; needs its own investigation** |
 | **Ground battle log / events / records** | **MISSING — zero emission anywhere in the resolver** | n/a | **MISSING, and the clock halts anyway → the interrupt lies** | **[V]** `GroundForcesProcessor.cs:329-330` + whole-file grep |
-| Unit inspection (hover + Force Management) | **MISSING, not "partial" — I overstated this in the first draft of this very table.** There are **zero tooltips** anywhere and **zero per-UNIT stat readout** in any surface | MISSING | MISSING | **[V2]** — corrected against my own row |
+| Unit inspection (hover + Force Management) | **PARTIAL — and the first draft was RIGHT. My own "correction" to MISSING was the error; Phase B walked it back.** What EXISTS: the ground surface already shows **aggregated** strength — count + summed Health/MaxHealth per (faction × unit-type × region) (`PlanetViewWindow.cs:1081-1087`), a map token printing type-initial + count + a `»` moving marker (`:466`), and the formation panel printing live stance multipliers (`:1497`). Hover is already **detected** three times for click handling (`:295,296,791`). What is MISSING: any **per-INDIVIDUAL-unit** drill-down, and a single tooltip **call** in either ground window (`SetTooltip`/`BeginTooltip` = **0** in both `PlanetViewWindow.cs` and `PlanetaryWindow.cs`). **"Zero tooltips anywhere" was flatly false** — the client has **101 `SetTooltip` + 12 `BeginTooltip`** across 20+ files; the true claim is scoped to the *ground* windows. **⇒ RE-SIZED medium → cheap-wire:** the numbers and the hover plumbing are already there; the missing part is the tooltip body and a per-unit view | PARTIAL | MISSING (per-unit only) | **[B]** Phase B, 3 lenses — the operation's first genuine walk-back |
 | Lost-contact fading marker | BUILT for space (`SensorContactIcon`) | — | **MISSING on ground** | ruling #26 |
 | Ground behaviour flags | BUILT — but **process statics**; set on New Game (menu *and* DevTest), **never on load** | — | MISSING | **[V]** `GroundForcesProcessor.cs:62/72/85/100`, `NewGameMenu.cs:562-581/979-986` |
 | A takeable enemy from the menu | BUILT | **ACCESSIBLE — the ungated "DevTest" main-menu button** (premise corrected) | — | **[V]** `MainMenuItems.cs:51` |
@@ -344,7 +344,18 @@ is zeroed even though the contact must have passed `> 0` at scan time (`SensorSc
 - **Why it outranks most depth work:** `CombatRisk.WouldEngage` deliberately returns **true** when the enemy
   estimate is non-positive (`CombatRisk.cs:41`) — a sensible fallback whose input is *always* zero, so **the
   AI's entire risk appetite never evaluates anything**, at the commit gate or anywhere else. Two treaty
-  behaviours can never fire either. This is also the **keystone prerequisite** `DIPLOMACY-DESIGN` already names.
+  behaviours can never fire either.
+- **⚠ ONE JUSTIFICATION WITHDRAWN (Phase B, my own overreach).** I wrote that this is *"the keystone prerequisite
+  `DIPLOMACY-DESIGN` already names."* **It is not.** That doc **dissolved** its detection-quality keystone on
+  2026-07-07 — the hidden-info gradient moved to the Information Ledger. **The slice still stands on its own
+  evidence** (288 of 288 real AI decisions read `vs no threat`), it just is not a named prerequisite for anything.
+- **⭐ A CONCRETE ROOT-CAUSE LEAD (Phase B — the plan said "unverified, start there, do not guess").** Two facts:
+  `ThreatAssessment.cs:11` documents that it *deliberately* uses signal **STRENGTH** because the `SignalQuality`
+  path was design-cut — so the field being read is the intended one, and it is the one reading zero. And
+  `SensorTools.cs:69` carries a **commented-out** `if(detectionValue.SignalStrength_kW > 0)` guard, ~150 lines
+  above the setter that assigns it (`:220 SignalStrength_kW = detectedMagnatude`). **Start at those two lines.**
+  *(`SignalQuality` itself is NOT cut from the code — it is live in 9 files and gates survey reveal at 0.20/0.80,
+  `SystemBodyInfoDB.cs:154-160`. Do not delete it.)*
 - **Build:** trace why `LatestDetectionQuality` is zeroed while `HighestDetectionQuality` was not (root cause
   **unverified** — start there, do not guess), then fix the read so a detected ship reports real loudness.
 - **Gate:** a fixture with two detected hostile fleets asserts `GreatestThreatTo` names the rival with a

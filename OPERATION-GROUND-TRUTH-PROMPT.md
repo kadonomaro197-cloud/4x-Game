@@ -395,6 +395,59 @@ doesn't exist (the C3 case) and any heavy new fixture that would land in the `re
 
 ## 3. PHASE B — ADVERSARIAL VERIFICATION
 
+> ### 🟡 PHASE B: ROUND 1 + ROUND 2 DONE — **1 genuine walk-back, 4 new defects, 5 verdicts still owed**
+>
+> Round 1: compliance doc §6 (10 claims, 0 refuted, 3 sharpened). **Round 2: `docs/DOCS-AUDIT-2026-07-27.md` §14.**
+>
+> **Cost note, recorded because the deviation must be explicit:** a 15-agent fan-out (5 claims × 3 diverse lenses,
+> default-to-refuted) was launched and **killed on the developer's third budget intervention** — 2 agents started,
+> **none finished**, ~150–200 k tokens, **zero verdicts**. The arithmetic was already in the compliance doc §6 and
+> was ignored because a session flag asked for fan-out. **The standing instruction outranks the flag.** Round 2 ran
+> in the main loop for a small fraction, applying the same three lenses by hand.
+>
+> **🔴 The first genuine walk-back of the operation — ruling #25.** *"Zero tooltips anywhere in the client"* is
+> **flatly false** (**101 `SetTooltip` + 12 `BeginTooltip`** across 20+ files), and aggregated ground strength
+> already renders (`PlanetViewWindow.cs:1081-1087,466,1497`) with hover already detected 3× for clicks. The first
+> plan draft said **PARTIAL**; the session "corrected" it to MISSING; Phase B **restored PARTIAL** and re-sized the
+> slice **medium → cheap-wire**. *An absolute quantifier is the most refutable thing in any finding.*
+>
+> **4 CONFIRMED — but three of them exposed a NEW defect apiece, all fixed:**
+> - **N1** `PLAY-TO-MARS-WALKTHROUGH.md` contradicted itself 95 lines apart — §L was rewritten to say the invade
+>   panel is built, while **table row L still read `❌ no button, no order`** and the header still said *"three gaps."*
+>   Row flipped; count corrected to **two** (K bombardment → S9; I no-enemy-on-normal-start, DevTest qualified).
+> - **N2 (my own overreach, withdrawn)** I framed B5 as *"changes a documented build order."* It does not —
+>   `DIPLOMACY-DESIGN.md:7` already recorded keystone 3 as *"substantially DONE"* on **2026-07-07**. Only
+>   `Combat/CLAUDE.md:107` was stale.
+> - **N3** `DIPLOMACY-DESIGN.md` contradicted **itself** — banner said keystone 3 done, its table ~460 lines below
+>   still said *"hostility isn't diplomacy-driven."* Row corrected.
+> - **N4 — a doc claim that invited deleting live code.** `DIPLOMACY-DESIGN.md:458` said `SignalQuality` **"was CUT."**
+>   **REFUTED:** live in **9 files**, gating **survey reveal** at `> 0.20` / `> 0.80` (`SystemBodyInfoDB.cs:154-160`,
+>   `StarInfoDB.cs:130`). Only its *role as the hidden-info gradient* was cut. Read literally, the old wording is an
+>   instruction to break survey accuracy.
+>
+> **Two consequences for slice S1e, both landed in THE PLAN:** its *"named keystone prerequisite"* justification is
+> **withdrawn** (that keystone was dissolved — the slice stands on its own 288-of-288-blind evidence); and it now has
+> a **concrete root-cause lead** where the plan had said *"unverified, do not guess"* — `ThreatAssessment.cs:11`
+> (deliberately reads signal STRENGTH because the `SignalQuality` path was design-cut) plus the **commented-out**
+> `if(detectionValue.SignalStrength_kW > 0)` guard at `SensorTools.cs:69`, ~150 lines above its setter at `:220`.
+>
+> **Also re-checked (all CONFIRMED, three sharpened):** `GroundCombatWindow` truly absent (and `PlanetaryWindow.old.cs`
+> is a **sealed** commented-out corpse, so no L1 risk) · multi-weapon plurality range-gates **per weapon per target**
+> · the region is a **derived band of hex columns** and **planet** capture is **all-or-nothing** across regions ·
+> upkeep confirmed hard, and **`GroundUnitAtb` has no upkeep parameter at all**, so base-mod units are *structurally*
+> unable to bill *(self-corrected: its ctor uses optional trailing params, so adding one is cheap — not the
+> exact-arity break I first called it)* · the installations-UI gap refuted.
+>
+> **⚠ HONEST RESIDUE — 5 verdicts still owed.** **B1 (#14 "the only fully-wired move verb") is the highest-value
+> single check left**: it sizes slice **S6 (large)** and ruling #14 says **DELETE** that verb. Also owed: §10 #1's
+> five sub-claims, the `WEAPONS-DESIGN` saturation scoping, the `REAL-DISTANCE` STALE header, and
+> `GroundCombat/CLAUDE.md:52`.
+>
+> **📌 STANDING LESSON, worth more than any single verdict:** three of the four new defects were **not wrong
+> findings — they were correct findings with INCOMPLETE remediation** (a section fixed but not its index row; a
+> banner fixed but not its table row). **A half-applied fix is indistinguishable from a wrong verdict.** When a
+> verdict lands, grep the doc for every *other* place that states the same thing.
+
 Nothing from Phase A enters Phase C on one agent's word. For every REFUTED/STALE verdict and every wall: an
 independent refute pass (3 lenses or 3 voters, majority rules; "default to refuted if uncertain"). Keep the killed
 findings in an appendix so the next session knows they were checked.

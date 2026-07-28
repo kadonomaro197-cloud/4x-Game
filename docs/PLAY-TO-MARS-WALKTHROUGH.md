@@ -13,8 +13,17 @@ phase is marked:
   can't reach it.
 
 The point: **the two ENDS of the chain are playable (build an economy/army/fleet; fight and capture on the
-surface), but the space-to-ground BRIDGE in the middle — bombard, load, land — is where a normal playthrough
-breaks.** Three gaps block a hands-on invasion; the rest is polish.
+surface), but the space-to-ground BRIDGE in the middle is where a normal playthrough breaks.**
+
+> **⚠ COUNT CORRECTED 2026-07-27 (OPERATION GROUND TRUTH Phase B).** This line used to say *"Three gaps block
+> a hands-on invasion,"* and the bridge used to read *"bombard, load, land."* **`load` and `land` are BUILT** —
+> §L was rewritten to say so, but this header sentence and **table row L** were not updated in the same pass,
+> so the doc contradicted itself 95 lines apart. **TWO gaps remain**, and only one is about the bridge:
+> - **K — bombardment** has no first-class order (the plan's slice **S9**). This is the real remaining bridge gap.
+> - **I — no enemy on Mars** in a *normal* New Game. Note the qualifier: an **ungated "DevTest" main-menu
+>   button** already boots a three-faction at-war scenario (`MainMenuItems.cs:51-53`), so an enemy *is* reachable
+>   today — just not from the normal start. Promoting the scenario start is **ruling #27b** and is gated on the
+>   developer's answer to Q2, so this row stays honest as written for the normal path.
 
 > This is a *verification* artifact, not a build order committed to. What gets built and when is the developer's
 > call (the near-term milestone is `docs/MVP.md`'s "you can take a planet"). See the fix list at the bottom.
@@ -36,7 +45,7 @@ breaks.** Three gaps block a hands-on invasion; the rest is polish.
 | I | **Have an enemy on Mars to fight** | ❌ gated off (the paused Earth-Mars war) |
 | J | Win the orbit (space combat) | ✅ |
 | K | **Bombard Mars to soften the garrison** | ⚠️ no first-class order; incidental only |
-| L | **Load troops → land them on Mars** | ❌ the invasion bridge — no button, no order |
+| L | **Load troops → land them on Mars** | ✅ **BUILT — blocker CLOSED** (Earthfall C5.1, 2026-07-19; see §L) |
 | M | Fight & capture the surface | ✅ (fight + capture are automatic) |
 
 ---

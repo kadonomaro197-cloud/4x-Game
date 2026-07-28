@@ -507,7 +507,7 @@ Legend: **DONE** · **PARTIAL** · **MISSING** · **INERT** (code exists, nothin
 | 8 | Upkeep + magazine; ammo must bite | **PARTIAL/INERT** | Upkeep bills for assembled + garrison units (base-mod path free). Ammo drain helpers exist but are **called only from tests**; the flat 1 kg/salvo makes a magazine never a trade. | medium |
 | 9 | NOTHING IS FREE | **MISSING** | **TWO free paths, not one** — the "Build here" order *and* the `LocalConstruction` queue (spends only `PointsPerDay`, never `ResourceCosts`, yet lists infantry/armor/artillery). **And the trap: fortification value sums only from `Region.InstallationIds`, which the costed queue never writes** — so cutting the free path alone leaves no buildable fortification, CI green. | large |
 | 10 | ONE build queue, destinations, visible progress | **MISSING** | **FIVE live build paths.** Only the tile side-car carries a planetary destination; the only real progress bar is on the *free* queue. | large |
-| 11 | Every building occupies ground = war-map objective | **premise REFUTED** | `GroundFootprintAtb` is **already the single attribute** (presence = objective, `TileFootprint` = occupancy, both read live). **The gap is DATA: only 2 of 26 templates carry it.** | data |
+| 11 | Every building occupies ground = war-map objective | **premise REFUTED** | `GroundFootprintAtb` is **already the single attribute** (presence = objective, `TileFootprint` = occupancy, both read live). **The gap is DATA — and BIGGER than first recorded: `2` of `51` installation templates, not 2 of 26** (Phase B recounted by `UniqueID` entries in `installations.json`; the old denominator counted the wrong thing). Phase B also confirmed all four live readers: `ColonyFactory.cs:126` (drops footprint buildings onto hexes at colony creation), `CityBuilder.cs:52` (spends the tiles), `GroundBuildings.cs:28` (the `HasAttribute` predicate), `:324` (reads the count) — plus a proper `Clone()` at `GroundFootprintAtb.cs:38`, so no L12 exposure. | data |
 | 12 | Fund employment + power | **INERT** | Both wires complete end-to-end; both inputs **structurally zero** — zero templates declare `EmploymentAtbDB`, `powerDemandPerCapita` authored 0, and `uef.json` has no strain node. | **cheap-wire** |
 | 13 | Semantic tile bonuses | **MISSING** | No per-tile bonus mechanism of any kind. **`CityTile.Terrain` is populated and read by nobody but its copy-ctor and two tests.** | medium |
 | 14 | DELETE march-to-region → two-layer coordinate | **MISSING** | It is the **only fully-wired planetary move verb** — live in the primitive, order enum, processor, **AI tactical brain**, both client windows, the Site engine and a save/load fixture. **Four** coordinate systems coexist; no formatter prints `(17,09)(22,47)`. | large |
@@ -521,7 +521,7 @@ Legend: **DONE** · **PARTIAL** · **MISSING** · **INERT** (code exists, nothin
 | 22 | `CasualtyTier` + damage ledger + Training dial | **PARTIAL** | Training dial **built + gauged**. But of the design's 9 slices only **1** exists, and **all 7 Part-B types return ZERO files** (`CasualtyTier`, `ModelCount`, `BattleLedger`, `WeaponKey`, `VictimSnapshot`, `WeaponTally`, `SideReport`). | large |
 | 23 | Fire rate CALCULATED + shorten the tick | **MISSING** | No ground weapon carries a rate; tick = 1 h; **and the salvo pool is NOT `dt`-scaled while space's IS** — so shortening the tick *multiplies* ground damage. **A committed CI spec already pins a 5 s ground quantum and nothing implements it.** | large |
 | 24 | Ground battle readout = a LOG | **MISSING** | The whole `GroundCombat/` folder publishes **two** events, both in the troop-lift orders. And the interrupt pops the **space-only** report. | **cheap-wire** |
-| 25 | Hover tooltip + Force-Management detail | **MISSING** | *(Overstated as "partial" in the first plan draft.)* **Zero tooltips; zero per-UNIT stat readout anywhere.** | medium |
+| 25 | Hover tooltip + Force-Management detail | **PARTIAL** ⚠ **WALKED BACK by Phase B — the first draft was right and my "correction" to MISSING was the error.** | *"Zero tooltips anywhere" is FALSE* — the client has **101 `SetTooltip` + 12 `BeginTooltip`** across 20+ files. Aggregated ground strength already renders (count + Σ Health/MaxHealth per faction×type×region, `PlanetViewWindow.cs:1081-1087`; token type+count+`»` at `:466`; live stance multipliers at `:1497`), and hover is already detected 3× for clicks (`:295,296,791`). **True claim, scoped:** zero tooltip *calls* in either ground window, and no per-INDIVIDUAL-unit drill-down. | **cheap-wire** (was medium) |
 | 26 | Fading last-known contact marker | **MISSING on ground** | Space is built (`SensorContactIcon`); the ground read is live-only. | medium |
 | 27a | Five behaviour flags into the SAVE | **MISSING** | Five process statics, set on **two New-Game paths**; `LoadGame.LoadFile` sets **none**. | medium |
 | 27b | No default garrison/enemy in a stock New Game | ✅ **DONE** | All three auto-spawns default `false` (`NewGameMenu.cs:52,55,60`). **The one ruling already satisfied.** | — |
@@ -665,3 +665,110 @@ seven named shards. Adding shard `X` **without** also adding `FullyQualifiedName
 `rest` never shrinks. `docs/earthfall/IMPLEMENTATION-AUDIT-2026-07-22.md:83` calls the sharding *"gap-proof by
 construction,"* which is true for **coverage** (nothing can be excluded from every shard) but says nothing
 about this **duplication** direction. **Every new-shard commit edits `ci.yml` in TWO places.**
+
+---
+
+## 14. PHASE B — ADVERSARIAL VERIFICATION, ROUND 2 (orders §3)
+
+Round 1 (compliance doc §6) checked 10 claims and left **two ⚠ rows accepted on one agent's word**. This round
+targets the verdicts where **being wrong means a true thing was deleted** — the orders' actual reason for Phase B.
+
+### 14a. Method, and an honest cost note
+
+A 15-agent workflow (5 claims × 3 diverse lenses: counter-evidence / scope-auditor / consequence-checker,
+default-to-refuted) was launched and **killed at the developer's third budget intervention**. It had started 2
+agents (the concurrency cap on this 4-core box) and finished **none** — ~150–200 k tokens, **zero verdicts**.
+The arithmetic was already recorded in the compliance doc §6 and was ignored because a session flag asked for
+fan-out. **The standing instruction outranks the flag.** Round 2 was then done in the main loop for a small
+fraction of that, using the same three lenses applied by hand.
+
+### 14b. Results — 1 REFUTED (a real walk-back), 4 CONFIRMED, and **4 NEW defects found**
+
+| # | Claim under test | Outcome |
+|---|---|---|
+| **B1** | `march-to-region` is the only fully-wired move verb (#14) | **carried forward — still not re-verified.** Honest residue. |
+| **B2** | Unit inspection is MISSING; "zero tooltips anywhere" (#25) | 🔴 **REFUTED — the operation's first genuine walk-back** |
+| **B3** | The invade-from-orbit panel is BUILT, so the "#1 blocker" claim is refuted | ✅ **CONFIRMED in code** — but the **remediation was incomplete** (defect N1) |
+| **B4** | `GroundFootprintAtb` is already the single attribute; gap is data-only (#11) | ✅ **CONFIRMED** — count corrected, gap is **bigger** |
+| **B5** | `Combat/CLAUDE.md:107` "no diplomacy system" is refuted by `AreHostile` | ✅ **CONFIRMED** — but **my framing was overreach** (defect N2), and it exposed defects N3/N4 |
+
+#### 🔴 B2 — REFUTED. Ruling #25 goes back to PARTIAL, and my own "correction" was the error.
+
+*"There are zero tooltips anywhere"* is **flatly false**: the client has **101 `SetTooltip` + 12 `BeginTooltip`**
+calls across 20+ files. *"Zero per-UNIT stat readout in any surface"* is also too strong — `PlanetViewWindow`
+already renders **aggregated** strength (count + Σ Health/MaxHealth per faction × unit-type × region, `:1081-1087`),
+a map token with type-initial + count + a `»` moving marker (`:466`), and **live stance multipliers** (`:1497`).
+Hover is already **detected** three times, for click handling (`:295,296,791`).
+
+**The true, scoped claim:** **zero tooltip calls in either ground window** (`SetTooltip`/`BeginTooltip` = 0 in both
+`PlanetViewWindow.cs` and `PlanetaryWindow.cs`), and **no per-INDIVIDUAL-unit drill-down**. ⇒ **#25 re-sized
+medium → cheap-wire**: the numbers exist, the hover plumbing exists, only the tooltip body and a per-unit view are
+missing. *The first plan draft said PARTIAL; the session "corrected" it to MISSING; Phase B restored PARTIAL.*
+**Lesson: an absolute quantifier is the most refutable thing in any finding — and this session produced two of them.**
+
+#### ✅ B3 — the code is right, the doc fix was half-done (**defect N1, fixed**)
+
+`FleetWindow.cs:1754/1812` issue real `LoadTroopsOrder`/`LandTroopsOrder` commands through
+`_uiState.Game.OrderHandler.HandleOrder`, gated on `CanLoad`/`holdsOrbit`, each with a `SessionLog.Action` trace.
+The panel is real. **But** `docs/PLAY-TO-MARS-WALKTHROUGH.md` had §L rewritten while **table row L (line 39) still
+read `❌ no button, no order`** — the doc contradicted itself 95 lines apart — and the header still said *"Three
+gaps block a hands-on invasion."* **Both fixed**: row L flipped to ✅ with a pointer, and the count corrected to
+**two** (K bombardment = slice S9; I no-enemy-on-normal-start, with the DevTest qualifier). *A correct verdict with
+an incomplete remediation reads exactly like a wrong verdict to the next reader.*
+
+#### ✅ B4 — confirmed, and the data gap is **bigger** than recorded
+
+All four live (non-test) readers verified: `ColonyFactory.cs:126` drops footprint buildings onto hexes at colony
+creation, `CityBuilder.cs:52` spends the tiles, `GroundBuildings.cs:28` is the `HasAttribute` predicate, `:324`
+reads the count. It carries a proper `Clone()` (`GroundFootprintAtb.cs:38`) — no L12 exposure. **Correction: 2 of
+51** installation templates carry it, not 2 of 26; the old denominator had counted attribute *declarations*
+(62 in that file) rather than templates.
+
+#### ✅ B5 — confirmed, my framing withdrawn, and **three more defects found**
+
+`AreHostile` (`CombatEngagement.cs:1847-1874`) does read `DiplomacyDB` **both ways** — a declared-war latch in
+either direction forces hostility, and a **mutual** Friendly/Allied stance suppresses it. Precise shape, which the
+audit's phrasing missed: **diplomacy can only SUPPRESS default hostility or FORCE war — it never creates hostility
+from a score**, and an unmet stranger falls through to "different faction = hostile."
+
+- **N2 — my own overreach, withdrawn.** I framed this as *"changes a documented build order."* It does not:
+  `DIPLOMACY-DESIGN.md:7` already recorded keystone 3 as *"substantially DONE"* on **2026-07-07**, twenty days
+  earlier. Only `Combat/CLAUDE.md:107` was stale.
+- **N3 — `DIPLOMACY-DESIGN.md` contradicted itself (fixed).** Its status banner said keystone 3 substantially done;
+  its blast-radius table ~460 lines below still said *"hostility isn't diplomacy-driven."* Row corrected.
+- **N4 — a doc claim that invited deleting live code (fixed).** `DIPLOMACY-DESIGN.md:458` said `SignalQuality`
+  **"was CUT."** **REFUTED:** it is **live in 9 files** and gates **survey reveal** at `> 0.20` / `> 0.80`
+  (`SystemBodyInfoDB.cs:154-160`, `StarInfoDB.cs:130`). What was cut is its *role as the hidden-info gradient*, not
+  the field. Read literally, the old wording is an instruction to break survey accuracy.
+
+**Two consequences for slice S1e**, both landed in THE PLAN:
+1. **A justification withdrawn** — S1e is **not** "the keystone prerequisite `DIPLOMACY-DESIGN` names"; that
+   keystone was *dissolved*. The slice stands on its own evidence (288 of 288 AI decisions read `vs no threat`).
+2. **A concrete root-cause lead**, where the plan had said *"unverified — start there, do not guess"*:
+   `ThreatAssessment.cs:11` documents that it *deliberately* uses signal **STRENGTH** because the `SignalQuality`
+   path was design-cut — so the field being read is the intended one and it is the one reading zero; and
+   `SensorTools.cs:69` carries a **commented-out** `if(detectionValue.SignalStrength_kW > 0)` guard ~150 lines above
+   the setter that assigns it (`:220`). **Start at those two lines.**
+
+### 14c. The lower-stakes verdicts, also re-checked this round (all CONFIRMED, three sharpened)
+
+| Verdict | Outcome |
+|---|---|
+| `GroundCombatWindow` does not exist (§10 #5) | ✅ **CONFIRMED** — zero references under any spelling; the real surfaces are `PlanetViewWindow.cs` / `PlanetaryWindow.cs`. *Bonus:* `PlanetaryWindow.old.cs` is a **fully commented-out corpse** (`/*` from the top) — dead weight, but sealed, so **not** an L1 dead-code-that-looks-live risk |
+| Multi-weapon plurality is BUILT (§11, `GroundForcesProcessor.cs:472`) | ✅ **CONFIRMED, stronger** — it loops `WeaponLoadout` **and** range-gates **per weapon per target** (`WeaponReaches(u,t,m.RangeHexes,m.Range_m,…)`), preserves a documented byte-identical collapsed path for single-weapon units, and interlocks with ammo (dry ⇒ silent; one salvo burned iff any weapon fired) |
+| Combat groups by REGION, capture flips the REGION (§10 #11) | ✅ **CONFIRMED, sharpened** — `byRegion` at `:272-275`, `ResolveRegionCombat` per region at `:304`, faction grouping *within* a region at `:379`. **Added precision:** the region is a **derived band of hex columns** (`:210` `PlanetGridFactory.RegionOfColumn`), so the hex is the movement substrate *and* the region is computed from it; and **planet** capture is **all-or-nothing** — every region must be uniformly held (`:1056-1073`) |
+| Upkeep is BACKWARDS in the doc (§10 #6) | ✅ **CONFIRMED HARD** — exactly two production writers (`GroundUnitAssembly.cs:299` mass-scaled, `GroundStartGarrison.cs:101` HP-scaled); `GroundUpkeep.cs:57` skips `<= 0`. **Stronger:** **zero** JSON files in all of `GameData/` mention upkeep, and **`GroundUnitAtb` has no upkeep parameter at all** (`:52`) — a base-mod ground unit is *structurally* unable to bill, not merely unconfigured. *Self-correction: I first called this an exact-arity breaking change; the constructor already uses **optional trailing parameters**, so adding `upkeep = 0` would not break the 3 existing declarations. Cheaper than I first said.* |
+| `Industry/CLAUDE.md:111` installations-UI gap is refuted (§11) | ✅ **CONFIRMED** — `PlanetaryWindow.cs:102` gates on `ComponentInstancesDB`, `:218` renders through it; the doc already carries the retraction |
+
+### 14d. Honest residue — what Phase B still owes
+
+- **B1 (#14, "the only fully-wired move verb")** — still resting on one agent, still not independently re-checked.
+  It sizes slice **S6 (large)** and ruling #14 says **DELETE** that verb, so a wrong verdict here is expensive.
+  **Highest-value single check for the next session.**
+- **§10 #1** (the five sub-claims behind "Pulsar has no ground combat at all"), the **`WEAPONS-DESIGN` saturation
+  ship-only** scoping, the **`REAL-DISTANCE` header STALE** verdict, and **`GroundCombat/CLAUDE.md:52` OVERSTATED** —
+  all four still stand on round-1 or agent evidence.
+- **Standing lesson from this round, worth more than any single verdict:** three of the five defects found were not
+  wrong *findings* — they were **correct findings with incomplete remediation** (a section fixed but not its index
+  row, a banner fixed but not its table row). **A half-applied fix is indistinguishable from a wrong verdict.**
+  When a verdict lands, grep the doc for every *other* place that states the same thing.
