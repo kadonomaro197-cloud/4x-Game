@@ -460,7 +460,31 @@ tile" and "is a war-map objective" one attribute (#11).
 - **Reach:** Colony → Production → queue → destination picker → watch progress.
 - **See:** queue progress in the UI + a `[Build]` completion line naming the destination.
 
-### S6 — Movement rework (#14 + #16 + #17) · **large** (re-sized up)
+### S6 — Movement rework (#14 + #16 + #17) · ~~**large**~~ → **cheap-wire slice + a retirement** (RE-SIZED DOWN 2026-07-28)
+
+> **⭐ RE-SIZED DOWN by Phase B's B1 verdict (audit §17). Read this before planning the slice.** The old sizing
+> rested on *"march-to-region is the ONLY fully-wired move verb,"* which made #14 read as *"delete the only thing
+> that works and build a replacement."* **That quantifier is refuted.** `MoveToHex` is already wired at four of
+> seven ends — order enum (`GroundForcesDB.cs:292`), factory (`:342`), formatter (`:355`), **processor execution**
+> (`GroundForcesProcessor.cs:918`) — and, the part nobody had noticed, **the client already DRAWS its waypoint
+> path** (`PlanetViewWindow.cs:505`, on **global cylinder coordinates** — precisely the *global* half of the
+> two-layer scheme #14 asks for). What `MoveToHex` lacks is **ISSUERS**: no client button, no AI call, no test.
+> **So #14 is three smaller pieces, in this order:**
+> 1. **Wire `MoveToHex`'s issuers** — a client button (the view already renders the result) and an AI call in
+>    `GroundTacticalBrain` beside the existing `MoveRegion(…)` at `:205`. *cheap-wire.*
+> 2. **Add the two-layer coordinate formatter** — genuinely absent (the two existing formatters print one layer
+>    each), and cheap: one function, then point both readouts at it.
+> 3. **THEN retire `MoveToRegion`** — last, not first, with its client (`PlanetViewWindow.cs:1442,1445`) and AI
+>    (`GroundTacticalBrain.cs:205`) issuers migrated.
+>
+> **⚠ Retirement caution:** `MoveToRegion` carries the **only save/load coverage of ground movement**
+> (`MidCampaignSaveLoadTests`). Retiring it without moving that fixture to `MoveToHex` **drops the only gauge
+> watching movement survive a save.** Move the gauge in the same slice.
+>
+> **Confirmed unchanged:** **four** coordinate systems coexist — `RegionIndex` (`:46`), `HexQ/HexR` (`:155,157`),
+> `GlobalQ/GlobalR` (`:174,176`), `MiniQ/MiniR` (`:185,187`) — plus the order's own `TargetQ/TargetR` vs
+> `TargetRegion` split (`:328-330`). *(Do not conflate `MoveToHex` with `OrderFormationTreeMoveToHex`, a formation-**tree**
+> variant that genuinely has zero callers.)*
 
 > **[V2] RE-SIZED.** "March to region" is **the only fully-wired planetary move verb** — live in the
 > primitive, the order enum, the processor, the **AI tactical brain**, **both** client windows, the Site

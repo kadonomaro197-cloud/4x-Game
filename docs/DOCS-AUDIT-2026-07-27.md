@@ -510,7 +510,7 @@ Legend: **DONE** · **PARTIAL** · **MISSING** · **INERT** (code exists, nothin
 | 11 | Every building occupies ground = war-map objective | **premise REFUTED** | `GroundFootprintAtb` is **already the single attribute** (presence = objective, `TileFootprint` = occupancy, both read live). **The gap is DATA — and BIGGER than first recorded: `2` of `51` installation templates, not 2 of 26** (Phase B recounted by `UniqueID` entries in `installations.json`; the old denominator counted the wrong thing). Phase B also confirmed all four live readers: `ColonyFactory.cs:126` (drops footprint buildings onto hexes at colony creation), `CityBuilder.cs:52` (spends the tiles), `GroundBuildings.cs:28` (the `HasAttribute` predicate), `:324` (reads the count) — plus a proper `Clone()` at `GroundFootprintAtb.cs:38`, so no L12 exposure. | data |
 | 12 | Fund employment + power | **INERT** | Both wires complete end-to-end; both inputs **structurally zero** — zero templates declare `EmploymentAtbDB`, `powerDemandPerCapita` authored 0, and `uef.json` has no strain node. | **cheap-wire** |
 | 13 | Semantic tile bonuses | **MISSING** | No per-tile bonus mechanism of any kind. **`CityTile.Terrain` is populated and read by nobody but its copy-ctor and two tests.** | medium |
-| 14 | DELETE march-to-region → two-layer coordinate | **MISSING** | It is the **only fully-wired planetary move verb** — live in the primitive, order enum, processor, **AI tactical brain**, both client windows, the Site engine and a save/load fixture. **Four** coordinate systems coexist; no formatter prints `(17,09)(22,47)`. | large |
+| 14 | DELETE march-to-region → two-layer coordinate | **MISSING** ⚠ **RE-SIZED DOWN by Phase B — see §17** | `MoveToRegion` is the only verb wired **end-to-end** (issuer→processor→readout→save) ✅ — but *"the ONLY fully-wired move verb"* is **refuted**: `MoveToHex` is already wired at **four of seven ends** (enum `:292`, factory `:342`, formatter `:355`, **processor** `GroundForcesProcessor.cs:918`) and **the client already draws its waypoint path** on **global cylinder coords** (`PlanetViewWindow.cs:505,477`) — the global half of the two-layer scheme. It lacks only **ISSUERS**. **Four** coordinate systems confirmed; **no combined two-layer formatter** confirmed absent. ⚠ `MoveToRegion` carries the only save/load gauge of ground movement. | ~~large~~ → **cheap-wire + a retirement** |
 | 15 | Fight is COMMITTED; retreat + break-away; pursuit | **PARTIAL** | **Ground has none of the four, and walking out is FREE** (a region march just removes the unit from the roster). Space has the lock + retreat but prices the exit with a hardcoded `const RetreatCasualtyThreshold = 0.5` while the doctrine's own `BreakAwaySeconds`/`Pursue` sit unread. | large |
 | 16 | Mini-hex movement as a player order | **MISSING** | Mini coords are written **only** by the engine's auto-spread/closing steps. No order type, and the city-zoom click handler has **no move branch**. | medium |
 | 17 | Show destination · distance · ETA · speed | **PARTIAL** | **All four ingredients exist as engine state; ZERO are displayed.** No accessor computes distance-remaining or ETA. | **cheap-wire** |
@@ -990,3 +990,66 @@ and six documents inherited it, one of which pointed the entire NPC brain at a f
 **Write decisions as decisions.** When a doc records intent, say *"decided, not yet built"*; the three-state
 vocabulary this operation already uses (built-and-gauged / built-but-runtime-unverified / built-but-INERT) needs a
 fourth state for exactly this: **DECIDED-NOT-BUILT**.
+
+---
+
+## 17. PHASE B — B1 RESOLVED: the highest-value owed verdict, and it makes slice S6 SMALLER
+
+The one verdict §14d flagged as most expensive to get wrong: *"`march-to-region` is the ONLY fully-wired planetary
+move verb"* — because ruling **#14 says DELETE that verb**, and deleting the only working one is a serious call.
+It had rested on a single agent since Phase A. **Resolved 2026-07-28. Verdict: CONFIRMED in substance, MATERIALLY
+OVERSTATED in its quantifier — and the correction is good news.**
+
+### 17a. What is actually wired, end by end
+
+| End | `MoveToRegion` | `MoveToHex` |
+|---|---|---|
+| Order-enum member | ✅ `GroundForcesDB.cs:293` | ✅ `:292` (*"march to a **GLOBAL** planetary-grid hex"*) |
+| Factory | ✅ `MoveRegion(region)` `:343` | ✅ `MoveHex(q,r)` `:342` |
+| Readout formatter | ✅ `:356` `"→ region N"` | ✅ `:355` `"→ hex (q,r)"` |
+| **Processor executes it** | ✅ `GroundForcesProcessor.cs:913` | ✅ **`:918`** |
+| **Client ISSUES it** | ✅ `PlanetViewWindow.cs:1442,1445` (two buttons) | ❌ **no button anywhere** |
+| **Client RENDERS it** | — | ✅ **`PlanetViewWindow.cs:505`** draws each queued waypoint as a dot on the path overlay (`:477`: *"`GlobalPath` → each queued `MoveToHex` waypoint"*) |
+| **AI issues it** | ✅ `GroundTacticalBrain.cs:205`, marked `Ai` | ❌ none |
+| Save/load fixture | ✅ `MidCampaignSaveLoadTests` | ❌ none |
+
+### 17b. The verdict, precisely
+
+- **CONFIRMED:** `MoveToRegion` is the only verb wired **end-to-end** — issuer → processor → readout → save.
+- **REFUTED as written:** *"the ONLY fully-wired move verb"* implies the alternative is absent. It is not.
+  **`MoveToHex` is wired at four of seven ends** — enum, factory, formatter, **processor execution**, and the
+  client's **path rendering**. What it lacks is **ISSUERS**: no client button, no AI call, no test.
+- **CONFIRMED:** **four coordinate systems** coexist on the ground state — `RegionIndex` (`:46`), `HexQ/HexR`
+  (`:155,157`), `GlobalQ/GlobalR` (`:174,176`, defaulting to `-1`), `MiniQ/MiniR` (`:185,187`) — plus the order's
+  own `TargetQ/TargetR` vs `TargetRegion` split (`:328-330`).
+- **CONFIRMED:** **no formatter prints a combined two-layer coordinate.** The two that exist print one layer each
+  (`"→ hex (q,r)"`, `"→ region N"`). Nothing renders the `(17,09)(22,47)` shape ruling #14 asks for.
+
+### 17c. Why this makes S6 smaller — the load-bearing consequence
+
+The old reading of #14 was *"delete the only working move verb,"* which sizes S6 as **build a replacement movement
+system, then switch to it.** That is wrong. **The replacement's hard half already exists:** `MoveToHex` has its
+primitive, its **processor execution**, and — the part nobody had noticed — the client already **draws its
+waypoint path**, on **global cylinder coordinates**, which is precisely the *global* half of the two-layer scheme
+#14 asks for.
+
+So #14 is really three smaller pieces:
+1. **Wire `MoveToHex`'s issuers** — a client button (the city/planet view already renders the result) and an AI
+   call in `GroundTacticalBrain` beside the existing `MoveRegion(…)`.
+2. **Add the two-layer formatter** — genuinely absent, and cheap: one function, then point both readouts at it.
+3. **Then** retire `MoveToRegion` (with its AI and client issuers migrated) — last, not first.
+
+**⇒ S6 should be RE-SIZED and RE-ORDERED**: it is not one large slice but a cheap-wire issuer/formatter slice
+followed by a retirement. And a caution for whoever builds it: **`MoveToRegion` currently carries the only
+save/load coverage of ground movement**, so retiring it without moving that fixture to `MoveToHex` drops the only
+gauge watching movement survive a save.
+
+*(Distinct symbol, do not conflate: the separately-recorded `OrderFormationTreeMoveToHex` — a formation-**tree**
+variant — does have zero callers. That is not the `MoveToHex` order type audited here.)*
+
+### 17d. Phase B's remaining residue after this
+
+Four lower-stakes verdicts still stand on round-1/agent evidence: §10 #1's five sub-claims ("Pulsar has no ground
+combat at all"), the `WEAPONS-DESIGN` saturation ship-only scoping, the `REAL-DISTANCE` STALE header, and
+`GroundCombat/CLAUDE.md:52`'s OVERSTATED garrison note. All four are **doc-scoping** verdicts whose failure mode is
+a mis-worded doc, not a mis-sized build — which is why they rank below B1 and are carried, not rushed.

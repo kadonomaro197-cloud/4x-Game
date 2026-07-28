@@ -438,10 +438,18 @@ doesn't exist (the C3 case) and any heavy new fixture that would land in the `re
 > unable to bill *(self-corrected: its ctor uses optional trailing params, so adding one is cheap — not the
 > exact-arity break I first called it)* · the installations-UI gap refuted.
 >
-> **⚠ HONEST RESIDUE — 5 verdicts still owed.** **B1 (#14 "the only fully-wired move verb") is the highest-value
-> single check left**: it sizes slice **S6 (large)** and ruling #14 says **DELETE** that verb. Also owed: §10 #1's
-> five sub-claims, the `WEAPONS-DESIGN` saturation scoping, the `REAL-DISTANCE` STALE header, and
-> `GroundCombat/CLAUDE.md:52`.
+> **✅ B1 RESOLVED 2026-07-28 (audit §17) — and it made a LARGE slice SMALL.** The highest-value owed verdict is
+> done. `MoveToRegion` *is* the only verb wired **end-to-end**, but *"the ONLY fully-wired move verb"* is
+> **refuted**: `MoveToHex` already has its enum, factory, formatter, **processor execution**, and — the part nobody
+> had noticed — **the client already draws its waypoint path, on global cylinder coordinates**, which is the global
+> half of the two-layer scheme #14 asks for. It lacks only **ISSUERS** (no button, no AI call, no test). So #14 is
+> not *"delete the only thing that works and build a replacement"* — it is **wire the issuers → add the missing
+> two-layer formatter → then retire `MoveToRegion`**. **Slice S6 re-sized `large` → cheap-wire + a retirement.**
+> ⚠ Retirement caution recorded: `MoveToRegion` carries the **only save/load gauge of ground movement**.
+>
+> **⚠ RESIDUE — 4 verdicts still owed**, all **doc-scoping** claims whose failure mode is a mis-worded doc rather
+> than a mis-sized build, which is why they rank below B1: §10 #1's five sub-claims, the `WEAPONS-DESIGN`
+> saturation scoping, the `REAL-DISTANCE` STALE header, and `GroundCombat/CLAUDE.md:52`.
 >
 > **📌 STANDING LESSON, worth more than any single verdict:** three of the four new defects were **not wrong
 > findings — they were correct findings with INCOMPLETE remediation** (a section fixed but not its index row; a
