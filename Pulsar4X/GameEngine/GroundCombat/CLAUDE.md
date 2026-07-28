@@ -1,5 +1,30 @@
 # Ground Combat — Subsystem Reference
 
+> ## 🔒 CANON OVERRIDE — THE 2026-07-28 MOVEMENT & GEOGRAPHY RULINGS (M1–M12)
+>
+> **`docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md` → the 2026-07-28 addendum overrides this file wherever they
+> disagree.** Several things described below as live design are now **scheduled for DELETION** — they are documented
+> here as *as-built state*, which is still accurate, but **do not build on them:**
+>
+> | Described below | Ruling |
+> |---|---|
+> | `OrderMove` — the adjacency-gated coarse **region hop** (`Neighbors.Contains`, `CrossingTimeSeconds ÷ speed`, `MovingToRegion`) | ⛔ **DELETED** (M1 — one movement layer) |
+> | The **region-local hex march** (`HexPath`/`HexStepBaseSeconds`) — the middle layer | ⛔ **DELETED** (M1) |
+> | `byRegion` + `ResolveRegionCombat` — **region as the combat container** | ⛔ **DELETED** (M2/M6 — proximity at the mini-hex level). **This is the ruling's load-bearing change:** two units in different regions never enter the same bucket, so the metre range gate never compares them |
+> | **Region capture** + `TryCapturePlanet`'s all-regions-uniformly-held test | ⛔ **DELETED** (M8 — **capture is per-HEX**; what victory means is a written deferral) |
+> | `GroundFortification.SumAdjacent` — a bunker shielding **adjacent regions** | ⛔ **DELETED** (M10) |
+> | Per-**region** hazard declaration | ⛔ **DELETED** (M11 — per-hex, from hex type + geography) |
+> | Any order surface outside **Force Management** | ⛔ **DELETED** (M9) |
+> | The client's **direct** `OrderMoveToGlobalHex` call (bypasses the order queue ⇒ the AI cannot use it) | ⛔ **DELETED** — violates **One Verb, Both Seats** (root `CLAUDE.md`) |
+>
+> **KEPT and load-bearing — do not touch:** `GroundMiniHex.ContinuousPosKm` / `RealGapMetres` (the two-part address
+> **is** the live distance function, continuous three levels deep) · `WeaponReaches` → `CombatKernel.WithinReach` (the
+> metre range gate, ON for menu games) · the mini-hex construction layer + roll-up invariant.
+>
+> **NEW, not built:** **transitional hexes at the regional-hex level** (M5) — connective ground so the mini patches form
+> one connected graph. *Not* needed for range across a boundary; that already works.
+
+
 The planet-surface war layer: units you build, station in regions, move, and fight with — the ground echo of the space fleet/combat systems. Lives in `GameEngine/GroundCombat/`. **New 2026-07-04 (slice 5a).**
 
 > **Read `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` first** — the locked design + the sub-slice roadmap (5a–5i). v1 target is **full tactical** (unit types + terrain + base-coverage + formations + a navigable click-to-place map), shipped as CI-gated sub-slices. This subsystem sits ON the region map (`Galaxy/PlanetRegionsDB` — the 4-slice ring per body).

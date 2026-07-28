@@ -291,3 +291,90 @@ which ties this directly to ruling #18 (doctrine sets that priority order).
 - **Ruling #14 (delete "march to region") removes a currently-broken path**, not a working one: every region-march
   button, every queued region move, and every AI move sets the region index without restamping the global position, so
   the token never moves on the map.
+
+---
+
+# ADDENDUM — THE MOVEMENT & GEOGRAPHY RULINGS (developer, 2026-07-28)
+
+**Status: 🔒 CANON. These override every older document, including anything in this file above them, and including
+`docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md`.** They were given in dialogue after a code walk-through of how
+movement actually works. Where an older doc contradicts one of these, the older doc is **wrong and gets corrected or
+deleted** — not reconciled.
+
+## The governing law it starts from — ⭐ ONE VERB, BOTH SEATS
+
+> **"Movement planetside must be just like movement spaceside, meaning the AI must be able to do it — and thus it
+> must be simple."**
+
+Generalised, because it is the sharpest design rule in this project and it is not about movement:
+
+> **If the AI cannot use a mechanic with the SAME primitive the player uses, the mechanic is too complex. Full stop.**
+> Complexity only a human can drive is not depth — it is a system with half its players locked out. Two parallel paths
+> for the same verb (one for the player, one for the AI) is the failure this law forbids.
+
+**It has immediate teeth.** The client's click-to-march calls `GroundForces.OrderMoveToGlobalHex(...)` **directly**,
+bypassing the order queue — so it carries no issuer marker, cannot be sequenced, and **the AI cannot use it at all**,
+because the AI issues orders through the queue. That is a two-path violation and it is why the direct call is deleted
+rather than kept as a convenience.
+
+## The rulings
+
+| # | Ruling |
+|---|---|
+| **M1** | **ONE movement layer, not three.** The coarse region hop, the region-local hex march, and the global cylinder march collapse into a single movement system. |
+| **M2** | **REGIONS ARE A VISUAL AID.** They are a display grouping — not a movement layer, not a combat container, not the unit of capture. |
+| **M3** | **Position is a TWO-PART ADDRESS: the regional-hex address + the mini-hex address.** Movement between hexes is coordinate-based on that pair. |
+| **M4** | **The player orders a unit to a specific mini hex inside a specific regional hex** — e.g. *"to mini-hex (22,47) in regional hex (17,09)."* The mini hex is directly addressable, not an engine-only placement. |
+| **M5** | **TRANSITIONAL HEXES exist at the REGIONAL-HEX level** so the whole planet is seamlessly connected — connective ground between the per-regional-hex mini patches, so there is somewhere to stand and something to path across at a boundary. |
+| **M6** | **Combat by proximity works at the MINI-HEX level.** That is what the regional hexes and the transitional hexes exist to serve. |
+| **M7** | **Combat starts when the auto-resolver starts, which is when one party enters weapons range** — already the design. On the mini-hex map, **weapons range is drawn as a RED border and sensor/radar range as a WHITE border.** |
+| **M8** | **CAPTURE IS PER-HEX.** You capture *that hex*. Region capture is gone. *"What that means doesn't matter much right now — once everything is built we can determine what victory actually means."* ⇒ **the victory condition is a WRITTEN DEFERRAL, not an open design hole** (and is distinct from ruling **#21**, what a capture *transfers*, which remains OPEN). |
+| **M9** | **ORDERS ARE ISSUED FROM THE FORCE MANAGEMENT WINDOW, AND THAT IS IT.** One order surface. |
+| **M10** | **Fortification's region-adjacency is DELETED** — no more "a bunker shields adjacent regions." |
+| **M11** | **HAZARDS ARE PER-HEX, derived from hex type + geography** and any other variable specifiable at that level of the planet. Not per-region declarations. |
+| **M12** | **The AI tactical brain should be HYBRID if it can be managed** — coarse at the regional-hex level, fine at the mini-hex level. *(Scope of "hybrid" to be confirmed.)* |
+
+## What is ALREADY BUILT for these (verified in source, 2026-07-28 — so this is mostly a DELETE job)
+
+The ruling is far closer to as-built than the older docs suggest. **Do not rebuild these:**
+
+- **M3's two-part address is the live distance function.** `GroundMiniHex.ContinuousPosKm(globalQ, globalR, miniQ,
+  miniR, coarsePitchKm, cityRadius)` (`:47-53`) = coarse-hex centre in km **+** mini-hex centre in km, and a second
+  overload (`:61-66`) adds a real **sub-mini-hex offset** (`MiniOffX_km`/`MiniOffY_km`) — so the field is continuous
+  **three levels deep** and a weapon range *shorter than a 37 km mini tile* can decide a fight.
+- **M6/M7's proximity gate is built and ON for menu games.** `GroundForcesProcessor.WeaponReaches` (`:561-571`) routes
+  through the shared `CombatKernel.WithinReach(range_m, GroundMiniHex.RealGapMetres(...))` behind
+  `EnableMiniHexCombat` (`NewGameMenu.cs:580,985`).
+- **The coarse-hex edge problem M5 was raised to solve is ALREADY SOLVED at the distance level** — the code says so
+  itself (`GroundMiniHex.cs:70-71`): *"two units at a shared coarse-hex edge read a small gap **regardless of which
+  coarse hex each is filed under**."* ⇒ **Transitional hexes are therefore NOT needed to make ranges work across a
+  boundary. Their job is the CONNECTED MOVEMENT GRAPH and addressable standing ground** (mini patches are sized per
+  coarse hex — `2·radius+1` = 13 across — so they are addressing islands that A* needs connective tissue between).
+- **M2 is half-true already:** on the global path `RegionIndex` is **derived**, not stored truth — recomputed from the
+  column via `PlanetGridFactory.RegionOfColumn` (`GroundForcesProcessor.cs:210`).
+
+## ⛔ THE ONE REAL BLOCKER — and it is not the hexes
+
+**Combat is bucketed by REGION before the range gate ever runs.** `GroundForcesProcessor` builds
+`byRegion` keyed on `unit.RegionIndex` (`:268-278`) and calls `ResolveRegionCombat` **once per region bucket**
+(`:295-304`). Two units in **different regions** never enter the same list, so they are **never compared at all**, no
+matter how close they are in metres — the metre gate only ever runs *inside* a bucket.
+
+⇒ **That bucket is what makes the planet not seamlessly connected. Deleting it is the ruling's load-bearing change.**
+
+## What these rulings DELETE (code — scheduled as a build slice, not executed on the doc pass)
+
+1. **The coarse region hop** — `GroundForcesDB.OrderMove` (`:756-770`) entirely: the **adjacency gate**
+   (`Neighbors.Contains`, `:762` — one ring-hop at a time), the per-region `CrossingTimeSeconds ÷ speed` transit clock
+   (`:768`), and `MovingToRegion` as a movement state (with its several "a coarse hop wins" precedence guards).
+2. **The region-local hex march** (`HexPath`/`HexStepBaseSeconds`, the middle layer) — redundant once the global grid
+   is the one layer.
+3. **`byRegion` as the combat container** → proximity clustering on the continuous surface (**M6**).
+4. **Region capture** → per-hex capture (**M8**), including the all-regions-uniformly-held planet-capture test
+   (`TryCapturePlanet`, `:1056-1073`).
+5. **The direct click-to-march call** that bypasses the order queue (**the One-Verb law**).
+6. **Every order surface outside Force Management** (**M9**) — the planet view's March / raze / seize / hold / ROE
+   buttons.
+7. **Fortification's `SumAdjacent` region shielding** (**M10**).
+8. **Per-region hazard declaration** → per-hex, from terrain + geography (**M11**).
+9. **Four coordinate systems → the two of M3.**

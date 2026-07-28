@@ -1,5 +1,8 @@
 # Surface Fog of War & Reconnaissance — Design (LOCKED 2026-07-17)
 
+> **⚠ CANON 2026-07-28:** where this doc treats the **region** as a combat container, a movement layer, or the unit of capture, it is **superseded** — see `docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md` → the 2026-07-28 addendum (M2/M6/M8). Regions are a **visual aid**; combat proximity resolves at the **mini-hex** level on continuous real distances; **capture is per-hex**.
+
+
 > **Build state corrected 2026-07-27:** this doc **under-reported itself** — slices **5 and 6** carried no status
 > at all and read as pending, but **both are built** (they landed in `GroundThreat` and `ExpandResolver` /
 > Operation Earthfall, outside this doc's own slice track). **Engine-side, slices 1–6 are done.** The one real

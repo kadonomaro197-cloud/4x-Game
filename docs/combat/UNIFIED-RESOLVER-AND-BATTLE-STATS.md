@@ -1,5 +1,8 @@
 # Unified Resolver + Battle Statistics — simplified solutions
 
+> **⚠ CANON 2026-07-28:** where this doc treats the **region** as a combat container, a movement layer, or the unit of capture, it is **superseded** — see `docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md` → the 2026-07-28 addendum (M2/M6/M8). Regions are a **visual aid**; combat proximity resolves at the **mini-hex** level on continuous real distances; **capture is per-hex**.
+
+
 This doc merges the original design with a line-by-line source verification. Every correction from that check is applied. The honest headline up front: **the damage math is genuinely one shared engine today; almost everything else the word "unified" implies is still two separate pieces of code that we can make agree.** Where the original design oversold something, this version says so and reclassifies the effort.
 
 ---

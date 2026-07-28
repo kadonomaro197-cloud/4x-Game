@@ -465,7 +465,58 @@ tile" and "is a war-map objective" one attribute (#11).
 - **Reach:** Colony → Production → queue → destination picker → watch progress.
 - **See:** queue progress in the UI + a `[Build]` completion line naming the destination.
 
-### S6 — Movement rework (#14 + #16 + #17) · ~~**large**~~ → **cheap-wire slice + a retirement** (RE-SIZED DOWN 2026-07-28)
+### S6 — ⛔ **REPLACED 2026-07-28 by the CANON MOVEMENT RULINGS (M1–M12)** — see the box below, then the slice
+
+> # 🔒 S6 IS NOW "ONE LAYER, TWO ADDRESSES, ONE ORDER SURFACE"
+>
+> **Authority:** `docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md` → the 2026-07-28 addendum. **Everything in the
+> older S6 text below that assumes a region movement layer is void.** The governing law is **One Verb, Both Seats**
+> (root `CLAUDE.md`): *if the AI cannot use a mechanic with the same primitive the player uses, it is too complex.*
+>
+> **⭐ The load-bearing discovery: this is mostly a DELETE, and the hard parts are already built.**
+> - The **two-part address is the live distance function** — `GroundMiniHex.ContinuousPosKm(globalQ,globalR,miniQ,miniR,…)`
+>   = coarse-hex km **+** mini-hex km, plus a second overload adding a real **sub-mini-hex offset**. Continuous **three
+>   levels deep**, so a weapon range shorter than a 37 km mini tile decides a fight.
+> - The **metre proximity gate is built and ON for menu games** — `WeaponReaches` → `CombatKernel.WithinReach(range_m,
+>   RealGapMetres(…))` behind `EnableMiniHexCombat`.
+> - **The coarse-hex edge problem is ALREADY SOLVED**, and the code says so (`GroundMiniHex.cs:70-71`): *"two units at a
+>   shared coarse-hex edge read a small gap regardless of which coarse hex each is filed under."*
+>
+> **⛔ THE ONE REAL BLOCKER — the region bucket.** `GroundForcesProcessor` groups units into `byRegion` keyed on
+> `unit.RegionIndex` (`:268-278`) and calls `ResolveRegionCombat` **once per bucket** (`:295-304`). Two units in
+> different regions **never enter the same list**, so they are never compared — however close in metres. The metre gate
+> only runs *inside* a bucket. **Deleting that bucket is what makes the planet seamlessly connected.**
+>
+> ### S6 splits into five slices, in this order
+>
+> | # | Slice | What | Size |
+> |---|---|---|---|
+> | **S6a** | **Unbucket combat** | Replace `byRegion` with proximity clustering on the continuous surface. **The keystone — do it first**; everything else is cosmetic until two units 1 km apart across a region line actually fight. | medium |
+> | **S6b** | **One movement layer** | Delete `OrderMove` (the adjacency gate `Neighbors.Contains`, the `CrossingTimeSeconds ÷ speed` clock, `MovingToRegion` and its precedence guards) **and** the region-local hex march (`HexPath`). The global grid becomes the only layer. | medium |
+> | **S6c** | **The two-part order verb** | One order type taking **(regional hex, mini hex)** — `MoveToHex` generalised — issued the **same way by player and AI** through the order queue. **Deletes the client's direct `OrderMoveToGlobalHex` call** (a One-Verb violation: no issuer marker, unsequenceable, AI-invisible). Add the two-layer coordinate **formatter** — genuinely absent today. | medium |
+> | **S6d** | **Transitional hexes at the regional-hex level** | Connective ground between the per-regional-hex mini patches (`2·radius+1` = 13 across, so today they are addressing islands) so A* spans the planet as **one connected graph** and there is somewhere to stand on a boundary. **NOT needed for range across a boundary — that already works.** | large |
+> | **S6e** | **Orders only from Force Management** | Move March / raze / seize / hold / ROE off the planet view into the Force Management window. | medium |
+>
+> - **Gate (S6a, the one that matters):** two units placed **1 km apart across a region boundary** exchange fire. Today
+>   they cannot, and **no test covers it** — which is why the bug survived.
+> - **Gate (S6c):** the same destination order is issued by the player **and** by the AI through the identical primitive,
+>   and round-trips through save/load. ⚠ **`MoveToRegion` currently carries the ONLY save/load gauge of ground movement
+>   (`MidCampaignSaveLoadTests`) — move that fixture in the same slice or the last gauge dies with it.**
+> - **Reach:** **Force Management → select a formation → order to regional hex (17,09), mini hex (22,47)** (M4/M9).
+> - **See:** the S1 log names both addresses; the mini-hex map draws **RED** weapons-range borders and **WHITE**
+>   sensor borders (M7).
+>
+> ### ⚠ Knock-ons this ruling creates OUTSIDE S6 — scheduled, not silently dropped
+> | Ruling | Lands in |
+> |---|---|
+> | **M8** capture is per-**hex**; region capture + `TryCapturePlanet`'s all-regions test are deleted | **new S6f** — and it is *upstream* of **S12** (#21 what capture transfers, still OPEN). Victory condition = **written deferral** |
+> | **M10** delete `GroundFortification.SumAdjacent` region shielding | **S5** (it already touches the fortification trap) |
+> | **M11** hazards per-hex from hex type + geography | **S11** — replaces the per-region declaration; pairs with the `SYSTEM-GENERATION` **G6** physics-terrain item |
+> | **M12** hybrid AI brain (coarse regional / fine mini) | **S7/D3a** — the maneuver slice already consults doctrine; *scope of "hybrid" to be confirmed* |
+
+<details><summary>Superseded S6 text (kept for provenance — do not build from it)</summary>
+
+#### ~~S6 — Movement rework (#14 + #16 + #17)~~ · ~~large~~ → ~~cheap-wire + a retirement~~
 
 > **⭐ RE-SIZED DOWN by Phase B's B1 verdict (audit §17). Read this before planning the slice.** The old sizing
 > rested on *"march-to-region is the ONLY fully-wired move verb,"* which made #14 read as *"delete the only thing
@@ -505,6 +556,8 @@ numbers.
   non-zero and consistent (`Speed_kmh` is already real and read **[V]**).
 - **Reach:** Force Management → battalion → Move → pick a two-layer address.
 - **See:** the token moves; `[Ground]` march lines from S1.
+
+</details>
 
 ### S7 — Doctrine becomes the steering wheel (**D0** → D2 → D3a → D3b; #15/#18/#19/#20) · medium ×4
 

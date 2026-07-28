@@ -1,5 +1,8 @@
 # The Auto-Resolver — Anatomy, Dial-Insertion Map, and the Ship↔Ground Merge
 
+> **⚠ CANON 2026-07-28:** where this doc treats the **region** as a combat container, a movement layer, or the unit of capture, it is **superseded** — see `docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md` → the 2026-07-28 addendum (M2/M6/M8). Regions are a **visual aid**; combat proximity resolves at the **mini-hex** level on continuous real distances; **capture is per-hex**.
+
+
 **What this is:** the one place that explains how Pulsar's auto-resolve combat engine is actually built — how the numbers flow when two forces fight, every place a designer's "dial" can plug in, and the plan (mostly landed) to make **one** engine run both space battles and planetary battles instead of two duplicate ones.
 
 **Consolidated 2026-07-13 from:** `docs/combat/RESOLVER-DESIGN.md` (the resolver taken apart bit by bit + the dial-insertion map + the extension backlog) and `docs/combat/RESOLVER-DESIGN.md` (the one-kernel-for-ships-and-ground plan + the landed slices).

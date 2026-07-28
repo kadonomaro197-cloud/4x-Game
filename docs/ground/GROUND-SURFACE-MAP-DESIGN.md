@@ -8,6 +8,35 @@
 
 ---
 
+> # 🔒 CANON OVERRIDE — THE 2026-07-28 MOVEMENT & GEOGRAPHY RULINGS
+>
+> **`docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md` → the 2026-07-28 addendum (rulings M1–M12) OVERRIDES this
+> document wherever they disagree. Read it first.** The headline changes to *this* doc:
+>
+> - **REGIONS ARE A VISUAL AID (M2).** Layer 1's "strategic region ring" is **demoted** — it is a display grouping, not
+>   a strategic layer, not a movement graph, and not a combat container. The region `Neighbors` graph is **no longer a
+>   movement graph** (M1).
+> - **⛔ LAYER 2 IS DEAD (M2/M6).** "Ground combat on the region ring" is superseded outright. Combat proximity resolves
+>   at the **mini-hex** level on continuous real distances. *(Layer 4's combat half and Layer 5 already said this — M6
+>   confirms them; it is Layer 2's region-scale model that goes.)*
+> - **ONE movement layer, not three (M1).** The coarse region hop and the region-local hex march are both deleted; the
+>   one continuous grid is the only layer.
+> - **Position is a TWO-PART ADDRESS (M3/M4):** regional-hex address **+** mini-hex address, and **the player orders to a
+>   specific mini hex inside a specific regional hex.**
+> - **⭐ TRANSITIONAL HEXES at the regional-hex level (M5)** — NEW, not described anywhere below. Connective ground
+>   between the per-regional-hex mini patches so the planet is one seamlessly-connected graph.
+> - **CAPTURE IS PER-HEX (M8).** Region capture is gone. *What victory means is a written deferral until the system is
+>   built* — distinct from ruling #21 (what a capture transfers), which stays OPEN.
+> - **ORDERS ONLY FROM FORCE MANAGEMENT (M9).** Every order surface on the planet view goes.
+> - **Fortification's region-adjacency is deleted (M10); hazards become per-hex from terrain + geography (M11).**
+>
+> **What is NOT changed, and must not be "fixed":** the mini-hex construction layer, the roll-up invariant, Layer 5's
+> mini-hex fight, and the scale answer below. **And the two-part address already works as live code** —
+> `GroundMiniHex.ContinuousPosKm` sums coarse-hex + mini-hex + a sub-mini-hex km offset, so *"two units at a shared
+> coarse-hex edge read a small gap regardless of which coarse hex each is filed under"* (`GroundMiniHex.cs:70-71`).
+> **⇒ M5's transitional hexes are NOT needed to make ranges work across a boundary** — that is already solved. Their job
+> is the connected movement graph and addressable standing ground.
+
 ## The north star (the developer's own framing)
 
 **"4 big slices you can zoom into at high accuracy."** A world is cut into a small ring of regions; you build in them, move between them, and defend them — and you can zoom down to a fine hex battlefield inside them. Before you can fight over a planet, the planet has to be somewhere with a *where*. Today (before this work) a colony sits on a planet as an abstract bag of population and buildings with no location. This design gives the planet a **surface without lying about its shape.**
@@ -37,7 +66,13 @@ The surface map went through four models. **The current target is Model 4 (the g
 
 ---
 
-## Layer 1 — The strategic region ring (KEPT from Model 1)
+## Layer 1 — The region ring — ⚠ **DEMOTED TO A VISUAL AID (M2, 2026-07-28)**
+
+> **Regions are a DISPLAY GROUPING.** Not a strategic layer, not a movement graph, not a combat container, not the unit
+> of capture. The schema below still describes the live `PlanetRegionsDB`, and regions remain useful for *grouping and
+> presentation* — but **`Region.Neighbors` is no longer a movement graph** (M1 deletes the adjacency-gated region hop)
+> and **`Region.CrossingTimeSeconds` is no longer a transit clock**. Read the rest of this Layer as *how the display
+> grouping is generated*, not as a layer units traverse.
 
 **What it's for:** the coarse global topology — where ownership, area, crossing-time, survey-fog, and features live. It solved the sphere problem (4 longitude slices, no seam → "the Pacific survives") and it's still the layer that combat/capture resolve on (now per column-band rather than per disk).
 
@@ -87,7 +122,20 @@ Net: slice 3 stayed the base; the tactical map is **slice 5's client half** (uni
 
 ---
 
-## Layer 2 — Ground combat on the region ring (slice 5, FULL TACTICAL)
+## ~~Layer 2 — Ground combat on the region ring (slice 5, FULL TACTICAL)~~ — ⛔ **SUPERSEDED OUTRIGHT (M2/M6, 2026-07-28)**
+
+> **This whole Layer's model is dead.** Combat does **not** resolve on the region ring. Proximity resolves at the
+> **mini-hex** level on continuous real-metre distances (M6), and a fight starts when a party enters **weapons range**
+> (M7) — drawn on the mini-hex map as a **RED** border, with sensor/radar range as a **WHITE** border.
+>
+> **The concrete thing being deleted, and it is the ruling's load-bearing change:** the resolver buckets units into
+> `byRegion` keyed on `unit.RegionIndex` and calls `ResolveRegionCombat` **once per bucket**
+> (`GroundForcesProcessor.cs:268-278,295-304`). Two units in **different regions never enter the same list**, so they
+> are never compared at all — no matter how close they are in metres. **That bucket is why the planet is not seamlessly
+> connected.** The metre range gate (`WeaponReaches` → `CombatKernel.WithinReach`) only ever runs *inside* a bucket.
+>
+> Kept as history because it explains the shape of what replaced it. **Do not build from it.** Live truth for a fight:
+> **Layer 5**.
 
 **Slice 5 v1 TARGET = FULL TACTICAL (developer decision, 2026-07-04).** Not just an auto-resolve garrison — unit *types*, terrain-as-leverage, base-defends-city coverage, formations, AND the navigable click-to-place/units-on-surface map. The target is the ceiling; it still ships as CI-gated **sub-slices 5a–5i** toward that ceiling (a single untested "full tactical" commit is what breaks a branch).
 

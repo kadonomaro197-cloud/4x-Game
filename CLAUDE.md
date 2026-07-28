@@ -348,6 +348,34 @@ Pairs with the Prime Directive: **map the connections, then make sure you can se
 
 ---
 
+## One Verb, Both Seats — if the AI can't drive it, it's too complex
+
+**The developer's law, 2026-07-28** (given as *"movement planetside must be just like movement spaceside, meaning the
+AI must be able to do it — and thus it must be simple"*). It generalises past movement and it is the cheapest
+complexity check in the project:
+
+> **If the AI cannot use a mechanic with the SAME primitive the player uses, the mechanic is too complex. Full stop.**
+
+**Why it bites harder than it sounds.** Complexity only a human can drive is not depth — it is a system with half its
+players locked out. And the specific failure it forbids is **two parallel paths for one verb**: a rich path for the
+player, a crude path (or none) for the AI. That shape always looks like progress and always ends with the AI unable
+to play its own game.
+
+**The worked example that produced the law.** Ground movement had grown **three** layers (a coarse region hop, a
+region-local hex march, a global cylinder march), and the client's click-to-march called the engine **directly**,
+bypassing the order queue — so it carried no issuer marker, could not be sequenced, and **the AI could not use it at
+all**, because the AI issues orders through the queue. Three layers plus a bypass is exactly what this law forbids;
+the ruling collapsed it to **one** verb both seats issue the same way (`docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md`
+→ the 2026-07-28 movement addendum).
+
+**The test, before you build any mechanic:** name the primitive the AI will call. If your answer is "the AI gets a
+simpler version," stop — you are building two systems and one of them will rot.
+
+*Pairs with Cradle-to-Grave (a capability must be reachable through the whole chain) and the Prime Directive (map
+what it connects to). This one asks the third question: **can both seats actually drive it?***
+
+---
+
 ## How to Work in This Repo (Working Agreement)
 
 ### ⚡ Pre-flight — run these SIX steps on EVERY task, before writing code (do not skip because the change "looks small")
