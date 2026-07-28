@@ -658,6 +658,50 @@ invalid designs from **saving** (#3).
   (`ConquerResolver.cs:377` → `GroundReinforcement.cs:125`), so #1 needs a scenario/AI-authorable design
   source first or the AI can no longer reinforce. The forced order #2 → #4 → #1 still holds.
 
+### 🔬 THE 7-PASS DESIGNER AUDIT — 40 findings, SEVEN root causes, and THREE decisions that gate the rest
+
+**Full record:** `docs/economy/DESIGNER-AUDIT-2026-07-28.md` (the pass log + the consolidation, every finding with
+file:line and the docs read before flagging it). Opened after the developer's call that *"if we're going to get combat
+to work we need the designers fully functioning"* — correct, because canon **M19** makes the resolver's job to simulate
+*"any collection of components"*, so a component recorded wrongly poisons every fix downstream.
+
+**It asks a DIFFERENT question than the resolver audit and than the 2026-07-08 `docs/DESIGNER-AUDIT/`.** That one asks
+*is the designer UNIVERSAL* (can a part mount on many hosts); this one asks **is it FAITHFUL** — does a dial you turn
+get recorded correctly and *arrive* at the thing that reads it.
+
+**Tally:** 40 findings — 9 🔴 · 15 🟠 · 8 🟡 · 5 🔵 · 3 ✅. **Stopped at seven passes** not because findings dried up
+(Pass 7 found five) but because **novelty of kind** did: every Pass 5/6/7 finding landed in a bucket already on the
+board, and the space/ground split alone surfaced **four times from four independent directions**.
+
+| # | Root cause | Symptom in one line | Key findings |
+|---|---|---|---|
+| **RC-1** | **The base mod is untyped text nothing checks** | *A namespace, an arity, a material id and a mount flag are all just strings that happen to be right.* | **D2-1 (six `AttributeType` strings name a namespace that does not exist → FOUR live designer doors throw, including the whole missile-warhead designer)** · D2-3 (one arity gap) · D2-4 (three undefined materials **silently dropped** from build costs) · D2-5 (a numeric mount flag makes a solar array ship-only) · D1-1/D1-2 (**five duplicate ids**, three of them ground stances in two files → **load order decides behaviour**) · D2-6 (no gauge) |
+| **RC-2** | **SPACE AGGREGATES, GROUND INDIVIDUATES — one unstated decision, four expressions** | *In space the fleet is the unit of account; on the ground it's the unit.* | D6-3 (**one shield pool per fleet**) · D5-2 (**armour hardening fleet-averaged** — one hardened hull protects the freighters) · D7-3 (*"engagement"* means two different things and ground never reads the space field) · + resolver root cause **B** |
+| **RC-3** | **The merge reached the ARITHMETIC and stopped before the STRUCTURE** | *Both sides call the same formulas and disagree on the shape of the fight.* | **D6-1 (`CombatKernel.Combatant` has ZERO production consumers; no shared salvo loop)** · **D5-1 (two armour models: flat per-source on the ground, hit-points in space)** · D4-3 (so `Penetration`/`PerShotEnergy` on ships are not un-wired — they are **undefined**) · D6-2 (the dead bridge would **regress** the working ground shield-regen dial) |
+| **RC-4** | **Dials that don't arrive — or don't exist to be turned** | *The audit's founding question, in three flavours.* | **D4-1 (you cannot design a weapon's RANGE except on a beam — five classes use engine constants, and the X9 rule runs off a ladder no design can reorder)** · **D4-2 (a missile carries 0 of `WeaponProfile`'s 10 fields)** · D4-4 (ground velocity/tracking/saturation are three constants picked by a dropdown) · D7-1 (**4 of 14 doctrine dials never reach the fight — three are the 2026-07-24 behaviour rulings**) · D3-2 (`Amphibious` **doubles the part's mass** and is read by nothing) · D3-3 · D7-4 · D2-7 · D4-6 |
+| **RC-5** | **The combat value is computed once and never again** | *Frozen at `ShipFactory.cs:144`; nothing invalidates it.* | D5-3 (**falsifies the "grave rung" written into six attribute doc-comments**) · D5-4 (any refit is stale) · D5-5 (**the AI's own-strength, threat assessment AND decision log read the frozen number**) · = resolver **X14**/**P11-1** |
+| **RC-6** | **Gauges pointed at the wrong thing — the most dangerous one** | *A gauge reading normal while the system is inert.* | **D7-2 (`UnifiedDoctrineTests` is described as proving the behaviours are "delivered" and asserts that a JSON file contains the values — green while nothing pursues, nothing finishes the wounded, nothing takes time to break away)** · D2-6 (no designer gauge, which is why RC-1 went unseen) |
+| **RC-7** | **Ground combat has NO research tree** | *An absent system, not a wiring fault.* | **D3-1 (only 18 of 96 templates carry any tech gate; 42 are free AND ungated — every ground part among them; a turn-one rifle dials to 5000 attack / 100 km)** · D3-6 (research where it exists is mostly a price tag, not a ceiling) |
+
+**⛔ THREE DECISIONS GATE THE REST — the developer's calls, not inferable:**
+**Q-A** does the fight **aggregate or individuate** (RC-2)? · **Q-B** **which armour model wins** (RC-3/D5-1 — flat
+per-source is what the shared kernel already implements; penetration and alpha only mean anything under it)? ·
+**Q-C** the carried-over **P1-4** conflict — July's health-weighted bucketing vs the 2026-07-28 no-roll-over/real-targeting
+ruling (**`TargetPriority` cannot be built until this is answered**). *(#21 — what a capture transfers — also still open.)*
+
+**Ordered action list (full version in the audit's CONSOLIDATION):** ① build the designer gauge (~20 lines, proves
+every fix below) → ② fix the six namespace strings → ③ re-point the four doctrine assertions at behaviour → ④
+recompute the combat value → ⑤ the small data fixes → ⑥ give five ship weapon classes a real `Range` dial, ceiling
+authored as `TechData(...)` so it starts closing RC-7 too → ⑦ the ground research tree → **⑧ gated on Q-A+Q-B** the
+structural merge → **⑨ gated on Q-B+Q-C** `TargetPriority`, written ONCE in the shared kernel → ⑩ missiles, only after
+② and ⑧.
+
+**Hold new work to what the audit confirmed is GOOD:** **D6-4 — the ground shield chain** is the only end-to-end
+example in the codebase of a dial that is designed, assembled, delivered, resolved **and gauged on the decision it
+creates**. That is what "done" looks like. Also verified sound: the designer→assembler hop (**41 of 43** ground dials
+have a reader), ten of fourteen doctrine dials, the ship armour nature matchup, and the whole formula layer
+(675/675 `PropertyValue`, 58/58 `TechData`, 119/120 arities).
+
 ### 🔬 THE 17-PASS RESOLVER AUDIT — 49 findings, and they are FIVE root causes
 
 **Full record:** `docs/combat/RESOLVER-AUDIT-2026-07-28.md` (the pass log, every finding with file:line and the docs

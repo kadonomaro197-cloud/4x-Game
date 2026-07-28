@@ -381,3 +381,158 @@ and `UnifiedDoctrineTests.cs` in full.
 - **Fix D7-2 in the same slice as any of the above.** Four assertions currently certify these features as delivered.
   Leaving them pointed at the JSON while wiring the behaviour means the tests stay green either way — which is the
   same as having no gauge at all.
+
+---
+---
+
+# CONSOLIDATION — 40 findings, 7 root causes, 3 decisions that block the rest
+
+**Why stop at seven passes.** The developer's standing rule for these audits is *"keep making passes until the amount
+of issues you find drops off to negligible levels."* The **count** has not dropped — Pass 7 found five. What has
+dropped to zero is **novelty of kind**. Every finding in Passes 5, 6 and 7 turned out to be another expression of a
+root cause already on the board; the space/ground split alone surfaced **four times from four independent directions**
+(the battlefield container, armour hardening, the shield, the word "engagement"). That is the real stopping signal:
+more passes would keep producing findings, and they would keep landing in the same seven buckets. **The work now is
+deciding and fixing, not looking.**
+
+**Tally:** 40 findings — **9 🔴 BLOCKER · 15 🟠 REAL · 8 🟡 DEBT · 5 🔵 NOTE · 3 ✅ verified-good.**
+Companion to `docs/combat/RESOLVER-AUDIT-2026-07-28.md` (49 findings, 5 root causes); the two overlap deliberately and
+the cross-references are noted below.
+
+---
+
+## The seven root causes
+
+### RC-1 · The base mod is a large body of untyped text that nothing checks
+*(D1-1, D1-2, D2-1, D2-3, D2-4, D2-5, D2-6)*
+
+The compiler cannot see inside a JSON string and the test suite does not walk the templates. So a namespace, an
+argument count, a material id and a mount flag are all just text that happens to be right — until it isn't.
+**Six `AttributeType` strings name a namespace that does not exist (`Pulsar4X.Atb`), taking down four live designer
+doors including the entire missile-warhead designer.** Around it: one arity mismatch, three undefined materials
+silently dropped from build costs, one mount flag written as a magic number, and five duplicate template ids whose
+winner is decided by load order — including three ground stances defined in *two* files at once.
+
+> **This is the cheapest root cause to close and the one that pays first.** One ~20-line test that constructs a
+> `ComponentDesigner` for all 96 templates catches every binding failure here permanently.
+
+### RC-2 · One unstated decision: SPACE AGGREGATES, GROUND INDIVIDUATES
+*(D5-2, D6-3, D7-3, + resolver root cause B)*
+
+Four systems split the same way and nobody chose it out loud. In space the **fleet** is the unit of account: one
+shield pool for everyone, armour hardening averaged across the fleet, the whole star system as one battlefield. On the
+ground everything is per-unit. It even reaches the vocabulary — *"engagement"* means *will you shoot first* in space
+and *will you advance or kite* on the ground, and ground never reads the space field.
+
+> **This is a developer decision, not a defect to fix.** M19 says the two should not differ. Four systems already
+> encode a difference; a fifth will follow whichever way it is left.
+
+### RC-3 · The resolver merge reached the ARITHMETIC and stopped before the STRUCTURE
+*(D6-1, D5-1, D4-3, D6-2)*
+
+`CombatKernel`'s shared formulas are real (`ArmourSoak` 6 production callers, `ArmourSoakBurst` 4, `BurstShotCount` 3,
+`HitFraction` 2). But its **neutral `Combatant` view has zero production consumers** and there is **no shared salvo
+loop** — each domain still runs its own. That is exactly how two incompatible armour models coexist while both sides
+honestly call the same function: **on the ground armour stops a fixed amount of every hit; in space armour is extra
+hit points.** Which is *why* `Penetration` and `PerShotEnergy` are hardcoded 0 on ships — not un-wired, **undefined**.
+
+> **Prerequisite, not follow-up.** Several Pass 4/5 fixes assume a shared structure that does not exist yet.
+
+### RC-4 · Dials that do not arrive — or do not exist to be turned
+*(D4-1, D4-2, D4-4, D3-2, D3-3, D2-7, D7-1, D7-4, D4-6)*
+
+The audit's founding question. Three flavours, worth keeping apart:
+- **Not designable at all.** Weapon range on five of six ship classes (engine constants; **no template even offers the
+  dial**). Velocity/tracking/saturation on every ground weapon (three constants picked by a dropdown).
+- **Designed but discarded.** A missile carries **0 of `WeaponProfile`'s 10 fields** from its design — every missile in
+  the game fights identically. Four of fourteen doctrine dials never reach the fight, three of them the 2026-07-24
+  behaviour rulings.
+- **Built, costed, and inert.** `Amphibious` **doubles the part's mass** and is read by zero lines of code.
+  `SpeedMult` is **printed in the client** as an active effect and read by nothing.
+
+> **The sharpest single instance: `Range`.** The X9 ruling routes *every battle's opening range* through the group's
+> longest-ranged weapon — which today is a fixed ladder (missile > railgun > disruptor > flak) no design can reorder.
+
+### RC-5 · The combat value is computed once and never again
+*(D5-3, D5-4, D5-5, + resolver X14 / P11-1)*
+
+`ShipCombatValueDB.Calculate` has **exactly one production call site** — `ShipFactory.cs:144`, at construction — and
+nothing ever invalidates the blob. So every `comp.HealthPercent` multiply inside it is frozen at build-time health.
+Reach: it silently falsifies the cradle-to-grave **"grave rung" written into six attribute doc-comments**; any future
+**refit** is stale; and `FactionRollup.MilitaryStrength` feeds that frozen number to the **AI's objective selection,
+its threat assessment, and the decision log its behaviour is audited from.**
+
+> **One fix, three consumers.** Not a decision — but do it once, deliberately, with a gauge, rather than three times
+> from three directions.
+
+### RC-6 · Gauges pointed at the wrong thing — the most dangerous cause here
+*(D7-2, D2-6, and the pattern behind both)*
+
+CI is the only correctness gauge this project has, and in two places it is measuring the wrong thing.
+**`UnifiedDoctrineTests` is described as proving *"the catalog actually delivers the behaviours the rulings asked
+for"* and instead asserts that a JSON file contains the values** — it is green while nothing pursues, nothing targets
+the wounded, and nothing takes time to break away. And **no test constructs a designer for all 96 templates**, which is
+why RC-1 went unseen. **A gauge reading normal while the system is inert is worse than no gauge: it converts "not
+built" into "verified built."**
+
+> Every fix below must land with its gauge re-pointed at **behaviour**, or the same blindness returns.
+
+### RC-7 · Ground combat has no research tree — the missing cradle-to-grave rung
+*(D3-1, D3-6)*
+
+Only **18 of 96** templates carry any tech gate; **42 are both free to research and completely ungated** — and *every
+ground part is among them*. A turn-one ground rifle can be dialled to 5000 attack and 100 km range. Contrast
+`laser-weapon`, whose Range ceiling **is** `TechData('tech-beam-range')`: research literally widens what you may
+design. **This is not a wiring fault — it is an absent system**, and it is the honest answer to *"does planetary
+combat have the depth space combat has?"* Not yet, and this is why.
+
+---
+
+## The three decisions that block everything else
+
+Ordinary work can proceed on RC-1, RC-5, RC-6 and RC-7 today. These three cannot, and they are the developer's calls:
+
+| # | Decision | Why it can't be inferred |
+|---|---|---|
+| **Q-A** | **Does the fight aggregate or individuate?** (RC-2) | Four systems already differ. Making them agree means changing one side or the other — a gameplay decision (does one shielded battleship cover the fleet?), not a refactor. |
+| **Q-B** | **Which armour model wins?** (RC-3 / D5-1) | Flat per-source soak (ground, and what the shared kernel implements) or armour-as-hit-points (space). Penetration and alpha-vs-chip only mean anything under the first. There is no third option that keeps both. |
+| **Q-C** | **Damage bucketing vs real targeting** — the July health-weighted/bucketed ruling against the 2026-07-28 no-roll-over/real-targeting ruling | *(Carried from the resolver audit as **P1-4** — still unanswered, and `TargetPriority` cannot be built until it is.)* |
+
+*Also still open and unchanged: **#21**, what a planet capture transfers — deliberately left for the developer.*
+
+---
+
+## Ranked action list — what to do, in this order
+
+1. **Build the designer gauge** (D2-6). ~20 lines: loop all 96 templates, construct a `ComponentDesigner`, call
+   `SetAttributes()`, collect failures. Catches RC-1 permanently. **Do this first — it proves every fix below.**
+2. **Fix the six namespace strings** (D2-1) — restores four dead designer doors, including the missile warhead.
+3. **Re-point the four doctrine assertions at behaviour** (D7-2). Cheap, and until it happens CI actively lies.
+4. **Recompute the combat value** (RC-5) — one change, three consumers, one gauge.
+5. **Small data fixes**: the arity gap (D2-3), three undefined materials (D2-4), five duplicate ids (D1-1/D1-2),
+   `solarArray`'s magic mount flag (D2-5). Decide `Amphibious` and `Size` — wire or remove, but stop charging for
+   `Amphibious` (D3-2, D3-3).
+6. **Give the five ship weapon classes a real `Range` dial** (D4-1) — one dial per template, one line per class. Author
+   the ceiling as `TechData(...)` and it starts closing RC-7 in the same stroke.
+7. **Ground research tree** (D3-1) — real `ResearchCost` plus `TechData(...)` ceilings across the ground stack; new
+   techs to author.
+8. **— gated on Q-A + Q-B —** the structural merge: a real `ResolveSalvo`, both sides presenting `Combatant`, one
+   armour model. Carry D6-2 as a hard note so the merge does not delete the working ground shield-regen dial.
+9. **— gated on Q-B + Q-C —** `TargetPriority`: write the selector **once, in the shared kernel**. Biggest behaviour
+   win available, and it is what finally makes penetration worth having.
+10. **Missiles** (D4-2) — only after 2 and 8; opening the warhead designer while the launcher still contributes five
+    stubs ships a designer whose dials demonstrably do nothing.
+
+---
+
+## What the audit confirmed is GOOD — hold new work to these
+
+- **D6-4 — the ground shield chain.** Part dial → *shield-weighted* assembly average → design → raised unit → resolver
+  regen, **with a test that asserts the decision** (fast small ward vs slow big generator), not the plumbing. The only
+  end-to-end example in the codebase of a dial that is designed, assembled, delivered, resolved *and* gauged on the
+  choice it creates. **This is what "done" looks like.**
+- **D3-4 — the designer → assembler hop.** 41 of 43 ground dials have a reader. The expensive half is already correct.
+- **D7-5 — ten of fourteen doctrine dials land**, on both domains, cooldown enforced at all three switch sites.
+- **D5-6 — the ship armour NATURE matchup is real and authored**, in Earth's starting items and on a base-mod ship.
+- **The formula layer** — 675/675 `PropertyValue` references, 58/58 `TechData` references, 119/120 ctor arities.
+- **`laser-weapon`** — the one weapon whose research gate raises its design ceiling. The shape to copy for RC-7.
