@@ -452,6 +452,58 @@ formations, and the code says so, taking a shot at its sibling: *"so own-vs-enem
 the space AI's."* **The blind AI of S1e is the STRATEGIC layer** (`ThreatAssessment` summing a sensor *margin*). Two
 different problems: **S1e fixes what the empire can see; M17 fixes what a battalion can see.**
 
+## M18 — THE ORDER SET: THREE battalion orders, two transport orders (developer, 2026-07-28)
+
+**The whole planetary order vocabulary.** Arrived at by asking of every candidate: *is it a decision the AI can make,
+and is it a DIFFERENT decision from one already here?* Anything that failed either test is deleted.
+
+| Order | The decision it answers | Target |
+|---|---|---|
+| **MOVE** | *Go there* — and thereby **take** it (M16 derives ownership from occupation) and **fight** whoever contests it (M7 fires automatically at weapons range) | **(regional hex, mini hex)** |
+| **RAZE** | *Destroy it rather than take it* | **(regional hex, mini hex)** — and because a mini tile holds **exactly one** building (`CityTile.BuildingInstanceId`), **the address IS the target** |
+| **SET DOCTRINE** | *How to behave* while doing either (posture + ROE folded in) | a doctrine id |
+| **EMBARK** / **LAND** | genuinely different — a **ship** is involved | existing troop-lift orders |
+
+**HOLD is not an order — it is the DEFAULT.** An empty queue means "stand here," indefinitely. Nothing to issue, nothing
+for the AI to re-issue, and no chain of timed holds to garrison a hex.
+
+**No timed hold either** (developer: *"battalions arrive when they arrive"*). The one thing it could have expressed —
+pausing to synchronise two battalions — is deliberately given up rather than paid for with a mechanic.
+
+### The order enum goes 7 → 3. What is deleted, and by which ruling
+
+| Today | Fate |
+|---|---|
+| `MoveToHex` | ✅ **KEEP** → becomes **MOVE**, generalised to the two-part address (M3/M4) |
+| `MoveToRegion` | ⛔ **DELETE** — regions are a visual aid (M1/M2) |
+| `HoldFor` | ⛔ **DELETE** — hold is the default, and no timed hold (M18) |
+| `SetStance` + `SetEngagement` | 🔀 **FOLD 2 → 1** as **SET DOCTRINE**. ROE is *behaviour*, and behaviour is what a doctrine **is** — it becomes a field of the doctrine, matching the developer's own frame that *everything goes through the doctrines* |
+| `DestroyInfrastructure` | ✅ **KEEP** → **RAZE**, re-targeted to the two-part address. **This also kills the hardcoded `(0,0)` target bug** the client passes today |
+| `CaptureInfrastructure` | ⛔ **DELETE** — **M16 derives it.** Standing on a mini tile makes it yours; the roll-up flips the regional hex. The order was doing by hand what the invariant now does automatically |
+
+### ⭐ THE ACID TEST — "can the AI do all of these intelligently?" — NOW YES, ACROSS THE BOARD
+
+The six-order set failed this in three places. **Simplifying fixed the answer**, which is the clearest evidence the
+simplification is right:
+
+| Order | AI today |
+|---|---|
+| **MOVE** | ✅ issues it (`GroundTacticalBrain.cs:205`) and picks the destination from a **real** strength ratio. Needs the two-address port |
+| **RAZE** | ✅ issues it (`ConquerResolver.cs:135`) — tasks an Offensive battalion at an enemy building. Needs the two-address target |
+| **SET DOCTRINE** | ⚠ decides it well (`DecidePosture` — a pure, deterministic, testable function with real gauges: dry ⇒ never Offensive, 4:1 losses ⇒ retreat, a break-glass so a dying unit is never locked offensive) **but applies it by DIRECT CALL** (`TrySetStance`/`SetEngagementStance`, `:176,254`) while the player queues it — **the third One-Verb violation.** Fix = route it through the queue |
+| **EMBARK / LAND** | ✅ issues both (`ConquerResolver` Rung 1.5 Load → the landing rung) |
+| **HOLD** | ✅ trivially — it is the absence of an order |
+
+**And the one serious gap CLOSED ITSELF.** The six-order audit found the AI *never* seizes — *"it can wreck a planet
+but never take one."* Under **M16 + M18 there is no seize order**: the AI takes ground by **moving onto it**, which it
+already does. The gap was an artefact of a mechanic that should not have existed.
+
+### The one thing left to build, and it is small
+
+**Not three orders' worth.** It is: **generalise MOVE and RAZE to the two-part address · fold ROE into doctrine · route
+the AI's doctrine application through the order queue · delete four order types.** The (0,0) bug dies with the RAZE
+port. One medium slice.
+
 ## What is ALREADY BUILT for these (verified in source, 2026-07-28 — so this is mostly a DELETE job)
 
 The ruling is far closer to as-built than the older docs suggest. **Do not rebuild these:**
