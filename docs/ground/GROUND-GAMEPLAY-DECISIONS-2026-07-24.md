@@ -396,6 +396,62 @@ tunable part is the definition of "occupied", set above.*
    to all of its hexes. Under M16 ownership only ever flows *up*.
 4. **Already deleted by M8:** region capture and `TryCapturePlanet`'s all-regions-uniformly-held test.
 
+## M17 — THE THREAT READ IS ONLY WHAT THE UNITS CAN SEE (developer, 2026-07-28)
+
+**The ruling:** *"For the ground threat read it should ONLY be based on what the AI can see, which is based only off
+what the units can see."* ⇒ **Threat = the union, over my living units, of the enemies inside THAT unit's own sensor
+reach.** Nothing else counts — not ownership, not survey history, not sharing a region.
+
+### The three omniscience leaks this DELETES
+
+`GroundThreat.IsRegionDetected` (`:53-60`) currently returns true on **any** of three grounds. All three are deleted:
+
+| Leak | Why it is omniscience |
+|---|---|
+| `regionIndex == viewerRegion` — *"I'm standing there — contact"* | A region is a **band of many regional hexes** (M2). Sharing a region does not mean anyone can *see*; the enemy may be a thousand km away. |
+| `Regions[regionIndex].OwnerFactionID == viewerFactionId` — *"I hold it — I see my own ground"* | **Ownership is not eyesight.** You can own a region with **no units in it at all** and still see every enemy that walks through. |
+| `IsRegionRevealedFor(...)` — *"scouted / surveyed to me"* | A survey is knowledge of **terrain**, and it is **permanent**. It is not live detection of **moving units** — so once scouted you would see enemies there forever. |
+
+**Plus the un-gated base case:** `DetectedEnemyStrength` (`:77-88`) sums the viewer's **own** region with **no fog gate at
+all** (*"own region — always in contact"*), then adds whole **neighbour regions**. Both the base case and the
+neighbour-summing go — they are region-shaped, which **M2** deletes anyway.
+
+### The replacement — already built, and the right shape
+
+`GroundSensors.RadarReachHexes(body, unit)` (`:64`) reads the unit's **`GroundSensorAtb` components off its own
+component store** (`TryGetComponentsByAttribute<GroundSensorAtb>`) and converts `Range_km / HexPitchKm` for **that
+body**. So sensor reach is **per-unit, component-borne, cradle-to-grave** — researched, built, installed, and **shot off
+blinds that unit** (the grave rung the space side already has).
+
+**It is the IDENTICAL shape to the weapon gate**, which is what keeps it simple: `WeaponReaches` compares *weapon* range
+against the continuous metre distance (`RealGapMetres`); the threat read compares *sensor* range against **the same
+distance function**. One function each, same primitive, no new machinery. **Same slice as S6a's unbucketing.**
+
+### ⭐ The consequence worth keeping — the UI becomes a picture of what the AI knows
+
+**M7** already draws sensor range as a **WHITE** border and weapons range as **RED**. If the threat read is the union of
+the white circles, then **the AI's knowledge is literally what is on the screen.** You can look at a planet and see
+exactly what your opponent does and does not know. *The Visibility Gate satisfied by construction rather than bolted on.*
+
+### ✅ SAFETY: this does NOT make the AI reckless — the valve already exists
+
+Tightening the sensors means the AI will see nothing more often, and "no threat" must not read as "safe to charge" (that
+is exactly the strategic-AI failure in **S1e**). **Already guarded:** `GroundTacticsContext.Blind` (`:72-73`) —
+*"treat unknown as risk"* — multiplies the required odds ratio by `BlindCautionFactor = 1.5` (`:104,149`, FLAGGED), and
+the commit rule is explicit at `:155`: *"no threat + scouted = free to press; **blind = don't**."* So the AI already
+refuses to advance into ground it cannot see. **M17 makes that valve fire more often, which is correct.**
+
+⚠ **One thing must be ported WITH it:** `Blind` is defined today as *"an adjacent **region** is un-scouted."* Under M17
+it must mean **"there is ground I care about that none of my units can see."** The flag stays; its input changes — the
+same port as the threat read.
+
+### Note the distinction M17 does NOT touch
+
+**The GROUND brain reads real strength and is honest** — `GroundThreat` sums actual `GroundUnit.Attack` of real
+formations, and the code says so, taking a shot at its sibling: *"so own-vs-enemy is an apples-to-apples ratio, unlike
+the space AI's."* **The blind AI of S1e is the STRATEGIC layer** (`ThreatAssessment` summing a sensor *margin*). Two
+different problems: **S1e fixes what the empire can see; M17 fixes what a battalion can see.**
+
 ## What is ALREADY BUILT for these (verified in source, 2026-07-28 — so this is mostly a DELETE job)
 
 The ruling is far closer to as-built than the older docs suggest. **Do not rebuild these:**
