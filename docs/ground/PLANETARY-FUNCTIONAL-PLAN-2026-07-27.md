@@ -658,6 +658,37 @@ invalid designs from **saving** (#3).
   (`ConquerResolver.cs:377` → `GroundReinforcement.cs:125`), so #1 needs a scenario/AI-authorable design
   source first or the AI can no longer reinforce. The forced order #2 → #4 → #1 still holds.
 
+### ⚔ R1–R5 — THE RESOLVER RETROFIT (canon **M19**, 2026-07-28) · large, five slices
+
+> **Cause established, not assumed.** The kernel is already shared; the **FEED** into it and the **WRAP** around it are
+> duplicated, and **all eight recorded contradictions live in that duplication** (canon M19's audit table X1–X8). The
+> decisive argument is not the bug count: **the DESIGNER is already unified** — `SpaceWeaponGround` exists so the same
+> laser/railgun/flak a ship mounts works on a chassis, reading *"the SAME fields `ShipCombatValueDB` reads"* — and the
+> ground profile converter then **throws that design away**, hardcoding velocity/tracking/saturation from a 4-value
+> enum. **A railgun on a tank stops being a railgun.**
+>
+> | # | Slice | Fixes |
+> |---|---|---|
+> | **R1** | **Unify the FEED** — one `design → WeaponProfile` converter both domains call; the assembler writes `Penetration`/`PerShotEnergy`; ground gains component-health damage scaling + recoil-vs-mass tracking | X5, X6 |
+> | **R2** | **Unify the BATTLEFIELD — per-engagement clustering** *(developer-ruled)*. A battle is a cluster in contact, not a star system or a region. **Cheaper, not dearer** — 100 fights of 4 ≈ 1,600 comparisons vs one fight of 400 ≈ 160,000 | X7 |
+> | **R3** | **Unify ALLOCATION — real targeting, NO roll-over** *(developer-ruled)*. Excess over a target's remaining health is **wasted**. Replaces the health-weighted pool smear (which never finishes a cripple) and the ship bucket-aggregate. **Needs R1** (alpha must exist before wasting it means anything) and **R2** (which buys its budget) | X6, #18 |
+> | **R4** | **Unify the TICK** — ground to the committed **5 s** quantum, per-second like space. **R-g makes this CORRECTNESS**: at an hourly tick a battle can finish in one step, so *"simulated throughout the entirety of the battle"* cannot hold | X4 |
+> | **R5** | **Unify ARMOUR + the HIERARCHY** — one armour definition; **Fleet/Battalion → Squadron → Wing/Formation** as real named buckets in both domains; and **doctrine addresses roles** so doctrine is the sole behavioural driver | X1, X2, X3, X8 |
+>
+> **⚠ X1 is LIVE IN A REAL GAME.** `EnableGroundRoleManeuver = true` on the **normal New Game path**
+> (`NewGameMenu.cs:567`), and role independently decides whether a unit backs off — a second behavioural driver
+> alongside doctrine, which **R-c forbids**. The fix keeps the useful part: space's group-plane already positions
+> sub-fleets by *"anchor + **doctrine** RoleOffset"*, so **make ground do what space already does.**
+>
+> - **Gate (R1):** the SAME designed weapon mounted on a ship and on a ground chassis produces the **same
+>   `WeaponProfile`** (modulo mount/platform terms) — the test that would have caught the whole class.
+> - **Gate (R2):** two separated pairs of hostile forces in one system/region resolve as **two independent battles**,
+>   and a third pair joining one does not perturb the other.
+> - **Gate (R3):** a shot that over-kills its target **wastes** the excess — a high-alpha weapon measurably
+>   under-performs a low-alpha one of equal DPS against many small targets, and out-performs it against armour.
+> - **Gate (R4):** the same battle at two tick lengths produces the same result (the C2 guard).
+> - **Order:** **S1 first** (you cannot tune what you cannot watch) → R1 → R2 → R3 → R4 → R5.
+
 ### S11 — Depth, cradle-to-grave · large, many small slices
 Each is independently shippable: units cost **people** permanently (#7 — `CrewReq` exists, unread);
 **ammo bites** (#8); **hazard counters as specific gear** (#5); **`CasualtyTier` + damage ledger** (#22 —

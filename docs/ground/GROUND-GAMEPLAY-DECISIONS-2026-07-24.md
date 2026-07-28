@@ -504,6 +504,82 @@ already does. The gap was an artefact of a mechanic that should not have existed
 the AI's doctrine application through the order queue · delete four order types.** The (0,0) bug dies with the RAZE
 port. One medium slice.
 
+## M19 — WHAT THE AUTO-RESOLVER *IS* (developer, 2026-07-28) — 🔒 the definition every line of resolver code answers to
+
+> **"The whole point of the auto resolver is to simulate ANY battle, in ANY condition, between ANY collection of
+> components, in ANY environment."**
+>
+> **"IT IS 1 RESOLVER — IT SHOULD NOT MATTER"** whether the battle is in space or on a planet.
+>
+> **"If there is a line of code that doesn't reflect these ideas, DELETE THEM WITH THE UTMOST PREJUDICE."**
+
+### The model, clause by clause
+
+| # | Clause |
+|---|---|
+| **R-a** | **ONE resolver.** The space/planetary distinction does not exist at the resolver level. |
+| **R-b** | **Units bucket into FLEETS (space) or BATTALIONS (ground)**, and inside those into smaller buckets. **A sub-fleet is now and forever a SQUADRON.** The smallest buckets are **WINGS** and **FORMATIONS**. |
+| **R-c** | **COMBAT DOCTRINE IS THE ONLY THING that changes how those forces act when combat begins.** Nothing else. |
+| **R-d** | **Engagement begins ONLY when an opposing force falls within the range of an opposing force's WEAPONS.** |
+| **R-e** | **On engagement the distance between the two forces is calculated**, and both are **simulated on either side of a simulated battlefield**. |
+| **R-f** | **The wings/formations then manoeuvre according to their doctrine's instructions.** |
+| **R-g** | **Components function differently at varying parameters, and that must be accurately simulated throughout THE ENTIRETY OF THE BATTLE** — not sampled once at the opening. |
+
+### ✅ AUDIT — what already lines up (verified 2026-07-28; do NOT rebuild these)
+
+- **R-d is BUILT AND LIVE.** `RequireWeaponRangeToEngage` gates the trigger on actual `WithinWeaponRange`, not the
+  coarse `EngagementRange_m` bubble — and the code already calls this *"the developer's rule."* The client turns it on,
+  together with `EnableClosingRange`, `RequireDetectionToEngage` and `RequireWeaponsReleaseToEngage`
+  (`PulsarMainWindow.cs:98,105,113,114`). CI runs them **off** for byte-identity; a real game runs them **on**.
+- **R-e is BUILT.** `StartEngagement` seeds the **real** distance; `FleetCombatStateDB.Separation_m` is the battlefield
+  axis; `EnableClosingRange` closes the gap each step.
+- **R-g is PARTLY built on the space side** — range-accuracy falloff, per-weapon range gates re-checked every step, and
+  shields regenerating between volleys all vary with the state of the battle.
+- **The kernel is already ONE.** Armour, dodge, shields, penetration and per-shot energy have a single definition
+  (`Combat/CombatKernel.cs`) that both domains call.
+
+### ⛔ AUDIT — what CONTRADICTS the ruling (the delete-with-prejudice list)
+
+| # | Contradiction | Evidence |
+|---|---|---|
+| **X1** | **🔴 ROLE is a SECOND behavioural driver, and it is LIVE IN A REAL GAME.** `EnableGroundRoleManeuver` is set **true on the NORMAL New Game path** (`NewGameMenu.cs:567`, and DevTest `:981`), and `GroundRoleComposer.RoleMoveAway(role, …)` independently decides whether a unit backs off — *"fighters move differently than a line ship."* **R-c says doctrine is the ONLY thing.** | `GroundForcesProcessor.cs:72,795-803` |
+| **X2** | **The 3-tier hierarchy of R-b does not exist as named types.** There is **no `Squadron` type and no `Wing` type** anywhere in the engine (`Squadron` appears only as prose in a scenario helper, `CombatSandbox.HostileSquadronSet`). | grep: 0 type declarations |
+| **X3** | **And the two domains bucket DIFFERENTLY** — the two-resolver problem in structural form. Space: a `FleetDB` **tree** (arbitrary nesting) plus **computed** `FleetRole` sorting that is explicitly *"not a per-role fleet"* (`FleetComposition.cs:31`) — i.e. roles are a transient classification, not persistent buckets. Ground: `GroundFormation` + sub-formations. **Neither is R-b's Fleet/Battalion → Squadron → Wing/Formation.** | `FleetRoleComposer.cs:16,29`; `GroundForcesDB.cs:378` |
+| **X4** | **R-g is IMPOSSIBLE on the ground at the current tick.** Ground resolves **hourly**; a battle can finish inside one or two steps, so *"accurately simulated throughout the entirety of the battle"* cannot hold. **R-g therefore makes the shorter tick a CORRECTNESS requirement, not a balance choice.** | `GroundForcesProcessor.cs:29` |
+| **X5** | **The FEED throws the design away** (the teardown finding). Of the resolver's 10 weapon variables, a ground weapon gets **2** from the designer; velocity/tracking/saturation are **hardcoded by a 4-value mode enum**, penetration + per-shot energy are **never written by the assembler**, heat is never set. **A railgun bolted to a tank stops being a railgun** — even though `SpaceWeaponGround` exists precisely so *"a weapon that's stronger in space is stronger on the ground."* | `GroundCombatant.cs:67-115`; `GroundUnitAssembly.ToGroundUnitDesign` |
+| **X6** | **Alpha does not exist in EITHER domain.** Ground: the assembler never sets `PerShotEnergy`. Space: `BuildFireMix` **hard-zeroes** `Penetration` and `PerShotEnergy` when it buckets weapons. Since `BurstShotCount = DPS ÷ PerShotEnergy` (clamped ≥1), **every attack lands as exactly ONE shot**, so flat armour never bounces many small hits. | `CombatEngagement.cs:1188`; `CombatKernel.cs:266-273` |
+| **X7** | **The battlefield is a geographic container, not an engagement.** Space: *"a star system IS the battlefield … every in-combat fleet fights in ONE multi-party engagement … (real weapon-range clustering — distinct simultaneous battles in one system — **is a v2 layer**)."* Ground: the same bug via the `byRegion` bucket. | `CombatEngagement.cs:264-267`; `GroundForcesProcessor.cs:268-278` |
+| **X8** | **Two different ARMOUR models.** Ground applies real per-source flat soak + a burst split; ships fold armour into Toughness and apply a proportional fraction. **The same designed armour means different things in different places.** | teardown scenario 6 |
+
+### ⭐ The resolution for X1 that keeps what is useful
+
+**Do not delete role — delete role as an INDEPENDENT driver.** The space 2D layer already does it the ruling's way:
+`FleetCombatStateDB` positions a sub-fleet by *"anchor + **doctrine** `RoleOffset`"* — **the doctrine places the roles.**
+Ground does it backwards, with role deciding on its own. ⇒ **Make ground do what space's group-plane already does: the
+doctrine addresses roles** ("artillery stands off, the line closes"), so doctrine remains the sole driver and
+role becomes the *thing addressed* rather than a parallel switch.
+
+---
+
+## THE RESOLVER RETROFIT — the R-track (R1–R5)
+
+**Cause established (M19's audit): the kernel is shared, but the FEED into it and the WRAP around it are duplicated —
+and every contradiction above lives in that duplication.** The retrofit unifies the feed and the wrap and keeps the
+kernel. **Two of the five slices are already ruled by the developer.**
+
+| # | Slice | What it does | Fixes |
+|---|---|---|---|
+| **R1** | **UNIFY THE FEED** | ONE `design → WeaponProfile` converter both domains call. Ground stops synthesizing velocity/tracking/saturation from a mode enum; the assembler writes `Penetration`/`PerShotEnergy`; heat is set. Ground gains the two ship-side behaviours it lacks: **component health scaling damage** and **recoil-vs-chassis-mass degrading tracking**. | **X5, X6** |
+| **R2** | **UNIFY THE BATTLEFIELD — per-engagement clustering** *(developer-ruled)* | A battle is a **cluster of forces in contact**, not a geographic container. *"100 separate fights in one region need 100 separate resolvers."* Replaces BOTH the star-system battlefield and the `byRegion` bucket. **Cheaper, not dearer:** n² inside small clusters beats N² across everything (100 fights of 4 ≈ 1,600 comparisons vs one fight of 400 ≈ 160,000). | **X7** |
+| **R3** | **UNIFY ALLOCATION — real targeting, NO roll-over** *(developer-ruled)* | Pick a target by doctrine priority, fire, **excess over the target's remaining health is WASTED** (*"design a weapon with a bunch of alpha and you pay for it"*). Replaces ground's health-weighted **pool smear** (which never finishes a cripple) and the ship-side bucket aggregate. **Requires R1** — alpha must reach the resolver before wasting it can mean anything. **Do R2 first: clustering buys the budget targeting spends.** | **X6** + #18 |
+| **R4** | **UNIFY THE TICK** | Ground moves to the committed **5 s** quantum on the same per-second basis space uses. **R-g makes this correctness, not balance.** Every per-tick damage term audited for time-scaling in the same change (finding **C2**). | **X4** |
+| **R5** | **UNIFY THE ARMOUR MODEL + THE HIERARCHY** | One armour definition (ground's per-source flat soak is the more honest — it is what makes flat armour bounce). Plus R-b's **Fleet/Battalion → Squadron → Wing/Formation** as real, named, persistent buckets in **both** domains, replacing the fleet-tree-plus-computed-roles asymmetry. And **doctrine addresses roles**, killing X1. | **X1, X2, X3, X8** |
+
+**Sequencing, and it is not arbitrary:** **S1 (the ground battle log) still comes first** — retrofitting a resolver you
+cannot watch is tuning blind (the Visibility Gate). Then **R1 → R2 → R3 → R4 → R5**: R1 makes the designer honest and
+is independently testable; R2 makes R3 affordable; R4 is what makes R-g true; R5 is the structural tidy that needs the
+rest landed first.
+
 ## What is ALREADY BUILT for these (verified in source, 2026-07-28 — so this is mostly a DELETE job)
 
 The ruling is far closer to as-built than the older docs suggest. **Do not rebuild these:**
