@@ -347,6 +347,55 @@ rather than kept as a convenience.
 - **MINI HEX** — the little hexes inside it, **13 across** ⇒ ~37 km each. Where units stand, shoot, and where buildings sit.
 - *(A **region** is neither — it is a **visual grouping** of regional hexes, M2.)*
 
+## M16 — CAPTURE IS A HYBRID: mini-hex ownership is the truth, regional-hex ownership is the ROLL-UP (developer, 2026-07-28)
+
+**The ruling.** Both levels, not one. **You capture MINI hexes. A REGIONAL hex flips when you hold the MAJORITY OF ITS
+OCCUPIED mini hexes.** (Developer, asked "why not a hybrid of both?" — and it is the better answer; the earlier
+recommendation of regional-hex-only is withdrawn.)
+
+**Why it is the cheapest option, not the most expensive — it reuses a pattern that is already locked and working.**
+`CityGrid.cs:14` names *"the roll-up invariant"*: buildings physically live on **mini** tiles and the **regional** hex
+keeps a maintained **aggregate** of them (`GroundHex.InstallationIds`). **M16 is that same pattern applied to
+ownership.** Fine layer is the truth; coarse layer is a maintained summary. Same shape, same machinery, same discipline.
+
+**And it satisfies One Verb, Both Seats.** The AI never tracks ~169 tiles as ~169 decisions — it reads **one derived
+number per regional hex** ("do I hold it, and how much"). Fine grain for manoeuvre, coarse grain for decisions: the
+same split as **M14**.
+
+### 🧨 THE ONE GUARD — one source of truth, or we rebuild the bug we just deleted
+
+**Ownership is STORED in exactly one place: the mini hex. The regional hex's owner is DERIVED and never independently
+written.** Today it is the other way round: `GroundHex.OwnerFactionID` is a stored `[JsonProperty]` (`GroundHex.cs:26`)
+and `GroundBuildings.CaptureRegionHexContents(regionsDB, regionIndex, newOwner)` (`:187`) writes it **top-down**,
+flipping every hex in a region at once. **M16 inverts that direction.** If both levels stay stored *and* writable, they
+drift — and two ownership records that can disagree is exactly the region-versus-hex bug M2/M6 exist to delete.
+
+### The rules, stated so they can be built without a second conversation
+
+| Question | Rule |
+|---|---|
+| When is a mini hex **OCCUPIED**? | It carries a **living unit** *or* a **building** (`CityTile.BuildingInstanceId >= 0`). Empty ground is not occupied and does not count. |
+| Who **owns** an occupied mini hex? | The faction whose unit stands on it; if no unit, the faction owning the building. |
+| When does the **regional hex** flip? | Whoever holds the **majority of its occupied mini hexes**. **Derived** — recomputed with the roll-up, no separate capture event. |
+| **Empty** regional hex (zero occupied tiles) | **Unowned.** Walking in with one unit makes it 1-of-1 ⇒ majority ⇒ yours. *An undefended regional hex is taken by arriving, which is correct — there is nothing there to fight for.* |
+| **Tie** | **No flip.** It stays with its current owner (or unowned) — a tie is a stalemate, which is the honest outcome. |
+| Why not "all tiles"? | **Rejected:** it recreates the *"every region uniformly held"* rule **M8** just deleted — one enemy squad in a corner blocks a capture forever. |
+| Why not "majority of ALL tiles"? | **Rejected:** garrisoning empty desert would count toward taking a hex. |
+
+*Not a FLAGGED balance value — the developer ruled the threshold explicitly (majority of occupied). The only genuinely
+tunable part is the definition of "occupied", set above.*
+
+### What this needs in code — ONE new field, and one inversion
+
+1. **NEW: `CityTile.OwnerFactionID`** (default `-1`). `CityTile` today carries only `Q`, `R`, `Terrain`,
+   `BuildingInstanceId` (`CityTile.cs:18-24`) — **there is no owner at the mini level yet.** ⚠ **Add it to the
+   `[JsonProperty]` set AND to the copy-constructor** (`:28`) — `CONVENTIONS.md` discipline; a field left out of the
+   copy-ctor silently drops when a grid is copied. Save-compatible (a new field defaults on load).
+2. **`GroundHex.OwnerFactionID` becomes a maintained roll-up**, computed from the tiles — not written directly.
+3. **Invert `CaptureRegionHexContents`** (`GroundBuildings.cs:187`) — it currently pushes an owner *down* from a region
+   to all of its hexes. Under M16 ownership only ever flows *up*.
+4. **Already deleted by M8:** region capture and `TryCapturePlanet`'s all-regions-uniformly-held test.
+
 ## What is ALREADY BUILT for these (verified in source, 2026-07-28 — so this is mostly a DELETE job)
 
 The ruling is far closer to as-built than the older docs suggest. **Do not rebuild these:**
