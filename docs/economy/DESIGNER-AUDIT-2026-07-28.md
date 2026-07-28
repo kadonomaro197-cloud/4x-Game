@@ -323,3 +323,61 @@ the ordering changes:
    its way past.
 4. **Hold every chain against D6-4.** It is the only end-to-end example in the codebase of a dial that is designed,
    assembled, delivered, resolved, *and* gauged on the decision it creates. It is what "done" looks like.
+
+---
+
+## PASS 7 — Doctrine: canon says it is THE ONLY THING that changes how forces act. Does it?
+
+The developer's canon is unambiguous: *"the combat doctrine is **THE ONLY THING** that changes how those forces will
+act when combat begins."* And `CombatDoctrineBlueprint`'s own class doc-comment agrees — *"it is the container for
+every combat BEHAVIOUR decision — not just a strength multiplier."* Pass 7 checks that claim field by field.
+
+**Docs read first:** `CombatDoctrineBlueprint.cs` in full (all 14 fields + the reciprocal-trap note),
+`Combat/TargetPriority.cs` in full, `CombatDoctrine.cs`, `FleetDoctrine.cs`, `FleetDoctrineDB.cs`,
+`GroundFormationDoctrine.cs`, `GroundTacticalBrain.cs`, `GroundStanceBlueprint.cs`, `docs/combat/COMBAT-DESIGN.md`
+System 4, `docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md` (rulings #15, #18, #19 — the three this pass turns on),
+and `UnifiedDoctrineTests.cs` in full.
+
+### The ledger — all 14 blueprint fields (all 14 ARE authored in the 25-entry catalog)
+
+| Field | Authored | Reaches the fight? |
+|---|---|---|
+| `FirepowerMult` | 25/25 | ✅ space + ground |
+| `ToughnessMult` | 22/25 | ✅ space + ground |
+| `DamageTakenMult` | 6/25 | ✅ ground (the reciprocal encoding) |
+| `CooldownSeconds` | 28/28 | ✅ all three switch sites |
+| `IsRetreat` | 25/25 | ✅ space |
+| `RetreatCasualtyThreshold` | 25/25 | ✅ space (ruling #15's *trigger*) |
+| `EngagementPosture` | 25/25 | ✅ **space only** (ruling #19) — see D7-3 |
+| `Domain` · `Family` · `DisplayName` | 25/25 | ✅ filtering + UI |
+| **`TargetPriority`** | 25/25 | ❌ **parser only — no selector exists** (ruling #18) |
+| **`BreakAwaySeconds`** | 25/25 | ❌ **accessor only, zero callers** (ruling #15) |
+| **`Pursues`** | 25/25 | ❌ **accessor only, zero callers** (ruling #15) |
+| **`SpeedMult`** | 25/25 | ❌ **read by no movement code — but PRINTED in the client** |
+
+### Findings
+
+| # | Sev | Finding |
+|---|---|---|
+| **D7-1** | 🔴 | **FOUR OF THE FOURTEEN DOCTRINE DIALS NEVER REACH THE FIGHT — AND THREE OF THE FOUR ARE THE 2026-07-24 BEHAVIOUR RULINGS.** **`TargetPriority` (ruling #18):** the only non-test code is `CombatDoctrine.ParseTargetPriority` — a string parser. **No selector function exists anywhere**, and nothing calls the parser outside tests. Both resolvers still spread fire by current health, which is precisely what the enum's own doc-comment says it was created to end: *"damage preferentially lands on the HEALTHIEST target and a cripple is never finished — the opposite of how anyone actually fights."* **`BreakAwaySeconds` (ruling #15):** only `CombatDoctrine.EffectiveBreakAwaySeconds` — an accessor with zero callers. Retreat is still instant. **`Pursues` (ruling #15):** only `CombatDoctrine.Pursues(bp)` — an accessor with zero callers. Disengage is still free. **So doctrine today changes firepower, toughness, whether you shoot first, and when you break off. It does NOT change who you shoot, whether you chase, or how long breaking away takes.** Against the canon — *"the ONLY thing that changes how those forces act"* — **doctrine is still mostly a stat multiplier with two behaviours bolted on, not the behaviour container the ruling asked for.** |
+| **D7-2** | 🔴 | **A GREEN CI TEST IS ASSERTING THESE EXACT FEATURES WORK.** `UnifiedDoctrineTests.cs:226` is described as *"The catalog actually delivers the behaviours the rulings asked for: something pursues, …"* — and its assertions are `all.Any(CombatDoctrine.Pursues)` (`:233`), `…ParseTargetPriority(b.TargetPriority) == FinishWounded` (`:237`), `…EffectiveBreakAwaySeconds(b) > 0` (`:239`), and `:280` *"Break and Roll chases the rout"*. **Every one of those asserts that a JSON file contains a value.** The word *"delivers"* is doing work the test does not do — nothing chases anything. **This is the Visibility Gate's failure mode INVERTED: a gauge reading normal while the system is inert.** It is worse than having no test, because it converts *"not built"* into *"verified built"* on the CI dashboard — and CI is the only correctness gauge this project has. **Any fix here must include re-pointing these four assertions at behaviour, or they will keep certifying the gap closed.** |
+| **D7-3** | 🟠 | **"ENGAGEMENT" MEANS TWO DIFFERENT THINGS, ONE PER DOMAIN.** Space: `EngagementPosture` — *WeaponsFree / WeaponsHold / ReturnFire* — **will you shoot first.** Ground: `GroundEngagementStance` (`GroundForcesDB.cs:275-285`) — *HoldGround / CloseToEngage / StandOff* — **will you advance or kite.** Different enums, different questions, and **ground never reads the doctrine's `EngagementPosture` at all** (grep across `GroundCombat/`: zero hits). So the "one unified doctrine catalog" carries a posture field that **half the game ignores**, while that half runs its own parallel mechanism. **This is One Verb, Both Seats violated inside the doctrine layer itself** — and it is the **fourth** instance of the same space/ground split, after the battlefield container (root cause B), armour hardening (**D5-2**) and the shield (**D6-3**). |
+| **D7-4** | 🟡 | **`SpeedMult` is INERT AND THE UI STATES IT AS FACT.** It is copied blueprint → `FleetDoctrineDB` (`FleetDoctrine.cs:60`) and printed twice in the client — the active-doctrine line (`FleetWindow.cs:724`: *"Firepower x…, Toughness x…, **Speed x…**"*) and the selection preview (`:767`). **No movement code reads it** — every other `SpeedMult*` hit in the engine is `GroundMobility.SpeedMultFor`, an unrelated locomotion multiplier. Separated from D7-1 because it is a worse class of fault: an inert dial the player cannot see is a wasted opportunity; **an inert dial the UI reports as an active effect is misinformation.** |
+| **D7-5** | ✅ | **TEN OF FOURTEEN DO LAND — the catalog is real work, and the gap is specifically the behaviour half.** Wired and verified: `FirepowerMult`/`ToughnessMult` on **both** domains (`FleetDoctrine` for space; `GroundFormationDoctrine.AttackMult` at `GroundForcesProcessor.cs:490, 523` for ground), `DamageTakenMult` on ground (`:541`), `RetreatCasualtyThreshold` + `IsRetreat` (the space retreat), `EngagementPosture` (space weapons-release — ruling #19 genuinely built), `CooldownSeconds` enforced at **all three** switch sites (`FleetDoctrine.cs:65`, `GroundFormationDoctrine.cs:52`, `GroundTacticalBrain.cs:239`), and `Domain`/`Family`/`DisplayName` for filtering and UI. **Recorded precisely so nobody rebuilds the ten that work while chasing the four that don't.** |
+
+### What Pass 7 changes about the plan
+
+**Three of the four missing dials are cheap; the fourth is the one that matters.**
+
+- `Pursues` and `BreakAwaySeconds` are small: both hang off the retreat path that **already** reads
+  `RetreatCasualtyThreshold`, so the trigger exists and only the consequence is missing.
+- `SpeedMult` is either wired to closing speed or **removed from the two client lines** — but it cannot stay as a
+  number the UI asserts and the engine ignores.
+- **`TargetPriority` is the real work and the biggest single behaviour win available.** There is no selector function
+  to call — it has to be written, and it has to be written **once, in the shared kernel**, or it will land twice and
+  diverge exactly the way armour did (**D5-1**). It is also the dial that makes **D4-3's penetration** worth having:
+  `Heaviest` targeting is meaningless until penetration works, and penetration is dull until something chooses to aim
+  at armour.
+- **Fix D7-2 in the same slice as any of the above.** Four assertions currently certify these features as delivered.
+  Leaving them pointed at the JSON while wiring the behaviour means the tests stay green either way — which is the
+  same as having no gauge at all.
