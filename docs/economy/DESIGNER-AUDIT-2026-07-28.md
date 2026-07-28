@@ -127,3 +127,48 @@ turns this whole class of failure from invisible into a red ✗ in CI.
 **And one hard consequence for combat, which is why this audit was started:** the *missile warhead designer does not
 open at all* (D2-1) and its shaped-charge branch is broken underneath that (D2-3). Any plan that relies on the player
 designing missiles — the resolver audit's missile-stub findings included — is blocked behind these two.
+
+---
+
+## PASS 3 — Does the dial reach the UNIT, and does RESEARCH gate any of it?
+
+Pass 2 checked whether the data's references bind. Pass 3 walks the two rungs on either side of that: **can the player
+reach the part at all** (the designer doors), **does the dial reach the thing that uses it** (designer → assembler),
+and **does research gate any of it** (the missing cradle-to-grave rung).
+
+**Docs read first:** `docs/economy/COMPONENT-DESIGNER-CATEGORIES.md` §2 (the locked 11-category × 37-door taxonomy),
+`docs/economy/COMPONENT-DESIGNER-DIAL-AUDIT-2026-07-23.md` (the prior dial audit — its **T2a hardcoded-Mass** finding is
+credited below), `GroundCombat/CLAUDE.md`, `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` (the unit-designer section),
+`docs/combat/RESOLVER-AUDIT-2026-07-28.md` root cause **A**, and the source of every attribute and reader named.
+
+### Findings
+
+| # | Sev | Finding |
+|---|---|---|
+| **D3-1** | 🔴 | **THE ENTIRE GROUND STACK HAS NO RESEARCH GATE — you can design the best ground unit the game allows on turn one.** Only **18 of 96** templates have *any* tech gate (`TechData(…)`/`TechLevel(…)`), and **42 are BOTH free to research (`ResearchCost: "0"`) AND tech-ungated.** Every ground part is in that 42: all four frames (`human-frame`, `vehicle-frame`, `walker-frame`, `swarm-frame`), all five ground weapons (`ground-rifle`, `ground-cannon`, `ground-autocannon`, `energy-weapon`, `claw-weapon`), `ground-plating`, `ground-radar`, `ground-locomotion`, `ground-magazine`, all three augments (`power-armor`, `shield-generator`, `reflex-booster`), `ground-constructor`, and all three prebuilt units. **Concretely: on turn one, with zero research, the ground-rifle designer will let you build a rifle with `Attack` 5000 and `Range_m` 100 km** — its ceilings are hardcoded constants, not tech. **Now the contrast that shows what right looks like:** `laser-weapon` costs `[Mass]` to research **and its Range ceiling IS the tech** (`"MaxFormula": "TechData('tech-beam-range')"`) — research literally widens what you may design. `railgun-weapon` does the same on `tech-kinetic-yield`. **This is the single largest gap between "planetary combat" and "the depth space combat has":** space earns its numbers, ground is handed them. It is also a straight cradle-to-grave failure — the **research** rung is absent for the whole ground chain. |
+| **D3-2** | 🟠 | **`Amphibious` is a dial the player PAYS FOR that does NOTHING.** It is a live slider on `ground-locomotion` (`installations.json:3460`), and turning it on **doubles the part's mass** — the template's own Mass formula is `100 * SpeedFactor * (1 + RoughHandling) * (1 + Amphibious)`. It is passed into `GroundLocomotionAtb` correctly, stored, cloned, and printed in the part description (*"…, amphibious"*). **It is read by zero lines of code in the entire solution.** `HexPathfinder.IsImpassable` returns true for `Ocean` unconditionally (`HexPathfinder.cs:42`), and the method's own comment says it: *"Amphibious/transport gating that would let some units cross is a cradle-to-grave follow-on."* **So the player buys an amphibious unit, pays double the locomotion mass for it, and it still cannot enter a water hex.** Of everything found in three passes this is the cleanest example of the fault this audit exists to catch: a costed decision with no effect. |
+| **D3-3** | 🟡 | **`GroundChassisAtb.Size` is a dial that does nothing — and is FREE, which is the only reason it's less bad than D3-2.** A live `GuiSelectionMaxMin` slider on all four frames (human 1, vehicle 6, walker 4, swarm 1; max 10), passed into the attribute, stored, echoed by `Clone()` — and **`grep '\.Size\b'` over the whole GameEngine returns ZERO reads.** `GroundUnitAssembly.cs:95` fetches the chassis and reads `BaseStrength` / `BaseHP` / `CarryClass` / `Locomotion` — never `Size`. It doesn't even cost anything, because the four frames have **hardcoded** masses (20 / 4000 / 2500 / 5) rather than a formula of their dials — *which is the prior audit's **T2a** finding, `COMPONENT-DESIGNER-DIAL-AUDIT-2026-07-23.md:138`, confirmed still true.* |
+| **D3-4** | ✅ | **THE DESIGNER → ASSEMBLER HOP IS SOUND — and this MOVES the resolver audit's root cause A.** I built the full ledger: **43 dials across 13 ground attributes**, each checked for a reader. **41 of 43 are read** (the two exceptions are D3-2 and D3-3). Every value on `GroundWeaponAtb`, `GroundArmorAtb` (including all four nature factors), `GroundAugmentAtb` (including the new shield-regen dial), `GroundUnitAtb` (including `Penetration` and `PerShotEnergy`) reaches the assembler. **So the resolver audit's root cause A — "the designer's numbers don't arrive" — is NOT a designer→assembler problem.** The loss is one hop further downstream, at **assembler → resolver** (the `WeaponProfile` hand-off). That is a materially different place to fix than the plan currently assumes, and it is good news: the expensive half is already correct. |
+| **D3-5** | 🔵 | **Door coverage is good — 91 of 95 templates are mapped, and the 4 unmapped ones are NOT lost.** `ComponentDoors.Classify` has an explicit fallback to an **"Other"** category keyed by the template's raw `ComponentType`, so `ground-constructor`, `ground-training-cadre`, `sealed-systems` and `stainless-steel-fuel-tank` still appear — just filed under "Construction" / "Augment" / "Fuel Storage" instead of a designed door. Zero doors point at a template that doesn't exist. *(95 unique ids across 96 entries — the one-off is the duplicate `spaceport` from **D1-1**.)* Cheap tidy-up, not a defect. |
+| **D3-6** | 🟡 | **Research where it EXISTS is mostly a price tag, not a ceiling.** Of the 18 tech-gated templates, most gate a single dial. `flak-weapon` is the clearest half-measure: it **does** cost `[Mass]` to research, but **every one of its five dial ceilings is a hardcoded constant** (`Muzzle Velocity` 100000, `Damage Per Pellet` 100000, `Rounds Per Second` 100, `Pellets Per Shot` 500, `Tracking` 1), so no amount of research ever widens a flak design. Paying for research that doesn't change what you may build is the weakest form of the gate — the `laser-weapon` shape (`MaxFormula = TechData(...)`) is the one to copy. |
+
+### What Pass 3 changes about the plan
+
+Three things, and the first two point in opposite directions — which is why the pass was worth running.
+
+1. **Good news that redirects a fix.** The designer → assembler hand-off is essentially complete (41/43). The resolver
+   audit's root cause **A** should be re-scoped from *"the designer's numbers don't arrive"* to *"the numbers arrive at
+   the unit and are then dropped at the resolver boundary."* Fixing the `WeaponProfile` hand-off is a smaller, more
+   contained job than rebuilding the designer path — and the plan should say so.
+
+2. **Bad news that is bigger than any single bug.** Ground combat has **no research at all**. Not a weak tree — none.
+   That is not a wiring defect to patch; it is a missing rung of the cradle-to-grave chain for the whole ground stack,
+   and it is the honest answer to *"does planetary combat have the depth space combat has?"* — **not yet, and this is
+   the reason.** The fix is data, not engine: give the ground templates a real `ResearchCost` and replace their
+   hardcoded dial ceilings with `TechData(...)`, exactly the way `laser-weapon` already does it. New ground techs will
+   need authoring in `techs.json`.
+
+3. **Two dials should be decided, not left.** `Amphibious` is **costed and inert** — either build the pathfinder gate
+   (`HexPathfinder.IsImpassable` already documents where it goes) or drop the dial, but do not keep charging for it.
+   `Size` is **free and inert** — either give it a meaning (it is the natural driver of the frame's mass, which would
+   also close the prior audit's T2a) or remove the slider.
