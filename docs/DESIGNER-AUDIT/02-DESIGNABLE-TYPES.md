@@ -118,6 +118,6 @@ The one place they all converge is `FactionInfoDB.IndustryDesigns` (`FactionInfo
 
 - Should the fix hoist `ComponentMountType` (or an analog) onto a shared `IConstructableDesign`/`AssembledDesign` so *every* buildable declares its legal hosts as data — collapsing the class-per-host split?
 - Can `ShipDesign` and `OrdnanceDesign` be unified onto one "assembled vehicle" base (they already share ~90% of fields), with `OnConstructionComplete` the only real difference?
-- Where does the `GroundUnitDesign` flattened-stats read-model fit if units migrate to entities (see `docs/GROUND-UNITS-AS-ENTITIES-DESIGN.md`)? A unification should not re-flatten what that migration is un-flattening.
+- Where does the `GroundUnitDesign` flattened-stats read-model fit if units migrate to entities (see `docs/ground/GROUND-SURFACE-MAP-DESIGN.md`)? A unification should not re-flatten what that migration is un-flattening.
 - Is a `StationDesign` warranted (design-then-deploy), or is deploy-then-furnish the intended permanent asymmetry?
 - The per-host faction dictionaries: safe to collapse to `IndustryDesigns` + typed views, or do downstream UIs (`ShipDesignWindow`, `OrdnanceDesignWindow`) depend on the dedicated dicts? (UI-side audit territory.)

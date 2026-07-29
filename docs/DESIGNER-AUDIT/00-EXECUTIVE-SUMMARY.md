@@ -133,4 +133,4 @@ For each pair: keep ONE attribute, make both host processors read it, retire the
 | `06-INDUSTRY-AND-MATERIALS.md` | industry is ALREADY host-uniform — the pattern to copy | designing the fix (the target shape) |
 | `07-RESEARCH-AND-UNLOCKS.md` | unlock/tech is ALREADY host-uniform; not the source of the bug | ruling the tech layer in/out |
 
-**Related existing design docs** (already circling this problem): `docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md`, `docs/WEAPON-UNIFICATION-DESIGN.md`, `docs/GROUND-UNITS-AS-ENTITIES-DESIGN.md`.
+**Related existing design docs** (already circling this problem): `docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md`, `docs/combat/WEAPONS-DESIGN.md`, `docs/ground/GROUND-SURFACE-MAP-DESIGN.md`.

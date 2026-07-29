@@ -317,7 +317,7 @@ found by the prior surveys (verify each is still true, then FIX in Phase C):
   `CLAUDE.md` sends every ground designer straight to it.
 - `docs/MVP.md` + `docs/PLAY-TO-MARS-WALKTHROUGH.md` still name the invade-from-orbit panel as the #1 blocker; it was
   built (Earthfall C5.1, 2026-07-19).
-- `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` is "being retired" yet root `CLAUDE.md` both mandates opening it on every
+- `docs/archive/SYSTEMS-STATUS-AND-TEST-PLAN.md` is "being retired" yet root `CLAUDE.md` both mandates opening it on every
   dive AND says don't add to it — complete the retirement and fix the contradiction.
 - `Pulsar4X/GameEngine/Colonies/CLAUDE.md` calls `ColonyHexMapDB` "built and wired"; the surface design lists it as a
   do-not-revive landmine; in code it's save-UNSAFE and still live on a toolbar window that ATTACHES it to a colony.

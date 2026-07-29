@@ -187,8 +187,8 @@ a future session doing exactly the pre-flight the root `CLAUDE.md` demands — t
 
 | Class | Count | Examples → where they went |
 |---|---|---|
-| **Moved** by the subfolder reorg | 13 paths | `docs/AI-BRAIN-BUILD-TRACKER.md` (61 sites!) → `docs/ai/…`; `docs/SITE-ENGINE-DESIGN.md` (35) → `docs/explore/…`; `docs/DIPLOMACY-DESIGN.md` (17) → `docs/society/…` |
-| **Consolidated** into a survivor | 10 paths | `docs/GROUND-COMBAT-MAP-DESIGN.md` (27), `GROUND-CITY-AND-WARMAP-DESIGN.md` (13), `HEX-GROUND-AND-ORDERS-DESIGN.md` (9), `GLOBAL-HEX-GRID-DESIGN.md` (9) → `docs/ground/GROUND-SURFACE-MAP-DESIGN.md`; `WEAPON-TAXONOMY` + `WEAPONS-AND-DODGE` (23) → `docs/combat/WEAPONS-DESIGN.md`; `AI-MEANS-ENDS-PLANNER` + `AI-OBJECTIVE-ENGINE` (23) → `docs/ai/AI-DECISION-ENGINE-DESIGN.md`; `RESOLVER-MERGE` (6) → `docs/combat/RESOLVER-DESIGN.md`; `SPACE-STATIONS` (8) → `docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md` |
+| **Moved** by the subfolder reorg | 13 paths | `docs/ai/AI-BRAIN-BUILD-TRACKER.md` (61 sites!) → `docs/ai/…`; `docs/explore/SITE-ENGINE-DESIGN.md` (35) → `docs/explore/…`; `docs/society/DIPLOMACY-DESIGN.md` (17) → `docs/society/…` |
+| **Consolidated** into a survivor | 10 paths | `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` (27), `GROUND-CITY-AND-WARMAP-DESIGN.md` (13), `HEX-GROUND-AND-ORDERS-DESIGN.md` (9), `GLOBAL-HEX-GRID-DESIGN.md` (9) → `docs/ground/GROUND-SURFACE-MAP-DESIGN.md`; `WEAPON-TAXONOMY` + `WEAPONS-AND-DODGE` (23) → `docs/combat/WEAPONS-DESIGN.md`; `AI-MEANS-ENDS-PLANNER` + `AI-OBJECTIVE-ENGINE` (23) → `docs/ai/AI-DECISION-ENGINE-DESIGN.md`; `RESOLVER-MERGE` (6) → `docs/combat/RESOLVER-DESIGN.md`; `SPACE-STATIONS` (8) → `docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md` |
 | **Superseded outright** | 2 paths | `WEAPON-UNIFICATION-DESIGN.md` (8), `GROUND-UNITS-AS-ENTITIES-DESIGN.md` (9) → `docs/economy/COMPONENT-DESIGNER-CATEGORIES.md` |
 
 **Swept 2026-07-27.** Re-grep returns **zero** dead paths. Provably **comment-only**: 327 insertions /
@@ -777,7 +777,7 @@ from a score**, and an unmet stranger falls through to "different faction = host
 
 ## 15. THE OPERATION'S PROCESS RECORD — migrated from the deleted compliance tracker
 
-`docs/OPERATION-GROUND-TRUTH-COMPLIANCE.md` was **deleted 2026-07-27** at the developer's instruction, after its
+`docs/DOCS-AUDIT-2026-07-27.md` was **deleted 2026-07-27** at the developer's instruction, after its
 job was taken over by verified-done annotations written directly into `OPERATION-GROUND-TRUTH-PROMPT.md`. It had
 been created because the session drifted; the developer then asked the right question — *"why are we doing the
 compliance doc over the orders?"* — and the answer was that a derived checklist standing in for its source will

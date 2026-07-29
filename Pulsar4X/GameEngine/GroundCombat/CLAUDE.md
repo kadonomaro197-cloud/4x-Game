@@ -308,7 +308,7 @@ real game gets real distances on-by-default. Design: `docs/combat/REAL-DISTANCE-
 
 ## Units as entities — "abilities just fall out" (Option A, 2026-07-07/08)
 
-The migration that promotes a raised `GroundUnit` to also carry a **real component store** (a backing `Entity` + `ComponentInstancesDB`), so every ability — radar reveal, march speed, crew — FALLS OUT of the same infrastructure a ship uses (`TryGetComponentsByAttribute<TAtb>`), with no per-ability special-casing. Full plan + status board: **`docs/GROUND-UNITS-AS-ENTITIES-DESIGN.md`**. Only assembler-designed units (with a component list) get a backing; monolithic/dev/garrison units get `BackingEntityId = -1` and are byte-unchanged. The backing is inert (populated low-level, no install hook / ReCalc; ground atbs are inert on install; no processor iterates `ComponentInstancesDB`).
+The migration that promotes a raised `GroundUnit` to also carry a **real component store** (a backing `Entity` + `ComponentInstancesDB`), so every ability — radar reveal, march speed, crew — FALLS OUT of the same infrastructure a ship uses (`TryGetComponentsByAttribute<TAtb>`), with no per-ability special-casing. Full plan + status board: **`docs/ground/GROUND-SURFACE-MAP-DESIGN.md`**. Only assembler-designed units (with a component list) get a backing; monolithic/dev/garrison units get `BackingEntityId = -1` and are byte-unchanged. The backing is inert (populated low-level, no install hook / ReCalc; ground atbs are inert on install; no processor iterates `ComponentInstancesDB`).
 
 | File | Role | Status |
 |------|------|--------|
