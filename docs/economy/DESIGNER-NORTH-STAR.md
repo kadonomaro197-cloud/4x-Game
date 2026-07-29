@@ -587,7 +587,7 @@ evasion falls as your range grows.** That tension does not exist in the game tod
 | bubble create/sustain cost | stored electricity | needs **Power** |
 | `GroundLocomotionAtb.SpeedFactor` | `GroundMobility.SpeedMultForUnit` → `Speed_kmh` | the closing march |
 | `RoughHandling` | `TerrainMult` **and** `LocomotionTerrainMult` | travel time **and** a combat multiplier |
-| `Amphibious` | pathfinding passability | where you may go |
+| ~~`Amphibious`~~ | 🔴 **nothing reads it** | **not an input at all** — the surface scan mis-read a *comment* for a wire (§23.3b) |
 | drive mass (emergent) | chassis budget **and back into its own accel** | the feedback loop |
 
 ## 22. THE FIVE QUESTIONS
@@ -714,12 +714,82 @@ The sim reads **different things per family**, so the doors do not share one sli
 | Family | Its dials | State |
 |---|---|---|
 | **Reaction** | drive size · **push ↔ economy** · *signature suppression* | first two exist; third proposed (§23.2) |
-| **Traction** | **speed factor** · **rough handling** · **amphibious** | 🔵 **all three already editable and read** — I dropped them by over-collapsing |
+| **Traction** | **speed factor** · **rough handling** · ~~amphibious~~ | 🔵 first two editable **and read**. ⚠ **amphibious is read by NOTHING — §23.3b** |
 | **Warp** | **max speed** · **efficiency vs power** | 🔵 **already an editable dial in the template** — also dropped |
-| **Fluid** | medium | writes almost nothing today |
+| ~~**Fluid**~~ | — | ❌ **CUT — §23.3c.** No component, no variable. |
 
 **`RoughHandling` is worth its own note:** it is **one dial feeding two systems** — march time (`TerrainMult`) *and* a
-combat multiplier (`LocomotionTerrainMult`). **`Amphibious`** is a bool that decides where you may go at all.
+combat multiplier (`LocomotionTerrainMult`).
+
+### 23.3a 🔑 THE GROUPING — one door for space thrust AND ground locomotion (developer, 2026-07-29)
+
+> *"Don't we have locomotion in another door? Why not just group everything?"*
+
+**Yes — and the design already says group them. The code never did.**
+
+`docs/economy/COMPONENT-DESIGNER-CATEGORIES.md:36` already lists **ground-locomotion under Propulsion**, and `:60`
+already rules the parallel ground `*Atb`s are *"absorbed into the universal doors … resolved by deletion not merger."*
+**But the engine carries two unrelated implementations of one verb:**
+
+| | Space | Ground |
+|---|---|---|
+| Class | `Movement/NewtonMove/NewtonionThrustAtb.cs` | `GroundCombat/GroundLocomotionAtb.cs` |
+| Fields | `ExhaustVelocity` · `FuelType` · `FuelBurnRate` | `SpeedFactor` · `RoughHandling` · `Amphibious` |
+| **Fields in common** | 🔴 **ZERO** | 🔴 **ZERO** |
+
+Two parameterisations of *"how does this thing move,"* sharing nothing. **That is exactly what `CLAUDE.md`'s
+One Verb, Both Seats forbids** — and this derivation half-did it: making "the ground" a *family* of the one door **is**
+the grouping, but §23.3 never said what grouping **COSTS**: **deleting `GroundLocomotionAtb`** and giving Traction the
+same shape as Reaction.
+
+**And they CAN share a shape — every family is ONE POWER BUDGET SPENT TWO WAYS:**
+
+| Family | The budget split | Law |
+|---|---|---|
+| **Reaction** | **thrust** ↔ **exhaust velocity** | `T · v = 2P` (§20) |
+| **Traction** | **speed** ↔ **tractive effort** | 🔑 **the gearbox trade** — tall gearing is fast on roads, low gearing crawls over rough. **`SpeedFactor` and `RoughHandling` are the SAME zero-sum split**, merely authored as two independent dials. |
+| **Warp** | **top speed** ↔ **bubble cost** | `WarpPower` vs `BubbleCreationCost` — **already a split** |
+
+> 🔑 **So all three are `how much drive you fit` × `how you spend it`. The same two dials; the MEDIUM changes what
+> they BUY.** That is the grouping — *and it is also the answer to "the choice needs to be more evident."* Picking a
+> family does not relabel a tooltip; it **re-purposes both sliders and every readout.**
+
+**What it costs to land:** `GroundLocomotionAtb` is deleted, its three fields become (a) the shared size dial,
+(b) the shared split dial, (c) a cut dial (§23.3b). `GroundMobility.RoughHandlingForUnit` /
+`GroundTerrain.LocomotionTerrainMult` / `GroundMobility.TerrainMult` keep reading a rough-handling number — it just
+comes from the shared split instead of its own field. **Save-load risk: L3** (renaming/removing a serialized type).
+
+### 23.3b 🔴 CORRECTION — `Amphibious` is a dial that COSTS MASS and BUYS NOTHING
+
+§23.3 said Traction's three dials are *"all three already editable and read."* **That was wrong about `Amphibious`.**
+Every mention in the repo, grepped:
+
+| Site | What it does |
+|---|---|
+| `GroundLocomotionAtb.cs:32,40,43,51` | the field, ctor, copy-ctor, description |
+| `installations.json:3460,3472` | a real designer dial + `AtbConstrArgs` |
+| `installations.json:3424` | 🔴 **the Mass formula MULTIPLIES BY IT — you are charged for it** |
+| `HexPathfinder.cs:39` | a **comment** saying amphibious gating *"is a cradle-to-grave follow-on"* |
+| **anything that READS it** | 🔴 **NOTHING** |
+
+`HexPathfinder.IsImpassable` hard-codes **ocean impassable to every ground unit**, amphibious or not. So the dial
+**takes mass and returns no capability** — the clearest §1-law violation found in any category so far, and it was
+hiding behind this document's own summary. **Either wire it (`IsImpassable` becomes unit-aware) or cut it; do not
+ship a knob that charges for nothing.**
+
+### 23.3c 🔴 CORRECTION — `Fluid` is NOT a family
+
+Grepped for airbreathing · hover · buoyancy · fluid-drive · atmospheric-thrust: **zero components.** The only
+propulsion `*Atb`s that exist are `NewtonionThrustAtb`, `ReactionlessThrustAtb`, `WarpDriveAtb`,
+`GroundLocomotionAtb`. **Fluid is an authored door with no implementation and no variable.**
+
+And physically it collapses like the rest: a propeller or a jet **is** reaction mass — you **scoop it instead of
+carrying it**. So:
+
+> **Fluid = Reaction, with the propellant sourced externally and a medium requirement added.**
+
+The same shape as Reactionless (*"a rule removed"*) and Gravitic (*"a constraint lifted"*) in §24. **Three real
+families remain: Reaction · Traction · Warp.**
 
 ### 23.4 CANDIDATES CHECKED AND REJECTED
 
@@ -764,7 +834,7 @@ the inputs; the entity decides the outcome. A designer that pretended otherwise 
 | **Warp max speed** | `WarpSpeedFloor` | strategic transit; the fleet moves at its slowest ship |
 | **Ground speed factor** | `Speed_kmh` → the closing march | how fast you cross a battle's real metres |
 | **Rough-ground handling** | march time **and** `LocomotionTerrainMult` | **one dial, two systems** |
-| **`Amphibious`** | pathfinding passability | where you may go at all |
+| ~~**`Amphibious`**~~ | 🔴 **NOTHING** | **read by no code** (§23.3b) — ocean is impassable to everyone; the dial still charges mass |
 | **Fuel burn** | **Logistics** — tankers, refuelling | a thirsty fleet is a supply problem |
 | **Warp bubble cost** | **Power** (stored electricity) | a flat battery is a ship that cannot leave |
 | **Drive mass** | **Chassis** budget — **and back into its own acceleration** | the only door whose output fights its own input |
