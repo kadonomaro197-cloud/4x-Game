@@ -25,6 +25,20 @@ Work in this order, always:
 4. **The choices are the doors. The sliders are the depth.**
 5. **Prove it by reproducing everything that already exists.** If the derivation can't rebuild the components in the
    game today, the derivation is wrong.
+6. 🔴 **NAME WHAT GOES OUT.** For every door, list what its output actually feeds — which systems read it, and where.
+   **This is not bookkeeping, it is the diagnostic** (developer's standing instruction, 2026-07-29).
+
+**Why step 6 earns its place — it is what caught Hardening.** Two failures are invisible until you trace the output:
+
+- **A mis-filed door.** Hardening sits in Defense, but its output (`EnvironmentalResistance`) is read in exactly one
+  place — the environmental **attrition** step. It never reaches a weapon hit. **A door whose output does not arrive
+  at the system it is filed under is in the wrong category**, and only an output trace shows that.
+- **A dead dial.** A dial whose output reaches nothing is the "never ship a dead knob" failure. The input test
+  (*which sim variable does it write?*) catches some; the output test catches the rest — a dial that writes a real
+  field nothing downstream ever reads.
+
+**So the full test for a door is two-sided:** *what does it write* (§ the input surface) **and** *where does that go*
+(§ the output map). Both, every time.
 
 **The test for any dial, at any time:** *which of the sim's variables does it write?* Writes one → real. Writes none
 but costs mass → fine, that's the price. **Writes none and costs nothing → it is a bug in the design.** That is
@@ -201,6 +215,32 @@ Family and setting checked against what `ShipCombatValueDB` and the base-mod gro
 
 ---
 
+## 8b. WHAT GOES OUT — the Weapons output map (verified in source)
+
+**The Prime Directive applied at the door.** Change a weapon dial and this is the blast radius.
+
+| What leaves the door | Goes to | Why it matters |
+|---|---|---|
+| **`WeaponProfile`** (all ten) | `CombatKernel` → hit fraction, shield drain, armour soak, casualties | the primary path — everything else below is a side effect of it existing |
+| **`DamagePerSecond`** → summed as **`Firepower`** | `ShipCombatValueDB` | the ship's nameplate rating |
+| **`Firepower > 0`** | 🔴 **`FleetAssembly`** (`:122`, `:247`, `:303`) | **it is the armed-vs-tender test.** A ship with no weapon is never folded into a strike fleet — so a weapon dial decides whether the AI fields the hull at all |
+| **`Firepower` + `Toughness`** | **`FactionRollup`** (`:83`) | the faction's total military strength — **how threatening every rival thinks you are** |
+| **`Firepower`** | `MilitaryComposition` · `AutoResolve` | fleet deployability; the instant off-screen resolver |
+| **`Range_m`** → `MaxReach` | 🔴 **`WithinWeaponRange`** | **starts battles** — and under **LD-30 it sizes the arena they are fought in** |
+| **`Nature`** → `IsAmmoNature` | ammo drain · heat throttle | routes the weapon to **Logistical** (magazines) or **Power** (reactors) |
+| **`HeatPerSecond`** | fleet heat pool | creates demand for **radiators** — a Defense/Systems purchase |
+| **`Delivery`** → `IsInterceptable` | point-defence | the only thing Delivery decides, and it is what makes PD a counter |
+| **Firing itself** → `ShotsFiredThisTick` | **EMCON `ActivityMultiplier`** → `SensorTools` | **a ship that shoots is seen farther.** Weapons feed detection |
+| **Mass** | **Chassis** budget → crew · cost · research · build time · mobility | the universal cost chain |
+| **A space weapon on a ground chassis** | `SpaceWeaponGround` → the ground resolver | one weapon, both domains |
+| **The component being destroyed** | Damage system | the grave rung — shoot the gun off and the capability is gone |
+
+> ⚠ **One quirk worth knowing:** `Firepower` is computed **at build and cached**, so the AI's planner cannot read it
+> before a ship exists — `DefendResolver.cs:130` explicitly works around this by reading the design attribute at plan
+> time instead. **A weapon dial's effect on AI planning is therefore indirect**, and that is a real seam.
+
+---
+
 ## 9. WHAT THIS KILLS
 
 | Killed | Why |
@@ -348,6 +388,27 @@ HANDLED on the ground and a GAP in space. Same defect, now with a decided direct
 | **Evasion** | 🔴 **The best defence in the game is not sold at this door.** It comes from hull volume + engine acceleration (Chassis + Propulsion); the only override is filed under Propulsion ▸ Exotic. **The Defense door cannot sell the layer that stops damage from ever being rolled.** |
 | **Armour** | 🔴 **Two mechanics wearing one name** — ship: HP lump + nature *fraction* (0 = plain); ground: flat per-shot subtract + nature *multiplier* (1.0 = plain). **Opposite defaults, different maths.** Resolved by §15.1. |
 
+## 16b. WHAT GOES OUT — the Defense output map (verified in source)
+
+| What leaves the door | Goes to | Why it matters |
+|---|---|---|
+| **`ShieldCapacity_J` · `ShieldRegen_Jps`** | `FleetCombatStateDB.ShieldPool_J` (space) · `GroundUnit.CurrentShield` (ground) → `ResolveShield` | the buffer layer |
+| **Armour points** | ship: folded into **`Toughness`** → `ApplyCasualties` `EffToughness` · ground: **`Defense`** → `ArmourSoak` | 🔴 **two different destinations — this is the divergence §15.1 resolves** |
+| **Armour nature values** | `ArmourResistFor` → scales the flat soak | the defender's half of the matchup |
+| **`Toughness`** | **`FactionRollup`** (`:83`) · `AutoResolve` · `MilitaryComposition` | **armour makes you look more threatening to every rival AI** — a defensive purchase changes diplomacy and targeting |
+| **Shield power draw** | **Power** (generation + storage) | a shield you cannot feed is a shield you do not have |
+| **Mass** | **Chassis** budget → the same universal cost chain | |
+| **`EnvironmentalResistance`** (Hardening) | ⛔ **the environmental ATTRITION step ONLY** (`GroundForcesProcessor.cs:235`) | 🔴 **the smoking gun — it never reaches combat.** This single output trace is what proved Hardening is mis-filed |
+| **Fortification `DefenseMult`** | ground combat incoming divisor → region hold → **capture** | infrastructure, not kit — and it feeds the capture loop, not the damage loop |
+| **The component being destroyed** | Damage system | shoot the shield generator off and the buffer is gone |
+
+> 🔑 **The output map surfaces something the input surface hides:** **defence is not a private matter.** Toughness
+> feeds `FactionRollup`, which is how rival AIs rate your military strength — so **fitting more armour changes who
+> attacks you**. A purely defensive decision has an offensive-posture consequence, and nothing in the authored
+> Defense doors says so.
+
+---
+
 ## 17. WHAT DEFENSE COLLAPSES TO
 
 **Two real combat layers, one choice and three sliders:**
@@ -371,3 +432,8 @@ drive. Neither is a Defense purchase, and the doc should stop implying they are.
 | **Weapons** | ✅ derived — 5 doors + 41 dial groups → **2 choices + 4 sliders** |
 | **Defense** | ✅ derived — 4 doors → **1 choice + 3 sliders**, two doors relocated out of the category |
 | Propulsion · Sensors · Power · Enhancers · Industrial · Logistical · Civic · Command · Chassis | ⏳ owed |
+
+**Standing rule from here on (developer, 2026-07-29):** every category derived from now on ships **both** maps — the
+**input surface** (what the door writes) and the **output map** (where that goes). Weapons §8b and Defense §16b are
+the pattern. Connections found this way belong in `docs/SYSTEM-CONNECTION-MAP.md` too — that file owns the
+system-to-system graph.
