@@ -225,8 +225,8 @@ option is captured in the live reference above — but the **five-door structure
 3. Choices become doors, the rest become sliders
 4. Prove it reproduces everything that exists today
 
-**Suggested next: Defense.** It is the direct counterpart — shields, armour and their four nature resistances are
-already half-surfaced by §5 above, and deriving it validates the weapon derivation from the other side.
+**Defense is now DERIVED — see Part Two below.** It validated the weapon derivation from the other side (§14).
+Nine categories remain; Propulsion is next in the authored order.
 
 **Nothing here is built.** This is a design lock, not a slice. The build order remains: make weapon range designable
 across all six classes first (`docs/TESTING-TRACKER.md` **G-C0**) — that is the prerequisite the arena model needs
@@ -248,3 +248,126 @@ across all six classes first (`docs/TESTING-TRACKER.md` **G-C0**) — that is th
 **Cradle-to-grave:** unchanged and load-bearing. A weapon is a component — mined, refined, researched, designed,
 built, mounted, and **lost when it is shot off**. This derivation changes only how its dials are *organised*; it
 parachutes in no engine abstraction the player cannot reach.
+
+---
+
+# PART TWO — DEFENSE (derived 2026-07-29)
+
+**Live reference:** https://claude.ai/code/artifact/41bb5a42-52a9-4c54-bcab-bc7680c0f84a
+
+## 12. THE INPUT SURFACE (verified in source)
+
+| Variable | Read by | Layer |
+|---|---|---|
+| `Evasion` (0..0.95) | `CombatKernel.HitFraction` | miss |
+| `ShieldCapacity_J` · `ShieldRegen_Jps` | `CombatKernel.ResolveShield` | buffer |
+| armour points (`Defense`) | `CombatKernel.ArmourSoak` | bounce |
+| ship `ArmourSoakVs*` — a **fraction**, 0 = plain | fleet soak | bounce, per nature |
+| ground `ArmourVs*` — a **multiplier**, 1.0 = plain | `ArmourResistFor` | bounce, per nature |
+| `Toughness` / `Health` | `ApplyCasualties` / health drain | structure |
+| `ToughnessMult` · `DamageTakenMult` | doctrine / stance | flat multiplier |
+| fortification `DefenseMult` (capped ×2) | ground pool divide | flat multiplier |
+| cover multiplier | terrain | flat multiplier |
+| `EnvironmentalResistance` | ⚠ **the ATTRITION step only** (`GroundForcesProcessor.cs:235`) — never combat | environment |
+
+## 13. THE FOUR LAYERS — and this is the resolver's real order
+
+**miss → shield → armour → structure**
+
+| Layer | Mechanic | Beaten by | Recharges | Cares about shot size |
+|---|---|---|---|---|
+| **Evasion** | you miss entirely | shot speed · tracking · volume | — | no |
+| **Shield** | soaks a **fraction**, depletes | sustained fire · Exotic | **yes** | **no** |
+| **Armour** | subtracts **flat, per shot** (floored at 10%) | big shots · penetration | no | **yes** |
+| **Structure** | absorbs until gone | nothing — it just ends | no (repair) | no |
+
+## 14. 🔑 THE MIRROR — Defense confirms the Weapons derivation from the other side
+
+| | Who sets the number | Cares about shot size |
+|---|---|---|
+| **Shield** | 🔴 **the ATTACKER** — 0 / 50 / 75 / 100% by their setting | no |
+| **Armour** | ✅ **the DEFENDER** — thickness and nature tuning | **yes** |
+| **Structure** | nobody | no |
+
+> **You cannot build an anti-energy shield.** A shield's response to a damage type is fixed by what is being fired at
+> it. Armour is the exact opposite. **This is §5.2 seen from the receiving end, and it holds** — which is the point of
+> deriving Defense second.
+
+## 15. 🔒 LOCKED — ARMOUR NATURE TUNING IS ZERO-SUM (developer, 2026-07-29)
+
+> *"zero-sum, tuning against one costs you against the others — and if you want better defense you fit more."*
+
+**Two separate axes, and keeping them separate is the whole ruling:**
+
+| Axis | What it does | Paid in |
+|---|---|---|
+| **How much plate you fit** | raises total protection | **mass** (and everything mass drags — crew, cost, build time, mobility) |
+| **How that plate is tuned** | redistributes protection across the four damage types | **nothing — it is zero-sum** |
+
+**The math this forces:** the four nature values share a fixed budget.
+
+```
+VsKinetic + VsEnergy + VsExplosive + VsExotic = 4.0     (plain plate = 1.0 each)
+```
+
+Tune toward energy and kinetic drops by exactly what energy gained. **There is no setting that is better against
+everything** — that is the anti-dominance rule satisfied by construction rather than by a balance pass.
+
+**Why this is a good decision, stated so it is not undone later:**
+- **Tuning becomes a bet, not an upgrade.** Your plate is a wager on what the enemy fields — and they can counter it.
+- **It makes intel load-bearing.** Knowing what a rival shoots is what tells you how to tune. That wires Defense to
+  the sensor and espionage layers for free.
+- **It keeps the two axes honest.** Want to be tougher against everything? Fit more, pay the mass. Want to be tougher
+  against *one* thing for free? You cannot — you can only choose where to be weak.
+
+**⚠ Flagged for the developer (balance, not design):** a floor and ceiling on any single value, so a design can never
+sit at 0.0 against a damage type (completely naked) or absurdly high against one. Suggested band **0.25 … 2.5**,
+unset until playtest.
+
+### 15.1 The ruling DECIDES the ship↔ground divergence
+
+Ship and ground armour are two different mechanics today (§16 finding 4). **Zero-sum settles which one survives**,
+because a zero-sum budget needs a **neutral midpoint to distribute around**:
+
+- Ground's model **has** one — `1.0 = plain`, four values summing to 4.0. ✅ **This is the correct parameterisation.**
+- Ship's model **does not** — `0 = plain` is a floor, not a midpoint. A budget cannot be shared around zero.
+
+**⇒ The ship side must move to the ground parameterisation** (multiplier, 1.0 neutral, flat-per-shot soak) — which
+also closes the long-standing gap where **the flat-bounce identity the kernel is built around only ever fires on the
+ground**, because the space path zeroes `PerShotEnergy` so `BurstShotCount` is always 1.
+
+*(Cross-ref: `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md` §8 row 6 — "flat armour bounces many small hits" is
+HANDLED on the ground and a GAP in space. Same defect, now with a decided direction.)*
+
+## 16. WHAT THE FOUR AUTHORED DOORS GOT WRONG
+
+| Door | Finding |
+|---|---|
+| **Hardening** | ⛔ **Not a combat defence at all.** It writes `EnvironmentalResistance`, read in exactly one place — the environmental **attrition** step (`GroundForcesProcessor.cs:235`). It never touches a weapon hit. **Moves to environment/survival.** |
+| **Fortification** | ⛔ **Not something you wear.** A *building* that modifies a *place* — a divisor on incoming, capped at halving it, ground-only. **Moves to infrastructure.** |
+| **Evasion** | 🔴 **The best defence in the game is not sold at this door.** It comes from hull volume + engine acceleration (Chassis + Propulsion); the only override is filed under Propulsion ▸ Exotic. **The Defense door cannot sell the layer that stops damage from ever being rolled.** |
+| **Armour** | 🔴 **Two mechanics wearing one name** — ship: HP lump + nature *fraction* (0 = plain); ground: flat per-shot subtract + nature *multiplier* (1.0 = plain). **Opposite defaults, different maths.** Resolved by §15.1. |
+
+## 17. WHAT DEFENSE COLLAPSES TO
+
+**Two real combat layers, one choice and three sliders:**
+
+| | Choice / slider | Notes |
+|---|---|---|
+| **Choice** | Shield · Armour | the two layers you can actually buy |
+| **Shield sliders** | **Capacity ↔ Regen** | the direct mirror of the weapon's shot-size ↔ rate: a big buffer that returns slowly, or a small one that returns fast |
+| **Armour slider** | **Thickness** | more is simply better, paid in mass |
+| **Armour tuning** | **Nature distribution** | 🔒 **zero-sum**, §15 |
+
+**Structure** comes from the chassis and the components bolted to it. **Evasion** comes from the chassis and the
+drive. Neither is a Defense purchase, and the doc should stop implying they are.
+
+---
+
+## 18. RUNNING TALLY
+
+| Category | State |
+|---|---|
+| **Weapons** | ✅ derived — 5 doors + 41 dial groups → **2 choices + 4 sliders** |
+| **Defense** | ✅ derived — 4 doors → **1 choice + 3 sliders**, two doors relocated out of the category |
+| Propulsion · Sensors · Power · Enhancers · Industrial · Logistical · Civic · Command · Chassis | ⏳ owed |
