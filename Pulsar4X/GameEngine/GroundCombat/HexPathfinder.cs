@@ -35,19 +35,45 @@ namespace Pulsar4X.GroundCombat
         public const double Move_Cover = 1.5;    // forest / jungle / wetland — slower
         public const double Move_Rough = 2.5;    // mountains / highlands / volcanic — a real barrier (and water, v1)
 
-        /// <summary>OCEAN is IMPASSABLE to ground units (the developer's call, 2026-07-04): a march can't cross open
-        /// water — it routes around it, and a destination on a water hex is unreachable. (Amphibious/transport gating
-        /// that would let some units cross is a cradle-to-grave follow-on.) ICE stays passable-but-rough. An impassable
-        /// hex is left OUT of the pathfinding graph entirely (cleaner than an infinite cost).</summary>
-        public static bool IsImpassable(RegionFeatureType terrain) => terrain == RegionFeatureType.Ocean;
+        /// <summary>What it costs an AMPHIBIOUS unit to swim ONE ocean hex. Deliberately worse than
+        /// <see cref="Move_Rough"/> — swimming is slower than climbing a mountain — so amphibious buys you ACCESS, not
+        /// speed, and a land route is still preferred when one exists. ⚠ FLAGGED balance value.</summary>
+        public const double Move_Water = 4.0;
+
+        /// <summary>OCEAN is IMPASSABLE to ordinary ground units (the developer's call, 2026-07-04): a march can't cross
+        /// open water — it routes around it, and a destination on a water hex is unreachable. ICE stays
+        /// passable-but-rough. An impassable hex is left OUT of the pathfinding graph entirely (cleaner than an
+        /// infinite cost). <b>AMPHIBIOUS units are the exception</b> — see the two-arg overload.</summary>
+        public static bool IsImpassable(RegionFeatureType terrain) => IsImpassable(terrain, false);
+
+        /// <summary>
+        /// Passability FOR A GIVEN UNIT — ocean blocks everyone EXCEPT an amphibious drive
+        /// (<see cref="GroundLocomotionAtb.Amphibious"/>). This is the wire that made that dial real: it was a
+        /// serialized, designer-editable, MASS-CHARGING flag that <b>nothing read</b> (docs/economy/DESIGNER-NORTH-STAR.md
+        /// §23.3b) — you paid for it and got nothing. The developer's call, 2026-07-29: keep it, so wire it.
+        /// <para>
+        /// <b>Passability is now PER-UNIT, which makes the pathfinding GRAPH per-unit.</b> That is the load-bearing
+        /// consequence: an impassable hex is dropped from the graph entirely, so two units standing on the same hex can
+        /// legitimately have different reachable sets. Every path query must therefore pass the marching unit's flag —
+        /// which is why <see cref="FindPath"/> / <see cref="FindGlobalPath"/> take it rather than reading it inside.
+        /// </para>
+        /// <paramref name="amphibious"/> false → byte-identical to the one-arg form (every caller that has no unit in
+        /// hand: muster snapping, base placement, the in-battle step).
+        /// </summary>
+        public static bool IsImpassable(RegionFeatureType terrain, bool amphibious)
+            => terrain == RegionFeatureType.Ocean && !amphibious;
 
         /// <summary>How much this hex's terrain slows a march across it (the cost to ENTER it). Uses the same
         /// open/cover/rough sorting the combat terrain (<see cref="GroundTerrain.Classify"/>) uses, but for movement.
-        /// (Ocean is impassable — see <see cref="IsImpassable"/> — so it never reaches a cost query; Ice is rough.)</summary>
+        /// (Ice is rough.) <b>Ocean costs <see cref="Move_Water"/></b> — it is only ever entered by an AMPHIBIOUS unit
+        /// (an ordinary march never reaches this query for water, so that path is unchanged), and it must cost
+        /// something real or amphibious would be a strictly-better free upgrade rather than a trade.</summary>
         public static double HexMoveMult(RegionFeatureType terrain)
         {
             switch (terrain)
             {
+                case RegionFeatureType.Ocean:      // only reachable by an amphibious drive — swimming is slow
+                    return Move_Water;
                 case RegionFeatureType.Mountains:
                 case RegionFeatureType.Highlands:
                 case RegionFeatureType.Volcanic:
@@ -68,7 +94,7 @@ namespace Pulsar4X.GroundCombat
         /// destination. Empty if the patch is empty, the destination isn't in the patch, start == dest, or no route exists.
         /// Deterministic (no RNG): ties break by insertion order via the priority queue.
         /// </summary>
-        public static List<GroundHex> FindPath(List<GroundHex> hexes, int startQ, int startR, int destQ, int destR)
+        public static List<GroundHex> FindPath(List<GroundHex> hexes, int startQ, int startR, int destQ, int destR, bool amphibious = false)
         {
             var result = new List<GroundHex>();
             if (hexes == null || hexes.Count == 0) return result;
@@ -81,7 +107,7 @@ namespace Pulsar4X.GroundCombat
             var startKey = (startQ, startR);
             var destKey = (destQ, destR);
             if (!byCoord.TryGetValue(destKey, out var destHex)) return result;   // can't march to a hex outside the patch
-            if (IsImpassable(destHex.Terrain)) return result;                    // can't march ONTO open water
+            if (IsImpassable(destHex.Terrain, amphibious)) return result;        // can't march ONTO open water (unless amphibious)
 
             var dest = new HexCoordinate(destQ, destR);
             var gScore = new Dictionary<(int, int), double> { [startKey] = 0.0 };
@@ -100,7 +126,7 @@ namespace Pulsar4X.GroundCombat
                 {
                     var nkey = (nb.Q, nb.R);
                     if (!byCoord.TryGetValue(nkey, out var nhex)) continue;   // off the patch
-                    if (IsImpassable(nhex.Terrain)) continue;                 // can't step into open water — route around
+                    if (IsImpassable(nhex.Terrain, amphibious)) continue;     // can't step into open water — route around (unless amphibious)
                     double tentative = baseG + HexMoveMult(nhex.Terrain);     // cost to ENTER the neighbour
                     if (gScore.TryGetValue(nkey, out var known) && tentative >= known) continue;
                     gScore[nkey] = tentative;
@@ -126,7 +152,7 @@ namespace Pulsar4X.GroundCombat
         /// EXCLUDING the start, INCLUDING the destination — or empty if the grid is empty, the destination is off-grid or
         /// impassable, start == dest, or no route exists. Deterministic.
         /// </summary>
-        public static List<GroundHex> FindGlobalPath(SurfaceGrid grid, int fromQ, int fromR, int toQ, int toR)
+        public static List<GroundHex> FindGlobalPath(SurfaceGrid grid, int fromQ, int fromR, int toQ, int toR, bool amphibious = false)
         {
             var result = new List<GroundHex>();
             if (grid == null || grid.Cols <= 0 || grid.Rows <= 0 || grid.Hexes == null || grid.Hexes.Count == 0) return result;
@@ -138,7 +164,7 @@ namespace Pulsar4X.GroundCombat
             if (sQ == dQ && sR == dR) return result;   // already there
 
             var destHex = grid.HexAt(dQ, dR);
-            if (destHex == null || IsImpassable(destHex.Terrain)) return result;   // can't march onto open water / off-grid
+            if (destHex == null || IsImpassable(destHex.Terrain, amphibious)) return result;   // can't march onto open water (unless amphibious) / off-grid
 
             var startKey = (sQ, sR);
             var destKey = (dQ, dR);
@@ -161,7 +187,7 @@ namespace Pulsar4X.GroundCombat
                     int nq = grid.WrapCol(current.Item1 + dq);      // longitude wraps
                     var nkey = (nq, nr);
                     var nhex = grid.HexAt(nq, nr);
-                    if (nhex == null || IsImpassable(nhex.Terrain)) continue;   // route around open water
+                    if (nhex == null || IsImpassable(nhex.Terrain, amphibious)) continue;   // route around open water (unless amphibious)
                     double tentative = baseG + HexMoveMult(nhex.Terrain);
                     if (gScore.TryGetValue(nkey, out var known) && tentative >= known) continue;
                     gScore[nkey] = tentative;

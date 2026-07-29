@@ -871,6 +871,45 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("AMPHIBIOUS (2026-07-29, developer: 'keep amphibious'): the dial used to charge mass and be read by NOTHING — ocean was hard-coded impassable to everyone. Now passability is PER-UNIT: an amphibious drive crosses water (at a steep cost, so it buys ACCESS not speed) and can be ordered onto it; a non-amphibious unit still routes around. Byte-identical for every caller that passes no flag.")]
+        public void HexPath_Amphibious_CrossesWater_ButPaysForIt()
+        {
+            // The gate itself, both ways.
+            Assert.That(HexPathfinder.IsImpassable(RegionFeatureType.Ocean, false), Is.True, "ocean still blocks an ordinary unit");
+            Assert.That(HexPathfinder.IsImpassable(RegionFeatureType.Ocean, true), Is.False, "an amphibious drive crosses water");
+            Assert.That(HexPathfinder.IsImpassable(RegionFeatureType.Ocean), Is.True,
+                "the one-arg form is unchanged — every existing caller (muster snap, base placement, the in-battle step) is byte-identical");
+
+            // Water must COST something, or amphibious is a free strictly-better upgrade rather than a trade.
+            Assert.That(HexPathfinder.HexMoveMult(RegionFeatureType.Ocean), Is.EqualTo(HexPathfinder.Move_Water));
+            Assert.That(HexPathfinder.Move_Water, Is.GreaterThan(HexPathfinder.Move_Rough),
+                "swimming is slower than climbing a mountain — a land route is still preferred when one exists");
+
+            // A STRAIT that genuinely cuts the patch in two: the whole r=0 row is ocean. A neighbour step changes r by
+            // at most 1, so there is no land route from the r<0 half to the r>0 half at all. (A partial wall would NOT
+            // prove anything — A* correctly prefers a land detour even for an amphibious unit, because Move_Water costs
+            // more than going around. Amphibious buys ACCESS, not a shortcut.)
+            var disk = OpenDisk(2);
+            for (int i = 0; i < disk.Count; i++)
+                if (disk[i].R == 0)
+                    disk[i] = new GroundHex(disk[i].Q, disk[i].R, RegionFeatureType.Ocean);
+
+            var landRoute = HexPathfinder.FindPath(disk, 0, -2, 0, 2, amphibious: false);
+            var swimRoute = HexPathfinder.FindPath(disk, 0, -2, 0, 2, amphibious: true);
+            Assert.That(landRoute.Count, Is.EqualTo(0), "no land route exists across the strait — the ordinary unit is stuck");
+            Assert.That(swimRoute.Count, Is.GreaterThan(0), "the amphibious unit crosses");
+            Assert.That(swimRoute.Any(h => h.Terrain == RegionFeatureType.Ocean), Is.True, "and its route genuinely goes through water");
+
+            // And it can be ordered ONTO water, which a land unit cannot.
+            Assert.That(HexPathfinder.FindPath(disk, 0, -2, 0, 0, amphibious: false).Count, Is.EqualTo(0),
+                "a land unit still can't be ordered onto an ocean hex");
+            Assert.That(HexPathfinder.FindPath(disk, 0, -2, 0, 0, amphibious: true).Count, Is.GreaterThan(0),
+                "an amphibious unit can");
+
+            Log($"amphibious: crossed the strait in {swimRoute.Count} hexes where a land unit has no route at all; water costs {HexPathfinder.Move_Water} vs rough {HexPathfinder.Move_Rough}");
+        }
+
+        [Test]
         [Description("H2: the move-cost tiers are the developer's Moderate call (open ×1, cover ×1.5, rough ×2.5); per-hex base time is derived from the region's crossing-time datum, not a magic number.")]
         public void HexPath_CostModel_TiersAndDerivedBaseTime()
         {

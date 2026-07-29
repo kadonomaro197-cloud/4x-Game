@@ -793,7 +793,10 @@ namespace Pulsar4X.GroundCombat
             Pulsar4X.Galaxy.PlanetHexFactory.EnsureHexesForBody(body);
 
             var region = regionsDB.Regions[unit.RegionIndex];
-            var path = HexPathfinder.FindPath(region.Hexes, unit.HexQ, unit.HexR, destQ, destR);
+            // AMPHIBIOUS (2026-07-29): passability is per-unit — a designed amphibious drive may route ACROSS
+            // ocean hexes (at the steep Move_Water cost); everything else still routes around them.
+            bool amphib = GroundMobility.AmphibiousForUnit(body, unit);
+            var path = HexPathfinder.FindPath(region.Hexes, unit.HexQ, unit.HexR, destQ, destR, amphib);
             if (path.Count == 0) return false;   // already there / unreachable / dest off-patch
 
             // Store deep copies (don't alias the region's live hex objects), and capture the region's per-hex base time.
@@ -826,7 +829,10 @@ namespace Pulsar4X.GroundCombat
             if (unit.GlobalQ < 0 || unit.GlobalR < 0) StampGlobalMuster(body, unit, unit.RegionIndex);   // ensure it's on the grid
             if (unit.GlobalQ < 0) return false;
 
-            var path = HexPathfinder.FindGlobalPath(grid, unit.GlobalQ, unit.GlobalR, destQ, destR);
+            // AMPHIBIOUS (2026-07-29): same per-unit passability on the global cylinder — an amphibious unit can
+            // cross an ocean band instead of walking the long way round the world.
+            var path = HexPathfinder.FindGlobalPath(grid, unit.GlobalQ, unit.GlobalR, destQ, destR,
+                                                    GroundMobility.AmphibiousForUnit(body, unit));
             if (path.Count == 0) return false;   // already there / unreachable / dest off-grid or impassable
 
             unit.GlobalPath = new List<Pulsar4X.Galaxy.GroundHex>(path.Count);

@@ -91,6 +91,37 @@ namespace Pulsar4X.GroundCombat
             return 0.5;
         }
 
+        /// <summary>The minimum locomotion HEALTH a unit needs for its amphibious rating to count. A half-wrecked drive
+        /// is fine limping over land and lethal in open water — this is the grave rung for
+        /// <see cref="GroundLocomotionAtb.Amphibious"/>. ⚠ FLAGGED balance value.</summary>
+        public const double AmphibiousMinHealth = 0.5;
+
+        /// <summary>Can this unit cross OPEN WATER? True only if it carries a designed locomotion component whose
+        /// <see cref="GroundLocomotionAtb.Amphibious"/> is set AND that component is still healthy enough
+        /// (<see cref="AmphibiousMinHealth"/>) — shoot the drive up and the unit can no longer swim, so the flag is
+        /// LOSABLE like every other capability (cradle-to-grave). A unit with no designed locomotion (monolithic /
+        /// garrison / DevTools) is NOT amphibious → false → every existing march is byte-identical. Never throws.
+        /// <para>Read by <see cref="HexPathfinder.IsImpassable(RegionFeatureType, bool)"/> via the march call sites —
+        /// see docs/economy/DESIGNER-NORTH-STAR.md §23.3b for why this wire exists.</para></summary>
+        public static bool AmphibiousForUnit(Entity body, GroundUnit unit)
+        {
+            try
+            {
+                if (GroundUnitEntity.TryGetBacking(body, unit, out var backing)
+                    && backing.TryGetDataBlob<ComponentInstancesDB>(out var cidb)
+                    && cidb.TryGetComponentsByAttribute<GroundLocomotionAtb>(out var locos))
+                {
+                    foreach (var comp in locos)
+                    {
+                        var la = comp.Design?.GetAttribute<GroundLocomotionAtb>();
+                        if (la != null && la.Amphibious && comp.HealthPercent >= AmphibiousMinHealth) return true;
+                    }
+                }
+            }
+            catch { }
+            return false;
+        }
+
         /// <summary>Adjust a terrain move-penalty by a unit's rough-terrain handling. PURE. Open terrain (baseMult ≤ 1)
         /// is never penalised. rough handling 0.5 is NEUTRAL (reproduces the un-tuned behaviour); a higher-handling
         /// drive (tracks/walker) EASES the rough penalty, a lower one (wheels) WORSENS it. ⚠ FLAGGED slope (the 1.5 −
