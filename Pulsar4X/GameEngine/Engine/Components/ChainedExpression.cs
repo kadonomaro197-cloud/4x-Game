@@ -539,6 +539,25 @@ namespace Pulsar4X.Components
                     Expression dataExpression = new Expression(cargo.Formulas["ExhaustVelocity"]);
                     args.Result = dataExpression.Evaluate();
                     break;
+                // FUEL GRADE (2026-07-29) — how hard a refined fuel drives the engine, the developer's
+                // "make the level of refined options for fuel affect the engine" (docs/economy/DESIGNER-NORTH-STAR.md §26).
+                // A fuel's REFINEMENT LEVEL multiplies the engine's mass flow, so grade × exhaust velocity is roughly the
+                // engine's power budget (§20's T·v = 2P): a dense low-Isp fuel like RP-1 pushes HARDER, a high-Isp one
+                // like Hydrolox pushes SOFTER but goes further per kg. Without this a better fuel raised exhaust velocity
+                // AND thrust at once — a pure dominance ladder with no trade (§26.3).
+                // DEFENSIVE: a fuel material with no FuelGrade formula (any mod's fuel, or an old save's) reads 1.0,
+                // which reproduces the pre-grade arithmetic exactly.
+                case "FuelGradeLookup":
+                    args.Result = 1.0;
+                    var fuelMat = _factionDataStore.CargoGoods.GetAny((string)args.EvaluateParameters()[0]) as ProcessedMaterialBlueprint;
+                    if (fuelMat?.Formulas != null && fuelMat.Formulas.TryGetValue("FuelGrade", out var gradeFormula)
+                        && !string.IsNullOrWhiteSpace(gradeFormula))
+                    {
+                        var gradeResult = new Expression(gradeFormula).Evaluate();
+                        double grade = Convert.ToDouble(gradeResult);
+                        if (grade > 0) args.Result = grade;   // a non-positive grade would zero the engine — ignore it
+                    }
+                    break;
             }
         }
     }

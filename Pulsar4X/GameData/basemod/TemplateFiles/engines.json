@@ -64,7 +64,7 @@
           "Units": "kg/s",
           "DescriptionFormula": "'Fuel Consumption per second'",
           "GuiHint": "GuiTextDisplay",
-          "PropertyFormula": "[Mass] * 0.3 * TechData('tech-conventional-engine-fuel-consumption')"
+          "PropertyFormula": "[Mass] * 0.3 * TechData('tech-conventional-engine-fuel-consumption') * FuelGradeLookup(PropertyValue('Fuel Type'))"
         },
         {
           "Name": "DataBlob",
@@ -150,7 +150,7 @@
           "Units": "kg/s",
           "DescriptionFormula": "'Fuel Consumption per second'",
           "GuiHint": "GuiTextDisplay",
-          "PropertyFormula": "[Mass] * 0.017"
+          "PropertyFormula": "[Mass] * 0.017 * FuelGradeLookup(PropertyValue('Fuel Type'))"
         },
         {
           "Name": "DataBlob",
