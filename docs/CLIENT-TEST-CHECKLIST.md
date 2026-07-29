@@ -260,14 +260,13 @@ Full detail + predictions: `docs/COMBAT-DESIGNER-GROUND-TRUTH-2026-07-28.md` §7
 
 Source: `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md`. CI can't run the client, so these need the local Windows build.
 
-- [ ] **🔴 The 2D group plane is UNREACHABLE — decide, then wire or park it.** `CombatEngagement.EnableGroupPlane`
-      shipped three slices (S0–S2: the plane math, the anchor seeding, the 2D range gate), all CI-gauged — and the flag
-      is **assigned nowhere** outside its own `= false` declaration and the tests. Contrast `EnableClosingRange`
-      (`PulsarMainWindow.cs:98`) and `EnableMiniHexCombat` (`NewGameMenu.cs:580`), which the client switches on.
-      **First decide (record §16 O-5): is the plane wanted at runtime?** If yes, add a DevTools checkbox beside the
-      existing "Closing range" / "First-shot trigger" ones (`DevToolsWindow.cs:855-858`) and fight a battle with it on
-      — watch for the anchors seeding and the range gate reading a 2D pair-distance. If no, say so in the record so
-      nobody re-discovers it.
+- [ ] **🔒 RULED 2026-07-29 (LD-29): the 2D group plane is the DEFAULT for all combat — but it CANNOT be switched
+      on yet.** Wiring the ruling surfaced a live defect (record §13.9): `AdvanceAnchorPlane` moves **only the
+      controller fleet's** anchor while `SeparationOf` now reads the anchor pair-distance, so with **3+ fleets** any
+      pair where neither is the controller has a **permanently frozen gap** — typically far outside weapon range, so
+      that fleet sits out the whole battle. All eight existing group-plane tests are two-fleet and cannot see it.
+      **Order: fix §13.9 → land the 3-fleet gauge (TESTING-TRACKER G-C1) → then add the client line + DevTools
+      checkbox (G-C7) and run this item.** Do not flip the flag before G-C1 is green.
 - [ ] **Watch a fight and read the `[Combat]` narration.** The closing model narrates itself (gated on `NarrateToLog`,
       client-on): a per-step gap / IN-or-OUT-of-RANGE / reach / maneuver-reserve line per fleet, a **WEAPONS RELEASE**
       line when the first-shot rule breaks a standoff, and a **maneuver-reserve-spent** line when a kiter burns out.

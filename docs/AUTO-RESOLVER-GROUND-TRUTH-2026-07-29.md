@@ -243,6 +243,17 @@ characteristics.
 **LD-28 · Cradle-to-grave is preserved.** *"a ground weapon is still a **component** — designed, researched, built from
 materials, mounted, and lost. This design changes only how its range number is interpreted."*
 
+**LD-29 · 🔒 THE 2D GROUP PLANE IS THE DEFAULT FOR ALL COMBAT (developer, 2026-07-29).** Asked whether the plane should
+be switchable at runtime or parked, the developer's ruling: ***"it should be the default of all combat."*** So the
+plane is **not** an opt-in experiment — it is how combat is meant to work, and the scalar single-gap model is the
+fallback, not the norm. **This closes §16 O-5.**
+
+> **What this does NOT license.** The ruling settles the *destination*, not the landing date. **`EnableGroupPlane`
+> cannot be switched on as-is** — see **§13.9**, a live multi-fleet defect found while wiring this ruling. The engine
+> default stays `false` (the house pattern: the engine ships every combat behaviour off so CI is byte-identical, and
+> the **client** turns on what a real game should use — `PulsarMainWindow.cs:87-114`). The ruling is delivered by
+> fixing §13.9, gauging it, and *then* adding the client line — not by flipping the flag.
+
 ---
 
 ## 6. THE ANATOMY — the input surface every dial must land on
@@ -771,7 +782,7 @@ A **`BattleTheater`** holds several planes (one space + one ground per contested
 |---|---|---|
 | **S0** | `GroupPlane.cs` pure static (project / offset / distance); nothing calls it | ✅ **BUILT** · `GroupPlaneTests` (10 tests) |
 | **S1** | anchors in space — Anchor/Frame/GroupPositions on `FleetCombatStateDB` `:83-118`, seeded at engagement start (`CombatEngagement.cs:520`), copied to joiners (`:614`), `AdvanceClosing` moves anchors in 2D (`:1062`,`:1077`) | ✅ **BUILT** · `EfGroupPlaneAnchorTests` |
-| **S2** | the 2D range gate — `SeparationOf` `:1003` / `WithinWeaponRange` `:1268` read the 2D pair-distance | ✅ **BUILT** · `EfGroupPlaneRangeGateTests` |
+| **S2** | the 2D range gate — `SeparationOf` `:1003` / `WithinWeaponRange` `:1268` read the 2D pair-distance | ✅ **BUILT** · `EfGroupPlaneRangeGateTests` — 🔴 **two-fleet-only, see §13.9** |
 | **S3** | role geometry — the `RoleGeometry` table | ❌ **NOT BUILT** (verified absent) |
 | **S4** | ground onto the plane — **a DELIBERATE re-baseline**, not byte-identical | ❌ **NOT BUILT** (`EnableGroundGroupPlane` absent) |
 | **S5** | combined theater — `BattleTheater` + `GuardedByDB` + bombardment edges | ❌ **NOT BUILT** (both types absent) · **gated on Joint #2** ✅ pinned |
@@ -809,6 +820,9 @@ opposite of a flank advantage. **The lesson is baked into the polar bearing rule
 6. The battle frame **must be persisted and copied to joiners** — a real save/load + reinforcement correctness trap.
 7. S4 knowingly changes ground outcomes — **not byte-identical, must be a signed-off re-baseline.**
 8. 🟠 **Standoff radii and role-bearing constants are unchosen** — a live-tuning question CI cannot answer. S3 unbuilt.
+9. 🔴 **THE FROZEN-ANCHOR DEFECT (§13.9) — not on the original list, found 2026-07-29.** Only the controller's anchor
+   moves, so with 3+ fleets a pair where neither is the controller has a permanently frozen gap. **The design's own
+   weakness list missed this because every gauge it was written against had two fleets.** It blocks LD-29.
 
 ### 13.7 JOINT #1 — conserved fire-allocation (🔒 pinned, gates S6)
 
@@ -915,6 +929,59 @@ S5/S6 land, they must reproduce this fixture's worked example.
 
 > ⚠ **The parent design's §11 must be read as CLOSED.** It named these two joints as blocking homework and said
 > *"'named' is not 'designed.'"* **Both are now designed and pinned.** Do not re-read §11 as open work.
+
+### 13.9 🔴 BLOCKER — the frozen-anchor defect: S1/S2 are **only correct for two fleets**
+
+**Found 2026-07-29 while wiring LD-29 (make the plane the combat default). It is why the flag cannot simply be
+switched on.** Verified in source, not inferred.
+
+**The mechanism, in three lines of code:**
+
+| Step | What it does | Where |
+|---|---|---|
+| ① | `AdvanceClosing` moves **every** fleet's scalar `Separation_m` toward the **one shared** `desired` (the controller's preferred standoff) | `CombatEngagement.cs:1065-1072` |
+| ② | `AdvanceAnchorPlane` then slides **only the controller's** anchor — `var ctrl = live[controller]` and the body mutates `cst` **and nothing else** | `:1088-1111` |
+| ③ | With the plane on, `SeparationOf` returns the **2D anchor pair-distance**, no longer the scalar | `:1003` |
+
+**⇒ At most ONE anchor moves per step. Every other fleet's anchor is frozen for the whole battle.**
+
+**Why two fleets hide it completely.** In a 1v1 one of the two is always the controller, so the pair-distance tracks
+the scalar exactly — which is precisely what `EfGroupPlaneAnchorTests.AdvanceClosing_FlagOn_SlidesControllerAnchorTowardEnemy`
+asserts, and it is right. **All eight group-plane tests are two-fleet scenarios** (verified: `GroupPlaneTests`,
+`EfGroupPlaneAnchorTests`, `EfGroupPlaneRangeGateTests` — every fixture stands up exactly two fleets). **The defect
+is structurally invisible to the existing suite.**
+
+**What breaks at three or more.** Each fleet's plane gap is measured to its **stored** `OpponentFleetId`
+(`TryPlanePairDistance`, `:1013`). Take a 3-way where fleet **A** is the controller and fleet **C**'s stored opponent
+is **B**: neither C nor B is the controller, so **both anchors never move, and `SeparationOf(C)` is pinned at its
+seeded value for the entire battle.** Under the scalar model C's gap converged with everyone else's.
+
+**The consequence is a live-game bug, not a rounding artefact.** Engagements form out to
+`EngagementRange_m = 1e9` — a **gigameter**, which the source itself calls *"a stub"*. The longest weapon reach in the
+game is the missile's **1 000 km = 1e6 m** — three orders of magnitude smaller. So a seeded gap is routinely far
+outside every weapon's range, and a fleet frozen there **fires nothing and takes nothing for the whole battle.**
+In play that reads as *"my third fleet just sat there"* — the same bug class as the Living-Opponents
+"builds but never attacks" failure.
+
+**Multi-fleet is not an edge case here:** the resolver is natively multi-party (fire divided `1/split`,
+`:745-747`), `MultiPartyEngagementTests` covers assist / join / fire-split, and the AI masses fleets
+(`FleetAssembly`) — so 3+ fleets in one engagement is the normal case in a real game, and the *only* case the
+scenario matrix (§8 row 10) calls HANDLED for space.
+
+**The fix is one of two, and it is a design choice, not a mechanical repair:**
+
+| Option | What | Trade |
+|---|---|---|
+| **(a) Move every fleet's anchor** | each fleet slides along its own enemy-facing direction by its own scalar-gap delta, not just the controller's | Closest to today's scalar behaviour (everyone converges) and keeps the plane meaningful. **But it contradicts the design's stated rule** — *"only the faster (controller) fleet moves, matching the design's 'the faster side closes the distance'"* |
+| **(b) Fall back to the scalar for un-moved pairs** | `TryPlanePairDistance` returns false when neither fleet is the controller | Smallest change, preserves the controller rule — but the plane then measures some pairs and not others, which is exactly the split-brain the merge exists to remove |
+
+**(a) is the better fit for LD-29** — if the plane is *the default for all combat*, every fleet must have a real
+position, not just whichever one is dictating range this step. But it changes the closing rule, so it is the
+developer's call.
+
+**The gauge that must exist either way (owed — `docs/TESTING-TRACKER.md` G-C7):** three fleets, plane on, closing on,
+controller pinned; assert **no hostile pair's gap is still at its seeded value** after the fight has run — i.e.
+nobody is frozen out of range. Plus the flag-off twin as the byte-identity tripwire.
 
 ---
 
@@ -1114,7 +1181,7 @@ not an engine flag.**
 | **O-2** | **Should `AutoResolve` and `StepEngagementGroup` remain two resolvers?** | They have genuinely different fidelity — one has no dodge, shields, ammo, heat, doctrine, or retreat. **Two paths for one verb.** *(§10 row 9.)* |
 | **O-3** | **When does `dt` get fixed on the ground?** | Ground damage is per-tick, space per-second. **This must be fixed BEFORE the wound model or the tick is ever shortened, and it re-baselines every ground gauge.** *(§10 row 8.)* |
 | **O-4** | **`ResolveSalvo` was designed and never built.** | The merge design specified a single neutral `CombatKernel.ResolveSalvo(attackers, defenders, dt, ctx)`. **It does not exist** — the build chose delegation instead, deliberately and with a written reason. **The design text is superseded by that choice; do not build `ResolveSalvo` on the strength of the old spec.** |
-| **O-5** | **`EnableGroupPlane` is unreachable.** Is the 2D plane wanted at runtime, or is it parked? | Built, gauged, and **no switch anywhere.** Either add a DevTools toggle beside `EnableClosingRange` or record it as deliberately parked. *(§13.5.)* |
+| **O-5** | ~~Is the 2D plane wanted at runtime, or is it parked?~~ ✅ **ANSWERED 2026-07-29 — LD-29: *"it should be the default of all combat."*** | **Superseded by a NEW blocker: §13.9.** The flag cannot be switched on as-is — S1/S2 are only correct for two fleets. The ruling is delivered by fixing §13.9, gauging it, then adding the client line. |
 | **O-6** | **`FleetDoctrineDB.SpeedMult` is a dead dial** and **`FleetRetreatDB` is a dead-end hook** (no survivor actually moves). | Both are shipped knobs the sim ignores — the "never ship a dead knob" failure. |
 
 ---
