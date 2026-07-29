@@ -39,6 +39,18 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-alcubierre-2k-endurance",
+      "Name": "Alcuberi-White 2k (Endurance)",
+      "TemplateId": "alcubierre-warp-drive",
+      "Properties": [
+        { "Key": "Mass", "Value": 2000 },
+        { "Key": "Startup vs Endurance", "Value": 2.0 }
+      ]
+    }
+  },
+{
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-alcubierre-500",
       "Name": "Alcuberi-White 500",
       "TemplateId": "alcubierre-warp-drive",

@@ -2041,21 +2041,23 @@
         },
         {
           "Name": "Locomotion",
-          "DescriptionFormula": "'0=Foot 1=Tracked 2=Walker 3=Hover.'",
-          "GuiHint": "GuiSelectionMaxMinInt",
-          "MaxFormula": "3",
+          "DescriptionFormula": "'How this frame gets around. Legs go anywhere slowly; tracks are fast on open ground and bog down off it; a walker keeps most of the legs advantage at speed; hover is fastest but has nothing to grip.'",
+          "GuiHint": "GuiEnumSelectionList",
+          "MaxFormula": "4",
           "MinFormula": "0",
           "StepFormula": "1",
-          "PropertyFormula": "0"
+          "PropertyFormula": "0",
+          "EnumTypeName": "Pulsar4X.GroundCombat.GroundLocomotion"
         },
         {
           "Name": "CarryClass",
-          "DescriptionFormula": "'0=Personnel 1=Vehicle.'",
-          "GuiHint": "GuiSelectionMaxMinInt",
-          "MaxFormula": "1",
+          "DescriptionFormula": "'Which transport bay hauls a unit on this frame: Personnel rides a troop bay, Vehicle a cargo bay.'",
+          "GuiHint": "GuiEnumSelectionList",
+          "MaxFormula": "2",
           "MinFormula": "0",
           "StepFormula": "1",
-          "PropertyFormula": "0"
+          "PropertyFormula": "0",
+          "EnumTypeName": "Pulsar4X.GroundCombat.GroundCarryClass"
         },
         {
           "Name": "humanframeArgs",
@@ -2614,21 +2616,23 @@
         },
         {
           "Name": "Locomotion",
-          "DescriptionFormula": "'0=Foot 1=Tracked 2=Walker 3=Hover.'",
-          "GuiHint": "GuiSelectionMaxMinInt",
-          "MaxFormula": "3",
+          "DescriptionFormula": "'How this frame gets around. Legs go anywhere slowly; tracks are fast on open ground and bog down off it; a walker keeps most of the legs advantage at speed; hover is fastest but has nothing to grip.'",
+          "GuiHint": "GuiEnumSelectionList",
+          "MaxFormula": "4",
           "MinFormula": "0",
           "StepFormula": "1",
-          "PropertyFormula": "1"
+          "PropertyFormula": "1",
+          "EnumTypeName": "Pulsar4X.GroundCombat.GroundLocomotion"
         },
         {
           "Name": "CarryClass",
-          "DescriptionFormula": "'0=Personnel 1=Vehicle.'",
-          "GuiHint": "GuiSelectionMaxMinInt",
-          "MaxFormula": "1",
+          "DescriptionFormula": "'Which transport bay hauls a unit on this frame: Personnel rides a troop bay, Vehicle a cargo bay.'",
+          "GuiHint": "GuiEnumSelectionList",
+          "MaxFormula": "2",
           "MinFormula": "0",
           "StepFormula": "1",
-          "PropertyFormula": "1"
+          "PropertyFormula": "1",
+          "EnumTypeName": "Pulsar4X.GroundCombat.GroundCarryClass"
         },
         {
           "Name": "vehicleframeArgs",
@@ -2773,21 +2777,23 @@
         },
         {
           "Name": "Locomotion",
-          "DescriptionFormula": "'0=Foot 1=Tracked 2=Walker 3=Hover.'",
-          "GuiHint": "GuiSelectionMaxMinInt",
-          "MaxFormula": "3",
+          "DescriptionFormula": "'How this frame gets around. Legs go anywhere slowly; tracks are fast on open ground and bog down off it; a walker keeps most of the legs advantage at speed; hover is fastest but has nothing to grip.'",
+          "GuiHint": "GuiEnumSelectionList",
+          "MaxFormula": "4",
           "MinFormula": "0",
           "StepFormula": "1",
-          "PropertyFormula": "2"
+          "PropertyFormula": "2",
+          "EnumTypeName": "Pulsar4X.GroundCombat.GroundLocomotion"
         },
         {
           "Name": "CarryClass",
-          "DescriptionFormula": "'0=Personnel 1=Vehicle.'",
-          "GuiHint": "GuiSelectionMaxMinInt",
-          "MaxFormula": "1",
+          "DescriptionFormula": "'Which transport bay hauls a unit on this frame: Personnel rides a troop bay, Vehicle a cargo bay.'",
+          "GuiHint": "GuiEnumSelectionList",
+          "MaxFormula": "2",
           "MinFormula": "0",
           "StepFormula": "1",
-          "PropertyFormula": "1"
+          "PropertyFormula": "1",
+          "EnumTypeName": "Pulsar4X.GroundCombat.GroundCarryClass"
         },
         {
           "Name": "walkerframeArgs",
@@ -3264,21 +3270,23 @@
         },
         {
           "Name": "Locomotion",
-          "DescriptionFormula": "'0=Foot 1=Tracked 2=Walker 3=Hover.'",
-          "GuiHint": "GuiSelectionMaxMinInt",
-          "MaxFormula": "3",
+          "DescriptionFormula": "'How this frame gets around. Legs go anywhere slowly; tracks are fast on open ground and bog down off it; a walker keeps most of the legs advantage at speed; hover is fastest but has nothing to grip.'",
+          "GuiHint": "GuiEnumSelectionList",
+          "MaxFormula": "4",
           "MinFormula": "0",
           "StepFormula": "1",
-          "PropertyFormula": "0"
+          "PropertyFormula": "0",
+          "EnumTypeName": "Pulsar4X.GroundCombat.GroundLocomotion"
         },
         {
           "Name": "CarryClass",
-          "DescriptionFormula": "'0=Personnel 1=Vehicle.'",
-          "GuiHint": "GuiSelectionMaxMinInt",
-          "MaxFormula": "1",
+          "DescriptionFormula": "'Which transport bay hauls a unit on this frame: Personnel rides a troop bay, Vehicle a cargo bay.'",
+          "GuiHint": "GuiEnumSelectionList",
+          "MaxFormula": "2",
           "MinFormula": "0",
           "StepFormula": "1",
-          "PropertyFormula": "0"
+          "PropertyFormula": "0",
+          "EnumTypeName": "Pulsar4X.GroundCombat.GroundCarryClass"
         },
         {
           "Name": "swarmframeArgs",

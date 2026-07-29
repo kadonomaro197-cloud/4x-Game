@@ -798,7 +798,7 @@ The sim reads **different things per family**, so the doors do not share one sli
 |---|---|---|
 | **Reaction** | drive size · **push ↔ economy** · *signature suppression* | first two exist; third proposed (§23.2) |
 | **Traction** | **speed factor** · **rough handling** · ~~amphibious~~ | 🔵 first two editable **and read**. ⚠ **amphibious is read by NOTHING — §23.3b** |
-| **Warp** | **max speed** · **efficiency vs power** | 🔵 **already an editable dial in the template** — also dropped |
+| **Warp** | **max speed** · **efficiency vs power** · **startup ↔ endurance** | 🔵 first two already editable — I dropped them by over-collapsing. **Third ADDED 2026-07-29** (§26b). |
 | ~~**Fluid**~~ | — | ❌ **CUT — §23.3c.** No component, no variable. |
 
 **`RoughHandling` is worth its own note:** it is **one dial feeding two systems** — march time (`TerrainMult`) *and* a
@@ -1001,6 +1001,50 @@ of it in the same tank. That is a genuine choice the player can feel.
 industry points, identical output and credits, but Methalox has **higher** exhaust velocity **and** better density.
 There is no reason to ever refine RP-1. Either give it an edge (cheaper inputs, or an earlier tech unlock) or cut it.
 Same §1-law failure as a dead dial, one level up: **a dead RECIPE.**
+
+## 26b. ✅ BUILT — the WARP dial, and the GROUND labels (2026-07-29)
+
+Two cheap additions found by asking *"what does the sim already read that has no dial?"*
+
+### 26b.1 Warp — `Startup vs Endurance`
+
+Warp had **one** performance dial (`Efficency vs Power`) plus Mass. Bubble **creation** and bubble **sustain** were
+both computed from Engine Power with no choice — yet **both are live**:
+
+| | Read by | When it bites |
+|---|---|---|
+| `BubbleCreationCost` | `WarpMoveCommand` | **gates departure** — a ship refuses to leave below it |
+| `BubbleSustainCost` | `WarpMoveProcessor` `AddDemand(...)` | **charged per second in transit** |
+
+**The dial multiplies creation and DIVIDES sustain, so their product is invariant** — zero-sum, the same shape as
+the Reaction door's `T·v = 2P`:
+
+| Setting | Creation | Sustain | The build |
+|---|---|---|---|
+| **0.4** | ×0.4 | ×2.5 | cheap to start, dear to hold — **short hops**, and it can leave on a part-charged battery |
+| **1.0** *(default)* | ×1 | ×1 | today's numbers exactly — **byte-identical** |
+| **2.5** | ×2.5 | ×0.4 | dear to start, cheap to hold — **one long haul** |
+
+Range `[0.4, 2.5]` is **reciprocal-symmetric** around 1.0, so the two ends are equal and opposite.
+**Cradle-to-grave:** the buildable `default-design-alcubierre-2k-endurance` (same mass as the 2k, dial at 2.0).
+Gauge `WarpBubbleTradeTests` — asserts the product is invariant, the ratios are exactly the dial, and that the
+undialled creation:sustain ratio is unchanged and power-independent.
+
+### 26b.2 Ground — the mode dial was already there, just unreadable
+
+`human-frame` / `vehicle-frame` / `walker-frame` / `swarm-frame` each exposed **`Locomotion` and `CarryClass` as raw
+integers** (`GuiSelectionMaxMinInt`), so the designer showed *"Locomotion: 1"* — with the meaning shoved into a
+description reading `'0=Foot 1=Tracked 2=Walker 3=Hover.'`. Someone already knew it was unreadable.
+
+Both are now **`GuiEnumSelectionList`** bound to the real enums (`Pulsar4X.GroundCombat.GroundLocomotion` /
+`GroundCarryClass`), so the player picks **Foot · Tracked · Walker · Hover** by name.
+
+⚠ **The trap, for anyone adding another enum dial:** the renderer builds
+`length = maxValue - minValue` entries (`ComponentDesignDisplay.GuiHintEnumSelection`), so **`MaxFormula` must be the
+COUNT, not the top index** — `3` would have silently cut **Hover** off the list. Set to `4` and `2`.
+`PropertyFormula` is untouched on every frame, so each still binds the same int → **byte-identical**.
+
+---
 
 ## 26a. 🔒 DECIDED — KEEP `Amphibious`, which means WIRING it (developer, 2026-07-29)
 

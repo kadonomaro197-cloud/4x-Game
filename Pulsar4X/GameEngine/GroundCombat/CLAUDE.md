@@ -363,6 +363,29 @@ A `GroundUnit` is a plain serializable object inside `GroundForcesDB`, not a ful
 
 6. **A trailing ctor arg on a JSON-bound `*Atb` is NOT template-free-additive — the binder is EXACT-ARITY (cost a red CI 2026-07-17).** `ComponentDesigner.SetAttributes` binds a component's `AtbConstrArgs` via `Activator.CreateInstance(type, args)` (`Engine/Components/ComponentDesigner.cs:94`), whose default binder requires a constructor with **exactly** the passed arity and does **not** fill in C# optional/default parameters. So adding an 8th `= 0` optional arg to `GroundUnitAtb` orphaned every base-mod ground-unit template (infantry/armor/artillery) that passes 7 `groundUnitAtbArgs` — the whole test suite red-lit with *"the arguments did not match any constructors"* (the args were `Int32`; the binder widens Int32→double fine, arity is the trap). This is why `Penetration`/`PerShotEnergy` were each added to the templates in lockstep (the 6th/7th `groundUnitAtbArgs` value), NOT "additively." **Rule: to add a JSON-authorable atb ctor dial you MUST update every template that binds that atb in the same change (gotcha #10), and run `BaseModIntegrityTests` (its `Harness_BuildsColonyStart` is the sensor).** If you only need a design-level dial (not JSON-authorable), put it on `GroundUnitDesign` and set it at a design-builder site instead of on the atb ctor — that's what `UpkeepCredits` does.
 
+## FRAME DIALS ARE NAMED, NOT NUMBERED (2026-07-29)
+
+The four ground frames (`human-frame` / `vehicle-frame` / `walker-frame` / `swarm-frame` in `installations.json`)
+exposed **`Locomotion` and `CarryClass` as raw integers** (`GuiSelectionMaxMinInt`), so the Entity Assembler showed
+*"Locomotion: 1"* and the meaning lived in a description reading `'0=Foot 1=Tracked 2=Walker 3=Hover.'`. Both are now
+**`GuiEnumSelectionList`** with `EnumTypeName` pointing at the real enums
+(`Pulsar4X.GroundCombat.GroundLocomotion` / `GroundCarryClass`), so the player picks by NAME.
+
+⚠ **Trap for the next enum dial:** `ComponentDesignDisplay.GuiHintEnumSelection` builds
+`length = maxValue - minValue` entries, so **`MaxFormula` must be the enum's COUNT, not its top index** — leaving
+Locomotion at `3` would have silently dropped **Hover** off the list. It is now `4` (and CarryClass `2`), matching the
+`command-berth` `SiteRole` precedent.
+
+**Byte-identical:** `PropertyFormula` is unchanged on every frame, so each still binds the same int into
+`GroundChassisAtb(double, double, double, double, double)` (the binder widens Int32→double; only ARITY is the trap —
+gotcha 6). JSON only, no C# change.
+
+**Related open finding (NOT fixed):** `GroundMobility.SpeedMultForUnit` returns a mounted `GroundLocomotionAtb`'s
+`SpeedFactor` **outright**, falling back to the chassis mode only when no locomotion component is mounted. So the
+moment a unit carries a designed drive, whether its frame is Foot or Hover **stops affecting speed at all** — the four
+modes are dead weight on any properly-designed unit. The mode should probably SCALE the designed factor rather than be
+replaced by it; that is a behaviour change needing a re-baselined gauge and the developer's call.
+
 ## VETERANCY / TRAINING — an elite-unit multiplier baked at raise (litmus follow-up, 2026-07-17)
 
 **Slice A (engine-only, byte-identical):** `GroundUnitDesign.TrainingMultiplier` (default **1.0**) is multiplied into a raised unit's **Attack + toughness (`MaxHealth`)** in `GroundForces.RaiseUnit` — the ground echo of a ship's `Combat.UnitCaliberAtb` elite stamp (Firepower×Toughness). Baked into the snapshot, **NOT** read by the resolver (the developer's constraint); `GroundUnit.TrainingMultiplier` is a **readout only** (already applied — never re-apply). Defense (armour = equipment, not training) is deliberately unscaled. **Byte-identical:** every existing design keeps 1.0, and the `= 1.0` property initializer is the save-compat fallback for an old design's JSON that lacks the field (Newtonsoft keeps the ctor value for an absent property — so a pre-veterancy design never loads at 0× and zeroes its units). Gauge: `GroundVeterancyTests` (a ×1.5 design fields a 150/750 unit from a 100/500 base; an unset design is byte-identical).

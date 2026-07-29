@@ -216,6 +216,16 @@
           "PropertyFormula": "1"
         },
         {
+          "Name": "Startup vs Endurance",
+          "Units": "SvE",
+          "DescriptionFormula": "'Trades the cost of CREATING the warp bubble against the cost of HOLDING it. Turn it down for a drive that spins up cheaply but drinks power in transit — short hops, and it can leave on a part-charged battery. Turn it up for a drive that costs a lot to start and almost nothing to hold — one long haul. The product is fixed, so neither end is free.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2.5",
+          "MinFormula": "0.4",
+          "StepFormula": "0.1",
+          "PropertyFormula": "1"
+        },
+        {
           "Name": "Engine Power",
           "Units": "EP",
           "DescriptionFormula": "'Move Power for ship'",
@@ -227,14 +237,14 @@
           "Units": "KJ",
           "DescriptionFormula": "'How much energy required to create the warp bubble.'",
           "GuiHint": "GuiTextDisplay",
-          "PropertyFormula": "PropertyValue('Engine Power') * TechData('tech-alcubierre-bubble-creation-cost') * 0.5"
+          "PropertyFormula": "PropertyValue('Engine Power') * TechData('tech-alcubierre-bubble-creation-cost') * 0.5 * PropertyValue('Startup vs Endurance')"
         },
         {
           "Name": "Bubble Sustain Energy Cost",
           "Units": "KW",
           "DescriptionFormula": "'How much energy required to sustain the warp bubble per second during the warp'",
           "GuiHint": "GuiTextDisplay",
-          "PropertyFormula": "PropertyValue('Engine Power') * 0.001 * TechData('tech-alcubierre-sustain-cost')"
+          "PropertyFormula": "PropertyValue('Engine Power') * 0.001 * TechData('tech-alcubierre-sustain-cost') / PropertyValue('Startup vs Endurance')"
         },
         {
           "Name": "Bubble Collapse Energy Returned",

@@ -224,6 +224,7 @@
       ],
       "ComponentDesigns": [
         "default-design-alcubierre-2k",
+        "default-design-alcubierre-2k-endurance",
         "default-design-alcubierre-500",
         "default-design-auto-mine",
         "default-design-battery-2t",
