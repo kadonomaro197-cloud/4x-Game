@@ -80,6 +80,66 @@ positions** — not two entries on a menu.
 
 ---
 
+### 1b. 🔒 EVASION IS A MULTIPLIER — the developer's reading, and the code already agrees (2026-07-29)
+
+> *"What if the evasion is just a multiplier of sorts?"*
+
+**It already is one. There is no to-hit roll anywhere in either resolver.** This is the single line that decides who
+dies:
+
+```csharp
+// CombatEngagement.cs:897
+EffToughness = cv.Toughness * cs.ToughnessMult / landed
+```
+
+Evasion divides **into toughness**. `1 ÷ landedFraction` **IS** an effective-health multiplier. The ground resolver
+writes the same arithmetic the other way round — it multiplies the damage down instead of the health up
+(`GroundForcesProcessor.cs:422`: `contribution = pool × share × HitFraction(...)`) — which is mathematically
+identical. Nothing rolls a die; both sides just scale a number.
+
+**So the developer read the model correctly through the fog of its own vocabulary.** The battle report's *"42% on
+target (58% dodged)"* implies dice that do not exist. The honest phrasing is *"this hull is 2.4× harder to kill
+against that fire mix."*
+
+#### Why saying it out loud matters
+
+**① It puts evasion in the SAME CURRENCY as armour** — and then the whole defence stack is one sentence:
+
+> **effective health = Health × (evasion multiplier) × (armour multiplier)**, with **shields** as the one
+> *depleting pool* on top.
+
+All three are **MATCHUP** multipliers, and the keys are the two weapon axes: **evasion is keyed to DELIVERY**
+(velocity · tracking · saturation), **armour and shields are keyed to NATURE**. 🔑 **The defence model is the weapon
+model in a mirror** — which is the same finding §14 reached from the other side, now with one shared unit.
+
+**② It exposes a balance cliff nothing in the game currently shows.** The multipliers have hard ceilings, and they
+are not close to each other:
+
+| Layer | Ceiling on effective health | Set by |
+|---|---|---|
+| **Evasion, point blank** | **×20** | `EvasionCap` 0.95 (`ShipCombatValueDB.cs:96`) |
+| **Evasion, at range** | **×50** | `MinLandedFraction` 0.02 (`CombatKernel.cs:46`) |
+| **Armour** | **×10** | `ArmourMinPassFraction` 0.1 (`CombatKernel.cs:78`) |
+| **Shields** | a finite pool | designed capacity |
+
+🔴 **Evasion is a 2×–5× LARGER multiplier than armour can ever be** — and it is the one bought at a *different door*,
+in a *different currency*, against *no defence budget*. **That is the number behind §25.1's "Propulsion is the game's
+largest defensive purchase."**
+
+*(Cleanup flagged, not done: on ships the limit that bites at point blank is `EvasionCap`, but at range it is
+`MinLandedFraction`. Two dials for one ceiling, and the one named "cap" is not always the one doing the work.)*
+
+**③ It makes an honest designer readout possible.** You cannot show a "hit chance" on a part that has never met an
+enemy. You *can* show **"× effective health vs a slug / vs a beam"** — which tells the truth and admits the matchup.
+
+#### The caveat that keeps this from being a pure rename
+
+**It is a MATCHUP multiplier, not a flat one.** ×1 against a beam — you cannot dodge light. Large against a slow slug
+at long range. So any readout must be a **small curve or matrix, never one number** — the same shape §15 already
+locked for the armour readout. Consistent by construction.
+
+---
+
 ## 2. WEAPONS — the input surface (verified in source, 2026-07-29)
 
 Ten values reach the fight. Nothing else on a weapon does.
@@ -597,6 +657,56 @@ this the richest single trade found in any category so far, and **it is already 
 **⇒ A `Signature suppression` dial is therefore a genuine candidate:** quiet the drive at the cost of mass or
 efficiency. Intrinsic ✅ · writes a variable the sim reads ✅ · has an obvious catch ✅. *(Proposed, not built.)*
 
+### 23.2a 🔒 SIGNATURE MUST COST MORE IN THE OTHER PARAMETERS (developer, 2026-07-29)
+
+> *"Heat signature needs to cost more in the other parameters."*
+
+**Correct, and the source says WHY it costs so little today.** The full chain, verified end to end:
+
+```
+Thrust → SensorSignatureAtb.PartWaveFormMag          (engines.json)
+       → SensorProfileDB.EmittedEMSpectra[].Magnitude (SensorProfileTools.cs:33-40)
+       → DetectionRange_m = √( magnitude × activity × scale ÷ (4π × threshold) )   (SensorTools.cs:441,466)
+```
+
+🔴 **SQUARE ROOT.** Double your thrust and you are seen from only **1.41×** as far; ten times the thrust, 3.2×.
+Meanwhile doubling thrust doubles acceleration, which climbs the **evasion multiplier** (§1b) directly. **So loud is
+nearly free today** — inverse-square dilution eats the penalty before the player ever feels it.
+
+**Three ways to make it bite. Take (a).**
+
+| | The change | Verdict |
+|---|---|---|
+| **(a)** | **Suppression eats the SHARED POWER BUDGET** — zero-sum, exactly like the §15 armour ruling | ✅ **the ruling** |
+| (b) | Signature superlinear in thrust (`magnitude = Thrust^k`, or feed *waste heat* instead of thrust) | ⚠ defensible physics, but it moves a **shipped** number and every existing detection with it — a **balance-pass** call, not a design one. Flagged, not done. |
+| (c) | Weaken the √ dilution | ❌ **no.** That is the inverse-square law, and it is what makes *closing* meaningful. |
+
+**(a) in full — the locked shape:**
+
+```
+P_drive = P_total × (1 − suppression)
+T · v   = 2 · P_drive
+```
+
+**Power spent staying quiet is power not available for thrust OR exhaust velocity.** So suppression is not a third
+way to split the budget — it is a **tax on the whole budget**, costing push *and* economy at once. Then the shroud's
+**mass** is dead weight on the hull, dragging acceleration (and therefore the evasion multiplier) down further.
+**Suppression pays twice.** No new physics needed, and it is honest: cooling and shrouding a drive really does spend
+power on not-thrust.
+
+### 23.2b 🔴 AND THE COST ALREADY THERE IS THE BIGGEST IN THE GAME — nothing says so
+
+`Pulsar4X.Tests` → **`FirstStrike_SeerWipesBlindEnemy_Unscathed`**: two **EQUAL** fleets, one blinded, fog on. The
+seeing side **wipes it taking ZERO losses.**
+
+> **Signature does not cost you a stat. It costs you the opening exchange — and the repo's own gauge says the
+> opening exchange is the whole battle.**
+
+**One ugly interaction, named rather than hidden:** the loud ship is also the FAST ship, and speed decides who
+dictates the range (`FleetManeuver` picks the controller off evasion — §25). So a hard-shove drive gives away its
+position **and** controls the engagement range. Whether those cancel is a live-tuning question — but **a designer
+that shows neither is lying twice.**
+
 ### 23.3 THE CHOICE PICKS YOUR DIAL SET — the corrected structure
 
 The sim reads **different things per family**, so the doors do not share one slider wall:
@@ -669,6 +779,10 @@ door.** This is where it is sold.
 
 That is exactly the class of connection step 6 exists to find, and it took three derivations meeting before it was
 visible.
+
+**§1b now puts a NUMBER on it.** Evasion is an effective-health **multiplier**, capped at **×20** point-blank and
+**×50** at range, against armour's **×10**. So the sentence above is not a figure of speech — the Propulsion door
+sells a defence **2×–5× larger than anything the Defense door can**, in a currency the Defense door never sees.
 
 ## 26. OPEN — for the developer
 
