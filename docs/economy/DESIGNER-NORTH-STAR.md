@@ -1157,4 +1157,70 @@ with CI as the only compile gauge.
 | **Weapons** | ✅ derived | 5 doors + 41 dial groups → **2 choices + 4 sliders** |
 | **Defense** | ✅ derived | 4 doors → **1 choice + 3 sliders**, two doors relocated out |
 | **Propulsion** | ✅ derived *(corrected)* | 5 doors → **1 choice, and the choice picks the dial set**; Exotic dissolves; **the fix here is to ADD dials, not remove doors** — headline: the push↔economy trade is **three-way** because signature already scales with thrust |
-| Sensors · Power · Enhancers · Industrial · Logistical · Civic · Command · Chassis | ⏳ owed | |
+| Sensors · Power · Enhancers · Industrial · Logistical · Civic · Command · Chassis | ⏳ owed | **build plan in PART FOUR (§28–31)** — the per-door recipe, the order and why, the predictions, and what "done" means |
+
+---
+
+# PART FOUR — THE REMAINING EIGHT: a build plan (2026-07-29)
+
+Not derivations — **a plan for producing them**, using the method §1 locks. Written so a cold session can pick up any
+one door and run it without re-deriving the approach.
+
+## 28. THE PER-DOOR RECIPE — run these seven steps, in order, every time
+
+| # | Step | Done when |
+|---|---|---|
+| 1 | **Find the INPUT SURFACE in source.** Grep the door's `*Atb` classes; for each field ask *what reads this?* | You can cite `file:line` for every field, and every field is marked READ or **UNREAD** |
+| 2 | **Group the fields by the QUESTION each answers.** Not by class — by what a player is deciding. | Every field sits under exactly one question |
+| 3 | **Separate FORCED from FREE.** A question with mutually-exclusive answers is a **choice/door**; a question with a continuum is a **slider**. | Each question is labelled door or slider |
+| 4 | **Apply the two tests to every candidate dial.** ① Which sim variable does it write? *(none + costs nothing ⇒ a bug)* ② **§1a the intrinsic test** — settable knowing only this part? | Each candidate is dial · assembly decision · emergent readout · **cut** |
+| 5 | **Prove it reproduces what exists.** Every shipped component of that category must fall out of the new dials. | Every base-mod design in the category is reachable |
+| 6 | **Name what goes OUT — the output map.** Where does each value land, and what breaks if it changes? | A table: what leaves → where it goes → why it matters |
+| 7 | **Land the cheap wins found on the way**, each as its own gauged slice. | Each shipped with a test that cannot rot |
+
+**The two standing exit criteria:** a door is not derived until it has **both** an input surface *and* an output map
+(§1). And every surviving dial passes **both** tests in step 4.
+
+**What the four completed doors predict:** the biggest findings came from categories with **lots of authored surface
+and little wiring** (Weapons' 5 doors → 2; Propulsion's whole category having almost no dials). Expect the same
+signal — the dead-dial smell test is `grep -rl <Atb> --include=*.cs | grep -v /<Atb>.cs` and **zero hits means the
+dial charges mass and buys nothing** (how `Amphibious` and `Fluid` were caught).
+
+## 29. THE ORDER, AND WHY
+
+| # | Door | Input surface (where to grep) | Size | Why here |
+|---|---|---|---|---|
+| **1** | **Sensors** | `Sensors/` SensorReceiverAtb · SensorSignatureAtb · CloakAtb · JammerAtb; `Weapons/BeamFireControlAtbDB`; `GroundCombat/GroundSensorAtb`; `GeoSurveys/GeoSurveyAtb`; `JumpPoints/GravSurveyAtb`; `Factions/IntelDirectorateAtb` | **~9 — largest** | **The context is already loaded.** Three findings this week land here (signature = thrust §23.2 · warp signature §26c.1 · detection range goes as **√magnitude**). It is also the door that decides **who shoots first**, which every combat finding has leaned on — and it holds the one thing we deliberately deferred: **FTL needs its own band AND a receiver that can see it** (§26c.1). Biggest single payoff. |
+| **2** | **Power** | `Energy/` EnergyGenerationAtb · EnergyStoreAtb · EnergySolarGenerationAtb | **3 — smallest** | It just gained **two fresh consumers** — warp bubble creation/sustain (§26b) and weapon energy draw. Deriving it **closes loops we opened this week** rather than opening new ones. Fast, and the supply side of two live demands. |
+| **3** | **Chassis** | `Ships/ShipHullAtb` · `GroundCombat/GroundChassisAtb` · `Stations/StationChassisAtb` · `Colonies/BuildingChassisAtb` (all four already share `IChassisAtb`) | 4 | **The door every other door mounts on.** Its budget is what every *"and it costs mass"* claim spends against — so deriving it here means the remaining four derive against a **real** budget. Mostly derivation-not-build: the interface, the mass-budget computation and an enforcement flag all exist. |
+| **4** | **Logistical** | `Storage/` CargoStorageAtb · CargoTransferAtb; `Combat/ShipMagazineAtb`; `GroundCombat/` GroundMagazineAtb · GroundBayAtb; `Logistics/LogiBaseAtb` | ~6 | **It is owed two debts.** Propulsion's intrinsic test **cut fuel load and sent it here** (§23.1); Weapons and Propulsion both sent **magazines** here. Also holds the **one confirmed dead attribute found so far — `LogiBaseAtb` has ZERO readers anywhere outside its own file.** |
+| **5** | **Command** | `People/AdminSpaceAtb` · `Sites/CommandBerthAtb` | 2 | Small, but it is the chassis the **Governance/Delegation** design bolts onto — and that design already says it is *mostly CONNECT, not build*. Do it **before Civic**, whose academies and admin overlap it. |
+| **6** | **Enhancers** | `Combat/` UnitCaliberAtb · CrewAutomationAtb; `GroundCombat/` GroundAugmentAtb · GroundTrainingAtb | 4 | Small, and **two of the four were built recently** (caliber, automation), so this is mostly *writing down what exists* and testing the other two. Low risk, quick win. |
+| **7** | **Industrial** | `Industry/` IndustryAtb · MineResourcesAtbDB · LocalConstructionAtb · InfrastructureCapacityAtb; `Construction/ConstructorAtb`; `GroundCombat/GroundConstructorAtb`; `Ships/LaunchComplexAtb` | ~7 | The **economy spine**. The sim genuinely runs on it, so expect *"healthy but under-dialled"* rather than *"dead"* — a different and slower kind of find. Higher blast radius. |
+| **8** | **Civic** | `Colonies/` HousingAtbDB · EmploymentAtbDB · FoodProductionAtbDB; `Galaxy/` PopulationSupportAtbDB · GravityToleranceAtb · PressureToleranceAtb; `Tech/ResearchPointsAtbDB`; `People/` NavalAcademyAtb · ResearchAcademyAtb | **~9 — largest** | **Biggest blast radius.** Morale, population, food, housing and employment all live here and are **half-wired by an already-live separate plan** (`docs/society/MORALE-AND-POPULATION-DESIGN.md` M1–M5). Do it last, with the method most practised — and **reconcile against that plan rather than deriving over the top of it.** |
+
+> **⚠ The one ordering to reconsider:** this order is **combat-and-structure first**. If the near-term priority is the
+> **colony/population game** rather than the fight, **swap Civic to first and Sensors later** — Civic is where the
+> most player-facing decisions are likely missing. That is a developer call, not a technical one.
+
+## 30. PER-DOOR PREDICTIONS — written down NOW so they can be scored later
+
+Marked as predictions, not findings. Recording them makes the method falsifiable.
+
+| Door | Prediction |
+|---|---|
+| **Sensors** | Richest remaining door. Expect the two axes to be **what you can see × what you emit**, with EMCON as the posture. `CloakAtb`/`JammerAtb` are the likeliest dead-or-thin pair. The **band** question (§26c.1) becomes a real dial once a second receiver type exists. |
+| **Power** | Healthy but **under-dialled** — likely one honest trade (**output ↔ storage**, or output ↔ mass) and little else. May turn out to need *adding*, like Propulsion. |
+| **Chassis** | Mostly already right. The finding will be about the **budget**, not the dials: whether four chassis kinds need four budget *currencies* or one. |
+| **Logistical** | At least one confirmed dead dial (`LogiBaseAtb`). Expect the door to collapse to **capacity × what-it-holds**, with the two owed items (fuel tankage, magazines) landing cleanly. |
+| **Command** | Thin. Expect *"this is a delegation seat, not a component dial"* — i.e. most of it belongs to the Governance design, not here. |
+| **Enhancers** | Thin but honest. The two built dials work; the question is whether the other two earn their place. |
+| **Industrial** | Healthy. Expect **rate ↔ efficiency** as the shape, and the finding to be about *missing costs* rather than missing dials. |
+| **Civic** | Most entangled. Expect significant overlap with the morale plan and at least one thing that is **infrastructure, not a component** (the way Fortification left the Defense door). |
+
+## 31. WHAT "DONE" LOOKS LIKE FOR A DOOR
+
+1. A **Part N** section in this document: input surface · the questions · the doors/sliders · both tests applied · the proof it reproduces what exists · **the output map**.
+2. Its row flipped in **§27 RUNNING TALLY** and in `docs/DOCS-INDEX.md`, same commit.
+3. Every cheap win found on the way **shipped as its own gauged slice** — one per push, CI green between (the standing working agreement).
+4. Anything found dead is either **wired or cut** — never left charging mass for nothing (the `Amphibious` rule).
