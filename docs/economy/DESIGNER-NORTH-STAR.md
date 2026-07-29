@@ -1046,6 +1046,74 @@ COUNT, not the top index** — `3` would have silently cut **Hover** off the lis
 
 ---
 
+## 26c. FTL, SURVEYED AGAINST SCI-FI — three axes, and the one thing that was cheap
+
+The developer's ask: *"if you're doing spacetime (ie ftl) you should probably spend a moment or 2 thinking about all
+the other things that go into it… just give a glance at sci fi and see what you can get and simplify and apply."*
+
+**Every famous FTL collapses onto THREE yes/no axes.** No fourth axis was needed to place any of them:
+
+| | Route | Transit | Reachable in transit |
+|---|---|---|---|
+| **Star Trek** warp | free — go anywhere | continuous | **yes** — normal space, trackable, interceptable |
+| **Star Wars** hyperspace | free | continuous | **no** — you are elsewhere |
+| **BSG** jump drive | free | **instant** | n/a |
+| **Stellaris** hyperlanes | **fixed** — a graph | continuous | yes |
+| **B5 gates · Stargate · Mass Effect relays · Aurora jump points** | **fixed** — a node you must reach | **instant** | n/a |
+| **Dune fold · Andromeda slipstream** | free | instant-ish | n/a — but gated on a **navigator** (a worker, not a drive) |
+
+### What Pulsar already has — two of the boxes, and they are the two most-used
+
+| | Route | Transit | Reachable | Notes |
+|---|---|---|---|---|
+| **Alcubierre warp** | free | continuous | **yes** — a warping ship keeps a real `PositionDB` + vector | = Star Trek warp |
+| **Jump points** | **fixed** (`JumpPointDB.DestinationId`) | instant transit; you must **sail to the node** | n/a | + a **discovery** layer — `IsDiscovered` per faction via grav survey, and `IsStabilized`. = the Aurora / Mass-Effect model |
+
+**That is a genuinely good spread already**, and the jump-point *discovery* layer is the part most 4X games skip.
+
+### What is missing, and what each would actually cost
+
+| Missing | What it would take | Verdict |
+|---|---|---|
+| **Unreachable transit (hyperspace)** — the only truly absent axis | the sensor scan and the combat trigger must both skip a ship in transit | 🔴 **not simple** — real blast radius into detection *and* combat. A design decision, not a dial. |
+| **Instant free jump (BSG)** | a new order + a per-jump range limit + a cooldown | ⚠ medium. A whole movement mode. |
+| **Navigator-gated FTL (Dune)** | this is the **Site Engine's Command Berth** pattern pointed at a drive | ⚠ a system, not a dial — but it already has a home in the design |
+| **Spool-up time (BSG)** | — | ✅ **already emergent.** Creation cost gates departure, so a high-creation drive on weak generation *is* a long spool. Nothing to build. |
+
+### 26c.1 ✅ The one that WAS missing and WAS cheap: FTL made no noise
+
+**A warp drive emitted nothing.** Grepped every engine template: `conventional-engine` and `scntr-engine` both carry a
+`SensorSignatureAtb`; **`alcubierre-warp-drive`, `inertialess-drive` and `reactionless-drive` carry none.** So a ship
+crossing a system at FTL was **exactly as detectable as one sitting still** — which contradicts essentially every
+setting in the table above (warp signatures, hyperspace wakes, the jump-point flash are staples).
+
+**Fixed with one JSON property**, and it makes the §26b dial trade **three ways** instead of two, exactly mirroring the
+Reaction door's §23.2:
+
+```
+Sensor Signature → AtbConstrArgs(3500, PropertyValue('Bubble Sustain Energy Cost') * 1000)
+```
+
+Magnitude is the power you are **continuously pouring into holding the bubble** — which is what sustain *is* — so it
+divides by the dial:
+
+| Dial | Magnitude | Seen from |
+|---|---|---|
+| **0.4** short-hop | 5,000,000 | **3.2×** a small chemical engine's range — loud |
+| **1.0** default | 2,000,000 | 2.0× |
+| **2.5** long-haul | 800,000 | **1.3×** — the quiet one |
+
+🔑 **So the endurance drive buys range AND stealth with the same slider, and pays for both at the departure gate.**
+
+**⚠ The band is deliberately 3500 K — the same as a thruster plume — and that is a real decision, not laziness.** The
+"gravimetric signature" answer (a long-wavelength band needing a dedicated sensor) is the better sci-fi, and the scan
+*does* band-match (`SensorTools.DetectonQuality` penalises off-band). **But the only base-mod receiver is tuned to
+600 nm ± 250**, so a 300 K warp signature at ~9,660 nm would be **invisible to every sensor in the game** — a stealth
+exploit, not a feature. Putting FTL in its own band is a **two-part** change: the signature *and* a receiver that can
+see it. Flagged, not done. The gauge pins the band so nobody moves it by halves.
+
+---
+
 ## 26a. 🔒 DECIDED — KEEP `Amphibious`, which means WIRING it (developer, 2026-07-29)
 
 > *"Keep amphibious."*

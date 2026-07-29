@@ -2,6 +2,7 @@ using NUnit.Framework;
 using Pulsar4X.Components;
 using Pulsar4X.Factions;
 using Pulsar4X.Movement;
+using Pulsar4X.Sensors;
 
 namespace Pulsar4X.Tests
 {
@@ -17,10 +18,12 @@ namespace Pulsar4X.Tests
     /// <para><b>The dial.</b> One slider multiplies creation and DIVIDES sustain, so their product is invariant —
     /// zero-sum, the same shape as the Reaction door's <c>T·v = 2P</c>:</para>
     /// <code>
-    ///   0.5 → creation ×0.5, sustain ×2    cheap to start, expensive to hold — SHORT HOPS,
-    ///                                       and it can leave on a part-charged battery
+    ///   0.4 → creation ×0.4, sustain ×2.5   cheap to start, dear to hold — SHORT HOPS, and it can
+    ///                                       leave on a part-charged battery. Also the LOUDEST.
     ///   1.0 → today's numbers exactly       (byte-identical default)
-    ///   2.0 → creation ×2, sustain ×0.5     expensive to start, cheap to hold — ONE LONG HAUL
+    ///   2.5 → creation ×2.5, sustain ×0.4   dear to start, cheap to hold — ONE LONG HAUL, and the
+    ///                                       QUIETEST (signature tracks the sustain draw).
+    /// The range is reciprocal-symmetric around 1.0, so the two ends are equal and opposite.
     /// </code>
     ///
     /// <para>Gauged through the real JSON → NCalc → <see cref="WarpDriveAtb"/> path against the base-mod drives.
@@ -75,6 +78,35 @@ namespace Pulsar4X.Tests
                 "creation scales by the dial exactly");
             Assert.That(std.BubbleSustainCost / end.BubbleSustainCost, Is.EqualTo(2.0).Within(1e-6),
                 "sustain scales by its reciprocal exactly");
+        }
+
+        [Test]
+        [Description("FTL IS NOT QUIET, and the dial trades three ways. A warp drive used to emit NO signature at all — a ship crossing a system at FTL was exactly as detectable as one parked. It now emits at the power it pours into HOLDING the bubble, so the endurance drive (cheap to hold) is also the QUIET one: the same startup/endurance slider buys range and stealth together, and pays for both at the departure gate.")]
+        public void WarpNowEmits_AndTheEnduranceDriveIsTheQuietOne()
+        {
+            var s = TestScenario.CreateWithColony();
+            var designs = s.Faction.GetDataBlob<FactionInfoDB>().ComponentDesigns;
+
+            Assert.That(designs[Standard].TryGetAttribute<SensorSignatureAtb>(out var stdSig), Is.True,
+                "a warp drive must emit something — FTL is not quiet");
+            Assert.That(designs[Endurance].TryGetAttribute<SensorSignatureAtb>(out var endSig), Is.True);
+
+            Log($"signature — standard {stdSig.PartWaveFormMag:0} | endurance {endSig.PartWaveFormMag:0}");
+            Assert.That(stdSig.PartWaveFormMag, Is.GreaterThan(0), "a held bubble is loud");
+            Assert.That(endSig.PartWaveFormMag, Is.LessThan(stdSig.PartWaveFormMag),
+                "the long-haul drive holds its bubble on less power, so it is also the quieter one");
+
+            // signature tracks the sustain draw exactly — it IS the continuous power, not a separate number.
+            var stdDrive = Drive(s, Standard);
+            var endDrive = Drive(s, Endurance);
+            Assert.That(stdSig.PartWaveFormMag / endSig.PartWaveFormMag,
+                Is.EqualTo(stdDrive.BubbleSustainCost / endDrive.BubbleSustainCost).Within(1e-6),
+                "signature scales with the sustain draw, so it cannot drift from it");
+
+            // It must sit in a band the base-mod sensor can actually see. A "gravimetric" long-wavelength
+            // signature would be invisible to every receiver in the game — a stealth exploit, not a feature.
+            Assert.That(stdSig.PartWaveForm.WavelengthAverage_nm, Is.EqualTo(2898000.0 / 3500).Within(1.0),
+                "same 3500 K band as a thruster plume, so existing sensors can detect it");
         }
 
         [Test]

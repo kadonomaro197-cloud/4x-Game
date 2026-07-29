@@ -258,6 +258,14 @@
           "GuiHint": "None",
           "PropertyFormula": "AtbConstrArgs(PropertyValue('Engine Power'), 'electricity', PropertyValue('Bubble Creation Energy Cost'), PropertyValue('Bubble Sustain Energy Cost'), -PropertyValue('Bubble Collapse Energy Returned'))",
           "AttributeType": "Pulsar4X.Movement.WarpDriveAtb"
+        },
+        {
+          "Name": "Sensor Signature",
+          "Units": "unknown",
+          "DescriptionFormula": "'A held warp bubble is not quiet. The signature is the power you are continuously pouring into holding it, so a drive tuned for endurance runs quieter than one tuned for quick hops. Same 3500K band as a thruster plume — a warp trail is loud, not exotic.'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(3500, PropertyValue('Bubble Sustain Energy Cost') * 1000)",
+          "AttributeType": "Pulsar4X.Sensors.SensorSignatureAtb"
         }
       ]
     }
