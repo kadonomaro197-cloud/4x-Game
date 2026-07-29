@@ -40,6 +40,37 @@ Work in this order, always:
 **So the full test for a door is two-sided:** *what does it write* (§ the input surface) **and** *where does that go*
 (§ the output map). Both, every time.
 
+---
+
+### 1a. 🔒 THE INTRINSIC TEST — what may be a dial at all (developer, 2026-07-29)
+
+> *"We need to determine what parameters can be set regardless of the other components on an entity."*
+
+**A component dial must be settable WITHOUT knowing anything else about the entity it will be mounted on.**
+
+You are designing **a part**, not a ship. At design time you do not know the hull, the fuel it will carry, or what
+else is bolted on. So:
+
+| The number | Where it lives |
+|---|---|
+| Settable knowing only this part | ✅ **a component dial** |
+| Needs to know what else is mounted, or how many | **an ASSEMBLY decision** — the Entity Assembler |
+| Computed from the finished entity | **an EMERGENT readout** — shown, never set |
+
+**Why this matters more than it looks: it is the missing test for the two-tool split.** The design has always said
+*"the Component Designer makes PIECES; the Entity Assembler puts pieces on a chassis"* (**L1/L2**) — but it never gave
+a way to decide which side a given number belongs on. **This is that test.**
+
+**It bites immediately.** Two dials in the authored spec fail it:
+
+- **Propulsion ▸ fuel load** — fuel is in **tanks** (Logistical ▸ Storage). An engine does not carry fuel. Δv cannot
+  be a drive dial because Δv needs the wet and dry mass of *the whole ship*.
+- **Weapons ▸ Guided ▸ "magazine size"** — a magazine is **Logistical ▸ Storage** too. Same error, same reason.
+
+**The corollary:** the headline numbers players care about most in movement — **acceleration, Δv, evasion** — are
+**all emergent**. Not one of them can be set on a drive, because every one needs the finished entity's mass or volume.
+**That is not a gap. That is correct** — and the designer must show them as readouts, never as sliders.
+
 **The test for any dial, at any time:** *which of the sim's variables does it write?* Writes one → real. Writes none
 but costs mass → fine, that's the price. **Writes none and costs nothing → it is a bug in the design.** That is
 `CONVENTIONS §16` and "never ship a dead knob," made checkable in one step.
@@ -522,8 +553,32 @@ evasion falls as your range grows.** That tension does not exist in the game tod
 you are **entailed** by what you push against — they are not independent choices. Propulsion is genuinely
 **one choice and three sliders**.
 
-**The three sliders:** how much drive you fit (paid in mass) · **push ↔ economy** (§20, the missing one) · fuel load.
-Ground adds rough-terrain handling, which already exists.
+**The sliders — after the intrinsic test (§1a) — are TWO, not three:**
+
+| Slider | Intrinsic? | Why |
+|---|---|---|
+| **How much drive you fit** | ✅ | this engine's own mass — a property of the part |
+| **Push ↔ economy** | ✅ | this engine's thrust and exhaust velocity — true whatever it is bolted to |
+| ~~Fuel load~~ | ❌ **CUT** | fuel is **tankage** (Logistical ▸ Storage). An engine does not carry fuel. |
+
+Ground adds **rough-terrain handling**, which already exists and is intrinsic.
+
+> 🔑 **The developer's reading, and it is the right one:** *"push ↔ economy, out of all the others, is the only one
+> that makes sense."* It is the only dial in the category that is **both intrinsic and a real trade** — drive size is
+> intrinsic but has no catch beyond mass, and everything else people reach for (Δv, acceleration, evasion) is
+> emergent.
+
+### 23.1 WHAT IS SET vs WHAT EMERGES — propulsion's honest split
+
+| Set on the part | Emerges at assembly |
+|---|---|
+| what it pushes against | **acceleration** = thrust ÷ the finished ship's dry mass |
+| drive size → thrust · exhaust velocity | **Δv** = exhaust velocity × ln(wet ÷ dry) — needs tanks |
+| push ↔ economy | **evasion** = f(volume, acceleration) — needs the whole hull |
+| ground: rough-terrain handling | **march speed** — needs the unit's total mass |
+
+**Every number a player actually cares about in movement is in the right-hand column.** The drive contributes two of
+the inputs; the entity decides the outcome. A designer that pretended otherwise would be lying about the physics.
 
 ## 24. THE EXOTIC DOOR DISSOLVES — the same collapse as Weapons
 
@@ -567,11 +622,23 @@ as its cost?** The first keeps research meaningful; the second makes the trade c
 
 ---
 
+## 26a. RE-CHECKING THE EARLIER DERIVATIONS AGAINST §1a
+
+| Category | Dials | Verdict |
+|---|---|---|
+| **Weapons** | total damage · shot size↔rate · reach · focus | ✅ **all four intrinsic.** Each is true of the gun whatever it is bolted to. *(The authored spec's Guided "magazine size" would have failed — the derivation dropped it before the test existed.)* |
+| **Defense** | shield capacity↔regen · plate thickness · zero-sum nature tuning | ✅ **all intrinsic.** A plate has a thickness and a tuning; a shield has a capacity and a regen rate. None needs the hull. |
+| **Propulsion** | drive size · push↔economy | ✅ after cutting fuel load (§23) |
+
+**No earlier derivation has to be reopened** — but the test is now applied first, every time.
+
+---
+
 ## 27. RUNNING TALLY (updated)
 
 | Category | State | Shape |
 |---|---|---|
 | **Weapons** | ✅ derived | 5 doors + 41 dial groups → **2 choices + 4 sliders** |
 | **Defense** | ✅ derived | 4 doors → **1 choice + 3 sliders**, two doors relocated out |
-| **Propulsion** | ✅ derived | 5 doors → **1 choice + 3 sliders**; Exotic dissolves; **the fix here is to ADD a dial, not remove doors** |
+| **Propulsion** | ✅ derived | 5 doors → **1 choice + 2 sliders**; Exotic dissolves; **the fix here is to ADD a dial, not remove doors** |
 | Sensors · Power · Enhancers · Industrial · Logistical · Civic · Command · Chassis | ⏳ owed | |
