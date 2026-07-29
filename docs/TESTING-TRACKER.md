@@ -448,7 +448,24 @@ campaign proved are **missing or lying** — they are the reason nine blockers s
 | **G-B4** | 🖥 **Reopen a saved design with an enum or tech dial** | whether the combo shows the saved value or the template default | Predicted: the **default** — only the fuel dial's `ListSelection` is restored, and `_techSelectedIndex` is a **static** shared by every tech dial on every template. | **3** |
 | **G-B5** | 🖥 **Open the designer in SM mode** (viewed faction = Game Master) | whether the fuel-type row or the tech list throws | Both hard-index into a possibly-empty `CargoGoods`. | **3** |
 
-**The standing lesson this table encodes** *(resolver audit P10-2)*: **49 combat fixtures exist and not one of the
+---
+
+## 🔬 GAUGES OWED BY THE 2026-07-29 AUTO-RESOLVER CONSOLIDATION
+
+**Source of every row: `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md`.** Added 2026-07-29. These come out of the
+eight-doc consolidation, where re-verifying each claim against source found built-but-unreachable code, a live
+correctness bug with no gauge, and five gauges that were *proposed in a design and never written*.
+
+| # | Gauge | What it proves | Why it is owed | Layer |
+|---|---|---|---|---|
+| **G-C1** | 🖥 **Reach `EnableGroupPlane` at runtime** — add a DevTools toggle beside the existing "Closing range" / "First-shot trigger" checkboxes (`DevToolsWindow.cs:855-858`), then fight a battle with it on | that the 2D group plane does anything in a real game | 🔴 **S0–S2 are BUILT and CI-gauged (`GroupPlaneTests`, `EfGroupPlaneAnchorTests`, `EfGroupPlaneRangeGateTests`) and the flag is assigned NOWHERE outside its own `= false` declaration and the tests.** Three shipped slices are unreachable. Contrast `EnableClosingRange` (`PulsarMainWindow.cs:98`) and `EnableMiniHexCombat` (`NewGameMenu.cs:580`), which the client turns on. **Decide first (§16 O-5): wanted at runtime, or deliberately parked?** | **3 (local runtime)** + a 1-line client change |
+| **G-C2** | **Ground firepower conservation in a 3-way fight** — one unit facing two enemy factions must deal its pool ONCE, not once per faction | that the ground double-count bug is fixed and stays fixed | 🔴 **The bug is LIVE**: `GroundForcesProcessor.cs:443/:445` nest the faction loops with the pool rebuilt inside (`:491`, `:524`). Space is already conserved (`CombatEngagement.cs:745,747`). **`Resolver2DJointsSpecTests` proves the ALGORITHM but touches no production path** — nothing tests the real resolver. | 1 (CI) |
+| **G-C3** | **`rate × dt` on the ground damage pool** — assert that halving the ground tick halves per-tick damage instead of doubling total damage | that the per-tick-vs-per-second mismatch can't silently multiply ground damage | ⛔ Space scales by `dt` (`CombatEngagement.cs:759`); ground does not (`:491`, `:524`). **Shortening the combat tick — which the combined-theater cadence design requires — would MULTIPLY ground damage.** The conversion **re-baselines every existing ground combat gauge**, so the gauge must land in the same slice. | 1 (CI) |
+| **G-C4** | **Ground large-battle performance** (`GroundBucketPerfTests`) — 5 000 units in a region resolve in milliseconds — **plus an equivalence test** that a bucketed resolve matches the per-unit resolve unit-for-unit | that W4/slice-5c is a loop restructure, not a math change | Ground is **O(units²) with no perf gauge at all**; the space twin (`CombatPerformanceTests`) has proven 200 warships in ms since day one. The equivalence half is what makes the restructure safe to land. | 1 (CI) |
+| **G-C5** | **Five gauges named in a design and never written** — `RangeGate_FiresOnRealGap`, `GroundClosing_GapShrinksAtRealSpeed`, `GroundFog_UndetectedEnemyDoesNotEngage`, plus the method `AdvanceGroundClosing` and the flag `EnableGroundRealRange` | — | 🔵 **Verified 2026-07-29: all five return ZERO hits.** Recorded so nobody cites them as existing coverage. Slice 2's behaviour shipped under `EnableMiniHexCombat` instead and **bypassed the design's own `RealRangeKmFor` seam**. | 1 (CI) |
+| **G-C6** | **A `CombatKernel.Combatant` production consumer — or its retirement** | that the neutral-view seam is real | It is built, `sealed`, carries a `Position_m` axis… and **no kernel function takes one; only `GroundKernelBridgeTests` builds one.** A seam with nothing sitting on it. *(Same finding as the designer record's §2 gauge board.)* | 1 (CI) |
+
+**The standing lesson these two tables encode** *(resolver audit P10-2)*: **49 combat fixtures exist and not one of the
 campaign's 89 findings had a test.** *"The suite proves the code does what it does; it does not prove the code does what
 the DESIGN says."* **Every fix from the campaign must have its gauge written from the design statement, not from current
 behaviour — otherwise the tests lock in the bugs.**

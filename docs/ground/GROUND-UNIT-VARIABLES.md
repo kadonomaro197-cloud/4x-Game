@@ -24,7 +24,7 @@
 > `GroundCombatant.ToWeaponProfile(unit, mount, …)` (`GroundCombatant.cs:96`), byte-identical to the old
 > single-profile path for a one-weapon unit. **So a bolter-at-range plus a chainsword-adjacent unit resolves
 > correctly today.** Wherever this doc says the machinery is present but the plurality missing, or talks about
-> "the flattened scalars", read it as history. Track: `docs/combat/GROUND-CLOSING-FIGHT-W-TRACK.md`.
+> "the flattened scalars", read it as history. Track: `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.4`.
 >
 > Evidence: `docs/DOCS-AUDIT-2026-07-27.md`.
 

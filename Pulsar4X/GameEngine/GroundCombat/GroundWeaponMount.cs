@@ -20,10 +20,12 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public int RangeHexes { get; internal set; }
         /// <summary>REAL-DISTANCE FOUNDATION (Slice 1b) — this weapon's reach in real METRES, the metric TRUTH alongside the
         /// display <see cref="RangeHexes"/> (a hex is a different real distance on every body; the km on the gun is the
-        /// truth, the hex is only the ruler). Populated by <c>GroundUnitAssembly.Compute</c> from the hex range × a fixed
-        /// nominal reference pitch (a real per-body pitch is a later slice); 0 = unset. <b>ADDITIVE + UNREAD by the
-        /// resolver</b> (it still gates on <see cref="RangeHexes"/>) → byte-identical; the range gate flips to this in
-        /// Slice 2. Deep-copied below. Design: docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md.</summary>
+        /// truth, the hex is only the ruler). Populated by <c>GroundUnitAssembly.Compute</c> from the weapon's authored
+        /// <c>GroundWeaponAtb.Range_m</c> (K1), else derived from the hex range × a nominal reference pitch; 0 = unset.
+        /// <b>THE RESOLVER READS THIS</b> since K3: <c>GroundForcesProcessor.WeaponReaches</c> is handed this value and,
+        /// when <c>EnableMiniHexCombat</c> is on (OFF in CI, ON for menu games), gates on the REAL metre gap instead of
+        /// <see cref="RangeHexes"/>. Deep-copied below.
+        /// Design: docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.</summary>
         [JsonProperty] public double Range_m { get; internal set; }
         /// <summary>This weapon's damage flavour (Ballistic / Energy / Artillery / Melee …).</summary>
         [JsonProperty] public GroundWeaponMode Mode { get; internal set; } = GroundWeaponMode.Ballistic;

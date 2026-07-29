@@ -7,8 +7,8 @@ using Pulsar4X.Combat;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Executable SPECIFICATION for the two 2D-resolver joints pinned in docs/combat/RESOLVER-2D-JOINTS.md
-    /// (Operation Earthfall slice T0.1). These are the homework docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md §11
+    /// Executable SPECIFICATION for the two 2D-resolver joints pinned in docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13.7/§13.8
+    /// (Operation Earthfall slice T0.1). These are the homework docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13 (formerly the group-plane design's §11)
     /// assigned before slices S6 (multi-party / FFA) and S5 (combined theater / Endor) may ship.
     ///
     /// This fixture holds a SELF-CONTAINED reference implementation of both joints and asserts their invariants,
@@ -25,7 +25,7 @@ namespace Pulsar4X.Tests
         private static void Log(string m) => TestContext.Progress.WriteLine("[2d-joints] " + m);
 
         // ─────────────────────────────────────────────────────────────────────────────────────────────────────
-        //  JOINT #1 — the reference AllocateFire (docs/combat/RESOLVER-2D-JOINTS.md §1.2)
+        //  JOINT #1 — the reference AllocateFire (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13.7)
         //  One DPS pool per firing group, split across its engageable targets, conserved exactly via the residual.
         // ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -203,7 +203,7 @@ namespace Pulsar4X.Tests
         }
 
         // ─────────────────────────────────────────────────────────────────────────────────────────────────────
-        //  JOINT #2 — combined-theater cadence (docs/combat/RESOLVER-2D-JOINTS.md §2)
+        //  JOINT #2 — combined-theater cadence (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13.8)
         //  A self-contained model of the fixed-quantum stepping + the fast-forward==watch proof.
         // ─────────────────────────────────────────────────────────────────────────────────────────────────────
 

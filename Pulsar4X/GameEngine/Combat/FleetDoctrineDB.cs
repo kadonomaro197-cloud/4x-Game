@@ -4,7 +4,7 @@ using Pulsar4X.Datablobs;
 
 namespace Pulsar4X.Combat
 {
-    /// <summary>A fleet's weapons-release posture — the FIRST ROE knob (Phase 3, docs/combat/FLEET-COMBAT-CLOSING-DESIGN.md).
+    /// <summary>A fleet's weapons-release posture — the FIRST ROE knob (Phase 3, docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.4).
     /// A battle only erupts if someone will release a shot; two non-WeaponsFree fleets in range sit in a tense standoff.</summary>
     public enum EngagementPosture
     {

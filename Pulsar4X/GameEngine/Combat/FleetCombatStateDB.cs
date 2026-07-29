@@ -47,7 +47,7 @@ namespace Pulsar4X.Combat
         [JsonProperty] public double ManeuverBudget { get; internal set; }
 
         /// <summary>The current gap (metres) to the opposing side — the CLOSING range (Phase 1,
-        /// docs/combat/FLEET-COMBAT-CLOSING-DESIGN.md). Seeded from the real distance at first contact, then closed each step
+        /// docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.4). Seeded from the real distance at first contact, then closed each step
         /// toward the controlling (faster) side's preferred range. A weapon only fires if its <see cref="WeaponProfile.Range_m"/>
         /// reaches this. ONLY meaningful when <see cref="CombatEngagement.EnableClosingRange"/> is on; 0 otherwise (which
         /// makes the range-gate a no-op, so the resolve is byte-identical to the pre-closing behaviour). v1: one shared
@@ -80,7 +80,7 @@ namespace Pulsar4X.Combat
         /// aggregate pool per fleet, like the shield and ammo.</summary>
         [JsonProperty] public double HeatPool_kJ { get; internal set; }
 
-        // ─── 2D group plane (Operation Earthfall T2.1 / slice S1, docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md) ───
+        // ─── 2D group plane (Operation Earthfall T2.1 / slice S1, docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13) ───
         // ALL of these are inert unless CombatEngagement.EnableGroupPlane is on — a flag-off fight never seeds them,
         // leaves them at their defaults, and closing runs the unchanged scalar Separation_m path (byte-identical).
 

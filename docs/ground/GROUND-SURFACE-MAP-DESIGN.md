@@ -2,7 +2,7 @@
 
 **As of 2026-07-24.** Consolidated **2026-07-13** from four now-deleted docs — `GROUND-COMBAT-MAP-DESIGN`, `HEX-GROUND-AND-ORDERS-DESIGN`, `GLOBAL-HEX-GRID-DESIGN`, and the hex-**map** half of `GROUND-CITY-AND-WARMAP-DESIGN` (that last doc's other half — the ~60-command *order catalog* / O-track — lives in `docs/ground/GROUND-ORDERS-CATALOG-DESIGN.md`, NOT here). *(Those four names are historical, deliberately plain text: the 2026-07-13 link-sweep rewrote them into this doc's own path and destroyed the provenance — restored 2026-07-24.)* Consolidated again **2026-07-24** from `MINI-HEX-TACTICAL-GRID-DESIGN` (→ Layer 5) and the tile-naming spec that was orphaned in `docs/ai/DEVTEST-CONQUEST-SANDBOX-DESIGN.md` (→ Layer 6).
 
-**What this is:** **THE single design for the planet surface** — turning a planet from a *dimensionless point* into a **place**: a surface with locations you build at, distances you march across, geography you discover, ground you fight over, and a map that tells you what's on it. **All three zooms live here** (region ring → operational hex → mini hex). Companions: `docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md` (the *rules* units fight by — real km ranges; this doc is the *board* they fight on), `docs/aurora/GROUND-COMBAT.md` (the combat spec), `docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md` (the host-pattern this reuses), `GameEngine/GroundCombat/CLAUDE.md` (as-built state), and `docs/MVP.md` (the scope firewall).
+**What this is:** **THE single design for the planet surface** — turning a planet from a *dimensionless point* into a **place**: a surface with locations you build at, distances you march across, geography you discover, ground you fight over, and a map that tells you what's on it. **All three zooms live here** (region ring → operational hex → mini hex). Companions: `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12` (the *rules* units fight by — real km ranges; this doc is the *board* they fight on), `docs/aurora/GROUND-COMBAT.md` (the combat spec), `docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md` (the host-pattern this reuses), `GameEngine/GroundCombat/CLAUDE.md` (as-built state), and `docs/MVP.md` (the scope firewall).
 
 **Why one doc:** the surface is ONE design that *evolved* through four map models — region-graph → per-region hex disks → **one global cylinder grid** → a two-zoom war-map/city sub-grid. Each later model **supersedes** the earlier one's map. This doc presents them as one design with the **global cylinder as the current target**, and keeps the earlier models as recorded history (they explain why the current one is shaped the way it is, and some of their build-state still stands underneath).
 
@@ -270,7 +270,7 @@ The two grids each do ONE job, and the operational hex is a **pure roll-up** of 
 ### ⚖ SCALE — THE ONE TRUE ANSWER (settled from code 2026-07-27; quote THIS, not a remembered number)
 
 This doc used to state two different pairs of numbers for the same board — **~560 km / ~47 km** in this layer
-and **~477 km / ~37 km** in Layer 5 — and `docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md` used 560. **Both pairs
+and **~477 km / ~37 km** in Layer 5 — and `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12` used 560. **Both pairs
 were arithmetically self-consistent. They measured different things.** Here is the resolution:
 
 **The truth is a FORMULA, not a constant. There is no single hex size.**
@@ -363,7 +363,7 @@ That way you get the **tactical payoff right away**, and the big builder subsyst
 
 *(Merged here 2026-07-24 from the deleted `MINI-HEX-TACTICAL-GRID-DESIGN` — name kept as plain text so a future link
 sweep can't eat the provenance the way the 2026-07-13 one did. Its sibling —
-`docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md`, the real-km **rules** units fight by — stays a separate doc. This layer is
+`docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12`, the real-km **rules** units fight by — stays a separate doc. This layer is
 the **board**; that doc is the **rules**. Read together.)*
 
 ### The point, before the plumbing

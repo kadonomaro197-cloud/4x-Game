@@ -134,7 +134,7 @@ ASSERT ONLY STRUCTURAL TRUTHS — never a balance number: mini pitch == coarse p
 for a generated body; and the pitch differs between two bodies of different size (that IS the design's
 "a hex means a different real distance on each body").
 Then REPORT the measured numbers in your return value so the session can quote the measurement into
-${BOARD} (Layer 4 ~line 276 and Layer 5 ~lines 293-324) and docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md.
+${BOARD} (Layer 4 ~line 276 and Layer 5 ~lines 293-324) and docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.
 Do NOT edit those docs yourself — report the numbers; the Docs agent lands them.
 Byte-identity: a new read-only test fixture. Trivially inert.` },
 

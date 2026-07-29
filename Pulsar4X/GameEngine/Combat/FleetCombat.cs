@@ -7,7 +7,7 @@ using Pulsar4X.Sensors;
 namespace Pulsar4X.Combat
 {
     /// <summary>
-    /// Fleet capability aggregation — Root B of the closing-fight model (docs/combat/FLEET-COMBAT-CLOSING-DESIGN.md). Pure
+    /// Fleet capability aggregation — Root B of the closing-fight model (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.4). Pure
     /// read-models over data that already exists; NO behaviour change. These are the numbers the closing resolve
     /// (Phase 1+) and the battle readout will read:
     ///   • a fleet moves as one icon → it's bound by its SLOWEST, shortest-legged ship (the floors);

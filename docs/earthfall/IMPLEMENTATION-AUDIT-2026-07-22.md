@@ -65,7 +65,7 @@ Hand-verified this pass (8): ai-military-execution · w-track-squad · ground-de
 
 **Doc / comment drift (9):**
 - `detection-snapshot`: `Sensors/CLAUDE.md:273` grave-rung still says "no contact-expiry pass yet" — contacts now age out; update the bullet.
-- `T-2d-resolver`: `RESOLVER-2D-GROUP-PLANE-DESIGN.md` header line 3 still says "not started (S0 is the first slice)" — S0+S1+S2 are built (behind `EnableGroupPlane`, default off). One-line flip.
+- `T-2d-resolver`: `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13` header line 3 still says "not started (S0 is the first slice)" — S0+S1+S2 are built (behind `EnableGroupPlane`, default off). One-line flip.
 - `surface-fog`: `DOCS-INDEX.md:103` SURFACE-FOG row status is stale (slices 1–4 built; 5 = GroundThreat; 6 pending). Refresh row + As-of stamp.
 - `P4-sealift`: `ShipDesign.cs:167-171` + `LaunchComplexProcessor.cs:125-130` comments predate the decision-3 flip; update to "both flags default ON as of dev decision 3."
 - `P4-sealift`: `TESTING-TRACKER.md` lacks the per-test T-P4.1..T-P4.4 seven-field rows (they live only in LANE-CORE-NOTES).

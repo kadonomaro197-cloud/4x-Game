@@ -1178,7 +1178,7 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("Real-distance foundation (Slice 1): the km↔hex translation both ways. A REAL weapon range (km) maps onto the hex ruler DIFFERENTLY per body — a 1 km gun needs the same hex on a continent-scale world but reaches an adjacent hex on a tiny moon — and round-trips back. Additive/byte-identical: nothing in the resolver reads these yet. docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md.")]
+        [Description("Real-distance foundation (Slice 1): the km↔hex translation both ways. A REAL weapon range (km) maps onto the hex ruler DIFFERENTLY per body — a 1 km gun needs the same hex on a continent-scale world but reaches an adjacent hex on a tiny moon — and round-trips back. Additive/byte-identical: nothing in the resolver reads these yet. docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.")]
         public void RealDistance_HexTranslation_BothWays_AndByBody()
         {
             // An Earth-scale region: ~550 km per hex (a continent). A 1 km gun is a sliver of one hex → same-hex only.
@@ -1222,7 +1222,7 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("K4 — the round-down hex READOUT (INFORMATION-DELTA #11): the real km on the gun is the truth, 'round down to hexes' is a per-body DISPLAY fact. A 4 km tank cannon floors to 0 WHOLE hexes on an Earth-scale world (single-hex combat) but spans several on a small moon; DescribeReach states both, and HexesFloorForMetres == floor(HexesForMetres). docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md.")]
+        [Description("K4 — the round-down hex READOUT (INFORMATION-DELTA #11): the real km on the gun is the truth, 'round down to hexes' is a per-body DISPLAY fact. A 4 km tank cannon floors to 0 WHOLE hexes on an Earth-scale world (single-hex combat) but spans several on a small moon; DescribeReach states both, and HexesFloorForMetres == floor(HexesForMetres). docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.")]
         public void RoundDownHexReadout_FloorsPerBody_AndRoundTrips()
         {
             // Earth-scale region (~551 km/hex): a 4 km gun is a sliver of one hex → floors to 0 whole hexes.
@@ -1248,7 +1248,7 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("Real-distance foundation (Slice 1b/1c): the new real-metre FIELDS populate and round-trip through the km↔hex helper WITHOUT perturbing the hex combat stats. A raised unit carries a real Range_m (from its design, else derived from the hex range × the nominal pitch) and a real Speed_kmh; the mount + unit copy-ctors deep-copy them; and Range_m → hexes reproduces the 'same gun, different hex count per body' behaviour. ADDITIVE at the time of writing; Speed_kmh is now READ by the resolver's closing step (corrected 2026-07-27) — this fixture still only asserts the fields populate/round-trip, which stays true. docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md.")]
+        [Description("Real-distance foundation (Slice 1b/1c): the new real-metre FIELDS populate and round-trip through the km↔hex helper WITHOUT perturbing the hex combat stats. A raised unit carries a real Range_m (from its design, else derived from the hex range × the nominal pitch) and a real Speed_kmh; the mount + unit copy-ctors deep-copy them; and Range_m → hexes reproduces the 'same gun, different hex count per body' behaviour. ADDITIVE at the time of writing; Speed_kmh is now READ by the resolver's closing step (corrected 2026-07-27) — this fixture still only asserts the fields populate/round-trip, which stays true. docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.")]
         public void RealDistance_Slice1Fields_PopulateAndRoundTrip()
         {
             double pitch_m = GroundCombatant.NominalHexPitch_m;   // the nominal reference pitch (a real per-body pitch is Slice 2)
@@ -1518,7 +1518,7 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("K3 — the REAL-DISTANCE closing fight on the CONTINUOUS mini-hex field (the mini twin of InitialEngagementSpread_OpensAGap): with BOTH the metre gate (EnableMiniHexCombat) and the spread (EnableInitialEngagementSpread) on, two co-located units with AUTHORED real ranges — a 30 km artillery kiter and a 500 m rifle rusher — are pushed the holder's REAL range apart on the Global/Mini/offset field, so RealGapMetres ≈ 30 km. The rusher (Close-to-Engage) crosses that real distance at its march speed while the long gun fires free the whole approach; range is the only difference, so the artillery-thins-the-approach fight decides it. Both flags default OFF → the CI suite is byte-identical; reset in finally. docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md.")]
+        [Description("K3 — the REAL-DISTANCE closing fight on the CONTINUOUS mini-hex field (the mini twin of InitialEngagementSpread_OpensAGap): with BOTH the metre gate (EnableMiniHexCombat) and the spread (EnableInitialEngagementSpread) on, two co-located units with AUTHORED real ranges — a 30 km artillery kiter and a 500 m rifle rusher — are pushed the holder's REAL range apart on the Global/Mini/offset field, so RealGapMetres ≈ 30 km. The rusher (Close-to-Engage) crosses that real distance at its march speed while the long gun fires free the whole approach; range is the only difference, so the artillery-thins-the-approach fight decides it. Both flags default OFF → the CI suite is byte-identical; reset in finally. docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.")]
         public void MiniHexClosingFight_RealDistanceSpread_LongRangeWhittlesTheRusher()
         {
             var s = TestScenario.CreateWithColony();

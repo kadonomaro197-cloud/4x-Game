@@ -188,7 +188,7 @@ a future session doing exactly the pre-flight the root `CLAUDE.md` demands — t
 | Class | Count | Examples → where they went |
 |---|---|---|
 | **Moved** by the subfolder reorg | 13 paths | `docs/ai/AI-BRAIN-BUILD-TRACKER.md` (61 sites!) → `docs/ai/…`; `docs/explore/SITE-ENGINE-DESIGN.md` (35) → `docs/explore/…`; `docs/society/DIPLOMACY-DESIGN.md` (17) → `docs/society/…` |
-| **Consolidated** into a survivor | 10 paths | `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` (27), `GROUND-CITY-AND-WARMAP-DESIGN.md` (13), `HEX-GROUND-AND-ORDERS-DESIGN.md` (9), `GLOBAL-HEX-GRID-DESIGN.md` (9) → `docs/ground/GROUND-SURFACE-MAP-DESIGN.md`; `WEAPON-TAXONOMY` + `WEAPONS-AND-DODGE` (23) → `docs/combat/WEAPONS-DESIGN.md`; `AI-MEANS-ENDS-PLANNER` + `AI-OBJECTIVE-ENGINE` (23) → `docs/ai/AI-DECISION-ENGINE-DESIGN.md`; `RESOLVER-MERGE` (6) → `docs/combat/RESOLVER-DESIGN.md`; `SPACE-STATIONS` (8) → `docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md` |
+| **Consolidated** into a survivor | 10 paths | `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` (27), `GROUND-CITY-AND-WARMAP-DESIGN.md` (13), `HEX-GROUND-AND-ORDERS-DESIGN.md` (9), `GLOBAL-HEX-GRID-DESIGN.md` (9) → `docs/ground/GROUND-SURFACE-MAP-DESIGN.md`; `WEAPON-TAXONOMY` + `WEAPONS-AND-DODGE` (23) → `docs/combat/WEAPONS-DESIGN.md`; `AI-MEANS-ENDS-PLANNER` + `AI-OBJECTIVE-ENGINE` (23) → `docs/ai/AI-DECISION-ENGINE-DESIGN.md`; `RESOLVER-MERGE` (6) → `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.1`; `SPACE-STATIONS` (8) → `docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md` |
 | **Superseded outright** | 2 paths | `WEAPON-UNIFICATION-DESIGN.md` (8), `GROUND-UNITS-AS-ENTITIES-DESIGN.md` (9) → `docs/economy/COMPONENT-DESIGNER-CATEGORIES.md` |
 
 **Swept 2026-07-27.** Re-grep returns **zero** dead paths. Provably **comment-only**: 327 insertions /
@@ -482,7 +482,7 @@ the hint is a behaviour change, so it is scheduled (plan slice **S6**), not done
 | **Ruling #22 has ZERO code** — 7 named types, 0 files each; 1 of 9 slices exists | quantifies "designed, not built" | recorded at the top of the design's own build order |
 | **Ground damage is flat per-tick, space is per-second** (`* dt` present in space, absent on ground) | the C2 tick trap, **independently re-confirmed** | recorded in the combat doc, not just the audit |
 | `WEAPONS-DESIGN` — "saturation is derived from rate-of-fire, never hand-set" | **ship-only**; ground uses two hardcoded constants and has **no rate dial at all** | scoped to ships |
-| `REAL-DISTANCE-COMBAT-DESIGN` header — "slices 2–5 planned" | **STALE** — slice 2 shipped as K1+K3 under a different flag; two more claims refuted | header corrected |
+| `REAL-DISTANCE-COMBAT-DESIGN` header — "slices 2–5 planned" | **STALE** — slice 2 shipped as K1+K3 under a different flag; two more claims refuted | header corrected *(that doc was consolidated away 2026-07-29; the finding now lives in `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md` §12.3 + §19 S-8)* |
 | `GROUND-UNIT-VARIABLES` — 5 stale `GroundForcesProcessor.cs` line refs + "multi-weapon plurality missing" | **REFUTED** — the W-track built it (`:472` loops the loadout, range-gating each weapon) | drift table + row flipped |
 
 ---

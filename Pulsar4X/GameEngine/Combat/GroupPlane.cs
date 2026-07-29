@@ -6,7 +6,7 @@ using Pulsar4X.Orbital;
 namespace Pulsar4X.Combat
 {
     /// <summary>
-    /// The 2D group-plane math (docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md, slice S0).
+    /// The 2D group-plane math (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13, slice S0).
     ///
     /// PLAIN ENGLISH: picture a flat sheet of graph paper laid over a battle, measured in metres. It is NEVER
     /// drawn — it only exists as numbers. Every fighting GROUP (a sub-fleet in space, a formation on the ground)

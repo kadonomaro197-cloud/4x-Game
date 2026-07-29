@@ -9,7 +9,7 @@ using Pulsar4X.Ships;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase 3 of the closing-fight model (docs/combat/FLEET-COMBAT-CLOSING-DESIGN.md): the FIRST-SHOT trigger. A battle no
+    /// Phase 3 of the closing-fight model (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.4): the FIRST-SHOT trigger. A battle no
     /// longer erupts on mere proximity — it erupts only if someone will RELEASE a shot (the first ROE knob,
     /// weapons-free vs weapons-hold). Two hostile fleets that are both holding fire sit in a tense STANDOFF. Behind
     /// <c>RequireWeaponsReleaseToEngage</c> (default off → proximity engages as before, since the default posture is

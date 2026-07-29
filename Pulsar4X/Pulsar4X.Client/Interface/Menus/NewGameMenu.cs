@@ -565,7 +565,7 @@ public class NewGameMenu : PulsarGuiWindow
         // kites to standoff, support stays back (the ground echo of space sub-fleet roles). OFF in the engine suite
         // (byte-identical), ON here so a menu game's closing ground fights show the role differentiation.
         Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundRoleManeuver = true;
-        // REAL-DISTANCE GROUND COMBAT (docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md, K-track): a ground weapon carries a REAL
+        // REAL-DISTANCE GROUND COMBAT (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12, K-track): a ground weapon carries a REAL
         // range in metres (rifle 500 m, tank cannon 4 km, tube artillery 30 km, sci-fi laser 20 km — K1) and a unit carries
         // a CONTINUOUS real position; combat resolves on real distance vs real range. We run BOTH gates on the menu path:
         //   • EnableMiniHexCombat — the resolver's range gate reads the REAL metre gap on the continuous mini-hex field

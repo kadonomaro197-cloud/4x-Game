@@ -56,7 +56,7 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("K2 — the sub-mini-hex OFFSET makes the field CONTINUOUS below the mini-tile: two units in the SAME coarse hex AND the same mini-hex, but with different real km offsets, read a gap of EXACTLY the offset difference (× 1000 m/km). This is why a real conventional weapon range (< a ~37 km mini-tile) can decide the fight. Offset (0,0) on both → byte-identical to the offset-free gap. docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md.")]
+        [Description("K2 — the sub-mini-hex OFFSET makes the field CONTINUOUS below the mini-tile: two units in the SAME coarse hex AND the same mini-hex, but with different real km offsets, read a gap of EXACTLY the offset difference (× 1000 m/km). This is why a real conventional weapon range (< a ~37 km mini-tile) can decide the fight. Offset (0,0) on both → byte-identical to the offset-free gap. docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.")]
         public void SubMiniOffset_ShiftsRealGap_ByExactlyTheOffset()
         {
             // Same coarse hex (0,0), same mini-hex (0,0); A offset 0, B offset +5 km east → gap exactly 5 km.

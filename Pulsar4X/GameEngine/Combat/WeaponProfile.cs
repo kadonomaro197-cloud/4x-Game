@@ -92,7 +92,7 @@ namespace Pulsar4X.Combat
 
         /// <summary>The farthest this weapon can land a hit (metres) — the ROOT of the closing-fight model: as two
         /// fleets close, a weapon only contributes once the gap is ≤ its range (see
-        /// docs/combat/FLEET-COMBAT-CLOSING-DESIGN.md, Root A). Uses the engine's existing range convention: **0 = unbounded
+        /// docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.4, ROOT A). Uses the engine's existing range convention: **0 = unbounded
         /// / always in range** (same as <see cref="Weapons.GenericBeamWeaponAtb.IsInRange"/> treating MaxRange ≤ 0 as
         /// unlimited), which is also serialization-safe (no Infinity in JSON). Beams carry their design MaxRange;
         /// railgun/flak/missile default to 0 (rangeless) until their own range fields are added — a flagged follow-up.</summary>

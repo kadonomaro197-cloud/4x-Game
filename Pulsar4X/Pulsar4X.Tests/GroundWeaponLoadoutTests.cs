@@ -8,7 +8,7 @@ using Pulsar4X.GroundCombat;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// W-TRACK W1 — the multi-weapon ground LOADOUT (docs/combat/GROUND-CLOSING-FIGHT-W-TRACK.md §W1). Proves a ground
+    /// W-TRACK W1 — the multi-weapon ground LOADOUT (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.4, W1). Proves a ground
     /// unit no longer COLLAPSES its weapons into one Attack + one Range: it now also carries a per-weapon
     /// <see cref="GroundWeaponMount"/> loadout (one per mounted weapon component, each with its OWN range/mode), so W2
     /// can fire each weapon in its own range band as the unit closes (a lascannon reaches before a chainsword).

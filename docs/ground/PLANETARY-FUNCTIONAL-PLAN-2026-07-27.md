@@ -6,7 +6,7 @@ to "a planetary war you can play and see." Produced by OPERATION GROUND TRUTH
 
 **Governed by:** `docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md` (the 27 rulings — they override every
 other doc), `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` (the board, Layers 5–6),
-`docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md` (the rules), `docs/MVP.md` (scope firewall),
+`docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12` (the rules), `docs/MVP.md` (scope firewall),
 `docs/REALISM-VS-GAMEPLAY-AUDIT.md` (weight firewall).
 
 > **UPDATE 2026-07-27 (later the same day): the rulings-compliance matrix for #1–#18 LANDED** after the usage

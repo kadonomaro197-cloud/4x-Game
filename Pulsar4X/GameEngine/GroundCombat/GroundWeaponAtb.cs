@@ -40,7 +40,7 @@ namespace Pulsar4X.GroundCombat
         /// weapon (rifle 500 m, autocannon 2000 m, tank cannon 4000 m, tube artillery 30000 m, ground laser 20000 m,
         /// melee/claw 0). 0 = derive from the hex range × the nominal pitch as a fallback (a mod template that omits it).
         /// Snapshotted through the assembler → the design → the raised unit; the resolver's real-distance gate reads it.
-        /// Design: docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md.</summary>
+        /// Design: docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.</summary>
         [JsonProperty] public double Range_m { get; internal set; }
         [JsonProperty] public GroundWeaponMode Mode { get; internal set; } = GroundWeaponMode.Ballistic;
 

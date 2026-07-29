@@ -11,7 +11,7 @@ using Pulsar4X.Ships;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Slice S2 of the 2D group-plane resolver (docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md §13 S2; Operation
+    /// Slice S2 of the 2D group-plane resolver (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13.5 S2; Operation
     /// Earthfall T3.1). S1 laid the frozen plane down and gave each fleet an anchor; S2 makes the RANGE GATE read
     /// that plane: with <see cref="CombatEngagement.EnableGroupPlane"/> on, <c>SeparationOf</c> and
     /// <c>WithinWeaponRange</c> measure the straight-line 2D distance between two fleets' group anchors — the real

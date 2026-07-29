@@ -16,9 +16,9 @@ namespace Pulsar4X.GroundCombat
     /// <item><b>The two-way translation</b> — <see cref="HexesForKm"/>/<see cref="HexesForMetres"/> (km → hexes) and
     /// <see cref="MetresForHexes"/> (hexes → real metres): the INVERSE of RealReach, so a REAL weapon/radar range can be
     /// placed on the hex ruler and back. This is the foundation for making the real km on the gun the truth and the hex
-    /// a pure display ruler (docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md, Slice 1 — additive/byte-identical).</item>
+    /// a pure display ruler (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.3, Slice 1 — additive/byte-identical).</item>
     /// </list>
-    /// Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md (H3) + docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md.
+    /// Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md (H3) + docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.
     /// </summary>
     public static class GroundRangeTools
     {
@@ -51,7 +51,7 @@ namespace Pulsar4X.GroundCombat
             return rangeHexes * HexPitchKm(region);
         }
 
-        // ── Real-distance combat foundation (docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md, Slice 1) ──────────────────────
+        // ── Real-distance combat foundation (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.3, Slice 1) ──────────────────────
         // The LOCKED principle: the real distance (km) on the weapon/entity is the truth; the hex grid is only the
         // display ruler, and a hex means a DIFFERENT real distance on each body. HexPitchKm/RealReachKm already convert
         // hexes → km; these add the INVERSE (km → hexes) so a real weapon/radar range can be placed on the hex ruler and

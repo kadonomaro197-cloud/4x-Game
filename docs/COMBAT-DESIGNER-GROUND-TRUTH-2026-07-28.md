@@ -493,7 +493,7 @@ starved templates.
 | **D4-4** | 🟠 | **A ground weapon's velocity, tracking and saturation are NOT designable** — three constants picked by the `Mode` dropdown (Melee 1/1.0/1 · Artillery 300/0.0/100 000 · else 1000/0.0/1). No rate of fire, no muzzle velocity, no accuracy. **Deliberate and commented** (it is how ground got onto the shared kernel) — and it is the ground half of the "same depth as space" gap. |
 | **D4-5** | 🟠 | **GROUND CARRIES MORE DESIGN FIDELITY INTO THE FIGHT THAN MOST SHIP WEAPONS — the opposite of the assumption.** Ground 6/10 including the two fields **no ship weapon carries at all**; railgun/flak/plasma 4/10; missile 0. Only the beam beats ground. **Root cause A is a SPACE problem at least as much as a ground one.** |
 | **D4-6** | 🟡 | **`HeatPerSecond` is fed by exactly one weapon type** — and with D2-7, by **one template** in the base mod. The burst-vs-sustained decision is not in the game yet. |
-| **D4-7** | 🟡 | **A doc had gone stale under the code** — `FLEET-COMBAT-CLOSING-DESIGN.md` §ROOT A still said railgun/flak/missile were rangeless. **De-staled 2026-07-28** with what actually changed. |
+| **D4-7** | 🟡 | **A doc had gone stale under the code** — `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md` §14.4 ROOT A still said railgun/flak/missile were rangeless. **De-staled 2026-07-28** with what actually changed. |
 
 ### Pass 5 — the armour reconcile and the value that never updates
 
@@ -615,7 +615,7 @@ of the six were caused by trusting a name, a count, or a prior doc instead of th
 6. **Two proposed slices withdrawn** — adding dials to `GroundWeaponAtb` to protect the prebuilt units. **Both ends are
    condemned by L10 + L11.**
 
-**Also corrected in other docs during the campaign:** `FLEET-COMBAT-CLOSING-DESIGN.md` §ROOT A (said railgun/flak/missile
+**Also corrected in other docs during the campaign:** `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md` §14.4 ROOT A (said railgun/flak/missile
 were rangeless a month after the code and its test moved on) · `Pulsar4X.Client/CLAUDE.md` is wrong twice (the
 `Window.Begin/End` safety claim, and listing `OrdnanceDesignWindow` as *"Functional"* when it is unreachable) ·
 `docs/archive/DESIGNER-AUDIT-2026-07-08/04-BASEMOD-TEMPLATES.md` is stale (claims 89 payloads/88 ids and **omits the `Station` flag entirely**;

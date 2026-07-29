@@ -6,7 +6,7 @@ using Pulsar4X.GroundCombat;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// RESOLVER MERGE, slice 3b-i (docs/combat/RESOLVER-DESIGN.md §7) — the BRIDGE gauge.
+    /// RESOLVER MERGE, slice 3b-i (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.1) — the BRIDGE gauge.
     ///
     /// Proves that a <see cref="GroundUnit"/> presented as a <see cref="CombatKernel.Combatant"/> reproduces the ground
     /// combat semantics THROUGH THE SHARED KERNEL — i.e. the Armor▸Infantry▸Artillery triangle and the dodge/shield

@@ -143,8 +143,8 @@ developer gives the go before it runs. Use as many subagents as the work needs; 
 > | `PLANETARY-GAMEPLAY-AUDIT-2026-07-24.md` | ✅ in full (259 lines) — 2 stale sections reconciled |
 > | `GROUND-SURFACE-MAP-DESIGN.md` | ⚠ **partially** — Layers 4/5/6 + the scale sections read directly; not all 560 lines |
 > | `SYSTEM-GENERATION-AND-PERSISTENCE-DESIGN.md` | ❌ **NOT READ until this walk-through — the real gap. See below.** |
-> | `REAL-DISTANCE-COMBAT-DESIGN.md` | ⚠ partially direct + fully swept by agent A2b |
-> | `UNIFIED-RESOLVER-AND-BATTLE-STATS.md` | ⚠ partially direct + fully swept by agent A2b |
+> | `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12` | ⚠ partially direct + fully swept by agent A2b |
+> | `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.2` | ⚠ partially direct + fully swept by agent A2b |
 > | `GROUND-UNIT-VARIABLES.md` | ⚠ partially (targeted) — and corrected |
 > | `DOCS-INDEX.md` + `TESTING-TRACKER.md` | ✅ read and updated throughout |
 >
@@ -170,8 +170,8 @@ Read these first. Where any other doc disagrees with them, the other doc is wron
 | `docs/ground/PLANETARY-GAMEPLAY-AUDIT-2026-07-24.md` | The holistic audit — status board, the four loop breaks, P1–P7 roadmap, surface-map status table |
 | `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` | THE single surface design, all three zooms. Layer 5 = the locked mini-hex tactical model; Layer 6 = the developer's display/naming requirements (hover-reveal, glyphs, city marker, battalion stacks, click-to-name, weather at both zooms) + the "nothing is impossible, it's just costs" law |
 | `docs/environment/SYSTEM-GENERATION-AND-PERSISTENCE-DESIGN.md` | LOCKED: generation + the spec-file persistence (5 decisions: hybrid recipe/frozen · written first time · per-save-vs-library at galaxy setup · hand-editable · surfaces on demand) + build order G1–G6 |
-| `docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md` | LOCKED: real km on the weapon are the truth; hexes are a display ruler |
-| `docs/combat/UNIFIED-RESOLVER-AND-BATTLE-STATS.md` | Part B designs the `CasualtyTier` wound model + the battle-stats ledger — ruling #22 says this is DECIDED; build it, never redesign it |
+| `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12` | LOCKED: real km on the weapon are the truth; hexes are a display ruler |
+| `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.2` | Part B designs the `CasualtyTier` wound model + the battle-stats ledger — ruling #22 says this is DECIDED; build it, never redesign it |
 | `docs/ground/GROUND-UNIT-VARIABLES.md` | The Training/veterancy dial design (partially built) |
 | `docs/DOCS-INDEX.md` + `docs/TESTING-TRACKER.md` | The doc dashboard (update rows in the SAME commit as any doc change) and the test ledger |
 
@@ -326,7 +326,7 @@ found by the prior surveys (verify each is still true, then FIX in Phase C):
 - `Pulsar4X/GameEngine/GroundCombat/CLAUDE.md`: the upkeep-source claim is BACKWARDS (assembler/garrison DO set it; the
   base-mod monolithic path doesn't), and the "C3 FULL path" test it cites does not exist.
 - **Scale contradiction our own consolidation introduced:** `GROUND-SURFACE-MAP-DESIGN.md` Layer 4 says ~560 km
-  op-hex / ~47 km mini-tile; Layer 5 says ~477 km / ~37 km; `REAL-DISTANCE-COMBAT-DESIGN.md` uses 560. **Derive the
+  op-hex / ~47 km mini-tile; Layer 5 says ~477 km / ~37 km; `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12` uses 560. **Derive the
   TRUE numbers FROM CODE** (`PlanetGridFactory` dims + `GroundMiniHex.MiniPitchKm`) and make all three docs agree.
 - `docs/DOCS-INDEX.md` disagrees with itself: the As-of stamp flags PLAY-TO-MARS / MVP / GROUND-UNIT-VARIABLES stale
   while their rows still read current.

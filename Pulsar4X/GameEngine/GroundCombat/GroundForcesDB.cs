@@ -78,7 +78,7 @@ namespace Pulsar4X.GroundCombat
         /// absent that (a code-built / garrison / DevTools design) — derived from the hex <see cref="Range"/> × the
         /// nominal reference pitch (<see cref="GroundCombatant.NominalHexPitch_m"/>). <b>ADDITIVE + UNREAD by the
         /// resolver</b> (it still gates on hex <see cref="Range"/>) → byte-identical; the gate flips to this in Slice 2.
-        /// 0 = unset. Design: docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md.</summary>
+        /// 0 = unset. Design: docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.</summary>
         [JsonProperty] public double Range_m { get; internal set; }
         /// <summary>REAL-DISTANCE FOUNDATION (Slice 1b) — this unit's drive SPEED in real km/h, a READOUT of its march
         /// pace (the abstract chassis/locomotion multiplier × the Foot baseline <see cref="GroundMobility.BaseMarchSpeed_kmh"/>).
@@ -192,7 +192,7 @@ namespace Pulsar4X.GroundCombat
         //    GroundMiniHex.ContinuousPosKm/RealGapMetres on TOP of the (MiniQ,MiniR) mini-hex centre; NOT derived from
         //    MiniQ/MiniR. Default (0,0) = at the mini-hex centre → byte-identical (M2/M3a read gap 0 as before) until
         //    the K3 spread/closing sets it. Save-safe ([JsonProperty] + deep-copied below). Design: the K-track real-
-        //    distance ground combat (docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md + docs/ground/GROUND-SURFACE-MAP-DESIGN.md Layer 5).
+        //    distance ground combat (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12 + docs/ground/GROUND-SURFACE-MAP-DESIGN.md Layer 5).
         /// <summary>Real sub-mini-hex offset EAST (km) added to this unit's mini-hex centre (0 = centred).</summary>
         [JsonProperty] public double MiniOffX_km { get; internal set; }
         /// <summary>Real sub-mini-hex offset NORTH (km) added to this unit's mini-hex centre (0 = centred).</summary>
@@ -268,7 +268,7 @@ namespace Pulsar4X.GroundCombat
 
     /// <summary>
     /// A formation's RULES OF ENGAGEMENT — the movement intent a commander sets, the ground echo of the space
-    /// CLOSING model (docs/combat/FLEET-COMBAT-CLOSING-DESIGN.md: a fast long-range fleet kites, a brawler forces the merge).
+    /// CLOSING model (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.4: a fast long-range fleet kites, a brawler forces the merge).
     /// It tells the surface processor how a formation should MANEUVER relative to the enemy each tick, so the H3 range
     /// advantage is used automatically instead of by micro:
     /// </summary>

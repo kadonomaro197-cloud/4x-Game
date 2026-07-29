@@ -1,6 +1,6 @@
 # Combat System Design
 
-> **→ The range/closing build plan lives in `docs/combat/FLEET-COMBAT-CLOSING-DESIGN.md`.** That doc is the phased
+> **→ The range/closing build plan lives in `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.4`.** That doc is the phased
 > blueprint for the next big evolution: turning this instant strength-compare into a **closing fight** where range,
 > speed, detection, and doctrine decide who can hit whom — fleet capability aggregation, per-sub-fleet ranges, the
 > first-shot trigger, and Rules of Engagement (the grown-up doctrine). Read it before touching combat distance,

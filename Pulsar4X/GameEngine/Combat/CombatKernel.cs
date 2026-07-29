@@ -11,7 +11,7 @@ namespace Pulsar4X.Combat
     /// soak it, does armour bounce it, how much health is left — but with two separate copies of the arithmetic. This
     /// class is the shared home for that arithmetic, written to a **neutral view** (<see cref="Combatant"/>) that a
     /// ship OR a ground unit can present, so neither the hex board nor the ship <c>Entity</c> leaks into the math. It
-    /// is the seam the resolver-merge (docs/combat/RESOLVER-DESIGN.md) is built on.
+    /// is the seam the resolver-merge (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.1) is built on.
     ///
     /// **Purity is the load-bearing property.** Every function here is pure arithmetic — no entity mutation, no RNG,
     /// no clock. That is what keeps combat DETERMINISTIC (the locked rule: fast-forward must equal watch). The caller
@@ -27,7 +27,7 @@ namespace Pulsar4X.Combat
     /// its two armour constants now delegate/forward here, so the kernel is the single source of truth for the flat
     /// armour math on BOTH domains. The rest of the planetary resolver (weapon profiles, the dodge/shield reconcile,
     /// the closing model on the hex board) adopts this kernel in slice 3b+. <see cref="CombatKernelTests"/> pins these
-    /// outputs. See docs/combat/RESOLVER-DESIGN.md §5.
+    /// outputs. See docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §6.3.
     /// </summary>
     public static class CombatKernel
     {
@@ -82,7 +82,7 @@ namespace Pulsar4X.Combat
         /// the kernel sees only these value fields plus <see cref="Weapons"/> (the SAME <see cref="WeaponProfile"/>
         /// type both domains carry) and a 1-D <see cref="Position_m"/> (fleet separation in space; hex-distance ×
         /// metres-per-hex on a planet). The caller keeps its own back-reference (ship id / GroundUnit ref) to apply
-        /// the results the kernel returns. See docs/combat/RESOLVER-DESIGN.md §2.
+        /// the results the kernel returns. See docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §2 (and §16 O-1: this view has no production consumer).
         /// </summary>
         public sealed class Combatant
         {
@@ -135,7 +135,7 @@ namespace Pulsar4X.Combat
         /// ground melee weapon (reach 0) hits only at contact (gap 0), while a space beam (Range_m 0) is UNBOUNDED. Each
         /// caller layers its own reach-0 rule on top (space via <see cref="WeaponReaches(WeaponProfile,double)"/>), so
         /// this core stays the single, convention-free arithmetic the ship resolver's <c>BuildFireMix</c> gate and the
-        /// ground resolver's <c>WeaponReaches</c> both compute. Pure; never throws. (docs/combat/UNIFIED-RESOLVER-AND-BATTLE-STATS.md Slice 1.)
+        /// ground resolver's <c>WeaponReaches</c> both compute. Pure; never throws. (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.2 slice 1.)
         /// </summary>
         public static bool WithinReach(double reach, double gap) => gap <= reach;
 

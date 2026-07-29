@@ -7,14 +7,14 @@ applies them. Sections are delimited by slice so parallel siblings can append wi
 
 TWOD owns (fence, CAMPAIGN-PLAN.md §3): `GameEngine/Combat/GroupPlane.cs` (new),
 `GameEngine/Combat/FleetCombatStateDB.cs`, `GameEngine/Combat/CombatEngagement.cs` (flag-gated blocks only),
-`docs/combat/RESOLVER-2D-JOINTS.md`. Design source: `docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md` §11 (T0 joints)
+`docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13.7/§13.8`. Design source: `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13.7/§13.8` (T0 joints)
 + §13 slices S0/S1/S2 (T1/T2/T3). S3+ are a later campaign — NOT in this lane.
 
 ---
 
 ## T0.1 — Pin fire-allocation + theater cadence (joints memo) — DONE in working tree
 
-**Created:** `docs/combat/RESOLVER-2D-JOINTS.md` (pins BOTH §11 joints), `Pulsar4X.Tests/Resolver2DJointsSpecTests.cs`
+**Created:** `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13.7/§13.8` (pins BOTH §11 joints), `Pulsar4X.Tests/Resolver2DJointsSpecTests.cs`
 (executable-spec fixture; lane-distinct name, lands in the `rest` shard).
 
 **Byte-identity claim: (b), strongest form — the slice adds only a doc + an isolated test fixture and changes ZERO
@@ -25,7 +25,7 @@ ctor + getters, no shared-state mutation), so every existing fixture is byte-for
 Add under the combat-design docs:
 | Doc | Purpose | Status |
 |-----|---------|--------|
-| `docs/combat/RESOLVER-2D-JOINTS.md` | Pins the two under-specified joints of the locked 2D group-plane resolver — (1) conserved, target-weighted, residual-exact fire-allocation (3-way FFA worked example; kills the double-count trap) and (2) combined-theater cadence (`BattleTheater` owns a fixed-5s ground fight-step from inside the space trigger; fast-forward==watch proof). Gates slices S6 (multi-party) + S5 (combined theater). | 🔒 design-pinned (2026-07-18), build-state: not started (S5/S6 consume it) |
+| `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13.7/§13.8` | Pins the two under-specified joints of the locked 2D group-plane resolver — (1) conserved, target-weighted, residual-exact fire-allocation (3-way FFA worked example; kills the double-count trap) and (2) combined-theater cadence (`BattleTheater` owns a fixed-5s ground fight-step from inside the space trigger; fast-forward==watch proof). Gates slices S6 (multi-party) + S5 (combined theater). | 🔒 design-pinned (2026-07-18), build-state: not started (S5/S6 consume it) |
 
 ### Pending TESTING-TRACKER.md row (P8.2 lands it)
 - **Resolver2DJointsSpecTests** (engine/CI, `rest` shard) — executable specification for the two 2D-resolver joints.
@@ -36,7 +36,7 @@ Add under the combat-design docs:
   watch-vs-ff. What-it-unblocks: S5 (combined theater / Endor) + S6 (multi-party / FFA).
 
 ### Pending Combat/CLAUDE.md row (put here to avoid a parallel-sibling collision on that shared file)
-Add to the Combat File Map (or a "2D resolver joints" note): a row for `docs/combat/RESOLVER-2D-JOINTS.md` — the
+Add to the Combat File Map (or a "2D resolver joints" note): a row for `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13.7/§13.8` — the
 pinned design for the two group-plane joints; and note that when S6 wires `AllocateFire` it REPLACES the
 `1.0 / split` scale in `StepEngagementGroup` (`CombatEngagement.cs:729`) behind the group-plane flag (uniform weights
 → `1/count` → byte-identical to today's equal split), and folds the ground per-faction pool
@@ -56,7 +56,7 @@ allocation.
 **Created:** `GameEngine/Combat/GroupPlane.cs` (pure static, NO caller) + `Pulsar4X.Tests/GroupPlaneTests.cs`
 (lane-distinct fixture name; lands in the `rest` shard by the complement filter, ci.yml line 33 — no ci change).
 
-`GroupPlane` is the invisible battle graph-paper math of RESOLVER-2D-GROUP-PLANE-DESIGN.md §13 S0:
+`GroupPlane` is the invisible battle graph-paper math of docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13.5 S0:
 - `SeedFrame(seeds)` → `BattleFrame` (Origin/XAxis/YAxis as 3D unit vectors). Deterministic basis: seeds sorted by
   id first (order-independent, incl. the centroid sum); XAxis = lowest-id→centre; YAxis = widest spread ⟂ XAxis
   (id tie-break); degenerate fallbacks (no seeds → UnitX/UnitY; lowest-id AT centre → farthest seed; no spread →
@@ -73,7 +73,7 @@ every current green test is byte-for-byte unaffected. (No FLAGGED balance number
 epsilons — `Epsilon = 1e-9` and a `1e-6` relative tie tolerance — numerical, not gameplay.)
 
 ### Pending DOCS-INDEX.md status flip (P8.2 lands it — do NOT edit DOCS-INDEX mid-flight)
-- `docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md` build-state: was "not started (S0 is the first slice)"; now
+- `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13` build-state: was "not started (S0 is the first slice)"; now
   **S0 built (pure `GroupPlane.cs` + `GroupPlaneTests`, no caller); S1+ pending**. (Header line 3 of that doc also
   reads "Build state: not started (S0 is the first slice)" — a future in-fence slice or P8.2 can refresh it; that doc
   is design source, not in this lane's edit fence, so leaving the flip as a pending note here.)
@@ -86,7 +86,7 @@ epsilons — `Epsilon = 1e-9` and a `1e-6` relative tie tolerance — numerical,
 (new `EnableGroupPlane` flag + seeding + 2D anchor movement, all flag-gated). **Created:**
 `Pulsar4X.Tests/EfGroupPlaneAnchorTests.cs` (lane-distinct fixture; lands in the `rest` shard, no ci.yml change).
 
-Slice S1 of RESOLVER-2D-GROUP-PLANE-DESIGN.md §13 — WIRE the S0 `GroupPlane` math into the space engagement:
+Slice S1 of docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13.5 — WIRE the S0 `GroupPlane` math into the space engagement:
 - `FleetCombatStateDB` gains `HasFrame`/`FrameOrigin`/`FrameXAxis`/`FrameYAxis` (the frozen `BattleFrame`, stored as three
   loose `Vector3`s — the `FleetRetreatDB.RetreatVector` save pattern), `Anchor` (this fleet's 2D point) and
   `GroupPositions` (`List<Vector2>`; S1 = one entry, the whole-fleet group at the anchor; S3 fills per-role). All
@@ -137,7 +137,7 @@ Gauge `EfGroupPlaneAnchorTests`.
   gate reads the pair-distance).
 
 ### Pending DOCS-INDEX.md status flip (P8.2 lands it)
-- `docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md` build-state: now **S0 + S1 built (pure `GroupPlane.cs` + `GroupPlaneTests`;
+- `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13` build-state: now **S0 + S1 built (pure `GroupPlane.cs` + `GroupPlaneTests`;
   `FleetCombatStateDB` anchors + 2D `AdvanceClosing` behind `EnableGroupPlane` + `EfGroupPlaneAnchorTests`); S2+ pending**.
 
 ### Cross-lane requests / developer decisions
@@ -147,7 +147,7 @@ Gauge `EfGroupPlaneAnchorTests`.
 
 ### Pending Combat/CLAUDE.md row (put here to avoid a parallel-sibling collision on that shared file — same as T0.1)
 Add to the Combat File Map:
-| `GroupPlane.cs` | **NEW (2D group-plane resolver, slice S0, Operation Earthfall T1.1)** Pure-static "invisible battle graph-paper" math (`docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md` §13). `SeedFrame` lays a battle-local 2D `BattleFrame` (Origin + orthonormal XAxis/YAxis) down ONCE from the fighters' real 3D positions — deterministic basis (seeds sorted by id; XAxis = lowest-id→centre; YAxis = widest ⟂ spread, id tie-break; degenerate fallbacks, never throws). `Project` flattens a 3D position onto the FROZEN frame (a joiner uses the stored axes, so gaps don't jump as ships die). `EnemyDirection` gives the nearest-enemy facing with a lowest-id tie-break (no oscillation). `RoleOffset(enemyDir, bearingDeg, alongStandoff, perpSpread)` is the doctrine nudge as pure trig (0°=at enemy / ±90°=flank / 180°=rear; −standoff kites; perpSpread fans). `PairDistance` = the single scalar the plane will hand the unchanged 1-D `CombatKernel`. **NOTHING calls it (S0)** — byte-identical by construction; S1 seeds anchors in `FleetCombatStateDB`, S2 the 2D range gate. Gauge `GroupPlaneTests`. | ✅ S0 (pure math, no caller) |
+| `GroupPlane.cs` | **NEW (2D group-plane resolver, slice S0, Operation Earthfall T1.1)** Pure-static "invisible battle graph-paper" math (`docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13` §13). `SeedFrame` lays a battle-local 2D `BattleFrame` (Origin + orthonormal XAxis/YAxis) down ONCE from the fighters' real 3D positions — deterministic basis (seeds sorted by id; XAxis = lowest-id→centre; YAxis = widest ⟂ spread, id tie-break; degenerate fallbacks, never throws). `Project` flattens a 3D position onto the FROZEN frame (a joiner uses the stored axes, so gaps don't jump as ships die). `EnemyDirection` gives the nearest-enemy facing with a lowest-id tie-break (no oscillation). `RoleOffset(enemyDir, bearingDeg, alongStandoff, perpSpread)` is the doctrine nudge as pure trig (0°=at enemy / ±90°=flank / 180°=rear; −standoff kites; perpSpread fans). `PairDistance` = the single scalar the plane will hand the unchanged 1-D `CombatKernel`. **NOTHING calls it (S0)** — byte-identical by construction; S1 seeds anchors in `FleetCombatStateDB`, S2 the 2D range gate. Gauge `GroupPlaneTests`. | ✅ S0 (pure math, no caller) |
 
 ### Pending TESTING-TRACKER.md row (P8.2 lands it)
 - **GroupPlaneTests** (engine/CI, `rest` shard) — the S0 group-plane math gauge. Asserts: frame determinism (shuffled
@@ -159,7 +159,7 @@ Add to the Combat File Map:
   usable frame; `PairDistance` Euclidean. What-it-unblocks: S1 (anchors in `FleetCombatStateDB`) + S2 (2D range gate).
 
 ### Pending DOCS-INDEX.md status flip (P8.2 lands it — do NOT edit DOCS-INDEX mid-flight)
-- `docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md` build-state: was "not started (S0 is the first slice)"; now
+- `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13` build-state: was "not started (S0 is the first slice)"; now
   **S0 built (pure `GroupPlane.cs` + `GroupPlaneTests`, no caller); S1+ pending**. (Header line 3 of that doc also
   reads "Build state: not started (S0 is the first slice)" — a future in-fence slice or P8.2 can refresh it; that doc
   is design source, not in this lane's edit fence, so leaving the flip as a pending note here.)
@@ -174,7 +174,7 @@ plane-aware `WithinWeaponRange(Entity,Entity)` via new private `RangeBetween`), 
 WithinWeaponRange now read…"). **Created:** `Pulsar4X.Tests/EfGroupPlaneRangeGateTests.cs` (lane-distinct fixture;
 lands in the `rest` shard, no ci.yml change).
 
-Slice S2 of RESOLVER-2D-GROUP-PLANE-DESIGN.md §13 — WIRE the range gate to the 2D plane:
+Slice S2 of docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13.5 — WIRE the range gate to the 2D plane:
 - `SeparationOf(fleet)`: still gated on `EnableClosingRange` FIRST (returns 0 when closing off → the range gate is a
   no-op → byte-identical). When `EnableGroupPlane` is ALSO on and the plane is live (`HasFrame`) for BOTH this fleet
   and its representative opponent (`OpponentFleetId`), it returns the straight-line 2D `GroupPlane.PairDistance` between
@@ -228,7 +228,7 @@ And in the `FleetCombatStateDB.cs` row, extend the T2.1 note: the `Anchor` field
   per-role sub-fleet groups the pair-distance will then span).
 
 ### Pending DOCS-INDEX.md status flip — S2 (P8.2 lands it)
-- `docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md` build-state: now **S0 + S1 + S2 built** (pure `GroupPlane.cs` +
+- `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13` build-state: now **S0 + S1 + S2 built** (pure `GroupPlane.cs` +
   `GroupPlaneTests`; `FleetCombatStateDB` anchors + 2D `AdvanceClosing` behind `EnableGroupPlane` + `EfGroupPlaneAnchorTests`;
   the 2D range gate `SeparationOf`/`WithinWeaponRange` + `EfGroupPlaneRangeGateTests`); **S3+ pending** (S3–S6 are a
   later campaign — NOT this lane). Header line 3 of that doc still reads "not started" — a P8.2 refresh, that doc is

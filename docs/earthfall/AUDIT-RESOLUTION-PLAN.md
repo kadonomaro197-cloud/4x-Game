@@ -55,7 +55,7 @@ Pulsar4X.Colonies.LegitimacyProcessor.EnableRebellionDebounce = true;
 ## Slice 5 — DOC + hygiene batch (one commit)
 - `.gitignore`: add `console_output.txt`, `game_logs/`, `imgui.ini`; `git rm --cached` the tracked copies.
 - `GameEngine/Sensors/CLAUDE.md:273`: update the grave-rung bullet — contacts now age out (`SensorScan.ContactStaleSeconds`).
-- `docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md` line 3: flip build-state to "S0+S1+S2 built (Earthfall T1–T3, behind `EnableGroupPlane` default-off, byte-identical); S3–S6 later."
+- `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13` line 3: flip build-state to "S0+S1+S2 built (Earthfall T1–T3, behind `EnableGroupPlane` default-off, byte-identical); S3–S6 later."
 - `docs/DOCS-INDEX.md`: refresh the SURFACE-FOG row (slices 1–4 built; 5 = GroundThreat; 6 pending) **and add rows for the two new audit docs** (`IMPLEMENTATION-AUDIT-2026-07-22.md`, `AUDIT-RESOLUTION-PLAN.md`); refresh the As-of stamp.
 - `ShipDesign.cs:167-171` + `LaunchComplexProcessor.cs:125-130` comments: match the decision-3 flip ("both flags default ON as of dev decision 3, 2026-07-21").
 - `docs/TESTING-TRACKER.md`: copy the four T-P4.1..T-P4.4 seven-field rows from `LANE-CORE-NOTES.md` into the Layer-1 table.

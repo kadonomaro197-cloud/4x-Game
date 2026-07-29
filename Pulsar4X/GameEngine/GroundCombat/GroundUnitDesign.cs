@@ -62,7 +62,7 @@ namespace Pulsar4X.GroundCombat
         /// hex ranges × a fixed nominal reference pitch (a real per-body pitch is a later slice) and snapshotted onto
         /// <see cref="GroundUnit.Range_m"/>. 0 = unset (a code-built / garrison design leaves it 0 → <c>RaiseUnit</c>
         /// derives it from the hex range). <b>ADDITIVE + UNREAD by the resolver</b> → byte-identical.
-        /// Design: docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md.</summary>
+        /// Design: docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.</summary>
         [JsonProperty] public double Range_m { get; set; }
         /// <summary>SYSTEM ① survivability-by-dodge (0..1) — Σ augment evasion; snapshotted onto each raised unit.</summary>
         [JsonProperty] public double Evasion { get; set; }

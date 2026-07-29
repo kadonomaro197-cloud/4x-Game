@@ -4,7 +4,7 @@
 developer's answers, captured verbatim-in-essence so a future session doesn't re-ask or guess. Produced from a
 two-pass survey (8 domain readers + 8 cross-system connection readers, ~4M tokens, file:line throughout).
 
-**Read with:** `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` (the board), `docs/combat/REAL-DISTANCE-COMBAT-DESIGN.md`
+**Read with:** `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` (the board), `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12`
 (the rules), `GameEngine/GroundCombat/CLAUDE.md` (as-built).
 
 ---
@@ -74,7 +74,7 @@ rules of engagement, an order queue, a tactical AI, inter-world troop lift, and 
 | 19 | Battle scope + an engage decision? | **Battle is scoped to REAL DISTANCE** (not the region band). **And yes to an engage decision — dependent on orders or doctrine.** |
 | 20 | How is a battalion composed? | **The same way it's done in SPACE.** (Ground mirrors the fleet composition model — consistent with the existing "formation is the ground echo of a fleet" parity map.) |
 | 21 | What does capturing a planet transfer? | **OPEN — still thinking.** |
-| 22 | Is one health scalar enough? | **ALREADY DECIDED IN THE DOCS — the question should not have been asked.** `docs/combat/UNIFIED-RESOLVER-AND-BATTLE-STATS.md` Part B designs the `CasualtyTier` wound function (returns untouched / wounded / dead, works for a model squad *and* a monolith) plus a damage ledger totalled at battle end; `docs/ground/GROUND-UNIT-VARIABLES.md` designs the shared **Training** dial (build-time + scarce talent + credits → veterancy, militia→elite on one slider). **Both designed, neither built.** Treat as settled design awaiting build. |
+| 22 | Is one health scalar enough? | **ALREADY DECIDED IN THE DOCS — the question should not have been asked.** `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.2` Part B designs the `CasualtyTier` wound function (returns untouched / wounded / dead, works for a model squad *and* a monolith) plus a damage ledger totalled at battle end; `docs/ground/GROUND-UNIT-VARIABLES.md` designs the shared **Training** dial (build-time + scarce talent + credits → veterancy, militia→elite on one slider). **Both designed, neither built.** Treat as settled design awaiting build. |
 | 23 | How long is a battle meant to last? | **A fire rate EXISTS but must be CALCULATED, not stored as a lump.** A weapon carries a **rate** (e.g. 10 damage/second). Each tick the resolver **integrates that rate over the tick's duration against the available targets and works out who actually died and who is still alive** — developer's example: *a machine gun at 10 dps, 500 reachable targets at 200 health each, in one tick → compute it out.* **Applies to ALL weapons**, not just ground. |
 
 ### F — Showing the ground war

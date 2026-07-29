@@ -372,7 +372,7 @@ namespace Pulsar4X.Combat
         public static bool RequireDetectionToEngage = false;
 
         /// <summary>When true, a battle only ERUPTS if someone will release a shot — the first-shot trigger (Phase 3,
-        /// docs/combat/FLEET-COMBAT-CLOSING-DESIGN.md). Two hostile fleets that are BOTH non-WeaponsFree (weapons-hold /
+        /// docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.4). Two hostile fleets that are BOTH non-WeaponsFree (weapons-hold /
         /// return-fire) sit in a tense STANDOFF — proximity no longer auto-starts a fight. At least one WeaponsFree
         /// fleet (the default posture) starts it. Default FALSE so existing fixtures (no posture set = WeaponsFree
         /// anyway) are unchanged; the client turns it on when ROE is live.</summary>
@@ -390,7 +390,7 @@ namespace Pulsar4X.Combat
         /// and combat disagree (the same rule fog-of-war learned — see NewEngagementImminent).</summary>
         public static bool RequireWeaponRangeToEngage = false;
 
-        /// <summary>When true, combat is a CLOSING fight (Phase 1, docs/combat/FLEET-COMBAT-CLOSING-DESIGN.md): a weapon only
+        /// <summary>When true, combat is a CLOSING fight (Phase 1, docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.4): a weapon only
         /// fires if its <see cref="WeaponProfile.Range_m"/> reaches the current gap, and the gap CLOSES each step toward
         /// the FASTER (more maneuverable) side's preferred range — so a faster long-range fleet kites a slower
         /// short-range one, and a faster brawler forces the merge. Default FALSE so every existing combat fixture is
@@ -398,7 +398,7 @@ namespace Pulsar4X.Combat
         /// weapon always fires). v1: ONE shared range per engagement group (per-sub-fleet ranges are Phase 4).</summary>
         public static bool EnableClosingRange = false;
 
-        /// <summary>When true, the closing fight runs on the 2D GROUP PLANE (docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md,
+        /// <summary>When true, the closing fight runs on the 2D GROUP PLANE (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13,
         /// slice S1): at engagement start a battle-local plane is seeded from the fleets' real 3D positions
         /// (<see cref="GroupPlane.SeedFrame"/>) and FROZEN, each fleet's ANCHOR is its projected 2D point (a joiner is
         /// placed with the SAME stored frame, so gaps don't jump as ships die), and <see cref="AdvanceClosing"/> slides
@@ -989,7 +989,7 @@ namespace Pulsar4X.Combat
         // ─── Phase 1 — closing distance ────────────────────────────────────────────────────────────────────────
 
         /// <summary>This fleet's current gap to the opposing side — 0 when closing is off or it has no state (which
-        /// makes the range-gate a no-op). Slice S2 (2D group plane, docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md §13):
+        /// makes the range-gate a no-op). Slice S2 (2D group plane, docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13.5):
         /// when <see cref="EnableGroupPlane"/> is on and the plane is live for BOTH this fleet and its representative
         /// opponent, the gap is the straight-line 2D pair-distance between their group anchors — the REAL per-fleet-pair
         /// gap (per-sub-fleet gaps become real, the substrate's deferred "Phase 4"), no longer one shared scalar. It

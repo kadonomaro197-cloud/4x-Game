@@ -12,7 +12,7 @@ using Pulsar4X.Ships;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Roots A & B of the closing-fight model (docs/combat/FLEET-COMBAT-CLOSING-DESIGN.md) — the data the whole tree reads.
+    /// Roots A & B of the closing-fight model (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.4) — the data the whole tree reads.
     /// Root A: a weapon carries its RANGE into the combat profile (beams real, the rest rangeless-for-now). Root B:
     /// fleet capability AGGREGATION — speed/Δv floor (slowest ship), firepower-vs-range curve (longest gun that
     /// reaches), sensor envelope (best sensor, parallel = max not sum). Pure read-models; no behaviour change.

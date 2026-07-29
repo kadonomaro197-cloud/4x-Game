@@ -163,10 +163,10 @@ Verdicts: **KEEP** (healthy) · **KEEP-TRIM** (small fix/trim) · **STALE-FIX** 
 | STATUS | `docs/DOCS-INDEX.md` | KEEP-TRIM | BLOATED | Keep as the canonical index but enforce a hard cap on the Notes column (~1 line / ~25 word |
 | STATUS | `docs/archive/SYSTEMS-STATUS-AND-TEST-PLAN.md` | STALE-FIX | VERBOSE | Keep the doc for its unique value — the system×system 'Connected to' wiring map — but (1)  |
 | STATUS | `docs/TESTING-TRACKER.md` | KEEP-TRIM | VERBOSE | Keep as the canonical test ledger but split concerns: (1) move the dated per-session live- |
-| COMBAT | `docs/combat/AUTO-RESOLVER-TEARDOWN.md` | STALE-FIX | VERBOSE | Do a status pass: flip §4 #1/#2/#3/#5/#6 and §7d #1/#2 from ➕/backlog to ✅ built (cite Wea |
+| COMBAT | `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §8` | STALE-FIX | VERBOSE | Do a status pass: flip §4 #1/#2/#3/#5/#6 and §7d #1/#2 from ➕/backlog to ✅ built (cite Wea |
 | COMBAT | `docs/combat/COMBAT-DESIGN.md` | STALE-FIX | VERBOSE | Keep as the combat design hub, but: (1) replace the stale 'What Already Exists' table with |
-| COMBAT | `docs/combat/FLEET-COMBAT-CLOSING-DESIGN.md` | KEEP-TRIM | OK | Keep in docs/ as the combat-range design spine. Add an 'as of' refresh stamp noting Phases |
-| COMBAT | `docs/combat/RESOLVER-DESIGN.md` | KEEP-TRIM | VERBOSE | Keep in place as the combat-resolver-merge record. Once slice 5c (bucketing) lands, collap |
+| COMBAT | `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.4` | KEEP-TRIM | OK | Keep in docs/ as the combat-range design spine. Add an 'as of' refresh stamp noting Phases |
+| COMBAT | `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.1` | KEEP-TRIM | VERBOSE | Keep in place as the combat-resolver-merge record. Once slice 5c (bucketing) lands, collap |
 | COMBAT | `docs/combat/WEAPONS-DESIGN.md` | KEEP-TRIM | OK | Keep in place. (1) Update the header status from 'design survey' to 'design LOCKED + built |
 | COMBAT | `docs/combat/WEAPONS-DESIGN.md` | KEEP-TRIM | VERBOSE | Keep as the canonical dodge/triangle/bucketing design doc but (1) add a one-line header no |
 | GROUND | `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` | KEEP-TRIM | OK | Keep as the active G6b-3 tracker now. On G6b-3 completion: (1) delete or archive docs/HEX- |
