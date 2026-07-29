@@ -553,7 +553,13 @@ evasion falls as your range grows.** That tension does not exist in the game tod
 you are **entailed** by what you push against — they are not independent choices. Propulsion is genuinely
 **one choice and three sliders**.
 
-**The sliders — after the intrinsic test (§1a) — are TWO, not three:**
+> ### ⚠ CORRECTED 2026-07-29 — the first pass OVER-COLLAPSED this category
+> An earlier draft of this section said *"one choice and two sliders,"* flattening dials that genuinely differ. **That
+> was wrong on two counts:** it dropped Traction's and Warp's own editable dials, and it missed that **a drive's
+> SIGNATURE is already wired and scales with thrust** (§23.2). The corrected shape is **one choice, and the choice
+> picks your dial set** — because the sim reads different things depending on what you push against.
+
+**The sliders for REACTION — after the intrinsic test (§1a):**
 
 | Slider | Intrinsic? | Why |
 |---|---|---|
@@ -564,9 +570,57 @@ you are **entailed** by what you push against — they are not independent choic
 Ground adds **rough-terrain handling**, which already exists and is intrinsic.
 
 > 🔑 **The developer's reading, and it is the right one:** *"push ↔ economy, out of all the others, is the only one
-> that makes sense."* It is the only dial in the category that is **both intrinsic and a real trade** — drive size is
+> that makes sense."* It is the only **Reaction** dial that is **both intrinsic and a real trade** — drive size is
 > intrinsic but has no catch beyond mass, and everything else people reach for (Δv, acceleration, evasion) is
 > emergent.
+
+### 23.2 🔴 THE TRADE IS THREE-WAY, NOT TWO — signature is already wired
+
+**Missed in the first pass, found in `engines.json`:**
+
+```
+Sensor Signature → AtbConstrArgs(3500, PropertyValue('Thrust'))
+                 → SensorSignatureAtb(temp 3500 K, magnitude = Thrust)
+```
+
+**A drive's signature magnitude IS its thrust**, and that feeds the live detection system. So push ↔ economy is not a
+two-way trade:
+
+| Push harder | Ease off |
+|---|---|
+| more thrust → **more evasion** | more exhaust velocity → **more Δv per kg** |
+| more thrust → 🔴 **louder — seen from farther away** | quieter — you pick your moment |
+
+**And detection decides who shoots first.** So *hard shove* costs you **stealth**, not merely economy — which makes
+this the richest single trade found in any category so far, and **it is already true in the code.**
+
+**⇒ A `Signature suppression` dial is therefore a genuine candidate:** quiet the drive at the cost of mass or
+efficiency. Intrinsic ✅ · writes a variable the sim reads ✅ · has an obvious catch ✅. *(Proposed, not built.)*
+
+### 23.3 THE CHOICE PICKS YOUR DIAL SET — the corrected structure
+
+The sim reads **different things per family**, so the doors do not share one slider wall:
+
+| Family | Its dials | State |
+|---|---|---|
+| **Reaction** | drive size · **push ↔ economy** · *signature suppression* | first two exist; third proposed (§23.2) |
+| **Traction** | **speed factor** · **rough handling** · **amphibious** | 🔵 **all three already editable and read** — I dropped them by over-collapsing |
+| **Warp** | **max speed** · **efficiency vs power** | 🔵 **already an editable dial in the template** — also dropped |
+| **Fluid** | medium | writes almost nothing today |
+
+**`RoughHandling` is worth its own note:** it is **one dial feeding two systems** — march time (`TerrainMult`) *and* a
+combat multiplier (`LocomotionTerrainMult`). **`Amphibious`** is a bool that decides where you may go at all.
+
+### 23.4 CANDIDATES CHECKED AND REJECTED
+
+| Candidate | Verdict |
+|---|---|
+| Thrust vectoring / gimbal arc | ❌ the resolver is **non-positional** — writes nothing |
+| Spool-up · throttle response | ❌ the resolver is **not per-shot-timed** — writes nothing |
+| Restart capability · reliability / MTBF | ❌ not modelled at all |
+| Ground pressure / footprint | ❌ nothing beyond `RoughHandling` reads it |
+| **Drive heat** | ⚠ **symmetric and missing.** Weapons feed a fleet `HeatPool_kJ`; propulsion feeds nothing. Writes no variable **today**, so it fails test 2 as-is — but the asymmetry is real and the wire is small. |
+| Fuel type | ⚠ intrinsic, but under push↔economy it becomes a **cost/availability** axis rather than a performance one — **the open question in §26.** |
 
 ### 23.1 WHAT IS SET vs WHAT EMERGES — propulsion's honest split
 
@@ -595,6 +649,7 @@ the inputs; the entity decides the outcome. A designer that pretended otherwise 
 |---|---|---|
 | **Thrust ÷ mass** | `CalculateEvasion` | 🔴 **the best defence in the game is bought HERE** |
 | **Thrust** | `FleetManeuver` | decides **who dictates the range** in a closing fight |
+| **Thrust** (again) → **sensor signature** | `SensorSignatureAtb(3500 K, magnitude = Thrust)` → **Detection** | 🔴 **the third leg of the trade (§23.2)** — the same dial that buys evasion sells your position. Detection decides who shoots first. |
 | **Δv** | `FleetCombat.DeltaVFloor` → `ManeuverBudget` | the **kiting clock** — run dry and the enemy closes |
 | **Warp max speed** | `WarpSpeedFloor` | strategic transit; the fleet moves at its slowest ship |
 | **Ground speed factor** | `Speed_kmh` → the closing march | how fast you cross a battle's real metres |
@@ -640,5 +695,5 @@ as its cost?** The first keeps research meaningful; the second makes the trade c
 |---|---|---|
 | **Weapons** | ✅ derived | 5 doors + 41 dial groups → **2 choices + 4 sliders** |
 | **Defense** | ✅ derived | 4 doors → **1 choice + 3 sliders**, two doors relocated out |
-| **Propulsion** | ✅ derived | 5 doors → **1 choice + 2 sliders**; Exotic dissolves; **the fix here is to ADD a dial, not remove doors** |
+| **Propulsion** | ✅ derived *(corrected)* | 5 doors → **1 choice, and the choice picks the dial set**; Exotic dissolves; **the fix here is to ADD dials, not remove doors** — headline: the push↔economy trade is **three-way** because signature already scales with thrust |
 | Sensors · Power · Enhancers · Industrial · Logistical · Civic · Command · Chassis | ⏳ owed | |
