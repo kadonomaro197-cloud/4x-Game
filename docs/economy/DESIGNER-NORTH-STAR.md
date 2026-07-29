@@ -138,7 +138,7 @@ enemy. You *can* show **"× effective health vs a slug / vs a beam"** — which 
 at long range. So any readout must be a **small curve or matrix, never one number** — the same shape §15 already
 locked for the armour readout. Consistent by construction.
 
-### 1c. ⚠ THE TWO CEILINGS — `EvasionCap` vs `MinLandedFraction`, explained (open decision)
+### 1c. 🔒 DECIDED — THE TWO CEILINGS NOW AGREE (developer chose (c), 2026-07-29)
 
 **Plain English: there are two different safety stops on the same machine, fitted by different people, and only one of
 them is labelled "the limit."**
@@ -170,9 +170,20 @@ shape of thing that makes a balance pass go wrong quietly.
 | **(b)** | Delete `EvasionCap`; `MinLandedFraction` becomes the single ceiling → **×50 everywhere** | **changes point-blank combat** — dodgy hulls get much tougher up close |
 | **(c)** | Keep both but make them **agree**: set `MinLandedFraction = 1 − EvasionCap = 0.05` → **×20 everywhere** | **changes long-range combat** — dodgy hulls get less tough at range |
 
-**Recommended: (c).** One number then means one thing, and it *lowers* the largest multiplier in the game (§1b: 2×–5×
-armour's). **But it moves live combat numbers, so it needs a before/after gauge run — the developer's call, not a
-silent edit.**
+**🔒 DECIDED — (c), and BUILT 2026-07-29.** `CombatKernel.MinLandedFraction` 0.02 → **0.05** (= `1 − EvasionCap`),
+so the ceiling is **×20 everywhere**. One number now means one thing, and it *lowers* the largest multiplier in the
+game (§1b).
+
+**Narrow by construction:** the effective floor is `max(Saturation/(Saturation+50), MinLandedFraction)`, so this only
+binds for weapons whose own saturation floor is below it — **`Saturation < ~2.6`, i.e. low rate-of-fire ballistics.**
+A flak gun floors itself far higher and never sees this number. So it bites exactly the case it was meant to: **a slow
+slug at long range against a nimble target.** ⚠ It is still a **balance change that moves live combat numbers** (not
+an additive flag-gated slice) — CI is the gauge.
+
+**Gauge that cannot rot:** `CombatKernelTests.TheTwoCeilings_Agree_SoEvasionCapsAtOneMultiplierEverywhere` asserts
+`MinLandedFraction == 1 − EvasionCap`, that the same hull under the same fire hits the same ceiling at gap 0 and at a
+gigametre, that the ceiling is ×20, and that evasion still exceeds armour's ×10 — so a future retune of either dial is
+a deliberate, visible act.
 
 ---
 

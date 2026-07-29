@@ -50,6 +50,40 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("THE TWO CEILINGS AGREE (developer's call 2026-07-29, option (c) of DESIGNER-NORTH-STAR §1c): MinLandedFraction == 1 - EvasionCap, so evasion's effective-health multiplier is the SAME ×20 point-blank and at range. Two dials used to bound the same thing at different values (×20 vs ×50) and only one was named 'cap'.")]
+        public void TheTwoCeilings_Agree_SoEvasionCapsAtOneMultiplierEverywhere()
+        {
+            // Evasion is a MULTIPLIER, not a to-hit roll: CombatEngagement.ApplyCasualties computes
+            // EffToughness = Toughness / landedFraction. So a landed fraction of f is an effective-health ×(1/f).
+            Assert.That(CombatKernel.MinLandedFraction, Is.EqualTo(1.0 - ShipCombatValueDB.EvasionCap).Within(1e-9),
+                "the range floor and the point-blank cap must bound the SAME multiplier — keep them equal if either is retuned");
+
+            // POINT BLANK: a maximally-evasive hull vs a slow dumb shot. dodge = evasion × (1 − trackingEffectiveness),
+            // which tops out at EvasionCap, so the landed fraction bottoms out at 1 − EvasionCap.
+            var slowShot = new WeaponProfile(100, 1.0, 0.0, 1.0, 0, WeaponNature.Kinetic, WeaponDelivery.Slug);
+            double pointBlank = CombatKernel.HitFraction(slowShot, evasion: ShipCombatValueDB.EvasionCap);
+
+            // AT RANGE: the range term ADDS dodge on top and clamps at 1.0, so ONLY the floor stops 0% landing.
+            double atRange = CombatKernel.HitFraction(slowShot, evasion: ShipCombatValueDB.EvasionCap, separation_m: 1e9);
+
+            // Tolerance 1e-4, not 1e-9: point-blank sits a hair ABOVE the floor because even a 1 m/s shot has a
+            // non-zero velocityTerm (v/(v+VelocityReference)), which shaves ~1e-6 off the dodge. At range the dodge
+            // clamps to 1.0 and the floor alone decides. Same ceiling to every meaningful digit.
+            Assert.That(atRange, Is.EqualTo(pointBlank).Within(1e-4),
+                "the same hull under the same fire must hit the same ceiling whether the gap is 0 or a gigametre");
+
+            double multiplier = 1.0 / pointBlank;
+            Assert.That(multiplier, Is.EqualTo(20.0).Within(0.5), "the single evasion ceiling is ×20 effective health");
+
+            // And it stays BELOW nothing — armour's own ceiling is 1/ArmourMinPassFraction (×10), so evasion is still
+            // the larger multiplier; this test pins the ratio so a retune of either is a deliberate, visible act.
+            double armourCeiling = 1.0 / CombatKernel.ArmourMinPassFraction;
+            Log($"evasion ceiling ×{multiplier:0.#} (point-blank {pointBlank:0.###}, at-range {atRange:0.###})  armour ceiling ×{armourCeiling:0.#}");
+            Assert.That(multiplier, Is.GreaterThan(armourCeiling),
+                "evasion is still the bigger multiplier — bought at the Propulsion door, not the Defense one");
+        }
+
+        [Test]
         [Description("ArmourSoak pins the flat-per-source plating: light armour shaves a flat amount off a source; heavy armour is floored at ArmourMinPassFraction so it's never total immunity; 0 armour passes the source untouched.")]
         public void ArmourSoak_PinsKnownValues()
         {

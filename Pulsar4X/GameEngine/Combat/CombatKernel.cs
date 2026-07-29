@@ -42,8 +42,33 @@ namespace Pulsar4X.Combat
         public const double SaturationReference = 50.0;
 
         /// <summary>Floor on the fraction of fire that lands, so enough volume kills even a perfect dodger.
-        /// Mirror of <see cref="CombatEngagement.MinLandedFraction"/>.</summary>
-        public const double MinLandedFraction = 0.02;
+        /// Mirror of <see cref="CombatEngagement.MinLandedFraction"/>.
+        /// <para>
+        /// <b>0.02 → 0.05 (2026-07-29, developer's call — option (c) of docs/economy/DESIGNER-NORTH-STAR.md §1c).</b>
+        /// This value and <see cref="ShipCombatValueDB.EvasionCap"/> are TWO ceilings on the same thing — how tough
+        /// evasion can make a hull — and they used to DISAGREE, each biting in a different situation:
+        /// <list type="bullet">
+        /// <item>POINT BLANK the cap bound: <c>dodge = evasion × (1 − tracking)</c> maxes at 0.95, so 5% landed
+        ///   ⇒ <b>×20</b> effective health (evasion is a multiplier — <c>EffToughness = Toughness ÷ landed</c>,
+        ///   CombatEngagement ApplyCasualties; there is no to-hit roll).</item>
+        /// <item>AT RANGE the floor bound: the range term ADDS dodge on top, clamping at 1.0, so this floor was all
+        ///   that stopped 0% landing ⇒ <b>×50</b> effective health.</item>
+        /// </list>
+        /// Tuning "how tough can a dodgy hull get" therefore needed BOTH dials plus knowing which was active — and the
+        /// one named "cap" only governed half the cases. Setting this to <c>1 − EvasionCap</c> makes them AGREE at a
+        /// single <b>×20</b> ceiling everywhere, so one number means one thing. It also LOWERS the largest multiplier
+        /// in the game (evasion's ×20/×50 against armour's ×10 <c>1/ArmourMinPassFraction</c>).
+        /// </para>
+        /// <para>
+        /// <b>Narrow by construction:</b> the effective floor is
+        /// <c>saturationFloor = max(Saturation/(Saturation+SaturationReference), MinLandedFraction)</c>, so this only
+        /// binds for weapons whose own saturation floor is below it — i.e. <c>Saturation &lt; ~2.6</c> (low
+        /// rate-of-fire ballistics). A flak gun floors itself far higher and never sees this number. So the change
+        /// bites exactly the case it was meant to: a slow slug at long range against a nimble target.
+        /// </para>
+        /// <b>⚠ BALANCE DIAL — this MOVES live combat numbers</b> (it is not additive/byte-identical like the flag-gated
+        /// slices). Keep it equal to <c>1 − ShipCombatValueDB.EvasionCap</c> if either is retuned.</summary>
+        public const double MinLandedFraction = 0.05;
 
         /// <summary>Flight time (s) at which a ballistic shot's RANGE penalty reaches half its max — the
         /// "accuracy falls off with distance" knob. Inert at separation 0. Mirror of
