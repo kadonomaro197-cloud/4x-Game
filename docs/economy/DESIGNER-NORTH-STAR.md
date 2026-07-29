@@ -138,6 +138,42 @@ enemy. You *can* show **"× effective health vs a slug / vs a beam"** — which 
 at long range. So any readout must be a **small curve or matrix, never one number** — the same shape §15 already
 locked for the armour readout. Consistent by construction.
 
+### 1c. ⚠ THE TWO CEILINGS — `EvasionCap` vs `MinLandedFraction`, explained (open decision)
+
+**Plain English: there are two different safety stops on the same machine, fitted by different people, and only one of
+them is labelled "the limit."**
+
+| Dial | Value | What it actually limits |
+|---|---|---|
+| `EvasionCap` | 0.95 | the evasion **number** — *"no hull is more than 95% evasive"* |
+| `MinLandedFraction` | 0.02 | the fraction of fire that **lands** — *"at least 2% of incoming fire always connects"* |
+
+**They bite in different situations, which is the whole problem:**
+
+| Situation | The maths | Which stop bites | Result |
+|---|---|---|---|
+| **Point blank** | `dodge = evasion × (1 − tracking)` → max **0.95**, so 5% lands | **`EvasionCap`** | **×20** effective health |
+| **At range** | the range term ADDS more dodge on top, so dodge clamps at **1.0** → 0% would land | **`MinLandedFraction`** | **×50** effective health |
+
+*(The floor is really `saturationFloor = max(sat/(sat+50), MinLandedFraction)`, so `MinLandedFraction` only bites for
+**low-saturation** weapons — a flak gun's own saturation floors it far higher.)*
+
+**Why it matters:** if you ever want to tune *"how tough can a dodgy ship get,"* you must change **both** dials **and**
+know which one is active in which situation. The one named "cap" only governs half the cases. That is exactly the
+shape of thing that makes a balance pass go wrong quietly.
+
+**Three ways out:**
+
+| | The change | Cost |
+|---|---|---|
+| **(a)** | **Leave it, document it.** Both are defensible — a ceiling on agility and a floor on volume-of-fire getting through. | **zero risk**, but the confusion stays |
+| **(b)** | Delete `EvasionCap`; `MinLandedFraction` becomes the single ceiling → **×50 everywhere** | **changes point-blank combat** — dodgy hulls get much tougher up close |
+| **(c)** | Keep both but make them **agree**: set `MinLandedFraction = 1 − EvasionCap = 0.05` → **×20 everywhere** | **changes long-range combat** — dodgy hulls get less tough at range |
+
+**Recommended: (c).** One number then means one thing, and it *lowers* the largest multiplier in the game (§1b: 2×–5×
+armour's). **But it moves live combat numbers, so it needs a before/after gauge run — the developer's call, not a
+silent edit.**
+
 ---
 
 ## 2. WEAPONS — the input surface (verified in source, 2026-07-29)
@@ -453,7 +489,43 @@ everything** — that is the anti-dominance rule satisfied by construction rathe
 
 **⚠ Flagged for the developer (balance, not design):** a floor and ceiling on any single value, so a design can never
 sit at 0.0 against a damage type (completely naked) or absurdly high against one. Suggested band **0.25 … 2.5**,
-unset until playtest.
+unset until playtest. **Explained in §15.2.**
+
+### 15.2 ⚠ WHAT "THE BAND" IS AND WHY IT NEEDS TWO NUMBERS (open decision)
+
+**Plain English: it is a graphic equaliser with a fixed total power.** You can boost the bass, but the treble has to
+come down. **The band is how far the sliders are allowed to travel** — how much boost, and how much cut.
+
+You are tuning **four** values, one per damage nature (kinetic · energy · explosive · exotic). The zero-sum ruling
+fixes their **total**. The band fixes how lopsided any **one** of them may get.
+
+**Why it needs BOTH ends — each extreme breaks the game a different way:**
+
+| Missing end | What happens |
+|---|---|
+| **No ceiling** | you build plating that is near-**immune** to one nature. Combat becomes a hard counter: whoever guessed the enemy's weapon nature wins outright. **The decision moves out of the battle and into a coin flip made before it.** |
+| **No floor** | you can tune a nature to **zero**. A specialist plate is then a free win against one enemy and instant death against another — the same failure mirrored. |
+
+**⇒ A band keeps it a LEAN, not a SWITCH.** The high end must be meaningful (a specialist genuinely walls its
+matchup); the low end must still soak something (a bad matchup hurts, it does not delete you).
+
+**In real numbers, with a total budget of 4.0 across four natures (neutral = 1.0 each):**
+
+| Band | Extreme specialist | What it means in a fight |
+|---|---|---|
+| **0.25 … 2.5** *(suggested)* | 2.5 / 0.5 / 0.5 / 0.5 | **×2.5 tougher** in its matchup, **×0.5 — half as tough** outside it. A real bet, survivable when wrong. |
+| 0.1 … 4.0 *(too wide)* | 4.0 / 0.1 / 0.1 / … | near-immune vs one, **paper** vs the rest — the coin-flip failure |
+| 0.75 … 1.5 *(too narrow)* | 1.5 / 0.83 / … | barely worth tuning — the dial stops being a decision |
+
+**🔴 The prerequisite (§15.1) — the band cannot be set until the ship side moves to the ground parameterisation.**
+A band is a *lean around a neutral midpoint*, and **the ship's `ArmourHardeningAtb` has no midpoint**: its four
+`SoakVs*` fields default to **0** and clamp to `[0, MaxSoakFraction 0.9]`, so "plain plate" is the **floor**, not the
+centre. A ship cannot currently express *"weak against energy"* at all — only *"normal, or better."* The ground's
+`GroundArmorAtb` **does** have the midpoint (`VsKinetic…` default **1.0**, a resistance multiplier that can go both
+ways). **So §15.1's direction is not optional bookkeeping — it is what makes a band expressible at all.**
+
+**Order of operations:** ① move the ship side to the 1.0-neutral multiplier · ② set the band · ③ playtest and
+re-tune. **Doing ② before ① is not possible.**
 
 ### 15.1 The ruling DECIDES the ship↔ground divergence
 
@@ -854,10 +926,92 @@ visible.
 **×50** at range, against armour's **×10**. So the sentence above is not a figure of speech — the Propulsion door
 sells a defence **2×–5× larger than anything the Defense door can**, in a currency the Defense door never sees.
 
-## 26. OPEN — for the developer
+## 26. 🔒 DECIDED — fuel type is a MULTIPLIER ON THE BUDGET (developer, 2026-07-29)
 
-**Should fuel type stay a dropdown of unlocked fuels, or become a position on the push↔economy slider with the fuel
-as its cost?** The first keeps research meaningful; the second makes the trade continuous. Not decided.
+> *"Do fuel type as a multiplier for everything. We just need to ensure that a refinery can make the different
+> variations of fuel."*
+
+**Was open** (dropdown-of-unlocked-fuels vs a position on the push↔economy slider). **Now closed as a third answer,
+and a better one:** fuel type is neither a door nor a slider position — **it multiplies the POWER BUDGET the split
+slider then divides.**
+
+### 26.1 The shape
+
+Today the fuel is an **additive lookup on exhaust velocity only** (`engines.json:44`):
+
+```
+Exhaust Velocity = ExhaustVelocityLookup(Fuel Type) + TechData('tech-conventional-engine-exhaust-velocity')
+```
+
+Under the ruling it becomes a coefficient on the whole budget, which composes cleanly with §23.3a's grouping:
+
+```
+P_total = (drive size) × FuelGrade
+T · v   = 2 · P_total          ← the split slider still decides HOW you spend it
+```
+
+🔑 **Why this is the right answer and not just a different one:** a multiplier on the budget works for **every**
+family, which is exactly what *"a multiplier for everything"* asks for. Reaction burns fuel, Traction burns
+fuel/power/muscle, Warp burns stored power — a **grade** coefficient applies to any family that burns something,
+where an exhaust-velocity lookup only ever meant anything to Reaction.
+
+### 26.2 ✅ THE REFINERY RUNG ALREADY EXISTS — verified
+
+The developer's condition (*"ensure that a refinery can make the different variations"*) **is already met.** All four
+fuels are refinery recipes today (`materials.json:25-115`), every one `"IndustryTypeID": "refining"`:
+
+| Fuel | Inputs | Ind. pts | Out | Credits | Exhaust vel | Volume/unit | `FuelType` class |
+|---|---|---|---|---|---|---|---|
+| **RP-1** | hydrocarbons 1 | 10 | 2 | 20 | 3510 | 0.000945 | conventional |
+| **Methalox** | hydrocarbons 1 | 10 | 2 | 20 | **3615** | **0.000836** | conventional |
+| **Hydrolox** | hydrocarbons 1 | 10 | 2 | 25 | 4462 | 0.002778 | conventional |
+| **NTP** | hydrocarbons 100 **+ fissionables 1** | 100 | 100 | **2500** | **7000** | 0.002778 | **ntr** |
+
+So the cradle-to-grave chain is **whole**: mineral (hydrocarbons / fissionables) → refinery → fuel material →
+burned by a drive. Nothing to build; this rung was already there.
+
+### 26.3 🔴 BUT A PURE MULTIPLIER IS A DOMINANCE LADDER — the counter-axis is already in the data
+
+**If a better fuel is better at everything, "use the best fuel you've researched" is not a decision** — it is the same
+disease as *"a bigger engine is strictly better"* (§19). A grade multiplier **needs a counter-axis**, and the table
+above already has one: **`VolumePerUnit` — density.** Tanks are finite in VOLUME, so:
+
+| Fuel | Units per m³ of tank | Reading |
+|---|---|---|
+| Methalox | **1,197** | the density king |
+| RP-1 | 1,059 | — |
+| Hydrolox | 360 | **23% more exhaust velocity, 3.3× bulkier** |
+| NTP | 360 | 94% more exhaust velocity, bulky, and 125× the credits |
+
+**⇒ The trade is performance × density × cost**, and it is real: Hydrolox gives more Δv per kg but you fit far less
+of it in the same tank. That is a genuine choice the player can feel.
+
+**🔴 One dead option found on the way:** **RP-1 is strictly dominated by Methalox** — identical inputs, identical
+industry points, identical output and credits, but Methalox has **higher** exhaust velocity **and** better density.
+There is no reason to ever refine RP-1. Either give it an edge (cheaper inputs, or an earlier tech unlock) or cut it.
+Same §1-law failure as a dead dial, one level up: **a dead RECIPE.**
+
+## 26a. 🔒 DECIDED — KEEP `Amphibious`, which means WIRING it (developer, 2026-07-29)
+
+> *"Keep amphibious."*
+
+**Kept. And keeping it means it cannot stay as it is** (§23.3b: it charges mass and is read by nothing). The wire is
+small and well-bounded:
+
+| Change | File | Note |
+|---|---|---|
+| `IsImpassable(terrain)` → **`IsImpassable(terrain, unit)`** — ocean is impassable *unless the unit is amphibious* | `GroundCombat/HexPathfinder.cs:41` | today it hard-codes `terrain == Ocean` for everyone |
+| An amphibious unit crossing water pays a **rough** move cost, not a free one | `HexPathfinder.HexMoveMult` | water should be slow, not free — or amphibious becomes strictly better |
+| Read the flag off the unit's locomotion, health-scaled | `GroundMobility` (beside `RoughHandlingForUnit`) | the **grave rung** — a shot-off drive should strand you |
+
+**Blast radius (Prime Directive):** an impassable hex is **left out of the pathfinding graph entirely** (the comment
+at `HexPathfinder.cs:41` says so), so making passability unit-dependent means the graph is **per-unit**, not global —
+that is the one non-trivial part of this change and it must be checked before it is written. **Gauge:** an amphibious
+unit paths across a water hex; a non-amphibious one still routes around it; a destination on water is reachable only
+for the amphibious one.
+
+**Not built this pass** — it is an engine change to pathfinding, and the working agreement is one slice at a time
+with CI as the only compile gauge.
 
 ---
 
