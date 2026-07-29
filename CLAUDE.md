@@ -163,7 +163,6 @@ See `ARCHITECTURE.md` for the full data-flow diagram.
 | `docs/combat/` · `ground/` · `economy/` · `society/` · `ai/` · `environment/` · `explore/` | subject design docs |
 | `docs/aurora/` | Aurora 4X external spec (reference) |
 | `docs/archive/` | superseded docs, each with a banner (do not follow as live) — includes the archived 2026-07-08 `DESIGNER-AUDIT-2026-07-08/` survey, whose still-valid diagnosis lives in `docs/COMBAT-DESIGNER-GROUND-TRUTH-2026-07-28.md` §16 |
-| `docs/archive/` | superseded docs, each with a banner (do not follow as live) |
 
 **Three upkeep rules (each has ONE owner — don't recreate a combined doc):**
 1. New/changed doc → **add or flip its row in `docs/DOCS-INDEX.md` in the same commit** (doc currency owner). Put the doc in its subject subfolder.
