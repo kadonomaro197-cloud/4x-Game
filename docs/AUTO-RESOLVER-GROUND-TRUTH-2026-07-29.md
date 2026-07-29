@@ -22,13 +22,34 @@ was **pervasive** (see §19). **The source is the gauge; this file is the map.**
 
 **Severity key:** 🔴 **BLOCKER** · 🟠 **REAL** · 🟡 **DEBT** · 🔵 **NOTE** · ✅ **verified-good**.
 
+> ## 🔒 THE GOVERNING MODEL — LD-30, THE ARENA (developer, 2026-07-29)
+>
+> **Read this before any section below.** The developer specified what a battle *is*, and it supersedes the
+> frame-and-anchor geometry that slices S1/S2 were built on:
+>
+> **A battle is an ARENA, not a gap.** A circle at `0,0` whose **radius is set by the built weapon range** that
+> opened the fight, with the combatants at opposite ends of a diameter. **The circle does not close.** Inside it the
+> resolver is a **live simulation — units move at their own real speeds, "as though it was an RTS."** A joiner
+> **expands the arena only if its range is larger**, never retroactively, and **enters at whatever state the battle
+> is currently in.**
+>
+> **⇒ The arena is bounded by RANGE; the fight is resolved by MOVEMENT.** Today's engine conflates the two into one
+> shrinking scalar (`Separation_m`), which is why the 2D plane is a **2D readout painted on a 1-D model** (**§13.9a**
+> — the root-cause finding).
+>
+> **How to read the rest of this file:** every *as-built* description of the scalar-closing / frozen-frame model is
+> **kept and labelled**, because you cannot fix a model you cannot see. Every *design intent* that contradicted LD-30
+> has been **pruned or marked superseded** in place. Full ruling: **§5 LD-30**. What it requires: **§13.9b**.
+
 ---
 
 ## 0. HOW TO USE THIS DOCUMENT
 
 | If you are… | Read |
 |---|---|
+| **Anything at all** | 🔒 **the LD-30 banner above, then §5 LD-30** — the arena model governs every section |
 | New to the resolver | §1 the headline · §2 the two resolvers + the naming trap · §3 the tick order |
+| Asking "why is the 2D plane wrong?" | **§13.9a the root cause** (a 2D readout on a 1-D model) · §13.9b what LD-30 requires |
 | About to change combat | §5 the locked rulings · §6 the anatomy · §14 the build ledger · §19 the stale warning |
 | Asking "does it handle X?" | **§8 the 14-row scenario matrix** — the fastest answer in the file |
 | Working on ground units / squads | §9 the 6-man squad + Fix A/B/C · §12.4 the W-track |
@@ -60,8 +81,10 @@ was **pervasive** (see §19). **The source is the gauge; this file is the map.**
    are concerned"* — one shape, both domains, with the closing fight simulated tick by tick.
 6. **The kernel is PURE and that purity is load-bearing** — it is what makes fast-forward == watch. There is exactly
    **one** break: `RangeBaseMiss` is a mutable public static.
-7. **A 2D group plane is built and unreachable** — S0–S2 shipped behind `EnableGroupPlane`, which **no client code ever
-   turns on.**
+7. 🔴 **The 2D group plane is built, unreachable, AND the wrong shape.** S0–S2 shipped behind `EnableGroupPlane`,
+   which **no client code ever turns on** — and under **LD-30** it could not be turned on as-is anyway: the anchor is
+   moved by *"however much the scalar gap just changed"* (`:1106`), so the plane is a **2D readout painted on a 1-D
+   model**. Only the controller's anchor can move; everyone else freezes. **§13.9 / §13.9a.**
 
 ---
 
@@ -209,8 +232,9 @@ the reason written down.
 playbook (doctrine / rules of engagement), and the math fights the battle."* **Doctrine is the entire control surface.**
 
 **LD-20 · The nine closing decisions (2026-06-27).** 1 **doctrine-only control** · 2 ~~range is a scalar per group; no
-2D, no facing, no flanking~~ ⚠ **SUPERSEDED — see §13** · 3 **determinism** · 4 **first shot makes the battle**
+2D, no facing, no flanking~~ ⛔ **SUPERSEDED — by shipped code (§19 S-1) and decisively by LD-30** · 3 **determinism** · 4 **first shot makes the battle**
 (proximity ≠ combat; two weapons-hold fleets in range = a tense standoff) · 5 **true weapon ranges, continuous closing**
+(⚠ *"continuous closing" survives LD-30 only as **units moving continuously**, never as a shrinking global gap*)
 · 6 **detail intel comes from scanners, not from closing** (so combat detection does **not** depend on the broken
 `SignalQuality`) · 7 **ROE is the grown-up `FleetDoctrineDB`, NOT a parallel system** · 8 **the battle readout is the
 agency surface — "lose agency, lose the player"** · 9 **post-battle form-up**.
@@ -363,7 +387,7 @@ BATTLE ─ CombatEngagement.StepEngagementGroup(members, dt)   (every 5 s game-t
 | `SalvoDamageScale` (space pace) | 0.1 | `:103` |
 | `RetreatCasualtyThreshold` · `CollectivismRetreatSwing` | 0.5 · 0.4 | `:48, :55` |
 | Retreat threshold formula | `0.5 + (collectivism − 0.5) × 2 × 0.4`, clamped `[0.05, 0.95]` | `:1665` |
-| `ClosingSpeedScale_mps` · `InitialSeparationDefault_m` · `ManeuverBurnRate` | 1e6 · 1e6 · 5.0 | `:421, :428, :450` |
+| `ClosingSpeedScale_mps` · `InitialSeparationDefault_m` · `ManeuverBurnRate` | 1e6 · 1e6 · 5.0 | `:421, :428, :450` ⚠ **the scalar-closing dials — superseded in shape by LD-30** (the arena does not close; units move) |
 | `SalvoScale` (ground pace) | **1.0** | `GroundForcesProcessor.cs:35` |
 | Ground `RunFrequency` | **1 hour** | `:29` |
 | `Ticklength` default · battle-trigger sweep | 3600 s · **5 s** | `MasterTimePulse.cs:83` · `BattleTriggerProcessor` |
@@ -436,7 +460,7 @@ loud rather than smoothing it over.
 |---|----------|:-----:|:------:|---------------|
 | 1 | **N bodies vs one HP lump** (the 6-man squad) | HANDLED\* | **GAP** | Space models N *ships*, each whole-or-dead (`ApplyCasualties` `:878`). Ground `GroundUnit` is **one `Health` scalar, no model count** (`GroundForcesDB.cs:53-55`). *(§9)* |
 | 2 | **One unit, multiple different weapons** | HANDLED | ✅ **NOW HANDLED** — *was GAP* | **CHANGED by W2 (2026-07-21).** `GroundForcesProcessor.cs:479` loops `u.WeaponLoadout` and gates **each mount** on its own range; `GroundCombatant.ToWeaponProfile(unit, mount)` `:96` is the per-mount overload. A loadout-less unit still falls back to the single collapsed profile. |
-| 3 | **Ranged vs melee closing** | **PARTIAL** | HANDLED | Ground: clean range first-strike + ROE march (`WeaponReaches` `:561`, `ApplyEngagementManeuvers` `:732`). Space: closing exists but `EnableClosingRange` **defaults OFF** in the engine (`:399`) → at gap 0 all weapons fire regardless of range. *(The client DOES turn it on — `PulsarMainWindow.cs:98`. CI does not.)* |
+| 3 | **Ranged vs melee closing** | **PARTIAL** | HANDLED | Ground: clean range first-strike + ROE march (`WeaponReaches` `:561`, `ApplyEngagementManeuvers` `:732`). Space: closing exists but `EnableClosingRange` **defaults OFF** in the engine (`:399`) → at gap 0 all weapons fire regardless of range. *(The client DOES turn it on — `PulsarMainWindow.cs:98`. CI does not.)* ⚠ **Under LD-30 the space side is wrong in shape, not just off:** closing must be units moving in an arena, not one gap shrinking. |
 | 4 | **Evasion / dodge** (fast light vs heavy) | HANDLED | HANDLED | Shared kernel `HitFraction` `:171`; evasion is a per-target bucket key. A jump-pack is just a component raising Evasion. |
 | 5 | **Saturation / area fire floors a dodge** | HANDLED | HANDLED | `saturationFloor` (`CombatKernel.cs:171-188`). *One agent marked this UNCERTAIN because it had not opened the kernel; the agents that did read it confirm HANDLED.* |
 | 6 | **Flat armour bounces many small hits, not one big** | **GAP** | HANDLED | Ground applies real per-source flat soak + burst split. Ship folds armour into Toughness and applies a *proportional* fraction — and **`BuildFireMix` `:1317` hard-zeroes `PerShotEnergy`**, so `BurstShotCount` is always 1. A deliberate v1 deferral, **not** an accident. |
@@ -521,7 +545,7 @@ What diverges is the **harness**, and every one of these is a bounded, independe
 
 | # | Divergence | Space | Ground | To unify |
 |---|---|---|---|---|
-| 1 | **Range model** | Metric separation in metres, gated behind `EnableClosingRange` (engine default OFF → usually gap 0). | **Both, by flag.** `EnableMiniHexCombat` OFF → integer hex distance; ON → a **real metre gap** on the continuous mini-hex field (`GroundForcesProcessor.cs:421`, `:567`). **OFF in CI, ON for menu games.** | Mostly done — Slice 1 put `WeaponReaches`/`WithinReach` in the kernel. What remains is retiring the hex fields (§12 Slice 5). **Latent risk:** if a future slice sets ground `Position_m`, the *untested* kernel range term (`RangeBaseMiss = 0.9`) suddenly activates and changes **every** ground outcome. |
+| 1 | **Range model** ⚠ *LD-30: space is wrong in SHAPE — a single gap cannot express an arena with units moving inside it (§13.9a)* | Metric separation in metres, gated behind `EnableClosingRange` (engine default OFF → usually gap 0). | **Both, by flag.** `EnableMiniHexCombat` OFF → integer hex distance; ON → a **real metre gap** on the continuous mini-hex field (`GroundForcesProcessor.cs:421`, `:567`). **OFF in CI, ON for menu games.** | Mostly done — Slice 1 put `WeaponReaches`/`WithinReach` in the kernel. What remains is retiring the hex fields (§12 Slice 5). **Latent risk:** if a future slice sets ground `Position_m`, the *untested* kernel range term (`RangeBaseMiss = 0.9`) suddenly activates and changes **every** ground outcome. |
 | 2 | **Fog / detection** | `CanEngageTarget` gates who may shoot whom via the sensor track table; a blind enemy takes fire without reply. Behind `RequireDetectionToEngage`. | **No detection combat gate at all.** Radar reveals the *map*; the fight uses raw faction difference + range. | Add a per-faction detection predicate in `ResolveRegionCombat`'s target loop mirroring `CanEngageTarget` — **in both the engage trigger and the interrupt-imminent check** (the two-places rule that already bit the space fog gate). §12 Slice 4. |
 | 3 | **Multi-weapon** | `List<WeaponProfile>` per ship, all fire. | ✅ **CLOSED by W2.** | — |
 | 4 | 🔴 **Firepower conservation (3+ sides)** | Conserved: `1/split` (`:745,747`) — but **equal**, not target-weighted. | **NOT conserved** — full pool to each enemy faction (`:443-445` + `:491`/`:524`). | Hoist the attacker's pool/reachable computation *above* the per-defender-faction loop and divide across all reachable enemies regardless of faction. **The pinned algorithm is §13 Joint #1** — residual-exact, target-weighted. |
@@ -559,6 +583,12 @@ range**, and the resolver keeps computing damage and losses continuously until i
 survives.**
 
 > ### *"This IS how space combat should be and how planetary combat MUST be. This is the north star of combat and what you are building towards this whole time."*
+
+> ✅ **Pillar ③ IS LD-30, stated a year earlier.** *"each sub-formation moves at its **true speed** under its stance …
+> as battle-time passes they close based on their move speed"* is exactly *"they're moving as though it was an RTS."*
+> **The north star and the arena model agree; it is the SPACE IMPLEMENTATION that diverged** by collapsing all that
+> movement into one shrinking scalar. Ground already moves units continuously (`StepMiniToward`, `Speed_kmh × dt`,
+> §12.3) — **so on this axis the ground side is closer to the north star than space is.**
 
 **Why the kernel merge is the enabler:** the closing model and the damage math must be **one** implementation or the
 two domains drift apart. The zergling/Titan example is the **acceptance test for "done."**
@@ -728,6 +758,13 @@ in the key is why a *spread-out* army compresses less than a *stacked* one — w
 
 ## 13. THE 2D GROUP PLANE AND THE TWO JOINTS
 
+> ### ⚠ READ §13 AS AS-BUILT, NOT AS TARGET
+> **LD-30 supersedes this section's geometry.** What follows is the design S0–S2 were actually built from — kept
+> because it is what the code does today and you cannot fix what you cannot see. **The target is the arena
+> (§5 LD-30); the reason this design cannot reach it is §13.9a.** Each subsection is marked where it diverges.
+> **Still valid and carried forward:** the group-not-unit position choice (§13.2), the directed range rule (§13.3),
+> the data-only coupling for combined battles (§13.4), and both pinned joints (§13.7/§13.8).
+
 ### 13.1 The one-line version
 
 Give every **group** in a battle a single position on an invisible 2D map; let doctrine decide where each group sits
@@ -761,19 +798,31 @@ never O(units²) — dozens even at Endor scale.
 
 ### 13.3 The model, the two rules, and the three invariants
 
-**The frozen frame.** Seed the sheet **once** at battle start from the fleets' real 3D positions; find the centre;
-pick a deterministic axis pair; flatten. **This projection is done once and frozen — never recomputed from live
-positions, because ships die and the centre would jump.** A latecomer is placed using the *same stored* axes. For the
-ordinary two-sides-facing-off case the second axis comes out near zero and the whole thing **collapses back to
-today's 1-D tug-of-war** — which is exactly the byte-identical path.
+**The frozen frame — ⛔ SUPERSEDED AS TARGET by LD-30; this is what S1 BUILT.** Seed the sheet **once** at battle
+start from the fleets' real 3D positions; find the centre; pick a deterministic axis pair; flatten. The projection is
+frozen and never recomputed; a latecomer is placed using the *same stored* axes.
 
-**Range rule.** For each enemy group pair A→B, measure the 2D distance `d`, then hand **that same `d`** to the
+> ⛔ **Three ways this contradicts LD-30, and they are why S1/S2 cannot deliver it:**
+> ① the frame is seeded from **real 3D positions**, not sized as a **circle whose radius is the built weapon range**;
+> ② there is **no radius at all**, so a joiner *"expands the size of the plane"* has nothing to expand — it just
+> copies the frozen frame (`:614`);
+> ③ *"the whole thing collapses back to today's 1-D tug-of-war"* was written as the **safety property**. Under LD-30
+> it is the **defect** — the arena must never collapse to a tug-of-war, because the fight is units moving inside it.
+>
+> **What survives:** freezing-so-it-cannot-drift is the right instinct and LD-30 keeps it — *"it doesnt change what
+> has already occurred in the battle."* The thing frozen changes from an axis pair to **already-placed units and
+> already-dealt damage**.
+
+**Range rule — ✅ COMPATIBLE with LD-30, carry it forward.** For each enemy group pair A→B, measure the 2D distance `d`, then hand **that same `d`** to the
 *unchanged* firing code as `separation_m`. Each weapon inside A skips if its own range is less than `d`. So the
 missile (1000 km) > railgun (500 km) > flak (50 km) > melee (~0) **layering falls out per group-pair.** The gate is
 **directed** — a long-range group can shoot a short-range group **that cannot shoot back yet.** *That is exactly
 "those with the farthest range shoot first."*
 
-**Bearing rule — `RoleGeometry(role) → (bearing, standoff)`:**
+**Bearing rule — 🔵 COMPATIBLE but UNBUILT (S3).** LD-30 says nothing about roles, and nothing here contradicts it:
+an arena still needs to decide *where inside it* a group stands. Carry this table forward as the placement rule.
+
+**`RoleGeometry(role) → (bearing, standoff)`:**
 
 | Role | Bearing | Behaviour |
 |---|---|---|
@@ -787,8 +836,14 @@ missile (1000 km) > railgun (500 km) > flak (50 km) > melee (~0) **layering fall
 > down on purpose: the plane is unseen and micro is forbidden, so flanking is a doctrine **fiction** that produces
 > the right result, not emergent tactics.
 
-**The three invariants:** ① **determinism** (no RNG, no clock, no iteration-order dependence) · ② **default-off /
-byte-identity** · ③ 🔴 **keep the kernel pure and 1-D — do the 2D math in the CALLER and hand the kernel one scalar.**
+**The three invariants — ✅ ALL THREE SURVIVE LD-30:** ① **determinism** (no RNG, no clock, no iteration-order
+dependence) · ② **default-off / byte-identity** · ③ 🔴 **keep the kernel pure and 1-D — do the 2D math in the CALLER
+and hand the kernel one scalar.**
+
+> ✅ **Invariant ③ is not in tension with the arena.** The kernel only ever needs *one distance between two things*.
+> The arena changes **who computes that distance and how it moves** (the caller, from real unit positions), not what
+> the kernel receives. **The damage math needs no change for LD-30** — which is the single biggest reason the arena
+> is affordable.
 
 ### 13.4 Combined battles — Endor, done with data not geometry
 
@@ -808,9 +863,9 @@ A **`BattleTheater`** holds several planes (one space + one ground per contested
 | Slice | What | State |
 |---|---|---|
 | **S0** | `GroupPlane.cs` pure static (project / offset / distance); nothing calls it | ✅ **BUILT** · `GroupPlaneTests` (10 tests) |
-| **S1** | anchors in space — Anchor/Frame/GroupPositions on `FleetCombatStateDB` `:83-118`, seeded at engagement start (`CombatEngagement.cs:520`), copied to joiners (`:614`), `AdvanceClosing` moves anchors in 2D (`:1062`,`:1077`) | ✅ **BUILT** · `EfGroupPlaneAnchorTests` |
+| **S1** | anchors in space — Anchor/Frame/GroupPositions on `FleetCombatStateDB` `:83-118`, seeded at engagement start (`CombatEngagement.cs:520`), copied to joiners (`:614`), `AdvanceClosing` moves anchors in 2D (`:1062`,`:1077`) | ✅ **BUILT** · `EfGroupPlaneAnchorTests` — ⛔ **superseded in SHAPE by LD-30**: the anchor is a follower of the scalar (`:1106`), so only the controller's can move (§13.9a) |
 | **S2** | the 2D range gate — `SeparationOf` `:1003` / `WithinWeaponRange` `:1268` read the 2D pair-distance | ✅ **BUILT** · `EfGroupPlaneRangeGateTests` — 🔴 **two-fleet-only, see §13.9** |
-| **S3** | role geometry — the `RoleGeometry` table | ❌ **NOT BUILT** (verified absent) |
+| **S3** | role geometry — the `RoleGeometry` table | ❌ **NOT BUILT** (verified absent) · 🔵 **compatible with LD-30** — an arena still needs a placement rule |
 | **S4** | ground onto the plane — **a DELIBERATE re-baseline**, not byte-identical | ❌ **NOT BUILT** (`EnableGroundGroupPlane` absent) |
 | **S5** | combined theater — `BattleTheater` + `GuardedByDB` + bombardment edges | ❌ **NOT BUILT** (both types absent) · **gated on Joint #2** ✅ pinned |
 | **S6** | multi-party — reinforcement join + FFA + cross-plane conservation | ❌ **NOT BUILT** (no production `AllocateFire`) · **gated on Joint #1** ✅ pinned |
@@ -850,6 +905,10 @@ opposite of a flank advantage. **The lesson is baked into the polar bearing rule
 9. 🔴 **THE FROZEN-ANCHOR DEFECT (§13.9) — not on the original list, found 2026-07-29.** Only the controller's anchor
    moves, so with 3+ fleets a pair where neither is the controller has a permanently frozen gap. **The design's own
    weakness list missed this because every gauge it was written against had two fleets.** It blocks LD-29.
+10. 🔴 **THE ROOT CAUSE BENEATH #9 (§13.9a):** the anchor is driven by the scalar gap delta, so the "2D plane" is a
+    **2D readout on a 1-D model.** Weaknesses #1 (lossy projection) and #7 (S4 re-baseline) are also reframed by
+    LD-30 — under the arena, position is the source of truth, so there is no projection to be lossy about and the
+    ground side stops being a special case.
 
 ### 13.7 JOINT #1 — conserved fire-allocation (🔒 pinned, gates S6)
 
@@ -1123,7 +1182,7 @@ long-range fire on the way in to reach knife range where it dominates?*
 |---|---|---|---|
 | **ROOT A** weapon range on the combat profile | `WeaponProfile.Range_m` (**convention: 0 = unbounded** — serialization-safe, no `Infinity` in JSON) | ✅ **BUILT** 2026-06-27 | `FleetAggregationTests.WeaponProfile_CarriesDesignRange_FirepowerUnchanged` |
 | **ROOT B** fleet capability aggregation | `WarpSpeedFloor` / `DeltaVFloor` = **MIN** (the fleet moves as one) · `FirepowerAtRange(R)` = Σ weapons reaching R · **`SensorReach` = MAX, not summed** (two identical sensors are redundant; diverse ones are complementary) | ✅ **BUILT** 2026-06-27 | `Floors_TakeTheSlowest_SensorReach_TakesTheBest` |
-| **PHASE 1** single-range closing | `Separation_m` seeded from real distance; `BuildFireMix` gates each weapon; `AdvanceClosing` moves the gap toward the **faster** side's preferred range (controller = max maneuver = min evasion). Tunables `ClosingSpeedScale_mps` (0 = freeze), `InitialSeparationDefault_m`. | ✅ **BUILT** 2026-06-27 | `ClosingTests` — a 100-km fleet hits across a 50-km gap, a 1-km fleet deals **zero** (kited); determinism; flag-off identity; the faster side dictating |
+| **PHASE 1** single-range closing ⛔ **superseded in SHAPE by LD-30 — the arena does not close; units move inside it** | `Separation_m` seeded from real distance; `BuildFireMix` gates each weapon; `AdvanceClosing` moves the gap toward the **faster** side's preferred range (controller = max maneuver = min evasion). Tunables `ClosingSpeedScale_mps` (0 = freeze), `InitialSeparationDefault_m`. | ✅ **BUILT** 2026-06-27 | `ClosingTests` — a 100-km fleet hits across a 50-km gap, a 1-km fleet deals **zero** (kited); determinism; flag-off identity; the faster side dictating |
 | **PHASE 2** kiting counters (endurance tier 1 = **fuel**) | `ManeuverBudget` seeded from `DeltaVFloor`; **only a fleet with budget left can be the controller**, and it spends `ManeuverBurnRate × dt` — so a kiter that burns out stops dictating the range. **Interceptors are emergent from P1's speed rule — verify, don't build.** | ✅ **BUILT** 2026-06-27 | `Kiting_RunsOutOfBudget_TheEnemyCloses` |
 | **PHASE 3** first-shot trigger + standoff | `EngagementPosture` (WeaponsFree / WeaponsHold / ReturnFire) on `FleetDoctrineDB` — **the first ROE knob, grown on doctrine, not a parallel system.** Both non-WeaponsFree ⇒ **tense standoff, no battle.** | ✅ **BUILT** 2026-06-27 | `WeaponsReleaseTests` |
 | **PHASE 4** per-sub-fleet ranges | ⏸ **SPEC-READY, deliberately NOT built blind** | — | gauge **named, unwritten** |
@@ -1145,7 +1204,14 @@ long-range fire on the way in to reach knife range where it dominates?*
 > bucketed per target component — **this is the part that needs playtest**) · ⑤ default targeting = the triangle,
 > plus post-battle form-up.
 >
-> ⚠ **Phase 4 overlaps Group-Plane S3.** `FleetCombatStateDB.cs:116-118` says **S3 replaces the anchor with one
+> ⛔ **PHASE 4 IS SUPERSEDED BY LD-30 — do not build it as specified.** Its whole premise is *"each component needs
+> its own `Separation_m`"* — more resolution on a **gap**. LD-30 goes the other way: **position is the source of
+> truth and gaps are derived**, so per-component gaps are the wrong direction. Its five-step plan is kept below as
+> the record of a carefully-reasoned approach that the arena replaces, and its "why paused" ruling is kept because
+> **that reasoning is still exactly right and still binds** (a resolver restructure whose payoff is a *feel*
+> question CI cannot answer — which is now doubly true of the arena itself).
+>
+> ⚠ **Phase 4 also overlapped Group-Plane S3.** `FleetCombatStateDB.cs:116-118` says **S3 replaces the anchor with one
 > point per role sub-fleet** — which is the same ground Phase 4 covers. **An open question: which one governs
 > per-sub-fleet positioning?** *(§16 Q-3.)*
 
@@ -1238,10 +1304,10 @@ not an engine flag.**
 |---|---|---|---|
 | **Q-1** | **`AttackPerDps = 1/2500`** — bless it or retune it? | It is the ONE number converting space joules to ground attack points. Everything a space weapon does on a surface scales off it. | `SpaceWeaponGround.cs:27` · §12.4 |
 | **Q-2** | **`MinTargetWeight` and `MinHitWeight`**, and the **choice of weight terms** (threat-only / hittability-only / both / equal) | Joint #1's conservation machinery is a hard invariant; the *weight* is a doctrine-tuning decision the agent explicitly did not make. | §13.7 · gates S6 |
-| **Q-3** | **Which governs per-sub-fleet positioning — Group-Plane S3 or Fleet-Closing PHASE 4?** | They overlap. S3 replaces the anchor with one point per role sub-fleet; P4 gives each component its own gap. **Building both produces two parallel systems for one verb** — the exact failure the "One Verb, Both Seats" law forbids. | §13.5 · §14.4 |
+| **Q-3** | ~~Which governs per-sub-fleet positioning — S3 or PHASE 4?~~ ✅ **ANSWERED BY LD-30 — NEITHER.** | Both were ways to give a *gap* more resolution. LD-30 makes **position the source of truth and gaps derived**, so P4's "each component gets its own `Separation_m`" is the wrong direction outright, and S3 survives only as the **placement rule inside the arena** (`RoleGeometry`), not as a second positioning system. **One verb: units have positions and move.** | §13.9b |
 | **Q-4** | **Standoff radii and role-bearing constants** (S3) | Balance-pass defaults were never chosen. The standoff-vs-brawl and flank-vs-hold gut-check is **a live-tuning question CI cannot answer.** | §13.6 #8 |
 | **Q-5** | **`RangeBaseMiss = 0.9`** — is the range-accuracy term calibrated? | It is a **mutable public static** and **the kernel's only purity break.** It is also **untested on the ground path**: if a slice ever feeds ground a non-zero separation into a path that reads it, **every ground outcome changes.** | `CombatKernel.cs:57` · §10 row 1 |
-| **Q-6** | **`ManeuverBurnRate` and `ClosingSpeedScale_mps`** | "Live calibration of the closing rate + the *is it fun* gut-check are the developer's play-test" — stated at Phase 1/2 and never done. | §14.4 |
+| **Q-6** | **`ManeuverBurnRate` and `ClosingSpeedScale_mps`** — ⚠ **hold this one.** | "Live calibration of the closing rate + the *is it fun* gut-check are the developer's play-test" — stated at Phase 1/2, never done. **Under LD-30 these dials change meaning** (`ClosingSpeedScale_mps` scales a gap that no longer exists; unit speed becomes the driver), so calibrating them now would tune a mechanism that is being replaced. **Re-ask after §13.9b step ③.** | §14.4 · §13.9b |
 | **Q-7** | **`Math.Round(0.5)` banker's-rounds to 0** in the casualty split — one downed model gives 0 dead / 1 wounded. | *"Pick that rounding on purpose."* Not yet picked. | §9.3 · §15 |
 | **Q-8** | **`HealthBandSize`** — how coarse should the bucket health band be? | Too fine and a swarm stops compressing; too coarse and damage smears. | §12.4 (W4) |
 | **Q-9** | **`MissileLauncherFirepowerStub = 100 000`** — missile firepower is a flat stub, not derived from the warhead. | Every missile ship's combat value is fiction until this is real. | `ShipCombatValueDB.cs:38` |
@@ -1264,9 +1330,11 @@ not an engine flag.**
 **Written OUT on purpose.** A thing in this list is not a gap; it is a decision.
 
 **From the closing spine:**
-- ⚠ **2D positioning / flanking / facing — *"permanently parked unless the no-RTS principle is itself revisited."*
-  🔴 THIS IS SUPERSEDED BY SHIPPED CODE.** See §19 S-1. The original text is preserved because it shows what
-  changed, but it is **not live law.**
+- ⛔ **2D positioning / flanking / facing — *"permanently parked unless the no-RTS principle is itself revisited."*
+  🔴 SUPERSEDED TWICE OVER — DO NOT TREAT AS LAW.** First by shipped code (§19 S-1), then decisively by **LD-30**,
+  which makes 2D *the model* and states outright that inside a battle units move *"as though it was an RTS."*
+  **The no-RTS principle was about the PLAYER's control surface, not the simulation's fidelity** — doctrine is still
+  the only lever; the sim underneath is free to move units. Original text preserved to show what changed.
 - **Environmental hazard fields** (energetic-particle bands wrecking sensors / dragging movement) — lands on
   sensors + movement + combat at once; evocative, expensive, its own build.
 - **Crew provisions** as a ship endurance variable (endurance tier 3 — the one genuinely new ship sub-system).
@@ -1321,7 +1389,8 @@ destroy a sensor and detection goes dark. **The shape is only as real as the uni
 
 > **⚠ One-Verb-Both-Seats check on this system.** The resolver passes: both seats issue **doctrine**, and the AI's
 > `FleetRoleComposer.FormRoleSubFleets` call (`NPCDecisionProcessor.cs:819`) is the same primitive. **The place to
-> watch is Q-3** — if Group-Plane S3 and Fleet-Closing Phase 4 both ship, one verb grows two paths.
+> watch WAS Q-3** — two parallel positioning systems for one verb. **LD-30 closes it:** position is the source of
+> truth, gaps are derived, and there is exactly one way a unit moves. Do not revive Phase 4's per-component gap.
 
 ---
 
@@ -1346,6 +1415,10 @@ dropped, because *how* a doc went stale is the most reusable lesson in the file.
 | **S-12** | **"scenario 2 (ground multi-weapon) = GAP"** and **"scenario 8 (ground ammo) = GAP"** | **Both closed since.** Row 2 is HANDLED (W2); row 8 is PARTIAL (whole-unit ammo gate). *(§8.)* |
 | **S-13** | **the `GroundWeaponMount.Range_m` docstring: "ADDITIVE + UNREAD by the resolver… the range gate flips to this in Slice 2."** | **False since K3.** A **stale comment in live source**, and it points at a doc this file replaces. **Fix it in the code.** |
 | **S-14** | **"`ResolveRegionCombat` at `:266`" / "`BuildFireMix` at `:1139`" / "`StepEngagementGroup` at `:622`" / "`ApplyCasualties` at `:860`" / "`ShouldRetreat` at `:1455`"** etc. | **Pervasive line drift** — see below. |
+
+| **S-15** | **"Range is a scalar per group"** / **"the whole thing collapses back to today's 1-D tug-of-war — which is exactly the byte-identical path"** / **"only the faster (controller) fleet moves"** — the scalar-closing and frame-and-anchor design, live text in three separate docs. | ⛔ **SUPERSEDED 2026-07-29 by LD-30.** A battle is an **arena bounded by weapon range**, and the fight is **units moving inside it at their own speeds**. The collapse-to-1-D that was written down as the *safety property* is, under the arena, the *defect*. All three are kept in §13 as **as-built**, marked, because the code still does them. |
+| **S-16** | **"2D / flanking / facing — permanently parked."** | ⛔ **Superseded twice** — by shipped code (S-1) and then decisively by LD-30. The no-RTS principle governs the **player's control surface**, not the simulation's fidelity. §17. |
+| **S-17** | **My own §13.9 first draft: "engagements form out to a gigameter, three orders of magnitude past any weapon."** | ⛔ **WRONG for a real game, corrected in place 2026-07-29.** `EngagementRange_m = 1e9` is a **coarse broad-phase pre-filter**; the real gate is `WithinWeaponRange` (`:218`), **ON in the client**, and `EnsureInCombat` seeds from the **real distance**. A frozen pair is stuck at *weapon-range* scale. Recorded because the overstatement was mine and a reader would have believed it. |
 
 ### 19.1 THE LINE-DRIFT WARNING
 
