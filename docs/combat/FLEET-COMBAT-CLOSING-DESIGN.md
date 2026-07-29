@@ -122,7 +122,7 @@ the developer's build. Don't start a phase until the one below it is rooted.
 > **The follow-up is still open and is now the load-bearing one:** those are engine constants, not design dials —
 > **only the beam can express a designed range**, and no railgun/flak/missile template even offers a Range dial. So
 > the X9 rule (*the battle commences at the range of the group's longest-ranged weapon*) runs off a fixed ladder no
-> design decision can reorder. See `docs/economy/DESIGNER-AUDIT-2026-07-28.md` **D4-1**.
+> design decision can reorder. See `docs/COMBAT-DESIGNER-GROUND-TRUTH-2026-07-28.md` **D4-1**.
 
 - **Design:** `WeaponProfile` gains a `Range_m`. Fed from the real weapon designs — beam `MaxRange` (exists),
   railgun/flak ranges, missile range (still a stub — flagged; a rangeless weapon = "always in range" until built).

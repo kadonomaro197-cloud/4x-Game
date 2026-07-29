@@ -658,135 +658,33 @@ invalid designs from **saving** (#3).
   (`ConquerResolver.cs:377` → `GroundReinforcement.cs:125`), so #1 needs a scenario/AI-authorable design
   source first or the AI can no longer reinforce. The forced order #2 → #4 → #1 still holds.
 
-### 🔬 THE 7-PASS DESIGNER AUDIT — 40 findings, SEVEN root causes, and THREE decisions that gate the rest
+### 🔬 THE 2026-07-28 VERIFICATION CAMPAIGN — 89 findings, consolidated ELSEWHERE
 
-**Full record:** `docs/economy/DESIGNER-AUDIT-2026-07-28.md` (the pass log + the consolidation, every finding with
-file:line and the docs read before flagging it). Opened after the developer's call that *"if we're going to get combat
-to work we need the designers fully functioning"* — correct, because canon **M19** makes the resolver's job to simulate
-*"any collection of components"*, so a component recorded wrongly poisons every fix downstream.
+**The full record is `docs/COMBAT-DESIGNER-GROUND-TRUTH-2026-07-28.md`.** It replaces the four documents this section used to
+summarise (the 17-pass resolver audit, the 7-pass designer audit, the 7-agent retrofit survey, and the cross-audit
+reconciliation) — **summarising it again here is how the two drifted apart in the first place**, so this is a pointer, not a copy.
 
-**It asks a DIFFERENT question than the resolver audit and than the 2026-07-08 `docs/DESIGNER-AUDIT/`.** That one asks
-*is the designer UNIVERSAL* (can a part mount on many hosts); this one asks **is it FAITHFUL** — does a dial you turn
-get recorded correctly and *arrive* at the thing that reads it.
+**What it holds, and why you'd open it:**
 
-**Tally:** 40 findings — 9 🔴 · 15 🟠 · 8 🟡 · 5 🔵 · 3 ✅. **Stopped at seven passes** not because findings dried up
-(Pass 7 found five) but because **novelty of kind** did: every Pass 5/6/7 finding landed in a bucket already on the
-board, and the space/ground split alone surfaced **four times from four independent directions**.
+- **§2 — six gauges that cannot rot.** Template count **96** against a locked target of **~37** · **shared dials per door = 0** ·
+  templates that construct without throwing **92/96** · `WeaponProfile` fields fed from the design (beam 7/10, ground 6/10,
+  railgun 4/10, **missile 0/10**) · `CombatKernel.Combatant` production consumers **0** · doctrine dials reaching the fight **9/14**.
+- **§3 — the open developer decisions that gate this plan.** **Q-A** does a fight aggregate or individuate (four systems already
+  differ) · **Q-B** which armour model wins · **Q-C** the carried-over bucketing-vs-targeting conflict between two of the
+  developer's own rulings · **Q-D** the station build model (a doc-*rejected* alternative shipped anyway) · **Q-E** the
+  Prebuilt-Units door · **#21** capture transfer.
+- **§4 — the 36 LOCKED decisions.** ⚠ Two slices this plan previously carried are **withdrawn** by them: adding
+  `Penetration`/`PerShotEnergy` dials to `GroundWeaponAtb` to protect the three prebuilt units is condemned at **both ends**
+  (L10 kills the prebuilts, L11 deletes the ground attribute family).
+- **§8/§9/§10 — all 89 findings** (40 designer · 49 resolver) plus **where the two audits disagreed**, including **C-2**, a blocker
+  neither could find alone: **the parts designer cannot express armour penetration at all**, and the only path that can is the one
+  marked for deletion.
+- **§11 — the six corrections**, including a retracted doc self-correction that **would have crashed New Game**.
+- **§12 — the save-compatibility risk register** · **§13 — verified-good, do not rebuild** · **§14 — the A/B/C/D plan**, which
+  supersedes the DS-0→DS-7 slice list this section used to carry.
 
-| # | Root cause | Symptom in one line | Key findings |
-|---|---|---|---|
-| **RC-1** | **The base mod is untyped text nothing checks** | *A namespace, an arity, a material id and a mount flag are all just strings that happen to be right.* | **D2-1 (six `AttributeType` strings name a namespace that does not exist → FOUR live designer doors throw, including the whole missile-warhead designer)** · D2-3 (one arity gap) · D2-4 (three undefined materials **silently dropped** from build costs) · D2-5 (a numeric mount flag makes a solar array ship-only) · D1-1/D1-2 (**five duplicate ids**, three of them ground stances in two files → **load order decides behaviour**) · D2-6 (no gauge) |
-| **RC-2** | **SPACE AGGREGATES, GROUND INDIVIDUATES — one unstated decision, four expressions** | *In space the fleet is the unit of account; on the ground it's the unit.* | D6-3 (**one shield pool per fleet**) · D5-2 (**armour hardening fleet-averaged** — one hardened hull protects the freighters) · D7-3 (*"engagement"* means two different things and ground never reads the space field) · + resolver root cause **B** |
-| **RC-3** | **The merge reached the ARITHMETIC and stopped before the STRUCTURE** | *Both sides call the same formulas and disagree on the shape of the fight.* | **D6-1 (`CombatKernel.Combatant` has ZERO production consumers; no shared salvo loop)** · **D5-1 (two armour models: flat per-source on the ground, hit-points in space)** · D4-3 (so `Penetration`/`PerShotEnergy` on ships are not un-wired — they are **undefined**) · D6-2 (the dead bridge would **regress** the working ground shield-regen dial) |
-| **RC-4** | **Dials that don't arrive — or don't exist to be turned** | *The audit's founding question, in three flavours.* | **D4-1 (you cannot design a weapon's RANGE except on a beam — five classes use engine constants, and the X9 rule runs off a ladder no design can reorder)** · **D4-2 (a missile carries 0 of `WeaponProfile`'s 10 fields)** · D4-4 (ground velocity/tracking/saturation are three constants picked by a dropdown) · D7-1 (**4 of 14 doctrine dials never reach the fight — three are the 2026-07-24 behaviour rulings**) · D3-2 (`Amphibious` **doubles the part's mass** and is read by nothing) · D3-3 · D7-4 · D2-7 · D4-6 |
-| **RC-5** | **The combat value is computed once and never again** | *Frozen at `ShipFactory.cs:144`; nothing invalidates it.* | D5-3 (**falsifies the "grave rung" written into six attribute doc-comments**) · D5-4 (any refit is stale) · D5-5 (**the AI's own-strength, threat assessment AND decision log read the frozen number**) · = resolver **X14**/**P11-1** |
-| **RC-6** | **Gauges pointed at the wrong thing — the most dangerous one** | *A gauge reading normal while the system is inert.* | **D7-2 (`UnifiedDoctrineTests` is described as proving the behaviours are "delivered" and asserts that a JSON file contains the values — green while nothing pursues, nothing finishes the wounded, nothing takes time to break away)** · D2-6 (no designer gauge, which is why RC-1 went unseen) |
-| **RC-7** | **Ground combat has NO research tree** | *An absent system, not a wiring fault.* | **D3-1 (only 18 of 96 templates carry any tech gate; 42 are free AND ungated — every ground part among them; a turn-one rifle dials to 5000 attack / 100 km)** · D3-6 (research where it exists is mostly a price tag, not a ceiling) |
-
-**⛔ THREE DECISIONS GATE THE REST — the developer's calls, not inferable:**
-**Q-A** does the fight **aggregate or individuate** (RC-2)? · **Q-B** **which armour model wins** (RC-3/D5-1 — flat
-per-source is what the shared kernel already implements; penetration and alpha only mean anything under it)? ·
-**Q-C** the carried-over **P1-4** conflict — July's health-weighted bucketing vs the 2026-07-28 no-roll-over/real-targeting
-ruling (**`TargetPriority` cannot be built until this is answered**). *(#21 — what a capture transfers — also still open.)*
-
-**Ordered action list (full version in the audit's CONSOLIDATION):** ① build the designer gauge (~20 lines, proves
-every fix below) → ② fix the six namespace strings → ③ re-point the four doctrine assertions at behaviour → ④
-recompute the combat value → ⑤ the small data fixes → ⑥ give five ship weapon classes a real `Range` dial, ceiling
-authored as `TechData(...)` so it starts closing RC-7 too → ⑦ the ground research tree → **⑧ gated on Q-A+Q-B** the
-structural merge → **⑨ gated on Q-B+Q-C** `TargetPriority`, written ONCE in the shared kernel → ⑩ missiles, only after
-② and ⑧.
-
-**Hold new work to what the audit confirmed is GOOD:** **D6-4 — the ground shield chain** is the only end-to-end
-example in the codebase of a dial that is designed, assembled, delivered, resolved **and gauged on the decision it
-creates**. That is what "done" looks like. Also verified sound: the designer→assembler hop (**41 of 43** ground dials
-have a reader), ten of fourteen doctrine dials, the ship armour nature matchup, and the whole formula layer
-(675/675 `PropertyValue`, 58/58 `TechData`, 119/120 arities).
-
-### 🛠 THE DESIGNER FIX TRACK (DS-0 → DS-7) — the audit's action list as buildable slices
-
-**The headline: this whole track is UNBLOCKED.** The three open developer decisions (Q-A aggregate-vs-individuate ·
-Q-B which armour model · Q-C bucketing-vs-targeting) gate the *resolver* work. **Every slice below can be built today**
-except the missile finish, which waits on DS-0 plus the structural merge. Standing rules apply: **one slice per push,
-wait for BOTH CI jobs green (~33 min) before stacking the next**, and the exact-arity binder means **every new dial is
-a NEW ctor overload with the old one kept**, so un-authored templates stay byte-identical (landmine **L7**).
-
-| Slice | What changes | Why (finding) | The gauge | Notes / risk |
-|---|---|---|---|---|
-| **DS-0** ⭐ | **The designer smoke test + the six dead namespace strings + the shaped-charge arg.** New `Pulsar4X.Tests/Modding/ComponentDesignerSmokeTests.cs`: loop **every** base-mod `ComponentTemplate`, `new ComponentDesigner(...)`, `SetAttributes()`, collect `(id, exception)` and assert the list is empty **naming every failure**. Same slice: repoint the six `Pulsar4X.Atb.*` strings to `Pulsar4X.Logistics` / `Pulsar4X.People` / `Pulsar4X.Weapons` (`installations.json`, `ordnance.json`), and add the **missing 6th value** to `missile-payload`'s `ShapeDataBlob` formula. | **D2-6, D2-1, D2-3** | **Is itself the gauge.** It must be **green on arrival** — that is why the fixes ride in the same slice; a gauge that ships red breaks the working agreement. | **Lowest-risk, highest-leverage slice in the project: data + one test file, zero engine change.** ✅ The shaped-charge fix is one line — **`Liner Thickness` already EXISTS as a dial** (default 3, already feeding `LinerVolume`); the formula simply never passed it. **Unblocks four dead designer doors incl. the entire missile-warhead designer.** |
-| **DS-1** | **The cost leak — and make the silent drop LOUD.** `ComponentDesigner.cs:61-63` drops a `ResourceCost` whose id is not in the cargo library, with no record. Add a skip record (mirroring `ModLoader.SkippedEntries`) and assert it empty. Then fix the three ids. Also: five duplicate template ids (`spaceport` ×2 files, `hydrogen-sulphide` ×2 in one file, + DS-2's three), `solarArray`'s `"MountType": 1` → spelled flags **incl. `PlanetInstallation`** (it is in Earth's StartingItems and cannot be installed there today), and its duplicate `Area `/`Area` property. | **D2-4, D1-1, D2-5** | Extend `BaseModIntegrityTests`: **zero** undefined cost ids, **zero** duplicate template ids. | ⚠ **Worse than the audit recorded.** `missile-electronics-suite`'s **only** cost line is `gallicite`, and `ordnance-cargo-hold`'s **only** two are `duranium`+`mercassium` — all three undefined. **Both parts currently cost NOTHING to build.** Recommend repointing to defined materials rather than minting three new minerals (which ripples into system-gen and every colony stockpile). |
-| **DS-2** | **Retire `groundStances.json`.** Point ground formations at the 25-entry unified catalog; delete the 3-entry legacy file; keep the `AttackMult` → `FirepowerMult` mapping. | **D1-2** *(corrected)* | The existing `UnifiedDoctrineTests` ±25% byte-identity guard, plus a new assert that the three ids resolve to the unified entries. | ⚠ **JUSTIFICATION CORRECTED 2026-07-28.** It is **not** a load-order coin-flip — the two files declare different `Type`s and land in separate dictionaries. It is **duplication**: two rival catalogs for the same three stances, with the *code* choosing. Still worth doing, and `CATEGORIES.md` §3 locks the ground parallels to die by **deletion**. Lower urgency than first written. |
-| **DS-3** | **`GroundWeaponAtb` gains `Penetration` + `PerShotEnergy`.** New 7-arg ctor overload (keep the 5-arg → byte-identical); `GroundUnitAssembly` carries both into `GroundUnitDesign`; author them on the base-mod ground weapons. | **C-2** | A parts-designed AP unit's `WeaponProfile.Penetration > 0`, and it out-damages a non-AP twin against a plated target. | 🔴 **MUST precede retiring the three prebuilt whole-unit templates.** Today `GroundWeaponAtb` has five fields and none is penetration, so **a unit designed from parts can never be armour-piercing** — only `infantry-unit`/`armor-unit`/`artillery-unit` can, and those are marked for removal. |
-| **DS-4** | **Weapon range becomes a design dial.** Five templates (`railgun-weapon`, `siege-railgun`, `flak-weapon`, `disruptor-weapon`, `plasma-repeater`, `missile-launcher`) gain a `Range` property with a `TechData(...)` ceiling; each `*Atb` gains a trailing `range_m` arg as a **new overload**; `ShipCombatValueDB` reads `atb.Range_m > 0 ? atb.Range_m : <the existing constant>`. | **D4-1** | A designed long-range railgun's profile carries its design range (not `RailgunRange_m`); an un-authored design is byte-identical; the closing model holds its fire until inside it. | **The biggest gameplay win in the track.** The X9 rule routes *every battle's opening range* through the group's longest weapon — today a fixed ladder no design can reorder. Needs one tech per class (or reuse `tech-kinetic-yield`). Authoring the ceiling as `TechData(...)` also starts **DS-5**. |
-| **DS-5** | **Ground research gating.** New ground techs in `techs.json`; real `ResearchCost` formulas on the ground templates; `TechData(...)` ceilings on the ground dials (Attack, Range_m, HP, Defense, StrengthBonus…). | **D3-1, D3-6** | A turn-one faction **cannot** design a max-attack rifle; after the research it can. | **The largest authoring job, and pure data.** 42 of 96 templates are free AND ungated and every ground part is among them — a turn-one rifle dials to 5000 attack / 100 km. Copy `laser-weapon`'s shape: `"MaxFormula": "TechData('tech-beam-range')"`. |
-| **DS-6** | **The inert dials — decide and act.** `Amphibious`: wire into `HexPathfinder.IsImpassable` (its own comment names the spot) **or remove the dial** — either way stop charging double mass for nothing. `Size`: drive the frame's mass from it (also closes the prior audit's **T2a** hardcoded-Mass finding) **or remove the slider**. `SpeedMult`: wire it, or remove it from the two `FleetWindow` lines that report it as an active effect. | **D3-2, D3-3, D7-4** | Each: the dial changes an observable outcome, or it is gone. | **Three small independent calls.** `Amphibious` is the priority — it is the only one the player **pays for**. |
-| **DS-7** | **The universality pass.** Decide the dangling **`PDC`** mount flag (zero templates, no designer — build or delete the enum value). Give the four unmapped templates real doors (`ground-constructor`, `ground-training-cadre`, `sealed-systems`, `stainless-steel-fuel-tank` currently fall through to "Other"). | **D1-4, D3-5** | Door coverage 95/95; `PDC` either used or gone. | Lowest priority — the fallback means nothing is unreachable today. |
-
-**Not in this track (blocked or resolver-side):** **D4-2** the missile feed (needs DS-0 *and* the structural merge —
-opening the warhead designer while the launcher still contributes five stubs ships a designer whose dials demonstrably
-do nothing) · **D4-3 / D4-4** (need **Q-B**) · **D7-1** the five inert doctrine dials (a **save-schema change** on
-`FleetDoctrineDB`, resolver-side — resolver **P2-1** has the correct characterisation: not a copy bug, *nowhere to
-copy to*).
-
-**Suggested order:** DS-0 → DS-1 → DS-4 → DS-3 → DS-5 → DS-2 → DS-6 → DS-7. DS-0 first because it proves every slice
-after it; DS-4 early because it is the biggest player-facing win and its `TechData` ceilings seed DS-5; DS-3 before any
-prebuilt retirement.
-
-### ⚖ CROSS-AUDIT RECONCILIATION — where the two audits DISAGREE (read this before acting on either)
-
-Two audits, days apart, different lenses: the **resolver audit** read code + design docs; the **designer audit** read
-base-mod data + the code consuming it. The disagreements are worth more than the agreements. Full table:
-`docs/economy/DESIGNER-AUDIT-2026-07-28.md` → **CROSS-AUDIT RECONCILIATION**.
-
-- **C-2 🔴 NEW BLOCKER, found only by crossing them — and it changes a PLANNED DELETION.** X5 said the assembler never
-  writes penetration/alpha; the designer ledger said both arrive. **Both true, of different paths.**
-  `GroundWeaponAtb` has five fields and **none is penetration or per-shot energy**, so a unit designed **from parts can
-  never be armour-piercing**. Only `infantry-unit`/`armor-unit`/`artillery-unit` carry them (via `GroundUnitAtb`) — and
-  those three are **marked for eventual removal**. ⇒ **Add the two dials to `GroundWeaponAtb` BEFORE retiring the
-  prebuilts, or armour penetration leaves the ground game.**
-- **C-3 🟠 the plan's "the ground feed is lossy" framing is BACKWARDS.** True per-field: ground **6 of 10** (prebuilt) /
-  **4 of 10** (parts) · railgun **4 of 10** (not "all designed") · **missile 0 of 10**. A prebuilt ground unit carries
-  more designed fidelity into the fight than any ship weapon except the beam.
-- **C-1 🔴 the doctrine inert-list is FIVE, not four**, and matches resolver **P2-1** exactly: `TargetPriority`,
-  `RetreatCasualtyThreshold`, `BreakAwaySeconds`, `Pursues`, `SpeedMult`. The fix for four of them is a **save-schema
-  change** (`FleetDoctrineDB` has nowhere to put them) — not a copy bug.
-- **C-5 🔵 carry this sentence into the recompute slice:** **freeze on RESEARCH · refresh on DAMAGE and REFIT.** Without
-  it, resolver **P17-1**'s ✅ ("a built ship keeping its build-time numbers is correct") reads as blessing the frozen
-  value that RC-5 exists to fix.
-- **C-4 🟡** the all-beam-closes-to-point-blank case is **unreachable with base-mod data** (both beams have Range
-  `MinFormula: 1000`) — latent trap, not live misbehaviour.
-- **C-7 🔵 coverage map:** the resolver lens could never have found RC-1 (it did not read the JSON); the designer lens
-  could never have found the disengage refill or the battle-report fog leak (it never ran a battle). **Neither swept the
-  engine↔client seam — the one surface that yielded a 🔴 on first contact. Point the next pass there.**
-- **C-8 ✅** both audits independently produced the same sentence — *the designer models COMPONENTS, the resolver models
-  TOTALS.* Two differently-pointed methods converging is the strongest evidence either document contains.
-
-### 🔬 THE 17-PASS RESOLVER AUDIT — 49 findings, and they are FIVE root causes
-
-**Full record:** `docs/combat/RESOLVER-AUDIT-2026-07-28.md` (the pass log, every finding with file:line and the docs
-read before flagging it). **Canon + the X1–X15 table:** `GROUND-GAMEPLAY-DECISIONS-2026-07-24.md` M19.
-
-**The load-bearing conclusion: there are not 49 problems. There are five, and one outlier.** Every finding is a
-symptom of one of these — which is why the fix order below is a *dependency* order, not a preference.
-
-| # | Root cause | Symptom in one line | Findings it explains |
-|---|---|---|---|
-| **A** | **The design→resolver FEED is lossy** | *The designer's numbers don't arrive.* | X5 (ground weapon: **2 of 10** values designed) · X6 (**alpha zeroed in BOTH domains**) · **P7-1 (a missile: 0 of 5)** · P3-1 (a fire-control dial gated by a flag nothing switches on) · X14 (combat values **frozen at build**, never refreshed by damage) · P11-1 (a gutted hull still reads as an armed warship) |
-| **B** | **The battlefield is a CONTAINER, not an ENGAGEMENT** | *Everything aggregates at the fleet/region level, which is the wrong level.* | X7 (a **star system**/a **region** is the battlefield) · P1-6 (`ResolveRegionCombat` is **O(units²)**) · X11 (**wings have no position** to manoeuvre with) · P5-1/2/3 (fleet-wide range decisions; **one long-range gun hijacks the fleet**; an **all-beam fleet closes to point-blank**) · P8-1 (**one shield pool for a whole fleet**) |
-| **C** | **Combat state is EPHEMERAL** | *Nothing a battle does persists.* | **P6-5 (disengaging refills ammo, shields, heat, manoeuvre — and deletes accumulated damage)** · X15 (ships are **whole-or-dead**, no wounded ship) · X14 again · P15-3 (the report dies on quit) |
-| **D** | **Doctrine cannot carry its own behaviour** | *The wheel is not connected to the wheels.* | P2-1 (**the runtime blob has no fields for 5 of the 14 authored dials**) · P2-2 (**different names per domain, one pair a RECIPROCAL**) · P2-3 (incompatible posture enums) · P2-4 (ground has no `SpeedMult` to land on) · X1 (**role** is a second driver, live in a real game) · P6-2/P6-3 (**personality** is a third driver — it modulates the retreat threshold) · X9/X10 (computed range + a hardcoded opening spread **override** doctrine) |
-| **E** | **TWO WORLDS — the live sim and the auto-resolver** | *The same designed thing behaves differently depending on which code path runs.* | **P7-2 (two missile models, 500×–50,000× apart)** · P7-3 (the auto-resolver never spawns ordnance) · P13-1 (**bombardment exists only in the path that does not run the battle**) · X13 (**reach 0 means opposite things** in the two domains) · X12 (the feed and the closing model are still unshared) · P4-5/P4-6 (**hazards: each domain built the half the other lacks**) |
-| **⭐ OUTLIER** | **The engine records everything; the CLIENT filters nothing** | *A fog-of-war leak.* | **P15-1 — the Battle Report shows EVERY faction's battles galaxy-wide.** The `FactionId` needed to filter is **already on the event struct** and nothing reads it. **Found only by crossing engine→client — a seam barely swept, which yielded a 🔴 on first contact.** |
-
-**⚡ THE FOUR CHEAP ONES — hours, not weeks, and each closes a whole class:**
-**P15-1** the fog filter (the field exists) · **P3-1** the fire-control flag (one line) · **X13** pick ONE reach
-convention (`0` = no reach, unbounded = `PositiveInfinity`, which the range check already handles) · **P2-1** add the
-five missing doctrine fields (a save-schema addition, and it un-blocks **every** doctrine slice).
-
-**THE DEPENDENCY ORDER (not a preference — each unlocks the next):**
-> **S1 (see it)** → **D-fields** (doctrine can hold its dials) → **A** (the designer's numbers arrive) → **B**
-> (cluster the battlefield — *and it makes everything cheaper, not dearer*) → **C** (state persists) → **E** (unify the
-> two worlds). ⚠ **R3 (real targeting) needs A first** — wasting alpha means nothing until alpha exists — **and B
-> before it**, because clustering buys the budget targeting spends.
+**The one-line headline for planetary work:** *the designer models COMPONENTS; the resolver models TOTALS* — and the ground feed is
+**not** the lossy side. A prebuilt ground unit carries more designed fidelity into a fight than any ship weapon except the beam.
 
 ### ⚔ R1–R5 — THE RESOLVER RETROFIT (canon **M19**, 2026-07-28) · large, five slices
 

@@ -222,3 +222,34 @@ the first four are about **instruments that lied**, not features.
       by default (its manifest has no `DefaultEnabled` field → `false`, `ModsState.cs:62`), which is the only
       reason this isn't a boot-blocker. **What right looks like:** either the game starts, or it refuses the
       mod with a readable message — never an NRE. Report which you get.
+
+
+---
+
+## 🔬 ADDED 2026-07-28 — the designer/client items from the verification campaign
+
+Full detail + predictions: `docs/COMBAT-DESIGNER-GROUND-TRUTH-2026-07-28.md` §7.2 and `docs/TESTING-TRACKER.md` (G-B1…G-B5).
+**CI compiles the client and can never run it, so every item below is local-runtime only.**
+
+- [ ] **⭐ THE BRICK (do this first).** In a **Debug** build: open the Component Designer, **collapse it** (double-click the
+      title bar), then open any other window. **If they all go blank, a 16-window bug is live** — `Window._beginCount` is
+      static with no per-frame reset and those windows call `End()` inside the `if`. Not a designer bug; a client-wide one.
+- [ ] **The four dead doors.** Click **Logistical ▸ Transfer** — predicted to throw on the door click itself (it sorts
+      first). Then **Weapons ▸ Guided**, **Sensors ▸ Detection**, **Civic ▸ Development** — those three throw when you pick
+      the bad entry in the **"Type" dropdown**, not on the door click.
+- [ ] **The frozen list.** Save a component → reopen the designer → is it in the middle list? *(predicted: no)* Research a
+      template → does it appear in the tree? *(predicted: no)*
+- [ ] **Reopen fidelity.** Reopen a saved design with an enum/tech dial (e.g. a ground weapon's `Mode`) — does the combo
+      show what you saved, or the template default? *(predicted: the default; the stored number is correct)*
+- [ ] **Type-switch data loss.** Set several dials, then change the "Type" dropdown. *(predicted: everything is discarded)*
+- [ ] **Layout.** Does the **Save** button fit on screen? The panes use hardcoded fractions and the button is placed from
+      the *available* region.
+- [ ] **The dual-handle range slider** (`infrastructure` ▸ gravity/pressure) — do both handles track, and does the gap clamp
+      hold? Its geometry is hand-drawn off window pos/size rather than the cursor.
+- [ ] **SM mode.** Open the designer with the viewed faction set to Game Master — predicted throw at the fuel-type row.
+- [ ] **A printf tooltip.** Hover the `[?]` on `bunker` ▸ **LocalFortify** — its description contains a bare `%` that is not
+      escaped (the unit tooltip escapes correctly; the description path does not).
+- [ ] **`solarArray`'s duplicate "Area"** — confirm the dial list shows Area twice (the mod has `Area` and `Area ` with a
+      trailing space).
+- [ ] **Confirm `OrdnanceDesignWindow` is genuinely unreachable** before anyone plans work against it — no toolbar entry,
+      no hotkey, no menu name were found.
