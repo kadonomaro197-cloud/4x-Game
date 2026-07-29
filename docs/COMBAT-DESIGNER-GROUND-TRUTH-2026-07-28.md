@@ -7,7 +7,7 @@ gating · design lifecycle & saves · a docs sweep for design intent).
 
 **Why one document.** These began as four and overlapped badly — the same defect appeared under three names, two of them
 disagreed, and one carried a claim that would have crashed New Game if acted on. Consolidated here at the developer's
-instruction. **The four source documents are deleted; nothing was lost — §16 maps every one.**
+instruction. **The four source documents are deleted; nothing was lost — §17 maps every one.**
 
 > **This file supersedes and replaces:**
 > `docs/economy/DESIGNER-AUDIT-2026-07-28.md` · `docs/combat/RESOLVER-AUDIT-2026-07-28.md` ·
@@ -35,7 +35,7 @@ combat, economy and ground, so no single subject subfolder fits.
 | About to change the resolver | §3 · §4 · §9 the resolver root causes · §14 |
 | Wondering if something is already known | §8 (designer, 40 findings) · §9 (resolver, 49) · §10 (where they disagreed) |
 | Checking whether a claim is trustworthy | §11 corrections — five claims in this campaign were wrong and are named |
-| Looking for something that used to be in another file | §16 the deletion map |
+| Looking for something that used to be in another file | **§17 the deletion map** |
 
 ---
 
@@ -355,7 +355,7 @@ whitelist**."*
 **What the prior audit says universality actually requires — TWO locks:**
 > *"**Lock #1 — the mount flag** (shallow)… **Lock #2 — the processor reader** (deep, the real wall). Even if you fix
 > every flag, a mounted ability only *does something* if some **processor reads that attribute off that host**."*
-> …*"the universality is real in the basement and **lost on the main floor**."* — `DESIGNER-AUDIT/00`
+> …*"the universality is real in the basement and **lost on the main floor**."* — `docs/archive/DESIGNER-AUDIT-2026-07-08/00`
 
 **The proof-of-pattern to copy:** *"`EnergyGenerationAtb` (reactors) is the one already-universal ability. It is read by
 a **space** processor *and* a **ground** system off the same attribute. **Every other capability should look like
@@ -429,7 +429,7 @@ it (**Q-E**). 91 of 95 templates mapped; the 4 unmapped fall through to "Other" 
 ## 8. THE DESIGNER AUDIT — 40 findings across 7 passes
 
 **Tally: 9 🔴 · 15 🟠 · 8 🟡 · 5 🔵 · 3 ✅.** Two of the four checks below are the framing that made the audit useful:
-the 2026-07-08 `docs/DESIGNER-AUDIT/` asks *is the designer UNIVERSAL* (can a part mount on many hosts); this campaign
+the 2026-07-08 `docs/archive/DESIGNER-AUDIT-2026-07-08/` asks *is the designer UNIVERSAL* (can a part mount on many hosts); this campaign
 asked *is it **FAITHFUL*** (does a dial you turn get recorded correctly and arrive at the thing that reads it). **Both
 matter and they are independent** — a part can be perfectly universal and carry a wrong number.
 
@@ -618,7 +618,7 @@ of the six were caused by trusting a name, a count, or a prior doc instead of th
 **Also corrected in other docs during the campaign:** `FLEET-COMBAT-CLOSING-DESIGN.md` §ROOT A (said railgun/flak/missile
 were rangeless a month after the code and its test moved on) · `Pulsar4X.Client/CLAUDE.md` is wrong twice (the
 `Window.Begin/End` safety claim, and listing `OrdnanceDesignWindow` as *"Functional"* when it is unreachable) ·
-`DESIGNER-AUDIT/04-BASEMOD-TEMPLATES.md` is stale (claims 89 payloads/88 ids and **omits the `Station` flag entirely**;
+`docs/archive/DESIGNER-AUDIT-2026-07-08/04-BASEMOD-TEMPLATES.md` is stale (claims 89 payloads/88 ids and **omits the `Station` flag entirely**;
 actual 96/95 with Station on 7 templates) — **do not size the retrofit off that doc.**
 
 ---
@@ -736,7 +736,126 @@ swept, which yielded a 🔴 on first contact.
 
 ---
 
-## 16. THE DELETION MAP — where everything went
+## 16. THE 2026-07-08 DESIGNER AUDIT — its still-valid diagnosis, folded in
+
+`docs/archive/DESIGNER-AUDIT-2026-07-08/` (9 files, ~1,100 lines, produced 2026-07-08 by a 7-way parallel code audit) was **archived
+2026-07-28** — its numbers had gone stale and a nine-file folder carrying wrong counts misleads at a glance. **Its
+diagnosis did not go stale, and it is the best frame anyone has produced for this problem.** It is preserved here in
+full, with every stale figure corrected inline.
+
+**It asked a DIFFERENT question than this campaign did** — *is the designer **UNIVERSAL*** (can a radar I designed
+mount on a ship *and* a station *and* a ground unit) versus this campaign's *is it **FAITHFUL*** (does a dial you turn
+get recorded correctly and arrive at the thing that reads it). **Both matter and they are independent:** a part can be
+perfectly universal and carry a wrong number, or perfectly accurate and mountable nowhere.
+
+### 16.1 The one-sentence verdict — still the best summary of the designer
+
+> *"the engine already has a **universal** buildable model at the bottom (a part is a `ComponentDesign` carrying an
+> ability, built by an industry that doesn't care what host it's on) — but the **middle band** (which designer offers a
+> part, which validator lets it in, and whether the ability actually *functions* on that host) was built four separate
+> times, once per host, so **the universality is real in the basement and lost on the main floor.**"*
+
+### 16.2 The one ladder — everything a player makes is one stack
+
+```
+  MINERAL      mined from a deposit                          (rung 0)
+     │  refine
+  MATERIAL     a ProcessedMaterial                           (rung 1)
+     │  consume to build
+  COMPONENT    a ComponentDesign = a TEMPLATE + one or more ABILITIES
+     │            (an ability = an IComponentDesignAttribute — a "rating plate" on the part)
+     │            designed in the ONE universal Component Designer
+     │  compose many components into…
+  ASSEMBLY     a SHIP / STATION / GROUND UNIT / MISSILE       (rung 3)
+     │  install / deploy
+  IN PLAY      the thing on the map that fights, mines, senses, moves
+```
+
+Wrapped by two support systems: **INDUSTRY** (materials → components → assemblies) and **RESEARCH** (unlocks *which*
+templates you may design, and *scales* their numbers as you tech up).
+
+### 16.3 ⭐ THE DIAGNOSIS — TWO LOCKS, NOT ONE (the crux, and still exactly right)
+
+**Lock #1 — the mount flag (shallow, cheap).** Every template carries a hand-authored `[Flags] ComponentMountType`, so
+one part *can* legally be tagged for many hosts, and the base mod already does it. **The one Component Designer honours
+this correctly.** The break is downstream: **the assemblers each hardcode a single host test**, so a part tagged for
+three hosts surfaces in only one builder — and the flags themselves are authored inconsistently.
+⚠ **Corrected 2026-07-28:** the audit said *"enforced in only ~1.5 of 4 engine paths."* Re-measured: **design-time 1.5
+of 4** (only `OrdnanceDesign.cs:97` filters) and **install-time 0 of 4** — nothing in `Entity.AddComponent` or the
+industry install path checks at all. Each assembler re-tests its own **concrete chassis attribute**, and `IChassisAtb`
+— the interface built to be the shared seam — **is read by no engine code** (§5.4).
+
+**Lock #2 — the processor reader (deep, the real wall).** *"an ability only does something if some **processor reads
+that attribute off that host**. Think of the attribute as a rating plate bolted to a part: the plate only matters if a
+watch-stander is trained to read **that** plate on **that** kind of equipment."* Because almost every processor lives
+inside one host's subsystem, **the same real capability got built twice.**
+
+**THE NINE DUPLICATED ABILITY PAIRS** — the same real thing modelled as two incompatible parts. ⚠ **`CATEGORIES.md` §3
+(L11) locks these to be resolved by DELETION, not merger:**
+
+| # | Capability | Space attribute | Ground/other twin | Note |
+|---|---|---|---|---|
+| 1 | **Radar / detection** | `SensorReceiverAtb` | `GroundSensorAtb` | *the one that started this* |
+| 2 | **Weapons** | Beam/Railgun/Flak/Disruptor/Plasma atbs | `GroundWeaponAtb` | already mid-merge (`WeaponSupply`) |
+| 3 | **Shields** | `ShieldAtb` | `GroundAugmentAtb.Shield` | ⚠ and they differ in **scope** — §8 D6-3 |
+| 4 | **Evasion / dodge** | the ship dodge model | `GroundAugmentAtb.EvasionBonus` | |
+| 5 | **Propulsion / mobility** | `NewtonionThrustAtb` + `WarpDriveAtb` | `GroundLocomotionAtb` + `GroundChassisAtb` | |
+| 6 | **Carry capacity** | `CargoStorageAtb` | `GroundBayAtb` | *both already mount on ships* |
+| 7 | **Ammo magazine** | `GenericWeaponAtb` mag / ordnance | `GroundMagazineAtb` | ⚠ and the two ammo **models** differ — §9 P6-1 |
+| 8 | **Hazard resistance** | `HazardResistanceAtb` | ground `EnvResistance` (**not even a component**) | the weaker side must be promoted first |
+| 9 | **Armour** | ship armour (a `ShipDesign` property, **not a component**) | `GroundArmorAtb` | ⚠ **and the two armour MECHANICS differ — §8 D5-1, the deepest M19 violation** |
+
+> *"Unifying a pair means: pick ONE attribute, and make **both** host processors read it — then retire the twin."*
+
+### 16.4 ⭐ THE PROOF IT IS FIXABLE — three parts of the tree already do it right
+
+- **Industry is fully host-uniform.** Every "make" verb is an installed component carrying an `*Atb`, and every
+  industry/mining/research processor finds its work **by an ability DataBlob, never by host type**. *"A space station
+  with a factory builds exactly like a colony, with **zero** station-aware code. This is the target pattern."*
+- **Research/unlock is fully host-uniform.** One faction data store, one `ComponentTemplates` dictionary, no per-host
+  copy. *"Tech decides **whether**, never **where**."*
+- **`EnergyGenerationAtb` is the one already-universal ABILITY** — read by a **space** processor *and* a **ground**
+  system off the same attribute. *"Reactors already work everywhere. **Every other capability should look like this.**"*
+
+> *"So the fix is not 'invent universality' — it's **'make the middle band conform to the universality the basement
+> already has.'**"*
+
+**And the portability rule that falls out of it** *(from `03-ABILITIES-AND-MOUNTS.md`)*: **readers keyed to the
+ABILITY's derived DataBlob (like `EnergyGenAbilityDB`) are automatically portable; readers keyed to a HOST blob
+(`ShipInfoDB`, `ColonyInfoDB`, `GroundForcesDB`) are the locks.**
+
+### 16.5 The structural findings — still true, with two corrections
+
+- **No shared assembly engine.** Four mechanisms, four validators, four factories. **Only the bottom two rungs are
+  shared** — the `ComponentDesign`+attribute, and `Entity.AddComponent → ComponentInstancesDB`. ✅ **Confirmed and
+  sharpened 2026-07-28** (§5.4): `StationAssembly.Compute` and `BuildingAssembly.Compute` are **line-for-line the same
+  algorithm**, `AddCosts` is copy-pasted **3×**, and the batch-job lifecycle block is re-implemented **4×**.
+- **Mount legality lives only on `ComponentDesign`** — for ships/missiles/ground units the host is baked into *which C#
+  class wraps the design*, so a capability cannot be re-hosted without changing its class. ✅ still true.
+- ⚠ **"Stations have no design class at all (deploy-then-furnish)" — NOW WRONG.** `StationDesign` shipped 2026-07-15.
+  **And it is the alternative `OFF-WORLD-INFRASTRUCTURE-DESIGN.md:129` explicitly REJECTED** — both front doors now
+  ship. That is open decision **Q-D** (§3).
+- ⚠ **"`PDC` and `Fighter` are dangling mount flags" — HALF WRONG.** `PDC` is still at **zero** templates. **`Fighter`
+  is carried by 15** (`passive-sensor`, `warp-stabilizer`, both engines, all three exotic drives, all four power
+  sources, both fuel tanks, `sensor-hardening-module`, `drive-reinforcement`).
+- ⚠ **"Ground unit — no player UI yet" — NOW WRONG.** The **Entity Assembler** (`ShipDesignWindow`) builds ground units
+  from a frame + parts, with a squad-size dial (§5.5).
+
+### 16.6 What was stale, and must not be used to size anything
+
+| Claim | Correction |
+|---|---|
+| *"**67** base-mod component templates"* | **96 payloads / 95 distinct ids** (2026-07-28). The `04` file's own later revision said 89/88 — **also stale.** |
+| `04-BASEMOD-TEMPLATES.md`'s per-template table | Written against 44 installations templates; there are **51**. It **omits the `Station` mount flag entirely** (7 templates carry it), and lists a `CargoTransferAtbDB` class that **does not exist**. |
+| *"enforced in only ~1.5 of 4"* | **design-time 1.5 of 4 · install-time 0 of 4** (§16.3) |
+| The whole *"collapse 67 into ~37 doors"* arithmetic | The pile has **grown** — 67 → 89 → 96. See §2, the campaign's headline gauge. |
+
+**Its open questions were not lost either** — they were carried into §3 as **Q-D** (is a `StationDesign` warranted at
+all?), **Q-E**, and the smaller PDC / `solarArray` / `spaceport` calls.
+
+---
+
+## 17. THE DELETION MAP — where everything went
 
 | Deleted file | What it held | Now in |
 |---|---|---|

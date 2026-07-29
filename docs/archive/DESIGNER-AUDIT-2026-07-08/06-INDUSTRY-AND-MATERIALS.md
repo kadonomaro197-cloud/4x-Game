@@ -1,3 +1,18 @@
+> # 🗄 ARCHIVED 2026-07-08 SURVEY — DO NOT FOLLOW AS LIVE
+>
+> **This file is a point-in-time snapshot from 2026-07-08 and its NUMBERS ARE STALE.** It was written when the base mod
+> held **67** component templates; there are now **96**. Its per-template tables, its mount-flag coverage (it omits the
+> `Station` flag entirely) and its *"~1.5 of 4"* enforcement figure are all superseded. **Do not size any work off this
+> folder.**
+>
+> **Its DIAGNOSIS did not go stale, and it is preserved — with every figure corrected inline — in
+> [`docs/COMBAT-DESIGNER-GROUND-TRUTH-2026-07-28.md`](../../COMBAT-DESIGNER-GROUND-TRUTH-2026-07-28.md) §16:** the
+> *"universality is real in the basement and lost on the main floor"* verdict · the **two locks** (mount flag vs
+> processor reader) · the **nine duplicated ability pairs** · and the **three proof-of-pattern** parts of the tree that
+> already do universality correctly. **Read §16, not this folder.**
+>
+> Kept only as the historical record of how that diagnosis was reached.
+
 # 06 — Industry & Materials (the "MAKE" layer)
 
 **Scope:** everything a player can MAKE via the economy — refining, component/installation/ship/ordnance construction, mining — and the exact chain that turns a design into something buildable, plus whether those "make" abilities are the same on every host (colony vs station vs ship).

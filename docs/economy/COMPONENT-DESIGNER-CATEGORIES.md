@@ -6,7 +6,7 @@
 
 > **⚙ WIRING-READY (2026-07-09).** This doc is the **map** (the 11 categories, the boundary, the stress test, the holes). The **wiring reference for each category is its self-contained ⚙ Wiring Dossier** in `docs/economy/COMPONENT-DESIGNER-DIALS.md` (`⚙ 1`…`⚙ 11`) — dials → engine-wire (file:line) → resolver insertion → dead stubs → §0g stamp, all verified against the live engine. **To wire a category, read its dossier; read this doc for the boundary rules and the hole it owns.** Together, these two docs are the only reference needed to wire — every external source (the resolver anatomy, the five merged strategic docs) has been transferred, translated, and folded into the dossiers.
 
-> The decision doc for collapsing Pulsar's **67 hand-authored component templates** into **11 parametric designer categories**. Supersedes the "author a new template per thing" model and the "reconcile the two parallel (space/ground) systems" plan (`WEAPON-UNIFICATION-DESIGN.md`, deleted). The current-state evidence this replaces is `docs/DESIGNER-AUDIT/`. The governing principle is `docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md`.
+> The decision doc for collapsing Pulsar's **67 hand-authored component templates** into **11 parametric designer categories**. Supersedes the "author a new template per thing" model and the "reconcile the two parallel (space/ground) systems" plan (`WEAPON-UNIFICATION-DESIGN.md`, deleted). The current-state evidence this replaces is `docs/archive/DESIGNER-AUDIT-2026-07-08/`. The governing principle is `docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md`.
 
 ---
 
@@ -49,7 +49,7 @@ The recurring lesson: what *feels* like a type is usually a **dial**. Point-defe
 - **Ship hulls become real designs** (today they're implicit in `ShipDesign`).
 - **Stations finally get a design class** (Chassis ▸ Structure) — the `DESIGNER-AUDIT` §02/§05 "no station design class" gap, closed.
 - **Data bugs dissolve:** the `solarArray` ship-only mount and the duplicate `spaceport` both vanish (they become Power ▸ Generation and Logistical ▸ Transfer designs).
-- **The parallel ground systems die for good:** `GroundWeaponAtb`, `GroundSensorAtb`, `GroundLocomotionAtb`, `GroundAugmentAtb`, `GroundArmorAtb`, `GroundMagazineAtb` etc. are absorbed into the universal doors (the 9 duplicated ability pairs from `DESIGNER-AUDIT/03`, resolved by deletion not merger).
+- **The parallel ground systems die for good:** `GroundWeaponAtb`, `GroundSensorAtb`, `GroundLocomotionAtb`, `GroundAugmentAtb`, `GroundArmorAtb`, `GroundMagazineAtb` etc. are absorbed into the universal doors (the 9 duplicated ability pairs from `docs/archive/DESIGNER-AUDIT-2026-07-08/03`, resolved by deletion not merger).
 
 ### The designer's boundary (what it does NOT make)
 The designer makes **gear**. It does **not** make the *being* that uses it. Innate/pilot abilities — the Force, psionics, a species trait, raw veterancy — live in the **People / crew / commander / morale** system, not the component store. Enhancers is the *bridge* (buildable bio/training/systems mods), but a Jedi's telekinesis is a **pilot trait**, not a component. This boundary is load-bearing (see hole H4).
@@ -286,7 +286,7 @@ That is the answer to H4: the designer never makes a Jedi; the **People system**
 |------|------|
 | **H1 teleport** | **Logistical ▸ Transfer "delivery mode" dial**: physical (docking/conveyor, short) vs **teleport** (instant, ranged, mass/cycle-limited, heavy power draw). Transporter, rings, beaming = the same dial at different range/mass. Emits the **teleport effect** on the bus. |
 | **H2a self-repair** | **Enhancers ▸ Systems "regen" dial** — regenerate a pool (hull/armor/shield) per tick. Reuses the shield-pool regen mechanic; "what it repairs" is a dial. |
-| **H3a mobile fabrication** | **Universal mounting** — let Industrial doors mount on Hull/Vehicle/Personnel, not just Structure. The engine already discovers industry by ability-blob, not host (`DESIGNER-AUDIT/06`); it's a mount-flag change. A factory ship / construction rig falls out. |
+| **H3a mobile fabrication** | **Universal mounting** — let Industrial doors mount on Hull/Vehicle/Personnel, not just Structure. The engine already discovers industry by ability-blob, not host (`docs/archive/DESIGNER-AUDIT-2026-07-08/06`); it's a mount-flag change. A factory ship / construction rig falls out. |
 | **H3b self-replication** | **Industrial ▸ Fabrication "output = own design" mode** — consume matter, build a copy of self. Grey-goo is bounded by tech/scale caps + matter. Reuses Fabrication. |
 | **H5a config-states** | **Chassis config-states** — a design carries 2–3 named configs (stat/active-component profiles), switched in-play on a cooldown. **Reuse the fleet-doctrine / ground-stance switch mechanic** verbatim, one level down. S-foils, combat/travel mode, dig-in. |
 | **H7 hybrid components** | **Multi-role components** — a single design carries abilities from >1 door (already how templates work: a reactor carries EnergyGen + SensorSignature). Staff = Energy + Melee; lightsaber = Melee + a deflect effect. The designer just needs to *permit* adding a second role. |

@@ -89,7 +89,7 @@ docs/ai/         AI-BUILD-STATUS-AND-WIRING-MAP (hub) · AI-DECISION-ENGINE · A
 docs/environment/  ENVIRONMENTS-DESIGN · STELLAR-ENVIRONMENTS-CATALOG
 docs/explore/    SITE-ENGINE-DESIGN · EXPLORATION-CONTENT-DESIGN
 docs/aurora/     (external spec — keep the whole 14-file family intact; only strip the per-doc "Maps to Pulsar" status columns)
-docs/DESIGNER-AUDIT/  (keep intact as one 8-file point-in-time deliverable)
+docs/archive/DESIGNER-AUDIT-2026-07-08/  (keep intact as one 8-file point-in-time deliverable)
 docs/archive/    (new — superseded but kept for provenance, each with a HISTORICAL/SUPERSEDED banner)
 ```
 
@@ -126,7 +126,7 @@ Three docs all try to be the status board and all three rot: `DOCS-INDEX` (69 KB
 
 ## 4. The healthy core (keep as-is)
 
-The load-bearing docs that are accurate and must stay: **`CLAUDE.md`** (with two fact-fixes), **`CONVENTIONS.md`**, **`LIVING-GALAXY-DESIGN.md`** (uniquely forbids building an event-engine/director — has already prevented a wrong build twice), **`docs/economy/COMPONENT-DESIGNER-DIAL-LEDGER.md`** (the model doc for the build-vs-designed distinction), **`PLAY-TO-MARS-WALKTHROUGH.md`** (unusually accurate — pinpoints the three real MVP blockers), **`docs/explore/SITE-ENGINE-DESIGN.md`**, **`NORTH-STAR-VISION.md`**, the **`docs/aurora/`** family (once the status columns are stripped), the **`docs/DESIGNER-AUDIT/`** folder, and the shipped-subsystem specs **`MORALE-AND-POPULATION` / `GOVERNMENT-AND-POLITICS` / `GOVERNANCE-AND-DELEGATION`** (design bodies stay; only the status layer refreshes).
+The load-bearing docs that are accurate and must stay: **`CLAUDE.md`** (with two fact-fixes), **`CONVENTIONS.md`**, **`LIVING-GALAXY-DESIGN.md`** (uniquely forbids building an event-engine/director — has already prevented a wrong build twice), **`docs/economy/COMPONENT-DESIGNER-DIAL-LEDGER.md`** (the model doc for the build-vs-designed distinction), **`PLAY-TO-MARS-WALKTHROUGH.md`** (unusually accurate — pinpoints the three real MVP blockers), **`docs/explore/SITE-ENGINE-DESIGN.md`**, **`NORTH-STAR-VISION.md`**, the **`docs/aurora/`** family (once the status columns are stripped), the **`docs/archive/DESIGNER-AUDIT-2026-07-08/`** folder, and the shipped-subsystem specs **`MORALE-AND-POPULATION` / `GOVERNMENT-AND-POLITICS` / `GOVERNANCE-AND-DELEGATION`** (design bodies stay; only the status layer refreshes).
 
 ---
 
@@ -179,15 +179,15 @@ Verdicts: **KEEP** (healthy) · **KEEP-TRIM** (small fix/trim) · **STALE-FIX** 
 | DESIGNER | `docs/economy/COMPONENT-DESIGNER-DIAL-LEDGER.md` | KEEP | OK | Keep as the canonical 'what's actually wired' ledger for the component designer and cross- |
 | DESIGNER | `docs/economy/COMPONENT-DESIGNER-DIALS.md` | KEEP-TRIM | BLOATED | Keep as the DESIGNER design authority but shrink it: (1) delete or archive the folded-in o |
 | DESIGNER | `docs/economy/COMPONENT-DESIGNER-CATEGORIES.md` | CONSOLIDATE | OK | Fold the Part 3 hole→plug ledger and the Part 2 'shared EFFECT bus / gear=designer vs bein |
-| DESIGNER | `docs/DESIGNER-AUDIT/00-EXECUTIVE-SUMMARY.md` | KEEP-TRIM | OK | Keep in place as the DESIGNER-AUDIT front page. Update line 136 to drop/repoint the non-ex |
-| DESIGNER | `docs/DESIGNER-AUDIT/01-DESIGNER-UIS.md` | KEEP-TRIM | OK | Keep in place as part 1 of the DESIGNER-AUDIT series. Add a dated staleness banner at top  |
-| DESIGNER | `docs/DESIGNER-AUDIT/02-DESIGNABLE-TYPES.md` | KEEP | OK | Keep in place within docs/DESIGNER-AUDIT/. Add a one-line cross-link from the Open-Questio |
-| DESIGNER | `docs/DESIGNER-AUDIT/03-ABILITIES-AND-MOUNTS.md` | STALE-FIX | OK | Keep in place as the crux section of docs/DESIGNER-AUDIT/. Do a reference-fix pass: replac |
-| DESIGNER | `docs/DESIGNER-AUDIT/04-BASEMOD-TEMPLATES.md` | STALE-FIX | OK | Re-run the per-file UniqueID enumeration against current TemplateFiles/*.json to rebuild a |
-| DESIGNER | `docs/DESIGNER-AUDIT/05-ASSEMBLIES.md` | KEEP | OK | Keep in place as part of the DESIGNER-AUDIT set. Add a one-line date/'as-of-SHA' stamp at  |
-| DESIGNER | `docs/DESIGNER-AUDIT/06-INDUSTRY-AND-MATERIALS.md` | KEEP | OK | Keep in place. Add one paragraph (or a §6 resolution) covering the LocalConstruction subsy |
-| DESIGNER | `docs/DESIGNER-AUDIT/07-RESEARCH-AND-UNLOCKS.md` | KEEP | OK | Keep in place within docs/DESIGNER-AUDIT/. Add a date/commit stamp at the top (all DESIGNE |
-| DESIGNER | `docs/DESIGNER-AUDIT/README.md` | KEEP | LEAN | Keep in place as the DESIGNER-AUDIT folder index. Add a one-line status/date-of-relevance  |
+| DESIGNER | `docs/archive/DESIGNER-AUDIT-2026-07-08/00-EXECUTIVE-SUMMARY.md` | KEEP-TRIM | OK | Keep in place as the DESIGNER-AUDIT front page. Update line 136 to drop/repoint the non-ex |
+| DESIGNER | `docs/archive/DESIGNER-AUDIT-2026-07-08/01-DESIGNER-UIS.md` | KEEP-TRIM | OK | Keep in place as part 1 of the DESIGNER-AUDIT series. Add a dated staleness banner at top  |
+| DESIGNER | `docs/archive/DESIGNER-AUDIT-2026-07-08/02-DESIGNABLE-TYPES.md` | KEEP | OK | Keep in place within docs/archive/DESIGNER-AUDIT-2026-07-08/. Add a one-line cross-link from the Open-Questio |
+| DESIGNER | `docs/archive/DESIGNER-AUDIT-2026-07-08/03-ABILITIES-AND-MOUNTS.md` | STALE-FIX | OK | Keep in place as the crux section of docs/archive/DESIGNER-AUDIT-2026-07-08/. Do a reference-fix pass: replac |
+| DESIGNER | `docs/archive/DESIGNER-AUDIT-2026-07-08/04-BASEMOD-TEMPLATES.md` | STALE-FIX | OK | Re-run the per-file UniqueID enumeration against current TemplateFiles/*.json to rebuild a |
+| DESIGNER | `docs/archive/DESIGNER-AUDIT-2026-07-08/05-ASSEMBLIES.md` | KEEP | OK | Keep in place as part of the DESIGNER-AUDIT set. Add a one-line date/'as-of-SHA' stamp at  |
+| DESIGNER | `docs/archive/DESIGNER-AUDIT-2026-07-08/06-INDUSTRY-AND-MATERIALS.md` | KEEP | OK | Keep in place. Add one paragraph (or a §6 resolution) covering the LocalConstruction subsy |
+| DESIGNER | `docs/archive/DESIGNER-AUDIT-2026-07-08/07-RESEARCH-AND-UNLOCKS.md` | KEEP | OK | Keep in place within docs/archive/DESIGNER-AUDIT-2026-07-08/. Add a date/commit stamp at the top (all DESIGNE |
+| DESIGNER | `docs/archive/DESIGNER-AUDIT-2026-07-08/README.md` | KEEP | LEAN | Keep in place as the DESIGNER-AUDIT folder index. Add a one-line status/date-of-relevance  |
 | DESIGNER | `docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md` | KEEP-TRIM | OK | Keep in place as the parent principle of the DESIGNER cluster. Trim/restamp the §3 'Curren |
 | ECONOMY | `docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md` | KEEP-TRIM | OK | Keep as the canonical ladder-vision capture but fold it into the economy/off-world design  |
 | ECONOMY | `docs/economy/RESOURCES-AND-MATERIALS-DESIGN.md` | STALE-FIX | OK | Add a dated 'SUPERSEDED SINCE SURVEY' banner listing what has landed (NPCDecisionProcessor |
