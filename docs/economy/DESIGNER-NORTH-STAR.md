@@ -431,9 +431,147 @@ drive. Neither is a Defense purchase, and the doc should stop implying they are.
 |---|---|
 | **Weapons** | ✅ derived — 5 doors + 41 dial groups → **2 choices + 4 sliders** |
 | **Defense** | ✅ derived — 4 doors → **1 choice + 3 sliders**, two doors relocated out of the category |
-| Propulsion · Sensors · Power · Enhancers · Industrial · Logistical · Civic · Command · Chassis | ⏳ owed |
+| Propulsion | ✅ derived — see Part Three |
+| Sensors · Power · Enhancers · Industrial · Logistical · Civic · Command · Chassis | ⏳ owed |
 
 **Standing rule from here on (developer, 2026-07-29):** every category derived from now on ships **both** maps — the
 **input surface** (what the door writes) and the **output map** (where that goes). Weapons §8b and Defense §16b are
 the pattern. Connections found this way belong in `docs/SYSTEM-CONNECTION-MAP.md` too — that file owns the
 system-to-system graph.
+
+---
+
+# PART THREE — PROPULSION (derived 2026-07-29)
+
+**Live reference:** https://claude.ai/code/artifact/3c1d784b-df96-444a-93c5-c2c512a831d4
+
+## 19. THE HEADLINE — this is the OPPOSITE problem from Weapons
+
+**Weapons had too many doors with overlapping dials. Propulsion has almost no dials at all.**
+
+The engine designer today offers **one slider and one dropdown**. Verified in `engines.json`:
+
+| Dial | Editable? | How it is actually decided |
+|---|---|---|
+| **Mass** | ✅ **the only one** | bounded by two techs |
+| **Fuel Type** | ✅ a dropdown | which fuels you have unlocked |
+| Exhaust Velocity | ❌ display only | `ExhaustVelocityLookup(Fuel Type) + TechData(...)` |
+| Fuel Consumption | ❌ display only | `Mass × 0.3 × TechData(...)` |
+| Thrust | ❌ display only | `Exhaust Velocity × Fuel Consumption` |
+
+🔴 **Follow the chain and the door empties out.** Thrust is **linear in engine mass**; exhaust velocity does not depend
+on mass at all. So **a bigger engine is strictly better on both counts**, and the only real decision left is which
+fuel you have unlocked. **There is no trade anywhere in the category** — which is the "if an option has no catch it is
+a bug in the design" rule failing at the level of a whole door.
+
+**The most famous trade in rocketry — high thrust with poor economy, or gentle thrust with enormous range — cannot be
+expressed.** The tech tree has ion and nuclear-pulse engines, but those are **tech levels you unlock**, not **choices
+you make**.
+
+## 20. THE PHYSICS THE DOOR IS MISSING
+
+> **For a given engine power, thrust × exhaust velocity is a constant.**
+> Power is `½·ṁ·v²`; thrust is `ṁ·v`; therefore **`T · v = 2P`**.
+
+Spend your power on a fast thin exhaust and you get economy with little push. Spend it on a slow heavy one and you
+get push with little range. **This is a real zero-sum that is already true in physics** — it needs no invention, only
+exposing, and it costs **no new resolver field**.
+
+It is the exact mirror of the weapon's **shot size ↔ rate of fire** and of the locked **zero-sum plate tuning**: one
+budget, split two ways, no free lunch.
+
+**And a second tension falls out for free:** fuel load buys Δv but adds mass, and mass fights your own thrust. **Your
+evasion falls as your range grows.** That tension does not exist in the game today.
+
+## 21. THE INPUT SURFACE (verified in source)
+
+| Variable | Read by | Decides |
+|---|---|---|
+| `ThrustInNewtons` | `accel = Thrust ÷ MassDry` → `CalculateEvasion` | **Evasion** |
+| `ExhaustVelocity` | Tsiolkovsky | Δv per kg of fuel |
+| `FuelBurnRate` · `TotalFuel_kg` | fuel drain · Δv | endurance, logistics |
+| `Reactionless` (bool) | skips propellant | unbounded Δv |
+| `InertialessDriveAtb.EvasionOverride` | evasion **floor** | breaks the mass↔evasion coupling |
+| `WarpAbilityDB.MaxSpeed` | `FleetCombat.WarpSpeedFloor` | strategic transit |
+| bubble create/sustain cost | stored electricity | needs **Power** |
+| `GroundLocomotionAtb.SpeedFactor` | `GroundMobility.SpeedMultForUnit` → `Speed_kmh` | the closing march |
+| `RoughHandling` | `TerrainMult` **and** `LocomotionTerrainMult` | travel time **and** a combat multiplier |
+| `Amphibious` | pathfinding passability | where you may go |
+| drive mass (emergent) | chassis budget **and back into its own accel** | the feedback loop |
+
+## 22. THE FIVE QUESTIONS
+
+| Question | Variables |
+|---|---|
+| **How fast do you change direction?** | Thrust ÷ mass → **Evasion** — the combat payoff |
+| **How long can you hold a position?** | Δv → `ManeuverBudget` — the kiting clock |
+| **How fast do you cross the map?** | warp max speed · ground march speed |
+| **Where can you go at all?** | medium · `Amphibious` · terrain handling |
+| **What feeds it?** | fuel · stored power · nothing |
+
+## 23. THE ONE CHOICE — WHAT DO YOU PUSH AGAINST
+
+| Setting | Works in | Runs on | Combat payoff |
+|---|---|---|---|
+| **Reaction mass** | anywhere, vacuum included | fuel | **evasion + control of the range** |
+| **The ground** | surfaces only | fuel · power · muscle | march speed + terrain edge |
+| **Air or water** | that medium only | fuel | access (altitude/depth deferred) |
+| **Spacetime** | interstellar | **stored power** | none — strategic only |
+
+🔑 **Unlike Weapons, there is no second axis, and inventing one would be dishonest.** Where you can go and what feeds
+you are **entailed** by what you push against — they are not independent choices. Propulsion is genuinely
+**one choice and three sliders**.
+
+**The three sliders:** how much drive you fit (paid in mass) · **push ↔ economy** (§20, the missing one) · fuel load.
+Ground adds rough-terrain handling, which already exists.
+
+## 24. THE EXOTIC DOOR DISSOLVES — the same collapse as Weapons
+
+| Was | Actually |
+|---|---|
+| **Reactionless** | **Reaction with a rule removed** — implemented as exactly that: thrust set directly, propellant burn zero. A flag, not a family. |
+| **Gravitic** | any family with the **medium requirement removed**. A constraint lifted. |
+| **Inertialess** | 🔴 **not propulsion at all.** It writes one thing — an **evasion floor**. It produces no thrust and moves nothing. It is a **defensive** component sitting in Propulsion because it is about dodging. |
+| **Teleport** | 🔴 **not propulsion either.** It breaks distance rather than crossing it — a transfer mechanic, belongs with logistics. |
+
+## 25. WHAT GOES OUT — the Propulsion output map (verified in source)
+
+| What leaves the door | Goes to | Why it matters |
+|---|---|---|
+| **Thrust ÷ mass** | `CalculateEvasion` | 🔴 **the best defence in the game is bought HERE** |
+| **Thrust** | `FleetManeuver` | decides **who dictates the range** in a closing fight |
+| **Δv** | `FleetCombat.DeltaVFloor` → `ManeuverBudget` | the **kiting clock** — run dry and the enemy closes |
+| **Warp max speed** | `WarpSpeedFloor` | strategic transit; the fleet moves at its slowest ship |
+| **Ground speed factor** | `Speed_kmh` → the closing march | how fast you cross a battle's real metres |
+| **Rough-ground handling** | march time **and** `LocomotionTerrainMult` | **one dial, two systems** |
+| **`Amphibious`** | pathfinding passability | where you may go at all |
+| **Fuel burn** | **Logistics** — tankers, refuelling | a thirsty fleet is a supply problem |
+| **Warp bubble cost** | **Power** (stored electricity) | a flat battery is a ship that cannot leave |
+| **Drive mass** | **Chassis** budget — **and back into its own acceleration** | the only door whose output fights its own input |
+| **The drive destroyed** | Damage | shoot the engine off and evasion collapses |
+
+### 25.1 🔑 THE LOOP THIS CLOSES ACROSS THREE DERIVATIONS
+
+Defense (§16) found that **evasion — the layer that stops damage from ever being rolled — is not sold at the Defense
+door.** This is where it is sold.
+
+> **Propulsion is the game's largest defensive purchase, and nothing in either category says so.**
+
+That is exactly the class of connection step 6 exists to find, and it took three derivations meeting before it was
+visible.
+
+## 26. OPEN — for the developer
+
+**Should fuel type stay a dropdown of unlocked fuels, or become a position on the push↔economy slider with the fuel
+as its cost?** The first keeps research meaningful; the second makes the trade continuous. Not decided.
+
+---
+
+## 27. RUNNING TALLY (updated)
+
+| Category | State | Shape |
+|---|---|---|
+| **Weapons** | ✅ derived | 5 doors + 41 dial groups → **2 choices + 4 sliders** |
+| **Defense** | ✅ derived | 4 doors → **1 choice + 3 sliders**, two doors relocated out |
+| **Propulsion** | ✅ derived | 5 doors → **1 choice + 3 sliders**; Exotic dissolves; **the fix here is to ADD a dial, not remove doors** |
+| Sensors · Power · Enhancers · Industrial · Logistical · Civic · Command · Chassis | ⏳ owed | |
