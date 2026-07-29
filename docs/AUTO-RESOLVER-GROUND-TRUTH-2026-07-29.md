@@ -254,6 +254,33 @@ fallback, not the norm. **This closes §16 O-5.**
 > the **client** turns on what a real game should use — `PulsarMainWindow.cs:87-114`). The ruling is delivered by
 > fixing §13.9, gauging it, and *then* adding the client line — not by flipping the flag.
 
+**LD-30 · 🔒 THE ARENA MODEL — how a battle is shaped (developer, 2026-07-29).** The developer's specification of what
+the 2D plane actually *is*, given in their own words across two messages. **This supersedes the frame-and-anchor
+geometry of S1/S2 as the target model.**
+
+1. **The trigger is the built weapon.** *"when a battle commences that means Unit A weapons range covers unit B BAM
+   auto resolver starts."* **And it revolves around what the unit is BUILT with** — *"the 1000km is an example… it all
+   revolves around what the unit is built with."*
+2. **The battle has an AREA OF ENGAGEMENT — a circle.** Centre `0,0`; its **radius** is set by the weapon range that
+   opened the fight; the two original combatants sit at opposite ends of a **diameter**.
+3. 🔴 **THE CIRCLE DOES NOT CLOSE.** *"the circle doesnt close."* It is the **arena**, not a gap. It never shrinks.
+4. 🔴 **Inside it, the resolver is a live SIMULATION.** *"the auto resolver is a simulation the moment combat starts
+   they're moving as though it was an RTS."* **Closing is the UNITS moving at their real speeds — not a global gap
+   number shrinking.** The player never drives it; the sim does.
+5. **A joiner expands the arena ONLY if its range is larger.** *"the battle will ONLY expand if they're range is LARGER
+   than Unit A. at which point they just expand the size of the plane to encompass them."* Otherwise the arena is
+   untouched and the joiner simply fits inside it.
+6. **Expansion is forward-only.** *"it doesnt change what has already occurred in the battle."* Existing units keep
+   their positions and their damage; the circle grows outward around them.
+7. **Scale is a non-issue.** *"then 50 other units can join, it wont matter either they'll just have a smaller range
+   and fall into the the auto resolver or they're expand the range of the engagement and Fall into the auto
+   resolver."*
+8. **A joiner enters at the battle's CURRENT state.** *"they show up at whatever status that battle currently is at."*
+   No rewind, no re-seed, no fresh start.
+
+> **The one-line consequence:** the arena is bounded by **range**; the fight is resolved by **movement**. Those are two
+> different things, and today's engine conflates them into one shrinking scalar.
+
 ---
 
 ## 6. THE ANATOMY — the input surface every dial must land on
@@ -956,32 +983,78 @@ is structurally invisible to the existing suite.**
 is **B**: neither C nor B is the controller, so **both anchors never move, and `SeparationOf(C)` is pinned at its
 seeded value for the entire battle.** Under the scalar model C's gap converged with everyone else's.
 
-**The consequence is a live-game bug, not a rounding artefact.** Engagements form out to
-`EngagementRange_m = 1e9` — a **gigameter**, which the source itself calls *"a stub"*. The longest weapon reach in the
-game is the missile's **1 000 km = 1e6 m** — three orders of magnitude smaller. So a seeded gap is routinely far
-outside every weapon's range, and a fleet frozen there **fires nothing and takes nothing for the whole battle.**
-In play that reads as *"my third fleet just sat there"* — the same bug class as the Living-Opponents
-"builds but never attacks" failure.
+**The consequence, stated accurately.** ⚠ *An earlier draft of this section claimed a frozen fleet sits a gigameter
+out of range. That was WRONG for a real game and is corrected here.* `EngagementRange_m = 1e9` is only a **coarse
+broad-phase pre-filter** (`InRange`); the real gate is `WithinWeaponRange` (`:218`), which is **ON in the client**
+(`RequireWeaponRangeToEngage`, `PulsarMainWindow.cs:113`), and `EnsureInCombat` seeds the gap from the **real
+distance** (the 2026-07-16 freeze fix). So a battle forms at genuine weapon reach and a frozen pair is stuck at
+**weapon-range scale** — which still means *the brawler never closes on the artillery* and that fleet contributes
+nothing for the rest of the fight, but not the three-orders-of-magnitude disaster first described.
 
 **Multi-fleet is not an edge case here:** the resolver is natively multi-party (fire divided `1/split`,
 `:745-747`), `MultiPartyEngagementTests` covers assist / join / fire-split, and the AI masses fleets
 (`FleetAssembly`) — so 3+ fleets in one engagement is the normal case in a real game, and the *only* case the
 scenario matrix (§8 row 10) calls HANDLED for space.
 
-**The fix is one of two, and it is a design choice, not a mechanical repair:**
+### 13.9a THE ROOT CAUSE — the "2D plane" is a 2D READOUT PAINTED ON A 1-D MODEL
 
-| Option | What | Trade |
+**This is the finding that matters, and LD-30 is what exposed it.** The frozen anchor is a *symptom*; here is the
+disease, in one line of source:
+
+```csharp
+double moved = ctrlGapBefore - cst.Separation_m;              // CombatEngagement.cs:1106
+Vector2 newAnchor = GroupPlane.Place(cst.Anchor, dir * moved);
+```
+
+**The anchor moves by however much the SCALAR gap just changed.** The scalar is the driver; the 2D position is a
+follower. And `SeparationOf` then reads that follower back as if it were the truth (`:1003`).
+
+**Everything else falls out of that:**
+
+- **Only one anchor can move**, because only one fleet has a scalar-gap delta attributable to it — the controller.
+  That *is* §13.9. It was never a missing `for` loop; it is the shape of the model.
+- **The plane cannot express LD-30 at all.** A single shrinking scalar cannot represent *"they're moving as though it
+  was an RTS"* — one number has no room for units moving independently inside an arena.
+- **The arena does not exist.** There is no radius, no `0,0` centre, no notion of an engagement *extent*. S1 seeds a
+  frame from real 3D positions and gives each fleet a drifting anchor; a joiner **copies the frozen frame** (`:614`)
+  and is projected into it. **Nothing expands, because there is nothing to expand.**
+
+**⇒ The (a)/(b) repair I previously offered here is WITHDRAWN. Both were patches to the follower.** Neither would have
+produced the arena, and neither would have made the units move.
+
+### 13.9b WHAT LD-30 ACTUALLY REQUIRES
+
+| Piece | Today | LD-30 |
 |---|---|---|
-| **(a) Move every fleet's anchor** | each fleet slides along its own enemy-facing direction by its own scalar-gap delta, not just the controller's | Closest to today's scalar behaviour (everyone converges) and keeps the plane meaningful. **But it contradicts the design's stated rule** — *"only the faster (controller) fleet moves, matching the design's 'the faster side closes the distance'"* |
-| **(b) Fall back to the scalar for un-moved pairs** | `TryPlanePairDistance` returns false when neither fleet is the controller | Smallest change, preserves the controller rule — but the plane then measures some pairs and not others, which is exactly the split-brain the merge exists to remove |
+| **Trigger** | `WithinWeaponRange` = `Max(reachA, reachB)`, client-on | ✅ **already correct — this is the ruling, built** |
+| **Weapon range** | ❌ **1 of 6 classes designable** (see below) | the arena's radius, so it MUST be designable |
+| **Battle extent** | none — no radius, no centre | a circle at `0,0`, radius = the largest weapon range present |
+| **Closing** | one scalar gap shrinking for everyone | **units moving at their own speeds inside a fixed arena** |
+| **Position** | a follower of the scalar | **the source of truth** |
+| **Joining** | copies the frozen frame; nothing expands | expands the radius **iff** the joiner's range is larger; else fits inside |
+| **Joiner state** | seeded onto the frame | **enters at the battle's current state** — no rewind |
 
-**(a) is the better fit for LD-29** — if the plane is *the default for all combat*, every fleet must have a real
-position, not just whichever one is dictating range this step. But it changes the closing rule, so it is the
-developer's call.
+🔴 **THE LOAD-BEARING PREREQUISITE — only the beam can express a designed range.** LD-30 makes the arena's size a
+function of built weapon range, so this stops being cosmetic and becomes the thing everything hangs off
+(`ShipCombatValueDB.cs`):
 
-**The gauge that must exist either way (owed — `docs/TESTING-TRACKER.md` G-C7):** three fleets, plane on, closing on,
-controller pinned; assert **no hostile pair's gap is still at its seeded value** after the fight has run — i.e.
-nobody is frozen out of range. Plus the flag-off twin as the byte-identity tripwire.
+| Weapon | Range source | |
+|---|---|---|
+| **Beam** `:359` | `beam.MaxRange` — **the design** | ✅ |
+| Railgun `:381` | `RailgunRange_m` = 500 km | ❌ engine constant `:62` |
+| Flak `:400` | `FlakRange_m` = 50 km | ❌ engine constant `:52` |
+| Disruptor `:417` | `DisruptorRange_m` = 400 km | ❌ engine constant `:73` |
+| Plasma `:435` | **borrows `RailgunRange_m`** | ❌ not even its own |
+| Missile `:448` | `MissileRange_m` = 1000 km | ❌ engine constant `:68` |
+
+**So five of six weapons run off a fixed ladder no design decision can reorder** — and under LD-30 that ladder would
+silently dictate the size of every battlefield. *(Same finding as `docs/COMBAT-DESIGNER-GROUND-TRUTH-2026-07-28.md`
+**D4-1**; LD-30 promotes it from a designer wart to a resolver blocker.)*
+
+**Order of work this implies:** ① make weapon range designable across all six classes (the cradle-to-grave rung) →
+② give the engagement an arena with a radius → ③ make positions the source of truth and move units at their own
+speeds inside it → ④ joiner expand-or-fit, entering at current state. **The gauge is owed at each step
+(`docs/TESTING-TRACKER.md` G-C1); the 3-fleet no-frozen-pair assertion remains the acceptance test for ③.**
 
 ---
 
