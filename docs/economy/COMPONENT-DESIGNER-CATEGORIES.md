@@ -22,6 +22,14 @@ This is the realization of `docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md`: everythi
 
 ## 2. The 11 categories
 
+> ### ⛔ THE FIVE WEAPONS DOORS ARE SUPERSEDED (2026-07-29)
+> **`docs/economy/DESIGNER-NORTH-STAR.md` is LOCKED and replaces the Weapons row below.** Energy / Ballistic / Melee /
+> Guided / Exotic collapse to **two choices and four sliders**, derived from the ten values the combat resolver
+> actually reads: **how it gets there** (Contact · Beam · Projectile · Guided) × **what it's good against** (Kinetic ·
+> Energy · Explosive · Exotic), then Total damage · Shot size↔rate · Reach · Focus.
+> **Exotic stops being a door** — it is a setting on the second axis. The other ten categories below are unchanged
+> and still owed the same derivation.
+
 | # | Category | Doors | Absorbs (old templates → gone) |
 |---|----------|-------|-------------------------------|
 | 1 | **Weapons** | Energy · Ballistic · Melee · Guided · Exotic | laser/railgun/flak/disruptor/plasma/missile-launcher + all ground weapons + missile payload/electronics |

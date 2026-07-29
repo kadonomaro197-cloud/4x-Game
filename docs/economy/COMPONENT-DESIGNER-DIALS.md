@@ -208,6 +208,13 @@ Both new criteria are nearly free because they **reuse the designer's own machin
 
 ## §1 — Weapons
 
+> ### ⛔ SUPERSEDED IN STRUCTURE (2026-07-29) — read `docs/economy/DESIGNER-NORTH-STAR.md` first
+> The five doors and 41 dial groups below are **replaced by a derivation**: 2 choices + 4 sliders, reproducing all
+> eleven weapons the engine builds today and reaching 1,073 named designs. **The dial CONTENT below is still the
+> record** of what each option means and what it costs — keep reading it for that. What is superseded is the
+> **structure**: five doors, Exotic-as-a-door, and Pulse-vs-Continuous as separate delivery types (a pulse of light
+> travels at light speed too — no number separated them).
+
 ### 1.0 Shared weapon dials (common to all five weapon doors)
 On top of the universal seven, every weapon has:
 | Dial | Drives |
