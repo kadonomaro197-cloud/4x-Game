@@ -5,6 +5,8 @@ using Pulsar4X.Interfaces;
 using Pulsar4X.Energy;
 using Pulsar4X.Stations;
 using Pulsar4X.Extensions;   // GetTotalFoodOutput (food supply) extension on ComponentInstancesDB
+using Pulsar4X.Storage;      // ⚠ REQUIRED for the CargoMath EXTENSION methods (GetUnitsStored). Fully-qualifying
+                             //   the TYPE is not enough — C# only finds extension methods through a using.
 
 namespace Pulsar4X.Colonies
 {
@@ -103,7 +105,7 @@ namespace Pulsar4X.Colonies
         private static double DrawStoredFood(Entity province, double shortfallPerDay)
         {
             if (shortfallPerDay <= 0) return 0.0;                       // farms cover it — nothing to draw
-            if (!province.TryGetDataBlob<Pulsar4X.Storage.CargoStorageDB>(out var hold)) return 0.0;
+            if (!province.TryGetDataBlob<CargoStorageDB>(out var hold)) return 0.0;
 
             try
             {
@@ -125,7 +127,7 @@ namespace Pulsar4X.Colonies
 
                 // Consume it. int is the API's unit type; a larger draw is clamped rather than overflowed.
                 int drawInt = draw > int.MaxValue ? int.MaxValue : (int)draw;
-                Pulsar4X.Storage.CargoTransferProcessor.RemoveCargoItems(province, food, drawInt);
+                CargoTransferProcessor.RemoveCargoItems(province, food, drawInt);
 
                 return drawInt / days;                                  // back to a per-day rate
             }
@@ -155,7 +157,7 @@ namespace Pulsar4X.Colonies
         private static void BankFoodSurplus(Entity province, double surplusPerDay)
         {
             if (surplusPerDay <= 0) return;
-            if (!province.TryGetDataBlob<Pulsar4X.Storage.CargoStorageDB>(out _)) return;
+            if (!province.TryGetDataBlob<CargoStorageDB>(out _)) return;
 
             try
             {
@@ -170,7 +172,7 @@ namespace Pulsar4X.Colonies
                 int add = units > int.MaxValue ? int.MaxValue : (int)units;
 
                 // Whatever does not fit is NOT stored — a perishable with nowhere cold to go spoils.
-                Pulsar4X.Storage.CargoTransferProcessor.AddCargoItems(province, food, add);
+                CargoTransferProcessor.AddCargoItems(province, food, add);
             }
             catch
             {
