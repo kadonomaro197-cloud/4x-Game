@@ -2914,11 +2914,39 @@ a new compartment is a **three-part** registration: the **class id**, the **temp
    `WeaponSupply.PowerDraw_W` switches on **weapon** attribute types. Until that exists, "the cryo pods die if the
    reactor does" cannot be wired, and neither can the refrigerated hold's spoilage. Same finding as Chassis: the gate
    is domain-neutral in its signature and hard-coded in its body.
-4. **The ×1000 hold-mass unit bug** (F7, now measured): `Mass = Size Efficiency × 1.0` where the property's own
-   description calls itself *"the amount of **tonnage** taken up by racking, office space etc."* — **the author was
-   thinking tonnes and the field is kilograms.** The four new templates are costed on the same law deliberately, so the
-   door stays internally consistent and the correction is one coefficient per template. **Needs a ruling:** it
-   multiplies every cargo hold's mass by 1000 against an armed mass-budget gate.
+4. ~~The hold-mass unit bug (F7)~~ ✅ **RULED AND FIXED 2026-07-30 — see §46b.**
+
+### 46b 🔒 "MAKE THE FIELD KGS NO TONNES" — the ruling, and the design names pinned the factor at 100
+
+**The developer's ruling, verbatim: *"make the field kgs no tonnes."*** So the field stays **kilograms** and the numbers
+get corrected — rather than the field being re-read as tonnes.
+
+**What was wrong.** Every hold's `Mass` was `Size Efficiency × 1.0`, and `Size Efficiency` is `volume × 0.01` — so a
+**5,000 m³ cargo hold massed 50 kg.** The property's own description called itself *"the amount of **tonnage** taken up
+by racking, office space etc."*: **the author was thinking in tonnes and the field is kilograms.**
+
+⚠ **CORRECTION to my own estimate.** I reported the gap as "~1000×" from that *tonnage* wording. **It is exactly 100×,
+and the shipped design NAMES prove it** — a piece of evidence already in the repo that I had not used:
+
+| Design | Capacity | Mass before | **Mass now** | Its name |
+|---|---|---|---|---|
+| `Cargo Hold 1t` | 1,000 m³ | 10 kg | **1,000 kg** | ✅ **"1t" is now true** |
+| `Cargo Hold 5t` | 5,000 m³ | 50 kg | **5,000 kg** | ✅ **"5t" is now true** |
+
+**The names were right the whole time; the formula had lost the unit.** That is what makes this a **unit fix** rather
+than a balance change, and it is why the factor needed no judgement call at all. Applied to all six hold templates
+(`×1.5→×150` warehouse, `×1.0→×100` general hold, and the four new compartments `×400 / ×300 / ×200 / ×600`), and the
+`Size Efficiency` description now says **kilograms** instead of tonnage.
+
+⚠ **This is the ONE part of the cargo work that is deliberately not byte-identical.** Six base-mod ships mount a hold;
+the largest change is the **Freighter** (+4,950 kg against its medium hull's 90,000 kg budget). **`ShipMassBudgetTests`
+is the gauge that adjudicates it** — it asserts every base-mod ship stays under its hull budget and fails loudly if any
+design is pushed over. The other five ships carry a 1t hold (+990 kg each), two of them on heavy hulls.
+
+⚠ **And one calibration gap left FLAGGED, not folded in:** this puts a bare hold at **1.0 kg per m³** of capacity, where
+a real 33 m³ shipping container masses ~2,200 kg — about **67 kg/m³**. The family is still ~67× lighter than a steel
+box. **That is a balance call sitting on top of a unit fix, and they are not the same decision** — so it stays visible
+in the test readout rather than being quietly bundled in.
 
 #### ⚠ Two pre-existing data bugs found while validating this slice (reported, NOT fixed here)
 
@@ -3130,3 +3158,119 @@ only one thing is built out of PART SEVEN, build this.
 | 6 | Arm **`EnableFuelExhaustion`**; is a reactor **refuelable**? | §39.7a |
 | 7 | The **RTG's power-density** gap — pick a number, or leave it flagged? | §39.8 |
 | 8 | The **Sensors S0 band** ruling (reaches Power's solar array and the deferred FTL band) | §34.5 |
+
+---
+
+## 52. 🔒 WATER AND UNDERGROUND — what Propulsion, Weapons and Sensors actually need (developer, 2026-07-30)
+
+*"Make logical additions and fixes for propulsion, weapons, and sensors as needed for water and underground. **Don't
+force it** — just make it make sense."*
+
+The Chassis door added three environments (open water, atmospheric, subterranean) as declared-but-empty cells. The
+follow-up question was the right one: **a chassis for an environment is useless if nothing else in the game can tell
+that environment apart.** Measured across all three doors, the answer was **nothing can**:
+
+| Door | What exists for water / underground | Measured how |
+|---|---|---|
+| **Propulsion** | `GroundLocomotion` = **Foot · Tracked · Walker · Hover**. No naval, no submersible, no burrowing. Water's entire representation is **one boolean**, `Amphibious`, which lets a unit *cross* an ocean hex — no depth, no speed effect, no cost. | read the enum + `GroundLocomotionAtb` |
+| **Weapons** | **Nothing.** No reference to atmosphere, underwater, submerged or vacuum anywhere in `Weapons/`, `Combat/` or `Damage/`. A laser fires identically in vacuum and forty metres down. The only near-miss is the `Corrosive` damage signature, which treats a dense medium as a *hazard*, never as something a shot travels through. | grep, all three folders |
+| **Sensors** | **Zero hits** for atmosphere / water / submerged / sonar / medium in the entire `Sensors/` folder. Detection is one **vacuum** law — `AttenuationCalc = source × 1e6 / (4π d²)` — applied to everything, everywhere. | grep + read the law |
+
+🔴 **And one live bug underneath all of it: `GroundTerrain.Classify` sorts `Ocean` into `Open`** (it is in neither the
+Rough nor the Cover case, so it falls through the `default`). Two consequences, both backwards:
+1. `CoverDefenseMult(Open) = 0.9` — open ground *favours the attacker* — so **a submerged defender is easier to kill
+   than one standing in a forest.**
+2. `LocomotionTerrainMult` returns **1.0 for Open** — so **a boat's handling is ignored in water.** The dial exists and
+   the medium never reads it.
+
+`GasLayers` — the gas-giant terrain type — falls through the same way.
+
+### 52a 🔑 THE ADDITION: one property per environment, three consumers that already exist
+
+**Not three separate systems. One number, read three ways** — and it fills slots the design already *declared*.
+`GroundTerrain`'s own header maps the terrain vocabulary onto the space-hazard vocabulary and names what is missing:
+*"**Concealment** ↔ hazard `SensorJam` (forest/jungle hides units — ground fog of war; **a later slice**)"* and
+*"**EnvironmentalHazard** ↔ `HeatDamage`/`Corrosive` … **later**"*. **So this was designed and left unbuilt. It is a
+named hole being filled, not a new axis being invented.**
+
+| Door | The consumer that already exists | What the medium changes |
+|---|---|---|
+| **Sensors** | `AttenuationCalc` / the signature path | **opacity** divides the signature → fills the declared *Concealment* slot |
+| **Weapons** | `GroundWeaponMount.RangeHexes` → `ResolveRegionCombat`'s per-weapon band (the W2 slice) | **opacity** divides engagement range, **by weapon nature** |
+| **Propulsion** | `LocomotionTerrainMult` + `GroundMobility.StepSecondsFor` | **drag** divides speed *unless your locomotion is rated for that medium* |
+
+**Opacity, per medium** — the water and rock figures are physics, not balance: seawater absorbs EM over *metres*, and
+rock is opaque outright.
+
+| Medium | Opacity | What it does to play |
+|---|---|---|
+| Vacuum / open ground | **1** | nothing — byte-identical |
+| Forest / jungle (`Cover`) | ~3 | ground fog of war, the declared *Concealment* slot |
+| Mountains (`Rough`) | ~2 | line of sight broken, so you must go and look |
+| **Submerged** | ~**1,000** | **a submerged unit is effectively invisible to every sensor in the game** |
+| **Buried** | ~**10,000** | **a buried thing cannot be seen at all — only inferred**, which is the whole point of burying it |
+
+**Weapons read the same number by NATURE** (already a first-class axis): **Energy** is worst in water and useless with
+no line of sight · **Kinetic** is poor (drag) and blocked by rock · **Explosive** is *better* in both (water transmits
+shock; a confined blast has nowhere to go) · close/melee is unaffected.
+
+🔑 **The payoff, and it is free: THE WEAPON TRIANGLE ROTATES BY ENVIRONMENT.** Artillery's whole edge is standoff range.
+Underwater and underground that edge collapses, so **the corner that dominates changes with where you fight** — and a
+submarine action reads the way it should: *everything is short-range and explosive.* **No torpedo type had to be
+invented; a torpedo is a slow Explosive munition, which the taxonomy already expresses.**
+
+### 52b ✅ WATER is cheap — three of the four pieces are already built
+
+1. ✅ **The single change that makes water real: give `Ocean` its own terrain class.** Then cover, the locomotion
+   multiplier and march time — all *already built* — start reading it. **One enum value and one switch case turns three
+   existing systems on at once.**
+2. ✅ The pathfinder gate exists (`Ocean && !amphibious`).
+3. ✅ The locomotion × terrain multiplier exists.
+4. 🔴 **`Amphibious` is a free boolean, so it is not a decision** — a pass flag with no mass, no speed cost, no downside;
+   nobody would ever decline it. Make it a **locomotion MODE with a land penalty**: a hull rated for water gives up
+   ground speed, one rated for both gives up more. **Narrow and cheap, or broad and expensive** — the same trade as the
+   Chassis operating envelope, and each mode wins an axis outright (tracked = cheapest on ground · amphibious = the only
+   one that does both · submersible = **the only one that is invisible** · hover = ignores drag, and already exists).
+
+⛔ **What is deliberately NOT being added: sonar.** This engine's sensor model is an **EM waveform in nanometres**
+matched against a receiver's band. **Sound is not electromagnetic**, and giving it a wavelength in nm to squeeze it
+through the existing matcher is exactly the forcing the ruling forbids. The honest version needs no new physics:
+**water blocks EM, so range collapses, and the counter is to get close or put the sensor in the water with the target.**
+A genuine acoustic band is a separate decision, **named here so it is not lost** — not smuggled in as a fake wavelength.
+
+### 52c 🔒 UNDERGROUND IS NOT AN ENVIRONMENT — it is a POSITION, and its payoff is a missing READ
+
+Ask what "underground" actually *means* in play and there is one answer: **you cannot be bombarded from orbit.**
+Everything else about it (no line of sight, short ranges, slow going) is what `Rough` terrain and the range rules
+already do. And **the "dug in" mechanic is almost entirely built**:
+
+| What "dug in" needs | Exists? | Where |
+|---|---|---|
+| A defender takes less incoming | ✅ **built** | `GroundTerrain.CoverDefenseMult` — Rough ×1.5, Cover ×1.25 |
+| A **building** that hardens its own ground and projects into neighbours | ✅ **built, design-driven** | `GroundDefenseAtb.LocalFortify` / `AdjacentProjection` → `GroundFortification.DefenseMult`, capped at ×2 |
+| A grave rung — the shelter can be taken from you | ✅ **built** | a captured hex's building stops fortifying the defender |
+| **Orbital fire respects any of it** | 🔴 **NO — the whole gap** | `ApplyGroundBombardment` reads the unit's own `Defense`, the artillery matchup and its explosive armour resist, and **never calls `CoverDefenseMult` or `DefenseMult`** |
+
+🔑 **So a unit sitting in a mountain bunker takes exactly the same orbital fire as one standing in an open field.** The
+dial is built, the building that provides it is built, the cap is built, the grave rung is built — **and the one attack
+it was invented to resist ignores it.**
+
+🔒 **The ruling this produces: make orbital fire read cover and fortification, and "underground" becomes the far end of a
+dial that already exists.** No new terrain type, no third dimension on the hex grid, no new component. **One change, and
+"dig in before they arrive" becomes a real decision** — which is the thing subterranean was interesting *for*.
+
+⚠ **Explicitly NOT proposed:** a subterranean map layer, tunnel networks, or a depth axis on the hex grid. None is
+needed to deliver that, and each is a new system to maintain. **If depth ever needs to be visible, it is a number on a
+position, not a place.**
+
+### 52d The build order, and the gauge for each
+
+| # | Slice | Gauge |
+|---|---|---|
+| **W1** | `Ocean` gets its own terrain class (+ `GasLayers`) — cover stops favouring the attacker in water and locomotion starts being read | a terrain-classification test + the existing `GroundForcesTests` as the byte-identity tripwire on land |
+| **W2** | Orbital fire reads `CoverDefenseMult` × `DefenseMult` — **the underground payoff, and it is one formula** | `GroundBombardmentTests` (extend: a fortified defender survives fire that kills an exposed twin) |
+| **W3** | `Amphibious` becomes a locomotion **mode** with a land penalty; add `Submersible` | a locomotion-mode test; the stock four modes byte-identical |
+| **W4** | Medium **opacity** on detection and on weapon range | a detection-range test at depth; a range-band test |
+
+**W2 is the highest value per line in the whole list** — it is a single missing read, it uses only built machinery, and
+it turns four existing systems (terrain · fortification · buildings · capture) into an answer to orbital bombardment.

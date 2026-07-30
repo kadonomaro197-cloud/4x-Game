@@ -6,7 +6,7 @@
       "Name": "Warehouse faciliy",
       "Formulas": {
         "Description": "Stores General Cargo on a colony",
-        "Mass": "PropertyValue('Size Efficiency') * 1.5",
+        "Mass": "PropertyValue('Size Efficiency') * 150",
         "Volume": "PropertyValue('Storage Volume') + PropertyValue('Size Efficiency')",
         "HTK": "0.5",
         "CrewReq": "Max(1, PropertyValue('Size Efficiency') * 0.1)",
@@ -57,7 +57,7 @@
       "Name": "General Cargo Hold",
       "Formulas": {
         "Description": "Stores General Cargo on ships",
-        "Mass": "PropertyValue('Size Efficiency') * 1.0",
+        "Mass": "PropertyValue('Size Efficiency') * 100",
         "Volume": "PropertyValue('Storage Volume') + PropertyValue('Size Efficiency')",
         "HTK": "0.5",
         "CrewReq": "Max(1, PropertyValue('Size Efficiency') * 0.1)",
@@ -88,7 +88,7 @@
         },
         {
           "Name": "Size Efficiency",
-          "DescriptionFormula": "'The amount of tonnage taken up by racking, office space etc.'",
+          "DescriptionFormula": "'Racking, office space and structure, as a fraction of capacity. Feeds Mass in KILOGRAMS (x100) and the crew count -- the field is kg, not tonnes.'",
           "GuiHint": "GuiTextDisplay",
           "DataDict": {},
           "PropertyFormula": "Max(1, PropertyValue('Storage Volume') * 0.01)"
@@ -356,7 +356,7 @@
       "Name": "Passenger Cabin",
       "Formulas": {
         "Description": "Berths for LIVING people — the only compartment whose occupants can walk out and go to work. Pressure hull, air, water and fittings, so it masses four times a bare hold of the same size and needs stewards aboard. Carries passengers, colonists, a drafted workforce, a research team, prisoners, refugees.",
-        "Mass": "PropertyValue('Size Efficiency') * 4.0",
+        "Mass": "PropertyValue('Size Efficiency') * 400",
         "Volume": "PropertyValue('Storage Volume') + PropertyValue('Size Efficiency') * 2",
         "HTK": "0.5",
         "CrewReq": "Max(2, PropertyValue('Size Efficiency') * 0.4)",
@@ -409,7 +409,7 @@
       "Name": "Cryogenic Bay",
       "Formulas": {
         "Description": "Frozen people, stacked. The CHEAPEST way to move a population — pods need no air, no food and almost nobody to tend them — paid for with the two things a cabin gives you: the occupants cannot act, and they are wholly dependent on the refrigeration plant. Also the only compartment that will hold seed stock, gene banks and casualties in stasis.",
-        "Mass": "PropertyValue('Size Efficiency') * 3.0",
+        "Mass": "PropertyValue('Size Efficiency') * 300",
         "Volume": "PropertyValue('Storage Volume') + PropertyValue('Size Efficiency') * 2",
         "HTK": "0.5",
         "CrewReq": "Max(1, PropertyValue('Size Efficiency') * 0.05)",
@@ -462,7 +462,7 @@
       "Name": "Refrigerated Hold",
       "Formulas": {
         "Description": "A cooled, controlled hold — the only compartment whose contents are still worth having when they arrive. Food, biomass, medical stock and anything alive spoil in a bare hold; here they do not. Costs twice a general hold of the same size for the cooling plant and insulation.",
-        "Mass": "PropertyValue('Size Efficiency') * 2.0",
+        "Mass": "PropertyValue('Size Efficiency') * 200",
         "Volume": "PropertyValue('Storage Volume') + PropertyValue('Size Efficiency') * 1.5",
         "HTK": "0.5",
         "CrewReq": "Max(1, PropertyValue('Size Efficiency') * 0.1)",
@@ -515,7 +515,7 @@
       "Name": "Containment Hold",
       "Formulas": {
         "Description": "A shielded, isolated hold for cargo that is dangerous to the ship carrying it — volatiles, radioactives, antimatter, biohazard, a live xeno specimen. The only compartment rated for cargo whose escape damages the carrier, and it is the heaviest per cubic metre by a wide margin because the shielding is the point.",
-        "Mass": "PropertyValue('Size Efficiency') * 6.0",
+        "Mass": "PropertyValue('Size Efficiency') * 600",
         "Volume": "PropertyValue('Storage Volume') + PropertyValue('Size Efficiency') * 3",
         "HTK": "0.5",
         "CrewReq": "Max(2, PropertyValue('Size Efficiency') * 0.2)",

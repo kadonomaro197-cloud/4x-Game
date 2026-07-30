@@ -213,15 +213,17 @@ namespace Pulsar4X.Tests
                 Log($"{label,-18} {atb.MaxVolume,10:0} {d.MassPerUnit,8:0} {perM3,11:0.###} {d.CrewReq,6} {atb.StoreTypeID}");
             }
 
-            // ⚠ READ THE ABSOLUTE NUMBERS AND DO NOT BELIEVE THEM. A 500 m³ compartment massing tens of kilograms is
-            // nonsense, and it is inherited: the shipped holds' Mass is `Size Efficiency × 1.0` where Size Efficiency
-            // is `volume × 0.01`, and that property's own description calls itself "the amount of TONNAGE taken up by
-            // racking, office space etc." — the author was thinking in tonnes and the field is kilograms, so the whole
-            // family is light by ~1000×. These four are costed on the SAME law deliberately, so the door stays
-            // internally consistent and the correction is one coefficient per template once it is ruled on. Fixing it
-            // here would multiply every cargo hold's mass by 1000 against an armed mass-budget gate (§46).
-            Log("⚠ absolute masses are ~1000× light across the whole hold family (inherited unit bug, flagged in §46);"
-                + " the RATIOS below are the part that is calibrated.");
+            // ✅ THE FIELD IS KILOGRAMS — developer's ruling, 2026-07-30 — so the coefficients are now right.
+            // They were written by an author thinking in TONNES (the `Size Efficiency` property described itself as
+            // "the amount of TONNAGE taken up by racking"), which left every hold light by exactly 100×. The factor is
+            // not a guess: the shipped design NAMES pin it. "Cargo Hold 1t" (1000 m³) and "Cargo Hold 5t" (5000 m³)
+            // come out at exactly 1,000 kg and 5,000 kg once the ×100 is restored — the names were right all along and
+            // the formula had lost the unit.
+            Log("mass coefficients are ×100 (the field is KILOGRAMS): a shipped 5t hold now masses exactly 5,000 kg.");
+            // ⚠ One calibration gap left flagged rather than silently changed: this puts a bare hold at 1.0 kg per m³
+            // of capacity, where a real 33 m³ shipping container masses ~2,200 kg — about 67 kg/m³. So the family is
+            // still ~67× lighter than steel-box reality. That is a BALANCE call on top of a UNIT fix, and it is not the
+            // same decision, so it is not folded in here.
 
             // Direction, not calibration — a re-tune may move the numbers, but not the ordering that justifies each class.
             Assert.That(kgPerM3["general hold"], Is.LessThan(kgPerM3["refrigerated"]),
@@ -272,28 +274,49 @@ namespace Pulsar4X.Tests
         }
 
         /// <summary>
-        /// Byte-safety: the two compartments that already existed must be untouched, because five base-mod ship
-        /// designs mount a cargo hold and the client's mass-budget gate is armed.
+        /// 🔒 THE FIELD IS KILOGRAMS (developer's ruling, 2026-07-30) — so the shipped holds keep their capacity and
+        /// their MASS IS CORRECTED, not preserved.
+        ///
+        /// <para>Every hold's <c>Mass</c> was <c>Size Efficiency × 1.0</c>, and <c>Size Efficiency</c> is
+        /// <c>volume × 0.01</c> — so a 5,000 m³ hold massed <b>50 kg</b>. The property's own description called itself
+        /// <i>"the amount of <b>tonnage</b> taken up by racking, office space etc."</i>: the author was thinking in
+        /// tonnes and the field is kilograms.</para>
+        ///
+        /// <para><b>The factor is not a guess — the shipped design NAMES pin it at exactly 100.</b>
+        /// <c>Cargo Hold 1t</c> is a 1,000 m³ design and <c>Cargo Hold 5t</c> a 5,000 m³ one; with the ×100 restored
+        /// they mass exactly <b>1,000 kg</b> and <b>5,000 kg</b>. The names were right the whole time and the formula
+        /// had lost the unit — which is why this is a UNIT fix, not a balance change.</para>
+        ///
+        /// <para>⚠ <b>This is the one part of the slice that is deliberately NOT byte-identical.</b> Six base-mod ships
+        /// mount a hold; the largest change is the <b>Freighter</b> (a 5t hold, 50 kg → 5,000 kg = +4,950 kg against
+        /// its medium hull's 90,000 kg budget). <c>ShipMassBudgetTests</c> is the gauge that adjudicates it — it asserts
+        /// every base-mod ship stays under its hull budget and will fail loudly if this pushes any design over.</para>
         /// </summary>
         [Test]
-        [Description("The cargo holds that already shipped are unchanged — same store type, same volume, same mass — so every existing ship design masses exactly what it did and the armed mass-budget gate sees no change.")]
-        public void TheExistingHolds_AreUnchanged()
+        [Description("The shipped cargo holds keep their store type and capacity, and their mass is corrected to real kilograms: the field is kg, the coefficients were written in tonnes, and the design names Cargo Hold 1t / 5t pin the missing factor at exactly 100 — so they now mass exactly 1,000 kg and 5,000 kg, making their own names true.")]
+        public void TheExistingHolds_KeepTheirCapacity_AndNowMassRealKilograms()
         {
             var s = TestScenario.CreateWithColony();
             var designs = s.Faction.GetDataBlob<FactionInfoDB>().ComponentDesigns;
 
             foreach (var (id, vol, mass) in new (string, double, long)[]
                      {
-                         ("default-design-cargo-hold-1t", 1000, 10),
-                         ("default-design-cargo-hold-5t", 5000, 50),
+                         ("default-design-cargo-hold-1t", 1000, 1000),   // "1t" → 1,000 kg ✅ the name is now true
+                         ("default-design-cargo-hold-5t", 5000, 5000),   // "5t" → 5,000 kg ✅
                      })
             {
                 var d = designs[id];
                 var atb = d.GetAttribute<CargoStorageAtb>();
-                Log($"{d.Name}: {atb.StoreTypeID} {atb.MaxVolume:0} m³ on {d.MassPerUnit} kg");
+                Log($"{d.Name}: {atb.StoreTypeID} {atb.MaxVolume:0} m³ on {d.MassPerUnit} kg "
+                    + $"({d.MassPerUnit / 1000.0:0.#} t — matches the design's own name)");
+
+                // Capacity and class are untouched: nothing about WHAT a hold carries changed.
                 Assert.That(atb.StoreTypeID, Is.EqualTo("general-storage"), id + " is still a general hold");
                 Assert.That(atb.MaxVolume, Is.EqualTo(vol), id + " still holds the same volume");
-                Assert.That(d.MassPerUnit, Is.EqualTo(mass), id + " still masses the same");
+
+                // Mass is corrected, and the assertion is the design's own name read as kilograms.
+                Assert.That(d.MassPerUnit, Is.EqualTo(mass),
+                    id + " must mass what its name says, in kilograms — if this fails the ×100 was lost again");
             }
         }
     }
