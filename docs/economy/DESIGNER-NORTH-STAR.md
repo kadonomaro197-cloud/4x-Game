@@ -1848,6 +1848,7 @@ Each is a §31-style gauged slice, one per push, CI green between. **Nothing bel
 **Blocked on a developer ruling, not on work:** **S0** (§34.5 — correct the overlap test *and* add an infrared receiver
 in the SAME change, or else compute the band and remove the dial; either way it also closes the deferred FTL-band
 question) and §34.8 (one cost law for reach, or two).
+
 ## 36. SCORING THE §30 PREDICTION — half right, and wrong in an informative direction
 
 §30 predicted, before any of this was read:
