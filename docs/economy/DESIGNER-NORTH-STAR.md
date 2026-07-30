@@ -1613,6 +1613,16 @@ Marked as predictions, not findings. Recording them makes the method falsifiable
 
 # PART FIVE — SENSORS (door 1 of the remaining eight, derived 2026-07-30)
 
+**Live reference (the worked result, driveable):** `sensors-derived.html` — each of the five jobs opens on its **real
+shipped component**, so the first number on screen is always one the game actually ships.
+
+> ⚠ **Three of my own first-pass claims were overturned by building that page**, because it forced the arithmetic over
+> the dials' whole range instead of at a point. Each is corrected in place and marked: **§34.5** (the wavelength dial is
+> not a narrow trap — the band gate is **one-sided**, and the game *depends* on the bug), **§34.6** (the one honest
+> trade is **cancelled** by that same bug), and **§34.7** (antenna size is **not** honest — the 90 kg constant swamps
+> the quadratic term across the dial's entire usable range). 🔒 **Lesson: "the formula has the right shape" is not
+> "the dial trades." Run the numbers over the dial's real range.**
+
 Run per the §28 recipe. Steps 1–4 and the findings are below; steps 5–7 (prove it reproduces what exists · the marked
 output map · land the cheap wins as gauged slices) are the next pass.
 
@@ -1728,22 +1738,45 @@ loss of range or tracking. That is not a dead dial, it is a **free 16× mass sav
 Chassis door (door 3) is about to build its whole budget on. **Fix before Chassis, or Chassis derives against a
 budget that can be cheated.**
 
-### 34.5 ⚠ The wavelength dial is a TRAP — it can blind a sensor with no warning
+### 34.5 🔴 CORRECTION + THE HEADLINE — the band gate is ONE-SIDED, and the game DEPENDS on the bug
 
-`Ideal Detection Wavelength` ranges **0.01 to 1e12** nm. But every signature in the game is authored at 3500 K, which
-Wien's law puts at **2898000 / 3500 ≈ 828 nm**, spanning `[428, 828, 1428]`. The receiver's band is
-`peak ± bandwidth/2`, so the shipped 600 nm ± 125 gives `[475, 725]` — which overlaps, and detection works.
+**I had this wrong on the first pass.** I wrote that the wavelength dial was a *trap* with a narrow valid window.
+Building the demo forced the arithmetic, and the truth is sharper and worse. `SensorTools.DetectonQuality` tests:
 
-**Tune the peak to 2000 nm and the band becomes `[1875, 2125]`, which overlaps nothing in the game. The sensor is
-totally blind, and the designer says nothing.** A dial whose valid range is a narrow undocumented window inside a
-1e12-wide slider is a trap, not a choice.
+```csharp
+if (Math.Max(receverSensitivityFreqMin, signalWaveSpectraFreqMin)
+    < Math.Max(signalWaveSpectraFreqMin, signalWaveSpectraFreqMax))
+```
 
-**Two ways out, and they point in opposite directions** — this is a developer call:
-- **(a) Hide it.** If there is only ever one band worth tuning to, the dial is not a decision — compute it and remove
-  the slider (the §1 test says a dial nobody can meaningfully set is not a dial).
-- **(b) Make it real.** Give different emitters genuinely different bands, so tuning is a *counter-intelligence*
-  decision: a sensor tuned for thruster plumes is blind to a cold hull. **This is the same deferred question §26c.1
-  flagged** — FTL wants its own band, and it needs a receiver that can see it. One ruling closes both.
+The right-hand side is just `sigMax` (an `EMWaveForm` always has min < max), so **the receiver's UPPER edge is never
+consulted.** The test reduces to *"is my band's bottom edge below the signal's top edge"*. A correct interval-overlap
+test would read `max(recvMin, sigMin) < min(recvMax, sigMax)`.
+
+**Consequence 1 — the only receiver in the game is tuned to visible light, and everything in the game emits infrared.**
+Every magnitude and temperature below is from the shipped templates:
+
+| Emitter | Temp | Peak (Wien) | Its band | Stock magnitude | In the receiver's window? |
+|---|---|---|---|---|---|
+| **Reactor** (`energy.json`, mass 1500) | 1700 K | **1705 nm** | 1305–2305 nm | **11,250,000** | 🔴 **NO — 580 nm clear of it** |
+| Warp drive, bubble held | 3500 K | 828 nm | 428–1428 nm | 3,179,000 | its lower tail only |
+| Thruster plume | 3500 K | 828 nm | 428–1428 nm | 109,103 | its lower tail only |
+| **The shipped `passive-sensor`** | — | **600 nm** | **475–725 nm** | — | — *(that is the human eye)* |
+
+**Not one emitter PEAK falls inside the receiver's window** — and the reactor, which is **100× louder than a thruster**
+and therefore the number that actually sets detection range, sits a full 1000 nm outside it.
+
+**Consequence 2 — the bug is LOAD-BEARING. Fixing the line alone breaks detection.** Computed through the real
+formulas: against a stock ship the stock sensor reaches **0.397 Gm** — driven entirely by the reactor. Correct the
+overlap test on its own and the reactor drops out, reach collapses to the thruster's **0.039 Gm**, and a ship with its
+**engines off becomes completely undetectable.** That is exactly the *"sat at Luna, saw nothing, no battle"* failure the
+whole `DetectionSensitivityScale` rebalance was written to cure.
+
+> 🔒 **So the fix MUST be one change: correct the overlap test AND give the base mod an infrared receiver.** And that
+> is the same ruling **§26c.1** was already waiting on for the FTL band — **one decision closes both.**
+
+**Consequence 3 — the band-centre dial has a DOMINANT setting.** Because only the lower edge is enforced, tuning the
+peak as short as it goes makes the test pass for every emitter in the game. Tune it *long* (2000 nm) and you go blind.
+So the dial is not a narrow valid window — it is *"crank it to minimum"*, a ladder and an exploit at once.
 
 ### 34.6 ✅ The one HONEST trade already in the door — and nothing tells the player
 
@@ -1756,20 +1789,39 @@ Sensitivity = tech / (EffectiveSize² × Efficiency)                       ← l
             = tech × bandwidth / (EffectiveSize² × techMaxBandwidth)
 ```
 
-So **a wider band sees more kinds of thing, each from less far.** That is a genuine zero-sum coverage ↔ reach trade,
-**already shipping**, and the designer presents it as two unrelated numbers. Wiring the readout is a pure §? Failure-A
+So **a wider band sees more kinds of thing, each from less far** — and it is *exact*: **coverage × range² = 39.34**,
+constant across the whole dial (verified numerically at bandwidth 1 / 62.5 / 250 / 500 nm). A genuine zero-sum,
+**already shipping**, presented as two unrelated numbers. Wiring the readout is a pure Failure-A
 (the number exists, it is just unwired — `docs/combat/INFORMATION-DELTA-DESIGN.md`).
 
-### 34.7 ✅ And the size dial is already honest: **range ∝ √mass**
+🔴 **But §34.5's gate bug CANCELS it.** If only your lower edge is enforced, a **1 nm** window still admits every
+emitter in the game — so you take the narrow window's **6.27 Gm** and give up nothing. **The one honest trade in this
+door is only honest once the overlap test is fixed.** Two findings, one line of code.
+
+### 34.7 🔴 CORRECTION — antenna size is a FREE LADDER too. I had called this one honest.
+
+On the first pass I wrote that this dial was already fine, because range goes as antenna size and mass as its square,
+so *range ∝ √mass*. **The proportionality is right and the SCALING is wrong by two orders of magnitude.**
 
 ```
-Sensitivity ∝ 1 / AntennaSize²        and     range ∝ √(1/Sensitivity) ∝ AntennaSize
+Sensitivity ∝ 1 / AntennaSize²   ⇒   range ∝ AntennaSize          (linear)
 Mass        = 90 + 0.01 × AntennaSize²
-⇒  range ∝ √mass  —  DOUBLE YOUR REACH, QUADRUPLE THE ANTENNA.
+the quadratic term only overtakes the 90 kg constant at  size ≈ 95
+…and the shipped passive-sensor sits at  size = 1.25
 ```
 
-**The inverse-square law shows up on both the physics side and the cost side, and they agree.** Nothing to fix; it
-just needs saying, because it is the reason a big sensor is a real commitment rather than a shopping choice.
+**So across the dial's entire usable range the mass is effectively flat.** Measured through the real formula:
+
+| Antenna size | Mass | Detection range vs a reactor |
+|---|---|---|
+| **1.25** *(shipped)* | 90.0 kg | 0.40 Gm |
+| 8.2 | 90.7 kg | 2.61 Gm |
+| 15.5 | 92.4 kg | 4.90 Gm |
+| 29.9 | 98.9 kg | **9.48 Gm** |
+
+**Size 30 buys 24× the detection range for +9 kg.** The cost law is correct in principle and mis-scaled in practice, so
+the dial behaves as a free ladder. *(Lesson: "the formula has the right shape" is not the same as "the dial trades."
+Run the numbers over the dial's actual range — the shape was right and the answer was still wrong.)*
 
 ### 34.8 ⚠ Ground radar and space sensors price reach by DIFFERENT LAWS
 
@@ -1785,6 +1837,7 @@ Each is a §31-style gauged slice, one per push, CI green between. **Nothing bel
 
 | # | Slice | Why it is cheap | What it changes about PLAY |
 |---|---|---|---|
+| **S0** | 🔒 **BLOCKED ON A RULING — fix the overlap test AND add an infrared receiver, in ONE change** (§34.5) | the test is one line; the receiver is one template | 🔴 **The biggest single change in the door.** It makes band-matching real, which turns the wavelength dial from *"crank it to minimum"* into a counter-intelligence decision, and restores the coverage ↔ reach trade. **Must be one commit** — the fix alone makes a parked ship undetectable. Also closes the deferred FTL-band question. |
 | **S1** | **Price `Self Signature Boost` into `Sensitivity Degrade`** — one number, the jammer's noise *is* its self-signature | a formula change in one template; the atb already takes both args | 🔴 **The jammer gets its downside back.** Blinding the enemy paints you, and you cannot opt out. |
 | **S2** | **Make the two fire-control size dials write something, or delete them** | they appear in exactly one formula | 🔴 **Closes a free 16× mass saving before Chassis derives against that budget.** |
 | **S3** | **Give `Scan Time` a cost** (power draw or mass) | one formula; `EnergyGenAbilityDB` is already the consumer for the solar branch | **Sweep-often-and-run-hot vs sweep-rarely-and-stay-cold** becomes a real EMCON decision. |
@@ -1792,9 +1845,9 @@ Each is a §31-style gauged slice, one per push, CI green between. **Nothing bel
 | **S5** | **Publish the bandwidth trade** as a readout (coverage ↔ reach) | Failure-A: the number exists, it is unwired | The one honest dial in the door starts reading as a decision. |
 | **S6** | **Move `IntelDirectorateAtb` to Command** (§33.1) | a doc/ownership move, no code | Keeps the door's question clean; Command inherits it with the other seats. |
 
-**Blocked on a developer ruling, not on work:** §34.5 (hide the wavelength dial, or make bands real — one ruling also
-closes the deferred FTL-band question) and §34.8 (one cost law for reach, or two).
-
+**Blocked on a developer ruling, not on work:** **S0** (§34.5 — correct the overlap test *and* add an infrared receiver
+in the SAME change, or else compute the band and remove the dial; either way it also closes the deferred FTL-band
+question) and §34.8 (one cost law for reach, or two).
 ## 36. SCORING THE §30 PREDICTION — half right, and wrong in an informative direction
 
 §30 predicted, before any of this was read:
